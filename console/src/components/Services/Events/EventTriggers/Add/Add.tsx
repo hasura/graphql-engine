@@ -150,7 +150,7 @@ const Add: React.FC<Props> = props => {
                 type="checkbox"
                 checked={colEnabled}
                 onChange={handleToggleColumn}
-                className={styles.cursorPointer}
+                className={`${styles.cursorPointer} legacy-input-fix`}
               />
               {colName}
               {/* <small> ({colType})</small> TODO */}
@@ -224,7 +224,7 @@ const Add: React.FC<Props> = props => {
               onChange={handleTriggerNameChange}
               maxLength={42}
             />
-            <hr />
+            <hr className="my-md" />
             <h4 className={styles.subheading_text}>
               Database &nbsp; &nbsp;
               <OverlayTrigger
@@ -249,7 +249,7 @@ const Add: React.FC<Props> = props => {
                   </option>
                 ))}
             </select>
-            <hr />
+            <hr className="my-md" />
             <h4 className={styles.subheading_text}>
               Schema/Table &nbsp; &nbsp;
               <OverlayTrigger
@@ -265,6 +265,7 @@ const Add: React.FC<Props> = props => {
               className={`${styles.selectTrigger} form-control`}
               value={table.schema}
             >
+              <option value="">Select schema</option>
               {Object.keys(databaseInfo).map(s => (
                 <option value={s} key={s}>
                   {s}
@@ -288,7 +289,7 @@ const Add: React.FC<Props> = props => {
                   );
                 })}
             </select>
-            <hr />
+            <hr className="my-md" />
             <div
               className={`${styles.add_mar_bottom} ${styles.selectOperations}`}
             >
@@ -311,7 +312,7 @@ const Add: React.FC<Props> = props => {
                 />
               </div>
             </div>
-            <hr />
+            <hr className="my-md" />
             <div className={styles.add_mar_bottom}>
               <h4 className={styles.subheading_text}>
                 Webhook URL &nbsp; &nbsp;
@@ -353,7 +354,7 @@ const Add: React.FC<Props> = props => {
                 environments.
               </small>
             </div>
-            <hr />
+            <hr className="my-md" />
             <CollapsibleToggle
               title={
                 <h4 className={styles.subheading_text}>Advanced Settings</h4>
@@ -362,7 +363,7 @@ const Add: React.FC<Props> = props => {
             >
               <div>
                 {advancedColumnSection}
-                <hr />
+                <hr className="my-md" />
                 <div className={styles.add_mar_top}>
                   <h4 className={styles.subheading_text}>Retry Logic</h4>
                   <RetryConfEditor
@@ -370,14 +371,14 @@ const Add: React.FC<Props> = props => {
                     setRetryConf={setState.retryConf}
                   />
                 </div>
-                <hr />
+                <hr className="my-md" />
                 <div className={styles.add_mar_top}>
                   <h4 className={styles.subheading_text}>Headers</h4>
                   {headersList}
                 </div>
               </div>
             </CollapsibleToggle>
-            <hr />
+            <hr className="my-md" />
             {!readOnlyMode && (
               <Button
                 type="submit"

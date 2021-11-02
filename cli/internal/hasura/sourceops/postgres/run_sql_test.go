@@ -5,10 +5,10 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/hasura/graphql-engine/cli/internal/testutil"
+	"github.com/hasura/graphql-engine/cli/v2/internal/testutil"
 
-	"github.com/hasura/graphql-engine/cli/internal/hasura"
-	"github.com/hasura/graphql-engine/cli/internal/httpc"
+	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
+	"github.com/hasura/graphql-engine/cli/v2/internal/httpc"
 )
 
 func TestHasuraDatabaseOperations_RunSQL(t *testing.T) {
@@ -19,8 +19,7 @@ func TestHasuraDatabaseOperations_RunSQL(t *testing.T) {
 		path       string
 	}
 	type args struct {
-		input    hasura.PGRunSQLInput
-		database string
+		input hasura.PGRunSQLInput
 	}
 	tests := []struct {
 		name    string

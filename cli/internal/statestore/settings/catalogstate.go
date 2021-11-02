@@ -1,7 +1,7 @@
 package settings
 
 import (
-	"github.com/hasura/graphql-engine/cli/internal/statestore"
+	"github.com/hasura/graphql-engine/cli/v2/internal/statestore"
 )
 
 type StateStoreCatalog struct {

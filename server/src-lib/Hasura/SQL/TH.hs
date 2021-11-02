@@ -11,28 +11,25 @@
 --   * the definition of the AST is fairly readable:
 --     * Exp: https://hackage.haskell.org/package/template-haskell-2.16.0.0/docs/Language-Haskell-TH.html#t:Exp
 --     * Dec: https://hackage.haskell.org/package/template-haskell-2.16.0.0/docs/Language-Haskell-TH.html#t:Dec
-
 module Hasura.SQL.TH
-  ( backendConstructors
-  , forEachBackend
-  , getBackendValue
-  , getBackendTypeValue
-  , getBackendTagName
-  , getBackendValueName
-  , backendList
-  , backendCase
-  , backendData
-  , mkDispatch
-  ) where
+  ( backendConstructors,
+    forEachBackend,
+    getBackendValue,
+    getBackendTypeValue,
+    getBackendTagName,
+    getBackendValueName,
+    backendList,
+    backendCase,
+    backendData,
+    mkDispatch,
+  )
+where
 
-import           Hasura.Prelude
+import Hasura.Prelude
+import Hasura.SQL.Backend
+import Language.Haskell.TH
 
-import           Language.Haskell.TH
-
-import           Hasura.SQL.Backend
-
-
-type BackendConstructor = [Name]
+type BackendConstructor = NonEmpty Name
 
 -- | Inspects the 'BackendType' to produce a list of its constructors in the 'Q' monad. Each
 -- constructor is represented as a list of names, to include the arguments, if any.
@@ -47,7 +44,7 @@ backendConstructors = do
       ConT argName <- pure arg
       TyConI (DataD _ _ _ _ argCons _) <- reify argName
       pure [argCon | NormalC argCon _ <- argCons]
-    pure $ map (name :) $ sequenceA argsConstructors
+    pure $ map (name :|) $ sequenceA argsConstructors
 
 -- | Associates a value in the 'Q' monad to each backend @Name@.
 forEachBackend :: (BackendConstructor -> Q a) -> Q [a]
@@ -78,36 +75,45 @@ backendList f = ListE <$> forEachBackend f
 -- | Creates a case expression with a match for each backend. It is not possible
 -- do directly expand a @Q [Match]@, which is a body of a case, hence the need
 -- to instead generate the full @Q Exp@.
-backendCase
-  :: Q Exp                         -- ^ the expresion on which we do a case switch
-  -> (BackendConstructor -> Q Pat) -- ^ the match pattern for a given backend
-  -> (BackendConstructor -> Q Exp) -- ^ the match body for a given backend
-  -> Maybe (Q Exp)                 -- ^ the default case, if any
-  -> Q Exp
+backendCase ::
+  -- | the expresion on which we do a case switch
+  Q Exp ->
+  -- | the match pattern for a given backend
+  (BackendConstructor -> Q Pat) ->
+  -- | the match body for a given backend
+  (BackendConstructor -> Q Exp) ->
+  -- | the default case, if any
+  Maybe (Q Exp) ->
+  Q Exp
 backendCase caseExp toPat toBody defaultCase = do
-  cexp    <- caseExp
+  cexp <- caseExp
   matches <- forEachBackend \b -> do
-    pat  <- toPat  b
+    pat <- toPat b
     body <- toBody b
     pure $ Match pat (NormalB body) []
   allMatches <- case defaultCase of
     Nothing -> pure matches
-    Just e  -> do
+    Just e -> do
       defaultBody <- NormalB <$> e
       pure $ matches ++ [Match WildP defaultBody []]
   pure $ CaseE cexp allMatches
 
--- | Creates a data type in which there's one constructor per backend.  While
+-- | Creates a data type in which there's one constructor per backend. While
 -- this only returns one declaration, it nonetheless returns a @[Dec]@ as it's
 -- what the $() splice interpolation syntax expects.
-backendData
-  :: Name                          -- ^ the name of the type
-  -> [TyVarBndr]                   -- ^ type variables of the type if any
-  -> (BackendConstructor -> Q Con) -- ^ the constructor for a given backend
-  -> Q [Dec]
-backendData name tVars mkCon = do
+backendData ::
+  -- | the name of the type
+  Name ->
+  -- | type variables of the type if any
+  [TyVarBndr] ->
+  -- | the constructor for a given backend
+  (BackendConstructor -> Q Con) ->
+  -- | classes to derive using the stock strategy
+  [Name] ->
+  Q [Dec]
+backendData name tVars mkCon derivs = do
   constructors <- forEachBackend mkCon
-  pure [DataD [] name tVars Nothing constructors []]
+  pure [DataD [] name tVars Nothing constructors [DerivClause (Just StockStrategy) $ map ConT derivs]]
 
 -- | Generates a case expression that applies a function @f@ to each possible value
 -- of an 'AnyBackend' @e@:
@@ -118,17 +124,20 @@ backendData name tVars mkCon = do
 --
 -- This function needs to be in a separate file from 'AnyBackend', so that it
 -- can be used in splices of another module.
-mkDispatch
-  :: Name  -- ^ the name of the function to dispatch
-  -> Name  -- ^ the name of the 'AnyBackend' value
-  -> Q Exp
+mkDispatch ::
+  -- | the name of the function to dispatch
+  Name ->
+  -- | the name of the 'AnyBackend' value
+  Name ->
+  Q Exp
 mkDispatch func value = do
   let fE = pure $ VarE func
       vE = pure $ VarE value
-  backendCase [| $vE |]
+  backendCase
+    [|$vE|]
     -- the pattern for a backend
     (\b -> pure $ ConP (getBackendValueName b) [VarP $ mkName "x"])
     -- the body for a backend
-    (const [| $fE x |])
+    (const [|$fE x|])
     -- no default case
     Nothing

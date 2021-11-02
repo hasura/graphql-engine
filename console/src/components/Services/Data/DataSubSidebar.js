@@ -72,6 +72,7 @@ const DataSubSidebar = props => {
     pathname,
     dataSources,
     sidebarLoadingState,
+    currentTable,
   } = props;
   const { setDriver } = useDataSource();
 
@@ -107,7 +108,9 @@ const DataSubSidebar = props => {
     setSchemaLoading(true);
     dispatch(updateCurrentSchema(value, currentDataSource))
       .then(() => {
-        dispatch(_push(`/data/${currentDataSource}/schema/${value}`));
+        if (value === currentSchema) {
+          dispatch(_push(`/data/${currentDataSource}/schema/${value}`));
+        }
       })
       .finally(() => {
         setSchemaLoading(false);
@@ -233,12 +236,7 @@ const DataSubSidebar = props => {
         setTreeViewItems(newItems);
       }
     );
-  }, [sources.length, tables, functions, enums, schemaList]);
-
-  const loadStyle = {
-    pointerEvents: 'none',
-    cursor: 'progress',
-  };
+  }, [sources.length, tables, functions, enums, schemaList, currentTable]);
 
   const databasesCount = treeViewItems?.length || 0;
 
@@ -286,12 +284,16 @@ const DataSubSidebar = props => {
       <ul className={styles.subSidebarListUL} data-test="table-links">
         <div
           style={
-            schemaLoading ||
-            databaseLoading ||
-            sidebarLoadingState ||
-            isFetching
-              ? loadStyle
-              : { pointerEvents: 'auto' }
+            // // block sidebar interaction during data fetch
+            // schemaLoading ||
+            // databaseLoading ||
+            // sidebarLoadingState ||
+            // isFetching ?
+            //   {
+            //     pointerEvents: 'none',
+            //     cursor: 'progress',
+            //   } :
+            { pointerEvents: 'auto' }
           }
         >
           <TreeView
@@ -325,6 +327,7 @@ const mapStateToProps = state => {
       .flat().length,
     currentDataSource: state.tables.currentDataSource,
     currentSchema: state.tables.currentSchema,
+    currentTable: state.tables.currentTable,
     schemaList: state.tables.schemaList,
     allSourcesSchemas: state.tables?.allSourcesSchemas,
     pathname: state?.routing?.locationBeforeTransitions?.pathname,

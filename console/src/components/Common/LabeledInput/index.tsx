@@ -6,6 +6,7 @@ interface LabeledInputProps extends InputHTMLAttributes<HTMLInputElement> {
   label: string;
   boldlabel?: boolean;
   tooltipText?: string;
+  type?: string;
 }
 
 export const LabeledInput: React.FC<LabeledInputProps> = props => (
@@ -15,7 +16,7 @@ export const LabeledInput: React.FC<LabeledInputProps> = props => (
       {props.tooltipText && <Tooltip message={props.tooltipText} />}
     </label>
     <input
-      type="text"
+      type={props?.type ?? 'text'}
       className={`form-control ${styles.connect_db_input_pad}`}
       {...props}
     />

@@ -1,0 +1,6 @@
+- role: manager
+  definition:
+    schema: "!include schemas/manager.graphql"
+- role: user
+  definition:
+    schema: "!include schemas/user.graphql"

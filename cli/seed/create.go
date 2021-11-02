@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/hasura/graphql-engine/cli/internal/hasura"
+	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
 
 	"github.com/spf13/afero"
 )
@@ -47,7 +47,10 @@ func CreateSeedFile(fs afero.Fs, opts CreateSeedOpts) (*string, error) {
 	defer file.Close()
 
 	r := bufio.NewReader(opts.Data)
-	io.Copy(file, r)
+	_, err = io.Copy(file, r)
+	if err != nil {
+		return nil, err
+	}
 
 	return &fullFilePath, nil
 }

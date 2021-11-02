@@ -4,8 +4,8 @@
 
 .. _metadata_api_event_triggers:
 
-Metadata API Reference: Event Triggers (v2.0 and above)
-=======================================================
+Metadata API Reference: Event Triggers
+======================================
 
 .. contents:: Table of contents
   :backlinks: none
@@ -129,7 +129,11 @@ Args syntax
    * - enable_manual
      - false
      - Boolean
-     - If set to true, the event trigger can be invoked manually 
+     - If set to true, the event trigger can be invoked manually
+   * - transform
+     - false
+     - :ref:`RequestTransformation`
+     - Attaches a Request Transformation to the Event Trigger.
 
 (*) Either ``webhook`` or ``webhook_from_env`` are required.
 

@@ -6,12 +6,12 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/hasura/graphql-engine/cli/internal/hasura"
+	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
 
-	"github.com/hasura/graphql-engine/cli"
-	"github.com/hasura/graphql-engine/cli/commands"
-	"github.com/hasura/graphql-engine/cli/migrate"
-	"github.com/hasura/graphql-engine/cli/util"
+	"github.com/hasura/graphql-engine/cli/v2"
+	"github.com/hasura/graphql-engine/cli/v2/commands"
+	"github.com/hasura/graphql-engine/cli/v2/migrate"
+	"github.com/hasura/graphql-engine/cli/v2/util"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -27,7 +27,8 @@ func TestMigrateCmd(t *testing.T, ec *cli.ExecutionContext) {
 	if err != nil {
 		t.Fatalf("unable to copy migrations directory %v", err)
 	}
-
+	ec.Source.Name = "default"
+	ec.Source.Kind = hasura.SourceKindPG
 	tt := []struct {
 		name   string
 		opts   migrateInterface

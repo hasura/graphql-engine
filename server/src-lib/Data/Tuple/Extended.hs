@@ -1,14 +1,13 @@
 module Data.Tuple.Extended
-  ( module Data.Tuple
-  , curry3
-  , curry4
-  , uncurry3
-  , uncurry4
-  ) where
+  ( module Data.Tuple,
+    curry3,
+    curry4,
+    uncurry3,
+    uncurry4,
+  )
+where
 
-import           Prelude
-
-import           Data.Tuple
+import Data.Tuple
 
 curry3 :: ((a, b, c) -> d) -> a -> b -> c -> d
 curry3 f a b c = f (a, b, c)

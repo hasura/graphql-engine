@@ -2,23 +2,20 @@
 
 module Hasura.IncrementalSpec (spec) where
 
-import           Hasura.Prelude
-
-import qualified Data.HashMap.Strict    as M
-import qualified Data.HashSet           as S
-
-import           Control.Arrow.Extended
-import           Control.Monad.Unique
-import           Test.Hspec
-
-import qualified Hasura.Incremental     as Inc
+import Control.Arrow.Extended
+import Control.Monad.Unique
+import Data.HashMap.Strict qualified as M
+import Data.HashSet qualified as S
+import Hasura.Incremental qualified as Inc
+import Hasura.Prelude
+import Test.Hspec
 
 spec :: Spec
 spec = do
   describe "cache" $ do
     it "skips re-running rules if the input didn’t change" $ do
       let add1 :: (MonadState Integer m) => m ()
-          add1 = modify' (+1)
+          add1 = modify' (+ 1)
 
           rule = proc (a, b) -> do
             Inc.cache $ arrM (\_ -> add1) -< a
@@ -32,14 +29,23 @@ spec = do
       state3 `shouldBe` 2
 
     it "tracks dependencies within nested uses of cache across multiple executions" do
-      let rule :: (MonadWriter String m, MonadUnique m)
-               => Inc.Rule m (Inc.InvalidationKey, Inc.InvalidationKey) ()
+      let rule ::
+            (MonadWriter String m, MonadUnique m) =>
+            Inc.Rule m (Inc.InvalidationKey, Inc.InvalidationKey) ()
           rule = proc (key1, key2) -> do
             dep1 <- Inc.newDependency -< key2
-            (key1, dep1) >- Inc.cache (proc (_, dep2) ->
-              dep2 >- Inc.cache (proc dep3 -> do
-                Inc.dependOn -< dep3
-                arrM tell -< "executed"))
+            (key1, dep1)
+              >-
+                Inc.cache
+                  ( proc (_, dep2) ->
+                      dep2
+                        >-
+                          Inc.cache
+                            ( proc dep3 -> do
+                                Inc.dependOn -< dep3
+                                arrM tell -< "executed"
+                            )
+                  )
             returnA -< ()
 
       let key1 = Inc.initialInvalidationKey
@@ -56,12 +62,16 @@ spec = do
 
   describe "keyed" $ do
     it "preserves incrementalization when entries don’t change" $ do
-      let rule :: (MonadWriter (S.HashSet (String, Integer)) m, MonadUnique m)
-               => Inc.Rule m (M.HashMap String Integer) (M.HashMap String Integer)
+      let rule ::
+            (MonadWriter (S.HashSet (String, Integer)) m, MonadUnique m) =>
+            Inc.Rule m (M.HashMap String Integer) (M.HashMap String Integer)
           rule = proc m ->
-            (| Inc.keyed (\k v -> do
-                 Inc.cache $ arrM (tell . S.singleton) -< (k, v)
-                 returnA -< v * 2)
+            (|
+              Inc.keyed
+                ( \k v -> do
+                    Inc.cache $ arrM (tell . S.singleton) -< (k, v)
+                    returnA -< v * 2
+                )
             |) m
 
       (result1, log1) <- runWriterT . Inc.build rule $ M.fromList [("a", 1), ("b", 2)]

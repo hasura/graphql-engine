@@ -87,6 +87,7 @@ The Hasura GraphQL engine makes your data instantly accessible over a real-time 
       - :ref:`api_reference`
       - :ref:`How It Works <how_it_works>`
       - :ref:`Troubleshooting <troubleshooting>`
+      - :ref:`FAQs <faq>`
       - :ref:`security_protocol`
 
   .. container:: toc-list-section

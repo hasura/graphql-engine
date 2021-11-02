@@ -22,6 +22,8 @@ const addState: AddState = {
   timeoutConf: '',
   name: '',
   forwardClientHeaders: false,
+  comment: '',
+  customization: undefined,
   ...asyncState,
   editState: {
     id: -1,
@@ -32,6 +34,8 @@ const addState: AddState = {
     originalEnvUrl: '',
     originalTimeoutConf: '',
     originalForwardClientHeaders: false,
+    originalComment: '',
+    originalCustomization: undefined,
   },
 };
 

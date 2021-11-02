@@ -9,7 +9,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/gin-gonic/contrib/renders/multitemplate"
-	"github.com/hasura/graphql-engine/cli/version"
+	"github.com/hasura/graphql-engine/cli/v2/version"
 )
 
 const (

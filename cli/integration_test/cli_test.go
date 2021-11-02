@@ -10,13 +10,13 @@ import (
 	"time"
 
 	"github.com/briandowns/spinner"
-	"github.com/hasura/graphql-engine/cli"
-	integrationtest "github.com/hasura/graphql-engine/cli/integration_test"
-	"github.com/hasura/graphql-engine/cli/internal/testutil"
+	"github.com/hasura/graphql-engine/cli/v2"
+	integrationtest "github.com/hasura/graphql-engine/cli/v2/integration_test"
+	"github.com/hasura/graphql-engine/cli/v2/internal/testutil"
 	"github.com/spf13/viper"
 
-	v2 "github.com/hasura/graphql-engine/cli/integration_test/v2"
-	v3 "github.com/hasura/graphql-engine/cli/integration_test/v3"
+	v2 "github.com/hasura/graphql-engine/cli/v2/integration_test/v2"
+	v3 "github.com/hasura/graphql-engine/cli/v2/integration_test/v3"
 	"github.com/sirupsen/logrus/hooks/test"
 )
 
@@ -34,6 +34,8 @@ func TestCommands(t *testing.T) {
 		ec.Spinner = spinner.New(spinner.CharSets[7], 100*time.Millisecond)
 		ec.Spinner.Writer = ioutil.Discard
 		ec.Viper = viper.New()
+		ec.Stdout = os.Stdout
+		ec.Stderr = os.Stderr
 
 		initDir := filepath.Join(os.TempDir(), "hasura-cli-test-"+strconv.Itoa(rand.Intn(1000)))
 		defer os.RemoveAll(initDir)
@@ -91,6 +93,8 @@ func TestCommands(t *testing.T) {
 		ec.Spinner = spinner.New(spinner.CharSets[7], 100*time.Millisecond)
 		ec.Spinner.Writer = ioutil.Discard
 		ec.Viper = viper.New()
+		ec.Stdout = os.Stdout
+		ec.Stderr = os.Stderr
 
 		initDir := filepath.Join(os.TempDir(), "hasura-cli-test-"+strconv.Itoa(rand.Intn(1000)))
 		defer os.RemoveAll(initDir)
@@ -138,6 +142,11 @@ func TestCommands(t *testing.T) {
 		skip(t)
 		t.Run("seed apply commands", func(t *testing.T) {
 			v3.TestSeedsApplyCmd(t, ec)
+		})
+
+		skip(t)
+		t.Run("deploy commands", func(t *testing.T) {
+			v3.TestDeployCmd(t, ec)
 		})
 	})
 }

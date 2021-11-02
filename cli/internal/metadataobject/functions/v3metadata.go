@@ -3,7 +3,9 @@ package functions
 import (
 	"path/filepath"
 
-	"github.com/hasura/graphql-engine/cli"
+	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject"
+
+	"github.com/hasura/graphql-engine/cli/v2"
 
 	"gopkg.in/yaml.v2"
 )
@@ -20,10 +22,10 @@ func NewV3MetadataFunctionConfig(ec *cli.ExecutionContext, baseDir string) *V3Me
 		},
 	}
 }
-func (t *V3MetadataFunctionConfig) Export(md yaml.MapSlice) (map[string][]byte, error) {
+func (t *V3MetadataFunctionConfig) Export(md yaml.MapSlice) (map[string][]byte, metadataobject.ErrParsingMetadataObject) {
 	metadataBytes, err := yaml.Marshal(md)
 	if err != nil {
-		return nil, err
+		return nil, t.error(err)
 	}
 	var metadata struct {
 		Sources []struct {
@@ -33,7 +35,7 @@ func (t *V3MetadataFunctionConfig) Export(md yaml.MapSlice) (map[string][]byte, 
 	}
 	var functions interface{}
 	if err := yaml.Unmarshal(metadataBytes, &metadata); err != nil {
-		return nil, err
+		return nil, t.error(err)
 	}
 	if len(metadata.Sources) > 0 {
 		// use tables of first source
@@ -44,9 +46,9 @@ func (t *V3MetadataFunctionConfig) Export(md yaml.MapSlice) (map[string][]byte, 
 	}
 	data, err := yaml.Marshal(functions)
 	if err != nil {
-		return nil, err
+		return nil, t.error(err)
 	}
 	return map[string][]byte{
-		filepath.ToSlash(filepath.Join(t.MetadataDir, MetadataFilename)): data,
+		filepath.ToSlash(filepath.Join(t.MetadataDir, t.Filename())): data,
 	}, nil
 }

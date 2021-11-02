@@ -1,0 +1,29 @@
+description: Insert float value as a variable
+url: /v1/graphql
+status: 200
+query:
+  variables:
+    float_value: 2.23E-308
+  query: |
+    mutation($float_value: Float) {
+      insert_test_types(
+        objects: [
+          { c_pkey: 1
+          , c50_float: $float_value
+          }
+        ]
+      ){
+        affected_rows
+        returning{
+          c_pkey
+          c50_float
+        }
+      }
+    }
+response:
+  data:
+    insert_test_types:
+      affected_rows: 1
+      returning:
+      - c_pkey: 1
+        c50_float: 2.23e-308

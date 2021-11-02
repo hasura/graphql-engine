@@ -1,0 +1,349 @@
+# # Overview
+# In this file, we are testing that:
+#
+# * We can supply custom names to `pg_track_function` and have them applied in the schema
+# * Name aliases are applied correctly for all the possible specified cases, see https://github.com/hasura/graphql-engine-mono/pull/2419
+# * We can omit custom names from `pg_track_function`
+# * We can set and unset custom names with `set_function_customization`
+# * We test that we don't introduce name clashes
+
+
+- description: Define the SQL function the tests will be using
+  url: /v2/query
+  status: 200
+  query:
+    type: run_sql
+    args:
+      sql: |
+        create function unaliased_function(t test)
+        returns setof post as $$
+            select *
+            from post
+            where
+            title ilike ('%' || t.name || '%')
+            $$ language sql stable;
+
+
+# Test: We can supply (all) aliases via `pg_track_function`, and the names are applied.
+
+- description: Test that we supply all custom names to `pg_track_function`.
+  url: /v1/metadata
+  status: 200
+  response:
+    message: success
+  query:
+    type: pg_track_function
+    args:
+      function: unaliased_function
+      configuration:
+        custom_root_fields:
+         function: nameBase
+         function_aggregate: nameAggregate
+
+- description: Execute the function without the alias, which should fail
+  url: /v1/graphql
+  status: 200
+  query:
+    query: |
+      query {
+        unaliased_function (args: {t: "(1, hasura,311cf381-71e7-449b-bac5-86cd6deafd5b)"}) {
+          title
+          content
+        }
+      }
+  response:
+    "errors": [
+      {
+        "message": "field \"unaliased_function\" not found in type: 'query_root'",
+        "extensions": {
+          "code": "validation-failed",
+          "path": "$.selectionSet.unaliased_function"
+        }
+      }
+    ]
+
+- description: Execute the function by its alias, which should succeed
+  url: /v1/graphql
+  status: 200
+  query:
+    query: |
+      query {
+        nameBase (args: {t: "(1, hasura,311cf381-71e7-449b-bac5-86cd6deafd5b)"}) {
+          title
+          content
+        }
+      }
+  response:
+    data:
+      nameBase:
+        - title: post by hasura
+          content: content for post
+
+- description: Execute the function with aggregation by its aggregation-alias, which should succeed
+  url: /v1/graphql
+  status: 200
+  query:
+    query: |
+      query {
+        nameAggregate (args: {t: "(1, hasura,311cf381-71e7-449b-bac5-86cd6deafd5b)"}) {
+          aggregate {
+            count
+          }
+        }
+      }
+  response:
+    data:
+      nameAggregate:
+        aggregate:
+          count: 1
+
+- description: Teardown the test of fully given aliases
+  url: /v1/metadata
+  status: 200
+  response:
+    message: success
+  query:
+    type: pg_untrack_function
+    args:
+      name: unaliased_function
+
+
+# Test: We can supply just the base alias via `pg_track_function`, and the names are applied.
+
+- description: Test that we supply all custom names to `pg_track_function`.
+  url: /v1/metadata
+  status: 200
+  response:
+    message: success
+  query:
+    type: pg_track_function
+    args:
+      function: unaliased_function
+      configuration:
+        custom_name: aliased
+
+- description: Execute the function without the alias, which should fail
+  url: /v1/graphql
+  status: 200
+  query:
+    query: |
+      query {
+        unaliased_function (args: {t: "(1, hasura,311cf381-71e7-449b-bac5-86cd6deafd5b)"}) {
+          title
+          content
+        }
+      }
+  response:
+    "errors": [
+      {
+        "message": "field \"unaliased_function\" not found in type: 'query_root'",
+        "extensions": {
+          "code": "validation-failed",
+          "path": "$.selectionSet.unaliased_function"
+        }
+      }
+    ]
+
+- description: Execute the function by its alias, which should succeed
+  url: /v1/graphql
+  status: 200
+  query:
+    query: |
+      query {
+        aliased (args: {t: "(1, hasura,311cf381-71e7-449b-bac5-86cd6deafd5b)"}) {
+          title
+          content
+        }
+      }
+  response:
+    data:
+      aliased:
+        - title: post by hasura
+          content: content for post
+
+- description: Execute the function with aggregation by its aggregation-alias, which should succeed
+  url: /v1/graphql
+  status: 200
+  query:
+    query: |
+      query {
+        aliased_aggregate (args: {t: "(1, hasura,311cf381-71e7-449b-bac5-86cd6deafd5b)"}) {
+          aggregate {
+            count
+          }
+        }
+      }
+  response:
+    data:
+      aliased_aggregate:
+        aggregate:
+          count: 1
+
+
+# Test: Using set_function_customization
+
+- description: Test that we fail on non-existing functions
+  url: /v1/metadata
+  status: 400
+  response:
+    code: not-exists
+    error: 'function "non_existing_function" does not exist in source: default'
+    path: $.args
+  query:
+    type: pg_set_function_customization
+    args:
+      function: non_existing_function
+      configuration: { }
+
+- description: Test that we fail on duplicate custom root fields
+  url: /v1/metadata
+  status: 400
+  response:
+    code: parse-failed
+    error: "Error when parsing command set_function_customization.\n\
+      See our documentation at https://hasura.io/docs/latest/graphql/core/api-reference/metadata-api/index.html#metadata-apis.\n\
+      Internal error message: the following custom root field names are duplicated: \"duplicate_name\" and \"duplicate_name\""
+    path: $.args.configuration.custom_root_fields
+  query:
+    type: pg_set_function_customization
+    args:
+      function: unaliased_function
+      configuration:
+        custom_root_fields:
+          function: duplicate_name
+          function_aggregate: duplicate_name
+
+- description: Test that we can clear the customized names
+  url: /v1/metadata
+  status: 200
+  response:
+    message: success
+  query:
+    type: pg_set_function_customization
+    args:
+      function: unaliased_function
+      configuration: { }
+
+- descripion: Execute the function without the alias, which should now work
+  url: /v1/graphql
+  status: 200
+  query:
+    query: |
+      query {
+        unaliased_function (args: {t: "(1, hasura,311cf381-71e7-449b-bac5-86cd6deafd5b)"}) {
+          title
+          content
+        }
+      }
+  response:
+    data:
+      unaliased_function:
+        - title: post by hasura
+          content: content for post
+
+- description: Test that we can set customized names using `set_function_customization`
+  url: /v1/metadata
+  status: 200
+  response:
+    message: success
+  query:
+    type: pg_set_function_customization
+    args:
+      function: unaliased_function
+      configuration:
+        custom_root_fields:
+         function: nameBaseOther
+
+- description: Execute the function by its alias
+  url: /v1/graphql
+  status: 200
+  query:
+    query: |
+      query {
+        nameBaseOther (args: {t: "(1, hasura,311cf381-71e7-449b-bac5-86cd6deafd5b)"}) {
+          title
+          content
+        }
+      }
+  response:
+    data:
+      nameBaseOther:
+        - title: post by hasura
+          content: content for post
+
+- description: Execute the function with aggregation (unaliased), which should succeed.
+  url: /v1/graphql
+  status: 200
+  query:
+    query: |
+      query {
+        unaliased_function_aggregate (args: {t: "(1, hasura,311cf381-71e7-449b-bac5-86cd6deafd5b)"}) {
+          aggregate {
+            count
+          }
+        }
+      }
+  response:
+    data:
+      unaliased_function_aggregate:
+        aggregate:
+          count: 1
+
+# Test: We reject name clashes: A function is aliased to an existing (unaliased) function.
+# Note: We are not going to go to great lengths to ensure all the different
+# conceivable ways collisions could be introduced are avoided, because there is
+# a general mechanism in the code that builds the schema cache which ensures no
+# collisions appear in the final, generated schema.
+# (issue https://github.com/hasura/graphql-engine-mono/issues/1868 has a bit
+# more info on this subject)
+
+- description: "Setup: Define a separate function to cause clashes"
+  url: /v2/query
+  status: 200
+  query:
+    type: run_sql
+    args:
+      sql: |
+        create function unaliased_function2(t test)
+        returns setof post as $$
+            select *
+            from post
+            where
+            title ilike ('%' || t.name || '%')
+            $$ language sql stable;
+
+- description: "Setup: Track the new function"
+  url: /v1/metadata
+  status: 200
+  response:
+    message: success
+  query:
+    type: pg_track_function
+    args:
+      function: unaliased_function2
+
+- description: "Setup: clear up aliases of unaliased_function"
+  url: /v1/metadata
+  status: 200
+  response:
+    message: success
+  query:
+    type: pg_set_function_customization
+    args:
+      function: unaliased_function
+      configuration: {}
+
+- description: Test that we cannot alias `unaliased_function2` to `unaliased_function`
+  url: /v1/metadata
+  status: 500
+  response:
+    code: unexpected
+    error: 'found duplicate fields in selection set: unaliased_function_aggregate, unaliased_function'
+    path: $.args
+
+  query:
+    type: pg_set_function_customization
+    args:
+      function: unaliased_function2
+      configuration:
+        custom_name: unaliased_function

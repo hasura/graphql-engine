@@ -4,14 +4,12 @@ import (
 	"io/ioutil"
 	"path/filepath"
 
+	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject"
+
 	"github.com/sirupsen/logrus"
 
-	"github.com/hasura/graphql-engine/cli"
+	"github.com/hasura/graphql-engine/cli/v2"
 	"gopkg.in/yaml.v2"
-)
-
-const (
-	MetadataFilename string = "inherited_roles.yaml"
 )
 
 type InheritedRolesConfig struct {
@@ -27,20 +25,20 @@ func New(ec *cli.ExecutionContext, baseDir string) *InheritedRolesConfig {
 	}
 }
 
-func (t *InheritedRolesConfig) Validate() error {
+func (ir *InheritedRolesConfig) Validate() error {
 	return nil
 }
 
-func (t *InheritedRolesConfig) CreateFiles() error {
+func (ir *InheritedRolesConfig) CreateFiles() error {
 	// skip creating files by default, since this is an experimental feature
 	// which has to be enabled on the server using a flag.
 	return nil
 }
 
-func (t *InheritedRolesConfig) Build(metadata *yaml.MapSlice) error {
-	data, err := ioutil.ReadFile(filepath.Join(t.MetadataDir, MetadataFilename))
+func (ir *InheritedRolesConfig) Build(metadata *yaml.MapSlice) metadataobject.ErrParsingMetadataObject {
+	data, err := ioutil.ReadFile(filepath.Join(ir.MetadataDir, ir.Filename()))
 	if err != nil {
-		return err
+		return ir.error(err)
 	}
 	item := yaml.MapItem{
 		Key:   "inherited_roles",
@@ -48,13 +46,13 @@ func (t *InheritedRolesConfig) Build(metadata *yaml.MapSlice) error {
 	}
 	err = yaml.Unmarshal(data, &item.Value)
 	if err != nil {
-		return err
+		return ir.error(err)
 	}
 	*metadata = append(*metadata, item)
 	return nil
 }
 
-func (t *InheritedRolesConfig) Export(metadata yaml.MapSlice) (map[string][]byte, error) {
+func (ir *InheritedRolesConfig) Export(metadata yaml.MapSlice) (map[string][]byte, metadataobject.ErrParsingMetadataObject) {
 	var inheritedRoles interface{}
 	for _, item := range metadata {
 		k, ok := item.Key.(string)
@@ -64,20 +62,28 @@ func (t *InheritedRolesConfig) Export(metadata yaml.MapSlice) (map[string][]byte
 		inheritedRoles = item.Value
 	}
 	if inheritedRoles == nil {
-		t.logger.WithFields(logrus.Fields{
+		ir.logger.WithFields(logrus.Fields{
 			"reason": "not found in metadata",
-		}).Debugf("skipped building %s", t.Name())
+		}).Debugf("skipped building %s", ir.Key())
 		return nil, nil
 	}
 	data, err := yaml.Marshal(inheritedRoles)
 	if err != nil {
-		return nil, err
+		return nil, ir.error(err)
 	}
 	return map[string][]byte{
-		filepath.ToSlash(filepath.Join(t.MetadataDir, MetadataFilename)): data,
+		filepath.ToSlash(filepath.Join(ir.MetadataDir, ir.Filename())): data,
 	}, nil
 }
 
-func (t *InheritedRolesConfig) Name() string {
+func (ir *InheritedRolesConfig) Key() string {
 	return "inherited_roles"
+}
+
+func (ir *InheritedRolesConfig) Filename() string {
+	return "inherited_roles.yaml"
+}
+
+func (ir *InheritedRolesConfig) error(err error, additionalContext ...string) metadataobject.ErrParsingMetadataObject {
+	return metadataobject.NewErrParsingMetadataObject(ir, err, additionalContext...)
 }

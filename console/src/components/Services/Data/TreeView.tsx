@@ -142,7 +142,6 @@ const SchemaItemsView: React.FC<SchemaItemsViewProps> = ({
   const [isOpen, setIsOpen] = useState(false);
   const showActiveStyle =
     pathname === `/data/${currentSource}/schema/${item.name}`;
-
   useEffect(() => {
     setIsOpen(isActive);
   }, [isActive]);
@@ -151,10 +150,10 @@ const SchemaItemsView: React.FC<SchemaItemsViewProps> = ({
     <>
       <div
         onClick={() => {
-          setActiveSchema(item.name);
+          setActiveSchema(encodeURIComponent(item.name));
         }}
         onKeyDown={() => {
-          setActiveSchema(item.name);
+          setActiveSchema(encodeURIComponent(item.name));
         }}
         role="button"
         className={styles.padd_bottom_small}
@@ -219,7 +218,12 @@ const DatabaseItemsView: React.FC<DatabaseItemsViewProps> = ({
   databaseLoading,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const showActiveStyle = pathname === `/data/${item.name}/`;
+  const showActiveStyle = [
+    `/data/${item.name}/`,
+    `/data/${item.name}`,
+    `/data/${item.name}/display`,
+    `/data/${item.name}/gallery`,
+  ].includes(pathname);
 
   useEffect(() => {
     setIsOpen(isActive);

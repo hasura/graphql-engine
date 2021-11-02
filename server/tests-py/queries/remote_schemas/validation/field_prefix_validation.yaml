@@ -1,0 +1,79 @@
+- description: query with prefix field name in inline fragment
+  url: /v1/graphql
+  status: 200
+  query:
+    query: |
+      {
+        hero(episode: 4) {
+          foo_id
+          foo_name
+          ... on Droid {
+            foo_id
+            foo_name
+            foo_primaryFunction
+          }
+        }
+      }
+  response:
+    data:
+      hero:
+        foo_id: '1'
+        foo_name: R2-D2
+        foo_primaryFunction: Astromech
+
+- description: query with prefix field name and non-existing (renamed) field
+  url: /v1/graphql
+  status: 200
+  query:
+    query: |
+      {
+        hero(episode: 4) {
+          id
+        }
+      }
+  response:
+    errors:
+      - extensions:
+          path: $.selectionSet.hero.selectionSet.id
+          code: validation-failed
+        message: "field \"id\" not found in type: 'Character'"
+
+- description: query aliases
+  url: /v1/graphql
+  status: 200
+  query:
+    query: |
+      {
+        hero(episode: 4) {
+          name: foo_id
+          id: foo_name
+          ... on Droid {
+            foo_name: foo_primaryFunction
+          }
+        }
+      }
+  response:
+    data:
+      hero:
+        name: '1'
+        id: R2-D2
+        foo_name: Astromech
+
+- description: query with __typename (__typename should _not_ be affected by field prefix/suffix customization)
+  url: /v1/graphql
+  status: 200
+  query:
+    query: |
+      {
+        hero(episode: 4) {
+          foo_id
+          foo_name
+          __typename
+        }
+      }
+  response:
+    data:
+      hero:
+        foo_id: "1"
+        foo_name: R2-D2
+        __typename: Droid

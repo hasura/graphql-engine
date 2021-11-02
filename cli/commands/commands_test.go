@@ -8,9 +8,11 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/hasura/graphql-engine/cli/util"
+	"github.com/hasura/graphql-engine/cli/v2/internal/testutil"
 
-	"github.com/hasura/graphql-engine/cli"
+	"github.com/hasura/graphql-engine/cli/v2/util"
+
+	"github.com/hasura/graphql-engine/cli/v2"
 	"gopkg.in/yaml.v2"
 
 	. "github.com/onsi/ginkgo"
@@ -19,6 +21,7 @@ import (
 
 const (
 	defaultConfigFilename = "config.yaml"
+	timeout               = testutil.DefaultE2ETestTimeout
 )
 
 func TestE2e(t *testing.T) {
@@ -36,6 +39,24 @@ func editEndpointInConfig(configFilePath, endpoint string) {
 	Expect(err).ShouldNot(HaveOccurred())
 
 	config.Endpoint = endpoint
+
+	b, err = yaml.Marshal(&config)
+	Expect(err).ShouldNot(HaveOccurred())
+
+	err = ioutil.WriteFile(configFilePath, b, 0655)
+	Expect(err).ShouldNot(HaveOccurred())
+
+}
+
+func editMetadataFileInConfig(configFilePath, path string) {
+	var config cli.Config
+	b, err := ioutil.ReadFile(configFilePath)
+	Expect(err).ShouldNot(HaveOccurred())
+
+	err = yaml.Unmarshal(b, &config)
+	Expect(err).ShouldNot(HaveOccurred())
+
+	config.MetadataFile = path
 
 	b, err = yaml.Marshal(&config)
 	Expect(err).ShouldNot(HaveOccurred())
@@ -70,4 +91,19 @@ func copyTestConfigV3Project(dest string) {
 	p, err := filepath.Abs("testdata/config-v3-test-project")
 	Expect(err).To(BeNil())
 	Expect(util.CopyDir(p, dest)).To(BeNil())
+}
+
+func copyMigrationsToProjectDirectory(projectDirectory, migrationsDirectory string, sources ...string) {
+	projectMigrationsDirectory := filepath.Join(projectDirectory, "migrations")
+	if len(sources) == 0 {
+		// should be a config v2 project
+		Expect(os.RemoveAll(projectMigrationsDirectory)).To(BeNil())
+		Expect(util.CopyDir(migrationsDirectory, filepath.Join(projectDirectory, "migrations"))).To(BeNil())
+	}
+	for _, source := range sources {
+		// remove existing migrations from project directory
+		Expect(os.RemoveAll(projectMigrationsDirectory)).To(BeNil())
+		// move new migrations
+		Expect(util.CopyDir(migrationsDirectory, filepath.Join(projectMigrationsDirectory, source))).To(BeNil())
+	}
 }

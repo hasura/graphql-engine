@@ -20,6 +20,7 @@ import {
   checkSchemaModification,
   getCreateCheckConstraintSql,
   getCreatePkSql,
+  getAlterPkSql,
   getCreateTriggerSql,
   getDropSql,
   getDropSchemaSql,
@@ -180,9 +181,9 @@ export const mysql: DataSourcesAPI = {
   getEstimateCountQuery: (schema: string, table: string) => {
     return `
 SELECT
-	TABLE_ROWS
+  TABLE_ROWS
 FROM
-	INFORMATION_SCHEMA.TABLES
+  INFORMATION_SCHEMA.TABLES
 WHERE
   information_schema.\`TABLES\`.\`TABLE_NAME\` = "${table}" AND
   information_schema.\`TABLES\`.\`TABLE_SCHEMA\` = ${schema};
@@ -232,10 +233,14 @@ WHERE
   checkSchemaModification,
   getCreateCheckConstraintSql,
   getCreatePkSql,
+  getAlterPkSql,
   frequentlyUsedColumns: [],
   primaryKeysInfoSql,
   uniqueKeysSql,
   checkConstraintsSql: undefined,
+  tableIndexSql: undefined,
+  createIndexSql: undefined,
+  dropIndexSql: undefined,
   getFKRelations,
   getReferenceOption: (option: string) => option,
   getEventInvocationInfoByIDSql: undefined,
@@ -243,6 +248,5 @@ WHERE
   permissionColumnDataTypes: null,
   viewsSupported: false,
   supportedColumnOperators: null,
-  aggregationPermissionsAllowed: false,
   violationActions,
 };

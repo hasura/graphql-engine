@@ -69,3 +69,70 @@ args:
         - id: X-HASURA-USER-ID
         - is_published:
             _eq: true
+
+
+# for table permissions over functions
+# See https://github.com/hasura/graphql-engine/issues/7617
+
+- type: run_sql
+  args:
+    sql: |
+      create table message (
+        id serial primary key,
+        content text not null,
+        channel_id integer not null,
+        user_id integer not null,
+        post_date timestamptz not null
+      );
+      create table channel_member (
+        channel_id integer not null,
+        user_id integer not null,
+        join_date timestamptz not null
+      );
+      create function get_messages()
+      returns setof message as $$
+          select *
+          from message
+      $$ language sql stable;
+      INSERT INTO message (id, content, channel_id, user_id, post_date)
+        VALUES
+        (1, 'content 1', 1, 1, '02-02-2001'),
+        (2, 'content 2', 1, 2, '04-04-2001'),
+        (3, 'content 3', 1, 2, '05-04-2001');
+      INSERT INTO channel_member (channel_id, user_id, join_date)
+        VALUES
+        (1, 1, '01-01-2001'),
+        (1, 2, '03-03-2001'),
+        (1, 3, '05-05-2001');
+
+- type: track_table
+  args:
+    table: message
+
+- type: track_table
+  args:
+    table: channel_member
+
+- type: track_function
+  args:
+    name: get_messages
+
+- type: create_array_relationship
+  args:
+    table: message
+    name: members
+    using:
+      manual_configuration:
+        column_mapping:
+          channel_id: channel_id
+        remote_table:
+          name: channel_member
+          schema: public
+
+- type: create_select_permission
+  args:
+    table: message
+    role: user
+    permission:
+      columns: "*"
+      filter: {"members":{"_and":[{"user_id":{"_eq":"X-Hasura-User-Id"}},{"join_date":{"_clt":["$","post_date"]}}]}}

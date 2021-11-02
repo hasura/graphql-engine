@@ -5,7 +5,7 @@ import CustomInputAutoSuggest from '../../../Common/CustomInputAutoSuggest/Custo
 import { getValidAlterOptions, convertToArrayOptions } from './utils';
 import Tooltip from '../../../Common/Tooltip/Tooltip';
 import { ColumnTypeSelector } from '../Common/Components/ColumnTypeSelector';
-import { dataSource } from '../../../../dataSources';
+import { dataSource, isFeatureSupported } from '../../../../dataSources';
 
 const ColumnEditor = ({
   onSubmit,
@@ -22,8 +22,6 @@ const ColumnEditor = ({
     return null;
   }
 
-  const styles = require('./ModifyTable.scss');
-
   const getColumnType = () => {
     return (
       colName in selectedProperties &&
@@ -36,21 +34,6 @@ const ColumnEditor = ({
   if (columnProperties.display_type_name === dataSource.columnDataTypes.ARRAY) {
     columnTypePG = columnTypePG.replace('_', '') + '[]';
   }
-
-  const customSelectBoxStyles = {
-    dropdownIndicator: {
-      padding: '5px',
-    },
-    placeholder: {
-      top: '44%',
-      fontSize: '12px',
-    },
-    singleValue: {
-      fontSize: '12px',
-      top: '44%',
-      color: '#555555',
-    },
-  };
 
   // eslint-disable-next-line prefer-const
   let { alterOptions, alterOptionsValueMap } = getValidAlterOptions(
@@ -88,18 +71,18 @@ const ColumnEditor = ({
 
   const getColumnCustomFieldInput = () => {
     return (
-      <div className={`${styles.display_flex} form-group`}>
-        <label className={'col-xs-4'}>
-          GraphQL field name
+      <div className="flex items-center">
+        <label className="flex items-center text-gray-600 font-semibold">
+          GraphQL Field Name
           <Tooltip
             message={
               'Expose the column with a different name in the GraphQL API'
             }
           />
         </label>
-        <div className="col-xs-6">
+        <div className="ml-auto w-6/12">
           <input
-            className="input-sm form-control"
+            className="form-control"
             value={selectedProperties[colName].customFieldName}
             onChange={updateColumnCustomField}
             placeholder={`${colName} (default)`}
@@ -112,29 +95,28 @@ const ColumnEditor = ({
   };
 
   const getColumnDefaultInput = () => {
-    const theme = require('../../../Common/CustomInputAutoSuggest/CustomThemes/EditColumnDefault.scss');
-
     return (
       <CustomInputAutoSuggest
         options={defaultOptions}
-        className="input-sm form-control"
+        className="form-control"
         value={selectedProperties[colName].default || ''}
         onChange={updateColumnDefault}
         type="text"
         data-test="edit-col-default"
-        theme={theme}
       />
     );
   };
 
   return (
-    <div className={`${styles.colEditor} container-fluid`}>
-      <form className="form-horizontal" onSubmit={onSubmit}>
-        <div className={`${styles.display_flex} form-group`}>
-          <label className={'col-xs-4'}>Name</label>
-          <div className="col-xs-6">
+    <div className="">
+      <form className="space-y-md" onSubmit={onSubmit}>
+        <div className="flex items-center">
+          <label className="flex items-center text-gray-600 font-semibold">
+            Name
+          </label>
+          <div className="ml-auto w-6/12">
             <input
-              className="input-sm form-control"
+              className="form-control w-full"
               value={selectedProperties[colName].name}
               onChange={updateColumnName}
               type="text"
@@ -142,24 +124,42 @@ const ColumnEditor = ({
             />
           </div>
         </div>
-        <div className={`${styles.display_flex} form-group`}>
-          <label className={'col-xs-4'}>Type</label>
-          <div className="col-xs-6">
-            <ColumnTypeSelector
-              options={alterOptions}
-              onChange={updateColumnType}
-              value={alterOptionsValueMap[columnTypePG] || columnTypePG}
-              colIdentifier={0}
-              bsClass={`col-type-${0} modify_select`}
-              styleOverrides={customSelectBoxStyles}
-            />
+        <div className="flex items-center">
+          <label className="flex items-center text-gray-600 font-semibold">
+            Type
+          </label>
+          <div className="ml-auto w-6/12">
+            {isFeatureSupported('tables.create.frequentlyUsedColumns') ? (
+              <ColumnTypeSelector
+                options={alterOptions}
+                onChange={updateColumnType}
+                value={alterOptionsValueMap[columnTypePG] || columnTypePG}
+                colIdentifier={0}
+                bsClass={`col-type-${0}`}
+              />
+            ) : (
+              <input
+                type="text"
+                className={`form-control col-type-${0}`}
+                value={
+                  alterOptionsValueMap?.[columnTypePG]?.value ?? columnTypePG
+                }
+                onChange={e => {
+                  e.persist();
+                  updateColumnType({ value: e.target.value });
+                }}
+                placeholder="column_type"
+              />
+            )}
           </div>
         </div>
-        <div className={`${styles.display_flex} form-group`}>
-          <label className={'col-xs-4'}>Nullable</label>
-          <div className="col-xs-6">
+        <div className="flex items-center">
+          <label className="flex items-center text-gray-600 font-semibold">
+            Nullable
+          </label>
+          <div className="ml-auto w-6/12">
             <select
-              className="input-sm form-control"
+              className="form-control"
               value={selectedProperties[colName].isNullable}
               onChange={toggleColumnNullable}
               disabled={columnProperties.pkConstraint}
@@ -170,11 +170,13 @@ const ColumnEditor = ({
             </select>
           </div>
         </div>
-        <div className={`${styles.display_flex} form-group`}>
-          <label className={'col-xs-4'}>Unique</label>
-          <div className="col-xs-6">
+        <div className="flex items-center">
+          <label className="flex items-center text-gray-600 font-semibold">
+            Unique
+          </label>
+          <div className="ml-auto w-6/12">
             <select
-              className="input-sm form-control"
+              className="form-control"
               value={
                 !!(
                   selectedProperties[colName].isUnique ||
@@ -190,15 +192,19 @@ const ColumnEditor = ({
             </select>
           </div>
         </div>
-        <div className={`${styles.display_flex} form-group`}>
-          <label className={'col-xs-4'}>Default</label>
-          <div className="col-xs-6">{getColumnDefaultInput()}</div>
+        <div className="flex items-center">
+          <label className="flex items-center text-gray-600 font-semibold">
+            Default
+          </label>
+          <div className="ml-auto w-6/12">{getColumnDefaultInput()}</div>
         </div>
-        <div className={`${styles.display_flex} form-group`}>
-          <label className={'col-xs-4'}>Comment</label>
-          <div className="col-xs-6">
+        <div className="flex items-center">
+          <label className="flex items-center text-gray-600 font-semibold">
+            Comment
+          </label>
+          <div className="ml-auto w-6/12">
             <input
-              className="input-sm form-control"
+              className="form-control"
               value={selectedProperties[colName].comment || ''}
               onChange={updateColumnComment}
               type="text"
@@ -206,11 +212,10 @@ const ColumnEditor = ({
             />
           </div>
         </div>
-        {getColumnCustomFieldInput()}
+        {isFeatureSupported('tables.modify.columns.graphqlFieldName')
+          ? getColumnCustomFieldInput()
+          : null}
       </form>
-      <div className="row">
-        <br />
-      </div>
     </div>
   );
 };

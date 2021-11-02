@@ -675,11 +675,16 @@ CREATE TABLE hdb_catalog.hdb_cron_triggers
   comment TEXT
 );
 
+-- The below statement is run separately and is run after the cron triggers
+-- are inserted in the hdb_catalog.hdb_cron_events table. See `from43To42`
+-- in Migrate.hs for more details.
+
+
 -- Add foreign key constraint from hdb_cron_events to hdb_cron_triggers
-ALTER TABLE hdb_catalog.hdb_cron_events ADD CONSTRAINT
-  hdb_cron_events_trigger_name_fkey FOREIGN KEY (trigger_name)
-  REFERENCES hdb_catalog.hdb_cron_triggers(name)
-  ON UPDATE CASCADE ON DELETE CASCADE;
+-- ALTER TABLE hdb_catalog.hdb_cron_events ADD CONSTRAINT
+--   hdb_cron_events_trigger_name_fkey FOREIGN KEY (trigger_name)
+--   REFERENCES hdb_catalog.hdb_cron_triggers(name)
+--   ON UPDATE CASCADE ON DELETE CASCADE;
 
 CREATE VIEW hdb_catalog.hdb_cron_events_stats AS
   SELECT ct.name,

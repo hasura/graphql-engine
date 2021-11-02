@@ -12,13 +12,14 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory/dockertest/v3/docker"
+
 	"github.com/gofrs/uuid"
-	"github.com/stretchr/testify/require"
 
 	"github.com/Pallinder/go-randomdata"
 
 	_ "github.com/denisenkom/go-mssqldb"
-	"github.com/hasura/graphql-engine/cli/internal/httpc"
+	"github.com/hasura/graphql-engine/cli/v2/internal/httpc"
 	_ "github.com/lib/pq"
 	"github.com/ory/dockertest/v3"
 )
@@ -34,6 +35,25 @@ func getDockerRepoAndTag(t TestingT, dockerImage string) (repo, version string) 
 	return "", ""
 }
 
+// helper function to configure docker auth properly
+func getDockerAuthConfig(t TestingT) docker.AuthConfiguration {
+	var opts docker.AuthConfiguration
+
+	if os.Getenv("BUILDKITE") == "true" {
+		// docker hub api has a rate limit in place - https://www.docker.com/increase-rate-limits
+		// in order to overcome the rate limit in CI environment, we will need to authenticate
+		// to dockerhub while making calls to docker registry. Hence we are configuring our tests
+		// to use the docker config.json present by default in the buildkite-agent here.
+		authCfg, err := docker.NewAuthConfigurationsFromDockerCfg()
+		if err != nil {
+			t.Fatalf("Could not setup docker config: %s", err)
+		}
+		opts = authCfg.Configs["https://index.docker.io/v1/"]
+	}
+
+	return opts
+}
+
 // TestingT is a workaround for using test helpers on Ginkgo tests
 // and normal go tests this interfaces is introduced
 // ginkgo specs do not have a handle of *testing.T and therefore
@@ -45,6 +65,25 @@ type TestingT interface {
 }
 
 func StartHasura(t TestingT, image string) (port string, teardown func()) {
+	connectionUrl, teardownPG := StartPGContainer(t)
+	port, teardownHasura := StartHasuraWithPG(t, image, connectionUrl)
+	return port, func() { teardownHasura(); teardownPG() }
+}
+
+func StartHasuraCLIMigrations(t TestingT, image string, pgConnectionUrl string, metadataDir, migrationsDir string) (port string, teardown func()) {
+	port, teardownHasura := StartHasuraWithPG(t, image, pgConnectionUrl, func(o *docker.HostConfig) {
+		o.Binds = []string{}
+		if len(metadataDir) > 0 {
+			o.Binds = append(o.Binds, fmt.Sprintf("%s:%s", metadataDir, "/hasura-metadata"))
+		}
+		if len(migrationsDir) > 0 {
+			o.Binds = append(o.Binds, fmt.Sprintf("%s:%s", migrationsDir, "/hasura-migrations"))
+		}
+	})
+	return port, func() { teardownHasura() }
+}
+
+func StartHasuraWithPG(t TestingT, image string, pgConnectionUrl string, dockerOpts ...func(*docker.HostConfig)) (port string, teardown func()) {
 	if len(image) == 0 {
 		t.Fatal("no hasura image provided, probably use testutil.HasuraDockerImage")
 	}
@@ -53,35 +92,8 @@ func StartHasura(t TestingT, image string) (port string, teardown func()) {
 	if err != nil {
 		t.Fatalf("Could not connect to docker: %s", err)
 	}
-	uniqueName := getUniqueName(t)
-	pgopts := &dockertest.RunOptions{
-		Name:       fmt.Sprintf("%s-%s", uniqueName, "pg"),
-		Repository: "postgres",
-		Tag:        "11",
-		Env: []string{
-			"POSTGRES_PASSWORD=postgrespassword",
-			"POSTGRES_DB=postgres",
-		},
-		ExposedPorts: []string{"5432/tcp"},
-	}
-	pg, err := pool.RunWithOptions(pgopts)
-	if err != nil {
-		t.Fatalf("Could not start resource: %s", err)
-	}
-	var db *sql.DB
-	if err = pool.Retry(func() error {
-		var err error
-		db, err = sql.Open("postgres", fmt.Sprintf("postgres://postgres:postgrespassword@%s:%s/%s?sslmode=disable", "0.0.0.0", pg.GetPort("5432/tcp"), "postgres"))
-		if err != nil {
-			return err
-		}
-		return db.Ping()
-	}); err != nil {
-		t.Fatal(err)
-	}
-
 	envs := []string{
-		fmt.Sprintf("HASURA_GRAPHQL_DATABASE_URL=postgres://postgres:postgrespassword@%s:%s/postgres", DockerSwitchIP, pg.GetPort("5432/tcp")),
+		fmt.Sprintf("HASURA_GRAPHQL_DATABASE_URL=%s", pgConnectionUrl),
 		`HASURA_GRAPHQL_ENABLE_CONSOLE=true`,
 		"HASURA_GRAPHQL_DEV_MODE=true",
 		"HASURA_GRAPHQL_ENABLED_LOG_TYPES=startup, http-log, webhook-log, websocket-log, query-log",
@@ -92,13 +104,14 @@ func StartHasura(t TestingT, image string) (port string, teardown func()) {
 	}
 	repo, tag := getDockerRepoAndTag(t, image)
 	hasuraopts := &dockertest.RunOptions{
-		Name:         fmt.Sprintf("%s-%s", uniqueName, "hasura"),
+		Name:         fmt.Sprintf("%s-%s", randomdata.SillyName(), "hasura"),
 		Repository:   repo,
 		Tag:          tag,
 		Env:          envs,
 		ExposedPorts: []string{"8080/tcp"},
+		Auth:         getDockerAuthConfig(t),
 	}
-	hasura, err := pool.RunWithOptions(hasuraopts)
+	hasura, err := pool.RunWithOptions(hasuraopts, dockerOpts...)
 	if err != nil {
 		t.Fatalf("Could not start resource: %s", err)
 	}
@@ -118,9 +131,6 @@ func StartHasura(t TestingT, image string) (port string, teardown func()) {
 
 	teardown = func() {
 		if err = pool.Purge(hasura); err != nil {
-			t.Fatalf("Could not purge resource: %s", err)
-		}
-		if err = pool.Purge(pg); err != nil {
 			t.Fatalf("Could not purge resource: %s", err)
 		}
 	}
@@ -145,6 +155,7 @@ func StartHasuraWithMetadataDatabase(t TestingT, image string) (port string, tea
 			"POSTGRES_PASSWORD=postgrespassword",
 			"POSTGRES_DB=postgres",
 		},
+		Auth: getDockerAuthConfig(t),
 	}
 	pg, err := pool.RunWithOptions(pgopts)
 	if err != nil {
@@ -178,6 +189,7 @@ func StartHasuraWithMetadataDatabase(t TestingT, image string) (port string, tea
 		Tag:          tag,
 		Env:          envs,
 		ExposedPorts: []string{"8080/tcp"},
+		Auth:         getDockerAuthConfig(t),
 	}
 	hasura, err := pool.RunWithOptions(hasuraopts)
 	if err != nil {
@@ -214,19 +226,19 @@ func StartHasuraWithMetadataDatabase(t TestingT, image string) (port string, tea
 func StartHasuraWithMSSQLSource(t *testing.T, version string) (string, string, func()) {
 	hasuraPort, hasuraTeardown := StartHasuraWithMetadataDatabase(t, version)
 	sourcename := randomdata.SillyName()
-	mssqlPort, mssqlTeardown := startMSSQLContainer(t)
+	mssqlPort, mssqlTeardown := StartMSSQLContainer(t)
 
 	teardown := func() {
 		hasuraTeardown()
 		mssqlTeardown()
 	}
 	connectionString := fmt.Sprintf("DRIVER={ODBC Driver 17 for SQL Server};SERVER=%s,%s;DATABASE=master;Uid=SA;Pwd=%s;Encrypt=no", DockerSwitchIP, mssqlPort, MSSQLPassword)
-	addMSSQLSourceToHasura(t, fmt.Sprintf("%s:%s", BaseURL, hasuraPort), connectionString, sourcename)
+	AddMSSQLSourceToHasura(t, fmt.Sprintf("%s:%s", BaseURL, hasuraPort), connectionString, sourcename)
 	return hasuraPort, sourcename, teardown
 }
 
 // startsMSSQLContainer and creates a database and returns the port number
-func startMSSQLContainer(t *testing.T) (string, func()) {
+func StartMSSQLContainer(t TestingT) (string, func()) {
 	pool, err := dockertest.NewPool("")
 	pool.MaxWait = time.Minute
 	if err != nil {
@@ -241,6 +253,7 @@ func startMSSQLContainer(t *testing.T) (string, func()) {
 			fmt.Sprintf("SA_PASSWORD=%s", MSSQLPassword),
 		},
 		ExposedPorts: []string{"1433/tcp"},
+		Auth:         getDockerAuthConfig(t),
 	}
 	mssql, err := pool.RunWithOptions(opts)
 	if err != nil {
@@ -290,6 +303,7 @@ func StartPGContainer(t TestingT) (connectionString string, teardown func()) {
 			fmt.Sprintf("POSTGRES_DB=%s", database),
 		},
 		ExposedPorts: []string{"5432"},
+		Auth:         getDockerAuthConfig(t),
 	}
 	pg, err := pool.RunWithOptions(pgopts)
 	if err != nil {
@@ -315,7 +329,7 @@ func StartPGContainer(t TestingT) (connectionString string, teardown func()) {
 	return connectionString, teardown
 }
 
-func addMSSQLSourceToHasura(t *testing.T, hasuraEndpoint, connectionString, sourceName string) {
+func AddMSSQLSourceToHasura(t TestingT, hasuraEndpoint, connectionString, sourceName string) {
 	url := fmt.Sprintf("%s/v1/metadata", hasuraEndpoint)
 	body := fmt.Sprintf(`
 {
@@ -334,7 +348,9 @@ func addMSSQLSourceToHasura(t *testing.T, hasuraEndpoint, connectionString, sour
 	fmt.Println(hasuraEndpoint)
 
 	req, err := http.NewRequest("POST", url, strings.NewReader(body))
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatal(err)
+	}
 	req.Header.Set("Content-Type", "application/json")
 	adminSecret := os.Getenv("HASURA_GRAPHQL_TEST_ADMIN_SECRET")
 	if adminSecret != "" {
@@ -342,7 +358,9 @@ func addMSSQLSourceToHasura(t *testing.T, hasuraEndpoint, connectionString, sour
 	}
 
 	r, err := http.DefaultClient.Do(req)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatal(err)
+	}
 	if r.StatusCode != http.StatusOK {
 		body, err := ioutil.ReadAll(r.Body)
 		if err != nil {
@@ -417,4 +435,101 @@ func getUniqueName(t TestingT) string {
 		t.Fatalf("Could not connect to docker: %s", err)
 	}
 	return u.String() + "-" + randomdata.SillyName()
+}
+
+func StartHasuraWithCitusSource(t TestingT, image string) (string, string, func()) {
+	hasuraPort, hasuraTeardown := StartHasuraWithMetadataDatabase(t, image)
+	sourcename := randomdata.SillyName()
+	connectionString, citusTeardown := StartCitusContainer(t)
+
+	teardown := func() {
+		hasuraTeardown()
+		citusTeardown()
+	}
+	AddCitusSourceToHasura(t, fmt.Sprintf("%s:%s", BaseURL, hasuraPort), connectionString, sourcename)
+	return hasuraPort, sourcename, teardown
+}
+
+// StartCitusContainer and creates a database and returns the port number
+func StartCitusContainer(t TestingT) (string, func()) {
+	password := "test"
+	var err error
+	pool, err := dockertest.NewPool("")
+	if err != nil {
+		t.Fatalf("Could not connect to docker: %s", err)
+	}
+	uniqueName := getUniqueName(t)
+	pgopts := &dockertest.RunOptions{
+		Name:       fmt.Sprintf("%s-%s", uniqueName, "pg"),
+		Repository: "citusdata/citus",
+		Tag:        "latest",
+		Env: []string{
+			fmt.Sprintf("POSTGRES_PASSWORD=%s", password),
+		},
+		ExposedPorts: []string{"5432"},
+		Auth:         getDockerAuthConfig(t),
+	}
+	pg, err := pool.RunWithOptions(pgopts)
+	if err != nil {
+		t.Fatalf("Could not start resource: %s", err)
+	}
+	var db *sql.DB
+	if err = pool.Retry(func() error {
+		var err error
+		db, err = sql.Open("postgres", fmt.Sprintf("postgres://postgres:test@%s:%s/%s?sslmode=disable", "0.0.0.0", pg.GetPort("5432/tcp"), "postgres"))
+		if err != nil {
+			return err
+		}
+		return db.Ping()
+	}); err != nil {
+		t.Fatal(err)
+	}
+	teardown := func() {
+		if err = pool.Purge(pg); err != nil {
+			t.Fatalf("Could not purge resource: %s", err)
+		}
+	}
+	connectionString := fmt.Sprintf("postgres://postgres:test@%s:%s/postgres", DockerSwitchIP, pg.GetPort("5432/tcp"))
+	return connectionString, teardown
+}
+
+func AddCitusSourceToHasura(t TestingT, hasuraEndpoint, connectionString, sourceName string) {
+	url := fmt.Sprintf("%s/v1/metadata", hasuraEndpoint)
+	body := fmt.Sprintf(`
+{
+  "type": "citus_add_source",
+  "args": {
+    "name": "%s",
+    "configuration": {
+        "connection_info": {
+            "database_url": "%s"
+        }
+    }
+  }
+}
+`, sourceName, connectionString)
+	fmt.Println(connectionString)
+	fmt.Println(hasuraEndpoint)
+	req, err := http.NewRequest(http.MethodPost, url, strings.NewReader(body))
+	if err != nil {
+		t.Fatal(err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+	adminSecret := os.Getenv("HASURA_GRAPHQL_TEST_ADMIN_SECRET")
+	if adminSecret != "" {
+		req.Header.Set("x-hasura-admin-secret", adminSecret)
+	}
+
+	r, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if r.StatusCode != http.StatusOK {
+		body, err := ioutil.ReadAll(r.Body)
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer r.Body.Close()
+		t.Fatalf("cannot add citus source to hasura: %s", string(body))
+	}
 }

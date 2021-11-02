@@ -4,8 +4,8 @@
 
 .. _metadata_api_manage_metadata:
 
-Metadata API Reference: Manage metadata (v2.0 and above)
-========================================================
+Metadata API Reference: Manage metadata
+=======================================
 
 .. contents:: Table of contents
   :backlinks: none
@@ -232,7 +232,8 @@ table using ``psql`` and this column should now be added to the GraphQL schema.
    {
        "type" : "reload_metadata",
        "args": {
-           "reload_remote_schemas": true
+           "reload_remote_schemas": true,
+           "reload_sources": false
        }
    }
 
@@ -250,8 +251,12 @@ Args syntax
      - Description
    * - reload_remote_schemas
      - false
-     - Boolean
-     - If set to ``true``, all remote schemas' (including inconsistent ones) cached GraphQL schemas are refreshed (default: ``false``)
+     - ``Boolean`` | [:ref:`RemoteSchemaName`]
+     - If set to ``true``, all remote schemas' (including inconsistent ones) cached GraphQL schemas are refreshed (default: ``true``)
+   * - reload_sources
+     - false
+     - ``Boolean`` | [:ref:`SourceName`]
+     - If set to ``true``, all sources' (including inconsistent ones) cached GraphQL schemas are refreshed (default: ``true``)
 
 .. _metadata_clear_metadata:
 
@@ -346,4 +351,29 @@ drop_inconsistent_metadata
    {
        "type": "drop_inconsistent_metadata",
        "args": {}
+   }
+
+.. _test_webhook_transform:
+
+test_webhook_transform
+--------------------------
+
+``test_webhook_transform`` can be used to test out request transformations using mock data.
+
+.. code-block:: http
+
+   POST /v1/metadata HTTP/1.1
+   Content-Type: application/json
+   X-Hasura-Role: admin
+
+   {
+       "type" : "test_webhook_transform",
+       "args" : {
+         "webhook_url": "http://localhost:1234",
+         "body": { "hello": "world" },
+         "request_transform": {
+           "body": "{{ $body.world }}",
+           "template_engine": "Kriti"
+         }
+       }
    }

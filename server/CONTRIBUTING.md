@@ -11,7 +11,7 @@ own machine and how to contribute.
 
 For building console and running test suite:
 
-- [Node.js](https://nodejs.org/en/) (>= v8.9)
+- [Node.js](https://nodejs.org/en/) (v12+, it is recommended that you use `node` with version `v12.x.x` A.K.A `erbium` or version `14.x.x` A.K.A `Fermium`)
 - npm >= 5.7
 - python >= 3.5 with pip3 and virtualenv
 
@@ -45,10 +45,9 @@ After making your changes
 
 ...and the server:
 
-    $ cd server
     $ ln -s cabal.project.dev cabal.project.local
     $ cabal new-update
-    $ cabal new-build
+    $ cabal new-build graphql-engine
 
 To set up the project configuration to coincide with the testing scripts below, thus avoiding recompilation when testing locally, rather use `cabal.project.dev-sh.local` instead of `cabal.project.dev`:
 
@@ -110,7 +109,7 @@ The following command can be used to build and launch a local `graphql-engine` i
 ```
 cabal new-run -- exe:graphql-engine \
   --database-url='postgres://<user>:<password>@<host>:<port>/<dbname>' \
-  serve --enable-console --console-assets-dir=../console/static/dist
+  serve --enable-console --console-assets-dir=console/static/dist
 ```
 
 This will launch a server on port 8080, and it will serve the console assets if they were built with `npm run server-build` as mentioned above.
@@ -216,6 +215,25 @@ Some other useful points of note:
              --backend mssql -k TestGraphQLQueryBasicCommon
     ```
 
+##### Running the Python test suite on BigQuery
+Running integration tests against a BigQuery data source is a little more involved due to the necessary service account requirements:
+```
+HASURA_BIGQUERY_PROJECT_ID=# the project ID of the service account
+HASURA_BIGQUERY_SERVICE_ACCOUNT_EMAIL=# eg. "<<SERVICE_ACCOUNT_NAME>>@<<PROJECT_NAME>>.iam.gserviceaccount.com"
+HASURA_BIGQUERY_SERVICE_ACCOUNT_FILE=# the filepath to the downloaded service account key
+```
+
+Before running the test suite either [manually](https://github.com/hasura/graphql-engine/blob/master/server/CONTRIBUTING.md#run-and-test-manually) or [via `dev.sh`](https://github.com/hasura/graphql-engine/blob/master/server/CONTRIBUTING.md#run-and-test-via-devsh):
+1. Ensure you have access to a [Google Cloud Console service account](https://cloud.google.com/iam/docs/creating-managing-service-accounts#creating). Store the project ID and account email in `HASURA_BIGQUERY_PROJECT_ID` and (optional) `HASURA_BIGQUERY_SERVICE_ACCOUNT_EMAIL` variables.
+2. [Create and download a new service account key](https://cloud.google.com/iam/docs/creating-managing-service-account-keys). Store the filepath in a `HASURA_BIGQUERY_SERVICE_ACCOUNT_FILE` variable.
+3. [Login and activate the service account](https://cloud.google.com/sdk/gcloud/reference/auth/activate-service-account), if it is not already activated.
+4. Verify the service account is accessible via the [BigQuery API](https://cloud.google.com/bigquery/docs/reference/rest):
+     1. Run `source scripts/verify-bigquery-creds.sh $HASURA_BIGQUERY_PROJECT_ID $HASURA_BIGQUERY_SERVICE_ACCOUNT_FILE $HASURA_BIGQUERY_SERVICE_ACCOUNT_EMAIL`. If the query succeeds, the service account is setup correctly to run tests against BigQuery locally.
+5. Finally, run the BigQuery test suite with `HASURA_BIGQUERY_SERVICE_ACCOUNT_FILE` and `HASURA_BIGQUERY_PROJECT_ID` environment variables set. For example:
+  ```
+  scripts/dev.sh test --integration --backend bigquery -k TestGraphQLQueryBasicBigquery
+  ```
+
 ##### Guide on writing python tests
 
 1. Check whether the test you intend to write already exists in the test suite, so that there will be no
@@ -261,9 +279,29 @@ The current workflow for supporting a new backend in integration tests is as fol
     3. `teardown_<backend>` and `cleardb_<backend>`
     4. important: filename suffixes should be the same as the value that’s being passed to `—backend`; that's how the files are looked up.
 4. Specify a `backend` parameter for [the `per_backend_tests` fixture](https://github.com/hasura/graphql-engine/commit/64d52f5fa333f337ef76ada4e0b6abd49353c457/scripts/dev.sh#diff-1034b560ce9984643a4aa4edab1d612aa512f1c3c28bbc93364700620681c962R420), parameterised by backend. [Example](https://github.com/hasura/graphql-engine/commit/64d52f5fa333f337ef76ada4e0b6abd49353c457/scripts/dev.sh#diff-40b7c6ad5362e70cafd29a3ac5d0a5387bd75befad92532ea4aaba99421ba3c8R12-R13).
-5. Optional: Run the existing (Postgres) test suite against the new backend to identify and group common and backend-specific tests into their own classes.
 
-Tests against alternative backends aren't yet run/supported in CI, so please test locally.
+Note: When teardown is not disabled (via `skip_teardown`, in which case, this phase is skipped entirely), `teardown.yaml` always runs before `schema_teardown.yaml`, even if the tests fail. See `setup_and_teardown` in `server/tests-py/conftest.py` for the full source code/logic.
+
+This means, for example, that if `teardown.yaml` untracks a table, and `schema_teardown.yaml` runs raw SQL to drop the table, both would succeed (assuming the table is tracked/exists).
+
+**Test suite naming convention**
+The current convention is to indicate the backend(s) tests can be run against in the class name. For example:
+    * `TestGraphQLQueryBasicMySQL` for tests that can only be run on MySQL
+    * `TestGraphQLQueryBasicCommon` for tests that can be run against more than one backend
+    * if a test class doesn't have a suffix specifying the backend, nor does its name end in `Common`, then it is likely a test written pre-v2.0 that can only be run on Postgres
+
+This naming convention enables easier test filtering with [pytest command line flags](https://docs.pytest.org/en/6.2.x/usage.html#specifying-tests-selecting-tests).
+
+The backend-specific and common test suites are disjoint; for example, run `pytest --integration -k "Common or MySQL" --backend mysql` to run all MySQL tests.
+
+#### Building with profiling
+
+To build with profiling support, you need to both enable profiling via `cabal`
+and set the `profiling` flag. E.g.
+
+```
+cabal build exe:graphql-engine -f profiling --enable-profiling
+```
 
 ### Create Pull Request
 
@@ -274,9 +312,18 @@ Tests against alternative backends aren't yet run/supported in CI, so please tes
 
 ## Code conventions
 
-This helps enforce a uniform style for all committers.
+The following conventions help us maintain a uniform style for all committers:
+make sure your contributions are in line with them.
 
-- Compiler warnings are turned on, make sure your code has no warnings.
-- Use [hlint](https://github.com/ndmitchell/hlint) to make sure your code has no warnings.
-  You can use our custom hlint config with `$ hlint --hint=server/.hlint.yaml .`
-- Use [stylish-haskell](https://github.com/jaspervdj/stylish-haskell) to format your code.
+We enforce these by means of CI hooks which will fail the build if any of these
+are not met.
+
+- No compiler warnings: Make sure your code builds with no warnings (adding
+  `-Werror` to `ghc-options` in your `cabal.project` is a good way of checking
+  this.)
+- No lint failures: Use [hlint](https://github.com/ndmitchell/hlint) with our
+  custom config to validate your code, using `hlint --hint=server/.hlint.yaml`.
+- Consistent formatting: Use [ormolu](https://github.com/tweag/ormolu) to
+  format your code. `ormolu -ei '*.hs'` will format all files with a `.hs`
+  extension in the current directory.
+- Consistent style: Consider the [style guide](./STYLE.md) when writing new code.

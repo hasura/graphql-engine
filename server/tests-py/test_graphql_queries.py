@@ -1,22 +1,158 @@
 import pytest
-from validate import check_query_f, check_query, get_conf_f
-from conftest import use_inherited_roles_fixtures
+from validate import assert_response_code, check_query_f, check_query, get_conf_f
 from context import PytestConf
+
+import json
+import textwrap
 
 # Mark that all tests in this module can be run as server upgrade tests
 pytestmark = pytest.mark.allow_server_upgrade_test
 
 usefixtures = pytest.mark.usefixtures
 
+
+@pytest.mark.parametrize("transport", ['http'])
+@pytest.mark.parametrize("backend", ['mysql'])
+@usefixtures('per_class_tests_db_state')
+class TestGraphQLQueryReplaceMetadataMySQL:
+
+    # initialize the metadata with default 'http' transport fixture
+    def test_replace_metadata(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/replace_metadata.yaml', transport)
+
+    @classmethod
+    def dir(cls):
+        return 'queries/graphql_query/mysql'
+
+
+@pytest.mark.parametrize("backend", ['mysql'])
+@usefixtures('per_class_tests_db_state')
+class TestGraphQLQueryBasicMySQL:
+
+    # basic queries
+    def test_select_query_author(self, hge_ctx): # extra
+        check_query_f(hge_ctx, self.dir() + '/basic.yaml')
+
+    def test_select_query_ignore_author(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/select_query_author.yaml')
+
+    def test_nested_select_query_deep(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/nested_select_query_deep.yaml')
+
+    def test_select_quoted_col(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/select_query_author_quoted_col.yaml')
+
+    def test_non_tracked_table(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/select_query_non_tracked_table_err.yaml')
+
+    def test_select_query_non_tracked_table(self, hge_ctx): # may be duplicate of the one above
+        check_query_f(hge_ctx, self.dir() + '/select_query_non_tracked_table.yaml')
+
+    def test_col_not_present(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/select_query_author_col_not_present_err.yaml')
+
+    # offsets / limit
+    def test_offset_1_limit_2(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/offset_1_limit_2.yaml')
+
+    def test_offset_2_limit_1(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/offset_2_limit_1.yaml')
+
+    def test_select_offset_limit(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/select_query_author_limit.yaml')
+
+    def test_select_offset(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/select_query_author_offset.yaml')
+
+    def test_select_limit(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/select_query_author_limit_offset.yaml')
+
+
+    # where clause
+    def test_select_query_where(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/select_query_author_where.yaml')
+
+    def test_select_query_where(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/nested_select_where_query_author_article.yaml')
+
+    # order by
+    def test_select_query_author_order_by(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/select_query_author_order_by.yaml')
+
+    # directives
+    def test_select_query_author_with_skip_directive(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/select_query_author_with_skip_directive.yaml')
+
+    # TODO select_query_author_with_include_directive
+
+    def test_select_query_author_with_skip_include_directive(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/select_query_author_with_skip_include_directive.yaml')
+
+    def test_select_query_author_with_wrong_directive_err(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/select_query_author_with_wrong_directive_err.yaml')
+
+    # views
+    def test_query_search_author_view(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/query_search_author_view.yaml')
+
+    def test_offset_2_limit_1(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/offset_2_limit_1.yaml')
+
+    def test_select_offset_limit(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/select_query_author_limit.yaml')
+
+    def test_select_offset(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/select_query_author_offset.yaml')
+
+    def test_select_limit(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/select_query_author_limit_offset.yaml')
+
+
+    # where clause
+    def test_select_query_where(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/select_query_author_where.yaml')
+
+    def test_select_query_where(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/nested_select_where_query_author_article.yaml')
+
+    # order by
+    def test_select_query_author_order_by(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/select_query_author_order_by.yaml')
+
+    # directives
+    def test_select_query_author_with_skip_directive(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/select_query_author_with_skip_directive.yaml')
+
+    def test_select_query_author_with_skip_include_directive(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/select_query_author_with_skip_include_directive.yaml')
+
+    def test_select_query_author_with_wrong_directive_err(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/select_query_author_with_wrong_directive_err.yaml')
+
+    # views
+    def test_query_search_author_view(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/query_search_author_view.yaml')
+
+    @classmethod
+    def dir(cls):
+        return 'queries/graphql_query/mysql'
+
+
+@pytest.mark.parametrize("transport", ['http', 'websocket'])
+class TestGraphQLEmpty:
+
+    def test_no_empty_roots(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/check_no_empty_roots.yaml', transport)
+
+    @classmethod
+    def dir(cls):
+        return 'queries/graphql_query/empty'
+
+
 @pytest.mark.parametrize("transport", ['http', 'websocket'])
 @pytest.mark.parametrize("backend", ['bigquery'])
 @usefixtures('per_class_tests_db_state')
 class TestGraphQLQueryBasicBigquery:
-
-    # initialize the metadata
-    def test_replace_metadata(self, hge_ctx, transport):
-        if transport == 'http':
-            check_query_f(hge_ctx, self.dir() + '/replace_metadata.yaml')
 
     def test_user_perms(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + "/user_perms.yaml", transport)
@@ -100,9 +236,22 @@ class TestGraphQLQueryBasicBigquery:
     def test_select_query_invalid_escape_sequence(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + "/select_query_invalid_escape_sequence.yaml", transport)
 
+    # aggregates
+    def test_select_join_provenance_queries(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + "/select_join_provenance.yaml", transport)
+
+    # offsets
+    def test_offset_regression(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + "/offset_regression.yaml", transport)
+
+    # BigQuery-specific configuration: global_limit
+    def test_global_limit(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + "/global_limit.yaml", transport)
+
     @classmethod
     def dir(cls):
         return 'queries/graphql_query/bigquery'
+
 
 @pytest.mark.parametrize("transport", ['http', 'websocket'])
 @pytest.mark.parametrize("backend", ['citus', 'mssql', 'postgres'])
@@ -111,6 +260,9 @@ class TestGraphQLQueryBasicCommon:
     # This also exercises support for multiple operations in a document:
     def test_select_query_author(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/select_query_author.yaml', transport)
+
+    def test_select_query_author(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_query_author_v1alpha1.yaml', transport)
 
     def test_select_query_author_quoted_col(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/select_query_author_col_quoted.yaml', transport)
@@ -163,6 +315,7 @@ class TestGraphQLQueryBasicCommon:
 @pytest.mark.parametrize("backend", ['mssql'])
 @usefixtures('per_class_tests_db_state')
 class TestGraphQLQueryBasicMSSQL:
+
     def test_select_various_mssql_types(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/select_query_test_types_mssql.yaml', transport)
 
@@ -171,6 +324,12 @@ class TestGraphQLQueryBasicMSSQL:
 
     def test_select_query_user_col_change(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + "/select_query_user_col_change_mssql.yaml")
+
+    def test_nodes_aggregates_mssql(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + "/nodes_aggregates_mssql.yaml", transport)
+
+    def test_nodes_aggregates_conditions_mssql(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + "/nodes_aggregates_conditions_mssql.yaml", transport)
 
     @classmethod
     def dir(cls):
@@ -261,7 +420,7 @@ class TestGraphQLQueryBasicCitus:
     def test_create_invalid_fkey_relationship(self, hge_ctx, transport):
         st_code, resp = hge_ctx.v1metadataq_f(self.dir() + '/setup_invalid_fkey_relationship.yaml')
         assert st_code == 400, resp
-        assert resp['error'] == "Expecting object { table, columns }."
+        assert resp['error'] == "Error when parsing command create_array_relationship.\nSee our documentation at https://hasura.io/docs/latest/graphql/core/api-reference/metadata-api/index.html#metadata-apis.\nInternal error message: Expecting object { table, columns }."
 
     @classmethod
     def dir(cls):
@@ -270,7 +429,7 @@ class TestGraphQLQueryBasicCitus:
 @pytest.mark.parametrize("transport", ['http', 'websocket'])
 @pytest.mark.parametrize("backend", ['citus', 'postgres'])
 @usefixtures('per_class_tests_db_state')
-class TestGraphQLQueryFragments:
+class TestGraphQLQueryFragmentsCommon:
 
     def test_select_query_top_level_fragment(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/select_query_top_level_fragment.yaml', transport)
@@ -483,14 +642,13 @@ class TestGraphQLQueryBoolExpBasicMSSQL:
     def test_uuid_test_in_uuid_col(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/select_uuid_test_in_uuid_col_mssql.yaml', transport)
 
-    @pytest.mark.skip(reason="TODO: https://github.com/hasura/graphql-engine-mono/issues/1438")
     def test_bools(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/select_bools_mssql.yaml', transport)
 
     def test_create_invalid_fkey_relationship(self, hge_ctx, transport):
         st_code, resp = hge_ctx.v1metadataq_f(self.dir() + '/setup_invalid_fkey_relationship_mssql.yaml')
         assert st_code == 400, resp
-        assert resp['error'] == "Expecting object { table, columns }."
+        assert resp['error'] == "Error when parsing command create_array_relationship.\nSee our documentation at https://hasura.io/docs/latest/graphql/core/api-reference/metadata-api/index.html#metadata-apis.\nInternal error message: Expecting object { table, columns }."
 
     @classmethod
     def dir(cls):
@@ -511,6 +669,9 @@ class TestGraphqlQueryPermissions:
 
     def test_anonymous_only_published_articles(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/anonymous_can_only_get_published_articles.yaml', transport)
+
+    def test_anonymous_only_published_articles_v1alpha1(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/anonymous_can_only_get_published_articles_v1alpha1.yaml', transport)
 
     def test_user_cannot_access_remarks_col(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/user_cannot_access_remarks_col.yaml', transport)
@@ -566,17 +727,31 @@ class TestGraphqlQueryPermissions:
     def test_author_articles_without_required_headers_set(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/select_articles_without_required_headers.yaml', transport)
 
+    def test_reader_author(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/reader_author.yaml', transport)
+
+    def test_tutor_get_students(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/tutor_get_students.yaml', transport)
+
+    def test_tutor_get_students_session(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/tutor_get_students_session.yaml', transport)
+
     @classmethod
     def dir(cls):
         return 'queries/graphql_query/permissions'
 
+# These tests only test the schema specific stuff which will
+# be common across all the backends, to add DB specific tests
+# look for the  TestGraphQLInheritedRoles<backend> test classes
 @pytest.mark.parametrize('transport', ['http', 'websocket'])
-@use_inherited_roles_fixtures
-class TestGraphQLInheritedRoles:
+@usefixtures('per_class_tests_db_state')
+class TestGraphQLInheritedRolesSchema:
 
     @classmethod
     def dir(cls):
         return 'queries/graphql_query/permissions/inherited_roles'
+
+    setup_metadata_api_version = "v2"
 
     def test_basic_inherited_role(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/basic_inherited_roles.yaml')
@@ -584,6 +759,84 @@ class TestGraphQLInheritedRoles:
     def test_inherited_role_when_some_roles_may_not_have_permission_configured(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/inherited_role_with_some_roles_having_no_permissions.yaml')
 
+    def test_throw_error_when_roles_form_a_cycle(self, hge_ctx, transport):
+        export_metadata_query = {
+            "type": "export_metadata",
+            "args": {}
+        }
+        st_code, resp = hge_ctx.v1q(export_metadata_query)
+        assert st_code == 200, resp
+        circular_roles_metadata = [
+            {
+                "role_name": "intermediate_circular_role_1",
+                "role_set": [
+                    "manager_employee",
+                    "circular_role"
+                ]
+            },
+            {
+                "role_name": "intermediate_circular_role_2",
+                "role_set": [
+                    "intermediate_circular_role_1",
+                    "employee"
+                ]
+            },
+            {
+                "role_name": "circular_role",
+                "role_set": [
+                    "intermediate_circular_role_2",
+                    "author"
+                ]
+            }
+
+        ]
+        resp["inherited_roles"] = resp["inherited_roles"] + circular_roles_metadata
+        import_metadata_query = {
+            "type": "replace_metadata",
+            "args": {
+                "metadata": resp
+            }
+        }
+        st_code, resp = hge_ctx.v1q(import_metadata_query)
+        assert st_code == 400, resp
+        assert resp['error'] == '''found cycle(s) in roles: ["circular_role","intermediate_circular_role_2","intermediate_circular_role_1","circular_role"]'''
+
+    def test_explicit_metadata_permission_should_override_role_inheritance(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/override_inherited_permission.yaml')
+
+    def test_inherited_role_inherits_from_inherited_role(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/inherited_role_parent_is_another_inherited_role.yaml')
+
+@pytest.mark.parametrize('transport', ['http', 'websocket'])
+@usefixtures('per_class_tests_db_state')
+class TestGraphQLInheritedRolesPostgres:
+
+    @classmethod
+    def dir(cls):
+        return 'queries/graphql_query/permissions/inherited_roles'
+
+    setup_metadata_api_version = "v2"
+
+    def test_basic_inherited_role(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/basic_inherited_roles.yaml')
+
+    def test_inherited_role_when_some_roles_may_not_have_permission_configured(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/inherited_role_with_some_roles_having_no_permissions.yaml')
+
+@pytest.mark.parametrize('transport', ['http', 'websocket'])
+@pytest.mark.parametrize('backend', ['mssql'])
+@usefixtures('per_backend_tests', 'per_class_tests_db_state')
+class TestGraphQLInheritedRolesMSSQL:
+
+    @classmethod
+    def dir(cls):
+        return 'queries/graphql_query/permissions/inherited_roles_mssql'
+
+    def test_basic_inherited_role(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/basic_inherited_roles.yaml')
+
+    def test_inherited_role_when_some_roles_may_not_have_permission_configured(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/inherited_role_with_some_roles_having_no_permissions.yaml')
 
 @pytest.mark.parametrize("transport", ['http', 'websocket', 'subscription'])
 @pytest.mark.parametrize("backend", ['postgres', 'mssql'])
@@ -774,6 +1027,12 @@ class TestGraphQLQueryOrderBy:
     def test_album_order_by_tracks_tags(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/album_order_by_tracks_tags.yaml', transport)
 
+    def test_Track_order_by_size(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/Track_order_by_size.yaml', transport)
+
+    def test_author_order_by_get_articles_aggregate(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/author_order_by_get_articles_aggregate.yaml', transport)
+
     @classmethod
     def dir(cls):
         return 'queries/graphql_query/order_by'
@@ -830,6 +1089,10 @@ class TestGraphQLQueryFunctions:
 
     def test_tracking_function_with_composite_type_argument(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/track_non_base_function_arg_type.yaml')
+
+    @pytest.mark.skip(reason="FIXME: https://github.com/hasura/graphql-engine-mono/issues/2595")
+    def test_tracking_function_with_customized_names(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/track_customised_names.yaml')
 
     @classmethod
     def dir(cls):
@@ -916,6 +1179,18 @@ class TestGraphQLQueryComputedFields:
     def test_tracked_function_as_computed_field(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/tracked_function_as_comp_field.yaml')
 
+    def test_scalar_computed_field_filter(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/scalar_computed_field_filter.yaml')
+
+    def test_table_computed_field_filter(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/table_computed_field_filter.yaml')
+
+    def test_table_computed_field_filter_fail(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/table_computed_field_filter_fail.yaml')
+
+    def test_table_computed_field_filter_session_argument(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/table_computed_field_filter_session_argument.yaml')
+
 @pytest.mark.parametrize('transport', ['http', 'websocket'])
 @usefixtures('per_class_tests_db_state')
 class TestGraphQLQueryCaching:
@@ -943,31 +1218,87 @@ class TestUnauthorizedRolePermission:
     def test_unauth_role(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/unauthorized_role.yaml', transport, False)
 
-@pytest.mark.parametrize("backend", ['postgres', 'mssql'])
 @usefixtures('per_class_tests_db_state')
 class TestGraphQLExplain:
     @classmethod
     def dir(cls):
         return 'queries/explain'
 
+    def test_simple_query_as_admin(self, hge_ctx, backend):
+        q = {"query": {"query": "query abc { __typename }", "operationName": "abc"}}
+        st_code, resp = hge_ctx.v1GraphqlExplain(q)
+        assert st_code == 200, resp
+
+    def test_simple_query_as_user(self, hge_ctx, backend):
+        q = {"query": {"query": "query abc { __typename }", "operationName": "abc"}}
+        st_code, resp = hge_ctx.v1GraphqlExplain(q, {"x-hasura-role": "random_user"})
+        assert st_code == 400, resp
+
+    @pytest.mark.parametrize("backend", ['postgres', 'mssql', 'mysql'])
     def test_simple_query(self, hge_ctx, backend):
-        self.with_admin_secret(hge_ctx, self.dir() + hge_ctx.backend_suffix('/simple_query') + ".yaml")
+        self.with_admin_secret("query", hge_ctx, self.dir() + hge_ctx.backend_suffix('/simple_query') + ".yaml")
 
+    @pytest.mark.parametrize("backend", ['postgres', 'mssql', 'mysql'])
     def test_permissions_query(self, hge_ctx, backend):
-        self.with_admin_secret(hge_ctx, self.dir() + hge_ctx.backend_suffix('/permissions_query') + ".yaml")
+        self.with_admin_secret("query", hge_ctx, self.dir() + hge_ctx.backend_suffix('/permissions_query') + ".yaml")
 
-    def with_admin_secret(self, hge_ctx, f):
+    def test_limit_query(self, hge_ctx):
+        self.with_admin_secret("query", hge_ctx, self.dir() + '/limit_query.yaml')
+
+    def test_limit_orderby_column_query(self, hge_ctx):
+        self.with_admin_secret("query", hge_ctx, self.dir() + '/limit_orderby_column_query.yaml')
+
+    def test_limit_orderby_relationship_query(self, hge_ctx):
+        self.with_admin_secret("query", hge_ctx, self.dir() + '/limit_orderby_relationship_query.yaml')
+
+    def test_limit_offset_orderby_relationship_query(self, hge_ctx):
+        self.with_admin_secret("query", hge_ctx, self.dir() + '/limit_offset_orderby_relationship_query.yaml')
+
+    def test_orderby_array_relationship_query(self, hge_ctx):
+        self.with_admin_secret("query", hge_ctx, self.dir() + '/orderby_array_relationship_query.yaml')
+
+    @pytest.mark.parametrize("backend", ['postgres', 'mssql'])
+    def test_documented_query(self, hge_ctx, backend):
+        self.with_admin_secret("query", hge_ctx, self.dir() + hge_ctx.backend_suffix('/docs_query') + ".yaml")
+
+    @pytest.mark.parametrize("backend", ['postgres', 'mssql'])
+    def test_documented_subscription(self, hge_ctx, backend):
+        self.with_admin_secret("subscription", hge_ctx, self.dir() + hge_ctx.backend_suffix('/docs_subscription') + ".yaml")
+
+    def with_admin_secret(self, explain_query_type, hge_ctx, f, hdrs=None, req_st=200):
         conf = get_conf_f(f)
         admin_secret = hge_ctx.hge_key
         headers = {}
-        if admin_secret:
-            headers['X-Hasura-Admin-Secret'] = hge_ctx.hge_key
+        if hdrs != None:
+            headers = hdrs
+        elif admin_secret and hdrs == None:
+            headers['X-Hasura-Admin-Secret'] = admin_secret
         status_code, resp_json, _ = hge_ctx.anyq(conf['url'], conf['query'], headers)
-        assert status_code == 200, resp_json
-        # Comparing only with generated 'sql' since the 'plan' may differ
-        resp_sql = resp_json[0]['sql']
-        exp_sql = conf['response'][0]['sql']
-        assert resp_sql == exp_sql, resp_json
+        assert_response_code(conf['url'], conf['query'], status_code, req_st, resp_json)
+
+        if req_st != 200:
+            # return early in case we're testing for failures
+            return
+
+        if explain_query_type == "query":
+            # This test is specific to queries with a single field.
+            # Comparing only with generated 'sql' since the 'plan' may differ.
+            resp_sql = resp_json[0]['sql']
+            exp_sql = conf['response'][0]['sql']
+            # Outputing response for embedding in test
+            assert resp_sql == exp_sql, \
+                f"Unexpected explain SQL in response:\n{textwrap.indent(json.dumps(resp_json, indent=2), '  ')}"
+        elif explain_query_type == "subscription":
+            # Comparing only with generated 'sql' since the 'plan' may differ.
+            # In particular, we ignore the subscription's cohort variables.
+            resp_sql = resp_json['sql']
+            exp_sql = conf['response']['sql']
+            # Outputing response for embedding in test
+            assert resp_sql == exp_sql, \
+                f"Unexpected explain SQL in response:\n{textwrap.indent(json.dumps(resp_json, indent=2), '  ')}"
+        else:
+            assert False, "Test programmer error"
+
 
 @pytest.mark.parametrize('transport', ['http', 'websocket'])
 @usefixtures('per_class_tests_db_state')
@@ -1081,10 +1412,14 @@ use_function_permission_fixtures = pytest.mark.usefixtures(
 @pytest.mark.parametrize('transport', ['http', 'websocket'])
 @use_function_permission_fixtures
 class TestGraphQLQueryFunctionPermissions:
+    # These tests are skipped unless the test-suite is run with '--test-function-permissions'
 
     @classmethod
     def dir(cls):
         return 'queries/graphql_query/functions/permissions/'
+
+    def test_access_function_with_table_permissions(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + 'get_messages_with_table_permissions.yaml')
 
     def test_access_function_without_permission_configured(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + 'get_articles_without_permission_configured.yaml')

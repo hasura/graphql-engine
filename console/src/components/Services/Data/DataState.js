@@ -39,6 +39,7 @@ const defaultPermissionsState = {
   bulkSelect: [],
   applySamePermissions: [],
   isEditing: false,
+  inconsistentInhertiedRole: null,
 };
 
 const defaultQueryPermissions = {
@@ -91,8 +92,8 @@ const defaultModifyState = {
       refSchemaName: '',
       refTableName: '',
       colMappings: [{ '': '' }],
-      onDelete: dataSource?.violationActions?.[0],
-      onUpdate: dataSource?.violationActions?.[0],
+      onDelete: dataSource?.violationActions?.[0] ?? '',
+      onUpdate: dataSource?.violationActions?.[0] ?? '',
     },
   ],
   checkConstraintsModify: [],

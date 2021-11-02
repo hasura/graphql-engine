@@ -1,10 +1,10 @@
 .. meta::
-   :description: Using Hasura with a YugaByte Postgres database
+   :description: Using Hasura with a Yugabyte Postgres database
    :keywords: hasura, docs, existing database, guide, yugabyte
 
 .. _cloud_db_yugabyte:
 
-Using Hasura Cloud with a YugaByte Postgres database
+Using Hasura Cloud with a Yugabyte Postgres database
 ====================================================
 
 .. contents:: Table of contents
@@ -15,7 +15,7 @@ Using Hasura Cloud with a YugaByte Postgres database
 Introduction
 ------------
 
-This guide explains how to connect a new or existing YugaByte Postgres database to a Hasura Cloud project.
+This guide explains how to connect a new or existing Yugabyte Postgres database to a Hasura Cloud project.
 
 Step 0: Sign up or log in to Hasura Cloud
 -----------------------------------------
@@ -45,15 +45,15 @@ On the Hasura console, navigate to ``Data -> Manage -> Connect Database -> Conne
 
 .. _create_pg_db_yugabyte:
 
-Step 2: Create a Postgres DB on YugaByte (skip if you have an existing DB)
+Step 2: Create a Postgres DB on Yugabyte (skip if you have an existing DB)
 --------------------------------------------------------------------------
 
-Log into the `YugaByte Cloud dashboard <https://cloud.yugabyte.com/login>`__.
+Log into the `Yugabyte Cloud dashboard <https://cloud.yugabyte.com/login>`__.
 
-On the YugaByte Cloud dashboard, click on ``Create cluster``:
+On the Yugabyte Cloud dashboard, click on ``Create cluster``:
 
 .. thumbnail:: /img/graphql/cloud/cloud-dbs/yugabyte/create-cluster.png
-   :alt: Create cluster on YugaByte
+   :alt: Create cluster on Yugabyte
    :width: 1000px
 
 Select a ``Cloud Provider`` and ``Region`` and then click ``Create Cluster``.
@@ -76,19 +76,19 @@ The structure of the database connection URL looks as follows:
 To get it, click on your cluster on the cluster dashboard:
 
 .. thumbnail:: /img/graphql/cloud/cloud-dbs/yugabyte/go-to-cluster.png
-   :alt: Go to cluster on YugaByte
+   :alt: Go to cluster on Yugabyte
    :width: 700px
 
 On your cluster's dashboard, click on ``Connect`` on the top right:
 
 .. thumbnail:: /img/graphql/cloud/cloud-dbs/yugabyte/connect.png
-   :alt: Connect to cluster on YugaByte
+   :alt: Connect to cluster on Yugabyte
    :width: 1000px
 
 Now you can get the connection info from the following screen:
 
 .. thumbnail:: /img/graphql/cloud/cloud-dbs/yugabyte/connection-info.png
-   :alt: Connection info for YugaByte
+   :alt: Connection info for Yugabyte
    :width: 600px
 
 - ``user-name``: If you have a separate database user, the user name will be their name. If you didn't specify a user, the default user name is ``admin`` (see after ``-U`` in the screenshot above).
@@ -126,8 +126,7 @@ You can check out our `30-Minute Hasura Basics Course <https://hasura.io/learn/g
 and other `GraphQL & Hasura Courses <https://hasura.io/learn/>`__ for a more detailed introduction to Hasura.
 
 You can also click the gear icon to manage your Hasura Cloud project. (e.g. add :ref:`collaborators <manage_project_collaborators>`,
-:ref:`env vars <manage_project_env_vars>` or :ref:`custom domains <manage_project_domains>`) and :ref:`add an admin secret <secure_project>`
-to make sure that your GraphQL endpoint and the Hasura console are not publicly accessible.
+:ref:`env vars <manage_project_env_vars>` or :ref:`custom domains <manage_project_domains>`).
 
 .. thumbnail:: /img/graphql/cloud/getting-started/project-manage.png
   :alt: Project actions

@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/hasura/graphql-engine/cli"
-	"github.com/hasura/graphql-engine/cli/internal/metadataobject/actions"
-	"github.com/hasura/graphql-engine/cli/internal/metadataobject/actions/types"
+	"github.com/hasura/graphql-engine/cli/v2"
+	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/actions"
+	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/actions/types"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
@@ -61,7 +61,7 @@ func (o *actionsCodegenOptions) run() (err error) {
 	}
 
 	if o.EC.Config.ActionConfig.Codegen.Framework == "" {
-		return fmt.Errorf(`Could not find codegen config. For adding codegen config, run:
+		return fmt.Errorf(`could not find codegen config. For adding codegen config, run:
 
   hasura actions use-codegen`)
 	}

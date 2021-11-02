@@ -4,8 +4,8 @@
 
 .. _api_custom_functions:
 
-Schema/Metadata API Reference: Custom Functions
-===============================================
+Schema/Metadata API Reference: Custom Functions (Deprecated)
+============================================================
 
 .. contents:: Table of contents
   :backlinks: none

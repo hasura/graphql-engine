@@ -2,20 +2,21 @@ package migrate
 
 import (
 	"fmt"
-	"github.com/hasura/graphql-engine/cli/internal/scripts"
-	"github.com/hasura/graphql-engine/cli/internal/statestore"
-	"github.com/hasura/graphql-engine/cli/internal/statestore/migrations"
 	nurl "net/url"
 	"os"
 	"path/filepath"
 	"runtime"
 	"strings"
 
-	"github.com/hasura/graphql-engine/cli/internal/hasura"
+	"github.com/hasura/graphql-engine/cli/v2/internal/scripts"
+	"github.com/hasura/graphql-engine/cli/v2/internal/statestore"
+	"github.com/hasura/graphql-engine/cli/v2/internal/statestore/migrations"
 
-	migratedb "github.com/hasura/graphql-engine/cli/migrate/database"
+	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
 
-	"github.com/hasura/graphql-engine/cli"
+	migratedb "github.com/hasura/graphql-engine/cli/v2/migrate/database"
+
+	"github.com/hasura/graphql-engine/cli/v2"
 	"github.com/pkg/errors"
 )
 
@@ -135,6 +136,8 @@ func NewMigrate(ec *cli.ExecutionContext, isCmd bool, sourceName string, sourceK
 		isCmd, int(ec.Config.Version),
 		ec.Config.ServerConfig.TLSConfig,
 		ec.Logger,
+		ec.Stdout,
+		ec.Stderr,
 		&migratedb.HasuraOpts{
 			HasMetadataV3: ec.HasMetadataV3,
 			SourceName:    sourceName,
@@ -154,6 +157,7 @@ func NewMigrate(ec *cli.ExecutionContext, isCmd bool, sourceName string, sourceK
 	if ec.HasMetadataV3 {
 		opts.hasuraOpts.PGSourceOps = ec.APIClient.V2Query
 		opts.hasuraOpts.MSSQLSourceOps = ec.APIClient.V2Query
+		opts.hasuraOpts.CitusSourceOps = ec.APIClient.V2Query
 		opts.hasuraOpts.GenericQueryRequest = ec.APIClient.V2Query.Send
 	} else {
 		opts.hasuraOpts.PGSourceOps = ec.APIClient.V1Query
@@ -215,7 +219,7 @@ func GetFilePath(dir string) *nurl.URL {
 
 func IsMigrationsSupported(kind hasura.SourceKind) bool {
 	switch kind {
-	case hasura.SourceKindMSSQL, hasura.SourceKindPG:
+	case hasura.SourceKindMSSQL, hasura.SourceKindPG, hasura.SourceKindCitus:
 		return true
 	}
 	return false
@@ -255,20 +259,20 @@ func copyStateToCatalogStateAPIIfRequired(ec *cli.ExecutionContext, sourceName s
 			// check if hdb_catalog.schema_migrations exists
 			// check if migrations state table exists
 			query := hasura.PGRunSQLInput{
-			  	Source: sourceName,
-				SQL: `SELECT COUNT(1) FROM information_schema.tables WHERE table_name = '` + migrations.DefaultMigrationsTable + `' AND table_schema = '` + migrations.DefaultSchema + `' LIMIT 1`,
+				Source: sourceName,
+				SQL:    `SELECT COUNT(1) FROM information_schema.tables WHERE table_name = '` + migrations.DefaultMigrationsTable + `' AND table_schema = '` + migrations.DefaultSchema + `' LIMIT 1`,
 			}
 
 			runsqlResp, err := ec.APIClient.V2Query.PGRunSQL(query)
 			if err != nil {
-				ec.Logger.Warn("encountered error when trying to move migrations from hdb_catalog.schema_migrations to catalog state\n", err,
+				ec.Logger.Debug("encountered error when trying to move migrations from hdb_catalog.schema_migrations to catalog state\n", err,
 					"\nnote: ignore this if you are not updating your project from config v2 -> config v3")
 				ec.Logger.Debug("marking IsStateCopyCompleted as true %w", markStateMigrationCompleted())
 				return false, nil
 			}
 
 			if runsqlResp.ResultType != hasura.TuplesOK {
-				ec.Logger.Warn("encountered error when trying to move migrations from hdb_catalog.schema_migrations to catalog state", fmt.Errorf("invalid result Type %s", runsqlResp.ResultType),
+				ec.Logger.Debug("encountered error when trying to move migrations from hdb_catalog.schema_migrations to catalog state", fmt.Errorf("invalid result Type %s", runsqlResp.ResultType),
 					"\nnote: ignore this if you are not updating your project from config v2 -> config v3")
 				ec.Logger.Debug("marking IsStateCopyCompleted as true %w", markStateMigrationCompleted())
 				return false, nil

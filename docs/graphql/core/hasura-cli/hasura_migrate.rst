@@ -44,6 +44,7 @@ SEE ALSO
 * :ref:`hasura <hasura>` 	 - Hasura GraphQL engine command line tool
 * :ref:`hasura migrate apply <hasura_migrate_apply>` 	 - Apply migrations on the database
 * :ref:`hasura migrate create <hasura_migrate_create>` 	 - Create files required for a migration
+* :ref:`hasura migrate delete <hasura_migrate_delete>` 	 - (PREVIEW) clear migrations from local project and server
 * :ref:`hasura migrate squash <hasura_migrate_squash>` 	 - (PREVIEW) Squash multiple migrations into a single one
 * :ref:`hasura migrate status <hasura_migrate_status>` 	 - Display current status of migrations on a database
 

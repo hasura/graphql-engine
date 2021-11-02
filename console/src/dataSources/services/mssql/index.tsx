@@ -1,4 +1,5 @@
 import React from 'react';
+import { DeepRequired } from 'ts-essentials';
 import { DataSourcesAPI } from '../..';
 import { QualifiedTable } from '../../../metadata/types';
 import {
@@ -6,9 +7,14 @@ import {
   Table,
   BaseTableColumn,
   SupportedFeaturesType,
+  FrequentlyUsedColumn,
   ViolationActions,
 } from '../../types';
-import { generateTableRowRequest, operators } from './utils';
+import {
+  generateTableRowRequest,
+  operators,
+  generateRowsCountRequest,
+} from './utils';
 
 const permissionColumnDataTypes = {
   character: [
@@ -76,7 +82,7 @@ const columnDataTypes = {
 };
 
 // eslint-disable-next-line no-useless-escape
-const createSQLRegex = /create\s*(?:|or\s*replace)\s*(?<type>view|table|function)\s*(?:\s*if*\s*not\s*exists\s*)?((?<schema>\"?\w+\"?)\.(?<tableWithSchema>\"?\w+\"?)|(?<table>\"?\w+\"?))\s*(?<partition>partition\s*of)?/gim;
+const createSQLRegex = /create\s*(?:|or\s*replace)\s*(?<type>view|table|function)\s*(?:\s*if*\s*not\s*exists\s*)?((?<schema>\"?\w+\"?)\.(?<nameWithSchema>\"?\w+\"?)|(?<name>\"?\w+\"?))\s*(?<partition>partition\s*of)?/gim;
 
 export const displayTableName = (table: Table) => {
   const tableName = table.table_name;
@@ -91,9 +97,12 @@ const violationActions: ViolationActions[] = [
   'set default',
 ];
 
-export const supportedFeatures: SupportedFeaturesType = {
+export const supportedFeatures: DeepRequired<SupportedFeaturesType> = {
   driver: {
     name: 'mssql',
+    fetchVersion: {
+      enabled: false,
+    },
   },
   schemas: {
     create: {
@@ -107,26 +116,30 @@ export const supportedFeatures: SupportedFeaturesType = {
     create: {
       enabled: true,
       frequentlyUsedColumns: false,
+      columnTypeSelector: false,
     },
     browse: {
       enabled: true,
       customPagination: true,
-      aggregation: false,
+      aggregation: true,
     },
     insert: {
       enabled: false,
     },
     modify: {
+      editableTableName: false,
       enabled: true,
-      readOnly: true,
       columns: {
         view: true,
-        edit: false,
+        edit: true,
+        graphqlFieldName: false,
+        frequentlyUsedColumns: false,
       },
+      readOnly: false,
       computedFields: false,
       primaryKeys: {
         view: true,
-        edit: false,
+        edit: true,
       },
       foreignKeys: {
         view: true,
@@ -134,14 +147,18 @@ export const supportedFeatures: SupportedFeaturesType = {
       },
       uniqueKeys: {
         view: true,
-        edit: false,
+        edit: true,
       },
       triggers: false,
       checkConstraints: {
         view: true,
         edit: false,
       },
-      customGqlRoot: false,
+      indexes: {
+        view: false,
+        edit: false,
+      },
+      customGqlRoot: true,
       setAsEnum: false,
       untrack: true,
       delete: true,
@@ -153,9 +170,11 @@ export const supportedFeatures: SupportedFeaturesType = {
     relationships: {
       enabled: true,
       track: true,
+      remoteRelationships: false,
     },
     permissions: {
       enabled: true,
+      aggregation: false,
     },
     track: {
       enabled: false,
@@ -268,6 +287,22 @@ ORDER BY
         .map(t => `'${t.table_name}'`)
         .join(',')})`;
     }
+    // ## Note on fetching MSSQL table comments
+    // LEFT JOIN (select * from sys.extended_properties where "minor_id"= 0) AS e ON e.major_id = obj.object_id
+    // this would filter out column comments, but if there are multiple extended properties with same major id and minor_id=0;
+    // ie, multiple properties on the table name (as shown below) can cause confusion and then it would pick only the first result.
+    // * case 1
+    // EXEC sys.sp_addextendedproperty
+    // @name=N'TableDescription',
+    // @value=N'Album Table is used for listing albums' ,
+    // @level0type=N'SCHEMA', @level0name=N'dbo',
+    // @level1type=N'TABLE', @level1name=N'Album';
+    // * case 2
+    // EXEC sys.sp_addextendedproperty
+    // @name=N'TableDescription2', -- ==> this is possible with mssql
+    // @value=N'some other property description' ,
+    // @level0type=N'SCHEMA', @level0name=N'dbo',
+    // @level1type=N'TABLE', @level1name=N'Album';
 
     return `
   SELECT sch.name as table_schema,
@@ -299,7 +334,7 @@ ORDER BY
     JSON_QUERY([isc].json) AS columns
 FROM sys.objects as obj
     INNER JOIN sys.schemas as sch ON obj.schema_id = sch.schema_id
-    LEFT JOIN sys.extended_properties AS e ON major_id = obj.object_id
+		LEFT JOIN (select * from sys.extended_properties where minor_id = 0) AS e ON e.major_id = obj.object_id
     OUTER APPLY (
         SELECT
             a.name AS column_name,
@@ -318,11 +353,16 @@ FROM sys.objects as obj
                 WHEN t.is_user_defined = 1 THEN 'USER-DEFINED'
                 ELSE 'OTHER'
             END AS data_type,
-            t.name AS data_type_name
+            t.name AS data_type_name,
+            sch.name AS table_schema,
+            obj.name AS table_name,
+            ep.value AS comment,
+            ep.name AS extended_property_name_comment
         FROM
             sys.columns a
             LEFT JOIN sys.default_constraints ad ON (a.column_id = ad.parent_column_id AND a.object_id = ad.parent_object_id)
             JOIN sys.types t ON a.user_type_id = t.user_type_id
+            LEFT JOIN sys.extended_properties ep ON (ep.major_id = a.object_id AND ep.minor_id = a.column_id)
         WHERE a.column_id > 0 and a.object_id = obj.object_id
         FOR JSON path
 ) AS [isc](json) where obj.type_desc in ('USER_TABLE', 'VIEW') ${whereClause};`;
@@ -552,35 +592,131 @@ FROM sys.objects as obj
   getViewDefinitionSql: () => {
     return '';
   },
-  getDropColumnSql: () => {
+  getDropColumnSql: (
+    tableName: string,
+    schemaName: string,
+    columnName: string
+  ) => {
+    return `ALTER TABLE "${schemaName}"."${tableName}"
+    DROP COLUMN "${columnName}"`;
+  },
+  getAddColumnSql: (
+    tableName: string,
+    schemaName: string,
+    columnName: string,
+    columnType: string,
+    options?: {
+      nullable: boolean;
+      unique: boolean;
+      default: any;
+      sqlGenerator?: FrequentlyUsedColumn['dependentSQLGenerator'];
+    },
+    constraintName?: string
+  ) => {
+    let sql = `ALTER TABLE "${schemaName}"."${tableName}" ADD "${columnName}" ${columnType}`;
+    if (!options) {
+      return sql;
+    }
+    if (options.nullable) {
+      sql += ` NULL`;
+    } else {
+      sql += ` NOT NULL`;
+    }
+    if (options.unique) {
+      sql += ` UNIQUE`;
+    }
+    if (options.default) {
+      sql += ` CONSTRAINT "${constraintName}" DEFAULT '${options.default}' WITH VALUES`;
+    }
+    return sql;
+  },
+  getAddUniqueConstraintSql: (
+    tableName: string,
+    schemaName: string,
+    constraintName: string,
+    columns: string[]
+  ) => {
+    return `ALTER TABLE "${schemaName}"."${tableName}"
+    ADD CONSTRAINT "${constraintName}"
+    UNIQUE (${columns.join(',')})`;
+  },
+  getDropNotNullSql: (
+    tableName: string,
+    schemaName: string,
+    columnName: string,
+    columnType?: string
+  ) => {
+    return `ALTER TABLE "${schemaName}"."${tableName}" ALTER COLUMN "${columnName}"  ${columnType} NULL`;
+  },
+  getSetCommentSql: (
+    on: 'column' | 'table' | string,
+    tableName: string,
+    schemaName: string,
+    comment: string | null,
+    columnName?: string
+  ) => {
+    const dropCommonCommentStatement = `IF EXISTS (SELECT NULL FROM SYS.EXTENDED_PROPERTIES WHERE [major_id] = OBJECT_ID('${tableName}') AND [name] = N'${on}_comment_${schemaName}_${tableName}_${columnName}' AND [minor_id] = (SELECT [column_id] FROM SYS.COLUMNS WHERE [name] = '${columnName}' AND [object_id] = OBJECT_ID('${tableName}')))    
+        EXECUTE sp_dropextendedproperty   
+        @name = N'${on}_comment_${schemaName}_${tableName}_${columnName}',   
+        @level0type = N'SCHEMA', @level0name = '${schemaName}'
+    `;
+    const commonCommentStatement = `
+        exec sys.sp_addextendedproperty   
+        @name = N'${on}_comment_${schemaName}_${tableName}_${columnName}',   
+        @value = N'${comment}',   
+        @level0type = N'SCHEMA', @level0name = '${schemaName}'
+    `;
+    if (on === 'column') {
+      return `${dropCommonCommentStatement},@level1type = N'TABLE',  @level1name = '${tableName}',@level2type = N'COLUMN', @level2name = '${columnName}';
+      ${commonCommentStatement},@level1type = N'TABLE',  @level1name = '${tableName}',@level2type = N'COLUMN', @level2name = '${columnName}'`;
+    }
+    // FIXME: Comment on mssql table and function is not implemented yet.
     return '';
   },
-  getAddColumnSql: () => {
-    return '';
+  getSetColumnDefaultSql: (
+    tableName: string,
+    schemaName: string,
+    columnName: string,
+    defaultValue: any,
+    constraintName: string
+  ) => {
+    return `ALTER TABLE "${schemaName}"."${tableName}" DROP CONSTRAINT IF EXISTS "${constraintName}";
+    ALTER TABLE "${schemaName}"."${tableName}" ADD CONSTRAINT "${constraintName}" DEFAULT ${defaultValue} FOR "${columnName}"`;
   },
-  getAddUniqueConstraintSql: () => {
-    return '';
+  getSetNotNullSql: (
+    tableName: string,
+    schemaName: string,
+    columnName: string,
+    columnType: string
+  ) => {
+    return `ALTER TABLE "${schemaName}"."${tableName}" ALTER COLUMN "${columnName}"  ${columnType} NOT NULL`;
   },
-  getDropNotNullSql: () => {
-    return '';
+  getAlterColumnTypeSql: (
+    tableName: string,
+    schemaName: string,
+    columnName: string,
+    columnType: string,
+    wasNullable?: boolean
+  ) => {
+    return `ALTER TABLE "${schemaName}"."${tableName}" ALTER COLUMN "${columnName}" ${columnType} ${
+      !wasNullable ? `NOT NULL` : ``
+    }`;
   },
-  getSetCommentSql: () => {
-    return '';
+  getDropColumnDefaultSql: (
+    tableName: string,
+    schemaName: string,
+    columnName?: string,
+    constraintName?: string
+  ) => {
+    return `ALTER TABLE "${schemaName}"."${tableName}" DROP CONSTRAINT "${constraintName}"`;
   },
-  getSetColumnDefaultSql: () => {
-    return '';
-  },
-  getSetNotNullSql: () => {
-    return '';
-  },
-  getAlterColumnTypeSql: () => {
-    return '';
-  },
-  getDropColumnDefaultSql: () => {
-    return '';
-  },
-  getRenameColumnQuery: () => {
-    return '';
+  getRenameColumnQuery: (
+    tableName: string,
+    schemaName: string,
+    newName: string,
+    oldName: string
+  ) => {
+    return `sp_rename '[${schemaName}].[${tableName}].[${oldName}]', '${newName}', 'COLUMN'`;
   },
   fetchColumnCastsQuery: '',
   checkSchemaModification: () => {
@@ -589,8 +725,40 @@ FROM sys.objects as obj
   getCreateCheckConstraintSql: () => {
     return '';
   },
-  getCreatePkSql: () => {
-    return '';
+  getCreatePkSql: ({
+    schemaName,
+    tableName,
+    selectedPkColumns,
+    constraintName,
+  }: {
+    schemaName: string;
+    tableName: string;
+    selectedPkColumns: string[];
+    constraintName?: string;
+  }) => {
+    return `ALTER TABLE "${schemaName}"."${tableName}"
+    ADD CONSTRAINT "${constraintName}"
+    PRIMARY KEY (${selectedPkColumns.map(pkc => `"${pkc}"`).join(',')})`;
+  },
+  getAlterPkSql: ({
+    schemaName,
+    tableName,
+    selectedPkColumns,
+    constraintName,
+  }: {
+    schemaName: string;
+    tableName: string;
+    selectedPkColumns: string[];
+    constraintName: string; // compulsory for PG
+  }) => {
+    return `BEGIN TRANSACTION;
+    ALTER TABLE "${schemaName}"."${tableName}" DROP CONSTRAINT "${constraintName}";
+    ALTER TABLE "${schemaName}"."${tableName}"
+      ADD CONSTRAINT "${constraintName}" PRIMARY KEY (${selectedPkColumns
+      .map(pkc => `"${pkc}"`)
+      .join(', ')});
+    
+    COMMIT TRANSACTION;`;
   },
   getFunctionDefinitionSql: null,
   primaryKeysInfoSql: ({ schemas }) => {
@@ -759,8 +927,8 @@ WHERE
   permissionColumnDataTypes,
   viewsSupported: false,
   supportedColumnOperators,
-  aggregationPermissionsAllowed: false,
   supportedFeatures,
   violationActions,
   defaultRedirectSchema,
+  generateRowsCountRequest,
 };

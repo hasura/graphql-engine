@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 PARAMS=""
-BACKEND="postgres"
+BACKEND="${BACKEND:-postgres}"
 
 die_backends() {
 cat <<EOL
@@ -9,6 +9,7 @@ Invalid --backend argument. Available backends:
   bigquery
   citus
   mssql
+  mysql
 
 EOL
 exit 1
@@ -34,10 +35,16 @@ case "$BACKEND" in
   postgres)
   ;;
   bigquery)
+    source "scripts/data-sources-util.sh"
+
+    verify_bigquery_pytest_env
+    export HASURA_BIGQUERY_SERVICE_ACCOUNT=$(cat "$HASURA_BIGQUERY_SERVICE_ACCOUNT_FILE")
   ;;
   citus)
   ;;
   mssql)
+  ;;
+  mysql)
   ;;
   *)
     die_backends

@@ -5,8 +5,6 @@ import {
   saveTableCommentSql,
 } from './ModifyActions';
 
-import styles from './ModifyTable.scss';
-
 const TableCommentEditor = ({
   tableComment,
   tableCommentEdit,
@@ -31,59 +29,46 @@ const TableCommentEditor = ({
   };
 
   let commentHtml = readOnly ? null : (
-    <div className={styles.add_pad_bottom}>
-      <div className={styles.commentText}>Add a comment</div>
-      <div onClick={editCommentClicked} className={styles.commentEdit}>
-        <i className="fa fa-edit" />
-      </div>
+    <div
+      onClick={editCommentClicked}
+      className="flex items-center cursor-pointer"
+    >
+      <i className="fa fa-edit mr-xs" />
+      <span className="font-semibold">Add a Comment</span>
     </div>
   );
 
   if (tableComment && !tableCommentEdit.enabled) {
     commentHtml = (
-      <div className={styles.mar_bottom}>
-        <div className={styles.commentText + ' alert alert-warning'}>
+      <div>
+        <div className="rounded bg-secondary-light border border-gray-300 border-l-4 border-l-secondary py-sm px-md mb-sm">
           {tableComment}
         </div>
         {!readOnly && (
-          <div onClick={editCommentClicked} className={styles.commentEdit}>
-            <i className="fa fa-edit" />
+          <div
+            onClick={editCommentClicked}
+            className="flex items-center cursor-pointer"
+          >
+            <i className="fa fa-edit mr-xs" />
+            <span className="font-semibold">Edit Comment</span>
           </div>
         )}
       </div>
     );
   } else if (tableCommentEdit.enabled) {
     commentHtml = (
-      <div className={styles.mar_bottom}>
+      <div className="flex items-center">
         <input
           onChange={commentEdited}
-          className={'form-control ' + styles.commentInput}
+          className="form-control"
           type="text"
           value={tableCommentEdit.value}
           defaultValue={tableComment}
         />
-        <div
-          onClick={commentEditSave}
-          className={
-            styles.display_inline +
-            ' ' +
-            styles.add_pad_left +
-            ' ' +
-            styles.comment_action
-          }
-        >
+        <div onClick={commentEditSave} className="ml-sm cursor-pointer">
           Save
         </div>
-        <div
-          onClick={commentEditCancel}
-          className={
-            styles.display_inline +
-            ' ' +
-            styles.add_pad_left +
-            ' ' +
-            styles.comment_action
-          }
-        >
+        <div onClick={commentEditCancel} className="ml-sm cursor-pointer">
           Cancel
         </div>
       </div>

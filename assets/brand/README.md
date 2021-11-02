@@ -6,12 +6,14 @@ All assets are available on a Google Cloud Storage Bucket CDN at `https://graphq
 
 | name | asset |
 | ---- | ----- |
-| `hasura_icon_black.svg` | <img src="hasura_icon_black.svg" width="150px" style="background-color: white;" /> |
-| `hasura_icon_blue.svg` | <img src="hasura_icon_blue.svg" width="150px" style="background-color: white;" /> |
-| `hasura_icon_white.svg` | <img src="hasura_icon_white.svg" width="150px" style="background-color: black;" /> |
-| `hasura_logo_horizontal_black.svg` | <img src="hasura_logo_horizontal_black.svg" width="150px" style="background-color: white;" /> |
-| `hasura_logo_horizontal_blue.svg` | <img src="hasura_logo_horizontal_blue.svg" width="150px" style="background-color: white;" /> |
-| `hasura_logo_horizontal_white.svg` | <img src="hasura_logo_horizontal_white.svg" width="150px" style="background-color: black;" /> |
-| `powered_by_hasura_black.svg` | <img src="powered_by_hasura_black.svg" width="150px" style="background-color: white;" /> |
-| `powered_by_hasura_blue.svg` | <img src="powered_by_hasura_blue.svg" width="150px" style="background-color: white;" /> |
-| `powered_by_hasura_white.svg` | <img src="powered_by_hasura_white.svg" width="150px" style="background-color: black;" /> |
+| `hasura_icon_colour.svg` | <img src="hasura_icon_colour.svg" width="150px" style="background-color: white;" /> |
+| `hasura_icon_darkbg.svg` | <img src="hasura_icon_darkbg.svg" width="150px" style="background-color: white;" /> |
+| `hasura_icon_lightbg.svg` | <img src="hasura_icon_lightbg.svg" width="150px" style="background-color: white;" /> |
+| `hasura_logo_mono_darkbg.svg` | <img src="hasura_logo_mono_darkbg.svg" width="150px" style="background-color: white;" /> |
+| `hasura_logo_mono_lightbg.svg` | <img src="hasura_logo_mono_lightbg.svg" width="150px" style="background-color: white;" /> |
+| `hasura_logo_primary_darkbg.svg` | <img src="hasura_logo_primary_darkbg.svg" width="150px" style="background-color: white;" /> |
+| `hasura_logo_primary_lightbg.svg` | <img src="hasura_logo_primary_lightbg.svg" width="150px" style="background-color: black;" /> |
+| `powered_by_hasura_mono_darkbg.svg` | <img src="powered_by_hasura_mono_darkbg.svg" width="150px" style="background-color: white;" /> |
+| `powered_by_hasura_mono_lightbg.svg` | <img src="powered_by_hasura_mono_lightbg.svg" width="150px" style="background-color: white;" /> |
+| `powered_by_hasura_primary_darkbg.svg` | <img src="powered_by_hasura_primary_darkbg.svg" width="150px" style="background-color: white;" /> |
+| `powered_by_hasura_primary_lightbg.svg` | <img src="powered_by_hasura_primary_lightbg.svg" width="150px" style="background-color: black;" /> |

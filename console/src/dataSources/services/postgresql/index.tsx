@@ -1,4 +1,6 @@
 import React from 'react';
+import { DeepRequired } from 'ts-essentials';
+
 import {
   Table,
   TableColumn,
@@ -6,11 +8,19 @@ import {
   SupportedFeaturesType,
   BaseTableColumn,
   ViolationActions,
+  IndexType,
 } from '../../types';
 import { QUERY_TYPES, Operations } from '../../common';
 import { PGFunction } from './types';
 import { DataSourcesAPI, ColumnsInfoResult } from '../..';
-import { generateTableRowRequest } from './utils';
+import {
+  generateTableRowRequest,
+  generateInsertRequest,
+  generateRowsCountRequest,
+  generateEditRowRequest,
+  generateDeleteRowRequest,
+  generateBulkDeleteRowRequest,
+} from './utils';
 import {
   getFetchTablesListQuery,
   fetchColumnTypesQuery,
@@ -45,6 +55,7 @@ import {
   checkSchemaModification,
   getCreateCheckConstraintSql,
   getCreatePkSql,
+  getAlterPkSql,
   getFunctionDefinitionSql,
   primaryKeysInfoSql,
   checkConstraintsSql,
@@ -54,6 +65,9 @@ import {
   deleteFunctionSql,
   getEventInvocationInfoByIDSql,
   getDatabaseInfo,
+  tableIndexSql,
+  getCreateIndexSql,
+  getDropIndexSql,
   getTableInfo,
   getDatabaseVersionSql,
 } from './sqlUtils';
@@ -227,10 +241,22 @@ export const getGroupedTableComputedFields = (
   return groupedComputedFields;
 };
 
+export const getComputedFieldFunction = (
+  computedField: ComputedField,
+  allFunctions: PGFunction[]
+) => {
+  const computedFieldFnDef = computedField.definition.function;
+  return findFunction(
+    allFunctions,
+    computedFieldFnDef.name,
+    computedFieldFnDef.schema
+  );
+};
+
 const schemaListSql = (
   schemas?: string[]
 ) => `SELECT schema_name FROM information_schema.schemata WHERE
-schema_name NOT IN ('information_schema', 'pg_catalog', 'hdb_catalog', 'hdb_views', 'pg_temp_1', 'pg_toast_temp_1', 'pg_toast')
+schema_name NOT IN ('information_schema', 'hdb_catalog', 'hdb_views') AND schema_name NOT LIKE 'pg_%'
 ${schemas?.length ? ` AND schema_name IN (${schemas.join(',')})` : ''}
 ORDER BY schema_name ASC;`;
 
@@ -428,7 +454,7 @@ export const isColTypeString = (colType: string) =>
 
 const dependencyErrorCode = '2BP01'; // pg dependent error > https://www.postgresql.org/docs/current/errcodes-appendix.html
 
-const createSQLRegex = /create\s*(?:|or\s*replace)\s*(?<type>view|table|function)\s*(?:\s*if*\s*not\s*exists\s*)?((?<schema>\"?\w+\"?)\.(?<tableWithSchema>\"?\w+\"?)|(?<table>\"?\w+\"?))\s*(?<partition>partition\s*of)?/gim; // eslint-disable-line
+const createSQLRegex = /create\s*(?:|or\s*replace)\s*(?<type>view|table|function)\s*(?:\s*if*\s*not\s*exists\s*)?((?<schema>\"?\w+\"?)\.(?<nameWithSchema>\"?\w+\"?)|(?<name>\"?\w+\"?))\s*(?<partition>partition\s*of)?/gim; // eslint-disable-line
 
 const isTimeoutError = (error: {
   code: string;
@@ -505,7 +531,31 @@ const permissionColumnDataTypes = {
   user_defined: [], // default for all other types
 };
 
-export const supportedFeatures: SupportedFeaturesType = {
+const indexFormToolTips = {
+  unique:
+    'Causes the system to check for duplicate values in the table when the index is created (if data already exist) and each time data is added',
+  indexName:
+    'The name of the index to be created. No schema name can be included here; the index is always created in the same schema as its parent table',
+  indexType:
+    'Only B-Tree, GiST, GIN and BRIN support multi-column indexes on PostgreSQL',
+  indexColumns:
+    'In PostgreSQL, at most 32 fields can be provided while creating an index',
+};
+
+const indexTypes: Record<string, IndexType> = {
+  BRIN: 'brin',
+  'SP-GIST': 'spgist',
+  GiST: 'gist',
+  HASH: 'hash',
+  'B-Tree': 'btree',
+  GIN: 'gin',
+};
+
+const supportedIndex = {
+  multiColumn: ['brin', 'gist', 'btree', 'gin'],
+  singleColumn: ['hash', 'spgist'],
+};
+export const supportedFeatures: DeepRequired<SupportedFeaturesType> = {
   driver: {
     name: 'postgres',
     fetchVersion: {
@@ -528,12 +578,14 @@ export const supportedFeatures: SupportedFeaturesType = {
     },
     browse: {
       enabled: true,
-      aggregation: true,
+      aggregation: false,
+      customPagination: true,
     },
     insert: {
       enabled: true,
     },
     modify: {
+      readOnly: false,
       enabled: true,
       editableTableName: true,
       comments: {
@@ -543,6 +595,8 @@ export const supportedFeatures: SupportedFeaturesType = {
       columns: {
         view: true,
         edit: true,
+        graphqlFieldName: true,
+        frequentlyUsedColumns: true,
       },
       computedFields: true,
       primaryKeys: {
@@ -562,6 +616,10 @@ export const supportedFeatures: SupportedFeaturesType = {
         view: true,
         edit: true,
       },
+      indexes: {
+        view: true,
+        edit: true,
+      },
       customGqlRoot: true,
       setAsEnum: true,
       untrack: true,
@@ -574,6 +632,7 @@ export const supportedFeatures: SupportedFeaturesType = {
     },
     permissions: {
       enabled: true,
+      aggregation: true,
     },
     track: {
       enabled: false,
@@ -702,6 +761,7 @@ export const postgres: DataSourcesAPI = {
   checkSchemaModification,
   getCreateCheckConstraintSql,
   getCreatePkSql,
+  getAlterPkSql,
   getFunctionDefinitionSql,
   primaryKeysInfoSql,
   checkConstraintsSql,
@@ -712,6 +772,12 @@ export const postgres: DataSourcesAPI = {
   deleteFunctionSql,
   getEventInvocationInfoByIDSql,
   getDatabaseInfo,
+  tableIndexSql,
+  createIndexSql: getCreateIndexSql,
+  dropIndexSql: getDropIndexSql,
+  indexFormToolTips,
+  indexTypes,
+  supportedIndex,
   getTableInfo,
   operators,
   generateTableRowRequest,
@@ -719,9 +785,13 @@ export const postgres: DataSourcesAPI = {
   permissionColumnDataTypes,
   viewsSupported: true,
   supportedColumnOperators: null,
-  aggregationPermissionsAllowed: true,
   supportedFeatures,
   violationActions,
   defaultRedirectSchema,
+  generateInsertRequest,
+  generateRowsCountRequest,
   getPartitionDetailsSql,
+  generateEditRowRequest,
+  generateDeleteRowRequest,
+  generateBulkDeleteRowRequest,
 };

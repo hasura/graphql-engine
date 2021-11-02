@@ -58,8 +58,13 @@
                   name: Elsa
               action:
                 name: create_user
+              request_query: "mutation {\n  create_user(users: [{email: \"blake@hasura.io\"\
+                , name: \"Blake\"}, {email: \"elsa@hasura.io\", name: \"Elsa\"}]){\n\
+                \    id\n    user {\n      name\n      email\n      is_admin\n    }\n\
+                \  }\n}\n"
             url: http://127.0.0.1:5593/create-users
             headers: []
+            transformed_request:
         path: $
         code: unexpected
       message: expecting object for action webhook response but got array

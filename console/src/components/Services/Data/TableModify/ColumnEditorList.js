@@ -62,7 +62,6 @@ const ColumnEditorList = ({
   return columns.map((col, i) => {
     const colName = col.column_name;
     const isArrayDataType = col.data_type === dataSource.columnDataTypes.ARRAY;
-
     // todo -- create getColumnProperties utility
     const getDisplayName = () => {
       if (isArrayDataType) {
@@ -145,9 +144,11 @@ const ColumnEditorList = ({
 
       const keyPropertiesString = propertiesList.join(', ');
 
-      propertiesDisplay.push(<i key={'props'}>{keyPropertiesString}</i>);
-
-      propertiesDisplay.push(<br key={'br1'} />);
+      propertiesDisplay.push(
+        <span className="ml-xs font-normal" key={'props'}>
+          {keyPropertiesString}
+        </span>
+      );
 
       propertiesDisplay.push(
         <span key={'comment'} className={styles.text_gray}>
@@ -160,14 +161,14 @@ const ColumnEditorList = ({
 
     const collapsedLabel = () => {
       return (
-        <div key={colName}>
-          <b>
-            {colName}
-            <i>
+        <div className="flex items-center" key={colName}>
+          <div>
+            <span className="font-semibold">{colName}</span>
+            <span className="ml-xs font-semibold">
               {columnProperties.customFieldName &&
                 ` → ${columnProperties.customFieldName}`}
-            </i>
-          </b>{' '}
+            </span>
+          </div>{' '}
           {gqlCompatibilityWarning()} - {keyProperties()}
         </div>
       );

@@ -23,26 +23,26 @@ response:
       internal:
         errors:
         - path:
-          - messageBasic__0
+          - f0
           - errorMsg
           message: intentional-error
           locations:
           - line: 1
-            column: 49
+            column: 36
         - path:
-          - messageBasic__1
+          - f1
           - errorMsg
           message: intentional-error
           locations:
           - line: 1
-            column: 100
+            column: 74
         - path:
-          - messageBasic__2
+          - f2
           - errorMsg
           message: intentional-error
           locations:
           - line: 1
-            column: 151
+            column: 112
       path: $
       code: unexpected
     message: Errors from remote server

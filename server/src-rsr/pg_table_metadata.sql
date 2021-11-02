@@ -10,7 +10,9 @@ SELECT
     -- Note: unique_constraints does NOT include primary key constraints!
     'unique_constraints', coalesce(unique_constraints.info, '[]'),
     'foreign_keys', coalesce(foreign_key_constraints.info, '[]'),
-    'view_info', CASE "table".relkind WHEN 'v' THEN jsonb_build_object(
+    -- Note: for views and materialized views, we are asking Postgres if it is mutable or not
+    --       and for any other case, we are assuming it to be mutable.
+    'view_info', CASE WHEN "table".relkind IN ('v', 'm') THEN jsonb_build_object(
       'is_updatable', ((pg_catalog.pg_relation_is_updatable("table".oid, true) & 4) = 4),
       'is_insertable', ((pg_catalog.pg_relation_is_updatable("table".oid, true) & 8) = 8),
       'is_deletable', ((pg_catalog.pg_relation_is_updatable("table".oid, true) & 16) = 16)
@@ -47,7 +49,7 @@ LEFT JOIN LATERAL
     WHERE "column".attrelid = "table".oid
       -- columns where attnum <= 0 are special, system-defined columns
       AND "column".attnum > 0
-      -- dropped columns still exist in the system catalog as “zombie” columns, so ignore those
+      -- dropped columns still exist in the system catalog as "zombie" columns, so ignore those
       AND NOT "column".attisdropped
   ) columns ON true
 

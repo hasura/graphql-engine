@@ -120,8 +120,7 @@ func (i *Migrations) Next(version uint64) (nextVersion uint64, ok bool) {
 }
 
 func (i *Migrations) GetDirections(version uint64) map[Direction]bool {
-	var directions map[Direction]bool
-	directions = map[Direction]bool{
+	var directions = map[Direction]bool{
 		Down:     false,
 		Up:       false,
 		MetaDown: false,

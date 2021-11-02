@@ -144,12 +144,13 @@ JSON object:
 ``type``
 ^^^^^^^^
 Valid values are : ``HS256``, ``HS384``, ``HS512``, ``RS256``,
-``RS384``, ``RS512``. (see https://jwt.io).
+``RS384``, ``RS512``, ``Ed25519``. (see https://jwt.io).
 
-``HS*`` is for HMAC-SHA based algorithms. ``RS*`` is for RSA based signing. For
+``HS*`` is for HMAC-SHA based algorithms. ``RS*`` is for RSA based signing. ``Ed*`` is
+for Edwards-curve Digital Signature algorithms. For
 example, if your auth server is using HMAC-SHA256 for signing the JWTs, then
-use ``HS256``. If it is using RSA with SHA-512, then use ``RS512``. EC
-public keys are not yet supported.
+use ``HS256``. If it is using RSA with SHA-512, then use ``RS512``. If it is using EdDSA instance of
+Edwards25519, then use ``Ed25519``. EC public keys are not yet supported.
 
 This is an optional field. This is required only if you are using ``key`` in the config.
 
@@ -158,7 +159,7 @@ This is an optional field. This is required only if you are using ``key`` in the
 - In case of symmetric key (i.e. HMAC based key), the key as it is. (e.g. -
   "abcdef..."). The key must be long enough for the algorithm chosen,
   (e.g. for HS256 it must be at least 32 characters long).
-- In case of asymmetric keys (RSA etc.), only the public key, in a PEM encoded
+- In case of asymmetric keys (RSA, EdDSA etc.), only the public key, in a PEM encoded
   string or as a X509 certificate.
 
 This is an optional field. You can also provide a URL to fetch JWKs from using
@@ -583,7 +584,31 @@ the JWT config only needs to have the public key.
       "jwk_url": "https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com"
     }
 
+EdDSA based
++++++++++++
+If your auth server is using EdDSA to sign JWTs, and is using the Ed25519 variant key,
+the JWT config only needs to have the public key.
 
+**Example 1**: public key in PEM format (not OpenSSH format):
+
+.. code-block:: json
+
+    {
+      "type":"Ed25519", 
+      "key": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAG9I+toAAJicilbPt36tiC4wi7E1Dp9rMmfnwdKyVXi0=\n-----END PUBLIC KEY-----"
+    }
+
+**Example 2**: public key as X509 certificate:
+
+.. code-block:: json
+
+    {
+      "type":"Ed25519",
+      "key": "-----BEGIN CERTIFICATE REQUEST-----\nMIIBAzCBtgIBADAnMQswCQYDVQQGEwJERTEYMBYGA1UEAwwPd3d3LmV4YW1wbGUu\nY29tMCowBQYDK2VwAyEA/9DV/InajW02Q0tC/tyr9mCSbSnNP1txICXVJrTGKDSg\nXDBaBgkqhkiG9w0BCQ4xTTBLMAsGA1UdDwQEAwIEMDATBgNVHSUEDDAKBggrBgEF\nBQcDATAnBgNVHREEIDAegg93d3cuZXhhbXBsZS5jb22CC2V4YW1wbGUuY29tMAUG\nAytlcANBAKbTqnTyPcf4ZkVuq2tC108pBGY19VgyoI+PP2wD2KaRz4QAO7Bjd+7S\nljyJoN83UDdtdtgb7aFgb611gx9W4go=\n-----END CERTIFICATE REQUEST-----
+      "
+    }
+
+    
 Running with JWT
 ^^^^^^^^^^^^^^^^
 Using the flag:

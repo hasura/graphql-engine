@@ -17,7 +17,7 @@ response:
             name: IncludeInpObj
         - name: where
           type:
-            name: MessageWhereInpObj_remote_rel_public_profilesmessagesNestedArgs
+            name: MessageWhereInpObj_remote_rel_profilesmessagesNestedArgs
       - name: name
         args: []
 query:

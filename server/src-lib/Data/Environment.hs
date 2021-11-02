@@ -1,20 +1,21 @@
 module Data.Environment
-    ( Environment()
-    , getEnvironment
-    , mkEnvironment
-    , emptyEnvironment
-    , maybeEnvironment
-    , lookupEnv
-    , redactEnv
-    , Data.Environment.toList
-    ) where
+  ( Environment (),
+    getEnvironment,
+    mkEnvironment,
+    emptyEnvironment,
+    maybeEnvironment,
+    lookupEnv,
+    redactEnv,
+    Data.Environment.toList,
+  )
+where
 
-import           Data.Aeson
-import           Hasura.Prelude
+import Data.Aeson
+import Data.Map qualified as M
+import Hasura.Prelude
+import System.Environment qualified
 
-import qualified Data.Map           as M
-import qualified System.Environment
-
+-- | Server process environment variables
 newtype Environment = Environment (M.Map String String) deriving (Eq, Show, Generic)
 
 instance FromJSON Environment

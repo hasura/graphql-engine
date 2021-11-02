@@ -1,77 +1,106 @@
-{-# LANGUAGE StrictData #-}
-
 -- | Types for representing a GraphQL schema.
-module Hasura.GraphQL.Parser.Schema (
-  -- * Kinds
-    Kind(..)
-  , (:<:)(..)
-  , type (<:)(..)
+module Hasura.GraphQL.Parser.Schema
+  ( -- * Kinds
+    Kind (..),
+    (:<:) (..),
+    type (<:) (..),
 
-  -- * Types
-  , Type(..)
-  , NonNullableType(..)
-  , TypeInfo(..)
-  , SomeTypeInfo(..)
-  , eqType
-  , eqNonNullableType
-  , eqTypeInfo
-  , discardNullability
-  , nullableType
-  , nonNullableType
-  , toGraphQLType
-  , getObjectInfo
-  , getInterfaceInfo
+    -- * Types
+    Typename (..),
+    MkTypename,
+    mkTypename,
+    withTypenameCustomization,
+    Type (..),
+    NonNullableType (..),
+    TypeInfo (..),
+    SomeTypeInfo (..),
+    eqType,
+    eqNonNullableType,
+    eqTypeInfo,
+    discardNullability,
+    nullableType,
+    nonNullableType,
+    toGraphQLType,
+    getObjectInfo,
+    getInterfaceInfo,
+    EnumValueInfo (..),
+    InputFieldInfo (..),
+    FieldInfo (..),
+    InputObjectInfo (..),
+    ObjectInfo (..),
+    InterfaceInfo (..),
+    UnionInfo (..),
 
-  , EnumValueInfo(..)
-  , InputFieldInfo(..)
-  , FieldInfo(..)
-  , InputObjectInfo(..)
-  , ObjectInfo(..)
-  , InterfaceInfo(..)
-  , UnionInfo(..)
+    -- * Definitions
+    DefinitionName,
+    Definition (..),
+    mkDefinition,
+    addDefinitionUnique,
+    HasDefinition (..),
 
-  -- * Definitions
-  , Definition(..)
-  , mkDefinition
-  , addDefinitionUnique
-  , HasDefinition(..)
+    -- * Schemas
+    Schema (..),
+    ConflictingDefinitions (..),
+    HasTypeDefinitions (..),
+    TypeDefinitionsWrapper (..),
+    collectTypeDefinitions,
 
-  -- * Schemas
-  , Schema(..)
-  , ConflictingDefinitions(..)
-  , HasTypeDefinitions(..)
-  , TypeDefinitionsWrapper(..)
-  , collectTypeDefinitions
+    -- * Miscellany
+    HasName (..),
+    InputValue (..),
+    Variable (..),
+    VariableInfo (..),
+    DirectiveInfo (..),
+  )
+where
 
-  -- * Miscellany
-  , HasName(..)
-  , InputValue(..)
-  , Variable(..)
-  , VariableInfo(..)
-  , DirectiveInfo(..)
-  ) where
-
-import           Hasura.Incremental            (Cacheable)
-import           Hasura.Prelude
-
-import qualified Data.Aeson                    as J
-import qualified Data.HashMap.Strict.Extended  as Map
-import qualified Data.HashSet                  as Set
-import qualified Data.List.NonEmpty            as NE
-import qualified Data.Text                     as T
-
-import           Control.Lens.Extended
-import           Control.Monad.Unique
-import           Data.Functor.Classes
-import           Data.Hashable                 (Hashable (..))
-import           Data.Text.Extended
-import           Language.GraphQL.Draft.Syntax (Description (..), DirectiveLocation (..),
-                                                GType (..), Name (..), Nullability (..), Value (..))
+import Control.Lens.Extended
+import Control.Monad.Unique
+import Data.Aeson qualified as J
+import Data.Functor.Classes
+import Data.Has
+import Data.HashMap.Strict.Extended qualified as Map
+import Data.HashSet qualified as Set
+import Data.Hashable (Hashable (..))
+import Data.List.NonEmpty qualified as NE
+import Data.Text qualified as T
+import Data.Text.Extended
+import Hasura.Incremental (Cacheable)
+import Hasura.Prelude
+import Language.GraphQL.Draft.Syntax
+  ( Description (..),
+    DirectiveLocation (..),
+    GType (..),
+    Name (..),
+    Nullability (..),
+    Value (..),
+  )
 
 class HasName a where
   getName :: a -> Name
+
 instance HasName Name where
   getName = id
+
+-- | newtype wrapper to allow us to distinguish type names from other GraphQL names.
+newtype Typename = Typename {unTypename :: Name} deriving (Eq, Ord, Show, HasName, J.ToJSON)
+
+instance ToTxt Typename where
+  toTxt = toTxt . getName
+
+-- | Function to turn a @Name@ into a @Typename@ while possibly applying some customizations.
+type MkTypename = Name -> Typename
+
+-- | Inject a new @Typename@ customization function into the environment.
+-- This can be used by schema-building code (with @MonadBuildSchema@ constraint) to ensure
+-- the correct typename customizations are applied.
+withTypenameCustomization :: forall m r a. (MonadReader r m, Has MkTypename r) => MkTypename -> m a -> m a
+withTypenameCustomization = local . set hasLens
+
+-- | Apply the typename customization function from the current environment.
+mkTypename :: (MonadReader r m, Has MkTypename r) => Name -> m Typename
+mkTypename name =
+  ($ name) <$> asks getter
 
 -- | GraphQL types are divided into two classes: input types and output types.
 -- The GraphQL spec does not use the word “kind” to describe these classes, but
@@ -83,7 +112,8 @@ instance HasName Name where
 --
 -- For more details, see <http://spec.graphql.org/June2018/#sec-Input-and-Output-Types>.
 data Kind
-  = Both -- ^ see Note [The 'Both kind]
+  = -- | see Note [The 'Both kind]
+    Both
   | Input
   | Output
 
@@ -277,8 +307,10 @@ data k1 :<: k2 where
 -- places where 'Input' or 'Output' would otherwise be expected.
 class k1 <: k2 where
   subKind :: k1 :<: k2
+
 instance k1 ~ k2 => k1 <: k2 where
   subKind = KRefl
+
 instance {-# OVERLAPPING #-} k <: 'Both where
   subKind = KBoth
 
@@ -292,19 +324,19 @@ instance Eq (Type k) where
 -- | Like '==', but can compare 'Type's of different kinds.
 eqType :: Type k1 -> Type k2 -> Bool
 eqType (NonNullable a) (NonNullable b) = eqNonNullableType a b
-eqType (Nullable    a) (Nullable    b) = eqNonNullableType a b
-eqType _               _               = False
+eqType (Nullable a) (Nullable b) = eqNonNullableType a b
+eqType _ _ = False
 
 instance HasName (Type k) where
   getName = getName . discardNullability
 
 instance HasDefinition (Type k) (TypeInfo k) where
   definitionLens f (NonNullable t) = NonNullable <$> definitionLens f t
-  definitionLens f (Nullable t)    = Nullable <$> definitionLens f t
+  definitionLens f (Nullable t) = Nullable <$> definitionLens f t
 
 discardNullability :: Type k -> NonNullableType k
 discardNullability (NonNullable t) = t
-discardNullability (Nullable t)    = t
+discardNullability (Nullable t) = t
 
 nullableType :: Type k -> Type k
 nullableType (NonNullable t) = Nullable t
@@ -312,7 +344,7 @@ nullableType (NonNullable t) = Nullable t
 nullableType t@(Nullable {}) = t
 
 nonNullableType :: Type k -> Type k
-nonNullableType (Nullable t)       = NonNullable t
+nonNullableType (Nullable t) = NonNullable t
 nonNullableType t@(NonNullable {}) = t
 
 data NonNullableType k
@@ -325,26 +357,25 @@ instance Eq (NonNullableType k) where
 toGraphQLType :: Type k -> GType
 toGraphQLType = \case
   NonNullable t -> translateWith False t
-  Nullable    t -> translateWith True  t
+  Nullable t -> translateWith True t
   where
     translateWith nullability = \case
       TNamed typeInfo -> TypeNamed (Nullability nullability) $ getName typeInfo
-      TList  typeInfo -> TypeList  (Nullability nullability) $ toGraphQLType typeInfo
-
+      TList typeInfo -> TypeList (Nullability nullability) $ toGraphQLType typeInfo
 
 -- | Like '==', but can compare 'NonNullableType's of different kinds.
 eqNonNullableType :: NonNullableType k1 -> NonNullableType k2 -> Bool
 eqNonNullableType (TNamed a) (TNamed b) = liftEq eqTypeInfo a b
-eqNonNullableType (TList  a) (TList  b) = eqType a b
-eqNonNullableType _          _          = False
+eqNonNullableType (TList a) (TList b) = eqType a b
+eqNonNullableType _ _ = False
 
 instance HasName (NonNullableType k) where
   getName (TNamed definition) = getName definition
-  getName (TList t)           = getName t
+  getName (TList t) = getName t
 
 instance HasDefinition (NonNullableType k) (TypeInfo k) where
   definitionLens f (TNamed definition) = TNamed <$> f definition
-  definitionLens f (TList t)           = TList <$> definitionLens f t
+  definitionLens f (TList t) = TList <$> definitionLens f t
 
 {- Note [The interfaces story]
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -439,26 +470,28 @@ be worth implementing a more sophisticated solution that can gather up all the
 different sources of information and make sure they’re consistent. -}
 
 data InputObjectInfo = InputObjectInfo ~[Definition InputFieldInfo]
+
 -- Note that we can't check for equality of the fields since there may be
 -- circularity. So we rather check for equality of names.
 instance Eq InputObjectInfo where
-  InputObjectInfo fields1 == InputObjectInfo fields2
-    =  Set.fromList (fmap dName fields1)     == Set.fromList (fmap dName fields2)
+  InputObjectInfo fields1 == InputObjectInfo fields2 =
+    Set.fromList (fmap dName fields1) == Set.fromList (fmap dName fields2)
 
 data ObjectInfo = ObjectInfo
-  { oiFields     :: ~[Definition FieldInfo]
-    -- ^ The fields that this object has.  This consists of the fields of the
+  { -- | The fields that this object has.  This consists of the fields of the
     -- interfaces that it implements, as well as any additional fields.
-  , oiImplements :: ~[Definition InterfaceInfo]
-    -- ^ The interfaces that this object implements (inheriting all their
+    oiFields :: ~[Definition FieldInfo],
+    -- | The interfaces that this object implements (inheriting all their
     -- fields). See Note [The interfaces story] for more details.
+    oiImplements :: ~[Definition InterfaceInfo]
   }
+
 -- Note that we can't check for equality of the fields and the interfaces since
 -- there may be circularity. So we rather check for equality of names.
 instance Eq ObjectInfo where
-  ObjectInfo fields1 interfaces1 == ObjectInfo fields2 interfaces2
-    =  Set.fromList (fmap dName fields1    ) == Set.fromList (fmap dName fields2    )
-    && Set.fromList (fmap dName interfaces1) == Set.fromList (fmap dName interfaces2)
+  ObjectInfo fields1 interfaces1 == ObjectInfo fields2 interfaces2 =
+    Set.fromList (fmap dName fields1) == Set.fromList (fmap dName fields2)
+      && Set.fromList (fmap dName interfaces1) == Set.fromList (fmap dName interfaces2)
 
 -- | Type information for a GraphQL interface; see Note [The interfaces story]
 -- for more details.
@@ -467,23 +500,24 @@ instance Eq ObjectInfo where
 -- 2018), interfaces may implement other interfaces, but we currently don't
 -- support this.
 data InterfaceInfo = InterfaceInfo
-  { iiFields        :: ~[Definition FieldInfo]
-    -- ^ Fields declared by this interface. Every object implementing this
+  { -- | Fields declared by this interface. Every object implementing this
     -- interface must include those fields.
-  , iiPossibleTypes :: ~[Definition ObjectInfo]
-    -- ^ Objects that implement this interface. See Note [The interfaces story]
+    iiFields :: ~[Definition FieldInfo],
+    -- | Objects that implement this interface. See Note [The interfaces story]
     -- for why we include that information here.
+    iiPossibleTypes :: ~[Definition ObjectInfo]
   }
+
 -- Note that we can't check for equality of the fields and the interfaces since
 -- there may be circularity. So we rather check for equality of names.
 instance Eq InterfaceInfo where
-  InterfaceInfo fields1 objects1 == InterfaceInfo fields2 objects2
-    =  Set.fromList (fmap dName fields1    ) == Set.fromList (fmap dName fields2    )
-    && Set.fromList (fmap dName objects1   ) == Set.fromList (fmap dName objects2   )
+  InterfaceInfo fields1 objects1 == InterfaceInfo fields2 objects2 =
+    Set.fromList (fmap dName fields1) == Set.fromList (fmap dName fields2)
+      && Set.fromList (fmap dName objects1) == Set.fromList (fmap dName objects2)
 
 data UnionInfo = UnionInfo
-  { uiPossibleTypes :: ~[Definition ObjectInfo]
-    -- ^ The member object types of this union.
+  { -- | The member object types of this union.
+    uiPossibleTypes :: ~[Definition ObjectInfo]
   }
 
 data TypeInfo k where
@@ -499,77 +533,91 @@ instance Eq (TypeInfo k) where
 
 -- | Like '==', but can compare 'TypeInfo's of different kinds.
 eqTypeInfo :: TypeInfo k1 -> TypeInfo k2 -> Bool
-eqTypeInfo  TIScalar                       TIScalar            = True
-eqTypeInfo (TIEnum values1)               (TIEnum values2)
-  = Set.fromList (toList values1) == Set.fromList (toList values2)
+eqTypeInfo TIScalar TIScalar = True
+eqTypeInfo (TIEnum values1) (TIEnum values2) =
+  Set.fromList (toList values1) == Set.fromList (toList values2)
 -- NB the case for input objects currently has quadratic complexity, which is
 -- probably avoidable. HashSets should be able to get this down to
 -- O(n*log(n)). But this requires writing some Hashable instances by hand
 -- because we use some existential types and GADTs.
-eqTypeInfo (TIInputObject ioi1)           (TIInputObject ioi2) = ioi1 == ioi2
-eqTypeInfo (TIObject oi1)                 (TIObject oi2)       = oi1 == oi2
-eqTypeInfo (TIInterface ii1)              (TIInterface ii2)    = ii1 == ii2
-eqTypeInfo (TIUnion (UnionInfo objects1)) (TIUnion (UnionInfo objects2))
-  = Set.fromList (fmap dName objects1) == Set.fromList (fmap dName objects2)
-eqTypeInfo _                              _                    = False
+eqTypeInfo (TIInputObject ioi1) (TIInputObject ioi2) = ioi1 == ioi2
+eqTypeInfo (TIObject oi1) (TIObject oi2) = oi1 == oi2
+eqTypeInfo (TIInterface ii1) (TIInterface ii2) = ii1 == ii2
+eqTypeInfo (TIUnion (UnionInfo objects1)) (TIUnion (UnionInfo objects2)) =
+  Set.fromList (fmap dName objects1) == Set.fromList (fmap dName objects2)
+eqTypeInfo _ _ = False
 
 getObjectInfo :: Type k -> Maybe (Definition ObjectInfo)
-getObjectInfo = traverse getTI . (^.definitionLens)
+getObjectInfo = traverse getTI . (^. definitionLens)
   where
     getTI :: TypeInfo k -> Maybe ObjectInfo
     getTI (TIObject oi) = Just oi
-    getTI _             = Nothing
+    getTI _ = Nothing
 
 getInterfaceInfo :: Type 'Output -> Maybe (Definition InterfaceInfo)
-getInterfaceInfo = traverse getTI . (^.definitionLens)
+getInterfaceInfo = traverse getTI . (^. definitionLens)
   where
     getTI :: TypeInfo 'Output -> Maybe InterfaceInfo
     getTI (TIInterface ii) = Just ii
-    getTI _                = Nothing
+    getTI _ = Nothing
 
 data SomeTypeInfo = forall k. SomeTypeInfo (TypeInfo k)
 
 instance Eq SomeTypeInfo where
   SomeTypeInfo a == SomeTypeInfo b = eqTypeInfo a b
 
+type family DefinitionName a where
+  DefinitionName (TypeInfo k) = Typename
+  DefinitionName SomeTypeInfo = Typename
+  DefinitionName InterfaceInfo = Typename
+  DefinitionName ObjectInfo = Typename
+  DefinitionName InputFieldInfo = Name
+  DefinitionName FieldInfo = Name
+  DefinitionName EnumValueInfo = Name
+
 data Definition a = Definition
-  { dName        :: Name
-  , dUnique      :: Maybe Unique
-  -- ^ A unique identifier used to break cycles in mutually-recursive type
-  -- definitions. If two 'Definition's have the same 'Unique', they can be
-  -- assumed to be identical. Note that the inverse is /not/ true: two
-  -- definitions with different 'Unique's might still be otherwise identical.
-  --
-  -- Also see Note [Tying the knot] in Hasura.GraphQL.Parser.Class.
-  , dDescription :: Maybe Description
-  , dInfo        :: ~a
-  -- ^ Lazy to allow mutually-recursive type definitions.
-  } deriving (Functor, Foldable, Traversable, Generic)
+  { dName :: Name,
+    -- | A unique identifier used to break cycles in mutually-recursive type
+    -- definitions. If two 'Definition's have the same 'Unique', they can be
+    -- assumed to be identical. Note that the inverse is /not/ true: two
+    -- definitions with different 'Unique's might still be otherwise identical.
+    --
+    -- Also see Note [Tying the knot] in Hasura.GraphQL.Parser.Class.
+    dUnique :: Maybe Unique,
+    dDescription :: Maybe Description,
+    -- | Lazy to allow mutually-recursive type definitions.
+    dInfo :: ~a
+  }
+  deriving (Functor, Foldable, Traversable, Generic)
+
 instance Hashable a => Hashable (Definition a) where
-  hashWithSalt salt Definition{..} =
+  hashWithSalt salt Definition {..} =
     salt `hashWithSalt` dName `hashWithSalt` dInfo
 
-mkDefinition :: Name -> Maybe Description -> a -> Definition a
-mkDefinition name description info = Definition name Nothing description info
+mkDefinition :: HasName (DefinitionName a) => DefinitionName a -> Maybe Description -> a -> Definition a
+mkDefinition name description info = Definition (getName name) Nothing description info
 
 instance Eq a => Eq (Definition a) where
   (==) = eq1
 
 instance Eq1 Definition where
-  liftEq eq (Definition name1 maybeUnique1 _ info1)
-            (Definition name2 maybeUnique2 _ info2)
-    | Just unique1 <- maybeUnique1
-    , Just unique2 <- maybeUnique2
-    , unique1 == unique2
-    = True
-    | otherwise
-    = name1 == name2 && eq info1 info2
+  liftEq
+    eq
+    (Definition name1 maybeUnique1 _ info1)
+    (Definition name2 maybeUnique2 _ info2)
+      | Just unique1 <- maybeUnique1,
+        Just unique2 <- maybeUnique2,
+        unique1 == unique2 =
+        True
+      | otherwise =
+        name1 == name2 && eq info1 info2
 
 instance HasName (Definition a) where
   getName = dName
 
 class HasDefinition s a | s -> a where
   definitionLens :: Lens' s (Definition a)
+
 instance HasDefinition (Definition a) a where
   definitionLens = id
 
@@ -577,37 +625,40 @@ instance HasDefinition (Definition a) a where
 -- definition already has a 'Unique', the existing 'Unique' is kept.
 addDefinitionUnique :: HasDefinition s a => Unique -> s -> s
 addDefinitionUnique unique = over definitionLens \definition ->
-  definition { dUnique = dUnique definition <|> Just unique }
+  definition {dUnique = dUnique definition <|> Just unique}
 
 -- | Enum values have no extra information except for the information common to
 -- all definitions, so this is just a placeholder for use as @'Definition'
 -- 'EnumValueInfo'@.
 data EnumValueInfo = EnumValueInfo
   deriving (Eq, Generic)
+
 instance Hashable EnumValueInfo
 
 data InputFieldInfo
-  -- | A required field with a non-nullable type.
-  = forall k. ('Input <: k) => IFRequired (NonNullableType k)
-  -- | An optional input field with a nullable type and possibly a default
-  -- value. If a default value is provided, it should be a valid value for the
-  -- type.
-  --
-  -- Note that a default value of 'VNull' is subtly different from having no
-  -- default value at all. If no default value is provided, the GraphQL
-  -- specification allows distinguishing provided @null@ values from values left
-  -- completely absent; see Note [Optional fields and nullability] in
-  -- Hasura.GraphQL.Parser.Internal.Parser.
-  | forall k. ('Input <: k) => IFOptional (Type k) (Maybe (Value Void))
+  = -- | A required field with a non-nullable type.
+    forall k. ('Input <: k) => IFRequired (NonNullableType k)
+  | -- | An optional input field with a nullable type and possibly a default
+    -- value. If a default value is provided, it should be a valid value for the
+    -- type.
+    --
+    -- Note that a default value of 'VNull' is subtly different from having no
+    -- default value at all. If no default value is provided, the GraphQL
+    -- specification allows distinguishing provided @null@ values from values left
+    -- completely absent; see Note [Optional fields and nullability] in
+    -- Hasura.GraphQL.Parser.Internal.Parser.
+    forall k. ('Input <: k) => IFOptional (Type k) (Maybe (Value Void))
 
 instance Eq InputFieldInfo where
-  IFRequired t1    == IFRequired t2    = eqNonNullableType t1 t2
+  IFRequired t1 == IFRequired t2 = eqNonNullableType t1 t2
   IFOptional t1 v1 == IFOptional t2 v2 = eqType t1 t2 && v1 == v2
-  _                == _                = False
+  _ == _ = False
 
-data FieldInfo = forall k. ('Output <: k) => FieldInfo
-  { fArguments :: [Definition InputFieldInfo]
-  , fType      :: Type k
+data FieldInfo = forall k.
+  ('Output <: k) =>
+  FieldInfo
+  { fArguments :: [Definition InputFieldInfo],
+    fType :: Type k
   }
 
 instance Eq FieldInfo where
@@ -672,33 +723,41 @@ data InputValue v
   = GraphQLValue (Value v)
   | JSONValue J.Value
   deriving (Show, Eq, Functor, Generic, Ord)
+
 instance (Hashable v) => Hashable (InputValue v)
+
 instance (Cacheable v) => Cacheable (InputValue v)
 
 data Variable = Variable
-  { vInfo  :: VariableInfo
-  , vType  :: GType
-  , vValue :: InputValue Void
-  -- ^ Note: if the variable was null or was not provided and the field has a
-  -- non-null default value, this field contains the default value, not 'VNull'.
-  } deriving (Show, Eq, Generic, Ord)
+  { vInfo :: VariableInfo,
+    vType :: GType,
+    -- | Note: if the variable was null or was not provided and the field has a
+    -- non-null default value, this field contains the default value, not 'VNull'.
+    vValue :: InputValue Void
+  }
+  deriving (Show, Eq, Generic, Ord)
+
 instance Hashable Variable
+
 instance Cacheable Variable
 
 data VariableInfo
   = VIRequired Name
-  -- | Unlike fields (see 'IFOptional'), nullable variables with no default
-  -- value are indistinguishable from variables with a default value of null, so
-  -- we don’t distinguish those cases here.
-  | VIOptional Name (Value Void)
+  | -- | Unlike fields (see 'IFOptional'), nullable variables with no default
+    -- value are indistinguishable from variables with a default value of null, so
+    -- we don’t distinguish those cases here.
+    VIOptional Name (Value Void)
   deriving (Show, Eq, Generic, Ord)
+
 instance Hashable VariableInfo
+
 instance Cacheable VariableInfo
 
 instance HasName Variable where
   getName = getName . vInfo
+
 instance HasName VariableInfo where
-  getName (VIRequired name)   = name
+  getName (VIRequired name) = name
   getName (VIOptional name _) = name
 
 -- -----------------------------------------------------------------------------
@@ -706,68 +765,87 @@ instance HasName VariableInfo where
 
 -- | This type represents the directives information to be served over GraphQL introspection
 data DirectiveInfo = DirectiveInfo
-  { diName        :: !Name
-  , diDescription :: !(Maybe Description)
-  , diArguments   :: ![Definition InputFieldInfo]
-  , diLocations   :: ![DirectiveLocation]
+  { diName :: !Name,
+    diDescription :: !(Maybe Description),
+    diArguments :: ![Definition InputFieldInfo],
+    diLocations :: ![DirectiveLocation]
   }
 
 -- | This type contains all the information needed to efficiently serve GraphQL
 -- introspection queries. It corresponds to the GraphQL @__Schema@ type defined
 -- in <§ 4.5 Schema Introspection http://spec.graphql.org/June2018/#sec-Introspection>.
 data Schema = Schema
-  { sDescription      :: Maybe Description
-  , sTypes            :: HashMap Name (Definition SomeTypeInfo)
-  , sQueryType        :: Type 'Output
-  , sMutationType     :: Maybe (Type 'Output)
-  , sSubscriptionType :: Maybe (Type 'Output)
-  , sDirectives       :: [DirectiveInfo]
+  { sDescription :: Maybe Description,
+    sTypes :: HashMap Name (Definition SomeTypeInfo),
+    sQueryType :: Type 'Output,
+    sMutationType :: Maybe (Type 'Output),
+    sSubscriptionType :: Maybe (Type 'Output),
+    sDirectives :: [DirectiveInfo]
   }
 
 data TypeDefinitionsWrapper where
   TypeDefinitionsWrapper :: HasTypeDefinitions a => a -> TypeDefinitionsWrapper
 
 -- | Recursively collects all type definitions accessible from the given value.
-collectTypeDefinitions
-  :: (HasTypeDefinitions a, MonadError ConflictingDefinitions m)
-  => a
-  -> m (HashMap Name (Definition SomeTypeInfo))
+collectTypeDefinitions ::
+  HasTypeDefinitions a =>
+  a ->
+  Either ConflictingDefinitions (HashMap Name (Definition SomeTypeInfo))
 collectTypeDefinitions x =
   fmap (fmap fst) $
-  flip execStateT Map.empty $
-  flip runReaderT (TypeOriginStack []) $
-  accumulateTypeDefinitions x
+    runExcept $
+      flip execStateT Map.empty $
+        flip runReaderT (TypeOriginStack []) $
+          runTypeAccumulation $
+            accumulateTypeDefinitions x
 
 newtype TypeOriginStack = TypeOriginStack [Name]
 
 -- Add the current field name to the origin stack
 typeOriginRecurse :: Name -> TypeOriginStack -> TypeOriginStack
-typeOriginRecurse field (TypeOriginStack origins) = TypeOriginStack (field:origins)
+typeOriginRecurse field (TypeOriginStack origins) = TypeOriginStack (field : origins)
 
 -- This is kind of a hack to make sure that the query root name is part of the origin stack
 typeRootRecurse :: Name -> TypeOriginStack -> TypeOriginStack
 typeRootRecurse rootName (TypeOriginStack []) = (TypeOriginStack [rootName])
-typeRootRecurse _ x                           = x
+typeRootRecurse _ x = x
 
 instance ToTxt TypeOriginStack where
   toTxt (TypeOriginStack fields) = T.intercalate "." $ toTxt <$> reverse fields
 
 data ConflictingDefinitions
-  = ConflictingDefinitions
-    (Definition SomeTypeInfo, TypeOriginStack)
-    (Definition SomeTypeInfo, NonEmpty TypeOriginStack)
-  -- ^ Type collection has found at least two types with the same name.
+  = -- | Type collection has found at least two types with the same name.
+    ConflictingDefinitions
+      (Definition SomeTypeInfo, TypeOriginStack)
+      (Definition SomeTypeInfo, NonEmpty TypeOriginStack)
+
+-- | Although the majority of graphql-engine is written in terms of abstract
+-- mtl-style effect monads, we figured out that this particular codepath is
+-- quite hot, and that mtl has a measurable negative effect for accumulating
+-- types from the schema, both in profiling and in benchmarking.  Using an
+-- explicit transformers-style effect stack seems to overall memory usage by
+-- about 3-7%.
+newtype TypeAccumulation a = TypeAccumulation
+  { runTypeAccumulation ::
+      ReaderT
+        TypeOriginStack
+        ( StateT
+            (HashMap Name (Definition SomeTypeInfo, NonEmpty TypeOriginStack))
+            (ExceptT ConflictingDefinitions Identity)
+        )
+        a
+  }
+  deriving (Functor, Applicative, Monad)
+  deriving (MonadReader TypeOriginStack)
+  deriving (MonadState (HashMap Name (Definition SomeTypeInfo, NonEmpty TypeOriginStack)))
+  deriving (MonadError ConflictingDefinitions)
 
 class HasTypeDefinitions a where
   -- | Recursively accumulates all type definitions accessible from the given
   -- value. This is done statefully to avoid infinite loops arising from
   -- recursive type definitions; see Note [Tying the knot] in Hasura.GraphQL.Parser.Class.
-  accumulateTypeDefinitions
-    :: ( MonadError ConflictingDefinitions m
-       , MonadReader TypeOriginStack m
-       , MonadState (HashMap Name (Definition SomeTypeInfo, NonEmpty TypeOriginStack)) m
-       )
-    => a -> m ()
+  accumulateTypeDefinitions ::
+    a -> TypeAccumulation ()
 
 instance HasTypeDefinitions (Definition (TypeInfo k)) where
   accumulateTypeDefinitions definition = do
@@ -786,7 +864,7 @@ instance HasTypeDefinitions (Definition (TypeInfo k)) where
         -- It’s important we /don’t/ recur if we’ve already seen this definition
         -- before to avoid infinite loops; see Note [Tying the knot] in Hasura.GraphQL.Parser.Class.
         | old == new -> put $! Map.insert (dName new) (old, stack `NE.cons` origins) definitions
-        | otherwise  -> throwError $ ConflictingDefinitions (new, stack) (old, origins)
+        | otherwise -> throwError $ ConflictingDefinitions (new, stack) (old, origins)
 
 instance HasTypeDefinitions a => HasTypeDefinitions [a] where
   accumulateTypeDefinitions = traverse_ accumulateTypeDefinitions
@@ -797,39 +875,39 @@ instance HasTypeDefinitions TypeDefinitionsWrapper where
 instance HasTypeDefinitions (Type k) where
   accumulateTypeDefinitions = \case
     NonNullable t -> accumulateTypeDefinitions t
-    Nullable    t -> accumulateTypeDefinitions t
+    Nullable t -> accumulateTypeDefinitions t
 
 instance HasTypeDefinitions (NonNullableType k) where
   accumulateTypeDefinitions = \case
     TNamed d -> accumulateTypeDefinitions d
-    TList  t -> accumulateTypeDefinitions t
+    TList t -> accumulateTypeDefinitions t
 
 instance HasTypeDefinitions (TypeInfo k) where
   accumulateTypeDefinitions = \case
-    TIScalar                                              -> pure ()
-    TIEnum _                                              -> pure ()
-    TIInputObject (InputObjectInfo fields)                -> accumulateTypeDefinitions fields
-    TIObject (ObjectInfo fields interfaces)               ->
+    TIScalar -> pure ()
+    TIEnum _ -> pure ()
+    TIInputObject (InputObjectInfo fields) -> accumulateTypeDefinitions fields
+    TIObject (ObjectInfo fields interfaces) ->
       accumulateTypeDefinitions fields >> accumulateTypeDefinitions interfaces
     TIInterface (InterfaceInfo fields objects) ->
-         accumulateTypeDefinitions fields
-      >> accumulateTypeDefinitions objects
-    TIUnion (UnionInfo objects)                           -> accumulateTypeDefinitions objects
+      accumulateTypeDefinitions fields
+        >> accumulateTypeDefinitions objects
+    TIUnion (UnionInfo objects) -> accumulateTypeDefinitions objects
 
 instance HasTypeDefinitions (Definition InputObjectInfo) where
   accumulateTypeDefinitions = accumulateTypeDefinitions . fmap TIInputObject
 
 instance HasTypeDefinitions (Definition InputFieldInfo) where
-  accumulateTypeDefinitions Definition{..} =
+  accumulateTypeDefinitions Definition {..} =
     local (typeOriginRecurse dName) $ accumulateTypeDefinitions dInfo
 
 instance HasTypeDefinitions InputFieldInfo where
   accumulateTypeDefinitions = \case
-    IFRequired t   -> accumulateTypeDefinitions t
+    IFRequired t -> accumulateTypeDefinitions t
     IFOptional t _ -> accumulateTypeDefinitions t
 
 instance HasTypeDefinitions (Definition FieldInfo) where
-  accumulateTypeDefinitions Definition{..} =
+  accumulateTypeDefinitions Definition {..} =
     local (typeOriginRecurse dName) $ accumulateTypeDefinitions dInfo
 
 instance HasTypeDefinitions FieldInfo where
@@ -838,13 +916,13 @@ instance HasTypeDefinitions FieldInfo where
     accumulateTypeDefinitions t
 
 instance HasTypeDefinitions (Definition ObjectInfo) where
-  accumulateTypeDefinitions d@Definition{..} =
+  accumulateTypeDefinitions d@Definition {..} =
     local (typeOriginRecurse dName) $ accumulateTypeDefinitions (fmap TIObject d)
 
 instance HasTypeDefinitions (Definition InterfaceInfo) where
-  accumulateTypeDefinitions d@Definition{..} =
+  accumulateTypeDefinitions d@Definition {..} =
     local (typeOriginRecurse dName) $ accumulateTypeDefinitions (fmap TIInterface d)
 
 instance HasTypeDefinitions (Definition UnionInfo) where
-  accumulateTypeDefinitions d@Definition{..} =
+  accumulateTypeDefinitions d@Definition {..} =
     local (typeOriginRecurse dName) $ accumulateTypeDefinitions (fmap TIUnion d)

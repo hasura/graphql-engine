@@ -1,4 +1,4 @@
-import { Driver } from '../dataSources';
+import { Driver, sourceNames } from '../dataSources';
 import {
   ConnectionPoolSettings,
   IsolationLevelOptions,
@@ -16,6 +16,7 @@ export const addSource = (
     bigQuery: {
       projectId: string;
       datasets: string;
+      global_select_limit: number;
     };
     sslConfiguration?: SSLConfigOptions;
     preparedStatements?: boolean;
@@ -58,6 +59,7 @@ export const addSource = (
         name: payload.name,
         configuration: {
           service_account,
+          global_select_limit: payload.bigQuery.global_select_limit,
           project_id: payload.bigQuery.projectId,
           datasets: payload.bigQuery.datasets.split(',').map(d => d.trim()),
         },
@@ -67,7 +69,7 @@ export const addSource = (
   }
 
   return {
-    type: 'pg_add_source',
+    type: `${driver === 'postgres' ? 'pg' : 'citus'}_add_source`,
     args: {
       name: payload.name,
       configuration: {
@@ -88,14 +90,14 @@ export const addSource = (
 export const removeSource = (driver: Driver, name: string) => {
   let prefix = '';
   switch (driver) {
-    case 'mssql':
+    case sourceNames.mssql:
       prefix = 'mssql_';
       break;
-    case 'mysql':
-      prefix = 'mysql_';
-      break;
-    case 'bigquery':
+    case sourceNames.bigquery:
       prefix = 'bigquery_';
+      break;
+    case sourceNames.citus:
+      prefix = 'citus_';
       break;
     default:
       prefix = 'pg_';

@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/hasura/graphql-engine/cli/internal/hasura"
+	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
 )
 
 func (c *ClientCommonMetadataOps) V2ReplaceMetadata(args hasura.V2ReplaceMetadataArgs) (*hasura.V2ReplaceMetadataResponse, error) {

@@ -5,42 +5,65 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/hasura/graphql-engine/cli/internal/testutil"
+	"github.com/Pallinder/go-randomdata"
+	"github.com/hasura/graphql-engine/cli/v2/internal/testutil"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	. "github.com/onsi/gomega/gexec"
 )
 
 var _ = Describe("hasura metadata inconsistency list", func() {
-
-	var dirName string
+	var projectDirectory string
 	var teardown func()
 	BeforeEach(func() {
-		dirName = testutil.RandDirName()
+		projectDirectory = testutil.RandDirName()
 		hgeEndPort, teardownHGE := testutil.StartHasura(GinkgoT(), testutil.HasuraDockerImage)
 		hgeEndpoint := fmt.Sprintf("http://0.0.0.0:%s", hgeEndPort)
+		sourceName := randomdata.SillyName()
+		connectionString, teardownPG := AddDatabaseToHasura(hgeEndpoint, sourceName, "postgres")
+		copyTestConfigV3Project(projectDirectory)
+		editEndpointInConfig(filepath.Join(projectDirectory, defaultConfigFilename), hgeEndpoint)
+		editSourceNameInConfigV3ProjectTemplate(projectDirectory, sourceName, connectionString)
+
 		testutil.RunCommandAndSucceed(testutil.CmdOpts{
-			Args: []string{"init", dirName},
+			Args:             []string{"metadata", "apply"},
+			WorkingDirectory: projectDirectory,
 		})
-		editEndpointInConfig(filepath.Join(dirName, defaultConfigFilename), hgeEndpoint)
 
 		teardown = func() {
-			os.RemoveAll(dirName)
+			os.RemoveAll(projectDirectory)
 			teardownHGE()
+			teardownPG()
 		}
 	})
 
 	AfterEach(func() { teardown() })
+	var matcher = func(out []byte) {
+		want := []string{"genres", "albums", "media_types", "playlists", "artists", "tracks", "playlist_track"}
+		for _, v := range want {
+			Expect(out).To(ContainSubstring(v))
+		}
+	}
 
-	Context("metadata inconsistency list test", func() {
-		It("Lists all inconsistent objects from the metadata", func() {
+	It("should list inconsistent metadata objects", func() {
+		Context("Lists all inconsistent objects in table format", func() {
 			session := testutil.Hasura(testutil.CmdOpts{
 				Args:             []string{"metadata", "inconsistency", "list"},
-				WorkingDirectory: dirName,
+				WorkingDirectory: projectDirectory,
 			})
-			want := `metadata is consistent`
-			Eventually(session, 60*40).Should(Exit(0))
-			Eventually(session.Wait().Err.Contents()).Should(ContainSubstring(want))
+			Eventually(session, timeout).Should(Exit(0))
+			stdout := session.Out.Contents()
+			matcher(stdout)
+		})
+		Context("Lists all inconsistent objects in json format", func() {
+			session := testutil.Hasura(testutil.CmdOpts{
+				Args:             []string{"metadata", "inconsistency", "list", "-o", "json"},
+				WorkingDirectory: projectDirectory,
+			})
+			Eventually(session, timeout).Should(Exit(0))
+			stdout := session.Out.Contents()
+			Eventually(isJSON(stdout)).Should(BeTrue())
+			matcher(stdout)
 		})
 	})
 })

@@ -1,0 +1,101 @@
+- description: When permissions conflict, the metadata should be inconsistent
+  url: /v1/metadata
+  status: 200
+  query:
+    type: get_inconsistent_metadata
+    args: {}
+  response:
+    is_consistent: False
+    inconsistent_objects:
+      - reason: "Could not inherit permission for the role 'author_editor' for the entity: 'update permission, table: authors, source: 'default''"
+        name: author_editor
+        type: inherited role permission inconsistency
+        entity:
+          permission_type: update
+          source: default
+          table: authors
+
+
+- description: Querying an inconsistent table permission should not be available
+  url: /v1/graphql
+  headers:
+    X-Hasura-Role: author_editor
+  status: 200
+  query:
+    query: |
+      mutation {
+        update_authors (_set: { phone: "43424320132" })
+        {
+          affected_rows
+        }
+      }
+  response:
+    errors:
+    - extensions:
+        path: $.selectionSet.update_authors
+        code: validation-failed
+      message: "field \"update_authors\" not found in type: 'mutation_root'"
+
+- description: add permission for the inherited role which was inconsistent
+  url: /v1/metadata
+  status: 200
+  query:
+    type: pg_create_update_permission
+    args:
+      table: authors
+      role: author_editor
+      permission:
+        columns:
+          - first_name
+          - last_name
+          - phone
+          - age
+          - editor_id
+        filter:
+          id: X-Hasura-Author-Id
+        set:
+          updated_at: "NOW()"
+  response:
+    message: success
+
+- description: after overriding the permission, the inconsistent permission should have been resolved
+  url: /v1/metadata
+  status: 200
+  query:
+    type: get_inconsistent_metadata
+    args: {}
+  response:
+    is_consistent: true
+    inconsistent_objects: []
+
+- description: |
+    After setting the permission, `update_authors` should use the permission which
+    was added
+  url: /v1/graphql
+  headers:
+    X-Hasura-Role: author_editor
+    X-Hasura-Author-Id: '1'
+  status: 200
+  query:
+    query: |
+      mutation {
+        update_authors (_set: { phone: "43424320132" }, where: {id: {_eq: 1}})
+        {
+          affected_rows
+        }
+      }
+  response:
+    data:
+      update_authors:
+        affected_rows: 1
+
+- description: drop the permission which was added in this module # so that all the tests are idempotent
+  url: /v1/metadata
+  status: 200
+  query:
+    type: pg_drop_update_permission
+    args:
+      table: authors
+      role: author_editor
+  response:
+    message: success

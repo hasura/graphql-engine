@@ -7,9 +7,9 @@ import (
 	"io"
 
 	"github.com/goccy/go-yaml"
-	"github.com/hasura/graphql-engine/cli"
-	"github.com/hasura/graphql-engine/cli/internal/scripts"
-	"github.com/hasura/graphql-engine/cli/util"
+	"github.com/hasura/graphql-engine/cli/v2"
+	"github.com/hasura/graphql-engine/cli/v2/internal/scripts"
+	"github.com/hasura/graphql-engine/cli/v2/util"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -55,7 +55,9 @@ func NewMetadataCmd(ec *cli.ExecutionContext) *cobra.Command {
 	f.String("endpoint", "", "http(s) endpoint for Hasura GraphQL engine")
 	f.String("admin-secret", "", "admin secret for Hasura GraphQL engine")
 	f.String("access-key", "", "access key for Hasura GraphQL engine")
-	f.MarkDeprecated("access-key", "use --admin-secret instead")
+	if err := f.MarkDeprecated("access-key", "use --admin-secret instead"); err != nil {
+		ec.Logger.WithError(err).Errorf("error while using a dependency library")
+	}
 	f.Bool("insecure-skip-tls-verify", false, "skip TLS verification and disable cert checking (default: false)")
 	f.String("certificate-authority", "", "path to a cert file for the certificate authority")
 
@@ -76,13 +78,19 @@ func writeByOutputFormat(w io.Writer, b []byte, format rawOutputFormat) error {
 		if err != nil {
 			return err
 		}
-		io.Copy(w, out)
+		_, err = io.Copy(w, out)
+		if err != nil {
+			return fmt.Errorf("writing output failed: %w", err)
+		}
 	case rawOutputFormatYAML:
 		o, err := yaml.JSONToYAML(b)
 		if err != nil {
 			return err
 		}
-		io.Copy(w, bytes.NewReader(o))
+		_, err = io.Copy(w, bytes.NewReader(o))
+		if err != nil {
+			return fmt.Errorf("writing output failed: %w", err)
+		}
 	default:
 		return fmt.Errorf("output format '%v' is not supported. supported formats: %v, %v", format, rawOutputFormatJSON, rawOutputFormatYAML)
 	}

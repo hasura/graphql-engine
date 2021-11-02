@@ -49,6 +49,13 @@ In addition to flags, the GraphQL engine also accepts environment variables.
 In the above case, for adding an admin secret you will use the ``HASURA_GRAPHQL_ADMIN_SECRET``
 and for the webhook, you will use the ``HASURA_GRAPHQL_AUTH_HOOK`` environment variables.
 
+.. hiding this as it mixes auth for the data plane with auth for the control plane and might be confusing
+
+  .. admonition:: Using collaborators as an alternative to Hasura Admin Secret sharing with Hasura Cloud
+    :class: dhc
+
+    Hasura Cloud offers console collaborators which avoids sharing the `HASURA-ADMIN-SECRET` with those that shouldn't have unrestricted access to your project. For more information about collaborator management, see :ref:`Collaborators in Hasura Cloud <manage_project_collaborators>`.
+
 .. _cli-with-admin-secret:
 
 Using CLI commands with admin secret
@@ -183,7 +190,7 @@ The ``internal`` key contains error information including the
 generated SQL statement and exception information from Postgres. 
 This can be highly useful, especially in the case of debugging errors in :doc:`action <../../actions/debugging>` requests.
 
-By default the ``extensions`` key is not sent in the ``errors`` response. To enable this,
+By default the ``internal`` key is not sent in the ``extensions`` response (except for ``admin`` roles). To enable this,
 start the GraphQL engine server in debugging mode with the following configuration:
 
 .. code-block:: bash
@@ -194,15 +201,15 @@ start the GraphQL engine server in debugging mode with the following configurati
    # flag
    --dev-mode
 
-If you want the debugging mode enabled only for ``admin`` role requests, configure as follows instead of the above:
+The ``internal`` key is sent for ``admin`` role requests by default. To disable them, configure as follows:
 
 .. code-block:: bash
 
    # env var
-   HASURA_GRAPHQL_ADMIN_INTERNAL_ERRORS=true
+   HASURA_GRAPHQL_ADMIN_INTERNAL_ERRORS=false
 
    # flag
-   --admin-internal-errors
+   --admin-internal-errors false
 
 .. note::
 

@@ -1,5 +1,4 @@
 import React from 'react';
-import styles from './ModifyCustomFunction.scss';
 
 export interface EditorInputProps {
   value: string | number;
@@ -16,9 +15,9 @@ const EditorInput: React.FC<EditorInputProps> = ({
   placeholder,
   testID,
 }) => (
-  <div className={`${styles.display_flex} form-group`}>
-    <label className="col-xs-4">{label}</label>
-    <div className="col-xs-6">
+  <div className="flex items-center">
+    <label className="text-gray-600 font-semibold">{label}</label>
+    <div className="ml-auto w-6/12">
       <input
         className="input-sm form-control"
         value={value}

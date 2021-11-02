@@ -19,8 +19,9 @@ response:
       name: endpoint foo
       type: endpoint
   path: $.args
-  error: cannot continue due to new inconsistent metadata
-  code: unexpected
+  error: 'Inconsistent object: in endpoint foo: query with name simple_subscription
+    is a subscription'
+  code: invalid-configuration
 query:
   type: create_rest_endpoint
   args:

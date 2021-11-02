@@ -4,8 +4,8 @@
 
 .. _schema_metadata_apis:
 
-Schema / Metadata API Reference
-===============================
+Schema / Metadata API Reference (Deprecated)
+============================================
 
 .. contents:: Table of contents
   :backlinks: none
@@ -266,6 +266,11 @@ The various types of queries are listed in the following table:
      - 1
      - Add a remote GraphQL server as a remote schema
 
+   * - :ref:`update_remote_schema`
+     - :ref:`update_remote_schema_args <update_remote_schema_syntax>`
+     - 1
+     - Update the details for a remote schema
+
    * - :ref:`remove_remote_schema`
      - :ref:`remove_remote_schema_args <remove_remote_schema_syntax>`
      - 1
@@ -312,7 +317,7 @@ The various types of queries are listed in the following table:
      - Import and replace existing metadata
 
    * - :ref:`reload_metadata`
-     - :ref:`Empty Object`
+     - :ref:`reload_metadata_args <reload_metadata_args_syntax>`
      - 1
      - Reload changes to the underlying Postgres DB
 

@@ -103,7 +103,7 @@ Test auth0 login and generate sample JWTs for testing
 
 You don't need to integrate your UI with auth0 for testing. You can follow the steps below:
 
-1. Login to your auth0 app by heading to this URL: ``https://<auth0-domain>.auth0.com/login?client=<client_id>&protocol=oauth2&response_type=token%20id_token&redirect_uri=<callback_uri>&scope=openid%20profile``.
+1. Login to your auth0 app by heading to this URL: ``https://<auth0-domain>.auth0.com/authorize?client_id=<client_id>&response_type=token%20id_token&redirect_uri=<callback_uri>&scope=openid%20profile&nonce=mynonce``.
 
    - Replace ``<auth0-domain>`` with your auth0 app domain.
    - Replace ``<client-id>`` with your auth0 app client id. Get your client id from the app settings page on the auth0 dashboard.

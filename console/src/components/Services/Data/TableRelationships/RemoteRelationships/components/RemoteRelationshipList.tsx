@@ -3,11 +3,13 @@ import { RemoteRelationshipServer } from '../utils';
 import RemoteRelationshipEditor from './RemoteRelEditorWrapper';
 import { Dispatch } from '../../../../../../types';
 import { Table } from '../../../../../../dataSources/types';
+import { PGFunction } from '../../../../../../dataSources/services/postgresql/types';
 
 type Props = {
   relationships: RemoteRelationshipServer[];
   table: Table;
   remoteSchemas: string[];
+  allFunctions: PGFunction[];
   reduxDispatch: Dispatch;
 };
 
@@ -15,6 +17,7 @@ const RemoteRelationshipList: React.FC<Props> = ({
   relationships,
   table,
   remoteSchemas,
+  allFunctions,
   reduxDispatch,
 }) => {
   return (
@@ -26,6 +29,7 @@ const RemoteRelationshipList: React.FC<Props> = ({
           table={table}
           remoteSchemas={remoteSchemas}
           reduxDispatch={reduxDispatch}
+          allFunctions={allFunctions}
           isLast={false}
         />
       ))}
@@ -33,6 +37,7 @@ const RemoteRelationshipList: React.FC<Props> = ({
         key="add-remote-rel"
         table={table}
         remoteSchemas={remoteSchemas}
+        allFunctions={allFunctions}
         reduxDispatch={reduxDispatch}
         isLast
       />

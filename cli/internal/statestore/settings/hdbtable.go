@@ -3,7 +3,7 @@ package settings
 import (
 	"fmt"
 
-	"github.com/hasura/graphql-engine/cli/internal/hasura"
+	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
 )
 
 type StateStoreHdbTable struct {
@@ -126,7 +126,7 @@ func (s *StateStoreHdbTable) PrepareSettingsDriver() error {
 func (s *StateStoreHdbTable) setDefaults() error {
 	var sql string
 	for _, setting := range Settings {
-		sql += `INSERT INTO ` + fmt.Sprintf("%s.%s", s.schema, s.table) + ` (setting, value) VALUES ('` + fmt.Sprintf("%s", setting.GetName()) + `', '` + fmt.Sprintf("%s", setting.GetDefaultValue()) + `');`
+		sql += `INSERT INTO ` + fmt.Sprintf("%s.%s", s.schema, s.table) + ` (setting, value) VALUES ('` + setting.GetName() + `', '` + setting.GetDefaultValue() + `');`
 	}
 
 	query := hasura.PGRunSQLInput{

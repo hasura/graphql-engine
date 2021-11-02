@@ -2,38 +2,39 @@
 
 module Hasura.RQL.Types.Source where
 
-import           Hasura.Prelude
+import Control.Lens
+import Data.Aeson.Extended
+import Data.HashMap.Strict qualified as M
+import Database.PG.Query qualified as Q
+import Hasura.Backends.Postgres.Connection
+import Hasura.Base.Error
+import Hasura.Prelude
+import Hasura.RQL.IR.BoolExp
+import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.Common
+import Hasura.RQL.Types.Function
+import Hasura.RQL.Types.Instances ()
+import Hasura.RQL.Types.QueryTags
+import Hasura.RQL.Types.SourceCustomization
+import Hasura.RQL.Types.Table
+import Hasura.SQL.AnyBackend qualified as AB
+import Hasura.SQL.Backend
+import Hasura.SQL.Tag
+import Hasura.Session
+import Hasura.Tracing qualified as Tracing
 
-import qualified Data.HashMap.Strict                 as M
+data SourceInfo b = SourceInfo
+  { _siName :: !SourceName,
+    _siTables :: !(TableCache b),
+    _siFunctions :: !(FunctionCache b),
+    _siConfiguration :: !(SourceConfig b),
+    _siQueryTagsConfig :: !(Maybe QueryTagsConfig),
+    _siCustomization :: !SourceCustomization
+  }
+  deriving (Generic)
 
-import           Control.Lens
-import           Data.Aeson.Extended
-import           Data.Aeson.TH
-
-import qualified Hasura.SQL.AnyBackend               as AB
-import qualified Hasura.Tracing                      as Tracing
-
-import           Hasura.Backends.Postgres.Connection
-import           Hasura.Base.Error
-import           Hasura.RQL.IR.BoolExp
-import           Hasura.RQL.Types.Backend
-import           Hasura.RQL.Types.Common
-import           Hasura.RQL.Types.Function
-import           Hasura.RQL.Types.Instances          ()
-import           Hasura.RQL.Types.Table
-import           Hasura.SQL.Backend
-import           Hasura.SQL.Tag
-import           Hasura.Session
-
-
-data SourceInfo b
-  = SourceInfo
-  { _siName          :: !SourceName
-  , _siTables        :: !(TableCache b)
-  , _siFunctions     :: !(FunctionCache b)
-  , _siConfiguration :: !(SourceConfig b)
-  } deriving (Generic)
 $(makeLenses ''SourceInfo)
+
 instance (Backend b, ToJSONKeyValue (BooleanOperators b (PartialSQLExp b))) => ToJSON (SourceInfo b) where
   toJSON = genericToJSON hasuraJSON
 
@@ -54,7 +55,7 @@ unsafeSourceInfo = AB.unpackAnyBackend
 unsafeSourceName :: BackendSourceInfo -> SourceName
 unsafeSourceName bsi = AB.dispatchAnyBackend @Backend bsi go
   where
-    go (SourceInfo name _ _ _) = name
+    go (SourceInfo name _ _ _ _ _) = name
 
 unsafeSourceTables :: forall b. HasTag b => BackendSourceInfo -> Maybe (TableCache b)
 unsafeSourceTables = fmap _siTables . unsafeSourceInfo @b
@@ -70,16 +71,15 @@ getTableRoles bsi = AB.dispatchAnyBackend @Backend bsi go
   where
     go si = M.keys . _tiRolePermInfoMap =<< M.elems (_siTables si)
 
-
 -- | Contains Postgres connection configuration and essential metadata from the
 -- database to build schema cache for tables and function.
-data ResolvedSource b
-  = ResolvedSource
-  { _rsConfig    :: !(SourceConfig b)
-  , _rsTables    :: !(DBTablesMetadata b)
-  , _rsFunctions :: !(DBFunctionsMetadata b)
-  , _rsPgScalars :: !(HashSet (ScalarType b))
-  } deriving (Eq)
+data ResolvedSource b = ResolvedSource
+  { _rsConfig :: !(SourceConfig b),
+    _rsCustomization :: !(SourceTypeCustomization),
+    _rsTables :: !(DBTablesMetadata b),
+    _rsFunctions :: !(DBFunctionsMetadata b),
+    _rsPgScalars :: !(HashSet (ScalarType b))
+  }
 
 type SourceTables b = HashMap SourceName (TableCache b)
 
@@ -98,54 +98,13 @@ instance (MonadResolveSource m) => MonadResolveSource (ReaderT r m) where
 instance (MonadResolveSource m) => MonadResolveSource (Tracing.TraceT m) where
   getSourceResolver = lift getSourceResolver
 
-instance (MonadResolveSource m) => MonadResolveSource (LazyTxT QErr m) where
+instance (MonadResolveSource m) => MonadResolveSource (Q.TxET QErr m) where
   getSourceResolver = lift getSourceResolver
 
--- Metadata API related types
-data AddSource b
-  = AddSource
-  { _asName                 :: !SourceName
-  , _asConfiguration        :: !(SourceConnConfiguration b)
-  , _asReplaceConfiguration :: !Bool
-  } deriving (Generic)
-deriving instance (Backend b) => Show (AddSource b)
-deriving instance (Backend b) => Eq (AddSource b)
-
-instance (Backend b) => ToJSON (AddSource b) where
-  toJSON = genericToJSON hasuraJSON
-
-instance (Backend b) => FromJSON (AddSource b) where
-  parseJSON = withObject "Object" $ \o ->
-    AddSource
-      <$> o .: "name"
-      <*> o .: "configuration"
-      <*> o .:? "replace_configuration" .!= False
-
-data RenameSource
-  = RenameSource
-  { _rmName    :: !SourceName
-  , _rmNewName :: !SourceName
-  } deriving stock (Generic, Show, Eq)
-
-instance ToJSON RenameSource where
-  toJSON = genericToJSON hasuraJSON
-
-instance FromJSON RenameSource where
-  parseJSON = withObject "Object" $ \o ->
-    RenameSource <$> o .: "name" <*> o .: "new_name"
-
-data DropSource
-  = DropSource
-  { _dsName    :: !SourceName
-  , _dsCascade :: !Bool
-  } deriving (Show, Eq)
-$(deriveToJSON hasuraJSON ''DropSource)
-
-instance FromJSON DropSource where
-  parseJSON = withObject "Object" $ \o ->
-    DropSource <$> o .: "name" <*> o .:? "cascade" .!= False
-
-newtype PostgresSourceName =
-  PostgresSourceName {_psnName :: SourceName}
+data MaintenanceModeVersion
+  = -- | should correspond to the source catalog version from which the user
+    -- is migrating from
+    PreviousMMVersion
+  | -- | should correspond to the latest source catalog version
+    CurrentMMVersion
   deriving (Show, Eq)
-$(deriveJSON hasuraJSON ''PostgresSourceName)

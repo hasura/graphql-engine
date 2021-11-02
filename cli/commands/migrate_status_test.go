@@ -5,7 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/hasura/graphql-engine/cli/internal/testutil"
+	"github.com/hasura/graphql-engine/cli/v2/internal/testutil"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	. "github.com/onsi/gomega/gbytes"
@@ -53,9 +53,9 @@ var _ = Describe("hasura migrate status", func() {
 			}
 
 			for _, keyword := range wantKeywordList {
-				Eventually(session.Out, 60*40).Should(Say(keyword))
+				Expect(session.Wait(timeout).Out).Should(Say(keyword))
 			}
-			Eventually(session, 60*40).Should(Exit(0))
+			Eventually(session, timeout).Should(Exit(0))
 		})
 	})
 

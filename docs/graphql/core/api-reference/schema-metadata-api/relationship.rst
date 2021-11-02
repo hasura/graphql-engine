@@ -4,8 +4,8 @@
 
 .. _api_relationship:
 
-Schema/Metadata API Reference: Relationships
-============================================
+Schema/Metadata API Reference: Relationships (Deprecated)
+=========================================================
 
 .. contents:: Table of contents
   :backlinks: none

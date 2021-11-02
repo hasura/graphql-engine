@@ -6,12 +6,12 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/hasura/graphql-engine/cli/internal/hasura/pgdump"
-	"github.com/hasura/graphql-engine/cli/internal/hasura/v1query"
+	"github.com/hasura/graphql-engine/cli/v2/internal/hasura/pgdump"
+	"github.com/hasura/graphql-engine/cli/v2/internal/hasura/v1query"
 
-	"github.com/hasura/graphql-engine/cli/internal/testutil"
+	"github.com/hasura/graphql-engine/cli/v2/internal/testutil"
 
-	"github.com/hasura/graphql-engine/cli/internal/hasura"
+	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
 )
 
 func TestDriver_ExportDatadump(t *testing.T) {
@@ -74,6 +74,7 @@ SELECT pg_catalog.setval('public.authors_id_seq', 1, false);
 				_, err = q.PGRunSQL(hasura.PGRunSQLInput{
 					SQL: string(b),
 				})
+				require.NoError(t, err)
 			},
 		},
 	}

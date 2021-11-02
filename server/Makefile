@@ -9,6 +9,7 @@ registry := hasura
 packager_ver := 20210218
 pg_dump_ver := 13
 build_output := /build/_server_output
+docs_output := /build/_server_output/docs.tar.gz
 
 # Getting access to the built products with the `cabal v2-*` commands is really awkward; see
 # <https://www.haskell.org/cabal/users-guide/nix-local-build.html#where-are-my-build-products> for a
@@ -18,36 +19,25 @@ build_output := /build/_server_output
 # This glob is a pretty heavy hammer designed to work regardless of `cabal-install` version (see the
 # aforementioned link for why that’s tricky). If `cabal v2-*` ever gets a better way to do this,
 # please replace this with something less hacky.
-executables_glob := dist-newstyle/build/*/*/graphql-engine-*/**/opt/build/{graphql-engine/graphql-engine,graphql-engine-tests/graphql-engine-tests}
-
-# These are the directories where `cabal v2-build --enable-coverage` sticks .mix files. It would be
-# much better if cabal-install supported something like stack’s `stack hpc report`, which passes the
-# right `--hpcdir` options automatically.
-mix_dirs_glob := dist-newstyle/**/hpc/vanilla/mix/**/{graphql-engine-1.0.0,graphql-engine}/
+executables_glob := ../dist-newstyle/build/*/*/graphql-engine-*/**/opt/build/{graphql-engine/graphql-engine,graphql-engine-tests/graphql-engine-tests,graphql-engine-integration-tests/graphql-engine-integration-tests}
 
 # assumes this is built in circleci
 ci-build:
 	## configure
-	cp cabal.project.ci cabal.project.local
-	# Passing `--enable-coverage` to `cabal v2-build` appears to enable coverage for all packages, not
-	# just local packages (at least as of cabal-install-2.4.1.0), so add `coverage: true` to the
-	# `cabal.project.local` file in the appropriate package stanza.
-	if [[ -n '$(enable_coverage)' ]]; then \
-		printf '\npackage graphql-engine\n  coverage: true\n' >> cabal.project.local; \
-	fi
-	cabal v2-update
+	cabal v2-update --project-file=cabal.project.ci
 	## build
-	cabal v2-build
+	cabal v2-build --project-file=cabal.project.ci
 	## install
 	mkdir -p '$(build_output)'
 	echo '$(VERSION)' > '$(build_output)/version.txt'
 	shopt -s failglob globstar && cp $(executables_glob) '$(build_output)/'
-	# Copy the .mix files needed for `hpc` to generate code coverage reports into the build output
-	# directory, only if coverage is enabled (the mix files aren't generated otherwise).
-	if [[ -n '$(enable_coverage)' ]]; then \
-		mkdir -p '$(build_output)/mix/' && \
-		shopt -s failglob globstar && cp -R $(mix_dirs_glob) '$(build_output)/mix/'; \
-	fi
+
+# assumes this is built in circleci
+ci-docs:
+	# build
+	cabal haddock
+	# copy
+	cd ../dist-newstyle/build/*/*/graphql-engine-*/**/doc/html/graphql-engine/ && tar czf $(docs_output) *
 
 # assumes this is built in circleci
 ci-image:

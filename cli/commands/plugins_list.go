@@ -10,7 +10,6 @@ source: https://github.com/kubernetes-sigs/krew/blob/master/cmd/krew/cmd/list.go
 import (
 	"fmt"
 	"io"
-	"os"
 	"runtime"
 	"sort"
 	"strings"
@@ -19,8 +18,8 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
-	"github.com/hasura/graphql-engine/cli"
-	"github.com/hasura/graphql-engine/cli/plugins"
+	"github.com/hasura/graphql-engine/cli/v2"
+	"github.com/hasura/graphql-engine/cli/v2/plugins"
 )
 
 func newPluginsListCmd(ec *cli.ExecutionContext) *cobra.Command {
@@ -95,7 +94,6 @@ func (p *pluginListOptions) run() error {
 		var version string
 		if _, ok := installed[name]; ok {
 			status = "yes"
-			version = installed[name]
 		} else if _, ok, err := plugins.MatchPlatform(plugin.Platforms); err != nil {
 			return errors.Wrapf(err, "failed to get the matching platform for plugin %s", name)
 		} else if ok {
@@ -112,7 +110,7 @@ func (p *pluginListOptions) run() error {
 	}
 	rows = sortByFirstColumn(rows)
 	ec.Spinner.Stop()
-	return printTable(os.Stdout, cols, rows)
+	return printTable(p.EC.Stdout, cols, rows)
 }
 
 func printTable(out io.Writer, columns []string, rows [][]string) error {

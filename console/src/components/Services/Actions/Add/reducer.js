@@ -3,6 +3,12 @@ import defaultState from './state';
 const SET_DEFAULTS = 'Actions/Add/SET_DEFAULTS';
 export const setDefaults = () => ({ type: SET_DEFAULTS });
 
+const SET_ACTION_TIMEOUT = 'Actions/Add/SET_ACTION_TIMEOUT';
+export const setActionTimeout = timeout => ({
+  type: SET_ACTION_TIMEOUT,
+  timeout,
+});
+
 const SET_ACTION_HANDLER = 'Actions/Add/SET_ACTION_HANDLER';
 export const setActionHandler = handler => ({
   type: SET_ACTION_HANDLER,
@@ -67,6 +73,11 @@ const reducer = (state = defaultState, action) => {
   switch (action.type) {
     case SET_DEFAULTS:
       return defaultState;
+    case SET_ACTION_TIMEOUT:
+      return {
+        ...state,
+        timeout: action.timeout,
+      };
     case SET_ACTION_HANDLER:
       return {
         ...state,

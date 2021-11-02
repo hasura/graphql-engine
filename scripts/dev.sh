@@ -50,6 +50,10 @@ Available COMMANDs:
     Launch a Citus single-node container suitable for use with graphql-engine,
     watch its logs, clean up nicely after
 
+  mysql
+    Launch a MySQL container suitable for use with graphql-engine, watch its
+    logs, clean up nicely after
+
   test [--integration [pytest_args...] | --unit | --hlint]
     Run the unit and integration tests, handling spinning up all dependencies.
     This will force a recompile. A combined code coverage report will be
@@ -74,7 +78,7 @@ try_jq() {
 
 # Bump this to:
 #  - force a reinstall of python dependencies, etc.
-DEVSH_VERSION=1.4
+DEVSH_VERSION=1.5
 
 case "${1-}" in
   graphql-engine)
@@ -95,6 +99,8 @@ case "${1-}" in
   mssql)
   ;;
   citus)
+  ;;
+  mysql)
   ;;
   test)
     case "${2-}" in
@@ -119,6 +125,7 @@ case "${1-}" in
       RUN_INTEGRATION_TESTS=true
       RUN_UNIT_TESTS=true
       RUN_HLINT=true
+      BACKEND="postgres"
       ;;
       *)
       die_usage
@@ -158,12 +165,15 @@ fi
 ####################################
 
 source scripts/containers/postgres
-source scripts/containers/mssql
+source scripts/containers/mssql.sh
 source scripts/containers/citus
+source scripts/containers/mysql.sh
+source scripts/data-sources-util.sh
 
 PG_RUNNING=0
 MSSQL_RUNNING=0
 CITUS_RUNNING=0
+MYSQL_RUNNING=0
 
 function cleanup {
   echo
@@ -176,6 +186,7 @@ function cleanup {
   if [    $PG_RUNNING -eq 1 ]; then    pg_cleanup; fi
   if [ $MSSQL_RUNNING -eq 1 ]; then mssql_cleanup; fi
   if [ $CITUS_RUNNING -eq 1 ]; then citus_cleanup; fi
+  if [ $MYSQL_RUNNING -eq 1 ]; then mysql_cleanup; fi
 
   echo_pretty "Done"
 }
@@ -200,6 +211,13 @@ function citus_start() {
   citus_wait
 }
 
+function mysql_start() {
+  mysql_launch_container
+  MYSQL_RUNNING=1
+  mysql_wait
+}
+
+
 function start_dbs() {
   # always launch the postgres container
   pg_start
@@ -211,38 +229,12 @@ function start_dbs() {
     mssql)
       mssql_start
     ;;
-    # bigquery omitted as test setup is atypical. See:
-    # https://github.com/hasura/graphql-engine-mono/wiki/Testing-BigQuery
-  esac
-}
-
-function add_sources() {
-  METADATA_URL=http://127.0.0.1:$HASURA_GRAPHQL_SERVER_PORT/v1/metadata
-
-  # always add a postgres source
-  echo ""
-  echo_pretty "Adding Postgres source"
-  curl "$METADATA_URL" \
-  --data-raw '{"type":"pg_add_source","args":{"name":"default","configuration":{"connection_info":{"database_url":"'"$PG_DB_URL"'"}}}}'
-
-  case "$BACKEND" in
-    # bigquery omitted as test setup is atypical. See:
-    # https://github.com/hasura/graphql-engine-mono/wiki/Testing-BigQuery
-    citus)
-      echo ""
-      echo_pretty "Adding Citus source"
-      curl "$METADATA_URL" \
-      --data-raw '{"type":"citus_add_source","args":{"name":"citus","configuration":{"connection_info":{"database_url":"'"$CITUS_DB_URL"'"}}}}'
+    mysql)
+      mysql_start
     ;;
-    mssql)
-      echo ""
-      echo_pretty "Adding SQL Server source"
-      curl "$METADATA_URL" \
-      --data-raw '{"type":"mssql_add_source","args":{"name":"mssql","configuration":{"connection_info":{"connection_string":"'"$MSSQL_DB_URL"'"}}}}'
-    ;;
+    # bigquery deliberately omitted as its test setup is atypical. See:
+    # https://github.com/hasura/graphql-engine/blob/master/server/CONTRIBUTING.md#running-the-python-test-suite-on-bigquery
   esac
-
-  echo ""
 }
 
 
@@ -251,7 +243,7 @@ function add_sources() {
 #################################
 
 if [ "$MODE" = "graphql-engine" ]; then
-  cd "$PROJECT_ROOT/server"
+  cd "$PROJECT_ROOT"
   # Existing tix files for a different hge binary will cause issues:
   rm -f graphql-engine.tix
 
@@ -294,11 +286,6 @@ if [ "$MODE" = "graphql-engine" ]; then
 
   export HASURA_GRAPHQL_DATABASE_URL=${HASURA_GRAPHQL_DATABASE_URL-$PG_DB_URL}
   export HASURA_GRAPHQL_SERVER_PORT=${HASURA_GRAPHQL_SERVER_PORT-8181}
-
-  export HASURA_BIGQUERY_SERVICE_ACCOUNT="<<<SERVICE_ACCOUNT_FILE_CONTENTS>>>" # `cat ../SERVICE_ACCOUNT_FILE.json`
-  export HASURA_BIGQUERY_PROJECT_ID="<<<PROJECT_ID>>>"
-  export HASURA_BIGQUERY_DATASETS="<<<CSV_DATASETS>>>"
-
 
   echo_pretty "We will connect to postgres at '$HASURA_GRAPHQL_DATABASE_URL'"
   echo_pretty "If you haven't overridden HASURA_GRAPHQL_DATABASE_URL, you can"
@@ -398,7 +385,7 @@ elif [ "$MODE" = "mssql" ]; then
   echo_pretty "    $ $MSSQL_DOCKER -i <import_file>"
   echo_pretty ""
   echo_pretty "Here is the database URL:"
-  echo_pretty "    $MSSQL_DB_URL"
+  echo_pretty "    $MSSQL_CONN_STR"
   echo_pretty ""
   docker logs -f --tail=0 "$MSSQL_CONTAINER_NAME"
 
@@ -420,12 +407,29 @@ elif [ "$MODE" = "citus" ]; then
   echo_pretty ""
   docker logs -f --tail=0 "$CITUS_CONTAINER_NAME"
 
+#################################
+###      MySQL Container      ###
+#################################
+
+elif [ "$MODE" = "mysql" ]; then
+  mysql_start
+  echo_pretty "MYSQL logs will start to show up in realtime here. Press CTRL-C to exit and "
+  echo_pretty "shutdown this container."
+  echo_pretty ""
+  echo_pretty "You can use the following to connect to the running instance:"
+  echo_pretty "    $ $MYSQL_DOCKER"
+  echo_pretty ""
+  echo_pretty "If you want to import a SQL file into MYSQL:"
+  echo_pretty "    $ $MYSQL_DOCKER -i <import_file>"
+  echo_pretty ""
+  docker logs -f --tail=0 "$MYSQL_CONTAINER_NAME"
+
 
 elif [ "$MODE" = "test" ]; then
   ########################################
   ###     Integration / unit tests     ###
   ########################################
-  cd "$PROJECT_ROOT/server"
+  cd "$PROJECT_ROOT"
 
   # Until we can use a real webserver for TestEventFlood, limit concurrency
   export HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE=8
@@ -439,25 +443,28 @@ elif [ "$MODE" = "test" ]; then
   export SCHEDULED_TRIGGERS_WEBHOOK_DOMAIN="http://127.0.0.1:5594"
   export REMOTE_SCHEMAS_WEBHOOK_DOMAIN="http://127.0.0.1:5000"
 
-  # It's better UX to build first (possibly failing) before trying to launch
-  # PG, but make sure that new-run uses the exact same build plan, else we risk
-  # rebuilding twice... ugh
-  # Formerly this was a `cabal build` but mixing cabal build and cabal run
-  # seems to conflict now, causing re-linking, haddock runs, etc. Instead do a
-  # `graphql-engine version` to trigger build
-  cabal new-run --project-file=cabal.project.dev-sh -- exe:graphql-engine \
-      --metadata-database-url="$PG_DB_URL" version
-
   if [ "$RUN_INTEGRATION_TESTS" = true ]; then
+    # It's better UX to build first (possibly failing) before trying to launch
+    # PG, but make sure that new-run uses the exact same build plan, else we risk
+    # rebuilding twice... ugh
+    # Formerly this was a `cabal build` but mixing cabal build and cabal run
+    # seems to conflict now, causing re-linking, haddock runs, etc. Instead do a
+    # `graphql-engine version` to trigger build
+    cabal new-run --project-file=cabal.project.dev-sh -- exe:graphql-engine \
+        --metadata-database-url="$PG_DB_URL" version
     start_dbs
-  else
-    # unit tests just need access to a postgres instance:
-    pg_start
   fi
 
   if [ "$RUN_UNIT_TESTS" = true ]; then
     echo_pretty "Running Haskell test suite"
-    HASURA_GRAPHQL_DATABASE_URL="$PG_DB_URL" cabal new-run --project-file=cabal.project.dev-sh -- test:graphql-engine-tests
+
+    # unit tests need access to postgres and mssql instances:
+    mssql_start
+    pg_start
+
+    HASURA_GRAPHQL_DATABASE_URL="$PG_DB_URL" \
+      HASURA_MSSQL_CONN_STR="$MSSQL_CONN_STR" \
+      cabal new-run --project-file=cabal.project.dev-sh -- test:graphql-engine-tests
   fi
 
   if [ "$RUN_HLINT" = true ]; then
@@ -477,6 +484,7 @@ elif [ "$MODE" = "test" ]; then
     # are defined.
     export HASURA_GRAPHQL_PG_SOURCE_URL_1=${HASURA_GRAPHQL_PG_SOURCE_URL_1-$PG_DB_URL}
     export HASURA_GRAPHQL_PG_SOURCE_URL_2=${HASURA_GRAPHQL_PG_SOURCE_URL_2-$PG_DB_URL}
+    export HASURA_GRAPHQL_EXPERIMENTAL_FEATURES="inherited_roles"
 
     # Using --metadata-database-url flag to test multiple backends
     #       HASURA_GRAPHQL_PG_SOURCE_URL_* For a couple multi-source pytests:
@@ -500,7 +508,8 @@ elif [ "$MODE" = "test" ]; then
     echo ""
     echo " Ok"
 
-    add_sources
+    export HASURA_BIGQUERY_SERVICE_ACCOUNT=$(cat "$HASURA_BIGQUERY_SERVICE_ACCOUNT_FILE")
+    add_sources $HASURA_GRAPHQL_SERVER_PORT
 
     cd "$PROJECT_ROOT/server/tests-py"
 
@@ -524,6 +533,8 @@ elif [ "$MODE" = "test" ]; then
       rm -rf "$PY_VENV"
       echo "$DEVSH_VERSION" > "$DEVSH_VERSION_FILE"
     fi
+    # cryptography 3.4.7 version requires Rust dependencies by default. But we don't need them for our tests, hence disabling them via the following env var => https://stackoverflow.com/a/66334084
+    export CRYPTOGRAPHY_DONT_BUILD_RUST=1
     set +u  # for venv activate
     if [ ! -d "$PY_VENV" ]; then
       python3 -m venv "$PY_VENV"

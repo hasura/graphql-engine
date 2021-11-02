@@ -4,8 +4,8 @@
 
 .. _api_remote_schemas:
 
-Schema/Metadata API Reference: Remote schemas
-=============================================
+Schema/Metadata API Reference: Remote schemas (Deprecated)
+==========================================================
 
 .. contents:: Table of contents
   :backlinks: none
@@ -55,6 +55,60 @@ An example request as follows:
 
 
 .. _add_remote_schema_syntax:
+
+.. list-table::
+   :header-rows: 1
+
+   * - Key
+     - Required
+     - Schema
+     - Description
+   * - name
+     - true
+     - :ref:`RemoteSchemaName`
+     - Name of the remote schema
+   * - definition
+     - true
+     - :ref:`RemoteSchemaDef`
+     - Definition for the remote schema
+   * - comment
+     - false
+     - Text
+     - comment
+
+.. _update_remote_schema:
+
+update_remote_schema
+--------------------
+
+``update_remote_schema`` is used to update the configuration of a remote schema. If the remote schema URL has changed 
+then it will perform a introspection as well. After introspection, if there are any inconsistencies detected with other 
+metadata objects (like remote relationships or remote schema permissions) they will be reported as `inconsistent_metadata`.
+
+An example request as follows:
+
+.. code-block:: http
+
+   POST /v1/query HTTP/1.1
+   Content-Type: application/json
+   X-Hasura-Role: admin
+
+   {
+       "type": "update_remote_schema",
+       "args": {
+           "name": "my remote schema",
+           "definition": {
+               "url": "https://remote-server.com/graphql",
+               "headers": [{"name": "X-Server-Request-From", "value": "Hasura"}],
+               "forward_client_headers": false,
+               "timeout_seconds": 60
+           },
+           "comment": "some optional comment"
+       }
+   }
+
+
+.. _update_remote_schema_syntax:
 
 .. list-table::
    :header-rows: 1

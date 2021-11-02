@@ -7,6 +7,7 @@ import { useRemoteRelationship } from '../state';
 import { saveRemoteRelationship, dropRemoteRelationship } from '../../Actions';
 import { Dispatch } from '../../../../../../types';
 import { Table } from '../../../../../../dataSources/types';
+import { PGFunction } from '../../../../../../dataSources/services/postgresql/types';
 
 type Props = {
   relationship?: RemoteRelationshipServer;
@@ -14,6 +15,7 @@ type Props = {
   isLast: boolean;
   remoteSchemas: string[];
   reduxDispatch: Dispatch;
+  allFunctions: PGFunction[];
 };
 
 const EditorWrapper: React.FC<Props> = ({
@@ -22,6 +24,7 @@ const EditorWrapper: React.FC<Props> = ({
   isLast,
   remoteSchemas,
   reduxDispatch,
+  allFunctions,
 }) => {
   const { state, dispatch, reset } = useRemoteRelationship(table, relationship);
 
@@ -31,6 +34,7 @@ const EditorWrapper: React.FC<Props> = ({
       remoteSchemas={remoteSchemas}
       isLast={isLast}
       state={state}
+      allFunctions={allFunctions}
       dispatch={dispatch}
       reduxDispatch={reduxDispatch}
     />

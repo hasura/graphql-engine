@@ -56,11 +56,15 @@
                 name: Clarke
               action:
                 name: create_user
+              request_query: "mutation {\n  create_user(email: \"clarke@gmail.com\", name: \"\
+                Clarke\"){\n    id\n    user {\n      name\n      email\n      is_admin\n\
+                \    }\n  }\n}\n"
             url: http://127.0.0.1:5593/invalid-response
             headers: []
+            transformed_request:
         path: $
         code: parse-failed
-      message: expecting object or array of objects for action webhook response
+      message: expecting null, object or array of objects for action webhook response
 - description: Revert action wehbook
   url: /v1/query
   status: 200

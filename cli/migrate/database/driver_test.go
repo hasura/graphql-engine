@@ -5,7 +5,7 @@ import (
 	"io"
 	"testing"
 
-	"github.com/hasura/graphql-engine/cli/internal/hasura"
+	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
 
 	"github.com/sirupsen/logrus"
 )
@@ -88,11 +88,9 @@ func (m *mockDriver) Query(data interface{}) error {
 }
 
 func (m *mockDriver) ResetQuery() {
-	return
 }
 
 func (m *mockDriver) Squash(list *CustomList, ret chan<- interface{}) {
-	return
 }
 
 func (m *mockDriver) EnableCheckMetadataConsistency(enabled bool) {

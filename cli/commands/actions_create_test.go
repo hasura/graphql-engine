@@ -48,9 +48,7 @@ var _ = Describe("actions_create", func() {
 				fmt.Println(err)
 			}
 			_, err = file.Write([]byte(data))
-			if err != nil {
-				fmt.Println(err)
-			}
+			Expect(err).To(BeNil())
 			file.Close()
 			session = testutil.Hasura(testutil.CmdOpts{
 				Args:             []string{"actions", "create", "action1", "--file", filePath},
@@ -61,9 +59,9 @@ var _ = Describe("actions_create", func() {
 			}
 
 			for _, keyword := range wantKeywordList {
-				Eventually(session, 60*40).Should(Say(keyword))
+				Eventually(session.Wait(timeout)).Should(Say(keyword))
 			}
-			Eventually(session, 60*40).Should(Exit(0))
+			Eventually(session, timeout).Should(Exit(0))
 		})
 	})
 })

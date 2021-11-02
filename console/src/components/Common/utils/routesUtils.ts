@@ -140,6 +140,11 @@ export const getFunctionModifyRoute = (
   return `${getFunctionBaseRoute(schemaName, source, functionName)}/modify`;
 };
 
+export const isTableRoute = (route: string) => {
+  // contains "/data/<source-name>/schema/<schema-name>/tables\views/<table-name>/"
+  return /\/data\/(.*)\/schema\/(.*)\/(tables|views)\/(.*)\//.test(route);
+};
+
 // Action route utils
 
 export const getActionsBaseRoute = () => {

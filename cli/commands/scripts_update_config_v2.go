@@ -3,24 +3,24 @@ package commands
 import (
 	"bytes"
 	"fmt"
+
 	"io/ioutil"
 	"os"
 	"path/filepath"
 
-	"github.com/hasura/graphql-engine/cli/internal/metadataobject"
-
-	"github.com/hasura/graphql-engine/cli/internal/cliext"
-	"github.com/hasura/graphql-engine/cli/internal/hasura"
-	"github.com/hasura/graphql-engine/cli/migrate"
+	"github.com/hasura/graphql-engine/cli/v2/internal/cliext"
+	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
+	"github.com/hasura/graphql-engine/cli/v2/internal/projectmetadata"
+	"github.com/hasura/graphql-engine/cli/v2/migrate"
 
 	"gopkg.in/yaml.v2"
 
-	"github.com/hasura/graphql-engine/cli"
-	"github.com/hasura/graphql-engine/cli/internal/metadataobject/actions/types"
-	"github.com/hasura/graphql-engine/cli/migrate/database/hasuradb"
-	"github.com/hasura/graphql-engine/cli/migrate/source"
-	"github.com/hasura/graphql-engine/cli/migrate/source/file"
-	"github.com/hasura/graphql-engine/cli/util"
+	"github.com/hasura/graphql-engine/cli/v2"
+	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/actions/types"
+	"github.com/hasura/graphql-engine/cli/v2/migrate/database/hasuradb"
+	"github.com/hasura/graphql-engine/cli/v2/migrate/source"
+	"github.com/hasura/graphql-engine/cli/v2/migrate/source/file"
+	"github.com/hasura/graphql-engine/cli/v2/util"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -121,7 +121,7 @@ func newScriptsUpdateConfigV2Cmd(ec *cli.ExecutionContext) *cobra.Command {
 						if err != nil {
 							return errors.Wrapf(err, "unable to marshal run_sql args in %s", upMetaMigration.Raw)
 						}
-						var to hasuradb.RunSQLInput
+						var to hasura.PGRunSQLInput
 						err = yaml.Unmarshal(argByt, &to)
 						if err != nil {
 							return errors.Wrapf(err, "unable to unmarshal run_sql args in %s", upMetaMigration.Raw)
@@ -195,7 +195,7 @@ func newScriptsUpdateConfigV2Cmd(ec *cli.ExecutionContext) *cobra.Command {
 						if err != nil {
 							return errors.Wrapf(err, "unable to marshal run_sql args in %s", downMetaMigration.Raw)
 						}
-						var to hasuradb.RunSQLInput
+						var to hasura.PGRunSQLInput
 						err = yaml.Unmarshal(argByt, &to)
 						if err != nil {
 							return errors.Wrapf(err, "unable to unmarshal run_sql args in %s", downMetaMigration.Raw)
@@ -305,12 +305,8 @@ func newScriptsUpdateConfigV2Cmd(ec *cli.ExecutionContext) *cobra.Command {
 			ec.Config.ActionConfig.Codegen = nil
 			// run metadata export
 			ec.Spin("Exporting metadata...")
-			migrateDrv, err = migrate.NewMigrate(ec, true, "", hasura.SourceKindPG)
-			if err != nil {
-				return errors.Wrap(err, "unable to initialize migrations driver")
-			}
 			var files map[string][]byte
-			mdHandler := metadataobject.NewHandlerFromEC(ec)
+			mdHandler := projectmetadata.NewHandlerFromEC(ec)
 			files, err = mdHandler.ExportMetadata()
 			if err != nil {
 				return errors.Wrap(err, "cannot export metadata from server")
@@ -361,7 +357,9 @@ func newScriptsUpdateConfigV2Cmd(ec *cli.ExecutionContext) *cobra.Command {
 	f.String("endpoint", "", "http(s) endpoint for Hasura GraphQL engine")
 	f.String("admin-secret", "", "admin secret for Hasura GraphQL engine")
 	f.String("access-key", "", "access key for Hasura GraphQL engine")
-	f.MarkDeprecated("access-key", "use --admin-secret instead")
+	if err := f.MarkDeprecated("access-key", "use --admin-secret instead"); err != nil {
+		ec.Logger.WithError(err).Errorf("error while using a dependency library")
+	}
 	f.Bool("insecure-skip-tls-verify", false, "skip TLS verification and disable cert checking (default: false)")
 	f.String("certificate-authority", "", "path to a cert file for the certificate authority")
 

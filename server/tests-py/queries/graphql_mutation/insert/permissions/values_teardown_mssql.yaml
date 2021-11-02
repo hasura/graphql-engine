@@ -1,0 +1,7 @@
+type: bulk
+args:
+  - type: mssql_run_sql
+    args:
+      source: mssql
+      sql: |
+        DELETE FROM article;

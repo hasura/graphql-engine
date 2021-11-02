@@ -49,13 +49,19 @@ This ``many-to-many`` relationship can be established in the database by:
    .. code-block:: sql
 
       article_tag (
+        id SERIAL PRIMARY KEY
         article_id INT
         tag_id INT
-        PRIMARY KEY (article_id, tag_id)
+        UNIQUE (article_id, tag_id)
         ...
       )
 
-2. Adding **foreign key constraints** from the ``article_tag`` table to:
+   .. note::
+
+     If you can have multiple rows linking the same ``article`` and ``tag`` in your model, you can skip the
+     unique constraint on ``(article_id, tag_id)``
+
+2. Adding **foreign key constraints** in the ``article_tag`` table for:
 
    - the ``articles`` table using the ``article_id`` and ``id`` columns of the tables respectively
    - the ``tags`` table using the ``tag_id`` and ``id`` columns of the tables respectively

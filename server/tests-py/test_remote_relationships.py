@@ -66,6 +66,9 @@ class TestCreateRemoteRelationship:
         st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_remote_rel_with_enum.yaml')
         assert st_code == 200, resp
 
+        st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_remote_rel_computed_fields.yaml')
+        assert st_code == 200, resp
+
     def test_create_invalid(self, hge_ctx):
         st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_invalid_remote_rel_hasura_field.yaml')
         assert st_code == 400, resp
@@ -92,6 +95,9 @@ class TestCreateRemoteRelationship:
         assert st_code == 400, resp
 
         st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_invalid_remote_rel_array.yaml')
+        assert st_code == 400, resp
+
+        st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_invalid_remote_rel_computed_field.yaml')
         assert st_code == 400, resp
 
     def test_generation(self, hge_ctx):
@@ -180,6 +186,11 @@ class TestExecution:
         assert st_code == 200, resp
         check_query_f(hge_ctx, self.dir() + 'query_with_arr_rel.yaml')
 
+    def test_regression_7172(self, hge_ctx):
+        st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_regression_7172.yaml')
+        assert st_code == 200, resp
+        check_query_f(hge_ctx, self.dir() + 'regression_7172.yaml')
+
     def test_basic_relationship_joining_singleton_to_array(self, hge_ctx):
         st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_remote_rel_joining_singleton_with_array.yaml')
         assert st_code == 200, resp
@@ -251,6 +262,15 @@ class TestExecution:
         st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_remote_rel_nested_args.yaml')
         assert st_code == 200, resp
         check_query_f(hge_ctx, self.dir() + 'query_with_errors_arr.yaml')
+
+    def test_with_aliased_remote_join_keys(self, hge_ctx):
+        """
+        Regression test for https://github.com/hasura/graphql-engine/issues/7180.
+        """
+        st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_remote_rel_basic.yaml')
+        assert st_code == 200, resp
+        print(resp)
+        check_query_f(hge_ctx, self.dir() + 'basic_relationship_alias.yaml')
 
     def test_with_scalar_relationship(self, hge_ctx):
         st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_remote_rel_scalar.yaml')
@@ -361,3 +381,56 @@ class TestWithRelay:
         st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_remote_rel_basic.yaml')
         assert st_code == 200, resp
         check_query_f(hge_ctx, self.dir() + "with_relay.yaml")
+
+@use_test_fixtures
+class TestExecutionWithCustomization:
+
+    @classmethod
+    def dir(cls):
+        return "queries/remote_schemas/remote_relationships/schema_customization/"
+
+    def test_basic_relationship(self, hge_ctx):
+        st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_remote_rel_basic.yaml')
+        assert st_code == 200, resp
+        check_query_f(hge_ctx, self.dir() + 'basic_relationship.yaml')
+
+    def test_nested_fields(self, hge_ctx):
+        st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_remote_rel_nested_fields.yaml')
+        assert st_code == 200, resp
+        check_query_f(hge_ctx, self.dir() + 'basic_nested_fields.yaml')
+
+
+class TestComputedFieldsInRemoteRelationship:
+
+    @classmethod
+    def dir(cls):
+        return "queries/remote_schemas/remote_relationships/"
+
+    @pytest.fixture(autouse=True)
+    def transact(self, hge_ctx, graphql_service):
+        print("In setup method")
+        st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup.yaml')
+        assert st_code == 200, resp
+        st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_remote_rel_computed_fields.yaml')
+        assert st_code == 200, resp
+        yield
+        st_code, resp = hge_ctx.v1q_f(self.dir() + 'teardown.yaml')
+        assert st_code == 200, resp
+
+    def test_remote_join_with_computed_field(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + 'remote_join_with_computed_field.yaml')
+
+    def test_remote_join_with_computed_field_session(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + 'remote_join_with_computed_field_session.yaml')
+
+@use_test_fixtures
+class TestRemoteRelationshipFieldType:
+
+    @classmethod
+    def dir(cls):
+        return "queries/remote_schemas/remote_relationships"
+
+    def test_remote_relationship_field_type(self, hge_ctx):
+        st_code, resp = hge_ctx.v1q_f(self.dir() + '/setup_remote_rel_nested_args.yaml')
+        assert st_code == 200, resp
+        check_query_f(hge_ctx, self.dir() + '/remote_relationship_field_type.yaml')

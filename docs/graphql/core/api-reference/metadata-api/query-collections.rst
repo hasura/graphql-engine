@@ -4,8 +4,8 @@
 
 .. _metadata_api_query_collections:
 
-Metadata API Reference: Query collections (v2.0 and above)
-==========================================================
+Metadata API Reference: Query collections
+=========================================
 
 .. contents:: Table of contents
   :backlinks: none

@@ -1,0 +1,263 @@
+- description: query with prefix type name in inline fragment
+  url: /v1/graphql
+  status: 200
+  query:
+    query: |
+      {
+        hero(episode: 4) {
+          id
+          name
+          ... on FooDroid {
+            id
+            name
+            primaryFunction
+          }
+        }
+      }
+  response:
+    data:
+      hero:
+        id: "1"
+        name: R2-D2
+        primaryFunction: Astromech
+
+- description: query with prefix type name in inline fragment and non-existing field
+  url: /v1/graphql
+  status: 200
+  query:
+    query: |
+      {
+        hero(episode: 4) {
+          id
+          name
+          ... on FooDroid {
+            id
+            name
+            primaryFunction
+            non_existing_field
+          }
+        }
+      }
+  response:
+    errors:
+      - extensions:
+          path: $.selectionSet.hero.selectionSet.non_existing_field
+          code: validation-failed
+        message: 'field "non_existing_field" not found in type: ''FooDroid'''
+
+- description: query with prefix original (non-customized) type name in inline fragment
+  url: /v1/graphql
+  status: 200
+  query:
+    query: |
+      {
+        hero(episode: 4) {
+          id
+          name
+          ... on Droid {
+            id
+            name
+            primaryFunction
+          }
+        }
+      }
+  response:
+    errors:
+    - extensions:
+        path: $.selectionSet.hero.selectionSet
+        code: validation-failed
+      message: Type "Droid" is not a subtype of "FooCharacter"
+
+- description: query with fragment
+  url: /v1/graphql
+  status: 200
+  query:
+    query: |
+      {
+        hero(episode: 4) {
+          ... characterFields
+        }
+      }
+
+      fragment characterFields on FooCharacter {
+        id
+        name
+      }
+  response:
+    data:
+      hero:
+        id: "1"
+        name: R2-D2
+
+- description: query with variable
+  url: /v1/graphql
+  status: 200
+  query:
+    query: |
+      query Hero($ep: MyInt!) {
+        hero(episode: $ep) {
+          id
+          name
+        }
+      }
+    variables:
+      ep: 4
+  response:
+    data:
+      hero:
+        id: "1"
+        name: R2-D2
+
+# - description: query with variable with wrong type name
+#   url: /v1/graphql
+#   status: 200
+#   query:
+#     query: |
+#       query Hero($ep: Int!) {
+#         hero(episode: $ep) {
+#           id
+#           name
+#         }
+#       }
+#     variables:
+#       ep: 4
+#   response:
+#     errors:
+#     - extensions:
+#         path: $.selectionSet.hero.args.episode
+#         code: validation-failed
+#       message: variable "ep" is declared as Int!, but used where MyInt! is expected
+
+- description: query with __type introspection
+  url: /v1/graphql
+  status: 200
+  query:
+    query: |
+      {
+        __type(name: "FooDroid") {
+          kind
+          name
+        }
+      }
+  response:
+    data:
+      __type:
+        kind: OBJECT
+        name: FooDroid
+
+- description: query with __type introspection on original type should return empty result
+  url: /v1/graphql
+  status: 200
+  query:
+    query: |
+      {
+        __type(name: "Droid") {
+          kind
+          name
+        }
+      }
+  response:
+    data:
+      __type:
+
+# __typename tests
+
+- description: query with __typename
+  url: /v1/graphql
+  status: 200
+  query:
+    query: |
+      {
+        hero(episode: 4) {
+          id
+          name
+          __typename
+        }
+      }
+  response:
+    data:
+      hero:
+        id: "1"
+        name: R2-D2
+        __typename: FooDroid
+
+- description: query with __typename in list field
+  url: /v1/graphql
+  status: 200
+  query:
+    query: |
+      {
+        heroes {
+          id
+          name
+          __typename
+          ... on FooHuman {
+            droid {
+              name
+              __typename
+            }
+          }
+        }
+      }
+  response:
+    data:
+      heroes:
+        - id: "1"
+          name: R2-D2
+          __typename: FooDroid
+        - id: "2"
+          name: Luke Skywalker
+          __typename: FooHuman
+          droid:
+            name: R2-D2
+            __typename: FooDroid
+
+- description: query with __typename and field aliases
+  url: /v1/graphql
+  status: 200
+  query:
+    query: |
+      {
+        my_hero: hero(episode: 4) {
+          my_id: id
+          my_name: name
+          my_typename: __typename
+        }
+      }
+  response:
+    data:
+      my_hero:
+        my_id: "1"
+        my_name: R2-D2
+        my_typename: FooDroid
+
+- description: query with __typename in list field and field aliases
+  url: /v1/graphql
+  status: 200
+  query:
+    query: |
+      {
+        my_heroes: heroes {
+          my_id: id
+          my_name: name
+          my_typename: __typename
+          ... on FooHuman {
+            my_droid: droid {
+              my_droid_name: name
+              my_droid_typename: __typename
+            }
+          }
+        }
+      }
+  response:
+    data:
+      my_heroes:
+        - my_id: "1"
+          my_name: R2-D2
+          my_typename: FooDroid
+        - my_id: "2"
+          my_name: Luke Skywalker
+          my_typename: FooHuman
+          my_droid:
+            my_droid_name: R2-D2
+            my_droid_typename: FooDroid

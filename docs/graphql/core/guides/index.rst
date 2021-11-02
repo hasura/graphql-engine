@@ -27,7 +27,8 @@ Guides / Tutorials / Resources
    Telemetry <telemetry>
    Code Editor Integrations <code-editor-integrations/index>
    MySQL preview <mysql-preview>
-   Upgrading to Hasura v2 <upgrade-hasura-v2>
+   Updating to Hasura v2 <upgrade-hasura-v2>
+   FAQs <faq/index>
 
 .. note::
 

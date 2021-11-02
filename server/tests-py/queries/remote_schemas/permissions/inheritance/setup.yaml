@@ -1,0 +1,226 @@
+type: bulk
+args:
+
+- type: add_remote_schema
+  args:
+    name: my-remote-schema
+    definition:
+      url: http://localhost:4020
+      forward_client_headers: false
+
+- type: pg_track_table
+  args:
+    table: authors
+
+- type: pg_create_select_permission
+  args:
+    table: authors
+    role: role3
+    permission:
+      columns: "*"
+      filter:
+        id: X-Hasura-Author-Id
+
+- type: add_remote_schema_permissions
+  args:
+    remote_schema: my-remote-schema
+    role: role1
+    definition:
+      schema: |
+       type User {
+         user_id: Int
+         userMessages(whered: MessageWhereInpObj): [Message]
+         gimmeText(text: String): String
+       }
+
+       interface Communication {
+         id: Int!
+         msg: String!
+       }
+
+       type Message implements Communication {
+         id: Int!
+         name: String!
+         msg: String!
+         errorMsg: String
+       }
+
+       input MessageWhereInpObj {
+         id: IntCompareObj
+         name: StringCompareObj
+       }
+
+       input IntCompareObj {
+         eq : Int
+         gt : Int
+         lt : Int
+       }
+
+       input StringCompareObj {
+         eq : String
+       }
+
+       type Query {
+         hello: String
+         messages(where: MessageWhereInpObj @preset(value: {id: {eq: 1}})): [Message]
+         user(user_id: Int! @preset(value: "x-hasura-user-id")): User
+         users(user_ids: [Int]!): [User]
+         message(id: Int!) : Message
+         communications(id: Int): [Communication]
+       }
+
+       schema {
+         query: Query
+       }
+
+- type: add_remote_schema_permissions
+  args:
+    remote_schema: my-remote-schema
+    role: role2
+    definition:
+      # same permission as role1, some types and fields
+      # are arranged differently
+      schema: |
+       schema {
+         query: Query
+       }
+
+       interface Communication {
+         id: Int!
+         msg: String!
+       }
+
+       type User {
+         user_id: Int
+         userMessages(whered: MessageWhereInpObj): [Message]
+         gimmeText(text: String): String
+       }
+
+       input MessageWhereInpObj {
+         id: IntCompareObj
+         name: StringCompareObj
+       }
+
+       type Message implements Communication {
+         id: Int!
+         name: String!
+         msg: String!
+         errorMsg: String
+       }
+
+       input IntCompareObj {
+         eq : Int
+         gt : Int
+         lt : Int
+       }
+
+       input StringCompareObj {
+         eq : String
+       }
+
+       type Query {
+         messages(where: MessageWhereInpObj @preset(value: {id: {eq: 1}})): [Message]
+         users(user_ids: [Int]!): [User]
+         message(id: Int!) : Message
+         user(user_id: Int! @preset(value: "x-hasura-user-id")): User
+         communications(id: Int): [Communication]
+         hello: String
+       }
+
+- type: add_inherited_role
+  args:
+    role_name: inherited_role1
+    role_set:
+      - role1
+      - role2
+      - role3
+
+- type: add_remote_schema_permissions
+  args:
+    remote_schema: my-remote-schema
+    role: role4
+    definition:
+      schema: |
+       interface Communication {
+         id: Int!
+         msg: String!
+       }
+
+       type Message implements Communication {
+         id: Int!
+         name: String!
+         msg: String!
+         errorMsg: String
+       }
+
+       input MessageWhereInpObj {
+         id: IntCompareObj
+         name: StringCompareObj
+       }
+
+       input IntCompareObj {
+         eq : Int
+         gt : Int
+         lt : Int
+       }
+
+       input StringCompareObj {
+         eq : String
+       }
+
+       type Query {
+         messages(where: MessageWhereInpObj @preset(value: {id: {eq: 1}})): [Message]
+       }
+
+       schema {
+         query: Query
+       }
+
+# preset of the `where` argument of the `messages` field is different from role3
+- type: add_remote_schema_permissions
+  args:
+    remote_schema: my-remote-schema
+    role: role5
+    definition:
+      schema: |
+       interface Communication {
+         id: Int!
+         msg: String!
+       }
+
+       type Message implements Communication {
+         id: Int!
+         name: String!
+         msg: String!
+         errorMsg: String
+       }
+
+       input MessageWhereInpObj {
+         id: IntCompareObj
+         name: StringCompareObj
+       }
+
+       input IntCompareObj {
+         eq : Int
+         gt : Int
+         lt : Int
+       }
+
+       input StringCompareObj {
+         eq : String
+       }
+
+       type Query {
+         messages(where: MessageWhereInpObj @preset(value: {id: {eq: 2}})): [Message]
+       }
+
+       schema {
+         query: Query
+       }
+
+- type: add_inherited_role
+  args:
+    role_name: inherited_role2
+    role_set:
+      - role4
+      - role5

@@ -201,6 +201,56 @@ Fetch a list of articles that were published on a certain date (``published_on``
       }
     }
 
+.. admonition:: Caveat for "null" values
+
+  By design, the ``_eq`` or ``_neq`` operators will not return rows with ``null`` values.
+
+  To also return rows with ``null`` values, the ``_is_null`` operator needs to be used
+  along with these joined by the ``_or`` operator.
+
+  For example, to fetch a list of articles where the ``is_published`` column is either ``false`` or ``null``:
+
+  .. graphiql::
+    :view_only:
+    :query:
+      query {
+        articles (
+          where: {
+            _or: [
+              {is_published: {_eq: false}},
+              {is_published: {_is_null: true}}
+            ]
+          }
+        )
+        {
+          id
+          title
+          is_published
+        }
+      }
+    :response:
+      {
+        "data": {
+          "articles": [
+            {
+              "id": 1,
+              "title": "Robben Island",
+              "is_published": false
+            },
+            {
+              "id": 2,
+              "title": "The Life of Matthias",
+              "is_published": false
+            },
+            {
+              "id": 3,
+              "title": "All about Hasura",
+              "is_published": null
+            },
+          ]
+        }
+      }
+
 Greater than or less than operators (_gt, _lt, _gte, _lte)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -422,8 +472,8 @@ Fetch a list of those authors whose names are NOT part of a list:
       }
     }
 
-Text search or pattern matching operators (_like, _similar, etc.)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Text search or pattern matching operators (_like, _similar, _regex, etc.)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The ``_like``, ``_nlike``, ``_ilike``, ``_nilike``, ``_similar``, ``_nsimilar``, ``_regex``, ``_nregex``, ``_iregex``, ``_niregex`` operators are used for
 pattern matching on string/text fields.
@@ -447,21 +497,23 @@ Fetch a list of articles whose titles contain the word “amet”:
     }
   :response:
     {
-    "data": {
-      "articles": [
-        {
-          "id": 1,
-          "title": "sit amet"
-        },
-        {
-          "id": 3,
-          "title": "amet justo morbi"
-        },
-        {
-          "id": 9,
-          "title": "sit amet"
-        }
-      ]
+      "data": {
+        "articles": [
+          {
+            "id": 1,
+            "title": "sit amet"
+          },
+          {
+            "id": 3,
+            "title": "amet justo morbi"
+          },
+          {
+            "id": 9,
+            "title": "sit amet"
+          }
+        ]
+      }
+    }
 
 .. note::
 
@@ -510,6 +562,49 @@ Fetch a list of authors whose names begin with A or C:
 .. note::
 
   ``_similar`` is case-sensitive
+
+**Example: _regex**
+
+Fetch a list of articles whose titles match the regex “[ae]met”:
+
+.. graphiql::
+  :view_only:
+  :query:
+    query {
+      articles(
+        where: {title: {_regex: "[ae]met"}}
+      ) {
+        id
+        title
+      }
+    }
+  :response:
+    {
+      "data": {
+        "articles": [
+          {
+            "id": 1,
+            "title": "sit amet"
+          },
+          {
+            "id": 3,
+            "title": "cremet justo morbi"
+          },
+          {
+            "id": 9,
+            "title": "sit ametist"
+          }
+        ]
+      }
+    }  
+
+.. note::
+
+  ``_regex`` is case-sensitive. Use ``_iregex`` for case-insensitive search.
+
+.. note::
+
+  ``regex`` operators are supported in in ``v2.0.0`` and above
 
 JSONB operators (_contains, _has_key, etc.)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -1800,6 +1895,132 @@ Fetch all authors which have not written any articles:
         ]
       }
     }
+
+Filter based on computed fields
+-------------------------------
+You can use computed fields to filter your query results.
+
+For example:
+
+.. code-block:: graphql
+   :emphasize-lines: 2
+
+      query {
+        author (where: {full_name: {_ilike: "%bob%"}}){
+          id
+          first_name
+          last_name
+        }
+      }
+
+The behaviour of the comparison operators depends on whether the computed fields return scalar type values or
+set of table rows.
+
+- In case of scalar type, a row will be returned if the computed field returned scalar value satisfied the defined condition.
+- In case of table row type, a row will be returned if **any of the returned rows** sastisfy the defined condition.
+
+Let's look at a few use cases based on the above:
+
+Fetch if the scalar value returned by the computed field satisfies a condition
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+**Example:**
+
+A computed field ``total_marks`` defined to a ``student`` table which computes the total sum
+of marks obtained from each subject. Fetch all students whose total marks is above "80":
+
+.. graphiql::
+   :view_only:
+   :query:
+      query {
+        student(where: {total_marks: {_gte: 80}}){
+          roll_no
+          name
+        }
+      }
+   :response:
+       {
+         "data": {
+           "student": [
+             {
+               "roll_no": 34,
+               "name": "Alice"
+             },
+             {
+               "roll_no": 31,
+               "name": "Bob"
+             }
+           ]
+         }
+       }
+
+Fetch if **any** of the returned table rows by the computed field satisfy a condition
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+**Example:**
+
+A computed field ``get_published_articles`` defined to a ``author`` table which returns set of
+``article`` rows published. Fetch all authors who have atleast a published article in medicine
+field:
+
+.. graphiql::
+   :view_only:
+   :query:
+      query {
+        author(where: {get_published_articles: {type: {_eq: "medicine"}}}){
+          id
+          name
+        }
+      }
+   :response:
+     {
+       "data": {
+         "author": [
+           {
+             "id": 3,
+             "name": "Alice"
+           },
+           {
+             "id": 5,
+             "name": "Bob"
+           }
+         ]
+       }
+     }
+
+Fetch if aggregate value of the returned table rows by the computed field satisfies a condition
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+**Example:**
+
+A computed field ``get_published_articles`` defined to a ``author`` table which returns set of
+``article`` rows published. Fetch all authors whose count of published articles is more than 10:
+
+.. graphiql::
+   :view_only:
+   :query:
+      query {
+        author(where: {get_published_articles_aggregate: {count: {_gte: 10}}}){
+          id
+          name
+        }
+      }
+   :response:
+     {
+       "data": {
+         "author": [
+           {
+             "id": 5,
+             "name": "Bob"
+           },
+           {
+             "id": 7,
+             "name": "Clarke"
+           }
+         ]
+       }
+     }
+
 
 Cast a field to a different type before filtering (_cast)
 ---------------------------------------------------------

@@ -7,17 +7,19 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/hasura/graphql-engine/cli/internal/hasura/sourceops/mssql"
-	"github.com/hasura/graphql-engine/cli/internal/hasura/sourceops/postgres"
+	"github.com/hasura/graphql-engine/cli/v2/internal/hasura/sourceops/citus"
+	"github.com/hasura/graphql-engine/cli/v2/internal/hasura/sourceops/mssql"
+	"github.com/hasura/graphql-engine/cli/v2/internal/hasura/sourceops/postgres"
 
-	"github.com/hasura/graphql-engine/cli/internal/hasura"
-	"github.com/hasura/graphql-engine/cli/internal/httpc"
+	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
+	"github.com/hasura/graphql-engine/cli/v2/internal/httpc"
 )
 
 type Client struct {
 	*httpc.Client
 	hasura.PGSourceOps
 	hasura.MSSQLSourceOps
+	hasura.CitusSourceOps
 	path string
 }
 
@@ -26,6 +28,7 @@ func New(c *httpc.Client, path string) *Client {
 		Client:         c,
 		PGSourceOps:    postgres.New(c, path),
 		MSSQLSourceOps: mssql.New(c, path),
+		CitusSourceOps: citus.New(c, path),
 		path:           path,
 	}
 	return client
@@ -57,7 +60,7 @@ func (c *Client) Bulk(args []hasura.RequestBody) (io.Reader, error) {
 	if err != nil {
 		return nil, err
 	} else if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("bulk request failed: %v %v", resp.StatusCode, responseBody.String())
+		return nil, fmt.Errorf("%v", responseBody.String())
 	}
 	return responseBody, nil
 }

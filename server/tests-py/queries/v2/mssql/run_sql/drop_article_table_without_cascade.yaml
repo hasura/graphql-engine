@@ -1,0 +1,14 @@
+description: Dropping article table without cascading causes dependencies exception
+url: /v2/query
+status: 400
+query:
+  type: mssql_run_sql
+  args:
+    source: mssql
+    sql: |
+      DROP TABLE [article];
+response:
+  path: $
+  error: 'cannot drop due to the following dependent objects : relationship author.articles
+    in source "mssql"'
+  code: dependency-error

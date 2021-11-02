@@ -21,10 +21,12 @@ import {
   readReplicaReducer,
   defaultState,
   makeReadReplicaConnectionObject,
+  ExtendedConnectDBState,
 } from './state';
 import {
   getDatasourceURL,
   getErrorMessageFromMissingFields,
+  getReadReplicaDBUrlInfo,
   parsePgUrl,
 } from './utils';
 import ReadReplicaForm from './ReadReplicaForm';
@@ -91,6 +93,42 @@ const ConnectDatabase: React.FC<ConnectDatabaseProps> = props => {
         },
       });
 
+      const existingReadReplicas: ExtendedConnectDBState[] | [] = (
+        currentSourceInfo.configuration?.read_replicas ?? []
+      ).map(replica => {
+        const replicaDBUrlInfo = getReadReplicaDBUrlInfo(replica);
+        return {
+          chosenConnectionType:
+            replicaDBUrlInfo?.connectionType || connectionTypes.DATABASE_URL,
+          displayName: '',
+          dbType: currentSourceInfo.kind ?? 'postgres',
+          connectionParamState: {
+            host: '',
+            port: '',
+            username: '',
+            password: '',
+            database: '',
+          },
+          databaseURLState: replicaDBUrlInfo?.databaseURLState ?? {
+            dbURL: '',
+            serviceAccount: '',
+            global_select_limit: 1000,
+            projectId: '',
+            datasets: '',
+          },
+          envVarState: replicaDBUrlInfo?.envVarState ?? {
+            envVar: '',
+          },
+          preparedStatements: replica.use_prepared_statements ?? false,
+          isolationLevel: replica.isolation_level ?? 'read-committed',
+          connectionSettings: replica?.pool_settings,
+        };
+      });
+      readReplicaDispatch({
+        type: 'SET_REPLICA_STATE',
+        data: existingReadReplicas,
+      });
+
       if (
         typeof databaseUrl === 'string' &&
         currentSourceInfo.kind === 'postgres'
@@ -130,6 +168,12 @@ const ConnectDatabase: React.FC<ConnectDatabaseProps> = props => {
           type: 'UPDATE_DB_BIGQUERY_PROJECT_ID',
           data: conf?.project_id ?? '',
         });
+        if (conf?.global_select_limit) {
+          connectDBDispatch({
+            type: 'UPDATE_DB_BIGQUERY_GLOBAL_LIMIT',
+            data: +conf?.global_select_limit,
+          });
+        }
         if (conf?.service_account?.from_env) {
           changeConnectionType(connectionTypes.ENV_VAR);
           connectDBDispatch({
@@ -336,7 +380,25 @@ const ConnectDatabase: React.FC<ConnectDatabaseProps> = props => {
           loading={loading}
           onSubmit={onSubmit}
           title="Edit Data Source"
-        />
+        >
+          {/* Should be rendered only on Pro and Cloud Console */}
+          {getSupportedDrivers('connectDbForm.read_replicas').includes(
+            connectDBInputState.dbType
+          ) &&
+            (window.__env.consoleId || window.__env.userRole) && (
+              <ReadReplicaForm
+                readReplicaState={readReplicasState}
+                readReplicaDispatch={readReplicaDispatch}
+                connectDBState={connectDBStateForReadReplica}
+                connectDBStateDispatch={connectDBReadReplicaDispatch}
+                readReplicaConnectionType={readReplicaConnectionType}
+                updateReadReplicaConnectionType={updateRadioForReadReplica}
+                onClickAddReadReplicaCb={onClickAddReadReplica}
+                onClickCancelOnReadReplicaCb={onClickCancelOnReadReplicaForm}
+                onClickSaveReadReplicaCb={onClickSaveReadReplicaForm}
+              />
+            )}
+        </DataSourceFormWrapper>
       </EditDataSource>
     );
   }

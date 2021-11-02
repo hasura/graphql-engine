@@ -15,7 +15,7 @@ Heroku database URL sync
 Introduction
 ------------
 
-Hasura Cloud can keep your project's Heroku database URL i.e. the ``HEROKU_DATABASE_URL`` env var in sync with Postgres from a Heroku app.
+Hasura Cloud can keep your project's Heroku database URL i.e. the ``PG_DATABASE_URL`` env var in sync with Postgres from a Heroku app.
 This is especially helpful in cases when the database credentials of Heroku Postgres are rotated automatically by Heroku.
 
 .. note::
@@ -34,7 +34,7 @@ Opt out
 
 If your project has Heroku database URL sync enabled, you can opt out as follows:
 
-1. Go to the ``Env vars`` tab of your project and click on the ``HEROKU_DATABASE_URL`` env var.
+1. Go to the ``Env vars`` tab of your project and click on the ``PG_DATABASE_URL`` env var.
 
 2. Click on ``Opt out of the sync`` button next to Heroku note.
 
@@ -57,5 +57,5 @@ Whenever Postgres credentials of a Heroku app are rotated:
 1. The ``DATABASE_URL`` config variable of the Heroku app gets updated with the new credentials.
 2. The config variable change triggers a new release, which notifies Hasura Cloud's webhook.
 3. When Hasura Cloud is notified about the new release, it fetches the newest database URL from Heroku and updates the
-   ``HEROKU_DATABASE_URL`` env var of your project with it.
+   ``PG_DATABASE_URL`` env var of your project with it.
 4. This way, your project is always configured with the correct database URL.
