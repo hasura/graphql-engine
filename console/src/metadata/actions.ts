@@ -530,7 +530,7 @@ export const replaceMetadata = (
             x.name === getState().tables.currentDataSource
         );
 
-        if (!currentSource) {
+        if (!currentSource && newState.metadata.sources?.[0]) {
           dispatch({
             type: UPDATE_CURRENT_DATA_SOURCE,
             source: newState.metadata.sources[0].name,
