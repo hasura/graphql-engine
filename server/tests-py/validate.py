@@ -292,6 +292,8 @@ def validate_gql_ws_q(hge_ctx, conf, headers, retry=False, via_subscription=Fals
             assert resp['type'] in ['data', 'error', 'next'], resp
 
     if 'errors' in exp_http_response or 'error' in exp_http_response:
+        if gqlws:
+            resp['payload'] = {'errors':resp['payload']}
         assert resp['type'] in ['data', 'error', 'next'], resp
     else:
         assert resp['type'] == 'data' or resp['type'] == 'next', resp
