@@ -203,7 +203,7 @@ For the ``serve`` sub-command these are the available flags and environment vari
 
    * - ``-i, --tx-iso <TXISO>``
      - ``HASURA_GRAPHQL_TX_ISOLATION``
-     - Transaction isolation. read-committed / repeatable-read / serializable (default: read-commited)
+     - Transaction isolation. read-committed / repeatable-read / serializable (default: read-committed)
 
        (**Deprecated in versions > v2.0.0**. :ref:`See details <hasura_v2_env_changes>`)
 
