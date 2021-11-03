@@ -1,3 +1,21 @@
+import { GraphQLError } from 'graphql';
+import { Nullable } from '../../../Common/utils/tsUtils';
+
+export type Definition = {
+  sdl: string;
+  error: Nullable<GraphQLError>;
+  timer: Nullable<NodeJS.Timeout>;
+  ast: Nullable<Record<string, any>>;
+};
+
+export type Header = {
+  name: string;
+  value: string;
+  type: 'static' | 'env';
+};
+
+export type ActionExecution = 'synchronous' | 'asynchronous';
+
 export const defaultArg = {
   name: '',
   type: '',
@@ -59,7 +77,7 @@ input SampleInput {
 }
 `;
 
-export const defaultHeader = {
+export const defaultHeader: Header = {
   name: '',
   value: '',
   type: 'static',

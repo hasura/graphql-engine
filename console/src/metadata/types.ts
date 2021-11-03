@@ -815,6 +815,37 @@ export interface Action {
 }
 
 /**
+ * https://hasura.io/docs/latest/graphql/core/api-reference/syntax-defs.html#requesttransformation
+ */
+export type RequestTransformMethod =
+  | 'POST'
+  | 'GET'
+  | 'PUT'
+  | 'DELETE'
+  | 'PATCH';
+
+export type RequestTransformContentType =
+  | 'application/json'
+  | 'application/x-www-form-urlencoded';
+
+export type RequestTransformHeaders = {
+  addHeaders: Record<string, string>;
+  removeHeaders: string[];
+};
+
+export type RequestTransformTemplateEngine = 'Kriti';
+
+export interface RequestTransform {
+  method?: Nullable<RequestTransformMethod>;
+  url?: Nullable<string>;
+  body?: Nullable<string>;
+  content_type?: Nullable<RequestTransformContentType>;
+  request_headers?: Nullable<RequestTransformHeaders>;
+  query_params?: Nullable<Record<string, string>>;
+  template_engine?: Nullable<RequestTransformTemplateEngine>;
+}
+
+/**
  * https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/actions.html#actiondefinition
  */
 export interface ActionDefinition {
@@ -825,6 +856,7 @@ export interface ActionDefinition {
   forward_client_headers?: boolean;
   handler: WebhookURL;
   type?: 'mutation' | 'query';
+  transform?: RequestTransform;
 }
 
 /**

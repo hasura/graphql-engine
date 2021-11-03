@@ -61,6 +61,7 @@ const Manage = ({ allTypes, dispatch, readOnlyMode, ...manageProps }) => {
         tooltip={editorTooltip}
         height="600px"
         readOnlyMode={readOnlyMode}
+        fontSize="14px"
         allowEmpty
       />
       <hr className="my-md" />

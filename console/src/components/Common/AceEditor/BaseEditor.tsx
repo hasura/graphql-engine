@@ -6,9 +6,14 @@ import 'ace-builds/src-noconflict/ext-error_marker';
 import 'ace-builds/src-noconflict/ext-beautify';
 import { ACE_EDITOR_THEME, ACE_EDITOR_FONT_SIZE } from './utils';
 
-const Editor: React.FC<IAceEditorProps> = ({ mode, ...props }) => {
+interface EditorProps extends IAceEditorProps {
+  editorRef?: any;
+}
+
+const Editor: React.FC<EditorProps> = ({ mode, editorRef, ...props }) => {
   return (
     <AceEditor
+      ref={editorRef}
       mode={mode}
       theme={ACE_EDITOR_THEME}
       fontSize={ACE_EDITOR_FONT_SIZE}

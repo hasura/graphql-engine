@@ -3,6 +3,7 @@ import {
   defaultTypesDefSdl,
   defaultHeader,
 } from '../Common/stateDefaults';
+import { DefaultState } from './types';
 
 let defaultHandler = '';
 if (typeof navigator !== 'undefined') {
@@ -17,23 +18,23 @@ if (typeof navigator !== 'undefined') {
   }
 }
 
-const state = {
+const state: DefaultState = {
   handler: defaultHandler,
   actionDefinition: {
     sdl: defaultActionDefSdl,
-    error: '',
+    error: null,
     timer: null,
     ast: null,
   },
   typeDefinition: {
     sdl: defaultTypesDefSdl,
-    error: '',
+    error: null,
     timer: null,
     ast: null,
   },
   headers: [defaultHeader],
   forwardClientHeaders: false,
-  kind: 'synchronous',
+  execution: 'synchronous',
   isFetching: false,
   derive: {
     operation: '',

@@ -7,6 +7,7 @@ import {
   QualifiedFunction,
   RestEndpointEntry,
   RemoteSchemaDef,
+  RequestTransform,
   HasuraMetadataV2,
   HasuraMetadataV3,
 } from './types';
@@ -277,7 +278,8 @@ export const getCreateActionPermissionQuery = (
 export const getUpdateActionQuery = (
   def: ActionDefinition,
   actionName: string,
-  actionComment: string
+  actionComment: string,
+  request_transform: RequestTransform
 ) => {
   return {
     type: 'update_action',
@@ -285,6 +287,7 @@ export const getUpdateActionQuery = (
       name: actionName,
       definition: def,
       comment: actionComment,
+      request_transform,
     },
   };
 };
