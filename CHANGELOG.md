@@ -3,6 +3,7 @@
 ## Next release
 (Add entries below in the order of server, console, cli, docs, others)
 
+- server: do not recreate event triggers if tables haven't changed on reloading metadata
 - server: moves `request_transform` into the Action Definition the `create_action` metadata API call.
 - server: call auth webhooks even when the request is malformed JSON or otherwise fails to parse (close #7532)
 - server: updates kriti to v0.2.1 which adds an `escapeUri` function

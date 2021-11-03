@@ -984,7 +984,7 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
                     ( do
                         (info, dependencies) <- bindErrorA -< buildEventTriggerInfo @b env source table eventTriggerConf
                         let tableColumns = M.mapMaybe (^? _FIColumn) (_tciFieldInfoMap tableInfo)
-                        recreateTriggerIfNeeded -< (metadataInvalidationKey, table, M.elems tableColumns, triggerName, etcDefinition eventTriggerConf, sourceConfig, recreateEventTriggers)
+                        recreateTriggerIfNeeded -< (table, M.elems tableColumns, triggerName, etcDefinition eventTriggerConf, sourceConfig, recreateEventTriggers)
                         recordDependencies -< (metadataObject, schemaObjectId, dependencies)
                         returnA -< info
                     )
@@ -993,10 +993,12 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
             |) metadataObject
 
         recreateTriggerIfNeeded =
+          -- using `Inc.cache` here means that the response will be cached for the given output and the
+          -- next time this arrow recieves the same input, the cached response will be returned and the
+          -- computation will not be done again.
           Inc.cache
             proc
-              ( metadataInvalidationKey,
-                tableName,
+              ( tableName,
                 tableColumns,
                 triggerName,
                 triggerDefinition,
@@ -1004,9 +1006,6 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
                 recreateEventTriggers
                 )
             -> do
-              -- We want to make sure we re-create event triggers in postgres database on
-              -- `reload_metadata` metadata query request
-              Inc.dependOn -< metadataInvalidationKey
               bindA
                 -< do
                   buildReason <- ask
