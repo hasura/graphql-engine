@@ -105,7 +105,7 @@ var _ = Describe("hasura metadata export (config v3)", func() {
 			Eventually(session, timeout).Should(Exit(0))
 			Expect(session.Err.Contents()).Should(ContainSubstring("Metadata exported"))
 			Expect(filepath.Join(projectDirectory, "metadata", "databases", sourceName, "tables", "public_albums.yaml")).Should(BeAnExistingFile())
-			verifyRequestTransformsMetadataIsApplied(hgeEndpoint)
+			verifyRequestTransformsMetadataIsExported(projectDirectory)
 		})
 		testExportMetadataToStdout(projectDirectory)
 		testMetadataFileMode(projectDirectory)
@@ -152,7 +152,7 @@ var _ = Describe("hasura metadata export (config v2)", func() {
 			Expect(session.Err.Contents()).Should(ContainSubstring("Metadata exported"))
 			Expect(filepath.Join(projectDirectory, "metadata", "tables.yaml")).Should(BeAnExistingFile())
 
-			verifyRequestTransformsMetadataIsApplied(hgeEndpoint)
+			verifyRequestTransformsMetadataIsExported(projectDirectory)
 		})
 		testExportMetadataToStdout(projectDirectory)
 		testMetadataFileMode(projectDirectory)
