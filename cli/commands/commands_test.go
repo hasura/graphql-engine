@@ -2,8 +2,12 @@ package commands
 
 import (
 	"fmt"
+	"io"
 	"io/ioutil"
+	"net/http"
+	"net/url"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -106,4 +110,26 @@ func copyMigrationsToProjectDirectory(projectDirectory, migrationsDirectory stri
 		// move new migrations
 		Expect(util.CopyDir(migrationsDirectory, filepath.Join(projectMigrationsDirectory, source))).To(BeNil())
 	}
+}
+
+var assertHGEAPIRequestSucceedsAndGetResponseBody = func(hgeEndpoint string, urlPath string, body io.Reader) []byte {
+	uri, err := url.Parse(hgeEndpoint)
+	Expect(err).To(BeNil())
+	uri.Path = path.Join(uri.Path, urlPath)
+	req, err := http.NewRequest("POST", uri.String(), body)
+	Expect(err).To(BeNil())
+
+	req.Header.Set("Content-Type", "application/json")
+	adminSecret := os.Getenv("HASURA_GRAPHQL_TEST_ADMIN_SECRET")
+	if adminSecret != "" {
+		req.Header.Set("x-hasura-admin-secret", adminSecret)
+	}
+
+	resp, err := http.DefaultClient.Do(req)
+	Expect(err).To(BeNil())
+	defer resp.Body.Close()
+	Expect(fmt.Sprint(resp.StatusCode)).Should(ContainSubstring(fmt.Sprint(http.StatusOK)))
+	responseBody, err := ioutil.ReadAll(resp.Body)
+	Expect(err).To(BeNil())
+	return responseBody
 }

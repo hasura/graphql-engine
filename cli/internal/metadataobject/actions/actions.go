@@ -303,11 +303,13 @@ func (a *ActionConfig) Build(metadata *yaml.MapSlice) metadataobject.ErrParsingM
 			if action.Name == newActionObj.Name {
 				isFound = true
 				sdlFromResp.Actions[newActionIndex].Permissions = oldAction.Actions[actionIndex].Permissions
+				sdlFromResp.Actions[newActionIndex].Comment = oldAction.Actions[actionIndex].Comment
 				sdlFromResp.Actions[newActionIndex].Definition.Timeout = oldAction.Actions[actionIndex].Definition.Timeout
 				sdlFromResp.Actions[newActionIndex].Definition.Kind = oldAction.Actions[actionIndex].Definition.Kind
 				sdlFromResp.Actions[newActionIndex].Definition.Handler = oldAction.Actions[actionIndex].Definition.Handler
 				sdlFromResp.Actions[newActionIndex].Definition.ForwardClientHeaders = oldAction.Actions[actionIndex].Definition.ForwardClientHeaders
 				sdlFromResp.Actions[newActionIndex].Definition.Headers = oldAction.Actions[actionIndex].Definition.Headers
+				sdlFromResp.Actions[newActionIndex].Definition.RequestTransform = oldAction.Actions[actionIndex].Definition.RequestTransform
 				break
 			}
 		}

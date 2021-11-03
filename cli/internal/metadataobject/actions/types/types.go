@@ -57,6 +57,7 @@ type Action struct {
 	Name        string          `json:"name" yaml:"name"`
 	Definition  ActionDef       `json:"definition" yaml:"definition"`
 	Permissions []yaml.MapSlice `json:"-" yaml:"permissions,omitempty"`
+	Comment     interface{}     `json:"comment,omitempty" yaml:"comment,omitempty"`
 }
 
 type ActionType string
@@ -77,6 +78,7 @@ type ActionDef struct {
 	ForwardClientHeaders bool            `json:"-" yaml:"forward_client_headers,omitempty"`
 	Headers              []yaml.MapSlice `json:"-" yaml:"headers,omitempty"`
 	Timeout              int             `json:"-" yaml:"timeout,omitempty"`
+	RequestTransform     interface{}     `json:"request_transform,omitempty" yaml:"request_transform,omitempty"`
 }
 
 type CustomTypes struct {
