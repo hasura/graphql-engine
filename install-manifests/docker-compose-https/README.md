@@ -11,7 +11,7 @@ This Docker Compose setup runs [Hasura GraphQL Engine](https://github.com/hasura
 
 - Clone this repo on a machine with a public ip address
 - Map your domain name to this ip address
-- Edit `Caddyfile` and add your domain (replace `<your-domain.com>` with your domain, don't keep `<>`)
+- Edit `Caddyfile` and add your domain (replace `:80` with your domain to get automatic HTTPS certs from [LetsEncrypt](https://letsencrypt.org/))
 - Edit `docker-compose.yaml` and change `HASURA_GRAPHQL_ADMIN_SECRET` to something secure
 - `docker-compose up -d`
 
