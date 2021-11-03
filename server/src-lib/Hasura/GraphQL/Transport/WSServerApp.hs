@@ -9,7 +9,7 @@ import Control.Concurrent.Async.Lifted.Safe qualified as LA
 import Control.Concurrent.STM qualified as STM
 import Control.Exception.Lifted
 import Control.Monad.Trans.Control qualified as MC
-import Data.Aeson (toJSON, object, (.=))
+import Data.Aeson (object, toJSON, (.=))
 import Data.ByteString.Char8 qualified as B (pack)
 import Data.Environment qualified as Env
 import Data.Text (pack, unpack)
@@ -165,7 +165,7 @@ mkWSActions logger subProtocol =
       WS.defaultAcceptRequest
         { WS.acceptSubprotocol = Just . B.pack . showSubProtocol $ subProtocol
         }
-    
+
     fmtErrorMessage errMsgs = case subProtocol of
-      Apollo -> object [ "errors" .= errMsgs ]
+      Apollo -> object ["errors" .= errMsgs]
       GraphQLWS -> toJSON errMsgs

@@ -779,7 +779,7 @@ onStart env enabledLogTypes serverEnv wsConn (StartMsg opId q) onMessageActions 
       logOpEv (ODQueryErr qErr) (Just reqId) Nothing
       let err = case errRespTy of
             ERTLegacy -> errFn False qErr
-            ERTGraphqlCompliant -> fmtErrorMessage [ errFn False qErr ]
+            ERTGraphqlCompliant -> fmtErrorMessage [errFn False qErr]
       sendMsg wsConn (SMErr $ ErrorMsg opId err)
 
     sendSuccResp ::
