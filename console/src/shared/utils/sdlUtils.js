@@ -175,6 +175,7 @@ export const getActionDefinitionFromSdl = sdl => {
     outputType: '',
     comment: '',
     error: null,
+    type: '',
   };
   let schemaAst;
   try {

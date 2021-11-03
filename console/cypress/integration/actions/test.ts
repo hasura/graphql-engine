@@ -5,6 +5,9 @@ import {
   modifyQueryAction,
   deleteMutationAction,
   deleteQueryAction,
+  createActionTransform,
+  modifyActionTransform,
+  deleteActionTransform,
 } from './spec';
 import { testMode } from '../../helpers/common';
 import { setMetaData } from '../validators/validators';
@@ -29,6 +32,9 @@ export const runActionsTests = () => {
     // it('Verify Query Actions on GraphiQL', verifyQuery);
     it('Modify Query Action', modifyQueryAction);
     it('Delete Query Action', deleteQueryAction);
+    it('Create Action With Transform', createActionTransform);
+    it('Update Action With Transform', modifyActionTransform);
+    it('Delete Action With Transform', deleteActionTransform);
   });
 };
 
