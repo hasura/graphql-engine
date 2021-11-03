@@ -1,3 +1,7 @@
+-- | Migrations for postgres source catalog
+--
+--    NOTE: Please have a look at the `server/documentation/migration-guidelines.md` before adding any new migration
+--       if you haven't already looked at it
 module Hasura.Backends.Postgres.DDL.Source
   ( ToMetadataFetchQuery,
     fetchPgScalars,
@@ -95,13 +99,13 @@ initCatalogForSource maintenanceMode migrationTime = do
       | not sourceVersionTableExist && eventLogTableExist -> do
         -- Update the Source Catalog to v43 to include the new migration
         -- changes. Skipping this step will result in errors.
-        currMetadataCatalogVersion <- liftTx getCatalogVersion
+        currMetadataCatalogVersionFloat <- liftTx getCatalogVersion
         -- we migrate to the 43 version, which is the migration where
         -- metadata separation is introduced
-        migrateTo43MetadataCatalog currMetadataCatalogVersion
+        migrateTo43MetadataCatalog currMetadataCatalogVersionFloat
         liftTx createVersionTable
-        -- Migrate the catalog from initial version i.e '1'
-        migrateSourceCatalogFrom "1"
+        -- Migrate the catalog from initial version i.e '0'
+        migrateSourceCatalogFrom "0"
       | otherwise -> migrateSourceCatalog
   where
     initPgSourceCatalog = do
@@ -124,7 +128,7 @@ initCatalogForSource maintenanceMode migrationTime = do
       pure ()
 
     migrateTo43MetadataCatalog prevVersion = do
-      let neededMigrations = dropWhile ((/= prevVersion) . fst) upMigrationsUntil43
+      let neededMigrations = dropWhile ((< prevVersion) . fst) upMigrationsUntil43
       case NE.nonEmpty neededMigrations of
         Just nonEmptyNeededMigrations -> do
           -- Migrations aren't empty. We need to update the catalog version after migrations
@@ -186,30 +190,35 @@ sourceMigrations =
 
          migrationsFromFile = map $ \(from :: Integer) ->
            [|($(TH.lift $ tshow from), $(migrationFromFile from))|]
-      in TH.listE $ migrationsFromFile [1 .. (latestSourceCatalogVersion - 1)]
+      in TH.listE $ migrationsFromFile [0 .. (latestSourceCatalogVersion - 1)]
    )
 
 -- Upgrade the hdb_catalog schema to v43 (Metadata catalog)
-upMigrationsUntil43 :: [(Text, Q.TxE QErr ())]
+upMigrationsUntil43 :: [(Float, Q.TxE QErr ())]
 upMigrationsUntil43 =
   $( let migrationFromFile from to =
            let path = "src-rsr/migrations/" <> from <> "_to_" <> to <> ".sql"
             in [|Q.multiQE defaultTxErrorHandler $(makeRelativeToProject path >>= Q.sqlFromFile)|]
 
-         migrationsFromFile = map $ \(to :: Integer) ->
+         migrationsFromFile = map $ \(to :: Float) ->
            let from = to - 1
             in [|
-                 ( $(TH.lift $ tshow from),
-                   $(migrationFromFile (show from) (show to))
+                 ( $(TH.lift from),
+                   $(migrationFromFile (show (floor from :: Integer)) (show (floor to :: Integer)))
                  )
                  |]
       in TH.listE
          -- version 0.8 is the only non-integral catalog version
+         -- The 41st migration which included only source catalog migration
+         -- was introduced before metadata separation changes were introduced
+         -- in the graphql-engine. Now the earlier 41st migration has been
+         -- moved to source catalog migrations and the 41st up migration is removed
+         -- entirely.
          $
-           [|("0.8", $(migrationFromFile "08" "1"))|] :
+           [|(0.8, $(migrationFromFile "08" "1"))|] :
            migrationsFromFile [2 .. 3]
-             ++ [|("3", from3To4)|] :
-           migrationsFromFile [5 .. 43]
+             ++ [|(3, from3To4)|] :
+           (migrationsFromFile [5 .. 40]) ++ migrationsFromFile [42 .. 43]
    )
 
 -- | Fetch Postgres metadata of all user tables
