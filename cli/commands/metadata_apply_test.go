@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/Pallinder/go-randomdata"
 
@@ -81,13 +82,19 @@ var testConfigV2 = func(projectDirectory string) {
 	commonMetadataCommandsTest(projectDirectory)
 }
 
+var verifyRequestTransformsMetadataIsApplied = func(hgeEndpoint string) {
+	response := assertHGEAPIRequestSucceedsAndGetResponseBody(hgeEndpoint, "v1/metadata", strings.NewReader(`{"type": "export_metadata", "args": {}}`))
+	Expect(string(response)).To(ContainSubstring("request_transform"))
+	Expect(string(response)).To(ContainSubstring("$body.input.arg1.username"))
+	Expect(string(response)).To(ContainSubstring("actions_test_comment"))
+}
 var _ = Describe("hasura metadata apply (config v3)", func() {
-	var projectDirectory string
+	var projectDirectory, hgeEndpoint string
 	var teardown func()
 	BeforeEach(func() {
 		projectDirectory = testutil.RandDirName()
 		hgeEndPort, teardownHGE := testutil.StartHasura(GinkgoT(), testutil.HasuraDockerImage)
-		hgeEndpoint := fmt.Sprintf("http://0.0.0.0:%s", hgeEndPort)
+		hgeEndpoint = fmt.Sprintf("http://0.0.0.0:%s", hgeEndPort)
 
 		sourceName := randomdata.SillyName()
 		connectionString, teardownPG := testutil.StartPGContainer(GinkgoT())
@@ -109,16 +116,18 @@ var _ = Describe("hasura metadata apply (config v3)", func() {
 
 	It("metadata apply", func() {
 		commonMetadataCommandsTest(projectDirectory)
+		verifyRequestTransformsMetadataIsApplied(hgeEndpoint)
 	})
 })
 
 var _ = Describe("hasura metadata apply (config v2)", func() {
 	var projectDirectoryLatest, projectDirectoryV13 string
+	var hgeEndpoint string
 	var teardown func()
 	BeforeEach(func() {
 		projectDirectoryLatest = testutil.RandDirName()
 		hgeEndPort, teardownHGE := testutil.StartHasura(GinkgoT(), testutil.HasuraDockerImage)
-		hgeEndpoint := fmt.Sprintf("http://0.0.0.0:%s", hgeEndPort)
+		hgeEndpoint = fmt.Sprintf("http://0.0.0.0:%s", hgeEndPort)
 		copyTestConfigV2Project(projectDirectoryLatest)
 		editEndpointInConfig(filepath.Join(projectDirectoryLatest, defaultConfigFilename), hgeEndpoint)
 
@@ -140,6 +149,7 @@ var _ = Describe("hasura metadata apply (config v2)", func() {
 
 	It("metadata apply", func() {
 		testConfigV2(projectDirectoryLatest)
+		verifyRequestTransformsMetadataIsApplied(hgeEndpoint)
 		testConfigV2(projectDirectoryV13)
 	})
 })

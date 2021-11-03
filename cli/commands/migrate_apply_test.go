@@ -2,11 +2,7 @@ package commands
 
 import (
 	"fmt"
-	"io"
-	"net/http"
-	"net/url"
 	"os"
-	"path"
 	"path/filepath"
 	"strings"
 
@@ -231,26 +227,6 @@ var testProgressBar = func(projectDirectory string) {
 	})
 }
 
-var testByRunningAPI = func(hgeEndpoint string, urlPath string, body io.Reader) {
-	uri, err := url.Parse(hgeEndpoint)
-	Expect(err).To(BeNil())
-	uri.Path = path.Join(uri.Path, urlPath)
-	req, err := http.NewRequest("POST", uri.String(), body)
-	Expect(err).To(BeNil())
-
-	req.Header.Set("Content-Type", "application/json")
-	adminSecret := os.Getenv("HASURA_GRAPHQL_TEST_ADMIN_SECRET")
-	if adminSecret != "" {
-		req.Header.Set("x-hasura-admin-secret", adminSecret)
-	}
-
-	resp, err := http.DefaultClient.Do(req)
-	Expect(err).To(BeNil())
-	defer resp.Body.Close()
-	Expect(fmt.Sprint(resp.StatusCode)).Should(ContainSubstring(fmt.Sprint(http.StatusOK)))
-
-}
-
 var _ = Describe("hasura migrate apply", func() {
 	var hgeEndpoint string
 	var teardown func()
@@ -296,7 +272,7 @@ var _ = Describe("hasura migrate apply", func() {
 			}
 		}
 		`)
-		testByRunningAPI(hgeEndpoint, "v2/query", createTable)
+		assertHGEAPIRequestSucceedsAndGetResponseBody(hgeEndpoint, "v2/query", createTable)
 	})
 })
 
@@ -347,7 +323,7 @@ var _ = Describe("hasura migrate apply (config v3)", func() {
 }
 `, pgSource)
 		createTable := strings.NewReader(createTableString)
-		testByRunningAPI(hgeEndpoint, "v2/query", createTable)
+		assertHGEAPIRequestSucceedsAndGetResponseBody(hgeEndpoint, "v2/query", createTable)
 	})
 	It("should apply the migrations on all-databases", func() {
 		testMigrateApplyAllDatabases(projectDirectory, pgSource, citusSource, mssqlSource)
@@ -361,7 +337,7 @@ var _ = Describe("hasura migrate apply (config v3)", func() {
 }
 `, pgSource)
 		createTable := strings.NewReader(pgBody)
-		testByRunningAPI(hgeEndpoint, "v2/query", createTable)
+		assertHGEAPIRequestSucceedsAndGetResponseBody(hgeEndpoint, "v2/query", createTable)
 		citusBody := fmt.Sprintf(`
 {
     "type": "citus_run_sql",
@@ -372,7 +348,7 @@ var _ = Describe("hasura migrate apply (config v3)", func() {
 }
 `, citusSource)
 		createTable = strings.NewReader(citusBody)
-		testByRunningAPI(hgeEndpoint, "v2/query", createTable)
+		assertHGEAPIRequestSucceedsAndGetResponseBody(hgeEndpoint, "v2/query", createTable)
 	})
 	It("should the migrations on all-databases except first database and it should exit with code 1", func() {
 		testMigrateApplyAllDatabasesWithError(projectDirectory, pgSource, citusSource, mssqlSource)
@@ -386,7 +362,7 @@ var _ = Describe("hasura migrate apply (config v3)", func() {
 }
 `, citusSource)
 		createTable := strings.NewReader(citusBody)
-		testByRunningAPI(hgeEndpoint, "v2/query", createTable)
+		assertHGEAPIRequestSucceedsAndGetResponseBody(hgeEndpoint, "v2/query", createTable)
 	})
 })
 

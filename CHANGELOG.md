@@ -3,6 +3,7 @@
 ## Next release
 (Add entries below in the order of server, console, cli, docs, others)
 
+- server: do not recreate event triggers if tables haven't changed on reloading metadata
 - server: moves `request_transform` into the Action Definition the `create_action` metadata API call.
 - server: call auth webhooks even when the request is malformed JSON or otherwise fails to parse (close #7532)
 - server: updates kriti to v0.2.1 which adds an `escapeUri` function
@@ -14,6 +15,7 @@
 - console: allow dropping indices on all schemas
 - console: fix bug with displaying 1-to-1 relationship with the same column mapping (close #7552)
 - cli: split remote schema permissions metadata into seperate files (#7033)
+- cli: support action request transforms in metadata
 
 
 ### Function field names customization (#7405)

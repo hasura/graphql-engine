@@ -90,7 +90,7 @@ In this example, we're creating a relationship for the ``createUser`` action.
 
   .. tab:: API
 
-    You can create an action relationship when defining custom types via the :ref:`set_custom_types metadata API <set_custom_types>`:
+    You can create an action relationship when defining custom types via the :ref:`set_custom_types metadata API <metadata_set_custom_types>`:
 
     .. code-block:: http
       :emphasize-lines: 20-29
