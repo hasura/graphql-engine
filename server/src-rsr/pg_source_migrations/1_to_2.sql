@@ -1,4 +1,3 @@
-DROP INDEX hdb_catalog.event_log_locked_idx;
 DROP INDEX hdb_catalog.event_log_delivered_idx;
 DROP INDEX hdb_catalog.event_log_created_at_idx;
 

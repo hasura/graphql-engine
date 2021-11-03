@@ -14,6 +14,9 @@
 --
 -- The Template Haskell code in this module will automatically compile the new migration script into
 -- the @graphql-engine@ executable.
+--
+-- NOTE: Please have a look at the `server/documentation/migration-guidelines.md` before adding any new migration
+--       if you haven't already looked at it
 module Hasura.Server.Migrate
   ( MigrationResult (..),
     getMigratedFrom,
@@ -156,25 +159,31 @@ migrateCatalog maybeDefaultSourceConfig maintenanceMode migrationTime = do
       pure MRInitialized
 
     -- migrates an existing catalog to the latest version from an existing verion
-    migrateFrom :: Text -> m MigrationResult
+    migrateFrom :: Float -> m MigrationResult
     migrateFrom previousVersion
-      | previousVersion == latestCatalogVersionString = pure MRNothingToDo
-      | [] <- neededMigrations =
-        throw400 NotSupported $
-          "Cannot use database previously used with a newer version of graphql-engine (expected"
-            <> " a catalog version <="
-            <> latestCatalogVersionString
-            <> ", but the current version"
-            <> " is "
-            <> previousVersion
-            <> ")."
+      | previousVersion == fromInteger latestCatalogVersion = pure MRNothingToDo
       | otherwise = do
-        traverse_ (mpMigrate . snd) neededMigrations
-        updateCatalogVersion
-        pure $ MRMigrated previousVersion
+        let upMigrations = migrations maybeDefaultSourceConfig False maintenanceMode
+            -- 0.8 is the only non-integral catalog version and we'd like to output the version for other
+            -- versions as integer rather than float, for example: 40 instead of 40.0
+            previousVersionText = bool (tshow ((floor previousVersion) :: Integer)) "0.8" $ previousVersion == 0.8
+        case neededMigrations previousVersion upMigrations of
+          [] ->
+            throw400 NotSupported $
+              "Cannot use database previously used with a newer version of graphql-engine (expected"
+                <> " a catalog version <="
+                <> latestCatalogVersionString
+                <> ", but the current version"
+                <> " is "
+                <> previousVersionText
+                <> ")."
+          migrationsToBeApplied -> do
+            traverse_ (mpMigrate . snd) migrationsToBeApplied
+            updateCatalogVersion
+            pure $ MRMigrated previousVersionText
       where
-        neededMigrations =
-          dropWhile ((/= previousVersion) . fst) (migrations maybeDefaultSourceConfig False maintenanceMode)
+        neededMigrations prevVersion upMigrations =
+          dropWhile ((< prevVersion) . fst) upMigrations
 
     updateCatalogVersion = setCatalogVersion latestCatalogVersionString migrationTime
 
@@ -186,19 +195,22 @@ downgradeCatalog ::
   UTCTime ->
   m MigrationResult
 downgradeCatalog defaultSourceConfig opts time = do
-  downgradeFrom =<< liftTx getCatalogVersion
+  currentCatalogVersion <- liftTx getCatalogVersion
+  targetVersionFloat :: Float <-
+    onLeft (readEither (T.unpack $ dgoTargetVersion opts)) $ \err ->
+      throw500 $ "Unexpected: couldn't convert " <> dgoTargetVersion opts <> " to a float, error: " <> tshow err
+  downgradeFrom currentCatalogVersion targetVersionFloat
   where
     -- downgrades an existing catalog to the specified version
-    downgradeFrom :: Text -> m MigrationResult
-    downgradeFrom previousVersion
-      | previousVersion == dgoTargetVersion opts = do
-        pure MRNothingToDo
+    downgradeFrom :: Float -> Float -> m MigrationResult
+    downgradeFrom previousVersion targetVersion
+      | previousVersion == targetVersion = pure MRNothingToDo
       | otherwise =
-        case neededDownMigrations (dgoTargetVersion opts) of
+        case neededDownMigrations targetVersion of
           Left reason ->
             throw400 NotSupported $
               "This downgrade path (from "
-                <> previousVersion
+                <> tshow previousVersion
                 <> " to "
                 <> dgoTargetVersion opts
                 <> ") is not supported, because "
@@ -207,7 +219,7 @@ downgradeCatalog defaultSourceConfig opts time = do
             sequence_ path
             unless (dgoDryRun opts) do
               setCatalogVersion (dgoTargetVersion opts) time
-            pure (MRMigrated previousVersion)
+            pure (MRMigrated (dgoTargetVersion opts))
       where
         neededDownMigrations newVersion =
           downgrade
@@ -216,9 +228,9 @@ downgradeCatalog defaultSourceConfig opts time = do
             (reverse (migrations defaultSourceConfig (dgoDryRun opts) MaintenanceModeDisabled))
 
         downgrade ::
-          Text ->
-          Text ->
-          [(Text, MigrationPair m)] ->
+          Float ->
+          Float ->
+          [(Float, MigrationPair m)] ->
           Either Text [m ()]
         downgrade lower upper = skipFutureDowngrades
           where
@@ -228,7 +240,7 @@ downgradeCatalog defaultSourceConfig opts time = do
             -- Then we take migrations as needed until we reach the target
             -- version, dropping any remaining migrations from the end of the
             -- (reversed) list.
-            skipFutureDowngrades, dropOlderDowngrades :: [(Text, MigrationPair m)] -> Either Text [m ()]
+            skipFutureDowngrades, dropOlderDowngrades :: [(Float, MigrationPair m)] -> Either Text [m ()]
             skipFutureDowngrades xs | previousVersion == lower = dropOlderDowngrades xs
             skipFutureDowngrades [] = Left "the starting version is unrecognized."
             skipFutureDowngrades ((x, _) : xs)
@@ -237,7 +249,7 @@ downgradeCatalog defaultSourceConfig opts time = do
 
             dropOlderDowngrades [] = Left "the target version is unrecognized."
             dropOlderDowngrades ((x, MigrationPair {mpDown = Nothing}) : _) =
-              Left $ "there is no available migration back to version " <> x <> "."
+              Left $ "there is no available migration back to version " <> tshow x <> "."
             dropOlderDowngrades ((x, MigrationPair {mpDown = Just y}) : xs)
               | x == upper = Right [y]
               | otherwise = (y :) <$> dropOlderDowngrades xs
@@ -248,7 +260,7 @@ migrations ::
   Maybe (SourceConnConfiguration ('Postgres 'Vanilla)) ->
   Bool ->
   MaintenanceMode ->
-  [(Text, MigrationPair m)]
+  [(Float, MigrationPair m)]
 migrations maybeDefaultSourceConfig dryRun maintenanceMode =
   -- We need to build the list of migrations at compile-time so that we can compile the SQL
   -- directly into the executable using `Q.sqlFromFile`. The GHC stage restriction makes
@@ -264,24 +276,30 @@ migrations maybeDefaultSourceConfig dryRun maintenanceMode =
              then [|Just (runTxOrPrint $(Q.sqlFromFile path))|]
              else [|Nothing|]
 
-         migrationsFromFile = map $ \(to :: Integer) ->
+         migrationsFromFile = map $ \(to :: Float) ->
            let from = to - 1
+               fromInt :: Integer = floor from
+               toInt :: Integer = floor to
             in [|
-                 ( $(TH.lift $ tshow from),
+                 ( $(TH.lift from),
                    MigrationPair
-                     $(migrationFromFile (show from) (show to))
-                     $(migrationFromFileMaybe (show to) (show from))
+                     $(migrationFromFile (show fromInt) (show toInt))
+                     $(migrationFromFileMaybe (show toInt) (show fromInt))
                  )
                  |]
       in TH.listE
          -- version 0.8 is the only non-integral catalog version
+         -- The 40_to_41 migration is consciously omitted from below because its contents
+         -- have been moved to the `0_to_1.sql` because the `40_to_41` migration only contained
+         -- source catalog changes and we'd like to keep source catalog migrations in a different
+         -- path than metadata catalog migrations.
          $
-           [|("0.8", MigrationPair $(migrationFromFile "08" "1") Nothing)|] :
+           [|(0.8, MigrationPair $(migrationFromFile "08" "1") Nothing)|] :
            migrationsFromFile [2 .. 3]
-             ++ [|("3", MigrationPair from3To4 Nothing)|] :
-           migrationsFromFile [5 .. 42]
-             ++ [|("42", MigrationPair from42To43 (Just from43To42))|] :
-           migrationsFromFile [44 .. latestCatalogVersion]
+             ++ [|(3, MigrationPair from3To4 Nothing)|] :
+           (migrationsFromFile [5 .. 40] ++ migrationsFromFile [42])
+             ++ [|(42, MigrationPair from42To43 (Just from43To42))|] :
+           migrationsFromFile [44 .. (fromInteger latestCatalogVersion)]
    )
   where
     runTxOrPrint :: Q.Query -> m ()
