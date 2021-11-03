@@ -2,7 +2,7 @@
   :description: Set field values for Postgres using role-based column presets
   :keywords: hasura, docs, postgres, schema, role-based, column preset
 
-.. _pg_column_presets:
+.. _column_presets:
 
 Postgres: Setting values for fields using role-based column presets
 ===================================================================
@@ -82,19 +82,18 @@ Step 1: Configure a column preset
 
   .. tab:: API
 
-    You can add column presets by using the :ref:`metadata_pg_create_insert_permission` metadata API:
+    You can add column presets by using the :ref:`create_insert_permission metadata API <create_insert_permission>`:
 
     .. code-block:: http
-      :emphasize-lines: 13-15
+      :emphasize-lines: 12-14
 
-      POST /v1/metadata HTTP/1.1
+      POST /v1/query HTTP/1.1
       Content-Type: application/json
       X-Hasura-Role: admin
 
       {
-        "type" : "pg_create_insert_permission",
+        "type" : "create_insert_permission",
         "args" : {
-          "source": "<db_name>",
           "table" : "article",
           "role" : "user",
           "permission" : {
@@ -154,5 +153,5 @@ passed in the ``X-Hasura-User-Id`` variable:
 Also see
 --------
 
-- :ref:`pg_postgres_defaults`
-- :ref:`pg_sql_functions_as_default`
+- :ref:`postgres_defaults`
+- :ref:`sql_functions_as_default`

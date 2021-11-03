@@ -1,7 +1,3 @@
--- | MSSQL SQL Value
---
--- Provide a function to translate from a column value to its literal (textual)
--- value specific to MSSQL. Used in the 'BackendExecute' instance.
 module Hasura.Backends.MSSQL.SQL.Value (txtEncodedColVal) where
 
 import Data.Text.Encoding (decodeUtf8)

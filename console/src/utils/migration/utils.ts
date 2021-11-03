@@ -253,20 +253,23 @@ export const getColumnUpdateMigration = (
 
   /* column comment up/down migration */
   if (originalColComment !== comment) {
-    const columnCommentUpQuery = dataSource.getAlterColumnCommentSql({
+    const columnCommentUpQuery = dataSource.getSetCommentSql(
+      'column',
       tableName,
-      schemaName: currentSchema,
+      currentSchema,
       comment,
-      columnName: colName,
-      columnType: colType,
-    });
-    const columnCommentDownQuery = dataSource.getAlterColumnCommentSql({
+      colName,
+      colType
+    );
+
+    const columnCommentDownQuery = dataSource.getSetCommentSql(
+      'column',
       tableName,
-      schemaName: currentSchema,
-      comment: originalColComment,
-      columnName: colName,
-      columnType: colType,
-    });
+      currentSchema,
+      originalColComment,
+      colName,
+      colType
+    );
 
     migration.add(
       getRunSqlQuery(columnCommentUpQuery, source),

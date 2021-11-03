@@ -32,7 +32,6 @@ the following columns:
 
 .. thumbnail:: /img/graphql/core/getting-started/create-profile-table.png
    :alt: Create a table
-   :width: 1200px
 
 Now, insert some sample data into the table using the ``Insert Row`` tab of the ``profiles`` table.
 
@@ -54,4 +53,3 @@ You'll see that you get all the inserted data!
 
 .. thumbnail:: /img/graphql/core/getting-started/profile-query.png
    :alt: Try out a query
-   :width: 1200px

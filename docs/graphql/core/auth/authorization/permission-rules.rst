@@ -20,7 +20,6 @@ level granularity:
 
 .. thumbnail:: /img/graphql/core/auth/permission-rule-granularity.png
    :alt: Access control rules in Hasura
-   :width: 1000px
 
 Requests to Hasura should contain the reserved session variable ``X-Hasura-Role`` to indicate the requesting
 user's role, and the table and action information is inferred from the request itself. This information is used
@@ -35,7 +34,7 @@ constraints on the data being returned or modified.
 
 Let's take a look at the different configuration options available to define a permission rule. Permission
 rules are defined for each role, table, operation (*insert, select, update, delete*) by using the console
-or the :ref:`metadata APIs for permissions <metadata_api_permission>`.
+or the :ref:`metadata APIs for permissions <api_permission>`.
 
 Operation permissions
 ---------------------
@@ -100,7 +99,7 @@ Using column operators to build rules
 *************************************
 
 Type-based operators (*depending on the column type*) are available for constructing row-level permissions.
-You can use the same operators that you use to :ref:`filter query results <pg_filter_queries>`
+You can use the same operators that you use to :ref:`filter query results <filter_queries>`
 along with a few others to define permission rules.
 
 See the :ref:`API reference <MetadataOperator>` for a list of all supported column operators.
@@ -109,11 +108,11 @@ See the :ref:`API reference <MetadataOperator>` for a list of all supported colu
 types:
 
 .. thumbnail:: /img/graphql/core/auth/operators-for-integer-types.png
-   :width: 400px
+   :width: 40%
    :alt: Column operators for integer types
 
 .. thumbnail:: /img/graphql/core/auth/operators-for-text-types.png
-   :width: 400px
+   :width: 40%
    :alt: Column operators for text types
 
 Using boolean expressions
@@ -130,7 +129,7 @@ the value in the ``id`` column is greater than 10:
       You can define permissions using boolean expressions on the Hasura console as follows:
 
       .. thumbnail:: /img/graphql/core/auth/simple-boolean-expression.png
-         :width: 600px
+         :width: 700px
          :alt: Using boolean expressions to build rules
 
    .. tab:: CLI
@@ -159,19 +158,18 @@ the value in the ``id`` column is greater than 10:
 
    .. tab:: API
 
-      You can define permissions using boolean expressions when using the :ref:`permissions metadata API <metadata_api_permission>`:
+      You can define permissions using boolean expressions when using the :ref:`permissions metadata API <api_permission>`:
 
       .. code-block:: http
-         :emphasize-lines: 13-15
+         :emphasize-lines: 12-14
 
-         POST /v1/metadata HTTP/1.1
+         POST /v1/query HTTP/1.1
          Content-Type: application/json
          X-Hasura-Role: admin
 
          {
-            "type": "pg_create_select_permission",
+            "type": "create_select_permission",
             "args": {
-               "source": "<db_name>",
                "table": "author",
                "role": "user",
                "permission": {
@@ -231,19 +229,18 @@ or "A":
 
    .. tab:: API
 
-      You can define permissions using the ``_and`` operator when using the :ref:`permissions metadata API <metadata_api_permission>`:
+      You can define permissions using the ``_and`` operator when using the :ref:`permissions metadata API <api_permission>`:
 
       .. code-block:: http
-         :emphasize-lines: 13-26
+         :emphasize-lines: 12-25
 
-         POST /v1/metadata HTTP/1.1
+         POST /v1/query HTTP/1.1
          Content-Type: application/json
          X-Hasura-Role: admin
 
          {
-            "type": "pg_create_select_permission",
+            "type": "create_select_permission",
             "args": {
-               "source": "<db_name>",
                "table": "author",
                "role": "user",
                "permission": {
@@ -316,19 +313,18 @@ the author's ID*):
 
    .. tab:: API
 
-      You can define session variables in permissions tables when using the :ref:`permissions metadata API <metadata_api_permission>`:
+      You can define session variables in permissions tables when using the :ref:`permissions metadata API <api_permission>`:
 
       .. code-block:: http
-         :emphasize-lines: 13-15
+         :emphasize-lines: 12-14
 
-         POST /v1/metadata HTTP/1.1
+         POST /v1/query HTTP/1.1
          Content-Type: application/json
          X-Hasura-Role: admin
 
          {
-            "type": "pg_create_select_permission",
+            "type": "create_select_permission",
             "args": {
-               "source": "<db_name>",
                "table": "article",
                "role": "author",
                "permission": {
@@ -354,7 +350,7 @@ the author's ID*):
 Using relationships or nested objects
 *************************************
 
-You can leverage :ref:`table relationships <pg_table_relationships>` to define permission rules with fields
+You can leverage :ref:`table relationships <table_relationships>` to define permission rules with fields
 from a nested object.
 
 **For example**, let's say you have an object relationship called ``agent`` from the ``authors`` table to another table
@@ -400,19 +396,18 @@ that uses the aforementioned object relationship:
 
    .. tab:: API
 
-      You add permissions using relationships or nested objects when using the :ref:`permissions metadata API <metadata_api_permission>`:
+      You add permissions using relationships or nested objects when using the :ref:`permissions metadata API <api_permission>`:
 
       .. code-block:: http
-         :emphasize-lines: 13-19
+         :emphasize-lines: 12-18
 
-         POST /v1/metadata HTTP/1.1
+         POST /v1/query HTTP/1.1
          Content-Type: application/json
          X-Hasura-Role: admin
 
             {
-               "type": "pg_create_select_permission",
+               "type": "create_select_permission",
                "args": {
-                  "source": "<db_name>",
                   "table": "author",
                   "role": "agent",
                   "permission": {
@@ -497,19 +492,18 @@ session variable.
 
    .. tab:: API
 
-      You can set permissions for unrelated tables when using the :ref:`permissions metadata API <metadata_api_permission>`:
+      You can set permissions for unrelated tables when using the :ref:`permissions metadata API <api_permission>`:
 
       .. code-block:: http
-         :emphasize-lines: 13-27
+         :emphasize-lines: 12-26
 
-         POST /v1/metadata HTTP/1.1
+         POST /v1/query HTTP/1.1
          Content-Type: application/json
          X-Hasura-Role: admin
 
          {
-            "type": "pg_create_insert_permission",
+            "type": "create_insert_permission",
             "args": {
-               "source": "<db_name>",
                "table": "article",
                "role": "user",
                "permission": {
@@ -586,19 +580,18 @@ permissions.
 
    .. tab:: API
 
-      You can set column-level permissions when using the :ref:`permissions metadata API <metadata_api_permission>`:
+      You can set column-level permissions when using the :ref:`permissions metadata API <api_permission>`:
 
       .. code-block:: http
-         :emphasize-lines: 12-17
+         :emphasize-lines: 11-16
 
-         POST /v1/metadata HTTP/1.1
+         POST /v1/query HTTP/1.1
          Content-Type: application/json
          X-Hasura-Role: admin
 
          {
-            "type": "pg_create_select_permission",
+            "type": "create_select_permission",
             "args": {
-               "source": "<db_name>",
                "table": "article",
                "role": "author",
                "permission": {
@@ -634,7 +627,7 @@ using this configuration:
       You can set a row fetch limit on the Hasura console as follows:
 
       .. thumbnail:: /img/graphql/core/auth/limit-rows-for-select.png
-         :width: 600px
+         :width: 500px
          :alt: Row fetch limit
 
    .. tab:: CLI
@@ -666,19 +659,18 @@ using this configuration:
 
    .. tab:: API
 
-      You can a row fetch limit for a table when using the :ref:`permissions metadata API <metadata_api_permission>`:
+      You can a row fetch limit for a table when using the :ref:`permissions metadata API <api_permission>`:
 
       .. code-block:: http
-         :emphasize-lines: 18
+         :emphasize-lines: 17
 
-         POST /v1/metadata HTTP/1.1
+         POST /v1/query HTTP/1.1
          Content-Type: application/json
          X-Hasura-Role: admin
 
          {
-            "type": "pg_create_select_permission",
+            "type": "create_select_permission",
             "args": {
-               "source": "<db_name>",
                "table": "author",
                "role": "user",
                "permission": {
@@ -702,7 +694,7 @@ In the above example, this configuration  restricts the number of accessible row
 Aggregation queries permissions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-In the case of ``select`` operations, access to :ref:`aggregation queries <pg_aggregation_queries>`
+In the case of ``select`` operations, access to :ref:`aggregation queries <aggregation_queries>`
 can be enabled for a given role using this configuration.
 
 .. rst-class:: api_tabs
@@ -713,7 +705,7 @@ can be enabled for a given role using this configuration.
       You can enable aggregation queries permissions on the Hasura console as follows:
 
       .. thumbnail:: /img/graphql/core/auth/aggregation-query-permissions.png
-         :width: 600px
+         :width: 500px
          :alt: Aggregation queries permissions
 
    .. tab:: CLI
@@ -745,19 +737,18 @@ can be enabled for a given role using this configuration.
 
    .. tab:: API
 
-      You can allow aggregation query permissions when using the :ref:`permissions metadata API <metadata_api_permission>`
+      You can allow aggregation query permissions when using the :ref:`permissions metadata API <api_permission>`
 
       .. code-block:: http
-         :emphasize-lines: 19
+         :emphasize-lines: 18
 
-         POST /v1/metadata HTTP/1.1
+         POST /v1/query HTTP/1.1
          Content-Type: application/json
          X-Hasura-Role: admin
 
          {
-            "type": "pg_create_select_permission",
+            "type": "create_select_permission",
             "args": {
-               "source": "<db_name>",
                "table": "author",
                "role": "user",
                "permission": {
@@ -781,7 +772,7 @@ Column presets
 ^^^^^^^^^^^^^^
 
 While this is strictly not a permission configuration, defining
-:ref:`role-based column presets <pg_column_presets>` on any column automatically
+:ref:`role-based column presets <column_presets>` on any column automatically
 removes access to it. This preset can be defined for ``insert`` and ``update`` operations. This configuration
 is also very useful to avoid sending sensitive user-information in the request and leverage session variables
 or static data instead.

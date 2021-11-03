@@ -1,6 +1,4 @@
--- | MSSQL Types Update
---
--- This module defines the Update-related IR types specific to MSSQL.
+-- | This module defines the Update-related IR types specific to MSSQL.
 module Hasura.Backends.MSSQL.Types.Update
   ( BackendUpdate (..),
     UpdateOperator (..),

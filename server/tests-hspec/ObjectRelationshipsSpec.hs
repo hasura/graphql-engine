@@ -64,17 +64,16 @@ args:
 CREATE TABLE author
 (
     id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(45) UNIQUE KEY,
-    createdAt DATETIME
+    name VARCHAR(45) UNIQUE KEY
 );
 |]
   Mysql.run_
     [sql|
 INSERT INTO author
-    (name, createdAt)
+    (name)
 VALUES
-    ( 'Author 1', '2017-09-21 09:39:44' ),
-    ( 'Author 2', '2017-09-21 09:50:44' );
+    ( 'Author 1'),
+    ( 'Author 2');
 |]
 
   -- Setup tables
@@ -173,35 +172,4 @@ data:
   - id: 1
     author:
       id: 1
-|]
-
-  -- originally from <https://github.com/hasura/graphql-engine-mono/blob/cf64da26e818ca0e4ec39667296c67021bc03c2a/server/tests-py/queries/graphql_query/mysql/select_query_author_quoted_col.yaml>
-  it "Simple GraphQL object query on author" $ \state ->
-    shouldReturnYaml
-      ( GraphqlEngine.postGraphql
-          state
-          [graphql|
-query {
- hasura_author {
-    createdAt
-    name
-    id
-  }
-}
-|]
-      )
-      -- I believe that the order is not necessarily guaranteed, but
-      -- the Python test was written like this. We can't use
-      -- limit/order here without requiring that new backends
-      -- implement those too. Approach: hope that ordering is never
-      -- violated, and if it is, rework this test.
-      [yaml|
-data:
-  hasura_author:
-  - createdAt: '2017-09-21 09:39:44'
-    name: Author 1
-    id: 1
-  - createdAt: '2017-09-21 09:50:44'
-    name: Author 2
-    id: 2
 |]

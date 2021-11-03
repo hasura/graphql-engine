@@ -261,37 +261,14 @@ export interface DataSourcesAPI {
     defaultValue: any,
     constraintName: string
   ) => string;
-  getAlterTableCommentSql: ({
-    tableName,
-    schemaName,
-    comment,
-  }: {
-    tableName: string;
-    schemaName: string;
-    comment: string;
-  }) => string;
-  getAlterColumnCommentSql: ({
-    tableName,
-    schemaName,
-    columnName,
-    columnType,
-    comment,
-  }: {
-    tableName: string;
-    schemaName: string;
-    comment: string;
-    columnName: string;
-    columnType?: string;
-  }) => string;
-  getAlterFunctionCommentSql: ({
-    functionName,
-    schemaName,
-    comment,
-  }: {
-    functionName: string;
-    schemaName: string;
-    comment: string;
-  }) => string;
+  getSetCommentSql: (
+    on: 'table' | 'column' | string,
+    tableName: string,
+    schemaName: string,
+    columnName: string,
+    comment: string,
+    columnType?: string
+  ) => string;
   getAlterColumnTypeSql: (
     tableName: string,
     schemaName: string,

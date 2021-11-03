@@ -885,14 +885,6 @@ class TestGraphqlInsertPermissionMSSQL:
     def test_insert_permission_columns_fail(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/article_user_role_columns_fail_mssql.yaml")
 
-    def test_user_role_if_matched_update(self, hge_ctx):
-        check_query_f(hge_ctx, self.dir() + "/article_if_matched_user_role_mssql.yaml")
-
-    def test_restricted_role_if_matched_update(self, hge_ctx):
-        check_query_f(hge_ctx, self.dir() + "/article_if_matched_restricted_role_mssql.yaml")
-
-
-
 @pytest.mark.parametrize("backend", ['mssql'])
 @use_mutation_fixtures
 class TestGraphqlInsertIfMatchedMSSQL:

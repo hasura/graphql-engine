@@ -1,8 +1,5 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
--- | MSSQL Instances API
---
--- Defines a 'Hasura.Server.API.Backend.BackendAPI' type class instance for MSSQL.
 module Hasura.Backends.MSSQL.Instances.API () where
 
 import Hasura.Prelude

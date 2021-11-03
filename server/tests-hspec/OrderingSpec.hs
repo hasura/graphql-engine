@@ -99,10 +99,6 @@ DROP TABLE author;
 --------------------------------------------------------------------------------
 -- Tests
 
--- Added equivalents from <https://github.com/hasura/graphql-engine-mono/blob/ee524e94caf6405ce0ae39edfe161dadd223d60f/server/tests-py/queries/graphql_query/mysql/select_query_author_order_by.yaml#L1>
--- That includes order by {text,id} {desc,asc}
---
-
 tests :: SpecWith State
 tests = do
   it "Order by id ascending" $ \state ->
@@ -134,50 +130,6 @@ data:
           [graphql|
 query {
   hasura_author (order_by: {id: desc}) {
-    name
-    id
-  }
-}
-|]
-      )
-      [yaml|
-data:
-  hasura_author:
-  - name: Author 2
-    id: 2
-  - name: Author 1
-    id: 1
-|]
-
-  it "Order by name ascending" $ \state ->
-    shouldReturnYaml
-      ( GraphqlEngine.postGraphql
-          state
-          [graphql|
-query {
-  hasura_author (order_by: {name: asc}) {
-    name
-    id
-  }
-}
-|]
-      )
-      [yaml|
-data:
-  hasura_author:
-  - name: Author 1
-    id: 1
-  - name: Author 2
-    id: 2
-|]
-
-  it "Order by name descending" $ \state ->
-    shouldReturnYaml
-      ( GraphqlEngine.postGraphql
-          state
-          [graphql|
-query {
-  hasura_author (order_by: {name: desc}) {
     name
     id
   }

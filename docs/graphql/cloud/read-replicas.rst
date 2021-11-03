@@ -67,7 +67,7 @@ Postgres
 
    .. tab:: API
 
-      You can add read replicas for a database using the :ref:`metadata_pg_add_source` metadata API
+      You can add read replicas for a database using the :ref:`pg_add_source metadata API <pg_add_source>`
 
       .. code-block:: http
          :emphasize-lines: 16-27

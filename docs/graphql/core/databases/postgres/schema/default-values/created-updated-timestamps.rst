@@ -2,7 +2,7 @@
    :description: Add created at / updated at timestamps for Postgres in Hasura
    :keywords: hasura, docs, postgres, schema, default value, timestamps
 
-.. _pg_created_updated_timestamps:
+.. _created_updated_timestamps:
 
 Postgres: Adding created_at / updated_at timestamps
 ===================================================
@@ -30,8 +30,7 @@ Add a created_at timestamp
     choose ``created_at``:
 
     .. thumbnail:: /img/graphql/core/schema/created-at.png
-       :alt: Add a created_at time on the Hasura console
-       :width: 1000px
+        :alt: Add a created_at time on the Hasura console
 
     Click the ``Add column`` button.
 
@@ -58,18 +57,17 @@ Add a created_at timestamp
 
   .. tab:: API
 
-    You can add a ``created_at`` timestamp by using the :ref:`schema_run_sql` schema API:
+    You can add a ``created_at`` timestamp by using the :ref:`run_sql metadata API <run_sql>`:
 
     .. code-block:: http
 
-      POST /v2/query HTTP/1.1
+      POST /v1/query HTTP/1.1
       Content-Type: application/json
       X-Hasura-Role: admin
 
       {
         "type": "run_sql",
         "args": {
-            "source": "<db_name>",
             "sql": "ALTER TABLE ONLY \"article\" ADD COLUMN \"created_at\" TIMESTAMP DEFAULT NOW();"
         }
       }
@@ -86,8 +84,7 @@ Add an updated_at timestamp
     choose ``updated_at``:
 
     .. thumbnail:: /img/graphql/core/schema/updated-at.png
-       :alt: Add an updated_at time on the Hasura console
-       :width: 1000px
+        :alt: Add an updated_at time on the Hasura console
 
     Click the ``Add column`` button.
 
@@ -135,7 +132,7 @@ Add an updated_at timestamp
 
   .. tab:: API
 
-    You can add an ``updated_at`` timestamp by using the :ref:`schema_run_sql` schema API.
+    You can add an ``updated_at`` timestamp by using the :ref:`run_sql metadata API <run_sql>`.
 
     The below SQL statement will achieve the following:
 
@@ -145,14 +142,13 @@ Add an updated_at timestamp
 
     .. code-block:: http
 
-      POST /v2/query HTTP/1.1
+      POST /v1/query HTTP/1.1
       Content-Type: application/json
       X-Hasura-Role: admin
 
       {
         "type": "run_sql",
         "args": {
-            "source": "<db_name>",
             "sql": 
               "ALTER TABLE ONLY \"public\".\"article\"
               ADD COLUMN \"updated_at\" TIMESTAMP DEFAULT NOW();

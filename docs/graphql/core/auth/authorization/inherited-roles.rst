@@ -47,7 +47,7 @@ Creating inherited roles
 
      .. thumbnail:: /img/graphql/core/auth/console-inherited-role.png
         :alt: Console create inherited role
-        :width: 1200px
+        :width: 1100px
 
   .. tab:: CLI
 

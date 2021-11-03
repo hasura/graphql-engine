@@ -17,11 +17,7 @@ function useAuthContextValue() {
   let authService: AuthService | undefined;
 
   if (consoleType === 'oss' && consoleMode === 'server') {
-    if (
-      !isAdminSecretSet ||
-      (isAdminSecretSet &&
-        (Boolean(getAdminSecret()) || getAdminSecret() === null))
-    ) {
+    if (!isAdminSecretSet || (isAdminSecretSet && Boolean(getAdminSecret()))) {
       const ossAuthService = new OSSAuthService({
         consoleMode: globals.consoleMode as AllowedConsoleModes,
         consoleType: 'oss',
@@ -39,7 +35,6 @@ function useAuthContextValue() {
     });
     const adminSecret = getAdminSecret();
     ossAuthService.authenticate(adminSecret);
-    authService = ossAuthService;
   }
 
   return {

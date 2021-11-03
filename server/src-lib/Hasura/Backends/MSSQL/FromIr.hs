@@ -572,7 +572,7 @@ fromColumnInfoForBoolExp :: IR.ColumnInfo 'MSSQL -> ReaderT EntityAlias FromIr E
 fromColumnInfoForBoolExp IR.ColumnInfo {pgiColumn = pgCol, pgiType} = do
   fieldName <- columnNameToFieldName pgCol <$> ask
   if shouldCastToVarcharMax pgiType -- See function commentary.
-    then pure (CastExpression (ColumnExpression fieldName) WvarcharType DataLengthMax)
+    then pure (CastExpression (ColumnExpression fieldName) "VARCHAR(MAX)")
     else pure (ColumnExpression fieldName)
 
 -- | There's a problem of comparing text fields with =, <, etc. that
@@ -729,7 +729,7 @@ fromAnnColumnField _stringifyNumbers annColumnField = do
   -- doesn't have any functions to convert to GeoJSON format. So we return it in
   -- WKT format
   if typ == (IR.ColumnScalar GeometryType) || typ == (IR.ColumnScalar GeographyType)
-    then pure $ MethodApplicationExpression (ColumnExpression fieldName) MethExpSTAsText
+    then pure $ MethodExpression (ColumnExpression fieldName) "STAsText" []
     else case caseBoolExpMaybe of
       Nothing -> pure (ColumnExpression fieldName)
       Just ex -> do

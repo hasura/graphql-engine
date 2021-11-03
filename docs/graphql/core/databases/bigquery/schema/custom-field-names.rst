@@ -61,7 +61,7 @@ Expose columns with a different name in the GraphQL API
 
     A custom field name can be set for a column via the following 2 methods:
 
-    1. Passing a :ref:`table_config` with the :ref:`CustomColumnNames` to the :ref:`metadata_bigquery_set_table_customization` API while tracking a table:
+    1. Passing a :ref:`table_config` with the :ref:`CustomColumnNames` to the :ref:`bigquery_set_table_customization` API while tracking a table:
 
        .. code-block:: http
 
@@ -72,7 +72,6 @@ Expose columns with a different name in the GraphQL API
          {
            "type": "bigquery_set_table_customization",
            "args": {
-             "source": "<db_name>",
              "table": "authors",
              "configuration": {
                "custom_column_names": {
@@ -83,7 +82,7 @@ Expose columns with a different name in the GraphQL API
          }
 
 
-    2. Customization can be done at the time of creation using :ref:`metadata_bigquery_track_table` API also.
+    2. Customization can be done at the time of creation using :ref:`bigquery_track_table` API also.
 
 
 Expose table root fields with a different name in the GraphQL API
@@ -107,7 +106,7 @@ Expose table root fields with a different name in the GraphQL API
     You can expose table root fields with a different name in the GraphQL API in the ``tables.yaml`` file inside the ``metadata`` directory:
 
     .. code-block:: yaml
-       :emphasize-lines: 4-6
+       :emphasize-lines: 3-6
 
         - table:
             dataset: hasura
@@ -126,7 +125,7 @@ Expose table root fields with a different name in the GraphQL API
 
     A custom field name can be set for a table root field via the following 2 methods:
 
-    1. Passing a :ref:`table_config` with the :ref:`custom_root_fields` to the :ref:`metadata_bigquery_set_table_customization` API while tracking a table:
+    1. Passing a :ref:`table_config` with the :ref:`custom_root_fields` to the :ref:`bigquery_set_table_customization` API while tracking a table:
 
        .. code-block:: http
 
@@ -137,12 +136,11 @@ Expose table root fields with a different name in the GraphQL API
          {
            "type": "bigquery_set_table_customization",
            "args": {
-             "source": "<db_name>",
              "table": "authors",
              "configuration": {
                "custom_column_names": {
                  "id": "AuthorId"
-               },
+               }
                "custom_root_fields": {
                  "select": "authors",
                  "select_aggregate": "authors_aggregate"
@@ -152,6 +150,6 @@ Expose table root fields with a different name in the GraphQL API
          }
 
 
-    2. Customization can be done at the time of creation using :ref:`metadata_bigquery_track_table` API also.
+    2. Customization can be done at the time of creation using :ref:`bigquery_track_table` API also.
 
 

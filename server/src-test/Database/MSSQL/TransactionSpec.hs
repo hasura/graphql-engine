@@ -2,10 +2,11 @@ module Database.MSSQL.TransactionSpec (spec) where
 
 import Control.Exception.Base (bracket)
 import Data.ByteString
-import Database.MSSQL.Pool
 import Database.MSSQL.Transaction
 import Database.ODBC.SQLServer as ODBC
   ( ODBCException (DataRetrievalError, UnsuccessfulReturnCode),
+    close,
+    connect,
   )
 import Hasura.Prelude
 import Test.Hspec
@@ -30,7 +31,7 @@ spec connString = do
     it "an unsuccesful transaction, expecting Int" $ do
       result <- runInConn connString selectIntQueryFail
       either
-        (matchDataRetrievalError "Expected Int, but got: ByteStringValue \"hello\"")
+        (\(MSSQLTxError _ err) -> err `shouldBe` DataRetrievalError "Expected Int, but got: ByteStringValue \"hello\"")
         (\r -> expectationFailure $ "expected Left, returned " <> show r)
         result
 
@@ -41,14 +42,17 @@ spec connString = do
     it "an unsuccesful transaction; expecting single row" $ do
       result <- runInConn connString selectIdQueryFail
       either
-        (matchDataRetrievalError "expecting single row")
+        (\(MSSQLTxError _ err) -> err `shouldBe` DataRetrievalError "expecting single row")
         (\r -> expectationFailure $ "expected Left, returned " <> show r)
         result
 
     it "displays the SQL Server error on an unsuccessful transaction" $ do
       result <- runInConn connString badQuery
       either
-        (matchQueryError (UnsuccessfulReturnCode "odbc_SQLExecDirectW" (-1) invalidSyntaxError))
+        ( \(MSSQLTxError _ err) ->
+            err
+              `shouldBe` UnsuccessfulReturnCode "odbc_SQLExecDirectW" (-1) invalidSyntaxError
+        )
         (\() -> expectationFailure "expected Left, returned ()")
         result
 
@@ -58,14 +62,6 @@ spec connString = do
       either
         (\err -> expectationFailure $ "expected Right, returned " <> show err)
         (\value -> value `shouldNotBe` 3)
-        result
-
-    it "displays the connection error on an invalid connection string" $ do
-      invalidPool <- createMinimalPool "some random invalid connection string"
-      result <- runExceptT $ runTx selectQuery invalidPool
-      either
-        (`shouldBe` MSSQLConnError (UnsuccessfulReturnCode "odbc_SQLDriverConnect" (-1) invalidConnStringError))
-        (\r -> expectationFailure $ "expected Left, returned " ++ show r)
         result
 
 selectQuery :: TxT IO Int
@@ -109,36 +105,10 @@ badQuery =
 runInConn :: Text -> TxT IO a -> IO (Either MSSQLTxError a)
 runInConn connString query =
   bracket
-    (createMinimalPool connString)
-    drainMSSQLPool
+    (connect connString)
+    close
     (runExceptT . runTx query)
-
-createMinimalPool :: Text -> IO MSSQLPool
-createMinimalPool connString =
-  initMSSQLPool (ConnectionString connString) $ ConnectionOptions 1 1 5
 
 invalidSyntaxError :: String
 invalidSyntaxError =
-  "[Microsoft][ODBC Driver 17 for SQL Server][SQL Server]The definition for column 'INVALID_SYNTAX' must include a data type."
-
-invalidConnStringError :: String
-invalidConnStringError =
-  "[unixODBC][Driver Manager]Data source name not found and no default driver specified[unixODBC][Driver Manager]Data source name not found and no default driver specified"
-
-unexpectedMSSQLInternalError :: String
-unexpectedMSSQLInternalError =
-  "Expected MSSQLQueryError, but got: MSSQLInternal"
-
-unexpectedMSSQLConnError :: String
-unexpectedMSSQLConnError =
-  "Expected MSSQLQueryError, but got: MSSQLConnError"
-
-matchDataRetrievalError :: String -> MSSQLTxError -> Expectation
-matchDataRetrievalError errMessage =
-  matchQueryError (DataRetrievalError errMessage)
-
-matchQueryError :: ODBCException -> MSSQLTxError -> Expectation
-matchQueryError expectedErr = \case
-  MSSQLQueryError _ err -> err `shouldBe` expectedErr
-  MSSQLConnError _ -> expectationFailure unexpectedMSSQLConnError
-  MSSQLInternal _ -> expectationFailure unexpectedMSSQLInternalError
+  "[Microsoft][ODBC Driver 17 for SQL Server][SQL Server]The definition for column 'INVALID_SYNTAX' must include a data type.[Microsoft][ODBC Driver 17 for SQL Server][SQL Server]The definition for column 'INVALID_SYNTAX' must include a data type."

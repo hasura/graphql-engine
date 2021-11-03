@@ -202,7 +202,7 @@ fromSelectRows annSelectG = do
   filterExpression <-
     runReaderT (fromAnnBoolExp permFilter) (fromAlias selectFrom)
   selectProjections <-
-    NE.nonEmpty (concatMap (toList . fieldSourceProjections True) fieldSources)
+    NE.nonEmpty (concatMap (toList . fieldSourceProjections) fieldSources)
       `onNothing` refute (pure NoProjectionFields)
   globalTop <- getGlobalTop
   pure
@@ -215,7 +215,7 @@ fromSelectRows annSelectG = do
         selectTop = globalTop <> permissionBasedTop <> argsTop,
         selectProjections,
         selectFrom,
-        selectJoins = argsJoins <> concat (mapMaybe fieldSourceJoins fieldSources),
+        selectJoins = argsJoins <> mapMaybe fieldSourceJoin fieldSources,
         selectWhere = argsWhere <> Where [filterExpression],
         selectOffset = argsOffset
       }
@@ -267,7 +267,7 @@ fromSelectAggregate minnerJoinFields annSelectG = do
   selectProjections <-
     onNothing
       ( NE.nonEmpty
-          (concatMap (toList . fieldSourceProjections True) fieldSources)
+          (concatMap (toList . fieldSourceProjections) fieldSources)
       )
       (refute (pure NoProjectionFields))
   indexAlias <- generateEntityAlias IndexTemplate
@@ -314,7 +314,8 @@ fromSelectAggregate minnerJoinFields annSelectG = do
                                       )
                                   ),
                         selectFrom,
-                        selectJoins = argsJoins,
+                        selectJoins =
+                          argsJoins <> mapMaybe fieldSourceJoin fieldSources,
                         selectWhere = argsWhere <> (Where [filterExpression]),
                         selectOrderBy = argsOrderBy,
                         -- Above: This is important to have here, because
@@ -331,7 +332,7 @@ fromSelectAggregate minnerJoinFields annSelectG = do
                   aliasedAlias = entityAliasText (fromAlias selectFrom)
                 }
             ),
-        selectJoins = concat (mapMaybe fieldSourceJoins fieldSources),
+        selectJoins = mempty,
         selectWhere =
           case mforeignKeyConditions of
             Nothing -> mempty
@@ -697,7 +698,7 @@ data FieldSource
   = ExpressionFieldSource (Aliased Expression)
   | JoinFieldSource (Aliased Join)
   | AggregateFieldSource Text (NonEmpty (Aliased Aggregate))
-  | ArrayAggFieldSource (Aliased ArrayAgg) (Maybe [FieldSource])
+  | ArrayAggFieldSource (Aliased ArrayAgg)
   deriving (Eq, Show)
 
 -- Example:
@@ -780,10 +781,11 @@ fromTableAggregateFieldG args permissionBasedTop stringifyNumbers (Rql.FieldName
           (fromAnnFieldsG (argsExistingJoins args) stringifyNumbers)
           fields
       arrayAggProjections <-
-        NE.nonEmpty (concatMap (toList . fieldSourceProjections False) fieldSources)
+        NE.nonEmpty (concatMap (toList . fieldSourceProjections) fieldSources)
           `onNothing` refute (pure NoProjectionFields)
       globalTop <- lift getGlobalTop
-      let arrayAgg =
+      pure
+        ( ArrayAggFieldSource
             Aliased
               { aliasedThing =
                   ArrayAgg
@@ -793,7 +795,7 @@ fromTableAggregateFieldG args permissionBasedTop stringifyNumbers (Rql.FieldName
                     },
                 aliasedAlias = name
               }
-      pure (ArrayAggFieldSource arrayAgg (Just fieldSources))
+        )
 
 fromAggregateField :: Ir.AggregateField 'BigQuery -> ReaderT EntityAlias FromIr Aggregate
 fromAggregateField aggregateField =
@@ -885,8 +887,8 @@ fromPGCol (ColumnName txt) = do
   EntityAlias {entityAliasText} <- ask
   pure (FieldName {fieldName = txt, fieldNameEntity = entityAliasText})
 
-fieldSourceProjections :: Bool -> FieldSource -> NonEmpty Projection
-fieldSourceProjections keepJoinField =
+fieldSourceProjections :: FieldSource -> NonEmpty Projection
+fieldSourceProjections =
   \case
     ExpressionFieldSource aliasedExpression ->
       pure (ExpressionProjection aliasedExpression)
@@ -894,11 +896,10 @@ fieldSourceProjections keepJoinField =
       NE.fromList
         -- Here we're producing all join fields needed later for
         -- Haskell-native joining.  They will be removed by upstream
-        -- code if keepJoinField is True
+        -- code.
         ( [ FieldNameProjection
               (Aliased {aliasedThing = right, aliasedAlias = fieldNameText right})
-            | (_left, right) <- joinOn join',
-              keepJoinField
+            | (_left, right) <- joinOn join'
           ]
             <>
             -- Below:
@@ -985,17 +986,17 @@ fieldSourceProjections keepJoinField =
         ( AggregateProjections
             (Aliased {aliasedThing = aggregates, aliasedAlias = name})
         )
-    ArrayAggFieldSource arrayAgg _ -> pure (ArrayAggProjection arrayAgg)
+    ArrayAggFieldSource arrayAgg -> pure (ArrayAggProjection arrayAgg)
   where
     fieldNameText FieldName {fieldName} = fieldName
 
-fieldSourceJoins :: FieldSource -> Maybe [Join]
-fieldSourceJoins =
+fieldSourceJoin :: FieldSource -> Maybe Join
+fieldSourceJoin =
   \case
-    JoinFieldSource aliasedJoin -> pure [aliasedThing aliasedJoin]
+    JoinFieldSource aliasedJoin -> pure (aliasedThing aliasedJoin)
     ExpressionFieldSource {} -> Nothing
     AggregateFieldSource {} -> Nothing
-    ArrayAggFieldSource _ sources -> fmap (concat . mapMaybe fieldSourceJoins) sources
+    ArrayAggFieldSource {} -> Nothing
 
 --------------------------------------------------------------------------------
 -- Joins
@@ -1020,7 +1021,7 @@ fromObjectRelationSelectG _existingJoins annRelationSelectG = do
       (const entityAlias)
       (traverse (fromAnnFieldsG mempty LeaveNumbersAlone) fields)
   selectProjections <-
-    NE.nonEmpty (concatMap (toList . fieldSourceProjections True) fieldSources)
+    NE.nonEmpty (concatMap (toList . fieldSourceProjections) fieldSources)
       `onNothing` refute (pure NoProjectionFields)
   joinFieldName <- lift (fromRelName aarRelationshipName)
   joinAlias <-
@@ -1054,7 +1055,7 @@ fromObjectRelationSelectG _existingJoins annRelationSelectG = do
                 selectProjections =
                   NE.fromList joinFieldProjections <> selectProjections,
                 selectFrom,
-                selectJoins = concat (mapMaybe fieldSourceJoins fieldSources),
+                selectJoins = mapMaybe fieldSourceJoin fieldSources,
                 selectWhere = Where [filterExpression],
                 selectOffset = Nothing
               },

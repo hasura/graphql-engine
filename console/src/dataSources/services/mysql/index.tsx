@@ -11,6 +11,7 @@ import {
   getAddColumnSql,
   getAddUniqueConstraintSql,
   getDropNotNullSql,
+  getSetCommentSql,
   getSetColumnDefaultSql,
   getSetNotNullSql,
   getAlterColumnTypeSql,
@@ -33,9 +34,6 @@ import {
   uniqueKeysSql,
   schemaListSql,
   getAdditionalColumnsInfoQuerySql,
-  getAlterTableCommentSql,
-  getAlterColumnCommentSql,
-  getAlterFunctionCommentSql,
 } from './sqlUtils';
 import { getTableSupportedQueries } from '../postgresql';
 
@@ -227,6 +225,7 @@ WHERE
   getAddColumnSql,
   getAddUniqueConstraintSql,
   getDropNotNullSql,
+  getSetCommentSql,
   getSetColumnDefaultSql,
   getSetNotNullSql,
   getAlterColumnTypeSql,
@@ -251,7 +250,4 @@ WHERE
   viewsSupported: false,
   supportedColumnOperators: null,
   violationActions,
-  getAlterTableCommentSql,
-  getAlterColumnCommentSql,
-  getAlterFunctionCommentSql,
 };

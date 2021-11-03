@@ -391,7 +391,3 @@ export const generateRowsCountRequest = () => ({
   endpoint: Endpoints.graphQLUrl,
   processCount,
 });
-
-export const sqlHandleApostrophe = (rawText: string) => {
-  return rawText ? rawText.replace(/'/g, "''") : rawText;
-};

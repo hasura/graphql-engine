@@ -78,7 +78,7 @@ try_jq() {
 
 # Bump this to:
 #  - force a reinstall of python dependencies, etc.
-DEVSH_VERSION=1.6
+DEVSH_VERSION=1.5
 
 case "${1-}" in
   graphql-engine)
@@ -250,7 +250,7 @@ function start_dbs() {
       mysql_start
     ;;
     # bigquery deliberately omitted as its test setup is atypical. See:
-    # https://github.com/hasura/graphql-engine/blob/master/server/py-tests/README.md#running-bigquery-tests
+    # https://github.com/hasura/graphql-engine/blob/master/server/CONTRIBUTING.md#running-the-python-test-suite-on-bigquery
   esac
 }
 

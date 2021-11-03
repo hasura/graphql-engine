@@ -198,6 +198,7 @@ Let's expose Hasura with `Ingress
 
 .. code-block:: yaml
 
+
 	apiVersion: v1
 	kind: Service
 	metadata:
@@ -245,7 +246,7 @@ Create Ingress:
 	              serviceName: hasura
 	              servicePort: 80
 
-.. _gc_kubernetes_logs:
+
 
 Logs
 ----

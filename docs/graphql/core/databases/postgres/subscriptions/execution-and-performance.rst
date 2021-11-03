@@ -2,7 +2,7 @@
     :description: Tuning Hasura for High-performance Subscriptions
     :keywords: hasura, docs, subscriptions, performance, tuning
  
-.. _pg_subscriptions_execution_and_performance:
+.. _subscriptions_execution_and_performance:
 
 Subscriptions execution and performance
 =======================================

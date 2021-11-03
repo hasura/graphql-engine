@@ -213,9 +213,6 @@ class TestGraphQLQueryBasicBigquery:
     def test_nested_array_relationships(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + "/nested_array_relationships.yaml", transport)
 
-    def test_agg_nodes(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + "/agg_nodes.yaml", transport)
-
     @classmethod
     def dir(cls):
         return 'queries/graphql_query/bigquery'

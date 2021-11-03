@@ -68,7 +68,6 @@ To track a table or a view
       {
          "type": "mssql_track_table",
          "args": {
-            "source": "<db_name>",
             "schema": "dbo",
             "name": "<table name>"
          }
@@ -124,7 +123,6 @@ To track all tables and views present in the database
           {
              "type": "mssql_track_table",
              "args": {
-                "source": "<db_name>",
                 "schema": "dbo",
                 "name": "<table-name-1>"
              }
@@ -132,7 +130,6 @@ To track all tables and views present in the database
           {
              "type": "mssql_track_table",
              "args": {
-                "source": "<db_name>",
                 "schema": "dbo",
                 "name": "<table-name-2>"
              }
@@ -207,7 +204,8 @@ To track a foreign-key between two tables in the database
 
       **Object relationship**
 
-      You can create an object relationship by using the :ref:`mssql_create_object_relationship` metadata API:
+
+      You can create an object relationship by using the :ref:`mssql_create_object_relationship metadata API <mssql_create_object_relationship>`:
 
       .. code-block:: http
 
@@ -218,7 +216,6 @@ To track a foreign-key between two tables in the database
          {
             "type": "mssql_create_object_relationship",
             "args": {
-               "source": "<db_name>",
                "table": "<table name>",
                "name": "<relationship name>",
                "using": {
@@ -229,7 +226,9 @@ To track a foreign-key between two tables in the database
 
       **Array relationship**
 
-      You can create an array relationship by using the :ref:`mssql_create_array_relationship` metadata API:
+      .. TODO: BROKEN_LINK
+
+      You can create an array relationship by using the :ref:`mssql_create_array_relationship metadata API <mssql_create_array_relationship>`:
 
       .. code-block:: http
 
@@ -240,7 +239,6 @@ To track a foreign-key between two tables in the database
          {
             "type": "mssql_create_array_relationship",
             "args": {
-               "source": "<db_name>",
                "table": "<table name>",
                "name": "<relationship name>",
                "using": {
@@ -309,8 +307,8 @@ To track all the foreign-keys of all tables in the database
    .. tab:: API
 
 
-      You can create multiple relationships by using the :ref:`mssql_create_object_relationship`
-      and the :ref:`mssql_create_array_relationship` metadata APIs:
+      You can create multiple relationships by using the :ref:`mssql_create_object_relationship metadata API <mssql_create_object_relationship>`
+      and the :ref:`mssql_create_array_relationship metadata API <mssql_create_array_relationship>`:
 
       .. code-block:: http
 
@@ -324,7 +322,6 @@ To track all the foreign-keys of all tables in the database
             {
               "type": "mssql_create_object_relationship",
               "args": {
-                "source": "<db_name>",
                 "table": "<table name>",
                 "name": "<relationship name>",
                 "using": {
@@ -335,7 +332,6 @@ To track all the foreign-keys of all tables in the database
             {
               "type": "mssql_create_array_relationship",
               "args": {
-                "source": "<db_name>",
                 "table": "<table name>",
                 "name": "<relationship name>",
                 "using": {

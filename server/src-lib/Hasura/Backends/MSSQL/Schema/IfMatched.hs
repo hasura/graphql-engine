@@ -1,11 +1,8 @@
 {-# LANGUAGE ApplicativeDo #-}
 
--- | MSSQL Schema IfMatched
---
--- This module contains the building blocks for parsing @if_matched@ clauses
--- (represented as 'IfMatched'), which in the MSSQL backend are used to
--- implement upsert functionality.
---
+-- | This module contains the building blocks for parsing @if_matched@ clauses
+-- (represented as 'IfMatched'),
+-- which in the MSSQL backend are used to implement upsert functionality.
 -- These are used by 'Hasura.Backends.MSSQL.Instances.Schema.backendInsertParser' to
 -- construct a mssql-specific schema parser for insert (and upsert) mutations.
 module Hasura.Backends.MSSQL.Schema.IfMatched
@@ -72,7 +69,7 @@ ifMatchedObjectParser sourceName tableInfo maybeSelectPerms maybeUpdatePerms = r
   selectPerms <- hoistMaybe maybeSelectPerms
   updatePerms <- hoistMaybe maybeUpdatePerms
   matchColumnsEnum <- MaybeT $ tableInsertMatchColumnsEnum sourceName tableInfo selectPerms
-  updateColumnsEnum <- lift $ updateColumnsPlaceholderParser tableInfo updatePerms
+  updateColumnsEnum <- MaybeT $ tableUpdateColumnsEnum tableInfo updatePerms
 
   -- The style of the above code gives me some cognitive dissonance: We could
   -- push the @hoistMaybe@ checks further away to callers, but not the enum
@@ -98,10 +95,7 @@ ifMatchedObjectParser sourceName tableInfo maybeSelectPerms maybeUpdatePerms = r
       _imMatchColumns <-
         P.fieldWithDefault matchColumnsName Nothing (G.VList []) (P.list matchColumnsEnum)
       _imUpdateColumns <-
-        P.fieldWithDefault updateColumnsName Nothing (G.VList []) (P.list updateColumnsEnum) `P.bindFields` \cs ->
-          -- this can only happen if the placeholder was used
-          sequenceA cs `onNothing` parseError "erroneous column name"
-
+        P.fieldWithDefault updateColumnsName Nothing (G.VList []) (P.list updateColumnsEnum)
       pure $ IfMatched {..}
 
 -- | Table insert_match_columns enum

@@ -687,7 +687,7 @@ func (ec *ExecutionContext) Validate() error {
 		return fmt.Errorf("error while parsing the endpoint :%w", err)
 	}
 
-	err = util.GetServerStatus(ec.Config.GetVersionEndpoint())
+	err = util.GetServerStatus(ec.Config.Endpoint)
 	if err != nil {
 		ec.Logger.Error("connecting to graphql-engine server failed")
 		ec.Logger.Info("possible reasons:")

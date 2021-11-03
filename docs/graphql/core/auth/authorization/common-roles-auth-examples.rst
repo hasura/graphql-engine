@@ -37,7 +37,6 @@ Anonymous (not logged in) users
 .. thumbnail:: /img/graphql/core/auth/anonymous-role-examples.png
    :class: no-shadow
    :alt: Access control for an anonymous role
-   :width: 1300px
 
 See :ref:`unauthenticated_access` for steps to configure the anonymous user role in Hasura.
 
@@ -54,7 +53,6 @@ Logged-in users
 .. thumbnail:: /img/graphql/core/auth/user-select-graphiql.png
    :class: no-shadow
    :alt: Access control for a logged-in user
-   :width: 1300px
 
 
 Managers of an organisation in a multi-tenant app
@@ -72,7 +70,6 @@ organisation either in the same table or via a related table.
 .. thumbnail:: /img/graphql/core/auth/org-manager-graphiql.png
    :class: no-shadow
    :alt: Access control for a manager of an organisation
-   :width: 1300px
 
 Collaborators of an article
 ---------------------------
@@ -93,7 +90,6 @@ Let's say the "ownership" or "visibility" information for a data model (table) i
 .. thumbnail:: /img/graphql/core/auth/collaborator-relationship.png
    :class: no-shadow
    :alt: Access control for collaborators of an article
-   :width: 1300px
 
 .. Role-based schemas
   ------------------
@@ -158,7 +154,6 @@ The following is a reference database schema for our example:
 
 .. thumbnail:: /img/graphql/core/auth/multirole-example-db-schema.png
    :alt: Database schema example for multiple roles per user
-   :width: 1300px
 
 Based on the above schema, we'll create the following tables:
 
@@ -246,7 +241,7 @@ Permissions for role ``author``
 
   a) :ref:`Column-level permissions<col-level-permissions>`: Restrict access to certain columns only.
   
-  b) :ref:`Column presets <pg_column_presets>`: Session-variable-based column preset for the ``author_id`` column to automatically insert the user's ID i.e. the ``X-Hasura-User-Id`` session-variable's value. It also helps us avoid explicitly passing the user's ID in the insert mutation.
+  b) :ref:`Column presets <column_presets>`: Session-variable-based column preset for the ``author_id`` column to automatically insert the user's ID i.e. the ``X-Hasura-User-Id`` session-variable's value. It also helps us avoid explicitly passing the user's ID in the insert mutation.
 
   .. thumbnail:: /img/graphql/core/auth/multirole-example-author-insert.png
      :alt: Permissions for the role author

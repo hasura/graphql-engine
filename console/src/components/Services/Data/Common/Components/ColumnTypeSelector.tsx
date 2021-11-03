@@ -11,12 +11,12 @@ type Option = {
 };
 
 export interface ColumnTypeSelectorProps {
-  options: { label: string; options?: Option[] }[];
-  onChange: (option: Option) => void;
+  options: Array<{ label: string; options?: Option[] }>;
+  onChange: (option: any) => void;
   value: Option | string;
   bsClass: string;
+  styleOverrides: Record<string, any>;
   colIdentifier: number;
-  styleOverrides?: Record<string, any>;
 }
 
 export const ColumnTypeSelector: React.FC<ColumnTypeSelectorProps> = ({
@@ -41,9 +41,7 @@ export const ColumnTypeSelector: React.FC<ColumnTypeSelectorProps> = ({
       isCreatable
       createNewOption={createOpt}
       options={options}
-      onChange={op => {
-        onChange(op as Option);
-      }}
+      onChange={onChange}
       value={value}
       bsClass={bsClass}
       styleOverrides={styleOverrides}

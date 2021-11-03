@@ -1,11 +1,7 @@
 import { dataSource, Operations } from '@/dataSources';
 import { ComputedField, TableColumn } from '@/dataSources/types';
-import {
-  useMetadataTableComputedFields,
-  useMetadataTablePermissions,
-  useRoles,
-} from '@/features/MetadataAPI';
-import { useAllFunctions, useSchemaList, useSingleTable } from '@/hooks';
+import { useRoles } from '@/features/MetadataAPI';
+import { useAllFunctions, useSchemaList, useTables } from '@/hooks';
 import { QualifiedTable } from '@/metadata/types';
 
 export type RolePermissions = {
@@ -95,32 +91,42 @@ interface RolePermission {
   };
 }
 
-export const useRolePermissions = (table: QualifiedTable) => {
+export const useRolePermissions = ({
+  name: tableName,
+  schema: schemaName,
+}: QualifiedTable) => {
   const { data: schemaList } = useSchemaList();
-  const { data: currentTableSchema } = useSingleTable(table);
-  const { data: permissions } = useMetadataTablePermissions(table);
-  const { data: computedFields } = useMetadataTableComputedFields(table);
+  const { data: tables } = useTables(
+    { schemas: schemaList! },
+    { enabled: !!schemaList }
+  );
+  const currentTableSchema = tables?.find(
+    ({ table_schema, table_name }) =>
+      table_schema === schemaName && table_name === tableName
+  );
   const { data: allFunctions } = useAllFunctions(schemaList!, {
     enabled: !!schemaList,
   });
   const { data: roles } = useRoles();
 
-  if (!permissions || !allFunctions) {
+  if (!currentTableSchema || !allFunctions) {
     return { supportedQueries: [], rolePermissions: [] };
   }
 
-  const currentRolePermissions = permissions.reduce((acc, p) => {
-    acc[p.role_name] = p.permissions;
-    return acc;
-  }, {} as Record<string, any>);
+  const currentRolePermissions = currentTableSchema.permissions.reduce(
+    (acc, p) => {
+      acc[p.role_name] = p.permissions;
+      return acc;
+    },
+    {} as Record<string, any>
+  );
 
-  let supportedQueries: Operations[] = [];
-  if (currentTableSchema) {
-    supportedQueries = dataSource.getTableSupportedQueries(currentTableSchema);
-  }
+  const supportedQueries = dataSource.getTableSupportedQueries(
+    currentTableSchema
+  );
 
   const groupedComputedFields = dataSource.getGroupedTableComputedFields(
-    computedFields ?? [],
+    currentTableSchema.computed_fields,
     allFunctions
   );
 

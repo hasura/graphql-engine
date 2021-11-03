@@ -164,7 +164,6 @@
     "@types/optimize-css-assets-webpack-plugin": "5.0.1",
     "@types/react": "16.14.2",
     "@types/react-addons-test-utils": "0.14.25",
-    "@types/react-autosuggest": "^10.1.5",
     "@types/react-bootstrap": "0.32.21",
     "@types/react-dom": "16.9.5",
     "@types/react-helmet": "5.0.15",

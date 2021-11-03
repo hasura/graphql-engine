@@ -1,9 +1,6 @@
 {-# LANGUAGE ApplicativeDo #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
--- | MSSQL Instances Schema
---
--- Defines a 'Hasura.GraphQL.Schema.Backend.BackendSchema' type class instance for MSSQL.
 module Hasura.Backends.MSSQL.Instances.Schema () where
 
 import Data.Has

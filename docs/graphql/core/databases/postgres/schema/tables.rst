@@ -2,7 +2,7 @@
    :description: GraphQL over Postgres tables in Hasura
    :keywords: hasura, docs, postgres, schema, tables
 
-.. _pg_schema_tables:
+.. _schema_tables:
 
 Postgres: Tables basics
 =======================
@@ -17,7 +17,7 @@ Introduction
 
 Adding tables allows you to define the GraphQL types of your schema including their corresponding fields. 
 
-.. _pg_create_tables:
+.. _create_tables:
 
 Creating tables
 ---------------
@@ -74,18 +74,17 @@ Let's say we want to create two simple tables for ``articles`` and ``author`` sc
 
   .. tab:: API
 
-    You can create a table by making an API call to the :ref:`schema_run_sql` schema API:
+    You can create a table by making an API call to the :ref:`run_sql metadata API <run_sql>`:
 
     .. code-block:: http
 
-      POST /v2/query HTTP/1.1
+      POST /v1/query HTTP/1.1
       Content-Type: application/json
       X-Hasura-Role: admin
 
       {
         "type": "run_sql",
         "args": {
-          "source": "<db_name>",
           "sql": "CREATE TABLE articles(id serial NOT NULL, title text NOT NULL, content text NOT NULL, rating integer NOT NULL, author_id serial NOT NULL, PRIMARY KEY (id));"
         }
       }
@@ -130,18 +129,17 @@ In order to expose a table over the GraphQL API, it needs to be **tracked**.
 
   .. tab:: API
 
-    To track the table and expose it over the GraphQL API, make the following API call to the :ref:`metadata_pg_track_table` metadata API:
+    To track the table and expose it over the GraphQL API, make the following API call to the :ref:`track_table metadata API <track_table>`:
 
     .. code-block:: http
 
-      POST /v1/metadata HTTP/1.1
+      POST /v1/query HTTP/1.1
       Content-Type: application/json
       X-Hasura-Role: admin
 
       {
-        "type": "pg_track_table",
+        "type": "track_table",
         "args": {
-          "source": "<db_name>",
           "schema": "public",
           "name": "articles"
         }

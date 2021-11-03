@@ -6,21 +6,15 @@ export interface ConsoleConfig {
   type: string;
 }
 
-const getEnvVarAsString = (value: string) => {
-  if (!value || value === 'undefined') return undefined;
-  return value;
-};
-
-const getEnvVarAsBoolean = (value: string | boolean) => {
-  if (typeof value === 'boolean') return value;
-
-  return value === 'true';
+const getConsoleType = (type: string) => {
+  if (type === 'undefined') return 'oss';
+  return type;
 };
 
 export const useConsoleConfig = (): ConsoleConfig => {
   return {
     mode: globals.consoleMode as 'server' | 'cli',
-    is_admin_secret_set: getEnvVarAsBoolean(globals.isAdminSecretSet),
-    type: getEnvVarAsString(globals.consoleType) ?? 'oss',
+    is_admin_secret_set: Boolean(globals.isAdminSecretSet),
+    type: getConsoleType(globals.consoleType),
   };
 };

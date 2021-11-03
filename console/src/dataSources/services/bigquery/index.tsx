@@ -359,9 +359,9 @@ export const bigquery: DataSourcesAPI = {
   getDropNotNullSql: () => {
     return '';
   },
-  getAlterTableCommentSql: () => '',
-  getAlterColumnCommentSql: () => '',
-  getAlterFunctionCommentSql: () => '',
+  getSetCommentSql: () => {
+    return '';
+  },
   getSetColumnDefaultSql: () => {
     return '';
   },

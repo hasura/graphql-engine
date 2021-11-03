@@ -8,7 +8,7 @@ import { FixMe } from '../../../types';
 
 // TODO — each service should export `mergeLoadSchemaData` — results should be "merged" to Table object
 
-export type PermKeys = Pick<
+type PermKeys = Pick<
   TableEntry,
   | 'update_permissions'
   | 'select_permissions'
@@ -16,14 +16,14 @@ export type PermKeys = Pick<
   | 'insert_permissions'
 >;
 
-export const permKeys: Array<keyof PermKeys> = [
+const permKeys: Array<keyof PermKeys> = [
   'insert_permissions',
   'update_permissions',
   'select_permissions',
   'delete_permissions',
 ];
 
-export const keyToPermission = {
+const keyToPermission = {
   insert_permissions: 'insert',
   update_permissions: 'update',
   select_permissions: 'select',
@@ -46,7 +46,7 @@ type MSSqlTable = {
   table_type: 'TABLE' | 'VIEW';
 };
 
-export type MSSqlFk = {
+type MSSqlFk = {
   table_name: string;
   table_schema: string;
   constraint_name: string;
@@ -57,7 +57,7 @@ export type MSSqlFk = {
   column_mapping: Array<{ column: string; referenced_column: string }>;
 };
 
-export type MSSqlConstraint = {
+type MSSqlConstraint = {
   table_name: string;
   table_schema: string;
   constraints: {
@@ -73,7 +73,7 @@ type MSSqlCheckConstraint = {
   check_definition: string;
 };
 
-export const trimDefaultValue = (defaultValue?: string) => {
+const trimDefaultValue = (defaultValue?: string) => {
   if (!defaultValue) {
     return '';
   }
@@ -92,7 +92,7 @@ export const trimDefaultValue = (defaultValue?: string) => {
   );
 };
 
-export const modifyViolationType = (fkType: string) => {
+const modifyViolationType = (fkType: string) => {
   switch (fkType) {
     case 'NO_ACTION':
       return 'no action';

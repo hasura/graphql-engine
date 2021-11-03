@@ -36,7 +36,7 @@ Configuring actions transforms
 
     .. thumbnail:: /img/graphql/core/actions/configure-transformation.png
        :alt: Configure action transformation
-       :width: 800px
+       :width: 70%
 
 
   .. tab:: API
@@ -84,10 +84,6 @@ Types of transformations
 ------------------------
 
 You can practically create an arbitrary request using the context available in the Action execution.
-
-Context Variables
-*****************
-
 The context variables available during transformation are:
 
 .. list-table::
@@ -101,46 +97,6 @@ The context variables available during transformation are:
      - Original configured URL
    * - $session_variables
      - Session variables 
-    
-Sample Context
-~~~~~~~~~~~~~~
-
-In this section, you can provide mock ``session variables`` and ``env variables`` to test your transforms.
-Actual environment variables are not resolved during testing transforms as it could expose sensitive information to the UI.
-
-.. rst-class:: api_tabs
-.. tabs::
-
-
-  .. tab:: Console
-
-    Configure an ``env var`` in the action webhook handler.
-
-    .. thumbnail:: /img/graphql/core/actions/transformation-context-vars-0.png
-       :alt: Console action webhook handler
-       :width: 90%
-
-    Add the ``env var`` value to the ``Sample Context`` under ``Sample Env Variables``.
-
-    .. thumbnail:: /img/graphql/core/actions/transformation-context-vars-1.png
-       :alt: Console action context env
-       :width: 90%
-
-    The value should be reflected in the ``{{$base_url}}`` in ``Request Options Transformation``:
-
-    .. thumbnail:: /img/graphql/core/actions/transformation-context-vars-2.png
-       :alt: Console action req options transformation
-       :width: 90%
-
-    ``Session vars`` could also be added to the ``Sample context`` as shown above, 
-    and they could be used like so: ``{{$session_variables['x-hasura-user-id']}}``.
-    The above screen also shows an example of using the session vars from context.
-
-    .. admonition:: Context variables validation error
-
-      Note that if you don't provide mock ``env/session variables`` and test your transform, you would get a UI validation error.
-      Considering this section is only used for testing, ``Create Action`` button will still be usable.
-      When you click on ``Create Action``, any referenced envs are validated at the server without leaking any sensitive information to the UI.
 
 Request body
 ************
@@ -151,22 +107,27 @@ You can use the `Kriti templating language <https://github.com/hasura/kriti-lang
 .. rst-class:: api_tabs
 .. tabs::
 
+
   .. tab:: Console
 
     In the ``Configure Transformations`` section, click on ``Add Payload Transformation``:
 
     .. thumbnail:: /img/graphql/core/actions/payload-transformation.png
        :alt: Add payload transformation
-       :width: 1100px
+       :width: 90%
+
 
   .. tab:: API
 
     .. code-block:: json
-      :emphasize-lines: 3
+      :emphasize-lines: 3-6
 
       {
         "request_transform": {
-           "body": "{\n  \"users\": {\n    \"name\": {{$body.input.arg1.username}},\n    \"password\": {{$body.input.arg1.password}}\n  }\n}",
+           "body": {
+               "name": "{{$body.input.name}}",
+               "email": "{{$body.input.email}}"
+           }
         }
       }
 
@@ -214,7 +175,7 @@ You can use the `Kriti templating language <https://github.com/hasura/kriti-lang
 
     .. thumbnail:: /img/graphql/core/actions/request-options-transformation.png
        :alt: Console action create
-       :width: 800px
+       :width: 90%
 
   .. tab:: API
 
@@ -251,7 +212,7 @@ Transform the method. This can be used to change the request method, say from ``
 
     .. thumbnail:: /img/graphql/core/actions/request-options-transformation.png
        :alt: Console action create
-       :width: 800px
+       :width: 90%
 
   .. tab:: API
 
@@ -282,17 +243,17 @@ Let's integrate Auth0's management API to update the profile of a user:
 
     .. thumbnail:: /img/graphql/core/actions/example-transformation-0.png
        :alt: Console action create
-       :width: 1100px
+       :width: 90%
 
     The transformation is given by:
 
     .. thumbnail:: /img/graphql/core/actions/example-transformation-1.png
        :alt: Console action create
-       :width: 800px
+       :width: 90%
 
     .. thumbnail:: /img/graphql/core/actions/example-transformation-2.png
        :alt: Console action create
-       :width: 1000px
+       :width: 90%
 
   .. tab:: API
 

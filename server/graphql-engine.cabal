@@ -347,7 +347,6 @@ library
                      , Data.Time.Clock.Units
                      , Data.URL.Template
                      , Database.MSSQL.Transaction
-                     , Database.MSSQL.Pool
                      , GHC.AssertNF.CPP
                      , GHC.Stats.Extended
                      , Hasura.App
@@ -380,10 +379,6 @@ library
                      , Hasura.Backends.MSSQL.DDL.BoolExp
                      , Hasura.Backends.MSSQL.DDL.RunSQL
                      , Hasura.Backends.MSSQL.DDL.Source
-                     , Hasura.Backends.MSSQL.Execute.MutationResponse
-                     , Hasura.Backends.MSSQL.Execute.Delete
-                     , Hasura.Backends.MSSQL.Execute.Insert
-                     , Hasura.Backends.MSSQL.Execute.Update
                      , Hasura.Backends.MSSQL.FromIr
                      , Hasura.Backends.MSSQL.Instances.API
                      , Hasura.Backends.MSSQL.Instances.Execute
@@ -756,9 +751,9 @@ test-suite graphql-engine-integration-tests
     , ekg-core
     , exceptions
     , hedgehog
-    , hspec >=2.8.3 && <3
-    , hspec-core >=2.8.3 && <3
-    , hspec-discover >=2.8.3 && <3
+    , hspec >=2.6.1 && <3
+    , hspec-core >=2.6.1 && <3
+    , hspec-discover
     , hspec-expectations
     , hspec-wai
     , hspec-wai-json
@@ -801,8 +796,8 @@ test-suite graphql-engine-tests
     , graphql-engine
     , graphql-parser
     , hedgehog
-    , hspec >=2.8.3 && <3
-    , hspec-core >=2.8.3 && <3
+    , hspec >=2.6.1 && <3
+    , hspec-core >=2.6.1 && <3
     , hspec-expectations
     , hspec-expectations-lifted
     , hspec-hedgehog
@@ -876,7 +871,6 @@ test-suite graphql-engine-tests
 test-suite tests-hspec
   import: common-all, common-exe
   type: exitcode-stdio-1.0
-  build-tool-depends: hspec-discover:hspec-discover
   build-depends:
       aeson
     , base
@@ -890,9 +884,8 @@ test-suite tests-hspec
     , graphql-parser
     , haskell-src-meta
     , hedgehog
-    , hspec >=2.8.3 && <3
-    , hspec-core >=2.8.3 && <3
-    , hspec-discover >=2.8.3 && <3
+    , hspec >=2.6.1 && <3
+    , hspec-core >=2.6.1 && <3
     , hspec-expectations
     , hspec-expectations-lifted
     , hspec-hedgehog
@@ -959,7 +952,6 @@ test-suite tests-hspec
   ghc-options: -Wall -O0 -threaded
   main-is: Spec.hs
   other-modules:
-    SpecHook
     Harness.Mysql
     Harness.Http
     Harness.Postgres
@@ -974,7 +966,6 @@ test-suite tests-hspec
     Harness.GraphqlEngine
 
     ArrayRelationshipsSpec
-    NestedRelationshipsSpec
     BasicFieldsSpec
     DirectivesSpec
     HelloWorldSpec

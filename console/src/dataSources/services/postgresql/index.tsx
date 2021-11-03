@@ -46,6 +46,7 @@ import {
   getAddColumnSql,
   getAddUniqueConstraintSql,
   getDropNotNullSql,
+  getSetCommentSql,
   getSetColumnDefaultSql,
   getSetNotNullSql,
   getAlterColumnTypeSql,
@@ -71,9 +72,6 @@ import {
   getTableInfo,
   getDatabaseVersionSql,
   schemaListQuery,
-  getAlterTableCommentSql,
-  getAlterColumnCommentSql,
-  getAlterFunctionCommentSql,
 } from './sqlUtils';
 import globals from '../../../Globals';
 
@@ -762,6 +760,7 @@ export const postgres: DataSourcesAPI = {
   getAddColumnSql,
   getAddUniqueConstraintSql,
   getDropNotNullSql,
+  getSetCommentSql,
   getSetColumnDefaultSql,
   getSetNotNullSql,
   getAlterColumnTypeSql,
@@ -805,7 +804,4 @@ export const postgres: DataSourcesAPI = {
   generateDeleteRowRequest,
   generateBulkDeleteRowRequest,
   schemaListQuery,
-  getAlterTableCommentSql,
-  getAlterColumnCommentSql,
-  getAlterFunctionCommentSql,
 };

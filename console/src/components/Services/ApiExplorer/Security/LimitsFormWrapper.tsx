@@ -29,7 +29,7 @@ export const labels: Record<
       'Set a request rate limit for this role. You can also combine additional unique parameters for more granularity.',
   },
   time_limit: {
-    title: 'Operation time limit',
+    title: 'Timeout',
     info: 'Global timeout for GraphQL operations.',
   },
 };

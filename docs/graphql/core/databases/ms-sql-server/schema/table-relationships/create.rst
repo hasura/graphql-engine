@@ -47,7 +47,6 @@ Let's add a foreign-key constraint to the ``author_id`` column in the ``articles
 
     .. thumbnail:: /img/graphql/core/schema/add-foreign-key-mssql.png
       :alt: Add foreign-key constraint
-      :width: 700px
 
   .. tab:: CLI
 
@@ -106,7 +105,6 @@ Each article has one author. This is an ``object relationship``.
 
     .. thumbnail:: /img/graphql/core/schema/add-1-1-relationship.png
       :alt: Create an object relationship
-      :width: 1100px
 
   .. tab:: CLI
 
@@ -133,8 +131,8 @@ Each article has one author. This is an ``object relationship``.
       hasura metadata apply
 
   .. tab:: API
-
-    You can create an object relationship by using the :ref:`mssql_create_object_relationship` metadata API:
+    .. TODO: BROKEN_LINK
+    You can create an object relationship by using the :ref:`mssql_create_object_relationship metadata API <mssql_create_object_relationship>`:
 
     .. code-block:: http
 
@@ -145,9 +143,9 @@ Each article has one author. This is an ``object relationship``.
       {
         "type": "mssql_create_object_relationship",
         "args": {
-          "source": "<db_name>",
           "table": "articles",
           "name": "author",
+          "source": "default",
           "using": {
             "foreign_key_constraint_on" : ["author_id"]
           }
@@ -219,7 +217,6 @@ You can add an ``array relationship`` in the same fashion as an ``object relatio
 
     .. thumbnail:: /img/graphql/core/schema/add-1-many-relationship.png
       :alt: Create an array relationship
-      :width: 1100px
 
     We can now run a nested object query that is based on this ``array relationship``.
 
@@ -256,8 +253,8 @@ You can add an ``array relationship`` in the same fashion as an ``object relatio
       hasura metadata apply
 
   .. tab:: API
-
-    You can create an array relationship by using the :ref:`mssql_create_array_relationship` metadata API:
+    .. TODO: BROKEN_LINK
+    You can create an array relationship by using the :ref:`mssql_create_array_relationship metadata API <mssql_create_array_relationship>`:
 
     .. code-block:: http
 
@@ -270,7 +267,7 @@ You can add an ``array relationship`` in the same fashion as an ``object relatio
         "args": {
           "table": "author",
           "name": "articles",
-          "source": "<db_name>",
+          "source": "default",
           "using": {
             "foreign_key_constraint_on" : {
                 "table" : "articles",
@@ -372,7 +369,6 @@ Let us now create an ``object relationship`` called ``avg_rating`` from the ``au
 
     .. thumbnail:: /img/graphql/core/schema/manual-relationship-btn.png
       :alt: Open the manual relationship section
-      :width: 1100px
 
     **Step 2: Define the relationship**
 
@@ -380,7 +376,6 @@ Let us now create an ``object relationship`` called ``avg_rating`` from the ``au
 
     .. thumbnail:: /img/graphql/core/schema/manual-relationship-create.png
       :alt: Define the relationship
-      :width: 700px
 
     In this case:
 
@@ -426,7 +421,7 @@ Let us now create an ``object relationship`` called ``avg_rating`` from the ``au
 
   .. tab:: API
 
-    You can add a manual relationship by using the :ref:`mssql_create_object_relationship` metadata API:
+    You can add a manual relationship by using the :ref:`mssql_create_object_relationship metadata API <mssql_create_object_relationship>`:
 
     .. code-block:: http
 
@@ -439,7 +434,7 @@ Let us now create an ``object relationship`` called ``avg_rating`` from the ``au
         "args": {
           "table": "authors",
           "name": "avg_rating",
-          "source": "<db_name>",
+          "source": "default",
           "using": {
             "manual_configuration": {
               "remote_table": "author_average_rating",
@@ -511,7 +506,6 @@ As mentioned in the Introduction section above, relationships can be inferred vi
 
     .. thumbnail:: /img/graphql/core/schema/schema-track-relationships.png
       :alt: Track all relationships
-      :width: 800px
 
     You can choose to track the relationships individually using the ``Track`` buttons or hit the ``Track all`` button to
     track all the inferred relationships in one go.
@@ -549,9 +543,9 @@ As mentioned in the Introduction section above, relationships can be inferred vi
       hasura metadata apply
 
   .. tab:: API
-
-    You can create multiple relationships by using the :ref:`mssql_create_object_relationship`
-    and the :ref:`mssql_create_array_relationship` metadata APIs:
+    .. TODO: BROKEN_LINK
+    You can create multiple relationships by using the :ref:`mssql_create_object_relationship metadata API <mssql_create_object_relationship>`
+    and the :ref:`mssql_create_array_relationship metadata API <mssql_create_array_relationship>`:
 
     .. code-block:: http
 
@@ -565,7 +559,6 @@ As mentioned in the Introduction section above, relationships can be inferred vi
           {
             "type": "mssql_create_object_relationship",
             "args": {
-              "source": "<db_name>",
               "table": "articles",
               "name": "author",
               "using": {
@@ -576,7 +569,6 @@ As mentioned in the Introduction section above, relationships can be inferred vi
           {
             "type": "mssql_create_array_relationship",
             "args": {
-              "source": "<db_name>",
               "table": "authors",
               "name": "articles",
               "using": {

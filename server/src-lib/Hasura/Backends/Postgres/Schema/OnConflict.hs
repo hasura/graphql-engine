@@ -65,7 +65,7 @@ conflictObjectParser ::
   UpdPermInfo ('Postgres pgKind) ->
   m (Parser 'Input n (IR.OnConflictClause ('Postgres pgKind) (UnpreparedValue ('Postgres pgKind))))
 conflictObjectParser sourceName tableInfo constraints selectPerms updatePerms = do
-  updateColumnsEnum <- updateColumnsPlaceholderParser tableInfo updatePerms
+  updateColumnsEnum <- updateColumnsPlaceholderParser
   constraintParser <- conflictConstraint constraints sourceName tableInfo
   whereExpParser <- boolExp sourceName tableInfo selectPerms
   tableGQLName <- getTableGQLName tableInfo
@@ -92,6 +92,24 @@ conflictObjectParser sourceName tableInfo constraints selectPerms updatePerms = 
           _ -> IR.OCCUpdate $ IR.OnConflictClauseData constraint updateColumns presetColumns $ BoolAnd $ updateFilter : maybeToList whereExp
   where
     tableName = tableInfoName tableInfo
+
+    -- If there's no column for which the current user has "update"
+    -- permissions, this functions returns an enum that only contains a
+    -- placeholder, so as to still allow this type to exist in the schema.
+    updateColumnsPlaceholderParser :: m (Parser 'Both n (Maybe (Column ('Postgres pgKind))))
+    updateColumnsPlaceholderParser = do
+      maybeEnum <- tableUpdateColumnsEnum tableInfo updatePerms
+      case maybeEnum of
+        Just e -> pure $ Just <$> e
+        Nothing -> do
+          tableGQLName <- getTableGQLName tableInfo
+          enumName <- P.mkTypename $ tableGQLName <> $$(G.litName "_update_column")
+          pure $
+            P.enum enumName (Just $ G.Description $ "placeholder for update columns of table " <> tableName <<> " (current role has no relevant permissions)") $
+              pure
+                ( P.Definition @P.EnumValueInfo $$(G.litName "_PLACEHOLDER") (Just $ G.Description "placeholder (do not use)") P.EnumValueInfo,
+                  Nothing
+                )
 
 -- | Constructs a Parser for the name of the constraints on a given table.
 --

@@ -9,11 +9,10 @@ module Database.MSSQL.Transaction
     multiRowQueryE,
     rawQuery,
     rawQueryE,
-    buildGenericQueryTxE,
+    buildGenericTxE,
     TxT,
     TxET (..),
     MSSQLTxError (..),
-    withTxET,
   )
 where
 
@@ -28,17 +27,13 @@ import Control.Monad.Except
 import Control.Monad.IO.Class (MonadIO (..))
 import Control.Monad.Morph (MFunctor (hoist), MonadTrans (..))
 import Control.Monad.Reader (MonadFix, MonadReader, ReaderT (..))
-import Control.Monad.Trans.Control (MonadBaseControl)
-import Database.MSSQL.Pool
 import Database.ODBC.SQLServer (FromRow)
 import Database.ODBC.SQLServer qualified as ODBC
-import Hasura.Prelude (Text, hoistEither, liftEither, mapLeft)
+import Hasura.Prelude (hoistEither, liftEither, mapLeft)
 import Prelude
 
 data MSSQLTxError
-  = MSSQLQueryError !ODBC.Query !ODBC.ODBCException
-  | MSSQLConnError !ODBC.ODBCException
-  | MSSQLInternal !Text
+  = MSSQLTxError !ODBC.Query !ODBC.ODBCException
   deriving (Eq, Show)
 
 -- | A successful result from a query is a list of rows where each row contains list of column values
@@ -64,27 +59,12 @@ beginTx =
   unitQuery "BEGIN TRANSACTION"
 
 commitTx :: MonadIO m => TxT m ()
-commitTx = do
-  transactionState <- getTransactionState
-  case transactionState of
-    TSActive -> unitQuery "COMMIT TRANSACTION"
-    TSUncommittable -> throwError $ MSSQLInternal "Transaction is uncommittable"
-    TSNoActive -> throwError $ MSSQLInternal "No active transaction exist; cannot commit"
+commitTx =
+  unitQuery "COMMIT TRANSACTION"
 
 rollbackTx :: MonadIO m => TxT m ()
-rollbackTx = do
-  transactionState <- getTransactionState
-  let rollback = unitQuery "ROLLBACK TRANSACTION"
-  case transactionState of
-    TSActive -> rollback
-    TSUncommittable ->
-      -- We can only do a full rollback of an uncommittable transaction
-      rollback
-    TSNoActive ->
-      -- Few query exceptions result in an auto-rollback of the transaction.
-      -- For eg. Creating a table with already existing table name (See https://github.com/hasura/graphql-engine-mono/issues/3046)
-      -- In such cases, we shouldn't rollback the transaction again.
-      pure ()
+rollbackTx =
+  unitQuery "ROLLBACK TRANSACTION"
 
 -- | Useful for building transactions which returns no data
 --
@@ -129,28 +109,6 @@ singleRowQueryE ef = rawQueryE ef singleRowResult
     singleRowResult (MSSQLResult [row]) = ODBC.fromRow row
     singleRowResult (MSSQLResult _) = Left "expecting single row"
 
--- | The transaction state of the current connection
-data TransactionState
-  = -- | Has an active transaction.
-    TSActive
-  | -- | Has no active transaction.
-    TSNoActive
-  | -- | An error occurred that caused the transaction to be uncommittable. We cannot commit or
-    -- rollback to a savepoint; we can only do a full rollback of the transaction.
-    TSUncommittable
-
--- | Get the @'TransactionState' of current connection
--- For more details, refer to https://docs.microsoft.com/en-us/sql/t-sql/functions/xact-state-transact-sql?view=sql-server-ver15
-getTransactionState :: (MonadIO m) => TxT m TransactionState
-getTransactionState = do
-  let query = "SELECT XACT_STATE()"
-  xactState :: Int <- singleRowQuery query
-  case xactState of
-    1 -> pure TSActive
-    0 -> pure TSNoActive
-    -1 -> pure TSUncommittable
-    _ -> throwError $ MSSQLQueryError query $ ODBC.DataRetrievalError "Unexpected value for XACT_STATE"
-
 -- | Useful for building query transactions which returns multiple rows.
 --
 -- selectIds :: TxT m [Int]
@@ -186,56 +144,52 @@ rawQueryE ::
   -- | Query to run
   ODBC.Query ->
   TxET e m a
-rawQueryE ef rf q = do
-  rows <- buildGenericQueryTxE ef q id ODBC.query
-  liftEither $ mapLeft (ef . MSSQLQueryError q . ODBC.DataRetrievalError) $ rf (MSSQLResult rows)
+rawQueryE ef rf q = TxET $
+  ReaderT $ \conn ->
+    hoist liftIO $
+      withExceptT ef $
+        execQuery conn q
+          >>= liftEither . mapLeft (MSSQLTxError q . ODBC.DataRetrievalError) . rf
 
 -- | Build a generic transaction out of an IO action
-buildGenericQueryTxE ::
+buildGenericTxE ::
   (MonadIO m) =>
   -- | Exception modifier
-  (MSSQLTxError -> e) ->
-  -- | The Query
-  query ->
-  -- | Query to ODBC.Query converter
-  (query -> ODBC.Query) ->
+  (ODBC.ODBCException -> e) ->
   -- | IO action
-  (ODBC.Connection -> query -> IO a) ->
+  (ODBC.Connection -> IO a) ->
   TxET e m a
-buildGenericQueryTxE errorF query convertQ runQuery = TxET $
-  ReaderT $ \conn -> withExceptT errorF $ execQuery query convertQ (runQuery conn)
+buildGenericTxE ef f = TxET $
+  ReaderT $ \conn -> do
+    result <- liftIO $ try $ f conn
+    withExceptT ef $ hoistEither result
 
 execQuery ::
-  forall m a query.
   (MonadIO m) =>
-  query ->
-  (query -> ODBC.Query) ->
-  (query -> IO a) ->
-  ExceptT MSSQLTxError m a
-execQuery query toODBCQuery runQuery = do
-  result :: Either ODBC.ODBCException a <- liftIO $ try $ runQuery query
-  withExceptT (MSSQLQueryError $ toODBCQuery query) $ hoistEither result
+  ODBC.Connection ->
+  ODBC.Query ->
+  ExceptT MSSQLTxError m MSSQLResult
+execQuery conn query = do
+  result :: Either ODBC.ODBCException [[ODBC.Value]] <- liftIO $ try $ ODBC.query conn query
+  withExceptT (MSSQLTxError query) $ hoistEither $ MSSQLResult <$> result
 
 -- | Run a command on the given connection wrapped in a transaction.
 runTx ::
-  (MonadIO m, MonadBaseControl IO m) =>
+  MonadIO m =>
   TxT m a ->
-  MSSQLPool ->
+  ODBC.Connection ->
   ExceptT MSSQLTxError m a
 runTx = runTxE id
 
 -- | Run a command on the given connection wrapped in a transaction.
 runTxE ::
-  (MonadIO m, MonadBaseControl IO m) =>
+  MonadIO m =>
   (MSSQLTxError -> e) ->
   TxET e m a ->
-  MSSQLPool ->
+  ODBC.Connection ->
   ExceptT e m a
-runTxE ef tx pool = do
-  withMSSQLPool pool (asTransaction ef (`execTx` tx))
-    >>= hoistEither . mapLeft (ef . MSSQLConnError)
-
--- withConn pool $ asTransaction txm $ \connRsrc -> execTx connRsrc tx
+runTxE ef tx =
+  asTransaction ef (`execTx` tx)
 
 {-# INLINE execTx #-}
 execTx :: ODBC.Connection -> TxET e m a -> ExceptT e m a
@@ -259,6 +213,3 @@ asTransaction ef f conn = do
     rollback err = do
       withExceptT ef $ execTx conn rollbackTx
       throwError err
-
-withTxET :: Monad m => (e1 -> e2) -> TxET e1 m a -> TxET e2 m a
-withTxET f (TxET m) = TxET $ hoist (withExceptT f) m

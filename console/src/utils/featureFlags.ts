@@ -1,1 +1,1 @@
-export const ENABLE_AUTH_LAYER = true;
+export const ENABLE_AUTH_LAYER = false;

@@ -56,19 +56,18 @@ Event triggers can be created using the Hasura console, CLI or metadata APIs.
 
    .. tab:: API
 
-      Add an event trigger by using the :ref:`metadata_pg_create_event_trigger` metadata API.
+      Add an event trigger by using the :ref:`create_event_trigger metadata API<create_event_trigger>`.
 
       .. code-block:: http
 
-         POST /v1/metadata HTTP/1.1
+         POST /v1/query HTTP/1.1
          Content-Type: application/json
          X-Hasura-Role: admin
 
          {
-            "type" : "pg_create_event_trigger",
+            "type" : "create_event_trigger",
             "args" : {
                "name": "author_trigger",
-               "source": "<db_name>",
                "table": {
                   "name": "author",
                   "schema": "public"
@@ -166,20 +165,19 @@ If a column is not selected here, then an update to that column will not trigger
 
    .. tab:: API
 
-      You can configure advanced settings via the :ref:`metadata_pg_create_event_trigger` metadata API.
+      You can configure advanced settings via the :ref:`create_event_trigger metadata API<create_event_trigger>`.
 
       .. code-block:: http
-         :emphasize-lines: 18-20
+         :emphasize-lines: 17-19
 
-         POST /v1/metadata HTTP/1.1
+         POST /v1/query HTTP/1.1
          Content-Type: application/json
          X-Hasura-Role: admin
 
          {
-            "type": "pg_create_event_trigger",
+            "type": "create_event_trigger",
             "args": {
                "name": "author_trigger",
-               "source": "<db_name>",
                "table": {
                   "name": "author",
                   "schema": "public"
@@ -266,20 +264,19 @@ Retry configuration is available in the "Advanced settings" when you create a tr
 
    .. tab:: API
 
-      You can configure advanced settings via the :ref:`metadata_pg_create_event_trigger` metadata API.
+      You can configure advanced settings via the :ref:`create_event_trigger metadata API<create_event_trigger>`.
 
       .. code-block:: http
-         :emphasize-lines: 21-25
+         :emphasize-lines: 20-24
 
-         POST /v1/metadata HTTP/1.1
+         POST /v1/query HTTP/1.1
          Content-Type: application/json
          X-Hasura-Role: admin
 
          {
-            "type": "pg_create_event_trigger",
+            "type": "create_event_trigger",
             "args": {
                "name": "author_trigger",
-               "source": "<db_name>",
                "table": {
                   "name": "author",
                   "schema": "public"
@@ -371,20 +368,19 @@ Each header has 3 parameters:
 
    .. tab:: API
 
-      You can configure advanced settings via the :ref:`metadata_pg_create_event_trigger` metadata API.
+      You can configure advanced settings via the :ref:`create_event_trigger metadata API<create_event_trigger>`.
 
       .. code-block:: http
-         :emphasize-lines: 26-35
+         :emphasize-lines: 25-34
 
-         POST /v1/metadata HTTP/1.1
+         POST /v1/query HTTP/1.1
          Content-Type: application/json
          X-Hasura-Role: admin
 
          {
-            "type": "pg_create_event_trigger",
+            "type": "create_event_trigger",
             "args": {
                "name": "author_trigger",
-               "source": "<db_name>",
                "table": {
                   "name": "author",
                   "schema": "public"

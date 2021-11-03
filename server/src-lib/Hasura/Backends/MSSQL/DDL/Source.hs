@@ -1,11 +1,3 @@
--- | MSSQL Source
---
--- Implements the Source related methods of the
--- 'Hasura.RQL.Types.Metadata.Backend.BackendMetadata' type class
--- for the MSSQL backend, which provides an interface for identifying the
--- MSSQL database instance (source) and manipulate it.
---
--- The actual instance is defined in "Hasura.Backends.MSSQL.Instances.Metadata".
 module Hasura.Backends.MSSQL.DDL.Source
   ( resolveSourceConfig,
     resolveDatabaseMetadata,
@@ -15,6 +7,7 @@ where
 
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Environment qualified as Env
+import Database.MSSQL.Transaction qualified as Tx
 import Hasura.Backends.MSSQL.Connection
 import Hasura.Backends.MSSQL.Meta
 import Hasura.Base.Error
@@ -40,7 +33,7 @@ resolveDatabaseMetadata ::
   SourceTypeCustomization ->
   m (Either QErr (ResolvedSource 'MSSQL))
 resolveDatabaseMetadata config customization = runExceptT do
-  dbTablesMetadata <- mssqlRunReadOnly mssqlExecCtx $ loadDBMetadata
+  dbTablesMetadata <- (mssqlRunReadOnly mssqlExecCtx) $ Tx.runTxE fromMSSQLTxError loadDBMetadata
   pure $ ResolvedSource config customization dbTablesMetadata mempty mempty
   where
     MSSQLSourceConfig _connString mssqlExecCtx = config
