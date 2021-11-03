@@ -84,6 +84,7 @@ realtime monitoring, caching, tracing, and rate-limiting. It supports both new a
   response-caching
   tracing
   query-tags
+  Preview Apps <preview-apps>
   dedicated-vpc
   Billing <billing/index>
   hasurapro-cli/index
