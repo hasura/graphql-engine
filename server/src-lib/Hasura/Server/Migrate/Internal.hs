@@ -6,6 +6,7 @@ module Hasura.Server.Migrate.Internal
 where
 
 import Data.Aeson qualified as A
+import Data.Text qualified as T
 import Data.Time.Clock (UTCTime)
 import Database.PG.Query qualified as Q
 import Hasura.Backends.Postgres.Connection
@@ -16,16 +17,20 @@ import Hasura.RQL.Types.Common (InputWebhook)
 import Hasura.RQL.Types.EventTrigger
 import Hasura.SQL.Backend
 
--- | The old 0.8 catalog version is non-integral, so we store it in the database as a
--- string.
-getCatalogVersion :: Q.TxE QErr Text
-getCatalogVersion =
-  runIdentity . Q.getRow
-    <$> Q.withQE
-      defaultTxErrorHandler
-      [Q.sql| SELECT version FROM hdb_catalog.hdb_version |]
-      ()
-      False
+-- | The old 0.8 catalog version is non-integral, so the version has always been stored
+--   as a string.
+--   TODO: Change the version column to Float?
+getCatalogVersion :: Q.TxE QErr Float
+getCatalogVersion = do
+  versionText <-
+    runIdentity . Q.getRow
+      <$> Q.withQE
+        defaultTxErrorHandler
+        [Q.sql| SELECT version FROM hdb_catalog.hdb_version |]
+        ()
+        False
+  onLeft (readEither $ T.unpack versionText) $
+    \err -> throw500 $ "Unexpected: couldn't convert " <> versionText <> " to float, err:" <> tshow err
 
 from3To4 :: forall m. (Backend ('Postgres 'Vanilla), MonadTx m) => m ()
 from3To4 = liftTx $
