@@ -1,6 +1,27 @@
 -- |
 -- Description: Schema cache types related to computed field
-module Hasura.RQL.Types.ComputedField where
+module Hasura.RQL.Types.ComputedField
+  ( ComputedFieldDefinition (..),
+    ComputedFieldFunction (..),
+    ComputedFieldInfo (..),
+    ComputedFieldName (..),
+    ComputedFieldReturn (..),
+    CustomFunctionNames (..),
+    FunctionSessionArgument (..),
+    FunctionTableArgument (..),
+    FunctionTrackedAs (..),
+    cfiComment,
+    cfiFunction,
+    cfiName,
+    cfiReturnType,
+    cfiXComputedFieldInfo,
+    computedFieldNameToText,
+    fromComputedField,
+    onlyScalarComputedFields,
+    _CFRScalar,
+    _CFRSetofTable,
+  )
+where
 
 import Control.Lens hiding ((.=))
 import Data.Aeson

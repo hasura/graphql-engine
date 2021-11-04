@@ -1,4 +1,8 @@
-module Hasura.Server.Limits where
+module Hasura.Server.Limits
+  ( HasResourceLimits (..),
+    ResourceLimits (..),
+  )
+where
 
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Hasura.Base.Error

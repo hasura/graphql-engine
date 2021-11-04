@@ -1,4 +1,13 @@
-module Hasura.RQL.DDL.Permission.Internal where
+module Hasura.RQL.DDL.Permission.Internal
+  ( CreatePerm (..),
+    DropPerm (..),
+    assertPermDefined,
+    convColSpec,
+    getDepHeadersFromVal,
+    getDependentHeaders,
+    procBoolExp,
+  )
+where
 
 import Control.Lens hiding ((.=))
 import Data.Aeson.Types
@@ -40,26 +49,6 @@ assertPermDefined role pa tableInfo =
         ]
   where
     rpi = M.lookup role $ _tiRolePermInfoMap tableInfo
-
-askPermInfo ::
-  (Backend backend, MonadError QErr m) =>
-  TableInfo backend ->
-  RoleName ->
-  PermAccessor backend c ->
-  m c
-askPermInfo tabInfo roleName pa =
-  (M.lookup roleName rpim >>= (^. permAccToLens pa))
-    `onNothing` throw400
-      PermissionDenied
-      ( mconcat
-          [ pt <> " permission on " <>> tableInfoName tabInfo,
-            " for role " <>> roleName,
-            " does not exist"
-          ]
-      )
-  where
-    pt = permTypeToCode $ permAccToType pa
-    rpim = _tiRolePermInfoMap tabInfo
 
 newtype CreatePerm a b = CreatePerm (WithTable b (PermDef (a b)))
   deriving newtype (FromJSON)

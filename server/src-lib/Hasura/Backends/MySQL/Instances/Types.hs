@@ -1,6 +1,6 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
-module Hasura.Backends.MySQL.Instances.Types where
+module Hasura.Backends.MySQL.Instances.Types () where
 
 import Data.Aeson qualified as J
 import Database.MySQL.Base.Types qualified as MySQL

@@ -1,4 +1,10 @@
-module Hasura.RQL.Types.Roles where
+module Hasura.RQL.Types.Roles
+  ( DropInheritedRole (..),
+    InheritedRole,
+    ParentRoles (..),
+    Role (..),
+  )
+where
 
 import Data.Aeson
 import Data.Aeson.Casing

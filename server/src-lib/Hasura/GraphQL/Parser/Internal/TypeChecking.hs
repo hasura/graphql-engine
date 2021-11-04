@@ -1,7 +1,13 @@
 -- | Here are all functions related to type-checking within the schema. This
 -- includes functions that deal with variables, and functions that craft error
 -- messages.
-module Hasura.GraphQL.Parser.Internal.TypeChecking where
+module Hasura.GraphQL.Parser.Internal.TypeChecking
+  ( peelVariable,
+    peelVariableWith,
+    typeCheck,
+    typeMismatch,
+  )
+where
 
 import Data.Aeson qualified as A
 import Data.Text.Extended

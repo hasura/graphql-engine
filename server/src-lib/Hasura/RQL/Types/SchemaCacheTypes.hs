@@ -1,4 +1,16 @@
-module Hasura.RQL.Types.SchemaCacheTypes where
+module Hasura.RQL.Types.SchemaCacheTypes
+  ( DependencyReason (..),
+    SchemaDependency (..),
+    SchemaObjId (..),
+    SourceObjId (..),
+    TableObjId (..),
+    purgeDependentObject,
+    reasonToTxt,
+    reportDependentObjectsExist,
+    reportSchemaObj,
+    reportSchemaObjs,
+  )
+where
 
 import Data.Aeson
 import Data.Aeson.TH

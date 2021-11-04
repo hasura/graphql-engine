@@ -1,4 +1,30 @@
-module Hasura.GraphQL.Schema.Common where
+module Hasura.GraphQL.Schema.Common
+  ( AggSelectExp,
+    AnnotatedField,
+    AnnotatedFields,
+    ConnectionFields,
+    ConnectionSelectExp,
+    EdgeFields,
+    QueryContext (QueryContext, qcDangerousBooleanCollapse, qcFunctionPermsContext, qcQueryType, qcRemoteRelationshipContext, qcStringifyNum),
+    RemoteRelationshipQueryContext (RemoteRelationshipQueryContext, _rrscParsedIntrospection),
+    SelectArgs,
+    SelectExp,
+    TablePerms,
+    comparisonAggOperators,
+    currentNodeIdVersion,
+    mapField,
+    mkDescriptionWith,
+    nodeIdVersionInt,
+    numericAggOperators,
+    optionalFieldParser,
+    parsedSelectionsToFields,
+    partialSQLExpToUnpreparedValue,
+    requiredFieldParser,
+    takeValidFunctions,
+    takeValidTables,
+    textToName,
+  )
+where
 
 import Data.Aeson qualified as J
 import Data.Either (isRight)

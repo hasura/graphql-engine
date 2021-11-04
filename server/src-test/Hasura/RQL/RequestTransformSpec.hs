@@ -1,4 +1,4 @@
-module Hasura.RQL.RequestTransformSpec where
+module Hasura.RQL.RequestTransformSpec (spec) where
 
 import Data.Aeson
 import Data.CaseInsensitive qualified as CI

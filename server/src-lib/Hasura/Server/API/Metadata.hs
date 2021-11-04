@@ -1,7 +1,12 @@
 {-# LANGUAGE ViewPatterns #-}
 
 -- | The RQL metadata query ('/v1/metadata')
-module Hasura.Server.API.Metadata where
+module Hasura.Server.API.Metadata
+  ( RQLMetadata,
+    RQLMetadataV1 (..),
+    runMetadataQuery,
+  )
+where
 
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Control.Monad.Unique

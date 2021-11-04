@@ -3,7 +3,14 @@
 {-# OPTIONS_HADDOCK not-home #-}
 
 -- | Defines the basic 'Rule' datatype and its core operations.
-module Hasura.Incremental.Internal.Rule where
+module Hasura.Incremental.Internal.Rule
+  ( ArrowDistribute (..),
+    Result (rebuildRule, result),
+    Rule (..),
+    build,
+    rebuild,
+  )
+where
 
 import Control.Arrow.Extended
 import Control.Category

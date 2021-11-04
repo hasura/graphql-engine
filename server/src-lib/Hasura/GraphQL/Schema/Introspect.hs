@@ -1,6 +1,10 @@
 {-# LANGUAGE ApplicativeDo #-}
 
-module Hasura.GraphQL.Schema.Introspect where
+module Hasura.GraphQL.Schema.Introspect
+  ( schema,
+    typeIntrospection,
+  )
+where
 
 -- import qualified Hasura.RQL.Types
 

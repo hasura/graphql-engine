@@ -1,4 +1,17 @@
-module Hasura.Backends.MSSQL.Connection where
+module Hasura.Backends.MSSQL.Connection
+  ( MSSQLConnConfiguration (MSSQLConnConfiguration),
+    MSSQLPool,
+    MSSQLSourceConfig (MSSQLSourceConfig, _mscConnectionPool),
+    createMSSQLPool,
+    drainMSSQLPool,
+    fromMSSQLTxError,
+    getEnv,
+    odbcExceptionToJSONValue,
+    odbcValueToJValue,
+    runJSONPathQuery,
+    withMSSQLPool,
+  )
+where
 
 import Control.Exception.Lifted qualified as EL
 import Control.Monad.Trans.Control
@@ -103,7 +116,7 @@ instance NFData MSSQLConnConfiguration
 
 $(deriveJSON hasuraJSON ''MSSQLConnConfiguration)
 
-newtype MSSQLPool = MSSQLPool {unMSSQLPool :: Pool.Pool ODBC.Connection}
+newtype MSSQLPool = MSSQLPool (Pool.Pool ODBC.Connection)
 
 createMSSQLPool ::
   MonadIO m =>

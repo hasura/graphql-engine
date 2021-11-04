@@ -1,6 +1,20 @@
 -- | This module has the various metadata we want to attach to the
 -- generated/executed query
-module Hasura.QueryTags where
+module Hasura.QueryTags
+  ( Attribute,
+    LivequeryMetadata (LivequeryMetadata),
+    MutationMetadata (MutationMetadata),
+    QueryMetadata (QueryMetadata),
+    QueryTags (QTLiveQuery, QTMutation, QTQuery),
+    QueryTagsAttributes (_unQueryTagsAttributes),
+    QueryTagsComment (..),
+    emptyQueryTagsComment,
+    encodeQueryTags,
+
+    -- * Exposed for testing
+    emptyQueryTagsAttributes,
+  )
+where
 
 import Data.Text.Extended
 import Hasura.GraphQL.Namespace (RootFieldAlias)
@@ -21,6 +35,9 @@ newtype QueryTagsComment = QueryTagsComment {_unQueryTagsComment :: Text} derivi
 type Attribute = (Text, Text)
 
 newtype QueryTagsAttributes = QueryTagsAttributes {_unQueryTagsAttributes :: [Attribute]} deriving (Show, Eq)
+
+emptyQueryTagsAttributes :: QueryTagsAttributes
+emptyQueryTagsAttributes = QueryTagsAttributes mempty
 
 emptyQueryTagsComment :: QueryTagsComment
 emptyQueryTagsComment = QueryTagsComment mempty

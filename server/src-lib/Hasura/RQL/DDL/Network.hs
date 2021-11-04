@@ -1,4 +1,10 @@
-module Hasura.RQL.DDL.Network where
+module Hasura.RQL.DDL.Network
+  ( checkForHostnameInAllowlistObject,
+    dropHostFromAllowList,
+    runAddHostToTLSAllowlist,
+    runDropHostFromTLSAllowlist,
+  )
+where
 
 import Data.Text (pack)
 import Data.Text.Extended

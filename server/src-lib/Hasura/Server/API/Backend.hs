@@ -9,7 +9,19 @@
 -- Furthermore, for each set of related features, such as table tracking commands, or permission
 -- commands, a helper function is provided, that allows a backend to write its instance by simply
 -- listing the set of features it supports.
-module Hasura.Server.API.Backend where
+module Hasura.Server.API.Backend
+  ( BackendAPI (..),
+    commandParser,
+    eventTriggerCommands,
+    functionCommands,
+    functionPermissionsCommands,
+    relationshipCommands,
+    remoteRelationshipCommands,
+    sourceCommands,
+    tableCommands,
+    tablePermissionsCommands,
+  )
+where
 
 import Data.Aeson ((<?>))
 import Data.Aeson.Types (modifyFailure)

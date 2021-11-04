@@ -1,4 +1,7 @@
-module Hasura.RQL.Types.GraphqlSchemaIntrospection where
+module Hasura.RQL.Types.GraphqlSchemaIntrospection
+  ( SetGraphqlIntrospectionOptions (..),
+  )
+where
 
 import Data.Aeson.TH
 import Data.HashSet qualified as Set

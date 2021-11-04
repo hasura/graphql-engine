@@ -1,7 +1,35 @@
 {-# LANGUAGE NondecreasingIndentation #-}
 {-# LANGUAGE OverloadedStrings #-}
 
-module Hasura.GraphQL.Transport.WebSocket.Server where
+module Hasura.GraphQL.Transport.WebSocket.Server
+  ( AcceptWith (AcceptWith),
+    HasuraServerApp,
+    MessageDetails (MessageDetails),
+    MonadWSLog (..),
+    OnConnH,
+    WSActions (..),
+    WSConn,
+    WSEvent (EMessageSent),
+    WSEventInfo (WSEventInfo, _wseiEventType, _wseiOperationId, _wseiOperationName, _wseiParameterizedQueryHash, _wseiQueryExecutionTime, _wseiResponseSize),
+    WSHandlers (WSHandlers),
+    WSId,
+    WSKeepAliveMessageAction,
+    WSLog (WSLog),
+    WSOnErrorMessageAction,
+    WSQueueResponse (WSQueueResponse),
+    WSServer,
+    closeConn,
+    createServerApp,
+    createWSServer,
+    getData,
+    getRawWebSocketConnection,
+    getWSId,
+    onClientMessageParseErrorText,
+    onConnInitErrorText,
+    sendMsg,
+    shutdown,
+  )
+where
 
 import Control.Concurrent.Async qualified as A
 import Control.Concurrent.Async.Lifted.Safe qualified as LA
@@ -181,11 +209,12 @@ createWSServer logger = do
   serverStatus <- STM.newTVar (AcceptingConns connMap)
   return $ WSServer logger serverStatus
 
-closeAll :: WSServer a -> BL.ByteString -> IO ()
-closeAll (WSServer (L.Logger writeLog) serverStatus) msg = do
-  writeLog $ L.debugT "closing all connections"
-  conns <- STM.atomically $ flushConnMap serverStatus
-  closeAllWith (flip closeConn) msg conns
+-- -- UNUSED
+-- closeAll :: WSServer a -> BL.ByteString -> IO ()
+-- closeAll (WSServer (L.Logger writeLog) serverStatus) msg = do
+--   writeLog $ L.debugT "closing all connections"
+--   conns <- STM.atomically $ flushConnMap serverStatus
+--   closeAllWith (flip closeConn) msg conns
 
 closeAllWith ::
   (BL.ByteString -> WSConn a -> IO ()) ->
@@ -250,7 +279,7 @@ onConnInitErrorText = Just "Connection initialization failed: "
 
 type OnConnH m a = WSId -> WS.RequestHead -> IpAddress -> WSActions a -> m (Either WS.RejectRequest (AcceptWith a))
 
-type OnMessageH m a = WSConn a -> BL.ByteString -> WSActions a -> m ()
+-- type OnMessageH m a = WSConn a -> BL.ByteString -> WSActions a -> m ()
 
 type OnCloseH m a = WSConn a -> m ()
 

@@ -1,4 +1,11 @@
-module Hasura.Eventing.ScheduledTrigger.Types where
+module Hasura.Eventing.ScheduledTrigger.Types
+  ( CronTriggerStats (CronTriggerStats, ctsMaxScheduledTime, ctsName),
+    RetryContext (RetryContext, _rctxConf),
+    ScheduledEventOp (..),
+    ScheduledEventWebhookPayload (ScheduledEventWebhookPayload, sewpName, sewpScheduledTime),
+    ScheduledTriggerInternalErr (ScheduledTriggerInternalErr),
+  )
+where
 
 import Data.Aeson qualified as J
 import Data.Aeson.TH qualified as J

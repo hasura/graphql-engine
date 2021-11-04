@@ -1,4 +1,9 @@
-module Hasura.Server.Auth.JWT.Internal where
+module Hasura.Server.Auth.JWT.Internal
+  ( parseEdDSAKey,
+    parseHmacKey,
+    parseRsaKey,
+  )
+where
 
 import Control.Lens
 import Crypto.JOSE.Types (Base64Integer (..))

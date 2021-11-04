@@ -1,6 +1,6 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
-module Hasura.Backends.BigQuery.Instances.Metadata where
+module Hasura.Backends.BigQuery.Instances.Metadata () where
 
 import Hasura.Backends.BigQuery.DDL qualified as BigQuery
 import Hasura.RQL.Types.Metadata.Backend

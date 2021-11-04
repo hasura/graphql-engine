@@ -1,5 +1,43 @@
 -- | Types and classes related to configuration when the server is initialised
-module Hasura.Server.Init.Config where
+module Hasura.Server.Init.Config
+  ( API (..),
+    DowngradeOptions (..),
+    Env,
+    FromEnv (..),
+    HGECommand,
+    HGECommandG (..),
+    HGEOptions,
+    HGEOptionsG (..),
+    KeepAliveDelay (..),
+    OptionalInterval (..),
+    PostgresConnInfo (..),
+    PostgresRawConnDetails (..),
+    PostgresRawConnInfo (..),
+    RawAuthHook,
+    RawConnParams (..),
+    RawHGECommand,
+    RawHGEOptions,
+    RawServeOptions (..),
+    ResponseInternalErrorsConfig (..),
+    ServeOptions (..),
+    WSConnectionInitTimeout (..),
+    WithEnv,
+    defaultKeepAliveDelay,
+    defaultWSConnectionInitTimeout,
+    msToOptionalInterval,
+    parseStrAsBool,
+    rawConnDetailsToUrl,
+    rawConnDetailsToUrlText,
+    readAPIs,
+    readExperimentalFeatures,
+    readHookType,
+    readJson,
+    readLogLevel,
+    readNonNegativeInt,
+    runWithEnv,
+    shouldIncludeInternal,
+  )
+where
 
 import Data.Aeson
 import Data.Aeson qualified as J

@@ -1,4 +1,10 @@
-module Hasura.Backends.Postgres.DDL.Source.Version where
+module Hasura.Backends.Postgres.DDL.Source.Version
+  ( getSourceCatalogVersion,
+    latestSourceCatalogVersion,
+    latestSourceCatalogVersionText,
+    setSourceCatalogVersion,
+  )
+where
 
 import Database.PG.Query qualified as Q
 import Hasura.Backends.Postgres.Connection

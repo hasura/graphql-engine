@@ -1,7 +1,7 @@
 {-# LANGUAGE ApplicativeDo #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
-module Hasura.Backends.MySQL.Instances.Schema where
+module Hasura.Backends.MySQL.Instances.Schema () where
 
 import Data.Aeson qualified as J
 import Data.ByteString (ByteString)
