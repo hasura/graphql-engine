@@ -236,7 +236,8 @@ data WSActions a = WSActions
     -- after the connection has been successfully established after `connection_init`
     _wsaKeepAliveAction :: !(WSKeepAliveMessageAction a),
     _wsaGetDataMessageType :: !(DataMsg -> ServerMsg),
-    _wsaAcceptRequest :: !WS.AcceptRequest
+    _wsaAcceptRequest :: !WS.AcceptRequest,
+    _wsaErrorMsgFormat :: !([J.Value] -> J.Value)
   }
 
 -- | to be used with `WSOnErrorMessageAction`
