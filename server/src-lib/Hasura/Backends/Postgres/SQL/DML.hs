@@ -1,4 +1,95 @@
-module Hasura.Backends.Postgres.SQL.DML where
+module Hasura.Backends.Postgres.SQL.DML
+  ( Alias (..),
+    BinOp (AndOp, OrOp),
+    BoolExp (..),
+    CTE (CTEDelete, CTEInsert, CTESelect, CTEUpdate),
+    CompareOp (SContainedIn, SContains, SEQ, SGT, SGTE, SHasKey, SHasKeysAll, SHasKeysAny, SILIKE, SIREGEX, SLIKE, SLT, SLTE, SMatchesFulltext, SNE, SNILIKE, SNIREGEX, SNLIKE, SNREGEX, SNSIMILAR, SREGEX, SSIMILAR),
+    CountType (CTDistinct, CTSimple, CTStar),
+    DistinctExpr (DistinctOn, DistinctSimple),
+    Extractor (..),
+    FromExp (..),
+    FromItem (..),
+    FunctionAlias (FunctionAlias),
+    FunctionArgs (FunctionArgs),
+    FunctionExp (FunctionExp),
+    GroupByExp (GroupByExp),
+    HavingExp (HavingExp),
+    JoinCond (..),
+    JoinExpr (JoinExpr),
+    JoinType (Inner, LeftOuter),
+    Lateral (Lateral),
+    LimitExp (LimitExp),
+    NullsOrder (NFirst, NLast),
+    OffsetExp (OffsetExp),
+    OrderByExp (..),
+    OrderByItem (OrderByItem, oColumn),
+    OrderType (OTAsc, OTDesc),
+    QIdentifier (QIdentifier),
+    Qual (QualTable, QualVar, QualifiedIdentifier),
+    RetExp (RetExp),
+    SQLConflict (..),
+    SQLConflictTarget (SQLColumn, SQLConstraint),
+    SQLDelete (SQLDelete),
+    SQLExp (..),
+    SQLInsert (SQLInsert, siCols, siConflict, siRet, siTable, siValues),
+    SQLOp (SQLOp),
+    SQLUpdate (SQLUpdate),
+    Select (Select, selCTEs, selDistinct, selExtr, selFrom, selLimit, selOffset, selOrderBy, selWhere),
+    SelectWith,
+    SelectWithG (SelectWith),
+    SetExp (SetExp),
+    SetExpItem (..),
+    TupleExp (TupleExp),
+    TypeAnn (TypeAnn),
+    ValuesExp (ValuesExp),
+    WhereFrag (WhereFrag),
+    applyJsonBuildArray,
+    applyJsonBuildObj,
+    applyRowToJson,
+    boolTypeAnn,
+    buildUpsertSetExp,
+    columnDefaultValue,
+    countStar,
+    handleIfNull,
+    incOp,
+    int64ToSQLExp,
+    intToSQLExp,
+    intTypeAnn,
+    jsonTypeAnn,
+    jsonbConcatOp,
+    jsonbDeleteAtPathOp,
+    jsonbDeleteOp,
+    jsonbPathOp,
+    jsonbTypeAnn,
+    mkExists,
+    mkExtr,
+    mkFunctionAlias,
+    mkIdenFromExp,
+    mkLateralFromItem,
+    mkQIdenExp,
+    mkQIdentifierTable,
+    mkQual,
+    mkRowExp,
+    mkSIdenExp,
+    mkSQLOpExp,
+    mkSelFromExp,
+    mkSelFromItem,
+    mkSelect,
+    mkSelectWithFromItem,
+    mkSimpleFromExp,
+    mkTypeAnn,
+    mulOp,
+    numericTypeAnn,
+    returningStar,
+    selectStar,
+    selectStar',
+    simplifyBoolExp,
+    textArrTypeAnn,
+    textTypeAnn,
+    toAlias,
+    withTyAnn,
+  )
+where
 
 import Data.Aeson qualified as J
 import Data.Aeson.Casing qualified as J
@@ -158,9 +249,6 @@ mkSelFromExp isLateral sel tn =
   FISelect (Lateral isLateral) sel alias
   where
     alias = Alias $ toIdentifier tn
-
-mkFuncFromItem :: QualifiedFunction -> FunctionArgs -> FromItem
-mkFuncFromItem qf args = FIFunc $ FunctionExp qf args Nothing
 
 mkRowExp :: [Extractor] -> SQLExp
 mkRowExp extrs =
@@ -485,17 +573,6 @@ applyRowToJson :: [Extractor] -> SQLExp
 applyRowToJson extrs =
   SEFnApp "row_to_json" [mkRowExp extrs] Nothing
 
-getExtrAlias :: Extractor -> Maybe Alias
-getExtrAlias (Extractor _ ma) = ma
-
-mkAliasedExtr :: (IsIdentifier a, IsIdentifier b) => a -> Maybe b -> Extractor
-mkAliasedExtr t = mkAliasedExtrFromExp (mkSIdenExp t)
-
-mkAliasedExtrFromExp :: (IsIdentifier a) => SQLExp -> Maybe a -> Extractor
-mkAliasedExtrFromExp sqlExp ma = Extractor sqlExp (aliasF <$> ma)
-  where
-    aliasF = Alias . toIdentifier
-
 mkExtr :: (IsIdentifier a) => a -> Extractor
 mkExtr t = Extractor (mkSIdenExp t) Nothing
 
@@ -564,10 +641,6 @@ instance NFData FunctionAlias
 instance Cacheable FunctionAlias
 
 instance Hashable FunctionAlias
-
-mkSimpleFunctionAlias :: Identifier -> FunctionAlias
-mkSimpleFunctionAlias identifier =
-  FunctionAlias (toAlias identifier) Nothing
 
 mkFunctionAlias :: Identifier -> Maybe [(PGCol, PGScalarType)] -> FunctionAlias
 mkFunctionAlias identifier listM =
@@ -858,10 +931,6 @@ instance Show CompareOp where
 instance ToSQL CompareOp where
   toSQL = fromString . show
 
-buildInsVal :: PGCol -> Int -> (PGCol, SQLExp)
-buildInsVal colName argNumber =
-  (colName, SEPrep argNumber)
-
 data SQLDelete = SQLDelete
   { delTable :: !QualifiedTable,
     delUsing :: !(Maybe UsingExp),
@@ -884,10 +953,6 @@ newtype SetExp = SetExp [SetExpItem]
 
 newtype SetExpItem = SetExpItem (PGCol, SQLExp)
   deriving (Show, Eq)
-
-buildSEI :: PGCol -> Int -> SetExpItem
-buildSEI colName argNumber =
-  SetExpItem (colName, SEPrep argNumber)
 
 buildUpsertSetExp ::
   [PGCol] ->

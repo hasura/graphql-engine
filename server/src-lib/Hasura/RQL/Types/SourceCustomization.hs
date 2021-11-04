@@ -1,6 +1,18 @@
 {-# LANGUAGE UndecidableInstances #-}
 
-module Hasura.RQL.Types.SourceCustomization where
+module Hasura.RQL.Types.SourceCustomization
+  ( SourceTypeCustomization,
+    RootFieldsCustomization (..),
+    mkCustomizedTypename,
+    emptySourceCustomization,
+    getSourceTypeCustomization,
+    getRootFieldsCustomization,
+    mkRootFieldName,
+    SourceCustomization (..),
+    withSourceCustomization,
+    MkRootFieldName,
+  )
+where
 
 import Control.Lens
 import Data.Aeson.Extended

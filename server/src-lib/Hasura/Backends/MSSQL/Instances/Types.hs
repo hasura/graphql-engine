@@ -1,6 +1,6 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
-module Hasura.Backends.MSSQL.Instances.Types where
+module Hasura.Backends.MSSQL.Instances.Types () where
 
 import Data.Aeson
 import Database.ODBC.SQLServer qualified as ODBC

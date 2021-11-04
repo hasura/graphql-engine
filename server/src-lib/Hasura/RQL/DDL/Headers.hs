@@ -1,4 +1,10 @@
-module Hasura.RQL.DDL.Headers where
+module Hasura.RQL.DDL.Headers
+  ( HeaderConf (..),
+    HeaderValue (HVEnv, HVValue),
+    makeHeadersFromConf,
+    toHeadersConf,
+  )
+where
 
 import Data.Aeson
 import Data.CaseInsensitive qualified as CI

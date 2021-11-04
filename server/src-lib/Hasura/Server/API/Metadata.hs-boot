@@ -1,4 +1,7 @@
-module Hasura.Server.API.Metadata where
+module Hasura.Server.API.Metadata
+  ( RQLMetadataV1 (..),
+  )
+where
 
 import Hasura.RQL.DDL.Action
 import Hasura.RQL.DDL.ComputedField

@@ -1,7 +1,7 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
 -- | Instances that're slow to compile.
-module Hasura.Backends.MSSQL.Types.Instances where
+module Hasura.Backends.MSSQL.Types.Instances () where
 
 import Data.Aeson.Extended
 import Data.Aeson.Types

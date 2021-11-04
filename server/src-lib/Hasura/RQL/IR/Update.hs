@@ -1,4 +1,10 @@
-module Hasura.RQL.IR.Update where
+module Hasura.RQL.IR.Update
+  ( AnnUpd,
+    AnnUpdG (..),
+    UpdOpExpG (..),
+    updateOperatorText,
+  )
+where
 
 import Data.Kind (Type)
 import Hasura.Prelude

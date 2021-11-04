@@ -2,7 +2,18 @@
 {-# LANGUAGE NoGeneralisedNewtypeDeriving #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
-module Hasura.Backends.BigQuery.Source where
+module Hasura.Backends.BigQuery.Source
+  ( BigQueryConnSourceConfig (..),
+    BigQuerySourceConfig (..),
+    ConfigurationInput (..),
+    ConfigurationInputs (..),
+    ConfigurationJSON (..),
+    GoogleAccessToken (GoogleAccessToken),
+    PKey (unPKey),
+    ServiceAccount (..),
+    TokenResp (..),
+  )
+where
 
 import Control.Concurrent.MVar
 import Crypto.PubKey.RSA.Types qualified as Cry
@@ -59,9 +70,6 @@ instance J.FromJSON TokenResp where
     TokenResp
       <$> o J..: "access_token"
       <*> o J..: "expires_in"
-
-dummyTokenResp :: TokenResp
-dummyTokenResp = TokenResp (GoogleAccessToken "DUMMY") 0
 
 data ServiceAccount = ServiceAccount
   { _saClientEmail :: !Text,

@@ -1,4 +1,13 @@
-module Hasura.Server.Types where
+module Hasura.Server.Types
+  ( ExperimentalFeature (..),
+    InstanceId (..),
+    MaintenanceMode (..),
+    PGVersion (PGVersion),
+    RequestId (..),
+    ServerConfigCtx (..),
+    getRequestId,
+  )
+where
 
 import Data.Aeson
 import Data.HashSet qualified as Set

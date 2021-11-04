@@ -1,7 +1,15 @@
 -- | Top-level schema building function. Those are used to construct a schema for a given resource,
 -- such as a table or a function. Those matches what the @BackendSchema@ class expects, and are the
 -- default implementation a fully-fledged backend should support.
-module Hasura.GraphQL.Schema.Build where
+module Hasura.GraphQL.Schema.Build
+  ( buildFunctionMutationFields,
+    buildFunctionQueryFields,
+    buildTableDeleteMutationFields,
+    buildTableInsertMutationFields,
+    buildTableQueryFields,
+    buildTableUpdateMutationFields,
+  )
+where
 
 import Data.Text.Extended
 import Hasura.GraphQL.Parser hiding (EnumValueInfo, field)

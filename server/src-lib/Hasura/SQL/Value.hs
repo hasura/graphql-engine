@@ -1,4 +1,7 @@
-module Hasura.SQL.Value where
+module Hasura.SQL.Value
+  ( TxtEncodedVal (..),
+  )
+where
 
 import Data.Aeson qualified as A
 import Data.Aeson.Types qualified as AT

@@ -1,5 +1,15 @@
 -- | Planning T-SQL queries and subscriptions.
-module Hasura.Backends.MSSQL.Plan where
+module Hasura.Backends.MSSQL.Plan
+  ( PrepareState (..),
+    planQuery,
+    planSubscription,
+    prepareValueQuery,
+    resultAlias,
+    resultIdAlias,
+    resultVarsAlias,
+    rowAlias,
+  )
+where
 
 -- TODO: Re-add the export list after cleaning up the module
 -- ( planQuery
@@ -122,15 +132,15 @@ collapseMap selects =
 --------------------------------------------------------------------------------
 -- Session variables
 
-globalSessionExpression :: Expression
-globalSessionExpression =
-  ValueExpression (ODBC.TextValue "current_setting('hasura.user')::json")
+-- globalSessionExpression :: Expression
+-- globalSessionExpression =
+--   ValueExpression (ODBC.TextValue "current_setting('hasura.user')::json")
 
 --------------------------------------------------------------------------------
 -- Resolving values
 
-data PrepareError
-  = FromIrError (NonEmpty Error)
+-- data PrepareError
+--   = FromIrError (NonEmpty Error)
 
 data PrepareState = PrepareState
   { positionalArguments :: ![RQL.ColumnValue 'MSSQL],

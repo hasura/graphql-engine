@@ -1,4 +1,13 @@
-module Hasura.GraphQL.Execute.Backend where
+module Hasura.GraphQL.Execute.Backend
+  ( BackendExecute (..),
+    DBStepInfo (..),
+    ExecutionPlan,
+    ExecutionStep (..),
+    ExplainPlan (..),
+    MonadQueryTags (..),
+    convertRemoteSourceRelationship,
+  )
+where
 
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Aeson qualified as J

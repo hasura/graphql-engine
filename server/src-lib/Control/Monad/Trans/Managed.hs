@@ -1,4 +1,11 @@
-module Control.Monad.Trans.Managed where
+module Control.Monad.Trans.Managed
+  ( ManagedT (..),
+    allocate,
+    allocate_,
+    lowerManagedT,
+    hoistManagedTReaderT,
+  )
+where
 
 import Control.Concurrent qualified as C
 import Control.Exception.Lifted (bracket, bracket_)

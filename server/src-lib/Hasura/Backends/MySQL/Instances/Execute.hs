@@ -1,6 +1,6 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
-module Hasura.Backends.MySQL.Instances.Execute where
+module Hasura.Backends.MySQL.Instances.Execute () where
 
 import Data.Aeson as J
 import Data.Bifunctor

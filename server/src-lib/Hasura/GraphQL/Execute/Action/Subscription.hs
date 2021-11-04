@@ -1,5 +1,8 @@
 -- | Module related to async action query subscriptions
-module Hasura.GraphQL.Execute.Action.Subscription where
+module Hasura.GraphQL.Execute.Action.Subscription
+  ( asyncActionSubscriptionsProcessor,
+  )
+where
 
 import Control.Concurrent.Extended qualified as C
 import Control.Concurrent.STM qualified as STM

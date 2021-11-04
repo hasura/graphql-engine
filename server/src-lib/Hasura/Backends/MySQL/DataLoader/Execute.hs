@@ -3,7 +3,13 @@
 -- |
 --
 -- Execute the plan given from .Plan.
-module Hasura.Backends.MySQL.DataLoader.Execute where
+module Hasura.Backends.MySQL.DataLoader.Execute
+  ( OutputValue (..),
+    RecordSet (..),
+    execute,
+    runExecute,
+  )
+where
 
 import Control.Monad.IO.Class
 import Data.Aeson hiding (Value)
@@ -30,7 +36,7 @@ import Hasura.Backends.MySQL.Types hiding
     ScalarValue,
     selectWhere,
   )
-import Hasura.Backends.MySQL.Types qualified as MySQL
+-- import Hasura.Backends.MySQL.Types qualified as MySQL
 import Hasura.GraphQL.Parser ()
 -- Brings an instance for Hashable (Vector a)...
 import Hasura.Prelude hiding
@@ -219,6 +225,7 @@ getFinalRecordSet HeadAndTail {..} = do
             (rows tailSet)
       }
 
+{- WIP, it seems:
 -- | Make an lhs_fk IN (rhs_fk1, rhs_fk2, ..) expression list.
 makeRelationshipIn :: DataLoaderPlan.Relationship -> Execute [Expression]
 makeRelationshipIn
@@ -241,6 +248,7 @@ makeRelationshipIn
 planFieldNameToQueryFieldName :: EntityAlias -> FieldName -> MySQL.FieldName
 planFieldNameToQueryFieldName (EntityAlias fieldNameEntity) (FieldName fieldName) =
   MySQL.FieldName {fNameEntity = fieldNameEntity, fName = fieldName}
+-}
 
 -- | Inefficient but clean left object join.
 leftObjectJoin ::

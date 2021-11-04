@@ -1,4 +1,7 @@
-module Hasura.Server.Middleware where
+module Hasura.Server.Middleware
+  ( corsMiddleware,
+  )
+where
 
 import Control.Applicative
 import Data.ByteString qualified as B

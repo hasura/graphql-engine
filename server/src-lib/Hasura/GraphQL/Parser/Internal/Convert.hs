@@ -2,7 +2,11 @@
 -- representations of values in the schema; most commonly: GraphQL literals,
 -- JSON values, and 'InputValue', a type that provides an abstraction above both
 -- of those.
-module Hasura.GraphQL.Parser.Internal.Convert where
+module Hasura.GraphQL.Parser.Internal.Convert
+  ( jsonToGraphQL,
+    valueToJSON,
+  )
+where
 
 import Data.Aeson qualified as A
 import Data.HashMap.Strict.Extended qualified as M

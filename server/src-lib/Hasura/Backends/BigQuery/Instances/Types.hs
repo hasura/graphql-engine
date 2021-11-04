@@ -1,6 +1,6 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
-module Hasura.Backends.BigQuery.Instances.Types where
+module Hasura.Backends.BigQuery.Instances.Types () where
 
 import Data.Aeson
 import Hasura.Backends.BigQuery.Source qualified as BigQuery

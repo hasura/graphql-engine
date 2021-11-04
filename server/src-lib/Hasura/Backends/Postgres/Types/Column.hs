@@ -1,4 +1,7 @@
-module Hasura.Backends.Postgres.Types.Column where
+module Hasura.Backends.Postgres.Types.Column
+  ( unsafePGColumnToBackend,
+  )
+where
 
 import Hasura.Backends.Postgres.Instances.Types ()
 import Hasura.Backends.Postgres.SQL.Types

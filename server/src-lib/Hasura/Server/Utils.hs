@@ -1,4 +1,42 @@
-module Hasura.Server.Utils where
+module Hasura.Server.Utils
+  ( APIVersion (..),
+    DeprecatedEnvVars (..),
+    EnvVarsMovedToMetadata (..),
+    adminSecretHeader,
+    commonClientHeadersIgnored,
+    cryptoHash,
+    deprecatedAccessKeyHeader,
+    deprecatedEnvVars,
+    englishList,
+    envVarsMovedToMetadata,
+    executeJSONPath,
+    filterHeaders,
+    fmapL,
+    generateFingerprint,
+    getRequestHeader,
+    getValFromEnvOrScript,
+    gzipHeader,
+    httpExceptToJSON,
+    isReqUserId,
+    isSessionVariable,
+    jsonHeader,
+    makeReasonMessage,
+    mkClientHeadersForward,
+    mkSetCookieHeaders,
+    parseConnLifeTime,
+    parseStringAsBool,
+    quoteRegex,
+    readIsoLevel,
+    redactSensitiveHeader,
+    requestIdHeader,
+    sqlHeader,
+    htmlHeader,
+    useBackendOnlyPermissionsHeader,
+    userIdHeader,
+    userRoleHeader,
+    sessionVariablePrefix,
+  )
+where
 
 import Control.Lens ((^..))
 import Crypto.Hash qualified as Crypto
@@ -167,18 +205,6 @@ commonClientHeadersIgnored =
     "Content-Type"
   ]
 
-commonResponseHeadersIgnored :: (IsString a) => [a]
-commonResponseHeadersIgnored =
-  [ "Server",
-    "Transfer-Encoding",
-    "Cache-Control",
-    "Access-Control-Allow-Credentials",
-    "Access-Control-Allow-Methods",
-    "Access-Control-Allow-Origin",
-    "Content-Type",
-    "Content-Length"
-  ]
-
 sessionVariablePrefix :: Text
 sessionVariablePrefix = "x-hasura-"
 
@@ -209,26 +235,8 @@ filterRequestHeaders :: [HTTP.Header] -> [HTTP.Header]
 filterRequestHeaders =
   filterHeaders $ Set.fromList commonClientHeadersIgnored
 
--- ignore the following response headers from remote
-filterResponseHeaders :: [HTTP.Header] -> [HTTP.Header]
-filterResponseHeaders =
-  filterHeaders $ Set.fromList commonResponseHeadersIgnored
-
 filterHeaders :: Set.HashSet HTTP.HeaderName -> [HTTP.Header] -> [HTTP.Header]
 filterHeaders list = filter (\(n, _) -> not $ n `Set.member` list)
-
-hyphenate :: String -> String
-hyphenate = u . applyFirst toLower
-  where
-    u [] = []
-    u (x : xs)
-      | isUpper x = '-' : toLower x : hyphenate xs
-      | otherwise = x : u xs
-
-applyFirst :: (Char -> Char) -> String -> String
-applyFirst _ [] = []
-applyFirst f [x] = [f x]
-applyFirst f (x : xs) = f x : xs
 
 -- | The version integer
 data APIVersion

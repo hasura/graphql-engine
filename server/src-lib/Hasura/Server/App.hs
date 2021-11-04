@@ -1,6 +1,29 @@
 {-# LANGUAGE CPP #-}
 
-module Hasura.Server.App where
+module Hasura.Server.App
+  ( APIResp (JSONResp),
+    ConsoleRenderer (..),
+    Handler,
+    HandlerCtx (hcReqHeaders, hcServerCtx, hcUser),
+    HasuraApp (HasuraApp),
+    MonadConfigApiHandler (..),
+    MonadMetadataApiAuthorization (..),
+    SchemaCacheRef (..),
+    ServerCtx (scManager),
+    boolToText,
+    configApiGetHandler,
+    getSCFromRef,
+    initialiseCache,
+    isAdminSecretSet,
+    logInconsObjs,
+    mkGetHandler,
+    mkSpockAction,
+    mkWaiApp,
+    onlyAdmin,
+    renderHtmlTemplate,
+    withSCUpdate,
+  )
+where
 
 import Control.Concurrent.Async.Lifted.Safe qualified as LA
 import Control.Concurrent.MVar.Lifted

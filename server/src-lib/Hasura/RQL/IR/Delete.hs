@@ -1,4 +1,8 @@
-module Hasura.RQL.IR.Delete where
+module Hasura.RQL.IR.Delete
+  ( AnnDel,
+    AnnDelG (..),
+  )
+where
 
 import Data.Kind (Type)
 import Hasura.Prelude

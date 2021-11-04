@@ -1,6 +1,6 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
-module Hasura.Backends.MySQL.Instances.Metadata where
+module Hasura.Backends.MySQL.Instances.Metadata () where
 
 import Hasura.Backends.MySQL.Connection qualified as MySQL
 import Hasura.Prelude

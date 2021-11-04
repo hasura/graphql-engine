@@ -2,7 +2,7 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
 -- | This module defines all missing instances of third party libraries.
-module Hasura.Base.Instances where
+module Hasura.Base.Instances () where
 
 import Data.Aeson qualified as J
 import Data.Functor.Product

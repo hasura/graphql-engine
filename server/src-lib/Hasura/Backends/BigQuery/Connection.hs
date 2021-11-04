@@ -1,6 +1,13 @@
 {-# LANGUAGE NumericUnderscores #-}
 
-module Hasura.Backends.BigQuery.Connection where
+module Hasura.Backends.BigQuery.Connection
+  ( BigQueryProblem,
+    resolveConfigurationInput,
+    resolveConfigurationInputs,
+    resolveConfigurationJson,
+    runBigQuery,
+  )
+where
 
 import Control.Concurrent.MVar
 import Control.Exception
@@ -10,7 +17,6 @@ import Crypto.PubKey.RSA.Types as Cry (Error)
 import Data.Aeson qualified as J
 import Data.Aeson.Casing qualified as J
 import Data.Aeson.TH qualified as J
-import Data.Bifunctor (bimap)
 import Data.ByteArray.Encoding qualified as BAE
 import Data.ByteString qualified as BS
 import Data.ByteString.Char8 qualified as B8
@@ -155,10 +161,6 @@ getAccessToken sa = do
                     "exp" J..= (n + maxTokenLifetime),
                     "iss" J..= _saClientEmail
                   ]
-
-getServiceAccount :: MonadIO m => FilePath -> m (Either ServiceAccountProblem ServiceAccount)
-getServiceAccount serviceAccountFilePath =
-  bimap ServiceAccountFileDecodeProblem id . J.eitherDecode' <$> liftIO (BL.readFile serviceAccountFilePath)
 
 -- | Get a usable token. If the token has expired refresh it.
 getUsableToken :: MonadIO m => BigQuerySourceConfig -> m (Either TokenProblem TokenResp)

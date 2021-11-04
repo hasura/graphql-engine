@@ -1,5 +1,9 @@
 -- | Classes for monads used during schema construction and query parsing.
-module Hasura.GraphQL.Parser.Class.Parse where
+module Hasura.GraphQL.Parser.Class.Parse
+  ( MonadParse (..),
+    parseError,
+  )
+where
 
 import Data.Parser.JSONPath
 import Hasura.Base.Error

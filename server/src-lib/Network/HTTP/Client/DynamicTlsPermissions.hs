@@ -1,4 +1,7 @@
-module Network.HTTP.Client.DynamicTlsPermissions where
+module Network.HTTP.Client.DynamicTlsPermissions
+  ( mkMgr,
+  )
+where
 
 import Control.Exception.Safe (Exception, Typeable, impureThrow)
 import Data.ByteString.Char8 qualified as BC

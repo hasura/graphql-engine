@@ -1,4 +1,4 @@
-module Network.HTTP.Client.TransformableSpec where
+module Network.HTTP.Client.TransformableSpec (spec) where
 
 --import           Data.Aeson                        (eitherDecodeStrict)
 

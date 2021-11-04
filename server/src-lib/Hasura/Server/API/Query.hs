@@ -1,5 +1,11 @@
 -- | The RQL query ('/v1/query')
-module Hasura.Server.API.Query where
+module Hasura.Server.API.Query
+  ( RQLQuery,
+    queryModifiesSchemaCache,
+    requiresAdmin,
+    runQuery,
+  )
+where
 
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Control.Monad.Unique
@@ -8,7 +14,6 @@ import Data.Aeson.Casing
 import Data.Aeson.TH
 import Data.Environment qualified as Env
 import Data.Has (Has)
-import Database.PG.Query qualified as Q
 import Hasura.Backends.Postgres.DDL.RunSQL
 import Hasura.Base.Error
 import Hasura.EncJSON
@@ -277,41 +282,6 @@ queryModifiesSchemaCache (RQV2 qi) = case qi of
   RQV2SetTableCustomFields _ -> True
   RQV2TrackFunction _ -> True
   RQV2ReplaceMetadata _ -> True
-
-getQueryAccessMode :: (MonadError QErr m) => RQLQuery -> m Q.TxAccess
-getQueryAccessMode q = fromMaybe Q.ReadOnly <$> getQueryAccessMode' q
-  where
-    getQueryAccessMode' ::
-      (MonadError QErr m) => RQLQuery -> m (Maybe Q.TxAccess)
-    getQueryAccessMode' (RQV1 q') =
-      case q' of
-        RQSelect _ -> pure Nothing
-        RQCount _ -> pure Nothing
-        RQRunSql RunSQL {rTxAccessMode} -> pure $ Just rTxAccessMode
-        RQBulk qs -> foldM reconcileAccessModeWith Nothing (zip [0 :: Integer ..] qs)
-        _ -> pure $ Just Q.ReadWrite
-      where
-        reconcileAccessModeWith expectedMode (i, query) = do
-          queryMode <- getQueryAccessMode' query
-          onLeft (reconcileAccessModes expectedMode queryMode) $ \errMode ->
-            throw400 BadRequest $
-              "incompatible access mode requirements in bulk query, "
-                <> "expected access mode: "
-                <> maybe "ANY" tshow expectedMode
-                <> " but "
-                <> "$.args["
-                <> tshow i
-                <> "] forces "
-                <> tshow errMode
-    getQueryAccessMode' (RQV2 _) = pure $ Just Q.ReadWrite
-
--- | onRight, return reconciled access mode. onLeft, return conflicting access mode
-reconcileAccessModes :: Maybe Q.TxAccess -> Maybe Q.TxAccess -> Either Q.TxAccess (Maybe Q.TxAccess)
-reconcileAccessModes Nothing mode = pure mode
-reconcileAccessModes mode Nothing = pure mode
-reconcileAccessModes (Just mode1) (Just mode2)
-  | mode1 == mode2 = pure $ Just mode1
-  | otherwise = Left mode2
 
 runQueryM ::
   ( CacheRWM m,

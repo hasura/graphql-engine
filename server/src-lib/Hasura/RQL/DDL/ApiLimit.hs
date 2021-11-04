@@ -1,4 +1,8 @@
-module Hasura.RQL.DDL.ApiLimit where
+module Hasura.RQL.DDL.ApiLimit
+  ( runRemoveApiLimits,
+    runSetApiLimits,
+  )
+where
 
 import Control.Lens ((.~))
 import Hasura.Base.Error

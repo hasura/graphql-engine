@@ -1,4 +1,11 @@
-module Hasura.RQL.Types.Backend where
+module Hasura.RQL.Types.Backend
+  ( Backend (..),
+    Representable,
+    SessionVarType,
+    XDisable,
+    XEnable,
+  )
+where
 
 import Data.Aeson.Extended
 import Data.Kind (Type)

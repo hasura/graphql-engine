@@ -1,4 +1,39 @@
-module Hasura.RQL.Types.Metadata.Object where
+module Hasura.RQL.Types.Metadata.Object
+  ( InconsistentMetadata (..),
+    InconsistentRoleEntity (..),
+    MetadataObjId (..),
+    MetadataObject (..),
+    SourceMetadataObjId (..),
+    TableMetadataObjId (..),
+    droppableInconsistentMetadata,
+    getInconsistentRemoteSchemas,
+    groupInconsistentMetadataById,
+    imObjectIds,
+    imReason,
+    moDefinition,
+    moId,
+    moiName,
+    moiTypeName,
+    _AmbiguousRestEndpoints,
+    _ConflictingInheritedPermission,
+    _ConflictingObjects,
+    _DuplicateObjects,
+    _DuplicateRestVariables,
+    _InconsistentObject,
+    _InvalidRestSegments,
+    _MOAction,
+    _MOActionPermission,
+    _MOCronTrigger,
+    _MOCustomTypes,
+    _MOEndpoint,
+    _MOHostTlsAllowlist,
+    _MOInheritedRole,
+    _MORemoteSchema,
+    _MORemoteSchemaPermissions,
+    _MOSource,
+    _MOSourceObjId,
+  )
+where
 
 import Control.Lens hiding (set, (.=))
 import Data.Aeson.Types

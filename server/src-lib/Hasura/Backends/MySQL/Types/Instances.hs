@@ -2,7 +2,7 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
 -- | Instances that're slow to compile.
-module Hasura.Backends.MySQL.Types.Instances where
+module Hasura.Backends.MySQL.Types.Instances () where
 
 import Control.DeepSeq
 import Data.Aeson qualified as J

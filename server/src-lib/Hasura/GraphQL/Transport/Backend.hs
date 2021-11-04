@@ -1,4 +1,7 @@
-module Hasura.GraphQL.Transport.Backend where
+module Hasura.GraphQL.Transport.Backend
+  ( BackendTransport (..),
+  )
+where
 
 import Data.ByteString qualified as B
 import Hasura.Base.Error

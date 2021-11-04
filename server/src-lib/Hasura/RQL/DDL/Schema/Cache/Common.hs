@@ -3,7 +3,41 @@
 
 -- | Types/functions shared between modules that implement "Hasura.RQL.DDL.Schema.Cache". Other
 -- modules should not import this module directly.
-module Hasura.RQL.DDL.Schema.Cache.Common where
+module Hasura.RQL.DDL.Schema.Cache.Common
+  ( BuildOutputs (..),
+    CacheBuild,
+    CacheBuildParams (CacheBuildParams),
+    InvalidationKeys (..),
+    ikMetadata,
+    ikRemoteSchemas,
+    ikSources,
+    NonColumnTableInputs (..),
+    RebuildableSchemaCache (RebuildableSchemaCache, lastBuiltSchemaCache),
+    TableBuildInput (TableBuildInput, _tbiName),
+    TablePermissionInputs (..),
+    addTableContext,
+    bindErrorA,
+    boAllowlist,
+    boApiLimits,
+    boMetricsConfig,
+    boTlsAllowlist,
+    boActions,
+    boCronTriggers,
+    boCustomTypes,
+    boEndpoints,
+    boRemoteSchemas,
+    boRoles,
+    boSources,
+    buildInfoMap,
+    buildInfoMapPreservingMetadata,
+    initialInvalidationKeys,
+    invalidateKeys,
+    mkTableInputs,
+    runCacheBuild,
+    runCacheBuildM,
+    withRecordDependencies,
+  )
+where
 
 import Control.Arrow.Extended
 import Control.Lens
@@ -139,7 +173,7 @@ data CacheBuildParams = CacheBuildParams
   }
 
 -- | The monad in which @'RebuildableSchemaCache' is being run
-newtype CacheBuild a = CacheBuild {unCacheBuild :: ReaderT CacheBuildParams (ExceptT QErr IO) a}
+newtype CacheBuild a = CacheBuild (ReaderT CacheBuildParams (ExceptT QErr IO) a)
   deriving
     ( Functor,
       Applicative,
@@ -193,8 +227,6 @@ data RebuildableSchemaCache = RebuildableSchemaCache
     _rscInvalidationMap :: !InvalidationKeys,
     _rscRebuild :: !(Inc.Rule (ReaderT BuildReason CacheBuild) (Metadata, InvalidationKeys) SchemaCache)
   }
-
-$(makeLenses ''RebuildableSchemaCache)
 
 bindErrorA ::
   (ArrowChoice arr, ArrowKleisli m arr, ArrowError e arr, MonadError e m) =>

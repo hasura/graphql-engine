@@ -1,4 +1,19 @@
-module Hasura.GraphQL.Execute.Action.Types where
+module Hasura.GraphQL.Execute.Action.Types
+  ( ActionContext (..),
+    ActionExecution (..),
+    ActionExecutionPlan (..),
+    ActionHandlerLog (..),
+    ActionInternalError (..),
+    ActionRequestInfo (..),
+    ActionResponseInfo (..),
+    ActionWebhookErrorResponse (..),
+    ActionWebhookPayload (..),
+    ActionWebhookResponse (..),
+    AsyncActionQueryExecution (..),
+    AsyncActionQueryExecutionPlan (..),
+    AsyncActionQuerySourceExecution (..),
+  )
+where
 
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Aeson qualified as J

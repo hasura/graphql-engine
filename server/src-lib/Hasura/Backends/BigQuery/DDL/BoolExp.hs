@@ -1,4 +1,7 @@
-module Hasura.Backends.BigQuery.DDL.BoolExp where
+module Hasura.Backends.BigQuery.DDL.BoolExp
+  ( parseBoolExpOperations,
+  )
+where
 
 import Data.Aeson qualified as J
 import Data.HashMap.Strict qualified as Map

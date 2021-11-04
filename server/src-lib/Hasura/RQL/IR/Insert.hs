@@ -9,7 +9,28 @@
 -- TODO: the distinction between single-row inserts and multi-rows inserts does not
 -- need to be enforced the way it currently is, with booleans and different
 -- types. The distinction could be made in the translation layer, if need be.
-module Hasura.RQL.IR.Insert where
+module Hasura.RQL.IR.Insert
+  ( AnnIns (..),
+    AnnInsert (..),
+    AnnotatedInsert (..),
+    AnnotatedInsertRow,
+    ArrRelIns,
+    ConflictClauseP1 (..),
+    ConflictTarget (..),
+    InsertQueryP1 (..),
+    MultiObjIns,
+    ObjRelIns,
+    RelIns (..),
+    Single (..),
+    SingleObjIns,
+    getInsertArrayRelationships,
+    getInsertColumns,
+    getInsertObjectRelationships,
+    _AIArrayRelationship,
+    _AIColumn,
+    _AIObjectRelationship,
+  )
+where
 
 import Control.Lens ((^?))
 import Control.Lens.TH (makePrisms)

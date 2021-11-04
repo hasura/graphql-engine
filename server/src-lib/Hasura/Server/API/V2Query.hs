@@ -1,5 +1,10 @@
 -- | The RQL query ('/v2/query')
-module Hasura.Server.API.V2Query where
+module Hasura.Server.API.V2Query
+  ( RQLQuery,
+    queryModifiesSchema,
+    runQuery,
+  )
+where
 
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Aeson

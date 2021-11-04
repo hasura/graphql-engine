@@ -40,6 +40,8 @@ common common-all
     -Wall -Wcompat -Wincomplete-record-updates -Wincomplete-uni-patterns -Wredundant-constraints
     -- This is just to keep compile-times in check and might be adjusted later (See mono #2610):
     -fmax-simplifier-iterations=2
+    -- Insisting on export lists might help with compile times, and help to document modules:
+    -Wmissing-export-lists
 
   if flag(developer)
     cpp-options: -DDeveloperAPIs

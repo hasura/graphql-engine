@@ -1,6 +1,6 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
-module Hasura.Backends.BigQuery.Instances.API where
+module Hasura.Backends.BigQuery.Instances.API () where
 
 import Hasura.Prelude
 import Hasura.SQL.Backend

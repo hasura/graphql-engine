@@ -1,6 +1,28 @@
 {-# LANGUAGE UndecidableInstances #-}
 
-module Hasura.Backends.Postgres.Translate.Types where
+module Hasura.Backends.Postgres.Translate.Types
+  ( ApplySortingAndSlicing (ApplySortingAndSlicing),
+    ArrayConnectionSource (ArrayConnectionSource, _acsSource),
+    ArrayRelationSource (ArrayRelationSource),
+    ComputedFieldTableSetSource (ComputedFieldTableSetSource),
+    DistinctAndOrderByExpr (ASorting),
+    JoinTree (..),
+    MultiRowSelectNode (..),
+    ObjectRelationSource (ObjectRelationSource),
+    ObjectSelectSource (ObjectSelectSource, _ossPrefix),
+    PermissionLimitSubQuery (..),
+    SelectNode (SelectNode),
+    SelectSlicing (SelectSlicing, _ssLimit, _ssOffset),
+    SelectSorting (..),
+    SelectSource (SelectSource, _ssPrefix),
+    SortingAndSlicing (SortingAndSlicing),
+    SourcePrefixes (..),
+    applySortingAndSlicing,
+    noSortingAndSlicing,
+    objectSelectSourceToSelectSource,
+    orderByForJsonAgg,
+  )
+where
 
 import Data.HashMap.Strict qualified as HM
 import Data.Int (Int64)

@@ -1,4 +1,7 @@
-module Hasura.GraphQL.Schema.RemoteSource where
+module Hasura.GraphQL.Schema.RemoteSource
+  ( remoteSourceField,
+  )
+where
 
 import Hasura.GraphQL.Parser
 import Hasura.GraphQL.Schema.Backend
