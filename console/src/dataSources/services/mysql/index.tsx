@@ -201,6 +201,7 @@ WHERE
     throw new Error('not implemented');
   },
   schemaListSql,
+  schemaListQuery: '',
   dependencyErrorCode: '',
   columnDataTypes,
   commonDataTypes,

@@ -10,6 +10,7 @@ import { Provider } from 'react-redux';
 import { Router, browserHistory } from 'react-router';
 import { syncHistoryWithStore } from 'react-router-redux';
 import { useBasename } from 'history';
+import { ReactQueryProvider } from './lib/reactQuery';
 import './theme/tailwind.css';
 
 import getRoutes from './routes';
@@ -60,11 +61,13 @@ const Main = () => {
     basename: globals.urlPrefix,
   });
   return (
-    <Router
-      history={routeHistory}
-      routes={getRoutes(store)}
-      onUpdate={hashLinkScroll}
-    />
+    <ReactQueryProvider>
+      <Router
+        history={routeHistory}
+        routes={getRoutes(store)}
+        onUpdate={hashLinkScroll}
+      />
+    </ReactQueryProvider>
   );
 };
 
