@@ -188,7 +188,7 @@ data ServerMsg
 data ServerErrorCode
   = ProtocolError1002
   | GenericError4400 !String
-  | UnAuthorized4401
+  | Unauthorized4401
   | Forbidden4403
   | ConnectionInitTimeout4408
   | NonUniqueSubscription4409 !OperationId
@@ -199,7 +199,7 @@ encodeServerErrorMsg :: ServerErrorCode -> BL.ByteString
 encodeServerErrorMsg ecode = encJToLBS . encJFromJValue $ case ecode of
   ProtocolError1002 -> packMsg "1002: Protocol Error"
   GenericError4400 msg -> packMsg $ "4400: " <> msg
-  UnAuthorized4401 -> packMsg "4401: Unauthorized"
+  Unauthorized4401 -> packMsg "4401: Unauthorized"
   Forbidden4403 -> packMsg "4403: Forbidden"
   ConnectionInitTimeout4408 -> packMsg "4408: Connection initialisation timeout"
   NonUniqueSubscription4409 opId -> packMsg $ "4409: Subscriber for " <> show opId <> " already exists"
