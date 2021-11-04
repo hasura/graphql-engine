@@ -70,6 +70,7 @@ import {
   getDropIndexSql,
   getTableInfo,
   getDatabaseVersionSql,
+  schemaListQuery,
 } from './sqlUtils';
 import globals from '../../../Globals';
 
@@ -794,4 +795,5 @@ export const postgres: DataSourcesAPI = {
   generateEditRowRequest,
   generateDeleteRowRequest,
   generateBulkDeleteRowRequest,
+  schemaListQuery,
 };

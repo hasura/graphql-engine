@@ -141,11 +141,15 @@ const setUntrackedRelations = () => (dispatch, getState) => {
   });
 };
 
+/**
+ * @param {{schemas: string[], tables: import('@/metadata/types').QualifiedTable[]}} [configOptions={}]
+ */
 // todo: it's called 4 times on start
 const loadSchema = (configOptions = {}) => {
   return (dispatch, getState) => {
     const url = Endpoints.query;
 
+    /** @type {import('@/dataSources/types').Table[]} */
     let allSchemas = getState().tables.allSchemas;
     const source = getState().tables.currentDataSource;
     const { currentSchema, schemaList } = getState().tables;
@@ -166,8 +170,8 @@ const loadSchema = (configOptions = {}) => {
         schemaInfo =>
           !configOptions.tables.some(
             item =>
-              item.table_schema === schemaInfo.table_schema &&
-              item.table_name === schemaInfo.table_name
+              item.schema === schemaInfo.table_schema &&
+              item.name === schemaInfo.table_name
           )
       );
     }
@@ -297,6 +301,9 @@ const fetchAdditionalColumnsInfo = () => (dispatch, getState) => {
   );
 };
 
+/**
+ * @param {{schemas: string[], tables?: import('@/metadata/types').QualifiedTable[]}} [options=undefined]
+ */
 const updateSchemaInfo = options => (dispatch, getState) => {
   if (!getState().tables.currentDataSource) return;
   return dispatch(loadSchema(options)).then(data => {

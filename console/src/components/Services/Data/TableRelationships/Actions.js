@@ -554,8 +554,8 @@ const addRelViewMigrate = (tableSchema, toggleEditor) => (
       updateSchemaInfo({
         tables: [
           {
-            table_schema: currentTableSchema,
-            table_name: currentTableName,
+            schema: currentTableSchema,
+            name: currentTableName,
           },
         ],
       })

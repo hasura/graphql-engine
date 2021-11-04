@@ -1,4 +1,4 @@
-import { Table, FrequentlyUsedColumn, IndexType } from '../../types';
+import { FrequentlyUsedColumn, IndexType } from '../../types';
 import { isColTypeString } from '.';
 import { FunctionState } from './types';
 import { QualifiedTable } from '../../../metadata/types';
@@ -15,7 +15,7 @@ export const sqlEscapeText = (rawText: string) => {
 };
 
 const generateWhereClause = (
-  options: { schemas: string[]; tables: Table[] },
+  options: { schemas: string[]; tables?: QualifiedTable[] },
   sqlTableName = 'ist.table_name',
   sqlSchemaName = 'ist.table_schema',
   clausePrefix = 'where'
@@ -28,7 +28,7 @@ const generateWhereClause = (
 
   options.tables?.forEach(tableInfo => {
     whereCondtions.push(
-      `(${sqlSchemaName}='${tableInfo.table_schema}' and ${sqlTableName}='${tableInfo.table_name}')`
+      `(${sqlSchemaName}='${tableInfo.schema}' and ${sqlTableName}='${tableInfo.name}')`
     );
   });
 
@@ -40,7 +40,7 @@ const generateWhereClause = (
 
 export const getFetchTablesListQuery = (options: {
   schemas: string[];
-  tables: Table[];
+  tables?: QualifiedTable[];
 }) => {
   const whereQuery = generateWhereClause(
     options,
@@ -898,7 +898,7 @@ ${functionName ? 'LIMIT 1' : ''}
 
 export const primaryKeysInfoSql = (options: {
   schemas: string[];
-  tables: Table[];
+  tables?: QualifiedTable[];
 }) => `
 SELECT
 COALESCE(
@@ -987,7 +987,7 @@ GROUP BY
 
 export const uniqueKeysSql = (options: {
   schemas: string[];
-  tables: Table[];
+  tables?: QualifiedTable[];
 }) => `
 SELECT
 COALESCE(
@@ -1015,7 +1015,7 @@ FROM (
 
 export const checkConstraintsSql = (options: {
   schemas: string[];
-  tables: Table[];
+  tables?: QualifiedTable[];
 }) => `
 SELECT
 COALESCE(
@@ -1181,7 +1181,7 @@ IS 'trigger to set value of column "${columnName}" to current timestamp on row u
 
 export const getFKRelations = (options: {
   schemas: string[];
-  tables: Table[];
+  tables?: QualifiedTable[];
 }) => `
 SELECT
 	COALESCE(json_agg(row_to_json(info)), '[]'::JSON)
@@ -1311,3 +1311,11 @@ FROM (
 `;
 
 export const getDatabaseVersionSql = 'SELECT version();';
+
+export const schemaListQuery = `
+SELECT schema_name FROM information_schema.schemata
+WHERE
+	schema_name NOT in('information_schema', 'pg_catalog', 'hdb_catalog')
+	AND schema_name NOT LIKE 'pg_toast%'
+	AND schema_name NOT LIKE 'pg_temp_%';
+`;
