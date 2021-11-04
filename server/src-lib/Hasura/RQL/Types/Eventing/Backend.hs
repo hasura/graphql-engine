@@ -1,4 +1,7 @@
-module Hasura.RQL.Types.Eventing.Backend where
+module Hasura.RQL.Types.Eventing.Backend
+  ( BackendEventTrigger (..),
+  )
+where
 
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Aeson

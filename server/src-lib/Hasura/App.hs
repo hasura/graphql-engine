@@ -1,6 +1,39 @@
 {-# LANGUAGE UndecidableInstances #-}
 
-module Hasura.App where
+module Hasura.App
+  ( ExitCode (DatabaseMigrationError, DowngradeProcessError, MetadataCleanError, MetadataExportError, SchemaCacheInitError),
+    ExitException (ExitException),
+    GlobalCtx (GlobalCtx, _gcDefaultPostgresConnInfo, _gcHttpManager, _gcMetadataDbConnInfo),
+    Loggers (..),
+    PGMetadataStorageAppT (runPGMetadataStorageAppT),
+    ServeCtx (ServeCtx, _scLoggers, _scMetadataDbPool, _scShutdownLatch),
+    ShutdownLatch,
+    accessDeniedErrMsg,
+    flushLogger,
+    getCatalogStateTx,
+    initGlobalCtx,
+    initialiseServeCtx,
+    migrateCatalogSchema,
+    mkLoggers,
+    mkPGLogger,
+    newShutdownLatch,
+    notifySchemaCacheSyncTx,
+    parseArgs,
+    printErrExit,
+    printErrJExit,
+    printJSON,
+    printYaml,
+    readTlsAllowlist,
+    resolvePostgresConnInfo,
+    runHGEServer,
+    setCatalogStateTx,
+    shutdownGracefully,
+
+    -- * Exported for testing
+    mkHGEServer,
+    mkPgSourceResolver,
+  )
+where
 
 import Control.Concurrent.Async.Lifted.Safe qualified as LA
 import Control.Concurrent.Extended qualified as C
@@ -63,7 +96,6 @@ import Hasura.RQL.DDL.Schema.Cache.Common
 import Hasura.RQL.DDL.Schema.Catalog
 import Hasura.RQL.Types
 import Hasura.RQL.Types.Eventing.Backend
-import Hasura.RQL.Types.Run
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.Server.API.Query (requiresAdmin)
 import Hasura.Server.App
@@ -935,15 +967,6 @@ mkHGEServer setupHook env ServeOptions {..} ServeCtx {..} initTime postPollHook 
           else unless (processingEventsCount == 0) $ do
             C.sleep (5) -- sleep for 5 seconds and then repeat
             waitForProcessingAction l actionType processingEventsCountAction' shutdownAction (maxTimeout - (Seconds 5))
-
-runAsAdmin ::
-  HTTP.Manager ->
-  ServerConfigCtx ->
-  RunT m a ->
-  m (Either QErr a)
-runAsAdmin httpManager serverConfigCtx m = do
-  let runCtx = RunCtx adminUserInfo httpManager serverConfigCtx
-  runExceptT $ peelRun runCtx m
 
 instance (Monad m) => Tracing.HasReporter (PGMetadataStorageAppT m)
 

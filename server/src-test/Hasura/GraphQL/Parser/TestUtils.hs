@@ -1,4 +1,10 @@
-module Hasura.GraphQL.Parser.TestUtils where
+module Hasura.GraphQL.Parser.TestUtils
+  ( TestMonad (..),
+    fakeScalar,
+    fakeInputFieldValue,
+    fakeDirective,
+  )
+where
 
 import Data.HashMap.Strict qualified as M
 import Data.List.NonEmpty qualified as NE

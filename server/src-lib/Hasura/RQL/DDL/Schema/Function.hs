@@ -1,6 +1,26 @@
 -- |
 -- Description: Create/delete SQL functions to/from Hasura metadata.
-module Hasura.RQL.DDL.Schema.Function where
+module Hasura.RQL.DDL.Schema.Function
+  ( FunctionPermissionArgument (..),
+    SetFunctionCustomization (..),
+    TrackFunction (..),
+    TrackFunctionV2 (..),
+    UnTrackFunction (..),
+    askFunctionInfo,
+    doesFunctionPermissionExist,
+    dropFunctionInMetadata,
+    dropFunctionPermissionInMetadata,
+    handleMultipleFunctions,
+    runCreateFunctionPermission,
+    runDropFunctionPermission,
+    runSetFunctionCustomization,
+    runTrackFunc,
+    runTrackFunctionV2,
+    runUntrackFunc,
+    trackFunctionP1,
+    trackFunctionP2,
+  )
+where
 
 import Control.Lens ((.~), (^.))
 import Data.Aeson

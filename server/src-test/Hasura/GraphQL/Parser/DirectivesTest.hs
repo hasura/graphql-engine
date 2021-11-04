@@ -1,4 +1,4 @@
-module Hasura.GraphQL.Parser.DirectivesTest where
+module Hasura.GraphQL.Parser.DirectivesTest (spec) where
 
 import Data.Dependent.Map qualified as DM
 import Data.Text qualified as T

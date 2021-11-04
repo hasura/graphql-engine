@@ -1,4 +1,7 @@
-module Hasura.GraphQL.Execute.Common where
+module Hasura.GraphQL.Execute.Common
+  ( MonadGQLExecutionCheck (..),
+  )
+where
 
 import Data.Aeson.Ordered qualified as JO
 import Hasura.Base.Error

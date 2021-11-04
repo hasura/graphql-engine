@@ -1,4 +1,33 @@
-module Hasura.RQL.DML.Internal where
+module Hasura.RQL.DML.Internal
+  ( SessionVariableBuilder,
+    askDelPermInfo,
+    askInsPermInfo,
+    askPermInfo',
+    askSelPermInfo,
+    askUpdPermInfo,
+    binRHSBuilder,
+    checkPermOnCol,
+    checkSelOnCol,
+    convAnnBoolExpPartialSQL,
+    convAnnColumnCaseBoolExpPartialSQL,
+    convBoolExp,
+    convPartialSQLExp,
+    dmlTxErrorHandler,
+    fetchRelDet,
+    fetchRelTabInfo,
+    fromCurrentSession,
+    getPermInfoMaybe,
+    getRolePermInfo,
+    isTabUpdatable,
+    onlyPositiveInt,
+    runDMLP1T,
+    sessVarFromCurrentSetting,
+    validateHeaders,
+    valueParserWithCollectableType,
+    verifyAsrns,
+    withTypeAnn,
+  )
+where
 
 import Control.Lens
 import Data.Aeson.Types

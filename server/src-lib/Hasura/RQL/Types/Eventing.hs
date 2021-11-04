@@ -1,5 +1,18 @@
 -- | This module contains types which are common to event triggers and scheduled triggers.
-module Hasura.RQL.Types.Eventing where
+module Hasura.RQL.Types.Eventing
+  ( ClientError (..),
+    EventId (..),
+    Invocation (..),
+    InvocationVersion,
+    PGTextArray (..),
+    Response (..),
+    TriggerTypes (..),
+    WebhookRequest (..),
+    WebhookResponse (..),
+    invocationVersionET,
+    invocationVersionST,
+  )
+where
 
 import Data.Aeson
 import Data.Aeson.TH

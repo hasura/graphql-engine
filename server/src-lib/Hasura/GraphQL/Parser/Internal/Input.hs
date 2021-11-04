@@ -1,5 +1,16 @@
 -- | Defines the 'Parser' type and its primitive combinators.
-module Hasura.GraphQL.Parser.Internal.Input where
+module Hasura.GraphQL.Parser.Internal.Input
+  ( InputFieldsParser (..),
+    enum,
+    field,
+    fieldOptional,
+    fieldWithDefault,
+    inputParserInput,
+    list,
+    object,
+    pInputParser,
+  )
+where
 
 import Control.Lens.Extended hiding (enum, index)
 import Data.Aeson qualified as A

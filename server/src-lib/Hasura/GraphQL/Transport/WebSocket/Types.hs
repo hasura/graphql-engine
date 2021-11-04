@@ -1,4 +1,13 @@
-module Hasura.GraphQL.Transport.WebSocket.Types where
+module Hasura.GraphQL.Transport.WebSocket.Types
+  ( ErrRespType (ERTGraphqlCompliant, ERTLegacy),
+    WSConn,
+    WSConnData (WSConnData, _wscOpMap, _wscUser),
+    WSConnState (CSInitError, CSInitialised, CSNotInitialised),
+    WSServerEnv (WSServerEnv, _wseCorsPolicy, _wseHManager, _wseKeepAliveDelay, _wseLiveQMap, _wseLogger, _wseServer, _wseServerMetrics),
+    WsClientState (WsClientState, wscsIpAddress, wscsReqHeaders, wscsTokenExpTime, wscsUserInfo),
+    WsHeaders (WsHeaders, unWsHeaders),
+  )
+where
 
 import Control.Concurrent.STM qualified as STM
 import Data.Time.Clock qualified as TC

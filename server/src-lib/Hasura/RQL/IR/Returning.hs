@@ -1,4 +1,14 @@
-module Hasura.RQL.IR.Returning where
+module Hasura.RQL.IR.Returning
+  ( MutFld,
+    MutFldG (..),
+    MutFlds,
+    MutFldsG,
+    MutationOutput,
+    MutationOutputG (..),
+    buildEmptyMutResp,
+    hasNestedFld,
+  )
+where
 
 import Data.Aeson qualified as J
 import Data.HashMap.Strict.InsOrd qualified as OMap

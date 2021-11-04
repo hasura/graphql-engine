@@ -1,7 +1,17 @@
 {-# OPTIONS_HADDOCK not-home #-}
 
 -- | Supporting functionality for fine-grained dependency tracking.
-module Hasura.Incremental.Internal.Dependency where
+module Hasura.Incremental.Internal.Dependency
+  ( Access (AccessedAll),
+    Accesses,
+    Cacheable (..),
+    Dependency (..),
+    DependencyKey (DependencyRoot),
+    recordAccess,
+    selectD,
+    selectKeyD,
+  )
+where
 
 import Data.Aeson (Value)
 import Data.ByteString (ByteString)

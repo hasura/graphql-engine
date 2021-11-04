@@ -1,5 +1,11 @@
 -- | Defines the 'Parser' type and its primitive combinators.
-module Hasura.GraphQL.Parser.Internal.Types where
+module Hasura.GraphQL.Parser.Internal.Types
+  ( Parser (..),
+    ParserInput,
+    parserType,
+    runParser,
+  )
+where
 
 import Hasura.GraphQL.Parser.Schema
 import Hasura.Prelude

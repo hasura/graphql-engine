@@ -1,4 +1,7 @@
-module Hasura.Backends.Postgres.Types.Table where
+module Hasura.Backends.Postgres.Types.Table
+  ( mutableView,
+  )
+where
 
 import Data.Text.Extended
 import Hasura.Backends.Postgres.SQL.Types

@@ -1,4 +1,12 @@
-module Hasura.RQL.DDL.Schema.Source where
+module Hasura.RQL.DDL.Schema.Source
+  ( AddSource,
+    DropSource,
+    RenameSource,
+    runAddSource,
+    runDropSource,
+    runRenameSource,
+  )
+where
 
 import Control.Lens (at, (.~), (^.))
 import Control.Monad.Trans.Control (MonadBaseControl)

@@ -1,7 +1,12 @@
 {-# LANGUAGE UndecidableInstances #-}
 {-# OPTIONS_HADDOCK not-home #-}
 
-module Hasura.Incremental.Internal.Cache where
+module Hasura.Incremental.Internal.Cache
+  ( ArrowCache (..),
+    DependT,
+    MonadDepend (..),
+  )
+where
 
 import Control.Arrow.Extended
 import Control.Monad.Unique

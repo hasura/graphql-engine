@@ -34,7 +34,7 @@ import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.Prelude
 import Hasura.RQL.DDL.Permission.Internal
-import Hasura.RQL.DML.Internal hiding (askPermInfo)
+import Hasura.RQL.DML.Internal
 import Hasura.RQL.Types
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.Types

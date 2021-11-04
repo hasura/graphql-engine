@@ -1,4 +1,12 @@
-module Hasura.RQL.Types.Network where
+module Hasura.RQL.Types.Network
+  ( AddHostToTLSAllowlist,
+    DropHostFromTLSAllowlist (..),
+    Network (..),
+    TlsAllow (..),
+    TlsPermission (..),
+    emptyNetwork,
+  )
+where
 
 import Data.Aeson as A
 import Data.Text qualified as T

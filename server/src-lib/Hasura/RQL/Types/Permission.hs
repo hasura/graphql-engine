@@ -1,4 +1,21 @@
-module Hasura.RQL.Types.Permission where
+module Hasura.RQL.Types.Permission
+  ( DelPerm (..),
+    DelPermDef,
+    InsPerm (..),
+    InsPermDef,
+    PermColSpec (..),
+    PermDef (..),
+    PermType (..),
+    SelPerm (..),
+    SelPermDef,
+    UpdPerm (..),
+    UpdPermDef,
+    pdComment,
+    pdPermission,
+    pdRole,
+    permTypeToCode,
+  )
+where
 
 import Control.Lens (makeLenses)
 import Data.Aeson

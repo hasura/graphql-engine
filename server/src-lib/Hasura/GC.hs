@@ -1,4 +1,7 @@
-module Hasura.GC where
+module Hasura.GC
+  ( ourIdleGC,
+  )
+where
 
 import Control.Concurrent.Extended qualified as C
 import GHC.Stats

@@ -1,6 +1,28 @@
 {-# LANGUAGE UndecidableInstances #-}
 
-module Hasura.RQL.Types.Source where
+module Hasura.RQL.Types.Source
+  ( BackendSourceInfo,
+    MaintenanceModeVersion (..),
+    MonadResolveSource (..),
+    ResolvedSource (..),
+    SourceCache,
+    SourceInfo (..),
+    SourceResolver,
+    SourceTables,
+    getTableRoles,
+    siConfiguration,
+    siFunctions,
+    siName,
+    siQueryTagsConfig,
+    siTables,
+    siCustomization,
+    unsafeSourceConfiguration,
+    unsafeSourceFunctions,
+    unsafeSourceInfo,
+    unsafeSourceName,
+    unsafeSourceTables,
+  )
+where
 
 import Control.Lens
 import Data.Aeson.Extended

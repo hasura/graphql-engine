@@ -1,4 +1,7 @@
-module Hasura.RQL.DDL.GraphqlSchemaIntrospection where
+module Hasura.RQL.DDL.GraphqlSchemaIntrospection
+  ( runSetGraphqlSchemaIntrospectionOptions,
+  )
+where
 
 import Control.Lens ((.~))
 import Hasura.Base.Error

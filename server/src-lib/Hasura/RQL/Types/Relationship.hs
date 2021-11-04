@@ -1,4 +1,23 @@
-module Hasura.RQL.Types.Relationship where
+module Hasura.RQL.Types.Relationship
+  ( ArrRelDef,
+    ArrRelUsing,
+    ArrRelUsingFKeyOn (..),
+    Nullable (..),
+    ObjRelDef,
+    ObjRelUsing,
+    ObjRelUsingChoice (..),
+    RelDef (..),
+    RelInfo (..),
+    RelManualConfig (..),
+    RelUsing (..),
+    WithTable (..),
+    boolToNullable,
+    fromRel,
+    rdComment,
+    rdName,
+    rdUsing,
+  )
+where
 
 import Control.Lens (makeLenses)
 import Data.Aeson.TH

@@ -30,7 +30,12 @@
 --   instance, a backend that supports a different set ot table arguments can
 --   choose to reimplement @tableArgs@, but can still use @tableWhere@ in its
 --   custom implementation.
-module Hasura.GraphQL.Schema.Backend where
+module Hasura.GraphQL.Schema.Backend
+  ( BackendSchema (aggregateOrderByCountType, buildFunctionMutationFields, buildFunctionQueryFields, buildFunctionRelayQueryFields, buildTableDeleteMutationFields, buildTableInsertMutationFields, buildTableQueryFields, buildTableRelayQueryFields, buildTableUpdateMutationFields, columnDefaultValue, columnParser, comparisonExps, computedField, conflictObject, getExtraInsertData, jsonPathArg, mkCountType, mkRelationshipParser, node, nodesAggExtension, orderByOperators, relayExtension, tableArguments, updateOperators),
+    ComparisonExp,
+    MonadBuildSchema,
+  )
+where
 
 import Data.Has
 import Hasura.Base.Error
@@ -235,8 +240,3 @@ class Backend b => BackendSchema (b :: BackendType) where
   getExtraInsertData :: TableInfo b -> ExtraInsertData b
 
 type ComparisonExp b = OpExpG b (UnpreparedValue b)
-
-data BackendExtension b = BackendExtension
-  { backendRelay :: Maybe (XRelay b),
-    backendNodesAgg :: Maybe (XNodesAgg b)
-  }

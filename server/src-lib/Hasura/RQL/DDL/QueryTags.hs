@@ -1,4 +1,8 @@
-module Hasura.RQL.DDL.QueryTags where
+module Hasura.RQL.DDL.QueryTags
+  ( SetQueryTagsConfig,
+    runSetQueryTagsConfig,
+  )
+where
 
 import Control.Lens
 import Data.Aeson
@@ -18,7 +22,6 @@ data SetQueryTagsConfig = SetQueryTagsConfig
   }
 
 $(J.deriveToJSON hasuraJSON {J.omitNothingFields = True} ''SetQueryTagsConfig)
-$(makeLenses ''SetQueryTagsConfig)
 
 instance FromJSON SetQueryTagsConfig where
   parseJSON = withObject "SetQueryTagsConfig" $ \o -> do

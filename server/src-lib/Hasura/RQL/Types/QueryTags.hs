@@ -1,4 +1,9 @@
-module Hasura.RQL.Types.QueryTags where
+module Hasura.RQL.Types.QueryTags
+  ( QueryTagsConfig (..),
+    QueryTagsFormat (..),
+    defaultQueryTagsConfig,
+  )
+where
 
 import Data.Aeson
 import Data.Aeson.Casing qualified as J

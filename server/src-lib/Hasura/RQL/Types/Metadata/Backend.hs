@@ -1,4 +1,7 @@
-module Hasura.RQL.Types.Metadata.Backend where
+module Hasura.RQL.Types.Metadata.Backend
+  ( BackendMetadata (..),
+  )
+where
 
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Aeson
