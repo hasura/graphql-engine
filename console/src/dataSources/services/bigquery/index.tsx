@@ -254,7 +254,7 @@ export const bigquery: DataSourcesAPI = {
     if (schemas) {
       datasets = schemas;
     } else {
-      datasets = tables.map(t => t.table_schema);
+      datasets = tables?.map(t => t.schema) ?? [];
     }
 
     const query = (dataset: string) => `
@@ -440,4 +440,5 @@ export const bigquery: DataSourcesAPI = {
   viewsSupported: false,
   supportedColumnOperators,
   violationActions,
+  schemaListQuery: '',
 };

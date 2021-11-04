@@ -1,7 +1,11 @@
 import { DeepRequired } from 'ts-essentials';
 
 import { DataSourcesAPI } from '../..';
-import { getFetchTablesListQuery, schemaListSql } from './sqlUtils';
+import {
+  getFetchTablesListQuery,
+  schemaListSql,
+  schemaListQuery,
+} from './sqlUtils';
 import {
   generateTableRowRequest,
   generateInsertRequest,
@@ -78,4 +82,5 @@ export const citus: DataSourcesAPI = {
   generateEditRowRequest,
   generateDeleteRowRequest,
   generateBulkDeleteRowRequest,
+  schemaListQuery,
 };
