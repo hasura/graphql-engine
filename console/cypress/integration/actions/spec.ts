@@ -113,7 +113,9 @@ const typeIntoHandler = (content: string) => {
 };
 
 const clickOnCreateAction = () => {
-  cy.get(getElementFromAlias('create-action-btn')).click({ force: true });
+  cy.get(getElementFromAlias('create-action-btn'))
+    .scrollIntoView()
+    .click({ force: true });
   cy.get('.notification', { timeout: AWAIT_LONG })
     .should('be.visible')
     .and('contain', 'Created action successfully');
@@ -193,6 +195,10 @@ export const routeToGraphiql = () => {
 export const createMutationAction = () => {
   // Click on create
   cy.get(getElementFromAlias('data-create-actions')).click();
+  cy.intercept('*', req => {
+    // send all other requests to the destination server
+    req.reply();
+  });
   // Clear default text on
   clearActionDef();
   // type statement
@@ -287,6 +293,10 @@ export const deleteMutationAction = () => deleteAction('login');
 export const createQueryAction = () => {
   // Routing to the index page
   cy.visit('/actions/manage/actions');
+  cy.intercept('*', req => {
+    // send all other requests to the destination server
+    req.reply();
+  });
   cy.url({ timeout: AWAIT_LONG }).should(
     'eq',
     `${baseUrl}/actions/manage/actions`
@@ -420,6 +430,10 @@ export const createActionTransform = () => {
   checkTransformRequestBodyError(false);
 
   // click to create action
+  cy.intercept('*', req => {
+    // send all other requests to the destination server
+    req.reply();
+  });
   clickOnCreateAction();
   cy.get(getElementFromAlias('action-timeout-seconds')).should(
     'have.value',
