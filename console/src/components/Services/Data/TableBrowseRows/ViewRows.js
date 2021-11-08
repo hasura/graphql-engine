@@ -508,59 +508,72 @@ const ViewRows = props => {
       );
 
       // Insert column cells
-      _tableSchema.columns.forEach(col => {
-        const columnName = col.column_name;
-
-        /* Row is a JSON object with `key` as the column name in the db
-         * and `value` as corresponding column value of the column in the database,
-         * Ex: author table with the following schema:
-         *  id int Primary key,
-         *  name text,
-         *  address json
-         *  `row`:
-         *    {
-         *      id: 1,
-         *      name: "Hasura",
-         *      address: {Hello: "World", Foo: "Bar"}
-         *    }
-         * */
-
-        const getColCellContent = () => {
-          const rowColumnValue = row[columnName];
-
-          let cellValue = '';
-          let cellTitle = '';
-
-          if (rowColumnValue === null) {
-            cellValue = <i>NULL</i>;
-            cellTitle = 'NULL';
-          } else if (rowColumnValue === undefined) {
-            cellValue = 'NULL';
-            cellTitle = cellValue;
-          } else if (
-            col.data_type === 'json' ||
-            col.data_type === 'jsonb' ||
-            typeof rowColumnValue === 'object'
+      _tableSchema.columns
+        .map(col => {
+          if (
+            _tableSchema.configuration?.custom_column_names?.[col.column_name]
           ) {
-            cellValue = JSON.stringify(rowColumnValue, null, 4);
-            cellTitle = cellValue;
-          } else {
-            cellValue = rowColumnValue.toString();
-            cellTitle = cellValue;
+            return {
+              ...col,
+              column_name:
+                _tableSchema.configuration.custom_column_names[col.column_name],
+            };
           }
+          return col;
+        })
+        .forEach(col => {
+          const columnName = col.column_name;
 
-          return (
-            <div
-              className={isExpanded ? styles.tableCellExpanded : ''}
-              title={cellTitle}
-            >
-              {cellValue}
-            </div>
-          );
-        };
+          /* Row is a JSON object with `key` as the column name in the db
+           * and `value` as corresponding column value of the column in the database,
+           * Ex: author table with the following schema:
+           *  id int Primary key,
+           *  name text,
+           *  address json
+           *  `row`:
+           *    {
+           *      id: 1,
+           *      name: "Hasura",
+           *      address: {Hello: "World", Foo: "Bar"}
+           *    }
+           * */
 
-        newRow[columnName] = getColCellContent();
-      });
+          const getColCellContent = () => {
+            const rowColumnValue = row[columnName];
+
+            let cellValue = '';
+            let cellTitle = '';
+
+            if (rowColumnValue === null) {
+              cellValue = <i>NULL</i>;
+              cellTitle = 'NULL';
+            } else if (rowColumnValue === undefined) {
+              cellValue = 'NULL';
+              cellTitle = cellValue;
+            } else if (
+              col.data_type === 'json' ||
+              col.data_type === 'jsonb' ||
+              typeof rowColumnValue === 'object'
+            ) {
+              cellValue = JSON.stringify(rowColumnValue, null, 4);
+              cellTitle = cellValue;
+            } else {
+              cellValue = rowColumnValue.toString();
+              cellTitle = cellValue;
+            }
+
+            return (
+              <div
+                className={isExpanded ? styles.tableCellExpanded : ''}
+                title={cellTitle}
+              >
+                {cellValue}
+              </div>
+            );
+          };
+
+          newRow[columnName] = getColCellContent();
+        });
 
       // Insert relationship cells
       _tableSchema.relationships.forEach(rel => {
@@ -632,7 +645,6 @@ const ViewRows = props => {
 
       _gridRows.push(newRow);
     });
-
     return _gridRows;
   };
 
@@ -640,8 +652,19 @@ const ViewRows = props => {
   const tableSchema = schemas.find(
     x => x.table_name === curTableName && x.table_schema === currentSchema
   );
-
-  const tableColumnsSorted = tableSchema.columns.sort(ordinalColSort);
+  const tableColumnsSorted = tableSchema.columns
+    .map(col => {
+      if (tableSchema.configuration?.custom_column_names?.[col.column_name]) {
+        return {
+          ...col,
+          column_name:
+            tableSchema.configuration.custom_column_names[col.column_name],
+        };
+      }
+      return col;
+    })
+    .sort(ordinalColSort);
+  // const tableColumnsSorted = tableSchema.columns.sort(ordinalColSort)
   const tableRelationships = tableSchema.relationships;
 
   const hasPrimaryKey = isTableWithPK(tableSchema);

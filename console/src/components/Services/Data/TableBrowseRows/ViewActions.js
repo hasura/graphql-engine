@@ -94,12 +94,25 @@ const vMakeRowsRequest = () => {
           originalTable,
           tableConfiguration,
         });
+        const updatedRows = rows.map(row => {
+          for (const key in row) {
+            if (row.hasOwnProperty(key)) {
+              const customColumnName =
+                tableConfiguration?.custom_column_names?.[key];
+              if (customColumnName) {
+                row[customColumnName] = row[key];
+                delete row[key];
+              }
+            }
+          }
+          return row;
+        });
         const currentTable = getState().tables.currentTable;
         if (currentTable === originalTable) {
           Promise.all([
             dispatch({
               type: V_REQUEST_SUCCESS,
-              data: rows,
+              data: updatedRows,
               estimatedCount,
             }),
             dispatch({ type: V_REQUEST_PROGRESS, data: false }),
