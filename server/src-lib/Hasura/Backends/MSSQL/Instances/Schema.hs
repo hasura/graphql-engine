@@ -23,7 +23,6 @@ import Hasura.Prelude
 import Hasura.RQL.IR
 import Hasura.RQL.IR.Insert qualified as IR
 import Hasura.RQL.IR.Select qualified as IR
-import Hasura.RQL.IR.Update qualified as IR
 import Hasura.RQL.Types
 import Language.GraphQL.Draft.Syntax qualified as G
 
@@ -54,7 +53,6 @@ instance BackendSchema 'MSSQL where
   jsonPathArg = msJsonPathArg
   orderByOperators = msOrderByOperators
   comparisonExps = msComparisonExps
-  updateOperators = msUpdateOperators
   mkCountType = msMkCountType
   aggregateOrderByCountType = MSSQL.IntegerType
   computedField = msComputedField
@@ -442,16 +440,6 @@ msMkCountType (Just True) (Just cols) =
   maybe MSSQL.StarCountable MSSQL.DistinctCountable $ nonEmpty cols
 msMkCountType _ (Just cols) =
   maybe MSSQL.StarCountable MSSQL.NonNullFieldCountable $ nonEmpty cols
-
--- | Various update operators
-msUpdateOperators ::
-  Applicative m =>
-  -- | table info
-  TableInfo 'MSSQL ->
-  -- | update permissions of the table
-  UpdPermInfo 'MSSQL ->
-  m (Maybe (InputFieldsParser n [(Column 'MSSQL, IR.UpdOpExpG (UnpreparedValue 'MSSQL))]))
-msUpdateOperators _tableInfo _updatePermissions = pure Nothing
 
 -- | Computed field parser.
 -- Currently unsupported: returns Nothing for now.

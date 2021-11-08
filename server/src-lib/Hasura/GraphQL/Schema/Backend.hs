@@ -31,9 +31,12 @@
 --   choose to reimplement @tableArgs@, but can still use @tableWhere@ in its
 --   custom implementation.
 module Hasura.GraphQL.Schema.Backend
-  ( BackendSchema (aggregateOrderByCountType, buildFunctionMutationFields, buildFunctionQueryFields, buildFunctionRelayQueryFields, buildTableDeleteMutationFields, buildTableInsertMutationFields, buildTableQueryFields, buildTableRelayQueryFields, buildTableUpdateMutationFields, columnDefaultValue, columnParser, comparisonExps, computedField, conflictObject, getExtraInsertData, jsonPathArg, mkCountType, mkRelationshipParser, node, nodesAggExtension, orderByOperators, relayExtension, tableArguments, updateOperators),
-    ComparisonExp,
+  ( -- * Main Types
+    BackendSchema (..),
     MonadBuildSchema,
+
+    -- * Auxiliary Types
+    ComparisonExp,
   )
 where
 
@@ -45,7 +48,6 @@ import Hasura.Prelude
 import Hasura.RQL.IR
 import Hasura.RQL.IR.Insert qualified as IR
 import Hasura.RQL.IR.Select qualified as IR
-import Hasura.RQL.IR.Update qualified as IR
 import Hasura.RQL.Types hiding (EnumValueInfo)
 import Language.GraphQL.Draft.Syntax (Nullability)
 import Language.GraphQL.Draft.Syntax qualified as G
@@ -211,12 +213,9 @@ class Backend b => BackendSchema (b :: BackendType) where
     MonadBuildSchema b r m n =>
     ColumnType b ->
     m (Parser 'Input n [ComparisonExp b])
-  updateOperators ::
-    (MonadSchema n m, MonadTableInfo r m, MonadReader r m, Has MkTypename r) =>
-    TableInfo b ->
-    UpdPermInfo b ->
-    m (Maybe (InputFieldsParser n [(Column b, IR.UpdOpExpG (UnpreparedValue b))]))
+
   mkCountType :: Maybe Bool -> Maybe [Column b] -> CountType b
+
   aggregateOrderByCountType :: ScalarType b
 
   -- | Computed field parser
