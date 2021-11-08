@@ -9,7 +9,7 @@ const config = {
   title: 'Hasura GraphQL Engine Documentation | Hasura GraphQL Docs',
   tagline: 'Instant GraphQL on all your data',
   url: 'https://hasura.io/',
-  baseUrl: '/',
+  baseUrl: '/docs/',
   onBrokenLinks: 'throw',
   onBrokenMarkdownLinks: 'throw',
   favicon: '/img/favicon.png',
@@ -22,6 +22,7 @@ const config = {
       /** @type {import('@docusaurus/preset-classic').Options} */
       ({
         docs: {
+          routeBasePath: "/",
           sidebarPath: require.resolve('./sidebars.js'),
           // Please change this to your repo.
           editUrl: 'https://github.com/hasura/graphql-engine/edit/main/docs-new/',
@@ -64,7 +65,7 @@ const config = {
             items: [
               {
                 label: 'Migration Guide',
-                to: '/docs/migration-guide',
+                to: '/migration-guide',
               },
             ],
           },
