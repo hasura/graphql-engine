@@ -64,11 +64,15 @@ const renderCols = (
           -- column --
         </option>
       ) : null}
-      {columns.map((c, i) => (
-        <option key={i} value={c}>
-          {c}
-        </option>
-      ))}
+      {columns.map((c, i) => {
+        const col_name =
+          tableSchema.configuration?.custom_column_names?.[c] ?? c;
+        return (
+          <option key={i} value={c}>
+            {col_name}
+          </option>
+        );
+      })}
     </select>
   );
 };
