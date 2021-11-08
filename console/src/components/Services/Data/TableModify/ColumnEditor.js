@@ -203,13 +203,14 @@ const ColumnEditor = ({
             Comment
           </label>
           <div className="ml-auto w-6/12">
-            <input
+            <textarea
               className="form-control"
-              value={selectedProperties[colName].comment || ''}
               onChange={updateColumnComment}
               type="text"
               data-test="edit-col-comment"
-            />
+            >
+              {selectedProperties[colName].comment || ''}
+            </textarea>
           </div>
         </div>
         {isFeatureSupported('tables.modify.columns.graphqlFieldName')

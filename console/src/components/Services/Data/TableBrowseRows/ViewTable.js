@@ -165,13 +165,14 @@ class ViewTable extends Component {
     let comment = null;
     if (tableSchema.comment) {
       comment = (
-        <div
+        <textarea
           className={
-            'sm:max-w-xl rounded bg-secondary-light border border-gray-300 border-l-4 border-l-secondary py-sm px-md mt-lg'
+            'w-100 sm:max-w-xl rounded bg-secondary-light border border-gray-300 border-l-4 border-l-secondary py-sm px-md mt-lg'
           }
+          readOnly
         >
           {tableSchema.comment}
-        </div>
+        </textarea>
       );
     }
 

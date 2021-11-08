@@ -6,6 +6,8 @@
 ### Bug fixes and improvements
 (Add entries below in the order of server, console, cli, docs, others)
 
+- console: support multiline table/column comments (close #3723)
+
 ## v2.1.0-beta.2
 
 ### Action transforms
