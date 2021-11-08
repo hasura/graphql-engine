@@ -22,7 +22,6 @@ import Hasura.GraphQL.Schema.Select
 import Hasura.Prelude
 import Hasura.RQL.IR
 import Hasura.RQL.IR.Select qualified as IR
-import Hasura.RQL.IR.Update qualified as IR
 import Hasura.RQL.Types
 import Language.GraphQL.Draft.Syntax qualified as G
 
@@ -52,7 +51,6 @@ instance BackendSchema 'BigQuery where
   jsonPathArg = bqJsonPathArg
   orderByOperators = bqOrderByOperators
   comparisonExps = bqComparisonExps
-  updateOperators = bqUpdateOperators
   mkCountType = bqMkCountType
   aggregateOrderByCountType = BigQuery.IntegerScalarType
   computedField = bqComputedField
@@ -342,17 +340,6 @@ bqMkCountType (Just True) (Just cols) =
   maybe BigQuery.StarCountable BigQuery.DistinctCountable $ nonEmpty cols
 bqMkCountType _ (Just cols) =
   maybe BigQuery.StarCountable BigQuery.NonNullFieldCountable $ nonEmpty cols
-
--- | Various update operators
-bqUpdateOperators ::
-  -- :: forall m n r. (MonadSchema n m, MonadTableInfo r m)
-  Applicative m =>
-  -- | qualified name of the table
-  TableInfo 'BigQuery ->
-  -- | update permissions of the table
-  UpdPermInfo 'BigQuery ->
-  m (Maybe (InputFieldsParser n [(Column 'BigQuery, IR.UpdOpExpG (UnpreparedValue 'BigQuery))]))
-bqUpdateOperators _tableInfo _updatePermissions = pure Nothing
 
 -- | Computed field parser.
 -- Currently unsupported: returns Nothing for now.

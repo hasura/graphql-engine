@@ -35,6 +35,7 @@ import Hasura.RQL.IR.Delete qualified as IR
 import Hasura.RQL.IR.Insert qualified as IR
 import Hasura.RQL.IR.Returning qualified as IR
 import Hasura.RQL.IR.Select qualified as IR
+import Hasura.RQL.IR.Update
 import Hasura.RQL.IR.Update qualified as IR
 import Hasura.RQL.Types
 import Language.GraphQL.Draft.Syntax qualified as G
@@ -402,6 +403,12 @@ conflictConstraint constraints sourceName tableInfo =
 updateTable ::
   forall b r m n.
   MonadBuildSchema b r m n =>
+  -- | Operators that updating accepts
+  ( TableInfo b ->
+    UpdPermInfo b ->
+    m
+      (InputFieldsParser n [(Column b, UpdOpExpG (UnpreparedValue b))])
+  ) ->
   -- | table source
   SourceName ->
   -- | table info
@@ -414,27 +421,32 @@ updateTable ::
   UpdPermInfo b ->
   -- | select permissions of the table (if any)
   Maybe (SelPermInfo b) ->
-  m (Maybe (FieldParser n (IR.AnnUpdG b (IR.RemoteSelect UnpreparedValue) (UnpreparedValue b))))
-updateTable sourceName tableInfo fieldName description updatePerms selectPerms = runMaybeT $ do
+  m (FieldParser n (IR.AnnUpdG b (IR.RemoteSelect UnpreparedValue) (UnpreparedValue b)))
+updateTable updateOperators sourceName tableInfo fieldName description updatePerms selectPerms = do
   let tableName = tableInfoName tableInfo
       columns = tableColumns tableInfo
       whereName = $$(G.litName "where")
       whereDesc = "filter the rows which have to be updated"
-  opArgs <- MaybeT $ updateOperators tableInfo updatePerms
-  whereArg <- lift $ P.field whereName (Just whereDesc) <$> boolExp sourceName tableInfo selectPerms
-  selection <- lift $ mutationSelectionSet sourceName tableInfo selectPerms
+  opArgs <- updateOperators tableInfo updatePerms
+  whereArg <- P.field whereName (Just whereDesc) <$> boolExp sourceName tableInfo selectPerms
+  selection <- mutationSelectionSet sourceName tableInfo selectPerms
   let argsParser = liftA2 (,) opArgs whereArg
   pure $
     P.subselection fieldName description argsParser selection
       <&> mkUpdateObject tableName columns updatePerms . fmap IR.MOutMultirowFields
 
--- | Construct a root field, normally called update_tablename, that can be used
+-- | Construct a root field, normally called 'update_tablename_by_pk', that can be used
 -- to update a single in a DB table, specified by primary key. Only returns a
 -- parser if there are columns the user is allowed to update and if the user has
 -- select permissions on all primary keys; otherwise returns Nothing.
 updateTableByPk ::
   forall b r m n.
   MonadBuildSchema b r m n =>
+  -- | Update Operators
+  ( TableInfo b ->
+    UpdPermInfo b ->
+    m (InputFieldsParser n [(Column b, UpdOpExpG (UnpreparedValue b))])
+  ) ->
   -- | table source
   SourceName ->
   -- | table info
@@ -448,24 +460,25 @@ updateTableByPk ::
   -- | select permissions of the table
   SelPermInfo b ->
   m (Maybe (FieldParser n (IR.AnnUpdG b (IR.RemoteSelect UnpreparedValue) (UnpreparedValue b))))
-updateTableByPk sourceName tableInfo fieldName description updatePerms selectPerms = runMaybeT $ do
+updateTableByPk updateOperators sourceName tableInfo fieldName description updatePerms selectPerms = runMaybeT $ do
   let columns = tableColumns tableInfo
       tableName = tableInfoName tableInfo
   tableGQLName <- getTableGQLName tableInfo
   pkArgs <- MaybeT $ primaryKeysArguments tableInfo selectPerms
-  opArgs <- MaybeT $ updateOperators tableInfo updatePerms
-  selection <- lift $ tableSelectionSet sourceName tableInfo selectPerms
-  pkObjectName <- P.mkTypename $ tableGQLName <> $$(G.litName "_pk_columns_input")
-  let pkFieldName = $$(G.litName "pk_columns")
-      pkObjectDesc = G.Description $ "primary key columns input for table: " <> G.unName tableGQLName
-      pkParser = P.object pkObjectName (Just pkObjectDesc) pkArgs
-      argsParser = do
-        operators <- opArgs
-        primaryKeys <- P.field pkFieldName Nothing pkParser
-        pure (operators, primaryKeys)
-  pure $
-    P.subselection fieldName description argsParser selection
-      <&> mkUpdateObject tableName columns updatePerms . fmap IR.MOutSinglerowObject
+  lift $ do
+    opArgs <- updateOperators tableInfo updatePerms
+    selection <- tableSelectionSet sourceName tableInfo selectPerms
+    pkObjectName <- P.mkTypename $ tableGQLName <> $$(G.litName "_pk_columns_input")
+    let pkFieldName = $$(G.litName "pk_columns")
+        pkObjectDesc = G.Description $ "primary key columns input for table: " <> G.unName tableGQLName
+        pkParser = P.object pkObjectName (Just pkObjectDesc) pkArgs
+        argsParser = do
+          operators <- opArgs
+          primaryKeys <- P.field pkFieldName Nothing pkParser
+          pure (operators, primaryKeys)
+    pure $
+      P.subselection fieldName description argsParser selection
+        <&> mkUpdateObject tableName columns updatePerms . fmap IR.MOutSinglerowObject
 
 mkUpdateObject ::
   Backend b =>
@@ -604,6 +617,10 @@ mutationSelectionSet sourceName tableInfo selectPerms =
     tableName = tableInfoName tableInfo
 
 -- | How to specify a database row by primary key.
+--
+-- This will give @Nothing@ when either there are no primary keys defined for
+-- the table or when the given permissions do not permit selecting from all the
+-- columns that make up the key.
 primaryKeysArguments ::
   forall b r m n.
   MonadBuildSchema b r m n =>

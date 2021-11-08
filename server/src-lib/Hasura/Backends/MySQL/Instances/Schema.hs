@@ -22,7 +22,6 @@ import Hasura.GraphQL.Schema.Select
 import Hasura.Prelude
 import Hasura.RQL.IR
 import Hasura.RQL.IR.Select qualified as IR
-import Hasura.RQL.IR.Update qualified as IR
 import Hasura.RQL.Types as RQL
 import Language.GraphQL.Draft.Syntax qualified as G
 
@@ -42,7 +41,6 @@ instance BackendSchema 'MySQL where
   jsonPathArg = jsonPathArg'
   orderByOperators = orderByOperators'
   comparisonExps = comparisonExps'
-  updateOperators = updateOperators'
   mkCountType = error "mkCountType: MySQL backend does not support this operation yet."
   aggregateOrderByCountType = error "aggregateOrderByCountType: MySQL backend does not support this operation yet."
   computedField = error "computedField: MySQL backend does not support this operation yet."
@@ -301,13 +299,3 @@ comparisonExps' = P.memoize 'comparisonExps $ \columnType -> do
 offsetParser' :: MonadParse n => Parser 'Both n (SQLExpression 'MySQL)
 offsetParser' =
   MySQL.ValueExpression . MySQL.BigValue . fromIntegral <$> P.int
-
--- | Various update operators
-updateOperators' ::
-  Applicative m =>
-  -- | qualified name of the table
-  TableInfo 'MySQL ->
-  -- | update permissions of the table
-  UpdPermInfo 'MySQL ->
-  m (Maybe (InputFieldsParser n [(RQL.Column 'MySQL, IR.UpdOpExpG (UnpreparedValue 'MySQL))]))
-updateOperators' _table _updatePermissions = pure Nothing

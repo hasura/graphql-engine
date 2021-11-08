@@ -112,6 +112,12 @@ buildTableInsertMutationFields
 buildTableUpdateMutationFields ::
   forall b r m n.
   MonadBuildSchema b r m n =>
+  -- | Action that builds the @update operators@ supported.
+  ( TableInfo b ->
+    UpdPermInfo b ->
+    m
+      (InputFieldsParser n [(Column b, UpdOpExpG (UnpreparedValue b))])
+  ) ->
   SourceName ->
   SourceConfig b ->
   Maybe QueryTagsConfig ->
@@ -121,7 +127,7 @@ buildTableUpdateMutationFields ::
   UpdPermInfo b ->
   Maybe (SelPermInfo b) ->
   m [FieldParser n (MutationRootField UnpreparedValue)]
-buildTableUpdateMutationFields sourceName sourceInfo queryTagsConfig tableName tableInfo gqlName updPerms mSelPerms = do
+buildTableUpdateMutationFields updateOperators sourceName sourceInfo queryTagsConfig tableName tableInfo gqlName updPerms mSelPerms = do
   let mkRF =
         RFDB sourceName
           . AB.mkAnyBackend
@@ -134,12 +140,12 @@ buildTableUpdateMutationFields sourceName sourceInfo queryTagsConfig tableName t
       updatePKDesc = Just $ G.Description $ "update single row of the table: " <>> tableName
   updateName <- mkRootFieldName $ fromMaybe ($$(G.litName "update_") <> gqlName) $ _tcrfUpdate customRootFields
   updatePKName <- mkRootFieldName $ fromMaybe ($$(G.litName "update_") <> gqlName <> $$(G.litName "_by_pk")) $ _tcrfUpdateByPk customRootFields
-  update <- updateTable sourceName tableInfo updateName updateDesc updPerms mSelPerms
-  -- Primary keys can only be tested in the `where` clause if the user has
-  -- select permissions for them, which at the very least requires select
-  -- permissions.
-  updateByPk <- fmap join $ for mSelPerms $ updateTableByPk sourceName tableInfo updatePKName updatePKDesc updPerms
-  pure $ fmap (mkRF . MDBUpdate) <$> catMaybes [update, updateByPk]
+  update <- updateTable updateOperators sourceName tableInfo updateName updateDesc updPerms mSelPerms
+  -- Primary keys can only be tested in the `where` clause if a primary key
+  -- exists on the table and if the user has select permissions on all columns
+  -- that make up the key.
+  updateByPk <- fmap join $ for mSelPerms $ updateTableByPk updateOperators sourceName tableInfo updatePKName updatePKDesc updPerms
+  pure $ fmap (mkRF . MDBUpdate) <$> update : catMaybes [updateByPk]
 
 buildTableDeleteMutationFields ::
   forall b r m n.

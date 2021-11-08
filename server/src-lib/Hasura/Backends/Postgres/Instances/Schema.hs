@@ -15,7 +15,6 @@ import Data.List.NonEmpty qualified as NE
 import Data.Parser.JSONPath
 import Data.Text qualified as T
 import Data.Text.Extended
-import Data.Typeable
 import Hasura.Backends.Postgres.SQL.DML as PG hiding (CountType)
 import Hasura.Backends.Postgres.SQL.Types as PG hiding (FunctionName, TableName)
 import Hasura.Backends.Postgres.SQL.Value as PG
@@ -43,7 +42,6 @@ import Hasura.RQL.IR.Select qualified as IR
 import Hasura.RQL.IR.Update qualified as IR
 import Hasura.RQL.Types
 import Hasura.SQL.AnyBackend qualified as AB
-import Hasura.SQL.Tag
 import Hasura.SQL.Types
 import Language.GraphQL.Draft.Syntax qualified as G
 
@@ -114,9 +112,7 @@ instance PostgresSchema 'Citus where
 -- postgres schema
 
 instance
-  ( HasTag ('Postgres pgKind),
-    Typeable ('Postgres pgKind),
-    Backend ('Postgres pgKind),
+  ( Backend ('Postgres pgKind),
     PostgresSchema pgKind
   ) =>
   BackendSchema ('Postgres pgKind)
@@ -125,7 +121,7 @@ instance
   buildTableQueryFields = GSB.buildTableQueryFields
   buildTableRelayQueryFields = pgkBuildTableRelayQueryFields
   buildTableInsertMutationFields = GSB.buildTableInsertMutationFields
-  buildTableUpdateMutationFields = GSB.buildTableUpdateMutationFields
+  buildTableUpdateMutationFields = GSB.buildTableUpdateMutationFields updateOperators
   buildTableDeleteMutationFields = GSB.buildTableDeleteMutationFields
   buildFunctionQueryFields = GSB.buildFunctionQueryFields
   buildFunctionRelayQueryFields = pgkBuildFunctionRelayQueryFields
@@ -145,7 +141,6 @@ instance
   jsonPathArg = jsonPathArg
   orderByOperators = orderByOperators
   comparisonExps = comparisonExps
-  updateOperators = updateOperators
   mkCountType = mkCountType
   aggregateOrderByCountType = PG.PGInteger
   computedField = computedFieldPG
@@ -658,7 +653,7 @@ updateOperators ::
   TableInfo ('Postgres pgKind) ->
   -- | update permissions of the table
   UpdPermInfo ('Postgres pgKind) ->
-  m (Maybe (InputFieldsParser n [(Column ('Postgres pgKind), IR.UpdOpExpG (UnpreparedValue ('Postgres pgKind)))]))
+  m (InputFieldsParser n [(Column ('Postgres pgKind), IR.UpdOpExpG (UnpreparedValue ('Postgres pgKind)))])
 updateOperators tableInfo updatePermissions = do
   tableGQLName <- getTableGQLName tableInfo
   columns <- tableUpdateColumns tableInfo updatePermissions
@@ -731,30 +726,29 @@ updateOperators tableInfo updatePermissions = do
                 desc
                 desc
         ]
-  whenMaybe (not $ null parsers) do
-    let allowedOperators = fst <$> parsers
-    pure $
-      fmap catMaybes (sequenceA $ snd <$> parsers)
-        `P.bindFields` \opExps -> do
-          -- there needs to be at least one operator in the update, even if it is empty
-          let presetColumns = Map.toList $ IR.UpdSet . partialSQLExpToUnpreparedValue <$> upiSet updatePermissions
-          when (null opExps && null presetColumns) $
-            parseError $
-              "at least any one of " <> commaSeparated allowedOperators <> " is expected"
+  let allowedOperators = fst <$> parsers
+  pure $
+    fmap catMaybes (sequenceA $ snd <$> parsers)
+      `P.bindFields` \opExps -> do
+        -- there needs to be at least one operator in the update, even if it is empty
+        let presetColumns = Map.toList $ IR.UpdSet . partialSQLExpToUnpreparedValue <$> upiSet updatePermissions
+        when (null opExps && null presetColumns) $
+          parseError $
+            "at least any one of " <> commaSeparated allowedOperators <> " is expected"
 
-          -- no column should appear twice
-          let flattenedExps = concat opExps
-              erroneousExps = OMap.filter ((> 1) . length) $ OMap.groupTuples flattenedExps
-          unless (OMap.null erroneousExps) $
-            parseError $
-              "column found in multiple operators; "
-                <> T.intercalate
-                  ". "
-                  [ dquote columnName <> " in " <> commaSeparated (IR.updateOperatorText <$> ops)
-                    | (columnName, ops) <- OMap.toList erroneousExps
-                  ]
+        -- no column should appear twice
+        let flattenedExps = concat opExps
+            erroneousExps = OMap.filter ((> 1) . length) $ OMap.groupTuples flattenedExps
+        unless (OMap.null erroneousExps) $
+          parseError $
+            "column found in multiple operators; "
+              <> T.intercalate
+                ". "
+                [ dquote columnName <> " in " <> commaSeparated (IR.updateOperatorText <$> ops)
+                  | (columnName, ops) <- OMap.toList erroneousExps
+                ]
 
-          pure $ presetColumns <> flattenedExps
+        pure $ presetColumns <> flattenedExps
   where
     tableName = tableInfoName tableInfo
     typedParser columnInfo = fmap P.mkParameter <$> columnParser (pgiType columnInfo) (G.Nullability $ pgiIsNullable columnInfo)
