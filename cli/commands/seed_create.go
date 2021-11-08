@@ -65,7 +65,7 @@ func newSeedCreateCmd(ec *cli.ExecutionContext) *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringArrayVar(&opts.FromTableNames, "from-table", []string{}, "name of table from which seed file has to be initialized")
+	cmd.Flags().StringArrayVar(&opts.FromTableNames, "from-table", []string{}, "name of table from which seed file has to be initialized. e.g. table1, myschema1.table1")
 
 	return cmd
 }
