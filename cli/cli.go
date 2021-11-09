@@ -325,34 +325,12 @@ func (s *ServerConfig) SetTLSConfig() error {
 	return nil
 }
 
-// isProxyEnvSet - returns true if any of the Proxy env variables are set.  If they are set, then the http client will
-// use the proxy in the transport.
-func isProxyEnvSet() bool {
-	if isEnvSet("HTTP_PROXY", "http_proxy", "HTTPS_PROXY", "https_proxy") {
-		return true
-	}
-
-	return false
-}
-
-// isEnvSet - returns true if ANY of the environment variables passed in are set
-func isEnvSet(names ...string) bool {
-	for _, n := range names {
-		if val := os.Getenv(n); val != "" {
-			return true
-		}
-	}
-	return false
-}
-
 // SetHTTPClient - sets the http client
 func (s *ServerConfig) SetHTTPClient() error {
 	s.HTTPClient = &http.Client{Transport: http.DefaultTransport}
 	if s.TLSConfig != nil {
 		tr := &http.Transport{TLSClientConfig: s.TLSConfig}
-		if isProxyEnvSet() {
-			tr.Proxy = http.ProxyFromEnvironment
-		}
+		tr.Proxy = http.ProxyFromEnvironment
 		s.HTTPClient.Transport = tr
 	}
 	return nil
@@ -781,14 +759,12 @@ func (ec *ExecutionContext) Validate() error {
 		ec.SetHGEHeaders(headers)
 	}
 
-	tr := &http.Transport{TLSClientConfig: ec.Config.TLSConfig}
-	if isProxyEnvSet() {
-		tr.Proxy = http.ProxyFromEnvironment
-	}
-
 	httpClient, err := httpc.New(
 		&http.Client{
-			Transport: tr,
+			Transport: &http.Transport{
+				TLSClientConfig: ec.Config.TLSConfig,
+				Proxy:           http.ProxyFromEnvironment,
+			},
 		},
 		ec.Config.Endpoint,
 		headers,
