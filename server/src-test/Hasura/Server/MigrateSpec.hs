@@ -105,9 +105,14 @@ spec ::
   Q.ConnInfo ->
   SpecWithCache m
 spec srcConfig pgExecCtx pgConnInfo = do
-  let migrateCatalogAndBuildCache env time = do
+  let logger :: Logger Hasura = Logger $ \l -> do
+        let (logLevel, logType :: EngineLogType Hasura, logDetail) = toEngineLog l
+        t <- liftIO $ getFormattedTime Nothing
+        liftIO $ putStrLn $ LBS.toString $ encode $ EngineLog t logLevel logType logDetail
+
+      migrateCatalogAndBuildCache env time = do
         (migrationResult, metadata) <- runTx' pgExecCtx $ migrateCatalog (Just srcConfig) MaintenanceModeDisabled time
-        (,migrationResult) <$> runCacheBuildM (buildRebuildableSchemaCache env metadata)
+        (,migrationResult) <$> runCacheBuildM (buildRebuildableSchemaCache logger env metadata)
 
       dropAndInit env time = lift $
         CacheRefT $ flip modifyMVar \_ ->
@@ -158,10 +163,6 @@ spec srcConfig pgExecCtx pgConnInfo = do
 
   describe "recreateSystemMetadata" $ do
     let dumpMetadata = execPGDump (PGDumpReqBody defaultSource ["--schema=hdb_catalog"] False) pgConnInfo
-        logger :: Logger Hasura = Logger $ \l -> do
-          let (logLevel, logType :: EngineLogType Hasura, logDetail) = toEngineLog l
-          t <- liftIO $ getFormattedTime Nothing
-          liftIO $ putStrLn $ LBS.toString $ encode $ EngineLog t logLevel logType logDetail
 
     it "is idempotent" \(NT transact) -> do
       env <- Env.getEnvironment
