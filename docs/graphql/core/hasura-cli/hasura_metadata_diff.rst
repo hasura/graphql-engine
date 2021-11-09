@@ -39,6 +39,9 @@ Examples
     # Apply admin secret for Hasura GraphQL engine:
     hasura metadata diff --admin-secret "<admin-secret>"
 
+    # For unified diff as the default diff just outputs only the difference:
+    hasura metadata diff --type "unified-common"
+
     # Diff metadata on a different Hasura instance:
     hasura metadata diff --endpoint "<endpoint>"
 
@@ -47,7 +50,8 @@ Options
 
 ::
 
-  -h, --help   help for diff
+  -h, --help          help for diff
+      --type string   specify a type of diff [allowed values: unified-common] (default "default")
 
 Options inherited from parent commands
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

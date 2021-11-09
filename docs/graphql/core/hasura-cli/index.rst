@@ -39,6 +39,7 @@ Commands
 - :ref:`hasura actions use-codegen <hasura_actions_use-codegen>`
 - :ref:`hasura completion <hasura_completion>`
 - :ref:`hasura console <hasura_console>`
+- :ref:`hasura deploy <hasura_deploy>`
 - :ref:`hasura init <hasura_init>`
 - :ref:`hasura metadata <hasura_metadata>`
 - :ref:`hasura metadata apply <hasura_metadata_apply>`
@@ -89,6 +90,7 @@ Refer to :ref:`uninstall_hasura_cli`.
    hasura actions use-codegen <hasura_actions_use-codegen>
    hasura completion <hasura_completion>
    hasura console <hasura_console>
+   hasura deploy <hasura_deploy>
    hasura init <hasura_init>
    hasura metadata <hasura_metadata>
    hasura metadata apply <hasura_metadata_apply>

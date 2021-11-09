@@ -26,7 +26,8 @@ Options
 
 ::
 
-  -h, --help   help for list
+  -h, --help            help for list
+  -o, --output string   select output format for inconsistent metadata objects(Allowed values: json)
 
 Options inherited from parent commands
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
