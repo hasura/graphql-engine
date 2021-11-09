@@ -1,3 +1,4 @@
+import Migration from '@/utils/migration/Migration';
 import { dataSource } from '../../../../dataSources';
 import Endpoints, { globalCookiePolicy } from '../../../../Endpoints';
 import { exportMetadata } from '../../../../metadata/actions';
@@ -46,6 +47,12 @@ const PERMISSION_CUSTOM_FUNCTION_DROP_SUCCESS =
   '@customFunction/PERMISSION_CUSTOM_FUNCTION_DROP_SUCCESS';
 const PERMISSION_CUSTOM_FUNCTION_DROP_FAIL =
   '@customFunction/PERMISSION_CUSTOM_FUNCTION_DROP_FAIL';
+
+const FUNCTION_COMMENT_SET_SUCCESS =
+  '@customFunction/FUNCTION_COMMENT_SET_SUCCESS';
+const CUSTOM_FUNCTION_COMMENT_EDITING =
+  '@customFunction/CUSTOM_FUNCTION_COMMENT_EDITING';
+const FUNCTION_COMMENT_SET_FAIL = '@customFunction/FUNCTION_COMMENT_SET_FAIL';
 
 /* Action creators */
 const fetchCustomFunction = (functionName, schema, source) => {
@@ -262,6 +269,69 @@ const updateSessVar = session_argument => {
   };
 };
 
+const setEditing = editing => dispatch =>
+  dispatch({ type: CUSTOM_FUNCTION_COMMENT_EDITING, data: editing });
+
+const saveFunctionComment = updatedComment => (dispatch, getState) => {
+  const source = getState().tables.currentDataSource;
+  const { currentSchema } = getState().tables;
+  const { functionName } = getState().functions;
+
+  const upQuery = dataSource.getSetCommentSql(
+    'function',
+    '',
+    currentSchema,
+    updatedComment || null,
+    null,
+    functionName
+  );
+
+  const downQuery = dataSource.getSetCommentSql(
+    'function',
+    '',
+    currentSchema,
+    'NULL',
+    null,
+    functionName
+  );
+
+  const migration = new Migration();
+  migration.add(
+    getRunSqlQuery(upQuery, source),
+    getRunSqlQuery(downQuery, source)
+  );
+
+  const migrationName =
+    'alter_function_' + currentSchema + '_' + functionName + '_update_comment';
+  const requestMsg = 'Updating Comment...';
+  const successMsg = 'Comment Updated';
+  const errorMsg = 'Updating comment failed';
+
+  const customOnSuccess = () => {
+    dispatch({
+      type: FUNCTION_COMMENT_SET_SUCCESS,
+      data: { functionComment: updatedComment },
+    });
+  };
+
+  const customOnError = err => {
+    dispatch({ type: FUNCTION_COMMENT_SET_FAIL, data: err });
+  };
+
+  return dispatch(
+    makeRequest(
+      migration.upMigration,
+      migration.downMigration,
+      migrationName,
+      customOnSuccess,
+      customOnError,
+      requestMsg,
+      successMsg,
+      errorMsg
+    )
+  );
+};
+
 const setFunctionPermission = (userRole, onSuccessCb) => (
   dispatch,
   getState
@@ -377,6 +447,7 @@ const customFunctionReducer = (state = functionData, action) => {
         setOffTableSchema: action?.data?.return_type_schema || null,
         inputArgNames: action?.data?.input_arg_names || null,
         inputArgTypes: action?.data?.input_arg_types || null,
+        functionComment: action?.data?.comment || '',
         isFetching: false,
         isUpdating: false,
         isFetchError: null,
@@ -453,6 +524,16 @@ const customFunctionReducer = (state = functionData, action) => {
         isPermissionDrop: false,
         isError: action.data,
       };
+    case CUSTOM_FUNCTION_COMMENT_EDITING:
+      return { ...state, isEditingComment: action?.data };
+    case FUNCTION_COMMENT_SET_SUCCESS:
+      return {
+        ...state,
+        isEditingComment: false,
+        functionComment: action?.data?.functionComment,
+      };
+    case FUNCTION_COMMENT_SET_FAIL:
+      return { ...state, isEditingComment: false, isError: action?.data };
     default:
       return state;
   }
@@ -461,7 +542,9 @@ const customFunctionReducer = (state = functionData, action) => {
 export {
   deleteFunction,
   dropFunctionPermission,
+  saveFunctionComment,
   fetchCustomFunction,
+  setEditing,
   RESET,
   setFunctionPermission,
   unTrackCustomFunction,

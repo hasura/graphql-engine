@@ -323,6 +323,13 @@ export type SupportedFeaturesType = {
     nonTrackableFunctions: {
       enabled: boolean;
     };
+    modify: {
+      enabled: boolean;
+      comments: {
+        view: boolean;
+        edit: boolean;
+      };
+    };
   };
   events: {
     triggers: {
