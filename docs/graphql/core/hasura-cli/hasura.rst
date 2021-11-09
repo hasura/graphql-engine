@@ -44,6 +44,7 @@ SEE ALSO
 * :ref:`hasura actions <hasura_actions>` 	 - Manage Hasura actions
 * :ref:`hasura completion <hasura_completion>` 	 - Generate auto completion code
 * :ref:`hasura console <hasura_console>` 	 - Open the console to manage the database and try out APIs
+* :ref:`hasura deploy <hasura_deploy>` 	 - (PREVIEW) Utility command to apply metadata & database migrations to graphql-engine
 * :ref:`hasura init <hasura_init>` 	 - Initialize a directory for Hasura GraphQL engine migrations
 * :ref:`hasura metadata <hasura_metadata>` 	 - Manage Hasura GraphQL engine metadata saved in the database
 * :ref:`hasura migrate <hasura_migrate>` 	 - Manage migrations on the database
