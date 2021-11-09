@@ -69,6 +69,7 @@ import Hasura.Server.Utils
 import Hasura.Session
 import Hasura.Tracing qualified as Tracing
 import Network.HTTP.Client.Transformable qualified as HTTP
+import Network.HTTP.Types as N
 import Network.URI (URI)
 import Network.Wreq qualified as Wreq
 import Web.Spock.Internal.Cookies qualified as Spock
@@ -375,7 +376,7 @@ processJwt ::
   JWTCtx ->
   HTTP.RequestHeaders ->
   Maybe RoleName ->
-  m (UserInfo, Maybe UTCTime)
+  m (UserInfo, Maybe UTCTime, [N.Header])
 processJwt = processJwt_ processAuthZOrCookieHeader jcxHeader
 
 -- Broken out for testing with mocks:
@@ -387,7 +388,7 @@ processJwt_ ::
   _JWTCtx ->
   HTTP.RequestHeaders ->
   Maybe RoleName ->
-  m (UserInfo, Maybe UTCTime)
+  m (UserInfo, Maybe UTCTime, [N.Header])
 processJwt_ processAuthZOrCookieHeader_ fGetHeaderType jwtCtx headers mUnAuthRole =
   maybe withoutAuthZHeader withAuthZHeader mAuthZHeader
   where
@@ -419,14 +420,14 @@ processJwt_ processAuthZOrCookieHeader_ fGetHeaderType jwtCtx headers mUnAuthRol
       userInfo <-
         mkUserInfo (URBPreDetermined requestedRole) UAdminSecretNotSent $
           mkSessionVariablesText metadata
-      pure (userInfo, expTimeM)
+      pure (userInfo, expTimeM, [])
 
     withoutAuthZHeader = do
       unAuthRole <- onNothing mUnAuthRole missingAuthzHeader
       userInfo <-
         mkUserInfo (URBPreDetermined unAuthRole) UAdminSecretNotSent $
           mkSessionVariablesHeaders headers
-      pure (userInfo, Nothing)
+      pure (userInfo, Nothing, [])
       where
         missingAuthzHeader =
           throw400 InvalidHeaders $

@@ -13,7 +13,7 @@ import Data.Aeson
 import Data.Aeson qualified as J
 import Data.ByteString.Lazy qualified as BL
 import Data.HashMap.Strict qualified as Map
-import Data.Parser.CacheControl
+import Data.Parser.CacheControl (parseMaxAge)
 import Data.Parser.Expires
 import Data.Text qualified as T
 import Data.Time.Clock (UTCTime, addUTCTime, getCurrentTime)
@@ -64,12 +64,14 @@ userInfoFromAuthHook ::
   AuthHook ->
   [N.Header] ->
   Maybe GH.ReqsText ->
-  m (UserInfo, Maybe UTCTime)
+  m (UserInfo, Maybe UTCTime, [N.Header])
 userInfoFromAuthHook logger manager hook reqHeaders reqs = do
   resp <- (`onLeft` logAndThrow) =<< try performHTTPRequest
   let status = resp ^. Wreq.responseStatus
       respBody = resp ^. Wreq.responseBody
-  mkUserInfoFromResp logger (ahUrl hook) (hookMethod hook) status respBody
+      cookieHeaders = filter (\(headerName, _) -> headerName == "Set-Cookie") (resp ^. Wreq.responseHeaders)
+
+  mkUserInfoFromResp logger (ahUrl hook) (hookMethod hook) status respBody cookieHeaders
   where
     performHTTPRequest :: m (Wreq.Response BL.ByteString)
     performHTTPRequest = do
@@ -111,14 +113,15 @@ mkUserInfoFromResp ::
   N.StdMethod ->
   N.Status ->
   BL.ByteString ->
-  m (UserInfo, Maybe UTCTime)
-mkUserInfoFromResp (Logger logger) url method statusCode respBody
+  [N.Header] ->
+  m (UserInfo, Maybe UTCTime, [N.Header])
+mkUserInfoFromResp (Logger logger) url method statusCode respBody respHdrs
   | statusCode == N.status200 =
     case eitherDecode respBody of
       Left e -> do
         logError
         throw500 $ "Invalid response from authorization hook: " <> T.pack e
-      Right rawHeaders -> getUserInfoFromHdrs rawHeaders
+      Right rawHeaders -> getUserInfoFromHdrs rawHeaders respHdrs
   | statusCode == N.status401 = do
     logError
     throw401 "Authentication hook unauthorized this request"
@@ -126,13 +129,13 @@ mkUserInfoFromResp (Logger logger) url method statusCode respBody
     logError
     throw500 "Invalid response from authorization hook"
   where
-    getUserInfoFromHdrs rawHeaders = do
+    getUserInfoFromHdrs rawHeaders responseHdrs = do
       userInfo <-
         mkUserInfo URBFromSessionVariables UAdminSecretNotSent $
           mkSessionVariablesText rawHeaders
       logWebHookResp LevelInfo Nothing Nothing
       expiration <- runMaybeT $ timeFromCacheControl rawHeaders <|> timeFromExpires rawHeaders
-      pure (userInfo, expiration)
+      pure (userInfo, expiration, responseHdrs)
 
     logWebHookResp :: MonadIO m => LogLevel -> Maybe BL.ByteString -> Maybe Text -> m ()
     logWebHookResp logLevel mResp message =
