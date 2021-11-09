@@ -2,6 +2,7 @@ import pytest
 import time
 from context import HGECtx, HGECtxError, ActionsWebhookServer, EvtsWebhookServer, HGECtxGQLServer, GQLWsClient, PytestConf, GraphQLWSClient
 import threading
+from auth_webhook_server import create_server, stop_server
 import random
 from datetime import datetime
 import sys
@@ -185,6 +186,14 @@ This option may result in test failures if the schema has to change between the 
         "--test-developer-api-enabled", action="store_true",
         help="Run Test cases with the Developer API Enabled",
         default=False
+    )
+
+    parser.addoption(
+        "--test-auth-webhook-header",
+        action="store_true",
+        default=False,
+        required=False,
+        help="Run testcases for auth webhook header forwarding"
     )
 
 

@@ -969,6 +969,7 @@ onConnInit logger manager wsConn authMode connParamsM onConnInitErrAction keepAl
     Right ipAddress -> do
       let headers = mkHeaders connState
       res <- resolveUserInfo logger manager headers authMode Nothing
+
       case res of
         Left e -> do
           let !initErr = CSInitError $ qeError e
@@ -979,7 +980,8 @@ onConnInit logger manager wsConn authMode connParamsM onConnInitErrAction keepAl
           let connErr = ConnErrMsg $ qeError e
           logWSEvent logger wsConn $ EConnErr connErr
           liftIO $ onConnInitErrAction wsConn connErr WS.onConnInitErrorText
-        Right (userInfo, expTimeM) -> do
+        -- we're ignoring the auth headers as headers are irrelevant in websockets
+        Right (userInfo, expTimeM, _authHeaders) -> do
           let !csInit = CSInitialised $ WsClientState userInfo expTimeM paramHeaders ipAddress
           liftIO $ do
             $assertNFHere csInit -- so we don't write thunks to mutable vars

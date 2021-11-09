@@ -51,12 +51,12 @@ getUserInfoWithExpTimeTests = describe "getUserInfo" $ do
         runExceptT
           . withExceptT qeCode -- just look at Code for purposes of tests
           . fmap _uiRole -- just look at RoleName for purposes of tests
-          . fmap fst -- disregard Nothing expiration
+          . fmap (view _1) -- disregard Nothing expiration
           . getUserInfoWithExpTime_ userInfoFromAuthHook processJwt () () rawHeaders authMode
         where
           -- mock authorization callbacks:
           userInfoFromAuthHook _ _ _hook _reqHeaders _optionalReqs = do
-            (,Nothing) <$> _UserInfo "hook"
+            (,Nothing,[]) <$> _UserInfo "hook"
             where
               -- we don't care about details here; we'll just check role name in tests:
               _UserInfo nm =

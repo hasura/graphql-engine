@@ -572,6 +572,25 @@ case "$SERVER_TEST_TO_RUN" in
     unset HASURA_GRAPHQL_CORS_DOMAIN
     ;;
 
+  auth-webhook-cookie)
+    # test auth webhook set-cookie forwarding on response
+
+    echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH SET-COOKIE HEADER IN AUTH WEBHOOK ########>\n"
+    TEST_TYPE="auth-webhook-cookie"
+    export HASURA_GRAPHQL_AUTH_HOOK="http://localhost:9876/auth"
+    export HASURA_GRAPHQL_ADMIN_SECRET="HGE$RANDOM$RANDOM"
+
+    python3 auth_webhook_server.py > "$OUTPUT_FOLDER/cookie_webhook.log" 2>&1  & WHC_PID=$!
+    wait_for_port 9876
+
+    run_hge_with_args serve
+    wait_for_port 8080
+
+    pytest -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --hge-webhook="$HASURA_GRAPHQL_AUTH_HOOK" --test-auth-webhook-header test_auth_webhook_cookie.py
+
+    kill_hge_servers
+    ;;
+
   ws-init-cookie-read-cors-enabled)
     # test websocket transport with initial cookie header
 
@@ -581,7 +600,7 @@ case "$SERVER_TEST_TO_RUN" in
     export HASURA_GRAPHQL_AUTH_HOOK_MODE="POST"
     export HASURA_GRAPHQL_ADMIN_SECRET="HGE$RANDOM$RANDOM"
 
-    python3 test_cookie_webhook.py > "$OUTPUT_FOLDER/cookie_webhook.log" 2>&1  & WHC_PID=$!
+    python3 auth_webhook_server.py > "$OUTPUT_FOLDER/cookie_webhook.log" 2>&1  & WHC_PID=$!
     wait_for_port 9876
 
     run_hge_with_args serve
@@ -604,7 +623,7 @@ case "$SERVER_TEST_TO_RUN" in
 
     wait_for_port 8080
 
-    python3 test_cookie_webhook.py > "$OUTPUT_FOLDER/cookie_webhook.log" 2>&1  & WHC_PID=$!
+    python3 auth_webhook_server.py > "$OUTPUT_FOLDER/cookie_webhook.log" 2>&1  & WHC_PID=$!
     wait_for_port 9876
 
     pytest -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --test-ws-init-cookie=noread test_websocket_init_cookie.py
@@ -623,7 +642,7 @@ case "$SERVER_TEST_TO_RUN" in
     run_hge_with_args serve --disable-cors
     wait_for_port 8080
 
-    python3 test_cookie_webhook.py > "$OUTPUT_FOLDER/cookie_webhook.log" 2>&1  & WHC_PID=$!
+    python3 auth_webhook_server.py > "$OUTPUT_FOLDER/cookie_webhook.log" 2>&1  & WHC_PID=$!
     wait_for_port 9876
 
     pytest -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --test-ws-init-cookie=read test_websocket_init_cookie.py
@@ -650,7 +669,7 @@ case "$SERVER_TEST_TO_RUN" in
     run_hge_with_args serve
     wait_for_port 8080
 
-    python3 test_cookie_webhook.py > "$OUTPUT_FOLDER/cookie_webhook.log" 2>&1  & WHC_PID=$!
+    python3 auth_webhook_server.py > "$OUTPUT_FOLDER/cookie_webhook.log" 2>&1  & WHC_PID=$!
     wait_for_port 9876
 
     pytest -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --test-graphql-disabled test_apis_disabled.py
@@ -679,7 +698,7 @@ case "$SERVER_TEST_TO_RUN" in
     run_hge_with_args serve
     wait_for_port 8080
 
-    python3 test_cookie_webhook.py > "$OUTPUT_FOLDER/cookie_webhook.log" 2>&1  & WHC_PID=$!
+    python3 auth_webhook_server.py > "$OUTPUT_FOLDER/cookie_webhook.log" 2>&1  & WHC_PID=$!
     wait_for_port 9876
 
     pytest -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --test-metadata-disabled test_apis_disabled.py
@@ -821,6 +840,7 @@ case "$SERVER_TEST_TO_RUN" in
       echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH ADMIN SECRET & WEBHOOK (POST) #########################>\n"
 
       export HASURA_GRAPHQL_AUTH_HOOK="https://localhost:9090/"
+      export HASURA_GRAPHQL_AUTH_HOOK_MODE="POST"
       export HASURA_GRAPHQL_ADMIN_SECRET="HGE$RANDOM$RANDOM"
       init_ssl
 
@@ -858,7 +878,7 @@ case "$SERVER_TEST_TO_RUN" in
       echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH ADMIN SECRET & WEBHOOK (GET) #########################>\n"
       TEST_TYPE="get-webhook"
       export HASURA_GRAPHQL_AUTH_HOOK="https://localhost:9090/"
-      export HASURA_GRAPHQL_AUTH_HOOK_MODE="POST"
+      export HASURA_GRAPHQL_AUTH_HOOK_MODE="GET"
       export HASURA_GRAPHQL_ADMIN_SECRET="HGE$RANDOM$RANDOM"
       init_ssl
 

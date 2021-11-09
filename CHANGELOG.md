@@ -48,6 +48,7 @@ source.
 - server: enable inherited roles by default in the graphql-engine
 - server: support MSSQL insert mutations
 - server: fix bug in OpenAPI when multiple REST endpoints have the same URL path but different method
+- server: forward Set-Cookie headers from auth webhook
 - console: design cleanup Modify and Add Table forms (close #7454)
 - console: enable custom graphql root fields for mssql under modify tab
 - console: allow dropping indices on all schemas

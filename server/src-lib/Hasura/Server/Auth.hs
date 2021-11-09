@@ -55,7 +55,7 @@ class (Monad m) => UserAuthentication m where
     [N.Header] ->
     AuthMode ->
     Maybe ReqsText ->
-    m (Either QErr (UserInfo, Maybe UTCTime))
+    m (Either QErr (UserInfo, Maybe UTCTime, [N.Header]))
 
 -- | The hashed admin password. 'hashAdminSecret' is our public interface for
 -- constructing the secret.
@@ -184,7 +184,7 @@ getUserInfoWithExpTime ::
   [N.Header] ->
   AuthMode ->
   Maybe ReqsText ->
-  m (UserInfo, Maybe UTCTime)
+  m (UserInfo, Maybe UTCTime, [N.Header])
 getUserInfoWithExpTime = getUserInfoWithExpTime_ userInfoFromAuthHook processJwt
 
 -- Broken out for testing with mocks:
@@ -197,16 +197,16 @@ getUserInfoWithExpTime_ ::
     AuthHook ->
     [N.Header] ->
     Maybe ReqsText ->
-    m (UserInfo, Maybe UTCTime)
+    m (UserInfo, Maybe UTCTime, [N.Header])
   ) ->
   -- | mock 'processJwt'
-  (JWTCtx -> [N.Header] -> Maybe RoleName -> m (UserInfo, Maybe UTCTime)) ->
+  (JWTCtx -> [N.Header] -> Maybe RoleName -> m (UserInfo, Maybe UTCTime, [N.Header])) ->
   _Logger_Hasura ->
   _Manager ->
   [N.Header] ->
   AuthMode ->
   Maybe ReqsText ->
-  m (UserInfo, Maybe UTCTime)
+  m (UserInfo, Maybe UTCTime, [N.Header])
 getUserInfoWithExpTime_ userInfoFromAuthHook_ processJwt_ logger manager rawHeaders authMode reqs = case authMode of
   AMNoAuth -> withNoExpTime $ mkUserInfoFallbackAdminRole UAuthNotSet
   -- If hasura was started with an admin secret we:
@@ -215,7 +215,7 @@ getUserInfoWithExpTime_ userInfoFromAuthHook_ processJwt_ logger manager rawHead
   --   - if not proceed with either webhook or JWT auth if configured
   AMAdminSecret realAdminSecretHash maybeUnauthRole ->
     checkingSecretIfSent realAdminSecretHash $
-      withNoExpTime $
+      withNoExpTime
         -- Consider unauthorized role, if not found raise admin secret header required exception
         case maybeUnauthRole of
           Nothing ->
@@ -241,7 +241,7 @@ getUserInfoWithExpTime_ userInfoFromAuthHook_ processJwt_ logger manager rawHead
     sessionVariables = mkSessionVariablesHeaders rawHeaders
 
     checkingSecretIfSent ::
-      AdminSecretHash -> m (UserInfo, Maybe UTCTime) -> m (UserInfo, Maybe UTCTime)
+      AdminSecretHash -> m (UserInfo, Maybe UTCTime, [N.Header]) -> m (UserInfo, Maybe UTCTime, [N.Header])
     checkingSecretIfSent realAdminSecretHash actionIfNoAdminSecret = do
       let maybeRequestAdminSecret =
             foldl1 (<|>) $
@@ -258,4 +258,4 @@ getUserInfoWithExpTime_ userInfoFromAuthHook_ processJwt_ logger manager rawHead
               "invalid " <> adminSecretHeader <> "/" <> deprecatedAccessKeyHeader
           withNoExpTime $ mkUserInfoFallbackAdminRole UAdminSecretSent
 
-    withNoExpTime a = (,Nothing) <$> a
+    withNoExpTime a = (,Nothing,[]) <$> a

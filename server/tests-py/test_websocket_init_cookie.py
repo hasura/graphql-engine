@@ -10,7 +10,6 @@ from context import PytestConf
 if not PytestConf.config.getoption("--test-ws-init-cookie"):
     pytest.skip("--test-ws-init-cookie flag is missing, skipping tests", allow_module_level=True)
 
-
 def url(hge_ctx):
     ws_url = urlparse(hge_ctx.hge_url)._replace(scheme='ws', path='/v1alpha1/graphql')
     return ws_url.geturl()

@@ -171,8 +171,9 @@ There is no default timeout on the resulting connection. You can optionally add 
        "Expires": "Mon, 30 Mar 2020 13:25:18 GMT"
    }
 
+.. note::
 
-
+  If the `Set-Cookie` headers are set by the auth webhook, they are forwarded by the GraphQL Engine as response headers for both GET/POST request methods.
 
 Failure
 +++++++
