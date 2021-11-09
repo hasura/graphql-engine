@@ -21,6 +21,7 @@ module Hasura.RQL.DDL.Schema.Cache
 where
 
 import Control.Arrow.Extended
+import Control.Concurrent.Async.Lifted.Safe qualified as LA
 import Control.Lens hiding ((.=))
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Control.Monad.Unique
@@ -41,11 +42,12 @@ import Data.These (These (..))
 import Data.Time.Clock (getCurrentTime)
 import Database.PG.Query qualified as Q
 import Hasura.Backends.Postgres.Connection
-import Hasura.Backends.Postgres.DDL.Source (initCatalogForSource)
+import Hasura.Backends.Postgres.DDL.Source (initCatalogForSource, logPGSourceCatalogMigrationLockedQueries)
 import Hasura.Base.Error
 import Hasura.GraphQL.Execute.Types
 import Hasura.GraphQL.Schema (buildGQLContext)
 import Hasura.Incremental qualified as Inc
+import Hasura.Logging
 import Hasura.Metadata.Class
 import Hasura.Prelude
 import Hasura.RQL.DDL.Action
@@ -115,6 +117,7 @@ action/function.
 -}
 
 buildRebuildableSchemaCache ::
+  Logger Hasura ->
   Env.Environment ->
   Metadata ->
   CacheBuild RebuildableSchemaCache
@@ -123,13 +126,14 @@ buildRebuildableSchemaCache =
 
 buildRebuildableSchemaCacheWithReason ::
   BuildReason ->
+  Logger Hasura ->
   Env.Environment ->
   Metadata ->
   CacheBuild RebuildableSchemaCache
-buildRebuildableSchemaCacheWithReason reason env metadata = do
+buildRebuildableSchemaCacheWithReason reason logger env metadata = do
   result <-
     flip runReaderT reason $
-      Inc.build (buildSchemaCacheRule env) (metadata, initialInvalidationKeys)
+      Inc.build (buildSchemaCacheRule logger env) (metadata, initialInvalidationKeys)
 
   pure $ RebuildableSchemaCache (Inc.result result) initialInvalidationKeys (Inc.rebuildRule result)
 
@@ -231,9 +235,10 @@ buildSchemaCacheRule ::
     MonadResolveSource m,
     HasServerConfigCtx m
   ) =>
+  Logger Hasura ->
   Env.Environment ->
   (Metadata, InvalidationKeys) `arr` SchemaCache
-buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
+buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
   invalidationKeysDep <- Inc.newDependency -< invalidationKeys
 
   -- Step 1: Process metadata and collect dependency information.
@@ -397,13 +402,12 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
       ( ArrowChoice arr,
         Inc.ArrowCache m arr,
         MonadIO m,
-        MonadBaseControl IO m,
         BackendMetadata b,
         HasServerConfigCtx m,
         MonadError QErr m
       ) =>
       (Int, SourceConfig b) `arr` RecreateEventTriggers
-    initCatalogIfNeeded = Inc.cache proc (numEventTriggers, sc) -> do
+    initCatalogIfNeeded = Inc.cache proc (numEventTriggers, sourceConfig) -> do
       arrM id
         -< do
           if numEventTriggers > 0
@@ -412,24 +416,27 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
                 Tag.PostgresVanillaTag -> do
                   migrationTime <- liftIO getCurrentTime
                   maintenanceMode <- _sccMaintenanceMode <$> askServerConfigCtx
-                  let initCatalogAction =
-                        runExceptT $ runTx (_pscExecCtx sc) Q.ReadWrite (initCatalogForSource maintenanceMode migrationTime)
-                  -- The `initCatalogForSource` action is retried here because
-                  -- in cloud there will be multiple workers (graphql-engine instances)
-                  -- trying to migrate the source catalog, when needed. This introduces
-                  -- a race condition as both the workers try to migrate the source catalog
-                  -- concurrently and when one of them succeeds the other ones will fail
-                  -- and be in an inconsistent state. To avoid the inconsistency, we retry
-                  -- migrating the catalog on error and in the retry `initCatalogForSource`
-                  -- will see that the catalog is already migrated, so it won't attempt the
-                  -- migration again
-                  liftEither
-                    =<< Retry.retrying
-                      ( Retry.constantDelay (fromIntegral $ diffTimeToMicroSeconds $ seconds $ Seconds 10)
-                          <> Retry.limitRetries 3
-                      )
-                      (const $ return . isLeft)
-                      (const initCatalogAction)
+                  liftEitherM $
+                    liftIO $
+                      LA.withAsync (logPGSourceCatalogMigrationLockedQueries logger sourceConfig) $
+                        const $ do
+                          let initCatalogAction =
+                                runExceptT $ runTx (_pscExecCtx sourceConfig) Q.ReadWrite (initCatalogForSource maintenanceMode migrationTime)
+                          -- The `initCatalogForSource` action is retried here because
+                          -- in cloud there will be multiple workers (graphql-engine instances)
+                          -- trying to migrate the source catalog, when needed. This introduces
+                          -- a race condition as both the workers try to migrate the source catalog
+                          -- concurrently and when one of them succeeds the other ones will fail
+                          -- and be in an inconsistent state. To avoid the inconsistency, we retry
+                          -- migrating the catalog on error and in the retry `initCatalogForSource`
+                          -- will see that the catalog is already migrated, so it won't attempt the
+                          -- migration again
+                          Retry.retrying
+                            ( Retry.constantDelay (fromIntegral $ diffTimeToMicroSeconds $ seconds $ Seconds 10)
+                                <> Retry.limitRetries 3
+                            )
+                            (const $ return . isLeft)
+                            (const initCatalogAction)
                 -- TODO: When event triggers are supported on new databases,
                 -- the initialization of the source catalog should also return
                 -- if the event triggers are to be re-created or not, essentially

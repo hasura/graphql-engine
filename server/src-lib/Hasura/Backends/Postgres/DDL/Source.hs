@@ -11,10 +11,14 @@ module Hasura.Backends.Postgres.DDL.Source
     postDropSourceHook,
     resolveDatabaseMetadata,
     resolveSourceConfig,
+    logPGSourceCatalogMigrationLockedQueries,
   )
 where
 
+import Control.Concurrent.Extended (sleep)
 import Control.Monad.Trans.Control (MonadBaseControl)
+import Data.Aeson (ToJSON, toJSON)
+import Data.Aeson.TH
 import Data.Environment qualified as Env
 import Data.FileEmbed (makeRelativeToProject)
 import Data.HashMap.Strict qualified as Map
@@ -25,6 +29,7 @@ import Hasura.Backends.Postgres.Connection
 import Hasura.Backends.Postgres.DDL.Source.Version
 import Hasura.Backends.Postgres.SQL.Types
 import Hasura.Base.Error
+import Hasura.Logging
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Common
@@ -60,6 +65,67 @@ resolveSourceConfig ::
 resolveSourceConfig name config _env = runExceptT do
   sourceResolver <- getSourceResolver
   liftEitherM $ liftIO $ sourceResolver name config
+
+-- | 'PGSourceLockQuery' is a data type which represents the contents of a single object of the
+--   locked queries which are queried from the `pg_stat_activity`. See `logPGSourceCatalogMigrationLockedQueries`.
+data PGSourceLockQuery = PGSourceLockQuery
+  { _psqaQuery :: !Text,
+    _psqaLockGranted :: !(Maybe Bool),
+    _psqaLockMode :: !Text,
+    _psqaTransactionStartTime :: !UTCTime,
+    _psqaQueryStartTime :: !UTCTime,
+    _psqaWaitEventType :: !Text,
+    _psqaBlockingQuery :: !Text
+  }
+
+$(deriveJSON hasuraJSON ''PGSourceLockQuery)
+
+instance ToEngineLog [PGSourceLockQuery] Hasura where
+  toEngineLog resp = (LevelInfo, sourceCatalogMigrationLogType, toJSON resp)
+
+newtype PGSourceLockQueryError = PGSourceLockQueryError QErr
+  deriving (ToJSON)
+
+instance ToEngineLog PGSourceLockQueryError Hasura where
+  toEngineLog resp = (LevelError, sourceCatalogMigrationLogType, toJSON resp)
+
+-- | 'logPGSourceCatalogMigrationLockedQueries' as the name suggests logs
+--   the queries which are blocking in the database. This function is called
+--   asynchronously from `initCatalogIfNeeded` while the source catalog is being
+--   migrated.
+--   NOTE: When there are no locking queries present in the database, nothing will be logged.
+logPGSourceCatalogMigrationLockedQueries ::
+  MonadIO m =>
+  Logger Hasura ->
+  PGSourceConfig ->
+  m Void
+logPGSourceCatalogMigrationLockedQueries logger sourceConfig = forever $ do
+  dbStats <- liftIO $ runPgSourceReadTx sourceConfig fetchLockedQueriesTx
+  case dbStats of
+    Left err -> unLogger logger $ PGSourceLockQueryError err
+    Right (val :: (Maybe [PGSourceLockQuery])) ->
+      case val of
+        Nothing -> pure ()
+        Just [] -> pure ()
+        Just val' -> liftIO $ unLogger logger $ val'
+  liftIO $ sleep $ seconds 5
+  where
+    -- The blocking query in the below transaction is truncated to the first 20 characters because it may contain
+    -- sensitive info.
+    fetchLockedQueriesTx =
+      (Q.getAltJ . runIdentity . Q.getRow)
+        <$> Q.withQE
+          defaultTxErrorHandler
+          [Q.sql|
+         SELECT COALESCE(json_agg(DISTINCT jsonb_build_object('query', psa.query, 'lock_granted', pl.granted, 'lock_mode', pl.mode, 'transaction_start_time', psa.xact_start, 'query_start_time', psa.query_start, 'wait_event_type', psa.wait_event_type, 'blocking_query', (SUBSTRING(blocking.query, 1, 20) || '...') )), '[]'::json)
+         FROM     pg_stat_activity psa
+         JOIN     pg_stat_activity blocking ON blocking.pid = ANY(pg_blocking_pids(psa.pid))
+         LEFT JOIN pg_locks pl ON psa.pid = pl.pid
+         WHERE    psa.query ILIKE '%hdb_catalog%' AND psa.wait_event_type IS NOT NULL
+         AND      psa.query ILIKE any (array ['%create%', '%drop%', '%alter%']);
+       |]
+          ()
+          False
 
 resolveDatabaseMetadata ::
   forall pgKind m.

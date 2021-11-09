@@ -21,6 +21,7 @@ module Hasura.Logging
     cleanLoggerCtx,
     eventTriggerLogType,
     scheduledTriggerLogType,
+    sourceCatalogMigrationLogType,
     EnabledLogTypes (..),
     defaultEnabledEngineLogTypes,
     isEngineLogTypeEnabled,
@@ -113,6 +114,7 @@ data InternalLogTypes
   | ILTJwkRefreshLog
   | ILTTelemetry
   | ILTSchemaSyncThread
+  | ILTSourceCatalogMigration
   deriving (Show, Eq, Generic)
 
 instance Hashable InternalLogTypes
@@ -128,6 +130,7 @@ instance J.ToJSON InternalLogTypes where
     ILTJwkRefreshLog -> "jwk-refresh-log"
     ILTTelemetry -> "telemetry-log"
     ILTSchemaSyncThread -> "schema-sync-thread"
+    ILTSourceCatalogMigration -> "source-catalog-migration"
 
 -- the default enabled log-types
 defaultEnabledEngineLogTypes :: Set.HashSet (EngineLogType Hasura)
@@ -284,3 +287,6 @@ eventTriggerLogType = ELTInternal ILTEventTrigger
 
 scheduledTriggerLogType :: EngineLogType Hasura
 scheduledTriggerLogType = ELTInternal ILTScheduledTrigger
+
+sourceCatalogMigrationLogType :: EngineLogType Hasura
+sourceCatalogMigrationLogType = ELTInternal ILTSourceCatalogMigration

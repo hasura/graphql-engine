@@ -467,7 +467,7 @@ migrateCatalogSchema
               if version < 43 then CatalogUpdate else CatalogSync
       schemaCache <-
         runCacheBuild cacheBuildParams $
-          buildRebuildableSchemaCacheWithReason buildReason env metadata
+          buildRebuildableSchemaCacheWithReason buildReason logger env metadata
       pure (migrationResult, schemaCache)
 
     (migrationResult, schemaCache) <-
