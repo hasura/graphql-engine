@@ -647,6 +647,13 @@ export const supportedFeatures: DeepRequired<SupportedFeaturesType> = {
     nonTrackableFunctions: {
       enabled: true,
     },
+    modify: {
+      enabled: true,
+      comments: {
+        view: true,
+        edit: true,
+      },
+    },
   },
   events: {
     triggers: {

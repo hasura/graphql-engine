@@ -663,12 +663,21 @@ export const getSetColumnDefaultSql = (
 };
 
 export const getSetCommentSql = (
-  on: 'column' | 'table' | string,
+  on: string,
   tableName: string,
   schemaName: string,
   comment: string | null,
-  columnName?: string
+  columnName?: string,
+  functionName?: string
 ) => {
+  if (functionName) {
+    return `
+comment on ${on} "${schemaName}"."${functionName}" is ${
+      comment ? sqlEscapeText(comment) : 'NULL'
+    }
+`;
+  }
+
   if (columnName) {
     return `
   comment on ${on} "${schemaName}"."${tableName}"."${columnName}" is ${
@@ -857,6 +866,7 @@ pg_get_functiondef(p.oid) AS function_definition,
 rtn.nspname::text AS return_type_schema,
 rt.typname::text AS return_type_name,
 rt.typtype::text AS return_type_type,
+obj_description(p.oid) AS comment,
 p.proretset AS returns_set,
 ( SELECT COALESCE(json_agg(json_build_object('schema', q.schema, 'name', q.name, 'type', q.type)), '[]'::json) AS "coalesce"
        FROM ( SELECT pt.typname AS name,

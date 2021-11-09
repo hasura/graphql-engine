@@ -1,4 +1,5 @@
 import React from 'react';
+import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 
 import Helmet from 'react-helmet';
@@ -9,6 +10,7 @@ import globals from '../../../../../Globals';
 import Button from '../../../../Common/Button/Button';
 import styles from './ModifyCustomFunction.scss';
 import TextAreaWithCopy from '../../../../Common/TextAreaWithCopy/TextAreaWithCopy';
+import FunctionCommentEditor from './FunctionCommentEditor';
 import {
   fetchCustomFunction,
   unTrackCustomFunction,
@@ -23,7 +25,8 @@ import {
 } from '../../../../Common/utils/routesUtils';
 import SessionVarSection from './SessionVarSection';
 import RawSqlButton from '../../Common/Components/RawSqlButton';
-import { connect } from 'react-redux';
+
+import { isFeatureSupported } from '@/dataSources';
 
 export const pageTitle = 'Custom Function';
 
@@ -122,6 +125,8 @@ class ModifyCustomFunction extends React.Component {
       functionSchema: schema,
       functionName,
       functionDefinition,
+      functionComment,
+      isEditingComment,
       isRequesting,
       isDeleting,
       isUntracking,
@@ -220,7 +225,24 @@ class ModifyCustomFunction extends React.Component {
           showLoader={isFetching}
           testPrefix={'functions'}
         />
+
         <br />
+        {isFeatureSupported('functions.modify.comments.view') && (
+          <div className="w-full sm:w-6/12 mb-lg">
+            <h4 className="flex items-center text-gray-600 font-semibold mb-formlabel">
+              Function Comments
+            </h4>
+
+            <FunctionCommentEditor
+              isEditing={isEditingComment}
+              defaultValue={functionComment}
+              dispatch={dispatch}
+              readOnly={!isFeatureSupported('functions.modify.comments.edit')}
+              dispatch={dispatch}
+            />
+          </div>
+        )}
+
         <div className="w-full sm:w-6/12 mb-md">
           <h4 className="flex items-center text-gray-600 font-semibold mb-formlabel">
             Function Definition:

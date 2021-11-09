@@ -2,8 +2,8 @@
 
 ## Next release
 (Add highlights/major features below)
-
 - server: log locking DB queries during source catalog migration
+- console: add comments to tracked functions
 
 ### Bug fixes and improvements
 (Add entries below in the order of server, console, cli, docs, others)
