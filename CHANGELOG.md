@@ -6,6 +6,7 @@
 - server: fix to allow remote schema response to contain an "extensions" field (#7143)
 - console: add comments to tracked functions
 - metadata SDK: add type definitions for config v3
+- cli: fix cli-console failing to add migrations if there are tabs in SQL body (#7362)
 
 - cli: core CLI features are not blocked in environments without internet (#7695)
 
