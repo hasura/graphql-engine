@@ -1461,3 +1461,587 @@ definitions:
     required:
       - tables
       - version
+  FromEnv:
+    description: >-
+      https://hasura.io/docs/latest/graphql/core/api-reference/syntax-defs.html#fromenv
+    title: FromEnv
+    type: object
+    properties:
+      from_env:
+        description: Name of the environment variable
+        type: string
+        title: from_env
+    required:
+      - from_env
+  PGConfiguration:
+    description: >-
+      https://hasura.io/docs/latest/graphql/core/api-reference/syntax-defs.html#pgconfiguration
+    title: PGConfiguration
+    type: object
+    properties:
+      connection_info:
+        $ref: '#/definitions/PGSourceConnectionInfo'
+        description: Connection parameters for the source
+        title: connection_info
+      read_replicas:
+        description: >-
+          Optional list of read replica configuration (supported only in
+          cloud/enterprise versions)
+        type: array
+        items:
+          $ref: '#/definitions/PGSourceConnectionInfo'
+        title: read_replicas
+    required:
+      - connection_info
+  MsSQLConfiguration:
+    description: >-
+      https://hasura.io/docs/latest/graphql/core/api-reference/syntax-defs.html#mssqlsourceconnectioninfo
+    title: MsSQLConfiguration
+    type: object
+    properties:
+      connection_info:
+        $ref: '#/definitions/MsSQLSourceConnectionInfo'
+        description: Connection parameters for the source
+        title: connection_info
+    required:
+      - connection_info
+  BigQueryConfiguration:
+    description: >-
+      https://hasura.io/docs/latest/graphql/core/api-reference/syntax-defs.html#bigqueryconfiguration
+    title: BigQueryConfiguration
+    type: object
+    properties:
+      service_account:
+        description: Service account for BigQuery database
+        anyOf:
+          - $ref: '#/definitions/FromEnv'
+          - $ref: '#/definitions/Record<string,any>'
+          - type: string
+        title: service_account
+      project_id:
+        description: Project Id for BigQuery database
+        anyOf:
+          - $ref: '#/definitions/FromEnv'
+          - type: string
+        title: project_id
+      datasets:
+        description: List of BigQuery datasets
+        anyOf:
+          - type: array
+            items:
+              type: string
+          - $ref: '#/definitions/FromEnv'
+        title: datasets
+    required:
+      - datasets
+      - project_id
+      - service_account
+  PGSourceConnectionInfo:
+    description: >-
+      https://hasura.io/docs/latest/graphql/core/api-reference/syntax-defs.html#pgsourceconnectioninfo
+    title: PGSourceConnectionInfo
+    type: object
+    properties:
+      database_url:
+        description: >-
+          The database connection URL as a string, as an environment variable,
+          or as connection parameters.
+        anyOf:
+          - $ref: '#/definitions/FromEnv'
+          - $ref: '#/definitions/PGConnectionParameters'
+          - type: string
+        title: database_url
+      pool_settings:
+        description: Connection pool settings
+        $ref: '#/definitions/PGPoolSettings'
+        title: pool_settings
+      use_prepared_statements:
+        description: >-
+          If set to true the server prepares statement before executing on the
+          source database (default: false). For more details, refer to the
+          Postgres docs
+        type: boolean
+        title: use_prepared_statements
+      isolation_level:
+        description: >-
+          The transaction isolation level in which the queries made to the
+          source will be run with (default: read-committed).
+        enum:
+          - read-committed
+          - repeatable-read
+          - serializable
+        type: string
+        title: isolation_level
+      ssl_configuration:
+        description: >-
+          The client SSL certificate settings for the database (Only available
+          in Cloud).
+        $ref: '#/definitions/PGCertSettings'
+        title: ssl_configuration
+    required:
+      - database_url
+  MsSQLSourceConnectionInfo:
+    description: >-
+      https://hasura.io/docs/latest/graphql/core/api-reference/syntax-defs.html#mssqlsourceconnectioninfo
+    title: MsSQLSourceConnectionInfo
+    type: object
+    properties:
+      connection_string:
+        description: 'The database connection string, or as an environment variable'
+        anyOf:
+          - $ref: '#/definitions/FromEnv'
+          - type: string
+        title: connection_string
+      pool_settings:
+        description: Connection pool settings
+        $ref: '#/definitions/MsSQLPoolSettings'
+        title: pool_settings
+    required:
+      - connection_string
+  PGConnectionParameters:
+    description: >-
+      https://hasura.io/docs/latest/graphql/core/api-reference/syntax-defs.html#pgconnectionparameters
+    title: PGConnectionParameters
+    type: object
+    properties:
+      username:
+        description: The Postgres user to be connected
+        type: string
+        title: username
+      password:
+        description: The Postgres user’s password
+        type: string
+        title: password
+      database:
+        description: The database name
+        type: string
+        title: database
+      host:
+        description: The name of the host to connect to
+        type: string
+        title: host
+      port:
+        description: 'The port number to connect with, at the server host'
+        type: number
+        title: port
+    required:
+      - database
+      - host
+      - port
+      - username
+  PGPoolSettings:
+    description: >-
+      https://hasura.io/docs/latest/graphql/core/api-reference/syntax-defs.html#pgpoolsettings
+    title: PGPoolSettings
+    type: object
+    properties:
+      max_connections:
+        description: 'Maximum number of connections to be kept in the pool (default: 50)'
+        type: number
+        title: max_connections
+      idle_timeout:
+        description: 'The idle timeout (in seconds) per connection (default: 180)'
+        type: number
+        title: idle_timeout
+      retries:
+        description: 'Number of retries to perform (default: 1)'
+        type: number
+        title: retries
+      pool_timeout:
+        description: >-
+          Maximum time to wait while acquiring a Postgres connection from the
+          pool, in seconds (default: forever)
+        type: number
+        title: pool_timeout
+      connection_lifetime:
+        description: >-
+          Time from connection creation after which the connection should be
+          destroyed and a new one created. A value of 0 indicates we should
+          never destroy an active connection. If 0 is passed, memory from large
+          query results may not be reclaimed. (default: 600 sec)
+        type: number
+        title: connection_lifetime
+  PGCertSettings:
+    description: >-
+      https://hasura.io/docs/latest/graphql/core/api-reference/syntax-defs.html#pgcertsettings
+    title: PGCertSettings
+    type: object
+    properties:
+      sslmode:
+        description: >-
+          The SSL connection mode. See the libpq ssl support docs
+          <https://www.postgresql.org/docs/9.1/libpq-ssl.html> for more details.
+        type: string
+        title: sslmode
+      sslrootcert:
+        $ref: '#/definitions/FromEnv'
+        description: Environment variable which stores trusted certificate authorities.
+        title: sslrootcert
+      sslcert:
+        $ref: '#/definitions/FromEnv'
+        description: Environment variable which stores the client certificate.
+        title: sslcert
+      sslkey:
+        $ref: '#/definitions/FromEnv'
+        description: Environment variable which stores the client private key.
+        title: sslkey
+      sslpassword:
+        description: Password in the case where the sslkey is encrypted.
+        anyOf:
+          - $ref: '#/definitions/FromEnv'
+          - type: string
+        title: sslpassword
+    required:
+      - sslcert
+      - sslkey
+      - sslmode
+      - sslrootcert
+  MsSQLPoolSettings:
+    description: >-
+      https://hasura.io/docs/latest/graphql/core/api-reference/syntax-defs.html#mssqlpoolsettings
+    title: MsSQLPoolSettings
+    type: object
+    properties:
+      max_connections:
+        description: 'Maximum number of connections to be kept in the pool (default: 50)'
+        type: number
+        title: max_connections
+      idle_timeout:
+        description: 'The idle timeout (in seconds) per connection (default: 180)'
+        type: number
+        title: idle_timeout
+  BackendKind:
+    enum:
+      - bigquery
+      - citus
+      - mssql
+      - postgres
+    type: string
+  BaseSource:
+    title: BaseSource
+    type: object
+    properties:
+      name:
+        type: string
+        title: name
+      tables:
+        type: array
+        items:
+          $ref: '#/definitions/TableEntry'
+        title: tables
+      functions:
+        type: array
+        items:
+          $ref: '#/definitions/CustomFunction'
+        title: functions
+    required:
+      - name
+      - tables
+  PGSource:
+    title: PGSource
+    type: object
+    properties:
+      kind:
+        enum:
+          - citus
+          - postgres
+        type: string
+        title: kind
+      configuration:
+        $ref: '#/definitions/PGConfiguration'
+        title: configuration
+      name:
+        type: string
+        title: name
+      tables:
+        type: array
+        items:
+          $ref: '#/definitions/TableEntry'
+        title: tables
+      functions:
+        type: array
+        items:
+          $ref: '#/definitions/CustomFunction'
+        title: functions
+    required:
+      - configuration
+      - kind
+      - name
+      - tables
+  MsSQLSource:
+    title: MsSQLSource
+    type: object
+    properties:
+      kind:
+        type: string
+        enum:
+          - mssql
+        title: kind
+      configuration:
+        $ref: '#/definitions/MsSQLConfiguration'
+        title: configuration
+      name:
+        type: string
+        title: name
+      tables:
+        type: array
+        items:
+          $ref: '#/definitions/TableEntry'
+        title: tables
+      functions:
+        type: array
+        items:
+          $ref: '#/definitions/CustomFunction'
+        title: functions
+    required:
+      - configuration
+      - kind
+      - name
+      - tables
+  BigQuerySource:
+    title: BigQuerySource
+    type: object
+    properties:
+      kind:
+        type: string
+        enum:
+          - bigquery
+        title: kind
+      configuration:
+        $ref: '#/definitions/BigQueryConfiguration'
+        title: configuration
+      name:
+        type: string
+        title: name
+      tables:
+        type: array
+        items:
+          $ref: '#/definitions/TableEntry'
+        title: tables
+      functions:
+        type: array
+        items:
+          $ref: '#/definitions/CustomFunction'
+        title: functions
+    required:
+      - configuration
+      - kind
+      - name
+      - tables
+  Source:
+    anyOf:
+      - $ref: '#/definitions/PGSource'
+      - $ref: '#/definitions/MsSQLSource'
+      - $ref: '#/definitions/BigQuerySource'
+  APILimits:
+    title: APILimits
+    type: object
+    properties:
+      depth_limit:
+        $ref: '#/definitions/DepthLimit'
+        title: depth_limit
+      disabled:
+        type: boolean
+        title: disabled
+      rate_limit:
+        $ref: '#/definitions/RateLimit'
+        title: rate_limit
+      node_limit:
+        $ref: '#/definitions/NodeLimit'
+        title: node_limit
+    required:
+      - disabled
+  DepthLimit:
+    title: DepthLimit
+    type: object
+    properties:
+      global:
+        type: number
+        title: global
+      per_role:
+        type: object
+        additionalProperties:
+          type: number
+        title: per_role
+    required:
+      - global
+      - per_role
+  RateLimit:
+    title: RateLimit
+    type: object
+    properties:
+      global:
+        $ref: '#/definitions/RateLimitRule'
+        title: global
+      per_role:
+        type: object
+        additionalProperties:
+          $ref: '#/definitions/RateLimitRule'
+        title: per_role
+    required:
+      - global
+      - per_role
+  RateLimitRule:
+    title: RateLimitRule
+    type: object
+    properties:
+      unique_params:
+        anyOf:
+          - type: array
+            items:
+              type: string
+          - enum:
+              - IP
+            type: string
+          - type: 'null'
+        title: unique_params
+      max_reqs_per_min:
+        type: number
+        title: max_reqs_per_min
+    required:
+      - max_reqs_per_min
+      - unique_params
+  NodeLimit:
+    title: NodeLimit
+    type: object
+    properties:
+      global:
+        type: number
+        title: global
+      per_role:
+        type: object
+        additionalProperties:
+          type: number
+        title: per_role
+    required:
+      - global
+      - per_role
+  RestEndpoint:
+    title: RestEndpoint
+    type: object
+    properties:
+      name:
+        type: string
+        title: name
+      url:
+        type: string
+        title: url
+      methods:
+        type: array
+        items:
+          enum:
+            - PATCH
+            - POST
+            - PUT
+          type: string
+        title: methods
+      definition:
+        $ref: '#/definitions/RestEndpointDefinition'
+        title: definition
+      comment:
+        type: string
+        title: comment
+    required:
+      - definition
+      - methods
+      - name
+      - url
+  RestEndpointDefinition:
+    title: RestEndpointDefinition
+    type: object
+    properties:
+      query:
+        type: object
+        properties:
+          query_name:
+            type: string
+            title: query_name
+          collection_name:
+            type: string
+            title: collection_name
+        required:
+          - collection_name
+          - query_name
+        title: query
+    required:
+      - query
+  InheritedRole:
+    title: InheritedRole
+    type: object
+    properties:
+      role_name:
+        type: string
+        title: role_name
+      role_set:
+        type: array
+        items:
+          type: string
+        title: role_set
+    required:
+      - role_name
+      - role_set
+  HasuraMetadataV3:
+    title: HasuraMetadataV3
+    type: object
+    properties:
+      version:
+        type: number
+        enum:
+          - 3
+        title: version
+      sources:
+        type: array
+        items:
+          anyOf:
+            - $ref: '#/definitions/PGSource'
+            - $ref: '#/definitions/MsSQLSource'
+            - $ref: '#/definitions/BigQuerySource'
+        title: sources
+      actions:
+        type: array
+        items:
+          $ref: '#/definitions/Action'
+        title: actions
+      custom_types:
+        $ref: '#/definitions/CustomTypes'
+        title: custom_types
+      remote_schemas:
+        type: array
+        items:
+          $ref: '#/definitions/RemoteSchema'
+        title: remote_schemas
+      query_collections:
+        type: array
+        items:
+          $ref: '#/definitions/QueryCollectionEntry'
+        title: query_collections
+      allowlist:
+        type: array
+        items:
+          $ref: '#/definitions/AllowList'
+        title: allowlist
+      cron_triggers:
+        type: array
+        items:
+          $ref: '#/definitions/CronTrigger'
+        title: cron_triggers
+      api_limits:
+        $ref: '#/definitions/APILimits'
+        title: api_limits
+      rest_endpoints:
+        type: array
+        items:
+          $ref: '#/definitions/RestEndpoint'
+        title: rest_endpoints
+      inherited_roles:
+        type: array
+        items:
+          $ref: '#/definitions/InheritedRole'
+        title: inherited_roles
+    required:
+      - rest_endpoints
+      - sources
+      - version
+  'Record<string,any>':
+    title: 'Record<string,any>'
+    type: object

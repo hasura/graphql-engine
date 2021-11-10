@@ -75,6 +75,32 @@
 #     result = action_definition_from_dict(json.loads(json_string))
 #     result = input_argument_from_dict(json.loads(json_string))
 #     result = hasura_metadata_v2_from_dict(json.loads(json_string))
+#     result = from_env_from_dict(json.loads(json_string))
+#     result = pg_configuration_from_dict(json.loads(json_string))
+#     result = mssql_configuration_from_dict(json.loads(json_string))
+#     result = big_query_configuration_from_dict(json.loads(json_string))
+#     result = pg_source_connection_info_from_dict(json.loads(json_string))
+#     result = mssql_source_connection_info_from_dict(json.loads(json_string))
+#     result = pg_connection_parameters_from_dict(json.loads(json_string))
+#     result = pg_pool_settings_from_dict(json.loads(json_string))
+#     result = pgcert_settings_from_dict(json.loads(json_string))
+#     result = mssql_pool_settings_from_dict(json.loads(json_string))
+#     result = backend_kind_from_dict(json.loads(json_string))
+#     result = base_source_from_dict(json.loads(json_string))
+#     result = pg_source_from_dict(json.loads(json_string))
+#     result = mssql_source_from_dict(json.loads(json_string))
+#     result = big_query_source_from_dict(json.loads(json_string))
+#     result = source_from_dict(json.loads(json_string))
+#     result = api_limits_from_dict(json.loads(json_string))
+#     result = depth_limit_from_dict(json.loads(json_string))
+#     result = rate_limit_from_dict(json.loads(json_string))
+#     result = rate_limit_rule_from_dict(json.loads(json_string))
+#     result = node_limit_from_dict(json.loads(json_string))
+#     result = rest_endpoint_from_dict(json.loads(json_string))
+#     result = rest_endpoint_definition_from_dict(json.loads(json_string))
+#     result = inherited_role_from_dict(json.loads(json_string))
+#     result = hasura_metadata_v3_from_dict(json.loads(json_string))
+#     result = record_string_any_from_dict(json.loads(json_string))
 
 from dataclasses import dataclass
 from typing import Any, Optional, List, Dict, Union, TypeVar, Callable, Type, cast
@@ -1830,6 +1856,927 @@ class HasuraMetadataV2:
         return result
 
 
+@dataclass
+class PGConnectionParameters:
+    """
+    https://hasura.io/docs/latest/graphql/core/api-reference/syntax-defs.html#pgconnectionparameters
+    """
+    """The database name"""
+    database: str
+    """The name of the host to connect to"""
+    host: str
+    """The port number to connect with, at the server host"""
+    port: float
+    """The Postgres user to be connected"""
+    username: str
+    """The Postgres user’s password"""
+    password: Optional[str] = None
+
+    @staticmethod
+    def from_dict(obj: Any) -> 'PGConnectionParameters':
+        assert isinstance(obj, dict)
+        database = from_str(obj.get("database"))
+        host = from_str(obj.get("host"))
+        port = from_float(obj.get("port"))
+        username = from_str(obj.get("username"))
+        password = from_union([from_str, from_none], obj.get("password"))
+        return PGConnectionParameters(database, host, port, username, password)
+
+    def to_dict(self) -> dict:
+        result: dict = {}
+        result["database"] = from_str(self.database)
+        result["host"] = from_str(self.host)
+        result["port"] = to_float(self.port)
+        result["username"] = from_str(self.username)
+        result["password"] = from_union([from_str, from_none], self.password)
+        return result
+
+
+@dataclass
+class BaseSource:
+    name: str
+    tables: List[TableEntry]
+    functions: Optional[List[CustomFunction]] = None
+
+    @staticmethod
+    def from_dict(obj: Any) -> 'BaseSource':
+        assert isinstance(obj, dict)
+        name = from_str(obj.get("name"))
+        tables = from_list(TableEntry.from_dict, obj.get("tables"))
+        functions = from_union([lambda x: from_list(CustomFunction.from_dict, x), from_none], obj.get("functions"))
+        return BaseSource(name, tables, functions)
+
+    def to_dict(self) -> dict:
+        result: dict = {}
+        result["name"] = from_str(self.name)
+        result["tables"] = from_list(lambda x: to_class(TableEntry, x), self.tables)
+        result["functions"] = from_union([lambda x: from_list(lambda x: to_class(CustomFunction, x), x), from_none], self.functions)
+        return result
+
+
+@dataclass
+class PGConnectionParametersClass:
+    """https://hasura.io/docs/latest/graphql/core/api-reference/syntax-defs.html#fromenv
+    
+    Environment variable which stores the client certificate.
+    
+    Environment variable which stores the client private key.
+    
+    Environment variable which stores trusted certificate authorities.
+    
+    
+    https://hasura.io/docs/latest/graphql/core/api-reference/syntax-defs.html#pgconnectionparameters
+    """
+    """Name of the environment variable"""
+    from_env: Optional[str] = None
+    """The database name"""
+    database: Optional[str] = None
+    """The name of the host to connect to"""
+    host: Optional[str] = None
+    """The Postgres user’s password"""
+    password: Optional[str] = None
+    """The port number to connect with, at the server host"""
+    port: Optional[float] = None
+    """The Postgres user to be connected"""
+    username: Optional[str] = None
+
+    @staticmethod
+    def from_dict(obj: Any) -> 'PGConnectionParametersClass':
+        assert isinstance(obj, dict)
+        from_env = from_union([from_str, from_none], obj.get("from_env"))
+        database = from_union([from_str, from_none], obj.get("database"))
+        host = from_union([from_str, from_none], obj.get("host"))
+        password = from_union([from_str, from_none], obj.get("password"))
+        port = from_union([from_float, from_none], obj.get("port"))
+        username = from_union([from_str, from_none], obj.get("username"))
+        return PGConnectionParametersClass(from_env, database, host, password, port, username)
+
+    def to_dict(self) -> dict:
+        result: dict = {}
+        result["from_env"] = from_union([from_str, from_none], self.from_env)
+        result["database"] = from_union([from_str, from_none], self.database)
+        result["host"] = from_union([from_str, from_none], self.host)
+        result["password"] = from_union([from_str, from_none], self.password)
+        result["port"] = from_union([to_float, from_none], self.port)
+        result["username"] = from_union([from_str, from_none], self.username)
+        return result
+
+
+class IsolationLevel(Enum):
+    """The transaction isolation level in which the queries made to the source will be run with
+    (default: read-committed).
+    """
+    READ_COMMITTED = "read-committed"
+    REPEATABLE_READ = "repeatable-read"
+    SERIALIZABLE = "serializable"
+
+
+@dataclass
+class PGPoolSettings:
+    """Connection pool settings
+    
+    https://hasura.io/docs/latest/graphql/core/api-reference/syntax-defs.html#pgpoolsettings
+    """
+    """Time from connection creation after which the connection should be destroyed and a new
+    one created. A value of 0 indicates we should never destroy an active connection. If 0 is
+    passed, memory from large query results may not be reclaimed. (default: 600 sec)
+    """
+    connection_lifetime: Optional[float] = None
+    """The idle timeout (in seconds) per connection (default: 180)"""
+    idle_timeout: Optional[float] = None
+    """Maximum number of connections to be kept in the pool (default: 50)"""
+    max_connections: Optional[float] = None
+    """Maximum time to wait while acquiring a Postgres connection from the pool, in seconds
+    (default: forever)
+    """
+    pool_timeout: Optional[float] = None
+    """Number of retries to perform (default: 1)"""
+    retries: Optional[float] = None
+
+    @staticmethod
+    def from_dict(obj: Any) -> 'PGPoolSettings':
+        assert isinstance(obj, dict)
+        connection_lifetime = from_union([from_float, from_none], obj.get("connection_lifetime"))
+        idle_timeout = from_union([from_float, from_none], obj.get("idle_timeout"))
+        max_connections = from_union([from_float, from_none], obj.get("max_connections"))
+        pool_timeout = from_union([from_float, from_none], obj.get("pool_timeout"))
+        retries = from_union([from_float, from_none], obj.get("retries"))
+        return PGPoolSettings(connection_lifetime, idle_timeout, max_connections, pool_timeout, retries)
+
+    def to_dict(self) -> dict:
+        result: dict = {}
+        result["connection_lifetime"] = from_union([to_float, from_none], self.connection_lifetime)
+        result["idle_timeout"] = from_union([to_float, from_none], self.idle_timeout)
+        result["max_connections"] = from_union([to_float, from_none], self.max_connections)
+        result["pool_timeout"] = from_union([to_float, from_none], self.pool_timeout)
+        result["retries"] = from_union([to_float, from_none], self.retries)
+        return result
+
+
+@dataclass
+class FromEnv:
+    """https://hasura.io/docs/latest/graphql/core/api-reference/syntax-defs.html#fromenv
+    
+    Environment variable which stores the client certificate.
+    
+    Environment variable which stores the client private key.
+    
+    Environment variable which stores trusted certificate authorities.
+    """
+    """Name of the environment variable"""
+    from_env: str
+
+    @staticmethod
+    def from_dict(obj: Any) -> 'FromEnv':
+        assert isinstance(obj, dict)
+        from_env = from_str(obj.get("from_env"))
+        return FromEnv(from_env)
+
+    def to_dict(self) -> dict:
+        result: dict = {}
+        result["from_env"] = from_str(self.from_env)
+        return result
+
+
+@dataclass
+class PGCERTSettings:
+    """The client SSL certificate settings for the database (Only available in Cloud).
+    
+    https://hasura.io/docs/latest/graphql/core/api-reference/syntax-defs.html#pgcertsettings
+    """
+    """Environment variable which stores the client certificate."""
+    sslcert: FromEnv
+    """Environment variable which stores the client private key."""
+    sslkey: FromEnv
+    """The SSL connection mode. See the libpq ssl support docs
+    <https://www.postgresql.org/docs/9.1/libpq-ssl.html> for more details.
+    """
+    sslmode: str
+    """Password in the case where the sslkey is encrypted."""
+    sslpassword: Union[FromEnv, None, str]
+    """Environment variable which stores trusted certificate authorities."""
+    sslrootcert: FromEnv
+
+    @staticmethod
+    def from_dict(obj: Any) -> 'PGCERTSettings':
+        assert isinstance(obj, dict)
+        sslcert = FromEnv.from_dict(obj.get("sslcert"))
+        sslkey = FromEnv.from_dict(obj.get("sslkey"))
+        sslmode = from_str(obj.get("sslmode"))
+        sslpassword = from_union([FromEnv.from_dict, from_str, from_none], obj.get("sslpassword"))
+        sslrootcert = FromEnv.from_dict(obj.get("sslrootcert"))
+        return PGCERTSettings(sslcert, sslkey, sslmode, sslpassword, sslrootcert)
+
+    def to_dict(self) -> dict:
+        result: dict = {}
+        result["sslcert"] = to_class(FromEnv, self.sslcert)
+        result["sslkey"] = to_class(FromEnv, self.sslkey)
+        result["sslmode"] = from_str(self.sslmode)
+        result["sslpassword"] = from_union([lambda x: to_class(FromEnv, x), from_str, from_none], self.sslpassword)
+        result["sslrootcert"] = to_class(FromEnv, self.sslrootcert)
+        return result
+
+
+@dataclass
+class PGSourceConnectionInfo:
+    """Connection parameters for the source
+    
+    
+    https://hasura.io/docs/latest/graphql/core/api-reference/syntax-defs.html#pgsourceconnectioninfo
+    """
+    """The database connection URL as a string, as an environment variable, or as connection
+    parameters.
+    """
+    database_url: Union[PGConnectionParametersClass, str]
+    """The transaction isolation level in which the queries made to the source will be run with
+    (default: read-committed).
+    """
+    isolation_level: Optional[IsolationLevel] = None
+    """Connection pool settings"""
+    pool_settings: Optional[PGPoolSettings] = None
+    """The client SSL certificate settings for the database (Only available in Cloud)."""
+    ssl_configuration: Optional[PGCERTSettings] = None
+    """If set to true the server prepares statement before executing on the source database
+    (default: false). For more details, refer to the Postgres docs
+    """
+    use_prepared_statements: Optional[bool] = None
+
+    @staticmethod
+    def from_dict(obj: Any) -> 'PGSourceConnectionInfo':
+        assert isinstance(obj, dict)
+        database_url = from_union([PGConnectionParametersClass.from_dict, from_str], obj.get("database_url"))
+        isolation_level = from_union([IsolationLevel, from_none], obj.get("isolation_level"))
+        pool_settings = from_union([PGPoolSettings.from_dict, from_none], obj.get("pool_settings"))
+        ssl_configuration = from_union([PGCERTSettings.from_dict, from_none], obj.get("ssl_configuration"))
+        use_prepared_statements = from_union([from_bool, from_none], obj.get("use_prepared_statements"))
+        return PGSourceConnectionInfo(database_url, isolation_level, pool_settings, ssl_configuration, use_prepared_statements)
+
+    def to_dict(self) -> dict:
+        result: dict = {}
+        result["database_url"] = from_union([lambda x: to_class(PGConnectionParametersClass, x), from_str], self.database_url)
+        result["isolation_level"] = from_union([lambda x: to_enum(IsolationLevel, x), from_none], self.isolation_level)
+        result["pool_settings"] = from_union([lambda x: to_class(PGPoolSettings, x), from_none], self.pool_settings)
+        result["ssl_configuration"] = from_union([lambda x: to_class(PGCERTSettings, x), from_none], self.ssl_configuration)
+        result["use_prepared_statements"] = from_union([from_bool, from_none], self.use_prepared_statements)
+        return result
+
+
+@dataclass
+class PGConfiguration:
+    """https://hasura.io/docs/latest/graphql/core/api-reference/syntax-defs.html#pgconfiguration"""
+    """Connection parameters for the source"""
+    connection_info: PGSourceConnectionInfo
+    """Optional list of read replica configuration (supported only in cloud/enterprise versions)"""
+    read_replicas: Optional[List[PGSourceConnectionInfo]] = None
+
+    @staticmethod
+    def from_dict(obj: Any) -> 'PGConfiguration':
+        assert isinstance(obj, dict)
+        connection_info = PGSourceConnectionInfo.from_dict(obj.get("connection_info"))
+        read_replicas = from_union([lambda x: from_list(PGSourceConnectionInfo.from_dict, x), from_none], obj.get("read_replicas"))
+        return PGConfiguration(connection_info, read_replicas)
+
+    def to_dict(self) -> dict:
+        result: dict = {}
+        result["connection_info"] = to_class(PGSourceConnectionInfo, self.connection_info)
+        result["read_replicas"] = from_union([lambda x: from_list(lambda x: to_class(PGSourceConnectionInfo, x), x), from_none], self.read_replicas)
+        return result
+
+
+class PGSourceKind(Enum):
+    CITUS = "citus"
+    POSTGRES = "postgres"
+
+
+@dataclass
+class PGSource:
+    configuration: PGConfiguration
+    kind: PGSourceKind
+    name: str
+    tables: List[TableEntry]
+    functions: Optional[List[CustomFunction]] = None
+
+    @staticmethod
+    def from_dict(obj: Any) -> 'PGSource':
+        assert isinstance(obj, dict)
+        configuration = PGConfiguration.from_dict(obj.get("configuration"))
+        kind = PGSourceKind(obj.get("kind"))
+        name = from_str(obj.get("name"))
+        tables = from_list(TableEntry.from_dict, obj.get("tables"))
+        functions = from_union([lambda x: from_list(CustomFunction.from_dict, x), from_none], obj.get("functions"))
+        return PGSource(configuration, kind, name, tables, functions)
+
+    def to_dict(self) -> dict:
+        result: dict = {}
+        result["configuration"] = to_class(PGConfiguration, self.configuration)
+        result["kind"] = to_enum(PGSourceKind, self.kind)
+        result["name"] = from_str(self.name)
+        result["tables"] = from_list(lambda x: to_class(TableEntry, x), self.tables)
+        result["functions"] = from_union([lambda x: from_list(lambda x: to_class(CustomFunction, x), x), from_none], self.functions)
+        return result
+
+
+@dataclass
+class MSSQLPoolSettings:
+    """Connection pool settings
+    
+    
+    https://hasura.io/docs/latest/graphql/core/api-reference/syntax-defs.html#mssqlpoolsettings
+    """
+    """The idle timeout (in seconds) per connection (default: 180)"""
+    idle_timeout: Optional[float] = None
+    """Maximum number of connections to be kept in the pool (default: 50)"""
+    max_connections: Optional[float] = None
+
+    @staticmethod
+    def from_dict(obj: Any) -> 'MSSQLPoolSettings':
+        assert isinstance(obj, dict)
+        idle_timeout = from_union([from_float, from_none], obj.get("idle_timeout"))
+        max_connections = from_union([from_float, from_none], obj.get("max_connections"))
+        return MSSQLPoolSettings(idle_timeout, max_connections)
+
+    def to_dict(self) -> dict:
+        result: dict = {}
+        result["idle_timeout"] = from_union([to_float, from_none], self.idle_timeout)
+        result["max_connections"] = from_union([to_float, from_none], self.max_connections)
+        return result
+
+
+@dataclass
+class MSSQLSourceConnectionInfo:
+    """Connection parameters for the source
+    
+    
+    https://hasura.io/docs/latest/graphql/core/api-reference/syntax-defs.html#mssqlsourceconnectioninfo
+    """
+    """The database connection string, or as an environment variable"""
+    connection_string: Union[FromEnv, str]
+    """Connection pool settings"""
+    pool_settings: Optional[MSSQLPoolSettings] = None
+
+    @staticmethod
+    def from_dict(obj: Any) -> 'MSSQLSourceConnectionInfo':
+        assert isinstance(obj, dict)
+        connection_string = from_union([FromEnv.from_dict, from_str], obj.get("connection_string"))
+        pool_settings = from_union([MSSQLPoolSettings.from_dict, from_none], obj.get("pool_settings"))
+        return MSSQLSourceConnectionInfo(connection_string, pool_settings)
+
+    def to_dict(self) -> dict:
+        result: dict = {}
+        result["connection_string"] = from_union([lambda x: to_class(FromEnv, x), from_str], self.connection_string)
+        result["pool_settings"] = from_union([lambda x: to_class(MSSQLPoolSettings, x), from_none], self.pool_settings)
+        return result
+
+
+@dataclass
+class MSSQLConfiguration:
+    """
+    https://hasura.io/docs/latest/graphql/core/api-reference/syntax-defs.html#mssqlsourceconnectioninfo
+    """
+    """Connection parameters for the source"""
+    connection_info: MSSQLSourceConnectionInfo
+
+    @staticmethod
+    def from_dict(obj: Any) -> 'MSSQLConfiguration':
+        assert isinstance(obj, dict)
+        connection_info = MSSQLSourceConnectionInfo.from_dict(obj.get("connection_info"))
+        return MSSQLConfiguration(connection_info)
+
+    def to_dict(self) -> dict:
+        result: dict = {}
+        result["connection_info"] = to_class(MSSQLSourceConnectionInfo, self.connection_info)
+        return result
+
+
+class MSSQLSourceKind(Enum):
+    MSSQL = "mssql"
+
+
+@dataclass
+class MSSQLSource:
+    configuration: MSSQLConfiguration
+    kind: MSSQLSourceKind
+    name: str
+    tables: List[TableEntry]
+    functions: Optional[List[CustomFunction]] = None
+
+    @staticmethod
+    def from_dict(obj: Any) -> 'MSSQLSource':
+        assert isinstance(obj, dict)
+        configuration = MSSQLConfiguration.from_dict(obj.get("configuration"))
+        kind = MSSQLSourceKind(obj.get("kind"))
+        name = from_str(obj.get("name"))
+        tables = from_list(TableEntry.from_dict, obj.get("tables"))
+        functions = from_union([lambda x: from_list(CustomFunction.from_dict, x), from_none], obj.get("functions"))
+        return MSSQLSource(configuration, kind, name, tables, functions)
+
+    def to_dict(self) -> dict:
+        result: dict = {}
+        result["configuration"] = to_class(MSSQLConfiguration, self.configuration)
+        result["kind"] = to_enum(MSSQLSourceKind, self.kind)
+        result["name"] = from_str(self.name)
+        result["tables"] = from_list(lambda x: to_class(TableEntry, x), self.tables)
+        result["functions"] = from_union([lambda x: from_list(lambda x: to_class(CustomFunction, x), x), from_none], self.functions)
+        return result
+
+
+@dataclass
+class RecordStringAnyClass:
+    """https://hasura.io/docs/latest/graphql/core/api-reference/syntax-defs.html#fromenv
+    
+    Environment variable which stores the client certificate.
+    
+    Environment variable which stores the client private key.
+    
+    Environment variable which stores trusted certificate authorities.
+    """
+    """Name of the environment variable"""
+    from_env: Optional[str] = None
+
+    @staticmethod
+    def from_dict(obj: Any) -> 'RecordStringAnyClass':
+        assert isinstance(obj, dict)
+        from_env = from_union([from_str, from_none], obj.get("from_env"))
+        return RecordStringAnyClass(from_env)
+
+    def to_dict(self) -> dict:
+        result: dict = {}
+        result["from_env"] = from_union([from_str, from_none], self.from_env)
+        return result
+
+
+@dataclass
+class BigQueryConfiguration:
+    """
+    https://hasura.io/docs/latest/graphql/core/api-reference/syntax-defs.html#bigqueryconfiguration
+    """
+    """List of BigQuery datasets"""
+    datasets: Union[List[str], FromEnv]
+    """Project Id for BigQuery database"""
+    project_id: Union[FromEnv, str]
+    """Service account for BigQuery database"""
+    service_account: Union[RecordStringAnyClass, str]
+
+    @staticmethod
+    def from_dict(obj: Any) -> 'BigQueryConfiguration':
+        assert isinstance(obj, dict)
+        datasets = from_union([lambda x: from_list(from_str, x), FromEnv.from_dict], obj.get("datasets"))
+        project_id = from_union([FromEnv.from_dict, from_str], obj.get("project_id"))
+        service_account = from_union([RecordStringAnyClass.from_dict, from_str], obj.get("service_account"))
+        return BigQueryConfiguration(datasets, project_id, service_account)
+
+    def to_dict(self) -> dict:
+        result: dict = {}
+        result["datasets"] = from_union([lambda x: from_list(from_str, x), lambda x: to_class(FromEnv, x)], self.datasets)
+        result["project_id"] = from_union([lambda x: to_class(FromEnv, x), from_str], self.project_id)
+        result["service_account"] = from_union([lambda x: to_class(RecordStringAnyClass, x), from_str], self.service_account)
+        return result
+
+
+class BigQuerySourceKind(Enum):
+    BIGQUERY = "bigquery"
+
+
+@dataclass
+class BigQuerySource:
+    configuration: BigQueryConfiguration
+    kind: BigQuerySourceKind
+    name: str
+    tables: List[TableEntry]
+    functions: Optional[List[CustomFunction]] = None
+
+    @staticmethod
+    def from_dict(obj: Any) -> 'BigQuerySource':
+        assert isinstance(obj, dict)
+        configuration = BigQueryConfiguration.from_dict(obj.get("configuration"))
+        kind = BigQuerySourceKind(obj.get("kind"))
+        name = from_str(obj.get("name"))
+        tables = from_list(TableEntry.from_dict, obj.get("tables"))
+        functions = from_union([lambda x: from_list(CustomFunction.from_dict, x), from_none], obj.get("functions"))
+        return BigQuerySource(configuration, kind, name, tables, functions)
+
+    def to_dict(self) -> dict:
+        result: dict = {}
+        result["configuration"] = to_class(BigQueryConfiguration, self.configuration)
+        result["kind"] = to_enum(BigQuerySourceKind, self.kind)
+        result["name"] = from_str(self.name)
+        result["tables"] = from_list(lambda x: to_class(TableEntry, x), self.tables)
+        result["functions"] = from_union([lambda x: from_list(lambda x: to_class(CustomFunction, x), x), from_none], self.functions)
+        return result
+
+
+@dataclass
+class DepthLimit:
+    depth_limit_global: float
+    per_role: Dict[str, float]
+
+    @staticmethod
+    def from_dict(obj: Any) -> 'DepthLimit':
+        assert isinstance(obj, dict)
+        depth_limit_global = from_float(obj.get("global"))
+        per_role = from_dict(from_float, obj.get("per_role"))
+        return DepthLimit(depth_limit_global, per_role)
+
+    def to_dict(self) -> dict:
+        result: dict = {}
+        result["global"] = to_float(self.depth_limit_global)
+        result["per_role"] = from_dict(to_float, self.per_role)
+        return result
+
+
+@dataclass
+class NodeLimit:
+    node_limit_global: float
+    per_role: Dict[str, float]
+
+    @staticmethod
+    def from_dict(obj: Any) -> 'NodeLimit':
+        assert isinstance(obj, dict)
+        node_limit_global = from_float(obj.get("global"))
+        per_role = from_dict(from_float, obj.get("per_role"))
+        return NodeLimit(node_limit_global, per_role)
+
+    def to_dict(self) -> dict:
+        result: dict = {}
+        result["global"] = to_float(self.node_limit_global)
+        result["per_role"] = from_dict(to_float, self.per_role)
+        return result
+
+
+class UniqueParamsEnum(Enum):
+    IP = "IP"
+
+
+@dataclass
+class RateLimitRule:
+    max_reqs_per_min: float
+    unique_params: Union[List[str], UniqueParamsEnum, None]
+
+    @staticmethod
+    def from_dict(obj: Any) -> 'RateLimitRule':
+        assert isinstance(obj, dict)
+        max_reqs_per_min = from_float(obj.get("max_reqs_per_min"))
+        unique_params = from_union([lambda x: from_list(from_str, x), from_none, UniqueParamsEnum], obj.get("unique_params"))
+        return RateLimitRule(max_reqs_per_min, unique_params)
+
+    def to_dict(self) -> dict:
+        result: dict = {}
+        result["max_reqs_per_min"] = to_float(self.max_reqs_per_min)
+        result["unique_params"] = from_union([lambda x: from_list(from_str, x), from_none, lambda x: to_enum(UniqueParamsEnum, x)], self.unique_params)
+        return result
+
+
+@dataclass
+class RateLimit:
+    rate_limit_global: RateLimitRule
+    per_role: Dict[str, RateLimitRule]
+
+    @staticmethod
+    def from_dict(obj: Any) -> 'RateLimit':
+        assert isinstance(obj, dict)
+        rate_limit_global = RateLimitRule.from_dict(obj.get("global"))
+        per_role = from_dict(RateLimitRule.from_dict, obj.get("per_role"))
+        return RateLimit(rate_limit_global, per_role)
+
+    def to_dict(self) -> dict:
+        result: dict = {}
+        result["global"] = to_class(RateLimitRule, self.rate_limit_global)
+        result["per_role"] = from_dict(lambda x: to_class(RateLimitRule, x), self.per_role)
+        return result
+
+
+@dataclass
+class APILimits:
+    disabled: bool
+    depth_limit: Optional[DepthLimit] = None
+    node_limit: Optional[NodeLimit] = None
+    rate_limit: Optional[RateLimit] = None
+
+    @staticmethod
+    def from_dict(obj: Any) -> 'APILimits':
+        assert isinstance(obj, dict)
+        disabled = from_bool(obj.get("disabled"))
+        depth_limit = from_union([DepthLimit.from_dict, from_none], obj.get("depth_limit"))
+        node_limit = from_union([NodeLimit.from_dict, from_none], obj.get("node_limit"))
+        rate_limit = from_union([RateLimit.from_dict, from_none], obj.get("rate_limit"))
+        return APILimits(disabled, depth_limit, node_limit, rate_limit)
+
+    def to_dict(self) -> dict:
+        result: dict = {}
+        result["disabled"] = from_bool(self.disabled)
+        result["depth_limit"] = from_union([lambda x: to_class(DepthLimit, x), from_none], self.depth_limit)
+        result["node_limit"] = from_union([lambda x: to_class(NodeLimit, x), from_none], self.node_limit)
+        result["rate_limit"] = from_union([lambda x: to_class(RateLimit, x), from_none], self.rate_limit)
+        return result
+
+
+@dataclass
+class InheritedRole:
+    role_name: str
+    role_set: List[str]
+
+    @staticmethod
+    def from_dict(obj: Any) -> 'InheritedRole':
+        assert isinstance(obj, dict)
+        role_name = from_str(obj.get("role_name"))
+        role_set = from_list(from_str, obj.get("role_set"))
+        return InheritedRole(role_name, role_set)
+
+    def to_dict(self) -> dict:
+        result: dict = {}
+        result["role_name"] = from_str(self.role_name)
+        result["role_set"] = from_list(from_str, self.role_set)
+        return result
+
+
+@dataclass
+class Query:
+    collection_name: str
+    query_name: str
+
+    @staticmethod
+    def from_dict(obj: Any) -> 'Query':
+        assert isinstance(obj, dict)
+        collection_name = from_str(obj.get("collection_name"))
+        query_name = from_str(obj.get("query_name"))
+        return Query(collection_name, query_name)
+
+    def to_dict(self) -> dict:
+        result: dict = {}
+        result["collection_name"] = from_str(self.collection_name)
+        result["query_name"] = from_str(self.query_name)
+        return result
+
+
+@dataclass
+class RESTEndpointDefinition:
+    query: Query
+
+    @staticmethod
+    def from_dict(obj: Any) -> 'RESTEndpointDefinition':
+        assert isinstance(obj, dict)
+        query = Query.from_dict(obj.get("query"))
+        return RESTEndpointDefinition(query)
+
+    def to_dict(self) -> dict:
+        result: dict = {}
+        result["query"] = to_class(Query, self.query)
+        return result
+
+
+class Method(Enum):
+    PATCH = "PATCH"
+    POST = "POST"
+    PUT = "PUT"
+
+
+@dataclass
+class RESTEndpoint:
+    definition: RESTEndpointDefinition
+    methods: List[Method]
+    name: str
+    url: str
+    comment: Optional[str] = None
+
+    @staticmethod
+    def from_dict(obj: Any) -> 'RESTEndpoint':
+        assert isinstance(obj, dict)
+        definition = RESTEndpointDefinition.from_dict(obj.get("definition"))
+        methods = from_list(Method, obj.get("methods"))
+        name = from_str(obj.get("name"))
+        url = from_str(obj.get("url"))
+        comment = from_union([from_str, from_none], obj.get("comment"))
+        return RESTEndpoint(definition, methods, name, url, comment)
+
+    def to_dict(self) -> dict:
+        result: dict = {}
+        result["definition"] = to_class(RESTEndpointDefinition, self.definition)
+        result["methods"] = from_list(lambda x: to_enum(Method, x), self.methods)
+        result["name"] = from_str(self.name)
+        result["url"] = from_str(self.url)
+        result["comment"] = from_union([from_str, from_none], self.comment)
+        return result
+
+
+@dataclass
+class PoolSettings:
+    """Connection pool settings
+    
+    https://hasura.io/docs/latest/graphql/core/api-reference/syntax-defs.html#pgpoolsettings
+    
+    
+    https://hasura.io/docs/latest/graphql/core/api-reference/syntax-defs.html#mssqlpoolsettings
+    """
+    """Time from connection creation after which the connection should be destroyed and a new
+    one created. A value of 0 indicates we should never destroy an active connection. If 0 is
+    passed, memory from large query results may not be reclaimed. (default: 600 sec)
+    """
+    connection_lifetime: Optional[float] = None
+    """The idle timeout (in seconds) per connection (default: 180)"""
+    idle_timeout: Optional[float] = None
+    """Maximum number of connections to be kept in the pool (default: 50)"""
+    max_connections: Optional[float] = None
+    """Maximum time to wait while acquiring a Postgres connection from the pool, in seconds
+    (default: forever)
+    """
+    pool_timeout: Optional[float] = None
+    """Number of retries to perform (default: 1)"""
+    retries: Optional[float] = None
+
+    @staticmethod
+    def from_dict(obj: Any) -> 'PoolSettings':
+        assert isinstance(obj, dict)
+        connection_lifetime = from_union([from_float, from_none], obj.get("connection_lifetime"))
+        idle_timeout = from_union([from_float, from_none], obj.get("idle_timeout"))
+        max_connections = from_union([from_float, from_none], obj.get("max_connections"))
+        pool_timeout = from_union([from_float, from_none], obj.get("pool_timeout"))
+        retries = from_union([from_float, from_none], obj.get("retries"))
+        return PoolSettings(connection_lifetime, idle_timeout, max_connections, pool_timeout, retries)
+
+    def to_dict(self) -> dict:
+        result: dict = {}
+        result["connection_lifetime"] = from_union([to_float, from_none], self.connection_lifetime)
+        result["idle_timeout"] = from_union([to_float, from_none], self.idle_timeout)
+        result["max_connections"] = from_union([to_float, from_none], self.max_connections)
+        result["pool_timeout"] = from_union([to_float, from_none], self.pool_timeout)
+        result["retries"] = from_union([to_float, from_none], self.retries)
+        return result
+
+
+@dataclass
+class SourceConnectionInfo:
+    """Connection parameters for the source
+    
+    
+    https://hasura.io/docs/latest/graphql/core/api-reference/syntax-defs.html#pgsourceconnectioninfo
+    
+    
+    https://hasura.io/docs/latest/graphql/core/api-reference/syntax-defs.html#mssqlsourceconnectioninfo
+    """
+    """The database connection URL as a string, as an environment variable, or as connection
+    parameters.
+    """
+    database_url: Union[PGConnectionParametersClass, None, str]
+    """The database connection string, or as an environment variable"""
+    connection_string: Union[FromEnv, None, str]
+    """The transaction isolation level in which the queries made to the source will be run with
+    (default: read-committed).
+    """
+    isolation_level: Optional[IsolationLevel] = None
+    """Connection pool settings"""
+    pool_settings: Optional[PoolSettings] = None
+    """The client SSL certificate settings for the database (Only available in Cloud)."""
+    ssl_configuration: Optional[PGCERTSettings] = None
+    """If set to true the server prepares statement before executing on the source database
+    (default: false). For more details, refer to the Postgres docs
+    """
+    use_prepared_statements: Optional[bool] = None
+
+    @staticmethod
+    def from_dict(obj: Any) -> 'SourceConnectionInfo':
+        assert isinstance(obj, dict)
+        database_url = from_union([PGConnectionParametersClass.from_dict, from_str, from_none], obj.get("database_url"))
+        connection_string = from_union([FromEnv.from_dict, from_str, from_none], obj.get("connection_string"))
+        isolation_level = from_union([IsolationLevel, from_none], obj.get("isolation_level"))
+        pool_settings = from_union([PoolSettings.from_dict, from_none], obj.get("pool_settings"))
+        ssl_configuration = from_union([PGCERTSettings.from_dict, from_none], obj.get("ssl_configuration"))
+        use_prepared_statements = from_union([from_bool, from_none], obj.get("use_prepared_statements"))
+        return SourceConnectionInfo(database_url, connection_string, isolation_level, pool_settings, ssl_configuration, use_prepared_statements)
+
+    def to_dict(self) -> dict:
+        result: dict = {}
+        result["database_url"] = from_union([lambda x: to_class(PGConnectionParametersClass, x), from_str, from_none], self.database_url)
+        result["connection_string"] = from_union([lambda x: to_class(FromEnv, x), from_str, from_none], self.connection_string)
+        result["isolation_level"] = from_union([lambda x: to_enum(IsolationLevel, x), from_none], self.isolation_level)
+        result["pool_settings"] = from_union([lambda x: to_class(PoolSettings, x), from_none], self.pool_settings)
+        result["ssl_configuration"] = from_union([lambda x: to_class(PGCERTSettings, x), from_none], self.ssl_configuration)
+        result["use_prepared_statements"] = from_union([from_bool, from_none], self.use_prepared_statements)
+        return result
+
+
+@dataclass
+class Configuration:
+    """
+    https://hasura.io/docs/latest/graphql/core/api-reference/syntax-defs.html#pgconfiguration
+    
+    
+    https://hasura.io/docs/latest/graphql/core/api-reference/syntax-defs.html#mssqlsourceconnectioninfo
+    
+    
+    https://hasura.io/docs/latest/graphql/core/api-reference/syntax-defs.html#bigqueryconfiguration
+    """
+    """List of BigQuery datasets"""
+    datasets: Union[List[str], FromEnv, None]
+    """Project Id for BigQuery database"""
+    project_id: Union[FromEnv, None, str]
+    """Service account for BigQuery database"""
+    service_account: Union[RecordStringAnyClass, None, str]
+    """Connection parameters for the source"""
+    connection_info: Optional[SourceConnectionInfo] = None
+    """Optional list of read replica configuration (supported only in cloud/enterprise versions)"""
+    read_replicas: Optional[List[PGSourceConnectionInfo]] = None
+
+    @staticmethod
+    def from_dict(obj: Any) -> 'Configuration':
+        assert isinstance(obj, dict)
+        datasets = from_union([lambda x: from_list(from_str, x), FromEnv.from_dict, from_none], obj.get("datasets"))
+        project_id = from_union([FromEnv.from_dict, from_str, from_none], obj.get("project_id"))
+        service_account = from_union([RecordStringAnyClass.from_dict, from_str, from_none], obj.get("service_account"))
+        connection_info = from_union([SourceConnectionInfo.from_dict, from_none], obj.get("connection_info"))
+        read_replicas = from_union([lambda x: from_list(PGSourceConnectionInfo.from_dict, x), from_none], obj.get("read_replicas"))
+        return Configuration(datasets, project_id, service_account, connection_info, read_replicas)
+
+    def to_dict(self) -> dict:
+        result: dict = {}
+        result["datasets"] = from_union([lambda x: from_list(from_str, x), lambda x: to_class(FromEnv, x), from_none], self.datasets)
+        result["project_id"] = from_union([lambda x: to_class(FromEnv, x), from_str, from_none], self.project_id)
+        result["service_account"] = from_union([lambda x: to_class(RecordStringAnyClass, x), from_str, from_none], self.service_account)
+        result["connection_info"] = from_union([lambda x: to_class(SourceConnectionInfo, x), from_none], self.connection_info)
+        result["read_replicas"] = from_union([lambda x: from_list(lambda x: to_class(PGSourceConnectionInfo, x), x), from_none], self.read_replicas)
+        return result
+
+
+class BackendKind(Enum):
+    BIGQUERY = "bigquery"
+    CITUS = "citus"
+    MSSQL = "mssql"
+    POSTGRES = "postgres"
+
+
+@dataclass
+class Source:
+    configuration: Configuration
+    kind: BackendKind
+    name: str
+    tables: List[TableEntry]
+    functions: Optional[List[CustomFunction]] = None
+
+    @staticmethod
+    def from_dict(obj: Any) -> 'Source':
+        assert isinstance(obj, dict)
+        configuration = Configuration.from_dict(obj.get("configuration"))
+        kind = BackendKind(obj.get("kind"))
+        name = from_str(obj.get("name"))
+        tables = from_list(TableEntry.from_dict, obj.get("tables"))
+        functions = from_union([lambda x: from_list(CustomFunction.from_dict, x), from_none], obj.get("functions"))
+        return Source(configuration, kind, name, tables, functions)
+
+    def to_dict(self) -> dict:
+        result: dict = {}
+        result["configuration"] = to_class(Configuration, self.configuration)
+        result["kind"] = to_enum(BackendKind, self.kind)
+        result["name"] = from_str(self.name)
+        result["tables"] = from_list(lambda x: to_class(TableEntry, x), self.tables)
+        result["functions"] = from_union([lambda x: from_list(lambda x: to_class(CustomFunction, x), x), from_none], self.functions)
+        return result
+
+
+@dataclass
+class HasuraMetadataV3:
+    rest_endpoints: List[RESTEndpoint]
+    sources: List[Source]
+    version: float
+    actions: Optional[List[Action]] = None
+    allowlist: Optional[List[AllowList]] = None
+    api_limits: Optional[APILimits] = None
+    cron_triggers: Optional[List[CronTrigger]] = None
+    custom_types: Optional[CustomTypes] = None
+    inherited_roles: Optional[List[InheritedRole]] = None
+    query_collections: Optional[List[QueryCollectionEntry]] = None
+    remote_schemas: Optional[List[RemoteSchema]] = None
+
+    @staticmethod
+    def from_dict(obj: Any) -> 'HasuraMetadataV3':
+        assert isinstance(obj, dict)
+        rest_endpoints = from_list(RESTEndpoint.from_dict, obj.get("rest_endpoints"))
+        sources = from_list(Source.from_dict, obj.get("sources"))
+        version = from_float(obj.get("version"))
+        actions = from_union([lambda x: from_list(Action.from_dict, x), from_none], obj.get("actions"))
+        allowlist = from_union([lambda x: from_list(AllowList.from_dict, x), from_none], obj.get("allowlist"))
+        api_limits = from_union([APILimits.from_dict, from_none], obj.get("api_limits"))
+        cron_triggers = from_union([lambda x: from_list(CronTrigger.from_dict, x), from_none], obj.get("cron_triggers"))
+        custom_types = from_union([CustomTypes.from_dict, from_none], obj.get("custom_types"))
+        inherited_roles = from_union([lambda x: from_list(InheritedRole.from_dict, x), from_none], obj.get("inherited_roles"))
+        query_collections = from_union([lambda x: from_list(QueryCollectionEntry.from_dict, x), from_none], obj.get("query_collections"))
+        remote_schemas = from_union([lambda x: from_list(RemoteSchema.from_dict, x), from_none], obj.get("remote_schemas"))
+        return HasuraMetadataV3(rest_endpoints, sources, version, actions, allowlist, api_limits, cron_triggers, custom_types, inherited_roles, query_collections, remote_schemas)
+
+    def to_dict(self) -> dict:
+        result: dict = {}
+        result["rest_endpoints"] = from_list(lambda x: to_class(RESTEndpoint, x), self.rest_endpoints)
+        result["sources"] = from_list(lambda x: to_class(Source, x), self.sources)
+        result["version"] = to_float(self.version)
+        result["actions"] = from_union([lambda x: from_list(lambda x: to_class(Action, x), x), from_none], self.actions)
+        result["allowlist"] = from_union([lambda x: from_list(lambda x: to_class(AllowList, x), x), from_none], self.allowlist)
+        result["api_limits"] = from_union([lambda x: to_class(APILimits, x), from_none], self.api_limits)
+        result["cron_triggers"] = from_union([lambda x: from_list(lambda x: to_class(CronTrigger, x), x), from_none], self.cron_triggers)
+        result["custom_types"] = from_union([lambda x: to_class(CustomTypes, x), from_none], self.custom_types)
+        result["inherited_roles"] = from_union([lambda x: from_list(lambda x: to_class(InheritedRole, x), x), from_none], self.inherited_roles)
+        result["query_collections"] = from_union([lambda x: from_list(lambda x: to_class(QueryCollectionEntry, x), x), from_none], self.query_collections)
+        result["remote_schemas"] = from_union([lambda x: from_list(lambda x: to_class(RemoteSchema, x), x), from_none], self.remote_schemas)
+        return result
+
+
 def pg_column_from_dict(s: Any) -> str:
     return from_str(s)
 
@@ -2396,3 +3343,211 @@ def hasura_metadata_v2_from_dict(s: Any) -> HasuraMetadataV2:
 
 def hasura_metadata_v2_to_dict(x: HasuraMetadataV2) -> Any:
     return to_class(HasuraMetadataV2, x)
+
+
+def from_env_from_dict(s: Any) -> FromEnv:
+    return FromEnv.from_dict(s)
+
+
+def from_env_to_dict(x: FromEnv) -> Any:
+    return to_class(FromEnv, x)
+
+
+def pg_configuration_from_dict(s: Any) -> PGConfiguration:
+    return PGConfiguration.from_dict(s)
+
+
+def pg_configuration_to_dict(x: PGConfiguration) -> Any:
+    return to_class(PGConfiguration, x)
+
+
+def mssql_configuration_from_dict(s: Any) -> MSSQLConfiguration:
+    return MSSQLConfiguration.from_dict(s)
+
+
+def mssql_configuration_to_dict(x: MSSQLConfiguration) -> Any:
+    return to_class(MSSQLConfiguration, x)
+
+
+def big_query_configuration_from_dict(s: Any) -> BigQueryConfiguration:
+    return BigQueryConfiguration.from_dict(s)
+
+
+def big_query_configuration_to_dict(x: BigQueryConfiguration) -> Any:
+    return to_class(BigQueryConfiguration, x)
+
+
+def pg_source_connection_info_from_dict(s: Any) -> PGSourceConnectionInfo:
+    return PGSourceConnectionInfo.from_dict(s)
+
+
+def pg_source_connection_info_to_dict(x: PGSourceConnectionInfo) -> Any:
+    return to_class(PGSourceConnectionInfo, x)
+
+
+def mssql_source_connection_info_from_dict(s: Any) -> MSSQLSourceConnectionInfo:
+    return MSSQLSourceConnectionInfo.from_dict(s)
+
+
+def mssql_source_connection_info_to_dict(x: MSSQLSourceConnectionInfo) -> Any:
+    return to_class(MSSQLSourceConnectionInfo, x)
+
+
+def pg_connection_parameters_from_dict(s: Any) -> PGConnectionParameters:
+    return PGConnectionParameters.from_dict(s)
+
+
+def pg_connection_parameters_to_dict(x: PGConnectionParameters) -> Any:
+    return to_class(PGConnectionParameters, x)
+
+
+def pg_pool_settings_from_dict(s: Any) -> PGPoolSettings:
+    return PGPoolSettings.from_dict(s)
+
+
+def pg_pool_settings_to_dict(x: PGPoolSettings) -> Any:
+    return to_class(PGPoolSettings, x)
+
+
+def pgcert_settings_from_dict(s: Any) -> PGCERTSettings:
+    return PGCERTSettings.from_dict(s)
+
+
+def pgcert_settings_to_dict(x: PGCERTSettings) -> Any:
+    return to_class(PGCERTSettings, x)
+
+
+def mssql_pool_settings_from_dict(s: Any) -> MSSQLPoolSettings:
+    return MSSQLPoolSettings.from_dict(s)
+
+
+def mssql_pool_settings_to_dict(x: MSSQLPoolSettings) -> Any:
+    return to_class(MSSQLPoolSettings, x)
+
+
+def backend_kind_from_dict(s: Any) -> BackendKind:
+    return BackendKind(s)
+
+
+def backend_kind_to_dict(x: BackendKind) -> Any:
+    return to_enum(BackendKind, x)
+
+
+def base_source_from_dict(s: Any) -> BaseSource:
+    return BaseSource.from_dict(s)
+
+
+def base_source_to_dict(x: BaseSource) -> Any:
+    return to_class(BaseSource, x)
+
+
+def pg_source_from_dict(s: Any) -> PGSource:
+    return PGSource.from_dict(s)
+
+
+def pg_source_to_dict(x: PGSource) -> Any:
+    return to_class(PGSource, x)
+
+
+def mssql_source_from_dict(s: Any) -> MSSQLSource:
+    return MSSQLSource.from_dict(s)
+
+
+def mssql_source_to_dict(x: MSSQLSource) -> Any:
+    return to_class(MSSQLSource, x)
+
+
+def big_query_source_from_dict(s: Any) -> BigQuerySource:
+    return BigQuerySource.from_dict(s)
+
+
+def big_query_source_to_dict(x: BigQuerySource) -> Any:
+    return to_class(BigQuerySource, x)
+
+
+def source_from_dict(s: Any) -> Source:
+    return Source.from_dict(s)
+
+
+def source_to_dict(x: Source) -> Any:
+    return to_class(Source, x)
+
+
+def api_limits_from_dict(s: Any) -> APILimits:
+    return APILimits.from_dict(s)
+
+
+def api_limits_to_dict(x: APILimits) -> Any:
+    return to_class(APILimits, x)
+
+
+def depth_limit_from_dict(s: Any) -> DepthLimit:
+    return DepthLimit.from_dict(s)
+
+
+def depth_limit_to_dict(x: DepthLimit) -> Any:
+    return to_class(DepthLimit, x)
+
+
+def rate_limit_from_dict(s: Any) -> RateLimit:
+    return RateLimit.from_dict(s)
+
+
+def rate_limit_to_dict(x: RateLimit) -> Any:
+    return to_class(RateLimit, x)
+
+
+def rate_limit_rule_from_dict(s: Any) -> RateLimitRule:
+    return RateLimitRule.from_dict(s)
+
+
+def rate_limit_rule_to_dict(x: RateLimitRule) -> Any:
+    return to_class(RateLimitRule, x)
+
+
+def node_limit_from_dict(s: Any) -> NodeLimit:
+    return NodeLimit.from_dict(s)
+
+
+def node_limit_to_dict(x: NodeLimit) -> Any:
+    return to_class(NodeLimit, x)
+
+
+def rest_endpoint_from_dict(s: Any) -> RESTEndpoint:
+    return RESTEndpoint.from_dict(s)
+
+
+def rest_endpoint_to_dict(x: RESTEndpoint) -> Any:
+    return to_class(RESTEndpoint, x)
+
+
+def rest_endpoint_definition_from_dict(s: Any) -> RESTEndpointDefinition:
+    return RESTEndpointDefinition.from_dict(s)
+
+
+def rest_endpoint_definition_to_dict(x: RESTEndpointDefinition) -> Any:
+    return to_class(RESTEndpointDefinition, x)
+
+
+def inherited_role_from_dict(s: Any) -> InheritedRole:
+    return InheritedRole.from_dict(s)
+
+
+def inherited_role_to_dict(x: InheritedRole) -> Any:
+    return to_class(InheritedRole, x)
+
+
+def hasura_metadata_v3_from_dict(s: Any) -> HasuraMetadataV3:
+    return HasuraMetadataV3.from_dict(s)
+
+
+def hasura_metadata_v3_to_dict(x: HasuraMetadataV3) -> Any:
+    return to_class(HasuraMetadataV3, x)
+
+
+def record_string_any_from_dict(s: Any) -> Dict[str, Any]:
+    return from_dict(lambda x: x, s)
+
+
+def record_string_any_to_dict(x: Dict[str, Any]) -> Any:
+    return from_dict(lambda x: x, x)
