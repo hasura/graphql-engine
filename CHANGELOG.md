@@ -13,6 +13,7 @@
 ### Bug fixes and improvements
 (Add entries below in the order of server, console, cli, docs, others)
 
+- server: provide option to explicitly recreate event triggers for sources in the `reload_metadata` API
 - server: fix `gen_hasura_uuid` migration to be idempotent, so that it doesn't fail if the database is already initialised with source migrations.
 - server: fix mssql `table_by_pk` query returning empty array (fix #7784)
 

@@ -67,20 +67,25 @@ reloadAllSources :: ReloadSources
 reloadAllSources = RSReloadAll
 
 data ReloadMetadata = ReloadMetadata
-  { _rmReloadRemoteSchemas :: !ReloadRemoteSchemas,
-    _rmReloadSources :: !ReloadSources
+  { _rmReloadRemoteSchemas :: ReloadRemoteSchemas,
+    _rmReloadSources :: ReloadSources,
+    -- | Provides a way for the user to allow to explicitly recreate event triggers
+    --   for some or all the sources. This is useful when a user may have fiddled with
+    --   the SQL trigger in the source and they'd simply want the event trigger to be
+    --   recreated without deleting and creating the event trigger. By default, no
+    --   source's event triggers will be recreated.
+    _rmRecreateEventTriggers :: ReloadSources
   }
   deriving (Show, Eq)
 
 $(deriveToJSON hasuraJSON ''ReloadMetadata)
 
 instance FromJSON ReloadMetadata where
-  parseJSON = \case
-    Object o ->
-      ReloadMetadata
-        <$> o .:? "reload_remote_schemas" .!= reloadAllRemoteSchemas
-        <*> o .:? "reload_sources" .!= reloadAllSources
-    _ -> pure $ ReloadMetadata reloadAllRemoteSchemas reloadAllSources
+  parseJSON = withObject "ReloadMetadata" $ \o ->
+    ReloadMetadata
+      <$> o .:? "reload_remote_schemas" .!= reloadAllRemoteSchemas
+      <*> o .:? "reload_sources" .!= reloadAllSources
+      <*> o .:? "recreate_event_triggers" .!= RSReloadList mempty
 
 data DumpInternalState
   = DumpInternalState

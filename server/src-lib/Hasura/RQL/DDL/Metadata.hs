@@ -327,7 +327,7 @@ runExportMetadataV2 currentResourceVersion ExportMetadata {} = do
         ]
 
 runReloadMetadata :: (QErrM m, CacheRWM m, MetadataM m) => ReloadMetadata -> m EncJSON
-runReloadMetadata (ReloadMetadata reloadRemoteSchemas reloadSources) = do
+runReloadMetadata (ReloadMetadata reloadRemoteSchemas reloadSources reloadRecreateEventTriggers) = do
   metadata <- getMetadata
   let allSources = HS.fromList $ OMap.keys $ _metaSources metadata
       allRemoteSchemas = HS.fromList $ OMap.keys $ _metaRemoteSchemas metadata
@@ -346,6 +346,9 @@ runReloadMetadata (ReloadMetadata reloadRemoteSchemas reloadSources) = do
   pgSourcesInvalidations <- case reloadSources of
     RSReloadAll -> pure allSources
     RSReloadList l -> mapM_ checkSource l *> pure l
+  recreateEventTriggersSources <- case reloadRecreateEventTriggers of
+    RSReloadAll -> pure allSources
+    RSReloadList l -> mapM_ checkSource l *> pure l
 
   let cacheInvalidations =
         CacheInvalidations
@@ -354,7 +357,7 @@ runReloadMetadata (ReloadMetadata reloadRemoteSchemas reloadSources) = do
             ciSources = pgSourcesInvalidations
           }
 
-  buildSchemaCacheWithOptions CatalogUpdate cacheInvalidations metadata
+  buildSchemaCacheWithOptions (CatalogUpdate $ Just recreateEventTriggersSources) cacheInvalidations metadata
   pure successMsg
 
 runDumpInternalState ::

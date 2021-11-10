@@ -137,7 +137,7 @@ data BuildReason
   = -- | The build was triggered by an update this instance made to the catalog (in the
     -- currently-active transaction), so information in Postgres that needs to be kept in sync with
     -- the catalog (i.e. table event triggers in @hdb_catalog@ schema) should be updated.
-    CatalogUpdate
+    CatalogUpdate (Maybe (HashSet SourceName))
   | -- | The build was triggered by a notification that some other currently-running Hasura instance
     -- updated the catalog. Since that instance already updated table event triggers in @hdb_catalog@,
     -- this build should be read-only.
@@ -244,7 +244,7 @@ buildSchemaCacheWithInvalidations :: (MetadataM m, CacheRWM m) => CacheInvalidat
 buildSchemaCacheWithInvalidations cacheInvalidations metadataModifier = do
   metadata <- getMetadata
   let modifiedMetadata = unMetadataModifier metadataModifier metadata
-  buildSchemaCacheWithOptions CatalogUpdate cacheInvalidations modifiedMetadata
+  buildSchemaCacheWithOptions (CatalogUpdate mempty) cacheInvalidations modifiedMetadata
   putMetadata modifiedMetadata
 
 buildSchemaCache :: (MetadataM m, CacheRWM m) => MetadataModifier -> m ()

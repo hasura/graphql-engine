@@ -470,7 +470,7 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
       )
         `arr` BackendSourceInfo
     buildSource = proc (allSources, sourceMetadata, sourceConfig, tablesRawInfo, _dbTables, dbFunctions, remoteSchemaMap, invalidationKeys, orderedRoles) -> do
-      let SourceMetadata source tables functions _ queryTagsConfig sourceCustomization = sourceMetadata
+      let SourceMetadata sourceName tables functions _ queryTagsConfig sourceCustomization = sourceMetadata
           tablesMetadata = OMap.elems tables
           (_, nonColumnInputs, permissions) = unzip3 $ map mkTableInputs tablesMetadata
           eventTriggers = map (_tmTable &&& OMap.elems . _tmEventTriggers) tablesMetadata
@@ -488,7 +488,7 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
           Inc.keyed
             ( \_ (tableRawInfo, nonColumnInput) -> do
                 let columns = _tciFieldInfoMap tableRawInfo
-                allFields :: FieldInfoMap (FieldInfo b) <- addNonColumnFields -< (allSources, source, tablesRawInfo, columns, remoteSchemaMap, dbFunctions, nonColumnInput)
+                allFields :: FieldInfoMap (FieldInfo b) <- addNonColumnFields -< (allSources, sourceName, tablesRawInfo, columns, remoteSchemaMap, dbFunctions, nonColumnInput)
                 returnA -< (tableRawInfo {_tciFieldInfoMap = allFields})
             )
           |) (tablesRawInfo `alignTableMap` nonColumnsByTable)
@@ -504,8 +504,8 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
                 permissionInfos <-
                   buildTablePermissions
                     -<
-                      (Proxy :: Proxy b, source, tableCoreInfosDep, tableFields, permissionInputs, orderedRoles)
-                eventTriggerInfos <- buildTableEventTriggers -< (source, sourceConfig, tableCoreInfo, eventTriggerConfs, metadataInvalidationKey, recreateEventTriggers)
+                      (Proxy :: Proxy b, sourceName, tableCoreInfosDep, tableFields, permissionInputs, orderedRoles)
+                eventTriggerInfos <- buildTableEventTriggers -< (sourceName, sourceConfig, tableCoreInfo, eventTriggerConfs, metadataInvalidationKey, recreateEventTriggers)
                 returnA -< TableInfo tableCoreInfo permissionInfos eventTriggerInfos
             )
           |) (tableCoreInfos `alignTableMap` mapFromL _tpiTable permissions `alignTableMap` mapFromL fst eventTriggers)
@@ -520,13 +520,13 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
                           definition = toJSON $ TrackFunction @b qf
                           metadataObject =
                             MetadataObject
-                              ( MOSourceObjId source $
+                              ( MOSourceObjId sourceName $
                                   AB.mkAnyBackend $
                                     SMOFunction @b qf
                               )
                               definition
                           schemaObject =
-                            SOSourceObj source $
+                            SOSourceObj sourceName $
                               AB.mkAnyBackend $
                                 SOIFunction @b qf
                           addFunctionContext e = "in function " <> qf <<> ": " <> e
@@ -539,7 +539,7 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
                                     rawfunctionInfo <- bindErrorA -< handleMultipleFunctions @b qf funcDefs
                                     let metadataPermissions = mapFromL _fpmRole functionPermissions
                                         permissionsMap = mkBooleanPermissionMap FunctionPermissionInfo metadataPermissions orderedRoles
-                                    (functionInfo, dep) <- bindErrorA -< buildFunctionInfo source qf systemDefined config permissionsMap rawfunctionInfo comment
+                                    (functionInfo, dep) <- bindErrorA -< buildFunctionInfo sourceName qf systemDefined config permissionsMap rawfunctionInfo comment
                                     recordDependencies -< (metadataObject, schemaObject, [dep])
                                     returnA -< functionInfo
                                 )
@@ -550,7 +550,7 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
               |)
           >-> (\infos -> M.catMaybes infos >- returnA)
 
-      returnA -< AB.mkAnyBackend $ SourceInfo source tableCache functionCache sourceConfig queryTagsConfig sourceCustomization
+      returnA -< AB.mkAnyBackend $ SourceInfo sourceName tableCache functionCache sourceConfig queryTagsConfig sourceCustomization
 
     buildAndCollectInfo ::
       forall arr m.
@@ -970,10 +970,10 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
         RecreateEventTriggers
       )
         `arr` (EventTriggerInfoMap b)
-    buildTableEventTriggers = proc (source, sourceConfig, tableInfo, eventTriggerConfs, metadataInvalidationKey, recreateEventTriggers) ->
+    buildTableEventTriggers = proc (sourceName, sourceConfig, tableInfo, eventTriggerConfs, metadataInvalidationKey, recreateEventTriggers) ->
       buildInfoMap (etcName . (^. _6)) (mkEventTriggerMetadataObject @b) buildEventTrigger
         -<
-          (tableInfo, map (metadataInvalidationKey,source,sourceConfig,_tciName tableInfo,recreateEventTriggers,) eventTriggerConfs)
+          (tableInfo, map (metadataInvalidationKey,sourceName,sourceConfig,_tciName tableInfo,recreateEventTriggers,) eventTriggerConfs)
       where
         buildEventTrigger = proc (tableInfo, (metadataInvalidationKey, source, sourceConfig, table, recreateEventTriggers, eventTriggerConf)) -> do
           let triggerName = etcName eventTriggerConf
@@ -984,6 +984,12 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
                     SOITableObj @b table $
                       TOTrigger triggerName
               addTriggerContext e = "in event trigger " <> triggerName <<> ": " <> e
+          buildReason <- bindA -< ask
+          let reloadMetadataRecreateEventTrigger =
+                case buildReason of
+                  CatalogSync -> RETDoNothing
+                  CatalogUpdate Nothing -> RETDoNothing
+                  CatalogUpdate (Just sources) -> if source `elem` sources then RETRecreate else RETDoNothing
           (|
             withRecordInconsistency
               ( (|
@@ -991,7 +997,7 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
                     ( do
                         (info, dependencies) <- bindErrorA -< buildEventTriggerInfo @b env source table eventTriggerConf
                         let tableColumns = M.mapMaybe (^? _FIColumn) (_tciFieldInfoMap tableInfo)
-                        recreateTriggerIfNeeded -< (table, M.elems tableColumns, triggerName, etcDefinition eventTriggerConf, sourceConfig, recreateEventTriggers)
+                        recreateTriggerIfNeeded -< (table, M.elems tableColumns, triggerName, etcDefinition eventTriggerConf, sourceConfig, recreateEventTriggers <> reloadMetadataRecreateEventTrigger)
                         recordDependencies -< (metadataObject, schemaObjectId, dependencies)
                         returnA -< info
                     )
@@ -1017,9 +1023,13 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
                 -< do
                   buildReason <- ask
                   serverConfigCtx <- askServerConfigCtx
+                  let isCatalogUpdate =
+                        case buildReason of
+                          CatalogUpdate _ -> True
+                          CatalogSync -> False
                   -- we don't modify the existing event trigger definitions in the maintenance mode
                   when
-                    ( (buildReason == CatalogUpdate || recreateEventTriggers == RETRecreate)
+                    ( (isCatalogUpdate || recreateEventTriggers == RETRecreate)
                         && _sccMaintenanceMode serverConfigCtx == MaintenanceModeDisabled
                     )
                     $ liftEitherM $
