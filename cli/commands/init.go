@@ -70,7 +70,7 @@ func NewInitCmd(ec *cli.ExecutionContext) *cobra.Command {
 			if opts.Version <= cli.V1 {
 				return fmt.Errorf("config v1 is deprecated, please consider using config v3")
 			}
-			return ec.PluginsConfig.Repo.EnsureCloned()
+			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) == 1 {
@@ -86,7 +86,11 @@ func NewInitCmd(ec *cli.ExecutionContext) *cobra.Command {
 	f.StringVar(&opts.Endpoint, "endpoint", "", "http(s) endpoint for Hasura GraphQL engine")
 	f.StringVar(&opts.AdminSecret, "admin-secret", "", "admin secret for Hasura GraphQL engine")
 	f.StringVar(&opts.AdminSecret, "access-key", "", "access key for Hasura GraphQL engine")
-	f.StringVar(&opts.Template, "install-manifest", "", "install manifest to be cloned")
+
+	f.String("install-manifest", "", "install manifest to be cloned")
+	if err := f.MarkDeprecated("install-manifest", "refer: https://github.com/hasura/graphql-engine/tree/stable/install-manifests"); err != nil {
+		ec.Logger.Debugf("failed marking depricated flag")
+	}
 	if err := f.MarkDeprecated("access-key", "use --admin-secret instead"); err != nil {
 		ec.Logger.WithError(err).Errorf("error while using a dependency library")
 	}
@@ -111,8 +115,6 @@ type InitOptions struct {
 	AdminSecret           string
 	InitDir               string
 	GetMetadataMigrations bool
-
-	Template string
 }
 
 func (o *InitOptions) InitRun() error {
@@ -163,12 +165,6 @@ func (o *InitOptions) InitRun() error {
 		if err != nil {
 			return err
 		}
-	}
-
-	// create template files
-	err = o.createTemplateFiles()
-	if err != nil {
-		return err
 	}
 
 	// create other required files, like config.yaml, migrations directory
@@ -283,29 +279,6 @@ func (o *InitOptions) createFiles() error {
 	err = os.MkdirAll(o.EC.SeedsDirectory, os.ModePerm)
 	if err != nil {
 		return errors.Wrap(err, "cannot write seeds directory")
-	}
-	return nil
-}
-
-func (o *InitOptions) createTemplateFiles() error {
-	if o.Template == "" {
-		return nil
-	}
-	err := o.EC.InitTemplatesRepo.EnsureUpdated()
-	if err != nil {
-		return errors.Wrap(err, "error in updating init-templates repo")
-	}
-	templatePath := filepath.Join(o.EC.InitTemplatesRepo.Path, o.Template)
-	info, err := os.Stat(templatePath)
-	if err != nil {
-		return errors.Wrap(err, "template doesn't exist")
-	}
-	if !info.IsDir() {
-		return errors.Errorf("template should be a directory")
-	}
-	err = util.CopyDir(templatePath, filepath.Join(o.EC.ExecutionDirectory, "install-manifest"))
-	if err != nil {
-		return err
 	}
 	return nil
 }

@@ -36,6 +36,20 @@ func newActionsUseCodegenCmd(ec *cli.ExecutionContext) *cobra.Command {
   # Use a codegen with a starter kit
   hasura actions use-codegen --with-starter-kit true`,
 		SilenceUsage: true,
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			if err := ec.SetupCodegenAssetsRepo(); err != nil {
+				return fmt.Errorf("setting up codegen-assets repo failed (this is required for automatically generating actions code): %w", err)
+			}
+
+			if err := ec.SetupCodegenAssetsRepo(); err != nil {
+				return fmt.Errorf("setting up codengen assets repo failed")
+			}
+			// ensure codegen-assets repo exists
+			if err := ec.CodegenAssetsRepo.EnsureCloned(); err != nil {
+				return fmt.Errorf("pulling latest actions codegen files from internet failed: %w", err)
+			}
+			return nil
+		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return opts.run()
 		},

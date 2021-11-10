@@ -7,6 +7,8 @@
 - console: add comments to tracked functions
 - metadata SDK: add type definitions for config v3
 
+- cli: core CLI features are not blocked in environments without internet (#7695)
+
 ### Bug fixes and improvements
 (Add entries below in the order of server, console, cli, docs, others)
 

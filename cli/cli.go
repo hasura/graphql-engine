@@ -523,25 +523,9 @@ func (ec *ExecutionContext) Prepare() error {
 		return errors.Wrap(err, "setting up global config failed")
 	}
 
-	// setup plugins path
-	err = ec.setupPlugins()
-	if err != nil {
-		return errors.Wrap(err, "setting up plugins path failed")
-	}
-
 	if !ec.proPluginVersionValidated {
 		ec.validateProPluginVersion()
 		ec.proPluginVersionValidated = true
-	}
-
-	err = ec.setupCodegenAssetsRepo()
-	if err != nil {
-		return errors.Wrap(err, "setting up codegen-assets repo failed")
-	}
-
-	err = ec.setupInitTemplatesRepo()
-	if err != nil {
-		return errors.Wrap(err, "setting up init-templates repo failed")
 	}
 
 	ec.LastUpdateCheckFile = filepath.Join(ec.GlobalConfigDir, LastUpdateCheckFileName)
@@ -568,9 +552,9 @@ func (ec *ExecutionContext) Prepare() error {
 	return nil
 }
 
-// setupPlugins create and returns the inferred paths for hasura. By default, it assumes
+// SetupPlugins create and returns the inferred paths for hasura. By default, it assumes
 // $HOME/.hasura as the base path
-func (ec *ExecutionContext) setupPlugins() error {
+func (ec *ExecutionContext) SetupPlugins() error {
 	base := filepath.Join(ec.GlobalConfigDir, "plugins")
 	base, err := filepath.Abs(base)
 	if err != nil {
@@ -586,6 +570,10 @@ func (ec *ExecutionContext) setupPlugins() error {
 }
 
 func (ec *ExecutionContext) validateProPluginVersion() {
+	if err := ec.SetupPlugins(); err != nil {
+		ec.Logger.Debugf("Validating installed pro plugin version failed: %v", err)
+		return
+	}
 	installedPlugins, err := ec.PluginsConfig.ListInstalledPlugins()
 	if err != nil {
 		return
@@ -606,7 +594,7 @@ func (ec *ExecutionContext) validateProPluginVersion() {
 	}
 }
 
-func (ec *ExecutionContext) setupCodegenAssetsRepo() error {
+func (ec *ExecutionContext) SetupCodegenAssetsRepo() error {
 	base := filepath.Join(ec.GlobalConfigDir, util.ActionsCodegenDirName)
 	base, err := filepath.Abs(base)
 	if err != nil {
@@ -620,20 +608,6 @@ func (ec *ExecutionContext) setupCodegenAssetsRepo() error {
 	return nil
 }
 
-func (ec *ExecutionContext) setupInitTemplatesRepo() error {
-	base := filepath.Join(ec.GlobalConfigDir, util.InitTemplatesDirName)
-	base, err := filepath.Abs(base)
-	if err != nil {
-		return errors.Wrap(err, "cannot get absolute path")
-	}
-	ec.InitTemplatesRepo = util.NewGitUtil(util.InitTemplatesRepoURI, base, "")
-	ec.InitTemplatesRepo.Logger = ec.Logger
-	if ec.GlobalConfig.CLIEnvironment == ServerOnDockerEnvironment {
-		ec.InitTemplatesRepo.DisableCloneOrUpdate = true
-	}
-	return nil
-}
-
 func (ec *ExecutionContext) SetHGEHeaders(headers map[string]string) {
 	ec.HGEHeaders = headers
 }
@@ -642,22 +616,10 @@ func (ec *ExecutionContext) SetHGEHeaders(headers map[string]string) {
 // ExecutionDirectory to see if all the required files and directories are in
 // place.
 func (ec *ExecutionContext) Validate() error {
-	// ensure plugins index exists
-	err := ec.PluginsConfig.Repo.EnsureCloned()
-	if err != nil {
-		return errors.Wrap(err, "ensuring plugins index failed")
-	}
-
-	// ensure codegen-assets repo exists
-	err = ec.CodegenAssetsRepo.EnsureCloned()
-	if err != nil {
-		return errors.Wrap(err, "ensuring codegen-assets repo failed")
-	}
-
 	// validate execution directory
-	err = ec.validateDirectory()
+	err := ec.validateDirectory()
 	if err != nil {
-		return errors.Wrap(err, "validating current directory failed")
+		return fmt.Errorf("validating current directory failed: %w", err)
 	}
 
 	// load .env file

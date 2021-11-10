@@ -17,12 +17,6 @@ const (
 	ActionsCodegenDirName string = "actions-codegen-assets"
 )
 
-// Default init-templates repo constants
-const (
-	InitTemplatesRepoURI string = "https://github.com/hasura/graphql-engine-install-manifests.git"
-	InitTemplatesDirName string = "init-templates"
-)
-
 type GitUtil struct {
 	URI  string
 	Path string
