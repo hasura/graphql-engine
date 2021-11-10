@@ -2,6 +2,7 @@ package hasuradb
 
 import (
 	"crypto/tls"
+	"encoding/json"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -20,7 +21,6 @@ import (
 
 	"github.com/mitchellh/mapstructure"
 
-	"github.com/goccy/go-yaml"
 	"github.com/hasura/graphql-engine/cli/v2/migrate/database"
 	"github.com/parnurzeal/gorequest"
 	log "github.com/sirupsen/logrus"
@@ -269,7 +269,7 @@ func (h *HasuraDB) Run(migration io.Reader, fileType, fileName string) error {
 		}
 	case "meta":
 		var metadataRequests []interface{}
-		err := yaml.Unmarshal(migr, &metadataRequests)
+		err := json.Unmarshal(migr, &metadataRequests)
 		if err != nil {
 			h.migrationQuery.ResetArgs()
 			return err
