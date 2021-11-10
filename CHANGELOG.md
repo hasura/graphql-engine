@@ -9,6 +9,8 @@
 ### Bug fixes and improvements
 (Add entries below in the order of server, console, cli, docs, others)
 
+- server: fix mssql `table_by_pk` query returning empty array (fix #7784)
+
 ## v2.1.0-beta.2
 
 ### Action transforms

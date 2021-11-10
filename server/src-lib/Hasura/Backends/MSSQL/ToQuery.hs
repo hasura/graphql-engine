@@ -496,12 +496,23 @@ parens p = "(" <+> IndentPrinter 1 p <+> ")"
 
 -- | Wrap a select with things needed when using FOR JSON.
 wrapFor :: For -> Printer -> Printer
-wrapFor for' inner = nullToArray
+wrapFor for' inner = coalesceNull
   where
-    nullToArray =
+    coalesceNull =
       case for' of
         NoFor -> rooted
-        JsonFor _ -> SeqPrinter ["SELECT ISNULL((", rooted, "), '[]')"]
+        JsonFor forJson ->
+          SeqPrinter
+            [ "SELECT ISNULL((",
+              rooted,
+              "), '",
+              emptyarrayOrNull forJson,
+              "')"
+            ]
+    emptyarrayOrNull ForJson {..} =
+      case jsonCardinality of
+        JsonSingleton -> "null"
+        JsonArray -> "[]"
     rooted =
       case for' of
         JsonFor ForJson {jsonRoot, jsonCardinality = JsonSingleton} ->

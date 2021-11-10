@@ -306,7 +306,6 @@ class TestGraphQLQueryBasicCommon:
     def test_select_query_multiple_columns_obj_fkey(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + "/select_multiple_columns_obj_fkey.yaml", transport)
 
-
     @classmethod
     def dir(cls):
         return 'queries/graphql_query/basic'
@@ -331,6 +330,12 @@ class TestGraphQLQueryBasicMSSQL:
     def test_nodes_aggregates_conditions_mssql(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + "/nodes_aggregates_conditions_mssql.yaml", transport)
 
+    def test_select_query_author_pk(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_query_author_by_pkey.yaml', transport)
+
+    def test_select_query_author_pk_null(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_query_author_by_pkey_null.yaml', transport)
+
     @classmethod
     def dir(cls):
         return 'queries/graphql_query/basic'
@@ -343,12 +348,6 @@ class TestGraphQLQueryBasicPostgres:
     @pytest.mark.skip_server_upgrade_test
     def test_select_various_postgres_types(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/select_query_test_types_postgres.yaml', transport)
-
-    # TODO: https://github.com/hasura/graphql-engine-mono/issues/866
-    # This test currently fails on MSSQL.
-    # Move to TestGraphQLQueryBasicCommon once linked issue is fixed.
-    def test_select_query_author_pk(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + '/select_query_author_by_pkey.yaml', transport)
 
     def test_select_query_invalid_escape_sequence(self, hge_ctx, transport):
         transport = 'http'
@@ -383,6 +382,12 @@ class TestGraphQLQueryBasicPostgres:
         st_code, resp = hge_ctx.v1q_f(self.dir() + '/setup_invalid_fkey_relationship.yaml')
         assert st_code == 400, resp
         assert resp['error'] == "Expecting object { table, columns }."
+
+    def test_select_query_author_pk(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_query_author_by_pkey.yaml', transport)
+
+    def test_select_query_author_pk_null(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_query_author_by_pkey_null.yaml', transport)
 
     @classmethod
     def dir(cls):
