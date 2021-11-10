@@ -3,6 +3,7 @@
 ## Next release
 (Add highlights/major features below)
 - server: log locking DB queries during source catalog migration
+- server: fix to allow remote schema response to contain an "extensions" field (#7143)
 - console: add comments to tracked functions
 
 ### Bug fixes and improvements

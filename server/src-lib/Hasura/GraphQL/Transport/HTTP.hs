@@ -545,6 +545,21 @@ coalescePostgresMutations plan = do
     _ -> Nothing
   Just (oneSourceConfig, mutations)
 
+data GraphQLResponse
+  = GraphQLResponseErrors [J.Value]
+  | GraphQLResponseData JO.Value
+
+decodeGraphQLResponse :: LBS.ByteString -> Either Text GraphQLResponse
+decodeGraphQLResponse bs = do
+  val <- mapLeft T.pack $ JO.eitherDecode bs
+  valObj <- JO.asObject val
+  case JO.lookup "errors" valObj of
+    Just (JO.Array errs) -> Right $ GraphQLResponseErrors (toList $ JO.fromOrdered <$> errs)
+    Just _ -> Left "Invalid \"errors\" field in response from remote"
+    Nothing -> do
+      dataVal <- JO.lookup "data" valObj `onNothing` Left "Missing \"data\" field in response from remote"
+      Right $ GraphQLResponseData dataVal
+
 extractFieldFromResponse ::
   forall m.
   Monad m =>
@@ -557,14 +572,13 @@ extractFieldFromResponse fieldName rsi resultCustomizer resp = do
   let namespace = fmap G.unName $ _rscNamespaceFieldName $ rsCustomizer rsi
       fieldName' = G.unName $ _rfaAlias fieldName
   -- TODO: use RootFieldAlias for remote fields
-  val <- onLeft (JO.eitherDecode resp) $ do400 . T.pack
-  valObj <- onLeft (JO.asObject val) do400
   dataVal <-
-    applyResultCustomizer resultCustomizer <$> case JO.toList valObj of
-      [("data", v)] -> pure v
-      _ -> case JO.lookup "errors" valObj of
-        Just (JO.Array err) -> doGQExecError $ toList $ fmap JO.fromOrdered err
-        _ -> do400 "Received invalid JSON value from remote"
+    applyResultCustomizer resultCustomizer
+      <$> do
+        graphQLResponse <- decodeGraphQLResponse resp `onLeft` do400
+        case graphQLResponse of
+          GraphQLResponseErrors errs -> doGQExecError errs
+          GraphQLResponseData d -> pure d
   case namespace of
     Just _ ->
       -- If using a custom namespace field then the response from the remote server
