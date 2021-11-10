@@ -46,7 +46,16 @@ Please open pull requests against this repo to add new plugins`,
 		SilenceUsage: true,
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 			cmd.Root().PersistentPreRun(cmd, args)
-			return ec.PluginsConfig.Repo.EnsureCloned()
+			// setup plugins path
+			err := ec.SetupPlugins()
+			if err != nil {
+				return fmt.Errorf("setting up plugins path failed: %w", err)
+			}
+
+			if err := ec.PluginsConfig.Repo.EnsureCloned(); err != nil {
+				return fmt.Errorf("pulling latest plugins list from internet failed: %w", err)
+			}
+			return nil
 		},
 	}
 	pluginsCmd.AddCommand(
