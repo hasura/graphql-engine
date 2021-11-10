@@ -73,14 +73,57 @@ module QuickType
     , ActionDefinition (..)
     , InputArgument (..)
     , HasuraMetadataV2 (..)
+    , FromEnv (..)
+    , PGConfiguration (..)
+    , MSSQLConfiguration (..)
+    , BigQueryConfiguration (..)
+    , PGSourceConnectionInfo (..)
+    , MSSQLSourceConnectionInfo (..)
+    , PGConnectionParameters (..)
+    , PGPoolSettings (..)
+    , PGCERTSettings (..)
+    , MSSQLPoolSettings (..)
+    , BackendKind (..)
+    , BaseSource (..)
+    , PGSource (..)
+    , MSSQLSource (..)
+    , BigQuerySource (..)
+    , Source (..)
+    , APILimits (..)
+    , DepthLimit (..)
+    , RateLimit (..)
+    , RateLimitRule (..)
+    , NodeLimit (..)
+    , RESTEndpoint (..)
+    , RESTEndpointDefinition (..)
+    , InheritedRole (..)
+    , HasuraMetadataV3 (..)
+    , RecordStringAny (..)
     , Header (..)
     , Permission (..)
     , Definition (..)
     , RemoteFieldValue (..)
+    , PGConnectionParametersClass (..)
+    , RecordStringAnyClass (..)
+    , QueryClass (..)
+    , Configuration (..)
+    , SourceConnectionInfo (..)
+    , PoolSettings (..)
     , ActionDefinitionType (..)
     , CustomTypeObjectRelationshipType (..)
     , Columns (..)
+    , IsolationLevel (..)
+    , PGSourceKind (..)
+    , MSSQLSourceKind (..)
+    , BigQuerySourceKind (..)
+    , UniqueParamsEnum (..)
+    , Method (..)
     , Filter (..)
+    , DatabaseURL (..)
+    , Sslpassword (..)
+    , Datasets (..)
+    , ServiceAccount (..)
+    , UniqueParams (..)
     , decodeTopLevel
     ) where
 
@@ -122,6 +165,8 @@ type ColumnPresetsExpression = HashMap Text Text
 type RemoteField = HashMap Text RemoteFieldValue
 
 type InputArguments = HashMap Text Text
+
+type RecordStringAny = HashMap Text (Maybe Text)
 
 {-|
 https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/syntax-defs.html#headerfromvalue
@@ -1152,6 +1197,536 @@ data UpdatePermission = UpdatePermission
     , setUpdatePermission :: Maybe (HashMap Text Text)
     } deriving (Show)
 
+{-|
+https://hasura.io/docs/latest/graphql/core/api-reference/syntax-defs.html#pgconnectionparameters
+
+database:
+The database name
+
+host:
+The name of the host to connect to
+
+password:
+The Postgres user’s password
+
+port:
+The port number to connect with, at the server host
+
+username:
+The Postgres user to be connected
+-}
+data PGConnectionParameters = PGConnectionParameters
+    { databasePGConnectionParameters :: Text
+    , hostPGConnectionParameters :: Text
+    , passwordPGConnectionParameters :: Maybe Text
+    , portPGConnectionParameters :: Float
+    , usernamePGConnectionParameters :: Text
+    } deriving (Show)
+
+data BaseSource = BaseSource
+    { functionsBaseSource :: Maybe (Vector CustomFunction)
+    , nameBaseSource :: Text
+    , tablesBaseSource :: Vector TableEntry
+    } deriving (Show)
+
+data PGSource = PGSource
+    { configurationPGSource :: PGConfiguration
+    , functionsPGSource :: Maybe (Vector CustomFunction)
+    , kindPGSource :: PGSourceKind
+    , namePGSource :: Text
+    , tablesPGSource :: Vector TableEntry
+    } deriving (Show)
+
+{-| https://hasura.io/docs/latest/graphql/core/api-reference/syntax-defs.html#pgconfiguration
+
+connectionInfo:
+Connection parameters for the source
+
+readReplicas:
+Optional list of read replica configuration (supported only in cloud/enterprise versions)
+-}
+data PGConfiguration = PGConfiguration
+    { connectionInfoPGConfiguration :: PGSourceConnectionInfo
+    , readReplicasPGConfiguration :: Maybe (Vector PGSourceConnectionInfo)
+    } deriving (Show)
+
+{-| Connection parameters for the source
+
+
+https://hasura.io/docs/latest/graphql/core/api-reference/syntax-defs.html#pgsourceconnectioninfo
+
+databaseURL:
+The database connection URL as a string, as an environment variable, or as connection
+parameters.
+
+isolationLevel:
+The transaction isolation level in which the queries made to the source will be run with
+(default: read-committed).
+
+poolSettings:
+Connection pool settings
+
+sslConfiguration:
+The client SSL certificate settings for the database (Only available in Cloud).
+
+usePreparedStatements:
+If set to true the server prepares statement before executing on the source database
+(default: false). For more details, refer to the Postgres docs
+-}
+data PGSourceConnectionInfo = PGSourceConnectionInfo
+    { databaseURLPGSourceConnectionInfo :: DatabaseURL
+    , isolationLevelPGSourceConnectionInfo :: Maybe IsolationLevel
+    , poolSettingsPGSourceConnectionInfo :: Maybe PGPoolSettings
+    , sslConfigurationPGSourceConnectionInfo :: Maybe PGCERTSettings
+    , usePreparedStatementsPGSourceConnectionInfo :: Maybe Bool
+    } deriving (Show)
+
+{-| The database connection URL as a string, as an environment variable, or as connection
+parameters.
+-}
+data DatabaseURL
+    = PGConnectionParametersClassInDatabaseURL PGConnectionParametersClass
+    | StringInDatabaseURL Text
+    deriving (Show)
+
+{-| https://hasura.io/docs/latest/graphql/core/api-reference/syntax-defs.html#fromenv
+
+Environment variable which stores the client certificate.
+
+Environment variable which stores the client private key.
+
+Environment variable which stores trusted certificate authorities.
+
+
+https://hasura.io/docs/latest/graphql/core/api-reference/syntax-defs.html#pgconnectionparameters
+
+fromEnv:
+Name of the environment variable
+
+database:
+The database name
+
+host:
+The name of the host to connect to
+
+password:
+The Postgres user’s password
+
+port:
+The port number to connect with, at the server host
+
+username:
+The Postgres user to be connected
+-}
+data PGConnectionParametersClass = PGConnectionParametersClass
+    { fromEnvPGConnectionParametersClass :: Maybe Text
+    , databasePGConnectionParametersClass :: Maybe Text
+    , hostPGConnectionParametersClass :: Maybe Text
+    , passwordPGConnectionParametersClass :: Maybe Text
+    , portPGConnectionParametersClass :: Maybe Float
+    , usernamePGConnectionParametersClass :: Maybe Text
+    } deriving (Show)
+
+{-| The transaction isolation level in which the queries made to the source will be run with
+(default: read-committed).
+-}
+data IsolationLevel
+    = ReadCommittedIsolationLevel
+    | RepeatableReadIsolationLevel
+    | SerializableIsolationLevel
+    deriving (Show)
+
+{-| Connection pool settings
+
+https://hasura.io/docs/latest/graphql/core/api-reference/syntax-defs.html#pgpoolsettings
+
+connectionLifetime:
+Time from connection creation after which the connection should be destroyed and a new
+one created. A value of 0 indicates we should never destroy an active connection. If 0 is
+passed, memory from large query results may not be reclaimed. (default: 600 sec)
+
+idleTimeout:
+The idle timeout (in seconds) per connection (default: 180)
+
+maxConnections:
+Maximum number of connections to be kept in the pool (default: 50)
+
+poolTimeout:
+Maximum time to wait while acquiring a Postgres connection from the pool, in seconds
+(default: forever)
+
+retries:
+Number of retries to perform (default: 1)
+-}
+data PGPoolSettings = PGPoolSettings
+    { connectionLifetimePGPoolSettings :: Maybe Float
+    , idleTimeoutPGPoolSettings :: Maybe Float
+    , maxConnectionsPGPoolSettings :: Maybe Float
+    , poolTimeoutPGPoolSettings :: Maybe Float
+    , retriesPGPoolSettings :: Maybe Float
+    } deriving (Show)
+
+{-| The client SSL certificate settings for the database (Only available in Cloud).
+
+https://hasura.io/docs/latest/graphql/core/api-reference/syntax-defs.html#pgcertsettings
+
+sslcert:
+Environment variable which stores the client certificate.
+
+sslkey:
+Environment variable which stores the client private key.
+
+sslmode:
+The SSL connection mode. See the libpq ssl support docs
+<https://www.postgresql.org/docs/9.1/libpq-ssl.html> for more details.
+
+sslpassword:
+Password in the case where the sslkey is encrypted.
+
+sslrootcert:
+Environment variable which stores trusted certificate authorities.
+-}
+data PGCERTSettings = PGCERTSettings
+    { sslcertPGCERTSettings :: FromEnv
+    , sslkeyPGCERTSettings :: FromEnv
+    , sslmodePGCERTSettings :: Text
+    , sslpasswordPGCERTSettings :: Maybe Sslpassword
+    , sslrootcertPGCERTSettings :: FromEnv
+    } deriving (Show)
+
+{-| https://hasura.io/docs/latest/graphql/core/api-reference/syntax-defs.html#fromenv
+
+Environment variable which stores the client certificate.
+
+Environment variable which stores the client private key.
+
+Environment variable which stores trusted certificate authorities.
+
+fromEnv:
+Name of the environment variable
+-}
+data FromEnv = FromEnv
+    { fromEnvFromEnv :: Text
+    } deriving (Show)
+
+data Sslpassword
+    = FromEnvInSslpassword FromEnv
+    | StringInSslpassword Text
+    deriving (Show)
+
+data PGSourceKind
+    = KindCitusPGSourceKind
+    | KindPostgresPGSourceKind
+    deriving (Show)
+
+data MSSQLSource = MSSQLSource
+    { configurationMSSQLSource :: MSSQLConfiguration
+    , functionsMSSQLSource :: Maybe (Vector CustomFunction)
+    , kindMSSQLSource :: MSSQLSourceKind
+    , nameMSSQLSource :: Text
+    , tablesMSSQLSource :: Vector TableEntry
+    } deriving (Show)
+
+{-|
+https://hasura.io/docs/latest/graphql/core/api-reference/syntax-defs.html#mssqlsourceconnectioninfo
+
+connectionInfo:
+Connection parameters for the source
+-}
+data MSSQLConfiguration = MSSQLConfiguration
+    { connectionInfoMSSQLConfiguration :: MSSQLSourceConnectionInfo
+    } deriving (Show)
+
+{-| Connection parameters for the source
+
+
+https://hasura.io/docs/latest/graphql/core/api-reference/syntax-defs.html#mssqlsourceconnectioninfo
+
+connectionString:
+The database connection string, or as an environment variable
+
+poolSettings:
+Connection pool settings
+-}
+data MSSQLSourceConnectionInfo = MSSQLSourceConnectionInfo
+    { connectionStringMSSQLSourceConnectionInfo :: Sslpassword
+    , poolSettingsMSSQLSourceConnectionInfo :: Maybe MSSQLPoolSettings
+    } deriving (Show)
+
+{-| Connection pool settings
+
+
+https://hasura.io/docs/latest/graphql/core/api-reference/syntax-defs.html#mssqlpoolsettings
+
+idleTimeout:
+The idle timeout (in seconds) per connection (default: 180)
+
+maxConnections:
+Maximum number of connections to be kept in the pool (default: 50)
+-}
+data MSSQLPoolSettings = MSSQLPoolSettings
+    { idleTimeoutMSSQLPoolSettings :: Maybe Float
+    , maxConnectionsMSSQLPoolSettings :: Maybe Float
+    } deriving (Show)
+
+data MSSQLSourceKind
+    = KindMssqlMSSQLSourceKind
+    deriving (Show)
+
+data BigQuerySource = BigQuerySource
+    { configurationBigQuerySource :: BigQueryConfiguration
+    , functionsBigQuerySource :: Maybe (Vector CustomFunction)
+    , kindBigQuerySource :: BigQuerySourceKind
+    , nameBigQuerySource :: Text
+    , tablesBigQuerySource :: Vector TableEntry
+    } deriving (Show)
+
+{-|
+https://hasura.io/docs/latest/graphql/core/api-reference/syntax-defs.html#bigqueryconfiguration
+
+datasets:
+List of BigQuery datasets
+
+projectID:
+Project Id for BigQuery database
+
+serviceAccount:
+Service account for BigQuery database
+-}
+data BigQueryConfiguration = BigQueryConfiguration
+    { datasetsBigQueryConfiguration :: Datasets
+    , projectIDBigQueryConfiguration :: Sslpassword
+    , serviceAccountBigQueryConfiguration :: ServiceAccount
+    } deriving (Show)
+
+{-| List of BigQuery datasets -}
+data Datasets
+    = FromEnvInDatasets FromEnv
+    | StringArrayInDatasets (Vector Text)
+    deriving (Show)
+
+{-| Service account for BigQuery database -}
+data ServiceAccount
+    = RecordStringAnyClassInServiceAccount RecordStringAnyClass
+    | StringInServiceAccount Text
+    deriving (Show)
+
+{-| https://hasura.io/docs/latest/graphql/core/api-reference/syntax-defs.html#fromenv
+
+Environment variable which stores the client certificate.
+
+Environment variable which stores the client private key.
+
+Environment variable which stores trusted certificate authorities.
+
+fromEnv:
+Name of the environment variable
+-}
+data RecordStringAnyClass = RecordStringAnyClass
+    { fromEnvRecordStringAnyClass :: Maybe Text
+    } deriving (Show)
+
+data BigQuerySourceKind
+    = KindBigqueryBigQuerySourceKind
+    deriving (Show)
+
+data HasuraMetadataV3 = HasuraMetadataV3
+    { actionsHasuraMetadataV3 :: Maybe (Vector Action)
+    , allowlistHasuraMetadataV3 :: Maybe (Vector AllowList)
+    , apiLimitsHasuraMetadataV3 :: Maybe APILimits
+    , cronTriggersHasuraMetadataV3 :: Maybe (Vector CronTrigger)
+    , customTypesHasuraMetadataV3 :: Maybe CustomTypes
+    , inheritedRolesHasuraMetadataV3 :: Maybe (Vector InheritedRole)
+    , queryCollectionsHasuraMetadataV3 :: Maybe (Vector QueryCollectionEntry)
+    , remoteSchemasHasuraMetadataV3 :: Maybe (Vector RemoteSchema)
+    , restEndpointsHasuraMetadataV3 :: Vector RESTEndpoint
+    , sourcesHasuraMetadataV3 :: Vector Source
+    , versionHasuraMetadataV3 :: Float
+    } deriving (Show)
+
+data APILimits = APILimits
+    { depthLimitAPILimits :: Maybe DepthLimit
+    , disabledAPILimits :: Bool
+    , nodeLimitAPILimits :: Maybe NodeLimit
+    , rateLimitAPILimits :: Maybe RateLimit
+    } deriving (Show)
+
+data DepthLimit = DepthLimit
+    { globalDepthLimit :: Float
+    , perRoleDepthLimit :: HashMap Text Float
+    } deriving (Show)
+
+data NodeLimit = NodeLimit
+    { globalNodeLimit :: Float
+    , perRoleNodeLimit :: HashMap Text Float
+    } deriving (Show)
+
+data RateLimit = RateLimit
+    { globalRateLimit :: RateLimitRule
+    , perRoleRateLimit :: HashMap Text RateLimitRule
+    } deriving (Show)
+
+data RateLimitRule = RateLimitRule
+    { maxReqsPerMinRateLimitRule :: Float
+    , uniqueParamsRateLimitRule :: UniqueParams
+    } deriving (Show)
+
+data UniqueParams
+    = EnumInUniqueParams UniqueParamsEnum
+    | NullInUniqueParams
+    | StringArrayInUniqueParams (Vector Text)
+    deriving (Show)
+
+data UniqueParamsEnum
+    = IPUniqueParamsEnum
+    deriving (Show)
+
+data InheritedRole = InheritedRole
+    { roleNameInheritedRole :: Text
+    , roleSetInheritedRole :: Vector Text
+    } deriving (Show)
+
+data RESTEndpoint = RESTEndpoint
+    { commentRESTEndpoint :: Maybe Text
+    , definitionRESTEndpoint :: RESTEndpointDefinition
+    , methodsRESTEndpoint :: Vector Method
+    , nameRESTEndpoint :: Text
+    , urlRESTEndpoint :: Text
+    } deriving (Show)
+
+data RESTEndpointDefinition = RESTEndpointDefinition
+    { queryRESTEndpointDefinition :: QueryClass
+    } deriving (Show)
+
+data QueryClass = QueryClass
+    { collectionNameQueryClass :: Text
+    , queryNameQueryClass :: Text
+    } deriving (Show)
+
+data Method
+    = PatchMethod
+    | PostMethod
+    | PutMethod
+    deriving (Show)
+
+data Source = Source
+    { configurationSource :: Configuration
+    , functionsSource :: Maybe (Vector CustomFunction)
+    , kindSource :: BackendKind
+    , nameSource :: Text
+    , tablesSource :: Vector TableEntry
+    } deriving (Show)
+
+{-|
+https://hasura.io/docs/latest/graphql/core/api-reference/syntax-defs.html#pgconfiguration
+
+
+https://hasura.io/docs/latest/graphql/core/api-reference/syntax-defs.html#mssqlsourceconnectioninfo
+
+
+https://hasura.io/docs/latest/graphql/core/api-reference/syntax-defs.html#bigqueryconfiguration
+
+connectionInfo:
+Connection parameters for the source
+
+readReplicas:
+Optional list of read replica configuration (supported only in cloud/enterprise versions)
+
+datasets:
+List of BigQuery datasets
+
+projectID:
+Project Id for BigQuery database
+
+serviceAccount:
+Service account for BigQuery database
+-}
+data Configuration = Configuration
+    { connectionInfoConfiguration :: Maybe SourceConnectionInfo
+    , readReplicasConfiguration :: Maybe (Vector PGSourceConnectionInfo)
+    , datasetsConfiguration :: Maybe Datasets
+    , projectIDConfiguration :: Maybe Sslpassword
+    , serviceAccountConfiguration :: Maybe ServiceAccount
+    } deriving (Show)
+
+{-| Connection parameters for the source
+
+
+https://hasura.io/docs/latest/graphql/core/api-reference/syntax-defs.html#pgsourceconnectioninfo
+
+
+https://hasura.io/docs/latest/graphql/core/api-reference/syntax-defs.html#mssqlsourceconnectioninfo
+
+databaseURL:
+The database connection URL as a string, as an environment variable, or as connection
+parameters.
+
+isolationLevel:
+The transaction isolation level in which the queries made to the source will be run with
+(default: read-committed).
+
+poolSettings:
+Connection pool settings
+
+sslConfiguration:
+The client SSL certificate settings for the database (Only available in Cloud).
+
+usePreparedStatements:
+If set to true the server prepares statement before executing on the source database
+(default: false). For more details, refer to the Postgres docs
+
+connectionString:
+The database connection string, or as an environment variable
+-}
+data SourceConnectionInfo = SourceConnectionInfo
+    { databaseURLSourceConnectionInfo :: Maybe DatabaseURL
+    , isolationLevelSourceConnectionInfo :: Maybe IsolationLevel
+    , poolSettingsSourceConnectionInfo :: Maybe PoolSettings
+    , sslConfigurationSourceConnectionInfo :: Maybe PGCERTSettings
+    , usePreparedStatementsSourceConnectionInfo :: Maybe Bool
+    , connectionStringSourceConnectionInfo :: Maybe Sslpassword
+    } deriving (Show)
+
+{-| Connection pool settings
+
+https://hasura.io/docs/latest/graphql/core/api-reference/syntax-defs.html#pgpoolsettings
+
+
+https://hasura.io/docs/latest/graphql/core/api-reference/syntax-defs.html#mssqlpoolsettings
+
+connectionLifetime:
+Time from connection creation after which the connection should be destroyed and a new
+one created. A value of 0 indicates we should never destroy an active connection. If 0 is
+passed, memory from large query results may not be reclaimed. (default: 600 sec)
+
+idleTimeout:
+The idle timeout (in seconds) per connection (default: 180)
+
+maxConnections:
+Maximum number of connections to be kept in the pool (default: 50)
+
+poolTimeout:
+Maximum time to wait while acquiring a Postgres connection from the pool, in seconds
+(default: forever)
+
+retries:
+Number of retries to perform (default: 1)
+-}
+data PoolSettings = PoolSettings
+    { connectionLifetimePoolSettings :: Maybe Float
+    , idleTimeoutPoolSettings :: Maybe Float
+    , maxConnectionsPoolSettings :: Maybe Float
+    , poolTimeoutPoolSettings :: Maybe Float
+    , retriesPoolSettings :: Maybe Float
+    } deriving (Show)
+
+data BackendKind
+    = BackendKindBigqueryBackendKind
+    | BackendKindCitusBackendKind
+    | BackendKindMssqlBackendKind
+    | BackendKindPostgresBackendKind
+    deriving (Show)
+
 decodeTopLevel :: ByteString -> Maybe PGColumn
 decodeTopLevel = decode
 
@@ -1363,6 +1938,84 @@ decodeTopLevel :: ByteString -> Maybe InputArgument
 decodeTopLevel = decode
 
 decodeTopLevel :: ByteString -> Maybe HasuraMetadataV2
+decodeTopLevel = decode
+
+decodeTopLevel :: ByteString -> Maybe FromEnv
+decodeTopLevel = decode
+
+decodeTopLevel :: ByteString -> Maybe PGConfiguration
+decodeTopLevel = decode
+
+decodeTopLevel :: ByteString -> Maybe MSSQLConfiguration
+decodeTopLevel = decode
+
+decodeTopLevel :: ByteString -> Maybe BigQueryConfiguration
+decodeTopLevel = decode
+
+decodeTopLevel :: ByteString -> Maybe PGSourceConnectionInfo
+decodeTopLevel = decode
+
+decodeTopLevel :: ByteString -> Maybe MSSQLSourceConnectionInfo
+decodeTopLevel = decode
+
+decodeTopLevel :: ByteString -> Maybe PGConnectionParameters
+decodeTopLevel = decode
+
+decodeTopLevel :: ByteString -> Maybe PGPoolSettings
+decodeTopLevel = decode
+
+decodeTopLevel :: ByteString -> Maybe PGCERTSettings
+decodeTopLevel = decode
+
+decodeTopLevel :: ByteString -> Maybe MSSQLPoolSettings
+decodeTopLevel = decode
+
+decodeTopLevel :: ByteString -> Maybe BackendKind
+decodeTopLevel = decode
+
+decodeTopLevel :: ByteString -> Maybe BaseSource
+decodeTopLevel = decode
+
+decodeTopLevel :: ByteString -> Maybe PGSource
+decodeTopLevel = decode
+
+decodeTopLevel :: ByteString -> Maybe MSSQLSource
+decodeTopLevel = decode
+
+decodeTopLevel :: ByteString -> Maybe BigQuerySource
+decodeTopLevel = decode
+
+decodeTopLevel :: ByteString -> Maybe Source
+decodeTopLevel = decode
+
+decodeTopLevel :: ByteString -> Maybe APILimits
+decodeTopLevel = decode
+
+decodeTopLevel :: ByteString -> Maybe DepthLimit
+decodeTopLevel = decode
+
+decodeTopLevel :: ByteString -> Maybe RateLimit
+decodeTopLevel = decode
+
+decodeTopLevel :: ByteString -> Maybe RateLimitRule
+decodeTopLevel = decode
+
+decodeTopLevel :: ByteString -> Maybe NodeLimit
+decodeTopLevel = decode
+
+decodeTopLevel :: ByteString -> Maybe RESTEndpoint
+decodeTopLevel = decode
+
+decodeTopLevel :: ByteString -> Maybe RESTEndpointDefinition
+decodeTopLevel = decode
+
+decodeTopLevel :: ByteString -> Maybe InheritedRole
+decodeTopLevel = decode
+
+decodeTopLevel :: ByteString -> Maybe HasuraMetadataV3
+decodeTopLevel = decode
+
+decodeTopLevel :: ByteString -> Maybe RecordStringAny
 decodeTopLevel = decode
 
 instance ToJSON HeaderFromValue where
@@ -2248,3 +2901,577 @@ instance FromJSON UpdatePermission where
         <*> v .: "columns"
         <*> v .:? "filter"
         <*> v .:? "set"
+
+instance ToJSON PGConnectionParameters where
+    toJSON (PGConnectionParameters databasePGConnectionParameters hostPGConnectionParameters passwordPGConnectionParameters portPGConnectionParameters usernamePGConnectionParameters) =
+        object
+        [ "database" .= databasePGConnectionParameters
+        , "host" .= hostPGConnectionParameters
+        , "password" .= passwordPGConnectionParameters
+        , "port" .= portPGConnectionParameters
+        , "username" .= usernamePGConnectionParameters
+        ]
+
+instance FromJSON PGConnectionParameters where
+    parseJSON (Object v) = PGConnectionParameters
+        <$> v .: "database"
+        <*> v .: "host"
+        <*> v .:? "password"
+        <*> v .: "port"
+        <*> v .: "username"
+
+instance ToJSON BaseSource where
+    toJSON (BaseSource functionsBaseSource nameBaseSource tablesBaseSource) =
+        object
+        [ "functions" .= functionsBaseSource
+        , "name" .= nameBaseSource
+        , "tables" .= tablesBaseSource
+        ]
+
+instance FromJSON BaseSource where
+    parseJSON (Object v) = BaseSource
+        <$> v .:? "functions"
+        <*> v .: "name"
+        <*> v .: "tables"
+
+instance ToJSON PGSource where
+    toJSON (PGSource configurationPGSource functionsPGSource kindPGSource namePGSource tablesPGSource) =
+        object
+        [ "configuration" .= configurationPGSource
+        , "functions" .= functionsPGSource
+        , "kind" .= kindPGSource
+        , "name" .= namePGSource
+        , "tables" .= tablesPGSource
+        ]
+
+instance FromJSON PGSource where
+    parseJSON (Object v) = PGSource
+        <$> v .: "configuration"
+        <*> v .:? "functions"
+        <*> v .: "kind"
+        <*> v .: "name"
+        <*> v .: "tables"
+
+instance ToJSON PGConfiguration where
+    toJSON (PGConfiguration connectionInfoPGConfiguration readReplicasPGConfiguration) =
+        object
+        [ "connection_info" .= connectionInfoPGConfiguration
+        , "read_replicas" .= readReplicasPGConfiguration
+        ]
+
+instance FromJSON PGConfiguration where
+    parseJSON (Object v) = PGConfiguration
+        <$> v .: "connection_info"
+        <*> v .:? "read_replicas"
+
+instance ToJSON PGSourceConnectionInfo where
+    toJSON (PGSourceConnectionInfo databaseURLPGSourceConnectionInfo isolationLevelPGSourceConnectionInfo poolSettingsPGSourceConnectionInfo sslConfigurationPGSourceConnectionInfo usePreparedStatementsPGSourceConnectionInfo) =
+        object
+        [ "database_url" .= databaseURLPGSourceConnectionInfo
+        , "isolation_level" .= isolationLevelPGSourceConnectionInfo
+        , "pool_settings" .= poolSettingsPGSourceConnectionInfo
+        , "ssl_configuration" .= sslConfigurationPGSourceConnectionInfo
+        , "use_prepared_statements" .= usePreparedStatementsPGSourceConnectionInfo
+        ]
+
+instance FromJSON PGSourceConnectionInfo where
+    parseJSON (Object v) = PGSourceConnectionInfo
+        <$> v .: "database_url"
+        <*> v .:? "isolation_level"
+        <*> v .:? "pool_settings"
+        <*> v .:? "ssl_configuration"
+        <*> v .:? "use_prepared_statements"
+
+instance ToJSON DatabaseURL where
+    toJSON (PGConnectionParametersClassInDatabaseURL x) = toJSON x
+    toJSON (StringInDatabaseURL x) = toJSON x
+
+instance FromJSON DatabaseURL where
+    parseJSON xs@(Object _) = (fmap PGConnectionParametersClassInDatabaseURL . parseJSON) xs
+    parseJSON xs@(String _) = (fmap StringInDatabaseURL . parseJSON) xs
+
+instance ToJSON PGConnectionParametersClass where
+    toJSON (PGConnectionParametersClass fromEnvPGConnectionParametersClass databasePGConnectionParametersClass hostPGConnectionParametersClass passwordPGConnectionParametersClass portPGConnectionParametersClass usernamePGConnectionParametersClass) =
+        object
+        [ "from_env" .= fromEnvPGConnectionParametersClass
+        , "database" .= databasePGConnectionParametersClass
+        , "host" .= hostPGConnectionParametersClass
+        , "password" .= passwordPGConnectionParametersClass
+        , "port" .= portPGConnectionParametersClass
+        , "username" .= usernamePGConnectionParametersClass
+        ]
+
+instance FromJSON PGConnectionParametersClass where
+    parseJSON (Object v) = PGConnectionParametersClass
+        <$> v .:? "from_env"
+        <*> v .:? "database"
+        <*> v .:? "host"
+        <*> v .:? "password"
+        <*> v .:? "port"
+        <*> v .:? "username"
+
+instance ToJSON IsolationLevel where
+    toJSON ReadCommittedIsolationLevel = "read-committed"
+    toJSON RepeatableReadIsolationLevel = "repeatable-read"
+    toJSON SerializableIsolationLevel = "serializable"
+
+instance FromJSON IsolationLevel where
+    parseJSON = withText "IsolationLevel" parseText
+        where
+            parseText "read-committed" = return ReadCommittedIsolationLevel
+            parseText "repeatable-read" = return RepeatableReadIsolationLevel
+            parseText "serializable" = return SerializableIsolationLevel
+
+instance ToJSON PGPoolSettings where
+    toJSON (PGPoolSettings connectionLifetimePGPoolSettings idleTimeoutPGPoolSettings maxConnectionsPGPoolSettings poolTimeoutPGPoolSettings retriesPGPoolSettings) =
+        object
+        [ "connection_lifetime" .= connectionLifetimePGPoolSettings
+        , "idle_timeout" .= idleTimeoutPGPoolSettings
+        , "max_connections" .= maxConnectionsPGPoolSettings
+        , "pool_timeout" .= poolTimeoutPGPoolSettings
+        , "retries" .= retriesPGPoolSettings
+        ]
+
+instance FromJSON PGPoolSettings where
+    parseJSON (Object v) = PGPoolSettings
+        <$> v .:? "connection_lifetime"
+        <*> v .:? "idle_timeout"
+        <*> v .:? "max_connections"
+        <*> v .:? "pool_timeout"
+        <*> v .:? "retries"
+
+instance ToJSON PGCERTSettings where
+    toJSON (PGCERTSettings sslcertPGCERTSettings sslkeyPGCERTSettings sslmodePGCERTSettings sslpasswordPGCERTSettings sslrootcertPGCERTSettings) =
+        object
+        [ "sslcert" .= sslcertPGCERTSettings
+        , "sslkey" .= sslkeyPGCERTSettings
+        , "sslmode" .= sslmodePGCERTSettings
+        , "sslpassword" .= sslpasswordPGCERTSettings
+        , "sslrootcert" .= sslrootcertPGCERTSettings
+        ]
+
+instance FromJSON PGCERTSettings where
+    parseJSON (Object v) = PGCERTSettings
+        <$> v .: "sslcert"
+        <*> v .: "sslkey"
+        <*> v .: "sslmode"
+        <*> v .:? "sslpassword"
+        <*> v .: "sslrootcert"
+
+instance ToJSON FromEnv where
+    toJSON (FromEnv fromEnvFromEnv) =
+        object
+        [ "from_env" .= fromEnvFromEnv
+        ]
+
+instance FromJSON FromEnv where
+    parseJSON (Object v) = FromEnv
+        <$> v .: "from_env"
+
+instance ToJSON Sslpassword where
+    toJSON (FromEnvInSslpassword x) = toJSON x
+    toJSON (StringInSslpassword x) = toJSON x
+
+instance FromJSON Sslpassword where
+    parseJSON xs@(Object _) = (fmap FromEnvInSslpassword . parseJSON) xs
+    parseJSON xs@(String _) = (fmap StringInSslpassword . parseJSON) xs
+
+instance ToJSON PGSourceKind where
+    toJSON KindCitusPGSourceKind = "citus"
+    toJSON KindPostgresPGSourceKind = "postgres"
+
+instance FromJSON PGSourceKind where
+    parseJSON = withText "PGSourceKind" parseText
+        where
+            parseText "citus" = return KindCitusPGSourceKind
+            parseText "postgres" = return KindPostgresPGSourceKind
+
+instance ToJSON MSSQLSource where
+    toJSON (MSSQLSource configurationMSSQLSource functionsMSSQLSource kindMSSQLSource nameMSSQLSource tablesMSSQLSource) =
+        object
+        [ "configuration" .= configurationMSSQLSource
+        , "functions" .= functionsMSSQLSource
+        , "kind" .= kindMSSQLSource
+        , "name" .= nameMSSQLSource
+        , "tables" .= tablesMSSQLSource
+        ]
+
+instance FromJSON MSSQLSource where
+    parseJSON (Object v) = MSSQLSource
+        <$> v .: "configuration"
+        <*> v .:? "functions"
+        <*> v .: "kind"
+        <*> v .: "name"
+        <*> v .: "tables"
+
+instance ToJSON MSSQLConfiguration where
+    toJSON (MSSQLConfiguration connectionInfoMSSQLConfiguration) =
+        object
+        [ "connection_info" .= connectionInfoMSSQLConfiguration
+        ]
+
+instance FromJSON MSSQLConfiguration where
+    parseJSON (Object v) = MSSQLConfiguration
+        <$> v .: "connection_info"
+
+instance ToJSON MSSQLSourceConnectionInfo where
+    toJSON (MSSQLSourceConnectionInfo connectionStringMSSQLSourceConnectionInfo poolSettingsMSSQLSourceConnectionInfo) =
+        object
+        [ "connection_string" .= connectionStringMSSQLSourceConnectionInfo
+        , "pool_settings" .= poolSettingsMSSQLSourceConnectionInfo
+        ]
+
+instance FromJSON MSSQLSourceConnectionInfo where
+    parseJSON (Object v) = MSSQLSourceConnectionInfo
+        <$> v .: "connection_string"
+        <*> v .:? "pool_settings"
+
+instance ToJSON MSSQLPoolSettings where
+    toJSON (MSSQLPoolSettings idleTimeoutMSSQLPoolSettings maxConnectionsMSSQLPoolSettings) =
+        object
+        [ "idle_timeout" .= idleTimeoutMSSQLPoolSettings
+        , "max_connections" .= maxConnectionsMSSQLPoolSettings
+        ]
+
+instance FromJSON MSSQLPoolSettings where
+    parseJSON (Object v) = MSSQLPoolSettings
+        <$> v .:? "idle_timeout"
+        <*> v .:? "max_connections"
+
+instance ToJSON MSSQLSourceKind where
+    toJSON KindMssqlMSSQLSourceKind = "mssql"
+
+instance FromJSON MSSQLSourceKind where
+    parseJSON = withText "MSSQLSourceKind" parseText
+        where
+            parseText "mssql" = return KindMssqlMSSQLSourceKind
+
+instance ToJSON BigQuerySource where
+    toJSON (BigQuerySource configurationBigQuerySource functionsBigQuerySource kindBigQuerySource nameBigQuerySource tablesBigQuerySource) =
+        object
+        [ "configuration" .= configurationBigQuerySource
+        , "functions" .= functionsBigQuerySource
+        , "kind" .= kindBigQuerySource
+        , "name" .= nameBigQuerySource
+        , "tables" .= tablesBigQuerySource
+        ]
+
+instance FromJSON BigQuerySource where
+    parseJSON (Object v) = BigQuerySource
+        <$> v .: "configuration"
+        <*> v .:? "functions"
+        <*> v .: "kind"
+        <*> v .: "name"
+        <*> v .: "tables"
+
+instance ToJSON BigQueryConfiguration where
+    toJSON (BigQueryConfiguration datasetsBigQueryConfiguration projectIDBigQueryConfiguration serviceAccountBigQueryConfiguration) =
+        object
+        [ "datasets" .= datasetsBigQueryConfiguration
+        , "project_id" .= projectIDBigQueryConfiguration
+        , "service_account" .= serviceAccountBigQueryConfiguration
+        ]
+
+instance FromJSON BigQueryConfiguration where
+    parseJSON (Object v) = BigQueryConfiguration
+        <$> v .: "datasets"
+        <*> v .: "project_id"
+        <*> v .: "service_account"
+
+instance ToJSON Datasets where
+    toJSON (FromEnvInDatasets x) = toJSON x
+    toJSON (StringArrayInDatasets x) = toJSON x
+
+instance FromJSON Datasets where
+    parseJSON xs@(Object _) = (fmap FromEnvInDatasets . parseJSON) xs
+    parseJSON xs@(Array _) = (fmap StringArrayInDatasets . parseJSON) xs
+
+instance ToJSON ServiceAccount where
+    toJSON (RecordStringAnyClassInServiceAccount x) = toJSON x
+    toJSON (StringInServiceAccount x) = toJSON x
+
+instance FromJSON ServiceAccount where
+    parseJSON xs@(Object _) = (fmap RecordStringAnyClassInServiceAccount . parseJSON) xs
+    parseJSON xs@(String _) = (fmap StringInServiceAccount . parseJSON) xs
+
+instance ToJSON RecordStringAnyClass where
+    toJSON (RecordStringAnyClass fromEnvRecordStringAnyClass) =
+        object
+        [ "from_env" .= fromEnvRecordStringAnyClass
+        ]
+
+instance FromJSON RecordStringAnyClass where
+    parseJSON (Object v) = RecordStringAnyClass
+        <$> v .:? "from_env"
+
+instance ToJSON BigQuerySourceKind where
+    toJSON KindBigqueryBigQuerySourceKind = "bigquery"
+
+instance FromJSON BigQuerySourceKind where
+    parseJSON = withText "BigQuerySourceKind" parseText
+        where
+            parseText "bigquery" = return KindBigqueryBigQuerySourceKind
+
+instance ToJSON HasuraMetadataV3 where
+    toJSON (HasuraMetadataV3 actionsHasuraMetadataV3 allowlistHasuraMetadataV3 apiLimitsHasuraMetadataV3 cronTriggersHasuraMetadataV3 customTypesHasuraMetadataV3 inheritedRolesHasuraMetadataV3 queryCollectionsHasuraMetadataV3 remoteSchemasHasuraMetadataV3 restEndpointsHasuraMetadataV3 sourcesHasuraMetadataV3 versionHasuraMetadataV3) =
+        object
+        [ "actions" .= actionsHasuraMetadataV3
+        , "allowlist" .= allowlistHasuraMetadataV3
+        , "api_limits" .= apiLimitsHasuraMetadataV3
+        , "cron_triggers" .= cronTriggersHasuraMetadataV3
+        , "custom_types" .= customTypesHasuraMetadataV3
+        , "inherited_roles" .= inheritedRolesHasuraMetadataV3
+        , "query_collections" .= queryCollectionsHasuraMetadataV3
+        , "remote_schemas" .= remoteSchemasHasuraMetadataV3
+        , "rest_endpoints" .= restEndpointsHasuraMetadataV3
+        , "sources" .= sourcesHasuraMetadataV3
+        , "version" .= versionHasuraMetadataV3
+        ]
+
+instance FromJSON HasuraMetadataV3 where
+    parseJSON (Object v) = HasuraMetadataV3
+        <$> v .:? "actions"
+        <*> v .:? "allowlist"
+        <*> v .:? "api_limits"
+        <*> v .:? "cron_triggers"
+        <*> v .:? "custom_types"
+        <*> v .:? "inherited_roles"
+        <*> v .:? "query_collections"
+        <*> v .:? "remote_schemas"
+        <*> v .: "rest_endpoints"
+        <*> v .: "sources"
+        <*> v .: "version"
+
+instance ToJSON APILimits where
+    toJSON (APILimits depthLimitAPILimits disabledAPILimits nodeLimitAPILimits rateLimitAPILimits) =
+        object
+        [ "depth_limit" .= depthLimitAPILimits
+        , "disabled" .= disabledAPILimits
+        , "node_limit" .= nodeLimitAPILimits
+        , "rate_limit" .= rateLimitAPILimits
+        ]
+
+instance FromJSON APILimits where
+    parseJSON (Object v) = APILimits
+        <$> v .:? "depth_limit"
+        <*> v .: "disabled"
+        <*> v .:? "node_limit"
+        <*> v .:? "rate_limit"
+
+instance ToJSON DepthLimit where
+    toJSON (DepthLimit globalDepthLimit perRoleDepthLimit) =
+        object
+        [ "global" .= globalDepthLimit
+        , "per_role" .= perRoleDepthLimit
+        ]
+
+instance FromJSON DepthLimit where
+    parseJSON (Object v) = DepthLimit
+        <$> v .: "global"
+        <*> v .: "per_role"
+
+instance ToJSON NodeLimit where
+    toJSON (NodeLimit globalNodeLimit perRoleNodeLimit) =
+        object
+        [ "global" .= globalNodeLimit
+        , "per_role" .= perRoleNodeLimit
+        ]
+
+instance FromJSON NodeLimit where
+    parseJSON (Object v) = NodeLimit
+        <$> v .: "global"
+        <*> v .: "per_role"
+
+instance ToJSON RateLimit where
+    toJSON (RateLimit globalRateLimit perRoleRateLimit) =
+        object
+        [ "global" .= globalRateLimit
+        , "per_role" .= perRoleRateLimit
+        ]
+
+instance FromJSON RateLimit where
+    parseJSON (Object v) = RateLimit
+        <$> v .: "global"
+        <*> v .: "per_role"
+
+instance ToJSON RateLimitRule where
+    toJSON (RateLimitRule maxReqsPerMinRateLimitRule uniqueParamsRateLimitRule) =
+        object
+        [ "max_reqs_per_min" .= maxReqsPerMinRateLimitRule
+        , "unique_params" .= uniqueParamsRateLimitRule
+        ]
+
+instance FromJSON RateLimitRule where
+    parseJSON (Object v) = RateLimitRule
+        <$> v .: "max_reqs_per_min"
+        <*> v .: "unique_params"
+
+instance ToJSON UniqueParams where
+    toJSON (EnumInUniqueParams x) = toJSON x
+    toJSON NullInUniqueParams = Null
+    toJSON (StringArrayInUniqueParams x) = toJSON x
+
+instance FromJSON UniqueParams where
+    parseJSON xs@(Object _) = (fmap EnumInUniqueParams . parseJSON) xs
+    parseJSON Null = return NullInUniqueParams
+    parseJSON xs@(Array _) = (fmap StringArrayInUniqueParams . parseJSON) xs
+
+instance ToJSON UniqueParamsEnum where
+    toJSON IPUniqueParamsEnum = "IP"
+
+instance FromJSON UniqueParamsEnum where
+    parseJSON = withText "UniqueParamsEnum" parseText
+        where
+            parseText "IP" = return IPUniqueParamsEnum
+
+instance ToJSON InheritedRole where
+    toJSON (InheritedRole roleNameInheritedRole roleSetInheritedRole) =
+        object
+        [ "role_name" .= roleNameInheritedRole
+        , "role_set" .= roleSetInheritedRole
+        ]
+
+instance FromJSON InheritedRole where
+    parseJSON (Object v) = InheritedRole
+        <$> v .: "role_name"
+        <*> v .: "role_set"
+
+instance ToJSON RESTEndpoint where
+    toJSON (RESTEndpoint commentRESTEndpoint definitionRESTEndpoint methodsRESTEndpoint nameRESTEndpoint urlRESTEndpoint) =
+        object
+        [ "comment" .= commentRESTEndpoint
+        , "definition" .= definitionRESTEndpoint
+        , "methods" .= methodsRESTEndpoint
+        , "name" .= nameRESTEndpoint
+        , "url" .= urlRESTEndpoint
+        ]
+
+instance FromJSON RESTEndpoint where
+    parseJSON (Object v) = RESTEndpoint
+        <$> v .:? "comment"
+        <*> v .: "definition"
+        <*> v .: "methods"
+        <*> v .: "name"
+        <*> v .: "url"
+
+instance ToJSON RESTEndpointDefinition where
+    toJSON (RESTEndpointDefinition queryRESTEndpointDefinition) =
+        object
+        [ "query" .= queryRESTEndpointDefinition
+        ]
+
+instance FromJSON RESTEndpointDefinition where
+    parseJSON (Object v) = RESTEndpointDefinition
+        <$> v .: "query"
+
+instance ToJSON QueryClass where
+    toJSON (QueryClass collectionNameQueryClass queryNameQueryClass) =
+        object
+        [ "collection_name" .= collectionNameQueryClass
+        , "query_name" .= queryNameQueryClass
+        ]
+
+instance FromJSON QueryClass where
+    parseJSON (Object v) = QueryClass
+        <$> v .: "collection_name"
+        <*> v .: "query_name"
+
+instance ToJSON Method where
+    toJSON PatchMethod = "PATCH"
+    toJSON PostMethod = "POST"
+    toJSON PutMethod = "PUT"
+
+instance FromJSON Method where
+    parseJSON = withText "Method" parseText
+        where
+            parseText "PATCH" = return PatchMethod
+            parseText "POST" = return PostMethod
+            parseText "PUT" = return PutMethod
+
+instance ToJSON Source where
+    toJSON (Source configurationSource functionsSource kindSource nameSource tablesSource) =
+        object
+        [ "configuration" .= configurationSource
+        , "functions" .= functionsSource
+        , "kind" .= kindSource
+        , "name" .= nameSource
+        , "tables" .= tablesSource
+        ]
+
+instance FromJSON Source where
+    parseJSON (Object v) = Source
+        <$> v .: "configuration"
+        <*> v .:? "functions"
+        <*> v .: "kind"
+        <*> v .: "name"
+        <*> v .: "tables"
+
+instance ToJSON Configuration where
+    toJSON (Configuration connectionInfoConfiguration readReplicasConfiguration datasetsConfiguration projectIDConfiguration serviceAccountConfiguration) =
+        object
+        [ "connection_info" .= connectionInfoConfiguration
+        , "read_replicas" .= readReplicasConfiguration
+        , "datasets" .= datasetsConfiguration
+        , "project_id" .= projectIDConfiguration
+        , "service_account" .= serviceAccountConfiguration
+        ]
+
+instance FromJSON Configuration where
+    parseJSON (Object v) = Configuration
+        <$> v .:? "connection_info"
+        <*> v .:? "read_replicas"
+        <*> v .:? "datasets"
+        <*> v .:? "project_id"
+        <*> v .:? "service_account"
+
+instance ToJSON SourceConnectionInfo where
+    toJSON (SourceConnectionInfo databaseURLSourceConnectionInfo isolationLevelSourceConnectionInfo poolSettingsSourceConnectionInfo sslConfigurationSourceConnectionInfo usePreparedStatementsSourceConnectionInfo connectionStringSourceConnectionInfo) =
+        object
+        [ "database_url" .= databaseURLSourceConnectionInfo
+        , "isolation_level" .= isolationLevelSourceConnectionInfo
+        , "pool_settings" .= poolSettingsSourceConnectionInfo
+        , "ssl_configuration" .= sslConfigurationSourceConnectionInfo
+        , "use_prepared_statements" .= usePreparedStatementsSourceConnectionInfo
+        , "connection_string" .= connectionStringSourceConnectionInfo
+        ]
+
+instance FromJSON SourceConnectionInfo where
+    parseJSON (Object v) = SourceConnectionInfo
+        <$> v .:? "database_url"
+        <*> v .:? "isolation_level"
+        <*> v .:? "pool_settings"
+        <*> v .:? "ssl_configuration"
+        <*> v .:? "use_prepared_statements"
+        <*> v .:? "connection_string"
+
+instance ToJSON PoolSettings where
+    toJSON (PoolSettings connectionLifetimePoolSettings idleTimeoutPoolSettings maxConnectionsPoolSettings poolTimeoutPoolSettings retriesPoolSettings) =
+        object
+        [ "connection_lifetime" .= connectionLifetimePoolSettings
+        , "idle_timeout" .= idleTimeoutPoolSettings
+        , "max_connections" .= maxConnectionsPoolSettings
+        , "pool_timeout" .= poolTimeoutPoolSettings
+        , "retries" .= retriesPoolSettings
+        ]
+
+instance FromJSON PoolSettings where
+    parseJSON (Object v) = PoolSettings
+        <$> v .:? "connection_lifetime"
+        <*> v .:? "idle_timeout"
+        <*> v .:? "max_connections"
+        <*> v .:? "pool_timeout"
+        <*> v .:? "retries"
+
+instance ToJSON BackendKind where
+    toJSON BackendKindBigqueryBackendKind = "bigquery"
+    toJSON BackendKindCitusBackendKind = "citus"
+    toJSON BackendKindMssqlBackendKind = "mssql"
+    toJSON BackendKindPostgresBackendKind = "postgres"
+
+instance FromJSON BackendKind where
+    parseJSON = withText "BackendKind" parseText
+        where
+            parseText "bigquery" = return BackendKindBigqueryBackendKind
+            parseText "citus" = return BackendKindCitusBackendKind
+            parseText "mssql" = return BackendKindMssqlBackendKind
+            parseText "postgres" = return BackendKindPostgresBackendKind

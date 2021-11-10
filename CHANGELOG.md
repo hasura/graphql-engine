@@ -5,6 +5,7 @@
 - server: log locking DB queries during source catalog migration
 - server: fix to allow remote schema response to contain an "extensions" field (#7143)
 - console: add comments to tracked functions
+- metadata SDK: add type definitions for config v3
 
 ### Bug fixes and improvements
 (Add entries below in the order of server, console, cli, docs, others)

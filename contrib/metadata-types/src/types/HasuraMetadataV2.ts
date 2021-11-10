@@ -785,7 +785,7 @@ export interface Action {
   /** Comment */
   comment?: string
   /** Permissions of the action */
-  permissions?: { role: string }
+  permissions?: Array<{ role: string }>
 }
 
 /**

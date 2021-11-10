@@ -213,6 +213,84 @@
 //
 //    hasuraMetadataV2, err := UnmarshalHasuraMetadataV2(bytes)
 //    bytes, err = hasuraMetadataV2.Marshal()
+//
+//    fromEnv, err := UnmarshalFromEnv(bytes)
+//    bytes, err = fromEnv.Marshal()
+//
+//    pGConfiguration, err := UnmarshalPGConfiguration(bytes)
+//    bytes, err = pGConfiguration.Marshal()
+//
+//    mSSQLConfiguration, err := UnmarshalMSSQLConfiguration(bytes)
+//    bytes, err = mSSQLConfiguration.Marshal()
+//
+//    bigQueryConfiguration, err := UnmarshalBigQueryConfiguration(bytes)
+//    bytes, err = bigQueryConfiguration.Marshal()
+//
+//    pGSourceConnectionInfo, err := UnmarshalPGSourceConnectionInfo(bytes)
+//    bytes, err = pGSourceConnectionInfo.Marshal()
+//
+//    mSSQLSourceConnectionInfo, err := UnmarshalMSSQLSourceConnectionInfo(bytes)
+//    bytes, err = mSSQLSourceConnectionInfo.Marshal()
+//
+//    pGConnectionParameters, err := UnmarshalPGConnectionParameters(bytes)
+//    bytes, err = pGConnectionParameters.Marshal()
+//
+//    pGPoolSettings, err := UnmarshalPGPoolSettings(bytes)
+//    bytes, err = pGPoolSettings.Marshal()
+//
+//    pGCERTSettings, err := UnmarshalPGCERTSettings(bytes)
+//    bytes, err = pGCERTSettings.Marshal()
+//
+//    mSSQLPoolSettings, err := UnmarshalMSSQLPoolSettings(bytes)
+//    bytes, err = mSSQLPoolSettings.Marshal()
+//
+//    backendKind, err := UnmarshalBackendKind(bytes)
+//    bytes, err = backendKind.Marshal()
+//
+//    baseSource, err := UnmarshalBaseSource(bytes)
+//    bytes, err = baseSource.Marshal()
+//
+//    pGSource, err := UnmarshalPGSource(bytes)
+//    bytes, err = pGSource.Marshal()
+//
+//    mSSQLSource, err := UnmarshalMSSQLSource(bytes)
+//    bytes, err = mSSQLSource.Marshal()
+//
+//    bigQuerySource, err := UnmarshalBigQuerySource(bytes)
+//    bytes, err = bigQuerySource.Marshal()
+//
+//    source, err := UnmarshalSource(bytes)
+//    bytes, err = source.Marshal()
+//
+//    aPILimits, err := UnmarshalAPILimits(bytes)
+//    bytes, err = aPILimits.Marshal()
+//
+//    depthLimit, err := UnmarshalDepthLimit(bytes)
+//    bytes, err = depthLimit.Marshal()
+//
+//    rateLimit, err := UnmarshalRateLimit(bytes)
+//    bytes, err = rateLimit.Marshal()
+//
+//    rateLimitRule, err := UnmarshalRateLimitRule(bytes)
+//    bytes, err = rateLimitRule.Marshal()
+//
+//    nodeLimit, err := UnmarshalNodeLimit(bytes)
+//    bytes, err = nodeLimit.Marshal()
+//
+//    rESTEndpoint, err := UnmarshalRESTEndpoint(bytes)
+//    bytes, err = rESTEndpoint.Marshal()
+//
+//    rESTEndpointDefinition, err := UnmarshalRESTEndpointDefinition(bytes)
+//    bytes, err = rESTEndpointDefinition.Marshal()
+//
+//    inheritedRole, err := UnmarshalInheritedRole(bytes)
+//    bytes, err = inheritedRole.Marshal()
+//
+//    hasuraMetadataV3, err := UnmarshalHasuraMetadataV3(bytes)
+//    bytes, err = hasuraMetadataV3.Marshal()
+//
+//    recordStringAny, err := UnmarshalRecordStringAny(bytes)
+//    bytes, err = recordStringAny.Marshal()
 
 package hasura_metadata
 
@@ -962,6 +1040,268 @@ func (r *HasuraMetadataV2) Marshal() ([]byte, error) {
 	return json.Marshal(r)
 }
 
+func UnmarshalFromEnv(data []byte) (FromEnv, error) {
+	var r FromEnv
+	err := json.Unmarshal(data, &r)
+	return r, err
+}
+
+func (r *FromEnv) Marshal() ([]byte, error) {
+	return json.Marshal(r)
+}
+
+func UnmarshalPGConfiguration(data []byte) (PGConfiguration, error) {
+	var r PGConfiguration
+	err := json.Unmarshal(data, &r)
+	return r, err
+}
+
+func (r *PGConfiguration) Marshal() ([]byte, error) {
+	return json.Marshal(r)
+}
+
+func UnmarshalMSSQLConfiguration(data []byte) (MSSQLConfiguration, error) {
+	var r MSSQLConfiguration
+	err := json.Unmarshal(data, &r)
+	return r, err
+}
+
+func (r *MSSQLConfiguration) Marshal() ([]byte, error) {
+	return json.Marshal(r)
+}
+
+func UnmarshalBigQueryConfiguration(data []byte) (BigQueryConfiguration, error) {
+	var r BigQueryConfiguration
+	err := json.Unmarshal(data, &r)
+	return r, err
+}
+
+func (r *BigQueryConfiguration) Marshal() ([]byte, error) {
+	return json.Marshal(r)
+}
+
+func UnmarshalPGSourceConnectionInfo(data []byte) (PGSourceConnectionInfo, error) {
+	var r PGSourceConnectionInfo
+	err := json.Unmarshal(data, &r)
+	return r, err
+}
+
+func (r *PGSourceConnectionInfo) Marshal() ([]byte, error) {
+	return json.Marshal(r)
+}
+
+func UnmarshalMSSQLSourceConnectionInfo(data []byte) (MSSQLSourceConnectionInfo, error) {
+	var r MSSQLSourceConnectionInfo
+	err := json.Unmarshal(data, &r)
+	return r, err
+}
+
+func (r *MSSQLSourceConnectionInfo) Marshal() ([]byte, error) {
+	return json.Marshal(r)
+}
+
+func UnmarshalPGConnectionParameters(data []byte) (PGConnectionParameters, error) {
+	var r PGConnectionParameters
+	err := json.Unmarshal(data, &r)
+	return r, err
+}
+
+func (r *PGConnectionParameters) Marshal() ([]byte, error) {
+	return json.Marshal(r)
+}
+
+func UnmarshalPGPoolSettings(data []byte) (PGPoolSettings, error) {
+	var r PGPoolSettings
+	err := json.Unmarshal(data, &r)
+	return r, err
+}
+
+func (r *PGPoolSettings) Marshal() ([]byte, error) {
+	return json.Marshal(r)
+}
+
+func UnmarshalPGCERTSettings(data []byte) (PGCERTSettings, error) {
+	var r PGCERTSettings
+	err := json.Unmarshal(data, &r)
+	return r, err
+}
+
+func (r *PGCERTSettings) Marshal() ([]byte, error) {
+	return json.Marshal(r)
+}
+
+func UnmarshalMSSQLPoolSettings(data []byte) (MSSQLPoolSettings, error) {
+	var r MSSQLPoolSettings
+	err := json.Unmarshal(data, &r)
+	return r, err
+}
+
+func (r *MSSQLPoolSettings) Marshal() ([]byte, error) {
+	return json.Marshal(r)
+}
+
+func UnmarshalBackendKind(data []byte) (BackendKind, error) {
+	var r BackendKind
+	err := json.Unmarshal(data, &r)
+	return r, err
+}
+
+func (r *BackendKind) Marshal() ([]byte, error) {
+	return json.Marshal(r)
+}
+
+func UnmarshalBaseSource(data []byte) (BaseSource, error) {
+	var r BaseSource
+	err := json.Unmarshal(data, &r)
+	return r, err
+}
+
+func (r *BaseSource) Marshal() ([]byte, error) {
+	return json.Marshal(r)
+}
+
+func UnmarshalPGSource(data []byte) (PGSource, error) {
+	var r PGSource
+	err := json.Unmarshal(data, &r)
+	return r, err
+}
+
+func (r *PGSource) Marshal() ([]byte, error) {
+	return json.Marshal(r)
+}
+
+func UnmarshalMSSQLSource(data []byte) (MSSQLSource, error) {
+	var r MSSQLSource
+	err := json.Unmarshal(data, &r)
+	return r, err
+}
+
+func (r *MSSQLSource) Marshal() ([]byte, error) {
+	return json.Marshal(r)
+}
+
+func UnmarshalBigQuerySource(data []byte) (BigQuerySource, error) {
+	var r BigQuerySource
+	err := json.Unmarshal(data, &r)
+	return r, err
+}
+
+func (r *BigQuerySource) Marshal() ([]byte, error) {
+	return json.Marshal(r)
+}
+
+func UnmarshalSource(data []byte) (Source, error) {
+	var r Source
+	err := json.Unmarshal(data, &r)
+	return r, err
+}
+
+func (r *Source) Marshal() ([]byte, error) {
+	return json.Marshal(r)
+}
+
+func UnmarshalAPILimits(data []byte) (APILimits, error) {
+	var r APILimits
+	err := json.Unmarshal(data, &r)
+	return r, err
+}
+
+func (r *APILimits) Marshal() ([]byte, error) {
+	return json.Marshal(r)
+}
+
+func UnmarshalDepthLimit(data []byte) (DepthLimit, error) {
+	var r DepthLimit
+	err := json.Unmarshal(data, &r)
+	return r, err
+}
+
+func (r *DepthLimit) Marshal() ([]byte, error) {
+	return json.Marshal(r)
+}
+
+func UnmarshalRateLimit(data []byte) (RateLimit, error) {
+	var r RateLimit
+	err := json.Unmarshal(data, &r)
+	return r, err
+}
+
+func (r *RateLimit) Marshal() ([]byte, error) {
+	return json.Marshal(r)
+}
+
+func UnmarshalRateLimitRule(data []byte) (RateLimitRule, error) {
+	var r RateLimitRule
+	err := json.Unmarshal(data, &r)
+	return r, err
+}
+
+func (r *RateLimitRule) Marshal() ([]byte, error) {
+	return json.Marshal(r)
+}
+
+func UnmarshalNodeLimit(data []byte) (NodeLimit, error) {
+	var r NodeLimit
+	err := json.Unmarshal(data, &r)
+	return r, err
+}
+
+func (r *NodeLimit) Marshal() ([]byte, error) {
+	return json.Marshal(r)
+}
+
+func UnmarshalRESTEndpoint(data []byte) (RESTEndpoint, error) {
+	var r RESTEndpoint
+	err := json.Unmarshal(data, &r)
+	return r, err
+}
+
+func (r *RESTEndpoint) Marshal() ([]byte, error) {
+	return json.Marshal(r)
+}
+
+func UnmarshalRESTEndpointDefinition(data []byte) (RESTEndpointDefinition, error) {
+	var r RESTEndpointDefinition
+	err := json.Unmarshal(data, &r)
+	return r, err
+}
+
+func (r *RESTEndpointDefinition) Marshal() ([]byte, error) {
+	return json.Marshal(r)
+}
+
+func UnmarshalInheritedRole(data []byte) (InheritedRole, error) {
+	var r InheritedRole
+	err := json.Unmarshal(data, &r)
+	return r, err
+}
+
+func (r *InheritedRole) Marshal() ([]byte, error) {
+	return json.Marshal(r)
+}
+
+func UnmarshalHasuraMetadataV3(data []byte) (HasuraMetadataV3, error) {
+	var r HasuraMetadataV3
+	err := json.Unmarshal(data, &r)
+	return r, err
+}
+
+func (r *HasuraMetadataV3) Marshal() ([]byte, error) {
+	return json.Marshal(r)
+}
+
+type RecordStringAny map[string]interface{}
+
+func UnmarshalRecordStringAny(data []byte) (RecordStringAny, error) {
+	var r RecordStringAny
+	err := json.Unmarshal(data, &r)
+	return r, err
+}
+
+func (r *RecordStringAny) Marshal() ([]byte, error) {
+	return json.Marshal(r)
+}
+
 //
 // https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/syntax-defs.html#headerfromvalue
 type HeaderFromValue struct {
@@ -1461,6 +1801,276 @@ type UpdatePermission struct {
 	Set     map[string]string    `json:"set,omitempty"`   // Preset values for columns that can be sourced from session variables or static values
 }
 
+//
+// https://hasura.io/docs/latest/graphql/core/api-reference/syntax-defs.html#pgconnectionparameters
+type PGConnectionParameters struct {
+	Database string  `json:"database"`          // The database name
+	Host     string  `json:"host"`              // The name of the host to connect to
+	Password *string `json:"password,omitempty"`// The Postgres user’s password
+	Port     float64 `json:"port"`              // The port number to connect with, at the server host
+	Username string  `json:"username"`          // The Postgres user to be connected
+}
+
+type BaseSource struct {
+	Functions []CustomFunction `json:"functions,omitempty"`
+	Name      string           `json:"name"`               
+	Tables    []TableEntry     `json:"tables"`             
+}
+
+type PGSource struct {
+	Configuration PGConfiguration  `json:"configuration"`      
+	Functions     []CustomFunction `json:"functions,omitempty"`
+	Kind          PGSourceKind     `json:"kind"`               
+	Name          string           `json:"name"`               
+	Tables        []TableEntry     `json:"tables"`             
+}
+
+// https://hasura.io/docs/latest/graphql/core/api-reference/syntax-defs.html#pgconfiguration
+type PGConfiguration struct {
+	ConnectionInfo PGSourceConnectionInfo   `json:"connection_info"`        // Connection parameters for the source
+	ReadReplicas   []PGSourceConnectionInfo `json:"read_replicas,omitempty"`// Optional list of read replica configuration (supported only in cloud/enterprise versions)
+}
+
+// Connection parameters for the source
+//
+//
+// https://hasura.io/docs/latest/graphql/core/api-reference/syntax-defs.html#pgsourceconnectioninfo
+type PGSourceConnectionInfo struct {
+	DatabaseURL           *DatabaseURL    `json:"database_url"`                     // The database connection URL as a string, as an environment variable, or as connection; parameters.
+	IsolationLevel        *IsolationLevel `json:"isolation_level,omitempty"`        // The transaction isolation level in which the queries made to the source will be run with; (default: read-committed).
+	PoolSettings          *PGPoolSettings `json:"pool_settings,omitempty"`          // Connection pool settings
+	SSLConfiguration      *PGCERTSettings `json:"ssl_configuration,omitempty"`      // The client SSL certificate settings for the database (Only available in Cloud).
+	UsePreparedStatements *bool           `json:"use_prepared_statements,omitempty"`// If set to true the server prepares statement before executing on the source database; (default: false). For more details, refer to the Postgres docs
+}
+
+// https://hasura.io/docs/latest/graphql/core/api-reference/syntax-defs.html#fromenv
+//
+// Environment variable which stores the client certificate.
+//
+// Environment variable which stores the client private key.
+//
+// Environment variable which stores trusted certificate authorities.
+//
+//
+// https://hasura.io/docs/latest/graphql/core/api-reference/syntax-defs.html#pgconnectionparameters
+type PGConnectionParametersClass struct {
+	FromEnv  *string  `json:"from_env,omitempty"`// Name of the environment variable
+	Database *string  `json:"database,omitempty"`// The database name
+	Host     *string  `json:"host,omitempty"`    // The name of the host to connect to
+	Password *string  `json:"password,omitempty"`// The Postgres user’s password
+	Port     *float64 `json:"port,omitempty"`    // The port number to connect with, at the server host
+	Username *string  `json:"username,omitempty"`// The Postgres user to be connected
+}
+
+// Connection pool settings
+//
+// https://hasura.io/docs/latest/graphql/core/api-reference/syntax-defs.html#pgpoolsettings
+type PGPoolSettings struct {
+	ConnectionLifetime *float64 `json:"connection_lifetime,omitempty"`// Time from connection creation after which the connection should be destroyed and a new; one created. A value of 0 indicates we should never destroy an active connection. If 0 is; passed, memory from large query results may not be reclaimed. (default: 600 sec)
+	IdleTimeout        *float64 `json:"idle_timeout,omitempty"`       // The idle timeout (in seconds) per connection (default: 180)
+	MaxConnections     *float64 `json:"max_connections,omitempty"`    // Maximum number of connections to be kept in the pool (default: 50)
+	PoolTimeout        *float64 `json:"pool_timeout,omitempty"`       // Maximum time to wait while acquiring a Postgres connection from the pool, in seconds; (default: forever)
+	Retries            *float64 `json:"retries,omitempty"`            // Number of retries to perform (default: 1)
+}
+
+// The client SSL certificate settings for the database (Only available in Cloud).
+//
+// https://hasura.io/docs/latest/graphql/core/api-reference/syntax-defs.html#pgcertsettings
+type PGCERTSettings struct {
+	Sslcert     FromEnv      `json:"sslcert"`    // Environment variable which stores the client certificate.
+	Sslkey      FromEnv      `json:"sslkey"`     // Environment variable which stores the client private key.
+	Sslmode     string       `json:"sslmode"`    // The SSL connection mode. See the libpq ssl support docs; <https://www.postgresql.org/docs/9.1/libpq-ssl.html> for more details.
+	Sslpassword *Sslpassword `json:"sslpassword"`// Password in the case where the sslkey is encrypted.
+	Sslrootcert FromEnv      `json:"sslrootcert"`// Environment variable which stores trusted certificate authorities.
+}
+
+// https://hasura.io/docs/latest/graphql/core/api-reference/syntax-defs.html#fromenv
+//
+// Environment variable which stores the client certificate.
+//
+// Environment variable which stores the client private key.
+//
+// Environment variable which stores trusted certificate authorities.
+type FromEnv struct {
+	FromEnv string `json:"from_env"`// Name of the environment variable
+}
+
+type MSSQLSource struct {
+	Configuration MSSQLConfiguration `json:"configuration"`      
+	Functions     []CustomFunction   `json:"functions,omitempty"`
+	Kind          MSSQLSourceKind    `json:"kind"`               
+	Name          string             `json:"name"`               
+	Tables        []TableEntry       `json:"tables"`             
+}
+
+//
+// https://hasura.io/docs/latest/graphql/core/api-reference/syntax-defs.html#mssqlsourceconnectioninfo
+type MSSQLConfiguration struct {
+	ConnectionInfo MSSQLSourceConnectionInfo `json:"connection_info"`// Connection parameters for the source
+}
+
+// Connection parameters for the source
+//
+//
+// https://hasura.io/docs/latest/graphql/core/api-reference/syntax-defs.html#mssqlsourceconnectioninfo
+type MSSQLSourceConnectionInfo struct {
+	ConnectionString *Sslpassword       `json:"connection_string"`      // The database connection string, or as an environment variable
+	PoolSettings     *MSSQLPoolSettings `json:"pool_settings,omitempty"`// Connection pool settings
+}
+
+// Connection pool settings
+//
+//
+// https://hasura.io/docs/latest/graphql/core/api-reference/syntax-defs.html#mssqlpoolsettings
+type MSSQLPoolSettings struct {
+	IdleTimeout    *float64 `json:"idle_timeout,omitempty"`   // The idle timeout (in seconds) per connection (default: 180)
+	MaxConnections *float64 `json:"max_connections,omitempty"`// Maximum number of connections to be kept in the pool (default: 50)
+}
+
+type BigQuerySource struct {
+	Configuration BigQueryConfiguration `json:"configuration"`      
+	Functions     []CustomFunction      `json:"functions,omitempty"`
+	Kind          BigQuerySourceKind    `json:"kind"`               
+	Name          string                `json:"name"`               
+	Tables        []TableEntry          `json:"tables"`             
+}
+
+//
+// https://hasura.io/docs/latest/graphql/core/api-reference/syntax-defs.html#bigqueryconfiguration
+type BigQueryConfiguration struct {
+	Datasets       *Datasets       `json:"datasets"`       // List of BigQuery datasets
+	ProjectID      *Sslpassword    `json:"project_id"`     // Project Id for BigQuery database
+	ServiceAccount *ServiceAccount `json:"service_account"`// Service account for BigQuery database
+}
+
+// https://hasura.io/docs/latest/graphql/core/api-reference/syntax-defs.html#fromenv
+//
+// Environment variable which stores the client certificate.
+//
+// Environment variable which stores the client private key.
+//
+// Environment variable which stores trusted certificate authorities.
+type RecordStringAnyClass struct {
+	FromEnv *string `json:"from_env,omitempty"`// Name of the environment variable
+}
+
+type HasuraMetadataV3 struct {
+	Actions          []Action               `json:"actions,omitempty"`          
+	Allowlist        []AllowList            `json:"allowlist,omitempty"`        
+	APILimits        *APILimits             `json:"api_limits,omitempty"`       
+	CronTriggers     []CronTrigger          `json:"cron_triggers,omitempty"`    
+	CustomTypes      *CustomTypes           `json:"custom_types,omitempty"`     
+	InheritedRoles   []InheritedRole        `json:"inherited_roles,omitempty"`  
+	QueryCollections []QueryCollectionEntry `json:"query_collections,omitempty"`
+	RemoteSchemas    []RemoteSchema         `json:"remote_schemas,omitempty"`   
+	RESTEndpoints    []RESTEndpoint         `json:"rest_endpoints"`             
+	Sources          []Source               `json:"sources"`                    
+	Version          float64                `json:"version"`                    
+}
+
+type APILimits struct {
+	DepthLimit *DepthLimit `json:"depth_limit,omitempty"`
+	Disabled   bool        `json:"disabled"`             
+	NodeLimit  *NodeLimit  `json:"node_limit,omitempty"` 
+	RateLimit  *RateLimit  `json:"rate_limit,omitempty"` 
+}
+
+type DepthLimit struct {
+	Global  float64            `json:"global"`  
+	PerRole map[string]float64 `json:"per_role"`
+}
+
+type NodeLimit struct {
+	Global  float64            `json:"global"`  
+	PerRole map[string]float64 `json:"per_role"`
+}
+
+type RateLimit struct {
+	Global  RateLimitRule            `json:"global"`  
+	PerRole map[string]RateLimitRule `json:"per_role"`
+}
+
+type RateLimitRule struct {
+	MaxReqsPerMin float64       `json:"max_reqs_per_min"`
+	UniqueParams  *UniqueParams `json:"unique_params"`   
+}
+
+type InheritedRole struct {
+	RoleName string   `json:"role_name"`
+	RoleSet  []string `json:"role_set"` 
+}
+
+type RESTEndpoint struct {
+	Comment    *string                `json:"comment,omitempty"`
+	Definition RESTEndpointDefinition `json:"definition"`       
+	Methods    []Method               `json:"methods"`          
+	Name       string                 `json:"name"`             
+	URL        string                 `json:"url"`              
+}
+
+type RESTEndpointDefinition struct {
+	Query QueryClass `json:"query"`
+}
+
+type QueryClass struct {
+	CollectionName string `json:"collection_name"`
+	QueryName      string `json:"query_name"`     
+}
+
+type Source struct {
+	Configuration Configuration    `json:"configuration"`      
+	Functions     []CustomFunction `json:"functions,omitempty"`
+	Kind          BackendKind      `json:"kind"`               
+	Name          string           `json:"name"`               
+	Tables        []TableEntry     `json:"tables"`             
+}
+
+//
+// https://hasura.io/docs/latest/graphql/core/api-reference/syntax-defs.html#pgconfiguration
+//
+//
+// https://hasura.io/docs/latest/graphql/core/api-reference/syntax-defs.html#mssqlsourceconnectioninfo
+//
+//
+// https://hasura.io/docs/latest/graphql/core/api-reference/syntax-defs.html#bigqueryconfiguration
+type Configuration struct {
+	ConnectionInfo *SourceConnectionInfo    `json:"connection_info,omitempty"`// Connection parameters for the source
+	ReadReplicas   []PGSourceConnectionInfo `json:"read_replicas,omitempty"`  // Optional list of read replica configuration (supported only in cloud/enterprise versions)
+	Datasets       *Datasets                `json:"datasets"`                 // List of BigQuery datasets
+	ProjectID      *Sslpassword             `json:"project_id"`               // Project Id for BigQuery database
+	ServiceAccount *ServiceAccount          `json:"service_account"`          // Service account for BigQuery database
+}
+
+// Connection parameters for the source
+//
+//
+// https://hasura.io/docs/latest/graphql/core/api-reference/syntax-defs.html#pgsourceconnectioninfo
+//
+//
+// https://hasura.io/docs/latest/graphql/core/api-reference/syntax-defs.html#mssqlsourceconnectioninfo
+type SourceConnectionInfo struct {
+	DatabaseURL           *DatabaseURL    `json:"database_url"`                     // The database connection URL as a string, as an environment variable, or as connection; parameters.
+	IsolationLevel        *IsolationLevel `json:"isolation_level,omitempty"`        // The transaction isolation level in which the queries made to the source will be run with; (default: read-committed).
+	PoolSettings          *PoolSettings   `json:"pool_settings,omitempty"`          // Connection pool settings
+	SSLConfiguration      *PGCERTSettings `json:"ssl_configuration,omitempty"`      // The client SSL certificate settings for the database (Only available in Cloud).
+	UsePreparedStatements *bool           `json:"use_prepared_statements,omitempty"`// If set to true the server prepares statement before executing on the source database; (default: false). For more details, refer to the Postgres docs
+	ConnectionString      *Sslpassword    `json:"connection_string"`                // The database connection string, or as an environment variable
+}
+
+// Connection pool settings
+//
+// https://hasura.io/docs/latest/graphql/core/api-reference/syntax-defs.html#pgpoolsettings
+//
+//
+// https://hasura.io/docs/latest/graphql/core/api-reference/syntax-defs.html#mssqlpoolsettings
+type PoolSettings struct {
+	ConnectionLifetime *float64 `json:"connection_lifetime,omitempty"`// Time from connection creation after which the connection should be destroyed and a new; one created. A value of 0 indicates we should never destroy an active connection. If 0 is; passed, memory from large query results may not be reclaimed. (default: 600 sec)
+	IdleTimeout        *float64 `json:"idle_timeout,omitempty"`       // The idle timeout (in seconds) per connection (default: 180)
+	MaxConnections     *float64 `json:"max_connections,omitempty"`    // Maximum number of connections to be kept in the pool (default: 50)
+	PoolTimeout        *float64 `json:"pool_timeout,omitempty"`       // Maximum time to wait while acquiring a Postgres connection from the pool, in seconds; (default: forever)
+	Retries            *float64 `json:"retries,omitempty"`            // Number of retries to perform (default: 1)
+}
+
 type ActionDefinitionType string
 const (
 	Mutation ActionDefinitionType = "mutation"
@@ -1477,6 +2087,51 @@ const (
 type Columns string
 const (
 	Empty Columns = "*"
+)
+
+// The transaction isolation level in which the queries made to the source will be run with
+// (default: read-committed).
+type IsolationLevel string
+const (
+	ReadCommitted IsolationLevel = "read-committed"
+	RepeatableRead IsolationLevel = "repeatable-read"
+	Serializable IsolationLevel = "serializable"
+)
+
+type PGSourceKind string
+const (
+	KindCitus PGSourceKind = "citus"
+	KindPostgres PGSourceKind = "postgres"
+)
+
+type MSSQLSourceKind string
+const (
+	KindMssql MSSQLSourceKind = "mssql"
+)
+
+type BigQuerySourceKind string
+const (
+	KindBigquery BigQuerySourceKind = "bigquery"
+)
+
+type UniqueParamsEnum string
+const (
+	IP UniqueParamsEnum = "IP"
+)
+
+type Method string
+const (
+	Patch Method = "PATCH"
+	Post Method = "POST"
+	Put Method = "PUT"
+)
+
+type BackendKind string
+const (
+	BackendKindBigquery BackendKind = "bigquery"
+	BackendKindCitus BackendKind = "citus"
+	BackendKindMssql BackendKind = "mssql"
+	BackendKindPostgres BackendKind = "postgres"
 )
 
 type TableName struct {
@@ -1563,6 +2218,120 @@ func (x *EventTriggerColumns) UnmarshalJSON(data []byte) error {
 
 func (x *EventTriggerColumns) MarshalJSON() ([]byte, error) {
 	return marshalUnion(nil, nil, nil, nil, x.StringArray != nil, x.StringArray, false, nil, false, nil, x.Enum != nil, x.Enum, false)
+}
+
+// The database connection URL as a string, as an environment variable, or as connection
+// parameters.
+type DatabaseURL struct {
+	PGConnectionParametersClass *PGConnectionParametersClass
+	String                      *string
+}
+
+func (x *DatabaseURL) UnmarshalJSON(data []byte) error {
+	x.PGConnectionParametersClass = nil
+	var c PGConnectionParametersClass
+	object, err := unmarshalUnion(data, nil, nil, nil, &x.String, false, nil, true, &c, false, nil, false, nil, false)
+	if err != nil {
+		return err
+	}
+	if object {
+		x.PGConnectionParametersClass = &c
+	}
+	return nil
+}
+
+func (x *DatabaseURL) MarshalJSON() ([]byte, error) {
+	return marshalUnion(nil, nil, nil, x.String, false, nil, x.PGConnectionParametersClass != nil, x.PGConnectionParametersClass, false, nil, false, nil, false)
+}
+
+type Sslpassword struct {
+	FromEnv *FromEnv
+	String  *string
+}
+
+func (x *Sslpassword) UnmarshalJSON(data []byte) error {
+	x.FromEnv = nil
+	var c FromEnv
+	object, err := unmarshalUnion(data, nil, nil, nil, &x.String, false, nil, true, &c, false, nil, false, nil, false)
+	if err != nil {
+		return err
+	}
+	if object {
+		x.FromEnv = &c
+	}
+	return nil
+}
+
+func (x *Sslpassword) MarshalJSON() ([]byte, error) {
+	return marshalUnion(nil, nil, nil, x.String, false, nil, x.FromEnv != nil, x.FromEnv, false, nil, false, nil, false)
+}
+
+// List of BigQuery datasets
+type Datasets struct {
+	FromEnv     *FromEnv
+	StringArray []string
+}
+
+func (x *Datasets) UnmarshalJSON(data []byte) error {
+	x.StringArray = nil
+	x.FromEnv = nil
+	var c FromEnv
+	object, err := unmarshalUnion(data, nil, nil, nil, nil, true, &x.StringArray, true, &c, false, nil, false, nil, false)
+	if err != nil {
+		return err
+	}
+	if object {
+		x.FromEnv = &c
+	}
+	return nil
+}
+
+func (x *Datasets) MarshalJSON() ([]byte, error) {
+	return marshalUnion(nil, nil, nil, nil, x.StringArray != nil, x.StringArray, x.FromEnv != nil, x.FromEnv, false, nil, false, nil, false)
+}
+
+// Service account for BigQuery database
+type ServiceAccount struct {
+	RecordStringAnyClass *RecordStringAnyClass
+	String               *string
+}
+
+func (x *ServiceAccount) UnmarshalJSON(data []byte) error {
+	x.RecordStringAnyClass = nil
+	var c RecordStringAnyClass
+	object, err := unmarshalUnion(data, nil, nil, nil, &x.String, false, nil, true, &c, false, nil, false, nil, false)
+	if err != nil {
+		return err
+	}
+	if object {
+		x.RecordStringAnyClass = &c
+	}
+	return nil
+}
+
+func (x *ServiceAccount) MarshalJSON() ([]byte, error) {
+	return marshalUnion(nil, nil, nil, x.String, false, nil, x.RecordStringAnyClass != nil, x.RecordStringAnyClass, false, nil, false, nil, false)
+}
+
+type UniqueParams struct {
+	Enum        *UniqueParamsEnum
+	StringArray []string
+}
+
+func (x *UniqueParams) UnmarshalJSON(data []byte) error {
+	x.StringArray = nil
+	x.Enum = nil
+	object, err := unmarshalUnion(data, nil, nil, nil, nil, true, &x.StringArray, false, nil, false, nil, true, &x.Enum, true)
+	if err != nil {
+		return err
+	}
+	if object {
+	}
+	return nil
+}
+
+func (x *UniqueParams) MarshalJSON() ([]byte, error) {
+	return marshalUnion(nil, nil, nil, nil, x.StringArray != nil, x.StringArray, false, nil, false, nil, x.Enum != nil, x.Enum, true)
 }
 
 func unmarshalUnion(data []byte, pi **int64, pf **float64, pb **bool, ps **string, haveArray bool, pa interface{}, haveObject bool, pc interface{}, haveMap bool, pm interface{}, haveEnum bool, pe interface{}, nullable bool) (bool, error) {
