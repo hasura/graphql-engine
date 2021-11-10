@@ -809,12 +809,15 @@ test-suite graphql-engine-tests
     Database.MSSQL.TransactionSpec
     Hasura.EventingSpec
     Hasura.Generator
+    Hasura.Generator.Common
     Hasura.GraphQL.NamespaceSpec
     Hasura.GraphQL.Parser.DirectivesTest
     Hasura.GraphQL.Parser.TestUtils
     Hasura.GraphQL.RemoteServerSpec
     Hasura.GraphQL.Schema.RemoteTest
     Hasura.IncrementalSpec
+    Hasura.RQL.IR.Generator
+    Hasura.RQL.IR.Postgres
     Hasura.RQL.PermissionSpec
     Hasura.RQL.RequestTransformSpec
     Hasura.RQL.Types.EndpointSpec
