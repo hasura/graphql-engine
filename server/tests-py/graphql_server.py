@@ -12,8 +12,8 @@ from graphql import GraphQLError
 
 HGE_URLS=[]
 
-def mkJSONResp(graphql_result):
-    return Response(HTTPStatus.OK, graphql_result.to_dict(),
+def mkJSONResp(graphql_result, extensions={}):
+    return Response(HTTPStatus.OK, {**graphql_result.to_dict(), **extensions},
                     {'Content-Type': 'application/json'})
 
 
@@ -47,6 +47,17 @@ class HelloGraphQL(RequestHandler):
             return Response(HTTPStatus.BAD_REQUEST)
         res = hello_schema.execute(request.json['query'])
         return mkJSONResp(res)
+
+class HelloGraphQLExtensions(RequestHandler):
+    def get(self, request):
+        return Response(HTTPStatus.METHOD_NOT_ALLOWED)
+
+    def post(self, request):
+        if not request.json:
+            return Response(HTTPStatus.BAD_REQUEST)
+        res = hello_schema.execute(request.json['query'])
+        extensions = {'extensions': {'message': 'an extra field in response object'}}
+        return mkJSONResp(res, extensions)
 
 class User(graphene.ObjectType):
     id = graphene.Int()
@@ -785,6 +796,7 @@ class MessagesGraphQL(RequestHandler):
 handlers = MkHandlers({
     '/hello': HelloWorldHandler,
     '/hello-graphql': HelloGraphQL,
+    '/hello-graphql-extensions': HelloGraphQLExtensions,
     '/user-graphql': UserGraphQL,
     '/country-graphql': CountryGraphQL,
     '/character-iface-graphql' : CharacterInterfaceGraphQL,
