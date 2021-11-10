@@ -105,7 +105,7 @@ import Hasura.Server.Init
 import Hasura.Server.Limits
 import Hasura.Server.Logging
 import Hasura.Server.Metrics (ServerMetrics (..))
-import Hasura.Server.Migrate (getMigratedFrom, migrateCatalog)
+import Hasura.Server.Migrate (migrateCatalog)
 import Hasura.Server.SchemaUpdate
 import Hasura.Server.Telemetry
 import Hasura.Server.Types
@@ -456,15 +456,7 @@ migrateCatalogSchema
             currentTime
       let cacheBuildParams =
             CacheBuildParams httpManager sourceResolver serverConfigCtx
-          buildReason = case getMigratedFrom migrationResult of
-            Nothing -> CatalogSync
-            Just version ->
-              -- Catalog version 43 marks the metadata separation which also drops
-              -- the "hdb_views" schema where table event triggers are hosted.
-              -- We need to re-create table event trigger procedures in "hdb_catalog"
-              -- schema when migration happens from version < 43. Build reason
-              -- @'CatalogUpdate' re-creates event triggers in the database.
-              if version < 43 then CatalogUpdate else CatalogSync
+          buildReason = CatalogSync
       schemaCache <-
         runCacheBuild cacheBuildParams $
           buildRebuildableSchemaCacheWithReason buildReason logger env metadata

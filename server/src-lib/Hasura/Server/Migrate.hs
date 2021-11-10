@@ -19,7 +19,6 @@
 --       if you haven't already looked at it
 module Hasura.Server.Migrate
   ( MigrationResult (..),
-    getMigratedFrom,
     migrateCatalog,
     latestCatalogVersion,
     downgradeCatalog,
@@ -81,16 +80,6 @@ instance ToEngineLog MigrationResult Hasura where
             MRMaintanenceMode ->
               "Catalog migrations are skipped because the graphql-engine is in maintenance mode"
         }
-
-getMigratedFrom ::
-  MigrationResult ->
-  -- | We have version 0.8 as non integral catalog version
-  Maybe Float
-getMigratedFrom = \case
-  MRNothingToDo -> Nothing
-  MRInitialized -> Nothing
-  MRMigrated t -> readMaybe (T.unpack t)
-  MRMaintanenceMode -> Nothing
 
 -- A migration and (hopefully) also its inverse if we have it.
 -- Polymorphic because `m` can be any `MonadTx`, `MonadIO` when

@@ -233,7 +233,8 @@ table using ``psql`` and this column should now be added to the GraphQL schema.
        "type" : "reload_metadata",
        "args": {
            "reload_remote_schemas": true,
-           "reload_sources": false
+           "reload_sources": false,
+           "recreate_event_triggers": true
        }
    }
 
@@ -257,6 +258,11 @@ Args syntax
      - false
      - ``Boolean`` | [:ref:`SourceName`]
      - If set to ``true``, all sources' (including inconsistent ones) cached GraphQL schemas are refreshed (default: ``true``)
+   * - recreate_event_triggers
+     - false
+     - ``Boolean`` | [:ref:`SourceName`]
+     - If set to ``true``, all sources' (including inconsistent ones) cached event triggers and their corresponding SQL
+       triggers present in the source database will be recreated. When an array of :ref:`SourceName` is provided, the event triggers will only be recreated for those sources. (default: `false` i.e. no sources' event triggers will be recreated)
 
 .. _metadata_clear_metadata:
 

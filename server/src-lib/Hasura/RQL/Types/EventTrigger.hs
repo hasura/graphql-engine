@@ -217,6 +217,12 @@ data RecreateEventTriggers
 
 instance Cacheable RecreateEventTriggers
 
+instance Semigroup RecreateEventTriggers where
+  RETRecreate <> RETRecreate = RETRecreate
+  RETRecreate <> RETDoNothing = RETRecreate
+  RETDoNothing <> RETRecreate = RETRecreate
+  RETDoNothing <> RETDoNothing = RETDoNothing
+
 data TriggerMetadata = TriggerMetadata {tmName :: TriggerName}
   deriving (Show, Eq)
 
