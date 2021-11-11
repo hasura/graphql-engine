@@ -100,6 +100,7 @@ where
 
 import Control.Lens hiding (set, (.=))
 import Data.Aeson.Casing
+import Data.Aeson.Extended (mapWithJSONPath)
 import Data.Aeson.Ordered qualified as AO
 import Data.Aeson.TH
 import Data.Aeson.Types
@@ -526,7 +527,7 @@ instance FromJSON Metadata where
     when (version /= MVVersion3) $
       fail $ "unexpected metadata version from storage: " <> show version
     rawSources <- o .: "sources"
-    sources <- oMapFromL getSourceName <$> traverse parseSourceMetadata rawSources
+    sources <- oMapFromL getSourceName <$> mapWithJSONPath parseSourceMetadata rawSources <?> Key "sources"
     endpoints <- oMapFromL _ceName <$> o .:? "rest_endpoints" .!= []
     network <- o .:? "network" .!= emptyNetwork
     ( remoteSchemas,
@@ -565,19 +566,20 @@ instance FromJSON Metadata where
 emptyMetadata :: Metadata
 emptyMetadata =
   Metadata
-    mempty
-    mempty
-    mempty
-    mempty
-    emptyCustomTypes
-    mempty
-    mempty
-    mempty
-    emptyApiLimit
-    emptyMetricsConfig
-    mempty
-    mempty
-    emptyNetwork
+    { _metaSources = mempty,
+      _metaRemoteSchemas = mempty,
+      _metaQueryCollections = mempty,
+      _metaAllowlist = mempty,
+      _metaActions = mempty,
+      _metaCronTriggers = mempty,
+      _metaRestEndpoints = mempty,
+      _metaInheritedRoles = mempty,
+      _metaSetGraphqlIntrospectionOptions = mempty,
+      _metaCustomTypes = emptyCustomTypes,
+      _metaApiLimits = emptyApiLimit,
+      _metaMetricsConfig = emptyMetricsConfig,
+      _metaNetwork = emptyNetwork
+    }
 
 tableMetadataSetter ::
   (Backend b) =>

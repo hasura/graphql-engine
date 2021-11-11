@@ -3,12 +3,13 @@ module Data.Aeson.Extended
     encodeToStrictText,
     ToJSONKeyValue (..),
     FromJSONKeyValue (..),
+    mapWithJSONPath,
   )
 where
 
 import Data.Aeson as J
 import Data.Aeson.Text (encodeToTextBuilder)
-import Data.Aeson.Types (Parser)
+import Data.Aeson.Types (JSONPathElement (..), Parser)
 import Data.Functor.Const
 import Data.Text.Lazy (toStrict)
 import Data.Text.Lazy.Builder (toLazyText)
@@ -28,3 +29,8 @@ instance ToJSONKeyValue Void where
 
 instance ToJSONKeyValue a => ToJSONKeyValue (Const a b) where
   toJSONKeyValue = toJSONKeyValue . getConst
+
+-- | map a 'Parser' over a list, keeping the JSONPath context
+mapWithJSONPath :: (a -> Parser b) -> [a] -> Parser [b]
+mapWithJSONPath parser xs =
+  traverse (\(idx, item) -> parser item <?> Index idx) $ zip [0 ..] xs
