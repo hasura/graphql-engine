@@ -5,6 +5,8 @@ The binaries are built using the [pkg](https://www.npmjs.com/package/pkg) packag
 ```bash
 npm install
 npm run build
+OR 
+make clean-build
 ```
 
 The binaries will be placed in the `bin` directory at root. Copy the binary to your PATH as `cli-ext`.
