@@ -26,6 +26,7 @@ const config = {
           sidebarPath: require.resolve('./sidebars.js'),
           // Please change this to your repo.
           editUrl: 'https://github.com/hasura/graphql-engine/edit/main/docs-new/',
+          docItemComponent: require.resolve('./src/components/CustomDocLayout/CustomDocLayout.tsx'),
         },
         theme: {
           customCss: require.resolve('./src/css/custom.css'),
@@ -46,9 +47,15 @@ const config = {
         items: [
           {
             type: 'doc',
-            docId: 'intro',
+            docId: 'graphql/cloud/index',
             position: 'left',
-            label: 'Tutorial',
+            label: 'Cloud',
+          },
+          {
+            type: 'doc',
+            docId: 'graphql/core/index',
+            position: 'left',
+            label: 'Core',
           },
           {
             href: 'https://github.com/hasura/graphql-engine',
