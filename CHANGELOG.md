@@ -2,6 +2,8 @@
 
 ## Next release
 (Add highlights/major features below)
+
+- server: fix JSON path in error when parsing sources in metadata (fix #7769)
 - server: log locking DB queries during source catalog migration
 - server: fix to allow remote schema response to contain an "extensions" field (#7143)
 - console: add comments to tracked functions
