@@ -12,6 +12,7 @@
   "rules": {
     "allowForLoopAfterthoughts": 0,
     "react/no-multi-comp": 0,
+    "import/order": 0,
     "import/default": 0,
     "import/no-duplicates": 0,
     "import/named": 0,
@@ -161,6 +162,7 @@
             }
           }
         ],
+        "import/order": 0,
         "import/extensions": 0,
         "import/prefer-default-export": "off",
         "react/prop-types": "off",
