@@ -4,6 +4,8 @@
   - [Acceptance criteria](#acceptance-criteria)
   - [Checkpoints](#checkpoints)
   - [Nice-to-have](#nice-to-have)
+  - [Rationale](#rationale)
+  - [Open questions](#open-questions)
 - [Other considerations](#other-considerations)
   - [Long-term goals](#long-term-goals)
     - [Backends](#backends)
@@ -55,6 +57,7 @@ Requirements
 - The test suite launches ephemeral graphql-engine servers by itself and doesn't require any existing service to be running.
 - A local iteration on a single test case (edit the test then run to failure) is not slower for a comparable pytest on typical developer hardware. (The class of tests to compare here would execute a single GraphQL query against a single backend.)
 - Test execution for a given feature set is not slower for a comparable subset of pytests, on similar hardware to the current pytest CI setup.
+- Test framework allows access to intermediate app state for more fine-grained integration tests *as well as* end-to-end (request/response) tests.
 
 Acceptance criteria
 -------------------
@@ -79,6 +82,7 @@ We will scope this to something very simple for now: basic queries (where, order
 - [ ] Implement the equivalent of `TestGraphQLQueryBasicCommon`.
 - [ ] Implement the equivalent of `RemoteResourceSpec`.
 
+
 Nice-to-have
 ------------
 - Coherent, human-readable test fixtures which could be used to spin up a local environment with semi-realistic data given a schema, amongst other things. Would be great to make use of FPCo folks experience here, namely developing [fakedata-haskell](https://github.com/fakedata-haskell/fakedata).
@@ -86,7 +90,27 @@ Nice-to-have
 - We should be able to identify which subset of the pytest suite has been replaced with the new test groups. This will allow us to gradually sunset pytest classes in favour of the equivalent Haskell test groups with confidence.
 - Choosing which tests to run should be convenient, e.g. it should be easy to iterate on an individual test, run a particular test against all backends, or run all tests against a particular backend.
 - Test groups must only be made as large as is *required* (e.g. if we have to run some tests in order because each sets up the state for the next one), and test groups that can be split into smaller ones should be refactored thus.
-- We could start with a [golden test](https://ro-che.info/articles/2017-12-04-golden-tests) approach, but allow for unit tests and property tests to be added later.
+
+Rationale
+---------
+*What design decisions have been debated that are worth documenting?*
+
+Should the test suite spin up the services it needs, or expect necessary services to be running?
+* Fewer implicit dependencies will improve usability of the test suite for new and existing code contributors, which is the main goal of this project.
+* However, the test suite should also support more advanced (or less common, but still important) use cases; Pro feature testing, different graphql-engine versions and command line options.
+* Decision: [start an graphql-engine server by default](https://github.com/hasura/graphql-engine/issues/7801), separately to the test suite execution, and support endpoint overrides. Databases will be brought up with Docker.
+
+Should we stick to the golden test approach from the pytest suite?
+* The proposed [advantages of golden tests](https://ro-che.info/articles/2017-12-04-golden-tests) are outweighed by the complex [automated](https://github.com/hasura/graphql-engine/blob/504f13725fb7a92de8159523b836aa5fcbd3e6ce/server/tests-py/conftest.py#L504-L683), and tedious [manual](https://github.com/hasura/graphql-engine/issues/7139), lookup of disparate setup, teardown and golden files.
+* Including test setup, teardown, results and assertions in the same file will reduce/remove the file lookup overhead and smooth the workflow for adding and updating snapshot tests.
+* Self-contained test modules might also encourage organising into "smallest possible test groups"; the file length passing some threshold could be a prompt for developers to split up large test groups. Max file length can be suggested or enforced in developer tools and CI.
+* Decision: experiment with entirely self-contained Haskell test modules and quasi-quoted YAML, SQL and GraphQL as needed.
+
+Open questions
+--------------
+- [ ] how might we [access intermediate application state](#db-to-db-joins-testing), so we can write more granular integration tests (and get faster feedback, better type inference & error messages)?
+- [ ] should we take [the proposed composable metadata approach](#long-term-goals) to support testing multiple backend and test group combinations?
+- [ ] how might we share the same schema for different backends, so we can test the same features across multiple backends with minimal code duplication?
 
 Other considerations
 ====================
