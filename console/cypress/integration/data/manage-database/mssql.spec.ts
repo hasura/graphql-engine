@@ -28,9 +28,9 @@ const fillDetailsForDbUrlForm = (dbName: string) => {
 };
 
 const fillDetailsForEnvVarForm = (dbName: string) => {
-  cy.get("input[type='radio']").eq(0).click();
   cy.getBySel('database-display-name').type(dbName);
   cy.getBySel('database-type').select('mssql');
+  cy.get("input[type='radio']").eq(0).click();
   cy.getBySel('database-url-env').type('TEST_MSSQL_DATABASE_URL');
 };
 
@@ -41,6 +41,7 @@ export const removeDB = (dbName: string) => {
       expect(response.body).to.have.property('message', 'success'); // true
     }
   );
+  cy.reload();
 };
 
 export const createDB = (dbName: string) => {

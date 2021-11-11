@@ -46,11 +46,25 @@ const connectDatabaseFormTests = () => {
                   submitConnectDBForm();
                 });
 
-                it('verify success notification and redirect uri', () => {
+                it('notifies that db is being added', () => {
+                  expectNotif('success', {
+                    title: 'Adding data source...',
+                  });
+                });
+
+                it('redirects to Data Manager page', () => {
+                  cy.contains('Data Manager');
+                  verifyUrl(`${baseUrl}/data/manage`);
+                });
+
+                it(`has ${driver.name}_db_${key} on manage page`, () => {
+                  cy.contains(`${driver.name}_db_${key}`);
+                });
+
+                it('has success notification displayed', () => {
                   expectNotif('success', {
                     title: 'Data source added successfully!',
                   });
-                  verifyUrl(`${baseUrl}/data/manage`);
                 });
 
                 // cleanup
