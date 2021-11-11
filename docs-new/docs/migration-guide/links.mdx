@@ -1,0 +1,74 @@
+---
+sidebar_position: 3
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+# Links
+
+Please refer [this](https://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html?highlight=links#hyperlinks) to get familiar with links in Sphinx
+
+## External Links
+
+These are straight forward syntax swap as give below.
+
+<Tabs>
+  <TabItem value="sphinx" label="Sphinx - RST" default>
+
+    `Hasura Cloud <https://cloud.hasura.io/signup/>`_
+
+  </TabItem>
+  <TabItem value="docusaurus" label="Docusaurus - MDX">
+
+    [Hasura Cloud](https://cloud.hasura.io/signup/)
+
+  </TabItem>
+</Tabs>
+
+## Internal Links
+
+Sphinx uses `:ref:` to simplify cross-referencing documents. You can read more about how it works in [sphinx docs](https://www.sphinx-doc.org/en/master/usage/restructuredtext/roles.html#ref-role)
+
+Since MDX doesn't yet support this direct referencing, we have to rely on relative/root relative path resolution for [referencing other documents](https://docusaurus.io/docs/docs-markdown-features#referencing-other-documents).
+
+<Tabs>
+  <TabItem value="sphinx" label="Sphinx - RST" default>
+
+    :ref:`cloud_getting_started`
+
+    where `cloud_getting_started` is id of the document given at top of RST file.
+    
+    Link label will by default be title of page. For custom link labels, the syntax might look like below.
+
+    :ref:`Remote schemas <remote_schemas>`
+
+  </TabItem>
+  <TabItem value="docusaurus" label="Docusaurus - MDX">
+
+    [Getting Started With Hasura Cloud](../relative/path/to/getting-started-document)
+
+    [Remote Schemas](../relative/path/to/remote-schemas-document)
+
+  </TabItem>
+</Tabs>
+
+### Root Relative Links
+
+While relative paths works absolutely fine, this can easily lead to an absolute mess when files are move around. Thus requiring manual effort to fix the paths.
+
+To avoid this scenario, we can use root relative paths. The path will still break when moved around, but it is lot easier to find and replace. Find with old path and replace with new path.
+
+```
+Find `/docs/folder1/subfolder2/doc3` and replace with `/docs/folder1/newsubfolder4/doc5`
+```
+
+Since MDX doesn't yet support direct document referencing with id/ref unlike sphinx, we need to settle with root relative path liniking for now.
+
+`[MDX Root Relative Link](/docs/migration-guide/index#contents-covered)`
+
+> [MDX Root Relative Link](/docs/migration-guide/index#contents-covered)
+
+:::info
+Docusaurus catches [broken markdown links](https://docusaurus.io/docs/api/docusaurus-config#onbrokenmarkdownlinks) if enabled
+:::

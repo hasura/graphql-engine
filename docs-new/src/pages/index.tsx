@@ -15,8 +15,8 @@ function HomepageHeader() {
         <div className={styles.buttons}>
           <Link
             className="button button--secondary button--lg"
-            to="/intro">
-            Docusaurus Tutorial - 5min ⏱️
+            to="/migration-guide/index">
+            Hasura GraphQL Engine Docs Migration Guide
           </Link>
         </div>
       </div>
