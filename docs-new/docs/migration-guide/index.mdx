@@ -12,6 +12,7 @@ This page will cover all the factors that require a clarification during the mig
 
 ## Migration Guide Format
 
+### Tabs
 Most of this guide will inculde tabs for syntax migration examples wherever applicable.
 
 import Tabs from '@theme/Tabs';
@@ -26,18 +27,31 @@ import TabItem from '@theme/TabItem';
   </TabItem>
 </Tabs>
 
+<br />
+
+### Normal Headings
+Whereever Tab system is quite difficult to understand/implement. The `Sphinx - RST` and `Docusaurus - MDX` will just be normal sections with headings in respective order.
+
+#### Sphinx - RST
+Snippets from current docs in RST syntax will be shown in this tab which needs to be migrated to mdx
+
+#### Docusaurus - MDX
+MDX Snippet which is migrated from RST will be added in this tab.
+
 :::note
 Please note that all code snippets in this guide are directly taken from current docs in RST format and migrated to MDX to provide an example.
 :::
 
+<br />
 
+### Admonitions
 :::info
 Admonitions are used wherever applicable to provide reference / helpful links and info.
 :::
 
+<br />
 
 ## Contents Covered
-
 Below are primary topics/syntaxes/extensions that are covered in this guide.
 
 - [Metadata + Frontmatter](/docs/migration-guide/metadata)

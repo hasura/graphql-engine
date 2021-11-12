@@ -1,0 +1,82 @@
+
+/*** GraphiQL overrides ***/
+
+.graphiql {
+  margin-bottom: 20px;
+}
+
+.graphiql .query,
+.graphiql .response,
+.graphiql .variables {
+  display: none;
+}
+
+.graphiql .graphiql-container {
+  min-height: 325px;
+  border: 1px solid #eee;
+  -webkit-box-shadow: -1px 2px 10px 2px rgba(217,217,217,1);
+  -moz-box-shadow: -1px 2px 10px 2px rgba(217,217,217,1);
+  box-shadow: -1px 2px 10px 2px rgba(217,217,217,1);
+}
+
+.graphiql.with-vars .graphiql-container {
+  min-height: 375px;
+}
+
+.graphiql .topBarWrap {
+  height: 0;
+}
+
+.graphiql .execute-button-wrap {
+  z-index: 3;
+  top: -2px;
+  left: calc(50% - 50px);
+  margin: 0 !important;
+  height: 28px !important;
+}
+
+.graphiql .execute-button {
+  height: 28px !important;
+  width: 28px !important;
+}
+
+.graphiql .execute-button svg {
+  position: relative;
+  top: -3px;
+  left: -3px;
+}
+
+.graphiql .CodeMirror pre {
+  padding: 0 15px;
+}
+
+.graphiql .CodeMirror-lines {
+  padding: 15px 0 !important;
+}
+
+.graphiql .CodeMirror-gutter-wrapper,
+.graphiql .CodeMirror-gutters {
+  display: none;
+}
+
+.graphiql .title,
+.graphiql .docExplorerShow,
+.graphiql .toolbar {
+  display: none !important;
+}
+
+.graphiql:not(.with-vars) .variable-editor {
+  display: none !important;
+}
+
+.graphiql .variable-editor .variable-editor-title {
+  line-height: 18px;
+  font-size: 16px;
+  padding: 2px 10px;
+}
+
+.graphiql.view-only .execute-button {
+  display: none !important;
+}
+
+/*** GraphiQL overrides END ***/
