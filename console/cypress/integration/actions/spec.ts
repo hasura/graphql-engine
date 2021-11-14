@@ -4,7 +4,7 @@ import {
   getElementFromClassName,
 } from '../../helpers/dataHelpers';
 import { setPromptValue } from '../../helpers/common';
-import { AWAIT_LONG } from '../../helpers/constants';
+import { AWAIT_LONG, AWAIT_SHORT } from '../../helpers/constants';
 import { getTimeoutSeconds } from '../../helpers/eventHelpers';
 
 const statements = {
@@ -114,8 +114,12 @@ const typeIntoHandler = (content: string) => {
 
 const clickOnCreateAction = () => {
   cy.get(getElementFromAlias('create-action-btn'))
-    .scrollIntoView()
-    .click({ force: true });
+    .scrollIntoView();
+  // hard await before accessing the element
+  cy.wait(AWAIT_SHORT);
+
+  cy.get(getElementFromAlias('create-action-btn')).click({ force: true });
+  cy.wait(AWAIT_SHORT);
   cy.get('.notification', { timeout: AWAIT_LONG })
     .should('be.visible')
     .and('contain', 'Created action successfully');
