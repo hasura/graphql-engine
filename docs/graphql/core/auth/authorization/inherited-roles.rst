@@ -24,42 +24,32 @@ Inherited roles are useful when you need to define multiple permission rules (ma
 By default, inherited roles will try to inherit the permissions from its parent roles. If you'd rather like to
 have a different permission than the inherited one for a particular entity and role pair,
 then it can be done by creating a permission for the entity and role pair. After creating this permission,
-it will override the inherited permission.
+it will override the inherited permission, if any.
 
 .. note::
 
-   By default, inherited roles will try to inherit the permissions from its parent roles.
-   If you'd rather like to have a different permission than the inherited one for a particular entity and role pair,
-   then it can be done by creating a permission for the entity and role pair. After creating this permission,
-   it will override the inherited permission, if any.
+   Inherited roles cannot form cycles.
 
-.. note::
+   **For example:**
 
-   Inherited roles cannot form cycles. For example:
+   Suppose there are two inherited roles: ``inherited_role1``, ``inherited_role2`` and
+   two non-inherited roles: ``role1``, ``role2`` and:
 
-   Suppose there are three inherited roles: ``inherited_role1``, ``inherited_role2`` and ``inherited_role3`` and
-   three non-inherited roles: ``role1``, ``role2`` and ``role3`` and
+   - ``inherited_role1`` inherits from ``role1`` and ``inherited_role2``
 
-   ``inherited_role1`` inherits from ``inherited_role3`` and ``role1``
+   - ``inherited_role2`` inherits from ``role2`` and ``inherited_role1``
 
-   ``inherited_role2`` inherits from ``role2`` and ``role3``
-
-   ``inherited_role3`` inherits from ``inherited_role1`` and ``inherited_role2``.
-
-   The above setup won't work because ``inherited_role3`` and ``inherited_role2`` form a cycle.
-
-.. note::
-
-   This feature is currently accessible as an experimental feature and must be enabled.
-   This can be done either by setting the env var ``HASURA_GRAPHQL_EXPERIMENTAL_FEATURES``
-   to ``inherited_roles`` or by providing the server flag ``--experimental-features``
-   to ``inherited_roles``.
-
-   See :ref:`server config reference <server_flag_reference>` for info on setting the flag/env var.
+   The above setup won't work because ``inherited_role1`` and ``inherited_role2`` form a cycle.
 
 .. admonition:: Supported from
 
-   Inherited roles are supported for versions ``v2.0.0-alpha.4`` and above.
+   Inherited roles will be supported for versions ``v2.0.0-alpha.4`` and above. The inherited roles feature
+   is an experimental feature from the ``v2.0.0-alpha.4`` till the ``v2.1.0-beta.1`` version i.e it must be
+   explicitly toggled in order to be enabled. This can be done either by setting the env
+   var ``HASURA_GRAPHQL_EXPERIMENTAL_FEATURES`` or the server flag ``--experimental-features`` to ``inherited_roles``.
+
+   After the ``v2.1.0-beta.1`` version, inherited roles will be enabled by default in the graphql-engine.
+
 
 Creating inherited roles
 ------------------------
@@ -173,7 +163,7 @@ Accessibility of a field for an inherited role is defined as follows:
    to the inherited role.
 
 Examples
---------
+~~~~~~~~
 
 Let's take the example of an ``users`` table with the following columns:
 
@@ -191,121 +181,121 @@ Let's create a new inherited role called ``user_anonymous_inherited_role`` which
 
 1. Executing the query as ``user`` role
 
-.. code-block:: http
+   .. code-block:: http
 
-   POST /v1/graphql HTTP/1.1
-   Content-Type: application/json
-   X-Hasura-Role: user
-   X-Hasura-User-Id: 1
+      POST /v1/graphql HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: user
+      X-Hasura-User-Id: 1
 
-.. graphiql::
-  :view_only:
-  :query:
-     query {
-        users {
-          id
-          name
-          email
-        }
-      }
-  :response:
-     {
-       "data": {
-         "users": [
-           {
-              "id": 1,
-              "name": "alice",
-              "email": "alice@xyz.com"
+   .. graphiql::
+     :view_only:
+     :query:
+        query {
+           users {
+             id
+             name
+             email
            }
-         ]
-       }
-     }
+         }
+     :response:
+        {
+          "data": {
+            "users": [
+              {
+                 "id": 1,
+                 "name": "alice",
+                 "email": "alice@xyz.com"
+              }
+            ]
+          }
+        }
 
 2. Executing the query as ``anonymous`` role
 
-.. code-block:: http
+   .. code-block:: http
 
-   POST /v1/graphql HTTP/1.1
-   Content-Type: application/json
-   X-Hasura-Role: anonymous
+      POST /v1/graphql HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: anonymous
 
-.. graphiql::
-  :view_only:
-  :query:
-     query {
-        users {
-          id
-          name
-        }
-      }
-  :response:
-     {
-       "data": {
-         "users": [
-           {
-             "id": 1,
-             "name": "Alice"
-           },
-           {
-             "id": 2,
-             "name": "Bob"
-           },
-           {
-             "id": 3,
-             "name": "Sam"
+   .. graphiql::
+     :view_only:
+     :query:
+        query {
+           users {
+             id
+             name
            }
-         ]
-       }
-     }
+         }
+     :response:
+        {
+          "data": {
+            "users": [
+              {
+                "id": 1,
+                "name": "Alice"
+              },
+              {
+                "id": 2,
+                "name": "Bob"
+              },
+              {
+                "id": 3,
+                "name": "Sam"
+              }
+            ]
+          }
+        }
 
 3. Executing the query as ``user_anonymous_inherited_role`` role
 
-.. code-block:: http
+   .. code-block:: http
 
-   POST /v1/graphql HTTP/1.1
-   Content-Type: application/json
-   X-Hasura-Role: user_anonymous_inherited_role
-   X-Hasura-User-Id: 1
+      POST /v1/graphql HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: user_anonymous_inherited_role
+      X-Hasura-User-Id: 1
 
-.. graphiql::
-   :view_only:
-   :query:
-      query {
-        users {
-          id
-          name
-          email
-        }
-      }
-   :response:
-      {
-        "data": {
-          "users": [
-            {
-              "id": 1,
-              "name": "Alice",
-              "email": "alice@xyz.com"
-            },
-            {
-              "id": 2,
-              "name": "Bob",
-              "email": null
-            },
-            {
-              "id": 3,
-              "name": "Sam",
-              "email": null
-            }
-          ]
-        }
-      }
+   .. graphiql::
+      :view_only:
+      :query:
+         query {
+           users {
+             id
+             name
+             email
+           }
+         }
+      :response:
+         {
+           "data": {
+             "users": [
+               {
+                 "id": 1,
+                 "name": "Alice",
+                 "email": "alice@xyz.com"
+               },
+               {
+                 "id": 2,
+                 "name": "Bob",
+                 "email": null
+               },
+               {
+                 "id": 3,
+                 "name": "Sam",
+                 "email": null
+               }
+             ]
+           }
+         }
 
-In the response of the query being executed with the ``user_anonymous_inherited_role`` role, there are 3 rows returned and if
-we compare that to the queries executed as the ``user`` and ``anonymous`` roles, the results are unioned in the inherited
-role. But some of the fields have ``null`` values despite the value in the database not being ``null``. This can only happen
-with inherited roles when a column doesn't have permission in the particular row. In the above example, we see that the
-``email`` of "Bob"  and "Sam" is ``null`` but a non null value for "Alice", this is because the "Alice" row is executed as the
-``user`` role and the other rows are executed as the ``anonymous`` role which is why is why the value is ``null``.
+   In the response of the query being executed with the ``user_anonymous_inherited_role`` role, there are 3 rows returned and if
+   we compare that to the queries executed as the ``user`` and ``anonymous`` roles, the results are unioned in the inherited
+   role. But some of the fields have ``null`` values despite the value in the database not being ``null``. This can only happen
+   with inherited roles when a column doesn't have permission in the particular row. In the above example, we see that the
+   ``email`` of "Bob"  and "Sam" is ``null`` but a non null value for "Alice", this is because the "Alice" row is executed as the
+   ``user`` role and the other rows are executed as the ``anonymous`` role which is why is why the value is ``null``.
 
 
 4. Suppose we have two tables ``users`` and ``authors`` and similarly two roles ``user`` and ``author`` are defined. The ``user``
@@ -313,50 +303,50 @@ with inherited roles when a column doesn't have permission in the particular row
    tables in a single query.
 
 
-.. code-block:: http
+   .. code-block:: http
 
-   POST /v1/graphql HTTP/1.1
-   Content-Type: application/json
-   X-Hasura-Role: user_authors_inherited_role
-   X-Hasura-User-Id: 1
+      POST /v1/graphql HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: user_authors_inherited_role
+      X-Hasura-User-Id: 1
 
-.. graphiql::
-  :view_only:
-  :query:
-       query {
-         users {
-           id
-           name
-           email
-         }
-         authors {
-           id
-           name
-           followers
-         }
-       }
-  :response:
-       {
-         "data": {
-           "users": [
-             {
-               "id": 1,
-               "name": "Alice",
-               "email": "alice@xyz.com"
-             }
-           ],
-           "authors": [
-             {
-               "id": 1,
-               "name": "Paulo Coelho",
-               "followers": 10382193
-             }
-           ]
-         }
-       }
+   .. graphiql::
+     :view_only:
+     :query:
+          query {
+            users {
+              id
+              name
+              email
+            }
+            authors {
+              id
+              name
+              followers
+            }
+          }
+     :response:
+          {
+            "data": {
+              "users": [
+                {
+                  "id": 1,
+                  "name": "Alice",
+                  "email": "alice@xyz.com"
+                }
+              ],
+              "authors": [
+                {
+                  "id": 1,
+                  "name": "Paulo Coelho",
+                  "followers": 10382193
+                }
+              ]
+            }
+          }
 
 2. Mutation and remote schema permissions
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 A mutation (insert, update and delete) or remote schema permission is inherited in the following manner:
 
@@ -368,39 +358,39 @@ For example, if two insert permissions are configured in the following way:
 
 1. insert permission of role ``pr1``
 
-.. code-block:: json
+   .. code-block:: json
 
-   {
-       "type" : "pg_create_insert_permission",
-       "args" : {
-           "table" : "article",
-           "source": "default",
-           "role" : "pr1",
-           "permission" : {
-               "check" : {
-                   "author_id" : "X-HASURA-AUTHOR-ID"
-               }
-           }
-       }
-   }
+      {
+          "type" : "pg_create_insert_permission",
+          "args" : {
+              "table" : "article",
+              "source": "default",
+              "role" : "pr1",
+              "permission" : {
+                  "check" : {
+                      "author_id" : "X-HASURA-AUTHOR-ID"
+                  }
+              }
+          }
+      }
 
 2. insert permission of the role ``pr2``
 
-.. code-block:: json
+   .. code-block:: json
 
-   {
-       "type" : "pg_create_insert_permission",
-       "args" : {
-           "table" : "article",
-           "source": "default",
-           "role" : "pr2",
-           "permission" : {
-               "check" : {
-                   "author_id" : "X-HASURA-USER-ID"
-               }
-           }
-       }
-   }
+      {
+          "type" : "pg_create_insert_permission",
+          "args" : {
+              "table" : "article",
+              "source": "default",
+              "role" : "pr2",
+              "permission" : {
+                  "check" : {
+                      "author_id" : "X-HASURA-USER-ID"
+                  }
+              }
+          }
+      }
 
 The ``check`` constraint is different in both the permissions and there's no way to
 resolve this conflict.

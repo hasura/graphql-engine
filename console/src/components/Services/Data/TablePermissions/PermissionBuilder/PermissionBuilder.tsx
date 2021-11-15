@@ -562,7 +562,7 @@ class PermissionBuilder extends React.Component<PermissionBuilderProps> {
           } else if (
             currentTypeMap?.numeric &&
             currentTypeMap.numeric.includes(valueType) &&
-            !Number.isNaN(val) &&
+            !isNaN(val as number) &&
             (val as string).substr(-1) !== '.'
           ) {
             newValue = Number(val);

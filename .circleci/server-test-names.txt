@@ -14,6 +14,7 @@ jwt-claims-map-with-literal-values
 jwt-with-expiry-time-leeway
 jwt-cookie
 cors-domains
+auth-webhook-cookie
 ws-init-cookie-read-cors-enabled
 ws-init-cookie-noread
 ws-init-cookie-read-cors-disabled

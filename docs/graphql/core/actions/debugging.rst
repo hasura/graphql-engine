@@ -20,6 +20,9 @@ To do so, start the server in :ref:`debugging mode <dev-mode>`.
 In the case of errors, the GraphQL response will contain debugging information
 of the webhook calls in the ``extensions.internal`` field.
 
+If you are using action transforms, then you will also see the ``transformed_request``
+inside the ``request`` field.
+
 **For example**:
 
 .. graphiql::
@@ -38,12 +41,12 @@ of the webhook calls in the ``extensions.internal`` field.
     {
       "errors": [
         {
-          "message": "expecting object or array of objects for action webhook response",
+          "message": "expecting null, object or array of objects for action webhook response",
           "extensions": {
             "code": "parse-failed",
             "path": "$",
             "internal": {
-              "error": "expecting object or array of objects for action webhook response",
+              "error": "expecting null, object or array of objects for action webhook response",
               "response": {
                 "status": 200,
                 "headers": [
@@ -67,8 +70,22 @@ of the webhook calls in the ``extensions.internal`` field.
                   "input": {
                     "email": "foo@boo.com",
                     "name": "Foo"
-                  }
-                }
+                  },
+                  "request_query": "mutation {\n    create_user(email: \"foo@bar.com\", name: \"Foo\"){\n      id\n      user {\n        name\n        email\n      }\n    }\n  }\n"
+                },
+                "transformed_request": {
+                  "query_string": "",
+                  "body": "[transformed body]",
+                  "url": "http://127.0.0.1:3000/abcd",
+                  "headers": [
+                    [
+                      "Content-Type",
+                      "application/json"
+                    ]
+                  ],
+                  "method": "PATCH",
+                  "response_timeout": "30000000"
+                },
               }
             }
           }

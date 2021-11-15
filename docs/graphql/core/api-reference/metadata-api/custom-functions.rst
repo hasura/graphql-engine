@@ -52,7 +52,8 @@ Track an SQL function called ``search_articles`` with a Hasura session argument:
            "source": "default",
            "configuration": {
                "session_argument": "hasura_session"
-           }
+           },
+           "comment": "This function helps search for articles"
        }
    }
 
@@ -121,6 +122,11 @@ Args syntax
      - false
      - :ref:`SourceName <SourceName>`
      - Name of the source database of the function (default: ``default``)
+   * - comment
+     - false
+     - String
+     - Comment for the function. This comment would replace the auto-generated
+       comment for the function field in the GraphQL schema.
 
 .. _pg_untrack_function:
 
@@ -162,6 +168,62 @@ Args syntax
      - true
      - :ref:`FunctionName <FunctionName>`
      - Name of the SQL function
+   * - source
+     - false
+     - :ref:`SourceName <SourceName>`
+     - Name of the source database of the function (default: ``default``)
+
+.. _pg_set_function_customization:
+
+pg_set_function_customization
+-----------------------------
+
+``pg_set_function_customization`` allows you to customize any given function with
+a custom name and custom root fields of an already tracked
+function. This will **replace** the already present customization.
+
+Set the configuration for a function called ``search_articles``:
+
+.. code-block:: http
+
+   POST /v1/metadata HTTP/1.1
+   Content-Type: application/json
+   X-Hasura-Role: admin
+
+   {
+      "type": "pg_set_function_customization",
+      "args": {
+        "function": "search_articles",
+        "source": "default",
+        "configuration": {
+          "custom_root_fields": {
+            "function": "FindArticles",
+            "function_aggregate": "FindArticlesAgg"
+          }
+        }
+      }
+   }
+
+.. _pg_set_function_customization_syntax:
+
+Args syntax
+^^^^^^^^^^^
+
+.. list-table::
+   :header-rows: 1
+
+   * - Key
+     - Required
+     - Schema
+     - Description
+   * - function
+     - true
+     - :ref:`FunctionName <FunctionName>`
+     - Name of the function
+   * - configuration
+     - false
+     - :ref:`Function Configuration <function_configuration>`
+     - Configuration for the function
    * - source
      - false
      - :ref:`SourceName <SourceName>`

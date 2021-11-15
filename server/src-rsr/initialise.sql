@@ -3,8 +3,15 @@ Since the column default is not directly referencing gen_random_uuid(),
 it prevents the column default to be dropped when pgcrypto or public schema is dropped unwittingly.
 
 See https://github.com/hasura/graphql-engine/issues/4217
+
+There is another instance of this function, defined in `init_pg_source.sql`. We
+need to define them in both places because the `gen_hasura_uuid` function is
+used as column defaults for various tables stored in both the metadata database
+and the event log table in user's (source) database. In the case where the
+metadata database is separate from the source database, we need to create these
+functions separately. Note that both of these definitions have to be the same.
 */
-CREATE FUNCTION hdb_catalog.gen_hasura_uuid() RETURNS uuid AS
+CREATE OR REPLACE FUNCTION hdb_catalog.gen_hasura_uuid() RETURNS uuid AS
 -- We assume gen_random_uuid() is available in the search_path.
 -- This may not be true but we can't do much till https://github.com/hasura/graphql-engine/issues/3657
 'select gen_random_uuid()' LANGUAGE SQL;

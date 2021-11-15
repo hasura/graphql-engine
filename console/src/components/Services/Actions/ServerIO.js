@@ -59,8 +59,9 @@ import {
   persistDerivedAction,
   updatePersistedDerivation,
 } from './utils';
+import { getRequestTransformObject } from '../../Common/ConfigureTransformation/utils';
 
-export const createAction = () => (dispatch, getState) => {
+export const createAction = transformState => (dispatch, getState) => {
   const { add: rawState } = getState().actions;
   const existingTypesList = customTypesSelector(getState());
   const allActions = actionsSelector(getState());
@@ -103,6 +104,8 @@ export const createAction = () => (dispatch, getState) => {
     timeout: parseInt(rawState.timeout, 10),
   };
 
+  const requestTransform = getRequestTransformObject(transformState);
+
   const validationError = getStateValidationError(state, existingTypesList);
   if (validationError) {
     return dispatch(showErrorNotification(validationError));
@@ -141,11 +144,17 @@ export const createAction = () => (dispatch, getState) => {
   );
   migration.add(customFieldsQueryUp, customFieldsQueryDown);
 
-  const actionQueryUp = generateCreateActionQuery(
-    state.name,
-    generateActionDefinition(state),
-    actionComment
-  );
+  const actionQueryUp = requestTransform
+    ? generateCreateActionQuery(
+        state.name,
+        generateActionDefinition(state, requestTransform),
+        actionComment
+      )
+    : generateCreateActionQuery(
+        state.name,
+        generateActionDefinition(state),
+        actionComment
+      );
 
   const actionQueryDown = generateDropActionQuery(state.name);
 
@@ -185,7 +194,10 @@ export const createAction = () => (dispatch, getState) => {
   );
 };
 
-export const saveAction = currentAction => (dispatch, getState) => {
+export const saveAction = (currentAction, transformState) => (
+  dispatch,
+  getState
+) => {
   const { modify: rawState } = getState().actions;
   const existingTypesList = customTypesSelector(getState());
   const {
@@ -227,6 +239,8 @@ export const saveAction = currentAction => (dispatch, getState) => {
     comment: actionComment,
   };
 
+  const requestTransform = getRequestTransformObject(transformState);
+
   const validationError = getStateValidationError(state);
 
   if (validationError) {
@@ -255,22 +269,35 @@ export const saveAction = currentAction => (dispatch, getState) => {
 
   const dropCurrentActionQuery = generateDropActionQuery(currentAction.name);
 
-  const updateCurrentActionQuery = getUpdateActionQuery(
-    generateActionDefinition(state),
-    currentAction.name,
-    actionComment
-  );
+  const updateCurrentActionQuery = requestTransform
+    ? getUpdateActionQuery(
+        generateActionDefinition(state, requestTransform),
+        currentAction.name,
+        actionComment
+      )
+    : getUpdateActionQuery(
+        generateActionDefinition(state),
+        currentAction.name,
+        actionComment
+      );
+
   const rollbackActionQuery = getUpdateActionQuery(
     currentAction.definition,
     currentAction.name,
     currentAction.comment
   );
 
-  const createNewActionQuery = generateCreateActionQuery(
-    state.name,
-    generateActionDefinition(state),
-    actionComment
-  );
+  const createNewActionQuery = requestTransform
+    ? generateCreateActionQuery(
+        state.name,
+        generateActionDefinition(state, requestTransform),
+        actionComment
+      )
+    : generateCreateActionQuery(
+        state.name,
+        generateActionDefinition(state),
+        actionComment
+      );
 
   const actionQueryDown = generateDropActionQuery(state.name);
   const oldActionQueryUp = generateCreateActionQuery(

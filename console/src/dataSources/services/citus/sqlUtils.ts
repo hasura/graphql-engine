@@ -1,7 +1,7 @@
-import { Table } from '../../types';
+import { QualifiedTable } from '@/metadata/types';
 
 const generateWhereClause = (
-  options: { schemas: string[]; tables: Table[] },
+  options: { schemas: string[]; tables?: QualifiedTable[] },
   sqlTableName = 'ist.table_name',
   sqlSchemaName = 'ist.table_schema',
   clausePrefix = 'where'
@@ -17,7 +17,7 @@ const generateWhereClause = (
   if (options.tables) {
     options.tables.forEach(tableInfo => {
       whereCondtions.push(
-        `(${sqlSchemaName}='${tableInfo.table_schema}' and ${sqlTableName}='${tableInfo.table_name}')`
+        `(${sqlSchemaName}='${tableInfo.schema}' and ${sqlTableName}='${tableInfo.name}')`
       );
     });
   }
@@ -38,7 +38,7 @@ const generateWhereClause = (
 
 export const getFetchTablesListQuery = (options: {
   schemas: string[];
-  tables: Table[];
+  tables?: QualifiedTable[];
 }) => {
   const whereQuery = generateWhereClause(
     options,
@@ -185,16 +185,26 @@ schema_name NOT IN ('information_schema', 'hdb_catalog', 'hdb_views', 'columnar'
 ${schemas?.length ? ` AND schema_name IN (${schemas.join(',')})` : ''}
 ORDER BY schema_name ASC;`;
 
+export const schemaListQuery = `
+SELECT
+	schema_name
+FROM
+	information_schema.schemata
+WHERE
+	schema_name NOT IN('information_schema', 'hdb_catalog', 'hdb_views', 'columnar', 'citus', 'citus_internal')
+	AND schema_name NOT LIKE 'pg_%'
+ORDER BY
+	schema_name ASC;
+`;
+
 const trackableFunctionsWhere = `
 AND has_variadic = FALSE
-AND returns_set = TRUE
 AND return_type_type = 'c'
 `;
 
 const nonTrackableFunctionsWhere = `
 AND NOT (
   has_variadic = false
-  AND returns_set = TRUE
   AND return_type_type = 'c'
 )
 `;

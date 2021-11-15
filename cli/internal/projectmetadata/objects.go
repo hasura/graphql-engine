@@ -10,7 +10,7 @@ import (
 	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/functions"
 	graphqlschemaintrospection "github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/graphql_schema_introspection"
 	inheritedroles "github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/inherited_roles"
-	querytags "github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/query_tags"
+	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/network"
 	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/querycollections"
 	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/remoteschemas"
 	restendpoints "github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/rest_endpoints"
@@ -26,7 +26,10 @@ func GetMetadataObjectsWithDir(ec *cli.ExecutionContext, dir ...string) metadata
 	} else {
 		metadataDir = dir[0]
 	}
-	ec.Version.GetServerFeatureFlags()
+	err := ec.Version.GetServerFeatureFlags()
+	if err != nil {
+		ec.Logger.Errorf("error determining server feature flags: %v", err)
+	}
 	objects := make(metadataobject.Objects, 0)
 	if ec.Config.Version >= cli.V2 && metadataDir != "" {
 		// hasura core metadata objects
@@ -49,6 +52,7 @@ func GetMetadataObjectsWithDir(ec *cli.ExecutionContext, dir ...string) metadata
 		objects = append(objects, allowlist.New(ec, metadataDir))
 		objects = append(objects, actions.New(ec, metadataDir))
 		objects = append(objects, crontriggers.New(ec, metadataDir))
+		objects = append(objects, network.New(ec, metadataDir))
 
 		if ec.HasMetadataV3 && ec.Config.Version >= cli.V3 {
 			// metadata objects supported in metadata v3
@@ -58,7 +62,6 @@ func GetMetadataObjectsWithDir(ec *cli.ExecutionContext, dir ...string) metadata
 			// hasura pro specific metadata objects
 			objects = append(objects, apilimits.New(ec, metadataDir))
 			objects = append(objects, graphqlschemaintrospection.New(ec, metadataDir))
-			objects = append(objects, querytags.New(ec, metadataDir))
 		}
 	}
 

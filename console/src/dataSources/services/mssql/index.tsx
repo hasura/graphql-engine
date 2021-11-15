@@ -158,7 +158,7 @@ export const supportedFeatures: DeepRequired<SupportedFeaturesType> = {
         view: false,
         edit: false,
       },
-      customGqlRoot: false,
+      customGqlRoot: true,
       setAsEnum: false,
       untrack: true,
       delete: true,
@@ -187,6 +187,13 @@ export const supportedFeatures: DeepRequired<SupportedFeaturesType> = {
     },
     nonTrackableFunctions: {
       enabled: false,
+    },
+    modify: {
+      enabled: false,
+      comments: {
+        view: false,
+        edit: false,
+      },
     },
   },
   events: {
@@ -284,7 +291,7 @@ ORDER BY
       whereClause = `AND sch.name IN (${schemas.map(s => `'${s}'`).join(',')})`;
     } else if (tables) {
       whereClause = `AND obj.name IN (${tables
-        .map(t => `'${t.table_name}'`)
+        .map(t => `'${t.name}'`)
         .join(',')})`;
     }
     // ## Note on fetching MSSQL table comments
@@ -931,4 +938,20 @@ WHERE
   violationActions,
   defaultRedirectSchema,
   generateRowsCountRequest,
+  // TODO(iyekings): this is a duplicate of schemaList
+  schemaListQuery: `
+  SELECT
+    s.name AS schema_name
+  FROM
+    sys.schemas s
+  WHERE
+    s.name NOT IN (
+      'guest', 'INFORMATION_SCHEMA', 'sys',
+      'db_owner', 'db_securityadmin', 'db_accessadmin',
+      'db_backupoperator', 'db_ddladmin', 'db_datawriter',
+      'db_datareader', 'db_denydatawriter', 'db_denydatareader'
+    )
+  ORDER BY
+    s.name
+`,
 };

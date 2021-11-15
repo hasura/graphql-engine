@@ -5,14 +5,6 @@ ALTER TABLE hdb_catalog.hdb_version
 ALTER COLUMN hasura_uuid
 SET DEFAULT hdb_catalog.gen_hasura_uuid();
 
-ALTER TABLE hdb_catalog.event_log
-ALTER COLUMN id
-SET DEFAULT hdb_catalog.gen_hasura_uuid();
-
-ALTER TABLE hdb_catalog.event_invocation_logs
-ALTER COLUMN id
-SET DEFAULT hdb_catalog.gen_hasura_uuid();
-
 ALTER TABLE hdb_catalog.hdb_action_log
 ALTER COLUMN id
 SET DEFAULT hdb_catalog.gen_hasura_uuid();

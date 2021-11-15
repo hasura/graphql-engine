@@ -1,24 +1,22 @@
 module Hasura.Backends.Postgres.Translate.Update
-  ( mkUpdateCTE
-  ) where
+  ( mkUpdateCTE,
+  )
+where
 
-import           Hasura.Prelude
+import Hasura.Backends.Postgres.SQL.DML qualified as S
+import Hasura.Backends.Postgres.SQL.Types
+import Hasura.Backends.Postgres.Translate.BoolExp
+import Hasura.Backends.Postgres.Translate.Insert
+import Hasura.Backends.Postgres.Translate.Returning
+import Hasura.Prelude
+import Hasura.RQL.IR.Update
+import Hasura.RQL.Types
+import Hasura.SQL.Types
 
-import qualified Hasura.Backends.Postgres.SQL.DML             as S
-
-import           Hasura.Backends.Postgres.SQL.Types
-import           Hasura.Backends.Postgres.Translate.BoolExp
-import           Hasura.Backends.Postgres.Translate.Insert
-import           Hasura.Backends.Postgres.Translate.Returning
-import           Hasura.RQL.IR.Update
-import           Hasura.RQL.Types
-import           Hasura.SQL.Types
-
-
-mkUpdateCTE
-  :: Backend ('Postgres pgKind)
-  => AnnUpd ('Postgres pgKind)
-  -> S.CTE
+mkUpdateCTE ::
+  Backend ('Postgres pgKind) =>
+  AnnUpd ('Postgres pgKind) ->
+  S.CTE
 mkUpdateCTE (AnnUpd tn opExps (permFltr, wc) chk _ columnsInfo) =
   S.CTEUpdate update
   where
@@ -26,30 +24,31 @@ mkUpdateCTE (AnnUpd tn opExps (permFltr, wc) chk _ columnsInfo) =
       S.SQLUpdate tn setExp Nothing tableFltr
         . Just
         . S.RetExp
-        $ [ S.selectStar
-          , asCheckErrorExtractor $ insertCheckConstraint checkExpr
+        $ [ S.selectStar,
+            asCheckErrorExtractor $ insertCheckConstraint checkExpr
           ]
-    setExp    = S.SetExp $ map (expandOperator columnsInfo) opExps
+    setExp = S.SetExp $ map (expandOperator columnsInfo) opExps
     tableFltr = Just $ S.WhereFrag tableFltrExpr
     tableFltrExpr = toSQLBoolExp (S.QualTable tn) $ andAnnBoolExps permFltr wc
     checkExpr = toSQLBoolExp (S.QualTable tn) chk
 
 expandOperator :: [ColumnInfo ('Postgres pgKind)] -> (PGCol, UpdOpExpG S.SQLExp) -> S.SetExpItem
-expandOperator infos (column, op) = S.SetExpItem $ (column,) $ case op of
-  UpdSet          e -> e
-  UpdInc          e -> S.mkSQLOpExp S.incOp               identifier (asNum  e)
-  UpdAppend       e -> S.mkSQLOpExp S.jsonbConcatOp       identifier (asJSON e)
-  UpdPrepend      e -> S.mkSQLOpExp S.jsonbConcatOp       (asJSON e) identifier
-  UpdDeleteKey    e -> S.mkSQLOpExp S.jsonbDeleteOp       identifier (asText e)
-  UpdDeleteElem   e -> S.mkSQLOpExp S.jsonbDeleteOp       identifier (asInt  e)
-  UpdDeleteAtPath a -> S.mkSQLOpExp S.jsonbDeleteAtPathOp identifier (asArray a)
+expandOperator infos (column, op) = S.SetExpItem $
+  (column,) $ case op of
+    UpdSet e -> e
+    UpdInc e -> S.mkSQLOpExp S.incOp identifier (asNum e)
+    UpdAppend e -> S.mkSQLOpExp S.jsonbConcatOp identifier (asJSON e)
+    UpdPrepend e -> S.mkSQLOpExp S.jsonbConcatOp (asJSON e) identifier
+    UpdDeleteKey e -> S.mkSQLOpExp S.jsonbDeleteOp identifier (asText e)
+    UpdDeleteElem e -> S.mkSQLOpExp S.jsonbDeleteOp identifier (asInt e)
+    UpdDeleteAtPath a -> S.mkSQLOpExp S.jsonbDeleteAtPathOp identifier (asArray a)
   where
     identifier = S.SEIdentifier $ toIdentifier column
-    asInt  e   = S.SETyAnn e S.intTypeAnn
-    asText e   = S.SETyAnn e S.textTypeAnn
-    asJSON e   = S.SETyAnn e S.jsonbTypeAnn
-    asArray a  = S.SETyAnn (S.SEArray a) S.textArrTypeAnn
-    asNum  e   = S.SETyAnn e $
+    asInt e = S.SETyAnn e S.intTypeAnn
+    asText e = S.SETyAnn e S.textTypeAnn
+    asJSON e = S.SETyAnn e S.jsonbTypeAnn
+    asArray a = S.SETyAnn (S.SEArray a) S.textArrTypeAnn
+    asNum e = S.SETyAnn e $
       case find (\info -> pgiColumn info == column) infos <&> pgiType of
         Just (ColumnScalar s) -> S.mkTypeAnn $ CollectableTypeScalar s
-        _                     -> S.numericTypeAnn
+        _ -> S.numericTypeAnn

@@ -1,4 +1,4 @@
-import { Table, FrequentlyUsedColumn, IndexType } from '../../types';
+import { FrequentlyUsedColumn, IndexType } from '../../types';
 import { isColTypeString } from '.';
 import { FunctionState } from './types';
 import { QualifiedTable } from '../../../metadata/types';
@@ -15,44 +15,32 @@ export const sqlEscapeText = (rawText: string) => {
 };
 
 const generateWhereClause = (
-  options: { schemas: string[]; tables: Table[] },
+  options: { schemas: string[]; tables?: QualifiedTable[] },
   sqlTableName = 'ist.table_name',
   sqlSchemaName = 'ist.table_schema',
   clausePrefix = 'where'
 ) => {
-  let whereClause = '';
-
   const whereCondtions: string[] = [];
-  if (options.schemas) {
-    options.schemas.forEach(schemaName => {
-      whereCondtions.push(`(${sqlSchemaName}='${schemaName}')`);
-    });
-  }
-  if (options.tables) {
-    options.tables.forEach(tableInfo => {
-      whereCondtions.push(
-        `(${sqlSchemaName}='${tableInfo.table_schema}' and ${sqlTableName}='${tableInfo.table_name}')`
-      );
-    });
-  }
 
-  if (whereCondtions.length > 0) {
-    whereClause = clausePrefix;
-  }
-
-  whereCondtions.forEach((whereInfo, index) => {
-    whereClause += ` ${whereInfo}`;
-    if (index + 1 !== whereCondtions.length) {
-      whereClause += ' or';
-    }
+  options.schemas?.forEach(schemaName => {
+    whereCondtions.push(`(${sqlSchemaName}='${schemaName}')`);
   });
 
-  return whereClause;
+  options.tables?.forEach(tableInfo => {
+    whereCondtions.push(
+      `(${sqlSchemaName}='${tableInfo.schema}' and ${sqlTableName}='${tableInfo.name}')`
+    );
+  });
+
+  if (whereCondtions.length) {
+    return `${clausePrefix} (${whereCondtions.join(' or ')})`;
+  }
+  return '';
 };
 
 export const getFetchTablesListQuery = (options: {
   schemas: string[];
-  tables: Table[];
+  tables?: QualifiedTable[];
 }) => {
   const whereQuery = generateWhereClause(
     options,
@@ -675,12 +663,21 @@ export const getSetColumnDefaultSql = (
 };
 
 export const getSetCommentSql = (
-  on: 'column' | 'table' | string,
+  on: string,
   tableName: string,
   schemaName: string,
   comment: string | null,
-  columnName?: string
+  columnName?: string,
+  functionName?: string
 ) => {
+  if (functionName) {
+    return `
+comment on ${on} "${schemaName}"."${functionName}" is ${
+      comment ? sqlEscapeText(comment) : 'NULL'
+    }
+`;
+  }
+
   if (columnName) {
     return `
   comment on ${on} "${schemaName}"."${tableName}"."${columnName}" is ${
@@ -824,14 +821,12 @@ COMMIT TRANSACTION;`;
 
 const trackableFunctionsWhere = `
 AND has_variadic = FALSE
-AND returns_set = TRUE
 AND return_type_type = 'c'
 `;
 
 const nonTrackableFunctionsWhere = `
 AND NOT (
   has_variadic = false
-  AND returns_set = TRUE
   AND return_type_type = 'c'
 )
 `;
@@ -842,7 +837,7 @@ const functionWhereStatement = {
 };
 
 export const getFunctionDefinitionSql = (
-  schemaName: string,
+  schemaName: string | string[],
   functionName?: string | null,
   type?: keyof typeof functionWhereStatement
 ) => `
@@ -871,6 +866,7 @@ pg_get_functiondef(p.oid) AS function_definition,
 rtn.nspname::text AS return_type_schema,
 rt.typname::text AS return_type_name,
 rt.typtype::text AS return_type_type,
+obj_description(p.oid) AS comment,
 p.proretset AS returns_set,
 ( SELECT COALESCE(json_agg(json_build_object('schema', q.schema, 'name', q.name, 'type', q.type)), '[]'::json) AS "coalesce"
        FROM ( SELECT pt.typname AS name,
@@ -897,7 +893,12 @@ AND NOT(EXISTS (
     1 FROM pg_aggregate
   WHERE
     pg_aggregate.aggfnoid::oid = p.oid))) as info
-WHERE function_schema='${schemaName}'
+-- WHERE function_schema='${schemaName}'
+WHERE ${
+  Array.isArray(schemaName)
+    ? `function_schema IN (${schemaName.map(s => `'${s}'`).join(', ')})`
+    : `function_schema='${schemaName}'`
+}
 ${functionName ? `AND function_name='${functionName}'` : ''}
 ${type ? functionWhereStatement[type] : ''}
 ORDER BY function_name ASC
@@ -907,7 +908,7 @@ ${functionName ? 'LIMIT 1' : ''}
 
 export const primaryKeysInfoSql = (options: {
   schemas: string[];
-  tables: Table[];
+  tables?: QualifiedTable[];
 }) => `
 SELECT
 COALESCE(
@@ -996,7 +997,7 @@ GROUP BY
 
 export const uniqueKeysSql = (options: {
   schemas: string[];
-  tables: Table[];
+  tables?: QualifiedTable[];
 }) => `
 SELECT
 COALESCE(
@@ -1024,7 +1025,7 @@ FROM (
 
 export const checkConstraintsSql = (options: {
   schemas: string[];
-  tables: Table[];
+  tables?: QualifiedTable[];
 }) => `
 SELECT
 COALESCE(
@@ -1110,8 +1111,8 @@ export const getCreateIndexSql = (indexObj: {
 `;
 };
 
-export const getDropIndexSql = (indexName: string) =>
-  `DROP INDEX IF EXISTS "${indexName}"`;
+export const getDropIndexSql = (indexName: string, schema: string) =>
+  `DROP INDEX IF EXISTS "${schema}"."${indexName}"`;
 
 export const frequentlyUsedColumns: FrequentlyUsedColumn[] = [
   {
@@ -1190,7 +1191,7 @@ IS 'trigger to set value of column "${columnName}" to current timestamp on row u
 
 export const getFKRelations = (options: {
   schemas: string[];
-  tables: Table[];
+  tables?: QualifiedTable[];
 }) => `
 SELECT
 	COALESCE(json_agg(row_to_json(info)), '[]'::JSON)
@@ -1320,3 +1321,11 @@ FROM (
 `;
 
 export const getDatabaseVersionSql = 'SELECT version();';
+
+export const schemaListQuery = `
+SELECT schema_name FROM information_schema.schemata
+WHERE
+	schema_name NOT in('information_schema', 'pg_catalog', 'hdb_catalog')
+	AND schema_name NOT LIKE 'pg_toast%'
+	AND schema_name NOT LIKE 'pg_temp_%';
+`;

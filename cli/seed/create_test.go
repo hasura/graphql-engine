@@ -74,6 +74,7 @@ SELECT pg_catalog.setval('public.authors_id_seq', 1, false);
 				_, err = q.PGRunSQL(hasura.PGRunSQLInput{
 					SQL: string(b),
 				})
+				require.NoError(t, err)
 			},
 		},
 	}

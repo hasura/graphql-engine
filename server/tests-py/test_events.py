@@ -4,7 +4,7 @@ import pytest
 import queue
 import time
 import utils
-from validate import check_query_f, check_event
+from validate import check_query_f, check_event, check_event_transformed
 
 usefixtures = pytest.mark.usefixtures
 
@@ -87,7 +87,7 @@ class TestCreateAndDelete:
 
 # Generates a backlog of events, then:
 # - checks that we're processing with the concurrency and backpressure
-#   characteristics we expect 
+#   characteristics we expect
 # - ensures all events are successfully processed
 #
 # NOTE: this expects:
@@ -112,7 +112,7 @@ class TestEventFlood(object):
         def check_backpressure():
             # Expect that HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE webhooks are pending:
             assert evts_webhook.blocked_count == 8
-            # ...Great, so presumably: 
+            # ...Great, so presumably:
             # - event handlers are run concurrently
             # - with concurrency limited by HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE
 
@@ -120,10 +120,10 @@ class TestEventFlood(object):
                 "type":"run_sql",
                 "args":{
                     "sql":'''
-                    select 
+                    select
                       (select count(*) from hdb_catalog.event_log where locked IS NOT NULL) as num_locked,
                       count(*) as total
-                    from hdb_catalog.event_log 
+                    from hdb_catalog.event_log
                     where table_name = 'test_flood'
                     '''
                 }
@@ -163,7 +163,7 @@ class TestEventDataFormat(object):
     @classmethod
     def dir(cls):
         return 'queries/event_triggers/data_format'
-    
+
     def test_bigint(self, hge_ctx, evts_webhook):
       table = {"schema": "hge_tests", "name": "test_bigint"}
 
@@ -175,7 +175,7 @@ class TestEventDataFormat(object):
       st_code, resp = insert(hge_ctx, table, init_row)
       assert st_code == 200, resp
       check_event(hge_ctx, evts_webhook, "bigint_all", table, "INSERT", exp_ev_data)
-    
+
     def test_geojson(self, hge_ctx, evts_webhook):
       table = {"schema": "hge_tests", "name": "test_geojson"}
 
@@ -211,13 +211,13 @@ class TestEventDataFormat(object):
                     }
                   }
       }
-      
+
 
       where_exp = {"id" : 1}
       set_exp = {"id": 2}
       st_code, resp = update(hge_ctx, table, where_exp, set_exp)
       assert st_code == 200, resp
-      check_event(hge_ctx, evts_webhook, "geojson_all", table, "UPDATE", exp_ev_data)  
+      check_event(hge_ctx, evts_webhook, "geojson_all", table, "UPDATE", exp_ev_data)
 
 
 
@@ -807,7 +807,7 @@ class TestManualEvents(object):
             st_code, resp = hge_ctx.v1metadataq(reload_metadata_q)
             assert st_code == 200, resp
 
-            self.test_basic(hge_ctx, evts_webhook)           
+            self.test_basic(hge_ctx, evts_webhook)
 
 @usefixtures('per_method_tests_db_state')
 class TestEventsAsynchronousExecution(object):
@@ -842,3 +842,85 @@ class TestEventsAsynchronousExecution(object):
         end_time = time.perf_counter()
         time_elapsed = end_time - start_time
         assert time_elapsed < 10
+
+@usefixtures("per_class_tests_db_state")
+class TestEventTransform(object):
+
+    @classmethod
+    def dir(cls):
+        return 'queries/event_triggers/transform'
+
+    def test_basic(self, hge_ctx, evts_webhook):
+        # GIVEN
+        check_query_f(hge_ctx, self.dir() + '/basic_transform.yaml')
+
+        # WHEN
+        table = {"schema": "hge_tests", "name": "test_t1"}
+        insert_row = {"id": 0, "first_name": "Simon", "last_name": "Marlow"}
+        st_code, resp = insert(hge_ctx, table, insert_row)
+
+        # THEN
+        expectedPath = "/?foo=bar"
+        expectedBody = insert_row
+
+        check_event_transformed(hge_ctx,
+                                evts_webhook,
+                                expectedBody,
+                                headers={"foo": "bar"},
+                                removedHeaders=["user-agent"],
+                                webhook_path=expectedPath)
+        assert st_code == 200, resp
+
+    def test_content_type_allows_json(self, hge_ctx, evts_webhook):
+        # GIVEN
+        check_query_f(hge_ctx, self.dir() + '/content_type_transform.yaml')
+
+        # WHEN
+        table = {"schema": "hge_tests", "name": "test_t1"}
+        insert_row = {"id": 0, "first_name": "Simon", "last_name": "Marlow"}
+        st_code, resp = insert(hge_ctx, table, insert_row)
+
+        # THEN
+        expected_event_data = {
+            "old": None,
+            "new": insert_row
+        }
+
+        check_event(hge_ctx,
+                    evts_webhook,
+                    "sample_trigger",
+                    table,
+                    "INSERT",
+                    expected_event_data,
+                    {"Content-Type": "application/json"})
+        assert st_code == 200, resp
+
+    def test_content_type_allows_urlencoded(self, hge_ctx, evts_webhook):
+        # GIVEN
+        check_query_f(hge_ctx, self.dir() + '/url_encoded_transform.yaml')
+
+        # WHEN
+        table = {"schema": "hge_tests", "name": "test_t1"}
+        insert_row = {"id": 0, "first_name": "Simon", "last_name": "Marlow"}
+        st_code, resp = insert(hge_ctx, table, insert_row)
+
+        # THEN
+        expected_event_data = {
+            "old": None,
+            "new": insert_row
+        }
+
+        check_event(hge_ctx,
+                    evts_webhook,
+                    "sample_trigger",
+                    table,
+                    "INSERT",
+                    expected_event_data,
+                    {"Content-Type": "application/x-www-form-urlencoded"})
+        assert st_code == 200, resp
+
+    def test_content_type_disallows_bad_content_types(self, hge_ctx, evts_webhook):
+        check_query_f(hge_ctx, self.dir() + '/bad_content_type_transform.yaml')
+
+    def test_transform_headers_disallows_bad_content_types(self, hge_ctx, evts_webhook):
+        check_query_f(hge_ctx, self.dir() + '/bad_header_transform.yaml')

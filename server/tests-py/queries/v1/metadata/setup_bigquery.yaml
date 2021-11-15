@@ -1,0 +1,9 @@
+type: bulk
+args:
+
+- type: bigquery_track_table
+  args:
+    source: bigquery
+    table:
+      dataset: hasura_test
+      name: table_to_customize

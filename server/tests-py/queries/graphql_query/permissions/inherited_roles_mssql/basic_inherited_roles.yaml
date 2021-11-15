@@ -199,3 +199,50 @@
           - title: title 2
 
 
+- description: custom-check based select permissions with _exists (positive)
+  url: /v1/graphql
+  status: 200
+  headers:
+    x-hasura-role: permissions_with_custom_check
+    x-hasura-user-id: "2"
+  query:
+    query: |
+      query {
+        article {
+          id
+          title
+        }
+      }
+  response:
+    data:
+      article:
+        - id: 1
+          title: title 1
+        - id: 2
+          title: title 2
+        - id: 3
+          title: title 3
+        - id: 4
+          title: title 4
+        - id: 5
+          title: title 5
+
+
+- description: custom-check based select permissions with _exists (negative)
+  url: /v1/graphql
+  status: 200
+  headers:
+    x-hasura-role: permissions_with_custom_check
+    x-hasura-user-id: "3"
+  query:
+    query: |
+      query {
+        article {
+          id
+          title
+        }
+      }
+  response:
+    data:
+      article: []
+

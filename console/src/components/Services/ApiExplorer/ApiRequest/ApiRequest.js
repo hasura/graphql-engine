@@ -361,8 +361,8 @@ class ApiRequest extends Component {
                   <input
                     type="checkbox"
                     name="sponsored"
-                    style={{ outline: 'none' }}
-                    className="mr-1 border-gray-400 rounded outline-none focus:outline-none focus:ring-2 focus:ring-offset-2  focus:ring-yellow-400"
+                    style={{ marginTop: '4px' }}
+                    className="legacy-input-fix"
                     id={i + 1}
                     checked={header.isActive}
                     data-header-id={i}
@@ -577,17 +577,17 @@ class ApiRequest extends Component {
               <thead>
                 <tr className="bg-gray-50">
                   <th
-                    className={`w-16 px-md py-sm max-w-xs text-left text-sm font-semibold bg-gray-50 text-gray-600 uppercase tracking-wider ${styles.wd4}`}
+                    className={`w-16 px-sm py-xs max-w-xs text-left text-sm font-semibold bg-gray-50 text-gray-600 uppercase tracking-wider ${styles.wd4}`}
                   >
                     Enable
                   </th>
-                  <th className="px-md py-sm max-w-xs text-left text-sm font-semibold bg-gray-50 text-gray-600 uppercase tracking-wider">
+                  <th className="px-sm py-xs max-w-xs text-left text-sm font-semibold bg-gray-50 text-gray-600 uppercase tracking-wider">
                     Key
                   </th>
-                  <th className="px-md py-sm max-w-xs text-left text-sm font-semibold bg-gray-50 text-gray-600 uppercase tracking-wider">
+                  <th className="px-sm py-xs max-w-xs text-left text-sm font-semibold bg-gray-50 text-gray-600 uppercase tracking-wider">
                     Value
                   </th>
-                  <th className="w-16 px-md py-sm max-w-xs text-left text-sm font-semibold bg-gray-50 text-gray-600 uppercase tracking-wider" />
+                  <th className="w-16 px-sm py-xs max-w-xs text-left text-sm font-semibold bg-gray-50 text-gray-600 uppercase tracking-wider" />
                 </tr>
               </thead>
               <tbody className="bg-white">{getHeaderRows()}</tbody>
@@ -609,6 +609,7 @@ class ApiRequest extends Component {
                 dispatch={this.props.dispatch}
                 headerFocus={this.props.headerFocus}
                 urlParams={this.props.urlParams}
+                response={this.props.explorerData.response}
               />
             </div>
           );

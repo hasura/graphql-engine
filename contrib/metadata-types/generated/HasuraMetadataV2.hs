@@ -74,7 +74,7 @@ module QuickType
     , InputArgument (..)
     , HasuraMetadataV2 (..)
     , Header (..)
-    , Permissions (..)
+    , Permission (..)
     , Definition (..)
     , RemoteFieldValue (..)
     , ActionDefinitionType (..)
@@ -204,7 +204,7 @@ data Action = Action
     { commentAction :: Maybe Text
     , definitionAction :: ActionDefinition
     , nameAction :: Text
-    , permissionsAction :: Maybe Permissions
+    , permissionsAction :: Maybe (Vector Permission)
     } deriving (Show)
 
 {-| Definition of the action
@@ -260,9 +260,8 @@ data Header = Header
     , valueFromEnvHeader :: Maybe Text
     } deriving (Show)
 
-{-| Permissions of the action -}
-data Permissions = Permissions
-    { rolePermissions :: Text
+data Permission = Permission
+    { rolePermission :: Text
     } deriving (Show)
 
 {-|
@@ -734,11 +733,15 @@ https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/tab
 customColumnNames:
 Customise the column names
 
+customName:
+Customise the table name
+
 customRootFields:
 Customise the root fields
 -}
 data TableConfig = TableConfig
     { customColumnNamesTableConfig :: Maybe (HashMap Text Text)
+    , customNameTableConfig :: Maybe Text
     , customRootFieldsTableConfig :: Maybe CustomRootFields
     } deriving (Show)
 
@@ -1500,14 +1503,14 @@ instance FromJSON Header where
         <*> v .:? "value"
         <*> v .:? "value_from_env"
 
-instance ToJSON Permissions where
-    toJSON (Permissions rolePermissions) =
+instance ToJSON Permission where
+    toJSON (Permission rolePermission) =
         object
-        [ "role" .= rolePermissions
+        [ "role" .= rolePermission
         ]
 
-instance FromJSON Permissions where
-    parseJSON (Object v) = Permissions
+instance FromJSON Permission where
+    parseJSON (Object v) = Permission
         <$> v .: "role"
 
 instance ToJSON AllowList where
@@ -1927,15 +1930,17 @@ instance FromJSON ComputedFieldDefinition where
         <*> v .:? "table_argument"
 
 instance ToJSON TableConfig where
-    toJSON (TableConfig customColumnNamesTableConfig customRootFieldsTableConfig) =
+    toJSON (TableConfig customColumnNamesTableConfig customNameTableConfig customRootFieldsTableConfig) =
         object
         [ "custom_column_names" .= customColumnNamesTableConfig
+        , "custom_name" .= customNameTableConfig
         , "custom_root_fields" .= customRootFieldsTableConfig
         ]
 
 instance FromJSON TableConfig where
     parseJSON (Object v) = TableConfig
         <$> v .:? "custom_column_names"
+        <*> v .:? "custom_name"
         <*> v .:? "custom_root_fields"
 
 instance ToJSON CustomRootFields where

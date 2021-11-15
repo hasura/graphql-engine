@@ -46,3 +46,6 @@ query:
         - name: co_author
           using:
             foreign_key_constraint_on: co_author_id
+      - table:
+          name: search_author_view
+          schema: hasura

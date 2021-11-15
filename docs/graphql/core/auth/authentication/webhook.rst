@@ -112,6 +112,9 @@ with variables `{"a": 1}`, the webhook will receive a request of the following f
 
 If you configure your webhook to use ``POST``, then Hasura **will send all client headers in payload**.
 
+.. note::
+   If an invalid JSON request is sent, then the request body is not forwarded to the webhook
+
 .. _webhook_response:
 
 Response
@@ -168,8 +171,9 @@ There is no default timeout on the resulting connection. You can optionally add 
        "Expires": "Mon, 30 Mar 2020 13:25:18 GMT"
    }
 
+.. note::
 
-
+  If the `Set-Cookie` headers are set by the auth webhook, they are forwarded by the GraphQL Engine as response headers for both GET/POST request methods.
 
 Failure
 +++++++

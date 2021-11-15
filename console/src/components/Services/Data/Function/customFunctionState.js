@@ -14,6 +14,8 @@ const functionData = {
   functionName: '',
   functionSchema: '',
   functionDefinition: '',
+  functionComment: '',
+  isEditingComment: false,
   configuration: {},
   permissions: {},
   setOffTable: '',

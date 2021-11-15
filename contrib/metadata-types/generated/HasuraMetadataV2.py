@@ -321,15 +321,14 @@ class ActionDefinition:
 
 
 @dataclass
-class Permissions:
-    """Permissions of the action"""
+class Permission:
     role: str
 
     @staticmethod
-    def from_dict(obj: Any) -> 'Permissions':
+    def from_dict(obj: Any) -> 'Permission':
         assert isinstance(obj, dict)
         role = from_str(obj.get("role"))
-        return Permissions(role)
+        return Permission(role)
 
     def to_dict(self) -> dict:
         result: dict = {}
@@ -349,7 +348,7 @@ class Action:
     """Comment"""
     comment: Optional[str] = None
     """Permissions of the action"""
-    permissions: Optional[Permissions] = None
+    permissions: Optional[List[Permission]] = None
 
     @staticmethod
     def from_dict(obj: Any) -> 'Action':
@@ -357,7 +356,7 @@ class Action:
         definition = ActionDefinition.from_dict(obj.get("definition"))
         name = from_str(obj.get("name"))
         comment = from_union([from_str, from_none], obj.get("comment"))
-        permissions = from_union([Permissions.from_dict, from_none], obj.get("permissions"))
+        permissions = from_union([lambda x: from_list(Permission.from_dict, x), from_none], obj.get("permissions"))
         return Action(definition, name, comment, permissions)
 
     def to_dict(self) -> dict:
@@ -365,7 +364,7 @@ class Action:
         result["definition"] = to_class(ActionDefinition, self.definition)
         result["name"] = from_str(self.name)
         result["comment"] = from_union([from_str, from_none], self.comment)
-        result["permissions"] = from_union([lambda x: to_class(Permissions, x), from_none], self.permissions)
+        result["permissions"] = from_union([lambda x: from_list(lambda x: to_class(Permission, x), x), from_none], self.permissions)
         return result
 
 
@@ -1166,6 +1165,8 @@ class TableConfig:
     """
     """Customise the column names"""
     custom_column_names: Optional[Dict[str, str]] = None
+    """Customise the table name"""
+    custom_name: Optional[str] = None
     """Customise the root fields"""
     custom_root_fields: Optional[CustomRootFields] = None
 
@@ -1173,12 +1174,14 @@ class TableConfig:
     def from_dict(obj: Any) -> 'TableConfig':
         assert isinstance(obj, dict)
         custom_column_names = from_union([lambda x: from_dict(from_str, x), from_none], obj.get("custom_column_names"))
+        custom_name = from_union([from_str, from_none], obj.get("custom_name"))
         custom_root_fields = from_union([CustomRootFields.from_dict, from_none], obj.get("custom_root_fields"))
-        return TableConfig(custom_column_names, custom_root_fields)
+        return TableConfig(custom_column_names, custom_name, custom_root_fields)
 
     def to_dict(self) -> dict:
         result: dict = {}
         result["custom_column_names"] = from_union([lambda x: from_dict(from_str, x), from_none], self.custom_column_names)
+        result["custom_name"] = from_union([from_str, from_none], self.custom_name)
         result["custom_root_fields"] = from_union([lambda x: to_class(CustomRootFields, x), from_none], self.custom_root_fields)
         return result
 

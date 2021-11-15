@@ -46,7 +46,6 @@ func (s *Stub) Scan() error {
 }
 
 func (s *Stub) DefaultParser(p source.Parser) {
-	return
 }
 
 func (s *Stub) First() (version uint64, err error) {

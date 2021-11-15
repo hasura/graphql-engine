@@ -141,46 +141,39 @@ const setUntrackedRelations = () => (dispatch, getState) => {
   });
 };
 
+/**
+ * @param {{schemas: string[], tables: import('@/metadata/types').QualifiedTable[]}} [configOptions={}]
+ */
 // todo: it's called 4 times on start
-const loadSchema = configOptions => {
+const loadSchema = (configOptions = {}) => {
   return (dispatch, getState) => {
     const url = Endpoints.query;
 
+    /** @type {import('@/dataSources/types').Table[]} */
     let allSchemas = getState().tables.allSchemas;
     const source = getState().tables.currentDataSource;
+    const { currentSchema, schemaList } = getState().tables;
 
-    if (
-      !configOptions ||
-      ((!configOptions.schemas || configOptions.schemas.length === 0) &&
-        (!configOptions.tables || configOptions.tables.length === 0))
-    ) {
-      configOptions = {
-        schemas: [
-          getState().tables.currentSchema || getState().tables.schemaList[0],
-        ],
-      };
+    if (!configOptions?.schemas?.length && !configOptions?.tables?.length) {
+      configOptions.schemas = [currentSchema || schemaList[0]];
     }
 
-    if (configOptions) {
-      if (configOptions.schemas) {
-        allSchemas = allSchemas.filter(
-          schemaInfo =>
-            !configOptions.schemas.some(
-              item => item === schemaInfo.table_schema
-            )
-        );
-      }
+    if (configOptions?.schemas) {
+      allSchemas = allSchemas.filter(
+        schemaInfo =>
+          !configOptions.schemas.some(item => item === schemaInfo.table_schema)
+      );
+    }
 
-      if (configOptions.tables) {
-        allSchemas = allSchemas.filter(
-          schemaInfo =>
-            !configOptions.tables.some(
-              item =>
-                item.table_schema === schemaInfo.table_schema &&
-                item.table_name === schemaInfo.table_name
-            )
-        );
-      }
+    if (configOptions?.tables) {
+      allSchemas = allSchemas.filter(
+        schemaInfo =>
+          !configOptions.tables.some(
+            item =>
+              item.schema === schemaInfo.table_schema &&
+              item.name === schemaInfo.table_name
+          )
+      );
     }
     const body = {
       type: 'bulk',
@@ -308,6 +301,9 @@ const fetchAdditionalColumnsInfo = () => (dispatch, getState) => {
   );
 };
 
+/**
+ * @param {{schemas: string[], tables?: import('@/metadata/types').QualifiedTable[]}} [options=undefined]
+ */
 const updateSchemaInfo = options => (dispatch, getState) => {
   if (!getState().tables.currentDataSource) return;
   return dispatch(loadSchema(options)).then(data => {
@@ -392,6 +388,9 @@ const fetchDataInit = (source, driver) => (dispatch, getState) => {
   );
 };
 
+/**
+ * @param {string| string[]} [schema=null]
+ */
 const fetchFunctionInit = (schema = null) => (dispatch, getState) => {
   const url = Endpoints.query;
   const source = getState().tables.currentDataSource;
@@ -747,9 +746,9 @@ const makeMigrationCall = (
   errorMsg,
   shouldSkipSchemaReload,
   skipExecution = false,
-  isRetry = false
+  isRetry = false,
+  source = getState().tables.currentDataSource
 ) => {
-  const source = getState().tables.currentDataSource;
   const { resourceVersion } = getState().metadata;
   const upQuery = {
     type: 'bulk',

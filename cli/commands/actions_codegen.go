@@ -30,6 +30,16 @@ func newActionsCodegenCmd(ec *cli.ExecutionContext) *cobra.Command {
   # Derive an action from a hasura operation
   hasura actions codegen [action-name] --derive-from ""`,
 		SilenceUsage: true,
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			if err := ec.SetupCodegenAssetsRepo(); err != nil {
+				return fmt.Errorf("setting up codegen-assets repo failed (this is required for automatically generating actions code): %w", err)
+			}
+			// ensure codegen-assets repo exists
+			if err := ec.CodegenAssetsRepo.EnsureCloned(); err != nil {
+				return fmt.Errorf("pulling latest actions codegen files from internet failed: %w", err)
+			}
+			return nil
+		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			opts.actions = args
 			return opts.run()
@@ -61,7 +71,7 @@ func (o *actionsCodegenOptions) run() (err error) {
 	}
 
 	if o.EC.Config.ActionConfig.Codegen.Framework == "" {
-		return fmt.Errorf(`Could not find codegen config. For adding codegen config, run:
+		return fmt.Errorf(`could not find codegen config. For adding codegen config, run:
 
   hasura actions use-codegen`)
 	}

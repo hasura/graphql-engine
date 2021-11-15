@@ -1,14 +1,15 @@
 const colors = require('tailwindcss/colors');
 
 module.exports = {
-  purge: ['./src/**/*.{js,jsx,ts,tsx,html}'],
+  purge: ['./src/**/*.{js,jsx,ts,tsx,html,md,mdx}'],
   darkMode: false, // or 'media' or 'class'
-  jit: true,
+  // jit: true,
   mode: 'jit',
   theme: {
     extend: {
       colors: {
         yellow: colors.amber,
+        gray: colors.blueGray,
         primary: {
           light: '#fad170',
           DEFAULT: '#f9c548',
@@ -28,23 +29,31 @@ module.exports = {
         legacybg: {
           DEFAULT: '#f8fafb',
         },
+        muted: {
+          DEFAULT: '#475569',
+        },
+      },
+      fontFamily: {
+        sans: ['Gudea', 'ui-sans-serif', 'system-ui'],
       },
       spacing: {
-        xs: '0.25rem',
-        sm: '0.5rem',
-        md: '1rem',
-        lg: '2rem',
+        xs: '0.571rem',
+        sm: '0.857rem',
+        md: '1.429rem',
+        lg: '2.286rem',
+        xl: '2.857rem',
         input: '2.5rem',
         btn: '2.5rem',
         btnsm: '2rem',
+        formlabel: '0.571rem',
       },
       fontSize: {
         sm: ['0.875rem', { lineHeight: '1.25rem' }],
         base: ['1rem', { lineHeight: '1.5rem' }],
-        lg: ['1.125rem', { lineHeight: '1.5rem' }],
-        xl: ['2.25rem', { lineHeight: '2.5rem' }],
+        lg: ['1.143rem', { lineHeight: '1.429rem' }],
+        xl: ['1.714rem', { lineHeight: '2.143rem' }],
       },
     },
   },
-  plugins: [require('@tailwindcss/forms')],
+  plugins: [require('@tailwindcss/typography'), require('@tailwindcss/forms')],
 };

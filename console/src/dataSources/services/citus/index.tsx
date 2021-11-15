@@ -1,7 +1,11 @@
 import { DeepRequired } from 'ts-essentials';
 
 import { DataSourcesAPI } from '../..';
-import { getFetchTablesListQuery, schemaListSql } from './sqlUtils';
+import {
+  getFetchTablesListQuery,
+  schemaListSql,
+  schemaListQuery,
+} from './sqlUtils';
 import {
   generateTableRowRequest,
   generateInsertRequest,
@@ -36,7 +40,7 @@ export const supportedFeatures: DeepRequired<SupportedFeaturesType> = {
       enabled: true,
       computedFields: true,
       triggers: true,
-      customGqlRoot: false,
+      customGqlRoot: true,
       setAsEnum: false,
       untrack: true,
       delete: true,
@@ -64,6 +68,13 @@ export const supportedFeatures: DeepRequired<SupportedFeaturesType> = {
     nonTrackableFunctions: {
       enabled: true,
     },
+    modify: {
+      enabled: true,
+      comments: {
+        view: true,
+        edit: true,
+      },
+    },
   },
 };
 
@@ -78,4 +89,5 @@ export const citus: DataSourcesAPI = {
   generateEditRowRequest,
   generateDeleteRowRequest,
   generateBulkDeleteRowRequest,
+  schemaListQuery,
 };

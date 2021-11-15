@@ -3,8 +3,8 @@
   status: 200
   query:
     query: |
-      query MyQuery {
-        hasura_author {
+      query {
+        hasura_test_author(order_by: {id: asc}) {
           id
           articles_aggregate(offset: 10) {
             aggregate {
@@ -25,7 +25,7 @@
       }
   response:
     data:
-      hasura_author:
+      hasura_test_author:
       - id: '1'
         articles_aggregate:
           aggregate:
@@ -54,8 +54,8 @@
   status: 200
   query:
     query: |
-      query MyQuery {
-        hasura_article(offset: 10) {
+      query {
+        hasura_test_article(offset: 10) {
           id
           author {
             id
@@ -68,4 +68,4 @@
       }
   response:
     data:
-      hasura_article: []
+      hasura_test_article: []

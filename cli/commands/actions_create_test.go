@@ -48,9 +48,7 @@ var _ = Describe("actions_create", func() {
 				fmt.Println(err)
 			}
 			_, err = file.Write([]byte(data))
-			if err != nil {
-				fmt.Println(err)
-			}
+			Expect(err).To(BeNil())
 			file.Close()
 			session = testutil.Hasura(testutil.CmdOpts{
 				Args:             []string{"actions", "create", "action1", "--file", filePath},

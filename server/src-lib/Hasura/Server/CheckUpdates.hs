@@ -1,40 +1,37 @@
 module Hasura.Server.CheckUpdates
-  ( checkForUpdates
-  ) where
+  ( checkForUpdates,
+  )
+where
 
-import           Hasura.Prelude
+import CI qualified
+import Control.Concurrent.Extended qualified as C
+import Control.Exception (try)
+import Control.Lens
+import Data.Aeson qualified as A
+import Data.Aeson.Casing qualified as A
+import Data.Aeson.TH qualified as A
+import Data.Either (fromRight)
+import Data.Text qualified as T
+import Data.Text.Conversions (toText)
+import Hasura.HTTP
+import Hasura.Logging (LoggerCtx (..))
+import Hasura.Prelude
+import Hasura.Server.Version (Version, currentVersion)
+import Network.HTTP.Client qualified as H
+import Network.URI.Encode qualified as URI
+import Network.Wreq qualified as Wreq
+import System.Log.FastLogger qualified as FL
 
-import qualified CI
-import qualified Control.Concurrent.Extended as C
-import qualified Data.Aeson                  as A
-import qualified Data.Aeson.Casing           as A
-import qualified Data.Aeson.TH               as A
-import qualified Data.Text                   as T
-import qualified Network.HTTP.Client         as H
-import qualified Network.URI.Encode          as URI
-import qualified Network.Wreq                as Wreq
-import qualified System.Log.FastLogger       as FL
-
-import           Control.Exception           (try)
-import           Control.Lens
-import           Data.Either                 (fromRight)
-import           Data.Text.Conversions       (toText)
-
-import           Hasura.HTTP
-import           Hasura.Logging              (LoggerCtx (..))
-import           Hasura.Server.Version       (HasVersion, Version, currentVersion)
-
-
-newtype UpdateInfo
-  = UpdateInfo
+newtype UpdateInfo = UpdateInfo
   { _uiLatest :: Version
-  } deriving (Show)
+  }
+  deriving (Show)
 
 -- note that this is erroneous and should drop three characters or use
 -- aesonPrefix, but needs to remain like this for backwards compatibility
 $(A.deriveJSON (A.aesonDrop 2 A.snakeCase) ''UpdateInfo)
 
-checkForUpdates :: HasVersion => LoggerCtx a -> H.Manager -> IO void
+checkForUpdates :: LoggerCtx a -> H.Manager -> IO void
 checkForUpdates (LoggerCtx loggerSet _ _ _) manager = do
   let options = wreqOptions manager []
   url <- getUrl
@@ -48,12 +45,14 @@ checkForUpdates (LoggerCtx loggerSet _ _ _) manager = do
           FL.pushLogStrLn loggerSet $ FL.toLogStr $ updateMsg latestVersion
 
     C.sleep $ days 1
-
   where
     updateMsg v = "Update: A new version is available: " <> toText v
     getUrl = do
-      let buildUrl agent = "https://releases.hasura.io/graphql-engine?agent=" <>
-                           agent <> "&version=" <> URI.encodeText (toText currentVersion)
+      let buildUrl agent =
+            "https://releases.hasura.io/graphql-engine?agent="
+              <> agent
+              <> "&version="
+              <> URI.encodeText (toText currentVersion)
       ciM <- CI.getCI
       return . buildUrl $ case ciM of
         Nothing -> "server"

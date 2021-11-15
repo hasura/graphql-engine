@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 
 	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
 
@@ -85,6 +86,10 @@ func newMigrateApplyCmd(ec *cli.ExecutionContext) *cobra.Command {
 
 	f.BoolVar(&opts.DryRun, "dry-run", false, "print the names of migrations which are going to be applied")
 	f.BoolVar(&opts.AllDatabases, "all-databases", false, "set this flag to attempt to apply migrations on all databases present on server")
+	f.BoolVar(&opts.ProgressBarLogs, "progressbar-logs", false, "print the logs of progressbar")
+	if err := f.MarkHidden("progressbar-logs"); err != nil {
+		ec.Logger.WithError(err).Errorf("error while using a dependency library")
+	}
 	return migrateApplyCmd
 }
 
@@ -96,11 +101,12 @@ type MigrateApplyOptions struct {
 	VersionMigration string
 	MigrationType    string
 	// version up to which migration chain has to be applied
-	GotoVersion   string
-	SkipExecution bool
-	DryRun        bool
-	Source        cli.Source
-	AllDatabases  bool
+	GotoVersion     string
+	SkipExecution   bool
+	DryRun          bool
+	Source          cli.Source
+	AllDatabases    bool
+	ProgressBarLogs bool
 }
 
 func (o *MigrateApplyOptions) Validate() error {
@@ -154,12 +160,17 @@ func (o *MigrateApplyOptions) Run() error {
 	if err != nil {
 		return err
 	}
+	var failedSources []string
 	for result := range results {
 		if result.Error != nil {
+			failedSources = append(failedSources, result.DatabaseName)
 			o.EC.Logger.Errorf("%v", result.Error)
 		} else if len(result.Message) > 0 {
 			o.EC.Logger.Infof(result.Message)
 		}
+	}
+	if len(failedSources) != 0 {
+		return fmt.Errorf("operation failed on : %s", strings.Join(failedSources, ","))
 	}
 	return nil
 }
@@ -267,6 +278,7 @@ func (o *MigrateApplyOptions) Exec() error {
 	}
 	migrateDrv.SkipExecution = o.SkipExecution
 	migrateDrv.DryRun = o.DryRun
+	migrateDrv.ProgressBarLogs = o.ProgressBarLogs
 
 	return ExecuteMigration(migrationType, migrateDrv, step)
 }

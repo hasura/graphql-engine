@@ -1,51 +1,48 @@
-{-# LANGUAGE StrictData #-}
-
 -- | Monad transformers for GraphQL schema construction and query parsing.
 module Hasura.GraphQL.Parser.Monad
-  ( SchemaT
-  , runSchemaT
+  ( SchemaT,
+    runSchemaT,
+    ParseT,
+    runParseT,
+    ParseError (..),
+    reportParseErrors,
+  )
+where
 
-  , ParseT
-  , runParseT
-  , ParseError(..)
-  , reportParseErrors
-  ) where
-
-import           Hasura.Prelude
-
-import qualified Data.Dependent.Map           as DM
-import qualified Data.Kind                    as K
-import qualified Data.Sequence.NonEmpty       as NE
-import qualified Language.Haskell.TH          as TH
-
-import           Control.Monad.Unique
-import           Control.Monad.Validate
-import           Data.Dependent.Map           (DMap)
-import           Data.GADT.Compare.Extended
-import           Data.IORef
-import           Data.Parser.JSONPath
-import           Data.Proxy                   (Proxy (..))
-import           System.IO.Unsafe             (unsafeInterleaveIO)
-import           Type.Reflection              (Typeable, typeRep, (:~:) (..))
-
-import           Hasura.Base.Error
-import           Hasura.GraphQL.Parser.Class
-import           Hasura.GraphQL.Parser.Schema
-
+import Control.Monad.Unique
+import Control.Monad.Validate
+import Data.Dependent.Map (DMap)
+import Data.Dependent.Map qualified as DM
+import Data.GADT.Compare.Extended
+import Data.IORef
+import Data.Kind qualified as K
+import Data.Parser.JSONPath
+import Data.Proxy (Proxy (..))
+import Data.Sequence.NonEmpty qualified as NE
+import Hasura.Base.Error
+import Hasura.GraphQL.Parser.Class
+import Hasura.GraphQL.Parser.Schema
+import Hasura.Prelude
+import Language.Haskell.TH qualified as TH
+import System.IO.Unsafe (unsafeInterleaveIO)
+import Type.Reflection (Typeable, typeRep, (:~:) (..))
 
 -- -------------------------------------------------------------------------------------------------
 -- schema construction
 
 newtype SchemaT n m a = SchemaT
   { unSchemaT :: StateT (DMap ParserId (ParserById n)) m a
-  } deriving (Functor, Applicative, Monad, MonadError e)
+  }
+  deriving (Functor, Applicative, Monad, MonadError e)
 
-runSchemaT :: forall m n a . Monad m => SchemaT n m a -> m a
+runSchemaT :: forall m n a. Monad m => SchemaT n m a -> m a
 runSchemaT = flip evalStateT mempty . unSchemaT
 
 -- | see Note [SchemaT requires MonadIO]
-instance (MonadIO m, MonadUnique m, MonadParse n)
-      => MonadSchema n (SchemaT n m) where
+instance
+  (MonadIO m, MonadUnique m, MonadParse n) =>
+  MonadSchema n (SchemaT n m)
+  where
   memoizeOn name key buildParser = SchemaT do
     let parserId = ParserId name key
     parsersById <- get
@@ -74,11 +71,17 @@ instance (MonadIO m, MonadUnique m, MonadParse n)
         -- That laziness can be dangerous if the action has side-effects, since
         -- the point at which the effect is performed can be unpredictable. But
         -- this action just reads, never writes, so that isn’t a concern.
-        parserById <- liftIO $ unsafeInterleaveIO $ readIORef cell >>= \case
-          Just parser -> pure $ ParserById parser
-          Nothing -> error $ unlines
-            [ "memoize: parser was forced before being fully constructed"
-            , "  parser constructor: " ++ TH.pprint name ]
+        parserById <-
+          liftIO $
+            unsafeInterleaveIO $
+              readIORef cell >>= \case
+                Just parser -> pure $ ParserById parser
+                Nothing ->
+                  error $
+                    unlines
+                      [ "memoize: parser was forced before being fully constructed",
+                        "  parser constructor: " ++ TH.pprint name
+                      ]
         put $! DM.insert parserId parserById parsersById
 
         unique <- newUnique
@@ -92,8 +95,10 @@ instance (MonadIO m, MonadUnique m, MonadParse n)
 
 deriving instance Monad m => MonadReader a (SchemaT n (ReaderT a m))
 
-instance (MonadIO m, MonadUnique m, MonadParse n)
-      => MonadSchema n (ReaderT a (SchemaT n m)) where
+instance
+  (MonadIO m, MonadUnique m, MonadParse n) =>
+  MonadSchema n (ReaderT a (SchemaT n m))
+  where
   memoizeOn name key = mapReaderT (memoizeOn name key)
 
 {- Note [SchemaT requires MonadIO]
@@ -127,29 +132,31 @@ data ParserId (t :: ((K.Type -> K.Type) -> K.Type -> K.Type, K.Type)) where
   ParserId :: (Ord a, Typeable p, Typeable a, Typeable b) => TH.Name -> a -> ParserId '(p, b)
 
 instance GEq ParserId where
-  geq (ParserId name1 (arg1 :: a1) :: ParserId t1)
-      (ParserId name2 (arg2 :: a2) :: ParserId t2)
-    | _ :: Proxy '(p1, b1) <- Proxy @t1
-    , _ :: Proxy '(p2, b2) <- Proxy @t2
-    , name1 == name2
-    , Just Refl <- typeRep @a1 `geq` typeRep @a2
-    , arg1 == arg2
-    , Just Refl <- typeRep @p1 `geq` typeRep @p2
-    , Just Refl <- typeRep @b1 `geq` typeRep @b2
-    = Just Refl
-    | otherwise = Nothing
+  geq
+    (ParserId name1 (arg1 :: a1) :: ParserId t1)
+    (ParserId name2 (arg2 :: a2) :: ParserId t2)
+      | _ :: Proxy '(p1, b1) <- Proxy @t1,
+        _ :: Proxy '(p2, b2) <- Proxy @t2,
+        name1 == name2,
+        Just Refl <- typeRep @a1 `geq` typeRep @a2,
+        arg1 == arg2,
+        Just Refl <- typeRep @p1 `geq` typeRep @p2,
+        Just Refl <- typeRep @b1 `geq` typeRep @b2 =
+        Just Refl
+      | otherwise = Nothing
 
 instance GCompare ParserId where
-  gcompare (ParserId name1 (arg1 :: a1) :: ParserId t1)
-           (ParserId name2 (arg2 :: a2) :: ParserId t2)
-    | _ :: Proxy '(p1, b1) <- Proxy @t1
-    , _ :: Proxy '(p2, b2) <- Proxy @t2
-    = strengthenOrdering (compare name1 name2)
-      `extendGOrdering` gcompare (typeRep @a1) (typeRep @a2)
-      `extendGOrdering` strengthenOrdering (compare arg1 arg2)
-      `extendGOrdering` gcompare (typeRep @p1) (typeRep @p2)
-      `extendGOrdering` gcompare (typeRep @b1) (typeRep @b2)
-      `extendGOrdering` GEQ
+  gcompare
+    (ParserId name1 (arg1 :: a1) :: ParserId t1)
+    (ParserId name2 (arg2 :: a2) :: ParserId t2)
+      | _ :: Proxy '(p1, b1) <- Proxy @t1,
+        _ :: Proxy '(p2, b2) <- Proxy @t2 =
+        strengthenOrdering (compare name1 name2)
+          `extendGOrdering` gcompare (typeRep @a1) (typeRep @a2)
+          `extendGOrdering` strengthenOrdering (compare arg1 arg2)
+          `extendGOrdering` gcompare (typeRep @p1) (typeRep @p2)
+          `extendGOrdering` gcompare (typeRep @b1) (typeRep @b2)
+          `extendGOrdering` GEQ
 
 -- | A newtype wrapper around a 'Parser' that rearranges the type parameters
 -- so that it can be indexed by a 'ParserId' in a 'DMap'.
@@ -158,6 +165,7 @@ instance GCompare ParserId where
 -- because GHC doesn’t allow ordinary datatype declarations to pattern-match on
 -- type parameters, and we want to match on the tuple.
 data family ParserById (m :: K.Type -> K.Type) (a :: ((K.Type -> K.Type) -> K.Type -> K.Type, K.Type))
+
 newtype instance ParserById m '(p, a) = ParserById (p m a)
 
 -- -------------------------------------------------------------------------------------------------
@@ -165,15 +173,17 @@ newtype instance ParserById m '(p, a) = ParserById (p m a)
 
 newtype ParseT m a = ParseT
   { unParseT :: ReaderT JSONPath (ValidateT (NESeq ParseError) m) a
-  } deriving (Functor, Applicative, Monad)
+  }
+  deriving (Functor, Applicative, Monad)
 
-runParseT
-  :: Functor m
-  => ParseT m a
-  -> m (Either (NESeq ParseError) a)
-runParseT = unParseT
-  >>> flip runReaderT []
-  >>> runValidateT
+runParseT ::
+  Functor m =>
+  ParseT m a ->
+  m (Either (NESeq ParseError) a)
+runParseT =
+  unParseT
+    >>> flip runReaderT []
+    >>> runValidateT
 
 instance MonadTrans ParseT where
   lift = ParseT . lift . lift
@@ -182,21 +192,21 @@ instance Monad m => MonadParse (ParseT m) where
   withPath f x = ParseT $ withReaderT f $ unParseT x
   parseErrorWith code text = ParseT $ do
     path <- ask
-    lift $ refute $ NE.singleton ParseError{ peCode = code, pePath = path, peMessage = text }
+    lift $ refute $ NE.singleton ParseError {peCode = code, pePath = path, peMessage = text}
 
 data ParseError = ParseError
-  { pePath    :: JSONPath
-  , peMessage :: Text
-  , peCode    :: Code
+  { pePath :: JSONPath,
+    peMessage :: Text,
+    peCode :: Code
   }
 
-reportParseErrors
-  :: MonadError QErr m
-  => NESeq ParseError
-  -> m a
+reportParseErrors ::
+  MonadError QErr m =>
+  NESeq ParseError ->
+  m a
 reportParseErrors errs = case NE.head errs of
   -- TODO: Our error reporting machinery doesn’t currently support reporting
   -- multiple errors at once, so we’re throwing away all but the first one
   -- here. It would be nice to report all of them!
-  ParseError{ pePath, peMessage, peCode } ->
-    throwError (err400 peCode peMessage){ qePath = pePath }
+  ParseError {pePath, peMessage, peCode} ->
+    throwError (err400 peCode peMessage) {qePath = pePath}

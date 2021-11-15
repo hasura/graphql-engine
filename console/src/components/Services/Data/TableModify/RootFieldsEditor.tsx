@@ -6,9 +6,7 @@ import {
   modifyRootFields,
   setCustomRootFields,
 } from './ModifyActions';
-import { isEmpty } from '../../../Common/utils/jsUtils';
 
-import styles from './ModifyTable.scss';
 import { Dispatch } from '../../../../types';
 
 type RootFieldsEditorProps = {
@@ -18,6 +16,7 @@ type RootFieldsEditorProps = {
   tableName: string;
   customName: string;
   existingCustomName?: string;
+  tableSchema: string;
 };
 
 const RootFieldsEditor = ({
@@ -27,6 +26,7 @@ const RootFieldsEditor = ({
   tableName,
   customName,
   existingCustomName,
+  tableSchema,
 }: RootFieldsEditorProps) => {
   const setRootFieldsBulk = (rf: Record<string, string>) => {
     dispatch(modifyRootFields(rf));
@@ -49,8 +49,10 @@ const RootFieldsEditor = ({
 
     if (existingCustomName) {
       customRootFieldLabels.push(
-        <span className={styles.display_inline} key={existingCustomName}>
-          <i>custom_table_name</i> &rarr; {existingCustomName}
+        <span className="flex items-center" key={existingCustomName}>
+          <span className="font-semibold mr-xs">custom_table_name</span>{' '}
+          <span className="mr-xs">&rarr;</span>{' '}
+          <span>{existingCustomName}</span>
         </span>
       );
     }
@@ -60,26 +62,24 @@ const RootFieldsEditor = ({
       if (customRootField) {
         customRootFieldLabels.push(
           <>
-            {!isEmpty(customRootFieldLabels) && ', '}
-            <span className={styles.display_inline} key={rootField}>
-              <i>{rootField}</i> &rarr; {customRootField}
+            <span className="flex items-center" key={rootField}>
+              <span className="font-semibold mr-xs">{rootField}</span>
+              <span className="mr-xs">&rarr;</span>
+              <span>{customRootField}</span>
             </span>
           </>
         );
       }
     });
 
-    if (isEmpty(customRootFieldLabels) && !existingCustomName) {
-      customRootFieldLabels.push('No root fields customised');
-    }
-
-    return <span>{customRootFieldLabels}</span>;
+    return <div>{customRootFieldLabels}</div>;
   };
 
   const editorExpanded = () => (
     <RootFieldEditor
       disabled={false}
       tableName={tableName}
+      tableSchema={tableSchema}
       rootFields={rootFieldsEdit}
       customName={customName}
       customNameOnChange={(e: React.ChangeEvent<HTMLInputElement>) => {

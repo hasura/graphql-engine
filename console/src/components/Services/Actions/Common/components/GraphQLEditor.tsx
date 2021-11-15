@@ -11,18 +11,20 @@ type GraphQLEditorProps = {
   value: string;
   onChange: (
     value: Nullable<string>,
-    error: Nullable<Error>,
+    error: Nullable<GraphQLError>,
     timer: Nullable<NodeJS.Timeout>,
     ast: Nullable<Record<string, any>>
   ) => void;
   className?: string;
-  placeholder: string;
-  error: GraphQLError;
-  timer: number;
+  fontSize?: string;
+  error: Nullable<GraphQLError>;
+  timer: Nullable<NodeJS.Timeout>;
   readOnlyMode: boolean;
-  label: string;
-  tooltip: string;
+  placeholder?: string;
+  label?: string | undefined;
+  tooltip?: string | undefined;
   height?: string;
+  width?: string;
   allowEmpty?: boolean;
 };
 
@@ -30,13 +32,15 @@ const GraphQLEditor: React.FC<GraphQLEditorProps> = ({
   value,
   onChange,
   className,
-  placeholder = '',
+  fontSize,
   error,
   timer,
   readOnlyMode,
+  placeholder = '',
   label,
   tooltip,
   height,
+  width,
   allowEmpty = false,
 }) => {
   const onChangeWithError = (val: string) => {
@@ -72,38 +76,42 @@ const GraphQLEditor: React.FC<GraphQLEditorProps> = ({
 
   return (
     <div className={`${className || ''}`}>
-      <h2
-        className={`${styles.subheading_text} ${styles.add_mar_bottom_small}`}
-      >
-        {label}
-        <Tooltip
-          id="action-name"
-          text={tooltip}
-          className={styles.add_mar_left_mid}
-        />
-      </h2>
-      <div className={styles.sdlEditorContainer}>
-        <div
-          className={`${styles.display_flex} ${styles.add_mar_bottom_small}`}
+      {label ? (
+        <h2
+          className={`${styles.subheading_text} ${styles.add_mar_bottom_small}`}
         >
-          {error && (
-            <div className={`${styles.display_flex}  ${styles.errorMessage}`}>
-              <CrossIcon className={styles.add_mar_right_small} />
-              <div>{`${errorMessage} ${errorMessageLine}`}</div>
-            </div>
+          {label}
+          {tooltip ? (
+            <Tooltip
+              id="action-name"
+              text={tooltip}
+              className={styles.add_mar_left_mid}
+            />
+          ) : (
+            <></>
           )}
-        </div>
-        <AceEditor
-          name="sdl-editor"
-          value={value}
-          onChange={onChangeWithError}
-          placeholder={placeholder}
-          height={height || '200px'}
-          mode="graphqlschema"
-          width="600px"
-          readOnly={readOnlyMode}
-        />
+        </h2>
+      ) : null}
+      <div className={`${styles.display_flex} ${styles.add_mar_bottom_small}`}>
+        {error && (
+          <div className={`${styles.display_flex}  ${styles.errorMessage}`}>
+            <CrossIcon className={styles.add_mar_right_small} />
+            <div>{`${errorMessage} ${errorMessageLine}`}</div>
+          </div>
+        )}
       </div>
+      <AceEditor
+        name="sdl-editor"
+        value={value}
+        fontSize={fontSize}
+        onChange={onChangeWithError}
+        placeholder={placeholder}
+        height={height || '200px'}
+        mode="graphqlschema"
+        width={width || '600px'}
+        showPrintMargin={false}
+        readOnly={readOnlyMode}
+      />
     </div>
   );
 };

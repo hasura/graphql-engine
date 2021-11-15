@@ -1,0 +1,5 @@
+type: mysql_run_sql
+args:
+  source: mysql
+  sql: |
+    DROP TABLE user;

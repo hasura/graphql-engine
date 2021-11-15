@@ -1,3 +1,6 @@
+@import url('https://fonts.googleapis.com/css?family=Gudea:400,500,700');
+@import url('https://fonts.googleapis.com/css?family=Roboto:300,400,500,700,900');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -69,8 +72,93 @@ a[class=''] {
   background-color: rgb(239, 239, 239);
 }
 
-
 /* To remove botstrap html font size from 10px */
 html {
-    font-size: 14px;
+  font-size: 14px;
+}
+
+/* React Select - Fixes Inner Outline in Select Box */
+input[id*='react-select'][id$='-input']:focus {
+  box-shadow: none;
+}
+
+/* ** GraphiQL CSS tweaks to fix compatibility */
+/* Input fixes from Tailwind */
+.graphiql-container input,
+.graphiql-container select {
+  min-width: min-content;
+  padding: 4px 8px;
+  height: 32px;
+  border-radius: 4px;
+  border: 1px solid rgb(203, 213, 225) !important;
+  box-shadow: rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px,
+    rgba(0, 0, 0, 0.05) 0px 1px 2px 0px;
+}
+.graphiql-container input:focus,
+.graphiql-container select:focus {
+  border: 1px solid rgb(251, 191, 36) !important;
+  box-shadow: rgb(255, 255, 255) 0px 0px 0px 0px,
+    rgb(253, 230, 138) 0px 0px 0px 2px, rgba(0, 0, 0, 0.05) 0px 1px 2px 0px;
+}
+
+.graphiql-explorer-actions > select {
+  font-family: system, -apple-system, 'San Francisco', '.SFNSDisplay-Regular',
+    'Helvetica Neue', helvetica, 'Lucida Grande', arial, sans-serif;
+  font-variant-caps: normal;
+  font-weight: 400;
+  border: 1px solid #cbd5e1;
+  font-size: 14px;
+  padding: 5px 8px;
+  border-radius: 4px;
+  margin-left: 8px;
+  margin-right: 8px;
+  height: 32px;
+  box-shadow: rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px,
+    rgba(0, 0, 0, 0.05) 0px 1px 2px 0px;
+}
+.graphiql-explorer-actions > select:focus {
+  border: 1px solid rgb(251, 191, 36) !important;
+  box-shadow: rgb(255, 255, 255) 0px 0px 0px 0px,
+    rgb(253, 230, 138) 0px 0px 0px 2px, rgba(0, 0, 0, 0.05) 0px 1px 2px 0px;
+}
+
+/* While we're fixing the inputs maybe the Explorer header + footer */
+/* Fixes header spacing */
+.doc-explorer-title-bar {
+  height: 46px !important;
+}
+.docExplorerHide {
+  padding: 16px !important;
+}
+
+/* Fixes result loading spinner position */
+.graphiql-container .spinner-container{
+  top: 48px !important;
+}
+
+/* Fixes spacing in operation title namer */
+.graphiql-explorer-root {
+  padding-top: 0 !important;
+}
+.graphiql-operation-title-bar {
+  margin-top: 10px;
+}
+.graphiql-operation-title-bar > span > input {
+  margin-right: 4px;
+}
+
+/* Fixes footer spacing */
+.graphiql-explorer-actions > span {
+  font-family: system, -apple-system, 'San Francisco', '.SFNSDisplay-Regular',
+    'Helvetica Neue', helvetica, 'Lucida Grande', arial, sans-serif;
+  font-variant-caps: normal;
+  font-weight: 500;
+  font-size: 12px;
+  letter-spacing: 0px;
+  text-transform: capitalize;
+}
+.graphiql-explorer-actions {
+  margin: 4px 0px 0px -8px !important;
+  width: calc(100% + 16px) !important;
+  padding: 10px !important;
 }

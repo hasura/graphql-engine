@@ -1,0 +1,8 @@
+type: bulk
+args:
+
+- type: run_sql
+  args:
+    cascade: true
+    sql: |
+      drop table hge_tests.test_t1 cascade;

@@ -1,48 +1,45 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
-module Hasura.Backends.MSSQL.Instances.Types where
+module Hasura.Backends.MSSQL.Instances.Types () where
 
-import           Hasura.Prelude
-
-import qualified Database.ODBC.SQLServer          as ODBC
-import qualified Language.GraphQL.Draft.Syntax    as G
-
-import           Data.Aeson
-
-import qualified Hasura.Backends.MSSQL.Connection as MSSQL
-import qualified Hasura.Backends.MSSQL.Types      as MSSQL
-
-import           Hasura.Backends.MSSQL.ToQuery    ()
-import           Hasura.Base.Error
-import           Hasura.RQL.Types.Backend
-import           Hasura.SQL.Backend
-
+import Data.Aeson
+import Database.ODBC.SQLServer qualified as ODBC
+import Hasura.Backends.MSSQL.Connection qualified as MSSQL
+import Hasura.Backends.MSSQL.ToQuery ()
+import Hasura.Backends.MSSQL.Types qualified as MSSQL
+import Hasura.Base.Error
+import Hasura.Prelude
+import Hasura.RQL.Types.Backend
+import Hasura.SQL.Backend
+import Language.GraphQL.Draft.Syntax qualified as G
 
 instance Backend 'MSSQL where
-  type SourceConfig            'MSSQL = MSSQL.MSSQLSourceConfig
+  type SourceConfig 'MSSQL = MSSQL.MSSQLSourceConfig
   type SourceConnConfiguration 'MSSQL = MSSQL.MSSQLConnConfiguration
-  type Identifier              'MSSQL = Void
-  type TableName               'MSSQL = MSSQL.TableName
-  type RawFunctionInfo         'MSSQL = Void
-  type FunctionName            'MSSQL = MSSQL.FunctionName
-  type FunctionArgType         'MSSQL = Void
-  type ConstraintName          'MSSQL = ()
-  type BasicOrderType          'MSSQL = MSSQL.Order
-  type NullsOrderType          'MSSQL = MSSQL.NullsOrder
-  type CountType               'MSSQL = MSSQL.Countable MSSQL.ColumnName
-  type Column                  'MSSQL = MSSQL.ColumnName
-  type ScalarValue             'MSSQL = MSSQL.Value
-  type ScalarType              'MSSQL = MSSQL.ScalarType
-  type BooleanOperators        'MSSQL = MSSQL.BooleanOperators
-  type SQLExpression           'MSSQL = MSSQL.Expression
-  type SQLOperator             'MSSQL = MSSQL.Op
+  type Identifier 'MSSQL = Text
+  type TableName 'MSSQL = MSSQL.TableName
+  type RawFunctionInfo 'MSSQL = Void
+  type FunctionName 'MSSQL = MSSQL.FunctionName
+  type FunctionArgType 'MSSQL = Void
+  type ConstraintName 'MSSQL = Text
+  type BasicOrderType 'MSSQL = MSSQL.Order
+  type NullsOrderType 'MSSQL = MSSQL.NullsOrder
+  type CountType 'MSSQL = MSSQL.Countable MSSQL.ColumnName
+  type Column 'MSSQL = MSSQL.ColumnName
+  type ScalarValue 'MSSQL = MSSQL.Value
+  type ScalarType 'MSSQL = MSSQL.ScalarType
+  type BooleanOperators 'MSSQL = MSSQL.BooleanOperators
+  type SQLExpression 'MSSQL = MSSQL.Expression
+  type SQLOperator 'MSSQL = MSSQL.Op
 
-  type ExtraTableMetadata      'MSSQL = ()
+  type ExtraTableMetadata 'MSSQL = [MSSQL.ColumnName] -- List of identity columns
+  type ExtraInsertData 'MSSQL = MSSQL.MSSQLExtraInsertData
 
-  type XComputedField          'MSSQL = XDisable
-  type XRelay                  'MSSQL = XDisable
-  type XNodesAgg               'MSSQL = XEnable
-  type XNestedInserts          'MSSQL = XDisable
+  type XComputedField 'MSSQL = XDisable
+  type XRelay 'MSSQL = XDisable
+  type XNodesAgg 'MSSQL = XEnable
+  type XNestedInserts 'MSSQL = XDisable
+  type XOnConflict 'MSSQL = XDisable
 
   functionArgScalarType :: FunctionArgType 'MSSQL -> ScalarType 'MSSQL
   functionArgScalarType = absurd

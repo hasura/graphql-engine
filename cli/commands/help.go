@@ -49,6 +49,7 @@ func (o *helpOptions) run() {
 				NewConsoleCmd(o.EC),
 				NewActionsCmd(o.EC),
 				NewSeedCmd(o.EC),
+				NewDeployCmd(o.EC),
 			},
 		},
 		{
@@ -67,7 +68,10 @@ func (o *helpOptions) run() {
 	cmd, _, e := c.Root().Find(args)
 	if cmd == nil || e != nil {
 		c.Printf("Unknown help topic %#q\n", args)
-		c.Root().Usage()
+		err := c.Root().Usage()
+		if err != nil {
+			ec.Logger.WithError(err).Errorf("error while using a dependency library")
+		}
 	} else {
 		if cmd.Name() == "hasura" {
 			// root command
@@ -84,7 +88,10 @@ func (o *helpOptions) run() {
 			fmt.Println(`Use "hasura [command] --help" for more information about a command.`)
 		} else {
 			cmd.InitDefaultHelpFlag() // make possible 'help' flag to be shown
-			cmd.Help()
+			err := cmd.Help()
+			if err != nil {
+				ec.Logger.WithError(err).Errorf("error while using a dependency library")
+			}
 		}
 	}
 

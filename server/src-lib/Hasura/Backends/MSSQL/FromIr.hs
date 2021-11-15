@@ -1,39 +1,52 @@
 {-# LANGUAGE ViewPatterns #-}
+
 -- | Translate from the DML to the TSql dialect.
-
+--
+-- We use 'StateT' (newtype 'FromIr') as the base monad for all operations, since
+-- state is used to mangle names such that the scope of identifiers in the IR is
+-- preserved in the resulting TSQL.
+--
+-- For the MSSQL backend, a supported subset of the constructs that make
+-- up its TSQL dialect are represented in the form of data-types in the
+-- Hasura.Backends.MSSQL.Types module. In this module, we translate from RQL to
+-- those TSQL types. And in 'ToQuery' we render/serialize/print the TSQL types to
+-- query-strings that are suitable to be executed on the actual MSSQL database.
+--
+-- In places where a series of transations are scoped under a context, we use
+-- 'ReaderT'. For example, such translations as pertaining to a table with an
+-- alias, will require the alias for their translation operations, like qualified
+-- equality checks under where clauses, etc., perhaps below multiple layers of
+-- nested function calls.
 module Hasura.Backends.MSSQL.FromIr
-  ( fromSelectRows
-  , mkSQLSelect
-  , fromRootField
-  , fromSelectAggregate
-  , fromAnnBoolExp
-  , Error(..)
-  , runFromIr
-  , FromIr
-  , jsonFieldName
-  , fromDelete
-  ) where
+  ( fromSelectRows,
+    mkSQLSelect,
+    fromRootField,
+    fromSelectAggregate,
+    fromGBoolExp,
+    Error (..),
+    runFromIr,
+    FromIr,
+    jsonFieldName,
+    fromInsert,
+    fromDelete,
+  )
+where
 
-import           Hasura.Prelude
-
-import qualified Data.HashMap.Strict                   as HM
-import qualified Data.Map.Strict                       as M
-import qualified Data.Text                             as T
-import qualified Database.ODBC.SQLServer               as ODBC
-
-import           Control.Monad.Validate
-import           Data.Map.Strict                       (Map)
-import           Data.Proxy
-
-import qualified Hasura.RQL.IR                         as IR
-import qualified Hasura.RQL.Types.Column               as IR
-import qualified Hasura.RQL.Types.Common               as IR
-import qualified Hasura.RQL.Types.Relationship         as IR
-
-import           Hasura.Backends.MSSQL.Instances.Types ()
-import           Hasura.Backends.MSSQL.Types           as TSQL
-import           Hasura.SQL.Backend
-
+import Control.Monad.Validate
+import Data.HashMap.Strict qualified as HM
+import Data.Map.Strict (Map)
+import Data.Map.Strict qualified as M
+import Data.Proxy
+import Data.Text qualified as T
+import Database.ODBC.SQLServer qualified as ODBC
+import Hasura.Backends.MSSQL.Instances.Types ()
+import Hasura.Backends.MSSQL.Types as TSQL
+import Hasura.Prelude
+import Hasura.RQL.IR qualified as IR
+import Hasura.RQL.Types.Column qualified as IR
+import Hasura.RQL.Types.Common qualified as IR
+import Hasura.RQL.Types.Relationship qualified as IR
+import Hasura.SQL.Backend
 
 --------------------------------------------------------------------------------
 -- Types
@@ -62,13 +75,13 @@ data Error
 -- @fromPGCol@.
 newtype FromIr a = FromIr
   { unFromIr :: StateT (Map Text Int) (Validate (NonEmpty Error)) a
-  } deriving (Functor, Applicative, Monad, MonadValidate (NonEmpty Error))
+  }
+  deriving (Functor, Applicative, Monad, MonadValidate (NonEmpty Error))
 
 data StringifyNumbers
   = StringifyNumbers
   | LeaveNumbersAlone
   deriving (Eq)
-
 
 --------------------------------------------------------------------------------
 -- Runners
@@ -76,14 +89,13 @@ data StringifyNumbers
 runFromIr :: FromIr a -> Validate (NonEmpty Error) a
 runFromIr fromIr = evalStateT (unFromIr fromIr) mempty
 
-
 --------------------------------------------------------------------------------
 -- Similar rendition of old API
 
-mkSQLSelect
-  :: IR.JsonAggSelect
-  -> IR.AnnSelectG 'MSSQL (Const Void) (IR.AnnFieldG 'MSSQL (Const Void)) Expression
-  -> FromIr TSQL.Select
+mkSQLSelect ::
+  IR.JsonAggSelect ->
+  IR.AnnSelectG 'MSSQL (Const Void) (IR.AnnFieldG 'MSSQL (Const Void)) Expression ->
+  FromIr TSQL.Select
 mkSQLSelect jsonAggSelect annSimpleSel =
   case jsonAggSelect of
     IR.JASMultipleRows -> fromSelectRows annSimpleSel
@@ -92,63 +104,67 @@ mkSQLSelect jsonAggSelect annSimpleSel =
         sel
           { selectFor =
               JsonFor
-                ForJson {jsonCardinality = JsonSingleton, jsonRoot = NoRoot}
-          , selectTop = Top 1
+                ForJson {jsonCardinality = JsonSingleton, jsonRoot = NoRoot},
+            selectTop = Top 1
           }
 
 -- | Convert from the IR database query into a select.
 fromRootField :: IR.QueryDB 'MSSQL (Const Void) Expression -> FromIr Select
 fromRootField =
   \case
-    (IR.QDBSingleRow s)    -> mkSQLSelect IR.JASSingleObject s
+    (IR.QDBSingleRow s) -> mkSQLSelect IR.JASSingleObject s
     (IR.QDBMultipleRows s) -> mkSQLSelect IR.JASMultipleRows s
-    (IR.QDBAggregation s)  -> fromSelectAggregate Nothing s
-    (IR.QDBConnection _)   -> refute $ pure ConnectionsNotSupported
+    (IR.QDBAggregation s) -> fromSelectAggregate Nothing s
 
 --------------------------------------------------------------------------------
 -- Top-level exported functions
 
+-- | Top/root-level 'Select'. All descendent/sub-translations are collected to produce a root TSQL.Select.
 fromSelectRows :: IR.AnnSelectG 'MSSQL (Const Void) (IR.AnnFieldG 'MSSQL (Const Void)) Expression -> FromIr TSQL.Select
 fromSelectRows annSelectG = do
   selectFrom <-
     case from of
       IR.FromTable qualifiedObject -> fromQualifiedTable qualifiedObject
-      IR.FromFunction {}           -> refute $ pure FunctionNotSupported
-  Args { argsOrderBy
-       , argsWhere
-       , argsJoins
-       , argsTop
-       , argsDistinct = Proxy
-       , argsOffset
-       , argsExistingJoins
-       } <- runReaderT (fromSelectArgsG args) (fromAlias selectFrom)
+      IR.FromIdentifier identifier -> pure $ FromIdentifier identifier
+      IR.FromFunction {} -> refute $ pure FunctionNotSupported
+  Args
+    { argsOrderBy,
+      argsWhere,
+      argsJoins,
+      argsTop,
+      argsDistinct = Proxy,
+      argsOffset,
+      argsExistingJoins
+    } <-
+    runReaderT (fromSelectArgsG args) (fromAlias selectFrom)
   fieldSources <-
     runReaderT
       (traverse (fromAnnFieldsG argsExistingJoins stringifyNumbers) fields)
       (fromAlias selectFrom)
   filterExpression <-
-    runReaderT (fromAnnBoolExp permFilter) (fromAlias selectFrom)
+    runReaderT (fromGBoolExp permFilter) (fromAlias selectFrom)
   let selectProjections =
         concatMap (toList . fieldSourceProjections) fieldSources
-  pure
-    Select
-      { selectOrderBy = argsOrderBy
-      , selectTop = permissionBasedTop <> argsTop
-      , selectProjections
-      , selectFrom = Just selectFrom
-      , selectJoins = argsJoins <> mapMaybe fieldSourceJoin fieldSources
-      , selectWhere = argsWhere <> Where [filterExpression]
-      , selectFor =
-          JsonFor ForJson {jsonCardinality = JsonArray, jsonRoot = NoRoot}
-      , selectOffset = argsOffset
+  pure $
+    emptySelect
+      { selectOrderBy = argsOrderBy,
+        selectTop = permissionBasedTop <> argsTop,
+        selectProjections,
+        selectFrom = Just selectFrom,
+        selectJoins = argsJoins <> mapMaybe fieldSourceJoin fieldSources,
+        selectWhere = argsWhere <> Where [filterExpression],
+        selectFor =
+          JsonFor ForJson {jsonCardinality = JsonArray, jsonRoot = NoRoot},
+        selectOffset = argsOffset
       }
   where
-    IR.AnnSelectG { _asnFields = fields
-                  , _asnFrom = from
-                  , _asnPerm = perm
-                  , _asnArgs = args
-                  , _asnStrfyNum = num
-                  } = annSelectG
+    IR.AnnSelectG
+      { _asnFields = fields,
+        _asnFrom = from,
+        _asnPerm = perm,
+        _asnArgs = args,
+        _asnStrfyNum = num
+      } = annSelectG
     IR.TablePerm {_tpLimit = mPermLimit, _tpFilter = permFilter} = perm
     permissionBasedTop =
       maybe NoTop Top mPermLimit
@@ -157,28 +173,30 @@ fromSelectRows annSelectG = do
         then StringifyNumbers
         else LeaveNumbersAlone
 
-
 mkNodesSelect :: Args -> Where -> Expression -> Top -> From -> [(Int, (IR.FieldName, [Projection]))] -> [(Int, [Projection])]
-mkNodesSelect Args{..} foreignKeyConditions filterExpression permissionBasedTop selectFrom nodes =
-  [ (index,
-      [ ExpressionProjection $ Aliased
-          { aliasedThing = SelectExpression $ Select
-              { selectProjections = projections
-              , selectTop = permissionBasedTop <> argsTop
-              , selectFrom = pure selectFrom
-              , selectJoins = argsJoins
-              , selectWhere = argsWhere <> Where [filterExpression] <> foreignKeyConditions
-              , selectFor =
-                  JsonFor ForJson {jsonCardinality = JsonArray, jsonRoot = NoRoot}
-              , selectOrderBy = argsOrderBy
-              , selectOffset = argsOffset
-              }
-          , aliasedAlias = IR.getFieldNameTxt fieldName
-          }
+mkNodesSelect Args {..} foreignKeyConditions filterExpression permissionBasedTop selectFrom nodes =
+  [ ( index,
+      [ ExpressionProjection $
+          Aliased
+            { aliasedThing =
+                SelectExpression $
+                  emptySelect
+                    { selectProjections = projections,
+                      selectTop = permissionBasedTop <> argsTop,
+                      selectFrom = pure selectFrom,
+                      selectJoins = argsJoins,
+                      selectWhere = argsWhere <> Where [filterExpression] <> foreignKeyConditions,
+                      selectFor =
+                        JsonFor ForJson {jsonCardinality = JsonArray, jsonRoot = NoRoot},
+                      selectOrderBy = argsOrderBy,
+                      selectOffset = argsOffset
+                    },
+              aliasedAlias = IR.getFieldNameTxt fieldName
+            }
       ] -- singleton
     )
-  | (index, (fieldName, projections)) <- nodes ]
-
+    | (index, (fieldName, projections)) <- nodes
+  ]
 
 --
 -- The idea here is that LIMIT/OFFSET and aggregates don't mix
@@ -192,127 +210,138 @@ mkNodesSelect Args{..} foreignKeyConditions filterExpression permissionBasedTop 
 --
 mkAggregateSelect :: Args -> Where -> From -> [(Int, (IR.FieldName, [Projection]))] -> [(Int, [Projection])]
 mkAggregateSelect Args {..} foreignKeyConditions selectFrom aggregates =
-  [ ( index
-    , [ ExpressionProjection $
-        Aliased
-          { aliasedThing =
-              JsonQueryExpression $
-              SelectExpression $
-              Select
-                { selectProjections = projections
-                , selectTop = NoTop
-                , selectFrom = pure $
-                    FromSelect
-                      Aliased
-                        { aliasedAlias = aggSubselectName
-                        , aliasedThing =
-                            Select
-                              { selectProjections = pure StarProjection
-                              , selectTop = argsTop
-                              , selectFrom = pure selectFrom
-                              , selectJoins = argsJoins
-                              , selectWhere = argsWhere <> foreignKeyConditions
-                              , selectFor = NoFor
-                              , selectOrderBy = mempty
-                              , selectOffset = argsOffset
-                              }
-                        }
-                , selectJoins = mempty
-                , selectWhere = mempty
-                , selectFor =
-                    JsonFor
-                      ForJson
-                        {jsonCardinality = JsonSingleton, jsonRoot = NoRoot}
-                , selectOrderBy = mempty
-                , selectOffset = Nothing
-                }
-          , aliasedAlias = IR.getFieldNameTxt fieldName
-          }
+  [ ( index,
+      [ ExpressionProjection $
+          Aliased
+            { aliasedThing =
+                JsonQueryExpression $
+                  SelectExpression $
+                    emptySelect
+                      { selectProjections = projections,
+                        selectTop = NoTop,
+                        selectFrom =
+                          pure $
+                            FromSelect
+                              Aliased
+                                { aliasedAlias = aggSubselectName,
+                                  aliasedThing =
+                                    emptySelect
+                                      { selectProjections = pure StarProjection,
+                                        selectTop = argsTop,
+                                        selectFrom = pure selectFrom,
+                                        selectJoins = argsJoins,
+                                        selectWhere = argsWhere <> foreignKeyConditions,
+                                        selectFor = NoFor,
+                                        selectOrderBy = mempty,
+                                        selectOffset = argsOffset
+                                      }
+                                },
+                        selectJoins = mempty,
+                        selectWhere = mempty,
+                        selectFor =
+                          JsonFor
+                            ForJson
+                              { jsonCardinality = JsonSingleton,
+                                jsonRoot = NoRoot
+                              },
+                        selectOrderBy = mempty,
+                        selectOffset = Nothing
+                      },
+              aliasedAlias = IR.getFieldNameTxt fieldName
+            }
       ] -- singleton
-     )
-  | (index, (fieldName, projections)) <- aggregates
+    )
+    | (index, (fieldName, projections)) <- aggregates
   ]
 
-fromSelectAggregate
-  :: Maybe (EntityAlias, HashMap ColumnName ColumnName)
-  -> IR.AnnSelectG 'MSSQL (Const Void) (IR.TableAggregateFieldG 'MSSQL (Const Void)) Expression
-  -> FromIr TSQL.Select
+fromSelectAggregate ::
+  Maybe (EntityAlias, HashMap ColumnName ColumnName) ->
+  IR.AnnSelectG 'MSSQL (Const Void) (IR.TableAggregateFieldG 'MSSQL (Const Void)) Expression ->
+  FromIr TSQL.Select
 fromSelectAggregate
   mparentRelationship
   IR.AnnSelectG
-    { _asnFields = (zip [0..] -> fields)
-    , _asnFrom = from
-    , _asnPerm = IR.TablePerm {_tpLimit = (maybe NoTop Top -> permissionBasedTop), _tpFilter = permFilter}
-    , _asnArgs = args
-    , _asnStrfyNum = (bool LeaveNumbersAlone StringifyNumbers -> stringifyNumbers)
-    }
-  = do
-  selectFrom <- case from of
-    IR.FromTable qualifiedObject -> fromQualifiedTable qualifiedObject
-    IR.FromFunction {}           -> refute $ pure FunctionNotSupported
-  -- Below: When we're actually a RHS of a query (of CROSS APPLY),
-  -- then we'll have a LHS table that we're joining on. So we get the
-  -- conditions expressions from the field mappings. The LHS table is
-  -- the entityAlias, and the RHS table is selectFrom.
-  mforeignKeyConditions <- fmap (Where . fromMaybe []) $ for mparentRelationship $
-    \(entityAlias, mapping) ->
-      runReaderT (fromMapping selectFrom mapping) entityAlias
-  filterExpression <- runReaderT (fromAnnBoolExp permFilter) (fromAlias selectFrom)
-  args'@Args{argsExistingJoins} <-
-    runReaderT (fromSelectArgsG args) (fromAlias selectFrom)
-  -- Although aggregates, exps and nodes could be handled in one list,
-  -- we need to separately treat the subselect expressions
-  expss :: [(Int, [Projection])] <- flip runReaderT (fromAlias selectFrom) $ sequence $ mapMaybe fromTableExpFieldG fields
-  nodes :: [(Int, (IR.FieldName, [Projection]))] <-
-    flip runReaderT (fromAlias selectFrom) $ sequence $ mapMaybe (fromTableNodesFieldG argsExistingJoins stringifyNumbers) fields
-  let aggregates :: [(Int, (IR.FieldName, [Projection]))] = mapMaybe fromTableAggFieldG fields
-  pure
-    Select
-      { selectProjections =
-          concatMap snd $ sortBy (comparing fst) $
-            expss
-            <> mkNodesSelect     args' mforeignKeyConditions filterExpression permissionBasedTop selectFrom nodes
-            <> mkAggregateSelect args' mforeignKeyConditions selectFrom aggregates
-      , selectTop = NoTop
-      , selectFrom = pure $ FromOpenJson $ Aliased
-          { aliasedThing = OpenJson
-              { openJsonExpression = ValueExpression $ ODBC.TextValue "[0]"
-              , openJsonWith = Nothing
-              }
-          , aliasedAlias = existsFieldName
+    { _asnFields = (zip [0 ..] -> fields),
+      _asnFrom = from,
+      _asnPerm = IR.TablePerm {_tpLimit = (maybe NoTop Top -> permissionBasedTop), _tpFilter = permFilter},
+      _asnArgs = args,
+      _asnStrfyNum = (bool LeaveNumbersAlone StringifyNumbers -> stringifyNumbers)
+    } =
+    do
+      selectFrom <- case from of
+        IR.FromTable qualifiedObject -> fromQualifiedTable qualifiedObject
+        IR.FromIdentifier identifier -> pure $ FromIdentifier identifier
+        IR.FromFunction {} -> refute $ pure FunctionNotSupported
+      -- Below: When we're actually a RHS of a query (of CROSS APPLY),
+      -- then we'll have a LHS table that we're joining on. So we get the
+      -- conditions expressions from the field mappings. The LHS table is
+      -- the entityAlias, and the RHS table is selectFrom.
+      mforeignKeyConditions <- fmap (Where . fromMaybe []) $
+        for mparentRelationship $
+          \(entityAlias, mapping) ->
+            runReaderT (fromMapping selectFrom mapping) entityAlias
+      filterExpression <- runReaderT (fromGBoolExp permFilter) (fromAlias selectFrom)
+      args'@Args {argsExistingJoins} <-
+        runReaderT (fromSelectArgsG args) (fromAlias selectFrom)
+      -- Although aggregates, exps and nodes could be handled in one list,
+      -- we need to separately treat the subselect expressions
+      expss :: [(Int, [Projection])] <- flip runReaderT (fromAlias selectFrom) $ sequence $ mapMaybe fromTableExpFieldG fields
+      nodes :: [(Int, (IR.FieldName, [Projection]))] <-
+        flip runReaderT (fromAlias selectFrom) $ sequence $ mapMaybe (fromTableNodesFieldG argsExistingJoins stringifyNumbers) fields
+      let aggregates :: [(Int, (IR.FieldName, [Projection]))] = mapMaybe fromTableAggFieldG fields
+      pure
+        emptySelect
+          { selectProjections =
+              concatMap snd $
+                sortBy (comparing fst) $
+                  expss
+                    <> mkNodesSelect args' mforeignKeyConditions filterExpression permissionBasedTop selectFrom nodes
+                    <> mkAggregateSelect args' mforeignKeyConditions selectFrom aggregates,
+            selectTop = NoTop,
+            selectFrom =
+              pure $
+                FromOpenJson $
+                  Aliased
+                    { aliasedThing =
+                        OpenJson
+                          { openJsonExpression = ValueExpression $ ODBC.TextValue "[0]",
+                            openJsonWith = Nothing
+                          },
+                      aliasedAlias = existsFieldName
+                    },
+            selectJoins = mempty, -- JOINs and WHEREs are only relevant in subselects
+            selectWhere = mempty,
+            selectFor = JsonFor ForJson {jsonCardinality = JsonSingleton, jsonRoot = NoRoot},
+            selectOrderBy = Nothing,
+            selectOffset = Nothing
           }
-      , selectJoins = mempty -- JOINs and WHEREs are only relevant in subselects
-      , selectWhere = mempty
-      , selectFor = JsonFor ForJson {jsonCardinality = JsonSingleton, jsonRoot = NoRoot}
-      , selectOrderBy = Nothing
-      , selectOffset = Nothing
-      }
-
 
 --------------------------------------------------------------------------------
 -- GraphQL Args
 
 data Args = Args
-  { argsWhere         :: Where
-  , argsOrderBy       :: Maybe (NonEmpty OrderBy)
-  , argsJoins         :: [Join]
-  , argsTop           :: Top
-  , argsOffset        :: Maybe Expression
-  , argsDistinct      :: Proxy (Maybe (NonEmpty FieldName))
-  , argsExistingJoins :: Map TableName EntityAlias
-  } deriving (Show)
+  { argsWhere :: Where,
+    argsOrderBy :: Maybe (NonEmpty OrderBy),
+    argsJoins :: [Join],
+    argsTop :: Top,
+    argsOffset :: Maybe Expression,
+    argsDistinct :: Proxy (Maybe (NonEmpty FieldName)),
+    argsExistingJoins :: Map TableName EntityAlias
+  }
+  deriving (Show)
 
 data UnfurledJoin = UnfurledJoin
-  { unfurledJoin             :: Join
-  , unfurledObjectTableAlias :: Maybe (TableName, EntityAlias)
-    -- ^ Recorded if we joined onto an object relation.
-  } deriving (Show)
+  { unfurledJoin :: Join,
+    -- | Recorded if we joined onto an object relation.
+    unfurledObjectTableAlias :: Maybe (TableName, EntityAlias)
+  }
+  deriving (Show)
 
 fromSelectArgsG :: IR.SelectArgsG 'MSSQL Expression -> ReaderT EntityAlias FromIr Args
 fromSelectArgsG selectArgsG = do
   let argsOffset = ValueExpression . ODBC.IntValue . fromIntegral <$> moffset
   argsWhere <-
-    maybe (pure mempty) (fmap (Where . pure) . fromAnnBoolExp) mannBoolExp
+    maybe (pure mempty) (fmap (Where . pure) . fromGBoolExp) mannBoolExp
   argsTop <-
     maybe (pure mempty) (pure . Top) mlimit
   -- Not supported presently, per Vamshi:
@@ -330,49 +359,51 @@ fromSelectArgsG selectArgsG = do
         M.fromList (mapMaybe unfurledObjectTableAlias (toList joins))
   pure
     Args
-      { argsJoins = toList (fmap unfurledJoin joins)
-      , argsOrderBy = nonEmpty argsOrderBy
-      , ..
+      { argsJoins = toList (fmap unfurledJoin joins),
+        argsOrderBy = nonEmpty argsOrderBy,
+        ..
       }
   where
-    IR.SelectArgs { _saWhere = mannBoolExp
-                  , _saLimit = mlimit
-                  , _saOffset = moffset
-                  , _saOrderBy = orders
-                  } = selectArgsG
+    IR.SelectArgs
+      { _saWhere = mannBoolExp,
+        _saLimit = mlimit,
+        _saOffset = moffset,
+        _saOrderBy = orders
+      } = selectArgsG
 
 -- | Produce a valid ORDER BY construct, telling about any joins
 -- needed on the side.
-fromAnnotatedOrderByItemG
-  :: IR.AnnotatedOrderByItemG 'MSSQL Expression
-  -> WriterT (Seq UnfurledJoin) (ReaderT EntityAlias FromIr) OrderBy
+fromAnnotatedOrderByItemG ::
+  IR.AnnotatedOrderByItemG 'MSSQL Expression ->
+  WriterT (Seq UnfurledJoin) (ReaderT EntityAlias FromIr) OrderBy
 fromAnnotatedOrderByItemG IR.OrderByItemG {obiType, obiColumn = obiColumn, obiNulls} = do
   (orderByFieldName, orderByType) <- unfurlAnnotatedOrderByElement obiColumn
   let orderByNullsOrder = fromMaybe NullsAnyOrder obiNulls
-      orderByOrder      = fromMaybe AscOrder obiType
+      orderByOrder = fromMaybe AscOrder obiType
   pure OrderBy {..}
 
 -- | Unfurl the nested set of object relations (tell'd in the writer)
 -- that are terminated by field name (IR.AOCColumn and
 -- IR.AOCArrayAggregation).
-unfurlAnnotatedOrderByElement
-   :: IR.AnnotatedOrderByElement 'MSSQL Expression
-   -> WriterT (Seq UnfurledJoin) (ReaderT EntityAlias FromIr) (FieldName, Maybe TSQL.ScalarType)
+unfurlAnnotatedOrderByElement ::
+  IR.AnnotatedOrderByElement 'MSSQL Expression ->
+  WriterT (Seq UnfurledJoin) (ReaderT EntityAlias FromIr) (FieldName, Maybe TSQL.ScalarType)
 unfurlAnnotatedOrderByElement =
   \case
     IR.AOCColumn pgColumnInfo -> do
       fieldName <- lift (fromPGColumnInfo pgColumnInfo)
       pure
-        ( fieldName
-        , case (IR.pgiType pgColumnInfo) of
+        ( fieldName,
+          case (IR.pgiType pgColumnInfo) of
             IR.ColumnScalar t -> Just t
             -- Above: It is of interest to us whether the type is
             -- text/ntext/image. See ToQuery for more explanation.
-            _                 -> Nothing)
+            _ -> Nothing
+        )
     IR.AOCObjectRelation IR.RelInfo {riMapping = mapping, riRTable = table} annBoolExp annOrderByElementG -> do
       selectFrom <- lift (lift (fromQualifiedTable table))
       joinAliasEntity <-
-        lift (lift (generateEntityAlias (ForOrderAlias (tableNameText table))))
+        lift (lift (generateAlias (ForOrderAlias (tableNameText table))))
       foreignKeyConditions <- lift (fromMapping selectFrom mapping)
       -- TODO: Because these object relations are re-used by regular
       -- object mapping queries, this WHERE may be unnecessarily
@@ -383,30 +414,31 @@ unfurlAnnotatedOrderByElement =
       -- Map in 'argsExistingJoins'. That would guarantee only equal
       -- selects are re-used.
       whereExpression <-
-        lift (local (const (fromAlias selectFrom)) (fromAnnBoolExp annBoolExp))
+        lift (local (const (fromAlias selectFrom)) (fromGBoolExp annBoolExp))
       tell
-        (pure
-           UnfurledJoin
-             { unfurledJoin =
-                 Join
-                   { joinSource =
-                       JoinSelect
-                         Select
-                           { selectTop = NoTop
-                           , selectProjections = [StarProjection]
-                           , selectFrom = Just selectFrom
-                           , selectJoins = []
-                           , selectWhere =
-                               Where (foreignKeyConditions <> [whereExpression])
-                           , selectFor = NoFor
-                           , selectOrderBy = Nothing
-                           , selectOffset = Nothing
-                           }
-                   , joinJoinAlias =
-                       JoinAlias {joinAliasEntity, joinAliasField = Nothing}
-                   }
-             , unfurledObjectTableAlias = Just (table, EntityAlias joinAliasEntity)
-             })
+        ( pure
+            UnfurledJoin
+              { unfurledJoin =
+                  Join
+                    { joinSource =
+                        JoinSelect
+                          emptySelect
+                            { selectTop = NoTop,
+                              selectProjections = [StarProjection],
+                              selectFrom = Just selectFrom,
+                              selectJoins = [],
+                              selectWhere =
+                                Where (foreignKeyConditions <> [whereExpression]),
+                              selectFor = NoFor,
+                              selectOrderBy = Nothing,
+                              selectOffset = Nothing
+                            },
+                      joinJoinAlias =
+                        JoinAlias {joinAliasEntity, joinAliasField = Nothing}
+                    },
+                unfurledObjectTableAlias = Just (table, EntityAlias joinAliasEntity)
+              }
+        )
       local
         (const (EntityAlias joinAliasEntity))
         (unfurlAnnotatedOrderByElement annOrderByElementG)
@@ -414,53 +446,57 @@ unfurlAnnotatedOrderByElement =
       selectFrom <- lift (lift (fromQualifiedTable tableName))
       let alias = aggFieldName
       joinAliasEntity <-
-        lift (lift (generateEntityAlias (ForOrderAlias (tableNameText tableName))))
+        lift (lift (generateAlias (ForOrderAlias (tableNameText tableName))))
       foreignKeyConditions <- lift (fromMapping selectFrom mapping)
       whereExpression <-
-        lift (local (const (fromAlias selectFrom)) (fromAnnBoolExp annBoolExp))
+        lift (local (const (fromAlias selectFrom)) (fromGBoolExp annBoolExp))
       aggregate <-
         lift
-          (local
-             (const (fromAlias selectFrom))
-             (case annAggregateOrderBy of
-                IR.AAOCount -> pure (CountAggregate StarCountable)
-                IR.AAOOp text pgColumnInfo -> do
-                  fieldName <- fromPGColumnInfo pgColumnInfo
-                  pure (OpAggregate text (pure (ColumnExpression fieldName)))))
+          ( local
+              (const (fromAlias selectFrom))
+              ( case annAggregateOrderBy of
+                  IR.AAOCount -> pure (CountAggregate StarCountable)
+                  IR.AAOOp text pgColumnInfo -> do
+                    fieldName <- fromPGColumnInfo pgColumnInfo
+                    pure (OpAggregate text (pure (ColumnExpression fieldName)))
+              )
+          )
       tell
-        (pure
-           (UnfurledJoin
-              { unfurledJoin =
-                  Join
-                    { joinSource =
-                        JoinSelect
-                          Select
-                            { selectTop = NoTop
-                            , selectProjections =
-                                [ AggregateProjection
-                                    Aliased
-                                    { aliasedThing = aggregate
-                                    , aliasedAlias = alias
-                                    }
-                                ]
-                            , selectFrom = Just selectFrom
-                            , selectJoins = []
-                            , selectWhere =
-                                Where
-                                  (foreignKeyConditions <> [whereExpression])
-                            , selectFor = NoFor
-                            , selectOrderBy = Nothing
-                            , selectOffset = Nothing
-                            }
-                    , joinJoinAlias =
-                        JoinAlias {joinAliasEntity, joinAliasField = Nothing}
-                    }
-              , unfurledObjectTableAlias = Nothing
-              }))
+        ( pure
+            ( UnfurledJoin
+                { unfurledJoin =
+                    Join
+                      { joinSource =
+                          JoinSelect
+                            emptySelect
+                              { selectTop = NoTop,
+                                selectProjections =
+                                  [ AggregateProjection
+                                      Aliased
+                                        { aliasedThing = aggregate,
+                                          aliasedAlias = alias
+                                        }
+                                  ],
+                                selectFrom = Just selectFrom,
+                                selectJoins = [],
+                                selectWhere =
+                                  Where
+                                    (foreignKeyConditions <> [whereExpression]),
+                                selectFor = NoFor,
+                                selectOrderBy = Nothing,
+                                selectOffset = Nothing
+                              },
+                        joinJoinAlias =
+                          JoinAlias {joinAliasEntity, joinAliasField = Nothing}
+                      },
+                  unfurledObjectTableAlias = Nothing
+                }
+            )
+        )
       pure
-        ( FieldName {fieldNameEntity = joinAliasEntity, fieldName = alias}
-        , Nothing)
-
+        ( FieldName {fieldNameEntity = joinAliasEntity, fieldName = alias},
+          Nothing
+        )
 
 --------------------------------------------------------------------------------
 -- Conversion functions
@@ -471,28 +507,28 @@ tableNameText (TableName {tableName}) = tableName
 -- | This is really the start where you query the base table,
 -- everything else is joins attached to it.
 fromQualifiedTable :: TableName -> FromIr From
-fromQualifiedTable schemadTableName@(TableName{tableName}) = do
-  alias <- generateEntityAlias (TableTemplate tableName)
+fromQualifiedTable schemadTableName@(TableName {tableName}) = do
+  alias <- generateAlias (TableTemplate tableName)
   pure
-    (FromQualifiedTable
-       (Aliased
-          { aliasedThing = schemadTableName
-          , aliasedAlias = alias
-          }))
+    ( FromQualifiedTable
+        ( Aliased
+            { aliasedThing = schemadTableName,
+              aliasedAlias = alias
+            }
+        )
+    )
 
 fromTableName :: TableName -> FromIr EntityAlias
-fromTableName TableName{tableName} = do
-  alias <- generateEntityAlias (TableTemplate tableName)
+fromTableName TableName {tableName} = do
+  alias <- generateAlias (TableTemplate tableName)
   pure (EntityAlias alias)
 
-fromAnnBoolExp
-  :: IR.GBoolExp 'MSSQL (IR.AnnBoolExpFld 'MSSQL Expression)
-  -> ReaderT EntityAlias FromIr Expression
-fromAnnBoolExp = traverse fromAnnBoolExpFld >=> fromGBoolExp
-
-fromAnnBoolExpFld
-  :: IR.AnnBoolExpFld 'MSSQL Expression
-  -> ReaderT EntityAlias FromIr Expression
+-- | Translate an 'AnnBoolExpFld' within an 'EntityAlias' context referring to the table the `AnnBoolExpFld` field belongs to.
+--
+-- This is mutually recursive with 'fromGBoolExp', mirroring the mutually recursive structure between 'AnnBoolExpFld' and 'AnnBoolExp b a' (alias of 'GBoolExp b (AnnBoolExpFld b a)').
+fromAnnBoolExpFld ::
+  IR.AnnBoolExpFld 'MSSQL Expression ->
+  ReaderT EntityAlias FromIr Expression
 fromAnnBoolExpFld =
   \case
     IR.AVColumn pgColumnInfo opExpGs -> do
@@ -503,25 +539,27 @@ fromAnnBoolExpFld =
       selectFrom <- lift (fromQualifiedTable table)
       foreignKeyConditions <- fromMapping selectFrom mapping
       whereExpression <-
-        local (const (fromAlias selectFrom)) (fromAnnBoolExp annBoolExp)
+        local (const (fromAlias selectFrom)) (fromGBoolExp annBoolExp)
       pure
-        (ExistsExpression
-           Select
-             { selectOrderBy = Nothing
-             , selectProjections =
-                 [ ExpressionProjection
-                     (Aliased
-                        { aliasedThing = trueExpression
-                        , aliasedAlias = existsFieldName
-                        })
-                 ]
-             , selectFrom = Just selectFrom
-             , selectJoins = mempty
-             , selectWhere = Where (foreignKeyConditions <> [whereExpression])
-             , selectTop = NoTop
-             , selectFor = NoFor
-             , selectOffset = Nothing
-             })
+        ( ExistsExpression
+            emptySelect
+              { selectOrderBy = Nothing,
+                selectProjections =
+                  [ ExpressionProjection
+                      ( Aliased
+                          { aliasedThing = trueExpression,
+                            aliasedAlias = existsFieldName
+                          }
+                      )
+                  ],
+                selectFrom = Just selectFrom,
+                selectJoins = mempty,
+                selectWhere = Where (foreignKeyConditions <> [whereExpression]),
+                selectTop = NoTop,
+                selectFor = NoFor,
+                selectOffset = Nothing
+              }
+        )
 
 -- | For boolean operators, various comparison operators used need
 -- special handling to ensure that SQL Server won't outright reject
@@ -530,8 +568,8 @@ fromColumnInfoForBoolExp :: IR.ColumnInfo 'MSSQL -> ReaderT EntityAlias FromIr E
 fromColumnInfoForBoolExp IR.ColumnInfo {pgiColumn = pgCol, pgiType} = do
   fieldName <- columnNameToFieldName pgCol <$> ask
   if shouldCastToVarcharMax pgiType -- See function commentary.
-     then pure (CastExpression (ColumnExpression fieldName) "VARCHAR(MAX)")
-     else pure (ColumnExpression fieldName)
+    then pure (CastExpression (ColumnExpression fieldName) "VARCHAR(MAX)")
+    else pure (ColumnExpression fieldName)
 
 -- | There's a problem of comparing text fields with =, <, etc. that
 -- SQL Server completely refuses to do so. So one way to workaround
@@ -544,34 +582,12 @@ shouldCastToVarcharMax typ =
 fromPGColumnInfo :: IR.ColumnInfo 'MSSQL -> ReaderT EntityAlias FromIr FieldName
 fromPGColumnInfo IR.ColumnInfo {pgiColumn = pgCol} =
   columnNameToFieldName pgCol <$> ask
+
 --  entityAlias <- ask
 --  pure
 --    (columnNameToFieldName pgCol entityAlias
 --     FieldName
 --       {fieldName = PG.getPGColTxt pgCol, fieldNameEntity = entityAliasText})
-
-fromGExists :: IR.GExists 'MSSQL Expression -> ReaderT EntityAlias FromIr Select
-fromGExists IR.GExists {_geTable, _geWhere} = do
-  selectFrom <- lift (fromQualifiedTable _geTable)
-  whereExpression <-
-    local (const (fromAlias selectFrom)) (fromGBoolExp _geWhere)
-  pure
-    Select
-      { selectOrderBy = Nothing
-      , selectProjections =
-          [ ExpressionProjection
-              (Aliased
-                 { aliasedThing = trueExpression
-                 , aliasedAlias = existsFieldName
-                 })
-          ]
-      , selectFrom = Just selectFrom
-      , selectJoins = mempty
-      , selectWhere = Where [whereExpression]
-      , selectTop = NoTop
-      , selectFor = NoFor
-      , selectOffset = Nothing
-      }
 
 --------------------------------------------------------------------------------
 -- Sources of projected fields
@@ -592,26 +608,30 @@ fromTableExpFieldG :: -- TODO: Convert function to be similar to Nodes function
   (Int, (IR.FieldName, IR.TableAggregateFieldG 'MSSQL (Const Void) Expression)) ->
   Maybe (ReaderT EntityAlias FromIr (Int, [Projection]))
 fromTableExpFieldG = \case
-  (index, (IR.FieldName name, IR.TAFExp text)) -> Just $
-    pure $
-      (index, fieldSourceProjections $
-        ExpressionFieldSource
-          Aliased
-            { aliasedThing = TSQL.ValueExpression (ODBC.TextValue text)
-            , aliasedAlias = name
-            })
+  (index, (IR.FieldName name, IR.TAFExp text)) ->
+    Just $
+      pure $
+        ( index,
+          fieldSourceProjections $
+            ExpressionFieldSource
+              Aliased
+                { aliasedThing = TSQL.ValueExpression (ODBC.TextValue text),
+                  aliasedAlias = name
+                }
+        )
   _ -> Nothing
 
 fromTableAggFieldG ::
   (Int, (IR.FieldName, IR.TableAggregateFieldG 'MSSQL (Const Void) Expression)) ->
   Maybe (Int, (IR.FieldName, [Projection]))
 fromTableAggFieldG = \case
-  (index, (fieldName, IR.TAFAgg (aggregateFields :: [(IR.FieldName, IR.AggregateField 'MSSQL)]))) -> Just $
-    let aggregates = aggregateFields <&> \(fieldName', aggregateField) ->
-          fromAggregateField (IR.getFieldNameTxt fieldName') aggregateField
-    in (index, (fieldName, aggregates))
+  (index, (fieldName, IR.TAFAgg (aggregateFields :: [(IR.FieldName, IR.AggregateField 'MSSQL)]))) ->
+    Just $
+      let aggregates =
+            aggregateFields <&> \(fieldName', aggregateField) ->
+              fromAggregateField (IR.getFieldNameTxt fieldName') aggregateField
+       in (index, (fieldName, aggregates))
   _ -> Nothing
-
 
 fromTableNodesFieldG ::
   Map TableName EntityAlias ->
@@ -625,71 +645,76 @@ fromTableNodesFieldG argsExistingJoins stringifyNumbers = \case
     pure (index, (fieldName, nodesProjections'))
   _ -> Nothing
 
-
 fromAggregateField :: Text -> IR.AggregateField 'MSSQL -> Projection
 fromAggregateField alias aggregateField =
   case aggregateField of
-    IR.AFExp text        -> AggregateProjection $ Aliased (TextAggregate text) alias
+    IR.AFExp text -> AggregateProjection $ Aliased (TextAggregate text) alias
     IR.AFCount countType -> AggregateProjection . flip Aliased alias . CountAggregate $ case countType of
-      StarCountable               -> StarCountable
+      StarCountable -> StarCountable
       NonNullFieldCountable names -> NonNullFieldCountable $ fmap columnFieldAggEntity names
-      DistinctCountable     names -> DistinctCountable     $ fmap columnFieldAggEntity names
+      DistinctCountable names -> DistinctCountable $ fmap columnFieldAggEntity names
     IR.AFOp IR.AggregateOp {_aoOp = op, _aoFields = fields} ->
-      let projections :: [Projection] = fields <&> \(fieldName, pgColFld) ->
-            case pgColFld of
-              IR.CFCol pgCol _pgType ->
-                let fname = columnFieldAggEntity pgCol
-                in AggregateProjection $ Aliased (OpAggregate op [ColumnExpression fname]) (IR.getFieldNameTxt fieldName)
-              IR.CFExp text          ->
-                ExpressionProjection $ Aliased (ValueExpression (ODBC.TextValue text)) (IR.getFieldNameTxt fieldName)
-      in ExpressionProjection $ flip Aliased alias $ JsonQueryExpression $ SelectExpression $
-            emptySelect
-              { selectProjections = projections
-              , selectFor = JsonFor $ ForJson JsonSingleton NoRoot
-              }
-
+      let projections :: [Projection] =
+            fields <&> \(fieldName, pgColFld) ->
+              case pgColFld of
+                IR.CFCol pgCol _pgType ->
+                  let fname = columnFieldAggEntity pgCol
+                   in AggregateProjection $ Aliased (OpAggregate op [ColumnExpression fname]) (IR.getFieldNameTxt fieldName)
+                IR.CFExp text ->
+                  ExpressionProjection $ Aliased (ValueExpression (ODBC.TextValue text)) (IR.getFieldNameTxt fieldName)
+       in ExpressionProjection $
+            flip Aliased alias $
+              JsonQueryExpression $
+                SelectExpression $
+                  emptySelect
+                    { selectProjections = projections,
+                      selectFor = JsonFor $ ForJson JsonSingleton NoRoot
+                    }
   where
     columnFieldAggEntity col = columnNameToFieldName col $ EntityAlias aggSubselectName
 
-
 -- | The main sources of fields, either constants, fields or via joins.
 fromAnnFieldsG ::
-     Map TableName EntityAlias
-  -> StringifyNumbers
-  -> (IR.FieldName, IR.AnnFieldG 'MSSQL (Const Void) Expression)
-  -> ReaderT EntityAlias FromIr FieldSource
+  Map TableName EntityAlias ->
+  StringifyNumbers ->
+  (IR.FieldName, IR.AnnFieldG 'MSSQL (Const Void) Expression) ->
+  ReaderT EntityAlias FromIr FieldSource
 fromAnnFieldsG existingJoins stringifyNumbers (IR.FieldName name, field) =
   case field of
     IR.AFColumn annColumnField -> do
       expression <- fromAnnColumnField stringifyNumbers annColumnField
       pure
-        (ExpressionFieldSource
-           Aliased {aliasedThing = expression, aliasedAlias = name})
+        ( ExpressionFieldSource
+            Aliased {aliasedThing = expression, aliasedAlias = name}
+        )
     IR.AFExpression text ->
       pure
-        (ExpressionFieldSource
-           Aliased
-             { aliasedThing = TSQL.ValueExpression (ODBC.TextValue text)
-             , aliasedAlias = name
-             })
+        ( ExpressionFieldSource
+            Aliased
+              { aliasedThing = TSQL.ValueExpression (ODBC.TextValue text),
+                aliasedAlias = name
+              }
+        )
     IR.AFObjectRelation objectRelationSelectG ->
       fmap
-        (\aliasedThing ->
-           JoinFieldSource (Aliased {aliasedThing, aliasedAlias = name}))
+        ( \aliasedThing ->
+            JoinFieldSource (Aliased {aliasedThing, aliasedAlias = name})
+        )
         (fromObjectRelationSelectG existingJoins objectRelationSelectG)
     IR.AFArrayRelation arraySelectG ->
       fmap
-        (\aliasedThing ->
-           JoinFieldSource (Aliased {aliasedThing, aliasedAlias = name}))
+        ( \aliasedThing ->
+            JoinFieldSource (Aliased {aliasedThing, aliasedAlias = name})
+        )
         (fromArraySelectG arraySelectG)
 
 -- | Here is where we project a field as a column expression. If
 -- number stringification is on, then we wrap it in a
 -- 'ToStringExpression' so that it's casted when being projected.
-fromAnnColumnField
-  :: StringifyNumbers
-  -> IR.AnnColumnField 'MSSQL Expression
-  -> ReaderT EntityAlias FromIr Expression
+fromAnnColumnField ::
+  StringifyNumbers ->
+  IR.AnnColumnField 'MSSQL Expression ->
+  ReaderT EntityAlias FromIr Expression
 fromAnnColumnField _stringifyNumbers annColumnField = do
   fieldName <- fromPGCol pgCol
   -- TODO: Handle stringifying large numbers
@@ -701,24 +726,28 @@ fromAnnColumnField _stringifyNumbers annColumnField = do
   -- doesn't have any functions to convert to GeoJSON format. So we return it in
   -- WKT format
   if typ == (IR.ColumnScalar GeometryType) || typ == (IR.ColumnScalar GeographyType)
-     then pure $ MethodExpression (ColumnExpression fieldName) "STAsText" []
-     else case caseBoolExpMaybe of
-            Nothing -> pure (ColumnExpression fieldName)
-            Just ex -> do
-                ex' <- (traverse fromAnnBoolExpFld >=> fromGBoolExp) (coerce ex)
-                pure (ConditionalProjection ex' fieldName)
+    then pure $ MethodExpression (ColumnExpression fieldName) "STAsText" []
+    else case caseBoolExpMaybe of
+      Nothing -> pure (ColumnExpression fieldName)
+      Just ex -> do
+        ex' <- fromGBoolExp (coerce ex)
+        let nullValue = ValueExpression ODBC.NullValue
+        pure (ConditionalExpression ex' (ColumnExpression fieldName) nullValue)
   where
-    IR.AnnColumnField { _acfInfo = IR.ColumnInfo{pgiColumn=pgCol,pgiType=typ}
-                      , _acfAsText = _asText :: Bool
-                      , _acfOp = _ :: Maybe (IR.ColumnOp 'MSSQL) -- TODO: What's this?
-                      , _acfCaseBoolExpression = caseBoolExpMaybe
-                      } = annColumnField
+    IR.AnnColumnField
+      { _acfColumn = pgCol,
+        _acfType = typ,
+        _acfAsText = _asText :: Bool,
+        _acfOp = _ :: Maybe (IR.ColumnOp 'MSSQL), -- TODO: What's this?
+        _acfCaseBoolExpression = caseBoolExpMaybe
+      } = annColumnField
 
 -- | This is where a field name "foo" is resolved to a fully qualified
 -- field name [table].[foo]. The table name comes from EntityAlias in
 -- the ReaderT.
 fromPGCol :: ColumnName -> ReaderT EntityAlias FromIr FieldName
 fromPGCol pgCol = columnNameToFieldName pgCol <$> ask
+
 --  entityAlias <- ask
 --  pure (columnNameToFieldName pgCol entityAlias -- FieldName {fieldName = PG.getPGColTxt pgCol, fieldNameEntity = entityAliasText}
 --       )
@@ -730,39 +759,42 @@ fieldSourceProjections =
       pure (ExpressionProjection aliasedExpression)
     JoinFieldSource aliasedJoin ->
       pure
-        (ExpressionProjection
-           (aliasedJoin
-              { aliasedThing =
-                  -- Basically a cast, to ensure that SQL Server won't
-                  -- double-encode the JSON but will "pass it through"
-                  -- untouched.
-                  JsonQueryExpression
-                    (ColumnExpression
-                       (joinAliasToField
-                          (joinJoinAlias (aliasedThing aliasedJoin))))
-              }))
+        ( ExpressionProjection
+            ( aliasedJoin
+                { aliasedThing =
+                    -- Basically a cast, to ensure that SQL Server won't
+                    -- double-encode the JSON but will "pass it through"
+                    -- untouched.
+                    JsonQueryExpression
+                      ( ColumnExpression
+                          ( joinAliasToField
+                              (joinJoinAlias (aliasedThing aliasedJoin))
+                          )
+                      )
+                }
+            )
+        )
 
 joinAliasToField :: JoinAlias -> FieldName
 joinAliasToField JoinAlias {..} =
   FieldName
-    { fieldNameEntity = joinAliasEntity
-    , fieldName = fromMaybe (error "TODO: Eliminate this case. joinAliasToField") joinAliasField
+    { fieldNameEntity = joinAliasEntity,
+      fieldName = fromMaybe (error "TODO: Eliminate this case. joinAliasToField") joinAliasField
     }
 
 fieldSourceJoin :: FieldSource -> Maybe Join
 fieldSourceJoin =
   \case
     JoinFieldSource aliasedJoin -> pure (aliasedThing aliasedJoin)
-    ExpressionFieldSource {}    -> Nothing
-
+    ExpressionFieldSource {} -> Nothing
 
 --------------------------------------------------------------------------------
 -- Joins
 
 fromObjectRelationSelectG ::
-     Map TableName {-PG.QualifiedTable-} EntityAlias
-  -> IR.ObjectRelationSelectG 'MSSQL (Const Void) Expression
-  -> ReaderT EntityAlias FromIr Join
+  Map TableName {-PG.QualifiedTable-} EntityAlias ->
+  IR.ObjectRelationSelectG 'MSSQL (Const Void) Expression ->
+  ReaderT EntityAlias FromIr Join
 fromObjectRelationSelectG existingJoins annRelationSelectG = do
   eitherAliasOrFrom <- lift (lookupTableFrom existingJoins tableFrom)
   let entityAlias :: EntityAlias = either id fromAlias eitherAliasOrFrom
@@ -773,64 +805,69 @@ fromObjectRelationSelectG existingJoins annRelationSelectG = do
   let selectProjections =
         concatMap (toList . fieldSourceProjections) fieldSources
   joinJoinAlias <-
-    do fieldName <- lift (fromRelName aarRelationshipName)
-       alias <- lift (generateEntityAlias (ObjectRelationTemplate fieldName))
-       pure
-         JoinAlias
-           {joinAliasEntity = alias, joinAliasField = pure jsonFieldName}
+    do
+      fieldName <- lift (fromRelName aarRelationshipName)
+      alias <- lift (generateAlias (ObjectRelationTemplate fieldName))
+      pure
+        JoinAlias
+          { joinAliasEntity = alias,
+            joinAliasField = pure jsonFieldName
+          }
   let selectFor =
         JsonFor ForJson {jsonCardinality = JsonSingleton, jsonRoot = NoRoot}
-  filterExpression <- local (const entityAlias) (fromAnnBoolExp tableFilter)
+  filterExpression <- local (const entityAlias) (fromGBoolExp tableFilter)
   case eitherAliasOrFrom of
     Right selectFrom -> do
       foreignKeyConditions <- fromMapping selectFrom mapping
       pure
         Join
-          { joinJoinAlias
-          , joinSource =
+          { joinJoinAlias,
+            joinSource =
               JoinSelect
-                Select
-                  { selectOrderBy = Nothing
-                  , selectTop = NoTop
-                  , selectProjections
-                  , selectFrom = Just selectFrom
-                  , selectJoins = mapMaybe fieldSourceJoin fieldSources
-                  , selectWhere =
-                      Where (foreignKeyConditions <> [filterExpression])
-                  , selectFor
-                  , selectOffset = Nothing
+                emptySelect
+                  { selectOrderBy = Nothing,
+                    selectTop = NoTop,
+                    selectProjections,
+                    selectFrom = Just selectFrom,
+                    selectJoins = mapMaybe fieldSourceJoin fieldSources,
+                    selectWhere =
+                      Where (foreignKeyConditions <> [filterExpression]),
+                    selectFor,
+                    selectOffset = Nothing
                   }
           }
     Left _entityAlias ->
       pure
         Join
-          { joinJoinAlias
-          , joinSource =
+          { joinJoinAlias,
+            joinSource =
               JoinReselect
                 Reselect
-                  { reselectProjections = selectProjections
-                  , reselectFor = selectFor
-                  , reselectWhere = Where [filterExpression]
+                  { reselectProjections = selectProjections,
+                    reselectFor = selectFor,
+                    reselectWhere = Where [filterExpression]
                   }
           }
   where
-    IR.AnnObjectSelectG { _aosFields = fields :: IR.AnnFieldsG 'MSSQL (Const Void) Expression
-                        , _aosTableFrom = tableFrom :: TableName{-PG.QualifiedTable-}
-                        , _aosTableFilter = tableFilter :: IR.AnnBoolExp 'MSSQL Expression
-                        } = annObjectSelectG
-    IR.AnnRelationSelectG { aarRelationshipName
-                          , aarColumnMapping = mapping :: HashMap ColumnName ColumnName -- PG.PGCol PG.PGCol
-                          , aarAnnSelect = annObjectSelectG :: IR.AnnObjectSelectG 'MSSQL (Const Void) Expression
-                          } = annRelationSelectG
+    IR.AnnObjectSelectG
+      { _aosFields = fields :: IR.AnnFieldsG 'MSSQL (Const Void) Expression,
+        _aosTableFrom = tableFrom :: TableName {-PG.QualifiedTable-},
+        _aosTableFilter = tableFilter :: IR.AnnBoolExp 'MSSQL Expression
+      } = annObjectSelectG
+    IR.AnnRelationSelectG
+      { aarRelationshipName,
+        aarColumnMapping = mapping :: HashMap ColumnName ColumnName, -- PG.PGCol PG.PGCol
+        aarAnnSelect = annObjectSelectG :: IR.AnnObjectSelectG 'MSSQL (Const Void) Expression
+      } = annRelationSelectG
 
 lookupTableFrom ::
-     Map TableName {-PG.QualifiedTable-} EntityAlias
-  -> {-PG.QualifiedTable-}TableName
-  -> FromIr (Either EntityAlias From)
+  Map TableName {-PG.QualifiedTable-} EntityAlias ->
+  {-PG.QualifiedTable-} TableName ->
+  FromIr (Either EntityAlias From)
 lookupTableFrom existingJoins tableFrom = do
   case M.lookup tableFrom existingJoins of
     Just entityAlias -> pure (Left entityAlias)
-    Nothing          -> fmap Right (fromQualifiedTable tableFrom)
+    Nothing -> fmap Right (fromQualifiedTable tableFrom)
 
 fromArraySelectG :: IR.ArraySelectG 'MSSQL (Const Void) Expression -> ReaderT EntityAlias FromIr Join
 fromArraySelectG =
@@ -840,9 +877,9 @@ fromArraySelectG =
     IR.ASAggregate arrayAggregateSelectG ->
       fromArrayAggregateSelectG arrayAggregateSelectG
 
-fromArrayAggregateSelectG
-  :: IR.AnnRelationSelectG 'MSSQL (IR.AnnAggregateSelectG 'MSSQL (Const Void) Expression)
-  -> ReaderT EntityAlias FromIr Join
+fromArrayAggregateSelectG ::
+  IR.AnnRelationSelectG 'MSSQL (IR.AnnAggregateSelectG 'MSSQL (Const Void) Expression) ->
+  ReaderT EntityAlias FromIr Join
 fromArrayAggregateSelectG annRelationSelectG = do
   fieldName <- lift (fromRelName aarRelationshipName)
   joinSelect <- do
@@ -850,41 +887,48 @@ fromArrayAggregateSelectG annRelationSelectG = do
     -- With this, the foreign key relations are injected automatically
     -- at the right place by fromSelectAggregate.
     lift (fromSelectAggregate (pure (lhsEntityAlias, mapping)) annSelectG)
-  alias <- lift (generateEntityAlias (ArrayAggregateTemplate fieldName))
+  alias <- lift (generateAlias (ArrayAggregateTemplate fieldName))
   pure
     Join
       { joinJoinAlias =
           JoinAlias
-            {joinAliasEntity = alias, joinAliasField = pure jsonFieldName}
-      , joinSource = JoinSelect joinSelect
+            { joinAliasEntity = alias,
+              joinAliasField = pure jsonFieldName
+            },
+        joinSource = JoinSelect joinSelect
       }
   where
-    IR.AnnRelationSelectG { aarRelationshipName
-                          , aarColumnMapping = mapping :: HashMap ColumnName ColumnName
-                          , aarAnnSelect = annSelectG
-                          } = annRelationSelectG
+    IR.AnnRelationSelectG
+      { aarRelationshipName,
+        aarColumnMapping = mapping :: HashMap ColumnName ColumnName,
+        aarAnnSelect = annSelectG
+      } = annRelationSelectG
 
 fromArrayRelationSelectG :: IR.ArrayRelationSelectG 'MSSQL (Const Void) Expression -> ReaderT EntityAlias FromIr Join
 fromArrayRelationSelectG annRelationSelectG = do
   fieldName <- lift (fromRelName aarRelationshipName)
   sel <- lift (fromSelectRows annSelectG)
   joinSelect <-
-    do foreignKeyConditions <- selectFromMapping sel mapping
-       pure
-         sel {selectWhere = Where foreignKeyConditions <> selectWhere sel}
-  alias <- lift (generateEntityAlias (ArrayRelationTemplate fieldName))
+    do
+      foreignKeyConditions <- selectFromMapping sel mapping
+      pure
+        sel {selectWhere = Where foreignKeyConditions <> selectWhere sel}
+  alias <- lift (generateAlias (ArrayRelationTemplate fieldName))
   pure
     Join
       { joinJoinAlias =
           JoinAlias
-            {joinAliasEntity = alias, joinAliasField = pure jsonFieldName}
-      , joinSource = JoinSelect joinSelect
+            { joinAliasEntity = alias,
+              joinAliasField = pure jsonFieldName
+            },
+        joinSource = JoinSelect joinSelect
       }
   where
-    IR.AnnRelationSelectG { aarRelationshipName
-                          , aarColumnMapping = mapping :: HashMap ColumnName ColumnName-- PG.PGCol PG.PGCol
-                          , aarAnnSelect = annSelectG
-                          } = annRelationSelectG
+    IR.AnnRelationSelectG
+      { aarRelationshipName,
+        aarColumnMapping = mapping :: HashMap ColumnName ColumnName, -- PG.PGCol PG.PGCol
+        aarAnnSelect = annSelectG
+      } = annRelationSelectG
 
 fromRelName :: IR.RelName -> FromIr Text
 fromRelName relName =
@@ -901,24 +945,28 @@ fromRelName relName =
 -- to the left/right of @select ... join ...@. Therefore left=remote,
 -- right=local in this context.
 fromMapping ::
-     From
-  -> HashMap ColumnName ColumnName-- PG.PGCol PG.PGCol
-  -> ReaderT EntityAlias FromIr [Expression]
+  From ->
+  HashMap ColumnName ColumnName -> -- PG.PGCol PG.PGCol
+  ReaderT EntityAlias FromIr [Expression]
 fromMapping localFrom =
   traverse
-    (\(remotePgCol, localPgCol) -> do
-       localFieldName <- local (const (fromAlias localFrom)) (fromPGCol localPgCol)
-       remoteFieldName <- fromPGCol remotePgCol
-       pure
-         (OpExpression TSQL.EQ'
-            (ColumnExpression localFieldName)
-            (ColumnExpression remoteFieldName))) .
-  HM.toList
+    ( \(remotePgCol, localPgCol) -> do
+        localFieldName <- local (const (fromAlias localFrom)) (fromPGCol localPgCol)
+        remoteFieldName <- fromPGCol remotePgCol
+        pure
+          ( OpExpression
+              TSQL.EQ'
+              (ColumnExpression localFieldName)
+              (ColumnExpression remoteFieldName)
+          )
+    )
+    . HM.toList
 
-selectFromMapping :: Select
-  -> HashMap ColumnName ColumnName
-  -> ReaderT EntityAlias FromIr [Expression]
-selectFromMapping Select {selectFrom = Nothing  } = const (pure [])
+selectFromMapping ::
+  Select ->
+  HashMap ColumnName ColumnName ->
+  ReaderT EntityAlias FromIr [Expression]
+selectFromMapping Select {selectFrom = Nothing} = const (pure [])
 selectFromMapping Select {selectFrom = Just from} = fromMapping from
 
 --------------------------------------------------------------------------------
@@ -927,66 +975,140 @@ selectFromMapping Select {selectFrom = Just from} = fromMapping from
 fromOpExpG :: Expression -> IR.OpExpG 'MSSQL Expression -> FromIr Expression
 fromOpExpG expression op =
   case op of
-    IR.ANISNULL      -> pure $ TSQL.IsNullExpression    expression
-    IR.ANISNOTNULL   -> pure $ TSQL.IsNotNullExpression expression
-    IR.AEQ False val -> pure $ nullableBoolEquality    expression val
-    IR.AEQ True  val -> pure $ OpExpression TSQL.EQ'   expression val
-    IR.ANE False val -> pure $ nullableBoolInequality  expression val
-    IR.ANE True  val -> pure $ OpExpression TSQL.NEQ'  expression val
-    IR.AGT       val -> pure $ OpExpression TSQL.GT    expression val
-    IR.ALT       val -> pure $ OpExpression TSQL.LT    expression val
-    IR.AGTE      val -> pure $ OpExpression TSQL.GTE   expression val
-    IR.ALTE      val -> pure $ OpExpression TSQL.LTE   expression val
-    IR.AIN       val -> pure $ OpExpression TSQL.IN    expression val
-    IR.ANIN      val -> pure $ OpExpression TSQL.NIN   expression val
-    IR.ALIKE     val -> pure $ OpExpression TSQL.LIKE  expression val
-    IR.ANLIKE    val -> pure $ OpExpression TSQL.NLIKE expression val
-
+    IR.ANISNULL -> pure $ TSQL.IsNullExpression expression
+    IR.ANISNOTNULL -> pure $ TSQL.IsNotNullExpression expression
+    IR.AEQ False val -> pure $ nullableBoolEquality expression val
+    IR.AEQ True val -> pure $ OpExpression TSQL.EQ' expression val
+    IR.ANE False val -> pure $ nullableBoolInequality expression val
+    IR.ANE True val -> pure $ OpExpression TSQL.NEQ' expression val
+    IR.AGT val -> pure $ OpExpression TSQL.GT expression val
+    IR.ALT val -> pure $ OpExpression TSQL.LT expression val
+    IR.AGTE val -> pure $ OpExpression TSQL.GTE expression val
+    IR.ALTE val -> pure $ OpExpression TSQL.LTE expression val
+    IR.AIN val -> pure $ OpExpression TSQL.IN expression val
+    IR.ANIN val -> pure $ OpExpression TSQL.NIN expression val
+    IR.ALIKE val -> pure $ OpExpression TSQL.LIKE expression val
+    IR.ANLIKE val -> pure $ OpExpression TSQL.NLIKE expression val
     IR.ABackendSpecific o -> case o of
-      ASTContains   val -> pure $ TSQL.STOpExpression TSQL.STContains   expression val
-      ASTCrosses    val -> pure $ TSQL.STOpExpression TSQL.STCrosses    expression val
-      ASTEquals     val -> pure $ TSQL.STOpExpression TSQL.STEquals     expression val
+      ASTContains val -> pure $ TSQL.STOpExpression TSQL.STContains expression val
+      ASTCrosses val -> pure $ TSQL.STOpExpression TSQL.STCrosses expression val
+      ASTEquals val -> pure $ TSQL.STOpExpression TSQL.STEquals expression val
       ASTIntersects val -> pure $ TSQL.STOpExpression TSQL.STIntersects expression val
-      ASTOverlaps   val -> pure $ TSQL.STOpExpression TSQL.STOverlaps   expression val
-      ASTTouches    val -> pure $ TSQL.STOpExpression TSQL.STTouches    expression val
-      ASTWithin     val -> pure $ TSQL.STOpExpression TSQL.STWithin     expression val
-
+      ASTOverlaps val -> pure $ TSQL.STOpExpression TSQL.STOverlaps expression val
+      ASTTouches val -> pure $ TSQL.STOpExpression TSQL.STTouches expression val
+      ASTWithin val -> pure $ TSQL.STOpExpression TSQL.STWithin expression val
     -- As of March 2021, only geometry/geography casts are supported
-    IR.ACast _casts  -> refute (pure (UnsupportedOpExpG op)) -- mkCastsExp casts
+    IR.ACast _casts -> refute (pure (UnsupportedOpExpG op)) -- mkCastsExp casts
 
     -- We do not yet support column names in permissions
-    IR.CEQ _rhsCol   -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SEQ lhs $ mkQCol rhsCol
-    IR.CNE _rhsCol   -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SNE lhs $ mkQCol rhsCol
-    IR.CGT _rhsCol   -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SGT lhs $ mkQCol rhsCol
-    IR.CLT _rhsCol   -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SLT lhs $ mkQCol rhsCol
-    IR.CGTE _rhsCol  -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SGTE lhs $ mkQCol rhsCol
-    IR.CLTE _rhsCol  -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SLTE lhs $ mkQCol rhsCol
+    IR.CEQ _rhsCol -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SEQ lhs $ mkQCol rhsCol
+    IR.CNE _rhsCol -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SNE lhs $ mkQCol rhsCol
+    IR.CGT _rhsCol -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SGT lhs $ mkQCol rhsCol
+    IR.CLT _rhsCol -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SLT lhs $ mkQCol rhsCol
+    IR.CGTE _rhsCol -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SGTE lhs $ mkQCol rhsCol
+    IR.CLTE _rhsCol -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SLTE lhs $ mkQCol rhsCol
 
 nullableBoolEquality :: Expression -> Expression -> Expression
 nullableBoolEquality x y =
   OrExpression
-    [ OpExpression TSQL.EQ' x y
-    , AndExpression [IsNullExpression x, IsNullExpression y]
+    [ OpExpression TSQL.EQ' x y,
+      AndExpression [IsNullExpression x, IsNullExpression y]
     ]
 
 nullableBoolInequality :: Expression -> Expression -> Expression
 nullableBoolInequality x y =
   OrExpression
-    [ OpExpression TSQL.NEQ' x y
-    , AndExpression [IsNotNullExpression x, IsNullExpression y]
+    [ OpExpression TSQL.NEQ' x y,
+      AndExpression [IsNotNullExpression x, IsNullExpression y]
     ]
 
-fromGBoolExp :: IR.GBoolExp 'MSSQL Expression -> ReaderT EntityAlias FromIr Expression
+-- | Translate a 'GBoolExp' of a 'AnnBoolExpFld', within an 'EntityAlias' context.
+--
+-- It is mutually recursive with 'fromAnnBoolExpFld' and 'fromGExists'.
+fromGBoolExp ::
+  IR.GBoolExp 'MSSQL (IR.AnnBoolExpFld 'MSSQL Expression) ->
+  ReaderT EntityAlias FromIr Expression
 fromGBoolExp =
   \case
     IR.BoolAnd expressions ->
       fmap AndExpression (traverse fromGBoolExp expressions)
     IR.BoolOr expressions ->
       fmap OrExpression (traverse fromGBoolExp expressions)
-    IR.BoolNot expression -> fmap NotExpression (fromGBoolExp expression)
-    IR.BoolExists gExists -> fmap ExistsExpression (fromGExists gExists)
-    IR.BoolFld expression -> pure expression
+    IR.BoolNot expression ->
+      fmap NotExpression (fromGBoolExp expression)
+    IR.BoolExists gExists ->
+      fromGExists gExists
+    IR.BoolFld expression ->
+      fromAnnBoolExpFld expression
+  where
+    fromGExists :: IR.GExists 'MSSQL (IR.AnnBoolExpFld 'MSSQL Expression) -> ReaderT EntityAlias FromIr Expression
+    fromGExists IR.GExists {_geTable, _geWhere} = do
+      selectFrom <- lift (fromQualifiedTable _geTable)
+      whereExpression <-
+        local (const (fromAlias selectFrom)) (fromGBoolExp _geWhere)
+      pure $
+        ExistsExpression $
+          emptySelect
+            { selectOrderBy = Nothing,
+              selectProjections =
+                [ ExpressionProjection
+                    ( Aliased
+                        { aliasedThing = trueExpression,
+                          aliasedAlias = existsFieldName
+                        }
+                    )
+                ],
+              selectFrom = Just selectFrom,
+              selectJoins = mempty,
+              selectWhere = Where [whereExpression],
+              selectTop = NoTop,
+              selectFor = NoFor,
+              selectOffset = Nothing
+            }
 
+--------------------------------------------------------------------------------
+-- Insert
+
+fromInsert :: IR.AnnInsert 'MSSQL (Const Void) Expression -> Insert
+fromInsert IR.AnnInsert {..} =
+  let IR.AnnIns {..} = _aiData
+      insertRows = normalizeInsertRows _aiData $ map (IR.getInsertColumns) _aiInsObj
+      insertColumnNames = maybe [] (map fst) $ listToMaybe insertRows
+      insertValues = map (Values . map snd) insertRows
+      primaryKeyColumns = map OutputColumn $ _mssqlPrimaryKeyColumns _aiExtraInsertData
+   in Insert _aiTableName insertColumnNames (InsertOutput primaryKeyColumns) insertValues
+
+-- | Normalize a row by adding missing columns with 'DEFAULT' value and sort by column name to make sure
+-- all rows are consistent in column values and order.
+--
+-- Example: A table "author" is defined as
+--
+--   CREATE TABLE author ([id] INTEGER NOT NULL PRIMARY KEY, name TEXT NOT NULL, age INTEGER)
+--
+--  Consider the following mutation;
+--
+--   mutation {
+--     insert_author(
+--       objects: [{id: 1, name: "Foo", age: 21}, {id: 2, name: "Bar"}]
+--     ){
+--       affected_rows
+--     }
+--   }
+--
+-- We consider 'DEFAULT' value for "age" column which is missing in second insert row. The INSERT statement look like
+--
+-- INSERT INTO author (id, name, age) OUTPUT INSERTED.id VALUES (1, 'Foo', 21), (2, 'Bar', DEFAULT)
+normalizeInsertRows :: IR.AnnIns 'MSSQL [] Expression -> [[(Column 'MSSQL, Expression)]] -> [[(Column 'MSSQL, Expression)]]
+normalizeInsertRows IR.AnnIns {..} insertRows =
+  let isIdentityColumn column =
+        IR.pgiColumn column `elem` _mssqlIdentityColumns _aiExtraInsertData
+      allColumnsWithDefaultValue =
+        -- DEFAULT or NULL are not allowed as explicit identity values.
+        map ((,DefaultExpression) . IR.pgiColumn) $ filter (not . isIdentityColumn) _aiTableCols
+      addMissingColumns insertRow =
+        HM.toList $ HM.fromList insertRow `HM.union` HM.fromList allColumnsWithDefaultValue
+      sortByColumn = sortBy (\l r -> compare (fst l) (fst r))
+   in map (sortByColumn . addMissingColumns) insertRows
 
 --------------------------------------------------------------------------------
 -- Delete
@@ -995,26 +1117,26 @@ fromDelete :: IR.AnnDel 'MSSQL -> FromIr Delete
 fromDelete (IR.AnnDel tableName (permFilter, whereClause) _ _) = do
   tableAlias <- fromTableName tableName
   runReaderT
-    (do permissionsFilter <- fromAnnBoolExp permFilter
-        whereExpression <- fromAnnBoolExp whereClause
+    ( do
+        permissionsFilter <- fromGBoolExp permFilter
+        whereExpression <- fromGBoolExp whereClause
         pure
           Delete
             { deleteTable =
                 Aliased
-                  { aliasedAlias = entityAliasText tableAlias
-                  , aliasedThing = tableName
-                  }
-            , deleteWhere = Where [permissionsFilter, whereExpression]
-            })
+                  { aliasedAlias = entityAliasText tableAlias,
+                    aliasedThing = tableName
+                  },
+              deleteWhere = Where [permissionsFilter, whereExpression]
+            }
+    )
     tableAlias
-
 
 --------------------------------------------------------------------------------
 -- Misc combinators
 
 trueExpression :: Expression
 trueExpression = ValueExpression (ODBC.BoolValue True)
-
 
 --------------------------------------------------------------------------------
 -- Constants
@@ -1031,7 +1153,6 @@ aggSubselectName = "agg_sub"
 existsFieldName :: Text
 existsFieldName = "exists_placeholder"
 
-
 --------------------------------------------------------------------------------
 -- Name generation
 
@@ -1042,8 +1163,11 @@ data NameTemplate
   | TableTemplate Text
   | ForOrderAlias Text
 
-generateEntityAlias :: NameTemplate -> FromIr Text
-generateEntityAlias template = do
+-- | Generate an alias for a given entity to remove ambiguity and naming
+-- conflicts between scopes at the TSQL level. Keeps track of the increments for
+-- the alias index in the 'StateT'
+generateAlias :: NameTemplate -> FromIr Text
+generateAlias template = do
   FromIr (modify' (M.insertWith (+) prefix start))
   i <- FromIr get
   pure (prefix <> tshow (fromMaybe start (M.lookup prefix i)))
@@ -1052,16 +1176,17 @@ generateEntityAlias template = do
     prefix = T.take 20 rendered
     rendered =
       case template of
-        ArrayRelationTemplate sample  -> "ar_" <> sample
+        ArrayRelationTemplate sample -> "ar_" <> sample
         ArrayAggregateTemplate sample -> "aa_" <> sample
         ObjectRelationTemplate sample -> "or_" <> sample
-        TableTemplate sample          -> "t_" <> sample
-        ForOrderAlias sample          -> "order_" <> sample
+        TableTemplate sample -> "t_" <> sample
+        ForOrderAlias sample -> "order_" <> sample
 
 fromAlias :: From -> EntityAlias
 fromAlias (FromQualifiedTable Aliased {aliasedAlias}) = EntityAlias aliasedAlias
-fromAlias (FromOpenJson Aliased {aliasedAlias})       = EntityAlias aliasedAlias
-fromAlias (FromSelect Aliased {aliasedAlias})         = EntityAlias aliasedAlias
+fromAlias (FromOpenJson Aliased {aliasedAlias}) = EntityAlias aliasedAlias
+fromAlias (FromSelect Aliased {aliasedAlias}) = EntityAlias aliasedAlias
+fromAlias (FromIdentifier identifier) = EntityAlias identifier
 
 columnNameToFieldName :: ColumnName -> EntityAlias -> FieldName
 columnNameToFieldName (ColumnName fieldName) EntityAlias {entityAliasText = fieldNameEntity} =

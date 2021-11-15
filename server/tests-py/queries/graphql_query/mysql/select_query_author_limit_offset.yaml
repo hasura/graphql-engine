@@ -4,12 +4,12 @@ status: 200
 response:
   data:
     hasura_author:
-    - name: Author 2
-      id: 2
+    - id: 2
+      name: Author 2
 query:
   query: |
     query {
-      hasura_author(offset: 1, limit 1) {
+      hasura_author(offset: 1, limit: 1) {
         id
         name
       }

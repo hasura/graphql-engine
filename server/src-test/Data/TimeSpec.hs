@@ -1,11 +1,11 @@
 -- | Time-related properties we care about.
 module Data.TimeSpec (spec) where
 
-import           Data.Aeson
-import           Data.Time
-import           Data.Time.Clock.Units
-import           Prelude
-import           Test.Hspec
+import Data.Aeson
+import Data.Time
+import Data.Time.Clock.Units
+import Test.Hspec
+import Prelude
 
 spec :: Spec
 spec = do
@@ -39,6 +39,6 @@ diffTimeSpec :: Spec
 diffTimeSpec =
   describe "DiffTime" $ do
     it "JSON serializes as seconds" $ do
-    -- although we would prefer to use Seconds instead...
+      -- although we would prefer to use Seconds instead...
       toJSON (1 :: DiffTime) `shouldBe` Number 1
       decode "1.0" `shouldBe` Just (1 :: DiffTime)

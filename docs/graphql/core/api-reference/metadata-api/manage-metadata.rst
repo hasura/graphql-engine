@@ -233,7 +233,8 @@ table using ``psql`` and this column should now be added to the GraphQL schema.
        "type" : "reload_metadata",
        "args": {
            "reload_remote_schemas": true,
-           "reload_sources": false
+           "reload_sources": false,
+           "recreate_event_triggers": true
        }
    }
 
@@ -257,6 +258,11 @@ Args syntax
      - false
      - ``Boolean`` | [:ref:`SourceName`]
      - If set to ``true``, all sources' (including inconsistent ones) cached GraphQL schemas are refreshed (default: ``true``)
+   * - recreate_event_triggers
+     - false
+     - ``Boolean`` | [:ref:`SourceName`]
+     - If set to ``true``, all sources' (including inconsistent ones) cached event triggers and their corresponding SQL
+       triggers present in the source database will be recreated. When an array of :ref:`SourceName` is provided, the event triggers will only be recreated for those sources. (default: `false` i.e. no sources' event triggers will be recreated)
 
 .. _metadata_clear_metadata:
 
@@ -351,4 +357,29 @@ drop_inconsistent_metadata
    {
        "type": "drop_inconsistent_metadata",
        "args": {}
+   }
+
+.. _test_webhook_transform:
+
+test_webhook_transform
+--------------------------
+
+``test_webhook_transform`` can be used to test out request transformations using mock data.
+
+.. code-block:: http
+
+   POST /v1/metadata HTTP/1.1
+   Content-Type: application/json
+   X-Hasura-Role: admin
+
+   {
+       "type" : "test_webhook_transform",
+       "args" : {
+         "webhook_url": "http://localhost:1234",
+         "body": { "hello": "world" },
+         "request_transform": {
+           "body": "{{ $body.world }}",
+           "template_engine": "Kriti"
+         }
+       }
    }

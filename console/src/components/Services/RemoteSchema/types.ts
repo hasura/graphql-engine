@@ -18,6 +18,21 @@ export type AsyncState = {
   isFetchError: any;
 };
 
+export type graphQLCustomization = {
+  root_fields_namespace?: string;
+  type_names?: {
+    prefix?: string;
+    suffix?: string;
+    mapping?: Record<string, string>;
+  };
+  field_names?: {
+    parent_type?: string;
+    prefix?: string;
+    suffix?: string;
+    mapping?: Record<string, string>;
+  }[];
+};
+
 export type EditState = {
   id: number;
   isModify: boolean;
@@ -28,6 +43,7 @@ export type EditState = {
   originalTimeoutConf: string;
   originalForwardClientHeaders: boolean;
   originalComment?: string;
+  originalCustomization?: graphQLCustomization;
 };
 
 export type AddState = AsyncState & {
@@ -39,6 +55,7 @@ export type AddState = AsyncState & {
   forwardClientHeaders: boolean;
   editState: EditState;
   comment?: string;
+  customization?: graphQLCustomization;
 };
 
 export type ListState = AsyncState & {

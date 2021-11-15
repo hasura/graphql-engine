@@ -63,7 +63,6 @@ func NewCompletionCmd(ec *cli.ExecutionContext) *cobra.Command {
 	}
 
 	completionCmd.Flags().StringVar(&opts.File, "file", "", "file to which output has to be written")
-	completionCmd.MarkFlagFilename("file")
 	return completionCmd
 }
 
@@ -91,7 +90,7 @@ func (o *completionOptions) run() error {
 			err = o.Cmd.Root().GenZshCompletion(os.Stdout)
 		}
 	default:
-		err = fmt.Errorf("Unknown shell: %s. Use bash or zsh", o.Shell)
+		err = fmt.Errorf("unknown shell: %s. Use bash or zsh", o.Shell)
 	}
 	if err != nil {
 		return err

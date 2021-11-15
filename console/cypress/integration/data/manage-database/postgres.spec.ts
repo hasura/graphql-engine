@@ -72,8 +72,8 @@ export const removeDB = (dbName: string) => {
   cy.request('POST', 'http://localhost:8080/v1/metadata', postBody).then(
     response => {
       expect(response.body).to.have.property('message', 'success'); // true
-    }
-  );
+  });
+  cy.reload();
 };
 
 const postgres: driverSpecType = {

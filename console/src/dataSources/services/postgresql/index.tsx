@@ -70,6 +70,7 @@ import {
   getDropIndexSql,
   getTableInfo,
   getDatabaseVersionSql,
+  schemaListQuery,
 } from './sqlUtils';
 import globals from '../../../Globals';
 
@@ -578,8 +579,8 @@ export const supportedFeatures: DeepRequired<SupportedFeaturesType> = {
     },
     browse: {
       enabled: true,
-      aggregation: true,
-      customPagination: false,
+      aggregation: false,
+      customPagination: true,
     },
     insert: {
       enabled: true,
@@ -645,6 +646,13 @@ export const supportedFeatures: DeepRequired<SupportedFeaturesType> = {
     },
     nonTrackableFunctions: {
       enabled: true,
+    },
+    modify: {
+      enabled: true,
+      comments: {
+        view: true,
+        edit: true,
+      },
     },
   },
   events: {
@@ -794,4 +802,5 @@ export const postgres: DataSourcesAPI = {
   generateEditRowRequest,
   generateDeleteRowRequest,
   generateBulkDeleteRowRequest,
+  schemaListQuery,
 };

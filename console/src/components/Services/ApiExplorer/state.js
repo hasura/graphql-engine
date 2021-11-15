@@ -47,7 +47,10 @@ const dataApis = {
 const explorerData = {
   sendingRequest: false,
   enableResponseSection: false,
-  response: {},
+  response: {
+    responseTime: null,
+    responseSize: null,
+  },
   fileObj: null,
 };
 

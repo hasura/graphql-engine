@@ -1,38 +1,35 @@
 module Hasura.Backends.Postgres.DDL.Function
-  ( buildFunctionInfo
-  , mkFunctionArgs
+  ( buildFunctionInfo,
+    mkFunctionArgs,
   )
 where
 
-import           Hasura.Prelude
-
-import qualified Control.Monad.Validate             as MV
-import qualified Data.Sequence                      as Seq
-import qualified Data.Text                          as T
-import qualified Language.GraphQL.Draft.Syntax      as G
-
-import           Control.Lens                       hiding (from, index, op, (.=))
-import           Data.Text.Extended
-
-import qualified Hasura.SQL.AnyBackend              as AB
-
-import           Hasura.Backends.Postgres.SQL.Types
-import           Hasura.Base.Error
-import           Hasura.RQL.Types.Backend
-import           Hasura.RQL.Types.Common
-import           Hasura.RQL.Types.Function
-import           Hasura.RQL.Types.SchemaCache
-import           Hasura.RQL.Types.SchemaCacheTypes
-import           Hasura.SQL.Backend
-import           Hasura.Server.Utils
+import Control.Lens hiding (from, index, op, (.=))
+import Control.Monad.Validate qualified as MV
+import Data.Sequence qualified as Seq
+import Data.Text qualified as T
+import Data.Text.Extended
+import Hasura.Backends.Postgres.SQL.Types
+import Hasura.Base.Error
+import Hasura.Prelude
+import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.Common
+import Hasura.RQL.Types.Function
+import Hasura.RQL.Types.SchemaCache
+import Hasura.RQL.Types.SchemaCacheTypes
+import Hasura.SQL.AnyBackend qualified as AB
+import Hasura.SQL.Backend
+import Hasura.Server.Utils
+import Language.GraphQL.Draft.Syntax qualified as G
 
 mkFunctionArgs :: Int -> [QualifiedPGType] -> [FunctionArgName] -> [FunctionArg ('Postgres pgKind)]
 mkFunctionArgs defArgsNo tys argNames =
   bool withNames withNoNames $ null argNames
   where
-    hasDefaultBoolSeq = replicate (length tys - defArgsNo) (HasDefault False)
-                        -- only last arguments can have default expression
-                        <> replicate defArgsNo (HasDefault True)
+    hasDefaultBoolSeq =
+      replicate (length tys - defArgsNo) (HasDefault False)
+        -- only last arguments can have default expression
+        <> replicate defArgsNo (HasDefault True)
 
     tysWithHasDefault = zip tys hasDefaultBoolSeq
 
@@ -40,7 +37,7 @@ mkFunctionArgs defArgsNo tys argNames =
     withNames = zipWith mkArg argNames tysWithHasDefault
 
     mkArg "" (ty, hasDef) = FunctionArg Nothing ty hasDef
-    mkArg n  (ty, hasDef) = FunctionArg (Just n) ty hasDef
+    mkArg n (ty, hasDef) = FunctionArg (Just n) ty hasDef
 
 data FunctionIntegrityError
   = FunctionNameNotGQLCompliant
@@ -53,24 +50,36 @@ data FunctionIntegrityError
   | FunctionInvalidArgumentNames [FunctionArgName]
   deriving (Show, Eq)
 
-buildFunctionInfo
-  :: forall pgKind m
-   . (Backend ('Postgres pgKind), QErrM m)
-  => SourceName
-  -> QualifiedFunction
-  -> SystemDefined
-  -> FunctionConfig
-  -> FunctionPermissionsMap
-  -> RawFunctionInfo ('Postgres pgKind)
-  -> m (FunctionInfo ('Postgres pgKind), SchemaDependency)
-buildFunctionInfo source qf systemDefined FunctionConfig{..} permissions rawFuncInfo =
+buildFunctionInfo ::
+  forall pgKind m.
+  (Backend ('Postgres pgKind), QErrM m) =>
+  SourceName ->
+  QualifiedFunction ->
+  SystemDefined ->
+  FunctionConfig ->
+  FunctionPermissionsMap ->
+  RawFunctionInfo ('Postgres pgKind) ->
+  Maybe Text ->
+  m (FunctionInfo ('Postgres pgKind), SchemaDependency)
+buildFunctionInfo source qf systemDefined fc@FunctionConfig {..} permissions rawFuncInfo comment =
   either (throw400 NotSupported . showErrors) pure
     =<< MV.runValidateT validateFunction
   where
     functionArgs = mkFunctionArgs defArgsNo inpArgTyps inpArgNames
-    PGRawFunctionInfo _ hasVariadic funVol retSn retN retTyTyp retSet
-                inpArgTyps inpArgNames defArgsNo returnsTab descM
-                = rawFuncInfo
+    PGRawFunctionInfo
+      _
+      hasVariadic
+      funVol
+      retSn
+      retN
+      retTyTyp
+      retSet
+      inpArgTyps
+      inpArgNames
+      defArgsNo
+      returnsTab
+      descM =
+        rawFuncInfo
     returnType = QualifiedPGType retSn retN retTyTyp
 
     throwValidateError = MV.dispute . pure
@@ -95,28 +104,44 @@ buildFunctionInfo source qf systemDefined FunctionConfig{..} permissions rawFunc
         throwValidateError NonVolatileFunctionAsMutation
       -- If 'exposed_as' is omitted we'll infer it from the volatility:
       let exposeAs = flip fromMaybe _fcExposedAs $ case funVol of
-                       FTVOLATILE -> FEAMutation
-                       _          -> FEAQuery
+            FTVOLATILE -> FEAMutation
+            _ -> FEAQuery
 
       -- validate function argument names
       validateFunctionArgNames
 
       inputArguments <- makeInputArguments
 
+      funcGivenName <- functionGraphQLName @('Postgres pgKind) qf `onLeft` throwError
+
       let retTable = typeToTable returnType
           retJsonAggSelect = bool JASSingleObject JASMultipleRows retSet
-          functionInfo =
-            FunctionInfo qf systemDefined funVol exposeAs inputArguments
-                         retTable (getPGDescription <$> descM) permissions
-                         retJsonAggSelect
 
-      pure ( functionInfo
-           , SchemaDependency
-               (SOSourceObj source
-                 $ AB.mkAnyBackend
-                 $ SOITable @('Postgres pgKind) retTable)
-               DRTable
-           )
+          functionInfo =
+            FunctionInfo
+              qf
+              (getFunctionGQLName funcGivenName fc)
+              (getFunctionArgsGQLName funcGivenName fc)
+              (getFunctionAggregateGQLName funcGivenName fc)
+              systemDefined
+              funVol
+              exposeAs
+              inputArguments
+              retTable
+              (getPGDescription <$> descM)
+              permissions
+              retJsonAggSelect
+              comment
+
+      pure
+        ( functionInfo,
+          SchemaDependency
+            ( SOSourceObj source $
+                AB.mkAnyBackend $
+                  SOITable @('Postgres pgKind) retTable
+            )
+            DRTable
+        )
 
     validateFunctionArgNames = do
       let argNames = mapMaybe faName functionArgs
@@ -130,16 +155,19 @@ buildFunctionInfo source qf systemDefined FunctionConfig{..} permissions rawFunc
         Just sessionArgName -> do
           unless (any (\arg -> Just sessionArgName == faName arg) functionArgs) $
             throwValidateError $ FunctionInvalidSessionArgument sessionArgName
-          fmap Seq.fromList $ forM functionArgs $ \arg ->
-            if Just sessionArgName == faName arg then do
-              let argTy = _qptName $ faType arg
-              if argTy == PGJSON then pure $ IASessionVariables sessionArgName
-              else MV.refute $ pure $ FunctionSessionArgumentNotJSON sessionArgName
-            else pure $ IAUserProvided arg
+          fmap Seq.fromList $
+            forM functionArgs $ \arg ->
+              if Just sessionArgName == faName arg
+                then do
+                  let argTy = _qptName $ faType arg
+                  if argTy == PGJSON
+                    then pure $ IASessionVariables sessionArgName
+                    else MV.refute $ pure $ FunctionSessionArgumentNotJSON sessionArgName
+                else pure $ IAUserProvided arg
 
     showErrors allErrors =
       "the function " <> qf <<> " cannot be tracked "
-      <> makeReasonMessage allErrors showOneError
+        <> makeReasonMessage allErrors showOneError
 
     showOneError = \case
       FunctionNameNotGQLCompliant -> "function name is not a legal GraphQL identifier"
@@ -147,12 +175,12 @@ buildFunctionInfo source qf systemDefined FunctionConfig{..} permissions rawFunc
       FunctionReturnNotCompositeType -> "the function does not return a \"COMPOSITE\" type"
       FunctionReturnNotTable -> "the function does not return a table"
       NonVolatileFunctionAsMutation ->
-        "the function was requested to be exposed as a mutation, but is not marked VOLATILE. " <>
-        "Maybe the function was given the wrong volatility when it was defined?"
+        "the function was requested to be exposed as a mutation, but is not marked VOLATILE. "
+          <> "Maybe the function was given the wrong volatility when it was defined?"
       FunctionSessionArgumentNotJSON argName ->
         "given session argument " <> argName <<> " is not of type json"
       FunctionInvalidSessionArgument argName ->
         "given session argument " <> argName <<> " not the input argument of the function"
       FunctionInvalidArgumentNames args ->
         let argsText = T.intercalate "," $ map getFuncArgNameTxt args
-        in "the function arguments " <> argsText <> " are not in compliance with GraphQL spec"
+         in "the function arguments " <> argsText <> " are not in compliance with GraphQL spec"

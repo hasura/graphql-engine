@@ -3,7 +3,7 @@ url: /v1/graphql
 status: 200
 response:
   data:
-    hasura_author:
+    hasura_test_author:
     - id: '2'
       name: Author 2
 query:
@@ -11,7 +11,7 @@ query:
     authorId: 2
   query: |
     fragment MyFragment on query_root {
-      hasura_author (order_by: {id: asc}, where: {id: {_eq: $authorId}}){
+      hasura_test_author (order_by: {id: asc}, where: {id: {_eq: $authorId}}){
         id
         name
       }
@@ -19,4 +19,3 @@ query:
     query ($authorId : Int!) {
       ...MyFragment
     }
-

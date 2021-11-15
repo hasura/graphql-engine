@@ -25,7 +25,6 @@ type ServeOpts struct {
 
 	SignalChanAPIServer     chan os.Signal
 	SignalChanConsoleServer chan os.Signal
-	WG                      sync.WaitGroup
 }
 
 // Server console and API Server
@@ -52,7 +51,7 @@ func Serve(opts *ServeOpts) error {
 	}()
 
 	// Create WaitGroup for running 2 servers
-	wg := opts.WG
+	wg := new(sync.WaitGroup)
 	wg.Add(1)
 	go func() {
 		if err := apiHTTPServer.ListenAndServe(); err != nil {

@@ -280,7 +280,7 @@ class GraphQLWSClient():
             new_msg['type'] = 'pong'
             self.send(json.dumps(new_msg))
             return
-        
+
         if 'id' in json_msg:
             query_id = json_msg['id']
             if json_msg.get('type') == 'complete':
@@ -290,14 +290,14 @@ class GraphQLWSClient():
                 self.ws_id_query_queues[json_msg['id']] = queue.Queue(maxsize=-1)
             #Put event in the correponding query_queue
             self.ws_id_query_queues[query_id].put(json_msg)
-        
+
         if json_msg['type'] != 'ping':
             self.ws_queue.put(json_msg)
 
     def _on_close(self):
         self.remote_closed = True
         self.init_done = False
-    
+
     def get_conn_close_state(self):
         return self.remote_closed or self.is_closing
 
@@ -349,9 +349,21 @@ class ActionsWebhookHandler(http.server.BaseHTTPRequestHandler):
             resp, status = self.get_users_by_email(False)
             self._send_response(status, resp)
 
+        elif req_path == "/intentional-error":
+            resp, status = self.intentional_error()
+            self._send_response(status, resp)
+
+        elif req_path == "/null-response":
+            resp, status = self.null_response()
+            self._send_response(status, resp)
+
         else:
             self.send_response(HTTPStatus.NO_CONTENT)
             self.end_headers()
+
+    def intentional_error(self):
+        blob = self.req_json['input']['blob']
+        return blob, HTTPStatus.BAD_REQUEST
 
     def create_user(self):
         email_address = self.req_json['input']['email']
@@ -387,6 +399,7 @@ class ActionsWebhookHandler(http.server.BaseHTTPRequestHandler):
             return response, HTTPStatus.BAD_REQUEST
 
         response = resp['data']['insert_user_one']
+
         return response, HTTPStatus.OK
 
     def create_users(self):
@@ -462,6 +475,10 @@ class ActionsWebhookHandler(http.server.BaseHTTPRequestHandler):
             return resp['data']['user'][0], HTTPStatus.OK
         else:
             return resp['data']['user'], HTTPStatus.OK
+    
+    def null_response(self):
+        response = None
+        return response, HTTPStatus.OK
 
 
 
@@ -641,7 +658,6 @@ class HGECtx:
 
         self.hge_scale_url = config.getoption('--test-hge-scale-url')
         self.avoid_err_msg_checks = config.getoption('--avoid-error-message-checks')
-        self.inherited_roles_tests = config.getoption('--test-inherited-roles')
         self.pro_tests = config.getoption('--pro-tests')
 
         self.ws_client = GQLWsClient(self, '/v1/graphql')
@@ -732,7 +748,9 @@ class HGECtx:
         )
         # NOTE: make sure we preserve key ordering so we can test the ordering
         # properties in the graphql spec properly
-        return resp.status_code, resp.json(object_pairs_hook=OrderedDict)
+        # Don't assume `resp` is JSON object
+        resp_obj = {} if resp.status_code == 500 else resp.json(object_pairs_hook=OrderedDict)
+        return resp.status_code, resp_obj
 
 
     def v1q(self, q, headers = {}):

@@ -1,9 +1,16 @@
-# For MySQL, every statement ends with a `;\n` (that's a semicolon followed by a newline), and
-# it cannot parse the next if a new statement follows after an indentation, like we normal write
-# for other backends. So breaking apart the requests into individual statements turned out to be
-# the ergonomic way to make this work.
-# Also tried typical YAML multi-line (block) syntax in all combinations `|`, `>` with `+` and `-`,
-# including specification of the indentation levels with numbers, without success.
+# For MySQL, every statement ends with a `;\n` (that's a semicolon followed by
+# a newline), and it cannot parse the next if a new statement follows after an
+# indentation, like we normally write for other backends. So breaking apart the
+# requests into individual statements turned out to be the ergonomic way to make
+# this work.
+#
+# Also tried typical YAML multi-line (block) syntax in all combinations `|`,
+# `>` with `+` and `-`, including specification of the indentation levels with
+# numbers, without success.
+#
+# NOTE: For local development, if manual data seeding is ever necessary, we
+# maintain a `mysql-ddl-dml.sql` that should always remain in sync with this
+# file.
 
 type: bulk
 args:
@@ -20,14 +27,15 @@ args:
     sql: |
       DROP TABLE IF EXISTS author;
 
+
 - type: mysql_run_sql
   args:
     source: mysql
     sql: |
       CREATE TABLE author
       (
-          id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
-          name VARCHAR(450) UNIQUE KEY,
+          id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+          name VARCHAR(45) UNIQUE KEY,
           createdAt DATETIME
       );
 
@@ -41,6 +49,7 @@ args:
           ( 'Author 1', '2017-09-21 09:39:44' ),
           ( 'Author 2', '2017-09-21 09:50:44' );
 
+
 - type: mysql_run_sql
   args:
     source: mysql
@@ -51,8 +60,8 @@ args:
           content TEXT,
           is_published BIT,
           published_on TIMESTAMP,
-          author_id INT,
-          co_author_id INT,
+          author_id INT UNSIGNED,
+          co_author_id INT UNSIGNED,
           FOREIGN KEY (author_id) REFERENCES author(id),
           FOREIGN KEY (co_author_id) REFERENCES author(id)
       );
@@ -67,3 +76,19 @@ args:
           ( 'Article 1', 'Sample article content 1', 1, 0 ),
           ( 'Article 2', 'Sample article content 2', 1, 1 ),
           ( 'Article 3', 'Sample article content 3', 2, 1 );
+
+
+# NOTE on dropping tables that have dependent views:
+# ref: https://dev.mysql.com/doc/refman/5.7/en/view-restrictions.html
+#
+# You can use DROP TABLE or ALTER TABLE to drop or alter a table that is used
+# in a view definition. No warning results from the DROP or ALTER operation,
+# even though this invalidates the view. Instead, an error occurs later, when
+# the view is used. CHECK TABLE can be used to check for views that have been
+# invalidated by DROP or ALTER operations.
+- type: mysql_run_sql
+  args:
+    source: mysql
+    sql: |
+      CREATE OR REPLACE VIEW search_author_view AS
+        SELECT * FROM author;

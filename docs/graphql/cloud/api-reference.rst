@@ -29,7 +29,7 @@ Authentication
 --------------
 
 Authentication is done using a Personal Access Token that you can create from
-the Hasura Cloud Dashboard. You can find this option under the "Settings" tab.
+the Hasura Cloud Dashboard. You can find this option in the "My Account" section on bottom left.
 
 Once you have the token it can be used with the header:
 ``Authorization: pat <token>``.
@@ -63,6 +63,13 @@ Create a Project
      createTenant(
        cloud: "aws"
        region: "us-east-2"
+       envs: [{
+         key: "HASURA_GRAPHQL_CORS_DOMAIN",
+         value: "*"
+       }, {
+         key: "MY_ENV_VAR_1",
+         value: "my value 1"
+       }]
      ) {
        id
        name
@@ -83,7 +90,7 @@ Get Project tenant id
         id
       }
     }
-}
+  }
 
 Get Tenant details
 ^^^^^^^^^^^^^^^^^^
@@ -148,3 +155,44 @@ Update ENV Vars
        envVars
      }
    }
+
+.. _api_ref_create_preview_app:
+
+Create GitHub Preview App
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Schedules the creation of a Hasura Cloud project with metadata and migrations from a branch of a GitHub repo.
+
+.. code-block:: graphql
+
+   mutation createGitHubPreviewApp {
+     createGitHubPreviewApp (
+       payload: {
+         githubPersonalAccessToken: "<github_access_token>",
+         githubRepoDetails: {
+             branch: "main"
+             owner: "my-org"
+             repo: "my-repo",
+             directory: "backend/hasura"
+         },
+         projectOptions: {
+           cloud: "aws",
+           region: "us-east-2",
+           plan: "cloud_free",
+           name: "my-app_name"
+           envVars: [{
+             key: "HASURA_GRAPHQL_AUTH_HOOK",
+             value: "https://my-webhook.com"
+           }, {
+             key: "MY_ENV_VAR_1",
+             value: "my value 1"
+           }]
+         }
+       }
+     ) {
+       githubPreviewAppJobID # job ID of the preview app creation job
+     }
+   }
+
+
+

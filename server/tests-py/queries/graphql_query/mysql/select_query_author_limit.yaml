@@ -10,7 +10,7 @@ query:
   query: |
     query {
       hasura_author(limit: 1) {
-        id
         name
+        id
       }
     }

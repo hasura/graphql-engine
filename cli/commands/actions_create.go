@@ -96,7 +96,7 @@ func (o *actionsCreateOptions) run() error {
 	// if codegen config not present, skip codegen
 	if o.EC.Config.ActionConfig.Codegen.Framework == "" {
 		if o.withCodegen {
-			return fmt.Errorf(`Could not find codegen config. For adding codegen config, run:
+			return fmt.Errorf(`could not find codegen config. For adding codegen config, run:
 
   hasura actions use-codegen`)
 		}
@@ -121,6 +121,18 @@ func (o *actionsCreateOptions) run() error {
 		return nil
 	}
 
+	if err := o.EC.SetupCodegenAssetsRepo(); err != nil {
+		o.EC.Logger.Errorf("failed generating code: setting up codegen-assets repo failed (this is required for automatically generating actions code): %v", err)
+		o.EC.Logger.Errorf("retry operation with: 'hasura actions codegen %s'", o.name)
+		return nil
+	}
+	// ensure codegen-assets repo exists
+	if err := ec.CodegenAssetsRepo.EnsureCloned(); err != nil {
+		o.EC.Logger.Errorf("failed generating code: pulling latest actions codegen files from internet failed: %v", err)
+		o.EC.Logger.Errorf("retry operation with: 'hasura actions codegen %s'", o.name)
+		return nil
+	}
+
 	// construct derive payload to send to codegenerator
 	derivePayload := types.DerivePayload{
 		IntrospectionSchema: introSchema,
@@ -132,7 +144,9 @@ func (o *actionsCreateOptions) run() error {
 	o.EC.Spin(fmt.Sprintf(`Running "hasura actions codegen %s"...`, o.name))
 	err = actionCfg.Codegen(o.name, derivePayload)
 	if err != nil {
-		return errors.Wrap(err, "error in generating codegen")
+		o.EC.Spinner.Stop()
+		o.EC.Logger.Warn("codegen failed, retry with `hasura actions codegen`")
+		return err
 	}
 	o.EC.Spinner.Stop()
 	o.EC.Logger.Info("Codegen files generated at " + o.EC.Config.ActionConfig.Codegen.OutputDir)

@@ -22,14 +22,11 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"regexp"
 	"runtime"
 	"strings"
 	"syscall"
-	"unicode"
 
 	"github.com/hasura/graphql-engine/cli/v2"
-	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
 
@@ -49,7 +46,16 @@ Please open pull requests against this repo to add new plugins`,
 		SilenceUsage: true,
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 			cmd.Root().PersistentPreRun(cmd, args)
-			return ec.PluginsConfig.Repo.EnsureCloned()
+			// setup plugins path
+			err := ec.SetupPlugins()
+			if err != nil {
+				return fmt.Errorf("setting up plugins path failed: %w", err)
+			}
+
+			if err := ec.PluginsConfig.Repo.EnsureCloned(); err != nil {
+				return fmt.Errorf("pulling latest plugins list from internet failed: %w", err)
+			}
+			return nil
 		},
 	}
 	pluginsCmd.AddCommand(
@@ -163,23 +169,6 @@ func HandlePluginCommand(pluginHandler PluginHandler, cmdArgs []string) error {
 	}
 
 	return nil
-}
-
-func ensureDirs(paths ...string) error {
-	for _, p := range paths {
-		if err := os.MkdirAll(p, 0755); err != nil {
-			return errors.Wrapf(err, "failed to ensure create directory %q", p)
-		}
-	}
-	return nil
-}
-
-func indent(s string) string {
-	out := "\\\n"
-	s = strings.TrimRightFunc(s, unicode.IsSpace)
-	out += regexp.MustCompile("(?m)^").ReplaceAllString(s, " | ")
-	out += "\n/"
-	return out
 }
 
 func limitString(s string, length int) string {

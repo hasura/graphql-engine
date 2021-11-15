@@ -1,6 +1,7 @@
 .hasura-dev-python-venv
 server/tests-py/.devsh_version
 npm-debug.log
+dist-newstyle/
 *.temp
 *.DS_Store
 .tern-project

@@ -34,22 +34,6 @@ changelog() {
   fi
 }
 
-## deploy functions
-deploy_server() {
-    echo "deploying server"
-    cd "$ROOT/server"
-    docker login -u "$DOCKER_USER" -p "$DOCKER_PASSWORD"
-    make ci-load-image
-    make push
-}
-
-deploy_server_latest() {
-    echo "deloying server latest tag"
-    cd "$ROOT/server"
-    echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USER" --password-stdin
-    make push-latest
-}
-
 draft_github_release() {
     cd "$ROOT"
     export GITHUB_REPOSITORY="${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}"
@@ -85,86 +69,6 @@ send_pr_to_repo() {
   hub pull-request -f -F- <<<"Update image version to ${LATEST_TAG}" -r ${REVIEWERS} -a ${REVIEWERS}
 }
 
-deploy_console() {
-    echo "deploying console"
-
-    cd "$ROOT/console"
-    export VERSION=$(../scripts/get-console-assets-version.sh)
-    # if version is not set, then skip console
-    if [ -z "$VERSION" ]; then
-        echo "version is not, skipping console deployment"
-        return
-    fi
-    export DIST_PATH="/build/_console_output"
-    local GS_BUCKET_ROOT="gs://graphql-engine-cdn.hasura.io/console/assets/$VERSION"
-    # assets are at /build/_console_output/assets/versioned, already gzipped
-    gsutil cp "$DIST_PATH/assets/versioned/main.js.gz" "$GS_BUCKET_ROOT/main.js.gz"
-    gsutil cp "$DIST_PATH/assets/versioned/main.css.gz" "$GS_BUCKET_ROOT/main.css.gz"
-    gsutil cp "$DIST_PATH/assets/versioned/vendor.js.gz" "$GS_BUCKET_ROOT/vendor.js.gz"
-    gsutil setmeta -h "Content-Encoding: gzip" "$GS_BUCKET_ROOT/*"
-
-    unset VERSION
-    unset DIST_PATH
-}
-
-# build and push container for auto-migrations-v2
-build_and_push_cli_migrations_image_v2() {
-    IMAGE_TAG="hasura/graphql-engine:${CIRCLE_TAG}.cli-migrations-v2"
-    docker load -i /build/_cli_migrations_output/v2.tar
-    docker tag cli-migrations-v2 "$IMAGE_TAG"
-    docker push "$IMAGE_TAG"
-}
-
-# build and push latest container for auto-migrations-v2
-push_latest_cli_migrations_image_v2() {
-    IMAGE_TAG="hasura/graphql-engine:${CIRCLE_TAG}.cli-migrations-v2"
-    LATEST_IMAGE_TAG="hasura/graphql-engine:latest.cli-migrations-v2"
-
-    # push latest.cli-migrations-v2 tag
-    docker tag "$IMAGE_TAG" "$LATEST_IMAGE_TAG"
-    docker push "$LATEST_IMAGE_TAG"
-}
-
-# build and push container for auto-migrations-v3
-build_and_push_cli_migrations_image_v3() {
-    IMAGE_TAG="hasura/graphql-engine:${CIRCLE_TAG}.cli-migrations-v3"
-    docker load -i /build/_cli_migrations_output/v3.tar
-    docker tag cli-migrations-v3 "$IMAGE_TAG"
-    docker push "$IMAGE_TAG"
-}
-
-# build and push latest container for auto-migrations-v3
-push_latest_cli_migrations_image_v3() {
-    IMAGE_TAG="hasura/graphql-engine:${CIRCLE_TAG}.cli-migrations-v3"
-    LATEST_IMAGE_TAG="hasura/graphql-engine:latest.cli-migrations-v3"
-
-    # push latest.cli-migrations-v3 tag
-    docker tag "$IMAGE_TAG" "$LATEST_IMAGE_TAG"
-    docker push "$LATEST_IMAGE_TAG"
-}
-
-
-# copy docker-compose-https manifests to gcr for digital ocean one-click app
-deploy_do_manifests() {
-    gsutil cp "$ROOT/install-manifests/docker-compose-https/docker-compose.yaml" \
-           gs://graphql-engine-cdn.hasura.io/install-manifests/do-one-click/docker-compose.yaml
-    gsutil cp "$ROOT/install-manifests/docker-compose-https/Caddyfile" \
-           gs://graphql-engine-cdn.hasura.io/install-manifests/do-one-click/Caddyfile
-}
-
-# setup gcloud cli tool
-setup_gcloud() {
-    echo $GCLOUD_SERVICE_KEY > ${HOME}/gcloud-service-key.json
-    gcloud auth activate-service-account --key-file=${HOME}/gcloud-service-key.json
-    gcloud --quiet config set project ${GOOGLE_PROJECT_ID}
-}
-
-# push the server binary to google cloud storage
-push_server_binary() {
-    gsutil cp /build/_server_output/graphql-engine \
-              gs://graphql-engine-cdn.hasura.io/server/latest/linux-amd64
-}
-
 # skip deploy for pull requests
 if [[ -n "${CIRCLE_PR_NUMBER:-}" ]]; then
     echo "not deploying for PRs"
@@ -182,31 +86,10 @@ fi
 # CIRCLE_PR_NUMBER
 # CIRCLE_BRANCH
 
-setup_gcloud
-
-if [[ -z "$CIRCLE_TAG" ]]; then
-    # channel branch, only update console
-    echo "channel branch, only deploying console"
-    export EXPECTED_CHANNEL="${CIRCLE_BRANCH}"
-    deploy_console
-    unset EXPECTED_CHANNEL
-    exit
-fi
-
-deploy_console
-deploy_server
 if [[ ! -z "$CIRCLE_TAG" ]]; then
-    build_and_push_cli_migrations_image_v2
-    build_and_push_cli_migrations_image_v3
-
     # if this is a stable release, update all latest assets
     if [ $IS_STABLE_RELEASE = true ]; then
-        deploy_server_latest
-        push_server_binary
-        push_latest_cli_migrations_image_v2
-        push_latest_cli_migrations_image_v3
         send_pr_to_repo graphql-engine-heroku
-        deploy_do_manifests
     fi
 
     # submit a release draft to github

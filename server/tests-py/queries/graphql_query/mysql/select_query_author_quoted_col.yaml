@@ -14,8 +14,8 @@ query:
   query: |
     query {
      hasura_author {
-        id
-        name
         createdAt
+        name
+        id
       }
     }

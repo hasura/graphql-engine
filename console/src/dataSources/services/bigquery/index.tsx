@@ -170,6 +170,13 @@ export const supportedFeatures: DeepRequired<SupportedFeaturesType> = {
     nonTrackableFunctions: {
       enabled: false,
     },
+    modify: {
+      enabled: false,
+      comments: {
+        view: false,
+        edit: false,
+      },
+    },
   },
   events: {
     triggers: {
@@ -254,7 +261,7 @@ export const bigquery: DataSourcesAPI = {
     if (schemas) {
       datasets = schemas;
     } else {
-      datasets = tables.map(t => t.table_schema);
+      datasets = tables?.map(t => t.schema) ?? [];
     }
 
     const query = (dataset: string) => `
@@ -440,4 +447,5 @@ export const bigquery: DataSourcesAPI = {
   viewsSupported: false,
   supportedColumnOperators,
   violationActions,
+  schemaListQuery: '',
 };

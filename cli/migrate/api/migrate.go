@@ -20,7 +20,6 @@ import (
 	"github.com/hasura/graphql-engine/cli/v2"
 	"github.com/hasura/graphql-engine/cli/v2/migrate"
 	"github.com/hasura/graphql-engine/cli/v2/migrate/cmd"
-	"github.com/hasura/graphql-engine/cli/v2/migrate/database/hasuradb"
 	"github.com/sirupsen/logrus"
 )
 
@@ -68,9 +67,6 @@ func MigrateAPI(c *gin.Context) {
 		return
 	}
 
-	// Get version
-	version := c.GetInt("version")
-
 	// Convert to url.URL
 	ec, ok := ecPtr.(*cli.ExecutionContext)
 	if !ok {
@@ -94,6 +90,10 @@ func MigrateAPI(c *gin.Context) {
 			kind, err := metadatautil.GetSourceKind(ec.APIClient.V1Metadata.ExportMetadata, sourceName)
 			if err != nil {
 				c.JSON(http.StatusInternalServerError, &Response{Code: "internal_error", Message: err.Error()})
+				return
+			}
+			if kind == nil {
+				c.JSON(http.StatusInternalServerError, &Response{Code: "request_parse_error", Message: fmt.Sprintf("cannot determine source kind for %v", sourceName)})
 				return
 			}
 			sourceKind = *kind
@@ -144,7 +144,26 @@ func MigrateAPI(c *gin.Context) {
 				c.JSON(http.StatusInternalServerError, &Response{Code: "internal_error", Message: err.Error()})
 				return
 			}
-			sourceKind = *kind
+			if kind == nil && len(request.Up) == 0 {
+				c.JSON(http.StatusInternalServerError, &Response{Code: "request_parse_error", Message: fmt.Sprintf("didn't find any request in UP in query body %v", sourceName)})
+				return
+			}
+			if kind == nil && len(request.Up) != 0 {
+				switch databaseKind := strings.Split(request.Up[0].Type, "_")[0]; databaseKind {
+				case "pg":
+					sourceKind = hasura.SourceKindPG
+				case "mssql":
+					sourceKind = hasura.SourceKindMSSQL
+				case "citus":
+					sourceKind = hasura.SourceKindCitus
+				default:
+					c.JSON(http.StatusInternalServerError, &Response{Code: "request_parse_error", Message: fmt.Sprintf("cannot determine source kind for %v", sourceName)})
+					return
+				}
+			}
+			if kind != nil {
+				sourceKind = *kind
+			}
 		}
 		t, err := migrate.NewMigrate(ec, false, sourceName, sourceKind)
 		if err != nil {
@@ -152,88 +171,68 @@ func MigrateAPI(c *gin.Context) {
 			return
 		}
 		createOptions := cmd.New(timestamp, request.Name, filepath.Join(ec.MigrationDir, sourceName))
-		if version != int(cli.V1) && migrate.IsMigrationsSupported(sourceKind) {
-			sqlUp := &bytes.Buffer{}
-			sqlDown := &bytes.Buffer{}
-			for _, arg := range request.Up {
-				if strings.Contains(arg.Type, "run_sql") {
-					argByt, err := json.Marshal(arg.Args)
-					if err != nil {
-						c.JSON(http.StatusInternalServerError, &Response{Code: "request_parse_error", Message: err.Error()})
-						return
-					}
-					var to hasuradb.RunSQLInput
-					err = json.Unmarshal(argByt, &to)
-					if err != nil {
-						c.JSON(http.StatusInternalServerError, &Response{Code: "request_parse_error", Message: err.Error()})
-						return
-					}
-					sqlUp.WriteString(to.SQL)
-					sqlUp.WriteString("\n")
-				}
-			}
-
-			for _, arg := range request.Down {
-				if strings.Contains(arg.Type, "run_sql") {
-					argByt, err := json.Marshal(arg.Args)
-					if err != nil {
-						c.JSON(http.StatusInternalServerError, &Response{Code: "request_parse_error", Message: err.Error()})
-						return
-					}
-					var to hasuradb.RunSQLInput
-					err = json.Unmarshal(argByt, &to)
-					if err != nil {
-						c.JSON(http.StatusInternalServerError, &Response{Code: "request_parse_error", Message: err.Error()})
-						return
-					}
-					sqlDown.WriteString(to.SQL)
-					sqlDown.WriteString("\n")
-				}
-			}
-
-			if sqlUp.String() != "" {
-				err = createOptions.SetSQLUp(sqlUp.String())
+		sqlUp := &bytes.Buffer{}
+		sqlDown := &bytes.Buffer{}
+		for _, arg := range request.Up {
+			if strings.Contains(arg.Type, "run_sql") {
+				argByt, err := json.Marshal(arg.Args)
 				if err != nil {
-					c.JSON(http.StatusInternalServerError, &Response{Code: "create_file_error", Message: err.Error()})
+					c.JSON(http.StatusInternalServerError, &Response{Code: "request_parse_error", Message: err.Error()})
 					return
 				}
-			}
-			if sqlDown.String() != "" {
-				err = createOptions.SetSQLDown(sqlDown.String())
+				var to hasura.PGRunSQLInput
+				err = json.Unmarshal(argByt, &to)
 				if err != nil {
-					c.JSON(http.StatusInternalServerError, &Response{Code: "create_file_error", Message: err.Error()})
+					c.JSON(http.StatusInternalServerError, &Response{Code: "request_parse_error", Message: err.Error()})
 					return
 				}
+				sqlUp.WriteString(to.SQL)
+				sqlUp.WriteString("\n")
 			}
+		}
 
-			if sqlUp.String() != "" || sqlDown.String() != "" {
-				err = createOptions.Create()
+		for _, arg := range request.Down {
+			if strings.Contains(arg.Type, "run_sql") {
+				argByt, err := json.Marshal(arg.Args)
 				if err != nil {
-					c.JSON(http.StatusInternalServerError, &Response{Code: "create_file_error", Message: err.Error()})
+					c.JSON(http.StatusInternalServerError, &Response{Code: "request_parse_error", Message: err.Error()})
 					return
 				}
-			} else {
-				timestamp = 0
+				var to hasura.PGRunSQLInput
+				err = json.Unmarshal(argByt, &to)
+				if err != nil {
+					c.JSON(http.StatusInternalServerError, &Response{Code: "request_parse_error", Message: err.Error()})
+					return
+				}
+				sqlDown.WriteString(to.SQL)
+				sqlDown.WriteString("\n")
 			}
-		} else {
-			err = createOptions.SetMetaUp(request.Up)
+		}
+
+		if sqlUp.String() != "" {
+			err = createOptions.SetSQLUp(sqlUp.String())
 			if err != nil {
 				c.JSON(http.StatusInternalServerError, &Response{Code: "create_file_error", Message: err.Error()})
 				return
 			}
-			err = createOptions.SetMetaDown(request.Down)
-			if err != nil {
-				c.JSON(http.StatusInternalServerError, &Response{Code: "create_file_error", Message: err.Error()})
-				return
-			}
-
-			err = createOptions.Create()
+		}
+		if sqlDown.String() != "" {
+			err = createOptions.SetSQLDown(sqlDown.String())
 			if err != nil {
 				c.JSON(http.StatusInternalServerError, &Response{Code: "create_file_error", Message: err.Error()})
 				return
 			}
 		}
 
+		if sqlUp.String() != "" || sqlDown.String() != "" {
+			err = createOptions.Create()
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, &Response{Code: "create_file_error", Message: err.Error()})
+				return
+			}
+		} else {
+			timestamp = 0
+		}
 		defer func() {
 			if err != nil && timestamp != 0 {
 				err := createOptions.Delete()

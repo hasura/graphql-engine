@@ -1,47 +1,44 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
-module Hasura.Backends.BigQuery.Instances.Types where
+module Hasura.Backends.BigQuery.Instances.Types () where
 
-import           Hasura.Prelude
-
-import qualified Language.GraphQL.Draft.Syntax    as G
-
-import           Data.Aeson
-
-import qualified Hasura.Backends.BigQuery.Source  as BigQuery
-import qualified Hasura.Backends.BigQuery.Types   as BigQuery
-
-import           Hasura.Backends.BigQuery.ToQuery ()
-import           Hasura.Base.Error
-import           Hasura.RQL.Types.Backend
-import           Hasura.SQL.Backend
-
+import Data.Aeson
+import Hasura.Backends.BigQuery.Source qualified as BigQuery
+import Hasura.Backends.BigQuery.ToQuery ()
+import Hasura.Backends.BigQuery.Types qualified as BigQuery
+import Hasura.Base.Error
+import Hasura.Prelude
+import Hasura.RQL.Types.Backend
+import Hasura.SQL.Backend
+import Language.GraphQL.Draft.Syntax qualified as G
 
 instance Backend 'BigQuery where
-  type SourceConfig            'BigQuery = BigQuery.BigQuerySourceConfig
+  type SourceConfig 'BigQuery = BigQuery.BigQuerySourceConfig
   type SourceConnConfiguration 'BigQuery = BigQuery.BigQueryConnSourceConfig
-  type Identifier              'BigQuery = Void
-  type TableName               'BigQuery = BigQuery.TableName
-  type FunctionName            'BigQuery = BigQuery.FunctionName
-  type RawFunctionInfo         'BigQuery = Void
-  type FunctionArgType         'BigQuery = Void
-  type ConstraintName          'BigQuery = Void
-  type BasicOrderType          'BigQuery = BigQuery.Order
-  type NullsOrderType          'BigQuery = BigQuery.NullsOrder
-  type CountType               'BigQuery = BigQuery.Countable BigQuery.ColumnName
-  type Column                  'BigQuery = BigQuery.ColumnName
-  type ScalarValue             'BigQuery = BigQuery.Value
-  type ScalarType              'BigQuery = BigQuery.ScalarType
-  type SQLExpression           'BigQuery = BigQuery.Expression
-  type SQLOperator             'BigQuery = BigQuery.Op
-  type BooleanOperators        'BigQuery = Const Void
+  type Identifier 'BigQuery = Void
+  type TableName 'BigQuery = BigQuery.TableName
+  type FunctionName 'BigQuery = BigQuery.FunctionName
+  type RawFunctionInfo 'BigQuery = Void
+  type FunctionArgType 'BigQuery = Void
+  type ConstraintName 'BigQuery = Void
+  type BasicOrderType 'BigQuery = BigQuery.Order
+  type NullsOrderType 'BigQuery = BigQuery.NullsOrder
+  type CountType 'BigQuery = BigQuery.Countable BigQuery.ColumnName
+  type Column 'BigQuery = BigQuery.ColumnName
+  type ScalarValue 'BigQuery = BigQuery.Value
+  type ScalarType 'BigQuery = BigQuery.ScalarType
+  type SQLExpression 'BigQuery = BigQuery.Expression
+  type SQLOperator 'BigQuery = BigQuery.Op
+  type BooleanOperators 'BigQuery = Const Void
 
-  type XComputedField          'BigQuery = XDisable
-  type XRelay                  'BigQuery = XDisable
-  type XNodesAgg               'BigQuery = XEnable
-  type XNestedInserts          'BigQuery = XDisable
+  type XComputedField 'BigQuery = XDisable
+  type XRelay 'BigQuery = XDisable
+  type XNodesAgg 'BigQuery = XEnable
+  type XNestedInserts 'BigQuery = XDisable
+  type XOnConflict 'BigQuery = XDisable
 
-  type ExtraTableMetadata      'BigQuery = ()
+  type ExtraTableMetadata 'BigQuery = ()
+  type ExtraInsertData 'BigQuery = ()
 
   functionArgScalarType :: FunctionArgType 'BigQuery -> ScalarType 'BigQuery
   functionArgScalarType = absurd
@@ -77,5 +74,5 @@ instance Backend 'BigQuery where
   scalarTypeGraphQLName = BigQuery.scalarTypeGraphQLName
 
   snakeCaseTableName :: TableName 'BigQuery -> Text
-  snakeCaseTableName BigQuery.TableName { tableName, tableNameSchema } =
+  snakeCaseTableName BigQuery.TableName {tableName, tableNameSchema} =
     tableNameSchema <> "_" <> tableName

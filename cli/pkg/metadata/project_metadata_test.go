@@ -42,9 +42,45 @@ func TestProjectMetadataOps_Apply(t *testing.T) {
 			false,
 		},
 		{
+			"can apply metadata from config v3 project in file mode (json)",
+			fields{
+				projectDirectory: "testdata/projectv3-file-mode-json",
+				endpointString:   hgeEndpoint,
+			},
+			`{"is_consistent":false,"inconsistent_objects":[{"definition":{"name":"t1","schema":"public"},"name":"table t1 in source default","reason":"Inconsistent object: no such table/view exists in source: \"t1\"","type":"table"},{"definition":{"name":"t2","schema":"public"},"name":"table t2 in source default","reason":"Inconsistent object: no such table/view exists in source: \"t2\"","type":"table"},{"definition":{"name":"t4","schema":"pub"},"name":"table pub.t4 in source default","reason":"Inconsistent object: no such table/view exists in source: \"pub.t4\"","type":"table"},{"definition":{"name":"t3","schema":"pub"},"name":"table pub.t3 in source default","reason":"Inconsistent object: no such table/view exists in source: \"pub.t3\"","type":"table"}]}`,
+			false,
+		},
+		{
+			"can apply metadata from config v3 project in file mode (yaml)",
+			fields{
+				projectDirectory: "testdata/projectv3-file-mode-yaml",
+				endpointString:   hgeEndpoint,
+			},
+			`{"is_consistent":false,"inconsistent_objects":[{"definition":{"name":"t1","schema":"public"},"name":"table t1 in source default","reason":"Inconsistent object: no such table/view exists in source: \"t1\"","type":"table"},{"definition":{"name":"t2","schema":"public"},"name":"table t2 in source default","reason":"Inconsistent object: no such table/view exists in source: \"t2\"","type":"table"},{"definition":{"name":"t4","schema":"pub"},"name":"table pub.t4 in source default","reason":"Inconsistent object: no such table/view exists in source: \"pub.t4\"","type":"table"},{"definition":{"name":"t3","schema":"pub"},"name":"table pub.t3 in source default","reason":"Inconsistent object: no such table/view exists in source: \"pub.t3\"","type":"table"}]}`,
+			false,
+		},
+		{
 			"can apply metadata from config v2 project",
 			fields{
 				projectDirectory: "testdata/projectv2",
+				endpointString:   hgeEndpoint,
+			},
+			"",
+			true,
+		},
+		{
+			"can apply metadata from config v2 project file mode (json)",
+			fields{
+				projectDirectory: "testdata/projectv2-file-mode-json",
+				endpointString:   hgeEndpoint,
+			},
+			"",
+			true,
+		},
+		{
+			"can apply metadata from config v2 project file mode (yaml)",
+			fields{
+				projectDirectory: "testdata/projectv2-file-mode-yaml",
 				endpointString:   hgeEndpoint,
 			},
 			"",
@@ -76,8 +112,6 @@ func TestProjectMetadataOps_Parse(t *testing.T) {
 	defer teardown()
 	type fields struct {
 		projectDirectory string
-		adminSecret      string
-		endpointString   string
 	}
 	tests := []struct {
 		name       string
@@ -94,9 +128,41 @@ func TestProjectMetadataOps_Parse(t *testing.T) {
 			false,
 		},
 		{
+			"can generate json metadata from config v3 project in filemode (json)",
+			fields{
+				projectDirectory: "testdata/projectv3-file-mode-json",
+			},
+			"testdata/metadata_parse_test/config-v3.golden.json",
+			false,
+		},
+		{
+			"can generate json metadata from config v3 project in filemode (yaml)",
+			fields{
+				projectDirectory: "testdata/projectv3-file-mode-yaml",
+			},
+			"testdata/metadata_parse_test/config-v3.golden.json",
+			false,
+		},
+		{
 			"can generate json metadata from config v2 project",
 			fields{
 				projectDirectory: "testdata/projectv2",
+			},
+			"testdata/metadata_parse_test/config-v2.golden.json",
+			false,
+		},
+		{
+			"can generate json metadata from config v2 project in filemode (json)",
+			fields{
+				projectDirectory: "testdata/projectv2-file-mode-json",
+			},
+			"testdata/metadata_parse_test/config-v2.golden.json",
+			false,
+		},
+		{
+			"can generate json metadata from config v2 project in filemode (yaml)",
+			fields{
+				projectDirectory: "testdata/projectv2-file-mode-yaml",
 			},
 			"testdata/metadata_parse_test/config-v2.golden.json",
 			false,
@@ -116,7 +182,6 @@ func TestProjectMetadataOps_Parse(t *testing.T) {
 				require.NoError(t, err)
 				wantb, err := ioutil.ReadFile(tt.wantGolden)
 				require.NoError(t, err)
-
 				require.JSONEq(t, string(wantb), string(gotb))
 			}
 		})
@@ -129,8 +194,6 @@ func TestProjectMetadataOps_Diff(t *testing.T) {
 	defer teardown()
 	type fields struct {
 		projectDirectory string
-		adminSecret      string
-		endpointString   string
 	}
 	tests := []struct {
 		name       string
@@ -178,7 +241,6 @@ func TestProjectMetadata_Reload(t *testing.T) {
 	defer teardown()
 	type fields struct {
 		projectDirectory string
-		adminSecret      string
 		endpointString   string
 	}
 	tests := []struct {

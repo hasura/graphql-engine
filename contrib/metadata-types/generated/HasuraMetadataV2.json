@@ -71,6 +71,11 @@
             "title": "TableConfig",
             "type": "object",
             "properties": {
+                "custom_name": {
+                    "description": "Customise the table name",
+                    "type": "string",
+                    "title": "custom_name"
+                },
                 "custom_root_fields": {
                     "description": "Customise the root fields",
                     "$ref": "#/definitions/CustomRootFields",
@@ -1672,16 +1677,19 @@
                 },
                 "permissions": {
                     "description": "Permissions of the action",
-                    "type": "object",
-                    "properties": {
-                        "role": {
-                            "type": "string",
-                            "title": "role"
-                        }
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "role": {
+                                "type": "string",
+                                "title": "role"
+                            }
+                        },
+                        "required": [
+                            "role"
+                        ]
                     },
-                    "required": [
-                        "role"
-                    ],
                     "title": "permissions"
                 }
             },

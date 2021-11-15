@@ -54,6 +54,10 @@ definitions:
     title: TableConfig
     type: object
     properties:
+      custom_name:
+        description: Customise the table name
+        type: string
+        title: custom_name
       custom_root_fields:
         description: Customise the root fields
         $ref: '#/definitions/CustomRootFields'
@@ -1334,13 +1338,15 @@ definitions:
         title: comment
       permissions:
         description: Permissions of the action
-        type: object
-        properties:
-          role:
-            type: string
-            title: role
-        required:
-          - role
+        type: array
+        items:
+          type: object
+          properties:
+            role:
+              type: string
+              title: role
+          required:
+            - role
         title: permissions
     required:
       - definition

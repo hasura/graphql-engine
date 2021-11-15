@@ -1,6 +1,8 @@
 package commands
 
 import (
+	"fmt"
+
 	"github.com/hasura/graphql-engine/cli/v2"
 	"github.com/hasura/graphql-engine/cli/v2/internal/projectmetadata"
 
@@ -9,7 +11,7 @@ import (
 )
 
 func newMetadataReloadCmd(ec *cli.ExecutionContext) *cobra.Command {
-	opts := &metadataReloadOptions{
+	opts := &MetadataReloadOptions{
 		EC: ec,
 	}
 
@@ -26,28 +28,43 @@ func newMetadataReloadCmd(ec *cli.ExecutionContext) *cobra.Command {
   hasura metadata export --endpoint "<endpoint>"`,
 		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			opts.EC.Spin("Reloading metadata...")
-			err := opts.run()
-			opts.EC.Spinner.Stop()
-			if err != nil {
-				return errors.Wrap(err, "failed to reload metadata")
-			}
-			opts.EC.Logger.Info("Metadata reloaded")
-			return nil
+			return opts.runWithInfo()
 		},
 	}
 
 	return metadataReloadCmd
 }
 
-type metadataReloadOptions struct {
+type MetadataReloadOptions struct {
 	EC *cli.ExecutionContext
 }
 
-func (o *metadataReloadOptions) run() error {
+func (o *MetadataReloadOptions) runWithInfo() error {
+	o.EC.Spin("Reloading metadata...")
+	err := o.run()
+	o.EC.Spinner.Stop()
+	if err != nil {
+		return errors.Wrap(err, "failed to reload metadata")
+	}
+	o.EC.Logger.Info("Metadata reloaded")
+	icListOpts := &metadataInconsistencyListOptions{
+		EC: o.EC,
+	}
+	err = icListOpts.read(projectmetadata.NewHandlerFromEC(icListOpts.EC))
+	if err != nil {
+		return fmt.Errorf("failed to read metadata status: %v", err)
+	}
+	if icListOpts.isConsistent {
+		icListOpts.EC.Logger.Infoln("Metadata is consistent")
+	} else {
+		icListOpts.EC.Logger.Warnln("Metadata is inconsistent, use 'hasura metadata ic list' command to see the inconsistent objects")
+	}
+	return nil
+}
 
+func (o *MetadataReloadOptions) run() error {
 	var err error
-	metadataHandler := projectmetadata.NewHandlerFromEC(ec)
+	metadataHandler := projectmetadata.NewHandlerFromEC(o.EC)
 	_, err = metadataHandler.ReloadMetadata()
 	if err != nil {
 		return errors.Wrap(err, "Cannot reload metadata")

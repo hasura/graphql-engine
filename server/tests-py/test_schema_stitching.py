@@ -297,6 +297,28 @@ class TestRemoteSchemaBasic:
         st_code, resp = hge_ctx.v1q_f(self.dir + '/basic_bulk_remove_add.yaml')
         assert st_code == 200, resp
 
+class TestRemoteSchemaBasicExtensions:
+    """ basic => no hasura tables are tracked """
+
+    teardown = {"type": "clear_metadata", "args": {}}
+    dir = 'queries/remote_schemas'
+
+    @pytest.fixture(autouse=True)
+    def transact(self, request, hge_ctx):
+        config = request.config
+        # This is needed for supporting server upgrade tests
+        # Some marked tests in this class will be run as server upgrade tests
+        if not config.getoption('--skip-schema-setup'):
+            q = mk_add_remote_q('simple 1', 'http://localhost:5000/hello-graphql-extensions')
+            st_code, resp = hge_ctx.v1q(q)
+            assert st_code == 200, resp
+        yield
+        if request.session.testsfailed > 0 or not config.getoption('--skip-schema-teardown'):
+            hge_ctx.v1q(self.teardown)
+
+    def test_remote_query(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir + '/basic_query.yaml')
+
 
 class TestAddRemoteSchemaTbls:
     """ tests with adding a table in hasura """

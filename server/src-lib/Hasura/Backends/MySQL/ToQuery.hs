@@ -1,26 +1,31 @@
-{-# OPTIONS_GHC -fno-warn-orphans #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 
 -- | Convert the simple AST to an SQL query, ready to be passed
 -- to the mysql package's query/exec functions.
-
 module Hasura.Backends.MySQL.ToQuery
-  ( Printer
-  , toQueryPretty
-  , fromSelect
-  , toQueryFlat
-  , Query(..)
+  ( Printer,
+    toQueryPretty,
+    fromSelect,
+    toQueryFlat,
+    Query (..),
+    renderBuilderPretty,
+    runBuilderPretty,
   )
 where
 
-import           Data.ByteString             (ByteString)
-import           Data.List                   (intersperse)
-import           Data.String
-import qualified Data.Text                   as T
-import           Hasura.Backends.MySQL.Types
-import           Hasura.Prelude              hiding (GT, LT)
+import Data.ByteString (ByteString)
+import Data.HashMap.Strict.InsOrd qualified as OMap
+import Data.List (intersperse)
+import Data.String
+import Data.Text qualified as T
+import Data.Text.Encoding qualified as T
+import Data.Text.Lazy.Builder qualified as LT
+import Data.Tuple (swap)
+import Hasura.Backends.MySQL.Types
+import Hasura.Prelude hiding (GT, LT)
 
-newtype Query = Query { unQuery :: ByteString } deriving (Show, Eq, Monoid, Semigroup)
+newtype Query = Query {unQuery :: ByteString} deriving (Show, Eq, Monoid, Semigroup)
 
 data Printer
   = SeqPrinter [Printer]
@@ -34,12 +39,7 @@ instance IsString Printer where
   fromString = QueryPrinter . Query . fromString
 
 (<+>) :: Printer -> Printer -> Printer
-(<+>) x y = SeqPrinter [x,y]
-
-(<+>?) :: Printer -> Maybe Printer -> Printer
-(<+>?) x Nothing  = x
-(<+>?) x (Just y) = SeqPrinter [x,y]
-
+(<+>) x y = SeqPrinter [x, y]
 
 -- Printer generators
 
@@ -49,7 +49,7 @@ fromExpression =
     ValueExpression value -> QueryPrinter (fromScalarType value)
     AndExpression xs ->
       case xs of
-        [] -> ""
+        [] -> truePrinter
         _ ->
           SepByPrinter
             (NewlinePrinter <+> "AND ")
@@ -62,139 +62,139 @@ fromExpression =
             (NewlinePrinter <+> "OR ")
             (fmap (\x -> "(" <+> fromExpression x <+> ")") (toList xs))
     NotExpression expression -> "NOT " <+> fromExpression expression
-    ExistsExpression sel     -> "EXISTS (" <+> fromSelect sel <+> ")"
+    ExistsExpression sel -> "EXISTS (" <+> fromSelect sel <+> ")"
+    InExpression x xs ->
+      fromExpression x <+> " IN " <+> SeqPrinter (fmap fromExpression xs)
     ColumnExpression fieldName -> fromFieldName fieldName
     MethodExpression field method args ->
-      fromExpression field <+> "." <+>
-      fromString (T.unpack method) <+>
-      "(" <+> SeqPrinter (map fromExpression args) <+> ")"
+      fromExpression field <+> "."
+        <+> fromString (T.unpack method)
+        <+> "("
+        <+> SeqPrinter (map fromExpression args)
+        <+> ")"
     OpExpression op x y ->
-      "(" <+>
-      fromExpression x <+>
-      ") " <+> fromOp op <+> " (" <+> fromExpression y <+> ")"
+      "("
+        <+> fromExpression x
+        <+> ") "
+        <+> fromOp op
+        <+> " ("
+        <+> fromExpression y
+        <+> ")"
 
 fromScalarType :: ScalarValue -> Query
-fromScalarType (IntValue v) = Query $ fromString (show v)
-fromScalarType other        = error $ "fromscalartype: not implemented " <> show other
+fromScalarType = \case
+  BigValue v -> Query $ fromString $ show v
+  BinaryValue v -> Query $ fromString $ show v
+  BitValue v -> Query $ fromString $ show v
+  BlobValue v -> Query $ fromString $ show v
+  CharValue v -> Query $ fromString $ show v
+  DatetimeValue v -> Query $ fromString $ show v
+  DateValue v -> Query $ fromString $ show v
+  DecimalValue v -> Query $ fromString $ show v
+  DoubleValue v -> Query $ fromString $ show v
+  EnumValue v -> Query $ fromString $ show v
+  FloatValue v -> Query $ fromString $ show v
+  GeometrycollectionValue v -> Query $ fromString $ show v
+  GeometryValue v -> Query $ fromString $ show v
+  IntValue v -> Query $ fromString $ show v
+  JsonValue v -> Query $ fromString $ show v
+  LinestringValue v -> Query $ fromString $ show v
+  MediumValue v -> Query $ fromString $ show v
+  MultilinestringValue v -> Query $ fromString $ show v
+  MultipointValue v -> Query $ fromString $ show v
+  MultipolygonValue v -> Query $ fromString $ show v
+  NullValue -> Query $ fromString "NULL"
+  NumericValue v -> Query $ fromString $ show v
+  PointValue v -> Query $ fromString $ show v
+  PolygonValue v -> Query $ fromString $ show v
+  SmallValue v -> Query $ fromString $ show v
+  TextValue v -> Query $ fromString $ show v
+  TimestampValue v -> Query $ fromString $ show v
+  TimeValue v -> Query $ fromString $ show v
+  TinyValue v -> Query $ fromString $ show v
+  VarbinaryValue v -> Query $ fromString $ show v
+  VarcharValue v -> Query $ fromString $ show v
+  YearValue v -> Query $ fromString $ show v
+  other -> error $ "fromscalartype: not implemented " <> show other
 
 fromOp :: Op -> Printer
 fromOp =
   \case
-    LT    -> "<"
-    GT    -> ">"
-    GTE   -> ">="
-    LTE   -> "<="
-    IN    -> "IN"
-    NIN   -> "NOT IN"
-    LIKE  -> "LIKE"
+    LT -> "<"
+    GT -> ">"
+    GTE -> ">="
+    LTE -> "<="
+    IN -> "IN"
+    NIN -> "NOT IN"
+    LIKE -> "LIKE"
     NLIKE -> "NOT LIKE"
-    EQ'   -> "="
-    NEQ'  -> "!="
+    EQ' -> "="
+    NEQ' -> "!="
 
 fromFieldName :: FieldName -> Printer
 fromFieldName (FieldName {..}) =
   fromNameText fNameEntity <+> "." <+> fromNameText fName
 
 fromSelect :: Select -> Printer
-fromSelect Select {..} = wrapFor selectFor result
-  where
-    result =
-      SepByPrinter
-      NewlinePrinter $
-      [ "SELECT " <+>
-        IndentPrinter
-          7
-          (SepByPrinter
-             ("," <+> NewlinePrinter)
-             (map fromProjection (toList selectProjections)))
-      ] <>
-      [ "FROM " <+> IndentPrinter 5 (fromFrom f) | Just f <- [selectFrom] ] <>
-      [ SepByPrinter
-          NewlinePrinter
-          (map
-             (\Join {..} ->
-                SeqPrinter
-                  [ "OUTER APPLY ("
-                  , IndentPrinter 13 (fromJoinSource joinSource)
-                  , ") "
-                  , NewlinePrinter
-                  , "AS "
-                  , fromJoinAlias joinJoinAlias
-                  ])
-             selectJoins)
-      , fromWhere selectWhere
-      , fromOrderBys selectTop selectOffset selectOrderBy
-      , fromFor selectFor
+fromSelect Select {..} =
+  SepByPrinter
+    NewlinePrinter
+    $ [ "SELECT "
+          <+> IndentPrinter
+            7
+            ( SepByPrinter
+                ("," <+> NewlinePrinter)
+                (map fromProjection (toList selectProjections))
+            ),
+        "FROM " <+> IndentPrinter 5 (fromFrom selectFrom),
+        fromWhere selectWhere,
+        fromOrderBys selectOrderBy,
+        fromOffsetAndLimit selectSqlTop selectSqlOffset
       ]
 
-fromJoinSource :: JoinSource -> Printer
-fromJoinSource =
-  \case
-    JoinSelect sel        -> fromSelect sel
-    JoinReselect reselect -> fromReselect reselect
-
-fromReselect :: Reselect -> Printer
-fromReselect Reselect {..} = wrapFor reselectFor result
-  where
-    result =
-      SepByPrinter
-        NewlinePrinter
-        [ "SELECT " <+>
-          IndentPrinter
-            7
-            (SepByPrinter
-               ("," <+> NewlinePrinter)
-               (map fromProjection (toList reselectProjections)))
-        , fromWhere reselectWhere
-        , fromFor reselectFor
-        ]
-
 -- https://dev.mysql.com/doc/refman/5.7/en/select.html
-fromOffsetAndLimit :: Top -> Maybe Expression -> Printer
+fromOffsetAndLimit :: Top -> Maybe Int -> Printer
 fromOffsetAndLimit NoTop Nothing = ""
 fromOffsetAndLimit NoTop (Just offset) =
   SeqPrinter
     [ "LIMIT " <+> fromString (show (maxBound :: Int)),
-      IndentPrinter 9 (SepByPrinter NewlinePrinter [" OFFSET " <+> fromExpression offset])
+      IndentPrinter 9 (SepByPrinter NewlinePrinter [" OFFSET " <+> fromString (show offset)])
     ]
 fromOffsetAndLimit (Top val) Nothing = SeqPrinter ["LIMIT " <+> fromString (show val)]
 fromOffsetAndLimit (Top val) (Just offset) =
   SeqPrinter
     [ "LIMIT " <+> fromString (show val),
-      IndentPrinter 9 (SepByPrinter NewlinePrinter [" OFFSET " <+> fromExpression offset])
+      IndentPrinter 9 (SepByPrinter NewlinePrinter [" OFFSET " <+> fromString (show offset)])
     ]
 
 fromOrderBys ::
-     Top -> Maybe Expression -> Maybe (NonEmpty OrderBy) -> Printer
-fromOrderBys top offset Nothing = fromOffsetAndLimit top offset
-fromOrderBys _ moffset morderBys =
+  Maybe (NonEmpty OrderBy) -> Printer
+fromOrderBys Nothing = ""
+fromOrderBys morderBys =
   SeqPrinter
-    [ "ORDER BY "
-    , IndentPrinter
+    [ "ORDER BY ",
+      IndentPrinter
         9
-        (SepByPrinter
-           NewlinePrinter
-           [ case morderBys of
-               Nothing -> ""
-               Just orderBys ->
-                 SepByPrinter
-                   ("," <+> NewlinePrinter)
-                   (concatMap fromOrderBy (toList orderBys))
-           , case moffset of
-               Nothing -> ""
-               (Just offset) ->
-                 "OFFSET " <+> fromExpression offset
-           ])
+        ( SepByPrinter
+            NewlinePrinter
+            [ case morderBys of
+                Nothing -> ""
+                Just orderBys ->
+                  SepByPrinter
+                    ("," <+> NewlinePrinter)
+                    (concatMap fromOrderBy (toList orderBys))
+            ]
+        )
     ]
-
 
 fromOrderBy :: OrderBy -> [Printer]
 fromOrderBy OrderBy {..} =
-  [ fromNullsOrder orderByFieldName orderByNullsOrder
+  [ fromNullsOrder orderByFieldName orderByNullsOrder,
     -- Above: This doesn't do anything when using text, ntext or image
     -- types. See below on CAST commentary.
-  , wrapNullHandling (fromFieldName orderByFieldName) <+>
-    " " <+> fromOrder orderByOrder
+    wrapNullHandling (fromFieldName orderByFieldName)
+      <+> " "
+      <+> fromOrder orderByOrder
   ]
   where
     wrapNullHandling inner = inner
@@ -202,30 +202,18 @@ fromOrderBy OrderBy {..} =
 fromOrder :: Order -> Printer
 fromOrder =
   \case
-    Asc  -> "ASC"
+    Asc -> "ASC"
     Desc -> "DESC"
 
+-- Source <https://gregrs-uk.github.io/2011-02-02/mysql-order-by-with-nulls-first-or-last/>
 fromNullsOrder :: FieldName -> NullsOrder -> Printer
 fromNullsOrder fieldName =
   \case
     NullsAnyOrder -> ""
-    NullsFirst    -> "IIF(" <+> fromFieldName fieldName <+> " IS NULL, 0, 1)"
-    NullsLast     -> "IIF(" <+> fromFieldName fieldName <+> " IS NULL, 1, 0)"
-
-fromJoinAlias :: JoinAlias -> Printer
-fromJoinAlias JoinAlias {..} =
-  fromNameText joinAliasEntity <+>?
-  fmap (\name -> "(" <+> fromNameText name <+> ")") joinAliasField
-
-fromFor :: For -> Printer
-fromFor =
-  \case
-    NoFor -> ""
-    JsonFor ForJson {jsonCardinality} ->
-      "FOR JSON PATH" <+>
-      case jsonCardinality of
-        JsonArray     -> ""
-        JsonSingleton -> ", WITHOUT_ARRAY_WRAPPER"
+    -- ISNULL(NULL)=1, ISNULL(_) = 0 -- therefore we need DESC to put
+    -- nulls first.
+    NullsFirst -> "ISNULL(" <+> fromFieldName fieldName <+> ") DESC"
+    NullsLast -> "ISNULL(" <+> fromFieldName fieldName <+> ") ASC"
 
 fromProjection :: Projection -> Printer
 fromProjection =
@@ -236,15 +224,78 @@ fromProjection =
       fromAliased (fmap fromFieldName aliasedFieldName)
     AggregateProjection aliasedAggregate ->
       fromAliased (fmap fromAggregate aliasedAggregate)
+    AggregateProjections aliasedAggregates ->
+      fromAliased
+        ( fmap
+            ( \aggs ->
+                "STRUCT("
+                  <+> IndentPrinter
+                    7
+                    ( SepByPrinter
+                        ", "
+                        (fmap (fromAliased . fmap fromAggregate) (toList aggs))
+                    )
+                  <+> ")"
+            )
+            aliasedAggregates
+        )
     StarProjection -> "*"
+    EntityProjection aliasedEntity ->
+      fromAliased
+        ( fmap
+            ( \(fields :: [(FieldName, FieldOrigin)]) ->
+                -- Example:
+                --   STRUCT(
+                --     IFNULL(
+                --       `aa_articles1`.`aggregate`,
+                --       STRUCT(0 as count, struct(null as id) as sum)
+                --     ) as aggregate
+                --   ) AS `articles_aggregate`
+                --
+                -- The (AS `articles_aggregate`) part at the end is rendered by 'fromAliased' evaluating
+                -- at the root of this branch, and not by anything below
+                "STRUCT("
+                  <+> ( SepByPrinter
+                          ", "
+                          ( fields
+                              <&> \(fieldName@FieldName {..}, fieldOrigin :: FieldOrigin) ->
+                                "IFNULL(" <+> fromFieldName fieldName <+> ", " <+> fromFieldOrigin fieldOrigin
+                                  <+> ") AS "
+                                  <+> fromNameText fName
+                          )
+                      )
+                  <+> ")"
+            )
+            aliasedEntity
+        )
+    ArrayEntityProjection entityAlias aliasedEntity ->
+      fromAliased
+        ( fmap
+            ( \aggs ->
+                "ARRAY(SELECT AS STRUCT "
+                  <+> IndentPrinter
+                    7
+                    (SepByPrinter ", " (fmap fromFieldNameNaked (toList aggs)))
+                  <+> " FROM "
+                  <+> fromNameText (entityAliasText entityAlias)
+                  <+> ".agg)"
+            )
+            aliasedEntity
+        )
+      where
+        fromFieldNameNaked :: FieldName -> Printer
+        fromFieldNameNaked (FieldName {..}) =
+          fromNameText fName
 
 fromAggregate :: Aggregate -> Printer
 fromAggregate =
   \case
     CountAggregate countable -> "COUNT(" <+> fromCountable countable <+> ")"
     OpAggregate text args ->
-      QueryPrinter (Query $ fromString $ show text) <+>
-      "(" <+> SepByPrinter ", " (map fromExpression (toList args)) <+> ")"
+      QueryPrinter (Query $ fromString $ show text)
+        <+> "("
+        <+> SepByPrinter ", " (map fromExpression (toList args))
+        <+> ")"
     TextAggregate text -> fromExpression (ValueExpression (TextValue text))
 
 fromCountable :: Countable FieldName -> Printer
@@ -254,93 +305,44 @@ fromCountable =
     NonNullFieldCountable fields ->
       SepByPrinter ", " (map fromFieldName (toList fields))
     DistinctCountable fields ->
-      "DISTINCT " <+>
-      SepByPrinter ", " (map fromFieldName (toList fields))
+      "DISTINCT "
+        <+> SepByPrinter ", " (map fromFieldName (toList fields))
 
 fromWhere :: Where -> Printer
 fromWhere =
   \case
     Where [] -> ""
     Where expressions ->
-      "WHERE " <+>
-      IndentPrinter 6 (fromExpression (AndExpression expressions))
+      "WHERE "
+        <+> IndentPrinter 6 (fromExpression (AndExpression expressions))
 
 fromFrom :: From -> Printer
 fromFrom =
   \case
     FromQualifiedTable aliasedQualifiedTableName ->
       fromAliased (fmap fromTableName aliasedQualifiedTableName)
-    FromOpenJson openJson -> fromAliased (fmap fromOpenJson openJson)
+    FromSelect select -> fromAliased (fmap (parens . fromSelect) select)
 
-fromOpenJson :: OpenJson -> Printer
-fromOpenJson OpenJson {openJsonExpression, openJsonWith} =
-  SepByPrinter
-    NewlinePrinter
-    [ "OPENJSON(" <+>
-      IndentPrinter 9 (fromExpression openJsonExpression) <+> ")"
-    , "WITH (" <+>
-      IndentPrinter
-        5
-        (SepByPrinter
-           ("," <+> NewlinePrinter)
-           (toList (fmap fromJsonFieldSpec openJsonWith))) <+>
-      ")"
-    ]
-
-fromJsonFieldSpec :: JsonFieldSpec -> Printer
-fromJsonFieldSpec =
-  \case
-    IntField name mPath    -> fromNameText name <+> " INT" <+> quote mPath
-    StringField name mPath -> fromNameText name <+> " NVARCHAR(MAX)" <+> quote mPath
-    UuidField name mPath   -> fromNameText name <+> " UNIQUEIDENTIFIER" <+> quote mPath
-    JsonField name mPath   -> fromJsonFieldSpec (StringField name mPath) <+> " AS JSON"
-    where
-      quote mPath = maybe "" ((\p -> " '" <+> p <+> "'"). go) mPath
-      go = \case
-        RootPath      -> "$"
-        IndexPath r i -> go r <+> "[" <+> fromString (show i) <+> "]"
-        FieldPath r f -> go r <+> ".\"" <+> fromString (T.unpack f) <+> "\""
+parens :: Printer -> Printer
+parens x = "(" <+> IndentPrinter 1 x <+> ")"
 
 fromTableName :: TableName -> Printer
 fromTableName TableName {name, schema} =
-  fromNameText schema <+> "." <+> fromNameText name
+  maybe "" ((<+> ".") . fromNameText) schema <+> fromNameText name
 
 fromAliased :: Aliased Printer -> Printer
 fromAliased Aliased {..} =
-  aliasedThing <+>
-  ((" AS " <+>) . fromNameText) aliasedAlias
+  aliasedThing
+    <+> ((" AS " <+>) . fromNameText) aliasedAlias
 
 fromNameText :: Text -> Printer
 fromNameText t = QueryPrinter (Query . fromString . T.unpack $ t)
 
-falsePrinter :: Printer
-falsePrinter = "(1<>1)"
+truePrinter :: Printer
+truePrinter = "TRUE"
 
--- | Wrap a select with things needed when using FOR JSON.
-wrapFor :: For -> Printer -> Printer
-wrapFor for' inner = nullToArray
-  where
-    nullToArray =
-      case for' of
-        NoFor     -> rooted
-        JsonFor _ -> rooted
-    rooted =
-      case for' of
-        JsonFor ForJson {jsonRoot, jsonCardinality = JsonSingleton} ->
-          case jsonRoot of
-            NoRoot -> inner
-            -- This is gross, but unfortunately ROOT and
-            -- WITHOUT_ARRAY_WRAPPER are not allowed to be used at the
-            -- same time (reason not specified). Therefore we just
-            -- concatenate the necessary JSON string literals around
-            -- the JSON.
-            Root text ->
-              SeqPrinter
-                [ fromString ("SELECT CONCAT('{" <> show text <> ":', (")
-                , inner
-                , "), '}')"
-                ]
-        _ -> inner
+falsePrinter :: Printer
+falsePrinter = "FALSE"
 
 --------------------------------------------------------------------------------
 -- Basic printing API
@@ -373,3 +375,40 @@ toQueryPretty = go 0
         IndentPrinter n p -> go (level + n) p
     indentation n = T.replicate n " "
     notEmpty = (/= mempty)
+
+-- | Produces a query with holes, and a mapping for each
+renderBuilderPretty :: Printer -> (LT.Builder, InsOrdHashMap Int ScalarValue)
+renderBuilderPretty =
+  second (OMap.fromList . map swap . OMap.toList) . flip runState mempty
+    . runBuilderPretty
+
+runBuilderPretty :: Printer -> State (InsOrdHashMap ScalarValue Int) LT.Builder
+runBuilderPretty = go 0
+  where
+    go level =
+      \case
+        SeqPrinter xs -> fmap (mconcat . filter notEmpty) (mapM (go level) xs)
+        SepByPrinter x xs -> do
+          i <- go level x
+          fmap (mconcat . intersperse i . filter notEmpty) (mapM (go level) xs)
+        NewlinePrinter -> pure ("\n" <> indentation level)
+        IndentPrinter n p -> go (level + n) p
+        QueryPrinter Query {unQuery = q} -> pure . LT.fromText . T.decodeUtf8 $ q
+    indentation n = LT.fromText (T.replicate n " ")
+    notEmpty = (/= mempty)
+
+fromFieldOrigin :: FieldOrigin -> Printer
+fromFieldOrigin = \case
+  NoOrigin -> "NULL"
+  AggregateOrigin aliasedAggregates ->
+    "STRUCT("
+      <+>
+      -- Example: "0 AS count, STRUCT(NULL AS id) AS sum"
+      SepByPrinter ", " (fromAliased . fmap fromNullAggregate <$> aliasedAggregates)
+      <+> ")"
+
+fromNullAggregate :: Aggregate -> Printer
+fromNullAggregate = \case
+  CountAggregate _ -> "0"
+  OpAggregate _text _exp -> "NULL"
+  TextAggregate _text -> "NULL"

@@ -137,6 +137,11 @@ The various types of queries are listed in the following table:
      - 1
      - Remove a Postgres SQL function
 
+   * - :ref:`pg_set_function_customization <pg_set_function_customization>`
+     - :ref:`pg_set_function_customization_args <pg_set_function_customization_syntax>`
+     - 1
+     - Set function customization of an already tracked Postgres function
+
    * - :ref:`pg_create_function_permission`
      - :ref:`pg_create_function_permission_args <pg_create_function_permission_syntax>`
      - 1
@@ -371,6 +376,11 @@ The various types of queries are listed in the following table:
      - :ref:`create_scheduled_event_args <metadata_create_scheduled_event_syntax>`
      - 1
      - Create a new scheduled event
+   
+   * - :ref:`metadata_delete_scheduled_event`
+     - :ref:`delete_scheduled_event_args <metadata_delete_scheduled_event_syntax>`
+     - 1
+     - Delete a scheduled event
 
    * - :ref:`metadata_add_remote_schema`
      - :ref:`add_remote_schema_args <metadata_add_remote_schema_syntax>`

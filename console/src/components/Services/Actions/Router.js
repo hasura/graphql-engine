@@ -7,8 +7,8 @@ import ActionsLandingPage from './Landing';
 import ActionRelationships from './Relationships';
 import ActionPermissions from './Permissions';
 import ActionsCodegen from './Codegen';
-import ModifyAction from './Modify';
-import AddAction from './Add';
+import ModifyAction from './Modify/Modify';
+import AddAction from './Add/Add';
 import TypesManage from './Types/Manage';
 import TypesRelationships from './Types/Relationships';
 import { exportMetadata } from '../../../metadata/actions';
@@ -39,8 +39,8 @@ const getActionsRouter = (connect, store, composeOnEnterHooks) => {
       <Route path="manage" component={RightContainer}>
         <IndexRedirect to="actions" />
         <Route path="actions" component={ActionsLandingPage(connect)} />
-        <Route path="add" component={AddAction(connect)} />
-        <Route path=":actionName/modify" component={ModifyAction(connect)} />
+        <Route path="add" component={AddAction} />
+        <Route path=":actionName/modify" component={ModifyAction} />
         <Route
           path=":actionName/relationships"
           component={ActionRelationships(connect)}

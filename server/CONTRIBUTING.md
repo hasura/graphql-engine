@@ -11,7 +11,7 @@ own machine and how to contribute.
 
 For building console and running test suite:
 
-- [Node.js](https://nodejs.org/en/) (>= v8.9)
+- [Node.js](https://nodejs.org/en/) (v12+, it is recommended that you use `node` with version `v12.x.x` A.K.A `erbium` or version `14.x.x` A.K.A `Fermium`)
 - npm >= 5.7
 - python >= 3.5 with pip3 and virtualenv
 
@@ -216,19 +216,21 @@ Some other useful points of note:
     ```
 
 ##### Running the Python test suite on BigQuery
-Running integration tests against a BigQuery data source is a little more involved due to the necessary service account requirements. Before running the test suite either [manually](https://github.com/hasura/graphql-engine/blob/master/server/CONTRIBUTING.md#run-and-test-manually) or [via `dev.sh`](https://github.com/hasura/graphql-engine/blob/master/server/CONTRIBUTING.md#run-and-test-via-devsh):
-1. Ensure you have access to a [Google Cloud Console service account](https://cloud.google.com/iam/docs/creating-managing-service-accounts#creating).
-2. [Create and download a new service account key](https://cloud.google.com/iam/docs/creating-managing-service-account-keys).
-3. [Activate the service account](https://cloud.google.com/sdk/gcloud/reference/auth/activate-service-account), if it is not already activated.
+Running integration tests against a BigQuery data source is a little more involved due to the necessary service account requirements:
+```
+HASURA_BIGQUERY_PROJECT_ID=# the project ID of the service account
+HASURA_BIGQUERY_SERVICE_ACCOUNT_EMAIL=# eg. "<<SERVICE_ACCOUNT_NAME>>@<<PROJECT_NAME>>.iam.gserviceaccount.com"
+HASURA_BIGQUERY_SERVICE_ACCOUNT_FILE=# the filepath to the downloaded service account key
+```
+
+Before running the test suite either [manually](https://github.com/hasura/graphql-engine/blob/master/server/CONTRIBUTING.md#run-and-test-manually) or [via `dev.sh`](https://github.com/hasura/graphql-engine/blob/master/server/CONTRIBUTING.md#run-and-test-via-devsh):
+1. Ensure you have access to a [Google Cloud Console service account](https://cloud.google.com/iam/docs/creating-managing-service-accounts#creating). Store the project ID and account email in `HASURA_BIGQUERY_PROJECT_ID` and (optional) `HASURA_BIGQUERY_SERVICE_ACCOUNT_EMAIL` variables.
+2. [Create and download a new service account key](https://cloud.google.com/iam/docs/creating-managing-service-account-keys). Store the filepath in a `HASURA_BIGQUERY_SERVICE_ACCOUNT_FILE` variable.
+3. [Login and activate the service account](https://cloud.google.com/sdk/gcloud/reference/auth/activate-service-account), if it is not already activated.
 4. Verify the service account is accessible via the [BigQuery API](https://cloud.google.com/bigquery/docs/reference/rest):
-     1. Update the environment variables in `scripts/verify-bigquery-creds.sh` with the credentials for your service account.
-     2. Run `source scripts/verify-bigquery-creds.sh`.
-     3. If the query succeeds, the service account is setup correctly to run tests against BigQuery locally.
-5. Create a new `hasura` data source, and run the contents of [this `schema_setup_bigquery.sql` file](https://github.com/hasura/graphql-engine/blob/master/server/tests-py/queries/graphql_query/bigquery/schema_setup_bigquery.sql) against it.
-6. Finally, run the BigQuery test suite with `HASURA_BIGQUERY_SERVICE_ACCOUNT_FILE` and `HASURA_BIGQUERY_PROJECT_ID` environment variables set. For example:
+     1. Run `source scripts/verify-bigquery-creds.sh $HASURA_BIGQUERY_PROJECT_ID $HASURA_BIGQUERY_SERVICE_ACCOUNT_FILE $HASURA_BIGQUERY_SERVICE_ACCOUNT_EMAIL`. If the query succeeds, the service account is setup correctly to run tests against BigQuery locally.
+5. Finally, run the BigQuery test suite with `HASURA_BIGQUERY_SERVICE_ACCOUNT_FILE` and `HASURA_BIGQUERY_PROJECT_ID` environment variables set. For example:
   ```
-  export HASURA_BIGQUERY_PROJECT_ID=# the project ID of the service account from step 1
-  export HASURA_BIGQUERY_SERVICE_ACCOUNT_FILE=# the filepath to the downloaded service account key from step 2
   scripts/dev.sh test --integration --backend bigquery -k TestGraphQLQueryBasicBigquery
   ```
 
@@ -292,6 +294,15 @@ This naming convention enables easier test filtering with [pytest command line f
 
 The backend-specific and common test suites are disjoint; for example, run `pytest --integration -k "Common or MySQL" --backend mysql` to run all MySQL tests.
 
+#### Building with profiling
+
+To build with profiling support, you need to both enable profiling via `cabal`
+and set the `profiling` flag. E.g.
+
+```
+cabal build exe:graphql-engine -f profiling --enable-profiling
+```
+
 ### Create Pull Request
 
 - Make sure your commit messages meet the [guidelines](../CONTRIBUTING.md).
@@ -301,9 +312,18 @@ The backend-specific and common test suites are disjoint; for example, run `pyte
 
 ## Code conventions
 
-This helps enforce a uniform style for all committers.
+The following conventions help us maintain a uniform style for all committers:
+make sure your contributions are in line with them.
 
-- Compiler warnings are turned on, make sure your code has no warnings.
-- Use [hlint](https://github.com/ndmitchell/hlint) to make sure your code has no warnings.
-  You can use our custom hlint config with `$ hlint --hint=server/.hlint.yaml .`
-- Use [stylish-haskell](https://github.com/jaspervdj/stylish-haskell) to format your code.
+We enforce these by means of CI hooks which will fail the build if any of these
+are not met.
+
+- No compiler warnings: Make sure your code builds with no warnings (adding
+  `-Werror` to `ghc-options` in your `cabal.project` is a good way of checking
+  this.)
+- No lint failures: Use [hlint](https://github.com/ndmitchell/hlint) with our
+  custom config to validate your code, using `hlint --hint=server/.hlint.yaml`.
+- Consistent formatting: Use [ormolu](https://github.com/tweag/ormolu) to
+  format your code. `ormolu -ei '*.hs'` will format all files with a `.hs`
+  extension in the current directory.
+- Consistent style: Consider the [style guide](./STYLE.md) when writing new code.

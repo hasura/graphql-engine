@@ -118,7 +118,7 @@ export interface DataSourcesAPI {
   operators: Array<{ name: string; value: string; graphqlOp: string }>;
   getFetchTablesListQuery: (options: {
     schemas: string[];
-    tables: Table[];
+    tables?: QualifiedTable[];
   }) => string;
   commonDataTypes: {
     name: string;
@@ -322,19 +322,22 @@ export interface DataSourcesAPI {
   getFunctionDefinitionSql:
     | null
     | ((
-        schemaName: string,
+        schemaName: string | string[],
         functionName?: string | null | undefined,
         type?: 'trackable' | 'non-trackable' | undefined
       ) => string);
   frequentlyUsedColumns: FrequentlyUsedColumn[];
   primaryKeysInfoSql: (options: {
     schemas: string[];
-    tables: Table[];
+    tables?: QualifiedTable[];
   }) => string;
-  uniqueKeysSql: (options: { schemas: string[]; tables: Table[] }) => string;
+  uniqueKeysSql: (options: {
+    schemas: string[];
+    tables?: QualifiedTable[];
+  }) => string;
   checkConstraintsSql?: (options: {
     schemas: string[];
-    tables: Table[];
+    tables?: QualifiedTable[];
   }) => string;
   tableIndexSql?: (options: { schema: string; table: string }) => string;
   createIndexSql?: (indexInfo: {
@@ -344,14 +347,17 @@ export interface DataSourcesAPI {
     columns: string[];
     unique?: boolean;
   }) => string;
-  dropIndexSql?: (indexName: string) => string;
+  dropIndexSql?: (indexName: string, schema: string) => string;
   indexFormToolTips?: IndexFormToolTips;
   indexTypes?: Record<string, IndexType>;
   supportedIndex?: {
     multiColumn: string[];
     singleColumn: string[];
   };
-  getFKRelations: (options: { schemas: string[]; tables: Table[] }) => string;
+  getFKRelations: (options: {
+    schemas: string[];
+    tables?: QualifiedTable[];
+  }) => string;
   getReferenceOption: (opt: string) => string;
   deleteFunctionSql?: (
     schemaName: string,
@@ -379,6 +385,8 @@ export interface DataSourcesAPI {
   generateEditRowRequest?: () => GenerateEditRowRequest;
   generateDeleteRowRequest?: () => GenerateDeleteRowRequest;
   generateBulkDeleteRowRequest?: () => GenerateBulkDeleteRowRequest;
+  // New Simple Queries to fetch just what we need at a time
+  schemaListQuery: string;
 }
 
 export let currentDriver: Driver = 'postgres';

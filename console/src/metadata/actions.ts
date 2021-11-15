@@ -2,6 +2,7 @@ import requestAction from '../utils/requestAction';
 import Endpoints, { globalCookiePolicy } from '../Endpoints';
 import {
   ConnectionPoolSettings,
+  HasuraMetadataV2,
   HasuraMetadataV3,
   InconsistentObject,
   IsolationLevelOptions,
@@ -336,7 +337,11 @@ export const addDataSource = (
     onError,
     requestMsg,
     undefined,
-    errorMsg
+    errorMsg,
+    false,
+    false,
+    false,
+    data.payload.name
   );
 };
 
@@ -493,7 +498,7 @@ export const removeDataSource = (
 };
 
 export const replaceMetadata = (
-  newMetadata: ExportMetadataSuccess['data'],
+  newMetadata: HasuraMetadataV2 | ExportMetadataSuccess['data'],
   successCb: () => void,
   errorCb: () => void
 ): Thunk<void, MetadataActions> => (dispatch, getState) => {
@@ -501,8 +506,12 @@ export const replaceMetadata = (
     resource_version: number;
     metadata: HasuraMetadataV3;
   }) => {
-    const upQuery = generateReplaceMetadataQuery(newMetadata);
-    const downQuery = generateReplaceMetadataQuery(oldMetadata);
+    const metadata =
+      (newMetadata as HasuraMetadataV2).version?.toString() === '2'
+        ? (newMetadata as HasuraMetadataV2)
+        : (newMetadata as ExportMetadataSuccess['data']).metadata;
+    const upQuery = generateReplaceMetadataQuery(metadata);
+    const downQuery = generateReplaceMetadataQuery(oldMetadata.metadata);
 
     const migrationName = 'replace_metadata';
 
@@ -521,7 +530,7 @@ export const replaceMetadata = (
             x.name === getState().tables.currentDataSource
         );
 
-        if (!currentSource) {
+        if (!currentSource && newState.metadata.sources?.[0]) {
           dispatch({
             type: UPDATE_CURRENT_DATA_SOURCE,
             source: newState.metadata.sources[0].name,
@@ -621,7 +630,10 @@ export const replaceMetadataFromFile = (
     parsedFileContent = JSON.parse(fileContent);
   } catch (e) {
     dispatch(
-      showErrorNotification('Error parsing metadata file', e.toString())
+      showErrorNotification(
+        'Error parsing metadata file',
+        (e as Error).toString()
+      )
     );
 
     if (errorCb) errorCb();

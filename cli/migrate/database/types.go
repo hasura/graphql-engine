@@ -7,11 +7,11 @@ import (
 )
 
 type CustomList struct {
-	*list.List
+	List *list.List
 }
 
 func (c *CustomList) Iterate() linq.Iterator {
-	length := c.Len()
+	length := c.List.Len()
 	var prevElem *list.Element
 	i := 0
 	return func() (item interface{}, ok bool) {
@@ -20,7 +20,7 @@ func (c *CustomList) Iterate() linq.Iterator {
 		}
 
 		if i == 0 {
-			prevElem = c.Front()
+			prevElem = c.List.Front()
 			i++
 		} else {
 			prevElem = prevElem.Next()
