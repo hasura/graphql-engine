@@ -1,16 +1,29 @@
+import { LocationDescriptor, LocationDescriptorObject } from 'history';
+
+export type onEnterHook = (
+  nextState: { location: LocationDescriptorObject },
+  replaceState: (location: LocationDescriptor) => void,
+  cb?: () => void
+) => void;
+
 /**
  * The function makes a wrapper 'onEnter' function which iterates over all the hooks which are passed to it.
  * A hook function can have upto 3 arguments. If the third argument is not supplied the code assumes the
  * hook function is synchronous and would call that after the function.
  *
- * @param  {Array[function]} An array of functions which needs to be called onEnter.
+ * @param  {Array[onEnterHook]} An array of functions which needs to be called onEnter.
  * @return {function}       A function which wraps all the other hooks function.
  */
-export const composeOnEnterHooks = hooks => {
+
+export const composeOnEnterHooks = (hooks: Array<onEnterHook>) => {
   // The below is the wrapper function which will be given back to the call.
-  return (nextState, replaceState, finalCallback) => {
+  return (
+    nextState: { location: LocationDescriptorObject },
+    replaceState: (location: LocationDescriptor) => void,
+    finalCallback: () => void
+  ) => {
     // Internal recursive function which will be called with all the hooks, or a subset of the hooks.
-    const executeRemainingHooks = remainingHooks => {
+    const executeRemainingHooks = (remainingHooks: Array<onEnterHook>) => {
       // if I got no more hooks then call the finalCallback
       if (remainingHooks.length === 0) {
         return finalCallback();
@@ -31,23 +44,4 @@ export const composeOnEnterHooks = hooks => {
     // initial execute with all the hooks.
     executeRemainingHooks(hooks);
   };
-};
-
-/**
- * Return a function which takes (location, callback). This is compatible with getComponent attribute
- * of react-router 'Router component'. The function help with webpack to split the main bundle to multiple
- * chuck which reduces initial load-time.
- * FIXME: THIS DOESN'T WORK. Need to find a better way - best option now is to upgrade to webpack2 (But it not a trivial change).
- *
- * @param  {String} componentPath the path of the component in the system. The component is expected to have a default.
- * @return {function}               the closure function which is used.
- */
-export const asyncComponent = componentPath => {
-  const asyncRoutFunc = `(function (location, callback) {
-    require.ensure([], (function (require) {
-      callback(null, require("${componentPath}"));
-    }));
-  });`;
-  /* eslint-disable no-eval */
-  return eval(asyncRoutFunc);
 };
