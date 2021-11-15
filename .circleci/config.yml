@@ -1,7 +1,7 @@
 # anchor refs to be used elsewhere
 refs:
   constants:
-    - &server_builder_image hasura/graphql-engine-server-builder:bb7caa0b5222f6ebf6cd9af5c5c258df6f4dafa18e29d6f44d1744bb276fd03f
+    - &server_builder_image hasura/graphql-engine-server-builder:bb9d1eea5ba8c194eb940b4a9923a2fd247c16f91699b58c76f5b0fe92d23e0d
     - &mssql_image hasura/mssql-server-2019-cu10-ubuntu-20.04:187352320456c39572656ce46cc292369cffa01ac0e90fcdf179c01d36fb3952
   skip_job_on_ciignore: &skip_job_on_ciignore
     run:
