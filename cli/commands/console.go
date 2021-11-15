@@ -57,6 +57,7 @@ func NewConsoleCmd(ec *cli.ExecutionContext) *cobra.Command {
 	f := consoleCmd.Flags()
 
 	f.StringVar(&opts.APIPort, "api-port", "9693", "port for serving migrate api")
+	f.StringVar(&opts.APIHost, "api-host", "http://localhost", "(PREVIEW: usage may change in future) host serving migrate api")
 	f.StringVar(&opts.ConsolePort, "console-port", "9695", "port for serving console")
 	f.StringVar(&opts.Address, "address", "localhost", "address to serve console and migration API from")
 	f.BoolVar(&opts.DontOpenBrowser, "no-browser", false, "do not automatically open console in browser")
@@ -87,6 +88,7 @@ type ConsoleOptions struct {
 	EC *cli.ExecutionContext
 
 	APIPort     string
+	APIHost     string
 	ConsolePort string
 	Address     string
 
@@ -124,7 +126,7 @@ func (o *ConsoleOptions) Run() error {
 	}
 
 	consoleRouter, err := console.BuildConsoleRouter(templateProvider, consoleTemplateVersion, o.StaticDir, gin.H{
-		"apiHost":              "http://" + o.Address,
+		"apiHost":              o.APIHost,
 		"apiPort":              o.APIPort,
 		"cliVersion":           o.EC.Version.GetCLIVersion(),
 		"serverVersion":        o.EC.Version.GetServerVersion(),
