@@ -144,6 +144,9 @@ JSON payload
       }
     }
 
+.. note::
+
+   :ref:`Hasura computed fields <computed-fields>` are not included in the payloads data
 
 
 Syntax definitions
