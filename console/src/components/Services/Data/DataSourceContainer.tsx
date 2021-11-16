@@ -104,7 +104,7 @@ const DataSourceContainer = ({
           ? dataSource.defaultRedirectSchema
           : schemaList.sort(Intl.Collator().compare)[0];
     }
-    if (location.pathname.includes('schema')) {
+    if (location.pathname.includes('schema') && newSchema) {
       dispatch(_push(`/data/${source}/schema/${newSchema}`));
     }
   }, [dispatch, schema, schemaList, location, source, dataLoaded]);
