@@ -108,12 +108,10 @@ JSON payload
 
 .. note::
 
-   - In case of ``UPDATE``, the events are delivered only if new data is distinct from
-     old data. The `composite type comparison <https://www.postgresql.org/docs/current/functions-comparisons.html#COMPOSITE-TYPE-COMPARISON>`__
-     is used to compare the old and new rows. If rows contain columns, which cannot be
-     compared using ``<>`` operator, then internal binary representation of rows by Postgres is compared.
-     
-   - :ref:`Table computed fields <computed_fields>` are not included in the event trigger payload data  
+   In case of ``UPDATE``, the events are delivered only if new data is distinct from
+   old data. The `composite type comparison <https://www.postgresql.org/docs/current/functions-comparisons.html#COMPOSITE-TYPE-COMPARISON>`__
+   is used to compare the old and new rows. If rows contain columns, which cannot be
+   compared using ``<>`` operator, then internal binary representation of rows by Postgres is compared.
 
 **For example**:
 
@@ -123,7 +121,7 @@ JSON payload
       "id": "85558393-c75d-4d2f-9c15-e80591b83894",
       "created_at": "2018-09-05T07:14:21.601701Z",
       "trigger": {
-          "name": "insert_user_trigger"
+          "name": "test_trigger"
       },
       "table": {
           "schema": "public",
@@ -145,6 +143,8 @@ JSON payload
           }
       }
     }
+
+
 
 Syntax definitions
 ------------------

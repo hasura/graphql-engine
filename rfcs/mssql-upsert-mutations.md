@@ -12,10 +12,12 @@
   - [Success](#success)
   - [Checkpoints](#checkpoints)
   - [Design](#design)
-    - [1. Cleanup `XOnConflict` and `ExtraInsertData`](#1-cleanup-xonconflict-and-extrainsertdata)
-    - [2. Generate `upsert` mutation schema](#2-generate-upsert-mutation-schema)
-    - [3. SQL generation & execution](#3-sql-generation--execution)
+    - [1. Support backend-agnostic column mutability](#1-support-backend-agnostic-column-mutability)
+    - [2. Reconsider, refactor or rename `XOnConflict` and `ExtraInsertData`](#2-reconsider-refactor-or-rename-xonconflict-and-extrainsertdata)
+    - [3. Generate `upsert` mutation schema](#3-generate-upsert-mutation-schema)
+    - [4. SQL generation & execution](#4-sql-generation--execution)
   - [Other info](#other-info)
+  - [Future Work](#future-work)
 
 ## Metadata
 authors: [Abby](http://github.com/sassela), [Vamshi](https://github.com/0x777)
@@ -152,24 +154,35 @@ Include wireframes and mockups here.
 Are there things that we don't yet know yet? Are we currently doing an R&D Spike to evaluate? -->
 
 *These checkpoints do not necessarily need to be delivered in the same PR. In fact, prefer smaller PRs where they are functional, tested, and self-contained.*
-- [ ] [Reconsider, refactor or rename `XOnConflict` and `ExtraInsertData`](https://github.com/hasura/graphql-engine-mono/issues/2999)
-- [ ] [Generate `upsert` mutation schema](https://github.com/hasura/graphql-engine/issues/7861)
-- [ ] [Query translation / execution](https://github.com/hasura/graphql-engine/issues/7862)
+- [ ] [Support backend-agnostic column mutability](https://github.com/hasura/graphql-engine-mono/issues/2770)
+- [ ] Reconsider, refactor or rename `XOnConflict` and `ExtraInsertData`
+- [ ] Generate `upsert` mutation schema
+- [ ] Query translation / execution
 
 ## Design
 
-### 1. Cleanup `XOnConflict` and `ExtraInsertData`
+### 1. Support backend-agnostic column mutability
 
-The way we have been using the `XFeatureFlag` trick is something of an anti-pattern.
+GraphQL Engine's current mutations implementation relies on a Postgres-specific concept of column identity, which doesn't adequately describe the conditions in which columns can be mutated in SQL Server, nor other databases we want to support in future.
 
-Differences in behavior across backends should not manifest itself as "case switching" in shared code (be that at runtime or compile-time case-switching). Rather, they should happen in the type class instance declarations, and code sharing should be achieved via shared building blocks that individual backends may put together in ways appropriate to them, in a similar fashion to how #2741 does for `updateOperators`.
+[This RFC](https://github.com/hasura/graphql-engine-mono/blob/main/rfcs/column-mutability.md) proposes a backend-agnostic concept of column mutability, which we'll need in order to support upserts across SQL Server and alternative backends.
 
-Currently, the main thing that `type XOnConflict b :: *` achieves is that it lets a backend guarantee that the `_on_conflict`-related IR nodes never appear, by letting a backend `B` define `type XOnConflict B = Void`, making such nodes statically un-instantiateable.
+[Supporting backend-agnostic column mutability](https://github.com/hasura/graphql-engine-mono/issues/2770) is a prerequisite to supporting upserts on SQL Server.
 
-While that's of course neat in some ways (i.e. it ensures the schema generators don't create IR nodes that the execution layer won't handle), it's also in itself a bit heavy, and worst of all it's one more thing that shared schema generating code needs to case switch over.
+### 2. Reconsider, refactor or rename `XOnConflict` and `ExtraInsertData`
+`ExtraInsertData` and `ExtraTableMetadata` both seem to encode backend-specific information about what's needed to mutate columns.
 
-A better approach for dealing with `XOnConflict` and `ExtraInsertData` would be to have `ExtraInsertData` also handle the backend-specific concern of upserts (and other backend-specific insert stuff in the future), by removing `_aiConflictClause` from `data AnnIns` and have backends that support on-conflict clauses put something similar into their `ExtraInsertData`.
-This would give us the same coherency guarantees between schema and execution as mentioned above, and centralize backend specific behavior in the backend specific type class instances, where they belong. This will require some refactoring of the schema code and the existing Postgres upsert implementation though.
+`XOnConflict` which AFAICT is a type-level flag for the `on-conflict` field parser.
+
+*Open questions:* In light of the column mutability work that needs to be done anyway, I think we should take the opportunity to discuss in this PR:
+1. whether `ExtraInsertData`, `ExtraTableMetadata` and `XOnConflict` would still be necessary after the above changes.
+2. if so, whether any can be refactored or renamed to make their meaning clearer.
+
+In particular, there were some valid points of feedback in the [insert mutation PR](https://github.com/hasura/graphql-engine-mono/pull/2248) that seem unaddressed. Regardless of whether the feedback was missed or resolved, I think now is a good time to reconsider:
+- [ ] [do we still need `XOnConflict`?](https://github.com/hasura/graphql-engine-mono/pull/2248#discussion_r710982823)
+  - [ ] if so, could we rename it to something more generic like `XUpserts`?
+- [ ] do we still need `ExtraInsertData`? [[1]](https://github.com/hasura/graphql-engine-mono/pull/2248#discussion_r710981216)[[2]](https://github.com/hasura/graphql-engine-mono/pull/2248#pullrequestreview-762404235)
+  - [ ] [if so, can we more clearly model the behaviour of `getExtraInsertData` in the absence of PKs?](https://github.com/hasura/graphql-engine-mono/pull/2248#discussion_r718311871)
 
 
 ```
@@ -177,14 +190,12 @@ This would give us the same coherency guarantees between schema and execution as
 | Metadata | --> | IR | --> | Mutation AST | --> | SQL | --> | Execution on DB |
 +----------+     +----+     +--------------+     +-----+     +-----------------+
 ```
-
-### 2. Generate `upsert` mutation schema
+### 3. Generate `upsert` mutation schema
 ```
 +----------+     +----+
 | Metadata | --> | IR |
 +----------+     +----+
 ```
-
 Generate schema for insert mutations with an `if_matched` clause, with permissions enforced. This broadly involves:
 
 1. implementing the `upsert` object parser: implement `defaultConflictObject` for an MSSQL backend. Consider renaming the class method to use a more generic term like "upsert", e.g. `upsertObject`.
@@ -226,13 +237,13 @@ type mutation_root {
 
 The mutation, if attempted, won't succeed until the next step is implemented.
 
-### 3. SQL generation & execution
 ```
 +--------------+     +-----+     +-----------------+
 | Mutation AST | --> | SQL | --> | Execution on DB |
 +--------------+     +-----+     +-----------------+
 ```
 
+### 4. SQL generation & execution
 This broadly involves:
 1. creating an intermediate mutation AST: for example, `data Merge` in `Hasura.Backends.MSSQL.Types`.
      - [These notes on MSSQL upsert](https://github.com/hasura/graphql-engine-mono/issues/2427) give an example `MERGE` statement in context of HGE upserts.
@@ -245,4 +256,8 @@ This broadly involves:
 ## Other info
 - [SQL Server upsert API design notes](https://github.com/hasura/graphql-engine-mono/issues/2427)
 - [SQL Server `MERGE` docs](https://docs.microsoft.com/en-us/sql/t-sql/statements/merge-transact-sql)
-- Work to introduce [column mutability](https://github.com/hasura/graphql-engine-mono/issues/2770) is a prerequisite to further inserts, updates and, indirectly, upserts on SQL Server.
+
+## Future Work
+- [ ] Is there anything specific we need to consider for upserts related to...
+  - Nested inserts?
+  - Mutations for tables without primary keys?

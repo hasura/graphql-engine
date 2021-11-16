@@ -39,8 +39,7 @@ LEFT JOIN LATERAL
       'position', "column".attnum,
       'type', coalesce(base_type.typname, "type".typname),
       'is_nullable', NOT "column".attnotnull,
-      'description', pg_catalog.col_description("table".oid, "column".attnum),
-      'mutability', jsonb_build_object('is_insertable', true, 'is_updatable', true)
+      'description', pg_catalog.col_description("table".oid, "column".attnum)
     )) AS info
     FROM pg_catalog.pg_attribute "column"
     LEFT JOIN pg_catalog.pg_type "type"
@@ -60,32 +59,32 @@ LEFT JOIN LATERAL
       'constraint', jsonb_build_object('name', class.relname, 'oid', class.oid :: integer),
       'columns', coalesce(columns.info, '[]')
     ) AS info
-    FROM pg_catalog.pg_index idx
+    FROM pg_catalog.pg_index index
     JOIN pg_catalog.pg_class class
-      ON class.oid = idx.indexrelid
+      ON class.oid = index.indexrelid
     LEFT JOIN LATERAL
       ( SELECT jsonb_agg("column".attname) AS info
         FROM pg_catalog.pg_attribute "column"
         WHERE "column".attrelid = "table".oid
-          AND "column".attnum = ANY (idx.indkey)
+          AND "column".attnum = ANY (index.indkey)
       ) AS columns ON true
-    WHERE idx.indrelid = "table".oid
-      AND idx.indisprimary
+    WHERE index.indrelid = "table".oid
+      AND index.indisprimary
   ) primary_key ON true
 
 -- unique constraints
 LEFT JOIN LATERAL
   ( SELECT jsonb_agg(jsonb_build_object('name', class.relname, 'oid', class.oid :: integer)) AS info
-    FROM pg_catalog.pg_index idx
+    FROM pg_catalog.pg_index index
     JOIN pg_catalog.pg_class class
-      ON class.oid = idx.indexrelid
-    WHERE idx.indrelid = "table".oid
-      AND idx.indisunique
-      AND NOT idx.indisprimary
+      ON class.oid = index.indexrelid
+    WHERE index.indrelid = "table".oid
+      AND index.indisunique
+      AND NOT index.indisprimary
   ) unique_constraints ON true
 
 -- foreign keys
-LEFT JOIN
+LEFT JOIN LATERAL
   ( SELECT jsonb_agg(jsonb_build_object(
       'constraint', jsonb_build_object(
         'name', foreign_key.constraint_name,
@@ -97,9 +96,7 @@ LEFT JOIN
         'name', foreign_key.ref_table
       ),
       'foreign_columns', foreign_key.ref_columns
-    )) AS info, -- This field corresponds to the `PGForeignKeyMetadata` Haskell type
-    foreign_key.table_schema,
-    foreign_key.table_name
+    )) AS info -- This field corresponds to the `PGForeignKeyMetadata` Haskell type
     FROM (SELECT
              q.table_schema :: text,
              q.table_name :: text,
@@ -142,10 +139,9 @@ LEFT JOIN
                   AND q.ref_table_id = afc.attrelid
          GROUP BY q.table_schema, q.table_name, q.constraint_name
     ) foreign_key
-    GROUP BY foreign_key.table_schema, foreign_key.table_name
-  ) foreign_key_constraints
-    ON "table".relname = foreign_key_constraints.table_name
-       AND schema.nspname = foreign_key_constraints.table_schema
+    WHERE foreign_key.table_schema = schema.nspname
+      AND foreign_key.table_name = "table".relname
+  ) foreign_key_constraints ON true
 
 -- all these identify table-like things
 WHERE "table".relkind IN ('r', 't', 'v', 'm', 'f', 'p')

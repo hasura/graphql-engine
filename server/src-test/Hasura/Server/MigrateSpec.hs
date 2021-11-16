@@ -5,6 +5,7 @@ module Hasura.Server.MigrateSpec (CacheRefT (..), spec) where
 import Control.Concurrent.MVar.Lifted
 import Control.Monad.Morph
 import Control.Monad.Trans.Control (MonadBaseControl)
+import Control.Monad.Unique
 import Control.Natural ((:~>) (..))
 import Data.Aeson (encode)
 import Data.ByteString.Lazy.UTF8 qualified as LBS
@@ -42,6 +43,7 @@ newtype CacheRefT m a = CacheRefT {runCacheRefT :: MVar RebuildableSchemaCache -
       MonadBase b,
       MonadBaseControl b,
       MonadTx,
+      MonadUnique,
       UserInfoM,
       HTTP.HasHttpManagerM,
       HasServerConfigCtx,

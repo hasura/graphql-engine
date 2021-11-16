@@ -12,8 +12,6 @@ import Endpoints from '@/Endpoints';
 import {
   getActionRequestTransformDefaultState,
   requestTransformReducer,
-  setEnvVars,
-  setSessionVars,
   setRequestMethod,
   setRequestUrl,
   setRequestUrlError,
@@ -157,14 +155,6 @@ const AddAction: React.FC<AddActionProps> = ({
     }
   };
 
-  const envVarsOnChange = (envVars: KeyValuePair[]) => {
-    transformDispatch(setEnvVars(envVars));
-  };
-
-  const sessionVarsOnChange = (sessionVars: KeyValuePair[]) => {
-    transformDispatch(setSessionVars(sessionVars));
-  };
-
   const requestMethodOnChange = (requestMethod: RequestTransformMethod) => {
     transformDispatch(setRequestMethod(requestMethod));
   };
@@ -219,11 +209,7 @@ const AddAction: React.FC<AddActionProps> = ({
     transformDispatch(setRequestPayloadTransform(data));
   };
 
-  // we send separate requests for the `url` preview and `body` preview, as in case of error,
-  // we will not be able to resolve if the error is with url or body transform, with the current state of `test_webhook_transform` api
   useEffect(() => {
-    requestUrlErrorOnChange('');
-    requestUrlPreviewOnChange('');
     const onResponse = (data: Record<string, any>) => {
       parseValidateApiData(
         data,
@@ -234,8 +220,6 @@ const AddAction: React.FC<AddActionProps> = ({
     const options = getValidateTransformOptions(
       transformState.requestSampleInput,
       handler,
-      transformState.envVars,
-      transformState.sessionVars,
       undefined,
       transformState.requestUrl,
       transformState.requestQueryParams
@@ -244,7 +228,11 @@ const AddAction: React.FC<AddActionProps> = ({
       requestUrlErrorOnChange(
         'Please configure your webhook handler to generate request url transform'
       );
+      requestUrlPreviewOnChange('');
+    } else if (!transformState.requestUrl) {
+      requestUrlPreviewOnChange('');
     } else {
+      requestUrlErrorOnChange('');
       dispatch(
         requestAction(
           Endpoints.metadata,
@@ -261,13 +249,9 @@ const AddAction: React.FC<AddActionProps> = ({
     handler,
     transformState.requestUrl,
     transformState.requestQueryParams,
-    transformState.envVars,
-    transformState.sessionVars,
   ]);
 
   useEffect(() => {
-    requestBodyErrorOnChange('');
-    requestTransformedBodyOnChange('');
     const onResponse = (data: Record<string, any>) => {
       parseValidateApiData(
         data,
@@ -279,15 +263,12 @@ const AddAction: React.FC<AddActionProps> = ({
     const options = getValidateTransformOptions(
       transformState.requestSampleInput,
       handler,
-      transformState.envVars,
-      transformState.sessionVars,
       transformState.requestBody
     );
-    if (!handler) {
-      requestBodyErrorOnChange(
-        'Please configure your webhook handler to generate request body transform'
-      );
+    if (!transformState.requestBody) {
+      requestTransformedBodyOnChange('');
     } else if (transformState.requestBody && handler) {
+      requestBodyErrorOnChange('');
       dispatch(
         requestAction(
           Endpoints.metadata,
@@ -299,13 +280,7 @@ const AddAction: React.FC<AddActionProps> = ({
         )
       ).then(onResponse, onResponse); // parseValidateApiData will parse both success and error
     }
-  }, [
-    transformState.requestSampleInput,
-    transformState.requestBody,
-    handler,
-    transformState.envVars,
-    transformState.sessionVars,
-  ]);
+  }, [transformState.requestSampleInput, transformState.requestBody]);
 
   const allowSave =
     !isFetching &&
@@ -355,15 +330,16 @@ const AddAction: React.FC<AddActionProps> = ({
         />
 
         <ConfigureTransformation
+          webhookUrl={handler}
           state={transformState}
           resetSampleInput={resetSampleInput}
-          envVarsOnChange={envVarsOnChange}
-          sessionVarsOnChange={sessionVarsOnChange}
           requestMethodOnChange={requestMethodOnChange}
           requestUrlOnChange={requestUrlOnChange}
+          requestUrlErrorOnChange={requestUrlErrorOnChange}
           requestQueryParamsOnChange={requestQueryParamsOnChange}
           requestAddHeadersOnChange={requestAddHeadersOnChange}
           requestBodyOnChange={requestBodyOnChange}
+          requestBodyErrorOnChange={requestBodyErrorOnChange}
           requestSampleInputOnChange={requestSampleInputOnChange}
           requestContentTypeOnChange={requestContentTypeOnChange}
           requestUrlTransformOnChange={requestUrlTransformOnChange}

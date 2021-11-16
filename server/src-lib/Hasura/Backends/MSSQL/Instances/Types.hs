@@ -6,9 +6,7 @@ import Data.Aeson
 import Database.ODBC.SQLServer qualified as ODBC
 import Hasura.Backends.MSSQL.Connection qualified as MSSQL
 import Hasura.Backends.MSSQL.ToQuery ()
-import Hasura.Backends.MSSQL.Types.Insert qualified as MSSQL (BackendInsert)
-import Hasura.Backends.MSSQL.Types.Internal qualified as MSSQL
-import Hasura.Backends.MSSQL.Types.Update qualified as MSSQL (BackendUpdate)
+import Hasura.Backends.MSSQL.Types qualified as MSSQL
 import Hasura.Base.Error
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend
@@ -18,6 +16,7 @@ import Language.GraphQL.Draft.Syntax qualified as G
 instance Backend 'MSSQL where
   type SourceConfig 'MSSQL = MSSQL.MSSQLSourceConfig
   type SourceConnConfiguration 'MSSQL = MSSQL.MSSQLConnConfiguration
+  type Identifier 'MSSQL = Text
   type TableName 'MSSQL = MSSQL.TableName
   type RawFunctionInfo 'MSSQL = Void
   type FunctionName 'MSSQL = MSSQL.FunctionName
@@ -33,15 +32,14 @@ instance Backend 'MSSQL where
   type SQLExpression 'MSSQL = MSSQL.Expression
   type SQLOperator 'MSSQL = MSSQL.Op
 
-  type BackendUpdate 'MSSQL = MSSQL.BackendUpdate
-
   type ExtraTableMetadata 'MSSQL = [MSSQL.ColumnName] -- List of identity columns
-  type BackendInsert 'MSSQL = MSSQL.BackendInsert
+  type ExtraInsertData 'MSSQL = MSSQL.MSSQLExtraInsertData
 
   type XComputedField 'MSSQL = XDisable
   type XRelay 'MSSQL = XDisable
   type XNodesAgg 'MSSQL = XEnable
   type XNestedInserts 'MSSQL = XDisable
+  type XOnConflict 'MSSQL = XDisable
 
   functionArgScalarType :: FunctionArgType 'MSSQL -> ScalarType 'MSSQL
   functionArgScalarType = absurd

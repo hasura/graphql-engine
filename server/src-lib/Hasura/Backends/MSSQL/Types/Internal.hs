@@ -11,7 +11,6 @@ module Hasura.Backends.MSSQL.Types.Internal
     Comment (..),
     Countable (..),
     Delete (..),
-    DeleteOutput,
     EntityAlias (..),
     Expression (..),
     FieldName (..),
@@ -20,7 +19,7 @@ module Hasura.Backends.MSSQL.Types.Internal
     From (..),
     FunctionName,
     Insert (..),
-    InsertOutput,
+    InsertOutput (..),
     Join (..),
     JoinAlias (..),
     JoinSource (..),
@@ -33,20 +32,14 @@ module Hasura.Backends.MSSQL.Types.Internal
     Order (..),
     OrderBy (..),
     OutputColumn (..),
-    Inserted (..),
-    Deleted (..),
-    Output (..),
     Projection (..),
     Reselect (..),
     Root (..),
     ScalarType (..),
     SchemaName (..),
     Select (..),
-    SetIdentityInsert (..),
-    TempTableName (..),
-    TempTable (..),
+    SetIdenityInsert (..),
     SetValue (..),
-    SelectIntoTempTable (..),
     SpatialOp (..),
     TableName (..),
     Top (..),
@@ -70,8 +63,6 @@ module Hasura.Backends.MSSQL.Types.Internal
     scalarTypeDBName,
     snakeCaseTableName,
     stringTypes,
-    tempTableNameDeleted,
-    tempTableNameUpdated,
   )
 where
 
@@ -164,18 +155,9 @@ emptySelect =
       selectOffset = Nothing
     }
 
-newtype OutputColumn = OutputColumn {unOutputColumn :: ColumnName}
+newtype OutputColumn = OutputColumn ColumnName
 
-data Inserted = Inserted
-
-data Deleted = Deleted
-
-data Output t = Output
-  { outputType :: !t,
-    outputColumns :: ![OutputColumn]
-  }
-
-type InsertOutput = Output Inserted
+newtype InsertOutput = InsertOutput [OutputColumn]
 
 newtype Values = Values [Expression]
 
@@ -190,40 +172,14 @@ data SetValue
   = SetON
   | SetOFF
 
-data SetIdentityInsert = SetIdentityInsert
+data SetIdenityInsert = SetIdenityInsert
   { setTable :: !TableName,
     setValue :: !SetValue
   }
 
-type DeleteOutput = Output Deleted
-
 data Delete = Delete
   { deleteTable :: !(Aliased TableName),
-    deleteOutput :: !DeleteOutput,
-    deleteTempTable :: !TempTable,
     deleteWhere :: !Where
-  }
-
--- | SELECT INTO temporary table statement without values.
---   Used to create a temporary table with the same schema as an existing table.
-data SelectIntoTempTable = SelectIntoTempTable
-  { sittTempTableName :: TempTableName,
-    sittColumns :: [UnifiedColumn],
-    sittFromTableName :: TableName
-  }
-
--- | A temporary table name is prepended by a hash-sign
-newtype TempTableName = TempTableName Text
-
-tempTableNameDeleted :: TempTableName
-tempTableNameDeleted = TempTableName "deleted"
-
-tempTableNameUpdated :: TempTableName
-tempTableNameUpdated = TempTableName "updated"
-
-data TempTable = TempTable
-  { ttName :: !TempTableName,
-    ttColumns :: ![ColumnName]
   }
 
 data Reselect = Reselect
@@ -315,8 +271,6 @@ data Expression
   | -- | This is for getting actual atomic values out of a JSON
     -- string.
     JsonValueExpression Expression JsonPath
-  | -- | This is for evaluating SQL functions, text(e1, e2, ..).
-    FunctionExpression Text [Expression]
   | OpExpression Op Expression Expression
   | ListExpression [Expression]
   | STOpExpression SpatialOp Expression Expression
@@ -348,7 +302,6 @@ data From
   | FromOpenJson (Aliased OpenJson)
   | FromSelect (Aliased Select)
   | FromIdentifier Text
-  | FromTempTable (Aliased TempTableName)
 
 data OpenJson = OpenJson
   { openJsonExpression :: Expression,

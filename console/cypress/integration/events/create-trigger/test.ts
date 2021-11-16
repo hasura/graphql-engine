@@ -6,16 +6,12 @@ import { setMetaData } from '../../validators/validators';
 import {
   checkCreateTriggerRoute,
   failCTWithoutData,
-  passCT2,
+  passCT,
   failCTDuplicateTrigger,
   insertTableRow,
   deleteCTTestTrigger,
   deleteCTTestTable,
   passPTCreateTable,
-  passCT1,
-  createEtTransform,
-  modifyEtTransform,
-  deleteEtTransform,
 } from './spec';
 import { getIndexRoute } from '../../../helpers/dataHelpers';
 
@@ -38,14 +34,10 @@ export const runCreateTriggerTests = () => {
       checkCreateTriggerRoute
     );
     it('Fails to create trigger without data', failCTWithoutData);
-    it('Successfuly creates trigger with selected columns for update', passCT1);
-    it('Successfuly creates trigger with all columns for update', passCT2);
+    it('Successfuly creates trigger', passCT);
     it('Fails to create duplicate trigger', failCTDuplicateTrigger);
     it('Insert a row and invoke trigger', insertTableRow);
     it("Delete's the test trigger", deleteCTTestTrigger);
-    it('Create Event Trigger With Transform', createEtTransform);
-    it('Update Event Trigger With Transform', modifyEtTransform);
-    it('Delete Event Trigger With Transform', deleteEtTransform);
     it("Delete's the test table", deleteCTTestTable);
   });
 };

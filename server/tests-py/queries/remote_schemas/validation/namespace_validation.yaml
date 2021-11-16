@@ -8,6 +8,11 @@
           hero(episode: 4) {
             id
             name
+            ... on BarDroid {
+              id
+              name
+              primaryFunction
+            }
           }
         }
       }
@@ -17,3 +22,4 @@
         hero:
           id: '1'
           name: R2-D2
+          primaryFunction: Astromech

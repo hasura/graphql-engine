@@ -475,8 +475,7 @@ export const validateCTrigger = (
   triggerName: string,
   tableName: string,
   schemaName = 'public',
-  result: ResultType,
-  allCols?: boolean
+  result: ResultType
 ) => {
   const reqBody = {
     type: 'export_metadata',
@@ -506,11 +505,7 @@ export const validateCTrigger = (
       expect(response.status === 200).to.be.true;
       expect(trigger.definition.insert.columns === '*').to.be.true;
       expect(trigger.definition.delete.columns === '*').to.be.true;
-      if (allCols) {
-        expect(trigger.definition.update.columns === '*').to.be.true;
-      } else {
-        expect(trigger.definition.update.columns.length === 2).to.be.true;
-      }
+      expect(trigger.definition.update.columns.length === 3).to.be.true;
       expect(
         trigger.retry_conf.interval_sec === parseInt(getIntervalSeconds(), 10)
       ).to.be.true;

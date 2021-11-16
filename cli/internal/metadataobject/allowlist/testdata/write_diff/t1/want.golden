@@ -1,6 +1,0 @@
-allow_list.yaml
-
-(root level)
-- one list entry removed:
-  - collection: some-queries
-

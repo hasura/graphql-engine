@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   RequestTransformContentType,
   RequestTransformMethod,
@@ -6,20 +6,20 @@ import {
 import { KeyValuePair, RequestTransformState } from './stateDefaults';
 import RequestOptionsTransforms from './RequestOptionsTransforms';
 import PayloadOptionsTransforms from './PayloadOptionsTransforms';
-import SampleContextTransforms from './SampleContextTransforms';
 import Button from '../Button';
 import AddIcon from '../Icons/Add';
 
 type ConfigureTransformationProps = {
+  webhookUrl: string;
   state: RequestTransformState;
   resetSampleInput: () => void;
-  envVarsOnChange: (envVars: KeyValuePair[]) => void;
-  sessionVarsOnChange: (sessionVars: KeyValuePair[]) => void;
   requestMethodOnChange: (requestMethod: RequestTransformMethod) => void;
   requestUrlOnChange: (requestUrl: string) => void;
+  requestUrlErrorOnChange: (requestUrlError: string) => void;
   requestQueryParamsOnChange: (requestQueryParams: KeyValuePair[]) => void;
   requestAddHeadersOnChange: (requestAddHeaders: KeyValuePair[]) => void;
   requestBodyOnChange: (requestBody: string) => void;
+  requestBodyErrorOnChange: (requestBodyError: string) => void;
   requestSampleInputOnChange: (requestSampleInput: string) => void;
   requestContentTypeOnChange: (
     requestContentType: RequestTransformContentType
@@ -29,23 +29,22 @@ type ConfigureTransformationProps = {
 };
 
 const ConfigureTransformation: React.FC<ConfigureTransformationProps> = ({
+  webhookUrl,
   state,
   resetSampleInput,
-  envVarsOnChange,
-  sessionVarsOnChange,
   requestMethodOnChange,
   requestUrlOnChange,
+  requestUrlErrorOnChange,
   requestQueryParamsOnChange,
   requestAddHeadersOnChange,
   requestBodyOnChange,
+  requestBodyErrorOnChange,
   requestSampleInputOnChange,
   requestContentTypeOnChange,
   requestUrlTransformOnChange,
   requestPayloadTransformOnChange,
 }) => {
   const {
-    envVars,
-    sessionVars,
     requestMethod,
     requestUrl,
     requestUrlError,
@@ -61,12 +60,6 @@ const ConfigureTransformation: React.FC<ConfigureTransformationProps> = ({
     isRequestPayloadTransform,
   } = state;
 
-  const [isContextAreaActive, toggleContextArea] = useState<boolean>(false);
-
-  const contextAreaText = isContextAreaActive
-    ? `Hide Sample Context`
-    : `Show Sample Context`;
-
   const requestUrlTransformText = isRequestUrlTransform
     ? `Remove Request Options Transformation`
     : `Add Request Options Transformation`;
@@ -80,36 +73,6 @@ const ConfigureTransformation: React.FC<ConfigureTransformationProps> = ({
       <h2 className="text-lg font-semibold mb-sm flex items-center">
         Configure Transformations
       </h2>
-
-      <div className="mb-lg">
-        <label className="block text-gray-600 font-medium mb-xs">
-          Sample Context
-        </label>
-        <p className="text-sm text-gray-600 mb-sm">
-          Add sample env vars and session vars for testing the transformation
-        </p>
-        <Button
-          color="white"
-          size="sm"
-          data-test="toggle-context-area"
-          onClick={() => {
-            toggleContextArea(!isContextAreaActive);
-          }}
-        >
-          {!isContextAreaActive ? <AddIcon /> : null}
-          {contextAreaText}
-        </Button>
-
-        {isContextAreaActive ? (
-          <SampleContextTransforms
-            envVars={envVars}
-            sessionVars={sessionVars}
-            envVarsOnChange={envVarsOnChange}
-            sessionVarsOnChange={sessionVarsOnChange}
-          />
-        ) : null}
-      </div>
-
       <div className="mb-lg">
         <label className="block text-gray-600 font-medium mb-xs">
           Request Options Transformation
@@ -141,6 +104,7 @@ const ConfigureTransformation: React.FC<ConfigureTransformationProps> = ({
             requestAddHeaders={requestAddHeaders}
             requestMethodOnChange={requestMethodOnChange}
             requestUrlOnChange={requestUrlOnChange}
+            requestUrlErrorOnChange={requestUrlErrorOnChange}
             requestQueryParamsOnChange={requestQueryParamsOnChange}
             requestAddHeadersOnChange={requestAddHeadersOnChange}
           />
@@ -174,8 +138,10 @@ const ConfigureTransformation: React.FC<ConfigureTransformationProps> = ({
             requestSampleInput={requestSampleInput}
             requestTransformedBody={requestTransformedBody}
             requestContentType={requestContentType}
+            webhookUrl={webhookUrl}
             resetSampleInput={resetSampleInput}
             requestBodyOnChange={requestBodyOnChange}
+            requestBodyErrorOnChange={requestBodyErrorOnChange}
             requestSampleInputOnChange={requestSampleInputOnChange}
             requestContentTypeOnChange={requestContentTypeOnChange}
           />

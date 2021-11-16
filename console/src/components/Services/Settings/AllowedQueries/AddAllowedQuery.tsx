@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import AceEditor from 'react-ace';
-import { isConsoleError } from '@/components/Common/utils/jsUtils';
 import styles from './AllowedQueries.scss';
 
 import ExpandableEditor from '../../../Common/Layout/ExpandableEditor/Editor';
@@ -49,11 +48,9 @@ const AddAllowedQuery: React.FC<AddAllowedQueryProps> = props => {
         const updatedQueries = renameDuplicates(fileQueries, allowedQueries);
         dispatch(addAllowedQueries(updatedQueries, toggle));
       } catch (error) {
-        if (isConsoleError(error)) {
-          dispatch(
-            showErrorNotification('Uploading operations failed', error.message)
-          );
-        }
+        dispatch(
+          showErrorNotification('Uploading operations failed', error.message)
+        );
       }
     };
 

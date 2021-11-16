@@ -668,7 +668,7 @@ export const supportedFeatures: DeepRequired<SupportedFeaturesType> = {
   rawSQL: {
     enabled: true,
     tracking: true,
-    statementTimeout: false,
+    statementTimeout: true,
   },
   connectDbForm: {
     enabled: true,

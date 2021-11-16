@@ -10,6 +10,4 @@ export default {
   },
 } as ComponentMeta<typeof VPCBanner>;
 
-export const Showcase = () => (
-  <VPCBanner onClose={() => window.alert('Close banner clicked')} />
-);
+export const Showcase = () => <VPCBanner />;

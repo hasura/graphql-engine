@@ -160,11 +160,6 @@ class TestMetadata:
     def test_pg_remote_source_query(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/pg_remote_source_query.yaml')
 
-    @pytest.mark.skipif(
-        os.getenv('HASURA_GRAPHQL_PG_SOURCE_URL_1') == os.getenv('HASURA_GRAPHQL_PG_SOURCE_URL_2') or
-        os.getenv('HASURA_GRAPHQL_PG_SOURCE_URL_1') is None or
-        os.getenv('HASURA_GRAPHQL_PG_SOURCE_URL_2') is None,
-        reason="We need two different and valid instances of postgres for this test.")
     def test_pg_remote_source_customized_query(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/pg_remote_source_customized_query.yaml')
 
@@ -222,9 +217,6 @@ class TestMetadata:
 
     def test_webhook_transform_success(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/test_webhook_transform_success.yaml')
-
-    def test_webhook_transform_with_url_env_reference_success(self, hge_ctx):
-        check_query_f(hge_ctx, self.dir() + '/test_webhook_transform_env_reference_success.yaml')
 
     def test_webhook_transform_bad_parse(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/test_webhook_transform_bad_parse.yaml')

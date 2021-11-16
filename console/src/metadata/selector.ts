@@ -296,7 +296,6 @@ export const getEventTriggers = createSelector(getMetadata, metadata => {
               webhook: trigger.webhook || '',
               webhook_from_env: trigger.webhook_from_env,
             },
-            request_transform: trigger.request_transform,
           })) || [];
         return [...triggers, ...acc];
       }, [] as EventTrigger[])
@@ -343,7 +342,6 @@ export const getEventTriggerByName = createSelector(
               webhook: trigger.webhook || '',
               webhook_from_env: trigger.webhook_from_env,
             },
-            request_transform: trigger.request_transform,
           };
       }
     }

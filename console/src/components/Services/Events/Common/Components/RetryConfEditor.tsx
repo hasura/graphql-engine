@@ -1,5 +1,4 @@
 import React from 'react';
-import { ToolTip } from '@/new-components/Tooltip';
 import { RetryConf } from '../../types';
 import Tooltip from '../../../../Common/Tooltip/Tooltip';
 import styles from '../../Events.scss';
@@ -7,11 +6,10 @@ import styles from '../../Events.scss';
 type Props = {
   setRetryConf: (r: RetryConf) => void;
   retryConf: RetryConf;
-  legacyTooltip?: boolean;
 };
 
 const RetryConfEditor: React.FC<Props> = props => {
-  const { retryConf, setRetryConf, legacyTooltip = true } = props;
+  const { retryConf, setRetryConf } = props;
 
   const handleRetryConfChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const label = e.target.name;
@@ -26,16 +24,12 @@ const RetryConfEditor: React.FC<Props> = props => {
     <div>
       <div className={`${styles.display_flex} ${styles.add_mar_bottom_small}`}>
         <div className={`col-md-3 ${styles.padd_left_remove}`}>
-          <label className="flex items-center">
+          <label className={`${styles.add_mar_right} ${styles.retryLabel}`}>
             Number of retries
-            {legacyTooltip ? (
-              <Tooltip
-                id="retry-conf-num-retries"
-                message="Number of retries that Hasura makes to the webhook in case of failure"
-              />
-            ) : (
-              <ToolTip message="Number of retries that Hasura makes to the webhook in case of failure" />
-            )}
+            <Tooltip
+              id="retry-conf-num-retries"
+              message="Number of retries that Hasura makes to the webhook in case of failure"
+            />
           </label>
         </div>
         <div className={`col-md-6 ${styles.padd_left_remove}`}>
@@ -53,16 +47,12 @@ const RetryConfEditor: React.FC<Props> = props => {
       </div>
       <div className={`${styles.display_flex} ${styles.add_mar_bottom_small}`}>
         <div className={`col-md-3 ${styles.padd_left_remove}`}>
-          <label className="flex items-center">
+          <label className={`${styles.add_mar_right} ${styles.retryLabel}`}>
             Retry interval in seconds
-            {legacyTooltip ? (
-              <Tooltip
-                id="retry-conf-interval-sec"
-                message="Interval (in seconds) between each retry"
-              />
-            ) : (
-              <ToolTip message="Interval (in seconds) between each retry" />
-            )}
+            <Tooltip
+              id="retry-conf-interval-sec"
+              message="Interval (in seconds) between each retry"
+            />
           </label>
         </div>
         <div className={`col-md-6 ${styles.padd_left_remove}`}>
@@ -80,16 +70,12 @@ const RetryConfEditor: React.FC<Props> = props => {
       </div>
       <div className={`${styles.display_flex} ${styles.add_mar_bottom_small}`}>
         <div className={`col-md-3 ${styles.padd_left_remove}`}>
-          <label className="flex items-center">
+          <label className={`${styles.add_mar_right} ${styles.retryLabel}`}>
             Timeout in seconds
-            {legacyTooltip ? (
-              <Tooltip
-                id="retry-conf-timeout-sec"
-                message="Request timeout for the webhook"
-              />
-            ) : (
-              <ToolTip message="Request timeout for the webhook" />
-            )}
+            <Tooltip
+              id="retry-conf-timeout-sec"
+              message="Request timeout for the webhook"
+            />
           </label>
         </div>
         <div className={`col-md-6 ${styles.padd_left_remove}`}>

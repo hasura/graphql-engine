@@ -1,1 +1,0 @@
-export { PermissionsTable } from './PermissionsTable';

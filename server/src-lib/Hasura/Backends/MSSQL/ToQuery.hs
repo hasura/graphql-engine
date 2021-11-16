@@ -10,15 +10,11 @@ module Hasura.Backends.MSSQL.ToQuery
     fromInsert,
     fromSetIdentityInsert,
     fromDelete,
-    fromUpdate,
-    fromSelectIntoTempTable,
-    dropTempTableQuery,
     Printer (..),
   )
 where
 
 import Data.Aeson (ToJSON (..))
-import Data.HashMap.Strict qualified as HM
 import Data.List (intersperse)
 import Data.String
 import Data.Text qualified as T
@@ -114,11 +110,6 @@ fromExpression =
         <+> " ("
         <+> fromExpression y
         <+> ")"
-    FunctionExpression function args ->
-      fromString (T.unpack function)
-        <+> "("
-        <+> SepByPrinter ", " (map fromExpression args)
-        <+> ")"
     ListExpression xs -> SepByPrinter ", " $ fromExpression <$> xs
     STOpExpression op e str ->
       "(" <+> fromExpression e <+> ")."
@@ -171,28 +162,13 @@ fromFieldName :: FieldName -> Printer
 fromFieldName (FieldName {..}) =
   fromNameText fieldNameEntity <+> "." <+> fromNameText fieldName
 
-fromInserted :: Inserted -> Printer
-fromInserted Inserted = "INSERTED"
-
-fromDeleted :: Deleted -> Printer
-fromDeleted Deleted = "DELETED"
-
-fromOutputColumn :: Printer -> OutputColumn -> Printer
-fromOutputColumn prefix (OutputColumn columnName) =
-  prefix <+> "." <+> fromNameText (columnNameText columnName)
-
-fromOutput :: (t -> Printer) -> Output t -> Printer
-fromOutput typePrinter (Output ty outputColumns) =
-  "OUTPUT " <+> SepByPrinter ", " (map (fromOutputColumn (typePrinter ty)) outputColumns)
+fromOutputColumn :: OutputColumn -> Printer
+fromOutputColumn (OutputColumn columnName) =
+  "INSERTED." <+> fromNameText (columnNameText columnName)
 
 fromInsertOutput :: InsertOutput -> Printer
-fromInsertOutput = fromOutput fromInserted
-
-fromDeleteOutput :: DeleteOutput -> Printer
-fromDeleteOutput = fromOutput fromDeleted
-
-fromUpdateOutput :: UpdateOutput -> Printer
-fromUpdateOutput = fromOutput fromInserted
+fromInsertOutput (InsertOutput outputColumns) =
+  "OUTPUT " <+> SepByPrinter ", " (map fromOutputColumn outputColumns)
 
 fromValues :: Values -> Printer
 fromValues (Values values) =
@@ -213,8 +189,8 @@ fromSetValue = \case
   SetON -> "ON"
   SetOFF -> "OFF"
 
-fromSetIdentityInsert :: SetIdentityInsert -> Printer
-fromSetIdentityInsert SetIdentityInsert {..} =
+fromSetIdentityInsert :: SetIdenityInsert -> Printer
+fromSetIdentityInsert SetIdenityInsert {..} =
   SepByPrinter
     " "
     [ "SET IDENTITY_INSERT",
@@ -222,115 +198,14 @@ fromSetIdentityInsert SetIdentityInsert {..} =
       fromSetValue setValue
     ]
 
--- | Generate a delete statement
---
--- > Delete
--- >   (Aliased (TableName "table" "schema") "alias")
--- >   [ColumnName "id", ColumnName "name"]
--- >   (Where [OpExpression EQ' (ValueExpression (IntValue 1)) (ValueExpression (IntValue 1))])
---
--- Becomes:
---
--- > DELETE [alias] OUTPUT DELETED.[id], DELETED.[name] INTO #deleted([id], [name]) FROM [schema].[table] AS [alias] WHERE ((1) = (1))
 fromDelete :: Delete -> Printer
-fromDelete Delete {deleteTable, deleteOutput, deleteTempTable, deleteWhere} =
+fromDelete Delete {deleteTable, deleteWhere} =
   SepByPrinter
     NewlinePrinter
     [ "DELETE " <+> fromNameText (aliasedAlias deleteTable),
-      fromDeleteOutput deleteOutput,
-      "INTO " <+> fromTempTable deleteTempTable,
       "FROM " <+> fromAliased (fmap fromTableName deleteTable),
       fromWhere deleteWhere
     ]
-
--- | Generate an update statement
---
--- > Update
--- >    (Aliased (TableName "table" "schema") "alias")
--- >    (fromList [(ColumnName "name", ValueExpression (TextValue "updated_name"))])
--- >    (Output Inserted)
--- >    (TempTable (TempTableName "updated") [ColumnName "id", ColumnName "name"])
--- >    (Where [OpExpression EQ' (ColumnName "id") (ValueExpression (IntValue 1))])
---
--- Becomes:
---
--- > UPDATE [alias] SET [alias].[name] = 'updated_name' OUTPUT INSERTED.[id], INSERTED.[name] INTO
--- > #updated([id], [name]) FROM [schema].[table] AS [alias] WHERE (id = 1)
-fromUpdate :: Update -> Printer
-fromUpdate Update {..} =
-  SepByPrinter
-    NewlinePrinter
-    [ "UPDATE " <+> fromNameText (aliasedAlias updateTable),
-      fromUpdateSet updateSet,
-      fromUpdateOutput updateOutput,
-      "INTO " <+> fromTempTable updateTempTable,
-      "FROM " <+> fromAliased (fmap fromTableName updateTable),
-      fromWhere updateWhere
-    ]
-  where
-    fromUpdateSet :: UpdateSet -> Printer
-    fromUpdateSet setColumns =
-      let updateColumnValue (column, updateOp) =
-            fromColumnName column <+> fromUpdateOperator (fromExpression <$> updateOp)
-       in "SET " <+> SepByPrinter ", " (map updateColumnValue (HM.toList setColumns))
-
-    fromUpdateOperator :: UpdateOperator Printer -> Printer
-    fromUpdateOperator = \case
-      UpdateSet p -> " = " <+> p
-      UpdateInc p -> " += " <+> p
-
--- | Converts `SelectIntoTempTable`.
---
---  > SelectIntoTempTable (TempTableName "deleted")  [UnifiedColumn "id" IntegerType, UnifiedColumn "name" TextType] (TableName "table" "schema")
---
---  Becomes:
---
---  > SELECT [id], [name] INTO #deleted([id], [name]) FROM [schema].[table] WHERE (1<>1) UNION ALL SELECT [id], [name] FROM [schema].[table];
---
---  We add the `UNION ALL` part to avoid copying identity constraints, and we cast columns with types such as `timestamp`
---  which are non-insertable to a different type.
-fromSelectIntoTempTable :: SelectIntoTempTable -> Printer
-fromSelectIntoTempTable SelectIntoTempTable {sittTempTableName, sittColumns, sittFromTableName} =
-  SepByPrinter
-    NewlinePrinter
-    [ "SELECT "
-        <+> columns,
-      "INTO " <+> fromTempTableName sittTempTableName,
-      "FROM " <+> fromTableName sittFromTableName,
-      "WHERE " <+> falsePrinter,
-      "UNION ALL SELECT " <+> columns,
-      "FROM " <+> fromTableName sittFromTableName,
-      "WHERE " <+> falsePrinter
-    ]
-  where
-    -- column names separated by commas
-    columns =
-      SepByPrinter
-        ("," <+> NewlinePrinter)
-        (map columnNameFromUnifiedColumn sittColumns)
-
-    -- column name with potential modifications of types
-    columnNameFromUnifiedColumn (UnifiedColumn columnName columnType) =
-      case columnType of
-        -- The "timestamp" is type synonym for "rowversion" and it is just an incrementing number and does not preserve a date or a time.
-        -- So, the "timestamp" type is neither insertable nor explicitly updatable. Its values are unique binary numbers within a database.
-        -- We're using "binary" type instead so that we can copy a timestamp row value safely into the temporary table.
-        -- See https://docs.microsoft.com/en-us/sql/t-sql/data-types/rowversion-transact-sql for more details.
-        TimestampType -> "CAST(" <+> fromNameText columnName <+> " AS binary(8)) AS " <+> fromNameText columnName
-        _ -> fromNameText columnName
-
--- | @TempTableName "deleted"@ becomes @\#deleted@
-fromTempTableName :: TempTableName -> Printer
-fromTempTableName (TempTableName v) = QueryPrinter (fromString . T.unpack $ "#" <> v)
-
-fromTempTable :: TempTable -> Printer
-fromTempTable (TempTable table columns) =
-  fromTempTableName table <+> parens (SepByPrinter ", " (map fromColumnName columns))
-
--- | @TempTableName "temp_table" is converted to "DROP TABLE #temp_table"
-dropTempTableQuery :: TempTableName -> Printer
-dropTempTableQuery tempTableName =
-  QueryPrinter "DROP TABLE " <+> fromTempTableName tempTableName
 
 fromSelect :: Select -> Printer
 fromSelect Select {..} = fmap fromWith selectWith ?<+> wrapFor selectFor result
@@ -563,7 +438,6 @@ fromFrom =
     FromOpenJson openJson -> fromAliased (fmap fromOpenJson openJson)
     FromSelect select -> fromAliased (fmap (parens . fromSelect) select)
     FromIdentifier identifier -> fromNameText identifier
-    FromTempTable aliasedTempTable -> fromAliased (fmap fromTempTableName aliasedTempTable)
 
 fromOpenJson :: OpenJson -> Printer
 fromOpenJson OpenJson {openJsonExpression, openJsonWith} =
@@ -607,9 +481,6 @@ fromAliased :: Aliased Printer -> Printer
 fromAliased Aliased {..} =
   aliasedThing
     <+> ((" AS " <+>) . fromNameText) aliasedAlias
-
-fromColumnName :: ColumnName -> Printer
-fromColumnName (ColumnName colname) = fromNameText colname
 
 fromNameText :: Text -> Printer
 fromNameText t = QueryPrinter (rawUnescapedText ("[" <> t <> "]"))

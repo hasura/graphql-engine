@@ -95,8 +95,7 @@ resolveSource sourceConfig customization =
                                       case mode of
                                         Nullable -> True
                                         _ -> False,
-                                    prciDescription = Nothing,
-                                    prciMutability = ColumnMutability {_cmIsInsertable = True, _cmIsUpdatable = True}
+                                    prciDescription = Nothing
                                   }
                                 | (position, RestFieldSchema {name, type', mode}) <-
                                     zip [1 ..] fields -- TODO: Same trouble as Oid above.

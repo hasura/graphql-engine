@@ -190,7 +190,7 @@ data ServeOptions impl = ServeOptions
     soHost :: !HostPreference,
     soConnParams :: !Q.ConnParams,
     soTxIso :: !Q.TxIsolation,
-    soAdminSecret :: !(Set.HashSet AdminSecretHash),
+    soAdminSecret :: !(Maybe AdminSecretHash),
     soAuthHook :: !(Maybe AuthHook),
     soJwtSecret :: !(Maybe JWTConfig),
     soUnAuthRole :: !(Maybe RoleName),
@@ -220,9 +220,7 @@ data ServeOptions impl = ServeOptions
     soEventsFetchBatchSize :: !NonNegativeInt,
     soDevMode :: !Bool,
     soGracefulShutdownTimeout :: !Seconds,
-    soWebsocketConnectionInitTimeout :: !WSConnectionInitTimeout,
-    soEventingMode :: !EventingMode,
-    soReadOnlyMode :: !ReadOnlyMode
+    soWebsocketConnectionInitTimeout :: !WSConnectionInitTimeout
   }
 
 data DowngradeOptions = DowngradeOptions

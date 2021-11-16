@@ -24,6 +24,7 @@ import Control.Arrow.Extended
 import Control.Concurrent.Async.Lifted.Safe qualified as LA
 import Control.Lens hiding ((.=))
 import Control.Monad.Trans.Control (MonadBaseControl)
+import Control.Monad.Unique
 import Control.Retry qualified as Retry
 import Data.Aeson
 import Data.Align (align)
@@ -71,7 +72,6 @@ import Hasura.SQL.Tag
 import Hasura.SQL.Tag qualified as Tag
 import Hasura.Server.Types
   ( MaintenanceMode (..),
-    ReadOnlyMode (..),
   )
 import Hasura.Session
 import Hasura.Tracing qualified as Tracing
@@ -147,6 +147,7 @@ newtype CacheRWT m a
       Applicative,
       Monad,
       MonadIO,
+      MonadUnique,
       MonadReader r,
       MonadError e,
       MonadTx,
@@ -226,6 +227,7 @@ buildSchemaCacheRule ::
     Inc.ArrowDistribute arr,
     Inc.ArrowCache m arr,
     MonadIO m,
+    MonadUnique m,
     MonadBaseControl IO m,
     MonadError QErr m,
     MonadReader BuildReason m,
@@ -257,7 +259,7 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
           (_boSources resolvedOutputs)
           (_boRemoteSchemas resolvedOutputs)
           (_boActions resolvedOutputs)
-          (_boCustomTypes resolvedOutputs)
+          (_actNonObjects $ _boCustomTypes resolvedOutputs)
 
   -- Step 4: Build the relay GraphQL schema
   (relayContext, relayContextUnauth, relaySchemaInconsistentObjects) <-
@@ -268,7 +270,7 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
           (_boSources resolvedOutputs)
           (_boRemoteSchemas resolvedOutputs)
           (_boActions resolvedOutputs)
-          (_boCustomTypes resolvedOutputs)
+          (_actNonObjects $ _boCustomTypes resolvedOutputs)
 
   let duplicateVariables :: EndpointMetadata a -> Bool
       duplicateVariables m = any ((> 1) . length) $ group $ sort $ catMaybes $ splitPath Just (const Nothing) (_ceUrl m)
@@ -414,14 +416,12 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
                 Tag.PostgresVanillaTag -> do
                   migrationTime <- liftIO getCurrentTime
                   maintenanceMode <- _sccMaintenanceMode <$> askServerConfigCtx
-                  eventingMode <- _sccEventingMode <$> askServerConfigCtx
-                  readOnlyMode <- _sccReadOnlyMode <$> askServerConfigCtx
                   liftEitherM $
                     liftIO $
                       LA.withAsync (logPGSourceCatalogMigrationLockedQueries logger sourceConfig) $
                         const $ do
                           let initCatalogAction =
-                                runExceptT $ runTx (_pscExecCtx sourceConfig) Q.ReadWrite (initCatalogForSource maintenanceMode eventingMode readOnlyMode migrationTime)
+                                runExceptT $ runTx (_pscExecCtx sourceConfig) Q.ReadWrite (initCatalogForSource maintenanceMode migrationTime)
                           -- The `initCatalogForSource` action is retried here because
                           -- in cloud there will be multiple workers (graphql-engine instances)
                           -- trying to migrate the source catalog, when needed. This introduces
@@ -559,6 +559,7 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
         Inc.ArrowCache m arr,
         ArrowWriter (Seq CollectedInfo) arr,
         MonadIO m,
+        MonadUnique m,
         MonadError QErr m,
         MonadReader BuildReason m,
         MonadBaseControl IO m,
@@ -1026,11 +1027,10 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
                         case buildReason of
                           CatalogUpdate _ -> True
                           CatalogSync -> False
-                  -- we don't modify the existing event trigger definitions in the maintenance mode or in read-only mode
+                  -- we don't modify the existing event trigger definitions in the maintenance mode
                   when
                     ( (isCatalogUpdate || recreateEventTriggers == RETRecreate)
                         && _sccMaintenanceMode serverConfigCtx == MaintenanceModeDisabled
-                        && _sccReadOnlyMode serverConfigCtx == ReadOnlyModeDisabled
                     )
                     $ liftEitherM $
                       createTableEventTrigger
@@ -1133,6 +1133,7 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
         ArrowWriter (Seq CollectedInfo) arr,
         Inc.ArrowCache m arr,
         MonadIO m,
+        MonadUnique m,
         HasHttpManagerM m
       ) =>
       ( Inc.Dependency (HashMap RemoteSchemaName Inc.InvalidationKey),
@@ -1144,7 +1145,7 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
       where
         -- We want to cache this call because it fetches the remote schema over HTTP, and we don’t
         -- want to re-run that if the remote schema definition hasn’t changed.
-        buildRemoteSchema = Inc.cache proc (invalidationKeys, remoteSchema@(RemoteSchemaMetadata name defn comment _ _)) -> do
+        buildRemoteSchema = Inc.cache proc (invalidationKeys, remoteSchema@(RemoteSchemaMetadata name defn comment _)) -> do
           -- TODO is it strange how we convert from RemoteSchemaMetadata back
           --      to AddRemoteSchemaQuery here? Document types please.
           let addRemoteSchemaQuery = AddRemoteSchemaQuery name defn comment

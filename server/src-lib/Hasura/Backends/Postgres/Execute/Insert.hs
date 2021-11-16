@@ -20,7 +20,6 @@ import Hasura.Backends.Postgres.Translate.Insert qualified as PGT
 import Hasura.Backends.Postgres.Translate.Mutation qualified as PGT
 import Hasura.Backends.Postgres.Translate.Returning qualified as PGT
 import Hasura.Backends.Postgres.Translate.Select (PostgresAnnotatedFieldJSON)
-import Hasura.Backends.Postgres.Types.Insert
 import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.Prelude
@@ -40,7 +39,7 @@ convertToSQLTransaction ::
     PostgresAnnotatedFieldJSON pgKind,
     MonadReader QueryTagsComment m
   ) =>
-  IR.AnnInsert ('Postgres pgKind) Void PG.SQLExp ->
+  IR.AnnInsert ('Postgres pgKind) (Const Void) PG.SQLExp ->
   UserInfo ->
   Seq.Seq Q.PrepArg ->
   Bool ->
@@ -74,7 +73,7 @@ insertMultipleObjects ::
 insertMultipleObjects multiObjIns additionalColumns userInfo mutationOutput planVars stringifyNum =
   bool withoutRelsInsert withRelsInsert anyRelsToInsert
   where
-    IR.AnnIns insObjs table checkCondition columnInfos defVals (BackendInsert conflictClause) = multiObjIns
+    IR.AnnIns insObjs table conflictClause checkCondition columnInfos defVals () = multiObjIns
     allInsObjRels = concatMap IR.getInsertObjectRelationships insObjs
     allInsArrRels = concatMap IR.getInsertArrayRelationships insObjs
     anyRelsToInsert = not $ null allInsArrRels && null allInsObjRels
@@ -89,7 +88,7 @@ insertMultipleObjects multiObjIns additionalColumns userInfo mutationOutput plan
               table
               columnNames
               columnValues
-              conflictClause
+              (snd <$> conflictClause)
               checkCondition
               mutationOutput
               columnInfos
@@ -100,7 +99,7 @@ insertMultipleObjects multiObjIns additionalColumns userInfo mutationOutput plan
 
     withRelsInsert = do
       insertRequests <- indexedForM insObjs \obj -> do
-        let singleObj = IR.AnnIns (IR.Single obj) table checkCondition columnInfos defVals (BackendInsert conflictClause)
+        let singleObj = IR.AnnIns (IR.Single obj) table conflictClause checkCondition columnInfos defVals ()
         insertObject singleObj additionalColumns userInfo planVars stringifyNum
       let affectedRows = sum $ map fst insertRequests
           columnValues = mapMaybe snd insertRequests
@@ -140,7 +139,7 @@ insertObject singleObjIns additionalColumns userInfo planVars stringifyNum = Tra
       objRelDeterminedCols = concatMap snd objInsRes
       finalInsCols = columns <> objRelDeterminedCols <> additionalColumns
 
-  cte <- mkInsertQ table onConflict finalInsCols defaultValues checkCond
+  cte <- mkInsertQ table (snd <$> onConflict) finalInsCols defaultValues checkCond
 
   PGE.MutateResp affRows colVals <-
     liftTx $
@@ -152,7 +151,7 @@ insertObject singleObjIns additionalColumns userInfo planVars stringifyNum = Tra
 
   return (totAffRows, colValM)
   where
-    IR.AnnIns (IR.Single annObj) table checkCond allColumns defaultValues (BackendInsert onConflict) = singleObjIns
+    IR.AnnIns (IR.Single annObj) table onConflict checkCond allColumns defaultValues () = singleObjIns
     columns = IR.getInsertColumns annObj
     objectRels = IR.getInsertObjectRelationships annObj
     arrayRels = IR.getInsertArrayRelationships annObj
@@ -173,7 +172,15 @@ insertObject singleObjIns additionalColumns userInfo planVars stringifyNum = Tra
     objToArr IR.RelIns {..} = IR.RelIns (singleToMulti _riAnnIns) _riRelInfo
 
     singleToMulti :: forall a b. IR.SingleObjIns b a -> IR.MultiObjIns b a
-    singleToMulti annIns = annIns {IR._aiInsObj = [IR.unSingle $ IR._aiInsObj annIns]}
+    singleToMulti IR.AnnIns {..} =
+      IR.AnnIns
+        [IR.unSingle _aiInsObj]
+        _aiTableName
+        _aiConflictClause
+        _aiCheckCond
+        _aiTableCols
+        _aiDefVals
+        _aiExtraInsertData
 
     withArrRels ::
       Maybe (ColumnValues ('Postgres pgKind) TxtEncodedVal) ->

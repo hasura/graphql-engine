@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import KeyValueInput from './KeyValueInput';
 import { Nullable } from '../../utils/tsUtils';
-import { editorDebounceTime, fixedInputStyles, inputStyles } from '../utils';
+import { editorDebounceTime, inputStyles } from '../utils';
 import { useDebouncedEffect } from '../../../../hooks/useDebounceEffect';
 import CrossIcon from '../../Icons/Cross';
 import { KeyValuePair } from '../stateDefaults';
@@ -12,6 +12,7 @@ type RequestUrlEditorProps = {
   requestUrlPreview: string;
   requestQueryParams: KeyValuePair[];
   requestUrlOnChange: (requestUrl: string) => void;
+  requestUrlErrorOnChange: (requestUrlError: string) => void;
   requestQueryParamsOnChange: (requestQueryParams: KeyValuePair[]) => void;
 };
 
@@ -21,6 +22,7 @@ const RequestUrlEditor: React.FC<RequestUrlEditorProps> = ({
   requestUrlPreview,
   requestQueryParams,
   requestUrlOnChange,
+  requestUrlErrorOnChange,
   requestQueryParamsOnChange,
 }) => {
   const [localUrl, setLocalUrl] = useState<string>(requestUrl);
@@ -30,6 +32,7 @@ const RequestUrlEditor: React.FC<RequestUrlEditorProps> = ({
   const [localQueryParams, setLocalQueryParams] = useState<KeyValuePair[]>(
     requestQueryParams
   );
+  const [localPreview, setLocalPreview] = useState<string>(requestUrlPreview);
 
   useEffect(() => {
     setLocalUrl(requestUrl);
@@ -44,11 +47,16 @@ const RequestUrlEditor: React.FC<RequestUrlEditorProps> = ({
   }, [requestUrlError]);
 
   useEffect(() => {
+    setLocalPreview(requestUrlPreview);
+  }, [requestUrlPreview]);
+
+  useEffect(() => {
     setLocalQueryParams(requestQueryParams);
   }, [requestQueryParams]);
 
   useDebouncedEffect(
     () => {
+      requestUrlErrorOnChange('');
       requestUrlOnChange(localUrl);
     },
     editorDebounceTime,
@@ -57,6 +65,7 @@ const RequestUrlEditor: React.FC<RequestUrlEditorProps> = ({
 
   useDebouncedEffect(
     () => {
+      requestUrlErrorOnChange('');
       requestQueryParamsOnChange(localQueryParams);
     },
     editorDebounceTime,
@@ -64,10 +73,12 @@ const RequestUrlEditor: React.FC<RequestUrlEditorProps> = ({
   );
 
   const urlOnChangeHandler = (val: string) => {
+    setLocalError(null);
     setLocalUrl(val);
   };
 
   const queryParamsOnChangeHandler = (val: KeyValuePair[]) => {
+    setLocalError(null);
     setLocalQueryParams(val);
   };
 
@@ -75,21 +86,16 @@ const RequestUrlEditor: React.FC<RequestUrlEditorProps> = ({
     <>
       <div className="grid gap-3 grid-cols-3 mb-sm">
         <div className="col-span-2">
-          <div className="flex shadow-sm rounded w-full">
-            <span className={fixedInputStyles}>
-              &#123;&#123;$base_url&#125;&#125;
-            </span>
-            <input
-              type="text"
-              name="request_url"
-              id="request_url"
-              className={`w-full ${inputStyles}`}
-              placeholder="URL Template (Optional)..."
-              value={localUrl}
-              onChange={e => urlOnChangeHandler(e.target.value)}
-              data-test="transform-requestUrl"
-            />
-          </div>
+          <input
+            type="text"
+            name="request_url"
+            id="request_url"
+            className={`w-full ${inputStyles}`}
+            placeholder="{{$base_url}}/users"
+            value={localUrl}
+            onChange={e => urlOnChangeHandler(e.target.value)}
+            data-test="transform-requestUrl"
+          />
         </div>
       </div>
       <div className="grid gap-3 grid-cols-3">
@@ -106,7 +112,6 @@ const RequestUrlEditor: React.FC<RequestUrlEditorProps> = ({
         <KeyValueInput
           pairs={localQueryParams}
           setPairs={queryParamsOnChangeHandler}
-          testId="query-params"
         />
       </div>
       <div className="grid gap-3 grid-cols-3 mb-sm">
@@ -124,16 +129,16 @@ const RequestUrlEditor: React.FC<RequestUrlEditorProps> = ({
             id="request_url_preview"
             className="w-full block cursor-not-allowed rounded border-gray-200 bg-gray-200"
             data-test="transform-requestUrl-preview"
-            value={requestUrlPreview}
+            value={localPreview}
           />
         </div>
       </div>
-      {localError ? (
+      {localError && (
         <div className="mb-sm" data-test="transform-requestUrl-error">
           <CrossIcon />
           <span className="text-red-500 ml-sm">{localError}</span>
         </div>
-      ) : null}
+      )}
     </>
   );
 };

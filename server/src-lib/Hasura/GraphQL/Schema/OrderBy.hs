@@ -15,6 +15,7 @@ import Hasura.GraphQL.Parser
   )
 import Hasura.GraphQL.Parser qualified as P
 import Hasura.GraphQL.Parser.Class
+import Hasura.GraphQL.Parser.Schema (Typename (..))
 import Hasura.GraphQL.Schema.Backend
 import Hasura.GraphQL.Schema.Common
 import Hasura.GraphQL.Schema.Table
@@ -175,7 +176,7 @@ orderByAggregation sourceName tableInfo selectPermissions = memoizeOn 'orderByAg
       InputFieldsParser n (Maybe [IR.OrderByItemG b (IR.AnnotatedAggregateOrderBy b)])
     parseOperator mkTypename operator tableGQLName columns =
       let opText = G.unName operator
-          objectName = P.runMkTypename mkTypename $ tableGQLName <> $$(G.litName "_") <> operator <> $$(G.litName "_order_by")
+          objectName = mkTypename $ tableGQLName <> $$(G.litName "_") <> operator <> $$(G.litName "_order_by")
           objectDesc = Just $ G.Description $ "order by " <> opText <> "() on columns of table " <>> tableName
        in P.fieldOptional operator Nothing (P.object objectName objectDesc columns)
             `mapField` map (\(col, info) -> mkOrderByItemG (IR.AAOOp opText col) info)
@@ -185,7 +186,7 @@ orderByOperator ::
   (BackendSchema b, MonadParse n) =>
   Parser 'Both n (Maybe (BasicOrderType b, NullsOrderType b))
 orderByOperator =
-  P.nullable $ P.enum $$(G.litName "order_by") (Just "column ordering options") $ orderByOperators @b
+  P.nullable $ P.enum (Typename $$(G.litName "order_by")) (Just "column ordering options") $ orderByOperators @b
 
 mkOrderByItemG :: forall b a. a -> (BasicOrderType b, NullsOrderType b) -> IR.OrderByItemG b a
 mkOrderByItemG column (orderType, nullsOrder) =

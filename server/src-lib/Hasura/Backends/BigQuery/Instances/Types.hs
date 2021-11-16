@@ -15,6 +15,7 @@ import Language.GraphQL.Draft.Syntax qualified as G
 instance Backend 'BigQuery where
   type SourceConfig 'BigQuery = BigQuery.BigQuerySourceConfig
   type SourceConnConfiguration 'BigQuery = BigQuery.BigQueryConnSourceConfig
+  type Identifier 'BigQuery = Void
   type TableName 'BigQuery = BigQuery.TableName
   type FunctionName 'BigQuery = BigQuery.FunctionName
   type RawFunctionInfo 'BigQuery = Void
@@ -34,8 +35,10 @@ instance Backend 'BigQuery where
   type XRelay 'BigQuery = XDisable
   type XNodesAgg 'BigQuery = XEnable
   type XNestedInserts 'BigQuery = XDisable
+  type XOnConflict 'BigQuery = XDisable
 
   type ExtraTableMetadata 'BigQuery = ()
+  type ExtraInsertData 'BigQuery = ()
 
   functionArgScalarType :: FunctionArgType 'BigQuery -> ScalarType 'BigQuery
   functionArgScalarType = absurd

@@ -50,6 +50,9 @@ data FieldParser m a = FieldParser
   }
   deriving (Functor)
 
+instance HasDefinition (FieldParser m a) FieldInfo where
+  definitionLens f parser = definitionLens f (fDefinition parser) <&> \fDefinition -> parser {fDefinition}
+
 infixl 1 `bindField`
 
 bindField :: Monad m => FieldParser m a -> (a -> m b) -> FieldParser m b
@@ -85,17 +88,17 @@ nullable parser =
 
 -- | Decorate a schema field as NON_NULL
 nonNullableField :: forall m a. FieldParser m a -> FieldParser m a
-nonNullableField (FieldParser (Definition n d (FieldInfo as t)) p) =
-  FieldParser (Definition n d (FieldInfo as (nonNullableType t))) p
+nonNullableField (FieldParser (Definition n u d (FieldInfo as t)) p) =
+  FieldParser (Definition n u d (FieldInfo as (nonNullableType t))) p
 
 -- | Decorate a schema field as NULL
 nullableField :: forall m a. FieldParser m a -> FieldParser m a
-nullableField (FieldParser (Definition n d (FieldInfo as t)) p) =
-  FieldParser (Definition n d (FieldInfo as (nullableType t))) p
+nullableField (FieldParser (Definition n u d (FieldInfo as t)) p) =
+  FieldParser (Definition n u d (FieldInfo as (nullableType t))) p
 
 multipleField :: forall m a. FieldParser m a -> FieldParser m a
-multipleField (FieldParser (Definition n d (FieldInfo as t)) p) =
-  FieldParser (Definition n d (FieldInfo as (Nullable (TList t)))) p
+multipleField (FieldParser (Definition n u d (FieldInfo as t)) p) =
+  FieldParser (Definition n u d (FieldInfo as (Nullable (TList t)))) p
 
 -- | Decorate a schema field with reference to given @'G.GType'
 wrapFieldParser :: forall m a. G.GType -> FieldParser m a -> FieldParser m a
@@ -119,7 +122,7 @@ multiple parser = parser {pType = Nullable $ TList $ pType parser}
 -- | A variant of 'selectionSetObject' which doesn't implement any interfaces
 selectionSet ::
   MonadParse m =>
-  Name ->
+  Typename ->
   Maybe Description ->
   [FieldParser m a] ->
   Parser 'Output m (OMap.InsOrdHashMap Name (ParsedSelection a))
@@ -127,7 +130,7 @@ selectionSet name desc fields = selectionSetObject name desc fields []
 
 safeSelectionSet ::
   (MonadError QErr n, MonadParse m) =>
-  Name ->
+  Typename ->
   Maybe Description ->
   [FieldParser m a] ->
   n (Parser 'Output m (OMap.InsOrdHashMap Name (ParsedSelection a)))
@@ -144,7 +147,7 @@ safeSelectionSet name desc fields
 -- See also Note [Selectability of tables].
 selectionSetObject ::
   MonadParse m =>
-  Name ->
+  Typename ->
   Maybe Description ->
   -- | Fields of this object, including any fields that are required from the
   -- interfaces that it implements.  Note that we can't derive those fields from
@@ -161,7 +164,7 @@ selectionSetObject name description parsers implementsInterfaces =
     { pType =
         Nullable $
           TNamed $
-            Definition name description $
+            mkDefinition name description $
               TIObject $ ObjectInfo (map fDefinition parsers) interfaces,
       pParser = \input -> withPath (++ [Key "selectionSet"]) do
         -- Not all fields have a selection set, but if they have one, it
@@ -205,7 +208,7 @@ selectionSetObject name description parsers implementsInterfaces =
 
 selectionSetInterface ::
   (MonadParse n, Traversable t) =>
-  Name ->
+  Typename ->
   Maybe Description ->
   -- | Fields defined in this interface
   [FieldParser n a] ->
@@ -218,7 +221,7 @@ selectionSetInterface name description fields objectImplementations =
     { pType =
         Nullable $
           TNamed $
-            Definition name description $
+            mkDefinition name description $
               TIInterface $ InterfaceInfo (map fDefinition fields) objects,
       pParser = \input -> for objectImplementations (($ input) . pParser)
       -- Note: This is somewhat suboptimal, since it parses a query against every
@@ -236,7 +239,7 @@ selectionSetInterface name description fields objectImplementations =
 
 selectionSetUnion ::
   (MonadParse n, Traversable t) =>
-  Name ->
+  Typename ->
   Maybe Description ->
   -- | The member object types.
   t (Parser 'Output n b) ->
@@ -246,7 +249,7 @@ selectionSetUnion name description objectImplementations =
     { pType =
         Nullable $
           TNamed $
-            Definition name description $
+            mkDefinition name description $
               TIUnion $ UnionInfo objects,
       pParser = \input -> for objectImplementations (($ input) . pParser)
     }
@@ -286,7 +289,7 @@ rawSelection ::
 rawSelection name description argumentsParser resultParser =
   FieldParser
     { fDefinition =
-        Definition name description $
+        mkDefinition name description $
           FieldInfo (ifDefinitions argumentsParser) (pType resultParser),
       fParser = \Field {_fAlias, _fArguments, _fSelectionSet} -> do
         unless (null _fSelectionSet) $
@@ -338,7 +341,7 @@ rawSubselection ::
 rawSubselection name description argumentsParser bodyParser =
   FieldParser
     { fDefinition =
-        Definition name description $
+        mkDefinition name description $
           FieldInfo (ifDefinitions argumentsParser) (pType bodyParser),
       fParser = \Field {_fAlias, _fArguments, _fSelectionSet} -> do
         -- check for extraneous arguments here, since the InputFieldsParser just

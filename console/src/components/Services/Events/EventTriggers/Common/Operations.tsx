@@ -1,8 +1,9 @@
 import React from 'react';
-import { ToolTip } from '@/new-components/Tooltip';
+import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 import * as tooltip from './Tooltips';
 import KnowMoreLink from '../../../../Common/KnowMoreLink/KnowMoreLink';
 import { capitalize } from '../../../../Common/utils/jsUtils';
+import styles from '../TableCommon/EventTable.scss';
 import { EVENT_TRIGGER_OPERATIONS } from '../../constants';
 import { EventTriggerOperation } from '../../types';
 
@@ -10,15 +11,13 @@ type OperationProps = {
   selectedOperations: Record<EventTriggerOperation, boolean>;
   setOperations: (o: Record<EventTriggerOperation, boolean>) => void;
   readOnly: boolean;
-  tableName: string;
 };
 
-export const Operations: React.FC<OperationProps> = ({
+const Operations = ({
   selectedOperations,
   setOperations,
   readOnly,
-  tableName,
-}) => {
+}: OperationProps) => {
   const setOperation = (e: React.BaseSyntheticEvent) => {
     const label: EventTriggerOperation = e.target.name;
     setOperations({
@@ -35,9 +34,15 @@ export const Operations: React.FC<OperationProps> = ({
     disabled: readOnly,
     displayName:
       o === 'enable_manual' ? (
-        <span className="flex items-center">
-          Via console
-          <ToolTip message={tooltip.manualOperationsDescription} />
+        <span>
+          Via console &nbsp;&nbsp;
+          <OverlayTrigger
+            placement="right"
+            overlay={tooltip.manualOperationsDescription}
+          >
+            <i className="fa fa-question-circle" aria-hidden="true" />
+          </OverlayTrigger>
+          &nbsp;&nbsp;
           <KnowMoreLink href="https://hasura.io/docs/latest/graphql/core/event-triggers/invoke-trigger-console.html" />
         </span>
       ) : (
@@ -45,29 +50,29 @@ export const Operations: React.FC<OperationProps> = ({
       ),
   }));
 
-  return (
-    <>
-      <div className="flex items-center mb-md">
-        <div className="mr-md">
-          On <span className="font-semibold">{tableName}</span> table:
-        </div>
-        {allOperations.map(o => (
-          <div key={o.name} className="mr-md">
-            <label className="cursor-pointer flex">
-              <input
-                onChange={o.onChange}
-                data-test={o.testIdentifier}
-                className="cursor-pointer legacy-input-fix"
-                type="checkbox"
-                name={o.name}
-                checked={o.isChecked}
-                disabled={readOnly}
-              />
-              <span className="ml-xs">{o.displayName}</span>
-            </label>
-          </div>
-        ))}
+  const getOperationsList = () => {
+    return allOperations.map(o => (
+      <div
+        key={o.name}
+        className={`${styles.display_inline} ${styles.add_mar_right}`}
+      >
+        <label className={styles.cursorPointer}>
+          <input
+            onChange={o.onChange}
+            data-test={o.testIdentifier}
+            className={`${styles.display_inline} ${styles.add_mar_right_small} ${styles.cursorPointer} legacy-input-fix`}
+            type="checkbox"
+            name={o.name}
+            checked={o.isChecked}
+            disabled={readOnly}
+          />
+          {o.displayName}
+        </label>
       </div>
-    </>
-  );
+    ));
+  };
+
+  return <div>{getOperationsList()}</div>;
 };
+
+export default Operations;

@@ -59,7 +59,7 @@ import Hasura.Prelude
 import Hasura.RQL.DML.Internal
 import Hasura.RQL.IR.OrderBy
 import Hasura.RQL.IR.Select
-import Hasura.RQL.Types
+import Hasura.RQL.Types hiding (Identifier)
 import Hasura.SQL.Types
 
 -- | Translates IR to Postgres queries for simple SELECTs (select queries that
@@ -94,7 +94,7 @@ connectionSelectQuerySQL ::
   ( Backend ('Postgres pgKind),
     PostgresAnnotatedFieldJSON pgKind
   ) =>
-  ConnectionSelect ('Postgres pgKind) Void S.SQLExp ->
+  ConnectionSelect ('Postgres pgKind) (Const Void) S.SQLExp ->
   Q.Query
 connectionSelectQuerySQL =
   Q.fromBuilder . toSQL . mkConnectionSelect
@@ -114,7 +114,7 @@ asSingleRowJsonResp query args =
   encJFromBS . runIdentity . Q.getRow
     <$> Q.rawQE dmlTxErrorHandler query args True
 
--- | Converts a function name to an 'Identifier'.
+-- | Converts a function name to an identifier.
 --
 -- If the schema name is public, it will just use its name, otherwise it will
 -- prefix it by the schema name.
@@ -124,7 +124,7 @@ functionToIdentifier = Identifier . qualifiedObjectToText
 selectFromToFromItem :: Identifier -> SelectFrom ('Postgres pgKind) -> S.FromItem
 selectFromToFromItem pfx = \case
   FromTable tn -> S.FISimple tn Nothing
-  FromIdentifier i -> S.FIIdentifier $ toIdentifier i
+  FromIdentifier i -> S.FIIdentifier i
   FromFunction qf args defListM ->
     S.FIFunc $
       S.FunctionExp qf (fromTableRowArgs pfx args) $
@@ -140,7 +140,7 @@ selectFromToFromItem pfx = \case
 selectFromToQual :: SelectFrom ('Postgres pgKind) -> S.Qual
 selectFromToQual = \case
   FromTable table -> S.QualTable table
-  FromIdentifier i -> S.QualifiedIdentifier (toIdentifier i) Nothing
+  FromIdentifier i -> S.QualifiedIdentifier i Nothing
   FromFunction qf _ _ -> S.QualifiedIdentifier (functionToIdentifier qf) Nothing
 
 aggregateFieldToExp :: AggregateFields ('Postgres pgKind) -> Bool -> S.SQLExp
@@ -305,16 +305,15 @@ mkArrayRelationAlias parentFieldName similarFieldsMap fieldName =
       HM.lookupDefault [fieldName] fieldName similarFieldsMap
 
 fromTableRowArgs ::
-  Identifier -> FunctionArgsExpTableRow S.SQLExp -> S.FunctionArgs
-fromTableRowArgs prefix = toFunctionArgs . fmap toSQLExp
+  Identifier -> FunctionArgsExpTableRow ('Postgres pgKind) S.SQLExp -> S.FunctionArgs
+fromTableRowArgs pfx = toFunctionArgs . fmap toSQLExp
   where
     toFunctionArgs (FunctionArgsExp positional named) =
       S.FunctionArgs positional named
-    toSQLExp =
-      onArgumentExp
-        (S.SERowIdentifier alias)
-        (S.mkQIdenExp alias . Identifier)
-    alias = mkBaseTableAlias prefix
+    toSQLExp (AETableRow Nothing) = S.SERowIdentifier $ mkBaseTableAlias pfx
+    toSQLExp (AETableRow (Just acc)) = S.mkQIdenExp (mkBaseTableAlias pfx) acc
+    toSQLExp (AESession s) = s
+    toSQLExp (AEInput s) = s
 
 -- uses row_to_json to build a json object
 withRowToJSON ::
@@ -422,7 +421,7 @@ type SimilarArrayFields = HM.HashMap FieldName [FieldName]
 mkSimilarArrayFields ::
   forall pgKind v.
   (Backend ('Postgres pgKind), Eq v) =>
-  AnnFieldsG ('Postgres pgKind) Void v ->
+  AnnFieldsG ('Postgres pgKind) (Const Void) v ->
   Maybe (NE.NonEmpty (AnnotatedOrderByItemG ('Postgres pgKind) v)) ->
   SimilarArrayFields
 mkSimilarArrayFields annFields maybeOrderBys =
@@ -1399,7 +1398,7 @@ mkConnectionSelect ::
   ( Backend ('Postgres pgKind),
     PostgresAnnotatedFieldJSON pgKind
   ) =>
-  ConnectionSelect ('Postgres pgKind) Void S.SQLExp ->
+  ConnectionSelect ('Postgres pgKind) (Const Void) S.SQLExp ->
   S.SelectWithG S.Select
 mkConnectionSelect connectionSelect =
   let ((connectionSource, topExtractor, nodeExtractors), joinTree) =
@@ -1482,7 +1481,7 @@ processConnectionSelect ::
   FieldName ->
   S.Alias ->
   HM.HashMap PGCol PGCol ->
-  ConnectionSelect ('Postgres pgKind) Void S.SQLExp ->
+  ConnectionSelect ('Postgres pgKind) (Const Void) S.SQLExp ->
   m
     ( ArrayConnectionSource,
       S.Extractor,

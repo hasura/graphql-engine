@@ -42,8 +42,11 @@ var _ = Describe("hasura metadata diff", func() {
 			})
 			Eventually(session, timeout).Should(Exit(0))
 			stdout := session.Out.Contents()
-			Expect(stdout).Should(ContainSubstring("kind: postgres"))
-			Expect(stdout).Should(ContainSubstring("name: default"))
+			Expect(stdout).Should(ContainSubstring("+sources: []"))
+			Expect(stdout).Should(ContainSubstring("-sources:"))
+			Expect(stdout).Should(ContainSubstring("-  kind: postgres"))
+			Expect(stdout).Should(ContainSubstring("-  name: default"))
+			Expect(stdout).Should(ContainSubstring("-  tables: []"))
 
 			editMetadataFileInConfig(filepath.Join(projectDirectory, defaultConfigFilename), "metadata.yaml")
 			session = testutil.Hasura(testutil.CmdOpts{
@@ -52,14 +55,14 @@ var _ = Describe("hasura metadata diff", func() {
 			})
 			Eventually(session, timeout).Should(Exit(0))
 			stdout = session.Out.Contents()
-			Expect(stdout).Should(ContainSubstring("sources"))
-			Expect(stdout).Should(ContainSubstring("kind: postgres"))
-			Expect(stdout).Should(ContainSubstring("name: default"))
-			Expect(stdout).Should(ContainSubstring("tables: []"))
+			Expect(stdout).Should(ContainSubstring("-sources:"))
+			Expect(stdout).Should(ContainSubstring("-  kind: postgres"))
+			Expect(stdout).Should(ContainSubstring("-- name: default"))
+			Expect(stdout).Should(ContainSubstring("-  tables: []"))
 
 			editMetadataFileInConfig(filepath.Join(projectDirectory, defaultConfigFilename), "metadata.json")
 			session = testutil.Hasura(testutil.CmdOpts{
-				Args:             []string{"metadata", "diff", "--no-color"},
+				Args:             []string{"metadata", "diff"},
 				WorkingDirectory: projectDirectory,
 			})
 			Eventually(session, timeout).Should(Exit(0))

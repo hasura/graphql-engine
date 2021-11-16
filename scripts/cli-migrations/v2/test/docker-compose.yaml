@@ -7,8 +7,7 @@ services:
       POSTGRES_PASSWORD: postgrespassword
   graphql-engine:
     container_name: graphql-engine
-    image: ${TEST_IMAGE_NAME}
-    platform: ${TEST_PLATFORM}
+    image: cli-migrations-v2
     ports:
     - "8080:8080"
     depends_on:

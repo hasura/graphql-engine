@@ -53,6 +53,7 @@ import (
 	"github.com/hasura/graphql-engine/cli/v2/telemetry"
 	"github.com/hasura/graphql-engine/cli/v2/util"
 	"github.com/hasura/graphql-engine/cli/v2/version"
+	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"github.com/subosito/gotenv"
@@ -203,7 +204,7 @@ func (c *ServerConfig) GetHasuraInternalServerConfig() error {
 	client := http.Client{Timeout: 30 * time.Second}
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		return fmt.Errorf("error fetching config from server: %w", err)
+		return errors.Wrap(err, "error fetching config from server")
 	}
 
 	if c.AdminSecret != "" {
@@ -232,6 +233,11 @@ func (c *ServerConfig) GetHasuraInternalServerConfig() error {
 // HasuraServerConfig is the type returned by the v1alpha1/config API
 // TODO: Move this type to a client implementation for hasura
 type HasuraServerInternalConfig struct {
+	Version          string `json:"version"`
+	IsAdminSecretSet bool   `json:"is_admin_secret_set"`
+	IsAuthHookSet    bool   `json:"is_auth_hook_set"`
+	IsJwtSet         bool   `json:"is_jwt_set"`
+	JWT              string `json:"jwt"`
 	ConsoleAssetsDir string `json:"console_assets_dir"`
 }
 
@@ -306,10 +312,10 @@ func (s *ServerConfig) SetTLSConfig() error {
 		certPath, _ := filepath.Abs(s.CAPath)
 		cert, err := ioutil.ReadFile(certPath)
 		if err != nil {
-			return fmt.Errorf("error reading CA %s: %w", s.CAPath, err)
+			return errors.Errorf("error reading CA %s", s.CAPath)
 		}
 		if ok := rootCAs.AppendCertsFromPEM(cert); !ok {
-			return fmt.Errorf("unable to append given CA cert")
+			return errors.Errorf("Unable to append given CA cert.")
 		}
 		s.TLSConfig = &tls.Config{
 			RootCAs:            rootCAs,
@@ -324,7 +330,6 @@ func (s *ServerConfig) SetHTTPClient() error {
 	s.HTTPClient = &http.Client{Transport: http.DefaultTransport}
 	if s.TLSConfig != nil {
 		tr := &http.Transport{TLSClientConfig: s.TLSConfig}
-		tr.Proxy = http.ProxyFromEnvironment
 		s.HTTPClient.Transport = tr
 	}
 	return nil
@@ -515,7 +520,7 @@ func (ec *ExecutionContext) Prepare() error {
 	// setup global config
 	err := ec.setupGlobalConfig()
 	if err != nil {
-		return fmt.Errorf("setting up global config failed: %w", err)
+		return errors.Wrap(err, "setting up global config failed")
 	}
 
 	if !ec.proPluginVersionValidated {
@@ -553,7 +558,7 @@ func (ec *ExecutionContext) SetupPlugins() error {
 	base := filepath.Join(ec.GlobalConfigDir, "plugins")
 	base, err := filepath.Abs(base)
 	if err != nil {
-		return fmt.Errorf("cannot get absolute path: %w", err)
+		return errors.Wrap(err, "cannot get absolute path")
 	}
 	ec.PluginsConfig = plugins.New(base)
 	ec.PluginsConfig.Logger = ec.Logger
@@ -593,7 +598,7 @@ func (ec *ExecutionContext) SetupCodegenAssetsRepo() error {
 	base := filepath.Join(ec.GlobalConfigDir, util.ActionsCodegenDirName)
 	base, err := filepath.Abs(base)
 	if err != nil {
-		return fmt.Errorf("cannot get absolute path: %w", err)
+		return errors.Wrap(err, "cannot get absolute path")
 	}
 	ec.CodegenAssetsRepo = util.NewGitUtil(util.ActionsCodegenRepoURI, base, "")
 	ec.CodegenAssetsRepo.Logger = ec.Logger
@@ -620,7 +625,7 @@ func (ec *ExecutionContext) Validate() error {
 	// load .env file
 	err = ec.loadEnvfile()
 	if err != nil {
-		return fmt.Errorf("loading .env file failed: %w", err)
+		return errors.Wrap(err, "loading .env file failed")
 	}
 
 	// set names of config file
@@ -629,7 +634,7 @@ func (ec *ExecutionContext) Validate() error {
 	// read config and parse the values into Config
 	err = ec.readConfig()
 	if err != nil {
-		return fmt.Errorf("cannot read config: %w", err)
+		return errors.Wrap(err, "cannot read config")
 	}
 
 	// set name of migration directory
@@ -637,7 +642,7 @@ func (ec *ExecutionContext) Validate() error {
 	if _, err := os.Stat(ec.MigrationDir); os.IsNotExist(err) {
 		err = os.MkdirAll(ec.MigrationDir, os.ModePerm)
 		if err != nil {
-			return fmt.Errorf("cannot create migrations directory: %w", err)
+			return errors.Wrap(err, "cannot create migrations directory")
 		}
 	}
 
@@ -645,7 +650,7 @@ func (ec *ExecutionContext) Validate() error {
 	if _, err := os.Stat(ec.SeedsDirectory); os.IsNotExist(err) {
 		err = os.MkdirAll(ec.SeedsDirectory, os.ModePerm)
 		if err != nil {
-			return fmt.Errorf("cannot create seeds directory: %w", err)
+			return errors.Wrap(err, "cannot create seeds directory")
 		}
 	}
 
@@ -671,7 +676,7 @@ func (ec *ExecutionContext) Validate() error {
 		if _, err := os.Stat(ec.MetadataDir); os.IsNotExist(err) && !(len(ec.MetadataFile) > 0) {
 			err = os.MkdirAll(ec.MetadataDir, os.ModePerm)
 			if err != nil {
-				return fmt.Errorf("cannot create metadata directory: %w", err)
+				return errors.Wrap(err, "cannot create metadata directory")
 			}
 		}
 	}
@@ -699,13 +704,13 @@ func (ec *ExecutionContext) Validate() error {
 	// get version from the server and match with the cli version
 	err = ec.checkServerVersion()
 	if err != nil {
-		return fmt.Errorf("version check: %w", err)
+		return errors.Wrap(err, "version check")
 	}
 
 	// get the server feature flags
 	err = ec.Version.GetServerFeatureFlags()
 	if err != nil {
-		return fmt.Errorf("error in getting server feature flags %w", err)
+		return errors.Wrap(err, "error in getting server feature flags")
 	}
 	var headers map[string]string
 	if ec.Config.AdminSecret != "" {
@@ -719,7 +724,6 @@ func (ec *ExecutionContext) Validate() error {
 		&http.Client{
 			Transport: &http.Transport{
 				TLSClientConfig: ec.Config.TLSConfig,
-				Proxy:           http.ProxyFromEnvironment,
 			},
 		},
 		ec.Config.Endpoint,
@@ -761,9 +765,9 @@ func (ec *ExecutionContext) Validate() error {
 	}
 	var state *util.ServerState
 	if ec.HasMetadataV3 {
-		state = util.GetServerState(httpClient, ec.Config.GetV1MetadataEndpoint(), ec.HasMetadataV3, ec.Logger)
+		state = util.GetServerState(ec.Config.GetV1MetadataEndpoint(), ec.Config.ServerConfig.AdminSecret, ec.Config.ServerConfig.TLSConfig, ec.HasMetadataV3, ec.Logger)
 	} else {
-		state = util.GetServerState(httpClient, ec.Config.GetV1QueryEndpoint(), ec.HasMetadataV3, ec.Logger)
+		state = util.GetServerState(ec.Config.GetV1QueryEndpoint(), ec.Config.ServerConfig.AdminSecret, ec.Config.ServerConfig.TLSConfig, ec.HasMetadataV3, ec.Logger)
 	}
 	ec.ServerUUID = state.UUID
 	ec.Telemetry.ServerUUID = ec.ServerUUID
@@ -775,7 +779,7 @@ func (ec *ExecutionContext) Validate() error {
 func (ec *ExecutionContext) checkServerVersion() error {
 	v, err := version.FetchServerVersion(ec.Config.ServerConfig.GetVersionEndpoint(), ec.Config.ServerConfig.HTTPClient)
 	if err != nil {
-		return fmt.Errorf("failed to get version from server: %w", err)
+		return errors.Wrap(err, "failed to get version from server")
 	}
 	ec.Version.SetServerVersion(v)
 	ec.Telemetry.ServerVersion = ec.Version.GetServerVersion()
@@ -836,7 +840,7 @@ func (ec *ExecutionContext) readConfig() error {
 	v.AddConfigPath(ec.ExecutionDirectory)
 	err := v.ReadInConfig()
 	if err != nil {
-		return fmt.Errorf("cannot read config from file/env: %w", err)
+		return errors.Wrap(err, "cannot read config from file/env")
 	}
 	adminSecret := v.GetString("admin_secret")
 	if adminSecret == "" {
@@ -880,7 +884,7 @@ func (ec *ExecutionContext) readConfig() error {
 	}
 	err = ec.Config.ServerConfig.ParseEndpoint()
 	if err != nil {
-		return fmt.Errorf("unable to parse server endpoint: %w", err)
+		return errors.Wrap(err, "unable to parse server endpoint")
 	}
 
 	// this populates the ec.Config.ServerConfig.HasuraServerInternalConfig
@@ -892,7 +896,7 @@ func (ec *ExecutionContext) readConfig() error {
 
 	err = ec.Config.ServerConfig.SetTLSConfig()
 	if err != nil {
-		return fmt.Errorf("setting up TLS config failed: %w", err)
+		return errors.Wrap(err, "setting up TLS config failed")
 	}
 	return ec.Config.ServerConfig.SetHTTPClient()
 }

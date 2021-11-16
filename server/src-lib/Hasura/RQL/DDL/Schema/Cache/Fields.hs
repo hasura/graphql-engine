@@ -87,7 +87,7 @@ addNonColumnFields =
 
     rawRemoteRelationshipInfos <-
       buildInfoMapPreservingMetadata
-        (_rrName . (^. _3))
+        (_rrmName . (^. _3))
         (mkRemoteRelationshipMetadataObject @b)
         buildRemoteRelationship
         -<
@@ -289,17 +289,17 @@ buildComputedField = proc (trackedTableNames, (source, pgFunctions, table, cf@Co
 mkRemoteRelationshipMetadataObject ::
   forall b.
   Backend b =>
-  (SourceName, TableName b, RemoteRelationship) ->
+  (SourceName, TableName b, RemoteRelationshipMetadata) ->
   MetadataObject
-mkRemoteRelationshipMetadataObject (source, table, RemoteRelationship {..}) =
+mkRemoteRelationshipMetadataObject (source, table, RemoteRelationshipMetadata {..}) =
   let objectId =
         MOSourceObjId source $
           AB.mkAnyBackend $
             SMOTableObj @b table $
-              MTORemoteRelationship _rrName
+              MTORemoteRelationship _rrmName
    in MetadataObject objectId $
         toJSON $
-          CreateFromSourceRelationship @b source table _rrName _rrDefinition
+          RemoteRelationship @b _rrmName source table _rrmDefinition
 
 buildRemoteRelationship ::
   forall b arr m.
@@ -310,28 +310,36 @@ buildRemoteRelationship ::
     BackendMetadata b
   ) =>
   ( (HashMap SourceName (AB.AnyBackend PartiallyResolvedSource), FieldInfoMap (FieldInfo b), RemoteSchemaMap),
-    (SourceName, TableName b, RemoteRelationship)
+    (SourceName, TableName b, RemoteRelationshipMetadata)
   )
     `arr` Maybe (RemoteFieldInfo b)
 buildRemoteRelationship =
   proc
     ( (allSources, allColumns, remoteSchemaMap),
-      (source, table, rr@RemoteRelationship {..})
+      (source, table, rrm@RemoteRelationshipMetadata {..})
       )
   -> do
-    let metadataObject = mkRemoteRelationshipMetadataObject @b (source, table, rr)
+    let metadataObject = mkRemoteRelationshipMetadataObject @b (source, table, rrm)
         schemaObj =
           SOSourceObj source $
             AB.mkAnyBackend $
               SOITableObj @b table $
-                TORemoteRel _rrName
-        addRemoteRelationshipContext e = "in remote relationship" <> _rrName <<> ": " <> e
+                TORemoteRel _rrmName
+        addRemoteRelationshipContext e = "in remote relationship" <> _rrmName <<> ": " <> e
+        def = _rrmDefinition
+        remoteRelationship =
+          RemoteRelationship
+            @b
+            _rrmName
+            source
+            table
+            def
     (|
       withRecordInconsistency
         ( (|
             modifyErrA
               ( do
-                  (remoteField, dependencies) <- bindErrorA -< buildRemoteFieldInfo source table allColumns rr allSources remoteSchemaMap
+                  (remoteField, dependencies) <- bindErrorA -< buildRemoteFieldInfo source table allColumns remoteRelationship allSources remoteSchemaMap
                   recordDependencies -< (metadataObject, schemaObj, dependencies)
                   returnA -< remoteField
               )

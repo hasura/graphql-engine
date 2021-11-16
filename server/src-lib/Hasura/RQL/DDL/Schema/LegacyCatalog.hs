@@ -24,7 +24,6 @@ import Hasura.Prelude
 import Hasura.RQL.DDL.Action
 import Hasura.RQL.DDL.ComputedField
 import Hasura.RQL.DDL.Permission
-import Hasura.RQL.DDL.RemoteRelationship
 import Hasura.RQL.Types
 
 saveMetadataToHdbTables ::
@@ -63,9 +62,9 @@ saveMetadataToHdbTables
         -- Remote Relationships
         withPathK "remote_relationships" $
           indexedForM_ _tmRemoteRelationships $
-            \RemoteRelationship {..} -> do
+            \(RemoteRelationshipMetadata name def) -> do
               addRemoteRelationshipToCatalog $
-                CreateFromSourceRelationship defaultSource _tmTable _rrName _rrDefinition
+                RemoteRelationship name defaultSource _tmTable def
 
         -- Permissions
         withPathK "insert_permissions" $ processPerms _tmTable _tmInsertPermissions
@@ -198,8 +197,8 @@ addComputedFieldToCatalog q =
     QualifiedObject schemaName tableName = table
     AddComputedField _ table computedField definition comment = q
 
-addRemoteRelationshipToCatalog :: MonadTx m => CreateFromSourceRelationship ('Postgres 'Vanilla) -> m ()
-addRemoteRelationshipToCatalog CreateFromSourceRelationship {..} =
+addRemoteRelationshipToCatalog :: MonadTx m => RemoteRelationship ('Postgres 'Vanilla) -> m ()
+addRemoteRelationshipToCatalog remoteRelationship =
   liftTx $
     Q.unitQE
       defaultTxErrorHandler
@@ -208,10 +207,11 @@ addRemoteRelationshipToCatalog CreateFromSourceRelationship {..} =
        (remote_relationship_name, table_schema, table_name, definition)
        VALUES ($1, $2, $3, $4::jsonb)
   |]
-      (_crrName, schemaName, tableName, Q.AltJ _crrDefinition)
+      (_rtrName remoteRelationship, schemaName, tableName, Q.AltJ definition)
       True
   where
-    QualifiedObject schemaName tableName = _crrTable
+    QualifiedObject schemaName tableName = _rtrTable remoteRelationship
+    definition = _rtrDefinition remoteRelationship
 
 addFunctionToCatalog ::
   (MonadTx m, HasSystemDefined m) =>
@@ -234,7 +234,7 @@ addFunctionToCatalog (QualifiedObject sn fn) config = do
 addRemoteSchemaToCatalog ::
   RemoteSchemaMetadata ->
   Q.TxE QErr ()
-addRemoteSchemaToCatalog (RemoteSchemaMetadata name def comment _ _) =
+addRemoteSchemaToCatalog (RemoteSchemaMetadata name def comment _) =
   Q.unitQE
     defaultTxErrorHandler
     [Q.sql|
@@ -406,7 +406,7 @@ fetchMetadataFromHdbTables = liftTx do
         modMetaMap tmDeletePermissions _pdRole delPermDefs
         modMetaMap tmEventTriggers etcName triggerMetaDefs
         modMetaMap tmComputedFields _cfmName computedFields
-        modMetaMap tmRemoteRelationships _rrName remoteRelationships
+        modMetaMap tmRemoteRelationships _rrmName remoteRelationships
 
   -- fetch all functions
   functions <- Q.catchE defaultTxErrorHandler fetchFunctions
@@ -532,7 +532,7 @@ fetchMetadataFromHdbTables = liftTx do
           True
       where
         fromRow (name, Q.AltJ def, comment) =
-          RemoteSchemaMetadata name def comment mempty mempty
+          RemoteSchemaMetadata name def comment mempty
 
     fetchCollections =
       map fromRow
@@ -668,7 +668,7 @@ fetchMetadataFromHdbTables = liftTx do
       pure $
         flip map r $ \(schema, table, name, Q.AltJ definition) ->
           ( QualifiedObject schema table,
-            RemoteRelationship name $ RelationshipToSchema RRFOldDBToRemoteSchema definition
+            RemoteRelationshipMetadata name definition
           )
 
 addCronTriggerForeignKeyConstraint :: MonadTx m => m ()

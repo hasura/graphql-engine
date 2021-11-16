@@ -7,12 +7,10 @@ module Hasura.RQL.Types.Column
     isScalarColumnWhere,
     ValueParser,
     onlyNumCols,
-    isNumCol,
     onlyComparableCols,
     parseScalarValueColumnType,
     parseScalarValuesColumnType,
     ColumnValue (..),
-    ColumnMutability (..),
     ColumnInfo (..),
     RawColumnInfo (..),
     PrimaryKeyColumns,
@@ -172,8 +170,7 @@ data RawColumnInfo (b :: BackendType) = RawColumnInfo
     prciPosition :: !Int,
     prciType :: !(ScalarType b),
     prciIsNullable :: !Bool,
-    prciDescription :: !(Maybe G.Description),
-    prciMutability :: ColumnMutability
+    prciDescription :: !(Maybe G.Description)
   }
   deriving (Generic)
 
@@ -191,33 +188,6 @@ instance Backend b => ToJSON (RawColumnInfo b) where
 instance Backend b => FromJSON (RawColumnInfo b) where
   parseJSON = genericParseJSON hasuraJSON
 
--- | Indicates whether a column may participate in certain mutations.
---
--- For example, identity columns may sometimes be insertable but rarely
--- updatable, depending on the backend and how they're declared.
---
--- This guides the schema parsers such that they only generate fields for
--- columns where they're valid without having to model the exact circumstances
--- which cause a column to appear or not.
-data ColumnMutability = ColumnMutability
-  { _cmIsInsertable :: Bool,
-    _cmIsUpdatable :: Bool
-  }
-  deriving (Eq, Generic, Show)
-
-instance Cacheable ColumnMutability
-
-instance NFData ColumnMutability
-
-instance Hashable ColumnMutability
-
-instance FromJSON ColumnMutability where
-  parseJSON = genericParseJSON hasuraJSON
-
-instance ToJSON ColumnMutability where
-  toJSON = genericToJSON hasuraJSON
-  toEncoding = genericToEncoding hasuraJSON
-
 -- | “Resolved” column info, produced from a 'RawColumnInfo' value that has been combined with
 -- other schema information to produce a 'PGColumnType'.
 data ColumnInfo (b :: BackendType) = ColumnInfo
@@ -227,8 +197,7 @@ data ColumnInfo (b :: BackendType) = ColumnInfo
     pgiPosition :: !Int,
     pgiType :: !(ColumnType b),
     pgiIsNullable :: !Bool,
-    pgiDescription :: !(Maybe G.Description),
-    pgiMutability :: ColumnMutability
+    pgiDescription :: !(Maybe G.Description)
   }
   deriving (Generic)
 
@@ -249,10 +218,7 @@ instance Backend b => ToJSON (ColumnInfo b) where
 type PrimaryKeyColumns b = NESeq (ColumnInfo b)
 
 onlyNumCols :: forall b. Backend b => [ColumnInfo b] -> [ColumnInfo b]
-onlyNumCols = filter isNumCol
-
-isNumCol :: forall b. Backend b => ColumnInfo b -> Bool
-isNumCol = isScalarColumnWhere (isNumType @b) . pgiType
+onlyNumCols = filter (isScalarColumnWhere (isNumType @b) . pgiType)
 
 onlyComparableCols :: forall b. Backend b => [ColumnInfo b] -> [ColumnInfo b]
 onlyComparableCols = filter (isScalarColumnWhere (isComparableType @b) . pgiType)

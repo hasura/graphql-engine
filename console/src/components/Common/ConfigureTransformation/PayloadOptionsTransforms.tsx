@@ -13,8 +13,10 @@ type PayloadOptionsTransformsProps = {
   requestSampleInput: string;
   requestTransformedBody: string;
   requestContentType: RequestTransformContentType;
+  webhookUrl: string;
   resetSampleInput: () => void;
   requestBodyOnChange: (requestBody: string) => void;
+  requestBodyErrorOnChange: (requestBodyError: string) => void;
   requestSampleInputOnChange: (requestSampleInput: string) => void;
   requestContentTypeOnChange: (
     requestContentType: RequestTransformContentType
@@ -29,6 +31,7 @@ const PayloadOptionsTransforms: React.FC<PayloadOptionsTransformsProps> = ({
   requestContentType,
   resetSampleInput,
   requestBodyOnChange,
+  requestBodyErrorOnChange,
   requestSampleInputOnChange,
   requestContentTypeOnChange,
 }) => {
@@ -48,9 +51,9 @@ const PayloadOptionsTransforms: React.FC<PayloadOptionsTransformsProps> = ({
     <div className="m-md pl-lg pr-sm border-l border-l-gray-400">
       <div className="mb-md">
         <NumberedSidebar
+          number="1"
           title="Sample Input"
           description="Sample input defined by your Action Defintion."
-          number="1"
         >
           <button
             type="button"
@@ -71,16 +74,10 @@ const PayloadOptionsTransforms: React.FC<PayloadOptionsTransformsProps> = ({
 
       <div className="mb-md">
         <NumberedSidebar
-          title="Configure Request Body"
-          description={
-            <span>
-              The template which will transform your request body into the
-              required specification. You can use{' '}
-              <code className="text-xs">$body</code> to access the original
-              request body
-            </span>
-          }
           number="2"
+          title="Configure Request Body"
+          description="The template which will transform your request body into the
+          required specification."
           url="https://hasura.io/docs/latest/graphql/core/actions/transforms.html#request-body"
         />
         <TemplateEditor
@@ -88,15 +85,16 @@ const PayloadOptionsTransforms: React.FC<PayloadOptionsTransformsProps> = ({
           requestBodyError={requestBodyError}
           requestSampleInput={requestSampleInput}
           requestBodyOnChange={requestBodyOnChange}
+          requestBodyErrorOnChange={requestBodyErrorOnChange}
         />
       </div>
 
       <div className="mb-md">
         <NumberedSidebar
+          number="3"
           title="Transformed Request Body"
           description="Sample request body to be delivered based on your input and
           transformation template."
-          number="3"
         >
           {showRequestContentTypeOptions ? (
             <select

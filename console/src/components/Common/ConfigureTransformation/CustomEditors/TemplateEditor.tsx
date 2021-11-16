@@ -10,6 +10,7 @@ type TemplateEditorProps = {
   requestBodyError: string;
   requestSampleInput: string;
   requestBodyOnChange: (requestBody: string) => void;
+  requestBodyErrorOnChange: (requestBodyError: string) => void;
   height?: string;
   width?: string;
 };
@@ -19,6 +20,7 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({
   requestBodyError,
   requestSampleInput,
   requestBodyOnChange,
+  requestBodyErrorOnChange,
   height,
   width,
 }) => {
@@ -54,6 +56,7 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({
 
   useDebouncedEffect(
     () => {
+      requestBodyErrorOnChange('');
       requestBodyOnChange(localValue);
     },
     editorDebounceTime,
@@ -61,6 +64,7 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({
   );
 
   const onChangeHandler = (val: string) => {
+    setLocalError(null);
     setLocalValue(val);
   };
 

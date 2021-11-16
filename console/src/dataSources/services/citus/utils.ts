@@ -9,10 +9,7 @@ import {
   GenerateBulkDeleteRowRequest,
   BaseTableColumn,
 } from '../../types';
-import {
-  isConsoleError,
-  isEmpty,
-} from '../../../components/Common/utils/jsUtils';
+import { isEmpty } from '../../../components/Common/utils/jsUtils';
 import { CitusTable } from './types';
 import {
   getColQuery,
@@ -505,9 +502,7 @@ const processDeleteRowData = (data: Record<string, any>) => {
       return data?.data?.delete_row?.affected_rows;
     throw new Error('Invalid response');
   } catch (err) {
-    if (isConsoleError(err)) {
-      throw new Error(err.message);
-    }
+    throw new Error(err.message);
   }
 };
 
@@ -572,7 +567,7 @@ const processBulkDeleteRowData = (data: Record<string, any>) => {
       return res;
     }
   } catch (err) {
-    throw new Error((err as Error).message);
+    throw new Error(err.message);
   }
 };
 

@@ -4,7 +4,6 @@ import styles from '../Common.scss';
 
 import { GlobalContext } from '../../App/App';
 import { trackRuntimeError } from '../../../telemetry';
-import { isConsoleError } from '../utils/jsUtils';
 
 /*
   This is a Button HOC that takes all the props supported by <button>
@@ -53,9 +52,7 @@ const Button: React.FC<ButtonProps> = props => {
       }
     } catch (error) {
       console.error(error);
-      if (isConsoleError(error)) {
-        trackRuntimeError(globals, error);
-      }
+      trackRuntimeError(globals, error);
     }
   };
 

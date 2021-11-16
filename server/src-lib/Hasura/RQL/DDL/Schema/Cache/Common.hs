@@ -104,9 +104,12 @@ data NonColumnTableInputs b = NonColumnTableInputs
     _nctiObjectRelationships :: ![ObjRelDef b],
     _nctiArrayRelationships :: ![ArrRelDef b],
     _nctiComputedFields :: ![ComputedFieldMetadata b],
-    _nctiRemoteRelationships :: ![RemoteRelationship]
+    _nctiRemoteRelationships :: ![RemoteRelationshipMetadata]
   }
   deriving (Show, Eq, Generic)
+
+-- instance NFData NonColumnTableInputs
+-- instance Inc.Cacheable NonColumnTableInputs
 
 data TablePermissionInputs b = TablePermissionInputs
   { _tpiTable :: !(TableName b),

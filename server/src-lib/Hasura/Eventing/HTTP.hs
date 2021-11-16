@@ -16,7 +16,6 @@ module Hasura.Eventing.HTTP
     logHTTPForST,
     ExtraLogContext (..),
     RequestDetails (..),
-    extractRequest,
     EventId,
     InvocationVersion,
     Response (..),
@@ -39,12 +38,11 @@ module Hasura.Eventing.HTTP
     invocationVersionST,
     mkRequest,
     invokeRequest,
-    TransformableRequestError (..),
   )
 where
 
 import Control.Exception (try)
-import Control.Lens (preview, set, view)
+import Control.Lens (preview, set)
 import Data.Aeson qualified as J
 import Data.Aeson.Lens
 import Data.Aeson.TH
@@ -154,9 +152,6 @@ data RequestDetails = RequestDetails
     _rdTransformedRequest :: Maybe HTTP.Request,
     _rdTransformedSize :: Maybe Int64
   }
-
-extractRequest :: RequestDetails -> HTTP.Request
-extractRequest RequestDetails {..} = fromMaybe _rdOriginalRequest _rdTransformedRequest
 
 $(deriveToJSON hasuraJSON ''RequestDetails)
 
@@ -274,11 +269,8 @@ runHTTP manager req = do
   res <- liftIO $ try $ HTTP.performRequest req manager
   return $ either (Left . HClient . HttpException) anyBodyParser res
 
-data TransformableRequestError a = HTTPError J.Value (HTTPErr a) | TransformationError J.Value TransformErrorBundle
-  deriving (Show)
-
 mkRequest ::
-  MonadError (TransformableRequestError a) m =>
+  MonadError (HTTPErr a) m =>
   [HTTP.Header] ->
   HTTP.ResponseTimeout ->
   -- | the request body. It is passed as a 'BL.Bytestring' because we need to
@@ -287,51 +279,48 @@ mkRequest ::
   LBS.ByteString ->
   Maybe RequestTransform ->
   ResolvedWebhook ->
-  m RequestDetails
+  m (Either TransformErrorBundle RequestDetails)
 mkRequest headers timeout payload mRequestTransform (ResolvedWebhook webhook) =
-  let body = fromMaybe J.Null $ J.decode @J.Value payload
-   in case HTTP.mkRequestEither webhook of
-        Left excp -> throwError $ HTTPError body (HClient $ HttpException excp)
-        Right initReq ->
-          let req =
-                initReq & set HTTP.method "POST"
-                  & set HTTP.headers headers
-                  & set HTTP.body (Just payload)
-                  & set HTTP.timeout timeout
-           in case mRequestTransform of
-                Nothing -> pure $ RequestDetails req (LBS.length payload) Nothing Nothing
-                Just reqTransform ->
-                  let sessionVars = do
-                        val <- J.decode @J.Value payload
-                        varVal <- preview (key "event" . key "session_variables") val
-                        case J.fromJSON @SessionVariables varVal of
-                          J.Success sessionVars' -> pure sessionVars'
-                          _ -> Nothing
-                   in case applyRequestTransform webhook reqTransform req sessionVars of
-                        Left err -> throwError $ TransformationError body err
-                        Right transformedReq ->
-                          let transformedReqSize = HTTP.getReqSize transformedReq
-                           in pure $ RequestDetails req (LBS.length payload) (Just transformedReq) (Just transformedReqSize)
+  case HTTP.mkRequestEither webhook of
+    Left excp -> throwError $ HClient $ HttpException excp
+    Right initReq ->
+      let req =
+            initReq & set HTTP.method "POST"
+              & set HTTP.headers headers
+              & set HTTP.body (Just payload)
+              & set HTTP.timeout timeout
+       in case mRequestTransform of
+            Nothing -> pure $ Right $ RequestDetails req (LBS.length payload) Nothing Nothing
+            Just reqTransform ->
+              let sessionVars = do
+                    val <- J.decode @J.Value payload
+                    varVal <- preview (key "event" . key "session_variables") val
+                    case J.fromJSON @SessionVariables varVal of
+                      J.Success sessionVars' -> pure sessionVars'
+                      _ -> Nothing
+               in case applyRequestTransform webhook reqTransform req sessionVars of
+                    Left err -> pure $ Left err
+                    Right transformedReq ->
+                      let transformedReqSize = HTTP.getReqSize transformedReq
+                       in pure $ Right $ RequestDetails req (LBS.length payload) (Just transformedReq) (Just transformedReqSize)
 
 invokeRequest ::
   ( MonadReader r m,
-    MonadError (TransformableRequestError a) m,
     Has HTTP.Manager r,
     MonadIO m,
     MonadTrace m
   ) =>
   RequestDetails ->
   ((Either (HTTPErr a) (HTTPResp a)) -> RequestDetails -> m ()) ->
-  m (HTTPResp a)
+  m (Either (HTTPErr a) (HTTPResp a))
 invokeRequest reqDetails@RequestDetails {_rdOriginalRequest, _rdTransformedRequest} logger = do
   let finalReq = fromMaybe _rdOriginalRequest _rdTransformedRequest
-      body = fromMaybe J.Null $ view HTTP.body finalReq >>= J.decode @J.Value
   manager <- asks getter
   -- Perform the HTTP Request
   eitherResp <- tracedHttpRequest finalReq $ runHTTP manager
   -- Log the result along with the pre/post transformation Request data
   logger eitherResp reqDetails
-  onLeft eitherResp (\err -> throwError $ HTTPError body err)
+  pure eitherResp
 
 mkResp :: Int -> TBS.TByteString -> [HeaderConf] -> Response a
 mkResp status payload headers =

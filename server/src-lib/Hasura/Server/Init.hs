@@ -48,25 +48,6 @@ import Network.WebSockets qualified as WS
 import Options.Applicative
 import Text.PrettyPrint.ANSI.Leijen qualified as PP
 
-{- Note [ReadOnly Mode]
-~~~~~~~~~~~~~~~~~~~~~~~~~
-
-This mode starts the server in a (database) read-only mode. That is, only
-read-only queries are allowed on users' database sources, and write
-queries throw a runtime error. The use-case is for failsafe operations.
-Metadata APIs are also disabled.
-
-Following is the precise behaviour -
-  1. For any GraphQL API (relay/hasura; http/websocket) - disable execution of
-  mutations
-  2. Metadata API is disabled
-  3. /v2/query API - insert, delete, update, run_sql are disabled
-  4. /v1/query API - insert, delete, update, run_sql are disabled
-  5. No source catalog migrations are run
-  6. During build schema cache phase, building event triggers are disabled (as
-  they create corresponding database triggers)
--}
-
 getDbId :: Q.TxE QErr Text
 getDbId =
   runIdentity . Q.getRow
@@ -94,8 +75,6 @@ $(J.deriveJSON hasuraJSON ''StartupTimeInfo)
 returnJust :: Monad m => a -> m (Maybe a)
 returnJust = return . Just
 
--- | Lookup a key in the application environment then parse the value
--- with a 'FromEnv' instance'
 considerEnv :: FromEnv a => String -> WithEnv (Maybe a)
 considerEnv envVar = do
   env <- ask
@@ -107,8 +86,6 @@ considerEnv envVar = do
       throwError $
         "Fatal Error:- Environment variable " ++ envVar ++ ": " ++ s
 
--- | Lookup a list of keys with 'considerEnv' and return the first
--- value to parse successfully.
 considerEnvs :: FromEnv a => [String] -> WithEnv (Maybe a)
 considerEnvs envVars = foldl1 (<|>) <$> mapM considerEnv envVars
 
@@ -116,7 +93,6 @@ withEnv :: FromEnv a => Maybe a -> String -> WithEnv (Maybe a)
 withEnv mVal envVar =
   maybe (considerEnv envVar) returnJust mVal
 
--- | Return 'a' if Just or else call 'considerEnv' with a list of env keys k
 withEnvs :: FromEnv a => Maybe a -> [String] -> WithEnv (Maybe a)
 withEnvs mVal envVars =
   maybe (considerEnvs envVars) returnJust mVal
@@ -185,7 +161,7 @@ mkServeOptions rso = do
 
   connParams <- mkConnParams $ rsoConnParams rso
   txIso <- fromMaybe Q.ReadCommitted <$> withEnv (rsoTxIso rso) (fst txIsoEnv)
-  adminScrt <- fmap (maybe mempty Set.singleton) $ withEnvs (rsoAdminSecret rso) $ map fst [adminSecretEnv, accessKeyEnv]
+  adminScrt <- withEnvs (rsoAdminSecret rso) $ map fst [adminSecretEnv, accessKeyEnv]
   authHook <- mkAuthHook $ rsoAuthHook rso
   jwtSecret <- withEnvJwtConf (rsoJwtSecret rso) $ fst jwtSecretEnv
   unAuthRole <- withEnv (rsoUnAuthRole rso) $ fst unAuthRoleEnv
@@ -303,8 +279,6 @@ mkServeOptions rso = do
       devMode
       gracefulShutdownTime
       webSocketConnectionInitTimeout
-      EventingEnabled
-      ReadOnlyModeDisabled
   where
     defaultAsyncActionsFetchInterval = Interval 1000 -- 1000 Milliseconds or 1 Second
     defaultSchemaPollInterval = Interval 1000 -- 1000 Milliseconds or 1 Second
@@ -502,7 +476,6 @@ eventsFetchBatchSizeEnv :: (String, String)
 eventsFetchBatchSizeEnv =
   ( "HASURA_GRAPHQL_EVENTS_FETCH_BATCH_SIZE",
     "The maximum number of events to be fetched from the events table in a single batch. Default 100"
-      ++ "Value \"0\" implies completely disable fetching events from events table. "
   )
 
 asyncActionsFetchIntervalEnv :: (String, String)
@@ -1343,7 +1316,7 @@ serveOptsToLog so =
         [ "port" J..= soPort so,
           "server_host" J..= show (soHost so),
           "transaction_isolation" J..= show (soTxIso so),
-          "admin_secret_set" J..= (not $ Set.null (soAdminSecret so)),
+          "admin_secret_set" J..= isJust (soAdminSecret so),
           "auth_hook" J..= (ahUrl <$> soAuthHook so),
           "auth_hook_mode" J..= (show . ahType <$> soAuthHook so),
           "jwt_secret" J..= (J.toJSON <$> soJwtSecret so),

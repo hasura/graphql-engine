@@ -59,90 +59,107 @@ instance BackendSchema 'BigQuery where
   -- SQL literals
   columnDefaultValue = error "TODO: Make impossible by the type system. BigQuery doesn't support insertions."
 
+  -- Extra insert data
+  getExtraInsertData = const ()
+
 ----------------------------------------------------------------
 -- Top level parsers
 
 bqBuildTableRelayQueryFields ::
   MonadBuildSchema 'BigQuery r m n =>
   SourceName ->
+  SourceConfig 'BigQuery ->
+  Maybe QueryTagsConfig ->
   TableName 'BigQuery ->
   TableInfo 'BigQuery ->
   G.Name ->
   NESeq (ColumnInfo 'BigQuery) ->
   SelPermInfo 'BigQuery ->
-  m [a]
-bqBuildTableRelayQueryFields _sourceName _tableName _tableInfo _gqlName _pkeyColumns _selPerms =
+  m [FieldParser n (QueryRootField UnpreparedValue)]
+bqBuildTableRelayQueryFields _sourceName _sourceInfo _queryTagsConfig _tableName _tableInfo _gqlName _pkeyColumns _selPerms =
   pure []
 
 bqBuildTableInsertMutationFields ::
   MonadBuildSchema 'BigQuery r m n =>
   SourceName ->
+  SourceConfig 'BigQuery ->
+  Maybe QueryTagsConfig ->
   TableName 'BigQuery ->
   TableInfo 'BigQuery ->
   G.Name ->
   InsPermInfo 'BigQuery ->
   Maybe (SelPermInfo 'BigQuery) ->
   Maybe (UpdPermInfo 'BigQuery) ->
-  m [a]
-bqBuildTableInsertMutationFields _sourceName _tableName _tableInfo _gqlName _insPerms _selPerms _updPerms =
+  m [FieldParser n (MutationRootField UnpreparedValue)]
+bqBuildTableInsertMutationFields _sourceName _sourceInfo _queryTagsConfig _tableName _tableInfo _gqlName _insPerms _selPerms _updPerms =
   pure []
 
 bqBuildTableUpdateMutationFields ::
   MonadBuildSchema 'BigQuery r m n =>
   SourceName ->
+  SourceConfig 'BigQuery ->
+  Maybe QueryTagsConfig ->
   TableName 'BigQuery ->
   TableInfo 'BigQuery ->
   G.Name ->
   UpdPermInfo 'BigQuery ->
   Maybe (SelPermInfo 'BigQuery) ->
-  m [a]
-bqBuildTableUpdateMutationFields _sourceName _tableName _tableInfo _gqlName _updPerns _selPerms =
+  m [FieldParser n (MutationRootField UnpreparedValue)]
+bqBuildTableUpdateMutationFields _sourceName _sourceInfo _queryTagsConfig _tableName _tableInfo _gqlName _updPerns _selPerms =
   pure []
 
 bqBuildTableDeleteMutationFields ::
   MonadBuildSchema 'BigQuery r m n =>
   SourceName ->
+  SourceConfig 'BigQuery ->
+  Maybe QueryTagsConfig ->
   TableName 'BigQuery ->
   TableInfo 'BigQuery ->
   G.Name ->
   DelPermInfo 'BigQuery ->
   Maybe (SelPermInfo 'BigQuery) ->
-  m [a]
-bqBuildTableDeleteMutationFields _sourceName _tableName _tableInfo _gqlName _delPerns _selPerms =
+  m [FieldParser n (MutationRootField UnpreparedValue)]
+bqBuildTableDeleteMutationFields _sourceName _sourceInfo _queryTagsConfig _tableName _tableInfo _gqlName _delPerns _selPerms =
   pure []
 
 bqBuildFunctionQueryFields ::
   MonadBuildSchema 'BigQuery r m n =>
   SourceName ->
+  SourceConfig 'BigQuery ->
+  Maybe QueryTagsConfig ->
   FunctionName 'BigQuery ->
   FunctionInfo 'BigQuery ->
   TableName 'BigQuery ->
   SelPermInfo 'BigQuery ->
-  m [a]
-bqBuildFunctionQueryFields _ _ _ _ _ =
+  m [FieldParser n (QueryRootField UnpreparedValue)]
+bqBuildFunctionQueryFields _ _ _ _ _ _ _ =
   pure []
 
 bqBuildFunctionRelayQueryFields ::
   MonadBuildSchema 'BigQuery r m n =>
   SourceName ->
+  SourceConfig 'BigQuery ->
+  Maybe QueryTagsConfig ->
   FunctionName 'BigQuery ->
   FunctionInfo 'BigQuery ->
   TableName 'BigQuery ->
   NESeq (ColumnInfo 'BigQuery) ->
   SelPermInfo 'BigQuery ->
-  m [a]
-bqBuildFunctionRelayQueryFields _sourceName _functionName _functionInfo _tableName _pkeyColumns _selPerms =
+  m [FieldParser n (QueryRootField UnpreparedValue)]
+bqBuildFunctionRelayQueryFields _sourceName _sourceInfo _queryTagsConfig _functionName _functionInfo _tableName _pkeyColumns _selPerms =
   pure []
 
 bqBuildFunctionMutationFields ::
   MonadBuildSchema 'BigQuery r m n =>
   SourceName ->
+  SourceConfig 'BigQuery ->
+  Maybe QueryTagsConfig ->
   FunctionName 'BigQuery ->
   FunctionInfo 'BigQuery ->
   TableName 'BigQuery ->
   SelPermInfo 'BigQuery ->
-  m [a]
-bqBuildFunctionMutationFields _ _ _ _ _ =
+  m [FieldParser n (MutationRootField UnpreparedValue)]
+bqBuildFunctionMutationFields _ _ _ _ _ _ _ =
   pure []
 
 ----------------------------------------------------------------
@@ -205,7 +222,7 @@ bqColumnParser columnType (G.Nullability isNullable) =
       BigQuery.DatetimeScalarType -> pure $ possiblyNullable scalarType $ BigQuery.DatetimeValue . BigQuery.Datetime <$> P.string
       BigQuery.GeographyScalarType -> pure $ possiblyNullable scalarType $ BigQuery.GeographyValue . BigQuery.Geography <$> P.string
       BigQuery.TimestampScalarType -> do
-        let schemaType = P.Nullable . P.TNamed $ P.Definition stringScalar Nothing P.TIScalar
+        let schemaType = P.Nullable . P.TNamed $ P.mkDefinition (P.Typename stringScalar) Nothing P.TIScalar
         pure $
           possiblyNullable scalarType $
             Parser
@@ -230,11 +247,11 @@ bqColumnParser columnType (G.Nullability isNullable) =
       | otherwise = id
     mkEnumValue :: (EnumValue, EnumValueInfo) -> (P.Definition P.EnumValueInfo, ScalarValue 'BigQuery)
     mkEnumValue (EnumValue value, EnumValueInfo description) =
-      ( P.Definition value (G.Description <$> description) P.EnumValueInfo,
+      ( P.mkDefinition value (G.Description <$> description) P.EnumValueInfo,
         BigQuery.StringValue $ G.unName value
       )
     throughJSON scalarName =
-      let schemaType = P.NonNullable $ P.TNamed $ P.Definition scalarName Nothing P.TIScalar
+      let schemaType = P.NonNullable $ P.TNamed $ P.mkDefinition scalarName Nothing P.TIScalar
        in Parser
             { pType = schemaType,
               pParser =
@@ -275,7 +292,7 @@ bqOrderByOperators =
       )
     ]
   where
-    define name desc = P.Definition name (Just desc) P.EnumValueInfo
+    define name desc = P.mkDefinition name (Just desc) P.EnumValueInfo
 
 bqComparisonExps ::
   forall m n r.
@@ -288,7 +305,7 @@ bqComparisonExps = P.memoize 'comparisonExps $ \columnType -> do
   typedParser <- columnParser columnType (G.Nullability False)
   nullableTextParser <- columnParser (ColumnScalar @'BigQuery BigQuery.StringScalarType) (G.Nullability True)
   -- textParser <- columnParser (ColumnScalar @'BigQuery BigQuery.StringScalarType) (G.Nullability False)
-  let name = P.getName typedParser <> $$(G.litName "_BigQuery_comparison_exp")
+  let name = P.Typename $ P.getName typedParser <> $$(G.litName "_BigQuery_comparison_exp")
       desc =
         G.Description $
           "Boolean expression to compare columns of type "

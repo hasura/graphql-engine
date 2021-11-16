@@ -138,8 +138,7 @@ export const TableRow: React.FC<TableRowProps> = ({
           inputRef={(node: HTMLInputElement) => {
             setRef('valueNode', node);
           }}
-          // TODO: #3053 console: fix type coercion to null
-          prevValue={prevValue as null}
+          prevValue={prevValue}
           enumOptions={enumOptions}
           col={column}
           clone={clone}

@@ -74,8 +74,8 @@ withField name = censor (fmap wrap)
 -- | Collects remote joins from the AST and also adds the necessary join fields
 getRemoteJoins ::
   Backend b =>
-  QueryDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b) ->
-  (QueryDB b Void (UnpreparedValue b), Maybe RemoteJoins)
+  QueryDB b (RemoteSelect UnpreparedValue) (UnpreparedValue b) ->
+  (QueryDB b (Const Void) (UnpreparedValue b), Maybe RemoteJoins)
 getRemoteJoins = \case
   QDBMultipleRows s -> first QDBMultipleRows $ getRemoteJoinsSelect s
   QDBSingleRow s -> first QDBSingleRow $ getRemoteJoinsSelect s
@@ -85,32 +85,32 @@ getRemoteJoins = \case
 -- | Traverse through 'AnnSimpleSel' and collect remote join fields (if any).
 getRemoteJoinsSelect ::
   Backend b =>
-  AnnSimpleSelectG b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b) ->
-  (AnnSimpleSelectG b Void (UnpreparedValue b), Maybe RemoteJoins)
+  AnnSimpleSelectG b (RemoteSelect UnpreparedValue) (UnpreparedValue b) ->
+  (AnnSimpleSelectG b (Const Void) (UnpreparedValue b), Maybe RemoteJoins)
 getRemoteJoinsSelect =
   runCollector . transformSelect
 
 -- | Traverse through @'AnnAggregateSelect' and collect remote join fields (if any).
 getRemoteJoinsAggregateSelect ::
   Backend b =>
-  AnnAggregateSelectG b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b) ->
-  (AnnAggregateSelectG b Void (UnpreparedValue b), Maybe RemoteJoins)
+  AnnAggregateSelectG b (RemoteSelect UnpreparedValue) (UnpreparedValue b) ->
+  (AnnAggregateSelectG b (Const Void) (UnpreparedValue b), Maybe RemoteJoins)
 getRemoteJoinsAggregateSelect =
   runCollector . transformAggregateSelect
 
 -- | Traverse through @'ConnectionSelect' and collect remote join fields (if any).
 getRemoteJoinsConnectionSelect ::
   Backend b =>
-  ConnectionSelect b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b) ->
-  (ConnectionSelect b Void (UnpreparedValue b), Maybe RemoteJoins)
+  ConnectionSelect b (RemoteSelect UnpreparedValue) (UnpreparedValue b) ->
+  (ConnectionSelect b (Const Void) (UnpreparedValue b), Maybe RemoteJoins)
 getRemoteJoinsConnectionSelect =
   runCollector . transformConnectionSelect
 
 -- | Traverse through 'MutationOutput' and collect remote join fields (if any)
 getRemoteJoinsMutationOutput ::
   Backend b =>
-  MutationOutputG b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b) ->
-  (MutationOutputG b Void (UnpreparedValue b), Maybe RemoteJoins)
+  MutationOutputG b (RemoteSelect UnpreparedValue) (UnpreparedValue b) ->
+  (MutationOutputG b (Const Void) (UnpreparedValue b), Maybe RemoteJoins)
 getRemoteJoinsMutationOutput =
   runCollector . transformMutationOutput
   where
@@ -129,17 +129,17 @@ getRemoteJoinsMutationOutput =
 
 -- local helpers
 
-getRemoteJoinsActionFields ::
+getRemoteJoinsAnnFields ::
   Backend b =>
-  ActionFieldsG b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b) ->
-  (ActionFieldsG b Void (UnpreparedValue b), Maybe RemoteJoins)
-getRemoteJoinsActionFields =
-  runCollector . transformActionFields
+  AnnFieldsG b (RemoteSelect UnpreparedValue) (UnpreparedValue b) ->
+  (AnnFieldsG b (Const Void) (UnpreparedValue b), Maybe RemoteJoins)
+getRemoteJoinsAnnFields =
+  runCollector . transformAnnFields
 
 getRemoteJoinsMutationDB ::
   Backend b =>
-  MutationDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b) ->
-  (MutationDB b Void (UnpreparedValue b), Maybe RemoteJoins)
+  MutationDB b (RemoteSelect UnpreparedValue) (UnpreparedValue b) ->
+  (MutationDB b (Const Void) (UnpreparedValue b), Maybe RemoteJoins)
 getRemoteJoinsMutationDB = \case
   MDBInsert insert ->
     first MDBInsert $ getRemoteJoinsInsert insert
@@ -155,8 +155,8 @@ getRemoteJoinsMutationDB = \case
        in (insert {_aiOutput = output'}, remoteJoins)
 
     getRemoteJoinsUpdate update =
-      let (output', remoteJoins) = getRemoteJoinsMutationOutput $ _auOutput update
-       in (update {_auOutput = output'}, remoteJoins)
+      let (output', remoteJoins) = getRemoteJoinsMutationOutput $ uqp1Output update
+       in (update {uqp1Output = output'}, remoteJoins)
 
     getRemoteJoinsDelete delete =
       let (output', remoteJoins) = getRemoteJoinsMutationOutput $ dqp1Output delete
@@ -164,16 +164,16 @@ getRemoteJoinsMutationDB = \case
 
 getRemoteJoinsSyncAction ::
   (Backend b) =>
-  AnnActionExecution b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b) ->
-  (AnnActionExecution b Void (UnpreparedValue b), Maybe RemoteJoins)
+  AnnActionExecution b (RemoteSelect UnpreparedValue) (UnpreparedValue b) ->
+  (AnnActionExecution b (Const Void) (UnpreparedValue b), Maybe RemoteJoins)
 getRemoteJoinsSyncAction actionExecution =
-  let (fields', remoteJoins) = getRemoteJoinsActionFields $ _aaeFields actionExecution
+  let (fields', remoteJoins) = getRemoteJoinsAnnFields $ _aaeFields actionExecution
    in (actionExecution {_aaeFields = fields'}, remoteJoins)
 
 getRemoteJoinsActionQuery ::
   (Backend b) =>
-  ActionQuery b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b) ->
-  (ActionQuery b Void (UnpreparedValue b), Maybe RemoteJoins)
+  ActionQuery b (RemoteSelect UnpreparedValue) (UnpreparedValue b) ->
+  (ActionQuery b (Const Void) (UnpreparedValue b), Maybe RemoteJoins)
 getRemoteJoinsActionQuery = \case
   AQQuery sync ->
     first AQQuery $ getRemoteJoinsSyncAction sync
@@ -191,23 +191,23 @@ getRemoteJoinsActionQuery = \case
         (fieldName,) <$> case field of
           AsyncTypename t -> pure $ AsyncTypename t
           AsyncOutput outputFields ->
-            AsyncOutput <$> transformActionFields outputFields
+            AsyncOutput <$> transformAnnFields outputFields
           AsyncId -> pure AsyncId
           AsyncCreatedAt -> pure AsyncCreatedAt
           AsyncErrors -> pure AsyncErrors
 
 getRemoteJoinsActionMutation ::
   (Backend b) =>
-  ActionMutation b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b) ->
-  (ActionMutation b Void (UnpreparedValue b), Maybe RemoteJoins)
+  ActionMutation b (RemoteSelect UnpreparedValue) (UnpreparedValue b) ->
+  (ActionMutation b (Const Void) (UnpreparedValue b), Maybe RemoteJoins)
 getRemoteJoinsActionMutation = \case
   AMAsync async -> (AMAsync async, Nothing)
   AMSync sync -> first AMSync $ getRemoteJoinsSyncAction sync
 
 transformSelect ::
   Backend b =>
-  AnnSimpleSelectG b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b) ->
-  Collector (AnnSimpleSelectG b Void (UnpreparedValue b))
+  AnnSimpleSelectG b (RemoteSelect UnpreparedValue) (UnpreparedValue b) ->
+  Collector (AnnSimpleSelectG b (Const Void) (UnpreparedValue b))
 transformSelect select@AnnSelectG {_asnFields = fields} = do
   -- Transform selects in array, object and computed fields
   transformedFields <- transformAnnFields fields
@@ -215,8 +215,8 @@ transformSelect select@AnnSelectG {_asnFields = fields} = do
 
 transformAggregateSelect ::
   Backend b =>
-  AnnAggregateSelectG b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b) ->
-  Collector (AnnAggregateSelectG b Void (UnpreparedValue b))
+  AnnAggregateSelectG b (RemoteSelect UnpreparedValue) (UnpreparedValue b) ->
+  Collector (AnnAggregateSelectG b (Const Void) (UnpreparedValue b))
 transformAggregateSelect select@AnnSelectG {_asnFields = aggFields} = do
   transformedFields <- for aggFields \(fieldName, aggField) ->
     withField fieldName $ case aggField of
@@ -230,8 +230,8 @@ transformAggregateSelect select@AnnSelectG {_asnFields = aggFields} = do
 transformConnectionSelect ::
   forall b.
   Backend b =>
-  ConnectionSelect b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b) ->
-  Collector (ConnectionSelect b Void (UnpreparedValue b))
+  ConnectionSelect b (RemoteSelect UnpreparedValue) (UnpreparedValue b) ->
+  Collector (ConnectionSelect b (Const Void) (UnpreparedValue b))
 transformConnectionSelect connSelect@ConnectionSelect {..} = do
   transformedFields <- for (_asnFields _csSelect) \(fieldName, connField) ->
     withField fieldName $ case connField of
@@ -245,8 +245,8 @@ transformConnectionSelect connSelect@ConnectionSelect {..} = do
   pure connSelect {_csSelect = select}
   where
     transformEdges ::
-      [(FieldName, EdgeField b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))] ->
-      Collector [(FieldName, EdgeField b Void (UnpreparedValue b))]
+      [(FieldName, EdgeField b (RemoteSelect UnpreparedValue) (UnpreparedValue b))] ->
+      Collector [(FieldName, EdgeField b (Const Void) (UnpreparedValue b))]
     transformEdges edgeFields = for edgeFields \(fieldName, edgeField) ->
       withField fieldName $ case edgeField of
         EdgeTypename t -> pure (fieldName, EdgeTypename t)
@@ -257,69 +257,22 @@ transformConnectionSelect connSelect@ConnectionSelect {..} = do
 
 transformObjectSelect ::
   Backend b =>
-  AnnObjectSelectG b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b) ->
-  Collector (AnnObjectSelectG b Void (UnpreparedValue b))
+  AnnObjectSelectG b (RemoteSelect UnpreparedValue) (UnpreparedValue b) ->
+  Collector (AnnObjectSelectG b (Const Void) (UnpreparedValue b))
 transformObjectSelect select@AnnObjectSelectG {_aosFields = fields} = do
   transformedFields <- transformAnnFields fields
   pure select {_aosFields = transformedFields}
 
--- | Converts a remote relationship field into a 'RemoteJoin' that
--- the execution engine understands
-createRemoteJoin ::
-  -- We need information about 'how' the lhs join fields appear in the lhs
-  -- response to construct a 'RemoteJoin' node
-  Map.HashMap FieldName JoinColumnAlias ->
-  -- The remote relationship field as captured in the IR
-  RemoteRelationshipField UnpreparedValue ->
-  RemoteJoin
-createRemoteJoin joinColumnAliases remoteRelationship =
-  case remoteRelationship of
-    RemoteSchemaField RemoteSchemaSelect {..} ->
-      let inputArgsToMap = Map.fromList . map (_rfaArgument &&& _rfaValue)
-          remoteJoin =
-            RemoteJoinRemoteSchema $
-              RemoteSchemaJoin
-                (inputArgsToMap _rselArgs)
-                _rselResultCustomizer
-                _rselSelection
-                joinColumnAliases
-                _rselFieldCall
-                _rselRemoteSchema
-       in remoteJoin
-    RemoteSourceField anySourceSelect ->
-      AB.dispatchAnyBackend @Backend anySourceSelect \RemoteSourceSelect {..} ->
-        let (transformedSourceRelationship, sourceRelationshipJoins) =
-              getRemoteJoinsSourceRelation _rssSelection
-
-            -- the invariant here is that the the keys in joinColumnAliases and
-            -- _rssJoinMapping are the same. We could've opted for a more type
-            -- safe representation Map k (a, b) instead of (Map k a, Map k b)
-            -- but that would make the type of lhs join columns creep into
-            -- RemoteRelationshipField which would make the type a little
-            -- unweildy
-            joinColumns =
-              _rssJoinMapping & Map.mapMaybeWithKey
-                \joinFieldName (rhsColumn, rhsColumnType) ->
-                  (,rhsColumn,rhsColumnType)
-                    <$> Map.lookup joinFieldName joinColumnAliases
-            anySourceJoin =
-              AB.mkAnyBackend $
-                RemoteSourceJoin
-                  _rssName
-                  _rssConfig
-                  transformedSourceRelationship
-                  joinColumns
-         in RemoteJoinSource anySourceJoin sourceRelationshipJoins
-
 transformAnnFields ::
   forall src.
   Backend src =>
-  AnnFieldsG src (RemoteRelationshipField UnpreparedValue) (UnpreparedValue src) ->
-  Collector (AnnFieldsG src Void (UnpreparedValue src))
+  AnnFieldsG src (RemoteSelect UnpreparedValue) (UnpreparedValue src) ->
+  Collector (AnnFieldsG src (Const Void) (UnpreparedValue src))
 transformAnnFields fields = do
   -- Produces a list of transformed fields that may or may not have an
   -- associated remote join.
   annotatedFields <- for fields \(fieldName, field') -> withField fieldName do
+    -- FIXME: There's way too much going on in this 'case .. of' block...
     (fieldName,) <$> case field' of
       -- AnnFields which do not need to be transformed.
       AFNodeId x qt pkeys -> pure (AFNodeId x qt pkeys, Nothing)
@@ -348,29 +301,103 @@ transformAnnFields fields = do
         pure (AFComputedField computedField computedFieldName transformed, Nothing)
       -- Remote AnnFields, whose elements require annotation so that they can be
       -- used to construct a remote join.
-      AFRemote RemoteRelationshipSelect {..} ->
-        pure
-          ( -- We generate this so that the response has a key with the relationship,
-            -- without which preserving the order of fields in the final response
-            -- would require a lot of bookkeeping.
-            remoteAnnPlaceholder,
-            Just $ createRemoteJoin joinColumnAliases _rrsRelationship
-          )
+      --
+      -- We generate this so that the response has a key with the relationship,
+      -- without which preserving the order of fields in the final response
+      -- would require a lot of bookkeeping.
+      AFRemote (RemoteSelectRemoteSchema RemoteSchemaSelect {..}) ->
+        let annotatedJoinColumns =
+              Map.fromList $ map annotateDBJoinField (toList _rselHasuraFields)
+            phantomColumns =
+              annotatedJoinColumns & Map.mapMaybe \(columnInfo, alias) ->
+                case alias of
+                  JCSelected _ -> Nothing
+                  JCPhantom a -> Just (columnInfo, a)
+            joinColumnAliases = fmap snd annotatedJoinColumns
+            inputArgsToMap = Map.fromList . map (_rfaArgument &&& _rfaValue)
+            remoteJoin =
+              RemoteJoinRemoteSchema $
+                RemoteSchemaJoin
+                  (inputArgsToMap _rselArgs)
+                  _rselResultCustomizer
+                  _rselSelection
+                  joinColumnAliases
+                  _rselFieldCall
+                  _rselRemoteSchema
+            annotatedJoin = Just (phantomColumns, remoteJoin)
+         in pure (remoteAnnPlaceholder, annotatedJoin)
+      AFRemote (RemoteSelectSource anySourceSelect) -> AB.dispatchAnyBackend @Backend
+        anySourceSelect
+        -- NOTE: This is necessary to bring 'tgt' into scope, so that it can be
+        -- passed to the helper function as a type argument.
+        \(RemoteSourceSelect {..} :: RemoteSourceSelect src UnpreparedValue tgt) ->
+          let (transformedSourceRelationship, sourceRelationshipJoins) =
+                getRemoteJoinsSourceRelation _rssSelection
+              annotatedJoinColumns = annotateSourceJoin @tgt <$> _rssJoinMapping
+              phantomColumns =
+                annotatedJoinColumns & Map.mapMaybe \(columnInfo, (alias, _, _)) ->
+                  case alias of
+                    JCSelected _ -> Nothing
+                    JCPhantom a -> Just (columnInfo, a)
+              anySourceJoin =
+                AB.mkAnyBackend $
+                  RemoteSourceJoin
+                    _rssName
+                    _rssConfig
+                    transformedSourceRelationship
+                    (fmap snd annotatedJoinColumns)
+              remoteJoin = RemoteJoinSource anySourceJoin sourceRelationshipJoins
+              annotatedJoin = Just (phantomColumns, remoteJoin)
+           in pure (remoteAnnPlaceholder, annotatedJoin)
 
   let transformedFields = (fmap . fmap) fst annotatedFields
       remoteJoins =
         annotatedFields & mapMaybe \(fieldName, (_, mRemoteJoin)) ->
-          (fieldName,) <$> mRemoteJoin
-
+          mRemoteJoin <&> \remoteJoin -> (fieldName, remoteJoin)
   case NE.nonEmpty remoteJoins of
     Nothing -> pure transformedFields
     Just neRemoteJoins -> do
-      collect neRemoteJoins
+      let phantomFields =
+            (Map.elems . Map.unions . map (fst . snd) $ remoteJoins)
+              <&> \(joinField, alias) -> case joinField of
+                JoinColumn columnInfo ->
+                  let column = AFColumn $ AnnColumnField (pgiColumn columnInfo) (pgiType columnInfo) False Nothing Nothing
+                   in (alias, column)
+                JoinComputedField computedFieldInfo ->
+                  (alias, mkScalarComputedFieldSelect computedFieldInfo)
+      collect $ (fmap . fmap) snd neRemoteJoins
       pure $ transformedFields <> phantomFields
   where
     -- Placeholder text to annotate a remote relationship field.
-    remoteAnnPlaceholder :: AnnFieldG src Void (UnpreparedValue src)
+    remoteAnnPlaceholder :: AnnFieldG src (Const Void) (UnpreparedValue src)
     remoteAnnPlaceholder = AFExpression "remote relationship placeholder"
+
+    -- Annotate a 'DBJoinField' with its field name and an alias so that it may
+    -- be used to construct a remote join.
+    annotateDBJoinField ::
+      DBJoinField src -> (FieldName, (DBJoinField src, JoinColumnAlias))
+    annotateDBJoinField = \case
+      jc@(JoinColumn columnInfo) ->
+        let column = pgiColumn columnInfo
+            columnFieldName = fromCol @src column
+            alias = getJoinColumnAlias columnFieldName column columnFields
+         in (columnFieldName, (jc, alias))
+      jcf@(JoinComputedField ScalarComputedField {..}) ->
+        let computedFieldName = fromComputedField _scfName
+            alias = getJoinColumnAlias computedFieldName _scfName computedFields
+         in (computedFieldName, (jcf, alias))
+
+    -- Annotate an element a remote source join from '_rssJoinMapping' so that
+    -- a remote join can be constructed.
+    annotateSourceJoin ::
+      forall tgt.
+      (ColumnInfo src, ScalarType tgt, Column tgt) ->
+      (DBJoinField src, (JoinColumnAlias, ScalarType tgt, Column tgt))
+    annotateSourceJoin (columnInfo, rhsColumnType, rhsColumn) =
+      let lhsColumn = pgiColumn columnInfo
+          lhsColumnFieldName = fromCol @src lhsColumn
+          alias = getJoinColumnAlias lhsColumnFieldName lhsColumn columnFields
+       in (JoinColumn columnInfo, (alias, rhsColumnType, rhsColumn))
 
     -- Get the fields targeted by some 'Traversal' for an arbitrary list of
     -- tuples, discarding any elements whose fields cannot be focused upon.
@@ -398,44 +425,45 @@ transformAnnFields fields = do
             (alias, fieldName) <- getFields (_AFComputedField . _2) fields
         ]
 
-    -- Annotate a 'DBJoinField' with its field name and an alias so that it may
-    -- be used to construct a remote join.
-    annotateDBJoinField ::
-      FieldName -> DBJoinField src -> (DBJoinField src, JoinColumnAlias)
-    annotateDBJoinField fieldName = \case
-      jc@(JoinColumn column _) ->
-        let alias = getJoinColumnAlias fieldName column columnFields allAliases
-         in (jc, alias)
-      jcf@(JoinComputedField ScalarComputedField {..}) ->
-        let alias = getJoinColumnAlias fieldName _scfName computedFields allAliases
-         in (jcf, alias)
-      where
-        allAliases = map fst fields
+    getJoinColumnAlias ::
+      (Eq field, Hashable field) =>
+      FieldName ->
+      field ->
+      HashMap field FieldName ->
+      JoinColumnAlias
+    getJoinColumnAlias fieldName field selectedFields =
+      case Map.lookup field selectedFields of
+        Nothing -> makeUniqueAlias fieldName
+        Just fieldAlias -> JCSelected fieldAlias
 
-    -- goes through all the remote relationships in the selection set and emits
-    -- 1. a map of join field names to their aliases in the lhs response
-    -- 2. a list of extra fields that need to be included in the lhs query
-    --    that are required for the join
-    (joinColumnAliases, phantomFields) =
-      let lhsJoinFields =
-            Map.unions $ map (_rrsLHSJoinFields . snd) $ getFields _AFRemote fields
-          annotatedJoinColumns = Map.mapWithKey annotateDBJoinField $ lhsJoinFields
-          phantomFields_ =
-            toList annotatedJoinColumns & mapMaybe \(joinField, alias) ->
-              case alias of
-                JCSelected _ -> Nothing
-                JCPhantom a -> case joinField of
-                  JoinColumn column columnType ->
-                    let annotatedColumn =
-                          AFColumn $ AnnColumnField column columnType False Nothing Nothing
-                     in Just (a, annotatedColumn)
-                  JoinComputedField computedFieldInfo ->
-                    Just (a, mkScalarComputedFieldSelect computedFieldInfo)
-       in (fmap snd annotatedJoinColumns, phantomFields_)
+    longestAliasLength = maximum $ map (T.length . coerce . fst) fields
+
+    -- This generates an alias for a phantom field that does not conflict with
+    -- any of the existing aliases in the seleciton set
+    --
+    -- If we generate a unique name for each field name which is longer than
+    -- the longest alias in the selection set, the generated name would be
+    -- unique
+    makeUniqueAlias :: FieldName -> JoinColumnAlias
+    makeUniqueAlias fieldName =
+      let suffix =
+            "_join_column"
+              <>
+              -- 12 is the length of "_join_column"
+              T.replicate ((longestAliasLength - (T.length (coerce fieldName) + 12)) + 1) "_"
+       in JCPhantom $ fieldName <> FieldName suffix
+
+    transformAnnRelation ::
+      (a -> Collector b) ->
+      AnnRelationSelectG src a ->
+      Collector (AnnRelationSelectG src b)
+    transformAnnRelation transform relation@(AnnRelationSelectG _ _ select) = do
+      transformedSelect <- transform select
+      pure $ relation {aarAnnSelect = transformedSelect}
 
     mkScalarComputedFieldSelect ::
       ScalarComputedField b ->
-      AnnFieldG b Void (UnpreparedValue b)
+      (AnnFieldG b (Const Void) (UnpreparedValue b))
     mkScalarComputedFieldSelect ScalarComputedField {..} =
       let functionArgs =
             flip FunctionArgsExp mempty $
@@ -445,85 +473,10 @@ transformAnnFields fields = do
               ComputedFieldScalarSelect _scfFunction functionArgs _scfType Nothing
        in AFComputedField _scfXField _scfName fieldSelect
 
--- | Annotate an element a remote source join from '_rssJoinMapping' so that
--- a remote join can be constructed.
-transformAnnRelation ::
-  (a -> Collector b) ->
-  AnnRelationSelectG src a ->
-  Collector (AnnRelationSelectG src b)
-transformAnnRelation transform relation@(AnnRelationSelectG _ _ select) = do
-  transformedSelect <- transform select
-  pure $ relation {aarAnnSelect = transformedSelect}
-
-transformActionFields ::
-  forall src.
-  Backend src =>
-  ActionFieldsG src (RemoteRelationshipField UnpreparedValue) (UnpreparedValue src) ->
-  Collector (ActionFieldsG src Void (UnpreparedValue src))
-transformActionFields fields = do
-  -- Produces a list of transformed fields that may or may not have an
-  -- associated remote join.
-  for fields \(fieldName, field') -> withField fieldName do
-    -- FIXME: There's way too much going on in this 'case .. of' block...
-    let mkCollector ::
-          ActionFieldG src (RemoteRelationshipField UnpreparedValue) (UnpreparedValue src) ->
-          Collector
-            (ActionFieldG src Void (UnpreparedValue src))
-        mkCollector annField = case annField of
-          -- ActionFields which do not need to be transformed.
-          ACFScalar c -> pure (ACFScalar c)
-          ACFExpression t -> pure (ACFExpression t)
-          -- ActionFields with no associated remote joins and whose transformations are
-          -- relatively straightforward.
-          ACFObjectRelation annRel -> do
-            transformed <- transformAnnRelation transformObjectSelect annRel
-            pure (ACFObjectRelation transformed)
-          ACFArrayRelation (ASSimple annRel) -> do
-            transformed <- transformAnnRelation transformSelect annRel
-            pure (ACFArrayRelation . ASSimple $ transformed)
-          ACFArrayRelation (ASAggregate aggRel) -> do
-            transformed <- transformAnnRelation transformAggregateSelect aggRel
-            pure (ACFArrayRelation . ASAggregate $ transformed)
-          ACFArrayRelation (ASConnection annRel) -> do
-            transformed <- transformAnnRelation transformConnectionSelect annRel
-            pure (ACFArrayRelation . ASConnection $ transformed)
-          ACFNestedObject fn fs ->
-            ACFNestedObject fn <$> transformActionFields fs
-    (fieldName,) <$> mkCollector field'
-
-getJoinColumnAlias ::
-  (Eq field, Hashable field) =>
-  FieldName ->
-  field ->
-  HashMap field FieldName ->
-  [FieldName] ->
-  JoinColumnAlias
-getJoinColumnAlias fieldName field selectedFields allAliases =
-  case Map.lookup field selectedFields of
-    Nothing -> JCPhantom uniqueAlias
-    Just fieldAlias -> JCSelected fieldAlias
-  where
-    -- This generates an alias for a phantom field that does not conflict with
-    -- any of the existing aliases in the seleciton set
-    --
-    -- If we generate a unique name for each field name which is longer than
-    -- the longest alias in the selection set, the generated name would be
-    -- unique
-    uniqueAlias :: FieldName
-    uniqueAlias =
-      let suffix =
-            "_join_column"
-              <>
-              -- 12 is the length of "_join_column"
-              T.replicate ((longestAliasLength - (T.length (coerce fieldName) + 12)) + 1) "_"
-       in fieldName <> FieldName suffix
-      where
-        longestAliasLength = maximum $ map (T.length . coerce) allAliases
-
 getRemoteJoinsSourceRelation ::
   Backend b =>
-  SourceRelationshipSelection b (RemoteRelationshipField UnpreparedValue) UnpreparedValue ->
-  (SourceRelationshipSelection b Void UnpreparedValue, Maybe RemoteJoins)
+  SourceRelationshipSelection b (RemoteSelect UnpreparedValue) UnpreparedValue ->
+  (SourceRelationshipSelection b (Const Void) UnpreparedValue, Maybe RemoteJoins)
 getRemoteJoinsSourceRelation = runCollector . transformSourceRelation
   where
     transformSourceRelation = \case

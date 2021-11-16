@@ -28,6 +28,7 @@ import Control.Arrow.Extended
 import Control.Lens
 import Control.Monad.Morph
 import Control.Monad.Trans.Control (MonadBaseControl)
+import Control.Monad.Unique
 import Data.Aeson (Value, toJSON)
 import Data.Aeson.TH
 import Data.HashMap.Strict.Extended qualified as M
@@ -209,6 +210,7 @@ newtype MetadataT m a = MetadataT {unMetadataT :: StateT Metadata m a}
       Monad,
       MonadTrans,
       MonadIO,
+      MonadUnique,
       MonadReader r,
       MonadError e,
       MonadTx,

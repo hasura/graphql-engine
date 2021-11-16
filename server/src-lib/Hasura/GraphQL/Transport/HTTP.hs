@@ -243,7 +243,7 @@ runSessVarPred = filterSessionVariables . unSessVarPred
 -- | Filter out only those session variables used by the query AST provided
 filterVariablesFromQuery ::
   Backend backend =>
-  [RootField (QueryDBRoot (RemoteRelationshipField UnpreparedValue) UnpreparedValue) RemoteField (ActionQuery backend (RemoteRelationshipField UnpreparedValue) (UnpreparedValue backend)) d] ->
+  [RootField (QueryDBRoot (RemoteSelect UnpreparedValue) UnpreparedValue) RemoteField (ActionQuery backend (RemoteSelect UnpreparedValue) (UnpreparedValue backend)) d] ->
   SessVarPred
 filterVariablesFromQuery query = fold $ rootToSessVarPreds =<< query
   where
@@ -297,7 +297,7 @@ runGQ ::
   m (GQLQueryOperationSuccessLog, HttpResponse (Maybe GQResponse, EncJSON))
 runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
   (totalTime, (response, parameterizedQueryHash)) <- withElapsedTime $ do
-    E.ExecutionCtx _ sqlGenCtx sc scVer httpManager enableAL readOnlyMode <- ask
+    E.ExecutionCtx _ sqlGenCtx sc scVer httpManager enableAL <- ask
 
     -- run system authorization on the GraphQL API
     reqParsed <-
@@ -313,7 +313,6 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
         logger
         userInfo
         sqlGenCtx
-        readOnlyMode
         sc
         scVer
         queryType
@@ -469,7 +468,7 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
     runRemoteGQ httpManager fieldName rsi resultCustomizer gqlReq = do
       (telemTimeIO_DT, remoteResponseHeaders, resp) <-
         doQErr $ E.execRemoteGQ env httpManager userInfo reqHeaders (rsDef rsi) gqlReq
-      value <- extractFieldFromResponse fieldName resultCustomizer resp
+      value <- extractFieldFromResponse fieldName rsi resultCustomizer resp
       let filteredHeaders = filter ((== "Set-Cookie") . fst) remoteResponseHeaders
       pure $ AnnotatedResponsePart telemTimeIO_DT Telem.Remote (encJFromOrderedValue value) filteredHeaders
 
@@ -565,11 +564,14 @@ extractFieldFromResponse ::
   forall m.
   Monad m =>
   RootFieldAlias ->
+  RemoteSchemaInfo ->
   ResultCustomizer ->
   LBS.ByteString ->
   ExceptT (Either GQExecError QErr) m JO.Value
-extractFieldFromResponse fieldName resultCustomizer resp = do
-  let fieldName' = G.unName $ _rfaAlias fieldName
+extractFieldFromResponse fieldName rsi resultCustomizer resp = do
+  let namespace = fmap G.unName $ _rscNamespaceFieldName $ rsCustomizer rsi
+      fieldName' = G.unName $ _rfaAlias fieldName
+  -- TODO: use RootFieldAlias for remote fields
   dataVal <-
     applyResultCustomizer resultCustomizer
       <$> do
@@ -577,11 +579,19 @@ extractFieldFromResponse fieldName resultCustomizer resp = do
         case graphQLResponse of
           GraphQLResponseErrors errs -> doGQExecError errs
           GraphQLResponseData d -> pure d
-  dataObj <- onLeft (JO.asObject dataVal) do400
-  fieldVal <-
-    onNothing (JO.lookup fieldName' dataObj) $
-      do400 $ "expecting key " <> fieldName'
-  return fieldVal
+  case namespace of
+    Just _ ->
+      -- If using a custom namespace field then the response from the remote server
+      -- will already be unwrapped so just return it.
+      return dataVal
+    _ -> do
+      -- No custom namespace so we need to look up the field name in the data
+      -- object.
+      dataObj <- onLeft (JO.asObject dataVal) do400
+      fieldVal <-
+        onNothing (JO.lookup fieldName' dataObj) $
+          do400 $ "expecting key " <> fieldName'
+      return fieldVal
   where
     do400 = withExceptT Right . throw400 RemoteSchemaError
     doGQExecError = withExceptT Left . throwError . GQExecError

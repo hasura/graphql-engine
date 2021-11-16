@@ -310,12 +310,12 @@ data ActionSourceInfo b
 getActionSourceInfo :: AnnotatedObjectType -> ActionSourceInfo ('Postgres 'Vanilla)
 getActionSourceInfo = maybe ASINoSource (uncurry ASISource) . _aotSource
 
-data AnnActionExecution (b :: BackendType) (r :: Type) v = AnnActionExecution
+data AnnActionExecution (b :: BackendType) (r :: BackendType -> Type) v = AnnActionExecution
   { _aaeName :: !ActionName,
     -- | output type
     _aaeOutputType :: !GraphQLType,
     -- | output selection
-    _aaeFields :: !(ActionFieldsG b r v),
+    _aaeFields :: !(AnnFieldsG b r v),
     -- | jsonified input arguments
     _aaePayload :: !J.Value,
     -- | to validate the response fields from webhook
@@ -339,9 +339,9 @@ data AnnActionMutationAsync = AnnActionMutationAsync
   }
   deriving (Show, Eq)
 
-data AsyncActionQueryFieldG (b :: BackendType) (r :: Type) v
+data AsyncActionQueryFieldG (b :: BackendType) (r :: BackendType -> Type) v
   = AsyncTypename !Text
-  | AsyncOutput !(ActionFieldsG b r v)
+  | AsyncOutput !(AnnFieldsG b r v)
   | AsyncId
   | AsyncCreatedAt
   | AsyncErrors
@@ -349,7 +349,7 @@ data AsyncActionQueryFieldG (b :: BackendType) (r :: Type) v
 
 type AsyncActionQueryFieldsG b r v = Fields (AsyncActionQueryFieldG b r v)
 
-data AnnActionAsyncQuery (b :: BackendType) (r :: Type) v = AnnActionAsyncQuery
+data AnnActionAsyncQuery (b :: BackendType) (r :: BackendType -> Type) v = AnnActionAsyncQuery
   { _aaaqName :: !ActionName,
     _aaaqActionId :: !ActionId,
     _aaaqOutputType :: !GraphQLType,

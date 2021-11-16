@@ -6,6 +6,7 @@ import (
 	"github.com/hasura/graphql-engine/cli/v2"
 	"github.com/hasura/graphql-engine/cli/v2/internal/projectmetadata"
 
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
 
@@ -43,7 +44,7 @@ func (o *MetadataReloadOptions) runWithInfo() error {
 	err := o.run()
 	o.EC.Spinner.Stop()
 	if err != nil {
-		return fmt.Errorf("failed to reload metadata: %w", err)
+		return errors.Wrap(err, "failed to reload metadata")
 	}
 	o.EC.Logger.Info("Metadata reloaded")
 	icListOpts := &metadataInconsistencyListOptions{
@@ -51,7 +52,7 @@ func (o *MetadataReloadOptions) runWithInfo() error {
 	}
 	err = icListOpts.read(projectmetadata.NewHandlerFromEC(icListOpts.EC))
 	if err != nil {
-		return fmt.Errorf("failed to read metadata status: %w", err)
+		return fmt.Errorf("failed to read metadata status: %v", err)
 	}
 	if icListOpts.isConsistent {
 		icListOpts.EC.Logger.Infoln("Metadata is consistent")
@@ -66,7 +67,7 @@ func (o *MetadataReloadOptions) run() error {
 	metadataHandler := projectmetadata.NewHandlerFromEC(o.EC)
 	_, err = metadataHandler.ReloadMetadata()
 	if err != nil {
-		return fmt.Errorf("cannot reload metadata: %w", err)
+		return errors.Wrap(err, "Cannot reload metadata")
 	}
 	return nil
 }

@@ -8,7 +8,6 @@ module Hasura.RQL.Types.Roles.Internal
   )
 where
 
-import Data.HashMap.Strict qualified as Map
 import Data.HashSet qualified as Set
 import Data.Semigroup (Any (..), Max (..))
 import Hasura.Prelude
@@ -198,12 +197,12 @@ instance OnlyRelevantEq RemoteSchemaInputValueDefinition where
 instance OnlyRelevantEq RemoteSchemaIntrospection where
   RemoteSchemaIntrospection typeDefinitionsL
     `relevantEq` RemoteSchemaIntrospection typeDefinitionsR =
-      sort (Map.elems typeDefinitionsL) `relevantEq` sort (Map.elems typeDefinitionsR)
+      (sort typeDefinitionsL) `relevantEq` (sort typeDefinitionsR)
 
 instance OnlyRelevantEq IntrospectionResult where
   IntrospectionResult (RemoteSchemaIntrospection typeDefnsL) queryRootL mutationRootL subsRootL
     `relevantEq` IntrospectionResult (RemoteSchemaIntrospection typeDefnsR) queryRootR mutationRootR subsRootR =
-      sort (Map.elems typeDefnsL) `relevantEq` sort (Map.elems typeDefnsR)
+      (sort typeDefnsL) `relevantEq` (sort typeDefnsR)
         && queryRootL == queryRootR
         && mutationRootL == mutationRootR
         && subsRootL == subsRootR

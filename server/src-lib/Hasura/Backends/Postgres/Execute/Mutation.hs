@@ -109,11 +109,11 @@ execUpdateQuery ::
   ) =>
   Bool ->
   UserInfo ->
-  (AnnotatedUpdate ('Postgres pgKind), DS.Seq Q.PrepArg) ->
+  (AnnUpd ('Postgres pgKind), DS.Seq Q.PrepArg) ->
   m EncJSON
 execUpdateQuery strfyNum userInfo (u, p) =
   runMutation
-    (mkMutation userInfo (_auTable u) (MCCheckConstraint updateCTE, p) (_auOutput u) (_auAllCols u) strfyNum)
+    (mkMutation userInfo (uqp1Table u) (MCCheckConstraint updateCTE, p) (uqp1Output u) (uqp1AllCols u) strfyNum)
   where
     updateCTE = mkUpdateCTE u
 
@@ -243,9 +243,8 @@ mutateAndFetchCols qt cols (cte, p) strfyNum = do
     then withCheckPermission $ (first Q.getAltJ . Q.getRow) <$> mutationTx
     else (Q.getAltJ . runIdentity . Q.getRow) <$> mutationTx
   where
-    rawAliasIdentifier = qualifiedObjectToText qt <> "__mutation_result"
-    aliasIdentifier = Identifier rawAliasIdentifier
-    tabFrom = FromIdentifier $ FIIdentifier rawAliasIdentifier
+    aliasIdentifier = Identifier $ qualifiedObjectToText qt <> "__mutation_result"
+    tabFrom = FromIdentifier aliasIdentifier
     tabPerm = TablePerm annBoolExpTrue Nothing
     selFlds = flip map cols $
       \ci -> (fromCol @('Postgres pgKind) $ pgiColumn ci, mkAnnColumnFieldAsText ci)

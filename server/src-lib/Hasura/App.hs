@@ -52,6 +52,7 @@ import Control.Monad.STM (atomically)
 import Control.Monad.Stateless
 import Control.Monad.Trans.Control (MonadBaseControl (..))
 import Control.Monad.Trans.Managed (ManagedT (..), allocate_)
+import Control.Monad.Unique
 import Data.Aeson qualified as A
 import Data.ByteString.Char8 qualified as BC
 import Data.ByteString.Lazy.Char8 qualified as BLC
@@ -307,6 +308,7 @@ newtype PGMetadataStorageAppT m a = PGMetadataStorageAppT {runPGMetadataStorageA
       MonadMask,
       HasHttpManagerM,
       HasServerConfigCtx,
+      MonadUnique,
       MonadReader (Q.PGPool, Q.PGLogger)
     )
     via (ReaderT (Q.PGPool, Q.PGLogger) m)
@@ -373,8 +375,6 @@ initialiseServeCtx env GlobalCtx {..} so@ServeOptions {..} = do
           sqlGenCtx
           soEnableMaintenanceMode
           soExperimentalFeatures
-          soEventingMode
-          soReadOnlyMode
 
   (rebuildableSchemaCache, _) <-
     lift . flip onException (flushLogger loggerCtx) $
@@ -693,8 +693,6 @@ mkHGEServer setupHook env ServeOptions {..} ServeCtx {..} initTime postPollHook 
           soConnectionOptions
           soWebsocketKeepAlive
           soEnableMaintenanceMode
-          soEventingMode
-          soReadOnlyMode
           soExperimentalFeatures
           _scEnabledLogTypes
           soWebsocketConnectionInitTimeout
@@ -706,8 +704,6 @@ mkHGEServer setupHook env ServeOptions {..} ServeCtx {..} initTime postPollHook 
           sqlGenCtx
           soEnableMaintenanceMode
           soExperimentalFeatures
-          soEventingMode
-          soReadOnlyMode
 
   -- Log Warning if deprecated environment variables are used
   sources <- scSources <$> liftIO (getSCFromRef cacheRef)
@@ -720,7 +716,6 @@ mkHGEServer setupHook env ServeOptions {..} ServeCtx {..} initTime postPollHook 
   -- NOTE: `newLogTVar` is being used to make sure that the metadata logger runs only once
   --       while logging errors or any `inconsistent_metadata` logs.
   newLogTVar <- liftIO $ STM.newTVarIO False
-
   -- Start a background thread for processing schema sync event present in the '_sscSyncEventRef'
   _ <-
     startSchemaSyncProcessorThread
@@ -732,7 +727,10 @@ mkHGEServer setupHook env ServeOptions {..} ServeCtx {..} initTime postPollHook 
       serverConfigCtx
       newLogTVar
 
-  let eventLogBehavior =
+  let maxEvThrds = fromMaybe defaultMaxEventThreads soEventsHttpPoolSize
+      fetchI = milliseconds $ fromMaybe (Milliseconds defaultFetchInterval) soEventsFetchInterval
+      allSources = HM.elems $ scSources $ lastBuiltSchemaCache _scSchemaCache
+      eventLogBehavior =
         LogBehavior
           { _lbHeader = if soLogHeadersFromEnv then LogEnvValue else LogEnvVarname,
             _lbResponse = if soDevMode then LogEntireResponse else LogSanitisedResponse
@@ -746,19 +744,100 @@ mkHGEServer setupHook env ServeOptions {..} ServeCtx {..} initTime postPollHook 
         <*> STM.newTVarIO mempty
         <*> STM.newTVarIO mempty
 
-  case soEventingMode of
-    EventingEnabled -> do
-      startEventTriggerPollerThread logger eventLogBehavior lockedEventsCtx cacheRef
-      startAsyncActionsPollerThread logger lockedEventsCtx cacheRef actionSubState
+  unless (getNonNegativeInt soEventsFetchBatchSize == 0 || soEventsFetchInterval == Just 0) $ do
+    -- Don't start the events poller thread when fetchBatchSize or fetchInterval is 0
+    -- prepare event triggers data
+    eventEngineCtx <- liftIO $ atomically $ initEventEngineCtx maxEvThrds fetchI soEventsFetchBatchSize
+    let eventsGracefulShutdownAction =
+          waitForProcessingAction
+            logger
+            "event_triggers"
+            (length <$> readTVarIO (leEvents lockedEventsCtx))
+            (EventTriggerShutdownAction (shutdownEventTriggerEvents allSources logger lockedEventsCtx))
+            soGracefulShutdownTimeout
+    unLogger logger $ mkGenericStrLog LevelInfo "event_triggers" "starting workers"
+    void $
+      C.forkManagedTWithGracefulShutdown
+        "processEventQueue"
+        logger
+        (C.ThreadShutdown (liftIO eventsGracefulShutdownAction))
+        $ processEventQueue
+          logger
+          eventLogBehavior
+          _scHttpManager
+          (getSCFromRef cacheRef)
+          eventEngineCtx
+          lockedEventsCtx
+          serverMetrics
+          soEnableMaintenanceMode
 
-      -- start a background thread to create new cron events
-      _cronEventsThread <-
-        C.forkManagedT "runCronEventsGenerator" logger $
-          runCronEventsGenerator logger (getSCFromRef cacheRef)
+  -- start a background thread to handle async actions
+  case soAsyncActionsFetchInterval of
+    Skip -> pure () -- Don't start the poller thread
+    Interval sleepTime -> do
+      let label = "asyncActionsProcessor"
+          asyncActionGracefulShutdownAction =
+            ( liftWithStateless \lowerIO ->
+                ( waitForProcessingAction
+                    logger
+                    "async_actions"
+                    (length <$> readTVarIO (leActionEvents lockedEventsCtx))
+                    (MetadataDBShutdownAction (hoist lowerIO (shutdownAsyncActions lockedEventsCtx)))
+                    soGracefulShutdownTimeout
+                )
+            )
 
-      startScheduledEventsPollerThread logger eventLogBehavior lockedEventsCtx cacheRef
-    EventingDisabled ->
-      unLogger logger $ mkGenericStrLog LevelInfo "server" "starting in eventing disabled mode"
+      void $
+        C.forkManagedTWithGracefulShutdown
+          label
+          logger
+          (C.ThreadShutdown asyncActionGracefulShutdownAction)
+          $ asyncActionsProcessor
+            env
+            logger
+            (_scrCache cacheRef)
+            (leActionEvents lockedEventsCtx)
+            _scHttpManager
+            sleepTime
+            Nothing
+
+  -- start a background thread to handle async action live queries
+  _asyncActionsSubThread <-
+    C.forkManagedT "asyncActionSubscriptionsProcessor" logger $
+      asyncActionSubscriptionsProcessor actionSubState
+
+  -- start a background thread to create new cron events
+  _cronEventsThread <-
+    C.forkManagedT "runCronEventsGenerator" logger $
+      runCronEventsGenerator logger (getSCFromRef cacheRef)
+
+  -- prepare scheduled triggers
+  lift $ prepareScheduledEvents logger
+
+  -- start a background thread to deliver the scheduled events
+  _scheduledEventsThread <- do
+    let scheduledEventsGracefulShutdownAction =
+          ( liftWithStateless \lowerIO ->
+              ( waitForProcessingAction
+                  logger
+                  "scheduled_events"
+                  (getProcessingScheduledEventsCount lockedEventsCtx)
+                  (MetadataDBShutdownAction (hoist lowerIO unlockAllLockedScheduledEvents))
+                  soGracefulShutdownTimeout
+              )
+          )
+
+    C.forkManagedTWithGracefulShutdown
+      "processScheduledTriggers"
+      logger
+      (C.ThreadShutdown scheduledEventsGracefulShutdownAction)
+      $ processScheduledTriggers
+        env
+        logger
+        eventLogBehavior
+        _scHttpManager
+        (getSCFromRef cacheRef)
+        lockedEventsCtx
 
   -- start a background thread to check for updates
   _updateThread <-
@@ -880,104 +959,6 @@ mkHGEServer setupHook env ServeOptions {..} ServeCtx {..} initTime postPollHook 
           else unless (processingEventsCount == 0) $ do
             C.sleep (5) -- sleep for 5 seconds and then repeat
             waitForProcessingAction l actionType processingEventsCountAction' shutdownAction (maxTimeout - (Seconds 5))
-
-    startEventTriggerPollerThread logger eventLogBehavior lockedEventsCtx cacheRef = do
-      let maxEvThrds = fromMaybe defaultMaxEventThreads soEventsHttpPoolSize
-          fetchI = milliseconds $ fromMaybe (Milliseconds defaultFetchInterval) soEventsFetchInterval
-          allSources = HM.elems $ scSources $ lastBuiltSchemaCache _scSchemaCache
-
-      unless (getNonNegativeInt soEventsFetchBatchSize == 0 || soEventsFetchInterval == Just 0) $ do
-        -- Don't start the events poller thread when fetchBatchSize or fetchInterval is 0
-        -- prepare event triggers data
-        eventEngineCtx <- liftIO $ atomically $ initEventEngineCtx maxEvThrds fetchI soEventsFetchBatchSize
-        let eventsGracefulShutdownAction =
-              waitForProcessingAction
-                logger
-                "event_triggers"
-                (length <$> readTVarIO (leEvents lockedEventsCtx))
-                (EventTriggerShutdownAction (shutdownEventTriggerEvents allSources logger lockedEventsCtx))
-                soGracefulShutdownTimeout
-        unLogger logger $ mkGenericStrLog LevelInfo "event_triggers" "starting workers"
-        void $
-          C.forkManagedTWithGracefulShutdown
-            "processEventQueue"
-            logger
-            (C.ThreadShutdown (liftIO eventsGracefulShutdownAction))
-            $ processEventQueue
-              logger
-              eventLogBehavior
-              _scHttpManager
-              (getSCFromRef cacheRef)
-              eventEngineCtx
-              lockedEventsCtx
-              serverMetrics
-              soEnableMaintenanceMode
-
-    startAsyncActionsPollerThread logger lockedEventsCtx cacheRef actionSubState = do
-      -- start a background thread to handle async actions
-      case soAsyncActionsFetchInterval of
-        Skip -> pure () -- Don't start the poller thread
-        Interval sleepTime -> do
-          let label = "asyncActionsProcessor"
-              asyncActionGracefulShutdownAction =
-                ( liftWithStateless \lowerIO ->
-                    ( waitForProcessingAction
-                        logger
-                        "async_actions"
-                        (length <$> readTVarIO (leActionEvents lockedEventsCtx))
-                        (MetadataDBShutdownAction (hoist lowerIO (shutdownAsyncActions lockedEventsCtx)))
-                        soGracefulShutdownTimeout
-                    )
-                )
-
-          void $
-            C.forkManagedTWithGracefulShutdown
-              label
-              logger
-              (C.ThreadShutdown asyncActionGracefulShutdownAction)
-              $ asyncActionsProcessor
-                env
-                logger
-                (_scrCache cacheRef)
-                (leActionEvents lockedEventsCtx)
-                _scHttpManager
-                sleepTime
-                Nothing
-
-      -- start a background thread to handle async action live queries
-      void $
-        C.forkManagedT "asyncActionSubscriptionsProcessor" logger $
-          asyncActionSubscriptionsProcessor actionSubState
-
-    startScheduledEventsPollerThread logger eventLogBehavior lockedEventsCtx cacheRef = do
-      -- prepare scheduled triggers
-      lift $ prepareScheduledEvents logger
-
-      -- start a background thread to deliver the scheduled events
-      -- _scheduledEventsThread <- do
-      let scheduledEventsGracefulShutdownAction =
-            ( liftWithStateless \lowerIO ->
-                ( waitForProcessingAction
-                    logger
-                    "scheduled_events"
-                    (getProcessingScheduledEventsCount lockedEventsCtx)
-                    (MetadataDBShutdownAction (hoist lowerIO unlockAllLockedScheduledEvents))
-                    soGracefulShutdownTimeout
-                )
-            )
-
-      void $
-        C.forkManagedTWithGracefulShutdown
-          "processScheduledTriggers"
-          logger
-          (C.ThreadShutdown scheduledEventsGracefulShutdownAction)
-          $ processScheduledTriggers
-            env
-            logger
-            eventLogBehavior
-            _scHttpManager
-            (getSCFromRef cacheRef)
-            lockedEventsCtx
 
 instance (Monad m) => Tracing.HasReporter (PGMetadataStorageAppT m)
 

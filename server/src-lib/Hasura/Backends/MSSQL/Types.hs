@@ -1,10 +1,14 @@
--- | This module exports modules @Hasura.Backends.MSSQL.Types.*@
+-- | Types for Transact-SQL aka T-SQL; the language of SQL Server.
 module Hasura.Backends.MSSQL.Types
-  ( module M,
+  ( module Hasura.Backends.MSSQL.Types.Internal,
+    MSSQLExtraInsertData (..),
   )
 where
 
-import Hasura.Backends.MSSQL.Types.Insert as M
 import Hasura.Backends.MSSQL.Types.Instances ()
-import Hasura.Backends.MSSQL.Types.Internal as M
-import Hasura.Backends.MSSQL.Types.Update as M
+import Hasura.Backends.MSSQL.Types.Internal
+
+data MSSQLExtraInsertData = MSSQLExtraInsertData
+  { _mssqlPrimaryKeyColumns :: ![ColumnName],
+    _mssqlIdentityColumns :: ![ColumnName]
+  }

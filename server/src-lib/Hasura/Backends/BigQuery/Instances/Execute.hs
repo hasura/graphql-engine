@@ -3,8 +3,6 @@
 module Hasura.Backends.BigQuery.Instances.Execute () where
 
 import Data.Aeson qualified as Aeson
-import Data.Aeson.Text qualified as Aeson
-import Data.HashMap.Strict qualified as Map
 import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.Text qualified as T
 import Data.Text.Lazy qualified as LT
@@ -22,11 +20,7 @@ import Hasura.GraphQL.Execute.Backend
 import Hasura.GraphQL.Namespace (RootFieldAlias)
 import Hasura.GraphQL.Parser
 import Hasura.Prelude
-import Hasura.QueryTags
-  ( emptyQueryTagsComment,
-  )
 import Hasura.RQL.IR
-import Hasura.RQL.IR.Select qualified as IR
 import Hasura.RQL.Types
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.Session
@@ -61,7 +55,7 @@ bqDBQueryPlan ::
   UserInfo ->
   SourceName ->
   SourceConfig 'BigQuery ->
-  QueryDB 'BigQuery Void (UnpreparedValue 'BigQuery) ->
+  QueryDB 'BigQuery (Const Void) (UnpreparedValue 'BigQuery) ->
   m (DBStepInfo 'BigQuery)
 bqDBQueryPlan userInfo sourceName sourceConfig qrf = do
   -- TODO (naveen): Append query tags to the query
@@ -119,7 +113,7 @@ bqDBMutationPlan ::
   Bool ->
   SourceName ->
   SourceConfig 'BigQuery ->
-  MutationDB 'BigQuery Void (UnpreparedValue 'BigQuery) ->
+  MutationDB 'BigQuery (Const Void) (UnpreparedValue 'BigQuery) ->
   m (DBStepInfo 'BigQuery)
 bqDBMutationPlan _userInfo _stringifyNum _sourceName _sourceConfig _mrf =
   throw500 "mutations are not supported in BigQuery; this should be unreachable"
@@ -132,7 +126,7 @@ bqDBQueryExplain ::
   UserInfo ->
   SourceName ->
   SourceConfig 'BigQuery ->
-  QueryDB 'BigQuery Void (UnpreparedValue 'BigQuery) ->
+  QueryDB 'BigQuery (Const Void) (UnpreparedValue 'BigQuery) ->
   m (AB.AnyBackend DBStepInfo)
 bqDBQueryExplain fieldName userInfo sourceName sourceConfig qrf = do
   select <- planNoPlan (BigQuery.bigQuerySourceConfigToFromIrConfig sourceConfig) userInfo qrf
@@ -190,37 +184,7 @@ bqDBRemoteRelationshipPlan ::
   -- | This is a field name from the lhs that *has* to be selected in the
   -- response along with the relationship.
   FieldName ->
-  (FieldName, SourceRelationshipSelection 'BigQuery Void UnpreparedValue) ->
+  (FieldName, SourceRelationshipSelection 'BigQuery (Const Void) UnpreparedValue) ->
   m (DBStepInfo 'BigQuery)
-bqDBRemoteRelationshipPlan userInfo sourceName sourceConfig lhs lhsSchema argumentId relationship = do
-  flip runReaderT emptyQueryTagsComment $ bqDBQueryPlan userInfo sourceName sourceConfig rootSelection
-  where
-    coerceToColumn = BigQuery.ColumnName . getFieldNameTxt
-    joinColumnMapping = mapKeys coerceToColumn lhsSchema
-
-    rowsArgument :: UnpreparedValue 'BigQuery
-    rowsArgument =
-      UVParameter Nothing $
-        ColumnValue (ColumnScalar BigQuery.StringScalarType) $
-          BigQuery.StringValue . LT.toStrict $ Aeson.encodeToLazyText lhs
-
-    recordSetDefinitionList =
-      (coerceToColumn argumentId, BigQuery.IntegerScalarType) : Map.toList (fmap snd joinColumnMapping)
-
-    jsonToRecordSet :: IR.SelectFromG ('BigQuery) (UnpreparedValue 'BigQuery)
-    jsonToRecordSet =
-      IR.FromFunction
-        (BigQuery.FunctionName "unnest")
-        ( IR.FunctionArgsExp
-            [IR.AEInput rowsArgument]
-            mempty
-        )
-        (Just recordSetDefinitionList)
-
-    rootSelection =
-      convertRemoteSourceRelationship
-        (fst <$> joinColumnMapping)
-        jsonToRecordSet
-        (BigQuery.ColumnName $ getFieldNameTxt argumentId)
-        (ColumnScalar BigQuery.IntegerScalarType)
-        relationship
+bqDBRemoteRelationshipPlan _userInfo _sourceName _sourceConfig _lhs _lhsSchema _argumentId _relationship = do
+  throw500 "mkDBRemoteRelationshipPlan: BigQuery does not currently support generalized joins."

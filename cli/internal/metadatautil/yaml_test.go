@@ -2,7 +2,6 @@ package metadatautil
 
 import (
 	"io/ioutil"
-	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -24,7 +23,7 @@ func Test_resolveTags(t *testing.T) {
 		{
 			"can resolve !include tags",
 			args{
-				ctx: map[string]string{baseDirectoryKey: "testdata/metadata/"},
+				ctx: map[string]string{includeTag: "testdata/metadata/"},
 				node: func() *yaml.Node {
 					v := new(yaml.Node)
 					b := []byte(`
@@ -47,7 +46,7 @@ actions: !include "actions.yaml"
 		{
 			"can resolve !include tags in strings",
 			args{
-				ctx: map[string]string{baseDirectoryKey: "testdata/metadata/"},
+				ctx: map[string]string{includeTag: "testdata/metadata/"},
 				node: func() *yaml.Node {
 					v := new(yaml.Node)
 					b := []byte(`
@@ -70,7 +69,7 @@ actions: '!include "actions.yaml"'
 		{
 			"can resolve !include tags in strings",
 			args{
-				ctx: map[string]string{baseDirectoryKey: "testdata/metadata/"},
+				ctx: map[string]string{includeTag: "testdata/metadata/"},
 				node: func() *yaml.Node {
 					v := new(yaml.Node)
 					b := []byte(`
@@ -93,7 +92,7 @@ actions: "!include actions.yaml"
 		{
 			"can resolve !include tags with relative paths",
 			args{
-				ctx: map[string]string{baseDirectoryKey: "testdata/metadata/databases"},
+				ctx: map[string]string{includeTag: "testdata/metadata/databases"},
 				node: func() *yaml.Node {
 					v := new(yaml.Node)
 					b, err := ioutil.ReadFile("testdata/metadata/databases/databases.yaml")
@@ -238,7 +237,7 @@ actions: "!include actions.yaml"
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := resolveTags(tt.args.ctx, tt.args.node, nil)
+			got, err := resolveTags(tt.args.ctx, tt.args.node)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("resolveTags() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -246,57 +245,6 @@ actions: "!include actions.yaml"
 			b, err := yaml.Marshal(got)
 			assert.NoError(t, err)
 			assert.Equal(t, tt.want, string(b))
-		})
-	}
-}
-
-func TestGetIncludeTagFiles(t *testing.T) {
-	type args struct {
-		node    *yaml.Node
-		baseDir string
-	}
-	tests := []struct {
-		name    string
-		args    args
-		want    []string
-		wantErr bool
-	}{
-		{
-			"can parse !include custom tags and generate child files",
-			args{
-				func() *yaml.Node {
-					var testdoc struct {
-						Foo yaml.Node `yaml:"foo"`
-					}
-					file, err := ioutil.ReadFile("testdata/include_tags_children/root.yaml")
-					assert.NoError(t, err)
-					assert.NoError(t, yaml.Unmarshal(file, &testdoc))
-					return &testdoc.Foo
-				}(),
-				"testdata/include_tags_children",
-			},
-			[]string{"testdata/include_tags_children/bar/bar.yaml", "testdata/include_tags_children/bar/foo.yaml"},
-			false,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got, err := GetIncludeTagFiles(tt.args.node, tt.args.baseDir)
-			if tt.wantErr {
-				assert.Error(t, err)
-			} else {
-				assert.NoError(t, err)
-			}
-			for _, want := range tt.want {
-				found := false
-				for _, g := range got {
-					if strings.Contains(g, want) {
-						found = true
-						break
-					}
-				}
-				assert.Equalf(t, true, found, "expected to find: %v in %v", want, got)
-			}
 		})
 	}
 }

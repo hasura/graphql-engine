@@ -10,18 +10,16 @@ import Data.Aeson qualified as J
 import Data.Has
 import Data.HashMap.Strict qualified as Map
 import Data.HashMap.Strict.Extended qualified as M
+import Data.HashMap.Strict.InsOrd.Extended qualified as OMap
 import Data.List.NonEmpty qualified as NE
 import Data.Parser.JSONPath
 import Data.Text qualified as T
 import Data.Text.Extended
-import Hasura.Backends.Postgres.SQL.DML as PG hiding (CountType, incOp)
+import Hasura.Backends.Postgres.SQL.DML as PG hiding (CountType)
 import Hasura.Backends.Postgres.SQL.Types as PG hiding (FunctionName, TableName)
 import Hasura.Backends.Postgres.SQL.Value as PG
-import Hasura.Backends.Postgres.Schema.OnConflict
 import Hasura.Backends.Postgres.Types.BoolExp
 import Hasura.Backends.Postgres.Types.Column
-import Hasura.Backends.Postgres.Types.Insert as PGIR
-import Hasura.Backends.Postgres.Types.Update as PGIR
 import Hasura.Base.Error
 import Hasura.GraphQL.Parser hiding (EnumValueInfo, field)
 import Hasura.GraphQL.Parser qualified as P
@@ -37,21 +35,13 @@ import Hasura.GraphQL.Schema.Build qualified as GSB
 import Hasura.GraphQL.Schema.Common
 import Hasura.GraphQL.Schema.Mutation qualified as GSB
 import Hasura.GraphQL.Schema.Select
-import Hasura.GraphQL.Schema.Update qualified as SU
+import Hasura.GraphQL.Schema.Table
 import Hasura.Prelude
-import Hasura.RQL.IR.BoolExp
-import Hasura.RQL.IR.Root (RemoteRelationshipField)
-import Hasura.RQL.IR.Select
-  ( QueryDB (QDBConnection),
-  )
+import Hasura.RQL.IR
 import Hasura.RQL.IR.Select qualified as IR
-import Hasura.RQL.Types.Backend (Backend (..))
-import Hasura.RQL.Types.Column
-import Hasura.RQL.Types.Common
-import Hasura.RQL.Types.Function (FunctionInfo)
-import Hasura.RQL.Types.SourceCustomization (mkRootFieldName)
-import Hasura.RQL.Types.Table (SelPermInfo, TableInfo, UpdPermInfo)
-import Hasura.SQL.Backend (BackendType (Postgres), PostgresKind (Citus, Vanilla))
+import Hasura.RQL.IR.Update qualified as IR
+import Hasura.RQL.Types
+import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.Types
 import Language.GraphQL.Draft.Syntax qualified as G
 
@@ -62,30 +52,31 @@ import Language.GraphQL.Draft.Syntax qualified as G
 -- Some functions of 'BackendSchema' differ across different Postgres "kinds",
 -- or call to functions (such as those related to Relay) that have not been
 -- generalized to all kinds of Postgres and still explicitly work on Vanilla
--- Postgres. This class allows each "kind" to specify its own specific
+-- Postgres. This class alllows each "kind" to specify its own specific
 -- implementation. All common code is directly part of `BackendSchema`.
---
--- Note: Users shouldn't ever put this as a constraint. Use `BackendSchema
--- ('Postgres pgKind)` instead.
 class PostgresSchema (pgKind :: PostgresKind) where
   pgkBuildTableRelayQueryFields ::
     BS.MonadBuildSchema ('Postgres pgKind) r m n =>
     SourceName ->
+    SourceConfig ('Postgres pgKind) ->
+    Maybe QueryTagsConfig ->
     TableName ('Postgres pgKind) ->
     TableInfo ('Postgres pgKind) ->
     G.Name ->
     NESeq (ColumnInfo ('Postgres pgKind)) ->
     SelPermInfo ('Postgres pgKind) ->
-    m [FieldParser n (QueryDB ('Postgres pgKind) (RemoteRelationshipField UnpreparedValue) (UnpreparedValue ('Postgres pgKind)))]
+    m [FieldParser n (QueryRootField UnpreparedValue)]
   pgkBuildFunctionRelayQueryFields ::
     BS.MonadBuildSchema ('Postgres pgKind) r m n =>
     SourceName ->
+    SourceConfig ('Postgres pgKind) ->
+    Maybe QueryTagsConfig ->
     FunctionName ('Postgres pgKind) ->
     FunctionInfo ('Postgres pgKind) ->
     TableName ('Postgres pgKind) ->
     NESeq (ColumnInfo ('Postgres pgKind)) ->
     SelPermInfo ('Postgres pgKind) ->
-    m [FieldParser n (QueryDB ('Postgres pgKind) (RemoteRelationshipField UnpreparedValue) (UnpreparedValue ('Postgres pgKind)))]
+    m [FieldParser n (QueryRootField UnpreparedValue)]
   pgkRelayExtension ::
     Maybe (XRelay ('Postgres pgKind))
   pgkNode ::
@@ -113,8 +104,8 @@ instance PostgresSchema 'Vanilla where
   pgkNode = nodePG
 
 instance PostgresSchema 'Citus where
-  pgkBuildTableRelayQueryFields _ _ _ _ _ _ = pure []
-  pgkBuildFunctionRelayQueryFields _ _ _ _ _ _ = pure []
+  pgkBuildTableRelayQueryFields _ _ _ _ _ _ _ _ = pure []
+  pgkBuildFunctionRelayQueryFields _ _ _ _ _ _ _ _ = pure []
   pgkRelayExtension = Nothing
   pgkNode = undefined
 
@@ -129,8 +120,9 @@ instance
   -- top level parsers
   buildTableQueryFields = GSB.buildTableQueryFields
   buildTableRelayQueryFields = pgkBuildTableRelayQueryFields
-  buildTableInsertMutationFields = GSB.buildTableInsertMutationFields backendInsertParser
-  buildTableUpdateMutationFields = GSB.buildTableUpdateMutationFields (\ti updP -> fmap BackendUpdate <$> updateOperators ti updP) -- TODO: https://github.com/hasura/graphql-engine-mono/issues/2955
+  buildTableNonQuerySubscriptionFields = GSB.buildTableNonQuerySubscriptionFields
+  buildTableInsertMutationFields = GSB.buildTableInsertMutationFields
+  buildTableUpdateMutationFields = GSB.buildTableUpdateMutationFields updateOperators
   buildTableDeleteMutationFields = GSB.buildTableDeleteMutationFields
   buildFunctionQueryFields = GSB.buildFunctionQueryFields
   buildFunctionRelayQueryFields = pgkBuildFunctionRelayQueryFields
@@ -138,7 +130,7 @@ instance
 
   -- table components
   tableArguments = defaultTableArgs
-  mkRelationshipParser = GSB.mkDefaultRelationshipParser backendInsertParser ()
+  mkRelationshipParser = GSB.mkDefaultRelationshipParser ()
 
   -- backend extensions
   relayExtension = pgkRelayExtension @pgKind
@@ -146,6 +138,7 @@ instance
 
   -- indivdual components
   columnParser = columnParser
+  conflictObject = GSB.defaultConflictObject ()
   jsonPathArg = jsonPathArg
   orderByOperators = orderByOperators
   comparisonExps = comparisonExps
@@ -157,16 +150,8 @@ instance
   -- SQL literals
   columnDefaultValue = const PG.columnDefaultValue
 
-backendInsertParser ::
-  forall pgKind m r n.
-  MonadBuildSchema ('Postgres pgKind) r m n =>
-  SourceName ->
-  TableInfo ('Postgres pgKind) ->
-  Maybe (SelPermInfo ('Postgres pgKind)) ->
-  Maybe (UpdPermInfo ('Postgres pgKind)) ->
-  m (InputFieldsParser n (PGIR.BackendInsert pgKind (UnpreparedValue ('Postgres pgKind))))
-backendInsertParser sourceName tableInfo selectPerms updatePerms =
-  fmap BackendInsert <$> onConflictFieldParser sourceName tableInfo selectPerms updatePerms
+  -- Extra insert data
+  getExtraInsertData = const ()
 
 ----------------------------------------------------------------
 -- Top level parsers
@@ -175,33 +160,47 @@ buildTableRelayQueryFields ::
   forall pgKind m n r.
   MonadBuildSchema ('Postgres pgKind) r m n =>
   SourceName ->
+  SourceConfig ('Postgres pgKind) ->
+  Maybe QueryTagsConfig ->
   TableName ('Postgres pgKind) ->
   TableInfo ('Postgres pgKind) ->
   G.Name ->
   NESeq (ColumnInfo ('Postgres pgKind)) ->
   SelPermInfo ('Postgres pgKind) ->
-  m [FieldParser n (QueryDB ('Postgres pgKind) (RemoteRelationshipField UnpreparedValue) (UnpreparedValue ('Postgres pgKind)))]
-buildTableRelayQueryFields sourceName tableName tableInfo gqlName pkeyColumns selPerms = do
-  let fieldDesc = Just $ G.Description $ "fetch data from the table: " <>> tableName
+  m [FieldParser n (QueryRootField UnpreparedValue)]
+buildTableRelayQueryFields sourceName sourceInfo queryTagsConfig tableName tableInfo gqlName pkeyColumns selPerms = do
+  let mkRF =
+        RFDB sourceName
+          . AB.mkAnyBackend
+          . SourceConfigWith sourceInfo queryTagsConfig
+          . QDBR
+      fieldDesc = Just $ G.Description $ "fetch data from the table: " <>> tableName
   fieldName <- mkRootFieldName $ gqlName <> $$(G.litName "_connection")
   fmap afold $
-    optionalFieldParser QDBConnection $
+    optionalFieldParser (mkRF . QDBConnection) $
       selectTableConnection sourceName tableInfo fieldName fieldDesc pkeyColumns selPerms
 
 buildFunctionRelayQueryFields ::
   forall pgKind m n r.
   MonadBuildSchema ('Postgres pgKind) r m n =>
   SourceName ->
+  SourceConfig ('Postgres pgKind) ->
+  Maybe QueryTagsConfig ->
   FunctionName ('Postgres pgKind) ->
   FunctionInfo ('Postgres pgKind) ->
   TableName ('Postgres pgKind) ->
   NESeq (ColumnInfo ('Postgres pgKind)) ->
   SelPermInfo ('Postgres pgKind) ->
-  m [FieldParser n (QueryDB ('Postgres pgKind) (RemoteRelationshipField UnpreparedValue) (UnpreparedValue ('Postgres pgKind)))]
-buildFunctionRelayQueryFields sourceName functionName functionInfo tableName pkeyColumns selPerms = do
-  let fieldDesc = Just $ G.Description $ "execute function " <> functionName <<> " which returns " <>> tableName
+  m [FieldParser n (QueryRootField UnpreparedValue)]
+buildFunctionRelayQueryFields sourceName sourceInfo queryTagsConfig functionName functionInfo tableName pkeyColumns selPerms = do
+  let mkRF =
+        RFDB sourceName
+          . AB.mkAnyBackend
+          . SourceConfigWith sourceInfo queryTagsConfig
+          . QDBR
+      fieldDesc = Just $ G.Description $ "execute function " <> functionName <<> " which returns " <>> tableName
   fmap afold $
-    optionalFieldParser QDBConnection $
+    optionalFieldParser (mkRF . QDBConnection) $
       selectFunctionConnection sourceName functionInfo fieldDesc pkeyColumns selPerms
 
 ----------------------------------------------------------------
@@ -232,8 +231,8 @@ columnParser columnType (G.Nullability isNullable) =
         -- not accept strings.
         --
         -- TODO: introduce new dedicated scalars for Postgres column types.
-        name <- mkScalarTypeName scalarType
-        let schemaType = P.NonNullable $ P.TNamed $ P.Definition name Nothing P.TIScalar
+        name <- P.Typename <$> mkScalarTypeName scalarType
+        let schemaType = P.NonNullable $ P.TNamed $ P.mkDefinition name Nothing P.TIScalar
         pure $
           Parser
             { pType = schemaType,
@@ -256,7 +255,7 @@ columnParser columnType (G.Nullability isNullable) =
       | otherwise = id
     mkEnumValue :: (EnumValue, EnumValueInfo) -> (P.Definition P.EnumValueInfo, PGScalarValue)
     mkEnumValue (EnumValue value, EnumValueInfo description) =
-      ( P.Definition value (G.Description <$> description) P.EnumValueInfo,
+      ( P.mkDefinition value (G.Description <$> description) P.EnumValueInfo,
         PGValText $ G.unName value
       )
 
@@ -302,7 +301,7 @@ orderByOperators =
       )
     ]
   where
-    define name desc = P.Definition name (Just desc) P.EnumValueInfo
+    define name desc = P.mkDefinition name (Just desc) P.EnumValueInfo
 
 comparisonExps ::
   forall pgKind m n r.
@@ -332,7 +331,7 @@ comparisonExps = P.memoize 'comparisonExps \columnType -> do
   -- `ltxtquery` represents a full-text-search-like pattern for matching `ltree` values.
   ltxtqueryParser <- columnParser (ColumnScalar PGLtxtquery) (G.Nullability False)
   maybeCastParser <- castExp columnType
-  let name = P.getName typedParser <> $$(G.litName "_comparison_exp")
+  let name = P.Typename $ P.getName typedParser <> $$(G.litName "_comparison_exp")
       desc =
         G.Description $
           "Boolean expression to compare columns of type "
@@ -583,7 +582,7 @@ comparisonExps = P.memoize 'comparisonExps \columnType -> do
         targetName <- mkScalarTypeName targetScalar
         targetOpExps <- comparisonExps $ ColumnScalar targetScalar
         let field = P.fieldOptional targetName Nothing $ (targetScalar,) <$> targetOpExps
-        pure $ P.object sourceName Nothing $ M.fromList . maybeToList <$> field
+        pure $ P.object (P.Typename sourceName) Nothing $ M.fromList . maybeToList <$> field
 
 geographyWithinDistanceInput ::
   forall pgKind m n r.
@@ -600,7 +599,7 @@ geographyWithinDistanceInput = do
   booleanParser <- columnParser (ColumnScalar PGBoolean) (G.Nullability True)
   floatParser <- columnParser (ColumnScalar PGFloat) (G.Nullability False)
   pure $
-    P.object $$(G.litName "st_d_within_geography_input") Nothing $
+    P.object (P.Typename $$(G.litName "st_d_within_geography_input")) Nothing $
       DWithinGeogOp <$> (mkParameter <$> P.field $$(G.litName "distance") Nothing floatParser)
         <*> (mkParameter <$> P.field $$(G.litName "from") Nothing geographyParser)
         <*> (mkParameter <$> P.fieldWithDefault $$(G.litName "use_spheroid") Nothing (G.VBoolean True) booleanParser)
@@ -613,7 +612,7 @@ geometryWithinDistanceInput = do
   geometryParser <- columnParser (ColumnScalar PGGeometry) (G.Nullability False)
   floatParser <- columnParser (ColumnScalar PGFloat) (G.Nullability False)
   pure $
-    P.object $$(G.litName "st_d_within_input") Nothing $
+    P.object (P.Typename $$(G.litName "st_d_within_input")) Nothing $
       DWithinGeomOp <$> (mkParameter <$> P.field $$(G.litName "distance") Nothing floatParser)
         <*> (mkParameter <$> P.field $$(G.litName "from") Nothing geometryParser)
 
@@ -625,7 +624,7 @@ intersectsNbandGeomInput = do
   geometryParser <- columnParser (ColumnScalar PGGeometry) (G.Nullability False)
   integerParser <- columnParser (ColumnScalar PGInteger) (G.Nullability False)
   pure $
-    P.object $$(G.litName "st_intersects_nband_geom_input") Nothing $
+    P.object (P.Typename $$(G.litName "st_intersects_nband_geom_input")) Nothing $
       STIntersectsNbandGeommin <$> (mkParameter <$> P.field $$(G.litName "nband") Nothing integerParser)
         <*> (mkParameter <$> P.field $$(G.litName "geommin") Nothing geometryParser)
 
@@ -637,7 +636,7 @@ intersectsGeomNbandInput = do
   geometryParser <- columnParser (ColumnScalar PGGeometry) (G.Nullability False)
   integerParser <- columnParser (ColumnScalar PGInteger) (G.Nullability False)
   pure $
-    P.object $$(G.litName "st_intersects_geom_nband_input") Nothing $
+    P.object (P.Typename $$(G.litName "st_intersects_geom_nband_input")) Nothing $
       STIntersectsGeomminNband
         <$> (mkParameter <$> P.field $$(G.litName "geommin") Nothing geometryParser)
         <*> (fmap mkParameter <$> P.fieldOptional $$(G.litName "nband") Nothing integerParser)
@@ -647,188 +646,140 @@ mkCountType _ Nothing = PG.CTStar
 mkCountType (Just True) (Just cols) = PG.CTDistinct cols
 mkCountType _ (Just cols) = PG.CTSimple cols
 
--- | Update operator that prepends a value to a column containing jsonb arrays.
---
--- Note: Currently this is Postgres specific because json columns have not been ported
--- to other backends yet.
-prependOp ::
-  forall pgKind m n r.
-  ( BackendSchema ('Postgres pgKind),
-    MonadReader r m,
-    MonadError QErr m,
-    MonadSchema n m,
-    Has MkTypename r
-  ) =>
-  SU.UpdateOperator ('Postgres pgKind) m n (UnpreparedValue ('Postgres pgKind))
-prependOp = SU.UpdateOperator {..}
-  where
-    updateOperatorApplicableColumn = isScalarColumnWhere (== PGJSONB) . pgiType
-
-    updateOperatorParser tableGQLName tableName columns = do
-      let typedParser columnInfo =
-            fmap P.mkParameter
-              <$> BS.columnParser
-                (pgiType columnInfo)
-                (G.Nullability $ pgiIsNullable columnInfo)
-
-          desc = "prepend existing jsonb value of filtered columns with new jsonb value"
-
-      SU.updateOperator
-        tableGQLName
-        $$(G.litName "_prepend")
-        typedParser
-        columns
-        desc
-        desc
-
--- | Update operator that appends a value to a column containing jsonb arrays.
---
--- Note: Currently this is Postgres specific because json columns have not been ported
--- to other backends yet.
-appendOp ::
-  forall pgKind m n r.
-  ( BackendSchema ('Postgres pgKind),
-    MonadReader r m,
-    MonadError QErr m,
-    MonadSchema n m,
-    Has MkTypename r
-  ) =>
-  SU.UpdateOperator ('Postgres pgKind) m n (UnpreparedValue ('Postgres pgKind))
-appendOp = SU.UpdateOperator {..}
-  where
-    updateOperatorApplicableColumn = isScalarColumnWhere (== PGJSONB) . pgiType
-
-    updateOperatorParser tableGQLName tableName columns = do
-      let typedParser columnInfo =
-            fmap P.mkParameter
-              <$> BS.columnParser
-                (pgiType columnInfo)
-                (G.Nullability $ pgiIsNullable columnInfo)
-
-          desc = "append existing jsonb value of filtered columns with new jsonb value"
-      SU.updateOperator
-        tableGQLName
-        $$(G.litName "_append")
-        typedParser
-        columns
-        desc
-        desc
-
--- | Update operator that deletes a value at a specified key from a column
--- containing jsonb objects.
---
--- Note: Currently this is Postgres specific because json columns have not been ported
--- to other backends yet.
-deleteKeyOp ::
-  forall pgKind m n r.
-  ( BackendSchema ('Postgres pgKind),
-    MonadReader r m,
-    MonadError QErr m,
-    MonadSchema n m,
-    Has MkTypename r
-  ) =>
-  SU.UpdateOperator ('Postgres pgKind) m n (UnpreparedValue ('Postgres pgKind))
-deleteKeyOp = SU.UpdateOperator {..}
-  where
-    updateOperatorApplicableColumn = isScalarColumnWhere (== PGJSONB) . pgiType
-
-    updateOperatorParser tableGQLName tableName columns = do
-      let nullableTextParser _ = fmap P.mkParameter <$> columnParser (ColumnScalar PGText) (G.Nullability True)
-          desc = "delete key/value pair or string element. key/value pairs are matched based on their key value"
-
-      SU.updateOperator
-        tableGQLName
-        $$(G.litName "_delete_key")
-        nullableTextParser
-        columns
-        desc
-        desc
-
--- | Update operator that deletes a value at a specific index from a column
--- containing jsonb arrays.
---
--- Note: Currently this is Postgres specific because json columns have not been ported
--- to other backends yet.
-deleteElemOp ::
-  forall pgKind m n r.
-  ( BackendSchema ('Postgres pgKind),
-    MonadReader r m,
-    MonadError QErr m,
-    MonadSchema n m,
-    Has MkTypename r
-  ) =>
-  SU.UpdateOperator ('Postgres pgKind) m n (UnpreparedValue ('Postgres pgKind))
-deleteElemOp = SU.UpdateOperator {..}
-  where
-    updateOperatorApplicableColumn = isScalarColumnWhere (== PGJSONB) . pgiType
-
-    updateOperatorParser tableGQLName tableName columns = do
-      let nonNullableIntParser _ = fmap P.mkParameter <$> columnParser (ColumnScalar PGInteger) (G.Nullability False)
-          desc =
-            "delete the array element with specified index (negative integers count from the end). "
-              <> "throws an error if top level container is not an array"
-
-      SU.updateOperator
-        tableGQLName
-        $$(G.litName "_delete_elem")
-        nonNullableIntParser
-        columns
-        desc
-        desc
-
--- | Update operator that deletes a field at a certan path from a column
--- containing jsonb objects.
---
--- Note: Currently this is Postgres specific because json columns have not been ported
--- to other backends yet.
-deleteAtPathOp ::
-  forall pgKind m n r.
-  ( BackendSchema ('Postgres pgKind),
-    MonadReader r m,
-    MonadError QErr m,
-    MonadSchema n m,
-    Has MkTypename r
-  ) =>
-  SU.UpdateOperator ('Postgres pgKind) m n [UnpreparedValue ('Postgres pgKind)]
-deleteAtPathOp = SU.UpdateOperator {..}
-  where
-    updateOperatorApplicableColumn = isScalarColumnWhere (== PGJSONB) . pgiType
-
-    updateOperatorParser tableGQLName tableName columns = do
-      let nonNullableTextListParser _ = P.list . fmap P.mkParameter <$> columnParser (ColumnScalar PGText) (G.Nullability False)
-          desc = "delete the field or element with specified path (for JSON arrays, negative integers count from the end)"
-
-      SU.updateOperator
-        tableGQLName
-        $$(G.litName "_delete_at_path")
-        nonNullableTextListParser
-        columns
-        desc
-        desc
-
 -- | Various update operators
 updateOperators ::
   forall pgKind m n r.
-  ( MonadParse n,
-    MonadReader r m,
-    Has MkTypename r,
-    MonadError QErr m,
-    MonadSchema n m,
-    BackendSchema ('Postgres pgKind)
-  ) =>
+  (BackendSchema ('Postgres pgKind), MonadSchema n m, MonadTableInfo r m, Has MkTypename r) =>
+  -- | table info
   TableInfo ('Postgres pgKind) ->
+  -- | update permissions of the table
   UpdPermInfo ('Postgres pgKind) ->
-  m (InputFieldsParser n (HashMap (Column ('Postgres pgKind)) (UpdateOpExpression (UnpreparedValue ('Postgres pgKind)))))
-updateOperators tableInfo updatePermissions =
-  SU.buildUpdateOperators
-    (PGIR.UpdateSet <$> SU.presetColumns updatePermissions)
-    [ PGIR.UpdateSet <$> SU.setOp,
-      PGIR.UpdateInc <$> SU.incOp,
-      PGIR.UpdatePrepend <$> prependOp,
-      PGIR.UpdateAppend <$> appendOp,
-      PGIR.UpdateDeleteKey <$> deleteKeyOp,
-      PGIR.UpdateDeleteElem <$> deleteElemOp,
-      PGIR.UpdateDeleteAtPath <$> deleteAtPathOp
-    ]
-    tableInfo
-    updatePermissions
+  m (InputFieldsParser n [(Column ('Postgres pgKind), IR.UpdOpExpG (UnpreparedValue ('Postgres pgKind)))])
+updateOperators tableInfo updatePermissions = do
+  tableGQLName <- getTableGQLName tableInfo
+  columns <- tableUpdateColumns tableInfo updatePermissions
+  let numericCols = onlyNumCols columns
+      jsonCols = onlyJSONBCols columns
+  parsers <-
+    catMaybes
+      <$> sequenceA
+        [ updateOperator
+            tableGQLName
+            $$(G.litName "_set")
+            typedParser
+            IR.UpdSet
+            columns
+            "sets the columns of the filtered rows to the given values"
+            (G.Description $ "input type for updating data in table " <>> tableName),
+          updateOperator
+            tableGQLName
+            $$(G.litName "_inc")
+            typedParser
+            IR.UpdInc
+            numericCols
+            "increments the numeric columns with given value of the filtered values"
+            (G.Description $ "input type for incrementing numeric columns in table " <>> tableName),
+          let desc = "prepend existing jsonb value of filtered columns with new jsonb value"
+           in updateOperator
+                tableGQLName
+                $$(G.litName "_prepend")
+                typedParser
+                IR.UpdPrepend
+                jsonCols
+                desc
+                desc,
+          let desc = "append existing jsonb value of filtered columns with new jsonb value"
+           in updateOperator
+                tableGQLName
+                $$(G.litName "_append")
+                typedParser
+                IR.UpdAppend
+                jsonCols
+                desc
+                desc,
+          let desc = "delete key/value pair or string element. key/value pairs are matched based on their key value"
+           in updateOperator
+                tableGQLName
+                $$(G.litName "_delete_key")
+                nullableTextParser
+                IR.UpdDeleteKey
+                jsonCols
+                desc
+                desc,
+          let desc =
+                "delete the array element with specified index (negative integers count from the end). "
+                  <> "throws an error if top level container is not an array"
+           in updateOperator
+                tableGQLName
+                $$(G.litName "_delete_elem")
+                nonNullableIntParser
+                IR.UpdDeleteElem
+                jsonCols
+                desc
+                desc,
+          let desc = "delete the field or element with specified path (for JSON arrays, negative integers count from the end)"
+           in updateOperator
+                tableGQLName
+                $$(G.litName "_delete_at_path")
+                (fmap P.list . nonNullableTextParser)
+                IR.UpdDeleteAtPath
+                jsonCols
+                desc
+                desc
+        ]
+  let allowedOperators = fst <$> parsers
+  pure $
+    fmap catMaybes (sequenceA $ snd <$> parsers)
+      `P.bindFields` \opExps -> do
+        -- there needs to be at least one operator in the update, even if it is empty
+        let presetColumns = Map.toList $ IR.UpdSet . partialSQLExpToUnpreparedValue <$> upiSet updatePermissions
+        when (null opExps && null presetColumns) $
+          parseError $
+            "at least any one of " <> commaSeparated allowedOperators <> " is expected"
+
+        -- no column should appear twice
+        let flattenedExps = concat opExps
+            erroneousExps = OMap.filter ((> 1) . length) $ OMap.groupTuples flattenedExps
+        unless (OMap.null erroneousExps) $
+          parseError $
+            "column found in multiple operators; "
+              <> T.intercalate
+                ". "
+                [ dquote columnName <> " in " <> commaSeparated (IR.updateOperatorText <$> ops)
+                  | (columnName, ops) <- OMap.toList erroneousExps
+                ]
+
+        pure $ presetColumns <> flattenedExps
+  where
+    tableName = tableInfoName tableInfo
+    typedParser columnInfo = fmap P.mkParameter <$> columnParser (pgiType columnInfo) (G.Nullability $ pgiIsNullable columnInfo)
+    nonNullableTextParser _ = fmap P.mkParameter <$> columnParser (ColumnScalar PGText) (G.Nullability False)
+    nullableTextParser _ = fmap P.mkParameter <$> columnParser (ColumnScalar PGText) (G.Nullability True)
+    nonNullableIntParser _ = fmap P.mkParameter <$> columnParser (ColumnScalar PGInteger) (G.Nullability False)
+
+    onlyJSONBCols = filter (isScalarColumnWhere (== PGJSONB) . pgiType)
+
+    updateOperator ::
+      G.Name ->
+      G.Name ->
+      (ColumnInfo b -> m (Parser 'Both n a)) ->
+      (a -> IR.UpdOpExpG (UnpreparedValue b)) ->
+      [ColumnInfo b] ->
+      G.Description ->
+      G.Description ->
+      m (Maybe (Text, InputFieldsParser n (Maybe [(Column b, IR.UpdOpExpG (UnpreparedValue b))])))
+    updateOperator tableGQLName opName mkParser updOpExp columns opDesc objDesc =
+      whenMaybe (not $ null columns) do
+        fields <- for columns \columnInfo -> do
+          let fieldName = pgiName columnInfo
+              fieldDesc = pgiDescription columnInfo
+          fieldParser <- mkParser columnInfo
+          pure $
+            P.fieldOptional fieldName fieldDesc fieldParser
+              `mapField` \value -> (pgiColumn columnInfo, updOpExp value)
+        objName <- P.mkTypename $ tableGQLName <> opName <> $$(G.litName "_input")
+        pure $
+          (G.unName opName,) $
+            P.fieldOptional opName (Just opDesc) $
+              P.object objName (Just objDesc) $
+                catMaybes <$> sequenceA fields

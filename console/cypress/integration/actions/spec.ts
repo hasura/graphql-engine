@@ -1,23 +1,11 @@
-import { baseUrl, getElementFromClassName } from '../../helpers/dataHelpers';
+import {
+  baseUrl,
+  getElementFromAlias,
+  getElementFromClassName,
+} from '../../helpers/dataHelpers';
 import { setPromptValue } from '../../helpers/common';
 import { AWAIT_LONG, AWAIT_SHORT } from '../../helpers/constants';
 import { getTimeoutSeconds } from '../../helpers/eventHelpers';
-import {
-  toggleRequestTransformSection,
-  togglePayloadTransformSection,
-  typeIntoRequestQueryParams,
-  typeIntoRequestUrl,
-  typeIntoTransformBody,
-  checkTransformRequestUrlError,
-  checkTransformRequestBodyError,
-  checkTransformRequestUrlPreview,
-  clearPayloadTransformBody,
-  clearRequestUrl,
-  toggleContextArea,
-  typeIntoContextAreaEnvVars,
-} from '../../helpers/webhookTransformHelpers';
-
-const ACTION_REQUEST_BODY_TRANSFORM_TEXTAREA = 4;
 
 const statements = {
   createMutationActionText: `type Mutation {
@@ -53,8 +41,7 @@ const statements = {
       accessToken: String!
     }
   `,
-  createTransformEnvHandler: '{{MY_WEBHOOK}}',
-  createTransformHandler: 'https://hasura-actions-demo.glitch.me',
+  createTransformHandler: 'https://hasura-actions-demo.glitch.me/login',
   createTransformIncorrectPayloadBody: `
   {
     "userInfo": {
@@ -91,7 +78,22 @@ const clearActionTypes = () => {
 };
 
 const clearHandler = () => {
-  cy.getBySel('action-create-handler-input').type('{selectall}{backspace}', {
+  cy.get(
+    getElementFromAlias('action-create-handler-input')
+  ).type('{selectall}{backspace}', { force: true });
+};
+
+const clearRequestUrl = () => {
+  cy.get(
+    getElementFromAlias('transform-requestUrl')
+  ).type('{selectall}{backspace}', { force: true });
+};
+
+const clearPayloadTransformBody = () => {
+  cy.get('textarea').eq(4).type('{selectall}', { force: true });
+  cy.get('textarea').eq(4).trigger('keydown', {
+    keyCode: 46,
+    which: 46,
     force: true,
   });
 };
@@ -105,22 +107,88 @@ const typeIntoActionTypes = (content: string) => {
 };
 
 const typeIntoHandler = (content: string) => {
-  cy.getBySel('action-create-handler-input').type(content, {
+  cy.get(getElementFromAlias('action-create-handler-input')).type(content, {
     force: true,
-    parseSpecialCharSequences: false,
   });
 };
 
 const clickOnCreateAction = () => {
-  cy.getBySel('create-action-btn').scrollIntoView();
+  cy.get(getElementFromAlias('create-action-btn'))
+    .scrollIntoView();
   // hard await before accessing the element
   cy.wait(AWAIT_SHORT);
 
-  cy.getBySel('create-action-btn').click({ force: true });
+  cy.get(getElementFromAlias('create-action-btn')).click({ force: true });
   cy.wait(AWAIT_SHORT);
   cy.get('.notification', { timeout: AWAIT_LONG })
     .should('be.visible')
     .and('contain', 'Created action successfully');
+};
+
+const togglePayloadTransformSection = () => {
+  cy.get(getElementFromAlias('toggle-payload-transform')).click({
+    force: true,
+  });
+};
+
+const typeIntoTransformBody = (content: string) => {
+  cy.get('textarea')
+    .eq(4)
+    .type(content, { force: true, parseSpecialCharSequences: false });
+};
+
+const typeIntoRequestUrl = (content: string) => {
+  cy.get(getElementFromAlias('transform-requestUrl')).type(content, {
+    parseSpecialCharSequences: false,
+  });
+};
+
+const typeIntoRequestQueryParams = () => {
+  cy.get(getElementFromAlias('transform-kv-key-0')).type('id');
+  cy.get(getElementFromAlias('transform-kv-value-0')).type('5');
+  cy.get(getElementFromAlias('transform-kv-key-1')).type('name');
+  cy.get(
+    getElementFromAlias('transform-kv-value-1')
+  ).type('{{$body.action.name}}', { parseSpecialCharSequences: false });
+};
+
+const checkTransformRequestUrlError = (exists: boolean, error?: string) => {
+  if (exists) {
+    if (error) {
+      cy.get(getElementFromAlias('transform-requestUrl-error'))
+        .should('exist')
+        .and('contain', error);
+    } else {
+      cy.get(getElementFromAlias('transform-requestUrl-error')).should('exist');
+    }
+  } else {
+    cy.get(getElementFromAlias('transform-requestUrl-error')).should(
+      'not.exist'
+    );
+  }
+};
+
+const checkTransformRequestBodyError = (exists: boolean) => {
+  if (exists) {
+    cy.get(getElementFromAlias('transform-requestBody-error')).should('exist');
+  } else {
+    cy.get(getElementFromAlias('transform-requestBody-error')).should(
+      'not.exist'
+    );
+  }
+};
+
+const checkTransformRequestUrlPreview = (previewText: string) => {
+  cy.get(getElementFromAlias('transform-requestUrl-preview')).should(
+    'have.value',
+    previewText
+  );
+};
+
+const toggleRequestTransformSection = () => {
+  cy.get(getElementFromAlias('toggle-request-transform')).click({
+    force: true,
+  });
 };
 
 export const routeToGraphiql = () => {
@@ -130,7 +198,7 @@ export const routeToGraphiql = () => {
 
 export const createMutationAction = () => {
   // Click on create
-  cy.getBySel('data-create-actions').click();
+  cy.get(getElementFromAlias('data-create-actions')).click();
   cy.intercept('*', req => {
     // send all other requests to the destination server
     req.reply();
@@ -147,10 +215,15 @@ export const createMutationAction = () => {
   clearHandler();
   // type into handler
   typeIntoHandler(statements.createMutationHandler);
-  cy.getBySel('action-timeout-seconds').clear().type(getTimeoutSeconds());
+  cy.get(getElementFromAlias('action-timeout-seconds'))
+    .clear()
+    .type(getTimeoutSeconds());
   // click to create action
   clickOnCreateAction();
-  cy.getBySel('action-timeout-seconds').should('have.value', '25');
+  cy.get(getElementFromAlias('action-timeout-seconds')).should(
+    'have.value',
+    '25'
+  );
 };
 
 export const verifyMutation = () => {
@@ -189,30 +262,33 @@ export const modifyMutationAction = () => {
   clearHandler();
   typeIntoHandler(statements.changeHandlerText);
 
-  cy.getBySel('action-timeout-seconds').type('{selectall}', {
+  cy.get(getElementFromAlias('action-timeout-seconds')).type('{selectall}', {
     force: true,
   });
-  cy.getBySel('action-timeout-seconds').clear().type('50');
-  cy.getBySel('save-modify-action-changes').click();
+  cy.get(getElementFromAlias('action-timeout-seconds')).clear().type('50');
+  cy.get(getElementFromAlias('save-modify-action-changes')).click();
   cy.get('.notification', { timeout: AWAIT_LONG })
     .should('be.visible')
     .and('contain', 'Action saved successfully');
-  cy.getBySel('action-timeout-seconds').should('have.value', '50');
+  cy.get(getElementFromAlias('action-timeout-seconds')).should(
+    'have.value',
+    '50'
+  );
 
   // permissions part
-  cy.getBySel('actions-permissions').click();
+  cy.get(getElementFromAlias('actions-permissions')).click();
 
-  cy.getBySel('role-textbox').type('hakuna_matata');
+  cy.get(getElementFromAlias('role-textbox')).type('hakuna_matata');
 
-  cy.getBySel('hakuna_matata-Permission').click();
-  cy.getBySel('save-permissions-for-action').click();
+  cy.get(getElementFromAlias('hakuna_matata-Permission')).click();
+  cy.get(getElementFromAlias('save-permissions-for-action')).click();
 
-  cy.getBySel('actions-modify').click();
+  cy.get(getElementFromAlias('actions-modify')).click();
 };
 
 const deleteAction = (promptValue: string) => {
   setPromptValue(promptValue);
-  cy.getBySel('delete-action').click();
+  cy.get(getElementFromAlias('delete-action')).click();
   cy.window().its('prompt').should('be.called');
 };
 
@@ -230,7 +306,7 @@ export const createQueryAction = () => {
     `${baseUrl}/actions/manage/actions`
   );
   // Click on create
-  cy.getBySel('data-create-actions').click();
+  cy.get(getElementFromAlias('data-create-actions')).click();
   // Clear default text on
   clearActionDef();
   // type statement
@@ -275,24 +351,24 @@ export const modifyQueryAction = () => {
   clearHandler();
   typeIntoHandler(statements.changeHandlerText);
 
-  cy.getBySel('save-modify-action-changes').click();
+  cy.get(getElementFromAlias('save-modify-action-changes')).click();
 
   // permissions part
-  cy.getBySel('actions-permissions').click();
+  cy.get(getElementFromAlias('actions-permissions')).click();
 
-  cy.getBySel('role-textbox').type('MANAGER');
+  cy.get(getElementFromAlias('role-textbox')).type('MANAGER');
 
-  cy.getBySel('MANAGER-Permission').click();
-  cy.getBySel('save-permissions-for-action').click();
+  cy.get(getElementFromAlias('MANAGER-Permission')).click();
+  cy.get(getElementFromAlias('save-permissions-for-action')).click();
 
-  cy.getBySel('actions-modify').click();
+  cy.get(getElementFromAlias('actions-modify')).click();
 };
 
 export const deleteQueryAction = () => deleteAction('addNumbers');
 
 export const createActionTransform = () => {
   // Click on create
-  cy.getBySel('data-create-actions').click();
+  cy.get(getElementFromAlias('data-create-actions')).click();
   // Clear default text on
   clearActionDef();
   // type statement
@@ -301,40 +377,22 @@ export const createActionTransform = () => {
   clearActionTypes();
   // type the action type text
   typeIntoActionTypes(statements.createTransformCustomType);
-  cy.getBySel('action-timeout-seconds').clear().type(getTimeoutSeconds());
+  cy.get(getElementFromAlias('action-timeout-seconds'))
+    .clear()
+    .type(getTimeoutSeconds());
   // open request transform section
   toggleRequestTransformSection();
-  cy.wait(AWAIT_SHORT);
-  cy.getBySel('transform-POST').click();
+  cy.get(getElementFromAlias('transform-POST')).click();
 
   // give correct body without webhook handler
   clearHandler();
-  typeIntoRequestUrl('users');
-  cy.wait(AWAIT_SHORT);
+  typeIntoRequestUrl('{{$base_url}}');
+  cy.wait(1500);
   // check for error
   checkTransformRequestUrlError(
     true,
     'Please configure your webhook handler to generate request url transform'
   );
-
-  // give correct body with env var
-  clearHandler();
-  typeIntoHandler(statements.createTransformEnvHandler);
-  // give body without specifying env var
-  clearRequestUrl();
-  typeIntoRequestUrl('/users');
-  cy.wait(AWAIT_SHORT);
-  // check for error
-  checkTransformRequestUrlError(true);
-
-  // add env var in context area
-  toggleContextArea();
-  typeIntoContextAreaEnvVars([
-    { key: 'MY_WEBHOOK', value: 'https://handler.com' },
-  ]);
-  // check there is no error and preview works fine
-  checkTransformRequestUrlError(false);
-  checkTransformRequestUrlPreview('https://handler.com/users');
 
   // clear handler
   clearHandler();
@@ -344,18 +402,15 @@ export const createActionTransform = () => {
   // give incorrect body
   clearRequestUrl();
   typeIntoRequestUrl('{{$url}}/users');
-  cy.wait(AWAIT_SHORT);
+  cy.wait(1500);
   // check for error
   checkTransformRequestUrlError(true);
 
   // give correct body
   clearRequestUrl();
-  typeIntoRequestUrl('/{{$body.action.name}}');
-  typeIntoRequestQueryParams([
-    { key: 'id', value: '5' },
-    { key: 'name', value: '{{$body.action.name}}' },
-  ]);
-  cy.wait(AWAIT_SHORT);
+  typeIntoRequestUrl('{{$base_url}}');
+  typeIntoRequestQueryParams();
+  cy.wait(1500);
   // check there is no error
   checkTransformRequestUrlError(false);
   // check the preview is correctly shown
@@ -367,21 +422,15 @@ export const createActionTransform = () => {
   togglePayloadTransformSection();
 
   // give incorrect body
-  clearPayloadTransformBody(ACTION_REQUEST_BODY_TRANSFORM_TEXTAREA);
-  typeIntoTransformBody(
-    statements.createTransformIncorrectPayloadBody,
-    ACTION_REQUEST_BODY_TRANSFORM_TEXTAREA
-  );
-  cy.wait(AWAIT_SHORT);
+  clearPayloadTransformBody();
+  typeIntoTransformBody(statements.createTransformIncorrectPayloadBody);
+  cy.wait(1500);
   checkTransformRequestBodyError(true);
 
   // give correct body
-  clearPayloadTransformBody(ACTION_REQUEST_BODY_TRANSFORM_TEXTAREA);
-  typeIntoTransformBody(
-    statements.createTransformPayloadBody,
-    ACTION_REQUEST_BODY_TRANSFORM_TEXTAREA
-  );
-  cy.wait(AWAIT_SHORT);
+  clearPayloadTransformBody();
+  typeIntoTransformBody(statements.createTransformPayloadBody);
+  cy.wait(1500);
   checkTransformRequestBodyError(false);
 
   // click to create action
@@ -390,7 +439,10 @@ export const createActionTransform = () => {
     req.reply();
   });
   clickOnCreateAction();
-  cy.getBySel('action-timeout-seconds').should('have.value', '25');
+  cy.get(getElementFromAlias('action-timeout-seconds')).should(
+    'have.value',
+    '25'
+  );
 };
 
 export const modifyActionTransform = () => {
@@ -399,16 +451,15 @@ export const modifyActionTransform = () => {
     'eq',
     `${baseUrl}/actions/manage/login/modify`
   );
-  cy.getBySel('transform-GET').click();
-  cy.getBySel('transform-requestUrl')
+  toggleRequestTransformSection();
+  cy.get(getElementFromAlias('transform-GET')).click();
+  cy.get(getElementFromAlias('transform-requestUrl'))
     .clear()
-    .type('/{{$body.action.name}}/actions', {
-      parseSpecialCharSequences: false,
-    });
-  cy.getBySel('transform-query-params-kv-remove-button-0').click();
+    .type('{{$base_url}}/actions', { parseSpecialCharSequences: false });
+  cy.get(getElementFromAlias('transform-kv-remove-button-0')).click();
   togglePayloadTransformSection();
 
-  cy.getBySel('save-modify-action-changes').click();
+  cy.get(getElementFromAlias('save-modify-action-changes')).click();
   cy.get('.notification', { timeout: AWAIT_LONG })
     .should('be.visible')
     .and('contain', 'Action saved successfully');

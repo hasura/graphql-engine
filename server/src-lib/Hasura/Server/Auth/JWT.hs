@@ -383,7 +383,7 @@ processJwt = processJwt_ processAuthZOrCookieHeader jcxHeader
 processJwt_ ::
   (MonadError QErr m) =>
   -- | mock 'processAuthZOrCookieHeader'
-  (_JWTCtx -> BLC.ByteString -> m (Maybe (ClaimsMap, Maybe UTCTime))) ->
+  (_JWTCtx -> BLC.ByteString -> m (ClaimsMap, Maybe UTCTime)) ->
   (_JWTCtx -> JWTHeader) ->
   _JWTCtx ->
   HTTP.RequestHeaders ->
@@ -401,25 +401,26 @@ processJwt_ processAuthZOrCookieHeader_ fGetHeaderType jwtCtx headers mUnAuthRol
       find (\(headerName, _) -> headerName == CI.mk expectedHeader) headers
 
     withAuthZHeader (_, authzHeader) = do
-      claimsMapTuple <- processAuthZOrCookieHeader_ jwtCtx (BL.fromStrict authzHeader)
+      (claimsMap, expTimeM) <- processAuthZOrCookieHeader_ jwtCtx $ BL.fromStrict authzHeader
 
-      case claimsMapTuple of
-        Nothing -> withoutAuthZHeader
-        Just (claimsMap, expTimeM) -> do
-          HasuraClaims allowedRoles defaultRole <- parseHasuraClaims claimsMap
-          let requestedRole = fromMaybe defaultRole $ getRequestHeader userRoleHeader headers >>= mkRoleName . bsToTxt
+      HasuraClaims allowedRoles defaultRole <- parseHasuraClaims claimsMap
+      -- see if there is a x-hasura-role header, or else pick the default role.
+      -- The role returned is unauthenticated at this point:
+      let requestedRole =
+            fromMaybe defaultRole $
+              getRequestHeader userRoleHeader headers >>= mkRoleName . bsToTxt
 
-          when (requestedRole `notElem` allowedRoles) $
-            throw400 AccessDenied "Your requested role is not in allowed roles"
-          let finalClaims =
-                Map.delete defaultRoleClaim . Map.delete allowedRolesClaim $ claimsMap
+      when (requestedRole `notElem` allowedRoles) $
+        throw400 AccessDenied "Your requested role is not in allowed roles"
+      let finalClaims =
+            Map.delete defaultRoleClaim . Map.delete allowedRolesClaim $ claimsMap
 
-          let finalClaimsObject = mapKeys sessionVariableToText finalClaims
-          metadata <- parseJwtClaim (J.Object $ finalClaimsObject) "x-hasura-* claims"
-          userInfo <-
-            mkUserInfo (URBPreDetermined requestedRole) UAdminSecretNotSent $
-              mkSessionVariablesText metadata
-          pure (userInfo, expTimeM, [])
+      let finalClaimsObject = mapKeys sessionVariableToText finalClaims
+      metadata <- parseJwtClaim (J.Object $ finalClaimsObject) "x-hasura-* claims"
+      userInfo <-
+        mkUserInfo (URBPreDetermined requestedRole) UAdminSecretNotSent $
+          mkSessionVariablesText metadata
+      pure (userInfo, expTimeM, [])
 
     withoutAuthZHeader = do
       unAuthRole <- onNothing mUnAuthRole missingAuthzHeader
@@ -433,7 +434,7 @@ processJwt_ processAuthZOrCookieHeader_ fGetHeaderType jwtCtx headers mUnAuthRol
             "Missing " <> bsToTxt expectedHeader <> " header in JWT authentication mode"
 
 -- | Parse and verify the 'Authorization' or 'Cookie' header (depending upon
--- the `jcHeader` value of the `JWTConfig`), returning either Nothing or the raw claims
+-- the `jcHeader` value of the `JWTConfig`), returning the raw claims
 -- object, and the expiration, if any.
 processAuthZOrCookieHeader ::
   ( MonadIO m,
@@ -441,27 +442,22 @@ processAuthZOrCookieHeader ::
   ) =>
   JWTCtx ->
   BLC.ByteString ->
-  -- The "Maybe" in "m (Maybe (...))" covers the case where the
-  -- requested Cookie name is not present (returns "m Nothing")
-  m (Maybe (ClaimsMap, Maybe UTCTime))
+  m (ClaimsMap, Maybe UTCTime)
 processAuthZOrCookieHeader jwtCtx authzHeader = do
   -- try to parse JWT token from Authorization or Cookie header
   jwt <-
     case jcxHeader jwtCtx of
-      JHAuthorization -> Just <$> parseAuthzHeader
+      JHAuthorization -> parseAuthzHeader
       JHCookie cName -> parseCookieHeader cName
 
   -- verify the JWT
-  case jwt of
-    Nothing -> pure Nothing
-    Just jwt' -> do
-      claims <- liftJWTError invalidJWTError $ verifyJwt jwtCtx $ RawJWT jwt'
+  claims <- liftJWTError invalidJWTError $ verifyJwt jwtCtx $ RawJWT jwt
 
-      let expTimeM = fmap (\(Jose.NumericDate t) -> t) $ claims ^. Jose.claimExp
+  let expTimeM = fmap (\(Jose.NumericDate t) -> t) $ claims ^. Jose.claimExp
 
-      claimsObject <- parseClaimsMap claims claimsConfig
+  claimsObject <- parseClaimsMap claims claimsConfig
 
-      pure $ Just (claimsObject, expTimeM)
+  pure $ (claimsObject, expTimeM)
   where
     claimsConfig = jcxClaims jwtCtx
     parseAuthzHeader = do
@@ -473,7 +469,7 @@ processAuthZOrCookieHeader jwtCtx authzHeader = do
     parseCookieHeader cName = do
       let cookies = Spock.parseCookies $ BL.toStrict authzHeader
           jwtCookie = snd <$> find (\(hn, _) -> hn == cName) cookies
-      pure $ BL.fromStrict . txtToBs <$> jwtCookie
+      BL.fromStrict . txtToBs <$> (onNothing jwtCookie (malformedCookieHeader cName))
 
     liftJWTError :: (MonadError e' m) => (e -> e') -> ExceptT e m a -> m a
     liftJWTError ef action = do
@@ -485,6 +481,9 @@ processAuthZOrCookieHeader jwtCtx authzHeader = do
 
     malformedAuthzHeader =
       throw400 InvalidHeaders "Malformed Authorization header"
+
+    malformedCookieHeader c =
+      throw400 InvalidHeaders $ "Could not find " <> c <> " in Cookie header"
 
 -- | parse the claims map from the JWT token or custom claims from the JWT config
 parseClaimsMap ::

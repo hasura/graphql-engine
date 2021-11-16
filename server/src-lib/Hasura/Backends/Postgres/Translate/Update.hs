@@ -3,13 +3,11 @@ module Hasura.Backends.Postgres.Translate.Update
   )
 where
 
-import Data.HashMap.Strict qualified as Map
 import Hasura.Backends.Postgres.SQL.DML qualified as S
 import Hasura.Backends.Postgres.SQL.Types
 import Hasura.Backends.Postgres.Translate.BoolExp
 import Hasura.Backends.Postgres.Translate.Insert
 import Hasura.Backends.Postgres.Translate.Returning
-import Hasura.Backends.Postgres.Types.Update
 import Hasura.Prelude
 import Hasura.RQL.IR.Update
 import Hasura.RQL.Types
@@ -17,9 +15,9 @@ import Hasura.SQL.Types
 
 mkUpdateCTE ::
   Backend ('Postgres pgKind) =>
-  AnnotatedUpdate ('Postgres pgKind) ->
+  AnnUpd ('Postgres pgKind) ->
   S.CTE
-mkUpdateCTE (AnnotatedUpdateG tn (permFltr, wc) chk (BackendUpdate opExps) _ columnsInfo) =
+mkUpdateCTE (AnnUpd tn opExps (permFltr, wc) chk _ columnsInfo) =
   S.CTEUpdate update
   where
     update =
@@ -29,21 +27,21 @@ mkUpdateCTE (AnnotatedUpdateG tn (permFltr, wc) chk (BackendUpdate opExps) _ col
         $ [ S.selectStar,
             asCheckErrorExtractor $ insertCheckConstraint checkExpr
           ]
-    setExp = S.SetExp $ map (expandOperator columnsInfo) (Map.toList opExps)
+    setExp = S.SetExp $ map (expandOperator columnsInfo) opExps
     tableFltr = Just $ S.WhereFrag tableFltrExpr
     tableFltrExpr = toSQLBoolExp (S.QualTable tn) $ andAnnBoolExps permFltr wc
     checkExpr = toSQLBoolExp (S.QualTable tn) chk
 
-expandOperator :: [ColumnInfo ('Postgres pgKind)] -> (PGCol, UpdateOpExpression S.SQLExp) -> S.SetExpItem
+expandOperator :: [ColumnInfo ('Postgres pgKind)] -> (PGCol, UpdOpExpG S.SQLExp) -> S.SetExpItem
 expandOperator infos (column, op) = S.SetExpItem $
   (column,) $ case op of
-    UpdateSet e -> e
-    UpdateInc e -> S.mkSQLOpExp S.incOp identifier (asNum e)
-    UpdateAppend e -> S.mkSQLOpExp S.jsonbConcatOp identifier (asJSON e)
-    UpdatePrepend e -> S.mkSQLOpExp S.jsonbConcatOp (asJSON e) identifier
-    UpdateDeleteKey e -> S.mkSQLOpExp S.jsonbDeleteOp identifier (asText e)
-    UpdateDeleteElem e -> S.mkSQLOpExp S.jsonbDeleteOp identifier (asInt e)
-    UpdateDeleteAtPath a -> S.mkSQLOpExp S.jsonbDeleteAtPathOp identifier (asArray a)
+    UpdSet e -> e
+    UpdInc e -> S.mkSQLOpExp S.incOp identifier (asNum e)
+    UpdAppend e -> S.mkSQLOpExp S.jsonbConcatOp identifier (asJSON e)
+    UpdPrepend e -> S.mkSQLOpExp S.jsonbConcatOp (asJSON e) identifier
+    UpdDeleteKey e -> S.mkSQLOpExp S.jsonbDeleteOp identifier (asText e)
+    UpdDeleteElem e -> S.mkSQLOpExp S.jsonbDeleteOp identifier (asInt e)
+    UpdDeleteAtPath a -> S.mkSQLOpExp S.jsonbDeleteAtPathOp identifier (asArray a)
   where
     identifier = S.SEIdentifier $ toIdentifier column
     asInt e = S.SETyAnn e S.intTypeAnn

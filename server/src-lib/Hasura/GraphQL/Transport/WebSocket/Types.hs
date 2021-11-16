@@ -23,7 +23,6 @@ import Hasura.RQL.Types
 import Hasura.Server.Cors
 import Hasura.Server.Init.Config (KeepAliveDelay (..))
 import Hasura.Server.Metrics (ServerMetrics (..))
-import Hasura.Server.Types (ReadOnlyMode (..))
 import Hasura.Session
 import Network.HTTP.Client qualified as H
 import Network.HTTP.Types qualified as H
@@ -76,7 +75,6 @@ data WSServerEnv = WSServerEnv
     _wseHManager :: !H.Manager,
     _wseCorsPolicy :: !CorsPolicy,
     _wseSQLCtx :: !SQLGenCtx,
-    _wseReadOnlyMode :: ReadOnlyMode,
     _wseServer :: !WSServer,
     _wseEnableAllowlist :: !Bool,
     _wseKeepAliveDelay :: !KeepAliveDelay,

@@ -60,10 +60,8 @@ window.hdocs = (function () {
     },
     saTrack: function (label) {
       window.analytics = window.analytics || [];
-      window.analytics.track("click", {
-        category: 'docs',
-        action: 'click',
-        label: 'Clicked ' + label,
+      window.analytics.track("Clicked " + label, {
+        category: 'Docs Custom',
         placement: 'header',
       })
     },

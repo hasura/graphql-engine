@@ -17,38 +17,37 @@ import Hasura.RQL.Types
 
 buildActionQueryFields ::
   MonadBuildSchema ('Postgres 'Vanilla) r m n =>
-  AnnotatedCustomTypes ->
+  NonObjectTypeMap ->
   ActionInfo ->
   m [FieldParser n (QueryRootField UnpreparedValue)]
-buildActionQueryFields customTypes actionInfo =
+buildActionQueryFields nonObjectCustomTypes actionInfo =
   maybeToList <$> case _adType (_aiDefinition actionInfo) of
     ActionQuery ->
-      fmap (fmap (RFAction . AQQuery)) <$> actionExecute customTypes actionInfo
+      fmap (fmap (RFAction . AQQuery)) <$> actionExecute nonObjectCustomTypes actionInfo
     ActionMutation ActionSynchronous -> pure Nothing
     ActionMutation ActionAsynchronous ->
-      fmap (fmap (RFAction . AQAsync)) <$> actionAsyncQuery (_actObjects customTypes) actionInfo
+      fmap (fmap (RFAction . AQAsync)) <$> actionAsyncQuery actionInfo
 
 buildActionMutationFields ::
   MonadBuildSchema ('Postgres 'Vanilla) r m n =>
-  AnnotatedCustomTypes ->
+  NonObjectTypeMap ->
   ActionInfo ->
   m [FieldParser n (MutationRootField UnpreparedValue)]
-buildActionMutationFields customTypes actionInfo =
+buildActionMutationFields nonObjectCustomTypes actionInfo =
   maybeToList <$> case _adType (_aiDefinition actionInfo) of
     ActionQuery -> pure Nothing
     ActionMutation ActionSynchronous ->
-      fmap (fmap (RFAction . AMSync)) <$> actionExecute customTypes actionInfo
+      fmap (fmap (RFAction . AMSync)) <$> actionExecute nonObjectCustomTypes actionInfo
     ActionMutation ActionAsynchronous ->
-      fmap (fmap (RFAction . AMAsync)) <$> actionAsyncMutation (_actNonObjects customTypes) actionInfo
+      fmap (fmap (RFAction . AMAsync)) <$> actionAsyncMutation nonObjectCustomTypes actionInfo
 
 buildActionSubscriptionFields ::
   MonadBuildSchema ('Postgres 'Vanilla) r m n =>
-  AnnotatedCustomTypes ->
   ActionInfo ->
   m [FieldParser n (QueryRootField UnpreparedValue)]
-buildActionSubscriptionFields customTypes actionInfo =
+buildActionSubscriptionFields actionInfo =
   maybeToList <$> case _adType (_aiDefinition actionInfo) of
     ActionQuery -> pure Nothing
     ActionMutation ActionSynchronous -> pure Nothing
     ActionMutation ActionAsynchronous ->
-      fmap (fmap (RFAction . AQAsync)) <$> actionAsyncQuery (_actObjects customTypes) actionInfo
+      fmap (fmap (RFAction . AQAsync)) <$> actionAsyncQuery actionInfo

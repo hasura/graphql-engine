@@ -44,11 +44,12 @@ module Hasura.RQL.Types.SchemaCache
     ViewInfo (..),
     isMutable,
     IntrospectionResult (..),
-    ParsedIntrospectionG (..),
-    ParsedIntrospection,
+    ParsedIntrospection (..),
     RemoteSchemaCustomizer (..),
     remoteSchemaCustomizeTypeName,
     remoteSchemaCustomizeFieldName,
+    remoteSchemaDecustomizeTypeName,
+    remoteSchemaDecustomizeFieldName,
     RemoteSchemaCtx (..),
     rscName,
     rscInfo,
@@ -125,7 +126,6 @@ import Database.PG.Query qualified as Q
 import Hasura.Backends.Postgres.Connection qualified as PG
 import Hasura.Base.Error
 import Hasura.GraphQL.Context (GQLContext, RoleContext)
-import Hasura.GraphQL.Namespace
 import Hasura.GraphQL.Parser qualified as P
 import Hasura.Incremental
   ( Cacheable,
@@ -149,7 +149,7 @@ import Hasura.RQL.Types.GraphqlSchemaIntrospection
 import Hasura.RQL.Types.Metadata.Object
 import Hasura.RQL.Types.Network (TlsAllow)
 import Hasura.RQL.Types.QueryCollection
-import Hasura.RQL.Types.Relationships.Local
+import Hasura.RQL.Types.Relationship
 import Hasura.RQL.Types.RemoteSchema
 import Hasura.RQL.Types.ScheduledTrigger
 import Hasura.RQL.Types.SchemaCacheTypes
@@ -220,13 +220,11 @@ data IntrospectionResult = IntrospectionResult
 
 instance Cacheable IntrospectionResult
 
-data ParsedIntrospectionG m = ParsedIntrospection
-  { piQuery :: [P.FieldParser m (NamespacedField RemoteField)],
-    piMutation :: Maybe [P.FieldParser m (NamespacedField RemoteField)],
-    piSubscription :: Maybe [P.FieldParser m (NamespacedField RemoteField)]
+data ParsedIntrospection = ParsedIntrospection
+  { piQuery :: [P.FieldParser (P.ParseT Identity) RemoteField],
+    piMutation :: Maybe [P.FieldParser (P.ParseT Identity) RemoteField],
+    piSubscription :: Maybe [P.FieldParser (P.ParseT Identity) RemoteField]
   }
-
-type ParsedIntrospection = ParsedIntrospectionG (P.ParseT Identity)
 
 -- | See 'fetchRemoteSchema'.
 data RemoteSchemaCtx = RemoteSchemaCtx

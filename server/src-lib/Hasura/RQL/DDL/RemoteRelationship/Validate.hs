@@ -2,7 +2,7 @@
 
 -- | Validate input queries against remote schemas.
 module Hasura.RQL.DDL.RemoteRelationship.Validate
-  ( validateSourceToSchemaRelationship,
+  ( validateRemoteSchemaRelationship,
     errorToText,
   )
 where
@@ -15,8 +15,7 @@ import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.ComputedField
-import Hasura.RQL.Types.Relationships.FromSource
-import Hasura.RQL.Types.Relationships.ToSchema
+import Hasura.RQL.Types.RemoteRelationship
 import Hasura.RQL.Types.RemoteSchema
 import Hasura.RQL.Types.SchemaCache
 import Hasura.SQL.Backend
@@ -101,22 +100,22 @@ errorToText = \case
       <> " so columns of such type cannot be used in a remote schema mapping "
 
 -- | Validate a remote schema relationship given a context.
-validateSourceToSchemaRelationship ::
+validateRemoteSchemaRelationship ::
   forall b m.
   (Backend b, MonadError (ValidationError b) m) =>
-  ToSchemaRelationshipDef ->
+  RemoteSchemaRelationshipDef ->
   TableName b ->
-  RelName ->
+  RemoteRelationshipName ->
   SourceName ->
   (RemoteSchemaInfo, IntrospectionResult) ->
   FieldInfoMap (FieldInfo b) ->
   m (RemoteSchemaFieldInfo b)
-validateSourceToSchemaRelationship schema table name source (remoteSchemaInfo, introspectionResult) fields = do
-  let remoteSchemaName = _trrdRemoteSchema schema
-  hasuraFields <- forM (toList $ _trrdLhsFields schema) $ \fieldName -> do
+validateRemoteSchemaRelationship schema table name source (remoteSchemaInfo, introspectionResult) fields = do
+  let remoteSchemaName = _rrdRemoteSchemaName schema
+  hasuraFields <- forM (toList $ _rrdHasuraFields schema) $ \fieldName -> do
     fieldInfo <- onNothing (HM.lookup fieldName fields) $ throwError $ TableFieldNonexistent table fieldName
     case fieldInfo of
-      FIColumn columnInfo -> pure $ JoinColumn (pgiColumn columnInfo) (pgiType columnInfo)
+      FIColumn columnInfo -> pure $ JoinColumn columnInfo
       FIComputedField ComputedFieldInfo {..} -> do
         scalarType <- case _cfiReturnType of
           CFRScalar ty -> pure ty
@@ -146,19 +145,19 @@ validateSourceToSchemaRelationship schema table name source (remoteSchemaInfo, i
     foldlM
       (buildRelationshipTypeInfo hasuraFieldsVariablesMap schemaDoc)
       (queryRoot, (mempty, mempty))
-      (unRemoteFields $ _trrdRemoteField schema)
+      (unRemoteFields $ _rrdRemoteField schema)
   pure $
     RemoteSchemaFieldInfo
-      { _rrfiName = name,
-        _rrfiParamMap = leafParamMap,
-        _rrfiHasuraFields = HS.fromList hasuraFields,
-        _rrfiRemoteFields = _trrdRemoteField schema,
-        _rrfiRemoteSchema = remoteSchemaInfo,
+      { _rfiName = name,
+        _rfiParamMap = leafParamMap,
+        _rfiHasuraFields = HS.fromList hasuraFields,
+        _rfiRemoteFields = _rrdRemoteField schema,
+        _rfiRemoteSchema = remoteSchemaInfo,
         -- adding the new input types after stripping the values of the
         -- schema document
-        _rrfiInputValueDefinitions = HM.elems leafTypeMap,
-        _rrfiRemoteSchemaName = remoteSchemaName,
-        _rrfiTable = (table, source)
+        _rfiInputValueDefinitions = HM.elems leafTypeMap,
+        _rfiRemoteSchemaName = remoteSchemaName,
+        _rfiTable = (table, source)
       }
   where
     getObjTyInfoFromField ::
@@ -235,7 +234,7 @@ validateSourceToSchemaRelationship schema table name source (remoteSchemaInfo, i
 -- provided by the user while querying a remote join field.
 stripInMap ::
   (Backend b) =>
-  RelName ->
+  RemoteRelationshipName ->
   TableName b ->
   RemoteSchemaIntrospection ->
   HM.HashMap G.Name RemoteSchemaInputValueDefinition ->
@@ -269,7 +268,7 @@ stripInMap rrName table types schemaArguments providedArguments =
 -- is atomic-ish.
 stripValue ::
   (Backend b) =>
-  RelName ->
+  RemoteRelationshipName ->
   TableName b ->
   RemoteSchemaIntrospection ->
   G.GType ->
@@ -298,7 +297,7 @@ stripValue name table types gtype value = do
 -- | Produce a new type for the list, or strip it entirely.
 stripList ::
   (Backend b) =>
-  RelName ->
+  RemoteRelationshipName ->
   TableName b ->
   RemoteSchemaIntrospection ->
   G.GType ->
@@ -320,7 +319,7 @@ stripList name table types originalOuterGType value =
 stripObject ::
   forall b.
   Backend b =>
-  RelName ->
+  RemoteRelationshipName ->
   TableName b ->
   RemoteSchemaIntrospection ->
   G.GType ->
@@ -361,11 +360,11 @@ stripObject name table schemaDoc originalGtype templateArguments =
 -- -- | Produce a new name for a type, used when stripping the schema
 -- -- types for a remote relationship.
 -- TODO: Consider a separator character to avoid conflicts. (from master)
-renameTypeForRelationship :: Backend b => RelName -> TableName b -> Text -> Text
+renameTypeForRelationship :: Backend b => RemoteRelationshipName -> TableName b -> Text -> Text
 renameTypeForRelationship rrName table text =
   text <> "_remote_rel_" <> name
   where
-    name = toTxt table <> relNameToTxt rrName
+    name = toTxt table <> remoteRelationshipNameToText rrName
 
 -- | Rename a type.
 renameNamedType :: (Text -> Text) -> G.Name -> G.Name
@@ -379,7 +378,7 @@ hasuraFieldToVariable ::
   m G.Name
 hasuraFieldToVariable hasuraField = do
   let fieldText = case hasuraField of
-        JoinColumn column _ -> toTxt column
+        JoinColumn columnInfo -> toTxt $ pgiColumn columnInfo
         JoinComputedField computedFieldInfo -> toTxt $ _scfName computedFieldInfo
   G.mkName fieldText `onNothing` throwError (InvalidGraphQLName fieldText)
 
@@ -537,7 +536,7 @@ dbJoinFieldToNamedType ::
   m G.Name
 dbJoinFieldToNamedType hasuraField = do
   scalarType <- case hasuraField of
-    JoinColumn _ columnType -> case columnType of
+    JoinColumn pci -> case pgiType pci of
       ColumnScalar scalarType -> pure scalarType
       _ -> throwError UnsupportedEnum
     JoinComputedField cfi -> pure $ _scfType cfi

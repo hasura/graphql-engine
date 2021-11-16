@@ -34,7 +34,6 @@ module Hasura.Backends.BigQuery.Types
     Reselect (..),
     ScalarType (..),
     Select (..),
-    SelectJson (..),
     TableName (..),
     Time (..),
     Timestamp (..),
@@ -434,7 +433,6 @@ instance NFData a => NFData (Countable a)
 data From
   = FromQualifiedTable (Aliased TableName)
   | FromSelect (Aliased Select)
-  | FromSelectJson (Aliased SelectJson)
   deriving (Eq, Show, Generic, Data, Lift, Ord)
 
 instance FromJSON From
@@ -444,20 +442,6 @@ instance Hashable From
 instance Cacheable From
 
 instance NFData From
-
-data SelectJson = SelectJson
-  { selectJsonBody :: Expression,
-    selectJsonFields :: [(ColumnName, ScalarType)]
-  }
-  deriving (Eq, Ord, Show, Generic, Data, Lift)
-
-instance FromJSON SelectJson
-
-instance Hashable SelectJson
-
-instance Cacheable SelectJson
-
-instance NFData SelectJson
 
 data OpenJson = OpenJson
   { openJsonExpression :: Expression,

@@ -212,10 +212,10 @@ resolveRemoteVariable userInfo = \case
 
 -- | TODO: Documentation.
 resolveRemoteField ::
-  (MonadError QErr m) =>
+  (MonadError QErr m, Traversable f) =>
   UserInfo ->
-  RemoteFieldG RemoteSchemaVariable ->
-  StateT RemoteJSONVariableMap m (RemoteFieldG Variable)
+  RemoteFieldG f RemoteSchemaVariable ->
+  StateT RemoteJSONVariableMap m (RemoteFieldG f Variable)
 resolveRemoteField userInfo = traverse (resolveRemoteVariable userInfo)
 
 -- | TODO: Documentation.

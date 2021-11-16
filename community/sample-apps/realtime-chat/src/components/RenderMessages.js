@@ -1,18 +1,24 @@
-import { useCallback, useEffect, useState } from 'react';
-import { gql, useQuery, useSubscription } from '@apollo/client';
+import React from 'react';
+import { Query } from 'react-apollo';
+import gql from 'graphql-tag';
 import '../App.js';
 import Banner from './Banner';
 import MessageList from './MessageList';
 
 const fetchMessages = gql`
-  query ($last_received_id: Int, $last_received_ts: timestamptz) {
-    message(
-      order_by: { timestamp: asc }
+  query ($last_received_id: Int, $last_received_ts: timestamptz){
+    message (
+      order_by: {timestamp:asc}
       where: {
         _and: {
-          id: { _neq: $last_received_id }
-          timestamp: { _gte: $last_received_ts }
+          id: {
+            _neq: $last_received_id
+          },
+          timestamp: {
+            _gte: $last_received_ts
+          }
         }
+
       }
     ) {
       id
@@ -23,203 +29,236 @@ const fetchMessages = gql`
   }
 `;
 
-const subscribeToNewMessages = gql`
-  subscription {
-    message(order_by: { id: desc }, limit: 1) {
-      id
-      username
-      text
-      timestamp
+export default class RenderMessages extends React.Component {
+  constructor() {
+    super();
+    this.state = {
+      messages: [],
+      newMessages: [],
+      error: null,
     }
   }
-`;
 
-export default function RenderMessages({
-  setMutationCallback,
-  username,
-  userId,
-}) {
-  const [messages, setMessages] = useState([]);
-  const [newMessages, setNewMessages] = useState([]);
-  const [bottom, setBottom] = useState(true);
+  async componentWillMount() {
+    // set mutation callback to update messages in state after mutation
+    this.props.setMutationCallback(this.mutationCallback);
+  }
 
-  // add old (read) messages to state
-  const addOldMessages = (newMessages) => {
-    const oldMessages = [...messages, ...newMessages];
-    setMessages(oldMessages);
-    setNewMessages([]);
-  };
+
+  componentDidMount() {
+    // add scroll listener on mount
+    window.addEventListener("scroll", this.handleScroll);
+  }
+
+
+  componentDidUpdate() {
+    if (this.state.newMessages.length === 0) {
+      this.scrollToBottom();
+    }
+  }
+
+  componentWillUnmount() {
+    // remove scroll listener on unmount
+    window.removeEventListener("scroll", this.handleScroll);
+  }
 
   // get appropriate query variables
-  const getLastReceivedVars = () => {
+  getLastReceivedVars = () => {
+    const { messages, newMessages } = this.state;
     if (newMessages.length === 0) {
       if (messages.length !== 0) {
         return {
           last_received_id: messages[messages.length - 1].id,
-          last_received_ts: messages[messages.length - 1].timestamp,
-        };
+          last_received_ts: messages[messages.length - 1].timestamp
+        }
       } else {
         return {
           last_received_id: -1,
-          last_received_ts: '2018-08-21T19:58:46.987552+00:00',
-        };
+          last_received_ts: "2018-08-21T19:58:46.987552+00:00"
+        }
       }
     } else {
       return {
         last_received_id: newMessages[newMessages.length - 1].id,
-        last_received_ts: newMessages[newMessages.length - 1].timestamp,
-      };
+        last_received_ts: newMessages[newMessages.length - 1].timestamp
+      }
     }
-  };
+  }
 
-  const { loading, refetch } = useQuery(fetchMessages, {
-    variables: getLastReceivedVars(),
-    onCompleted: (data) => {
-      const receivedMessages = data.message;
-
-      // load all messages to state in the beginning
-      if (receivedMessages.length !== 0) {
-        if (messages.length === 0) {
-          addOldMessages(receivedMessages);
-        }
+  // add new (unread) messages to state
+  addNewMessages = (messages) => {
+    const newMessages = [...this.state.newMessages];
+    messages.forEach((m) => {
+      // do not add new messages from self
+      if (m.username !== this.props.username) {
+        newMessages.push(m);
       }
-    },
-  });
+    });
+    this.setState({
+      newMessages
+    })
+  }
 
-  useSubscription(subscribeToNewMessages, {
-    onSubscriptionData: async () => {
-      if (!loading) {
-        const resp = await refetch(getLastReceivedVars());
-        if (resp.data) {
-          if (!isViewScrollable()) {
-            addOldMessages(resp.data.message);
-          } else {
-            if (bottom) {
-              addOldMessages(resp.data.message);
-            } else {
-              addNewMessages(resp.data.message);
-            }
-          }
-        }
-      }
-    },
-  });
-
-  // scroll to bottom
-  const scrollToBottom = () => {
-    document
-      ?.getElementById('lastMessage')
-      ?.scrollIntoView({ behavior: 'instant' });
-  };
-
-  // scroll to the new message
-  const scrollToNewMessage = () => {
-    document
-      ?.getElementById('newMessage')
-      ?.scrollIntoView({ behavior: 'instant' });
-  };
-
-  if (newMessages.length === 0) {
-    scrollToBottom();
+  // add old (read) messages to state
+  addOldMessages = (messages) => {
+    const oldMessages = [ ...this.state.messages, ...messages];
+    this.setState({
+      messages: oldMessages,
+      newMessages: []
+    })
   }
 
   // add message to state when text is entered
-  const mutationCallback = useCallback(() => {
-    return (newMessage) => {
-      const allMessages = [...messages, ...newMessages];
-      allMessages.push(newMessage);
-      setMessages(messages);
-      setNewMessages([]);
-    };
-  }, [messages, newMessages]);
+  mutationCallback = (message) => {
+    const messages = [ ...this.state.messages, ...this.state.newMessages ];
+    messages.push(message);
+    this.setState({
+      messages,
+      newMessages: []
+    });
+  }
 
-  // scroll handler
-  const handleScroll = useCallback(() => {
-    return (e) => {
-      const windowHeight =
-        'innerHeight' in window
-          ? window.innerHeight
-          : document.documentElement.offsetHeight;
-      const body = document.getElementById('chatbox');
-      const html = document.documentElement;
-      const docHeight = Math.max(
-        body.scrollHeight,
-        body.offsetHeight,
-        html.clientHeight,
-        html.scrollHeight,
-        html.offsetHeight
-      );
-      const windowBottom = windowHeight + window.pageYOffset;
-      if (windowBottom >= docHeight) {
-        setBottom(true);
-      } else {
-        if (bottom) {
-          setBottom(false);
+  // custom refetch to be passed to parent for refetching on event occurance
+  refetch = async() => {
+    if (!this.state.loading) {
+      const resp = await this.state.refetch(this.getLastReceivedVars());
+      if (resp.data) {
+        if (!this.isViewScrollable()) {
+          this.addOldMessages(resp.data.message);
+        } else {
+          if (this.state.bottom) {
+            this.addOldMessages(resp.data.message);
+          } else {
+            this.addNewMessages(resp.data.message);
+          }
         }
       }
-    };
-  }, [bottom]);
+    }
+  }
 
-  useEffect(() => {
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [handleScroll]);
+  // scroll to bottom
+  scrollToBottom = () => {
+    document.getElementById('lastMessage').scrollIntoView({ behavior: "instant" });
+  }
 
-  useEffect(() => {
-    setMutationCallback(mutationCallback);
-  }, [setMutationCallback, mutationCallback]);
+  // scroll to the new message
+  scrollToNewMessage = () => {
+    document.getElementById('newMessage').scrollIntoView({ behavior: "instant" });
+  }
 
-  // add new (unread) messages to state
-  const addNewMessages = (incomingMessages) => {
-    const allNewMessages = [...newMessages];
-    incomingMessages.forEach((m) => {
-      // do not add new messages from self
-      if (m.username !== username) {
-        allNewMessages.push(m);
+  // scroll handler
+  handleScroll = (e) => {
+    const windowHeight = "innerHeight" in window ? window.innerHeight : document.documentElement.offsetHeight;
+    const body = document.getElementById("chatbox");
+    const html = document.documentElement;
+    const docHeight = Math.max(body.scrollHeight, body.offsetHeight, html.clientHeight,  html.scrollHeight, html.offsetHeight);
+    const windowBottom = windowHeight + window.pageYOffset;
+    if (windowBottom >= docHeight) {
+      this.setState({
+        bottom: true
+      })
+    } else {
+      if (this.state.bottom) {
+        this.setState({
+          bottom: false
+        });
       }
-    });
-    setNewMessages(newMessages);
-  };
+    }
+  }
 
   // check if the view is scrollable
-  const isViewScrollable = () => {
+  isViewScrollable = () => {
     const isInViewport = (elem) => {
       const bounding = elem.getBoundingClientRect();
       return (
         bounding.top >= 0 &&
         bounding.left >= 0 &&
-        bounding.bottom <=
-          (window.innerHeight || document.documentElement.clientHeight) &&
-        bounding.right <=
-          (window.innerWidth || document.documentElement.clientWidth)
+        bounding.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
+        bounding.right <= (window.innerWidth || document.documentElement.clientWidth)
       );
     };
     if (document.getElementById('lastMessage')) {
       return !isInViewport(document.getElementById('lastMessage'));
     }
     return false;
-  };
+  }
 
-  return (
-    <div id="chatbox">
-      {/* show "unread messages" banner if not at bottom */}
-      {!bottom && newMessages.length > 0 && isViewScrollable() ? (
-        <Banner
-          scrollToNewMessage={scrollToNewMessage}
-          numOfNewMessages={newMessages.length}
+  render() {
+    const { messages, newMessages, bottom } = this.state;
+    // set refetch in parent component for refetching data whenever an event occurs
+    if (!this.props.refetch && this.state.refetch) {
+      this.props.setRefetch(this.refetch);
+    }
+    return (
+      <div id="chatbox">
+        <Query
+          query={fetchMessages}
+          variables={this.getLastReceivedVars()}
+        >
+          {
+            ({ data, loading, error, refetch}) => {
+              if (loading) {
+                return null;
+              }
+              if (error) {
+                return "Error: " + error;
+              }
+              // set refetch in local state to make a custom refetch
+              if (!this.state.refetch) {
+                this.setState({
+                  refetch
+                });
+              }
+              const receivedMessages = data.message;
+
+              // load all messages to state in the beginning
+              if (receivedMessages.length !== 0) {
+                if (messages.length === 0) {
+                  this.addOldMessages(receivedMessages);
+                }
+              }
+
+              // return null; real rendering happens below
+              return null;
+            }
+          }
+        </Query>
+        { /* show "unread messages" banner if not at bottom */}
+        {
+          (!bottom && newMessages.length > 0 && this.isViewScrollable()) ?
+          <Banner
+             scrollToNewMessage={this.scrollToNewMessage}
+             numOfNewMessages={newMessages.length}
+           /> : null
+        }
+
+        { /* Render old messages */}
+        <MessageList
+          messages={messages}
+          isNew={false}
+          username={this.props.username}
         />
-      ) : null}
+        { /* Show old/new message separation */}
+        <div
+          id="newMessage"
+          className="oldNewSeparator"
+        >
+          {
+            newMessages.length !== 0 ?
+            "New messages" :
+            null
+          }
 
-      {/* Render old messages */}
-      <MessageList messages={messages} isNew={false} username={username} />
-      {/* Show old/new message separation */}
-      <div id="newMessage" className="oldNewSeparator">
-        {newMessages.length !== 0 ? 'New messages' : null}
+        </div>
+
+        { /* render new messages */}
+        <MessageList
+          messages={newMessages}
+          isNew={true}
+          username={this.props.username}
+        />
+        { /* Bottom div to scroll to */}
       </div>
-
-      {/* render new messages */}
-      <MessageList messages={newMessages} isNew={true} username={username} />
-      {/* Bottom div to scroll to */}
-    </div>
-  );
+    );
+  }
 }

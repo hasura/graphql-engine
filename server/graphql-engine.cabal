@@ -30,7 +30,7 @@ flag profiling
 -- We share this flag name across our .cabal projects so we can switch it on or
 -- off for all of them at the top level of our cabal.project(.*) files
 flag optimize-hasura
-  description: Compile hasura code with appropriate optimizations
+  description: Compile hasura code with appropriate optimizations 
   default: True
   manual: False
 
@@ -50,8 +50,8 @@ common common-all
 
   if flag(optimize-hasura)
     ghc-options:
-      -- This is for performance, and works in combination with '-fspecialise-aggressively'
-      -- in the graphql-engine 'executable' stanza below, and in any other dependent
+      -- This is for performance, and works in combination with '-fspecialise-aggressively' 
+      -- in the graphql-engine 'executable' stanza below, and in any other dependent 
       -- executables (See mono #2610):
       -fexpose-all-unfoldings
       -O2
@@ -382,14 +382,11 @@ library
                      , Hasura.Backends.MSSQL.Instances.Types
                      , Hasura.Backends.MSSQL.Meta
                      , Hasura.Backends.MSSQL.Plan
-                     , Hasura.Backends.MSSQL.Schema.IfMatched
                      , Hasura.Backends.MSSQL.SQL.Value
                      , Hasura.Backends.MSSQL.ToQuery
                      , Hasura.Backends.MSSQL.Types
-                     , Hasura.Backends.MSSQL.Types.Insert
                      , Hasura.Backends.MSSQL.Types.Instances
                      , Hasura.Backends.MSSQL.Types.Internal
-                     , Hasura.Backends.MSSQL.Types.Update
 
                      , Hasura.Backends.Postgres.Connection
                      , Hasura.Backends.Postgres.DDL
@@ -412,7 +409,6 @@ library
                      , Hasura.Backends.Postgres.Instances.Schema
                      , Hasura.Backends.Postgres.Instances.Transport
                      , Hasura.Backends.Postgres.Instances.Types
-                     , Hasura.Backends.Postgres.Schema.OnConflict
                      , Hasura.Backends.Postgres.SQL.DML
                      , Hasura.Backends.Postgres.SQL.Error
                      , Hasura.Backends.Postgres.SQL.Rewrite
@@ -428,11 +424,9 @@ library
                      , Hasura.Backends.Postgres.Translate.Types
                      , Hasura.Backends.Postgres.Translate.Update
                      , Hasura.Backends.Postgres.Types.BoolExp
-                     , Hasura.Backends.Postgres.Types.CitusExtraTableMetadata
                      , Hasura.Backends.Postgres.Types.Column
-                     , Hasura.Backends.Postgres.Types.Insert
                      , Hasura.Backends.Postgres.Types.Table
-                     , Hasura.Backends.Postgres.Types.Update
+                     , Hasura.Backends.Postgres.Types.CitusExtraTableMetadata
 
                      , Hasura.Backends.MySQL.DataLoader.Execute
                      , Hasura.Backends.MySQL.DataLoader.Plan
@@ -452,6 +446,7 @@ library
                      , Hasura.Backends.MySQL.ToQuery
                      , Hasura.Backends.MySQL.Instances.API
 
+                     -- Exposed for benchmark:
                      , Hasura.Cache.Bounded
                      , Hasura.Logging
                      , Hasura.HTTP
@@ -485,9 +480,11 @@ library
                      , Hasura.RQL.Types.Run
                      , Hasura.Session
 
+                     -- exposed for Pro
                      , Hasura.Server.API.Config
                      , Hasura.Server.Telemetry
                      , Hasura.Server.Metrics
+                     -- Exposed for testing:
                      , Hasura.Server.Telemetry.Counters
                      , Hasura.Server.Auth.JWT
                      , Hasura.GC
@@ -527,11 +524,8 @@ library
                      , Hasura.RQL.Types.Permission
                      , Hasura.RQL.Types.QueryCollection
                      , Hasura.RQL.Types.QueryTags
-                     , Hasura.RQL.Types.Relationships.FromSource
-                     , Hasura.RQL.Types.Relationships.Local
-                     , Hasura.RQL.Types.Relationships.Remote
-                     , Hasura.RQL.Types.Relationships.ToSchema
-                     , Hasura.RQL.Types.Relationships.ToSource
+                     , Hasura.RQL.Types.Relationship
+                     , Hasura.RQL.Types.RemoteRelationship
                      , Hasura.RQL.Types.RemoteSchema
                      , Hasura.RQL.Types.ResultCustomization
                      , Hasura.RQL.Types.ScheduledTrigger
@@ -588,13 +582,11 @@ library
                      , Hasura.RQL.DML.Update
                      , Hasura.RQL.DML.Types
                      , Hasura.RQL.IR.BoolExp
-                     , Hasura.RQL.IR.Conflict
                      , Hasura.RQL.IR.Delete
                      , Hasura.RQL.IR.Insert
                      , Hasura.RQL.IR.OrderBy
                      , Hasura.RQL.IR.Returning
                      , Hasura.RQL.IR.Select
-                     , Hasura.RQL.IR.RemoteSchema
                      , Hasura.RQL.IR.Update
                      , Hasura.RQL.IR.Root
                      , Hasura.RQL.IR
@@ -654,7 +646,6 @@ library
                      , Hasura.GraphQL.Schema.RemoteSource
                      , Hasura.GraphQL.Schema.Select
                      , Hasura.GraphQL.Schema.Table
-                     , Hasura.GraphQL.Schema.Update
                      , Hasura.GraphQL.Transport.Backend
                      , Hasura.GraphQL.Transport.HTTP
                      , Hasura.GraphQL.Transport.HTTP.Protocol
@@ -698,7 +689,7 @@ executable graphql-engine
     ghc-options:
       -- This is for performance (See mono #2610):
       -fspecialise-aggressively
-
+       
   hs-source-dirs:    src-exec
   main-is:           Main.hs
   build-depends:     base
@@ -782,7 +773,6 @@ test-suite graphql-engine-tests
     , jose
     , kan-extensions
     , lens
-    , lens-aeson
     , lifted-base
     , mmorph
     , monad-control
@@ -804,7 +794,6 @@ test-suite graphql-engine-tests
     , unordered-containers
     , utf8-string
     , vector
-    , yaml
     -- mssql support
     , odbc
     , resource-pool
@@ -818,17 +807,16 @@ test-suite graphql-engine-tests
     Data.Text.RawString
     Data.TimeSpec
     Database.MSSQL.TransactionSpec
-    Hasura.Backends.MySQL.DataLoader.ExecuteTests
     Hasura.EventingSpec
     Hasura.Generator
     Hasura.Generator.Common
     Hasura.GraphQL.NamespaceSpec
     Hasura.GraphQL.Parser.DirectivesTest
     Hasura.GraphQL.Parser.TestUtils
+    Hasura.GraphQL.RemoteServerSpec
     Hasura.GraphQL.Schema.RemoteTest
     Hasura.IncrementalSpec
     Hasura.RQL.IR.Generator
-    Hasura.RQL.MetadataSpec
     Hasura.RQL.IR.Postgres
     Hasura.RQL.PermissionSpec
     Hasura.RQL.RequestTransformSpec
@@ -841,111 +829,3 @@ test-suite graphql-engine-tests
     Network.HTTP.Client.TransformableSpec
     Hasura.SessionSpec
     Hasura.SQL.WKTSpec
-
-test-suite tests-hspec
-  import: common-all, common-exe
-  type: exitcode-stdio-1.0
-  build-depends:
-      aeson
-    , base
-    , bytestring
-    , case-insensitive
-    , containers
-    , cron
-    , dependent-map
-    , dependent-sum
-    , graphql-engine
-    , graphql-parser
-    , hedgehog
-    , hspec >=2.6.1 && <3
-    , hspec-core >=2.6.1 && <3
-    , hspec-expectations
-    , hspec-expectations-lifted
-    , hspec-hedgehog
-    , http-client
-    , http-client-tls
-    , http-types
-    , insert-ordered-containers
-    , jose
-    , kan-extensions
-    , lens
-    , lifted-base
-    , mmorph
-    , monad-control
-    , mtl
-    , natural-transformation >=0.4 && <0.5
-    , network-uri
-    , optparse-applicative
-    , pg-client
-    , process
-    , QuickCheck
-    , safe
-    , typed-process
-    , scientific
-    , split
-    , stm
-    , template-haskell
-    , text
-    , time
-    , transformers-base
-    , unordered-containers
-    , utf8-string
-    , vector
-    -- mssql support
-    , odbc
-    , resource-pool
-    -- hspec tests
-    , text-conversions
-    , ekg-core
-    , unix
-    , warp
-    , aeson-casing
-    , websockets
-    , hspec
-    , async
-    , http-conduit
-    , network
-    , mysql-simple
-    , postgresql-libpq
-    , mysql
-    , aeson-qq
-    , resourcet
-    , conduit
-    , libyaml
-    , th-lift-instances
-    , th-lift
-    , yaml
-    , postgresql-simple
-    , persistent
-    , persistent-mysql
-    , persistent-postgresql
-    , persistent-template
-    , monad-logger
-    , unliftio-core
-  hs-source-dirs: tests-hspec
-  -- Turning off optimizations is intentional; tests aren't
-  -- performance sensitive and waiting for compilation is a problem.
-  ghc-options: -Wall -O0 -threaded
-  main-is: Spec.hs
-  other-modules:
-    Harness.Mysql
-    Harness.Http
-    Harness.Postgres
-    Harness.Constants
-    Harness.Feature
-    Harness.Yaml
-    Harness.Sql
-    Harness.State
-    Harness.Graphql
-    Harness.GraphqlEngine
-
-    ArrayRelationshipsSpec
-    BasicFieldsSpec
-    DirectivesSpec
-    HelloWorldSpec
-    LimitOffsetSpec
-    ObjectRelationshipsSpec
-    OrderingSpec
-    ServiceLivenessSpec
-    ViewsSpec
-    WhereSpec

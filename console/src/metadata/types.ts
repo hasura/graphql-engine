@@ -423,8 +423,6 @@ export interface EventTrigger {
   webhook_from_env?: string;
   /** The SQL function */
   headers?: ServerHeader[];
-  /** Request transformation object */
-  request_transform?: RequestTransform;
 }
 
 export interface EventTriggerDefinition {

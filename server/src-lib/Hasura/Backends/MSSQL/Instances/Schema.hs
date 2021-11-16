@@ -9,9 +9,7 @@ import Data.List.NonEmpty qualified as NE
 import Data.Text.Encoding (encodeUtf8)
 import Data.Text.Extended
 import Database.ODBC.SQLServer qualified as ODBC
-import Hasura.Backends.MSSQL.Types.Insert (BackendInsert (..), ExtraColumnInfo (..))
-import Hasura.Backends.MSSQL.Types.Internal qualified as MSSQL
-import Hasura.Backends.MSSQL.Types.Update (BackendUpdate (..), UpdateOperator (..))
+import Hasura.Backends.MSSQL.Types qualified as MSSQL
 import Hasura.Base.Error
 import Hasura.GraphQL.Parser hiding (EnumValueInfo, field)
 import Hasura.GraphQL.Parser qualified as P
@@ -21,12 +19,11 @@ import Hasura.GraphQL.Schema.BoolExp
 import Hasura.GraphQL.Schema.Build qualified as GSB
 import Hasura.GraphQL.Schema.Common
 import Hasura.GraphQL.Schema.Select
-import Hasura.GraphQL.Schema.Update qualified as SU
 import Hasura.Prelude
 import Hasura.RQL.IR
 import Hasura.RQL.IR.Insert qualified as IR
 import Hasura.RQL.IR.Select qualified as IR
-import Hasura.RQL.Types hiding (BackendInsert)
+import Hasura.RQL.Types
 import Language.GraphQL.Draft.Syntax qualified as G
 
 ----------------------------------------------------------------
@@ -37,9 +34,8 @@ instance BackendSchema 'MSSQL where
   buildTableQueryFields = GSB.buildTableQueryFields
   buildTableRelayQueryFields = msBuildTableRelayQueryFields
   buildTableInsertMutationFields = msBuildTableInsertMutationFields
-  buildTableDeleteMutationFields = GSB.buildTableDeleteMutationFields
   buildTableUpdateMutationFields = msBuildTableUpdateMutationFields
-
+  buildTableDeleteMutationFields = msBuildTableDeleteMutationFields
   buildFunctionQueryFields = msBuildFunctionQueryFields
   buildFunctionRelayQueryFields = msBuildFunctionRelayQueryFields
   buildFunctionMutationFields = msBuildFunctionMutationFields
@@ -65,6 +61,12 @@ instance BackendSchema 'MSSQL where
   -- SQL literals
   columnDefaultValue = msColumnDefaultValue
 
+  -- Extra insert data
+  getExtraInsertData tableInfo =
+    let pkeyColumns = fmap (map pgiColumn . toList . _pkColumns) . _tciPrimaryKey . _tiCoreInfo $ tableInfo
+        identityColumns = _tciExtraTableMetadata $ _tiCoreInfo tableInfo
+     in MSSQL.MSSQLExtraInsertData (fromMaybe [] pkeyColumns) identityColumns
+
 -- | MSSQL only supports inserts into tables that have a primary key defined.
 supportsInserts :: TableInfo 'MSSQL -> Bool
 supportsInserts = isJust . _tciPrimaryKey . _tiCoreInfo
@@ -75,28 +77,34 @@ supportsInserts = isJust . _tciPrimaryKey . _tiCoreInfo
 msBuildTableRelayQueryFields ::
   MonadBuildSchema 'MSSQL r m n =>
   SourceName ->
+  SourceConfig 'MSSQL ->
+  Maybe QueryTagsConfig ->
   TableName 'MSSQL ->
   TableInfo 'MSSQL ->
   G.Name ->
   NESeq (ColumnInfo 'MSSQL) ->
   SelPermInfo 'MSSQL ->
-  m [a]
-msBuildTableRelayQueryFields _sourceName _tableName _tableInfo _gqlName _pkeyColumns _selPerms =
+  m [FieldParser n (QueryRootField UnpreparedValue)]
+msBuildTableRelayQueryFields _sourceName _sourceInfo _queryTagsConfig _tableName _tableInfo _gqlName _pkeyColumns _selPerms =
   pure []
 
 msBuildTableInsertMutationFields ::
   forall r m n.
   MonadBuildSchema 'MSSQL r m n =>
   SourceName ->
+  SourceConfig 'MSSQL ->
+  Maybe QueryTagsConfig ->
   TableName 'MSSQL ->
   TableInfo 'MSSQL ->
   G.Name ->
   InsPermInfo 'MSSQL ->
   Maybe (SelPermInfo 'MSSQL) ->
   Maybe (UpdPermInfo 'MSSQL) ->
-  m [FieldParser n (AnnInsert 'MSSQL (RemoteRelationshipField UnpreparedValue) (UnpreparedValue 'MSSQL))]
+  m [FieldParser n (MutationRootField UnpreparedValue)]
 msBuildTableInsertMutationFields
   sourceName
+  sourceInfo
+  queryTagsConfig
   tableName
   tableInfo
   gqlName
@@ -105,8 +113,9 @@ msBuildTableInsertMutationFields
   mUpdPerms
     | supportsInserts tableInfo =
       GSB.buildTableInsertMutationFields
-        backendInsertParser
         sourceName
+        sourceInfo
+        queryTagsConfig
         tableName
         tableInfo
         gqlName
@@ -115,95 +124,72 @@ msBuildTableInsertMutationFields
         mUpdPerms
     | otherwise = return []
 
-backendInsertParser ::
-  forall m r n.
-  MonadBuildSchema 'MSSQL r m n =>
-  SourceName ->
-  TableInfo 'MSSQL ->
-  Maybe (SelPermInfo 'MSSQL) ->
-  Maybe (UpdPermInfo 'MSSQL) ->
-  m (InputFieldsParser n (BackendInsert (UnpreparedValue 'MSSQL)))
-backendInsertParser _sourceName tableInfo _selectPerms _updatePerms = do
-  -- Uncomment when we implement execution of upserts.
-  -- import Hasura.Backends.MSSQL.Schema.IfMatched
-  -- ifMatched <- ifMatchedFieldParser sourceName tableInfo selectPerms updatePerms
-  pure $ do
-    -- _biIfMatched <- ifMatched
-    let _biIfMatched = Nothing
-    pure $ BackendInsert {..}
-  where
-    _biExtraColumnInfo :: ExtraColumnInfo
-    _biExtraColumnInfo =
-      let pkeyColumns = fmap (map pgiColumn . toList . _pkColumns) . _tciPrimaryKey . _tiCoreInfo $ tableInfo
-          identityColumns = _tciExtraTableMetadata $ _tiCoreInfo tableInfo
-       in ExtraColumnInfo (fromMaybe [] pkeyColumns) identityColumns
-
 msBuildTableUpdateMutationFields ::
   MonadBuildSchema 'MSSQL r m n =>
   SourceName ->
+  SourceConfig 'MSSQL ->
+  Maybe QueryTagsConfig ->
   TableName 'MSSQL ->
   TableInfo 'MSSQL ->
   G.Name ->
   UpdPermInfo 'MSSQL ->
   Maybe (SelPermInfo 'MSSQL) ->
-  m [FieldParser n (AnnotatedUpdateG 'MSSQL (RemoteRelationshipField UnpreparedValue) (UnpreparedValue 'MSSQL))]
-msBuildTableUpdateMutationFields =
-  GSB.buildTableUpdateMutationFields
-    ( \ti updPerms ->
-        fmap BackendUpdate
-          <$> SU.buildUpdateOperators
-            (UpdateSet <$> SU.presetColumns updPerms)
-            [ UpdateSet <$> SU.setOp,
-              UpdateInc <$> SU.incOp
-            ]
-            ti
-            updPerms
-    )
+  m [FieldParser n (MutationRootField UnpreparedValue)]
+msBuildTableUpdateMutationFields _sourceName _sourceInfo _queryTagsConfig _tableName _tableInfo _gqlName _updPerns _selPerms =
+  pure []
 
 msBuildTableDeleteMutationFields ::
   MonadBuildSchema 'MSSQL r m n =>
   SourceName ->
+  SourceConfig 'MSSQL ->
+  Maybe QueryTagsConfig ->
   TableName 'MSSQL ->
   TableInfo 'MSSQL ->
   G.Name ->
   DelPermInfo 'MSSQL ->
   Maybe (SelPermInfo 'MSSQL) ->
-  m [a]
-msBuildTableDeleteMutationFields _sourceName _tableName _tableInfo _gqlName _delPerns _selPerms =
+  m [FieldParser n (MutationRootField UnpreparedValue)]
+msBuildTableDeleteMutationFields _sourceName _sourceInfo _queryTagsConfig _tableName _tableInfo _gqlName _delPerns _selPerms =
   pure []
 
 msBuildFunctionQueryFields ::
   MonadBuildSchema 'MSSQL r m n =>
   SourceName ->
+  SourceConfig 'MSSQL ->
+  Maybe QueryTagsConfig ->
   FunctionName 'MSSQL ->
   FunctionInfo 'MSSQL ->
   TableName 'MSSQL ->
   SelPermInfo 'MSSQL ->
-  m [a]
-msBuildFunctionQueryFields _ _ _ _ _ =
+  m [FieldParser n (QueryRootField UnpreparedValue)]
+msBuildFunctionQueryFields _ _ _ _ _ _ _ =
   pure []
 
 msBuildFunctionRelayQueryFields ::
   MonadBuildSchema 'MSSQL r m n =>
   SourceName ->
+  SourceConfig 'MSSQL ->
+  Maybe QueryTagsConfig ->
   FunctionName 'MSSQL ->
   FunctionInfo 'MSSQL ->
   TableName 'MSSQL ->
   NESeq (ColumnInfo 'MSSQL) ->
   SelPermInfo 'MSSQL ->
-  m [a]
-msBuildFunctionRelayQueryFields _sourceName _functionName _functionInfo _tableName _pkeyColumns _selPerms =
+  m [FieldParser n (QueryRootField UnpreparedValue)]
+msBuildFunctionRelayQueryFields _sourceName _sourceInfo _queryTagsConfig _functionName _functionInfo _tableName _pkeyColumns _selPerms =
   pure []
 
 msBuildFunctionMutationFields ::
   MonadBuildSchema 'MSSQL r m n =>
   SourceName ->
+  SourceConfig 'MSSQL ->
+  Maybe QueryTagsConfig ->
   FunctionName 'MSSQL ->
   FunctionInfo 'MSSQL ->
   TableName 'MSSQL ->
   SelPermInfo 'MSSQL ->
-  m [a]
-msBuildFunctionMutationFields _ _ _ _ _ =
+  m [FieldParser n (MutationRootField UnpreparedValue)]
+msBuildFunctionMutationFields _ _ _ _ _ _ _ =
   pure []
 
 ----------------------------------------------------------------
@@ -290,7 +276,7 @@ msColumnParser columnType (G.Nullability isNullable) =
         MSSQL.BitType -> pure $ ODBC.BoolValue <$> P.boolean
         _ -> do
           name <- MSSQL.mkMSSQLScalarTypeName scalarType
-          let schemaType = P.NonNullable $ P.TNamed $ P.Definition name Nothing P.TIScalar
+          let schemaType = P.NonNullable $ P.TNamed $ P.mkDefinition (P.Typename name) Nothing P.TIScalar
           pure $
             Parser
               { pType = schemaType,
@@ -311,7 +297,7 @@ msColumnParser columnType (G.Nullability isNullable) =
       | otherwise = id
     mkEnumValue :: (EnumValue, EnumValueInfo) -> (P.Definition P.EnumValueInfo, ScalarValue 'MSSQL)
     mkEnumValue (EnumValue value, EnumValueInfo description) =
-      ( P.Definition value (G.Description <$> description) P.EnumValueInfo,
+      ( P.mkDefinition value (G.Description <$> description) P.EnumValueInfo,
         ODBC.TextValue $ G.unName value
       )
 
@@ -348,7 +334,7 @@ msOrderByOperators =
       )
     ]
   where
-    define name desc = P.Definition name (Just desc) P.EnumValueInfo
+    define name desc = P.mkDefinition name (Just desc) P.EnumValueInfo
 
 msComparisonExps ::
   forall m n r.
@@ -373,7 +359,7 @@ msComparisonExps = P.memoize 'comparisonExps \columnType -> do
       textListParser = fmap openValueOrigin <$> P.list textParser
 
   -- field info
-  let name = P.getName typedParser <> $$(G.litName "_MSSQL_comparison_exp")
+  let name = P.Typename $ P.getName typedParser <> $$(G.litName "_MSSQL_comparison_exp")
       desc =
         G.Description $
           "Boolean expression to compare columns of type "

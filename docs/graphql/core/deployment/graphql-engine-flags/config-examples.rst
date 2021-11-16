@@ -54,9 +54,7 @@ and for the webhook, you will use the ``HASURA_GRAPHQL_AUTH_HOOK`` environment v
   .. admonition:: Using collaborators as an alternative to Hasura Admin Secret sharing with Hasura Cloud
     :class: dhc
 
-    Hasura Cloud offers console collaborators which avoids sharing the `HASURA-ADMIN-SECRET` with those that shouldn't
-    have unrestricted access to your project. For more information about collaborator management, see
-    :ref:`Collaborators in Hasura Cloud <manage_project_collaborators>`.
+    Hasura Cloud offers console collaborators which avoids sharing the `HASURA-ADMIN-SECRET` with those that shouldn't have unrestricted access to your project. For more information about collaborator management, see :ref:`Collaborators in Hasura Cloud <manage_project_collaborators>`.
 
 .. _cli-with-admin-secret:
 
@@ -229,7 +227,7 @@ and initializes a few tables under it. This schema and the internal tables are g
 By default, the ``metadata_catalogue`` is created inside the primary database provided by the user. 
 But sometimes it might be more advantageous to segregate the primary database and the metadata database.
 
-Hasura GraphQL engine provides a way to the users to provide an entirely separate database to store the 
+Hasura GraphQL engine provides a way to the users to provide an entirely seperate Database to store the 
 ``metadata catalogue``.
 
 To add a metadata database, set the following environment variable or add the flag to the server executable
@@ -242,14 +240,8 @@ To add a metadata database, set the following environment variable or add the fl
    # flag
    --metadata-database-url=postgres://<user>:<password>@<host>:<port>/<metadata-db-name>
 
-.. admonition:: Caveat for Hasura Cloud
-
-  The metadata for Hasura Cloud projects is stored in dedicated metadata DBs managed by Hasura Cloud.
-  Hence the ``HASURA_GRAPHQL_METADATA_DATABASE_URL`` cannot be configured on Hasura Cloud as its value is controlled
-  by Hasura Cloud itself.
-
-Possible configurations:
-~~~~~~~~~~~~~~~~~~~~~~~~
+Different Scenarios:
+~~~~~~~~~~~~~~~~~~~~
 
 **1. Both the** ``primary database`` **and**  ``metadata database`` **are provided to the server**
 
@@ -263,8 +255,7 @@ Possible configurations:
    --metadata-database-url=postgres://<user>:<password>@<host>:<port>/<metadata-db-name>
    --database-url=postgres://<user>:<password>@<host>:<port>/<db-name>
 
-In this case, Hasura GraphQL engine will use the ``HASURA_GRAPHQL_METADATA_DATABASE_URL`` to store the ``metadata catalogue``
-and starts the server with the database provided in the ``HASURA_GRAPHQL_DATABASE_URL``.
+In this case, Hasura GraphQL engine will use the ``HASURA_GRAPHQL_METADATA_DATABASE_URL`` to store the ``metadata catalogue`` and starts the server with the database provided in the ``HASURA_GRAPHQL_DATABASE_URL``.
 
 **2. Only** ``metadata database`` **is provided to the server**
 
@@ -276,9 +267,7 @@ and starts the server with the database provided in the ``HASURA_GRAPHQL_DATABAS
    # flag
    --metadata-database-url=postgres://<user>:<password>@<host>:<port>/<metadata-db-name>
 
-In this case, Hasura GraphQL engine will use the ``HASURA_GRAPHQL_METADATA_DATABASE_URL`` to store the ``metadata catalogue``
-and starts the server without tracking/managing any database. *i.e* a Hasura GraphQL server will be started with no database. The
-user could then manually track/manage databases at a later time.
+In this case, Hasura GraphQL engine will use the ``HASURA_GRAPHQL_METADATA_DATABASE_URL`` to store the ``metadata catalogue`` and starts the server without tracking/managing any database. *i.e* a Hasura GraphQL server will be started with no database. The user could then manually track/manage databases at a later time.
 
 **3. Only** ``primary database`` **is provided to the server**
 
@@ -290,8 +279,7 @@ user could then manually track/manage databases at a later time.
    # flag
    --database-url=postgres://<user>:<password>@<host>:<port>/<db-name>
 
-In this case, Hasura GraphQL engine server will start with the database provided in the ``HASURA_GRAPHQL_DATABASE_URL`` and will
-also use the *same database* to store the ``metadata catalogue``.
+In this case, Hasura GraphQL engine server will start with the database provided in the ``HASURA_GRAPHQL_DATABASE_URL`` and will also use the *same database* to store the ``metadata catalogue``.
 
 **4. Neither** ``primary database`` **nor** ``metadata database`` **is provided to the server**
 

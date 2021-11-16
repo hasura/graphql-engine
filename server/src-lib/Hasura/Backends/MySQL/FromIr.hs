@@ -23,7 +23,7 @@ import Hasura.Prelude hiding (GT)
 import Hasura.RQL.IR qualified as IR
 import Hasura.RQL.Types.Column qualified as IR
 import Hasura.RQL.Types.Common qualified as IR
-import Hasura.RQL.Types.Relationships.Local qualified as IR
+import Hasura.RQL.Types.Relationship qualified as IR
 import Hasura.SQL.Backend
 
 data FieldSource
@@ -35,7 +35,6 @@ data FieldSource
 -- | Most of these errors should be checked for legitimacy.
 data Error
   = UnsupportedOpExpG (IR.OpExpG 'MySQL Expression)
-  | IdentifierNotSupported
   | FunctionNotSupported
   | NodesUnsupportedForNow
   | ConnectionsNotSupported
@@ -468,7 +467,7 @@ fromRelName relName =
 --     IR.AFOp _ -> error "fromAggregatefield: not implemented"
 
 fromTableAggregateFieldG ::
-  (IR.FieldName, IR.TableAggregateFieldG 'MySQL Void Expression) -> ReaderT EntityAlias FromIr FieldSource
+  (IR.FieldName, IR.TableAggregateFieldG 'MySQL (Const Void) Expression) -> ReaderT EntityAlias FromIr FieldSource
 fromTableAggregateFieldG (IR.FieldName _name, _field) = error "fromTableAggregateFieldG: not implemented yet"
 
 fieldSourceProjections :: FieldSource -> [Projection]
@@ -504,13 +503,12 @@ fieldSourceJoin =
 
 fromSelectAggregate ::
   Maybe (EntityAlias, HashMap Column Column) ->
-  IR.AnnSelectG 'MySQL Void (IR.TableAggregateFieldG 'MySQL Void) Expression ->
+  IR.AnnSelectG 'MySQL (Const Void) (IR.TableAggregateFieldG 'MySQL (Const Void)) Expression ->
   FromIr Select
 fromSelectAggregate mparentRelationship annSelectG = do
   selectFrom <-
     case from of
       IR.FromTable qualifiedObject -> fromQualifiedTable qualifiedObject
-      IR.FromIdentifier {} -> refute $ pure IdentifierNotSupported
       IR.FromFunction {} -> refute $ pure FunctionNotSupported
   _mforeignKeyConditions <- fmap (Where . fromMaybe []) $
     for mparentRelationship $
@@ -556,7 +554,7 @@ fromSelectAggregate mparentRelationship annSelectG = do
     IR.TablePerm {_tpLimit = mPermLimit, _tpFilter = permFilter} = perm
 
 -- _fromTableAggFieldG ::
---   (Int, (IR.FieldName, IR.TableAggregateFieldG 'MySQL Void Expression)) ->
+--   (Int, (IR.FieldName, IR.TableAggregateFieldG 'MySQL (Const Void) Expression)) ->
 --   Maybe (ReaderT EntityAlias FromIr (Int, (IR.FieldName, [Projection])))
 -- _fromTableAggFieldG = \case
 --   (index, (fieldName, IR.TAFAgg (aggregateFields :: [(IR.FieldName, IR.AggregateField 'MySQL)]))) -> Just do
@@ -570,10 +568,10 @@ fromSelectAggregate mparentRelationship annSelectG = do
 -- _fromTableNodesFieldG ::
 --   Map TableName EntityAlias ->
 --   StringifyNumbers ->
---   (Int, (IR.FieldName, IR.TableAggregateFieldG 'MySQL Void Expression)) ->
+--   (Int, (IR.FieldName, IR.TableAggregateFieldG 'MySQL (Const Void) Expression)) ->
 --   Maybe (ReaderT EntityAlias FromIr (Int, (IR.FieldName, [Projection])))
 -- _fromTableNodesFieldG argsExistingJoins stringifyNumbers = \case
---   (index, (fieldName, IR.TAFNodes () (annFieldsG :: [(IR.FieldName, IR.AnnFieldG 'MySQL Void Expression)]))) -> Just do
+--   (index, (fieldName, IR.TAFNodes () (annFieldsG :: [(IR.FieldName, IR.AnnFieldG 'MySQL (Const Void) Expression)]))) -> Just do
 --     fieldSources' <- fromAnnFieldsG argsExistingJoins stringifyNumbers `traverse` annFieldsG
 --     let nodesProjections' :: [Projection] = concatMap fieldSourceProjections fieldSources'
 --     pure (index, (fieldName, nodesProjections'))
@@ -581,7 +579,7 @@ fromSelectAggregate mparentRelationship annSelectG = do
 
 -- -- | Get FieldSource from a TAFExp type table aggregate field
 -- _fromTableExpFieldG ::
---   (Int, (IR.FieldName, IR.TableAggregateFieldG 'MySQL Void Expression)) ->
+--   (Int, (IR.FieldName, IR.TableAggregateFieldG 'MySQL (Const Void) Expression)) ->
 --   Maybe (ReaderT EntityAlias FromIr (Int, [Projection]))
 -- _fromTableExpFieldG = \case
 --   (index, (IR.FieldName name, IR.TAFExp text)) -> Just $
@@ -595,7 +593,7 @@ fromSelectAggregate mparentRelationship annSelectG = do
 --   _ -> Nothing
 
 fromArrayAggregateSelectG ::
-  IR.AnnRelationSelectG 'MySQL (IR.AnnAggregateSelectG 'MySQL Void Expression) ->
+  IR.AnnRelationSelectG 'MySQL (IR.AnnAggregateSelectG 'MySQL (Const Void) Expression) ->
   ReaderT EntityAlias FromIr Join
 fromArrayAggregateSelectG annRelationSelectG = do
   fieldName <- lift (fromRelName aarRelationshipName)
@@ -622,7 +620,7 @@ fromArrayAggregateSelectG annRelationSelectG = do
         aarAnnSelect = annSelectG
       } = annRelationSelectG
 
-fromArraySelectG :: IR.ArraySelectG 'MySQL Void Expression -> ReaderT EntityAlias FromIr Join
+fromArraySelectG :: IR.ArraySelectG 'MySQL (Const Void) Expression -> ReaderT EntityAlias FromIr Join
 fromArraySelectG =
   \case
     IR.ASSimple arrayRelationSelectG ->
@@ -631,7 +629,7 @@ fromArraySelectG =
       fromArrayAggregateSelectG arrayAggregateSelectG
 
 fromObjectRelationSelectG ::
-  IR.ObjectRelationSelectG 'MySQL Void Expression ->
+  IR.ObjectRelationSelectG 'MySQL (Const Void) Expression ->
   ReaderT EntityAlias FromIr Join
 fromObjectRelationSelectG annRelationSelectG = do
   from <- lift $ fromQualifiedTable tableFrom
@@ -679,14 +677,14 @@ fromObjectRelationSelectG annRelationSelectG = do
       }
   where
     IR.AnnObjectSelectG
-      { _aosFields = fields :: IR.AnnFieldsG 'MySQL Void Expression,
+      { _aosFields = fields :: IR.AnnFieldsG 'MySQL (Const Void) Expression,
         _aosTableFrom = tableFrom :: TableName,
         _aosTableFilter = tableFilter :: IR.AnnBoolExp 'MySQL Expression
       } = annObjectSelectG
     IR.AnnRelationSelectG
       { aarRelationshipName,
         aarColumnMapping = mapping :: HashMap Column Column,
-        aarAnnSelect = annObjectSelectG :: IR.AnnObjectSelectG 'MySQL Void Expression
+        aarAnnSelect = annObjectSelectG :: IR.AnnObjectSelectG 'MySQL (Const Void) Expression
       } = annRelationSelectG
 
 isEmptyExpression :: Expression -> Bool
@@ -694,12 +692,11 @@ isEmptyExpression (AndExpression []) = True
 isEmptyExpression (OrExpression []) = True
 isEmptyExpression _ = False
 
-fromSelectRows :: IR.AnnSelectG 'MySQL Void (IR.AnnFieldG 'MySQL Void) Expression -> FromIr Select
+fromSelectRows :: IR.AnnSelectG 'MySQL (Const Void) (IR.AnnFieldG 'MySQL (Const Void)) Expression -> FromIr Select
 fromSelectRows annSelectG = do
   selectFrom <-
     case from of
       IR.FromTable qualifiedObject -> fromQualifiedTable qualifiedObject
-      IR.FromIdentifier {} -> refute $ pure IdentifierNotSupported
       IR.FromFunction {} -> refute $ pure FunctionNotSupported
   Args
     { argsOrderBy,
@@ -746,7 +743,7 @@ fromSelectRows annSelectG = do
         then StringifyNumbers
         else LeaveNumbersAlone
 
-fromArrayRelationSelectG :: IR.ArrayRelationSelectG 'MySQL Void Expression -> ReaderT EntityAlias FromIr Join
+fromArrayRelationSelectG :: IR.ArrayRelationSelectG 'MySQL (Const Void) Expression -> ReaderT EntityAlias FromIr Join
 fromArrayRelationSelectG annRelationSelectG = do
   joinFieldName <- lift (fromRelName aarRelationshipName)
   sel <- lift (fromSelectRows annSelectG)
@@ -789,7 +786,7 @@ fromArrayRelationSelectG annRelationSelectG = do
 -- | The main sources of fields, either constants, fields or via joins.
 fromAnnFieldsG ::
   StringifyNumbers ->
-  (IR.FieldName, IR.AnnFieldG 'MySQL Void Expression) ->
+  (IR.FieldName, IR.AnnFieldG 'MySQL (Const Void) Expression) ->
   ReaderT EntityAlias FromIr FieldSource
 fromAnnFieldsG stringifyNumbers (IR.FieldName name, field) =
   case field of
@@ -822,7 +819,7 @@ fromAnnFieldsG stringifyNumbers (IR.FieldName name, field) =
 
 mkSQLSelect ::
   IR.JsonAggSelect ->
-  IR.AnnSelectG 'MySQL Void (IR.AnnFieldG 'MySQL Void) Expression ->
+  IR.AnnSelectG 'MySQL (Const Void) (IR.AnnFieldG 'MySQL (Const Void)) Expression ->
   FromIr Select
 mkSQLSelect jsonAggSelect annSimpleSel = do
   case jsonAggSelect of
@@ -834,7 +831,7 @@ mkSQLSelect jsonAggSelect annSimpleSel = do
           }
 
 -- | Convert from the IR database query into a select.
-fromRootField :: IR.QueryDB 'MySQL Void Expression -> FromIr Select
+fromRootField :: IR.QueryDB 'MySQL (Const Void) Expression -> FromIr Select
 fromRootField =
   \case
     (IR.QDBSingleRow s) -> mkSQLSelect IR.JASSingleObject s
@@ -858,5 +855,5 @@ fromMappingFieldNames localFrom =
     )
     . HM.toList
 
-fieldTextNames :: IR.AnnFieldsG 'MySQL Void Expression -> [Text]
+fieldTextNames :: IR.AnnFieldsG 'MySQL (Const Void) Expression -> [Text]
 fieldTextNames = fmap (\(IR.FieldName name, _) -> name)

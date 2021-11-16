@@ -14,9 +14,6 @@ args:
     name: with_args
 - type: drop_rest_endpoint
   args:
-    name: with_uuids
-- type: drop_rest_endpoint
-  args:
     name: with_uuid
 - type: drop_rest_endpoint
   args:

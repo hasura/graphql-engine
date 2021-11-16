@@ -72,7 +72,7 @@ class
     UserInfo ->
     SourceName ->
     SourceConfig b ->
-    QueryDB b Void (UnpreparedValue b) ->
+    QueryDB b (Const Void) (UnpreparedValue b) ->
     m (DBStepInfo b)
   mkDBMutationPlan ::
     forall m.
@@ -84,7 +84,7 @@ class
     Bool ->
     SourceName ->
     SourceConfig b ->
-    MutationDB b Void (UnpreparedValue b) ->
+    MutationDB b (Const Void) (UnpreparedValue b) ->
     m (DBStepInfo b)
   mkDBSubscriptionPlan ::
     forall m.
@@ -97,7 +97,7 @@ class
     SourceName ->
     SourceConfig b ->
     Maybe G.Name ->
-    RootFieldMap (QueryDB b Void (UnpreparedValue b)) ->
+    RootFieldMap (QueryDB b (Const Void) (UnpreparedValue b)) ->
     m (LiveQueryPlan b (MultiplexedQuery b))
   mkDBQueryExplain ::
     forall m.
@@ -107,7 +107,7 @@ class
     UserInfo ->
     SourceName ->
     SourceConfig b ->
-    QueryDB b Void (UnpreparedValue b) ->
+    QueryDB b (Const Void) (UnpreparedValue b) ->
     m (AB.AnyBackend DBStepInfo)
   mkLiveQueryExplain ::
     ( MonadError QErr m,
@@ -130,12 +130,9 @@ class
     -- | The above objects have this schema.
     HashMap FieldName (Column b, ScalarType b) ->
     -- | This is a field name from the lhs that *has* to be selected in the
-    -- response along with the relationship. It is populated in
-    -- `Hasura.GraphQL.Execute.RemoteJoin.Join.processRemoteJoins_` and
-    -- the function `convertRemoteSourceRelationship` below assumes it
-    -- to be returned as either a number or a string with a number in it
+    -- response along with the relationship.
     FieldName ->
-    (FieldName, SourceRelationshipSelection b Void UnpreparedValue) ->
+    (FieldName, SourceRelationshipSelection b (Const Void) UnpreparedValue) ->
     m (DBStepInfo b)
 
 -- | This is a helper function to convert a remote source's relationship to a
@@ -158,8 +155,8 @@ convertRemoteSourceRelationship ::
   ColumnType b ->
   -- | The relationship column and its name (how it should be selected in the
   -- response)
-  (FieldName, SourceRelationshipSelection b Void UnpreparedValue) ->
-  QueryDB b Void (UnpreparedValue b)
+  (FieldName, SourceRelationshipSelection b (Const Void) UnpreparedValue) ->
+  QueryDB b (Const Void) (UnpreparedValue b)
 convertRemoteSourceRelationship
   columnMapping
   selectFrom

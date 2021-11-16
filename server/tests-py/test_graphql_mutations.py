@@ -512,63 +512,6 @@ class TestGraphqlUpdatePermissions:
     def dir(cls):
         return "queries/graphql_mutation/update/permissions"
 
-@pytest.mark.parametrize("backend", ['mssql'])
-@use_mutation_fixtures
-class TestGraphqlUpdateBasicMssql:
-
-    def test_set_author_name(self, hge_ctx):
-        check_query_f(hge_ctx, self.dir() + "/author_set_name_mssql.yaml")
-
-    def test_article_inc(self, hge_ctx):
-        check_query_f(hge_ctx, self.dir() + "/article_inc_mssql.yaml")
-
-    def test_author_no_operator(self, hge_ctx):
-        check_query_f(hge_ctx, self.dir() + "/author_no_operator_mssql.yaml")
-
-    def test_article_column_multiple_operators(self, hge_ctx):
-        check_query_f(hge_ctx, self.dir() + "/article_column_multiple_operators_mssql.yaml")
-
-    def test_author_by_pk(self, hge_ctx):
-        check_query_f(hge_ctx, self.dir() + "/author_by_pk_mssql.yaml")
-
-    def test_author_by_pk_null(self, hge_ctx):
-        check_query_f(hge_ctx, self.dir() + "/author_by_pk_null_mssql.yaml")
-
-    def test_numerics_inc(self, hge_ctx):
-        check_query_f(hge_ctx, self.dir() + "/numerics_inc_mssql.yaml")
-
-    @classmethod
-    def dir(cls):
-        return "queries/graphql_mutation/update/basic"
-
-@pytest.mark.parametrize("backend", ['mssql'])
-@use_mutation_fixtures
-class TestGraphqlUpdatePermissionsMssql:
-
-    def test_user_update_author(self, hge_ctx):
-        check_query_f(hge_ctx, self.dir() + "/user_update_author_mssql.yaml")
-
-    def test_user_update_author_other_userid(self, hge_ctx):
-        check_query_f(hge_ctx, self.dir() + "/user_update_author_other_userid_mssql.yaml")
-
-    def test_user_can_update_unpublished_article(self, hge_ctx):
-        check_query_f(hge_ctx, self.dir() + "/user_can_update_unpublished_article_mssql.yaml")
-
-    def test_user_cannot_update_published_article(self, hge_ctx):
-        check_query_f(hge_ctx, self.dir() + "/user_cannot_update_published_article_mssql.yaml")
-
-    def test_user_cannot_update_id_col_article(self, hge_ctx):
-        check_query_f(hge_ctx, self.dir() + "/user_cannot_update_id_col_article_mssql.yaml")
-
-    def test_user_cannot_update_another_users_article(self, hge_ctx):
-        check_query_f(hge_ctx, self.dir() + "/user_cannot_update_another_users_article_mssql.yaml")
-
-    def test_user_cannot_publish(self, hge_ctx):
-        check_query_f(hge_ctx, self.dir() + "/user_cannot_publish_mssql.yaml")
-
-    @classmethod
-    def dir(cls):
-        return "queries/graphql_mutation/update/permissions"
 
 @pytest.mark.parametrize("transport", ['http', 'websocket'])
 @use_mutation_fixtures
@@ -596,61 +539,12 @@ class TestGraphqlDeleteBasic:
     def dir(cls):
         return "queries/graphql_mutation/delete/basic"
 
-@pytest.mark.parametrize("backend", ['mssql'])
-@pytest.mark.parametrize("transport", ['http', 'websocket'])
-@usefixtures('per_method_tests_db_state')
-class TestGraphqlDeleteBasicMSSQL:
-
-    def test_article_delete(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + "/article.yaml", transport)
-
-    def test_article_delete_returning(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + "/article_returning.yaml", transport)
-
-    def test_article_delete_returning_author(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + "/article_returning_author.yaml", transport)
-
-    def test_author_returning_empty_articles(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + "/author_returning_empty_articles_mssql.yaml", transport)
-
-    def test_article_by_pk(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + "/article_by_pk.yaml", transport)
-
-    def test_article_by_pk_null(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + "/article_by_pk_null.yaml", transport)
-
-    def test_test_types_delete(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + "/test_types_mssql.yaml", transport)
-
-
-    @classmethod
-    def dir(cls):
-        return "queries/graphql_mutation/delete/basic"
-
 @pytest.mark.parametrize("transport", ['http', 'websocket'])
 @use_mutation_fixtures
 class TestGraphqlDeleteConstraints:
 
     def test_author_delete_foreign_key_violation(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + "/author_foreign_key_violation.yaml")
-
-    @classmethod
-    def dir(cls):
-        return "queries/graphql_mutation/delete/constraints"
-
-@pytest.mark.parametrize("backend", ['mssql'])
-@pytest.mark.parametrize("transport", ['http', 'websocket'])
-@usefixtures('per_method_tests_db_state')
-class TestGraphqlDeleteConstraintsMSSQL:
-
-    # The response from this query is non-determinstic. It looks something like:
-    # `conflicted with the REFERENCE constraint "FK__article__author___1B29035F"`
-    # where 1B29035F changes with each call.
-    # This makes it hard to write an equality-based test for it, so we just check the error code.
-    def test_author_delete_foreign_key_violation(self, hge_ctx, transport):
-        st_code, resp = hge_ctx.v1graphql_f(self.dir() + '/author_foreign_key_violation_mssql.yaml')
-        assert st_code == 200, resp
-        assert len(resp['errors']) == 1, resp
 
     @classmethod
     def dir(cls):
@@ -678,56 +572,14 @@ class TestGraphqlDeletePermissions:
     def test_user_delete_author(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/user_delete_author.yaml")
 
-    def test_user_delete_author_by_pk(self, hge_ctx):
-        check_query_f(hge_ctx, self.dir() + "/user_delete_author_by_pk.yaml")
-
     def test_user_delete_account_success(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/user_delete_account_success.yaml")
 
     def test_user_delete_account_no_rows(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/user_delete_account_no_rows.yaml")
-
     @classmethod
     def dir(cls):
         return "queries/graphql_mutation/delete/permissions"
-
-
-@pytest.mark.parametrize("backend", ['mssql'])
-@usefixtures('per_method_tests_db_state')
-class TestGraphqlDeletePermissionsMSSQL:
-
-    def test_author_can_delete_his_articles(self, hge_ctx):
-        check_query_f(hge_ctx, self.dir() + "/author_can_delete_his_articles.yaml")
-
-    def test_author_cannot_delete_other_users_articles(self, hge_ctx):
-        check_query_f(hge_ctx, self.dir() + "/author_cannot_delete_other_users_articles.yaml")
-
-    def test_resident_delete_without_select_perm_fail(self, hge_ctx):
-        check_query_f(hge_ctx, self.dir() + "/resident_delete_without_select_perm_fail.yaml")
-
-    # array types for session values not supported
-    # def test_agent_delete_perm_arr_sess_var(self, hge_ctx):
-    #     check_query_f(hge_ctx, self.dir() + "/agent_delete_perm_arr_sess_var.yaml")
-
-    # def test_agent_delete_perm_arr_sess_var_fail(self, hge_ctx):
-    #     check_query_f(hge_ctx, self.dir() + "/agent_delete_perm_arr_sess_var_fail.yaml")
-
-    def test_user_delete_author(self, hge_ctx):
-        check_query_f(hge_ctx, self.dir() + "/user_delete_author.yaml")
-
-    def test_user_delete_author_by_pk(self, hge_ctx):
-        check_query_f(hge_ctx, self.dir() + "/user_delete_author_by_pk.yaml")
-
-    def test_user_delete_account_success(self, hge_ctx):
-        check_query_f(hge_ctx, self.dir() + "/user_delete_account_success.yaml")
-
-    def test_user_delete_account_no_rows(self, hge_ctx):
-        check_query_f(hge_ctx, self.dir() + "/user_delete_account_no_rows.yaml")
-
-    @classmethod
-    def dir(cls):
-        return "queries/graphql_mutation/delete/permissions"
-
 
 @pytest.mark.parametrize("transport", ['http', 'websocket'])
 @use_mutation_fixtures

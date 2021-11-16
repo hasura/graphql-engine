@@ -13,16 +13,13 @@ module Hasura.RQL.DDL.Metadata.Types
     ReplaceMetadataV1 (..),
     ReplaceMetadataV2 (..),
     AllowInconsistentMetadata (..),
-    WebHookUrl (..),
     TestWebhookTransform (..),
   )
 where
 
 import Data.Aeson
 import Data.Aeson.TH
-import Data.Environment qualified as Env
 import Data.HashMap.Strict qualified as H
-import Data.Text qualified as T
 import Hasura.Prelude
 import Hasura.RQL.DDL.RequestTransform (MetadataTransform)
 import Hasura.RQL.Types
@@ -187,23 +184,8 @@ instance ToJSON ReplaceMetadata where
     RMReplaceMetadataV1 v1 -> toJSON v1
     RMReplaceMetadataV2 v2 -> toJSON v2
 
-data WebHookUrl = EnvVar String | URL T.Text
-  deriving (Eq)
-
-instance FromJSON WebHookUrl where
-  parseJSON (Object o) = do
-    var <- o .: "from_env"
-    pure $ EnvVar var
-  parseJSON (String str) = pure $ URL str
-  parseJSON _ = empty
-
-instance ToJSON WebHookUrl where
-  toJSON (EnvVar var) = object ["from_env" .= var]
-  toJSON (URL url) = toJSON url
-
 data TestWebhookTransform = TestWebhookTransform
-  { _twtEnv :: Env.Environment,
-    _twtWebhookUrl :: WebHookUrl,
+  { _twtWebhookUrl :: Text,
     _twtPayload :: Value,
     _twtTransformer :: MetadataTransform,
     _twtSessionVariables :: Maybe SessionVariables
@@ -212,19 +194,16 @@ data TestWebhookTransform = TestWebhookTransform
 
 instance FromJSON TestWebhookTransform where
   parseJSON = withObject "TestWebhookTransform" $ \o -> do
-    env' <- o .:? "env"
-    let env = fromMaybe mempty env'
     url <- o .: "webhook_url"
     payload <- o .: "body"
     transformer <- o .: "request_transform"
     sessionVars <- o .:? "session_variables"
-    pure $ TestWebhookTransform env url payload transformer sessionVars
+    pure $ TestWebhookTransform url payload transformer sessionVars
 
 instance ToJSON TestWebhookTransform where
-  toJSON (TestWebhookTransform env url payload mt sv) =
+  toJSON (TestWebhookTransform url payload mt sv) =
     object
-      [ "env" .= env,
-        "webhook_url" .= url,
+      [ "webhook_url" .= url,
         "body" .= payload,
         "request_transform" .= mt,
         "session_variables" .= sv
