@@ -38,7 +38,7 @@ data TlsAllow = TlsAllow
     taSuffix :: !(Maybe String),
     taPermit :: !(Maybe [TlsPermission])
   }
-  deriving (Show, Eq, Generic)
+  deriving (Show, Read, Eq, Generic)
 
 instance FromJSON TlsAllow where
   parseJSON j = aString j <|> anObject j
@@ -64,7 +64,7 @@ instance ToJSON TlsAllow where
 
 data TlsPermission
   = SelfSigned
-  deriving (Show, Eq, Generic, Enum, Bounded)
+  deriving (Show, Read, Eq, Generic, Enum, Bounded)
 
 instance FromJSON TlsPermission where
   parseJSON (String "self-signed") = pure SelfSigned
