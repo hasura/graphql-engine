@@ -829,3 +829,95 @@ test-suite graphql-engine-tests
     Network.HTTP.Client.TransformableSpec
     Hasura.SessionSpec
     Hasura.SQL.WKTSpec
+
+test-suite tests-hspec
+  import: common-all, common-exe
+  type: exitcode-stdio-1.0
+  build-depends:
+      aeson
+    , base
+    , bytestring
+    , case-insensitive
+    , containers
+    , cron
+    , dependent-map
+    , dependent-sum
+    , graphql-engine
+    , graphql-parser
+    , hedgehog
+    , hspec >=2.6.1 && <3
+    , hspec-core >=2.6.1 && <3
+    , hspec-expectations
+    , hspec-expectations-lifted
+    , hspec-hedgehog
+    , http-client
+    , http-client-tls
+    , http-types
+    , insert-ordered-containers
+    , jose
+    , kan-extensions
+    , lens
+    , lifted-base
+    , mmorph
+    , monad-control
+    , mtl
+    , natural-transformation >=0.4 && <0.5
+    , network-uri
+    , optparse-applicative
+    , pg-client
+    , process
+    , QuickCheck
+    , safe
+    , typed-process
+    , scientific
+    , split
+    , stm
+    , template-haskell
+    , text
+    , time
+    , transformers-base
+    , unordered-containers
+    , utf8-string
+    , vector
+    -- mssql support
+    , odbc
+    , resource-pool
+    -- hspec tests
+    , text-conversions
+    , ekg-core
+    , unix
+    , warp
+    , aeson-casing
+    , websockets
+    , hspec
+    , async
+    , http-conduit
+    , network
+    , mysql-simple
+    , postgresql-libpq
+    , mysql
+    , aeson-qq
+    , resourcet
+    , conduit
+    , libyaml
+    , th-lift-instances
+    , th-lift
+    , yaml
+    , postgresql-simple
+  hs-source-dirs: tests-hspec
+  -- Turning off optimizations is intentional; tests aren't
+  -- performance sensitive and waiting for compilation is a problem.
+  ghc-options: -Wall -O0 -threaded
+  main-is: Spec.hs
+  other-modules:
+    Harness.Mysql
+    Harness.Http
+    Harness.Postgres
+    Harness.Constants
+    Harness.Feature
+    Harness.Yaml
+    Harness.Sql
+    Harness.Graphql
+    Harness.GraphqlEngine
+    SanityCheckSpec
+    HelloWorldSpec
