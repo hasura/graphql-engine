@@ -33,6 +33,7 @@ instance BackendSchema 'MSSQL where
   -- top level parsers
   buildTableQueryFields = GSB.buildTableQueryFields
   buildTableRelayQueryFields = msBuildTableRelayQueryFields
+  buildTableNonQuerySubscriptionFields = GSB.buildTableNonQuerySubscriptionFields
   buildTableInsertMutationFields = msBuildTableInsertMutationFields
   buildTableUpdateMutationFields = msBuildTableUpdateMutationFields
   buildTableDeleteMutationFields = msBuildTableDeleteMutationFields

@@ -32,6 +32,7 @@ instance BackendSchema 'BigQuery where
   -- top level parsers
   buildTableQueryFields = GSB.buildTableQueryFields
   buildTableRelayQueryFields = bqBuildTableRelayQueryFields
+  buildTableNonQuerySubscriptionFields = GSB.buildTableNonQuerySubscriptionFields
   buildTableInsertMutationFields = bqBuildTableInsertMutationFields
   buildTableUpdateMutationFields = bqBuildTableUpdateMutationFields
   buildTableDeleteMutationFields = bqBuildTableDeleteMutationFields

@@ -42,7 +42,6 @@ import Hasura.RQL.Types
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.Session
 import Language.GraphQL.Draft.Syntax qualified as G
-import Debug.Trace
 
 ----------------------------------------------------------------
 -- Building contexts
@@ -228,9 +227,15 @@ buildRoleContext
           buildQueryParser queryFields queryRemotes allActionInfos nonObjectCustomTypes mutationParserBackend subscriptionParser
 
         let frontendContext =
-              GQLContext (finalizeParser queryParserFrontend) (finalizeParser <$> mutationParserFrontend)
+              GQLContext
+                (finalizeParser queryParserFrontend)
+                (finalizeParser <$> mutationParserFrontend)
+                (finalizeParser <$> subscriptionParser)
             backendContext =
-              GQLContext (finalizeParser queryParserBackend) (finalizeParser <$> mutationParserBackend)
+              GQLContext
+                (finalizeParser queryParserBackend)
+                (finalizeParser <$> mutationParserBackend)
+                (finalizeParser <$> subscriptionParser)
 
         pure $ RoleContext frontendContext $ Just backendContext
     where
@@ -327,9 +332,15 @@ buildRelayRoleContext
         queryWithIntrospectionHelper queryPGFields mutationParserBackend subscriptionParser
 
       let frontendContext =
-            GQLContext (finalizeParser queryParserFrontend) (finalizeParser <$> mutationParserFrontend)
+            GQLContext
+              (finalizeParser queryParserFrontend)
+              (finalizeParser <$> mutationParserFrontend)
+              (finalizeParser <$> subscriptionParser)
           backendContext =
-            GQLContext (finalizeParser queryParserBackend) (finalizeParser <$> mutationParserBackend)
+            GQLContext
+              (finalizeParser queryParserBackend)
+              (finalizeParser <$> mutationParserBackend)
+              (finalizeParser <$> subscriptionParser)
 
       pure $ RoleContext frontendContext $ Just backendContext
     where
@@ -450,7 +461,9 @@ unauthenticatedContext adminQueryRemotes adminMutationRemotes remoteSchemaPermsC
       P.safeSelectionSet mutationRoot (Just $ G.Description "mutation root") mutationFields
         <&> fmap (flattenNamespaces . fmap typenameToNamespacedRawRF)
   queryParser <- queryWithIntrospectionHelper queryFields mutationParser Nothing
-  pure $ GQLContext (finalizeParser queryParser) (finalizeParser <$> mutationParser)
+  -- FIXME: fix the `Nothing` used for the `gqlSubscriptionParser` by creating a `subscriptionParser`
+  -- and then using it there.
+  pure $ GQLContext (finalizeParser queryParser) (finalizeParser <$> mutationParser) Nothing
 
 ----------------------------------------------------------------
 -- Building parser fields
@@ -772,8 +785,6 @@ buildSubscriptionParser ::
   m (Maybe (Parser 'Output n (RootFieldMap (QueryRootField UnpreparedValue))))
 buildSubscriptionParser queryFields allActions nonQueryFields = do
   actionSubscriptionFields <- fmap (fmap NotNamespaced) . concat <$> traverse buildActionSubscriptionFields allActions
-  traceM ("reaching buildSubscriptionParser")
-  traceM ("non query fields are " <> show (P.getName . fDefinition <$> nonQueryFields))
   let subscriptionFields = queryFields <> actionSubscriptionFields <> nonQueryFields
   whenMaybe (not $ null subscriptionFields) $
     P.safeSelectionSet subscriptionRoot Nothing subscriptionFields

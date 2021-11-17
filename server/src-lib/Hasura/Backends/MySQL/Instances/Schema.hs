@@ -28,6 +28,7 @@ import Language.GraphQL.Draft.Syntax qualified as G
 instance BackendSchema 'MySQL where
   buildTableQueryFields = GSB.buildTableQueryFields
   buildTableRelayQueryFields = buildTableRelayQueryFields'
+  buildTableNonQuerySubscriptionFields = GSB.buildTableNonQuerySubscriptionFields
   buildTableInsertMutationFields = buildTableInsertMutationFields'
   buildTableUpdateMutationFields = buildTableUpdateMutationFields'
   buildTableDeleteMutationFields = buildTableDeleteMutationFields'

@@ -65,7 +65,6 @@ import Hasura.RQL.IR
 import Hasura.RQL.Types
 import Hasura.SQL.AnyBackend qualified as AB
 import Language.GraphQL.Draft.Syntax qualified as G
-import Debug.Trace
 
 buildTableQueryFields ::
   forall b r m n.
@@ -113,7 +112,6 @@ buildTableNonQuerySubscriptionFields ::
   SelPermInfo b ->
   m [FieldParser n (QueryRootField UnpreparedValue)]
 buildTableNonQuerySubscriptionFields sourceName sourceInfo queryTagsConfig tableName tableInfo gqlName selPerms = do
-  traceM ("reaching here")
   let mkRF =
         RFDB sourceName
           . AB.mkAnyBackend
@@ -122,8 +120,9 @@ buildTableNonQuerySubscriptionFields sourceName sourceInfo queryTagsConfig table
       customRootFields = _tcCustomRootFields $ _tciCustomConfig $ _tiCoreInfo tableInfo
       -- select table
       selectDesc = Just $ G.Description $ "fetch data from the table: " <>> tableName
-  selectStreamName <- mkRootFieldName $ (fromMaybe gqlName $ _tcrfSelect customRootFields) <> $$(G.litName "_stream")
-  traceM ("select stream name is " <> show selectStreamName)
+  selectStreamName <-
+    -- TODO: Do we need to have a custom field for stream fields?
+    mkRootFieldName $ (fromMaybe gqlName $ _tcrfSelect customRootFields) <> $$(G.litName "_stream")
   catMaybes
     <$> sequenceA
       [ requiredFieldParser (mkRF . QDBMultipleRows) $ selectTable sourceName tableInfo selectStreamName selectDesc selPerms

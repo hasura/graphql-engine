@@ -32,6 +32,7 @@ import Hasura.GraphQL.Execute.LiveQuery.Plan qualified as EL
 import Hasura.GraphQL.Execute.Mutation qualified as EM
 import Hasura.GraphQL.Execute.Query qualified as EQ
 import Hasura.GraphQL.Execute.RemoteJoin qualified as RJ
+import Hasura.GraphQL.Execute.Resolve qualified as ER
 import Hasura.GraphQL.Execute.Types qualified as ET
 import Hasura.GraphQL.Namespace
 import Hasura.GraphQL.ParameterizedQueryHash
@@ -325,9 +326,14 @@ getResolvedExecPlan
               maybeOperationName
           pure $ (parameterizedQueryHash, MutationExecutionPlan executionPlan)
         G.TypedOperationDefinition G.OperationTypeSubscription _ varDefs directives inlinedSelSet -> do
-          -- Parse as query to check correctness
-          (unpreparedAST, normalizedDirectives, normalizedSelectionSet) <-
-            EQ.parseGraphQLQuery gCtx varDefs (_grVariables reqUnparsed) directives inlinedSelSet
+          (normalizedDirectives, normalizedSelectionSet) <-
+            ER.resolveVariables
+              varDefs
+              (fromMaybe mempty (_grVariables reqUnparsed))
+              directives
+              inlinedSelSet
+          subscriptionParser <- C.gqlSubscriptionParser gCtx `onNothing` throw400 NotFound "subscriptions don't exist"
+          unpreparedAST <- (subscriptionParser >>> (`onLeft` reportParseErrors)) normalizedSelectionSet
           let parameterizedQueryHash = calculateParameterizedQueryHash normalizedSelectionSet
           -- Process directives on the subscription
           dirMap <-
