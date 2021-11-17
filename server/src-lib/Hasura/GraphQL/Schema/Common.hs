@@ -10,6 +10,7 @@ module Hasura.GraphQL.Schema.Common
     SelectArgs,
     SelectStreamArgs,
     SelectExp,
+    StreamSelectExp,
     TablePerms,
     comparisonAggOperators,
     currentNodeIdVersion,
@@ -45,7 +46,7 @@ import Language.GraphQL.Draft.Syntax as G
 
 type SelectExp b = IR.AnnSimpleSelectG b (IR.RemoteSelect UnpreparedValue) (UnpreparedValue b)
 
--- type StreamSelectExp b = IR.AnnStreamSelectG b (IR.RemoteSelect UnpreparedValue) (UnpreparedValue b)
+type StreamSelectExp b = IR.AnnSimpleStreamSelectG b (IR.RemoteSelect UnpreparedValue) (UnpreparedValue b)
 
 type AggSelectExp b = IR.AnnAggregateSelectG b (IR.RemoteSelect UnpreparedValue) (UnpreparedValue b)
 

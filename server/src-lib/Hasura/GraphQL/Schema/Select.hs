@@ -143,21 +143,21 @@ selectStreamTable ::
   Maybe G.Description ->
   -- | select permissions of the table
   SelPermInfo b ->
-  m (FieldParser n (SelectExp b))
+  m (FieldParser n (StreamSelectExp b))
 selectStreamTable sourceName tableInfo fieldName description selectPermissions = memoizeOn 'selectStreamTable (sourceName, tableName, fieldName) do
   stringifyNum <- asks $ qcStringifyNum . getter
-  tableArgsParser <- tableArguments sourceName tableInfo selectPermissions
+--  tableArgsParser <- tableArguments sourceName tableInfo selectPermissions
   tableStreamArgsParser <- tableStreamArguments sourceName tableInfo selectPermissions
   selectionSetParser <- tableSelectionList sourceName tableInfo selectPermissions
   pure $
-    P.subselection fieldName description tableArgsParser selectionSetParser
+    P.subselection fieldName description tableStreamArgsParser selectionSetParser
       <&> \(args, fields) ->
-        IR.AnnSelectG
-          { IR._asnFields = fields,
-            IR._asnFrom = IR.FromTable tableName,
-            IR._asnPerm = tablePermissionsInfo selectPermissions,
-            IR._asnArgs = args,
-            IR._asnStrfyNum = stringifyNum
+        IR.AnnSelectStreamG
+          { IR._assnFields = fields,
+            IR._assnFrom = IR.FromTable tableName,
+            IR._assnPerm = tablePermissionsInfo selectPermissions,
+            IR._assnArgs = args,
+            IR._assnStrfyNum = stringifyNum
           }
   where
     tableName = tableInfoName tableInfo

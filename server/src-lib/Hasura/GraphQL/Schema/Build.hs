@@ -125,7 +125,7 @@ buildTableNonQuerySubscriptionFields sourceName sourceInfo queryTagsConfig table
     mkRootFieldName $ (fromMaybe gqlName $ _tcrfSelect customRootFields) <> $$(G.litName "_stream")
   catMaybes
     <$> sequenceA
-      [ requiredFieldParser (mkRF . QDBMultipleRows) $ selectStreamTable sourceName tableInfo selectStreamName selectDesc selPerms
+      [ requiredFieldParser (mkRF . QDBStreamMultipleRows) $ selectStreamTable sourceName tableInfo selectStreamName selectDesc selPerms
       ]
 
 

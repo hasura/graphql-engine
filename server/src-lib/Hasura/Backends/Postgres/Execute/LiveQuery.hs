@@ -102,6 +102,7 @@ toSQLFromItem = flip \case
   QDBMultipleRows s -> S.mkSelFromItem $ DS.mkSQLSelect JASMultipleRows s
   QDBAggregation s -> S.mkSelFromItem $ DS.mkAggregateSelect s
   QDBConnection s -> S.mkSelectWithFromItem $ DS.mkConnectionSelect s
+  QDBStreamMultipleRows s -> S.mkSelFromItem $ DS.mkStreamSQLSelect s
 
 mkMultiplexedQuery ::
   ( Backend ('Postgres pgKind),

@@ -345,6 +345,7 @@ irToRootFieldPlan prepped = \case
   QDBSingleRow s -> mkPreparedSql (DS.selectQuerySQL JASSingleObject) s
   QDBAggregation s -> mkPreparedSql DS.selectAggregateQuerySQL s
   QDBConnection s -> mkPreparedSql DS.connectionSelectQuerySQL s
+  QDBStreamMultipleRows s -> mkPreparedSql DS.selectStreamQuerySQL s
   where
     mkPreparedSql :: (t -> Q.Query) -> t -> PreparedSql
     mkPreparedSql f simpleSel =

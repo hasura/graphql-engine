@@ -81,6 +81,7 @@ getRemoteJoins = \case
   QDBSingleRow s -> first QDBSingleRow $ getRemoteJoinsSelect s
   QDBAggregation s -> first QDBAggregation $ getRemoteJoinsAggregateSelect s
   QDBConnection s -> first QDBConnection $ getRemoteJoinsConnectionSelect s
+  QDBStreamMultipleRows s -> first QDBStreamMultipleRows $ getRemoteJoinsStreamSelect s
 
 -- | Traverse through 'AnnSimpleSel' and collect remote join fields (if any).
 getRemoteJoinsSelect ::
@@ -89,6 +90,13 @@ getRemoteJoinsSelect ::
   (AnnSimpleSelectG b (Const Void) (UnpreparedValue b), Maybe RemoteJoins)
 getRemoteJoinsSelect =
   runCollector . transformSelect
+
+getRemoteJoinsStreamSelect ::
+  Backend b =>
+  AnnSimpleStreamSelectG b (RemoteSelect UnpreparedValue) (UnpreparedValue b) ->
+  (AnnSimpleStreamSelectG b (Const Void) (UnpreparedValue b), Maybe RemoteJoins)
+getRemoteJoinsStreamSelect =
+  runCollector . transformStreamSelect
 
 -- | Traverse through @'AnnAggregateSelect' and collect remote join fields (if any).
 getRemoteJoinsAggregateSelect ::
@@ -212,6 +220,15 @@ transformSelect select@AnnSelectG {_asnFields = fields} = do
   -- Transform selects in array, object and computed fields
   transformedFields <- transformAnnFields fields
   pure select {_asnFields = transformedFields}
+
+transformStreamSelect ::
+  Backend b =>
+  AnnSimpleStreamSelectG b (RemoteSelect UnpreparedValue) (UnpreparedValue b) ->
+  Collector (AnnSimpleStreamSelectG b (Const Void) (UnpreparedValue b))
+transformStreamSelect select@AnnSelectStreamG {_assnFields = fields} = do
+  -- Transform selects in array, object and computed fields
+  transformedFields <- transformAnnFields fields
+  pure select {_assnFields = transformedFields}
 
 transformAggregateSelect ::
   Backend b =>

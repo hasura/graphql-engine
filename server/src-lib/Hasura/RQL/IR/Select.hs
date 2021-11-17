@@ -37,8 +37,11 @@ module Hasura.RQL.IR.Select
     AnnObjectSelectG (..),
     AnnRelationSelectG (..),
     AnnSelectG (..),
+    AnnSelectStreamG (..),
     AnnSimpleSelect,
     AnnSimpleSelectG,
+    AnnSimpleStreamSelect,
+    AnnSimpleStreamSelectG,
     AnnotatedAggregateOrderBy (..),
     AnnotatedOrderByElement (..),
     AnnotatedOrderByItem,
@@ -154,6 +157,7 @@ data QueryDB (b :: BackendType) (r :: BackendType -> Type) v
   | QDBSingleRow (AnnSimpleSelectG b r v)
   | QDBAggregation (AnnAggregateSelectG b r v)
   | QDBConnection (ConnectionSelect b r v)
+  | QDBStreamMultipleRows (AnnSimpleStreamSelectG b r v)
   deriving stock (Generic, Functor, Foldable, Traversable)
 
 -- Select
@@ -183,13 +187,46 @@ deriving instance
   ) =>
   Show (AnnSelectG b r f v)
 
+data AnnSelectStreamG
+    (b :: BackendType)
+    (r :: BackendType -> Type)
+    (f :: Type -> Type)
+    (v :: Type) = AnnSelectStreamG
+  { _assnFields :: !(Fields (f v)),
+    _assnFrom :: !(SelectFromG b v),
+    _assnPerm :: !(TablePermG b v),
+    _assnArgs :: !(SelectStreamArgsG b v),
+    _assnStrfyNum :: !Bool
+  }
+  deriving (Functor, Foldable, Traversable)
+
+deriving instance
+  ( Backend b,
+    Eq (BooleanOperators b v),
+    Eq v,
+    Eq (f v)
+  ) =>
+  Eq (AnnSelectStreamG b r f v)
+
+deriving instance
+  ( Backend b,
+    Show (BooleanOperators b v),
+    Show v,
+    Show (f v)
+  ) =>
+  Show (AnnSelectStreamG b r f v)
+
 type AnnSimpleSelectG b r v = AnnSelectG b r (AnnFieldG b r) v
 
 type AnnAggregateSelectG b r v = AnnSelectG b r (TableAggregateFieldG b r) v
 
+type AnnSimpleStreamSelectG b r v = AnnSelectStreamG b r (AnnFieldG b r) v
+
 type AnnSimpleSelect b = AnnSimpleSelectG b (Const Void) (SQLExpression b)
 
 type AnnAggregateSelect b = AnnAggregateSelectG b (Const Void) (SQLExpression b)
+
+type AnnSimpleStreamSelect b = AnnSimpleStreamSelectG b (Const Void) (SQLExpression b)
 
 -- Relay select
 
