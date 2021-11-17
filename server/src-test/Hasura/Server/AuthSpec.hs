@@ -10,6 +10,7 @@ import Crypto.JWT qualified as JWT
 import Data.Aeson ((.=))
 import Data.Aeson qualified as J
 import Data.HashMap.Strict qualified as Map
+import Data.HashSet qualified as Set
 import Data.Parser.JSONPath
 import Hasura.Base.Error
 import Hasura.GraphQL.Transport.HTTP.Protocol (ReqsText)
@@ -94,7 +95,7 @@ getUserInfoWithExpTimeTests = describe "getUserInfo" $ do
 
   describe "admin secret only" $ do
     describe "unauth role NOT set" $ do
-      mode <- runIO $ setupAuthMode'E (Just $ hashAdminSecret "secret") Nothing Nothing Nothing
+      mode <- runIO $ setupAuthMode'E (Just $ Set.singleton $ hashAdminSecret "secret") Nothing Nothing Nothing
 
       it "accepts when admin secret matches" $ do
         getUserInfoWithExpTime mempty [(adminSecretHeader, "secret")] mode
@@ -131,7 +132,7 @@ getUserInfoWithExpTimeTests = describe "getUserInfo" $ do
     describe "unauth role set" $ do
       mode <-
         runIO $
-          setupAuthMode'E (Just $ hashAdminSecret "secret") Nothing Nothing (Just ourUnauthRole)
+          setupAuthMode'E (Just $ Set.singleton $ hashAdminSecret "secret") Nothing Nothing (Just ourUnauthRole)
       it "accepts when admin secret matches" $ do
         getUserInfoWithExpTime mempty [(adminSecretHeader, "secret")] mode
           `shouldReturn` Right adminRoleName
@@ -169,7 +170,7 @@ getUserInfoWithExpTimeTests = describe "getUserInfo" $ do
   describe "webhook" $ do
     mode <-
       runIO $
-        setupAuthMode'E (Just $ hashAdminSecret "secret") (Just fakeAuthHook) Nothing Nothing
+        setupAuthMode'E (Just $ Set.singleton $ hashAdminSecret "secret") (Just fakeAuthHook) Nothing Nothing
 
     it "accepts when admin secret matches" $ do
       getUserInfoWithExpTime mempty [(adminSecretHeader, "secret")] mode
@@ -217,7 +218,7 @@ getUserInfoWithExpTimeTests = describe "getUserInfo" $ do
     describe "unauth role NOT set" $ do
       mode <-
         runIO $
-          setupAuthMode'E (Just $ hashAdminSecret "secret") Nothing (Just fakeJWTConfig) Nothing
+          setupAuthMode'E (Just $ Set.singleton $ hashAdminSecret "secret") Nothing (Just fakeJWTConfig) Nothing
 
       it "accepts when admin secret matches" $ do
         getUserInfoWithExpTime mempty [(adminSecretHeader, "secret")] mode
@@ -251,7 +252,7 @@ getUserInfoWithExpTimeTests = describe "getUserInfo" $ do
       mode <-
         runIO $
           setupAuthMode'E
-            (Just $ hashAdminSecret "secret")
+            (Just $ Set.singleton $ hashAdminSecret "secret")
             Nothing
             (Just fakeJWTConfig)
             (Just ourUnauthRole)
@@ -290,14 +291,14 @@ getUserInfoWithExpTimeTests = describe "getUserInfo" $ do
       modeA <-
         runIO $
           setupAuthMode'E
-            (Just $ hashAdminSecret "secret")
+            (Just $ Set.singleton $ hashAdminSecret "secret")
             Nothing
             (Just fakeJWTConfig)
             (Just ourUnauthRole)
       modeB <-
         runIO $
           setupAuthMode'E
-            (Just $ hashAdminSecret "secret")
+            (Just $ Set.singleton $ hashAdminSecret "secret")
             Nothing
             (Just fakeJWTConfig)
             Nothing
@@ -364,7 +365,7 @@ getUserInfoWithExpTimeTests = describe "getUserInfo" $ do
 -- Some very basic unit tests of AuthMode construction and error modes
 setupAuthModeTests :: Spec
 setupAuthModeTests = describe "setupAuthMode" $ do
-  let secret = hashAdminSecret "secret"
+  let secret = Set.singleton $ hashAdminSecret "secret"
       unauthRole = mkRoleNameE "anon"
 
   -- These are all various error cases, except for the AMNoAuth mode:
@@ -625,7 +626,7 @@ newtype NoReporter a = NoReporter {runNoReporter :: IO a}
 instance Tracing.HasReporter NoReporter
 
 setupAuthMode' ::
-  Maybe AdminSecretHash ->
+  Maybe (HashSet AdminSecretHash) ->
   Maybe AuthHook ->
   Maybe JWTConfig ->
   Maybe RoleName ->
@@ -637,7 +638,7 @@ setupAuthMode' mAdminSecretHash mWebHook mJwtSecret mUnAuthRole =
       lowerManagedT $
         runExceptT $
           setupAuthMode
-            mAdminSecretHash
+            (fromMaybe Set.empty mAdminSecretHash)
             mWebHook
             mJwtSecret
             mUnAuthRole

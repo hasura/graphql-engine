@@ -190,7 +190,7 @@ data ServeOptions impl = ServeOptions
     soHost :: !HostPreference,
     soConnParams :: !Q.ConnParams,
     soTxIso :: !Q.TxIsolation,
-    soAdminSecret :: !(Maybe AdminSecretHash),
+    soAdminSecret :: !(Set.HashSet AdminSecretHash),
     soAuthHook :: !(Maybe AuthHook),
     soJwtSecret :: !(Maybe JWTConfig),
     soUnAuthRole :: !(Maybe RoleName),
