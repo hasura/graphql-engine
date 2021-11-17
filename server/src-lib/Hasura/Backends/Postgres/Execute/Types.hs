@@ -3,7 +3,6 @@
 module Hasura.Backends.Postgres.Execute.Types
   ( PGExecCtx (..),
     mkPGExecCtx,
-    checkDbConnection,
     defaultTxErrorHandler,
     mkTxErrorHandler,
 
@@ -17,7 +16,6 @@ where
 import Control.Lens
 import Control.Monad.Trans.Control (MonadBaseControl (..))
 import Data.Aeson.Extended qualified as J
-import Data.Either (isRight)
 import Database.PG.Query qualified as Q
 import Database.PG.Query.Connection qualified as Q
 import Hasura.Backends.Postgres.SQL.Error
@@ -36,8 +34,6 @@ data PGExecCtx = PGExecCtx
     _pecRunReadNoTx :: RunTx,
     -- | Run a Q.ReadWrite transaction
     _pecRunReadWrite :: RunTx,
-    -- | Checks the health of this execution context
-    _pecCheckHealth :: (IO Bool),
     -- | Destroys connection pools
     _pecDestroyConn :: (IO ())
   }
@@ -49,19 +45,8 @@ mkPGExecCtx isoLevel pool =
     { _pecRunReadOnly = (Q.runTx pool (isoLevel, Just Q.ReadOnly)),
       _pecRunReadNoTx = (Q.runTx' pool),
       _pecRunReadWrite = (Q.runTx pool (isoLevel, Just Q.ReadWrite)),
-      _pecCheckHealth = checkDbConnection pool,
       _pecDestroyConn = Q.destroyPGPool pool
     }
-
-checkDbConnection :: MonadIO m => Q.PGPool -> m Bool
-checkDbConnection pool = do
-  e <- liftIO $ runExceptT $ Q.runTx' pool select1Query
-  pure $ isRight e
-  where
-    select1Query :: Q.TxE QErr Int
-    select1Query =
-      runIdentity . Q.getRow
-        <$> Q.withQE defaultTxErrorHandler [Q.sql| SELECT 1 |] () False
 
 defaultTxErrorHandler :: Q.PGTxErr -> QErr
 defaultTxErrorHandler = mkTxErrorHandler (const False)

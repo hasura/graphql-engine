@@ -26,7 +26,7 @@ import Hasura.App
     notifySchemaCacheSyncTx,
     setCatalogStateTx,
   )
-import Hasura.Backends.Postgres.Execute.Types (checkDbConnection)
+import Hasura.Backends.Postgres.Connection (checkDbConnection)
 import Hasura.Base.Error
   ( Code (AccessDenied),
     QErr,
