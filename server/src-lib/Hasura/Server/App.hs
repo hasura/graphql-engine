@@ -37,7 +37,6 @@ import Data.Aeson qualified as J
 import Data.ByteString.Char8 qualified as B8
 import Data.ByteString.Lazy qualified as BL
 import Data.CaseInsensitive qualified as CI
-import Data.Either (fromRight)
 import Data.Environment qualified as Env
 import Data.HashMap.Strict qualified as M
 import Data.HashSet qualified as S
@@ -945,23 +944,25 @@ httpApp setupHook corsCfg serverCtx enableConsole consoleAssetsDir enableTelemet
 
   -- Health check endpoint with logs
   let healthzAction = do
-        sc <- getSCFromRef $ scCacheRef serverCtx
-        eitherHealth <- runMetadataStorageT checkMetadataStorageHealth
-        let dbOk = fromRight False eitherHealth
-            okText = "OK"
-            warnText = "WARN: inconsistent objects in schema"
-            errorText = "ERROR"
-            responseText =
-              if null (scInconsistentObjs sc)
-                then okText
-                else warnText
-        if dbOk
-          then do
+        let errorMsg = "ERROR"
+        runMetadataStorageT checkMetadataStorageHealth >>= \case
+          Left err -> do
+            -- error running the health check
+            logError err
+            Spock.setStatus HTTP.status500 >> Spock.text errorMsg
+          Right False -> do
+            -- unhealthy
+            logError (internalError errorMsg)
+            Spock.setStatus HTTP.status500 >> Spock.text errorMsg
+          Right True -> do
+            -- healthy
+            sc <- getSCFromRef $ scCacheRef serverCtx
+            let responseText =
+                  if null (scInconsistentObjs sc)
+                    then "OK"
+                    else "WARN: inconsistent objects in schema"
             logSuccess responseText
             Spock.setStatus HTTP.status200 >> Spock.text (LT.toStrict responseText)
-          else do
-            logError errorText
-            Spock.setStatus HTTP.status500 >> Spock.text errorText
 
   Spock.get "healthz" healthzAction
 
@@ -1123,14 +1124,14 @@ httpApp setupHook corsCfg serverCtx enableConsole consoleAssetsDir enableTelemet
       lift $
         logHttpSuccess logger enabledLogTypes Nothing reqId req (reqBody, Nothing) blMsg blMsg Nothing Nothing headers (emptyHttpLogMetadata @m)
 
-    logError errmsg = do
+    logError err = do
       let enabledLogTypes = scEnabledLogTypes serverCtx
       req <- Spock.request
       reqBody <- liftIO $ Wai.strictRequestBody req
       let headers = Wai.requestHeaders req
       (reqId, _newHeaders) <- getRequestId headers
       lift $
-        logHttpError logger enabledLogTypes Nothing reqId req (reqBody, Nothing) (internalError errmsg) headers
+        logHttpError logger enabledLogTypes Nothing reqId req (reqBody, Nothing) err headers
 
     spockAction ::
       forall a n.
