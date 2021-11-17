@@ -6,6 +6,7 @@
 -- used exclusively by relay.
 module Hasura.GraphQL.Schema.Select
   ( selectTable,
+    selectStreamTable,
     selectTableByPk,
     selectTableAggregate,
     selectTableConnection,
@@ -15,6 +16,7 @@ module Hasura.GraphQL.Schema.Select
     computedFieldPG,
     remoteRelationshipField,
     defaultTableArgs,
+    tableStreamArgs,
     tableWhereArg,
     tableOrderByArg,
     tableDistinctArg,
@@ -115,6 +117,37 @@ selectTable ::
 selectTable sourceName tableInfo fieldName description selectPermissions = memoizeOn 'selectTable (sourceName, tableName, fieldName) do
   stringifyNum <- asks $ qcStringifyNum . getter
   tableArgsParser <- tableArguments sourceName tableInfo selectPermissions
+  selectionSetParser <- tableSelectionList sourceName tableInfo selectPermissions
+  pure $
+    P.subselection fieldName description tableArgsParser selectionSetParser
+      <&> \(args, fields) ->
+        IR.AnnSelectG
+          { IR._asnFields = fields,
+            IR._asnFrom = IR.FromTable tableName,
+            IR._asnPerm = tablePermissionsInfo selectPermissions,
+            IR._asnArgs = args,
+            IR._asnStrfyNum = stringifyNum
+          }
+  where
+    tableName = tableInfoName tableInfo
+
+selectStreamTable ::
+  forall b r m n.
+  MonadBuildSchema b r m n =>
+  SourceName ->
+  -- | table info
+  TableInfo b ->
+  -- | field display name
+  G.Name ->
+  -- | field description, if any
+  Maybe G.Description ->
+  -- | select permissions of the table
+  SelPermInfo b ->
+  m (FieldParser n (SelectExp b))
+selectStreamTable sourceName tableInfo fieldName description selectPermissions = memoizeOn 'selectStreamTable (sourceName, tableName, fieldName) do
+  stringifyNum <- asks $ qcStringifyNum . getter
+  tableArgsParser <- tableArguments sourceName tableInfo selectPermissions
+  tableStreamArgsParser <- tableStreamArguments sourceName tableInfo selectPermissions
   selectionSetParser <- tableSelectionList sourceName tableInfo selectPermissions
   pure $
     P.subselection fieldName description tableArgsParser selectionSetParser
@@ -710,6 +743,20 @@ defaultTableArgs sourceName tableInfo selectPermissions = do
       unless isValid $
         parseError
           "\"distinct_on\" columns must match initial \"order_by\" columns"
+
+tableStreamArgs ::
+  forall b r m n.
+  MonadBuildSchema b r m n =>
+  SourceName ->
+  TableInfo b ->
+  SelPermInfo b ->
+  m (InputFieldsParser n (SelectStreamArgs b))
+tableStreamArgs sourceName tableInfo selectPermissions = do
+  whereParser <- tableWhereArg sourceName tableInfo selectPermissions
+  pure $ do
+    whereArg <- whereParser
+    pure $
+      IR.SelectStreamArgsG whereArg
 
 -- | Argument to filter rows returned from table selection
 -- > where: table_bool_exp

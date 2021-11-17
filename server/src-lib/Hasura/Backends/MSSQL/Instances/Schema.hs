@@ -47,6 +47,7 @@ instance BackendSchema 'MSSQL where
 
   -- table arguments
   tableArguments = msTableArgs
+  tableStreamArguments = error "table stream arguments are not supported for MSSQL"
   mkRelationshipParser = msMkRelationshipParser
 
   -- individual components

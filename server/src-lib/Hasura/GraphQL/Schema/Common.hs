@@ -8,6 +8,7 @@ module Hasura.GraphQL.Schema.Common
     QueryContext (QueryContext, qcDangerousBooleanCollapse, qcFunctionPermsContext, qcQueryType, qcRemoteRelationshipContext, qcStringifyNum),
     RemoteRelationshipQueryContext (RemoteRelationshipQueryContext, _rrscParsedIntrospection),
     SelectArgs,
+    SelectStreamArgs,
     SelectExp,
     TablePerms,
     comparisonAggOperators,
@@ -44,11 +45,15 @@ import Language.GraphQL.Draft.Syntax as G
 
 type SelectExp b = IR.AnnSimpleSelectG b (IR.RemoteSelect UnpreparedValue) (UnpreparedValue b)
 
+-- type StreamSelectExp b = IR.AnnStreamSelectG b (IR.RemoteSelect UnpreparedValue) (UnpreparedValue b)
+
 type AggSelectExp b = IR.AnnAggregateSelectG b (IR.RemoteSelect UnpreparedValue) (UnpreparedValue b)
 
 type ConnectionSelectExp b = IR.ConnectionSelect b (IR.RemoteSelect UnpreparedValue) (UnpreparedValue b)
 
 type SelectArgs b = IR.SelectArgsG b (UnpreparedValue b)
+
+type SelectStreamArgs b = IR.SelectStreamArgsG b (UnpreparedValue b)
 
 type TablePerms b = IR.TablePermG b (UnpreparedValue b)
 

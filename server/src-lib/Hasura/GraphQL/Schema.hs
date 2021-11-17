@@ -94,6 +94,10 @@ buildGQLContext queryType sources allRemoteSchemas allActions nonObjectCustomTyp
 
   -- build the admin DB-only context so that we can check against name clashes with remotes
   -- TODO: Is there a better way to check for conflicts without actually building the admin schema?
+
+  -- The `adminHasuraDBContext` doesn't include the subscription parser because remote schema subscriptions
+  -- aren't implemented yet, when they are implemented, we should check for conflicts with the subcription
+  -- fields as well.
   adminHasuraDBContext <-
     buildFullestDBSchema adminQueryContext sources allActionInfos nonObjectCustomTypes
 

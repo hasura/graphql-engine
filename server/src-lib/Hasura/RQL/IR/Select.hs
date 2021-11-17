@@ -81,6 +81,8 @@ module Hasura.RQL.IR.Select
     RemoteSourceSelect (..),
     SelectArgs,
     SelectArgsG (..),
+    SelectStreamArgsG (..),
+    SelectStreamArgs,
     SelectFrom,
     SelectFromG (..),
     SourceRelationshipSelection (..),
@@ -280,6 +282,33 @@ instance (Backend b, Hashable v) => Hashable (SelectFromG b v)
 type SelectFrom b = SelectFromG b (SQLExpression b)
 
 -- Select arguments
+
+data SelectStreamArgsG (b :: BackendType) v = SelectStreamArgsG
+  { _ssaWhere :: !(Maybe (AnnBoolExp b v))
+  } deriving (Generic, Functor, Foldable, Traversable)
+
+type SelectStreamArgs b = SelectStreamArgsG b (SQLExpression b)
+
+deriving instance
+  ( Backend b,
+    Eq (BooleanOperators b v),
+    Eq v
+  ) =>
+  Eq (SelectStreamArgsG b v)
+
+instance
+  ( Backend b,
+    Hashable (BooleanOperators b v),
+    Hashable v
+  ) =>
+  Hashable (SelectStreamArgsG b v)
+
+deriving instance
+  ( Backend b,
+    Show (BooleanOperators b v),
+    Show v
+  ) =>
+  Show (SelectStreamArgsG b v)
 
 data SelectArgsG (b :: BackendType) v = SelectArgs
   { _saWhere :: !(Maybe (AnnBoolExp b v)),
