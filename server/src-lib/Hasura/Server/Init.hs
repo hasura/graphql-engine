@@ -75,6 +75,8 @@ $(J.deriveJSON hasuraJSON ''StartupTimeInfo)
 returnJust :: Monad m => a -> m (Maybe a)
 returnJust = return . Just
 
+-- | Lookup a key in the application environment then parse the value
+-- with a 'FromEnv' instance'
 considerEnv :: FromEnv a => String -> WithEnv (Maybe a)
 considerEnv envVar = do
   env <- ask
@@ -86,6 +88,8 @@ considerEnv envVar = do
       throwError $
         "Fatal Error:- Environment variable " ++ envVar ++ ": " ++ s
 
+-- | Lookup a list of keys with 'considerEnv' and return the first
+-- value to parse successfully.
 considerEnvs :: FromEnv a => [String] -> WithEnv (Maybe a)
 considerEnvs envVars = foldl1 (<|>) <$> mapM considerEnv envVars
 
@@ -93,6 +97,7 @@ withEnv :: FromEnv a => Maybe a -> String -> WithEnv (Maybe a)
 withEnv mVal envVar =
   maybe (considerEnv envVar) returnJust mVal
 
+-- | Return 'a' if Just or else call 'considerEnv' with a list of env keys k
 withEnvs :: FromEnv a => Maybe a -> [String] -> WithEnv (Maybe a)
 withEnvs mVal envVars =
   maybe (considerEnvs envVars) returnJust mVal
@@ -161,7 +166,7 @@ mkServeOptions rso = do
 
   connParams <- mkConnParams $ rsoConnParams rso
   txIso <- fromMaybe Q.ReadCommitted <$> withEnv (rsoTxIso rso) (fst txIsoEnv)
-  adminScrt <- withEnvs (rsoAdminSecret rso) $ map fst [adminSecretEnv, accessKeyEnv]
+  adminScrt <- fmap (maybe mempty Set.singleton) $ withEnvs (rsoAdminSecret rso) $ map fst [adminSecretEnv, accessKeyEnv]
   authHook <- mkAuthHook $ rsoAuthHook rso
   jwtSecret <- withEnvJwtConf (rsoJwtSecret rso) $ fst jwtSecretEnv
   unAuthRole <- withEnv (rsoUnAuthRole rso) $ fst unAuthRoleEnv
@@ -1316,7 +1321,7 @@ serveOptsToLog so =
         [ "port" J..= soPort so,
           "server_host" J..= show (soHost so),
           "transaction_isolation" J..= show (soTxIso so),
-          "admin_secret_set" J..= isJust (soAdminSecret so),
+          "admin_secret_set" J..= (not $ Set.null (soAdminSecret so)),
           "auth_hook" J..= (ahUrl <$> soAuthHook so),
           "auth_hook_mode" J..= (show . ahType <$> soAuthHook so),
           "jwt_secret" J..= (J.toJSON <$> soJwtSecret so),

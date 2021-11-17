@@ -13,6 +13,8 @@
 --
 -- See: https://www.haskell.org/cabal/users-guide/nix-local-build.html#configuring-builds-with-cabal-project
 
+with-compiler: ghc-8.10.7
+
 packages: server
 
 constraints:
