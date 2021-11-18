@@ -146,7 +146,6 @@ selectStreamTable ::
   m (FieldParser n (StreamSelectExp b))
 selectStreamTable sourceName tableInfo fieldName description selectPermissions = memoizeOn 'selectStreamTable (sourceName, tableName, fieldName) do
   stringifyNum <- asks $ qcStringifyNum . getter
---  tableArgsParser <- tableArguments sourceName tableInfo selectPermissions
   tableStreamArgsParser <- tableStreamArguments sourceName tableInfo selectPermissions
   selectionSetParser <- tableSelectionList sourceName tableInfo selectPermissions
   pure $
@@ -753,8 +752,10 @@ tableStreamArgs ::
   m (InputFieldsParser n (SelectStreamArgs b))
 tableStreamArgs sourceName tableInfo selectPermissions = do
   whereParser <- tableWhereArg sourceName tableInfo selectPermissions
+  cursorParser <- tableStreamCursorArg sourceName tableInfo selectPermissions
   pure $ do
     whereArg <- whereParser
+    cursorArg <- cursorParser
     pure $
       IR.SelectStreamArgsG whereArg
 
@@ -818,6 +819,34 @@ tableDistinctArg sourceName tableInfo selectPermissions = do
   where
     distinctOnName = $$(G.litName "distinct_on")
     distinctOnDesc = Just $ G.Description "distinct select on columns"
+
+tableStreamCursorArg ::
+  forall b r m n.
+  MonadBuildSchema b r m n =>
+  SourceName ->
+  TableInfo b ->
+  SelPermInfo b ->
+  m (InputFieldsParser n (HashMap (Column b) (UnpreparedValue b)))
+tableStreamCursorArg sourceName tableInfo selectPermissions = do
+  tableGQLName <- getTableGQLName tableInfo
+  let columnInfos = tableColumns tableInfo
+  fields <-
+    for columnInfos $ \columnInfo -> do
+      let fieldName = pgiName columnInfo
+          fieldDesc = pgiDescription columnInfo
+      fieldParser <- typedParser columnInfo
+      pure $
+        P.fieldOptional fieldName fieldDesc fieldParser
+           `mapField` \value -> (pgiColumn columnInfo, value)
+  objName <- P.mkTypename $ tableGQLName <> $$(G.litName ("_stream_cursor_input"))
+  pure $ P.field $$(G.litName "cursor") (Just "cursor column(s) for streaming data") $
+    P.object objName (Just "authors table desc") $
+      Map.fromList . catMaybes <$> sequenceA fields
+
+  where
+    typedParser columnInfo =
+      fmap P.mkParameter <$> columnParser (pgiType columnInfo) (G.Nullability $ pgiIsNullable columnInfo)
+
 
 -- | Argument to limit rows returned from table selection
 -- > limit: NonNegativeInt
