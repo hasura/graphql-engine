@@ -1411,7 +1411,12 @@ mkStreamSQLSelect ::
   AnnSimpleStreamSelect ('Postgres pgKind) ->
   S.Select
 mkStreamSQLSelect (AnnSelectStreamG fields from perm args strfyNum) =
-  let selectArgs = noSelectArgs { _saWhere = _ssaWhere args }
+  let selectArgs =
+        -- this is a shortcut..but maybe it's fine?
+        noSelectArgs
+        { _saWhere =
+          Just $ maybe (_ssaCursorBoolExp args) (andAnnBoolExps (_ssaCursorBoolExp args)) $ _ssaWhere args
+        }
       sqlSelect = AnnSelectG fields from perm selectArgs strfyNum
   in mkSQLSelect JASMultipleRows sqlSelect
 

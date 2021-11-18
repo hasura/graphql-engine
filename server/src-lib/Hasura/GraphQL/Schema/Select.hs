@@ -760,7 +760,17 @@ tableStreamArgs sourceName tableInfo selectPermissions = do
     orderingArg <- orderingParser
     batchSizeArg <- cursorBatchSizeArg
     pure $
-      IR.SelectStreamArgsG whereArg cursorArg (fromMaybe CODescending orderingArg) batchSizeArg
+      IR.SelectStreamArgsG whereArg batchSizeArg (cursorBoolExp cursorArg orderingArg)
+  where
+    orderBy orderingArg = fromMaybe COAscending orderingArg
+
+    orderbyOpExp orderingArg = bool ALT AGT $ orderBy orderingArg == COAscending
+
+    cursorFn colInfo (v, orderingArg) = BoolFld $ AVColumn colInfo [orderingArg v]
+
+    cursorBoolExp cursorArg orderingArg
+      = BoolAnd $ Map.elems $ Map.mapWithKey cursorFn $ (, orderbyOpExp orderingArg ) <$> cursorArg
+
 
 -- | Argument to filter rows returned from table selection
 -- > where: table_bool_exp
@@ -860,7 +870,7 @@ tableStreamCursorArg ::
   SourceName ->
   TableInfo b ->
   SelPermInfo b ->
-  m (InputFieldsParser n (HashMap (Column b) (UnpreparedValue b)))
+  m (InputFieldsParser n (HashMap (ColumnInfo b) (UnpreparedValue b)))
 tableStreamCursorArg sourceName tableInfo selectPermissions = do
   tableGQLName <- getTableGQLName tableInfo
   let columnInfos = tableColumns tableInfo
@@ -871,7 +881,7 @@ tableStreamCursorArg sourceName tableInfo selectPermissions = do
       fieldParser <- typedParser columnInfo
       pure $
         P.fieldOptional fieldName fieldDesc fieldParser
-           `mapField` \value -> (pgiColumn columnInfo, value)
+           `mapField` \value -> (columnInfo, value)
   objName <- P.mkTypename $ tableGQLName <> $$(G.litName ("_stream_cursor_input"))
   pure $ P.field $$(G.litName "cursor") (Just "cursor column(s) for streaming data") $
     P.object objName (Just "authors table desc") $
