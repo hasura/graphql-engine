@@ -8,6 +8,7 @@ where
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Aeson.Types
 import Data.HashMap.Strict qualified as M
+import Data.HashMap.Strict qualified as Map
 import Data.Sequence qualified as DS
 import Data.Text.Extended
 import Database.PG.Query qualified as Q
@@ -17,6 +18,7 @@ import Hasura.Backends.Postgres.SQL.DML qualified as S
 import Hasura.Backends.Postgres.SQL.Types
 import Hasura.Backends.Postgres.Translate.Returning
 import Hasura.Backends.Postgres.Types.Table
+import Hasura.Backends.Postgres.Types.Update
 import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.Prelude
@@ -98,7 +100,7 @@ validateUpdateQueryWith ::
   SessionVariableBuilder ('Postgres 'Vanilla) m ->
   ValueParser ('Postgres 'Vanilla) m S.SQLExp ->
   UpdateQuery ->
-  m (AnnUpd ('Postgres 'Vanilla))
+  m (AnnotatedUpdateNode ('Postgres 'Vanilla))
 validateUpdateQueryWith sessVarBldr prepValBldr uq = do
   let tableName = uqTable uq
   tableInfo <- withPathK "table" $ askTabInfoSource tableName
@@ -177,11 +179,11 @@ validateUpdateQueryWith sessVarBldr prepValBldr uq = do
         (upiCheck updPerm)
 
   return $
-    AnnUpd
+    AnnotatedUpdateNode
       tableName
-      (fmap UpdSet <$> setExpItems)
       (resolvedUpdFltr, annSQLBoolExp)
       resolvedUpdCheck
+      (BackendUpdate $ Map.fromList $ fmap UpdSet <$> setExpItems)
       (mkDefaultMutFlds mAnnRetCols)
       allCols
   where
@@ -194,7 +196,7 @@ validateUpdateQueryWith sessVarBldr prepValBldr uq = do
 validateUpdateQuery ::
   (QErrM m, UserInfoM m, CacheRM m) =>
   UpdateQuery ->
-  m (AnnUpd ('Postgres 'Vanilla), DS.Seq Q.PrepArg)
+  m (AnnotatedUpdateNode ('Postgres 'Vanilla), DS.Seq Q.PrepArg)
 validateUpdateQuery query = do
   let source = uqSource query
   tableCache :: TableCache ('Postgres 'Vanilla) <- askTableCache source

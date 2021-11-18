@@ -163,6 +163,8 @@ tableColumns tableInfo =
     columnInfo (FIColumn ci) = Just ci
     columnInfo _ = Nothing
 
+-- | Get the columns of a table that my be selected under the given select
+-- permissions.
 tableSelectColumns ::
   forall m n r b.
   (Backend b, MonadSchema n m, MonadTableInfo r m, MonadRole r m) =>
@@ -176,6 +178,8 @@ tableSelectColumns sourceName tableInfo permissions =
     columnInfo (FIColumn ci) = Just ci
     columnInfo _ = Nothing
 
+-- | Get the columns of a table that my be updated under the given update
+-- permissions.
 tableUpdateColumns ::
   forall m n b.
   (Backend b, MonadSchema n m) =>

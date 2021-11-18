@@ -407,7 +407,7 @@ updateTable ::
   ( TableInfo b ->
     UpdPermInfo b ->
     m
-      (InputFieldsParser n [(Column b, UpdOpExpG (UnpreparedValue b))])
+      (InputFieldsParser n (BackendUpdate b (UnpreparedValue b)))
   ) ->
   -- | table source
   SourceName ->
@@ -421,13 +421,13 @@ updateTable ::
   UpdPermInfo b ->
   -- | select permissions of the table (if any)
   Maybe (SelPermInfo b) ->
-  m (FieldParser n (IR.AnnUpdG b (IR.RemoteSelect UnpreparedValue) (UnpreparedValue b)))
-updateTable updateOperators sourceName tableInfo fieldName description updatePerms selectPerms = do
+  m (FieldParser n (IR.AnnotatedUpdateNodeG b (IR.RemoteSelect UnpreparedValue) (UnpreparedValue b)))
+updateTable updateIR sourceName tableInfo fieldName description updatePerms selectPerms = do
   let tableName = tableInfoName tableInfo
       columns = tableColumns tableInfo
       whereName = $$(G.litName "where")
       whereDesc = "filter the rows which have to be updated"
-  opArgs <- updateOperators tableInfo updatePerms
+  opArgs <- updateIR tableInfo updatePerms
   whereArg <- P.field whereName (Just whereDesc) <$> boolExp sourceName tableInfo selectPerms
   selection <- mutationSelectionSet sourceName tableInfo selectPerms
   let argsParser = liftA2 (,) opArgs whereArg
@@ -445,7 +445,7 @@ updateTableByPk ::
   -- | Update Operators
   ( TableInfo b ->
     UpdPermInfo b ->
-    m (InputFieldsParser n [(Column b, UpdOpExpG (UnpreparedValue b))])
+    m (InputFieldsParser n (BackendUpdate b (UnpreparedValue b)))
   ) ->
   -- | table source
   SourceName ->
@@ -459,14 +459,14 @@ updateTableByPk ::
   UpdPermInfo b ->
   -- | select permissions of the table
   SelPermInfo b ->
-  m (Maybe (FieldParser n (IR.AnnUpdG b (IR.RemoteSelect UnpreparedValue) (UnpreparedValue b))))
-updateTableByPk updateOperators sourceName tableInfo fieldName description updatePerms selectPerms = runMaybeT $ do
+  m (Maybe (FieldParser n (IR.AnnotatedUpdateNodeG b (IR.RemoteSelect UnpreparedValue) (UnpreparedValue b))))
+updateTableByPk backendIR sourceName tableInfo fieldName description updatePerms selectPerms = runMaybeT $ do
   let columns = tableColumns tableInfo
       tableName = tableInfoName tableInfo
   tableGQLName <- getTableGQLName tableInfo
   pkArgs <- MaybeT $ primaryKeysArguments tableInfo selectPerms
   lift $ do
-    opArgs <- updateOperators tableInfo updatePerms
+    opArgs <- backendIR tableInfo updatePerms
     selection <- tableSelectionSet sourceName tableInfo selectPerms
     pkObjectName <- P.mkTypename $ tableGQLName <> $$(G.litName "_pk_columns_input")
     let pkFieldName = $$(G.litName "pk_columns")
@@ -485,16 +485,16 @@ mkUpdateObject ::
   TableName b ->
   [ColumnInfo b] ->
   UpdPermInfo b ->
-  ( ( [(Column b, IR.UpdOpExpG (UnpreparedValue b))],
+  ( ( BackendUpdate b (UnpreparedValue b),
       AnnBoolExp b (UnpreparedValue b)
     ),
     IR.MutationOutputG b (IR.RemoteSelect UnpreparedValue) (UnpreparedValue b)
   ) ->
-  IR.AnnUpdG b (IR.RemoteSelect UnpreparedValue) (UnpreparedValue b)
-mkUpdateObject table columns updatePerms ((opExps, whereExp), mutationOutput) =
-  IR.AnnUpd
+  IR.AnnotatedUpdateNodeG b (IR.RemoteSelect UnpreparedValue) (UnpreparedValue b)
+mkUpdateObject table columns updatePerms ((backendIR, whereExp), mutationOutput) =
+  IR.AnnotatedUpdateNode
     { IR.uqp1Table = table,
-      IR.uqp1OpExps = opExps,
+      IR.uqp1BackendIR = backendIR,
       IR.uqp1Where = (permissionFilter, whereExp),
       IR.uqp1Check = checkExp,
       IR.uqp1Output = mutationOutput,

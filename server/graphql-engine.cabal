@@ -424,9 +424,10 @@ library
                      , Hasura.Backends.Postgres.Translate.Types
                      , Hasura.Backends.Postgres.Translate.Update
                      , Hasura.Backends.Postgres.Types.BoolExp
+                     , Hasura.Backends.Postgres.Types.CitusExtraTableMetadata
                      , Hasura.Backends.Postgres.Types.Column
                      , Hasura.Backends.Postgres.Types.Table
-                     , Hasura.Backends.Postgres.Types.CitusExtraTableMetadata
+                     , Hasura.Backends.Postgres.Types.Update
 
                      , Hasura.Backends.MySQL.DataLoader.Execute
                      , Hasura.Backends.MySQL.DataLoader.Plan

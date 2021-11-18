@@ -3,11 +3,13 @@ module Hasura.Backends.Postgres.Translate.Update
   )
 where
 
+import Data.HashMap.Strict qualified as Map
 import Hasura.Backends.Postgres.SQL.DML qualified as S
 import Hasura.Backends.Postgres.SQL.Types
 import Hasura.Backends.Postgres.Translate.BoolExp
 import Hasura.Backends.Postgres.Translate.Insert
 import Hasura.Backends.Postgres.Translate.Returning
+import Hasura.Backends.Postgres.Types.Update
 import Hasura.Prelude
 import Hasura.RQL.IR.Update
 import Hasura.RQL.Types
@@ -15,9 +17,9 @@ import Hasura.SQL.Types
 
 mkUpdateCTE ::
   Backend ('Postgres pgKind) =>
-  AnnUpd ('Postgres pgKind) ->
+  AnnotatedUpdateNode ('Postgres pgKind) ->
   S.CTE
-mkUpdateCTE (AnnUpd tn opExps (permFltr, wc) chk _ columnsInfo) =
+mkUpdateCTE (AnnotatedUpdateNode tn (permFltr, wc) chk (BackendUpdate opExps) _ columnsInfo) =
   S.CTEUpdate update
   where
     update =
@@ -27,7 +29,7 @@ mkUpdateCTE (AnnUpd tn opExps (permFltr, wc) chk _ columnsInfo) =
         $ [ S.selectStar,
             asCheckErrorExtractor $ insertCheckConstraint checkExpr
           ]
-    setExp = S.SetExp $ map (expandOperator columnsInfo) opExps
+    setExp = S.SetExp $ map (expandOperator columnsInfo) (Map.toList opExps)
     tableFltr = Just $ S.WhereFrag tableFltrExpr
     tableFltrExpr = toSQLBoolExp (S.QualTable tn) $ andAnnBoolExps permFltr wc
     checkExpr = toSQLBoolExp (S.QualTable tn) chk

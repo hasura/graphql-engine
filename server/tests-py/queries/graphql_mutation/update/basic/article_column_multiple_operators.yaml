@@ -6,7 +6,7 @@ response:
   - extensions:
       path: "$.selectionSet.update_article.args"
       code: validation-failed
-    message: column found in multiple operators; "author_id" in _set, _inc. "id" in _set, _inc
+    message: 'Column found in multiple operators: "author_id", "id".'
 
 query:
   query: |
