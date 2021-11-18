@@ -226,7 +226,6 @@ msDBMutationPlan ::
 msDBMutationPlan userInfo stringifyNum sourceName sourceConfig mrf = do
   go <$> case mrf of
     MDBInsert annInsert -> executeInsert userInfo stringifyNum sourceConfig annInsert
-    MDBUpdate _annUpdate -> throw400 NotSupported "update mutations are not supported in MSSQL"
     MDBDelete _annDelete -> throw400 NotSupported "delete mutations are not supported in MSSQL"
     MDBFunction {} -> throw400 NotSupported "function mutations are not supported in MSSQL"
   where

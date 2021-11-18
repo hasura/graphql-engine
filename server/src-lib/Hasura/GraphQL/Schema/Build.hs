@@ -174,11 +174,11 @@ buildTableInsertMutationFields
 buildTableUpdateMutationFields ::
   forall b r m n.
   MonadBuildSchema b r m n =>
-  -- | Action that builds the @update operators@ the backend supports
+  -- | TODO: Docs. WAS: Action that builds the @update operators@ the backend supports
   ( TableInfo b ->
     UpdPermInfo b ->
     m
-      (InputFieldsParser n [(Column b, UpdOpExpG (UnpreparedValue b))])
+      (InputFieldsParser n (BackendUpdate b (UnpreparedValue b)))
   ) ->
   -- | The source that the table lives in
   SourceName ->
