@@ -753,11 +753,14 @@ tableStreamArgs ::
 tableStreamArgs sourceName tableInfo selectPermissions = do
   whereParser <- tableWhereArg sourceName tableInfo selectPermissions
   cursorParser <- tableStreamCursorArg sourceName tableInfo selectPermissions
+  orderingParser <- cursorOrderingArg
   pure $ do
     whereArg <- whereParser
     cursorArg <- cursorParser
+    orderingArg <- orderingParser
+    batchSizeArg <- cursorBatchSizeArg
     pure $
-      IR.SelectStreamArgsG whereArg cursorArg
+      IR.SelectStreamArgsG whereArg cursorArg (fromMaybe CODescending orderingArg) batchSizeArg
 
 -- | Argument to filter rows returned from table selection
 -- > where: table_bool_exp
@@ -820,6 +823,37 @@ tableDistinctArg sourceName tableInfo selectPermissions = do
     distinctOnName = $$(G.litName "distinct_on")
     distinctOnDesc = Just $ G.Description "distinct select on columns"
 
+cursorOrderingArgParser ::
+  forall n m r.
+  (MonadSchema n m, Has P.MkTypename r, MonadReader r m) =>
+  m (Parser 'Both n CursorOrdering)
+cursorOrderingArgParser = do
+  enumName <- P.mkTypename $ $$(G.litName "cursor_ordering")
+  let description =
+        Just $
+          G.Description $
+            "ordering argument of a cursor"
+  pure $
+    P.enum enumName description
+      $ NE.fromList  -- It's fine to use fromList here because we know the list is never empty.
+        [ ( define (fst enumNameVal),
+            (snd enumNameVal)
+          )
+          | enumNameVal <- [($$(G.litName "ASC"), COAscending), ($$(G.litName "DESC"), CODescending)]
+        ]
+  where
+    define name =
+      P.mkDefinition name (Just $ G.Description "ordering of the cursor") P.EnumValueInfo
+
+cursorOrderingArg ::
+  forall n m r.
+  (MonadSchema n m, Has P.MkTypename r, MonadReader r m) =>
+  m (InputFieldsParser n (Maybe CursorOrdering))
+cursorOrderingArg = do
+  cursorOrderingParser' <- cursorOrderingArgParser
+  pure do
+    P.fieldOptional $$(G.litName "ordering") (Just $ G.Description "cursor ordering") cursorOrderingParser'
+
 tableStreamCursorArg ::
   forall b r m n.
   MonadBuildSchema b r m n =>
@@ -842,11 +876,9 @@ tableStreamCursorArg sourceName tableInfo selectPermissions = do
   pure $ P.field $$(G.litName "cursor") (Just "cursor column(s) for streaming data") $
     P.object objName (Just "authors table desc") $
       Map.fromList . catMaybes <$> sequenceA fields
-
   where
     typedParser columnInfo =
       fmap P.mkParameter <$> columnParser (pgiType columnInfo) (G.Nullability $ pgiIsNullable columnInfo)
-
 
 -- | Argument to limit rows returned from table selection
 -- > limit: NonNegativeInt
@@ -861,6 +893,18 @@ tableLimitArg =
   where
     limitName = $$(G.litName "limit")
     limitDesc = Just $ G.Description "limit the number of rows returned"
+
+cursorBatchSizeArg ::
+  forall n.
+  MonadParse n =>
+  InputFieldsParser n (Maybe Int)
+cursorBatchSizeArg =
+  fmap (fmap fromIntegral . join) $
+    P.fieldOptional batchSizeName batchSizeDesc $
+      P.nullable P.nonNegativeInt
+  where
+    batchSizeName = $$(G.litName "batch_size")
+    batchSizeDesc = Just $ G.Description "maximum number of rows returned in a single batch"
 
 -- | Argument to skip some rows, in conjunction with order_by
 -- > offset: BigInt

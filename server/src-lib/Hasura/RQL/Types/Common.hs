@@ -42,6 +42,7 @@ module Hasura.RQL.Types.Common
     PGConnectionParams (..),
     getPGConnectionStringFromParams,
     getConnOptionsFromConnParams,
+    CursorOrdering (..)
   )
 where
 
@@ -481,3 +482,8 @@ $(deriveJSON (aesonPrefix snakeCase) ''MetricsConfig)
 
 emptyMetricsConfig :: MetricsConfig
 emptyMetricsConfig = MetricsConfig False False
+
+-- | CursorOrdering is used in the streaming subscriptions to order
+--   the cursor.
+data CursorOrdering = COAscending | CODescending deriving (Show, Eq, Generic)
+instance Hashable CursorOrdering

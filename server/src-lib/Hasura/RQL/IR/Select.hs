@@ -322,7 +322,9 @@ type SelectFrom b = SelectFromG b (SQLExpression b)
 
 data SelectStreamArgsG (b :: BackendType) v = SelectStreamArgsG
   { _ssaWhere :: !(Maybe (AnnBoolExp b v)),
-    _ssaCursor :: !(HashMap (Column b) v)
+    _ssaCursor :: !(HashMap (Column b) v),
+    _ssaOrdering :: !CursorOrdering,
+    _ssaBatchSize :: !(Maybe Int)
   } deriving (Generic, Functor, Foldable, Traversable)
 
 type SelectStreamArgs b = SelectStreamArgsG b (SQLExpression b)
