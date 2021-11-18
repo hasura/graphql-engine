@@ -757,7 +757,7 @@ tableStreamArgs sourceName tableInfo selectPermissions = do
     whereArg <- whereParser
     cursorArg <- cursorParser
     pure $
-      IR.SelectStreamArgsG whereArg
+      IR.SelectStreamArgsG whereArg cursorArg
 
 -- | Argument to filter rows returned from table selection
 -- > where: table_bool_exp
