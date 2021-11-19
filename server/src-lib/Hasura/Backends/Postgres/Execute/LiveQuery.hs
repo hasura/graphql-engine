@@ -165,7 +165,7 @@ resolveMultiplexedValue ::
   UnpreparedValue ('Postgres pgKind) ->
   m S.SQLExp
 resolveMultiplexedValue allSessionVars = \case
-  UVParameter varM colVal -> do
+  UVParameter varM isCursorVariable colVal -> do
     varJsonPath <- case fmap PS.getName varM of
       Just varName -> do
         modifying qpiReusableVariableValues $ Map.insert varName colVal
@@ -209,7 +209,8 @@ executeMultiplexedQuery ::
   MultiplexedQuery ->
   [(CohortId, CohortVariables)] ->
   m [(CohortId, B.ByteString)]
-executeMultiplexedQuery (MultiplexedQuery query) = executeQuery query
+executeMultiplexedQuery (MultiplexedQuery query) cohorts = do
+  executeQuery query cohorts
 
 -- | Internal; used by both 'executeMultiplexedQuery' and 'pgDBLiveQueryExplain'.
 executeQuery ::

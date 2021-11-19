@@ -51,7 +51,10 @@ import Hasura.GraphQL.Namespace
   ( RootFieldAlias (..),
     RootFieldMap,
   )
-import Hasura.GraphQL.Parser (UnpreparedValue (..))
+import Hasura.GraphQL.Parser (
+  UnpreparedValue (..),
+  ParameterType (..)
+  )
 import Hasura.Prelude
 import Hasura.QueryTags
   ( QueryTagsComment (..),
@@ -402,7 +405,7 @@ pgDBRemoteRelationshipPlan userInfo sourceName sourceConfig lhs lhsSchema argume
 
     rowsArgument :: UnpreparedValue ('Postgres pgKind)
     rowsArgument =
-      UVParameter Nothing $
+      UVParameter Nothing PTNonCursorVariable $
         ColumnValue (ColumnScalar PG.PGJSONB) $
           PG.PGValJSONB $ Q.JSONB $ J.toJSON lhs
     jsonToRecordSet :: IR.SelectFromG ('Postgres pgKind) (UnpreparedValue ('Postgres pgKind))

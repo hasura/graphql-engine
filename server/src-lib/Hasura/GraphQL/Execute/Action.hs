@@ -300,7 +300,12 @@ resolveAsyncActionQuery userInfo annAction =
                       AsyncErrors -> mkAnnFldFromPGCol errorsColumn
 
                   jsonbToRecordSet = QualifiedObject "pg_catalog" $ FunctionName "jsonb_to_recordset"
-                  actionLogInput = UVParameter Nothing $ ColumnValue (ColumnScalar PGJSONB) $ PGValJSONB $ Q.JSONB $ J.toJSON [actionLogResponse]
+                  actionLogInput =
+                    UVParameter Nothing PTNonCursorVariable $
+                    ColumnValue (ColumnScalar PGJSONB) $
+                    PGValJSONB $
+                    Q.JSONB $
+                    J.toJSON [actionLogResponse]
                   functionArgs = RS.FunctionArgsExp [RS.AEInput actionLogInput] mempty
                   tableFromExp =
                     RS.FromFunction jsonbToRecordSet functionArgs $
@@ -340,7 +345,7 @@ resolveAsyncActionQuery userInfo annAction =
           actionIdColumnEq = BoolFld $ AVColumn actionIdColumnInfo [AEQ True $ UVLiteral $ S.SELit $ actionIdToText actionId]
           sessionVarsColumnInfo = mkPGColumnInfo sessionVarsColumn
           sessionVarValue =
-            UVParameter Nothing $
+            UVParameter Nothing PTNonCursorVariable $
               ColumnValue (ColumnScalar PGJSONB) $
                 PGValJSONB $ Q.JSONB $ J.toJSON $ _uiSession userInfo
           sessionVarsColumnEq = BoolFld $ AVColumn sessionVarsColumnInfo [AEQ True sessionVarValue]

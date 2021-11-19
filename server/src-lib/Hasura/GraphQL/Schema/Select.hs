@@ -760,7 +760,7 @@ tableStreamArgs sourceName tableInfo selectPermissions = do
     orderingArg <- orderingParser
     batchSizeArg <- cursorBatchSizeArg
     pure $
-      IR.SelectStreamArgsG whereArg batchSizeArg (cursorBoolExp cursorArg orderingArg)
+      IR.SelectStreamArgsG whereArg batchSizeArg cursorArg (cursorBoolExp cursorArg orderingArg) (orderBy orderingArg)
   where
     orderBy orderingArg = fromMaybe COAscending orderingArg
 
@@ -873,7 +873,7 @@ tableStreamCursorArg ::
   m (InputFieldsParser n (HashMap (ColumnInfo b) (UnpreparedValue b)))
 tableStreamCursorArg sourceName tableInfo selectPermissions = do
   tableGQLName <- getTableGQLName tableInfo
-  let columnInfos = tableColumns tableInfo
+  columnInfos <- tableSelectColumns sourceName tableInfo selectPermissions
   fields <-
     for columnInfos $ \columnInfo -> do
       let fieldName = pgiName columnInfo
@@ -884,7 +884,7 @@ tableStreamCursorArg sourceName tableInfo selectPermissions = do
            `mapField` \value -> (columnInfo, value)
   objName <- P.mkTypename $ tableGQLName <> $$(G.litName ("_stream_cursor_input"))
   pure $ P.field $$(G.litName "cursor") (Just "cursor column(s) for streaming data") $
-    P.object objName (Just "authors table desc") $
+    P.object objName (Just "authors table desc") $ -- FIXME: fix the description
       Map.fromList . catMaybes <$> sequenceA fields
   where
     typedParser columnInfo =
@@ -1019,7 +1019,7 @@ tableConnectionArgs pkeyColumns sourceName tableInfo selectPermissions = do
               iResultToMaybe (executeJSONPath columnJsonPath cursorValue)
                 `onNothing` throwInvalidCursor
             pgValue <- liftQErr $ parseScalarValueColumnType columnType pgColumnValue
-            let unresolvedValue = UVParameter Nothing $ ColumnValue columnType pgValue
+            let unresolvedValue = UVParameter Nothing P.PTNonCursorVariable $ ColumnValue columnType pgValue
             pure $
               IR.ConnectionSplit splitKind unresolvedValue $
                 IR.OrderByItemG Nothing (IR.AOCColumn pgColumnInfo) Nothing
@@ -1031,7 +1031,7 @@ tableConnectionArgs pkeyColumns sourceName tableInfo selectPermissions = do
               iResultToMaybe (executeJSONPath (getPathFromOrderBy annObCol) cursorValue)
                 `onNothing` throwInvalidCursor
             pgValue <- liftQErr $ parseScalarValueColumnType columnType orderByItemValue
-            let unresolvedValue = UVParameter Nothing $ ColumnValue columnType pgValue
+            let unresolvedValue = UVParameter Nothing P.PTNonCursorVariable $ ColumnValue columnType pgValue
             pure $
               IR.ConnectionSplit splitKind unresolvedValue $
                 IR.OrderByItemG orderType annObCol nullsOrder
@@ -1877,5 +1877,5 @@ nodeField = do
                       <<> " in node id: " <> t
                   pgColumnType = pgiType columnInfo
               pgValue <- modifyErr modifyErrFn $ parseScalarValueColumnType pgColumnType columnValue
-              let unpreparedValue = UVParameter Nothing $ ColumnValue pgColumnType pgValue
+              let unpreparedValue = UVParameter Nothing P.PTNonCursorVariable $ ColumnValue pgColumnType pgValue
               pure $ IR.BoolFld $ IR.AVColumn columnInfo [IR.AEQ True unpreparedValue]

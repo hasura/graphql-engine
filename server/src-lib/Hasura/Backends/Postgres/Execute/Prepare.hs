@@ -54,7 +54,7 @@ prepareWithPlan ::
   UnpreparedValue ('Postgres pgKind) ->
   m S.SQLExp
 prepareWithPlan userInfo = \case
-  UVParameter varInfoM ColumnValue {..} -> do
+  UVParameter varInfoM isCursorVariable ColumnValue {..} -> do
     argNum <- maybe getNextArgNum (getVarArgNum . getName) varInfoM
     addPrepArg argNum (binEncoder cvValue, cvValue)
     return $ toPrepParam argNum (unsafePGColumnToBackend cvType)
@@ -80,7 +80,7 @@ prepareWithoutPlan ::
   UnpreparedValue ('Postgres pgKind) ->
   m S.SQLExp
 prepareWithoutPlan userInfo = \case
-  UVParameter _ cv -> pure $ toTxtValue cv
+  UVParameter _ isCursorVariable cv -> pure $ toTxtValue cv
   UVLiteral sqlExp -> pure sqlExp
   UVSession -> pure $ sessionInfoJsonExp $ _uiSession userInfo
   UVSessionVar ty sessVar -> do
@@ -99,7 +99,7 @@ resolveUnpreparedValue ::
   UnpreparedValue ('Postgres pgKind) ->
   m S.SQLExp
 resolveUnpreparedValue userInfo = \case
-  UVParameter _ cv -> pure $ toTxtValue cv
+  UVParameter _ isCursorVariable cv -> pure $ toTxtValue cv
   UVLiteral sqlExp -> pure sqlExp
   UVSession -> pure $ sessionInfoJsonExp $ _uiSession userInfo
   UVSessionVar ty sessionVariable -> do

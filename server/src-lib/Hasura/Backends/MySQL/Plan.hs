@@ -59,7 +59,7 @@ prepareValueQuery sessionVariables =
   \case
     GraphQL.UVLiteral x -> pure x
     GraphQL.UVSession -> pure $ ValueExpression $ BinaryValue $ toStrict $ J.encode sessionVariables
-    GraphQL.UVParameter _ RQL.ColumnValue {..} -> pure $ ValueExpression cvValue
+    GraphQL.UVParameter _ _ RQL.ColumnValue {..} -> pure $ ValueExpression cvValue
     GraphQL.UVSessionVar _typ sessionVariable -> do
       value <-
         getSessionVariableValue sessionVariable sessionVariables

@@ -1411,11 +1411,20 @@ mkStreamSQLSelect ::
   AnnSimpleStreamSelect ('Postgres pgKind) ->
   S.Select
 mkStreamSQLSelect (AnnSelectStreamG fields from perm args strfyNum) =
-  let selectArgs =
+  let cursorCols = HM.keys $ _ssaCursorInitialValues args
+      annOrderbyCols = AOCColumn <$> cursorCols
+      basicOrderType =
+        bool S.OTDesc S.OTAsc $ _ssaCursorOrdering args == COAscending
+      orderByItems =
+        nonEmpty $ annOrderbyCols <&> (\col ->
+                            OrderByItemG (Just basicOrderType) col Nothing)
+      selectArgs =
         -- this is a shortcut..but maybe it's fine?
         noSelectArgs
         { _saWhere =
-          Just $ maybe (_ssaCursorBoolExp args) (andAnnBoolExps (_ssaCursorBoolExp args)) $ _ssaWhere args
+          Just $ maybe (_ssaCursorBoolExp args) (andAnnBoolExps (_ssaCursorBoolExp args)) $ _ssaWhere args,
+          _saOrderBy = orderByItems,
+          _saLimit = _ssaBatchSize args
         }
       sqlSelect = AnnSelectG fields from perm selectArgs strfyNum
   in mkSQLSelect JASMultipleRows sqlSelect

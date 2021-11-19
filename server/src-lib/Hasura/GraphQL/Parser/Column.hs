@@ -6,6 +6,8 @@ module Hasura.GraphQL.Parser.Column
     openValueOrigin,
     peelWithOrigin,
     mkParameter,
+    mkCursorParameter,
+    ParameterType (..)
   )
 where
 
@@ -25,10 +27,16 @@ import Language.GraphQL.Draft.Syntax qualified as G
 
 -- -------------------------------------------------------------------------------------------------
 
+data ParameterType
+  = PTCursorVariable
+  | PTNonCursorVariable
+  deriving (Show, Eq)
+
 data UnpreparedValue (b :: BackendType)
   = -- | A SQL value that can be parameterized over.
     UVParameter
       (Maybe VariableInfo)
+      ParameterType
       -- ^ The GraphQL variable this value came from, if any.
       (ColumnValue b)
   | -- | A literal SQL expression that /cannot/ be parameterized over.
@@ -62,9 +70,17 @@ openValueOrigin :: ValueWithOrigin a -> a
 openValueOrigin (ValueWithOrigin _ a) = a
 openValueOrigin (ValueNoOrigin a) = a
 
+mkParameterWithParameterType :: ParameterType -> ValueWithOrigin (ColumnValue b) -> UnpreparedValue b
+mkParameterWithParameterType parameterType (ValueWithOrigin valInfo columnValue) =
+  UVParameter (Just valInfo) parameterType columnValue
+mkParameterWithParameterType parameterType (ValueNoOrigin columnValue) =
+  UVParameter Nothing parameterType columnValue
+
 mkParameter :: ValueWithOrigin (ColumnValue b) -> UnpreparedValue b
-mkParameter (ValueWithOrigin valInfo columnValue) = UVParameter (Just valInfo) columnValue
-mkParameter (ValueNoOrigin columnValue) = UVParameter Nothing columnValue
+mkParameter = mkParameterWithParameterType PTNonCursorVariable
+
+mkCursorParameter :: ValueWithOrigin (ColumnValue b) -> UnpreparedValue b
+mkCursorParameter = mkParameterWithParameterType PTCursorVariable
 
 -- TODO: figure out what the purpose of this method is.
 peelWithOrigin :: MonadParse m => Parser 'Both m a -> Parser 'Both m (ValueWithOrigin a)

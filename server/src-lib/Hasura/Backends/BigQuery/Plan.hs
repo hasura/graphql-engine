@@ -61,7 +61,7 @@ prepareValueNoPlan sessionVariables =
             )
         CollectableTypeArray {} ->
           throwError $ E.internalError "Cannot currently prepare array types in BigQuery."
-    GraphQL.UVParameter _ RQL.ColumnValue {..} -> pure (ValueExpression cvValue)
+    GraphQL.UVParameter _ _ RQL.ColumnValue {..} -> pure (ValueExpression cvValue)
   where
     globalSessionExpression =
       ValueExpression

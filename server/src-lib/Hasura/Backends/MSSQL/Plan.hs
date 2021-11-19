@@ -65,7 +65,7 @@ prepareValueQuery sessionVariables =
   \case
     GraphQL.UVLiteral x -> pure x
     GraphQL.UVSession -> pure $ ValueExpression $ ODBC.ByteStringValue $ toStrict $ J.encode sessionVariables
-    GraphQL.UVParameter _ RQL.ColumnValue {..} -> pure $ ValueExpression cvValue
+    GraphQL.UVParameter _ _ RQL.ColumnValue {..} -> pure $ ValueExpression cvValue
     GraphQL.UVSessionVar _typ sessionVariable -> do
       value <-
         getSessionVariableValue sessionVariable sessionVariables
@@ -177,7 +177,7 @@ prepareValueSubscription globalVariables =
             ("missing session variable: " <>> sessionVariableToText text)
       modify' (\s -> s {sessionVariables = text `Set.insert` sessionVariables s})
       pure $ resultVarExp (sessionDot $ toTxt text)
-    GraphQL.UVParameter mVariableInfo columnValue ->
+    GraphQL.UVParameter mVariableInfo _ columnValue ->
       case fmap GraphQL.getName mVariableInfo of
         Nothing -> do
           currentIndex <- toInteger . length <$> gets positionalArguments
