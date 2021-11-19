@@ -10,6 +10,7 @@ module Hasura.Backends.MSSQL.ToQuery
     fromInsert,
     fromSetIdentityInsert,
     fromDelete,
+    fromSelectIntoTempTable,
     Printer (..),
   )
 where
@@ -189,8 +190,8 @@ fromSetValue = \case
   SetON -> "ON"
   SetOFF -> "OFF"
 
-fromSetIdentityInsert :: SetIdenityInsert -> Printer
-fromSetIdentityInsert SetIdenityInsert {..} =
+fromSetIdentityInsert :: SetIdentityInsert -> Printer
+fromSetIdentityInsert SetIdentityInsert {..} =
   SepByPrinter
     " "
     [ "SET IDENTITY_INSERT",
@@ -198,14 +199,70 @@ fromSetIdentityInsert SetIdenityInsert {..} =
       fromSetValue setValue
     ]
 
-fromDelete :: Delete -> Printer
-fromDelete Delete {deleteTable, deleteWhere} =
+-- | Generate a delete statement
+--
+-- > Delete
+-- >   (Aliased (TableName "table" "schema") "alias")
+-- >   [ColumnName "id", ColumnName "name"]
+-- >   (Where [OpExpression EQ' (ValueExpression (IntValue 1)) (ValueExpression (IntValue 1))])
+--
+-- Becomes:
+--
+-- > DELETE [alias] OUTPUT DELETED.[id], DELETED.[name] INTO #deleted([id], [name]) FROM [schema].[table] AS [alias] WHERE ((1) = (1))
+fromDelete :: TempTableName -> Delete -> Printer
+fromDelete tempTableName Delete {deleteTable, deleteColumns, deleteWhere} =
   SepByPrinter
     NewlinePrinter
     [ "DELETE " <+> fromNameText (aliasedAlias deleteTable),
+      "OUTPUT " <+> SepByPrinter ", " (map ((<+>) "DELETED." . fromColumnName) deleteColumns),
+      "INTO " <+> fromTempTableName tempTableName <+> parens (SepByPrinter ", " (map fromColumnName deleteColumns)),
       "FROM " <+> fromAliased (fmap fromTableName deleteTable),
       fromWhere deleteWhere
     ]
+
+-- | Converts `SelectIntoTempTable`.
+--
+--  > SelectIntoTempTable (TempTableName "deleted")  [UnifiedColumn "id" IntegerType, UnifiedColumn "name" TextType] (TableName "table" "schema")
+--
+--  Becomes:
+--
+--  > SELECT [id], [name] INTO #deleted([id], [name]) FROM [schema].[table] WHERE (1<>1) UNION ALL SELECT [id], [name] FROM [schema].[table];
+--
+--  We add the `UNION ALL` part to avoid copying identity constraints, and we cast columns with types such as `timestamp`
+--  which are non-insertable to a different type.
+fromSelectIntoTempTable :: SelectIntoTempTable -> Printer
+fromSelectIntoTempTable SelectIntoTempTable {sittTempTableName, sittColumns, sittFromTableName} =
+  SepByPrinter
+    NewlinePrinter
+    [ "SELECT "
+        <+> columns,
+      "INTO " <+> fromTempTableName sittTempTableName,
+      "FROM " <+> fromTableName sittFromTableName,
+      "WHERE " <+> falsePrinter,
+      "UNION ALL SELECT " <+> columns,
+      "FROM " <+> fromTableName sittFromTableName,
+      "WHERE " <+> falsePrinter
+    ]
+  where
+    -- column names separated by commas
+    columns =
+      SepByPrinter
+        ("," <+> NewlinePrinter)
+        (map columnNameFromUnifiedColumn sittColumns)
+
+    -- column name with potential modifications of types
+    columnNameFromUnifiedColumn (UnifiedColumn columnName columnType) =
+      case columnType of
+        -- The "timestamp" is type synonym for "rowversion" and it is just an incrementing number and does not preserve a date or a time.
+        -- So, the "timestamp" type is neither insertable nor explicitly updatable. Its values are unique binary numbers within a database.
+        -- We're using "binary" type instead so that we can copy a timestamp row value safely into the temporary table.
+        -- See https://docs.microsoft.com/en-us/sql/t-sql/data-types/rowversion-transact-sql for more details.
+        TimestampType -> "CAST(" <+> fromNameText columnName <+> " AS binary(8)) AS " <+> fromNameText columnName
+        _ -> fromNameText columnName
+
+-- | @TempTableName "deleted"@ becomes @\#deleted@
+fromTempTableName :: TempTableName -> Printer
+fromTempTableName (TempTableName v) = QueryPrinter (fromString . T.unpack $ "#" <> v)
 
 fromSelect :: Select -> Printer
 fromSelect Select {..} = fmap fromWith selectWith ?<+> wrapFor selectFor result
@@ -438,6 +495,7 @@ fromFrom =
     FromOpenJson openJson -> fromAliased (fmap fromOpenJson openJson)
     FromSelect select -> fromAliased (fmap (parens . fromSelect) select)
     FromIdentifier identifier -> fromNameText identifier
+    FromTempTable aliasedTempTable -> fromAliased (fmap fromTempTableName aliasedTempTable)
 
 fromOpenJson :: OpenJson -> Printer
 fromOpenJson OpenJson {openJsonExpression, openJsonWith} =
@@ -481,6 +539,9 @@ fromAliased :: Aliased Printer -> Printer
 fromAliased Aliased {..} =
   aliasedThing
     <+> ((" AS " <+>) . fromNameText) aliasedAlias
+
+fromColumnName :: ColumnName -> Printer
+fromColumnName (ColumnName colname) = fromNameText colname
 
 fromNameText :: Text -> Printer
 fromNameText t = QueryPrinter (rawUnescapedText ("[" <> t <> "]"))

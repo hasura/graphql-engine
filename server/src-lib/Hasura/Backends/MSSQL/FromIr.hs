@@ -29,6 +29,7 @@ module Hasura.Backends.MSSQL.FromIr
     jsonFieldName,
     fromInsert,
     fromDelete,
+    toSelectIntoTempTable,
   )
 where
 
@@ -47,6 +48,7 @@ import Hasura.RQL.Types.Column qualified as IR
 import Hasura.RQL.Types.Common qualified as IR
 import Hasura.RQL.Types.Relationship qualified as IR
 import Hasura.SQL.Backend
+import Language.GraphQL.Draft.Syntax (unName)
 
 --------------------------------------------------------------------------------
 -- Types
@@ -1113,8 +1115,9 @@ normalizeInsertRows IR.AnnIns {..} insertRows =
 --------------------------------------------------------------------------------
 -- Delete
 
+-- | Convert IR AST representing delete into MSSQL AST representing a delete statement
 fromDelete :: IR.AnnDel 'MSSQL -> FromIr Delete
-fromDelete (IR.AnnDel tableName (permFilter, whereClause) _ _) = do
+fromDelete (IR.AnnDel tableName (permFilter, whereClause) _ allColumns) = do
   tableAlias <- fromTableName tableName
   runReaderT
     ( do
@@ -1127,10 +1130,37 @@ fromDelete (IR.AnnDel tableName (permFilter, whereClause) _ _) = do
                   { aliasedAlias = entityAliasText tableAlias,
                     aliasedThing = tableName
                   },
+              deleteColumns = map (ColumnName . unName . IR.pgiName) allColumns,
               deleteWhere = Where [permissionsFilter, whereExpression]
             }
     )
     tableAlias
+
+-- | Convert IR AST representing delete into MSSQL AST representing a creation of a temporary table
+--   with the same schema as the deleted from table.
+toSelectIntoTempTable :: TempTableName -> IR.AnnDel 'MSSQL -> SelectIntoTempTable
+toSelectIntoTempTable tempTableName (IR.AnnDel {IR.dqp1Table = fromTable, IR.dqp1AllCols = allColumns}) = do
+  SelectIntoTempTable
+    { sittTempTableName = tempTableName,
+      sittColumns = map columnInfoToUnifiedColumn allColumns,
+      sittFromTableName = fromTable
+    }
+
+-- | Extracts the type and column name of a ColumnInfo
+columnInfoToUnifiedColumn :: IR.ColumnInfo 'MSSQL -> UnifiedColumn
+columnInfoToUnifiedColumn colInfo =
+  case IR.pgiType colInfo of
+    IR.ColumnScalar t ->
+      UnifiedColumn
+        { name = unName $ IR.pgiName colInfo,
+          type' = t
+        }
+    -- Enum values are represented as text value so they will always be of type text
+    IR.ColumnEnumReference {} ->
+      UnifiedColumn
+        { name = unName $ IR.pgiName colInfo,
+          type' = TextType
+        }
 
 --------------------------------------------------------------------------------
 -- Misc combinators
@@ -1187,6 +1217,7 @@ fromAlias (FromQualifiedTable Aliased {aliasedAlias}) = EntityAlias aliasedAlias
 fromAlias (FromOpenJson Aliased {aliasedAlias}) = EntityAlias aliasedAlias
 fromAlias (FromSelect Aliased {aliasedAlias}) = EntityAlias aliasedAlias
 fromAlias (FromIdentifier identifier) = EntityAlias identifier
+fromAlias (FromTempTable Aliased {aliasedAlias}) = EntityAlias aliasedAlias
 
 columnNameToFieldName :: ColumnName -> EntityAlias -> FieldName
 columnNameToFieldName (ColumnName fieldName) EntityAlias {entityAliasText = fieldNameEntity} =

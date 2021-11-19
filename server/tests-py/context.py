@@ -786,6 +786,15 @@ class HGECtx:
             yml = yaml.YAML()
             return self.v1metadataq(yml.load(f))
 
+    def v1graphqlq(self, q, headers = {}):
+        return self.execute_query(q, "/v1/graphql", headers)
+
+    def v1graphql_f(self, fn):
+        with open(fn) as f:
+            # NOTE: preserve ordering with ruamel
+            yml = yaml.YAML()
+            return self.v1graphqlq(yml.load(f))
+
     def teardown(self):
         self.http.close()
         self.engine.dispose()

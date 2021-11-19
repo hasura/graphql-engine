@@ -35,7 +35,7 @@ instance BackendSchema 'MSSQL where
   buildTableRelayQueryFields = msBuildTableRelayQueryFields
   buildTableInsertMutationFields = msBuildTableInsertMutationFields
   buildTableUpdateMutationFields = msBuildTableUpdateMutationFields
-  buildTableDeleteMutationFields = msBuildTableDeleteMutationFields
+  buildTableDeleteMutationFields = GSB.buildTableDeleteMutationFields
   buildFunctionQueryFields = msBuildFunctionQueryFields
   buildFunctionRelayQueryFields = msBuildFunctionRelayQueryFields
   buildFunctionMutationFields = msBuildFunctionMutationFields
