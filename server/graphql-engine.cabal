@@ -30,7 +30,7 @@ flag profiling
 -- We share this flag name across our .cabal projects so we can switch it on or
 -- off for all of them at the top level of our cabal.project(.*) files
 flag optimize-hasura
-  description: Compile hasura code with appropriate optimizations 
+  description: Compile hasura code with appropriate optimizations
   default: True
   manual: False
 
@@ -50,8 +50,8 @@ common common-all
 
   if flag(optimize-hasura)
     ghc-options:
-      -- This is for performance, and works in combination with '-fspecialise-aggressively' 
-      -- in the graphql-engine 'executable' stanza below, and in any other dependent 
+      -- This is for performance, and works in combination with '-fspecialise-aggressively'
+      -- in the graphql-engine 'executable' stanza below, and in any other dependent
       -- executables (See mono #2610):
       -fexpose-all-unfoldings
       -O2
@@ -690,7 +690,7 @@ executable graphql-engine
     ghc-options:
       -- This is for performance (See mono #2610):
       -fspecialise-aggressively
-       
+
   hs-source-dirs:    src-exec
   main-is:           Main.hs
   build-depends:     base
@@ -920,5 +920,14 @@ test-suite tests-hspec
     Harness.Sql
     Harness.Graphql
     Harness.GraphqlEngine
-    SanityCheckSpec
+
+    ArrayRelationshipsSpec
+    BasicFieldsSpec
+    DirectivesSpec
     HelloWorldSpec
+    LimitOffsetSpec
+    ObjectRelationshipsSpec
+    OrderingSpec
+    ServiceLivenessSpec
+    ViewsSpec
+    WhereSpec

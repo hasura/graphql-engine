@@ -1,6 +1,6 @@
--- | Sanity check tests: Confirm that the harness is working
+-- | Service liveness tests: Confirm that the harness is working
 -- properly. If this passes, the rest of the tests will pass.
-module SanityCheckSpec (spec) where
+module ServiceLivenessSpec (spec) where
 
 import Harness.Constants qualified as Constants
 import Harness.Http qualified as Http
