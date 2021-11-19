@@ -56,10 +56,14 @@ newtype Visual = Visual {unVisual :: Value}
 instance Show Visual where
   show = BS8.unpack . Data.Yaml.encode . unVisual
 
-shouldReturnYaml :: IO Value -> IO Value -> IO ()
-shouldReturnYaml x y = do
-  actual <- x
-  expected <- y
+-- | The action @actualIO@ should produce the @expected@ YAML,
+-- represented (by the yaml package) as an aeson 'Value'.
+--
+-- We use 'Visual' internally to easily display the 'Value' as YAML
+-- when the test suite uses its 'Show' instance.
+shouldReturnYaml :: IO Value -> Value -> IO ()
+shouldReturnYaml actualIO expected = do
+  actual <- actualIO
   shouldBe (Visual actual) (Visual expected)
 
 yaml :: QuasiQuoter
