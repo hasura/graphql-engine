@@ -194,5 +194,29 @@ Schedules the creation of a Hasura Cloud project with metadata and migrations fr
      }
    }
 
+The arguments mean the following:
 
+* ``githubPersonalAccessToken``: GitHub personal access token for Hasura Cloud to access the metadata and migrations from your repository
+
+* ``githubRepoDetails``: GitHub configuration of this preview app:
+
+  * ``owner``: The GitHub profile or the org that the repo with metadata/migrations belongs to
+
+  * ``repo``: Name of the GitHub repository that contains the metadata and migrations
+
+  * ``branch``: Name of the branch to deploy
+
+  * ``directory``: Path to the directory of the Hasura project (typically created by the Hasura CLI) in the repository
+
+* ``projectOptions``: Configuration of the created preview app:
+
+  * ``name``: Name of the preview app; can contain lowercase characters, numbers and hyphens
+
+  * ``cloud``: The cloud provider to deploy the preview app on. Currently only ``aws`` is supported
+
+  * ``region``: AWS Region to deploy the preview app on (refer to the Hasura Cloud dashboard to see the available regions)
+
+  * ``plan``: The pricing tier of the created preview app. Set ``cloud_free`` for free tier and ``cloud_payg`` for standard tier
+  
+  * ``envVars``: Env vars for the created preview app
 
