@@ -27,7 +27,8 @@ projects to ``v2.0`` by following this guide.
    In case you happen to have a large number of past cron and event trigger logs in your database, this might slow down the update
    to v2 and might even cause DB errors in certain scenarios.
 
-   **It is highly recommended to clean up past cron and event trigger logs data from the database before attempting the update**.
+   **It is highly recommended to clean up past cron and event trigger logs data from the database before attempting the update if you 
+   have a lot of historical data.**
 
    You can take a dump of this data before cleaning up if you wish to keep the log history.
 
