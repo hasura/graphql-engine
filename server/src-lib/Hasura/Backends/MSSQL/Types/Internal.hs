@@ -38,8 +38,10 @@ module Hasura.Backends.MSSQL.Types.Internal
     ScalarType (..),
     SchemaName (..),
     Select (..),
-    SetIdenityInsert (..),
+    SetIdentityInsert (..),
+    TempTableName (..),
     SetValue (..),
+    SelectIntoTempTable (..),
     SpatialOp (..),
     TableName (..),
     Top (..),
@@ -172,15 +174,27 @@ data SetValue
   = SetON
   | SetOFF
 
-data SetIdenityInsert = SetIdenityInsert
+data SetIdentityInsert = SetIdentityInsert
   { setTable :: !TableName,
     setValue :: !SetValue
   }
 
 data Delete = Delete
   { deleteTable :: !(Aliased TableName),
+    deleteColumns :: [ColumnName],
     deleteWhere :: !Where
   }
+
+-- | SELECT INTO temporary table statement without values.
+--   Used to create a temporary table with the same schema as an existing table.
+data SelectIntoTempTable = SelectIntoTempTable
+  { sittTempTableName :: TempTableName,
+    sittColumns :: [UnifiedColumn],
+    sittFromTableName :: TableName
+  }
+
+-- | A temporary table name is prepended by a hash-sign
+newtype TempTableName = TempTableName Text
 
 data Reselect = Reselect
   { reselectProjections :: ![Projection],
@@ -302,6 +316,7 @@ data From
   | FromOpenJson (Aliased OpenJson)
   | FromSelect (Aliased Select)
   | FromIdentifier Text
+  | FromTempTable (Aliased TempTableName)
 
 data OpenJson = OpenJson
   { openJsonExpression :: Expression,

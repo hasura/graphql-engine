@@ -306,6 +306,12 @@ class TestGraphQLQueryBasicCommon:
     def test_select_query_multiple_columns_obj_fkey(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + "/select_multiple_columns_obj_fkey.yaml", transport)
 
+    def test_select_query_author_pk(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_query_author_by_pkey.yaml', transport)
+
+    def test_select_query_author_pk_null(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_query_author_by_pkey_null.yaml', transport)
+
     @classmethod
     def dir(cls):
         return 'queries/graphql_query/basic'

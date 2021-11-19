@@ -41,7 +41,8 @@ $( fmap concat $ for
        ''UnifiedArrayRelationship,
        ''UnifiedUsing,
        ''UnifiedOn,
-       ''UnifiedColumn
+       ''UnifiedColumn,
+       ''TempTableName
      ]
      \name ->
        [d|
@@ -56,6 +57,8 @@ $( fmap concat $ for
          deriving instance Show $(conT name)
 
          deriving instance Data $(conT name)
+
+         instance NFData $(conT name)
 
          instance FromJSON $(conT name)
 
@@ -92,7 +95,8 @@ $( fmap concat $ for
        ''OpenJson,
        ''JsonFieldSpec,
        ''Join,
-       ''JoinSource
+       ''JoinSource,
+       ''SelectIntoTempTable
      ]
      \name ->
        [d|
