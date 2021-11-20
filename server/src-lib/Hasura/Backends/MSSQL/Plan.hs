@@ -33,6 +33,7 @@ import Hasura.Prelude hiding (first)
 import Hasura.RQL.IR
 import Hasura.RQL.Types.Column qualified as RQL
 import Hasura.SQL.Backend
+import Hasura.SQL.Types
 import Hasura.Session
 import Language.GraphQL.Draft.Syntax qualified as G
 
@@ -66,11 +67,18 @@ prepareValueQuery sessionVariables =
     GraphQL.UVLiteral x -> pure x
     GraphQL.UVSession -> pure $ ValueExpression $ ODBC.ByteStringValue $ toStrict $ J.encode sessionVariables
     GraphQL.UVParameter _ RQL.ColumnValue {..} -> pure $ ValueExpression cvValue
-    GraphQL.UVSessionVar _typ sessionVariable -> do
+    GraphQL.UVSessionVar typ sessionVariable -> do
       value <-
         getSessionVariableValue sessionVariable sessionVariables
           `onNothing` throw400 NotFound ("missing session variable: " <>> sessionVariable)
-      pure $ ValueExpression $ ODBC.TextValue value
+      -- See https://github.com/fpco/odbc/pull/34#issuecomment-812223147
+      -- We first cast to nvarchar(max) because casting from ntext is not supported
+      CastExpression (CastExpression (ValueExpression $ ODBC.TextValue value) "nvarchar(max)")
+        <$> case typ of
+          CollectableTypeScalar baseTy ->
+            pure (scalarTypeDBName baseTy)
+          CollectableTypeArray {} ->
+            throw400 NotSupported "Array types are currently not supported in MS SQL Server"
 
 planSubscription ::
   MonadError QErr m =>
