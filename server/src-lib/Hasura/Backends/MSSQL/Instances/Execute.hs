@@ -419,12 +419,14 @@ buildDeleteTx ::
   Bool ->
   Tx.TxET QErr IO EncJSON
 buildDeleteTx deleteOperation stringifyNum = do
-  let tempTableName = TSQL.TempTableName "deleted"
-      withAlias = "with_alias"
-      createTempTableQuery = toQueryFlat $ TQ.fromSelectIntoTempTable $ TSQL.toSelectIntoTempTable tempTableName deleteOperation
+  let withAlias = "with_alias"
+      createTempTableQuery =
+        toQueryFlat $
+          TQ.fromSelectIntoTempTable $
+            TSQL.toSelectIntoTempTable tempTableNameDeleted (dqp1Table deleteOperation) (dqp1AllCols deleteOperation)
   -- Create a temp table
   Tx.unitQueryE fromMSSQLTxError createTempTableQuery
-  let deleteQuery = TQ.fromDelete tempTableName <$> TSQL.fromDelete deleteOperation
+  let deleteQuery = TQ.fromDelete <$> TSQL.fromDelete deleteOperation
   deleteQueryValidated <- toQueryFlat <$> V.runValidate (runFromIr deleteQuery) `onLeft` (throw500 . tshow)
   -- Execute DELETE statement
   Tx.unitQueryE fromMSSQLTxError deleteQueryValidated
@@ -432,7 +434,7 @@ buildDeleteTx deleteOperation stringifyNum = do
   let withSelect =
         emptySelect
           { selectProjections = [StarProjection],
-            selectFrom = Just $ FromTempTable $ Aliased tempTableName "deleted_alias"
+            selectFrom = Just $ FromTempTable $ Aliased tempTableNameDeleted "deleted_alias"
           }
       finalMutationOutputSelect = mutationOutputSelect {selectWith = Just $ With $ pure $ Aliased withSelect withAlias}
       mutationOutputSelectQuery = toQueryFlat $ TQ.fromSelect finalMutationOutputSelect

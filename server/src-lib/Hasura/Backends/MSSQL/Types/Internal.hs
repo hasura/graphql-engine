@@ -11,6 +11,7 @@ module Hasura.Backends.MSSQL.Types.Internal
     Comment (..),
     Countable (..),
     Delete (..),
+    DeleteOutput,
     EntityAlias (..),
     Expression (..),
     FieldName (..),
@@ -19,7 +20,7 @@ module Hasura.Backends.MSSQL.Types.Internal
     From (..),
     FunctionName,
     Insert (..),
-    InsertOutput (..),
+    InsertOutput,
     Join (..),
     JoinAlias (..),
     JoinSource (..),
@@ -32,6 +33,9 @@ module Hasura.Backends.MSSQL.Types.Internal
     Order (..),
     OrderBy (..),
     OutputColumn (..),
+    Inserted (..),
+    Deleted (..),
+    Output (..),
     Projection (..),
     Reselect (..),
     Root (..),
@@ -40,6 +44,7 @@ module Hasura.Backends.MSSQL.Types.Internal
     Select (..),
     SetIdentityInsert (..),
     TempTableName (..),
+    TempTable (..),
     SetValue (..),
     SelectIntoTempTable (..),
     SpatialOp (..),
@@ -65,6 +70,7 @@ module Hasura.Backends.MSSQL.Types.Internal
     scalarTypeDBName,
     snakeCaseTableName,
     stringTypes,
+    tempTableNameDeleted,
   )
 where
 
@@ -157,9 +163,18 @@ emptySelect =
       selectOffset = Nothing
     }
 
-newtype OutputColumn = OutputColumn ColumnName
+newtype OutputColumn = OutputColumn {unOutputColumn :: ColumnName}
 
-newtype InsertOutput = InsertOutput [OutputColumn]
+data Inserted = Inserted
+
+data Deleted = Deleted
+
+data Output t = Output
+  { outputType :: !t,
+    outputColumns :: ![OutputColumn]
+  }
+
+type InsertOutput = Output Inserted
 
 newtype Values = Values [Expression]
 
@@ -179,9 +194,12 @@ data SetIdentityInsert = SetIdentityInsert
     setValue :: !SetValue
   }
 
+type DeleteOutput = Output Deleted
+
 data Delete = Delete
   { deleteTable :: !(Aliased TableName),
-    deleteColumns :: [ColumnName],
+    deleteOutput :: !DeleteOutput,
+    deleteTempTable :: !TempTable,
     deleteWhere :: !Where
   }
 
@@ -195,6 +213,14 @@ data SelectIntoTempTable = SelectIntoTempTable
 
 -- | A temporary table name is prepended by a hash-sign
 newtype TempTableName = TempTableName Text
+
+tempTableNameDeleted :: TempTableName
+tempTableNameDeleted = TempTableName "deleted"
+
+data TempTable = TempTable
+  { ttName :: !TempTableName,
+    ttColumns :: ![ColumnName]
+  }
 
 data Reselect = Reselect
   { reselectProjections :: ![Projection],

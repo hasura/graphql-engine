@@ -1078,7 +1078,7 @@ fromInsert IR.AnnInsert {..} =
       insertColumnNames = maybe [] (map fst) $ listToMaybe insertRows
       insertValues = map (Values . map snd) insertRows
       primaryKeyColumns = map OutputColumn $ _mssqlPrimaryKeyColumns _aiExtraInsertData
-   in Insert _aiTableName insertColumnNames (InsertOutput primaryKeyColumns) insertValues
+   in Insert _aiTableName insertColumnNames (Output Inserted primaryKeyColumns) insertValues
 
 -- | Normalize a row by adding missing columns with 'DEFAULT' value and sort by column name to make sure
 -- all rows are consistent in column values and order.
@@ -1123,6 +1123,7 @@ fromDelete (IR.AnnDel tableName (permFilter, whereClause) _ allColumns) = do
     ( do
         permissionsFilter <- fromGBoolExp permFilter
         whereExpression <- fromGBoolExp whereClause
+        let columnNames = map (ColumnName . unName . IR.pgiName) allColumns
         pure
           Delete
             { deleteTable =
@@ -1130,16 +1131,16 @@ fromDelete (IR.AnnDel tableName (permFilter, whereClause) _ allColumns) = do
                   { aliasedAlias = entityAliasText tableAlias,
                     aliasedThing = tableName
                   },
-              deleteColumns = map (ColumnName . unName . IR.pgiName) allColumns,
+              deleteOutput = Output Deleted (map OutputColumn columnNames),
+              deleteTempTable = TempTable tempTableNameDeleted columnNames,
               deleteWhere = Where [permissionsFilter, whereExpression]
             }
     )
     tableAlias
 
--- | Convert IR AST representing delete into MSSQL AST representing a creation of a temporary table
---   with the same schema as the deleted from table.
-toSelectIntoTempTable :: TempTableName -> IR.AnnDel 'MSSQL -> SelectIntoTempTable
-toSelectIntoTempTable tempTableName (IR.AnnDel {IR.dqp1Table = fromTable, IR.dqp1AllCols = allColumns}) = do
+-- | Create a temporary table with the same schema as the given table.
+toSelectIntoTempTable :: TempTableName -> TableName -> [IR.ColumnInfo 'MSSQL] -> SelectIntoTempTable
+toSelectIntoTempTable tempTableName fromTable allColumns = do
   SelectIntoTempTable
     { sittTempTableName = tempTableName,
       sittColumns = map columnInfoToUnifiedColumn allColumns,
