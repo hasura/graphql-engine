@@ -11,10 +11,13 @@ We use graphiql editor wherever applicable for example showcase throughout docs.
 A GraphiQLIDE component is already created with required custom logic. So, use `GraphiQLIDE` just like any other react component.
 
 ## Sphinx - RST
+
 ```rst
+// highlight-start
 .. graphiql::
   :view_only:
   :query:
+// highlight-end
     query get_authors_in_pincode ($jsonFilter: jsonb){
       authors(
         where: {
@@ -26,6 +29,7 @@ A GraphiQLIDE component is already created with required custom logic. So, use `
         address
       }
     }
+  // highlight-next-line
   :response:
     {
       "data": {
@@ -44,6 +48,7 @@ A GraphiQLIDE component is already created with required custom logic. So, use `
         ]
       }
     }
+  // highlight-next-line
   :variables:
     {
       "jsonFilter": {
@@ -61,10 +66,13 @@ A GraphiQLIDE component is already created with required custom logic. So, use `
 
 ## Docusaurus - MDX
 ```jsx
+
+// highlight-start
 import GraphiQLIDE from '@site/src/components/GraphiQLIDE/GraphiQLIDE';
 
 <GraphiQLIDE
   query={`query get_authors_in_pincode ($jsonFilter: jsonb){
+// highlight-end
     authors(
       where: {
         address: {_contains: $jsonFilter }
@@ -75,11 +83,13 @@ import GraphiQLIDE from '@site/src/components/GraphiQLIDE/GraphiQLIDE';
       address
     }
   }`}
+  // highlight-next-line
   variables={`{
     "jsonFilter": {
       "pincode": 560095
     }
   }`}
+  // highlight-next-line
   response={`{
     "data": {
       "authors": [

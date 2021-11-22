@@ -35,13 +35,17 @@ Since MDX doesn't yet support this direct referencing, we have to rely on relati
 <Tabs>
   <TabItem value="sphinx" label="Sphinx - RST" default>
 
+```rst
+    // highlight-next-line
     :ref:`cloud_getting_started`
 
     where `cloud_getting_started` is id of the document given at top of RST file.
     
     Link label will by default be title of page. For custom link labels, the syntax might look like below.
 
+    // highlight-next-line
     :ref:`Remote schemas <remote_schemas>`
+```
 
   </TabItem>
   <TabItem value="docusaurus" label="Docusaurus - MDX">
