@@ -42,7 +42,8 @@ const config = {
         title: '',
         logo: {
           alt: 'Hasura Logo',
-          src: '/img/logo.svg',
+          src: '/img/logo-lightbg.svg',
+          srcDark: '/img/logo.svg',
         },
         items: [
           {
