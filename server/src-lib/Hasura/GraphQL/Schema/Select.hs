@@ -776,7 +776,6 @@ tableStreamArgs sourceName tableInfo selectPermissions = do
 
     cursorBoolExp cursorArg orderingArg
       = cursorFn (fst cursorArg) (snd cursorArg, orderbyOpExp orderingArg)
-      -- = BoolAnd $ Map.elems $ Map.mapWithKey cursorFn $ (, orderbyOpExp orderingArg ) <$> cursorArg
 
 
 -- | Argument to filter rows returned from table selection
