@@ -7,10 +7,6 @@ import "graphiql/graphiql.min.css";
 import "./styles.css";
 
 
-const fetcher = createGraphiQLFetcher({
-  url: 'https://hasura.io/graphql', // TODO: update later
-});
-
 const GraphiQLIDE = ({ query, variables, response, viewOnly=true }) => (
   <BrowserOnly>
     {() => (
@@ -19,7 +15,9 @@ const GraphiQLIDE = ({ query, variables, response, viewOnly=true }) => (
           readOnly={viewOnly}
           editorTheme={'dracula'}
           schema={null}
-          fetcher={fetcher}
+          fetcher={createGraphiQLFetcher({
+            url: 'https://hasura.io/graphql', // TODO: update later
+          })}
           query={query}
           variables={variables}
           response={response}
