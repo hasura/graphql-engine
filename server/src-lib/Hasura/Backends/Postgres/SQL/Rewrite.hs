@@ -232,6 +232,8 @@ uSqlExp =
     S.SECount cty -> return $ S.SECount cty
     S.SENamedArg arg val -> S.SENamedArg arg <$> uSqlExp val
     S.SEFunction funcExp -> S.SEFunction <$> uFunctionExp funcExp
+    S.SEMax sqlExp -> return $ S.SEMax sqlExp -- TODO: not sure if this is correct?
+    S.SEMin sqlExp -> return $ S.SEMin sqlExp -- TODO: not sure if this is correct?
   where
     uQual = \case
       S.QualifiedIdentifier iden ty -> S.QualifiedIdentifier <$> getIdentifier iden <*> pure ty

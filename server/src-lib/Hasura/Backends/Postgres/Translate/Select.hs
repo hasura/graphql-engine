@@ -606,6 +606,39 @@ processAnnSimpleSelect sourcePrefixes fieldAlias permLimitSubQuery annSimpleSel 
     similarArrayFields =
       mkSimilarArrayFields annSelFields $ _saOrderBy tableArgs
 
+processAnnSimpleStreamSelect ::
+  forall pgKind m.
+  ( MonadReader Bool m,
+    MonadWriter JoinTree m,
+    Backend ('Postgres pgKind),
+    PostgresAnnotatedFieldJSON pgKind
+  ) =>
+  SourcePrefixes ->
+  FieldName ->
+  PermissionLimitSubQuery ->
+  AnnSimpleSelect ('Postgres pgKind) ->
+  m
+    ( SelectSource,
+      HM.HashMap S.Alias S.SQLExp
+    )
+processAnnSimpleStreamSelect sourcePrefixes fieldAlias permLimitSubQuery annSimpleSel = do
+  (selectSource, orderByExtractor, _) <-
+    processSelectParams
+      sourcePrefixes
+      fieldAlias
+      similarArrayFields
+      tableFrom
+      permLimitSubQuery
+      tablePermissions
+      tableArgs
+  annFieldsExtr <- processAnnFields (_pfThis sourcePrefixes) fieldAlias similarArrayFields annSelFields
+  let allExtractors = HM.fromList $ annFieldsExtr : orderByExtractor
+  pure (selectSource, allExtractors)
+  where
+    AnnSelectG annSelFields tableFrom tablePermissions tableArgs _ = annSimpleSel
+    similarArrayFields =
+      mkSimilarArrayFields annSelFields $ _saOrderBy tableArgs
+
 processAnnAggregateSelect ::
   forall pgKind m.
   ( MonadReader Bool m,
@@ -1431,12 +1464,17 @@ mkStreamSQLSelect (AnnSelectStreamG fields from perm args strfyNum) =
       ((selectSource, nodeExtractors), joinTree) =
         runWriter $
           flip runReaderT strfyNum $
-            processAnnSimpleSelect sourcePrefixes rootFldName permLimitSubQuery sqlSelect
+            processAnnSimpleStreamSelect sourcePrefixes rootFldName permLimitSubQuery sqlSelect
       selectNode = SelectNode nodeExtractors joinTree
       topExtractor =
         asJsonAggExtr JASMultipleRows rootFldAls permLimitSubQuery $
           orderByForJsonAgg selectSource
-      arrayNode = MultiRowSelectNode [topExtractor] selectNode
+      cursorLatestValueExp :: S.SQLExp =
+        let pgColumn = pgiColumn cursorCol
+            maxOrMin = bool S.SEMin S.SEMax $ _ssaCursorOrdering args == COAscending
+        in maxOrMin $ S.SELit $ getIdenTxt $ mkBaseTableColumnAlias rootFldIdentifier pgColumn
+      cursorLatestValueExtractor = S.Extractor cursorLatestValueExp (Just $ S.Alias $ Identifier "cursor")
+      arrayNode = MultiRowSelectNode [topExtractor, cursorLatestValueExtractor] selectNode
   in prefixNumToAliases $
         generateSQLSelectFromArrayNode selectSource arrayNode $ S.BELit True
   where

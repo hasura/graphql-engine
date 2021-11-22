@@ -448,6 +448,8 @@ data SQLExp
   | SECount !CountType
   | SENamedArg !Identifier !SQLExp
   | SEFunction !FunctionExp
+  | SEMax !SQLExp
+  | SEMin !SQLExp
   deriving (Show, Eq, Generic, Data)
 
 instance NFData SQLExp
@@ -531,6 +533,8 @@ instance ToSQL SQLExp where
   -- https://www.postgresql.org/docs/current/sql-syntax-calling-funcs.html
   toSQL (SENamedArg arg val) = toSQL arg <~> "=>" <~> toSQL val
   toSQL (SEFunction funcExp) = toSQL funcExp
+  toSQL (SEMax sqlExp) = "MAX" <> parenB (toSQL sqlExp)
+  toSQL (SEMin sqlExp) = "MIN" <> parenB (toSQL sqlExp)
 
 intToSQLExp :: Int -> SQLExp
 intToSQLExp = SEUnsafe . tshow
