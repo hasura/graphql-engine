@@ -163,13 +163,25 @@ fromFieldName :: FieldName -> Printer
 fromFieldName (FieldName {..}) =
   fromNameText fieldNameEntity <+> "." <+> fromNameText fieldName
 
-fromOutputColumn :: OutputColumn -> Printer
-fromOutputColumn (OutputColumn columnName) =
-  "INSERTED." <+> fromNameText (columnNameText columnName)
+fromInserted :: Inserted -> Printer
+fromInserted Inserted = "INSERTED"
+
+fromDeleted :: Deleted -> Printer
+fromDeleted Deleted = "DELETED"
+
+fromOutputColumn :: Printer -> OutputColumn -> Printer
+fromOutputColumn prefix (OutputColumn columnName) =
+  prefix <+> "." <+> fromNameText (columnNameText columnName)
+
+fromOutput :: (t -> Printer) -> Output t -> Printer
+fromOutput typePrinter (Output ty outputColumns) =
+  "OUTPUT " <+> SepByPrinter ", " (map (fromOutputColumn (typePrinter ty)) outputColumns)
 
 fromInsertOutput :: InsertOutput -> Printer
-fromInsertOutput (InsertOutput outputColumns) =
-  "OUTPUT " <+> SepByPrinter ", " (map fromOutputColumn outputColumns)
+fromInsertOutput = fromOutput fromInserted
+
+fromDeleteOutput :: DeleteOutput -> Printer
+fromDeleteOutput = fromOutput fromDeleted
 
 fromValues :: Values -> Printer
 fromValues (Values values) =
@@ -209,13 +221,13 @@ fromSetIdentityInsert SetIdentityInsert {..} =
 -- Becomes:
 --
 -- > DELETE [alias] OUTPUT DELETED.[id], DELETED.[name] INTO #deleted([id], [name]) FROM [schema].[table] AS [alias] WHERE ((1) = (1))
-fromDelete :: TempTableName -> Delete -> Printer
-fromDelete tempTableName Delete {deleteTable, deleteColumns, deleteWhere} =
+fromDelete :: Delete -> Printer
+fromDelete Delete {deleteTable, deleteOutput, deleteTempTable, deleteWhere} =
   SepByPrinter
     NewlinePrinter
     [ "DELETE " <+> fromNameText (aliasedAlias deleteTable),
-      "OUTPUT " <+> SepByPrinter ", " (map ((<+>) "DELETED." . fromColumnName) deleteColumns),
-      "INTO " <+> fromTempTableName tempTableName <+> parens (SepByPrinter ", " (map fromColumnName deleteColumns)),
+      fromDeleteOutput deleteOutput,
+      "INTO " <+> fromTempTable deleteTempTable,
       "FROM " <+> fromAliased (fmap fromTableName deleteTable),
       fromWhere deleteWhere
     ]
@@ -263,6 +275,10 @@ fromSelectIntoTempTable SelectIntoTempTable {sittTempTableName, sittColumns, sit
 -- | @TempTableName "deleted"@ becomes @\#deleted@
 fromTempTableName :: TempTableName -> Printer
 fromTempTableName (TempTableName v) = QueryPrinter (fromString . T.unpack $ "#" <> v)
+
+fromTempTable :: TempTable -> Printer
+fromTempTable (TempTable table columns) =
+  fromTempTableName table <+> parens (SepByPrinter ", " (map fromColumnName columns))
 
 fromSelect :: Select -> Printer
 fromSelect Select {..} = fmap fromWith selectWith ?<+> wrapFor selectFor result
