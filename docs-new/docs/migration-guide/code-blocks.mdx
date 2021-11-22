@@ -4,4 +4,80 @@ sidebar_position: 6
 
 # Code Blocks
 
-Coming Soon...
+These are straight forward syntax swap as give below.
+
+## Sphinx - RST
+
+```rest
+// highlight-next-line
+.. code-block:: graphql
+    mutation createProject {
+     createTenant(
+       cloud: "aws"
+       region: "us-east-2"
+       envs: [{
+         key: "HASURA_GRAPHQL_CORS_DOMAIN",
+         value: "*"
+       }, {
+         key: "MY_ENV_VAR_1",
+         value: "my value 1"
+       }]
+     ) {
+       id
+       name
+     }
+   }
+```
+
+## Docusaurus - MDX
+```markdown
+    // highlight-next-line
+    ```graphql
+      mutation createProject {
+        createTenant(
+          cloud: "aws"
+          region: "us-east-2"
+          envs: [{
+            key: "HASURA_GRAPHQL_CORS_DOMAIN",
+            value: "*"
+          }, {
+            key: "MY_ENV_VAR_1",
+            value: "my value 1"
+          }]
+        ) {
+          id
+          name
+        }
+      }
+    // highlight-next-line
+    ```
+```
+## Result in UI
+
+```graphql
+  mutation createProject {
+    createTenant(
+      cloud: "aws"
+      region: "us-east-2"
+      envs: [{
+        key: "HASURA_GRAPHQL_CORS_DOMAIN",
+        value: "*"
+      }, {
+        key: "MY_ENV_VAR_1",
+        value: "my value 1"
+      }]
+    ) {
+      id
+      name
+    }
+  }
+```
+
+:::caution Supported Languages
+  - Docusaurus uses prisma under the hood for code-block syntac highlighting. Please refer the supported labguages [here](https://prismjs.com/#supported-languages).
+  - By default prisma includes a few that are listed [here](https://github.com/FormidableLabs/prism-react-renderer/blob/master/src/vendor/prism/includeLangs.js). If any supported language is not listed here, please added it to `additionalLanguages` under prisma plugin in `docusaurus.config.js`
+:::
+
+:::tip
+Please refer docusaurus [Code Blocks Docs](https://docusaurus.io/docs/markdown-features/code-blocks) for further syntax and usage guidance.
+:::
