@@ -1411,13 +1411,12 @@ mkStreamSQLSelect ::
   AnnSimpleStreamSelect ('Postgres pgKind) ->
   S.Select
 mkStreamSQLSelect (AnnSelectStreamG fields from perm args strfyNum) =
-  let cursorCols = HM.keys $ _ssaCursorInitialValues args
-      annOrderbyCols = AOCColumn <$> cursorCols
+  let cursorCol = fst $ _ssaCursorInitialValues args
+      annOrderbyCol = AOCColumn cursorCol
       basicOrderType =
         bool S.OTDesc S.OTAsc $ _ssaCursorOrdering args == COAscending
       orderByItems =
-        nonEmpty $ annOrderbyCols <&> (\col ->
-                            OrderByItemG (Just basicOrderType) col Nothing)
+        nonEmpty $ pure $ OrderByItemG (Just basicOrderType) annOrderbyCol Nothing
       selectArgs =
         -- this is a shortcut..but maybe it's fine?
         noSelectArgs

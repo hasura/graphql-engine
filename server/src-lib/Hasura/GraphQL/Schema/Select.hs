@@ -752,11 +752,17 @@ tableStreamArgs ::
   m (InputFieldsParser n (SelectStreamArgs b))
 tableStreamArgs sourceName tableInfo selectPermissions = do
   whereParser <- tableWhereArg sourceName tableInfo selectPermissions
-  cursorParser <- tableStreamCursorArg sourceName tableInfo selectPermissions
+  cursorParser <-
+    tableStreamCursorArg sourceName tableInfo selectPermissions
+
   orderingParser <- cursorOrderingArg
   pure $ do
     whereArg <- whereParser
-    cursorArg <- cursorParser
+    cursorArg <- cursorParser `P.bindFields` \cols ->
+      case Map.toList cols of
+        [] -> parseError "one column field is expected"
+        [c] -> pure c
+        _   -> parseError "multiple column field cursor are not supported yet"
     orderingArg <- orderingParser
     batchSizeArg <- cursorBatchSizeArg
     pure $
@@ -769,7 +775,8 @@ tableStreamArgs sourceName tableInfo selectPermissions = do
     cursorFn colInfo (v, orderingArg) = BoolFld $ AVColumn colInfo [orderingArg v]
 
     cursorBoolExp cursorArg orderingArg
-      = BoolAnd $ Map.elems $ Map.mapWithKey cursorFn $ (, orderbyOpExp orderingArg ) <$> cursorArg
+      = cursorFn (fst cursorArg) (snd cursorArg, orderbyOpExp orderingArg)
+      -- = BoolAnd $ Map.elems $ Map.mapWithKey cursorFn $ (, orderbyOpExp orderingArg ) <$> cursorArg
 
 
 -- | Argument to filter rows returned from table selection
@@ -886,7 +893,7 @@ tableStreamCursorArg sourceName tableInfo selectPermissions = do
   pure $ P.field $$(G.litName "cursor") (Just "cursor column(s) for streaming data") $
     P.object objName (Just "authors table desc") $ -- FIXME: fix the description
       Map.fromList . catMaybes <$> sequenceA fields
-  where
+    where
     typedParser columnInfo =
       fmap P.mkParameter <$> columnParser (pgiType columnInfo) (G.Nullability $ pgiIsNullable columnInfo)
 
