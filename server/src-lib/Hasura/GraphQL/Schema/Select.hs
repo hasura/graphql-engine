@@ -894,7 +894,7 @@ tableStreamCursorArg sourceName tableInfo selectPermissions = do
       Map.fromList . catMaybes <$> sequenceA fields
     where
     typedParser columnInfo =
-      fmap P.mkParameter <$> columnParser (pgiType columnInfo) (G.Nullability $ pgiIsNullable columnInfo)
+      fmap P.mkCursorParameter <$> columnParser (pgiType columnInfo) (G.Nullability $ pgiIsNullable columnInfo)
 
 -- | Argument to limit rows returned from table selection
 -- > limit: NonNegativeInt

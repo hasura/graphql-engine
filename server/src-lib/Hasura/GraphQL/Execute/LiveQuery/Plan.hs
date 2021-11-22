@@ -97,6 +97,7 @@ module Hasura.GraphQL.Execute.LiveQuery.Plan
     ValidatedVariables (..),
     ValidatedQueryVariables,
     ValidatedSyntheticVariables,
+    ValidatedCursorVariables,
     LiveQueryPlan (..),
     LiveQueryPlanExplanation (..),
     ParameterizedLiveQueryPlan (..),
@@ -154,7 +155,8 @@ data CohortVariables = CohortVariables
     -- can still take advantage of the similarity between the two queries by
     -- multiplexing them together, so we replace them with references to synthetic
     -- variables.
-    _cvSyntheticVariables :: !ValidatedSyntheticVariables
+    _cvSyntheticVariables :: !ValidatedSyntheticVariables,
+    _cvCursorVariables :: !ValidatedCursorVariables
   }
   deriving (Show, Eq, Generic)
 
@@ -167,6 +169,7 @@ mkCohortVariables ::
   SessionVariables ->
   ValidatedQueryVariables ->
   ValidatedSyntheticVariables ->
+  ValidatedCursorVariables ->
   CohortVariables
 mkCohortVariables requiredSessionVariables sessionVariableValues =
   CohortVariables $
@@ -175,11 +178,12 @@ mkCohortVariables requiredSessionVariables sessionVariableValues =
       sessionVariableValues
 
 instance J.ToJSON CohortVariables where
-  toJSON (CohortVariables sessionVars queryVars syntheticVars) =
+  toJSON (CohortVariables sessionVars queryVars syntheticVars cursorVars) =
     J.object
       [ "session" J..= sessionVars,
         "query" J..= queryVars,
-        "synthetic" J..= syntheticVars
+        "synthetic" J..= syntheticVars,
+        "cursor" J..= cursorVars
       ]
 
 -- These types exist only to use the Postgres array encoding.
@@ -228,6 +232,8 @@ deriving instance (Monoid (f TxtEncodedVal)) => Monoid (ValidatedVariables f)
 type ValidatedQueryVariables = ValidatedVariables (Map.HashMap G.Name)
 
 type ValidatedSyntheticVariables = ValidatedVariables []
+
+type ValidatedCursorVariables = ValidatedVariables []
 
 ----------------------------------------------------------------------------------------------------
 -- Live query plans

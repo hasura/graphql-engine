@@ -45,6 +45,7 @@ import Language.GraphQL.Draft.Syntax qualified as G
 data QueryParametersInfo (b :: BackendType) = QueryParametersInfo
   { _qpiReusableVariableValues :: !(HashMap G.Name (ColumnValue b)),
     _qpiSyntheticVariableValues :: !(Seq (ColumnValue b)),
+    _qpiCursorVariableValues :: !(Seq (ColumnValue b)),
     -- | The session variables that are referenced in the query root fld's AST.
     -- This information is used to determine a cohort's required session
     -- variables
@@ -182,9 +183,15 @@ resolveMultiplexedValue allSessionVars = \case
         modifying qpiReusableVariableValues $ Map.insert varName colVal
         pure ["query", G.unName varName]
       Nothing -> do
-        syntheticVarIndex <- use (qpiSyntheticVariableValues . to length)
-        modifying qpiSyntheticVariableValues (|> colVal)
-        pure ["synthetic", tshow syntheticVarIndex]
+        if isCursorVariable == PTCursorVariable
+          then do
+            cursorVarIndex <- use (qpiCursorVariableValues . to length)
+            modifying qpiCursorVariableValues (|> colVal)
+            pure ["cursor", tshow cursorVarIndex]
+          else do
+            syntheticVarIndex <- use (qpiSyntheticVariableValues . to length)
+            modifying qpiSyntheticVariableValues (|> colVal)
+            pure ["synthetic", tshow syntheticVarIndex]
     pure $ fromResVars (CollectableTypeScalar $ unsafePGColumnToBackend $ cvType colVal) varJsonPath
   UVSessionVar ty sessVar -> do
     _ <-

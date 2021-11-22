@@ -311,6 +311,7 @@ pgDBSubscriptionPlan userInfo _sourceName sourceConfig namespace unpreparedAST =
   -- take down the entire multiplexed query.
   validatedQueryVars <- PGL.validateVariables (_pscExecCtx sourceConfig) _qpiReusableVariableValues
   validatedSyntheticVars <- PGL.validateVariables (_pscExecCtx sourceConfig) $ toList _qpiSyntheticVariableValues
+  validatedCursorVars <- PGL.validateVariables (_pscExecCtx sourceConfig) $ toList _qpiCursorVariableValues
 
   -- TODO validatedQueryVars validatedSyntheticVars
   let cohortVariables =
@@ -319,6 +320,7 @@ pgDBSubscriptionPlan userInfo _sourceName sourceConfig namespace unpreparedAST =
           (_uiSession userInfo)
           validatedQueryVars
           validatedSyntheticVars
+          validatedCursorVars
 
   pure $ LiveQueryPlan parameterizedPlan sourceConfig cohortVariables namespace
 
