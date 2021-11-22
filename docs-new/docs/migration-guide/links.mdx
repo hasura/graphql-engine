@@ -60,14 +60,14 @@ While relative paths works absolutely fine, this can easily lead to an absolute 
 To avoid this scenario, we can use root relative paths. The path will still break when moved around, but it is lot easier to find and replace. Find with old path and replace with new path.
 
 ```
-Find `/docs/folder1/subfolder2/doc3` and replace with `/docs/folder1/newsubfolder4/doc5`
+Find `/folder1/subfolder2/doc3` and replace with `/folder1/newsubfolder4/doc5`
 ```
 
 Since MDX doesn't yet support direct document referencing with id/ref unlike sphinx, we need to settle with root relative path liniking for now.
 
-`[MDX Root Relative Link](/docs/migration-guide/index#contents-covered)`
+`[MDX Root Relative Link](/migration-guide/index#contents-covered)`
 
-> [MDX Root Relative Link](/docs/migration-guide/index#contents-covered)
+> [MDX Root Relative Link](/migration-guide/index#contents-covered)
 
 :::info
 Docusaurus catches [broken markdown links](https://docusaurus.io/docs/api/docusaurus-config#onbrokenmarkdownlinks) if enabled

@@ -12,7 +12,7 @@ const config = {
   baseUrl: '/docs/',
   onBrokenLinks: 'throw',
   onBrokenMarkdownLinks: 'throw',
-  favicon: '/docs/img/favicon.png',
+  favicon: '/img/favicon.png',
   organizationName: 'hasura',
   projectName: 'graphql-engine',
 
@@ -42,7 +42,7 @@ const config = {
         title: '',
         logo: {
           alt: 'Hasura Logo',
-          src: '/docs/img/logo.svg',
+          src: '/img/logo.svg',
         },
         items: [
           {
