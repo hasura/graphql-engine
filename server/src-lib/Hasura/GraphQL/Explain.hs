@@ -100,7 +100,7 @@ explainGQLQuery sc (GQLExplain query userVarsRaw maybeIsRelay) = do
     G.TypedOperationDefinition G.OperationTypeMutation _ _ _ _ ->
       throw400 InvalidParams "only queries can be explained"
     G.TypedOperationDefinition G.OperationTypeSubscription _ varDefs directives inlinedSelSet -> do
-      (normalizedDirectives, normalizedSelectionSet) <-
+      (_normalizedDirectives, normalizedSelectionSet) <-
         ER.resolveVariables
           varDefs
           (fromMaybe mempty (GH._grVariables query))

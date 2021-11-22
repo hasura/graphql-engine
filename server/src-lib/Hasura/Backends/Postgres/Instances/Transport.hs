@@ -104,12 +104,12 @@ runPGSubscription ::
   SourceConfig ('Postgres pgKind) ->
   MultiplexedQuery ('Postgres pgKind) ->
   [(CohortId, CohortVariables)] ->
-  m (DiffTime, Either QErr [(CohortId, B.ByteString)])
+  m (DiffTime, Either QErr [(CohortId, B.ByteString, Maybe J.Value)])
 runPGSubscription sourceConfig query variables =
-  withElapsedTime $
-    runExceptT $
-      runQueryTx (_pscExecCtx sourceConfig) $
-        PGL.executeMultiplexedQuery query variables
+  withElapsedTime $ do
+    res <-
+      runExceptT $ runQueryTx (_pscExecCtx sourceConfig) $ PGL.executeMultiplexedQuery query variables
+    pure $ res <&> fmap (\(cohortId, cohortRespBS, cohortCursor :: Q.AltJ (Maybe J.Value)) -> (cohortId, cohortRespBS, Q.getAltJ cohortCursor))
 
 runPGQueryExplain ::
   forall pgKind m.

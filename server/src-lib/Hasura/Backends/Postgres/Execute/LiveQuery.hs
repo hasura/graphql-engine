@@ -10,6 +10,7 @@ module Hasura.Backends.Postgres.Execute.LiveQuery
 where
 
 import Control.Lens
+import Data.Aeson qualified as J
 import Data.ByteString qualified as B
 import Data.HashMap.Strict qualified as Map
 import Data.HashMap.Strict.InsOrd qualified as OMap
@@ -114,9 +115,10 @@ mkMultiplexedQuery rootFields =
   MultiplexedQuery . Q.fromBuilder . toSQL $
     S.mkSelect
       { S.selExtr =
-          -- SELECT _subs.result_id, _fld_resp.root AS result
+          -- SELECT _subs.result_id, _fld_resp.root, _fld_resp.cursor AS result
           [ S.Extractor (mkQualifiedIdentifier (Identifier "_subs") (Identifier "result_id")) Nothing,
-            S.Extractor (mkQualifiedIdentifier (Identifier "_fld_resp") (Identifier "root")) (Just . S.Alias $ Identifier "result")
+            S.Extractor (mkQualifiedIdentifier (Identifier "_fld_resp") (Identifier "root")) (Just . S.Alias $ Identifier "result"),
+            S.Extractor (mkQualifiedIdentifier (Identifier "_fld_resp") (Identifier "cursor")) (Just . S.Alias $ Identifier "cursor")
           ],
         S.selFrom =
           Just $
@@ -137,7 +139,7 @@ mkMultiplexedQuery rootFields =
     responseLateralFromItem = S.mkLateralFromItem selectRootFields (S.Alias $ Identifier "_fld_resp")
     selectRootFields =
       S.mkSelect
-        { S.selExtr = [S.Extractor rootFieldsJsonAggregate (Just . S.Alias $ Identifier "root")],
+        { S.selExtr = [(S.Extractor rootFieldsJsonAggregate (Just . S.Alias $ Identifier "root")), cursorExtractor],
           S.selFrom =
             Just . S.FromExp $
               OMap.toList rootFields <&> \(fieldAlias, resolvedAST) ->
@@ -151,6 +153,15 @@ mkMultiplexedQuery rootFields =
         mkQualifiedIdentifier (aliasToIdentifier fieldAlias) (Identifier "root")
       ]
 
+    -- we only consider the head field for the cursor
+    (headRootFieldAlias, headRootField) = head $ OMap.toList rootFields
+
+    cursorSQLExp =
+      case headRootField of
+        -- HACK: when subscription is not of the stream type, then set the cursor as null
+        QDBStreamMultipleRows _ -> S.SEFnApp "to_json" [mkQualifiedIdentifier (aliasToIdentifier headRootFieldAlias) (Identifier "cursor")] Nothing
+        _                       -> S.SELit "null"
+    cursorExtractor = S.Extractor cursorSQLExp (Just . S.Alias $ Identifier "cursor")
     mkQualifiedIdentifier prefix = S.SEQIdentifier . S.QIdentifier (S.QualifiedIdentifier prefix Nothing) -- TODO fix this Nothing of course
     aliasToIdentifier = Identifier . G.unName
 
@@ -208,7 +219,7 @@ executeMultiplexedQuery ::
   (MonadTx m) =>
   MultiplexedQuery ->
   [(CohortId, CohortVariables)] ->
-  m [(CohortId, B.ByteString)]
+  m [(CohortId, B.ByteString, Q.AltJ (Maybe J.Value))]
 executeMultiplexedQuery (MultiplexedQuery query) cohorts = do
   executeQuery query cohorts
 

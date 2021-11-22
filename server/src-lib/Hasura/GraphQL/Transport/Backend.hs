@@ -3,6 +3,7 @@ module Hasura.GraphQL.Transport.Backend
   )
 where
 
+import Data.Aeson qualified as J
 import Data.ByteString qualified as B
 import Hasura.Base.Error
 import Hasura.EncJSON
@@ -61,7 +62,7 @@ class BackendExecute b => BackendTransport (b :: BackendType) where
     MultiplexedQuery b ->
     -- | WARNING: Postgres-specific, ignored by other backends
     [(CohortId, CohortVariables)] ->
-    m (DiffTime, Either QErr [(CohortId, B.ByteString)])
+    m (DiffTime, Either QErr [(CohortId, B.ByteString, Maybe J.Value)])
   runDBQueryExplain ::
     forall m.
     ( MonadIO m,

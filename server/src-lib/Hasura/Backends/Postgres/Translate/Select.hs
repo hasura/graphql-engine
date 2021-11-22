@@ -1472,7 +1472,7 @@ mkStreamSQLSelect (AnnSelectStreamG fields from perm args strfyNum) =
       cursorLatestValueExp :: S.SQLExp =
         let pgColumn = pgiColumn cursorCol
             maxOrMin = bool S.SEMin S.SEMax $ _ssaCursorOrdering args == COAscending
-        in maxOrMin $ S.SELit $ getIdenTxt $ mkBaseTableColumnAlias rootFldIdentifier pgColumn
+        in maxOrMin $ S.SEIdentifier $ mkBaseTableColumnAlias rootFldIdentifier pgColumn
       cursorLatestValueExtractor = S.Extractor cursorLatestValueExp (Just $ S.Alias $ Identifier "cursor")
       arrayNode = MultiRowSelectNode [topExtractor, cursorLatestValueExtractor] selectNode
   in prefixNumToAliases $

@@ -45,7 +45,9 @@ import Control.Concurrent.Async qualified as A
 import Control.Concurrent.STM qualified as STM
 import Control.Immortal qualified as Immortal
 import Control.Lens
+import Debug.Trace
 import Crypto.Hash qualified as CH
+import Data.Aeson qualified as J
 import Data.Aeson.Extended qualified as J
 import Data.ByteString qualified as BS
 import Data.HashMap.Strict qualified as Map
@@ -471,8 +473,8 @@ pollQuery pollerId lqOpts (sourceName, sourceConfig) roleName parameterizedQuery
           -- batch response size is the sum of the response sizes of the cohorts
           batchResponseSize =
             case mxRes of
-              Left _ -> Nothing
-              Right resp -> Just $ getSum $ foldMap (Sum . BS.length . snd) resp
+              Left err -> Nothing
+              Right resp -> Just $ getSum $ foldMap ((\(_, sqlResp, _) -> Sum . BS.length $ sqlResp)) resp
       (pushTime, cohortsExecutionDetails) <- withElapsedTime $
         A.forConcurrently operations $ \(res, cohortId, respData, snapshot) -> do
           (pushedSubscribers, ignoredSubscribers) <-
@@ -528,12 +530,13 @@ pollQuery pollerId lqOpts (sourceName, sourceConfig) roleName parameterizedQuery
          in [(resp, cohortId, Nothing, snapshot) | (cohortId, snapshot) <- cohorts]
       Right responses -> do
         let cohortSnapshotMap = Map.fromList cohorts
-        flip mapMaybe responses $ \(cohortId, respBS) ->
+        flip mapMaybe responses $ \(cohortId, respBS, respCursorLatestValue) ->
           let respHash = mkRespHash respBS
               respSize = BS.length respBS
            in -- TODO: currently we ignore the cases when the cohortId from
               -- Postgres response is not present in the cohort map of this batch
               -- (this shouldn't happen but if it happens it means a logic error and
               -- we should log it)
+              trace ("latest cursor value is " <> show respCursorLatestValue) $
               (pure respBS,cohortId,Just (respHash, respSize),)
                 <$> Map.lookup cohortId cohortSnapshotMap

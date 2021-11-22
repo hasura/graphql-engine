@@ -207,7 +207,7 @@ buildSubscriptionPlan userInfo rootFields parameterizedQueryHash = do
       RootFieldAlias ->
       ExceptT QErr IO (SourceName, LiveQueryPlan)
     buildAction (sourceName, exists) allFields rootFieldName = do
-      lqp <- AB.dispatchAnyBackend @EB.BackendExecute
+      liveQueryPlan <- AB.dispatchAnyBackend @EB.BackendExecute
         exists
         \(IR.SourceConfigWith sourceConfig queryTagsConfig _ :: IR.SourceConfigWith db b) -> do
           qdbs <- traverse (checkField @b sourceName) allFields
@@ -215,7 +215,7 @@ buildSubscriptionPlan userInfo rootFields parameterizedQueryHash = do
           let queryTagsComment = Tagged.untag $ EB.createQueryTags @m subscriptionQueryTagsAttributes queryTagsConfig
           LQP . AB.mkAnyBackend . MultiplexedLiveQueryPlan
             <$> runReaderT (EB.mkDBSubscriptionPlan userInfo sourceName sourceConfig (_rfaNamespace rootFieldName) qdbs) queryTagsComment
-      pure (sourceName, lqp)
+      pure (sourceName, liveQueryPlan)
 
     checkField ::
       forall b m1.
