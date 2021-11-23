@@ -45,7 +45,6 @@ import Control.Concurrent.Async qualified as A
 import Control.Concurrent.STM qualified as STM
 import Control.Immortal qualified as Immortal
 import Control.Lens
-import Debug.Trace
 import Crypto.Hash qualified as CH
 import Data.Aeson qualified as J
 import Data.ByteString qualified as BS
@@ -71,11 +70,11 @@ import Hasura.Logging qualified as L
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Common (SourceName, getNonNegativeInt)
+import Hasura.SQL.Value (TxtEncodedVal(..))
 import Hasura.Server.Types (RequestId)
 import Hasura.Session
 import ListT qualified
 import StmContainers.Map qualified as STMMap
-import Hasura.Backends.Postgres.SQL.Value (TxtEncodedVal)
 import qualified Language.GraphQL.Draft.Syntax as G
 
 -- ----------------------------------------------------------------------------------------------
@@ -241,8 +240,18 @@ pushResultToCohort result !respHashM (LiveQueryMetadata dTime) latestCursorValue
       then do
         $assertNFHere respHashM -- so we don't write thunks to mutable vars
         STM.atomically $ do
+          prevCursorCohortValueMaybe <- STM.readTVar latestCursorValueTV
           STM.writeTVar respRef respHashM
-          STM.writeTVar latestCursorValueTV latestCursorValueMaybe
+          case (prevCursorCohortValueMaybe, latestCursorValueMaybe) of
+            (Nothing, Nothing) -> pure ()
+            (Just _, Nothing) -> pure () -- this case is not possible
+            (Nothing, Just a) -> STM.writeTVar latestCursorValueTV (Just a) -- initial case
+            (Just prev, Just curr) -> do
+              let combineFn previousVal currentVal =
+                    case currentVal of
+                      TENull -> previousVal -- When we get a null value from the DB, we retain the older value
+                      TELit t -> TELit t
+              STM.writeTVar latestCursorValueTV (Just (Map.unionWith combineFn prev curr))
         return (newSinks <> curSinks, mempty)
       else return (newSinks, curSinks)
   pushResultToSubscribers subscribersToPush
@@ -535,7 +544,7 @@ pollQuery pollerId lqOpts (sourceName, sourceConfig) roleName parameterizedQuery
               Just latestCursorVal ->
                 let unsafeValidatedVariable = mkUnsafeValidateVariables latestCursorVal
                 in modifyCursorCohortVariables unsafeValidatedVariable cohortVars
-              Nothing -> cohortVars
+              Nothing -> cohortVars -- live query subscription
       let cohortSnapshot = CohortSnapshot modifiedCohortVars respRef (map snd curOpsL) (map snd newOpsL) cursorLatestVal
       return (resId, cohortSnapshot)
 
@@ -553,6 +562,5 @@ pollQuery pollerId lqOpts (sourceName, sourceConfig) roleName parameterizedQuery
               -- Postgres response is not present in the cohort map of this batch
               -- (this shouldn't happen but if it happens it means a logic error and
               -- we should log it)
-              trace ("latest cursor value is " <> show respCursorLatestValue) $
               (pure respBS,cohortId,Just (respHash, respSize), respCursorLatestValue, )
                 <$> Map.lookup cohortId cohortSnapshotMap
