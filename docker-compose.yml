@@ -1,0 +1,53 @@
+# This file starts up the necessary database services to test
+# graphql-engine.
+#
+# Run the following to get started:
+#
+#     docker-compose up -d
+#
+# That will start up services in the background. To take them down,
+# you have to run
+#
+#     docker-compose down
+#
+# If you changed DB init scripts, then you should also run:
+#
+#     docker-compose down --volumes
+#
+# That'll delete the volumes. Otherwise e.g. PostgreSQL will skip
+# initializing if a DB already exists.
+#
+# If you omit -d, it'll run them all in the foreground, then you can
+# stop them with your usual control-C terminal command.
+#
+# Facts:
+#
+# * The SERVICE PORTS numbering start at 65001, 65002, etc. to avoid
+#   bother existing instances of databases.
+#
+# * The login credentials are, where possible, all "hasura" to avoid
+#   unnecessary mental overhead.
+
+version: "3.3"
+services:
+
+  mariadb:
+    image: mariadb:10.6.4-focal@sha256:c014ba1efc5dbd711d0520c7762d57807f35549de3414eb31e942a420c8a2ed2
+    ports:
+      - "65001:3306"
+    environment:
+      MARIADB_USER: "hasura"
+      MARIADB_PASSWORD: "hasura"
+      MARIADB_DATABASE: "hasura"
+      MARIADB_ALLOW_EMPTY_ROOT_PASSWORD: "true"
+
+  postgres:
+    image: postgres:14-alpine@sha256:1cf551de75fd602ebc94ccda93305a4e411f941bf9465f59d850bdcfd474ca52
+    ports:
+      - "65002:5432"
+    environment:
+      POSTGRES_USER: "hasura"
+      POSTGRES_PASSWORD: "hasura"
+      POSTGRES_DB: "hasura"
+    volumes:
+        - ./docker-compose/postgres:/docker-entrypoint-initdb.d

@@ -23,28 +23,37 @@ module Harness.Constants
     httpHealthCheckAttempts,
     httpHealthCheckIntervalSeconds,
     httpHealthCheckIntervalMicroseconds,
-    graphqlEngineUrlPrefix,
+    serveOptions,
   )
 where
 
+import Data.HashSet qualified as Set
 import Data.Word
 import Database.MySQL.Simple qualified as Mysql
-import Prelude
+import Database.PG.Query qualified as Q
+import Hasura.GraphQL.Execute.LiveQuery.Options qualified as LQ
+import Hasura.Logging qualified as L
+import Hasura.Prelude
+import Hasura.RQL.Types
+import Hasura.Server.Cors
+import Hasura.Server.Init
+import Hasura.Server.Types
+import Network.WebSockets qualified as WS
 
 postgresPassword :: String
-postgresPassword = "chinook"
+postgresPassword = "hasura"
 
 postgresUser :: String
-postgresUser = "chinook"
+postgresUser = "hasura"
 
 postgresDb :: String
-postgresDb = "chinook"
+postgresDb = "hasura"
 
 postgresHost :: String
 postgresHost = "127.0.0.1"
 
 postgresPort :: Word16
-postgresPort = 5432
+postgresPort = 65002
 
 postgresqlConnectionString :: String
 postgresqlConnectionString =
@@ -78,10 +87,10 @@ mysqlLivenessCheckIntervalMicroseconds :: Int
 mysqlLivenessCheckIntervalMicroseconds = 1000 * 1000 * mysqlLivenessCheckIntervalSeconds
 
 mysqlPassword :: String
-mysqlPassword = "hasuraMySQL1"
+mysqlPassword = "hasura"
 
 mysqlUser :: String
-mysqlUser = "root"
+mysqlUser = "hasura"
 
 mysqlDatabase :: String
 mysqlDatabase = "hasura"
@@ -90,7 +99,7 @@ mysqlHost :: String
 mysqlHost = "127.0.0.1"
 
 mysqlPort :: Word16
-mysqlPort = 3306
+mysqlPort = 65001
 
 mysqlConnectInfo :: Mysql.ConnectInfo
 mysqlConnectInfo =
@@ -111,5 +120,53 @@ httpHealthCheckIntervalSeconds = 1
 httpHealthCheckIntervalMicroseconds :: Int
 httpHealthCheckIntervalMicroseconds = 1000 * 1000 * httpHealthCheckIntervalSeconds
 
-graphqlEngineUrlPrefix :: String
-graphqlEngineUrlPrefix = "http://127.0.0.1:8080"
+serveOptions :: ServeOptions impl
+serveOptions =
+  ServeOptions
+    { soPort = 12345, -- The server runner will typically be generating
+    -- a random port, so this isn't particularly
+    -- important.
+      soHost = "0.0.0.0",
+      soConnParams = Q.defaultConnParams,
+      soTxIso = Q.Serializable,
+      soAdminSecret = mempty,
+      soAuthHook = Nothing,
+      soJwtSecret = Nothing,
+      soUnAuthRole = Nothing,
+      soCorsConfig = CCAllowAll,
+      soEnableConsole = True,
+      soConsoleAssetsDir = Nothing,
+      soEnableTelemetry = False,
+      soStringifyNum = True,
+      soDangerousBooleanCollapse = False,
+      soEnabledAPIs = testSuiteEnabledApis,
+      soLiveQueryOpts = LQ.mkLiveQueriesOptions Nothing Nothing,
+      soEnableAllowlist = False,
+      soEnabledLogTypes = Set.empty,
+      soLogLevel =
+        -- Use the below to show messages:
+        -- L.LevelDebug
+        -- Use the below to hide messages:
+        L.LevelOther "test-suite",
+      soResponseInternalErrorsConfig = InternalErrorsAllRequests,
+      soEventsHttpPoolSize = Nothing,
+      soEventsFetchInterval = Nothing,
+      soAsyncActionsFetchInterval = Skip,
+      soLogHeadersFromEnv = False,
+      soEnableRemoteSchemaPermissions = RemoteSchemaPermsDisabled,
+      soConnectionOptions = WS.defaultConnectionOptions,
+      soWebsocketKeepAlive = defaultKeepAliveDelay,
+      soInferFunctionPermissions = FunctionPermissionsInferred,
+      soEnableMaintenanceMode = MaintenanceModeDisabled,
+      -- MUST be disabled to be able to modify schema.
+      soSchemaPollInterval = Interval 10,
+      soExperimentalFeatures = mempty,
+      soEventsFetchBatchSize = 1,
+      soDevMode = True,
+      soGracefulShutdownTimeout = 0, -- Don't wait to shutdown.
+      soWebsocketConnectionInitTimeout = defaultWSConnectionInitTimeout
+    }
+
+-- These are important for the test suite.
+testSuiteEnabledApis :: HashSet API
+testSuiteEnabledApis = Set.fromList [METADATA, GRAPHQL, DEVELOPER, CONFIG]
