@@ -23,8 +23,10 @@ import Hasura.Logging qualified as L
 import Hasura.Prelude
 import Hasura.RQL.Types
 import Hasura.Server.Types (RequestId)
+import Hasura.SQL.Value (TxtEncodedVal)
 import Hasura.Session
 import Hasura.Tracing
+import qualified Language.GraphQL.Draft.Syntax as G
 
 instance BackendTransport 'MSSQL where
   runDBQuery = runQuery
@@ -98,7 +100,7 @@ runSubscription ::
   SourceConfig 'MSSQL ->
   MultiplexedQuery 'MSSQL ->
   [(CohortId, CohortVariables)] ->
-  m (DiffTime, Either QErr [(CohortId, B.ByteString, Maybe J.Value)])
+  m (DiffTime, Either QErr [(CohortId, B.ByteString, Maybe (HashMap G.Name TxtEncodedVal))])
 runSubscription sourceConfig (MultiplexedQuery' reselect) variables = do
   let pool = _mscConnectionPool sourceConfig
       multiplexed = multiplexRootReselect variables reselect
@@ -109,10 +111,10 @@ executeMultiplexedQuery ::
   MonadIO m =>
   MSSQLPool ->
   ODBC.Query ->
-  ExceptT QErr m [(CohortId, B.ByteString, Maybe J.Value)]
+  ExceptT QErr m [(CohortId, B.ByteString, Maybe (HashMap G.Name TxtEncodedVal))]
 executeMultiplexedQuery pool query = do
   let parseResult r = J.eitherDecodeStrict (encodeUtf8 r) `onLeft` \s -> throw400 ParseFailed (fromString s)
-      convertFromJSON :: [CohortResult] -> [(CohortId, B.ByteString, Maybe J.Value)]
+      convertFromJSON :: [CohortResult] -> [(CohortId, B.ByteString, Maybe (HashMap G.Name TxtEncodedVal))]
       convertFromJSON = map \(CohortResult (cid, cresult)) -> (cid, encodeUtf8 cresult, Nothing)
   textResult <- run $ runJSONPathQuery pool query
   parsedResult <- parseResult textResult

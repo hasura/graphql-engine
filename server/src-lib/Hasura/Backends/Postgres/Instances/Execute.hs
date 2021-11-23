@@ -46,7 +46,7 @@ import Hasura.GraphQL.Execute.LiveQuery.Plan
     ParameterizedLiveQueryPlan (..),
     SubscriptionType (..),
     mkCohortVariables,
-    newCohortId,
+    newCohortId, ValidatedVariables (ValidatedVariables)
   )
 import Hasura.GraphQL.Namespace
   ( RootFieldAlias (..),

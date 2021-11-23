@@ -63,6 +63,8 @@ import Hasura.RQL.IR.OrderBy
 import Hasura.RQL.IR.Select
 import Hasura.RQL.Types hiding (Identifier)
 import Hasura.SQL.Types
+import qualified Hasura.Backends.Postgres.SQL.DML as S
+import Hasura.Backends.Postgres.SQL.DML (textTypeAnn)
 
 -- | Translates IR to Postgres queries for simple SELECTs (select queries that
 -- are not aggregations, including subscriptions).
@@ -1472,7 +1474,9 @@ mkStreamSQLSelect (AnnSelectStreamG fields from perm args strfyNum) =
       cursorLatestValueExp :: S.SQLExp =
         let pgColumn = pgiColumn cursorCol
             maxOrMin = bool S.SEMin S.SEMax $ _ssaCursorOrdering args == COAscending
-        in maxOrMin $ S.SEIdentifier $ mkBaseTableColumnAlias rootFldIdentifier pgColumn
+            colExp = [S.SELit (getPGColTxt pgColumn), S.SETyAnn (maxOrMin $ S.SEIdentifier $ mkBaseTableColumnAlias rootFldIdentifier pgColumn) textTypeAnn]
+        in S.SEFnApp "json_build_object" colExp Nothing
+        -- annotating it as text because we can then directly get the value from the response as a Text, if it's a json we'll have to parse it into the correct PGScalar type which is not trivial.
       cursorLatestValueExtractor = S.Extractor cursorLatestValueExp (Just $ S.Alias $ Identifier "cursor")
       arrayNode = MultiRowSelectNode [topExtractor, cursorLatestValueExtractor] selectNode
   in prefixNumToAliases $

@@ -16,9 +16,11 @@ import Hasura.Logging qualified as L
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend
 import Hasura.SQL.Backend
+import Hasura.SQL.Value (TxtEncodedVal)
 import Hasura.Server.Types (RequestId)
 import Hasura.Session
 import Hasura.Tracing
+import Language.GraphQL.Draft.Syntax qualified as G
 
 -- | This typeclass enacapsulates how a given backend sends queries and mutations over the
 -- network. Each backend is currently responsible for both logging and tracing, for now.
@@ -62,7 +64,7 @@ class BackendExecute b => BackendTransport (b :: BackendType) where
     MultiplexedQuery b ->
     -- | WARNING: Postgres-specific, ignored by other backends
     [(CohortId, CohortVariables)] ->
-    m (DiffTime, Either QErr [(CohortId, B.ByteString, Maybe J.Value)])
+    m (DiffTime, Either QErr [(CohortId, B.ByteString, Maybe (HashMap G.Name TxtEncodedVal))])
   runDBQueryExplain ::
     forall m.
     ( MonadIO m,

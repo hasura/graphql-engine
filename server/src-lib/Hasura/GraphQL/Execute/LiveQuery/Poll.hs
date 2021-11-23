@@ -76,6 +76,7 @@ import Hasura.Session
 import ListT qualified
 import StmContainers.Map qualified as STMMap
 import Hasura.Backends.Postgres.SQL.Value (TxtEncodedVal)
+import qualified Language.GraphQL.Draft.Syntax as G
 
 -- ----------------------------------------------------------------------------------------------
 -- Subscribers
@@ -151,7 +152,7 @@ data Cohort = Cohort
     -- | subscribers we haven’t yet pushed any results to; we push results to them regardless if the
     -- result changed, then merge them in the map of existing subscribers
     _cNewSubscribers :: !SubscriberMap,
-    _cLatestCursorValue :: !(STM.TVar (Maybe J.Value)) -- this responds to a single cursor, for multiple column cursors this should be a (HashMap columnName (Maybe J.Value))
+    _cLatestCursorValue :: !(STM.TVar (Maybe (HashMap G.Name TxtEncodedVal))) -- this responds to a single cursor, for multiple column cursors this should be a (HashMap columnName (Maybe J.Value))
   }
 
 -- | The @BatchId@ is a number based ID to uniquely identify a batch in a single poll and
@@ -220,14 +221,14 @@ data CohortSnapshot = CohortSnapshot
     _csPreviousResponse :: !(STM.TVar (Maybe ResponseHash)),
     _csExistingSubscribers :: ![Subscriber],
     _csNewSubscribers :: ![Subscriber],
-    _csCursorLatestValue :: !(STM.TVar (Maybe J.Value))
+    _csCursorLatestValue :: !(STM.TVar (Maybe (HashMap G.Name TxtEncodedVal)))
   }
 
 pushResultToCohort ::
   GQResult BS.ByteString ->
   Maybe ResponseHash ->
   LiveQueryMetadata ->
-  Maybe J.Value ->
+  Maybe (HashMap G.Name TxtEncodedVal) ->
   CohortSnapshot ->
   -- | subscribers to which data has been pushed, subscribers which already
   -- have this data (this information is exposed by metrics reporting)
@@ -527,20 +528,15 @@ pollQuery pollerId lqOpts (sourceName, sourceConfig) roleName parameterizedQuery
       newOpsL <- TMap.toList newOpsTV
       forM_ newOpsL $ \(k, action) -> TMap.insert action k curOpsTV
       latestCursorValMaybe <- STM.readTVar cursorLatestVal
-      traceM ("The latest cursor val is " <> show latestCursorValMaybe)
-      let latestCursorValTxtEncodedMaybe :: Maybe TxtEncodedVal =
-            case J.fromJSON <$> latestCursorValMaybe of
-              Just (J.Error s) -> error $ "error in parsing to JSON " <> s
-              Just (J.Success a) -> Just a
-              Nothing -> Nothing
       TMap.reset newOpsTV
-      -- let modifiedCohortVars =
-      --       case latestCursorValTxtEncodedMaybe of
-      --         Just latestCursorValTxtEncode ->
-      --           let unsafeValidatedVariable = mkUnsafeValidateVariables [latestCursorValTxtEncode]
-      --           in modifyCursorCohortVariables unsafeValidatedVariable cohortVars
-      --         Nothing -> cohortVars
-      let cohortSnapshot = CohortSnapshot cohortVars respRef (map snd curOpsL) (map snd newOpsL) cursorLatestVal
+
+      let modifiedCohortVars =
+            case latestCursorValMaybe of
+              Just latestCursorVal ->
+                let unsafeValidatedVariable = mkUnsafeValidateVariables latestCursorVal
+                in modifyCursorCohortVariables unsafeValidatedVariable cohortVars
+              Nothing -> cohortVars
+      let cohortSnapshot = CohortSnapshot modifiedCohortVars respRef (map snd curOpsL) (map snd newOpsL) cursorLatestVal
       return (resId, cohortSnapshot)
 
     getCohortOperations cohorts = \case

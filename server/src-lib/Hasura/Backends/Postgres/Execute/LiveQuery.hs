@@ -233,7 +233,7 @@ executeMultiplexedQuery ::
   (MonadTx m) =>
   MultiplexedQuery ->
   [(CohortId, CohortVariables)] ->
-  m [(CohortId, B.ByteString, Q.AltJ (Maybe J.Value))]
+  m [(CohortId, B.ByteString, Q.AltJ (Maybe (HashMap G.Name TxtEncodedVal)))]
 executeMultiplexedQuery (MultiplexedQuery query) cohorts = do
   executeQuery query cohorts
 
