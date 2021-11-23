@@ -73,6 +73,22 @@ Since MDX doesn't yet support direct document referencing with id/ref unlike sph
 
 > [MDX Root Relative Link](/migration-guide/index#contents-covered)
 
+## Links in React
+
+Use Docusaurus [Links](https://docusaurus.io/docs/docusaurus-core#link) for linking in React. Works for both internal and external links.
+
+```jsx
+import Link from '@docusaurus/Link';
+
+// Internal Link
+<Link to="/migration-guide/links#root-relative-links">Root Relative Links</Link>
+
+// External Link
+<Link to="https://hasura.io">Hasura</Link>
+```
+
+<hr />
+
 :::info
 Docusaurus catches [broken markdown links](https://docusaurus.io/docs/api/docusaurus-config#onbrokenmarkdownlinks) if enabled
 :::
