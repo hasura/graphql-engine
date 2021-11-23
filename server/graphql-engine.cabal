@@ -918,6 +918,7 @@ test-suite tests-hspec
     Harness.Feature
     Harness.Yaml
     Harness.Sql
+    Harness.State
     Harness.Graphql
     Harness.GraphqlEngine
 

@@ -6,14 +6,16 @@ module Harness.Feature
   )
 where
 
+import Control.Exception
 import Data.Foldable
+import Harness.State (State)
 import Test.Hspec
 import Prelude
 
 -- | Use this record to put together a test against a set of backends.
 data Feature = Feature
   { backends :: [Backend],
-    tests :: Spec
+    tests :: SpecWith State
   }
 
 -- | A backend specification.
@@ -23,19 +25,25 @@ data Backend = Backend
     name :: String,
     -- | To setup the test suite: Run SQL commands, run metadata track
     -- tables calls.
-    setup :: IO (),
+    setup :: State -> IO (),
     -- | Clean up any resources you created in 'setup'.
-    teardown :: IO ()
+    teardown :: State -> IO ()
   }
 
 -- | Test the feature, running the setup before any tests are run, and
 -- and ensuring teardown happens after all tests are run.
-feature :: Feature -> Spec
+feature :: Feature -> SpecWith State
 feature Feature {backends, tests} =
   for_
     backends
     ( \Backend {name, setup, teardown} ->
         describe
           name
-          (afterAll (const teardown) (beforeAll setup tests))
+          ( aroundAllWith
+              ( \actionWith server -> do
+                  setup server
+                  finally (actionWith server) (teardown server)
+              )
+              tests
+          )
     )

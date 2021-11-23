@@ -11,6 +11,7 @@ import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Mysql as Mysql
 import Harness.Postgres as Postgres
 import Harness.Sql
+import Harness.State (State)
 import Harness.Yaml
 import Test.Hspec
 import Prelude
@@ -18,7 +19,7 @@ import Prelude
 --------------------------------------------------------------------------------
 -- Preamble
 
-spec :: Spec
+spec :: SpecWith State
 spec =
   Feature.feature
     Feature.Feature
@@ -40,10 +41,11 @@ spec =
 --------------------------------------------------------------------------------
 -- MySQL backend
 
-mysqlSetup :: IO ()
-mysqlSetup = do
+mysqlSetup :: State -> IO ()
+mysqlSetup state = do
   -- Clear and reconfigure the metadata
   GraphqlEngine.post_
+    state
     "/v1/metadata"
     [yaml|
 type: replace_metadata
@@ -82,6 +84,7 @@ VALUES
 
   -- Track the tables
   GraphqlEngine.post_
+    state
     "/v1/metadata"
     [yaml|
 type: mysql_track_table
@@ -92,8 +95,8 @@ args:
     name: author
 |]
 
-mysqlTeardown :: IO ()
-mysqlTeardown = do
+mysqlTeardown :: State -> IO ()
+mysqlTeardown _ = do
   Mysql.run_
     [sql|
 DROP TABLE hasura.author;
@@ -102,10 +105,11 @@ DROP TABLE hasura.author;
 --------------------------------------------------------------------------------
 -- PostgreSQL backend
 
-postgresSetup :: IO ()
-postgresSetup = do
+postgresSetup :: State -> IO ()
+postgresSetup state = do
   -- Clear and reconfigure the metadata
   GraphqlEngine.post_
+    state
     "/v1/metadata"
     [yaml|
 type: replace_metadata
@@ -141,6 +145,7 @@ VALUES
 
   -- Track the tables
   GraphqlEngine.post_
+    state
     "/v1/metadata"
     [yaml|
 type: postgres_track_table
@@ -151,8 +156,8 @@ args:
     name: author
 |]
 
-postgresTeardown :: IO ()
-postgresTeardown = do
+postgresTeardown :: State -> IO ()
+postgresTeardown _ = do
   Postgres.run_
     [sql|
 DROP TABLE hasura.author;
@@ -161,11 +166,12 @@ DROP TABLE hasura.author;
 --------------------------------------------------------------------------------
 -- Tests
 
-tests :: Spec
+tests :: SpecWith State
 tests = do
-  it "Author fields" $
+  it "Author fields" $ \state ->
     shouldReturnYaml
       ( GraphqlEngine.postGraphql
+          state
           [graphql|
 query {
   hasura_author {
@@ -183,9 +189,10 @@ data:
   - name: Author 2
     id: 2
 |]
-  it "Use operationName" $
+  it "Use operationName" $ \state ->
     shouldReturnYaml
       ( GraphqlEngine.postGraphqlYaml
+          state
           [yaml|
 operationName: chooseThisOne
 query: |
@@ -210,9 +217,10 @@ data:
   - name: Author 2
     id: 2
 |]
-  it "Missing field" $ do
+  it "Missing field" $ \state -> do
     shouldReturnYaml
       ( GraphqlEngine.postGraphql
+          state
           [graphql|
 query {
   hasura_author {
@@ -231,9 +239,10 @@ errors:
   message: |-
     field "notPresentCol" not found in type: 'hasura_author'
 |]
-  it "Missing table" $ do
+  it "Missing table" $ \state ->
     shouldReturnYaml
       ( GraphqlEngine.postGraphql
+          state
           [graphql|
 query {
   random {

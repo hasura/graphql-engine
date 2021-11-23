@@ -10,6 +10,7 @@ import Harness.Graphql
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Mysql as Mysql
 import Harness.Sql
+import Harness.State (State)
 import Harness.Yaml
 import Test.Hspec
 import Prelude
@@ -17,7 +18,7 @@ import Prelude
 --------------------------------------------------------------------------------
 -- Preamble
 
-spec :: Spec
+spec :: SpecWith State
 spec =
   Feature.feature
     Feature.Feature
@@ -34,10 +35,11 @@ spec =
 --------------------------------------------------------------------------------
 -- MySQL backend
 
-mysqlSetup :: IO ()
-mysqlSetup = do
+mysqlSetup :: State -> IO ()
+mysqlSetup state = do
   -- Clear and reconfigure the metadata
   GraphqlEngine.post_
+    state
     "/v1/metadata"
     [yaml|
 type: replace_metadata
@@ -76,6 +78,7 @@ VALUES
 
   -- Track the tables
   GraphqlEngine.post_
+    state
     "/v1/metadata"
     [yaml|
 type: mysql_track_table
@@ -86,8 +89,8 @@ args:
     name: author
 |]
 
-mysqlTeardown :: IO ()
-mysqlTeardown = do
+mysqlTeardown :: State -> IO ()
+mysqlTeardown _ = do
   Mysql.run_
     [sql|
 DROP TABLE author;
@@ -96,11 +99,12 @@ DROP TABLE author;
 --------------------------------------------------------------------------------
 -- Tests
 
-tests :: Spec
+tests :: SpecWith State
 tests = do
-  it "Order by id ascending" $
+  it "Order by id ascending" $ \state ->
     shouldReturnYaml
       ( GraphqlEngine.postGraphql
+          state
           [graphql|
 query {
   hasura_author (order_by: {id: asc}) {
@@ -119,9 +123,10 @@ data:
     id: 2
 |]
 
-  it "Order by id descending" $
+  it "Order by id descending" $ \state ->
     shouldReturnYaml
       ( GraphqlEngine.postGraphql
+          state
           [graphql|
 query {
   hasura_author (order_by: {id: desc}) {
