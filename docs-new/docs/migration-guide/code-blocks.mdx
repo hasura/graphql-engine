@@ -8,67 +8,53 @@ These are straight forward syntax swap as give below.
 
 ## Sphinx - RST
 
-```rest
-// highlight-next-line
+```rest {1-2}
 .. code-block:: graphql
-    mutation createProject {
-     createTenant(
-       cloud: "aws"
-       region: "us-east-2"
-       envs: [{
-         key: "HASURA_GRAPHQL_CORS_DOMAIN",
-         value: "*"
-       }, {
-         key: "MY_ENV_VAR_1",
-         value: "my value 1"
-       }]
-     ) {
-       id
-       name
-     }
-   }
+   :emphasize-lines: 2,5
+
+    query {
+      authors (where: {articles: {rating: {_gt: 4}}}) {
+        id
+        name
+        articles (where: {rating: {_gt: 4}}) {
+          id
+          title
+          rating
+        }
+      }
+    }
 ```
 
 ## Docusaurus - MDX
 ```markdown
     // highlight-next-line
-    ```graphql
-      mutation createProject {
-        createTenant(
-          cloud: "aws"
-          region: "us-east-2"
-          envs: [{
-            key: "HASURA_GRAPHQL_CORS_DOMAIN",
-            value: "*"
-          }, {
-            key: "MY_ENV_VAR_1",
-            value: "my value 1"
-          }]
-        ) {
-          id
-          name
+    ```graphql {2,5}
+        query {
+          authors (where: {articles: {rating: {_gt: 4}}}) {
+            id
+            name
+            articles (where: {rating: {_gt: 4}}) {
+              id
+              title
+              rating
+            }
+          }
         }
-      }
     // highlight-next-line
     ```
 ```
 ## Result in UI
 
-```graphql
-  mutation createProject {
-    createTenant(
-      cloud: "aws"
-      region: "us-east-2"
-      envs: [{
-        key: "HASURA_GRAPHQL_CORS_DOMAIN",
-        value: "*"
-      }, {
-        key: "MY_ENV_VAR_1",
-        value: "my value 1"
-      }]
-    ) {
+```graphql {2,5}
+  query {
+    authors (where: {articles: {rating: {_gt: 4}}}) {
       id
       name
+      articles (where: {rating: {_gt: 4}}) {
+        id
+        title
+        rating
+      }
     }
   }
 ```
