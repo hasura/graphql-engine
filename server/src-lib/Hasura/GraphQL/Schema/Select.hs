@@ -1,5 +1,6 @@
 {-# LANGUAGE ApplicativeDo #-}
 {-# LANGUAGE ViewPatterns #-}
+{-# LANGUAGE TupleSections #-}
 
 -- | Generate table selection schema both for ordinary Hasura-type and
 -- relay-type queries.  All schema with "relay" or "connection" in the name is
@@ -887,14 +888,14 @@ tableStreamCursorArg sourceName tableInfo selectPermissions = do
       fieldParser <- typedParser columnInfo
       pure $
         P.fieldOptional fieldName fieldDesc fieldParser
-           `mapField` \value -> (columnInfo, value)
+           `mapField` (columnInfo, )
   objName <- P.mkTypename $ tableGQLName <> $$(G.litName ("_stream_cursor_input"))
   pure $ P.field $$(G.litName "cursor") (Just "cursor column(s) for streaming data") $
     P.object objName (Just "authors table desc") $ -- FIXME: fix the description
       Map.fromList . catMaybes <$> sequenceA fields
     where
     typedParser columnInfo =
-      fmap P.mkCursorParameter <$> columnParser (pgiType columnInfo) (G.Nullability $ pgiIsNullable columnInfo)
+      fmap (P.mkCursorParameter (pgiName columnInfo)) <$> columnParser (pgiType columnInfo) (G.Nullability $ pgiIsNullable columnInfo)
 
 -- | Argument to limit rows returned from table selection
 -- > limit: NonNegativeInt

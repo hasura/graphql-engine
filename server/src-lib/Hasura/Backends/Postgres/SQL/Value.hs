@@ -96,7 +96,7 @@ data PGScalarValue
   | PGValLquery !Text
   | PGValLtxtquery !Text
   | PGValUnknown !Text
-  deriving (Show, Eq)
+  deriving (Show, Eq, Generic)
 
 pgScalarValueToJson :: PGScalarValue -> Value
 pgScalarValueToJson = \case

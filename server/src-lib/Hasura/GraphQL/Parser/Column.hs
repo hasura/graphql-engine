@@ -28,7 +28,7 @@ import Language.GraphQL.Draft.Syntax qualified as G
 -- -------------------------------------------------------------------------------------------------
 
 data ParameterType
-  = PTCursorVariable
+  = PTCursorVariable !G.Name
   | PTNonCursorVariable
   deriving (Show, Eq)
 
@@ -36,8 +36,8 @@ data UnpreparedValue (b :: BackendType)
   = -- | A SQL value that can be parameterized over.
     UVParameter
       (Maybe VariableInfo)
-      ParameterType
       -- ^ The GraphQL variable this value came from, if any.
+      ParameterType
       (ColumnValue b)
   | -- | A literal SQL expression that /cannot/ be parameterized over.
     UVLiteral (SQLExpression b)
@@ -79,8 +79,8 @@ mkParameterWithParameterType parameterType (ValueNoOrigin columnValue) =
 mkParameter :: ValueWithOrigin (ColumnValue b) -> UnpreparedValue b
 mkParameter = mkParameterWithParameterType PTNonCursorVariable
 
-mkCursorParameter :: ValueWithOrigin (ColumnValue b) -> UnpreparedValue b
-mkCursorParameter = mkParameterWithParameterType PTCursorVariable
+mkCursorParameter :: G.Name -> ValueWithOrigin (ColumnValue b) -> UnpreparedValue b
+mkCursorParameter colName = mkParameterWithParameterType (PTCursorVariable colName)
 
 -- TODO: figure out what the purpose of this method is.
 peelWithOrigin :: MonadParse m => Parser 'Both m a -> Parser 'Both m (ValueWithOrigin a)

@@ -6,9 +6,11 @@ module Hasura.Backends.Postgres.Execute.LiveQuery
     validateVariables,
     executeMultiplexedQuery,
     executeQuery,
+    SubscriptionType (..)
   )
 where
 
+import Debug.Trace
 import Control.Lens
 import Data.Aeson qualified as J
 import Data.ByteString qualified as B
@@ -16,6 +18,7 @@ import Data.HashMap.Strict qualified as Map
 import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.HashSet qualified as Set
 import Data.Semigroup.Generic
+import Data.Sequence qualified as Seq
 import Data.Text.Extended
 import Database.PG.Query qualified as Q
 import Hasura.Backends.Postgres.Connection
@@ -45,7 +48,7 @@ import Language.GraphQL.Draft.Syntax qualified as G
 data QueryParametersInfo (b :: BackendType) = QueryParametersInfo
   { _qpiReusableVariableValues :: !(HashMap G.Name (ColumnValue b)),
     _qpiSyntheticVariableValues :: !(Seq (ColumnValue b)),
-    _qpiCursorVariableValues :: !(Seq (ColumnValue b)),
+    _qpiCursorVariableValues :: !(HashMap G.Name (ColumnValue b)),
     -- | The session variables that are referenced in the query root fld's AST.
     -- This information is used to determine a cohort's required session
     -- variables
@@ -183,12 +186,16 @@ resolveMultiplexedValue allSessionVars = \case
         modifying qpiReusableVariableValues $ Map.insert varName colVal
         pure ["query", G.unName varName]
       Nothing -> do
-        if isCursorVariable == PTCursorVariable
-          then do
-            cursorVarIndex <- use (qpiCursorVariableValues . to length)
-            modifying qpiCursorVariableValues (|> colVal)
-            pure ["cursor", tshow cursorVarIndex]
-          else do
+        case isCursorVariable of
+          PTCursorVariable colName -> do
+            cursorVars <- use qpiCursorVariableValues
+            case Map.lookup colName cursorVars of
+              Nothing -> do
+                modifying qpiCursorVariableValues (Map.insert colName colVal)
+                pure ["cursor", G.unName colName]
+              Just {} ->
+                pure ["cursor", G.unName colName]
+          PTNonCursorVariable -> do
             syntheticVarIndex <- use (qpiSyntheticVariableValues . to length)
             modifying qpiSyntheticVariableValues (|> colVal)
             pure ["synthetic", tshow syntheticVarIndex]

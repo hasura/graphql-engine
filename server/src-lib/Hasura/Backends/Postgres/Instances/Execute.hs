@@ -44,6 +44,7 @@ import Hasura.GraphQL.Execute.LiveQuery.Plan
   ( LiveQueryPlan (..),
     LiveQueryPlanExplanation (..),
     ParameterizedLiveQueryPlan (..),
+    SubscriptionType (..),
     mkCohortVariables,
     newCohortId,
   )
@@ -81,6 +82,7 @@ import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.Session (UserInfo (..))
 import Hasura.Tracing qualified as Tracing
 import Language.GraphQL.Draft.Syntax qualified as G
+import Hasura.Backends.Postgres.Execute.LiveQuery (QueryParametersInfo(_qpiCursorVariableValues))
 
 data PreparedSql = PreparedSql
   { _psQuery :: !Q.Query,
@@ -298,7 +300,8 @@ pgDBSubscriptionPlan ::
 pgDBSubscriptionPlan userInfo _sourceName sourceConfig namespace unpreparedAST = do
   (preparedAST, PGL.QueryParametersInfo {..}) <-
     flip runStateT mempty $
-      for unpreparedAST $ traverse (PGL.resolveMultiplexedValue $ _uiSession userInfo)
+      for unpreparedAST $
+        traverse (PGL.resolveMultiplexedValue (_uiSession userInfo))
   mutationQueryTagsComment <- ask
   let multiplexedQuery = PGL.mkMultiplexedQuery $ OMap.mapKeys _rfaAlias preparedAST
       multiplexedQueryWithQueryTags =
@@ -311,7 +314,12 @@ pgDBSubscriptionPlan userInfo _sourceName sourceConfig namespace unpreparedAST =
   -- take down the entire multiplexed query.
   validatedQueryVars <- PGL.validateVariables (_pscExecCtx sourceConfig) _qpiReusableVariableValues
   validatedSyntheticVars <- PGL.validateVariables (_pscExecCtx sourceConfig) $ toList _qpiSyntheticVariableValues
-  validatedCursorVars <- PGL.validateVariables (_pscExecCtx sourceConfig) $ toList _qpiCursorVariableValues
+  validatedCursorVars <- PGL.validateVariables (_pscExecCtx sourceConfig) _qpiCursorVariableValues
+
+  let subscriptionType =
+        if Map.null _qpiCursorVariableValues
+          then STLiveQuery
+          else STStreaming
 
   -- TODO validatedQueryVars validatedSyntheticVars
   let cohortVariables =
@@ -322,7 +330,7 @@ pgDBSubscriptionPlan userInfo _sourceName sourceConfig namespace unpreparedAST =
           validatedSyntheticVars
           validatedCursorVars
 
-  pure $ LiveQueryPlan parameterizedPlan sourceConfig cohortVariables namespace
+  pure $ LiveQueryPlan parameterizedPlan sourceConfig cohortVariables namespace subscriptionType
 
 -- turn the current plan into a transaction
 mkCurPlanTx ::

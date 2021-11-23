@@ -95,12 +95,15 @@ module Hasura.GraphQL.Execute.LiveQuery.Plan
     CohortVariables,
     mkCohortVariables,
     ValidatedVariables (..),
+    mkUnsafeValidateVariables,
+    modifyCursorCohortVariables,
     ValidatedQueryVariables,
     ValidatedSyntheticVariables,
     ValidatedCursorVariables,
     LiveQueryPlan (..),
     LiveQueryPlanExplanation (..),
     ParameterizedLiveQueryPlan (..),
+    SubscriptionType (..)
   )
 where
 
@@ -161,6 +164,13 @@ data CohortVariables = CohortVariables
   deriving (Show, Eq, Generic)
 
 instance Hashable CohortVariables
+
+modifyCursorCohortVariables ::
+  ValidatedCursorVariables ->
+  CohortVariables ->
+  CohortVariables
+modifyCursorCohortVariables validatedCursorVariables cohortVariables =
+  cohortVariables { _cvCursorVariables = validatedCursorVariables }
 
 -- | Builds a cohort's variables by only using the session variables that
 -- are required for the subscription
@@ -233,10 +243,16 @@ type ValidatedQueryVariables = ValidatedVariables (Map.HashMap G.Name)
 
 type ValidatedSyntheticVariables = ValidatedVariables []
 
-type ValidatedCursorVariables = ValidatedVariables []
+type ValidatedCursorVariables = ValidatedVariables (Map.HashMap G.Name)
+
+mkUnsafeValidateVariables :: f TxtEncodedVal -> ValidatedVariables f
+mkUnsafeValidateVariables = ValidatedVariables
 
 ----------------------------------------------------------------------------------------------------
 -- Live query plans
+
+data SubscriptionType = STLiveQuery | STStreaming
+  deriving (Show, Eq)
 
 -- | A self-contained, ready-to-execute live query plan. Contains enough information
 -- to find an existing poller that this can be added to /or/ to create a new poller
@@ -247,7 +263,8 @@ data LiveQueryPlan (b :: BackendType) q = LiveQueryPlan
     _lqpVariables :: !CohortVariables,
     -- | We need to know if the source has a namespace so that we can wrap it around
     -- the response from the DB
-    _lqpNamespace :: !(Maybe G.Name)
+    _lqpNamespace :: !(Maybe G.Name),
+    _lqpSubscriptionType :: !SubscriptionType
   }
 
 data ParameterizedLiveQueryPlan (b :: BackendType) q = ParameterizedLiveQueryPlan

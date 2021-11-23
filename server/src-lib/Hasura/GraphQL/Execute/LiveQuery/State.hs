@@ -151,7 +151,7 @@ addLiveQuery
     where
       LiveQueriesState lqOpts lqMap postPollHook _ = lqState
       LiveQueriesOptions _ refetchInterval = lqOpts
-      LiveQueryPlan (ParameterizedLiveQueryPlan role query) sourceConfig cohortKey _ = plan
+      LiveQueryPlan (ParameterizedLiveQueryPlan role query) sourceConfig cohortKey _ subscriptionType = plan
 
       handlerId = PollerKey source role $ toTxt query
 
@@ -159,7 +159,7 @@ addLiveQuery
         TMap.insert subscriber (_sId subscriber) $ _cNewSubscribers handlerC
 
       addToPoller subscriber cohortId handler = do
-        !newCohort <- Cohort cohortId <$> STM.newTVar Nothing <*> TMap.new <*> TMap.new
+        !newCohort <- Cohort cohortId <$> STM.newTVar Nothing <*> TMap.new <*> TMap.new <*> STM.newTVar Nothing
         addToCohort subscriber newCohort
         TMap.insert newCohort cohortKey $ _pCohorts handler
 

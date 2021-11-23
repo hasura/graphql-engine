@@ -48,7 +48,6 @@ import Control.Lens
 import Debug.Trace
 import Crypto.Hash qualified as CH
 import Data.Aeson qualified as J
-import Data.Aeson.Extended qualified as J
 import Data.ByteString qualified as BS
 import Data.HashMap.Strict qualified as Map
 import Data.List.Split (chunksOf)
@@ -76,6 +75,7 @@ import Hasura.Server.Types (RequestId)
 import Hasura.Session
 import ListT qualified
 import StmContainers.Map qualified as STMMap
+import Hasura.Backends.Postgres.SQL.Value (TxtEncodedVal)
 
 -- ----------------------------------------------------------------------------------------------
 -- Subscribers
@@ -150,7 +150,8 @@ data Cohort = Cohort
     _cExistingSubscribers :: !SubscriberMap,
     -- | subscribers we haven’t yet pushed any results to; we push results to them regardless if the
     -- result changed, then merge them in the map of existing subscribers
-    _cNewSubscribers :: !SubscriberMap
+    _cNewSubscribers :: !SubscriberMap,
+    _cLatestCursorValue :: !(STM.TVar (Maybe J.Value)) -- this responds to a single cursor, for multiple column cursors this should be a (HashMap columnName (Maybe J.Value))
   }
 
 -- | The @BatchId@ is a number based ID to uniquely identify a batch in a single poll and
@@ -199,42 +200,48 @@ dumpCohortMap cohortMap = do
           "cohort" J..= cohortJ
         ]
   where
-    dumpCohort (Cohort respId respTV curOps newOps) =
+    dumpCohort (Cohort respId respTV curOps newOps latestCursorValTV) =
       STM.atomically $ do
         prevResHash <- STM.readTVar respTV
         curOpIds <- TMap.toList curOps
         newOpIds <- TMap.toList newOps
+        latestCursorVal <- STM.readTVar latestCursorValTV
         return $
           J.object
             [ "resp_id" J..= respId,
               "current_ops" J..= map fst curOpIds,
               "new_ops" J..= map fst newOpIds,
-              "previous_result_hash" J..= prevResHash
+              "previous_result_hash" J..= prevResHash,
+              "latest_cursor_value" J..= latestCursorVal
             ]
 
 data CohortSnapshot = CohortSnapshot
   { _csVariables :: !CohortVariables,
     _csPreviousResponse :: !(STM.TVar (Maybe ResponseHash)),
     _csExistingSubscribers :: ![Subscriber],
-    _csNewSubscribers :: ![Subscriber]
+    _csNewSubscribers :: ![Subscriber],
+    _csCursorLatestValue :: !(STM.TVar (Maybe J.Value))
   }
 
 pushResultToCohort ::
   GQResult BS.ByteString ->
   Maybe ResponseHash ->
   LiveQueryMetadata ->
+  Maybe J.Value ->
   CohortSnapshot ->
   -- | subscribers to which data has been pushed, subscribers which already
   -- have this data (this information is exposed by metrics reporting)
   IO ([SubscriberExecutionDetails], [SubscriberExecutionDetails])
-pushResultToCohort result !respHashM (LiveQueryMetadata dTime) cohortSnapshot = do
+pushResultToCohort result !respHashM (LiveQueryMetadata dTime) latestCursorValueMaybe cohortSnapshot = do
   prevRespHashM <- STM.readTVarIO respRef
   -- write to the current websockets if needed
   (subscribersToPush, subscribersToIgnore) <-
     if isExecError result || respHashM /= prevRespHashM
       then do
         $assertNFHere respHashM -- so we don't write thunks to mutable vars
-        STM.atomically $ STM.writeTVar respRef respHashM
+        STM.atomically $ do
+          STM.writeTVar respRef respHashM
+          STM.writeTVar latestCursorValueTV latestCursorValueMaybe
         return (newSinks <> curSinks, mempty)
       else return (newSinks, curSinks)
   pushResultToSubscribers subscribersToPush
@@ -246,7 +253,7 @@ pushResultToCohort result !respHashM (LiveQueryMetadata dTime) cohortSnapshot = 
       )
       (subscribersToPush, subscribersToIgnore)
   where
-    CohortSnapshot _ respRef curSinks newSinks = cohortSnapshot
+    CohortSnapshot _ respRef curSinks newSinks latestCursorValueTV = cohortSnapshot
 
     response = result <&> \payload -> LiveQueryResponse payload dTime
     pushResultToSubscribers =
@@ -473,12 +480,12 @@ pollQuery pollerId lqOpts (sourceName, sourceConfig) roleName parameterizedQuery
           -- batch response size is the sum of the response sizes of the cohorts
           batchResponseSize =
             case mxRes of
-              Left err -> Nothing
+              Left _ -> Nothing
               Right resp -> Just $ getSum $ foldMap ((\(_, sqlResp, _) -> Sum . BS.length $ sqlResp)) resp
       (pushTime, cohortsExecutionDetails) <- withElapsedTime $
-        A.forConcurrently operations $ \(res, cohortId, respData, snapshot) -> do
+        A.forConcurrently operations $ \(res, cohortId, respData, latestCursorValueMaybe, snapshot) -> do
           (pushedSubscribers, ignoredSubscribers) <-
-            pushResultToCohort res (fst <$> respData) lqMeta snapshot
+            pushResultToCohort res (fst <$> respData) lqMeta latestCursorValueMaybe snapshot
           pure
             CohortExecutionDetails
               { _cedCohortId = cohortId,
@@ -515,19 +522,32 @@ pollQuery pollerId lqOpts (sourceName, sourceConfig) roleName parameterizedQuery
     LiveQueriesOptions batchSize _ = lqOpts
 
     getCohortSnapshot (cohortVars, handlerC) = do
-      let Cohort resId respRef curOpsTV newOpsTV = handlerC
+      let Cohort resId respRef curOpsTV newOpsTV cursorLatestVal = handlerC
       curOpsL <- TMap.toList curOpsTV
       newOpsL <- TMap.toList newOpsTV
       forM_ newOpsL $ \(k, action) -> TMap.insert action k curOpsTV
+      latestCursorValMaybe <- STM.readTVar cursorLatestVal
+      traceM ("The latest cursor val is " <> show latestCursorValMaybe)
+      let latestCursorValTxtEncodedMaybe :: Maybe TxtEncodedVal =
+            case J.fromJSON <$> latestCursorValMaybe of
+              Just (J.Error s) -> error $ "error in parsing to JSON " <> s
+              Just (J.Success a) -> Just a
+              Nothing -> Nothing
       TMap.reset newOpsTV
-      let cohortSnapshot = CohortSnapshot cohortVars respRef (map snd curOpsL) (map snd newOpsL)
+      -- let modifiedCohortVars =
+      --       case latestCursorValTxtEncodedMaybe of
+      --         Just latestCursorValTxtEncode ->
+      --           let unsafeValidatedVariable = mkUnsafeValidateVariables [latestCursorValTxtEncode]
+      --           in modifyCursorCohortVariables unsafeValidatedVariable cohortVars
+      --         Nothing -> cohortVars
+      let cohortSnapshot = CohortSnapshot cohortVars respRef (map snd curOpsL) (map snd newOpsL) cursorLatestVal
       return (resId, cohortSnapshot)
 
     getCohortOperations cohorts = \case
       Left e ->
         -- TODO: this is internal error
         let resp = throwError $ GQExecError [encodeGQLErr False e]
-         in [(resp, cohortId, Nothing, snapshot) | (cohortId, snapshot) <- cohorts]
+         in [(resp, cohortId, Nothing, Nothing, snapshot) | (cohortId, snapshot) <- cohorts]
       Right responses -> do
         let cohortSnapshotMap = Map.fromList cohorts
         flip mapMaybe responses $ \(cohortId, respBS, respCursorLatestValue) ->
@@ -538,5 +558,5 @@ pollQuery pollerId lqOpts (sourceName, sourceConfig) roleName parameterizedQuery
               -- (this shouldn't happen but if it happens it means a logic error and
               -- we should log it)
               trace ("latest cursor value is " <> show respCursorLatestValue) $
-              (pure respBS,cohortId,Just (respHash, respSize),)
+              (pure respBS,cohortId,Just (respHash, respSize), respCursorLatestValue, )
                 <$> Map.lookup cohortId cohortSnapshotMap
