@@ -15,8 +15,14 @@ fi
 
 PG_PASSWORD=postgres
 PG_CONTAINER_NAME="hasura-dev-postgres-$PG_PORT"
-PG_DB_URL="postgres://postgres:$PG_PASSWORD@127.0.0.1:$PG_PORT/postgres"
+PG_DB_URL="postgresql://postgres:$PG_PASSWORD@127.0.0.1:$PG_PORT/postgres"
 PG_DOCKER="docker exec -u postgres -it $PG_CONTAINER_NAME psql $PG_DB_URL"
+
+if [[ `uname -m` == 'arm64' ]]; then
+  PG_CONTAINER_IMAGE=sayitsocial/postgis:raspi
+else
+  PG_CONTAINER_IMAGE=circleci/postgres:11.5-alpine-postgis
+fi
 
 # NOTE FWIW:
 #   Brandon tried these options to speed up integration tests, but to little effect:
@@ -66,7 +72,7 @@ function pg_launch_container(){
     -p 127.0.0.1:"$PG_PORT":$PG_PORT \
     --expose="$PG_PORT" \
     -e POSTGRES_PASSWORD="$PG_PASSWORD" \
-    -d circleci/postgres:11.5-alpine-postgis \
+    -d "$PG_CONTAINER_IMAGE" \
     $CONF_FLAGS
 
   # graphql-engine calls the pg_dump executable. To avoid a version mismatch (and
