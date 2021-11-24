@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import ReactDOM from "react-dom";
+import BrowserOnly from '@docusaurus/BrowserOnly';
 import { CSSTransition } from "react-transition-group";
 import './Thumbnail.css';
 
@@ -12,7 +13,7 @@ const Overlay = (props) => {
 
   useEffect(() => {
     document.body.addEventListener("keydown", closeOnEscapeKeyDown);
-    return function cleanup() {
+    return () => {
       document.body.removeEventListener("keydown", closeOnEscapeKeyDown);
     };
   }, []);
@@ -46,11 +47,13 @@ const Thumbnail = (props) => {
     onClick={() => setShowInModal(true)}
   >
     <img {...props} />
-    <div>
-      <Overlay onClose={() => setShowInModal(false)} show={showInModal}>
-        <img {...props} />
-      </Overlay>
-    </div>
+    <BrowserOnly>
+      {() => (
+        <Overlay onClose={() => setShowInModal(false)} show={showInModal}>
+          <img {...props} />
+        </Overlay>
+      )}
+    </BrowserOnly>
   </div>
 );
 }
