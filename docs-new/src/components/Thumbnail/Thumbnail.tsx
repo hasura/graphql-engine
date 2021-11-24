@@ -4,7 +4,7 @@ import BrowserOnly from '@docusaurus/BrowserOnly';
 import { CSSTransition } from "react-transition-group";
 import styles from './Thumbnail.module.css';
 
-const Overlay = (props) => {
+const Modal = (props) => {
   const closeOnEscapeKeyDown = e => {
     if ((e.charCode || e.keyCode) === 27) {
       props.onClose();
@@ -53,9 +53,9 @@ const Thumbnail = (props) => {
     <img {...props} />
     <BrowserOnly>
       {() => (
-        <Overlay onClose={() => setShowInModal(false)} show={showInModal}>
+        <Modal onClose={() => setShowInModal(false)} show={showInModal}>
           <img {...props} />
-        </Overlay>
+        </Modal>
       )}
     </BrowserOnly>
   </div>
