@@ -4,18 +4,23 @@ reject-unconstrained-dependencies: all
 
 package *
   ghc-options:
-    -- Tune for the circleci `xlarge` resource class, which provides
-    -- 8 vcpus.
-    -j6
+    -- We compile with package-level parallelism, so just use a small amount 
+    -- of module-level parallelism for dependencies:
+    -- TODO: tune me
+    -j2
     -- Limit heap size to 15G, to maintain some breathing room given
-    -- the 16G of available memory.
+    -- the 16G of available memory on the current "XXLarge" instance
     +RTS -M15000m -RTS
+    -- For performance, with `-j`:
+    +RTS -A64m -n2m -RTS
 
 -- Enable optimizations in all local (hasura) packages:
 flags: +optimize-hasura
 
 package graphql-engine
   ghc-options:
+    -- At this point though we definitely want full module-level parallelism:
+    -j
     -Werror
   tests: true
   benchmarks: true
@@ -31,11 +36,7 @@ package graphql-engine
 
 package graphql-engine-pro
   ghc-options:
+    -- At this point though we definitely want full module-level parallelism:
+    -j
     -Werror
-    -- Tune for the circleci `2xlarge` resource class, which provides
-    -- 16 vcpus.
-    -j14
-    -- Limit heap size to 31G, to maintain some breathing room given
-    -- the 32G of available memory.
-    +RTS -M31000m -RTS
   tests: true
