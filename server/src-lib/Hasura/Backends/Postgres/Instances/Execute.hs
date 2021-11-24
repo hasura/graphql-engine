@@ -197,14 +197,14 @@ convertUpdate ::
     PostgresAnnotatedFieldJSON pgKind
   ) =>
   UserInfo ->
-  IR.AnnotatedUpdateNodeG ('Postgres pgKind) (Const Void) (UnpreparedValue ('Postgres pgKind)) ->
+  IR.AnnotatedUpdateG ('Postgres pgKind) (Const Void) (UnpreparedValue ('Postgres pgKind)) ->
   Bool ->
   QueryTagsComment ->
   m (Tracing.TraceT (Q.TxET QErr IO) EncJSON)
 convertUpdate userInfo updateOperation stringifyNum queryTags = do
   preparedUpdate <- traverse (prepareWithoutPlan userInfo) updateOperation
-  if null $ updateOperations . IR.uqp1BackendIR $ updateOperation
-    then pure $ pure $ IR.buildEmptyMutResp $ IR.uqp1Output preparedUpdate
+  if null $ updateOperations . IR._auBackend $ updateOperation
+    then pure $ pure $ IR.buildEmptyMutResp $ IR._auOutput preparedUpdate
     else
       pure $
         flip runReaderT queryTags $
