@@ -40,6 +40,41 @@ You can turn any query into a subscription by simply replacing ``query`` with ``
   Hasura follows the `GraphQL spec <https://graphql.github.io/graphql-spec/June2018/#sec-Single-root-field>`__ which
   allows for only one root field in a subscription.
 
+Streaming Subscription
+----------------------
+
+Streaming subscriptions is a type of subscription which is based on a user-provided ``cursor``
+which is used by the graphql-engine to stream results based on the cursor.
+
+The auto-generated schema for the streaming subscription field for a table ``author`` looks like the following:
+
+.. code-block:: graphql
+
+   author_stream (
+     cursor: author_stream_cursor_input!,
+     where: author_bool_exp,
+     batch_size: Int,
+     ordering: cursor_ordering
+   ): [author]!
+
+   enum cursor_ordering {
+     ASC
+     DESC
+   }
+
+   input authors_stream_cursor_input {
+     created_at: timestamptz
+     id: Int
+     name: String
+     streaming_column: String
+   }
+
+Streaming subscriptions maintain the latest value of cursor and after every fetch of the result from the
+database, the latest value of the cursor in the batch returned to the client is stored internally and the
+immediately next result returned to the client will be the result which comes after or before the latest value of the
+cursor, depending on the ``ordering`` key's value (by default, ``ordering`` is ascending).
+
+
 Use cases
 ---------
 
@@ -52,9 +87,9 @@ Communication protocol
 
 Hasura GraphQL engine uses the `GraphQL over WebSocket Protocol
 <https://github.com/apollographql/subscriptions-transport-ws/blob/master/PROTOCOL.md>`__ by the
-`apollographql/subscriptions-transport-ws <https://github.com/apollographql/subscriptions-transport-ws>`__ library and the 
+`apollographql/subscriptions-transport-ws <https://github.com/apollographql/subscriptions-transport-ws>`__ library and the
 `GraphQL over WebSocket Protocol <https://github.com/enisdenjo/graphql-ws/blob/master/PROTOCOL.md>`__
-by the `graphql-ws <https://github.com/enisdenjo/graphql-ws>`__ library for sending and receiving events. The support for 
+by the `graphql-ws <https://github.com/enisdenjo/graphql-ws>`__ library for sending and receiving events. The support for
 ``graphql-ws`` is currently considered as ``BETA``. The graphql-engine uses the ``Sec-WebSocket-Protocol`` header to determine
 the server Implementation that'll be used. By default, the graphql-engine will use the ``apollographql/subscriptions-transport-ws`` implementation.
 

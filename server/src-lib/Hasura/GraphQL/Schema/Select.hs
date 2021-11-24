@@ -853,14 +853,15 @@ cursorOrderingArgParser = do
   pure $
     P.enum enumName description $
       NE.fromList -- It's fine to use fromList here because we know the list is never empty.
-        [ ( define (fst enumNameVal),
+        [ ( define enumNameVal,
             (snd enumNameVal)
           )
           | enumNameVal <- [($$(G.litName "ASC"), COAscending), ($$(G.litName "DESC"), CODescending)]
         ]
   where
-    define name =
-      P.mkDefinition name (Just $ G.Description "ordering of the cursor") P.EnumValueInfo
+    define (name, val) =
+      let orderingTypeDesc = bool "descending" "ascending" $ val == COAscending
+      in P.mkDefinition name (Just $ G.Description $ orderingTypeDesc <> " ordering of the cursor") P.EnumValueInfo
 
 cursorOrderingArg ::
   forall n m r.
@@ -892,7 +893,7 @@ tableStreamCursorArg sourceName tableInfo selectPermissions = do
   objName <- P.mkTypename $ tableGQLName <> $$(G.litName ("_stream_cursor_input"))
   pure $
     P.field $$(G.litName "cursor") (Just "cursor column(s) for streaming data") $
-      P.object objName (Just $ "streaming input for the " <> tableGQLName <<> " table") $
+      P.object objName (Just $ G.Description $ "streaming input for the " <> tableGQLName <<> " table") $
         Map.fromList . catMaybes <$> sequenceA fields
   where
     typedParser columnInfo =

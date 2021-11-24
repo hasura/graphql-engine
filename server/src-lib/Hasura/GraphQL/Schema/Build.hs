@@ -118,10 +118,8 @@ buildTableNonQuerySubscriptionFields sourceName sourceInfo queryTagsConfig table
           . SourceConfigWith sourceInfo queryTagsConfig
           . QDBR
       customRootFields = _tcCustomRootFields $ _tciCustomConfig $ _tiCoreInfo tableInfo
-      -- select table
-      selectDesc = Just $ G.Description $ "fetch data from the table: " <>> tableName
+      selectDesc = Just $ G.Description $ "fetch data from the table via streaming : " <>> tableName
   selectStreamName <-
-    -- TODO: Do we need to have a custom field for stream fields?
     mkRootFieldName $ (fromMaybe gqlName $ _tcrfSelect customRootFields) <> $$(G.litName "_stream")
   catMaybes
     <$> sequenceA
