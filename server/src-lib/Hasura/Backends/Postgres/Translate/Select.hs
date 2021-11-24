@@ -63,7 +63,6 @@ import Hasura.RQL.IR.OrderBy
 import Hasura.RQL.IR.Select
 import Hasura.RQL.Types hiding (Identifier)
 import Hasura.SQL.Types
-import qualified Hasura.Backends.Postgres.SQL.DML as S
 import Hasura.Backends.Postgres.SQL.DML (textTypeAnn)
 
 -- | Translates IR to Postgres queries for simple SELECTs (select queries that

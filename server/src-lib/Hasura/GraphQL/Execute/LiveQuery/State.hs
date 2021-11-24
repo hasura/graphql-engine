@@ -151,7 +151,7 @@ addLiveQuery
     where
       LiveQueriesState lqOpts lqMap postPollHook _ = lqState
       LiveQueriesOptions _ refetchInterval = lqOpts
-      LiveQueryPlan (ParameterizedLiveQueryPlan role query) sourceConfig cohortKey _ subscriptionType = plan
+      LiveQueryPlan (ParameterizedLiveQueryPlan role query) sourceConfig cohortKey _ _subscriptionType = plan
 
       handlerId = PollerKey source role $ toTxt query
 

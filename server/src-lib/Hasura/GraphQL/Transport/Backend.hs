@@ -3,7 +3,6 @@ module Hasura.GraphQL.Transport.Backend
   )
 where
 
-import Data.Aeson qualified as J
 import Data.ByteString qualified as B
 import Hasura.Base.Error
 import Hasura.EncJSON

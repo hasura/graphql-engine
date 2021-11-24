@@ -837,6 +837,7 @@ fromRootField =
     (IR.QDBSingleRow s) -> mkSQLSelect IR.JASSingleObject s
     (IR.QDBMultipleRows s) -> mkSQLSelect IR.JASMultipleRows s
     (IR.QDBAggregation s) -> fromSelectAggregate Nothing s
+    (IR.QDBStreamMultipleRows _) -> error "streaming subscriptions are not supported for MySQL"
 
 fromMappingFieldNames ::
   EntityAlias ->
