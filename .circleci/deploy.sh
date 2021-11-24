@@ -8,20 +8,6 @@ LATEST_TAG=$(git describe --tags --abbrev=0)
 PREVIOUS_TAG=$(git describe --tags $(git rev-list --tags --max-count=2) --abbrev=0 | sed -n 2p)
 CHANGELOG_TEXT=""
 
-# reviewers for pull requests opened to update installation manifests
-REVIEWERS="shahidhk,coco98,arvi3411301"
-
-IS_STABLE_RELEASE=false
-STABLE_SEMVER_REGEX="^v(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)$"
-if [ ! -z "${CIRCLE_TAG}" ]; then
-    if [[ "$CIRCLE_TAG" =~ $STABLE_SEMVER_REGEX ]]; then
-        echo
-        echo "this is a stable release"
-        echo
-        IS_STABLE_RELEASE=true
-    fi
-fi
-
 changelog() {
   CHANGELOG=$(git log ${PREVIOUS_TAG}..${LATEST_TAG} --pretty="tformat:- $1: %s" --reverse -- $ROOT/$1)
   if [ -n "$CHANGELOG" ]
@@ -57,18 +43,6 @@ configure_git() {
   git config --global user.name "hasura-bot"
 }
 
-send_pr_to_repo() {
-  configure_git
-  git clone https://github.com/hasura/$1.git ~/$1
-  cd ~/$1
-  git checkout -b ${LATEST_TAG}
-  find . -type f -exec sed -i -E 's#(hasura/graphql-engine:)v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(\-[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?(\+[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?( \\)*$#\1'"${LATEST_TAG}"'\9#' {} \;
-  git add .
-  git commit -m "update image version to ${LATEST_TAG}"
-  git push -q https://${GITHUB_TOKEN}@github.com/hasura/$1.git ${LATEST_TAG}
-  hub pull-request -f -F- <<<"Update image version to ${LATEST_TAG}" -r ${REVIEWERS} -a ${REVIEWERS}
-}
-
 # skip deploy for pull requests
 if [[ -n "${CIRCLE_PR_NUMBER:-}" ]]; then
     echo "not deploying for PRs"
@@ -87,11 +61,6 @@ fi
 # CIRCLE_BRANCH
 
 if [[ ! -z "$CIRCLE_TAG" ]]; then
-    # if this is a stable release, update all latest assets
-    if [ $IS_STABLE_RELEASE = true ]; then
-        send_pr_to_repo graphql-engine-heroku
-    fi
-
     # submit a release draft to github
     # build changelog
     CHANGELOG_TEXT=$(changelog server)

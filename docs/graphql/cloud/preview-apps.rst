@@ -25,7 +25,7 @@ by using the `hasura-cloud-preview-apps <https://github.com/hasura/hasura-cloud-
 
   Usage is limited to 60 preview app API calls per month for users with only ``Free`` tier projects on Hasura Cloud. More plans coming soon.
 
-Using the **hasura-cloud-preview-apps** GitHub action
+Using the hasura-cloud-preview-apps GitHub action
 -----------------------------------------------------
 
 Step 1: Creating a Hasura Cloud Personal Token
@@ -68,7 +68,7 @@ Create a file ``.github/workflows/hasura-cloud-preview-app.yml`` in your GitHub 
         - uses: actions/checkout@v2
 
         - name: Hasura Cloud Preview Apps
-          uses: hasura/hasura-cloud-preview-apps@v0.1.1
+          uses: hasura/hasura-cloud-preview-apps@v0.1.4
           id: hasura_cloud_preview
           with:
             name: "repo-name-${{github.env.GITHUB_HEAD_REF}}${{github.event.number}}"
@@ -157,7 +157,7 @@ Create a file ``.github/workflows/delete-hasura-cloud-preview-app.yml`` in your 
         - uses: actions/checkout@v2
                 
         - name: Hasura Cloud Preview Apps
-          uses: hasura/hasura-cloud-preview-apps@v0.1.1
+          uses: hasura/hasura-cloud-preview-apps@v0.1.4
           with:
             name: "repo-name-${{github.env.GITHUB_HEAD_REF}}${{github.event.number}}"
             delete: true

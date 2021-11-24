@@ -83,7 +83,9 @@ boolExp sourceName tableInfo selectPermissions = memoizeOn 'boolExp (sourceName,
         FIRelationship relationshipInfo -> do
           remoteTableInfo <- askTableInfo sourceName $ riRTable relationshipInfo
           remotePermissions <- lift $ tableSelectPermissions remoteTableInfo
-          let remoteTableFilter = (fmap . fmap) partialSQLExpToUnpreparedValue $ maybe annBoolExpTrue spiFilter remotePermissions
+          let remoteTableFilter =
+                fmap partialSQLExpToUnpreparedValue
+                  <$> maybe annBoolExpTrue spiFilter remotePermissions
           remoteBoolExp <- lift $ boolExp sourceName remoteTableInfo remotePermissions
           pure $ fmap (AVRelationship relationshipInfo . andAnnBoolExps remoteTableFilter) remoteBoolExp
         FIComputedField ComputedFieldInfo {..} -> do

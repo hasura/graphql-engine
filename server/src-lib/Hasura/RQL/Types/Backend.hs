@@ -104,7 +104,11 @@ class
     Eq (XNodesAgg b),
     Show (XNodesAgg b),
     Eq (XRelay b),
-    Show (XRelay b)
+    Show (XRelay b),
+    -- Intermediate Representations
+    Functor (BackendUpdate b),
+    Foldable (BackendUpdate b),
+    Traversable (BackendUpdate b)
   ) =>
   Backend (b :: BackendType)
   where
@@ -128,6 +132,14 @@ class
   type SQLOperator b :: Type
 
   type ExtraTableMetadata b :: Type
+
+  -- Backend-specific IR types
+
+  -- | Intermediate Representation of Update Mutations.
+  -- The default implementation makes update expressions uninstantiable.
+  type BackendUpdate b :: Type -> Type
+
+  type BackendUpdate b = Const Void
 
   -- | Extra backend specific context needed for insert mutations.
   type ExtraInsertData b :: Type

@@ -1,3 +1,5 @@
+{-# LANGUAGE UndecidableInstances #-}
+
 module Hasura.RQL.IR.Returning
   ( MutFld,
     MutFldG (..),
@@ -25,6 +27,8 @@ data MutFldG (b :: BackendType) (r :: BackendType -> Type) v
   | MRet !(AnnFieldsG b r v)
   deriving (Functor, Foldable, Traversable)
 
+deriving instance (Show (r b), Backend b, Show (BooleanOperators b a), Show a) => Show (MutFldG b r a)
+
 type MutFld b = MutFldG b (Const Void) (SQLExpression b)
 
 type MutFldsG b r v = Fields (MutFldG b r v)
@@ -33,6 +37,8 @@ data MutationOutputG (b :: BackendType) (r :: BackendType -> Type) v
   = MOutMultirowFields !(MutFldsG b r v)
   | MOutSinglerowObject !(AnnFieldsG b r v)
   deriving (Functor, Foldable, Traversable)
+
+deriving instance (Show (MutFldsG b r a), Show (r b), Backend b, Show (BooleanOperators b a), Show a) => Show (MutationOutputG b r a)
 
 type MutationOutput b = MutationOutputG b (Const Void) (SQLExpression b)
 

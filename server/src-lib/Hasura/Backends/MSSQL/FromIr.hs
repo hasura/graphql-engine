@@ -29,6 +29,7 @@ module Hasura.Backends.MSSQL.FromIr
     jsonFieldName,
     fromInsert,
     fromDelete,
+    toSelectIntoTempTable,
   )
 where
 
@@ -47,6 +48,7 @@ import Hasura.RQL.Types.Column qualified as IR
 import Hasura.RQL.Types.Common qualified as IR
 import Hasura.RQL.Types.Relationship qualified as IR
 import Hasura.SQL.Backend
+import Language.GraphQL.Draft.Syntax (unName)
 
 --------------------------------------------------------------------------------
 -- Types
@@ -1077,7 +1079,7 @@ fromInsert IR.AnnInsert {..} =
       insertColumnNames = maybe [] (map fst) $ listToMaybe insertRows
       insertValues = map (Values . map snd) insertRows
       primaryKeyColumns = map OutputColumn $ _mssqlPrimaryKeyColumns _aiExtraInsertData
-   in Insert _aiTableName insertColumnNames (InsertOutput primaryKeyColumns) insertValues
+   in Insert _aiTableName insertColumnNames (Output Inserted primaryKeyColumns) insertValues
 
 -- | Normalize a row by adding missing columns with 'DEFAULT' value and sort by column name to make sure
 -- all rows are consistent in column values and order.
@@ -1114,13 +1116,15 @@ normalizeInsertRows IR.AnnIns {..} insertRows =
 --------------------------------------------------------------------------------
 -- Delete
 
+-- | Convert IR AST representing delete into MSSQL AST representing a delete statement
 fromDelete :: IR.AnnDel 'MSSQL -> FromIr Delete
-fromDelete (IR.AnnDel tableName (permFilter, whereClause) _ _) = do
+fromDelete (IR.AnnDel tableName (permFilter, whereClause) _ allColumns) = do
   tableAlias <- fromTableName tableName
   runReaderT
     ( do
         permissionsFilter <- fromGBoolExp permFilter
         whereExpression <- fromGBoolExp whereClause
+        let columnNames = map (ColumnName . unName . IR.pgiName) allColumns
         pure
           Delete
             { deleteTable =
@@ -1128,10 +1132,37 @@ fromDelete (IR.AnnDel tableName (permFilter, whereClause) _ _) = do
                   { aliasedAlias = entityAliasText tableAlias,
                     aliasedThing = tableName
                   },
+              deleteOutput = Output Deleted (map OutputColumn columnNames),
+              deleteTempTable = TempTable tempTableNameDeleted columnNames,
               deleteWhere = Where [permissionsFilter, whereExpression]
             }
     )
     tableAlias
+
+-- | Create a temporary table with the same schema as the given table.
+toSelectIntoTempTable :: TempTableName -> TableName -> [IR.ColumnInfo 'MSSQL] -> SelectIntoTempTable
+toSelectIntoTempTable tempTableName fromTable allColumns = do
+  SelectIntoTempTable
+    { sittTempTableName = tempTableName,
+      sittColumns = map columnInfoToUnifiedColumn allColumns,
+      sittFromTableName = fromTable
+    }
+
+-- | Extracts the type and column name of a ColumnInfo
+columnInfoToUnifiedColumn :: IR.ColumnInfo 'MSSQL -> UnifiedColumn
+columnInfoToUnifiedColumn colInfo =
+  case IR.pgiType colInfo of
+    IR.ColumnScalar t ->
+      UnifiedColumn
+        { name = unName $ IR.pgiName colInfo,
+          type' = t
+        }
+    -- Enum values are represented as text value so they will always be of type text
+    IR.ColumnEnumReference {} ->
+      UnifiedColumn
+        { name = unName $ IR.pgiName colInfo,
+          type' = TextType
+        }
 
 --------------------------------------------------------------------------------
 -- Misc combinators
@@ -1188,6 +1219,7 @@ fromAlias (FromQualifiedTable Aliased {aliasedAlias}) = EntityAlias aliasedAlias
 fromAlias (FromOpenJson Aliased {aliasedAlias}) = EntityAlias aliasedAlias
 fromAlias (FromSelect Aliased {aliasedAlias}) = EntityAlias aliasedAlias
 fromAlias (FromIdentifier identifier) = EntityAlias identifier
+fromAlias (FromTempTable Aliased {aliasedAlias}) = EntityAlias aliasedAlias
 
 columnNameToFieldName :: ColumnName -> EntityAlias -> FieldName
 columnNameToFieldName (ColumnName fieldName) EntityAlias {entityAliasText = fieldNameEntity} =

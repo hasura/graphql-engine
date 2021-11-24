@@ -1,3 +1,5 @@
+{-# LANGUAGE UndecidableInstances #-}
+
 module Hasura.RQL.IR.Delete
   ( AnnDel,
     AnnDelG (..),
@@ -21,3 +23,5 @@ data AnnDelG (b :: BackendType) (r :: BackendType -> Type) v = AnnDel
   deriving (Functor, Foldable, Traversable)
 
 type AnnDel b = AnnDelG b (Const Void) (SQLExpression b)
+
+deriving instance (Show (MutationOutputG b r a), Backend b, Show (BooleanOperators b a), Show a) => Show (AnnDelG b r a)

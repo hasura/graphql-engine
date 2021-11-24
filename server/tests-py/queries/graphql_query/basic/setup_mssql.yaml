@@ -99,3 +99,12 @@ args:
       foreign_key_constraint_on:
         table: article_multi
         columns: ["author_id1", "author_id2"]
+
+- type: mssql_create_select_permission
+  args:
+    source: mssql
+    table: author
+    role: user
+    permission:
+      columns: "*"
+      filter: {"id":{"_eq":"X-Hasura-User-Id"}}

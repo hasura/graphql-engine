@@ -7,6 +7,7 @@ module Hasura.RQL.Types.Column
     isScalarColumnWhere,
     ValueParser,
     onlyNumCols,
+    isNumCol,
     onlyComparableCols,
     parseScalarValueColumnType,
     parseScalarValuesColumnType,
@@ -217,7 +218,10 @@ instance Backend b => ToJSON (ColumnInfo b) where
 type PrimaryKeyColumns b = NESeq (ColumnInfo b)
 
 onlyNumCols :: forall b. Backend b => [ColumnInfo b] -> [ColumnInfo b]
-onlyNumCols = filter (isScalarColumnWhere (isNumType @b) . pgiType)
+onlyNumCols = filter isNumCol
+
+isNumCol :: forall b. Backend b => ColumnInfo b -> Bool
+isNumCol = isScalarColumnWhere (isNumType @b) . pgiType
 
 onlyComparableCols :: forall b. Backend b => [ColumnInfo b] -> [ColumnInfo b]
 onlyComparableCols = filter (isScalarColumnWhere (isComparableType @b) . pgiType)

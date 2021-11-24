@@ -11,6 +11,7 @@ module Hasura.Backends.MSSQL.Types.Internal
     Comment (..),
     Countable (..),
     Delete (..),
+    DeleteOutput,
     EntityAlias (..),
     Expression (..),
     FieldName (..),
@@ -19,7 +20,7 @@ module Hasura.Backends.MSSQL.Types.Internal
     From (..),
     FunctionName,
     Insert (..),
-    InsertOutput (..),
+    InsertOutput,
     Join (..),
     JoinAlias (..),
     JoinSource (..),
@@ -32,14 +33,20 @@ module Hasura.Backends.MSSQL.Types.Internal
     Order (..),
     OrderBy (..),
     OutputColumn (..),
+    Inserted (..),
+    Deleted (..),
+    Output (..),
     Projection (..),
     Reselect (..),
     Root (..),
     ScalarType (..),
     SchemaName (..),
     Select (..),
-    SetIdenityInsert (..),
+    SetIdentityInsert (..),
+    TempTableName (..),
+    TempTable (..),
     SetValue (..),
+    SelectIntoTempTable (..),
     SpatialOp (..),
     TableName (..),
     Top (..),
@@ -63,6 +70,7 @@ module Hasura.Backends.MSSQL.Types.Internal
     scalarTypeDBName,
     snakeCaseTableName,
     stringTypes,
+    tempTableNameDeleted,
   )
 where
 
@@ -155,9 +163,18 @@ emptySelect =
       selectOffset = Nothing
     }
 
-newtype OutputColumn = OutputColumn ColumnName
+newtype OutputColumn = OutputColumn {unOutputColumn :: ColumnName}
 
-newtype InsertOutput = InsertOutput [OutputColumn]
+data Inserted = Inserted
+
+data Deleted = Deleted
+
+data Output t = Output
+  { outputType :: !t,
+    outputColumns :: ![OutputColumn]
+  }
+
+type InsertOutput = Output Inserted
 
 newtype Values = Values [Expression]
 
@@ -172,14 +189,37 @@ data SetValue
   = SetON
   | SetOFF
 
-data SetIdenityInsert = SetIdenityInsert
+data SetIdentityInsert = SetIdentityInsert
   { setTable :: !TableName,
     setValue :: !SetValue
   }
 
+type DeleteOutput = Output Deleted
+
 data Delete = Delete
   { deleteTable :: !(Aliased TableName),
+    deleteOutput :: !DeleteOutput,
+    deleteTempTable :: !TempTable,
     deleteWhere :: !Where
+  }
+
+-- | SELECT INTO temporary table statement without values.
+--   Used to create a temporary table with the same schema as an existing table.
+data SelectIntoTempTable = SelectIntoTempTable
+  { sittTempTableName :: TempTableName,
+    sittColumns :: [UnifiedColumn],
+    sittFromTableName :: TableName
+  }
+
+-- | A temporary table name is prepended by a hash-sign
+newtype TempTableName = TempTableName Text
+
+tempTableNameDeleted :: TempTableName
+tempTableNameDeleted = TempTableName "deleted"
+
+data TempTable = TempTable
+  { ttName :: !TempTableName,
+    ttColumns :: ![ColumnName]
   }
 
 data Reselect = Reselect
@@ -302,6 +342,7 @@ data From
   | FromOpenJson (Aliased OpenJson)
   | FromSelect (Aliased Select)
   | FromIdentifier Text
+  | FromTempTable (Aliased TempTableName)
 
 data OpenJson = OpenJson
   { openJsonExpression :: Expression,

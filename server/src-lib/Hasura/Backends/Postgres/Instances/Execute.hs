@@ -32,6 +32,7 @@ import Hasura.Backends.Postgres.SQL.Types qualified as PG
 import Hasura.Backends.Postgres.SQL.Value qualified as PG
 import Hasura.Backends.Postgres.Translate.Select (PostgresAnnotatedFieldJSON)
 import Hasura.Backends.Postgres.Translate.Select qualified as DS
+import Hasura.Backends.Postgres.Types.Update
 import Hasura.Base.Error (QErr)
 import Hasura.EncJSON (EncJSON, encJFromJValue)
 import Hasura.GraphQL.Execute.Backend
@@ -201,13 +202,13 @@ convertUpdate ::
     PostgresAnnotatedFieldJSON pgKind
   ) =>
   UserInfo ->
-  IR.AnnUpdG ('Postgres pgKind) (Const Void) (UnpreparedValue ('Postgres pgKind)) ->
+  IR.AnnotatedUpdateNodeG ('Postgres pgKind) (Const Void) (UnpreparedValue ('Postgres pgKind)) ->
   Bool ->
   QueryTagsComment ->
   m (Tracing.TraceT (Q.TxET QErr IO) EncJSON)
 convertUpdate userInfo updateOperation stringifyNum queryTags = do
   preparedUpdate <- traverse (prepareWithoutPlan userInfo) updateOperation
-  if null $ IR.uqp1OpExps updateOperation
+  if null $ updateOperations . IR.uqp1BackendIR $ updateOperation
     then pure $ pure $ IR.buildEmptyMutResp $ IR.uqp1Output preparedUpdate
     else
       pure $
