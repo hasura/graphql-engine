@@ -28,15 +28,15 @@
 .modal-content {
   /* width: 500px; */
   transition: all 0.3s ease-in-out;
-  transform: translateY(-1000px);
+  transform: scale(0.4);
 }
 
 .modal.enter-done .modal-content {
-  transform: translateY(0);
+  transform: scale(1);
 }
 
 .modal.exit .modal-content {
-  transform: translateY(-1000px);
+  transform: scale(0.4);
 }
 
 .modal-header,
