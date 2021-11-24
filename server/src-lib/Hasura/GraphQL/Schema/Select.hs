@@ -892,7 +892,7 @@ tableStreamCursorArg sourceName tableInfo selectPermissions = do
   objName <- P.mkTypename $ tableGQLName <> $$(G.litName ("_stream_cursor_input"))
   pure $
     P.field $$(G.litName "cursor") (Just "cursor column(s) for streaming data") $
-      P.object objName (Just "authors table desc") $ -- FIXME: fix the description
+      P.object objName (Just $ "streaming input for the " <> tableGQLName <<> " table") $
         Map.fromList . catMaybes <$> sequenceA fields
   where
     typedParser columnInfo =
