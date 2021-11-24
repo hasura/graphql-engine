@@ -481,12 +481,38 @@ fromWhere =
         collapse (OrExpression [x]) = collapse x
         collapse x = x
 
+fromSelectJson :: SelectJson -> Printer
+fromSelectJson SelectJson {..} = finalExpression
+  where
+    finalExpression =
+      SepByPrinter
+        NewlinePrinter
+        [ "SELECT " <+> IndentPrinter 7 fields,
+          "FROM UNNEST(JSON_QUERY_ARRAY("
+            <+> IndentPrinter 29 (fromExpression selectJsonBody)
+            <+> "))",
+          " AS " <+> jsonStringField
+        ]
+    jsonStringField = fromNameText "json"
+    fields =
+      SepByPrinter
+        ("," <+> NewlinePrinter)
+        (map extractJsonField selectJsonFields)
+    extractJsonField (ColumnName name, scalarType) =
+      "CAST(JSON_VALUE(" <+> jsonStringField <+> ", '$." <+> fromString (T.unpack name)
+        <+> "') AS "
+        <+> fromScalarType scalarType
+        <+> ") AS "
+        <+> fromNameText name
+
 fromFrom :: From -> Printer
 fromFrom =
   \case
     FromQualifiedTable aliasedQualifiedTableName ->
       fromAliased (fmap fromTableName aliasedQualifiedTableName)
     FromSelect select -> fromAliased (fmap (parens . fromSelect) select)
+    FromSelectJson selectJson ->
+      fromAliased (fmap (parens . fromSelectJson) selectJson)
 
 fromTableName :: TableName -> Printer
 fromTableName TableName {tableName, tableNameSchema} =

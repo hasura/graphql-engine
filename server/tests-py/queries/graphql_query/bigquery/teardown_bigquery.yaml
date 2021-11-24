@@ -23,3 +23,13 @@ args:
       - hasura_test
       global_select_limit: 10
     tables: []
+
+  - name: bigquery2
+    kind: bigquery
+    configuration:
+      service_account: {from_env: HASURA_BIGQUERY_SERVICE_ACCOUNT}
+      project_id: {from_env: HASURA_BIGQUERY_PROJECT_ID}
+      datasets:
+      - hasura_test
+      global_select_limit: 10
+    tables: []

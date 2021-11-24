@@ -74,7 +74,7 @@ function add_bigquery_source() {
     metadata_url=http://127.0.0.1:$hasura_graphql_server_port/v1/metadata
 
     echo ""
-    echo "Adding BigQuery source"
+    echo "Adding BigQuery sources"
     curl --fail "$metadata_url" \
     --data-raw '
     {
@@ -85,6 +85,18 @@ function add_bigquery_source() {
           "sources": [
             {
               "name": "bigquery",
+              "kind": "bigquery",
+              "tables": [],
+              "configuration": {
+                "service_account": {
+                  "from_env": "HASURA_BIGQUERY_SERVICE_ACCOUNT"
+                },
+                "project_id": { "from_env": "HASURA_BIGQUERY_PROJECT_ID" },
+                "datasets": ["hasura_test"]
+              }
+            },
+            {
+              "name": "bigquery2",
               "kind": "bigquery",
               "tables": [],
               "configuration": {

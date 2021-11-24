@@ -602,7 +602,7 @@ An example:
            "source": "default",
            "role": "user",
            "type" : "update",
-           "comment" : "can only modify his/her own rows"
+           "comment" : "can only modify their own rows"
        }
    }
 
@@ -1210,7 +1210,7 @@ An example:
            "source": "default",
            "role": "user",
            "type" : "update",
-           "comment" : "can only modify his/her own rows"
+           "comment" : "can only modify their own rows"
        }
    }
 

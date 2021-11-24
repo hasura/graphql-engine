@@ -3,9 +3,7 @@ module Hasura.GraphQL.Execute.RemoteJoin.Join
   )
 where
 
-import Control.Lens ((^?))
 import Data.Aeson qualified as J
-import Data.Aeson.Lens (_Integral, _Number)
 import Data.Aeson.Ordered qualified as JO
 import Data.Environment qualified as Env
 import Data.HashMap.Strict qualified as Map
@@ -14,7 +12,9 @@ import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.HashSet qualified as HS
 import Data.IntMap.Strict qualified as IntMap
 import Data.List.NonEmpty qualified as NE
+import Data.Scientific qualified as Scientific
 import Data.Text qualified as T
+import Data.Text.Read qualified as TR
 import Data.Tuple (swap)
 import Hasura.Base.Error
 import Hasura.EncJSON
@@ -163,7 +163,7 @@ processRemoteJoins_ requestId logger env manager reqHdrs userInfo lhs joinTree g
   joinResults joinIndices compositeValue
 
 -- | Attempt to construct a 'JoinIndex' from some 'EncJSON' source response.
-buildSourceDataJoinIndex :: MonadError QErr m => EncJSON -> m JoinIndex
+buildSourceDataJoinIndex :: (MonadError QErr m) => EncJSON -> m JoinIndex
 buildSourceDataJoinIndex response = do
   json <-
     JO.eitherDecode (encJToLBS response) `onLeft` \err ->
@@ -177,13 +177,22 @@ buildSourceDataJoinIndex response = do
         argumentIdValue <-
           JO.lookup "__argument_id__" obj
             `onNothing` throwMissingArgumentIdErr
-        argumentId <-
-          (argumentIdValue ^? _Number . _Integral)
-            `onNothing` throwInvalidArgumentIdTypeErr
+        (argumentId :: Int) <-
+          case argumentIdValue of
+            JO.Number n ->
+              Scientific.toBoundedInteger n
+                `onNothing` throwInvalidArgumentIdValueErr
+            JO.String s ->
+              intFromText s
+                `onNothing` throwInvalidArgumentIdValueErr
+            _ -> throwInvalidArgumentIdValueErr
         pure (argumentId, argumentResult)
       _ -> throwNoNestedObjectErr
     _ -> throwNoListOfObjectsErr
   where
+    intFromText txt = case TR.decimal txt of
+      Right (i, "") -> pure i
+      _ -> Nothing
     throwInvalidJsonErr errMsg =
       throw500 $
         "failed to decode JSON response from the source: " <> errMsg
@@ -194,8 +203,8 @@ buildSourceDataJoinIndex response = do
     throwMissingArgumentIdErr =
       throw500 $
         "cannot find '__argument_id__' within the source response"
-    throwInvalidArgumentIdTypeErr =
-      throw500 $ "expected 'argument_id' to be an integer"
+    throwInvalidArgumentIdValueErr =
+      throw500 $ "expected 'argument_id' to get parsed as backend integer type"
     throwNoNestedObjectErr =
       throw500 $
         "expected an object one level deep in the remote schema's response, \

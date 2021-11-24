@@ -7,6 +7,7 @@
 - server: fix JSON path in error when parsing sources in metadata (fix #7769)
 - server: log locking DB queries during source catalog migration
 - server: fix to allow remote schema response to contain an "extensions" field (#7143)
+- server: support database-to-database joins with BigQuery
 - console: add comments to tracked functions
 - metadata SDK: add type definitions for config v3
 - cli: fix cli-console failing to add migrations if there are tabs in SQL body (#7362)

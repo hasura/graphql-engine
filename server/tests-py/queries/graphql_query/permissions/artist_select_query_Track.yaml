@@ -1,4 +1,4 @@
-description: Artist can only select his/her tracks.
+description: Artist can only select their tracks.
 url: /v1/graphql
 status: 200
 headers:

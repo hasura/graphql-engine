@@ -161,11 +161,29 @@ fromRootField =
 --------------------------------------------------------------------------------
 -- Top-level exported functions
 
+fromUnnestedJSON :: Expression -> [(ColumnName, ScalarType)] -> [Rql.FieldName] -> FromIr From
+fromUnnestedJSON json columns _fields = do
+  alias <- generateEntityAlias UnnestTemplate
+  pure
+    ( FromSelectJson
+        ( Aliased
+            { aliasedThing =
+                SelectJson
+                  { selectJsonBody = json,
+                    selectJsonFields = columns
+                  },
+              aliasedAlias = entityAliasText alias
+            }
+        )
+    )
+
 fromSelectRows :: Ir.AnnSelectG 'BigQuery (Const Void) (Ir.AnnFieldG 'BigQuery (Const Void)) Expression -> FromIr BigQuery.Select
 fromSelectRows annSelectG = do
   selectFrom <-
     case from of
       Ir.FromTable qualifiedObject -> fromQualifiedTable qualifiedObject
+      Ir.FromFunction nm (Ir.FunctionArgsExp [Ir.AEInput json] _) (Just columns)
+        | nm == FunctionName "unnest" -> fromUnnestedJSON json columns (map fst fields)
       _ -> refute (pure (FromTypeUnsupported from))
   Args
     { argsOrderBy,
@@ -1476,6 +1494,7 @@ data NameTemplate
   | TableTemplate Text
   | ForOrderAlias Text
   | IndexTemplate
+  | UnnestTemplate
 
 generateEntityAlias :: NameTemplate -> FromIr EntityAlias
 generateEntityAlias template = do
@@ -1498,10 +1517,12 @@ generateEntityAlias template = do
         TableTemplate sample -> "t_" <> sample
         ForOrderAlias sample -> "order_" <> sample
         IndexTemplate -> "idx"
+        UnnestTemplate -> "unnest"
 
 fromAlias :: From -> EntityAlias
 fromAlias (FromQualifiedTable Aliased {aliasedAlias}) = EntityAlias aliasedAlias
 fromAlias (FromSelect Aliased {aliasedAlias}) = EntityAlias aliasedAlias
+fromAlias (FromSelectJson Aliased {aliasedAlias}) = EntityAlias aliasedAlias
 
 fieldTextNames :: Ir.AnnFieldsG 'BigQuery (Const Void) Expression -> [Text]
 fieldTextNames = fmap (\(Rql.FieldName name, _) -> name)
