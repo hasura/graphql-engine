@@ -123,7 +123,7 @@ instance
   buildTableQueryFields = GSB.buildTableQueryFields
   buildTableRelayQueryFields = pgkBuildTableRelayQueryFields
   buildTableInsertMutationFields = GSB.buildTableInsertMutationFields
-  buildTableUpdateMutationFields = GSB.buildTableUpdateMutationFields (\ti updP -> fmap BackendUpdate <$> updateOperators ti updP) -- TODO: simplify this!
+  buildTableUpdateMutationFields = GSB.buildTableUpdateMutationFields (\ti updP -> fmap BackendUpdate <$> updateOperators ti updP) -- TODO: https://github.com/hasura/graphql-engine-mono/issues/2955
   buildTableDeleteMutationFields = GSB.buildTableDeleteMutationFields
   buildFunctionQueryFields = GSB.buildFunctionQueryFields
   buildFunctionRelayQueryFields = pgkBuildFunctionRelayQueryFields
@@ -1037,17 +1037,17 @@ updateOperators ::
   ) =>
   TableInfo ('Postgres pgKind) ->
   UpdPermInfo ('Postgres pgKind) ->
-  m (InputFieldsParser n (HashMap (Column ('Postgres pgKind)) (UpdOpExpG (UnpreparedValue ('Postgres pgKind)))))
+  m (InputFieldsParser n (HashMap (Column ('Postgres pgKind)) (UpdateOpExpression (UnpreparedValue ('Postgres pgKind)))))
 updateOperators tableInfo updatePermissions =
   buildUpdateOperators
-    (PGIR.UpdSet <$> presetColumns updatePermissions)
-    [ PGIR.UpdSet <$> setOp,
-      PGIR.UpdInc <$> incOp,
-      PGIR.UpdPrepend <$> prependOp,
-      PGIR.UpdAppend <$> appendOp,
-      PGIR.UpdDeleteKey <$> deleteKeyOp,
-      PGIR.UpdDeleteElem <$> deleteElemOp,
-      PGIR.UpdDeleteAtPath <$> deleteAtPathOp
+    (PGIR.UpdateSet <$> presetColumns updatePermissions)
+    [ PGIR.UpdateSet <$> setOp,
+      PGIR.UpdateInc <$> incOp,
+      PGIR.UpdatePrepend <$> prependOp,
+      PGIR.UpdateAppend <$> appendOp,
+      PGIR.UpdateDeleteKey <$> deleteKeyOp,
+      PGIR.UpdateDeleteElem <$> deleteElemOp,
+      PGIR.UpdateDeleteAtPath <$> deleteAtPathOp
     ]
     tableInfo
     updatePermissions

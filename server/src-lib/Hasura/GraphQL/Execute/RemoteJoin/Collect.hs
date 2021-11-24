@@ -155,8 +155,8 @@ getRemoteJoinsMutationDB = \case
        in (insert {_aiOutput = output'}, remoteJoins)
 
     getRemoteJoinsUpdate update =
-      let (output', remoteJoins) = getRemoteJoinsMutationOutput $ uqp1Output update
-       in (update {uqp1Output = output'}, remoteJoins)
+      let (output', remoteJoins) = getRemoteJoinsMutationOutput $ _auOutput update
+       in (update {_auOutput = output'}, remoteJoins)
 
     getRemoteJoinsDelete delete =
       let (output', remoteJoins) = getRemoteJoinsMutationOutput $ dqp1Output delete

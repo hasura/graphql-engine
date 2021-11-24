@@ -1,7 +1,7 @@
 -- | This module defines the Update-related IR types specific to Postgres.
 module Hasura.Backends.Postgres.Types.Update
   ( BackendUpdate (..),
-    UpdOpExpG (..),
+    UpdateOpExpression (..),
   )
 where
 
@@ -15,7 +15,7 @@ import Hasura.Prelude
 -- the data at the leaves.
 data BackendUpdate v = BackendUpdate
   { -- | The update operations to perform on each colum.
-    updateOperations :: !(HashMap PGCol (UpdOpExpG v))
+    updateOperations :: !(HashMap PGCol (UpdateOpExpression v))
   }
   deriving (Functor, Foldable, Traversable, Generic, Data)
 
@@ -23,12 +23,12 @@ data BackendUpdate v = BackendUpdate
 -- i.e. the @_set@, @_inc@ operators that appear in the schema.
 --
 -- See <https://hasura.io/docs/latest/graphql/core/databases/postgres/mutations/update.html#postgres-update-mutation Update Mutations User docs>
-data UpdOpExpG v
-  = UpdSet !v
-  | UpdInc !v
-  | UpdAppend !v
-  | UpdPrepend !v
-  | UpdDeleteKey !v
-  | UpdDeleteElem !v
-  | UpdDeleteAtPath ![v]
+data UpdateOpExpression v
+  = UpdateSet !v
+  | UpdateInc !v
+  | UpdateAppend !v
+  | UpdatePrepend !v
+  | UpdateDeleteKey !v
+  | UpdateDeleteElem !v
+  | UpdateDeleteAtPath ![v]
   deriving (Functor, Foldable, Traversable, Generic, Data)

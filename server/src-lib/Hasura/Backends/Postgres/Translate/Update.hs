@@ -17,9 +17,9 @@ import Hasura.SQL.Types
 
 mkUpdateCTE ::
   Backend ('Postgres pgKind) =>
-  AnnotatedUpdateNode ('Postgres pgKind) ->
+  AnnotatedUpdate ('Postgres pgKind) ->
   S.CTE
-mkUpdateCTE (AnnotatedUpdateNode tn (permFltr, wc) chk (BackendUpdate opExps) _ columnsInfo) =
+mkUpdateCTE (AnnotatedUpdateG tn (permFltr, wc) chk (BackendUpdate opExps) _ columnsInfo) =
   S.CTEUpdate update
   where
     update =
@@ -34,16 +34,16 @@ mkUpdateCTE (AnnotatedUpdateNode tn (permFltr, wc) chk (BackendUpdate opExps) _ 
     tableFltrExpr = toSQLBoolExp (S.QualTable tn) $ andAnnBoolExps permFltr wc
     checkExpr = toSQLBoolExp (S.QualTable tn) chk
 
-expandOperator :: [ColumnInfo ('Postgres pgKind)] -> (PGCol, UpdOpExpG S.SQLExp) -> S.SetExpItem
+expandOperator :: [ColumnInfo ('Postgres pgKind)] -> (PGCol, UpdateOpExpression S.SQLExp) -> S.SetExpItem
 expandOperator infos (column, op) = S.SetExpItem $
   (column,) $ case op of
-    UpdSet e -> e
-    UpdInc e -> S.mkSQLOpExp S.incOp identifier (asNum e)
-    UpdAppend e -> S.mkSQLOpExp S.jsonbConcatOp identifier (asJSON e)
-    UpdPrepend e -> S.mkSQLOpExp S.jsonbConcatOp (asJSON e) identifier
-    UpdDeleteKey e -> S.mkSQLOpExp S.jsonbDeleteOp identifier (asText e)
-    UpdDeleteElem e -> S.mkSQLOpExp S.jsonbDeleteOp identifier (asInt e)
-    UpdDeleteAtPath a -> S.mkSQLOpExp S.jsonbDeleteAtPathOp identifier (asArray a)
+    UpdateSet e -> e
+    UpdateInc e -> S.mkSQLOpExp S.incOp identifier (asNum e)
+    UpdateAppend e -> S.mkSQLOpExp S.jsonbConcatOp identifier (asJSON e)
+    UpdatePrepend e -> S.mkSQLOpExp S.jsonbConcatOp (asJSON e) identifier
+    UpdateDeleteKey e -> S.mkSQLOpExp S.jsonbDeleteOp identifier (asText e)
+    UpdateDeleteElem e -> S.mkSQLOpExp S.jsonbDeleteOp identifier (asInt e)
+    UpdateDeleteAtPath a -> S.mkSQLOpExp S.jsonbDeleteAtPathOp identifier (asArray a)
   where
     identifier = S.SEIdentifier $ toIdentifier column
     asInt e = S.SETyAnn e S.intTypeAnn

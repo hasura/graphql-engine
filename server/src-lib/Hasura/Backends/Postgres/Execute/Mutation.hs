@@ -109,11 +109,11 @@ execUpdateQuery ::
   ) =>
   Bool ->
   UserInfo ->
-  (AnnotatedUpdateNode ('Postgres pgKind), DS.Seq Q.PrepArg) ->
+  (AnnotatedUpdate ('Postgres pgKind), DS.Seq Q.PrepArg) ->
   m EncJSON
 execUpdateQuery strfyNum userInfo (u, p) =
   runMutation
-    (mkMutation userInfo (uqp1Table u) (MCCheckConstraint updateCTE, p) (uqp1Output u) (uqp1AllCols u) strfyNum)
+    (mkMutation userInfo (_auTable u) (MCCheckConstraint updateCTE, p) (_auOutput u) (_auAllCols u) strfyNum)
   where
     updateCTE = mkUpdateCTE u
 
