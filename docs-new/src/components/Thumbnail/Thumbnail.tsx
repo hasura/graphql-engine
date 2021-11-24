@@ -33,7 +33,7 @@ const Modal = (props) => {
           <div className={styles["modal-body"]}>{props.children}</div>
           <div className={styles["modal-footer"]}>
             <button onClick={props.onClose} className={styles["button"]}>
-              Close
+              x
             </button>
           </div>
         </div>
@@ -50,11 +50,11 @@ const Thumbnail = (props) => {
     className={styles["thumbnail"]}
     onClick={() => setShowInModal(true)}
   >
-    <img {...props} />
+    <img {...props} className={styles["main-img"]} />
     <BrowserOnly>
       {() => (
         <Modal onClose={() => setShowInModal(false)} show={showInModal}>
-          <img {...props} />
+          <img {...props} className={styles["modal-img"]} />
         </Modal>
       )}
     </BrowserOnly>
