@@ -130,7 +130,10 @@ class
     -- | The above objects have this schema.
     HashMap FieldName (Column b, ScalarType b) ->
     -- | This is a field name from the lhs that *has* to be selected in the
-    -- response along with the relationship.
+    -- response along with the relationship. It is populated in
+    -- `Hasura.GraphQL.Execute.RemoteJoin.Join.processRemoteJoins_` and
+    -- the function `convertRemoteSourceRelationship` below assumes it
+    -- to be returned as either a number or a string with a number in it
     FieldName ->
     (FieldName, SourceRelationshipSelection b (Const Void) UnpreparedValue) ->
     m (DBStepInfo b)

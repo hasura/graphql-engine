@@ -248,6 +248,9 @@ class TestGraphQLQueryBasicBigquery:
     def test_global_limit(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + "/global_limit.yaml", transport)
 
+    def test_basic_remote_join(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + "/basic_remote_joins.yaml", transport)
+
     @classmethod
     def dir(cls):
         return 'queries/graphql_query/bigquery'

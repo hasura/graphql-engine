@@ -3,6 +3,8 @@
 module Hasura.Backends.BigQuery.Instances.Execute () where
 
 import Data.Aeson qualified as Aeson
+import Data.Aeson.Text qualified as Aeson
+import Data.HashMap.Strict qualified as Map
 import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.Text qualified as T
 import Data.Text.Lazy qualified as LT
@@ -20,7 +22,11 @@ import Hasura.GraphQL.Execute.Backend
 import Hasura.GraphQL.Namespace (RootFieldAlias)
 import Hasura.GraphQL.Parser
 import Hasura.Prelude
+import Hasura.QueryTags
+  ( emptyQueryTagsComment,
+  )
 import Hasura.RQL.IR
+import Hasura.RQL.IR.Select qualified as IR
 import Hasura.RQL.Types
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.Session
@@ -186,5 +192,35 @@ bqDBRemoteRelationshipPlan ::
   FieldName ->
   (FieldName, SourceRelationshipSelection 'BigQuery (Const Void) UnpreparedValue) ->
   m (DBStepInfo 'BigQuery)
-bqDBRemoteRelationshipPlan _userInfo _sourceName _sourceConfig _lhs _lhsSchema _argumentId _relationship = do
-  throw500 "mkDBRemoteRelationshipPlan: BigQuery does not currently support generalized joins."
+bqDBRemoteRelationshipPlan userInfo sourceName sourceConfig lhs lhsSchema argumentId relationship = do
+  flip runReaderT emptyQueryTagsComment $ bqDBQueryPlan userInfo sourceName sourceConfig rootSelection
+  where
+    coerceToColumn = BigQuery.ColumnName . getFieldNameTxt
+    joinColumnMapping = mapKeys coerceToColumn lhsSchema
+
+    rowsArgument :: UnpreparedValue 'BigQuery
+    rowsArgument =
+      UVParameter Nothing $
+        ColumnValue (ColumnScalar BigQuery.StringScalarType) $
+          BigQuery.StringValue . LT.toStrict $ Aeson.encodeToLazyText lhs
+
+    recordSetDefinitionList =
+      (coerceToColumn argumentId, BigQuery.IntegerScalarType) : Map.toList (fmap snd joinColumnMapping)
+
+    jsonToRecordSet :: IR.SelectFromG ('BigQuery) (UnpreparedValue 'BigQuery)
+    jsonToRecordSet =
+      IR.FromFunction
+        (BigQuery.FunctionName "unnest")
+        ( IR.FunctionArgsExp
+            [IR.AEInput rowsArgument]
+            mempty
+        )
+        (Just recordSetDefinitionList)
+
+    rootSelection =
+      convertRemoteSourceRelationship
+        (fst <$> joinColumnMapping)
+        jsonToRecordSet
+        (BigQuery.ColumnName $ getFieldNameTxt argumentId)
+        (ColumnScalar BigQuery.IntegerScalarType)
+        relationship

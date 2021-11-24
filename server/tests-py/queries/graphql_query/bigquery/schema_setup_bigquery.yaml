@@ -64,6 +64,10 @@ args:
         3, "Title 3", "Content 3", 2, FALSE, NULL, PARSE_TIMESTAMP("%c", "Thu Dec 25 07:30:03 2008")
       );
 
+      -- a copy for remote joins as we can't have the same table tracked in two sources
+      CREATE TABLE `hasura_test.article2`
+      AS SELECT * FROM `hasura_test.article`;
+
       -- These are helpful for join/aggregate testing.
 
       CREATE TABLE hasura_test.Artist (
