@@ -44,22 +44,20 @@ const Modal = (props) => {
 }
 
 const Thumbnail = (props) => {
-  const [showInModal, setShowInModal] = useState(false);
+  const [openModal, setOpenModal] = useState(false);
+
   return (
-  <div
-    className={styles["thumbnail"]}
-    onClick={() => setShowInModal(true)}
-  >
-    <img {...props} className={styles["main-img"]} />
-    <BrowserOnly>
-      {() => (
-        <Modal onClose={() => setShowInModal(false)} show={showInModal}>
-          <img {...props} className={styles["modal-img"]} />
-        </Modal>
-      )}
-    </BrowserOnly>
-  </div>
-);
+    <div className={styles["thumbnail"]}>
+      <img {...props} className={styles["main-img"]} onClick={() => setOpenModal(true)} />
+      <BrowserOnly>
+        {() => (
+          <Modal onClose={() => setOpenModal(false)} show={openModal}>
+            <img {...props} className={styles["modal-img"]} />
+          </Modal>
+        )}
+      </BrowserOnly>
+    </div>
+  );
 }
 
 export default Thumbnail;

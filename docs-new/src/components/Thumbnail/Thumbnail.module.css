@@ -22,7 +22,7 @@
 
 .modal.enter-done {
   opacity: 1;
-  pointer-events: visible;
+  pointer-events: auto;
 }
 
 .modal.exit {
