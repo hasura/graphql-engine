@@ -302,10 +302,10 @@ resolveAsyncActionQuery userInfo annAction =
                   jsonbToRecordSet = QualifiedObject "pg_catalog" $ FunctionName "jsonb_to_recordset"
                   actionLogInput =
                     UVParameter Nothing PTNonCursorVariable $
-                    ColumnValue (ColumnScalar PGJSONB) $
-                    PGValJSONB $
-                    Q.JSONB $
-                    J.toJSON [actionLogResponse]
+                      ColumnValue (ColumnScalar PGJSONB) $
+                        PGValJSONB $
+                          Q.JSONB $
+                            J.toJSON [actionLogResponse]
                   functionArgs = RS.FunctionArgsExp [RS.AEInput actionLogInput] mempty
                   tableFromExp =
                     RS.FromFunction jsonbToRecordSet functionArgs $

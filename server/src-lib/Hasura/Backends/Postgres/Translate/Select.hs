@@ -48,6 +48,7 @@ import Data.List.NonEmpty qualified as NE
 import Data.Text qualified as T
 import Data.Text.Extended
 import Database.PG.Query qualified as Q
+import Hasura.Backends.Postgres.SQL.DML (textTypeAnn)
 import Hasura.Backends.Postgres.SQL.DML qualified as S
 import Hasura.Backends.Postgres.SQL.Rewrite
 import Hasura.Backends.Postgres.SQL.Types
@@ -63,7 +64,6 @@ import Hasura.RQL.IR.OrderBy
 import Hasura.RQL.IR.Select
 import Hasura.RQL.Types hiding (Identifier)
 import Hasura.SQL.Types
-import Hasura.Backends.Postgres.SQL.DML (textTypeAnn)
 
 -- | Translates IR to Postgres queries for simple SELECTs (select queries that
 -- are not aggregations, including subscriptions).
@@ -1453,13 +1453,13 @@ mkStreamSQLSelect (AnnSelectStreamG fields from perm args strfyNum) =
         nonEmpty $ pure $ OrderByItemG (Just basicOrderType) annOrderbyCol Nothing
       selectArgs =
         noSelectArgs
-        { _saWhere =
-          -- this is a shortcut..but maybe it's fine? We're doing a boolean AND of the `where` and the
-          -- cursor's boolean expression.
-          Just $ maybe (_ssaCursorBoolExp args) (andAnnBoolExps (_ssaCursorBoolExp args)) $ _ssaWhere args,
-          _saOrderBy = orderByItems,
-          _saLimit = _ssaBatchSize args
-        }
+          { _saWhere =
+              -- this is a shortcut..but maybe it's fine? We're doing a boolean AND of the `where` and the
+              -- cursor's boolean expression.
+              Just $ maybe (_ssaCursorBoolExp args) (andAnnBoolExps (_ssaCursorBoolExp args)) $ _ssaWhere args,
+            _saOrderBy = orderByItems,
+            _saLimit = _ssaBatchSize args
+          }
       sqlSelect = AnnSelectG fields from perm selectArgs strfyNum
       permLimitSubQuery = PLSQNotRequired
       ((selectSource, nodeExtractors), joinTree) =
@@ -1474,18 +1474,17 @@ mkStreamSQLSelect (AnnSelectStreamG fields from perm args strfyNum) =
         let pgColumn = pgiColumn cursorCol
             maxOrMin = bool S.SEMin S.SEMax $ _ssaCursorOrdering args == COAscending
             colExp = [S.SELit (getPGColTxt pgColumn), S.SETyAnn (maxOrMin $ S.SEIdentifier $ mkBaseTableColumnAlias rootFldIdentifier pgColumn) textTypeAnn]
-        in S.SEFnApp "json_build_object" colExp Nothing
-        -- annotating it as text because we can then directly get the value from the response as a Text, if it's a json we'll have to parse it into the correct PGScalar type which is not trivial.
+         in S.SEFnApp "json_build_object" colExp Nothing
+      -- annotating it as text because we can then directly get the value from the response as a Text, if it's a json we'll have to parse it into the correct PGScalar type which is not trivial.
       cursorLatestValueExtractor = S.Extractor cursorLatestValueExp (Just $ S.Alias $ Identifier "cursor")
       arrayNode = MultiRowSelectNode [topExtractor, cursorLatestValueExtractor] selectNode
-  in prefixNumToAliases $
+   in prefixNumToAliases $
         generateSQLSelectFromArrayNode selectSource arrayNode $ S.BELit True
   where
     rootFldIdentifier = toIdentifier rootFldName
     sourcePrefixes = SourcePrefixes rootFldIdentifier rootFldIdentifier
     rootFldName = FieldName "root"
     rootFldAls = S.Alias $ toIdentifier rootFldName
-
 
 mkConnectionSelect ::
   forall pgKind.

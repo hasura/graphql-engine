@@ -42,7 +42,7 @@ module Hasura.RQL.Types.Common
     PGConnectionParams (..),
     getPGConnectionStringFromParams,
     getConnOptionsFromConnParams,
-    CursorOrdering (..)
+    CursorOrdering (..),
   )
 where
 
@@ -486,4 +486,5 @@ emptyMetricsConfig = MetricsConfig False False
 -- | CursorOrdering is used in the streaming subscriptions to order
 --   the cursor.
 data CursorOrdering = COAscending | CODescending deriving (Show, Eq, Generic)
+
 instance Hashable CursorOrdering

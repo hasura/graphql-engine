@@ -128,7 +128,6 @@ buildTableNonQuerySubscriptionFields sourceName sourceInfo queryTagsConfig table
       [ requiredFieldParser (mkRF . QDBStreamMultipleRows) $ selectStreamTable sourceName tableInfo selectStreamName selectDesc selPerms
       ]
 
-
 buildTableInsertMutationFields ::
   forall b r m n.
   MonadBuildSchema b r m n =>

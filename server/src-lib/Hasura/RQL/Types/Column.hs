@@ -118,6 +118,7 @@ data ColumnValue (b :: BackendType) = ColumnValue
   { cvType :: ColumnType b,
     cvValue :: ScalarValue b
   }
+
 deriving instance (Backend b, Eq (ScalarValue b)) => Eq (ColumnValue b)
 
 deriving instance (Backend b, Show (ScalarValue b)) => Show (ColumnValue b)

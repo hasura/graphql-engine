@@ -7,7 +7,7 @@ module Hasura.GraphQL.Parser.Column
     peelWithOrigin,
     mkParameter,
     mkCursorParameter,
-    ParameterType (..)
+    ParameterType (..),
   )
 where
 

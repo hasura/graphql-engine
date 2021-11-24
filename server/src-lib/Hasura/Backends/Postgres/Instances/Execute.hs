@@ -15,6 +15,7 @@ import Data.Sequence qualified as Seq
 import Database.PG.Query qualified as Q
 import Hasura.Backends.Postgres.Connection (runTx)
 import Hasura.Backends.Postgres.Execute.Insert (convertToSQLTransaction)
+import Hasura.Backends.Postgres.Execute.LiveQuery (QueryParametersInfo (_qpiCursorVariableValues))
 import Hasura.Backends.Postgres.Execute.LiveQuery qualified as PGL
 import Hasura.Backends.Postgres.Execute.Mutation qualified as PGE
 import Hasura.Backends.Postgres.Execute.Prepare
@@ -47,15 +48,15 @@ import Hasura.GraphQL.Execute.LiveQuery.Plan
     ParameterizedLiveQueryPlan (..),
     SubscriptionType (..),
     mkCohortVariables,
-    newCohortId
+    newCohortId,
   )
 import Hasura.GraphQL.Namespace
   ( RootFieldAlias (..),
     RootFieldMap,
   )
-import Hasura.GraphQL.Parser (
-  UnpreparedValue (..),
-  ParameterType (..)
+import Hasura.GraphQL.Parser
+  ( ParameterType (..),
+    UnpreparedValue (..),
   )
 import Hasura.Prelude
 import Hasura.QueryTags
@@ -83,7 +84,6 @@ import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.Session (UserInfo (..))
 import Hasura.Tracing qualified as Tracing
 import Language.GraphQL.Draft.Syntax qualified as G
-import Hasura.Backends.Postgres.Execute.LiveQuery (QueryParametersInfo(_qpiCursorVariableValues))
 
 data PreparedSql = PreparedSql
   { _psQuery :: !Q.Query,

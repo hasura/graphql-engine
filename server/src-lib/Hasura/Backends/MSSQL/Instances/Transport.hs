@@ -22,11 +22,11 @@ import Hasura.GraphQL.Transport.HTTP.Protocol
 import Hasura.Logging qualified as L
 import Hasura.Prelude
 import Hasura.RQL.Types
-import Hasura.Server.Types (RequestId)
 import Hasura.SQL.Value (TxtEncodedVal)
+import Hasura.Server.Types (RequestId)
 import Hasura.Session
 import Hasura.Tracing
-import qualified Language.GraphQL.Draft.Syntax as G
+import Language.GraphQL.Draft.Syntax qualified as G
 
 instance BackendTransport 'MSSQL where
   runDBQuery = runQuery

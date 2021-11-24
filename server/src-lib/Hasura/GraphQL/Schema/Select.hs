@@ -1,6 +1,6 @@
 {-# LANGUAGE ApplicativeDo #-}
-{-# LANGUAGE ViewPatterns #-}
 {-# LANGUAGE TupleSections #-}
+{-# LANGUAGE ViewPatterns #-}
 
 -- | Generate table selection schema both for ordinary Hasura-type and
 -- relay-type queries.  All schema with "relay" or "connection" in the name is
@@ -759,11 +759,12 @@ tableStreamArgs sourceName tableInfo selectPermissions = do
   orderingParser <- cursorOrderingArg
   pure $ do
     whereArg <- whereParser
-    cursorArg <- cursorParser `P.bindFields` \cols ->
-      case Map.toList cols of
-        [] -> parseError "one column field is expected"
-        [c] -> pure c
-        _   -> parseError "multiple column field cursor are not supported yet"
+    cursorArg <-
+      cursorParser `P.bindFields` \cols ->
+        case Map.toList cols of
+          [] -> parseError "one column field is expected"
+          [c] -> pure c
+          _ -> parseError "multiple column field cursor are not supported yet"
     orderingArg <- orderingParser
     batchSizeArg <- cursorBatchSizeArg
     pure $
@@ -775,9 +776,8 @@ tableStreamArgs sourceName tableInfo selectPermissions = do
 
     cursorFn colInfo (v, orderingArg) = BoolFld $ AVColumn colInfo [orderingArg v]
 
-    cursorBoolExp cursorArg orderingArg
-      = cursorFn (fst cursorArg) (snd cursorArg, orderbyOpExp orderingArg)
-
+    cursorBoolExp cursorArg orderingArg =
+      cursorFn (fst cursorArg) (snd cursorArg, orderbyOpExp orderingArg)
 
 -- | Argument to filter rows returned from table selection
 -- > where: table_bool_exp
@@ -851,8 +851,8 @@ cursorOrderingArgParser = do
           G.Description $
             "ordering argument of a cursor"
   pure $
-    P.enum enumName description
-      $ NE.fromList  -- It's fine to use fromList here because we know the list is never empty.
+    P.enum enumName description $
+      NE.fromList -- It's fine to use fromList here because we know the list is never empty.
         [ ( define (fst enumNameVal),
             (snd enumNameVal)
           )
@@ -888,12 +888,13 @@ tableStreamCursorArg sourceName tableInfo selectPermissions = do
       fieldParser <- typedParser columnInfo
       pure $
         P.fieldOptional fieldName fieldDesc fieldParser
-           `mapField` (columnInfo, )
+          `mapField` (columnInfo,)
   objName <- P.mkTypename $ tableGQLName <> $$(G.litName ("_stream_cursor_input"))
-  pure $ P.field $$(G.litName "cursor") (Just "cursor column(s) for streaming data") $
-    P.object objName (Just "authors table desc") $ -- FIXME: fix the description
-      Map.fromList . catMaybes <$> sequenceA fields
-    where
+  pure $
+    P.field $$(G.litName "cursor") (Just "cursor column(s) for streaming data") $
+      P.object objName (Just "authors table desc") $ -- FIXME: fix the description
+        Map.fromList . catMaybes <$> sequenceA fields
+  where
     typedParser columnInfo =
       fmap (P.mkCursorParameter (pgiName columnInfo)) <$> columnParser (pgiType columnInfo) (G.Nullability $ pgiIsNullable columnInfo)
 

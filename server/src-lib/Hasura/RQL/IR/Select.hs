@@ -187,7 +187,8 @@ deriving instance
   ) =>
   Show (AnnSelectG b r f v)
 
-data AnnSelectStreamG
+data
+  AnnSelectStreamG
     (b :: BackendType)
     (r :: BackendType -> Type)
     (f :: Type -> Type)
@@ -323,10 +324,11 @@ type SelectFrom b = SelectFromG b (SQLExpression b)
 data SelectStreamArgsG (b :: BackendType) v = SelectStreamArgsG
   { _ssaWhere :: !(Maybe (AnnBoolExp b v)),
     _ssaBatchSize :: !(Maybe Int),
-    _ssaCursorInitialValues :: !((ColumnInfo b),v), -- TODO: change this into a InsOrdHashmap (ColumnInfo b) v, when multiple column cursors are supported
+    _ssaCursorInitialValues :: !((ColumnInfo b), v), -- TODO: change this into a InsOrdHashmap (ColumnInfo b) v, when multiple column cursors are supported
     _ssaCursorBoolExp :: !(AnnBoolExp b v),
     _ssaCursorOrdering :: !CursorOrdering
-  } deriving (Generic, Functor, Foldable, Traversable)
+  }
+  deriving (Generic, Functor, Foldable, Traversable)
 
 type SelectStreamArgs b = SelectStreamArgsG b (SQLExpression b)
 

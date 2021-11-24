@@ -103,7 +103,7 @@ module Hasura.GraphQL.Execute.LiveQuery.Plan
     LiveQueryPlan (..),
     LiveQueryPlanExplanation (..),
     ParameterizedLiveQueryPlan (..),
-    SubscriptionType (..)
+    SubscriptionType (..),
   )
 where
 
@@ -170,7 +170,7 @@ modifyCursorCohortVariables ::
   CohortVariables ->
   CohortVariables
 modifyCursorCohortVariables validatedCursorVariables cohortVariables =
-  cohortVariables { _cvCursorVariables = validatedCursorVariables }
+  cohortVariables {_cvCursorVariables = validatedCursorVariables}
 
 -- | Builds a cohort's variables by only using the session variables that
 -- are required for the subscription

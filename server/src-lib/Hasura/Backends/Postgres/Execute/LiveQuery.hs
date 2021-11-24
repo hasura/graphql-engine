@@ -6,7 +6,7 @@ module Hasura.Backends.Postgres.Execute.LiveQuery
     validateVariables,
     executeMultiplexedQuery,
     executeQuery,
-    SubscriptionType (..)
+    SubscriptionType (..),
   )
 where
 
@@ -161,7 +161,7 @@ mkMultiplexedQuery rootFields =
       case headRootField of
         -- HACK: when subscription is not of the stream type, then set the cursor as null
         QDBStreamMultipleRows _ -> S.SEFnApp "to_json" [mkQualifiedIdentifier (aliasToIdentifier headRootFieldAlias) (Identifier "cursor")] Nothing
-        _                       -> S.SELit "null"
+        _ -> S.SELit "null"
     cursorExtractor = S.Extractor cursorSQLExp (Just . S.Alias $ Identifier "cursor")
     mkQualifiedIdentifier prefix = S.SEQIdentifier . S.QIdentifier (S.QualifiedIdentifier prefix Nothing) -- TODO fix this Nothing of course
     aliasToIdentifier = Identifier . G.unName
