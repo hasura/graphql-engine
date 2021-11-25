@@ -37,7 +37,6 @@ instance BackendSchema 'MySQL where
   buildFunctionMutationFields = buildFunctionMutationFields'
   relayExtension = Nothing
   tableArguments = mysqlTableArgs
-  tableStreamArguments = error "table stream arguments are not supported for MySQL"
   nodesAggExtension = Just ()
   streamSubscriptionExtension = Nothing
   columnParser = columnParser'

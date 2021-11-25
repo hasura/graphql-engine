@@ -132,7 +132,6 @@ instance
 
   -- table components
   tableArguments = defaultTableArgs
-  tableStreamArguments = tableStreamArgs
   mkRelationshipParser = GSB.mkDefaultRelationshipParser ()
 
   -- backend extensions

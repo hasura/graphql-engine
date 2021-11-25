@@ -17,7 +17,6 @@ module Hasura.GraphQL.Schema.Select
     computedFieldPG,
     remoteRelationshipField,
     defaultTableArgs,
-    tableStreamArgs,
     tableWhereArg,
     tableOrderByArg,
     tableDistinctArg,
@@ -746,14 +745,14 @@ defaultTableArgs sourceName tableInfo selectPermissions = do
         parseError
           "\"distinct_on\" columns must match initial \"order_by\" columns"
 
-tableStreamArgs ::
+tableStreamArguments ::
   forall b r m n.
   MonadBuildSchema b r m n =>
   SourceName ->
   TableInfo b ->
   SelPermInfo b ->
   m (InputFieldsParser n (SelectStreamArgs b))
-tableStreamArgs sourceName tableInfo selectPermissions = do
+tableStreamArguments sourceName tableInfo selectPermissions = do
   whereParser <- tableWhereArg sourceName tableInfo selectPermissions
   cursorParser <-
     tableStreamCursorArg sourceName tableInfo selectPermissions

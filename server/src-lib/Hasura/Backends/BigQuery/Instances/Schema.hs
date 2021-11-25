@@ -47,7 +47,6 @@ instance BackendSchema 'BigQuery where
 
   -- table arguments
   tableArguments = bqTableArgs
-  tableStreamArguments = error "table stream arguments are not supported for BigQuery"
 
   -- indivdual components
   columnParser = bqColumnParser

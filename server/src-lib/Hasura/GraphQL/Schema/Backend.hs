@@ -209,13 +209,6 @@ class Backend b => BackendSchema (b :: BackendType) where
     SelPermInfo b ->
     m (InputFieldsParser n (IR.SelectArgsG b (UnpreparedValue b)))
 
-  tableStreamArguments ::
-    MonadBuildSchema b r m n =>
-    SourceName ->
-    TableInfo b ->
-    SelPermInfo b ->
-    m (InputFieldsParser n (IR.SelectStreamArgsG b (UnpreparedValue b)))
-
   -- | Make a parser for relationships. Default implementaton elides
   -- relationships altogether.
   mkRelationshipParser ::
