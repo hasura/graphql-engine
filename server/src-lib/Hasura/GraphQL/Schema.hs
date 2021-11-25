@@ -40,6 +40,7 @@ import Hasura.Prelude
 import Hasura.RQL.IR
 import Hasura.RQL.Types
 import Hasura.SQL.AnyBackend qualified as AB
+import Hasura.SQL.Tag (HasTag)
 import Hasura.Session
 import Language.GraphQL.Draft.Syntax qualified as G
 
@@ -522,7 +523,7 @@ buildQueryFields sourceName sourceConfig tables (takeExposedAs FEAQuery -> funct
     tableGQLName <- getTableGQLName @b tableInfo
     -- FIXME: retrieve permissions directly from tableInfo to avoid a sourceCache lookup
     selectPerms <- tableSelectPermissions tableInfo
-    for selectPerms $ buildTableQueryFields sourceName sourceConfig queryTagsConfig tableName tableInfo tableGQLName
+    for selectPerms $ mkRF . buildTableQueryFields sourceName tableName tableInfo tableGQLName
   functionSelectExpParsers <- for (Map.toList functions) \(functionName, functionInfo) -> runMaybeT $ do
     guard $
       roleName == adminRoleName
@@ -531,8 +532,10 @@ buildQueryFields sourceName sourceConfig tables (takeExposedAs FEAQuery -> funct
     let targetTableName = _fiReturnType functionInfo
     targetTableInfo <- askTableInfo sourceName targetTableName
     selectPerms <- MaybeT $ tableSelectPermissions targetTableInfo
-    lift $ buildFunctionQueryFields sourceName sourceConfig queryTagsConfig functionName functionInfo targetTableName selectPerms
+    lift $ mkRF $ buildFunctionQueryFields sourceName functionName functionInfo targetTableName selectPerms
   pure $ concat $ catMaybes $ tableSelectExpParsers <> functionSelectExpParsers
+  where
+    mkRF = mkRootField sourceName sourceConfig queryTagsConfig QDBR
 
 buildRelayQueryFields ::
   forall b r m n.
@@ -549,15 +552,17 @@ buildRelayQueryFields sourceName sourceConfig tables (takeExposedAs FEAQuery -> 
     pkeyColumns <- hoistMaybe $ tableInfo ^? tiCoreInfo . tciPrimaryKey . _Just . pkColumns
     -- FIXME: retrieve permissions directly from tableInfo to avoid a sourceCache lookup
     selectPerms <- MaybeT $ tableSelectPermissions tableInfo
-    lift $ buildTableRelayQueryFields sourceName sourceConfig queryTagsConfig tableName tableInfo tableGQLName pkeyColumns selectPerms
+    lift $ mkRF $ buildTableRelayQueryFields sourceName tableName tableInfo tableGQLName pkeyColumns selectPerms
   functionConnectionFields <- for (Map.toList functions) $ \(functionName, functionInfo) -> runMaybeT do
     let returnTableName = _fiReturnType functionInfo
     -- FIXME: only extract the TableInfo once to avoid redundant cache lookups
     returnTableInfo <- lift $ askTableInfo sourceName returnTableName
     pkeyColumns <- MaybeT $ (^? tiCoreInfo . tciPrimaryKey . _Just . pkColumns) <$> pure returnTableInfo
     selectPerms <- MaybeT $ tableSelectPermissions returnTableInfo
-    lift $ buildFunctionRelayQueryFields sourceName sourceConfig queryTagsConfig functionName functionInfo returnTableName pkeyColumns selectPerms
+    lift $ mkRF $ buildFunctionRelayQueryFields sourceName functionName functionInfo returnTableName pkeyColumns selectPerms
   pure $ concat $ catMaybes $ tableConnectionFields <> functionConnectionFields
+  where
+    mkRF = mkRootField sourceName sourceConfig queryTagsConfig QDBR
 
 buildMutationFields ::
   forall b r m n.
@@ -586,24 +591,15 @@ buildMutationFields scenario sourceName sourceConfig tables (takeExposedAs FEAMu
             then Nothing
             else Just insertPerms
         lift $
-          buildTableInsertMutationFields
-            sourceName
-            sourceConfig
-            queryTagsConfig
-            tableName
-            tableInfo
-            tableGQLName
-            insertPerms
-            _permSel
-            _permUpd
+          mkRF (MDBR . MDBInsert) $ buildTableInsertMutationFields sourceName tableName tableInfo tableGQLName insertPerms _permSel _permUpd
       updates <- runMaybeT $ do
         guard $ isMutable viIsUpdatable viewInfo
         updatePerms <- hoistMaybe _permUpd
-        lift $ buildTableUpdateMutationFields sourceName sourceConfig queryTagsConfig tableName tableInfo tableGQLName updatePerms _permSel
+        lift $ mkRF (MDBR . MDBUpdate) $ buildTableUpdateMutationFields @b sourceName tableName tableInfo tableGQLName updatePerms _permSel
       deletes <- runMaybeT $ do
         guard $ isMutable viIsDeletable viewInfo
         deletePerms <- hoistMaybe _permDel
-        lift $ buildTableDeleteMutationFields sourceName sourceConfig queryTagsConfig tableName tableInfo tableGQLName deletePerms _permSel
+        lift $ mkRF (MDBR . MDBDelete) $ buildTableDeleteMutationFields sourceName tableName tableInfo tableGQLName deletePerms _permSel
       pure $ concat $ catMaybes [inserts, updates, deletes]
   functionMutations <- for (Map.toList functions) \(functionName, functionInfo) -> runMaybeT $ do
     let targetTableName = _fiReturnType functionInfo
@@ -615,8 +611,11 @@ buildMutationFields scenario sourceName sourceConfig tables (takeExposedAs FEAMu
       -- when function permissions are inferred, we don't expose the
       -- mutation functions for non-admin roles. See Note [Function Permissions]
       roleName == adminRoleName || roleName `Map.member` (_fiPermissions functionInfo)
-    lift $ buildFunctionMutationFields sourceName sourceConfig queryTagsConfig functionName functionInfo targetTableName selectPerms
+    lift $ mkRF MDBR $ buildFunctionMutationFields sourceName functionName functionInfo targetTableName selectPerms
   pure $ concat $ catMaybes $ tableMutations <> functionMutations
+  where
+    mkRF :: forall a db remote action raw. (a -> db b) -> m [FieldParser n a] -> m [FieldParser n (RootField db remote action raw)]
+    mkRF = mkRootField sourceName sourceConfig queryTagsConfig
 
 ----------------------------------------------------------------
 -- Building root parser from fields
@@ -769,6 +768,34 @@ buildMutationParser allRemotes allActions nonObjectCustomTypes mutationFields = 
 
 ----------------------------------------------------------------
 -- local helpers
+
+-- | All the 'BackendSchema' methods produce something of the form @m
+-- [FieldParser n a]@, where @a@ is something specific to what is being parsed
+-- by the given method.
+--
+-- In order to build the complete schema these must be
+-- homogenised and be annotated with query-tag data, which this function makes
+-- easy.
+mkRootField ::
+  forall b m n a db remote action raw.
+  (HasTag b, Functor m, Functor n) =>
+  SourceName ->
+  SourceConfig b ->
+  Maybe QueryTagsConfig ->
+  (a -> db b) ->
+  m [FieldParser n a] ->
+  m [FieldParser n (RootField db remote action raw)]
+mkRootField sourceName sourceConfig queryTagsConfig inj =
+  fmap
+    ( map
+        ( fmap
+            ( RFDB sourceName
+                . AB.mkAnyBackend @b
+                . SourceConfigWith sourceConfig queryTagsConfig
+                . inj
+            )
+        )
+    )
 
 takeExposedAs :: FunctionExposedAs -> FunctionCache b -> FunctionCache b
 takeExposedAs x = Map.filter ((== x) . _fiExposedAs)

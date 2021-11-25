@@ -91,36 +91,32 @@ class Backend b => BackendSchema (b :: BackendType) where
   buildTableQueryFields ::
     MonadBuildSchema b r m n =>
     SourceName ->
-    SourceConfig b ->
-    Maybe QueryTagsConfig ->
     TableName b ->
     TableInfo b ->
     G.Name ->
     SelPermInfo b ->
-    m [FieldParser n (QueryRootField UnpreparedValue)]
+    m [FieldParser n (QueryDB b (RemoteSelect UnpreparedValue) (UnpreparedValue b))]
+
   buildTableRelayQueryFields ::
     MonadBuildSchema b r m n =>
     SourceName ->
-    SourceConfig b ->
-    Maybe QueryTagsConfig ->
     TableName b ->
     TableInfo b ->
     G.Name ->
     NESeq (ColumnInfo b) ->
     SelPermInfo b ->
-    m [FieldParser n (QueryRootField UnpreparedValue)]
+    m [FieldParser n (QueryDB b (RemoteSelect UnpreparedValue) (UnpreparedValue b))]
+
   buildTableInsertMutationFields ::
     MonadBuildSchema b r m n =>
     SourceName ->
-    SourceConfig b ->
-    Maybe QueryTagsConfig ->
     TableName b ->
     TableInfo b ->
     G.Name ->
     InsPermInfo b ->
     Maybe (SelPermInfo b) ->
     Maybe (UpdPermInfo b) ->
-    m [FieldParser n (MutationRootField UnpreparedValue)]
+    m [FieldParser n (AnnInsert b (RemoteSelect UnpreparedValue) (UnpreparedValue b))]
 
   -- | This method is responsible for building the GraphQL Schema for mutations
   -- backed by @UPDATE@ statements on some table, as described in
@@ -132,10 +128,6 @@ class Backend b => BackendSchema (b :: BackendType) where
     MonadBuildSchema b r m n =>
     -- | The source that the table lives in
     SourceName ->
-    -- | The associated 'SourceConfig'
-    SourceConfig b ->
-    -- TODO: What are Query Tags?
-    Maybe QueryTagsConfig ->
     -- | The name of the table being acted on
     TableName b ->
     -- | table info
@@ -146,50 +138,45 @@ class Backend b => BackendSchema (b :: BackendType) where
     UpdPermInfo b ->
     -- | select permissions of the table (if any)
     Maybe (SelPermInfo b) ->
-    m [FieldParser n (MutationRootField UnpreparedValue)]
+    m [FieldParser n (AnnotatedUpdateG b (RemoteSelect UnpreparedValue) (UnpreparedValue b))]
 
   buildTableDeleteMutationFields ::
     MonadBuildSchema b r m n =>
     SourceName ->
-    SourceConfig b ->
-    Maybe QueryTagsConfig ->
     TableName b ->
     TableInfo b ->
     G.Name ->
     DelPermInfo b ->
     Maybe (SelPermInfo b) ->
-    m [FieldParser n (MutationRootField UnpreparedValue)]
+    m [FieldParser n (AnnDelG b (RemoteSelect UnpreparedValue) (UnpreparedValue b))]
+
   buildFunctionQueryFields ::
     MonadBuildSchema b r m n =>
     SourceName ->
-    SourceConfig b ->
-    Maybe QueryTagsConfig ->
     FunctionName b ->
     FunctionInfo b ->
     TableName b ->
     SelPermInfo b ->
-    m [FieldParser n (QueryRootField UnpreparedValue)]
+    m [FieldParser n (QueryDB b (RemoteSelect UnpreparedValue) (UnpreparedValue b))]
+
   buildFunctionRelayQueryFields ::
     MonadBuildSchema b r m n =>
     SourceName ->
-    SourceConfig b ->
-    Maybe QueryTagsConfig ->
     FunctionName b ->
     FunctionInfo b ->
     TableName b ->
     NESeq (ColumnInfo b) ->
     SelPermInfo b ->
-    m [FieldParser n (QueryRootField UnpreparedValue)]
+    m [FieldParser n (QueryDB b (RemoteSelect UnpreparedValue) (UnpreparedValue b))]
+
   buildFunctionMutationFields ::
     MonadBuildSchema b r m n =>
     SourceName ->
-    SourceConfig b ->
-    Maybe QueryTagsConfig ->
     FunctionName b ->
     FunctionInfo b ->
     TableName b ->
     SelPermInfo b ->
-    m [FieldParser n (MutationRootField UnpreparedValue)]
+    m [FieldParser n (MutationDB b (RemoteSelect UnpreparedValue) (UnpreparedValue b))]
 
   -- table components
   tableArguments ::
