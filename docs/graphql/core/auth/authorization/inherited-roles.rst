@@ -295,7 +295,7 @@ Let's create a new inherited role called ``user_anonymous_inherited_role`` which
    role. But some of the fields have ``null`` values despite the value in the database not being ``null``. This can only happen
    with inherited roles when a column doesn't have permission in the particular row. In the above example, we see that the
    ``email`` of "Bob"  and "Sam" is ``null`` but a non null value for "Alice", this is because the "Alice" row is executed as the
-   ``user`` role and the other rows are executed as the ``anonymous`` role which is why is why the value is ``null``.
+   ``user`` role and the other rows are executed as the ``anonymous`` role which is why the value is ``null``.
 
 
 4. Suppose we have two tables ``users`` and ``authors`` and similarly two roles ``user`` and ``author`` are defined. The ``user``
