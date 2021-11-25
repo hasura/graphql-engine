@@ -4,7 +4,7 @@ This code is taken from an AWS sample code repository. The code can be found her
 
 https://github.com/awslabs/aws-support-tools/blob/master/Cognito/decode-verify-jwt/decode-verify-jwt.js
 
-It's seperated out into is own file and function for two reason.
+It's separated out into is own file and function for two reason.
 
 First, It's easier to read and possibly test.
 
@@ -12,7 +12,7 @@ Second, Ther is a network request here to go download the secret keys from Cogni
 
 https://docs.aws.amazon.com/lambda/latest/dg/best-practices.html
 
-It's good practice to seperate out logic from the app entry point. This can make the function run faster especially when calls happen fast which I can imagine will be the case with this web hook.
+It's good practice to separate out logic from the app entry point. This can make the function run faster especially when calls happen fast which I can imagine will be the case with this web hook.
 
 */
 
