@@ -127,4 +127,4 @@ to it from `graphql-engine` which runs on a different computer. Currently, mssql
 `scripts/dev.sh mssql` will only be exposed to the machine it is run on.
 
 To change that and expose it to other machines as well, we need to edit `scripts/containers/mssql.sh` and change
-all instances of `127.0.0.1` to the external IP of the machine.
+the `MSSQL_HOST` variable to the external IP of the machine.
