@@ -193,7 +193,8 @@ data
     (r :: BackendType -> Type)
     (f :: Type -> Type)
     (v :: Type) = AnnSelectStreamG
-  { _assnFields :: !(Fields (f v)),
+  { _assnXStreamingSubscription :: !(XStreamingSubscription b),
+    _assnFields :: !(Fields (f v)),
     _assnFrom :: !(SelectFromG b v),
     _assnPerm :: !(TablePermG b v),
     _assnArgs :: !(SelectStreamArgsG b v),
@@ -232,7 +233,7 @@ type AnnSimpleStreamSelect b = AnnSimpleStreamSelectG b (Const Void) (SQLExpress
 -- Relay select
 
 data ConnectionSelect (b :: BackendType) (r :: BackendType -> Type) v = ConnectionSelect
-  { _csXRelay :: !(XRelay b),
+  { _csXRelay :: (XRelay b),
     _csPrimaryKeyColumns :: !(PrimaryKeyColumns b),
     _csSplit :: !(Maybe (NE.NonEmpty (ConnectionSplit b v))),
     _csSlice :: !(Maybe ConnectionSlice),

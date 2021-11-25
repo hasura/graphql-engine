@@ -39,6 +39,7 @@ instance BackendSchema 'MySQL where
   tableArguments = mysqlTableArgs
   tableStreamArguments = error "table stream arguments are not supported for MySQL"
   nodesAggExtension = Just ()
+  streamSubscriptionExtension = Nothing
   columnParser = columnParser'
   jsonPathArg = jsonPathArg'
   orderByOperators = orderByOperators'

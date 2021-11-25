@@ -228,6 +228,7 @@ class Backend b => BackendSchema (b :: BackendType) where
   -- backend extensions
   relayExtension :: Maybe (XRelay b)
   nodesAggExtension :: Maybe (XNodesAgg b)
+  streamSubscriptionExtension :: Maybe (XStreamingSubscription b)
 
   -- individual components
   columnParser ::

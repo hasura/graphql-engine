@@ -85,6 +85,7 @@ instance
   type XNodesAgg ('Postgres pgKind) = XEnable
   type XNestedInserts ('Postgres pgKind) = XEnable
   type XOnConflict ('Postgres pgKind) = XEnable
+  type XStreamingSubscription ('Postgres pgKind) = XEnable
 
   functionArgScalarType = PG.mkFunctionArgScalarType
   isComparableType = PG.isComparableType

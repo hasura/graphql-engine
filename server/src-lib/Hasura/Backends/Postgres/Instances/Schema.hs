@@ -138,6 +138,7 @@ instance
   -- backend extensions
   relayExtension = pgkRelayExtension @pgKind
   nodesAggExtension = Just ()
+  streamSubscriptionExtension = Just ()
 
   -- indivdual components
   columnParser = columnParser

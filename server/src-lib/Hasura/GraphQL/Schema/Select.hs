@@ -144,21 +144,23 @@ selectStreamTable ::
   Maybe G.Description ->
   -- | select permissions of the table
   SelPermInfo b ->
-  m (FieldParser n (StreamSelectExp b))
-selectStreamTable sourceName tableInfo fieldName description selectPermissions = memoizeOn 'selectStreamTable (sourceName, tableName, fieldName) do
-  stringifyNum <- asks $ qcStringifyNum . getter
-  tableStreamArgsParser <- tableStreamArguments sourceName tableInfo selectPermissions
-  selectionSetParser <- tableSelectionList sourceName tableInfo selectPermissions
-  pure $
-    P.subselection fieldName description tableStreamArgsParser selectionSetParser
-      <&> \(args, fields) ->
-        IR.AnnSelectStreamG
-          { IR._assnFields = fields,
-            IR._assnFrom = IR.FromTable tableName,
-            IR._assnPerm = tablePermissionsInfo selectPermissions,
-            IR._assnArgs = args,
-            IR._assnStrfyNum = stringifyNum
-          }
+  m (Maybe (FieldParser n (StreamSelectExp b)))
+selectStreamTable sourceName tableInfo fieldName description selectPermissions =
+  for (streamSubscriptionExtension @b) \xStreamSubscription -> memoizeOn 'selectStreamTable (sourceName, tableName, fieldName) do
+    stringifyNum <- asks $ qcStringifyNum . getter
+    tableStreamArgsParser <- tableStreamArguments sourceName tableInfo selectPermissions
+    selectionSetParser <- tableSelectionList sourceName tableInfo selectPermissions
+    pure $
+      P.subselection fieldName description tableStreamArgsParser selectionSetParser
+        <&> \(args, fields) ->
+          IR.AnnSelectStreamG
+            { IR._assnXStreamingSubscription = xStreamSubscription,
+              IR._assnFields = fields,
+              IR._assnFrom = IR.FromTable tableName,
+              IR._assnPerm = tablePermissionsInfo selectPermissions,
+              IR._assnArgs = args,
+              IR._assnStrfyNum = stringifyNum
+            }
   where
     tableName = tableInfoName tableInfo
 

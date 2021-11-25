@@ -105,6 +105,8 @@ class
     Show (XNodesAgg b),
     Eq (XRelay b),
     Show (XRelay b),
+    Eq (XStreamingSubscription b),
+    Show (XStreamingSubscription b),
     -- Intermediate Representations
     Functor (BackendUpdate b),
     Foldable (BackendUpdate b),
@@ -154,6 +156,8 @@ class
 
   -- | Extension to flag the availability of `on_conflict` input field in inserts (aka upsert feature)
   type XOnConflict b :: Type
+
+  type XStreamingSubscription b :: Type
 
   -- functions on types
   functionArgScalarType :: FunctionArgType b -> ScalarType b

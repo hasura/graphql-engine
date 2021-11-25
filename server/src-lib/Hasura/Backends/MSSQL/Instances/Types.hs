@@ -40,6 +40,7 @@ instance Backend 'MSSQL where
   type XNodesAgg 'MSSQL = XEnable
   type XNestedInserts 'MSSQL = XDisable
   type XOnConflict 'MSSQL = XDisable
+  type XStreamingSubscription 'MSSQL = XDisable
 
   functionArgScalarType :: FunctionArgType 'MSSQL -> ScalarType 'MSSQL
   functionArgScalarType = absurd

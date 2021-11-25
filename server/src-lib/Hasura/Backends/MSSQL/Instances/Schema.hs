@@ -44,6 +44,7 @@ instance BackendSchema 'MSSQL where
   -- backend extensions
   relayExtension = Nothing
   nodesAggExtension = Just ()
+  streamSubscriptionExtension = Nothing
 
   -- table arguments
   tableArguments = msTableArgs

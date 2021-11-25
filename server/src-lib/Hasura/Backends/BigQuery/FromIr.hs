@@ -157,7 +157,6 @@ fromRootField =
     (Ir.QDBSingleRow s) -> mkSQLSelect Rql.JASSingleObject s
     (Ir.QDBMultipleRows s) -> mkSQLSelect Rql.JASMultipleRows s
     (Ir.QDBAggregation s) -> fromSelectAggregate Nothing s
-    (Ir.QDBStreamMultipleRows _) -> error "streaming subscriptions are not yet supported for BigQuery"
 
 --------------------------------------------------------------------------------
 -- Top-level exported functions

@@ -43,6 +43,7 @@ instance BackendSchema 'BigQuery where
   -- backend extensions
   relayExtension = Nothing
   nodesAggExtension = Just ()
+  streamSubscriptionExtension = Nothing
 
   -- table arguments
   tableArguments = bqTableArgs
