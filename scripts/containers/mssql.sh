@@ -14,9 +14,10 @@ else
   MSSQL_PORT=21433
 fi
 
+MSSQL_HOST=127.0.0.1
 MSSQL_PASSWORD=hasuraMSSQL1
 MSSQL_CONTAINER_NAME="hasura-dev-mssql-$MSSQL_PORT"
-MSSQL_CONN_STR="DRIVER={ODBC Driver 17 for SQL Server};SERVER=127.0.0.1,$MSSQL_PORT;Uid=sa;Pwd=$MSSQL_PASSWORD;"
+MSSQL_CONN_STR="DRIVER={ODBC Driver 17 for SQL Server};SERVER=$MSSQL_HOST,$MSSQL_PORT;Uid=sa;Pwd=$MSSQL_PASSWORD;"
 MSSQL_DOCKER="docker exec -it $MSSQL_CONTAINER_NAME sqlcmd -S localhost -U sa -P $MSSQL_PASSWORD"
 
 if [[ `uname -m` == 'arm64' ]]; then
@@ -36,7 +37,8 @@ function mssql_launch_container(){
   docker run --name $MSSQL_CONTAINER_NAME \
     --platform "$MSSQL_PLATFORM" \
     -e ACCEPT_EULA=1 \
-    -p 127.0.0.1:"$MSSQL_PORT":1433 -d "$MSSQL_CONTAINER_IMAGE"
+    -e "MSSQL_SA_PASSWORD=$MSSQL_PASSWORD" \
+    -p $MSSQL_HOST:"$MSSQL_PORT":1433 -d "$MSSQL_CONTAINER_IMAGE"
 }
 
 function mssql_wait {
