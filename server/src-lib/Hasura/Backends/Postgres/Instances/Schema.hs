@@ -40,7 +40,6 @@ import Hasura.Prelude
 import Hasura.RQL.IR
 import Hasura.RQL.IR.Select qualified as IR
 import Hasura.RQL.Types
-import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.Types
 import Language.GraphQL.Draft.Syntax qualified as G
 
@@ -60,25 +59,21 @@ class PostgresSchema (pgKind :: PostgresKind) where
   pgkBuildTableRelayQueryFields ::
     BS.MonadBuildSchema ('Postgres pgKind) r m n =>
     SourceName ->
-    SourceConfig ('Postgres pgKind) ->
-    Maybe QueryTagsConfig ->
     TableName ('Postgres pgKind) ->
     TableInfo ('Postgres pgKind) ->
     G.Name ->
     NESeq (ColumnInfo ('Postgres pgKind)) ->
     SelPermInfo ('Postgres pgKind) ->
-    m [FieldParser n (QueryRootField UnpreparedValue)]
+    m [FieldParser n (QueryDB ('Postgres pgKind) (RemoteSelect UnpreparedValue) (UnpreparedValue ('Postgres pgKind)))]
   pgkBuildFunctionRelayQueryFields ::
     BS.MonadBuildSchema ('Postgres pgKind) r m n =>
     SourceName ->
-    SourceConfig ('Postgres pgKind) ->
-    Maybe QueryTagsConfig ->
     FunctionName ('Postgres pgKind) ->
     FunctionInfo ('Postgres pgKind) ->
     TableName ('Postgres pgKind) ->
     NESeq (ColumnInfo ('Postgres pgKind)) ->
     SelPermInfo ('Postgres pgKind) ->
-    m [FieldParser n (QueryRootField UnpreparedValue)]
+    m [FieldParser n (QueryDB ('Postgres pgKind) (RemoteSelect UnpreparedValue) (UnpreparedValue ('Postgres pgKind)))]
   pgkRelayExtension ::
     Maybe (XRelay ('Postgres pgKind))
   pgkNode ::
@@ -106,8 +101,8 @@ instance PostgresSchema 'Vanilla where
   pgkNode = nodePG
 
 instance PostgresSchema 'Citus where
-  pgkBuildTableRelayQueryFields _ _ _ _ _ _ _ _ = pure []
-  pgkBuildFunctionRelayQueryFields _ _ _ _ _ _ _ _ = pure []
+  pgkBuildTableRelayQueryFields _ _ _ _ _ _ = pure []
+  pgkBuildFunctionRelayQueryFields _ _ _ _ _ _ = pure []
   pgkRelayExtension = Nothing
   pgkNode = undefined
 
@@ -161,47 +156,33 @@ buildTableRelayQueryFields ::
   forall pgKind m n r.
   MonadBuildSchema ('Postgres pgKind) r m n =>
   SourceName ->
-  SourceConfig ('Postgres pgKind) ->
-  Maybe QueryTagsConfig ->
   TableName ('Postgres pgKind) ->
   TableInfo ('Postgres pgKind) ->
   G.Name ->
   NESeq (ColumnInfo ('Postgres pgKind)) ->
   SelPermInfo ('Postgres pgKind) ->
-  m [FieldParser n (QueryRootField UnpreparedValue)]
-buildTableRelayQueryFields sourceName sourceInfo queryTagsConfig tableName tableInfo gqlName pkeyColumns selPerms = do
-  let mkRF =
-        RFDB sourceName
-          . AB.mkAnyBackend
-          . SourceConfigWith sourceInfo queryTagsConfig
-          . QDBR
-      fieldDesc = Just $ G.Description $ "fetch data from the table: " <>> tableName
+  m [FieldParser n (QueryDB ('Postgres pgKind) (RemoteSelect UnpreparedValue) (UnpreparedValue ('Postgres pgKind)))]
+buildTableRelayQueryFields sourceName tableName tableInfo gqlName pkeyColumns selPerms = do
+  let fieldDesc = Just $ G.Description $ "fetch data from the table: " <>> tableName
   fieldName <- mkRootFieldName $ gqlName <> $$(G.litName "_connection")
   fmap afold $
-    optionalFieldParser (mkRF . QDBConnection) $
+    optionalFieldParser (QDBConnection) $
       selectTableConnection sourceName tableInfo fieldName fieldDesc pkeyColumns selPerms
 
 buildFunctionRelayQueryFields ::
   forall pgKind m n r.
   MonadBuildSchema ('Postgres pgKind) r m n =>
   SourceName ->
-  SourceConfig ('Postgres pgKind) ->
-  Maybe QueryTagsConfig ->
   FunctionName ('Postgres pgKind) ->
   FunctionInfo ('Postgres pgKind) ->
   TableName ('Postgres pgKind) ->
   NESeq (ColumnInfo ('Postgres pgKind)) ->
   SelPermInfo ('Postgres pgKind) ->
-  m [FieldParser n (QueryRootField UnpreparedValue)]
-buildFunctionRelayQueryFields sourceName sourceInfo queryTagsConfig functionName functionInfo tableName pkeyColumns selPerms = do
-  let mkRF =
-        RFDB sourceName
-          . AB.mkAnyBackend
-          . SourceConfigWith sourceInfo queryTagsConfig
-          . QDBR
-      fieldDesc = Just $ G.Description $ "execute function " <> functionName <<> " which returns " <>> tableName
+  m [FieldParser n (QueryDB ('Postgres pgKind) (RemoteSelect UnpreparedValue) (UnpreparedValue ('Postgres pgKind)))]
+buildFunctionRelayQueryFields sourceName functionName functionInfo tableName pkeyColumns selPerms = do
+  let fieldDesc = Just $ G.Description $ "execute function " <> functionName <<> " which returns " <>> tableName
   fmap afold $
-    optionalFieldParser (mkRF . QDBConnection) $
+    optionalFieldParser (QDBConnection) $
       selectFunctionConnection sourceName functionInfo fieldDesc pkeyColumns selPerms
 
 ----------------------------------------------------------------

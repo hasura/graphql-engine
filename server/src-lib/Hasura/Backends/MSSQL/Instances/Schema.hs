@@ -77,34 +77,28 @@ supportsInserts = isJust . _tciPrimaryKey . _tiCoreInfo
 msBuildTableRelayQueryFields ::
   MonadBuildSchema 'MSSQL r m n =>
   SourceName ->
-  SourceConfig 'MSSQL ->
-  Maybe QueryTagsConfig ->
   TableName 'MSSQL ->
   TableInfo 'MSSQL ->
   G.Name ->
   NESeq (ColumnInfo 'MSSQL) ->
   SelPermInfo 'MSSQL ->
-  m [FieldParser n (QueryRootField UnpreparedValue)]
-msBuildTableRelayQueryFields _sourceName _sourceInfo _queryTagsConfig _tableName _tableInfo _gqlName _pkeyColumns _selPerms =
+  m [a]
+msBuildTableRelayQueryFields _sourceName _tableName _tableInfo _gqlName _pkeyColumns _selPerms =
   pure []
 
 msBuildTableInsertMutationFields ::
   forall r m n.
   MonadBuildSchema 'MSSQL r m n =>
   SourceName ->
-  SourceConfig 'MSSQL ->
-  Maybe QueryTagsConfig ->
   TableName 'MSSQL ->
   TableInfo 'MSSQL ->
   G.Name ->
   InsPermInfo 'MSSQL ->
   Maybe (SelPermInfo 'MSSQL) ->
   Maybe (UpdPermInfo 'MSSQL) ->
-  m [FieldParser n (MutationRootField UnpreparedValue)]
+  m [FieldParser n (AnnInsert 'MSSQL (RemoteSelect UnpreparedValue) (UnpreparedValue 'MSSQL))]
 msBuildTableInsertMutationFields
   sourceName
-  sourceInfo
-  queryTagsConfig
   tableName
   tableInfo
   gqlName
@@ -114,8 +108,6 @@ msBuildTableInsertMutationFields
     | supportsInserts tableInfo =
       GSB.buildTableInsertMutationFields
         sourceName
-        sourceInfo
-        queryTagsConfig
         tableName
         tableInfo
         gqlName
@@ -127,69 +119,59 @@ msBuildTableInsertMutationFields
 msBuildTableUpdateMutationFields ::
   MonadBuildSchema 'MSSQL r m n =>
   SourceName ->
-  SourceConfig 'MSSQL ->
-  Maybe QueryTagsConfig ->
   TableName 'MSSQL ->
   TableInfo 'MSSQL ->
   G.Name ->
   UpdPermInfo 'MSSQL ->
   Maybe (SelPermInfo 'MSSQL) ->
-  m [FieldParser n (MutationRootField UnpreparedValue)]
-msBuildTableUpdateMutationFields _sourceName _sourceInfo _queryTagsConfig _tableName _tableInfo _gqlName _updPerns _selPerms =
+  m [a]
+msBuildTableUpdateMutationFields _sourceName _tableName _tableInfo _gqlName _updPerns _selPerms =
   pure []
 
 msBuildTableDeleteMutationFields ::
   MonadBuildSchema 'MSSQL r m n =>
   SourceName ->
-  SourceConfig 'MSSQL ->
-  Maybe QueryTagsConfig ->
   TableName 'MSSQL ->
   TableInfo 'MSSQL ->
   G.Name ->
   DelPermInfo 'MSSQL ->
   Maybe (SelPermInfo 'MSSQL) ->
-  m [FieldParser n (MutationRootField UnpreparedValue)]
-msBuildTableDeleteMutationFields _sourceName _sourceInfo _queryTagsConfig _tableName _tableInfo _gqlName _delPerns _selPerms =
+  m [a]
+msBuildTableDeleteMutationFields _sourceName _tableName _tableInfo _gqlName _delPerns _selPerms =
   pure []
 
 msBuildFunctionQueryFields ::
   MonadBuildSchema 'MSSQL r m n =>
   SourceName ->
-  SourceConfig 'MSSQL ->
-  Maybe QueryTagsConfig ->
   FunctionName 'MSSQL ->
   FunctionInfo 'MSSQL ->
   TableName 'MSSQL ->
   SelPermInfo 'MSSQL ->
-  m [FieldParser n (QueryRootField UnpreparedValue)]
-msBuildFunctionQueryFields _ _ _ _ _ _ _ =
+  m [a]
+msBuildFunctionQueryFields _ _ _ _ _ =
   pure []
 
 msBuildFunctionRelayQueryFields ::
   MonadBuildSchema 'MSSQL r m n =>
   SourceName ->
-  SourceConfig 'MSSQL ->
-  Maybe QueryTagsConfig ->
   FunctionName 'MSSQL ->
   FunctionInfo 'MSSQL ->
   TableName 'MSSQL ->
   NESeq (ColumnInfo 'MSSQL) ->
   SelPermInfo 'MSSQL ->
-  m [FieldParser n (QueryRootField UnpreparedValue)]
-msBuildFunctionRelayQueryFields _sourceName _sourceInfo _queryTagsConfig _functionName _functionInfo _tableName _pkeyColumns _selPerms =
+  m [a]
+msBuildFunctionRelayQueryFields _sourceName _functionName _functionInfo _tableName _pkeyColumns _selPerms =
   pure []
 
 msBuildFunctionMutationFields ::
   MonadBuildSchema 'MSSQL r m n =>
   SourceName ->
-  SourceConfig 'MSSQL ->
-  Maybe QueryTagsConfig ->
   FunctionName 'MSSQL ->
   FunctionInfo 'MSSQL ->
   TableName 'MSSQL ->
   SelPermInfo 'MSSQL ->
-  m [FieldParser n (MutationRootField UnpreparedValue)]
-msBuildFunctionMutationFields _ _ _ _ _ _ _ =
+  m [a]
+msBuildFunctionMutationFields _ _ _ _ _ =
   pure []
 
 ----------------------------------------------------------------
