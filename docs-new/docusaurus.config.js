@@ -27,6 +27,16 @@ const config = {
           // Please change this to your repo.
           editUrl: 'https://github.com/hasura/graphql-engine/edit/main/docs-new/',
           docItemComponent: require.resolve('./src/components/CustomDocLayout/CustomDocLayout.tsx'),
+          lastVersion: "current",
+          versions: {
+            current: {
+              label: "v2.x",
+            },
+            "1.x": {
+              label: "v1.x",
+              path: "1.0"
+            }
+          }
         },
         theme: {
           customCss: require.resolve('./src/css/custom.css'),
@@ -57,6 +67,11 @@ const config = {
             docId: 'graphql/core/index',
             position: 'left',
             label: 'Core',
+          },
+          {
+            type: 'docsVersionDropdown',
+            position: 'right',
+            dropdownActiveClassDisabled: true,
           },
           {
             href: 'https://github.com/hasura/graphql-engine',
