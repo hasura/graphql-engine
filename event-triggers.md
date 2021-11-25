@@ -14,7 +14,7 @@ Trigger webhooks on database events using Hasura GraphQL Engine's event triggers
 
 * **Works with existing, live databases**: Point it to an existing Postgres database to instantly listen to changes in your data and invoke webhooks.
 
-* **Ready for observability & monitoring]**: Generated events are automatically instrumented with an event-id and structured logs emitted by Hasura make it easy for you to use your favourite tools to run an event-driven backend in production ([watch](https://youtu.be/WOPA52r3bzU) an overview using [Honeycomb](https://honeycomb.io/)).
+* **Ready for observability & monitoring**: Generated events are automatically instrumented with an event-id and structured logs emitted by Hasura make it easy for you to use your favourite tools to run an event-driven backend in production ([watch](https://youtu.be/WOPA52r3bzU) an overview using [Honeycomb](https://honeycomb.io/)).
 
 
 ## Quickstart: 
