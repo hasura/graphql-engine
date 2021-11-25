@@ -229,7 +229,7 @@ and initializes a few tables under it. This schema and the internal tables are g
 By default, the ``metadata_catalogue`` is created inside the primary database provided by the user. 
 But sometimes it might be more advantageous to segregate the primary database and the metadata database.
 
-Hasura GraphQL engine provides a way to the users to provide an entirely seperate Database to store the 
+Hasura GraphQL engine provides a way to the users to provide an entirely separate database to store the 
 ``metadata catalogue``.
 
 To add a metadata database, set the following environment variable or add the flag to the server executable
