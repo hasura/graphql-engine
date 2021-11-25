@@ -557,6 +557,7 @@ comparisonExps = P.memoize 'comparisonExps \columnType -> do
       let maybeScalars = case sourceType of
             ColumnScalar PGGeography -> Just (PGGeography, PGGeometry)
             ColumnScalar PGGeometry -> Just (PGGeometry, PGGeography)
+            ColumnScalar PGJSONB -> Just (PGJSONB, PGText)
             _ -> Nothing
 
       forM maybeScalars $ \(sourceScalar, targetScalar) -> do

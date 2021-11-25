@@ -3,6 +3,7 @@
 ## Next release
 (Add highlights/major features below)
 
+- server: add jsonb to string cast support - postgres 
 - server: implement delete mutations for MS SQL Server (closes #7626)
 - server: fix JSON path in error when parsing sources in metadata (fix #7769)
 - server: log locking DB queries during source catalog migration

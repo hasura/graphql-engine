@@ -2027,7 +2027,7 @@ Cast a field to a different type before filtering (_cast)
 
 The ``_cast`` operator can be used to cast a field to a different type, which allows type-specific
 operators to be used on fields that otherwise would not support them. Currently, only casting
-between PostGIS ``geometry`` and ``geography`` types is supported.
+between PostGIS ``geometry`` and ``geography`` or Postgres ``jsonb`` to ``string`` types is supported.
 
 Casting using ``_cast`` corresponds directly to
 `SQL type casts <https://www.postgresql.org/docs/current/sql-expressions.html#SQL-SYNTAX-TYPE-CASTS>`__.

@@ -1,0 +1,17 @@
+description: Test casting from jsonb to string
+url: /v1/query
+status: 200
+response:
+- id: 2
+- id: 3
+query:
+  type: select
+  args:
+    table: article
+    columns:
+    - id
+    where:
+      tags:
+        $cast:
+          text:
+            $like: "%latest%"
