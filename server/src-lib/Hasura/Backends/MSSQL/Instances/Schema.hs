@@ -9,7 +9,9 @@ import Data.List.NonEmpty qualified as NE
 import Data.Text.Encoding (encodeUtf8)
 import Data.Text.Extended
 import Database.ODBC.SQLServer qualified as ODBC
-import Hasura.Backends.MSSQL.Types qualified as MSSQL
+import Hasura.Backends.MSSQL.Types.Insert (MSSQLExtraInsertData (..))
+import Hasura.Backends.MSSQL.Types.Internal qualified as MSSQL
+import Hasura.Backends.MSSQL.Types.Update (BackendUpdate (..), UpdateOperator (..))
 import Hasura.Base.Error
 import Hasura.GraphQL.Parser hiding (EnumValueInfo, field)
 import Hasura.GraphQL.Parser qualified as P
@@ -19,6 +21,7 @@ import Hasura.GraphQL.Schema.BoolExp
 import Hasura.GraphQL.Schema.Build qualified as GSB
 import Hasura.GraphQL.Schema.Common
 import Hasura.GraphQL.Schema.Select
+import Hasura.GraphQL.Schema.Update qualified as SU
 import Hasura.Prelude
 import Hasura.RQL.IR
 import Hasura.RQL.IR.Insert qualified as IR
@@ -34,8 +37,9 @@ instance BackendSchema 'MSSQL where
   buildTableQueryFields = GSB.buildTableQueryFields
   buildTableRelayQueryFields = msBuildTableRelayQueryFields
   buildTableInsertMutationFields = msBuildTableInsertMutationFields
-  buildTableUpdateMutationFields = msBuildTableUpdateMutationFields
   buildTableDeleteMutationFields = GSB.buildTableDeleteMutationFields
+  buildTableUpdateMutationFields = \_ _ _ _ _ _ -> return [] -- see _msBuildTableUpdateMutationFields.
+
   buildFunctionQueryFields = msBuildFunctionQueryFields
   buildFunctionRelayQueryFields = msBuildFunctionRelayQueryFields
   buildFunctionMutationFields = msBuildFunctionMutationFields
@@ -65,7 +69,7 @@ instance BackendSchema 'MSSQL where
   getExtraInsertData tableInfo =
     let pkeyColumns = fmap (map pgiColumn . toList . _pkColumns) . _tciPrimaryKey . _tiCoreInfo $ tableInfo
         identityColumns = _tciExtraTableMetadata $ _tiCoreInfo tableInfo
-     in MSSQL.MSSQLExtraInsertData (fromMaybe [] pkeyColumns) identityColumns
+     in MSSQLExtraInsertData (fromMaybe [] pkeyColumns) identityColumns
 
 -- | MSSQL only supports inserts into tables that have a primary key defined.
 supportsInserts :: TableInfo 'MSSQL -> Bool
@@ -116,7 +120,10 @@ msBuildTableInsertMutationFields
         mUpdPerms
     | otherwise = return []
 
-msBuildTableUpdateMutationFields ::
+-- Replace the instance implementation of 'buildTableUpdateMutationFields' with
+-- the below when we have an executable implementation of updates, in order to
+-- enable the update schema.
+_msBuildTableUpdateMutationFields ::
   MonadBuildSchema 'MSSQL r m n =>
   SourceName ->
   TableName 'MSSQL ->
@@ -124,9 +131,19 @@ msBuildTableUpdateMutationFields ::
   G.Name ->
   UpdPermInfo 'MSSQL ->
   Maybe (SelPermInfo 'MSSQL) ->
-  m [a]
-msBuildTableUpdateMutationFields _sourceName _tableName _tableInfo _gqlName _updPerns _selPerms =
-  pure []
+  m [FieldParser n (AnnotatedUpdateG 'MSSQL (RemoteSelect UnpreparedValue) (UnpreparedValue 'MSSQL))]
+_msBuildTableUpdateMutationFields =
+  GSB.buildTableUpdateMutationFields
+    ( \ti updPerms ->
+        fmap BackendUpdate
+          <$> SU.buildUpdateOperators
+            (UpdateSet <$> SU.presetColumns updPerms)
+            [ UpdateSet <$> SU.setOp,
+              UpdateInc <$> SU.incOp
+            ]
+            ti
+            updPerms
+    )
 
 msBuildTableDeleteMutationFields ::
   MonadBuildSchema 'MSSQL r m n =>

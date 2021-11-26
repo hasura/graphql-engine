@@ -22,7 +22,8 @@ import Hasura.Backends.MSSQL.FromIr as TSQL
 import Hasura.Backends.MSSQL.Plan
 import Hasura.Backends.MSSQL.SQL.Value (txtEncodedColVal)
 import Hasura.Backends.MSSQL.ToQuery as TQ
-import Hasura.Backends.MSSQL.Types as TSQL
+import Hasura.Backends.MSSQL.Types.Insert (MSSQLExtraInsertData (..))
+import Hasura.Backends.MSSQL.Types.Internal as TSQL
 import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.GraphQL.Execute.Backend
@@ -227,6 +228,7 @@ msDBMutationPlan userInfo stringifyNum sourceName sourceConfig mrf = do
   go <$> case mrf of
     MDBInsert annInsert -> executeInsert userInfo stringifyNum sourceConfig annInsert
     MDBDelete annDelete -> executeDelete userInfo stringifyNum sourceConfig annDelete
+    MDBUpdate _annUpdate -> throw400 NotSupported "update mutations are not supported in MS SQL Server"
     MDBFunction {} -> throw400 NotSupported "function mutations are not supported in MSSQL"
   where
     go v = DBStepInfo @'MSSQL sourceName sourceConfig Nothing v

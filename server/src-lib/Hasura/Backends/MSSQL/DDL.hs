@@ -11,7 +11,7 @@ where
 import Data.Aeson
 import Hasura.Backends.MSSQL.DDL.BoolExp as M
 import Hasura.Backends.MSSQL.DDL.Source as M
-import Hasura.Backends.MSSQL.Types qualified as MT
+import Hasura.Backends.MSSQL.Types.Internal qualified as MT
 import Hasura.Base.Error
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp

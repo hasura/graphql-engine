@@ -23,7 +23,8 @@ import Data.Text.Extended qualified as T
 import Data.Text.Lazy qualified as L
 import Data.Text.Lazy.Builder qualified as L
 import Database.ODBC.SQLServer
-import Hasura.Backends.MSSQL.Types
+import Hasura.Backends.MSSQL.Types.Instances ()
+import Hasura.Backends.MSSQL.Types.Internal
 import Hasura.Prelude hiding (GT, LT)
 
 --------------------------------------------------------------------------------
