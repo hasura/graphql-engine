@@ -35,11 +35,11 @@
     args:
       source: pg1
       sql: |
-        create table author(
+        create table author_local(
             id serial primary key,
             name text unique
         );
-        INSERT INTO author (name)
+        INSERT INTO author_local (name)
           VALUES ('Author 1'), ('Author 2');
 
 - description: track table
@@ -50,7 +50,7 @@
   query:
     type: pg_track_table
     args:
-      table: author
+      table: author_local
       source: pg1
       configuration:
         custom_name: foo
@@ -190,7 +190,7 @@
   query:
     type: pg_untrack_table
     args:
-      table: author
+      table: author_local
       source: pg1
 
 - description: drop table
@@ -204,7 +204,7 @@
     args:
       source: pg1
       sql: |
-        drop table author;
+        drop table author_local;
 
 - description: PG Drop Source 1
   url: /v1/metadata
