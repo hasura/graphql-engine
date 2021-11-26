@@ -210,6 +210,8 @@ const AddAction: React.FC<AddActionProps> = ({
   };
 
   useEffect(() => {
+    requestUrlErrorOnChange('');
+    requestUrlPreviewOnChange('');
     const onResponse = (data: Record<string, any>) => {
       parseValidateApiData(
         data,
@@ -228,11 +230,7 @@ const AddAction: React.FC<AddActionProps> = ({
       requestUrlErrorOnChange(
         'Please configure your webhook handler to generate request url transform'
       );
-      requestUrlPreviewOnChange('');
-    } else if (!transformState.requestUrl) {
-      requestUrlPreviewOnChange('');
     } else {
-      requestUrlErrorOnChange('');
       dispatch(
         requestAction(
           Endpoints.metadata,
@@ -252,6 +250,8 @@ const AddAction: React.FC<AddActionProps> = ({
   ]);
 
   useEffect(() => {
+    requestBodyErrorOnChange('');
+    requestTransformedBodyOnChange('');
     const onResponse = (data: Record<string, any>) => {
       parseValidateApiData(
         data,
@@ -265,10 +265,11 @@ const AddAction: React.FC<AddActionProps> = ({
       handler,
       transformState.requestBody
     );
-    if (!transformState.requestBody) {
-      requestTransformedBodyOnChange('');
+    if (!handler) {
+      requestBodyErrorOnChange(
+        'Please configure your webhook handler to generate request body transform'
+      );
     } else if (transformState.requestBody && handler) {
-      requestBodyErrorOnChange('');
       dispatch(
         requestAction(
           Endpoints.metadata,
@@ -280,7 +281,7 @@ const AddAction: React.FC<AddActionProps> = ({
         )
       ).then(onResponse, onResponse); // parseValidateApiData will parse both success and error
     }
-  }, [transformState.requestSampleInput, transformState.requestBody]);
+  }, [transformState.requestSampleInput, transformState.requestBody, handler]);
 
   const allowSave =
     !isFetching &&
@@ -335,11 +336,9 @@ const AddAction: React.FC<AddActionProps> = ({
           resetSampleInput={resetSampleInput}
           requestMethodOnChange={requestMethodOnChange}
           requestUrlOnChange={requestUrlOnChange}
-          requestUrlErrorOnChange={requestUrlErrorOnChange}
           requestQueryParamsOnChange={requestQueryParamsOnChange}
           requestAddHeadersOnChange={requestAddHeadersOnChange}
           requestBodyOnChange={requestBodyOnChange}
-          requestBodyErrorOnChange={requestBodyErrorOnChange}
           requestSampleInputOnChange={requestSampleInputOnChange}
           requestContentTypeOnChange={requestContentTypeOnChange}
           requestUrlTransformOnChange={requestUrlTransformOnChange}

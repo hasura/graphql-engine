@@ -1,7 +1,5 @@
 import React from 'react';
-import AceEditor from 'react-ace';
 import Editor from '../../../../Common/Layout/ExpandableEditor/Editor';
-import Tooltip from '../../../../Common/Tooltip/Tooltip';
 
 import Headers, { Header } from '../../../../Common/Headers/Headers';
 import { parseServerHeaders } from '../../../../Common/Headers/utils';
@@ -15,6 +13,9 @@ type HeaderEditorProps = {
   save: (success: VoidCallback, error: VoidCallback) => void;
   styles: Record<string, string>;
 };
+
+const thStyle =
+  'px-md py-sm text-left text-sm font-medium text-gray-600 uppercase tracking-wider';
 
 const HeadersEditor = (props: HeaderEditorProps) => {
   const { setHeaders, headers, styles, save, currentTrigger } = props;
@@ -31,30 +32,46 @@ const HeadersEditor = (props: HeaderEditorProps) => {
   };
 
   const collapsed = () => (
-    <div>
+    <>
       {numExistingHeaders > 0 ? (
-        <div className={styles.modifyHeaders}>
-          <AceEditor
-            mode="json"
-            theme="github"
-            name="headers"
-            value={JSON.stringify(
-              existingHeaders.filter(h => !!h.name),
-              null,
-              4
-            )}
-            minLines={4}
-            maxLines={100}
-            width="100%"
-            showPrintMargin={false}
-            showGutter={false}
-            readOnly
-          />
+        <div className="overflow-x-auto border border-gray-300 rounded mb-sm">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              <tr>
+                <th scope="col" className={thStyle}>
+                  Key
+                </th>
+                <th scope="col" className={thStyle}>
+                  Type
+                </th>
+                <th scope="col" className={thStyle}>
+                  Value
+                </th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {existingHeaders
+                .filter(h => !!h.name)
+                .map(header => (
+                  <tr className="">
+                    <td className="px-3 py-3 whitespace-nowrap font-medium">
+                      {header.name}
+                    </td>
+                    <td className="px-3 py-3 whitespace-nowrap text-gray-600">
+                      {header.type}
+                    </td>
+                    <td className="px-3 py-3 whitespace-nowrap text-gray-600">
+                      {header.value}
+                    </td>
+                  </tr>
+                ))}
+            </tbody>
+          </table>
         </div>
       ) : (
         <div className={styles.modifyProperty}>No headers</div>
       )}
-    </div>
+    </>
   );
 
   const expanded = () => (
@@ -64,22 +81,20 @@ const HeadersEditor = (props: HeaderEditorProps) => {
   );
 
   return (
-    <div className={`${styles.container} ${styles.borderBottom}`}>
-      <div className={styles.modifySection}>
-        <h4 className={styles.modifySectionHeading}>
-          Headers{' '}
-          <Tooltip message="Edit headers to be sent along with the event to your webhook" />
-        </h4>
-        <Editor
-          editorCollapsed={collapsed}
-          editorExpanded={expanded}
-          expandCallback={reset}
-          property="headers"
-          service="modify-trigger"
-          saveFunc={save}
-          styles={styles}
-        />
-      </div>
+    <div className="mb-lg w-6/12">
+      <h2 className="text-lg font-semibold mb-xs flex items-center">Headers</h2>
+      <p className="text-sm mb-sm text-gray-600">
+        Headers Hasura will send to the webhook with the POST request.
+      </p>
+      <Editor
+        editorCollapsed={collapsed}
+        editorExpanded={expanded}
+        expandCallback={reset}
+        property="headers"
+        service="modify-trigger"
+        saveFunc={save}
+        styles={styles}
+      />
     </div>
   );
 };

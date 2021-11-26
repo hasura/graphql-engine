@@ -1,6 +1,5 @@
 import React from 'react';
 import Editor from '../../../../Common/Layout/ExpandableEditor/Editor';
-import Tooltip from '../../../../Common/Tooltip/Tooltip';
 import {
   EventTrigger,
   EventTriggerOperation,
@@ -56,6 +55,11 @@ const OperationEditor = (props: OperationEditorProps) => {
     readOnly: boolean
   ) => (
     <div className={styles.modifyOps}>
+      <div>
+        <label className="block text-gray-600 font-medium mb-sm">
+          Trigger Method
+        </label>
+      </div>
       <div
         className={`${styles.modifyOpsCollapsedContent} ${styles.add_mar_bottom_mid}`}
       >
@@ -67,10 +71,15 @@ const OperationEditor = (props: OperationEditorProps) => {
           />
         </div>
       </div>
+      <div>
+        <label className="block text-gray-600 font-medium mb-xs">
+          Trigger Tables
+        </label>
+        <p className="text-sm text-gray-600 mb-sm">
+          Trigger columns to list to for updates.
+        </p>
+      </div>
       <div className={styles.modifyOpsCollapsedContent}>
-        <div className={`col-md-12 ${styles.padd_remove}`}>
-          Listen columns for update:&nbsp;
-        </div>
         <div className={`col-md-12 ${styles.padd_remove}`}>
           {ops.update ? (
             opCols.map(col => {
@@ -122,10 +131,7 @@ const OperationEditor = (props: OperationEditorProps) => {
   return (
     <div className={`${styles.container} ${styles.borderBottom}`}>
       <div className={styles.modifySection}>
-        <h4 className={styles.modifySectionHeading}>
-          Trigger Operations{' '}
-          <Tooltip message="Edit operations and related columns" />
-        </h4>
+        <h4 className={styles.modifySectionHeading}>Trigger Operations</h4>
         <Editor
           editorCollapsed={collapsed}
           editorExpanded={expanded}

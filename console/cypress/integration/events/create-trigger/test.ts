@@ -12,6 +12,9 @@ import {
   deleteCTTestTrigger,
   deleteCTTestTable,
   passPTCreateTable,
+  createEtTransform,
+  modifyEtTransform,
+  deleteEtTransform,
 } from './spec';
 import { getIndexRoute } from '../../../helpers/dataHelpers';
 
@@ -38,6 +41,9 @@ export const runCreateTriggerTests = () => {
     it('Fails to create duplicate trigger', failCTDuplicateTrigger);
     it('Insert a row and invoke trigger', insertTableRow);
     it("Delete's the test trigger", deleteCTTestTrigger);
+    it('Create Event Trigger With Transform', createEtTransform);
+    it('Update Event Trigger With Transform', modifyEtTransform);
+    it('Delete Event Trigger With Transform', deleteEtTransform);
     it("Delete's the test table", deleteCTTestTable);
   });
 };

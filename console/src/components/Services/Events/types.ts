@@ -2,7 +2,7 @@ import { Action as ReduxAction } from 'redux';
 import { RouteComponentProps } from 'react-router';
 import { Nullable } from '../../Common/utils/tsUtils';
 import { Dispatch } from '../../../types';
-import { ServerHeader } from '../../../metadata/types';
+import { RequestTransform, ServerHeader } from '../../../metadata/types';
 
 export const LOADING_TRIGGERS = 'Events/LOADING_TRIGGERS';
 export const LOADED_TRIGGERS = 'Events/LOADED_TRIGGERS';
@@ -101,6 +101,7 @@ export type EventTrigger = {
     webhook: Nullable<string>;
     webhook_from_env?: Nullable<string>;
   };
+  request_transform?: RequestTransform;
 };
 
 /*
