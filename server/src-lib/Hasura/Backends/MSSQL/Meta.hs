@@ -15,7 +15,7 @@ import Database.MSSQL.Transaction qualified as Tx
 import Database.ODBC.SQLServer qualified as ODBC
 import Hasura.Backends.MSSQL.Connection
 import Hasura.Backends.MSSQL.Instances.Types ()
-import Hasura.Backends.MSSQL.Types
+import Hasura.Backends.MSSQL.Types.Internal
 import Hasura.Base.Error
 import Hasura.Prelude
 import Hasura.RQL.Types.Column

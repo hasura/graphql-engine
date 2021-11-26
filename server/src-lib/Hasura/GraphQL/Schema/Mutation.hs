@@ -3,12 +3,12 @@
 module Hasura.GraphQL.Schema.Mutation
   ( insertIntoTable,
     insertOneIntoTable,
-    updateTable,
-    updateTableByPk,
     deleteFromTable,
     deleteFromTableByPk,
     mkDefaultRelationshipParser,
     defaultConflictObject,
+    mutationSelectionSet,
+    primaryKeysArguments,
   )
 where
 
@@ -35,8 +35,6 @@ import Hasura.RQL.IR.Delete qualified as IR
 import Hasura.RQL.IR.Insert qualified as IR
 import Hasura.RQL.IR.Returning qualified as IR
 import Hasura.RQL.IR.Select qualified as IR
-import Hasura.RQL.IR.Update
-import Hasura.RQL.IR.Update qualified as IR
 import Hasura.RQL.Types
 import Language.GraphQL.Draft.Syntax qualified as G
 
@@ -394,106 +392,6 @@ conflictConstraint constraints sourceName tableInfo =
     pure $ P.enum enumName (Just enumDesc) constraintEnumValues
   where
     tableName = tableInfoName tableInfo
-
--- update
-
--- | Construct a root field, normally called update_tablename, that can be used
--- to update rows in a DB table specified by filters. Only returns a parser if
--- there are columns the user is allowed to update; otherwise returns Nothing.
-updateTable ::
-  forall b r m n.
-  MonadBuildSchema b r m n =>
-  -- | backend-specific data needed to perform an update mutation
-  InputFieldsParser n (BackendUpdate b (UnpreparedValue b)) ->
-  -- | table source
-  SourceName ->
-  -- | table info
-  TableInfo b ->
-  -- | field display name
-  G.Name ->
-  -- | field description, if any
-  Maybe G.Description ->
-  -- | update permissions of the table
-  UpdPermInfo b ->
-  -- | select permissions of the table (if any)
-  Maybe (SelPermInfo b) ->
-  m (FieldParser n (IR.AnnotatedUpdateG b (IR.RemoteSelect UnpreparedValue) (UnpreparedValue b)))
-updateTable backendUpdate sourceName tableInfo fieldName description updatePerms selectPerms = do
-  let tableName = tableInfoName tableInfo
-      columns = tableColumns tableInfo
-      whereName = $$(G.litName "where")
-      whereDesc = "filter the rows which have to be updated"
-  whereArg <- P.field whereName (Just whereDesc) <$> boolExp sourceName tableInfo selectPerms
-  selection <- mutationSelectionSet sourceName tableInfo selectPerms
-  let argsParser = liftA2 (,) backendUpdate whereArg
-  pure $
-    P.subselection fieldName description argsParser selection
-      <&> mkUpdateObject tableName columns updatePerms . fmap IR.MOutMultirowFields
-
--- | Construct a root field, normally called 'update_tablename_by_pk', that can be used
--- to update a single in a DB table, specified by primary key. Only returns a
--- parser if there are columns the user is allowed to update and if the user has
--- select permissions on all primary keys; otherwise returns Nothing.
-updateTableByPk ::
-  forall b r m n.
-  MonadBuildSchema b r m n =>
-  -- | backend-specific data needed to perform an update mutation
-  InputFieldsParser n (BackendUpdate b (UnpreparedValue b)) ->
-  -- | table source
-  SourceName ->
-  -- | table info
-  TableInfo b ->
-  -- | field display name
-  G.Name ->
-  -- | field description, if any
-  Maybe G.Description ->
-  -- | update permissions of the table
-  UpdPermInfo b ->
-  -- | select permissions of the table
-  SelPermInfo b ->
-  m (Maybe (FieldParser n (IR.AnnotatedUpdateG b (IR.RemoteSelect UnpreparedValue) (UnpreparedValue b))))
-updateTableByPk backendUpdate sourceName tableInfo fieldName description updatePerms selectPerms = runMaybeT $ do
-  let columns = tableColumns tableInfo
-      tableName = tableInfoName tableInfo
-  tableGQLName <- getTableGQLName tableInfo
-  pkArgs <- MaybeT $ primaryKeysArguments tableInfo selectPerms
-  lift $ do
-    selection <- tableSelectionSet sourceName tableInfo selectPerms
-    pkObjectName <- P.mkTypename $ tableGQLName <> $$(G.litName "_pk_columns_input")
-    let pkFieldName = $$(G.litName "pk_columns")
-        pkObjectDesc = G.Description $ "primary key columns input for table: " <> G.unName tableGQLName
-        pkParser = P.object pkObjectName (Just pkObjectDesc) pkArgs
-        argsParser = do
-          operators <- backendUpdate
-          primaryKeys <- P.field pkFieldName Nothing pkParser
-          pure (operators, primaryKeys)
-    pure $
-      P.subselection fieldName description argsParser selection
-        <&> mkUpdateObject tableName columns updatePerms . fmap IR.MOutSinglerowObject
-
-mkUpdateObject ::
-  Backend b =>
-  TableName b ->
-  [ColumnInfo b] ->
-  UpdPermInfo b ->
-  ( ( BackendUpdate b (UnpreparedValue b),
-      AnnBoolExp b (UnpreparedValue b)
-    ),
-    IR.MutationOutputG b (IR.RemoteSelect UnpreparedValue) (UnpreparedValue b)
-  ) ->
-  IR.AnnotatedUpdateG b (IR.RemoteSelect UnpreparedValue) (UnpreparedValue b)
-mkUpdateObject table columns updatePerms ((backendIR, whereExp), mutationOutput) =
-  IR.AnnotatedUpdateG
-    { IR._auTable = table,
-      IR._auBackend = backendIR,
-      IR._auWhere = (permissionFilter, whereExp),
-      IR._auCheck = checkExp,
-      IR._auOutput = mutationOutput,
-      IR._auAllCols = columns
-    }
-  where
-    permissionFilter = fmap partialSQLExpToUnpreparedValue <$> upiFilter updatePerms
-    checkExp = maybe annBoolExpTrue ((fmap . fmap) partialSQLExpToUnpreparedValue) $ upiCheck updatePerms
 
 -- delete
 

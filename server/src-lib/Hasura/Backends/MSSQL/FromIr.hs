@@ -41,7 +41,8 @@ import Data.Proxy
 import Data.Text qualified as T
 import Database.ODBC.SQLServer qualified as ODBC
 import Hasura.Backends.MSSQL.Instances.Types ()
-import Hasura.Backends.MSSQL.Types as TSQL
+import Hasura.Backends.MSSQL.Types.Insert as TSQL (MSSQLExtraInsertData (..))
+import Hasura.Backends.MSSQL.Types.Internal as TSQL
 import Hasura.Prelude
 import Hasura.RQL.IR qualified as IR
 import Hasura.RQL.Types.Column qualified as IR
