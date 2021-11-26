@@ -768,6 +768,8 @@ tableStreamArguments sourceName tableInfo selectPermissions = do
           _ -> parseError "multiple column field cursor are not supported yet"
     orderingArg <- orderingParser
     batchSizeArg <- cursorBatchSizeArg
+    -- using the `orderingArg` and the `cursorArg` to create the cursor
+    -- boolean expression.
     pure $
       IR.SelectStreamArgsG whereArg batchSizeArg cursorArg (cursorBoolExp cursorArg orderingArg) (orderBy orderingArg)
   where
