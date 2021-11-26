@@ -42,7 +42,7 @@ Let's say we have the following database schema:
   vehicle_location (
     id INT PRIMARY KEY,
     location TEXT,
-    timestamp TIMESTAMP,
+    time_stamp TIMESTAMP,
     /* used to create relationship 'locations' for vehicle */
     vehicle_id INT FOREIGN KEY REFERENCES vehicle(id)
   )
@@ -54,33 +54,34 @@ Now we can use the following subscription to fetch the latest location of a vehi
   :query:
     # $vehicleId = 3
     subscription getLocation($vehicleId: Int!) {
-      vehicle(where: {id: {_eq: $vehicleId}}) {
+      vehicle_location(where: {id: {_eq: $vehicleId}}) {
         id
-        vehicle_number
-        locations(order_by: {timestamp: desc}, limit: 1) {
-          location
-          timestamp
+        locations {
+          vehicle_number       
         }
+	location
       }
     }
   :response:
     {
       "data": {
-        "vehicle": [
+        "vehicle_location": [
           {
             "id": 3,
-            "vehicle_number": "KA04AD4583",
             "locations": [
               {
-                "location": "(12.93623,77.61701)",
-                "timestamp": "2018-09-05T06:52:44.383588+00:00"
-              }
+                "vehicle_number": "KA04AD4583"
+              },
+	      "location": "(31.1657, 10.4115)"
             ]
           }
         ]
       }
     }
-
+  :variables:
+    {
+     "$vehicleId": 3
+    }
 
 Check this `sample app <https://realtime-location-tracking.demo.hasura.app/>`__ for a working demo
 (`source code <https://github.com/hasura/graphql-engine/tree/master/community/sample-apps/realtime-location-tracking>`__).
@@ -109,9 +110,9 @@ Let's say we have the following database schema:
 
   message (
     id INT PRIMARY KEY,
-    text TEXT,
-    timestamp TIMESTAMP,
-    /* used to create relationship 'author' for message */
+    texts TEXT,
+    time_stamp TIMESTAMP default now(),
+    /* used to create relationship 'author' with the 'user' table */
     user_id INT FOREIGN KEY REFERENCES user(id)
   )
 
@@ -122,8 +123,8 @@ Now we can use the following subscription to display the latest messages in a ch
   :query:
     subscription getMessages {
       message(order_by: {timestamp: desc}) {
-        text
-        timestamp
+        texts
+        time_stamp
         author {
           username
         }
@@ -134,23 +135,23 @@ Now we can use the following subscription to display the latest messages in a ch
       "data": {
         "message": [
           {
-            "text": "I am fine.",
-            "timestamp": "2018-09-05T10:52:23.522223+00:00",
-            "author": {
+            "texts": "I am fine, and you?",
+            "timestamp": "2021-11-29T07:42:56.689135",
+            "user": {
               "username": "Jane"
             }
           },
           {
             "text": "Hi! How are you?",
-            "timestamp": "2018-09-05T10:52:04.75283+00:00",
-            "author": {
-              "username": "Jose"
+            "timestamp": "2021-11-29T07:42:19.506049",
+            "user": {
+              "username": "Musk"
             },
           },
           {
             "text": "Hi!",
-            "timestamp": "2018-09-05T10:51:43.622839+00:00",
-            "author": {
+            "timestamp": "2021-11-29T07:38:52.347136",
+            "user": {
               "username": "Jane"
             }
           }
