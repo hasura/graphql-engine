@@ -89,6 +89,7 @@ module Hasura.RQL.IR.Select
     SelectFrom,
     SelectFromG (..),
     SourceRelationshipSelection (..),
+    StreamColumnItem (..),
     TableAggregateField,
     TableAggregateFieldG (..),
     TableAggregateFields,
@@ -149,6 +150,7 @@ import Hasura.RQL.Types.ResultCustomization
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.Backend
 import Language.GraphQL.Draft.Syntax qualified as G
+import Hasura.GraphQL.Parser (UnpreparedValue)
 
 -- Root selection
 
@@ -459,6 +461,8 @@ instance (Backend b) => Hashable (AnnotatedAggregateOrderBy b)
 type AnnotatedOrderByItemG b v = OrderByItemG b (AnnotatedOrderByElement b v)
 
 type AnnotatedOrderByItem b = AnnotatedOrderByItemG b (SQLExpression b)
+
+data StreamColumnItem b = StreamColumnItem !(UnpreparedValue b) !CursorOrdering
 
 -- Fields
 
