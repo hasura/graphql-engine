@@ -907,6 +907,12 @@ test-suite tests-hspec
     , th-lift
     , yaml
     , postgresql-simple
+    , persistent
+    , persistent-mysql
+    , persistent-postgresql
+    , persistent-template
+    , monad-logger
+    , unliftio-core
   hs-source-dirs: tests-hspec
   -- Turning off optimizations is intentional; tests aren't
   -- performance sensitive and waiting for compilation is a problem.

@@ -4,16 +4,21 @@
 module Harness.Mysql
   ( livenessCheck,
     run_,
+    runPersistent,
   )
 where
 
 import Control.Concurrent
 import Control.Exception
-import Data.Functor
+import Control.Monad.IO.Unlift
+import Control.Monad.Logger
+import Control.Monad.Reader
 import Data.String
 import Database.MySQL.Simple as Mysql
+import Database.Persist.MySQL qualified as Mysql
+import Database.Persist.Sql
 import GHC.Stack
-import Harness.Constants qualified as Constants
+import Harness.Constants as Constants
 import System.Process.Typed
 import Prelude
 
@@ -54,4 +59,20 @@ run_ query' =
                 query'
               ]
           )
+    )
+
+-- | Run a persistent action against mysql.
+runPersistent ::
+  (MonadUnliftIO m, HasCallStack) =>
+  ReaderT SqlBackend (NoLoggingT m) a ->
+  m a
+runPersistent actions =
+  runNoLoggingT
+    ( Mysql.withMySQLConn
+        Constants.mysqlConnectInfo
+        ( \conn -> do
+            a <- runReaderT actions conn
+            liftIO $ connCommit conn (error "Invalid use of connCommit.")
+            pure a
+        )
     )
