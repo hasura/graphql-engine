@@ -15,11 +15,9 @@ type ConfigureTransformationProps = {
   resetSampleInput: () => void;
   requestMethodOnChange: (requestMethod: RequestTransformMethod) => void;
   requestUrlOnChange: (requestUrl: string) => void;
-  requestUrlErrorOnChange: (requestUrlError: string) => void;
   requestQueryParamsOnChange: (requestQueryParams: KeyValuePair[]) => void;
   requestAddHeadersOnChange: (requestAddHeaders: KeyValuePair[]) => void;
   requestBodyOnChange: (requestBody: string) => void;
-  requestBodyErrorOnChange: (requestBodyError: string) => void;
   requestSampleInputOnChange: (requestSampleInput: string) => void;
   requestContentTypeOnChange: (
     requestContentType: RequestTransformContentType
@@ -34,11 +32,9 @@ const ConfigureTransformation: React.FC<ConfigureTransformationProps> = ({
   resetSampleInput,
   requestMethodOnChange,
   requestUrlOnChange,
-  requestUrlErrorOnChange,
   requestQueryParamsOnChange,
   requestAddHeadersOnChange,
   requestBodyOnChange,
-  requestBodyErrorOnChange,
   requestSampleInputOnChange,
   requestContentTypeOnChange,
   requestUrlTransformOnChange,
@@ -104,7 +100,6 @@ const ConfigureTransformation: React.FC<ConfigureTransformationProps> = ({
             requestAddHeaders={requestAddHeaders}
             requestMethodOnChange={requestMethodOnChange}
             requestUrlOnChange={requestUrlOnChange}
-            requestUrlErrorOnChange={requestUrlErrorOnChange}
             requestQueryParamsOnChange={requestQueryParamsOnChange}
             requestAddHeadersOnChange={requestAddHeadersOnChange}
           />
@@ -141,7 +136,6 @@ const ConfigureTransformation: React.FC<ConfigureTransformationProps> = ({
             webhookUrl={webhookUrl}
             resetSampleInput={resetSampleInput}
             requestBodyOnChange={requestBodyOnChange}
-            requestBodyErrorOnChange={requestBodyErrorOnChange}
             requestSampleInputOnChange={requestSampleInputOnChange}
             requestContentTypeOnChange={requestContentTypeOnChange}
           />

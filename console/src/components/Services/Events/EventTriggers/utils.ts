@@ -1,6 +1,7 @@
 import { LocalEventTriggerState } from './state';
 import { BaseTable } from '../../../../dataSources/types';
 import { isURLTemplated, isValidURL } from '../../../Common/utils/jsUtils';
+import { ETOperationColumn, EventTriggerOperation } from '../types';
 
 // check 2xx success status codes
 
@@ -116,4 +117,97 @@ export const etInvocationLogsTable: BaseTable = {
     { column_name: 'response', data_type: 'text' },
     { column_name: 'created_at', data_type: 'timestamptz' },
   ],
+};
+
+type ColVals = string | number | boolean;
+
+const getValueFromDataType = (type: string, value: string): ColVals => {
+  const maxNum = 20;
+  if (type === 'integer' || type === 'numeric') {
+    return Math.floor(Math.random() * maxNum);
+  } else if (type === 'boolean') {
+    return true;
+  } else if (type === 'date') {
+    return new Date().toISOString();
+  }
+  return value;
+};
+
+const getColumnDataFromOpCols = (
+  operationColumns: ETOperationColumn[]
+): Record<string, ColVals> => {
+  const colData: Record<string, ColVals> = {};
+  operationColumns.forEach(op => {
+    if (op.enabled) {
+      colData[op.name] = getValueFromDataType(op.type, op.name);
+    }
+  });
+  return colData;
+};
+
+const getDataFromOpCols = (
+  opValue: string,
+  operationColumns: ETOperationColumn[]
+) => {
+  const opData: {
+    old: Record<string, ColVals> | null;
+    new: Record<string, ColVals> | null;
+  } = { old: null, new: null };
+  if (opValue === 'INSERT' || opValue === 'UPDATE' || opValue === 'MANUAL') {
+    opData.new = getColumnDataFromOpCols(operationColumns);
+  }
+  if (opValue === 'UPDATE' || opValue === 'DELETE') {
+    opData.old = getColumnDataFromOpCols(operationColumns);
+  }
+  return opData;
+};
+
+const getOperationValue = (op: Record<EventTriggerOperation, boolean>) => {
+  if (op.update) {
+    return 'UPDATE';
+  } else if (op.insert) {
+    return 'INSERT';
+  } else if (op.delete) {
+    return 'DELETE';
+  } else if (op.enable_manual) {
+    return 'MANUAL';
+  }
+  return '';
+};
+
+export const getEventRequestSampleInput = (
+  name?: string,
+  tableName?: string,
+  schemaName?: string,
+  retries?: number,
+  operationColumns?: ETOperationColumn[],
+  operations?: Record<EventTriggerOperation, boolean>
+) => {
+  const opValue = operations ? getOperationValue(operations) : '';
+  const opData =
+    opValue && operationColumns
+      ? getDataFromOpCols(opValue, operationColumns)
+      : { old: null, new: null };
+
+  const obj = {
+    event: {
+      op: opValue,
+      data: opData,
+      trace_context: {
+        trace_id: '501ad47ed3570385',
+        span_id: 'd586cc98cee55ad1',
+      },
+    },
+    created_at: new Date().toISOString(),
+    id: '2c173942-a860-4a4c-ab71-9a29e2384d54',
+    delivery_info: { max_retries: retries ?? 0, current_retry: 0 },
+    trigger: { name: name ?? 'triggerName' },
+    table: {
+      schema: schemaName ?? 'schemaName',
+      name: tableName ?? 'tableName',
+    },
+  };
+
+  const value = JSON.stringify(obj, null, 2);
+  return value;
 };
