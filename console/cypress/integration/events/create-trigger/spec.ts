@@ -15,9 +15,9 @@ import {
 import {
   setMetaData,
   validateCT,
-  validateCTrigger,
   validateInsert,
   ResultType,
+  validateCTrigger,
 } from '../../validators/validators';
 import { setPromptValue } from '../../../helpers/common';
 import {
@@ -55,7 +55,7 @@ const statements = {
   `,
 };
 
-const createETForm = () => {
+const createETForm = (allCols: boolean) => {
   // Set trigger name and select table
   cy.getBySel('trigger-name').clear().type(getTriggerName(0, testName));
   cy.getBySel('select-source').select('default');
@@ -73,6 +73,10 @@ const createETForm = () => {
 
   // advanced settings
   cy.getBySel('advanced-settings').click();
+  if (!allCols) {
+    cy.getBySel('choose-column').click();
+    cy.getBySel('select-column').first().click();
+  }
 
   // retry configuration
   cy.getBySel('no-of-retries').clear().type(getNoOfRetries());
@@ -139,8 +143,10 @@ export const failCTWithoutData = () => {
   validateCT(getTriggerName(0, testName), ResultType.FAILURE);
 };
 
-export const passCT = () => {
-  createETForm();
+export const passCT1 = () => {
+  // select choose column from the radio input
+  const allCols = false;
+  createETForm(allCols);
 
   //  Click on create
   cy.getBySel('trigger-create').click();
@@ -159,7 +165,36 @@ export const passCT = () => {
     getTriggerName(0, testName),
     getTableName(0, testName),
     'public',
-    ResultType.SUCCESS
+    ResultType.SUCCESS,
+    allCols
+  );
+};
+
+export const passCT2 = () => {
+  cy.getBySel('data-sidebar-add').click();
+  // select all columns from the radio input
+  const allCols = true;
+  createETForm(allCols);
+
+  //  Click on create
+  cy.getBySel('trigger-create').click();
+  cy.wait(10000);
+  //  Check if the trigger got created and navigated to processed events page
+  cy.url().should(
+    'eq',
+    `${baseUrl}${EVENT_TRIGGER_INDEX_ROUTE}/${getTriggerName(
+      0,
+      testName
+    )}/modify`
+  );
+  cy.getBySel(getTriggerName(0, testName));
+  //   Validate
+  validateCTrigger(
+    getTriggerName(0, testName),
+    getTableName(0, testName),
+    'public',
+    ResultType.SUCCESS,
+    allCols
   );
 };
 
@@ -272,7 +307,7 @@ export const createEtTransform = () => {
   cy.url().should('eq', `${baseUrl}${EVENT_TRIGGER_INDEX_ROUTE}/add`);
 
   // fill up the basic event trigger form
-  createETForm();
+  createETForm(true);
 
   // open request transform section
   toggleRequestTransformSection();

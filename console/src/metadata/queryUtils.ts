@@ -450,9 +450,9 @@ export const generateCreateEventTriggerQuery = (
       : null,
     update: state.operations.update
       ? {
-          columns: state.operationColumns
-            .filter(c => !!c.enabled)
-            .map(c => c.name),
+          columns: state.isAllColumnChecked
+            ? '*'
+            : state.operationColumns.filter(c => !!c.enabled).map(c => c.name),
         }
       : null,
     delete: state.operations.delete

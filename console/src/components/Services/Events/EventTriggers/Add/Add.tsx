@@ -361,6 +361,7 @@ const Add: React.FC<Props> = props => {
                   state={state}
                   databaseInfo={databaseInfo}
                   dataSourcesList={dataSourcesList}
+                  readOnlyMode={readOnlyMode}
                   handleTriggerNameChange={handleTriggerNameChange}
                   handleWebhookValueChange={handleWebhookValueChange}
                   handleWebhookTypeChange={handleWebhookTypeChange}
@@ -371,6 +372,7 @@ const Add: React.FC<Props> = props => {
                   handleOperationsColumnsChange={handleOperationsColumnsChange}
                   handleRetryConfChange={handleRetryConfChange}
                   handleHeadersChange={handleHeadersChange}
+                  handleToggleAllColumn={setState.toggleAllColumnChecked}
                 />
                 <ConfigureTransformation
                   webhookUrl={webhook?.value}

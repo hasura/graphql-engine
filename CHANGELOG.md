@@ -9,6 +9,7 @@
 - server: fix to allow remote schema response to contain an "extensions" field (#7143)
 - server: support database-to-database joins with BigQuery
 - console: add comments to tracked functions
+- console: add select all columns option while selecting the columns in event triggers
 - console: add request transforms for events
 - metadata SDK: add type definitions for config v3
 - cli: fix cli-console failing to add migrations if there are tabs in SQL body (#7362)
