@@ -326,6 +326,8 @@ const Modify: React.FC<Props> = props => {
             setOperationColumns={setState.operationColumns}
             styles={styles}
             save={saveWrapper('ops')}
+            isAllColumnChecked={state.isAllColumnChecked}
+            handleColumnRadioButton={setState.toggleAllColumnChecked}
           />
           <RetryConfEditor
             conf={state.retryConf}

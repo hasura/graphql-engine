@@ -22,6 +22,7 @@ type CreateETFormProps = {
   state: LocalEventTriggerState;
   databaseInfo: DatabaseInfo;
   dataSourcesList: DataSource[];
+  readOnlyMode: boolean;
   handleTriggerNameChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   handleWebhookValueChange: (v: string) => void;
   handleWebhookTypeChange: (e: React.BaseSyntheticEvent) => void;
@@ -32,6 +33,7 @@ type CreateETFormProps = {
   handleOperationsColumnsChange: (oc: ETOperationColumn[]) => void;
   handleRetryConfChange: (r: RetryConf) => void;
   handleHeadersChange: (h: Header[]) => void;
+  handleToggleAllColumn: () => void;
 };
 
 const CreateETForm: React.FC<CreateETFormProps> = props => {
@@ -45,9 +47,11 @@ const CreateETForm: React.FC<CreateETFormProps> = props => {
       retryConf,
       operations,
       operationColumns,
+      isAllColumnChecked,
     },
     databaseInfo,
     dataSourcesList,
+    readOnlyMode,
     handleTriggerNameChange,
     handleDatabaseChange,
     handleSchemaChange,
@@ -58,6 +62,7 @@ const CreateETForm: React.FC<CreateETFormProps> = props => {
     handleOperationsColumnsChange,
     handleRetryConfChange,
     handleHeadersChange,
+    handleToggleAllColumn,
   } = props;
 
   const supportedDrivers = getSupportedDrivers('events.triggers.add');
@@ -195,6 +200,9 @@ const CreateETForm: React.FC<CreateETFormProps> = props => {
                 <ColumnList
                   operationColumns={operationColumns}
                   table={table}
+                  isAllColumnChecked={isAllColumnChecked}
+                  readOnlyMode={readOnlyMode}
+                  handleToggleAllColumn={handleToggleAllColumn}
                   handleOperationsColumnsChange={handleOperationsColumnsChange}
                 />
               </div>
