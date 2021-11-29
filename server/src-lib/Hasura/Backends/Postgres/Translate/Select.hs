@@ -1458,7 +1458,7 @@ mkStreamSQLSelect (AnnSelectStreamG () fields from perm args strfyNum) =
               -- cursor's boolean expression.
               Just $ maybe (_ssaCursorBoolExp args) (andAnnBoolExps (_ssaCursorBoolExp args)) $ _ssaWhere args,
             _saOrderBy = orderByItems,
-            _saLimit = _ssaBatchSize args
+            _saLimit = Just $ _ssaBatchSize args
           }
       sqlSelect = AnnSelectG fields from perm selectArgs strfyNum
       permLimitSubQuery = PLSQNotRequired

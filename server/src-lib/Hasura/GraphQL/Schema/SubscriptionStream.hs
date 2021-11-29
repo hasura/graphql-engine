@@ -1,6 +1,8 @@
 {-# LANGUAGE ApplicativeDo #-}
 module Hasura.GraphQL.Schema.SubscriptionStream
-  ( tableStreamCursorArg )
+  ( tableStreamCursorArg,
+    cursorBatchSizeArg
+  )
 where
 
 import Data.Text.Extended ((<>>))
@@ -21,6 +23,17 @@ import Hasura.RQL.Types
 import Language.GraphQL.Draft.Syntax qualified as G
 import Hasura.Base.Error (QErr)
 import Hasura.GraphQL.Schema.Table (getTableGQLName, tableSelectColumns)
+
+cursorBatchSizeArg ::
+  forall n.
+  MonadParse n =>
+  InputFieldsParser n Int
+cursorBatchSizeArg =
+  fromIntegral <$>
+    P.field batchSizeName batchSizeDesc P.nonNegativeInt
+  where
+    batchSizeName = $$(G.litName "batch_size")
+    batchSizeDesc = Just $ G.Description "maximum number of rows returned in a single batch"
 
 cursorOrderingArgParser ::
   forall n m r.

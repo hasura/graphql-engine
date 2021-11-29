@@ -878,18 +878,6 @@ tableLimitArg =
     limitName = $$(G.litName "limit")
     limitDesc = Just $ G.Description "limit the number of rows returned"
 
-cursorBatchSizeArg ::
-  forall n.
-  MonadParse n =>
-  InputFieldsParser n (Maybe Int)
-cursorBatchSizeArg =
-  fmap (fmap fromIntegral . join) $
-    P.fieldOptional batchSizeName batchSizeDesc $
-      P.nullable P.nonNegativeInt
-  where
-    batchSizeName = $$(G.litName "batch_size")
-    batchSizeDesc = Just $ G.Description "maximum number of rows returned in a single batch"
-
 -- | Argument to skip some rows, in conjunction with order_by
 -- > offset: BigInt
 tableOffsetArg ::
