@@ -1,10 +1,11 @@
+{-# LANGUAGE ApplicativeDo #-}
 module Hasura.GraphQL.Schema.SubscriptionStream
-  (  )
+  ( tableStreamCursorArg )
 where
 
+import Data.Text.Extended ((<>>))
 import Data.Has
 import Data.List.NonEmpty qualified as NE
-import Data.Text.Extended
 import Hasura.GraphQL.Parser
   ( InputFieldsParser,
     Kind (..),
@@ -13,17 +14,13 @@ import Hasura.GraphQL.Parser
   )
 import Hasura.GraphQL.Parser qualified as P
 import Hasura.GraphQL.Parser.Class
-import Hasura.GraphQL.Parser.Schema (Typename (..))
 import Hasura.GraphQL.Schema.Backend
-import Hasura.GraphQL.Schema.Common
-import Hasura.GraphQL.Schema.Table
 import Hasura.Prelude
-import Hasura.RQL.IR.OrderBy qualified as IR
 import Hasura.RQL.IR.Select qualified as IR
 import Hasura.RQL.Types
 import Language.GraphQL.Draft.Syntax qualified as G
-import Hasura.GraphQL.Parser.Internal.Input (InputFieldsParser(InputFieldsParser))
 import Hasura.Base.Error (QErr)
+import Hasura.GraphQL.Schema.Table (getTableGQLName, tableSelectColumns)
 
 cursorOrderingArgParser ::
   forall n m r.
@@ -61,13 +58,13 @@ streamColumnParserArg ::
   forall b n m r.
   (BackendSchema b, MonadSchema n m, Has P.MkTypename r, MonadReader r m, MonadError QErr m) =>
   ColumnInfo b ->
-  m (InputFieldsParser n (UnpreparedValue b))
+  m (InputFieldsParser n (Maybe (UnpreparedValue b)))
 streamColumnParserArg colInfo = do
   fieldParser <- typedParser colInfo
   let fieldName = pgiName colInfo
       fieldDesc = pgiDescription colInfo
   pure do
-    P.field fieldName fieldDesc fieldParser
+    P.fieldOptional fieldName fieldDesc fieldParser
   where
     typedParser columnInfo = do
       colParser <- columnParser (pgiType columnInfo) (G.Nullability $ pgiIsNullable columnInfo)
@@ -76,54 +73,47 @@ streamColumnParserArg colInfo = do
 
 tableStreamColumnArg ::
   forall n m r b.
-  (MonadBuildSchema b r m n, Monad (InputFieldsParser n)) =>
+  (BackendSchema b, MonadSchema n m, Has P.MkTypename r, MonadReader r m, MonadError QErr m) =>
   ColumnInfo b ->
-  m (InputFieldsParser n (IR.StreamColumnItem b))
+  m (InputFieldsParser n (Maybe (IR.StreamColumnItem b (UnpreparedValue b))))
 tableStreamColumnArg colInfo = do
   cursorOrderingParser <- cursorOrderingArg
   streamColumnParser <- streamColumnParserArg colInfo
-  pure do
-    columnArg <- streamColumnParser
+  pure $ do
     orderingArg <- cursorOrderingParser
-    pure $ IR.StreamColumnItem columnArg (fromMaybe COAscending orderingArg)
+    columnArg <- streamColumnParser
+    pure $ IR.StreamColumnItem orderingArg colInfo <$> columnArg
 
--- streamingCursorExp ::
---   forall m n r b.
---   (BackendSchema b, MonadSchema n m, MonadTableInfo r m, MonadRole r m, Has P.MkTypename r) =>
---   SourceName ->
---   TableInfo b ->
---   SelPermInfo b ->
---   m (InputFieldsParser n [(ColumnInfo b, (UnpreparedValue b, CursorOrdering))])
--- streamingCursorExp sourceName tableInfo selectPermissions = memoizeOn 'streamingCursorExp (sourceName, tableInfoName tableInfo) $ do
---   tableGQLName <- getTableGQLName tableInfo
---   name <- P.mkTypename $ tableGQLName <> $$(G.litName "_stream_cursor_input")
---   let description =
---         G.Description $
---           "Cursor input options when streaming data from " <> tableInfoName tableInfo <<> "."
---   columnInfos <- tableSelectColumns sourceName tableInfo selectPermissions
---   fields <-
---     for columnInfos $ \columnInfo -> do
---       let fieldName = pgiName columnInfo
---           fieldDesc = pgiDescription columnInfo
---       objName <- P.mkTypename $ tableGQLName <> $$(G.litName "_") <> fieldName <> $$(G.litName "_streaming_column")
---       fieldParser <- typedParser columnInfo
---       let fieldInputField = P.field fieldName fieldDesc fieldParser
---           orderingInputField = P.
---       pure $
---         P.fieldOptional fieldName (Just fieldDesc) $ do
---           P.object objName (Just $ G.Description $ "streaming input object for the " <> tableGQLName <<> "'s column: " <<> fieldName)
---   pure []
---   where
---     typedParser columnInfo =
---       fmap (P.mkCursorParameter (pgiName columnInfo)) <$> columnParser (pgiType columnInfo) (G.Nullability $ pgiIsNullable columnInfo)
+tableStreamCursorExp ::
+  forall m n r b.
+  (BackendSchema b, MonadSchema n m, MonadTableInfo r m, MonadRole r m, Has P.MkTypename r) =>
+  SourceName ->
+  TableInfo b ->
+  SelPermInfo b ->
+  m (Parser 'Input n [(IR.StreamColumnItem b (UnpreparedValue b))])
+tableStreamCursorExp sourceName tableInfo selectPermissions =
+  memoizeOn 'tableStreamCursorExp (sourceName, tableInfoName tableInfo) $ do
+  tableGQLName <- getTableGQLName tableInfo
+  columnInfos <- tableSelectColumns sourceName tableInfo selectPermissions
+  objName <- P.mkTypename $ tableGQLName <> $$(G.litName ("_stream_cursor_input"))
+  let description =
+        G.Description $ "Streaming cursor of the table " <>> tableGQLName
+  columnParsers <- sequenceA <$> traverse tableStreamColumnArg columnInfos
+  pure $ P.object objName (Just description) columnParsers <&> catMaybes
 
---     mkStreamColParser ::
---       ColumnInfo b ->
---       m (InputFieldsParser n (UnpreparedValue b, CursorOrdering))
---     mkStreamColParser colInfo = do
---       orderingParser <- cursorOrderingArgParser
---       valueParser <- typedParser colInfo
---       pure do
---         orderingArg <- orderingParser
---         valueArg <- valueParser
---         pure (valueArg, orderingArg)
+tableStreamCursorArg ::
+  forall b r m n.
+  MonadBuildSchema b r m n =>
+  SourceName ->
+  TableInfo b ->
+  SelPermInfo b ->
+  m (InputFieldsParser n [IR.StreamColumnItem b (UnpreparedValue b)])
+tableStreamCursorArg sourceName tableInfo selectPermissions = do
+  cursorParser <- tableStreamCursorExp sourceName tableInfo selectPermissions
+  pure $ do
+    cursorArgs <-
+      P.field cursorName cursorDesc $ P.list $ P.nullable cursorParser
+    pure $ concat $ catMaybes cursorArgs
+  where
+    cursorName = $$(G.litName "cursor")
+    cursorDesc = Just $ G.Description "cursor to stream the results returned by the query"

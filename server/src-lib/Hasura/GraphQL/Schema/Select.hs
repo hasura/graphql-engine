@@ -74,6 +74,7 @@ import Hasura.GraphQL.Schema.BoolExp
 import Hasura.GraphQL.Schema.Common
 import Hasura.GraphQL.Schema.OrderBy
 import Hasura.GraphQL.Schema.Remote
+import Hasura.GraphQL.Schema.SubscriptionStream
 import {-# SOURCE #-} Hasura.GraphQL.Schema.RemoteSource
 import Hasura.GraphQL.Schema.Table
 import Hasura.Prelude
@@ -84,6 +85,7 @@ import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.Server.Utils (executeJSONPath)
 import Hasura.Session
 import Language.GraphQL.Draft.Syntax qualified as G
+
 
 --------------------------------------------------------------------------------
 -- Top-level functions.
@@ -756,31 +758,27 @@ tableStreamArguments sourceName tableInfo selectPermissions = do
   whereParser <- tableWhereArg sourceName tableInfo selectPermissions
   cursorParser <-
     tableStreamCursorArg sourceName tableInfo selectPermissions
-
-  orderingParser <- cursorOrderingArg
   pure $ do
     whereArg <- whereParser
     cursorArg <-
-      cursorParser `P.bindFields` \cols ->
-        case Map.toList cols of
-          [] -> parseError "one column field is expected"
-          [c] -> pure c
-          _ -> parseError "multiple column field cursor are not supported yet"
-    orderingArg <- orderingParser
+      cursorParser `P.bindFields` \case
+        [] -> parseError "one column field is expected"
+        [c] -> pure c
+        _ -> parseError "multiple column field cursor are not supported yet"
     batchSizeArg <- cursorBatchSizeArg
     -- using the `orderingArg` and the `cursorArg` to create the cursor
     -- boolean expression.
     pure $
-      IR.SelectStreamArgsG whereArg batchSizeArg cursorArg (cursorBoolExp cursorArg orderingArg) (orderBy orderingArg)
+      IR.SelectStreamArgsG whereArg batchSizeArg cursorArg (cursorBoolExp cursorArg) (orderBy $ IR._sciOrdering cursorArg)
   where
     orderBy orderingArg = fromMaybe COAscending orderingArg
 
     orderbyOpExp orderingArg = bool ALT AGT $ orderBy orderingArg == COAscending
 
-    cursorFn colInfo (v, orderingArg) = BoolFld $ AVColumn colInfo [orderingArg v]
+    cursorFn colInfo (initialValue, orderingArg) = BoolFld $ AVColumn colInfo [orderingArg initialValue]
 
-    cursorBoolExp cursorArg orderingArg =
-      cursorFn (fst cursorArg) (snd cursorArg, orderbyOpExp orderingArg)
+    cursorBoolExp (IR.StreamColumnItem orderingArg colInfo initialValue) =
+      cursorFn colInfo (initialValue, orderbyOpExp orderingArg)
 
 -- | Argument to filter rows returned from table selection
 -- > where: table_bool_exp
@@ -865,43 +863,6 @@ cursorOrderingArgParser = do
     define (name, val) =
       let orderingTypeDesc = bool "descending" "ascending" $ val == COAscending
        in P.mkDefinition name (Just $ G.Description $ orderingTypeDesc <> " ordering of the cursor") P.EnumValueInfo
-
-cursorOrderingArg ::
-  forall n m r.
-  (MonadSchema n m, Has P.MkTypename r, MonadReader r m) =>
-  m (InputFieldsParser n (Maybe CursorOrdering))
-cursorOrderingArg = do
-  cursorOrderingParser' <- cursorOrderingArgParser
-  pure do
-    P.fieldOptional $$(G.litName "ordering") (Just $ G.Description "cursor ordering") cursorOrderingParser'
-
-tableStreamCursorArg ::
-  forall b r m n.
-  MonadBuildSchema b r m n =>
-  SourceName ->
-  TableInfo b ->
-  SelPermInfo b ->
-  m (InputFieldsParser n (HashMap (ColumnInfo b) (UnpreparedValue b)))
-tableStreamCursorArg sourceName tableInfo selectPermissions = do
-  tableGQLName <- getTableGQLName tableInfo
-  columnInfos <- tableSelectColumns sourceName tableInfo selectPermissions
-  fields <-
-    for columnInfos $ \columnInfo -> do
-      let fieldName = pgiName columnInfo
-          fieldDesc = pgiDescription columnInfo
-      fieldParser <- typedParser columnInfo
-      pure $
-        P.fieldOptional fieldName fieldDesc fieldParser
-          `mapField` (columnInfo,)
-  objName <- P.mkTypename $ tableGQLName <> $$(G.litName ("_stream_cursor_input"))
-  pure $
-    P.field $$(G.litName "cursor") (Just "cursor column(s) for streaming data") $
-      P.object objName (Just $ G.Description $ "streaming input for the " <> tableGQLName <<> " table") $
-        Map.fromList . catMaybes <$> sequenceA fields
-  where
-    typedParser columnInfo = do
-      colParser <- columnParser (pgiType columnInfo) (G.Nullability $ pgiIsNullable columnInfo)
-      pure $ (fmap (P.mkCursorParameter (pgiName columnInfo)) colParser)
 
 -- | Argument to limit rows returned from table selection
 -- > limit: NonNegativeInt

@@ -1445,7 +1445,7 @@ mkStreamSQLSelect ::
   AnnSimpleStreamSelect ('Postgres pgKind) ->
   S.Select
 mkStreamSQLSelect (AnnSelectStreamG () fields from perm args strfyNum) =
-  let cursorCol = fst $ _ssaCursorInitialValues args
+  let cursorCol = _sciColInfo $ _ssaCursorArg args
       annOrderbyCol = AOCColumn cursorCol
       basicOrderType =
         bool S.OTDesc S.OTAsc $ _ssaCursorOrdering args == COAscending

@@ -150,7 +150,6 @@ import Hasura.RQL.Types.ResultCustomization
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.Backend
 import Language.GraphQL.Draft.Syntax qualified as G
-import Hasura.GraphQL.Parser (UnpreparedValue)
 
 -- Root selection
 
@@ -327,7 +326,7 @@ type SelectFrom b = SelectFromG b (SQLExpression b)
 data SelectStreamArgsG (b :: BackendType) v = SelectStreamArgsG
   { _ssaWhere :: !(Maybe (AnnBoolExp b v)),
     _ssaBatchSize :: !(Maybe Int),
-    _ssaCursorInitialValues :: !((ColumnInfo b), v), -- TODO: change this into a InsOrdHashmap (ColumnInfo b) v, when multiple column cursors are supported
+    _ssaCursorArg :: !(StreamColumnItem b v),
     _ssaCursorBoolExp :: !(AnnBoolExp b v),
     _ssaCursorOrdering :: !CursorOrdering
   }
@@ -462,7 +461,18 @@ type AnnotatedOrderByItemG b v = OrderByItemG b (AnnotatedOrderByElement b v)
 
 type AnnotatedOrderByItem b = AnnotatedOrderByItemG b (SQLExpression b)
 
-data StreamColumnItem b = StreamColumnItem !(UnpreparedValue b) !CursorOrdering
+data StreamColumnItem (b :: BackendType) v = StreamColumnItem
+  { _sciOrdering :: !(Maybe CursorOrdering)
+  , _sciColInfo  :: !(ColumnInfo b)
+  , _sciInitialValue :: !v
+  }
+  deriving (Generic, Functor, Foldable, Traversable)
+
+deriving instance (Backend b, Eq v) => Eq (StreamColumnItem b v)
+
+deriving instance (Backend b, Show v) => Show (StreamColumnItem b v)
+
+instance (Backend b, Hashable v) => Hashable (StreamColumnItem b v)
 
 -- Fields
 
