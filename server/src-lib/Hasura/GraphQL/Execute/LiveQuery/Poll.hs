@@ -38,6 +38,7 @@ module Hasura.GraphQL.Execute.LiveQuery.Poll
 
     -- * Batch
     BatchId (..),
+
   )
 where
 
@@ -73,7 +74,6 @@ import Hasura.RQL.Types.Common (SourceName, getNonNegativeInt)
 import Hasura.SQL.Value (TxtEncodedVal (..))
 import Hasura.Server.Types (RequestId)
 import Hasura.Session
-import Language.GraphQL.Draft.Syntax qualified as G
 import ListT qualified
 import StmContainers.Map qualified as STMMap
 
@@ -151,7 +151,7 @@ data Cohort = Cohort
     -- | subscribers we haven’t yet pushed any results to; we push results to them regardless if the
     -- result changed, then merge them in the map of existing subscribers
     _cNewSubscribers :: !SubscriberMap,
-    _cLatestCursorValue :: !(STM.TVar (Maybe (HashMap G.Name TxtEncodedVal))) -- this responds to a single cursor, for multiple column cursors this should be a (HashMap columnName (Maybe J.Value))
+    _cLatestCursorValue :: !(STM.TVar (Maybe CursorVariableValues)) -- this responds to a single cursor, for multiple column cursors this should be a (HashMap columnName (Maybe J.Value))
   }
 
 -- | The @BatchId@ is a number based ID to uniquely identify a batch in a single poll and
@@ -220,14 +220,14 @@ data CohortSnapshot = CohortSnapshot
     _csPreviousResponse :: !(STM.TVar (Maybe ResponseHash)),
     _csExistingSubscribers :: ![Subscriber],
     _csNewSubscribers :: ![Subscriber],
-    _csCursorLatestValue :: !(STM.TVar (Maybe (HashMap G.Name TxtEncodedVal)))
+    _csCursorLatestValue :: !(STM.TVar (Maybe CursorVariableValues))
   }
 
 pushResultToCohort ::
   GQResult BS.ByteString ->
   Maybe ResponseHash ->
   LiveQueryMetadata ->
-  Maybe (HashMap G.Name TxtEncodedVal) ->
+  Maybe CursorVariableValues ->
   CohortSnapshot ->
   -- | subscribers to which data has been pushed, subscribers which already
   -- have this data (this information is exposed by metrics reporting)
@@ -243,15 +243,15 @@ pushResultToCohort result !respHashM (LiveQueryMetadata dTime) latestCursorValue
           prevCursorCohortValueMaybe <- STM.readTVar latestCursorValueTV
           STM.writeTVar respRef respHashM
           case (prevCursorCohortValueMaybe, latestCursorValueMaybe) of
-            (Nothing, Nothing) -> pure ()
+            (Nothing, Nothing) -> pure () -- livequery case
             (Just _, Nothing) -> pure () -- this case is not possible
             (Nothing, Just a) -> STM.writeTVar latestCursorValueTV (Just a) -- initial case
-            (Just prev, Just curr) -> do
+            (Just (CursorVariableValues prev), Just (CursorVariableValues curr)) -> do
               let combineFn previousVal currentVal =
                     case currentVal of
                       TENull -> previousVal -- When we get a null value from the DB, we retain the older value
                       TELit t -> TELit t
-              STM.writeTVar latestCursorValueTV (Just (Map.unionWith combineFn prev curr))
+              STM.writeTVar latestCursorValueTV (Just (CursorVariableValues (Map.unionWith combineFn prev curr)))
         return (newSinks <> curSinks, mempty)
       else return (newSinks, curSinks)
   pushResultToSubscribers subscribersToPush
@@ -541,8 +541,8 @@ pollQuery pollerId lqOpts (sourceName, sourceConfig) roleName parameterizedQuery
 
       let modifiedCohortVars =
             case latestCursorValMaybe of
-              Just latestCursorVal ->
-                let unsafeValidatedVariable = mkUnsafeValidateVariables latestCursorVal
+              Just (CursorVariableValues latestCursorVals) ->
+                let unsafeValidatedVariable = mkUnsafeValidateVariables latestCursorVals
                  in modifyCursorCohortVariables unsafeValidatedVariable cohortVars
               Nothing -> cohortVars -- live query subscription
       let cohortSnapshot = CohortSnapshot modifiedCohortVars respRef (map snd curOpsL) (map snd newOpsL) cursorLatestVal

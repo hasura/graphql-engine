@@ -104,7 +104,7 @@ runPGSubscription ::
   SourceConfig ('Postgres pgKind) ->
   MultiplexedQuery ('Postgres pgKind) ->
   [(CohortId, CohortVariables)] ->
-  m (DiffTime, Either QErr [(CohortId, B.ByteString, Maybe (HashMap G.Name TxtEncodedVal))])
+  m (DiffTime, Either QErr [(CohortId, B.ByteString, Maybe CursorVariableValues)])
 runPGSubscription sourceConfig query variables =
   withElapsedTime $ do
     res <-

@@ -104,6 +104,7 @@ module Hasura.GraphQL.Execute.LiveQuery.Plan
     LiveQueryPlanExplanation (..),
     ParameterizedLiveQueryPlan (..),
     SubscriptionType (..),
+    CursorVariableValues (..),
   )
 where
 
@@ -283,3 +284,9 @@ data LiveQueryPlanExplanation = LiveQueryPlanExplanation
   deriving (Show)
 
 $(J.deriveToJSON hasuraJSON ''LiveQueryPlanExplanation)
+
+--------------------------------------------------------------------------
+--- Streaming Subscriptions
+
+newtype CursorVariableValues = CursorVariableValues (HashMap G.Name TxtEncodedVal)
+  deriving (J.FromJSON, J.ToJSON, Eq, Show)
