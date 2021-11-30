@@ -164,7 +164,8 @@ serveOptions =
       soEventsFetchBatchSize = 1,
       soDevMode = True,
       soGracefulShutdownTimeout = 0, -- Don't wait to shutdown.
-      soWebsocketConnectionInitTimeout = defaultWSConnectionInitTimeout
+      soWebsocketConnectionInitTimeout = defaultWSConnectionInitTimeout,
+      soEventingMode = EventingEnabled
     }
 
 -- | Use the below to show messages.

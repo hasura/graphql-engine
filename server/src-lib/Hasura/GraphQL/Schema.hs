@@ -65,7 +65,7 @@ buildGQLContext ::
       Seq InconsistentMetadata
     )
 buildGQLContext queryType sources allRemoteSchemas allActions nonObjectCustomTypes = do
-  ServerConfigCtx functionPermsCtx remoteSchemaPermsCtx sqlGenCtx@(SQLGenCtx stringifyNum boolCollapse) _maintenanceMode _experimentalFeatures <-
+  ServerConfigCtx functionPermsCtx remoteSchemaPermsCtx sqlGenCtx@(SQLGenCtx stringifyNum boolCollapse) _maintenanceMode _experimentalFeatures _eventingMode <-
     askServerConfigCtx
   let remoteSchemasRoles = concatMap (Map.keys . _rscPermissions . fst . snd) $ Map.toList allRemoteSchemas
 
