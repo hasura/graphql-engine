@@ -25,8 +25,8 @@ import requestAction from '../../../../utils/requestAction';
 import { showErrorNotification } from '../../Common/Notification';
 import { services } from '../../../../dataSources/services';
 import CollapsibleToggle from './CollapsibleToggle';
-import globals from '../../../../Globals';
 import VPCBanner from '../../../Common/VPCBanner/VPCBanner';
+import { useVPCBannerVisibility } from './utils';
 
 type DatabaseListItemProps = {
   dataSource: DataSource;
@@ -210,6 +210,12 @@ const ManageDatabase: React.FC<ManageDatabaseProps> = ({
       autoRedirectedToConnectPage = true;
     }
   }, [location, dataSources, dispatch]);
+
+  const {
+    show: shouldShowVPCBanner,
+    dismiss: dismissVPCBanner,
+  } = useVPCBannerVisibility();
+
   const crumbs = [
     {
       title: 'Data',
@@ -277,8 +283,8 @@ const ManageDatabase: React.FC<ManageDatabaseProps> = ({
               Connect Database
             </Button>
           </div>
-          {globals.consoleType === 'cloud' && !globals.eeMode && (
-            <VPCBanner className="mt-md" />
+          {shouldShowVPCBanner && (
+            <VPCBanner className="mt-md" onClose={dismissVPCBanner} />
           )}
         </div>
         <div className={styles.manage_db_content}>
