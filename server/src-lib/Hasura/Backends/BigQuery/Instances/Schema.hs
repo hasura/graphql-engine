@@ -208,7 +208,7 @@ bqColumnParser columnType (G.Nullability isNullable) =
       BigQuery.DatetimeScalarType -> pure $ possiblyNullable scalarType $ BigQuery.DatetimeValue . BigQuery.Datetime <$> P.string
       BigQuery.GeographyScalarType -> pure $ possiblyNullable scalarType $ BigQuery.GeographyValue . BigQuery.Geography <$> P.string
       BigQuery.TimestampScalarType -> do
-        let schemaType = P.Nullable . P.TNamed $ P.mkDefinition (P.Typename stringScalar) Nothing P.TIScalar
+        let schemaType = P.Nullable . P.TNamed $ P.mkDefinition stringScalar Nothing P.TIScalar
         pure $
           possiblyNullable scalarType $
             Parser
@@ -291,7 +291,7 @@ bqComparisonExps = P.memoize 'comparisonExps $ \columnType -> do
   typedParser <- columnParser columnType (G.Nullability False)
   nullableTextParser <- columnParser (ColumnScalar @'BigQuery BigQuery.StringScalarType) (G.Nullability True)
   -- textParser <- columnParser (ColumnScalar @'BigQuery BigQuery.StringScalarType) (G.Nullability False)
-  let name = P.Typename $ P.getName typedParser <> $$(G.litName "_BigQuery_comparison_exp")
+  let name = P.getName typedParser <> $$(G.litName "_BigQuery_comparison_exp")
       desc =
         G.Description $
           "Boolean expression to compare columns of type "

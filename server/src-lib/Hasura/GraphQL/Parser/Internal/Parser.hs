@@ -122,7 +122,7 @@ multiple parser = parser {pType = Nullable $ TList $ pType parser}
 -- | A variant of 'selectionSetObject' which doesn't implement any interfaces
 selectionSet ::
   MonadParse m =>
-  Typename ->
+  Name ->
   Maybe Description ->
   [FieldParser m a] ->
   Parser 'Output m (OMap.InsOrdHashMap Name (ParsedSelection a))
@@ -130,7 +130,7 @@ selectionSet name desc fields = selectionSetObject name desc fields []
 
 safeSelectionSet ::
   (MonadError QErr n, MonadParse m) =>
-  Typename ->
+  Name ->
   Maybe Description ->
   [FieldParser m a] ->
   n (Parser 'Output m (OMap.InsOrdHashMap Name (ParsedSelection a)))
@@ -147,7 +147,7 @@ safeSelectionSet name desc fields
 -- See also Note [Selectability of tables].
 selectionSetObject ::
   MonadParse m =>
-  Typename ->
+  Name ->
   Maybe Description ->
   -- | Fields of this object, including any fields that are required from the
   -- interfaces that it implements.  Note that we can't derive those fields from
@@ -208,7 +208,7 @@ selectionSetObject name description parsers implementsInterfaces =
 
 selectionSetInterface ::
   (MonadParse n, Traversable t) =>
-  Typename ->
+  Name ->
   Maybe Description ->
   -- | Fields defined in this interface
   [FieldParser n a] ->
@@ -239,7 +239,7 @@ selectionSetInterface name description fields objectImplementations =
 
 selectionSetUnion ::
   (MonadParse n, Traversable t) =>
-  Typename ->
+  Name ->
   Maybe Description ->
   -- | The member object types.
   t (Parser 'Output n b) ->

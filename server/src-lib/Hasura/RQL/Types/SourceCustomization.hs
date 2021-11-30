@@ -1,7 +1,8 @@
 {-# LANGUAGE UndecidableInstances #-}
 
 module Hasura.RQL.Types.SourceCustomization
-  ( SourceTypeCustomization,
+  ( MkTypename (..),
+    SourceTypeCustomization,
     RootFieldsCustomization (..),
     mkCustomizedTypename,
     emptySourceCustomization,
@@ -11,7 +12,7 @@ module Hasura.RQL.Types.SourceCustomization
     SourceCustomization (..),
     withSourceCustomization,
     MkRootFieldName,
-    CustomizeRemoteFieldName,
+    CustomizeRemoteFieldName (..),
     withRemoteFieldNameCustomization,
   )
 where
@@ -19,6 +20,7 @@ where
 import Control.Lens
 import Data.Aeson.Extended
 import Data.Has
+import Data.Monoid
 import Hasura.GraphQL.Parser.Schema
 import Hasura.Incremental.Internal.Dependency (Cacheable)
 import Hasura.Prelude
@@ -60,15 +62,15 @@ instance FromJSON SourceTypeCustomization where
 emptySourceTypeCustomization :: SourceTypeCustomization
 emptySourceTypeCustomization = SourceTypeCustomization Nothing Nothing
 
-mkCustomizedTypename :: Maybe SourceTypeCustomization -> G.Name -> Typename
-mkCustomizedTypename Nothing = Typename
+mkCustomizedTypename :: Maybe SourceTypeCustomization -> MkTypename
+mkCustomizedTypename Nothing = mempty
 mkCustomizedTypename (Just SourceTypeCustomization {..}) =
-  Typename . applyPrefixSuffix _stcPrefix _stcSuffix
+  MkTypename (applyPrefixSuffix _stcPrefix _stcSuffix)
 
-mkCustomizedFieldName :: Maybe RootFieldsCustomization -> G.Name -> G.Name
-mkCustomizedFieldName Nothing = id
+mkCustomizedFieldName :: Maybe RootFieldsCustomization -> MkRootFieldName
+mkCustomizedFieldName Nothing = mempty
 mkCustomizedFieldName (Just RootFieldsCustomization {..}) =
-  applyPrefixSuffix _rootfcPrefix _rootfcSuffix
+  MkRootFieldName (applyPrefixSuffix _rootfcPrefix _rootfcSuffix)
 
 applyPrefixSuffix :: Maybe G.Name -> Maybe G.Name -> G.Name -> G.Name
 applyPrefixSuffix Nothing Nothing name = name
@@ -100,7 +102,8 @@ getSourceTypeCustomization :: SourceCustomization -> SourceTypeCustomization
 getSourceTypeCustomization = fromMaybe emptySourceTypeCustomization . _scTypeNames
 
 -- | Function to apply root field name customizations.
-type MkRootFieldName = G.Name -> G.Name
+newtype MkRootFieldName = MkRootFieldName {runMkRootFieldName :: G.Name -> G.Name}
+  deriving (Semigroup, Monoid) via (Endo G.Name)
 
 -- | Inject a new root field name customization function into the environment.
 -- This can be used by schema-building code (with @MonadBuildSchema@ constraint) to ensure
@@ -111,7 +114,7 @@ withRootFieldNameCustomization = local . set hasLens
 -- | Apply the root field name customization function from the current environment.
 mkRootFieldName :: (MonadReader r m, Has MkRootFieldName r) => G.Name -> m G.Name
 mkRootFieldName name =
-  ($ name) <$> asks getter
+  ($ name) . runMkRootFieldName <$> asks getter
 
 -- | Inject typename and root field name customizations from @SourceCustomization@ into
 -- the environment.
@@ -125,7 +128,10 @@ withSourceCustomization SourceCustomization {..} =
   withTypenameCustomization (mkCustomizedTypename _scTypeNames)
     . withRootFieldNameCustomization (mkCustomizedFieldName _scRootFields)
 
-type CustomizeRemoteFieldName = G.Name -> G.Name -> G.Name
+newtype CustomizeRemoteFieldName = CustomizeRemoteFieldName
+  { runCustomizeRemoteFieldName :: G.Name -> G.Name -> G.Name
+  }
+  deriving (Semigroup, Monoid) via (G.Name -> Endo G.Name)
 
 withRemoteFieldNameCustomization :: forall m r a. (MonadReader r m, Has CustomizeRemoteFieldName r) => CustomizeRemoteFieldName -> m a -> m a
 withRemoteFieldNameCustomization = local . set hasLens

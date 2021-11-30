@@ -318,7 +318,7 @@ actionInputArguments nonObjectTypeMap arguments = do
                     `onNothing` throw500 "object type for a field found in custom input object type"
                 (fieldName,) <$> argumentParser fieldName fieldDesc fieldType nonObjectFieldType
             pure $
-              P.object (P.Typename objectName) objectDesc $
+              P.object objectName objectDesc $
                 J.Object <$> inputFieldsToObject inputFieldsParsers
 
 mkArgumentInputFieldParser ::
@@ -358,9 +358,9 @@ customScalarParser = \case
         | _stdName == floatScalar -> J.toJSON <$> P.float
         | _stdName == stringScalar -> J.toJSON <$> P.string
         | _stdName == boolScalar -> J.toJSON <$> P.boolean
-        | otherwise -> P.jsonScalar (P.Typename _stdName) _stdDescription
+        | otherwise -> P.jsonScalar _stdName _stdDescription
   ASTReusedScalar name pgScalarType ->
-    let schemaType = P.NonNullable $ P.TNamed $ P.mkDefinition (P.Typename name) Nothing P.TIScalar
+    let schemaType = P.NonNullable $ P.TNamed $ P.mkDefinition name Nothing P.TIScalar
      in P.Parser
           { pType = schemaType,
             pParser =
@@ -385,4 +385,4 @@ customEnumParser (EnumTypeDefinition typeName description enumValues) =
                   valueName
                   (_evdDescription enumValue)
                   P.EnumValueInfo
-   in P.enum (P.Typename enumName) description enumValueDefinitions
+   in P.enum enumName description enumValueDefinitions

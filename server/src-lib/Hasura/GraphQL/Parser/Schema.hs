@@ -6,8 +6,7 @@ module Hasura.GraphQL.Parser.Schema
     type (<:) (..),
 
     -- * Types
-    Typename (..),
-    MkTypename,
+    MkTypename (..),
     mkTypename,
     withTypenameCustomization,
     Type (..),
@@ -32,7 +31,6 @@ module Hasura.GraphQL.Parser.Schema
     UnionInfo (..),
 
     -- * Definitions
-    DefinitionName,
     Definition (..),
     mkDefinition,
     addDefinitionUnique,
@@ -63,6 +61,7 @@ import Data.HashMap.Strict.Extended qualified as Map
 import Data.HashSet qualified as Set
 import Data.Hashable (Hashable (..))
 import Data.List.NonEmpty qualified as NE
+import Data.Monoid
 import Data.Text qualified as T
 import Data.Text.Extended
 import Hasura.Incremental (Cacheable)
@@ -82,25 +81,20 @@ class HasName a where
 instance HasName Name where
   getName = id
 
--- | newtype wrapper to allow us to distinguish type names from other GraphQL names.
-newtype Typename = Typename {unTypename :: Name} deriving (Eq, Ord, Show, HasName, J.ToJSON)
+-- | Type name customization
+newtype MkTypename = MkTypename {runMkTypename :: Name -> Name}
+  deriving (Semigroup, Monoid) via (Endo Name)
 
-instance ToTxt Typename where
-  toTxt = toTxt . getName
-
--- | Function to turn a @Name@ into a @Typename@ while possibly applying some customizations.
-type MkTypename = Name -> Typename
-
--- | Inject a new @Typename@ customization function into the environment.
+-- | Inject a new @MkTypename@ customization function into the environment.
 -- This can be used by schema-building code (with @MonadBuildSchema@ constraint) to ensure
--- the correct typename customizations are applied.
+-- the correct type name customizations are applied.
 withTypenameCustomization :: forall m r a. (MonadReader r m, Has MkTypename r) => MkTypename -> m a -> m a
 withTypenameCustomization = local . set hasLens
 
--- | Apply the typename customization function from the current environment.
-mkTypename :: (MonadReader r m, Has MkTypename r) => Name -> m Typename
+-- | Apply the type name customization function from the current environment.
+mkTypename :: (MonadReader r m, Has MkTypename r) => Name -> m Name
 mkTypename name =
-  ($ name) <$> asks getter
+  ($ name) . runMkTypename <$> asks getter
 
 -- | GraphQL types are divided into two classes: input types and output types.
 -- The GraphQL spec does not use the word “kind” to describe these classes, but
@@ -566,15 +560,6 @@ data SomeTypeInfo = forall k. SomeTypeInfo (TypeInfo k)
 instance Eq SomeTypeInfo where
   SomeTypeInfo a == SomeTypeInfo b = eqTypeInfo a b
 
-type family DefinitionName a where
-  DefinitionName (TypeInfo k) = Typename
-  DefinitionName SomeTypeInfo = Typename
-  DefinitionName InterfaceInfo = Typename
-  DefinitionName ObjectInfo = Typename
-  DefinitionName InputFieldInfo = Name
-  DefinitionName FieldInfo = Name
-  DefinitionName EnumValueInfo = Name
-
 data Definition a = Definition
   { dName :: Name,
     -- | A unique identifier used to break cycles in mutually-recursive type
@@ -594,8 +579,8 @@ instance Hashable a => Hashable (Definition a) where
   hashWithSalt salt Definition {..} =
     salt `hashWithSalt` dName `hashWithSalt` dInfo
 
-mkDefinition :: HasName (DefinitionName a) => DefinitionName a -> Maybe Description -> a -> Definition a
-mkDefinition name description info = Definition (getName name) Nothing description info
+mkDefinition :: Name -> Maybe Description -> a -> Definition a
+mkDefinition name description info = Definition name Nothing description info
 
 instance Eq a => Eq (Definition a) where
   (==) = eq1

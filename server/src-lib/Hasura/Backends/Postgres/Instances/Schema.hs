@@ -213,7 +213,7 @@ columnParser columnType (G.Nullability isNullable) =
         -- not accept strings.
         --
         -- TODO: introduce new dedicated scalars for Postgres column types.
-        name <- P.Typename <$> mkScalarTypeName scalarType
+        name <- mkScalarTypeName scalarType
         let schemaType = P.NonNullable $ P.TNamed $ P.mkDefinition name Nothing P.TIScalar
         pure $
           Parser
@@ -313,7 +313,7 @@ comparisonExps = P.memoize 'comparisonExps \columnType -> do
   -- `ltxtquery` represents a full-text-search-like pattern for matching `ltree` values.
   ltxtqueryParser <- columnParser (ColumnScalar PGLtxtquery) (G.Nullability False)
   maybeCastParser <- castExp columnType
-  let name = P.Typename $ P.getName typedParser <> $$(G.litName "_comparison_exp")
+  let name = P.getName typedParser <> $$(G.litName "_comparison_exp")
       desc =
         G.Description $
           "Boolean expression to compare columns of type "
@@ -564,7 +564,7 @@ comparisonExps = P.memoize 'comparisonExps \columnType -> do
         targetName <- mkScalarTypeName targetScalar
         targetOpExps <- comparisonExps $ ColumnScalar targetScalar
         let field = P.fieldOptional targetName Nothing $ (targetScalar,) <$> targetOpExps
-        pure $ P.object (P.Typename sourceName) Nothing $ M.fromList . maybeToList <$> field
+        pure $ P.object sourceName Nothing $ M.fromList . maybeToList <$> field
 
 geographyWithinDistanceInput ::
   forall pgKind m n r.
@@ -581,7 +581,7 @@ geographyWithinDistanceInput = do
   booleanParser <- columnParser (ColumnScalar PGBoolean) (G.Nullability True)
   floatParser <- columnParser (ColumnScalar PGFloat) (G.Nullability False)
   pure $
-    P.object (P.Typename $$(G.litName "st_d_within_geography_input")) Nothing $
+    P.object $$(G.litName "st_d_within_geography_input") Nothing $
       DWithinGeogOp <$> (mkParameter <$> P.field $$(G.litName "distance") Nothing floatParser)
         <*> (mkParameter <$> P.field $$(G.litName "from") Nothing geographyParser)
         <*> (mkParameter <$> P.fieldWithDefault $$(G.litName "use_spheroid") Nothing (G.VBoolean True) booleanParser)
@@ -594,7 +594,7 @@ geometryWithinDistanceInput = do
   geometryParser <- columnParser (ColumnScalar PGGeometry) (G.Nullability False)
   floatParser <- columnParser (ColumnScalar PGFloat) (G.Nullability False)
   pure $
-    P.object (P.Typename $$(G.litName "st_d_within_input")) Nothing $
+    P.object $$(G.litName "st_d_within_input") Nothing $
       DWithinGeomOp <$> (mkParameter <$> P.field $$(G.litName "distance") Nothing floatParser)
         <*> (mkParameter <$> P.field $$(G.litName "from") Nothing geometryParser)
 
@@ -606,7 +606,7 @@ intersectsNbandGeomInput = do
   geometryParser <- columnParser (ColumnScalar PGGeometry) (G.Nullability False)
   integerParser <- columnParser (ColumnScalar PGInteger) (G.Nullability False)
   pure $
-    P.object (P.Typename $$(G.litName "st_intersects_nband_geom_input")) Nothing $
+    P.object $$(G.litName "st_intersects_nband_geom_input") Nothing $
       STIntersectsNbandGeommin <$> (mkParameter <$> P.field $$(G.litName "nband") Nothing integerParser)
         <*> (mkParameter <$> P.field $$(G.litName "geommin") Nothing geometryParser)
 
@@ -618,7 +618,7 @@ intersectsGeomNbandInput = do
   geometryParser <- columnParser (ColumnScalar PGGeometry) (G.Nullability False)
   integerParser <- columnParser (ColumnScalar PGInteger) (G.Nullability False)
   pure $
-    P.object (P.Typename $$(G.litName "st_intersects_geom_nband_input")) Nothing $
+    P.object $$(G.litName "st_intersects_geom_nband_input") Nothing $
       STIntersectsGeomminNband
         <$> (mkParameter <$> P.field $$(G.litName "geommin") Nothing geometryParser)
         <*> (fmap mkParameter <$> P.fieldOptional $$(G.litName "nband") Nothing integerParser)

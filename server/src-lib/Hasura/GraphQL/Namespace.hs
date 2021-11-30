@@ -97,7 +97,7 @@ customizeNamespace (Just namespace) fromParsedSelection mkNamespaceTypename fiel
     parser :: Parser 'Output n (NamespacedField a)
     parser =
       Namespaced . OMap.mapWithKey fromParsedSelection
-        <$> P.selectionSet (mkNamespaceTypename namespace) Nothing fieldParsers
+        <$> P.selectionSet (runMkTypename mkNamespaceTypename namespace) Nothing fieldParsers
 customizeNamespace Nothing _ _ fieldParsers =
   -- No namespace so just wrap the field parser results in @NotNamespaced@.
   fmap NotNamespaced <$> fieldParsers

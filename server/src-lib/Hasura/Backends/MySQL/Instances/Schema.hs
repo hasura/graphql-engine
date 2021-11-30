@@ -185,7 +185,7 @@ columnParser' columnType (G.Nullability isNullable) =
       MySQL.Timestamp -> pure $ possiblyNullable scalarType $ MySQL.TimestampValue <$> P.string
       _ -> do
         name <- MySQL.mkMySQLScalarTypeName scalarType
-        let schemaType = P.NonNullable $ P.TNamed $ P.mkDefinition (P.Typename name) Nothing P.TIScalar
+        let schemaType = P.NonNullable $ P.TNamed $ P.mkDefinition name Nothing P.TIScalar
         pure $
           Parser
             { pType = schemaType,
@@ -261,7 +261,7 @@ comparisonExps' = P.memoize 'comparisonExps $ \columnType -> do
   typedParser <- columnParser columnType (G.Nullability False)
   nullableTextParser <- columnParser (ColumnScalar @'MySQL MySQL.VarChar) (G.Nullability True)
   textParser <- columnParser (ColumnScalar @'MySQL MySQL.VarChar) (G.Nullability False)
-  let name = P.Typename $ P.getName typedParser <> $$(G.litName "_MySQL_comparison_exp")
+  let name = P.getName typedParser <> $$(G.litName "_MySQL_comparison_exp")
       desc =
         G.Description $
           "Boolean expression to compare columns of type "

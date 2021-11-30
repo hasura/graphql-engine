@@ -55,12 +55,13 @@ import Data.Text.Extended
 import Data.Text.NonEmpty
 import Database.PG.Query qualified as Q
 import Hasura.Base.Error
-import Hasura.GraphQL.Parser.Schema (Variable)
+import Hasura.GraphQL.Parser.Schema
 import Hasura.Incremental (Cacheable)
 import Hasura.Prelude
 import Hasura.RQL.DDL.Headers (HeaderConf (..))
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.ResultCustomization
+import Hasura.RQL.Types.SourceCustomization
 import Hasura.Session
 import Language.GraphQL.Draft.Printer qualified as G
 import Language.GraphQL.Draft.Syntax qualified as G
@@ -191,12 +192,12 @@ instance Hashable RemoteSchemaCustomizer
 
 $(J.deriveJSON hasuraJSON ''RemoteSchemaCustomizer)
 
-remoteSchemaCustomizeTypeName :: RemoteSchemaCustomizer -> G.Name -> G.Name
-remoteSchemaCustomizeTypeName RemoteSchemaCustomizer {..} typeName =
+remoteSchemaCustomizeTypeName :: RemoteSchemaCustomizer -> MkTypename
+remoteSchemaCustomizeTypeName RemoteSchemaCustomizer {..} = MkTypename $ \typeName ->
   Map.lookupDefault typeName typeName _rscCustomizeTypeName
 
-remoteSchemaCustomizeFieldName :: RemoteSchemaCustomizer -> G.Name -> G.Name -> G.Name
-remoteSchemaCustomizeFieldName RemoteSchemaCustomizer {..} typeName fieldName =
+remoteSchemaCustomizeFieldName :: RemoteSchemaCustomizer -> CustomizeRemoteFieldName
+remoteSchemaCustomizeFieldName RemoteSchemaCustomizer {..} = CustomizeRemoteFieldName $ \typeName fieldName ->
   Map.lookup typeName _rscCustomizeFieldName >>= Map.lookup fieldName & fromMaybe fieldName
 
 hasTypeOrFieldCustomizations :: RemoteSchemaCustomizer -> Bool

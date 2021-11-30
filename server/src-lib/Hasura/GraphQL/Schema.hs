@@ -246,15 +246,15 @@ buildRoleContext
           (,,)
             <$> customizeFields
               sourceCustomization
-              (mkTypename . (<> $$(G.litName "_query")))
+              (mkTypename <> P.MkTypename (<> $$(G.litName "_query")))
               (buildQueryFields sourceName sourceConfig validTables validFunctions queryTagsConfig)
             <*> customizeFields
               sourceCustomization
-              (mkTypename . (<> $$(G.litName "_mutation_frontend")))
+              (mkTypename <> P.MkTypename (<> $$(G.litName "_mutation_frontend")))
               (buildMutationFields Frontend sourceName sourceConfig validTables validFunctions queryTagsConfig)
             <*> customizeFields
               sourceCustomization
-              (mkTypename . (<> $$(G.litName "_mutation_backend")))
+              (mkTypename <> P.MkTypename (<> $$(G.litName "_mutation_backend")))
               (buildMutationFields Backend sourceName sourceConfig validTables validFunctions queryTagsConfig)
 
 buildRelayRoleContext ::
@@ -331,15 +331,15 @@ buildRelayRoleContext
           (,,)
             <$> customizeFields
               sourceCustomization
-              (mkTypename . (<> $$(G.litName "_query")))
+              (mkTypename <> P.MkTypename (<> $$(G.litName "_query")))
               (buildRelayQueryFields sourceName sourceConfig validTables validFunctions queryTagsConfig)
             <*> customizeFields
               sourceCustomization
-              (mkTypename . (<> $$(G.litName "_mutation_frontend")))
+              (mkTypename <> P.MkTypename (<> $$(G.litName "_mutation_frontend")))
               (buildMutationFields Frontend sourceName sourceConfig validTables validFunctions queryTagsConfig)
             <*> customizeFields
               sourceCustomization
-              (mkTypename . (<> $$(G.litName "_mutation_backend")))
+              (mkTypename <> P.MkTypename (<> $$(G.litName "_mutation_backend")))
               (buildMutationFields Backend sourceName sourceConfig validTables validFunctions queryTagsConfig)
 
 buildFullestDBSchema ::
@@ -387,11 +387,11 @@ buildFullestDBSchema queryContext sources allActionInfos nonObjectCustomTypes =
         (,)
           <$> customizeFields
             sourceCustomization
-            (mkTypename . (<> $$(G.litName "_query")))
+            (mkTypename <> P.MkTypename (<> $$(G.litName "_query")))
             (buildQueryFields sourceName sourceConfig validTables validFunctions queryTagsConfig)
           <*> customizeFields
             sourceCustomization
-            (mkTypename . (<> $$(G.litName "_mutation_frontend")))
+            (mkTypename <> P.MkTypename (<> $$(G.litName "_mutation_frontend")))
             (buildMutationFields Frontend sourceName sourceConfig validTables validFunctions queryTagsConfig)
 
 -- The `unauthenticatedContext` is used when the user queries the graphql-engine
@@ -785,14 +785,14 @@ mkRootField sourceName sourceConfig queryTagsConfig inj =
 takeExposedAs :: FunctionExposedAs -> FunctionCache b -> FunctionCache b
 takeExposedAs x = Map.filter ((== x) . _fiExposedAs)
 
-subscriptionRoot :: P.Typename
-subscriptionRoot = P.Typename $$(G.litName "subscription_root")
+subscriptionRoot :: G.Name
+subscriptionRoot = $$(G.litName "subscription_root")
 
-mutationRoot :: P.Typename
-mutationRoot = P.Typename $$(G.litName "mutation_root")
+mutationRoot :: G.Name
+mutationRoot = $$(G.litName "mutation_root")
 
-queryRoot :: P.Typename
-queryRoot = P.Typename $$(G.litName "query_root")
+queryRoot :: G.Name
+queryRoot = $$(G.litName "query_root")
 
 finalizeParser :: Parser 'Output (P.ParseT Identity) a -> ParserFn a
 finalizeParser parser = runIdentity . P.runParseT . P.runParser parser
@@ -821,7 +821,7 @@ runMonadSchema ::
   ConcreteSchemaT m a ->
   m a
 runMonadSchema roleName queryContext pgSources m =
-  P.runSchemaT m `runReaderT` (roleName, pgSources, queryContext, P.Typename, id, const id)
+  P.runSchemaT m `runReaderT` (roleName, pgSources, queryContext, mempty, mempty, mempty)
 
 -- | Whether the request is sent with `x-hasura-use-backend-only-permissions` set to `true`.
 data Scenario = Backend | Frontend deriving (Enum, Show, Eq)

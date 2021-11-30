@@ -312,7 +312,7 @@ typeField =
           _ -> J.Null
    in applyPrinter
         <$> P.selectionSet
-          (P.Typename $$(G.litName "__Type"))
+          $$(G.litName "__Type")
           Nothing
           [ kind,
             name,
@@ -360,7 +360,7 @@ inputValue =
             _ -> J.Null
    in applyPrinter
         <$> P.selectionSet
-          (P.Typename $$(G.litName "__InputValue"))
+          $$(G.litName "__InputValue")
           Nothing
           [ name,
             description,
@@ -400,7 +400,7 @@ enumValue =
           $> const J.Null
    in applyPrinter
         <$> P.selectionSet
-          (P.Typename $$(G.litName "__EnumValue"))
+          $$(G.litName "__EnumValue")
           Nothing
           [ name,
             description,
@@ -426,7 +426,7 @@ typeKind ::
   Parser 'Both n ()
 typeKind =
   P.enum
-    (P.Typename $$(G.litName "__TypeKind"))
+    $$(G.litName "__TypeKind")
     Nothing
     ( NE.fromList
         [ mkDefinition $$(G.litName "ENUM"),
@@ -486,7 +486,7 @@ fieldField =
           $> const J.Null
    in applyPrinter
         <$> P.selectionSet
-          (P.Typename $$(G.litName "__Field"))
+          $$(G.litName "__Field")
           Nothing
           [ name,
             description,
@@ -533,7 +533,7 @@ directiveSet =
           $> const J.Null
    in applyPrinter
         <$> P.selectionSet
-          (P.Typename $$(G.litName "__Directive"))
+          $$(G.litName "__Directive")
           Nothing
           [ name,
             description,
@@ -605,7 +605,7 @@ schemaSet fakeSchema =
         return $ J.array $ map printer $ sDirectives fakeSchema
    in selectionSetToJSON . fmap (P.handleTypename nameAsJSON)
         <$> P.selectionSet
-          (P.Typename $$(G.litName "__Schema"))
+          $$(G.litName "__Schema")
           Nothing
           [ description,
             types,

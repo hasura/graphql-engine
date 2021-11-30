@@ -275,7 +275,7 @@ msColumnParser columnType (G.Nullability isNullable) =
         MSSQL.BitType -> pure $ ODBC.BoolValue <$> P.boolean
         _ -> do
           name <- MSSQL.mkMSSQLScalarTypeName scalarType
-          let schemaType = P.NonNullable $ P.TNamed $ P.mkDefinition (P.Typename name) Nothing P.TIScalar
+          let schemaType = P.NonNullable $ P.TNamed $ P.mkDefinition name Nothing P.TIScalar
           pure $
             Parser
               { pType = schemaType,
@@ -358,7 +358,7 @@ msComparisonExps = P.memoize 'comparisonExps \columnType -> do
       textListParser = fmap openValueOrigin <$> P.list textParser
 
   -- field info
-  let name = P.Typename $ P.getName typedParser <> $$(G.litName "_MSSQL_comparison_exp")
+  let name = P.getName typedParser <> $$(G.litName "_MSSQL_comparison_exp")
       desc =
         G.Description $
           "Boolean expression to compare columns of type "
