@@ -35,7 +35,7 @@ import Data.Aeson.Internal qualified as J
 import Data.Align (align)
 import Data.ByteString.Lazy qualified as BL
 import Data.Has
-import Data.HashMap.Strict qualified as Map
+import Data.HashMap.Strict.Extended qualified as Map
 import Data.HashSet qualified as Set
 import Data.Int (Int64)
 import Data.List.NonEmpty qualified as NE
@@ -1357,7 +1357,7 @@ remoteRelationshipField remoteFieldInfo = runMaybeT do
       let roleIntrospection@(RemoteSchemaIntrospection typeDefns) = irDoc roleIntrospectionResultOriginal
           -- add the new input value definitions created by the remote relationship
           -- to the existing schema introspection of the role
-          remoteRelationshipIntrospection = RemoteSchemaIntrospection $ typeDefns <> newInpValDefns
+          remoteRelationshipIntrospection = RemoteSchemaIntrospection $ typeDefns <> Map.fromListOn getTypeName newInpValDefns
       fieldName <- textToName $ remoteRelationshipNameToText name
 
       -- This selection set parser, should be of the remote node's selection set parser, which comes

@@ -3,7 +3,7 @@
 module Hasura.Generator () where
 
 import Data.Containers.ListUtils (nubOrd)
-import Data.HashMap.Strict qualified as Map
+import Data.HashMap.Strict.Extended qualified as Map
 import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.Ratio ((%))
 import Data.Text qualified as T
@@ -136,14 +136,15 @@ instance Arbitrary IntrospectionResult where
     -- finally, create an IntrospectionResult from the aggregated definitions
     let irDoc =
           RemoteSchemaIntrospection $
-            concat
-              [ G.TypeDefinitionScalar <$> scalarTypeDefinitions,
-                G.TypeDefinitionObject <$> objectTypeDefinitions,
-                G.TypeDefinitionInterface <$> interfaceTypeDefinitions,
-                G.TypeDefinitionUnion <$> unionTypeDefinitions,
-                G.TypeDefinitionEnum <$> enumTypeDefinitions,
-                G.TypeDefinitionInputObject <$> inputObjectTypeDefinitions
-              ]
+            Map.fromListOn getTypeName $
+              concat
+                [ G.TypeDefinitionScalar <$> scalarTypeDefinitions,
+                  G.TypeDefinitionObject <$> objectTypeDefinitions,
+                  G.TypeDefinitionInterface <$> interfaceTypeDefinitions,
+                  G.TypeDefinitionUnion <$> unionTypeDefinitions,
+                  G.TypeDefinitionEnum <$> enumTypeDefinitions,
+                  G.TypeDefinitionInputObject <$> inputObjectTypeDefinitions
+                ]
     irQueryRoot <- elements objectTypeNames
     let maybeObjectTypeName = elements $ Nothing : (Just <$> objectTypeNames)
     irMutationRoot <- maybeObjectTypeName

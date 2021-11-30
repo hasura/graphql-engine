@@ -8,6 +8,7 @@
 - server: log locking DB queries during source catalog migration
 - server: fix to allow remote schema response to contain an "extensions" field (#7143)
 - server: support database-to-database joins with BigQuery
+- server: improved startup time when using large remote schemas
 - console: add comments to tracked functions
 - console: add select all columns option while selecting the columns in event triggers
 - console: add request transforms for events

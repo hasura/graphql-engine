@@ -19,7 +19,7 @@ import Data.Aeson.Types qualified as J
 import Data.ByteString.Lazy qualified as BL
 import Data.Environment qualified as Env
 import Data.FileEmbed (makeRelativeToProject)
-import Data.HashMap.Strict qualified as Map
+import Data.HashMap.Strict.Extended qualified as Map
 import Data.HashSet qualified as Set
 import Data.List.Extended (duplicates)
 import Data.Text qualified as T
@@ -113,7 +113,7 @@ validateSchemaCustomizationsDistinct remoteSchemaCustomizer (RemoteSchemaIntrosp
 
     validateTypeMappingsAreDistinct :: m ()
     validateTypeMappingsAreDistinct = do
-      let dups = duplicates $ (runMkTypename customizeTypeName . typeDefinitionName) <$> typeDefinitions
+      let dups = duplicates $ runMkTypename customizeTypeName <$> Map.keys typeDefinitions
       unless (Set.null dups) $
         throwRemoteSchema $
           "Type name mappings are not distinct; the following types appear more than once: "
@@ -392,7 +392,7 @@ instance J.FromJSON (FromIntrospection IntrospectionResult) where
             types
         r =
           IntrospectionResult
-            (RemoteSchemaIntrospection (fmap fromIntrospection types'))
+            (RemoteSchemaIntrospection $ Map.fromListOn getTypeName $ fromIntrospection <$> types')
             queryRoot
             mutationRoot
             subsRoot
@@ -456,15 +456,6 @@ execRemoteGQ env manager userInfo reqHdrs rsdef gqlReq@GQLReq {..} = do
 identityCustomizer :: RemoteSchemaCustomizer
 identityCustomizer = RemoteSchemaCustomizer Nothing mempty mempty
 
-typeDefinitionName :: G.TypeDefinition a b -> G.Name
-typeDefinitionName = \case
-  G.TypeDefinitionScalar G.ScalarTypeDefinition {..} -> _stdName
-  G.TypeDefinitionObject G.ObjectTypeDefinition {..} -> _otdName
-  G.TypeDefinitionInterface G.InterfaceTypeDefinition {..} -> _itdName
-  G.TypeDefinitionUnion G.UnionTypeDefinition {..} -> _utdName
-  G.TypeDefinitionEnum G.EnumTypeDefinition {..} -> _etdName
-  G.TypeDefinitionInputObject G.InputObjectTypeDefinition {..} -> _iotdName
-
 getCustomizer :: IntrospectionResult -> Maybe RemoteSchemaCustomization -> RemoteSchemaCustomizer
 getCustomizer _ Nothing = identityCustomizer
 getCustomizer IntrospectionResult {..} (Just RemoteSchemaCustomization {..}) = RemoteSchemaCustomizer {..}
@@ -487,7 +478,7 @@ getCustomizer IntrospectionResult {..} (Just RemoteSchemaCustomization {..}) = R
       (Just prefix, Just suffix) -> map (\name -> (name, prefix <> name <> suffix)) names
 
     RemoteSchemaIntrospection typeDefinitions = irDoc
-    typesToRename = filter nameFilter $ typeDefinitionName <$> typeDefinitions
+    typesToRename = filter nameFilter $ Map.keys typeDefinitions
     typeRenameMap =
       case _rscTypeNames of
         Nothing -> Map.empty
@@ -496,11 +487,12 @@ getCustomizer IntrospectionResult {..} (Just RemoteSchemaCustomization {..}) = R
 
     typeFieldMap :: HashMap G.Name [G.Name] -- typeName -> fieldNames
     typeFieldMap =
-      Map.fromList $
-        typeDefinitions >>= \case
-          G.TypeDefinitionObject G.ObjectTypeDefinition {..} -> pure (_otdName, G._fldName <$> _otdFieldsDefinition)
-          G.TypeDefinitionInterface G.InterfaceTypeDefinition {..} -> pure (_itdName, G._fldName <$> _itdFieldsDefinition)
-          _ -> []
+      Map.mapMaybe getFieldsNames typeDefinitions
+      where
+        getFieldsNames = \case
+          G.TypeDefinitionObject G.ObjectTypeDefinition {..} -> Just $ G._fldName <$> _otdFieldsDefinition
+          G.TypeDefinitionInterface G.InterfaceTypeDefinition {..} -> Just $ G._fldName <$> _itdFieldsDefinition
+          _ -> Nothing
 
     mkFieldRenameMap RemoteFieldCustomization {..} fieldNames =
       _rfcMapping <> mkPrefixSuffixMap _rfcPrefix _rfcSuffix fieldNames
