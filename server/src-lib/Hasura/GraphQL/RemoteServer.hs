@@ -81,8 +81,8 @@ validateSchemaCustomizationsConsistent remoteSchemaCustomizer (RemoteSchemaIntro
       G.TypeDefinitionInterface G.InterfaceTypeDefinition {..} ->
         for_ _itdPossibleTypes $ \typeName ->
           for_ _itdFieldsDefinition $ \G.FieldDefinition {..} -> do
-            let interfaceCustomizedFieldName = customizeFieldName _itdName _fldName
-                typeCustomizedFieldName = customizeFieldName typeName _fldName
+            let interfaceCustomizedFieldName = runCustomizeRemoteFieldName customizeFieldName _itdName _fldName
+                typeCustomizedFieldName = runCustomizeRemoteFieldName customizeFieldName typeName _fldName
             when (interfaceCustomizedFieldName /= typeCustomizedFieldName) $
               throwRemoteSchema $
                 "Remote schema customization inconsistency: field name mapping for field "
@@ -109,11 +109,11 @@ validateSchemaCustomizationsDistinct remoteSchemaCustomizer (RemoteSchemaIntrosp
   traverse_ validateFieldMappingsAreDistinct typeDefinitions
   where
     customizeTypeName = remoteSchemaCustomizeTypeName remoteSchemaCustomizer
-    customizeFieldName = remoteSchemaCustomizeFieldName remoteSchemaCustomizer
+    customizeFieldName = runCustomizeRemoteFieldName (remoteSchemaCustomizeFieldName remoteSchemaCustomizer)
 
     validateTypeMappingsAreDistinct :: m ()
     validateTypeMappingsAreDistinct = do
-      let dups = duplicates $ (customizeTypeName . typeDefinitionName) <$> typeDefinitions
+      let dups = duplicates $ (runMkTypename customizeTypeName . typeDefinitionName) <$> typeDefinitions
       unless (Set.null dups) $
         throwRemoteSchema $
           "Type name mappings are not distinct; the following types appear more than once: "

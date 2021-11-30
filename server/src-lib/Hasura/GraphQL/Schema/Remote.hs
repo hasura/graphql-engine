@@ -349,7 +349,7 @@ remoteFieldScalarParser customizeTypename (G.ScalarTypeDefinition description na
           _ -> pure (Altered False, QueryVariable <$> v)
     }
   where
-    customizedTypename = customizeTypename name
+    customizedTypename = runMkTypename customizeTypename name
     schemaType = NonNullable $ TNamed $ mkDefinition customizedTypename description TIScalar
     gType = toGraphQLType schemaType
 
@@ -368,7 +368,7 @@ remoteFieldEnumParser customizeTypename (G.EnumTypeDefinition desc name _directi
           ( mkDefinition (G.unEnumValue enumName) enumDesc P.EnumValueInfo,
             G.VEnum enumName
           )
-   in fmap (Altered False,) $ P.enum (customizeTypename name) desc $ NE.fromList enumValDefns
+   in fmap (Altered False,) $ P.enum (runMkTypename customizeTypename name) desc $ NE.fromList enumValDefns
 
 -- | remoteInputObjectParser returns an input parser for a given 'G.InputObjectTypeDefinition'
 --
@@ -897,7 +897,7 @@ remoteField sdoc parentTypeName fieldName description argsDefn typeDefn = do
   argsParser <- argumentsParser argsDefn sdoc
   customizeTypename <- asks getter
   customizeFieldName <- asks getter
-  let customizedFieldName = customizeFieldName parentTypeName fieldName
+  let customizedFieldName = runCustomizeRemoteFieldName customizeFieldName parentTypeName fieldName
   case typeDefn of
     G.TypeDefinitionObject objTypeDefn -> do
       remoteSchemaObjFields <- remoteSchemaObject sdoc objTypeDefn
@@ -975,15 +975,12 @@ customizeRemoteNamespace remoteSchemaInfo@RemoteSchemaInfo {..} rootTypeName fie
         -- In P.selectionSet we lose the resultCustomizer from __typename fields so we need to put it back
         let resultCustomizer = modifyFieldByName alias $ customizeTypeNameString $ _rscCustomizeTypeName rsCustomizer
          in RemoteFieldG remoteSchemaInfo resultCustomizer $ G.Field (Just alias) $$(G.litName "__typename") mempty mempty mempty
-    mkNamespaceTypename = Typename . const (remoteSchemaCustomizeTypeName rsCustomizer rootTypeName)
+    mkNamespaceTypename = MkTypename $ const $ runMkTypename (remoteSchemaCustomizeTypeName rsCustomizer) rootTypeName
 
 type MonadBuildRemoteSchema r m n = (MonadSchema n m, MonadError QErr m, MonadReader r m, Has MkTypename r, Has CustomizeRemoteFieldName r)
 
 runMonadBuildRemoteSchema :: Monad m => SchemaT n (ReaderT (MkTypename, CustomizeRemoteFieldName) m) a -> m a
-runMonadBuildRemoteSchema m = flip runReaderT (Typename, idFieldCustomizer) $ runSchemaT m
-  where
-    idFieldCustomizer :: CustomizeRemoteFieldName
-    idFieldCustomizer = const id
+runMonadBuildRemoteSchema m = flip runReaderT (mempty, mempty) $ runSchemaT m
 
 withRemoteSchemaCustomization ::
   forall m r a.
@@ -992,5 +989,5 @@ withRemoteSchemaCustomization ::
   m a ->
   m a
 withRemoteSchemaCustomization remoteSchemaCustomizer =
-  withTypenameCustomization (Typename . remoteSchemaCustomizeTypeName remoteSchemaCustomizer)
+  withTypenameCustomization (remoteSchemaCustomizeTypeName remoteSchemaCustomizer)
     . withRemoteFieldNameCustomization (remoteSchemaCustomizeFieldName remoteSchemaCustomizer)

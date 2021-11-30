@@ -504,7 +504,7 @@ tableConnectionSelectionSet sourceName tableInfo selectPermissions = memoizeOn '
               hasPreviousPageField
             ]
        in P.nonNullableParser $
-            P.selectionSet (P.Typename $$(G.litName "PageInfo")) Nothing allFields
+            P.selectionSet $$(G.litName "PageInfo") Nothing allFields
               <&> parsedSelectionsToFields IR.PageInfoTypename
 
     tableEdgesSelectionSet ::
@@ -1037,7 +1037,7 @@ tableAggregationFields sourceName tableInfo selectPermissions = memoizeOn 'table
       FieldParser n (IR.AggregateField b)
     parseAggOperator mkTypename operator tableGQLName columns =
       let opText = G.unName operator
-          setName = mkTypename $ tableGQLName <> $$(G.litName "_") <> operator <> $$(G.litName "_fields")
+          setName = P.runMkTypename mkTypename $ tableGQLName <> $$(G.litName "_") <> operator <> $$(G.litName "_fields")
           setDesc = Just $ G.Description $ "aggregate " <> opText <> " on columns"
           subselectionParser =
             P.selectionSet setName setDesc columns
@@ -1674,7 +1674,7 @@ nodePG = memoizeOn 'nodePG () do
       pure $ (source,sourceConfig,selectPermissions,tablePkeyColumns,) <$> annotatedFieldsParser
   pure $
     P.selectionSetInterface
-      (P.Typename $$(G.litName "Node"))
+      $$(G.litName "Node")
       (Just nodeInterfaceDescription)
       [idField]
       tables
