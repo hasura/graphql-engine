@@ -1,0 +1,93 @@
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import CodeBlock from '@theme/CodeBlock';
+
+# List Tables
+
+<Tabs>
+  <TabItem value="sphinx" label="Sphinx - RST" default>
+
+```rest
+.. list-table::
+   :header-rows: 1
+   :widths: 20 40
+
+   * - Field
+     - Description
+
+   * - Region 
+     - The region of the datacentre where your New Relic account stores its data. `Read more about regions on New Relic docs. <https://docs.newrelic.com/docs/using-new-relic/welcome-new-relic/get-started/our-eu-us-region-data-centers>`_
+
+   * - API Key 
+     - API keys are unique to your organization. An API key is required by the New Relic API to submit metrics and events to New Relic. You can get the API key from `here <https://one.newrelic.com/launcher/api-keys-ui.api-keys-launcher>`__ if you are in New Relic US region and `here <https://one.eu.newrelic.com/launcher/api-keys-ui.api-keys-launcher>`__ if you're in New Relic EU region.
+   
+   * - Host
+     - The name of the originating host of the log and metrics.
+
+   * - Custom Attributes
+     - Custom Attributes associated with your logs and metrics. A default source tag ``hasura-cloud-metrics`` is added to all exported logs and metrics. Attributes ``project_id`` and ``project_name`` are added to all exported metrics. 
+
+   * - Service Name 
+     - The name of the application or service generating the log events.
+```    
+  </TabItem>
+  <TabItem value="docusaurus" label="Docusaurus - MDX">
+
+If the table consist of simple text and no complex UI.
+
+```markdown
+| Field             | Description                                                                                                                                                                                                                                              |
+|-------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Region            | The region of the datacentre where your New Relic account stores its data. [Read more about regions on New Relic docs.](https://docs.newrelic.com/docs/using-new-relic/welcome-new-relic/get-started/our-eu-us-region-data-centers)                                                                                                                                |
+| API Key           | API keys are unique to your organization. An API key is required by the New Relic API to submit metrics and events to New Relic. You can get the API key from [here](https://one.newrelic.com/launcher/api-keys-ui.api-keys-launcher) if you are in New Relic US region and [here](https://one.eu.newrelic.com/launcher/api-keys-ui.api-keys-launcher) if you're in New Relic EU region. |
+| Host              | The name of the originating host of the log and metrics.                                                                                                                                                                                                 |
+| Custom Attributes | Custom Attributes associated with your logs and metrics. A default source tag `hasura-cloud-metrics` is added to all exported logs and metrics. Attributes `project_id` and `project_name` are added to all exported metrics.                            |
+| Service Name      | The name of the application or service generating the log events.                                                                                                                                                                                        |
+```
+
+| Field             | Description                                                                                                                                                                                                                                              |
+|-------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Region            | The region of the datacentre where your New Relic account stores its data. [Read more about regions on New Relic docs.](https://docs.newrelic.com/docs/using-new-relic/welcome-new-relic/get-started/our-eu-us-region-data-centers)                                                                                                                                |
+| API Key           | API keys are unique to your organization. An API key is required by the New Relic API to submit metrics and events to New Relic. You can get the API key from [here](https://one.newrelic.com/launcher/api-keys-ui.api-keys-launcher) if you are in New Relic US region and [here](https://one.eu.newrelic.com/launcher/api-keys-ui.api-keys-launcher) if you're in New Relic EU region. |
+| Host              | The name of the originating host of the log and metrics.                                                                                                                                                                                                 |
+| Custom Attributes | Custom Attributes associated with your logs and metrics. A default source tag `hasura-cloud-metrics` is added to all exported logs and metrics. Attributes `project_id` and `project_name` are added to all exported metrics.                            |
+| Service Name      | The name of the application or service generating the log events.                                                                                                                                                                                        |
+
+Unfortunatly, MDX doesn't not have straight forward syntax to control width and had to rely on html for this.
+
+<table>
+  <thead>
+    <tr>
+      <th width="20%">Field</th>
+      <th width="40%">Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Region</td>
+      <td>The region of the datacentre where your New Relic account stores its data. [Read more about regions on New Relic docs.](https://docs.newrelic.com/docs/using-new-relic/welcome-new-relic/get-started/our-eu-us-region-data-centers)</td>
+    </tr>
+    <tr>
+      <td>One</td>
+<td>
+
+```jsx
+    <ReddishGreen />
+```
+</td>
+    </tr>
+  </tbody>
+</table>
+
+  </TabItem>
+</Tabs>
+
+helov
+
+
+Item | Price | # In stock
+---|---|---
+Juicy Apples | 1.99 | 739
+Bananas | 1.89 | 6
+Bananas | 1.89 | 6
+Bananas | 1.89 | 10
