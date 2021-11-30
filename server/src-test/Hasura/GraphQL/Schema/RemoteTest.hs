@@ -11,8 +11,8 @@ import Hasura.Base.Error
 import Hasura.GraphQL.Execute.Inline
 import Hasura.GraphQL.Execute.Remote (resolveRemoteVariable, runVariableCache)
 import Hasura.GraphQL.Execute.Resolve
+import Hasura.GraphQL.Namespace
 import Hasura.GraphQL.Parser.Internal.Parser qualified as P
-import Hasura.GraphQL.Parser.Monad
 import Hasura.GraphQL.Parser.Schema
 import Hasura.GraphQL.Parser.TestUtils
 import Hasura.GraphQL.RemoteServer (identityCustomizer)
@@ -99,20 +99,17 @@ buildQueryParsers ::
   IO (P.FieldParser TestMonad (G.Field G.NoFragments RemoteSchemaVariable))
 buildQueryParsers introspection = do
   let introResult = IntrospectionResult introspection $$(G.litName "Query") Nothing Nothing
-  (query, _, _) <-
+  ParsedIntrospection query _ _ <-
     runError $
-      runSchemaT $
-        buildRemoteParser introResult $
-          RemoteSchemaInfo (ValidatedRemoteSchemaDef N.nullURI [] False 60 Nothing) identityCustomizer
+      buildRemoteParser introResult $
+        RemoteSchemaInfo (ValidatedRemoteSchemaDef N.nullURI [] False 60 Nothing) identityCustomizer
   pure $
-    head query <&> \(RemoteFieldG _ _ abstractField) ->
-      case abstractField of
-        RRFRealField f -> f
-        RRFNamespaceField _ ->
-          error "buildQueryParsers: unexpected RRFNamespaceField"
-
--- Shouldn't happen if we're using identityCustomizer
--- TODO: add some tests for remote schema customization
+    head query <&> \case
+      NotNamespaced remoteFld -> _rfField remoteFld
+      Namespaced _ ->
+        -- Shouldn't happen if we're using identityCustomizer
+        -- TODO: add some tests for remote schema customization
+        error "buildQueryParsers: unexpected Namespaced field"
 
 runQueryParser ::
   P.FieldParser TestMonad any ->

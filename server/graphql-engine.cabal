@@ -816,7 +816,6 @@ test-suite graphql-engine-tests
     Hasura.GraphQL.NamespaceSpec
     Hasura.GraphQL.Parser.DirectivesTest
     Hasura.GraphQL.Parser.TestUtils
-    Hasura.GraphQL.RemoteServerSpec
     Hasura.GraphQL.Schema.RemoteTest
     Hasura.IncrementalSpec
     Hasura.RQL.IR.Generator
