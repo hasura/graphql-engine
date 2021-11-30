@@ -2,6 +2,7 @@
 export enum ArgType {
   CompositeType = 'c',
   BaseType = 'b',
+  PseudoType = 'p'
 }
 
 export type PGInputArgType = {

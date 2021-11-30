@@ -11,7 +11,7 @@ import {
   IndexType,
 } from '../../types';
 import { QUERY_TYPES, Operations } from '../../common';
-import { PGFunction } from './types';
+import { PGFunction, ArgType } from './types';
 import { DataSourcesAPI, ColumnsInfoResult } from '../..';
 import {
   generateTableRowRequest,
@@ -174,12 +174,15 @@ export const isFunctionCompatibleToTable = (
   inputArgTypes.forEach(inputArgType => {
     if (!hasTableRowInArguments) {
       hasTableRowInArguments =
-        inputArgType.name === tableName && inputArgType.schema === tableSchema;
+        (inputArgType.name === tableName && inputArgType.schema === tableSchema) || 
+        (inputArgType.type === ArgType.PseudoType && inputArgType.schema === 'pg_catalog');
     }
 
     if (!hasUnsupportedArguments) {
       hasUnsupportedArguments =
-        inputArgType.type !== 'c' && inputArgType.type !== 'b';
+        inputArgType.type !== ArgType.CompositeType && 
+        inputArgType.type !== ArgType.BaseType &&
+        inputArgType.type !== ArgType.PseudoType;
     }
   });
 

@@ -30,7 +30,7 @@ data ComputedFieldValidateError
 
 data InvalidTableArgument
   = ITANotFound !FunctionArgName
-  | ITANotComposite !FunctionTableArgument
+  | ITANotCompositeNorPseudo !FunctionTableArgument
   | ITANotTable !QualifiedTable !FunctionTableArgument
   deriving (Show, Eq)
 
@@ -45,8 +45,8 @@ showError qf = \case
     computedField <<> " is not valid GraphQL name"
   CFVEInvalidTableArgument (ITANotFound argName) ->
     argName <<> " is not an input argument of the function " <>> qf
-  CFVEInvalidTableArgument (ITANotComposite functionArg) ->
-    showFunctionTableArgument functionArg <> " is not COMPOSITE type"
+  CFVEInvalidTableArgument (ITANotCompositeNorPseudo functionArg) ->
+    showFunctionTableArgument functionArg <> " is not COMPOSITE nor PSEUDO type"
   CFVEInvalidTableArgument (ITANotTable ty functionArg) ->
     showFunctionTableArgument functionArg <> " of type " <> ty
       <<> " is not the table to which the computed field is being added"
@@ -172,10 +172,10 @@ buildComputedFieldInfo trackedTables table computedField definition rawFunctionI
       QualifiedPGType ->
       n ()
     validateTableArgumentType tableArg qpt = do
-      when (_qptType qpt /= PGKindComposite) $
-        MV.dispute $ pure $ CFVEInvalidTableArgument $ ITANotComposite tableArg
+      when ((_qptType qpt /= PGKindComposite) && (_qptType qpt /= PGKindPseudo)) $
+        MV.dispute $ pure $ CFVEInvalidTableArgument $ ITANotCompositeNorPseudo tableArg
       let typeTable = typeToTable qpt
-      unless (table == typeTable) $
+      unless ((table == typeTable) || (_qptType qpt == PGKindPseudo)) $
         MV.dispute $ pure $ CFVEInvalidTableArgument $ ITANotTable typeTable tableArg
 
     validateSessionArgumentType ::
