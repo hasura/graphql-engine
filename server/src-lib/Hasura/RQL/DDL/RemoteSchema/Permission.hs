@@ -38,7 +38,7 @@ module Hasura.RQL.DDL.RemoteSchema.Permission
 where
 
 import Control.Monad.Validate
-import Data.HashMap.Strict qualified as Map
+import Data.HashMap.Strict.Extended qualified as Map
 import Data.HashSet qualified as S
 import Data.List.Extended (duplicates, getDifference)
 import Data.List.NonEmpty qualified as NE
@@ -900,7 +900,7 @@ getSchemaDocIntrospection providedTypeDefns (queryRoot, mutationRoot, subscripti
           G.TypeDefinitionObject obj -> pure $ G.TypeDefinitionObject obj
           G.TypeDefinitionUnion union' -> pure $ G.TypeDefinitionUnion union'
           G.TypeDefinitionInputObject inpObj -> pure $ G.TypeDefinitionInputObject inpObj
-      remoteSchemaIntrospection = RemoteSchemaIntrospection modifiedTypeDefns
+      remoteSchemaIntrospection = RemoteSchemaIntrospection $ Map.fromListOn getTypeName modifiedTypeDefns
    in IntrospectionResult remoteSchemaIntrospection (fromMaybe $$(G.litName "Query") queryRoot) mutationRoot subscriptionRoot
 
 -- | validateRemoteSchema accepts two arguments, the `SchemaDocument` of
@@ -966,14 +966,6 @@ validateRemoteSchema upstreamRemoteSchemaIntrospection = do
           <$> validateInputObjectTypeDefinition providedInputObjectTypeDefn upstreamInputObjectTypeDefn
   pure $ getSchemaDocIntrospection validatedTypeDefinitions rootTypeNames
   where
-    getTypeName = \case
-      G.TypeDefinitionScalar scalar -> G._stdName scalar
-      G.TypeDefinitionEnum enum -> G._etdName enum
-      G.TypeDefinitionObject obj -> G._otdName obj
-      G.TypeDefinitionUnion union' -> G._utdName union'
-      G.TypeDefinitionInterface iface -> G._itdName iface
-      G.TypeDefinitionInputObject inpObj -> G._iotdName inpObj
-
     typeNotFound gType name = refute (pure $ TypeDoesNotExist gType name)
 
 resolveRoleBasedRemoteSchema ::
