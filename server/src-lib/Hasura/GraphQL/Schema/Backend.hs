@@ -64,7 +64,8 @@ type MonadBuildSchema b r m n =
     MonadRole r m,
     Has QueryContext r,
     Has MkTypename r,
-    Has MkRootFieldName r
+    Has MkRootFieldName r,
+    Has CustomizeRemoteFieldName r
   )
 
 -- | This type class is responsible for generating the schema of a backend.

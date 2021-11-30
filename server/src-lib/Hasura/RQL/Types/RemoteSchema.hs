@@ -3,11 +3,9 @@ module Hasura.RQL.Types.RemoteSchema
     AddRemoteSchemaQuery (..),
     AliasMapping,
     DropRemoteSchemaPermissions (..),
-    RawRemoteField,
     RemoteField,
     RemoteFieldCustomization (..),
     RemoteFieldG (..),
-    RemoteRootField (..),
     RemoteSchemaCustomization (..),
     RemoteSchemaCustomizer (..),
     RemoteSchemaDef (..),
@@ -25,7 +23,6 @@ module Hasura.RQL.Types.RemoteSchema
     ValidatedRemoteSchemaDef (..),
     applyAliasMapping,
     customizeTypeNameString,
-    getRemoteFieldSelectionSet,
     getUrlFromEnv,
     hasTypeOrFieldCustomizations,
     lookupEnum,
@@ -36,11 +33,8 @@ module Hasura.RQL.Types.RemoteSchema
     lookupType,
     lookupUnion,
     modifyFieldByName,
-    realRemoteField,
     remoteSchemaCustomizeFieldName,
     remoteSchemaCustomizeTypeName,
-    remoteSchemaDecustomizeFieldName,
-    remoteSchemaDecustomizeTypeName,
     rfField,
     rfRemoteSchemaInfo,
     rfResultCustomizer,
@@ -185,11 +179,7 @@ data RemoteSchemaCustomizer = RemoteSchemaCustomizer
     -- | type name -> type name
     _rscCustomizeTypeName :: !(HashMap G.Name G.Name),
     -- | type name -> field name -> field name
-    _rscCustomizeFieldName :: !(HashMap G.Name (HashMap G.Name G.Name)),
-    -- | type name -> type name
-    _rscDecustomizeTypeName :: !(HashMap G.Name G.Name),
-    -- | type name -> field name -> field name
-    _rscDecustomizeFieldName :: !(HashMap G.Name (HashMap G.Name G.Name))
+    _rscCustomizeFieldName :: !(HashMap G.Name (HashMap G.Name G.Name))
   }
   deriving (Show, Eq, Generic)
 
@@ -208,14 +198,6 @@ remoteSchemaCustomizeTypeName RemoteSchemaCustomizer {..} typeName =
 remoteSchemaCustomizeFieldName :: RemoteSchemaCustomizer -> G.Name -> G.Name -> G.Name
 remoteSchemaCustomizeFieldName RemoteSchemaCustomizer {..} typeName fieldName =
   Map.lookup typeName _rscCustomizeFieldName >>= Map.lookup fieldName & fromMaybe fieldName
-
-remoteSchemaDecustomizeTypeName :: RemoteSchemaCustomizer -> G.Name -> G.Name
-remoteSchemaDecustomizeTypeName RemoteSchemaCustomizer {..} typeName =
-  Map.lookupDefault typeName typeName _rscDecustomizeTypeName
-
-remoteSchemaDecustomizeFieldName :: RemoteSchemaCustomizer -> G.Name -> G.Name -> G.Name
-remoteSchemaDecustomizeFieldName RemoteSchemaCustomizer {..} typeName fieldName =
-  Map.lookup typeName _rscDecustomizeFieldName >>= Map.lookup fieldName & fromMaybe fieldName
 
 hasTypeOrFieldCustomizations :: RemoteSchemaCustomizer -> Bool
 hasTypeOrFieldCustomizations RemoteSchemaCustomizer {..} =
@@ -428,37 +410,16 @@ newtype RemoteSchemaIntrospection
   = RemoteSchemaIntrospection [(G.TypeDefinition [G.Name] RemoteSchemaInputValueDefinition)]
   deriving (Show, Eq, Generic, Hashable, Cacheable, Ord)
 
--- | An RemoteRootField could either be a real field on the remote server
--- or represent a virtual namespace that only exists in the Hasura schema.
-data RemoteRootField var
-  = -- | virtual namespace field
-    RRFNamespaceField !(G.SelectionSet G.NoFragments var)
-  | -- | a real field on the remote server
-    RRFRealField !(G.Field G.NoFragments var)
-  deriving (Functor, Foldable, Traversable)
-
--- | For a real remote field gives a SelectionSet for selecting the field itself.
---   For a virtual field gives the unwrapped SelectionSet for the field.
-getRemoteFieldSelectionSet :: RemoteRootField var -> G.SelectionSet G.NoFragments var
-getRemoteFieldSelectionSet = \case
-  RRFNamespaceField selSet -> selSet
-  RRFRealField fld -> [G.SelectionField fld]
-
-data RemoteFieldG f var = RemoteFieldG
+data RemoteFieldG var = RemoteFieldG
   { _rfRemoteSchemaInfo :: !RemoteSchemaInfo,
     _rfResultCustomizer :: !ResultCustomizer,
-    _rfField :: !(f var)
+    _rfField :: !(G.Field G.NoFragments var)
   }
   deriving (Functor, Foldable, Traversable)
 
 $(makeLenses ''RemoteFieldG)
 
-type RawRemoteField = RemoteFieldG (G.Field G.NoFragments) RemoteSchemaVariable
-
-type RemoteField = RemoteFieldG RemoteRootField RemoteSchemaVariable
-
-realRemoteField :: RawRemoteField -> RemoteField
-realRemoteField RemoteFieldG {..} = RemoteFieldG {_rfField = RRFRealField _rfField, ..}
+type RemoteField = RemoteFieldG RemoteSchemaVariable
 
 data RemoteSchemaPermsCtx
   = RemoteSchemaPermsEnabled

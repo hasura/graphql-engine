@@ -24,10 +24,8 @@ import Data.HashSet qualified as Set
 import Data.List.Extended (duplicates)
 import Data.Text qualified as T
 import Data.Text.Extended (dquoteList, (<<>))
-import Data.Tuple (swap)
 import Hasura.Base.Error
 import Hasura.GraphQL.Parser.Collect ()
-import Hasura.GraphQL.Parser.Monad qualified as P
 -- Needed for GHCi and HLS due to TH in cyclically dependent modules (see https://gitlab.haskell.org/ghc/ghc/-/issues/1012)
 import Hasura.GraphQL.Schema.Remote (buildRemoteParser)
 import Hasura.GraphQL.Transport.HTTP.Protocol
@@ -165,8 +163,7 @@ fetchRemoteSchema env manager _rscName rsDef@ValidatedRemoteSchemaDef {..} = do
 
   let _rscInfo = RemoteSchemaInfo {..}
   -- Check that the parsed GraphQL type info is valid by running the schema generation
-  (piQuery, piMutation, piSubscription) <-
-    P.runSchemaT @m @(P.ParseT Identity) $ buildRemoteParser _rscIntroOriginal _rscInfo
+  _rscParsed <- buildRemoteParser _rscIntroOriginal _rscInfo
 
   -- The 'rawIntrospectionResult' contains the 'Bytestring' response of
   -- the introspection result of the remote server. We store this in the
@@ -175,7 +172,6 @@ fetchRemoteSchema env manager _rscName rsDef@ValidatedRemoteSchemaDef {..} = do
   return
     RemoteSchemaCtx
       { _rscPermissions = mempty,
-        _rscParsed = ParsedIntrospection {..},
         ..
       }
   where
@@ -458,7 +454,7 @@ execRemoteGQ env manager userInfo reqHdrs rsdef gqlReq@GQLReq {..} = do
     userInfoToHdrs = sessionVariablesToHeaders $ _uiSession userInfo
 
 identityCustomizer :: RemoteSchemaCustomizer
-identityCustomizer = RemoteSchemaCustomizer Nothing mempty mempty mempty mempty
+identityCustomizer = RemoteSchemaCustomizer Nothing mempty mempty
 
 typeDefinitionName :: G.TypeDefinition a b -> G.Name
 typeDefinitionName = \case
@@ -473,8 +469,6 @@ getCustomizer :: IntrospectionResult -> Maybe RemoteSchemaCustomization -> Remot
 getCustomizer _ Nothing = identityCustomizer
 getCustomizer IntrospectionResult {..} (Just RemoteSchemaCustomization {..}) = RemoteSchemaCustomizer {..}
   where
-    mapMap f = Map.fromList . map f . Map.toList
-    invertMap = mapMap swap -- key collisions are checked for later in validateSchemaCustomizations
     rootTypeNames =
       if isNothing _rscRootFieldsNamespace
         then catMaybes [Just irQueryRoot, irMutationRoot, irSubscriptionRoot]
@@ -518,14 +512,9 @@ getCustomizer IntrospectionResult {..} (Just RemoteSchemaCustomization {..}) = R
           let customizationMap = Map.fromList $ map (\rfc -> (_rfcParentType rfc, rfc)) fieldNameCustomizations
            in Map.intersectionWith mkFieldRenameMap customizationMap typeFieldMap
 
-    mapLookup :: (Eq a, Hashable a) => HashMap a a -> a -> a
-    mapLookup m a = fromMaybe a $ Map.lookup a m
-
     _rscNamespaceFieldName = _rscRootFieldsNamespace
     _rscCustomizeTypeName = typeRenameMap
     _rscCustomizeFieldName = fieldRenameMap
-    _rscDecustomizeTypeName = invertMap typeRenameMap
-    _rscDecustomizeFieldName = mapMap (mapLookup typeRenameMap *** invertMap) fieldRenameMap
 
 throwRemoteSchema ::
   QErrM m =>

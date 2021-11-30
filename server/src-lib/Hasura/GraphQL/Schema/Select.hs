@@ -1376,23 +1376,27 @@ remoteRelationshipField remoteFieldInfo = runMaybeT do
       -- These are the arguments that are given by the user while executing a query
       let remoteFieldUserArguments = map snd $ Map.toList remoteFieldParamMap
       remoteFld <-
-        lift $
-          customizeFieldParser (,) remoteSchemaCustomizer parentTypeName . P.wrapFieldParser nestedFieldType
-            <$> remoteField remoteRelationshipIntrospection fieldName Nothing remoteFieldUserArguments fieldTypeDefinition
+        withRemoteSchemaCustomization remoteSchemaCustomizer $
+          lift $
+            P.wrapFieldParser nestedFieldType
+              <$> remoteField remoteRelationshipIntrospection parentTypeName fieldName Nothing remoteFieldUserArguments fieldTypeDefinition
 
       pure $
         pure $
           remoteFld
-            `P.bindField` \(resultCustomizer, G.Field {G._fArguments = args, G._fSelectionSet = selSet, G._fName = fname}) -> do
+            `P.bindField` \fld@G.Field {G._fArguments = args, G._fSelectionSet = selSet, G._fName = fname} -> do
               let remoteArgs =
                     Map.toList args <&> \(argName, argVal) -> IR.RemoteFieldArgument argName $ P.GraphQLValue $ argVal
-              let resultCustomizer' = applyFieldCalls fieldCalls $ applyAliasMapping (singletonAliasMapping fname (fcName $ NE.last fieldCalls)) resultCustomizer
+              let resultCustomizer =
+                    applyFieldCalls fieldCalls $
+                      applyAliasMapping (singletonAliasMapping fname (fcName $ NE.last fieldCalls)) $
+                        makeResultCustomizer remoteSchemaCustomizer fld
               pure $
                 IR.AFRemote $
                   IR.RemoteSelectRemoteSchema $
                     IR.RemoteSchemaSelect
                       { _rselArgs = remoteArgs,
-                        _rselResultCustomizer = resultCustomizer',
+                        _rselResultCustomizer = resultCustomizer,
                         _rselSelection = selSet,
                         _rselHasuraFields = hasuraFields,
                         _rselFieldCall = fieldCalls,

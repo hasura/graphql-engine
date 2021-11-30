@@ -11,6 +11,8 @@ module Hasura.RQL.Types.SourceCustomization
     SourceCustomization (..),
     withSourceCustomization,
     MkRootFieldName,
+    CustomizeRemoteFieldName,
+    withRemoteFieldNameCustomization,
   )
 where
 
@@ -122,3 +124,8 @@ withSourceCustomization ::
 withSourceCustomization SourceCustomization {..} =
   withTypenameCustomization (mkCustomizedTypename _scTypeNames)
     . withRootFieldNameCustomization (mkCustomizedFieldName _scRootFields)
+
+type CustomizeRemoteFieldName = G.Name -> G.Name -> G.Name
+
+withRemoteFieldNameCustomization :: forall m r a. (MonadReader r m, Has CustomizeRemoteFieldName r) => CustomizeRemoteFieldName -> m a -> m a
+withRemoteFieldNameCustomization = local . set hasLens
