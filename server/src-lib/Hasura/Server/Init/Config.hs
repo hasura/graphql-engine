@@ -220,7 +220,8 @@ data ServeOptions impl = ServeOptions
     soEventsFetchBatchSize :: !NonNegativeInt,
     soDevMode :: !Bool,
     soGracefulShutdownTimeout :: !Seconds,
-    soWebsocketConnectionInitTimeout :: !WSConnectionInitTimeout
+    soWebsocketConnectionInitTimeout :: !WSConnectionInitTimeout,
+    soEventingMode :: !EventingMode
   }
 
 data DowngradeOptions = DowngradeOptions

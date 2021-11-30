@@ -140,7 +140,8 @@ data ServerCtx = ServerCtx
     scEnableMaintenanceMode :: !MaintenanceMode,
     scExperimentalFeatures :: !(S.HashSet ExperimentalFeature),
     -- | this is only required for the short-term fix in https://github.com/hasura/graphql-engine-mono/issues/1770
-    scEnabledLogTypes :: !(S.HashSet (L.EngineLogType L.Hasura))
+    scEnabledLogTypes :: !(S.HashSet (L.EngineLogType L.Hasura)),
+    scEventingMode :: !EventingMode
   }
 
 data HandlerCtx = HandlerCtx
@@ -464,7 +465,8 @@ v1QueryHandler query = do
       functionPermsCtx <- asks (scFunctionPermsCtx . hcServerCtx)
       maintenanceMode <- asks (scEnableMaintenanceMode . hcServerCtx)
       experimentalFeatures <- asks (scExperimentalFeatures . hcServerCtx)
-      let serverConfigCtx = ServerConfigCtx functionPermsCtx remoteSchemaPermsCtx sqlGenCtx maintenanceMode experimentalFeatures
+      eventingMode <- asks (scEventingMode . hcServerCtx)
+      let serverConfigCtx = ServerConfigCtx functionPermsCtx remoteSchemaPermsCtx sqlGenCtx maintenanceMode experimentalFeatures eventingMode
       runQuery
         env
         logger
@@ -500,7 +502,8 @@ v1MetadataHandler query = do
   functionPermsCtx <- asks (scFunctionPermsCtx . hcServerCtx)
   experimentalFeatures <- asks (scExperimentalFeatures . hcServerCtx)
   maintenanceMode <- asks (scEnableMaintenanceMode . hcServerCtx)
-  let serverConfigCtx = ServerConfigCtx functionPermsCtx remoteSchemaPermsCtx sqlGenCtx maintenanceMode experimentalFeatures
+  eventingMode <- asks (scEventingMode . hcServerCtx)
+  let serverConfigCtx = ServerConfigCtx functionPermsCtx remoteSchemaPermsCtx sqlGenCtx maintenanceMode experimentalFeatures eventingMode
   r <-
     withSCUpdate
       scRef
@@ -551,7 +554,8 @@ v2QueryHandler query = do
       experimentalFeatures <- asks (scExperimentalFeatures . hcServerCtx)
       functionPermsCtx <- asks (scFunctionPermsCtx . hcServerCtx)
       maintenanceMode <- asks (scEnableMaintenanceMode . hcServerCtx)
-      let serverConfigCtx = ServerConfigCtx functionPermsCtx remoteSchemaPermsCtx sqlGenCtx maintenanceMode experimentalFeatures
+      eventingMode <- asks (scEventingMode . hcServerCtx)
+      let serverConfigCtx = ServerConfigCtx functionPermsCtx remoteSchemaPermsCtx sqlGenCtx maintenanceMode experimentalFeatures eventingMode
       V2Q.runQuery env instanceId userInfo schemaCache httpMgr serverConfigCtx query
 
 v1Alpha1GQHandler ::
@@ -812,6 +816,7 @@ mkWaiApp ::
   WS.ConnectionOptions ->
   KeepAliveDelay ->
   MaintenanceMode ->
+  EventingMode ->
   -- | Set of the enabled experimental features
   S.HashSet ExperimentalFeature ->
   S.HashSet (L.EngineLogType L.Hasura) ->
@@ -842,6 +847,7 @@ mkWaiApp
   connectionOptions
   keepAliveDelay
   maintenanceMode
+  eventingMode
   experimentalFeatures
   enabledLogTypes
   wsConnInitTimeout = do
@@ -881,7 +887,8 @@ mkWaiApp
               scFunctionPermsCtx = functionPermsCtx,
               scEnableMaintenanceMode = maintenanceMode,
               scExperimentalFeatures = experimentalFeatures,
-              scEnabledLogTypes = enabledLogTypes
+              scEnabledLogTypes = enabledLogTypes,
+              scEventingMode = eventingMode
             }
 
     spockApp <- liftWithStateless $ \lowerIO ->

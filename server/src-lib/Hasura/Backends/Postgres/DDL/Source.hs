@@ -40,7 +40,7 @@ import Hasura.RQL.Types.SourceCustomization
 import Hasura.RQL.Types.Table
 import Hasura.SQL.Backend
 import Hasura.Server.Migrate.Internal
-import Hasura.Server.Types (MaintenanceMode (..))
+import Hasura.Server.Types (EventingMode (..), MaintenanceMode (..))
 import Language.Haskell.TH.Lib qualified as TH
 import Language.Haskell.TH.Syntax qualified as TH
 
@@ -143,13 +143,16 @@ resolveDatabaseMetadata sourceConfig sourceCustomization = runExceptT do
 
 -- | Initialise catalog tables for a source, including those required by the event delivery subsystem.
 initCatalogForSource ::
-  forall m. MonadTx m => MaintenanceMode -> UTCTime -> m RecreateEventTriggers
-initCatalogForSource maintenanceMode migrationTime = do
+  forall m. MonadTx m => MaintenanceMode -> EventingMode -> UTCTime -> m RecreateEventTriggers
+initCatalogForSource maintenanceMode eventingMode migrationTime = do
   hdbCatalogExist <- doesSchemaExist "hdb_catalog"
   eventLogTableExist <- doesTableExist "hdb_catalog" "event_log"
   sourceVersionTableExist <- doesTableExist "hdb_catalog" "hdb_source_catalog_version"
-  -- when maintenance mode is enabled, don't perform any migrations
+
   if
+      -- when eventing mode is disabled, don't perform any migrations
+      | eventingMode == EventingDisabled -> pure RETDoNothing
+      -- when maintenance mode is enabled, don't perform any migrations
       | maintenanceMode == MaintenanceModeEnabled -> pure RETDoNothing
       -- Fresh database
       | not hdbCatalogExist -> liftTx do

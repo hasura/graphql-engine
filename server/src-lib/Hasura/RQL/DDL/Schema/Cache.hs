@@ -416,12 +416,13 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
                 Tag.PostgresVanillaTag -> do
                   migrationTime <- liftIO getCurrentTime
                   maintenanceMode <- _sccMaintenanceMode <$> askServerConfigCtx
+                  eventingMode <- _sccEventingMode <$> askServerConfigCtx
                   liftEitherM $
                     liftIO $
                       LA.withAsync (logPGSourceCatalogMigrationLockedQueries logger sourceConfig) $
                         const $ do
                           let initCatalogAction =
-                                runExceptT $ runTx (_pscExecCtx sourceConfig) Q.ReadWrite (initCatalogForSource maintenanceMode migrationTime)
+                                runExceptT $ runTx (_pscExecCtx sourceConfig) Q.ReadWrite (initCatalogForSource maintenanceMode eventingMode migrationTime)
                           -- The `initCatalogForSource` action is retried here because
                           -- in cloud there will be multiple workers (graphql-engine instances)
                           -- trying to migrate the source catalog, when needed. This introduces

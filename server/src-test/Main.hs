@@ -150,7 +150,7 @@ buildPostgresSpecs maybeUrlTemplate = do
         let sqlGenCtx = SQLGenCtx False False
             maintenanceMode = MaintenanceModeDisabled
             serverConfigCtx =
-              ServerConfigCtx FunctionPermissionsInferred RemoteSchemaPermsDisabled sqlGenCtx maintenanceMode mempty
+              ServerConfigCtx FunctionPermissionsInferred RemoteSchemaPermsDisabled sqlGenCtx maintenanceMode mempty EventingEnabled
             cacheBuildParams = CacheBuildParams httpManager (mkPgSourceResolver print) serverConfigCtx
             pgLogger = print
 

@@ -284,6 +284,7 @@ mkServeOptions rso = do
       devMode
       gracefulShutdownTime
       webSocketConnectionInitTimeout
+      EventingEnabled
   where
     defaultAsyncActionsFetchInterval = Interval 1000 -- 1000 Milliseconds or 1 Second
     defaultSchemaPollInterval = Interval 1000 -- 1000 Milliseconds or 1 Second
@@ -481,6 +482,7 @@ eventsFetchBatchSizeEnv :: (String, String)
 eventsFetchBatchSizeEnv =
   ( "HASURA_GRAPHQL_EVENTS_FETCH_BATCH_SIZE",
     "The maximum number of events to be fetched from the events table in a single batch. Default 100"
+      ++ "Value \"0\" implies completely disable fetching events from events table. "
   )
 
 asyncActionsFetchIntervalEnv :: (String, String)
