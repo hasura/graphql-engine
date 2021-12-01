@@ -239,14 +239,15 @@ args:
     table:
       name: article2
       dataset: hasura_test
-    remote_source:
-      relationship_type: object
-      field_mapping:
-        author_id: id
-      source: bigquery
-      table:
-        name: author
-        dataset: hasura_test
+    definition:
+      to_source:
+        relationship_type: object
+        field_mapping:
+          author_id: id
+        source: bigquery
+        table:
+          name: author
+          dataset: hasura_test
 
 - type: bigquery_create_remote_relationship
   args:
@@ -255,11 +256,12 @@ args:
     table:
       name: author
       dataset: hasura_test
-    remote_source:
-      relationship_type: array
-      field_mapping:
-        id: author_id
-      source: bigquery2
-      table:
-        name: article2
-        dataset: hasura_test
+    definition:
+      to_source:
+        relationship_type: array
+        field_mapping:
+          id: author_id
+        source: bigquery2
+        table:
+          name: article2
+          dataset: hasura_test

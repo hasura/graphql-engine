@@ -66,9 +66,9 @@ data RQLQueryV1
   | -- computed fields related
     RQAddComputedField !(AddComputedField ('Postgres 'Vanilla))
   | RQDropComputedField !(DropComputedField ('Postgres 'Vanilla))
-  | RQCreateRemoteRelationship !(RemoteRelationship ('Postgres 'Vanilla))
-  | RQUpdateRemoteRelationship !(RemoteRelationship ('Postgres 'Vanilla))
-  | RQDeleteRemoteRelationship !(DeleteRemoteRelationship ('Postgres 'Vanilla))
+  | RQCreateRemoteRelationship !(CreateFromSourceRelationship ('Postgres 'Vanilla))
+  | RQUpdateRemoteRelationship !(CreateFromSourceRelationship ('Postgres 'Vanilla))
+  | RQDeleteRemoteRelationship !(DeleteFromSourceRelationship ('Postgres 'Vanilla))
   | RQCreateInsertPermission !(CreatePerm InsPerm ('Postgres 'Vanilla))
   | RQCreateSelectPermission !(CreatePerm SelPerm ('Postgres 'Vanilla))
   | RQCreateUpdatePermission !(CreatePerm UpdPerm ('Postgres 'Vanilla))

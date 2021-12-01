@@ -12,7 +12,7 @@ import Hasura.Base.Error
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend (Backend)
 import Hasura.RQL.Types.Metadata.Backend
-import Hasura.RQL.Types.Relationship
+import Hasura.RQL.Types.Relationships.Local
 import Hasura.RQL.Types.Table
 import Hasura.SQL.Backend
 

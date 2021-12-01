@@ -1340,7 +1340,7 @@ remoteRelationshipField remoteFieldInfo = runMaybeT do
         hoistMaybe $ Map.lookup remoteSchemaName remoteRelationshipQueryCtx
       role <- askRoleName
       let hasuraFieldNames = Set.map dbJoinFieldToName hasuraFields
-          relationshipDef = RemoteSchemaRelationshipDef remoteSchemaName hasuraFieldNames remoteFields
+          relationshipDef = ToSchemaRelationshipDef remoteSchemaName hasuraFieldNames remoteFields
       (newInpValDefns :: [(G.TypeDefinition [G.Name] RemoteSchemaInputValueDefinition)], remoteFieldParamMap) <-
         if role == adminRoleName
           then do
@@ -1352,13 +1352,13 @@ remoteRelationshipField remoteFieldInfo = runMaybeT do
             fieldInfoMap <- (_tciFieldInfoMap . _tiCoreInfo) <$> askTableInfo @b source table
             roleRemoteField <-
               afold @(Either _) $
-                validateRemoteSchemaRelationship relationshipDef table name source (remoteSchemaInfo, roleIntrospectionResultOriginal) fieldInfoMap
-            pure $ (_rfiInputValueDefinitions roleRemoteField, _rfiParamMap roleRemoteField)
+                validateSourceToSchemaRelationship relationshipDef table name source (remoteSchemaInfo, roleIntrospectionResultOriginal) fieldInfoMap
+            pure $ (_rrfiInputValueDefinitions roleRemoteField, _rrfiParamMap roleRemoteField)
       let roleIntrospection@(RemoteSchemaIntrospection typeDefns) = irDoc roleIntrospectionResultOriginal
           -- add the new input value definitions created by the remote relationship
           -- to the existing schema introspection of the role
           remoteRelationshipIntrospection = RemoteSchemaIntrospection $ typeDefns <> Map.fromListOn getTypeName newInpValDefns
-      fieldName <- textToName $ remoteRelationshipNameToText name
+      fieldName <- textToName $ relNameToTxt name
 
       -- This selection set parser, should be of the remote node's selection set parser, which comes
       -- from the fieldCall
