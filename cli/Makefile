@@ -20,7 +20,7 @@ deps:
 
 .PHONY: lint
 lint:
-	golangci-lint run --timeout 2m
+	golangci-lint run --timeout 10m
 
 # build cli locally, for all given platform/arch
 .PHONY: build
