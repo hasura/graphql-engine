@@ -47,7 +47,8 @@ LEFT JOIN LATERAL
       'position', "column".attnum,
       'type', coalesce(base_type.typname, "type".typname),
       'is_nullable', NOT "column".attnotnull,
-      'description', pg_catalog.col_description("table".oid, "column".attnum)
+      'description', pg_catalog.col_description("table".oid, "column".attnum),
+      'mutability', jsonb_build_object('is_insertable', true, 'is_updatable', true)
     )) AS info
     FROM pg_catalog.pg_attribute "column"
     LEFT JOIN pg_catalog.pg_type "type"

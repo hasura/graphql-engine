@@ -43,7 +43,8 @@ mergeMetadata InformationSchema {..} =
                 prciPosition = fromIntegral isOrdinalPosition,
                 prciType = parseMySQLScalarType isColumnType, -- TODO: This needs to become more precise by considering Field length and character-set
                 prciIsNullable = isIsNullable == "YES", -- ref: https://dev.mysql.com/doc/refman/8.0/en/information-schema-columns-table.html
-                prciDescription = Just $ G.Description isColumnComment
+                prciDescription = Just $ G.Description isColumnComment,
+                prciMutability = ColumnMutability {_cmIsInsertable = True, _cmIsUpdatable = True}
               }
           ],
         _ptmiPrimaryKey =
