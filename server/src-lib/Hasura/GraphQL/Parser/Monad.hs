@@ -9,7 +9,6 @@ module Hasura.GraphQL.Parser.Monad
   )
 where
 
-import Control.Monad.Unique
 import Control.Monad.Validate
 import Data.Dependent.Map (DMap)
 import Data.Dependent.Map qualified as DM
@@ -21,7 +20,6 @@ import Data.Proxy (Proxy (..))
 import Data.Sequence.NonEmpty qualified as NE
 import Hasura.Base.Error
 import Hasura.GraphQL.Parser.Class
-import Hasura.GraphQL.Parser.Schema
 import Hasura.Prelude
 import Language.Haskell.TH qualified as TH
 import System.IO.Unsafe (unsafeInterleaveIO)
@@ -40,7 +38,7 @@ runSchemaT = flip evalStateT mempty . unSchemaT
 
 -- | see Note [SchemaT requires MonadIO]
 instance
-  (MonadIO m, MonadUnique m, MonadParse n) =>
+  (MonadIO m, MonadParse n) =>
   MonadSchema n (SchemaT n m)
   where
   memoizeOn name key buildParser = SchemaT do
@@ -84,8 +82,7 @@ instance
                       ]
         put $! DM.insert parserId parserById parsersById
 
-        unique <- newUnique
-        parser <- addDefinitionUnique unique <$> unSchemaT buildParser
+        parser <- unSchemaT buildParser
         liftIO $ writeIORef cell (Just parser)
         pure parser
 
@@ -96,7 +93,7 @@ instance
 deriving instance Monad m => MonadReader a (SchemaT n (ReaderT a m))
 
 instance
-  (MonadIO m, MonadUnique m, MonadParse n) =>
+  (MonadIO m, MonadParse n) =>
   MonadSchema n (ReaderT a (SchemaT n m))
   where
   memoizeOn name key = mapReaderT (memoizeOn name key)

@@ -261,7 +261,7 @@ float = Parser
         v                         -> typeMismatch floatScalar "a float" v
   }
   where
-    schemaType = NonNullable $ TNamed $ mkDefinition "Float" Nothing TIScalar
+    schemaType = NonNullable $ TNamed $ Definition "Float" Nothing TIScalar
 ```
 
 This allows us to incrementally unpack JSON values without having to fully

@@ -52,7 +52,6 @@ import Control.Monad.STM (atomically)
 import Control.Monad.Stateless
 import Control.Monad.Trans.Control (MonadBaseControl (..))
 import Control.Monad.Trans.Managed (ManagedT (..), allocate_)
-import Control.Monad.Unique
 import Data.Aeson qualified as A
 import Data.ByteString.Char8 qualified as BC
 import Data.ByteString.Lazy.Char8 qualified as BLC
@@ -308,7 +307,6 @@ newtype PGMetadataStorageAppT m a = PGMetadataStorageAppT {runPGMetadataStorageA
       MonadMask,
       HasHttpManagerM,
       HasServerConfigCtx,
-      MonadUnique,
       MonadReader (Q.PGPool, Q.PGLogger)
     )
     via (ReaderT (Q.PGPool, Q.PGLogger) m)

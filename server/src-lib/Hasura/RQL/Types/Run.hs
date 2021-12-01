@@ -8,7 +8,6 @@ module Hasura.RQL.Types.Run
 where
 
 import Control.Monad.Trans.Control (MonadBaseControl)
-import Control.Monad.Unique
 import Hasura.Base.Error
 import Hasura.Metadata.Class
 import Hasura.Prelude
@@ -34,9 +33,6 @@ newtype RunT m a = RunT {unRunT :: ReaderT RunCtx (ExceptT QErr m) a}
       MonadMetadataStorage,
       Tracing.MonadTrace
     )
-
-instance (MonadIO m) => MonadUnique (RunT m) where
-  newUnique = liftIO newUnique
 
 instance (MonadMetadataStorage m) => MonadMetadataStorageQueryAPI (RunT m)
 

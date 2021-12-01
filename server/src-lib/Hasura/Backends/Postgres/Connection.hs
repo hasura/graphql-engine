@@ -43,7 +43,6 @@ where
 import Control.Lens (makeLenses)
 import Control.Monad.Morph (hoist)
 import Control.Monad.Trans.Control (MonadBaseControl (..))
-import Control.Monad.Unique
 import Control.Monad.Validate
 import Data.Aeson
 import Data.Aeson.Casing (aesonDrop)
@@ -175,9 +174,6 @@ withTraceContext ::
 withTraceContext ctx tx = setTraceContextInTx ctx >> tx
 
 deriving instance Tracing.MonadTrace m => Tracing.MonadTrace (Q.TxET e m)
-
-instance (MonadIO m) => MonadUnique (Q.TxET e m) where
-  newUnique = liftIO newUnique
 
 checkDbConnection :: MonadIO m => Q.PGPool -> m Bool
 checkDbConnection pool = do

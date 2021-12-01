@@ -6,7 +6,6 @@ module Hasura.GraphQL.Schema
 where
 
 import Control.Lens.Extended
-import Control.Monad.Unique
 import Data.Aeson.Ordered qualified as JO
 import Data.Has
 import Data.HashMap.Strict qualified as Map
@@ -51,7 +50,6 @@ buildGQLContext ::
   forall m.
   ( MonadError QErr m,
     MonadIO m,
-    MonadUnique m,
     HasServerConfigCtx m
   ) =>
   GraphQLQueryType ->
@@ -102,7 +100,7 @@ buildGQLContext queryType sources allRemoteSchemas allActions nonObjectCustomTyp
   queryFieldNames :: [G.Name] <-
     case P.discardNullability $ P.parserType $ fst adminHasuraDBContext of
       -- It really ought to be this case; anything else is a programming error.
-      P.TNamed (P.Definition _ _ _ (P.TIObject (P.ObjectInfo rootFields _interfaces))) ->
+      P.TNamed (P.Definition _ _ (P.TIObject (P.ObjectInfo rootFields _interfaces))) ->
         pure $ fmap P.dName rootFields
       _ -> throw500 "We encountered an root query of unexpected GraphQL type.  It should be an object type."
   let mutationFieldNames :: [G.Name]
@@ -158,7 +156,7 @@ customizeFields SourceCustomization {..} =
 
 buildRoleContext ::
   forall m.
-  (MonadError QErr m, MonadIO m, MonadUnique m) =>
+  (MonadError QErr m, MonadIO m) =>
   (SQLGenCtx, GraphQLQueryType, FunctionPermissionsCtx) ->
   SourceCache ->
   RemoteSchemaCache ->
@@ -259,7 +257,7 @@ buildRoleContext
 
 buildRelayRoleContext ::
   forall m.
-  (MonadError QErr m, MonadIO m, MonadUnique m) =>
+  (MonadError QErr m, MonadIO m) =>
   (SQLGenCtx, GraphQLQueryType, FunctionPermissionsCtx) ->
   SourceCache ->
   [ActionInfo] ->
@@ -344,7 +342,7 @@ buildRelayRoleContext
 
 buildFullestDBSchema ::
   forall m.
-  (MonadError QErr m, MonadIO m, MonadUnique m) =>
+  (MonadError QErr m, MonadIO m) =>
   QueryContext ->
   SourceCache ->
   [ActionInfo] ->
@@ -403,8 +401,7 @@ buildFullestDBSchema queryContext sources allActionInfos nonObjectCustomTypes =
 unauthenticatedContext ::
   forall m.
   ( MonadError QErr m,
-    MonadIO m,
-    MonadUnique m
+    MonadIO m
   ) =>
   [P.FieldParser (P.ParseT Identity) (NamespacedField RemoteField)] ->
   [P.FieldParser (P.ParseT Identity) (NamespacedField RemoteField)] ->
@@ -426,7 +423,7 @@ unauthenticatedContext adminQueryRemotes adminMutationRemotes remoteSchemaPermsC
 
 buildRoleBasedRemoteSchemaParser ::
   forall m.
-  (MonadError QErr m, MonadUnique m, MonadIO m) =>
+  (MonadError QErr m, MonadIO m) =>
   RoleName ->
   RemoteSchemaCache ->
   m [(RemoteSchemaName, RemoteRelationshipQueryContext)]

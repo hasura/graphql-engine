@@ -360,7 +360,7 @@ customScalarParser = \case
         | _stdName == boolScalar -> J.toJSON <$> P.boolean
         | otherwise -> P.jsonScalar _stdName _stdDescription
   ASTReusedScalar name pgScalarType ->
-    let schemaType = P.NonNullable $ P.TNamed $ P.mkDefinition name Nothing P.TIScalar
+    let schemaType = P.NonNullable $ P.TNamed $ P.Definition name Nothing P.TIScalar
      in P.Parser
           { pType = schemaType,
             pParser =
@@ -381,7 +381,7 @@ customEnumParser (EnumTypeDefinition typeName description enumValues) =
         enumValues <&> \enumValue ->
           let valueName = G.unEnumValue $ _evdValue enumValue
            in (,J.toJSON valueName) $
-                P.mkDefinition
+                P.Definition
                   valueName
                   (_evdDescription enumValue)
                   P.EnumValueInfo

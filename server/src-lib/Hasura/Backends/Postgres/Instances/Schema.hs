@@ -214,7 +214,7 @@ columnParser columnType (G.Nullability isNullable) =
         --
         -- TODO: introduce new dedicated scalars for Postgres column types.
         name <- mkScalarTypeName scalarType
-        let schemaType = P.NonNullable $ P.TNamed $ P.mkDefinition name Nothing P.TIScalar
+        let schemaType = P.NonNullable $ P.TNamed $ P.Definition name Nothing P.TIScalar
         pure $
           Parser
             { pType = schemaType,
@@ -237,7 +237,7 @@ columnParser columnType (G.Nullability isNullable) =
       | otherwise = id
     mkEnumValue :: (EnumValue, EnumValueInfo) -> (P.Definition P.EnumValueInfo, PGScalarValue)
     mkEnumValue (EnumValue value, EnumValueInfo description) =
-      ( P.mkDefinition value (G.Description <$> description) P.EnumValueInfo,
+      ( P.Definition value (G.Description <$> description) P.EnumValueInfo,
         PGValText $ G.unName value
       )
 
@@ -283,7 +283,7 @@ orderByOperators =
       )
     ]
   where
-    define name desc = P.mkDefinition name (Just desc) P.EnumValueInfo
+    define name desc = P.Definition name (Just desc) P.EnumValueInfo
 
 comparisonExps ::
   forall pgKind m n r.

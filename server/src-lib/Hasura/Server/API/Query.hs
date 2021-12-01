@@ -8,7 +8,6 @@ module Hasura.Server.API.Query
 where
 
 import Control.Monad.Trans.Control (MonadBaseControl)
-import Control.Monad.Unique
 import Data.Aeson
 import Data.Aeson.Casing
 import Data.Aeson.TH
@@ -288,7 +287,6 @@ runQueryM ::
     UserInfoM m,
     MonadBaseControl IO m,
     MonadIO m,
-    MonadUnique m,
     HasHttpManagerM m,
     HasServerConfigCtx m,
     Tracing.MonadTrace m,

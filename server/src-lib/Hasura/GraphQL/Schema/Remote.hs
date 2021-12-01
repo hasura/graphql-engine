@@ -9,7 +9,6 @@ module Hasura.GraphQL.Schema.Remote
   )
 where
 
-import Control.Monad.Unique
 import Data.Has
 import Data.HashMap.Strict qualified as Map
 import Data.HashMap.Strict.InsOrd qualified as OMap
@@ -35,7 +34,7 @@ import Language.GraphQL.Draft.Syntax qualified as G
 
 buildRemoteParser ::
   forall m n.
-  (MonadIO m, MonadUnique m, MonadError QErr m, MonadParse n) =>
+  (MonadIO m, MonadError QErr m, MonadParse n) =>
   IntrospectionResult ->
   RemoteSchemaInfo ->
   m (ParsedIntrospectionG n)
@@ -350,7 +349,7 @@ remoteFieldScalarParser customizeTypename (G.ScalarTypeDefinition description na
     }
   where
     customizedTypename = runMkTypename customizeTypename name
-    schemaType = NonNullable $ TNamed $ mkDefinition customizedTypename description TIScalar
+    schemaType = NonNullable $ TNamed $ Definition customizedTypename description TIScalar
     gType = toGraphQLType schemaType
 
     mkRemoteGType = \case
@@ -365,7 +364,7 @@ remoteFieldEnumParser ::
 remoteFieldEnumParser customizeTypename (G.EnumTypeDefinition desc name _directives valueDefns) =
   let enumValDefns =
         valueDefns <&> \(G.EnumValueDefinition enumDesc enumName _) ->
-          ( mkDefinition (G.unEnumValue enumName) enumDesc P.EnumValueInfo,
+          ( Definition (G.unEnumValue enumName) enumDesc P.EnumValueInfo,
             G.VEnum enumName
           )
    in fmap (Altered False,) $ P.enum (runMkTypename customizeTypename name) desc $ NE.fromList enumValDefns
@@ -841,12 +840,12 @@ remoteFieldFromDefinition ::
   m (FieldParser n (G.Field G.NoFragments RemoteSchemaVariable))
 remoteFieldFromDefinition schemaDoc parentTypeName (G.FieldDefinition description name argsDefinition gType _) = do
   let addNullableList :: FieldParser n a -> FieldParser n a
-      addNullableList (P.FieldParser (Definition name' un desc (FieldInfo args typ)) parser) =
-        P.FieldParser (Definition name' un desc (FieldInfo args (Nullable (TList typ)))) parser
+      addNullableList (P.FieldParser (Definition name' desc (FieldInfo args typ)) parser) =
+        P.FieldParser (Definition name' desc (FieldInfo args (Nullable (TList typ)))) parser
 
       addNonNullableList :: FieldParser n a -> FieldParser n a
-      addNonNullableList (P.FieldParser (Definition name' un desc (FieldInfo args typ)) parser) =
-        P.FieldParser (Definition name' un desc (FieldInfo args (NonNullable (TList typ)))) parser
+      addNonNullableList (P.FieldParser (Definition name' desc (FieldInfo args typ)) parser) =
+        P.FieldParser (Definition name' desc (FieldInfo args (NonNullable (TList typ)))) parser
 
       -- TODO add directives, deprecation
       convertType :: G.GType -> m (FieldParser n (G.Field G.NoFragments RemoteSchemaVariable))

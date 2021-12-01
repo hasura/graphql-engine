@@ -80,7 +80,7 @@ tableSelectColumnsEnum sourceName tableInfo selectPermissions = do
         ]
   where
     define name =
-      P.mkDefinition name (Just $ G.Description "column name") P.EnumValueInfo
+      P.Definition name (Just $ G.Description "column name") P.EnumValueInfo
 
 -- | Table update columns enum
 --
@@ -111,8 +111,8 @@ tableUpdateColumnsEnum tableInfo updatePermissions = do
     Just values -> P.enum enumName enumDesc values
     Nothing -> P.enum enumName altDesc $ pure (placeholder, Nothing)
   where
-    define name = P.mkDefinition name (Just $ G.Description "column name") P.EnumValueInfo
-    placeholder = P.mkDefinition @P.EnumValueInfo $$(G.litName "_PLACEHOLDER") (Just $ G.Description "placeholder (do not use)") P.EnumValueInfo
+    define name = P.Definition name (Just $ G.Description "column name") P.EnumValueInfo
+    placeholder = P.Definition @P.EnumValueInfo $$(G.litName "_PLACEHOLDER") (Just $ G.Description "placeholder (do not use)") P.EnumValueInfo
 
 tablePermissions ::
   forall m n r b.

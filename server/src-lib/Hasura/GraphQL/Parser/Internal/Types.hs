@@ -61,9 +61,6 @@ data Parser k m a = Parser
 instance HasName (Parser k m a) where
   getName = getName . pType
 
-instance HasDefinition (Parser k m a) (TypeInfo k) where
-  definitionLens f parser = definitionLens f (pType parser) <&> \pType -> parser {pType}
-
 type family ParserInput k where
 -- see Note [The 'Both kind] in Hasura.GraphQL.Parser.Schema
   ParserInput 'Both = InputValue Variable
