@@ -6,8 +6,12 @@
 module Hasura.Backends.MySQL.DataLoader.Execute
   ( OutputValue (..),
     RecordSet (..),
+    ExecuteProblem (..),
     execute,
     runExecute,
+    -- for testing
+    joinObjectRows,
+    leftObjectJoin,
   )
 where
 
@@ -23,10 +27,22 @@ import Data.Vector (Vector)
 import Data.Vector qualified as V
 import GHC.TypeLits qualified
 import Hasura.Backends.MySQL.Connection (runQueryYieldingRows)
-import Hasura.Backends.MySQL.DataLoader.Plan hiding
-  ( Join (wantedFields),
-    Relationship (leftRecordSet),
-    Select,
+import Hasura.Backends.MySQL.DataLoader.Plan
+  ( Action (..),
+    FieldName (..),
+    HeadAndTail (..),
+    Join
+      ( joinFieldName,
+        joinRhsOffset,
+        joinRhsTop,
+        joinType,
+        leftRecordSet,
+        rightRecordSet
+      ),
+    PlannedAction (..),
+    Ref,
+    selectQuery,
+    toFieldName,
   )
 import Hasura.Backends.MySQL.DataLoader.Plan qualified as DataLoaderPlan
 import Hasura.Backends.MySQL.DataLoader.Plan qualified as Plan
@@ -79,6 +95,7 @@ data ExecuteProblem
   | JoinProblem ExecuteProblem
   | UnsupportedJoinBug JoinType
   | MissingRecordSetBug Ref
+  | BrokenJoinInvariant [DataLoaderPlan.FieldName]
   deriving (Show)
 
 -- | Execute monad; as queries are performed, the record sets are
@@ -157,25 +174,23 @@ fetchRecordSetForAction =
       right <- getRecordSet rightRecordSet
       case joinType' of
         ArrayJoin fields ->
-          case leftArrayJoin
+          leftArrayJoin
             wantedFields
             fieldName
             (toFieldNames fields)
             joinRhsTop
             joinRhsOffset
             left
-            right of
-            Left problem -> throwError (JoinProblem problem)
-            Right recordSet -> pure recordSet
+            right
+            `onLeft` (throwError . JoinProblem)
         ObjectJoin fields ->
-          case leftObjectJoin
+          leftObjectJoin
             wantedFields
             fieldName
             (toFieldNames fields)
             left
-            right of
-            Left problem -> throwError (JoinProblem problem)
-            Right recordSet -> pure recordSet
+            right
+            `onLeft` (throwError . JoinProblem)
         _ -> throwError (UnsupportedJoinBug joinType')
   where
     toFieldNames = fmap (bimap toFieldName toFieldName)
@@ -199,9 +214,7 @@ getRecordSet :: Ref -> Execute RecordSet
 getRecordSet ref = do
   recordSetsRef <- asks recordSets
   hash <- liftIO (readIORef recordSetsRef)
-  case OMap.lookup ref hash of
-    Nothing -> throwError (MissingRecordSetBug ref)
-    Just re -> pure re
+  OMap.lookup ref hash `onNothing` throwError (MissingRecordSetBug ref)
 
 -- | See documentation for 'HeadAndTail'.
 getFinalRecordSet :: HeadAndTail -> Execute RecordSet
@@ -215,12 +228,10 @@ getFinalRecordSet HeadAndTail {..} = do
     tailSet
       { rows =
           fmap
-            ( \row ->
-                OMap.filterWithKey
-                  ( \(FieldName k) _ ->
-                      maybe True (elem k) (wantedFields headSet)
-                  )
-                  row
+            ( OMap.filterWithKey
+                ( \(FieldName k) _ ->
+                    maybe True (elem k) (wantedFields headSet)
+                )
             )
             (rows tailSet)
       }
@@ -258,36 +269,36 @@ leftObjectJoin ::
   RecordSet ->
   RecordSet ->
   Either ExecuteProblem RecordSet
-leftObjectJoin wantedFields joinAlias joinFields left right =
+leftObjectJoin wantedFields joinAlias joinFields left right = do
+  rows' <- fmap V.fromList . traverse makeRows . toList $ rows left
   pure
     RecordSet
       { origin = Nothing,
         wantedFields = Nothing,
-        rows =
-          V.fromList
-            [ joinObjectRows wantedFields joinAlias leftRow rightRows
-              | leftRow <- toList (rows left),
-                let rightRows =
-                      V.fromList
-                        [ rightRow
-                          | rightRow <- toList (rows right),
-                            not (null joinFields),
-                            all
-                              ( \(rightField, leftField) ->
-                                  fromMaybe
-                                    False
-                                    ( do
-                                        leftValue <-
-                                          OMap.lookup leftField leftRow
-                                        rightValue <-
-                                          OMap.lookup rightField rightRow
-                                        pure (leftValue == rightValue)
-                                    )
-                              )
-                              joinFields
-                        ]
-            ]
+        rows = rows'
       }
+  where
+    makeRows :: InsOrdHashMap FieldName OutputValue -> Either ExecuteProblem (InsOrdHashMap FieldName OutputValue)
+    makeRows leftRow =
+      let rightRows =
+            V.fromList
+              [ rightRow
+                | not (null joinFields),
+                  rightRow <- toList (rows right),
+                  all
+                    ( \(rightField, leftField) ->
+                        Just True
+                          == ( do
+                                 leftValue <- OMap.lookup leftField leftRow
+                                 rightValue <- OMap.lookup rightField rightRow
+                                 pure (leftValue == rightValue)
+                             )
+                    )
+                    joinFields
+              ]
+       in -- The line below will return Left is rightRows has more than one element.
+          -- Consider moving the check here if it makes sense in the future.
+          joinObjectRows wantedFields joinAlias leftRow rightRows
 
 -- | A naive, exponential reference implementation of a left join. It
 -- serves as a trivial sample implementation for correctness checking
@@ -315,19 +326,16 @@ leftArrayJoin wantedFields joinAlias joinFields rhsTop rhsOffset left right =
                         ( limit
                             ( offset
                                 [ rightRow
-                                  | rightRow <- toList (rows right),
-                                    not (null joinFields),
+                                  | not (null joinFields),
+                                    rightRow <- toList (rows right),
                                     all
                                       ( \(rightField, leftField) ->
-                                          fromMaybe
-                                            False
-                                            ( do
-                                                leftValue <-
-                                                  OMap.lookup leftField leftRow
-                                                rightValue <-
-                                                  OMap.lookup rightField rightRow
-                                                pure (leftValue == rightValue)
-                                            )
+                                          Just True
+                                            == ( do
+                                                   leftValue <- OMap.lookup leftField leftRow
+                                                   rightValue <- OMap.lookup rightField rightRow
+                                                   pure (leftValue == rightValue)
+                                               )
                                       )
                                       joinFields
                                 ]
@@ -367,26 +375,24 @@ joinArrayRows wantedFields fieldName leftRow rightRow =
 
 -- | Join a row with another as an object join.
 --
--- We expect rightRow to consist of a single row, but don't complain
--- if this is violated. TODO: Change?
+-- If rightRow is not a single row, we throw 'BrokenJoinInvariant'.
 joinObjectRows ::
   Maybe [Text] ->
   Text ->
   InsOrdHashMap DataLoaderPlan.FieldName OutputValue ->
   Vector (InsOrdHashMap DataLoaderPlan.FieldName OutputValue) ->
-  InsOrdHashMap DataLoaderPlan.FieldName OutputValue
-joinObjectRows wantedFields fieldName leftRow rightRows =
-  foldl'
-    ( \left row ->
-        OMap.insert
-          (DataLoaderPlan.FieldName fieldName)
-          ( RecordOutputValue
-              ( OMap.filterWithKey
-                  (\(DataLoaderPlan.FieldName k) _ -> maybe True (elem k) wantedFields)
-                  row
-              )
-          )
-          left
-    )
-    leftRow
-    rightRows
+  Either ExecuteProblem (InsOrdHashMap DataLoaderPlan.FieldName OutputValue)
+joinObjectRows wantedFields fieldName leftRow rightRows
+  | V.length rightRows /= 1 = Left . BrokenJoinInvariant . foldMap OMap.keys $ rightRows
+  | otherwise =
+    let row = V.head rightRows
+     in pure $
+          OMap.insert
+            (DataLoaderPlan.FieldName fieldName)
+            ( RecordOutputValue
+                ( OMap.filterWithKey
+                    (\(DataLoaderPlan.FieldName k) _ -> maybe True (elem k) wantedFields)
+                    row
+                )
+            )
+            leftRow
