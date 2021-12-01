@@ -810,6 +810,7 @@ test-suite graphql-engine-tests
     Data.Text.RawString
     Data.TimeSpec
     Database.MSSQL.TransactionSpec
+    Hasura.Backends.MySQL.DataLoader.ExecuteTests
     Hasura.EventingSpec
     Hasura.Generator
     Hasura.Generator.Common
