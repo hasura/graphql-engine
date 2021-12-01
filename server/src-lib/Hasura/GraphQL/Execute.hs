@@ -119,7 +119,7 @@ data SubscriptionExecution
   = SEAsyncActionsWithNoRelationships !(RootFieldMap (ActionId, ActionLogResponse -> Either QErr EncJSON))
   | SEOnSourceDB
       !(HashSet ActionId)
-      !(ActionLogResponseMap -> ExceptT QErr IO (SourceName, LiveQueryPlan))
+      !(ActionLogResponseMap -> ExceptT QErr IO (SourceName, LiveQueryPlan, SubscriptionType))
 
 buildSubscriptionPlan ::
   forall m.
@@ -149,7 +149,8 @@ buildSubscriptionPlan userInfo rootFields parameterizedQueryHash = do
                     queryDB = case EA._aaqseJsonAggSelect dbExecution of
                       JASMultipleRows -> IR.QDBMultipleRows selectAST
                       JASSingleObject -> IR.QDBSingleRow selectAST
-                pure $ (sourceName, AB.mkAnyBackend $ IR.SourceConfigWith srcConfig Nothing (IR.QDBR queryDB))
+                -- async action subscriptions are live queries
+                pure $ (sourceName, AB.mkAnyBackend $ IR.SourceConfigWith srcConfig Nothing (IR.QDBR queryDB), STLiveQuery)
 
             case OMap.toList sourceSubFields of
               [] -> throw500 "empty selset for subscription"
@@ -163,7 +164,7 @@ buildSubscriptionPlan userInfo rootFields parameterizedQueryHash = do
       ( RootFieldMap
           ( Either
               (ActionId, (PGSourceConfig, EA.AsyncActionQuerySourceExecution (UnpreparedValue ('Postgres 'Vanilla))))
-              (SourceName, AB.AnyBackend (IR.SourceConfigWith (IR.QueryDBRoot (Const Void) UnpreparedValue)))
+              (SourceName, AB.AnyBackend (IR.SourceConfigWith (IR.QueryDBRoot (Const Void) UnpreparedValue)), SubscriptionType)
           ),
         RootFieldMap (ActionId, ActionLogResponse -> Either QErr EncJSON)
       ) ->
@@ -172,20 +173,20 @@ buildSubscriptionPlan userInfo rootFields parameterizedQueryHash = do
         ( RootFieldMap
             ( Either
                 (ActionId, (PGSourceConfig, EA.AsyncActionQuerySourceExecution (UnpreparedValue ('Postgres 'Vanilla))))
-                (SourceName, AB.AnyBackend (IR.SourceConfigWith (IR.QueryDBRoot (Const Void) UnpreparedValue)))
+                (SourceName, AB.AnyBackend (IR.SourceConfigWith (IR.QueryDBRoot (Const Void) UnpreparedValue)), SubscriptionType)
             ),
           RootFieldMap (ActionId, ActionLogResponse -> Either QErr EncJSON)
         )
     go accFields (gName, field) = case field of
       IR.RFRemote _ -> throw400 NotSupported "subscription to remote server is not supported"
       IR.RFRaw _ -> throw400 NotSupported "Introspection not supported over subscriptions"
-      IR.RFDB src e -> do
+      IR.RFDB src streamSubsMaybe e -> do
         newQDB <- AB.traverseBackend @EB.BackendExecute e \(IR.SourceConfigWith srcConfig queryTagsConfig (IR.QDBR qdb)) -> do
           let (newQDB, remoteJoins) = RJ.getRemoteJoins qdb
           unless (isNothing remoteJoins) $
             throw400 NotSupported "Remote relationships are not allowed in subscriptions"
           pure $ IR.SourceConfigWith srcConfig queryTagsConfig (IR.QDBR newQDB)
-        pure $ first (OMap.insert gName (Right (src, newQDB))) accFields
+        pure $ first (OMap.insert gName (Right (src, newQDB, maybe STLiveQuery (const STStreaming) streamSubsMaybe))) accFields
       IR.RFAction action -> do
         let (noRelsDBAST, remoteJoins) = RJ.getRemoteJoinsActionQuery action
         unless (isNothing remoteJoins) $
@@ -201,12 +202,12 @@ buildSubscriptionPlan userInfo rootFields parameterizedQueryHash = do
           IR.AQQuery _ -> throw400 NotSupported "query actions cannot be run as a subscription"
 
     buildAction ::
-      (SourceName, AB.AnyBackend (IR.SourceConfigWith b)) ->
+      (SourceName, AB.AnyBackend (IR.SourceConfigWith b), SubscriptionType) ->
       RootFieldMap
-        (SourceName, AB.AnyBackend (IR.SourceConfigWith (IR.QueryDBRoot (Const Void) UnpreparedValue))) ->
+        (SourceName, AB.AnyBackend (IR.SourceConfigWith (IR.QueryDBRoot (Const Void) UnpreparedValue)), SubscriptionType) ->
       RootFieldAlias ->
-      ExceptT QErr IO (SourceName, LiveQueryPlan)
-    buildAction (sourceName, exists) allFields rootFieldName = do
+      ExceptT QErr IO (SourceName, LiveQueryPlan, SubscriptionType)
+    buildAction (sourceName, exists, subscriptionType) allFields rootFieldName = do
       liveQueryPlan <- AB.dispatchAnyBackend @EB.BackendExecute
         exists
         \(IR.SourceConfigWith sourceConfig queryTagsConfig _ :: IR.SourceConfigWith db b) -> do
@@ -215,15 +216,15 @@ buildSubscriptionPlan userInfo rootFields parameterizedQueryHash = do
           let queryTagsComment = Tagged.untag $ EB.createQueryTags @m subscriptionQueryTagsAttributes queryTagsConfig
           LQP . AB.mkAnyBackend . MultiplexedLiveQueryPlan
             <$> runReaderT (EB.mkDBSubscriptionPlan userInfo sourceName sourceConfig (_rfaNamespace rootFieldName) qdbs) queryTagsComment
-      pure (sourceName, liveQueryPlan)
+      pure (sourceName, liveQueryPlan, subscriptionType)
 
     checkField ::
       forall b m1.
       (Backend b, MonadError QErr m1) =>
       SourceName ->
-      (SourceName, AB.AnyBackend (IR.SourceConfigWith (IR.QueryDBRoot (Const Void) UnpreparedValue))) ->
+      (SourceName, AB.AnyBackend (IR.SourceConfigWith (IR.QueryDBRoot (Const Void) UnpreparedValue)), SubscriptionType) ->
       m1 (IR.QueryDB b (Const Void) (UnpreparedValue b))
-    checkField sourceName (src, exists)
+    checkField sourceName (src, exists, _)
       | sourceName /= src = throw400 NotSupported "all fields of a subscription must be from the same source"
       | otherwise = case AB.unpackAnyBackend exists of
         Nothing -> throw500 "internal error: two sources share the same name but are tied to different backends"

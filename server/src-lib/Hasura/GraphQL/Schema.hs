@@ -581,7 +581,7 @@ buildNonQuerySubscriptionFields sourceName sourceConfig tables queryTagsConfig =
     -- FIXME: retrieve permissions directly from tableInfo to avoid a sourceCache lookup
     selectPerms <- tableSelectPermissions tableInfo
     for selectPerms $
-      buildTableNonQuerySubscriptionFields sourceName sourceConfig queryTagsConfig tableName tableInfo tableGQLName
+      buildTableStreamingSubscriptionFields sourceName sourceConfig queryTagsConfig tableName tableInfo tableGQLName
   pure $ concat $ catMaybes tableSelectExpParsers
 
 buildRelayQueryFields ::

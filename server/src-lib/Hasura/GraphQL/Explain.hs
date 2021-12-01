@@ -60,7 +60,7 @@ explainQueryField userInfo fieldName rootField = do
     RFRemote _ -> throw400 InvalidParams "only hasura queries can be explained"
     RFAction _ -> throw400 InvalidParams "query actions cannot be explained"
     RFRaw _ -> pure $ encJFromJValue $ ExplainPlan fieldName Nothing Nothing
-    RFDB sourceName exists -> do
+    RFDB sourceName _ exists -> do
       step <- AB.dispatchAnyBackend @BackendExecute
         exists
         \(SourceConfigWith sourceConfig _ (QDBR db)) -> do
@@ -116,7 +116,7 @@ explainGQLQuery sc (GQLExplain query userVarsRaw maybeIsRelay) = do
         E.SEAsyncActionsWithNoRelationships _ -> throw400 NotSupported "async action query fields without relationships to table cannot be explained"
         E.SEOnSourceDB actionIds liveQueryBuilder -> do
           actionLogResponseMap <- fst <$> E.fetchActionLogResponses actionIds
-          (_, E.LQP exists) <- liftEitherM $ liftIO $ runExceptT $ liveQueryBuilder actionLogResponseMap
+          (_, E.LQP exists, _) <- liftEitherM $ liftIO $ runExceptT $ liveQueryBuilder actionLogResponseMap
           AB.dispatchAnyBackend @BackendExecute exists \(E.MultiplexedLiveQueryPlan execPlan) ->
             encJFromJValue <$> mkLiveQueryExplain execPlan
   where

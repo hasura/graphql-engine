@@ -49,7 +49,7 @@ module Hasura.GraphQL.Schema.Build
     buildTableDeleteMutationFields,
     buildTableInsertMutationFields,
     buildTableQueryFields,
-    buildTableNonQuerySubscriptionFields,
+    buildTableStreamingSubscriptionFields,
     buildTableUpdateMutationFields,
   )
 where
@@ -65,6 +65,7 @@ import Hasura.RQL.IR
 import Hasura.RQL.Types
 import Hasura.SQL.AnyBackend qualified as AB
 import Language.GraphQL.Draft.Syntax qualified as G
+import qualified Hasura.RQL.Types.Common as RQL
 
 buildTableQueryFields ::
   forall b r m n.
@@ -79,7 +80,7 @@ buildTableQueryFields ::
   m [FieldParser n (QueryRootField UnpreparedValue)]
 buildTableQueryFields sourceName sourceInfo queryTagsConfig tableName tableInfo gqlName selPerms = do
   let mkRF =
-        RFDB sourceName
+        RFDB sourceName Nothing
           . AB.mkAnyBackend
           . SourceConfigWith sourceInfo queryTagsConfig
           . QDBR
@@ -100,7 +101,7 @@ buildTableQueryFields sourceName sourceInfo queryTagsConfig tableName tableInfo 
         optionalFieldParser (mkRF . QDBAggregation) $ selectTableAggregate sourceName tableInfo selectAggName selectAggDesc selPerms
       ]
 
-buildTableNonQuerySubscriptionFields ::
+buildTableStreamingSubscriptionFields ::
   forall b r m n.
   MonadBuildSchema b r m n =>
   SourceName ->
@@ -111,9 +112,9 @@ buildTableNonQuerySubscriptionFields ::
   G.Name ->
   SelPermInfo b ->
   m [FieldParser n (QueryRootField UnpreparedValue)]
-buildTableNonQuerySubscriptionFields sourceName sourceInfo queryTagsConfig tableName tableInfo gqlName selPerms = do
+buildTableStreamingSubscriptionFields sourceName sourceInfo queryTagsConfig tableName tableInfo gqlName selPerms = do
   let mkRF =
-        RFDB sourceName
+        RFDB sourceName (Just RQL.StreamingSubscription)
           . AB.mkAnyBackend
           . SourceConfigWith sourceInfo queryTagsConfig
           . QDBR
@@ -157,7 +158,7 @@ buildTableInsertMutationFields
             FieldParser n (MutationRootField UnpreparedValue)
           mkRF =
             fmap
-              ( RFDB sourceName
+              ( RFDB sourceName Nothing
                   . AB.mkAnyBackend
                   . SourceConfigWith sourceInfo queryTagsConfig
                   . MDBR
@@ -226,7 +227,7 @@ buildTableUpdateMutationFields ::
   m [FieldParser n (MutationRootField UnpreparedValue)]
 buildTableUpdateMutationFields updateOperators sourceName sourceInfo queryTagsConfig tableName tableInfo gqlName updPerms mSelPerms = do
   let mkRF =
-        RFDB sourceName
+        RFDB sourceName Nothing
           . AB.mkAnyBackend
           . SourceConfigWith sourceInfo queryTagsConfig
           . MDBR
@@ -258,7 +259,7 @@ buildTableDeleteMutationFields ::
   m [FieldParser n (MutationRootField UnpreparedValue)]
 buildTableDeleteMutationFields sourceName sourceInfo queryTagsConfig tableName tableInfo gqlName delPerms mSelPerms = do
   let mkRF =
-        RFDB sourceName
+        RFDB sourceName Nothing
           . AB.mkAnyBackend
           . SourceConfigWith sourceInfo queryTagsConfig
           . MDBR
@@ -289,7 +290,7 @@ buildFunctionQueryFields ::
   m [FieldParser n (QueryRootField UnpreparedValue)]
 buildFunctionQueryFields sourceName sourceInfo queryTagsConfig functionName functionInfo tableName selPerms = do
   let mkRF =
-        RFDB sourceName
+        RFDB sourceName Nothing
           . AB.mkAnyBackend
           . SourceConfigWith sourceInfo queryTagsConfig
           . QDBR
@@ -326,7 +327,7 @@ buildFunctionMutationFields ::
   m [FieldParser n (MutationRootField UnpreparedValue)]
 buildFunctionMutationFields sourceName sourceInfo queryTagsConfig functionName functionInfo tableName selPerms = do
   let mkRF =
-        RFDB sourceName
+        RFDB sourceName Nothing
           . AB.mkAnyBackend
           . SourceConfigWith sourceInfo queryTagsConfig
           . MDBR

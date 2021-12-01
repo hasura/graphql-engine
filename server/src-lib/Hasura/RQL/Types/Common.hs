@@ -43,6 +43,8 @@ module Hasura.RQL.Types.Common
     getPGConnectionStringFromParams,
     getConnOptionsFromConnParams,
     CursorOrdering (..),
+    SubscriptionType (..),
+    StreamingSubscription (..),
   )
 where
 
@@ -488,3 +490,9 @@ emptyMetricsConfig = MetricsConfig False False
 data CursorOrdering = COAscending | CODescending deriving (Show, Eq, Generic)
 
 instance Hashable CursorOrdering
+
+data SubscriptionType = STLiveQuery | STStreaming
+  deriving (Show, Eq)
+
+data StreamingSubscription = StreamingSubscription
+  deriving (Show, Eq)

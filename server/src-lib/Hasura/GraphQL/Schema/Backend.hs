@@ -98,7 +98,7 @@ class Backend b => BackendSchema (b :: BackendType) where
     G.Name ->
     SelPermInfo b ->
     m [FieldParser n (QueryRootField UnpreparedValue)]
-  buildTableNonQuerySubscriptionFields ::
+  buildTableStreamingSubscriptionFields ::
     MonadBuildSchema b r m n =>
     SourceName ->
     SourceConfig b ->

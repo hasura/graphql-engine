@@ -117,7 +117,7 @@ convertMutationSelectionSet
     -- Transform the RQL AST into a prepared SQL query
     txs <- flip OMap.traverseWithKey unpreparedQueries $ \rootFieldName rootFieldUnpreparedValue -> do
       case rootFieldUnpreparedValue of
-        RFDB sourceName exists ->
+        RFDB sourceName _ exists ->
           AB.dispatchAnyBackend @BackendExecute
             exists
             \(SourceConfigWith (sourceConfig :: SourceConfig b) queryTagsConfig (MDBR db)) -> do

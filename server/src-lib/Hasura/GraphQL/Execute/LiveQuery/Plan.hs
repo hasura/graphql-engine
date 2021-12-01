@@ -103,7 +103,6 @@ module Hasura.GraphQL.Execute.LiveQuery.Plan
     LiveQueryPlan (..),
     LiveQueryPlanExplanation (..),
     ParameterizedLiveQueryPlan (..),
-    SubscriptionType (..),
     CursorVariableValues (..),
   )
 where
@@ -252,9 +251,6 @@ mkUnsafeValidateVariables = ValidatedVariables
 ----------------------------------------------------------------------------------------------------
 -- Live query plans
 
-data SubscriptionType = STLiveQuery | STStreaming
-  deriving (Show, Eq)
-
 -- | A self-contained, ready-to-execute live query plan. Contains enough information
 -- to find an existing poller that this can be added to /or/ to create a new poller
 -- if necessary.
@@ -264,8 +260,7 @@ data LiveQueryPlan (b :: BackendType) q = LiveQueryPlan
     _lqpVariables :: !CohortVariables,
     -- | We need to know if the source has a namespace so that we can wrap it around
     -- the response from the DB
-    _lqpNamespace :: !(Maybe G.Name),
-    _lqpSubscriptionType :: !SubscriptionType
+    _lqpNamespace :: !(Maybe G.Name)
   }
 
 data ParameterizedLiveQueryPlan (b :: BackendType) q = ParameterizedLiveQueryPlan

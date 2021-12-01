@@ -122,7 +122,7 @@ instance
   -- top level parsers
   buildTableQueryFields = GSB.buildTableQueryFields
   buildTableRelayQueryFields = pgkBuildTableRelayQueryFields
-  buildTableNonQuerySubscriptionFields = GSB.buildTableNonQuerySubscriptionFields
+  buildTableStreamingSubscriptionFields = GSB.buildTableStreamingSubscriptionFields
   buildTableInsertMutationFields = GSB.buildTableInsertMutationFields
   buildTableUpdateMutationFields = GSB.buildTableUpdateMutationFields (\ti updP -> fmap BackendUpdate <$> updateOperators ti updP) -- TODO: simplify this!
   buildTableDeleteMutationFields = GSB.buildTableDeleteMutationFields
@@ -173,7 +173,7 @@ buildTableRelayQueryFields ::
   m [FieldParser n (QueryRootField UnpreparedValue)]
 buildTableRelayQueryFields sourceName sourceInfo queryTagsConfig tableName tableInfo gqlName pkeyColumns selPerms = do
   let mkRF =
-        RFDB sourceName
+        RFDB sourceName Nothing
           . AB.mkAnyBackend
           . SourceConfigWith sourceInfo queryTagsConfig
           . QDBR
@@ -197,7 +197,7 @@ buildFunctionRelayQueryFields ::
   m [FieldParser n (QueryRootField UnpreparedValue)]
 buildFunctionRelayQueryFields sourceName sourceInfo queryTagsConfig functionName functionInfo tableName pkeyColumns selPerms = do
   let mkRF =
-        RFDB sourceName
+        RFDB sourceName Nothing
           . AB.mkAnyBackend
           . SourceConfigWith sourceInfo queryTagsConfig
           . QDBR

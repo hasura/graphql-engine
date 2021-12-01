@@ -46,7 +46,6 @@ import Hasura.GraphQL.Execute.LiveQuery.Plan
   ( LiveQueryPlan (..),
     LiveQueryPlanExplanation (..),
     ParameterizedLiveQueryPlan (..),
-    SubscriptionType (..),
     mkCohortVariables,
     newCohortId,
   )
@@ -317,11 +316,6 @@ pgDBSubscriptionPlan userInfo _sourceName sourceConfig namespace unpreparedAST =
   validatedSyntheticVars <- PGL.validateVariables (_pscExecCtx sourceConfig) $ toList _qpiSyntheticVariableValues
   validatedCursorVars <- PGL.validateVariables (_pscExecCtx sourceConfig) _qpiCursorVariableValues
 
-  let subscriptionType =
-        if Map.null _qpiCursorVariableValues
-          then STLiveQuery
-          else STStreaming
-
   -- TODO validatedQueryVars validatedSyntheticVars
   let cohortVariables =
         mkCohortVariables
@@ -331,7 +325,7 @@ pgDBSubscriptionPlan userInfo _sourceName sourceConfig namespace unpreparedAST =
           validatedSyntheticVars
           validatedCursorVars
 
-  pure $ LiveQueryPlan parameterizedPlan sourceConfig cohortVariables namespace subscriptionType
+  pure $ LiveQueryPlan parameterizedPlan sourceConfig cohortVariables namespace
 
 -- turn the current plan into a transaction
 mkCurPlanTx ::

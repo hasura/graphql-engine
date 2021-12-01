@@ -248,7 +248,7 @@ filterVariablesFromQuery ::
 filterVariablesFromQuery query = fold $ rootToSessVarPreds =<< query
   where
     rootToSessVarPreds = \case
-      RFDB _ exists ->
+      RFDB _ _ exists ->
         AB.dispatchAnyBackend @Backend exists \case
           SourceConfigWith _ _ (QDBR db) -> toPred <$> toListOf traverse db
       RFRemote remote -> match <$> toListOf (traverse . _SessionPresetVariable) remote

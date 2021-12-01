@@ -64,6 +64,7 @@ import Hasura.GraphQL.Transport.WebSocket.Types
 import Hasura.Logging qualified as L
 import Hasura.Metadata.Class
 import Hasura.Prelude
+import Hasura.RQL.Types.Common (SubscriptionType)
 import Hasura.RQL.Types.RemoteSchema
 import Hasura.RQL.Types.ResultCustomization
 import Hasura.RQL.Types.SchemaCache (scApiLimits)
@@ -800,7 +801,7 @@ onStart env enabledLogTypes serverEnv wsConn (StartMsg opId q) onMessageActions 
 
     startLiveQuery liveQueryBuilder parameterizedQueryHash requestId actionLogMap = do
       liveQueryE <- runExceptT $ liveQueryBuilder actionLogMap
-      for liveQueryE $ \(sourceName, E.LQP exists) -> do
+      for liveQueryE $ \(sourceName, E.LQP exists, subscriptionType) -> do
         let !opName = _grOperationName q
             subscriberMetadata = LQ.mkSubscriberMetadata (WS.getWSId wsConn) opId opName requestId
         -- NOTE!: we mask async exceptions higher in the call stack, but it's
@@ -818,7 +819,7 @@ onStart env enabledLogTypes serverEnv wsConn (StartMsg opId q) onMessageActions 
               opName
               requestId
               liveQueryPlan
-              (liveQOnChange opName parameterizedQueryHash $ LQ._lqpNamespace liveQueryPlan)
+              (liveQOnChange opName subscriptionType parameterizedQueryHash $ LQ._lqpNamespace liveQueryPlan)
         liftIO $ $assertNFHere (lqId, opName) -- so we don't write thunks to mutable vars
         STM.atomically $
           -- NOTE: see crucial `lookup` check above, ensuring this doesn't clobber:
@@ -826,8 +827,8 @@ onStart env enabledLogTypes serverEnv wsConn (StartMsg opId q) onMessageActions 
         pure lqId
 
     -- on change, send message on the websocket
-    liveQOnChange :: Maybe OperationName -> ParameterizedQueryHash -> Maybe Name -> LQ.OnChange
-    liveQOnChange opName queryHash namespace = \case
+    liveQOnChange :: Maybe OperationName -> SubscriptionType -> ParameterizedQueryHash -> Maybe Name -> LQ.OnChange
+    liveQOnChange opName subscriptionType queryHash namespace = \case
       Right (LQ.LiveQueryResponse bs dTime) ->
         sendMsgWithMetadata
           wsConn

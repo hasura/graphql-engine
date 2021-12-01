@@ -33,6 +33,7 @@ data SourceConfigWith (db :: BackendType -> Type) (b :: BackendType)
 data RootField (db :: BackendType -> Type) remote action raw where
   RFDB ::
     RQL.SourceName ->
+    Maybe RQL.StreamingSubscription ->
     AB.AnyBackend (SourceConfigWith db) ->
     RootField db remote action raw
   RFRemote :: remote -> RootField db remote action raw
