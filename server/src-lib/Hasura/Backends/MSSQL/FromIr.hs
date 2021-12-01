@@ -47,7 +47,7 @@ import Hasura.Prelude
 import Hasura.RQL.IR qualified as IR
 import Hasura.RQL.Types.Column qualified as IR
 import Hasura.RQL.Types.Common qualified as IR
-import Hasura.RQL.Types.Relationship qualified as IR
+import Hasura.RQL.Types.Relationships.Local qualified as IR
 import Hasura.SQL.Backend
 import Language.GraphQL.Draft.Syntax (unName)
 

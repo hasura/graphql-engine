@@ -115,12 +115,13 @@
       name: author_location
       source: pg1
       table: author_local
-      remote_source:
-        relationship_type: object
-        field_mapping:
-          id: id
-        source: pg2
-        table: author_local
+      definition:
+        to_source:
+          relationship_type: object
+          field_mapping:
+            id: id
+          source: pg2
+          table: author_local
 
 - description: Query using remote relationship
   url: /v1/graphql

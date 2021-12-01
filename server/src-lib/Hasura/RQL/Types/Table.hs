@@ -103,8 +103,8 @@ import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.ComputedField
 import Hasura.RQL.Types.EventTrigger
 import Hasura.RQL.Types.Permission
-import Hasura.RQL.Types.Relationship
-import Hasura.RQL.Types.RemoteRelationship
+import Hasura.RQL.Types.Relationships.FromSource
+import Hasura.RQL.Types.Relationships.Local
 import Hasura.SQL.AnyBackend (runBackend)
 import Hasura.SQL.Backend
 import Hasura.Server.Utils (englishList)
@@ -223,13 +223,13 @@ fieldInfoGraphQLName = \case
   FIColumn info -> Just $ pgiName info
   FIRelationship info -> G.mkName $ relNameToTxt $ riName info
   FIComputedField info -> G.mkName $ computedFieldNameToText $ _cfiName info
-  FIRemoteRelationship info -> G.mkName $ remoteRelationshipNameToText $ getRemoteFieldInfoName info
+  FIRemoteRelationship info -> G.mkName $ relNameToTxt $ getRemoteFieldInfoName info
 
-getRemoteFieldInfoName :: RemoteFieldInfo b -> RemoteRelationshipName
+getRemoteFieldInfoName :: RemoteFieldInfo b -> RelName
 getRemoteFieldInfoName =
   \case
-    RFISchema schema -> _rfiName schema
-    RFISource source -> runBackend source _rsriName
+    RFISchema schema -> _rrfiName schema
+    RFISource source -> runBackend source _rsfiName
 
 -- | Returns all the field names created for the given field. Columns, object relationships, and
 -- computed fields only ever produce a single field, but array relationships also contain an

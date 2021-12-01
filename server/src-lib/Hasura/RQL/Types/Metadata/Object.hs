@@ -49,7 +49,6 @@ import Hasura.RQL.Types.Endpoint
 import Hasura.RQL.Types.EventTrigger
 import Hasura.RQL.Types.Instances ()
 import Hasura.RQL.Types.Permission
-import Hasura.RQL.Types.RemoteRelationship
 import Hasura.RQL.Types.RemoteSchema
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.Session
@@ -59,7 +58,7 @@ data TableMetadataObjId
   | MTOComputedField !ComputedFieldName
   | MTOPerm !RoleName !PermType
   | MTOTrigger !TriggerName
-  | MTORemoteRelationship !RemoteRelationshipName
+  | MTORemoteRelationship !RelName
   deriving (Show, Eq, Generic)
 
 instance Hashable TableMetadataObjId

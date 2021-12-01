@@ -54,7 +54,7 @@ import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.ComputedField
-import Hasura.RQL.Types.Relationship
+import Hasura.RQL.Types.Relationships.Local
 import Hasura.SQL.Backend
 import Hasura.Session
 

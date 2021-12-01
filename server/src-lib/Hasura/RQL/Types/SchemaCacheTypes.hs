@@ -27,7 +27,6 @@ import Hasura.RQL.Types.EventTrigger
 import Hasura.RQL.Types.Instances ()
 import Hasura.RQL.Types.Metadata
 import Hasura.RQL.Types.Permission
-import Hasura.RQL.Types.RemoteRelationship
 import Hasura.RQL.Types.RemoteSchema
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.Backend
@@ -37,7 +36,7 @@ data TableObjId (b :: BackendType)
   = TOCol !(Column b)
   | TORel !RelName
   | TOComputedField !ComputedFieldName
-  | TORemoteRel !RemoteRelationshipName
+  | TORemoteRel !RelName
   | TOForeignKey !(ConstraintName b)
   | TOPerm !RoleName !PermType
   | TOTrigger !TriggerName
@@ -87,7 +86,7 @@ reportSchemaObj = \case
         SOITableObj tn (TOComputedField ccn) ->
           "computed field " <> toTxt tn <> "." <> computedFieldNameToText ccn
         SOITableObj tn (TORemoteRel rn) ->
-          "remote relationship " <> toTxt tn <> "." <> remoteRelationshipNameToText rn
+          "remote relationship " <> toTxt tn <> "." <> relNameToTxt rn
   SORemoteSchema remoteSchemaName ->
     "remote schema " <> unNonEmptyText (unRemoteSchemaName remoteSchemaName)
   SORemoteSchemaPermission remoteSchemaName roleName ->

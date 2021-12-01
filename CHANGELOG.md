@@ -3,6 +3,9 @@
 ## Next release
 (Add highlights/major features below)
 
+- server: the syntax for remote relationships in metadata is changed to be
+  consistent with future remote relationships work. However, the older syntax
+  is still accepted and this is a non-breaking change.
 - server: implement delete mutations for MS SQL Server (closes #7626)
 - server: fix JSON path in error when parsing sources in metadata (fix #7769)
 - server: log locking DB queries during source catalog migration
