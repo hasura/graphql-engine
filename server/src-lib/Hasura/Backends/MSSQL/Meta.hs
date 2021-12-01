@@ -160,6 +160,8 @@ transformColumn columnInfo =
               _fkForeignTable = TableName (sfkcJoinedReferencedTableName foreignKeyColumn) schemaName
               _fkColumnMapping = HM.singleton prciName $ ColumnName $ sfkcJoinedReferencedColumnName foreignKeyColumn
            in ForeignKey {..}
+
+      prciMutability = ColumnMutability {_cmIsInsertable = True, _cmIsUpdatable = True}
    in (RawColumnInfo {..}, foreignKeys)
 
 transformPrimaryKey :: SysPrimaryKey -> PrimaryKey 'MSSQL (Column 'MSSQL)

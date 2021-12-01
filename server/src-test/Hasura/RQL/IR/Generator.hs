@@ -1024,6 +1024,10 @@ genColumnInfo
       <*> genColumnType genTableName genScalarType hashRange enumRange valueInfoRange
       <*> bool_
       <*> maybe (genDescription descriptionRange)
+      <*> genColumnMutability
+
+genColumnMutability :: MonadGen m => m ColumnMutability
+genColumnMutability = ColumnMutability <$> bool <*> bool
 
 genAnnotatedOrderByItemG ::
   MonadGen m =>
