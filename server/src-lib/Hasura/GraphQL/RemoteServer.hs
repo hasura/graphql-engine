@@ -12,7 +12,6 @@ where
 import Control.Arrow.Extended (left)
 import Control.Exception (try)
 import Control.Lens (set, (^.))
-import Control.Monad.Unique
 import Data.Aeson ((.:), (.:?))
 import Data.Aeson qualified as J
 import Data.Aeson.Types qualified as J
@@ -142,7 +141,7 @@ validateSchemaCustomizationsDistinct remoteSchemaCustomizer (RemoteSchemaIntrosp
 -- and also is called by schema cache rebuilding code in "Hasura.RQL.DDL.Schema.Cache".
 fetchRemoteSchema ::
   forall m.
-  (MonadIO m, MonadUnique m, MonadError QErr m, Tracing.MonadTrace m) =>
+  (MonadIO m, MonadError QErr m, Tracing.MonadTrace m) =>
   Env.Environment ->
   HTTP.Manager ->
   RemoteSchemaName ->

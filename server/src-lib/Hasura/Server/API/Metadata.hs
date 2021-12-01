@@ -9,7 +9,6 @@ module Hasura.Server.API.Metadata
 where
 
 import Control.Monad.Trans.Control (MonadBaseControl)
-import Control.Monad.Unique
 import Data.Aeson
 import Data.Aeson.Casing
 import Data.Aeson.Types qualified as A
@@ -355,7 +354,6 @@ runMetadataQueryM ::
     CacheRWM m,
     Tracing.MonadTrace m,
     UserInfoM m,
-    MonadUnique m,
     HTTP.HasHttpManagerM m,
     MetadataM m,
     MonadMetadataStorageQueryAPI m,
@@ -379,7 +377,6 @@ runMetadataQueryV1M ::
     CacheRWM m,
     Tracing.MonadTrace m,
     UserInfoM m,
-    MonadUnique m,
     HTTP.HasHttpManagerM m,
     MetadataM m,
     MonadMetadataStorageQueryAPI m,

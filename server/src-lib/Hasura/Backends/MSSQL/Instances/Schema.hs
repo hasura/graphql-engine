@@ -275,7 +275,7 @@ msColumnParser columnType (G.Nullability isNullable) =
         MSSQL.BitType -> pure $ ODBC.BoolValue <$> P.boolean
         _ -> do
           name <- MSSQL.mkMSSQLScalarTypeName scalarType
-          let schemaType = P.NonNullable $ P.TNamed $ P.mkDefinition name Nothing P.TIScalar
+          let schemaType = P.NonNullable $ P.TNamed $ P.Definition name Nothing P.TIScalar
           pure $
             Parser
               { pType = schemaType,
@@ -296,7 +296,7 @@ msColumnParser columnType (G.Nullability isNullable) =
       | otherwise = id
     mkEnumValue :: (EnumValue, EnumValueInfo) -> (P.Definition P.EnumValueInfo, ScalarValue 'MSSQL)
     mkEnumValue (EnumValue value, EnumValueInfo description) =
-      ( P.mkDefinition value (G.Description <$> description) P.EnumValueInfo,
+      ( P.Definition value (G.Description <$> description) P.EnumValueInfo,
         ODBC.TextValue $ G.unName value
       )
 
@@ -333,7 +333,7 @@ msOrderByOperators =
       )
     ]
   where
-    define name desc = P.mkDefinition name (Just desc) P.EnumValueInfo
+    define name desc = P.Definition name (Just desc) P.EnumValueInfo
 
 msComparisonExps ::
   forall m n r.

@@ -185,7 +185,7 @@ columnParser' columnType (G.Nullability isNullable) =
       MySQL.Timestamp -> pure $ possiblyNullable scalarType $ MySQL.TimestampValue <$> P.string
       _ -> do
         name <- MySQL.mkMySQLScalarTypeName scalarType
-        let schemaType = P.NonNullable $ P.TNamed $ P.mkDefinition name Nothing P.TIScalar
+        let schemaType = P.NonNullable $ P.TNamed $ P.Definition name Nothing P.TIScalar
         pure $
           Parser
             { pType = schemaType,
@@ -207,11 +207,11 @@ columnParser' columnType (G.Nullability isNullable) =
       | otherwise = id
     mkEnumValue :: (EnumValue, EnumValueInfo) -> (P.Definition P.EnumValueInfo, RQL.ScalarValue 'MySQL)
     mkEnumValue (RQL.EnumValue value, EnumValueInfo description) =
-      ( P.mkDefinition value (G.Description <$> description) P.EnumValueInfo,
+      ( P.Definition value (G.Description <$> description) P.EnumValueInfo,
         MySQL.VarcharValue $ G.unName value
       )
     throughJSON scalarName =
-      let schemaType = P.NonNullable $ P.TNamed $ P.mkDefinition scalarName Nothing P.TIScalar
+      let schemaType = P.NonNullable $ P.TNamed $ P.Definition scalarName Nothing P.TIScalar
        in Parser
             { pType = schemaType,
               pParser =
@@ -248,7 +248,7 @@ orderByOperators' =
       )
     ]
   where
-    define name desc = P.mkDefinition name (Just desc) P.EnumValueInfo
+    define name desc = P.Definition name (Just desc) P.EnumValueInfo
 
 -- | TODO: Make this as thorough as the one for MSSQL/PostgreSQL
 comparisonExps' ::

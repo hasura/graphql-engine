@@ -24,7 +24,6 @@ import Control.Arrow.Extended
 import Control.Concurrent.Async.Lifted.Safe qualified as LA
 import Control.Lens hiding ((.=))
 import Control.Monad.Trans.Control (MonadBaseControl)
-import Control.Monad.Unique
 import Control.Retry qualified as Retry
 import Data.Aeson
 import Data.Align (align)
@@ -147,7 +146,6 @@ newtype CacheRWT m a
       Applicative,
       Monad,
       MonadIO,
-      MonadUnique,
       MonadReader r,
       MonadError e,
       MonadTx,
@@ -227,7 +225,6 @@ buildSchemaCacheRule ::
     Inc.ArrowDistribute arr,
     Inc.ArrowCache m arr,
     MonadIO m,
-    MonadUnique m,
     MonadBaseControl IO m,
     MonadError QErr m,
     MonadReader BuildReason m,
@@ -560,7 +557,6 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
         Inc.ArrowCache m arr,
         ArrowWriter (Seq CollectedInfo) arr,
         MonadIO m,
-        MonadUnique m,
         MonadError QErr m,
         MonadReader BuildReason m,
         MonadBaseControl IO m,
@@ -1134,7 +1130,6 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
         ArrowWriter (Seq CollectedInfo) arr,
         Inc.ArrowCache m arr,
         MonadIO m,
-        MonadUnique m,
         HasHttpManagerM m
       ) =>
       ( Inc.Dependency (HashMap RemoteSchemaName Inc.InvalidationKey),

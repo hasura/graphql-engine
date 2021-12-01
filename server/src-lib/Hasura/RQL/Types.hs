@@ -30,7 +30,6 @@ module Hasura.RQL.Types
 where
 
 import Control.Lens (Traversal', at, preview, (^.))
-import Control.Monad.Unique
 import Data.HashMap.Strict qualified as M
 import Data.Text.Extended
 import Database.PG.Query qualified as Q
@@ -242,7 +241,6 @@ newtype HasSystemDefinedT m a = HasSystemDefinedT {unHasSystemDefinedT :: Reader
       Monad,
       MonadTrans,
       MonadIO,
-      MonadUnique,
       MonadError e,
       MonadTx,
       HasHttpManagerM,

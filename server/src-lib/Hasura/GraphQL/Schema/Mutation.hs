@@ -384,7 +384,7 @@ conflictConstraint constraints sourceName tableInfo =
     constraintEnumValues <- for constraints \constraint -> do
       name <- textToName $ toTxt $ _cName constraint
       pure
-        ( P.mkDefinition name (Just "unique or primary key constraint") P.EnumValueInfo,
+        ( P.Definition name (Just "unique or primary key constraint") P.EnumValueInfo,
           _cName constraint
         )
     enumName <- P.mkTypename $ tableGQLName <> $$(G.litName "_constraint")

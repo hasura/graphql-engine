@@ -208,7 +208,7 @@ bqColumnParser columnType (G.Nullability isNullable) =
       BigQuery.DatetimeScalarType -> pure $ possiblyNullable scalarType $ BigQuery.DatetimeValue . BigQuery.Datetime <$> P.string
       BigQuery.GeographyScalarType -> pure $ possiblyNullable scalarType $ BigQuery.GeographyValue . BigQuery.Geography <$> P.string
       BigQuery.TimestampScalarType -> do
-        let schemaType = P.Nullable . P.TNamed $ P.mkDefinition stringScalar Nothing P.TIScalar
+        let schemaType = P.Nullable . P.TNamed $ P.Definition stringScalar Nothing P.TIScalar
         pure $
           possiblyNullable scalarType $
             Parser
@@ -233,11 +233,11 @@ bqColumnParser columnType (G.Nullability isNullable) =
       | otherwise = id
     mkEnumValue :: (EnumValue, EnumValueInfo) -> (P.Definition P.EnumValueInfo, ScalarValue 'BigQuery)
     mkEnumValue (EnumValue value, EnumValueInfo description) =
-      ( P.mkDefinition value (G.Description <$> description) P.EnumValueInfo,
+      ( P.Definition value (G.Description <$> description) P.EnumValueInfo,
         BigQuery.StringValue $ G.unName value
       )
     throughJSON scalarName =
-      let schemaType = P.NonNullable $ P.TNamed $ P.mkDefinition scalarName Nothing P.TIScalar
+      let schemaType = P.NonNullable $ P.TNamed $ P.Definition scalarName Nothing P.TIScalar
        in Parser
             { pType = schemaType,
               pParser =
@@ -278,7 +278,7 @@ bqOrderByOperators =
       )
     ]
   where
-    define name desc = P.mkDefinition name (Just desc) P.EnumValueInfo
+    define name desc = P.Definition name (Just desc) P.EnumValueInfo
 
 bqComparisonExps ::
   forall m n r.
