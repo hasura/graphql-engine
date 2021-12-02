@@ -33,6 +33,7 @@ import Control.Monad.Trans.Managed (ManagedT)
 import Crypto.Hash qualified as Crypto
 import Data.ByteArray qualified as BA
 import Data.ByteString (ByteString)
+import Data.HashMap.Strict qualified as Map
 import Data.HashSet qualified as Set
 import Data.Hashable qualified as Hash
 import Data.IORef (newIORef)
@@ -96,7 +97,7 @@ data AuthMode
   = AMNoAuth
   | AMAdminSecret !(Set.HashSet AdminSecretHash) !(Maybe RoleName)
   | AMAdminSecretAndHook !(Set.HashSet AdminSecretHash) !AuthHook
-  | AMAdminSecretAndJWT !(Set.HashSet AdminSecretHash) !JWTCtx !(Maybe RoleName)
+  | AMAdminSecretAndJWT !(Set.HashSet AdminSecretHash) !(Map.HashMap (Maybe StringOrURI) JWTCtx) !(Maybe RoleName)
   deriving (Show, Eq)
 
 -- | Validate the user's requested authentication configuration, launching any
@@ -109,17 +110,17 @@ setupAuthMode ::
   ) =>
   Set.HashSet AdminSecretHash ->
   Maybe AuthHook ->
-  Maybe JWTConfig ->
+  Map.HashMap (Maybe StringOrURI) JWTConfig ->
   Maybe RoleName ->
   H.Manager ->
   Logger Hasura ->
   ExceptT Text (ManagedT m) AuthMode
-setupAuthMode adminSecretHashSet mWebHook mJwtSecret mUnAuthRole httpManager logger =
-  case (not (Set.null adminSecretHashSet), mWebHook, mJwtSecret) of
-    (True, Nothing, Nothing) -> return $ AMAdminSecret adminSecretHashSet mUnAuthRole
-    (True, Nothing, Just jwtConf) -> do
-      jwtCtx <- mkJwtCtx jwtConf
-      return $ AMAdminSecretAndJWT adminSecretHashSet jwtCtx mUnAuthRole
+setupAuthMode adminSecretHashSet mWebHook mJwtSecrets mUnAuthRole httpManager logger =
+  case (not (Set.null adminSecretHashSet), mWebHook, not (Map.null mJwtSecrets)) of
+    (True, Nothing, False) -> return $ AMAdminSecret adminSecretHashSet mUnAuthRole
+    (True, Nothing, True) -> do
+      jwtCtxs <- mkJwtCtxs mJwtSecrets
+      pure $ AMAdminSecretAndJWT adminSecretHashSet jwtCtxs mUnAuthRole
     -- Nothing below this case uses unauth role. Throw a fatal error if we would otherwise ignore
     -- that parameter, lest users misunderstand their auth configuration:
     _
@@ -128,18 +129,26 @@ setupAuthMode adminSecretHashSet mWebHook mJwtSecret mUnAuthRole httpManager log
           "Fatal Error: --unauthorized-role (HASURA_GRAPHQL_UNAUTHORIZED_ROLE)"
             <> requiresAdminScrtMsg
             <> " and is not allowed when --auth-hook (HASURA_GRAPHQL_AUTH_HOOK) is set"
-    (False, Nothing, Nothing) -> return AMNoAuth
-    (True, Just hook, Nothing) -> return $ AMAdminSecretAndHook adminSecretHashSet hook
-    (False, Just _, Nothing) ->
+    (False, Nothing, False) -> return AMNoAuth
+    (True, Just hook, False) -> return $ AMAdminSecretAndHook adminSecretHashSet hook
+    (False, Just _, False) ->
       throwError $
         "Fatal Error : --auth-hook (HASURA_GRAPHQL_AUTH_HOOK)" <> requiresAdminScrtMsg
-    (False, Nothing, Just _) ->
+    (False, Nothing, True) ->
       throwError $
         "Fatal Error : --jwt-secret (HASURA_GRAPHQL_JWT_SECRET)" <> requiresAdminScrtMsg
-    (_, Just _, Just _) ->
+    (_, Just _, True) ->
       throwError
         "Fatal Error: Both webhook and JWT mode cannot be enabled at the same time"
   where
+    mkJwtCtxs ::
+      ( ForkableMonadIO m,
+        Tracing.HasReporter m
+      ) =>
+      Map.HashMap (Maybe StringOrURI) JWTConfig ->
+      ExceptT Text (ManagedT m) (Map.HashMap (Maybe StringOrURI) JWTCtx)
+    mkJwtCtxs = traverse mkJwtCtx
+
     requiresAdminScrtMsg =
       " requires --admin-secret (HASURA_GRAPHQL_ADMIN_SECRET) or "
         <> " --access-key (HASURA_GRAPHQL_ACCESS_KEY) to be set"
@@ -204,7 +213,7 @@ getUserInfoWithExpTime_ ::
     m (UserInfo, Maybe UTCTime, [N.Header])
   ) ->
   -- | mock 'processJwt'
-  (JWTCtx -> [N.Header] -> Maybe RoleName -> m (UserInfo, Maybe UTCTime, [N.Header])) ->
+  (Map.HashMap (Maybe StringOrURI) JWTCtx -> [N.Header] -> Maybe RoleName -> m (UserInfo, Maybe UTCTime, [N.Header])) ->
   _Logger_Hasura ->
   _Manager ->
   [N.Header] ->
@@ -232,8 +241,8 @@ getUserInfoWithExpTime_ userInfoFromAuthHook_ processJwt_ logger manager rawHead
   -- this is the case that actually ends up consuming the request AST
   AMAdminSecretAndHook adminSecretHashSet hook ->
     checkingSecretIfSent adminSecretHashSet $ userInfoFromAuthHook_ logger manager hook rawHeaders reqs
-  AMAdminSecretAndJWT adminSecretHashSet jwtSecret unAuthRole ->
-    checkingSecretIfSent adminSecretHashSet $ processJwt_ jwtSecret rawHeaders unAuthRole
+  AMAdminSecretAndJWT adminSecretHashSet jwtSecrets unAuthRole ->
+    checkingSecretIfSent adminSecretHashSet $ processJwt_ jwtSecrets rawHeaders unAuthRole
   where
     -- CAREFUL!:
     mkUserInfoFallbackAdminRole adminSecretState =
