@@ -26,7 +26,7 @@ export const passCreateTable = () => {
   cy.get('textarea').type(prevStr, { force: true });
   cy.wait(1000); // debounce
   cy.get(getElementFromAlias('run-sql')).click();
-  cy.get(getElementFromAlias('raw-sql-statement-timeout'));
+  // cy.get(getElementFromAlias('raw-sql-statement-timeout'));
   cy.wait(5000);
 };
 
@@ -56,7 +56,7 @@ export const readQuery = () => {
   cy.wait(500);
   cy.get('div.rt-tr-group').should('have.length', 5);
   cy.get('div.rt-td').first().should('have.text', '11');
-  cy.get('div.rt-td').last().should('have.text', "NULL");
+  cy.get('div.rt-td').last().should('have.text', 'NULL');
 };
 export const passAlterTable = () => {
   clearText();
@@ -89,8 +89,8 @@ export const delTestTables = () => {
   cy.get(getElementFromAlias('run-sql')).click();
   // NOTE: This is only visible, when the console is in CLI mode
   cy.get(getElementFromAlias('not-migration-confirm')).click();
-  cy.get(getElementFromAlias('raw-sql-statement-timeout')).type('20', {
-    force: true,
-  });
+  // cy.get(getElementFromAlias('raw-sql-statement-timeout')).type('20', {
+  //   force: true,
+  // });
   cy.wait(5000);
 };
