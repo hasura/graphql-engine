@@ -285,10 +285,10 @@ pushResultToStreamSubscriptionCohort result !respHashM (LiveQueryMetadata dTime)
                   TENull -> previousVal -- When we get a null value from the DB, we retain the older value
                   TELit t -> TELit t
           case latestCursorValuesDB of
-            Nothing -> pure () -- Nothing indicates there was an error when the query ran
-            Just (CursorVariableValues curr) -> do
-              CursorVariableValues prev <- STM.readTVar latestCursorValueTV
-              STM.writeTVar latestCursorValueTV (CursorVariableValues (Map.unionWith combineFn prev curr))
+            Nothing -> pure () -- Nothing indicates there was an error when the query was polled
+            Just (CursorVariableValues currentPollCursorValues) -> do
+              CursorVariableValues prevPollCursorValues <- STM.readTVar latestCursorValueTV
+              STM.writeTVar latestCursorValueTV (CursorVariableValues (Map.unionWith combineFn prevPollCursorValues currentPollCursorValues))
           return (newSinks <> curSinks, mempty)
       else return (newSinks, curSinks)
   pushResultToSubscribers subscribersToPush
