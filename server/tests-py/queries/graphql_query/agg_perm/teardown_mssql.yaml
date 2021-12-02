@@ -1,0 +1,32 @@
+type: bulk
+args:
+
+#Drop relationships
+- type: mssql_drop_relationship
+  args:
+    source: mssql
+    table:
+      name: author
+    relationship: articles
+
+- type: mssql_drop_relationship
+  args:
+    source: mssql
+    table:
+      name: article
+    relationship: author
+
+#Untrack tables
+- type: mssql_untrack_table
+  args:
+    source: mssql
+    table:
+      name: author
+      cascade: true
+
+- type: mssql_untrack_table
+  args:
+    source: mssql
+    table:
+      name: article
+      cascade: true

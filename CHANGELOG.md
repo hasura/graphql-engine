@@ -3,6 +3,8 @@
 ## Next release
 (Add highlights/major features below)
 
+- server: fix aggregate queries with nodes field in selection set for sql server (fix #7871)
+- server: fix permissions are not respected for aggregations in sql server (fix #7773)
 - server: the syntax for remote relationships in metadata is changed to be
   consistent with future remote relationships work. However, the older syntax
   is still accepted and this is a non-breaking change.
