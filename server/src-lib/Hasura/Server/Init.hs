@@ -13,6 +13,7 @@ import Data.Aeson qualified as J
 import Data.Aeson.TH qualified as J
 import Data.ByteString.Char8 (pack, unpack)
 import Data.FileEmbed (embedStringFile, makeRelativeToProject)
+import Data.HashMap.Strict qualified as Map
 import Data.HashSet qualified as Set
 import Data.String qualified as DataString
 import Data.Text qualified as T
@@ -29,6 +30,7 @@ import Hasura.Logging qualified as L
 import Hasura.Prelude
 import Hasura.RQL.Types
 import Hasura.Server.Auth
+import Hasura.Server.Auth.JWT
 import Hasura.Server.Cors
 import Hasura.Server.Init.Config
 import Hasura.Server.Logging
@@ -168,7 +170,8 @@ mkServeOptions rso = do
   txIso <- fromMaybe Q.ReadCommitted <$> withEnv (rsoTxIso rso) (fst txIsoEnv)
   adminScrt <- fmap (maybe mempty Set.singleton) $ withEnvs (rsoAdminSecret rso) $ map fst [adminSecretEnv, accessKeyEnv]
   authHook <- mkAuthHook $ rsoAuthHook rso
-  jwtSecret <- withEnvJwtConf (rsoJwtSecret rso) $ fst jwtSecretEnv
+  jwtSecret' <- withEnvJwtConf (rsoJwtSecret rso) $ fst jwtSecretEnv
+  let jwtSecret = maybe mempty (uncurry Map.singleton) $ ((coerce . jcIssuer) &&& id) <$> jwtSecret'
   unAuthRole <- withEnv (rsoUnAuthRole rso) $ fst unAuthRoleEnv
   corsCfg <- mkCorsConfig $ rsoCorsConfig rso
   enableConsole <-
