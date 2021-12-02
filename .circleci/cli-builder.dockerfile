@@ -9,7 +9,14 @@ RUN	go get github.com/mitchellh/gox \
 
 # install UPX, netcat and gcloud cli
 RUN apt-get update && apt-get install -y \
-    xz-utils netcat libpq5 postgresql-client jq zip \
+    xz-utils netcat libpq5 postgresql-client jq zip build-essential pkg-config libssl-dev libcurl4-openssl-dev \
+    && wget https://github.com/mtrojnar/osslsigncode/releases/download/2.2/osslsigncode-2.2.0.tar.gz \
+    && tar -xzf osslsigncode-2.2.0.tar.gz \
+    && cd osslsigncode-2.2.0 \
+    && ./configure && make install && cd .. \
+    && rm -rf osslsigncode* \
+    && wget http://archive.ubuntu.com/ubuntu/pool/main/g/glibc/multiarch-support_2.27-3ubuntu1.4_amd64.deb \
+    && apt-get install ./multiarch-support_2.27-3ubuntu1.4_amd64.deb \
     && curl -s https://packages.microsoft.com/config/debian/9/prod.list > /etc/apt/sources.list.d/mssql-release.list \
     && curl -s https://packages.microsoft.com/keys/microsoft.asc | apt-key add - \
     && echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" | tee -a /etc/apt/sources.list.d/google-cloud-sdk.list \
