@@ -162,6 +162,17 @@ args:
 - type: create_select_permission
   args:
     table: article
+    role: user_with_filter
+    permission:
+      columns: '*'
+      filter:
+        author_id:
+          _eq: X-Hasura-User-Id
+      allow_aggregations: true
+
+- type: create_select_permission
+  args:
+    table: article
     role: role_without_access_to_cols
     permission:
       columns: []

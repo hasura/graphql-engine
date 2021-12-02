@@ -449,8 +449,9 @@ class TestGraphQLQueryAgg:
 
 
 @pytest.mark.parametrize("transport", ['http', 'websocket'])
+@pytest.mark.parametrize("backend", ['mssql', 'postgres'])
 @usefixtures('per_class_tests_db_state')
-class TestGraphQLQueryAggPerm:
+class TestGraphQLQueryAggPermCommon:
 
     def test_author_agg_articles(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/author_agg_articles.yaml', transport)
@@ -467,13 +468,28 @@ class TestGraphQLQueryAggPerm:
     def test_article_agg_without_select_access_to_any_col(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/article_agg_with_role_without_select_access.yaml', transport)
 
+    def test_article_agg_with_filter(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/article_agg_with_filter.yaml', transport)
+
+    @classmethod
+    def dir(cls):
+        return 'queries/graphql_query/agg_perm'
+
+@pytest.mark.parametrize("transport", ['http', 'websocket'])
+@pytest.mark.parametrize("backend", ['postgres'])
+@usefixtures('per_class_tests_db_state')
+class TestGraphQLQueryAggPermPostgres:
+    # This test should be part of TestGraphQLQueryAggPermCommon and it is not because of
+    # known issue with sql server aggregate count query on multiple columns.
+    # Refer https://github.com/hasura/graphql-engine/issues/7873
+    # Move the test to above said class when the issue is fixed.
+
     def test_article_agg_with_select_access(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/article_agg_with_role_with_select_access.yaml', transport)
 
     @classmethod
     def dir(cls):
         return 'queries/graphql_query/agg_perm'
-
 
 @usefixtures('per_class_tests_db_state')
 class TestGraphQLQueryLimits:
