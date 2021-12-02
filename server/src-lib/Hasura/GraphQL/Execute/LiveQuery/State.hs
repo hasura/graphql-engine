@@ -139,7 +139,11 @@ addLiveQuery
       pollerId <- PollerId <$> UUID.nextRandom
       threadRef <- forkImmortal ("pollQuery." <> show pollerId) logger $
         forever $ do
-          pollQuery @b pollerId lqOpts (source, sourceConfig) role parameterizedQueryHash query (_pCohorts handler) postPollHook
+          case subscriptionType of
+            STLiveQuery ->
+              pollQuery @b pollerId lqOpts (source, sourceConfig) role parameterizedQueryHash query (_pCohorts handler) postPollHook
+            STStreaming ->
+              pollStreamingQuery @b pollerId lqOpts (source, sourceConfig) role parameterizedQueryHash query (_pCohorts handler) postPollHook
           sleep $ unNonNegativeDiffTime $ unRefetchInterval refetchInterval
       let !pState = PollerIOState threadRef pollerId
       $assertNFHere pState -- so we don't write thunks to mutable vars
@@ -162,7 +166,9 @@ addLiveQuery
         cohortSubscriptionType <-
           case subscriptionType of
             STLiveQuery -> pure CohortLivequery
-            STStreaming -> CohortStreaming <$> STM.newTVar (CursorVariableValues mempty)
+            -- initializing the value of the CursorVariableValues with the user provided values which is stored in the
+            -- cursor variable of the `CohortVariables`
+            STStreaming -> CohortStreaming <$> STM.newTVar (CursorVariableValues (_unValidatedVariables (_cvCursorVariables cohortKey)))
         !newCohort <- Cohort cohortId <$> STM.newTVar Nothing <*> TMap.new <*> TMap.new <*> pure cohortSubscriptionType
         addToCohort subscriber newCohort
         TMap.insert newCohort cohortKey $ _pCohorts handler

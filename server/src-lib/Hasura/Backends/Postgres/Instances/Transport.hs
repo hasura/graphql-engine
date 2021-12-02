@@ -45,6 +45,7 @@ instance
   runDBQuery = runPGQuery
   runDBMutation = runPGMutation
   runDBSubscription = runPGSubscription
+  runDBStreamingSubscription = runPGStreamingSubscription
   runDBQueryExplain = runPGQueryExplain
 
 runPGQuery ::
@@ -108,6 +109,18 @@ runPGSubscription ::
 runPGSubscription sourceConfig query variables =
   withElapsedTime $
       runExceptT $ runQueryTx (_pscExecCtx sourceConfig) $ PGL.executeMultiplexedQuery query variables
+
+runPGStreamingSubscription ::
+  MonadIO m =>
+  SourceConfig ('Postgres pgKind) ->
+  MultiplexedQuery ('Postgres pgKind) ->
+  [(CohortId, CohortVariables)] ->
+  m (DiffTime, Either QErr [(CohortId, B.ByteString, CursorVariableValues)])
+runPGStreamingSubscription sourceConfig query variables =
+  withElapsedTime $
+    runExceptT $ do
+      res <- runQueryTx (_pscExecCtx sourceConfig) $ PGL.executeStreamingMultiplexedQuery query variables
+      pure $ res <&> (\(cohortId, cohortRes, cursorVariableVals) -> (cohortId, cohortRes, Q.getAltJ cursorVariableVals))
 
 runPGQueryExplain ::
   forall pgKind m.

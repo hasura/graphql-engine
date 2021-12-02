@@ -93,6 +93,7 @@ module Hasura.GraphQL.Execute.LiveQuery.Plan
     CohortIdArray (..),
     CohortVariablesArray (..),
     CohortVariables,
+    _cvCursorVariables,
     mkCohortVariables,
     ValidatedVariables (..),
     mkUnsafeValidateVariables,
@@ -225,7 +226,7 @@ instance Q.ToPrepArg CohortVariablesArray where
 -- > SELECT 'v1'::t1, 'v2'::t2, ..., 'vn'::tn
 --
 -- so if any variable values are invalid, the error will be caught early.
-newtype ValidatedVariables f = ValidatedVariables (f TxtEncodedVal)
+newtype ValidatedVariables f = ValidatedVariables {_unValidatedVariables :: (f TxtEncodedVal)}
 
 deriving instance (Show (f TxtEncodedVal)) => Show (ValidatedVariables f)
 

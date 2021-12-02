@@ -6,6 +6,7 @@ module Hasura.Backends.Postgres.Execute.LiveQuery
     resolveMultiplexedValue,
     validateVariables,
     executeMultiplexedQuery,
+    executeStreamingMultiplexedQuery,
     executeQuery,
     SubscriptionType (..),
   )
@@ -154,7 +155,7 @@ mkMultiplexedQuery rootFields =
         mkQualifiedIdentifier (aliasToIdentifier fieldAlias) (Identifier "root")
       ]
 
-    mkQualifiedIdentifier prefix = S.SEQIdentifier . S.QIdentifier (S.QualifiedIdentifier prefix Nothing) -- TODO fix this Nothing of course
+    mkQualifiedIdentifier prefix = S.SEQIdentifier . S.QIdentifier (S.QualifiedIdentifier prefix Nothing)
     aliasToIdentifier = Identifier . G.unName
 
 mkStreamingMultiplexedQuery ::
@@ -279,6 +280,14 @@ executeMultiplexedQuery ::
   [(CohortId, CohortVariables)] ->
   m [(CohortId, B.ByteString)]
 executeMultiplexedQuery (MultiplexedQuery query) cohorts = do
+  executeQuery query cohorts
+
+executeStreamingMultiplexedQuery ::
+  (MonadTx m) =>
+  MultiplexedQuery ->
+  [(CohortId, CohortVariables)] ->
+  m [(CohortId, B.ByteString, Q.AltJ CursorVariableValues)]
+executeStreamingMultiplexedQuery (MultiplexedQuery query) cohorts = do
   executeQuery query cohorts
 
 -- | Internal; used by both 'executeMultiplexedQuery' and 'pgDBLiveQueryExplain'.

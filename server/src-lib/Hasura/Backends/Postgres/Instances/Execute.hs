@@ -72,10 +72,6 @@ import Hasura.RQL.IR.Update qualified as IR
 import Hasura.RQL.Types
   ( Backend (..),
     BackendType (Postgres),
-    FieldName,
-    JsonAggSelect (..),
-    SourceName,
-    getFieldNameTxt,
     liftTx,
   )
 import Hasura.RQL.Types.Column (ColumnType (..), ColumnValue (..))
@@ -83,7 +79,7 @@ import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.Session (UserInfo (..))
 import Hasura.Tracing qualified as Tracing
 import Language.GraphQL.Draft.Syntax qualified as G
-import Hasura.RQL.Types.Common (SubscriptionType)
+import Hasura.RQL.Types.Common
 
 data PreparedSql = PreparedSql
   { _psQuery :: !Q.Query,
@@ -305,7 +301,10 @@ pgDBSubscriptionPlan userInfo _sourceName sourceConfig namespace subscriptionTyp
       for unpreparedAST $
         traverse (PGL.resolveMultiplexedValue (_uiSession userInfo))
   mutationQueryTagsComment <- ask
-  let multiplexedQuery = PGL.mkMultiplexedQuery $ OMap.mapKeys _rfaAlias preparedAST
+  let multiplexedQuery =
+        case subscriptionType of
+          STLiveQuery -> PGL.mkMultiplexedQuery $ OMap.mapKeys _rfaAlias preparedAST
+          STStreaming -> PGL.mkStreamingMultiplexedQuery $ OMap.mapKeys _rfaAlias preparedAST
       multiplexedQueryWithQueryTags =
         multiplexedQuery {PGL.unMultiplexedQuery = appendSQLWithQueryTags (PGL.unMultiplexedQuery multiplexedQuery) mutationQueryTagsComment}
       roleName = _uiRole userInfo

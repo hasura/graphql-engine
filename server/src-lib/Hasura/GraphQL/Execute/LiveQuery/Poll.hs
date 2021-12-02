@@ -5,6 +5,7 @@ module Hasura.GraphQL.Execute.LiveQuery.Poll
     PollerId (..),
     PollerIOState (..),
     pollQuery,
+    pollStreamingQuery,
     PollerKey (..),
     PollerMap,
     dumpPollerMap,
