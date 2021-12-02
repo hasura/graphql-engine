@@ -55,7 +55,7 @@ import Hasura.GraphQL.Namespace
   )
 import Hasura.GraphQL.Parser
   ( ParameterType (..),
-    UnpreparedValue (..),
+    UnpreparedValue (..)
   )
 import Hasura.Prelude
 import Hasura.QueryTags
@@ -83,6 +83,7 @@ import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.Session (UserInfo (..))
 import Hasura.Tracing qualified as Tracing
 import Language.GraphQL.Draft.Syntax qualified as G
+import Hasura.RQL.Types.Common (SubscriptionType)
 
 data PreparedSql = PreparedSql
   { _psQuery :: !Q.Query,
@@ -295,9 +296,10 @@ pgDBSubscriptionPlan ::
   SourceName ->
   SourceConfig ('Postgres pgKind) ->
   Maybe G.Name ->
+  SubscriptionType ->
   RootFieldMap (QueryDB ('Postgres pgKind) (Const Void) (UnpreparedValue ('Postgres pgKind))) ->
   m (LiveQueryPlan ('Postgres pgKind) (MultiplexedQuery ('Postgres pgKind)))
-pgDBSubscriptionPlan userInfo _sourceName sourceConfig namespace unpreparedAST = do
+pgDBSubscriptionPlan userInfo _sourceName sourceConfig namespace subscriptionType unpreparedAST = do
   (preparedAST, PGL.QueryParametersInfo {..}) <-
     flip runStateT mempty $
       for unpreparedAST $
@@ -325,7 +327,7 @@ pgDBSubscriptionPlan userInfo _sourceName sourceConfig namespace unpreparedAST =
           validatedSyntheticVars
           validatedCursorVars
 
-  pure $ LiveQueryPlan parameterizedPlan sourceConfig cohortVariables namespace
+  pure $ LiveQueryPlan parameterizedPlan sourceConfig cohortVariables namespace subscriptionType
 
 -- turn the current plan into a transaction
 mkCurPlanTx ::

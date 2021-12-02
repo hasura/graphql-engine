@@ -41,7 +41,7 @@ import Hasura.GraphQL.Transport.WebSocket.Protocol (OperationId)
 import Hasura.Logging qualified as L
 import Hasura.Prelude
 import Hasura.RQL.Types.Action
-import Hasura.RQL.Types.Common (SourceName, unNonNegativeDiffTime)
+import Hasura.RQL.Types.Common (SourceName, unNonNegativeDiffTime, SubscriptionType (..))
 import Hasura.Server.Metrics (ServerMetrics (..))
 import Hasura.Server.Types (RequestId)
 import StmContainers.Map qualified as STMMap
@@ -151,7 +151,7 @@ addLiveQuery
     where
       LiveQueriesState lqOpts lqMap postPollHook _ = lqState
       LiveQueriesOptions _ refetchInterval = lqOpts
-      LiveQueryPlan (ParameterizedLiveQueryPlan role query) sourceConfig cohortKey _ = plan
+      LiveQueryPlan (ParameterizedLiveQueryPlan role query) sourceConfig cohortKey _ subscriptionType = plan
 
       handlerId = PollerKey source role $ toTxt query
 
@@ -159,7 +159,11 @@ addLiveQuery
         TMap.insert subscriber (_sId subscriber) $ _cNewSubscribers handlerC
 
       addToPoller subscriber cohortId handler = do
-        !newCohort <- Cohort cohortId <$> STM.newTVar Nothing <*> TMap.new <*> TMap.new <*> STM.newTVar Nothing
+        cohortSubscriptionType <-
+          case subscriptionType of
+            STLiveQuery -> pure CohortLivequery
+            STStreaming -> CohortStreaming <$> STM.newTVar (CursorVariableValues mempty)
+        !newCohort <- Cohort cohortId <$> STM.newTVar Nothing <*> TMap.new <*> TMap.new <*> pure cohortSubscriptionType
         addToCohort subscriber newCohort
         TMap.insert newCohort cohortKey $ _pCohorts handler
 

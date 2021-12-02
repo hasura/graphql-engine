@@ -260,7 +260,8 @@ data LiveQueryPlan (b :: BackendType) q = LiveQueryPlan
     _lqpVariables :: !CohortVariables,
     -- | We need to know if the source has a namespace so that we can wrap it around
     -- the response from the DB
-    _lqpNamespace :: !(Maybe G.Name)
+    _lqpNamespace :: !(Maybe G.Name),
+    _lqpSubscriptionType :: !SubscriptionType
   }
 
 data ParameterizedLiveQueryPlan (b :: BackendType) q = ParameterizedLiveQueryPlan

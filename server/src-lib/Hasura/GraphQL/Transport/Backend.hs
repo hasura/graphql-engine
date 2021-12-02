@@ -61,7 +61,15 @@ class BackendExecute b => BackendTransport (b :: BackendType) where
     MultiplexedQuery b ->
     -- | WARNING: Postgres-specific, ignored by other backends
     [(CohortId, CohortVariables)] ->
-    m (DiffTime, Either QErr [(CohortId, B.ByteString, Maybe CursorVariableValues)])
+    m (DiffTime, Either QErr [(CohortId, B.ByteString)])
+  runDBStreamingSubscription ::
+    forall m.
+    MonadIO m =>
+    SourceConfig b ->
+    MultiplexedQuery b ->
+    -- | WARNING: Postgres-specific, ignored by other backends
+    [(CohortId, CohortVariables)] ->
+    m (DiffTime, Either QErr [(CohortId, B.ByteString, CursorVariableValues)])
   runDBQueryExplain ::
     forall m.
     ( MonadIO m,

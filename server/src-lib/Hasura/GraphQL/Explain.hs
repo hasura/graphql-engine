@@ -116,8 +116,8 @@ explainGQLQuery sc (GQLExplain query userVarsRaw maybeIsRelay) = do
         E.SEAsyncActionsWithNoRelationships _ -> throw400 NotSupported "async action query fields without relationships to table cannot be explained"
         E.SEOnSourceDB actionIds liveQueryBuilder -> do
           actionLogResponseMap <- fst <$> E.fetchActionLogResponses actionIds
-          (_, E.LQP exists, _) <- liftEitherM $ liftIO $ runExceptT $ liveQueryBuilder actionLogResponseMap
-          AB.dispatchAnyBackend @BackendExecute exists \(E.MultiplexedLiveQueryPlan execPlan) ->
+          (_, E.SubscriptionQueryPlan exists, _) <- liftEitherM $ liftIO $ runExceptT $ liveQueryBuilder actionLogResponseMap
+          AB.dispatchAnyBackend @BackendExecute exists \(E.MultiplexedQueryPlan execPlan) ->
             encJFromJValue <$> mkLiveQueryExplain execPlan
   where
     queryType = bool E.QueryHasura E.QueryRelay $ Just True == maybeIsRelay

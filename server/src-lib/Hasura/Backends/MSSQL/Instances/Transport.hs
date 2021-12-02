@@ -98,7 +98,7 @@ runSubscription ::
   SourceConfig 'MSSQL ->
   MultiplexedQuery 'MSSQL ->
   [(CohortId, CohortVariables)] ->
-  m (DiffTime, Either QErr [(CohortId, B.ByteString, Maybe CursorVariableValues)])
+  m (DiffTime, Either QErr [(CohortId, B.ByteString)])
 runSubscription sourceConfig (MultiplexedQuery' reselect) variables = do
   let pool = _mscConnectionPool sourceConfig
       multiplexed = multiplexRootReselect variables reselect
@@ -109,11 +109,11 @@ executeMultiplexedQuery ::
   MonadIO m =>
   MSSQLPool ->
   ODBC.Query ->
-  ExceptT QErr m [(CohortId, B.ByteString, Maybe CursorVariableValues)]
+  ExceptT QErr m [(CohortId, B.ByteString)]
 executeMultiplexedQuery pool query = do
   let parseResult r = J.eitherDecodeStrict (encodeUtf8 r) `onLeft` \s -> throw400 ParseFailed (fromString s)
-      convertFromJSON :: [CohortResult] -> [(CohortId, B.ByteString, Maybe CursorVariableValues)]
-      convertFromJSON = map \(CohortResult (cid, cresult)) -> (cid, encodeUtf8 cresult, Nothing)
+      convertFromJSON :: [CohortResult] -> [(CohortId, B.ByteString)]
+      convertFromJSON = map \(CohortResult (cid, cresult)) -> (cid, encodeUtf8 cresult)
   textResult <- run $ runJSONPathQuery pool query
   parsedResult <- parseResult textResult
   pure $ convertFromJSON parsedResult

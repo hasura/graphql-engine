@@ -16,6 +16,7 @@ module Hasura.GraphQL.Execute.LiveQuery.Poll
 
     -- * Cohorts
     Cohort (..),
+    CohortSubscriptionType (..),
     CohortId,
     newCohortId,
     CohortVariables,
@@ -131,6 +132,9 @@ type SubscriberMap = TMap.TMap SubscriberId Subscriber
 -- -------------------------------------------------------------------------------------------------
 -- Cohorts
 
+data CohortSubscriptionType =
+  CohortLivequery | CohortStreaming !(STM.TVar CursorVariableValues)
+
 -- | A batched group of 'Subscriber's who are not only listening to the same query but also have
 -- identical session and query variables. Each result pushed to a 'Cohort' is forwarded along to
 -- each of its 'Subscriber's.
@@ -151,7 +155,8 @@ data Cohort = Cohort
     -- | subscribers we haven’t yet pushed any results to; we push results to them regardless if the
     -- result changed, then merge them in the map of existing subscribers
     _cNewSubscribers :: !SubscriberMap,
-    _cLatestCursorValue :: !(STM.TVar (Maybe CursorVariableValues)) -- this responds to a single cursor, for multiple column cursors this should be a (HashMap columnName (Maybe J.Value))
+    -- | When the
+    _cSubscriptionType :: !CohortSubscriptionType
   }
 
 -- | The @BatchId@ is a number based ID to uniquely identify a batch in a single poll and
@@ -200,19 +205,17 @@ dumpCohortMap cohortMap = do
           "cohort" J..= cohortJ
         ]
   where
-    dumpCohort (Cohort respId respTV curOps newOps latestCursorValTV) =
+    dumpCohort (Cohort respId respTV curOps newOps _) =
       STM.atomically $ do
         prevResHash <- STM.readTVar respTV
         curOpIds <- TMap.toList curOps
         newOpIds <- TMap.toList newOps
-        latestCursorVal <- STM.readTVar latestCursorValTV
         return $
           J.object
             [ "resp_id" J..= respId,
               "current_ops" J..= map fst curOpIds,
               "new_ops" J..= map fst newOpIds,
-              "previous_result_hash" J..= prevResHash,
-              "latest_cursor_value" J..= latestCursorVal
+              "previous_result_hash" J..= prevResHash
             ]
 
 data CohortSnapshot = CohortSnapshot
@@ -220,19 +223,18 @@ data CohortSnapshot = CohortSnapshot
     _csPreviousResponse :: !(STM.TVar (Maybe ResponseHash)),
     _csExistingSubscribers :: ![Subscriber],
     _csNewSubscribers :: ![Subscriber],
-    _csCursorLatestValue :: !(STM.TVar (Maybe CursorVariableValues))
+    _csSubscriptionType :: !CohortSubscriptionType
   }
 
 pushResultToCohort ::
   GQResult BS.ByteString ->
   Maybe ResponseHash ->
   LiveQueryMetadata ->
-  Maybe CursorVariableValues ->
   CohortSnapshot ->
   -- | subscribers to which data has been pushed, subscribers which already
   -- have this data (this information is exposed by metrics reporting)
   IO ([SubscriberExecutionDetails], [SubscriberExecutionDetails])
-pushResultToCohort result !respHashM (LiveQueryMetadata dTime) latestCursorValueMaybe cohortSnapshot = do
+pushResultToCohort result !respHashM (LiveQueryMetadata dTime) cohortSnapshot = do
   prevRespHashM <- STM.readTVarIO respRef
   -- write to the current websockets if needed
   (subscribersToPush, subscribersToIgnore) <-
@@ -240,18 +242,7 @@ pushResultToCohort result !respHashM (LiveQueryMetadata dTime) latestCursorValue
       then do
         $assertNFHere respHashM -- so we don't write thunks to mutable vars
         STM.atomically $ do
-          prevCursorCohortValueMaybe <- STM.readTVar latestCursorValueTV
           STM.writeTVar respRef respHashM
-          case (prevCursorCohortValueMaybe, latestCursorValueMaybe) of
-            (Nothing, Nothing) -> pure () -- livequery case
-            (Just _, Nothing) -> pure () -- this case is not possible
-            (Nothing, Just a) -> STM.writeTVar latestCursorValueTV (Just a) -- initial case
-            (Just (CursorVariableValues prev), Just (CursorVariableValues curr)) -> do
-              let combineFn previousVal currentVal =
-                    case currentVal of
-                      TENull -> previousVal -- When we get a null value from the DB, we retain the older value
-                      TELit t -> TELit t
-              STM.writeTVar latestCursorValueTV (Just (CursorVariableValues (Map.unionWith combineFn prev curr)))
         return (newSinks <> curSinks, mempty)
       else return (newSinks, curSinks)
   pushResultToSubscribers subscribersToPush
@@ -263,7 +254,52 @@ pushResultToCohort result !respHashM (LiveQueryMetadata dTime) latestCursorValue
       )
       (subscribersToPush, subscribersToIgnore)
   where
-    CohortSnapshot _ respRef curSinks newSinks latestCursorValueTV = cohortSnapshot
+    CohortSnapshot _ respRef curSinks newSinks _ = cohortSnapshot
+
+    response = result <&> \payload -> LiveQueryResponse payload dTime
+    pushResultToSubscribers =
+      A.mapConcurrently_ $ \Subscriber {..} -> _sOnChangeCallback response
+
+pushResultToStreamSubscriptionCohort ::
+  GQResult BS.ByteString ->
+  Maybe ResponseHash ->
+  LiveQueryMetadata ->
+  STM.TVar CursorVariableValues ->
+  Maybe CursorVariableValues ->
+  CohortSnapshot ->
+  -- | subscribers to which data has been pushed, subscribers which already
+  -- have this data (this information is exposed by metrics reporting)
+  IO ([SubscriberExecutionDetails], [SubscriberExecutionDetails])
+pushResultToStreamSubscriptionCohort result !respHashM (LiveQueryMetadata dTime) latestCursorValueTV latestCursorValuesDB cohortSnapshot = do
+  prevRespHashM <- STM.readTVarIO respRef
+  -- write to the current websockets if needed
+  (subscribersToPush, subscribersToIgnore) <-
+    if isExecError result || respHashM /= prevRespHashM
+      then do
+        $assertNFHere respHashM -- so we don't write thunks to mutable vars
+        STM.atomically $ do
+          STM.writeTVar respRef respHashM
+          let combineFn previousVal currentVal =
+                case currentVal of
+                  TENull -> previousVal -- When we get a null value from the DB, we retain the older value
+                  TELit t -> TELit t
+          case latestCursorValuesDB of
+            Nothing -> pure () -- Nothing indicates there was an error when the query ran
+            Just (CursorVariableValues curr) -> do
+              CursorVariableValues prev <- STM.readTVar latestCursorValueTV
+              STM.writeTVar latestCursorValueTV (CursorVariableValues (Map.unionWith combineFn prev curr))
+          return (newSinks <> curSinks, mempty)
+      else return (newSinks, curSinks)
+  pushResultToSubscribers subscribersToPush
+  pure $
+    over
+      (each . each)
+      ( \Subscriber {..} ->
+          SubscriberExecutionDetails _sId _sMetadata
+      )
+      (subscribersToPush, subscribersToIgnore)
+  where
+    CohortSnapshot _ respRef curSinks newSinks _ = cohortSnapshot
 
     response = result <&> \payload -> LiveQueryResponse payload dTime
     pushResultToSubscribers =
@@ -491,11 +527,11 @@ pollQuery pollerId lqOpts (sourceName, sourceConfig) roleName parameterizedQuery
           batchResponseSize =
             case mxRes of
               Left _ -> Nothing
-              Right resp -> Just $ getSum $ foldMap ((\(_, sqlResp, _) -> Sum . BS.length $ sqlResp)) resp
+              Right resp -> Just $ getSum $ foldMap (Sum . BS.length . snd) resp
       (pushTime, cohortsExecutionDetails) <- withElapsedTime $
-        A.forConcurrently operations $ \(res, cohortId, respData, latestCursorValueMaybe, snapshot) -> do
+        A.forConcurrently operations $ \(res, cohortId, respData, snapshot) -> do
           (pushedSubscribers, ignoredSubscribers) <-
-            pushResultToCohort res (fst <$> respData) lqMeta latestCursorValueMaybe snapshot
+              pushResultToCohort res (fst <$> respData) lqMeta snapshot
           pure
             CohortExecutionDetails
               { _cedCohortId = cohortId,
@@ -532,20 +568,134 @@ pollQuery pollerId lqOpts (sourceName, sourceConfig) roleName parameterizedQuery
     LiveQueriesOptions batchSize _ = lqOpts
 
     getCohortSnapshot (cohortVars, handlerC) = do
-      let Cohort resId respRef curOpsTV newOpsTV cursorLatestVal = handlerC
+      let Cohort resId respRef curOpsTV newOpsTV cursorSubscriptionType = handlerC
       curOpsL <- TMap.toList curOpsTV
       newOpsL <- TMap.toList newOpsTV
       forM_ newOpsL $ \(k, action) -> TMap.insert action k curOpsTV
-      latestCursorValMaybe <- STM.readTVar cursorLatestVal
       TMap.reset newOpsTV
 
-      let modifiedCohortVars =
-            case latestCursorValMaybe of
-              Just (CursorVariableValues latestCursorVals) ->
-                let unsafeValidatedVariable = mkUnsafeValidateVariables latestCursorVals
-                 in modifyCursorCohortVariables unsafeValidatedVariable cohortVars
-              Nothing -> cohortVars -- live query subscription
-      let cohortSnapshot = CohortSnapshot modifiedCohortVars respRef (map snd curOpsL) (map snd newOpsL) cursorLatestVal
+      currentCohortVars <-
+        case cursorSubscriptionType of
+          CohortLivequery -> pure cohortVars
+          CohortStreaming latestCursorValsTVar -> do
+            CursorVariableValues latestCursorVals' <- STM.readTVar latestCursorValsTVar
+            let unsafeValidatedVariable = mkUnsafeValidateVariables latestCursorVals'
+            pure $ modifyCursorCohortVariables unsafeValidatedVariable cohortVars
+      let cohortSnapshot = CohortSnapshot currentCohortVars respRef (map snd curOpsL) (map snd newOpsL) cursorSubscriptionType
+      return (resId, cohortSnapshot)
+
+    getCohortOperations cohorts = \case
+      Left e ->
+        -- TODO: this is internal error
+        let resp = throwError $ GQExecError [encodeGQLErr False e]
+         in [(resp, cohortId, Nothing, snapshot) | (cohortId, snapshot) <- cohorts]
+      Right responses -> do
+        let cohortSnapshotMap = Map.fromList cohorts
+        flip mapMaybe responses $ \(cohortId, respBS) ->
+          let respHash = mkRespHash respBS
+              respSize = BS.length respBS
+           in -- TODO: currently we ignore the cases when the cohortId from
+              -- Postgres response is not present in the cohort map of this batch
+              -- (this shouldn't happen but if it happens it means a logic error and
+              -- we should log it)
+              (pure respBS,cohortId,Just (respHash, respSize),)
+                <$> Map.lookup cohortId cohortSnapshotMap
+
+-- | Where the magic happens: the top-level action run periodically by each
+-- active 'Poller'. This needs to be async exception safe.
+pollStreamingQuery ::
+  forall b.
+  BackendTransport b =>
+  PollerId ->
+  LiveQueriesOptions ->
+  (SourceName, SourceConfig b) ->
+  RoleName ->
+  ParameterizedQueryHash ->
+  MultiplexedQuery b ->
+  CohortMap ->
+  LiveQueryPostPollHook ->
+  IO ()
+pollStreamingQuery pollerId lqOpts (sourceName, sourceConfig) roleName parameterizedQueryHash query cohortMap postPollHook = do
+  (totalTime, (snapshotTime, batchesDetails)) <- withElapsedTime $ do
+    -- snapshot the current cohorts and split them into batches
+    (snapshotTime, cohortBatches) <- withElapsedTime $ do
+      -- get a snapshot of all the cohorts
+      -- this need not be done in a transaction
+      cohorts <- STM.atomically $ TMap.toList cohortMap
+      cohortSnapshots <- mapM (STM.atomically . getCohortSnapshot) cohorts
+      -- cohorts are broken down into batches specified by the batch size
+      let cohortBatches = chunksOf (getNonNegativeInt (unBatchSize batchSize)) cohortSnapshots
+      -- associating every batch with their BatchId
+      pure $ zip (BatchId <$> [1 ..]) cohortBatches
+
+    -- concurrently process each batch
+    batchesDetails <- A.forConcurrently cohortBatches $ \(batchId, cohorts) -> do
+      (queryExecutionTime, mxRes) <- runDBStreamingSubscription @b sourceConfig query $ over (each . _2) _csVariables cohorts
+
+      let lqMeta = LiveQueryMetadata $ convertDuration queryExecutionTime
+          operations = getCohortOperations cohorts mxRes
+          -- batch response size is the sum of the response sizes of the cohorts
+          batchResponseSize =
+            case mxRes of
+              Left _ -> Nothing
+              Right resp -> Just $ getSum $ foldMap ((\(_, sqlResp, _) -> Sum . BS.length $ sqlResp)) resp
+      (pushTime, cohortsExecutionDetails) <- withElapsedTime $
+        A.forConcurrently operations $ \(res, cohortId, respData, latestCursorValueMaybe, snapshot) -> do
+          (pushedSubscribers, ignoredSubscribers) <-
+            case _csSubscriptionType snapshot of
+              CohortLivequery ->  pushResultToCohort res (fst <$> respData) lqMeta snapshot
+              CohortStreaming cursorValuesTVar ->
+                pushResultToStreamSubscriptionCohort res (fst <$> respData) lqMeta cursorValuesTVar latestCursorValueMaybe snapshot
+          pure
+            CohortExecutionDetails
+              { _cedCohortId = cohortId,
+                _cedVariables = _csVariables snapshot,
+                _cedPushedTo = pushedSubscribers,
+                _cedIgnored = ignoredSubscribers,
+                _cedResponseSize = snd <$> respData,
+                _cedBatchId = batchId
+              }
+      pure $
+        BatchExecutionDetails
+          queryExecutionTime
+          pushTime
+          batchId
+          cohortsExecutionDetails
+          batchResponseSize
+
+    pure (snapshotTime, batchesDetails)
+
+  let pollDetails =
+        PollDetails
+          { _pdPollerId = pollerId,
+            _pdGeneratedSql = toTxt query,
+            _pdSnapshotTime = snapshotTime,
+            _pdBatches = batchesDetails,
+            _pdLiveQueryOptions = lqOpts,
+            _pdTotalTime = totalTime,
+            _pdSource = sourceName,
+            _pdRole = roleName,
+            _pdParameterizedQueryHash = parameterizedQueryHash
+          }
+  postPollHook pollDetails
+  where
+    LiveQueriesOptions batchSize _ = lqOpts
+
+    getCohortSnapshot (cohortVars, handlerC) = do
+      let Cohort resId respRef curOpsTV newOpsTV cursorSubscriptionType = handlerC
+      curOpsL <- TMap.toList curOpsTV
+      newOpsL <- TMap.toList newOpsTV
+      forM_ newOpsL $ \(k, action) -> TMap.insert action k curOpsTV
+      TMap.reset newOpsTV
+
+      currentCohortVars <-
+        case cursorSubscriptionType of
+          CohortLivequery -> pure cohortVars
+          CohortStreaming latestCursorValsTVar -> do
+            CursorVariableValues latestCursorVals' <- STM.readTVar latestCursorValsTVar
+            let unsafeValidatedVariable = mkUnsafeValidateVariables latestCursorVals'
+            pure $ modifyCursorCohortVariables unsafeValidatedVariable cohortVars
+      let cohortSnapshot = CohortSnapshot currentCohortVars respRef (map snd curOpsL) (map snd newOpsL) cursorSubscriptionType
       return (resId, cohortSnapshot)
 
     getCohortOperations cohorts = \case
@@ -562,5 +712,5 @@ pollQuery pollerId lqOpts (sourceName, sourceConfig) roleName parameterizedQuery
               -- Postgres response is not present in the cohort map of this batch
               -- (this shouldn't happen but if it happens it means a logic error and
               -- we should log it)
-              (pure respBS,cohortId,Just (respHash, respSize),respCursorLatestValue,)
+              (pure respBS,cohortId,Just (respHash, respSize), Just respCursorLatestValue,)
                 <$> Map.lookup cohortId cohortSnapshotMap

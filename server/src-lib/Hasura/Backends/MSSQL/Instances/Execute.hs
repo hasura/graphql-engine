@@ -130,7 +130,7 @@ msDBLiveQueryExplain ::
   (MonadIO m, MonadBaseControl IO m, MonadError QErr m) =>
   LiveQueryPlan 'MSSQL (MultiplexedQuery 'MSSQL) ->
   m LiveQueryPlanExplanation
-msDBLiveQueryExplain (LiveQueryPlan plan sourceConfig variables _) = do
+msDBLiveQueryExplain (LiveQueryPlan plan sourceConfig variables _ _) = do
   let (MultiplexedQuery' reselect) = _plqpQuery plan
       query = toQueryPretty $ fromSelect $ multiplexRootReselect [(dummyCohortId, variables)] reselect
       pool = _mscConnectionPool sourceConfig
@@ -503,15 +503,16 @@ msDBSubscriptionPlan ::
   SourceName ->
   SourceConfig 'MSSQL ->
   Maybe G.Name ->
+  SubscriptionType ->
   RootFieldMap (QueryDB 'MSSQL (Const Void) (UnpreparedValue 'MSSQL)) ->
   m (LiveQueryPlan 'MSSQL (MultiplexedQuery 'MSSQL))
-msDBSubscriptionPlan UserInfo {_uiSession, _uiRole} _sourceName sourceConfig namespace rootFields = do
+msDBSubscriptionPlan UserInfo {_uiSession, _uiRole} _sourceName sourceConfig namespace subscriptionType rootFields = do
   (reselect, prepareState) <- planSubscription (OMap.mapKeys _rfaAlias rootFields) _uiSession
   cohortVariables <- prepareStateCohortVariables sourceConfig _uiSession prepareState
   let parameterizedPlan = ParameterizedLiveQueryPlan _uiRole $ MultiplexedQuery' reselect
 
   pure $
-    LiveQueryPlan parameterizedPlan sourceConfig cohortVariables namespace
+    LiveQueryPlan parameterizedPlan sourceConfig cohortVariables namespace subscriptionType
 
 prepareStateCohortVariables :: (MonadError QErr m, MonadIO m, MonadBaseControl IO m) => SourceConfig 'MSSQL -> SessionVariables -> PrepareState -> m CohortVariables
 prepareStateCohortVariables sourceConfig session prepState = do

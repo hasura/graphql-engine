@@ -801,14 +801,14 @@ onStart env enabledLogTypes serverEnv wsConn (StartMsg opId q) onMessageActions 
 
     startLiveQuery liveQueryBuilder parameterizedQueryHash requestId actionLogMap = do
       liveQueryE <- runExceptT $ liveQueryBuilder actionLogMap
-      for liveQueryE $ \(sourceName, E.LQP exists, subscriptionType) -> do
+      for liveQueryE $ \(sourceName, E.SubscriptionQueryPlan exists, subscriptionType) -> do
         let !opName = _grOperationName q
             subscriberMetadata = LQ.mkSubscriberMetadata (WS.getWSId wsConn) opId opName requestId
         -- NOTE!: we mask async exceptions higher in the call stack, but it's
         -- crucial we don't lose lqId after addLiveQuery returns successfully.
         !lqId <- liftIO $ AB.dispatchAnyBackend @BackendTransport
           exists
-          \(E.MultiplexedLiveQueryPlan liveQueryPlan) ->
+          \(E.MultiplexedQueryPlan liveQueryPlan) ->
             LQ.addLiveQuery
               logger
               (_wseServerMetrics serverEnv)

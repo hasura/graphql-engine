@@ -2,6 +2,7 @@ module Hasura.Backends.Postgres.Execute.LiveQuery
   ( MultiplexedQuery (..),
     QueryParametersInfo (..),
     mkMultiplexedQuery,
+    mkStreamingMultiplexedQuery,
     resolveMultiplexedValue,
     validateVariables,
     executeMultiplexedQuery,
@@ -116,6 +117,56 @@ mkMultiplexedQuery rootFields =
   MultiplexedQuery . Q.fromBuilder . toSQL $
     S.mkSelect
       { S.selExtr =
+          -- SELECT _subs.result_id, _fld_resp.root AS result
+          [ S.Extractor (mkQualifiedIdentifier (Identifier "_subs") (Identifier "result_id")) Nothing,
+            S.Extractor (mkQualifiedIdentifier (Identifier "_fld_resp") (Identifier "root")) (Just . S.Alias $ Identifier "result")
+          ],
+        S.selFrom =
+          Just $
+            S.FromExp
+              [ S.FIJoin $
+                  S.JoinExpr subsInputFromItem S.LeftOuter responseLateralFromItem (S.JoinOn $ S.BELit True)
+              ]
+      }
+  where
+    -- FROM unnest($1::uuid[], $2::json[]) _subs (result_id, result_vars)
+    subsInputFromItem =
+      S.FIUnnest
+        [S.SEPrep 1 `S.SETyAnn` S.TypeAnn "uuid[]", S.SEPrep 2 `S.SETyAnn` S.TypeAnn "json[]"]
+        (S.Alias $ Identifier "_subs")
+        [S.SEIdentifier $ Identifier "result_id", S.SEIdentifier $ Identifier "result_vars"]
+
+    -- LEFT OUTER JOIN LATERAL ( ... ) _fld_resp
+    responseLateralFromItem = S.mkLateralFromItem selectRootFields (S.Alias $ Identifier "_fld_resp")
+    selectRootFields =
+      S.mkSelect
+        { S.selExtr = [S.Extractor rootFieldsJsonAggregate (Just . S.Alias $ Identifier "root")],
+          S.selFrom =
+            Just . S.FromExp $
+              OMap.toList rootFields <&> \(fieldAlias, resolvedAST) ->
+                toSQLFromItem (S.Alias $ aliasToIdentifier fieldAlias) resolvedAST
+        }
+
+    -- json_build_object('field1', field1.root, 'field2', field2.root, ...)
+    rootFieldsJsonAggregate = S.SEFnApp "json_build_object" rootFieldsJsonPairs Nothing
+    rootFieldsJsonPairs = flip concatMap (OMap.keys rootFields) $ \fieldAlias ->
+      [ S.SELit (G.unName fieldAlias),
+        mkQualifiedIdentifier (aliasToIdentifier fieldAlias) (Identifier "root")
+      ]
+
+    mkQualifiedIdentifier prefix = S.SEQIdentifier . S.QIdentifier (S.QualifiedIdentifier prefix Nothing) -- TODO fix this Nothing of course
+    aliasToIdentifier = Identifier . G.unName
+
+mkStreamingMultiplexedQuery ::
+  ( Backend ('Postgres pgKind),
+    DS.PostgresAnnotatedFieldJSON pgKind
+  ) =>
+  OMap.InsOrdHashMap G.Name (QueryDB ('Postgres pgKind) (Const Void) S.SQLExp) ->
+  MultiplexedQuery
+mkStreamingMultiplexedQuery rootFields =
+  MultiplexedQuery . Q.fromBuilder . toSQL $
+    S.mkSelect
+      { S.selExtr =
           -- SELECT _subs.result_id, _fld_resp.root, _fld_resp.cursor AS result
           [ S.Extractor (mkQualifiedIdentifier (Identifier "_subs") (Identifier "result_id")) Nothing,
             S.Extractor (mkQualifiedIdentifier (Identifier "_fld_resp") (Identifier "root")) (Just . S.Alias $ Identifier "result"),
@@ -155,15 +206,11 @@ mkMultiplexedQuery rootFields =
       ]
 
     -- we only consider the head field for the cursor
-    (headRootFieldAlias, headRootField) = head $ OMap.toList rootFields
+    (headRootFieldAlias, _) = head $ OMap.toList rootFields
 
-    cursorSQLExp =
-      case headRootField of
-        -- HACK: when subscription is not of the stream type, then set the cursor as null
-        QDBStreamMultipleRows _ -> S.SEFnApp "to_json" [mkQualifiedIdentifier (aliasToIdentifier headRootFieldAlias) (Identifier "cursor")] Nothing
-        _ -> S.SELit "null"
+    cursorSQLExp = S.SEFnApp "to_json" [mkQualifiedIdentifier (aliasToIdentifier headRootFieldAlias) (Identifier "cursor")] Nothing
     cursorExtractor = S.Extractor cursorSQLExp (Just . S.Alias $ Identifier "cursor")
-    mkQualifiedIdentifier prefix = S.SEQIdentifier . S.QIdentifier (S.QualifiedIdentifier prefix Nothing) -- TODO fix this Nothing of course
+    mkQualifiedIdentifier prefix = S.SEQIdentifier . S.QIdentifier (S.QualifiedIdentifier prefix Nothing)
     aliasToIdentifier = Identifier . G.unName
 
 -- | Resolves an 'GR.UnresolvedVal' by converting 'GR.UVPG' values to SQL
@@ -230,7 +277,7 @@ executeMultiplexedQuery ::
   (MonadTx m) =>
   MultiplexedQuery ->
   [(CohortId, CohortVariables)] ->
-  m [(CohortId, B.ByteString, Q.AltJ (Maybe CursorVariableValues))]
+  m [(CohortId, B.ByteString)]
 executeMultiplexedQuery (MultiplexedQuery query) cohorts = do
   executeQuery query cohorts
 

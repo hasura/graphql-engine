@@ -97,6 +97,7 @@ class
     SourceName ->
     SourceConfig b ->
     Maybe G.Name ->
+    SubscriptionType ->
     RootFieldMap (QueryDB b (Const Void) (UnpreparedValue b)) ->
     m (LiveQueryPlan b (MultiplexedQuery b))
   mkDBQueryExplain ::

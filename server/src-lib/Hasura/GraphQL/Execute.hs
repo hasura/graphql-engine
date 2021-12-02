@@ -10,8 +10,8 @@ module Hasura.GraphQL.Execute
     ExecutionCtx (..),
     EC.MonadGQLExecutionCheck (..),
     checkQueryInAllowlist,
-    MultiplexedLiveQueryPlan (..),
-    LiveQueryPlan (..),
+    MultiplexedQueryPlan (..),
+    SubscriptionQueryPlan (..),
   )
 where
 
@@ -105,10 +105,10 @@ data ResolvedExecutionPlan
   | -- | either action query or live query execution; remote schemas and introspection not supported
     SubscriptionExecutionPlan SubscriptionExecution
 
-newtype MultiplexedLiveQueryPlan (b :: BackendType)
-  = MultiplexedLiveQueryPlan (EL.LiveQueryPlan b (EB.MultiplexedQuery b))
+newtype MultiplexedQueryPlan (b :: BackendType)
+  = MultiplexedQueryPlan (EL.LiveQueryPlan b (EB.MultiplexedQuery b))
 
-newtype LiveQueryPlan = LQP (AB.AnyBackend MultiplexedLiveQueryPlan)
+newtype SubscriptionQueryPlan = SubscriptionQueryPlan (AB.AnyBackend MultiplexedQueryPlan)
 
 -- | The comprehensive subscription plan. We only support either
 -- 1. Fields with only async action queries with no associated relationships
@@ -119,7 +119,7 @@ data SubscriptionExecution
   = SEAsyncActionsWithNoRelationships !(RootFieldMap (ActionId, ActionLogResponse -> Either QErr EncJSON))
   | SEOnSourceDB
       !(HashSet ActionId)
-      !(ActionLogResponseMap -> ExceptT QErr IO (SourceName, LiveQueryPlan, SubscriptionType))
+      !(ActionLogResponseMap -> ExceptT QErr IO (SourceName, SubscriptionQueryPlan, SubscriptionType))
 
 buildSubscriptionPlan ::
   forall m.
@@ -206,17 +206,17 @@ buildSubscriptionPlan userInfo rootFields parameterizedQueryHash = do
       RootFieldMap
         (SourceName, AB.AnyBackend (IR.SourceConfigWith (IR.QueryDBRoot (Const Void) UnpreparedValue)), SubscriptionType) ->
       RootFieldAlias ->
-      ExceptT QErr IO (SourceName, LiveQueryPlan, SubscriptionType)
+      ExceptT QErr IO (SourceName, SubscriptionQueryPlan, SubscriptionType)
     buildAction (sourceName, exists, subscriptionType) allFields rootFieldName = do
-      liveQueryPlan <- AB.dispatchAnyBackend @EB.BackendExecute
+      subscriptionPlan <- AB.dispatchAnyBackend @EB.BackendExecute
         exists
         \(IR.SourceConfigWith sourceConfig queryTagsConfig _ :: IR.SourceConfigWith db b) -> do
           qdbs <- traverse (checkField @b sourceName) allFields
           let subscriptionQueryTagsAttributes = encodeQueryTags $ QTLiveQuery $ LivequeryMetadata rootFieldName parameterizedQueryHash
           let queryTagsComment = Tagged.untag $ EB.createQueryTags @m subscriptionQueryTagsAttributes queryTagsConfig
-          LQP . AB.mkAnyBackend . MultiplexedLiveQueryPlan
-            <$> runReaderT (EB.mkDBSubscriptionPlan userInfo sourceName sourceConfig (_rfaNamespace rootFieldName) qdbs) queryTagsComment
-      pure (sourceName, liveQueryPlan, subscriptionType)
+          SubscriptionQueryPlan . AB.mkAnyBackend . MultiplexedQueryPlan
+            <$> runReaderT (EB.mkDBSubscriptionPlan userInfo sourceName sourceConfig (_rfaNamespace rootFieldName) subscriptionType qdbs) queryTagsComment
+      pure (sourceName, subscriptionPlan, subscriptionType)
 
     checkField ::
       forall b m1.
