@@ -12,7 +12,7 @@ export default {
   title: 'Permissions Form/Components/Presets Section',
   component: ColumnPresetsSection,
   decorators: [
-    (S: React.FC) => (
+    (StoryComponent: React.FC) => (
       <Form
         schema={z.any()}
         options={{
@@ -23,10 +23,11 @@ export default {
         }}
         onSubmit={() => {}}
       >
-        {() => <S />}
+        {() => <StoryComponent />}
       </Form>
     ),
   ],
+  parameters: { chromatic: { disableSnapshot: true } },
 } as Meta;
 
 const columns = ['id', 'name', 'description'];
@@ -132,3 +133,21 @@ WithAllPresets.decorators = [
     </Form>
   ),
 ];
+
+type ShowcaseProps = Record<string, ColumnPresetsSectionProps>;
+
+export const Showcase: Story<ShowcaseProps> = args => (
+  <>
+    <Insert {...args.insert} />
+    <Update {...args.update} />
+    <WithPartialPresets {...args.partialPresets} />
+    <WithAllPresets {...args.allPresets} />
+  </>
+);
+Showcase.args = {
+  insert: Insert.args,
+  update: Update.args,
+  partialPresets: WithPartialPresets.args,
+  allPresets: WithAllPresets.args,
+} as ShowcaseProps;
+Showcase.parameters = { chromatic: { disableSnapshot: false } };
