@@ -20,6 +20,7 @@ export default {
       </Form>
     ),
   ],
+  parameters: { chromatic: { disableSnapshot: true } },
 } as Meta;
 
 export const InputCellComponent: Story<InputCellProps> = args => (

@@ -17,12 +17,13 @@ export default {
   title: 'Permissions Form/Components/Row Section',
   component: RowPermissionsSection,
   decorators: [
-    (S: React.FC) => (
+    (StoryComponent: React.FC) => (
       <Form schema={z.any()} onSubmit={() => {}}>
-        {() => <S />}
+        {() => <StoryComponent />}
       </Form>
     ),
   ],
+  parameters: { chromatic: { disableSnapshot: true } },
 } as Meta;
 
 const roleName = 'two';
@@ -109,3 +110,21 @@ Delete.args = {
     allRowChecks: allRowChecks({ role: roleName, query: 'delete' }),
   },
 };
+
+type ShowcaseProps = Record<string, Props>;
+
+export const Showcase: Story<ShowcaseProps> = args => (
+  <>
+    <Insert {...args.insert} />
+    <Select {...args.select} />
+    <Update {...args.update} />
+    <Delete {...args.delete} />
+  </>
+);
+Showcase.args = {
+  insert: Insert.args,
+  select: Select.args,
+  update: Update.args,
+  delete: Delete.args,
+} as ShowcaseProps;
+Showcase.parameters = { chromatic: { disableSnapshot: false } };
