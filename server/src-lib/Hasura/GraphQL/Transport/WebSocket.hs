@@ -90,6 +90,7 @@ import Network.HTTP.Client qualified as H
 import Network.HTTP.Types qualified as H
 import Network.WebSockets qualified as WS
 import StmContainers.Map qualified as STMMap
+import Hasura.RQL.Types (SubscriptionType (..))
 
 -- | 'LQ.LiveQueryId' comes from 'Hasura.GraphQL.Execute.LiveQuery.State.addLiveQuery'. We use
 -- this to track a connection's operations so we can remove them from 'LiveQueryState', and
@@ -808,17 +809,31 @@ onStart env enabledLogTypes serverEnv wsConn (StartMsg opId q) onMessageActions 
         !lqId <- liftIO $ AB.dispatchAnyBackend @BackendTransport
           exists
           \(E.MultiplexedQueryPlan liveQueryPlan) ->
-            LQ.addLiveQuery
-              logger
-              (_wseServerMetrics serverEnv)
-              subscriberMetadata
-              lqMap
-              sourceName
-              parameterizedQueryHash
-              opName
-              requestId
-              liveQueryPlan
-              (liveQOnChange opName parameterizedQueryHash $ LQ._lqpNamespace liveQueryPlan)
+            case LQ._lqpSubscriptionType liveQueryPlan of
+              STLiveQuery ->
+                LQ.addLiveQuery
+                  logger
+                  (_wseServerMetrics serverEnv)
+                  subscriberMetadata
+                  lqMap
+                  sourceName
+                  parameterizedQueryHash
+                  opName
+                  requestId
+                  liveQueryPlan
+                  (liveQOnChange opName parameterizedQueryHash $ LQ._lqpNamespace liveQueryPlan)
+              STStreaming ->
+                LQ.addStreamSubscriptionQuery
+                  logger
+                  (_wseServerMetrics serverEnv)
+                  subscriberMetadata
+                  lqMap
+                  sourceName
+                  parameterizedQueryHash
+                  opName
+                  requestId
+                  liveQueryPlan
+                  (liveQOnChange opName parameterizedQueryHash $ LQ._lqpNamespace liveQueryPlan)
         liftIO $ $assertNFHere (lqId, opName) -- so we don't write thunks to mutable vars
         STM.atomically $
           -- NOTE: see crucial `lookup` check above, ensuring this doesn't clobber:
@@ -1019,11 +1034,11 @@ onClose ::
   LQ.LiveQueriesState ->
   WSConn ->
   m ()
-onClose logger serverMetrics lqMap wsConn = do
+onClose logger serverMetrics liveQueriesState wsConn = do
   logWSEvent logger wsConn EClosed
   operations <- liftIO $ STM.atomically $ ListT.toList $ STMMap.listT opMap
   liftIO $
     for_ operations $ \(_, (lqId, _)) ->
-      LQ.removeLiveQuery logger serverMetrics lqMap lqId
+      LQ.removeLiveQuery logger serverMetrics liveQueriesState lqId
   where
     opMap = _wscOpMap $ WS.getData wsConn
