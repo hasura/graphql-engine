@@ -67,7 +67,7 @@ resolveVar varName (These expectedVar providedVar) =
               | typeName == $$(G.litName "uuid") -> Right $ Just $ J.String l
               | typeName == idScalar -> Right $ Just $ J.String l -- "ID" -- Note: Console doesn't expose this as a column type.
               | otherwise -> case decoded of
-                (Just (J.Null)) -> Left $ "Null or missing value for non-nullable variable: " <> G.unName varName
+                (Just J.Null) -> Left $ "Null or missing value for non-nullable variable: " <> G.unName varName
                 (Just x@(J.Bool _))
                   | typeName == boolScalar -> pure $ Just x -- "Boolean"
                   | typeName == $$(G.litName "Bool") -> pure $ Just x
@@ -84,7 +84,9 @@ resolveVar varName (These expectedVar providedVar) =
     -- TODO: This is a fallthrough case and is still required
     --       but we can move checks for template variables being
     --       scalars into the schema-cache construction.
-    _ -> Left ("The variable type for the expected variable " <> toTxt @G.Name varName <> " was not supported.")
+    G.TypeList _ _ -> case providedVar of
+      Right r -> Right (Just r)
+      Left l -> Left ("The variable type for the expected variable " <> toTxt @G.Name varName <> ", with value " <> tshow l <> " is not supported.")
 
 mkPassthroughRequest :: EndpointMetadata GQLQueryWithText -> VariableValues -> GQLReq GQLQueryText
 mkPassthroughRequest queryx resolvedVariables =

@@ -690,10 +690,17 @@ class HGECtx:
         self.meta.reflect(bind=self.engine)
 
     def anyq(self, u, q, h, b = None, v = None):
+
         resp = None
         if v == 'GET':
           resp = self.http.get(
               self.hge_url + u,
+              headers=h
+          )
+        elif v == 'POSTJSON' and b:
+          resp = self.http.post(
+              self.hge_url + u,
+              json=b,
               headers=h
           )
         elif v == 'POST' and b:
@@ -702,7 +709,7 @@ class HGECtx:
               self.hge_url + u,
               data=b,
               headers=h
-           )
+          )
         elif v == 'PATCH' and b:
           resp = self.http.patch(
               self.hge_url + u,
