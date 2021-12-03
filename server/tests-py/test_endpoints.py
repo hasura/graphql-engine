@@ -40,6 +40,9 @@ class TestCustomEndpoints:
     def test_endpoint_with_body_arg(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/endpoint_with_body_arg.yaml', transport)
 
+    def test_endpoint_with_body_list_arg(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/endpoint_with_list_arg.yaml', transport)
+
     def test_endpoint_with_query_arg_url_encoded(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/endpoint_with_query_arg_url_encoded.yaml', transport)
 

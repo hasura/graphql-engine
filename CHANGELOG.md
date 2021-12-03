@@ -15,6 +15,7 @@
 - server: fix to allow remote schema response to contain an "extensions" field (#7143)
 - server: support database-to-database joins with BigQuery
 - server: improved startup time when using large remote schemas
+- server: fix rest-endpoints bug allow list arguments (fix #7135)
 - console: add comments to tracked functions
 - console: add select all columns option while selecting the columns in event triggers
 - console: add request transforms for events
