@@ -4,7 +4,7 @@
 
 .. _many_to_many_modelling:
 
-Modelling many-to-many table relationships
+Modeling many-to-many table relationships
 ==========================================
 
 .. contents:: Table of contents
@@ -556,7 +556,7 @@ We can now:
 
 .. note::
 
-  **We do not recommend this** flattening pattern of modelling as this introduces an additional overhead of managing
+  **We do not recommend this** flattening pattern of modeling as this introduces an additional overhead of managing
   permissions and relationships on the newly created views. e.g. You cannot query for the author of the nested articles
   without setting up a new relationship to the ``authors`` table from the ``tag_articles_view`` view.
 

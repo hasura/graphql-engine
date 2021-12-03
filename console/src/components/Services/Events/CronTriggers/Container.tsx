@@ -50,7 +50,7 @@ const STContainer: React.FC<Props> = ({
 
   // TODO: This is a hack to deal with renaming cron triggers and stale props
   // https://react-redux.js.org/api/hooks#stale-props-and-zombie-children
-  // Needs remodelling the state and careful handling of cron triggers rename
+  // Needs remodeling the state and careful handling of cron triggers rename
   useEffect(() => {
     if (currentTrigger) {
       if (

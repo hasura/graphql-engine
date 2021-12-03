@@ -1,10 +1,10 @@
 .. meta::
-   :description: Relationships modelling in Hasura
-   :keywords: hasura, docs, schema, database modelling
+   :description: Relationships modeling in Hasura
+   :keywords: hasura, docs, schema, database modeling
 
 .. _ms_sql_server_relationship_database_modelling:
 
-Database relationship modelling guides
+Database relationship modeling guides
 ======================================
 
 .. contents:: Table of contents

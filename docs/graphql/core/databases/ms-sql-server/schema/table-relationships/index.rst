@@ -68,7 +68,7 @@ See the following to manage the object/array relationships between tables/views 
 - :ref:`ms_sql_server_create_relationships`
 - :ref:`ms_sql_server_rename_relationships`
 
-Table relationships modelling guides
+Table relationships modeling guides
 ------------------------------------
 
 The following guides will help you model the different types of table relationships in the database:
@@ -83,4 +83,4 @@ The following guides will help you model the different types of table relationsh
 
   Creating relationships <create>
   Renaming relationships <rename>
-  Database modelling <database-modelling>
+  Database modeling <database-modeling>

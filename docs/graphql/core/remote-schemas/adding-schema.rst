@@ -184,7 +184,7 @@ To support them, you can use community tooling to write your own client-facing G
 .. note::
 
   **Adding an additional layer on top of the Hasura GraphQL engine significantly impacts the performance provided by
-  it out of the box** (*by as much as 4x*). If you need any help with remodelling these kinds of use cases to use the
+  it out of the box** (*by as much as 4x*). If you need any help with remodeling these kinds of use cases to use the
   built-in remote schemas feature, please get in touch with us on `Discord <https://discord.gg/vBPpJkS>`__.
 
 .. admonition:: Additional Resources
