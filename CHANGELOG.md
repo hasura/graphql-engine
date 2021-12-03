@@ -3,6 +3,7 @@
 ## Next release
 (Add highlights/major features below)
 
+- server: allows the use of env vars in the `test_webhook_transform` metadata API action
 - server: fix aggregate queries with nodes field in selection set for sql server (fix #7871)
 - server: fix permissions are not respected for aggregations in sql server (fix #7773)
 - server: the syntax for remote relationships in metadata is changed to be

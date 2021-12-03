@@ -13,6 +13,7 @@ module Hasura.RQL.DDL.Metadata.Types
     ReplaceMetadataV1 (..),
     ReplaceMetadataV2 (..),
     AllowInconsistentMetadata (..),
+    WebHookUrl (..),
     TestWebhookTransform (..),
   )
 where
@@ -20,6 +21,7 @@ where
 import Data.Aeson
 import Data.Aeson.TH
 import Data.HashMap.Strict qualified as H
+import Data.Text qualified as T
 import Hasura.Prelude
 import Hasura.RQL.DDL.RequestTransform (MetadataTransform)
 import Hasura.RQL.Types
@@ -184,8 +186,22 @@ instance ToJSON ReplaceMetadata where
     RMReplaceMetadataV1 v1 -> toJSON v1
     RMReplaceMetadataV2 v2 -> toJSON v2
 
+data WebHookUrl = EnvVar String | URL T.Text
+  deriving (Eq)
+
+instance FromJSON WebHookUrl where
+  parseJSON (Object o) = do
+    var <- o .: "from_env"
+    pure $ EnvVar var
+  parseJSON (String str) = pure $ URL str
+  parseJSON _ = empty
+
+instance ToJSON WebHookUrl where
+  toJSON (EnvVar var) = object ["from_env" .= var]
+  toJSON (URL url) = String url
+
 data TestWebhookTransform = TestWebhookTransform
-  { _twtWebhookUrl :: Text,
+  { _twtWebhookUrl :: WebHookUrl,
     _twtPayload :: Value,
     _twtTransformer :: MetadataTransform,
     _twtSessionVariables :: Maybe SessionVariables

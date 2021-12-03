@@ -469,7 +469,7 @@ runMetadataQueryV1M env currentResourceVersion = \case
   RMDumpInternalState q -> runDumpInternalState q
   RMGetCatalogState q -> runGetCatalogState q
   RMSetCatalogState q -> runSetCatalogState q
-  RMTestWebhookTransform q -> runTestWebhookTransform q
+  RMTestWebhookTransform q -> runTestWebhookTransform env q
   RMSetQueryTagsConfig q -> runSetQueryTagsConfig q
   RMBulk q -> encJFromList <$> indexedMapM (runMetadataQueryM env currentResourceVersion) q
   where
