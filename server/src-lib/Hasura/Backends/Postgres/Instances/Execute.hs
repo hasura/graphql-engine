@@ -34,7 +34,7 @@ import Hasura.Backends.Postgres.SQL.Value qualified as PG
 import Hasura.Backends.Postgres.Translate.Select (PostgresAnnotatedFieldJSON)
 import Hasura.Backends.Postgres.Translate.Select qualified as DS
 import Hasura.Backends.Postgres.Types.Update
-import Hasura.Base.Error (QErr)
+import Hasura.Base.Error (QErr, throw400, Code (NotSupported))
 import Hasura.EncJSON (EncJSON, encJFromJValue)
 import Hasura.GraphQL.Execute.Backend
   ( BackendExecute (..),
@@ -80,6 +80,8 @@ import Hasura.Session (UserInfo (..))
 import Hasura.Tracing qualified as Tracing
 import Language.GraphQL.Draft.Syntax qualified as G
 import Hasura.RQL.Types.Common
+import qualified Hasura.GraphQL.Namespace as G
+import Data.List (partition)
 
 data PreparedSql = PreparedSql
   { _psQuery :: !Q.Query,
@@ -301,11 +303,18 @@ pgDBSubscriptionPlan userInfo _sourceName sourceConfig namespace subscriptionTyp
       for unpreparedAST $
         traverse (PGL.resolveMultiplexedValue (_uiSession userInfo))
   mutationQueryTagsComment <- ask
-  let multiplexedQuery =
-        case subscriptionType of
-          STLiveQuery -> PGL.mkMultiplexedQuery $ OMap.mapKeys _rfaAlias preparedAST
-          STStreaming -> PGL.mkStreamingMultiplexedQuery $ OMap.mapKeys _rfaAlias preparedAST
-      multiplexedQueryWithQueryTags =
+  multiplexedQuery <-
+    case subscriptionType of
+      STLiveQuery -> pure $ PGL.mkMultiplexedQuery $ OMap.mapKeys _rfaAlias preparedAST
+      STStreaming -> do
+        let isStreamingRootField = \case
+              QDBStreamMultipleRows _ -> True
+              _                       -> False
+        -- Currently, we only support a single root field with streaming subscriptions.
+        case partition (isStreamingRootField . snd) $ OMap.toList preparedAST of
+          ([(alias, resolvedAST)], []) -> pure $ PGL.mkStreamingMultiplexedQuery (G._rfaAlias alias, resolvedAST)
+          _ -> throw400 NotSupported $ "when any of the top level fields is a streaming one, then multiple top level fields are not allowed"
+  let multiplexedQueryWithQueryTags =
         multiplexedQuery {PGL.unMultiplexedQuery = appendSQLWithQueryTags (PGL.unMultiplexedQuery multiplexedQuery) mutationQueryTagsComment}
       roleName = _uiRole userInfo
       parameterizedPlan = ParameterizedLiveQueryPlan roleName multiplexedQueryWithQueryTags

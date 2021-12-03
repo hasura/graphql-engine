@@ -162,9 +162,9 @@ mkStreamingMultiplexedQuery ::
   ( Backend ('Postgres pgKind),
     DS.PostgresAnnotatedFieldJSON pgKind
   ) =>
-  OMap.InsOrdHashMap G.Name (QueryDB ('Postgres pgKind) (Const Void) S.SQLExp) ->
+  (G.Name, (QueryDB ('Postgres pgKind) (Const Void) S.SQLExp)) ->
   MultiplexedQuery
-mkStreamingMultiplexedQuery rootFields =
+mkStreamingMultiplexedQuery (fieldAlias, resolvedAST) =
   MultiplexedQuery . Q.fromBuilder . toSQL $
     S.mkSelect
       { S.selExtr =
@@ -192,24 +192,21 @@ mkStreamingMultiplexedQuery rootFields =
     responseLateralFromItem = S.mkLateralFromItem selectRootFields (S.Alias $ Identifier "_fld_resp")
     selectRootFields =
       S.mkSelect
-        { S.selExtr = [(S.Extractor rootFieldsJsonAggregate (Just . S.Alias $ Identifier "root")), cursorExtractor],
+        { S.selExtr = [(S.Extractor rootFieldJsonAggregate (Just . S.Alias $ Identifier "root")), cursorExtractor],
           S.selFrom =
             Just . S.FromExp $
-              OMap.toList rootFields <&> \(fieldAlias, resolvedAST) ->
-                toSQLFromItem (S.Alias $ aliasToIdentifier fieldAlias) resolvedAST
+                pure $ toSQLFromItem (S.Alias $ aliasToIdentifier fieldAlias) resolvedAST
         }
 
     -- json_build_object('field1', field1.root, 'field2', field2.root, ...)
-    rootFieldsJsonAggregate = S.SEFnApp "json_build_object" rootFieldsJsonPairs Nothing
-    rootFieldsJsonPairs = flip concatMap (OMap.keys rootFields) $ \fieldAlias ->
+    rootFieldJsonAggregate = S.SEFnApp "json_build_object" rootFieldJsonPair Nothing
+    rootFieldJsonPair =
       [ S.SELit (G.unName fieldAlias),
         mkQualifiedIdentifier (aliasToIdentifier fieldAlias) (Identifier "root")
       ]
 
-    -- we only consider the head field for the cursor
-    (headRootFieldAlias, _) = head $ OMap.toList rootFields
-
-    cursorSQLExp = S.SEFnApp "to_json" [mkQualifiedIdentifier (aliasToIdentifier headRootFieldAlias) (Identifier "cursor")] Nothing
+    -- to_json("root"."cursor") AS "cursor"
+    cursorSQLExp = S.SEFnApp "to_json" [mkQualifiedIdentifier (aliasToIdentifier fieldAlias) (Identifier "cursor")] Nothing
     cursorExtractor = S.Extractor cursorSQLExp (Just . S.Alias $ Identifier "cursor")
     mkQualifiedIdentifier prefix = S.SEQIdentifier . S.QIdentifier (S.QualifiedIdentifier prefix Nothing)
     aliasToIdentifier = Identifier . G.unName
