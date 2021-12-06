@@ -96,6 +96,7 @@ export const LS_KEYS = {
   rawSqlStatementTimeout: 'rawSql:rawSqlStatementTimeout',
   showConsoleOnboarding: 'console:showConsoleOnboarding',
   versionUpdateCheckLastClosed: 'console:versionUpdateCheckLastClosed',
+  vpcBannerLastDismissed: 'console:vpcBannerLastDismissed',
 };
 
 export const clearGraphiqlLS = () => {

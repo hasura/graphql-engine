@@ -44,12 +44,12 @@ fakeInputFieldValue = \case
     fromNNT :: forall k. ('Input <: k) => NonNullableType k -> G.Value Variable
     fromNNT = \case
       TList t -> G.VList [fromT t, fromT t]
-      TNamed (Definition name _ _ info) -> case info of
+      TNamed (Definition name _ info) -> case info of
         TIScalar -> fakeScalar name
         TIEnum ei -> G.VEnum $ G.EnumValue $ dName $ NE.head ei
         TIInputObject (InputObjectInfo oi) -> G.VObject $
           M.fromList $ do
-            Definition fieldName _ _ fieldInfo <- oi
+            Definition fieldName _ fieldInfo <- oi
             pure (fieldName, fakeInputFieldValue fieldInfo)
         _ -> error "impossible"
 
@@ -57,5 +57,5 @@ fakeDirective :: DirectiveInfo -> G.Directive Variable
 fakeDirective DirectiveInfo {..} =
   G.Directive diName $
     M.fromList $
-      diArguments <&> \(Definition argName _ _ argInfo) ->
+      diArguments <&> \(Definition argName _ argInfo) ->
         (argName, fakeInputFieldValue argInfo)

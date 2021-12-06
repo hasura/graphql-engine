@@ -32,11 +32,11 @@
     args:
       source: pg1
       sql: |
-        create table author(
+        create table author_local(
             id serial primary key,
             name text unique
         );
-        INSERT INTO author (name)
+        INSERT INTO author_local (name)
           VALUES ('Author 1'), ('Author 2');
 
 - description: track table
@@ -47,7 +47,7 @@
   query:
     type: pg_track_table
     args:
-      table: author
+      table: author_local
       source: pg1
 
 
@@ -58,19 +58,19 @@
     data:
       my_source:
         __typename: foo_my_source_query
-        author:
+        author_local:
         - id: 1
           name: 'Author 1'
-          __typename: foo_author
+          __typename: foo_author_local
         - id: 2
           name: 'Author 2'
-          __typename: foo_author
+          __typename: foo_author_local
   query:
     query: |
       query {
         my_source {
           __typename
-          author {
+          author_local {
             id
             name
             __typename
@@ -86,7 +86,7 @@
   query:
     type: pg_untrack_table
     args:
-      table: author
+      table: author_local
       source: pg1
 
 - description: drop table
@@ -100,7 +100,7 @@
     args:
       source: pg1
       sql: |
-        drop table author;
+        drop table author_local;
 
 - description: PG Drop Source 1
   url: /v1/metadata

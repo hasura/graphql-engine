@@ -1,6 +1,5 @@
 import React from 'react';
 import Editor from '../../../../Common/Layout/ExpandableEditor/Editor';
-import Tooltip from '../../../../Common/Tooltip/Tooltip';
 import {
   EventTrigger,
   EventTriggerOperation,
@@ -14,6 +13,7 @@ import {
 
 import Operations from '../Common/Operations';
 import { TableColumn } from '../../../../../dataSources/types';
+import { ColumnSelectionRadioButton } from '../Common/ColumnSelectionRadioButton';
 
 type OperationEditorProps = {
   currentTrigger: EventTrigger;
@@ -24,6 +24,8 @@ type OperationEditorProps = {
   setOperationColumns: (operationColumns: ETOperationColumn[]) => void;
   styles: Record<string, string>;
   save: (success: VoidCallback, error: VoidCallback) => void;
+  isAllColumnChecked: boolean;
+  handleColumnRadioButton: () => void;
 };
 
 const OperationEditor = (props: OperationEditorProps) => {
@@ -36,8 +38,9 @@ const OperationEditor = (props: OperationEditorProps) => {
     operationColumns,
     setOperations,
     setOperationColumns,
+    isAllColumnChecked,
+    handleColumnRadioButton,
   } = props;
-
   const etDef = currentTrigger.configuration.definition;
   const existingOps = parseEventTriggerOperations(etDef);
   const existingOpColumns = getETOperationColumns(
@@ -56,6 +59,11 @@ const OperationEditor = (props: OperationEditorProps) => {
     readOnly: boolean
   ) => (
     <div className={styles.modifyOps}>
+      <div>
+        <label className="block text-gray-600 font-medium mb-sm">
+          Trigger Method
+        </label>
+      </div>
       <div
         className={`${styles.modifyOpsCollapsedContent} ${styles.add_mar_bottom_mid}`}
       >
@@ -67,13 +75,35 @@ const OperationEditor = (props: OperationEditorProps) => {
           />
         </div>
       </div>
+      <div>
+        <label className="block text-gray-600 font-medium mb-xs">
+          Trigger Columns
+        </label>
+        <p className="text-sm text-gray-600 mb-sm">
+          Trigger columns to list to for updates.
+        </p>
+      </div>
       <div className={styles.modifyOpsCollapsedContent}>
         <div className={`col-md-12 ${styles.padd_remove}`}>
-          Listen columns for update:&nbsp;
+          <div className="checkbox ">
+            {ops.update ? (
+              <ColumnSelectionRadioButton
+                isAllColumnChecked={isAllColumnChecked}
+                handleColumnRadioButton={handleColumnRadioButton}
+                readOnly={readOnly}
+              />
+            ) : (
+              <div
+                className={`col-md-12 ${styles.padd_remove} ${styles.modifyOpsCollapsedtitle}`}
+              >
+                <i>Applicable only if update operation is selected.</i>
+              </div>
+            )}
+          </div>
         </div>
-        <div className={`col-md-12 ${styles.padd_remove}`}>
-          {ops.update ? (
-            opCols.map(col => {
+        {!isAllColumnChecked ? (
+          <div className={`col-md-12 ${styles.padd_remove}`}>
+            {opCols.map(col => {
               const toggle = () => {
                 if (!readOnly) {
                   const newCols = opCols.map(oc => {
@@ -102,15 +132,9 @@ const OperationEditor = (props: OperationEditorProps) => {
                   <small className={styles.addPaddSmall}> ({col.type})</small>
                 </label>
               );
-            })
-          ) : (
-            <div
-              className={`col-md-12 ${styles.padd_remove} ${styles.modifyOpsCollapsedtitle}`}
-            >
-              <i>Applicable only if update operation is selected.</i>
-            </div>
-          )}
-        </div>
+            })}
+          </div>
+        ) : null}
       </div>
     </div>
   );
@@ -122,10 +146,7 @@ const OperationEditor = (props: OperationEditorProps) => {
   return (
     <div className={`${styles.container} ${styles.borderBottom}`}>
       <div className={styles.modifySection}>
-        <h4 className={styles.modifySectionHeading}>
-          Trigger Operations{' '}
-          <Tooltip message="Edit operations and related columns" />
-        </h4>
+        <h4 className={styles.modifySectionHeading}>Trigger Operations</h4>
         <Editor
           editorCollapsed={collapsed}
           editorExpanded={expanded}

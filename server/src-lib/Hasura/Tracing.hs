@@ -24,7 +24,6 @@ import Control.Lens (over, view, (^?))
 import Control.Monad.Catch (MonadCatch, MonadMask, MonadThrow)
 import Control.Monad.Morph
 import Control.Monad.Trans.Control
-import Control.Monad.Unique
 import Data.Aeson qualified as J
 import Data.Aeson.Lens qualified as JL
 import Data.Binary qualified as Bin
@@ -84,7 +83,7 @@ data TraceContext = TraceContext
 -- | The 'TraceT' monad transformer adds the ability to keep track of
 -- the current trace context.
 newtype TraceT m a = TraceT {unTraceT :: ReaderT (TraceContext, Reporter) (WriterT TracingMetadata m) a}
-  deriving (Functor, Applicative, Monad, MonadIO, MonadUnique, MonadMask, MonadCatch, MonadThrow)
+  deriving (Functor, Applicative, Monad, MonadIO, MonadMask, MonadCatch, MonadThrow)
 
 instance MonadTrans TraceT where
   lift = TraceT . lift . lift

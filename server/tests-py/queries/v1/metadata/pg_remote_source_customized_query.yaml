@@ -33,11 +33,11 @@
     args:
       source: pg1
       sql: |
-        create table author(
+        create table author_local(
             id serial primary key,
             name text unique
         );
-        INSERT INTO author (name)
+        INSERT INTO author_local (name)
           VALUES ('Author 1'), ('Author 2');
 
 - description: track table 1
@@ -48,7 +48,7 @@
   query:
     type: pg_track_table
     args:
-      table: author
+      table: author_local
       source: pg1
 
 - description: PG add source 2
@@ -86,11 +86,11 @@
     args:
       source: pg2
       sql: |
-        create table author(
+        create table author_local(
             id serial primary key,
             location text unique
         );
-        INSERT INTO author (location)
+        INSERT INTO author_local (location)
           VALUES ('Location 1'), ('Location 2');
 
 - description: track table 2
@@ -101,7 +101,7 @@
   query:
     type: pg_track_table
     args:
-      table: author
+      table: author_local
       source: pg2
 
 - description: create remote relationship
@@ -114,13 +114,14 @@
     args:
       name: author_location
       source: pg1
-      table: author
-      remote_source:
-        relationship_type: object
-        field_mapping:
-          id: id
-        source: pg2
-        table: author
+      table: author_local
+      definition:
+        to_source:
+          relationship_type: object
+          field_mapping:
+            id: id
+          source: pg2
+          table: author_local
 
 - description: Query using remote relationship
   url: /v1/graphql
@@ -128,26 +129,26 @@
   response:
     data:
       s1:
-        f1_author:
-          - __typename: t1_author
+        f1_author_local:
+          - __typename: t1_author_local
             name: Author 1
             id: 1
             author_location:
-              __typename: t2_author
+              __typename: t2_author_local
               id: 1
               location: Location 1
-          - __typename: t1_author
+          - __typename: t1_author_local
             name: Author 2
             id: 2
             author_location:
-              __typename: t2_author
+              __typename: t2_author_local
               id: 2
               location: Location 2
   query:
     query: |
       query MyQuery {
         s1 {
-          f1_author {
+          f1_author_local {
             __typename
             name
             id
@@ -169,7 +170,7 @@
   query:
     type: pg_untrack_table
     args:
-      table: author
+      table: author_local
       source: pg1
 
 - description: drop table 1
@@ -183,7 +184,7 @@
     args:
       source: pg1
       sql: |
-        drop table author;
+        drop table author_local;
 
 - description: PG Drop Source 1
   url: /v1/metadata
@@ -203,7 +204,7 @@
   query:
     type: pg_untrack_table
     args:
-      table: author
+      table: author_local
       source: pg2
 
 - description: drop table 2
@@ -217,7 +218,7 @@
     args:
       source: pg2
       sql: |
-        drop table author;
+        drop table author_local;
 
 - description: PG Drop Source 2
   url: /v1/metadata

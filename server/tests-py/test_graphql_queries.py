@@ -43,9 +43,6 @@ class TestGraphQLQueryBasicMySQL:
         check_query_f(hge_ctx, self.dir() + '/select_query_author_quoted_col.yaml')
 
     def test_non_tracked_table(self, hge_ctx):
-        check_query_f(hge_ctx, self.dir() + '/select_query_non_tracked_table_err.yaml')
-
-    def test_select_query_non_tracked_table(self, hge_ctx): # may be duplicate of the one above
         check_query_f(hge_ctx, self.dir() + '/select_query_non_tracked_table.yaml')
 
     def test_col_not_present(self, hge_ctx):
@@ -72,7 +69,7 @@ class TestGraphQLQueryBasicMySQL:
     def test_select_query_where(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/select_query_author_where.yaml')
 
-    def test_select_query_where(self, hge_ctx):
+    def test_nested_select_query_where(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/nested_select_where_query_author_article.yaml')
 
     # order by
@@ -84,44 +81,6 @@ class TestGraphQLQueryBasicMySQL:
         check_query_f(hge_ctx, self.dir() + '/select_query_author_with_skip_directive.yaml')
 
     # TODO select_query_author_with_include_directive
-
-    def test_select_query_author_with_skip_include_directive(self, hge_ctx):
-        check_query_f(hge_ctx, self.dir() + '/select_query_author_with_skip_include_directive.yaml')
-
-    def test_select_query_author_with_wrong_directive_err(self, hge_ctx):
-        check_query_f(hge_ctx, self.dir() + '/select_query_author_with_wrong_directive_err.yaml')
-
-    # views
-    def test_query_search_author_view(self, hge_ctx):
-        check_query_f(hge_ctx, self.dir() + '/query_search_author_view.yaml')
-
-    def test_offset_2_limit_1(self, hge_ctx):
-        check_query_f(hge_ctx, self.dir() + '/offset_2_limit_1.yaml')
-
-    def test_select_offset_limit(self, hge_ctx):
-        check_query_f(hge_ctx, self.dir() + '/select_query_author_limit.yaml')
-
-    def test_select_offset(self, hge_ctx):
-        check_query_f(hge_ctx, self.dir() + '/select_query_author_offset.yaml')
-
-    def test_select_limit(self, hge_ctx):
-        check_query_f(hge_ctx, self.dir() + '/select_query_author_limit_offset.yaml')
-
-
-    # where clause
-    def test_select_query_where(self, hge_ctx):
-        check_query_f(hge_ctx, self.dir() + '/select_query_author_where.yaml')
-
-    def test_select_query_where(self, hge_ctx):
-        check_query_f(hge_ctx, self.dir() + '/nested_select_where_query_author_article.yaml')
-
-    # order by
-    def test_select_query_author_order_by(self, hge_ctx):
-        check_query_f(hge_ctx, self.dir() + '/select_query_author_order_by.yaml')
-
-    # directives
-    def test_select_query_author_with_skip_directive(self, hge_ctx):
-        check_query_f(hge_ctx, self.dir() + '/select_query_author_with_skip_directive.yaml')
 
     def test_select_query_author_with_skip_include_directive(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/select_query_author_with_skip_include_directive.yaml')
@@ -248,6 +207,9 @@ class TestGraphQLQueryBasicBigquery:
     def test_global_limit(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + "/global_limit.yaml", transport)
 
+    def test_basic_remote_join(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + "/basic_remote_joins.yaml", transport)
+
     @classmethod
     def dir(cls):
         return 'queries/graphql_query/bigquery'
@@ -261,7 +223,7 @@ class TestGraphQLQueryBasicCommon:
     def test_select_query_author(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/select_query_author.yaml', transport)
 
-    def test_select_query_author(self, hge_ctx, transport):
+    def test_select_query_author_v1(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/select_query_author_v1alpha1.yaml', transport)
 
     def test_select_query_author_quoted_col(self, hge_ctx, transport):
@@ -487,8 +449,9 @@ class TestGraphQLQueryAgg:
 
 
 @pytest.mark.parametrize("transport", ['http', 'websocket'])
+@pytest.mark.parametrize("backend", ['mssql', 'postgres'])
 @usefixtures('per_class_tests_db_state')
-class TestGraphQLQueryAggPerm:
+class TestGraphQLQueryAggPermCommon:
 
     def test_author_agg_articles(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/author_agg_articles.yaml', transport)
@@ -505,13 +468,28 @@ class TestGraphQLQueryAggPerm:
     def test_article_agg_without_select_access_to_any_col(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/article_agg_with_role_without_select_access.yaml', transport)
 
+    def test_article_agg_with_filter(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/article_agg_with_filter.yaml', transport)
+
+    @classmethod
+    def dir(cls):
+        return 'queries/graphql_query/agg_perm'
+
+@pytest.mark.parametrize("transport", ['http', 'websocket'])
+@pytest.mark.parametrize("backend", ['postgres'])
+@usefixtures('per_class_tests_db_state')
+class TestGraphQLQueryAggPermPostgres:
+    # This test should be part of TestGraphQLQueryAggPermCommon and it is not because of
+    # known issue with sql server aggregate count query on multiple columns.
+    # Refer https://github.com/hasura/graphql-engine/issues/7873
+    # Move the test to above said class when the issue is fixed.
+
     def test_article_agg_with_select_access(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/article_agg_with_role_with_select_access.yaml', transport)
 
     @classmethod
     def dir(cls):
         return 'queries/graphql_query/agg_perm'
-
 
 @usefixtures('per_class_tests_db_state')
 class TestGraphQLQueryLimits:

@@ -7,7 +7,7 @@ import Data.Aeson qualified as J
 import Data.HashMap.Strict qualified as Map
 import Data.Text qualified as T
 import Data.Text.Extended (dquote, toTxt, (<<>))
-import Hasura.Backends.MSSQL.Types hiding (ColumnType)
+import Hasura.Backends.MSSQL.Types.Internal hiding (ColumnType)
 import Hasura.Base.Error
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp

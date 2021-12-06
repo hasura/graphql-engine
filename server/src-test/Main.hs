@@ -20,10 +20,10 @@ import Hasura.App
   ( PGMetadataStorageAppT (..),
     mkPgSourceResolver,
   )
+import Hasura.Backends.MySQL.DataLoader.ExecuteTests qualified as MySQLDataLoader
 import Hasura.EventingSpec qualified as EventingSpec
 import Hasura.GraphQL.NamespaceSpec qualified as NamespaceSpec
 import Hasura.GraphQL.Parser.DirectivesTest qualified as GraphQLDirectivesSpec
-import Hasura.GraphQL.RemoteServerSpec qualified as RemoteServerSpec
 import Hasura.GraphQL.Schema.RemoteTest qualified as GraphRemoteSchemaSpec
 import Hasura.IncrementalSpec qualified as IncrementalSpec
 import Hasura.Logging
@@ -83,6 +83,7 @@ unitSpecs = do
   describe "Data.Parser.CacheControl" CacheControlParser.spec
   describe "Data.Parser.JSONPath" JsonPath.spec
   describe "Data.Time" TimeSpec.spec
+  describe "Hasura.Backends.MySQL.DataLoader.ExecuteTests" MySQLDataLoader.spec
   describe "Hasura.Eventing" EventingSpec.spec
   describe "Hasura.GraphQL.Parser.Directives" GraphQLDirectivesSpec.spec
   describe "Hasura.GraphQL.Schema.Remote" GraphRemoteSchemaSpec.spec
@@ -90,7 +91,6 @@ unitSpecs = do
   describe "Hasura.RQL.Types.Common" CommonTypesSpec.spec
   describe "Hasura.RQL.Types.Endpoint" EndpointSpec.spec
   describe "Hasura.GraphQL.Namespace" NamespaceSpec.spec
-  describe "Hasura.GraphQL.RemoteServer" RemoteServerSpec.spec
   describe "Hasura.SQL.WKT" WKTSpec.spec
   describe "Hasura.Server.Auth" AuthSpec.spec
   describe "Hasura.Server.Telemetry" TelemetrySpec.spec
@@ -152,7 +152,7 @@ buildPostgresSpecs maybeUrlTemplate = do
         let sqlGenCtx = SQLGenCtx False False
             maintenanceMode = MaintenanceModeDisabled
             serverConfigCtx =
-              ServerConfigCtx FunctionPermissionsInferred RemoteSchemaPermsDisabled sqlGenCtx maintenanceMode mempty
+              ServerConfigCtx FunctionPermissionsInferred RemoteSchemaPermsDisabled sqlGenCtx maintenanceMode mempty EventingEnabled
             cacheBuildParams = CacheBuildParams httpManager (mkPgSourceResolver print) serverConfigCtx
             pgLogger = print
 

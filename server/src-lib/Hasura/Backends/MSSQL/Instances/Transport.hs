@@ -31,6 +31,7 @@ instance BackendTransport 'MSSQL where
   runDBQueryExplain = runQueryExplain
   runDBMutation = runMutation
   runDBSubscription = runSubscription
+  runDBStreamingSubscription = error "not supported"
 
 newtype CohortResult = CohortResult (CohortId, Text)
 

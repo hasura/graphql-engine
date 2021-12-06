@@ -1,30 +1,69 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useReducer } from 'react';
 import { connect, ConnectedProps } from 'react-redux';
-import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 import Helmet from 'react-helmet';
+import {
+  getEventRequestTransformDefaultState,
+  requestTransformReducer,
+  setRequestMethod,
+  setRequestUrl,
+  setRequestUrlError,
+  setRequestUrlPreview,
+  setRequestQueryParams,
+  setRequestAddHeaders,
+  setRequestBody,
+  setRequestBodyError,
+  setRequestSampleInput,
+  setRequestTransformedBody,
+  setRequestContentType,
+  setRequestUrlTransform,
+  setRequestPayloadTransform,
+} from '@/components/Common/ConfigureTransformation/requestTransformState';
+import {
+  RequestTransformContentType,
+  RequestTransformMethod,
+} from '@/metadata/types';
+import { KeyValuePair } from '@/components/Common/ConfigureTransformation/stateDefaults';
+import ConfigureTransformation from '@/components/Common/ConfigureTransformation/ConfigureTransformation';
+import {
+  getValidateTransformOptions,
+  parseValidateApiData,
+} from '@/components/Common/ConfigureTransformation/utils';
+import requestAction from '@/utils/requestAction';
+import Endpoints from '@/Endpoints';
+import { Button } from '@/new-components/Button';
+import { Table } from '@/dataSources/types';
 import { MapStateToProps } from '../../../../../types';
 import { useEventTrigger } from '../state';
 import styles from '../TableCommon/EventTable.scss';
-import DropdownButton from '../../../../Common/DropdownButton/DropdownButton';
-import Headers from '../../../../Common/Headers/Headers';
-import CollapsibleToggle from '../../../../Common/CollapsibleToggle/CollapsibleToggle';
-import Button from '../../../../Common/Button/Button';
+import { Header } from '../../../../Common/Headers/Headers';
 import { createEventTrigger } from '../../ServerIO';
-import Operations from '../Common/Operations';
-import RetryConfEditor from '../../Common/Components/RetryConfEditor';
-import * as tooltip from '../Common/Tooltips';
 import { EVENTS_SERVICE_HEADING } from '../../constants';
 import { mapDispatchToPropsEmpty } from '../../../../Common/utils/reactUtils';
 import { getDataSources } from '../../../../../metadata/selector';
 import { DataSource } from '../../../../../metadata/types';
-import { getDatabaseSchemasInfo } from '../../../Data/DataActions';
+import {
+  getDatabaseSchemasInfo,
+  updateSchemaInfo,
+} from '../../../Data/DataActions';
 import { getSourceDriver } from '../../../Data/utils';
 import {
   currentDriver,
   setDriver,
-  getSupportedDrivers,
   isFeatureSupported,
+  findTable,
+  generateTableDef,
 } from '../../../../../dataSources';
+import { getEventRequestSampleInput } from '../utils';
+import CreateETForm from './CreateETForm';
+import {
+  ETOperationColumn,
+  EventTriggerOperation,
+  RetryConf,
+} from '../../types';
+
+export type DatabaseInfo = {
+  [schema_name: string]: { [table_name: string]: string[] };
+};
 
 interface Props extends InjectedProps {}
 
@@ -33,14 +72,29 @@ const Add: React.FC<Props> = props => {
   const {
     name,
     table,
-    operations,
-    operationColumns,
     webhook,
     retryConf,
-    headers,
     source,
+    operationColumns,
+    operations,
   } = state;
-  const { dispatch, readOnlyMode, dataSourcesList, currentDataSource } = props;
+  const {
+    dispatch,
+    readOnlyMode,
+    dataSourcesList,
+    currentDataSource,
+    allSchemas,
+  } = props;
+
+  useEffect(() => {
+    if (table.schema) {
+      dispatch(
+        updateSchemaInfo({
+          schemas: [table.schema],
+        })
+      );
+    }
+  }, [table.schema]);
 
   useEffect(() => {
     setState.source(currentDataSource);
@@ -50,11 +104,7 @@ const Add: React.FC<Props> = props => {
     }
   }, [currentDataSource, dataSourcesList]);
 
-  const [databaseInfo, setDatabaseInfo] = useState<{
-    [schema_name: string]: { [table_name: string]: string[] };
-  }>({});
-
-  const supportedDrivers = getSupportedDrivers('events.triggers.add');
+  const [databaseInfo, setDatabaseInfo] = useState<DatabaseInfo>({});
 
   useEffect(() => {
     dispatch(
@@ -64,23 +114,172 @@ const Add: React.FC<Props> = props => {
 
   useEffect(() => {
     if (source && table.schema && table.name) {
-      setState.operationColumns(
-        databaseInfo[table.schema][table.name].map(c => {
-          return {
-            name: c,
-            enabled: true,
-            type: '', // todo — update types, make it optional
-          };
-        })
+      const tableDef = findTable(
+        allSchemas,
+        generateTableDef(table.name, table.schema)
       );
+      if (tableDef?.columns) {
+        setState.operationColumns(
+          tableDef?.columns?.map(c => ({
+            name: c.column_name,
+            enabled: true,
+            type: c.data_type,
+          }))
+        );
+      }
     }
-  }, [table.name, source, table.schema, databaseInfo]);
+  }, [table.name, source, table.schema, databaseInfo, allSchemas]);
+
+  const [transformState, transformDispatch] = useReducer(
+    requestTransformReducer,
+    getEventRequestTransformDefaultState()
+  );
+
+  const resetSampleInput = () => {
+    const value = getEventRequestSampleInput(
+      name,
+      table.name,
+      table.schema,
+      retryConf.num_retries,
+      operationColumns,
+      operations
+    );
+    transformDispatch(setRequestSampleInput(value));
+  };
+
+  const requestMethodOnChange = (requestMethod: RequestTransformMethod) => {
+    transformDispatch(setRequestMethod(requestMethod));
+  };
+
+  const requestUrlOnChange = (requestUrl: string) => {
+    transformDispatch(setRequestUrl(requestUrl));
+  };
+
+  const requestUrlErrorOnChange = (requestUrlError: string) => {
+    transformDispatch(setRequestUrlError(requestUrlError));
+  };
+
+  const requestUrlPreviewOnChange = (requestUrlPreview: string) => {
+    transformDispatch(setRequestUrlPreview(requestUrlPreview));
+  };
+
+  const requestQueryParamsOnChange = (requestQueryParams: KeyValuePair[]) => {
+    transformDispatch(setRequestQueryParams(requestQueryParams));
+  };
+
+  const requestAddHeadersOnChange = (requestAddHeaders: KeyValuePair[]) => {
+    transformDispatch(setRequestAddHeaders(requestAddHeaders));
+  };
+
+  const requestBodyOnChange = (requestBody: string) => {
+    transformDispatch(setRequestBody(requestBody));
+  };
+
+  const requestBodyErrorOnChange = (requestBodyError: string) => {
+    transformDispatch(setRequestBodyError(requestBodyError));
+  };
+
+  const requestSampleInputOnChange = (requestSampleInput: string) => {
+    transformDispatch(setRequestSampleInput(requestSampleInput));
+  };
+
+  const requestTransformedBodyOnChange = (requestTransformedBody: string) => {
+    transformDispatch(setRequestTransformedBody(requestTransformedBody));
+  };
+
+  const requestContentTypeOnChange = (
+    requestContentType: RequestTransformContentType
+  ) => {
+    transformDispatch(setRequestContentType(requestContentType));
+  };
+
+  const requestUrlTransformOnChange = (data: boolean) => {
+    transformDispatch(setRequestUrlTransform(data));
+  };
+
+  const requestPayloadTransformOnChange = (data: boolean) => {
+    transformDispatch(setRequestPayloadTransform(data));
+  };
+
+  useEffect(() => {
+    requestUrlErrorOnChange('');
+    requestUrlPreviewOnChange('');
+    const onResponse = (data: Record<string, any>) => {
+      parseValidateApiData(
+        data,
+        requestUrlErrorOnChange,
+        requestUrlPreviewOnChange
+      );
+    };
+    const options = getValidateTransformOptions(
+      transformState.requestSampleInput,
+      webhook.value,
+      undefined,
+      transformState.requestUrl,
+      transformState.requestQueryParams
+    );
+    if (!webhook.value) {
+      requestUrlErrorOnChange(
+        'Please configure your webhook handler to generate request url transform'
+      );
+    } else {
+      dispatch(
+        requestAction(
+          Endpoints.metadata,
+          options,
+          undefined,
+          undefined,
+          true,
+          true
+        )
+      ).then(onResponse, onResponse); // parseValidateApiData will parse both success and error
+    }
+  }, [
+    transformState.requestSampleInput,
+    webhook,
+    transformState.requestUrl,
+    transformState.requestQueryParams,
+  ]);
+
+  useEffect(() => {
+    requestBodyErrorOnChange('');
+    requestTransformedBodyOnChange('');
+    const onResponse = (data: Record<string, any>) => {
+      parseValidateApiData(
+        data,
+        requestBodyErrorOnChange,
+        undefined,
+        requestTransformedBodyOnChange
+      );
+    };
+    const options = getValidateTransformOptions(
+      transformState.requestSampleInput,
+      webhook.value,
+      transformState.requestBody
+    );
+    if (!webhook.value) {
+      requestBodyErrorOnChange(
+        'Please configure your webhook handler to generate request body transform'
+      );
+    } else if (transformState.requestBody && webhook.value) {
+      dispatch(
+        requestAction(
+          Endpoints.metadata,
+          options,
+          undefined,
+          undefined,
+          true,
+          true
+        )
+      ).then(onResponse, onResponse); // parseValidateApiData will parse both success and error
+    }
+  }, [transformState.requestSampleInput, transformState.requestBody, webhook]);
 
   const createBtnText = 'Create Event Trigger';
 
   const submit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    dispatch(createEventTrigger(state));
+    dispatch(createEventTrigger(state, transformState));
   };
 
   const handleTriggerNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -114,283 +313,96 @@ const Add: React.FC<Props> = props => {
     });
   };
 
-  const handleWebhookValueChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
+  const handleWebhookValueChange = (value: string) => {
     setState.webhook({
       type: webhook.type,
       value,
     });
   };
 
-  const getColumnList = () => {
-    if (!table.name) {
-      return <i>Select a table first to get column list</i>;
-    }
-
-    return operationColumns.map(opCol => {
-      const handleToggleColumn = () => {
-        const newCols = operationColumns.map(o => {
-          return {
-            ...o,
-            enabled: o.name === opCol.name ? !o.enabled : o.enabled,
-          };
-        });
-        setState.operationColumns(newCols);
-      };
-      const { name: colName, enabled: colEnabled } = opCol;
-
-      return (
-        <div
-          key={opCol.name}
-          className={`${styles.padd_remove} ${styles.columnListElement}`}
-        >
-          <div className="checkbox ">
-            <label className={styles.cursorPointer}>
-              <input
-                type="checkbox"
-                checked={colEnabled}
-                onChange={handleToggleColumn}
-                className={`${styles.cursorPointer} legacy-input-fix`}
-              />
-              {colName}
-              {/* <small> ({colType})</small> TODO */}
-            </label>
-          </div>
-        </div>
-      );
-    });
+  const handleOperationsChange = (
+    o: Record<EventTriggerOperation, boolean>
+  ) => {
+    setState.operations(o);
   };
 
-  const advancedColumnSection = (
-    <div>
-      <h4 className={styles.subheading_text}>
-        Listen columns for update &nbsp; &nbsp;
-        <OverlayTrigger
-          placement="right"
-          overlay={tooltip.advancedOperationDescription}
-        >
-          <i className="fa fa-question-circle" aria-hidden="true" />
-        </OverlayTrigger>{' '}
-      </h4>
-      {operations.update ? (
-        <div className={`${styles.clear_fix} ${styles.listenColumnWrapper}`}>
-          {getColumnList()}
-        </div>
-      ) : (
-        <div className={`${styles.clear_fix} ${styles.listenColumnWrapper}`}>
-          <i>Applicable only if update operation is selected.</i>
-        </div>
-      )}
-    </div>
-  );
+  const handleOperationsColumnsChange = (oc: ETOperationColumn[]) => {
+    setState.operationColumns(oc);
+  };
 
-  const headersList = (
-    <Headers headers={headers} setHeaders={setState.headers} />
-  );
+  const handleRetryConfChange = (r: RetryConf) => {
+    setState.retryConf(r);
+  };
+
+  const handleHeadersChange = (h: Header[]) => {
+    setState.headers(h);
+  };
+
   return (
-    <div
-      className={`${styles.addTablesBody} ${styles.clear_fix} ${styles.padd_left}`}
-    >
-      <Helmet
-        title={`Add Event Trigger | ${EVENTS_SERVICE_HEADING} - Hasura`}
-      />
-      <div className={styles.subHeader}>
-        <h2 className={styles.heading_text}>Create a new event trigger</h2>
-        <div className="clearfix" />
-      </div>
-      <br />
-      <div className={`container-fluid ${styles.padd_left_remove}`}>
-        <form onSubmit={submit}>
-          <div
-            className={`${styles.addCol} col-xs-12 ${styles.padd_left_remove}`}
-          >
-            <h4 className={styles.subheading_text}>
-              Trigger Name &nbsp; &nbsp;
-              <OverlayTrigger
-                placement="right"
-                overlay={tooltip.triggerNameDescription}
-              >
-                <i className="fa fa-question-circle" aria-hidden="true" />
-              </OverlayTrigger>{' '}
-            </h4>
-            <input
-              type="text"
-              data-test="trigger-name"
-              placeholder="trigger_name"
-              required
-              pattern="^[A-Za-z]+[A-Za-z0-9_\\-]*$"
-              className={`${styles.tableNameInput} form-control`}
-              value={name}
-              onChange={handleTriggerNameChange}
-              maxLength={42}
-            />
-            <hr className="my-md" />
-            <h4 className={styles.subheading_text}>
-              Database &nbsp; &nbsp;
-              <OverlayTrigger
-                placement="right"
-                overlay={tooltip.triggerNameSource}
-              >
-                <i className="fa fa-question-circle" aria-hidden="true" />
-              </OverlayTrigger>
-            </h4>
-            <select
-              className={`${styles.select} form-control ${styles.add_pad_left}`}
-              onChange={handleDatabaseChange}
-              data-test="select-source"
-              value={source}
-            >
-              <option value="">Select database</option>
-              {dataSourcesList
-                .filter(s => supportedDrivers.includes(s.driver))
-                .map(s => (
-                  <option key={s.name} value={s.name}>
-                    {s.name}
-                  </option>
-                ))}
-            </select>
-            <hr className="my-md" />
-            <h4 className={styles.subheading_text}>
-              Schema/Table &nbsp; &nbsp;
-              <OverlayTrigger
-                placement="right"
-                overlay={tooltip.postgresDescription}
-              >
-                <i className="fa fa-question-circle" aria-hidden="true" />
-              </OverlayTrigger>{' '}
-            </h4>
-            <select
-              onChange={handleSchemaChange}
-              data-test="select-schema"
-              className={`${styles.selectTrigger} form-control`}
-              value={table.schema}
-            >
-              <option value="">Select schema</option>
-              {Object.keys(databaseInfo).map(s => (
-                <option value={s} key={s}>
-                  {s}
-                </option>
-              ))}
-            </select>
-            <select
-              onChange={handleTableChange}
-              data-test="select-table"
-              required
-              className={`${styles.selectTrigger} form-control ${styles.add_mar_left}`}
-              value={table.name}
-            >
-              <option value="">Select table</option>
-              {databaseInfo[table.schema] &&
-                Object.keys(databaseInfo[table.schema]).map(t => {
-                  return (
-                    <option key={t} value={t}>
-                      {t}
-                    </option>
-                  );
-                })}
-            </select>
-            <hr className="my-md" />
-            <div
-              className={`${styles.add_mar_bottom} ${styles.selectOperations}`}
-            >
-              <div
-                className={`${styles.add_mar_bottom} ${styles.selectOperations}`}
-              >
-                <h4 className={styles.subheading_text}>
-                  Trigger Operations &nbsp; &nbsp;
-                  <OverlayTrigger
-                    placement="right"
-                    overlay={tooltip.operationsDescription}
-                  >
-                    <i className="fa fa-question-circle" aria-hidden="true" />
-                  </OverlayTrigger>{' '}
-                </h4>
-                <Operations
-                  selectedOperations={operations}
-                  setOperations={setState.operations}
-                  readOnly={false}
-                />
-              </div>
-            </div>
-            <hr className="my-md" />
-            <div className={styles.add_mar_bottom}>
-              <h4 className={styles.subheading_text}>
-                Webhook URL &nbsp; &nbsp;
-                <OverlayTrigger
-                  placement="right"
-                  overlay={tooltip.webhookUrlDescription}
-                >
-                  <i className="fa fa-question-circle" aria-hidden="true" />
-                </OverlayTrigger>{' '}
-              </h4>
-              <div>
-                <div className={styles.dropdown_wrapper}>
-                  <DropdownButton
-                    dropdownOptions={[
-                      { display_text: 'URL', value: 'static' },
-                      { display_text: 'From env var', value: 'env' },
-                    ]}
-                    title={webhook.type === 'static' ? 'URL' : 'From env var'}
-                    dataKey={webhook.type === 'static' ? 'static' : 'env'}
-                    onButtonChange={handleWebhookTypeChange}
-                    onInputChange={handleWebhookValueChange}
-                    required
-                    bsClass={styles.dropdown_button}
-                    inputVal={webhook.value}
-                    id="webhook-url"
-                    inputPlaceHolder={
-                      webhook.type === 'static'
-                        ? 'http://httpbin.org/post'
-                        : 'MY_WEBHOOK_URL'
-                    }
-                    testId="webhook"
-                  />
-                </div>
-              </div>
-              <br />
-              <small>
-                Note: Specifying the webhook URL via an environmental variable
-                is recommended if you have different URLs for multiple
-                environments.
-              </small>
-            </div>
-            <hr className="my-md" />
-            <CollapsibleToggle
-              title={
-                <h4 className={styles.subheading_text}>Advanced Settings</h4>
-              }
-              testId="advanced-settings"
-            >
-              <div>
-                {advancedColumnSection}
-                <hr className="my-md" />
-                <div className={styles.add_mar_top}>
-                  <h4 className={styles.subheading_text}>Retry Logic</h4>
-                  <RetryConfEditor
-                    retryConf={retryConf}
-                    setRetryConf={setState.retryConf}
-                  />
-                </div>
-                <hr className="my-md" />
-                <div className={styles.add_mar_top}>
-                  <h4 className={styles.subheading_text}>Headers</h4>
-                  {headersList}
-                </div>
-              </div>
-            </CollapsibleToggle>
-            <hr className="my-md" />
-            {!readOnlyMode && (
-              <Button
-                type="submit"
-                color="yellow"
-                size="sm"
-                data-test="trigger-create"
-              >
-                {createBtnText}
-              </Button>
-            )}
+    <div className="w-full overflow-y-auto bg-gray-50">
+      <div className="max-w-6xl">
+        <div
+          className={`${styles.addTablesBody} ${styles.clear_fix} ${styles.padd_left}`}
+        >
+          <Helmet
+            title={`Add Event Trigger | ${EVENTS_SERVICE_HEADING} - Hasura`}
+          />
+          <div className={styles.subHeader}>
+            <h2 className={styles.heading_text}>Create a new event trigger</h2>
+            <div className="clearfix" />
           </div>
-        </form>
+          <br />
+          <div className={`container-fluid ${styles.padd_left_remove}`}>
+            <form onSubmit={submit}>
+              <div
+                className={`${styles.addCol} col-xs-12 ${styles.padd_left_remove}`}
+              >
+                <CreateETForm
+                  state={state}
+                  databaseInfo={databaseInfo}
+                  dataSourcesList={dataSourcesList}
+                  readOnlyMode={readOnlyMode}
+                  handleTriggerNameChange={handleTriggerNameChange}
+                  handleWebhookValueChange={handleWebhookValueChange}
+                  handleWebhookTypeChange={handleWebhookTypeChange}
+                  handleTableChange={handleTableChange}
+                  handleSchemaChange={handleSchemaChange}
+                  handleDatabaseChange={handleDatabaseChange}
+                  handleOperationsChange={handleOperationsChange}
+                  handleOperationsColumnsChange={handleOperationsColumnsChange}
+                  handleRetryConfChange={handleRetryConfChange}
+                  handleHeadersChange={handleHeadersChange}
+                  handleToggleAllColumn={setState.toggleAllColumnChecked}
+                />
+                <ConfigureTransformation
+                  webhookUrl={webhook?.value}
+                  state={transformState}
+                  resetSampleInput={resetSampleInput}
+                  requestMethodOnChange={requestMethodOnChange}
+                  requestUrlOnChange={requestUrlOnChange}
+                  requestQueryParamsOnChange={requestQueryParamsOnChange}
+                  requestAddHeadersOnChange={requestAddHeadersOnChange}
+                  requestBodyOnChange={requestBodyOnChange}
+                  requestSampleInputOnChange={requestSampleInputOnChange}
+                  requestContentTypeOnChange={requestContentTypeOnChange}
+                  requestUrlTransformOnChange={requestUrlTransformOnChange}
+                  requestPayloadTransformOnChange={
+                    requestPayloadTransformOnChange
+                  }
+                />
+                {!readOnlyMode && (
+                  <Button
+                    type="submit"
+                    mode="primary"
+                    data-test="trigger-create"
+                  >
+                    {createBtnText}
+                  </Button>
+                )}
+              </div>
+            </form>
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -399,6 +411,7 @@ const Add: React.FC<Props> = props => {
 type PropsFromState = {
   readOnlyMode: boolean;
   dataSourcesList: DataSource[];
+  allSchemas: Table[];
   currentDataSource: string;
 };
 
@@ -406,6 +419,7 @@ const mapStateToProps: MapStateToProps<PropsFromState> = state => {
   return {
     readOnlyMode: state.main.readOnlyMode,
     dataSourcesList: getDataSources(state),
+    allSchemas: state.tables.allSchemas,
     currentDataSource: state.tables.currentDataSource,
   };
 };

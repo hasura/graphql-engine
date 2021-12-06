@@ -1,10 +1,20 @@
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 -- | Test querying an entity for a couple fields.
 module BasicFieldsSpec (spec) where
 
-import Harness.Constants
+import Control.Monad.IO.Unlift
+import Control.Monad.Reader
+import Data.Int
+import Data.Text (Text)
+import Database.Persist
+import Database.Persist.MySQL qualified as Mysql
+import Database.Persist.Postgresql qualified as Postgresql
+import Database.Persist.Sql
+import Database.Persist.TH
+import Harness.Constants as Constants
 import Harness.Feature qualified as Feature
 import Harness.Graphql
 import Harness.GraphqlEngine qualified as GraphqlEngine
@@ -15,6 +25,33 @@ import Harness.State (State)
 import Harness.Yaml
 import Test.Hspec
 import Prelude
+
+--------------------------------------------------------------------------------
+-- Schema
+
+share
+  [mkPersist sqlSettings, mkMigrate "migrateAll"]
+  [persistLowerCase|
+Author
+    Id Int32
+    name Text
+    deriving Eq
+    deriving Show
+|]
+
+--------------------------------------------------------------------------------
+-- Data setup
+
+setupDatabase :: (MonadIO m) => ReaderT SqlBackend m ()
+setupDatabase = do
+  void $
+    insertKey
+      (AuthorKey {unAuthorKey = 1} :: AuthorId)
+      Author {authorName = "Author 1"}
+  void $
+    insertKey
+      AuthorKey {unAuthorKey = 2}
+      Author {authorName = "Author 2"}
 
 --------------------------------------------------------------------------------
 -- Preamble
@@ -64,23 +101,10 @@ args:
       pool_settings: {}
 |]
 
-  -- Setup tables
-  Mysql.run_
-    [sql|
-CREATE TABLE hasura.author
-(
-    id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(45) UNIQUE KEY
-);
-|]
-  Mysql.run_
-    [sql|
-INSERT INTO hasura.author
-    (name)
-VALUES
-    ( 'Author 1'),
-    ( 'Author 2');
-|]
+  -- Setup database
+  Mysql.runPersistent do
+    Mysql.runMigration migrateAll
+    setupDatabase
 
   -- Track the tables
   GraphqlEngine.post_
@@ -125,23 +149,10 @@ args:
         pool_settings: {}
 |]
 
-  -- Setup tables
-  Postgres.run_
-    [sql|
-CREATE TABLE hasura.author
-(
-    id SERIAL PRIMARY KEY,
-    name VARCHAR(45) UNIQUE
-);
-|]
-  Postgres.run_
-    [sql|
-INSERT INTO hasura.author
-    (name)
-VALUES
-    ( 'Author 1'),
-    ( 'Author 2');
-|]
+  -- Setup database
+  Postgres.runPersistent do
+    Postgresql.runMigration migrateAll
+    setupDatabase
 
   -- Track the tables
   GraphqlEngine.post_

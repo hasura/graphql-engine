@@ -12,10 +12,9 @@
 #       start OLD_VERSION again, running down migrations
 #         run the same pytests, don't run setup
 #
-# If no arguments are provided to this script, all the server upgrade tests will be run
-# With arguments, you can specify which server upgrade pytests should be run
-# Any options provided to this script will be applied to the
-# pytest command collecting server upgrade tests
+# This makes use of BUILDKITE_PARALLEL_JOB_COUNT and BUILDKITE_PARALLEL_JOB if
+# present to determine which subset of tests to run as part of a parallelized
+# test.
 
 set -euo pipefail
 
@@ -175,7 +174,6 @@ get_current_catalog_version() {
 	psql $HASURA_GRAPHQL_DATABASE_URL -P pager=off -c "SELECT version FROM hdb_catalog.hdb_version"
 }
 
-args=("$@")
 # Return the list of tests over which we will perform a
 # test-upgrade-test-downgrade-test sequence in run_server_upgrade_pytest().
 #
@@ -210,9 +208,12 @@ get_server_upgrade_tests() {
 		--deselect test_schema_stitching.py::TestAddRemoteSchemaTbls::test_add_conflicting_table \
 		--deselect test_events.py \
 		--deselect test_graphql_queries.py::TestGraphQLQueryFunctions \
-		"${args[@]}" 1>/dev/null 2>/dev/null
+		  1>/dev/null 2>/dev/null
 	set +x
-	cat "$tmpfile"
+	# Choose the subset of jobs to run based on possible parallelism in this buildkite job
+	# NOTE: BUILDKITE_PARALLEL_JOB starts from 0:
+	cat "$tmpfile" | sort |\
+	    awk -v C=${BUILDKITE_PARALLEL_JOB_COUNT:-1} -v J=${BUILDKITE_PARALLEL_JOB:-0} 'NR % C == J'
 	cd - >/dev/null
 	rm "$tmpfile"
 }
@@ -358,15 +359,8 @@ cleanup_hasura_metadata_if_present
 # We run_server_upgrade_pytest over each test individually to minimize the
 # chance of breakage (e.g. where two different tests have conflicting
 # setup.yaml which create the same table)
-#
-# TODO this is really slow (~1hr). There seems to be no good way to do many
-# tests in a batch because very few tests use unique table names, for instance.
-# We could:
-#  - try to give each setup.yaml unique names (very arduous), or
-#  - hand select a few tests that we think matter for the upgrade-downgrade case
-#    and make them compatible, or small enough in number we can run them
-#    sequentially
-#  - ???
+# 
+# This takes a long time.
 for pytest in $(get_server_upgrade_tests); do
 	log "Running pytest $pytest"
 	run_server_upgrade_pytest "$pytest"

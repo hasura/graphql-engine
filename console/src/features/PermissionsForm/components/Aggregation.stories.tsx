@@ -8,7 +8,10 @@ import { AggregationSection, AggregationProps } from './Aggregation';
 export default {
   title: 'Permissions Form/Components/Aggregation Section',
   component: AggregationSection,
-  decorators: [],
+  parameters: {
+    // Disable storybook for playground stories
+    chromatic: { disableSnapshot: true },
+  },
 } as Meta;
 
 const schema = z.object({
@@ -22,13 +25,13 @@ AggregationEnabled.args = {
   roleName: 'one',
 };
 AggregationEnabled.decorators = [
-  (S: React.FC) => (
+  (StoryComponent: React.FC) => (
     <Form
       schema={schema}
       onSubmit={() => {}}
       options={{ defaultValues: { enableAggregation: true } }}
     >
-      {() => <S />}
+      {() => <StoryComponent />}
     </Form>
   ),
 ];
@@ -40,22 +43,26 @@ AggregationDisabled.args = {
   roleName: 'two',
 };
 AggregationDisabled.decorators = [
-  (S: React.FC) => (
+  (StoryComponent: React.FC) => (
     <Form
       schema={schema}
       onSubmit={() => {}}
       options={{ defaultValues: { enableAggregation: false } }}
     >
-      {() => <S />}
+      {() => <StoryComponent />}
     </Form>
   ),
 ];
 
-export const DefaultOpen: Story<AggregationProps> = args => (
-  <AggregationSection {...args} />
+export const Showcase: Story<AggregationProps> = () => (
+  <AggregationSection queryType="insert" roleName="one" defaultOpen />
 );
-DefaultOpen.args = {
-  roleName: 'one',
+Showcase.parameters = {
+  ...AggregationEnabled.args,
   defaultOpen: true,
 };
-DefaultOpen.decorators = AggregationEnabled.decorators;
+Showcase.decorators = AggregationEnabled.decorators;
+Showcase.parameters = {
+  // Disable storybook for playground stories
+  chromatic: { disableSnapshot: false },
+};

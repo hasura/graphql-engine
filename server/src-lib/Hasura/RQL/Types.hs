@@ -30,7 +30,6 @@ module Hasura.RQL.Types
 where
 
 import Control.Lens (Traversal', at, preview, (^.))
-import Control.Monad.Unique
 import Data.HashMap.Strict qualified as M
 import Data.Text.Extended
 import Database.PG.Query qualified as Q
@@ -58,8 +57,11 @@ import Hasura.RQL.Types.Network as R
 import Hasura.RQL.Types.Permission as R
 import Hasura.RQL.Types.QueryCollection as R
 import Hasura.RQL.Types.QueryTags as R
-import Hasura.RQL.Types.Relationship as R
-import Hasura.RQL.Types.RemoteRelationship as R
+import Hasura.RQL.Types.Relationships.FromSource as R
+import Hasura.RQL.Types.Relationships.Local as R
+import Hasura.RQL.Types.Relationships.Remote as R
+import Hasura.RQL.Types.Relationships.ToSchema as R
+import Hasura.RQL.Types.Relationships.ToSource as R
 import Hasura.RQL.Types.RemoteSchema as R
 import Hasura.RQL.Types.ResultCustomization as R
 import Hasura.RQL.Types.Roles as R
@@ -239,7 +241,6 @@ newtype HasSystemDefinedT m a = HasSystemDefinedT {unHasSystemDefinedT :: Reader
       Monad,
       MonadTrans,
       MonadIO,
-      MonadUnique,
       MonadError e,
       MonadTx,
       HasHttpManagerM,
@@ -372,7 +373,7 @@ askRelType m r msg = do
 askRemoteRel ::
   (MonadError QErr m) =>
   FieldInfoMap (FieldInfo backend) ->
-  RemoteRelationshipName ->
+  RelName ->
   m (RemoteFieldInfo backend)
 askRemoteRel fieldInfoMap relName = do
   fieldInfo <- askFieldInfo fieldInfoMap (fromRemoteRelationship relName)

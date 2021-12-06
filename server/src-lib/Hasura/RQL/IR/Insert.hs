@@ -40,7 +40,7 @@ import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.IR.Returning
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Column
-import Hasura.RQL.Types.Relationship
+import Hasura.RQL.Types.Relationships.Local
 import Hasura.SQL.Backend
 
 -- | Overall representation of an insert mutation, corresponding to one root

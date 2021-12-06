@@ -9,7 +9,6 @@ module Hasura.Server.API.Metadata
 where
 
 import Control.Monad.Trans.Control (MonadBaseControl)
-import Control.Monad.Unique
 import Data.Aeson
 import Data.Aeson.Casing
 import Data.Aeson.Types qualified as A
@@ -83,9 +82,9 @@ data RQLMetadataV1
   | RMSetRelationshipComment !(AnyBackend SetRelComment)
   | RMRenameRelationship !(AnyBackend RenameRel)
   | -- Tables remote relationships
-    RMCreateRemoteRelationship !(AnyBackend RemoteRelationship)
-  | RMUpdateRemoteRelationship !(AnyBackend RemoteRelationship)
-  | RMDeleteRemoteRelationship !(DeleteRemoteRelationship ('Postgres 'Vanilla))
+    RMCreateRemoteRelationship !(AnyBackend CreateFromSourceRelationship)
+  | RMUpdateRemoteRelationship !(AnyBackend CreateFromSourceRelationship)
+  | RMDeleteRemoteRelationship !(DeleteFromSourceRelationship ('Postgres 'Vanilla))
   | -- Functions
     RMTrackFunction !(AnyBackend TrackFunctionV2)
   | RMUntrackFunction !(AnyBackend UnTrackFunction)
@@ -355,7 +354,6 @@ runMetadataQueryM ::
     CacheRWM m,
     Tracing.MonadTrace m,
     UserInfoM m,
-    MonadUnique m,
     HTTP.HasHttpManagerM m,
     MetadataM m,
     MonadMetadataStorageQueryAPI m,
@@ -379,7 +377,6 @@ runMetadataQueryV1M ::
     CacheRWM m,
     Tracing.MonadTrace m,
     UserInfoM m,
-    MonadUnique m,
     HTTP.HasHttpManagerM m,
     MetadataM m,
     MonadMetadataStorageQueryAPI m,
@@ -472,7 +469,7 @@ runMetadataQueryV1M env currentResourceVersion = \case
   RMDumpInternalState q -> runDumpInternalState q
   RMGetCatalogState q -> runGetCatalogState q
   RMSetCatalogState q -> runSetCatalogState q
-  RMTestWebhookTransform q -> runTestWebhookTransform q
+  RMTestWebhookTransform q -> runTestWebhookTransform env q
   RMSetQueryTagsConfig q -> runSetQueryTagsConfig q
   RMBulk q -> encJFromList <$> indexedMapM (runMetadataQueryM env currentResourceVersion) q
   where

@@ -20,7 +20,7 @@ deps:
 
 .PHONY: lint
 lint:
-	golangci-lint run --timeout 2m
+	golangci-lint run --timeout 10m
 
 # build cli locally, for all given platform/arch
 .PHONY: build
@@ -39,7 +39,7 @@ endif
 # compress
 .PHONY: compress
 compress:
-	ls $(OUTPUT_DIR)/$(VERSION)/cli-hasura-* | grep -v darwin | xargs upx
+	ls $(OUTPUT_DIR)/$(VERSION)/cli-hasura-* | grep -v darwin | grep -v windows | xargs upx
 
 # to be executed in circle-ci only
 ci-copy-binary:

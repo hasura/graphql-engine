@@ -383,3 +383,23 @@ test_webhook_transform
          }
        }
    }
+
+The `webhook_url` can be provided in an Environment Variable supplied in an object with the `from_env` key:
+
+.. code-block:: http
+
+   POST /v1/metadata HTTP/1.1
+   Content-Type: application/json
+   X-Hasura-Role: admin
+
+   {
+       "type" : "test_webhook_transform",
+       "args" : {
+         "webhook_url": {"from_env": "url_env_var" },
+         "body": { "hello": "world" },
+         "request_transform": {
+           "body": "{{ $body.world }}",
+           "template_engine": "Kriti"
+         }
+       }
+   }

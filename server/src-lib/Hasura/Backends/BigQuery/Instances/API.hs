@@ -12,5 +12,6 @@ instance BackendAPI 'BigQuery where
       [ sourceCommands @'BigQuery,
         tableCommands @'BigQuery,
         tablePermissionsCommands @'BigQuery,
-        relationshipCommands @'BigQuery
+        relationshipCommands @'BigQuery,
+        remoteRelationshipCommands @'BigQuery
       ]

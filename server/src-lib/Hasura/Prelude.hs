@@ -21,6 +21,7 @@ module Hasura.Prelude
     liftEitherM,
     hoistMaybe,
     hoistEither,
+    readJson,
     tshow,
 
     -- * Trace debugging
@@ -266,6 +267,9 @@ hoistEither = ExceptT . pure
 
 tshow :: Show a => a -> Text
 tshow = T.pack . show
+
+readJson :: (J.FromJSON a) => String -> Either String a
+readJson = J.eitherDecodeStrict . txtToBs . T.pack
 
 -- | Customized 'J.Options' which apply "snake case" to Generic or Template
 -- Haskell JSON derivations.

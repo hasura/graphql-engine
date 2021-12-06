@@ -718,7 +718,7 @@ onStart env enabledLogTypes serverEnv wsConn (StartMsg opId q) onMessageActions 
       (telemTimeIO_DT, _respHdrs, resp) <-
         doQErr $
           E.execRemoteGQ env httpMgr userInfo reqHdrs (rsDef rsi) gqlReq
-      value <- mapExceptT lift $ extractFieldFromResponse fieldName rsi resultCustomizer resp
+      value <- mapExceptT lift $ extractFieldFromResponse fieldName resultCustomizer resp
       return $ AnnotatedResponsePart telemTimeIO_DT Telem.Remote (encJFromOrderedValue value) []
 
     WSServerEnv

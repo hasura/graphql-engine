@@ -223,3 +223,45 @@ args:
           name: LimitedAlbum
         column_mapping:
           artist_self_id: artist_other_id
+
+# === hasura_test/bigquery2 ===
+- type: bigquery_track_table
+  args:
+    source: bigquery2
+    table:
+      dataset: hasura_test
+      name: article2
+
+- type: bigquery_create_remote_relationship
+  args:
+    name: author
+    source: bigquery2
+    table:
+      name: article2
+      dataset: hasura_test
+    definition:
+      to_source:
+        relationship_type: object
+        field_mapping:
+          author_id: id
+        source: bigquery
+        table:
+          name: author
+          dataset: hasura_test
+
+- type: bigquery_create_remote_relationship
+  args:
+    name: articles2
+    source: bigquery
+    table:
+      name: author
+      dataset: hasura_test
+    definition:
+      to_source:
+        relationship_type: array
+        field_mapping:
+          id: author_id
+        source: bigquery2
+        table:
+          name: article2
+          dataset: hasura_test

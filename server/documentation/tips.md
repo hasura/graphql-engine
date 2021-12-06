@@ -5,6 +5,7 @@
     - [Use curl and yaml2json to test the graphql-engine API directly](#use-curl-and-yaml2json-to-test-the-graphql-engine-api-directly)
     - [Convert a test case to a live example](#convert-a-test-case-to-a-live-example)
     - [Run a remote MSSQL instance with dev.sh](#run-a-remote-mssql-instance-with-devsh)
+    - [Add a unit test for SQL generation](#add-a-unit-test-for-sql-generation)
 
 <!-- markdown-toc end -->
 
@@ -127,4 +128,82 @@ to it from `graphql-engine` which runs on a different computer. Currently, mssql
 `scripts/dev.sh mssql` will only be exposed to the machine it is run on.
 
 To change that and expose it to other machines as well, we need to edit `scripts/containers/mssql.sh` and change
-all instances of `127.0.0.1` to the external IP of the machine.
+the `MSSQL_HOST` variable to the external IP of the machine.
+
+## Add a unit test for SQL generation
+We will look at the SQL generation of delete for MSSQL as an example. We want to test the conversion of `AnnDel` to structured SQL.
+
+We can unit test individual transformations, for example that the `Hasura.Backends.MSSQL.FromIr.fromDelete`
+function converts an `AnnDel` to the correct SQL `DELETE` statement, like this:
+
+1. Add a new HSpec file in `server/src-test/Database/MSSQL/` named something like `DeleteSpec.hs`:
+    - This test should expose a `spec` function with the tests
+    - It can use the `shouldBe` or `shouldSatisfy` combinators to compare the input to the expected output
+    - We can use `runValidate` and `runFromIr` just as it is used in the codebase to extract the value
+2. We can use `ltrace` or similar to print the *input* to `fromDelete` when run from graphql-engine instead of crafting it by hand
+3. We can print the output of the function when running the test, or craft the expected output ourselves
+4. We need to add another line to `unitSpecs` in `server/src-test/main.hs`
+
+**Note**: it is possible that `Eq` and `Show` instances will need to be added for the input and output types
+for this to work (so that hspec can compare the values and display the expected/got mismatches)
+
+### Test example
+
+```hs
+module Hasura.Backends.MSSQL.FromIRTest
+  ( spec,
+  )
+where
+
+import Control.Monad.Validate (runValidate)
+import Database.ODBC.SQLServer
+import Debug.Trace qualified as D
+import Hasura.Backends.MSSQL.FromIr
+import Hasura.Backends.MSSQL.Types.Internal hiding (FieldName)
+import Hasura.Backends.MSSQL.Types.Internal qualified as MSSQL
+import Hasura.Prelude
+import Hasura.RQL.IR
+import Hasura.RQL.Types
+import Language.GraphQL.Draft.Syntax
+import Test.Hspec
+
+spec :: Spec
+spec =
+  describe "Translate Delete" $
+    it "AnnDel to Delete" $ do
+      -- Can also be @`shouldBe` Right result@ instead
+      runValidate (runFromIr (fromDelete input)) `shouldSatisfy` thing
+  where
+    thing =
+      \case
+        Left _ -> False
+        Right x -> D.traceShow x True
+
+input :: AnnDel 'MSSQL
+input =
+  AnnDel
+    { dqp1Table = TableName {tableName = "author", tableSchema = "dbo"},
+      dqp1Where =
+        ( BoolAnd [],
+          BoolAnd [...]
+        ),
+      dqp1Output = MOutMultirowFields [...],
+      dqp1AllCols = [...]
+    }
+
+result :: Delete
+result =
+  Delete
+    { deleteTable =
+        Aliased
+          { aliasedThing = TableName {tableName = "author", tableSchema = "dbo"},
+            aliasedAlias = "t_author1"
+          },
+      deleteOutput = Output {...},
+      deleteTempTable = TempTable {...},
+      deleteWhere = Where [...]
+    }
+```
+
+See as a commit: https://github.com/hasura/graphql-engine-mono/commit/6fe03938d4255fbba3ec700a8f99527f60d795da
+(please completely ignore the `Show` related changes)

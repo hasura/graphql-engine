@@ -24,6 +24,7 @@ module Harness.Constants
     httpHealthCheckIntervalSeconds,
     httpHealthCheckIntervalMicroseconds,
     serveOptions,
+    debugMessagesEnabled,
   )
 where
 
@@ -131,7 +132,7 @@ serveOptions =
       soTxIso = Q.Serializable,
       soAdminSecret = mempty,
       soAuthHook = Nothing,
-      soJwtSecret = Nothing,
+      soJwtSecret = mempty,
       soUnAuthRole = Nothing,
       soCorsConfig = CCAllowAll,
       soEnableConsole = True,
@@ -144,10 +145,9 @@ serveOptions =
       soEnableAllowlist = False,
       soEnabledLogTypes = Set.empty,
       soLogLevel =
-        -- Use the below to show messages:
-        -- L.LevelDebug
-        -- Use the below to hide messages:
-        L.LevelOther "test-suite",
+        if debugMessagesEnabled
+          then L.LevelDebug
+          else L.LevelOther "test-suite",
       soResponseInternalErrorsConfig = InternalErrorsAllRequests,
       soEventsHttpPoolSize = Nothing,
       soEventsFetchInterval = Nothing,
@@ -164,8 +164,13 @@ serveOptions =
       soEventsFetchBatchSize = 1,
       soDevMode = True,
       soGracefulShutdownTimeout = 0, -- Don't wait to shutdown.
-      soWebsocketConnectionInitTimeout = defaultWSConnectionInitTimeout
+      soWebsocketConnectionInitTimeout = defaultWSConnectionInitTimeout,
+      soEventingMode = EventingEnabled
     }
+
+-- | Use the below to show messages.
+debugMessagesEnabled :: Bool
+debugMessagesEnabled = False
 
 -- These are important for the test suite.
 testSuiteEnabledApis :: HashSet API

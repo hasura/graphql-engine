@@ -6,13 +6,13 @@ module Hasura.GraphQL.Parser.Schema
     type (<:) (..),
 
     -- * Types
-    Typename (..),
-    MkTypename,
+    MkTypename (..),
     mkTypename,
     withTypenameCustomization,
     Type (..),
     NonNullableType (..),
     TypeInfo (..),
+    getTypeInfo,
     SomeTypeInfo (..),
     eqType,
     eqNonNullableType,
@@ -32,11 +32,7 @@ module Hasura.GraphQL.Parser.Schema
     UnionInfo (..),
 
     -- * Definitions
-    DefinitionName,
     Definition (..),
-    mkDefinition,
-    addDefinitionUnique,
-    HasDefinition (..),
 
     -- * Schemas
     Schema (..),
@@ -55,7 +51,6 @@ module Hasura.GraphQL.Parser.Schema
 where
 
 import Control.Lens.Extended
-import Control.Monad.Unique
 import Data.Aeson qualified as J
 import Data.Functor.Classes
 import Data.Has
@@ -63,6 +58,7 @@ import Data.HashMap.Strict.Extended qualified as Map
 import Data.HashSet qualified as Set
 import Data.Hashable (Hashable (..))
 import Data.List.NonEmpty qualified as NE
+import Data.Monoid
 import Data.Text qualified as T
 import Data.Text.Extended
 import Hasura.Incremental (Cacheable)
@@ -82,25 +78,20 @@ class HasName a where
 instance HasName Name where
   getName = id
 
--- | newtype wrapper to allow us to distinguish type names from other GraphQL names.
-newtype Typename = Typename {unTypename :: Name} deriving (Eq, Ord, Show, HasName, J.ToJSON)
+-- | Type name customization
+newtype MkTypename = MkTypename {runMkTypename :: Name -> Name}
+  deriving (Semigroup, Monoid) via (Endo Name)
 
-instance ToTxt Typename where
-  toTxt = toTxt . getName
-
--- | Function to turn a @Name@ into a @Typename@ while possibly applying some customizations.
-type MkTypename = Name -> Typename
-
--- | Inject a new @Typename@ customization function into the environment.
+-- | Inject a new @MkTypename@ customization function into the environment.
 -- This can be used by schema-building code (with @MonadBuildSchema@ constraint) to ensure
--- the correct typename customizations are applied.
+-- the correct type name customizations are applied.
 withTypenameCustomization :: forall m r a. (MonadReader r m, Has MkTypename r) => MkTypename -> m a -> m a
 withTypenameCustomization = local . set hasLens
 
--- | Apply the typename customization function from the current environment.
-mkTypename :: (MonadReader r m, Has MkTypename r) => Name -> m Typename
+-- | Apply the type name customization function from the current environment.
+mkTypename :: (MonadReader r m, Has MkTypename r) => Name -> m Name
 mkTypename name =
-  ($ name) <$> asks getter
+  ($ name) . runMkTypename <$> asks getter
 
 -- | GraphQL types are divided into two classes: input types and output types.
 -- The GraphQL spec does not use the word “kind” to describe these classes, but
@@ -330,10 +321,6 @@ eqType _ _ = False
 instance HasName (Type k) where
   getName = getName . discardNullability
 
-instance HasDefinition (Type k) (TypeInfo k) where
-  definitionLens f (NonNullable t) = NonNullable <$> definitionLens f t
-  definitionLens f (Nullable t) = Nullable <$> definitionLens f t
-
 discardNullability :: Type k -> NonNullableType k
 discardNullability (NonNullable t) = t
 discardNullability (Nullable t) = t
@@ -372,10 +359,6 @@ eqNonNullableType _ _ = False
 instance HasName (NonNullableType k) where
   getName (TNamed definition) = getName definition
   getName (TList t) = getName t
-
-instance HasDefinition (NonNullableType k) (TypeInfo k) where
-  definitionLens f (TNamed definition) = TNamed <$> f definition
-  definitionLens f (TList t) = TList <$> definitionLens f t
 
 {- Note [The interfaces story]
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -547,43 +530,28 @@ eqTypeInfo (TIUnion (UnionInfo objects1)) (TIUnion (UnionInfo objects2)) =
   Set.fromList (fmap dName objects1) == Set.fromList (fmap dName objects2)
 eqTypeInfo _ _ = False
 
-getObjectInfo :: Type k -> Maybe (Definition ObjectInfo)
-getObjectInfo = traverse getTI . (^. definitionLens)
-  where
-    getTI :: TypeInfo k -> Maybe ObjectInfo
-    getTI (TIObject oi) = Just oi
-    getTI _ = Nothing
+getTypeInfo :: Type k -> Definition (TypeInfo k)
+getTypeInfo t = case discardNullability t of
+  TNamed d -> d
+  TList t' -> getTypeInfo t'
 
-getInterfaceInfo :: Type 'Output -> Maybe (Definition InterfaceInfo)
-getInterfaceInfo = traverse getTI . (^. definitionLens)
-  where
-    getTI :: TypeInfo 'Output -> Maybe InterfaceInfo
-    getTI (TIInterface ii) = Just ii
-    getTI _ = Nothing
+getObjectInfo :: Type k -> Maybe (Definition ObjectInfo)
+getObjectInfo t = case getTypeInfo t of
+  d@Definition {dInfo = TIObject oi} -> Just d {dInfo = oi}
+  _ -> Nothing
+
+getInterfaceInfo :: Type k -> Maybe (Definition InterfaceInfo)
+getInterfaceInfo t = case getTypeInfo t of
+  d@Definition {dInfo = TIInterface ii} -> Just d {dInfo = ii}
+  _ -> Nothing
 
 data SomeTypeInfo = forall k. SomeTypeInfo (TypeInfo k)
 
 instance Eq SomeTypeInfo where
   SomeTypeInfo a == SomeTypeInfo b = eqTypeInfo a b
 
-type family DefinitionName a where
-  DefinitionName (TypeInfo k) = Typename
-  DefinitionName SomeTypeInfo = Typename
-  DefinitionName InterfaceInfo = Typename
-  DefinitionName ObjectInfo = Typename
-  DefinitionName InputFieldInfo = Name
-  DefinitionName FieldInfo = Name
-  DefinitionName EnumValueInfo = Name
-
 data Definition a = Definition
   { dName :: Name,
-    -- | A unique identifier used to break cycles in mutually-recursive type
-    -- definitions. If two 'Definition's have the same 'Unique', they can be
-    -- assumed to be identical. Note that the inverse is /not/ true: two
-    -- definitions with different 'Unique's might still be otherwise identical.
-    --
-    -- Also see Note [Tying the knot] in Hasura.GraphQL.Parser.Class.
-    dUnique :: Maybe Unique,
     dDescription :: Maybe Description,
     -- | Lazy to allow mutually-recursive type definitions.
     dInfo :: ~a
@@ -594,38 +562,18 @@ instance Hashable a => Hashable (Definition a) where
   hashWithSalt salt Definition {..} =
     salt `hashWithSalt` dName `hashWithSalt` dInfo
 
-mkDefinition :: HasName (DefinitionName a) => DefinitionName a -> Maybe Description -> a -> Definition a
-mkDefinition name description info = Definition (getName name) Nothing description info
-
 instance Eq a => Eq (Definition a) where
   (==) = eq1
 
 instance Eq1 Definition where
   liftEq
     eq
-    (Definition name1 maybeUnique1 _ info1)
-    (Definition name2 maybeUnique2 _ info2)
-      | Just unique1 <- maybeUnique1,
-        Just unique2 <- maybeUnique2,
-        unique1 == unique2 =
-        True
-      | otherwise =
-        name1 == name2 && eq info1 info2
+    (Definition name1 _ info1)
+    (Definition name2 _ info2) =
+      name1 == name2 && eq info1 info2
 
 instance HasName (Definition a) where
   getName = dName
-
-class HasDefinition s a | s -> a where
-  definitionLens :: Lens' s (Definition a)
-
-instance HasDefinition (Definition a) a where
-  definitionLens = id
-
--- | Adds a 'Unique' to a 'Definition' that does not yet have one. If the
--- definition already has a 'Unique', the existing 'Unique' is kept.
-addDefinitionUnique :: HasDefinition s a => Unique -> s -> s
-addDefinitionUnique unique = over definitionLens \definition ->
-  definition {dUnique = dUnique definition <|> Just unique}
 
 -- | Enum values have no extra information except for the information common to
 -- all definitions, so this is just a placeholder for use as @'Definition'

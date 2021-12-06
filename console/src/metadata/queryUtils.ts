@@ -433,7 +433,8 @@ export const resetMetadataQuery = {
 export const generateCreateEventTriggerQuery = (
   state: LocalEventTriggerState,
   source: string,
-  replace = false
+  replace = false,
+  requestTransform?: RequestTransform
 ) =>
   getMetadataQuery('create_event_trigger', source, {
     name: state.name.trim(),
@@ -449,9 +450,9 @@ export const generateCreateEventTriggerQuery = (
       : null,
     update: state.operations.update
       ? {
-          columns: state.operationColumns
-            .filter(c => !!c.enabled)
-            .map(c => c.name),
+          columns: state.isAllColumnChecked
+            ? '*'
+            : state.operationColumns.filter(c => !!c.enabled).map(c => c.name),
         }
       : null,
     delete: state.operations.delete
@@ -463,6 +464,7 @@ export const generateCreateEventTriggerQuery = (
     retry_conf: state.retryConf,
     headers: transformHeaders(state.headers),
     replace,
+    request_transform: requestTransform,
   });
 
 export const getDropEventTriggerQuery = (name: string, source: string) => ({

@@ -143,8 +143,9 @@ import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.ComputedField
 import Hasura.RQL.Types.Function
 import Hasura.RQL.Types.Instances ()
-import Hasura.RQL.Types.Relationship
-import Hasura.RQL.Types.RemoteRelationship
+import Hasura.RQL.Types.Relationships.FromSource
+import Hasura.RQL.Types.Relationships.Local
+import Hasura.RQL.Types.Relationships.ToSchema
 import Hasura.RQL.Types.RemoteSchema
 import Hasura.RQL.Types.ResultCustomization
 import Hasura.SQL.AnyBackend qualified as AB

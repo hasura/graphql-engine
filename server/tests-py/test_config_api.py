@@ -57,7 +57,7 @@ class TestConfigAPI():
                     assert body['jwt']['claims_namespace'] == claims_namespace
                     assert body['jwt']['claims_format'] == claims_format
         else:
-            assert body['jwt'] == None
+            assert body['jwt'] == []
 
         # test if the request fails without auth headers if admin secret is set
         if admin_secret is not None:

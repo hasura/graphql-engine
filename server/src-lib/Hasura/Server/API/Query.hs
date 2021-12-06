@@ -8,7 +8,6 @@ module Hasura.Server.API.Query
 where
 
 import Control.Monad.Trans.Control (MonadBaseControl)
-import Control.Monad.Unique
 import Data.Aeson
 import Data.Aeson.Casing
 import Data.Aeson.TH
@@ -66,9 +65,9 @@ data RQLQueryV1
   | -- computed fields related
     RQAddComputedField !(AddComputedField ('Postgres 'Vanilla))
   | RQDropComputedField !(DropComputedField ('Postgres 'Vanilla))
-  | RQCreateRemoteRelationship !(RemoteRelationship ('Postgres 'Vanilla))
-  | RQUpdateRemoteRelationship !(RemoteRelationship ('Postgres 'Vanilla))
-  | RQDeleteRemoteRelationship !(DeleteRemoteRelationship ('Postgres 'Vanilla))
+  | RQCreateRemoteRelationship !(CreateFromSourceRelationship ('Postgres 'Vanilla))
+  | RQUpdateRemoteRelationship !(CreateFromSourceRelationship ('Postgres 'Vanilla))
+  | RQDeleteRemoteRelationship !(DeleteFromSourceRelationship ('Postgres 'Vanilla))
   | RQCreateInsertPermission !(CreatePerm InsPerm ('Postgres 'Vanilla))
   | RQCreateSelectPermission !(CreatePerm SelPerm ('Postgres 'Vanilla))
   | RQCreateUpdatePermission !(CreatePerm UpdPerm ('Postgres 'Vanilla))
@@ -288,7 +287,6 @@ runQueryM ::
     UserInfoM m,
     MonadBaseControl IO m,
     MonadIO m,
-    MonadUnique m,
     HasHttpManagerM m,
     HasServerConfigCtx m,
     Tracing.MonadTrace m,

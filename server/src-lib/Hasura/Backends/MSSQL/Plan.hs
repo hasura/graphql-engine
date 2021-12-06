@@ -26,7 +26,7 @@ import Data.Text qualified as T
 import Data.Text.Extended
 import Database.ODBC.SQLServer qualified as ODBC
 import Hasura.Backends.MSSQL.FromIr
-import Hasura.Backends.MSSQL.Types
+import Hasura.Backends.MSSQL.Types.Internal
 import Hasura.Base.Error
 import Hasura.GraphQL.Parser qualified as GraphQL
 import Hasura.Prelude hiding (first)

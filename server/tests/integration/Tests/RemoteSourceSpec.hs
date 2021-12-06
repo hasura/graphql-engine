@@ -14,35 +14,12 @@ import Data.Text qualified as T
 import Data.Text.NonEmpty (mkNonEmptyTextUnsafe)
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
-  ( BoolExp (..),
-    ColExp (..),
-    GBoolExp (BoolFld),
-    gBoolExpTrue,
-  )
 import Hasura.RQL.Types.Backend (Backend (..))
 import Hasura.RQL.Types.Common
-  ( FieldName (..),
-    RelType (ArrRel, ObjRel),
-    SourceName (..),
-  )
 import Hasura.RQL.Types.Metadata
-  ( Metadata (..),
-    RemoteRelationshipMetadata (..),
-    SourceMetadata (..),
-    TableMetadata (..),
-    emptyMetadata,
-    mkTableMeta,
-  )
 import Hasura.RQL.Types.Permission
-  ( PermColSpec (..),
-    PermDef (..),
-    SelPerm (..),
-  )
-import Hasura.RQL.Types.RemoteRelationship
-  ( RemoteRelationshipDef (..),
-    RemoteRelationshipName (..),
-    RemoteSourceRelationshipDef (..),
-  )
+import Hasura.RQL.Types.Relationships.Remote
+import Hasura.RQL.Types.Relationships.ToSource
 import Hasura.RQL.Types.SourceCustomization (emptySourceCustomization)
 import Hasura.RQL.Types.Table (emptyTableConfig)
 import Hasura.SQL.AnyBackend (mkAnyBackend)
@@ -1409,7 +1386,7 @@ albumsTable :: forall b. (Backend b) => RemoteSourceSql b -> TableMetadata b
 albumsTable sqlConfig =
   baseTable
     { _tmRemoteRelationships =
-        let withName = _rrmName &&& id
+        let withName = _rrName &&& id
          in OM.fromList $
               map
                 withName
@@ -1435,94 +1412,94 @@ albumsTable sqlConfig =
     baseTable = mkTableMeta (albumsTableName sqlConfig) False emptyTableConfig
 
     -- A self-relationship
-    albumsRemoteRel :: RemoteRelationshipMetadata
+    albumsRemoteRel :: RemoteRelationship
     albumsRemoteRel =
-      RemoteRelationshipMetadata
-        { _rrmName = RemoteRelationshipName $ mkNonEmptyTextUnsafe albums,
-          _rrmDefinition =
-            RemoteSourceRelDef $
-              RemoteSourceRelationshipDef
-                { _rsrRelationshipType = ObjRel,
-                  _rsrFieldMapping =
+      RemoteRelationship
+        { _rrName = RelName $ mkNonEmptyTextUnsafe albums,
+          _rrDefinition =
+            RelationshipToSource $
+              ToSourceRelationshipDef
+                { _tsrdRelationshipType = ObjRel,
+                  _tsrdFieldMapping =
                     HM.singleton (FieldName id_) (FieldName id_),
-                  _rsrSource = albumsSourceName,
-                  _rsrTable = toJSON (albumsTableName sqlConfig)
+                  _tsrdSource = albumsSourceName,
+                  _tsrdTable = toJSON (albumsTableName sqlConfig)
                 }
         }
 
     -- A basic object relationship
-    artistsRemoteRel :: RemoteRelationshipMetadata
+    artistsRemoteRel :: RemoteRelationship
     artistsRemoteRel =
-      RemoteRelationshipMetadata
-        { _rrmName = RemoteRelationshipName $ mkNonEmptyTextUnsafe artists,
-          _rrmDefinition =
-            RemoteSourceRelDef $
-              RemoteSourceRelationshipDef
-                { _rsrRelationshipType = ObjRel,
-                  _rsrFieldMapping =
+      RemoteRelationship
+        { _rrName = RelName $ mkNonEmptyTextUnsafe artists,
+          _rrDefinition =
+            RelationshipToSource $
+              ToSourceRelationshipDef
+                { _tsrdRelationshipType = ObjRel,
+                  _tsrdFieldMapping =
                     HM.singleton (FieldName artist_id) (FieldName id_),
-                  _rsrSource = artistsSourceName,
-                  _rsrTable = toJSON (artistsTableName sqlConfig)
+                  _tsrdSource = artistsSourceName,
+                  _tsrdTable = toJSON (artistsTableName sqlConfig)
                 }
         }
 
     -- An object relationship where some join columns are null
-    artistsNullRemoteRel :: RemoteRelationshipMetadata
+    artistsNullRemoteRel :: RemoteRelationship
     artistsNullRemoteRel =
-      RemoteRelationshipMetadata
-        { _rrmName =
-            RemoteRelationshipName $ mkNonEmptyTextUnsafe "artists_null",
-          _rrmDefinition =
-            RemoteSourceRelDef $
-              RemoteSourceRelationshipDef
-                { _rsrRelationshipType = ObjRel,
-                  _rsrFieldMapping =
+      RemoteRelationship
+        { _rrName =
+            RelName $ mkNonEmptyTextUnsafe "artists_null",
+          _rrDefinition =
+            RelationshipToSource $
+              ToSourceRelationshipDef
+                { _tsrdRelationshipType = ObjRel,
+                  _tsrdFieldMapping =
                     HM.fromList
                       [ (FieldName artist_id, FieldName id_),
                         (FieldName artist_id, FieldName id_null)
                       ],
-                  _rsrSource = artistsSourceName,
-                  _rsrTable = toJSON (artistsTableName sqlConfig)
+                  _tsrdSource = artistsSourceName,
+                  _tsrdTable = toJSON (artistsTableName sqlConfig)
                 }
         }
 
     -- An object relationship that joins over two fields
-    favouriteOfRemoteRel :: RemoteRelationshipMetadata
+    favouriteOfRemoteRel :: RemoteRelationship
     favouriteOfRemoteRel =
-      RemoteRelationshipMetadata
-        { _rrmName =
-            RemoteRelationshipName $ mkNonEmptyTextUnsafe "favouriteOf",
-          _rrmDefinition =
-            RemoteSourceRelDef $
-              RemoteSourceRelationshipDef
-                { _rsrRelationshipType = ObjRel,
-                  _rsrFieldMapping =
+      RemoteRelationship
+        { _rrName =
+            RelName $ mkNonEmptyTextUnsafe "favouriteOf",
+          _rrDefinition =
+            RelationshipToSource $
+              ToSourceRelationshipDef
+                { _tsrdRelationshipType = ObjRel,
+                  _tsrdFieldMapping =
                     HM.fromList
                       [ (FieldName artist_id, FieldName id_),
                         (FieldName title, FieldName fav_album)
                       ],
-                  _rsrSource = artistsSourceName,
-                  _rsrTable = toJSON (artistsTableName sqlConfig)
+                  _tsrdSource = artistsSourceName,
+                  _tsrdTable = toJSON (artistsTableName sqlConfig)
                 }
         }
 
     -- An object relationship where some "source" rows are joined with more
     -- than one "target" row
-    ambiguousArtistRemoteRel :: RemoteRelationshipMetadata
+    ambiguousArtistRemoteRel :: RemoteRelationship
     ambiguousArtistRemoteRel =
-      RemoteRelationshipMetadata
-        { _rrmName =
-            RemoteRelationshipName $ mkNonEmptyTextUnsafe "ambiguous_artist",
-          _rrmDefinition =
-            RemoteSourceRelDef $
-              RemoteSourceRelationshipDef
-                { _rsrRelationshipType = ObjRel,
-                  _rsrFieldMapping =
+      RemoteRelationship
+        { _rrName =
+            RelName $ mkNonEmptyTextUnsafe "ambiguous_artist",
+          _rrDefinition =
+            RelationshipToSource $
+              ToSourceRelationshipDef
+                { _tsrdRelationshipType = ObjRel,
+                  _tsrdFieldMapping =
                     HM.fromList
                       [ (FieldName artist_name, FieldName name)
                       ],
-                  _rsrSource = artistsSourceName,
-                  _rsrTable = toJSON (artistsTableName sqlConfig)
+                  _tsrdSource = artistsSourceName,
+                  _tsrdTable = toJSON (artistsTableName sqlConfig)
                 }
         }
 
@@ -1562,22 +1539,22 @@ albumsTable sqlConfig =
 
     -- An object relationship that attempts join incompatible columns. We
     -- expect a runtime error.
-    artistsIncompatibleColumnsRemoteRel :: RemoteRelationshipMetadata
+    artistsIncompatibleColumnsRemoteRel :: RemoteRelationship
     artistsIncompatibleColumnsRemoteRel =
-      RemoteRelationshipMetadata
-        { _rrmName =
-            RemoteRelationshipName $
+      RemoteRelationship
+        { _rrName =
+            RelName $
               mkNonEmptyTextUnsafe "artists_incompatible_columns",
-          _rrmDefinition =
-            RemoteSourceRelDef $
-              RemoteSourceRelationshipDef
-                { _rsrRelationshipType = ObjRel,
-                  _rsrFieldMapping =
+          _rrDefinition =
+            RelationshipToSource $
+              ToSourceRelationshipDef
+                { _tsrdRelationshipType = ObjRel,
+                  _tsrdFieldMapping =
                     HM.fromList
                       [ (FieldName id_, FieldName name)
                       ],
-                  _rsrSource = artistsSourceName,
-                  _rsrTable = toJSON (artistsTableName sqlConfig)
+                  _tsrdSource = artistsSourceName,
+                  _tsrdTable = toJSON (artistsTableName sqlConfig)
                 }
         }
 
@@ -1633,7 +1610,7 @@ artistsTable :: forall b. (Backend b) => RemoteSourceSql b -> TableMetadata b
 artistsTable sqlConfig =
   baseTable
     { _tmRemoteRelationships =
-        let withName = _rrmName &&& id
+        let withName = _rrName &&& id
          in OM.fromList $
               map
                 withName
@@ -1656,57 +1633,57 @@ artistsTable sqlConfig =
     baseTable = mkTableMeta (artistsTableName sqlConfig) False emptyTableConfig
 
     -- A basic array relationship
-    albumsRemoteRel :: RemoteRelationshipMetadata
+    albumsRemoteRel :: RemoteRelationship
     albumsRemoteRel =
-      RemoteRelationshipMetadata
-        { _rrmName = RemoteRelationshipName $ mkNonEmptyTextUnsafe albums,
-          _rrmDefinition =
-            RemoteSourceRelDef $
-              RemoteSourceRelationshipDef
-                { _rsrRelationshipType = ArrRel,
-                  _rsrFieldMapping =
+      RemoteRelationship
+        { _rrName = RelName $ mkNonEmptyTextUnsafe albums,
+          _rrDefinition =
+            RelationshipToSource $
+              ToSourceRelationshipDef
+                { _tsrdRelationshipType = ArrRel,
+                  _tsrdFieldMapping =
                     HM.singleton (FieldName id_) (FieldName artist_id),
-                  _rsrSource = albumsSourceName,
-                  _rsrTable = toJSON (albumsTableName sqlConfig)
+                  _tsrdSource = albumsSourceName,
+                  _tsrdTable = toJSON (albumsTableName sqlConfig)
                 }
         }
 
     -- An array relationship where some join columns are null
-    albumsNullRemoteRel :: RemoteRelationshipMetadata
+    albumsNullRemoteRel :: RemoteRelationship
     albumsNullRemoteRel =
-      RemoteRelationshipMetadata
-        { _rrmName =
-            RemoteRelationshipName $ mkNonEmptyTextUnsafe "albums_null",
-          _rrmDefinition =
-            RemoteSourceRelDef $
-              RemoteSourceRelationshipDef
-                { _rsrRelationshipType = ArrRel,
-                  _rsrFieldMapping =
+      RemoteRelationship
+        { _rrName =
+            RelName $ mkNonEmptyTextUnsafe "albums_null",
+          _rrDefinition =
+            RelationshipToSource $
+              ToSourceRelationshipDef
+                { _tsrdRelationshipType = ArrRel,
+                  _tsrdFieldMapping =
                     HM.fromList
                       [ (FieldName id_, FieldName artist_id),
                         (FieldName id_, FieldName artist_id_null)
                       ],
-                  _rsrSource = albumsSourceName,
-                  _rsrTable = toJSON (albumsTableName sqlConfig)
+                  _tsrdSource = albumsSourceName,
+                  _tsrdTable = toJSON (albumsTableName sqlConfig)
                 }
         }
 
     -- An array relationship that joins over two fields
-    favAlbumsRemoteRel :: RemoteRelationshipMetadata
+    favAlbumsRemoteRel :: RemoteRelationship
     favAlbumsRemoteRel =
-      RemoteRelationshipMetadata
-        { _rrmName = RemoteRelationshipName $ mkNonEmptyTextUnsafe "favAlbums",
-          _rrmDefinition =
-            RemoteSourceRelDef $
-              RemoteSourceRelationshipDef
-                { _rsrRelationshipType = ArrRel,
-                  _rsrFieldMapping =
+      RemoteRelationship
+        { _rrName = RelName $ mkNonEmptyTextUnsafe "favAlbums",
+          _rrDefinition =
+            RelationshipToSource $
+              ToSourceRelationshipDef
+                { _tsrdRelationshipType = ArrRel,
+                  _tsrdFieldMapping =
                     HM.fromList
                       [ (FieldName id_, FieldName artist_id),
                         (FieldName fav_album, FieldName title)
                       ],
-                  _rsrSource = albumsSourceName,
-                  _rsrTable = toJSON (albumsTableName sqlConfig)
+                  _tsrdSource = albumsSourceName,
+                  _tsrdTable = toJSON (albumsTableName sqlConfig)
                 }
         }
 

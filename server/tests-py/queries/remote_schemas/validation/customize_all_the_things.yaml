@@ -69,11 +69,11 @@
         }
       }
   response:
-    errors:
-    - extensions:
-        path: $.selectionSet.star_wars.selectionSet.super_hero.selectionSet
-        code: validation-failed
-      message: Type "Droid" is not a subtype of "FooCharacter_x"
+    data:
+      star_wars:
+        super_hero:
+          ident: '1'
+          foo_name_f: R2-D2
 
 - description: query with fragment
   url: /v1/graphql
@@ -123,27 +123,27 @@
           ident: "1"
           foo_name_f: R2-D2
 
-# - description: query with variable with wrong type name
-#   url: /v1/graphql
-#   status: 200
-#   query:
-#     query: |
-#       query Hero($ep: Int!) {
-#         star_wars {
-#           super_hero(episode: $ep) {
-#             ident
-#             foo_name_f
-#           }
-#         }
-#       }
-#     variables:
-#       ep: 4
-#   response:
-#     errors:
-#     - extensions:
-#         path: $.selectionSet.star_wars.selectionSet.super_hero.args.episode
-#         code: validation-failed
-#       message: variable "ep" is declared as Int!, but used where MyInt! is expected
+- description: query with variable with wrong type name
+  url: /v1/graphql
+  status: 200
+  query:
+    query: |
+      query Hero($ep: Int!) {
+        star_wars {
+          super_hero(episode: $ep) {
+            ident
+            foo_name_f
+          }
+        }
+      }
+    variables:
+      ep: 4
+  response:
+    errors:
+    - extensions:
+        path: $.selectionSet.star_wars.selectionSet.super_hero.args.episode
+        code: validation-failed
+      message: variable "ep" is declared as Int!, but used where MyInt! is expected
 
 - description: query with __type introspection
   url: /v1/graphql
@@ -334,7 +334,7 @@
       - extensions:
           path: $.selectionSet.star_wars.selectionSet.super_hero.selectionSet.id
           code: validation-failed
-        message: "field \"id\" not found in type: 'FooCharacter_x'"
+        message: "field \"id\" not found in type: 'FooHuman_x'"
 
 - description: query aliases
   url: /v1/graphql
