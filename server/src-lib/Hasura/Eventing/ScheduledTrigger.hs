@@ -114,6 +114,7 @@ where
 import Control.Arrow.Extended (dup)
 import Control.Concurrent.Extended (Forever (..), sleep)
 import Control.Concurrent.STM
+import Control.Lens (view)
 import Data.Aeson qualified as J
 import Data.Environment qualified as Env
 import Data.Has
@@ -338,17 +339,6 @@ processScheduledTriggers env logger logBehavior httpMgr getSC LockedEventsCtx {.
   where
     logInternalError err = liftIO . L.unLogger logger $ ScheduledTriggerInternalErr err
 
-pattern HttpErr :: e -> Either e (Either e' a)
-pattern HttpErr e = Left e
-
-pattern TransErr :: e' -> Either e (Either e' a)
-pattern TransErr e = Right (Left e)
-
-pattern Resp :: a -> Either e (Either e' a)
-pattern Resp a = Right (Right a)
-
-{-# COMPLETE HttpErr, TransErr, Resp #-}
-
 processScheduledEvent ::
   ( MonadReader r m,
     Has HTTP.Manager r,
@@ -383,18 +373,19 @@ processScheduledEvent logBehavior eventId eventHeaders retryCtx payload webhookU
             extraLogCtx = ExtraLogContext eventId (sewpName payload)
             webhookReqBodyJson = J.toJSON payload
             webhookReqBody = J.encode webhookReqBodyJson
-        eitherRes <-
+        eitherReqRes <-
           runExceptT $
-            mkRequest headers httpTimeout webhookReqBody Nothing webhookUrl >>= \case
-              Left err -> pure $ Left err
-              Right reqDetails -> do
-                let logger e d = logHTTPForST e extraLogCtx d logBehavior
-                resp <- hoistEither =<< lift (invokeRequest reqDetails logger)
-                pure $ Right resp
-        case eitherRes of
-          Resp r -> processSuccess eventId decodedHeaders type' webhookReqBodyJson r
-          HttpErr e -> processError eventId retryCtx decodedHeaders type' webhookReqBodyJson e
-          TransErr e -> do
+            mkRequest headers httpTimeout webhookReqBody Nothing webhookUrl >>= \reqDetails -> do
+              let request = extractRequest reqDetails
+                  logger e d = logHTTPForST e extraLogCtx d logBehavior
+              resp <- invokeRequest reqDetails logger
+              pure (request, resp)
+        case eitherReqRes of
+          Right (req, resp) ->
+            let reqBody = fromMaybe J.Null $ view HTTP.body req >>= J.decode @J.Value
+             in processSuccess eventId decodedHeaders type' reqBody resp
+          Left (HTTPError reqBody e) -> processError eventId retryCtx decodedHeaders type' reqBody e
+          Left (TransformationError _ e) -> do
             -- Log The Transformation Error
             logger :: L.Logger L.Hasura <- asks getter
             L.unLogger logger $ L.UnstructuredLog L.LevelError (TBS.fromLBS $ J.encode e)
