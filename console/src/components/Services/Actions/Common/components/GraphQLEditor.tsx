@@ -59,7 +59,7 @@ const GraphQLEditor: React.FC<GraphQLEditorProps> = ({
       } catch (err) {
         timerError = err;
       }
-      onChange(null, timerError, null, ast);
+      onChange(null, timerError as GraphQLError, null, ast);
     }, 1000);
 
     onChange(val, null, parseDebounceTimer, null);
