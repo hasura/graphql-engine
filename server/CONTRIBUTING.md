@@ -116,19 +116,20 @@ This will launch a server on port 8080, and it will serve the console assets if 
 
 #### Test
 
-`graphql-engine` has two test suites:
+`graphql-engine` has several test suites, among them:
 
-  1. A small set of unit tests and integration tests written in Haskell.
+  1. A small set of unit tests and integration tests written in Haskell, in `server/src-test`.
 
-  2. An extensive set of end-to-end tests written in Python.
+  2. An extensive set of end-to-end tests written in Python, in `server/tests-py`.
 
 Both sets of tests require a running Postgres database.
 
 ##### Running the Haskell test suite
 
 ```
-cabal new-run -- test:graphql-engine-tests \
-  --database-url='postgres://<user>:<password>@<host>:<port>/<dbname>'
+cabal new-run -- test:graphql-engine-tests unit
+HASURA_GRAPHQL_DATABASE_URL='postgres://<user>:<password>@<host>:<port>/<dbname>' \
+    cabal new-run -- test:graphql-engine-tests postgres
 ```
 
 ##### Running the Python test suite

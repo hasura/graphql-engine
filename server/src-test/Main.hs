@@ -55,27 +55,27 @@ import Test.Hspec.Runner qualified as Hspec
 data TestSuites
   = -- | Run all test suites. It probably doesn't make sense to be able to specify additional
     -- hspec args here.
-    AllSuites !(Maybe URLTemplate) !(Maybe URLTemplate)
+    AllSuites
   | -- | Args to pass through to hspec (as if from 'getArgs'), and the specific suite to run.
     SingleSuite ![String] !TestSuite
 
 data TestSuite
   = UnitSuite
-  | PostgresSuite !(Maybe URLTemplate)
-  | MSSQLSuite !(Maybe URLTemplate)
+  | PostgresSuite
+  | MSSQLSuite
 
 main :: IO ()
 main =
   parseArgs >>= \case
-    AllSuites pgConnOptions mssqlConnOptions -> do
-      postgresSpecs <- buildPostgresSpecs pgConnOptions
-      mssqlSpecs <- buildMSSQLSpecs mssqlConnOptions
+    AllSuites -> do
+      postgresSpecs <- buildPostgresSpecs
+      mssqlSpecs <- buildMSSQLSpecs
       runHspec [] (unitSpecs *> postgresSpecs *> mssqlSpecs)
     SingleSuite hspecArgs suite ->
       runHspec hspecArgs =<< case suite of
         UnitSuite -> pure unitSpecs
-        PostgresSuite pgConnOptions -> buildPostgresSpecs pgConnOptions
-        MSSQLSuite mssqlConnOptions -> buildMSSQLSpecs mssqlConnOptions
+        PostgresSuite -> buildPostgresSpecs
+        MSSQLSuite -> buildMSSQLSpecs
 
 unitSpecs :: Spec
 unitSpecs = do
@@ -98,43 +98,38 @@ unitSpecs = do
   describe "Hasura.RQL.RequestTransformSpec" RequestTransformSpec.spec
   describe "Network.HTTP.Client.TransformableSpec" TransformableSpec.spec
 
-buildMSSQLSpecs :: Maybe URLTemplate -> IO Spec
-buildMSSQLSpecs maybeUrlTemplate = do
+buildMSSQLSpecs :: IO Spec
+buildMSSQLSpecs = do
   env <- liftIO getEnvironment
-  let envMap = Env.mkEnvironment env
-
-  urlTemplate <- flip onLeft printErrExit $
+  connStr <- flip onLeft printErrExit $
     runWithEnv env $ do
       let envVar = fst mssqlConnectionString
-      maybeV <- withEnv maybeUrlTemplate envVar
+      maybeV <- considerEnv envVar
       onNothing maybeV $
         throwError $
           "Expected: " <> envVar
-  connStr <- flip onLeft printErrExit $ renderURLTemplate envMap urlTemplate
   pure $ describe "Database.MSSQL.TransactionSpec" $ TransactionSpec.spec connStr
 
 mssqlConnectionString :: (String, String)
 mssqlConnectionString =
   ( "HASURA_MSSQL_CONN_STR",
-    "SQL Server database connection string. Example DRIVER={ODBC Driver 17 for SQL Server};SERVER=$IP_ADDRESS,$PORT;Uid=$USER;Pwd=$PASSWORD;"
+    "SQL Server database connection string. Example DRIVER={ODBC Driver 17 for SQL Server};SERVER=localhost,1433;Uid=user;Pwd=pass;"
   )
 
-buildPostgresSpecs :: Maybe URLTemplate -> IO Spec
-buildPostgresSpecs maybeUrlTemplate = do
+buildPostgresSpecs :: IO Spec
+buildPostgresSpecs = do
   env <- getEnvironment
   let envMap = Env.mkEnvironment env
 
-  pgUrlTemplate <- flip onLeft printErrExit $
+  pgUrlText <- flip onLeft printErrExit $
     runWithEnv env $ do
       let envVar = fst databaseUrlEnv
-      maybeV <- withEnv maybeUrlTemplate envVar
+      maybeV <- considerEnv envVar
       onNothing maybeV $
-        throwError $
-          "Expected: --database-url or " <> envVar
+        throwError $ "Expected: " <> envVar
 
-  pgUrlText <- flip onLeft printErrExit $ renderURLTemplate envMap pgUrlTemplate
   let pgConnInfo = Q.ConnInfo 1 $ Q.CDDatabaseURI $ txtToBs pgUrlText
-      urlConf = UrlValue $ InputWebhook pgUrlTemplate
+      urlConf = UrlValue $ InputWebhook $ mkPlainURLTemplate pgUrlText
       sourceConnInfo =
         PostgresSourceConnInfo urlConf (Just setPostgresPoolSettings) True Q.ReadCommitted Nothing
       sourceConfig = PostgresConnConfiguration sourceConnInfo Nothing
@@ -186,9 +181,7 @@ parseArgs =
     info (helper <*> (parseNoCommand <|> parseSubCommand)) $
       fullDesc <> header "Hasura GraphQL Engine test suite"
   where
-    parseDbUrlTemplate =
-      parseDatabaseUrl <|> (fmap rawConnDetailsToUrl <$> parseRawConnDetails)
-    parseNoCommand = AllSuites <$> parseDbUrlTemplate <*> parseDbUrlTemplate
+    parseNoCommand = pure AllSuites
     parseSubCommand = SingleSuite <$> parseHspecPassThroughArgs <*> subCmd
       where
         subCmd =
@@ -198,10 +191,10 @@ parseArgs =
                   info (pure UnitSuite) $
                     progDesc "Only run unit tests",
                 command "postgres" $
-                  info (helper <*> (PostgresSuite <$> parseDbUrlTemplate)) $
+                  info (pure PostgresSuite) $
                     progDesc "Only run Postgres integration tests",
                 command "mssql" $
-                  info (helper <*> (MSSQLSuite <$> parseDbUrlTemplate)) $
+                  info (pure MSSQLSuite) $
                     progDesc "Only run SQL Server unit tests"
               ]
         -- Add additional arguments and tweak as needed:
