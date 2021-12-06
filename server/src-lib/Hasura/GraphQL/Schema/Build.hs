@@ -63,9 +63,9 @@ import Hasura.GraphQL.Schema.Select
 import Hasura.Prelude
 import Hasura.RQL.IR
 import Hasura.RQL.Types
+import Hasura.RQL.Types.Common qualified as RQL
 import Hasura.SQL.AnyBackend qualified as AB
 import Language.GraphQL.Draft.Syntax qualified as G
-import qualified Hasura.RQL.Types.Common as RQL
 
 buildTableQueryFields ::
   forall b r m n.

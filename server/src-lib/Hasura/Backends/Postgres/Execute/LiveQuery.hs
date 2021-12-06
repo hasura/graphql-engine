@@ -195,7 +195,7 @@ mkStreamingMultiplexedQuery (fieldAlias, resolvedAST) =
         { S.selExtr = [(S.Extractor rootFieldJsonAggregate (Just . S.Alias $ Identifier "root")), cursorExtractor],
           S.selFrom =
             Just . S.FromExp $
-                pure $ toSQLFromItem (S.Alias $ aliasToIdentifier fieldAlias) resolvedAST
+              pure $ toSQLFromItem (S.Alias $ aliasToIdentifier fieldAlias) resolvedAST
         }
 
     -- json_build_object('field1', field1.root, 'field2', field2.root, ...)

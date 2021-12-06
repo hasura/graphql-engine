@@ -17,7 +17,6 @@ module Hasura.GraphQL.Execute.LiveQuery.Poll
 
     -- * Cohorts
     Cohort (..),
-    CohortSubscriptionType (..),
     CohortId,
     newCohortId,
     CohortVariables,
@@ -40,7 +39,6 @@ module Hasura.GraphQL.Execute.LiveQuery.Poll
 
     -- * Batch
     BatchId (..),
-
   )
 where
 
@@ -133,9 +131,6 @@ type SubscriberMap = TMap.TMap SubscriberId Subscriber
 -- -------------------------------------------------------------------------------------------------
 -- Cohorts
 
-data CohortSubscriptionType =
-  CohortLivequery | CohortStreaming !(STM.TVar CursorVariableValues)
-
 -- | A batched group of 'Subscriber's who are not only listening to the same query but also have
 -- identical session and query variables. Each result pushed to a 'Cohort' is forwarded along to
 -- each of its 'Subscriber's.
@@ -156,8 +151,9 @@ data Cohort streamCursorVars = Cohort
     -- | subscribers we haven’t yet pushed any results to; we push results to them regardless if the
     -- result changed, then merge them in the map of existing subscribers
     _cNewSubscribers :: !SubscriberMap,
-    -- | When the
-    _cSubscriptionType :: !streamCursorVars
+    -- | a mutable type which holds the latest value of the subscription stream cursor. In case
+    --   of live query subscription, this field can be ignored by setting `streamCursorVars` to `()`
+    _cStreamVariables :: !streamCursorVars
   }
 
 -- | The @BatchId@ is a number based ID to uniquely identify a batch in a single poll and
@@ -531,7 +527,7 @@ pollQuery pollerId lqOpts (sourceName, sourceConfig) roleName parameterizedQuery
       (pushTime, cohortsExecutionDetails) <- withElapsedTime $
         A.forConcurrently operations $ \(res, cohortId, respData, snapshot) -> do
           (pushedSubscribers, ignoredSubscribers) <-
-              pushResultToCohort res (fst <$> respData) lqMeta snapshot
+            pushResultToCohort res (fst <$> respData) lqMeta snapshot
           pure
             CohortExecutionDetails
               { _cedCohortId = cohortId,
@@ -667,22 +663,23 @@ pollStreamingQuery pollerId lqOpts (sourceName, sourceConfig) roleName parameter
             _pdRole = roleName,
             _pdParameterizedQueryHash = parameterizedQueryHash
           }
+  cohortsWithUpdatedCohortKeys <- do
+    cohortsList <- STM.atomically $ TMap.toList cohortMap
+    for cohortsList $ \(cohortKey, cohort) -> do
+      CursorVariableValues vals <- STM.readTVarIO $ _cStreamVariables cohort
+      pure (modifyCursorCohortVariables (mkUnsafeValidateVariables vals) cohortKey, cohort)
+  STM.atomically $ TMap.swap cohortMap $ Map.fromList cohortsWithUpdatedCohortKeys
   postPollHook pollDetails
   where
     LiveQueriesOptions batchSize _ = lqOpts
 
-    getCohortSnapshot (cohortVars, handlerC :: Cohort (STM.TVar CursorVariableValues)) = do
+    getCohortSnapshot (cohortVars, handlerC) = do
       let Cohort resId respRef curOpsTV newOpsTV latestCursorValsTVar = handlerC
       curOpsL <- TMap.toList curOpsTV
       newOpsL <- TMap.toList newOpsTV
       forM_ newOpsL $ \(k, action) -> TMap.insert action k curOpsTV
       TMap.reset newOpsTV
-
-      currentCohortVars <- do
-        CursorVariableValues latestCursorVals' <- STM.readTVar latestCursorValsTVar
-        let unsafeValidatedVariable = mkUnsafeValidateVariables latestCursorVals'
-        pure $ modifyCursorCohortVariables unsafeValidatedVariable cohortVars
-      let cohortSnapshot = CohortSnapshot currentCohortVars respRef (map snd curOpsL) (map snd newOpsL) latestCursorValsTVar
+      let cohortSnapshot = CohortSnapshot cohortVars respRef (map snd curOpsL) (map snd newOpsL) latestCursorValsTVar
       return (resId, cohortSnapshot)
 
     getCohortOperations cohorts = \case
@@ -699,5 +696,5 @@ pollStreamingQuery pollerId lqOpts (sourceName, sourceConfig) roleName parameter
               -- Postgres response is not present in the cohort map of this batch
               -- (this shouldn't happen but if it happens it means a logic error and
               -- we should log it)
-              (pure respBS,cohortId,Just (respHash, respSize), Just respCursorLatestValue,)
+              (pure respBS,cohortId,Just (respHash, respSize),Just respCursorLatestValue,)
                 <$> Map.lookup cohortId cohortSnapshotMap

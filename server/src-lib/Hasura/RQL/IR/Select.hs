@@ -462,9 +462,9 @@ type AnnotatedOrderByItemG b v = OrderByItemG b (AnnotatedOrderByElement b v)
 type AnnotatedOrderByItem b = AnnotatedOrderByItemG b (SQLExpression b)
 
 data StreamColumnItem (b :: BackendType) v = StreamColumnItem
-  { _sciOrdering :: !(Maybe CursorOrdering)
-  , _sciColInfo  :: !(ColumnInfo b)
-  , _sciInitialValue :: !v
+  { _sciOrdering :: !(Maybe CursorOrdering),
+    _sciColInfo :: !(ColumnInfo b),
+    _sciInitialValue :: !v
   }
   deriving (Generic, Functor, Foldable, Traversable)
 

@@ -11,6 +11,7 @@ import Data.Aeson qualified as J
 import Data.HashMap.Strict qualified as Map
 import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.IntMap qualified as IntMap
+import Data.List (partition)
 import Data.Sequence qualified as Seq
 import Database.PG.Query qualified as Q
 import Hasura.Backends.Postgres.Connection (runTx)
@@ -34,7 +35,7 @@ import Hasura.Backends.Postgres.SQL.Value qualified as PG
 import Hasura.Backends.Postgres.Translate.Select (PostgresAnnotatedFieldJSON)
 import Hasura.Backends.Postgres.Translate.Select qualified as DS
 import Hasura.Backends.Postgres.Types.Update
-import Hasura.Base.Error (QErr, throw400, Code (NotSupported))
+import Hasura.Base.Error (Code (..), QErr, throw400)
 import Hasura.EncJSON (EncJSON, encJFromJValue)
 import Hasura.GraphQL.Execute.Backend
   ( BackendExecute (..),
@@ -53,9 +54,10 @@ import Hasura.GraphQL.Namespace
   ( RootFieldAlias (..),
     RootFieldMap,
   )
+import Hasura.GraphQL.Namespace qualified as G
 import Hasura.GraphQL.Parser
   ( ParameterType (..),
-    UnpreparedValue (..)
+    UnpreparedValue (..),
   )
 import Hasura.Prelude
 import Hasura.QueryTags
@@ -75,13 +77,11 @@ import Hasura.RQL.Types
     liftTx,
   )
 import Hasura.RQL.Types.Column (ColumnType (..), ColumnValue (..))
+import Hasura.RQL.Types.Common
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.Session (UserInfo (..))
 import Hasura.Tracing qualified as Tracing
 import Language.GraphQL.Draft.Syntax qualified as G
-import Hasura.RQL.Types.Common
-import qualified Hasura.GraphQL.Namespace as G
-import Data.List (partition)
 
 data PreparedSql = PreparedSql
   { _psQuery :: !Q.Query,
@@ -309,7 +309,7 @@ pgDBSubscriptionPlan userInfo _sourceName sourceConfig namespace subscriptionTyp
       STStreaming -> do
         let isStreamingRootField = \case
               QDBStreamMultipleRows _ -> True
-              _                       -> False
+              _ -> False
         -- Currently, we only support a single root field with streaming subscriptions.
         case partition (isStreamingRootField . snd) $ OMap.toList preparedAST of
           ([(alias, resolvedAST)], []) -> pure $ PGL.mkStreamingMultiplexedQuery (G._rfaAlias alias, resolvedAST)

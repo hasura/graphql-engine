@@ -1,13 +1,15 @@
 {-# LANGUAGE ApplicativeDo #-}
+
 module Hasura.GraphQL.Schema.SubscriptionStream
   ( tableStreamCursorArg,
-    cursorBatchSizeArg
+    cursorBatchSizeArg,
   )
 where
 
-import Data.Text.Extended ((<>>))
 import Data.Has
 import Data.List.NonEmpty qualified as NE
+import Data.Text.Extended ((<>>))
+import Hasura.Base.Error (QErr)
 import Hasura.GraphQL.Parser
   ( InputFieldsParser,
     Kind (..),
@@ -17,20 +19,19 @@ import Hasura.GraphQL.Parser
 import Hasura.GraphQL.Parser qualified as P
 import Hasura.GraphQL.Parser.Class
 import Hasura.GraphQL.Schema.Backend
+import Hasura.GraphQL.Schema.Table (getTableGQLName, tableSelectColumns)
 import Hasura.Prelude
 import Hasura.RQL.IR.Select qualified as IR
 import Hasura.RQL.Types
 import Language.GraphQL.Draft.Syntax qualified as G
-import Hasura.Base.Error (QErr)
-import Hasura.GraphQL.Schema.Table (getTableGQLName, tableSelectColumns)
 
 cursorBatchSizeArg ::
   forall n.
   MonadParse n =>
   InputFieldsParser n Int
 cursorBatchSizeArg =
-  fromIntegral <$>
-    P.field batchSizeName batchSizeDesc P.nonNegativeInt
+  fromIntegral
+    <$> P.field batchSizeName batchSizeDesc P.nonNegativeInt
   where
     batchSizeName = $$(G.litName "batch_size")
     batchSizeDesc = Just $ G.Description "maximum number of rows returned in a single batch"
@@ -83,7 +84,6 @@ streamColumnParserArg colInfo = do
       colParser <- columnParser (pgiType columnInfo) (G.Nullability $ pgiIsNullable columnInfo)
       pure (fmap (P.mkCursorParameter (pgiName columnInfo)) colParser)
 
-
 tableStreamColumnArg ::
   forall n m r b.
   (BackendSchema b, MonadSchema n m, Has P.MkTypename r, MonadReader r m, MonadError QErr m) =>
@@ -106,13 +106,13 @@ tableStreamCursorExp ::
   m (Parser 'Input n [(IR.StreamColumnItem b (UnpreparedValue b))])
 tableStreamCursorExp sourceName tableInfo selectPermissions =
   memoizeOn 'tableStreamCursorExp (sourceName, tableInfoName tableInfo) $ do
-  tableGQLName <- getTableGQLName tableInfo
-  columnInfos <- tableSelectColumns sourceName tableInfo selectPermissions
-  objName <- P.mkTypename $ tableGQLName <> $$(G.litName ("_stream_cursor_input"))
-  let description =
-        G.Description $ "Streaming cursor of the table " <>> tableGQLName
-  columnParsers <- sequenceA <$> traverse tableStreamColumnArg columnInfos
-  pure $ P.object objName (Just description) columnParsers <&> catMaybes
+    tableGQLName <- getTableGQLName tableInfo
+    columnInfos <- tableSelectColumns sourceName tableInfo selectPermissions
+    objName <- P.mkTypename $ tableGQLName <> $$(G.litName ("_stream_cursor_input"))
+    let description =
+          G.Description $ "Streaming cursor of the table " <>> tableGQLName
+    columnParsers <- sequenceA <$> traverse tableStreamColumnArg columnInfos
+    pure $ P.object objName (Just description) columnParsers <&> catMaybes
 
 tableStreamCursorArg ::
   forall b r m n.

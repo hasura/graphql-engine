@@ -41,13 +41,13 @@ import Hasura.GraphQL.Transport.HTTP.Protocol (OperationName)
 import Hasura.GraphQL.Transport.WebSocket.Protocol (OperationId)
 import Hasura.Logging qualified as L
 import Hasura.Prelude
+import Hasura.RQL.Types (SubscriptionType)
 import Hasura.RQL.Types.Action
-import Hasura.RQL.Types.Common (SourceName, unNonNegativeDiffTime, SubscriptionType (STLiveQuery, STStreaming))
+import Hasura.RQL.Types.Common (SourceName, SubscriptionType (..), unNonNegativeDiffTime)
 import Hasura.Server.Metrics (ServerMetrics (..))
 import Hasura.Server.Types (RequestId)
 import StmContainers.Map qualified as STMMap
 import System.Metrics.Gauge qualified as EKG.Gauge
-import Hasura.RQL.Types (SubscriptionType)
 
 -- | The top-level datatype that holds the state for all active live queries.
 --
@@ -167,10 +167,10 @@ addLiveQuery
       addToPoller subscriber cohortId handler = do
         !newCohort <-
           Cohort cohortId
-          <$> STM.newTVar Nothing
-          <*> TMap.new
-          <*> TMap.new
-          <*> pure ()
+            <$> STM.newTVar Nothing
+            <*> TMap.new
+            <*> TMap.new
+            <*> pure ()
         addToCohort subscriber newCohort
         TMap.insert newCohort cohortKey $ _pCohorts handler
 

@@ -7,6 +7,7 @@ module Hasura.GraphQL.Execute.LiveQuery.TMap
     insert,
     delete,
     toList,
+    swap,
   )
 where
 
@@ -39,3 +40,6 @@ delete k mapTv = modifyTVar' (unTMap mapTv) $ Map.delete k
 
 toList :: TMap k v -> STM [(k, v)]
 toList = fmap Map.toList . readTVar . unTMap
+
+swap :: TMap k v -> Map.HashMap k v -> STM ()
+swap mapTV v = void $ swapTVar (unTMap mapTV) v

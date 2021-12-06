@@ -74,8 +74,8 @@ import Hasura.GraphQL.Schema.BoolExp
 import Hasura.GraphQL.Schema.Common
 import Hasura.GraphQL.Schema.OrderBy
 import Hasura.GraphQL.Schema.Remote
-import Hasura.GraphQL.Schema.SubscriptionStream
 import {-# SOURCE #-} Hasura.GraphQL.Schema.RemoteSource
+import Hasura.GraphQL.Schema.SubscriptionStream
 import Hasura.GraphQL.Schema.Table
 import Hasura.Prelude
 import Hasura.RQL.DDL.RemoteRelationship.Validate
@@ -85,7 +85,6 @@ import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.Server.Utils (executeJSONPath)
 import Hasura.Session
 import Language.GraphQL.Draft.Syntax qualified as G
-
 
 --------------------------------------------------------------------------------
 -- Top-level functions.
