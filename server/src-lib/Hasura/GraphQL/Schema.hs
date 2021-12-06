@@ -268,7 +268,7 @@ buildRoleContext
             <*> customizeFields
               sourceCustomization
               (mkTypename <> P.MkTypename (<> $$(G.litName "_subscription")))
-              (buildNonQuerySubscriptionFields sourceName sourceConfig validTables queryTagsConfig)
+              (buildTableStreamSubscriptionFields sourceName sourceConfig validTables queryTagsConfig)
 
 buildRelayRoleContext ::
   forall m.
@@ -364,7 +364,7 @@ buildRelayRoleContext
             <*> customizeFields
               sourceCustomization
               (mkTypename <> P.MkTypename (<> $$(G.litName "_subscription")))
-              (buildNonQuerySubscriptionFields sourceName sourceConfig validTables queryTagsConfig)
+              (buildTableStreamSubscriptionFields sourceName sourceConfig validTables queryTagsConfig)
 
 buildFullestDBSchema ::
   forall m.
@@ -421,7 +421,7 @@ buildFullestDBSchema queryContext sources allActionInfos nonObjectCustomTypes =
           <*> customizeFields
             sourceCustomization
             (mkTypename <> P.MkTypename (<> $$(G.litName "_subscription")))
-            (buildNonQuerySubscriptionFields sourceName sourceConfig validTables queryTagsConfig)
+            (buildTableStreamSubscriptionFields sourceName sourceConfig validTables queryTagsConfig)
 
 -- The `unauthenticatedContext` is used when the user queries the graphql-engine
 -- with a role that it's unaware of. Before remote schema permissions, remotes
@@ -549,7 +549,7 @@ buildQueryFields sourceName sourceConfig tables (takeExposedAs FEAQuery -> funct
   where
     mkRF = mkRootField sourceName sourceConfig queryTagsConfig Nothing QDBR
 
-buildNonQuerySubscriptionFields ::
+buildTableStreamSubscriptionFields ::
   forall b r m n.
   MonadBuildSchema b r m n =>
   SourceName ->
@@ -557,7 +557,7 @@ buildNonQuerySubscriptionFields ::
   TableCache b ->
   Maybe QueryTagsConfig ->
   m [P.FieldParser n (QueryRootField UnpreparedValue)]
-buildNonQuerySubscriptionFields sourceName sourceConfig tables queryTagsConfig = do
+buildTableStreamSubscriptionFields sourceName sourceConfig tables queryTagsConfig = do
   tableSelectExpParsers <- for (Map.toList tables) \(tableName, tableInfo) -> do
     tableGQLName <- getTableGQLName @b tableInfo
     selectPerms <- tableSelectPermissions tableInfo
