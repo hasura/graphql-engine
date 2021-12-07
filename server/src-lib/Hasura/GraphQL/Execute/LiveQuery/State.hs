@@ -237,7 +237,7 @@ addStreamSubscriptionQuery
       pollerId <- PollerId <$> UUID.nextRandom
       threadRef <- forkImmortal ("pollQuery." <> show pollerId) logger $
         forever $ do
-          pollStreamingQuery @b pollerId lqOpts (source, sourceConfig) role parameterizedQueryHash query (_pCohorts handler) postPollHook
+          pollStreamingQuery @b pollerId lqOpts (source, sourceConfig) role parameterizedQueryHash query (_pCohorts handler) rootFieldName postPollHook
           sleep $ unNonNegativeDiffTime $ unRefetchInterval refetchInterval
       let !pState = PollerIOState threadRef pollerId
       $assertNFHere pState -- so we don't write thunks to mutable vars

@@ -49,6 +49,7 @@ import Control.Lens
 import Crypto.Hash qualified as CH
 import Data.Aeson qualified as J
 import Data.ByteString qualified as BS
+import Data.ByteString.Lazy qualified as LBS
 import Data.HashMap.Strict qualified as Map
 import Data.List.Split (chunksOf)
 import Data.Monoid (Sum (..))
@@ -74,6 +75,7 @@ import Hasura.RQL.Types.Common (SourceName, getNonNegativeInt)
 import Hasura.SQL.Value (TxtEncodedVal (..))
 import Hasura.Server.Types (RequestId)
 import Hasura.Session
+import Language.GraphQL.Draft.Syntax qualified as G
 import ListT qualified
 import StmContainers.Map qualified as STMMap
 
@@ -262,11 +264,13 @@ pushResultToStreamSubscriptionCohort ::
   Maybe ResponseHash ->
   LiveQueryMetadata ->
   Maybe CursorVariableValues ->
+  G.Name ->
+  -- | Root field name
   CohortSnapshot (STM.TVar CursorVariableValues) ->
   -- | subscribers to which data has been pushed, subscribers which already
   -- have this data (this information is exposed by metrics reporting)
   IO ([SubscriberExecutionDetails], [SubscriberExecutionDetails])
-pushResultToStreamSubscriptionCohort result !respHashM (LiveQueryMetadata dTime) latestCursorValuesDB cohortSnapshot = do
+pushResultToStreamSubscriptionCohort result !respHashM (LiveQueryMetadata dTime) latestCursorValuesDB rootFieldName cohortSnapshot = do
   prevRespHashM <- STM.readTVarIO respRef
   -- write to the current websockets if needed
   (subscribersToPush, subscribersToIgnore) <-
@@ -286,7 +290,16 @@ pushResultToStreamSubscriptionCohort result !respHashM (LiveQueryMetadata dTime)
               STM.writeTVar latestCursorValueTV (CursorVariableValues (Map.unionWith combineFn prevPollCursorValues currentPollCursorValues))
           return (newSinks <> curSinks, mempty)
       else return (newSinks, curSinks)
-  pushResultToSubscribers subscribersToPush
+  let emptyRespBS =
+        J.object
+        [ (G.unName rootFieldName) J..= ([] :: [J.Value]) ]
+      isResponseNonEmpty =
+        case result of
+          Left _ -> True
+          Right respBS -> J.encode emptyRespBS /= LBS.fromStrict respBS
+  -- In streaming subscriptions, we don't send anything when there are no rows returned
+  -- by the client.
+  bool (pure ()) (pushResultToSubscribers subscribersToPush) isResponseNonEmpty
   pure $
     over
       (each . each)
@@ -602,9 +615,10 @@ pollStreamingQuery ::
   ParameterizedQueryHash ->
   MultiplexedQuery b ->
   CohortMap (STM.TVar CursorVariableValues) ->
+  G.Name ->
   LiveQueryPostPollHook ->
   IO ()
-pollStreamingQuery pollerId lqOpts (sourceName, sourceConfig) roleName parameterizedQueryHash query cohortMap postPollHook = do
+pollStreamingQuery pollerId lqOpts (sourceName, sourceConfig) roleName parameterizedQueryHash query cohortMap rootFieldName postPollHook = do
   (totalTime, (snapshotTime, batchesDetails)) <- withElapsedTime $ do
     -- snapshot the current cohorts and split them into batches
     (snapshotTime, cohortBatches) <- withElapsedTime $ do
@@ -631,7 +645,7 @@ pollStreamingQuery pollerId lqOpts (sourceName, sourceConfig) roleName parameter
       (pushTime, cohortsExecutionDetails) <- withElapsedTime $
         A.forConcurrently operations $ \(res, cohortId, respData, latestCursorValueMaybe, snapshot) -> do
           (pushedSubscribers, ignoredSubscribers) <-
-            pushResultToStreamSubscriptionCohort res (fst <$> respData) lqMeta latestCursorValueMaybe snapshot
+            pushResultToStreamSubscriptionCohort res (fst <$> respData) lqMeta latestCursorValueMaybe rootFieldName snapshot
           pure
             CohortExecutionDetails
               { _cedCohortId = cohortId,

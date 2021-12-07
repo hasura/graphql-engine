@@ -21,11 +21,9 @@ where
 
 import Control.Concurrent.Extended (sleep)
 import Control.Concurrent.STM qualified as STM
-import Control.Lens ((^?))
 import Control.Monad.Trans.Control qualified as MC
 import Data.Aeson qualified as J
 import Data.Aeson.Casing qualified as J
-import Data.Aeson.Lens qualified as JL
 import Data.Aeson.TH qualified as J
 import Data.ByteString (ByteString)
 import Data.ByteString.Lazy qualified as LBS
@@ -87,13 +85,12 @@ import Hasura.Server.Telemetry.Counters qualified as Telem
 import Hasura.Server.Types (RequestId, getRequestId)
 import Hasura.Session
 import Hasura.Tracing qualified as Tracing
-import Language.GraphQL.Draft.Syntax (Name (..))
-import Language.GraphQL.Draft.Syntax qualified as G
 import ListT qualified
 import Network.HTTP.Client qualified as H
 import Network.HTTP.Types qualified as H
 import Network.WebSockets qualified as WS
 import StmContainers.Map qualified as STMMap
+import Language.GraphQL.Draft.Syntax (Name (..))
 
 -- | 'LQ.LiveQueryId' comes from 'Hasura.GraphQL.Execute.LiveQuery.State.addLiveQuery'. We use
 -- this to track a connection's operations so we can remove them from 'LiveQueryState', and
@@ -822,7 +819,7 @@ onStart env enabledLogTypes serverEnv wsConn (StartMsg opId q) onMessageActions 
                   opName
                   requestId
                   liveQueryPlan
-                  (onChange opName STLiveQuery parameterizedQueryHash $ LQ._lqpNamespace liveQueryPlan)
+                  (onChange opName parameterizedQueryHash $ LQ._lqpNamespace liveQueryPlan)
               STStreaming rootFieldName ->
                 LQ.addStreamSubscriptionQuery
                   logger
@@ -835,7 +832,7 @@ onStart env enabledLogTypes serverEnv wsConn (StartMsg opId q) onMessageActions 
                   requestId
                   rootFieldName
                   liveQueryPlan
-                  (onChange opName (STStreaming rootFieldName) parameterizedQueryHash $ LQ._lqpNamespace liveQueryPlan)
+                  (onChange opName parameterizedQueryHash $ LQ._lqpNamespace liveQueryPlan)
         liftIO $ $assertNFHere (lqId, opName) -- so we don't write thunks to mutable vars
         STM.atomically $
           -- NOTE: see crucial `lookup` check above, ensuring this doesn't clobber:
@@ -843,31 +840,24 @@ onStart env enabledLogTypes serverEnv wsConn (StartMsg opId q) onMessageActions 
         pure lqId
 
     -- on change, send message on the websocket
-    onChange :: Maybe OperationName -> SubscriptionType -> ParameterizedQueryHash -> Maybe Name -> LQ.OnChange
-    onChange opName subscriptionType queryHash namespace = \case
-      Right (LQ.LiveQueryResponse bs dTime) -> do
-        let sendMsg =
-              sendMsgWithMetadata
-                wsConn
-                (sendDataMsg $ DataMsg opId $ pure $ maybe LBS.fromStrict wrapNamespace namespace bs)
-                opName
-                (Just queryHash)
-                (LQ.LiveQueryMetadata dTime)
-        case subscriptionType of
-          STLiveQuery -> sendMsg
-          STStreaming _ -> sendMsg
+    onChange :: Maybe OperationName -> ParameterizedQueryHash -> Maybe Name -> LQ.OnChange
+    onChange opName queryHash namespace = \case
+      Right (LQ.LiveQueryResponse bs dTime) ->
+        sendMsgWithMetadata
+          wsConn
+          (sendDataMsg $ DataMsg opId $ pure $ maybe LBS.fromStrict wrapNamespace namespace bs)
+          opName
+          (Just queryHash)
+          (LQ.LiveQueryMetadata dTime)
+      resp ->
+        sendMsg wsConn $
+          sendDataMsg $ DataMsg opId $ LBS.fromStrict . LQ._lqrPayload <$> resp
 
     -- If the source has a namespace then we need to wrap the response
     -- from the DB in that namespace.
     wrapNamespace :: Name -> ByteString -> LBS.ByteString
     wrapNamespace namespace bs =
       encJToLBS $ encJFromAssocList [(unName namespace, encJFromBS bs)]
-
-    isRespEmptyArray rootFieldName jsonVal =
-      maybe
-        False
-        null
-        (jsonVal ^? (JL.key "data" . JL.key (G.unName rootFieldName) . JL._Array))
 
     catchAndIgnore :: ExceptT () m () -> m ()
     catchAndIgnore m = void $ runExceptT m
