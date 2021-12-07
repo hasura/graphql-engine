@@ -1,4 +1,5 @@
 import { Action as ReduxAction } from 'redux';
+import { getEventRequestSampleInput } from '@/components/Services/Events/EventTriggers/utils';
 import { getActionRequestSampleInput } from '../../Services/Actions/Add/utils';
 import {
   defaultActionDefSdl,
@@ -156,10 +157,19 @@ export const defaultActionRequestSampleInput = getActionRequestSampleInput(
   defaultTypesDefSdl
 );
 
+export const defaultEventRequestSampleInput = getEventRequestSampleInput();
+
 export const defaultActionRequestBody = `{
   "users": {
     "name": {{$body.input.arg1.username}},
     "password": {{$body.input.arg1.password}}
+  }
+}`;
+
+export const defaultEventRequestBody = `{
+  "table": {
+    "name": {{$body.table.name}},
+    "schema": {{$body.table.schema}}
   }
 }`;
 

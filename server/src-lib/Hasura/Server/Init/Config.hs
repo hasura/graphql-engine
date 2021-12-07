@@ -44,6 +44,7 @@ import Data.Aeson qualified as J
 import Data.Aeson.Casing qualified as J
 import Data.Aeson.TH qualified as J
 import Data.Char (toLower)
+import Data.HashMap.Strict qualified as Map
 import Data.HashSet qualified as Set
 import Data.String qualified as DataString
 import Data.Text qualified as T
@@ -55,6 +56,7 @@ import Hasura.Logging qualified as L
 import Hasura.Prelude
 import Hasura.RQL.Types
 import Hasura.Server.Auth
+import Hasura.Server.Auth.JWT
 import Hasura.Server.Cors
 import Hasura.Server.Types
 import Hasura.Server.Utils
@@ -192,7 +194,7 @@ data ServeOptions impl = ServeOptions
     soTxIso :: !Q.TxIsolation,
     soAdminSecret :: !(Set.HashSet AdminSecretHash),
     soAuthHook :: !(Maybe AuthHook),
-    soJwtSecret :: !(Maybe JWTConfig),
+    soJwtSecret :: !(Map.HashMap (Maybe StringOrURI) JWTConfig),
     soUnAuthRole :: !(Maybe RoleName),
     soCorsConfig :: !CorsConfig,
     soEnableConsole :: !Bool,
@@ -220,7 +222,8 @@ data ServeOptions impl = ServeOptions
     soEventsFetchBatchSize :: !NonNegativeInt,
     soDevMode :: !Bool,
     soGracefulShutdownTimeout :: !Seconds,
-    soWebsocketConnectionInitTimeout :: !WSConnectionInitTimeout
+    soWebsocketConnectionInitTimeout :: !WSConnectionInitTimeout,
+    soEventingMode :: !EventingMode
   }
 
 data DowngradeOptions = DowngradeOptions
@@ -347,9 +350,6 @@ readLogLevel s = case T.toLower $ T.strip $ T.pack s of
   "warn" -> Right L.LevelWarn
   "error" -> Right L.LevelError
   _ -> Left "Valid log levels: debug, info, warn or error"
-
-readJson :: (J.FromJSON a) => String -> Either String a
-readJson = J.eitherDecodeStrict . txtToBs . T.pack
 
 class FromEnv a where
   fromEnv :: String -> Either String a

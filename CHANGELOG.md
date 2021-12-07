@@ -3,14 +3,26 @@
 ## Next release
 (Add highlights/major features below)
 
+- server: fix event invocation logs to include transformed request bodies (fix #2983)
+- server: allows the use of env vars in the `test_webhook_transform` metadata API action
+- server: fix aggregate queries with nodes field in selection set for sql server (fix #7871)
+- server: fix permissions are not respected for aggregations in sql server (fix #7773)
+- server: the syntax for remote relationships in metadata is changed to be
+  consistent with future remote relationships work. However, the older syntax
+  is still accepted and this is a non-breaking change.
 - server: implement delete mutations for MS SQL Server (closes #7626)
 - server: fix JSON path in error when parsing sources in metadata (fix #7769)
 - server: log locking DB queries during source catalog migration
 - server: fix to allow remote schema response to contain an "extensions" field (#7143)
+- server: support database-to-database joins with BigQuery
+- server: improved startup time when using large remote schemas
+- server: fix rest-endpoints bug allow list arguments (fix #7135)
 - console: add comments to tracked functions
+- console: add select all columns option while selecting the columns in event triggers
+- console: add request transforms for events
 - metadata SDK: add type definitions for config v3
 - cli: fix cli-console failing to add migrations if there are tabs in SQL body (#7362)
-
+- cli: sign windows binary of Hasura CLI (#7147)
 - cli: core CLI features are not blocked in environments without internet (#7695)
 
 ### Bug fixes and improvements
@@ -1028,7 +1040,7 @@ If you do have such headers configured, then you must update the header configur
 
 ### Relay
 
-The Hasura GraphQL Engine serves [Relay](https://relay.dev/en/) schema for Postgres tables which has a primary key defined.
+The Hasura GraphQL Engine serves [Relay](https://relay.dev/) schema for Postgres tables which has a primary key defined.
 
 The Relay schema can be accessed through `/v1beta1/relay` endpoint.
 

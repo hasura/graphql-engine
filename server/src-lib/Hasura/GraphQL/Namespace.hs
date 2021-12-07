@@ -8,12 +8,15 @@ module Hasura.GraphQL.Namespace
     NamespacedFieldMap,
     flattenNamespaces,
     unflattenNamespaces,
+    customizeNamespace,
   )
 where
 
 import Data.Aeson qualified as J
 import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.Text.Extended
+import Hasura.GraphQL.Parser
+import Hasura.GraphQL.Parser qualified as P
 import Hasura.Prelude
 import Language.GraphQL.Draft.Syntax qualified as G
 
@@ -76,3 +79,25 @@ unflattenNamespaces = OMap.foldlWithKey' insert mempty
       Just ns -> OMap.insertWith merge ns (Namespaced $ (OMap.singleton _rfaAlias v)) m
     merge (Namespaced m) (Namespaced m') = Namespaced (OMap.union m' m) -- Note: order of arguments to OMap.union to preserve ordering
     merge v _ = v
+
+-- | Wrap the field parser results in @NamespacedField@
+customizeNamespace ::
+  forall n a.
+  (MonadParse n) =>
+  Maybe G.Name ->
+  (G.Name -> P.ParsedSelection a -> a) ->
+  P.MkTypename ->
+  [FieldParser n a] ->
+  [FieldParser n (NamespacedField a)]
+customizeNamespace (Just namespace) fromParsedSelection mkNamespaceTypename fieldParsers =
+  -- Source or remote schema has a namespace field so wrap the parsers
+  -- in a new namespace field parser.
+  [P.subselection_ namespace Nothing parser]
+  where
+    parser :: Parser 'Output n (NamespacedField a)
+    parser =
+      Namespaced . OMap.mapWithKey fromParsedSelection
+        <$> P.selectionSet (runMkTypename mkNamespaceTypename namespace) Nothing fieldParsers
+customizeNamespace Nothing _ _ fieldParsers =
+  -- No namespace so just wrap the field parser results in @NotNamespaced@.
+  fmap NotNamespaced <$> fieldParsers

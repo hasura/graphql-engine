@@ -1,6 +1,7 @@
 module Hasura.RQL.Types.Common
   ( RelName (..),
     relNameToTxt,
+    fromRemoteRelationship,
     RelType (..),
     relTypeToTxt,
     OID (..),
@@ -74,6 +75,7 @@ newtype RelName = RelName {getRelTxt :: NonEmptyText}
       Ord,
       Hashable,
       FromJSON,
+      FromJSONKey,
       ToJSON,
       ToJSONKey,
       Q.ToPrepArg,
@@ -89,21 +91,8 @@ instance ToTxt RelName where
 relNameToTxt :: RelName -> Text
 relNameToTxt = unNonEmptyText . getRelTxt
 
-relTypeToTxt :: RelType -> Text
-relTypeToTxt ObjRel = "object"
-relTypeToTxt ArrRel = "array"
-
-data JsonAggSelect
-  = JASMultipleRows
-  | JASSingleObject
-  deriving (Show, Eq, Generic)
-
-instance Hashable JsonAggSelect
-
-instance ToJSON JsonAggSelect where
-  toJSON = \case
-    JASMultipleRows -> "multiple_rows"
-    JASSingleObject -> "single_row"
+fromRemoteRelationship :: RelName -> FieldName
+fromRemoteRelationship = FieldName . relNameToTxt
 
 data RelType
   = ObjRel
@@ -130,6 +119,22 @@ instance Q.FromCol RelType where
       "object" -> Just ObjRel
       "array" -> Just ArrRel
       _ -> Nothing
+
+relTypeToTxt :: RelType -> Text
+relTypeToTxt ObjRel = "object"
+relTypeToTxt ArrRel = "array"
+
+data JsonAggSelect
+  = JASMultipleRows
+  | JASSingleObject
+  deriving (Show, Eq, Generic)
+
+instance Hashable JsonAggSelect
+
+instance ToJSON JsonAggSelect where
+  toJSON = \case
+    JASMultipleRows -> "multiple_rows"
+    JASSingleObject -> "single_row"
 
 data InsertOrder = BeforeParent | AfterParent
   deriving (Show, Eq, Generic)

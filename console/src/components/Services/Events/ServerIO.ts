@@ -60,6 +60,8 @@ import { QualifiedTable } from '../../../metadata/types';
 import { dataSource } from '../../../dataSources';
 import Migration from '../../../utils/migration/Migration';
 import _push from '../Data/push';
+import { RequestTransformState } from '../../Common/ConfigureTransformation/stateDefaults';
+import { getRequestTransformObject } from '../../Common/ConfigureTransformation/utils';
 
 export const addScheduledTrigger = (
   state: LocalScheduledTriggerState,
@@ -291,6 +293,7 @@ export const deleteScheduledTrigger = (
 
 export const createEventTrigger = (
   state: LocalEventTriggerState,
+  transformState: RequestTransformState,
   successCb?: () => null,
   errorCb?: () => null
 ): Thunk => {
@@ -304,10 +307,18 @@ export const createEventTrigger = (
     }
 
     const migrationName = `create_event_trigger_${state.name.trim()}`;
+    const requestTransform = getRequestTransformObject(transformState);
 
     const migration = new Migration();
     migration.add(
-      generateCreateEventTriggerQuery(state, state.source),
+      requestTransform
+        ? generateCreateEventTriggerQuery(
+            state,
+            state.source,
+            false,
+            requestTransform
+          )
+        : generateCreateEventTriggerQuery(state, state.source),
       getDropEventTriggerQuery(state.name, state.source)
     );
 
@@ -346,27 +357,43 @@ export const createEventTrigger = (
 };
 
 export const modifyEventTrigger = (
-  property: EventTriggerProperty,
   state: LocalEventTriggerState,
+  transformState: RequestTransformState,
   trigger: EventTrigger,
+  property?: EventTriggerProperty,
   table?: Table,
   successCb?: () => void,
   errorCb?: () => void
 ): Thunk => (dispatch, getState) => {
   const currentSource = getState().tables.currentDataSource;
+  const requestTransform = getRequestTransformObject(transformState);
 
-  const downQuery = generateCreateEventTriggerQuery(
-    parseServerETDefinition(trigger, table),
-    currentSource,
-    true
-  );
+  const downQuery = requestTransform
+    ? generateCreateEventTriggerQuery(
+        parseServerETDefinition(trigger, table),
+        currentSource,
+        true,
+        requestTransform
+      )
+    : generateCreateEventTriggerQuery(
+        parseServerETDefinition(trigger, table),
+        currentSource,
+        true
+      );
 
   // TODO optimise redeclaration of queries
-  const upQuery = generateCreateEventTriggerQuery(
-    parseServerETDefinition(trigger, table),
-    currentSource,
-    true
-  );
+  const upQuery = requestTransform
+    ? generateCreateEventTriggerQuery(
+        parseServerETDefinition(trigger, table),
+        currentSource,
+        true,
+        requestTransform
+      )
+    : generateCreateEventTriggerQuery(
+        parseServerETDefinition(trigger, table),
+        currentSource,
+        true
+      );
 
   const errorMsg = 'Saving failed';
 
@@ -395,9 +422,11 @@ export const modifyEventTrigger = (
         insert: state.operations.insert ? { columns: '*' } : null,
         update: state.operations.update
           ? {
-              columns: state.operationColumns
-                .filter(c => !!c.enabled)
-                .map(c => c.name),
+              columns: state.isAllColumnChecked
+                ? '*'
+                : state.operationColumns
+                    .filter(c => !!c.enabled)
+                    .map(c => c.name),
             }
           : null,
         delete: state.operations.delete ? { columns: '*' } : null,

@@ -27,6 +27,7 @@ export type LocalEventTriggerState = {
   retryConf: RetryConf;
   headers: Header[];
   source: string;
+  isAllColumnChecked: boolean;
 };
 
 const defaultState: LocalEventTriggerState = {
@@ -53,6 +54,7 @@ const defaultState: LocalEventTriggerState = {
   },
   headers: [defaultHeader],
   source: '',
+  isAllColumnChecked: true,
 };
 
 export const parseServerETDefinition = (
@@ -86,6 +88,7 @@ export const parseServerETDefinition = (
     webhook: parseServerWebhook(etConf.webhook, etConf.webhook_from_env),
     retryConf: etConf.retry_conf,
     headers: parseServerHeaders(eventTrigger.configuration.headers),
+    isAllColumnChecked: etDef.update.columns === '*',
   };
 };
 
@@ -160,6 +163,12 @@ export const useEventTrigger = (initState?: LocalEventTriggerState) => {
       },
       bulk: (s: LocalEventTriggerState) => {
         setState(s);
+      },
+      toggleAllColumnChecked: () => {
+        setState(s => ({
+          ...s,
+          isAllColumnChecked: !s.isAllColumnChecked,
+        }));
       },
     },
   };

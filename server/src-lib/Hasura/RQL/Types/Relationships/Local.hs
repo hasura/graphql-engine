@@ -1,4 +1,4 @@
-module Hasura.RQL.Types.Relationship
+module Hasura.RQL.Types.Relationships.Local
   ( ArrRelDef,
     ArrRelUsing,
     ArrRelUsingFKeyOn (..),

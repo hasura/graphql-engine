@@ -21,12 +21,14 @@ import Control.Lens ((.~), (^.), (^?))
 import Data.Aeson qualified as J
 import Data.Aeson.Ordered qualified as AO
 import Data.CaseInsensitive qualified as CI
+import Data.Environment qualified as Env
 import Data.Has (Has, getter)
 import Data.HashMap.Strict qualified as Map
 import Data.HashMap.Strict.InsOrd.Extended qualified as OMap
 import Data.HashSet qualified as HS
 import Data.List qualified as L
 import Data.TByteString qualified as TBS
+import Data.Text qualified as T
 import Data.Text.Extended ((<<>))
 import Hasura.Base.Error
 import Hasura.EncJSON
@@ -473,9 +475,13 @@ runTestWebhookTransform ::
   ( QErrM m,
     MonadIO m
   ) =>
+  Env.Environment ->
   TestWebhookTransform ->
   m EncJSON
-runTestWebhookTransform (TestWebhookTransform url payload mt sv) = do
+runTestWebhookTransform env (TestWebhookTransform urlE payload mt sv) = do
+  url <- case urlE of
+    URL url' -> pure url'
+    EnvVar var -> maybe (throwError $ err400 NotFound "Missing Env Var") (pure . T.pack) $ Env.lookupEnv env var
   initReq <- liftIO $ HTTP.mkRequestThrow url
   let req = initReq & HTTP.body .~ pure (J.encode payload)
       dataTransform = mkRequestTransform mt

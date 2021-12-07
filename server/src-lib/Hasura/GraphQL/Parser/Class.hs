@@ -9,18 +9,15 @@ where
 import Data.Has
 import Data.HashMap.Strict qualified as Map
 import Data.Text.Extended
-import Data.Tuple.Extended
 import GHC.Stack (HasCallStack)
 import Hasura.Base.Error
 import Hasura.GraphQL.Parser.Class.Parse
 import Hasura.GraphQL.Parser.Internal.Types
-import Hasura.GraphQL.Parser.Schema (HasDefinition)
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.Table
--- import           Hasura.SQL.Backend
 import Hasura.Session (RoleName)
 import Language.Haskell.TH qualified as TH
 import Type.Reflection (Typeable)
@@ -103,8 +100,8 @@ class (Monad m, MonadParse n) => MonadSchema n m | m -> n where
   -- 'memoizeOn' :: 'MonadSchema' n m => 'TH.Name' -> a -> m (FieldParser n b) -> m (FieldParser n b)
   -- @
   memoizeOn ::
-    forall p d a b.
-    (HasCallStack, HasDefinition (p n b) d, Ord a, Typeable p, Typeable a, Typeable b) =>
+    forall p a b.
+    (HasCallStack, Ord a, Typeable p, Typeable a, Typeable b) =>
     -- | A unique name used to identify the function being memoized. There isn’t
     -- really any metaprogramming going on here, we just use a Template Haskell
     -- 'TH.Name' as a convenient source for a static, unique identifier.
@@ -152,46 +149,3 @@ memoize ::
   (a -> m (Parser k n b)) ->
   (a -> m (Parser k n b))
 memoize name f a = memoizeOn name a (f a)
-
-memoize2 ::
-  (HasCallStack, MonadSchema n m, Ord a, Ord b, Typeable a, Typeable b, Typeable c, Typeable k) =>
-  TH.Name ->
-  (a -> b -> m (Parser k n c)) ->
-  (a -> b -> m (Parser k n c))
-memoize2 name = curry . memoize name . uncurry
-
-memoize3 ::
-  ( HasCallStack,
-    MonadSchema n m,
-    Ord a,
-    Ord b,
-    Ord c,
-    Typeable a,
-    Typeable b,
-    Typeable c,
-    Typeable d,
-    Typeable k
-  ) =>
-  TH.Name ->
-  (a -> b -> c -> m (Parser k n d)) ->
-  (a -> b -> c -> m (Parser k n d))
-memoize3 name = curry3 . memoize name . uncurry3
-
-memoize4 ::
-  ( HasCallStack,
-    MonadSchema n m,
-    Ord a,
-    Ord b,
-    Ord c,
-    Ord d,
-    Typeable a,
-    Typeable b,
-    Typeable c,
-    Typeable d,
-    Typeable e,
-    Typeable k
-  ) =>
-  TH.Name ->
-  (a -> b -> c -> d -> m (Parser k n e)) ->
-  (a -> b -> c -> d -> m (Parser k n e))
-memoize4 name = curry4 . memoize name . uncurry4

@@ -35,11 +35,11 @@
     args:
       source: pg1
       sql: |
-        create table author(
+        create table author_local(
             id serial primary key,
             name text unique
         );
-        INSERT INTO author (name)
+        INSERT INTO author_local (name)
           VALUES ('Author 1'), ('Author 2');
 
 - description: track table
@@ -50,7 +50,7 @@
   query:
     type: pg_track_table
     args:
-      table: author
+      table: author_local
       source: pg1
 
 
@@ -61,19 +61,19 @@
     data:
       my_source:
         __typename: tpref_my_source_query_tsuff
-        fpref_author_fsuff:
+        fpref_author_local_fsuff:
         - id: 1
           name: 'Author 1'
-          __typename: tpref_author_tsuff
+          __typename: tpref_author_local_tsuff
         - id: 2
           name: 'Author 2'
-          __typename: tpref_author_tsuff
+          __typename: tpref_author_local_tsuff
   query:
     query: |
       query {
         my_source {
           __typename
-          fpref_author_fsuff {
+          fpref_author_local_fsuff {
             id
             name
             __typename
@@ -91,16 +91,16 @@
         c:
         - d: 1
           e: 'Author 1'
-          f: tpref_author_tsuff
+          f: tpref_author_local_tsuff
         - d: 2
           e: 'Author 2'
-          f: tpref_author_tsuff
+          f: tpref_author_local_tsuff
   query:
     query: |
       query {
         a: my_source {
           b: __typename
-          c: fpref_author_fsuff {
+          c: fpref_author_local_fsuff {
             d: id
             e: name
             f: __typename
@@ -114,15 +114,15 @@
   response:
     data:
       my_source:
-        fpref_author_by_pk_fsuff:
+        fpref_author_local_by_pk_fsuff:
           id: 1
           name: 'Author 1'
-          __typename: tpref_author_tsuff
+          __typename: tpref_author_local_tsuff
   query:
     query: |
       query {
         my_source {
-          fpref_author_by_pk_fsuff(id: 1) {
+          fpref_author_local_by_pk_fsuff(id: 1) {
             id
             name
             __typename
@@ -136,16 +136,16 @@
   response:
     data:
       my_source:
-        fpref_author_aggregate_fsuff:
-          __typename: tpref_author_aggregate_tsuff
+        fpref_author_local_aggregate_fsuff:
+          __typename: tpref_author_local_aggregate_tsuff
           aggregate:
-            __typename: tpref_author_aggregate_fields_tsuff
+            __typename: tpref_author_local_aggregate_fields_tsuff
             count: 1
   query:
     query: |
       query MyQuery {
         my_source {
-          fpref_author_aggregate_fsuff(where: {name: {_eq: "Author 2"}}) {
+          fpref_author_local_aggregate_fsuff(where: {name: {_eq: "Author 2"}}) {
             __typename
             aggregate {
               __typename
@@ -161,17 +161,17 @@
   response:
     data:
       my_source:
-        fpref_insert_author_fsuff:
-          __typename: tpref_author_mutation_response_tsuff
+        fpref_insert_author_local_fsuff:
+          __typename: tpref_author_local_mutation_response_tsuff
           returning:
-          - __typename: tpref_author_tsuff
+          - __typename: tpref_author_local_tsuff
             id: 3
             name: Author 3
   query:
     query: |
       mutation MyMutation {
         my_source {
-          fpref_insert_author_fsuff(objects: {name: "Author 3", id: 3}) {
+          fpref_insert_author_local_fsuff(objects: {name: "Author 3", id: 3}) {
             __typename
             returning {
               __typename
@@ -189,15 +189,15 @@
   response:
     data:
       my_source:
-        fpref_delete_author_by_pk_fsuff:
-          __typename: tpref_author_tsuff
+        fpref_delete_author_local_by_pk_fsuff:
+          __typename: tpref_author_local_tsuff
           id: 3
           name: Author 3
   query:
     query: |
       mutation MyMutation {
         my_source {
-          fpref_delete_author_by_pk_fsuff(id: 3) {
+          fpref_delete_author_local_by_pk_fsuff(id: 3) {
             __typename
             id
             name
@@ -213,7 +213,7 @@
   query:
     type: pg_untrack_table
     args:
-      table: author
+      table: author_local
       source: pg1
 
 - description: drop table
@@ -227,7 +227,7 @@
     args:
       source: pg1
       sql: |
-        drop table author;
+        drop table author_local;
 
 - description: PG Drop Source 1
   url: /v1/metadata

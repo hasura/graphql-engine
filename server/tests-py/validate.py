@@ -313,14 +313,17 @@ def validate_gql_ws_q(hge_ctx, conf, headers, retry=False, via_subscription=Fals
 
     return assert_graphql_resp_expected(resp['payload'], exp_http_response, query, skip_if_err_msg=hge_ctx.avoid_err_msg_checks)
 
-def assert_response_code(url, query, code, exp_code, resp):
+def assert_response_code(url, query, code, exp_code, resp, body=None):
     assert code == exp_code, \
         f"""
 When querying {url},
 Got response code {code}, expected {exp_code}.
 
-Request body:
+Request query:
 {textwrap.indent(json.dumps(query, indent=2), '  ')}
+
+Request body:
+{textwrap.indent(json.dumps(body, indent=2), '  ')}
 
 Response body:
 {textwrap.indent(json.dumps(resp, indent=2), '  ')}
@@ -329,7 +332,7 @@ Response body:
 def validate_http_anyq(hge_ctx, url, query, headers, exp_code, exp_response, exp_resp_hdrs, body = None, method = None):
     code, resp, resp_hdrs = hge_ctx.anyq(url, query, headers, body, method)
     print(headers)
-    assert_response_code(url, query, code, exp_code, resp)
+    assert_response_code(url, query, code, exp_code, resp, body)
 
     if exp_response:
         return assert_graphql_resp_expected(resp, exp_response, query, resp_hdrs, hge_ctx.avoid_err_msg_checks, exp_resp_hdrs=exp_resp_hdrs)
@@ -339,7 +342,7 @@ def validate_http_anyq(hge_ctx, url, query, headers, exp_code, exp_response, exp
 def validate_http_anyq_with_allowed_responses(hge_ctx, url, query, headers, exp_code, allowed_responses, body = None, method = None):
     code, resp, resp_hdrs = hge_ctx.anyq(url, query, headers, body, method)
     print(headers)
-    assert_response_code(url, query, code, exp_code, resp)
+    assert_response_code(url, query, code, exp_code, resp, body)
 
     if isinstance(allowed_responses, list) and len(allowed_responses) > 0:
         resp_res = {}

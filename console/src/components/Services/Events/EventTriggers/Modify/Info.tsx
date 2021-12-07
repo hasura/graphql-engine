@@ -1,43 +1,40 @@
 import React from 'react';
-import Tooltip from '../../../../Common/Tooltip/Tooltip';
 import { EventTrigger } from '../../types';
 
 type ETInfoProps = {
   currentTrigger: EventTrigger;
-  styles: Record<string, any>;
 };
 
-const Info = ({ currentTrigger, styles }: ETInfoProps) => (
-  <div className={`${styles.container} ${styles.borderBottom}`}>
-    <div className={styles.modifySection}>
-      <h4 className={styles.modifySectionHeading}>
-        Info{' '}
-        <Tooltip message="Delete this trigger and create another one if you need to edit any of these fields" />
-      </h4>
-      <div className={styles.infoContent}>
-        <table className="table table-striped table-bordered">
-          <thead />
-          <tbody>
-            <tr>
-              <td>Trigger name</td>
-              <td>{currentTrigger.name}</td>
-            </tr>
-            <tr>
-              <td>Table</td>
-              <td>{currentTrigger.table_name}</td>
-            </tr>
-            <tr>
-              <td>Schema</td>
-              <td>{currentTrigger.schema_name}</td>
-            </tr>
-            <tr>
-              <td>Data source</td>
-              <td>{currentTrigger.source}</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+const tdHeadStyle = 'px-3 py-3 whitespace-nowrap font-medium';
+const tdValStyle = 'px-3 py-3 whitespace-nowrap text-gray-600';
+
+const Info = ({ currentTrigger }: ETInfoProps) => (
+  <div className="flex flex-col mb-lg w-6/12">
+    <div className="overflow-x-auto border border-gray-300 rounded mb-sm">
+      <table className="min-w-full divide-y divide-gray-200">
+        <tbody className="bg-white divide-y divide-gray-200">
+          <tr className="">
+            <td className={tdHeadStyle}>Trigger Name</td>
+            <td className={tdValStyle}>{currentTrigger.name}</td>
+          </tr>
+          <tr className="">
+            <td className={tdHeadStyle}>Table</td>
+            <td className={tdValStyle}>{currentTrigger.table_name}</td>
+          </tr>
+          <tr className="">
+            <td className={tdHeadStyle}>Schema</td>
+            <td className={tdValStyle}>{currentTrigger.schema_name}</td>
+          </tr>
+          <tr className="">
+            <td className={tdHeadStyle}>Data Source</td>
+            <td className={tdValStyle}>{currentTrigger.source}</td>
+          </tr>
+        </tbody>
+      </table>
     </div>
+    <p className="text-sm text-gray-600">
+      *Remove this trigger and create a new one to replace these options.
+    </p>
   </div>
 );
 

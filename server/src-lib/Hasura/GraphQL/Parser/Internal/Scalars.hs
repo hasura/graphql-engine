@@ -87,8 +87,8 @@ uuid = mkScalar name Nothing \case
     name = $$(litName "uuid")
 
 json, jsonb :: MonadParse m => Parser 'Both m A.Value
-json = jsonScalar (Typename $$(litName "json")) Nothing
-jsonb = jsonScalar (Typename $$(litName "jsonb")) Nothing
+json = jsonScalar $$(litName "json") Nothing
+jsonb = jsonScalar $$(litName "jsonb") Nothing
 
 -- | Additional validation on integers. We do keep the same type name in the schema for backwards
 -- compatibility.
@@ -130,25 +130,25 @@ bigInt = mkScalar intScalar Nothing \case
 -- explicit use of the Parser constructor.
 unsafeRawScalar ::
   MonadParse n =>
-  Typename ->
+  Name ->
   Maybe Description ->
   Parser 'Both n (InputValue Variable)
 unsafeRawScalar name description =
   Parser
-    { pType = NonNullable $ TNamed $ mkDefinition name description TIScalar,
+    { pType = NonNullable $ TNamed $ Definition name description TIScalar,
       pParser = pure
     }
 
 -- | Creates a parser that transforms its input into a JSON value. 'valueToJSON'
 -- does properly unpack variables.
-jsonScalar :: MonadParse m => Typename -> Maybe Description -> Parser 'Both m A.Value
+jsonScalar :: MonadParse m => Name -> Maybe Description -> Parser 'Both m A.Value
 jsonScalar name description =
   Parser
     { pType = schemaType,
       pParser = valueToJSON $ toGraphQLType schemaType
     }
   where
-    schemaType = NonNullable $ TNamed $ mkDefinition name description TIScalar
+    schemaType = NonNullable $ TNamed $ Definition name description TIScalar
 
 --------------------------------------------------------------------------------
 -- Local helpers
@@ -165,7 +165,7 @@ mkScalar name description parser =
       pParser = peelVariable (toGraphQLType schemaType) >=> parser
     }
   where
-    schemaType = NonNullable $ TNamed $ mkDefinition (Typename name) description TIScalar
+    schemaType = NonNullable $ TNamed $ Definition name description TIScalar
 
 convertWith ::
   MonadParse m =>

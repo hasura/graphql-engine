@@ -3,7 +3,7 @@ module Hasura.GraphQL.Schema.RemoteTest (spec) where
 import Control.Lens (Prism', prism', to, (^..), _Right)
 import Data.Aeson qualified as J
 import Data.ByteString.Lazy qualified as LBS
-import Data.HashMap.Strict qualified as M
+import Data.HashMap.Strict.Extended qualified as M
 import Data.Text qualified as T
 import Data.Text.Extended
 import Data.Text.RawString
@@ -11,8 +11,8 @@ import Hasura.Base.Error
 import Hasura.GraphQL.Execute.Inline
 import Hasura.GraphQL.Execute.Remote (resolveRemoteVariable, runVariableCache)
 import Hasura.GraphQL.Execute.Resolve
+import Hasura.GraphQL.Namespace
 import Hasura.GraphQL.Parser.Internal.Parser qualified as P
-import Hasura.GraphQL.Parser.Monad
 import Hasura.GraphQL.Parser.Schema
 import Hasura.GraphQL.Parser.TestUtils
 import Hasura.GraphQL.RemoteServer (identityCustomizer)
@@ -33,26 +33,27 @@ runError = runExceptT >=> (`onLeft` (error . T.unpack . qeError))
 
 mkTestRemoteSchema :: Text -> RemoteSchemaIntrospection
 mkTestRemoteSchema schema = RemoteSchemaIntrospection $
-  runIdentity $
-    runError $ do
-      G.SchemaDocument types <- G.parseSchemaDocument schema `onLeft` throw500
-      pure $ flip mapMaybe types \case
-        G.TypeSystemDefinitionSchema _ -> Nothing
-        G.TypeSystemDefinitionType td -> Just $ case fmap toRemoteInputValue td of
-          G.TypeDefinitionScalar std -> G.TypeDefinitionScalar std
-          G.TypeDefinitionObject otd -> G.TypeDefinitionObject otd
-          G.TypeDefinitionUnion utd -> G.TypeDefinitionUnion utd
-          G.TypeDefinitionEnum etd -> G.TypeDefinitionEnum etd
-          G.TypeDefinitionInputObject itd -> G.TypeDefinitionInputObject itd
-          G.TypeDefinitionInterface itd ->
-            G.TypeDefinitionInterface $
-              G.InterfaceTypeDefinition
-                { G._itdDescription = G._itdDescription itd,
-                  G._itdName = G._itdName itd,
-                  G._itdDirectives = G._itdDirectives itd,
-                  G._itdFieldsDefinition = G._itdFieldsDefinition itd,
-                  G._itdPossibleTypes = []
-                }
+  M.fromListOn getTypeName $
+    runIdentity $
+      runError $ do
+        G.SchemaDocument types <- G.parseSchemaDocument schema `onLeft` throw500
+        pure $ flip mapMaybe types \case
+          G.TypeSystemDefinitionSchema _ -> Nothing
+          G.TypeSystemDefinitionType td -> Just $ case fmap toRemoteInputValue td of
+            G.TypeDefinitionScalar std -> G.TypeDefinitionScalar std
+            G.TypeDefinitionObject otd -> G.TypeDefinitionObject otd
+            G.TypeDefinitionUnion utd -> G.TypeDefinitionUnion utd
+            G.TypeDefinitionEnum etd -> G.TypeDefinitionEnum etd
+            G.TypeDefinitionInputObject itd -> G.TypeDefinitionInputObject itd
+            G.TypeDefinitionInterface itd ->
+              G.TypeDefinitionInterface $
+                G.InterfaceTypeDefinition
+                  { G._itdDescription = G._itdDescription itd,
+                    G._itdName = G._itdName itd,
+                    G._itdDirectives = G._itdDirectives itd,
+                    G._itdFieldsDefinition = G._itdFieldsDefinition itd,
+                    G._itdPossibleTypes = []
+                  }
   where
     toRemoteInputValue ivd =
       RemoteSchemaInputValueDefinition
@@ -99,20 +100,17 @@ buildQueryParsers ::
   IO (P.FieldParser TestMonad (G.Field G.NoFragments RemoteSchemaVariable))
 buildQueryParsers introspection = do
   let introResult = IntrospectionResult introspection $$(G.litName "Query") Nothing Nothing
-  (query, _, _) <-
+  ParsedIntrospection query _ _ <-
     runError $
-      runSchemaT $
-        buildRemoteParser introResult $
-          RemoteSchemaInfo (ValidatedRemoteSchemaDef N.nullURI [] False 60 Nothing) identityCustomizer
+      buildRemoteParser introResult $
+        RemoteSchemaInfo (ValidatedRemoteSchemaDef N.nullURI [] False 60 Nothing) identityCustomizer
   pure $
-    head query <&> \(RemoteFieldG _ _ abstractField) ->
-      case abstractField of
-        RRFRealField f -> f
-        RRFNamespaceField _ ->
-          error "buildQueryParsers: unexpected RRFNamespaceField"
-
--- Shouldn't happen if we're using identityCustomizer
--- TODO: add some tests for remote schema customization
+    head query <&> \case
+      NotNamespaced remoteFld -> _rfField remoteFld
+      Namespaced _ ->
+        -- Shouldn't happen if we're using identityCustomizer
+        -- TODO: add some tests for remote schema customization
+        error "buildQueryParsers: unexpected Namespaced field"
 
 runQueryParser ::
   P.FieldParser TestMonad any ->

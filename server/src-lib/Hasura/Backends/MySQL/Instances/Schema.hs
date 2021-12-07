@@ -75,98 +75,84 @@ mysqlTableArgs sourceName tableInfo selectPermissions = do
 buildTableRelayQueryFields' ::
   MonadBuildSchema 'MySQL r m n =>
   SourceName ->
-  RQL.SourceConfig 'MySQL ->
-  Maybe RQL.QueryTagsConfig ->
   RQL.TableName 'MySQL ->
   TableInfo 'MySQL ->
   G.Name ->
   NESeq (ColumnInfo 'MySQL) ->
   SelPermInfo 'MySQL ->
-  m [FieldParser n (QueryRootField UnpreparedValue)]
-buildTableRelayQueryFields' _sourceName _sourceInfo _queryTagsConfig _tableName _tableInfo _gqlName _pkeyColumns _selPerms =
+  m [a]
+buildTableRelayQueryFields' _sourceName _tableName _tableInfo _gqlName _pkeyColumns _selPerms =
   pure []
 
 buildTableInsertMutationFields' ::
   MonadBuildSchema 'MySQL r m n =>
   SourceName ->
-  RQL.SourceConfig 'MySQL ->
-  Maybe RQL.QueryTagsConfig ->
   RQL.TableName 'MySQL ->
   TableInfo 'MySQL ->
   G.Name ->
   InsPermInfo 'MySQL ->
   Maybe (SelPermInfo 'MySQL) ->
   Maybe (UpdPermInfo 'MySQL) ->
-  m [FieldParser n (MutationRootField UnpreparedValue)]
-buildTableInsertMutationFields' _sourceName _sourceInfo _queryTagsConfig _tableName _tableInfo _gqlName _insPerms _selPerms _updPerms =
+  m [a]
+buildTableInsertMutationFields' _sourceName _tableName _tableInfo _gqlName _insPerms _selPerms _updPerms =
   pure []
 
 buildTableUpdateMutationFields' ::
   MonadBuildSchema 'MySQL r m n =>
   SourceName ->
-  RQL.SourceConfig 'MySQL ->
-  Maybe RQL.QueryTagsConfig ->
   RQL.TableName 'MySQL ->
   TableInfo 'MySQL ->
   G.Name ->
   UpdPermInfo 'MySQL ->
   Maybe (SelPermInfo 'MySQL) ->
-  m [FieldParser n (MutationRootField UnpreparedValue)]
-buildTableUpdateMutationFields' _sourceName _sourceInfo _queryTagsConfig _tableName _tableInfo _gqlName _updPerns _selPerms =
+  m [a]
+buildTableUpdateMutationFields' _sourceName _tableName _tableInfo _gqlName _updPerns _selPerms =
   pure []
 
 buildTableDeleteMutationFields' ::
   MonadBuildSchema 'MySQL r m n =>
   SourceName ->
-  RQL.SourceConfig 'MySQL ->
-  Maybe RQL.QueryTagsConfig ->
   RQL.TableName 'MySQL ->
   TableInfo 'MySQL ->
   G.Name ->
   DelPermInfo 'MySQL ->
   Maybe (SelPermInfo 'MySQL) ->
-  m [FieldParser n (MutationRootField UnpreparedValue)]
-buildTableDeleteMutationFields' _sourceName _sourceInfo _queryTagsConfig _tableName _tableInfo _gqlName _delPerns _selPerms =
+  m [a]
+buildTableDeleteMutationFields' _sourceName _tableName _tableInfo _gqlName _delPerns _selPerms =
   pure []
 
 buildFunctionQueryFields' ::
   MonadBuildSchema 'MySQL r m n =>
   SourceName ->
-  RQL.SourceConfig 'MySQL ->
-  Maybe RQL.QueryTagsConfig ->
   FunctionName 'MySQL ->
   FunctionInfo 'MySQL ->
   RQL.TableName 'MySQL ->
   SelPermInfo 'MySQL ->
-  m [FieldParser n (QueryRootField UnpreparedValue)]
-buildFunctionQueryFields' _ _ _ _ _ _ _ =
+  m [a]
+buildFunctionQueryFields' _ _ _ _ _ =
   pure []
 
 buildFunctionRelayQueryFields' ::
   MonadBuildSchema 'MySQL r m n =>
   SourceName ->
-  RQL.SourceConfig 'MySQL ->
-  Maybe RQL.QueryTagsConfig ->
   FunctionName 'MySQL ->
   FunctionInfo 'MySQL ->
   RQL.TableName 'MySQL ->
   NESeq (ColumnInfo 'MySQL) ->
   SelPermInfo 'MySQL ->
-  m [FieldParser n (QueryRootField UnpreparedValue)]
-buildFunctionRelayQueryFields' _sourceName _sourceInfo _queryTagsConfig _functionName _functionInfo _tableName _pkeyColumns _selPerms =
+  m [a]
+buildFunctionRelayQueryFields' _sourceName _functionName _functionInfo _tableName _pkeyColumns _selPerms =
   pure []
 
 buildFunctionMutationFields' ::
   MonadBuildSchema 'MySQL r m n =>
   SourceName ->
-  RQL.SourceConfig 'MySQL ->
-  Maybe RQL.QueryTagsConfig ->
   FunctionName 'MySQL ->
   FunctionInfo 'MySQL ->
   RQL.TableName 'MySQL ->
   SelPermInfo 'MySQL ->
-  m [FieldParser n (MutationRootField UnpreparedValue)]
-buildFunctionMutationFields' _ _ _ _ _ _ _ =
+  m [a]
+buildFunctionMutationFields' _ _ _ _ _ =
   pure []
 
 bsParser :: MonadParse m => Parser 'Both m ByteString
@@ -199,7 +185,7 @@ columnParser' columnType (G.Nullability isNullable) =
       MySQL.Timestamp -> pure $ possiblyNullable scalarType $ MySQL.TimestampValue <$> P.string
       _ -> do
         name <- MySQL.mkMySQLScalarTypeName scalarType
-        let schemaType = P.NonNullable $ P.TNamed $ P.mkDefinition (P.Typename name) Nothing P.TIScalar
+        let schemaType = P.NonNullable $ P.TNamed $ P.Definition name Nothing P.TIScalar
         pure $
           Parser
             { pType = schemaType,
@@ -221,11 +207,11 @@ columnParser' columnType (G.Nullability isNullable) =
       | otherwise = id
     mkEnumValue :: (EnumValue, EnumValueInfo) -> (P.Definition P.EnumValueInfo, RQL.ScalarValue 'MySQL)
     mkEnumValue (RQL.EnumValue value, EnumValueInfo description) =
-      ( P.mkDefinition value (G.Description <$> description) P.EnumValueInfo,
+      ( P.Definition value (G.Description <$> description) P.EnumValueInfo,
         MySQL.VarcharValue $ G.unName value
       )
     throughJSON scalarName =
-      let schemaType = P.NonNullable $ P.TNamed $ P.mkDefinition scalarName Nothing P.TIScalar
+      let schemaType = P.NonNullable $ P.TNamed $ P.Definition scalarName Nothing P.TIScalar
        in Parser
             { pType = schemaType,
               pParser =
@@ -262,7 +248,7 @@ orderByOperators' =
       )
     ]
   where
-    define name desc = P.mkDefinition name (Just desc) P.EnumValueInfo
+    define name desc = P.Definition name (Just desc) P.EnumValueInfo
 
 -- | TODO: Make this as thorough as the one for MSSQL/PostgreSQL
 comparisonExps' ::
@@ -275,7 +261,7 @@ comparisonExps' = P.memoize 'comparisonExps $ \columnType -> do
   typedParser <- columnParser columnType (G.Nullability False)
   nullableTextParser <- columnParser (ColumnScalar @'MySQL MySQL.VarChar) (G.Nullability True)
   textParser <- columnParser (ColumnScalar @'MySQL MySQL.VarChar) (G.Nullability False)
-  let name = P.Typename $ P.getName typedParser <> $$(G.litName "_MySQL_comparison_exp")
+  let name = P.getName typedParser <> $$(G.litName "_MySQL_comparison_exp")
       desc =
         G.Description $
           "Boolean expression to compare columns of type "

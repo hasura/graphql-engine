@@ -6,6 +6,7 @@ import Endpoints from '@/Endpoints';
 import {
   parseValidateApiData,
   getValidateTransformOptions,
+  getTransformState,
 } from '@/components/Common/ConfigureTransformation/utils';
 import requestAction from '@/utils/requestAction';
 import {
@@ -35,7 +36,7 @@ import styles from '../../../Common/Common.scss';
 import ActionEditor from '../Common/components/ActionEditor';
 import Button from '../../../Common/Button';
 import ActionContainer from '../Containers/ActionContainer';
-import { getModifyState, getTransformState } from './utils';
+import { getModifyState } from './utils';
 import {
   setModifyState,
   setActionHandler,
@@ -106,19 +107,20 @@ const ModifyAction: React.FC<ModifyProps> = ({
   const init = () => {
     const modifyState = getModifyState(currentAction, allTypes);
     dispatch(setModifyState(modifyState));
-    const rtState =
-      !actionDefinitionError && !typesDefinitionError
-        ? getTransformState(
-            currentAction,
-            actionDefinitionSdl,
-            typeDefinitionSdl
-          )
-        : getTransformState(
-            currentAction,
-            defaultActionDefSdl,
-            defaultTypesDefSdl
-          );
-    transformDispatch(setRequestTransformState(rtState));
+    if (currentAction?.definition?.request_transform) {
+      const requestSampleInput =
+        !actionDefinitionError && !typesDefinitionError
+          ? getActionRequestSampleInput(actionDefinitionSdl, typeDefinitionSdl)
+          : getActionRequestSampleInput(
+              defaultActionDefSdl,
+              defaultTypesDefSdl
+            );
+      const rtState = getTransformState(
+        currentAction?.definition?.request_transform,
+        requestSampleInput
+      );
+      transformDispatch(setRequestTransformState(rtState));
+    }
   };
   useEffect(init, [currentAction, allTypes, dispatch]);
 
@@ -229,6 +231,8 @@ const ModifyAction: React.FC<ModifyProps> = ({
   };
 
   useEffect(() => {
+    requestUrlErrorOnChange('');
+    requestUrlPreviewOnChange('');
     const onResponse = (data: Record<string, any>) => {
       parseValidateApiData(
         data,
@@ -247,11 +251,7 @@ const ModifyAction: React.FC<ModifyProps> = ({
       requestUrlErrorOnChange(
         'Please configure your webhook handler to generate request url transform'
       );
-      requestUrlPreviewOnChange('');
-    } else if (!transformState.requestUrl) {
-      requestUrlPreviewOnChange('');
     } else {
-      requestUrlErrorOnChange('');
       dispatch(
         requestAction(
           Endpoints.metadata,
@@ -284,10 +284,14 @@ const ModifyAction: React.FC<ModifyProps> = ({
     transformState.requestBody
   );
   useEffect(() => {
-    if (!transformState.requestBody) {
+    requestBodyErrorOnChange('');
+    requestTransformedBodyOnChange('');
+    if (!handler) {
+      requestBodyErrorOnChange(
+        'Please configure your webhook handler to generate request body transform'
+      );
       requestTransformedBodyOnChange('');
     } else if (transformState.requestBody && handler) {
-      requestBodyErrorOnChange('');
       dispatch(
         requestAction(
           Endpoints.metadata,
@@ -299,7 +303,7 @@ const ModifyAction: React.FC<ModifyProps> = ({
         )
       ).then(onRequestBodyResponse, onRequestBodyResponse);
     }
-  }, [transformState.requestSampleInput, transformState.requestBody]);
+  }, [transformState.requestSampleInput, transformState.requestBody, handler]);
 
   useEffect(() => {
     if (
@@ -369,11 +373,9 @@ const ModifyAction: React.FC<ModifyProps> = ({
             resetSampleInput={resetSampleInput}
             requestMethodOnChange={requestMethodOnChange}
             requestUrlOnChange={requestUrlOnChange}
-            requestUrlErrorOnChange={requestUrlErrorOnChange}
             requestQueryParamsOnChange={requestQueryParamsOnChange}
             requestAddHeadersOnChange={requestAddHeadersOnChange}
             requestBodyOnChange={requestBodyOnChange}
-            requestBodyErrorOnChange={requestBodyErrorOnChange}
             requestSampleInputOnChange={requestSampleInputOnChange}
             requestContentTypeOnChange={requestContentTypeOnChange}
             requestUrlTransformOnChange={requestUrlTransformOnChange}
@@ -382,7 +384,7 @@ const ModifyAction: React.FC<ModifyProps> = ({
 
           <div className="flex items-center mb-lg">
             {!readOnlyMode && (
-              <React.Fragment>
+              <>
                 <Button
                   color="yellow"
                   size="sm"
@@ -404,7 +406,7 @@ const ModifyAction: React.FC<ModifyProps> = ({
                 >
                   Delete Action
                 </Button>
-              </React.Fragment>
+              </>
             )}
           </div>
         </div>

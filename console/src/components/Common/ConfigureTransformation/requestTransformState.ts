@@ -38,6 +38,8 @@ import {
   defaultRequestContentType,
   RequestTransformState,
   KeyValuePair,
+  defaultEventRequestBody,
+  defaultEventRequestSampleInput,
 } from './stateDefaults';
 
 export const setRequestMethod = (
@@ -158,6 +160,16 @@ export const getActionRequestTransformDefaultState = (): RequestTransformState =
     requestAddHeaders: [{ name: '', value: '' }],
     requestBody: defaultActionRequestBody,
     requestSampleInput: defaultActionRequestSampleInput,
+  };
+};
+
+export const getEventRequestTransformDefaultState = (): RequestTransformState => {
+  return {
+    ...requestTransformState,
+    requestQueryParams: [{ name: '', value: '' }],
+    requestAddHeaders: [{ name: '', value: '' }],
+    requestBody: defaultEventRequestBody,
+    requestSampleInput: defaultEventRequestSampleInput,
   };
 };
 

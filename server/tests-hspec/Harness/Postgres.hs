@@ -4,18 +4,23 @@
 module Harness.Postgres
   ( livenessCheck,
     run_,
+    runPersistent,
   )
 where
 
 import Control.Concurrent
 import Control.Exception
+import Control.Monad.IO.Unlift
+import Control.Monad.Logger
+import Control.Monad.Reader
 import Data.ByteString.Char8 qualified as S8
-import Data.Functor
 import Data.String
+import Database.Persist.Postgresql qualified as Postgresql
+import Database.Persist.Sql
 import Database.PostgreSQL.LibPQ qualified as PQ
 import Database.PostgreSQL.Simple qualified as Postgres
 import GHC.Stack
-import Harness.Constants qualified as Constants
+import Harness.Constants as Constants
 import System.Process.Typed
 import Prelude
 
@@ -58,4 +63,16 @@ run_ q =
                 q
               ]
           )
+    )
+
+-- | Run persistent for postgres.
+runPersistent ::
+  (MonadUnliftIO m, HasCallStack) =>
+  ReaderT SqlBackend (NoLoggingT m) a ->
+  m a
+runPersistent actions =
+  runNoLoggingT
+    ( Postgresql.withPostgresqlConn
+        (fromString Constants.postgresqlConnectionString)
+        (runReaderT actions)
     )

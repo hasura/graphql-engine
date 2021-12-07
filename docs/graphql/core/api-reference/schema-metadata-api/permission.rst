@@ -563,7 +563,7 @@ An example:
            "table": "article",
            "role": "user",
            "type" : "update",
-           "comment" : "can only modify his/her own rows"
+           "comment" : "can only modify their own rows"
        }
    }
 

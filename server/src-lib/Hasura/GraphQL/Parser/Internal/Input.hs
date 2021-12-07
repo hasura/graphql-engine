@@ -188,7 +188,7 @@ field ::
 field name description parser = case pType parser of
   NonNullable typ ->
     InputFieldsParser
-      { ifDefinitions = [mkDefinition name description $ IFRequired typ],
+      { ifDefinitions = [Definition name description $ IFRequired typ],
         ifParser = \values -> withPath (++ [Key (unName name)]) do
           value <-
             onNothing (M.lookup name values) $
@@ -215,7 +215,7 @@ fieldOptional ::
 fieldOptional name description parser =
   InputFieldsParser
     { ifDefinitions =
-        [ mkDefinition name description $
+        [ Definition name description $
             IFOptional (nullableType $ pType parser) Nothing
         ],
       ifParser =
@@ -240,7 +240,7 @@ fieldWithDefault ::
   InputFieldsParser m a
 fieldWithDefault name description defaultValue parser =
   InputFieldsParser
-    { ifDefinitions = [mkDefinition name description $ IFOptional (pType parser) (Just defaultValue)],
+    { ifDefinitions = [Definition name description $ IFOptional (pType parser) (Just defaultValue)],
       ifParser =
         M.lookup name
           >>> withPath (++ [Key (unName name)]) . \case
@@ -255,7 +255,7 @@ fieldWithDefault name description defaultValue parser =
 
 enum ::
   MonadParse m =>
-  Typename ->
+  Name ->
   Maybe Description ->
   NonEmpty (Definition EnumValueInfo, a) ->
   Parser 'Both m a
@@ -270,7 +270,7 @@ enum name description values =
           other -> typeMismatch name "an enum value" other
     }
   where
-    schemaType = NonNullable $ TNamed $ mkDefinition name description $ TIEnum (fst <$> values)
+    schemaType = NonNullable $ TNamed $ Definition name description $ TIEnum (fst <$> values)
     valuesMap = M.fromList $ over (traverse . _1) dName $ toList values
     validate value =
       onNothing (M.lookup value valuesMap) $
@@ -289,7 +289,7 @@ enum name description values =
 -- the spec.
 object ::
   MonadParse m =>
-  Typename ->
+  Name ->
   Maybe Description ->
   InputFieldsParser m a ->
   Parser 'Input m a
@@ -314,7 +314,7 @@ object name description parser =
     schemaType =
       NonNullable $
         TNamed $
-          mkDefinition name description $
+          Definition name description $
             TIInputObject (InputObjectInfo (ifDefinitions parser))
     fieldNames = S.fromList (dName <$> ifDefinitions parser)
     parseFields fields = do

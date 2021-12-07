@@ -16,7 +16,6 @@ type RequestOptionsTransformsProps = {
   requestAddHeaders: KeyValuePair[];
   requestMethodOnChange: (requestMethod: RequestTransformMethod) => void;
   requestUrlOnChange: (requestUrl: string) => void;
-  requestUrlErrorOnChange: (requestUrlError: string) => void;
   requestQueryParamsOnChange: (requestQueryParams: KeyValuePair[]) => void;
   requestAddHeadersOnChange: (requestAddHeaders: KeyValuePair[]) => void;
 };
@@ -30,7 +29,6 @@ const RequestOptionsTransforms: React.FC<RequestOptionsTransformsProps> = ({
   requestAddHeaders,
   requestMethodOnChange,
   requestUrlOnChange,
-  requestUrlErrorOnChange,
   requestQueryParamsOnChange,
   requestAddHeadersOnChange,
 }) => {
@@ -85,7 +83,6 @@ const RequestOptionsTransforms: React.FC<RequestOptionsTransformsProps> = ({
           requestUrlPreview={requestUrlPreview}
           requestQueryParams={requestQueryParams}
           requestUrlOnChange={requestUrlOnChange}
-          requestUrlErrorOnChange={requestUrlErrorOnChange}
           requestQueryParamsOnChange={requestQueryParamsOnChange}
         />
       </div>

@@ -7,6 +7,7 @@ module Hasura.Server.API.Config
 where
 
 import Data.Aeson.TH
+import Data.HashMap.Strict qualified as Map
 import Data.HashSet qualified as Set
 import Hasura.GraphQL.Execute.LiveQuery.Options qualified as LQ
 import Hasura.Prelude
@@ -35,7 +36,7 @@ data ServerConfig = ServerConfig
     scfgIsAdminSecretSet :: !Bool,
     scfgIsAuthHookSet :: !Bool,
     scfgIsJwtSet :: !Bool,
-    scfgJwt :: !(Maybe JWTInfo),
+    scfgJwt :: !(Map.HashMap (Maybe StringOrURI) JWTInfo),
     scfgIsAllowListEnabled :: !Bool,
     scfgLiveQueries :: !LQ.LiveQueriesOptions,
     scfgConsoleAssetsDir :: !(Maybe Text),
@@ -90,11 +91,12 @@ isJWTSet = \case
   AMAdminSecretAndJWT {} -> True
   _ -> False
 
-getJWTInfo :: AuthMode -> Maybe JWTInfo
-getJWTInfo (AMAdminSecretAndJWT _ jwtCtx _) =
-  Just $ case jcxClaims jwtCtx of
-    JCNamespace namespace claimsFormat ->
-      JWTInfo namespace claimsFormat Nothing
-    JCMap claimsMap ->
-      JWTInfo (ClaimNs defaultClaimsNamespace) defaultClaimsFormat $ Just claimsMap
-getJWTInfo _ = Nothing
+getJWTInfo :: AuthMode -> Map.HashMap (Maybe StringOrURI) JWTInfo
+getJWTInfo (AMAdminSecretAndJWT _ jwtCtxs _) =
+  let f jwtCtx = case jcxClaims jwtCtx of
+        JCNamespace namespace claimsFormat ->
+          JWTInfo namespace claimsFormat Nothing
+        JCMap claimsMap ->
+          JWTInfo (ClaimNs defaultClaimsNamespace) defaultClaimsFormat $ Just claimsMap
+   in fmap f jwtCtxs
+getJWTInfo _ = mempty

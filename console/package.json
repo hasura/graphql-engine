@@ -257,15 +257,15 @@
     "terser-webpack-plugin": "4.2.3",
     "ts-jest": "26.5.4",
     "tsconfig-paths-webpack-plugin": "^3.5.1",
-    "typescript": "4.2.3",
+    "typescript": "4.5.2",
     "url-loader": "1.1.2",
-    "whatwg-fetch": "^3.6.2",
     "webpack": "4.42.0",
     "webpack-cli": "3.3.11",
     "webpack-dev-middleware": "3.7.2",
     "webpack-hot-middleware": "2.25.0",
     "webpack-isomorphic-tools": "3.0.6",
-    "webpack-node-externals": "^1.7.2"
+    "webpack-node-externals": "^1.7.2",
+    "whatwg-fetch": "^3.6.2"
   },
   "engines": {
     "node": ">=8.9.1"

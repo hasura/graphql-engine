@@ -36,7 +36,7 @@
       - extensions:
           path: $.selectionSet.hero.selectionSet.id
           code: validation-failed
-        message: "field \"id\" not found in type: 'Character'"
+        message: "field \"id\" not found in type: 'Human'"
 
 - description: query aliases
   url: /v1/graphql

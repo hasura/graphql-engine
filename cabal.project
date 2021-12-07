@@ -15,6 +15,9 @@
 
 with-compiler: ghc-8.10.7
 
+-- package-level parallelism:
+jobs: $ncpus
+
 packages: server
 
 constraints:

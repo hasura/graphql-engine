@@ -15,6 +15,8 @@ args:
         query: "query ($first_name: String!, $last_name:String!) { test_table(where: {first_name: { _eq: $first_name } last_name: { _eq: $last_name }}) { first_name last_name } }"
       - name: query_with_uuid_arg
         query: "query ($id: uuid!) { test_table(where: {id: { _neq: $id }}) { first_name last_name } }"
+      - name: query_with_uuid_args
+        query: "query ($ids: [uuid!]!) { test_table(where: {id: { _in: $ids }}) { first_name last_name } }"
       - name: simple_subscription
         query: "subscription { test_table { first_name last_name } }"
 
@@ -84,6 +86,18 @@ args:
       query:
         collection_name: test_collection
         query_name: query_with_uuid_arg
+
+- type: create_rest_endpoint
+  args:
+    url: with_uuids
+    name: with_uuids
+    methods:
+      - POST
+    definition:
+      query:
+        collection_name: test_collection
+        query_name: query_with_uuid_args
+
 
 - type: create_rest_endpoint
   args:

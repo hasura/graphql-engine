@@ -156,6 +156,7 @@ library
                      , mtl
                      , openapi3
                      , optparse-applicative
+                     , optparse-generic
                      , parsec
                      , pg-client
                      , postgresql-binary
@@ -384,9 +385,10 @@ library
                      , Hasura.Backends.MSSQL.Plan
                      , Hasura.Backends.MSSQL.SQL.Value
                      , Hasura.Backends.MSSQL.ToQuery
-                     , Hasura.Backends.MSSQL.Types
+                     , Hasura.Backends.MSSQL.Types.Insert
                      , Hasura.Backends.MSSQL.Types.Instances
                      , Hasura.Backends.MSSQL.Types.Internal
+                     , Hasura.Backends.MSSQL.Types.Update
 
                      , Hasura.Backends.Postgres.Connection
                      , Hasura.Backends.Postgres.DDL
@@ -447,7 +449,6 @@ library
                      , Hasura.Backends.MySQL.ToQuery
                      , Hasura.Backends.MySQL.Instances.API
 
-                     -- Exposed for benchmark:
                      , Hasura.Cache.Bounded
                      , Hasura.Logging
                      , Hasura.HTTP
@@ -481,11 +482,9 @@ library
                      , Hasura.RQL.Types.Run
                      , Hasura.Session
 
-                     -- exposed for Pro
                      , Hasura.Server.API.Config
                      , Hasura.Server.Telemetry
                      , Hasura.Server.Metrics
-                     -- Exposed for testing:
                      , Hasura.Server.Telemetry.Counters
                      , Hasura.Server.Auth.JWT
                      , Hasura.GC
@@ -525,8 +524,11 @@ library
                      , Hasura.RQL.Types.Permission
                      , Hasura.RQL.Types.QueryCollection
                      , Hasura.RQL.Types.QueryTags
-                     , Hasura.RQL.Types.Relationship
-                     , Hasura.RQL.Types.RemoteRelationship
+                     , Hasura.RQL.Types.Relationships.FromSource
+                     , Hasura.RQL.Types.Relationships.Local
+                     , Hasura.RQL.Types.Relationships.Remote
+                     , Hasura.RQL.Types.Relationships.ToSchema
+                     , Hasura.RQL.Types.Relationships.ToSource
                      , Hasura.RQL.Types.RemoteSchema
                      , Hasura.RQL.Types.ResultCustomization
                      , Hasura.RQL.Types.ScheduledTrigger
@@ -647,6 +649,7 @@ library
                      , Hasura.GraphQL.Schema.RemoteSource
                      , Hasura.GraphQL.Schema.Select
                      , Hasura.GraphQL.Schema.Table
+                     , Hasura.GraphQL.Schema.Update
                      , Hasura.GraphQL.Transport.Backend
                      , Hasura.GraphQL.Transport.HTTP
                      , Hasura.GraphQL.Transport.HTTP.Protocol
@@ -808,13 +811,13 @@ test-suite graphql-engine-tests
     Data.Text.RawString
     Data.TimeSpec
     Database.MSSQL.TransactionSpec
+    Hasura.Backends.MySQL.DataLoader.ExecuteTests
     Hasura.EventingSpec
     Hasura.Generator
     Hasura.Generator.Common
     Hasura.GraphQL.NamespaceSpec
     Hasura.GraphQL.Parser.DirectivesTest
     Hasura.GraphQL.Parser.TestUtils
-    Hasura.GraphQL.RemoteServerSpec
     Hasura.GraphQL.Schema.RemoteTest
     Hasura.IncrementalSpec
     Hasura.RQL.IR.Generator
@@ -905,6 +908,12 @@ test-suite tests-hspec
     , th-lift
     , yaml
     , postgresql-simple
+    , persistent
+    , persistent-mysql
+    , persistent-postgresql
+    , persistent-template
+    , monad-logger
+    , unliftio-core
   hs-source-dirs: tests-hspec
   -- Turning off optimizations is intentional; tests aren't
   -- performance sensitive and waiting for compilation is a problem.
@@ -918,6 +927,7 @@ test-suite tests-hspec
     Harness.Feature
     Harness.Yaml
     Harness.Sql
+    Harness.State
     Harness.Graphql
     Harness.GraphqlEngine
 

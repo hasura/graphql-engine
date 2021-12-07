@@ -35,7 +35,7 @@ import Data.Aeson.Internal qualified as J
 import Data.Align (align)
 import Data.ByteString.Lazy qualified as BL
 import Data.Has
-import Data.HashMap.Strict qualified as Map
+import Data.HashMap.Strict.Extended qualified as Map
 import Data.HashSet qualified as Set
 import Data.Int (Int64)
 import Data.List.NonEmpty qualified as NE
@@ -504,7 +504,7 @@ tableConnectionSelectionSet sourceName tableInfo selectPermissions = memoizeOn '
               hasPreviousPageField
             ]
        in P.nonNullableParser $
-            P.selectionSet (P.Typename $$(G.litName "PageInfo")) Nothing allFields
+            P.selectionSet $$(G.litName "PageInfo") Nothing allFields
               <&> parsedSelectionsToFields IR.PageInfoTypename
 
     tableEdgesSelectionSet ::
@@ -1037,7 +1037,7 @@ tableAggregationFields sourceName tableInfo selectPermissions = memoizeOn 'table
       FieldParser n (IR.AggregateField b)
     parseAggOperator mkTypename operator tableGQLName columns =
       let opText = G.unName operator
-          setName = mkTypename $ tableGQLName <> $$(G.litName "_") <> operator <> $$(G.litName "_fields")
+          setName = P.runMkTypename mkTypename $ tableGQLName <> $$(G.litName "_") <> operator <> $$(G.litName "_fields")
           setDesc = Just $ G.Description $ "aggregate " <> opText <> " on columns"
           subselectionParser =
             P.selectionSet setName setDesc columns
@@ -1340,7 +1340,7 @@ remoteRelationshipField remoteFieldInfo = runMaybeT do
         hoistMaybe $ Map.lookup remoteSchemaName remoteRelationshipQueryCtx
       role <- askRoleName
       let hasuraFieldNames = Set.map dbJoinFieldToName hasuraFields
-          relationshipDef = RemoteSchemaRelationshipDef remoteSchemaName hasuraFieldNames remoteFields
+          relationshipDef = ToSchemaRelationshipDef remoteSchemaName hasuraFieldNames remoteFields
       (newInpValDefns :: [(G.TypeDefinition [G.Name] RemoteSchemaInputValueDefinition)], remoteFieldParamMap) <-
         if role == adminRoleName
           then do
@@ -1352,13 +1352,13 @@ remoteRelationshipField remoteFieldInfo = runMaybeT do
             fieldInfoMap <- (_tciFieldInfoMap . _tiCoreInfo) <$> askTableInfo @b source table
             roleRemoteField <-
               afold @(Either _) $
-                validateRemoteSchemaRelationship relationshipDef table name source (remoteSchemaInfo, roleIntrospectionResultOriginal) fieldInfoMap
-            pure $ (_rfiInputValueDefinitions roleRemoteField, _rfiParamMap roleRemoteField)
+                validateSourceToSchemaRelationship relationshipDef table name source (remoteSchemaInfo, roleIntrospectionResultOriginal) fieldInfoMap
+            pure $ (_rrfiInputValueDefinitions roleRemoteField, _rrfiParamMap roleRemoteField)
       let roleIntrospection@(RemoteSchemaIntrospection typeDefns) = irDoc roleIntrospectionResultOriginal
           -- add the new input value definitions created by the remote relationship
           -- to the existing schema introspection of the role
-          remoteRelationshipIntrospection = RemoteSchemaIntrospection $ typeDefns <> newInpValDefns
-      fieldName <- textToName $ remoteRelationshipNameToText name
+          remoteRelationshipIntrospection = RemoteSchemaIntrospection $ typeDefns <> Map.fromListOn getTypeName newInpValDefns
+      fieldName <- textToName $ relNameToTxt name
 
       -- This selection set parser, should be of the remote node's selection set parser, which comes
       -- from the fieldCall
@@ -1376,23 +1376,27 @@ remoteRelationshipField remoteFieldInfo = runMaybeT do
       -- These are the arguments that are given by the user while executing a query
       let remoteFieldUserArguments = map snd $ Map.toList remoteFieldParamMap
       remoteFld <-
-        lift $
-          customizeFieldParser (,) remoteSchemaCustomizer parentTypeName . P.wrapFieldParser nestedFieldType
-            <$> remoteField remoteRelationshipIntrospection fieldName Nothing remoteFieldUserArguments fieldTypeDefinition
+        withRemoteSchemaCustomization remoteSchemaCustomizer $
+          lift $
+            P.wrapFieldParser nestedFieldType
+              <$> remoteField remoteRelationshipIntrospection parentTypeName fieldName Nothing remoteFieldUserArguments fieldTypeDefinition
 
       pure $
         pure $
           remoteFld
-            `P.bindField` \(resultCustomizer, G.Field {G._fArguments = args, G._fSelectionSet = selSet, G._fName = fname}) -> do
+            `P.bindField` \fld@G.Field {G._fArguments = args, G._fSelectionSet = selSet, G._fName = fname} -> do
               let remoteArgs =
                     Map.toList args <&> \(argName, argVal) -> IR.RemoteFieldArgument argName $ P.GraphQLValue $ argVal
-              let resultCustomizer' = applyFieldCalls fieldCalls $ applyAliasMapping (singletonAliasMapping fname (fcName $ NE.last fieldCalls)) resultCustomizer
+              let resultCustomizer =
+                    applyFieldCalls fieldCalls $
+                      applyAliasMapping (singletonAliasMapping fname (fcName $ NE.last fieldCalls)) $
+                        makeResultCustomizer remoteSchemaCustomizer fld
               pure $
                 IR.AFRemote $
                   IR.RemoteSelectRemoteSchema $
                     IR.RemoteSchemaSelect
                       { _rselArgs = remoteArgs,
-                        _rselResultCustomizer = resultCustomizer',
+                        _rselResultCustomizer = resultCustomizer,
                         _rselSelection = selSet,
                         _rselHasuraFields = hasuraFields,
                         _rselFieldCall = fieldCalls,
@@ -1670,7 +1674,7 @@ nodePG = memoizeOn 'nodePG () do
       pure $ (source,sourceConfig,selectPermissions,tablePkeyColumns,) <$> annotatedFieldsParser
   pure $
     P.selectionSetInterface
-      (P.Typename $$(G.litName "Node"))
+      $$(G.litName "Node")
       (Just nodeInterfaceDescription)
       [idField]
       tables

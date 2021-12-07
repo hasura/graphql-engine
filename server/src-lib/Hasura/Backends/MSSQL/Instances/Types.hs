@@ -6,7 +6,9 @@ import Data.Aeson
 import Database.ODBC.SQLServer qualified as ODBC
 import Hasura.Backends.MSSQL.Connection qualified as MSSQL
 import Hasura.Backends.MSSQL.ToQuery ()
-import Hasura.Backends.MSSQL.Types qualified as MSSQL
+import Hasura.Backends.MSSQL.Types.Insert qualified as MSSQL (MSSQLExtraInsertData)
+import Hasura.Backends.MSSQL.Types.Internal qualified as MSSQL
+import Hasura.Backends.MSSQL.Types.Update qualified as MSSQL (BackendUpdate)
 import Hasura.Base.Error
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend
@@ -31,6 +33,8 @@ instance Backend 'MSSQL where
   type BooleanOperators 'MSSQL = MSSQL.BooleanOperators
   type SQLExpression 'MSSQL = MSSQL.Expression
   type SQLOperator 'MSSQL = MSSQL.Op
+
+  type BackendUpdate 'MSSQL = MSSQL.BackendUpdate
 
   type ExtraTableMetadata 'MSSQL = [MSSQL.ColumnName] -- List of identity columns
   type ExtraInsertData 'MSSQL = MSSQL.MSSQLExtraInsertData

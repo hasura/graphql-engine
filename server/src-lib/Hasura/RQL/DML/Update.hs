@@ -100,7 +100,7 @@ validateUpdateQueryWith ::
   SessionVariableBuilder ('Postgres 'Vanilla) m ->
   ValueParser ('Postgres 'Vanilla) m S.SQLExp ->
   UpdateQuery ->
-  m (AnnotatedUpdateNode ('Postgres 'Vanilla))
+  m (AnnotatedUpdate ('Postgres 'Vanilla))
 validateUpdateQueryWith sessVarBldr prepValBldr uq = do
   let tableName = uqTable uq
   tableInfo <- withPathK "table" $ askTabInfoSource tableName
@@ -179,11 +179,11 @@ validateUpdateQueryWith sessVarBldr prepValBldr uq = do
         (upiCheck updPerm)
 
   return $
-    AnnotatedUpdateNode
+    AnnotatedUpdateG
       tableName
       (resolvedUpdFltr, annSQLBoolExp)
       resolvedUpdCheck
-      (BackendUpdate $ Map.fromList $ fmap UpdSet <$> setExpItems)
+      (BackendUpdate $ Map.fromList $ fmap UpdateSet <$> setExpItems)
       (mkDefaultMutFlds mAnnRetCols)
       allCols
   where
@@ -196,7 +196,7 @@ validateUpdateQueryWith sessVarBldr prepValBldr uq = do
 validateUpdateQuery ::
   (QErrM m, UserInfoM m, CacheRM m) =>
   UpdateQuery ->
-  m (AnnotatedUpdateNode ('Postgres 'Vanilla), DS.Seq Q.PrepArg)
+  m (AnnotatedUpdate ('Postgres 'Vanilla), DS.Seq Q.PrepArg)
 validateUpdateQuery query = do
   let source = uqSource query
   tableCache :: TableCache ('Postgres 'Vanilla) <- askTableCache source

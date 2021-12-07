@@ -19,6 +19,8 @@ MYSQL_PASSWORD=hasuraMySQL1
 MYSQL_CONTAINER_NAME="hasura-dev-mysql-$MYSQL_PORT"
 # space deliberately omitted between -u and -p params https://hub.docker.com/_/mysql
 MYSQL_DOCKER="docker exec -it $MYSQL_CONTAINER_NAME mysql -u$MYSQL_USER -p$MYSQL_PASSWORD"
+MYSQL_CONTAINER_IMAGE=mysql:8.0
+MYSQL_PLATFORM=linux/amd64 # for M1 arch we use the rosetta emulation
 
 ######################
 #     Functions      #
@@ -29,8 +31,9 @@ function mysql_launch_container(){
   docker run --name $MYSQL_CONTAINER_NAME \
     -e MYSQL_ROOT_PASSWORD=$MYSQL_PASSWORD \
     -e MYSQL_DATABASE=hasura \
+    --platform "$MYSQL_PLATFORM" \
     -p 127.0.0.1:$MYSQL_PORT:3306 \
-    -d mysql:8.0 -h "127.0.0.1"
+    -d "$MYSQL_CONTAINER_IMAGE" -h "127.0.0.1"
 }
 
 function mysql_wait {

@@ -8,6 +8,10 @@ import { BackendOnlySection, BackEndOnlySectionProps } from './BackendOnly';
 export default {
   title: 'Permissions Form/Components/Backend Only Section',
   component: BackendOnlySection,
+  parameters: {
+    // Disable storybook for playground stories
+    chromatic: { disableSnapshot: true },
+  },
 } as Meta;
 
 const schema = z.object({
@@ -21,13 +25,13 @@ BackendOnlyEnabled.args = {
   queryType: 'insert',
 };
 BackendOnlyEnabled.decorators = [
-  (S: React.FC) => (
+  (StoryComponent: React.FC) => (
     <Form
       schema={schema}
       onSubmit={() => {}}
       options={{ defaultValues: { backendOnly: true } }}
     >
-      {() => <S />}
+      {() => <StoryComponent />}
     </Form>
   ),
 ];
@@ -39,22 +43,26 @@ BackendOnlyDisabled.args = {
   queryType: 'insert',
 };
 BackendOnlyDisabled.decorators = [
-  (S: React.FC) => (
+  (StoryComponent: React.FC) => (
     <Form
       schema={schema}
       onSubmit={() => {}}
       options={{ defaultValues: { backendOnly: false } }}
     >
-      {() => <S />}
+      {() => <StoryComponent />}
     </Form>
   ),
 ];
 
-export const DefaultOpen: Story<BackEndOnlySectionProps> = args => (
+export const Showcase: Story<BackEndOnlySectionProps> = args => (
   <BackendOnlySection {...args} />
 );
-DefaultOpen.args = {
+Showcase.args = {
   queryType: 'insert',
   defaultOpen: true,
 };
-DefaultOpen.decorators = BackendOnlyEnabled.decorators;
+Showcase.parameters = {
+  // Enable storybook for Showcase stories
+  chromatic: { disableSnapshot: false },
+};
+Showcase.decorators = BackendOnlyEnabled.decorators;
