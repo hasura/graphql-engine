@@ -200,14 +200,14 @@ buildRoleContext
               functionPermsCtx
       runMonadSchema role roleQueryContext sources $ do
         fieldsList <- traverse (buildBackendSource buildSource) $ toList sources
-        let (queryFields, mutationFrontendFields, mutationBackendFields, nonQuerySubscriptionFields) = mconcat fieldsList
+        let (queryFields, mutationFrontendFields, mutationBackendFields, subscriptionFields) = mconcat fieldsList
 
         mutationParserFrontend <-
           buildMutationParser mutationRemotes allActionInfos nonObjectCustomTypes mutationFrontendFields
         mutationParserBackend <-
           buildMutationParser mutationRemotes allActionInfos nonObjectCustomTypes mutationBackendFields
         subscriptionParser <-
-          buildSubscriptionParser queryFields allActionInfos nonQuerySubscriptionFields
+          buildSubscriptionParser subscriptionFields allActionInfos
         queryParserFrontend <-
           buildQueryParser queryFields queryRemotes allActionInfos nonObjectCustomTypes mutationParserFrontend subscriptionParser
         queryParserBackend <-
@@ -252,11 +252,13 @@ buildRoleContext
           let validFunctions = takeValidFunctions functions
               validTables = takeValidTables tables
           mkTypename <- asks getter
+          uncustomizedQueryFields <- buildQueryFields sourceName sourceConfig validTables validFunctions queryTagsConfig
+          uncustomizedStreamSubscriptionFields <- buildTableStreamSubscriptionFields sourceName sourceConfig validTables queryTagsConfig
           (,,,)
             <$> customizeFields
               sourceCustomization
               (mkTypename <> P.MkTypename (<> $$(G.litName "_query")))
-              (buildQueryFields sourceName sourceConfig validTables validFunctions queryTagsConfig)
+              (pure uncustomizedQueryFields)
             <*> customizeFields
               sourceCustomization
               (mkTypename <> P.MkTypename (<> $$(G.litName "_mutation_frontend")))
@@ -268,7 +270,7 @@ buildRoleContext
             <*> customizeFields
               sourceCustomization
               (mkTypename <> P.MkTypename (<> $$(G.litName "_subscription")))
-              (buildTableStreamSubscriptionFields sourceName sourceConfig validTables queryTagsConfig)
+              (pure $ uncustomizedStreamSubscriptionFields <> uncustomizedQueryFields)
 
 buildRelayRoleContext ::
   forall m.
@@ -302,7 +304,7 @@ buildRelayRoleContext
       -- FIXME: for now this is PG-only. This isn't a problem yet since for now only PG supports relay.
       -- To fix this, we'd need to first generalize `nodeField`.
       nodeField_ <- fmap NotNamespaced <$> nodeField
-      let (queryPGFields', mutationFrontendFields, mutationBackendFields, nonPGQuerySubscriptionFields) = mconcat fieldsList
+      let (queryPGFields', mutationFrontendFields, mutationBackendFields) = mconcat fieldsList
           queryPGFields = nodeField_ : queryPGFields'
 
       -- Remote schema mutations aren't exposed in relay because many times it throws
@@ -312,7 +314,7 @@ buildRelayRoleContext
       mutationParserBackend <-
         buildMutationParser mempty allActionInfos nonObjectCustomTypes mutationBackendFields
       subscriptionParser <-
-        buildSubscriptionParser queryPGFields [] nonPGQuerySubscriptionFields
+        buildSubscriptionParser queryPGFields []
       queryParserFrontend <-
         queryWithIntrospectionHelper queryPGFields mutationParserFrontend subscriptionParser
       queryParserBackend <-
@@ -339,8 +341,7 @@ buildRelayRoleContext
           m
           ( [FieldParser (P.ParseT Identity) (NamespacedField (QueryRootField UnpreparedValue))],
             [FieldParser (P.ParseT Identity) (NamespacedField (MutationRootField UnpreparedValue))],
-            [FieldParser (P.ParseT Identity) (NamespacedField (MutationRootField UnpreparedValue))],
-            [FieldParser (P.ParseT Identity) (NamespacedField (QueryRootField UnpreparedValue))]
+            [FieldParser (P.ParseT Identity) (NamespacedField (MutationRootField UnpreparedValue))]
           )
       buildSource (SourceInfo sourceName tables functions sourceConfig queryTagsConfig sourceCustomization) =
         withSourceCustomization sourceCustomization do
@@ -348,7 +349,8 @@ buildRelayRoleContext
               validTables = takeValidTables tables
 
           mkTypename <- asks getter
-          (,,,)
+          uncustomizedQueryFields <- buildQueryFields sourceName sourceConfig validTables validFunctions queryTagsConfig
+          (,,)
             <$> customizeFields
               sourceCustomization
               (mkTypename <> P.MkTypename (<> $$(G.litName "_query")))
@@ -361,10 +363,6 @@ buildRelayRoleContext
               sourceCustomization
               (mkTypename <> P.MkTypename (<> $$(G.litName "_mutation_backend")))
               (buildMutationFields Backend sourceName sourceConfig validTables validFunctions queryTagsConfig)
-            <*> customizeFields
-              sourceCustomization
-              (mkTypename <> P.MkTypename (<> $$(G.litName "_subscription")))
-              (buildTableStreamSubscriptionFields sourceName sourceConfig validTables queryTagsConfig)
 
 buildFullestDBSchema ::
   forall m.
@@ -380,14 +378,14 @@ buildFullestDBSchema ::
 buildFullestDBSchema queryContext sources allActionInfos nonObjectCustomTypes =
   runMonadSchema adminRoleName queryContext sources do
     fieldsList <- traverse (buildBackendSource buildSource) $ toList sources
-    let (queryFields, mutationFrontendFields, nonQuerySubscriptionFields) = mconcat fieldsList
+    let (queryFields, mutationFrontendFields, subscriptionFields) = mconcat fieldsList
 
     mutationParserFrontend <-
       -- NOTE: we omit remotes here on purpose since we're trying to check name
       -- clashes with remotes:
       buildMutationParser mempty allActionInfos nonObjectCustomTypes mutationFrontendFields
     subscriptionParser <-
-      buildSubscriptionParser queryFields allActionInfos nonQuerySubscriptionFields
+      buildSubscriptionParser subscriptionFields allActionInfos
     queryParserFrontend <-
       buildQueryParser queryFields mempty allActionInfos nonObjectCustomTypes mutationParserFrontend subscriptionParser
 
@@ -409,11 +407,13 @@ buildFullestDBSchema queryContext sources allActionInfos nonObjectCustomTypes =
             validTables = takeValidTables tables
 
         mkTypename <- asks getter
+        uncustomizedQueryFields <- buildQueryFields sourceName sourceConfig validTables validFunctions queryTagsConfig
+        uncustomizedStreamSubscriptionFields <- buildTableStreamSubscriptionFields sourceName sourceConfig validTables queryTagsConfig
         (,,)
           <$> customizeFields
             sourceCustomization
             (mkTypename <> P.MkTypename (<> $$(G.litName "_query")))
-            (buildQueryFields sourceName sourceConfig validTables validFunctions queryTagsConfig)
+            (pure uncustomizedQueryFields)
           <*> customizeFields
             sourceCustomization
             (mkTypename <> P.MkTypename (<> $$(G.litName "_mutation_frontend")))
@@ -421,7 +421,7 @@ buildFullestDBSchema queryContext sources allActionInfos nonObjectCustomTypes =
           <*> customizeFields
             sourceCustomization
             (mkTypename <> P.MkTypename (<> $$(G.litName "_subscription")))
-            (buildTableStreamSubscriptionFields sourceName sourceConfig validTables queryTagsConfig)
+            (pure $ uncustomizedStreamSubscriptionFields <> uncustomizedQueryFields)
 
 -- The `unauthenticatedContext` is used when the user queries the graphql-engine
 -- with a role that it's unaware of. Before remote schema permissions, remotes
@@ -766,11 +766,10 @@ buildSubscriptionParser ::
   ) =>
   [P.FieldParser n (NamespacedField (QueryRootField UnpreparedValue))] ->
   [ActionInfo] ->
-  [P.FieldParser n (NamespacedField (QueryRootField UnpreparedValue))] ->
   m (Maybe (Parser 'Output n (RootFieldMap (QueryRootField UnpreparedValue))))
-buildSubscriptionParser queryFields allActions nonQueryFields = do
+buildSubscriptionParser sourceSubscriptionFields allActions = do
   actionSubscriptionFields <- fmap (fmap NotNamespaced) . concat <$> traverse buildActionSubscriptionFields allActions
-  let subscriptionFields = queryFields <> actionSubscriptionFields <> nonQueryFields
+  let subscriptionFields = sourceSubscriptionFields <> actionSubscriptionFields
   whenMaybe (not $ null subscriptionFields) $
     P.safeSelectionSet subscriptionRoot Nothing subscriptionFields
       <&> fmap (flattenNamespaces . fmap typenameToNamespacedRawRF)
