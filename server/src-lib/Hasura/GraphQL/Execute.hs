@@ -162,7 +162,7 @@ buildSubscriptionPlan userInfo rootFields parameterizedQueryHash = do
       ( RootFieldMap
           ( Either
               (ActionId, (PGSourceConfig, EA.AsyncActionQuerySourceExecution (UnpreparedValue ('Postgres 'Vanilla))))
-              (SourceName, AB.AnyBackend (IR.SourceConfigWith (IR.QueryDBRoot (Const Void) UnpreparedValue)))
+              (SourceName, AB.AnyBackend (IR.SourceConfigWith (IR.QueryDBRoot Void UnpreparedValue)))
           ),
         RootFieldMap (ActionId, ActionLogResponse -> Either QErr EncJSON)
       ) ->
@@ -171,7 +171,7 @@ buildSubscriptionPlan userInfo rootFields parameterizedQueryHash = do
         ( RootFieldMap
             ( Either
                 (ActionId, (PGSourceConfig, EA.AsyncActionQuerySourceExecution (UnpreparedValue ('Postgres 'Vanilla))))
-                (SourceName, AB.AnyBackend (IR.SourceConfigWith (IR.QueryDBRoot (Const Void) UnpreparedValue)))
+                (SourceName, AB.AnyBackend (IR.SourceConfigWith (IR.QueryDBRoot Void UnpreparedValue)))
             ),
           RootFieldMap (ActionId, ActionLogResponse -> Either QErr EncJSON)
         )
@@ -202,7 +202,7 @@ buildSubscriptionPlan userInfo rootFields parameterizedQueryHash = do
     buildAction ::
       (SourceName, AB.AnyBackend (IR.SourceConfigWith b)) ->
       RootFieldMap
-        (SourceName, AB.AnyBackend (IR.SourceConfigWith (IR.QueryDBRoot (Const Void) UnpreparedValue))) ->
+        (SourceName, AB.AnyBackend (IR.SourceConfigWith (IR.QueryDBRoot Void UnpreparedValue))) ->
       RootFieldAlias ->
       ExceptT QErr IO (SourceName, LiveQueryPlan)
     buildAction (sourceName, exists) allFields rootFieldName = do
@@ -220,8 +220,8 @@ buildSubscriptionPlan userInfo rootFields parameterizedQueryHash = do
       forall b m1.
       (Backend b, MonadError QErr m1) =>
       SourceName ->
-      (SourceName, AB.AnyBackend (IR.SourceConfigWith (IR.QueryDBRoot (Const Void) UnpreparedValue))) ->
-      m1 (IR.QueryDB b (Const Void) (UnpreparedValue b))
+      (SourceName, AB.AnyBackend (IR.SourceConfigWith (IR.QueryDBRoot Void UnpreparedValue))) ->
+      m1 (IR.QueryDB b Void (UnpreparedValue b))
     checkField sourceName (src, exists)
       | sourceName /= src = throw400 NotSupported "all fields of a subscription must be from the same source"
       | otherwise = case AB.unpackAnyBackend exists of

@@ -116,7 +116,7 @@ validateSourceToSchemaRelationship schema table name source (remoteSchemaInfo, i
   hasuraFields <- forM (toList $ _trrdLhsFields schema) $ \fieldName -> do
     fieldInfo <- onNothing (HM.lookup fieldName fields) $ throwError $ TableFieldNonexistent table fieldName
     case fieldInfo of
-      FIColumn columnInfo -> pure $ JoinColumn columnInfo
+      FIColumn columnInfo -> pure $ JoinColumn (pgiColumn columnInfo) (pgiType columnInfo)
       FIComputedField ComputedFieldInfo {..} -> do
         scalarType <- case _cfiReturnType of
           CFRScalar ty -> pure ty
@@ -379,7 +379,7 @@ hasuraFieldToVariable ::
   m G.Name
 hasuraFieldToVariable hasuraField = do
   let fieldText = case hasuraField of
-        JoinColumn columnInfo -> toTxt $ pgiColumn columnInfo
+        JoinColumn column _ -> toTxt column
         JoinComputedField computedFieldInfo -> toTxt $ _scfName computedFieldInfo
   G.mkName fieldText `onNothing` throwError (InvalidGraphQLName fieldText)
 
@@ -537,7 +537,7 @@ dbJoinFieldToNamedType ::
   m G.Name
 dbJoinFieldToNamedType hasuraField = do
   scalarType <- case hasuraField of
-    JoinColumn pci -> case pgiType pci of
+    JoinColumn _ columnType -> case columnType of
       ColumnScalar scalarType -> pure scalarType
       _ -> throwError UnsupportedEnum
     JoinComputedField cfi -> pure $ _scfType cfi

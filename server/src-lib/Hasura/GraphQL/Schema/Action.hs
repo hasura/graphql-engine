@@ -28,6 +28,7 @@ import Hasura.GraphQL.Schema.Common
 import Hasura.GraphQL.Schema.Select
 import Hasura.Prelude
 import Hasura.RQL.DML.Internal qualified as RQL
+import Hasura.RQL.IR.Root qualified as RQL
 import Hasura.RQL.IR.Select qualified as RQL
 import Hasura.RQL.Types
 import Hasura.Session
@@ -48,7 +49,7 @@ actionExecute ::
   MonadBuildSchema ('Postgres 'Vanilla) r m n =>
   NonObjectTypeMap ->
   ActionInfo ->
-  m (Maybe (FieldParser n (AnnActionExecution ('Postgres 'Vanilla) (RQL.RemoteSelect UnpreparedValue) (UnpreparedValue ('Postgres 'Vanilla)))))
+  m (Maybe (FieldParser n (AnnActionExecution ('Postgres 'Vanilla) (RQL.RemoteRelationshipField UnpreparedValue) (UnpreparedValue ('Postgres 'Vanilla)))))
 actionExecute nonObjectTypeMap actionInfo = runMaybeT do
   roleName <- askRoleName
   guard (roleName == adminRoleName || roleName `Map.member` permissions)
@@ -119,7 +120,7 @@ actionAsyncQuery ::
   forall r m n.
   MonadBuildSchema ('Postgres 'Vanilla) r m n =>
   ActionInfo ->
-  m (Maybe (FieldParser n (AnnActionAsyncQuery ('Postgres 'Vanilla) (RQL.RemoteSelect UnpreparedValue) (UnpreparedValue ('Postgres 'Vanilla)))))
+  m (Maybe (FieldParser n (AnnActionAsyncQuery ('Postgres 'Vanilla) (RQL.RemoteRelationshipField UnpreparedValue) (UnpreparedValue ('Postgres 'Vanilla)))))
 actionAsyncQuery actionInfo = runMaybeT do
   roleName <- askRoleName
   guard $ roleName == adminRoleName || roleName `Map.member` permissions

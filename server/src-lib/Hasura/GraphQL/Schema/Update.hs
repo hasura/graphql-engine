@@ -30,7 +30,7 @@ import Hasura.GraphQL.Schema.Table (getTableGQLName, tableColumns, tableUpdateCo
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp (AnnBoolExp, annBoolExpTrue)
 import Hasura.RQL.IR.Returning (MutationOutputG (..))
-import Hasura.RQL.IR.Select (RemoteSelect)
+import Hasura.RQL.IR.Root (RemoteRelationshipField)
 import Hasura.RQL.IR.Update (AnnotatedUpdateG (..))
 import Hasura.RQL.Types.Backend (Backend (..))
 import Hasura.RQL.Types.Column (ColumnInfo (..), isNumCol)
@@ -270,7 +270,7 @@ updateTable ::
   UpdPermInfo b ->
   -- | select permissions of the table (if any)
   Maybe (SelPermInfo b) ->
-  m (P.FieldParser n (AnnotatedUpdateG b (RemoteSelect P.UnpreparedValue) (P.UnpreparedValue b)))
+  m (P.FieldParser n (AnnotatedUpdateG b (RemoteRelationshipField P.UnpreparedValue) (P.UnpreparedValue b)))
 updateTable backendUpdate sourceName tableInfo fieldName description updatePerms selectPerms = do
   let tableName = tableInfoName tableInfo
       columns = tableColumns tableInfo
@@ -304,7 +304,7 @@ updateTableByPk ::
   UpdPermInfo b ->
   -- | select permissions of the table
   SelPermInfo b ->
-  m (Maybe (P.FieldParser n (AnnotatedUpdateG b (RemoteSelect P.UnpreparedValue) (P.UnpreparedValue b))))
+  m (Maybe (P.FieldParser n (AnnotatedUpdateG b (RemoteRelationshipField P.UnpreparedValue) (P.UnpreparedValue b))))
 updateTableByPk backendUpdate sourceName tableInfo fieldName description updatePerms selectPerms = runMaybeT $ do
   let columns = tableColumns tableInfo
       tableName = tableInfoName tableInfo
@@ -329,9 +329,9 @@ mkUpdateObject ::
   ( ( BackendUpdate b (P.UnpreparedValue b),
       AnnBoolExp b (P.UnpreparedValue b)
     ),
-    MutationOutputG b (RemoteSelect P.UnpreparedValue) (P.UnpreparedValue b)
+    MutationOutputG b (RemoteRelationshipField P.UnpreparedValue) (P.UnpreparedValue b)
   ) ->
-  AnnotatedUpdateG b (RemoteSelect P.UnpreparedValue) (P.UnpreparedValue b)
+  AnnotatedUpdateG b (RemoteRelationshipField P.UnpreparedValue) (P.UnpreparedValue b)
 mkUpdateObject _auTable _auAllCols updatePerms ((_auBackend, whereExp), _auOutput) =
   AnnotatedUpdateG {..}
   where

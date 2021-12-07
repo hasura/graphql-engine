@@ -121,7 +121,7 @@ graphQLValueToJSON = \case
 
 -- | Information about the field on the LHS of a join against a remote schema.
 data DBJoinField (b :: BackendType)
-  = JoinColumn !(ColumnInfo b)
+  = JoinColumn !(Column b) !(ColumnType b)
   | JoinComputedField !(ScalarComputedField b)
   deriving (Generic)
 
@@ -135,12 +135,12 @@ instance Backend b => Hashable (DBJoinField b)
 
 instance (Backend b) => ToJSON (DBJoinField b) where
   toJSON = \case
-    JoinColumn columnInfo -> toJSON columnInfo
+    JoinColumn column columnType -> toJSON (column, columnType)
     JoinComputedField computedField -> toJSON computedField
 
 dbJoinFieldToName :: forall b. (Backend b) => DBJoinField b -> FieldName
 dbJoinFieldToName = \case
-  JoinColumn columnInfo -> fromCol @b $ pgiColumn $ columnInfo
+  JoinColumn column _ -> fromCol @b column
   JoinComputedField computedFieldInfo -> fromComputedField $ _scfName computedFieldInfo
 
 -- | Information about a computed field appearing on the LHS of a remote join.

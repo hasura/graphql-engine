@@ -26,7 +26,7 @@ planNoPlan ::
   MonadError E.QErr m =>
   FromIrConfig ->
   UserInfo ->
-  QueryDB 'BigQuery (Const Void) (GraphQL.UnpreparedValue 'BigQuery) ->
+  QueryDB 'BigQuery Void (GraphQL.UnpreparedValue 'BigQuery) ->
   m Select
 planNoPlan fromIrConfig userInfo queryDB = do
   rootField <- traverse (prepareValueNoPlan (_uiSession userInfo)) queryDB

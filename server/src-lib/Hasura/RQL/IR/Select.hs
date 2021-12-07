@@ -75,14 +75,12 @@ module Hasura.RQL.IR.Select
     PageInfoField (..),
     PageInfoFields,
     QueryDB (..),
-    RemoteFieldArgument (..),
-    RemoteSchemaSelect (..),
-    RemoteSelect (..),
     RemoteSourceSelect (..),
     SelectArgs,
     SelectArgsG (..),
     SelectFrom,
     SelectFromG (..),
+    RemoteRelationshipSelect (..),
     SourceRelationshipSelection (..),
     TableAggregateField,
     TableAggregateFieldG (..),
@@ -127,7 +125,6 @@ import Data.Int (Int64)
 import Data.Kind (Type)
 import Data.List.NonEmpty qualified as NE
 import Data.Sequence qualified as Seq
-import Hasura.GraphQL.Parser.Schema (InputValue)
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.IR.OrderBy
@@ -139,16 +136,11 @@ import Hasura.RQL.Types.Function
 import Hasura.RQL.Types.Instances ()
 import Hasura.RQL.Types.Relationships.FromSource
 import Hasura.RQL.Types.Relationships.Local
-import Hasura.RQL.Types.Relationships.ToSchema
-import Hasura.RQL.Types.RemoteSchema
-import Hasura.RQL.Types.ResultCustomization
-import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.Backend
-import Language.GraphQL.Draft.Syntax qualified as G
 
 -- Root selection
 
-data QueryDB (b :: BackendType) (r :: BackendType -> Type) v
+data QueryDB (b :: BackendType) (r :: Type) v
   = QDBMultipleRows (AnnSimpleSelectG b r v)
   | QDBSingleRow (AnnSimpleSelectG b r v)
   | QDBAggregation (AnnAggregateSelectG b r v)
@@ -157,7 +149,7 @@ data QueryDB (b :: BackendType) (r :: BackendType -> Type) v
 
 -- Select
 
-data AnnSelectG (b :: BackendType) (r :: BackendType -> Type) (f :: Type -> Type) (v :: Type) = AnnSelectG
+data AnnSelectG (b :: BackendType) (r :: Type) (f :: Type -> Type) (v :: Type) = AnnSelectG
   { _asnFields :: !(Fields (f v)),
     _asnFrom :: !(SelectFromG b v),
     _asnPerm :: !(TablePermG b v),
@@ -186,13 +178,13 @@ type AnnSimpleSelectG b r v = AnnSelectG b r (AnnFieldG b r) v
 
 type AnnAggregateSelectG b r v = AnnSelectG b r (TableAggregateFieldG b r) v
 
-type AnnSimpleSelect b = AnnSimpleSelectG b (Const Void) (SQLExpression b)
+type AnnSimpleSelect b = AnnSimpleSelectG b Void (SQLExpression b)
 
-type AnnAggregateSelect b = AnnAggregateSelectG b (Const Void) (SQLExpression b)
+type AnnAggregateSelect b = AnnAggregateSelectG b Void (SQLExpression b)
 
 -- Relay select
 
-data ConnectionSelect (b :: BackendType) (r :: BackendType -> Type) v = ConnectionSelect
+data ConnectionSelect (b :: BackendType) (r :: Type) v = ConnectionSelect
   { _csXRelay :: !(XRelay b),
     _csPrimaryKeyColumns :: !(PrimaryKeyColumns b),
     _csSplit :: !(Maybe (NE.NonEmpty (ConnectionSplit b v))),
@@ -205,7 +197,7 @@ deriving instance
   ( Backend b,
     Eq (BooleanOperators b v),
     Eq v,
-    Eq (r b)
+    Eq r
   ) =>
   Eq (ConnectionSelect b r v)
 
@@ -213,7 +205,7 @@ deriving instance
   ( Backend b,
     Show (BooleanOperators b v),
     Show v,
-    Show (r b)
+    Show r
   ) =>
   Show (ConnectionSelect b r v)
 
@@ -394,16 +386,26 @@ type AnnotatedOrderByItem b = AnnotatedOrderByItemG b (SQLExpression b)
 -- should appear in the response
 type Fields a = [(FieldName, a)]
 
-data AnnFieldG (b :: BackendType) (r :: BackendType -> Type) v
+-- | captures a remote relationship's selection and the necessary context
+data RemoteRelationshipSelect b r = RemoteRelationshipSelect
+  { -- | The fields on the table that are required for the join condition
+    -- of the remote relationship
+    _rrsLHSJoinFields :: HashMap FieldName (DBJoinField b),
+    -- | The field that captures the relationship
+    -- r ~ (RemoteRelationshipField UnpreparedValue) when the AST is emitted by the parser.
+    -- r ~ Void when an execution tree is constructed so that a backend is
+    -- absolved of dealing with remote relationships.
+    _rrsRelationship :: r
+  }
+  deriving (Eq, Show, Functor, Foldable, Traversable)
+
+data AnnFieldG (b :: BackendType) (r :: Type) v
   = AFColumn !(AnnColumnField b v)
   | AFObjectRelation !(ObjectRelationSelectG b r v)
   | AFArrayRelation !(ArraySelectG b r v)
   | AFComputedField !(XComputedField b) !ComputedFieldName !(ComputedFieldSelect b r v)
-  | -- | A relationship to a remote source/remote schema. Its kind is
-    -- (r :: BackendType -> Type) so that AFRemote can capture something
-    -- that is specific to the backend AnnFieldG. See RemoteSelect. When
-    -- remote joins are extracted from the structure, 'r' becomes 'Const Void'
-    AFRemote !(r b)
+  | -- | A remote relationship field
+    AFRemote !(RemoteRelationshipSelect b r)
   | AFNodeId !(XRelay b) !(TableName b) !(PrimaryKeyColumns b)
   | AFExpression !Text
   deriving (Functor, Foldable, Traversable)
@@ -412,7 +414,7 @@ deriving instance
   ( Backend b,
     Eq (BooleanOperators b v),
     Eq v,
-    Eq (r b)
+    Eq r
   ) =>
   Eq (AnnFieldG b r v)
 
@@ -420,13 +422,13 @@ deriving instance
   ( Backend b,
     Show (BooleanOperators b v),
     Show v,
-    Show (r b)
+    Show r
   ) =>
   Show (AnnFieldG b r v)
 
-type AnnField b = AnnFieldG b (Const Void) (SQLExpression b)
+type AnnField b = AnnFieldG b Void (SQLExpression b)
 
-type AnnFields b = AnnFieldsG b (Const Void) (SQLExpression b)
+type AnnFields b = AnnFieldsG b Void (SQLExpression b)
 
 mkAnnColumnField ::
   Column backend ->
@@ -445,7 +447,7 @@ mkAnnColumnFieldAsText ci =
 
 -- Aggregation fields
 
-data TableAggregateFieldG (b :: BackendType) (r :: BackendType -> Type) v
+data TableAggregateFieldG (b :: BackendType) (r :: Type) v
   = TAFAgg !(AggregateFields b)
   | TAFNodes (XNodesAgg b) !(AnnFieldsG b r v)
   | TAFExp !Text
@@ -455,7 +457,7 @@ deriving instance
   ( Backend b,
     Eq (BooleanOperators b v),
     Eq v,
-    Eq (r b)
+    Eq r
   ) =>
   Eq (TableAggregateFieldG b r v)
 
@@ -463,7 +465,7 @@ deriving instance
   ( Backend b,
     Show (BooleanOperators b v),
     Show v,
-    Show (r b)
+    Show r
   ) =>
   Show (TableAggregateFieldG b r v)
 
@@ -487,9 +489,9 @@ data ColFld (b :: BackendType)
   | CFExp !Text
   deriving stock (Eq, Show)
 
-type TableAggregateField b = TableAggregateFieldG b (Const Void) (SQLExpression b)
+type TableAggregateField b = TableAggregateFieldG b Void (SQLExpression b)
 
-type TableAggregateFields b = TableAggregateFieldsG b (Const Void) (SQLExpression b)
+type TableAggregateFields b = TableAggregateFieldsG b Void (SQLExpression b)
 
 type TableAggregateFieldsG b r v = Fields (TableAggregateFieldG b r v)
 
@@ -501,7 +503,7 @@ type AnnFieldsG b r v = Fields (AnnFieldG b r v)
 
 -- Relay fields
 
-data ConnectionField (b :: BackendType) (r :: BackendType -> Type) v
+data ConnectionField (b :: BackendType) (r :: Type) v
   = ConnectionTypename !Text
   | ConnectionPageInfo !PageInfoFields
   | ConnectionEdges !(EdgeFields b r v)
@@ -511,7 +513,7 @@ deriving instance
   ( Backend b,
     Eq (BooleanOperators b v),
     Eq v,
-    Eq (r b)
+    Eq r
   ) =>
   Eq (ConnectionField b r v)
 
@@ -519,7 +521,7 @@ deriving instance
   ( Backend b,
     Show (BooleanOperators b v),
     Show v,
-    Show (r b)
+    Show r
   ) =>
   Show (ConnectionField b r v)
 
@@ -531,7 +533,7 @@ data PageInfoField
   | PageInfoEndCursor
   deriving (Show, Eq)
 
-data EdgeField (b :: BackendType) (r :: BackendType -> Type) v
+data EdgeField (b :: BackendType) (r :: Type) v
   = EdgeTypename !Text
   | EdgeCursor
   | EdgeNode !(AnnFieldsG b r v)
@@ -541,7 +543,7 @@ deriving instance
   ( Backend b,
     Eq (BooleanOperators b v),
     Eq v,
-    Eq (r b)
+    Eq r
   ) =>
   Eq (EdgeField b r v)
 
@@ -549,7 +551,7 @@ deriving instance
   ( Backend b,
     Show (BooleanOperators b v),
     Show v,
-    Show (r b)
+    Show r
   ) =>
   Show (EdgeField b r v)
 
@@ -615,7 +617,7 @@ deriving instance (Backend b, Show v) => Show (ComputedFieldScalarSelect b v)
 
 deriving instance (Backend b, Eq v) => Eq (ComputedFieldScalarSelect b v)
 
-data ComputedFieldSelect (b :: BackendType) (r :: BackendType -> Type) v
+data ComputedFieldSelect (b :: BackendType) (r :: Type) v
   = CFSScalar
       !(ComputedFieldScalarSelect b v)
       -- ^ Type containing info about the computed field
@@ -632,7 +634,7 @@ deriving instance
   ( Backend b,
     Eq (BooleanOperators b v),
     Eq v,
-    Eq (r b)
+    Eq r
   ) =>
   Eq (ComputedFieldSelect b r v)
 
@@ -640,7 +642,7 @@ deriving instance
   ( Backend b,
     Show (BooleanOperators b v),
     Show v,
-    Show (r b)
+    Show r
   ) =>
   Show (ComputedFieldSelect b r v)
 
@@ -663,9 +665,9 @@ type ArrayAggregateSelectG b r v = AnnRelationSelectG b (AnnAggregateSelectG b r
 
 type ArrayConnectionSelect b r v = AnnRelationSelectG b (ConnectionSelect b r v)
 
-type ArrayAggregateSelect b = ArrayAggregateSelectG b (Const Void) (SQLExpression b)
+type ArrayAggregateSelect b = ArrayAggregateSelectG b Void (SQLExpression b)
 
-data AnnObjectSelectG (b :: BackendType) (r :: BackendType -> Type) v = AnnObjectSelectG
+data AnnObjectSelectG (b :: BackendType) (r :: Type) v = AnnObjectSelectG
   { _aosFields :: !(AnnFieldsG b r v),
     _aosTableFrom :: !(TableName b),
     _aosTableFilter :: !(AnnBoolExp b v)
@@ -676,7 +678,7 @@ deriving instance
   ( Backend b,
     Eq (BooleanOperators b v),
     Eq v,
-    Eq (r b)
+    Eq r
   ) =>
   Eq (AnnObjectSelectG b r v)
 
@@ -684,7 +686,7 @@ deriving instance
   ( Backend b,
     Show (BooleanOperators b v),
     Show v,
-    Show (r b)
+    Show r
   ) =>
   Show (AnnObjectSelectG b r v)
 
@@ -692,9 +694,9 @@ type AnnObjectSelect b r = AnnObjectSelectG b r (SQLExpression b)
 
 type ObjectRelationSelectG b r v = AnnRelationSelectG b (AnnObjectSelectG b r v)
 
-type ObjectRelationSelect b = ObjectRelationSelectG b (Const Void) (SQLExpression b)
+type ObjectRelationSelect b = ObjectRelationSelectG b Void (SQLExpression b)
 
-data ArraySelectG (b :: BackendType) (r :: BackendType -> Type) v
+data ArraySelectG (b :: BackendType) (r :: Type) v
   = ASSimple !(ArrayRelationSelectG b r v)
   | ASAggregate !(ArrayAggregateSelectG b r v)
   | ASConnection !(ArrayConnectionSelect b r v)
@@ -704,7 +706,7 @@ deriving instance
   ( Backend b,
     Eq (BooleanOperators b v),
     Eq v,
-    Eq (r b)
+    Eq r
   ) =>
   Eq (ArraySelectG b r v)
 
@@ -712,36 +714,19 @@ deriving instance
   ( Backend b,
     Show (BooleanOperators b v),
     Show v,
-    Show (r b)
+    Show r
   ) =>
   Show (ArraySelectG b r v)
 
-type ArraySelect b = ArraySelectG b (Const Void) (SQLExpression b)
+type ArraySelect b = ArraySelectG b Void (SQLExpression b)
 
 type ArraySelectFieldsG b r v = Fields (ArraySelectG b r v)
-
--- Remote schema relationships
-
-data RemoteFieldArgument = RemoteFieldArgument
-  { _rfaArgument :: !G.Name,
-    _rfaValue :: !(InputValue RemoteSchemaVariable)
-  }
-  deriving (Eq, Show)
-
-data RemoteSchemaSelect (b :: BackendType) = RemoteSchemaSelect
-  { _rselArgs :: ![RemoteFieldArgument],
-    _rselResultCustomizer :: !ResultCustomizer,
-    _rselSelection :: !(G.SelectionSet G.NoFragments RemoteSchemaVariable),
-    _rselHasuraFields :: !(HashSet (DBJoinField b)),
-    _rselFieldCall :: !(NonEmpty FieldCall),
-    _rselRemoteSchema :: !RemoteSchemaInfo
-  }
 
 -- | Captures the selection set of a remote source relationship.
 data
   SourceRelationshipSelection
     (b :: BackendType)
-    (r :: BackendType -> Type)
+    (r :: Type)
     (vf :: BackendType -> Type)
   = SourceRelationshipObject !(AnnObjectSelectG b r (vf b))
   | SourceRelationshipArray !(AnnSimpleSelectG b r (vf b))
@@ -751,7 +736,7 @@ deriving instance
   ( Backend b,
     Eq (BooleanOperators b (v b)),
     Eq (v b),
-    Eq (r b)
+    Eq r
   ) =>
   Eq (SourceRelationshipSelection b r v)
 
@@ -759,7 +744,7 @@ deriving instance
   ( Backend b,
     Show (BooleanOperators b (v b)),
     Show (v b),
-    Show (r b)
+    Show r
   ) =>
   Show (SourceRelationshipSelection b r v)
 
@@ -770,30 +755,19 @@ deriving instance
 -- we walk down the IR branches which capture relationships to other databases)
 data
   RemoteSourceSelect
-    (src :: BackendType)
+    (r :: Type)
     (vf :: BackendType -> Type)
     (tgt :: BackendType) = RemoteSourceSelect
   { _rssName :: !SourceName,
     _rssConfig :: !(SourceConfig tgt),
-    _rssSelection :: !(SourceRelationshipSelection tgt (RemoteSelect vf) vf),
+    _rssSelection :: !(SourceRelationshipSelection tgt r vf),
     -- | Additional information about the source's join columns:
-    -- (ColumnInfo src) so that we can add the join column to the AST
     -- (ScalarType tgt) so that the remote can interpret the join values coming
     -- from src
     -- (Column tgt) so that an appropriate join condition / IN clause can be built
     -- by the remote
-    _rssJoinMapping :: !(HM.HashMap FieldName (ColumnInfo src, ScalarType tgt, Column tgt))
+    _rssJoinMapping :: !(HM.HashMap FieldName (ScalarType tgt, Column tgt))
   }
-
--- | A remote relationship to either a remote schema or a remote source.
--- See RemoteSourceSelect for explanation on 'vf'.
-data
-  RemoteSelect
-    (vf :: BackendType -> Type)
-    (src :: BackendType)
-  = RemoteSelectRemoteSchema !(RemoteSchemaSelect src)
-  | -- | AnyBackend is used here to capture a relationship to an arbitrary target
-    RemoteSelectSource !(AB.AnyBackend (RemoteSourceSelect src vf))
 
 -- Permissions
 

@@ -12,7 +12,7 @@ import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Column
 import Hasura.SQL.Backend
 
-data AnnotatedUpdateG (b :: BackendType) (r :: BackendType -> Type) v = AnnotatedUpdateG
+data AnnotatedUpdateG (b :: BackendType) (r :: Type) v = AnnotatedUpdateG
   { _auTable :: !(TableName b),
     _auWhere :: !(AnnBoolExp b v, AnnBoolExp b v),
     _auCheck :: !(AnnBoolExp b v),
@@ -26,4 +26,4 @@ data AnnotatedUpdateG (b :: BackendType) (r :: BackendType -> Type) v = Annotate
   }
   deriving (Functor, Foldable, Traversable)
 
-type AnnotatedUpdate b = AnnotatedUpdateG b (Const Void) (SQLExpression b)
+type AnnotatedUpdate b = AnnotatedUpdateG b Void (SQLExpression b)

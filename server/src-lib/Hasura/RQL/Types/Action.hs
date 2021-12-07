@@ -310,7 +310,7 @@ data ActionSourceInfo b
 getActionSourceInfo :: AnnotatedObjectType -> ActionSourceInfo ('Postgres 'Vanilla)
 getActionSourceInfo = maybe ASINoSource (uncurry ASISource) . _aotSource
 
-data AnnActionExecution (b :: BackendType) (r :: BackendType -> Type) v = AnnActionExecution
+data AnnActionExecution (b :: BackendType) (r :: Type) v = AnnActionExecution
   { _aaeName :: !ActionName,
     -- | output type
     _aaeOutputType :: !GraphQLType,
@@ -339,7 +339,7 @@ data AnnActionMutationAsync = AnnActionMutationAsync
   }
   deriving (Show, Eq)
 
-data AsyncActionQueryFieldG (b :: BackendType) (r :: BackendType -> Type) v
+data AsyncActionQueryFieldG (b :: BackendType) (r :: Type) v
   = AsyncTypename !Text
   | AsyncOutput !(AnnFieldsG b r v)
   | AsyncId
@@ -349,7 +349,7 @@ data AsyncActionQueryFieldG (b :: BackendType) (r :: BackendType -> Type) v
 
 type AsyncActionQueryFieldsG b r v = Fields (AsyncActionQueryFieldG b r v)
 
-data AnnActionAsyncQuery (b :: BackendType) (r :: BackendType -> Type) v = AnnActionAsyncQuery
+data AnnActionAsyncQuery (b :: BackendType) (r :: Type) v = AnnActionAsyncQuery
   { _aaaqName :: !ActionName,
     _aaaqActionId :: !ActionId,
     _aaaqOutputType :: !GraphQLType,
