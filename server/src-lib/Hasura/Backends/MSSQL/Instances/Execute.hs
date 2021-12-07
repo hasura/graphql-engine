@@ -74,7 +74,7 @@ msDBQueryPlan ::
   UserInfo ->
   SourceName ->
   SourceConfig 'MSSQL ->
-  QueryDB 'MSSQL (Const Void) (UnpreparedValue 'MSSQL) ->
+  QueryDB 'MSSQL Void (UnpreparedValue 'MSSQL) ->
   m (DBStepInfo 'MSSQL)
 msDBQueryPlan userInfo sourceName sourceConfig qrf = do
   -- TODO (naveen): Append Query Tags to the query
@@ -102,7 +102,7 @@ msDBQueryExplain ::
   UserInfo ->
   SourceName ->
   SourceConfig 'MSSQL ->
-  QueryDB 'MSSQL (Const Void) (UnpreparedValue 'MSSQL) ->
+  QueryDB 'MSSQL Void (UnpreparedValue 'MSSQL) ->
   m (AB.AnyBackend DBStepInfo)
 msDBQueryExplain fieldName userInfo sourceName sourceConfig qrf = do
   let sessionVariables = _uiSession userInfo
@@ -222,7 +222,7 @@ msDBMutationPlan ::
   Bool ->
   SourceName ->
   SourceConfig 'MSSQL ->
-  MutationDB 'MSSQL (Const Void) (UnpreparedValue 'MSSQL) ->
+  MutationDB 'MSSQL Void (UnpreparedValue 'MSSQL) ->
   m (DBStepInfo 'MSSQL)
 msDBMutationPlan userInfo stringifyNum sourceName sourceConfig mrf = do
   go <$> case mrf of
@@ -291,7 +291,7 @@ executeInsert ::
   UserInfo ->
   Bool ->
   SourceConfig 'MSSQL ->
-  AnnInsert 'MSSQL (Const Void) (UnpreparedValue 'MSSQL) ->
+  AnnInsert 'MSSQL Void (UnpreparedValue 'MSSQL) ->
   m (ExceptT QErr IO EncJSON)
 executeInsert userInfo stringifyNum sourceConfig annInsert = do
   -- Convert the leaf values from @'UnpreparedValue' to sql @'Expression'
@@ -305,7 +305,7 @@ executeInsert userInfo stringifyNum sourceConfig annInsert = do
     withSelectTableAlias = "t_" <> tableName table
     withAlias = "with_alias"
 
-    buildInsertTx :: AnnInsert 'MSSQL (Const Void) Expression -> Tx.TxET QErr IO EncJSON
+    buildInsertTx :: AnnInsert 'MSSQL Void Expression -> Tx.TxET QErr IO EncJSON
     buildInsertTx insert = do
       let identityColumns = _mssqlIdentityColumns $ _aiExtraInsertData $ _aiData insert
           insertColumns = concatMap (map fst . getInsertColumns) $ _aiInsObj $ _aiData insert
@@ -393,7 +393,7 @@ executeDelete ::
   UserInfo ->
   Bool ->
   SourceConfig 'MSSQL ->
-  AnnDelG 'MSSQL (Const Void) (UnpreparedValue 'MSSQL) ->
+  AnnDelG 'MSSQL Void (UnpreparedValue 'MSSQL) ->
   m (ExceptT QErr IO EncJSON)
 executeDelete userInfo stringifyNum sourceConfig deleteOperation = do
   preparedDelete <- traverse (prepareValueQuery $ _uiSession userInfo) deleteOperation
@@ -453,7 +453,7 @@ mkMutationOutputSelect ::
   (MonadError QErr m) =>
   Bool ->
   Text ->
-  MutationOutputG 'MSSQL (Const Void) Expression ->
+  MutationOutputG 'MSSQL Void Expression ->
   m Select
 mkMutationOutputSelect stringifyNum withAlias = \case
   IR.MOutMultirowFields multiRowFields -> do
@@ -472,7 +472,7 @@ mkSelect ::
   Bool ->
   Text ->
   JsonAggSelect ->
-  Fields (AnnFieldG 'MSSQL (Const Void) Expression) ->
+  Fields (AnnFieldG 'MSSQL Void Expression) ->
   m Select
 mkSelect stringifyNum withAlias jsonAggSelect annFields = do
   let annSelect = IR.AnnSelectG annFields (IR.FromIdentifier withAlias) IR.noTablePermissions IR.noSelectArgs stringifyNum
@@ -505,7 +505,7 @@ msDBSubscriptionPlan ::
   SourceName ->
   SourceConfig 'MSSQL ->
   Maybe G.Name ->
-  RootFieldMap (QueryDB 'MSSQL (Const Void) (UnpreparedValue 'MSSQL)) ->
+  RootFieldMap (QueryDB 'MSSQL Void (UnpreparedValue 'MSSQL)) ->
   m (LiveQueryPlan 'MSSQL (MultiplexedQuery 'MSSQL))
 msDBSubscriptionPlan UserInfo {_uiSession, _uiRole} _sourceName sourceConfig namespace rootFields = do
   (reselect, prepareState) <- planSubscription (OMap.mapKeys _rfaAlias rootFields) _uiSession
@@ -664,7 +664,7 @@ msDBRemoteRelationshipPlan ::
   -- | This is a field name from the lhs that *has* to be selected in the
   -- response along with the relationship.
   RQLTypes.FieldName ->
-  (RQLTypes.FieldName, SourceRelationshipSelection 'MSSQL (Const Void) UnpreparedValue) ->
+  (RQLTypes.FieldName, SourceRelationshipSelection 'MSSQL Void UnpreparedValue) ->
   m (DBStepInfo 'MSSQL)
 msDBRemoteRelationshipPlan _userInfo _sourceName _sourceConfig _lhs _lhsSchema _argumentId _relationship = do
   throw500 "mkDBRemoteRelationshipPlan: SQL Server (MSSQL) does not currently support generalized joins."

@@ -100,7 +100,7 @@ msBuildTableInsertMutationFields ::
   InsPermInfo 'MSSQL ->
   Maybe (SelPermInfo 'MSSQL) ->
   Maybe (UpdPermInfo 'MSSQL) ->
-  m [FieldParser n (AnnInsert 'MSSQL (RemoteSelect UnpreparedValue) (UnpreparedValue 'MSSQL))]
+  m [FieldParser n (AnnInsert 'MSSQL (RemoteRelationshipField UnpreparedValue) (UnpreparedValue 'MSSQL))]
 msBuildTableInsertMutationFields
   sourceName
   tableName
@@ -131,7 +131,7 @@ _msBuildTableUpdateMutationFields ::
   G.Name ->
   UpdPermInfo 'MSSQL ->
   Maybe (SelPermInfo 'MSSQL) ->
-  m [FieldParser n (AnnotatedUpdateG 'MSSQL (RemoteSelect UnpreparedValue) (UnpreparedValue 'MSSQL))]
+  m [FieldParser n (AnnotatedUpdateG 'MSSQL (RemoteRelationshipField UnpreparedValue) (UnpreparedValue 'MSSQL))]
 _msBuildTableUpdateMutationFields =
   GSB.buildTableUpdateMutationFields
     ( \ti updPerms ->

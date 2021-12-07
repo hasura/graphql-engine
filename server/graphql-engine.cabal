@@ -590,6 +590,7 @@ library
                      , Hasura.RQL.IR.OrderBy
                      , Hasura.RQL.IR.Returning
                      , Hasura.RQL.IR.Select
+                     , Hasura.RQL.IR.RemoteSchema
                      , Hasura.RQL.IR.Update
                      , Hasura.RQL.IR.Root
                      , Hasura.RQL.IR

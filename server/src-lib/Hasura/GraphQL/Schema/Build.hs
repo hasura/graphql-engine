@@ -73,7 +73,7 @@ buildTableQueryFields ::
   TableInfo b ->
   G.Name ->
   SelPermInfo b ->
-  (m [FieldParser n (QueryDB b (RemoteSelect UnpreparedValue) (UnpreparedValue b))])
+  (m [FieldParser n (QueryDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))])
 buildTableQueryFields sourceName tableName tableInfo gqlName selPerms = do
   let customRootFields = _tcCustomRootFields $ _tciCustomConfig $ _tiCoreInfo tableInfo
       -- select table
@@ -102,7 +102,7 @@ buildTableInsertMutationFields ::
   InsPermInfo b ->
   Maybe (SelPermInfo b) ->
   Maybe (UpdPermInfo b) ->
-  m [FieldParser n (AnnInsert b (RemoteSelect UnpreparedValue) (UnpreparedValue b))]
+  m [FieldParser n (AnnInsert b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
 buildTableInsertMutationFields
   sourceName
   tableName
@@ -169,7 +169,7 @@ buildTableUpdateMutationFields ::
   UpdPermInfo b ->
   -- | select permissions of the table (if any)
   Maybe (SelPermInfo b) ->
-  m [FieldParser n (AnnotatedUpdateG b (RemoteSelect UnpreparedValue) (UnpreparedValue b))]
+  m [FieldParser n (AnnotatedUpdateG b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
 buildTableUpdateMutationFields mkBackendUpdate sourceName tableName tableInfo gqlName updPerms mSelPerms = do
   let customRootFields = _tcCustomRootFields $ _tciCustomConfig $ _tiCoreInfo tableInfo
       -- update table
@@ -195,7 +195,7 @@ buildTableDeleteMutationFields ::
   G.Name ->
   DelPermInfo b ->
   Maybe (SelPermInfo b) ->
-  m [FieldParser n (AnnDelG b (RemoteSelect UnpreparedValue) (UnpreparedValue b))]
+  m [FieldParser n (AnnDelG b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
 buildTableDeleteMutationFields sourceName tableName tableInfo gqlName delPerms mSelPerms = do
   let customRootFields = _tcCustomRootFields $ _tciCustomConfig $ _tiCoreInfo tableInfo
       -- delete from table
@@ -219,7 +219,7 @@ buildFunctionQueryFields ::
   FunctionInfo b ->
   TableName b ->
   SelPermInfo b ->
-  m [FieldParser n (QueryDB b (RemoteSelect UnpreparedValue) (UnpreparedValue b))]
+  m [FieldParser n (QueryDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
 buildFunctionQueryFields sourceName functionName functionInfo tableName selPerms = do
   let -- select function
       funcDesc =
@@ -248,7 +248,7 @@ buildFunctionMutationFields ::
   FunctionInfo b ->
   TableName b ->
   SelPermInfo b ->
-  m [FieldParser n (MutationDB b (RemoteSelect UnpreparedValue) (UnpreparedValue b))]
+  m [FieldParser n (MutationDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
 buildFunctionMutationFields sourceName functionName functionInfo tableName selPerms = do
   let funcDesc = Just $ G.Description $ "execute VOLATILE function " <> functionName <<> " which returns " <>> tableName
 

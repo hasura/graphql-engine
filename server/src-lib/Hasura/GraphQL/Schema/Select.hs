@@ -1393,15 +1393,16 @@ remoteRelationshipField remoteFieldInfo = runMaybeT do
                         makeResultCustomizer remoteSchemaCustomizer fld
               pure $
                 IR.AFRemote $
-                  IR.RemoteSelectRemoteSchema $
-                    IR.RemoteSchemaSelect
-                      { _rselArgs = remoteArgs,
-                        _rselResultCustomizer = resultCustomizer,
-                        _rselSelection = selSet,
-                        _rselHasuraFields = hasuraFields,
-                        _rselFieldCall = fieldCalls,
-                        _rselRemoteSchema = remoteSchemaInfo
-                      }
+                  IR.RemoteRelationshipSelect
+                    (Map.fromList [(dbJoinFieldToName dbJoinField, dbJoinField) | dbJoinField <- toList hasuraFields])
+                    $ IR.RemoteSchemaField $
+                      IR.RemoteSchemaSelect
+                        { IR._rselArgs = remoteArgs,
+                          IR._rselResultCustomizer = resultCustomizer,
+                          IR._rselSelection = selSet,
+                          IR._rselFieldCall = fieldCalls,
+                          IR._rselRemoteSchema = remoteSchemaInfo
+                        }
   where
     -- Apply parent field calls so that the result customizer modifies the nested field
     applyFieldCalls :: NonEmpty FieldCall -> ResultCustomizer -> ResultCustomizer

@@ -114,7 +114,7 @@ getJoinColumnMapping = \case
 data RemoteSourceJoin b = RemoteSourceJoin
   { _rsjSource :: !SourceName,
     _rsjSourceConfig :: !(SourceConfig b),
-    _rsjRelationship :: !(IR.SourceRelationshipSelection b (Const Void) P.UnpreparedValue),
+    _rsjRelationship :: !(IR.SourceRelationshipSelection b Void P.UnpreparedValue),
     _rsjJoinColumns :: !(Map.HashMap FieldName (JoinColumnAlias, ScalarType b, Column b))
   }
   deriving (Generic)

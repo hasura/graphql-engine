@@ -47,7 +47,7 @@ mysqlDBQueryPlan ::
   UserInfo ->
   SourceName ->
   SourceConfig 'MySQL ->
-  QueryDB 'MySQL (Const Void) (UnpreparedValue 'MySQL) ->
+  QueryDB 'MySQL Void (UnpreparedValue 'MySQL) ->
   m (DBStepInfo 'MySQL)
 mysqlDBQueryPlan userInfo sourceName sourceConfig qrf = do
   (headAndTail, actionsForest) <- queryToActionForest userInfo qrf
@@ -79,7 +79,7 @@ mysqlDBQueryExplain ::
   UserInfo ->
   SourceName ->
   SourceConfig 'MySQL ->
-  QueryDB 'MySQL (Const Void) (UnpreparedValue 'MySQL) ->
+  QueryDB 'MySQL Void (UnpreparedValue 'MySQL) ->
   m (AB.AnyBackend DBStepInfo)
 mysqlDBQueryExplain fieldName userInfo sourceName sourceConfig qrf = do
   select :: MySQL.Select <- planQuery (_uiSession userInfo) qrf

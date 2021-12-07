@@ -3,6 +3,7 @@ module Hasura.GraphQL.Schema.RemoteSource
   )
 where
 
+import Control.Lens
 import Hasura.GraphQL.Parser
 import Hasura.GraphQL.Schema.Backend
 import Hasura.GraphQL.Schema.Common
@@ -10,7 +11,9 @@ import Hasura.GraphQL.Schema.Instances ()
 import Hasura.GraphQL.Schema.Select
 import Hasura.GraphQL.Schema.Table
 import Hasura.Prelude
+import Hasura.RQL.IR.Root qualified as IR
 import Hasura.RQL.IR.Select qualified as IR
+import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common (RelType (..), relNameToTxt)
 import Hasura.RQL.Types.Relationships.FromSource
 import Hasura.RQL.Types.SourceCustomization (mkCustomizedTypename)
@@ -27,10 +30,10 @@ remoteSourceField remoteDB = dispatchAnyBackend @BackendSchema remoteDB buildFie
   where
     buildField ::
       forall src tgt.
-      BackendSchema tgt =>
+      (BackendSchema tgt) =>
       RemoteSourceFieldInfo src tgt ->
       m [FieldParser n (AnnotatedField src)]
-    buildField (RemoteSourceFieldInfo {..}) =
+    buildField RemoteSourceFieldInfo {..} =
       withTypenameCustomization (mkCustomizedTypename $ Just _rsfiSourceCustomization) do
         tableInfo <- askTableInfo @tgt _rsfiSource _rsfiTable
         fieldName <- textToName $ relNameToTxt _rsfiName
@@ -60,6 +63,8 @@ remoteSourceField remoteDB = dispatchAnyBackend @BackendSchema remoteDB buildFie
             pure $
               parsers <&> fmap \select ->
                 IR.AFRemote $
-                  IR.RemoteSelectSource $
-                    mkAnyBackend @tgt $
-                      IR.RemoteSourceSelect _rsfiSource _rsfiSourceConfig select _rsfiMapping
+                  IR.RemoteRelationshipSelect (fmap (\(columnInfo, _, _) -> JoinColumn (pgiColumn columnInfo) (pgiType columnInfo)) _rsfiMapping) $
+                    IR.RemoteSourceField $
+                      mkAnyBackend @tgt $
+                        IR.RemoteSourceSelect _rsfiSource _rsfiSourceConfig select $
+                          fmap (\(_, column, columnType) -> (column, columnType)) _rsfiMapping
