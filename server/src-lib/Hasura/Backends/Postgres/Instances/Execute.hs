@@ -306,7 +306,7 @@ pgDBSubscriptionPlan userInfo _sourceName sourceConfig namespace subscriptionTyp
   multiplexedQuery <-
     case subscriptionType of
       STLiveQuery -> pure $ PGL.mkMultiplexedQuery $ OMap.mapKeys _rfaAlias preparedAST
-      STStreaming -> do
+      STStreaming _ -> do
         let isStreamingRootField = \case
               QDBStreamMultipleRows _ -> True
               _ -> False

@@ -105,8 +105,7 @@ buildTableStreamingSubscriptionFields ::
   SelPermInfo b ->
   m [FieldParser n (QueryDB b (RemoteSelect UnpreparedValue) (UnpreparedValue b))]
 buildTableStreamingSubscriptionFields sourceName sourceInfo queryTagsConfig tableName tableInfo gqlName selPerms = do
-  let
-      customRootFields = _tcCustomRootFields $ _tciCustomConfig $ _tiCoreInfo tableInfo
+  let customRootFields = _tcCustomRootFields $ _tciCustomConfig $ _tiCoreInfo tableInfo
       selectDesc = Just $ G.Description $ "fetch data from the table via streaming : " <>> tableName
   selectStreamName <-
     mkRootFieldName $ (fromMaybe gqlName $ _tcrfSelect customRootFields) <> $$(G.litName "_stream")

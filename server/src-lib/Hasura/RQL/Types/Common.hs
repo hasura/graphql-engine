@@ -496,7 +496,7 @@ data CursorOrdering = COAscending | CODescending deriving (Show, Eq, Generic)
 
 instance Hashable CursorOrdering
 
-data SubscriptionType = STLiveQuery | STStreaming
+data SubscriptionType = STLiveQuery | STStreaming !G.Name
   deriving (Show, Eq)
 
 data StreamingSubscription = StreamingSubscription

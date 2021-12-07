@@ -21,9 +21,11 @@ where
 
 import Control.Concurrent.Extended (sleep)
 import Control.Concurrent.STM qualified as STM
+import Control.Lens ((^?))
 import Control.Monad.Trans.Control qualified as MC
 import Data.Aeson qualified as J
 import Data.Aeson.Casing qualified as J
+import Data.Aeson.Lens qualified as JL
 import Data.Aeson.TH qualified as J
 import Data.ByteString (ByteString)
 import Data.ByteString.Lazy qualified as LBS
@@ -86,6 +88,7 @@ import Hasura.Server.Types (RequestId, getRequestId)
 import Hasura.Session
 import Hasura.Tracing qualified as Tracing
 import Language.GraphQL.Draft.Syntax (Name (..))
+import Language.GraphQL.Draft.Syntax qualified as G
 import ListT qualified
 import Network.HTTP.Client qualified as H
 import Network.HTTP.Types qualified as H
@@ -224,7 +227,7 @@ sendCloseWithMsg ::
   m ()
 sendCloseWithMsg logger wsConn errCode mErrServerMsg mCode = do
   case mErrServerMsg of
-    Just errServerMsg -> do
+    Just errServerMsg ->
       sendMsg wsConn errServerMsg
     Nothing -> pure ()
   logWSEvent logger wsConn EClosed
@@ -287,7 +290,7 @@ onConn wsId requestHead ipAddress onConnHActions = do
     -- NOTE: the "Keep-Alive" delay is something that's mentioned
     -- in the Apollo spec. For 'graphql-ws', we're using the Ping
     -- messages that are part of the spec.
-    keepAliveAction keepAliveDelay wsConn = do
+    keepAliveAction keepAliveDelay wsConn =
       liftIO $
         forever $ do
           kaAction wsConn
@@ -517,9 +520,7 @@ onStart env enabledLogTypes serverEnv wsConn (StartMsg opId q) onMessageActions 
           sendResultFromFragments Telem.Query timerTot requestId conclusion opName parameterizedQueryHash
           case conclusion of
             Left _ -> pure ()
-            Right results -> do
-              -- Note: The result of cacheStore is ignored here since we can't ensure that
-              --       the WS client will respond correctly to multiple messages.
+            Right results ->
               void $
                 Tracing.interpTraceT (withExceptT mempty) $
                   cacheStore cacheKey cachedDirective $ encodeAnnotatedResponseParts results
@@ -661,7 +662,7 @@ onStart env enabledLogTypes serverEnv wsConn (StartMsg opId q) onMessageActions 
     fmtErrorMessage = WS._wsaErrorMsgFormat onMessageActions
 
     getExecStepActionWithActionInfo acc execStep = case execStep of
-      E.ExecStepAction _ actionInfo _remoteJoins -> (actionInfo : acc)
+      E.ExecStepAction _ actionInfo _remoteJoins -> actionInfo : acc
       _ -> acc
 
     doQErr ::
@@ -679,7 +680,7 @@ onStart env enabledLogTypes serverEnv wsConn (StartMsg opId q) onMessageActions 
       ExceptT f n a
     withErr embed f action = do
       res <- runExceptT $ f $ lift action
-      onLeft res (\e -> throwError $ embed e)
+      onLeft res (throwError . embed)
 
     forWithKey = flip OMap.traverseWithKey
 
@@ -821,8 +822,8 @@ onStart env enabledLogTypes serverEnv wsConn (StartMsg opId q) onMessageActions 
                   opName
                   requestId
                   liveQueryPlan
-                  (liveQOnChange opName parameterizedQueryHash $ LQ._lqpNamespace liveQueryPlan)
-              STStreaming ->
+                  (onChange opName STLiveQuery parameterizedQueryHash $ LQ._lqpNamespace liveQueryPlan)
+              STStreaming rootFieldName ->
                 LQ.addStreamSubscriptionQuery
                   logger
                   (_wseServerMetrics serverEnv)
@@ -832,8 +833,9 @@ onStart env enabledLogTypes serverEnv wsConn (StartMsg opId q) onMessageActions 
                   parameterizedQueryHash
                   opName
                   requestId
+                  rootFieldName
                   liveQueryPlan
-                  (liveQOnChange opName parameterizedQueryHash $ LQ._lqpNamespace liveQueryPlan)
+                  (onChange opName (STStreaming rootFieldName) parameterizedQueryHash $ LQ._lqpNamespace liveQueryPlan)
         liftIO $ $assertNFHere (lqId, opName) -- so we don't write thunks to mutable vars
         STM.atomically $
           -- NOTE: see crucial `lookup` check above, ensuring this doesn't clobber:
@@ -841,24 +843,31 @@ onStart env enabledLogTypes serverEnv wsConn (StartMsg opId q) onMessageActions 
         pure lqId
 
     -- on change, send message on the websocket
-    liveQOnChange :: Maybe OperationName -> ParameterizedQueryHash -> Maybe Name -> LQ.OnChange
-    liveQOnChange opName queryHash namespace = \case
-      Right (LQ.LiveQueryResponse bs dTime) ->
-        sendMsgWithMetadata
-          wsConn
-          (sendDataMsg $ DataMsg opId $ pure $ maybe LBS.fromStrict wrapNamespace namespace bs)
-          opName
-          (Just queryHash)
-          (LQ.LiveQueryMetadata dTime)
-      resp ->
-        sendMsg wsConn $
-          sendDataMsg $ DataMsg opId $ LBS.fromStrict . LQ._lqrPayload <$> resp
+    onChange :: Maybe OperationName -> SubscriptionType -> ParameterizedQueryHash -> Maybe Name -> LQ.OnChange
+    onChange opName subscriptionType queryHash namespace = \case
+      Right (LQ.LiveQueryResponse bs dTime) -> do
+        let sendMsg =
+              sendMsgWithMetadata
+                wsConn
+                (sendDataMsg $ DataMsg opId $ pure $ maybe LBS.fromStrict wrapNamespace namespace bs)
+                opName
+                (Just queryHash)
+                (LQ.LiveQueryMetadata dTime)
+        case subscriptionType of
+          STLiveQuery -> sendMsg
+          STStreaming _ -> sendMsg
 
     -- If the source has a namespace then we need to wrap the response
     -- from the DB in that namespace.
     wrapNamespace :: Name -> ByteString -> LBS.ByteString
     wrapNamespace namespace bs =
       encJToLBS $ encJFromAssocList [(unName namespace, encJFromBS bs)]
+
+    isRespEmptyArray rootFieldName jsonVal =
+      maybe
+        False
+        null
+        (jsonVal ^? (JL.key "data" . JL.key (G.unName rootFieldName) . JL._Array))
 
     catchAndIgnore :: ExceptT () m () -> m ()
     catchAndIgnore m = void $ runExceptT m
@@ -918,27 +927,22 @@ onPing wsConn mPayload =
 
 onPong :: (MonadIO m) => WSConn -> Maybe PingPongPayload -> m ()
 onPong wsConn mPayload = liftIO $ case mPayload of
-  Just message -> do
+  Just message ->
     when (message /= keepAliveMessage) $
       sendMsg wsConn (SMPing mPayload)
   -- NOTE: this is done to avoid sending Ping for every "keepalive" that the server sends
   Nothing -> sendMsg wsConn $ SMPing Nothing
 
 onStop :: (MonadIO m) => WSServerEnv -> WSConn -> StopMsg -> m ()
-onStop serverEnv wsConn (StopMsg opId) = liftIO $ do
-  -- When a stop message is received for an operation, it may not be present in OpMap
-  -- in these cases:
-  -- 1. If the operation is a query/mutation - as we remove the operation from the
-  -- OpMap as soon as it is executed
-  -- 2. A misbehaving client
-  -- 3. A bug on our end
-  stopOperation serverEnv wsConn opId $
-    L.unLogger logger $
-      L.UnstructuredLog L.LevelDebug $
-        fromString $
-          "Received STOP for an operation that we have no record for: "
-            <> show (unOperationId opId)
-            <> " (could be a query/mutation operation or a misbehaving client or a bug)"
+onStop serverEnv wsConn (StopMsg opId) =
+  liftIO $
+    stopOperation serverEnv wsConn opId $
+      L.unLogger logger $
+        L.UnstructuredLog L.LevelDebug $
+          fromString $
+            "Received STOP for an operation that we have no record for: "
+              <> show (unOperationId opId)
+              <> " (could be a query/mutation operation or a misbehaving client or a bug)"
   where
     logger = _wseLogger serverEnv
 

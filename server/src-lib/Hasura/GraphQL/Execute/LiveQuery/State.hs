@@ -46,6 +46,7 @@ import Hasura.RQL.Types.Action
 import Hasura.RQL.Types.Common (SourceName, SubscriptionType (..), unNonNegativeDiffTime)
 import Hasura.Server.Metrics (ServerMetrics (..))
 import Hasura.Server.Types (RequestId)
+import Language.GraphQL.Draft.Syntax qualified as G
 import StmContainers.Map qualified as STMMap
 import System.Metrics.Gauge qualified as EKG.Gauge
 
@@ -188,6 +189,7 @@ addStreamSubscriptionQuery ::
   -- | operation name of the query
   Maybe OperationName ->
   RequestId ->
+  G.Name ->
   LiveQueryPlan b (MultiplexedQuery b) ->
   -- | the action to be executed when result changes
   OnChange ->
@@ -201,6 +203,7 @@ addStreamSubscriptionQuery
   parameterizedQueryHash
   operationName
   requestId
+  rootFieldName
   plan
   onResultAction = do
     -- CAREFUL!: It's absolutely crucial that we can't throw any exceptions here!
@@ -242,7 +245,7 @@ addStreamSubscriptionQuery
 
     liftIO $ EKG.Gauge.inc $ smActiveSubscriptions serverMetrics
 
-    pure $ LiveQueryId handlerId cohortKey subscriberId STStreaming
+    pure $ LiveQueryId handlerId cohortKey subscriberId $ STStreaming rootFieldName
     where
       LiveQueriesState lqOpts _ streamQueryMap postPollHook _ = lqState
       LiveQueriesOptions _ refetchInterval = lqOpts
@@ -277,7 +280,7 @@ removeLiveQuery logger serverMetrics lqState lqId@(LiveQueryId handlerId cohortI
         fmap join $
           forM detM $ \(Poller cohorts ioState, cohort) ->
             cleanHandlerC cohorts ioState cohort
-      STStreaming -> do
+      STStreaming _ -> do
         detM <- getQueryDet streamQMap
         fmap join $
           forM detM $ \(Poller cohorts ioState, cohort) ->
@@ -315,7 +318,7 @@ removeLiveQuery logger serverMetrics lqState lqId@(LiveQueryId handlerId cohortI
         then do
           case subscriptionType of
             STLiveQuery -> STMMap.delete handlerId lqMap
-            STStreaming -> STMMap.delete handlerId streamQMap
+            STStreaming _ -> STMMap.delete handlerId streamQMap
           threadRefM <- fmap _pThread <$> STM.tryReadTMVar ioState
           return $
             Just $ -- deferred IO:

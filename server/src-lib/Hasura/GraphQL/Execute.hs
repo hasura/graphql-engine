@@ -181,7 +181,7 @@ buildSubscriptionPlan userInfo rootFields parameterizedQueryHash = do
       IR.RFRemote _ -> throw400 NotSupported "subscription to remote server is not supported"
       IR.RFRaw _ -> throw400 NotSupported "Introspection not supported over subscriptions"
       IR.RFDB src streamSubsMaybe e -> do
-        let subscriptionType = maybe STLiveQuery (const STStreaming) streamSubsMaybe
+        let subscriptionType = maybe STLiveQuery (const $ STStreaming $ _rfaAlias gName) streamSubsMaybe
         newQDB <- AB.traverseBackend @EB.BackendExecute e \(IR.SourceConfigWith srcConfig queryTagsConfig (IR.QDBR qdb)) -> do
           let (newQDB, remoteJoins) = RJ.getRemoteJoins qdb
           unless (isNothing remoteJoins) $
