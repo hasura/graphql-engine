@@ -663,11 +663,22 @@ pollStreamingQuery pollerId lqOpts (sourceName, sourceConfig) roleName parameter
             _pdRole = roleName,
             _pdParameterizedQueryHash = parameterizedQueryHash
           }
+
+  -- We rebuild the cohort map here, because after every poll, the latest value of the cursors
+  -- change. We rebuild the current poller's cohort map so that the cohort key includes the latest
+  -- cursor value in it. This will also help in grouping cohorts together, for example, if client 1
+  -- has started a streaming subscription with initial value as 2 on an serial primary key column
+  -- and has been running for some time and the latest cursor value in the server is say, 50 now.
+  -- Now, if at this exact moment, if there's a new client with the same query and the initial cursor value
+  -- as 50, then the client 2 will be added to client 1's cohort.
   cohortsWithUpdatedCohortKeys <- do
     cohortsList <- STM.atomically $ TMap.toList cohortMap
     for cohortsList $ \(cohortKey, cohort) -> do
       CursorVariableValues vals <- STM.readTVarIO $ _cStreamVariables cohort
       pure (modifyCursorCohortVariables (mkUnsafeValidateVariables vals) cohortKey, cohort)
+  -- TODO (KC): Is the use of `Map.fromList` here correct? What happens when there are duplicate
+  -- cohort keys or is it impossible to have duplicate cohort keys once a subscriber has been added to
+  -- a cohort?
   STM.atomically $ TMap.swap cohortMap $ Map.fromList cohortsWithUpdatedCohortKeys
   postPollHook pollDetails
   where
