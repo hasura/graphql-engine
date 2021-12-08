@@ -71,6 +71,7 @@ import Hasura.SQL.Tag
 import Hasura.SQL.Tag qualified as Tag
 import Hasura.Server.Types
   ( MaintenanceMode (..),
+    ReadOnlyMode (..),
   )
 import Hasura.Session
 import Hasura.Tracing qualified as Tracing
@@ -414,12 +415,13 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
                   migrationTime <- liftIO getCurrentTime
                   maintenanceMode <- _sccMaintenanceMode <$> askServerConfigCtx
                   eventingMode <- _sccEventingMode <$> askServerConfigCtx
+                  readOnlyMode <- _sccReadOnlyMode <$> askServerConfigCtx
                   liftEitherM $
                     liftIO $
                       LA.withAsync (logPGSourceCatalogMigrationLockedQueries logger sourceConfig) $
                         const $ do
                           let initCatalogAction =
-                                runExceptT $ runTx (_pscExecCtx sourceConfig) Q.ReadWrite (initCatalogForSource maintenanceMode eventingMode migrationTime)
+                                runExceptT $ runTx (_pscExecCtx sourceConfig) Q.ReadWrite (initCatalogForSource maintenanceMode eventingMode readOnlyMode migrationTime)
                           -- The `initCatalogForSource` action is retried here because
                           -- in cloud there will be multiple workers (graphql-engine instances)
                           -- trying to migrate the source catalog, when needed. This introduces
@@ -1024,10 +1026,11 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
                         case buildReason of
                           CatalogUpdate _ -> True
                           CatalogSync -> False
-                  -- we don't modify the existing event trigger definitions in the maintenance mode
+                  -- we don't modify the existing event trigger definitions in the maintenance mode or in read-only mode
                   when
                     ( (isCatalogUpdate || recreateEventTriggers == RETRecreate)
                         && _sccMaintenanceMode serverConfigCtx == MaintenanceModeDisabled
+                        && _sccReadOnlyMode serverConfigCtx == ReadOnlyModeDisabled
                     )
                     $ liftEitherM $
                       createTableEventTrigger

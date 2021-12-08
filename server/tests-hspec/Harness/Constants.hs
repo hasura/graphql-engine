@@ -165,7 +165,8 @@ serveOptions =
       soDevMode = True,
       soGracefulShutdownTimeout = 0, -- Don't wait to shutdown.
       soWebsocketConnectionInitTimeout = defaultWSConnectionInitTimeout,
-      soEventingMode = EventingEnabled
+      soEventingMode = EventingEnabled,
+      soReadOnlyMode = ReadOnlyModeDisabled
     }
 
 -- | Use the below to show messages.

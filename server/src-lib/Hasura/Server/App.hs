@@ -141,7 +141,8 @@ data ServerCtx = ServerCtx
     scExperimentalFeatures :: !(S.HashSet ExperimentalFeature),
     -- | this is only required for the short-term fix in https://github.com/hasura/graphql-engine-mono/issues/1770
     scEnabledLogTypes :: !(S.HashSet (L.EngineLogType L.Hasura)),
-    scEventingMode :: !EventingMode
+    scEventingMode :: !EventingMode,
+    scEnableReadOnlyMode :: !ReadOnlyMode
   }
 
 data HandlerCtx = HandlerCtx
@@ -466,7 +467,8 @@ v1QueryHandler query = do
       maintenanceMode <- asks (scEnableMaintenanceMode . hcServerCtx)
       experimentalFeatures <- asks (scExperimentalFeatures . hcServerCtx)
       eventingMode <- asks (scEventingMode . hcServerCtx)
-      let serverConfigCtx = ServerConfigCtx functionPermsCtx remoteSchemaPermsCtx sqlGenCtx maintenanceMode experimentalFeatures eventingMode
+      readOnlyMode <- asks (scEnableReadOnlyMode . hcServerCtx)
+      let serverConfigCtx = ServerConfigCtx functionPermsCtx remoteSchemaPermsCtx sqlGenCtx maintenanceMode experimentalFeatures eventingMode readOnlyMode
       runQuery
         env
         logger
@@ -494,16 +496,17 @@ v1MetadataHandler query = do
   scRef <- asks (scCacheRef . hcServerCtx)
   schemaCache <- fmap fst $ liftIO $ readIORef $ _scrCache scRef
   httpMgr <- asks (scManager . hcServerCtx)
-  sqlGenCtx <- asks (scSQLGenCtx . hcServerCtx)
+  _sccSQLGenCtx <- asks (scSQLGenCtx . hcServerCtx)
   env <- asks (scEnvironment . hcServerCtx)
   instanceId <- asks (scInstanceId . hcServerCtx)
   logger <- asks (scLogger . hcServerCtx)
-  remoteSchemaPermsCtx <- asks (scRemoteSchemaPermsCtx . hcServerCtx)
-  functionPermsCtx <- asks (scFunctionPermsCtx . hcServerCtx)
-  experimentalFeatures <- asks (scExperimentalFeatures . hcServerCtx)
-  maintenanceMode <- asks (scEnableMaintenanceMode . hcServerCtx)
-  eventingMode <- asks (scEventingMode . hcServerCtx)
-  let serverConfigCtx = ServerConfigCtx functionPermsCtx remoteSchemaPermsCtx sqlGenCtx maintenanceMode experimentalFeatures eventingMode
+  _sccRemoteSchemaPermsCtx <- asks (scRemoteSchemaPermsCtx . hcServerCtx)
+  _sccFunctionPermsCtx <- asks (scFunctionPermsCtx . hcServerCtx)
+  _sccExperimentalFeatures <- asks (scExperimentalFeatures . hcServerCtx)
+  _sccMaintenanceMode <- asks (scEnableMaintenanceMode . hcServerCtx)
+  _sccEventingMode <- asks (scEventingMode . hcServerCtx)
+  _sccReadOnlyMode <- asks (scEnableReadOnlyMode . hcServerCtx)
+  let serverConfigCtx = ServerConfigCtx {..}
   r <-
     withSCUpdate
       scRef
@@ -555,7 +558,8 @@ v2QueryHandler query = do
       functionPermsCtx <- asks (scFunctionPermsCtx . hcServerCtx)
       maintenanceMode <- asks (scEnableMaintenanceMode . hcServerCtx)
       eventingMode <- asks (scEventingMode . hcServerCtx)
-      let serverConfigCtx = ServerConfigCtx functionPermsCtx remoteSchemaPermsCtx sqlGenCtx maintenanceMode experimentalFeatures eventingMode
+      readOnlyMode <- asks (scEnableReadOnlyMode . hcServerCtx)
+      let serverConfigCtx = ServerConfigCtx functionPermsCtx remoteSchemaPermsCtx sqlGenCtx maintenanceMode experimentalFeatures eventingMode readOnlyMode
       V2Q.runQuery env instanceId userInfo schemaCache httpMgr serverConfigCtx query
 
 v1Alpha1GQHandler ::
@@ -580,23 +584,11 @@ v1Alpha1GQHandler queryType query = do
   reqHeaders <- asks hcReqHeaders
   ipAddress <- asks hcSourceIpAddress
   requestId <- asks hcRequestId
-  manager <- asks (scManager . hcServerCtx)
-  scRef <- asks (scCacheRef . hcServerCtx)
-  (sc, scVer) <- liftIO $ readIORef $ _scrCache scRef
-  sqlGenCtx <- asks (scSQLGenCtx . hcServerCtx)
-  enableAL <- asks (scEnableAllowlist . hcServerCtx)
   logger <- asks (scLogger . hcServerCtx)
   responseErrorsConfig <- asks (scResponseInternalErrorsConfig . hcServerCtx)
   env <- asks (scEnvironment . hcServerCtx)
 
-  let execCtx =
-        E.ExecutionCtx
-          logger
-          sqlGenCtx
-          (lastBuiltSchemaCache sc)
-          scVer
-          manager
-          enableAL
+  execCtx <- mkExecutionContext
 
   flip runReaderT execCtx $
     GH.runGQBatched env logger requestId responseErrorsConfig userInfo ipAddress reqHeaders queryType query
@@ -613,7 +605,8 @@ mkExecutionContext = do
   sqlGenCtx <- asks (scSQLGenCtx . hcServerCtx)
   enableAL <- asks (scEnableAllowlist . hcServerCtx)
   logger <- asks (scLogger . hcServerCtx)
-  pure $ E.ExecutionCtx logger sqlGenCtx (lastBuiltSchemaCache sc) scVer manager enableAL
+  readOnlyMode <- asks (scEnableReadOnlyMode . hcServerCtx)
+  pure $ E.ExecutionCtx logger sqlGenCtx (lastBuiltSchemaCache sc) scVer manager enableAL readOnlyMode
 
 v1GQHandler ::
   ( MonadIO m,
@@ -817,6 +810,7 @@ mkWaiApp ::
   KeepAliveDelay ->
   MaintenanceMode ->
   EventingMode ->
+  ReadOnlyMode ->
   -- | Set of the enabled experimental features
   S.HashSet ExperimentalFeature ->
   S.HashSet (L.EngineLogType L.Hasura) ->
@@ -848,6 +842,7 @@ mkWaiApp
   keepAliveDelay
   maintenanceMode
   eventingMode
+  readOnlyMode
   experimentalFeatures
   enabledLogTypes
   wsConnInitTimeout = do
@@ -865,6 +860,7 @@ mkWaiApp
         httpManager
         corsPolicy
         sqlGenCtx
+        readOnlyMode
         enableAL
         keepAliveDelay
         serverMetrics
@@ -888,7 +884,8 @@ mkWaiApp
               scEnableMaintenanceMode = maintenanceMode,
               scExperimentalFeatures = experimentalFeatures,
               scEnabledLogTypes = enabledLogTypes,
-              scEventingMode = eventingMode
+              scEventingMode = eventingMode,
+              scEnableReadOnlyMode = readOnlyMode
             }
 
     spockApp <- liftWithStateless $ \lowerIO ->

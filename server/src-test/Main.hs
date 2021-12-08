@@ -146,8 +146,9 @@ buildPostgresSpecs = do
         httpManager <- HTTP.newManager HTTP.tlsManagerSettings
         let sqlGenCtx = SQLGenCtx False False
             maintenanceMode = MaintenanceModeDisabled
+            readOnlyMode = ReadOnlyModeDisabled
             serverConfigCtx =
-              ServerConfigCtx FunctionPermissionsInferred RemoteSchemaPermsDisabled sqlGenCtx maintenanceMode mempty EventingEnabled
+              ServerConfigCtx FunctionPermissionsInferred RemoteSchemaPermsDisabled sqlGenCtx maintenanceMode mempty EventingEnabled readOnlyMode
             cacheBuildParams = CacheBuildParams httpManager (mkPgSourceResolver print) serverConfigCtx
             pgLogger = print
 
