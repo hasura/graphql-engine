@@ -1211,6 +1211,34 @@ class TestUnauthorizedRolePermission:
     def test_unauth_role(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/unauthorized_role.yaml', transport, False)
 
+@pytest.mark.skipif(
+    not PytestConf.config.getoption("--test-unauthorized-role"),
+    reason="--test-unauthorized-role missing"
+)
+@pytest.mark.parametrize('transport', ['http'])
+@usefixtures('per_class_tests_db_state')
+class TestFallbackUnauthorizedRoleCookie:
+    @classmethod
+    def dir(cls):
+        return 'queries/unauthorized_role'
+    
+    def test_fallback_unauth_role_jwt_cookie_not_set(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/cookie_header_absent_unauth_role_set.yaml', transport, add_auth=False)
+
+@pytest.mark.skipif(
+    not PytestConf.config.getoption("--test-no-cookie-and-unauth-role"),
+    reason="--test-no-cookie-and-unauth-role missing"
+)
+@pytest.mark.parametrize('transport', ['http'])
+@usefixtures('per_class_tests_db_state')
+class TestMissingUnauthorizedRoleAndCookie:
+    @classmethod
+    def dir(cls):
+        return 'queries/unauthorized_role'
+    
+    def test_error_unauth_role_not_set_jwt_cookie_not_set(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/cookie_header_absent_unauth_role_not_set.yaml', transport, add_auth=False)
+
 @usefixtures('per_class_tests_db_state')
 class TestGraphQLExplain:
     @classmethod
