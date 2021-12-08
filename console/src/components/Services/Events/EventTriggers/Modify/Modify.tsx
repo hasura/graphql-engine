@@ -40,7 +40,7 @@ import { updateSchemaInfo } from '../../../Data/DataActions';
 import { useEventTriggerModify } from '../state';
 import Info from './Info';
 import WebhookEditor from './WebhookEditor';
-import OperationEditor from './OperationEditor';
+import { OperationEditor } from './OperationEditor';
 import RetryConfEditor from './RetryConfEditor';
 import HeadersEditor from './HeadersEditor';
 import { ReduxState } from '../../../../../types';

@@ -88,7 +88,7 @@ export const parseServerETDefinition = (
     webhook: parseServerWebhook(etConf.webhook, etConf.webhook_from_env),
     retryConf: etConf.retry_conf,
     headers: parseServerHeaders(eventTrigger.configuration.headers),
-    isAllColumnChecked: etDef.update.columns === '*',
+    isAllColumnChecked: etDef?.update?.columns === '*',
   };
 };
 

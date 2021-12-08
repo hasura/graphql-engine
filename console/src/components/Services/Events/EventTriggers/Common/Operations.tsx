@@ -10,13 +10,15 @@ type OperationProps = {
   selectedOperations: Record<EventTriggerOperation, boolean>;
   setOperations: (o: Record<EventTriggerOperation, boolean>) => void;
   readOnly: boolean;
+  tableName: string;
 };
 
-const Operations = ({
+export const Operations: React.FC<OperationProps> = ({
   selectedOperations,
   setOperations,
   readOnly,
-}: OperationProps) => {
+  tableName,
+}) => {
   const setOperation = (e: React.BaseSyntheticEvent) => {
     const label: EventTriggerOperation = e.target.name;
     setOperations({
@@ -46,7 +48,9 @@ const Operations = ({
   return (
     <>
       <div className="flex items-center mb-md">
-        <div className="inline-flex items-center mr-md">On myTable:</div>
+        <div className="mr-md">
+          On <span className="font-semibold">{tableName}</span> table:
+        </div>
         {allOperations.map(o => (
           <div key={o.name} className="mr-md">
             <label className="cursor-pointer flex">
@@ -67,5 +71,3 @@ const Operations = ({
     </>
   );
 };
-
-export default Operations;
