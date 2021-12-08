@@ -202,9 +202,9 @@ buildRemoteFieldInfo sourceSource sourceTable fields RemoteRelationship {..} all
           remoteSchemaDep = SchemaDependency (SORemoteSchema _trrdRemoteSchema) DRRemoteSchema
           fieldsDep =
             S.toList (_rrfiHasuraFields remoteField) <&> \case
-              JoinColumn columnInfo ->
+              JoinColumn column _ ->
                 -- TODO: shouldn't this be DRColumn??
-                mkColDep @b DRRemoteRelationship sourceSource sourceTable $ pgiColumn columnInfo
+                mkColDep @b DRRemoteRelationship sourceSource sourceTable column
               JoinComputedField computedFieldInfo ->
                 mkComputedFieldDep @b DRRemoteRelationship sourceSource sourceTable $ _scfName computedFieldInfo
           schemaDependencies = (tableDep : remoteSchemaDep : fieldsDep)

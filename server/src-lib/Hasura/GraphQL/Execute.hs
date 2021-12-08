@@ -48,7 +48,7 @@ import Hasura.QueryTags
 import Hasura.RQL.IR qualified as IR
 import Hasura.RQL.Types
 import Hasura.SQL.AnyBackend qualified as AB
-import Hasura.Server.Types (RequestId (..))
+import Hasura.Server.Types (ReadOnlyMode (..), RequestId (..))
 import Hasura.Session
 import Hasura.Tracing qualified as Tracing
 import Language.GraphQL.Draft.Syntax qualified as G
@@ -57,12 +57,13 @@ import Network.HTTP.Types qualified as HTTP
 
 -- | Execution context
 data ExecutionCtx = ExecutionCtx
-  { _ecxLogger :: !(L.Logger L.Hasura),
-    _ecxSqlGenCtx :: !SQLGenCtx,
-    _ecxSchemaCache :: !SchemaCache,
-    _ecxSchemaCacheVer :: !SchemaCacheVer,
-    _ecxHttpManager :: !HTTP.Manager,
-    _ecxEnableAllowList :: !Bool
+  { _ecxLogger :: L.Logger L.Hasura,
+    _ecxSqlGenCtx :: SQLGenCtx,
+    _ecxSchemaCache :: SchemaCache,
+    _ecxSchemaCacheVer :: SchemaCacheVer,
+    _ecxHttpManager :: HTTP.Manager,
+    _ecxEnableAllowList :: Bool,
+    _ecxReadOnlyMode :: ReadOnlyMode
   }
 
 getExecPlanPartial ::
@@ -164,7 +165,7 @@ buildSubscriptionPlan userInfo rootFields parameterizedQueryHash = do
       ( RootFieldMap
           ( Either
               (ActionId, (PGSourceConfig, EA.AsyncActionQuerySourceExecution (UnpreparedValue ('Postgres 'Vanilla))))
-              (SourceName, AB.AnyBackend (IR.SourceConfigWith (IR.QueryDBRoot (Const Void) UnpreparedValue)), SubscriptionType)
+              (SourceName, AB.AnyBackend (IR.SourceConfigWith (IR.QueryDBRoot Void UnpreparedValue)), SubscriptionType)
           ),
         RootFieldMap (ActionId, ActionLogResponse -> Either QErr EncJSON)
       ) ->
@@ -173,7 +174,7 @@ buildSubscriptionPlan userInfo rootFields parameterizedQueryHash = do
         ( RootFieldMap
             ( Either
                 (ActionId, (PGSourceConfig, EA.AsyncActionQuerySourceExecution (UnpreparedValue ('Postgres 'Vanilla))))
-                (SourceName, AB.AnyBackend (IR.SourceConfigWith (IR.QueryDBRoot (Const Void) UnpreparedValue)), SubscriptionType)
+                (SourceName, AB.AnyBackend (IR.SourceConfigWith (IR.QueryDBRoot Void UnpreparedValue)), SubscriptionType)
             ),
           RootFieldMap (ActionId, ActionLogResponse -> Either QErr EncJSON)
         )
@@ -205,7 +206,7 @@ buildSubscriptionPlan userInfo rootFields parameterizedQueryHash = do
     buildAction ::
       (SourceName, AB.AnyBackend (IR.SourceConfigWith b), SubscriptionType) ->
       RootFieldMap
-        (SourceName, AB.AnyBackend (IR.SourceConfigWith (IR.QueryDBRoot (Const Void) UnpreparedValue)), SubscriptionType) ->
+        (SourceName, AB.AnyBackend (IR.SourceConfigWith (IR.QueryDBRoot Void UnpreparedValue)), SubscriptionType) ->
       RootFieldAlias ->
       ExceptT QErr IO (SourceName, SubscriptionQueryPlan, SubscriptionType)
     buildAction (sourceName, exists, subscriptionType) allFields rootFieldName = do
@@ -223,8 +224,8 @@ buildSubscriptionPlan userInfo rootFields parameterizedQueryHash = do
       forall b m1.
       (Backend b, MonadError QErr m1) =>
       SourceName ->
-      (SourceName, AB.AnyBackend (IR.SourceConfigWith (IR.QueryDBRoot (Const Void) UnpreparedValue)), SubscriptionType) ->
-      m1 (IR.QueryDB b (Const Void) (UnpreparedValue b))
+      (SourceName, AB.AnyBackend (IR.SourceConfigWith (IR.QueryDBRoot Void UnpreparedValue)), SubscriptionType) ->
+      m1 (IR.QueryDB b Void (UnpreparedValue b))
     checkField sourceName (src, exists, _)
       | sourceName /= src = throw400 NotSupported "all fields of a subscription must be from the same source"
       | otherwise = case AB.unpackAnyBackend exists of
@@ -266,6 +267,7 @@ getResolvedExecPlan ::
   L.Logger L.Hasura ->
   UserInfo ->
   SQLGenCtx ->
+  ReadOnlyMode ->
   SchemaCache ->
   SchemaCacheVer ->
   ET.GraphQLQueryType ->
@@ -279,6 +281,7 @@ getResolvedExecPlan
   logger
   userInfo
   sqlGenCtx
+  readOnlyMode
   sc
   _scVer
   queryType
@@ -308,8 +311,10 @@ getResolvedExecPlan
               (scSetGraphqlIntrospectionOptions sc)
               reqId
               maybeOperationName
-          pure $ (parameterizedQueryHash, QueryExecutionPlan executionPlan queryRootFields dirMap)
+          pure (parameterizedQueryHash, QueryExecutionPlan executionPlan queryRootFields dirMap)
         G.TypedOperationDefinition G.OperationTypeMutation _ varDefs directives inlinedSelSet -> do
+          when (readOnlyMode == ReadOnlyModeEnabled) $
+            throw400 NotSupported "Mutations are not allowed when read-only mode is enabled"
           (executionPlan, parameterizedQueryHash) <-
             EM.convertMutationSelectionSet
               env
@@ -326,7 +331,7 @@ getResolvedExecPlan
               (scSetGraphqlIntrospectionOptions sc)
               reqId
               maybeOperationName
-          pure $ (parameterizedQueryHash, MutationExecutionPlan executionPlan)
+          pure (parameterizedQueryHash, MutationExecutionPlan executionPlan)
         G.TypedOperationDefinition G.OperationTypeSubscription _ varDefs directives inlinedSelSet -> do
           (normalizedDirectives, normalizedSelectionSet) <-
             ER.resolveVariables

@@ -45,7 +45,7 @@ newtype ActionExecution = ActionExecution
 data AsyncActionQuerySourceExecution v = AsyncActionQuerySourceExecution
   { _aaqseSource :: !SourceName,
     _aaqseJsonAggSelect :: !JsonAggSelect,
-    _aaqseSelectBuilder :: !(ActionLogResponse -> RS.AnnSimpleSelectG ('Postgres 'Vanilla) (Const Void) v)
+    _aaqseSelectBuilder :: !(ActionLogResponse -> RS.AnnSimpleSelectG ('Postgres 'Vanilla) Void v)
   }
 
 data AsyncActionQueryExecution v

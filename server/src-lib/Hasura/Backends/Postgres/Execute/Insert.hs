@@ -39,7 +39,7 @@ convertToSQLTransaction ::
     PostgresAnnotatedFieldJSON pgKind,
     MonadReader QueryTagsComment m
   ) =>
-  IR.AnnInsert ('Postgres pgKind) (Const Void) PG.SQLExp ->
+  IR.AnnInsert ('Postgres pgKind) Void PG.SQLExp ->
   UserInfo ->
   Seq.Seq Q.PrepArg ->
   Bool ->

@@ -63,14 +63,14 @@ buildGQLContext ::
       Seq InconsistentMetadata
     )
 buildGQLContext queryType sources allRemoteSchemas allActions nonObjectCustomTypes = do
-  ServerConfigCtx functionPermsCtx remoteSchemaPermsCtx sqlGenCtx@(SQLGenCtx stringifyNum boolCollapse) _maintenanceMode _experimentalFeatures _eventingMode <-
-    askServerConfigCtx
+  ServerConfigCtx {..} <- askServerConfigCtx
+  let SQLGenCtx {..} = _sccSQLGenCtx
   let remoteSchemasRoles = concatMap (Map.keys . _rscPermissions . fst . snd) $ Map.toList allRemoteSchemas
 
   let nonTableRoles =
         Set.insert adminRoleName $
           (allActionInfos ^.. folded . aiPermissions . to Map.keys . folded)
-            <> Set.fromList (bool mempty remoteSchemasRoles $ remoteSchemaPermsCtx == RemoteSchemaPermsEnabled)
+            <> Set.fromList (bool mempty remoteSchemasRoles $ _sccRemoteSchemaPermsCtx == RemoteSchemaPermsEnabled)
       allActionInfos = Map.elems allActions
 
       allTableRoles = Set.fromList $ getTableRoles =<< Map.elems sources
@@ -86,7 +86,7 @@ buildGQLContext queryType sources allRemoteSchemas allActions nonObjectCustomTyp
       adminQueryContext =
         QueryContext
           stringifyNum
-          boolCollapse
+          dangerousBooleanCollapse
           queryType
           adminRemoteRelationshipQueryCtx
           FunctionPermissionsInferred
@@ -129,23 +129,23 @@ buildGQLContext queryType sources allRemoteSchemas allActions nonObjectCustomTyp
       case queryType of
         QueryHasura ->
           buildRoleContext
-            (sqlGenCtx, queryType, functionPermsCtx)
+            (_sccSQLGenCtx, queryType, _sccFunctionPermsCtx)
             sources
             allRemoteSchemas
             allActionInfos
             nonObjectCustomTypes
             remotes
             role
-            remoteSchemaPermsCtx
+            _sccRemoteSchemaPermsCtx
         QueryRelay ->
           buildRelayRoleContext
-            (sqlGenCtx, queryType, functionPermsCtx)
+            (_sccSQLGenCtx, queryType, _sccFunctionPermsCtx)
             sources
             allActionInfos
             nonObjectCustomTypes
             role
 
-  unauthenticated <- unauthenticatedContext adminQueryRemotes adminMutationRemotes remoteSchemaPermsCtx
+  unauthenticated <- unauthenticatedContext adminQueryRemotes adminMutationRemotes _sccRemoteSchemaPermsCtx
   pure (roleContexts, unauthenticated, remoteErrors)
 
 customizeFields ::

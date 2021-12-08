@@ -105,7 +105,7 @@ connectionSelectQuerySQL ::
   ( Backend ('Postgres pgKind),
     PostgresAnnotatedFieldJSON pgKind
   ) =>
-  ConnectionSelect ('Postgres pgKind) (Const Void) S.SQLExp ->
+  ConnectionSelect ('Postgres pgKind) Void S.SQLExp ->
   Q.Query
 connectionSelectQuerySQL =
   Q.fromBuilder . toSQL . mkConnectionSelect
@@ -432,7 +432,7 @@ type SimilarArrayFields = HM.HashMap FieldName [FieldName]
 mkSimilarArrayFields ::
   forall pgKind v.
   (Backend ('Postgres pgKind), Eq v) =>
-  AnnFieldsG ('Postgres pgKind) (Const Void) v ->
+  AnnFieldsG ('Postgres pgKind) Void v ->
   Maybe (NE.NonEmpty (AnnotatedOrderByItemG ('Postgres pgKind) v)) ->
   SimilarArrayFields
 mkSimilarArrayFields annFields maybeOrderBys =
@@ -1491,7 +1491,7 @@ mkConnectionSelect ::
   ( Backend ('Postgres pgKind),
     PostgresAnnotatedFieldJSON pgKind
   ) =>
-  ConnectionSelect ('Postgres pgKind) (Const Void) S.SQLExp ->
+  ConnectionSelect ('Postgres pgKind) Void S.SQLExp ->
   S.SelectWithG S.Select
 mkConnectionSelect connectionSelect =
   let ((connectionSource, topExtractor, nodeExtractors), joinTree) =
@@ -1574,7 +1574,7 @@ processConnectionSelect ::
   FieldName ->
   S.Alias ->
   HM.HashMap PGCol PGCol ->
-  ConnectionSelect ('Postgres pgKind) (Const Void) S.SQLExp ->
+  ConnectionSelect ('Postgres pgKind) Void S.SQLExp ->
   m
     ( ArrayConnectionSource,
       S.Extractor,

@@ -96,7 +96,7 @@ class Backend b => BackendSchema (b :: BackendType) where
     TableInfo b ->
     G.Name ->
     SelPermInfo b ->
-    m [FieldParser n (QueryDB b (RemoteSelect UnpreparedValue) (UnpreparedValue b))]
+    m [FieldParser n (QueryDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
   buildTableStreamingSubscriptionFields ::
     MonadBuildSchema b r m n =>
     SourceName ->
@@ -106,7 +106,7 @@ class Backend b => BackendSchema (b :: BackendType) where
     TableInfo b ->
     G.Name ->
     SelPermInfo b ->
-    m [FieldParser n (QueryDB b (RemoteSelect UnpreparedValue) (UnpreparedValue b))]
+    m [FieldParser n (QueryDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
   buildTableRelayQueryFields ::
     MonadBuildSchema b r m n =>
     SourceName ->
@@ -115,8 +115,7 @@ class Backend b => BackendSchema (b :: BackendType) where
     G.Name ->
     NESeq (ColumnInfo b) ->
     SelPermInfo b ->
-    m [FieldParser n (QueryDB b (RemoteSelect UnpreparedValue) (UnpreparedValue b))]
-
+    m [FieldParser n (QueryDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
   buildTableInsertMutationFields ::
     MonadBuildSchema b r m n =>
     SourceName ->
@@ -126,7 +125,7 @@ class Backend b => BackendSchema (b :: BackendType) where
     InsPermInfo b ->
     Maybe (SelPermInfo b) ->
     Maybe (UpdPermInfo b) ->
-    m [FieldParser n (AnnInsert b (RemoteSelect UnpreparedValue) (UnpreparedValue b))]
+    m [FieldParser n (AnnInsert b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
 
   -- | This method is responsible for building the GraphQL Schema for mutations
   -- backed by @UPDATE@ statements on some table, as described in
@@ -148,7 +147,7 @@ class Backend b => BackendSchema (b :: BackendType) where
     UpdPermInfo b ->
     -- | select permissions of the table (if any)
     Maybe (SelPermInfo b) ->
-    m [FieldParser n (AnnotatedUpdateG b (RemoteSelect UnpreparedValue) (UnpreparedValue b))]
+    m [FieldParser n (AnnotatedUpdateG b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
 
   buildTableDeleteMutationFields ::
     MonadBuildSchema b r m n =>
@@ -158,7 +157,7 @@ class Backend b => BackendSchema (b :: BackendType) where
     G.Name ->
     DelPermInfo b ->
     Maybe (SelPermInfo b) ->
-    m [FieldParser n (AnnDelG b (RemoteSelect UnpreparedValue) (UnpreparedValue b))]
+    m [FieldParser n (AnnDelG b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
 
   buildFunctionQueryFields ::
     MonadBuildSchema b r m n =>
@@ -167,7 +166,7 @@ class Backend b => BackendSchema (b :: BackendType) where
     FunctionInfo b ->
     TableName b ->
     SelPermInfo b ->
-    m [FieldParser n (QueryDB b (RemoteSelect UnpreparedValue) (UnpreparedValue b))]
+    m [FieldParser n (QueryDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
 
   buildFunctionRelayQueryFields ::
     MonadBuildSchema b r m n =>
@@ -177,7 +176,7 @@ class Backend b => BackendSchema (b :: BackendType) where
     TableName b ->
     NESeq (ColumnInfo b) ->
     SelPermInfo b ->
-    m [FieldParser n (QueryDB b (RemoteSelect UnpreparedValue) (UnpreparedValue b))]
+    m [FieldParser n (QueryDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
 
   buildFunctionMutationFields ::
     MonadBuildSchema b r m n =>
@@ -186,7 +185,7 @@ class Backend b => BackendSchema (b :: BackendType) where
     FunctionInfo b ->
     TableName b ->
     SelPermInfo b ->
-    m [FieldParser n (MutationDB b (RemoteSelect UnpreparedValue) (UnpreparedValue b))]
+    m [FieldParser n (MutationDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
 
   -- table components
   tableArguments ::

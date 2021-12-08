@@ -64,7 +64,7 @@ class PostgresSchema (pgKind :: PostgresKind) where
     G.Name ->
     NESeq (ColumnInfo ('Postgres pgKind)) ->
     SelPermInfo ('Postgres pgKind) ->
-    m [FieldParser n (QueryDB ('Postgres pgKind) (RemoteSelect UnpreparedValue) (UnpreparedValue ('Postgres pgKind)))]
+    m [FieldParser n (QueryDB ('Postgres pgKind) (RemoteRelationshipField UnpreparedValue) (UnpreparedValue ('Postgres pgKind)))]
   pgkBuildFunctionRelayQueryFields ::
     BS.MonadBuildSchema ('Postgres pgKind) r m n =>
     SourceName ->
@@ -73,7 +73,7 @@ class PostgresSchema (pgKind :: PostgresKind) where
     TableName ('Postgres pgKind) ->
     NESeq (ColumnInfo ('Postgres pgKind)) ->
     SelPermInfo ('Postgres pgKind) ->
-    m [FieldParser n (QueryDB ('Postgres pgKind) (RemoteSelect UnpreparedValue) (UnpreparedValue ('Postgres pgKind)))]
+    m [FieldParser n (QueryDB ('Postgres pgKind) (RemoteRelationshipField UnpreparedValue) (UnpreparedValue ('Postgres pgKind)))]
   pgkRelayExtension ::
     Maybe (XRelay ('Postgres pgKind))
   pgkNode ::
@@ -163,7 +163,7 @@ buildTableRelayQueryFields ::
   G.Name ->
   NESeq (ColumnInfo ('Postgres pgKind)) ->
   SelPermInfo ('Postgres pgKind) ->
-  m [FieldParser n (QueryDB ('Postgres pgKind) (RemoteSelect UnpreparedValue) (UnpreparedValue ('Postgres pgKind)))]
+  m [FieldParser n (QueryDB ('Postgres pgKind) (RemoteRelationshipField UnpreparedValue) (UnpreparedValue ('Postgres pgKind)))]
 buildTableRelayQueryFields sourceName tableName tableInfo gqlName pkeyColumns selPerms = do
   let fieldDesc = Just $ G.Description $ "fetch data from the table: " <>> tableName
   fieldName <- mkRootFieldName $ gqlName <> $$(G.litName "_connection")
@@ -180,7 +180,7 @@ buildFunctionRelayQueryFields ::
   TableName ('Postgres pgKind) ->
   NESeq (ColumnInfo ('Postgres pgKind)) ->
   SelPermInfo ('Postgres pgKind) ->
-  m [FieldParser n (QueryDB ('Postgres pgKind) (RemoteSelect UnpreparedValue) (UnpreparedValue ('Postgres pgKind)))]
+  m [FieldParser n (QueryDB ('Postgres pgKind) (RemoteRelationshipField UnpreparedValue) (UnpreparedValue ('Postgres pgKind)))]
 buildFunctionRelayQueryFields sourceName functionName functionInfo tableName pkeyColumns selPerms = do
   let fieldDesc = Just $ G.Description $ "execute function " <> functionName <<> " which returns " <>> tableName
   fmap afold $

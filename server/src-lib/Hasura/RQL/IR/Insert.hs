@@ -48,7 +48,7 @@ import Hasura.SQL.Backend
 -- output. For historical reasons, it will always contain a `MultiObjIns`,
 -- whether the root mutation is a single row or not, and will distinguish
 -- between them using a boolean field.
-data AnnInsert (b :: BackendType) (r :: BackendType -> Type) v = AnnInsert
+data AnnInsert (b :: BackendType) (r :: Type) v = AnnInsert
   { _aiFieldName :: !Text,
     _aiIsSingle :: !Bool,
     _aiData :: !(MultiObjIns b v),

@@ -99,7 +99,7 @@ toSQLFromItem ::
     DS.PostgresAnnotatedFieldJSON pgKind
   ) =>
   S.Alias ->
-  QueryDB ('Postgres pgKind) (Const Void) S.SQLExp ->
+  QueryDB ('Postgres pgKind) Void S.SQLExp ->
   S.FromItem
 toSQLFromItem = flip \case
   QDBSingleRow s -> S.mkSelFromItem $ DS.mkSQLSelect JASSingleObject s
@@ -112,7 +112,7 @@ mkMultiplexedQuery ::
   ( Backend ('Postgres pgKind),
     DS.PostgresAnnotatedFieldJSON pgKind
   ) =>
-  OMap.InsOrdHashMap G.Name (QueryDB ('Postgres pgKind) (Const Void) S.SQLExp) ->
+  OMap.InsOrdHashMap G.Name (QueryDB ('Postgres pgKind) Void S.SQLExp) ->
   MultiplexedQuery
 mkMultiplexedQuery rootFields =
   MultiplexedQuery . Q.fromBuilder . toSQL $
@@ -162,7 +162,7 @@ mkStreamingMultiplexedQuery ::
   ( Backend ('Postgres pgKind),
     DS.PostgresAnnotatedFieldJSON pgKind
   ) =>
-  (G.Name, (QueryDB ('Postgres pgKind) (Const Void) S.SQLExp)) ->
+  (G.Name, (QueryDB ('Postgres pgKind) Void S.SQLExp)) ->
   MultiplexedQuery
 mkStreamingMultiplexedQuery (fieldAlias, resolvedAST) =
   MultiplexedQuery . Q.fromBuilder . toSQL $

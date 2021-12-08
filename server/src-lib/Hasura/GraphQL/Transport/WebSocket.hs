@@ -442,6 +442,7 @@ onStart env enabledLogTypes serverEnv wsConn (StartMsg opId q) onMessageActions 
         logger
         userInfo
         sqlGenCtx
+        readOnlyMode
         sc
         scVer
         queryType
@@ -726,6 +727,7 @@ onStart env enabledLogTypes serverEnv wsConn (StartMsg opId q) onMessageActions 
       httpMgr
       _
       sqlGenCtx
+      readOnlyMode
       _
       enableAL
       _keepAliveDelay

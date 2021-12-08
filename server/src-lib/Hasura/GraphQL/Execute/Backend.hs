@@ -72,7 +72,7 @@ class
     UserInfo ->
     SourceName ->
     SourceConfig b ->
-    QueryDB b (Const Void) (UnpreparedValue b) ->
+    QueryDB b Void (UnpreparedValue b) ->
     m (DBStepInfo b)
   mkDBMutationPlan ::
     forall m.
@@ -84,7 +84,7 @@ class
     Bool ->
     SourceName ->
     SourceConfig b ->
-    MutationDB b (Const Void) (UnpreparedValue b) ->
+    MutationDB b Void (UnpreparedValue b) ->
     m (DBStepInfo b)
   mkDBSubscriptionPlan ::
     forall m.
@@ -98,7 +98,7 @@ class
     SourceConfig b ->
     Maybe G.Name ->
     SubscriptionType ->
-    RootFieldMap (QueryDB b (Const Void) (UnpreparedValue b)) ->
+    RootFieldMap (QueryDB b Void (UnpreparedValue b)) ->
     m (LiveQueryPlan b (MultiplexedQuery b))
   mkDBQueryExplain ::
     forall m.
@@ -108,7 +108,7 @@ class
     UserInfo ->
     SourceName ->
     SourceConfig b ->
-    QueryDB b (Const Void) (UnpreparedValue b) ->
+    QueryDB b Void (UnpreparedValue b) ->
     m (AB.AnyBackend DBStepInfo)
   mkLiveQueryExplain ::
     ( MonadError QErr m,
@@ -136,7 +136,7 @@ class
     -- the function `convertRemoteSourceRelationship` below assumes it
     -- to be returned as either a number or a string with a number in it
     FieldName ->
-    (FieldName, SourceRelationshipSelection b (Const Void) UnpreparedValue) ->
+    (FieldName, SourceRelationshipSelection b Void UnpreparedValue) ->
     m (DBStepInfo b)
 
 -- | This is a helper function to convert a remote source's relationship to a
@@ -159,8 +159,8 @@ convertRemoteSourceRelationship ::
   ColumnType b ->
   -- | The relationship column and its name (how it should be selected in the
   -- response)
-  (FieldName, SourceRelationshipSelection b (Const Void) UnpreparedValue) ->
-  QueryDB b (Const Void) (UnpreparedValue b)
+  (FieldName, SourceRelationshipSelection b Void UnpreparedValue) ->
+  QueryDB b Void (UnpreparedValue b)
 convertRemoteSourceRelationship
   columnMapping
   selectFrom

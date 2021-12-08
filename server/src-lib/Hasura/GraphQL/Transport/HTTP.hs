@@ -243,7 +243,7 @@ runSessVarPred = filterSessionVariables . unSessVarPred
 -- | Filter out only those session variables used by the query AST provided
 filterVariablesFromQuery ::
   Backend backend =>
-  [RootField (QueryDBRoot (RemoteSelect UnpreparedValue) UnpreparedValue) RemoteField (ActionQuery backend (RemoteSelect UnpreparedValue) (UnpreparedValue backend)) d] ->
+  [RootField (QueryDBRoot (RemoteRelationshipField UnpreparedValue) UnpreparedValue) RemoteField (ActionQuery backend (RemoteRelationshipField UnpreparedValue) (UnpreparedValue backend)) d] ->
   SessVarPred
 filterVariablesFromQuery query = fold $ rootToSessVarPreds =<< query
   where
@@ -297,7 +297,7 @@ runGQ ::
   m (GQLQueryOperationSuccessLog, HttpResponse (Maybe GQResponse, EncJSON))
 runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
   (totalTime, (response, parameterizedQueryHash)) <- withElapsedTime $ do
-    E.ExecutionCtx _ sqlGenCtx sc scVer httpManager enableAL <- ask
+    E.ExecutionCtx _ sqlGenCtx sc scVer httpManager enableAL readOnlyMode <- ask
 
     -- run system authorization on the GraphQL API
     reqParsed <-
@@ -313,6 +313,7 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
         logger
         userInfo
         sqlGenCtx
+        readOnlyMode
         sc
         scVer
         queryType
