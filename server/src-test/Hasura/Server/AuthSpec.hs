@@ -67,7 +67,7 @@ getUserInfoWithExpTimeTests = describe "getUserInfo" $ do
                   (mkSessionVariablesHeaders mempty)
 
           processAuthZHeader _jwtCtx _authzHeader =
-            return (mapKeys mkSessionVariable claims, Nothing)
+            return $ Just (mapKeys mkSessionVariable claims, Nothing)
 
           processJwt = processJwt_ processAuthZHeader (const JHAuthorization)
 

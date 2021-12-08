@@ -13,6 +13,7 @@ jwt-claims-map-with-json-path-values
 jwt-claims-map-with-literal-values
 jwt-with-expiry-time-leeway
 jwt-cookie
+jwt-cookie-unauthorized-role
 cors-domains
 auth-webhook-cookie
 ws-init-cookie-read-cors-enabled
