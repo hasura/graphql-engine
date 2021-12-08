@@ -297,7 +297,7 @@ runGQ ::
   m (GQLQueryOperationSuccessLog, HttpResponse (Maybe GQResponse, EncJSON))
 runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
   (totalTime, (response, parameterizedQueryHash)) <- withElapsedTime $ do
-    E.ExecutionCtx _ sqlGenCtx sc scVer httpManager enableAL <- ask
+    E.ExecutionCtx _ sqlGenCtx sc scVer httpManager enableAL readOnlyMode <- ask
 
     -- run system authorization on the GraphQL API
     reqParsed <-
@@ -313,6 +313,7 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
         logger
         userInfo
         sqlGenCtx
+        readOnlyMode
         sc
         scVer
         queryType

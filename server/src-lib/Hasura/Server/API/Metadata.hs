@@ -48,7 +48,7 @@ import Hasura.SQL.AnyBackend
 import Hasura.SQL.Tag
 import Hasura.Server.API.Backend
 import Hasura.Server.API.Instances ()
-import Hasura.Server.Types (InstanceId (..), MaintenanceMode (..))
+import Hasura.Server.Types (InstanceId (..), MaintenanceMode (..), ReadOnlyMode (..))
 import Hasura.Server.Utils (APIVersion (..))
 import Hasura.Session
 import Hasura.Tracing qualified as Tracing
@@ -306,8 +306,8 @@ runMetadataQuery env logger instanceId userInfo httpManager serverConfigCtx sche
       & liftEitherM
   -- set modified metadata in storage
   if queryModifiesMetadata _rqlMetadata
-    then case _sccMaintenanceMode serverConfigCtx of
-      MaintenanceModeDisabled -> do
+    then case (_sccMaintenanceMode serverConfigCtx, _sccReadOnlyMode serverConfigCtx) of
+      (MaintenanceModeDisabled, ReadOnlyModeDisabled) -> do
         -- set modified metadata in storage
         newResourceVersion <- setMetadata (fromMaybe currentResourceVersion _rqlMetadataResourceVersion) modMetadata
         -- notify schema cache sync
@@ -320,7 +320,11 @@ runMetadataQuery env logger instanceId userInfo httpManager serverConfigCtx sche
             & liftEitherM
 
         pure (r, modSchemaCache')
-      MaintenanceModeEnabled ->
+      (MaintenanceModeEnabled, ReadOnlyModeDisabled) ->
+        throw500 "metadata cannot be modified in maintenance mode"
+      (MaintenanceModeDisabled, ReadOnlyModeEnabled) ->
+        throw400 NotSupported "metadata cannot be modified in read-only mode"
+      (MaintenanceModeEnabled, ReadOnlyModeEnabled) ->
         throw500 "metadata cannot be modified in maintenance mode"
     else pure (r, modSchemaCache)
 

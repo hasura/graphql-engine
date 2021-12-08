@@ -223,7 +223,8 @@ data ServeOptions impl = ServeOptions
     soDevMode :: !Bool,
     soGracefulShutdownTimeout :: !Seconds,
     soWebsocketConnectionInitTimeout :: !WSConnectionInitTimeout,
-    soEventingMode :: !EventingMode
+    soEventingMode :: !EventingMode,
+    soReadOnlyMode :: !ReadOnlyMode
   }
 
 data DowngradeOptions = DowngradeOptions

@@ -374,6 +374,7 @@ initialiseServeCtx env GlobalCtx {..} so@ServeOptions {..} = do
           soEnableMaintenanceMode
           soExperimentalFeatures
           soEventingMode
+          soReadOnlyMode
 
   (rebuildableSchemaCache, _) <-
     lift . flip onException (flushLogger loggerCtx) $
@@ -693,6 +694,7 @@ mkHGEServer setupHook env ServeOptions {..} ServeCtx {..} initTime postPollHook 
           soWebsocketKeepAlive
           soEnableMaintenanceMode
           soEventingMode
+          soReadOnlyMode
           soExperimentalFeatures
           _scEnabledLogTypes
           soWebsocketConnectionInitTimeout
@@ -705,6 +707,7 @@ mkHGEServer setupHook env ServeOptions {..} ServeCtx {..} initTime postPollHook 
           soEnableMaintenanceMode
           soExperimentalFeatures
           soEventingMode
+          soReadOnlyMode
 
   -- Log Warning if deprecated environment variables are used
   sources <- scSources <$> liftIO (getSCFromRef cacheRef)
