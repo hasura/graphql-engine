@@ -61,7 +61,6 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({
   );
 
   const onChangeHandler = (val: string) => {
-    setLocalError(null);
     setLocalValue(val);
   };
 

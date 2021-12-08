@@ -77,6 +77,7 @@ const Add: React.FC<Props> = props => {
     source,
     operationColumns,
     operations,
+    isAllColumnChecked,
   } = state;
   const {
     dispatch,
@@ -142,7 +143,8 @@ const Add: React.FC<Props> = props => {
       table.schema,
       retryConf.num_retries,
       operationColumns,
-      operations
+      operations,
+      isAllColumnChecked
     );
     transformDispatch(setRequestSampleInput(value));
   };
@@ -216,7 +218,8 @@ const Add: React.FC<Props> = props => {
       webhook.value,
       undefined,
       transformState.requestUrl,
-      transformState.requestQueryParams
+      transformState.requestQueryParams,
+      webhook.type === 'env'
     );
     if (!webhook.value) {
       requestUrlErrorOnChange(
@@ -255,7 +258,10 @@ const Add: React.FC<Props> = props => {
     const options = getValidateTransformOptions(
       transformState.requestSampleInput,
       webhook.value,
-      transformState.requestBody
+      transformState.requestBody,
+      undefined,
+      undefined,
+      webhook.type === 'env'
     );
     if (!webhook.value) {
       requestBodyErrorOnChange(
@@ -375,7 +381,6 @@ const Add: React.FC<Props> = props => {
                   handleToggleAllColumn={setState.toggleAllColumnChecked}
                 />
                 <ConfigureTransformation
-                  webhookUrl={webhook?.value}
                   state={transformState}
                   resetSampleInput={resetSampleInput}
                   requestMethodOnChange={requestMethodOnChange}

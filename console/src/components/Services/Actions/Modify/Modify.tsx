@@ -120,6 +120,10 @@ const ModifyAction: React.FC<ModifyProps> = ({
         requestSampleInput
       );
       transformDispatch(setRequestTransformState(rtState));
+    } else {
+      transformDispatch(
+        setRequestTransformState(getActionRequestTransformDefaultState())
+      );
     }
   };
   useEffect(init, [currentAction, allTypes, dispatch]);
@@ -368,7 +372,6 @@ const ModifyAction: React.FC<ModifyProps> = ({
           />
 
           <ConfigureTransformation
-            webhookUrl={handler}
             state={transformState}
             resetSampleInput={resetSampleInput}
             requestMethodOnChange={requestMethodOnChange}

@@ -331,7 +331,6 @@ const AddAction: React.FC<AddActionProps> = ({
         />
 
         <ConfigureTransformation
-          webhookUrl={handler}
           state={transformState}
           resetSampleInput={resetSampleInput}
           requestMethodOnChange={requestMethodOnChange}

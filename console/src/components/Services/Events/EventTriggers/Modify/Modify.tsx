@@ -84,23 +84,31 @@ const Modify: React.FC<Props> = props => {
           schemas: [currentTrigger.schema_name],
         })
       );
-      if (currentTrigger.request_transform) {
-        const sampleInput = getEventRequestSampleInput(
-          currentTrigger.name,
-          currentTrigger.table_name,
-          currentTrigger.schema_name,
-          currentTrigger.configuration?.retry_conf?.num_retries,
-          state.operationColumns,
-          state.operations
-        );
-        transformDispatch(
-          setRequestTransformState(
-            getTransformState(currentTrigger.request_transform, sampleInput)
-          )
-        );
-      }
     }
   }, [currentTrigger.name]);
+
+  useEffect(() => {
+    if (currentTrigger.request_transform) {
+      const sampleInput = getEventRequestSampleInput(
+        currentTrigger.name,
+        currentTrigger.table_name,
+        currentTrigger.schema_name,
+        currentTrigger.configuration?.retry_conf?.num_retries,
+        state.operationColumns,
+        state.operations,
+        state.isAllColumnChecked
+      );
+      transformDispatch(
+        setRequestTransformState(
+          getTransformState(currentTrigger.request_transform, sampleInput)
+        )
+      );
+    } else {
+      transformDispatch(
+        setRequestTransformState(getEventRequestTransformDefaultState())
+      );
+    }
+  }, [state.name]);
 
   const resetSampleInput = () => {
     const value = getEventRequestSampleInput(
@@ -109,7 +117,8 @@ const Modify: React.FC<Props> = props => {
       currentTrigger.schema_name,
       currentTrigger.configuration.retry_conf.num_retries,
       state.operationColumns,
-      state.operations
+      state.operations,
+      state.isAllColumnChecked
     );
     transformDispatch(setRequestSampleInput(value));
   };
@@ -187,7 +196,8 @@ const Modify: React.FC<Props> = props => {
       state.webhook?.value,
       undefined,
       transformState.requestUrl,
-      transformState.requestQueryParams
+      transformState.requestQueryParams,
+      state.webhook.type === 'env'
     );
     if (!state.webhook?.value) {
       requestUrlErrorOnChange(
@@ -223,7 +233,10 @@ const Modify: React.FC<Props> = props => {
   const reqBodyoptions = getValidateTransformOptions(
     transformState.requestSampleInput,
     state.webhook?.value,
-    transformState.requestBody
+    transformState.requestBody,
+    undefined,
+    undefined,
+    state.webhook.type === 'env'
   );
   useEffect(() => {
     requestBodyErrorOnChange('');
@@ -344,7 +357,6 @@ const Modify: React.FC<Props> = props => {
             save={saveWrapper('headers')}
           />
           <ConfigureTransformation
-            webhookUrl={state.webhook?.value}
             state={transformState}
             resetSampleInput={resetSampleInput}
             requestMethodOnChange={requestMethodOnChange}
