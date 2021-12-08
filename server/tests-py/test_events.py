@@ -3,7 +3,7 @@
 import pytest
 import queue
 import time
-import utils
+from utils import *
 from validate import check_query_f, check_event, check_event_transformed
 
 usefixtures = pytest.mark.usefixtures
@@ -26,46 +26,6 @@ def select_last_event_fromdb(hge_ctx):
     st_code, resp = hge_ctx.v1q(q)
     return st_code, resp
 
-
-def insert(hge_ctx, table, row, returning=[], headers = {}):
-    return insert_many(hge_ctx, table, [row], returning, headers)
-
-def insert_many(hge_ctx, table, rows, returning=[], headers = {}):
-    q = {
-        "type": "insert",
-        "args": {
-            "table": table,
-            "objects": rows,
-            "returning": returning
-        }
-    }
-    st_code, resp = hge_ctx.v1q(q, headers = headers)
-    return st_code, resp
-
-
-def update(hge_ctx, table, where_exp, set_exp, headers = {}):
-    q = {
-        "type": "update",
-        "args": {
-            "table": table,
-            "where": where_exp,
-            "$set": set_exp
-        }
-    }
-    st_code, resp = hge_ctx.v1q(q, headers = headers)
-    return st_code, resp
-
-
-def delete(hge_ctx, table, where_exp, headers = {}):
-    q = {
-        "type": "delete",
-        "args": {
-            "table": table,
-            "where": where_exp
-        }
-    }
-    st_code, resp = hge_ctx.v1q(q, headers = headers)
-    return st_code, resp
 
 @usefixtures("per_method_tests_db_state")
 class TestCreateAndDelete:
