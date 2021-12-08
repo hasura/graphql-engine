@@ -3,9 +3,9 @@ import { LocalEventTriggerState } from '../state';
 import styles from '../TableCommon/EventTable.scss';
 import Headers, { Header } from '../../../../Common/Headers/Headers';
 import CollapsibleToggle from '../../../../Common/CollapsibleToggle/CollapsibleToggle';
-import Operations from '../Common/Operations';
 import RetryConfEditor from '../../Common/Components/RetryConfEditor';
 import * as tooltip from '../Common/Tooltips';
+import { Operations } from '../Common/Operations';
 import { DataSource } from '../../../../../metadata/types';
 import { getSupportedDrivers } from '../../../../../dataSources';
 import { DatabaseInfo } from './Add';
@@ -143,6 +143,7 @@ const CreateETForm: React.FC<CreateETFormProps> = props => {
             selectedOperations={operations}
             setOperations={handleOperationsChange}
             readOnly={false}
+            tableName={table.name}
           />
         </div>
       </div>
