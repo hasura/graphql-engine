@@ -78,6 +78,7 @@ import Hasura.Session
 import Language.GraphQL.Draft.Syntax qualified as G
 import ListT qualified
 import StmContainers.Map qualified as STMMap
+import Text.Shakespeare.Text (st)
 
 -- ----------------------------------------------------------------------------------------------
 -- Subscribers
@@ -290,16 +291,25 @@ pushResultToStreamSubscriptionCohort result !respHashM (LiveQueryMetadata dTime)
               STM.writeTVar latestCursorValueTV (CursorVariableValues (Map.unionWith combineFn prevPollCursorValues currentPollCursorValues))
           return (newSinks <> curSinks, mempty)
       else return (newSinks, curSinks)
-  let emptyRespBS =
-        J.object
-        [ (G.unName rootFieldName) J..= ([] :: [J.Value]) ]
-      isResponseNonEmpty =
+  let rootFieldNameText = G.unName rootFieldName
+      -- we want to know if the DB response is an empty array and if it is, then we don't send anything
+      -- to the client. We could do this by parsing the response and check for an empty list, but
+      -- this will have performance impact when large responses are parsed. Instead, we compare
+      -- the DB response to a templated empty array response.
+
+      -- We are using templating instead of doing something like
+      -- J.encode $ J.object [ rootFieldNameText J..= [] :: [J.Value] ]
+      -- is because, unfortunately, the value returned by the above is
+      -- {<rootFieldNameText>:[]} (notice the lack of spaces). So, instead
+      -- we're templating according to the format postgres sends JSON responses.
+      emptyRespBS = txtToBs $ [st|{"#{rootFieldNameText}" : []}|]
+      isResponseEmpty =
         case result of
-          Left _ -> True
-          Right respBS -> J.encode emptyRespBS /= LBS.fromStrict respBS
+          Left _ -> False
+          Right respBS -> emptyRespBS == respBS
   -- In streaming subscriptions, we don't send anything when there are no rows returned
   -- by the client.
-  bool (pure ()) (pushResultToSubscribers subscribersToPush) isResponseNonEmpty
+  bool (pushResultToSubscribers subscribersToPush) (pure ()) isResponseEmpty
   pure $
     over
       (each . each)
