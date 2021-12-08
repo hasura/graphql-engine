@@ -13,7 +13,6 @@ type PayloadOptionsTransformsProps = {
   requestSampleInput: string;
   requestTransformedBody: string;
   requestContentType: RequestTransformContentType;
-  webhookUrl: string;
   resetSampleInput: () => void;
   requestBodyOnChange: (requestBody: string) => void;
   requestSampleInputOnChange: (requestSampleInput: string) => void;

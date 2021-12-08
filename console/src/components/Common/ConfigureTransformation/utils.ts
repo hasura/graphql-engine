@@ -159,12 +159,13 @@ const generateValidateTransformQuery = (
   transformer: RequestTransformer,
   requestPayload: Nullable<Record<string, any>> = null,
   webhookUrl: string,
-  sessionVars?: KeyValuePair[]
+  sessionVars?: KeyValuePair[],
+  isEnvVar?: boolean
 ) => {
   return {
     type: 'test_webhook_transform',
     args: {
-      webhook_url: webhookUrl,
+      webhook_url: isEnvVar ? { from_env: webhookUrl } : webhookUrl,
       body: requestPayload,
       session_variables: sessionVars
         ? getPairsObjFromArray(sessionVars)
@@ -201,6 +202,7 @@ export const getValidateTransformOptions = (
   transformerBody?: string,
   requestUrl?: string,
   queryParams?: KeyValuePair[],
+  isEnvVar?: boolean,
   requestMethod?: Nullable<RequestTransformMethod>
 ) => {
   const sessionVars = getSessionVarsArray();
@@ -215,7 +217,8 @@ export const getValidateTransformOptions = (
     getTransformer(transformerBody, transformerUrl, requestMethod, queryParams),
     requestPayload,
     webhookUrl,
-    sessionVars
+    sessionVars,
+    isEnvVar
   );
 
   const options: RequestInit = {

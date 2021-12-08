@@ -64,12 +64,10 @@ const RequestUrlEditor: React.FC<RequestUrlEditorProps> = ({
   );
 
   const urlOnChangeHandler = (val: string) => {
-    setLocalError(null);
     setLocalUrl(val);
   };
 
   const queryParamsOnChangeHandler = (val: KeyValuePair[]) => {
-    setLocalError(null);
     setLocalQueryParams(val);
   };
 
