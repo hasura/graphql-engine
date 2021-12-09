@@ -65,12 +65,6 @@ instance BackendSchema 'MSSQL where
   -- SQL literals
   columnDefaultValue = msColumnDefaultValue
 
-  -- Extra insert data
-  getExtraInsertData tableInfo =
-    let pkeyColumns = fmap (map pgiColumn . toList . _pkColumns) . _tciPrimaryKey . _tiCoreInfo $ tableInfo
-        identityColumns = _tciExtraTableMetadata $ _tiCoreInfo tableInfo
-     in MSSQLExtraInsertData (fromMaybe [] pkeyColumns) identityColumns
-
 -- | MSSQL only supports inserts into tables that have a primary key defined.
 supportsInserts :: TableInfo 'MSSQL -> Bool
 supportsInserts = isJust . _tciPrimaryKey . _tiCoreInfo
@@ -111,6 +105,7 @@ msBuildTableInsertMutationFields
   mUpdPerms
     | supportsInserts tableInfo =
       GSB.buildTableInsertMutationFields
+        (\_sourceName tableInfo' _selectPermMaybe _updPermMaybe -> return (pure $ getExtraInsertData tableInfo'))
         sourceName
         tableName
         tableInfo
@@ -119,6 +114,12 @@ msBuildTableInsertMutationFields
         mSelPerms
         mUpdPerms
     | otherwise = return []
+
+getExtraInsertData :: TableInfo 'MSSQL -> MSSQLExtraInsertData v
+getExtraInsertData tableInfo =
+  let pkeyColumns = fmap (map pgiColumn . toList . _pkColumns) . _tciPrimaryKey . _tiCoreInfo $ tableInfo
+      identityColumns = _tciExtraTableMetadata $ _tiCoreInfo tableInfo
+   in MSSQLExtraInsertData (fromMaybe [] pkeyColumns) identityColumns
 
 -- Replace the instance implementation of 'buildTableUpdateMutationFields' with
 -- the below when we have an executable implementation of updates, in order to

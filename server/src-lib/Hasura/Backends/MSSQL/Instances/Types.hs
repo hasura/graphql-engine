@@ -37,13 +37,12 @@ instance Backend 'MSSQL where
   type BackendUpdate 'MSSQL = MSSQL.BackendUpdate
 
   type ExtraTableMetadata 'MSSQL = [MSSQL.ColumnName] -- List of identity columns
-  type ExtraInsertData 'MSSQL = MSSQL.MSSQLExtraInsertData
+  type BackendInsert 'MSSQL = MSSQL.MSSQLExtraInsertData
 
   type XComputedField 'MSSQL = XDisable
   type XRelay 'MSSQL = XDisable
   type XNodesAgg 'MSSQL = XEnable
   type XNestedInserts 'MSSQL = XDisable
-  type XOnConflict 'MSSQL = XDisable
 
   functionArgScalarType :: FunctionArgType 'MSSQL -> ScalarType 'MSSQL
   functionArgScalarType = absurd

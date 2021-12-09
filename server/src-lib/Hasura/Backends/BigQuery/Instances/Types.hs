@@ -35,10 +35,8 @@ instance Backend 'BigQuery where
   type XRelay 'BigQuery = XDisable
   type XNodesAgg 'BigQuery = XEnable
   type XNestedInserts 'BigQuery = XDisable
-  type XOnConflict 'BigQuery = XDisable
 
   type ExtraTableMetadata 'BigQuery = ()
-  type ExtraInsertData 'BigQuery = ()
 
   functionArgScalarType :: FunctionArgType 'BigQuery -> ScalarType 'BigQuery
   functionArgScalarType = absurd
