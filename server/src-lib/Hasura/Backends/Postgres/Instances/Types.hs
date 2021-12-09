@@ -79,7 +79,7 @@ instance
   type BackendUpdate ('Postgres pgKind) = PG.BackendUpdate
 
   type ExtraTableMetadata ('Postgres pgKind) = PgExtraTableMetadata pgKind
-  type BackendInsert ('Postgres pgKind) = PG.BackendInsert ('Postgres pgKind)
+  type BackendInsert ('Postgres pgKind) = PG.BackendInsert pgKind
 
   type XComputedField ('Postgres pgKind) = XEnable
   type XRelay ('Postgres pgKind) = XEnable

@@ -164,7 +164,7 @@ backendInsertParser ::
   TableInfo ('Postgres pgKind) ->
   Maybe (SelPermInfo ('Postgres pgKind)) ->
   Maybe (UpdPermInfo ('Postgres pgKind)) ->
-  m (InputFieldsParser n (PGIR.BackendInsert ('Postgres pgKind) (UnpreparedValue ('Postgres pgKind))))
+  m (InputFieldsParser n (PGIR.BackendInsert pgKind (UnpreparedValue ('Postgres pgKind))))
 backendInsertParser sourceName tableInfo selectPerms updatePerms =
   fmap BackendInsert <$> onConflictFieldParser sourceName tableInfo selectPerms updatePerms
 
