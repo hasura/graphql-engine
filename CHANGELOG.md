@@ -6,6 +6,8 @@
 ### Bug fixes and improvements
 (Add entries below in the order of server, console, cli, docs, others)
 
+- cli: `hasura metadata diff` shows diff with more context in directory mode
+
 ## v2.1.0-beta.3
 
 - server: allows the use of mock env vars in the `test_webhook_transform` metadata API action

@@ -95,6 +95,27 @@ func (o *MetadataObject) Filename() string {
 	return "graphql_schema_introspection.yaml"
 }
 
+func (o *MetadataObject) GetFiles() ([]string, metadataobject.ErrParsingMetadataObject) {
+	rootFile := filepath.Join(o.BaseDirectory(), o.Filename())
+	files, err := metadataobject.DefaultGetFiles(rootFile)
+	if err != nil {
+		return nil, o.error(err)
+	}
+	return files, nil
+}
+
+func (o *MetadataObject) WriteDiff(opts metadataobject.WriteDiffOpts) metadataobject.ErrParsingMetadataObject {
+	err := metadataobject.DefaultWriteDiff(metadataobject.DefaultWriteDiffOpts{From: o, WriteDiffOpts: opts})
+	if err != nil {
+		return o.error(err)
+	}
+	return nil
+}
+
+func (o *MetadataObject) BaseDirectory() string {
+	return o.MetadataDir
+}
+
 func (o *MetadataObject) error(err error, additionalContext ...string) metadataobject.ErrParsingMetadataObject {
 	return metadataobject.NewErrParsingMetadataObject(o, err, additionalContext...)
 }

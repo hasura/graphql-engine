@@ -1,0 +1,10 @@
+schema  { query: Query }
+
+type Language { code: ID!
+  name: String
+  native: String
+  rtl: Boolean!
+}
+
+type Query { language(code: ID!): Language
+}
