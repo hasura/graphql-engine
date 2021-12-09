@@ -20,6 +20,8 @@ where
 import Control.Lens ((.~), (^.), (^?))
 import Data.Aeson qualified as J
 import Data.Aeson.Ordered qualified as AO
+import Data.Bifunctor (bimap, first)
+import Data.ByteString.Lazy qualified as BL
 import Data.CaseInsensitive qualified as CI
 import Data.Environment qualified as Env
 import Data.Has (Has, getter)
@@ -29,12 +31,13 @@ import Data.HashSet qualified as HS
 import Data.List qualified as L
 import Data.TByteString qualified as TBS
 import Data.Text qualified as T
+import Data.Text.Encoding qualified as TE
 import Data.Text.Extended ((<<>))
 import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.Logging qualified as HL
 import Hasura.Metadata.Class
-import Hasura.Prelude
+import Hasura.Prelude hiding (first)
 import Hasura.RQL.DDL.Action
 import Hasura.RQL.DDL.ComputedField
 import Hasura.RQL.DDL.CustomTypes
@@ -53,6 +56,7 @@ import Hasura.RQL.DDL.Schema
 import Hasura.RQL.Types
 import Hasura.RQL.Types.Eventing.Backend (BackendEventTrigger (..))
 import Hasura.SQL.AnyBackend qualified as AB
+import Kriti qualified as K
 import Network.HTTP.Client.Transformable qualified as HTTP
 
 runClearMetadata ::
@@ -470,39 +474,50 @@ runRemoveMetricsConfig = do
         metaMetricsConfig .~ emptyMetricsConfig
   pure successMsg
 
+data TestTransformError
+  = UrlInterpError K.RenderedError
+  | RequestInitializationError HTTP.HttpException
+  | RequestTransformationError HTTP.Request TransformErrorBundle
+
 runTestWebhookTransform ::
-  forall m.
-  ( QErrM m,
-    MonadIO m
-  ) =>
-  Env.Environment ->
+  (QErrM m) =>
   TestWebhookTransform ->
   m EncJSON
-runTestWebhookTransform env (TestWebhookTransform urlE payload mt sv) = do
+runTestWebhookTransform (TestWebhookTransform env urlE payload mt sv) = do
   url <- case urlE of
     URL url' -> pure url'
-    EnvVar var -> maybe (throwError $ err400 NotFound "Missing Env Var") (pure . T.pack) $ Env.lookupEnv env var
-  initReq <- liftIO $ HTTP.mkRequestThrow url
-  let req = initReq & HTTP.body .~ pure (J.encode payload)
-      dataTransform = mkRequestTransform mt
-      transformedE = applyRequestTransform url dataTransform req sv
+    EnvVar var ->
+      let err = throwError $ err400 NotFound "Missing Env Var"
+       in maybe err (pure . T.pack) $ Env.lookupEnv env var
 
-  case transformedE of
+  result <- runExceptT $ do
+    let env' = bimap T.pack (J.String . T.pack) <$> Env.toList env
+        decodeKritiResult = TE.decodeUtf8 . BL.toStrict . J.encode
+
+    kritiUrlResult <- hoistEither $ first UrlInterpError $ decodeKritiResult <$> K.runKriti url env'
+
+    let unwrappedUrl = T.drop 1 $ T.dropEnd 1 kritiUrlResult
+    initReq <- hoistEither $ first RequestInitializationError $ HTTP.mkRequestEither unwrappedUrl
+
+    let req = initReq & HTTP.body .~ pure (J.encode payload)
+        dataTransform = mkRequestTransform mt
+    hoistEither $ first (RequestTransformationError req) $ applyRequestTransform unwrappedUrl dataTransform req sv
+
+  case result of
     Right transformed ->
-      pure $
-        encJFromJValue $
-          J.object
-            [ "webhook_url" J..= (transformed ^. HTTP.url),
-              "method" J..= (transformed ^. HTTP.method),
-              "headers" J..= (first CI.foldedCase <$> (transformed ^. HTTP.headers)),
-              "body" J..= (J.decode @J.Value =<< (transformed ^. HTTP.body))
-            ]
-    Left err ->
-      pure $
-        encJFromJValue $
-          J.object
-            [ "webhook_url" J..= (req ^. HTTP.url),
-              "method" J..= (req ^. HTTP.method),
-              "headers" J..= (first CI.foldedCase <$> (req ^. HTTP.headers)),
-              "body" J..= J.toJSON err
-            ]
+      let body = J.toJSON $ J.decode @J.Value =<< (transformed ^. HTTP.body)
+       in pure $ packTransformResult transformed body
+    Left (RequestTransformationError req err) -> pure $ packTransformResult req (J.toJSON err)
+    -- NOTE: In the following two cases we have failed before producing a valid request.
+    Left (UrlInterpError err) -> pure $ encJFromJValue $ J.toJSON err
+    Left (RequestInitializationError err) -> pure $ encJFromJValue $ J.String $ "Error: " <> tshow err
+
+packTransformResult :: HTTP.Request -> J.Value -> EncJSON
+packTransformResult req body =
+  encJFromJValue $
+    J.object
+      [ "webhook_url" J..= (req ^. HTTP.url),
+        "method" J..= (req ^. HTTP.method),
+        "headers" J..= (first CI.foldedCase <$> (req ^. HTTP.headers)),
+        "body" J..= body
+      ]

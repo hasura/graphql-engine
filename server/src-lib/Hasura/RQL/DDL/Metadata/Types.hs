@@ -20,6 +20,7 @@ where
 
 import Data.Aeson
 import Data.Aeson.TH
+import Data.Environment qualified as Env
 import Data.HashMap.Strict qualified as H
 import Data.Text qualified as T
 import Hasura.Prelude
@@ -193,15 +194,16 @@ instance FromJSON WebHookUrl where
   parseJSON (Object o) = do
     var <- o .: "from_env"
     pure $ EnvVar var
-  parseJSON (String str) = pure $ URL str
+  parseJSON (String str) = pure $ URL $ "\"" <> str <> "\""
   parseJSON _ = empty
 
 instance ToJSON WebHookUrl where
   toJSON (EnvVar var) = object ["from_env" .= var]
-  toJSON (URL url) = String url
+  toJSON (URL url) = toJSON url
 
 data TestWebhookTransform = TestWebhookTransform
-  { _twtWebhookUrl :: WebHookUrl,
+  { _twtEnv :: Env.Environment,
+    _twtWebhookUrl :: WebHookUrl,
     _twtPayload :: Value,
     _twtTransformer :: MetadataTransform,
     _twtSessionVariables :: Maybe SessionVariables
@@ -210,16 +212,19 @@ data TestWebhookTransform = TestWebhookTransform
 
 instance FromJSON TestWebhookTransform where
   parseJSON = withObject "TestWebhookTransform" $ \o -> do
+    env' <- o .:? "env"
+    let env = fromMaybe mempty env'
     url <- o .: "webhook_url"
     payload <- o .: "body"
     transformer <- o .: "request_transform"
     sessionVars <- o .:? "session_variables"
-    pure $ TestWebhookTransform url payload transformer sessionVars
+    pure $ TestWebhookTransform env url payload transformer sessionVars
 
 instance ToJSON TestWebhookTransform where
-  toJSON (TestWebhookTransform url payload mt sv) =
+  toJSON (TestWebhookTransform env url payload mt sv) =
     object
-      [ "webhook_url" .= url,
+      [ "env" .= env,
+        "webhook_url" .= url,
         "body" .= payload,
         "request_transform" .= mt,
         "session_variables" .= sv
