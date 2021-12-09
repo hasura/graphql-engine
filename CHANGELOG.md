@@ -3,6 +3,11 @@
 ## Next release
 (Add highlights/major features below)
 
+### Bug fixes and improvements
+(Add entries below in the order of server, console, cli, docs, others)
+
+## v2.1.0-beta.3
+
 - server: allows the use of mock env vars in the `test_webhook_transform` metadata API action
 - server: fix event invocation logs to include transformed request bodies (fix #2983)
 - server: fix aggregate queries with nodes field in selection set for sql server (fix #7871)
@@ -19,6 +24,9 @@
 - server: fix rest-endpoints bug allow list arguments (fix #7135)
 - server: fallback to unauthorized role when JWT is not found in cookie (fix #7272)
 - server: add support for building linux/arm64 docker image (#6337, #1266)
+- server: provide option to explicitly recreate event triggers for sources in the `reload_metadata` API
+- server: fix `gen_hasura_uuid` migration to be idempotent, so that it doesn't fail if the database is already initialised with source migrations.
+- server: fix mssql `table_by_pk` query returning empty array (fix #7784)
 - console: add comments to tracked functions
 - console: add select all columns option while selecting the columns in event triggers
 - console: add request transforms for events
@@ -26,13 +34,6 @@
 - cli: fix cli-console failing to add migrations if there are tabs in SQL body (#7362)
 - cli: sign windows binary of Hasura CLI (#7147)
 - cli: core CLI features are not blocked in environments without internet (#7695)
-
-### Bug fixes and improvements
-(Add entries below in the order of server, console, cli, docs, others)
-
-- server: provide option to explicitly recreate event triggers for sources in the `reload_metadata` API
-- server: fix `gen_hasura_uuid` migration to be idempotent, so that it doesn't fail if the database is already initialised with source migrations.
-- server: fix mssql `table_by_pk` query returning empty array (fix #7784)
 
 ## v2.1.0-beta.2
 
