@@ -307,7 +307,7 @@ executeInsert userInfo stringifyNum sourceConfig annInsert = do
 
     buildInsertTx :: AnnInsert 'MSSQL Void Expression -> Tx.TxET QErr IO EncJSON
     buildInsertTx insert = do
-      let identityColumns = _mssqlIdentityColumns $ _aiExtraInsertData $ _aiData insert
+      let identityColumns = _mssqlIdentityColumns $ _aiBackendInsert $ _aiData insert
           insertColumns = concatMap (map fst . getInsertColumns) $ _aiInsObj $ _aiData insert
 
       -- Set identity insert to ON if insert object contains identity columns

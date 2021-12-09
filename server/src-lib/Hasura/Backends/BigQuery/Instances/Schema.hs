@@ -59,9 +59,6 @@ instance BackendSchema 'BigQuery where
   -- SQL literals
   columnDefaultValue = error "TODO: Make impossible by the type system. BigQuery doesn't support insertions."
 
-  -- Extra insert data
-  getExtraInsertData = const ()
-
 ----------------------------------------------------------------
 -- Top level parsers
 

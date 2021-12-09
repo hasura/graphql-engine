@@ -428,6 +428,7 @@ library
                      , Hasura.Backends.Postgres.Types.BoolExp
                      , Hasura.Backends.Postgres.Types.CitusExtraTableMetadata
                      , Hasura.Backends.Postgres.Types.Column
+                     , Hasura.Backends.Postgres.Types.Insert
                      , Hasura.Backends.Postgres.Types.Table
                      , Hasura.Backends.Postgres.Types.Update
 
@@ -585,6 +586,7 @@ library
                      , Hasura.RQL.DML.Update
                      , Hasura.RQL.DML.Types
                      , Hasura.RQL.IR.BoolExp
+                     , Hasura.RQL.IR.Conflict
                      , Hasura.RQL.IR.Delete
                      , Hasura.RQL.IR.Insert
                      , Hasura.RQL.IR.OrderBy
@@ -641,6 +643,7 @@ library
                      , Hasura.GraphQL.Schema.BoolExp
                      , Hasura.GraphQL.Schema.Build
                      , Hasura.GraphQL.Schema.Common
+                     , Hasura.GraphQL.Schema.Conflict
                      , Hasura.GraphQL.Schema.Introspect
                      , Hasura.GraphQL.Schema.Instances
                      , Hasura.GraphQL.Schema.Mutation
