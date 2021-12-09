@@ -29,6 +29,11 @@ type RemoteSchema struct {
 	Comment    interface{} `yaml:"comment"`
 	Permission interface{} `yaml:"permissions"`
 }
+
+func (r RemoteSchema) BaseDirectory() string {
+	panic("implement me")
+}
+
 type SchemaDefinition struct {
 	Schema string `yaml:"schema"`
 }
@@ -115,12 +120,12 @@ func (r *RemoteSchemaConfig) Build(metadata *goyaml.MapSlice) metadataobject.Err
 		}
 		PermissionNode, err := permissionsPath.ReadNode(bytes.NewReader(data))
 		if err == nil {
-			tableNodeBytes, err := ioutil.ReadAll(PermissionNode)
+			permissionNodeBytes, err := ioutil.ReadAll(PermissionNode)
 			if err != nil {
 				return r.error(err)
 			}
 			var permissions interface{}
-			err = v3yaml.Unmarshal(tableNodeBytes, metadatautil.NewYamlDecoder(
+			err = v3yaml.Unmarshal(permissionNodeBytes, metadatautil.NewYamlDecoder(
 				metadatautil.YamlDecoderOpts{
 					IncludeTagBaseDirectory: filepath.Join(r.MetadataDir, remoteSchemasDirectory),
 				},
@@ -214,6 +219,44 @@ func (r *RemoteSchemaConfig) Export(metadata goyaml.MapSlice) (map[string][]byte
 	remoteSchemaFile := filepath.Join(r.MetadataDir, remoteSchemasDirectory, r.Filename())
 	files[filepath.ToSlash(remoteSchemaFile)] = data
 	return files, nil
+}
+
+func (r *RemoteSchemaConfig) GetFiles() ([]string, metadataobject.ErrParsingMetadataObject) {
+	var err error
+	var files []string
+
+	remoteSchemaFile := filepath.Join(r.MetadataDir, remoteSchemasDirectory, r.Filename())
+	if _, err = os.Stat(remoteSchemaFile); os.IsNotExist(err) {
+		// if metadata/remotes_schemas/remote_schema.yaml is not present
+		// fall back to old workflow where remote schemas used to stored in metadata/remote_schemas.yaml
+		// if this file exists respect this and read metadata from here
+		remoteSchemaFile = filepath.ToSlash(filepath.Join(r.MetadataDir, r.Filename()))
+		if _, err := os.Stat(remoteSchemaFile); os.IsNotExist(err) {
+			return nil, nil
+		}
+		files, err = metadataobject.DefaultGetFiles(remoteSchemaFile)
+		if err != nil {
+			return nil, r.error(err)
+		}
+	} else {
+		files, err = metadataobject.DefaultGetFiles(remoteSchemaFile)
+		if err != nil {
+			return nil, r.error(err)
+		}
+	}
+	return files, nil
+}
+
+func (r *RemoteSchemaConfig) WriteDiff(opts metadataobject.WriteDiffOpts) metadataobject.ErrParsingMetadataObject {
+	err := metadataobject.DefaultWriteDiff(metadataobject.DefaultWriteDiffOpts{From: r, WriteDiffOpts: opts})
+	if err != nil {
+		return r.error(err)
+	}
+	return nil
+}
+
+func (r *RemoteSchemaConfig) BaseDirectory() string {
+	return r.MetadataDir
 }
 
 func (r *RemoteSchemaConfig) Key() string {

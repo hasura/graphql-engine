@@ -1,0 +1,44 @@
+schema  { query: Query }
+
+type Continent { countries: [Country!]!
+  name: String!
+}
+
+type Country { capital: String
+  code: ID!
+  continent: Continent!
+  currency: String
+  emoji: String!
+  emojiU: String!
+  languages: [Language!]!
+  name: String!
+  native: String!
+  phone: String!
+  states: [State!]!
+}
+
+type Language { code: ID!
+  name: String
+  native: String
+  rtl: Boolean!
+}
+
+type Query { country(code: ID!): Country
+  languages(filter: LanguageFilterInput): [Language!]!
+}
+
+type State { code: String
+  country: Country!
+  name: String!
+}
+
+input LanguageFilterInput {code: StringQueryOperatorInput
+}
+
+input StringQueryOperatorInput {eq: String
+  glob: String
+  in: [String]
+  ne: String
+  nin: [String]
+  regex: String
+}

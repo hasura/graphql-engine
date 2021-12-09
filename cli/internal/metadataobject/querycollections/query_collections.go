@@ -91,6 +91,27 @@ func (q *QueryCollectionConfig) Filename() string {
 	return "query_collections.yaml"
 }
 
+func (q *QueryCollectionConfig) GetFiles() ([]string, metadataobject.ErrParsingMetadataObject) {
+	rootFile := filepath.Join(q.BaseDirectory(), q.Filename())
+	files, err := metadataobject.DefaultGetFiles(rootFile)
+	if err != nil {
+		return nil, q.error(err)
+	}
+	return files, nil
+}
+
+func (q *QueryCollectionConfig) WriteDiff(opts metadataobject.WriteDiffOpts) metadataobject.ErrParsingMetadataObject {
+	err := metadataobject.DefaultWriteDiff(metadataobject.DefaultWriteDiffOpts{From: q, WriteDiffOpts: opts})
+	if err != nil {
+		return q.error(err)
+	}
+	return nil
+}
+
+func (q *QueryCollectionConfig) BaseDirectory() string {
+	return q.MetadataDir
+}
+
 func (q *QueryCollectionConfig) error(err error, additionalContext ...string) metadataobject.ErrParsingMetadataObject {
 	return metadataobject.NewErrParsingMetadataObject(q, err, additionalContext...)
 }

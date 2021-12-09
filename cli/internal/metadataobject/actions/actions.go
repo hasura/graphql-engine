@@ -444,6 +444,28 @@ func (a *ActionConfig) Filename() string {
 	return "actions.yaml"
 }
 
+func (a *ActionConfig) GetFiles() ([]string, metadataobject.ErrParsingMetadataObject) {
+	rootFile := filepath.Join(a.BaseDirectory(), a.Filename())
+	files, err := metadataobject.DefaultGetFiles(rootFile)
+	if err != nil {
+		return nil, a.error(err)
+	}
+	files = append(files, filepath.Join(a.BaseDirectory(), graphqlFileName))
+	return files, nil
+}
+
+func (a *ActionConfig) WriteDiff(opts metadataobject.WriteDiffOpts) metadataobject.ErrParsingMetadataObject {
+	err := metadataobject.DefaultWriteDiff(metadataobject.DefaultWriteDiffOpts{From: a, WriteDiffOpts: opts})
+	if err != nil {
+		return a.error(err)
+	}
+	return nil
+}
+
+func (a *ActionConfig) BaseDirectory() string {
+	return a.MetadataDir
+}
+
 func (a *ActionConfig) GetActionsFileContent() (content types.Common, err error) {
 	commonByt, err := ioutil.ReadFile(filepath.Join(a.MetadataDir, a.Filename()))
 	if err != nil {

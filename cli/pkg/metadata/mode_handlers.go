@@ -78,6 +78,7 @@ func diff(p *ProjectMetadata) (io.Reader, error) {
 		EC:           p.ec,
 		Output:       w,
 		DisableColor: true,
+		DiffType:     string(commands.DifftypeJSON),
 	}
 	if err := opts.Run(); err != nil {
 		return nil, err

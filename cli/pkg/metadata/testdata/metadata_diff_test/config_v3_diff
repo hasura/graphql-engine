@@ -1,5 +1,5 @@
---- server
-+++ project
+- server
++ project
 @@ -13,4 +13,16 @@
 -  tables: []
 +  tables:

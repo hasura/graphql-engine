@@ -1,0 +1,42 @@
+table:
+  name: albums
+  schema: public
+object_relationships:
+- name: artist
+  using:
+    foreign_key_constraint_on: artist_id
+insert_permissions:
+- permission:
+    backend_only: false
+    check: {}
+    columns:
+    - artist_id
+    - id
+    - title
+  role: manager
+- permission:
+    backend_only: false
+    check: {}
+    columns:
+    - artist_id
+    - id
+    - title
+  role: user
+event_triggers:
+- definition:
+    delete:
+      columns: "*"
+    enable_manual: true
+    insert:
+      columns: "*"
+    update:
+      columns:
+      - title
+      - id
+      - artist_id
+  name: artists
+  retry_conf:
+    interval_sec: 10
+    num_retries: 0
+    timeout_sec: 60
+  webhook: https://httpbin.org/post

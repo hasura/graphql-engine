@@ -17,21 +17,21 @@ require (
 	github.com/denisenkom/go-mssqldb v0.0.0-20190515213511-eb9f6a1743f3
 	github.com/elazarl/goproxy v0.0.0-20191011121108-aa519ddbe484 // indirect
 	github.com/fatih/color v1.10.0
-	github.com/fsnotify/fsnotify v1.5.1 // indirect
 	github.com/gin-contrib/cors v1.3.0
 	github.com/gin-contrib/static v0.0.0-20191128031702-f81c604d8ac2
 	github.com/gin-gonic/contrib v0.0.0-20191209060500-d6e26eeaa607
 	github.com/gin-gonic/gin v1.5.0
 	github.com/goccy/go-yaml v1.8.8
 	github.com/gofrs/uuid v3.2.0+incompatible
+	github.com/gonvenience/ytbx v1.4.2
 	github.com/google/go-cmp v0.5.5
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/hexops/gotextdiff v1.0.3
+	github.com/homeport/dyff v1.4.5
 	github.com/kardianos/osext v0.0.0-20190222173326-2bc1f35cddc0
 	github.com/kr/pretty v0.2.0 // indirect
 	github.com/lib/pq v1.1.1
 	github.com/mattn/go-colorable v0.1.8
-	github.com/mattn/go-isatty v0.0.14 // indirect
 	github.com/mgutz/ansi v0.0.0-20170206155736-9520e82c474b
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/mitchellh/mapstructure v1.4.1
@@ -42,7 +42,6 @@ require (
 	github.com/ory/dockertest/v3 v3.6.3
 	github.com/parnurzeal/gorequest v0.2.16
 	github.com/pkg/errors v0.9.1
-	github.com/sergi/go-diff v1.2.0 // indirect
 	github.com/sirupsen/logrus v1.7.0
 	github.com/skratchdot/open-golang v0.0.0-20190402232053-79abb63cd66e
 	github.com/spf13/afero v1.6.0
@@ -52,10 +51,7 @@ require (
 	github.com/stretchr/testify v1.7.0
 	github.com/subosito/gotenv v1.2.0
 	golang.org/x/crypto v0.0.0-20210317152858-513c2a44f670 // indirect
-	golang.org/x/net v0.0.0-20210917163549-3c21e5b27794 // indirect
-	golang.org/x/sys v0.0.0-20210917161153-d61c044b1678 // indirect
 	golang.org/x/term v0.0.0-20210916214954-140adaaadfaf
-	golang.org/x/text v0.3.7 // indirect
 	gopkg.in/src-d/go-git.v4 v4.13.1
 	gopkg.in/yaml.v2 v2.4.0
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b

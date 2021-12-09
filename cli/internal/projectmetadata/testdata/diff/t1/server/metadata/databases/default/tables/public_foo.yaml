@@ -1,0 +1,11 @@
+table:
+  name: foo
+  schema: public
+insert_permissions:
+- permission:
+    backend_only: false
+    check: {}
+    columns:
+    - created_at
+    - id
+  role: foo
