@@ -18,6 +18,7 @@
 - server: improved startup time when using large remote schemas
 - server: fix rest-endpoints bug allow list arguments (fix #7135)
 - server: fallback to unauthorized role when JWT is not found in cookie (fix #7272)
+- server: add support for building linux/arm64 docker image (#6337, #1266)
 - console: add comments to tracked functions
 - console: add select all columns option while selecting the columns in event triggers
 - console: add request transforms for events
