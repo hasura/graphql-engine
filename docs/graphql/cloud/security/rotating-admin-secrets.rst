@@ -27,7 +27,7 @@ If you want to make API calls from outside the console, you need to pass any one
 
 .. note::
 
-    Only one of ``HASURA_GRAPHQL_ADMIN_SECRET`` or ``HASURA_GRAPHQL_ADMIN_SECRETS`` can be set at the same time. If both are set, then it will throw a configuration error at startup. 
+    If both ``HASURA_GRAPHQL_ADMIN_SECRET`` and ``HASURA_GRAPHQL_ADMIN_SECRETS`` are set, then only ``HASURA_GRAPH_ADMIN_SECRETS`` will be used.
 
 How to rotate an admin secret
 -----------------------------------
