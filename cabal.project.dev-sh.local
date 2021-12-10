@@ -14,7 +14,17 @@ package *
   -- a massive rebuild. To start, see:
   --   https://www.haskell.org/ghc/blog/20200403-dwarf-1.html
   debug-info: 2
+
+  -- For compile-time performance (see cabal.project.ci.local):
+  ghc-options:
+    -- We compile with package-level parallelism, so just use a small amount 
+    -- of module-level parallelism for dependencies:
+    -j2
+    +RTS -A64m -n2m -RTS
   
+-- Modify this to '+optimize-hasura' to enable optimizations. Be sure also to comment
+-- 'coverage: true' below for full prod performance.
+--
 -- NOTE: new-build may report a misleading 'Build profile: -O1'
 -- See:https://github.com/haskell/cabal/issues/6221
 flags: -optimize-hasura
@@ -28,6 +38,8 @@ package graphql-engine
   coverage: true
   -- to match CI:
   ghc-options: -Werror
+  -- For compile-time performance (see cabal.project.ci.local):
+  ghc-options: -j
   -- By default GHC is dynamically linked, so to run TemplateHaskell you need dynamic versions of
   -- libraries. But, also by default, cabal links executables statically, which requires static
   -- versions of the libraries. Therefore, by default, cabal builds with -dynamic-too to generate
