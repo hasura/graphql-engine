@@ -40,4 +40,4 @@ The authentication is resolved as follows:
 
 .. note::
 
-    Only one of ``HASURA_GRAPHQL_JWT_SECRET`` or ``HASURA_GRAPHQL_JWT_SECRETS`` can be set at the same time. If both are set, then it will throw a configuration error at startup.
+   If both ``HASURA_GRAPHQL_JWT_SECRET`` and ``HASURA_GRAPHQL_JWT_SECRETS`` are set, then only ``HASURA_GRAPHQL_JWT_SECRETS`` will be used.
