@@ -1,7 +1,7 @@
 # Hasura GraphQL Engine Changelog
 
 ## Next release
-(Add highlights/major features below)
+- cli-migrations: add apply seeds if directory exists
 
 ### Bug fixes and improvements
 (Add entries below in the order of server, console, cli, docs, others)

@@ -21,6 +21,8 @@ docker-compose up --no-start graphql-engine
 docker cp migrations/. graphql-engine:/hasura-migrations
 # copy metadata directory to /hasura-metadata
 docker cp metadata/. graphql-engine:/hasura-metadata
+# copy seeds directory to /hasura-seeds
+docker cp seeds/. graphql-engine:/hasura-seeds
 # start graphql-engine
 docker-compose up -d --no-recreate graphql-engine
 wait_for_server
@@ -28,5 +30,7 @@ wait_for_server
 docker run --network container:graphql-engine appropriate/curl -s -f   -d'{"type" : "export_metadata", "args" : {} }' localhost:8080/v1/metadata | jq -j '.' | diff validation/metadata.json -
 # get list of migrations applied from graphql-engine server
 docker run --network container:graphql-engine appropriate/curl -s -f   -d'{"type" : "get_catalog_state", "args" : {} }' localhost:8080/v1/metadata | jq .cli_state | diff validation/catalog_cli_state.json -
+# get list of data from the from graphql-engine server 
+docker run --network container:graphql-engine appropriate/curl -s -f -r POST --header 'Content-Type: application/json' -d '{"query":"{ test { id } }"}' http://localhost:8080/v1/graphql | jq -j '.'  | diff validation/data.json -
 # delete postgres and graphql-engine
 docker-compose down -v
