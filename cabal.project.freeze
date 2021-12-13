@@ -249,7 +249,7 @@ constraints: any.Cabal ==3.2.0.0,
              any.mysql-simple ==0.4.6,
              mysql-simple -developer,
              any.natural-transformation ==0.4,
-             any.network ==3.1.2.1,
+             any.network ==3.1.2.5,
              network -devel,
              any.network-byte-order ==0.1.6,
              any.network-info ==0.2.0.10,
@@ -462,4 +462,4 @@ constraints: any.Cabal ==3.2.0.0,
              any.zlib ==0.6.2.2,
              zlib -bundled-c-zlib -non-blocking-ffi -pkg-config,
              any.zlib-bindings ==0.1.1.5
-index-state: hackage.haskell.org 2021-07-09T20:23:17Z
+index-state: hackage.haskell.org 2021-12-09T17:38:20Z
