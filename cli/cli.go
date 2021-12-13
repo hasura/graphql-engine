@@ -325,6 +325,7 @@ func (s *ServerConfig) SetHTTPClient() error {
 	s.HTTPClient = &http.Client{Transport: http.DefaultTransport}
 	if s.TLSConfig != nil {
 		tr := &http.Transport{TLSClientConfig: s.TLSConfig}
+		tr.Proxy = http.ProxyFromEnvironment
 		s.HTTPClient.Transport = tr
 	}
 	return nil
@@ -719,6 +720,7 @@ func (ec *ExecutionContext) Validate() error {
 		&http.Client{
 			Transport: &http.Transport{
 				TLSClientConfig: ec.Config.TLSConfig,
+				Proxy:           http.ProxyFromEnvironment,
 			},
 		},
 		ec.Config.Endpoint,
