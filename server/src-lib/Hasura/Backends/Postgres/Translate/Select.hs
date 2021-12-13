@@ -59,7 +59,7 @@ import Hasura.Prelude
 import Hasura.RQL.DML.Internal
 import Hasura.RQL.IR.OrderBy
 import Hasura.RQL.IR.Select
-import Hasura.RQL.Types hiding (Identifier)
+import Hasura.RQL.Types
 import Hasura.SQL.Types
 
 -- | Translates IR to Postgres queries for simple SELECTs (select queries that
@@ -114,7 +114,7 @@ asSingleRowJsonResp query args =
   encJFromBS . runIdentity . Q.getRow
     <$> Q.rawQE dmlTxErrorHandler query args True
 
--- | Converts a function name to an identifier.
+-- | Converts a function name to an 'Identifier'.
 --
 -- If the schema name is public, it will just use its name, otherwise it will
 -- prefix it by the schema name.
@@ -124,7 +124,7 @@ functionToIdentifier = Identifier . qualifiedObjectToText
 selectFromToFromItem :: Identifier -> SelectFrom ('Postgres pgKind) -> S.FromItem
 selectFromToFromItem pfx = \case
   FromTable tn -> S.FISimple tn Nothing
-  FromIdentifier i -> S.FIIdentifier i
+  FromIdentifier i -> S.FIIdentifier $ toIdentifier i
   FromFunction qf args defListM ->
     S.FIFunc $
       S.FunctionExp qf (fromTableRowArgs pfx args) $
@@ -140,7 +140,7 @@ selectFromToFromItem pfx = \case
 selectFromToQual :: SelectFrom ('Postgres pgKind) -> S.Qual
 selectFromToQual = \case
   FromTable table -> S.QualTable table
-  FromIdentifier i -> S.QualifiedIdentifier i Nothing
+  FromIdentifier i -> S.QualifiedIdentifier (toIdentifier i) Nothing
   FromFunction qf _ _ -> S.QualifiedIdentifier (functionToIdentifier qf) Nothing
 
 aggregateFieldToExp :: AggregateFields ('Postgres pgKind) -> Bool -> S.SQLExp
@@ -305,15 +305,16 @@ mkArrayRelationAlias parentFieldName similarFieldsMap fieldName =
       HM.lookupDefault [fieldName] fieldName similarFieldsMap
 
 fromTableRowArgs ::
-  Identifier -> FunctionArgsExpTableRow ('Postgres pgKind) S.SQLExp -> S.FunctionArgs
-fromTableRowArgs pfx = toFunctionArgs . fmap toSQLExp
+  Identifier -> FunctionArgsExpTableRow S.SQLExp -> S.FunctionArgs
+fromTableRowArgs prefix = toFunctionArgs . fmap toSQLExp
   where
     toFunctionArgs (FunctionArgsExp positional named) =
       S.FunctionArgs positional named
-    toSQLExp (AETableRow Nothing) = S.SERowIdentifier $ mkBaseTableAlias pfx
-    toSQLExp (AETableRow (Just acc)) = S.mkQIdenExp (mkBaseTableAlias pfx) acc
-    toSQLExp (AESession s) = s
-    toSQLExp (AEInput s) = s
+    toSQLExp =
+      onArgumentExp
+        (S.SERowIdentifier alias)
+        (S.mkQIdenExp alias . Identifier)
+    alias = mkBaseTableAlias prefix
 
 -- uses row_to_json to build a json object
 withRowToJSON ::

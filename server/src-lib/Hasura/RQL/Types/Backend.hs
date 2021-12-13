@@ -46,8 +46,7 @@ type XDisable = Void
 -- type application or a 'Proxy' parameter to disambiguate between
 -- different backends at the call site.
 class
-  ( Representable (Identifier b),
-    Representable (TableName b),
+  ( Representable (TableName b),
     Representable (FunctionName b),
     Representable (FunctionArgType b),
     Representable (ConstraintName b),
@@ -118,7 +117,6 @@ class
   -- types
   type SourceConfig b :: Type
   type SourceConnConfiguration b :: Type
-  type Identifier b :: Type
   type TableName b :: Type
   type RawFunctionInfo b :: Type
   type FunctionName b :: Type

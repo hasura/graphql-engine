@@ -14,7 +14,7 @@ import Hasura.Backends.Postgres.SQL.Types hiding (TableName)
 import Hasura.Backends.Postgres.Types.BoolExp
 import Hasura.Base.Error
 import Hasura.Prelude
-import Hasura.RQL.Types hiding (Identifier)
+import Hasura.RQL.Types
 import Hasura.SQL.Types
 
 -- | Context to parse a RHS value in a boolean expression

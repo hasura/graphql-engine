@@ -291,10 +291,9 @@ resolveAsyncActionQuery userInfo annAction =
                     asyncFields <&> second \case
                       AsyncTypename t -> RS.AFExpression t
                       AsyncOutput annFields ->
-                        let inputTableArgument = RS.AETableRow $ Just $ Identifier "response_payload"
-                         in RS.AFComputedField () (ComputedFieldName $$(nonEmptyText "__action_computed_field")) $
-                              RS.CFSTable jsonAggSelect $
-                                processOutputSelectionSet inputTableArgument outputType definitionList annFields stringifyNumerics
+                        RS.AFComputedField () (ComputedFieldName $$(nonEmptyText "__action_computed_field")) $
+                          RS.CFSTable jsonAggSelect $
+                            processOutputSelectionSet RS.AEActionResponsePayload outputType definitionList annFields stringifyNumerics
                       AsyncId -> mkAnnFldFromPGCol idColumn
                       AsyncCreatedAt -> mkAnnFldFromPGCol createdAtColumn
                       AsyncErrors -> mkAnnFldFromPGCol errorsColumn
@@ -316,7 +315,7 @@ resolveAsyncActionQuery userInfo annAction =
     AnnActionAsyncQuery _ actionId outputType asyncFields definitionList stringifyNumerics _ actionSource = annAction
 
     idColumn = (unsafePGCol "id", PGUUID)
-    responsePayloadColumn = (unsafePGCol "response_payload", PGJSONB)
+    responsePayloadColumn = (unsafePGCol RS.actionResponsePayloadColumn, PGJSONB)
     createdAtColumn = (unsafePGCol "created_at", PGTimeStampTZ)
     errorsColumn = (unsafePGCol "errors", PGJSONB)
     sessionVarsColumn = (unsafePGCol "session_variables", PGJSONB)
@@ -608,7 +607,7 @@ callWebhook
                     "expecting not null value for field " <>> fieldName
 
 processOutputSelectionSet ::
-  RS.ArgumentExp ('Postgres 'Vanilla) v ->
+  RS.ArgumentExp v ->
   GraphQLType ->
   [(PGCol, PGScalarType)] ->
   RS.AnnFieldsG ('Postgres 'Vanilla) r v ->
