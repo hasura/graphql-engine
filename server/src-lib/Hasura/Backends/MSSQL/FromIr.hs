@@ -128,7 +128,7 @@ fromSelectRows annSelectG = do
   selectFrom <-
     case from of
       IR.FromTable qualifiedObject -> fromQualifiedTable qualifiedObject
-      IR.FromIdentifier identifier -> pure $ FromIdentifier identifier
+      IR.FromIdentifier identifier -> pure $ FromIdentifier $ IR.unFIIdentifier identifier
       IR.FromFunction {} -> refute $ pure FunctionNotSupported
   Args
     { argsOrderBy,
@@ -270,7 +270,7 @@ fromSelectAggregate
     do
       selectFrom <- case from of
         IR.FromTable qualifiedObject -> fromQualifiedTable qualifiedObject
-        IR.FromIdentifier identifier -> pure $ FromIdentifier identifier
+        IR.FromIdentifier identifier -> pure $ FromIdentifier $ IR.unFIIdentifier identifier
         IR.FromFunction {} -> refute $ pure FunctionNotSupported
       -- Below: When we're actually a RHS of a query (of CROSS APPLY),
       -- then we'll have a LHS table that we're joining on. So we get the

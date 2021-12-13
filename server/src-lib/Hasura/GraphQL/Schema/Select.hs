@@ -1301,16 +1301,14 @@ computedFieldPG sourceName ComputedFieldInfo {..} parentTable selectPermissions 
 
     computedFieldFunctionArgs ::
       ComputedFieldFunction ('Postgres pgKind) ->
-      m (InputFieldsParser n (IR.FunctionArgsExpTableRow ('Postgres pgKind) (UnpreparedValue ('Postgres pgKind))))
+      m (InputFieldsParser n (IR.FunctionArgsExpTableRow (UnpreparedValue ('Postgres pgKind))))
     computedFieldFunctionArgs ComputedFieldFunction {..} =
       functionArgs (FTAComputedField _cfiName sourceName parentTable) (IAUserProvided <$> _cffInputArgs) <&> fmap addTableAndSessionArgument
       where
-        tableRowArgument = IR.AETableRow Nothing
-
         addTableAndSessionArgument args@(IR.FunctionArgsExp positional named) =
           let withTable = case _cffTableArgument of
-                FTAFirst -> IR.FunctionArgsExp (tableRowArgument : positional) named
-                FTANamed argName index -> IR.insertFunctionArg argName index tableRowArgument args
+                FTAFirst -> IR.FunctionArgsExp (IR.AETableRow : positional) named
+                FTANamed argName index -> IR.insertFunctionArg argName index IR.AETableRow args
               sessionArgVal = IR.AESession UVSession
            in case _cffSessionArgument of
                 Nothing -> withTable
@@ -1416,7 +1414,7 @@ customSQLFunctionArgs ::
   FunctionInfo b ->
   G.Name ->
   G.Name ->
-  m (InputFieldsParser n (IR.FunctionArgsExpTableRow b (UnpreparedValue b)))
+  m (InputFieldsParser n (IR.FunctionArgsExpTableRow (UnpreparedValue b)))
 customSQLFunctionArgs FunctionInfo {..} functionName functionArgsName =
   functionArgs
     ( FTACustomFunction $
@@ -1447,7 +1445,7 @@ functionArgs ::
   ) =>
   FunctionTrackedAs b ->
   Seq.Seq (FunctionInputArgument b) ->
-  m (InputFieldsParser n (IR.FunctionArgsExpTableRow b (UnpreparedValue b)))
+  m (InputFieldsParser n (IR.FunctionArgsExpTableRow (UnpreparedValue b)))
 functionArgs functionTrackedAs (toList -> inputArgs) = do
   -- First, we iterate through the original sql arguments in order, to find the
   -- corresponding graphql names. At the same time, we create the input field
@@ -1514,7 +1512,7 @@ functionArgs functionTrackedAs (toList -> inputArgs) = do
 
         pure $ P.field fieldName (Just fieldDesc) objectParser
   where
-    sessionPlaceholder :: IR.ArgumentExp b (UnpreparedValue b)
+    sessionPlaceholder :: IR.ArgumentExp (UnpreparedValue b)
     sessionPlaceholder = IR.AEInput P.UVSession
 
     splitArguments ::
@@ -1522,9 +1520,9 @@ functionArgs functionTrackedAs (toList -> inputArgs) = do
       FunctionInputArgument b ->
       ( Int,
         ( [Text], -- graphql names, in order
-          [(Text, IR.ArgumentExp b (UnpreparedValue b))], -- session argument
-          [m (InputFieldsParser n (Maybe (Text, IR.ArgumentExp b (UnpreparedValue b))))], -- optional argument
-          [m (InputFieldsParser n (Maybe (Text, IR.ArgumentExp b (UnpreparedValue b))))] -- mandatory argument
+          [(Text, IR.ArgumentExp (UnpreparedValue b))], -- session argument
+          [m (InputFieldsParser n (Maybe (Text, IR.ArgumentExp (UnpreparedValue b))))], -- optional argument
+          [m (InputFieldsParser n (Maybe (Text, IR.ArgumentExp (UnpreparedValue b))))] -- mandatory argument
         )
       )
     splitArguments positionalIndex (IASessionVariables name) =
@@ -1538,7 +1536,7 @@ functionArgs functionTrackedAs (toList -> inputArgs) = do
             then (newIndex, ([argName], [], [parseArgument arg argName], []))
             else (newIndex, ([argName], [], [], [parseArgument arg argName]))
 
-    parseArgument :: FunctionArg b -> Text -> m (InputFieldsParser n (Maybe (Text, IR.ArgumentExp b (UnpreparedValue b))))
+    parseArgument :: FunctionArg b -> Text -> m (InputFieldsParser n (Maybe (Text, IR.ArgumentExp (UnpreparedValue b))))
     parseArgument arg name = do
       typedParser <- columnParser (ColumnScalar $ functionArgScalarType @b $ faType arg) (G.Nullability True)
       fieldName <- textToName name
@@ -1557,9 +1555,9 @@ functionArgs functionTrackedAs (toList -> inputArgs) = do
       pure $ argParser `mapField` ((name,) . IR.AEInput . mkParameter)
 
     namedArgument ::
-      HashMap Text (IR.ArgumentExp b (UnpreparedValue b)) ->
+      HashMap Text (IR.ArgumentExp (UnpreparedValue b)) ->
       (Text, FunctionInputArgument b) ->
-      n (Maybe (Text, IR.ArgumentExp b (UnpreparedValue b)))
+      n (Maybe (Text, IR.ArgumentExp (UnpreparedValue b)))
     namedArgument dictionary (name, inputArgument) = case inputArgument of
       IASessionVariables _ -> pure $ Just (name, sessionPlaceholder)
       IAUserProvided arg -> case Map.lookup name dictionary of

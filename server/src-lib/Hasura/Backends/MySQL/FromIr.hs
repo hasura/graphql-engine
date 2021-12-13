@@ -35,6 +35,7 @@ data FieldSource
 -- | Most of these errors should be checked for legitimacy.
 data Error
   = UnsupportedOpExpG (IR.OpExpG 'MySQL Expression)
+  | IdentifierNotSupported
   | FunctionNotSupported
   | NodesUnsupportedForNow
   | ConnectionsNotSupported
@@ -509,6 +510,7 @@ fromSelectAggregate mparentRelationship annSelectG = do
   selectFrom <-
     case from of
       IR.FromTable qualifiedObject -> fromQualifiedTable qualifiedObject
+      IR.FromIdentifier {} -> refute $ pure IdentifierNotSupported
       IR.FromFunction {} -> refute $ pure FunctionNotSupported
   _mforeignKeyConditions <- fmap (Where . fromMaybe []) $
     for mparentRelationship $
@@ -697,6 +699,7 @@ fromSelectRows annSelectG = do
   selectFrom <-
     case from of
       IR.FromTable qualifiedObject -> fromQualifiedTable qualifiedObject
+      IR.FromIdentifier {} -> refute $ pure IdentifierNotSupported
       IR.FromFunction {} -> refute $ pure FunctionNotSupported
   Args
     { argsOrderBy,

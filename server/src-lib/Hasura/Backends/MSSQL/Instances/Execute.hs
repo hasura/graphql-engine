@@ -475,7 +475,7 @@ mkSelect ::
   Fields (AnnFieldG 'MSSQL Void Expression) ->
   m Select
 mkSelect stringifyNum withAlias jsonAggSelect annFields = do
-  let annSelect = IR.AnnSelectG annFields (IR.FromIdentifier withAlias) IR.noTablePermissions IR.noSelectArgs stringifyNum
+  let annSelect = IR.AnnSelectG annFields (IR.FromIdentifier $ FIIdentifier withAlias) IR.noTablePermissions IR.noSelectArgs stringifyNum
   V.runValidate (runFromIr $ mkSQLSelect jsonAggSelect annSelect) `onLeft` (throw500 . tshow)
 
 -- SELECT COUNT(*) AS "count" FROM [with_alias]

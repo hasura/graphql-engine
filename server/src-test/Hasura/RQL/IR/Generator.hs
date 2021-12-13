@@ -39,7 +39,6 @@ genAnnSelectG ::
   Hashable (ScalarType b) =>
   Hashable (Column b) =>
   m (TableName b) ->
-  m (Identifier b) ->
   m (FunctionName b) ->
   m (Column b) ->
   m (ScalarType b) ->
@@ -77,7 +76,6 @@ genAnnSelectG ::
   m (AnnSelectG b r f a)
 genAnnSelectG
   genTableName
-  genIdentifier
   genFunctionName
   genColumn
   genScalarType
@@ -122,11 +120,11 @@ genAnnSelectG
       genFrom =
         genSelectFromG
           genTableName
-          genIdentifier
           genFunctionName
           genColumn
           genScalarType
           genA
+          nameRange
           functionDefinitionListRange
           funArgPositionalRange
           funArgsNameRange
@@ -161,7 +159,6 @@ genAnnSelectG
           genTableName
           genScalarType
           genFunctionName
-          genIdentifier
           genXComputedField
           genBooleanOperators
           genBasicOrderType
@@ -205,7 +202,6 @@ genSelectFromG ::
   forall b a m.
   MonadGen m =>
   m (TableName b) ->
-  m (Identifier b) ->
   m (FunctionName b) ->
   m (Column b) ->
   m (ScalarType b) ->
@@ -214,14 +210,15 @@ genSelectFromG ::
   Range Int ->
   Range Int ->
   Range Int ->
+  Range Int ->
   m (SelectFromG b a)
 genSelectFromG
   genTableName
-  genIdentifier
   genFunctionName
   genColumn
   genScalarType
   genA
+  nameRange
   funDefinitionListRange
   funArgPositionalRange
   funArgsNameRange
@@ -229,12 +226,12 @@ genSelectFromG
     choice [fromTable, fromIdentifier, fromFunction]
     where
       fromTable = FromTable <$> genTableName
-      fromIdentifier = FromIdentifier <$> genIdentifier
+      fromIdentifier = FromIdentifier <$> genIdentifier nameRange
       fromFunction =
         FromFunction
           <$> genFunctionName
           <*> genFunctionArgsExpG
-            (genArgumentExp genIdentifier genA)
+            (genArgumentExp genA)
             funArgPositionalRange
             funArgsNameRange
             funArgsNamedRange
@@ -348,7 +345,6 @@ genSelectArgsG ::
   m (TableName b) ->
   m (ScalarType b) ->
   m (FunctionName b) ->
-  m (Identifier b) ->
   m (XComputedField b) ->
   m (BooleanOperators b a) ->
   m (BasicOrderType b) ->
@@ -382,7 +378,6 @@ genSelectArgsG
   genTableName
   genScalarType
   genFunctionName
-  genIdentifier
   genXComputedField
   genBooleanOperators
   genBasicOrderType
@@ -459,7 +454,6 @@ genSelectArgsG
                 genTableName
                 genScalarType
                 genFunctionName
-                genIdentifier
                 genXComputedField
                 genBooleanOperators
                 genA
@@ -505,10 +499,14 @@ genFunctionArgsExpG genA positionalRange nameRange namedRange =
     <$> list positionalRange genA
     <*> genHashMap (genArbitraryUnicodeText nameRange) genA namedRange
 
-genArgumentExp :: MonadGen m => m (Identifier b) -> m a -> m (ArgumentExp b a)
-genArgumentExp genIdentifier genA = choice [tableRow, session, input]
+genArgumentExp :: MonadGen m => m a -> m (ArgumentExp a)
+genArgumentExp genA = choice [tableRow, session, input]
   where
-    tableRow = AETableRow <$> maybe genIdentifier
+    -- Don't actually generate this except manually, as it presumes
+    -- that the root table has a specific column.
+    --
+    -- responsePayload = pure AEActionResponsePayload
+    tableRow = pure AETableRow
     session = AESession <$> genA
     input = AEInput <$> genA
 
@@ -701,6 +699,9 @@ genRelType = element [ObjRel, ArrRel]
 
 genInsertOrder :: MonadGen m => m InsertOrder
 genInsertOrder = element [BeforeParent, AfterParent]
+
+genIdentifier :: MonadGen m => Range Int -> m FIIdentifier
+genIdentifier range = FIIdentifier <$> genArbitraryUnicodeText range
 
 genAnnComputedFieldBolExp ::
   MonadGen m =>
@@ -1051,7 +1052,6 @@ genAnnotatedOrderByElement ::
   m (TableName b) ->
   m (ScalarType b) ->
   m (FunctionName b) ->
-  m (Identifier b) ->
   m (XComputedField b) ->
   m (BooleanOperators b a) ->
   m a ->
@@ -1080,7 +1080,6 @@ genAnnotatedOrderByElement
   genTableName
   genScalarType
   genFunctionName
-  genIdentifier
   genXComputedField
   genBooleanOperators
   genA
@@ -1157,7 +1156,6 @@ genAnnotatedOrderByElement
             genTableName
             genScalarType
             genFunctionName
-            genIdentifier
             genXComputedField
             genBooleanOperators
             genA
@@ -1228,7 +1226,6 @@ genAnnotatedOrderByElement
             genScalarType
             genTableName
             genFunctionName
-            genIdentifier
             genXComputedField
             genBooleanOperators
             genA
@@ -1301,7 +1298,6 @@ genComputedFieldOrderBy ::
   m (ScalarType b) ->
   m (TableName b) ->
   m (FunctionName b) ->
-  m (Identifier b) ->
   m (XComputedField b) ->
   m (BooleanOperators b a) ->
   m a ->
@@ -1329,7 +1325,6 @@ genComputedFieldOrderBy
   genScalarType
   genTableName
   genFunctionName
-  genIdentifier
   genXComputedField
   genBooleanOperators
   genA
@@ -1356,7 +1351,7 @@ genComputedFieldOrderBy
       <*> genComputedFieldName fieldNameRange
       <*> genFunctionName
       <*> genFunctionArgsExpG
-        (genArgumentExp genIdentifier genA)
+        (genArgumentExp genA)
         funcArgPosRange
         funcArgNameRange
         funcArgNamedRange
