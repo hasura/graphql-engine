@@ -20,6 +20,7 @@ docs_output := /build/_server_output/docs.tar.gz
 # please replace this with something less hacky.
 executables_glob := ../dist-newstyle/build/*/*/graphql-engine-*/**/opt/build/{graphql-engine/graphql-engine,graphql-engine-tests/graphql-engine-tests,graphql-engine-integration-tests/graphql-engine-integration-tests}
 
+# TODO we can probably remove this
 # assumes this is built in circleci
 ci-build:
 	## configure
