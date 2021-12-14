@@ -87,26 +87,103 @@ databases/default/tables/public_tracks.yaml
           name: playlist_track
           schema: public
 
-remote_schemas/countries/permissions/permissions.yaml
+remote_schemas.yaml
 
-(root level)
-- one list entry removed:
-  - role: foo
-    definition:
-      schema: "!include schemas/foo.graphql"
+countries.permissions.0.definition.schema
+  ± value change
+    - schema  { query: Query }
 
-remote_schemas/countries/permissions/schemas/foo.graphql
-[36m@@ -1,10 +1 @@[0m
-[31m-schema  { query: Query }[0m
-[31m-[0m
-[31m-type Language { code: ID![0m
-[31m-  name: String[0m
-[31m-  native: String[0m
-[31m-  rtl: Boolean![0m
-[31m-}[0m
-[31m-[0m
-[31m-type Query { language(code: ID!): Language[0m
-[31m-}[0m
+      type Continent { code: ID!
+        countries: [Country!]!
+        name: String!
+      }
+
+      type Country { capital: String
+        code: ID!
+        continent: Continent!
+        currency: String
+        emoji: String!
+        emojiU: String!
+        languages: [Language!]!
+        name: String!
+        native: String!
+        phone: String!
+        states: [State!]!
+      }
+
+      type Language { code: ID!
+        name: String
+        native: String
+        rtl: Boolean!
+      }
+
+      type Query { continent(code: ID!): Continent
+        country(code: ID!): Country
+        languages(filter: LanguageFilterInput): [Language!]!
+      }
+
+      type State { code: String
+        country: Country!
+        name: String!
+      }
+
+      input LanguageFilterInput {code: StringQueryOperatorInput
+      }
+
+      input StringQueryOperatorInput {eq: String
+        glob: String
+        in: [String]
+        ne: String
+        nin: [String]
+        regex: String
+      }
+
+    + schema  { query: Query }
+
+      type Continent { code: ID!
+        countries: [Country!]!
+        name: String!
+      }
+
+      type Country { capital: String
+        code: ID!
+        continent: Continent!
+        currency: String
+        emoji: String!
+        emojiU: String!
+        languages: [Language!]!
+        name: String!
+        native: String!
+        phone: String!
+        states: [State!]!
+      }
+
+      type Language { code: ID!
+        name: String
+        native: String
+        rtl: Boolean!
+      }
+
+      type Query { country(code: ID!): Country
+        languages(filter: LanguageFilterInput): [Language!]!
+      }
+
+      type State { code: String
+        country: Country!
+        name: String!
+      }
+
+      input LanguageFilterInput {code: StringQueryOperatorInput
+      }
+
+      input StringQueryOperatorInput {eq: String
+        glob: String
+        in: [String]
+        ne: String
+        nin: [String]
+        regex: String
+      }
+
 
 actions.yaml
 

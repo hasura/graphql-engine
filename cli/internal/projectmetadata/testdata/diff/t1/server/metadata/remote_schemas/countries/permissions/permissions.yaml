@@ -1,6 +1,0 @@
-- role: foo
-  definition:
-    schema: "!include schemas/foo.graphql"
-- role: manager
-  definition:
-    schema: "!include schemas/manager.graphql"
