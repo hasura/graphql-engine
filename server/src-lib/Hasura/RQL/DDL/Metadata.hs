@@ -494,7 +494,7 @@ runTestWebhookTransform (TestWebhookTransform env urlE payload mt sv) = do
     let env' = bimap T.pack (J.String . T.pack) <$> Env.toList env
         decodeKritiResult = TE.decodeUtf8 . BL.toStrict . J.encode
 
-    kritiUrlResult <- hoistEither $ first UrlInterpError $ decodeKritiResult <$> K.runKriti url env'
+    kritiUrlResult <- hoistEither $ first UrlInterpError $ decodeKritiResult <$> K.runKriti ("\"" <> url <> "\"") env'
 
     let unwrappedUrl = T.drop 1 $ T.dropEnd 1 kritiUrlResult
     initReq <- hoistEither $ first RequestInitializationError $ HTTP.mkRequestEither unwrappedUrl

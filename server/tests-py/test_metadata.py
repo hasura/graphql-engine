@@ -223,6 +223,9 @@ class TestMetadata:
     def test_webhook_transform_success(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/test_webhook_transform_success.yaml')
 
+    def test_webhook_transform_with_url_env_reference_success(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/test_webhook_transform_env_reference_success.yaml')
+
     def test_webhook_transform_bad_parse(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/test_webhook_transform_bad_parse.yaml')
 
