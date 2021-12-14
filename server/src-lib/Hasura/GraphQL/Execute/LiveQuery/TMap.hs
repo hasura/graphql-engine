@@ -8,12 +8,13 @@ module Hasura.GraphQL.Execute.LiveQuery.TMap
     delete,
     toList,
     swap,
+    union,
   )
 where
 
 import Control.Concurrent.STM
 import Data.HashMap.Strict qualified as Map
-import Hasura.Prelude hiding (lookup, null, toList)
+import Hasura.Prelude hiding (lookup, null, toList, union)
 
 -- | A coarse-grained transactional map implemented by simply wrapping a 'Map.HashMap' in a 'TVar'.
 -- Compared to "StmContainers.Map", this provides much faster iteration over the elements at the
@@ -43,3 +44,9 @@ toList = fmap Map.toList . readTVar . unTMap
 
 swap :: TMap k v -> Map.HashMap k v -> STM ()
 swap mapTV v = void $ swapTVar (unTMap mapTV) v
+
+union :: (Eq k, Hashable k) => TMap k v -> TMap k v -> STM (TMap k v)
+union mapA mapB = do
+    l <- readTVar $ unTMap mapA
+    r <- readTVar $ unTMap mapB
+    TMap <$> newTVar (Map.union l r)

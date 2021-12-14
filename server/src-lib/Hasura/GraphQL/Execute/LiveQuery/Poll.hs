@@ -79,6 +79,7 @@ import Language.GraphQL.Draft.Syntax qualified as G
 import ListT qualified
 import StmContainers.Map qualified as STMMap
 import Text.Shakespeare.Text (st)
+import qualified Data.HashMap.Strict.Extended as Map
 
 -- ----------------------------------------------------------------------------------------------
 -- Subscribers
@@ -700,10 +701,9 @@ pollStreamingQuery pollerId lqOpts (sourceName, sourceConfig) roleName parameter
     for cohortsList $ \(cohortKey, cohort) -> do
       CursorVariableValues vals <- STM.readTVarIO $ _cStreamVariables cohort
       pure (modifyCursorCohortVariables (mkUnsafeValidateVariables vals) cohortKey, cohort)
-  -- TODO (KC): Is the use of `Map.fromList` here correct? What happens when there are duplicate
-  -- cohort keys or is it impossible to have duplicate cohort keys once a subscriber has been added to
-  -- a cohort?
-  STM.atomically $ TMap.swap cohortMap $ Map.fromList cohortsWithUpdatedCohortKeys
+  STM.atomically $ do
+    updatedCohortMap <- Map.fromListWithM mergeCohorts cohortsWithUpdatedCohortKeys
+    TMap.swap cohortMap updatedCohortMap
   postPollHook pollDetails
   where
     LiveQueriesOptions batchSize _ = lqOpts
@@ -716,6 +716,19 @@ pollStreamingQuery pollerId lqOpts (sourceName, sourceConfig) roleName parameter
       TMap.reset newOpsTV
       let cohortSnapshot = CohortSnapshot cohortVars respRef (map snd curOpsL) (map snd newOpsL) latestCursorValsTVar
       return (resId, cohortSnapshot)
+
+    mergeCohorts :: Cohort (STM.TVar CursorVariableValues) -> Cohort (STM.TVar CursorVariableValues) -> STM.STM (Cohort (STM.TVar CursorVariableValues))
+    mergeCohorts newCohort oldCohort = do
+      let newCohortExistingSubscribers = _cExistingSubscribers newCohort
+          oldCohortExistingSubscribers = _cExistingSubscribers oldCohort
+          newCohortNewSubscribers = _cNewSubscribers newCohort
+          oldCohortNewSubscribers = _cNewSubscribers oldCohort
+      mergedExistingSubscribers <- TMap.union newCohortExistingSubscribers oldCohortExistingSubscribers
+      mergedNewSubscribers <- TMap.union newCohortNewSubscribers oldCohortNewSubscribers
+      pure $ newCohort
+        { _cNewSubscribers = mergedNewSubscribers,
+          _cExistingSubscribers = mergedExistingSubscribers
+        }
 
     getCohortOperations cohorts = \case
       Left e ->

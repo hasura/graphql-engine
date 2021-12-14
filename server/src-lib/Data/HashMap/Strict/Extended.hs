@@ -9,10 +9,11 @@ module Data.HashMap.Strict.Extended
     lpadZip,
     mapKeys,
     unionsWith,
-    unionWithM,
+    fromListWithM,
   )
 where
 
+import Control.Arrow (second)
 import Data.Align qualified as A
 import Data.Foldable qualified as F
 import Data.Function
@@ -80,12 +81,10 @@ unionsWith :: (Foldable f, Hashable k, Ord k) => (a -> a -> a) -> f (HashMap k a
 unionsWith f ts =
   F.foldl' (unionWith f) empty ts
 
-unionWithM :: (Monad m, Hashable k, Eq k) => (a -> a -> m a) -> HashMap k a -> HashMap k a -> m (HashMap k a)
-unionWithM f mapA mapB =
-  sequence $ M.unionWith
-               (\a b -> do
-                   x <- a
-                   y <- b
-                   f x y)
-               (M.map return mapA)
-               (M.map return mapB)
+fromListWithM :: (Monad m, Hashable k, Eq k) => (v -> v -> m v) -> [(k, v)] -> m (HashMap k v)
+fromListWithM f l =
+  sequence $ M.fromListWith (\a b -> do
+                                x <- a
+                                y <- b
+                                f x y)
+                            (second return <$> l)
