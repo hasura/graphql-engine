@@ -1,5 +1,8 @@
+{-# LANGUAGE UndecidableInstances #-}
+
 module Hasura.RQL.DDL.RemoteRelationship
   ( CreateFromSourceRelationship (..),
+    LegacyCreateRemoteRelationship (..),
     runCreateRemoteRelationship,
     runDeleteRemoteRelationship,
     runUpdateRemoteRelationship,
@@ -10,18 +13,28 @@ module Hasura.RQL.DDL.RemoteRelationship
   )
 where
 
-import Data.Aeson
+import Control.Lens (foldOf, to)
+import Data.Aeson (FromJSON (..), ToJSON (..), (.!=), (.:), (.:?), (.=))
 import Data.Aeson qualified as J
+import Data.Aeson.Lens (_Object)
 import Data.HashMap.Strict qualified as Map
 import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.HashSet qualified as S
-import Data.Text.Extended
+import Data.Text.Extended ((<<>), (<>>))
 import Hasura.Base.Error
-import Hasura.EncJSON
+  ( Code (NotFound, NotSupported, RemoteSchemaError),
+    QErr,
+    QErrM,
+    runAesonParser,
+    throw400,
+  )
+import Hasura.EncJSON (EncJSON)
 import Hasura.Prelude
 import Hasura.RQL.DDL.RemoteRelationship.Validate
+  ( errorToText,
+    validateSourceToSchemaRelationship,
+  )
 import Hasura.RQL.Types
-import Hasura.SQL.AnyBackend (mkAnyBackend)
 import Hasura.SQL.AnyBackend qualified as AB
 
 --------------------------------------------------------------------------------
@@ -35,19 +48,78 @@ import Hasura.SQL.AnyBackend qualified as AB
 data CreateFromSourceRelationship (b :: BackendType) = CreateFromSourceRelationship
   { _crrSource :: SourceName,
     _crrTable :: TableName b,
-    _crrDefinition :: RemoteRelationship
+    _crrName :: RelName,
+    _crrDefinition :: RemoteRelationshipDefinition
   }
-  deriving (Generic)
+
+deriving stock instance (Eq (TableName b)) => Eq (CreateFromSourceRelationship b)
+
+deriving stock instance (Show (TableName b)) => Show (CreateFromSourceRelationship b)
 
 instance Backend b => FromJSON (CreateFromSourceRelationship b) where
-  parseJSON = withObject "CreateFromSourceRelationship" $ \o ->
-    CreateFromSourceRelationship
-      <$> o .:? "source" .!= defaultSource
-      <*> o .: "table"
-      <*> parseJSON (Object o)
+  parseJSON = J.withObject "CreateFromSourceRelationship" $ \o -> do
+    _crrSource <- o .:? "source" .!= defaultSource
+    _crrTable <- o .: "table"
+    _crrName <- o .: "name"
+    _crrDefinition <- o .: "definition"
+    pure $ CreateFromSourceRelationship {..}
 
 instance (Backend b) => ToJSON (CreateFromSourceRelationship b) where
-  toJSON = genericToJSON hasuraJSON
+  toJSON (CreateFromSourceRelationship {..}) =
+    J.toJSON . J.object $
+      [ "source" .= _crrSource,
+        "table" .= _crrTable,
+        "name" .= _crrName,
+        "definition" .= _crrDefinition
+      ]
+
+  toEncoding (CreateFromSourceRelationship {..}) =
+    J.pairs $
+      "source" .= _crrSource
+        <> "table" .= _crrTable
+        <> "name" .= _crrName
+        <> "definition" .= _crrDefinition
+
+-- | Opaque type wrapper around 'CreateFromSourceRelationship' which exists
+-- solely to provide customized 'FromJSON' and 'ToJSON' instances that
+-- preserves legacy JSON ser/de behavior.
+--
+-- See the associated 'FromJSON' and 'ToJSON' instances for details.
+newtype LegacyCreateRemoteRelationship = LegacyCreateRemoteRelationship
+  { unLegacyCreateRemoteRelationship ::
+      CreateFromSourceRelationship ('Postgres 'Vanilla)
+  }
+  deriving newtype (Eq, Show)
+
+instance FromJSON LegacyCreateRemoteRelationship where
+  parseJSON = J.withObject "LegacyCreateRemoteRelationship" $ \o -> do
+    _crrSource <- o .:? "source" .!= defaultSource
+    _crrTable <- o .: "table"
+    _crrName <- o .: "name"
+    _crrDefinition <- parseJSON (J.Object o)
+    pure . LegacyCreateRemoteRelationship $ CreateFromSourceRelationship {..}
+
+instance ToJSON LegacyCreateRemoteRelationship where
+  toJSON (LegacyCreateRemoteRelationship (CreateFromSourceRelationship {..})) =
+    -- The "legacy" serialization logic included the fields that are now a part
+    -- of the nested '_crrDefinition'.
+    --
+    -- To work around this, while sharing as much serialization logic with
+    -- 'RemoteRelationshipDefinition' as possible, '_crrDefinition' is
+    -- serialized to a 'J.Value' and then immediately converted back to a list
+    -- of key/value pairs.
+    --
+    -- 'definitionKeyValues' will be an empty list if this conversion fails
+    -- (which it should _never_ do), in which case those fields will be omitted
+    -- from the serialized JSON.
+    let definitionKeyValues =
+          foldOf (_Object . to Map.toList) (J.toJSON _crrDefinition)
+     in J.toJSON . J.object $
+          [ "source" .= _crrSource,
+            "table" .= _crrTable,
+            "name" .= _crrName
+          ]
+            <> definitionKeyValues
 
 runCreateRemoteRelationship ::
   forall b m.
@@ -56,16 +128,15 @@ runCreateRemoteRelationship ::
   m EncJSON
 runCreateRemoteRelationship CreateFromSourceRelationship {..} = do
   void $ askTabInfo @b _crrSource _crrTable
-  let relName = _rrName _crrDefinition
-      metadataObj =
+  let metadataObj =
         MOSourceObjId _crrSource $
           AB.mkAnyBackend $
             SMOTableObj @b _crrTable $
-              MTORemoteRelationship relName
+              MTORemoteRelationship _crrName
   buildSchemaCacheFor metadataObj $
     MetadataModifier $
       tableMetadataSetter @b _crrSource _crrTable . tmRemoteRelationships
-        %~ OMap.insert relName _crrDefinition
+        %~ OMap.insert _crrName (RemoteRelationship _crrName _crrDefinition)
   pure successMsg
 
 runUpdateRemoteRelationship ::
@@ -75,17 +146,16 @@ runUpdateRemoteRelationship ::
   m EncJSON
 runUpdateRemoteRelationship CreateFromSourceRelationship {..} = do
   fieldInfoMap <- askFieldInfoMap @b _crrSource _crrTable
-  let relName = _rrName _crrDefinition
-      metadataObj =
+  let metadataObj =
         MOSourceObjId _crrSource $
           AB.mkAnyBackend $
             SMOTableObj @b _crrTable $
-              MTORemoteRelationship relName
-  void $ askRemoteRel fieldInfoMap relName
+              MTORemoteRelationship _crrName
+  void $ askRemoteRel fieldInfoMap _crrName
   buildSchemaCacheFor metadataObj $
     MetadataModifier $
       tableMetadataSetter @b _crrSource _crrTable . tmRemoteRelationships
-        %~ OMap.insert relName _crrDefinition
+        %~ OMap.insert _crrName (RemoteRelationship _crrName _crrDefinition)
   pure successMsg
 
 --------------------------------------------------------------------------------
@@ -99,7 +169,7 @@ data DeleteFromSourceRelationship (b :: BackendType) = DeleteFromSourceRelations
   }
 
 instance Backend b => FromJSON (DeleteFromSourceRelationship b) where
-  parseJSON = withObject "DeleteFromSourceRelationship" $ \o ->
+  parseJSON = J.withObject "DeleteFromSourceRelationship" $ \o ->
     DeleteFromSourceRelationship
       <$> o .:? "source" .!= defaultSource
       <*> o .: "table"
@@ -190,7 +260,7 @@ buildRemoteFieldInfo sourceSource sourceTable fields RemoteRelationship {..} all
               [ SchemaDependency (SOSourceObj sourceSource $ AB.mkAnyBackend $ SOITableObj @b sourceTable $ TOCol @b $ pgiColumn srcColumn) DRRemoteRelationship,
                 SchemaDependency (SOSourceObj _tsrdSource $ AB.mkAnyBackend $ SOITableObj @b' targetTable $ TOCol @b' $ pgiColumn tgtColumn) DRRemoteRelationship
               ]
-        pure (RFISource $ mkAnyBackend @b' rsri, tableDependencies <> columnDependencies)
+        pure (RFISource $ AB.mkAnyBackend @b' rsri, tableDependencies <> columnDependencies)
     RelationshipToSchema _ remoteRelationship@ToSchemaRelationshipDef {..} -> do
       RemoteSchemaCtx {..} <-
         onNothing (Map.lookup _trrdRemoteSchema remoteSchemaMap) $
