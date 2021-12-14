@@ -356,8 +356,8 @@ removeStreamingQuery logger serverMetrics lqState cursorVariableTV lqId@(LiveQue
   mbCleanupIO <- STM.atomically $ do
      detM <- getQueryDet streamQMap
      fmap join $
-       forM detM $ \(Poller cohorts ioState, cohort) ->
-         cleanHandlerC cohorts ioState cohort
+       forM detM $ \(Poller cohorts ioState, currentCohortId, cohort) ->
+         cleanHandlerC cohorts ioState (cohort, currentCohortId)
   sequence_ mbCleanupIO
   liftIO $ EKG.Gauge.dec $ smActiveSubscriptions serverMetrics
   where
@@ -370,9 +370,9 @@ removeStreamingQuery logger serverMetrics lqState cursorVariableTV lqId@(LiveQue
       fmap join $
         forM pollerM $ \poller -> do
           cohortM <- TMap.lookup updatedCohortId (_pCohorts poller)
-          return $ (poller,) <$> cohortM
+          return $ (poller, updatedCohortId, ) <$> cohortM
 
-    cleanHandlerC cohortMap ioState handlerC = do
+    cleanHandlerC cohortMap ioState (handlerC, currentCohortId) = do
       let curOps = _cExistingSubscribers handlerC
           newOps = _cNewSubscribers handlerC
       TMap.delete sinkId curOps
@@ -381,9 +381,8 @@ removeStreamingQuery logger serverMetrics lqState cursorVariableTV lqId@(LiveQue
         (&&)
           <$> TMap.null curOps
           <*> TMap.null newOps
-      when cohortIsEmpty $ TMap.delete cohortId cohortMap
+      when cohortIsEmpty $ TMap.delete currentCohortId cohortMap
       handlerIsEmpty <- TMap.null cohortMap
-      cohortIds <- fmap (_cCohortId . snd) <$> TMap.toList cohortMap
       -- when there is no need for handler i.e,
       -- operation, take the ref for the polling thread to cancel it
       if handlerIsEmpty
