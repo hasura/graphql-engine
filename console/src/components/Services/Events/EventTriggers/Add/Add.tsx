@@ -4,6 +4,8 @@ import Helmet from 'react-helmet';
 import {
   getEventRequestTransformDefaultState,
   requestTransformReducer,
+  setEnvVars,
+  setSessionVars,
   setRequestMethod,
   setRequestUrl,
   setRequestUrlError,
@@ -149,6 +151,14 @@ const Add: React.FC<Props> = props => {
     transformDispatch(setRequestSampleInput(value));
   };
 
+  const envVarsOnChange = (envVars: KeyValuePair[]) => {
+    transformDispatch(setEnvVars(envVars));
+  };
+
+  const sessionVarsOnChange = (sessionVars: KeyValuePair[]) => {
+    transformDispatch(setSessionVars(sessionVars));
+  };
+
   const requestMethodOnChange = (requestMethod: RequestTransformMethod) => {
     transformDispatch(setRequestMethod(requestMethod));
   };
@@ -216,6 +226,8 @@ const Add: React.FC<Props> = props => {
     const options = getValidateTransformOptions(
       transformState.requestSampleInput,
       webhook.value,
+      transformState.envVars,
+      transformState.sessionVars,
       undefined,
       transformState.requestUrl,
       transformState.requestQueryParams,
@@ -242,6 +254,8 @@ const Add: React.FC<Props> = props => {
     webhook,
     transformState.requestUrl,
     transformState.requestQueryParams,
+    transformState.envVars,
+    transformState.sessionVars,
   ]);
 
   useEffect(() => {
@@ -258,6 +272,8 @@ const Add: React.FC<Props> = props => {
     const options = getValidateTransformOptions(
       transformState.requestSampleInput,
       webhook.value,
+      transformState.envVars,
+      transformState.sessionVars,
       transformState.requestBody,
       undefined,
       undefined,
@@ -279,7 +295,13 @@ const Add: React.FC<Props> = props => {
         )
       ).then(onResponse, onResponse); // parseValidateApiData will parse both success and error
     }
-  }, [transformState.requestSampleInput, transformState.requestBody, webhook]);
+  }, [
+    transformState.requestSampleInput,
+    transformState.requestBody,
+    webhook,
+    transformState.envVars,
+    transformState.sessionVars,
+  ]);
 
   const createBtnText = 'Create Event Trigger';
 
@@ -383,6 +405,8 @@ const Add: React.FC<Props> = props => {
                 <ConfigureTransformation
                   state={transformState}
                   resetSampleInput={resetSampleInput}
+                  envVarsOnChange={envVarsOnChange}
+                  sessionVarsOnChange={sessionVarsOnChange}
                   requestMethodOnChange={requestMethodOnChange}
                   requestUrlOnChange={requestUrlOnChange}
                   requestQueryParamsOnChange={requestQueryParamsOnChange}

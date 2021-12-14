@@ -13,6 +13,8 @@ import {
   checkTransformRequestUrlPreview,
   clearPayloadTransformBody,
   clearRequestUrl,
+  toggleContextArea,
+  typeIntoContextAreaEnvVars,
 } from '../../helpers/webhookTransformHelpers';
 
 const ACTION_REQUEST_BODY_TRANSFORM_TEXTAREA = 4;
@@ -51,6 +53,7 @@ const statements = {
       accessToken: String!
     }
   `,
+  createTransformEnvHandler: '{{MY_WEBHOOK}}',
   createTransformHandler: 'https://hasura-actions-demo.glitch.me',
   createTransformIncorrectPayloadBody: `
   {
@@ -104,6 +107,7 @@ const typeIntoActionTypes = (content: string) => {
 const typeIntoHandler = (content: string) => {
   cy.getBySel('action-create-handler-input').type(content, {
     force: true,
+    parseSpecialCharSequences: false,
   });
 };
 
@@ -313,6 +317,25 @@ export const createActionTransform = () => {
     'Please configure your webhook handler to generate request url transform'
   );
 
+  // give correct body with env var
+  clearHandler();
+  typeIntoHandler(statements.createTransformEnvHandler);
+  // give body without specifying env var
+  clearRequestUrl();
+  typeIntoRequestUrl('/users');
+  cy.wait(AWAIT_SHORT);
+  // check for error
+  checkTransformRequestUrlError(true);
+
+  // add env var in context area
+  toggleContextArea();
+  typeIntoContextAreaEnvVars([
+    { key: 'MY_WEBHOOK', value: 'https://handler.com' },
+  ]);
+  // check there is no error and preview works fine
+  checkTransformRequestUrlError(false);
+  checkTransformRequestUrlPreview('https://handler.com/users');
+
   // clear handler
   clearHandler();
   // type into handler
@@ -382,7 +405,7 @@ export const modifyActionTransform = () => {
     .type('/{{$body.action.name}}/actions', {
       parseSpecialCharSequences: false,
     });
-  cy.getBySel('transform-kv-remove-button-0').click();
+  cy.getBySel('transform-query-params-kv-remove-button-0').click();
   togglePayloadTransformSection();
 
   cy.getBySel('save-modify-action-changes').click();

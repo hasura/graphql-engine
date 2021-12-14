@@ -46,8 +46,8 @@ const RequestOptionsTransforms: React.FC<RequestOptionsTransformsProps> = ({
       <div className="mb-md">
         <NumberedSidebar
           title="Request Method"
-          url="https://hasura.io/docs/latest/graphql/core/actions/transforms.html#method"
           number="1"
+          url="https://hasura.io/docs/latest/graphql/core/actions/transforms.html#method"
         />
         {requestMethodOptions.map(method => (
           <div key={method} className="inline-flex items-center mr-md">
@@ -74,8 +74,8 @@ const RequestOptionsTransforms: React.FC<RequestOptionsTransformsProps> = ({
       <div className="mb-md">
         <NumberedSidebar
           title="Request URL Template"
-          url="https://hasura.io/docs/latest/graphql/core/actions/transforms.html#url"
           number="2"
+          url="https://hasura.io/docs/latest/graphql/core/actions/transforms.html#url"
         />
         <RequestUrlEditor
           requestUrl={requestUrl}
@@ -91,9 +91,9 @@ const RequestOptionsTransforms: React.FC<RequestOptionsTransformsProps> = ({
         <div className="mb-md">
           <NumberedSidebar
             title="Configure Headers"
-            url="https://hasura.io/docs/latest/graphql/core/actions/transforms.html#request-headers"
-            number="3"
             description="Transform your request header into the required specification."
+            number="3"
+            url="https://hasura.io/docs/latest/graphql/core/actions/transforms.html#request-headers"
           />
           <div className="grid gap-3 grid-cols-3">
             <div>
@@ -111,6 +111,7 @@ const RequestOptionsTransforms: React.FC<RequestOptionsTransformsProps> = ({
             <KeyValueInput
               pairs={requestAddHeaders}
               setPairs={requestAddHeadersOnChange}
+              testId="add-headers"
             />
           </div>
         </div>

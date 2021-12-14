@@ -9,6 +9,7 @@
 (Add entries below in the order of server, console, cli, docs, others)
 
 - server: fixes JSON ser/de backwards incompatibility introduced for metadata parsing and 'create_remote_relationship' queries (#7906)
+- console: add sample context section to webhook transforms
 - cli: `hasura metadata diff` shows diff with more context in directory mode
 - cli: revert change to split metadata related to remote schemas into seperate files (introduced in v2.1.0-beta.2) 
 

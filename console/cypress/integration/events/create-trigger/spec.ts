@@ -385,7 +385,7 @@ export const modifyEtTransform = () => {
   cy.getBySel('transform-requestUrl')
     .clear()
     .type('/{{$body.trigger.name}}', { parseSpecialCharSequences: false });
-  cy.getBySel('transform-kv-remove-button-0').click();
+  cy.getBySel('transform-query-params-kv-remove-button-0').click();
   togglePayloadTransformSection();
   cy.getBySel('save-modify-trigger-changes').click();
   cy.wait(AWAIT_SHORT);
