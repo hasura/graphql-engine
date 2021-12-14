@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import datetime
 import time
 import pytest
 import json
@@ -452,6 +453,7 @@ class TestStreamingSubscription:
           ev = next(respLive)
           assert ev['type'] == 'data', ev
           assert ev['id'] == 'stream_1', ev
+          # fetching two rows per batch
           expected_payload = [ {"id": 2*idx+1, "title": "Article title {}".format(2*idx+1)}, {"id": 2*idx+2, "title": "Article title {}".format(2*idx+2)}]
           assert ev['payload']['data'] == {'hge_tests_stream_query': expected_payload}, ev['payload']['data']
 
@@ -464,6 +466,63 @@ class TestStreamingSubscription:
 
         with pytest.raises(queue.Empty):
             ev = ws_client.get_ws_event(3)
+
+    def test_streaming_subscriptions_with_concurrent_data_inserts(self, hge_ctx, ws_client):
+        '''
+            Create connection using connection_init
+        '''
+        ws_client.init_as_admin()
+        headers={}
+        query = """
+        subscription ($batch_size: Int!, $initial_created_at: timestamptz!) {
+          hge_tests_stream_query: hge_tests_test_t2_stream(cursor: [{created_at: $initial_created_at}], batch_size: $batch_size) {
+             c1
+             c2
+          }
+        }
+        """
+
+        with open(self.dir() + "/steps.yaml") as c:
+            conf = yaml.safe_load(c)
+
+        subscrPayload = { 'query': query, 'variables': { 'batch_size': 2, 'initial_created_at': "2020-01-01" } }
+        respLive = ws_client.send_query(subscrPayload, query_id='stream_1', headers=headers, timeout=15)
+
+        assert isinstance(conf, list) == True, 'Not an list'
+        for index, step in enumerate(conf):
+            mutationPayload = { 'query': step['query'] }
+            if 'variables' in step and step['variables']:
+                mutationPayload['variables'] = json.loads(step['variables'])
+
+            expected_resp = json.loads(step['response'])
+
+            mutResp = ws_client.send_query(mutationPayload,'mutation_'+str(index),timeout=15)
+            ev = next(mutResp)
+            assert ev['type'] == 'data' and ev['id'] == 'mutation_'+str(index), ev
+            assert ev['payload']['data'] == expected_resp, ev['payload']['data']
+
+            ev = next(mutResp)
+            assert ev['type'] == 'complete' and ev['id'] == 'mutation_'+str(index), ev
+
+            ev = next(respLive)
+            assert ev['type'] == 'data', ev
+            assert ev['id'] == 'stream_1', ev
+
+            expectedReturnedResponse = json.loads(step['stream_response'])
+            expectedLiveResponse = { 'hge_tests_stream_query' : expectedReturnedResponse }
+
+            assert ev['payload']['data'] == expectedLiveResponse, ev['payload']['data']
+
+        # stop the streaming subscription
+        frame = {
+            'id': 'stream_1',
+            'type': 'stop'
+        }
+        ws_client.send(frame)
+
+        with pytest.raises(queue.Empty):
+            ev = ws_client.get_ws_event(3)
+
 
 @usefixtures('per_method_tests_db_state','ws_conn_init_graphql_ws')
 class TestSubscriptionLiveQueriesForGraphQLWS:

@@ -91,6 +91,7 @@ import Network.HTTP.Types qualified as H
 import Network.WebSockets qualified as WS
 import StmContainers.Map qualified as STMMap
 import Language.GraphQL.Draft.Syntax (Name (..))
+import qualified Hasura.GraphQL.Execute.LiveQuery.State as LQ
 
 -- | 'LQ.LiveQueryId' comes from 'Hasura.GraphQL.Execute.LiveQuery.State.addLiveQuery'. We use
 -- this to track a connection's operations so we can remove them from 'LiveQueryState', and
@@ -625,8 +626,8 @@ onStart env enabledLogTypes serverEnv wsConn (StartMsg opId q) onMessageActions 
         E.SEOnSourceDB actionIds liveQueryBuilder -> do
           actionLogMapE <- fmap fst <$> runExceptT (EA.fetchActionLogResponses actionIds)
           actionLogMap <- onLeft actionLogMapE (withComplete . preExecErr requestId)
-          lqIdE <- liftIO $ startLiveQuery liveQueryBuilder parameterizedQueryHash requestId actionLogMap
-          lqId <- onLeft lqIdE (withComplete . preExecErr requestId)
+          opMetadataE <- liftIO $ startLiveQuery liveQueryBuilder parameterizedQueryHash requestId actionLogMap
+          (lqId, opMetadata) <- onLeft opMetadataE (withComplete . preExecErr requestId)
 
           -- Update async action query subscription state
           case NE.nonEmpty (toList actionIds) of
@@ -797,7 +798,7 @@ onStart env enabledLogTypes serverEnv wsConn (StartMsg opId q) onMessageActions 
 
     restartLiveQuery parameterizedQueryHash requestId liveQueryBuilder lqId actionLogMap = do
       LQ.removeLiveQuery logger (_wseServerMetrics serverEnv) lqMap lqId
-      either (const Nothing) Just <$> startLiveQuery liveQueryBuilder parameterizedQueryHash requestId actionLogMap
+      either (const Nothing) (Just . fst) <$> startLiveQuery liveQueryBuilder parameterizedQueryHash requestId actionLogMap
 
     startLiveQuery liveQueryBuilder parameterizedQueryHash requestId actionLogMap = do
       liveQueryE <- runExceptT $ liveQueryBuilder actionLogMap
@@ -806,7 +807,7 @@ onStart env enabledLogTypes serverEnv wsConn (StartMsg opId q) onMessageActions 
             subscriberMetadata = LQ.mkSubscriberMetadata (WS.getWSId wsConn) opId opName requestId
         -- NOTE!: we mask async exceptions higher in the call stack, but it's
         -- crucial we don't lose lqId after addLiveQuery returns successfully.
-        !lqId <- liftIO $ AB.dispatchAnyBackend @BackendTransport
+        !(lqId,opMetadata)  <- liftIO $ AB.dispatchAnyBackend @BackendTransport
           exists
           \(E.MultiplexedQueryPlan liveQueryPlan) ->
             case LQ._lqpSubscriptionType liveQueryPlan of
@@ -838,8 +839,8 @@ onStart env enabledLogTypes serverEnv wsConn (StartMsg opId q) onMessageActions 
         liftIO $ $assertNFHere (lqId, opName) -- so we don't write thunks to mutable vars
         STM.atomically $
           -- NOTE: see crucial `lookup` check above, ensuring this doesn't clobber:
-          STMMap.insert (lqId, opName) opId opMap
-        pure lqId
+          STMMap.insert (lqId, opMetadata) opId opMap
+        pure $ (lqId, opMetadata)
 
     -- on change, send message on the websocket
     onChange :: Maybe OperationName -> ParameterizedQueryHash -> Maybe Name -> LQ.OnChange
@@ -942,9 +943,14 @@ stopOperation :: WSServerEnv -> WSConn -> OperationId -> IO () -> IO ()
 stopOperation serverEnv wsConn opId logWhenOpNotExist = do
   opM <- liftIO $ STM.atomically $ STMMap.lookup opId opMap
   case opM of
-    Just (lqId, opNameM) -> do
-      logWSEvent logger wsConn $ EOperation $ opDet opNameM
-      LQ.removeLiveQuery logger (_wseServerMetrics serverEnv) lqMap lqId
+    Just (lqId, operationMetadata) -> do
+      case operationMetadata of
+        LQ.OMLivequery opNameM -> do
+          logWSEvent logger wsConn $ EOperation $ opDet opNameM
+          LQ.removeLiveQuery logger (_wseServerMetrics serverEnv) lqMap lqId
+        LQ.OMStreaming opNameM cursorValTV -> do
+          logWSEvent logger wsConn $ EOperation $ opDet opNameM
+          LQ.removeStreamingQuery logger (_wseServerMetrics serverEnv) lqMap cursorValTV lqId
     Nothing -> logWhenOpNotExist
   STM.atomically $ STMMap.delete opId opMap
   where

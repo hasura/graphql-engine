@@ -6,7 +6,8 @@ args:
     sql: |
       create table hge_tests.test_t2(
           c1 int,
-          c2 text
+          c2 text,
+          created_at timestamptz default now()
       );
       create table hge_tests.articles(
         id serial primary key,

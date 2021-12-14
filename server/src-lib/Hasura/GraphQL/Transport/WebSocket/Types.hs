@@ -5,7 +5,7 @@ module Hasura.GraphQL.Transport.WebSocket.Types
     WSConnState (CSInitError, CSInitialised, CSNotInitialised),
     WSServerEnv (WSServerEnv, _wseCorsPolicy, _wseHManager, _wseKeepAliveDelay, _wseLiveQMap, _wseLogger, _wseServer, _wseServerMetrics),
     WsClientState (WsClientState, wscsIpAddress, wscsReqHeaders, wscsTokenExpTime, wscsUserInfo),
-    WsHeaders (WsHeaders, unWsHeaders),
+    WsHeaders (WsHeaders, unWsHeaders)
   )
 where
 
@@ -83,7 +83,7 @@ data WSServerEnv = WSServerEnv
     _wseServerMetrics :: !ServerMetrics
   }
 
-type OperationMap = STMMap.Map OperationId (LQ.LiveQueryId, Maybe OperationName)
+type OperationMap = STMMap.Map OperationId (LQ.LiveQueryId, LQ.OperationMetadata)
 
 type WSServer = WS.WSServer WSConnData
 

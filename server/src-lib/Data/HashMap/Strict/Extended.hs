@@ -9,6 +9,7 @@ module Data.HashMap.Strict.Extended
     lpadZip,
     mapKeys,
     unionsWith,
+    unionWithM,
   )
 where
 
@@ -78,3 +79,13 @@ mapKeys f = fromList . foldrWithKey (\k x xs -> (f k, x) : xs) []
 unionsWith :: (Foldable f, Hashable k, Ord k) => (a -> a -> a) -> f (HashMap k a) -> HashMap k a
 unionsWith f ts =
   F.foldl' (unionWith f) empty ts
+
+unionWithM :: (Monad m, Hashable k, Eq k) => (a -> a -> m a) -> HashMap k a -> HashMap k a -> m (HashMap k a)
+unionWithM f mapA mapB =
+  sequence $ M.unionWith
+               (\a b -> do
+                   x <- a
+                   y <- b
+                   f x y)
+               (M.map return mapA)
+               (M.map return mapB)
