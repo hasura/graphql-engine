@@ -85,17 +85,17 @@ getUserInfoWithExpTimeTests = describe "getUserInfo" $ do
 
   describe "started without admin secret" $ do
     it "gives admin by default" $ do
-      mode <- setupAuthMode'E Nothing Nothing mempty Nothing
-      getUserInfoWithExpTime mempty mempty mode
+      mode <- setupAuthMode'E Nothing Nothing Nothing Nothing
+      getUserInfoWithExpTime mempty [] mode
         `shouldReturn` Right adminRoleName
     it "allows any requested role" $ do
-      mode <- setupAuthMode'E Nothing Nothing mempty Nothing
+      mode <- setupAuthMode'E Nothing Nothing Nothing Nothing
       getUserInfoWithExpTime mempty [(userRoleHeader, "r00t")] mode
         `shouldReturn` Right (mkRoleNameE "r00t")
 
   describe "admin secret only" $ do
     describe "unauth role NOT set" $ do
-      mode <- runIO $ setupAuthMode'E (Just $ Set.singleton $ hashAdminSecret "secret") Nothing mempty Nothing
+      mode <- runIO $ setupAuthMode'E (Just $ Set.singleton $ hashAdminSecret "secret") Nothing Nothing Nothing
 
       it "accepts when admin secret matches" $ do
         getUserInfoWithExpTime mempty [(adminSecretHeader, "secret")] mode
@@ -120,7 +120,7 @@ getUserInfoWithExpTimeTests = describe "getUserInfo" $ do
           `shouldReturn` Left AccessDenied
 
       it "rejects when no secret sent, since no fallback unauth role" $ do
-        getUserInfoWithExpTime mempty mempty mode
+        getUserInfoWithExpTime mempty [] mode
           `shouldReturn` Left AccessDenied
         getUserInfoWithExpTime mempty [(userRoleHeader, "r00t"), (userRoleHeader, "admin")] mode
           `shouldReturn` Left AccessDenied
@@ -132,7 +132,7 @@ getUserInfoWithExpTimeTests = describe "getUserInfo" $ do
     describe "unauth role set" $ do
       mode <-
         runIO $
-          setupAuthMode'E (Just $ Set.singleton $ hashAdminSecret "secret") Nothing mempty (Just ourUnauthRole)
+          setupAuthMode'E (Just $ Set.singleton $ hashAdminSecret "secret") Nothing Nothing (Just ourUnauthRole)
       it "accepts when admin secret matches" $ do
         getUserInfoWithExpTime mempty [(adminSecretHeader, "secret")] mode
           `shouldReturn` Right adminRoleName
@@ -158,7 +158,7 @@ getUserInfoWithExpTimeTests = describe "getUserInfo" $ do
           `shouldReturn` Left AccessDenied
 
       it "accepts when no secret sent and unauth role defined" $ do
-        getUserInfoWithExpTime mempty mempty mode
+        getUserInfoWithExpTime mempty [] mode
           `shouldReturn` Right ourUnauthRole
         getUserInfoWithExpTime mempty [("heh", "heh")] mode
           `shouldReturn` Right ourUnauthRole
@@ -170,7 +170,7 @@ getUserInfoWithExpTimeTests = describe "getUserInfo" $ do
   describe "webhook" $ do
     mode <-
       runIO $
-        setupAuthMode'E (Just $ Set.singleton $ hashAdminSecret "secret") (Just fakeAuthHook) mempty Nothing
+        setupAuthMode'E (Just $ Set.singleton $ hashAdminSecret "secret") (Just fakeAuthHook) Nothing Nothing
 
     it "accepts when admin secret matches" $ do
       getUserInfoWithExpTime mempty [(adminSecretHeader, "secret")] mode
@@ -195,7 +195,7 @@ getUserInfoWithExpTimeTests = describe "getUserInfo" $ do
         `shouldReturn` Left AccessDenied
 
     it "authenticates with webhook when no admin secret sent" $ do
-      getUserInfoWithExpTime mempty mempty mode
+      getUserInfoWithExpTime mempty [] mode
         `shouldReturn` Right (mkRoleNameE "hook")
       getUserInfoWithExpTime mempty [("blah", "blah")] mode
         `shouldReturn` Right (mkRoleNameE "hook")
@@ -218,7 +218,7 @@ getUserInfoWithExpTimeTests = describe "getUserInfo" $ do
     describe "unauth role NOT set" $ do
       mode <-
         runIO $
-          setupAuthMode'E (Just $ Set.singleton $ hashAdminSecret "secret") Nothing (uncurry Map.singleton fakeJWTConfig) Nothing
+          setupAuthMode'E (Just $ Set.singleton $ hashAdminSecret "secret") Nothing (Just fakeJWTConfig) Nothing
 
       it "accepts when admin secret matches" $ do
         getUserInfoWithExpTime mempty [(adminSecretHeader, "secret")] mode
@@ -245,7 +245,7 @@ getUserInfoWithExpTimeTests = describe "getUserInfo" $ do
       it "rejects when admin secret not sent and no 'Authorization' header" $ do
         getUserInfoWithExpTime mempty [("blah", "blah")] mode
           `shouldReturn` Left InvalidHeaders
-        getUserInfoWithExpTime mempty mempty mode
+        getUserInfoWithExpTime mempty [] mode
           `shouldReturn` Left InvalidHeaders
 
     describe "unauth role set" $ do
@@ -254,7 +254,7 @@ getUserInfoWithExpTimeTests = describe "getUserInfo" $ do
           setupAuthMode'E
             (Just $ Set.singleton $ hashAdminSecret "secret")
             Nothing
-            (uncurry Map.singleton fakeJWTConfig)
+            (Just fakeJWTConfig)
             (Just ourUnauthRole)
 
       it "accepts when admin secret matches" $ do
@@ -284,7 +284,7 @@ getUserInfoWithExpTimeTests = describe "getUserInfo" $ do
       it "authorizes as unauth role when no 'Authorization' header" $ do
         getUserInfoWithExpTime mempty [("blah", "blah")] mode
           `shouldReturn` Right ourUnauthRole
-        getUserInfoWithExpTime mempty mempty mode
+        getUserInfoWithExpTime mempty [] mode
           `shouldReturn` Right ourUnauthRole
 
     describe "when Authorization header sent, and no admin secret" $ do
@@ -293,14 +293,14 @@ getUserInfoWithExpTimeTests = describe "getUserInfo" $ do
           setupAuthMode'E
             (Just $ Set.singleton $ hashAdminSecret "secret")
             Nothing
-            (uncurry Map.singleton fakeJWTConfig)
+            (Just fakeJWTConfig)
             (Just ourUnauthRole)
       modeB <-
         runIO $
           setupAuthMode'E
             (Just $ Set.singleton $ hashAdminSecret "secret")
             Nothing
-            (uncurry Map.singleton fakeJWTConfig)
+            (Just fakeJWTConfig)
             Nothing
 
       -- Here the unauth role does not come into play at all, so map same tests over both modes:
@@ -331,7 +331,7 @@ getUserInfoWithExpTimeTests = describe "getUserInfo" $ do
 
           -- A corner case, but the behavior seems desirable:
           it "always rejects when token has empty allowedRolesClaimText" $ do
-            let claim = unObject [allowedRolesClaimText .= (mempty :: [Text]), defaultRoleClaimText .= ("user" :: Text)]
+            let claim = unObject [allowedRolesClaimText .= ([] :: [Text]), defaultRoleClaimText .= ("user" :: Text)]
             getUserInfoWithExpTime claim [("Authorization", "IGNORED"), (userRoleHeader, "admin")] mode
               `shouldReturn` Left AccessDenied
             getUserInfoWithExpTime claim [("Authorization", "IGNORED"), (userRoleHeader, "user")] mode
@@ -342,7 +342,7 @@ getUserInfoWithExpTimeTests = describe "getUserInfo" $ do
           it "rejects when token doesn't have proper allowedRolesClaimText and defaultRoleClaimText" $ do
             let claim0 = unObject [allowedRolesClaimText .= (["editor", "user", "mod"] :: [Text])]
                 claim1 = unObject [defaultRoleClaimText .= ("user" :: Text)]
-                claim2 = unObject mempty
+                claim2 = unObject []
             for_ [claim0, claim1, claim2] $ \claim ->
               getUserInfoWithExpTime claim [("Authorization", "IGNORED")] mode
                 `shouldReturn` Left JWTRoleClaimMissing
@@ -370,53 +370,53 @@ setupAuthModeTests = describe "setupAuthMode" $ do
 
   -- These are all various error cases, except for the AMNoAuth mode:
   it "with no admin secret provided" $ do
-    setupAuthMode' Nothing Nothing mempty Nothing
+    setupAuthMode' Nothing Nothing Nothing Nothing
       `shouldReturn` Right AMNoAuth
     -- We insist on an admin secret in order to use webhook or JWT auth:
-    setupAuthMode' Nothing Nothing (uncurry Map.singleton fakeJWTConfig) Nothing
+    setupAuthMode' Nothing Nothing (Just fakeJWTConfig) Nothing
       `shouldReturn` Left ()
-    setupAuthMode' Nothing (Just fakeAuthHook) mempty Nothing
+    setupAuthMode' Nothing (Just fakeAuthHook) Nothing Nothing
       `shouldReturn` Left ()
     -- ...and we can't have both:
-    setupAuthMode' Nothing (Just fakeAuthHook) (uncurry Map.singleton fakeJWTConfig) Nothing
+    setupAuthMode' Nothing (Just fakeAuthHook) (Just fakeJWTConfig) Nothing
       `shouldReturn` Left ()
     -- If the unauthenticated role was set but would otherwise be ignored this
     -- should be an error (for now), since users might expect all access to use
     -- the specified role. This first case would be the real worrying one:
-    setupAuthMode' Nothing Nothing mempty (Just unauthRole)
+    setupAuthMode' Nothing Nothing Nothing (Just unauthRole)
       `shouldReturn` Left ()
-    setupAuthMode' Nothing Nothing (uncurry Map.singleton fakeJWTConfig) (Just unauthRole)
+    setupAuthMode' Nothing Nothing (Just fakeJWTConfig) (Just unauthRole)
       `shouldReturn` Left ()
-    setupAuthMode' Nothing (Just fakeAuthHook) mempty (Just unauthRole)
+    setupAuthMode' Nothing (Just fakeAuthHook) Nothing (Just unauthRole)
       `shouldReturn` Left ()
-    setupAuthMode' Nothing (Just fakeAuthHook) (uncurry Map.singleton fakeJWTConfig) (Just unauthRole)
+    setupAuthMode' Nothing (Just fakeAuthHook) (Just fakeJWTConfig) (Just unauthRole)
       `shouldReturn` Left ()
 
   it "with admin secret provided" $ do
-    setupAuthMode' (Just secret) Nothing mempty Nothing
+    setupAuthMode' (Just secret) Nothing Nothing Nothing
       `shouldReturn` Right (AMAdminSecret secret Nothing)
-    setupAuthMode' (Just secret) Nothing mempty (Just unauthRole)
+    setupAuthMode' (Just secret) Nothing Nothing (Just unauthRole)
       `shouldReturn` Right (AMAdminSecret secret $ Just unauthRole)
 
-    setupAuthMode' (Just secret) Nothing (uncurry Map.singleton fakeJWTConfig) Nothing >>= \case
+    setupAuthMode' (Just secret) Nothing (Just fakeJWTConfig) Nothing >>= \case
       Right (AMAdminSecretAndJWT s _ Nothing) -> do
         s `shouldBe` secret
       _ -> expectationFailure "AMAdminSecretAndJWT"
-    setupAuthMode' (Just secret) Nothing (uncurry Map.singleton fakeJWTConfig) (Just unauthRole) >>= \case
+    setupAuthMode' (Just secret) Nothing (Just fakeJWTConfig) (Just unauthRole) >>= \case
       Right (AMAdminSecretAndJWT s _ ur) -> do
         s `shouldBe` secret
         ur `shouldBe` Just unauthRole
       _ -> expectationFailure "AMAdminSecretAndJWT"
 
-    setupAuthMode' (Just secret) (Just fakeAuthHook) mempty Nothing
+    setupAuthMode' (Just secret) (Just fakeAuthHook) Nothing Nothing
       `shouldReturn` Right (AMAdminSecretAndHook secret fakeAuthHook)
     -- auth hook can't make use of unauthenticated role for now (no good UX):
-    setupAuthMode' (Just secret) (Just fakeAuthHook) mempty (Just unauthRole)
+    setupAuthMode' (Just secret) (Just fakeAuthHook) Nothing (Just unauthRole)
       `shouldReturn` Left ()
     -- we can't have both:
-    setupAuthMode' (Just secret) (Just fakeAuthHook) (uncurry Map.singleton fakeJWTConfig) Nothing
+    setupAuthMode' (Just secret) (Just fakeAuthHook) (Just fakeJWTConfig) Nothing
       `shouldReturn` Left ()
-    setupAuthMode' (Just secret) (Just fakeAuthHook) (uncurry Map.singleton fakeJWTConfig) (Just unauthRole)
+    setupAuthMode' (Just secret) (Just fakeAuthHook) (Just fakeJWTConfig) (Just unauthRole)
       `shouldReturn` Left ()
 
 parseClaimsMapTests :: Spec
@@ -601,7 +601,7 @@ mkCustomOtherClaim claimPath defVal =
     Just path -> JWTCustomClaimsMapJSONPath (mkJSONPathE path) $ defVal
     Nothing -> JWTCustomClaimsMapStatic $ fromMaybe "default claim value" defVal
 
-fakeJWTConfig :: (Maybe StringOrURI, JWTConfig)
+fakeJWTConfig :: JWTConfig
 fakeJWTConfig =
   let jcKeyOrUrl = Left (Jose.fromOctets [])
       jcAudience = Nothing
@@ -609,7 +609,7 @@ fakeJWTConfig =
       jcClaims = JCNamespace (ClaimNs "") JCFJson
       jcAllowedSkew = Nothing
       jcHeader = Nothing
-   in (Nothing, JWTConfig {..})
+   in JWTConfig {..}
 
 fakeAuthHook :: AuthHook
 fakeAuthHook = AuthHookG "http://fake" AHTGet
@@ -628,10 +628,10 @@ instance Tracing.HasReporter NoReporter
 setupAuthMode' ::
   Maybe (HashSet AdminSecretHash) ->
   Maybe AuthHook ->
-  Map.HashMap (Maybe StringOrURI) JWTConfig ->
+  Maybe JWTConfig ->
   Maybe RoleName ->
   IO (Either () AuthMode)
-setupAuthMode' mAdminSecretHash mWebHook jwtSecrets mUnAuthRole =
+setupAuthMode' mAdminSecretHash mWebHook mJwtSecret mUnAuthRole =
   -- just throw away the error message for ease of testing:
   fmap (either (const $ Left ()) Right) $
     runNoReporter $
@@ -640,7 +640,7 @@ setupAuthMode' mAdminSecretHash mWebHook jwtSecrets mUnAuthRole =
           setupAuthMode
             (fromMaybe Set.empty mAdminSecretHash)
             mWebHook
-            jwtSecrets
+            mJwtSecret
             mUnAuthRole
             -- NOTE: this won't do any http or launch threads if we don't specify JWT URL:
             (error "H.Manager")

@@ -9,7 +9,7 @@ response:
   - extensions:
       path: $
       code: invalid-headers
-    message: Missing 'Authorization' or 'Cookie' header in JWT authentication mode
+    message: Missing Cookie header in JWT authentication mode
 query:
   query: |
     query {
