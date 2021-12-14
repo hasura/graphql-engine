@@ -3,6 +3,8 @@
 ## Next release
 (Add highlights/major features below)
 
+- server: fix issue interpreting urls from environment in the `TestWebhookTransform` endpoint.
+
 ### Bug fixes and improvements
 (Add entries below in the order of server, console, cli, docs, others)
 

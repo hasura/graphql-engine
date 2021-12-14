@@ -1,0 +1,33 @@
+- description: Test Webhook Transform
+  url: /v1/metadata
+  headers:
+    X-Hasura-Role: admin
+  status: 200
+  response:
+    body: hello_world
+    headers:
+      - - content-type
+        - application/json
+      - - foo
+        - bar
+    method: POST
+    webhook_url: http://www.google.com?foo=bar
+  query:
+    type: test_webhook_transform
+    args:
+      env:
+        MY_WEBHOOK: http://www.google.net
+      webhook_url:
+        from_env: MY_WEBHOOK
+      body:
+        hello: world
+      request_transform:
+        url: "http://www.google.com"
+        template_engine: Kriti
+        body: "\"hello_{{ $body.hello }}\""
+        method: POST
+        query_params:
+          "foo": "bar"
+        request_headers:
+          add_headers:
+            foo: "bar"

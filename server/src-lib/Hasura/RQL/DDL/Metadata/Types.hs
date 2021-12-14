@@ -194,7 +194,7 @@ instance FromJSON WebHookUrl where
   parseJSON (Object o) = do
     var <- o .: "from_env"
     pure $ EnvVar var
-  parseJSON (String str) = pure $ URL $ "\"" <> str <> "\""
+  parseJSON (String str) = pure $ URL str
   parseJSON _ = empty
 
 instance ToJSON WebHookUrl where
