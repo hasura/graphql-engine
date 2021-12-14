@@ -63,9 +63,9 @@ saveMetadataToHdbTables
         -- Remote Relationships
         withPathK "remote_relationships" $
           indexedForM_ _tmRemoteRelationships $
-            \rr -> do
+            \RemoteRelationship {..} -> do
               addRemoteRelationshipToCatalog $
-                CreateFromSourceRelationship defaultSource _tmTable rr
+                CreateFromSourceRelationship defaultSource _tmTable _rrName _rrDefinition
 
         -- Permissions
         withPathK "insert_permissions" $ processPerms _tmTable _tmInsertPermissions
@@ -199,7 +199,7 @@ addComputedFieldToCatalog q =
     AddComputedField _ table computedField definition comment = q
 
 addRemoteRelationshipToCatalog :: MonadTx m => CreateFromSourceRelationship ('Postgres 'Vanilla) -> m ()
-addRemoteRelationshipToCatalog remoteRelationship =
+addRemoteRelationshipToCatalog CreateFromSourceRelationship {..} =
   liftTx $
     Q.unitQE
       defaultTxErrorHandler
@@ -208,11 +208,10 @@ addRemoteRelationshipToCatalog remoteRelationship =
        (remote_relationship_name, table_schema, table_name, definition)
        VALUES ($1, $2, $3, $4::jsonb)
   |]
-      (_rrName definition, schemaName, tableName, Q.AltJ definition)
+      (_crrName, schemaName, tableName, Q.AltJ _crrDefinition)
       True
   where
-    QualifiedObject schemaName tableName = _crrTable remoteRelationship
-    definition = _crrDefinition remoteRelationship
+    QualifiedObject schemaName tableName = _crrTable
 
 addFunctionToCatalog ::
   (MonadTx m, HasSystemDefined m) =>

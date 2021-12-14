@@ -781,6 +781,7 @@ test-suite graphql-engine-tests
     , jose
     , kan-extensions
     , lens
+    , lens-aeson
     , lifted-base
     , mmorph
     , monad-control
@@ -802,6 +803,7 @@ test-suite graphql-engine-tests
     , unordered-containers
     , utf8-string
     , vector
+    , yaml
     -- mssql support
     , odbc
     , resource-pool
@@ -825,6 +827,7 @@ test-suite graphql-engine-tests
     Hasura.GraphQL.Schema.RemoteTest
     Hasura.IncrementalSpec
     Hasura.RQL.IR.Generator
+    Hasura.RQL.MetadataSpec
     Hasura.RQL.IR.Postgres
     Hasura.RQL.PermissionSpec
     Hasura.RQL.RequestTransformSpec

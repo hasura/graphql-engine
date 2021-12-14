@@ -291,7 +291,7 @@ mkRemoteRelationshipMetadataObject ::
   Backend b =>
   (SourceName, TableName b, RemoteRelationship) ->
   MetadataObject
-mkRemoteRelationshipMetadataObject (source, table, rr@RemoteRelationship {..}) =
+mkRemoteRelationshipMetadataObject (source, table, RemoteRelationship {..}) =
   let objectId =
         MOSourceObjId source $
           AB.mkAnyBackend $
@@ -299,7 +299,7 @@ mkRemoteRelationshipMetadataObject (source, table, rr@RemoteRelationship {..}) =
               MTORemoteRelationship _rrName
    in MetadataObject objectId $
         toJSON $
-          CreateFromSourceRelationship @b source table rr
+          CreateFromSourceRelationship @b source table _rrName _rrDefinition
 
 buildRemoteRelationship ::
   forall b arr m.

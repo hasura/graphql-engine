@@ -31,6 +31,7 @@ import Hasura.Metadata.Class
 import Hasura.Prelude
 import Hasura.RQL.DDL.Schema.Cache
 import Hasura.RQL.DDL.Schema.Cache.Common
+import Hasura.RQL.MetadataSpec qualified as MetadataSpec
 import Hasura.RQL.PermissionSpec qualified as PermSpec
 import Hasura.RQL.RequestTransformSpec qualified as RequestTransformSpec
 import Hasura.RQL.Types
@@ -95,6 +96,7 @@ unitSpecs = do
   describe "Hasura.Server.Auth" AuthSpec.spec
   describe "Hasura.Server.Telemetry" TelemetrySpec.spec
   describe "Hasura.RQL.PermissionSpec" PermSpec.spec
+  describe "Hasura.RQL.MetadataSpec" MetadataSpec.spec
   describe "Hasura.RQL.RequestTransformSpec" RequestTransformSpec.spec
   describe "Network.HTTP.Client.TransformableSpec" TransformableSpec.spec
 
