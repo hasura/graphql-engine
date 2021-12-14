@@ -1,3 +1,0 @@
-- role: manager
-  definition:
-    schema: "!include schemas/manager.graphql"

@@ -1,0 +1,55 @@
+- name: countries
+  definition:
+    url: https://countries.trevorblades.com/
+    timeout_seconds: 60
+  comment: ""
+  permissions:
+  - role: test
+    definition:
+      schema: |-
+        schema  { query: Query }
+
+        type Continent { code: ID!
+          countries: [Country!]!
+          name: String!
+        }
+
+        type Country { capital: String
+          code: ID!
+          continent: Continent!
+          currency: String
+          emoji: String!
+          emojiU: String!
+          languages: [Language!]!
+          name: String!
+          native: String!
+          phone: String!
+          states: [State!]!
+        }
+
+        type Language { code: ID!
+          name: String
+          native: String
+          rtl: Boolean!
+        }
+
+        type Query { continent(code: ID!): Continent
+          country(code: ID!): Country
+          languages(filter: LanguageFilterInput): [Language!]!
+        }
+
+        type State { code: String
+          country: Country!
+          name: String!
+        }
+
+        input LanguageFilterInput {code: StringQueryOperatorInput
+        }
+
+        input StringQueryOperatorInput {eq: String
+          glob: String
+          in: [String]
+          ne: String
+          nin: [String]
+          regex: String
+        }
