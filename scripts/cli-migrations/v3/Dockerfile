@@ -9,7 +9,7 @@ RUN apt-get update && apt-get install -y netcat
 ENV HASURA_GRAPHQL_SHOW_UPDATE_NOTIFICATION=false
 
 COPY docker-entrypoint.sh /bin/
-COPY cli-hasura-linux-amd64 /bin/hasura-cli
+COPY hasura-cli /bin/hasura-cli
 
 RUN chmod +x /bin/hasura-cli 
 
