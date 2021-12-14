@@ -156,7 +156,6 @@ library
                      , mtl
                      , openapi3
                      , optparse-applicative
-                     , optparse-generic
                      , parsec
                      , pg-client
                      , postgresql-binary
