@@ -2,6 +2,8 @@ import React, { useEffect, useReducer } from 'react';
 import { connect, ConnectedProps } from 'react-redux';
 import {
   requestTransformReducer,
+  setEnvVars,
+  setSessionVars,
   setRequestMethod,
   setRequestUrl,
   setRequestUrlError,
@@ -127,6 +129,14 @@ const Modify: React.FC<Props> = props => {
     resetSampleInput();
   }, [state.webhook?.value]);
 
+  const envVarsOnChange = (envVars: KeyValuePair[]) => {
+    transformDispatch(setEnvVars(envVars));
+  };
+
+  const sessionVarsOnChange = (sessionVars: KeyValuePair[]) => {
+    transformDispatch(setSessionVars(sessionVars));
+  };
+
   const requestMethodOnChange = (requestMethod: RequestTransformMethod) => {
     transformDispatch(setRequestMethod(requestMethod));
   };
@@ -194,6 +204,8 @@ const Modify: React.FC<Props> = props => {
     const options = getValidateTransformOptions(
       transformState.requestSampleInput,
       state.webhook?.value,
+      transformState.envVars,
+      transformState.sessionVars,
       undefined,
       transformState.requestUrl,
       transformState.requestQueryParams,
@@ -220,6 +232,8 @@ const Modify: React.FC<Props> = props => {
     state.webhook?.value,
     transformState.requestUrl,
     transformState.requestQueryParams,
+    transformState.envVars,
+    transformState.sessionVars,
   ]);
 
   const onRequestBodyResponse = (data: Record<string, any>) => {
@@ -233,6 +247,8 @@ const Modify: React.FC<Props> = props => {
   const reqBodyoptions = getValidateTransformOptions(
     transformState.requestSampleInput,
     state.webhook?.value,
+    transformState.envVars,
+    transformState.sessionVars,
     transformState.requestBody,
     undefined,
     undefined,
@@ -261,6 +277,8 @@ const Modify: React.FC<Props> = props => {
     transformState.requestSampleInput,
     transformState.requestBody,
     state.webhook?.value,
+    transformState.envVars,
+    transformState.sessionVars,
   ]);
 
   useEffect(() => {
@@ -359,6 +377,8 @@ const Modify: React.FC<Props> = props => {
           <ConfigureTransformation
             state={transformState}
             resetSampleInput={resetSampleInput}
+            envVarsOnChange={envVarsOnChange}
+            sessionVarsOnChange={sessionVarsOnChange}
             requestMethodOnChange={requestMethodOnChange}
             requestUrlOnChange={requestUrlOnChange}
             requestQueryParamsOnChange={requestQueryParamsOnChange}

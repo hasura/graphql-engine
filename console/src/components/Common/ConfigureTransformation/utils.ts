@@ -1,5 +1,5 @@
 import { RequestTransform, RequestTransformMethod } from '@/metadata/types';
-import { getLSItem, LS_KEYS } from '@/utils/localStorage';
+import { getLSItem, setLSItem, LS_KEYS } from '@/utils/localStorage';
 import {
   defaultRequestContentType,
   GraphiQlHeader,
@@ -32,6 +32,52 @@ export const addPlaceholderValue = (pairs: KeyValuePair[]) => {
     pairs.push({ name: '', value: '' });
   }
   return pairs;
+};
+
+const getSessionVarsArrayFromGraphiQL = () => {
+  const lsHeadersString =
+    getLSItem(LS_KEYS.apiExplorerConsoleGraphQLHeaders) ?? '';
+  const headers: GraphiQlHeader[] = isJsonString(lsHeadersString)
+    ? JSON.parse(lsHeadersString)
+    : [];
+  let sessionVars: KeyValuePair[] = [];
+  if (Array.isArray(headers)) {
+    sessionVars = headers
+      .filter(
+        (header: GraphiQlHeader) =>
+          header.isActive && header.key?.toLowerCase().startsWith('x-hasura')
+      )
+      .map((header: GraphiQlHeader) => ({
+        name: header.key?.toLowerCase(),
+        value: header.value,
+      }));
+  }
+  return sessionVars;
+};
+
+const getEnvVarsArrayFromLS = () => {
+  const lsEnvString = getLSItem(LS_KEYS.webhookTransformEnvVars) ?? '';
+  const envVars: KeyValuePair[] = isJsonString(lsEnvString)
+    ? JSON.parse(lsEnvString)
+    : [];
+  return envVars;
+};
+
+export const getSessionVarsFromLS = () =>
+  isEmpty(getSessionVarsArrayFromGraphiQL())
+    ? [{ name: '', value: '' }]
+    : [...getSessionVarsArrayFromGraphiQL(), { name: '', value: '' }];
+
+export const getEnvVarsFromLS = () =>
+  isEmpty(getEnvVarsArrayFromLS())
+    ? [{ name: '', value: '' }]
+    : [...getEnvVarsArrayFromLS(), { name: '', value: '' }];
+
+export const setEnvVarsToLS = (envVars: KeyValuePair[]) => {
+  const validEnvVars = envVars.filter(
+    e => !isEmpty(e.name) && !isEmpty(e.value)
+  );
+  setLSItem(`${LS_KEYS.webhookTransformEnvVars}`, JSON.stringify(validEnvVars));
 };
 
 export const getArrayFromServerPairObject = (
@@ -160,13 +206,15 @@ const generateValidateTransformQuery = (
   requestPayload: Nullable<Record<string, any>> = null,
   webhookUrl: string,
   sessionVars?: KeyValuePair[],
-  isEnvVar?: boolean
+  isEnvVar?: boolean,
+  envVars?: KeyValuePair[]
 ) => {
   return {
     type: 'test_webhook_transform',
     args: {
       webhook_url: isEnvVar ? { from_env: webhookUrl } : webhookUrl,
       body: requestPayload,
+      env: envVars ? getPairsObjFromArray(envVars) : undefined,
       session_variables: sessionVars
         ? getPairsObjFromArray(sessionVars)
         : undefined,
@@ -175,37 +223,17 @@ const generateValidateTransformQuery = (
   };
 };
 
-const getSessionVarsArray = () => {
-  const lsHeadersString =
-    getLSItem(LS_KEYS.apiExplorerConsoleGraphQLHeaders) ?? '';
-  const headers: GraphiQlHeader[] = isJsonString(lsHeadersString)
-    ? JSON.parse(lsHeadersString)
-    : [];
-  let sessionVars: KeyValuePair[] = [];
-  if (Array.isArray(headers)) {
-    sessionVars = headers
-      .filter(
-        (header: GraphiQlHeader) =>
-          header.isActive && header.key.toLowerCase().startsWith('x-hasura')
-      )
-      .map((header: GraphiQlHeader) => ({
-        name: header.key,
-        value: header.value,
-      }));
-  }
-  return sessionVars;
-};
-
 export const getValidateTransformOptions = (
   inputPayloadString: string,
   webhookUrl: string,
+  envVarsFromContext?: KeyValuePair[],
+  sessionVarsFromContext?: KeyValuePair[],
   transformerBody?: string,
   requestUrl?: string,
   queryParams?: KeyValuePair[],
   isEnvVar?: boolean,
   requestMethod?: Nullable<RequestTransformMethod>
 ) => {
-  const sessionVars = getSessionVarsArray();
   const requestPayload = isJsonString(inputPayloadString)
     ? JSON.parse(inputPayloadString)
     : null;
@@ -217,8 +245,9 @@ export const getValidateTransformOptions = (
     getTransformer(transformerBody, transformerUrl, requestMethod, queryParams),
     requestPayload,
     webhookUrl,
-    sessionVars,
-    isEnvVar
+    sessionVarsFromContext,
+    isEnvVar,
+    envVarsFromContext
   );
 
   const options: RequestInit = {
@@ -293,6 +322,8 @@ export const getTransformState = (
   transform: RequestTransform,
   sampleInput: string
 ) => ({
+  envVars: getEnvVarsFromLS(),
+  sessionVars: getSessionVarsFromLS(),
   requestMethod: transform?.method ?? null,
   requestUrl: transform?.url ? getTrimmedRequestUrl(transform?.url) : '',
   requestUrlError: '',

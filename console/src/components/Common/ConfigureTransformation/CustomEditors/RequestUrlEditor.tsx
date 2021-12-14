@@ -106,6 +106,7 @@ const RequestUrlEditor: React.FC<RequestUrlEditorProps> = ({
         <KeyValueInput
           pairs={localQueryParams}
           setPairs={queryParamsOnChangeHandler}
+          testId="query-params"
         />
       </div>
       <div className="grid gap-3 grid-cols-3 mb-sm">

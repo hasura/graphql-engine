@@ -10,9 +10,14 @@ import { KeyValuePair } from '../stateDefaults';
 interface KeyValueInputProps {
   pairs: KeyValuePair[];
   setPairs: (h: KeyValuePair[]) => void;
+  testId?: string;
 }
 
-const KeyValueInput: React.FC<KeyValueInputProps> = ({ pairs, setPairs }) => {
+const KeyValueInput: React.FC<KeyValueInputProps> = ({
+  pairs,
+  setPairs,
+  testId,
+}) => {
   return (
     <>
       {pairs.map((pair, i) => {
@@ -47,7 +52,7 @@ const KeyValueInput: React.FC<KeyValueInputProps> = ({ pairs, setPairs }) => {
                 id="table_name"
                 className={`w-full ${inputStyles}`}
                 placeholder="Key..."
-                data-test={`transform-kv-key-${i.toString()}`}
+                data-test={`transform-${testId}-kv-key-${i.toString()}`}
               />
             </div>
             <div>
@@ -59,7 +64,7 @@ const KeyValueInput: React.FC<KeyValueInputProps> = ({ pairs, setPairs }) => {
                 id="table_name"
                 className={`w-full ${inputStyles}`}
                 placeholder="Value..."
-                data-test={`transform-kv-value-${i.toString()}`}
+                data-test={`transform-${testId}-kv-value-${i.toString()}`}
               />
             </div>
             {i < pairs.length - 1 ? (
@@ -67,7 +72,7 @@ const KeyValueInput: React.FC<KeyValueInputProps> = ({ pairs, setPairs }) => {
                 <button
                   type="button"
                   onClick={removePair}
-                  data-test={`transform-kv-remove-button-${i.toString()}`}
+                  data-test={`transform-${testId}-kv-remove-button-${i.toString()}`}
                   className={`flex items-center text-sm font-medium h-btn px-3 ${buttonShadow} ${focusYellowRing}`}
                 >
                   Remove

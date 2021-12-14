@@ -12,6 +12,8 @@ import {
 } from '../../../metadata/types';
 import { Nullable } from '../utils/tsUtils';
 
+export const SET_ENV_VARS = 'RequestTransform/SET_ENV_VARS';
+export const SET_SESSION_VARS = 'RequestTransform/SET_SESSION_VARS';
 export const SET_REQUEST_METHOD = 'RequestTransform/SET_REQUEST_METHOD';
 export const SET_REQUEST_URL = 'RequestTransform/SET_REQUEST_URL';
 export const SET_REQUEST_URL_ERROR = 'RequestTransform/SET_REQUEST_URL_ERROR';
@@ -35,6 +37,16 @@ export const SET_REQUEST_PAYLOAD_TRANSFORM =
   'RequestTransform/SET_REQUEST_PAYLOAD_TRANSFORM';
 export const SET_REQUEST_TRANSFORM_STATE =
   'RequestTransform/SET_REQUEST_TRANSFORM_STATE';
+
+export interface SetEnvVars extends ReduxAction {
+  type: typeof SET_ENV_VARS;
+  envVars: KeyValuePair[];
+}
+
+export interface SetSessionVars extends ReduxAction {
+  type: typeof SET_SESSION_VARS;
+  sessionVars: KeyValuePair[];
+}
 
 export interface SetRequestMethod extends ReduxAction {
   type: typeof SET_REQUEST_METHOD;
@@ -107,6 +119,8 @@ export interface SetRequestTransformState extends ReduxAction {
 }
 
 export type RequestTransformEvents =
+  | SetEnvVars
+  | SetSessionVars
   | SetRequestMethod
   | SetRequestUrl
   | SetRequestUrlError
@@ -123,6 +137,8 @@ export type RequestTransformEvents =
   | SetRequestTransformState;
 
 export type RequestTransformState = {
+  envVars: KeyValuePair[];
+  sessionVars: KeyValuePair[];
   requestMethod: Nullable<RequestTransformMethod>;
   requestUrl: string;
   requestUrlError: string;
