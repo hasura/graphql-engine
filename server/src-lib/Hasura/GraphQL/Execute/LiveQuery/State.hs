@@ -125,7 +125,7 @@ addLiveQuery
     cohortId <- newCohortId
     subscriberId <- newSubscriberId
 
-    let !subscriber = Subscriber subscriberId subscriberMetadata requestId operationName onResultAction
+    let !subscriber = Subscriber subscriberId subscriberMetadata requestId operationName onResultAction Nothing
 
     $assertNFHere subscriber -- so we don't write thunks to mutable vars
 
@@ -197,6 +197,9 @@ addStreamSubscriptionQuery ::
   LiveQueryPlan b (MultiplexedQuery b) ->
   -- | the action to be executed when result changes
   OnChange ->
+  Maybe (IO ()) ->
+  -- | optional onStop handler to be called when there are no
+  --   rows returned from the database
   IO (LiveQueryId, OperationMetadata)
 addStreamSubscriptionQuery
   logger
@@ -209,14 +212,15 @@ addStreamSubscriptionQuery
   requestId
   rootFieldName
   plan
-  onResultAction = do
+  onResultAction
+  onStopM = do
     -- CAREFUL!: It's absolutely crucial that we can't throw any exceptions here!
 
     -- disposable UUIDs:
     cohortId <- newCohortId
     subscriberId <- newSubscriberId
 
-    let !subscriber = Subscriber subscriberId subscriberMetadata requestId operationName onResultAction
+    let !subscriber = Subscriber subscriberId subscriberMetadata requestId operationName onResultAction onStopM
 
     $assertNFHere subscriber -- so we don't write thunks to mutable vars
 
@@ -260,7 +264,7 @@ addStreamSubscriptionQuery
 
       addToCohort subscriber handlerC = do
         TMap.insert subscriber (_sId subscriber) $ _cNewSubscribers handlerC
-        pure $ _cStreamVariables handlerC
+        pure $ _cStreamCursorVariables handlerC
 
       addToPoller subscriber cohortId handler = do
         latestCursorValues <-

@@ -28,6 +28,7 @@ import Network.HTTP.Client qualified as H
 import Network.HTTP.Types qualified as H
 import Network.Wai.Extended qualified as Wai
 import StmContainers.Map qualified as STMMap
+import Hasura.GraphQL.Transport.HTTP.Protocol (OperationName)
 
 newtype WsHeaders = WsHeaders {unWsHeaders :: [H.Header]}
   deriving (Show, Eq)

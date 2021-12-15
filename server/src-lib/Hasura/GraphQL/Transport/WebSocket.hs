@@ -835,6 +835,7 @@ onStart env enabledLogTypes serverEnv wsConn (StartMsg opId q) onMessageActions 
                   rootFieldName
                   liveQueryPlan
                   (onChange opName parameterizedQueryHash $ LQ._lqpNamespace liveQueryPlan)
+                  (Just streamStop) -- FIXME: remove the hardcoded Just
         liftIO $ $assertNFHere (lqId, opName) -- so we don't write thunks to mutable vars
         STM.atomically $
           -- NOTE: see crucial `lookup` check above, ensuring this doesn't clobber:
@@ -855,18 +856,9 @@ onStart env enabledLogTypes serverEnv wsConn (StartMsg opId q) onMessageActions 
         sendMsg wsConn $
           sendDataMsg $ DataMsg opId $ LBS.fromStrict . LQ._lqrPayload <$> resp
 
-    streamOnChange :: Maybe OperationName -> ParameterizedQueryHash -> Maybe Name -> LQ.OnChange
-    streamOnChange opName queryHash namespace = \case
-      Right (LQ.LiveQueryResponse bs dTime) ->
-        sendMsgWithMetadata
-          wsConn
-          (sendDataMsg $ DataMsg opId $ pure $ maybe LBS.fromStrict wrapNamespace namespace bs)
-          opName
-          (Just queryHash)
-          (LQ.LiveQueryMetadata dTime)
-      resp ->
-        sendMsg wsConn $
-          sendDataMsg $ DataMsg opId $ LBS.fromStrict . LQ._lqrPayload <$> resp
+    streamStop :: IO ()
+    streamStop =
+      onStop serverEnv wsConn (StopMsg opId)
 
     -- If the source has a namespace then we need to wrap the response
     -- from the DB in that namespace.

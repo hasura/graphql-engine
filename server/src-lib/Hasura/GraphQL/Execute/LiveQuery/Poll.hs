@@ -112,7 +112,10 @@ data Subscriber = Subscriber
     _sMetadata :: !SubscriberMetadata,
     _sRequestId :: !RequestId,
     _sOperationName :: !(Maybe OperationName),
-    _sOnChangeCallback :: !OnChange
+    _sOnChangeCallback :: !OnChange,
+    _sStreamOnStop :: !(Maybe (IO ()))
+    -- | optional action to stop the streaming subscription after
+    --   no rows are returned from the DB.
   }
 
 -- | live query onChange metadata, used for adding more extra analytics data
@@ -155,8 +158,8 @@ data Cohort streamCursorVars = Cohort
     -- result changed, then merge them in the map of existing subscribers
     _cNewSubscribers :: !SubscriberMap,
     -- | a mutable type which holds the latest value of the subscription stream cursor. In case
-    --   of live query subscription, this field can be ignored by setting `streamCursorVars` to `()`
-    _cStreamVariables :: !streamCursorVars
+    --   of live query subscription, this field is ignored by setting `streamCursorVars` to `()`
+    _cStreamCursorVariables :: !streamCursorVars
   }
 
 -- | The @BatchId@ is a number based ID to uniquely identify a batch in a single poll and
@@ -309,7 +312,7 @@ pushResultToStreamSubscriptionCohort result !respHashM (LiveQueryMetadata dTime)
           Right respBS -> emptyRespBS == respBS
   -- In streaming subscriptions, we don't send anything when there are no rows returned
   -- by the client.
-  bool (pushResultToSubscribers subscribersToPush) (pure ()) isResponseEmpty
+  pushResultToSubscribers isResponseEmpty subscribersToPush
   pure $
     over
       (each . each)
@@ -321,8 +324,13 @@ pushResultToStreamSubscriptionCohort result !respHashM (LiveQueryMetadata dTime)
     CohortSnapshot _ respRef curSinks newSinks latestCursorValueTV = cohortSnapshot
 
     response = result <&> \payload -> LiveQueryResponse payload dTime
-    pushResultToSubscribers =
-      A.mapConcurrently_ $ \Subscriber {..} -> _sOnChangeCallback response
+    pushResultToSubscribers isResponseEmpty = do
+      A.mapConcurrently_ $ \Subscriber {..} ->
+        if isResponseEmpty
+          then do
+            onJust _sStreamOnStop id
+          else
+            _sOnChangeCallback response
 
 -- -----------------------------------------------------------------------------
 -- Pollers
@@ -698,7 +706,7 @@ pollStreamingQuery pollerId lqOpts (sourceName, sourceConfig) roleName parameter
   cohortsWithUpdatedCohortKeys <- do
     cohortsList <- STM.atomically $ TMap.toList cohortMap
     for cohortsList $ \(cohortKey, cohort) -> do
-      CursorVariableValues vals <- STM.readTVarIO $ _cStreamVariables cohort
+      CursorVariableValues vals <- STM.readTVarIO $ _cStreamCursorVariables cohort
       pure (modifyCursorCohortVariables (mkUnsafeValidateVariables vals) cohortKey, cohort)
   STM.atomically $ do
     updatedCohortMap <- Map.fromListWithM mergeCohorts cohortsWithUpdatedCohortKeys
