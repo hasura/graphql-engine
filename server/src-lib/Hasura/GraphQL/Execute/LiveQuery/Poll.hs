@@ -50,6 +50,7 @@ import Crypto.Hash qualified as CH
 import Data.Aeson qualified as J
 import Data.ByteString qualified as BS
 import Data.HashMap.Strict qualified as Map
+import Data.HashMap.Strict.Extended qualified as Map
 import Data.List.Split (chunksOf)
 import Data.Monoid (Sum (..))
 import Data.Text.Extended
@@ -78,7 +79,6 @@ import Language.GraphQL.Draft.Syntax qualified as G
 import ListT qualified
 import StmContainers.Map qualified as STMMap
 import Text.Shakespeare.Text (st)
-import qualified Data.HashMap.Strict.Extended as Map
 
 -- ----------------------------------------------------------------------------------------------
 -- Subscribers
@@ -256,7 +256,7 @@ pushResultToCohort result !respHashM (LiveQueryMetadata dTime) cohortSnapshot = 
   where
     CohortSnapshot _ respRef curSinks newSinks () = cohortSnapshot
 
-    response = result <&> \payload -> LiveQueryResponse payload dTime
+    response = result <&> (`LiveQueryResponse` dTime)
     pushResultToSubscribers =
       A.mapConcurrently_ $ \Subscriber {..} -> _sOnChangeCallback response
 
@@ -724,10 +724,11 @@ pollStreamingQuery pollerId lqOpts (sourceName, sourceConfig) roleName parameter
           oldCohortNewSubscribers = _cNewSubscribers oldCohort
       mergedExistingSubscribers <- TMap.union newCohortExistingSubscribers oldCohortExistingSubscribers
       mergedNewSubscribers <- TMap.union newCohortNewSubscribers oldCohortNewSubscribers
-      pure $ newCohort
-        { _cNewSubscribers = mergedNewSubscribers,
-          _cExistingSubscribers = mergedExistingSubscribers
-        }
+      pure $
+        newCohort
+          { _cNewSubscribers = mergedNewSubscribers,
+            _cExistingSubscribers = mergedExistingSubscribers
+          }
 
     getCohortOperations cohorts = \case
       Left e ->

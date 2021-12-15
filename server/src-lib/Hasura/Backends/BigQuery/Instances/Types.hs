@@ -36,7 +36,6 @@ instance Backend 'BigQuery where
   type XNestedInserts 'BigQuery = XDisable
   type XStreamingSubscription 'BigQuery = XDisable
 
-
   type ExtraTableMetadata 'BigQuery = ()
 
   functionArgScalarType :: FunctionArgType 'BigQuery -> ScalarType 'BigQuery

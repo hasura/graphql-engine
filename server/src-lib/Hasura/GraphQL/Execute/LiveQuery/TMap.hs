@@ -47,6 +47,6 @@ swap mapTV v = void $ swapTVar (unTMap mapTV) v
 
 union :: (Eq k, Hashable k) => TMap k v -> TMap k v -> STM (TMap k v)
 union mapA mapB = do
-    l <- readTVar $ unTMap mapA
-    r <- readTVar $ unTMap mapB
-    TMap <$> newTVar (Map.union l r)
+  l <- readTVar $ unTMap mapA
+  r <- readTVar $ unTMap mapB
+  TMap <$> newTVar (Map.union l r)

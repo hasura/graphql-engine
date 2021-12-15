@@ -44,7 +44,6 @@ instance Backend 'MSSQL where
   type XNestedInserts 'MSSQL = XDisable
   type XStreamingSubscription 'MSSQL = XDisable
 
-
   functionArgScalarType :: FunctionArgType 'MSSQL -> ScalarType 'MSSQL
   functionArgScalarType = absurd
 

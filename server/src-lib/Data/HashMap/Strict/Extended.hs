@@ -83,8 +83,11 @@ unionsWith f ts =
 
 fromListWithM :: (Monad m, Hashable k, Eq k) => (v -> v -> m v) -> [(k, v)] -> m (HashMap k v)
 fromListWithM f l =
-  sequence $ M.fromListWith (\a b -> do
-                                x <- a
-                                y <- b
-                                f x y)
-                            (second return <$> l)
+  sequence $
+    M.fromListWith
+      ( \a b -> do
+          x <- a
+          y <- b
+          f x y
+      )
+      (second return <$> l)

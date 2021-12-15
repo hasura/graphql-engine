@@ -85,12 +85,12 @@ import Hasura.Server.Telemetry.Counters qualified as Telem
 import Hasura.Server.Types (RequestId, getRequestId)
 import Hasura.Session
 import Hasura.Tracing qualified as Tracing
+import Language.GraphQL.Draft.Syntax (Name (..))
 import ListT qualified
 import Network.HTTP.Client qualified as H
 import Network.HTTP.Types qualified as H
 import Network.WebSockets qualified as WS
 import StmContainers.Map qualified as STMMap
-import Language.GraphQL.Draft.Syntax (Name (..))
 
 -- | 'LQ.LiveQueryId' comes from 'Hasura.GraphQL.Execute.LiveQuery.State.addLiveQuery'. We use
 -- this to track a connection's operations so we can remove them from 'LiveQueryState', and
@@ -626,7 +626,7 @@ onStart env enabledLogTypes serverEnv wsConn (StartMsg opId q) onMessageActions 
           actionLogMapE <- fmap fst <$> runExceptT (EA.fetchActionLogResponses actionIds)
           actionLogMap <- onLeft actionLogMapE (withComplete . preExecErr requestId)
           opMetadataE <- liftIO $ startLiveQuery liveQueryBuilder parameterizedQueryHash requestId actionLogMap
-          (lqId, _opMetadata) <- onLeft opMetadataE (withComplete . preExecErr requestId)
+          lqId <- onLeft opMetadataE (withComplete . preExecErr requestId)
 
           -- Update async action query subscription state
           case NE.nonEmpty (toList actionIds) of
@@ -797,7 +797,7 @@ onStart env enabledLogTypes serverEnv wsConn (StartMsg opId q) onMessageActions 
 
     restartLiveQuery parameterizedQueryHash requestId liveQueryBuilder lqId actionLogMap = do
       LQ.removeLiveQuery logger (_wseServerMetrics serverEnv) lqMap lqId
-      either (const Nothing) (Just . fst) <$> startLiveQuery liveQueryBuilder parameterizedQueryHash requestId actionLogMap
+      either (const Nothing) Just <$> startLiveQuery liveQueryBuilder parameterizedQueryHash requestId actionLogMap
 
     startLiveQuery liveQueryBuilder parameterizedQueryHash requestId actionLogMap = do
       liveQueryE <- runExceptT $ liveQueryBuilder actionLogMap
@@ -806,7 +806,7 @@ onStart env enabledLogTypes serverEnv wsConn (StartMsg opId q) onMessageActions 
             subscriberMetadata = LQ.mkSubscriberMetadata (WS.getWSId wsConn) opId opName requestId
         -- NOTE!: we mask async exceptions higher in the call stack, but it's
         -- crucial we don't lose lqId after addLiveQuery returns successfully.
-        !(lqId,opMetadata)  <- liftIO $ AB.dispatchAnyBackend @BackendTransport
+        (lqId, opMetadata) <- liftIO $ AB.dispatchAnyBackend @BackendTransport
           exists
           \(E.MultiplexedQueryPlan liveQueryPlan) ->
             case LQ._lqpSubscriptionType liveQueryPlan of
@@ -838,12 +838,25 @@ onStart env enabledLogTypes serverEnv wsConn (StartMsg opId q) onMessageActions 
         liftIO $ $assertNFHere (lqId, opName) -- so we don't write thunks to mutable vars
         STM.atomically $
           -- NOTE: see crucial `lookup` check above, ensuring this doesn't clobber:
-          STMMap.insert (lqId, opMetadata) opId opMap
-        pure $ (lqId, opMetadata)
+          STMMap.insert (lqId, opName, opMetadata) opId opMap
+        pure lqId
 
     -- on change, send message on the websocket
     onChange :: Maybe OperationName -> ParameterizedQueryHash -> Maybe Name -> LQ.OnChange
     onChange opName queryHash namespace = \case
+      Right (LQ.LiveQueryResponse bs dTime) ->
+        sendMsgWithMetadata
+          wsConn
+          (sendDataMsg $ DataMsg opId $ pure $ maybe LBS.fromStrict wrapNamespace namespace bs)
+          opName
+          (Just queryHash)
+          (LQ.LiveQueryMetadata dTime)
+      resp ->
+        sendMsg wsConn $
+          sendDataMsg $ DataMsg opId $ LBS.fromStrict . LQ._lqrPayload <$> resp
+
+    streamOnChange :: Maybe OperationName -> ParameterizedQueryHash -> Maybe Name -> LQ.OnChange
+    streamOnChange opName queryHash namespace = \case
       Right (LQ.LiveQueryResponse bs dTime) ->
         sendMsgWithMetadata
           wsConn
@@ -942,12 +955,12 @@ stopOperation :: WSServerEnv -> WSConn -> OperationId -> IO () -> IO ()
 stopOperation serverEnv wsConn opId logWhenOpNotExist = do
   opM <- liftIO $ STM.atomically $ STMMap.lookup opId opMap
   case opM of
-    Just (lqId, operationMetadata) -> do
+    Just (lqId, opNameM, operationMetadata) -> do
+      logWSEvent logger wsConn $ EOperation $ opDet opNameM
       case operationMetadata of
-        LQ.OMLivequery opNameM -> do
-          logWSEvent logger wsConn $ EOperation $ opDet opNameM
+        LQ.OMLivequery -> do
           LQ.removeLiveQuery logger (_wseServerMetrics serverEnv) lqMap lqId
-        LQ.OMStreaming opNameM cursorValTV -> do
+        LQ.OMStreaming cursorValTV -> do
           logWSEvent logger wsConn $ EOperation $ opDet opNameM
           LQ.removeStreamingQuery logger (_wseServerMetrics serverEnv) lqMap cursorValTV lqId
     Nothing -> logWhenOpNotExist
@@ -1039,7 +1052,7 @@ onClose logger serverMetrics liveQueriesState wsConn = do
   logWSEvent logger wsConn EClosed
   operations <- liftIO $ STM.atomically $ ListT.toList $ STMMap.listT opMap
   liftIO $
-    for_ operations $ \(_, (lqId, _)) ->
+    for_ operations $ \(_, (lqId, _, _)) ->
       LQ.removeLiveQuery logger serverMetrics liveQueriesState lqId
   where
     opMap = _wscOpMap $ WS.getData wsConn

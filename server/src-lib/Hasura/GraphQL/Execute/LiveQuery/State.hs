@@ -34,6 +34,7 @@ import GHC.AssertNF.CPP
 import Hasura.Base.Error
 import Hasura.GraphQL.Execute.Backend
 import Hasura.GraphQL.Execute.LiveQuery.Options
+import Hasura.GraphQL.Execute.LiveQuery.Plan
 import Hasura.GraphQL.Execute.LiveQuery.Poll
 import Hasura.GraphQL.Execute.LiveQuery.TMap qualified as TMap
 import Hasura.GraphQL.ParameterizedQueryHash (ParameterizedQueryHash)
@@ -49,8 +50,6 @@ import Hasura.Server.Types (RequestId)
 import Language.GraphQL.Draft.Syntax qualified as G
 import StmContainers.Map qualified as STMMap
 import System.Metrics.Gauge qualified as EKG.Gauge
-import Hasura.GraphQL.Execute.LiveQuery.Plan
-
 
 -- | The top-level datatype that holds the state for all active live queries.
 --
@@ -90,8 +89,8 @@ data LiveQueryId = LiveQueryId
   deriving (Show)
 
 data OperationMetadata
-  = OMLivequery !(Maybe OperationName)
-  | OMStreaming !(Maybe OperationName) !(STM.TVar CursorVariableValues)
+  = OMLivequery
+  | OMStreaming !(STM.TVar CursorVariableValues)
 
 addLiveQuery ::
   forall b.
@@ -159,7 +158,7 @@ addLiveQuery
 
     liftIO $ EKG.Gauge.inc $ smActiveSubscriptions serverMetrics
 
-    pure $ ((LiveQueryId handlerId cohortKey subscriberId), OMLivequery operationName)
+    pure $ ((LiveQueryId handlerId cohortKey subscriberId), OMLivequery)
     where
       LiveQueriesState lqOpts lqMap _ postPollHook _ = lqState
       LiveQueriesOptions _ refetchInterval = lqOpts
@@ -251,7 +250,7 @@ addStreamSubscriptionQuery
 
     liftIO $ EKG.Gauge.inc $ smActiveSubscriptions serverMetrics
 
-    pure $ (LiveQueryId handlerId cohortKey subscriberId, OMStreaming operationName cohortCursorTVar)
+    pure $ (LiveQueryId handlerId cohortKey subscriberId, OMStreaming cohortCursorTVar)
     where
       LiveQueriesState lqOpts _ streamQueryMap postPollHook _ = lqState
       LiveQueriesOptions _ refetchInterval = lqOpts
@@ -339,10 +338,10 @@ removeStreamingQuery ::
   IO ()
 removeStreamingQuery logger serverMetrics lqState cursorVariableTV lqId@(LiveQueryId handlerId cohortId sinkId) = mask_ $ do
   mbCleanupIO <- STM.atomically $ do
-     detM <- getQueryDet streamQMap
-     fmap join $
-       forM detM $ \(Poller cohorts ioState, currentCohortId, cohort) ->
-         cleanHandlerC cohorts ioState (cohort, currentCohortId)
+    detM <- getQueryDet streamQMap
+    fmap join $
+      forM detM $ \(Poller cohorts ioState, currentCohortId, cohort) ->
+        cleanHandlerC cohorts ioState (cohort, currentCohortId)
   sequence_ mbCleanupIO
   liftIO $ EKG.Gauge.dec $ smActiveSubscriptions serverMetrics
   where
@@ -355,7 +354,7 @@ removeStreamingQuery logger serverMetrics lqState cursorVariableTV lqId@(LiveQue
       fmap join $
         forM pollerM $ \poller -> do
           cohortM <- TMap.lookup updatedCohortId (_pCohorts poller)
-          return $ (poller, updatedCohortId, ) <$> cohortM
+          return $ (poller,updatedCohortId,) <$> cohortM
 
     cleanHandlerC cohortMap ioState (handlerC, currentCohortId) = do
       let curOps = _cExistingSubscribers handlerC
@@ -387,7 +386,6 @@ removeStreamingQuery logger serverMetrics lqState cursorVariableTV lqId@(LiveQue
                         "In removeLiveQuery no worker thread installed. Please report this as a bug: "
                           <> show lqId
         else return Nothing
-
 
 -- | An async action query whose relationships are refered to table in a source.
 -- We need to generate an SQL statement with the action response and execute it
