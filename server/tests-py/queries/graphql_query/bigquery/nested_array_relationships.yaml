@@ -1,0 +1,153 @@
+- description: Author with articles with cited articles
+  url: /v1/graphql
+  status: 200
+  response:
+    data:
+      hasura_test_author:
+      - id: '1'
+        name: Author 1
+        articles:
+        - id: '1'
+          title: Title 1
+          content: Content 1
+          article_citations:
+          - description: citing the 2nd
+            cited_article:
+              id: '2'
+              title: Title 2
+              content: Content 2
+          - description: citing the third as well
+            cited_article:
+              id: '3'
+              title: Title 3
+              content: Content 3
+        - id: '2'
+          title: Title 2
+          content: Content 2
+          article_citations:
+          - description: the second also cites the third
+            cited_article:
+              id: '3'
+              title: Title 3
+              content: Content 3
+      - id: '2'
+        name: Author 2
+        articles:
+        - id: '3'
+          title: Title 3
+          content: Content 3
+          article_citations: []
+  query:
+    query: |
+      query {
+        hasura_test_author (order_by: {id: asc}) {
+          id
+          name
+          articles (order_by: {id:asc}){
+            id
+            title
+            content
+            article_citations {
+              description
+              cited_article {
+                id
+                title
+                content
+              }
+            }
+          }
+        }
+      }
+
+- description: Author with articles with count of cited articles
+  url: /v1/graphql
+  status: 200
+  response:
+    data:
+      hasura_test_author:
+      - id: '1'
+        name: Author 1
+        articles:
+        - id: '1'
+          title: Title 1
+          content: Content 1
+          article_citations_aggregate:
+            aggregate:
+              count: '2'
+        - id: '2'
+          title: Title 2
+          content: Content 2
+          article_citations_aggregate:
+            aggregate:
+              count: '1'
+      - id: '2'
+        name: Author 2
+        articles:
+        - id: '3'
+          title: Title 3
+          content: Content 3
+          article_citations_aggregate:
+            aggregate:
+              count: '0'
+  query:
+    query: |
+      query {
+        hasura_test_author (order_by: {id: asc}) {
+          id
+          name
+          articles (order_by: {id:asc}){
+            id
+            title
+            content
+            article_citations_aggregate {
+              aggregate {
+                count
+              }
+            }
+          }
+        }
+      }
+
+- description: Author with articles with article_citations in remote source
+  url: /v1/graphql
+  status: 200
+  response:
+    data:
+      hasura_test_author:
+      - id: '1'
+        name: Author 1
+        articles:
+        - id: '1'
+          title: Title 1
+          content: Content 1
+          article_citations2:
+          - description: citing the 2nd
+          - description: citing the third as well
+        - id: '2'
+          title: Title 2
+          content: Content 2
+          article_citations2:
+          - description: the second also cites the third
+      - id: '2'
+        name: Author 2
+        articles:
+        - id: '3'
+          title: Title 3
+          content: Content 3
+          article_citations2: []
+  query:
+    query: |
+      query {
+        hasura_test_author (order_by: {id: asc}) {
+          id
+          name
+          articles (order_by: {id:asc}){
+            id
+            title
+            content
+            article_citations2 {
+              description
+            }
+          }
+        }
+      }

@@ -1249,7 +1249,7 @@ fromArrayRelationSelectG annRelationSelectG = do
                             ArrayAgg
                               { arrayAggProjections =
                                   fmap
-                                    aliasToFieldProjection
+                                    (aliasToFieldProjection (fromAlias (selectFrom select)))
                                     (selectProjections select),
                                 arrayAggOrderBy = Nothing,
                                 arrayAggTop = selectTop select
@@ -1352,9 +1352,12 @@ fromArrayRelationSelectG annRelationSelectG = do
       } = annRelationSelectG
 
 -- | For entity projections, convert any entity aliases to their field
--- names. TODO: Add an explanation for this.
-aliasToFieldProjection :: Projection -> Projection
-aliasToFieldProjection =
+-- names. ArrayEntityProjection and ExpressionProjection get converted
+-- to aliases to fields with the same names as all the expressions
+-- have already aliases applied in select from ArrayAgg
+-- (created in Hasura.Backends.BigQuery.ToQuery.fromArrayAgg)
+aliasToFieldProjection :: EntityAlias -> Projection -> Projection
+aliasToFieldProjection (EntityAlias selectAlias) =
   \case
     EntityProjection Aliased {aliasedAlias = name, aliasedThing = fields} ->
       EntityProjection
@@ -1365,7 +1368,18 @@ aliasToFieldProjection =
                 (\(FieldName {..}, origin) -> (FieldName {fieldNameEntity = name, ..}, origin))
                 fields
           }
+    ArrayEntityProjection _ aliased ->
+      aliasColumn aliased
+    ExpressionProjection aliased ->
+      aliasColumn aliased
     p -> p
+  where
+    aliasColumn :: Aliased a -> Projection
+    aliasColumn aliased =
+      ExpressionProjection
+        aliased
+          { aliasedThing = ColumnExpression (FieldName {fieldName = aliasedAlias aliased, fieldNameEntity = selectAlias})
+          }
 
 fromRelName :: Rql.RelName -> FromIr Text
 fromRelName relName =

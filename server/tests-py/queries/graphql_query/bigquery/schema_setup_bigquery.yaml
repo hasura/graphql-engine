@@ -152,3 +152,18 @@ args:
                     "fear innoculum",
                     1002 );
       SELECT * from hasura_test.Album;
+
+      CREATE TABLE `hasura_test.article_citation` (
+        `article_id` INT64,
+        `cited_article_id` INT64,
+        `description` STRING,
+      );
+      INSERT INTO hasura_test.article_citation
+                  (article_id, cited_article_id, description)
+      VALUES      (1, 2, 'citing the 2nd'),
+                  (1, 3, 'citing the third as well'),
+                  (2, 3, 'the second also cites the third');
+
+      -- a copy for remote joins as we can't have the same table tracked in two sources
+      CREATE TABLE `hasura_test.article_citation2`
+      AS SELECT * FROM `hasura_test.article_citation`;
