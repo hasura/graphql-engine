@@ -42,9 +42,8 @@ import Hasura.GraphQL.Transport.HTTP.Protocol (OperationName)
 import Hasura.GraphQL.Transport.WebSocket.Protocol (OperationId)
 import Hasura.Logging qualified as L
 import Hasura.Prelude
-import Hasura.RQL.Types (SubscriptionType)
 import Hasura.RQL.Types.Action
-import Hasura.RQL.Types.Common (SourceName, SubscriptionType (..), unNonNegativeDiffTime)
+import Hasura.RQL.Types.Common (SourceName, unNonNegativeDiffTime)
 import Hasura.Server.Metrics (ServerMetrics (..))
 import Hasura.Server.Types (RequestId)
 import Language.GraphQL.Draft.Syntax qualified as G
@@ -86,8 +85,7 @@ dumpLiveQueriesState extended (LiveQueriesState opts lqMap streamMap _ _) = do
 data LiveQueryId = LiveQueryId
   { _lqiPoller :: !PollerKey,
     _lqiCohort :: !CohortKey,
-    _lqiSubscriber :: !SubscriberId,
-    _lqiSubscriptionType :: !SubscriptionType
+    _lqiSubscriber :: !SubscriberId
   }
   deriving (Show)
 
@@ -161,7 +159,7 @@ addLiveQuery
 
     liftIO $ EKG.Gauge.inc $ smActiveSubscriptions serverMetrics
 
-    pure $ ((LiveQueryId handlerId cohortKey subscriberId STLiveQuery), OMLivequery operationName)
+    pure $ ((LiveQueryId handlerId cohortKey subscriberId), OMLivequery operationName)
     where
       LiveQueriesState lqOpts lqMap _ postPollHook _ = lqState
       LiveQueriesOptions _ refetchInterval = lqOpts
@@ -253,7 +251,7 @@ addStreamSubscriptionQuery
 
     liftIO $ EKG.Gauge.inc $ smActiveSubscriptions serverMetrics
 
-    pure $ (LiveQueryId handlerId cohortKey subscriberId (STStreaming rootFieldName), OMStreaming operationName cohortCursorTVar)
+    pure $ (LiveQueryId handlerId cohortKey subscriberId, OMStreaming operationName cohortCursorTVar)
     where
       LiveQueriesState lqOpts _ streamQueryMap postPollHook _ = lqState
       LiveQueriesOptions _ refetchInterval = lqOpts
@@ -282,27 +280,17 @@ removeLiveQuery ::
   -- the query and the associated operation
   LiveQueryId ->
   IO ()
-removeLiveQuery logger serverMetrics lqState lqId@(LiveQueryId handlerId cohortId sinkId subscriptionType) = mask_ $ do
+removeLiveQuery logger serverMetrics lqState lqId@(LiveQueryId handlerId cohortId sinkId) = mask_ $ do
   mbCleanupIO <- STM.atomically $ do
-    case subscriptionType of
-      STLiveQuery -> do
-        detM <- getQueryDet lqMap
-        fmap join $
-          forM detM $ \(Poller cohorts ioState, cohort) ->
-            cleanHandlerC cohorts ioState cohort
-      STStreaming _ -> do
-        detM <- getQueryDet streamQMap
-        fmap join $
-          forM detM $ \(Poller cohorts ioState, cohort) ->
-            cleanHandlerC cohorts ioState cohort
+    detM <- getQueryDet lqMap
+    fmap join $
+      forM detM $ \(Poller cohorts ioState, cohort) ->
+        cleanHandlerC cohorts ioState cohort
   sequence_ mbCleanupIO
   liftIO $ EKG.Gauge.dec $ smActiveSubscriptions serverMetrics
   where
     lqMap = _lqsLiveQueryMap lqState
 
-    streamQMap = _lqsStreamQueryMap lqState
-
-    getQueryDet :: PollerMap a -> STM.STM (Maybe (Poller a, Cohort a))
     getQueryDet subMap = do
       pollerM <- STMMap.lookup handlerId subMap
       fmap join $
@@ -310,7 +298,6 @@ removeLiveQuery logger serverMetrics lqState lqId@(LiveQueryId handlerId cohortI
           cohortM <- TMap.lookup cohortId (_pCohorts poller)
           return $ (poller,) <$> cohortM
 
-    cleanHandlerC :: TMap.TMap CohortKey (Cohort a) -> STM.TMVar PollerIOState -> Cohort a -> STM.STM (Maybe (IO ()))
     cleanHandlerC cohortMap ioState handlerC = do
       let curOps = _cExistingSubscribers handlerC
           newOps = _cNewSubscribers handlerC
@@ -326,9 +313,7 @@ removeLiveQuery logger serverMetrics lqState lqId@(LiveQueryId handlerId cohortI
       -- operation, take the ref for the polling thread to cancel it
       if handlerIsEmpty
         then do
-          case subscriptionType of
-            STLiveQuery -> STMMap.delete handlerId lqMap
-            STStreaming _ -> STMMap.delete handlerId streamQMap
+          STMMap.delete handlerId lqMap
           threadRefM <- fmap _pThread <$> STM.tryReadTMVar ioState
           return $
             Just $ -- deferred IO:
@@ -352,7 +337,7 @@ removeStreamingQuery ::
   STM.TVar CursorVariableValues ->
   LiveQueryId ->
   IO ()
-removeStreamingQuery logger serverMetrics lqState cursorVariableTV lqId@(LiveQueryId handlerId cohortId sinkId _) = mask_ $ do
+removeStreamingQuery logger serverMetrics lqState cursorVariableTV lqId@(LiveQueryId handlerId cohortId sinkId) = mask_ $ do
   mbCleanupIO <- STM.atomically $ do
      detM <- getQueryDet streamQMap
      fmap join $
