@@ -24,7 +24,6 @@ const config = {
         docs: {
           routeBasePath: "/",
           sidebarPath: require.resolve('./sidebars.js'),
-          // Please change this to your repo.
           editUrl: 'https://github.com/hasura/graphql-engine/edit/main/docs-new/',
           docItemComponent: require.resolve('./src/components/CustomDocLayout/CustomDocLayout.tsx'),
           lastVersion: "current",

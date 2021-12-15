@@ -10,6 +10,7 @@ import TOCInline from '@theme/TOCInline';
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 import Link from '@docusaurus/Link';
+import CustomLink from '@site/src/components/CustomLink';
 import Thumbnail from "@site/src/components/Thumbnail/Thumbnail";
 import GraphiQLIDE from '@site/src/components/GraphiQLIDE/GraphiQLIDE';
 import { CustomTOCListHead } from "@site/src/components/CustomTOCList/CustomTOCList";
@@ -41,7 +42,7 @@ Let's look at **examples** for mutation and query type actions.
   </TabItem>
   <TabItem value="cli" label="CLI">
   
-<Link to="#install_hasura_cli">Install</Link> or <Link to="#hasura_update-cli">update to</Link> the latest version of Hasura CLI.
+<CustomLink to="#install_hasura_cli">Install</CustomLink> or <CustomLink to="#hasura_update-cli">update to</CustomLink> the latest version of Hasura CLI.
 
 You can either get started with an existing project or create a new project.
 
@@ -69,7 +70,7 @@ Run `hasura metadata export` so that you get server's metadata into the `metadat
 
   </TabItem>
   <TabItem value="api" label="API">
-    There is no setup required for defining actions via the <Link to="#metadata_api_actions">actions metadata API</Link>.
+    There is no setup required for defining actions via the <CustomLink to="#metadata_api_actions">actions metadata API</CustomLink>.
   </TabItem>
 </Tabs>
 
@@ -143,7 +144,7 @@ type LoginResponse {
   </TabItem>
   <TabItem value="api" label="API">
 
-It is essential that the custom types used in the action are defined *beforehand* via the <Link to="#metadata_set_custom_types">set_custom_types metadata API</Link>:
+It is essential that the custom types used in the action are defined *beforehand* via the <CustomLink to="#metadata_set_custom_types">set_custom_types metadata API</CustomLink>:
 
 ```http
 POST /v1/query HTTP/1.1
@@ -171,7 +172,7 @@ X-Hasura-Role: admin
 }
 ```
 
-Once the custom types are defined, we can create an action via the <Link to="#metadata_create_action">create_action metadata API</Link>:
+Once the custom types are defined, we can create an action via the <CustomLink to="#metadata_create_action">create_action metadata API</CustomLink>:
 
 ```http
 POST /v1/query HTTP/1.1
@@ -260,9 +261,9 @@ Update the `handler` to the above endpoint.
   </TabItem>
   <TabItem value="api" label="API">
 
-The action handler must be set when creating an action via the <Link to="#metadata_create_action">create_action metadata API</Link>.
+The action handler must be set when creating an action via the <CustomLink to="#metadata_create_action">create_action metadata API</CustomLink>.
 
-It can be updated later by using the <Link to="#metadata_update_action">update_action metadata API</Link>.
+It can be updated later by using the <CustomLink to="#metadata_update_action">update_action metadata API</CustomLink>.
 
   </TabItem>
 </Tabs>
@@ -302,7 +303,7 @@ Run `hasura metadata apply`.
   </TabItem>
   <TabItem value="api" label="API">
 
-An action will be created when sending a request to the <Link to="#metadata_create_action">create_action metadata API</Link>.
+An action will be created when sending a request to the <CustomLink to="#metadata_create_action">create_action metadata API</CustomLink>.
 
   </TabItem>
 </Tabs>
@@ -395,7 +396,7 @@ type AddResult {
   </TabItem>
   <TabItem value="api" label="API">
 
-It is essential that the custom types used in the action are defined *beforehand* via the <Link to="#metadata_set_custom_types">set_custom_types metadata API</Link>:
+It is essential that the custom types used in the action are defined *beforehand* via the <CustomLink to="#metadata_set_custom_types">set_custom_types metadata API</CustomLink>:
 
 ```http
 POST /v1/query HTTP/1.1
@@ -423,7 +424,7 @@ X-Hasura-Role: admin
 }
 ```
 
-Once the custom types are defined, we can create an action via the <Link to="#metadata_create_action">create_action metadata API</Link>:
+Once the custom types are defined, we can create an action via the <CustomLink to="#metadata_create_action">create_action metadata API</CustomLink>:
 
 ```http
 POST /v1/query HTTP/1.1
@@ -510,9 +511,9 @@ Update the `handler` to the above endpoint.
   <TabItem value="api" label="API">
 
 
-The action handler must be set when creating an action via the Once the custom types are defined, we can create an action via the <Link to="#metadata_create_action">create_action metadata API</Link>.
+The action handler must be set when creating an action via the Once the custom types are defined, we can create an action via the <CustomLink to="#metadata_create_action">create_action metadata API</CustomLink>.
 
-It can be updated later by using the <Link to="#metadata_update_action">update_action metadata API</Link>.
+It can be updated later by using the <CustomLink to="#metadata_update_action">update_action metadata API</CustomLink>.
   </TabItem>
 </Tabs>
 
@@ -540,7 +541,7 @@ Run `hasura metadata apply`.
   </TabItem>
   <TabItem value="api" label="API">
 
-An action will be created when sending a request to the <Link to="#metadata_create_action">create_action metadata API</Link>.
+An action will be created when sending a request to the <CustomLink to="#metadata_create_action">create_action metadata API</CustomLink>.
 
   </TabItem>
 </Tabs>

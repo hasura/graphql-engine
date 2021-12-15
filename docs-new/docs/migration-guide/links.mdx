@@ -4,6 +4,7 @@ sidebar_position: 3
 
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
+import CustomLink from '@site/src/components/CustomLink';
 
 # Links
 
@@ -36,23 +37,25 @@ Since MDX doesn't yet support this direct referencing, we have to rely on relati
   <TabItem value="sphinx" label="Sphinx - RST" default>
 
 ```rest
-    // highlight-next-line
-    :ref:`cloud_getting_started`
+// highlight-next-line
+:ref:`cloud_getting_started`
 
-    where `cloud_getting_started` is id of the document given at top of RST file.
-    
-    Link label will by default be title of page. For custom link labels, the syntax might look like below.
+where `cloud_getting_started` is id of the document given at top of RST file.
 
-    // highlight-next-line
-    :ref:`Remote schemas <remote_schemas>`
+Link label will by default be title of page. For custom link labels, the syntax might look like below.
+
+// highlight-next-line
+:ref:`Remote schemas <remote_schemas>`
 ```
 
   </TabItem>
   <TabItem value="docusaurus" label="Docusaurus - MDX">
 
-    [Getting Started With Hasura Cloud](../relative/path/to/getting-started-document)
+```markdown
+[Getting Started With Hasura Cloud](../relative/path/to/getting-started-document.mdx)
 
-    [Remote Schemas](../relative/path/to/remote-schemas-document)
+[Remote Schemas](../relative/path/to/remote-schemas-document.mdx)
+```
 
   </TabItem>
 </Tabs>
@@ -64,14 +67,16 @@ While relative paths works absolutely fine, this can easily lead to an absolute 
 To avoid this scenario, we can use root relative paths. The path will still break when moved around, but it is lot easier to find and replace. Find with old path and replace with new path.
 
 ```
-Find `/folder1/subfolder2/doc3` and replace with `/folder1/newsubfolder4/doc5`
+Find `/folder1/subfolder2/doc3.mdx` and replace with `/folder1/newsubfolder4/doc5.mdx`
 ```
 
-Since MDX doesn't yet support direct document referencing with id/ref unlike sphinx, we need to settle with root relative path liniking for now.
+Since MDX doesn't yet support direct document referencing with `id/ref` unlike sphinx, we need to settle with root relative path liniking for now.
 
-`[MDX Root Relative Link](/migration-guide/index#contents-covered)`
+```[MDX Root Relative Link](/migration-guide/index.mdx#contents-covered)```
 
-> [MDX Root Relative Link](/migration-guide/index#contents-covered)
+
+> [MDX Root Relative Link](/migration-guide/index.mdx#contents-covered)
+
 
 ## Links in React
 
@@ -86,6 +91,45 @@ import Link from '@docusaurus/Link';
 // External Link
 <Link to="https://hasura.io">Hasura</Link>
 ```
+
+## Versioned Links
+When docs are versioned there is a decent chance of broken internal links as the URL path will include a version number.
+
+External links have no effect and will link to external resource.
+
+### When using MDX links
+All absolute links will be broken and have to be manually fixed. So, it is always recommended to use root relative/relative links which would point to correct versioned docs.
+
+:::tip Dont forget the extension!
+Make sure to include file extension as MDX links are parsed a file path and will be resolved to correct version.
+:::
+
+### When using React Link
+React Link's to attribute will always accept a URL path and not file path. So, this will be broken.
+
+As a workwround, added a new `CustomLink` component which will prefix the path with respective version number.
+
+```jsx
+import Link from '@docusaurus/Link';
+import CustomLink from '@site/src/components/CustomLink';
+
+// Internal Link
+<CustomLink to="/migration-guide/links#when-using-react-link">Root Relative Versioned Links</CustomLink>
+
+// External Link - Please use Link from docusaurus.
+<Link to="https://hasura.io">Hasura</Link>
+```
+
+Verify this in versioned page of Link and here. The URL should point to correct verisoned link.
+<CustomLink to="/migration-guide/links#when-using-react-link">Root Relative Versioned Links</CustomLink>
+
+
+The base URL is prefixed by default for all internal relative links and version number is prefixed alng with base URL when using Custom Link.
+
+:::danger User for Internal Links only
+Please use CustomLink only for Internal Links with root relative path. Using for external links will break as it will be prefixed with version number.
+:::
+
 
 <hr />
 
