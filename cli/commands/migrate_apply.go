@@ -198,7 +198,7 @@ func (o *MigrateApplyOptions) Apply() (chan MigrateApplyResult, error) {
 			// if so skip this
 			return "", fmt.Errorf("skipping applying migrations on database %s, encountered: \n%s", o.Source.Name, e.Error())
 		} else if err != nil {
-			return "", fmt.Errorf("skipping applying migrations on database %s, encountered: \n%v", o.Source.Name, err)
+			return "", fmt.Errorf("skipping applying migrations on database %s, encountered: \n%w", o.Source.Name, err)
 		}
 		return "", nil
 	}
