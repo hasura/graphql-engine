@@ -91,7 +91,6 @@ import Network.HTTP.Types qualified as H
 import Network.WebSockets qualified as WS
 import StmContainers.Map qualified as STMMap
 import Language.GraphQL.Draft.Syntax (Name (..))
-import qualified Hasura.GraphQL.Execute.LiveQuery.State as LQ
 
 -- | 'LQ.LiveQueryId' comes from 'Hasura.GraphQL.Execute.LiveQuery.State.addLiveQuery'. We use
 -- this to track a connection's operations so we can remove them from 'LiveQueryState', and
@@ -627,7 +626,7 @@ onStart env enabledLogTypes serverEnv wsConn (StartMsg opId q) onMessageActions 
           actionLogMapE <- fmap fst <$> runExceptT (EA.fetchActionLogResponses actionIds)
           actionLogMap <- onLeft actionLogMapE (withComplete . preExecErr requestId)
           opMetadataE <- liftIO $ startLiveQuery liveQueryBuilder parameterizedQueryHash requestId actionLogMap
-          (lqId, opMetadata) <- onLeft opMetadataE (withComplete . preExecErr requestId)
+          (lqId, _opMetadata) <- onLeft opMetadataE (withComplete . preExecErr requestId)
 
           -- Update async action query subscription state
           case NE.nonEmpty (toList actionIds) of

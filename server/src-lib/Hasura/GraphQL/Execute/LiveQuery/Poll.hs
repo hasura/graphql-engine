@@ -49,7 +49,6 @@ import Control.Lens
 import Crypto.Hash qualified as CH
 import Data.Aeson qualified as J
 import Data.ByteString qualified as BS
-import Data.ByteString.Lazy qualified as LBS
 import Data.HashMap.Strict qualified as Map
 import Data.List.Split (chunksOf)
 import Data.Monoid (Sum (..))
