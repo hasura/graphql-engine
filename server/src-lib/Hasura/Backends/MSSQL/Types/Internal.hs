@@ -71,6 +71,7 @@ module Hasura.Backends.MSSQL.Types.Internal
     snakeCaseTableName,
     stringTypes,
     tempTableNameDeleted,
+    tempTableNameUpdated,
   )
 where
 
@@ -217,6 +218,9 @@ newtype TempTableName = TempTableName Text
 tempTableNameDeleted :: TempTableName
 tempTableNameDeleted = TempTableName "deleted"
 
+tempTableNameUpdated :: TempTableName
+tempTableNameUpdated = TempTableName "updated"
+
 data TempTable = TempTable
   { ttName :: !TempTableName,
     ttColumns :: ![ColumnName]
@@ -311,6 +315,8 @@ data Expression
   | -- | This is for getting actual atomic values out of a JSON
     -- string.
     JsonValueExpression Expression JsonPath
+  | -- | This is for evaluating SQL functions, text(e1, e2, ..).
+    FunctionExpression Text [Expression]
   | OpExpression Op Expression Expression
   | ListExpression [Expression]
   | STOpExpression SpatialOp Expression Expression

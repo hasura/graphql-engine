@@ -1,0 +1,34 @@
+type: bulk
+args:
+
+#Create tables
+- type: mssql_run_sql
+  args:
+    source: mssql
+    sql: |
+      -- author table
+      create table author(
+          id int identity not null primary key,
+          name text
+      );
+      -- article table
+      CREATE TABLE article (
+        id INT IDENTITY NOT NULL PRIMARY KEY,
+        title TEXT,
+        content TEXT,
+        author_id INTEGER REFERENCES author(id),
+        is_published BIT,
+        published_on TIMESTAMP
+      );
+      -- table with numeric columns
+      CREATE TABLE numerics (
+        id INT IDENTITY NOT NULL PRIMARY KEY,
+        numeric_col numeric,
+        decimal_col decimal,
+        int_col int,
+        smallint_col smallint,
+        float_col float,
+        real_col real,
+        bigint_col bigint,
+        tinyint_col tinyint
+      );
