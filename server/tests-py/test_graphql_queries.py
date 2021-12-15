@@ -1240,7 +1240,7 @@ class TestMissingUnauthorizedRoleAndCookie:
         check_query_f(hge_ctx, self.dir() + '/cookie_header_absent_unauth_role_not_set.yaml', transport, add_auth=False)
 
 @usefixtures('per_class_tests_db_state')
-class TestGraphQLExplain:
+class TestGraphQLExplainCommon:
     @classmethod
     def dir(cls):
         return 'queries/explain'
