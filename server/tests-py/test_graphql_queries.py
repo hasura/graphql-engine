@@ -210,6 +210,9 @@ class TestGraphQLQueryBasicBigquery:
     def test_basic_remote_join(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + "/basic_remote_joins.yaml", transport)
 
+    def test_nested_array_relationships(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + "/nested_array_relationships.yaml", transport)
+
     @classmethod
     def dir(cls):
         return 'queries/graphql_query/bigquery'
