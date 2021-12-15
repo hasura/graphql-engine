@@ -4,6 +4,8 @@ module Hasura.GraphQL.Schema.Common
     AnnotatedFields,
     ConnectionFields,
     ConnectionSelectExp,
+    AnnotatedActionField,
+    AnnotatedActionFields,
     EdgeFields,
     QueryContext (QueryContext, qcDangerousBooleanCollapse, qcFunctionPermsContext, qcQueryType, qcRemoteRelationshipContext, qcStringifyNum),
     RemoteRelationshipQueryContext (RemoteRelationshipQueryContext, _rrscParsedIntrospection),
@@ -60,6 +62,10 @@ type AnnotatedField b = IR.AnnFieldG b (IR.RemoteRelationshipField UnpreparedVal
 type ConnectionFields b = IR.ConnectionFields b (IR.RemoteRelationshipField UnpreparedValue) (UnpreparedValue b)
 
 type EdgeFields b = IR.EdgeFields b (IR.RemoteRelationshipField UnpreparedValue) (UnpreparedValue b)
+
+type AnnotatedActionFields b = IR.ActionFieldsG b (IR.RemoteRelationshipField UnpreparedValue) (UnpreparedValue b)
+
+type AnnotatedActionField b = IR.ActionFieldG b (IR.RemoteRelationshipField UnpreparedValue) (UnpreparedValue b)
 
 data RemoteRelationshipQueryContext = RemoteRelationshipQueryContext
   { _rrscIntrospectionResultOriginal :: !IntrospectionResult,

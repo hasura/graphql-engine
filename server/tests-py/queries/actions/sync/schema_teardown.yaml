@@ -22,7 +22,15 @@ args:
     clear_data: true
 - type: drop_action
   args:
+    name: get_user_by_email_nested
+    clear_data: true
+- type: drop_action
+  args:
     name: get_users_by_email
+    clear_data: true
+- type: drop_action
+  args:
+    name: get_users_by_email_nested
     clear_data: true
 - type: drop_action
   args:
@@ -31,6 +39,10 @@ args:
 - type: drop_action
   args:
     name: null_response
+    clear_data: true
+- type: drop_action
+  args:
+    name: recursive_output
     clear_data: true
 # clear custom types
 - type: set_custom_types

@@ -329,6 +329,7 @@ type NonObjectTypeMap = Map.HashMap G.Name NonObjectCustomType
 data AnnotatedObjectFieldType
   = AOFTScalar !AnnotatedScalarType
   | AOFTEnum !EnumTypeDefinition
+  | AOFTObject !G.Name
   deriving (Generic)
 
 instance J.ToJSON AnnotatedObjectFieldType where
@@ -338,6 +339,7 @@ fieldTypeToScalarType :: AnnotatedObjectFieldType -> PGScalarType
 fieldTypeToScalarType = \case
   AOFTEnum _ -> PGText
   AOFTScalar annotatedScalar -> annotatedScalarToPgScalar annotatedScalar
+  AOFTObject _ -> PGJSON
   where
     annotatedScalarToPgScalar = \case
       ASTReusedScalar _ scalarType -> scalarType

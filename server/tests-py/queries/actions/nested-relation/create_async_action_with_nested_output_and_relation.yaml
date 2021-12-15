@@ -1,0 +1,64 @@
+- description: Create an action with PG scalars in input arguments
+  url: /v1/query
+  status: 400
+  response:
+    internal:
+    - definition:
+        definition:
+          kind: asynchronous
+          output_type: UserIdObj_Fail
+          arguments:
+          - name: someInput
+            type: String!
+            description:
+          headers: []
+          handler: http://some.random/endpoint
+          type: mutation
+          timeout: 30
+          forward_client_headers: false
+        name: action_create_fail
+        comment:
+      reason: 'Inconsistent object: in action "action_create_fail"; Async action relations
+        cannot be used with object fields : "someNestedObj"'
+      name: action action_create_fail
+      type: action
+    path: "$.args[1].args"
+    error: 'Inconsistent object: in action "action_create_fail"; Async action relations
+      cannot be used with object fields : "someNestedObj"'
+    code: invalid-configuration
+  query:
+    type: bulk
+    args:
+    - type: set_custom_types
+      args:
+        objects:
+        - name: UserIdObj
+          fields:
+          - name: id
+            type: Int
+        - name: UserIdNested
+          fields:
+          - name: userObj
+            type: UserIdObj
+        - name: UserIdObj_Fail
+          fields:
+          - name: id
+            type: Int!
+          - name: someNestedObj
+            type: UserIdObj
+          relationships:
+          - name: relationship_failure
+            type: object
+            remote_table: user
+            field_mapping:
+              id: id
+    - type: create_action
+      args:
+        name: action_create_fail
+        definition:
+          kind: asynchronous
+          arguments:
+          - name: someInput
+            type: String!
+          output_type: UserIdObj_Fail
+          handler: http://some.random/endpoint
