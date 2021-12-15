@@ -22,7 +22,7 @@ import Hasura.Backends.MSSQL.FromIr as TSQL
 import Hasura.Backends.MSSQL.Plan
 import Hasura.Backends.MSSQL.SQL.Value (txtEncodedColVal)
 import Hasura.Backends.MSSQL.ToQuery as TQ
-import Hasura.Backends.MSSQL.Types.Insert (MSSQLExtraInsertData (..))
+import Hasura.Backends.MSSQL.Types.Insert (BackendInsert (..), ExtraColumnInfo (..))
 import Hasura.Backends.MSSQL.Types.Internal as TSQL
 import Hasura.Backends.MSSQL.Types.Update
 import Hasura.Base.Error
@@ -308,7 +308,7 @@ executeInsert userInfo stringifyNum sourceConfig annInsert = do
 
     buildInsertTx :: AnnInsert 'MSSQL Void Expression -> Tx.TxET QErr IO EncJSON
     buildInsertTx insert = do
-      let identityColumns = _mssqlIdentityColumns $ _aiBackendInsert $ _aiData insert
+      let identityColumns = _eciIdentityColumns $ _biExtraColumnInfo $ _aiBackendInsert $ _aiData insert
           insertColumns = concatMap (map fst . getInsertColumns) $ _aiInsObj $ _aiData insert
 
       -- Set identity insert to ON if insert object contains identity columns

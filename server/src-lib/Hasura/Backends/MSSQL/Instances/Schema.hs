@@ -9,7 +9,7 @@ import Data.List.NonEmpty qualified as NE
 import Data.Text.Encoding (encodeUtf8)
 import Data.Text.Extended
 import Database.ODBC.SQLServer qualified as ODBC
-import Hasura.Backends.MSSQL.Types.Insert (MSSQLExtraInsertData (..))
+import Hasura.Backends.MSSQL.Types.Insert (BackendInsert (..), ExtraColumnInfo (..))
 import Hasura.Backends.MSSQL.Types.Internal qualified as MSSQL
 import Hasura.Backends.MSSQL.Types.Update (BackendUpdate (..), UpdateOperator (..))
 import Hasura.Base.Error
@@ -26,7 +26,7 @@ import Hasura.Prelude
 import Hasura.RQL.IR
 import Hasura.RQL.IR.Insert qualified as IR
 import Hasura.RQL.IR.Select qualified as IR
-import Hasura.RQL.Types
+import Hasura.RQL.Types hiding (BackendInsert)
 import Language.GraphQL.Draft.Syntax qualified as G
 
 ----------------------------------------------------------------
@@ -105,7 +105,7 @@ msBuildTableInsertMutationFields
   mUpdPerms
     | supportsInserts tableInfo =
       GSB.buildTableInsertMutationFields
-        (\_sourceName tableInfo' _selectPermMaybe _updPermMaybe -> return (pure $ getExtraInsertData tableInfo'))
+        backendInsertParser
         sourceName
         tableName
         tableInfo
@@ -115,11 +115,28 @@ msBuildTableInsertMutationFields
         mUpdPerms
     | otherwise = return []
 
-getExtraInsertData :: TableInfo 'MSSQL -> MSSQLExtraInsertData v
-getExtraInsertData tableInfo =
-  let pkeyColumns = fmap (map pgiColumn . toList . _pkColumns) . _tciPrimaryKey . _tiCoreInfo $ tableInfo
-      identityColumns = _tciExtraTableMetadata $ _tiCoreInfo tableInfo
-   in MSSQLExtraInsertData (fromMaybe [] pkeyColumns) identityColumns
+backendInsertParser ::
+  forall m r n.
+  MonadBuildSchema 'MSSQL r m n =>
+  SourceName ->
+  TableInfo 'MSSQL ->
+  Maybe (SelPermInfo 'MSSQL) ->
+  Maybe (UpdPermInfo 'MSSQL) ->
+  m (InputFieldsParser n (BackendInsert (UnpreparedValue 'MSSQL)))
+backendInsertParser _sourceName tableInfo _selectPerms _updatePerms = do
+  -- Uncomment when we implement execution of upserts.
+  -- import Hasura.Backends.MSSQL.Schema.IfMatched
+  -- ifMatched <- ifMatchedFieldParser sourceName tableInfo selectPerms updatePerms
+  pure $ do
+    -- _biIfMatched <- ifMatched
+    let _biIfMatched = Nothing
+    pure $ BackendInsert {..}
+  where
+    _biExtraColumnInfo :: ExtraColumnInfo
+    _biExtraColumnInfo =
+      let pkeyColumns = fmap (map pgiColumn . toList . _pkColumns) . _tciPrimaryKey . _tiCoreInfo $ tableInfo
+          identityColumns = _tciExtraTableMetadata $ _tiCoreInfo tableInfo
+       in ExtraColumnInfo (fromMaybe [] pkeyColumns) identityColumns
 
 msBuildTableUpdateMutationFields ::
   MonadBuildSchema 'MSSQL r m n =>
