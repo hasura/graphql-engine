@@ -30,7 +30,7 @@ Example: Live location tracking
 
 Use subscriptions to show the current location of a vehicle on a map.
 
-Let's say we have the following database schema:
+Let's say we have the following database schema.  
 
 .. code-block:: sql
 
@@ -40,10 +40,9 @@ Let's say we have the following database schema:
   )
 
   vehicle_location (
-    id INT PRIMARY KEY,
+    id uuid PRIMARY KEY UNIQUE DEFAULT gen_random_uuid(),
     location TEXT,
-    timestamp TIMESTAMP,
-    /* used to create relationship 'locations' for vehicle */
+    time_stamp TIMESTAMP with time zone DEFAULT now(),
     vehicle_id INT FOREIGN KEY REFERENCES vehicle(id)
   )
 
@@ -52,38 +51,35 @@ Now we can use the following subscription to fetch the latest location of a vehi
 .. graphiql::
   :view_only:
   :query:
-    # $vehicleId = 3
-    subscription getLocation($vehicleId: Int!) {
-      vehicle(where: {id: {_eq: $vehicleId}}) {
-        id
-        vehicle_number
-        locations(order_by: {timestamp: desc}, limit: 1) {
-          location
-          timestamp
-        }
-      }
+    subscription getLocation($vehicleId: Int!) { 
+      vehicle_location(where: {vehicle_id: {_eq: $vehicleId}}, order_by: {time_stamp: desc}, limit: 1) {
+        locations {
+	        id
+	        vehicle_number
+	      }
+        location
+        time_stamp
     }
+  }
   :response:
-    {
-      "data": {
-        "vehicle": [
-          {
+  {
+    "data": {
+      "vehicle_location": [
+        {
+          "locations": {
             "id": 3,
-            "vehicle_number": "KA04AD4583",
-            "locations": [
-              {
-                "location": "(12.93623,77.61701)",
-                "timestamp": "2018-09-05T06:52:44.383588+00:00"
-              }
-            ]
-          }
-        ]
-      }
+            "vehicle_number": "KA04AD4583"
+        },  
+        "location": "52.5200, 13.4050",
+        "time_stamp": "2021-12-15T13:02:50.588724+00:00"
+        }
+      ]
     }
-
-
-Check this `sample app <https://realtime-location-tracking.demo.hasura.app/>`__ for a working demo
-(`source code <https://github.com/hasura/graphql-engine/tree/master/community/sample-apps/realtime-location-tracking>`__).
+  }
+  :variables:
+    {
+     "$vehicleId": 3
+    }
 
 .. _subscribe_table:
 
@@ -109,9 +105,9 @@ Let's say we have the following database schema:
 
   message (
     id INT PRIMARY KEY,
-    text TEXT,
-    timestamp TIMESTAMP,
-    /* used to create relationship 'author' for message */
+    texts TEXT,
+    time_stamp TIMESTAMP default now(),
+    /* used to create relationship 'author' with the 'user' table */
     user_id INT FOREIGN KEY REFERENCES user(id)
   )
 
@@ -121,9 +117,9 @@ Now we can use the following subscription to display the latest messages in a ch
   :view_only:
   :query:
     subscription getMessages {
-      message(order_by: {timestamp: desc}) {
-        text
-        timestamp
+      message(order_by: {time_stamp: desc}) {
+        texts
+        time_stamp
         author {
           username
         }
@@ -134,22 +130,22 @@ Now we can use the following subscription to display the latest messages in a ch
       "data": {
         "message": [
           {
-            "text": "I am fine.",
-            "timestamp": "2018-09-05T10:52:23.522223+00:00",
+            "texts": "I am fine, and you?",
+            "time_stamp": "2021-11-29T07:42:56.689135",
             "author": {
               "username": "Jane"
             }
           },
           {
-            "text": "Hi! How are you?",
-            "timestamp": "2018-09-05T10:52:04.75283+00:00",
+            "texts": "Hi! How are you?",
+            "time_stamp": "2021-11-29T07:42:19.506049",
             "author": {
-              "username": "Jose"
+              "username": "Musk"
             },
           },
           {
-            "text": "Hi!",
-            "timestamp": "2018-09-05T10:51:43.622839+00:00",
+            "texts": "Hi!",
+            "time_stamp": "2021-11-29T07:38:52.347136",
             "author": {
               "username": "Jane"
             }
@@ -157,9 +153,6 @@ Now we can use the following subscription to display the latest messages in a ch
         ]
       }
     }
-
-Check this `sample app <https://realtime-chat.demo.hasura.app/>`__ for a working demo
-(`source code <https://github.com/hasura/graphql-engine/tree/master/community/sample-apps/realtime-chat>`__).
 
 .. _subscribe_derived:
 
@@ -187,7 +180,7 @@ Let's say we have the following database schema:
   option (
     id INT PRIMARY KEY
     poll_id INT FOREIGN KEY REFERENCES poll(id)
-    text TEXT
+    texts TEXT
   )
 
   user (
@@ -199,7 +192,7 @@ Let's say we have the following database schema:
     id INT PRIMARY KEY,
     option_id INT FOREIGN KEY REFERENCES option(id),
     user_id INT FOREIGN KEY REFERENCES user(id),
-    timestamp TIMESTAMP
+    time_stamp TIMESTAMP
   )
 
 First, create a view ``poll_results`` to give the result of the poll:
@@ -242,7 +235,7 @@ Now we can use the following subscription to display the latest poll result:
       ) {
         poll_id
         option {
-          text
+          texts
         }
         votes
       }
@@ -255,40 +248,37 @@ Now we can use the following subscription to display the latest poll result:
             "poll_id": 1,
             "votes": 1,
             "option": {
-              "text": "Pizza"
+              "texts": "Pizza"
             }
           },
           {
             "poll_id": 1,
             "votes": 1,
             "option": {
-              "text": "Salad"
+              "texts": "Salad"
             }
           },
           {
             "poll_id": 1,
             "votes": 2,
             "option": {
-              "text": "Sandwich"
+              "texts": "Sandwich"
             }
           },
           {
             "poll_id": 1,
             "votes": 3,
             "option": {
-              "text": "Burger"
+              "texts": "Burger"
             }
           },
           {
             "poll_id": 1,
             "votes": 1,
             "option": {
-              "text": "Lasagna"
+              "texts": "Lasagna"
             }
           }
         ]
       }
     }
-
-Check this `sample app <https://realtime-poll.demo.hasura.app/>`__ for a working demo
-(`source code <https://github.com/hasura/graphql-engine/tree/master/community/sample-apps/realtime-poll>`__).
