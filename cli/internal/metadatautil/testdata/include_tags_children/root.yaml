@@ -1,0 +1,2 @@
+some: value
+foo: !include "bar/foo.yaml"

@@ -3,6 +3,8 @@ import {
   RequestTransformContentType,
 } from '../../../metadata/types';
 import {
+  SET_ENV_VARS,
+  SET_SESSION_VARS,
   SET_REQUEST_METHOD,
   SET_REQUEST_URL,
   SET_REQUEST_URL_ERROR,
@@ -17,6 +19,8 @@ import {
   SET_REQUEST_URL_TRANSFORM,
   SET_REQUEST_PAYLOAD_TRANSFORM,
   SET_REQUEST_TRANSFORM_STATE,
+  SetEnvVars,
+  SetSessionVars,
   SetRequestMethod,
   SetRequestUrl,
   SetRequestUrlError,
@@ -41,6 +45,19 @@ import {
   defaultEventRequestBody,
   defaultEventRequestSampleInput,
 } from './stateDefaults';
+import { getSessionVarsFromLS, getEnvVarsFromLS } from './utils';
+
+export const setEnvVars = (envVars: KeyValuePair[]): SetEnvVars => ({
+  type: SET_ENV_VARS,
+  envVars,
+});
+
+export const setSessionVars = (
+  sessionVars: KeyValuePair[]
+): SetSessionVars => ({
+  type: SET_SESSION_VARS,
+  sessionVars,
+});
 
 export const setRequestMethod = (
   requestMethod: RequestTransformMethod
@@ -137,6 +154,8 @@ export const setRequestTransformState = (
 });
 
 export const requestTransformState: RequestTransformState = {
+  envVars: [],
+  sessionVars: [],
   requestMethod: null,
   requestUrl: '',
   requestUrlError: '',
@@ -156,6 +175,8 @@ export const requestTransformState: RequestTransformState = {
 export const getActionRequestTransformDefaultState = (): RequestTransformState => {
   return {
     ...requestTransformState,
+    envVars: getEnvVarsFromLS(),
+    sessionVars: getSessionVarsFromLS(),
     requestQueryParams: [{ name: '', value: '' }],
     requestAddHeaders: [{ name: '', value: '' }],
     requestBody: defaultActionRequestBody,
@@ -166,6 +187,8 @@ export const getActionRequestTransformDefaultState = (): RequestTransformState =
 export const getEventRequestTransformDefaultState = (): RequestTransformState => {
   return {
     ...requestTransformState,
+    envVars: getEnvVarsFromLS(),
+    sessionVars: getSessionVarsFromLS(),
     requestQueryParams: [{ name: '', value: '' }],
     requestAddHeaders: [{ name: '', value: '' }],
     requestBody: defaultEventRequestBody,
@@ -178,6 +201,16 @@ export const requestTransformReducer = (
   action: RequestTransformEvents
 ): RequestTransformState => {
   switch (action.type) {
+    case SET_ENV_VARS:
+      return {
+        ...state,
+        envVars: action.envVars,
+      };
+    case SET_SESSION_VARS:
+      return {
+        ...state,
+        sessionVars: action.sessionVars,
+      };
     case SET_REQUEST_METHOD:
       return {
         ...state,

@@ -128,7 +128,7 @@ fromSelectRows annSelectG = do
   selectFrom <-
     case from of
       IR.FromTable qualifiedObject -> fromQualifiedTable qualifiedObject
-      IR.FromIdentifier identifier -> pure $ FromIdentifier identifier
+      IR.FromIdentifier identifier -> pure $ FromIdentifier $ IR.unFIIdentifier identifier
       IR.FromFunction {} -> refute $ pure FunctionNotSupported
   Args
     { argsOrderBy,
@@ -270,7 +270,7 @@ fromSelectAggregate
     do
       selectFrom <- case from of
         IR.FromTable qualifiedObject -> fromQualifiedTable qualifiedObject
-        IR.FromIdentifier identifier -> pure $ FromIdentifier identifier
+        IR.FromIdentifier identifier -> pure $ FromIdentifier $ IR.unFIIdentifier identifier
         IR.FromFunction {} -> refute $ pure FunctionNotSupported
       -- Below: When we're actually a RHS of a query (of CROSS APPLY),
       -- then we'll have a LHS table that we're joining on. So we get the
@@ -1071,7 +1071,7 @@ fromInsert IR.AnnInsert {..} =
       insertRows = normalizeInsertRows _aiData $ map (IR.getInsertColumns) _aiInsObj
       insertColumnNames = maybe [] (map fst) $ listToMaybe insertRows
       insertValues = map (Values . map snd) insertRows
-      primaryKeyColumns = map OutputColumn $ _mssqlPrimaryKeyColumns _aiExtraInsertData
+      primaryKeyColumns = map OutputColumn $ _mssqlPrimaryKeyColumns _aiBackendInsert
    in Insert _aiTableName insertColumnNames (Output Inserted primaryKeyColumns) insertValues
 
 -- | Normalize a row by adding missing columns with 'DEFAULT' value and sort by column name to make sure
@@ -1097,7 +1097,7 @@ fromInsert IR.AnnInsert {..} =
 normalizeInsertRows :: IR.AnnIns 'MSSQL [] Expression -> [[(Column 'MSSQL, Expression)]] -> [[(Column 'MSSQL, Expression)]]
 normalizeInsertRows IR.AnnIns {..} insertRows =
   let isIdentityColumn column =
-        IR.pgiColumn column `elem` _mssqlIdentityColumns _aiExtraInsertData
+        IR.pgiColumn column `elem` _mssqlIdentityColumns _aiBackendInsert
       allColumnsWithDefaultValue =
         -- DEFAULT or NULL are not allowed as explicit identity values.
         map ((,DefaultExpression) . IR.pgiColumn) $ filter (not . isIdentityColumn) _aiTableCols

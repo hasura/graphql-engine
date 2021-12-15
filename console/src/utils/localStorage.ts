@@ -97,6 +97,7 @@ export const LS_KEYS = {
   showConsoleOnboarding: 'console:showConsoleOnboarding',
   versionUpdateCheckLastClosed: 'console:versionUpdateCheckLastClosed',
   vpcBannerLastDismissed: 'console:vpcBannerLastDismissed',
+  webhookTransformEnvVars: 'console:webhookTransformEnvVars',
 };
 
 export const clearGraphiqlLS = () => {

@@ -84,6 +84,27 @@ func (ir *InheritedRolesConfig) Filename() string {
 	return "inherited_roles.yaml"
 }
 
+func (ir *InheritedRolesConfig) GetFiles() ([]string, metadataobject.ErrParsingMetadataObject) {
+	rootFile := filepath.Join(ir.BaseDirectory(), ir.Filename())
+	files, err := metadataobject.DefaultGetFiles(rootFile)
+	if err != nil {
+		return nil, ir.error(err)
+	}
+	return files, nil
+}
+
+func (ir *InheritedRolesConfig) WriteDiff(opts metadataobject.WriteDiffOpts) metadataobject.ErrParsingMetadataObject {
+	err := metadataobject.DefaultWriteDiff(metadataobject.DefaultWriteDiffOpts{From: ir, WriteDiffOpts: opts})
+	if err != nil {
+		return ir.error(err)
+	}
+	return nil
+}
+
+func (ir *InheritedRolesConfig) BaseDirectory() string {
+	return ir.MetadataDir
+}
+
 func (ir *InheritedRolesConfig) error(err error, additionalContext ...string) metadataobject.ErrParsingMetadataObject {
 	return metadataobject.NewErrParsingMetadataObject(ir, err, additionalContext...)
 }

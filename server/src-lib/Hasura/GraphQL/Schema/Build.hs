@@ -117,6 +117,7 @@ buildTableStreamingSubscriptionFields sourceName sourceInfo queryTagsConfig tabl
 buildTableInsertMutationFields ::
   forall b r m n.
   MonadBuildSchema b r m n =>
+  (SourceName -> TableInfo b -> Maybe (SelPermInfo b) -> Maybe (UpdPermInfo b) -> m (InputFieldsParser n (BackendInsert b (UnpreparedValue b)))) ->
   SourceName ->
   TableName b ->
   TableInfo b ->
@@ -126,6 +127,7 @@ buildTableInsertMutationFields ::
   Maybe (UpdPermInfo b) ->
   m [FieldParser n (AnnInsert b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
 buildTableInsertMutationFields
+  backendInsertAction
   sourceName
   tableName
   tableInfo
@@ -141,12 +143,12 @@ buildTableInsertMutationFields
           insertOneDesc = Just $ G.Description $ "insert a single row into the table: " <>> tableName
       insertName <- mkRootFieldName $ fromMaybe ($$(G.litName "insert_") <> gqlName) $ _tcrfInsert customRootFields
       insertOneName <- mkRootFieldName $ fromMaybe ($$(G.litName "insert_") <> gqlName <> $$(G.litName "_one")) $ _tcrfInsertOne customRootFields
-      insert <- insertIntoTable sourceName tableInfo insertName insertDesc insPerms mSelPerms mUpdPerms
+      insert <- insertIntoTable backendInsertAction sourceName tableInfo insertName insertDesc insPerms mSelPerms mUpdPerms
       -- Select permissions are required for insertOne: the selection set is the
       -- same as a select on that table, and it therefore can't be populated if the
       -- user doesn't have select permissions.
       insertOne <- for mSelPerms \selPerms ->
-        insertOneIntoTable sourceName tableInfo insertOneName insertOneDesc insPerms selPerms mUpdPerms
+        insertOneIntoTable backendInsertAction sourceName tableInfo insertOneName insertOneDesc insPerms selPerms mUpdPerms
       pure $ insert : maybeToList insertOne
 
 -- | This function is the basic building block for update mutations. It

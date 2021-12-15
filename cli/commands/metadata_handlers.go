@@ -13,7 +13,6 @@ import (
 	"github.com/hasura/graphql-engine/cli/v2"
 	"github.com/hasura/graphql-engine/cli/v2/internal/projectmetadata"
 	"github.com/pkg/errors"
-	"gopkg.in/yaml.v2"
 )
 
 type MetadataModeHandler interface {
@@ -103,12 +102,14 @@ func (m *metadataModeDirectoryHandler) Diff(o *MetadataDiffOptions) error {
 	messageFormat := "Showing diff between %s and %s..."
 	message := ""
 	metadataHandler := projectmetadata.NewHandlerFromEC(o.EC)
-	from := "project"
-	to := "server"
+	fromFriendlyName := "project"
+	toFriendlyName := "server"
+	fromDirectory, toDirectory := "", ""
 	switch len(args) {
 	case 0:
 		o.Metadata[0] = o.EC.MetadataDir
-		from = "project"
+		fromFriendlyName = "project"
+		fromDirectory = o.EC.MetadataDir
 	case 1:
 		// 1 arg, diff given directory and the metadata on server
 		err := checkDir(args[0])
@@ -116,26 +117,34 @@ func (m *metadataModeDirectoryHandler) Diff(o *MetadataDiffOptions) error {
 			return err
 		}
 		o.Metadata[0] = args[0]
-		from = o.Metadata[0]
+		fromFriendlyName = o.Metadata[0]
+		fromDirectory = o.Metadata[0]
 	case 2:
 		err := checkDir(args[0])
 		if err != nil {
 			return err
 		}
 		o.Metadata[0] = args[0]
-		from = o.Metadata[0]
+		fromFriendlyName = o.Metadata[0]
+		fromDirectory = o.Metadata[0]
 
 		err = checkDir(args[1])
 		if err != nil {
 			return err
 		}
 		o.Metadata[1] = args[1]
-		to = o.Metadata[1]
+		toFriendlyName = o.Metadata[1]
+		toDirectory = o.Metadata[1]
 	}
-	message = fmt.Sprintf(messageFormat, from, to)
+
+	message = fmt.Sprintf(messageFormat, fromFriendlyName, toFriendlyName)
 	o.EC.Logger.Info(message)
-	var oldYaml, newYaml []byte
+
 	if o.Metadata[1] == "" {
+		// if no arguments are provided to `metadata diff` command, then it means
+		// we have to compare project directory with the server
+		// For that, we are creating a temporary metadata directory and exporting
+		// metadata from the server to it and then setting it as the "toDirectory"
 		tmpDir, err := ioutil.TempDir("", "*")
 		if err != nil {
 			return err
@@ -151,37 +160,32 @@ func (m *metadataModeDirectoryHandler) Diff(o *MetadataDiffOptions) error {
 		if err != nil {
 			return err
 		}
-	} else {
-		metadataHandler.SetMetadataObjects(projectmetadata.GetMetadataObjectsWithDir(o.EC, o.Metadata[1]))
+		toDirectory = tmpDir
 	}
-
-	// build server metadata
-	serverMeta, err := metadataHandler.BuildMetadata()
-	if err != nil {
-		return err
+	if len(o.DiffType) > 0 {
+		opts := printGeneratedMetadataFileDiffOpts{
+			projectMetadataHandler: metadataHandler,
+			fromProjectDirectory:   fromDirectory,
+			toProjectDirectory:     toDirectory,
+			fromFriendlyName:       fromFriendlyName,
+			toFriendlyName:         toFriendlyName,
+			disableColor:           o.DisableColor,
+			diffType:               DiffType(o.DiffType),
+			metadataMode:           o.EC.MetadataMode,
+			writer:                 o.Output,
+			ec:                     o.EC,
+		}
+		return printGeneratedMetadataFileDiffBetweenProjectDirectories(opts)
 	}
-	newYaml, err = yaml.Marshal(serverMeta)
-	if err != nil {
-		return errors.Wrap(err, "cannot unmarshall server metadata")
+	opts := projectmetadata.PrintContextRichDiffBetweenProjectDirectoriesOpts{
+		EC:              o.EC,
+		MetadataHandler: metadataHandler,
+		FromDirectory:   toDirectory,
+		ToDirectory:     fromDirectory,
+		Writer:          o.Output,
+		DisableColor:    o.DisableColor,
 	}
-
-	// build local metadata
-	metadataHandler.SetMetadataObjects(projectmetadata.GetMetadataObjectsWithDir(o.EC, o.Metadata[0]))
-	localMeta, err := metadataHandler.BuildMetadata()
-	if err != nil {
-		return err
-	}
-	oldYaml, err = yaml.Marshal(localMeta)
-	if err != nil {
-		return errors.Wrap(err, "cannot unmarshal local metadata")
-	}
-
-	// Here oldYaml is project's metadata and newYaml is server's metadata for having diff similar to git diff i.e taking server has base before has been taken as server's metadata
-	err = printDiff(string(newYaml), string(oldYaml), to, from, o.Output, o.DiffType, o.DisableColor)
-	if err != nil {
-		return err
-	}
-	return nil
+	return projectmetadata.PrintContextRichDiffBetweenProjectDirectories(opts)
 }
 
 type metadataModeJSONHandler struct{}
@@ -195,7 +199,7 @@ func (m *metadataModeJSONHandler) Apply(o *MetadataApplyOptions) error {
 }
 
 func (m *metadataModeJSONHandler) Diff(o *MetadataDiffOptions) error {
-	return diff(o, o.EC.MetadataMode)
+	return diff(o, DifftypeJSON)
 }
 
 type metadataModeYAMLHandler struct{}
@@ -209,7 +213,7 @@ func (m *metadataModeYAMLHandler) Apply(o *MetadataApplyOptions) error {
 }
 
 func (m *metadataModeYAMLHandler) Diff(o *MetadataDiffOptions) error {
-	return diff(o, o.EC.MetadataMode)
+	return diff(o, DifftypeYAML)
 }
 
 func export(o *MetadataExportOptions, mode cli.MetadataMode) error {
@@ -287,7 +291,7 @@ func apply(o *MetadataApplyOptions, mode cli.MetadataMode) error {
 	return nil
 }
 
-func diff(o *MetadataDiffOptions, mode cli.MetadataMode) error {
+func diff(o *MetadataDiffOptions, diffType DiffType) error {
 	if len(o.Args) > 0 {
 		return fmt.Errorf("expected 0 arguments, found: %v", o.Args)
 	}
@@ -300,7 +304,7 @@ func diff(o *MetadataDiffOptions, mode cli.MetadataMode) error {
 	if err != nil {
 		return fmt.Errorf("reading server metadata: %w", err)
 	}
-	if mode == cli.MetadataModeYAML {
+	if diffType == DifftypeYAML {
 		serverMetadataBytes, err = goyaml.JSONToYAML(serverMetadataBytes)
 		if err != nil {
 			return fmt.Errorf("parsing server metadata as yaml: %w", err)
@@ -310,5 +314,5 @@ func diff(o *MetadataDiffOptions, mode cli.MetadataMode) error {
 	if err != nil {
 		return fmt.Errorf("reading local metadata: %w", err)
 	}
-	return printDiff(string(serverMetadataBytes), string(localMetadataBytes), "server", "project", o.Output, o.DiffType, !o.EC.IsTerminal)
+	return printMyersDiff(string(serverMetadataBytes), string(localMetadataBytes), "server", "project", o.Output, o.DisableColor)
 }

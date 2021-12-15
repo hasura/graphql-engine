@@ -64,12 +64,10 @@ const RequestUrlEditor: React.FC<RequestUrlEditorProps> = ({
   );
 
   const urlOnChangeHandler = (val: string) => {
-    setLocalError(null);
     setLocalUrl(val);
   };
 
   const queryParamsOnChangeHandler = (val: KeyValuePair[]) => {
-    setLocalError(null);
     setLocalQueryParams(val);
   };
 
@@ -108,6 +106,7 @@ const RequestUrlEditor: React.FC<RequestUrlEditorProps> = ({
         <KeyValueInput
           pairs={localQueryParams}
           setPairs={queryParamsOnChangeHandler}
+          testId="query-params"
         />
       </div>
       <div className="grid gap-3 grid-cols-3 mb-sm">

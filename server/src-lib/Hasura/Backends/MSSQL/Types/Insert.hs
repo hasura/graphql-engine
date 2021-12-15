@@ -5,8 +5,10 @@ module Hasura.Backends.MSSQL.Types.Insert
 where
 
 import Hasura.Backends.MSSQL.Types.Internal
+import Hasura.Prelude
 
-data MSSQLExtraInsertData = MSSQLExtraInsertData
+data MSSQLExtraInsertData v = MSSQLExtraInsertData
   { _mssqlPrimaryKeyColumns :: ![ColumnName],
     _mssqlIdentityColumns :: ![ColumnName]
   }
+  deriving (Functor, Foldable, Traversable)

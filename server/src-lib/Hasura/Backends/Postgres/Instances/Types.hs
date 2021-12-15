@@ -15,6 +15,7 @@ import Hasura.Backends.Postgres.SQL.Types qualified as PG
 import Hasura.Backends.Postgres.SQL.Value qualified as PG
 import Hasura.Backends.Postgres.Types.BoolExp qualified as PG
 import Hasura.Backends.Postgres.Types.CitusExtraTableMetadata qualified as Citus
+import Hasura.Backends.Postgres.Types.Insert qualified as PG (BackendInsert)
 import Hasura.Backends.Postgres.Types.Update qualified as PG
 import Hasura.Base.Error
 import Hasura.Prelude
@@ -59,7 +60,6 @@ instance
   where
   type SourceConfig ('Postgres pgKind) = PG.PGSourceConfig
   type SourceConnConfiguration ('Postgres pgKind) = PG.PostgresConnConfiguration
-  type Identifier ('Postgres pgKind) = PG.Identifier
   type TableName ('Postgres pgKind) = PG.QualifiedTable
   type FunctionName ('Postgres pgKind) = PG.QualifiedFunction
   type FunctionArgType ('Postgres pgKind) = PG.QualifiedPGType
@@ -78,13 +78,12 @@ instance
   type BackendUpdate ('Postgres pgKind) = PG.BackendUpdate
 
   type ExtraTableMetadata ('Postgres pgKind) = PgExtraTableMetadata pgKind
-  type ExtraInsertData ('Postgres pgKind) = ()
+  type BackendInsert ('Postgres pgKind) = PG.BackendInsert pgKind
 
   type XComputedField ('Postgres pgKind) = XEnable
   type XRelay ('Postgres pgKind) = XEnable
   type XNodesAgg ('Postgres pgKind) = XEnable
   type XNestedInserts ('Postgres pgKind) = XEnable
-  type XOnConflict ('Postgres pgKind) = XEnable
   type XStreamingSubscription ('Postgres pgKind) = XEnable
 
   functionArgScalarType = PG.mkFunctionArgScalarType

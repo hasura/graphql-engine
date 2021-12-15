@@ -11,6 +11,8 @@ where
 
 import Control.Lens (makeLenses, makePrisms)
 import Data.Aeson
+import Data.Aeson qualified as J
+import Data.Aeson.TH qualified as J
 import Hasura.Incremental (Cacheable)
 import Hasura.Prelude
 import Hasura.RQL.Types.Common
@@ -55,43 +57,37 @@ data RemoteRelationshipDefinition
 
 instance Cacheable RemoteRelationshipDefinition
 
-instance FromJSON RemoteRelationship where
-  parseJSON = withObject "RemoteRelationship" \obj -> do
-    relName <- obj .: "name"
+instance FromJSON RemoteRelationshipDefinition where
+  parseJSON = withObject "RemoteRelationshipDefinition" \obj -> do
     oldRSName <- obj .:? "remote_schema"
-    newDefinition <- obj .:? "definition"
-    definition <- case (oldRSName, newDefinition) of
-      (Just rsName, Nothing) -> do
+    case oldRSName of
+      Just rsName -> do
         hFields <- obj .: "hasura_fields"
         rField <- obj .: "remote_field"
         pure $ RelationshipToSchema RRFOldDBToRemoteSchema $ ToSchemaRelationshipDef rsName hFields rField
-      (Nothing, Just def) -> do
-        toSource <- def .:? "to_source"
-        toSchema <- def .:? "to_remote_schema"
+      Nothing -> do
+        toSource <- obj .:? "to_source"
+        toSchema <- obj .:? "to_remote_schema"
         case (toSchema, toSource) of
           (Just schema, Nothing) -> RelationshipToSchema RRFUnifiedFormat <$> parseJSON schema
           (Nothing, Just source) -> RelationshipToSource <$> parseJSON source
           _ -> fail "remote relationship definition expects exactly one of: to_source, to_remote_schema"
-      _ -> fail "remote relationship definition expects exactly one of: definition, remote_schema"
-    pure $ RemoteRelationship relName definition
 
-instance ToJSON RemoteRelationship where
-  toJSON RemoteRelationship {..} =
-    object $
-      ("name" .= _rrName) : case _rrDefinition of
-        RelationshipToSource source -> definition ["to_source" .= toJSON source]
-        RelationshipToSchema format schema@ToSchemaRelationshipDef {..} -> case format of
-          RRFUnifiedFormat -> definition ["to_remote_schema" .= toJSON schema]
-          RRFOldDBToRemoteSchema ->
-            [ "remote_schema" .= toJSON _trrdRemoteSchema,
-              "hasura_fields" .= toJSON _trrdLhsFields,
-              "remote_field" .= toJSON _trrdRemoteField
-            ]
-    where
-      definition d = ["definition" .= object d]
+instance ToJSON RemoteRelationshipDefinition where
+  toJSON = \case
+    RelationshipToSource source -> object ["to_source" .= toJSON source]
+    RelationshipToSchema format schema@ToSchemaRelationshipDef {..} -> case format of
+      RRFUnifiedFormat -> object ["to_remote_schema" .= toJSON schema]
+      RRFOldDBToRemoteSchema ->
+        object
+          [ "remote_schema" .= toJSON _trrdRemoteSchema,
+            "hasura_fields" .= toJSON _trrdLhsFields,
+            "remote_field" .= toJSON _trrdRemoteField
+          ]
 
 --------------------------------------------------------------------------------
 -- template haskell generation
 
 $(makeLenses ''RemoteRelationship)
+$(J.deriveJSON hasuraJSON {J.omitNothingFields = False} ''RemoteRelationship)
 $(makePrisms ''RemoteRelationshipDefinition)

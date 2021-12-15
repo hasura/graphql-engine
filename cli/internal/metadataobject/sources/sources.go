@@ -151,7 +151,7 @@ func (t *SourceConfig) Build(metadata *goyaml.MapSlice) metadataobject.ErrParsin
 		Value: []yaml.MapSlice{},
 	}
 	if err := v3yaml.Unmarshal(sourcesStructBytes, &item.Value); err != nil {
-		return t.error(fmt.Errorf("parsing error: %w \n%v\n", err, string(sourcesStructBytes)))
+		return t.error(fmt.Errorf("parsing error: %w \n%v", err, string(sourcesStructBytes)))
 	}
 	*metadata = append(*metadata, item)
 	return nil
@@ -282,12 +282,34 @@ func (t *SourceConfig) Export(metadata goyaml.MapSlice) (map[string][]byte, meta
 	return files, nil
 }
 
+func (t *SourceConfig) GetFiles() ([]string, metadataobject.ErrParsingMetadataObject) {
+	rootFile := filepath.Join(t.MetadataDir, sourcesDirectory, t.Filename())
+	files, err := metadataobject.DefaultGetFiles(rootFile)
+	if err != nil {
+		return nil, t.error(err)
+	}
+	return files, nil
+}
+
 func (t *SourceConfig) Key() string {
 	return "sources"
 }
 
 func (t *SourceConfig) Filename() string {
 	return "databases.yaml"
+}
+
+func (t *SourceConfig) BaseDirectory() string {
+	return t.MetadataDir
+}
+
+func (t *SourceConfig) WriteDiff(opts metadataobject.WriteDiffOpts) metadataobject.ErrParsingMetadataObject {
+	excludePatterns := []string{"tables/tables.yaml", "functions/functions.yaml"}
+	err := metadataobject.DefaultWriteDiff(metadataobject.DefaultWriteDiffOpts{From: t, WriteDiffOpts: opts, ExcludeFilesPatterns: excludePatterns})
+	if err != nil {
+		return t.error(err)
+	}
+	return nil
 }
 
 func (t *SourceConfig) error(err error, additionalContext ...string) metadataobject.ErrParsingMetadataObject {

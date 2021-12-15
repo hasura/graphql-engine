@@ -243,8 +243,9 @@ mutateAndFetchCols qt cols (cte, p) strfyNum = do
     then withCheckPermission $ (first Q.getAltJ . Q.getRow) <$> mutationTx
     else (Q.getAltJ . runIdentity . Q.getRow) <$> mutationTx
   where
-    aliasIdentifier = Identifier $ qualifiedObjectToText qt <> "__mutation_result"
-    tabFrom = FromIdentifier aliasIdentifier
+    rawAliasIdentifier = qualifiedObjectToText qt <> "__mutation_result"
+    aliasIdentifier = Identifier rawAliasIdentifier
+    tabFrom = FromIdentifier $ FIIdentifier rawAliasIdentifier
     tabPerm = TablePerm annBoolExpTrue Nothing
     selFlds = flip map cols $
       \ci -> (fromCol @('Postgres pgKind) $ pgiColumn ci, mkAnnColumnFieldAsText ci)

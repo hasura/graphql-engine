@@ -12,6 +12,7 @@ module Hasura.Backends.Postgres.Translate.Returning
   )
 where
 
+import Data.Coerce
 import Hasura.Backends.Postgres.SQL.DML qualified as S
 import Hasura.Backends.Postgres.SQL.Types
 import Hasura.Backends.Postgres.Translate.Select
@@ -20,7 +21,7 @@ import Hasura.Prelude
 import Hasura.RQL.DML.Internal
 import Hasura.RQL.IR.Returning
 import Hasura.RQL.IR.Select
-import Hasura.RQL.Types hiding (Identifier)
+import Hasura.RQL.Types
 import Hasura.Session
 
 -- | The postgres common table expression (CTE) for mutation queries.
@@ -92,11 +93,15 @@ mkMutFldExp cteAlias preCalAffRows strfyNum = \case
      in maybe countExp (S.SEUnsafe . tshow) preCalAffRows
   MExp t -> S.SELit t
   MRet selFlds ->
-    let tabFrom = FromIdentifier cteAlias
+    let tabFrom = FromIdentifier $ toFIIdentifier cteAlias
         tabPerm = TablePerm annBoolExpTrue Nothing
      in S.SESelect $
           mkSQLSelect JASMultipleRows $
             AnnSelectG selFlds tabFrom tabPerm noSelectArgs strfyNum
+
+toFIIdentifier :: Identifier -> FIIdentifier
+toFIIdentifier = coerce . getIdenTxt
+{-# INLINE toFIIdentifier #-}
 
 {- Note [Mutation output expression]
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -167,7 +172,7 @@ mkMutationOutputExp qt allCols preCalAffRows cte mutOutput strfyNum =
                     ]
              in S.SEFnApp "json_build_object" jsonBuildObjArgs Nothing
           MOutSinglerowObject annFlds ->
-            let tabFrom = FromIdentifier allColumnsAlias
+            let tabFrom = FromIdentifier $ toFIIdentifier allColumnsAlias
                 tabPerm = TablePerm annBoolExpTrue Nothing
              in S.SESelect $
                   mkSQLSelect JASSingleObject $

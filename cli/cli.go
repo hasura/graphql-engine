@@ -233,11 +233,6 @@ func (c *ServerConfig) GetHasuraInternalServerConfig() error {
 // HasuraServerConfig is the type returned by the v1alpha1/config API
 // TODO: Move this type to a client implementation for hasura
 type HasuraServerInternalConfig struct {
-	Version          string `json:"version"`
-	IsAdminSecretSet bool   `json:"is_admin_secret_set"`
-	IsAuthHookSet    bool   `json:"is_auth_hook_set"`
-	IsJwtSet         bool   `json:"is_jwt_set"`
-	JWT              string `json:"jwt"`
 	ConsoleAssetsDir string `json:"console_assets_dir"`
 }
 
@@ -330,6 +325,7 @@ func (s *ServerConfig) SetHTTPClient() error {
 	s.HTTPClient = &http.Client{Transport: http.DefaultTransport}
 	if s.TLSConfig != nil {
 		tr := &http.Transport{TLSClientConfig: s.TLSConfig}
+		tr.Proxy = http.ProxyFromEnvironment
 		s.HTTPClient.Transport = tr
 	}
 	return nil
@@ -724,6 +720,7 @@ func (ec *ExecutionContext) Validate() error {
 		&http.Client{
 			Transport: &http.Transport{
 				TLSClientConfig: ec.Config.TLSConfig,
+				Proxy:           http.ProxyFromEnvironment,
 			},
 		},
 		ec.Config.Endpoint,

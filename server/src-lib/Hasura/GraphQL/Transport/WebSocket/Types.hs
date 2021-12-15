@@ -13,7 +13,6 @@ import Control.Concurrent.STM qualified as STM
 import Data.Time.Clock qualified as TC
 import Hasura.GraphQL.Execute qualified as E
 import Hasura.GraphQL.Execute.LiveQuery.State qualified as LQ
-import Hasura.GraphQL.Transport.HTTP.Protocol
 import Hasura.GraphQL.Transport.Instances ()
 import Hasura.GraphQL.Transport.WebSocket.Protocol
 import Hasura.GraphQL.Transport.WebSocket.Server qualified as WS

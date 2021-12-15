@@ -95,6 +95,27 @@ func (c *CronTriggers) Filename() string {
 	return "cron_triggers.yaml"
 }
 
+func (c *CronTriggers) GetFiles() ([]string, metadataobject.ErrParsingMetadataObject) {
+	rootFile := filepath.Join(c.BaseDirectory(), c.Filename())
+	files, err := metadataobject.DefaultGetFiles(rootFile)
+	if err != nil {
+		return nil, c.error(err)
+	}
+	return files, nil
+}
+
+func (c *CronTriggers) WriteDiff(opts metadataobject.WriteDiffOpts) metadataobject.ErrParsingMetadataObject {
+	err := metadataobject.DefaultWriteDiff(metadataobject.DefaultWriteDiffOpts{From: c, WriteDiffOpts: opts})
+	if err != nil {
+		return c.error(err)
+	}
+	return nil
+}
+
+func (c *CronTriggers) BaseDirectory() string {
+	return c.MetadataDir
+}
+
 func (c *CronTriggers) error(err error, additionalContext ...string) metadataobject.ErrParsingMetadataObject {
 	return metadataobject.NewErrParsingMetadataObject(c, err, additionalContext...)
 }

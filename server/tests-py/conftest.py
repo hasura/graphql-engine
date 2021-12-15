@@ -156,6 +156,12 @@ This option may result in test failures if the schema has to change between the 
     )
 
     parser.addoption(
+        "--test-no-cookie-and-unauth-role",
+        action="store_true",
+        help="Run testcases for no unauthorized role and no cookie jwt header set (cookie auth is set as part of jwt config upon engine startup)",
+    )
+
+    parser.addoption(
         "--enable-remote-schema-permissions",
         action="store_true",
         default=False,

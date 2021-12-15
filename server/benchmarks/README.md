@@ -57,7 +57,20 @@ be ignored.
   cautious when drawing inferences from a _comparison_ of tail latencies between
   versions.
 
-## Adding a new benchmark
+- If **Memory Residency** has changed:
+  - `live_bytes` is just the total size of heap objects after GC, and is quite 
+    deterministic; `mem_in_use` is closer to what users experience in their nice graphs
+  - does the regression show up in `huge_schema`? If not maybe a function was
+    turned into a CAF. Small, constant memory usage increases are probably not
+    a big deal
+
+    The following is good background for `mem_in_use` vs. `live_bytes`, and why
+    we might care:
+
+    https://well-typed.com/blog/2021/01/fragmentation-deeper-look/
+    https://well-typed.com/blog/2021/03/memory-return/
+
+## Adding a new benchmark and reviewing
 
 You'll create a new directory under `benchmark_sets/`, and in general can
 follow the pattern from `chinook`. The process looks like:
@@ -95,3 +108,7 @@ If a benchmark set is not fairly stable, or you're not sure if it is, add an
 empty file named `SKIP_PR_REPORT` in the benchmark set's directory; this will
 prevent display of regression numbers in the PR comment body, but will still
 run and record the benchmarks.
+
+**For code reviewers**: help double-check the above, in particular look for
+errors in K6 output. Take a look at the detailed GUI report, make sure if using
+`constant-arrival-rate` that the query can keep up with load.

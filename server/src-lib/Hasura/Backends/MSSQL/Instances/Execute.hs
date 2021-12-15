@@ -307,7 +307,7 @@ executeInsert userInfo stringifyNum sourceConfig annInsert = do
 
     buildInsertTx :: AnnInsert 'MSSQL Void Expression -> Tx.TxET QErr IO EncJSON
     buildInsertTx insert = do
-      let identityColumns = _mssqlIdentityColumns $ _aiExtraInsertData $ _aiData insert
+      let identityColumns = _mssqlIdentityColumns $ _aiBackendInsert $ _aiData insert
           insertColumns = concatMap (map fst . getInsertColumns) $ _aiInsObj $ _aiData insert
 
       -- Set identity insert to ON if insert object contains identity columns
@@ -475,7 +475,7 @@ mkSelect ::
   Fields (AnnFieldG 'MSSQL Void Expression) ->
   m Select
 mkSelect stringifyNum withAlias jsonAggSelect annFields = do
-  let annSelect = IR.AnnSelectG annFields (IR.FromIdentifier withAlias) IR.noTablePermissions IR.noSelectArgs stringifyNum
+  let annSelect = IR.AnnSelectG annFields (IR.FromIdentifier $ FIIdentifier withAlias) IR.noTablePermissions IR.noSelectArgs stringifyNum
   V.runValidate (runFromIr $ mkSQLSelect jsonAggSelect annSelect) `onLeft` (throw500 . tshow)
 
 -- SELECT COUNT(*) AS "count" FROM [with_alias]

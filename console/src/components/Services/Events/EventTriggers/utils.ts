@@ -134,11 +134,20 @@ const getValueFromDataType = (type: string, value: string): ColVals => {
 };
 
 const getColumnDataFromOpCols = (
-  operationColumns: ETOperationColumn[]
+  operationColumns: ETOperationColumn[],
+  opValue: string,
+  isAllColumnsChecked?: boolean
 ): Record<string, ColVals> => {
   const colData: Record<string, ColVals> = {};
   operationColumns.forEach(op => {
-    if (op.enabled) {
+    if (
+      opValue === 'INSERT' ||
+      opValue === 'MANUAL' ||
+      opValue === 'DELETE' ||
+      isAllColumnsChecked
+    ) {
+      colData[op.name] = getValueFromDataType(op.type, op.name);
+    } else if (op.enabled) {
       colData[op.name] = getValueFromDataType(op.type, op.name);
     }
   });
@@ -147,17 +156,26 @@ const getColumnDataFromOpCols = (
 
 const getDataFromOpCols = (
   opValue: string,
-  operationColumns: ETOperationColumn[]
+  operationColumns: ETOperationColumn[],
+  isAllColumnsChecked?: boolean
 ) => {
   const opData: {
     old: Record<string, ColVals> | null;
     new: Record<string, ColVals> | null;
   } = { old: null, new: null };
   if (opValue === 'INSERT' || opValue === 'UPDATE' || opValue === 'MANUAL') {
-    opData.new = getColumnDataFromOpCols(operationColumns);
+    opData.new = getColumnDataFromOpCols(
+      operationColumns,
+      opValue,
+      isAllColumnsChecked
+    );
   }
   if (opValue === 'UPDATE' || opValue === 'DELETE') {
-    opData.old = getColumnDataFromOpCols(operationColumns);
+    opData.old = getColumnDataFromOpCols(
+      operationColumns,
+      opValue,
+      isAllColumnsChecked
+    );
   }
   return opData;
 };
@@ -181,12 +199,13 @@ export const getEventRequestSampleInput = (
   schemaName?: string,
   retries?: number,
   operationColumns?: ETOperationColumn[],
-  operations?: Record<EventTriggerOperation, boolean>
+  operations?: Record<EventTriggerOperation, boolean>,
+  isAllColumnsChecked?: boolean
 ) => {
   const opValue = operations ? getOperationValue(operations) : '';
   const opData =
     opValue && operationColumns
-      ? getDataFromOpCols(opValue, operationColumns)
+      ? getDataFromOpCols(opValue, operationColumns, isAllColumnsChecked)
       : { old: null, new: null };
 
   const obj = {

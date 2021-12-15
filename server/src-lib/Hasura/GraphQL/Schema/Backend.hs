@@ -216,25 +216,6 @@ class Backend b => BackendSchema (b :: BackendType) where
     Nullability ->
     m (Parser 'Both n (ValueWithOrigin (ColumnValue b)))
 
-  -- | Creates a parser for the "_on_conflict" object of the given table.
-  --
-  -- This object is used to generate the "ON CONFLICT" SQL clause: what should be
-  -- done if an insert raises a conflict? It may not always exist: it can't be
-  -- created if there aren't any unique or primary keys constraints. However, if
-  -- there are no columns for which the current role has update permissions, we
-  -- must still accept an empty list for `update_columns`; we do this by adding a
-  -- placeholder value to the enum (see 'tableUpdateColumnsEnum').
-  --
-  -- The default implementation elides on_conflict support.
-  conflictObject ::
-    MonadBuildSchema b r m n =>
-    SourceName ->
-    TableInfo b ->
-    Maybe (SelPermInfo b) ->
-    UpdPermInfo b ->
-    m (Maybe (Parser 'Input n (XOnConflict b, IR.ConflictClauseP1 b (UnpreparedValue b))))
-  conflictObject _ _ _ _ = pure Nothing
-
   -- | The "path" argument for json column fields
   jsonPathArg ::
     MonadParse n =>
@@ -268,9 +249,6 @@ class Backend b => BackendSchema (b :: BackendType) where
 
   -- SQL literals
   columnDefaultValue :: Column b -> SQLExpression b
-
-  -- Extra insert data
-  getExtraInsertData :: TableInfo b -> ExtraInsertData b
 
 type ComparisonExp b = OpExpG b (UnpreparedValue b)
 

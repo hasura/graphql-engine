@@ -8,30 +8,6 @@ CLI_BUILD_OUTPUT := $(BUILD_DIR)/_cli_output
 SHELL := /bin/bash
 .SHELLFLAGS := -ce
 
-.PHONY: build-cli-migrations-v2
-.ONESHELL:
-build-cli-migrations-v2:
-	cd v2
-	./build.sh $(SERVER_BUILD_OUTPUT) $(CLI_BUILD_OUTPUT) $(BUILD_OUTPUT)
-
-.PHONY: test-cli-migrations-v2
-.ONESHELL:
-test-cli-migrations-v2:
-	cd v2/test
-	./test.sh
-
-.PHONY: build-cli-migrations-v3
-.ONESHELL:
-build-cli-migrations-v3:
-	cd v3
-	./build.sh $(SERVER_BUILD_OUTPUT) $(CLI_BUILD_OUTPUT) $(BUILD_OUTPUT)
-
-.PHONY: test-cli-migrations-v3
-.ONESHELL:
-test-cli-migrations-v3:
-	cd v3/test
-	./test.sh
-
 .ONESHELL:
 prepare-local-env:
 	# works on *nix systems
@@ -48,6 +24,3 @@ prepare-local-env:
 	cd $$MAKEFILE_DIR && sed -i 's/BUILD_DIR ?= \/build/BUILD_DIR ?= \/tmp\/build/' Makefile
 reset-local-env:
 	sed -i 's/BUILD_DIR ?= \/tmp\/build/BUILD_DIR ?= \/build/' Makefile
-
-.PHONY: all
-all: build-cli-migrations-v2 test-cli-migrations-v2 build-cli-migrations-v3 test-cli-migrations-v3

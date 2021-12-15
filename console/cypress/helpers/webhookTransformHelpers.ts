@@ -6,6 +6,12 @@ export const togglePayloadTransformSection = () => {
   });
 };
 
+export const toggleContextArea = () => {
+  cy.getBySel('toggle-context-area').click({
+    force: true,
+  });
+};
+
 export const toggleRequestTransformSection = () => {
   cy.getBySel('toggle-request-transform').click({
     force: true,
@@ -41,14 +47,27 @@ export const checkTransformRequestUrlError = (
   }
 };
 
+export const typeIntoContextAreaEnvVars = (
+  envVars: { key: string; value: string }[]
+) => {
+  envVars.forEach((q, i) => {
+    cy.getBySel(`transform-env-vars-kv-key-${i}`).type(q.key, {
+      parseSpecialCharSequences: false,
+    });
+    cy.getBySel(`transform-env-vars-kv-value-${i}`).type(q.value, {
+      parseSpecialCharSequences: false,
+    });
+  });
+};
+
 export const typeIntoRequestQueryParams = (
   queryParams: { key: string; value: string }[]
 ) => {
   queryParams.forEach((q, i) => {
-    cy.getBySel(`transform-kv-key-${i}`).type(q.key, {
+    cy.getBySel(`transform-query-params-kv-key-${i}`).type(q.key, {
       parseSpecialCharSequences: false,
     });
-    cy.getBySel(`transform-kv-value-${i}`).type(q.value, {
+    cy.getBySel(`transform-query-params-kv-value-${i}`).type(q.value, {
       parseSpecialCharSequences: false,
     });
   });

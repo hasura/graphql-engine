@@ -82,6 +82,7 @@ data RQLMetadataV1
   | RMSetRelationshipComment !(AnyBackend SetRelComment)
   | RMRenameRelationship !(AnyBackend RenameRel)
   | -- Tables remote relationships
+    -- (backend)_create_remote_relationship, create_remote_relationship
     RMCreateRemoteRelationship !(AnyBackend CreateFromSourceRelationship)
   | RMUpdateRemoteRelationship !(AnyBackend CreateFromSourceRelationship)
   | RMDeleteRemoteRelationship !(DeleteFromSourceRelationship ('Postgres 'Vanilla))
@@ -221,6 +222,7 @@ instance FromJSON RQLMetadataV1 where
       "test_webhook_transform" -> RMTestWebhookTransform <$> args
       "set_query_tags" -> RMSetQueryTagsConfig <$> args
       "bulk" -> RMBulk <$> args
+      "create_remote_relationship" -> RMCreateRemoteRelationship . mkAnyBackend . unLegacyCreateRemoteRelationship <$> args
       -- backend specific
       _ -> do
         let (prefix, T.drop 1 -> cmd) = T.breakOn "_" queryType
@@ -473,7 +475,7 @@ runMetadataQueryV1M env currentResourceVersion = \case
   RMDumpInternalState q -> runDumpInternalState q
   RMGetCatalogState q -> runGetCatalogState q
   RMSetCatalogState q -> runSetCatalogState q
-  RMTestWebhookTransform q -> runTestWebhookTransform env q
+  RMTestWebhookTransform q -> runTestWebhookTransform q
   RMSetQueryTagsConfig q -> runSetQueryTagsConfig q
   RMBulk q -> encJFromList <$> indexedMapM (runMetadataQueryM env currentResourceVersion) q
   where

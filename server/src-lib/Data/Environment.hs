@@ -16,7 +16,7 @@ import Hasura.Prelude
 import System.Environment qualified
 
 -- | Server process environment variables
-newtype Environment = Environment (M.Map String String) deriving (Eq, Show, Generic)
+newtype Environment = Environment (M.Map String String) deriving (Eq, Show, Generic, ToJSON, Semigroup, Monoid)
 
 instance FromJSON Environment
 

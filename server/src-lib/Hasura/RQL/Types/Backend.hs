@@ -46,8 +46,7 @@ type XDisable = Void
 -- type application or a 'Proxy' parameter to disambiguate between
 -- different backends at the call site.
 class
-  ( Representable (Identifier b),
-    Representable (TableName b),
+  ( Representable (TableName b),
     Representable (FunctionName b),
     Representable (FunctionArgType b),
     Representable (ConstraintName b),
@@ -110,14 +109,16 @@ class
     -- Intermediate Representations
     Functor (BackendUpdate b),
     Foldable (BackendUpdate b),
-    Traversable (BackendUpdate b)
+    Traversable (BackendUpdate b),
+    Functor (BackendInsert b),
+    Foldable (BackendInsert b),
+    Traversable (BackendInsert b)
   ) =>
   Backend (b :: BackendType)
   where
   -- types
   type SourceConfig b :: Type
   type SourceConnConfiguration b :: Type
-  type Identifier b :: Type
   type TableName b :: Type
   type RawFunctionInfo b :: Type
   type FunctionName b :: Type
@@ -143,8 +144,11 @@ class
 
   type BackendUpdate b = Const Void
 
-  -- | Extra backend specific context needed for insert mutations.
-  type ExtraInsertData b :: Type
+  -- | Intermediate Representation of Insert Mutations.
+  -- The default implementation makes insert expressions uninstantiable.
+  type BackendInsert b :: Type -> Type
+
+  type BackendInsert b = Const Void
 
   -- extension types
   type XComputedField b :: Type
@@ -153,9 +157,6 @@ class
 
   -- | Extension to flag the availability of object and array relationships in inserts (aka nested inserts).
   type XNestedInserts b :: Type
-
-  -- | Extension to flag the availability of `on_conflict` input field in inserts (aka upsert feature)
-  type XOnConflict b :: Type
 
   type XStreamingSubscription b :: Type
 

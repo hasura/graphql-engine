@@ -12,6 +12,8 @@ import requestAction from '@/utils/requestAction';
 import {
   getActionRequestTransformDefaultState,
   requestTransformReducer,
+  setEnvVars,
+  setSessionVars,
   setRequestMethod,
   setRequestUrl,
   setRequestUrlError,
@@ -120,6 +122,10 @@ const ModifyAction: React.FC<ModifyProps> = ({
         requestSampleInput
       );
       transformDispatch(setRequestTransformState(rtState));
+    } else {
+      transformDispatch(
+        setRequestTransformState(getActionRequestTransformDefaultState())
+      );
     }
   };
   useEffect(init, [currentAction, allTypes, dispatch]);
@@ -174,6 +180,14 @@ const ModifyAction: React.FC<ModifyProps> = ({
       );
       transformDispatch(setRequestSampleInput(value));
     }
+  };
+
+  const envVarsOnChange = (envVars: KeyValuePair[]) => {
+    transformDispatch(setEnvVars(envVars));
+  };
+
+  const sessionVarsOnChange = (sessionVars: KeyValuePair[]) => {
+    transformDispatch(setSessionVars(sessionVars));
   };
 
   const requestMethodOnChange = (requestMethod: RequestTransformMethod) => {
@@ -243,6 +257,8 @@ const ModifyAction: React.FC<ModifyProps> = ({
     const options = getValidateTransformOptions(
       transformState.requestSampleInput,
       handler,
+      transformState.envVars,
+      transformState.sessionVars,
       undefined,
       transformState.requestUrl,
       transformState.requestQueryParams
@@ -268,6 +284,8 @@ const ModifyAction: React.FC<ModifyProps> = ({
     handler,
     transformState.requestUrl,
     transformState.requestQueryParams,
+    transformState.envVars,
+    transformState.sessionVars,
   ]);
 
   const onRequestBodyResponse = (data: Record<string, any>) => {
@@ -281,6 +299,8 @@ const ModifyAction: React.FC<ModifyProps> = ({
   const reqBodyoptions = getValidateTransformOptions(
     transformState.requestSampleInput,
     handler,
+    transformState.envVars,
+    transformState.sessionVars,
     transformState.requestBody
   );
   useEffect(() => {
@@ -303,7 +323,13 @@ const ModifyAction: React.FC<ModifyProps> = ({
         )
       ).then(onRequestBodyResponse, onRequestBodyResponse);
     }
-  }, [transformState.requestSampleInput, transformState.requestBody, handler]);
+  }, [
+    transformState.requestSampleInput,
+    transformState.requestBody,
+    handler,
+    transformState.envVars,
+    transformState.sessionVars,
+  ]);
 
   useEffect(() => {
     if (
@@ -368,9 +394,10 @@ const ModifyAction: React.FC<ModifyProps> = ({
           />
 
           <ConfigureTransformation
-            webhookUrl={handler}
             state={transformState}
             resetSampleInput={resetSampleInput}
+            envVarsOnChange={envVarsOnChange}
+            sessionVarsOnChange={sessionVarsOnChange}
             requestMethodOnChange={requestMethodOnChange}
             requestUrlOnChange={requestUrlOnChange}
             requestQueryParamsOnChange={requestQueryParamsOnChange}
