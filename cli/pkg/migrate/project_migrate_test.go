@@ -212,7 +212,17 @@ func TestProjectMigrate_Apply_Configv2(t *testing.T) {
 				require.Error(t, err)
 			} else {
 				require.NoError(t, err)
-				require.Equal(t, tt.want, got)
+				for idx, want := range tt.want {
+					if idx >= len(got) {
+						t.Errorf("expected to got to have equal number of elements: want %v got %v", len(tt.want), len(got))
+					}
+					if len(want.Message) > 0 {
+						assert.Equal(t, want.Message, got[idx].Message)
+					}
+					if want.Error != nil {
+						assert.Equal(t, want.Error.Error(), got[idx].Error.Error())
+					}
+				}
 			}
 		})
 	}

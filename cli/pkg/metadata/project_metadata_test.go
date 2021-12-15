@@ -10,7 +10,6 @@ import (
 	"testing"
 
 	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
-
 	"github.com/hasura/graphql-engine/cli/v2/pkg/migrate"
 
 	"github.com/stretchr/testify/require"
@@ -247,7 +246,7 @@ func TestProjectMetadata_Reload(t *testing.T) {
 		name    string
 		fields  fields
 		want    string
-		wantErr bool
+		wantErr require.ErrorAssertionFunc
 	}{
 		{
 			"can reload metadata",
@@ -256,21 +255,61 @@ func TestProjectMetadata_Reload(t *testing.T) {
 				endpointString:   hgeEndpoint,
 			},
 			`{"message": "success"}`,
-			false,
+			require.NoError,
 		},
+		// TODO: automate the following tests
+		// following tests are currently ran manually by making use of https://github.com/Shopify/toxiproxy
+		//{
+		//	"can return expected error type when graphql engine connections fail",
+		//	fields{
+		//		projectDirectory: "testdata/projectv3",
+		//		endpointString:   "http://localhost:12345/something",
+		//	},
+		//	`{"message": "success"}`,
+		//	func(t require.TestingT, err error, i ...interface{}) {
+		//		var e *url.Error
+		//		require.Truef(t, errors.As(err, &e), "expected err to be an instance of %v but got %v", reflect.TypeOf(&url.Error{}), reflect.TypeOf(err))
+		//	},
+		//},
+		// config.json
+		// [
+		//  {
+		//    "name": "hasura",
+		//    "listen": "[::]:18080",
+		//    "upstream": "localhost:8080",
+		//    "enabled": true
+		//  }
+		// ]
+		//
+		// 1. Simulate reset peer
+		// $ toxiproxy-cli toxic add -t reset_peer hasura
+		// 2. Simulate timeout
+		// $ toxiproxy-cli toxic add -t timeout -a timeout=1 hasura
+		//{
+		//	"return expect error type when graphql engine connections reset",
+		//	fields{
+		//		projectDirectory: "testdata/projectv3",
+		//		endpointString:   "http://localhost:18080",
+		//	},
+		//	`{"message": "success"}`,
+		//	func(t require.TestingT, err error, i ...interface{}) {
+		//		var e *url.Error
+		//		require.Truef(t, errors.As(err, &e), "expected err to be an instance of %v but got %v", reflect.TypeOf(&url.Error{}), reflect.TypeOf(err))
+		//	},
+		//},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			p, err := NewProjectMetadata(tt.fields.projectDirectory, WithEndpoint(hgeEndpoint), WithAdminSecret(testutil.TestAdminSecret))
-			require.NoError(t, err)
-			got, err := p.Reload()
-			if tt.wantErr {
-				require.Error(t, err)
+			p, err := NewProjectMetadata(tt.fields.projectDirectory, WithEndpoint(tt.fields.endpointString), WithAdminSecret(testutil.TestAdminSecret))
+			tt.wantErr(t, err)
+			if p != nil {
+				got, err := p.Reload()
+
+				tt.wantErr(t, err)
+				gotb, err := ioutil.ReadAll(got)
+				require.NoError(t, err)
+				require.JSONEq(t, tt.want, string(gotb))
 			}
-			require.NoError(t, err)
-			gotb, err := ioutil.ReadAll(got)
-			require.NoError(t, err)
-			require.JSONEq(t, tt.want, string(gotb))
 		})
 	}
 }

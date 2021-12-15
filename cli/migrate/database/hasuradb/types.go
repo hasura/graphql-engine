@@ -142,7 +142,7 @@ func NewHasuraError(data []byte, isCmd bool) error {
 		var herror HasuraError
 		err := json.Unmarshal(data, &herror)
 		if err != nil {
-			return fmt.Errorf("failed parsing json: %v; response from API: %s", err, string(data))
+			return fmt.Errorf("failed parsing json: %w; response from API: %s", err, string(data))
 		}
 		return herror
 	default:

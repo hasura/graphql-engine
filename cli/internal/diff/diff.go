@@ -19,7 +19,7 @@ import (
 func YamlDiff(fromFile, toFile ytbx.InputFile, writer io.Writer, fileName string) (int, error) {
 	report, err := dyff.CompareInputFiles(fromFile, toFile, dyff.IgnoreOrderChanges(true))
 	if err != nil {
-		return -1, fmt.Errorf("error while getting diff: %v", err)
+		return -1, fmt.Errorf("error while getting diff: %w", err)
 	}
 	reportWriter := &dyff.HumanReport{
 		Report:            report,
@@ -32,7 +32,7 @@ func YamlDiff(fromFile, toFile ytbx.InputFile, writer io.Writer, fileName string
 		fmt.Fprintf(writer, "%s\n", fileName)
 		err = reportWriter.WriteReport(writer)
 		if err != nil {
-			return -1, fmt.Errorf("error while printing diff: %v", err)
+			return -1, fmt.Errorf("error while printing diff: %w", err)
 		}
 	}
 	return len(report.Diffs), nil

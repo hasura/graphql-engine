@@ -71,7 +71,7 @@ func (o *actionsCreateOptions) run() error {
 		o.EC.Spin("Deriving a Hasura operation...")
 		introSchema, err = o.EC.APIClient.V1Graphql.GetIntrospectionSchema()
 		if err != nil {
-			return errors.Wrap(err, "error in fetching introspection schema")
+			return fmt.Errorf("error in fetching introspection schema: %w", err)
 		}
 		o.EC.Spinner.Stop()
 	}

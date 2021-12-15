@@ -135,7 +135,7 @@ func DefaultGetFiles(yamlFile string) ([]string, error) {
 				files = append(files, nodeFiles...)
 			}
 		} else {
-			return nil, fmt.Errorf("finding child files in failed: %v", err)
+			return nil, fmt.Errorf("finding child files in failed: %w", err)
 		}
 	}
 
