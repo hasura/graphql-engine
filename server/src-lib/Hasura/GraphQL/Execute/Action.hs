@@ -35,6 +35,7 @@ import Data.Set (Set)
 import Data.TByteString qualified as TBS
 import Data.Text.Extended
 import Data.Text.NonEmpty
+import Data.Vector qualified as Vec
 import Database.PG.Query qualified as Q
 import Hasura.Backends.Postgres.Execute.Prepare
 import Hasura.Backends.Postgres.SQL.DML qualified as S
@@ -56,6 +57,7 @@ import Hasura.Prelude
 import Hasura.RQL.DDL.Headers
 import Hasura.RQL.DDL.RequestTransform
 import Hasura.RQL.DDL.Schema.Cache
+import Hasura.RQL.IR.Select qualified as RQL
 import Hasura.RQL.IR.Select qualified as RS
 import Hasura.RQL.Types
 import Hasura.SQL.Types
@@ -116,44 +118,53 @@ resolveActionExecution ::
   ActionExecContext ->
   Maybe GQLQueryText ->
   ActionExecution
-resolveActionExecution env logger userInfo annAction execContext gqlQueryText =
-  case actionSource of
+resolveActionExecution env logger userInfo AnnActionExecution {..} ActionExecContext {..} gqlQueryText =
+  case _aaeSource of
     -- Build client response
-    ASINoSource -> ActionExecution $ first (encJFromOrderedValue . makeActionResponseNoRelations annFields) <$> runWebhook
+    ASINoSource -> ActionExecution $ first (encJFromOrderedValue . makeActionResponseNoRelations _aaeFields) <$> runWebhook
     ASISource _ sourceConfig -> ActionExecution do
       (webhookRes, respHeaders) <- runWebhook
-      let webhookResponseExpression =
+      let webhookResponse = makeActionResponseNoRelations _aaeFields webhookRes
+          webhookResponseExpression =
             RS.AEInput $
               UVLiteral $
                 toTxtValue $ ColumnValue (ColumnScalar PGJSONB) $ PGValJSONB $ Q.JSONB $ J.toJSON webhookRes
           selectAstUnresolved =
             processOutputSelectionSet
               webhookResponseExpression
-              outputType
-              definitionList
-              annFields
-              stringifyNum
-      (astResolved, finalPlanningSt) <- flip runStateT initPlanningSt $ traverse (prepareWithPlan userInfo) selectAstUnresolved
+              _aaeOutputType
+              _aaeDefinitionList
+              _aaeFields
+              _aaeStrfyNum
+      (RS.AnnSelectG {..}, finalPlanningSt) <- flip runStateT initPlanningSt $ traverse (prepareWithPlan userInfo) selectAstUnresolved
       let prepArgs = fmap fst $ IntMap.elems $ withUserVars (_uiSession userInfo) $ _psPrepped finalPlanningSt
-      (,respHeaders) <$> executeActionInDb sourceConfig astResolved prepArgs
+          astRelations = RS.AnnSelectG {_asnFields = filter (isRelationField . snd) _asnFields, ..}
+      maybeRelationData <-
+        if null $ RS._asnFields astRelations
+          then pure Nothing
+          else AO.decode . encJToBS <$> executeActionInDb sourceConfig astRelations prepArgs
+      let mergeNoRelAndRelation noRelResponse relData =
+            case (noRelResponse, relData) of
+              (AO.Object nRelObj, AO.Object relObj) ->
+                let lookupField (fieldName, fieldType) =
+                      let fName = getFieldNameTxt fieldName
+                       in (fName,)
+                            <$> if isRelationField fieldType
+                              then AO.lookup fName relObj
+                              else AO.lookup fName nRelObj
+                 in pure $ AO.Object $ AO.fromList $ mapMaybe lookupField _asnFields
+              (AO.Array nRelArr, AO.Array relArr) ->
+                AO.Array <$> Vec.zipWithM mergeNoRelAndRelation nRelArr relArr
+              _ -> throw500 "Type mismatch in action relation response"
+      finalResponse <- maybe (pure webhookResponse) (mergeNoRelAndRelation webhookResponse) maybeRelationData
+      pure (encJFromOrderedValue finalResponse, respHeaders)
   where
-    AnnActionExecution
-      actionName
-      outputType
-      annFields
-      inputPayload
-      outputFields
-      definitionList
-      resolvedWebhook
-      confHeaders
-      forwardClientHeaders
-      stringifyNum
-      timeout
-      actionSource
-      metadataTransform = annAction
-    ActionExecContext manager reqHeaders sessionVariables = execContext
-    actionContext = ActionContext actionName
-    handlerPayload = ActionWebhookPayload actionContext sessionVariables inputPayload gqlQueryText
+    isRelationField = \case
+      RS.AFObjectRelation _ -> True
+      RS.AFArrayRelation _ -> True
+      _ -> False
+
+    handlerPayload = ActionWebhookPayload (ActionContext _aaeName) _aecSessionVariables _aaePayload gqlQueryText
 
     executeActionInDb ::
       (MonadError QErr m, MonadIO m, MonadBaseControl IO m) =>
@@ -162,7 +173,7 @@ resolveActionExecution env logger userInfo annAction execContext gqlQueryText =
       [Q.PrepArg] ->
       m EncJSON
     executeActionInDb sourceConfig astResolved prepArgs = do
-      let jsonAggType = mkJsonAggSelect outputType
+      let jsonAggType = mkJsonAggSelect _aaeOutputType
       liftEitherM $
         runExceptT $
           runTx (_pscExecCtx sourceConfig) Q.ReadOnly $
@@ -175,40 +186,42 @@ resolveActionExecution env logger userInfo annAction execContext gqlQueryText =
       flip runReaderT logger $
         callWebhook
           env
-          manager
-          outputType
-          outputFields
-          reqHeaders
-          confHeaders
-          forwardClientHeaders
-          resolvedWebhook
+          _aecManager
+          _aaeOutputType
+          _aaeOutputFields
+          _aecHeaders
+          _aaeHeaders
+          _aaeForwardClientHeaders
+          _aaeWebhook
           handlerPayload
-          timeout
-          metadataTransform
+          _aaeTimeOut
+          _aaeRequestTransform
 
 -- | Build action response from the Webhook JSON response when there are no relationships defined
-makeActionResponseNoRelations :: RS.AnnFieldsG ('Postgres 'Vanilla) r v -> ActionWebhookResponse -> AO.Value
+makeActionResponseNoRelations :: forall b r v. RS.ActionFieldsG b r v -> ActionWebhookResponse -> AO.Value
 makeActionResponseNoRelations annFields webhookResponse =
-  let mkResponseObject obj =
+  let mkResponseObject :: RS.ActionFieldsG b r v -> HashMap Text J.Value -> AO.Value
+      mkResponseObject fields obj =
         AO.object $
-          flip mapMaybe annFields $ \(fieldName, annField) ->
+          flip mapMaybe fields $ \(fieldName, annField) ->
             let fieldText = getFieldNameTxt fieldName
              in (fieldText,) <$> case annField of
-                  RS.AFExpression t -> Just $ AO.String t
-                  RS.AFColumn c -> AO.toOrdered <$> Map.lookup (G.unsafeMkName . getPGColTxt $ RS._acfColumn c) obj
-                  -- NOTE (Phil): Coercing the name like this using unsafeMkName (instead
-                  -- of using something like pgiName is safe (here) because of how we
-                  -- construct ColumnInfo objects in mkPGColumnInfo. Really, we should get
-                  -- rid of ColumnInfo altogether, but right now action responses are
-                  -- represented as if they were rows in some temp PG table, which is why
-                  -- they appear here.
-                  _ -> AO.toOrdered <$> Map.lookup fieldText (mapKeys G.unName obj)
+                  RS.ACFExpression t -> Just $ AO.String t
+                  RS.ACFScalar fname -> AO.toOrdered <$> Map.lookup (G.unName fname) obj
+                  RS.ACFNestedObject _ nestedFields -> do
+                    let mkValue :: J.Value -> Maybe AO.Value
+                        mkValue = \case
+                          J.Object o -> Just $ mkResponseObject nestedFields o
+                          J.Array a -> Just $ AO.array $ mapMaybe mkValue $ toList a
+                          _ -> Nothing
+                    Map.lookup fieldText obj >>= mkValue
+                  _ -> AO.toOrdered <$> Map.lookup fieldText obj
    in -- NOTE (Sam): This case would still not allow for aliased fields to be
       -- a part of the response. Also, seeing that none of the other `annField`
       -- types would be caught in the example, I've chosen to leave it as it is.
       case webhookResponse of
-        AWRArray objs -> AO.array $ map mkResponseObject objs
-        AWRObject obj -> mkResponseObject obj
+        AWRArray objs -> AO.array $ map (mkResponseObject annFields) (mapKeys G.unName <$> objs)
+        AWRObject obj -> mkResponseObject annFields (mapKeys G.unName obj)
         AWRNull -> AO.Null
 
 {- Note: [Async action architecture]
@@ -610,12 +623,13 @@ processOutputSelectionSet ::
   RS.ArgumentExp v ->
   GraphQLType ->
   [(PGCol, PGScalarType)] ->
-  RS.AnnFieldsG ('Postgres 'Vanilla) r v ->
+  RS.ActionFieldsG ('Postgres 'Vanilla) r v ->
   Bool ->
   RS.AnnSimpleSelectG ('Postgres 'Vanilla) r v
-processOutputSelectionSet tableRowInput actionOutputType definitionList annotatedFields =
+processOutputSelectionSet tableRowInput actionOutputType definitionList actionFields =
   RS.AnnSelectG annotatedFields selectFrom RS.noTablePermissions RS.noSelectArgs
   where
+    annotatedFields = fmap actionFieldToAnnField <$> actionFields
     jsonbToPostgresRecordFunction =
       QualifiedObject "pg_catalog" $
         FunctionName $
@@ -624,6 +638,14 @@ processOutputSelectionSet tableRowInput actionOutputType definitionList annotate
             else "jsonb_to_record" -- Single object response
     functionArgs = RS.FunctionArgsExp [tableRowInput] mempty
     selectFrom = RS.FromFunction jsonbToPostgresRecordFunction functionArgs $ Just definitionList
+
+actionFieldToAnnField :: RS.ActionFieldG ('Postgres 'Vanilla) r v -> RS.AnnFieldG ('Postgres 'Vanilla) r v
+actionFieldToAnnField = \case
+  RS.ACFScalar asf -> RQL.mkAnnColumnField (unsafePGCol $ toTxt asf) (ColumnScalar PGJSON) Nothing Nothing
+  RS.ACFObjectRelation ors -> RS.AFObjectRelation ors
+  RS.ACFArrayRelation as -> RS.AFArrayRelation as
+  RS.ACFExpression txt -> RS.AFExpression txt
+  RS.ACFNestedObject fieldName _ -> RQL.mkAnnColumnField (unsafePGCol $ toTxt fieldName) (ColumnScalar PGJSON) Nothing Nothing
 
 mkJsonAggSelect :: GraphQLType -> JsonAggSelect
 mkJsonAggSelect =

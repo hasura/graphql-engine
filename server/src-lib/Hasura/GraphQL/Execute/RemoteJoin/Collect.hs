@@ -129,12 +129,12 @@ getRemoteJoinsMutationOutput =
 
 -- local helpers
 
-getRemoteJoinsAnnFields ::
+getRemoteJoinsActionFields ::
   Backend b =>
-  AnnFieldsG b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b) ->
-  (AnnFieldsG b Void (UnpreparedValue b), Maybe RemoteJoins)
-getRemoteJoinsAnnFields =
-  runCollector . transformAnnFields
+  ActionFieldsG b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b) ->
+  (ActionFieldsG b Void (UnpreparedValue b), Maybe RemoteJoins)
+getRemoteJoinsActionFields =
+  runCollector . transformActionFields
 
 getRemoteJoinsMutationDB ::
   Backend b =>
@@ -167,7 +167,7 @@ getRemoteJoinsSyncAction ::
   AnnActionExecution b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b) ->
   (AnnActionExecution b Void (UnpreparedValue b), Maybe RemoteJoins)
 getRemoteJoinsSyncAction actionExecution =
-  let (fields', remoteJoins) = getRemoteJoinsAnnFields $ _aaeFields actionExecution
+  let (fields', remoteJoins) = getRemoteJoinsActionFields $ _aaeFields actionExecution
    in (actionExecution {_aaeFields = fields'}, remoteJoins)
 
 getRemoteJoinsActionQuery ::
@@ -191,7 +191,7 @@ getRemoteJoinsActionQuery = \case
         (fieldName,) <$> case field of
           AsyncTypename t -> pure $ AsyncTypename t
           AsyncOutput outputFields ->
-            AsyncOutput <$> transformAnnFields outputFields
+            AsyncOutput <$> transformActionFields outputFields
           AsyncId -> pure AsyncId
           AsyncCreatedAt -> pure AsyncCreatedAt
           AsyncErrors -> pure AsyncErrors
@@ -433,14 +433,6 @@ transformAnnFields fields = do
                     Just (a, mkScalarComputedFieldSelect computedFieldInfo)
        in (fmap snd annotatedJoinColumns, phantomFields_)
 
-    transformAnnRelation ::
-      (a -> Collector b) ->
-      AnnRelationSelectG src a ->
-      Collector (AnnRelationSelectG src b)
-    transformAnnRelation transform relation@(AnnRelationSelectG _ _ select) = do
-      transformedSelect <- transform select
-      pure $ relation {aarAnnSelect = transformedSelect}
-
     mkScalarComputedFieldSelect ::
       ScalarComputedField b ->
       AnnFieldG b Void (UnpreparedValue b)
@@ -452,6 +444,52 @@ transformAnnFields fields = do
             flip CFSScalar Nothing $
               ComputedFieldScalarSelect _scfFunction functionArgs _scfType Nothing
        in AFComputedField _scfXField _scfName fieldSelect
+
+-- | Annotate an element a remote source join from '_rssJoinMapping' so that
+-- a remote join can be constructed.
+transformAnnRelation ::
+  (a -> Collector b) ->
+  AnnRelationSelectG src a ->
+  Collector (AnnRelationSelectG src b)
+transformAnnRelation transform relation@(AnnRelationSelectG _ _ select) = do
+  transformedSelect <- transform select
+  pure $ relation {aarAnnSelect = transformedSelect}
+
+transformActionFields ::
+  forall src.
+  Backend src =>
+  ActionFieldsG src (RemoteRelationshipField UnpreparedValue) (UnpreparedValue src) ->
+  Collector (ActionFieldsG src Void (UnpreparedValue src))
+transformActionFields fields = do
+  -- Produces a list of transformed fields that may or may not have an
+  -- associated remote join.
+  for fields \(fieldName, field') -> withField fieldName do
+    -- FIXME: There's way too much going on in this 'case .. of' block...
+    let mkCollector ::
+          ActionFieldG src (RemoteRelationshipField UnpreparedValue) (UnpreparedValue src) ->
+          Collector
+            (ActionFieldG src Void (UnpreparedValue src))
+        mkCollector annField = case annField of
+          -- ActionFields which do not need to be transformed.
+          ACFScalar c -> pure (ACFScalar c)
+          ACFExpression t -> pure (ACFExpression t)
+          -- ActionFields with no associated remote joins and whose transformations are
+          -- relatively straightforward.
+          ACFObjectRelation annRel -> do
+            transformed <- transformAnnRelation transformObjectSelect annRel
+            pure (ACFObjectRelation transformed)
+          ACFArrayRelation (ASSimple annRel) -> do
+            transformed <- transformAnnRelation transformSelect annRel
+            pure (ACFArrayRelation . ASSimple $ transformed)
+          ACFArrayRelation (ASAggregate aggRel) -> do
+            transformed <- transformAnnRelation transformAggregateSelect aggRel
+            pure (ACFArrayRelation . ASAggregate $ transformed)
+          ACFArrayRelation (ASConnection annRel) -> do
+            transformed <- transformAnnRelation transformConnectionSelect annRel
+            pure (ACFArrayRelation . ASConnection $ transformed)
+          ACFNestedObject fn fs ->
+            ACFNestedObject fn <$> transformActionFields fs
+    (fieldName,) <$> mkCollector field'
 
 getJoinColumnAlias ::
   (Eq field, Hashable field) =>

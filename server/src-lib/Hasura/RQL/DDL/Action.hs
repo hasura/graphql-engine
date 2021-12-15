@@ -22,6 +22,8 @@ import Data.Dependent.Map qualified as DMap
 import Data.Environment qualified as Env
 import Data.HashMap.Strict qualified as Map
 import Data.HashMap.Strict.InsOrd qualified as OMap
+import Data.HashSet qualified as Set
+import Data.List.NonEmpty qualified as NEList
 import Data.Text.Extended
 import Hasura.Base.Error
 import Hasura.EncJSON
@@ -120,11 +122,62 @@ resolveAction env AnnotatedCustomTypes {..} ActionDefinition {..} allScalars = d
   -- Check if the response type is an object
   let outputType = unGraphQLType _adOutputType
       outputBaseType = G.getBaseType outputType
-  outputObject <-
-    onNothing (Map.lookup outputBaseType _actObjects) $
-      throw400 NotExists $
-        "the type: " <> dquote outputBaseType
-          <> " is not an object type defined in custom types"
+  outputObject <- do
+    aot@AnnotatedObjectType {..} <-
+      Map.lookup outputBaseType _actObjects
+        `onNothing` throw400 NotExists ("the type: " <> dquote outputBaseType <> " is not an object type defined in custom types")
+    -- If the Action is sync:
+    --      1. Check if the output type has only top level relations (if any)
+    --   If the Action is async:
+    --      1. Check that the output type has no relations if the output type contains nested objects
+    -- These checks ensure that the SQL we generate for the join does not have to extract nested fields
+    -- from the action webhook response.
+    let (nestedObjects, scalarOrEnumFields) =
+          NEList.partition
+            ( \ObjectFieldDefinition {..} ->
+                case snd _ofdType of
+                  AOFTScalar _ -> False
+                  AOFTEnum _ -> False
+                  AOFTObject _ -> True
+            )
+            (_otdFields _aotDefinition)
+        scalarOrEnumFieldNames = fmap (\ObjectFieldDefinition {..} -> unObjectFieldName _ofdName) scalarOrEnumFields
+        validateSyncAction =
+          onJust (_otdRelationships _aotDefinition) $ \relLst -> do
+            let relationshipsWithNonTopLevelFields =
+                  NEList.filter
+                    ( \TypeRelationship {..} ->
+                        let objsInRel = unObjectFieldName <$> Map.keys _trFieldMapping
+                         in not $ all (`elem` scalarOrEnumFieldNames) objsInRel
+                    )
+                    relLst
+            unless (null relationshipsWithNonTopLevelFields) $
+              throw400 ConstraintError $
+                "Relationships cannot be defined with nested object fields : "
+                  <> commaSeparated (dquote . _trName <$> relationshipsWithNonTopLevelFields)
+    case _adType of
+      ActionQuery -> validateSyncAction
+      ActionMutation ActionSynchronous -> validateSyncAction
+      ActionMutation ActionAsynchronous ->
+        when (isJust (_otdRelationships _aotDefinition) && not (null nestedObjects)) $
+          throw400 ConstraintError $
+            "Async action relations cannot be used with object fields : " <> commaSeparated (dquote . _ofdName <$> nestedObjects)
+    pure aot
+  -- checking if there is any relation which is not in output type of action
+  let checkNestedObjRelationship :: (QErrM m) => HashSet G.Name -> AnnotatedObjectFieldType -> m ()
+      checkNestedObjRelationship seenObjectTypes = \case
+        AOFTScalar _ -> pure ()
+        AOFTEnum _ -> pure ()
+        AOFTObject objectTypeName -> do
+          unless (objectTypeName `Set.member` seenObjectTypes) $ do
+            -- avoid infinite loop for recursive types
+            ObjectTypeDefinition {..} <-
+              _aotDefinition <$> Map.lookup objectTypeName _actObjects
+                `onNothing` throw500 ("Custom object type " <> objectTypeName <<> " not found")
+            when (isJust _otdRelationships) $
+              throw400 ConstraintError $ "Relationship cannot be defined for nested object " <> _otdName <<> ". Relationship can be used only for top level object " <> outputBaseType <<> "."
+            for_ _otdFields $ checkNestedObjRelationship (Set.insert objectTypeName seenObjectTypes) . snd . _ofdType
+  for_ (_otdFields $ _aotDefinition outputObject) $ checkNestedObjRelationship mempty . snd . _ofdType
   resolvedWebhook <- resolveWebhook env _adHandler
   pure
     ( ActionDefinition

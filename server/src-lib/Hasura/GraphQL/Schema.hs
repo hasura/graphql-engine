@@ -56,13 +56,13 @@ buildGQLContext ::
   SourceCache ->
   RemoteSchemaCache ->
   ActionCache ->
-  NonObjectTypeMap ->
+  AnnotatedCustomTypes ->
   m
     ( HashMap RoleName (RoleContext GQLContext),
       GQLContext,
       Seq InconsistentMetadata
     )
-buildGQLContext queryType sources allRemoteSchemas allActions nonObjectCustomTypes = do
+buildGQLContext queryType sources allRemoteSchemas allActions customTypes = do
   ServerConfigCtx {..} <- askServerConfigCtx
   let SQLGenCtx {..} = _sccSQLGenCtx
   let remoteSchemasRoles = concatMap (Map.keys . _rscPermissions . fst . snd) $ Map.toList allRemoteSchemas
@@ -94,7 +94,7 @@ buildGQLContext queryType sources allRemoteSchemas allActions nonObjectCustomTyp
   -- build the admin DB-only context so that we can check against name clashes with remotes
   -- TODO: Is there a better way to check for conflicts without actually building the admin schema?
   adminHasuraDBContext <-
-    buildFullestDBSchema adminQueryContext sources allActionInfos nonObjectCustomTypes
+    buildFullestDBSchema adminQueryContext sources allActionInfos customTypes
 
   -- TODO factor out the common function; throw500 in both cases:
   queryFieldNames :: [G.Name] <-
@@ -129,7 +129,7 @@ buildGQLContext queryType sources allRemoteSchemas allActions nonObjectCustomTyp
             sources
             allRemoteSchemas
             allActionInfos
-            nonObjectCustomTypes
+            customTypes
             remotes
             role
             _sccRemoteSchemaPermsCtx
@@ -138,7 +138,7 @@ buildGQLContext queryType sources allRemoteSchemas allActions nonObjectCustomTyp
             (_sccSQLGenCtx, queryType, _sccFunctionPermsCtx)
             sources
             allActionInfos
-            nonObjectCustomTypes
+            customTypes
             role
 
   unauthenticated <- unauthenticatedContext adminQueryRemotes adminMutationRemotes _sccRemoteSchemaPermsCtx
@@ -161,7 +161,7 @@ buildRoleContext ::
   SourceCache ->
   RemoteSchemaCache ->
   [ActionInfo] ->
-  NonObjectTypeMap ->
+  AnnotatedCustomTypes ->
   [(RemoteSchemaName, RemoteRelationshipQueryContext)] ->
   RoleName ->
   RemoteSchemaPermsCtx ->
@@ -171,7 +171,7 @@ buildRoleContext
   sources
   allRemoteSchemas
   allActionInfos
-  nonObjectCustomTypes
+  customTypes
   remotes
   role
   remoteSchemaPermsCtx =
@@ -199,15 +199,15 @@ buildRoleContext
         let (queryFields, mutationFrontendFields, mutationBackendFields) = mconcat fieldsList
 
         mutationParserFrontend <-
-          buildMutationParser mutationRemotes allActionInfos nonObjectCustomTypes mutationFrontendFields
+          buildMutationParser mutationRemotes allActionInfos customTypes mutationFrontendFields
         mutationParserBackend <-
-          buildMutationParser mutationRemotes allActionInfos nonObjectCustomTypes mutationBackendFields
+          buildMutationParser mutationRemotes allActionInfos customTypes mutationBackendFields
         subscriptionParser <-
-          buildSubscriptionParser queryFields allActionInfos
+          buildSubscriptionParser queryFields allActionInfos customTypes
         queryParserFrontend <-
-          buildQueryParser queryFields queryRemotes allActionInfos nonObjectCustomTypes mutationParserFrontend subscriptionParser
+          buildQueryParser queryFields queryRemotes allActionInfos customTypes mutationParserFrontend subscriptionParser
         queryParserBackend <-
-          buildQueryParser queryFields queryRemotes allActionInfos nonObjectCustomTypes mutationParserBackend subscriptionParser
+          buildQueryParser queryFields queryRemotes allActionInfos customTypes mutationParserBackend subscriptionParser
 
         let frontendContext =
               GQLContext (finalizeParser queryParserFrontend) (finalizeParser <$> mutationParserFrontend)
@@ -261,14 +261,14 @@ buildRelayRoleContext ::
   (SQLGenCtx, GraphQLQueryType, FunctionPermissionsCtx) ->
   SourceCache ->
   [ActionInfo] ->
-  NonObjectTypeMap ->
+  AnnotatedCustomTypes ->
   RoleName ->
   m (RoleContext GQLContext)
 buildRelayRoleContext
   (SQLGenCtx stringifyNum boolCollapse, queryType, functionPermsCtx)
   sources
   allActionInfos
-  nonObjectCustomTypes
+  customTypes
   role = do
     -- TODO: At the time of writing this, remote schema queries are not supported in relay.
     -- When they are supported, we should get do what `buildRoleContext` does. Since, they
@@ -293,11 +293,11 @@ buildRelayRoleContext
       -- Remote schema mutations aren't exposed in relay because many times it throws
       -- the conflicting definitions error between the relay types like `Node`, `PageInfo` etc
       mutationParserFrontend <-
-        buildMutationParser mempty allActionInfos nonObjectCustomTypes mutationFrontendFields
+        buildMutationParser mempty allActionInfos customTypes mutationFrontendFields
       mutationParserBackend <-
-        buildMutationParser mempty allActionInfos nonObjectCustomTypes mutationBackendFields
+        buildMutationParser mempty allActionInfos customTypes mutationBackendFields
       subscriptionParser <-
-        buildSubscriptionParser queryPGFields []
+        buildSubscriptionParser queryPGFields [] customTypes
       queryParserFrontend <-
         queryWithIntrospectionHelper queryPGFields mutationParserFrontend subscriptionParser
       queryParserBackend <-
@@ -346,12 +346,12 @@ buildFullestDBSchema ::
   QueryContext ->
   SourceCache ->
   [ActionInfo] ->
-  NonObjectTypeMap ->
+  AnnotatedCustomTypes ->
   m
     ( Parser 'Output (P.ParseT Identity) (RootFieldMap (QueryRootField UnpreparedValue)),
       Maybe (Parser 'Output (P.ParseT Identity) (RootFieldMap (MutationRootField UnpreparedValue)))
     )
-buildFullestDBSchema queryContext sources allActionInfos nonObjectCustomTypes =
+buildFullestDBSchema queryContext sources allActionInfos customTypes =
   runMonadSchema adminRoleName queryContext sources do
     fieldsList <- traverse (buildBackendSource buildSource) $ toList sources
     let (queryFields, mutationFrontendFields) = mconcat fieldsList
@@ -359,11 +359,11 @@ buildFullestDBSchema queryContext sources allActionInfos nonObjectCustomTypes =
     mutationParserFrontend <-
       -- NOTE: we omit remotes here on purpose since we're trying to check name
       -- clashes with remotes:
-      buildMutationParser mempty allActionInfos nonObjectCustomTypes mutationFrontendFields
+      buildMutationParser mempty allActionInfos customTypes mutationFrontendFields
     subscriptionParser <-
-      buildSubscriptionParser queryFields allActionInfos
+      buildSubscriptionParser queryFields allActionInfos customTypes
     queryParserFrontend <-
-      buildQueryParser queryFields mempty allActionInfos nonObjectCustomTypes mutationParserFrontend subscriptionParser
+      buildQueryParser queryFields mempty allActionInfos customTypes mutationParserFrontend subscriptionParser
 
     pure (queryParserFrontend, mutationParserFrontend)
   where
@@ -614,12 +614,12 @@ buildQueryParser ::
   [P.FieldParser n (NamespacedField (QueryRootField UnpreparedValue))] ->
   [P.FieldParser n (NamespacedField RemoteField)] ->
   [ActionInfo] ->
-  NonObjectTypeMap ->
+  AnnotatedCustomTypes ->
   Maybe (Parser 'Output n (RootFieldMap (MutationRootField UnpreparedValue))) ->
   Maybe (Parser 'Output n (RootFieldMap (QueryRootField UnpreparedValue))) ->
   m (Parser 'Output n (RootFieldMap (QueryRootField UnpreparedValue)))
-buildQueryParser pgQueryFields remoteFields allActions nonObjectCustomTypes mutationParser subscriptionParser = do
-  actionQueryFields <- concat <$> traverse (buildActionQueryFields nonObjectCustomTypes) allActions
+buildQueryParser pgQueryFields remoteFields allActions customTypes mutationParser subscriptionParser = do
+  actionQueryFields <- concat <$> traverse (buildActionQueryFields customTypes) allActions
   let allQueryFields = pgQueryFields <> fmap (fmap NotNamespaced) actionQueryFields <> fmap (fmap $ fmap RFRemote) remoteFields
   queryWithIntrospectionHelper allQueryFields mutationParser subscriptionParser
 
@@ -715,9 +715,10 @@ buildSubscriptionParser ::
   ) =>
   [P.FieldParser n (NamespacedField (QueryRootField UnpreparedValue))] ->
   [ActionInfo] ->
+  AnnotatedCustomTypes ->
   m (Maybe (Parser 'Output n (RootFieldMap (QueryRootField UnpreparedValue))))
-buildSubscriptionParser queryFields allActions = do
-  actionSubscriptionFields <- fmap (fmap NotNamespaced) . concat <$> traverse buildActionSubscriptionFields allActions
+buildSubscriptionParser queryFields allActions customTypes = do
+  actionSubscriptionFields <- fmap (fmap NotNamespaced) . concat <$> traverse (buildActionSubscriptionFields customTypes) allActions
   let subscriptionFields = queryFields <> actionSubscriptionFields
   whenMaybe (not $ null subscriptionFields) $
     P.safeSelectionSet subscriptionRoot Nothing subscriptionFields
@@ -735,11 +736,11 @@ buildMutationParser ::
   ) =>
   [P.FieldParser n (NamespacedField RemoteField)] ->
   [ActionInfo] ->
-  NonObjectTypeMap ->
+  AnnotatedCustomTypes ->
   [P.FieldParser n (NamespacedField (MutationRootField UnpreparedValue))] ->
   m (Maybe (Parser 'Output n (RootFieldMap (MutationRootField UnpreparedValue))))
-buildMutationParser allRemotes allActions nonObjectCustomTypes mutationFields = do
-  actionParsers <- concat <$> traverse (buildActionMutationFields nonObjectCustomTypes) allActions
+buildMutationParser allRemotes allActions customTypes mutationFields = do
+  actionParsers <- concat <$> traverse (buildActionMutationFields customTypes) allActions
   let mutationFieldsParser =
         mutationFields
           <> (fmap NotNamespaced <$> actionParsers)

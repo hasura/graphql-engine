@@ -315,7 +315,7 @@ data AnnActionExecution (b :: BackendType) (r :: Type) v = AnnActionExecution
     -- | output type
     _aaeOutputType :: !GraphQLType,
     -- | output selection
-    _aaeFields :: !(AnnFieldsG b r v),
+    _aaeFields :: !(ActionFieldsG b r v),
     -- | jsonified input arguments
     _aaePayload :: !J.Value,
     -- | to validate the response fields from webhook
@@ -341,7 +341,7 @@ data AnnActionMutationAsync = AnnActionMutationAsync
 
 data AsyncActionQueryFieldG (b :: BackendType) (r :: Type) v
   = AsyncTypename !Text
-  | AsyncOutput !(AnnFieldsG b r v)
+  | AsyncOutput !(ActionFieldsG b r v)
   | AsyncId
   | AsyncCreatedAt
   | AsyncErrors

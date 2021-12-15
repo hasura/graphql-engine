@@ -78,12 +78,72 @@ args:
         field_mapping:
           id: user_id
 
+    - name: UserId2
+      fields:
+      - name: id
+        type: Int!
+
     - name: OutObject
       fields:
       - name: id
         type: ID! # For issue https://github.com/hasura/graphql-engine/issues/4061
       - name: name
         type: String
+
+    - name: Address
+      fields:
+      - name: city
+        type: String
+      - name: country
+        type: String
+
+    - name: NestedOutObject
+      fields:
+      - name: id
+        type: Int!
+      - name: user_id
+        type: UserId2
+      - name: address
+        type: Address
+      - name: addresses
+        type: '[Address]'
+
+    - name: DirectRecursiveType
+      fields:
+      - name: id
+        type: Int!
+      - name: this
+        type: DirectRecursiveType
+
+    - name: ListRecursiveType
+      fields:
+      - name: id
+        type: Int!
+      - name: these
+        type: '[ListRecursiveType]'
+
+    - name: MutuallyRecursiveTypeA
+      fields:
+      - name: id
+        type: Int!
+      - name: that
+        type: MutuallyRecursiveTypeB
+
+    - name: MutuallyRecursiveTypeB
+      fields:
+      - name: id
+        type: Int!
+      - name: other
+        type: MutuallyRecursiveTypeA
+
+    - name: Recursive
+      fields:
+      - name: direct
+        type: DirectRecursiveType
+      - name: list
+        type: ListRecursiveType
+      - name: mutual
+        type: MutuallyRecursiveTypeA
 
     - name: NullableResp
       fields:
@@ -171,6 +231,17 @@ args:
 
 - type: create_action
   args:
+    name: get_user_by_email_nested
+    definition:
+      type: query
+      arguments:
+      - name: email
+        type: String!
+      output_type: NestedOutObject!
+      handler: http://127.0.0.1:5593/get-user-by-email-nested
+
+- type: create_action
+  args:
     name: get_users_by_email
     definition:
       type: query
@@ -179,6 +250,17 @@ args:
         type: String!
       output_type: '[UserId]!'
       handler: http://127.0.0.1:5593/get-users-by-email
+
+- type: create_action
+  args:
+    name: get_users_by_email_nested
+    definition:
+      type: query
+      arguments:
+      - name: email
+        type: String!
+      output_type: '[NestedOutObject]!'
+      handler: http://127.0.0.1:5593/get-users-by-email-nested
 
 - type: create_action
   args:
@@ -217,3 +299,11 @@ args:
   args:
     action: get_user_by_email
     role: user
+
+- type: create_action
+  args:
+    name: recursive_output
+    definition:
+      type: query
+      output_type: Recursive
+      handler: http://127.0.0.1:5593/recursive-output

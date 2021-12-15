@@ -24,7 +24,10 @@
 --     @UnpreparedValue b@ for their respective backend @b@, and most backends will then transform
 --     their AST, cutting all such remote branches, and therefore using @Const Void@ for @r@.
 module Hasura.RQL.IR.Select
-  ( AggregateField (..),
+  ( ActionFieldG (..),
+    ActionFieldsG,
+    ActionFields,
+    AggregateField (..),
     AggregateFields,
     AggregateOp (..),
     AnnAggregateSelect,
@@ -142,6 +145,7 @@ import Hasura.RQL.Types.Instances ()
 import Hasura.RQL.Types.Relationships.FromSource
 import Hasura.RQL.Types.Relationships.Local
 import Hasura.SQL.Backend
+import Language.GraphQL.Draft.Syntax qualified as G
 
 -- Root selection
 
@@ -895,6 +899,36 @@ insertFunctionArg argName idx value (FunctionArgsExp positional named) =
         HM.insert (getFuncArgNameTxt argName) value named
   where
     insertAt i a = toList . Seq.insertAt i a . Seq.fromList
+
+-- Actions
+
+data ActionFieldG (b :: BackendType) (r :: Type) v
+  = ACFScalar !G.Name
+  | ACFObjectRelation !(ObjectRelationSelectG b r v)
+  | ACFArrayRelation !(ArraySelectG b r v)
+  | ACFExpression !Text
+  | ACFNestedObject !G.Name !(ActionFieldsG b r v)
+  deriving (Functor, Foldable, Traversable)
+
+deriving instance
+  ( Backend b,
+    Eq (BooleanOperators b v),
+    Eq v,
+    Eq r
+  ) =>
+  Eq (ActionFieldG b r v)
+
+deriving instance
+  ( Backend b,
+    Show (BooleanOperators b v),
+    Show v,
+    Show r
+  ) =>
+  Show (ActionFieldG b r v)
+
+type ActionFieldsG b r v = Fields (ActionFieldG b r v)
+
+type ActionFields b = ActionFieldsG b Void (SQLExpression b)
 
 -- Lenses
 

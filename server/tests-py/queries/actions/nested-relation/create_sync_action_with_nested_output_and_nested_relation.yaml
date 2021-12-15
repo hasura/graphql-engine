@@ -1,0 +1,60 @@
+- description: Create an action with PG scalars in input arguments
+  url: /v1/query
+  status: 400
+  response:
+    internal:
+    - definition:
+        definition:
+          kind: synchronous
+          output_type: UserIdObj_Fail
+          arguments:
+          - name: someInput
+            type: String!
+            description:
+          headers: []
+          handler: http://some.random/endpoint
+          type: mutation
+          timeout: 30
+          forward_client_headers: false
+        name: action_create_fail
+        comment:
+      reason: 'Inconsistent object: in action "action_create_fail"; Relationship cannot
+        be defined for nested object "UserId". Relationship can be used only for top level
+        object "UserIdObj_Fail".'
+      name: action action_create_fail
+      type: action
+    path: "$.args[1].args"
+    error: 'Inconsistent object: in action "action_create_fail"; Relationship cannot be
+      defined for nested object "UserId". Relationship can be used only for top level
+      object "UserIdObj_Fail".'
+    code: invalid-configuration
+  query:
+    type: bulk
+    args:
+    - type: set_custom_types
+      args:
+        objects:
+        - name: UserId
+          fields:
+          - name: id
+            type: Int!
+          relationships:
+          - name: user
+            type: object
+            remote_table: user
+            field_mapping:
+              id: id
+        - name: UserIdObj_Fail
+          fields:
+          - name: user_id
+            type: UserId
+    - type: create_action
+      args:
+        name: action_create_fail
+        definition:
+          kind: synchronous
+          arguments:
+          - name: someInput
+            type: String!
+          output_type: UserIdObj_Fail
+          handler: http://some.random/endpoint
