@@ -87,32 +87,24 @@ tableSelectColumnsEnum sourceName tableInfo selectPermissions = do
 -- Parser for an enum type that matches the columns of the given
 -- table. Used for conflict resolution in "insert" mutations, among
 -- others. Maps to the table_update_column object.
---
--- If there's no column for which the current user has "update"
--- permissions, this functions returns an enum that only contains a
--- placeholder, so as to still allow this type to exist in the schema.
 tableUpdateColumnsEnum ::
   forall m n r b.
   (BackendSchema b, MonadSchema n m, MonadError QErr m, MonadReader r m, Has P.MkTypename r) =>
   TableInfo b ->
   UpdPermInfo b ->
-  m (Parser 'Both n (Maybe (Column b)))
+  m (Maybe (Parser 'Both n (Column b)))
 tableUpdateColumnsEnum tableInfo updatePermissions = do
   tableGQLName <- getTableGQLName tableInfo
   columns <- tableUpdateColumns tableInfo updatePermissions
   enumName <- P.mkTypename $ tableGQLName <> $$(G.litName "_update_column")
   let tableName = tableInfoName tableInfo
       enumDesc = Just $ G.Description $ "update columns of table " <>> tableName
-      altDesc = Just $ G.Description $ "placeholder for update columns of table " <> tableName <<> " (current role has no relevant permissions)"
       enumValues = do
         column <- columns
-        pure (define $ pgiName column, Just $ pgiColumn column)
-  pure $ case nonEmpty enumValues of
-    Just values -> P.enum enumName enumDesc values
-    Nothing -> P.enum enumName altDesc $ pure (placeholder, Nothing)
+        pure (define $ pgiName column, pgiColumn column)
+  pure $ P.enum enumName enumDesc <$> nonEmpty enumValues
   where
     define name = P.Definition name (Just $ G.Description "column name") P.EnumValueInfo
-    placeholder = P.Definition @P.EnumValueInfo $$(G.litName "_PLACEHOLDER") (Just $ G.Description "placeholder (do not use)") P.EnumValueInfo
 
 tablePermissions ::
   forall m n r b.
