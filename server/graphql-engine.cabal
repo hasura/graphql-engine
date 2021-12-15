@@ -384,6 +384,7 @@ library
                      , Hasura.Backends.MSSQL.Plan
                      , Hasura.Backends.MSSQL.SQL.Value
                      , Hasura.Backends.MSSQL.ToQuery
+                     , Hasura.Backends.MSSQL.Types
                      , Hasura.Backends.MSSQL.Types.Insert
                      , Hasura.Backends.MSSQL.Types.Instances
                      , Hasura.Backends.MSSQL.Types.Internal
