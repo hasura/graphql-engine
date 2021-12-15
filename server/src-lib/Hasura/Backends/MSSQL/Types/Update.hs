@@ -2,11 +2,14 @@
 module Hasura.Backends.MSSQL.Types.Update
   ( BackendUpdate (..),
     UpdateOperator (..),
+    Update (..),
+    UpdateSet,
+    UpdateOutput,
   )
 where
 
 import Hasura.Backends.MSSQL.Types.Instances ()
-import Hasura.Backends.MSSQL.Types.Internal qualified as MSSQL
+import Hasura.Backends.MSSQL.Types.Internal
 import Hasura.Prelude
 
 -- | The MSSQL-specific data of an Update expression.
@@ -16,7 +19,7 @@ import Hasura.Prelude
 -- the data at the leaves.
 data BackendUpdate v = BackendUpdate
   { -- | The update operations to perform on each column.
-    updateOperations :: HashMap MSSQL.ColumnName (UpdateOperator v)
+    updateOperations :: HashMap ColumnName (UpdateOperator v)
   }
   deriving (Functor, Foldable, Traversable, Generic, Data)
 
@@ -29,3 +32,17 @@ data UpdateOperator v
   = UpdateSet v
   | UpdateInc v
   deriving (Functor, Foldable, Traversable, Generic, Data)
+
+type UpdateSet = HashMap ColumnName (UpdateOperator Expression)
+
+type UpdateOutput = Output Inserted
+
+-- | UPDATE [table_alias] SET [table_alias].column = 'value' OUTPUT INSERTED.column INTO #updated
+-- FROM [table_name] AS [table_alias] WHERE <filter-expression>
+data Update = Update
+  { updateTable :: Aliased TableName,
+    updateSet :: UpdateSet,
+    updateOutput :: UpdateOutput,
+    updateTempTable :: TempTable,
+    updateWhere :: Where
+  }

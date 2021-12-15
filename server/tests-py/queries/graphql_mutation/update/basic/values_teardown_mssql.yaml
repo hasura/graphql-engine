@@ -1,0 +1,16 @@
+type: bulk
+args:
+
+#truncate data
+- type: mssql_run_sql
+  args:
+    source: mssql
+    sql: |
+      -- delete rows from table
+      DELETE FROM article;
+      DELETE FROM author;
+      DELETE FROM numerics;
+      -- reset identity columns
+      DBCC CHECKIDENT ('article', RESEED, 0);
+      DBCC CHECKIDENT ('author', RESEED, 0);
+      DBCC CHECKIDENT ('numerics', RESEED, 0);

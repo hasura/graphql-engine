@@ -38,7 +38,7 @@ instance BackendSchema 'MSSQL where
   buildTableRelayQueryFields = msBuildTableRelayQueryFields
   buildTableInsertMutationFields = msBuildTableInsertMutationFields
   buildTableDeleteMutationFields = GSB.buildTableDeleteMutationFields
-  buildTableUpdateMutationFields = \_ _ _ _ _ _ -> return [] -- see _msBuildTableUpdateMutationFields.
+  buildTableUpdateMutationFields = msBuildTableUpdateMutationFields
 
   buildFunctionQueryFields = msBuildFunctionQueryFields
   buildFunctionRelayQueryFields = msBuildFunctionRelayQueryFields
@@ -121,10 +121,7 @@ getExtraInsertData tableInfo =
       identityColumns = _tciExtraTableMetadata $ _tiCoreInfo tableInfo
    in MSSQLExtraInsertData (fromMaybe [] pkeyColumns) identityColumns
 
--- Replace the instance implementation of 'buildTableUpdateMutationFields' with
--- the below when we have an executable implementation of updates, in order to
--- enable the update schema.
-_msBuildTableUpdateMutationFields ::
+msBuildTableUpdateMutationFields ::
   MonadBuildSchema 'MSSQL r m n =>
   SourceName ->
   TableName 'MSSQL ->
@@ -133,7 +130,7 @@ _msBuildTableUpdateMutationFields ::
   UpdPermInfo 'MSSQL ->
   Maybe (SelPermInfo 'MSSQL) ->
   m [FieldParser n (AnnotatedUpdateG 'MSSQL (RemoteRelationshipField UnpreparedValue) (UnpreparedValue 'MSSQL))]
-_msBuildTableUpdateMutationFields =
+msBuildTableUpdateMutationFields =
   GSB.buildTableUpdateMutationFields
     ( \ti updPerms ->
         fmap BackendUpdate

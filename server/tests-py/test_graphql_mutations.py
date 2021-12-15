@@ -512,6 +512,63 @@ class TestGraphqlUpdatePermissions:
     def dir(cls):
         return "queries/graphql_mutation/update/permissions"
 
+@pytest.mark.parametrize("backend", ['mssql'])
+@use_mutation_fixtures
+class TestGraphqlUpdateBasicMssql:
+
+    def test_set_author_name(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/author_set_name_mssql.yaml")
+
+    def test_article_inc(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/article_inc_mssql.yaml")
+
+    def test_author_no_operator(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/author_no_operator_mssql.yaml")
+
+    def test_article_column_multiple_operators(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/article_column_multiple_operators_mssql.yaml")
+
+    def test_author_by_pk(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/author_by_pk_mssql.yaml")
+
+    def test_author_by_pk_null(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/author_by_pk_null_mssql.yaml")
+
+    def test_numerics_inc(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/numerics_inc_mssql.yaml")
+
+    @classmethod
+    def dir(cls):
+        return "queries/graphql_mutation/update/basic"
+
+@pytest.mark.parametrize("backend", ['mssql'])
+@use_mutation_fixtures
+class TestGraphqlUpdatePermissionsMssql:
+
+    def test_user_update_author(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/user_update_author_mssql.yaml")
+
+    def test_user_update_author_other_userid(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/user_update_author_other_userid_mssql.yaml")
+
+    def test_user_can_update_unpublished_article(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/user_can_update_unpublished_article_mssql.yaml")
+
+    def test_user_cannot_update_published_article(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/user_cannot_update_published_article_mssql.yaml")
+
+    def test_user_cannot_update_id_col_article(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/user_cannot_update_id_col_article_mssql.yaml")
+
+    def test_user_cannot_update_another_users_article(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/user_cannot_update_another_users_article_mssql.yaml")
+
+    def test_user_cannot_publish(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/user_cannot_publish_mssql.yaml")
+
+    @classmethod
+    def dir(cls):
+        return "queries/graphql_mutation/update/permissions"
 
 @pytest.mark.parametrize("transport", ['http', 'websocket'])
 @use_mutation_fixtures

@@ -1,0 +1,90 @@
+type: bulk
+args:
+
+- type: mssql_track_table
+  args:
+    source: mssql
+    table:
+      name: author
+
+- type: mssql_track_table
+  args:
+    source: mssql
+    table:
+      name: article
+
+#Object relationship article <-> author
+- type: mssql_create_object_relationship
+  args:
+    source: mssql
+    table: article
+    name: author
+    using:
+      foreign_key_constraint_on: author_id
+
+#Array relationship author <-> article
+- type: mssql_create_array_relationship
+  args:
+    source: mssql
+    table: author
+    name: articles
+    using:
+      foreign_key_constraint_on:
+        table: article
+        column: author_id
+
+#Author select permission for user
+- type: mssql_create_select_permission
+  args:
+    source: mssql
+    table: author
+    role: user
+    permission:
+      columns: [id, name]
+      filter:
+        id: X-HASURA-USER-ID
+
+#Author update permission for user
+- type: mssql_create_update_permission
+  args:
+    source: mssql
+    table: author
+    role: user
+    permission:
+      columns:
+      - name
+      filter:
+        id: X-Hasura-User-Id
+
+#Article select permission for user
+- type: mssql_create_select_permission
+  args:
+    source: mssql
+    table: article
+    role: user
+    permission:
+      columns: '*'
+      filter:
+        $or:
+          - author_id: X-HASURA-USER-ID
+          - is_published: 1
+
+#Article update permission for user
+#Allow modifications only on unpublished articles
+- type: mssql_create_update_permission
+  args:
+    source: mssql
+    table: article
+    role: user
+    permission:
+      columns:
+      - title
+      - content
+      - is_published
+      - published_on
+      filter:
+        $and:
+          - author_id: X-HASURA-USER-ID
+          - is_published: 0
+      check:
+        is_published: 0
