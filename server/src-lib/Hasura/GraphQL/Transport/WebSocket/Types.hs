@@ -13,6 +13,7 @@ import Control.Concurrent.STM qualified as STM
 import Data.Time.Clock qualified as TC
 import Hasura.GraphQL.Execute qualified as E
 import Hasura.GraphQL.Execute.LiveQuery.State qualified as LQ
+import Hasura.GraphQL.Transport.HTTP.Protocol (OperationName)
 import Hasura.GraphQL.Transport.Instances ()
 import Hasura.GraphQL.Transport.WebSocket.Protocol
 import Hasura.GraphQL.Transport.WebSocket.Server qualified as WS
@@ -28,7 +29,6 @@ import Network.HTTP.Client qualified as H
 import Network.HTTP.Types qualified as H
 import Network.Wai.Extended qualified as Wai
 import StmContainers.Map qualified as STMMap
-import Hasura.GraphQL.Transport.HTTP.Protocol (OperationName)
 
 newtype WsHeaders = WsHeaders {unWsHeaders :: [H.Header]}
   deriving (Show, Eq)

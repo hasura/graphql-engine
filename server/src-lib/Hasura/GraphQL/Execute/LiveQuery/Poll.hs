@@ -114,8 +114,6 @@ data Subscriber = Subscriber
     _sOperationName :: !(Maybe OperationName),
     _sOnChangeCallback :: !OnChange,
     _sStreamOnStop :: !(Maybe (IO ()))
-    -- | optional action to stop the streaming subscription after
-    --   no rows are returned from the DB.
   }
 
 -- | live query onChange metadata, used for adding more extra analytics data
@@ -329,8 +327,7 @@ pushResultToStreamSubscriptionCohort result !respHashM (LiveQueryMetadata dTime)
         if isResponseEmpty
           then do
             onJust _sStreamOnStop id
-          else
-            _sOnChangeCallback response
+          else _sOnChangeCallback response
 
 -- -----------------------------------------------------------------------------
 -- Pollers
