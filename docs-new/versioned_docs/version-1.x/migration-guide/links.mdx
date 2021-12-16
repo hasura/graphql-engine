@@ -72,7 +72,9 @@ Find `/folder1/subfolder2/doc3.mdx` and replace with `/folder1/newsubfolder4/doc
 
 Since MDX doesn't yet support direct document referencing with `id/ref` unlike sphinx, we need to settle with root relative path liniking for now.
 
-```[MDX Root Relative Link](/migration-guide/index.mdx#contents-covered)```
+```
+[MDX Root Relative Link](/migration-guide/index.mdx#contents-covered)
+```
 
 
 > [MDX Root Relative Link](/migration-guide/index.mdx#contents-covered)
@@ -99,6 +101,12 @@ External links have no effect and will link to external resource.
 
 ### When using MDX links
 All absolute links will be broken and have to be manually fixed. So, it is always recommended to use root relative/relative links which would point to correct versioned docs.
+
+
+Switch versions and observe below to see how docusaurus parses file path links and result in full URL path for different versions
+Base URL is always prefixed.
+
+`[=>](/migration-guide/index.mdx#contents-covered)`
 
 :::tip Dont forget the extension!
 Make sure to include file extension as MDX links are parsed a file path and will be resolved to correct version.
