@@ -219,9 +219,15 @@ Step 4: Edit the ``Caddyfile`` and change ``:80`` to your domain
    vim Caddyfile
 
    ...
-   add_your-domain-here {
-      proxy / graphql-engine:8080 {
-         websocket
+   https://you.domain.example.com {
+      reverse_proxy * graphql-engine:8080 {
+         header_up Host {http.request.host}
+         header_up X-Real-IP {http.request.remote}
+         header_up X-Forwarded-For {http.request.remote}
+         header_up X-Forwarded-Port {http.request.port}
+         header_up X-Forwarded-Proto {http.request.scheme}
+         header_up Connection {http.request.header.Connection}
+         header_up Upgrade {http.request.header.Upgrade}
       }
    }
    ...
