@@ -376,7 +376,7 @@ The various types of queries are listed in the following table:
      - :ref:`create_scheduled_event_args <metadata_create_scheduled_event_syntax>`
      - 1
      - Create a new scheduled event
-   
+ 
    * - :ref:`metadata_delete_scheduled_event`
      - :ref:`delete_scheduled_event_args <metadata_delete_scheduled_event_syntax>`
      - 1
@@ -412,18 +412,18 @@ The various types of queries are listed in the following table:
      - 1
      - Drop existing permissions defined for a role for a remote schema
 
-   * - :ref:`metadata_create_remote_relationship`
-     - :ref:`create_remote_relationship_args <metadata_create_remote_relationship_syntax>`
+   * - :ref:`metadata_pg_create_remote_relationship`
+     - :ref:`pg_create_remote_relationship_args <metadata_pg_create_remote_relationship_syntax>`
      - 1
      - Create a remote relationship with an existing remote schema
 
-   * - :ref:`metadata_update_remote_relationship`
-     - :ref:`update_remote_relationship_args <metadata_update_remote_relationship_syntax>`
+   * - :ref:`metadata_pg_update_remote_relationship`
+     - :ref:`pg_update_remote_relationship_args <metadata_pg_update_remote_relationship_syntax>`
      - 1
      - Update an existing remote relationship
 
-   * - :ref:`metadata_delete_remote_relationship`
-     - :ref:`delete_remote_relationship_args <metadata_delete_remote_relationship_syntax>`
+   * - :ref:`metadata_pg_delete_remote_relationship`
+     - :ref:`pg_delete_remote_relationship_args <metadata_pg_delete_remote_relationship_syntax>`
      - 1
      - Delete an existing remote relationship
 
