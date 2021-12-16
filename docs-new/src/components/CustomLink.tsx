@@ -1,3 +1,5 @@
+// Ref: https://github.com/facebook/docusaurus/issues/2302#issuecomment-674175068
+
 import React from 'react';
 import Link from '@docusaurus/Link';
 import {useActiveVersion, useLatestVersion} from '@theme/hooks/useDocs';
