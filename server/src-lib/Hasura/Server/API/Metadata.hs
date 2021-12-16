@@ -82,10 +82,9 @@ data RQLMetadataV1
   | RMSetRelationshipComment !(AnyBackend SetRelComment)
   | RMRenameRelationship !(AnyBackend RenameRel)
   | -- Tables remote relationships
-    -- (backend)_create_remote_relationship, create_remote_relationship
     RMCreateRemoteRelationship !(AnyBackend CreateFromSourceRelationship)
   | RMUpdateRemoteRelationship !(AnyBackend CreateFromSourceRelationship)
-  | RMDeleteRemoteRelationship !(DeleteFromSourceRelationship ('Postgres 'Vanilla))
+  | RMDeleteRemoteRelationship !(AnyBackend DeleteFromSourceRelationship)
   | -- Functions
     RMTrackFunction !(AnyBackend TrackFunctionV2)
   | RMUntrackFunction !(AnyBackend UnTrackFunction)
@@ -222,7 +221,6 @@ instance FromJSON RQLMetadataV1 where
       "test_webhook_transform" -> RMTestWebhookTransform <$> args
       "set_query_tags" -> RMSetQueryTagsConfig <$> args
       "bulk" -> RMBulk <$> args
-      "create_remote_relationship" -> RMCreateRemoteRelationship . mkAnyBackend . unLegacyCreateRemoteRelationship <$> args
       -- backend specific
       _ -> do
         let (prefix, T.drop 1 -> cmd) = T.breakOn "_" queryType
@@ -419,7 +417,7 @@ runMetadataQueryV1M env currentResourceVersion = \case
   RMRenameRelationship q -> dispatchMetadata runRenameRel q
   RMCreateRemoteRelationship q -> dispatchMetadata runCreateRemoteRelationship q
   RMUpdateRemoteRelationship q -> dispatchMetadata runUpdateRemoteRelationship q
-  RMDeleteRemoteRelationship q -> runDeleteRemoteRelationship q
+  RMDeleteRemoteRelationship q -> dispatchMetadata runDeleteRemoteRelationship q
   RMTrackFunction q -> dispatchMetadata runTrackFunctionV2 q
   RMUntrackFunction q -> dispatchMetadata runUntrackFunc q
   RMCreateFunctionPermission q -> dispatchMetadata runCreateFunctionPermission q

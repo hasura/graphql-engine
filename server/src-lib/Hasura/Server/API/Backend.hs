@@ -115,7 +115,7 @@ relationshipCommands =
 remoteRelationshipCommands =
   [ commandParser "create_remote_relationship" $ RMCreateRemoteRelationship . mkAnyBackend @b,
     commandParser "update_remote_relationship" $ RMUpdateRemoteRelationship . mkAnyBackend @b,
-    commandParser "delete_remote_relationship" $ RMDeleteRemoteRelationship
+    commandParser "delete_remote_relationship" $ RMDeleteRemoteRelationship . mkAnyBackend @b
   ]
 eventTriggerCommands =
   [ commandParser "invoke_event_trigger" $ RMInvokeEventTrigger . mkAnyBackend @b,

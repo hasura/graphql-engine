@@ -48,7 +48,7 @@ data RQLMetadataV1
   | -- Tables remote relationships
     RMCreateRemoteRelationship !(AnyBackend CreateFromSourceRelationship)
   | RMUpdateRemoteRelationship !(AnyBackend CreateFromSourceRelationship)
-  | RMDeleteRemoteRelationship !(DeleteFromSourceRelationship ('Postgres 'Vanilla))
+  | RMDeleteRemoteRelationship !(AnyBackend DeleteFromSourceRelationship)
   | -- Functions
     RMTrackFunction !(AnyBackend TrackFunctionV2)
   | RMUntrackFunction !(AnyBackend UnTrackFunction)
