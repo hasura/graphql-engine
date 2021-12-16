@@ -29,6 +29,7 @@ module Hasura.Backends.MSSQL.FromIr
     jsonFieldName,
     fromInsert,
     fromDelete,
+    fromUpdate,
     toSelectIntoTempTable,
   )
 where
@@ -41,8 +42,9 @@ import Data.Proxy
 import Data.Text qualified as T
 import Database.ODBC.SQLServer qualified as ODBC
 import Hasura.Backends.MSSQL.Instances.Types ()
-import Hasura.Backends.MSSQL.Types.Insert as TSQL (MSSQLExtraInsertData (..))
+import Hasura.Backends.MSSQL.Types.Insert as TSQL (BackendInsert (..), ExtraColumnInfo (..))
 import Hasura.Backends.MSSQL.Types.Internal as TSQL
+import Hasura.Backends.MSSQL.Types.Update as TSQL (BackendUpdate (..), Update (..))
 import Hasura.Prelude
 import Hasura.RQL.IR qualified as IR
 import Hasura.RQL.Types.Column qualified as IR
@@ -1071,7 +1073,7 @@ fromInsert IR.AnnInsert {..} =
       insertRows = normalizeInsertRows _aiData $ map (IR.getInsertColumns) _aiInsObj
       insertColumnNames = maybe [] (map fst) $ listToMaybe insertRows
       insertValues = map (Values . map snd) insertRows
-      primaryKeyColumns = map OutputColumn $ _mssqlPrimaryKeyColumns _aiBackendInsert
+      primaryKeyColumns = map OutputColumn $ _eciPrimaryKeyColumns $ _biExtraColumnInfo _aiBackendInsert
    in Insert _aiTableName insertColumnNames (Output Inserted primaryKeyColumns) insertValues
 
 -- | Normalize a row by adding missing columns with 'DEFAULT' value and sort by column name to make sure
@@ -1097,7 +1099,7 @@ fromInsert IR.AnnInsert {..} =
 normalizeInsertRows :: IR.AnnIns 'MSSQL [] Expression -> [[(Column 'MSSQL, Expression)]] -> [[(Column 'MSSQL, Expression)]]
 normalizeInsertRows IR.AnnIns {..} insertRows =
   let isIdentityColumn column =
-        IR.pgiColumn column `elem` _mssqlIdentityColumns _aiBackendInsert
+        IR.pgiColumn column `elem` _eciIdentityColumns (_biExtraColumnInfo _aiBackendInsert)
       allColumnsWithDefaultValue =
         -- DEFAULT or NULL are not allowed as explicit identity values.
         map ((,DefaultExpression) . IR.pgiColumn) $ filter (not . isIdentityColumn) _aiTableCols
@@ -1128,6 +1130,30 @@ fromDelete (IR.AnnDel tableName (permFilter, whereClause) _ allColumns) = do
               deleteOutput = Output Deleted (map OutputColumn columnNames),
               deleteTempTable = TempTable tempTableNameDeleted columnNames,
               deleteWhere = Where [permissionsFilter, whereExpression]
+            }
+    )
+    tableAlias
+
+-- | Convert IR AST representing update into MSSQL AST representing an update statement
+fromUpdate :: IR.AnnotatedUpdate 'MSSQL -> FromIr Update
+fromUpdate (IR.AnnotatedUpdateG tableName (permFilter, whereClause) _ backendUpdate _ allColumns) = do
+  tableAlias <- fromTableName tableName
+  runReaderT
+    ( do
+        permissionsFilter <- fromGBoolExp permFilter
+        whereExpression <- fromGBoolExp whereClause
+        let columnNames = map (ColumnName . unName . IR.pgiName) allColumns
+        pure
+          Update
+            { updateTable =
+                Aliased
+                  { aliasedAlias = entityAliasText tableAlias,
+                    aliasedThing = tableName
+                  },
+              updateSet = updateOperations backendUpdate,
+              updateOutput = Output Inserted (map OutputColumn columnNames),
+              updateTempTable = TempTable tempTableNameUpdated columnNames,
+              updateWhere = Where [permissionsFilter, whereExpression]
             }
     )
     tableAlias

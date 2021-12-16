@@ -10,12 +10,15 @@ module Hasura.Backends.MSSQL.ToQuery
     fromInsert,
     fromSetIdentityInsert,
     fromDelete,
+    fromUpdate,
     fromSelectIntoTempTable,
+    dropTempTableQuery,
     Printer (..),
   )
 where
 
 import Data.Aeson (ToJSON (..))
+import Data.HashMap.Strict qualified as HM
 import Data.List (intersperse)
 import Data.String
 import Data.Text qualified as T
@@ -23,8 +26,7 @@ import Data.Text.Extended qualified as T
 import Data.Text.Lazy qualified as L
 import Data.Text.Lazy.Builder qualified as L
 import Database.ODBC.SQLServer
-import Hasura.Backends.MSSQL.Types.Instances ()
-import Hasura.Backends.MSSQL.Types.Internal
+import Hasura.Backends.MSSQL.Types
 import Hasura.Prelude hiding (GT, LT)
 
 --------------------------------------------------------------------------------
@@ -112,6 +114,11 @@ fromExpression =
         <+> " ("
         <+> fromExpression y
         <+> ")"
+    FunctionExpression function args ->
+      fromString (T.unpack function)
+        <+> "("
+        <+> SepByPrinter ", " (map fromExpression args)
+        <+> ")"
     ListExpression xs -> SepByPrinter ", " $ fromExpression <$> xs
     STOpExpression op e str ->
       "(" <+> fromExpression e <+> ")."
@@ -184,6 +191,9 @@ fromInsertOutput = fromOutput fromInserted
 fromDeleteOutput :: DeleteOutput -> Printer
 fromDeleteOutput = fromOutput fromDeleted
 
+fromUpdateOutput :: UpdateOutput -> Printer
+fromUpdateOutput = fromOutput fromInserted
+
 fromValues :: Values -> Printer
 fromValues (Values values) =
   "( " <+> SepByPrinter ", " (map fromExpression values) <+> " )"
@@ -233,6 +243,42 @@ fromDelete Delete {deleteTable, deleteOutput, deleteTempTable, deleteWhere} =
       fromWhere deleteWhere
     ]
 
+-- | Generate an update statement
+--
+-- > Update
+-- >    (Aliased (TableName "table" "schema") "alias")
+-- >    (fromList [(ColumnName "name", ValueExpression (TextValue "updated_name"))])
+-- >    (Output Inserted)
+-- >    (TempTable (TempTableName "updated") [ColumnName "id", ColumnName "name"])
+-- >    (Where [OpExpression EQ' (ColumnName "id") (ValueExpression (IntValue 1))])
+--
+-- Becomes:
+--
+-- > UPDATE [alias] SET [alias].[name] = 'updated_name' OUTPUT INSERTED.[id], INSERTED.[name] INTO
+-- > #updated([id], [name]) FROM [schema].[table] AS [alias] WHERE (id = 1)
+fromUpdate :: Update -> Printer
+fromUpdate Update {..} =
+  SepByPrinter
+    NewlinePrinter
+    [ "UPDATE " <+> fromNameText (aliasedAlias updateTable),
+      fromUpdateSet updateSet,
+      fromUpdateOutput updateOutput,
+      "INTO " <+> fromTempTable updateTempTable,
+      "FROM " <+> fromAliased (fmap fromTableName updateTable),
+      fromWhere updateWhere
+    ]
+  where
+    fromUpdateSet :: UpdateSet -> Printer
+    fromUpdateSet setColumns =
+      let updateColumnValue (column, updateOp) =
+            fromColumnName column <+> fromUpdateOperator (fromExpression <$> updateOp)
+       in "SET " <+> SepByPrinter ", " (map updateColumnValue (HM.toList setColumns))
+
+    fromUpdateOperator :: UpdateOperator Printer -> Printer
+    fromUpdateOperator = \case
+      UpdateSet p -> " = " <+> p
+      UpdateInc p -> " += " <+> p
+
 -- | Converts `SelectIntoTempTable`.
 --
 --  > SelectIntoTempTable (TempTableName "deleted")  [UnifiedColumn "id" IntegerType, UnifiedColumn "name" TextType] (TableName "table" "schema")
@@ -280,6 +326,11 @@ fromTempTableName (TempTableName v) = QueryPrinter (fromString . T.unpack $ "#" 
 fromTempTable :: TempTable -> Printer
 fromTempTable (TempTable table columns) =
   fromTempTableName table <+> parens (SepByPrinter ", " (map fromColumnName columns))
+
+-- | @TempTableName "temp_table" is converted to "DROP TABLE #temp_table"
+dropTempTableQuery :: TempTableName -> Printer
+dropTempTableQuery tempTableName =
+  QueryPrinter "DROP TABLE " <+> fromTempTableName tempTableName
 
 fromSelect :: Select -> Printer
 fromSelect Select {..} = fmap fromWith selectWith ?<+> wrapFor selectFor result

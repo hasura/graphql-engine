@@ -257,7 +257,7 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
           (_boSources resolvedOutputs)
           (_boRemoteSchemas resolvedOutputs)
           (_boActions resolvedOutputs)
-          (_actNonObjects $ _boCustomTypes resolvedOutputs)
+          (_boCustomTypes resolvedOutputs)
 
   -- Step 4: Build the relay GraphQL schema
   (relayContext, relayContextUnauth, relaySchemaInconsistentObjects) <-
@@ -268,7 +268,7 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
           (_boSources resolvedOutputs)
           (_boRemoteSchemas resolvedOutputs)
           (_boActions resolvedOutputs)
-          (_actNonObjects $ _boCustomTypes resolvedOutputs)
+          (_boCustomTypes resolvedOutputs)
 
   let duplicateVariables :: EndpointMetadata a -> Bool
       duplicateVariables m = any ((> 1) . length) $ group $ sort $ catMaybes $ splitPath Just (const Nothing) (_ceUrl m)

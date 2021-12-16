@@ -1,0 +1,30 @@
+description: Trying to update name of author whose id /= X-Hasura-User-Id. This shouldn't mutate any data as permission filter condition is not met.
+url: /v1/graphql
+status: 200
+headers:
+  X-Hasura-Role: user
+  X-Hasura-User-Id: '1'
+query:
+  query: |
+    mutation {
+      update_author(
+        where: {id: {_eq: 2}}
+        _set: {name: "Author 1 updated"}
+      ){
+        affected_rows
+        returning{
+          id
+          name
+          articles{
+            id
+            title
+            content
+          }
+        }
+      }
+    }
+response:
+  data:
+    update_author:
+      affected_rows: 0
+      returning: []

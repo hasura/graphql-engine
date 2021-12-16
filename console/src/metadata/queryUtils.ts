@@ -140,7 +140,7 @@ export const getMetadataQuery = (
       prefix = 'pg_';
   }
   return {
-    type: `${prefix}${type}`,
+    type: type !== 'create_remote_relationship' ? `${prefix}${type}` : type,
     args: { ...args, source },
   };
 };

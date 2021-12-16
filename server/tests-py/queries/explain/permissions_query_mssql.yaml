@@ -8,9 +8,9 @@ response:
              [t_user1].[name] AS [name],
              [t_user1].[age] AS [age]
       FROM [dbo].[user] AS [t_user1]
-      WHERE ((((([t_user1].[id]) = ((N'1')))
+      WHERE ((((([t_user1].[id]) = (CAST(CAST((N'1') AS nvarchar(max)) AS int)))
             OR ((([t_user1].[id]) IS NULL)
-            AND (((N'1')) IS NULL)))))
+            AND ((CAST(CAST((N'1') AS nvarchar(max)) AS int)) IS NULL)))))
       FOR JSON PATH, INCLUDE_NULL_VALUES), '[]')
 query:
   user:

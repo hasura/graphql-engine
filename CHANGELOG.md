@@ -6,6 +6,8 @@
 ### Bug fixes and improvements
 (Add entries below in the order of server, console, cli, docs, others)
 
+- server: implement update mutations for MS SQL Server (closes #7834)
+
 ## v2.1.0
 
 - server: fix issue interpreting urls from environment in the `TestWebhookTransform` endpoint.
@@ -30,11 +32,13 @@
 - server: support database-to-database joins with BigQuery
 - server: improved startup time when using large remote schemas
 - server: fix rest-endpoints bug allow list arguments (fix #7135)
+- server: support nested output object types in actions (#4796)
 - server: fallback to unauthorized role when JWT is not found in cookie (fix #7272)
 - server: add support for building linux/arm64 docker image (#6337, #1266)
 - server: provide option to explicitly recreate event triggers for sources in the `reload_metadata` API
 - server: fix `gen_hasura_uuid` migration to be idempotent, so that it doesn't fail if the database is already initialised with source migrations.
 - server: fix mssql `table_by_pk` query returning empty array (fix #7784)
+- server: fix BigQuery queries failing with more than one array relationship
 - console: add comments to tracked functions
 - console: add select all columns option while selecting the columns in event triggers
 - console: add request transforms for events

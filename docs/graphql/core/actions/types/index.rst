@@ -43,15 +43,34 @@ This is an object type called ``UserInfo`` that has two fields:
 * ``accessToken``: This field is of type ``String!`` (non-nullable ``String``)
 * ``userId``: This field is of type ``Int!`` (non-nullable ``Int``)
 
+Hasura supports nested objects. For example, you can define a type like the following:
+
+.. code-block:: graphql
+
+    type UserInfo {
+      accessToken: String!
+      userId: Int!
+      user: UserObj!
+    }
+
+    type UserObj {
+      name: String!
+      favFood: String!
+      isAdmin: Boolean!
+    }
+
+Recursive nested objects are also supported. For example, you can use the following type:
+
+.. code-block:: graphql
+
+    type UserObj {
+      name: String!
+      favFood: String!
+      isAdmin: Boolean!
+      friends: [UserObj]!
+    }
+
 `See reference <https://graphql.org/learn/schema/#object-types-and-fields>`__
-
-.. admonition:: Limitations
-
-  Hasura does not allow a field of an object type to be another object type,
-  i.e. the fields of an object type can only be ``scalars`` and ``enums``.
-
-  For a more complicated structure, the object types can be connected to the rest
-  of the graph via :ref:`relationships <custom_object_type_relationships>`.
 
 .. _custom_object_type_relationships:
 
@@ -100,6 +119,34 @@ The object type will now be modified as:
 
   Only fields with non-list scalar types (e.g. ``Int``, ``String``) can be used
   to define relationships
+
+
+.. admonition:: Limitations
+
+  Hasura has the following limitations for relationship in nested object types:
+
+  1. For nested objects, relationships can only be defined for top-level fields.
+     For example, for the following type definition:
+
+     .. code-block:: graphql
+
+          type UserInfo {
+            accessToken: String!
+            userId: Int!
+            user: UserObj!
+          }
+
+          type UserObj {
+            name: String!
+            favFood: String!
+            isAdmin: Boolean!
+          }
+     
+     relationships can only be defined using ``accessToken`` and ``userID``, you cannot
+     use ``name``, ``favFood`` or ``isAdmin`` fields in a relationship definition.
+
+  2. For ``async`` actions, you cannot have nested object types and relationships
+     in the same action.
 
 Input types
 -----------

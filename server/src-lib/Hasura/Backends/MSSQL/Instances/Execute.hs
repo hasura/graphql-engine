@@ -22,8 +22,9 @@ import Hasura.Backends.MSSQL.FromIr as TSQL
 import Hasura.Backends.MSSQL.Plan
 import Hasura.Backends.MSSQL.SQL.Value (txtEncodedColVal)
 import Hasura.Backends.MSSQL.ToQuery as TQ
-import Hasura.Backends.MSSQL.Types.Insert (MSSQLExtraInsertData (..))
+import Hasura.Backends.MSSQL.Types.Insert (BackendInsert (..), ExtraColumnInfo (..))
 import Hasura.Backends.MSSQL.Types.Internal as TSQL
+import Hasura.Backends.MSSQL.Types.Update
 import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.GraphQL.Execute.Backend
@@ -228,7 +229,7 @@ msDBMutationPlan userInfo stringifyNum sourceName sourceConfig mrf = do
   go <$> case mrf of
     MDBInsert annInsert -> executeInsert userInfo stringifyNum sourceConfig annInsert
     MDBDelete annDelete -> executeDelete userInfo stringifyNum sourceConfig annDelete
-    MDBUpdate _annUpdate -> throw400 NotSupported "update mutations are not supported in MS SQL Server"
+    MDBUpdate annUpdate -> executeUpdate userInfo stringifyNum sourceConfig annUpdate
     MDBFunction {} -> throw400 NotSupported "function mutations are not supported in MSSQL"
   where
     go v = DBStepInfo @'MSSQL sourceName sourceConfig Nothing v
@@ -307,7 +308,7 @@ executeInsert userInfo stringifyNum sourceConfig annInsert = do
 
     buildInsertTx :: AnnInsert 'MSSQL Void Expression -> Tx.TxET QErr IO EncJSON
     buildInsertTx insert = do
-      let identityColumns = _mssqlIdentityColumns $ _aiBackendInsert $ _aiData insert
+      let identityColumns = _eciIdentityColumns $ _biExtraColumnInfo $ _aiBackendInsert $ _aiData insert
           insertColumns = concatMap (map fst . getInsertColumns) $ _aiInsObj $ _aiData insert
 
       -- Set identity insert to ON if insert object contains identity columns
@@ -337,7 +338,7 @@ executeInsert userInfo stringifyNum sourceConfig annInsert = do
           `onLeft` (throw500 . tshow)
 
       -- SELECT (<mutation_output_select>) AS [mutation_response], (<check_constraint_select>) AS [check_constraint_select]
-      let mutationOutputCheckConstraintSelect = selectMutationOutputAndCheckCondition mutationOutputSelect checkBoolExp
+      let mutationOutputCheckConstraintSelect = selectMutationOutputAndCheckCondition withAlias mutationOutputSelect checkBoolExp
 
           -- WITH "with_alias" AS (<table_select>)
           -- SELECT (<mutation_output_select>) AS [mutation_response], (<check_constraint_select>) AS [check_constraint_select]
@@ -365,25 +366,6 @@ executeInsert userInfo stringifyNum sourceConfig annInsert = do
           let mkColumnEqExpression (column, value) =
                 OpExpression EQ' (columnFieldExpression column) (ValueExpression value)
            in Where $ pure $ OrExpression $ map (AndExpression . map mkColumnEqExpression) pkeyValues
-
-    generateCheckConstraintSelect :: Expression -> Select
-    generateCheckConstraintSelect checkBoolExp =
-      let zeroValue = ValueExpression $ ODBC.IntValue 0
-          oneValue = ValueExpression $ ODBC.IntValue 1
-          caseExpression = ConditionalExpression checkBoolExp zeroValue oneValue
-          sumAggregate = OpAggregate "SUM" [caseExpression]
-       in emptySelect
-            { selectProjections = [AggregateProjection (Aliased sumAggregate "check")],
-              selectFrom = Just $ TSQL.FromIdentifier withAlias
-            }
-
-    selectMutationOutputAndCheckCondition :: Select -> Expression -> Select
-    selectMutationOutputAndCheckCondition mutationOutputSelect checkBoolExp =
-      let mutationOutputProjection =
-            ExpressionProjection $ Aliased (SelectExpression mutationOutputSelect) "mutation_response"
-          checkConstraintProjection =
-            ExpressionProjection $ Aliased (SelectExpression (generateCheckConstraintSelect checkBoolExp)) "check_constraint_select"
-       in emptySelect {selectProjections = [mutationOutputProjection, checkConstraintProjection]}
 
 -- Delete
 
@@ -443,6 +425,77 @@ buildDeleteTx deleteOperation stringifyNum = do
   -- Execute SELECT query and fetch mutation response
   encJFromText <$> Tx.singleRowQueryE fromMSSQLTxError mutationOutputSelectQuery
 
+-- | Executes an Update IR AST and return results as JSON.
+executeUpdate ::
+  MonadError QErr m =>
+  UserInfo ->
+  Bool ->
+  SourceConfig 'MSSQL ->
+  AnnotatedUpdateG 'MSSQL Void (UnpreparedValue 'MSSQL) ->
+  m (ExceptT QErr IO EncJSON)
+executeUpdate userInfo stringifyNum sourceConfig updateOperation = do
+  preparedUpdate <- traverse (prepareValueQuery $ _uiSession userInfo) updateOperation
+  let pool = _mscConnectionPool sourceConfig
+  if null $ updateOperations . _auBackend $ updateOperation
+    then pure $ pure $ IR.buildEmptyMutResp $ _auOutput preparedUpdate
+    else pure $ withMSSQLPool pool $ Tx.runTxE fromMSSQLTxError (buildUpdateTx preparedUpdate stringifyNum)
+
+-- | Converts an Update IR AST to a transaction of three update sql statements.
+--
+-- A GraphQL update mutation does two things:
+--
+-- 1. Update rows in a table according to some predicate
+-- 2. (Potentially) returns the updated rows (including relationships) as JSON
+--
+-- In order to complete these 2 things we need 3 SQL statements:
+--
+-- 1. SELECT INTO <temp_table> WHERE <false> - creates a temporary table
+--    with the same schema as the original table in which we'll store the updated rows
+--    from the table we are deleting
+-- 2. UPDATE SET FROM with OUTPUT - updates the rows from the table and inserts the
+--   updated rows to the temporary table from (1)
+-- 3. SELECT - constructs the @returning@ query from the temporary table, including
+--   relationships with other tables.
+buildUpdateTx ::
+  AnnotatedUpdate 'MSSQL ->
+  Bool ->
+  Tx.TxET QErr IO EncJSON
+buildUpdateTx updateOperation stringifyNum = do
+  let withAlias = "with_alias"
+      createTempTableQuery =
+        toQueryFlat $
+          TQ.fromSelectIntoTempTable $
+            TSQL.toSelectIntoTempTable tempTableNameUpdated (_auTable updateOperation) (_auAllCols updateOperation)
+  -- Create a temp table
+  Tx.unitQueryE fromMSSQLTxError createTempTableQuery
+  let updateQuery = TQ.fromUpdate <$> TSQL.fromUpdate updateOperation
+  updateQueryValidated <- toQueryFlat <$> V.runValidate (runFromIr updateQuery) `onLeft` (throw500 . tshow)
+  -- Execute UPDATE statement
+  Tx.unitQueryE fromMSSQLTxError updateQueryValidated
+  mutationOutputSelect <- mkMutationOutputSelect stringifyNum withAlias $ _auOutput updateOperation
+  let checkCondition = _auCheck updateOperation
+  -- The check constraint is translated to boolean expression
+  checkBoolExp <-
+    V.runValidate (runFromIr $ runReaderT (fromGBoolExp checkCondition) (EntityAlias withAlias))
+      `onLeft` (throw500 . tshow)
+
+  let withSelect =
+        emptySelect
+          { selectProjections = [StarProjection],
+            selectFrom = Just $ FromTempTable $ Aliased tempTableNameUpdated "updated_alias"
+          }
+      mutationOutputCheckConstraintSelect = selectMutationOutputAndCheckCondition withAlias mutationOutputSelect checkBoolExp
+      finalSelect = mutationOutputCheckConstraintSelect {selectWith = Just $ With $ pure $ Aliased withSelect withAlias}
+
+  -- Execute SELECT query to fetch mutation response and check constraint result
+  (responseText, checkConditionInt) <- Tx.singleRowQueryE fromMSSQLTxError (toQueryFlat $ TQ.fromSelect finalSelect)
+  -- Drop the temp table
+  Tx.unitQueryE fromMSSQLTxError $ toQueryFlat $ dropTempTableQuery tempTableNameUpdated
+  -- Raise an exception if the check condition is not met
+  unless (checkConditionInt == (0 :: Int)) $
+    throw400 PermissionError "check constraint of an update permission has failed"
+  pure $ encJFromText responseText
+
 -- | Generate a SQL SELECT statement which outputs the mutation response
 --
 -- For multi row inserts:
@@ -466,6 +519,40 @@ mkMutationOutputSelect stringifyNum withAlias = \case
     let forJson = JsonFor $ ForJson JsonSingleton NoRoot
     pure emptySelect {selectFor = forJson, selectProjections = projections}
   IR.MOutSinglerowObject singleRowField -> mkSelect stringifyNum withAlias JASSingleObject singleRowField
+
+-- | Generate a SQL SELECT statement which outputs the mutation response and check constraint result
+--
+-- The check constraint boolean expression is evaluated on mutated rows in a CASE expression so that
+-- the int value "0" is returned when check constraint is true otherwise the int value "1" is returned.
+-- We use "SUM" aggregation on the returned value and if check constraint on any row is not met, the summed
+-- value will not equal to "0" (always > 1).
+--
+--   <check_constraint_select> :=
+--     SELECT SUM(CASE WHEN <check_boolean_expression> THEN 0 ELSE 1 END) FROM [with_alias]
+--
+--   <mutation_output_select> :=
+--     SELECT (SELECT COUNT(*) FROM [with_alias]) AS [affected_rows], (select_from_returning) AS [returning] FOR JSON PATH, INCLUDE_NULL_VALUES, WITHOUT_ARRAY_WRAPPER
+--
+-- SELECT (<mutation_output_select>) AS [mutation_response], (<check_constraint_select>) AS [check_constraint_select]
+selectMutationOutputAndCheckCondition :: Text -> Select -> Expression -> Select
+selectMutationOutputAndCheckCondition alias mutationOutputSelect checkBoolExp =
+  let mutationOutputProjection =
+        ExpressionProjection $ Aliased (SelectExpression mutationOutputSelect) "mutation_response"
+      checkConstraintProjection =
+        -- apply ISNULL() to avoid check constraint select statement yielding empty rows
+        ExpressionProjection $
+          Aliased (FunctionExpression "ISNULL" [SelectExpression checkConstraintSelect, ValueExpression (ODBC.IntValue 0)]) "check_constraint_select"
+   in emptySelect {selectProjections = [mutationOutputProjection, checkConstraintProjection]}
+  where
+    checkConstraintSelect =
+      let zeroValue = ValueExpression $ ODBC.IntValue 0
+          oneValue = ValueExpression $ ODBC.IntValue 1
+          caseExpression = ConditionalExpression checkBoolExp zeroValue oneValue
+          sumAggregate = OpAggregate "SUM" [caseExpression]
+       in emptySelect
+            { selectProjections = [AggregateProjection (Aliased sumAggregate "check")],
+              selectFrom = Just $ TSQL.FromIdentifier alias
+            }
 
 mkSelect ::
   MonadError QErr m =>

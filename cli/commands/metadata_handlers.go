@@ -12,7 +12,6 @@ import (
 	goyaml "github.com/goccy/go-yaml"
 	"github.com/hasura/graphql-engine/cli/v2"
 	"github.com/hasura/graphql-engine/cli/v2/internal/projectmetadata"
-	"github.com/pkg/errors"
 )
 
 type MetadataModeHandler interface {
@@ -39,11 +38,11 @@ func (m *metadataModeDirectoryHandler) Export(o *MetadataExportOptions) error {
 	files, err := metadataHandler.ExportMetadata()
 	o.EC.Spinner.Stop()
 	if err != nil {
-		return errors.Wrap(err, "failed to export metadata")
+		return fmt.Errorf("failed to export metadata: %w", err)
 	}
 	err = metadataHandler.WriteMetadata(files)
 	if err != nil {
-		return errors.Wrap(err, "cannot write metadata to project")
+		return fmt.Errorf("cannot write metadata to project: %w", err)
 	}
 	return nil
 }

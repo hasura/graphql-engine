@@ -176,6 +176,13 @@ args:
       dataset: hasura_test
       name: all_types
 
+- type: bigquery_track_table
+  args:
+    source: bigquery
+    table:
+      dataset: hasura_test
+      name: article_citation
+
 # === hasura_global_limited ===
 
 ## track tables
@@ -224,6 +231,36 @@ args:
         column_mapping:
           artist_self_id: artist_other_id
 
+- type: bigquery_create_array_relationship
+  args:
+    source: bigquery
+    table:
+      dataset: hasura_test
+      name: article
+    name: article_citations
+    using:
+      manual_configuration:
+        remote_table:
+          dataset: hasura_test
+          name: article_citation
+        column_mapping:
+          id: article_id
+
+- type: bigquery_create_object_relationship
+  args:
+    source: bigquery
+    table:
+      dataset: hasura_test
+      name: article_citation
+    name: cited_article
+    using:
+      manual_configuration:
+        remote_table:
+          dataset: hasura_test
+          name: article
+        column_mapping:
+          cited_article_id: id
+
 # === hasura_test/bigquery2 ===
 - type: bigquery_track_table
   args:
@@ -264,4 +301,28 @@ args:
         source: bigquery2
         table:
           name: article2
+          dataset: hasura_test
+
+- type: bigquery_track_table
+  args:
+    source: bigquery2
+    table:
+      dataset: hasura_test
+      name: article_citation2
+
+- type: bigquery_create_remote_relationship
+  args:
+    source: bigquery
+    table:
+      dataset: hasura_test
+      name: article
+    name: article_citations2
+    definition:
+      to_source:
+        relationship_type: array
+        field_mapping:
+          id: article_id
+        source: bigquery2
+        table:
+          name: article_citation2
           dataset: hasura_test

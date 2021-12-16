@@ -382,8 +382,10 @@ library
                      , Hasura.Backends.MSSQL.Instances.Types
                      , Hasura.Backends.MSSQL.Meta
                      , Hasura.Backends.MSSQL.Plan
+                     , Hasura.Backends.MSSQL.Schema.IfMatched
                      , Hasura.Backends.MSSQL.SQL.Value
                      , Hasura.Backends.MSSQL.ToQuery
+                     , Hasura.Backends.MSSQL.Types
                      , Hasura.Backends.MSSQL.Types.Insert
                      , Hasura.Backends.MSSQL.Types.Instances
                      , Hasura.Backends.MSSQL.Types.Internal
@@ -410,6 +412,7 @@ library
                      , Hasura.Backends.Postgres.Instances.Schema
                      , Hasura.Backends.Postgres.Instances.Transport
                      , Hasura.Backends.Postgres.Instances.Types
+                     , Hasura.Backends.Postgres.Schema.OnConflict
                      , Hasura.Backends.Postgres.SQL.DML
                      , Hasura.Backends.Postgres.SQL.Error
                      , Hasura.Backends.Postgres.SQL.Rewrite
@@ -642,7 +645,6 @@ library
                      , Hasura.GraphQL.Schema.BoolExp
                      , Hasura.GraphQL.Schema.Build
                      , Hasura.GraphQL.Schema.Common
-                     , Hasura.GraphQL.Schema.Conflict
                      , Hasura.GraphQL.Schema.Introspect
                      , Hasura.GraphQL.Schema.Instances
                      , Hasura.GraphQL.Schema.Mutation
