@@ -244,7 +244,7 @@ addStreamSubscriptionQuery
     -- cancelled after putTMVar
     onJust handlerM $ \handler -> do
       pollerId <- PollerId <$> UUID.nextRandom
-      threadRef <- forkImmortal ("pollQuery." <> show pollerId) logger $
+      threadRef <- forkImmortal ("pollQuery." <> show (unPollerId pollerId)) logger $
         forever $ do
           pollStreamingQuery @b pollerId lqOpts (source, sourceConfig) role parameterizedQueryHash query (_pCohorts handler) rootFieldName postPollHook
           sleep $ unNonNegativeDiffTime $ unRefetchInterval refetchInterval

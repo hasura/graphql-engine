@@ -3,6 +3,7 @@
 import pytest
 import queue
 import time
+import utils
 from utils import *
 from validate import check_query_f, check_event, check_event_transformed
 

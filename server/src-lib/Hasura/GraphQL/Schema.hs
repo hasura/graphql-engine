@@ -190,6 +190,7 @@ buildRoleContext
       let parsedIntrospections = _rrscParsedIntrospection . snd <$> roleBasedRemoteSchemas
           queryRemotes = getQueryRemotes parsedIntrospections
           mutationRemotes = getMutationRemotes parsedIntrospections
+          subscriptionRemotes = getSubscriptionRemotes parsedIntrospections
           remoteRelationshipQueryContext = Map.fromList roleBasedRemoteSchemas
           roleQueryContext =
             QueryContext
@@ -207,7 +208,7 @@ buildRoleContext
         mutationParserBackend <-
           buildMutationParser mutationRemotes allActionInfos nonObjectCustomTypes mutationBackendFields
         subscriptionParser <-
-          buildSubscriptionParser subscriptionFields allActionInfos
+          buildSubscriptionParser subscriptionFields allActionInfos subscriptionRemotes
         queryParserFrontend <-
           buildQueryParser queryFields queryRemotes allActionInfos nonObjectCustomTypes mutationParserFrontend subscriptionParser
         queryParserBackend <-
@@ -235,6 +236,11 @@ buildRoleContext
         [ParsedIntrospection] ->
         [P.FieldParser (P.ParseT Identity) (NamespacedField RemoteField)]
       getMutationRemotes = concatMap (concat . piMutation)
+
+      getSubscriptionRemotes ::
+        [ParsedIntrospection] ->
+        [P.FieldParser (P.ParseT Identity) (NamespacedField RemoteField)]
+      getSubscriptionRemotes = concatMap (concat . piSubscription)
 
       buildSource ::
         forall b.
@@ -314,7 +320,7 @@ buildRelayRoleContext
       mutationParserBackend <-
         buildMutationParser mempty allActionInfos nonObjectCustomTypes mutationBackendFields
       subscriptionParser <-
-        buildSubscriptionParser queryPGFields []
+        buildSubscriptionParser queryPGFields [] mempty
       queryParserFrontend <-
         queryWithIntrospectionHelper queryPGFields mutationParserFrontend subscriptionParser
       queryParserBackend <-
@@ -385,7 +391,7 @@ buildFullestDBSchema queryContext sources allActionInfos nonObjectCustomTypes =
       -- clashes with remotes:
       buildMutationParser mempty allActionInfos nonObjectCustomTypes mutationFrontendFields
     subscriptionParser <-
-      buildSubscriptionParser subscriptionFields allActionInfos
+      buildSubscriptionParser subscriptionFields allActionInfos mempty
     queryParserFrontend <-
       buildQueryParser queryFields mempty allActionInfos nonObjectCustomTypes mutationParserFrontend subscriptionParser
 
@@ -766,10 +772,11 @@ buildSubscriptionParser ::
   ) =>
   [P.FieldParser n (NamespacedField (QueryRootField UnpreparedValue))] ->
   [ActionInfo] ->
+  [P.FieldParser n (NamespacedField RemoteField)] ->
   m (Maybe (Parser 'Output n (RootFieldMap (QueryRootField UnpreparedValue))))
-buildSubscriptionParser sourceSubscriptionFields allActions = do
+buildSubscriptionParser sourceSubscriptionFields allActions remoteSubscriptionFields = do
   actionSubscriptionFields <- fmap (fmap NotNamespaced) . concat <$> traverse buildActionSubscriptionFields allActions
-  let subscriptionFields = sourceSubscriptionFields <> actionSubscriptionFields
+  let subscriptionFields = sourceSubscriptionFields <> actionSubscriptionFields <> fmap (fmap $ fmap RFRemote) remoteSubscriptionFields
   whenMaybe (not $ null subscriptionFields) $
     P.safeSelectionSet subscriptionRoot Nothing subscriptionFields
       <&> fmap (flattenNamespaces . fmap typenameToNamespacedRawRF)

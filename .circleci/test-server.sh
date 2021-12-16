@@ -579,7 +579,7 @@ case "$SERVER_TEST_TO_RUN" in
     pytest -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --hge-jwt-key-file="$OUTPUT_FOLDER/ssl/jwt_private.key" --hge-jwt-conf="$HASURA_GRAPHQL_JWT_SECRET" --test-no-cookie-and-unauth-role test_graphql_queries.py::TestMissingUnauthorizedRoleAndCookie
 
     kill_hge_servers
-    
+
     unset HASURA_GRAPHQL_JWT_SECRET
     ;;
 
