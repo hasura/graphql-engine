@@ -7,6 +7,7 @@
 (Add entries below in the order of server, console, cli, docs, others)
 
 - server: implement update mutations for MS SQL Server (closes #7834)
+- server: provides a more comprehensive fix for the JSON ser/de backwards incompatibility that was initially addressed by 45481db (#7906)
 
 ## v2.1.0
 

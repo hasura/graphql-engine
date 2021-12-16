@@ -65,8 +65,8 @@ data RQLQueryV1
   | -- computed fields related
     RQAddComputedField !(AddComputedField ('Postgres 'Vanilla))
   | RQDropComputedField !(DropComputedField ('Postgres 'Vanilla))
-  | RQCreateRemoteRelationship !LegacyCreateRemoteRelationship
-  | RQUpdateRemoteRelationship !LegacyCreateRemoteRelationship
+  | RQCreateRemoteRelationship !(CreateFromSourceRelationship ('Postgres 'Vanilla))
+  | RQUpdateRemoteRelationship !(CreateFromSourceRelationship ('Postgres 'Vanilla))
   | RQDeleteRemoteRelationship !(DeleteFromSourceRelationship ('Postgres 'Vanilla))
   | RQCreateInsertPermission !(CreatePerm InsPerm ('Postgres 'Vanilla))
   | RQCreateSelectPermission !(CreatePerm SelPerm ('Postgres 'Vanilla))
@@ -418,8 +418,8 @@ runQueryM env rq = withPathK "args" $ case rq of
       RQRemoveRemoteSchema q -> runRemoveRemoteSchema q
       RQReloadRemoteSchema q -> runReloadRemoteSchema q
       RQIntrospectRemoteSchema q -> runIntrospectRemoteSchema q
-      RQCreateRemoteRelationship q -> runCreateRemoteRelationship $ unLegacyCreateRemoteRelationship q
-      RQUpdateRemoteRelationship q -> runUpdateRemoteRelationship $ unLegacyCreateRemoteRelationship q
+      RQCreateRemoteRelationship q -> runCreateRemoteRelationship q
+      RQUpdateRemoteRelationship q -> runUpdateRemoteRelationship q
       RQDeleteRemoteRelationship q -> runDeleteRemoteRelationship q
       RQCreateEventTrigger q -> runCreateEventTriggerQuery q
       RQDeleteEventTrigger q -> runDeleteEventTriggerQuery q

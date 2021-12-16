@@ -20,12 +20,12 @@ Remote Relationships allow you to join tables with remote schemas.
   The metadata API is supported for versions ``v2.0.0`` and above and replaces the older
   :ref:`schema/metadata API <schema_metadata_apis>`.
 
-.. _metadata_create_remote_relationship:
+.. _metadata_pg_create_remote_relationship:
 
-create_remote_relationship
+pg_create_remote_relationship
 --------------------------
 
-``create_remote_relationship`` is used to create a new remote relationship with an existing remote schema.
+``pg_create_remote_relationship`` is used to create a new remote relationship with an existing remote schema.
 
 .. code-block:: http
 
@@ -34,7 +34,7 @@ create_remote_relationship
    X-Hasura-Role: admin
 
    {
-      "type":"create_remote_relationship",
+      "type":"pg_create_remote_relationship",
       "args":{
          "name": "sample_remote_relationship",
          "table": "users",
@@ -50,7 +50,7 @@ create_remote_relationship
       }
    }
 
-.. _metadata_create_remote_relationship_syntax:
+.. _metadata_pg_create_remote_relationship_syntax:
 
 Args syntax
 ^^^^^^^^^^^
@@ -83,12 +83,12 @@ Args syntax
      - :ref:`RemoteField`
      - The schema tree ending at the field in remote schema which needs to be joined with.
 
-.. _metadata_update_remote_relationship:
+.. _metadata_pg_update_remote_relationship:
 
-update_remote_relationship
+pg_update_remote_relationship
 --------------------------
 
-``update_remote_relationship`` is used to update an existing remote relationship.
+``pg_update_remote_relationship`` is used to update an existing remote relationship.
 
 .. code-block:: http
 
@@ -97,7 +97,7 @@ update_remote_relationship
    X-Hasura-Role: admin
 
    {
-     "type": "update_remote_relationship",
+     "type": "pg_update_remote_relationship",
      "args": {
         "name": "sample_remote_relationship",
         "table": "users",
@@ -116,7 +116,7 @@ update_remote_relationship
      }
    }
 
-.. _metadata_update_remote_relationship_syntax:
+.. _metadata_pg_update_remote_relationship_syntax:
 
 Args syntax
 ^^^^^^^^^^^
@@ -149,12 +149,12 @@ Args syntax
      - :ref:`RemoteField`
      - The schema tree ending at the field in remote schema which needs to be joined with.
 
-.. _metadata_delete_remote_relationship:
+.. _metadata_pg_delete_remote_relationship:
 
-delete_remote_relationship
+pg_delete_remote_relationship
 --------------------------
 
-``delete_remote_relationship`` is used to delete an existing remote relationship.
+``pg_delete_remote_relationship`` is used to delete an existing remote relationship.
 
 .. code-block:: http
 
@@ -163,7 +163,7 @@ delete_remote_relationship
    X-Hasura-Role: admin
 
    {
-       "type" : "delete_remote_relationship",
+       "type" : "pg_delete_remote_relationship",
        "args" : {
           "table":{
              "name":"users",
@@ -173,7 +173,7 @@ delete_remote_relationship
        }
    }
 
-.. _metadata_delete_remote_relationship_syntax:
+.. _metadata_pg_delete_remote_relationship_syntax:
 
 Args syntax
 ^^^^^^^^^^^

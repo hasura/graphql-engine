@@ -2,7 +2,6 @@
 
 module Hasura.RQL.DDL.RemoteRelationship
   ( CreateFromSourceRelationship (..),
-    LegacyCreateRemoteRelationship (..),
     runCreateRemoteRelationship,
     runDeleteRemoteRelationship,
     runUpdateRemoteRelationship,
@@ -13,10 +12,8 @@ module Hasura.RQL.DDL.RemoteRelationship
   )
 where
 
-import Control.Lens (foldOf, to)
 import Data.Aeson (FromJSON (..), ToJSON (..), (.!=), (.:), (.:?), (.=))
 import Data.Aeson qualified as J
-import Data.Aeson.Lens (_Object)
 import Data.HashMap.Strict qualified as Map
 import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.HashSet qualified as S
@@ -61,65 +58,42 @@ instance Backend b => FromJSON (CreateFromSourceRelationship b) where
     _crrSource <- o .:? "source" .!= defaultSource
     _crrTable <- o .: "table"
     _crrName <- o .: "name"
-    _crrDefinition <- o .: "definition"
+    -- In the old format, the definition is inlined; in the new format, the
+    -- definition is in the "definition" object.
+    remoteSchema :: Maybe J.Value <- o .:? "remote_schema"
+    definition <- o .:? "definition"
+    _crrDefinition <- case (remoteSchema, definition) of
+      -- old format
+      (Just _, Nothing) -> parseJSON $ J.Object o
+      -- new format
+      (Nothing, Just def) -> parseJSON def
+      -- both or neither
+      _ -> fail "create_remote_relationship expects exactly one of: remote_schema, definition"
     pure $ CreateFromSourceRelationship {..}
 
 instance (Backend b) => ToJSON (CreateFromSourceRelationship b) where
   toJSON (CreateFromSourceRelationship {..}) =
-    J.toJSON . J.object $
-      [ "source" .= _crrSource,
-        "table" .= _crrTable,
-        "name" .= _crrName,
-        "definition" .= _crrDefinition
-      ]
-
-  toEncoding (CreateFromSourceRelationship {..}) =
-    J.pairs $
-      "source" .= _crrSource
-        <> "table" .= _crrTable
-        <> "name" .= _crrName
-        <> "definition" .= _crrDefinition
-
--- | Opaque type wrapper around 'CreateFromSourceRelationship' which exists
--- solely to provide customized 'FromJSON' and 'ToJSON' instances that
--- preserves legacy JSON ser/de behavior.
---
--- See the associated 'FromJSON' and 'ToJSON' instances for details.
-newtype LegacyCreateRemoteRelationship = LegacyCreateRemoteRelationship
-  { unLegacyCreateRemoteRelationship ::
-      CreateFromSourceRelationship ('Postgres 'Vanilla)
-  }
-  deriving newtype (Eq, Show)
-
-instance FromJSON LegacyCreateRemoteRelationship where
-  parseJSON = J.withObject "LegacyCreateRemoteRelationship" $ \o -> do
-    _crrSource <- o .:? "source" .!= defaultSource
-    _crrTable <- o .: "table"
-    _crrName <- o .: "name"
-    _crrDefinition <- parseJSON (J.Object o)
-    pure . LegacyCreateRemoteRelationship $ CreateFromSourceRelationship {..}
-
-instance ToJSON LegacyCreateRemoteRelationship where
-  toJSON (LegacyCreateRemoteRelationship (CreateFromSourceRelationship {..})) =
-    -- The "legacy" serialization logic included the fields that are now a part
-    -- of the nested '_crrDefinition'.
-    --
-    -- To work around this, while sharing as much serialization logic with
-    -- 'RemoteRelationshipDefinition' as possible, '_crrDefinition' is
-    -- serialized to a 'J.Value' and then immediately converted back to a list
-    -- of key/value pairs.
-    --
-    -- 'definitionKeyValues' will be an empty list if this conversion fails
-    -- (which it should _never_ do), in which case those fields will be omitted
-    -- from the serialized JSON.
-    let definitionKeyValues =
-          foldOf (_Object . to Map.toList) (J.toJSON _crrDefinition)
-     in J.toJSON . J.object $
-          [ "source" .= _crrSource,
-            "table" .= _crrTable,
-            "name" .= _crrName
-          ]
-            <> definitionKeyValues
+    -- We need to introspect the definition, to know whether we need to inline
+    -- it, or if it needs to be in a distinct "definition" object.
+    J.object $ case _crrDefinition of
+      -- old format
+      RelationshipToSchema RRFOldDBToRemoteSchema _ ->
+        case J.toJSON _crrDefinition of
+          -- The result of this serialization will be an empty list if this
+          -- conversion fails (which it should _never_ do), in which case those
+          -- fields will be omitted from the serialized JSON. This could only
+          -- happen if the ToJSON instance of RemoteRelationshipDefinition were
+          -- changed to return something that isn't an object.
+          J.Object obj -> commonFields <> Map.toList obj
+          _ -> []
+      -- new format
+      _ -> ("definition" .= _crrDefinition) : commonFields
+    where
+      commonFields =
+        [ "source" .= _crrSource,
+          "table" .= _crrTable,
+          "name" .= _crrName
+        ]
 
 runCreateRemoteRelationship ::
   forall b m.
