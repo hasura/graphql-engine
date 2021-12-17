@@ -43,11 +43,11 @@
         hasura_test_author (order_by: {id: asc}) {
           id
           name
-          articles (order_by: {id:asc}){
+          articles (order_by: {id: asc}){
             id
             title
             content
-            article_citations {
+            article_citations (order_by: {cited_article_id: asc}) {
               description
               cited_article {
                 id
