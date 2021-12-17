@@ -240,7 +240,7 @@ class Permissions extends Component {
 
     const allFunctions = nonTrackableFunctions.concat(trackableFunctions);
     const groupedComputedFields = dataSource.getGroupedTableComputedFields(
-      currentTableSchema,
+      currentTableSchema.computed_fields,
       allFunctions
     );
 

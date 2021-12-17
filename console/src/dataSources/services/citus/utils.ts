@@ -572,7 +572,9 @@ const processBulkDeleteRowData = (data: Record<string, any>) => {
       return res;
     }
   } catch (err) {
-    throw new Error((err as Error).message);
+    if (isConsoleError(err)) {
+      throw err;
+    }
   }
 };
 

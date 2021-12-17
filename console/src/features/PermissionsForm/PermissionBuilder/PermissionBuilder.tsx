@@ -868,7 +868,7 @@ class PermissionBuilder extends React.Component<PermissionBuilderProps> {
           tableRelationshipNames = getTableRelationshipNames(tableSchema);
           const { allFunctions } = this.props;
           const computedFields = getGroupedTableComputedFields(
-            tableSchema,
+            tableSchema.computed_fields,
             allFunctions
           );
           const computedField = computedFields.scalar.find(
@@ -1086,7 +1086,7 @@ class PermissionBuilder extends React.Component<PermissionBuilderProps> {
           tableRelationshipNames = getTableRelationshipNames(tableSchema);
           const { allFunctions } = this.props;
           const computedFields = getGroupedTableComputedFields(
-            tableSchema,
+            tableSchema.computed_fields,
             allFunctions
           );
           scalarComputedFields = computedFields.scalar.filter(sc => {

@@ -1,10 +1,8 @@
 import { dataSource, Operations } from '@/dataSources';
-import {
-  ComputedField,
-  // Table,
-  TableColumn,
-} from '@/dataSources/types';
-import { useAllFunctions, useRoles, useSchemaList, useTables } from '@/hooks';
+import { ComputedField, TableColumn } from '@/dataSources/types';
+import { useRoles } from '@/features/MetadataAPI';
+import { useAllFunctions, useSchemaList, useTables } from '@/hooks';
+import { QualifiedTable } from '@/metadata/types';
 
 export type RolePermissions = {
   [role: string]: {
@@ -93,15 +91,10 @@ interface RolePermission {
   };
 }
 
-interface UseRolePermissionsArgs {
-  schemaName: string;
-  tableName: string;
-}
-
 export const useRolePermissions = ({
-  tableName,
-  schemaName,
-}: UseRolePermissionsArgs) => {
+  name: tableName,
+  schema: schemaName,
+}: QualifiedTable) => {
   const { data: schemaList } = useSchemaList();
   const { data: tables } = useTables(
     { schemas: schemaList! },
@@ -133,7 +126,7 @@ export const useRolePermissions = ({
   );
 
   const groupedComputedFields = dataSource.getGroupedTableComputedFields(
-    currentTableSchema,
+    currentTableSchema.computed_fields,
     allFunctions
   );
 

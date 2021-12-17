@@ -1,4 +1,4 @@
-import { MetadataResponse } from '@/hooks';
+import { MetadataResponse } from '@/features/MetadataAPI';
 import requestAction from '../utils/requestAction';
 import Endpoints, { globalCookiePolicy } from '../Endpoints';
 import {
@@ -56,7 +56,10 @@ import { Driver, setDriver } from '../dataSources';
 import { addSource, removeSource, reloadSource } from './sourcesUtils';
 import { getDataSources } from './selector';
 import { FixMe, ReduxState, Thunk } from '../types';
-import { getConfirmation } from '../components/Common/utils/jsUtils';
+import {
+  getConfirmation,
+  isConsoleError,
+} from '../components/Common/utils/jsUtils';
 import _push from '../components/Services/Data/push';
 import { dataSourceIsEqual } from '../components/Services/Data/DataSources/utils';
 import { getSourceDriver } from '../components/Services/Data/utils';
@@ -628,12 +631,11 @@ export const replaceMetadataFromFile = (
   try {
     parsedFileContent = JSON.parse(fileContent);
   } catch (e) {
-    dispatch(
-      showErrorNotification(
-        'Error parsing metadata file',
-        (e as Error).toString()
-      )
-    );
+    if (isConsoleError(e)) {
+      dispatch(
+        showErrorNotification('Error parsing metadata file', e.toString())
+      );
+    }
 
     if (errorCb) errorCb();
 

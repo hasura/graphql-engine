@@ -8,21 +8,15 @@ import {
   mergeDataBigQuery,
 } from '@/components/Services/Data/mergeData';
 import { getRunSqlQuery } from '@/components/Common/utils/v1QueryUtils';
+import { useMetadataTables, useMetadataVersion } from '@/features/MetadataAPI';
+import { dataSourceSqlQueries } from '@/features/SqlQueries';
 import { Api } from './apiUtils';
 import { QualifiedTable, TableEntry } from './../metadata/types';
 import { useAppSelector } from './../store';
 import { Table } from '../dataSources/types';
-import {
-  currentDriver,
-  DataSourcesAPI,
-  useDataSource,
-  Driver,
-} from '../dataSources';
-import { useMetadata } from './useMetadata';
-import { MetadataSelector } from './metadataSelector';
+import { currentDriver, useDataSource, Driver } from '../dataSources';
 
 interface FetchTablesArgs {
-  dataSource: DataSourcesAPI;
   options: { schemas: string[]; tables?: QualifiedTable[] };
   source: string;
   headers: Record<string, string>;
@@ -52,33 +46,34 @@ const mergeData = (metadataTables: TableEntry[], driver: Driver) => (
 };
 
 const fetchTables = (args: FetchTablesArgs) => {
-  const { dataSource, options, source, headers, metadataTables, driver } = args;
+  const { options, source, headers, metadataTables, driver } = args;
+  const dataSource = dataSourceSqlQueries[driver];
 
   const fetchTrackedTableFkQuery = () => {
-    const runSql = dataSource?.getFKRelations(options) || '';
+    const runSql = dataSource.getFKRelations(options);
     return getRunSqlQuery(runSql, source, false, true);
   };
 
   const fetchTableListQuery = () => {
-    const runSql = dataSource?.getFetchTablesListQuery(options) || '';
-
+    const runSql = dataSource.getFetchTablesListQuery(options);
     return getRunSqlQuery(runSql, source, false, true);
   };
+
   const body = {
     type: 'bulk',
     source,
     args: [
       fetchTableListQuery(),
       fetchTrackedTableFkQuery(),
-      // todo: queries below could be done only when user visits `Data` page
       getRunSqlQuery(
-        dataSource?.primaryKeysInfoSql(options) || '',
+        dataSource.primaryKeysInfoSql(options),
         source,
         false,
         true
       ),
+      getRunSqlQuery(dataSource.uniqueKeysSql(options), source, false, true),
       getRunSqlQuery(
-        dataSource?.uniqueKeysSql(options) || '',
+        dataSource.checkConstraintsSql(options),
         source,
         false,
         true
@@ -86,16 +81,6 @@ const fetchTables = (args: FetchTablesArgs) => {
     ],
   };
 
-  if (dataSource?.checkConstraintsSql) {
-    body.args.push(
-      getRunSqlQuery(
-        dataSource?.checkConstraintsSql(options) || '',
-        source,
-        false,
-        true
-      )
-    );
-  }
   return Api.post<Array<{ result: string[] }>, Table[]>(
     {
       url: Endpoints.query,
@@ -123,26 +108,23 @@ export function useTables(
   );
   const headers = useAppSelector(state => state.tables.dataHeaders);
 
-  const { data: metadataTables } = useMetadata(
-    MetadataSelector.getTables(source)
-  );
-  const { data: version } = useMetadata(d => d.resource_version);
+  const { data: metadataTables } = useMetadataTables();
+  const { data: version, isSuccess } = useMetadataVersion();
 
-  const { dataSource, driver } = useDataSource();
+  const { driver } = useDataSource();
 
   return useQuery({
     ...queryOptions,
     queryKey: ['tables', options, version],
     queryFn: () =>
       fetchTables({
-        dataSource,
         options,
         source,
         headers,
-        metadataTables: metadataTables!,
+        metadataTables: metadataTables ?? [],
         driver,
       }),
-    enabled: !!metadataTables && queryOptions?.enabled,
+    enabled: isSuccess && queryOptions?.enabled,
   });
 }
 

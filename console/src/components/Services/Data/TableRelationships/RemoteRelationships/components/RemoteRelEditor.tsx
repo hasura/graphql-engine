@@ -84,7 +84,10 @@ const RemoteRelEditor: React.FC<Props> = ({
     }
   );
 
-  const computedFields = getGroupedTableComputedFields(table, allFunctions);
+  const computedFields = getGroupedTableComputedFields(
+    table.computed_fields,
+    allFunctions
+  );
   const scalarComputedFields = computedFields.scalar.filter(sc => {
     const cFn = getComputedFieldFunction(sc, allFunctions)?.input_arg_types;
     // Only the computed fields that do not require extra arguments other than the table row
