@@ -44,7 +44,7 @@ import Language.GraphQL.Draft.Syntax qualified as G
 -- This function is used to create the insert_tablename root field.
 -- The field accepts the following arguments:
 --   - objects: the list of objects to insert into the table (see 'tableFieldsInput')
---   - on_conflict: an object describing how to perform an upsert in case of conflict
+--   - parser for backend-specific fields, e.g. upsert fields on_conflict or if_matched
 insertIntoTable ::
   forall b r m n.
   MonadBuildSchema b r m n =>
@@ -64,9 +64,11 @@ insertIntoTable ::
   Maybe (UpdPermInfo b) ->
   m (FieldParser n (IR.AnnInsert b (IR.RemoteRelationshipField UnpreparedValue) (UnpreparedValue b)))
 insertIntoTable backendInsertAction sourceName tableInfo fieldName description insertPerms selectPerms updatePerms = do
-  selectionParser <- mutationSelectionSet sourceName tableInfo selectPerms
+  -- objects [{ ... }]
   objectParser <- tableFieldsInput sourceName tableInfo insertPerms
   backendInsertParser <- backendInsertAction sourceName tableInfo selectPerms updatePerms
+  -- returning clause, affected rows, etc.
+  selectionParser <- mutationSelectionSet sourceName tableInfo selectPerms
   let argsParser = do
         backendInsert <- backendInsertParser
         objects <- mkObjectsArg objectParser
@@ -128,6 +130,17 @@ insertOneIntoTable backendInsertAction sourceName tableInfo fieldName descriptio
 -- This function creates an input object type named "tablename_insert_input" in
 -- the GraphQL shema, which has a field for each of the columns of that table
 -- that the user has insert permissions for.
+--
+-- > {
+-- >  insert_author (
+-- >    objects: [
+-- >      { # tableFieldsInput output
+-- >        name: "John",
+-- >        id:12
+-- >      }
+-- >    ] ...
+-- >  ) ...
+-- > }
 tableFieldsInput ::
   forall b r m n.
   MonadBuildSchema b r m n =>
@@ -164,7 +177,10 @@ tableFieldsInput sourceName tableInfo insertPerms =
     mkFieldParser = \case
       FIComputedField _ -> pure Nothing
       FIRemoteRelationship _ -> pure Nothing
-      FIColumn columnInfo -> mkColumnParser columnInfo
+      FIColumn columnInfo -> do
+        if (_cmIsInsertable $ pgiMutability columnInfo)
+          then mkColumnParser columnInfo
+          else pure Nothing
       FIRelationship relInfo -> mkRelationshipParser sourceName relInfo
 
     mkColumnParser ::
