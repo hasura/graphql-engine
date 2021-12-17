@@ -178,13 +178,11 @@ tableUpdateColumns ::
   TableInfo b ->
   UpdPermInfo b ->
   m [ColumnInfo b]
-tableUpdateColumns tableInfo permissions = do
-  let tableFields = _tciFieldInfoMap . _tiCoreInfo $ tableInfo
-  pure $ mapMaybe isUpdatable $ Map.elems tableFields
+tableUpdateColumns tableInfo permissions = pure $ filter isUpdatable $ tableColumns tableInfo
   where
-    isUpdatable (FIColumn columnInfo) =
-      if Set.member (pgiColumn columnInfo) (upiCols permissions)
-        && not (Map.member (pgiColumn columnInfo) (upiSet permissions))
-        then Just columnInfo
-        else Nothing
-    isUpdatable _ = Nothing
+    isUpdatable :: ColumnInfo b -> Bool
+    isUpdatable columnInfo = columnIsUpdatable && columnIsPermitted && columnHasNoPreset
+      where
+        columnIsUpdatable = _cmIsUpdatable (pgiMutability columnInfo)
+        columnIsPermitted = Set.member (pgiColumn columnInfo) (upiCols permissions)
+        columnHasNoPreset = not (Map.member (pgiColumn columnInfo) (upiSet permissions))

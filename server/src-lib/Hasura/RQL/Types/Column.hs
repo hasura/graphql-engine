@@ -199,6 +199,8 @@ instance Backend b => FromJSON (RawColumnInfo b) where
 -- This guides the schema parsers such that they only generate fields for
 -- columns where they're valid without having to model the exact circumstances
 -- which cause a column to appear or not.
+--
+-- See <https://github.com/hasura/graphql-engine/blob/master/rfcs/column-mutability.md>.
 data ColumnMutability = ColumnMutability
   { _cmIsInsertable :: Bool,
     _cmIsUpdatable :: Bool

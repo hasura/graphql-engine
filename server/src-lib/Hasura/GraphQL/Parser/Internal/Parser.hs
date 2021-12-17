@@ -310,6 +310,10 @@ rawSelection name description argumentsParser resultParser =
 -- | Builds a 'FieldParser' for a field that takes a subselection set, i.e. a
 -- field that returns an object.
 --
+-- For example, @subselection name _ args fields@ produces schema:
+--
+-- > name (args) { fields }
+--
 -- See also Note [The delicate balance of GraphQL kinds] in "Hasura.GraphQL.Parser.Schema".
 subselection ::
   forall m a b.
