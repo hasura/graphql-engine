@@ -258,8 +258,7 @@ export const getColumnUpdateMigration = (
       tableName,
       currentSchema,
       comment,
-      colName,
-      colType
+      colName
     );
 
     const columnCommentDownQuery = dataSource.getSetCommentSql(
@@ -267,8 +266,7 @@ export const getColumnUpdateMigration = (
       tableName,
       currentSchema,
       originalColComment,
-      colName,
-      colType
+      colName
     );
 
     migration.add(
