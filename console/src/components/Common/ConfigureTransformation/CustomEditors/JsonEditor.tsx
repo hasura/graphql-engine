@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useDebouncedEffect } from '@/hooks/useDebounceEffect';
 import AceEditor from '../../AceEditor/BaseEditor';
 import CrossIcon from '../../Icons/Cross';
-import { isJsonString } from '../../utils/jsUtils';
+import { isConsoleError, isJsonString } from '../../utils/jsUtils';
 import { Nullable } from '../../utils/tsUtils';
 
 type JsonEditorProps = {
@@ -33,7 +33,9 @@ const JsonEditor: React.FC<JsonEditorProps> = ({
     try {
       JSON.parse(val);
     } catch (e) {
-      setError((e as Error).message);
+      if (isConsoleError(e)) {
+        setError(e.message);
+      }
     }
   };
 

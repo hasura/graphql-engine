@@ -1,5 +1,5 @@
 import { TableEntry } from '@/metadata/types';
-import { MetadataResponse } from './useMetadata';
+import { MetadataResponse } from '..';
 
 export namespace MetadataSelector {
   export const getTablesFromAllSources = (

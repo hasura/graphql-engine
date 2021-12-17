@@ -9,6 +9,7 @@ import {
   BaseTableColumn,
   ViolationActions,
   IndexType,
+  NormalizedTable,
 } from '../../types';
 import { QUERY_TYPES, Operations } from '../../common';
 import { PGFunction } from './types';
@@ -74,7 +75,7 @@ import {
 } from './sqlUtils';
 import globals from '../../../Globals';
 
-export const isTable = (table: Table) => {
+export const isTable = (table: Table | NormalizedTable) => {
   return (
     table.table_type === 'TABLE' ||
     table.table_type === 'PARTITIONED TABLE' ||
@@ -88,7 +89,7 @@ export const displayTableName = (table: Table) => {
   return isTable(table) ? <span>{tableName}</span> : <i>{tableName}</i>;
 };
 
-export const getTableSupportedQueries = (table: Table) => {
+export const getTableSupportedQueries = (table: NormalizedTable) => {
   let supportedQueryTypes: Operations[];
 
   if (isTable(table)) {
@@ -216,7 +217,7 @@ export const findFunction = (
 };
 
 export const getGroupedTableComputedFields = (
-  table: Table,
+  computed_fields: ComputedField[],
   allFunctions: PGFunction[]
 ) => {
   const groupedComputedFields: {
@@ -224,7 +225,7 @@ export const getGroupedTableComputedFields = (
     table: ComputedField[];
   } = { scalar: [], table: [] };
 
-  table.computed_fields.forEach(computedField => {
+  computed_fields.forEach(computedField => {
     const computedFieldFnDef = computedField.definition.function;
     const computedFieldFn = findFunction(
       allFunctions,

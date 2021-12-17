@@ -13,6 +13,11 @@ import {
   WhereClause,
 } from '../../src/components/Common/utils/v1QueryUtils';
 import { Driver } from '.';
+import { PostgresTrigger } from './services/postgresql/types';
+
+export type TableORSchemaArg =
+  | { schemas: string[] }
+  | { tables: QualifiedTable[] };
 
 export interface Relationship
   extends Pick<BaseTable, 'table_name' | 'table_schema'> {
@@ -39,9 +44,42 @@ export interface BaseTableColumn {
   data_type_name?: string;
 }
 
+export type TableType =
+  | 'TABLE'
+  | 'VIEW'
+  | 'MATERIALIZED VIEW'
+  | 'FOREIGN TABLE'
+  | 'PARTITIONED TABLE'
+  | 'BASE TABLE'
+  | 'TABLE' // specific to SQL Server
+  | 'EXTERNAL'; // specific to Big Query
+
+export interface ViewInfo {
+  is_trigger_insertable_into: 'YES' | 'NO';
+  is_insertable_into: 'YES' | 'NO';
+  is_updatable: 'YES' | 'NO';
+  is_trigger_updatable: 'YES' | 'NO';
+  is_trigger_deletable: 'YES' | 'NO';
+  table_schema: string;
+  table_name: string;
+  view_definition: string;
+}
+
+export interface NormalizedTable {
+  table_schema: string;
+  table_name: string;
+  table_type: TableType;
+  comment: string | null;
+  columns: TableColumn[];
+  view_info?: ViewInfo | null;
+  is_table_tracked: boolean;
+  triggers?: PostgresTrigger[];
+  citus_table_type?: string;
+}
+
 export interface TableColumn extends BaseTableColumn {
   is_generated?: boolean;
-  is_nullable?: string;
+  is_nullable?: 'NO' | 'YES' | string;
   is_identity?: boolean;
   identity_generation?: 'ALWAYS' | 'BY DEFAULT' | null;
   comment?: string | null;
@@ -77,7 +115,11 @@ export type ForeignKeyConstraint = {
 };
 
 export type CheckConstraint = {
+  table_schema: string;
+  table_name: string;
   constraint_name: string;
+  column_name?: string | null;
+  /** sql definition */
   check: string;
 };
 
@@ -121,24 +163,27 @@ export interface BaseTable {
   is_enum?: boolean;
 }
 
+type Constraint = {
+  table_name: string;
+  table_schema: string;
+  constraint_name: string;
+  columns: string[];
+};
+
+export type PrimaryKey = Constraint;
+export type UniqueKey = Constraint;
+
+/**
+ * @deprecated use {@link NormalizedTable} instead
+ * which will be later renamed to Table when it
+ * been fully adopted and necessary changes made
+ */
 export interface Table extends BaseTable {
   table_name: string;
   table_schema: string;
-  table_type:
-    | 'TABLE'
-    | 'VIEW'
-    | 'MATERIALIZED VIEW'
-    | 'FOREIGN TABLE'
-    | 'PARTITIONED TABLE'
-    | 'BASE TABLE'
-    | 'TABLE' // specific to SQL Server
-    | 'EXTERNAL'; // specific to Big Query
-  primary_key: {
-    table_name: string;
-    table_schema: string;
-    constraint_name: string;
-    columns: string[];
-  } | null;
+  comment: string | null;
+  table_type: TableType;
+  primary_key: PrimaryKey | null;
   is_table_tracked: boolean;
   columns: TableColumn[];
   relationships: Relationship[];
@@ -165,16 +210,7 @@ export interface Table extends BaseTable {
   };
   computed_fields: ComputedField[];
   is_enum: boolean;
-  view_info: {
-    is_trigger_insertable_into: 'YES' | 'NO';
-    is_insertable_into: 'YES' | 'NO';
-    is_updatable: 'YES' | 'NO';
-    is_trigger_updatable: 'YES' | 'NO';
-    is_trigger_deletable: 'YES' | 'NO';
-    table_schema: string;
-    table_name: string;
-    view_definition: string;
-  } | null;
+  view_info: ViewInfo | null;
   remote_relationships: {
     remote_relationship_name: string;
     table_name: string;
@@ -182,14 +218,7 @@ export interface Table extends BaseTable {
     definition: RemoteRelationshipDef;
   }[];
   citusTableType?: string;
-  unique_constraints:
-    | {
-        table_name: string;
-        table_schema: string;
-        constraint_name: string;
-        columns: string[];
-      }[]
-    | null;
+  unique_constraints: UniqueKey[] | null;
 }
 
 export type Partition = {
@@ -199,6 +228,9 @@ export type Partition = {
   parent_table: string;
   partition_def: string;
   partition_key: string;
+  name?: string;
+  isUnique?: boolean;
+  isPrimary?: boolean;
 };
 
 export type ColumnAction = 'add' | 'modify';

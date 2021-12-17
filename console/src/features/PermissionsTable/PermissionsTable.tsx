@@ -72,8 +72,8 @@ export const PermissionsTable: React.FC<PermissionsTableProps> = ({
   const newRoleName = useWatch({ control, name: 'newRoleName' });
 
   const { supportedQueries, rolePermissions } = useRolePermissions({
-    schemaName,
-    tableName,
+    schema: schemaName,
+    name: tableName,
   });
 
   const clickHandler = ({
