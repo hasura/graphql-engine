@@ -1,7 +1,11 @@
+{-# LANGUAGE UndecidableInstances #-}
+
 module Hasura.RQL.Types.Relationships.Remote
   ( RemoteRelationship (..),
     RemoteRelationshipDefinition (..),
+    parseRemoteRelationshipDefinition,
     RRFormat (..),
+    RRParseMode (..),
     _RelationshipToSource,
     _RelationshipToSchema,
     rrName,
@@ -13,6 +17,8 @@ import Control.Lens (makeLenses, makePrisms)
 import Data.Aeson
 import Data.Aeson qualified as J
 import Data.Aeson.TH qualified as J
+import Data.Aeson.Types (Parser)
+import GHC.TypeLits (ErrorMessage (..), TypeError)
 import Hasura.Incremental (Cacheable)
 import Hasura.Prelude
 import Hasura.RQL.Types.Common
@@ -33,6 +39,12 @@ data RemoteRelationship = RemoteRelationship
   deriving (Show, Eq, Generic)
 
 instance Cacheable RemoteRelationship
+
+instance FromJSON RemoteRelationship where
+  parseJSON = withObject "RemoteRelationship" $ \obj ->
+    RemoteRelationship
+      <$> obj .: "name"
+      <*> (parseRemoteRelationshipDefinition RRPLenient =<< obj .: "definition")
 
 -- | Represents the format of the metadata a remote relationship was read from
 -- and must be written back as. We don't have a good way of doing metadata
@@ -57,21 +69,121 @@ data RemoteRelationshipDefinition
 
 instance Cacheable RemoteRelationshipDefinition
 
-instance FromJSON RemoteRelationshipDefinition where
-  parseJSON = withObject "RemoteRelationshipDefinition" \obj -> do
-    oldRSName <- obj .:? "remote_schema"
-    case oldRSName of
-      Just rsName -> do
-        hFields <- obj .: "hasura_fields"
-        rField <- obj .: "remote_field"
-        pure $ RelationshipToSchema RRFOldDBToRemoteSchema $ ToSchemaRelationshipDef rsName hFields rField
-      Nothing -> do
-        toSource <- obj .:? "to_source"
-        toSchema <- obj .:? "to_remote_schema"
-        case (toSchema, toSource) of
-          (Just schema, Nothing) -> RelationshipToSchema RRFUnifiedFormat <$> parseJSON schema
-          (Nothing, Just source) -> RelationshipToSource <$> parseJSON source
-          _ -> fail "remote relationship definition expects exactly one of: to_source, to_remote_schema"
+-- See documentation for 'parseRemoteRelationshipDefinition' for why
+-- this is necessary.
+instance
+  TypeError
+    ( 'ShowType RemoteRelationshipDefinition
+        ':<>: 'Text " has different JSON representations depending on context;"
+        ':$$: 'Text "call ‘parseRemoteRelationshipDefinition’ directly instead of relying on ‘FromJSON’"
+    ) =>
+  FromJSON RemoteRelationshipDefinition
+  where
+  parseJSON = error "impossible"
+
+-- | Whether to accept legacy fields when parsing 'RemoteRelationshipDefinition'
+data RRParseMode
+  = -- | Only allow legacy fields when parsing 'RemoteRelationshipDefinition'
+    RRPLegacy
+  | -- | Allow legacy fields when parsing 'RemoteRelationshipDefinition'
+    RRPLenient
+  | -- | Reject legacy fields when parsing 'RemoteRelationshipDefinition'
+    RRPStrict
+  deriving (Show, Eq, Generic)
+
+-- | Parse 'RemoteRelationshipDefinition' letting the caller decide how lenient to be.
+--
+-- This is necessary because 'RemoteRelationshipDefinition' is parsed in
+-- different contexts. In 'RemoteRelationship', the
+-- 'RemoteRelationshipDefinition' is always parsed out from a top-level
+-- @"definition" field. Thus, a legacy payload looks like this:
+--
+-- @
+-- {
+--   "name": "thing",
+--   "definition": {
+--     "remote_schema": "stuff",
+--     "hasura_fields": ...
+--     "remote_field": ...
+--   }
+-- }
+-- @
+--
+-- and a new payload looks like this:
+--
+-- @
+-- {
+--   "name": "thing",
+--   "definition": {
+--     "to_remote_schema": {
+--       "schema": "stuff",
+--       "lhs_fields": ...
+--       "remote_field": ...
+--     }
+--   }
+-- }
+-- @
+--
+-- In contrast, 'CreateFromSourceRelationship' does not have a top-
+-- level @"definition"@ in its legacy format. Instead, the legacy fields
+-- themselves are top-level:
+--
+-- @
+-- {
+--   "remote_schema": "stuff",
+--   "hasura_fields": ...
+--   "remote_field": ...
+-- }
+-- @
+--
+-- Furthermore, the presence of a @"definition"@ field is used to detect
+-- that the new payload is being used:
+--
+-- @
+-- {
+--   "definition": {
+--     "to_remote_schema": {
+--       "schema": "stuff",
+--       "lhs_fields": ...
+--       "remote_field": ...
+--     }
+--   }
+-- }
+-- @
+--
+-- In this latter case, we should not allow @"remote_schema"@ to appear
+-- under @"definition"@.
+parseRemoteRelationshipDefinition :: RRParseMode -> Value -> Parser RemoteRelationshipDefinition
+parseRemoteRelationshipDefinition mode = withObject ("RemoteRelationshipDefinition " <> suffix) \obj -> do
+  remoteSchema <- obj .:? "remote_schema"
+  case (remoteSchema, mode) of
+    (Just {}, RRPStrict) -> invalid
+    (Just schema, _) -> do
+      hasuraFields <- obj .: "hasura_fields"
+      remoteField <- obj .: "remote_field"
+      pure $ RelationshipToSchema RRFOldDBToRemoteSchema $ ToSchemaRelationshipDef schema hasuraFields remoteField
+    (Nothing, RRPLegacy) -> invalid
+    (Nothing, _) -> do
+      toSource <- obj .:? "to_source"
+      toSchema <- obj .:? "to_remote_schema"
+      case (toSchema, toSource) of
+        (Just schema, Nothing) -> RelationshipToSchema RRFUnifiedFormat <$> parseJSON schema
+        (Nothing, Just source) -> RelationshipToSource <$> parseJSON source
+        _ -> invalid
+  where
+    (suffix, expected) = case mode of
+      RRPLegacy -> ("(legacy format)", "remote_schema")
+      RRPLenient -> ("(lenient format)", "remote_schema, to_source, to_remote_schema")
+      RRPStrict -> ("(strict format)", "to_source, to_remote_schema")
+
+    invalid =
+      fail $
+        mconcat
+          [ "remote relationship definition ",
+            suffix,
+            " expects exactly one of: ",
+            expected
+          ]
 
 instance ToJSON RemoteRelationshipDefinition where
   toJSON = \case
@@ -89,5 +201,5 @@ instance ToJSON RemoteRelationshipDefinition where
 -- template haskell generation
 
 $(makeLenses ''RemoteRelationship)
-$(J.deriveJSON hasuraJSON {J.omitNothingFields = False} ''RemoteRelationship)
+$(J.deriveToJSON hasuraJSON {J.omitNothingFields = False} ''RemoteRelationship)
 $(makePrisms ''RemoteRelationshipDefinition)

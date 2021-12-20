@@ -15,7 +15,9 @@ import Data.Aeson (FromJSON, ToJSON)
 import Data.Aeson qualified as Aeson
 import Data.Aeson.Lens (key, _Object)
 import Data.HashMap.Strict qualified as HM
+import Data.Proxy (Proxy (..))
 import Data.Text qualified as T
+import Data.Typeable (Typeable, typeRep)
 import Data.Yaml.TH (yamlQQ)
 import GHC.Stack (HasCallStack)
 import Hasura.Prelude hiding ((%~))
@@ -27,7 +29,7 @@ import Hasura.SQL.Backend (BackendType (BigQuery, MSSQL, Postgres), PostgresKind
 import Hasura.Server.API.Metadata (RQLMetadataV1)
 import Hasura.Server.API.Query qualified as V1 (RQLQuery)
 import Hedgehog (MonadTest, evalEither, tripping)
-import Test.Hspec (Spec, describe, expectationFailure, it)
+import Test.Hspec (Spec, describe, expectationFailure, it, shouldContain)
 import Test.Hspec.Hedgehog (hedgehog)
 
 -------------------------------------------------------------------------------
@@ -85,18 +87,67 @@ spec_roundtrip = describe "JSON Roundtrip" do
 spec_Metadata_examples :: Spec
 spec_Metadata_examples = describe "Metadata" $ do
   it "parses an example remote relationship metadata fragment" do
-    case Aeson.fromJSON @Metadata remote_relationship_metadata_fragment of
-      Aeson.Success _ -> pure ()
-      Aeson.Error err -> expectationFailure err
+    decodesJSON @Metadata remote_relationship_metadata_fragment
 
 -------------------------------------------------------------------------------
 
 spec_RQLQuery_examples :: Spec
 spec_RQLQuery_examples = describe "V1 RQLQuery" do
+  it "parses a 'create_remote_relationship' query with the 'new' schema" do
+    decodesJSON @V1.RQLQuery
+      [yamlQQ|
+      type: create_remote_relationship
+      args:
+        name: message
+        table: profiles
+        definition:
+          to_remote_schema:
+            lhs_fields:
+              - id
+              - name
+            remote_schema: my-remote-schema
+            remote_field:
+              message:
+                arguments:
+                  id: "$id"
+    |]
+
   it "parses a 'create_remote_relationship' query with the 'old' schema" do
-    case Aeson.fromJSON @V1.RQLQuery create_remote_relationship_argument of
-      Aeson.Success _ -> pure ()
-      Aeson.Error err -> expectationFailure err
+    decodesJSON @V1.RQLQuery
+      [yamlQQ|
+     type: create_remote_relationship
+     args:
+       name: message
+       table: profiles
+       hasura_fields:
+         - id
+         - name
+       remote_schema: my-remote-schema
+       remote_field:
+         message:
+           arguments:
+             id: "$id"
+   |]
+
+  it "rejects a 'create_remote_relationship' query with the combination 'new+old' schema" do
+    rejectsJSON @V1.RQLQuery
+      "expects exactly one of: to_source, to_remote_schema"
+      [yamlQQ|
+      type: create_remote_relationship
+      args:
+        name: message
+        table: profiles
+        # Note remote_schema nested under definition!
+        definition:
+          hasura_fields:
+            - id
+            - name
+          remote_schema: my-remote-schema
+          remote_field:
+            message:
+              arguments:
+                id: "$id"
+    |]
 
 -------------------------------------------------------------------------------
 
@@ -105,36 +156,32 @@ spec_RQLMetadataV1_examples = describe "RQLMetadataV1" do
   describe "Success" do
     for_ ["create", "update", "delete"] \action ->
       it ("parses a 'pg_" <> T.unpack action <> "_remote_relationship query") do
-        case Aeson.fromJSON @RQLMetadataV1 (mk_pg_remote_relationship_argument action) of
-          Aeson.Success _ -> pure ()
-          Aeson.Error err -> expectationFailure err
+        decodesJSON @RQLMetadataV1 $ mk_pg_remote_relationship_argument action
 
     for_ ["create", "update", "delete"] \action ->
       it ("parses a 'pg_" <> T.unpack action <> "_remote_relationship query using the 'old' schema") do
-        case Aeson.fromJSON @RQLMetadataV1 (mk_pg_remote_relationship_old_argument action) of
-          Aeson.Success _ -> pure ()
-          Aeson.Error err -> expectationFailure err
+        decodesJSON @RQLMetadataV1 $ mk_pg_remote_relationship_old_argument action
 
     for_ ["create", "update", "delete"] \action ->
       it ("parses a 'citus_" <> T.unpack action <> "_remote_relationship query") do
-        case Aeson.fromJSON @RQLMetadataV1 (mk_citus_remote_relationship_argument action) of
-          Aeson.Success _ -> pure ()
-          Aeson.Error err -> expectationFailure err
+        decodesJSON @RQLMetadataV1 $ mk_citus_remote_relationship_argument action
 
     for_ ["create", "update", "delete"] \action ->
       it ("parses a 'bigquery_" <> T.unpack action <> "_remote_relationship query") do
-        case Aeson.fromJSON @RQLMetadataV1 (mk_bigquery_remote_relationship_argument action) of
-          Aeson.Success _ -> pure ()
-          Aeson.Error err -> expectationFailure err
+        decodesJSON @RQLMetadataV1 $ mk_bigquery_remote_relationship_argument action
 
   describe "Failure" do
+    for_ ["create", "update"] \action ->
+      it ("fails to parse a 'pg_" <> T.unpack action <> "_remote_relationship query using the 'old+new' schema") do
+        rejectsJSON @RQLMetadataV1
+          "expects exactly one of: to_source, to_remote_schema"
+          $ mk_pg_remote_relationship_old_new_argument action
+
     for_ ["create", "update", "delete"] \action ->
       it ("fails to parse an 'mssql_" <> T.unpack action <> "_remote_relationship query") do
-        case Aeson.fromJSON @RQLMetadataV1 (mk_mssql_remote_relationship_argument action) of
-          Aeson.Error _ -> pure ()
-          Aeson.Success _ ->
-            let errMsg = "expected 'mssql_" <> T.unpack action <> "' query to fail to parse"
-             in expectationFailure errMsg
+        rejectsJSON @RQLMetadataV1
+          "unknown metadata command"
+          $ mk_mssql_remote_relationship_argument action
 
 -------------------------------------------------------------------------------
 -- Example YAML fragments for the metadata and query tests above.
@@ -161,23 +208,6 @@ sources:
               id: $id
         remote_schema: some_remote_schema_name
     |]
-
-create_remote_relationship_argument :: Aeson.Value
-create_remote_relationship_argument =
-  [yamlQQ|
-type: create_remote_relationship
-args:
-  name: message
-  table: profiles
-  hasura_fields:
-    - id
-    - name
-  remote_schema: my-remote-schema
-  remote_field:
-    message:
-      arguments:
-        id: "$id"
-|]
 
 -- | Backend-agnostic @v1/metadata@ argument fragment which omits the @type@
 -- field.
@@ -243,12 +273,12 @@ mk_bigquery_remote_relationship_argument :: Text -> Aeson.Value
 mk_bigquery_remote_relationship_argument action =
   mk_backend_remote_relationship_argument "bigquery" action
     & key "args" . key "table"
-      .~ ( Aeson.Object $
-             HM.fromList
-               [ ("name" :: Text, "profiles"),
-                 ("dataset" :: Text, "test")
-               ]
-         )
+      .~ Aeson.Object
+        ( HM.fromList
+            [ ("name" :: Text, "profiles"),
+              ("dataset" :: Text, "test")
+            ]
+        )
 
 -- | Constructor for @v1/metadata@ @pg_(create|update|delete)_remote_relationship@
 -- arguments using the old, non-unified schema.
@@ -273,6 +303,32 @@ args:
     message:
       arguments:
         id: "$id"
+|]
+
+-- | Constructor for @v1/metadata@ @pg_(create|update|delete)_remote_relationship@
+-- arguments using a mix of the old and new schema.
+mk_pg_remote_relationship_old_new_argument :: Text -> Aeson.Value
+mk_pg_remote_relationship_old_new_argument action =
+  fragment
+    & _Object
+      %~ HM.insert
+        ("type" :: Text)
+        (Aeson.String $ "pg_" <> action <> "_remote_relationship")
+  where
+    fragment =
+      [yamlQQ|
+args:
+  name: message
+  table: profiles
+  definition:
+    hasura_fields:
+      - id
+      - name
+    remote_schema: my-remote-schema
+    remote_field:
+      message:
+        arguments:
+          id: "$id"
 |]
 
 -------------------------------------------------------------------------------
@@ -329,3 +385,21 @@ trippingJSONEncoding ::
   a ->
   m ()
 trippingJSONEncoding x = tripping x Aeson.encode Aeson.eitherDecode'
+
+-- | Test that a specific JSON value can be parsed successfully.
+decodesJSON :: forall a. (HasCallStack, FromJSON a) => Aeson.Value -> IO ()
+decodesJSON value = case Aeson.fromJSON @a value of
+  Aeson.Success _ -> pure ()
+  Aeson.Error err -> expectationFailure err
+
+-- | Test that a specific JSON value fails to parse.
+rejectsJSON :: forall a. (HasCallStack, Typeable a, FromJSON a) => String -> Aeson.Value -> IO ()
+rejectsJSON message value = case Aeson.fromJSON @a value of
+  Aeson.Error err -> err `shouldContain` message
+  Aeson.Success _ ->
+    expectationFailure $
+      mconcat
+        [ "expected parsing ",
+          show $ typeRep $ Proxy @a,
+          " to fail, but it succeeded"
+        ]
