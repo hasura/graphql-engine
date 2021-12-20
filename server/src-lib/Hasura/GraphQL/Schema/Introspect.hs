@@ -350,13 +350,12 @@ inputValue =
       typeF = do
         printer <- P.subselection_ $$(G.litName "type") Nothing typeField
         return $ \defInfo -> case P.dInfo defInfo of
-          P.IFRequired tp -> printer $ SomeType $ P.NonNullable tp
-          P.IFOptional tp _ -> printer $ SomeType tp
+          P.InputFieldInfo tp _ -> printer $ SomeType tp
       defaultValue :: FieldParser n (P.Definition P.InputFieldInfo -> J.Value)
       defaultValue =
         P.selection_ $$(G.litName "defaultValue") Nothing P.string
           $> \defInfo -> case P.dInfo defInfo of
-            P.IFOptional _ (Just val) -> J.String $ T.run $ GP.value val
+            P.InputFieldInfo _ (Just val) -> J.String $ T.run $ GP.value val
             _ -> J.Null
    in applyPrinter
         <$> P.selectionSet

@@ -1541,16 +1541,17 @@ functionArgs functionTrackedAs (toList -> inputArgs) = do
       typedParser <- columnParser (ColumnScalar $ functionArgScalarType @b $ faType arg) (G.Nullability True)
       fieldName <- textToName name
 
-      -- While some arguments are "mandatory" (i.e. they don't have a default
-      -- value), we don't enforce the distinction at the GraphQL type system
-      -- level, because all postgres function arguments are nullable, and
-      -- GraphQL conflates nullability and optionality (see Note [Optional
-      -- fields and nullability]). Making the field "mandatory" in the GraphQL
-      -- sense would mean giving a default value of `null`, implicitly passing
-      -- `null` to the postgres function if the user were to omit the
-      -- argument. For backwards compatibility reasons, and also to avoid
-      -- surprises, we prefer to reject the query if a mandatory argument is
-      -- missing rather than filling the blanks for the user.
+      -- Since all postgres function arguments are nullable, we define the
+      -- GraphQL fields in nullable types. As explained in Note [When are fields
+      -- optional?], this implies that they can be omitted. For backwards
+      -- compatibility reasons, and also to avoid surprises, we prefer to reject
+      -- the query if a mandatory argument is missing rather than filling the
+      -- blanks for the user.
+      --
+      -- As explained in Note [The value of omitted fields], we can still reject
+      -- queries when such nullable fields are omitted, and accept them when an
+      -- explicit value of `null` is used, as long as we don't set a default
+      -- value, not even `null`.
       let argParser = P.fieldOptional fieldName Nothing typedParser
       pure $ argParser `mapField` ((name,) . IR.AEInput . mkParameter)
 

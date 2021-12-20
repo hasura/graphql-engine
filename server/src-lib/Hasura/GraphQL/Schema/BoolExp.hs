@@ -144,8 +144,8 @@ In most cases, as mentioned above, we avoid this problem by making the column
 value non-nullable (which is correct, since we never treat a null value as a SQL
 NULL), then creating the field using 'fieldOptional'. This creates a parser that
 rejects nulls, but won’t be called at all if the field is not specified, which
-is permitted by the GraphQL specification. See Note [Optional fields and
-nullability] in Hasura.GraphQL.Parser.Internal.Parser for more details.
+is permitted by the GraphQL specification. See Note [The value of omitted
+fields] in Hasura.GraphQL.Parser.Internal.Parser for more details.
 
 Additionally, it is worth nothing that the `column` parser *does* handle
 explicit nulls, by creating a Null column value.

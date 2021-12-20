@@ -584,23 +584,18 @@ data EnumValueInfo = EnumValueInfo
 instance Hashable EnumValueInfo
 
 data InputFieldInfo
-  = -- | A required field with a non-nullable type.
-    forall k. ('Input <: k) => IFRequired (NonNullableType k)
-  | -- | An optional input field with a nullable type and possibly a default
-    -- value. If a default value is provided, it should be a valid value for the
-    -- type.
+  = -- | An input field with a type and possibly a default value. If a default
+    -- value is provided, it should be a valid value for the type.
     --
     -- Note that a default value of 'VNull' is subtly different from having no
-    -- default value at all. If no default value is provided, the GraphQL
-    -- specification allows distinguishing provided @null@ values from values left
-    -- completely absent; see Note [Optional fields and nullability] in
-    -- Hasura.GraphQL.Parser.Internal.Parser.
-    forall k. ('Input <: k) => IFOptional (Type k) (Maybe (Value Void))
+    -- default value at all. If no default value is provided (i.e. 'Nothing'),
+    -- the GraphQL specification allows distinguishing provided @null@ values
+    -- from values left completely absent; see Note [The value of omitted
+    -- fields] in Hasura.GraphQL.Parser.Internal.Parser.
+    forall k. ('Input <: k) => InputFieldInfo (Type k) (Maybe (Value Void))
 
 instance Eq InputFieldInfo where
-  IFRequired t1 == IFRequired t2 = eqNonNullableType t1 t2
-  IFOptional t1 v1 == IFOptional t2 v2 = eqType t1 t2 && v1 == v2
-  _ == _ = False
+  InputFieldInfo t1 v1 == InputFieldInfo t2 v2 = eqType t1 t2 && v1 == v2
 
 data FieldInfo = forall k.
   ('Output <: k) =>
@@ -691,9 +686,9 @@ instance Cacheable Variable
 
 data VariableInfo
   = VIRequired Name
-  | -- | Unlike fields (see 'IFOptional'), nullable variables with no default
-    -- value are indistinguishable from variables with a default value of null, so
-    -- we don’t distinguish those cases here.
+  | -- | Unlike fields (see 'InputFieldInfo'), nullable variables with no
+    -- default value are indistinguishable from variables with a default value
+    -- of null, so we don’t distinguish those cases here.
     VIOptional Name (Value Void)
   deriving (Show, Eq, Generic, Ord)
 
@@ -850,9 +845,8 @@ instance HasTypeDefinitions (Definition InputFieldInfo) where
     local (typeOriginRecurse dName) $ accumulateTypeDefinitions dInfo
 
 instance HasTypeDefinitions InputFieldInfo where
-  accumulateTypeDefinitions = \case
-    IFRequired t -> accumulateTypeDefinitions t
-    IFOptional t _ -> accumulateTypeDefinitions t
+  accumulateTypeDefinitions (InputFieldInfo t _) =
+    accumulateTypeDefinitions t
 
 instance HasTypeDefinitions (Definition FieldInfo) where
   accumulateTypeDefinitions Definition {..} =
