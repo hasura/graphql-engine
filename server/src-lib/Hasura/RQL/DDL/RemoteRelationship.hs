@@ -59,14 +59,15 @@ instance Backend b => FromJSON (CreateFromSourceRelationship b) where
     _crrTable <- o .: "table"
     _crrName <- o .: "name"
     -- In the old format, the definition is inlined; in the new format, the
-    -- definition is in the "definition" object.
+    -- definition is in the "definition" object, and we don't allow legacy
+    -- fields to appear under it.
     remoteSchema :: Maybe J.Value <- o .:? "remote_schema"
     definition <- o .:? "definition"
     _crrDefinition <- case (remoteSchema, definition) of
       -- old format
-      (Just _, Nothing) -> parseJSON $ J.Object o
+      (Just {}, Nothing) -> parseRemoteRelationshipDefinition RRPLegacy $ J.Object o
       -- new format
-      (Nothing, Just def) -> parseJSON def
+      (Nothing, Just def) -> parseRemoteRelationshipDefinition RRPStrict def
       -- both or neither
       _ -> fail "create_remote_relationship expects exactly one of: remote_schema, definition"
     pure $ CreateFromSourceRelationship {..}
