@@ -42,11 +42,11 @@ open_webpage() {
   fi
 }
 
-# see also `server/benchmarks/pr-merge-bases.sh`
+# see also server/benchmarks/utils/pr-merge-bases.sh 
 pr_nums=$(git log \
   --grep='https://github.com/hasura/graphql-engine-mono/pull/[0-9]*$' \
   -"$LIM" \
-  | grep  -oP '^    https://github.com/hasura/graphql-engine-mono/pull/\K[0-9]*$' \
+  | grep  -oP '^    PR-URL: https://github.com/hasura/graphql-engine-mono/pull/\K[0-9]*$' \
   # ^ TODO we'd also like to make this a multi-line regex so we can be sure
   # these are just the kodiak-added lines
 )
