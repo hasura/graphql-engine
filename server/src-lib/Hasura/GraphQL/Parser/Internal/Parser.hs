@@ -95,7 +95,7 @@ nullableField (FieldParser (Definition n d (FieldInfo as t)) p) =
 
 multipleField :: forall m a. FieldParser m a -> FieldParser m a
 multipleField (FieldParser (Definition n d (FieldInfo as t)) p) =
-  FieldParser (Definition n d (FieldInfo as (Nullable (TList t)))) p
+  FieldParser (Definition n d (FieldInfo as (TList Nullable t))) p
 
 -- | Decorate a schema field with reference to given @'G.GType'
 wrapFieldParser :: forall m a. G.GType -> FieldParser m a -> FieldParser m a
@@ -114,7 +114,7 @@ nullableParser :: forall m a. Parser 'Output m a -> Parser 'Output m a
 nullableParser parser = parser {pType = nullableType (pType parser)}
 
 multiple :: forall m a. Parser 'Output m a -> Parser 'Output m a
-multiple parser = parser {pType = Nullable $ TList $ pType parser}
+multiple parser = parser {pType = TList Nullable $ pType parser}
 
 -- | A variant of 'selectionSetObject' which doesn't implement any interfaces
 selectionSet ::
@@ -159,10 +159,9 @@ selectionSetObject ::
 selectionSetObject name description parsers implementsInterfaces =
   Parser
     { pType =
-        Nullable $
-          TNamed $
-            Definition name description $
-              TIObject $ ObjectInfo (map fDefinition parsers) interfaces,
+        TNamed Nullable $
+          Definition name description $
+            TIObject $ ObjectInfo (map fDefinition parsers) interfaces,
       pParser = \input -> withPath (++ [Key "selectionSet"]) do
         -- Not all fields have a selection set, but if they have one, it
         -- must contain at least one field. The GraphQL parser returns a
@@ -216,10 +215,9 @@ selectionSetInterface ::
 selectionSetInterface name description fields objectImplementations =
   Parser
     { pType =
-        Nullable $
-          TNamed $
-            Definition name description $
-              TIInterface $ InterfaceInfo (map fDefinition fields) objects,
+        TNamed Nullable $
+          Definition name description $
+            TIInterface $ InterfaceInfo (map fDefinition fields) objects,
       pParser = \input -> for objectImplementations (($ input) . pParser)
       -- Note: This is somewhat suboptimal, since it parses a query against every
       -- possible object implementing this interface, possibly duplicating work for
@@ -244,10 +242,9 @@ selectionSetUnion ::
 selectionSetUnion name description objectImplementations =
   Parser
     { pType =
-        Nullable $
-          TNamed $
-            Definition name description $
-              TIUnion $ UnionInfo objects,
+        TNamed Nullable $
+          Definition name description $
+            TIUnion $ UnionInfo objects,
       pParser = \input -> for objectImplementations (($ input) . pParser)
     }
   where

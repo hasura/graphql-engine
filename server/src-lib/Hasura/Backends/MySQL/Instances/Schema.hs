@@ -184,7 +184,7 @@ columnParser' columnType (G.Nullability isNullable) =
       MySQL.Timestamp -> pure $ possiblyNullable scalarType $ MySQL.TimestampValue <$> P.string
       _ -> do
         name <- MySQL.mkMySQLScalarTypeName scalarType
-        let schemaType = P.NonNullable $ P.TNamed $ P.Definition name Nothing P.TIScalar
+        let schemaType = P.TNamed P.NonNullable $ P.Definition name Nothing P.TIScalar
         pure $
           Parser
             { pType = schemaType,
@@ -210,7 +210,7 @@ columnParser' columnType (G.Nullability isNullable) =
         MySQL.VarcharValue $ G.unName value
       )
     throughJSON scalarName =
-      let schemaType = P.NonNullable $ P.TNamed $ P.Definition scalarName Nothing P.TIScalar
+      let schemaType = P.TNamed P.NonNullable $ P.Definition scalarName Nothing P.TIScalar
        in Parser
             { pType = schemaType,
               pParser =

@@ -98,15 +98,15 @@ buildGQLContext queryType sources allRemoteSchemas allActions customTypes = do
 
   -- TODO factor out the common function; throw500 in both cases:
   queryFieldNames :: [G.Name] <-
-    case P.discardNullability $ P.parserType $ fst adminHasuraDBContext of
+    case P.parserType $ fst adminHasuraDBContext of
       -- It really ought to be this case; anything else is a programming error.
-      P.TNamed (P.Definition _ _ (P.TIObject (P.ObjectInfo rootFields _interfaces))) ->
+      P.TNamed _ (P.Definition _ _ (P.TIObject (P.ObjectInfo rootFields _interfaces))) ->
         pure $ fmap P.dName rootFields
       _ -> throw500 "We encountered an root query of unexpected GraphQL type.  It should be an object type."
   let mutationFieldNames :: [G.Name]
       mutationFieldNames =
-        case P.discardNullability . P.parserType <$> snd adminHasuraDBContext of
-          Just (P.TNamed def) ->
+        case P.parserType <$> snd adminHasuraDBContext of
+          Just (P.TNamed _ def) ->
             case P.dInfo def of
               -- It really ought to be this case; anything else is a programming error.
               P.TIObject (P.ObjectInfo rootFields _interfaces) -> fmap P.dName rootFields
