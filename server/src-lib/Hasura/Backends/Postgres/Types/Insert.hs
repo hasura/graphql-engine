@@ -9,7 +9,7 @@ where
 
 import Data.Kind (Type)
 import Hasura.Prelude
-import Hasura.RQL.IR.Conflict (ConflictClauseP1)
+import Hasura.RQL.IR.Conflict (OnConflictClause)
 import Hasura.RQL.Types.Backend (Backend)
 import Hasura.SQL.Backend
 
@@ -20,7 +20,7 @@ import Hasura.SQL.Backend
 -- the data at the leaves.
 type BackendInsert :: PostgresKind -> Type -> Type
 newtype BackendInsert pgKind v = BackendInsert
-  { _biConflictClause :: Maybe (ConflictClauseP1 ('Postgres pgKind) v)
+  { _biConflictClause :: Maybe (OnConflictClause ('Postgres pgKind) v)
   }
 
 deriving instance (Backend ('Postgres pgKind)) => Functor (BackendInsert pgKind)

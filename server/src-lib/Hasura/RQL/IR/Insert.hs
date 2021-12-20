@@ -15,7 +15,8 @@ module Hasura.RQL.IR.Insert
     AnnotatedInsert (..),
     AnnotatedInsertRow,
     ArrRelIns,
-    ConflictClauseP1 (..),
+    OnConflictClause (..),
+    OnConflictClauseData (..),
     ConflictTarget (..),
     InsertQueryP1 (..),
     MultiObjIns,
@@ -125,7 +126,7 @@ data InsertQueryP1 (b :: BackendType) = InsertQueryP1
   { iqp1Table :: TableName b,
     iqp1Cols :: [Column b],
     iqp1Tuples :: [[SQLExpression b]],
-    iqp1Conflict :: Maybe (ConflictClauseP1 b (SQLExpression b)),
+    iqp1Conflict :: Maybe (OnConflictClause b (SQLExpression b)),
     iqp1CheckCond :: (AnnBoolExpSQL b, Maybe (AnnBoolExpSQL b)),
     iqp1Output :: MutationOutput b,
     iqp1AllCols :: [ColumnInfo b]

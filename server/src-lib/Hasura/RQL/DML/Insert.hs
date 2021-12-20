@@ -69,16 +69,16 @@ buildConflictClause ::
   TableInfo ('Postgres 'Vanilla) ->
   [PGCol] ->
   OnConflict ->
-  m (ConflictClauseP1 ('Postgres 'Vanilla) S.SQLExp)
+  m (OnConflictClause ('Postgres 'Vanilla) S.SQLExp)
 buildConflictClause sessVarBldr tableInfo inpCols (OnConflict mTCol mTCons act) =
   case (mTCol, mTCons, act) of
-    (Nothing, Nothing, CAIgnore) -> return $ CP1DoNothing Nothing
+    (Nothing, Nothing, CAIgnore) -> return $ OCCDoNothing Nothing
     (Just col, Nothing, CAIgnore) -> do
       validateCols col
-      return $ CP1DoNothing $ Just $ CTColumn $ getPGCols col
+      return $ OCCDoNothing $ Just $ CTColumn $ getPGCols col
     (Nothing, Just cons, CAIgnore) -> do
       validateConstraint cons
-      return $ CP1DoNothing $ Just $ CTConstraint cons
+      return $ OCCDoNothing $ Just $ CTConstraint cons
     (Nothing, Nothing, CAUpdate) ->
       throw400
         UnexpectedPayload
@@ -88,13 +88,13 @@ buildConflictClause sessVarBldr tableInfo inpCols (OnConflict mTCol mTCons act) 
       (updFltr, preSet) <- getUpdPerm
       resolvedUpdFltr <- convAnnBoolExpPartialSQL sessVarBldr updFltr
       resolvedPreSet <- mapM (convPartialSQLExp sessVarBldr) preSet
-      return $ CP1Update (CTColumn $ getPGCols col) inpCols resolvedPreSet resolvedUpdFltr
+      return $ OCCUpdate $ OnConflictClauseData (CTColumn $ getPGCols col) inpCols resolvedPreSet resolvedUpdFltr
     (Nothing, Just cons, CAUpdate) -> do
       validateConstraint cons
       (updFltr, preSet) <- getUpdPerm
       resolvedUpdFltr <- convAnnBoolExpPartialSQL sessVarBldr updFltr
       resolvedPreSet <- mapM (convPartialSQLExp sessVarBldr) preSet
-      return $ CP1Update (CTConstraint cons) inpCols resolvedPreSet resolvedUpdFltr
+      return $ OCCUpdate $ OnConflictClauseData (CTConstraint cons) inpCols resolvedPreSet resolvedUpdFltr
     (Just _, Just _, _) ->
       throw400
         UnexpectedPayload

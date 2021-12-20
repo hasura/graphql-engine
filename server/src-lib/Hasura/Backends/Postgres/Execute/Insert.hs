@@ -301,7 +301,7 @@ validateInsert insCols objRels addCols = do
 mkInsertQ ::
   (MonadError QErr m, Backend ('Postgres pgKind)) =>
   QualifiedTable ->
-  Maybe (IR.ConflictClauseP1 ('Postgres pgKind) PG.SQLExp) ->
+  Maybe (IR.OnConflictClause ('Postgres pgKind) PG.SQLExp) ->
   [(PGCol, PG.SQLExp)] ->
   Map.HashMap PGCol PG.SQLExp ->
   (AnnBoolExpSQL ('Postgres pgKind), Maybe (AnnBoolExpSQL ('Postgres pgKind))) ->
