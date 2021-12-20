@@ -205,7 +205,7 @@ bqColumnParser columnType (G.Nullability isNullable) =
       BigQuery.DatetimeScalarType -> pure $ possiblyNullable scalarType $ BigQuery.DatetimeValue . BigQuery.Datetime <$> P.string
       BigQuery.GeographyScalarType -> pure $ possiblyNullable scalarType $ BigQuery.GeographyValue . BigQuery.Geography <$> P.string
       BigQuery.TimestampScalarType -> do
-        let schemaType = P.Nullable . P.TNamed $ P.Definition stringScalar Nothing P.TIScalar
+        let schemaType = P.TNamed P.Nullable $ P.Definition stringScalar Nothing P.TIScalar
         pure $
           possiblyNullable scalarType $
             Parser
@@ -234,7 +234,7 @@ bqColumnParser columnType (G.Nullability isNullable) =
         BigQuery.StringValue $ G.unName value
       )
     throughJSON scalarName =
-      let schemaType = P.NonNullable $ P.TNamed $ P.Definition scalarName Nothing P.TIScalar
+      let schemaType = P.TNamed P.NonNullable $ P.Definition scalarName Nothing P.TIScalar
        in Parser
             { pType = schemaType,
               pParser =

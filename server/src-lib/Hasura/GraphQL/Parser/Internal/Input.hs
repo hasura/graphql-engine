@@ -233,8 +233,8 @@ field name description parser =
     }
   where
     -- nullable fields just have an implicit default value of `null`
-    nullableDefault = case pType parser of
-      Nullable _ -> Just (GraphQLValue VNull)
+    nullableDefault = case typeNullability (pType parser) of
+      Nullable -> Just (GraphQLValue VNull)
       _ -> Nothing
 
 -- | Creates a parser for a nullable field with no default value. If the field
@@ -308,7 +308,7 @@ enum name description values =
           other -> typeMismatch name "an enum value" other
     }
   where
-    schemaType = NonNullable $ TNamed $ Definition name description $ TIEnum (fst <$> values)
+    schemaType = TNamed NonNullable $ Definition name description $ TIEnum (fst <$> values)
     valuesMap = M.fromList $ over (traverse . _1) dName $ toList values
     validate value =
       onNothing (M.lookup value valuesMap) $
@@ -350,10 +350,9 @@ object name description parser =
     }
   where
     schemaType =
-      NonNullable $
-        TNamed $
-          Definition name description $
-            TIInputObject (InputObjectInfo (ifDefinitions parser))
+      TNamed NonNullable $
+        Definition name description $
+          TIInputObject (InputObjectInfo (ifDefinitions parser))
     fieldNames = S.fromList (dName <$> ifDefinitions parser)
     parseFields fields = do
       -- check for extraneous fields here, since the InputFieldsParser just
@@ -392,4 +391,4 @@ list parser =
             other -> fmap pure $ withPath (++ [Index 0]) $ pParser parser other
       }
   where
-    schemaType = NonNullable $ TList $ pType parser
+    schemaType = TList NonNullable $ pType parser

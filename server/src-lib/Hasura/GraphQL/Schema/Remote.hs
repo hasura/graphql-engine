@@ -349,7 +349,7 @@ remoteFieldScalarParser customizeTypename (G.ScalarTypeDefinition description na
     }
   where
     customizedTypename = runMkTypename customizeTypename name
-    schemaType = NonNullable $ TNamed $ Definition customizedTypename description TIScalar
+    schemaType = TNamed NonNullable $ Definition customizedTypename description TIScalar
     gType = toGraphQLType schemaType
 
     mkRemoteGType = \case
@@ -841,11 +841,11 @@ remoteFieldFromDefinition ::
 remoteFieldFromDefinition schemaDoc parentTypeName (G.FieldDefinition description name argsDefinition gType _) = do
   let addNullableList :: FieldParser n a -> FieldParser n a
       addNullableList (P.FieldParser (Definition name' desc (FieldInfo args typ)) parser) =
-        P.FieldParser (Definition name' desc (FieldInfo args (Nullable (TList typ)))) parser
+        P.FieldParser (Definition name' desc (FieldInfo args (TList Nullable typ))) parser
 
       addNonNullableList :: FieldParser n a -> FieldParser n a
       addNonNullableList (P.FieldParser (Definition name' desc (FieldInfo args typ)) parser) =
-        P.FieldParser (Definition name' desc (FieldInfo args (NonNullable (TList typ)))) parser
+        P.FieldParser (Definition name' desc (FieldInfo args (TList NonNullable typ))) parser
 
       -- TODO add directives, deprecation
       convertType :: G.GType -> m (FieldParser n (G.Field G.NoFragments RemoteSchemaVariable))

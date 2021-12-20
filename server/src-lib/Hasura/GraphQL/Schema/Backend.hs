@@ -44,7 +44,6 @@ import Hasura.RQL.IR
 import Hasura.RQL.IR.Insert qualified as IR
 import Hasura.RQL.IR.Select qualified as IR
 import Hasura.RQL.Types hiding (EnumValueInfo)
-import Language.GraphQL.Draft.Syntax (Nullability)
 import Language.GraphQL.Draft.Syntax qualified as G
 
 -- TODO: Might it make sense to add those constraints to MonadSchema directly?
@@ -204,7 +203,7 @@ class Backend b => BackendSchema (b :: BackendType) where
   columnParser ::
     (MonadSchema n m, MonadError QErr m, MonadReader r m, Has MkTypename r) =>
     ColumnType b ->
-    Nullability ->
+    G.Nullability -> -- TODO maybe use Hasura.GraphQL.Parser.Schema.Nullability instead?
     m (Parser 'Both n (ValueWithOrigin (ColumnValue b)))
 
   -- | The "path" argument for json column fields

@@ -290,7 +290,7 @@ msColumnParser columnType (G.Nullability isNullable) =
         MSSQL.BitType -> pure $ ODBC.BoolValue <$> P.boolean
         _ -> do
           name <- MSSQL.mkMSSQLScalarTypeName scalarType
-          let schemaType = P.NonNullable $ P.TNamed $ P.Definition name Nothing P.TIScalar
+          let schemaType = P.TNamed P.NonNullable $ P.Definition name Nothing P.TIScalar
           pure $
             Parser
               { pType = schemaType,

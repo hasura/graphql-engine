@@ -33,12 +33,12 @@ fakeScalar =
     name -> error $ "no test value implemented for scalar " <> T.unpack name
 
 fakeInputFieldValue :: InputFieldInfo -> G.Value Variable
-fakeInputFieldValue (InputFieldInfo t _) = fromNNT (discardNullability t)
+fakeInputFieldValue (InputFieldInfo t _) = go t
   where
-    fromNNT :: forall k. ('Input <: k) => NonNullableType k -> G.Value Variable
-    fromNNT = \case
-      TList t' -> G.VList [fromNNT (discardNullability t'), fromNNT (discardNullability t')]
-      TNamed (Definition name _ info) -> case (info, subKind @'Input @k) of
+    go :: forall k. ('Input <: k) => Type k -> G.Value Variable
+    go = \case
+      TList _ t' -> G.VList [go t', go t']
+      TNamed _ (Definition name _ info) -> case (info, subKind @'Input @k) of
         (TIScalar, _) -> fakeScalar name
         (TIEnum ei, _) -> G.VEnum $ G.EnumValue $ dName $ NE.head ei
         (TIInputObject (InputObjectInfo oi), _) -> G.VObject $
