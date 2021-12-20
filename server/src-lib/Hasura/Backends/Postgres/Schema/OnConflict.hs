@@ -46,7 +46,7 @@ onConflictFieldParser ::
   TableInfo ('Postgres pgKind) ->
   Maybe (SelPermInfo ('Postgres pgKind)) ->
   Maybe (UpdPermInfo ('Postgres pgKind)) ->
-  m (InputFieldsParser n (Maybe (IR.ConflictClauseP1 ('Postgres pgKind) (UnpreparedValue ('Postgres pgKind)))))
+  m (InputFieldsParser n (Maybe (IR.OnConflictClause ('Postgres pgKind) (UnpreparedValue ('Postgres pgKind)))))
 onConflictFieldParser sourceName tableInfo selectPerms updatePerms = do
   let maybeConstraints = tciUniqueOrPrimaryKeyConstraints . _tiCoreInfo $ tableInfo
   let maybeConflictObject = conflictObjectParser sourceName tableInfo <$> maybeConstraints <*> pure selectPerms <*> updatePerms
@@ -63,7 +63,7 @@ conflictObjectParser ::
   NonEmpty (Constraint ('Postgres pgKind)) ->
   Maybe (SelPermInfo ('Postgres pgKind)) ->
   UpdPermInfo ('Postgres pgKind) ->
-  m (Parser 'Input n (IR.ConflictClauseP1 ('Postgres pgKind) (UnpreparedValue ('Postgres pgKind))))
+  m (Parser 'Input n (IR.OnConflictClause ('Postgres pgKind) (UnpreparedValue ('Postgres pgKind))))
 conflictObjectParser sourceName tableInfo constraints selectPerms updatePerms = do
   updateColumnsEnum <- updateColumnsPlaceholderParser
   constraintParser <- conflictConstraint constraints sourceName tableInfo
@@ -88,8 +88,8 @@ conflictObjectParser sourceName tableInfo constraints selectPerms updatePerms = 
           sequenceA cs `onNothing` parseError "erroneous column name"
       pure $
         case updateColumns of
-          [] -> IR.CP1DoNothing $ Just constraint
-          _ -> IR.CP1Update constraint updateColumns presetColumns $ BoolAnd $ updateFilter : maybeToList whereExp
+          [] -> IR.OCCDoNothing $ Just constraint
+          _ -> IR.OCCUpdate $ IR.OnConflictClauseData constraint updateColumns presetColumns $ BoolAnd $ updateFilter : maybeToList whereExp
   where
     tableName = tableInfoName tableInfo
 
