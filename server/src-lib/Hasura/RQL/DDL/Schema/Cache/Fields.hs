@@ -78,11 +78,31 @@ addNonColumnFields =
         -<
           (HS.fromList $ M.keys rawTableInfo, map (source,pgFunctions,_nctiTable,) _nctiComputedFields)
 
-    let columnsAndComputedFields =
-          let columnFields = columns <&> FIColumn
+    -- the fields that can be used for defining join conditions to other sources/remote schemas:
+    -- 1. all columns
+    -- 2. computed fields which don't expect arguments other than the table row and user session
+    let lhsJoinFields =
+          let columnFields = columns <&> \columnInfo -> JoinColumn (pgiColumn columnInfo) (pgiType columnInfo)
               computedFields = M.fromList $
-                flip map (M.toList computedFieldInfos) $
-                  \(cfName, (cfInfo, _)) -> (fromComputedField cfName, FIComputedField cfInfo)
+                flip mapMaybe (M.toList computedFieldInfos) $
+                  \(cfName, (ComputedFieldInfo {..}, _)) -> do
+                    scalarType <- case _cfiReturnType of
+                      CFRScalar ty -> pure ty
+                      CFRSetofTable {} -> Nothing
+                    let ComputedFieldFunction {..} = _cfiFunction
+                    case toList _cffInputArgs of
+                      [] ->
+                        pure $
+                          (fromComputedField cfName,) $
+                            JoinComputedField $
+                              ScalarComputedField
+                                _cfiXComputedFieldInfo
+                                _cfiName
+                                _cffName
+                                _cffTableArgument
+                                _cffSessionArgument
+                                scalarType
+                      _ -> Nothing
            in M.union columnFields computedFields
 
     rawRemoteRelationshipInfos <-
@@ -91,7 +111,7 @@ addNonColumnFields =
         (mkRemoteRelationshipMetadataObject @b)
         buildRemoteRelationship
         -<
-          ((allSources, columnsAndComputedFields, remoteSchemaMap), map (source,_nctiTable,) _nctiRemoteRelationships)
+          ((allSources, lhsJoinFields, remoteSchemaMap), map (source,_nctiTable,) _nctiRemoteRelationships)
 
     let relationshipFields = mapKeys fromRel relationshipInfos
         computedFieldFields = mapKeys fromComputedField computedFieldInfos
@@ -309,10 +329,10 @@ buildRemoteRelationship ::
     MonadError QErr m,
     BackendMetadata b
   ) =>
-  ( (HashMap SourceName (AB.AnyBackend PartiallyResolvedSource), FieldInfoMap (FieldInfo b), RemoteSchemaMap),
+  ( (HashMap SourceName (AB.AnyBackend PartiallyResolvedSource), M.HashMap FieldName (DBJoinField b), RemoteSchemaMap),
     (SourceName, TableName b, RemoteRelationship)
   )
-    `arr` Maybe (RemoteFieldInfo b)
+    `arr` Maybe (RemoteFieldInfo (DBJoinField b))
 buildRemoteRelationship =
   proc
     ( (allSources, allColumns, remoteSchemaMap),
@@ -331,8 +351,25 @@ buildRemoteRelationship =
         ( (|
             modifyErrA
               ( do
-                  (remoteField, dependencies) <- bindErrorA -< buildRemoteFieldInfo source table allColumns rr allSources remoteSchemaMap
-                  recordDependencies -< (metadataObject, schemaObj, dependencies)
+                  (remoteField, rhsDependencies) <-
+                    bindErrorA
+                      -<
+                        buildRemoteFieldInfo (tableNameToLHSIdentifier @b table) allColumns rr allSources remoteSchemaMap
+                  -- buildRemoteFieldInfo only knows how to construct dependencies on the RHS of the join condition,
+                  -- so the dependencies on the remote relationship on the LHS entity have to be computed here
+                  let lhsDependencies =
+                        -- a direct dependency on the table on which this is defined
+                        SchemaDependency (SOSourceObj source $ AB.mkAnyBackend $ SOITable @b table) DRTable
+                        -- the relationship is also dependent on all the lhs
+                        -- columns that are used in the join condition
+                        :
+                        flip map (M.elems $ _rfiLHS remoteField) \case
+                          JoinColumn column _ ->
+                            -- TODO: shouldn't this be DRColumn??
+                            mkColDep @b DRRemoteRelationship source table column
+                          JoinComputedField computedFieldInfo ->
+                            mkComputedFieldDep @b DRRemoteRelationship source table $ _scfName computedFieldInfo
+                  recordDependencies -< (metadataObject, schemaObj, lhsDependencies <> rhsDependencies)
                   returnA -< remoteField
               )
           |) (addTableContext @b table . addRemoteRelationshipContext)

@@ -57,7 +57,6 @@ import Hasura.RQL.Types.Network as R
 import Hasura.RQL.Types.Permission as R
 import Hasura.RQL.Types.QueryCollection as R
 import Hasura.RQL.Types.QueryTags as R
-import Hasura.RQL.Types.Relationships.FromSource as R
 import Hasura.RQL.Types.Relationships.Local as R
 import Hasura.RQL.Types.Relationships.Remote as R
 import Hasura.RQL.Types.Relationships.ToSchema as R
@@ -374,7 +373,7 @@ askRemoteRel ::
   (MonadError QErr m) =>
   FieldInfoMap (FieldInfo backend) ->
   RelName ->
-  m (RemoteFieldInfo backend)
+  m (RemoteFieldInfo (DBJoinField backend))
 askRemoteRel fieldInfoMap relName = do
   fieldInfo <- askFieldInfo fieldInfoMap (fromRemoteRelationship relName)
   case fieldInfo of

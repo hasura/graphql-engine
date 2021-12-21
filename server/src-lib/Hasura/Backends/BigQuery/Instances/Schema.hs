@@ -339,7 +339,7 @@ bqComputedField _sourceName _fieldInfo _table _selectPemissions = pure Nothing
 -- Currently unsupported: returns Nothing for now.
 bqRemoteRelationshipField ::
   MonadBuildSchema 'BigQuery r m n =>
-  RemoteFieldInfo 'BigQuery ->
+  RemoteFieldInfo (DBJoinField 'BigQuery) ->
   m (Maybe [FieldParser n (AnnotatedField 'BigQuery)])
 bqRemoteRelationshipField _remoteFieldInfo = pure Nothing
 

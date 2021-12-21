@@ -88,9 +88,6 @@ class TestCreateRemoteRelationship:
         st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_invalid_remote_rel_remote_field.yaml')
         assert st_code == 400, resp
 
-        st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_invalid_remote_rel_type.yaml')
-        assert st_code == 400, resp
-
         st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_invalid_remote_rel_nested_args.yaml')
         assert st_code == 400, resp
 

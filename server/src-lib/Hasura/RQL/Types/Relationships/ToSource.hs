@@ -4,15 +4,19 @@ module Hasura.RQL.Types.Relationships.ToSource
     tsrdRelationshipType,
     tsrdSource,
     tsrdTable,
+    RemoteSourceFieldInfo (..),
   )
 where
 
 import Control.Lens (makeLenses)
 import Data.Aeson
+import Data.HashMap.Strict qualified as HM
 import Hasura.Incremental (Cacheable)
 import Hasura.Prelude
+import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Instances ()
+import Hasura.RQL.Types.SourceCustomization
 
 --------------------------------------------------------------------------------
 -- metadata
@@ -54,6 +58,27 @@ instance ToJSON ToSourceRelationshipDef where
 
 instance FromJSON ToSourceRelationshipDef where
   parseJSON = genericParseJSON hasuraJSON
+
+-- schema cache representation
+--
+
+-- | Schema cache information for a table field targeting a remote source.
+data RemoteSourceFieldInfo tgt = RemoteSourceFieldInfo
+  { _rsfiName :: !RelName,
+    _rsfiType :: !RelType,
+    _rsfiSource :: !SourceName,
+    _rsfiSourceConfig :: !(SourceConfig tgt),
+    _rsfiSourceCustomization :: !SourceTypeCustomization,
+    -- | this is parsed from `Value`
+    _rsfiTable :: !(TableName tgt),
+    -- | LHS field name -> RHS Column, RHS Column type
+    _rsfiMapping :: !(HM.HashMap FieldName (ScalarType tgt, Column tgt))
+  }
+  deriving stock (Generic)
+
+deriving instance (Backend tgt) => Eq (RemoteSourceFieldInfo tgt)
+
+instance (Backend tgt) => Cacheable (RemoteSourceFieldInfo tgt)
 
 --------------------------------------------------------------------------------
 -- template haskell generation

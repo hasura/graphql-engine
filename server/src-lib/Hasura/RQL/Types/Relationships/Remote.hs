@@ -10,6 +10,15 @@ module Hasura.RQL.Types.Relationships.Remote
     _RelationshipToSchema,
     rrName,
     rrDefinition,
+    RemoteSchemaFieldInfo (..),
+    RemoteSourceFieldInfo (..),
+    RemoteFieldInfoRHS (..),
+    RemoteFieldInfo (..),
+    DBJoinField (..),
+    ScalarComputedField (..),
+    graphQLValueToJSON,
+    LHSIdentifier (..),
+    tableNameToLHSIdentifier,
   )
 where
 
@@ -18,13 +27,19 @@ import Data.Aeson
 import Data.Aeson qualified as J
 import Data.Aeson.TH qualified as J
 import Data.Aeson.Types (Parser)
+import Data.HashMap.Strict qualified as HM
 import GHC.TypeLits (ErrorMessage (..), TypeError)
 import Hasura.Incremental (Cacheable)
 import Hasura.Prelude
+import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
+import Hasura.RQL.Types.ComputedField
 import Hasura.RQL.Types.Instances ()
 import Hasura.RQL.Types.Relationships.ToSchema
 import Hasura.RQL.Types.Relationships.ToSource
+import Hasura.SQL.AnyBackend (AnyBackend)
+import Hasura.SQL.Backend
 
 --------------------------------------------------------------------------------
 -- metadata
@@ -196,6 +211,83 @@ instance ToJSON RemoteRelationshipDefinition where
             "hasura_fields" .= toJSON _trrdLhsFields,
             "remote_field" .= toJSON _trrdRemoteField
           ]
+
+--------------------------------------------------------------------------------
+-- schema cache
+
+-- | Resolved remote relationship, as stored in the schema cache.
+data RemoteFieldInfo lhsJoinField = RemoteFieldInfo
+  { _rfiLHS :: HM.HashMap FieldName lhsJoinField,
+    _rfiRHS :: RemoteFieldInfoRHS
+  }
+  deriving (Generic, Eq)
+
+instance (Cacheable lhsJoinField) => Cacheable (RemoteFieldInfo lhsJoinField)
+
+instance (ToJSON lhsJoinField) => ToJSON (RemoteFieldInfo lhsJoinField)
+
+-- | Resolved remote relationship's RHS
+data RemoteFieldInfoRHS
+  = RFISchema !RemoteSchemaFieldInfo
+  | RFISource !(AnyBackend RemoteSourceFieldInfo)
+  deriving (Generic, Eq)
+
+instance Cacheable RemoteFieldInfoRHS
+
+instance ToJSON RemoteFieldInfoRHS where
+  toJSON =
+    \case
+      RFISchema schema -> toJSON schema
+      RFISource _ -> toJSON ()
+
+-- | Information about the field on the LHS of a join against a remote schema.
+data DBJoinField (b :: BackendType)
+  = JoinColumn !(Column b) !(ColumnType b)
+  | JoinComputedField !(ScalarComputedField b)
+  deriving (Generic)
+
+deriving instance Backend b => Eq (DBJoinField b)
+
+deriving instance Backend b => Show (DBJoinField b)
+
+instance Backend b => Cacheable (DBJoinField b)
+
+instance Backend b => Hashable (DBJoinField b)
+
+instance (Backend b) => ToJSON (DBJoinField b) where
+  toJSON = \case
+    JoinColumn column columnType -> toJSON (column, columnType)
+    JoinComputedField computedField -> toJSON computedField
+
+-- | Information about a computed field appearing on the LHS of a remote join.
+-- FIXME: why do we need all of this?
+data ScalarComputedField (b :: BackendType) = ScalarComputedField
+  { _scfXField :: !(XComputedField b),
+    _scfName :: !ComputedFieldName,
+    _scfFunction :: !(FunctionName b),
+    _scfTableArgument :: !FunctionTableArgument,
+    _scfSessionArgument :: !(Maybe FunctionSessionArgument),
+    _scfType :: !(ScalarType b)
+  }
+  deriving (Generic)
+
+deriving instance Backend b => Eq (ScalarComputedField b)
+
+deriving instance Backend b => Show (ScalarComputedField b)
+
+instance Backend b => Cacheable (ScalarComputedField b)
+
+instance Backend b => Hashable (ScalarComputedField b)
+
+instance Backend b => ToJSON (ScalarComputedField b) where
+  toJSON ScalarComputedField {..} =
+    object
+      [ "name" .= _scfName,
+        "function" .= _scfFunction,
+        "table_argument" .= _scfTableArgument,
+        "session_argument" .= _scfSessionArgument,
+        "type" .= _scfType
+      ]
 
 --------------------------------------------------------------------------------
 -- template haskell generation

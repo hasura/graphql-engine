@@ -3,9 +3,13 @@ module Hasura.RQL.Types.Relationships.ToSchema
     FieldCall (..),
     RemoteArguments (..),
     RemoteFields (..),
+    RemoteSchemaFieldInfo (..),
     trrdRemoteField,
     trrdLhsFields,
     trrdRemoteSchema,
+    graphQLValueToJSON,
+    LHSIdentifier (..),
+    tableNameToLHSIdentifier,
   )
 where
 
@@ -17,8 +21,10 @@ import Data.Bifunctor (bimap)
 import Data.HashMap.Strict qualified as HM
 import Data.Scientific
 import Data.Text qualified as T
+import Data.Text.Extended (toTxt)
 import Hasura.Incremental (Cacheable)
 import Hasura.Prelude
+import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Instances ()
 import Hasura.RQL.Types.RemoteSchema
@@ -162,6 +168,73 @@ instance ToJSON RemoteArguments where
           G.VEnum s -> toJSON s
           G.VList list -> toJSON (map gValueToValue list)
           G.VObject obj -> fieldsToObject obj
+
+-- schema cache representation
+
+-- A textual identifier for an entity on which remote relationships can be
+-- defined. This is used in error messages and type name generation for
+-- arguments in remote relationship fields to remote schemas (See
+-- RemoteRelationship.Validate)
+newtype LHSIdentifier = LHSIdentifier Text
+  deriving (Show, Eq, Generic)
+
+instance Cacheable LHSIdentifier
+
+tableNameToLHSIdentifier :: (Backend b) => TableName b -> LHSIdentifier
+tableNameToLHSIdentifier = LHSIdentifier . toTxt
+
+-- | Schema cache information for a table field targeting a remote schema.
+data RemoteSchemaFieldInfo = RemoteSchemaFieldInfo
+  { -- | Field name to which we'll map the remote in hasura; this becomes part
+    --   of the hasura schema.
+    _rrfiName :: !RelName,
+    -- | Input arguments to the remote field info; The '_rfiParamMap' will only
+    --   include the arguments to the remote field that is being joined. The
+    --   names of the arguments here are modified, it will be in the format of
+    --   <Original Field Name>_remote_rel_<hasura table schema>_<hasura table name><remote relationship name>
+    _rrfiParamMap :: !(HashMap G.Name RemoteSchemaInputValueDefinition),
+    _rrfiRemoteFields :: !RemoteFields,
+    _rrfiRemoteSchema :: !RemoteSchemaInfo,
+    -- | The new input value definitions created for this remote field
+    _rrfiInputValueDefinitions :: ![G.TypeDefinition [G.Name] RemoteSchemaInputValueDefinition],
+    -- | Name of the remote schema, that's used for joining
+    _rrfiRemoteSchemaName :: !RemoteSchemaName,
+    -- | TODO: this one should be gone when 'validateRemoteRelationship'
+    -- function is cleaned up
+    _rrfiLHSIdentifier :: LHSIdentifier
+  }
+  deriving (Generic, Eq, Show)
+
+instance Cacheable RemoteSchemaFieldInfo
+
+instance ToJSON RemoteSchemaFieldInfo where
+  toJSON RemoteSchemaFieldInfo {..} =
+    object
+      [ "name" .= _rrfiName,
+        "param_map" .= fmap toJsonInpValInfo _rrfiParamMap,
+        "remote_fields" .= _rrfiRemoteFields,
+        "remote_schema" .= _rrfiRemoteSchema
+      ]
+    where
+      toJsonInpValInfo (RemoteSchemaInputValueDefinition (G.InputValueDefinition desc name type' defVal _directives) _preset) =
+        object
+          [ "desc" .= desc,
+            "name" .= name,
+            "def_val" .= fmap graphQLValueToJSON defVal,
+            "type" .= type'
+          ]
+
+-- FIXME: deduplicate this
+graphQLValueToJSON :: G.Value Void -> Value
+graphQLValueToJSON = \case
+  G.VNull -> Null
+  G.VInt i -> toJSON i
+  G.VFloat f -> toJSON f
+  G.VString t -> toJSON t
+  G.VBoolean b -> toJSON b
+  G.VEnum (G.EnumValue n) -> toJSON n
+  G.VList values -> toJSON $ graphQLValueToJSON <$> values
+  G.VObject objects -> toJSON $ graphQLValueToJSON <$> objects
 
 --------------------------------------------------------------------------------
 -- template haskell generation

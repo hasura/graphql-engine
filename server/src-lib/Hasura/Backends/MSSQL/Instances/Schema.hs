@@ -470,7 +470,7 @@ msComputedField _sourceName _fieldInfo _table _selectPemissions = pure Nothing
 -- Currently unsupported: returns Nothing for now.
 msRemoteRelationshipField ::
   MonadBuildSchema 'MSSQL r m n =>
-  RemoteFieldInfo 'MSSQL ->
+  RemoteFieldInfo (DBJoinField 'MSSQL) ->
   m (Maybe [FieldParser n (AnnotatedField 'MSSQL)])
 msRemoteRelationshipField _remoteFieldInfo = pure Nothing
 
