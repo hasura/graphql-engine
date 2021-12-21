@@ -632,8 +632,8 @@ queryWithIntrospectionHelper ::
   m (Parser 'Output n (RootFieldMap (QueryRootField UnpreparedValue)))
 queryWithIntrospectionHelper basicQueryFP mutationP subscriptionP = do
   basicQueryP <- queryRootFromFields basicQueryFP
-  emptyIntro <- fmap (fmap NotNamespaced) <$> emptyIntrospection
   let directives = directivesInfo @n
+  -- We extract the types from the ordinary GraphQL schema (excluding introspection)
   allBasicTypes <-
     collectTypes $
       catMaybes
@@ -642,7 +642,16 @@ queryWithIntrospectionHelper basicQueryFP mutationP subscriptionP = do
           P.TypeDefinitionsWrapper . P.parserType <$> mutationP,
           P.TypeDefinitionsWrapper . P.parserType <$> subscriptionP
         ]
-  allIntrospectionTypes <- collectTypes . P.parserType =<< queryRootFromFields emptyIntro
+  let introspection = [schema, typeIntrospection]
+      {-# INLINE introspection #-}
+
+  -- TODO: it may be worth looking at whether we can stop collecting
+  -- introspection types monadically.  They are independent of the user schema;
+  -- the types here are always the same and specified by the GraphQL spec
+
+  -- Pull all the introspection types out (__Type, __Schema, etc)
+  allIntrospectionTypes <- collectTypes (map fDefinition introspection)
+
   let allTypes =
         Map.unions
           [ allBasicTypes,
@@ -657,8 +666,9 @@ queryWithIntrospectionHelper basicQueryFP mutationP subscriptionP = do
             sSubscriptionType = P.parserType <$> subscriptionP,
             sDirectives = directives
           }
-  let partialQueryFields =
-        basicQueryFP ++ (fmap (NotNamespaced . RFRaw) <$> [schema partialSchema, typeIntrospection partialSchema])
+  let buildIntrospectionResponse fromSchema = NotNamespaced $ RFRaw $ fromSchema partialSchema
+      partialQueryFields =
+        basicQueryFP ++ (fmap buildIntrospectionResponse <$> introspection)
   P.safeSelectionSet queryRoot Nothing partialQueryFields <&> fmap (flattenNamespaces . fmap typenameToNamespacedRawRF)
 
 queryRootFromFields ::
@@ -668,24 +678,6 @@ queryRootFromFields ::
   m (Parser 'Output n (RootFieldMap (QueryRootField UnpreparedValue)))
 queryRootFromFields fps =
   P.safeSelectionSet queryRoot Nothing fps <&> fmap (flattenNamespaces . fmap typenameToNamespacedRawRF)
-
-emptyIntrospection ::
-  forall m n.
-  (MonadSchema n m, MonadError QErr m) =>
-  m [P.FieldParser n (QueryRootField UnpreparedValue)]
-emptyIntrospection = do
-  emptyQueryP <- queryRootFromFields @n []
-  introspectionTypes <- collectTypes (P.parserType emptyQueryP)
-  let introspectionSchema =
-        Schema
-          { sDescription = Nothing,
-            sTypes = introspectionTypes,
-            sQueryType = P.parserType emptyQueryP,
-            sMutationType = Nothing,
-            sSubscriptionType = Nothing,
-            sDirectives = mempty
-          }
-  return $ fmap (fmap RFRaw) [schema introspectionSchema, typeIntrospection introspectionSchema]
 
 collectTypes ::
   forall m a.
