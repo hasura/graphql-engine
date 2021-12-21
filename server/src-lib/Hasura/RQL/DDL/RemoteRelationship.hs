@@ -16,7 +16,6 @@ import Data.Aeson (FromJSON (..), ToJSON (..), (.!=), (.:), (.:?), (.=))
 import Data.Aeson qualified as J
 import Data.HashMap.Strict qualified as Map
 import Data.HashMap.Strict.InsOrd qualified as OMap
-import Data.HashSet qualified as S
 import Data.Text.Extended ((<<>), (<>>))
 import Hasura.Base.Error
   ( Code (NotFound, NotSupported, RemoteSchemaError),
@@ -29,7 +28,7 @@ import Hasura.EncJSON (EncJSON)
 import Hasura.Prelude
 import Hasura.RQL.DDL.RemoteRelationship.Validate
   ( errorToText,
-    validateSourceToSchemaRelationship,
+    validateToSchemaRelationship,
   )
 import Hasura.RQL.Types
 import Hasura.SQL.AnyBackend qualified as AB
@@ -188,19 +187,27 @@ data PartiallyResolvedSource b = PartiallyResolvedSource
     _tableCoreInfoMap :: !(HashMap (TableName b) (TableCoreInfoG b (ColumnInfo b) (ColumnInfo b)))
   }
 
+-- | Builds the schema cache representation of a remote relationship
 -- TODO: this is not actually called by the remote relationship DDL API and is only used as part of
 -- the schema cache process. Should this be moved elsewhere?
 buildRemoteFieldInfo ::
-  forall m b.
-  (Backend b, QErrM m) =>
-  SourceName ->
-  TableName b ->
-  FieldInfoMap (FieldInfo b) ->
+  QErrM m =>
+  -- | The entity on which the remote relationship is defined
+  LHSIdentifier ->
+  -- | join fields provided by the LHS entity
+  Map.HashMap FieldName lhsJoinField ->
+  -- | definition of remote relationship
   RemoteRelationship ->
+  -- | Required context to process cross boundary relationships
   HashMap SourceName (AB.AnyBackend PartiallyResolvedSource) ->
+  -- | Required context to process cross boundary relationships
   RemoteSchemaMap ->
-  m (RemoteFieldInfo b, [SchemaDependency])
-buildRemoteFieldInfo sourceSource sourceTable fields RemoteRelationship {..} allSources remoteSchemaMap =
+  -- | returns
+  --   1. schema cache representation of the remote relationships
+  --   2. the dependencies on the RHS of the join. The dependencies
+  --      on the LHS entities has to be handled by the calling function
+  m (RemoteFieldInfo lhsJoinField, [SchemaDependency])
+buildRemoteFieldInfo lhsIdentifier lhsJoinFields RemoteRelationship {..} allSources remoteSchemaMap =
   case _rrDefinition of
     RelationshipToSource ToSourceRelationshipDef {..} -> do
       targetTables <-
@@ -212,13 +219,11 @@ buildRemoteFieldInfo sourceSource sourceTable fields RemoteRelationship {..} all
         targetColumns <-
           fmap _tciFieldInfoMap $
             onNothing (Map.lookup targetTable targetTablesInfo) $ throwTableDoesNotExist @b' targetTable
+        -- TODO: rhs fields should also ideally be DBJoinFields
         columnPairs <- for (Map.toList _tsrdFieldMapping) \(srcFieldName, tgtFieldName) -> do
-          srcField <- askFieldInfo fields srcFieldName
+          lhsJoinField <- askFieldInfo lhsJoinFields srcFieldName
           tgtField <- askFieldInfo targetColumns tgtFieldName
-          srcColumn <- case srcField of
-            FIColumn column -> pure column
-            _ -> throw400 NotSupported "relationships from non-columns are not supported yet"
-          pure (srcFieldName, srcColumn, tgtField)
+          pure (srcFieldName, lhsJoinField, tgtField)
         mapping <- for columnPairs \(srcFieldName, srcColumn, tgtColumn) -> do
           tgtScalar <- case pgiType tgtColumn of
             ColumnScalar scalarType -> pure scalarType
@@ -226,31 +231,25 @@ buildRemoteFieldInfo sourceSource sourceTable fields RemoteRelationship {..} all
           pure (srcFieldName, (srcColumn, tgtScalar, pgiColumn tgtColumn))
         let sourceConfig = _rsConfig targetSourceInfo
             sourceCustomization = _rsCustomization targetSourceInfo
-            rsri = RemoteSourceFieldInfo _rrName _tsrdRelationshipType _tsrdSource sourceConfig sourceCustomization targetTable $ Map.fromList mapping
-            tableDependencies =
-              [ SchemaDependency (SOSourceObj sourceSource $ AB.mkAnyBackend $ SOITable @b sourceTable) DRTable,
-                SchemaDependency (SOSourceObj _tsrdSource $ AB.mkAnyBackend $ SOITable @b' targetTable) DRTable
-              ]
-            columnDependencies = flip concatMap columnPairs \(_, srcColumn, tgtColumn) ->
-              [ SchemaDependency (SOSourceObj sourceSource $ AB.mkAnyBackend $ SOITableObj @b sourceTable $ TOCol @b $ pgiColumn srcColumn) DRRemoteRelationship,
-                SchemaDependency (SOSourceObj _tsrdSource $ AB.mkAnyBackend $ SOITableObj @b' targetTable $ TOCol @b' $ pgiColumn tgtColumn) DRRemoteRelationship
-              ]
-        pure (RFISource $ AB.mkAnyBackend @b' rsri, tableDependencies <> columnDependencies)
+            rsri =
+              RemoteSourceFieldInfo _rrName _tsrdRelationshipType _tsrdSource sourceConfig sourceCustomization targetTable $
+                fmap (\(_, tgtType, tgtColumn) -> (tgtType, tgtColumn)) $ Map.fromList mapping
+            rhsDependencies =
+              SchemaDependency (SOSourceObj _tsrdSource $ AB.mkAnyBackend $ SOITable @b' targetTable) DRTable :
+              flip map columnPairs \(_, _srcColumn, tgtColumn) ->
+                SchemaDependency
+                  ( SOSourceObj _tsrdSource $
+                      AB.mkAnyBackend $ SOITableObj @b' targetTable $ TOCol @b' $ pgiColumn tgtColumn
+                  )
+                  DRRemoteRelationship
+            requiredLHSJoinFields = fmap (\(srcField, _, _) -> srcField) $ Map.fromList mapping
+        pure (RemoteFieldInfo requiredLHSJoinFields $ RFISource $ AB.mkAnyBackend @b' rsri, rhsDependencies)
     RelationshipToSchema _ remoteRelationship@ToSchemaRelationshipDef {..} -> do
       RemoteSchemaCtx {..} <-
         onNothing (Map.lookup _trrdRemoteSchema remoteSchemaMap) $
           throw400 RemoteSchemaError $ "remote schema with name " <> _trrdRemoteSchema <<> " not found"
-      remoteField <-
-        validateSourceToSchemaRelationship remoteRelationship sourceTable _rrName sourceSource (_rscInfo, _rscIntroOriginal) fields
+      (requiredLHSJoinFields, remoteField) <-
+        validateToSchemaRelationship remoteRelationship lhsIdentifier _rrName (_rscInfo, _rscIntroOriginal) lhsJoinFields
           `onLeft` (throw400 RemoteSchemaError . errorToText)
-      let tableDep = SchemaDependency (SOSourceObj sourceSource $ AB.mkAnyBackend $ SOITable @b sourceTable) DRTable
-          remoteSchemaDep = SchemaDependency (SORemoteSchema _trrdRemoteSchema) DRRemoteSchema
-          fieldsDep =
-            S.toList (_rrfiHasuraFields remoteField) <&> \case
-              JoinColumn column _ ->
-                -- TODO: shouldn't this be DRColumn??
-                mkColDep @b DRRemoteRelationship sourceSource sourceTable column
-              JoinComputedField computedFieldInfo ->
-                mkComputedFieldDep @b DRRemoteRelationship sourceSource sourceTable $ _scfName computedFieldInfo
-          schemaDependencies = (tableDep : remoteSchemaDep : fieldsDep)
-      pure (RFISchema remoteField, schemaDependencies)
+      let rhsDependencies = [SchemaDependency (SORemoteSchema _trrdRemoteSchema) DRRemoteSchema]
+      pure (RemoteFieldInfo requiredLHSJoinFields $ RFISchema remoteField, rhsDependencies)

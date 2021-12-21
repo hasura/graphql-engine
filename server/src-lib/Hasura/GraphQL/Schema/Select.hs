@@ -36,7 +36,6 @@ import Data.Align (align)
 import Data.ByteString.Lazy qualified as BL
 import Data.Has
 import Data.HashMap.Strict.Extended qualified as Map
-import Data.HashSet qualified as Set
 import Data.Int (Int64)
 import Data.List.NonEmpty qualified as NE
 import Data.Parser.JSONPath
@@ -62,7 +61,6 @@ import Hasura.GraphQL.Parser.Class
   ( MonadParse (parseErrorWith, withPath),
     MonadSchema (..),
     MonadTableInfo,
-    askRoleName,
     askTableInfo,
     parseError,
   )
@@ -71,16 +69,13 @@ import Hasura.GraphQL.Schema.Backend
 import Hasura.GraphQL.Schema.BoolExp
 import Hasura.GraphQL.Schema.Common
 import Hasura.GraphQL.Schema.OrderBy
-import Hasura.GraphQL.Schema.Remote
-import {-# SOURCE #-} Hasura.GraphQL.Schema.RemoteSource
+import {-# SOURCE #-} Hasura.GraphQL.Schema.RemoteRelationship
 import Hasura.GraphQL.Schema.Table
 import Hasura.Prelude
-import Hasura.RQL.DDL.RemoteRelationship.Validate
 import Hasura.RQL.IR qualified as IR
 import Hasura.RQL.Types
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.Server.Utils (executeJSONPath)
-import Hasura.Session
 import Language.GraphQL.Draft.Syntax qualified as G
 
 --------------------------------------------------------------------------------
@@ -1045,33 +1040,6 @@ tableAggregationFields sourceName tableInfo selectPermissions = memoizeOn 'table
        in P.subselection_ operator Nothing subselectionParser
             <&> IR.AFOp . IR.AggregateOp opText
 
-lookupNestedFieldType' ::
-  (MonadSchema n m, MonadError QErr m) =>
-  G.Name ->
-  RemoteSchemaIntrospection ->
-  FieldCall ->
-  m G.GType
-lookupNestedFieldType' parentTypeName remoteSchemaIntrospection (FieldCall fcName _) =
-  case lookupObject remoteSchemaIntrospection parentTypeName of
-    Nothing -> throw400 RemoteSchemaError $ "object with name " <> parentTypeName <<> " not found"
-    Just G.ObjectTypeDefinition {..} ->
-      case find ((== fcName) . G._fldName) _otdFieldsDefinition of
-        Nothing -> throw400 RemoteSchemaError $ "field with name " <> fcName <<> " not found"
-        Just G.FieldDefinition {..} -> pure _fldType
-
-lookupNestedFieldType ::
-  (MonadSchema n m, MonadError QErr m) =>
-  G.Name ->
-  RemoteSchemaIntrospection ->
-  NonEmpty FieldCall ->
-  m G.GType
-lookupNestedFieldType parentTypeName remoteSchemaIntrospection (fieldCall :| rest) = do
-  fieldType <- lookupNestedFieldType' parentTypeName remoteSchemaIntrospection fieldCall
-  case NE.nonEmpty rest of
-    Nothing -> pure $ fieldType
-    Just rest' -> do
-      lookupNestedFieldType (G.getBaseType fieldType) remoteSchemaIntrospection rest'
-
 -- | An individual field of a table
 --
 -- > field_name(arg_name: arg_type, ...): field_type
@@ -1091,49 +1059,51 @@ fieldSelection sourceName table maybePkeyColumns fieldInfo selectPermissions = d
         queryType <- asks $ qcQueryType . getter
         let columnName = pgiColumn columnInfo
             fieldName = pgiName columnInfo
-        if
-            | fieldName == $$(G.litName "id") && queryType == ET.QueryRelay -> do
-              xRelayInfo <- hoistMaybe $ relayExtension @b
-              pkeyColumns <- hoistMaybe maybePkeyColumns
-              pure $
-                P.selection_ fieldName Nothing P.identifier
-                  $> IR.AFNodeId xRelayInfo table pkeyColumns
-            | otherwise -> do
-              guard $ columnName `Map.member` (spiCols selectPermissions)
-              let caseBoolExp = join $ Map.lookup columnName (spiCols selectPermissions)
-              let caseBoolExpUnpreparedValue =
-                    (fmap . fmap) partialSQLExpToUnpreparedValue <$> caseBoolExp
-              let pathArg = jsonPathArg $ pgiType columnInfo
-                  -- In an inherited role, when a column is part of all the select
-                  -- permissions which make up the inherited role then the nullability
-                  -- of the field is determined by the nullability of the DB column
-                  -- otherwise it is marked as nullable explicitly, ignoring the column's
-                  -- nullability. We do this because
-                  -- in multiple roles we execute an SQL query like:
-                  --
-                  --  select
-                  --    (case when (P1 or P2) then addr else null end) as addr,
-                  --    (case when P2 then phone else null end) as phone
-                  -- from employee
-                  -- where (P1 or P2)
-                  --
-                  -- In the above example, P(n) is a predicate configured for a role
-                  --
-                  -- NOTE: https://www.microsoft.com/en-us/research/wp-content/uploads/2016/02/FGALanguageICDE07.pdf
-                  -- The above is the paper which talks about the idea of cell-level
-                  -- authorization and multiple roles. The paper says that we should only
-                  -- allow the case analysis only on nullable columns.
-                  nullability = pgiIsNullable columnInfo || isJust caseBoolExp
-              field <- lift $ columnParser (pgiType columnInfo) (G.Nullability nullability)
-              pure $
-                P.selection fieldName (pgiDescription columnInfo) pathArg field
-                  <&> IR.mkAnnColumnField (pgiColumn columnInfo) (pgiType columnInfo) caseBoolExpUnpreparedValue
+        if fieldName == $$(G.litName "id") && queryType == ET.QueryRelay
+          then do
+            xRelayInfo <- hoistMaybe $ relayExtension @b
+            pkeyColumns <- hoistMaybe maybePkeyColumns
+            pure $
+              P.selection_ fieldName Nothing P.identifier
+                $> IR.AFNodeId xRelayInfo table pkeyColumns
+          else do
+            guard $ columnName `Map.member` spiCols selectPermissions
+            let caseBoolExp = join $ Map.lookup columnName (spiCols selectPermissions)
+            let caseBoolExpUnpreparedValue =
+                  (fmap . fmap) partialSQLExpToUnpreparedValue <$> caseBoolExp
+            let pathArg = jsonPathArg $ pgiType columnInfo
+                -- In an inherited role, when a column is part of all the select
+                -- permissions which make up the inherited role then the nullability
+                -- of the field is determined by the nullability of the DB column
+                -- otherwise it is marked as nullable explicitly, ignoring the column's
+                -- nullability. We do this because
+                -- in multiple roles we execute an SQL query like:
+                --
+                --  select
+                --    (case when (P1 or P2) then addr else null end) as addr,
+                --    (case when P2 then phone else null end) as phone
+                -- from employee
+                -- where (P1 or P2)
+                --
+                -- In the above example, P(n) is a predicate configured for a role
+                --
+                -- NOTE: https://www.microsoft.com/en-us/research/wp-content/uploads/2016/02/FGALanguageICDE07.pdf
+                -- The above is the paper which talks about the idea of cell-level
+                -- authorization and multiple roles. The paper says that we should only
+                -- allow the case analysis only on nullable columns.
+                nullability = pgiIsNullable columnInfo || isJust caseBoolExp
+            field <- lift $ columnParser (pgiType columnInfo) (G.Nullability nullability)
+            pure $
+              P.selection fieldName (pgiDescription columnInfo) pathArg field
+                <&> IR.mkAnnColumnField (pgiColumn columnInfo) (pgiType columnInfo) caseBoolExpUnpreparedValue
     FIRelationship relationshipInfo ->
       concat . maybeToList <$> relationshipField sourceName table relationshipInfo
     FIComputedField computedFieldInfo ->
       maybeToList <$> computedField sourceName computedFieldInfo table selectPermissions
-    FIRemoteRelationship remoteFieldInfo ->
-      concat . maybeToList <$> remoteRelationshipField remoteFieldInfo
+    FIRemoteRelationship remoteFieldInfo -> do
+      relationshipFields <- fromMaybe [] <$> remoteRelationshipField remoteFieldInfo
+      let lhsFields = _rfiLHS remoteFieldInfo
+      pure $ map (fmap (IR.AFRemote . IR.RemoteRelationshipSelect lhsFields)) relationshipFields
 
 -- | Field parsers for a table relationship
 relationshipField ::
@@ -1314,98 +1284,6 @@ computedFieldPG sourceName ComputedFieldInfo {..} parentTable selectPermissions 
                 Nothing -> withTable
                 Just (FunctionSessionArgument argName index) ->
                   IR.insertFunctionArg argName index sessionArgVal withTable
-
--- | Remote relationship field parsers
-remoteRelationshipField ::
-  forall b r m n.
-  MonadBuildSchema b r m n =>
-  RemoteFieldInfo b ->
-  m (Maybe [FieldParser n (AnnotatedField b)])
-remoteRelationshipField remoteFieldInfo = runMaybeT do
-  queryType <- asks $ qcQueryType . getter
-  remoteRelationshipQueryCtx <- asks $ qcRemoteRelationshipContext . getter
-  -- https://github.com/hasura/graphql-engine/issues/5144
-  -- The above issue is easily fixable by removing the following guard and 'MaybeT' monad transformation
-  guard $ queryType == ET.QueryHasura
-  case remoteFieldInfo of
-    RFISource remoteSource ->
-      lift $ remoteSourceField remoteSource
-    RFISchema remoteSchema -> do
-      let RemoteSchemaFieldInfo name params hasuraFields remoteFields remoteSchemaInfo remoteSchemaInputValueDefns remoteSchemaName (table, source) = remoteSchema
-      RemoteRelationshipQueryContext roleIntrospectionResultOriginal _ remoteSchemaCustomizer <-
-        -- The remote relationship field should not be accessible
-        -- if the remote schema is not accessible to the said role
-        hoistMaybe $ Map.lookup remoteSchemaName remoteRelationshipQueryCtx
-      role <- askRoleName
-      let hasuraFieldNames = Set.map dbJoinFieldToName hasuraFields
-          relationshipDef = ToSchemaRelationshipDef remoteSchemaName hasuraFieldNames remoteFields
-      (newInpValDefns :: [(G.TypeDefinition [G.Name] RemoteSchemaInputValueDefinition)], remoteFieldParamMap) <-
-        if role == adminRoleName
-          then do
-            -- we don't validate the remote relationship when the role is admin
-            -- because it's already been validated, when the remote relationship
-            -- was created
-            pure (remoteSchemaInputValueDefns, params)
-          else do
-            fieldInfoMap <- (_tciFieldInfoMap . _tiCoreInfo) <$> askTableInfo @b source table
-            roleRemoteField <-
-              afold @(Either _) $
-                validateSourceToSchemaRelationship relationshipDef table name source (remoteSchemaInfo, roleIntrospectionResultOriginal) fieldInfoMap
-            pure $ (_rrfiInputValueDefinitions roleRemoteField, _rrfiParamMap roleRemoteField)
-      let roleIntrospection@(RemoteSchemaIntrospection typeDefns) = irDoc roleIntrospectionResultOriginal
-          -- add the new input value definitions created by the remote relationship
-          -- to the existing schema introspection of the role
-          remoteRelationshipIntrospection = RemoteSchemaIntrospection $ typeDefns <> Map.fromListOn getTypeName newInpValDefns
-      fieldName <- textToName $ relNameToTxt name
-
-      -- This selection set parser, should be of the remote node's selection set parser, which comes
-      -- from the fieldCall
-      let fieldCalls = unRemoteFields remoteFields
-          parentTypeName = irQueryRoot roleIntrospectionResultOriginal
-      nestedFieldType <- lift $ lookupNestedFieldType parentTypeName roleIntrospection fieldCalls
-      let typeName = G.getBaseType nestedFieldType
-      fieldTypeDefinition <-
-        onNothing (lookupType roleIntrospection typeName)
-        -- the below case will never happen because we get the type name
-        -- from the schema document itself i.e. if a field exists for the
-        -- given role, then it's return type also must exist
-        $
-          throw500 $ "unexpected: " <> typeName <<> " not found "
-      -- These are the arguments that are given by the user while executing a query
-      let remoteFieldUserArguments = map snd $ Map.toList remoteFieldParamMap
-      remoteFld <-
-        withRemoteSchemaCustomization remoteSchemaCustomizer $
-          lift $
-            P.wrapFieldParser nestedFieldType
-              <$> remoteField remoteRelationshipIntrospection parentTypeName fieldName Nothing remoteFieldUserArguments fieldTypeDefinition
-
-      pure $
-        pure $
-          remoteFld
-            `P.bindField` \fld@G.Field {G._fArguments = args, G._fSelectionSet = selSet, G._fName = fname} -> do
-              let remoteArgs =
-                    Map.toList args <&> \(argName, argVal) -> IR.RemoteFieldArgument argName $ P.GraphQLValue $ argVal
-              let resultCustomizer =
-                    applyFieldCalls fieldCalls $
-                      applyAliasMapping (singletonAliasMapping fname (fcName $ NE.last fieldCalls)) $
-                        makeResultCustomizer remoteSchemaCustomizer fld
-              pure $
-                IR.AFRemote $
-                  IR.RemoteRelationshipSelect
-                    (Map.fromList [(dbJoinFieldToName dbJoinField, dbJoinField) | dbJoinField <- toList hasuraFields])
-                    $ IR.RemoteSchemaField $
-                      IR.RemoteSchemaSelect
-                        { IR._rselArgs = remoteArgs,
-                          IR._rselResultCustomizer = resultCustomizer,
-                          IR._rselSelection = selSet,
-                          IR._rselFieldCall = fieldCalls,
-                          IR._rselRemoteSchema = remoteSchemaInfo
-                        }
-  where
-    -- Apply parent field calls so that the result customizer modifies the nested field
-    applyFieldCalls :: NonEmpty FieldCall -> ResultCustomizer -> ResultCustomizer
-    applyFieldCalls fieldCalls resultCustomizer =
-      foldr (modifyFieldByName . fcName) resultCustomizer $ NE.init fieldCalls
 
 -- | The custom SQL functions' input "args" field parser
 -- > function_name(args: function_args)

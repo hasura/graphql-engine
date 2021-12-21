@@ -55,16 +55,8 @@ import Language.GraphQL.Draft.Syntax qualified as G
 -- the functions used to implement a class instance are defined in multiple
 -- modules.
 type MonadBuildSchema b r m n =
-  ( Backend b,
-    BackendSchema b,
-    MonadError QErr m,
-    MonadSchema n m,
-    MonadTableInfo r m,
-    MonadRole r m,
-    Has QueryContext r,
-    Has MkTypename r,
-    Has MkRootFieldName r,
-    Has CustomizeRemoteFieldName r
+  ( BackendSchema b,
+    MonadBuildSchemaBase r m n
   )
 
 -- | This type class is responsible for generating the schema of a backend.

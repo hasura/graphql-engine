@@ -2,57 +2,51 @@
 
 -- | Validate input queries against remote schemas.
 module Hasura.RQL.DDL.RemoteRelationship.Validate
-  ( validateSourceToSchemaRelationship,
+  ( validateToSchemaRelationship,
     errorToText,
   )
 where
 
 import Data.HashMap.Strict qualified as HM
 import Data.HashSet qualified as HS
+import Data.List.NonEmpty qualified as NE
 import Data.Text.Extended
 import Hasura.Prelude hiding (first)
-import Hasura.RQL.Types.Backend
-import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
-import Hasura.RQL.Types.ComputedField
-import Hasura.RQL.Types.Relationships.FromSource
+import Hasura.RQL.Types.Relationships.Remote
 import Hasura.RQL.Types.Relationships.ToSchema
 import Hasura.RQL.Types.RemoteSchema
 import Hasura.RQL.Types.SchemaCache
-import Hasura.SQL.Backend
+import Hasura.Server.Utils (englishList)
 import Language.GraphQL.Draft.Syntax qualified as G
 
 -- | An error validating the remote relationship.
-data ValidationError (b :: BackendType)
+data ValidationError
   = RemoteSchemaNotFound !RemoteSchemaName
   | CouldntFindRemoteField !G.Name !G.Name
   | FieldNotFoundInRemoteSchema !G.Name
   | NoSuchArgumentForRemote !G.Name
   | MissingRequiredArgument !G.Name
   | TypeNotFound !G.Name
-  | TableNotFound !(TableName b)
-  | TableFieldNonexistent !(TableName b) !FieldName
-  | TableFieldNotSupported !FieldName
-  | TableComputedFieldWithInputArgs !FieldName !(FunctionName b)
+  | JoinFieldNonExistent !LHSIdentifier !FieldName !(HS.HashSet FieldName)
   | ExpectedTypeButGot !G.GType !G.GType
   | InvalidType !G.GType !Text
-  | InvalidVariable !G.Name !(HM.HashMap G.Name (DBJoinField b))
+  | InvalidVariable !G.Name !(HS.HashSet G.Name)
   | NullNotAllowedHere
   | InvalidGTypeForStripping !G.GType
   | UnsupportedMultipleElementLists
   | UnsupportedEnum
-  | UnsupportedTableComputedField !(TableName b) !ComputedFieldName
   | InvalidGraphQLName !Text
   | IDTypeJoin !G.Name
-  | -- | This is the case where the type of the columns that are mapped do not
+  | -- | TODO: Can this be made not reachable?
+    -- This is the case where the type of the columns that are mapped do not
     -- have a graphql representation. This case is probably not reachable as
     -- having a db type which can't be representable in GraphQL should definitely
     -- fail the entire schema generation process
-    CannotGenerateGraphQLTypeName !(ScalarType b)
+    CannotGenerateGraphQLTypeName !G.Name
+  deriving (Show, Eq)
 
-deriving instance Backend b => Eq (ValidationError b)
-
-errorToText :: Backend b => ValidationError b -> Text
+errorToText :: ValidationError -> Text
 errorToText = \case
   RemoteSchemaNotFound name ->
     "remote schema with name " <> name <<> " not found"
@@ -66,15 +60,13 @@ errorToText = \case
     "required argument with name " <> name <<> " is missing"
   TypeNotFound ty ->
     "type with name " <> ty <<> " not found"
-  TableNotFound name ->
-    "table with name " <> name <<> " not found"
-  TableFieldNonexistent table fieldName ->
-    "field with name " <> fieldName <<> " not found in table " <>> table
-  TableFieldNotSupported fieldName ->
-    "field with name " <> fieldName <<> " not supported; only columns and scalar computed fields"
-  TableComputedFieldWithInputArgs fieldName function ->
-    "computed field " <> fieldName <<> " is associated with SQL function " <> function
-      <<> " has input arguments other than table row type and hasura session"
+  JoinFieldNonExistent (LHSIdentifier lhs) fieldName allowedJoinFields ->
+    let helpText =
+          case NE.nonEmpty $ map dquote $ toList allowedJoinFields of
+            Nothing -> ""
+            Just allowedFields -> ", the allowed fields are " <> englishList "or" allowedFields
+     in "field with name " <> fieldName <<> "is not provided by the lhs entity" <>> lhs
+          <<> "for defining a join condition" <> helpText
   ExpectedTypeButGot expTy actualTy ->
     "expected type " <> G.getBaseType expTy <<> " but got " <>> G.getBaseType actualTy
   InvalidType ty err ->
@@ -89,8 +81,6 @@ errorToText = \case
     "multiple elements in list value is not supported"
   UnsupportedEnum ->
     "enum value is not supported"
-  UnsupportedTableComputedField tableName fieldName ->
-    "computed field " <> fieldName <<> " returns set of " <> tableName <<> ", is not supported"
   InvalidGraphQLName t ->
     t <<> " is not a valid GraphQL identifier"
   IDTypeJoin typeName ->
@@ -101,42 +91,22 @@ errorToText = \case
       <> " so columns of such type cannot be used in a remote schema mapping "
 
 -- | Validate a remote schema relationship given a context.
-validateSourceToSchemaRelationship ::
-  forall b m.
-  (Backend b, MonadError (ValidationError b) m) =>
+validateToSchemaRelationship ::
+  (MonadError ValidationError m) =>
   ToSchemaRelationshipDef ->
-  TableName b ->
+  LHSIdentifier ->
   RelName ->
-  SourceName ->
   (RemoteSchemaInfo, IntrospectionResult) ->
-  FieldInfoMap (FieldInfo b) ->
-  m (RemoteSchemaFieldInfo b)
-validateSourceToSchemaRelationship schema table name source (remoteSchemaInfo, introspectionResult) fields = do
+  HM.HashMap FieldName joinField ->
+  m (HM.HashMap FieldName joinField, RemoteSchemaFieldInfo)
+validateToSchemaRelationship schema lhsIdentifier name (remoteSchemaInfo, introspectionResult) lhsJoinFields = do
   let remoteSchemaName = _trrdRemoteSchema schema
-  hasuraFields <- forM (toList $ _trrdLhsFields schema) $ \fieldName -> do
-    fieldInfo <- onNothing (HM.lookup fieldName fields) $ throwError $ TableFieldNonexistent table fieldName
-    case fieldInfo of
-      FIColumn columnInfo -> pure $ JoinColumn (pgiColumn columnInfo) (pgiType columnInfo)
-      FIComputedField ComputedFieldInfo {..} -> do
-        scalarType <- case _cfiReturnType of
-          CFRScalar ty -> pure ty
-          CFRSetofTable {} -> throwError $ UnsupportedTableComputedField table _cfiName
-        let ComputedFieldFunction {..} = _cfiFunction
-        case toList _cffInputArgs of
-          [] ->
-            pure $
-              JoinComputedField $
-                ScalarComputedField
-                  _cfiXComputedFieldInfo
-                  _cfiName
-                  _cffName
-                  _cffTableArgument
-                  _cffSessionArgument
-                  scalarType
-          _ -> throwError $ TableComputedFieldWithInputArgs fieldName _cffName
-      _ -> throwError $ TableFieldNotSupported fieldName
+  requiredLHSJoinFields <- forM (toList $ _trrdLhsFields schema) $ \fieldName -> do
+    fmap (fieldName,) $
+      onNothing (HM.lookup fieldName lhsJoinFields) $
+        throwError $ JoinFieldNonExistent lhsIdentifier fieldName $ HM.keysSet lhsJoinFields
   hasuraFieldsVariablesMap <-
-    fmap HM.fromList $ for hasuraFields $ \field -> (,field) <$> hasuraFieldToVariable field
+    fmap HM.fromList $ for requiredLHSJoinFields $ \(fieldName, field) -> (,field) <$> hasuraFieldToVariable fieldName
   let schemaDoc = irDoc introspectionResult
       queryRootName = irQueryRoot introspectionResult
   queryRoot <-
@@ -148,18 +118,18 @@ validateSourceToSchemaRelationship schema table name source (remoteSchemaInfo, i
       (queryRoot, (mempty, mempty))
       (unRemoteFields $ _trrdRemoteField schema)
   pure $
-    RemoteSchemaFieldInfo
-      { _rrfiName = name,
-        _rrfiParamMap = leafParamMap,
-        _rrfiHasuraFields = HS.fromList hasuraFields,
-        _rrfiRemoteFields = _trrdRemoteField schema,
-        _rrfiRemoteSchema = remoteSchemaInfo,
-        -- adding the new input types after stripping the values of the
-        -- schema document
-        _rrfiInputValueDefinitions = HM.elems leafTypeMap,
-        _rrfiRemoteSchemaName = remoteSchemaName,
-        _rrfiTable = (table, source)
-      }
+    (HM.fromList requiredLHSJoinFields,) $
+      RemoteSchemaFieldInfo
+        { _rrfiName = name,
+          _rrfiParamMap = leafParamMap,
+          _rrfiRemoteFields = _trrdRemoteField schema,
+          _rrfiRemoteSchema = remoteSchemaInfo,
+          -- adding the new input types after stripping the values of the
+          -- schema document
+          _rrfiInputValueDefinitions = HM.elems leafTypeMap,
+          _rrfiRemoteSchemaName = remoteSchemaName,
+          _rrfiLHSIdentifier = lhsIdentifier
+        }
   where
     getObjTyInfoFromField ::
       RemoteSchemaIntrospection ->
@@ -179,7 +149,8 @@ validateSourceToSchemaRelationship schema table name source (remoteSchemaInfo, i
             _ -> False
 
     buildRelationshipTypeInfo ::
-      HashMap G.Name (DBJoinField b) ->
+      (MonadError ValidationError m) =>
+      HashMap G.Name joinField ->
       RemoteSchemaIntrospection ->
       ( G.ObjectTypeDefinition RemoteSchemaInputValueDefinition,
         ( HashMap G.Name RemoteSchemaInputValueDefinition,
@@ -205,7 +176,7 @@ validateSourceToSchemaRelationship schema table name source (remoteSchemaInfo, i
             runStateT
               ( stripInMap
                   name
-                  table
+                  lhsIdentifier
                   schemaDoc
                   (mapFromL (G._ivdName . _rsitdDefinition) (G._fldArgumentsDefinition objFldDefinition))
                   providedArguments
@@ -234,17 +205,16 @@ validateSourceToSchemaRelationship schema table name source (remoteSchemaInfo, i
 -- list types are preserved because they can be merged, if any arguments are
 -- provided by the user while querying a remote join field.
 stripInMap ::
-  (Backend b) =>
   RelName ->
-  TableName b ->
+  LHSIdentifier ->
   RemoteSchemaIntrospection ->
   HM.HashMap G.Name RemoteSchemaInputValueDefinition ->
   HM.HashMap G.Name (G.Value G.Name) ->
   StateT
     (HashMap G.Name (G.TypeDefinition [G.Name] RemoteSchemaInputValueDefinition))
-    (Either (ValidationError b))
+    (Either ValidationError)
     (HM.HashMap G.Name RemoteSchemaInputValueDefinition)
-stripInMap rrName table types schemaArguments providedArguments =
+stripInMap relName lhsIdentifier types schemaArguments providedArguments =
   fmap
     (HM.mapMaybe id)
     ( HM.traverseWithKey
@@ -252,7 +222,7 @@ stripInMap rrName table types schemaArguments providedArguments =
             case HM.lookup name providedArguments of
               Nothing -> pure $ Just remoteInpValDef
               Just value -> do
-                maybeNewGType <- stripValue rrName table types (G._ivdType inpValInfo) value
+                maybeNewGType <- stripValue relName lhsIdentifier types (G._ivdType inpValInfo) value
                 pure
                   ( fmap
                       ( \newGType ->
@@ -268,17 +238,16 @@ stripInMap rrName table types schemaArguments providedArguments =
 -- | Strip a value type completely, or modify it, if the given value
 -- is atomic-ish.
 stripValue ::
-  (Backend b) =>
   RelName ->
-  TableName b ->
+  LHSIdentifier ->
   RemoteSchemaIntrospection ->
   G.GType ->
   G.Value G.Name ->
   StateT
     (HashMap G.Name (G.TypeDefinition [G.Name] RemoteSchemaInputValueDefinition))
-    (Either (ValidationError b))
+    (Either ValidationError)
     (Maybe G.GType)
-stripValue name table types gtype value = do
+stripValue name lhsIdentifier types gtype value = do
   case value of
     G.VVariable {} -> pure Nothing
     G.VInt {} -> pure Nothing
@@ -290,27 +259,26 @@ stripValue name table types gtype value = do
     G.VList values ->
       case values of
         [] -> pure Nothing
-        [gvalue] -> stripList name table types gtype gvalue
+        [gvalue] -> stripList name lhsIdentifier types gtype gvalue
         _ -> lift (Left UnsupportedMultipleElementLists)
     G.VObject keyPairs ->
-      fmap Just (stripObject name table types gtype keyPairs)
+      fmap Just (stripObject name lhsIdentifier types gtype keyPairs)
 
 -- | Produce a new type for the list, or strip it entirely.
 stripList ::
-  (Backend b) =>
   RelName ->
-  TableName b ->
+  LHSIdentifier ->
   RemoteSchemaIntrospection ->
   G.GType ->
   G.Value G.Name ->
   StateT
     (HashMap G.Name (G.TypeDefinition [G.Name] RemoteSchemaInputValueDefinition))
-    (Either (ValidationError b))
+    (Either ValidationError)
     (Maybe G.GType)
-stripList name table types originalOuterGType value =
+stripList name lhsIdentifier types originalOuterGType value =
   case originalOuterGType of
     G.TypeList nullability innerGType -> do
-      maybeNewInnerGType <- stripValue name table types innerGType value
+      maybeNewInnerGType <- stripValue name lhsIdentifier types innerGType value
       pure (G.TypeList nullability <$> maybeNewInnerGType)
     _ -> lift (Left (InvalidGTypeForStripping originalOuterGType))
 
@@ -318,18 +286,16 @@ stripList name table types originalOuterGType value =
 -- 'stripInMap'. Objects can't be deleted entirely, just keys of an
 -- object.
 stripObject ::
-  forall b.
-  Backend b =>
   RelName ->
-  TableName b ->
+  LHSIdentifier ->
   RemoteSchemaIntrospection ->
   G.GType ->
   HashMap G.Name (G.Value G.Name) ->
   StateT
     (HashMap G.Name (G.TypeDefinition [G.Name] RemoteSchemaInputValueDefinition))
-    (Either (ValidationError b))
+    (Either ValidationError)
     G.GType
-stripObject name table schemaDoc originalGtype templateArguments =
+stripObject name lhsIdentifier schemaDoc originalGtype templateArguments =
   case originalGtype of
     G.TypeNamed nullability originalNamedType ->
       case lookupType schemaDoc (G.getBaseType originalGtype) of
@@ -338,12 +304,12 @@ stripObject name table schemaDoc originalGtype templateArguments =
                 mapFromL (G._ivdName . _rsitdDefinition) $ G._iotdValueDefinitions originalInpObjTyInfo
               newNamedType =
                 renameNamedType
-                  (renameTypeForRelationship @b name table)
+                  (renameTypeForRelationship name lhsIdentifier)
                   originalNamedType
           newSchemaArguments <-
             stripInMap
               name
-              table
+              lhsIdentifier
               schemaDoc
               originalSchemaArguments
               templateArguments
@@ -361,11 +327,11 @@ stripObject name table schemaDoc originalGtype templateArguments =
 -- -- | Produce a new name for a type, used when stripping the schema
 -- -- types for a remote relationship.
 -- TODO: Consider a separator character to avoid conflicts. (from master)
-renameTypeForRelationship :: Backend b => RelName -> TableName b -> Text -> Text
-renameTypeForRelationship rrName table text =
+renameTypeForRelationship :: RelName -> LHSIdentifier -> Text -> Text
+renameTypeForRelationship relName (LHSIdentifier lhsIdentifier) text =
   text <> "_remote_rel_" <> name
   where
-    name = toTxt table <> relNameToTxt rrName
+    name = lhsIdentifier <> relNameToTxt relName
 
 -- | Rename a type.
 renameNamedType :: (Text -> Text) -> G.Name -> G.Name
@@ -374,18 +340,15 @@ renameNamedType rename =
 
 -- | Convert a field name to a variable name.
 hasuraFieldToVariable ::
-  (Backend b, MonadError (ValidationError b) m) =>
-  DBJoinField b ->
+  (MonadError ValidationError m) =>
+  FieldName ->
   m G.Name
-hasuraFieldToVariable hasuraField = do
-  let fieldText = case hasuraField of
-        JoinColumn column _ -> toTxt column
-        JoinComputedField computedFieldInfo -> toTxt $ _scfName computedFieldInfo
+hasuraFieldToVariable (FieldName fieldText) = do
   G.mkName fieldText `onNothing` throwError (InvalidGraphQLName fieldText)
 
 -- | Lookup the field in the schema.
 lookupField ::
-  (MonadError (ValidationError b) m) =>
+  (MonadError ValidationError m) =>
   G.Name ->
   G.ObjectTypeDefinition RemoteSchemaInputValueDefinition ->
   m (G.FieldDefinition RemoteSchemaInputValueDefinition)
@@ -400,10 +363,10 @@ lookupField name objFldInfo = viaObject objFldInfo
 
 -- | Validate remote input arguments against the remote schema.
 validateRemoteArguments ::
-  (Backend b, MonadError (ValidationError b) m) =>
+  (MonadError ValidationError m) =>
   HM.HashMap G.Name RemoteSchemaInputValueDefinition ->
   HM.HashMap G.Name (G.Value G.Name) ->
-  HM.HashMap G.Name (DBJoinField b) ->
+  HM.HashMap G.Name joinField ->
   RemoteSchemaIntrospection ->
   m ()
 validateRemoteArguments expectedArguments providedArguments permittedVariables schemaDocument = do
@@ -425,8 +388,8 @@ unwrapGraphQLType = \case
 
 -- | Validate a value against a type.
 validateType ::
-  (Backend b, MonadError (ValidationError b) m) =>
-  HM.HashMap G.Name (DBJoinField b) ->
+  (MonadError ValidationError m) =>
+  HM.HashMap G.Name joinField ->
   G.Value G.Name ->
   G.GType ->
   RemoteSchemaIntrospection ->
@@ -435,10 +398,9 @@ validateType permittedVariables value expectedGType schemaDocument =
   case value of
     G.VVariable variable ->
       case HM.lookup variable permittedVariables of
-        Nothing -> throwError (InvalidVariable variable permittedVariables)
-        Just fieldInfo -> do
-          namedType <- dbJoinFieldToNamedType fieldInfo
-          isTypeCoercible (mkGraphQLType namedType) expectedGType
+        Nothing -> throwError (InvalidVariable variable $ HM.keysSet permittedVariables)
+        -- TODO: check whether the type of lhs join field is allowed
+        Just _lhsJoinField -> pure ()
     G.VInt {} -> do
       let intScalarGType = mkGraphQLType intScalar
       isTypeCoercible intScalarGType expectedGType
@@ -488,7 +450,7 @@ validateType permittedVariables value expectedGType schemaDocument =
       G.TypeNamed (G.Nullability False)
 
 isTypeCoercible ::
-  (MonadError (ValidationError b) m) =>
+  (MonadError ValidationError m) =>
   G.GType ->
   G.GType ->
   m ()
@@ -521,30 +483,13 @@ isTypeCoercible actualType expectedType =
     raiseValidationError = throwError $ ExpectedTypeButGot expectedType actualType
 
 assertListType ::
-  (MonadError (ValidationError b) m) =>
+  (MonadError ValidationError m) =>
   G.GType ->
   m ()
 assertListType actualType =
   unless
     (G.isListType actualType)
     (throwError $ InvalidType actualType "is not a list type")
-
--- | Convert a field info to a named type, if possible.
-dbJoinFieldToNamedType ::
-  forall b m.
-  (Backend b, MonadError (ValidationError b) m) =>
-  DBJoinField b ->
-  m G.Name
-dbJoinFieldToNamedType hasuraField = do
-  scalarType <- case hasuraField of
-    JoinColumn _ columnType -> case columnType of
-      ColumnScalar scalarType -> pure scalarType
-      _ -> throwError UnsupportedEnum
-    JoinComputedField cfi -> pure $ _scfType cfi
-  -- CFRScalar scalarType -> pure scalarType
-  -- CFRSetofTable table  -> throwError $ UnsupportedTableComputedField table $ _cfiName cfi
-  onLeft (scalarTypeGraphQLName @b scalarType) $
-    const $ throwError $ CannotGenerateGraphQLTypeName scalarType
 
 getBaseTyWithNestedLevelsCount :: G.GType -> (G.Name, Int)
 getBaseTyWithNestedLevelsCount ty = go ty 0

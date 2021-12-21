@@ -103,8 +103,8 @@ import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.ComputedField
 import Hasura.RQL.Types.EventTrigger
 import Hasura.RQL.Types.Permission
-import Hasura.RQL.Types.Relationships.FromSource
 import Hasura.RQL.Types.Relationships.Local
+import Hasura.RQL.Types.Relationships.Remote
 import Hasura.SQL.AnyBackend (runBackend)
 import Hasura.SQL.Backend
 import Hasura.Server.Utils (englishList)
@@ -192,7 +192,7 @@ data FieldInfo (b :: BackendType)
   = FIColumn !(ColumnInfo b)
   | FIRelationship !(RelInfo b)
   | FIComputedField !(ComputedFieldInfo b)
-  | FIRemoteRelationship !(RemoteFieldInfo b)
+  | FIRemoteRelationship !(RemoteFieldInfo (DBJoinField b))
   deriving (Generic)
 
 deriving instance Backend b => Eq (FieldInfo b)
@@ -225,11 +225,10 @@ fieldInfoGraphQLName = \case
   FIComputedField info -> G.mkName $ computedFieldNameToText $ _cfiName info
   FIRemoteRelationship info -> G.mkName $ relNameToTxt $ getRemoteFieldInfoName info
 
-getRemoteFieldInfoName :: RemoteFieldInfo b -> RelName
-getRemoteFieldInfoName =
-  \case
-    RFISchema schema -> _rrfiName schema
-    RFISource source -> runBackend source _rsfiName
+getRemoteFieldInfoName :: RemoteFieldInfo lhsJoinField -> RelName
+getRemoteFieldInfoName RemoteFieldInfo {_rfiRHS} = case _rfiRHS of
+  RFISchema schema -> _rrfiName schema
+  RFISource source -> runBackend source _rsfiName
 
 -- | Returns all the field names created for the given field. Columns, object relationships, and
 -- computed fields only ever produce a single field, but array relationships also contain an

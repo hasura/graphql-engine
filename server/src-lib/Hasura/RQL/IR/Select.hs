@@ -142,8 +142,8 @@ import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.ComputedField
 import Hasura.RQL.Types.Function
 import Hasura.RQL.Types.Instances ()
-import Hasura.RQL.Types.Relationships.FromSource
 import Hasura.RQL.Types.Relationships.Local
+import Hasura.RQL.Types.Relationships.Remote
 import Hasura.SQL.Backend
 import Language.GraphQL.Draft.Syntax qualified as G
 

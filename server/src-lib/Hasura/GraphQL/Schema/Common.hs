@@ -1,5 +1,6 @@
 module Hasura.GraphQL.Schema.Common
-  ( AggSelectExp,
+  ( MonadBuildSchemaBase,
+    AggSelectExp,
     AnnotatedField,
     AnnotatedFields,
     ConnectionFields,
@@ -30,6 +31,7 @@ where
 
 import Data.Aeson qualified as J
 import Data.Either (isRight)
+import Data.Has
 import Data.HashMap.Strict qualified as Map
 import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.Text qualified as T
@@ -37,7 +39,6 @@ import Data.Text.Extended
 import Hasura.Backends.Postgres.SQL.Types qualified as PG
 import Hasura.Base.Error
 import Hasura.GraphQL.Execute.Types qualified as ET (GraphQLQueryType)
-import Hasura.GraphQL.Parser (UnpreparedValue)
 import Hasura.GraphQL.Parser qualified as P
 import Hasura.Prelude
 import Hasura.RQL.IR.Root qualified as IR
@@ -45,27 +46,39 @@ import Hasura.RQL.IR.Select qualified as IR
 import Hasura.RQL.Types
 import Language.GraphQL.Draft.Syntax as G
 
-type SelectExp b = IR.AnnSimpleSelectG b (IR.RemoteRelationshipField UnpreparedValue) (UnpreparedValue b)
+-- | the set of common constraints required to build the schema
+type MonadBuildSchemaBase r m n =
+  ( MonadError QErr m,
+    P.MonadSchema n m,
+    P.MonadTableInfo r m,
+    P.MonadRole r m,
+    Has QueryContext r,
+    Has MkTypename r,
+    Has MkRootFieldName r,
+    Has CustomizeRemoteFieldName r
+  )
 
-type AggSelectExp b = IR.AnnAggregateSelectG b (IR.RemoteRelationshipField UnpreparedValue) (UnpreparedValue b)
+type SelectExp b = IR.AnnSimpleSelectG b (IR.RemoteRelationshipField P.UnpreparedValue) (P.UnpreparedValue b)
 
-type ConnectionSelectExp b = IR.ConnectionSelect b (IR.RemoteRelationshipField UnpreparedValue) (UnpreparedValue b)
+type AggSelectExp b = IR.AnnAggregateSelectG b (IR.RemoteRelationshipField P.UnpreparedValue) (P.UnpreparedValue b)
 
-type SelectArgs b = IR.SelectArgsG b (UnpreparedValue b)
+type ConnectionSelectExp b = IR.ConnectionSelect b (IR.RemoteRelationshipField P.UnpreparedValue) (P.UnpreparedValue b)
 
-type TablePerms b = IR.TablePermG b (UnpreparedValue b)
+type SelectArgs b = IR.SelectArgsG b (P.UnpreparedValue b)
 
-type AnnotatedFields b = IR.AnnFieldsG b (IR.RemoteRelationshipField UnpreparedValue) (UnpreparedValue b)
+type TablePerms b = IR.TablePermG b (P.UnpreparedValue b)
 
-type AnnotatedField b = IR.AnnFieldG b (IR.RemoteRelationshipField UnpreparedValue) (UnpreparedValue b)
+type AnnotatedFields b = IR.AnnFieldsG b (IR.RemoteRelationshipField P.UnpreparedValue) (P.UnpreparedValue b)
 
-type ConnectionFields b = IR.ConnectionFields b (IR.RemoteRelationshipField UnpreparedValue) (UnpreparedValue b)
+type AnnotatedField b = IR.AnnFieldG b (IR.RemoteRelationshipField P.UnpreparedValue) (P.UnpreparedValue b)
 
-type EdgeFields b = IR.EdgeFields b (IR.RemoteRelationshipField UnpreparedValue) (UnpreparedValue b)
+type ConnectionFields b = IR.ConnectionFields b (IR.RemoteRelationshipField P.UnpreparedValue) (P.UnpreparedValue b)
 
-type AnnotatedActionFields b = IR.ActionFieldsG b (IR.RemoteRelationshipField UnpreparedValue) (UnpreparedValue b)
+type EdgeFields b = IR.EdgeFields b (IR.RemoteRelationshipField P.UnpreparedValue) (P.UnpreparedValue b)
 
-type AnnotatedActionField b = IR.ActionFieldG b (IR.RemoteRelationshipField UnpreparedValue) (UnpreparedValue b)
+type AnnotatedActionFields b = IR.ActionFieldsG b (IR.RemoteRelationshipField P.UnpreparedValue) (P.UnpreparedValue b)
+
+type AnnotatedActionField b = IR.ActionFieldG b (IR.RemoteRelationshipField P.UnpreparedValue) (P.UnpreparedValue b)
 
 data RemoteRelationshipQueryContext = RemoteRelationshipQueryContext
   { _rrscIntrospectionResultOriginal :: !IntrospectionResult,
