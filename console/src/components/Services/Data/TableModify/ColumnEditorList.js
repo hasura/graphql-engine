@@ -145,7 +145,7 @@ const ColumnEditorList = ({
       const keyPropertiesString = propertiesList.join(', ');
 
       propertiesDisplay.push(
-        <span className="ml-xs font-normal" key={'props'}>
+        <span className="ml-xs mr-2 font-normal" key={'props'}>
           {keyPropertiesString}
         </span>
       );
