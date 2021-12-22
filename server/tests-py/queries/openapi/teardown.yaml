@@ -7,4 +7,4 @@ args:
 - type: run_sql
   args:
     sql: |
-      drop table test_table
+      drop table test_table, test_table_recurse;
