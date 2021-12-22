@@ -205,6 +205,7 @@ fromInsert Insert {..} =
     [ "INSERT INTO " <+> fromTableName insertTable,
       "(" <+> SepByPrinter ", " (map (fromNameText . columnNameText) insertColumns) <+> ")",
       fromInsertOutput insertOutput,
+      "INTO " <+> fromTempTable insertTempTable,
       "VALUES " <+> SepByPrinter ", " (map fromValues insertValues)
     ]
 

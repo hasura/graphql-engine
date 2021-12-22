@@ -42,7 +42,7 @@ import Data.Proxy
 import Data.Text qualified as T
 import Database.ODBC.SQLServer qualified as ODBC
 import Hasura.Backends.MSSQL.Instances.Types ()
-import Hasura.Backends.MSSQL.Types.Insert as TSQL (BackendInsert (..), ExtraColumnInfo (..))
+import Hasura.Backends.MSSQL.Types.Insert as TSQL (BackendInsert (..))
 import Hasura.Backends.MSSQL.Types.Internal as TSQL
 import Hasura.Backends.MSSQL.Types.Update as TSQL (BackendUpdate (..), Update (..))
 import Hasura.Prelude
@@ -1073,8 +1073,10 @@ fromInsert IR.AnnInsert {..} =
       insertRows = normalizeInsertRows _aiData $ map (IR.getInsertColumns) _aiInsObj
       insertColumnNames = maybe [] (map fst) $ listToMaybe insertRows
       insertValues = map (Values . map snd) insertRows
-      primaryKeyColumns = map OutputColumn $ _eciPrimaryKeyColumns $ _biExtraColumnInfo _aiBackendInsert
-   in Insert _aiTableName insertColumnNames (Output Inserted primaryKeyColumns) insertValues
+      allColumnNames = map (ColumnName . unName . IR.pgiName) _aiTableCols
+      insertOutput = Output Inserted $ map OutputColumn allColumnNames
+      tempTable = TempTable tempTableNameInserted allColumnNames
+   in Insert _aiTableName insertColumnNames insertOutput tempTable insertValues
 
 -- | Normalize a row by adding missing columns with 'DEFAULT' value and sort by column name to make sure
 -- all rows are consistent in column values and order.
@@ -1099,7 +1101,7 @@ fromInsert IR.AnnInsert {..} =
 normalizeInsertRows :: IR.AnnIns 'MSSQL [] Expression -> [[(Column 'MSSQL, Expression)]] -> [[(Column 'MSSQL, Expression)]]
 normalizeInsertRows IR.AnnIns {..} insertRows =
   let isIdentityColumn column =
-        IR.pgiColumn column `elem` _eciIdentityColumns (_biExtraColumnInfo _aiBackendInsert)
+        IR.pgiColumn column `elem` _biIdentityColumns _aiBackendInsert
       allColumnsWithDefaultValue =
         -- DEFAULT or NULL are not allowed as explicit identity values.
         map ((,DefaultExpression) . IR.pgiColumn) $ filter (not . isIdentityColumn) _aiTableCols

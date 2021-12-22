@@ -867,8 +867,8 @@ class TestGraphQLInsertMSSQL:
     def test_insert_multiple_objects(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/insert_multiple_objects_mssql.yaml")
 
-    def test_insert_table_no_pk_fail(self, hge_ctx):
-        check_query_f(hge_ctx, self.dir() + "/insert_table_no_pk_fail_mssql.yaml")
+    def test_insert_table_no_pk(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/insert_table_no_pk_mssql.yaml")
 
 @pytest.mark.parametrize("backend", ['mssql'])
 @use_mutation_fixtures

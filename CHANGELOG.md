@@ -8,6 +8,8 @@
 ### Bug fixes and improvements
 (Add entries below in the order of server, console, cli, docs, others)
 
+- server: extend support for insert mutations to tables without primary key constraint in a MSSQL backend
+
 ## v2.1.1
 
 - server: implement update mutations for MS SQL Server (closes #7834)
