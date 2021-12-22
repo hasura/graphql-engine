@@ -92,12 +92,12 @@ Mutation AST is a data type which can be readily translated to SQL Text. We need
 - `data Delete` for Delete
 
 Specimen SQL for reference: Unlike Postgres, we cannot integrate DML statements in [common table expression](https://docs.microsoft.com/en-us/sql/t-sql/queries/with-common-table-expression-transact-sql?view=sql-server-ver15) of MSSQL. Only SELECTs are allowed in a common table expression.
-Our proposal is to use [local variables](https://docs.microsoft.com/en-us/sql/t-sql/language-elements/declare-local-variable-transact-sql?view=sql-server-ver15) to capture mutated rows and generated appropriate response using SELECT statement.
+Our proposal is to use [temporary tables](https://www.sqlservertutorial.net/sql-server-basics/sql-server-temporary-tables/) to capture mutated rows and generated appropriate response using SELECT statement.
 
 ```mssql
-INSERT INTO test (name, age) OUTPUT INSERTED.<primarykey-column> values ('rakesh', 25)
+INSERT INTO test (name, age) OUTPUT INSERTED.<column1>, INSERTED.<column2> INTO #temp_table values ('rakesh', 25)
 
-WITH some_alias AS (SELECT * FROM test WHERE <primarykey-column> IN (<values fetched from above SQL>))
+WITH some_alias AS (SELECT * FROM #temp_table)
 SELECT (SELECT * FROM  some_alias FOR JSON PATH, INCLUDE_NULL_VALUES)  AS [returning], count(*) AS [affected_rows] FROM some_alias FOR JSON PATH, WITHOUT_ARRAY_WRAPPER;
 ```
 
@@ -109,9 +109,9 @@ Like in Postgres, we need to generate expression to evaluate the check condition
 If check constraint is not satisfied we'll raise exception in the Haskell code.
 
 ```mssql
-INSERT INTO test (name, age) OUTPUT INSERTED.<primarykey-column> values ('rakesh', 25)
+INSERT INTO test (name, age) OUTPUT INSERTED.<column1>, INSERTED.<column2> INTO #temp_table values ('rakesh', 25)
 
-WITH alias AS (SELECT * FROM test where id IN (<values-returned-from-above-sql>))
+WITH alias AS (SELECT * FROM #temp_table)
 SELECT (SELECT (SELECT * FROM alias FOR JSON PATH, INCLUDE_NULL_VALUES) AS [returning], count(*) AS [affected_rows] FROM alias FOR JSON PATH, WITHOUT_ARRAY_WRAPPER) AS [data], SUM(case when (id = 12) then 0 else 1 end) AS [check_constraint] FROM alias ;
 
 ```

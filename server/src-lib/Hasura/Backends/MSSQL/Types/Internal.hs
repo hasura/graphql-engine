@@ -70,6 +70,7 @@ module Hasura.Backends.MSSQL.Types.Internal
     scalarTypeDBName,
     snakeCaseTableName,
     stringTypes,
+    tempTableNameInserted,
     tempTableNameDeleted,
     tempTableNameUpdated,
   )
@@ -180,10 +181,11 @@ type InsertOutput = Output Inserted
 newtype Values = Values [Expression]
 
 data Insert = Insert
-  { insertTable :: !TableName,
-    insertColumns :: ![ColumnName],
-    insertOutput :: !InsertOutput,
-    insertValues :: ![Values]
+  { insertTable :: TableName,
+    insertColumns :: [ColumnName],
+    insertOutput :: InsertOutput,
+    insertTempTable :: TempTable,
+    insertValues :: [Values]
   }
 
 data SetValue
@@ -214,6 +216,9 @@ data SelectIntoTempTable = SelectIntoTempTable
 
 -- | A temporary table name is prepended by a hash-sign
 newtype TempTableName = TempTableName Text
+
+tempTableNameInserted :: TempTableName
+tempTableNameInserted = TempTableName "inserted"
 
 tempTableNameDeleted :: TempTableName
 tempTableNameDeleted = TempTableName "deleted"

@@ -3,7 +3,6 @@
 -- | Types for MSSQL Insert IR.
 module Hasura.Backends.MSSQL.Types.Insert
   ( BackendInsert (..),
-    ExtraColumnInfo (..),
     IfMatched (..),
   )
 where
@@ -16,7 +15,7 @@ import Hasura.SQL.Backend (BackendType (MSSQL))
 
 data BackendInsert v = BackendInsert
   { _biIfMatched :: Maybe (IfMatched v),
-    _biExtraColumnInfo :: ExtraColumnInfo
+    _biIdentityColumns :: [ColumnName]
   }
 
 deriving instance Backend 'MSSQL => Functor BackendInsert
@@ -24,11 +23,6 @@ deriving instance Backend 'MSSQL => Functor BackendInsert
 deriving instance Backend 'MSSQL => Foldable BackendInsert
 
 deriving instance Backend 'MSSQL => Traversable BackendInsert
-
-data ExtraColumnInfo = ExtraColumnInfo
-  { _eciPrimaryKeyColumns :: ![ColumnName],
-    _eciIdentityColumns :: ![ColumnName]
-  }
 
 -- | The IR data representing an @if_matched@ clause, which handles upserts.
 data IfMatched v = IfMatched

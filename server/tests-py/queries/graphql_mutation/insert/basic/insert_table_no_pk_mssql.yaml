@@ -13,8 +13,9 @@ query:
       }
     }
 response:
-  errors:
-  - extensions:
-      path: $.selectionSet.insert_table_no_pk
-      code: validation-failed
-    message: "field \"insert_table_no_pk\" not found in type: 'mutation_root'"
+  data:
+    insert_table_no_pk:
+      affected_rows: 1
+      returning:
+      - id: 1
+        name: Foo

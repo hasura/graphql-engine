@@ -9,7 +9,7 @@ import Data.List.NonEmpty qualified as NE
 import Data.Text.Encoding (encodeUtf8)
 import Data.Text.Extended
 import Database.ODBC.SQLServer qualified as ODBC
-import Hasura.Backends.MSSQL.Types.Insert (BackendInsert (..), ExtraColumnInfo (..))
+import Hasura.Backends.MSSQL.Types.Insert (BackendInsert (..))
 import Hasura.Backends.MSSQL.Types.Internal qualified as MSSQL
 import Hasura.Backends.MSSQL.Types.Update (BackendUpdate (..), UpdateOperator (..))
 import Hasura.Base.Error
@@ -65,10 +65,6 @@ instance BackendSchema 'MSSQL where
   -- SQL literals
   columnDefaultValue = msColumnDefaultValue
 
--- | MSSQL only supports inserts into tables that have a primary key defined.
-supportsInserts :: TableInfo 'MSSQL -> Bool
-supportsInserts = isJust . _tciPrimaryKey . _tiCoreInfo
-
 ----------------------------------------------------------------
 -- Top level parsers
 
@@ -95,25 +91,7 @@ msBuildTableInsertMutationFields ::
   Maybe (SelPermInfo 'MSSQL) ->
   Maybe (UpdPermInfo 'MSSQL) ->
   m [FieldParser n (AnnInsert 'MSSQL (RemoteRelationshipField UnpreparedValue) (UnpreparedValue 'MSSQL))]
-msBuildTableInsertMutationFields
-  sourceName
-  tableName
-  tableInfo
-  gqlName
-  insPerms
-  mSelPerms
-  mUpdPerms
-    | supportsInserts tableInfo =
-      GSB.buildTableInsertMutationFields
-        backendInsertParser
-        sourceName
-        tableName
-        tableInfo
-        gqlName
-        insPerms
-        mSelPerms
-        mUpdPerms
-    | otherwise = return []
+msBuildTableInsertMutationFields = GSB.buildTableInsertMutationFields backendInsertParser
 
 backendInsertParser ::
   forall m r n.
@@ -130,13 +108,8 @@ backendInsertParser _sourceName tableInfo _selectPerms _updatePerms = do
   pure $ do
     -- _biIfMatched <- ifMatched
     let _biIfMatched = Nothing
+        _biIdentityColumns = _tciExtraTableMetadata $ _tiCoreInfo tableInfo
     pure $ BackendInsert {..}
-  where
-    _biExtraColumnInfo :: ExtraColumnInfo
-    _biExtraColumnInfo =
-      let pkeyColumns = fmap (map pgiColumn . toList . _pkColumns) . _tciPrimaryKey . _tiCoreInfo $ tableInfo
-          identityColumns = _tciExtraTableMetadata $ _tiCoreInfo tableInfo
-       in ExtraColumnInfo (fromMaybe [] pkeyColumns) identityColumns
 
 msBuildTableUpdateMutationFields ::
   MonadBuildSchema 'MSSQL r m n =>

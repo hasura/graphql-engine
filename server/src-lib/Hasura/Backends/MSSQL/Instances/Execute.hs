@@ -15,14 +15,13 @@ import Data.HashSet qualified as Set
 import Data.List.NonEmpty qualified as NE
 import Data.Text.Extended qualified as T
 import Database.MSSQL.Transaction qualified as Tx
-import Database.ODBC.Internal qualified as ODBCI
 import Database.ODBC.SQLServer qualified as ODBC
 import Hasura.Backends.MSSQL.Connection
 import Hasura.Backends.MSSQL.FromIr as TSQL
 import Hasura.Backends.MSSQL.Plan
 import Hasura.Backends.MSSQL.SQL.Value (txtEncodedColVal)
 import Hasura.Backends.MSSQL.ToQuery as TQ
-import Hasura.Backends.MSSQL.Types.Insert (BackendInsert (..), ExtraColumnInfo (..))
+import Hasura.Backends.MSSQL.Types.Insert (BackendInsert (..))
 import Hasura.Backends.MSSQL.Types.Internal as TSQL
 import Hasura.Backends.MSSQL.Types.Update
 import Hasura.Base.Error
@@ -250,23 +249,26 @@ msDBMutationPlan userInfo stringifyNum sourceName sourceConfig mrf = do
 -- --
 -- Step 1: Inserting rows into the table
 -- --
--- -- a. Generate an SQL Insert statement from the GraphQL insert mutation with OUTPUT expression to return
--- --    primary key column values after insertion.
+-- -- a. Create an empty temporary table with name #inserted to store inserted rows
+-- --
+-- --    SELECT column1, column2 INTO #inserted FROM some_table WHERE (1 <> 1)
+-- --
 -- -- b. Before insert, Set IDENTITY_INSERT to ON if any insert row contains atleast one identity column.
 -- --
 -- --    SET IDENTITY_INSERT some_table ON;
--- --    INSERT INTO some_table (column1, column2) OUTPUT INSERTED.pkey_column1, INSERTED.pkey_column2 VALUES (value1, value2), (value3, value4);
+-- --
+-- -- c. Generate an SQL Insert statement from the GraphQL insert mutation with OUTPUT expression to fill temporary table with inserted rows
+-- --
+-- --    INSERT INTO some_table (column1, column2) OUTPUT INSERTED.column1, INSERTED.column2 INTO #inserted(column1, column2) VALUES (value1, value2), (value3, value4);
 -- --
 -- Step 2: Generation of the mutation response
 -- --
 -- --    An SQL statement is generated and when executed it returns the mutation selection set containing 'affected_rows' and 'returning' field values.
 -- --    The statement is generated with multiple sub select queries explained below:
 -- --
--- -- a. A SQL Select statement to fetch only inserted rows from the table using primary key column values fetched from
--- --    Step 1 in the WHERE clause
+-- -- a. A SQL Select statement to fetch only inserted rows from temporary table
 -- --
--- --    <table_select> :=
--- --      SELECT * FROM some_table WHERE (pkey_column1 = value1 AND pkey_column2 = value2) OR (pkey_column1 = value3 AND pkey_column2 = value4)
+-- --    <table_select> := SELECT * FROM #inserted
 -- --
 -- --    The above select statement is referred through a common table expression - "WITH [with_alias] AS (<table_select>)"
 -- --
@@ -303,13 +305,19 @@ executeInsert userInfo stringifyNum sourceConfig annInsert = do
     sessionVariables = _uiSession userInfo
     pool = _mscConnectionPool sourceConfig
     table = _aiTableName $ _aiData annInsert
-    withSelectTableAlias = "t_" <> tableName table
     withAlias = "with_alias"
 
     buildInsertTx :: AnnInsert 'MSSQL Void Expression -> Tx.TxET QErr IO EncJSON
     buildInsertTx insert = do
-      let identityColumns = _eciIdentityColumns $ _biExtraColumnInfo $ _aiBackendInsert $ _aiData insert
+      let identityColumns = _biIdentityColumns $ _aiBackendInsert $ _aiData insert
           insertColumns = concatMap (map fst . getInsertColumns) $ _aiInsObj $ _aiData insert
+          createTempTableQuery =
+            toQueryFlat $
+              TQ.fromSelectIntoTempTable $
+                TSQL.toSelectIntoTempTable tempTableNameInserted table (_aiTableCols $ _aiData insert)
+
+      -- Create #inserted temporary table
+      Tx.unitQueryE fromMSSQLTxError createTempTableQuery
 
       -- Set identity insert to ON if insert object contains identity columns
       when (any (`elem` identityColumns) insertColumns) $
@@ -320,52 +328,36 @@ executeInsert userInfo stringifyNum sourceConfig annInsert = do
 
       -- Generate the INSERT query
       let insertQuery = toQueryFlat $ TQ.fromInsert $ TSQL.fromInsert insert
-          fromODBCException e =
-            (err400 MSSQLError "insert query exception") {qeInternal = Just (ExtraInternal $ odbcExceptionToJSONValue e)}
 
-      -- Execute the INSERT query and fetch the primary key values
-      primaryKeyValues <- Tx.buildGenericTxE fromODBCException $ \conn -> ODBCI.query conn (ODBC.renderQuery insertQuery)
-      let withSelect = generateWithSelect primaryKeyValues
-          -- WITH [with_alias] AS (select_query)
-          withExpression = With $ pure $ Aliased withSelect withAlias
-
+      -- Execute the INSERT query
+      Tx.unitQueryE fromMSSQLTxError insertQuery
       mutationOutputSelect <- mkMutationOutputSelect stringifyNum withAlias $ _aiOutput insert
-      let (checkCondition, _) = _aiCheckCond $ _aiData insert
 
       -- The check constraint is translated to boolean expression
+      let checkCondition = fst $ _aiCheckCond $ _aiData insert
       checkBoolExp <-
         V.runValidate (runFromIr $ runReaderT (fromGBoolExp checkCondition) (EntityAlias withAlias))
           `onLeft` (throw500 . tshow)
 
-      -- SELECT (<mutation_output_select>) AS [mutation_response], (<check_constraint_select>) AS [check_constraint_select]
-      let mutationOutputCheckConstraintSelect = selectMutationOutputAndCheckCondition withAlias mutationOutputSelect checkBoolExp
-
+      let withSelect =
+            emptySelect
+              { selectProjections = [StarProjection],
+                selectFrom = Just $ FromTempTable $ Aliased tempTableNameInserted "inserted_alias"
+              }
+          -- SELECT (<mutation_output_select>) AS [mutation_response], (<check_constraint_select>) AS [check_constraint_select]
+          mutationOutputCheckConstraintSelect = selectMutationOutputAndCheckCondition withAlias mutationOutputSelect checkBoolExp
           -- WITH "with_alias" AS (<table_select>)
           -- SELECT (<mutation_output_select>) AS [mutation_response], (<check_constraint_select>) AS [check_constraint_select]
-          finalSelect = mutationOutputCheckConstraintSelect {selectWith = Just withExpression}
+          finalSelect = mutationOutputCheckConstraintSelect {selectWith = Just $ With $ pure $ Aliased withSelect withAlias}
 
+      -- Execute SELECT query to fetch mutation response and check constraint result
       (responseText, checkConditionInt) <- Tx.singleRowQueryE fromMSSQLTxError (toQueryFlat $ TQ.fromSelect finalSelect)
+      -- Drop the temp table
+      Tx.unitQueryE fromMSSQLTxError $ toQueryFlat $ dropTempTableQuery tempTableNameInserted
+      -- Raise an exception if the check condition is not met
       unless (checkConditionInt == (0 :: Int)) $
         throw400 PermissionError "check constraint of an insert permission has failed"
       pure $ encJFromText responseText
-
-    columnFieldExpression :: ODBCI.Column -> Expression
-    columnFieldExpression column =
-      ColumnExpression $ TSQL.FieldName (ODBCI.columnName column) withSelectTableAlias
-
-    generateWithSelect :: [[(ODBCI.Column, ODBC.Value)]] -> Select
-    generateWithSelect pkeyValues =
-      emptySelect
-        { selectProjections = [StarProjection],
-          selectFrom = Just $ FromQualifiedTable $ Aliased table withSelectTableAlias,
-          selectWhere = whereExpression
-        }
-      where
-        -- WHERE (column1 = value1 AND column2 = value2) OR (column1 = value3 AND column2 = value4)
-        whereExpression =
-          let mkColumnEqExpression (column, value) =
-                OpExpression EQ' (columnFieldExpression column) (ValueExpression value)
-           in Where $ pure $ OrExpression $ map (AndExpression . map mkColumnEqExpression) pkeyValues
 
 -- Delete
 
