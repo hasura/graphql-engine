@@ -10,15 +10,22 @@ import {
 } from '../utils';
 import schema1 from './fixtures/schema1.json';
 import schema2 from './fixtures/schema2.json';
-import { continentsPreset, userPreset } from './fixtures/roles.json';
+import schema3 from './fixtures/schema3.json';
+import {
+  continentsPreset,
+  userPreset,
+  workoutPreset,
+} from './fixtures/roles.json';
 import { args1, args2 } from './fixtures/args.json';
 
 describe('Utils.ts', () => {
   let clientSchema1: GraphQLSchema;
   let clientSchema2: GraphQLSchema;
+  let clientSchema3: GraphQLSchema;
   beforeEach(async () => {
     clientSchema1 = buildClientSchema(schema1 as any);
     clientSchema2 = buildClientSchema(schema2 as any);
+    clientSchema3 = buildClientSchema(schema3 as any);
   });
 
   test('getTrimmedReturnType', () => {
@@ -124,5 +131,14 @@ describe('Utils.ts', () => {
     const schemaFields3 = getType(clientSchema1, permissionsSchema1);
     const sdl3 = generateSDL(schemaFields3, {});
     expect(sdl3).toMatchSnapshot();
+  });
+
+  it('generateSDL with default values', () => {
+    const def = addPresetDefinition(workoutPreset);
+    const permissions = buildSchema(def);
+    const schemaFields = getRemoteSchemaFields(clientSchema3, permissions);
+
+    const sdl = generateSDL(schemaFields, {});
+    expect(sdl).toMatchSnapshot();
   });
 });
