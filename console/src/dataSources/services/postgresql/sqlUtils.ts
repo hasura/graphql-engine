@@ -670,7 +670,7 @@ export const getSetCommentSql = (
   columnName?: string,
   functionName?: string
 ) => {
-  if (functionName) {
+  if (functionName && !columnName) {
     return `
 comment on ${on} "${schemaName}"."${functionName}" is ${
       comment ? sqlEscapeText(comment) : 'NULL'
