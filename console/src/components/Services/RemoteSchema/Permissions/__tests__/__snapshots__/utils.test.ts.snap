@@ -6,7 +6,7 @@ exports[`Utils.ts generateSDL 1`] = `
 }
  
 type query_root{
-      users(distinct_on : [users_select_column!] limit : Int offset : Int order_by : [users_order_by!] where : users_bool_exp ): [users!]!
+      users(distinct_on : [users_select_column!] limit : Int offset : Int order_by : [users_order_by!] where : users_bool_exp ): [users!]! 
 }
 
 type books{
@@ -237,7 +237,7 @@ exports[`Utils.ts generateSDL 2`] = `
 }
  
 type query_root{
-      users(distinct_on : [users_select_column!] limit : Int offset : Int order_by : [users_order_by!] where : users_bool_exp ): [users!]!
+      users(distinct_on : [users_select_column!] limit : Int offset : Int order_by : [users_order_by!] where : users_bool_exp ): [users!]! 
 }
 
 type books{
@@ -468,7 +468,7 @@ exports[`Utils.ts generateSDL 3`] = `
 }
  
 type Query{
-      continents(filter : ContinentFilterInput ): [Continent!]!
+      continents(filter : ContinentFilterInput = { code: { eq:\\"AF\\"}}  ): [Continent!]! 
 }
 
 type Continent{
@@ -525,7 +525,7 @@ exports[`Utils.ts generateSDL 4`] = `
 }
  
 type Query{
-      continents(filter : ContinentFilterInput ): [Continent!]!
+      continents(filter : ContinentFilterInput = { code: { eq:\\"AF\\"}}  ): [Continent!]! 
 }
 
 type Continent{
@@ -796,6 +796,32 @@ enum order_by{
 enum users_select_column{
       id
       name
+}
+"
+`;
+
+exports[`Utils.ts generateSDL with default values 1`] = `
+"schema{
+      query: Query
+}
+ 
+type Query{
+      workout(where : ID! stage : Stage! = DRAFT  locales : Locale! = en  ): WorkoutType! 
+}
+
+type WorkoutType{
+      id : ID!
+      name : String
+      description : String
+}
+
+enum Stage{
+      DRAFT
+      PUBLISHED
+}
+
+enum Locale{
+      en
 }
 "
 `;
@@ -4634,7 +4660,11 @@ Array [
         "args": Object {
           "filter": Object {
             "astNode": undefined,
-            "defaultValue": undefined,
+            "defaultValue": Object {
+              "code": Object {
+                "eq": "AF",
+              },
+            },
             "description": "",
             "extensions": undefined,
             "name": "filter",
@@ -5861,7 +5891,11 @@ Array [
     "args": Object {
       "filter": Object {
         "astNode": undefined,
-        "defaultValue": undefined,
+        "defaultValue": Object {
+          "code": Object {
+            "eq": "AF",
+          },
+        },
         "description": "",
         "extensions": undefined,
         "name": "filter",
