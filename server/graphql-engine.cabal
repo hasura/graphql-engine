@@ -313,6 +313,11 @@ library
                      , mysql
                      , mysql-simple
 
+                     -- TODO(jkachmar): re-organize this before merging
+                     -- dynamic backends stuff
+                     , uri-bytestring
+                     , witch
+
   if !flag(profiling)
     -- ghc-heap-view can't be built with profiling
     build-depends:     ghc-heap-view
@@ -452,6 +457,27 @@ library
                      , Hasura.Backends.MySQL.ToQuery
                      , Hasura.Backends.MySQL.Instances.API
 
+                     -- XXX(jkachmar): This needs to be renamed before we
+                     -- stabilize it.
+                     , Hasura.Experimental.Adapter.API
+                     , Hasura.Experimental.Adapter.Backend
+                     , Hasura.Experimental.Adapter.Execute
+                     , Hasura.Experimental.Adapter.Metadata
+                     , Hasura.Experimental.Adapter.Schema
+                     , Hasura.Experimental.Adapter.Transport
+                     , Hasura.Experimental.IR.Column
+                     , Hasura.Experimental.IR.Expression
+                     , Hasura.Experimental.IR.Function
+                     , Hasura.Experimental.IR.Name
+                     , Hasura.Experimental.IR.OrderBy
+                     , Hasura.Experimental.IR.Query
+                     , Hasura.Experimental.IR.Scalar.Type
+                     , Hasura.Experimental.IR.Scalar.Value
+                     , Hasura.Experimental.IR.Table
+                     , Hasura.Experimental.Schema.Column
+                     , Hasura.Experimental.Schema.Table
+
+                     -- Exposed for benchmark:
                      , Hasura.Cache.Bounded
                      , Hasura.Logging
                      , Hasura.HTTP
