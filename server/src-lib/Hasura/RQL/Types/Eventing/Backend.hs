@@ -231,3 +231,33 @@ instance BackendEventTrigger 'MySQL where
   redeliverEvent _ _ = throw400 NotSupported "Event triggers are not supported for MySQL sources"
   unlockEventsInSource _ _ = runExceptT $ throw400 NotSupported "Event triggers are not supported for MySQL sources"
   createTableEventTrigger _ _ _ _ _ _ = runExceptT $ throw400 NotSupported "Event triggers are not supported for MySQL sources"
+
+--------------------------------------------------------------------------------
+
+-- TODO(jkachmar): See if there isn't a way to define the function that
+-- implement these methods in the 'Hasura.Experimental.Adapters' module
+-- hierarchy just to keep everything as tidy as possible for that section of
+-- code.
+instance BackendEventTrigger 'Experimental where
+  insertManualEvent _ _ _ _ _ _ =
+    throw400 NotSupported "Event triggers are not supported for Experimental sources"
+  fetchUndeliveredEvents _ _ _ _ =
+    throw400 NotSupported "Event triggers are not supported for Experimental sources"
+  setRetry _ _ _ _ =
+    throw400 NotSupported "Event triggers are not supported for Experimental sources"
+  recordSuccess _ _ _ _ =
+    runExceptT $ throw400 NotSupported "Event triggers are not supported for Experimental sources"
+  getMaintenanceModeVersion _ =
+    throw400 NotSupported "Event triggers are not supported for Experimental sources"
+  recordError _ _ _ _ _ =
+    runExceptT $ throw400 NotSupported "Event triggers are not supported for Experimental sources"
+  recordError' _ _ _ _ _ =
+    runExceptT $ throw400 NotSupported "Event triggers are not supported for Experimental sources"
+  dropTriggerAndArchiveEvents _ _ =
+    throw400 NotSupported "Event triggers are not supported for Experimental sources"
+  redeliverEvent _ _ =
+    throw400 NotSupported "Event triggers are not supported for Experimental sources"
+  unlockEventsInSource _ _ =
+    runExceptT $ throw400 NotSupported "Event triggers are not supported for Experimental sources"
+  createTableEventTrigger _ _ _ _ _ _ =
+    runExceptT $ throw400 NotSupported "Event triggers are not supported for Experimental sources"
