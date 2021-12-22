@@ -35,3 +35,11 @@ class TestOpenAPISpec:
     def test_multiple_endpoints_same_path(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/openapi_multiple_endpoints_same_path.yaml', transport)
 
+    def test_endpoint_with_complex_arg(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/openapi_get_endpoint_test_complex_arg.yaml', transport)
+
+    def test_endpoint_with_complex_args(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/openapi_get_endpoint_test_complex_args.yaml', transport)
+
+    def test_endpoint_with_recursive_arg(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/openapi_post_endpoint_test_recursive_arg.yaml', transport)

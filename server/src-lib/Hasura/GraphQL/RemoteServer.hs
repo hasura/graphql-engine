@@ -1,8 +1,10 @@
 module Hasura.GraphQL.RemoteServer
   ( fetchRemoteSchema,
     IntrospectionResult,
+    parseIntrospectionResult,
     execRemoteGQ,
     identityCustomizer,
+    introspectionQuery,
     -- The following exports are needed for unit tests
     getCustomizer,
     validateSchemaCustomizationsDistinct,
@@ -135,6 +137,9 @@ validateSchemaCustomizationsDistinct remoteSchemaCustomizer (RemoteSchemaIntrosp
               <<> " are not distinct; the following fields appear more than once: "
               <> dquoteList dups
       _ -> pure ()
+
+parseIntrospectionResult :: J.Value -> Maybe IntrospectionResult
+parseIntrospectionResult = fmap fromIntrospection . J.parseMaybe J.parseJSON
 
 -- | Make an introspection query to the remote graphql server for the data we
 -- need to present and stitch the remote schema. This powers add_remote_schema,

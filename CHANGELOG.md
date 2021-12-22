@@ -3,6 +3,8 @@
 ## Next release
 (Add highlights/major features below)
 
+- server: add request and response bodies to OpenAPI specification of REST endpoints
+
 ### Bug fixes and improvements
 (Add entries below in the order of server, console, cli, docs, others)
 

@@ -146,6 +146,7 @@ library
                      , hashable-time
                      , http-client-tls
                      , http-conduit
+                     , http-media
                      , http-types
                      , kan-extensions
                      , kriti-lang
