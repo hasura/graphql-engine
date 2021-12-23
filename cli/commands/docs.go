@@ -9,8 +9,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/hasura/graphql-engine/cli"
-	"github.com/hasura/graphql-engine/cli/assets"
+	"github.com/hasura/graphql-engine/cli/v2"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/cobra/doc"
@@ -25,8 +24,9 @@ func NewDocsCmd(ec *cli.ExecutionContext) *cobra.Command {
 		Short:        "Generate CLI docs in various formats",
 		Hidden:       true,
 		SilenceUsage: true,
-		PreRun: func(cmd *cobra.Command, args []string) {
+		PreRunE: func(cmd *cobra.Command, args []string) error {
 			ec.Viper = viper.New()
+			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 			err = os.MkdirAll(docDirectory, os.ModePerm)
@@ -85,7 +85,7 @@ func printOptionsReST(buf *bytes.Buffer, cmd *cobra.Command, name string) error 
 	return nil
 }
 
-// linkHandler for default ReST hyperlink markup
+/* linkHandler for default ReST hyperlink markup
 func defaultLinkHandler(name, ref string) string {
 	return fmt.Sprintf("`%s <%s.rst>`_", name, ref)
 }
@@ -93,7 +93,7 @@ func defaultLinkHandler(name, ref string) string {
 // genReST creates reStructured Text output.
 func genReST(cmd *cobra.Command, w io.Writer, titlePrefix string) error {
 	return genReSTCustom(cmd, w, titlePrefix, defaultLinkHandler)
-}
+}*/
 
 // genReSTCustom creates custom reStructured Text output.
 func genReSTCustom(cmd *cobra.Command, w io.Writer, titlePrefix string, linkHandler func(string, string) string) error {
@@ -103,29 +103,37 @@ func genReSTCustom(cmd *cobra.Command, w io.Writer, titlePrefix string, linkHand
 	buf := new(bytes.Buffer)
 	name := cmd.CommandPath()
 	ref := strings.Replace(name, " ", "_", -1)
-	cliDocPath := "manifests/docs/" + ref + ".rst"
 	short := cmd.Short
 	long := cmd.Long
 	if len(long) == 0 {
 		long = short
 	}
-	fileInfo, er := assets.Asset(cliDocPath)
-	var info string
-	if er != nil || string(fileInfo) == "" {
-		info = short
+	info := short
+	buf.WriteString(".. meta::\n")
+	buf.WriteString("   :description: " + info + " using the Hasura CLI\n")
+	buf.WriteString("   :keywords: hasura, docs, CLI")
+	if cmd.CommandPath() != "hasura" {
+		buf.WriteString(", " + cmd.CommandPath() + "\n")
 	} else {
-		info = string(fileInfo)
+		buf.WriteString("\n")
 	}
-
+	buf.WriteString("\n")
 	buf.WriteString(".. _" + ref + ":\n\n")
 
 	buf.WriteString(titlePrefix + name + "\n")
 	buf.WriteString(strings.Repeat("-", len(titlePrefix+name)) + "\n\n")
-	buf.WriteString(info + "\n\n")
+	buf.WriteString(info + ".\n\n")
 
 	buf.WriteString("Synopsis\n")
 	buf.WriteString("~~~~~~~~\n\n")
-	buf.WriteString("\n" + long + "\n\n")
+	if name == "hasura" {
+		buf.WriteString("::")
+	}
+	buf.WriteString("\n" + long)
+	if name != "hasura" && name != "hasura scripts update-project-v2" {
+		buf.WriteString(".")
+	}
+	buf.WriteString("\n\n")
 
 	if cmd.Runnable() {
 		buf.WriteString(fmt.Sprintf("::\n\n  %s\n\n", cmd.UseLine()))
@@ -184,11 +192,11 @@ func genReSTCustom(cmd *cobra.Command, w io.Writer, titlePrefix string, linkHand
 // This function may not work correctly if your command names have `-` in them.
 // If you have `cmd` with two subcmds, `sub` and `sub-third`,
 // and `sub` has a subcommand called `third`, it is undefined which
-// help output will be in the file `cmd-sub-third.1`.
+/* help output will be in the file `cmd-sub-third.1`.
 func genReSTTree(cmd *cobra.Command, dir, titlePrefix string) error {
 	emptyStr := func(s string) string { return "" }
 	return genReSTTreeCustom(cmd, dir, titlePrefix, emptyStr, defaultLinkHandler)
-}
+}*/
 
 // genReSTTreeCustom is the the same as genReSTTree, but
 // with custom filePrepender and linkHandler.
@@ -201,7 +209,6 @@ func genReSTTreeCustom(cmd *cobra.Command, dir, titlePrefix string, filePrepende
 			return err
 		}
 	}
-
 	basename := strings.Replace(cmd.CommandPath(), " ", "_", -1) + ".rst"
 	filename := filepath.Join(dir, basename)
 	f, err := os.Create(filename)
@@ -252,13 +259,13 @@ func hasSeeAlso(cmd *cobra.Command) bool {
 }
 
 // Temporary workaround for yaml lib generating incorrect yaml with long strings
-// that do not contain \n.
+/* that do not contain \n.
 func forceMultiLine(s string) string {
 	if len(s) > 60 && !strings.Contains(s, "\n") {
 		s = s + "\n"
 	}
 	return s
-}
+}*/
 
 type byName []*cobra.Command
 

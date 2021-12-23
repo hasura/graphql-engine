@@ -5,12 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	log "github.com/sirupsen/logrus"
-)
-
-const (
-	TuplesOK  = "TuplesOk"
-	CommandOK = "CommandOk"
+	"github.com/mitchellh/mapstructure"
 )
 
 type HasuraInterfaceBulk struct {
@@ -23,116 +18,134 @@ func (h *HasuraInterfaceBulk) ResetArgs() {
 }
 
 type HasuraInterfaceQuery struct {
-	Type string      `json:"type" yaml:"type"`
-	Args interface{} `json:"args" yaml:"args"`
-}
-
-type HasuraQuery struct {
-	Type string     `json:"type" yaml:"type"`
-	Args HasuraArgs `json:"args" yaml:"args"`
-}
-
-type HasuraBulk struct {
-	Type string        `json:"type" yaml:"type"`
-	Args []HasuraQuery `json:"args" yaml:"args"`
-}
-
-type HasuraArgs struct {
-	SQL       string        `json:"sql,omitempty" yaml:"sql"`
-	Table     interface{}   `json:"table,omitempty"`
-	Columns   interface{}   `json:"columns,omitempty"`
-	Where     interface{}   `json:"where,omitempty"`
-	OrderBy   interface{}   `json:"order_by,omitempty"`
-	Objects   []interface{} `json:"objects,omitempty"`
-	Limit     int           `json:"limit,omitempty"`
-	Returning []string      `json:"returning,omitempty"`
-	Set       interface{}   `json:"$set,omitempty"`
-}
-
-type HasuraOrderBy struct {
-	Column string `json:"column,omitempty"`
-	Type   string `json:"type,omitempty"`
-	Nulls  string `json:"nulls,omitempty"`
-}
-
-type HasuraColumn struct {
-	Name    string      `json:"name"`
-	Columns interface{} `json:"columns,omitempty"`
+	Type    string      `json:"type" yaml:"type"`
+	Version int         `json:"version,omitempty" yaml:"version,omitempty"`
+	Source  string      `json:"source,omitempty" yaml:"source,omitempty"`
+	Args    interface{} `json:"args" yaml:"args"`
 }
 
 type HasuraError struct {
 	// MigrationFile is used internally for hasuractl
 	migrationFile  string
 	migrationQuery string
-	Path           string            `json:"path"`
-	ErrorMessage   string            `json:"error"`
-	Internal       *SQLInternalError `json:"internal,omitempty"`
-	Message        string            `json:"message,omitempty"`
-	Code           string            `json:"code"`
+	Path           string      `json:"path"`
+	ErrorMessage   string      `json:"error"`
+	Internal       interface{} `json:"internal,omitempty"`
+	Message        string      `json:"message,omitempty"`
+	Code           string      `json:"code"`
+}
+
+type InconsistentMetadataError struct {
+	Definition interface{} `json:"definition,omitempty" mapstructure:"definition,omitempty"`
+	Reason     string      `json:"reason,omitempty" mapstructure:"reason,omitempty"`
+	Type       string      `json:"type,omitempty" mapstructure:"type,omitempty"`
+}
+
+func (mderror *InconsistentMetadataError) String() string {
+	var out string
+	if mderror.Reason != "" {
+		out = fmt.Sprintf("\nreason: %v\n", mderror.Reason)
+	}
+	if mderror.Type != "" {
+		out = fmt.Sprintf("%stype: %v\n", out, mderror.Type)
+	}
+	if mderror.Definition != nil {
+		m, err := json.MarshalIndent(mderror.Definition, "", "  ")
+		if err == nil {
+			out = fmt.Sprintf("%sdefinition: \n%s", out, string(m))
+		}
+	}
+	return out
 }
 
 type SQLInternalError struct {
-	Arguments []string      `json:"arguments"`
-	Error     PostgresError `json:"error"`
-	Prepared  bool          `json:"prepared"`
-	Statement string        `json:"statement"`
+	Arguments                 []string       `json:"arguments" mapstructure:"arguments,omitempty"`
+	Error                     *PostgresError `json:"error" mapstructure:"error,omitempty"`
+	Prepared                  bool           `json:"prepared" mapstructure:"prepared,omitempty"`
+	Statement                 string         `json:"statement" mapstructure:"statement,omitempty"`
+	InconsistentMetadataError `mapstructure:",squash"`
 }
 type PostgresError struct {
-	StatusCode  string `json:"status_code"`
-	ExecStatus  string `json:"exec_status"`
-	Message     string `json:"message"`
-	Description string `json:"description"`
-	Hint        string `json:"hint"`
+	StatusCode  string `json:"status_code" mapstructure:"status_code,omitempty"`
+	ExecStatus  string `json:"exec_status" mapstructure:"exec_status,omitempty"`
+	Message     string `json:"message" mapstructure:"message,omitempty"`
+	Description string `json:"description" mapstructure:"description,omitempty"`
+	Hint        string `json:"hint" mapstructure:"hint,omitempty"`
 }
 
 type SchemaDump struct {
 	Opts        []string `json:"opts"`
 	CleanOutput bool     `json:"clean_output"`
+	Database    string   `json:"source,omitempty"`
 }
 
-func (h *HasuraError) CMDError() error {
+func (h HasuraError) Error() string {
 	var errorStrings []string
 	errorStrings = append(errorStrings, fmt.Sprintf("[%s] %s (%s)", h.Code, h.ErrorMessage, h.Path))
 	if h.migrationFile != "" {
 		errorStrings = append(errorStrings, fmt.Sprintf("File: '%s'", h.migrationFile))
 	}
 	if h.migrationQuery != "" {
-		errorStrings = append(errorStrings, fmt.Sprintf("%s", h.migrationQuery))
+		errorStrings = append(errorStrings, h.migrationQuery)
 	}
-	if h.Internal != nil {
-		// postgres error
-		errorStrings = append(errorStrings, fmt.Sprintf("[%s] %s: %s", h.Internal.Error.StatusCode, h.Internal.Error.ExecStatus, h.Internal.Error.Message))
-		if len(h.Internal.Error.Description) > 0 {
-			errorStrings = append(errorStrings, fmt.Sprintf("Description: %s", h.Internal.Error.Description))
-		}
-		if len(h.Internal.Error.Hint) > 0 {
-			errorStrings = append(errorStrings, fmt.Sprintf("Hint: %s", h.Internal.Error.Hint))
+	var internalError SQLInternalError
+	var internalErrors []SQLInternalError
+	if v, ok := h.Internal.(map[string]interface{}); ok {
+		err := mapstructure.Decode(v, &internalError)
+		if err == nil {
+			// postgres error
+			if internalError.Error != nil {
+				errorStrings = append(errorStrings, fmt.Sprintf("[%s] %s: %s", internalError.Error.StatusCode, internalError.Error.ExecStatus, internalError.Error.Message))
+				if len(internalError.Error.Description) > 0 {
+					errorStrings = append(errorStrings, fmt.Sprintf("Description: %s", internalError.Error.Description))
+				}
+				if len(internalError.Error.Hint) > 0 {
+					errorStrings = append(errorStrings, fmt.Sprintf("Hint: %s", internalError.Error.Hint))
+				}
+			}
+			if e := internalError.InconsistentMetadataError.String(); e != "" {
+				errorStrings = append(errorStrings, e)
+			}
 		}
 	}
-	return fmt.Errorf(strings.Join(errorStrings, "\r\n"))
+	if v, ok := h.Internal.([]interface{}); ok {
+		err := mapstructure.Decode(v, &internalErrors)
+		if err == nil {
+			for _, internalError := range internalErrors {
+				// postgres error
+				if internalError.Error != nil {
+					errorStrings = append(errorStrings, fmt.Sprintf("[%s] %s: %s", internalError.Error.StatusCode, internalError.Error.ExecStatus, internalError.Error.Message))
+					if len(internalError.Error.Description) > 0 {
+						errorStrings = append(errorStrings, fmt.Sprintf("Description: %s", internalError.Error.Description))
+					}
+					if len(internalError.Error.Hint) > 0 {
+						errorStrings = append(errorStrings, fmt.Sprintf("Hint: %s", internalError.Error.Hint))
+					}
+				}
+
+				if e := internalError.InconsistentMetadataError.String(); e != "" {
+					errorStrings = append(errorStrings, e)
+				}
+			}
+		}
+	}
+	if len(errorStrings) == 0 {
+		return ""
+	}
+	return strings.Join(errorStrings, "\r\n")
 }
 
-func (h *HasuraError) APIError() error {
-	data, err := json.Marshal(&h)
-	if err != nil {
-		return err
-	}
-	return fmt.Errorf("Data Error: %s", string(data))
-}
-
-func (h *HasuraError) Error(isCMD bool) error {
-	var err error
-	switch isCMD {
+// NewHasuraError - returns error based on data and isCmd
+func NewHasuraError(data []byte, isCmd bool) error {
+	switch isCmd {
 	case true:
-		err = h.CMDError()
-	case false:
-		err = h.APIError()
+		var herror HasuraError
+		err := json.Unmarshal(data, &herror)
+		if err != nil {
+			return fmt.Errorf("failed parsing json: %w; response from API: %s", err, string(data))
+		}
+		return herror
+	default:
+		return fmt.Errorf("Data Error: %s", string(data))
 	}
-	log.Debug(err)
-	return err
-}
-
-type HasuraSQLRes struct {
-	ResultType string     `json:"result_type"`
-	Result     [][]string `json:"result"`
 }

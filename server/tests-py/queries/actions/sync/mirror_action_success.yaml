@@ -1,0 +1,19 @@
+description: A successful query to mirror action
+url: /v1/graphql
+status: 200
+response:
+  data:
+    mirror:
+      id: some-id
+      name: Alice
+query:
+  variables:
+    id: some-id
+    name: Alice
+  query: |
+    mutation ($id: ID, $name: String) {
+      mirror(arg: {id: $id, name: $name}){
+        id
+        name
+      }
+    }

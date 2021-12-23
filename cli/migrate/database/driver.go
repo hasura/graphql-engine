@@ -1,6 +1,7 @@
 package database
 
 import (
+	"crypto/tls"
 	"fmt"
 	"io"
 	"sync"
@@ -43,7 +44,7 @@ type Driver interface {
 	// Open returns a new driver instance configured with parameters
 	// coming from the URL string. Migrate will call this function
 	// only once per instance.
-	Open(url string, isCMD bool, logger *log.Logger) (Driver, error)
+	Open(url string, isCMD bool, tlsConfig *tls.Config, logger *log.Logger, hasuraOpts *HasuraOpts) (Driver, error)
 
 	// Close closes the underlying database instance managed by the driver.
 	// Migrate will call this function only once per instance.
@@ -61,7 +62,7 @@ type Driver interface {
 	// all migrations have been run.
 	UnLock() error
 
-	// Run applies a migration to the database. migration is garantueed to be not nil.
+	// RunSeq applies a migration to the database in a sequential fashion. migration is guaranteed to be not nil.
 	Run(migration io.Reader, fileType, fileName string) error
 
 	// Reset Migration Query Args
@@ -75,6 +76,11 @@ type Driver interface {
 	// SetVersion saves version and dirty state.
 	// Migrate will call this function before and after each call to Run.
 	// version must be >= -1. -1 means NilVersion.
+	SetVersion(version int64, dirty bool) error
+
+	// SetVersion saves version and dirty state.
+	// Migrate will call this function before and after each call to Run.
+	// version must be >= -1. -1 means NilVersion.
 	RemoveVersion(version int64) error
 
 	// Version returns the currently active version and if the database is dirty.
@@ -82,37 +88,40 @@ type Driver interface {
 	// Dirty means, a previous migration failed and user interaction is required.
 	Version() (version int64, dirty bool, err error)
 
-	// Reset cleans public schema
-	Reset() error
-
 	// First returns the very first migration version available to the driver.
 	// Migrate will call this function multiple times
-	First() (version uint64, ok bool)
+	First() (migrationVersion *MigrationVersion, ok bool)
 
 	// Last returns the latest version available in database
-	Last() (version uint64, ok bool)
+	Last() (*MigrationVersion, bool)
 
 	// Prev returns the previous version for a given version available to the driver.
 	// Migrate will call this function multiple times.
 	// If there is no previous version available, it must return os.ErrNotExist.
-	Prev(version uint64) (prevVersion uint64, ok bool)
+	Prev(version uint64) (prevVersion *MigrationVersion, ok bool)
 
 	// Next returns the next version for a given version available to the driver.
 	// Migrate will call this function multiple times.
 	// If there is no next version available, it must return os.ErrNotExist.
-	Next(version uint64) (nextVersion uint64, ok bool)
+	Next(version uint64) (migrationVersion *MigrationVersion, ok bool)
 
 	Read(version uint64) (ok bool)
 
-	SettingsDriver
+	PushToList(migration io.Reader, fileType string, list *CustomList) error
+
+	Squash(list *CustomList, ret chan<- interface{})
 
 	MetadataDriver
 
 	SchemaDriver
+
+	SettingsDriver
+
+	Query(data interface{}) error
 }
 
 // Open returns a new driver instance.
-func Open(url string, isCMD bool, logger *log.Logger) (Driver, error) {
+func Open(url string, isCMD bool, tlsConfig *tls.Config, logger *log.Logger, hasuraOpts *HasuraOpts) (Driver, error) {
 	u, err := nurl.Parse(url)
 	if err != nil {
 		log.Debug(err)
@@ -127,16 +136,24 @@ func Open(url string, isCMD bool, logger *log.Logger) (Driver, error) {
 
 	d, ok := drivers[u.Scheme]
 	if !ok {
-		return nil, fmt.Errorf("database driver: unknown driver hasuradb (forgotten import?)")
+		return nil, fmt.Errorf("database driver: unknown driver %v", u.Scheme)
 	}
 
 	if logger == nil {
 		logger = log.New()
 	}
 
-	return d.Open(url, isCMD, logger)
+	return d.Open(url, isCMD, tlsConfig, logger, hasuraOpts)
 }
 
 func Register(name string, driver Driver) {
+	driversMu.Lock()
+	defer driversMu.Unlock()
+	if driver == nil {
+		panic("Register driver is nil")
+	}
+	if _, dup := drivers[name]; dup {
+		panic("Register called twice for driver " + name)
+	}
 	drivers[name] = driver
 }

@@ -1,0 +1,44 @@
+description: Query author with computed fields
+url: /v1/graphql
+status: 200
+query:
+  query: |
+    query {
+      author{
+        id
+        first_name
+        last_name
+        full_name
+        get_articles(args:{search:"Article"}){
+          id
+          title
+          content
+          author_id
+        }
+      }
+    }
+response:
+  data:
+    author:
+    - id: 1
+      first_name: Roger
+      last_name: Chris
+      full_name: Roger Chris
+      get_articles:
+      - id: 1
+        title: Article 1
+        content: Content for Article 1
+        author_id: 1
+    - id: 2
+      first_name: Daniel
+      last_name:
+      full_name: Daniel
+      get_articles:
+      - id: 2
+        title: Article 2
+        content: Content for Article 2
+        author_id: 2
+      - id: 3
+        title: Article 3
+        content: Content for Article 3
+        author_id: 2

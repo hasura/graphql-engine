@@ -6,23 +6,23 @@ response:
     delete_resident:
       affected_rows: 1
       returning:
-      - age: 25
-        id: 1
+      - id: 1
         name: Griffin
+        age: 25
 headers:
   X-Hasura-Role: agent
   X-Hasura-Allowed-Resident-Ids: '{1,2}'
 query:
   query: |
-   mutation{
-     delete_resident(
-       where: {id: {_eq: 1}}
-     ){
-       affected_rows
-       returning {
-          id
-          name
-          age
-       }
-     }
-   }
+    mutation{
+      delete_resident(
+        where: {id: {_eq: 1}}
+      ){
+        affected_rows
+        returning {
+           id
+           name
+           age
+        }
+      }
+    }

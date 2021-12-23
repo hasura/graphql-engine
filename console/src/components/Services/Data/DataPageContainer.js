@@ -1,32 +1,30 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Link } from 'react-router';
 import globals from '../../../Globals';
 
 import LeftContainer from '../../Common/Layout/LeftContainer/LeftContainer';
 import PageContainer from '../../Common/Layout/PageContainer/PageContainer';
 import DataSubSidebar from './DataSubSidebar';
-
-import { updateCurrentSchema } from './DataActions';
-import { NotFoundError } from '../../Error/PageNotFound';
 import { CLI_CONSOLE_MODE } from '../../../constants';
-
-const sectionPrefix = '/data';
+import styles from '../../Common/TableCommon/Table.scss';
+import { isFeatureSupported } from '../../../dataSources';
+import { fetchPostgresVersion } from '../../Main/Actions';
 
 const DataPageContainer = ({
-  currentSchema,
-  schemaList,
   children,
   location,
   dispatch,
+  currentDataSource,
 }) => {
-  const styles = require('../../Common/TableCommon/Table.scss');
-
-  if (!schemaList.map(s => s.schema_name).includes(currentSchema)) {
-    dispatch(updateCurrentSchema('public', false));
-
-    // throw a 404 exception
-    throw new NotFoundError();
-  }
+  useEffect(() => {
+    // TODO: handle for different drivers
+    if (
+      currentDataSource &&
+      isFeatureSupported('driver.fetchVersion.enabled')
+    ) {
+      dispatch(fetchPostgresVersion);
+    }
+  }, [dispatch, currentDataSource]);
 
   const currentLocation = location.pathname;
 
@@ -39,62 +37,45 @@ const DataPageContainer = ({
           currentLocation.includes('data/migrations') ? styles.active : ''
         }
       >
-        <Link className={styles.linkBorder} to={sectionPrefix + '/migrations'}>
+        <Link className={styles.linkBorder} to={'/data/migrations'}>
           Migrations
         </Link>
       </li>
     );
   }
 
-  const handleSchemaChange = e => {
-    dispatch(updateCurrentSchema(e.target.value));
-  };
-
-  const getSchemaOptions = () => {
-    return schemaList.map(s => (
-      <option key={s.schema_name} value={s.schema_name}>
-        {s.schema_name}
-      </option>
-    ));
-  };
-
   const sidebarContent = (
     <ul>
       <li
         role="presentation"
-        className={currentLocation.includes('data/schema') ? styles.active : ''}
+        className={
+          currentLocation.match(
+            /(\/)?data((\/manage)|(\/(\w+)\/)|(\/(\w|%)+\/schema?(\w+)))/
+          )
+            ? styles.active
+            : ''
+        }
       >
-        <Link
-          className={styles.linkBorder}
-          to={sectionPrefix + '/schema/' + currentSchema}
-        >
-          <div className={styles.schemaWrapper}>
-            <div className={styles.schemaSidebarSection} data-test="schema">
-              Schema:
-              <select
-                onChange={handleSchemaChange}
-                value={currentSchema}
-                className={styles.changeSchema + ' form-control'}
-              >
-                {getSchemaOptions()}
-              </select>
-            </div>
-          </div>
+        <Link className={styles.linkBorder} to={`/data/manage`}>
+          Data Manager
         </Link>
-        <DataSubSidebar location={location} />
+
+        <DataSubSidebar />
       </li>
-      <li
-        role="presentation"
-        className={currentLocation.includes('data/sql') ? styles.active : ''}
-      >
-        <Link
-          className={styles.linkBorder}
-          to={sectionPrefix + '/sql'}
-          data-test="sql-link"
+      {currentDataSource && (
+        <li
+          role="presentation"
+          className={currentLocation.includes('/sql') ? styles.active : ''}
         >
-          SQL
-        </Link>
-      </li>
+          <Link
+            className={styles.linkBorder}
+            to={`/data/sql`}
+            data-test="sql-link"
+          >
+            SQL
+          </Link>
+        </li>
+      )}
       {migrationTab}
     </ul>
   );
@@ -112,8 +93,7 @@ const DataPageContainer = ({
 
 const mapStateToProps = state => {
   return {
-    schemaList: state.tables.schemaList,
-    currentSchema: state.tables.currentSchema,
+    currentDataSource: state.tables.currentDataSource,
   };
 };
 

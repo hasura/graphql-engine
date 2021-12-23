@@ -33,14 +33,31 @@ fi
 
 # replace the image version with latest tag for all references in install-manifests
 find "$ROOT/install-manifests" \
-     "$ROOT/scripts/cli-migrations" \
      -type f -exec sed -i -E \
      's#(hasura/graphql-engine:)v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(\-[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?(\+[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?(.*)*$#\1'"${TAG}"'\9#' {} \;
 
-git add "$ROOT/install-manifests" \
-        "$ROOT/scripts/cli-migrations"
+# update version in CLI installation instructions
+sed -i -E 's#(.*)v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(\-[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?(\+[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?(.*)*$#\1'"${TAG}"'\9#' \
+    "${ROOT}/cli/README.md" \
+    "${ROOT}/docs/graphql/core/hasura-cli/install-hasura-cli.rst" \
 
-git commit -m "update manifests to $TAG"
+# update version in CI image scanning tags
+sed -i -E 's#v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)#'"${TAG}"'#' \
+    "${ROOT}/.buildkite/pipeline-gen/pipeline/scan_graphql_engine_images.go" \
+    "${ROOT}/.buildkite/pipeline-gen/pipeline/scan_graphql_engine_pro_images.go"
+
+# add the latest tag to the catalog_versions file
+[ -n "$(tail -c1 "$ROOT/server/src-rsr/catalog_versions.txt")" ] && echo >> "$ROOT/server/src-rsr/catalog_versions.txt"
+echo $TAG $(cat "$ROOT/server/src-rsr/catalog_version.txt") >> "$ROOT/server/src-rsr/catalog_versions.txt"
+
+git add "$ROOT/install-manifests" \
+        "$ROOT/server/src-rsr" \
+        "${ROOT}/cli/README.md" \
+        "${ROOT}/docs/graphql/core/hasura-cli/install-hasura-cli.rst" \
+        "${ROOT}/.buildkite/pipeline-gen/pipeline/scan_graphql_engine_images.go" \
+        "${ROOT}/.buildkite/pipeline-gen/pipeline/scan_graphql_engine_pro_images.go"
+
+git commit -m "tag release $TAG"
 
 git tag -a "$TAG" -m "$MESSAGE"
 

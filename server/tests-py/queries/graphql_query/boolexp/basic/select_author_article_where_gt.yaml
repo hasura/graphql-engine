@@ -4,21 +4,21 @@ status: 200
 response:
   data:
     author:
-    - name: Author 3
+    - id: 3
+      name: Author 3
       articles:
-      - content: Sample article content 4
-        id: 4
+      - id: 4
         title: Article 4
-      id: 3
+        content: Sample article content 4
 query:
-  query: |
+  query: |-
     query {
       author (where: {id: {_gt: 2}}) {
         id
         name
         articles {
           id
-          title 
+          title
           content
         }
       }

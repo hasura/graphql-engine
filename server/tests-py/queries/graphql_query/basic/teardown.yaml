@@ -1,11 +1,6 @@
 type: bulk
 args:
 
-- type: run_sql
-  args:
-    sql: |
-      drop table test_types
-
 #Drop relationship first
 - type: drop_relationship
   args:
@@ -13,33 +8,16 @@ args:
     table:
       schema: public
       name: author
-    
-- type: run_sql
-  args:
-    sql: |
-      drop table article
 
 - type: run_sql
   args:
     sql: |
-      drop table author
-
-- type: run_sql
-  args:
-    sql: |
-      drop table "user"
-
-- type: run_sql
-  args:
-    sql: |
-      drop table person
-
-- type: run_sql
-  args:
-    sql: |
-      drop type complex
-
-- type: run_sql
-  args:
-    sql: |
-      drop type inventory_item
+      drop table test_types;
+      drop table article;
+      drop table author;
+      drop table article_multi;
+      drop table author_multi;
+      drop table "user";
+      drop table person;
+      drop type complex;
+      drop type inventory_item;

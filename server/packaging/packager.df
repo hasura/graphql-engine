@@ -1,14 +1,13 @@
 FROM hasura/haskell-docker-packager:20190731
 MAINTAINER vamshi@hasura.io
 
-RUN apt-get update && apt-get install -y libpq5 upx git cmake pkgconf \
+RUN apt-get update && apt-get install -y libpq5 curl apt-transport-https upx \
+ && curl -s https://packages.microsoft.com/config/debian/9/prod.list > /etc/apt/sources.list.d/mssql-release.list \
+ && curl -s https://packages.microsoft.com/keys/microsoft.asc | apt-key add - \
+ && apt-get update \
+ && apt install -y unixodbc-dev freetds-dev \
+ && ACCEPT_EULA=Y apt install --yes msodbcsql17 \
  && update-ca-certificates \
  && mkdir -p /usr/src/busybox/rootfs/etc/ssl/certs \
  && cp -L /etc/ssl/certs/* /usr/src/busybox/rootfs/etc/ssl/certs/ \
- && git clone https://github.com/google/brotli.git && cd brotli && mkdir out && cd out && ../configure-cmake \
- && make && make test && make install && ldconfig && cd ../../ \
- && rm -rf brotli \
- && cp /usr/local/lib/libbrotlienc.so.1 /usr/src/busybox/rootfs/usr/lib/x86_64-linux-gnu \
- && cp /usr/local/lib/libbrotlidec.so.1 /usr/src/busybox/rootfs/usr/lib/x86_64-linux-gnu \
- && cp /usr/local/lib/libbrotlicommon.so.1 /usr/src/busybox/rootfs/usr/lib/x86_64-linux-gnu \
  && rm -rf /var/lib/apt/lists/*

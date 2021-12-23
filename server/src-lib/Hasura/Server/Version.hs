@@ -1,60 +1,72 @@
 module Hasura.Server.Version
-  ( currentVersion
-  , consoleVersion
-  , isDevVersion
+  ( Version (..),
+    currentVersion,
+    consoleAssetsVersion,
   )
 where
 
-import           Control.Lens        ((^.), (^?))
-import           Data.Either         (isLeft)
+import Control.Lens ((^.), (^?))
+import Data.Aeson (FromJSON (..), ToJSON (..))
+import Data.SemVer qualified as V
+import Data.Text qualified as T
+import Data.Text.Conversions (FromText (..), ToText (..))
+import Hasura.Prelude
+import Hasura.Server.Utils (getValFromEnvOrScript)
+import Text.Regex.TDFA ((=~~))
 
-import qualified Data.SemVer         as V
-import qualified Data.Text           as T
+data Version
+  = VersionDev !Text
+  | VersionRelease !V.Version
+  deriving (Show, Eq)
 
-import           Hasura.Prelude
-import           Hasura.Server.Utils (getValFromEnvOrScript)
+instance ToText Version where
+  toText = \case
+    VersionDev txt -> txt
+    VersionRelease version -> "v" <> V.toText version
 
-version :: T.Text
-version = T.dropWhileEnd (== '\n')
-  $(getValFromEnvOrScript "VERSION" "../scripts/get-version.sh")
+instance FromText Version where
+  fromText txt = case V.fromText $ T.dropWhile (== 'v') txt of
+    Left _ -> VersionDev txt
+    Right version -> VersionRelease version
 
-parsedVersion :: Either String V.Version
-parsedVersion = V.fromText $ T.dropWhile (== 'v') version
+instance ToJSON Version where
+  toJSON = toJSON . toText
 
-currentVersion :: T.Text
-currentVersion = version
+instance FromJSON Version where
+  parseJSON = fmap fromText . parseJSON
 
-isDevVersion :: Bool
-isDevVersion = isLeft parsedVersion
+currentVersion :: Version
+currentVersion =
+  fromText $
+    T.dropWhileEnd (== '\n') $
+      T.pack $
+        $$(getValFromEnvOrScript "VERSION" "../scripts/get-version.sh")
 
-rawVersion :: T.Text
-rawVersion = "versioned/" <> version
-
-consoleVersion :: T.Text
-consoleVersion = case parsedVersion of
-  Left _  -> rawVersion
-  Right v -> mkConsoleV v
-
-mkConsoleV :: V.Version -> T.Text
-mkConsoleV v = case getReleaseChannel v of
-  Nothing -> rawVersion
-  Just c  -> T.pack $ "channel/" <> c <> "/" <> vMajMin
+-- | A version-based string used to form the CDN URL for fetching console assets.
+consoleAssetsVersion :: Text
+consoleAssetsVersion = case currentVersion of
+  VersionDev txt -> "versioned/" <> txt
+  VersionRelease v -> case getReleaseChannel v of
+    Nothing -> "versioned/" <> vMajMin
+    Just c -> "channel/" <> c <> "/" <> vMajMin
+    where
+      vMajMin = T.pack ("v" <> show (v ^. V.major) <> "." <> show (v ^. V.minor))
   where
-    vMajMin = "v" <> show (v ^. V.major) <> "." <> show (v ^. V.minor)
+    getReleaseChannel :: V.Version -> Maybe Text
+    getReleaseChannel sv = case sv ^. V.release of
+      [] -> Just "stable"
+      (mr : _) -> case getTextFromId mr of
+        Nothing -> Nothing
+        Just r ->
+          if
+              | T.null r -> Nothing
+              | otherwise -> T.pack <$> getChannelFromPreRelease (T.unpack r)
 
-getReleaseChannel :: V.Version -> Maybe String
-getReleaseChannel sv = case sv ^. V.release of
-  []     -> Just "stable"
-  (mr:_) -> case getTextFromId mr of
-    Nothing -> Nothing
-    Just r  -> if
-      | "alpha" `T.isPrefixOf` r -> Just "alpha"
-      | "beta" `T.isPrefixOf` r  -> Just "beta"
-      | "rc" `T.isPrefixOf` r    -> Just "rc"
-      | otherwise                -> Nothing
+    getChannelFromPreRelease :: String -> Maybe String
+    getChannelFromPreRelease sv = sv =~~ ("^([a-z]+)" :: String)
 
-getTextFromId :: V.Identifier -> Maybe T.Text
-getTextFromId i = Just i ^? (toTextualM . V._Textual)
-  where
-    toTextualM _ Nothing  = pure Nothing
-    toTextualM f (Just a) = f a
+    getTextFromId :: V.Identifier -> Maybe Text
+    getTextFromId i = Just i ^? (toTextualM . V._Textual)
+      where
+        toTextualM _ Nothing = pure Nothing
+        toTextualM f (Just a) = f a

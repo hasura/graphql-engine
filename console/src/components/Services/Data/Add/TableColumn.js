@@ -1,11 +1,11 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 
-import SearchableSelectBox from '../../../Common/SearchableSelect/SearchableSelect';
-import { commonDataTypes } from '../utils';
 import { getDataOptions, inferDefaultValues } from '../Common/utils';
 
 import TableColumnDefault from './TableColumnDefault';
+import { ColumnTypeSelector } from '../Common/Components/ColumnTypeSelector';
+import { dataSource, isFeatureSupported } from '../../../../dataSources';
 
 /* Custom style object for searchable select box */
 const customSelectBoxStyles = {
@@ -55,7 +55,7 @@ const TableColumn = props => {
     onColTypeChange(selectedOption.colIdentifier, selectedOption.value);
   };
   const { columnDataTypes, columnTypeValueMap } = getDataOptions(
-    commonDataTypes,
+    dataSource.commonDataTypes,
     restTypes,
     i
   );
@@ -63,11 +63,11 @@ const TableColumn = props => {
   const getRemoveIcon = colLen => {
     let removeIcon;
     if (i + 1 === colLen) {
-      removeIcon = <i className={`${styles.fontAwosomeClose}`} />;
+      removeIcon = <i className="w-4 cursor-pointer fa fa-times" />;
     } else {
       removeIcon = (
         <i
-          className={`${styles.fontAwosomeClose} fa-lg fa fa-times`}
+          className="w-4 cursor-pointer fa fa-times"
           onClick={onRemoveColumn.bind(undefined, i)}
         />
       );
@@ -86,7 +86,7 @@ const TableColumn = props => {
       : getInferredDefaultValues();
 
   return (
-    <div key={i} className={`${styles.display_flex} form-group`}>
+    <div key={i} className="grid mb-sm gap-sm grid-cols-1 sm:grid-cols-5">
       <input
         type="text"
         className={`${styles.input} form-control`}
@@ -99,15 +99,29 @@ const TableColumn = props => {
         className={`${styles.inputDefault} ${styles.defaultWidth}`}
         data-test={`col-type-${i}`}
       >
-        <SearchableSelectBox
-          options={columnDataTypes}
-          onChange={handleColTypeChange}
-          value={column.type && columnTypeValueMap[column.type]}
-          bsClass={`col-type-${i} add_table_column_selector`}
-          styleOverrides={customSelectBoxStyles}
-          filterOption={'prefix'}
-          placeholder="column_type"
-        />
+        {isFeatureSupported('tables.create.frequentlyUsedColumns') ? (
+          <ColumnTypeSelector
+            options={columnDataTypes}
+            onChange={handleColTypeChange}
+            value={
+              (column.type && columnTypeValueMap[column.type]) || column.type
+            }
+            colIdentifier={i}
+            bsClass={`col-type-${i} add_table_column_selector`}
+            styleOverrides={customSelectBoxStyles}
+          />
+        ) : (
+          <input
+            type="text"
+            style={{ maxWidth: '200px' }}
+            className={`${styles.input} form-control col-type-${i}`}
+            onChange={e => {
+              e.persist();
+              onColTypeChange(i, e.target.value);
+            }}
+            placeholder="column_type"
+          />
+        )}
       </span>
       <span className={`${styles.inputDefault} ${styles.defaultWidth}`}>
         <TableColumnDefault
@@ -118,45 +132,37 @@ const TableColumn = props => {
           colDefaultFunctions={defaultFunctions}
         />
       </span>
-      {/*
-      <input
-        placeholder={getPlaceholder(column)}
-        type="text"
-        value={getDefaultValue(column)}
-        className={`${styles.inputDefault} ${
-          styles.defaultWidth
-        } form-control ${styles.add_pad_left}`}
-        onChange={setColDefaultValue.bind(
-          undefined,
-          i,
-          column.nullable || false
-        )}
-        data-test={`col-default-${i}`}
-      />
-      */}{' '}
-      <input
-        className={`${styles.inputCheckbox} form-control `}
-        checked={column.nullable}
-        type="checkbox"
-        onChange={onColNullableChange.bind(undefined, i)}
-        data-test={`nullable-${i}`}
-      />{' '}
-      <label>Nullable</label>
-      <input
-        className={`${styles.inputCheckbox} form-control `}
-        checked={isColumnUnique}
-        type="checkbox"
-        onChange={onColUniqueChange.bind(
-          undefined,
-          i,
-          numUniqueKeys,
-          isColumnUnique,
-          _uindex
-        )}
-        data-test={`unique-${i.toString()}`}
-      />{' '}
-      <label>Unique</label>
-      {getRemoveIcon(colLength)}
+      <div className="flex items-center">
+        <label className="flex items-center mr-sm">
+          <input
+            className={`legacy-input-fix`}
+            style={{ margin: '0' }}
+            checked={column.nullable}
+            type="checkbox"
+            onChange={onColNullableChange.bind(undefined, i)}
+            data-test={`nullable-${i}`}
+          />
+          <span className="ml-xs">Nullable</span>
+        </label>
+        <label className="flex items-center">
+          <input
+            className={`legacy-input-fix`}
+            style={{ margin: '0' }}
+            checked={isColumnUnique}
+            type="checkbox"
+            onChange={onColUniqueChange.bind(
+              undefined,
+              i,
+              numUniqueKeys,
+              isColumnUnique,
+              _uindex
+            )}
+            data-test={`unique-${i.toString()}`}
+          />
+          <span className="ml-xs">Unique</span>
+        </label>
+        <div className="ml-auto">{getRemoveIcon(colLength)}</div>
+      </div>
     </div>
   );
 };

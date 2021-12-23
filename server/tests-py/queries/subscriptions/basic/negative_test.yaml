@@ -1,0 +1,20 @@
+- description: Query bid prices more than action price
+  url: /v1/graphql
+  status: 200
+  headers:
+    X-Hasura-Role: user
+  response:
+    errors:
+    - extensions:
+        path: $
+        code: not-found
+      message: 'missing session variable: "x-hasura-custom"'
+
+  query:
+    query: |
+      query {
+        hge_tests_test_t1 {
+          c1, c2
+        }
+      }
+

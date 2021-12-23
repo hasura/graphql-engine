@@ -1,7 +1,6 @@
-import React, { Component } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import PropTypes from 'prop-types';
 import TableHeader from '../TableCommon/TableHeader';
-import { RESET } from '../TableModify/ModifyActions';
 import {
   addNewRelClicked,
   addRelNewFromStateMigrate,
@@ -11,17 +10,25 @@ import {
   formRelName,
   getExistingFieldsMap,
 } from './Actions';
-import { findAllFromRel } from '../utils';
 import { showErrorNotification } from '../../Common/Notification';
 import { setTable } from '../DataActions';
 import gqlPattern, { gqlRelErrorNotif } from '../Common/GraphQLValidation';
 import { getRelDef, getObjArrRelList } from './utils';
 
 import Button from '../../../Common/Button/Button';
+import ToolTip from '../../../Common/Tooltip/Tooltip';
+import KnowMoreLink from '../../../Common/KnowMoreLink/KnowMoreLink';
 import AddManualRelationship from './AddManualRelationship';
+import RemoteRelationships from './RemoteRelationships/RemoteRelationships';
 import suggestedRelationshipsRaw from './autoRelations';
 import RelationshipEditor from './RelationshipEditor';
 import { NotFoundError } from '../../../Error/PageNotFound';
+import styles from '../TableModify/ModifyTable.scss';
+import tableStyles from '../../../Common/TableCommon/TableStyles.scss';
+import { findAllFromRel, isFeatureSupported } from '../../../../dataSources';
+import { getRemoteSchemasSelector } from '../../../../metadata/selector';
+import { RightContainer } from '../../../Common/Layout/RightContainer';
+import FeatureDisabled from '../FeatureDisabled';
 
 const addRelationshipCellView = (
   dispatch,
@@ -31,8 +38,6 @@ const addRelationshipCellView = (
   relMetaData,
   tableSchema
 ) => {
-  const tableStyles = require('../../../Common/TableCommon/TableStyles.scss');
-
   const onAdd = e => {
     e.preventDefault();
     dispatch(relSelectionChanged(rel));
@@ -69,7 +74,7 @@ const addRelationshipCellView = (
   };
   return (
     <td>
-      <div>
+      <div className={styles.textNoNewLine}>
         {selectedRelationship === rel ? null : (
           <Button
             size="xs"
@@ -125,28 +130,22 @@ const AddRelationship = ({
   cachedRelationshipData,
   dispatch,
 }) => {
-  const styles = require('../TableModify/ModifyTable.scss');
-  const tableStyles = require('../../../Common/TableCommon/TableStyles.scss');
-
   const cTable = allSchemas.find(
     t => t.table_name === tableName && t.table_schema === currentSchema
   );
 
-  const suggestedRelationshipsData = suggestedRelationshipsRaw(
-    tableName,
-    allSchemas,
-    currentSchema
-  );
+  const suggestedRelationshipsData = useMemo(() => {
+    return suggestedRelationshipsRaw(tableName, allSchemas, currentSchema);
+  }, [tableName, allSchemas, currentSchema]);
 
   if (
     suggestedRelationshipsData.objectRel.length < 1 &&
     suggestedRelationshipsData.arrayRel.length < 1
   ) {
     return (
-      <div className={`${styles.remove_margin_bottom} form-group`}>
-        <label>
-          You have no new relationships that can be added via foreign-keys
-        </label>
+      <div className={styles.add_mar_bottom}>
+        You have <b>no new relationships</b> that can be added{' '}
+        <b>via foreign-keys</b>
       </div>
     );
   }
@@ -252,13 +251,11 @@ const AddRelationship = ({
   return (
     <div>
       <div>
-        <label> Add new relationships via foreign-keys </label>
+        Add new relationships <b>via foreign-keys</b>
       </div>
       <div className={tableStyles.tableContainer}>
         <table
-          className={`${
-            tableStyles.table
-          } table table-bordered table-striped table-hover`}
+          className={`${tableStyles.table} table table-bordered table-striped table-hover`}
         >
           <thead>
             <tr>
@@ -298,177 +295,215 @@ const AddRelationship = ({
   );
 };
 
-class Relationships extends Component {
-  componentDidMount() {
-    const { dispatch, tableName } = this.props;
-    dispatch({ type: RESET });
+const Relationships = ({
+  tableName,
+  allSchemas,
+  ongoingRequest,
+  lastError,
+  lastFormError,
+  lastSuccess,
+  dispatch,
+  relAdd,
+  remoteSchemas,
+  manualRelAdd,
+  currentSchema,
+  migrationMode,
+  allFunctions,
+  schemaList,
+  readOnlyMode,
+  currentSource,
+}) => {
+  useEffect(() => {
+    dispatch(resetRelationshipForm());
     dispatch(setTable(tableName));
+  }, []);
+
+  const tableSchema = allSchemas.find(
+    t => t.table_name === tableName && t.table_schema === currentSchema
+  );
+
+  if (!isFeatureSupported('tables.relationships.enabled')) {
+    return (
+      <FeatureDisabled
+        tab="relationships"
+        tableName={tableName}
+        schemaName={currentSchema}
+      />
+    );
   }
 
-  render() {
-    const {
-      tableName,
-      allSchemas,
-      ongoingRequest,
-      lastError,
-      lastFormError,
-      lastSuccess,
-      dispatch,
-      relAdd,
-      manualRelAdd,
-      currentSchema,
-      migrationMode,
-      schemaList,
-    } = this.props;
-    const styles = require('../TableModify/ModifyTable.scss');
-    const tableStyles = require('../../../Common/TableCommon/TableStyles.scss');
+  if (!tableSchema && isFeatureSupported('tables.relationships.enabled')) {
+    // throw a 404 exception
+    throw new NotFoundError();
+  }
 
-    const tableSchema = allSchemas.find(
-      t => t.table_name === tableName && t.table_schema === currentSchema
+  let alert = null;
+  if (ongoingRequest) {
+    alert = (
+      <div className="hidden alert alert-warning" role="alert">
+        Saving...
+      </div>
     );
+  } else if (lastError) {
+    alert = (
+      <div className="hidden alert alert-danger" role="alert">
+        Error: {JSON.stringify(lastError)}
+      </div>
+    );
+  } else if (lastSuccess) {
+    alert = (
+      <div className="hidden alert alert-success" role="alert">
+        Saved!
+      </div>
+    );
+  } else if (lastFormError) {
+    alert = (
+      <div className="hidden alert alert-warning" role="alert">
+        {lastFormError}
+      </div>
+    );
+  }
 
-    if (!tableSchema) {
-      // throw a 404 exception
-      throw new NotFoundError();
+  const objArrRelList = getObjArrRelList(tableSchema.relationships);
+
+  let addedRelationshipsView = null;
+  if (objArrRelList.length > 0) {
+    addedRelationshipsView = (
+      <div className={tableStyles.tableContainer}>
+        <table
+          className={`${tableStyles.table} table table-bordered table-striped table-hover`}
+        >
+          <thead>
+            <tr>
+              {['Object relationships', 'Array relationships'].map((s, i) => (
+                <th key={i}>{s}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {objArrRelList.map(rel => {
+              const column1 = rel.objRel ? (
+                <RelationshipEditor
+                  dispatch={dispatch}
+                  key={rel.objRel.rel_name}
+                  readOnlyMode={readOnlyMode}
+                  relConfig={findAllFromRel(tableSchema, rel.objRel)}
+                />
+              ) : (
+                <td />
+              );
+              const column2 = rel.arrRel ? (
+                <RelationshipEditor
+                  key={rel.arrRel.rel_name}
+                  dispatch={dispatch}
+                  readOnlyMode={readOnlyMode}
+                  relConfig={findAllFromRel(tableSchema, rel.arrRel)}
+                />
+              ) : (
+                <td />
+              );
+              return (
+                <tr>
+                  {column1}
+                  {column2}
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    );
+  }
+
+  const getAddRelSection = () => {
+    if (readOnlyMode) {
+      return null;
     }
 
-    let alert = null;
-    if (ongoingRequest) {
-      alert = (
-        <div className="hidden alert alert-warning" role="alert">
-          Saving...
+    let addRelSection = null;
+
+    if (relAdd.isActive) {
+      addRelSection = (
+        <div className={styles.activeEdit}>
+          {isFeatureSupported('tables.relationships.track') && (
+            <AddRelationship
+              tableName={tableName}
+              currentSchema={currentSchema}
+              allSchemas={allSchemas}
+              cachedRelationshipData={relAdd}
+              dispatch={dispatch}
+            />
+          )}
+          <AddManualRelationship
+            tableSchema={tableSchema}
+            allSchemas={allSchemas}
+            schemaList={schemaList}
+            relAdd={manualRelAdd}
+            dispatch={dispatch}
+          />
         </div>
       );
-    } else if (lastError) {
-      alert = (
-        <div className="hidden alert alert-danger" role="alert">
-          Error: {JSON.stringify(lastError)}
-        </div>
-      );
-    } else if (lastSuccess) {
-      alert = (
-        <div className="hidden alert alert-success" role="alert">
-          Saved!
-        </div>
-      );
-    } else if (lastFormError) {
-      alert = (
-        <div className="hidden alert alert-warning" role="alert">
-          {lastFormError}
-        </div>
+    } else {
+      addRelSection = (
+        <Button
+          type="submit"
+          color="white"
+          size="sm"
+          onClick={() => {
+            dispatch(addNewRelClicked());
+          }}
+        >
+          + Add relationship
+        </Button>
       );
     }
 
-    const objArrRelList = getObjArrRelList(tableSchema.relationships);
+    return addRelSection;
+  };
 
-    let addedRelationshipsView = null;
-    if (objArrRelList.length > 0) {
-      addedRelationshipsView = (
-        <div className={tableStyles.tableContainer}>
-          <table
-            className={`${
-              tableStyles.table
-            } table table-bordered table-striped table-hover`}
-          >
-            <thead>
-              <tr>
-                {['Object relationships', 'Array relationships'].map((s, i) => (
-                  <th key={i}>{s}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {objArrRelList.map(rel => {
-                const column1 = rel.objRel ? (
-                  <RelationshipEditor
-                    dispatch={dispatch}
-                    key={rel.objRel.rel_name}
-                    relConfig={findAllFromRel(
-                      allSchemas,
-                      tableSchema,
-                      rel.objRel
-                    )}
-                  />
-                ) : (
-                  <td />
-                );
-                const column2 = rel.arrRel ? (
-                  <RelationshipEditor
-                    key={rel.arrRel.rel_name}
-                    dispatch={dispatch}
-                    relConfig={findAllFromRel(
-                      allSchemas,
-                      tableSchema,
-                      rel.arrRel
-                    )}
-                  />
-                ) : (
-                  <td />
-                );
-                return (
-                  <tr>
-                    {column1}
-                    {column2}
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      );
-    }
+  const existingRemoteRelationships = tableSchema.remote_relationships;
 
-    return (
+  return (
+    <RightContainer>
       <div className={`${styles.container} container-fluid`}>
         <TableHeader
           dispatch={dispatch}
           table={tableSchema}
+          source={currentSource}
           tabName="relationships"
           migrationMode={migrationMode}
         />
         <br />
         <div className={`${styles.padd_left_remove} container-fluid`}>
-          <div className={`${styles.padd_left_remove} col-xs-10 col-md-10`}>
-            <h4 className={styles.subheading_text}>Relationships</h4>
+          <div
+            className={`${styles.padd_left_remove} col-xs-10 col-md-10 ${styles.add_mar_bottom}`}
+          >
+            <h4 className={styles.subheading_text}>
+              Table Relationships
+              <ToolTip message={'Relationships to tables / views'} />
+              &nbsp;
+              <KnowMoreLink href="https://hasura.io/docs/latest/graphql/core/schema/table-relationships/index.html" />
+            </h4>
             {addedRelationshipsView}
-            <br />
-            {relAdd.isActive ? (
-              <div className={styles.activeEdit}>
-                <AddRelationship
-                  tableName={tableName}
-                  currentSchema={currentSchema}
-                  allSchemas={allSchemas}
-                  cachedRelationshipData={relAdd}
-                  dispatch={dispatch}
-                />
-                <hr />
-                <AddManualRelationship
-                  tableSchema={tableSchema}
-                  allSchemas={allSchemas}
-                  schemaList={schemaList}
-                  relAdd={manualRelAdd}
-                  dispatch={dispatch}
-                />
-              </div>
-            ) : (
-              <Button
-                type="submit"
-                color="white"
-                size="sm"
-                onClick={() => {
-                  dispatch(addNewRelClicked());
-                }}
-              >
-                + Add relationship
-              </Button>
-            )}
+            {getAddRelSection()}
           </div>
+          {isFeatureSupported('tables.relationships.remoteRelationships') ? (
+            <div className={`${styles.padd_left_remove} col-xs-10 col-md-10`}>
+              <RemoteRelationships
+                relationships={existingRemoteRelationships}
+                reduxDispatch={dispatch}
+                table={tableSchema}
+                allFunctions={allFunctions}
+                remoteSchemas={remoteSchemas}
+              />
+            </div>
+          ) : null}
         </div>
         <div className={`${styles.fixed} hidden`}>{alert}</div>
       </div>
-    );
-  }
-}
+    </RightContainer>
+  );
+};
 
 Relationships.propTypes = {
   tableName: PropTypes.string.isRequired,
@@ -479,23 +514,36 @@ Relationships.propTypes = {
   relAdd: PropTypes.object.isRequired,
   manualRelAdd: PropTypes.object.isRequired,
   migrationMode: PropTypes.bool.isRequired,
+  readOnlyMode: PropTypes.bool.isRequired,
   ongoingRequest: PropTypes.bool.isRequired,
   lastError: PropTypes.object,
   lastFormError: PropTypes.object,
+  allFunctions: PropTypes.array.isRequired,
   lastSuccess: PropTypes.bool,
   dispatch: PropTypes.func.isRequired,
-  serverVersion: PropTypes.string,
+  remoteSchemas: PropTypes.array.isRequired,
 };
 
-const mapStateToProps = (state, ownProps) => ({
-  tableName: ownProps.params.table,
-  allSchemas: state.tables.allSchemas,
-  currentSchema: state.tables.currentSchema,
-  migrationMode: state.main.migrationMode,
-  serverVersion: state.main.serverVersion,
-  schemaList: state.tables.schemaList,
-  ...state.tables.modify,
-});
+const mapStateToProps = (state, ownProps) => {
+  const {
+    nonTrackablePostgresFunctions: nonTrackableFns,
+    postgresFunctions: trackedFns,
+  } = state.tables;
+  return {
+    tableName: ownProps.params.table,
+    allSchemas: state.tables.allSchemas,
+    currentSchema: state.tables.currentSchema,
+    migrationMode: state.main.migrationMode,
+    readOnlyMode: state.main.readOnlyMode,
+    serverVersion: state.main.serverVersion,
+    schemaList: state.tables.schemaList,
+    allFunctions: nonTrackableFns?.concat(trackedFns ?? []) ?? [],
+    remoteSchemas: getRemoteSchemasSelector(state).map(schema => schema.name),
+    adminHeaders: state.tables.dataHeaders,
+    currentSource: state.tables.currentDataSource,
+    ...state.tables.modify,
+  };
+};
 
 const relationshipsConnector = connect =>
   connect(mapStateToProps)(Relationships);

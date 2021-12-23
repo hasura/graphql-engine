@@ -1,221 +1,338 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { connect } from 'react-redux';
 import { Link } from 'react-router';
-
-import LeftSubSidebar from '../../Common/Layout/LeftSubSidebar/LeftSubSidebar';
-import gqlPattern from './Common/GraphQLValidation';
-import GqlCompatibilityWarning from '../../Common/GqlCompatibilityWarning/GqlCompatibilityWarning';
+import { manageDatabasesRoute } from '../../Common/utils/routesUtils';
+import TreeView from './TreeView';
+import { getDatabaseTableTypeInfoForAllSources } from './DataActions';
+import { isInconsistentSource, getSourceDriver } from './utils';
+import { canReUseTableTypes } from './DataSources/utils';
+import { useDataSource } from '../../../dataSources';
 import {
-  displayTableName,
-  getFunctionName,
-  getSchemaTables,
-  getTableName,
-} from '../../Common/utils/pgUtils';
+  getDataSources,
+  getSourcesFromMetadata,
+  getTablesFromAllSources,
+} from '../../../metadata/selector';
 import {
-  getFunctionModifyRoute,
-  getSchemaAddTableRoute,
-  getTableBrowseRoute,
-} from '../../Common/utils/routesUtils';
+  updateCurrentSchema,
+  UPDATE_CURRENT_DATA_SOURCE,
+  fetchDataInit,
+} from './DataActions';
+import _push from './push';
+import Button from '../../Common/Button/Button';
+import styles from '../../Common/Layout/LeftSubSidebar/LeftSubSidebar.scss';
+import Spinner from '../../Common/Spinner/Spinner';
 
-class DataSubSidebar extends React.Component {
-  constructor() {
-    super();
+const DATA_SIDEBAR_SET_LOADING = 'dataSidebar/DATA_SIDEBAR_SET_LOADING';
 
-    this.state = {
-      searchInput: '',
-    };
+export const setSidebarLoading = isLoading => ({
+  type: DATA_SIDEBAR_SET_LOADING,
+  data: isLoading,
+});
 
-    this.tableSearch = this.tableSearch.bind(this);
+// initial state
+const sidebarState = {
+  loading: false,
+};
+
+/* Reducer */
+export const dataSidebarReducer = (state = sidebarState, action) => {
+  switch (action.type) {
+    case DATA_SIDEBAR_SET_LOADING:
+      return {
+        ...state,
+        loading: action.data,
+      };
+    default:
+      return state;
   }
+};
 
-  shouldComponentUpdate(nextProps) {
-    if (nextProps.metadata.ongoingRequest) {
-      return false;
+const groupByKey = (list, key) =>
+  list.reduce(
+    (hash, obj) => ({
+      ...hash,
+      [obj[key]]: (hash[obj[key]] || []).concat(obj),
+    }),
+    {}
+  );
+
+const DataSubSidebar = props => {
+  const {
+    migrationMode,
+    dispatch,
+    tables,
+    functions,
+    sources,
+    currentDataSource,
+    schemaList,
+    currentSchema,
+    enums,
+    inconsistentObjects,
+    allSourcesSchemas,
+    pathname,
+    dataSources,
+    sidebarLoadingState,
+    currentTable,
+  } = props;
+  const { setDriver } = useDataSource();
+
+  const [databaseLoading, setDatabaseLoading] = useState(false);
+  const [schemaLoading, setSchemaLoading] = useState(false);
+  const [isFetching, setIsFetching] = useState(false);
+  const [preLoadState, setPreLoadState] = useState(true);
+
+  const onDatabaseChange = newSourceName => {
+    if (newSourceName === currentDataSource) {
+      dispatch(_push(`/data/${newSourceName}/`));
+      return;
+    }
+    setDatabaseLoading(true);
+    const driver = getSourceDriver(dataSources, newSourceName);
+    dispatch({
+      type: UPDATE_CURRENT_DATA_SOURCE,
+      source: newSourceName,
+    });
+    dispatch(_push(`/data/${newSourceName}/`));
+    setDriver(driver);
+    dispatch(fetchDataInit(newSourceName, driver)).finally(() => {
+      setDatabaseLoading(false);
+    });
+  };
+
+  const onSchemaChange = value => {
+    if (value === currentSchema) {
+      dispatch(_push(`/data/${currentDataSource}/schema/${value}`));
+      return;
     }
 
-    return true;
-  }
+    setSchemaLoading(true);
+    dispatch(updateCurrentSchema(value, currentDataSource))
+      .then(() => {
+        if (value === currentSchema) {
+          dispatch(_push(`/data/${currentDataSource}/schema/${value}`));
+        }
+      })
+      .finally(() => {
+        setSchemaLoading(false);
+      });
+  };
 
-  tableSearch(e) {
-    const searchTerm = e.target.value;
+  const getItems = (schemaInfo = null) => {
+    let sourceItems = [];
+    sources.forEach(source => {
+      if (isInconsistentSource(source.name, inconsistentObjects)) return;
 
-    this.setState({
-      searchInput: searchTerm,
-    });
-  }
+      const sourceItem = { name: source.name, type: 'database' };
+      const sourceTables = !source.tables
+        ? []
+        : source.tables.map(data => {
+            const is_enum = data.is_enum ? true : false;
+            return {
+              name: data.table.name,
+              schema: data.table.schema,
+              type: 'table',
+              is_enum: is_enum,
+            };
+          });
+      const sourceFunctions = !source.functions
+        ? []
+        : source.functions.map(data => ({
+            name: data.function.name,
+            schema: data.function.schema,
+            type: 'function',
+          }));
 
-  render() {
-    const styles = require('../../Common/Layout/LeftSubSidebar/LeftSubSidebar.scss');
-    const functionSymbol = require('../../Common/Layout/LeftSubSidebar/function.svg');
-    const functionSymbolActive = require('../../Common/Layout/LeftSubSidebar/function_active.svg');
-    const {
-      currentTable,
-      currentSchema,
-      migrationMode,
-      location,
-      currentFunction,
-      trackedFunctions,
-      allSchemas,
-    } = this.props;
-
-    const { searchInput } = this.state;
-
-    const trackedTablesInSchema = getSchemaTables(
-      allSchemas,
-      currentSchema
-    ).filter(table => table.is_table_tracked);
-
-    const filteredTableList = trackedTablesInSchema.filter(t =>
-      getTableName(t).includes(searchInput)
-    );
-
-    const filteredFunctionsList = trackedFunctions.filter(f =>
-      getFunctionName(f).includes(searchInput)
-    );
-
-    const getSearchInput = () => {
-      return (
-        <input
-          type="text"
-          onChange={this.tableSearch}
-          className="form-control"
-          placeholder={'search table/view/function'}
-          data-test="search-tables"
-        />
+      const schemaGroups = groupByKey(
+        [...sourceTables, ...sourceFunctions],
+        'schema'
       );
-    };
 
-    const getChildList = () => {
-      let childList;
+      // Find out the difference between schemas from metadata and SchemaList from state
+      const schemasFromMetadata = Array.from(
+        new Set([
+          ...sourceTables.map(i => i.schema),
+          ...sourceFunctions.map(i => i.schema),
+        ])
+      );
+      const missingSchemas = schemaList.filter(
+        x => !schemasFromMetadata.includes(x)
+      );
 
-      const currentLocation = location.pathname;
-
-      let tableLinks;
-      if (filteredTableList && filteredTableList.length) {
-        const filteredTablesObject = {};
-        filteredTableList.forEach(t => {
-          filteredTablesObject[getTableName(t)] = t;
+      let schemaItems = [];
+      Object.keys(schemaGroups).forEach(schema => {
+        const schemaItem = { name: schema, type: 'schema' };
+        const tableItems = [];
+        schemaGroups[schema].forEach(table => {
+          const is_view =
+            schemaInfo?.[source.name]?.[schema]?.[table.name]?.table_type ===
+              'view' ||
+            schemaInfo?.[source.name]?.[schema]?.[table.name]?.table_type ===
+              'materialized_view';
+          let type = table.type;
+          if (is_view) type = 'view';
+          if (table.is_enum) type = 'enum';
+          tableItems.push({
+            name: table.name,
+            type: type,
+          });
         });
+        schemaItem.children = tableItems;
+        schemaItems = [...schemaItems, schemaItem];
+      });
 
-        const sortedTableNames = Object.keys(filteredTablesObject).sort();
+      sourceItem.children = schemaItems;
 
-        tableLinks = sortedTableNames.map((tableName, i) => {
-          const table = filteredTablesObject[tableName];
-
-          const isActive =
-            tableName === currentTable && currentLocation.includes(tableName);
-
-          let gqlCompatibilityWarning = null;
-          if (!gqlPattern.test(tableName)) {
-            gqlCompatibilityWarning = (
-              <span className={styles.add_mar_left_mid}>
-                <GqlCompatibilityWarning />
-              </span>
-            );
-          }
-
-          return (
-            <li
-              className={isActive ? styles.activeLink : ''}
-              key={'table ' + i}
-            >
-              <Link to={getTableBrowseRoute(table)} data-test={tableName}>
-                <i
-                  className={styles.tableIcon + ' fa fa-table'}
-                  aria-hidden="true"
-                />
-                {displayTableName(table)}
-              </Link>
-              {gqlCompatibilityWarning}
-            </li>
-          );
-        });
-      } else {
-        tableLinks = [
-          <li className={styles.noChildren} key="no-tables-1">
-            <i>No tables/views available</i>
-          </li>,
+      if (source.name === currentDataSource) {
+        sourceItem.children = [
+          ...missingSchemas.map(schemaName => ({
+            name: schemaName,
+            type: 'schema',
+            children: [],
+          })),
+          ...sourceItem.children,
         ];
       }
 
-      const dividerHr = [
-        <li key={'fn-divider-1'}>
-          <hr className={styles.tableFunctionDivider} />
-        </li>,
-      ];
+      sourceItems = [...sourceItems, sourceItem];
+    });
+    return sourceItems;
+  };
 
-      if (filteredFunctionsList && filteredFunctionsList.length > 0) {
-        const filteredFunctionsObject = {};
-        filteredFunctionsList.forEach(f => {
-          filteredFunctionsObject[getFunctionName(f)] = f;
-        });
+  const [treeViewItems, setTreeViewItems] = useState([]);
 
-        const sortedFunctionNames = Object.keys(filteredFunctionsObject).sort();
+  useEffect(() => {
+    // skip api call, if the data is there in store
+    if (canReUseTableTypes(allSourcesSchemas, sources)) {
+      const newItems = getItems(allSourcesSchemas);
+      if (isFetching) setIsFetching(false);
+      if (preLoadState) setPreLoadState(false);
+      return setTreeViewItems(newItems);
+    }
 
-        const functionLinks = sortedFunctionNames.map((funcName, i) => {
-          const func = filteredFunctionsObject[funcName];
+    const schemaRequests = [];
+    sources.forEach(source => {
+      const currentSourceTables = sources
+        .filter(i => i.name === source.name)[0]
+        .tables.map(t => t.table);
+      schemaRequests.push({
+        sourceType: source.kind,
+        sourceName: source.name,
+        tables: currentSourceTables,
+      });
+    });
+    setIsFetching(true);
 
-          const isActive =
-            funcName === currentFunction && currentLocation.includes(funcName);
+    if (schemaRequests.length === 0) {
+      setIsFetching(false);
+      setPreLoadState(false);
+      return;
+    }
 
-          return (
-            <li className={isActive ? styles.activeLink : ''} key={'fn ' + i}>
-              <Link to={getFunctionModifyRoute(func)} data-test={funcName}>
-                <img
-                  src={isActive ? functionSymbolActive : functionSymbol}
-                  className={styles.functionIcon}
-                />
-                <span>{funcName}</span>
-              </Link>
-            </li>
-          );
-        });
-
-        childList = [...tableLinks, ...dividerHr, ...functionLinks];
-      } else if (
-        trackedFunctions.length > 0 &&
-        filteredFunctionsList.length === 0
-      ) {
-        const noFunctionsMsg = [
-          <li className={styles.noChildren} key="no-fns-1">
-            <i>No matching functions available</i>
-          </li>,
-        ];
-
-        childList = [...tableLinks, ...dividerHr, ...noFunctionsMsg];
-      } else {
-        childList = [...tableLinks];
+    dispatch(getDatabaseTableTypeInfoForAllSources(schemaRequests)).then(
+      schemaInfo => {
+        setIsFetching(false);
+        setPreLoadState(false);
+        const newItems = getItems(schemaInfo);
+        setTreeViewItems(newItems);
       }
-
-      return childList;
-    };
-
-    return (
-      <LeftSubSidebar
-        showAddBtn={migrationMode}
-        searchInput={getSearchInput()}
-        heading={`Tables (${trackedTablesInSchema.length})`}
-        addLink={getSchemaAddTableRoute(currentSchema)}
-        addLabel={'Add Table'}
-        addTestString={'sidebar-add-table'}
-        childListTestString={'table-links'}
-      >
-        {getChildList()}
-      </LeftSubSidebar>
     );
-  }
-}
+  }, [sources.length, tables, functions, enums, schemaList, currentTable]);
+
+  const databasesCount = treeViewItems?.length || 0;
+
+  return (
+    <div className={`${styles.subSidebarList} ${styles.padd_top_small}`}>
+      <div className={styles.sidebarHeadingWrapper}>
+        <div
+          className={`col-xs-8 ${styles.sidebarHeading} ${styles.padd_left_remove}`}
+        >
+          <div
+            className={`${styles.padd_top_small} ${styles.inline_display} ${styles.display_flex} ${styles.align_items_center}`}
+          >
+            <div>Databases ({databasesCount})</div>
+            {schemaLoading ||
+            databaseLoading ||
+            sidebarLoadingState ||
+            isFetching ? (
+              <div className={styles.inline_display}>
+                <Spinner className={styles.spinner} />
+              </div>
+            ) : (
+              <i
+                className={`fa fa-check-circle ${styles.padd_left_sm} ${styles.color_green}`}
+                aria-hidden="true"
+              />
+            )}
+          </div>
+        </div>
+        {migrationMode && (
+          <div
+            className={`col-xs-4 text-center ${styles.padd_left_remove} ${styles.sidebarCreateTable}`}
+          >
+            <Link className={styles.padd_remove_full} to={manageDatabasesRoute}>
+              <Button
+                size="xs"
+                color="white"
+                data-test="sidebar-manage-database"
+              >
+                Manage
+              </Button>
+            </Link>
+          </div>
+        )}
+      </div>
+      <ul className={styles.subSidebarListUL} data-test="table-links">
+        <div
+          style={
+            // // block sidebar interaction during data fetch
+            // schemaLoading ||
+            // databaseLoading ||
+            // sidebarLoadingState ||
+            // isFetching ?
+            //   {
+            //     pointerEvents: 'none',
+            //     cursor: 'progress',
+            //   } :
+            { pointerEvents: 'auto' }
+          }
+        >
+          <TreeView
+            items={treeViewItems}
+            onDatabaseChange={onDatabaseChange}
+            onSchemaChange={onSchemaChange}
+            currentDataSource={currentDataSource}
+            currentSchema={currentSchema}
+            pathname={pathname}
+            databaseLoading={databaseLoading}
+            preLoadState={preLoadState}
+          />
+        </div>
+      </ul>
+    </div>
+  );
+};
 
 const mapStateToProps = state => {
   return {
     migrationMode: state.main.migrationMode,
-    trackedFunctions: state.tables.trackedFunctions,
-    currentFunction: state.functions.functionName,
-    allSchemas: state.tables.allSchemas,
-    currentTable: state.tables.currentTable,
+    sources: getSourcesFromMetadata(state),
+    inconsistentObjects: state.metadata.inconsistentObjects,
+    tables: getTablesFromAllSources(state).flat().length,
+    enums: getSourcesFromMetadata(state)
+      .map(s => s.tables)
+      .flat()
+      .filter(item => item.hasOwnProperty('is_enum')).length,
+    functions: getSourcesFromMetadata(state)
+      .map(s => s.functions || [])
+      .flat().length,
+    currentDataSource: state.tables.currentDataSource,
     currentSchema: state.tables.currentSchema,
-    serverVersion: state.main.serverVersion ? state.main.serverVersion : '',
-    metadata: state.metadata,
+    currentTable: state.tables.currentTable,
+    schemaList: state.tables.schemaList,
+    allSourcesSchemas: state.tables?.allSourcesSchemas,
+    pathname: state?.routing?.locationBeforeTransitions?.pathname,
+    dataSources: getDataSources(state),
+    sidebarLoadingState: state.dataSidebar.loading,
   };
 };
 

@@ -6,11 +6,11 @@ response:
     AddArticles:
       affected_rows: 2
       returning:
-      - content: Content for Article 4
+      - title: Article 4 by new author
+        content: Content for Article 4
         author:
           AuthorId: 3
           name: Author 3
-        title: Article 4 by new author
 query:
   query: |
     mutation {

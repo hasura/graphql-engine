@@ -1,0 +1,309 @@
+type: bulk
+args:
+
+- type: run_sql
+  args:
+    sql: |
+      CREATE TABLE "user"(
+        id SERIAL PRIMARY KEY,
+        name TEXT NOT NULL,
+        email TEXT NOT NULL,
+        is_admin BOOLEAN NOT NULL DEFAULT false
+      );
+      CREATE TABLE "article"(
+        id SERIAL PRIMARY KEY,
+        name TEXT NOT NULL,
+        user_id INTEGER
+      );
+      INSERT INTO "article" (name, user_id) VALUES
+        ('foo', 1),
+        ('bar', 1),
+        ('bar', 1),
+        ('baz', 2);
+
+- type: track_table
+  args:
+    name: user
+    schema: public
+
+- type: track_table
+  args:
+    name: article
+    schema: public
+
+- type: set_custom_types
+  args:
+    input_objects:
+    - name: UserInput
+      fields:
+      - name: name
+        type: String!
+      - name: email
+        type: String!
+      - name: parent
+        type: UserInput
+
+    - name: InObject
+      fields:
+      - name: id
+        type: ID
+      - name: name
+        type: String
+      - name: age
+        type: Int
+
+    - name: IntentionalErrorInput
+      fields:
+      - name: message
+        type: String!
+      - name: code
+        type: String
+      - name: extensions
+        type: json
+
+    objects:
+    - name: UserId
+      fields:
+      - name: id
+        type: Int!
+      relationships:
+      - name: user
+        type: object
+        remote_table: user
+        field_mapping:
+          id: id
+      - name: articles
+        type: array
+        remote_table: article
+        field_mapping:
+          id: user_id
+
+    - name: UserId2
+      fields:
+      - name: id
+        type: Int!
+
+    - name: OutObject
+      fields:
+      - name: id
+        type: ID! # For issue https://github.com/hasura/graphql-engine/issues/4061
+      - name: name
+        type: String
+
+    - name: Address
+      fields:
+      - name: city
+        type: String
+      - name: country
+        type: String
+
+    - name: NestedOutObject
+      fields:
+      - name: id
+        type: Int!
+      - name: user_id
+        type: UserId2
+      - name: address
+        type: Address
+      - name: addresses
+        type: '[Address]'
+
+    - name: DirectRecursiveType
+      fields:
+      - name: id
+        type: Int!
+      - name: this
+        type: DirectRecursiveType
+
+    - name: ListRecursiveType
+      fields:
+      - name: id
+        type: Int!
+      - name: these
+        type: '[ListRecursiveType]'
+
+    - name: MutuallyRecursiveTypeA
+      fields:
+      - name: id
+        type: Int!
+      - name: that
+        type: MutuallyRecursiveTypeB
+
+    - name: MutuallyRecursiveTypeB
+      fields:
+      - name: id
+        type: Int!
+      - name: other
+        type: MutuallyRecursiveTypeA
+
+    - name: Recursive
+      fields:
+      - name: direct
+        type: DirectRecursiveType
+      - name: list
+        type: ListRecursiveType
+      - name: mutual
+        type: MutuallyRecursiveTypeA
+
+    - name: NullableResp
+      fields:
+      - name: id
+        type: Int
+
+- type: create_action
+  args:
+    name: create_user
+    definition:
+      kind: synchronous
+      arguments:
+      - name: email
+        type: String!
+      - name: name
+        type: String!
+      output_type: UserId
+      handler: http://127.0.0.1:5593/create-user
+
+- type: create_action
+  args:
+    name: create_users
+    definition:
+      kind: synchronous
+      arguments:
+      - name: users
+        type: '[UserInput!]!'
+      output_type: '[UserId]'
+      handler: http://127.0.0.1:5593/create-users
+
+- type: create_action
+  args:
+    name: mirror
+    definition:
+      kind: synchronous
+      arguments:
+      - name: arg
+        type: InObject!
+      output_type: OutObject
+      handler: http://127.0.0.1:5593/mirror-action
+
+- type: create_action
+  args:
+    name: mirror_transformed
+    definition:
+      kind: synchronous
+      arguments:
+      - name: arg
+        type: InObject!
+      output_type: OutObject
+      handler: http://127.0.0.1:5593/mirror-action
+
+- type: update_action
+  args:
+    name: mirror_transformed
+    definition:
+      kind: synchronous
+      arguments:
+      - name: arg
+        type: InObject!
+      output_type: OutObject
+      handler: http://127.0.0.1:5593/mirror-action
+      request_transform:
+        template_engine: Kriti
+        body: |
+          {
+            "input": {
+              "arg": {
+                "id": {{ $body.input.arg.name }},
+                "name": {{ $body.input.arg.id }}
+              }
+            }
+          }
+
+- type: create_action
+  args:
+    name: get_user_by_email
+    definition:
+      type: query
+      arguments:
+      - name: email
+        type: String!
+      output_type: UserId!
+      handler: http://127.0.0.1:5593/get-user-by-email
+
+- type: create_action
+  args:
+    name: get_user_by_email_nested
+    definition:
+      type: query
+      arguments:
+      - name: email
+        type: String!
+      output_type: NestedOutObject!
+      handler: http://127.0.0.1:5593/get-user-by-email-nested
+
+- type: create_action
+  args:
+    name: get_users_by_email
+    definition:
+      type: query
+      arguments:
+      - name: email
+        type: String!
+      output_type: '[UserId]!'
+      handler: http://127.0.0.1:5593/get-users-by-email
+
+- type: create_action
+  args:
+    name: get_users_by_email_nested
+    definition:
+      type: query
+      arguments:
+      - name: email
+        type: String!
+      output_type: '[NestedOutObject]!'
+      handler: http://127.0.0.1:5593/get-users-by-email-nested
+
+- type: create_action
+  args:
+    name: intentional_error
+    definition:
+      type: query
+      arguments:
+      - name: blob
+        type: IntentionalErrorInput!
+      # this can be anything, since this action never succeeds
+      output_type: '[UserId]!'
+      handler: http://127.0.0.1:5593/intentional-error
+
+- type: create_action
+  args:
+    name: null_response
+    definition:
+      kind: synchronous
+      arguments:
+      output_type: NullableResp
+      handler: http://127.0.0.1:5593/null-response
+
+- type: create_select_permission
+  args:
+    table: user
+    role: user
+    permission:
+      columns:
+        - id
+        - name
+        - email
+      filter:
+        id: X-Hasura-User-Id
+
+- type: create_action_permission
+  args:
+    action: get_user_by_email
+    role: user
+
+- type: create_action
+  args:
+    name: recursive_output
+    definition:
+      type: query
+      output_type: Recursive
+      handler: http://127.0.0.1:5593/recursive-output

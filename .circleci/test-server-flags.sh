@@ -24,7 +24,7 @@ fail_if_port_busy() {
 wait_for_port() {
     local PORT=$1
     echo "waiting for $PORT"
-    for _ in $(seq 1 30);
+    for _ in $(seq 1 60);
     do
       nc -z localhost $PORT && echo "port $PORT is ready" && return
       echo -n .
@@ -41,17 +41,6 @@ cd $SERVER_ROOT
 
 if [ -z "${HASURA_GRAPHQL_DATABASE_URL:-}" ] ; then
 	echo "Env var HASURA_GRAPHQL_DATABASE_URL is not set"
-	exit 1
-fi
-
-if ! stack --allow-different-user exec -- which graphql-engine > /dev/null && [ -z "${GRAPHQL_ENGINE:-}" ] ; then
-	echo "Do 'stack build' before tests, or export the location of executable in the GRAPHQL_ENGINE envirnoment variable"
-	exit 1
-fi
-
-GRAPHQL_ENGINE=${GRAPHQL_ENGINE:-"$(stack --allow-different-user exec -- which graphql-engine)"}
-if ! [ -x "$GRAPHQL_ENGINE" ] ; then
-	echo "$GRAPHQL_ENGINE is not present or is not an executable"
 	exit 1
 fi
 
@@ -76,6 +65,19 @@ trap kill_hge INT
 OUTPUT_FOLDER=${OUTPUT_FOLDER:-"$CIRCLECI_FOLDER/test-server-flags-output"}
 mkdir -p "$OUTPUT_FOLDER"
 
+
+########## Test that we didn't compile with +developer by accident
+echoInfo "Test we didn't compile in the developer-only APIs"
+
+run_hge_with_flags
+
+code=$(curl -s -o /dev/null -w "%{http_code}"  http://localhost:8080/dev/plan_cache)
+if [ "$code" != "404" ]; then
+  echo "Expected a dev endpoint to return 404, but got: $code"
+  exit 1
+fi
+
+kill_hge
 
 ########## Test --use-prepared-statements=false and flag --admin-secret
 

@@ -3,8 +3,10 @@ url: /v1/graphql
 response:
   data:
     update_person:
+      affected_rows: 1
       returning:
-      - details:
+      - id: 2
+        details:
         - university:
             name: Sydney university
         - address:
@@ -13,8 +15,6 @@ response:
         - address:
             country: United Kingdom
             city: Canterbury
-        id: 2
-      affected_rows: 1
 status: 200
 query:
   variables:

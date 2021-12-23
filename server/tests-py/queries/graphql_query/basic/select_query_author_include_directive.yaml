@@ -1,0 +1,36 @@
+- url: /v1/graphql
+  status: 200
+  query:
+    query: |
+      query author_with_include($includeId: Boolean!, $includeName: Boolean!) {
+        author {
+          id @include(if: $includeId)
+          name @include(if: $includeName)
+        }
+      }
+    variables:
+      includeId: true
+      includeName: false
+  response:
+    data:
+      author:
+      - id: 1
+      - id: 2
+- url: /v1/graphql
+  status: 200
+  query:
+    query: |
+      query author_with_include($includeId: Boolean!, $includeName: Boolean!) {
+        author {
+          id @include(if: $includeId)
+          name @include(if: $includeName)
+        }
+      }
+    variables:
+      includeId: false
+      includeName: true
+  response:
+    data:
+      author:
+      - name: Author 1
+      - name: Author 2

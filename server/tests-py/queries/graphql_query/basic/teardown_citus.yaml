@@ -1,0 +1,54 @@
+type: bulk
+args:
+
+# untrack tables
+- type: citus_untrack_table
+  args:
+    source: citus
+    table:
+      name: test_types
+    cascade: true
+
+- type: citus_untrack_table
+  args:
+    source: citus
+    table:
+      name: author
+    cascade: true
+
+- type: citus_untrack_table
+  args:
+    source: citus
+    table:
+      name: article
+    cascade: true
+
+- type: citus_untrack_table
+  args:
+    source: citus
+    table:
+      name: user
+    cascade: true
+
+- type: citus_untrack_table
+  args:
+    source: citus
+    table:
+      name: person
+    cascade: true
+
+- type: citus_untrack_table
+  args:
+    source: citus
+    schema: public
+    table:
+      name: author_multi
+    cascade: true
+
+- type: citus_untrack_table
+  args:
+    source: citus
+    schema: public
+    table:
+      name: article_multi
+    cascade: true

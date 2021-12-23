@@ -104,8 +104,6 @@
   response:
     message: success
   query:
-  query:
-  query:
     type: drop_relationship
     args:
       table: article

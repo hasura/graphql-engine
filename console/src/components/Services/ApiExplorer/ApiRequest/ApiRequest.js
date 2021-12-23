@@ -1,12 +1,10 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
-
 import jwt from 'jsonwebtoken';
 
 import TextAreaWithCopy from '../../../Common/TextAreaWithCopy/TextAreaWithCopy';
-import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
-import Tooltip from 'react-bootstrap/lib/Tooltip';
 import Modal from '../../../Common/Modal/Modal';
+import Tooltip from '../../../Common/Tooltip/Tooltip';
 
 import {
   changeRequestHeader,
@@ -15,9 +13,11 @@ import {
   unfocusTypingHeader,
   verifyJWTToken,
   setHeadersBulk,
+  switchGraphiQLMode,
 } from '../Actions';
 
 import GraphiQLWrapper from '../GraphiQLWrapper/GraphiQLWrapper';
+import Toggle from '../../../Common/Toggle/Toggle';
 
 import CollapsibleToggle from '../../../Common/CollapsibleToggle/CollapsibleToggle';
 
@@ -33,22 +33,36 @@ import {
   getAdminSecret,
   getPersistedAdminSecretHeaderWasAdded,
   persistAdminSecretHeaderWasAdded,
+  removePersistedAdminSecretHeaderWasAdded,
+  persistGraphiQLMode,
 } from './utils';
+import { getGraphQLEndpoint } from '../utils';
 
 import styles from '../ApiExplorer.scss';
-import { ADMIN_SECRET_HEADER_KEY } from '../../../../constants';
-
-const inspectJWTTooltip = (
-  <Tooltip id="tooltip-inspect-jwt">Decode JWT</Tooltip>
-);
-
-const jwtValidityStatus = message => (
-  <Tooltip id="tooltip-jwt-validity-status">{message}</Tooltip>
-);
+import {
+  getLSItem,
+  removeLSItem,
+  LS_KEYS,
+} from '../../../../utils/localStorage';
+import {
+  ADMIN_SECRET_HEADER_KEY,
+  HASURA_CLIENT_NAME,
+  HASURA_COLLABORATOR_TOKEN,
+} from '../../../../constants';
 
 /* When the page is loaded for the first time, hydrate the header state from the localStorage
  * Keep syncing the localStorage state when user modifies.
  * */
+
+const ActionIcon = ({ message, dataHeaderID }) => (
+  <Tooltip placement="left" message={message}>
+    <i
+      className={`${styles.headerInfoIcon} fa fa-question-circle`}
+      data-header-id={dataHeaderID}
+      aria-hidden="true"
+    />
+  </Tooltip>
+);
 
 class ApiRequest extends Component {
   constructor(props) {
@@ -69,9 +83,9 @@ class ApiRequest extends Component {
     };
 
     if (this.props.numberOfTables !== 0) {
-      const graphqlQueryInLS = window.localStorage.getItem('graphiql:query');
+      const graphqlQueryInLS = getLSItem(LS_KEYS.graphiqlQuery);
       if (graphqlQueryInLS && graphqlQueryInLS.indexOf('do not have') !== -1) {
-        window.localStorage.removeItem('graphiql:query');
+        removeLSItem(LS_KEYS.graphiqlQuery);
       }
     }
 
@@ -90,6 +104,7 @@ class ApiRequest extends Component {
       if (adminSecret && !adminSecretHeaderWasAdded) {
         const headerKeys = graphiqlHeaders.map(h => h.key);
 
+        // add admin secret header if not present
         if (!headerKeys.includes(ADMIN_SECRET_HEADER_KEY)) {
           graphiqlHeaders.push({
             key: ADMIN_SECRET_HEADER_KEY,
@@ -102,6 +117,22 @@ class ApiRequest extends Component {
 
         // set in local storage that admin secret header has been automatically added
         persistAdminSecretHeaderWasAdded();
+      }
+
+      // if admin secret is not set and admin secret header was ever added to headers, remove admin secret header if present
+      if (!adminSecret && adminSecretHeaderWasAdded) {
+        const headerKeys = graphiqlHeaders.map(h => h.key);
+
+        // remove admin secret header if present
+        const adminSecretHeaderIndex = headerKeys.indexOf(
+          ADMIN_SECRET_HEADER_KEY
+        );
+        if (adminSecretHeaderIndex >= 0) {
+          graphiqlHeaders.splice(adminSecretHeaderIndex, 1);
+        }
+
+        // remove from local storage that admin secret header has been automatically added
+        removePersistedAdminSecretHeaderWasAdded();
       }
 
       // add an empty placeholder header
@@ -189,6 +220,7 @@ class ApiRequest extends Component {
   }
 
   render() {
+    const { mode, dispatch, loading } = this.props;
     const { isAnalyzingToken, tokenInfo, analyzingHeaderRow } = this.state;
 
     const { is_jwt_set: isJWTSet = false } = this.props.serverConfig;
@@ -209,6 +241,13 @@ class ApiRequest extends Component {
         this.setState({ endpointSectionIsOpen: newIsOpen });
       };
 
+      const toggleGraphiqlMode = () => {
+        if (loading) return;
+        const newMode = mode === 'relay' ? 'graphql' : 'relay';
+        persistGraphiQLMode(newMode);
+        dispatch(switchGraphiQLMode(newMode));
+      };
+
       return (
         <CollapsibleToggle
           title={'GraphQL Endpoint'}
@@ -226,30 +265,43 @@ class ApiRequest extends Component {
               styles.stickyHeader
             }
           >
-            <div className={'col-xs-12 ' + styles.padd_remove}>
-              <div
-                className={
-                  'input-group ' +
-                  styles.inputGroupWrapper +
-                  ' ' +
-                  styles.cursorNotAllowed
-                }
-              >
-                <div className={'input-group-btn ' + styles.inputGroupBtn}>
-                  <button type="button" className={'btn btn-default'}>
-                    {this.props.method}
-                  </button>
-                </div>
+            <div className={'flex mb-md'}>
+              <div className="flex items-center w-full">
+                <button
+                  type="button"
+                  className="inline-flex cursor-default h-input font-semibold items-center px-3 rounded-l border border-r-0 border-gray-300 bg-gray-50"
+                >
+                  {this.props.method}
+                </button>
                 <input
-                  onChange={this.onUrlChanged}
-                  value={this.props.url || ''}
+                  value={getGraphQLEndpoint(mode)}
                   type="text"
                   readOnly
-                  className={styles.inputGroupInput + ' form-control '}
+                  className="flex-1 min-w-0 block w-full px-3 py-2 h-input rounded-r border-gray-300"
+                />
+              </div>
+
+              <div
+                className="flex items-center ml-md cursor-pointer"
+                onClick={toggleGraphiqlMode}
+              >
+                <Toggle
+                  checked={mode === 'relay'}
+                  className={`${styles.display_flex} ${styles.add_mar_right_mid}`}
+                  readOnly
+                  disabled={loading}
+                  icons={false}
+                />
+                <span className="whitespace-nowrap">Relay API</span>
+                <Tooltip
+                  id="relay-mode-toggle"
+                  placement="left"
+                  message={
+                    'Toggle to point this GraphiQL to a relay-compliant GraphQL API served at /v1beta1/relay'
+                  }
                 />
               </div>
             </div>
-            <div className={styles.stickySeparator} />
           </div>
         </CollapsibleToggle>
       );
@@ -292,29 +344,36 @@ class ApiRequest extends Component {
           const isAdminSecret =
             header.key.toLowerCase() === ADMIN_SECRET_HEADER_KEY;
 
+          const consoleId = window.__env.consoleId;
+
+          const isClientName =
+            header.key.toLowerCase() === HASURA_CLIENT_NAME && consoleId;
+
+          const isCollaboratorToken =
+            header.key.toLowerCase() === HASURA_COLLABORATOR_TOKEN && consoleId;
+
           const getHeaderActiveCheckBox = () => {
             let headerActiveCheckbox = null;
 
             if (!header.isNewHeader) {
               headerActiveCheckbox = (
-                <td>
+                <td className="text-center">
                   <input
                     type="checkbox"
                     name="sponsored"
-                    className={styles.common_checkbox + ' common_checkbox'}
+                    style={{ marginTop: '4px' }}
+                    className="legacy-input-fix"
                     id={i + 1}
                     checked={header.isActive}
                     data-header-id={i}
                     onChange={onHeaderValueChanged}
                     data-element-name="isActive"
                   />
-                  <label
-                    htmlFor={i + 1}
-                    className={
-                      styles.common_checkbox_label + ' common_checkbox_label'
-                    }
-                  />
                 </td>
+              );
+            } else {
+              headerActiveCheckbox = (
+                <td className="border-t border-gray-200" />
               );
             }
 
@@ -328,22 +387,15 @@ class ApiRequest extends Component {
           const getHeaderKey = () => {
             let className = '';
             if (header.isNewHeader) {
-              className =
-                styles.border_right +
-                ' ' +
-                styles.tableTdLeft +
-                ' ' +
-                styles.borderTop +
-                ' ' +
-                styles.tableEnterKey;
+              className = 'border-r border-t border-gray-200';
             } else {
-              className = styles.border_right;
+              className = 'border-r border-gray-200';
             }
 
             return (
-              <td colSpan={getColSpan()} className={className}>
+              <td className={className}>
                 <input
-                  className={'form-control ' + styles.responseTableInput}
+                  className="w-full border-0 outline-none focus:ring-0 focus:outline-none"
                   value={header.key || ''}
                   disabled={header.isDisabled === true}
                   data-header-id={i}
@@ -362,12 +414,7 @@ class ApiRequest extends Component {
           const getHeaderValue = () => {
             let className = '';
             if (header.isNewHeader) {
-              className =
-                styles.borderTop +
-                ' ' +
-                styles.tableEnterKey +
-                ' ' +
-                styles.tableLastTd;
+              className = 'border-t border-gray-200';
             }
 
             let type = 'text';
@@ -378,7 +425,7 @@ class ApiRequest extends Component {
             return (
               <td colSpan={getColSpan()} className={className}>
                 <input
-                  className={'form-control ' + styles.responseTableInput}
+                  className="w-full border-0 focus:ring-0 focus:outline-none"
                   value={header.value || ''}
                   disabled={header.isDisabled === true}
                   data-header-id={i}
@@ -399,12 +446,18 @@ class ApiRequest extends Component {
 
             if (isAdminSecret) {
               headerAdminVal = (
-                <i
-                  className={styles.showAdminSecret + ' fa fa-eye'}
-                  data-header-id={i}
-                  aria-hidden="true"
-                  onClick={onShowAdminSecretClicked}
-                />
+                <Tooltip
+                  id="admin-secret-show"
+                  placement="left"
+                  message="Show admin secret"
+                >
+                  <i
+                    className="cursor-pointer mr-md fa fa-eye"
+                    data-header-id={i}
+                    aria-hidden="true"
+                    onClick={onShowAdminSecretClicked}
+                  />
+                </Tooltip>
               );
             }
 
@@ -422,16 +475,12 @@ class ApiRequest extends Component {
 
               if (isAnalyzingToken && analyzingHeaderRow === i) {
                 analyzeIcon = (
-                  <i
-                    className={
-                      styles.showInspectorLoading + ' fa fa-spinner fa-spin'
-                    }
-                  />
+                  <i className="cursor-pointer mr-md fa fa-spinner fa-spin" />
                 );
               } else {
                 analyzeIcon = (
                   <i
-                    className={styles.showInspector + ' fa fa-user-secret'}
+                    className="cursor-pointer mr-md fa fa-user-secret"
                     token={token}
                     data-header-index={i}
                     onClick={this.analyzeBearerToken}
@@ -444,9 +493,13 @@ class ApiRequest extends Component {
 
             if (isAuthHeader && isJWTSet) {
               inspectorIcon = (
-                <OverlayTrigger placement="top" overlay={inspectJWTTooltip}>
+                <Tooltip
+                  id="tooltip-inspect-jwt"
+                  message="Decode JWT"
+                  placement="left"
+                >
                   {getAnalyzeIcon()}
-                </OverlayTrigger>
+                </Tooltip>
               );
             }
 
@@ -456,7 +509,7 @@ class ApiRequest extends Component {
           const getHeaderRemoveBtn = () => {
             return (
               <i
-                className={styles.closeHeader + ' fa fa-times'}
+                className="cursor-pointer mr-md fa fa-times"
                 data-header-id={i}
                 aria-hidden="true"
                 onClick={onDeleteHeaderClicked}
@@ -469,10 +522,22 @@ class ApiRequest extends Component {
 
             if (!header.isNewHeader) {
               headerActions = (
-                <td>
+                <td className="text-right">
                   {getHeaderAdminVal()}
                   {getJWTInspectorIcon()}
                   {getHeaderRemoveBtn()}
+                  {isClientName && (
+                    <ActionIcon
+                      message="Hasura client name is a header that indicates where the request is being made from. This is used by GraphQL Engine for providing detailed metrics."
+                      dataHeaderID={i}
+                    />
+                  )}
+                  {isCollaboratorToken && (
+                    <ActionIcon
+                      message="Hasura collaborator token is an admin-secret alternative when you login using Hasura. This is used by GraphQL Engine to authorise your requests."
+                      dataHeaderID={i}
+                    />
+                  )}
                 </td>
               );
             }
@@ -507,29 +572,25 @@ class ApiRequest extends Component {
           toggleHandler={toggleHandler}
           useDefaultTitleStyle
         >
-          <div className={styles.responseTable + ' ' + styles.remove_all_pad}>
-            <table className={'table ' + styles.tableBorder}>
+          <div className="mt-md overflow-x-auto border border-gray-300 rounded">
+            <table className="min-w-full divide-y divide-gray-200">
               <thead>
-                <tr>
-                  <th className={styles.wd4 + ' ' + styles.headerHeading} />
+                <tr className="bg-gray-50">
                   <th
-                    className={
-                      styles.wd48 +
-                      ' ' +
-                      styles.border_right +
-                      ' ' +
-                      styles.headerHeading
-                    }
+                    className={`w-16 px-sm py-xs max-w-xs text-left text-sm font-semibold bg-gray-50 text-gray-600 uppercase tracking-wider ${styles.wd4}`}
                   >
+                    Enable
+                  </th>
+                  <th className="px-sm py-xs max-w-xs text-left text-sm font-semibold bg-gray-50 text-gray-600 uppercase tracking-wider">
                     Key
                   </th>
-                  <th className={styles.wd48 + ' ' + styles.headerHeading}>
+                  <th className="px-sm py-xs max-w-xs text-left text-sm font-semibold bg-gray-50 text-gray-600 uppercase tracking-wider">
                     Value
                   </th>
-                  <th className={styles.wd4 + ' ' + styles.headerHeading} />
+                  <th className="w-16 px-sm py-xs max-w-xs text-left text-sm font-semibold bg-gray-50 text-gray-600 uppercase tracking-wider" />
                 </tr>
               </thead>
-              <tbody>{getHeaderRows()}</tbody>
+              <tbody className="bg-white">{getHeaderRows()}</tbody>
             </table>
           </div>
         </CollapsibleToggle>
@@ -540,13 +601,15 @@ class ApiRequest extends Component {
       switch (this.props.bodyType) {
         case 'graphql':
           return (
-            <div className={styles.add_mar_top}>
+            <div className={styles.apiRequestBody}>
               <GraphiQLWrapper
+                mode={mode}
                 data={this.props}
                 numberOfTables={this.props.numberOfTables}
                 dispatch={this.props.dispatch}
                 headerFocus={this.props.headerFocus}
                 urlParams={this.props.urlParams}
+                response={this.props.explorerData.response}
               />
             </div>
           );
@@ -584,14 +647,14 @@ class ApiRequest extends Component {
           switch (true) {
             case tokenVerified:
               return (
-                <OverlayTrigger
-                  placement="top"
-                  overlay={jwtValidityStatus('Valid JWT token')}
+                <Tooltip
+                  id="tooltip-jwt-validity-status"
+                  message="Valid JWT token"
                 >
                   <span className={styles.valid_jwt_token}>
                     <i className="fa fa-check" />
                   </span>
-                </OverlayTrigger>
+                </Tooltip>
               );
             case !tokenVerified && JWTError.length > 0:
               return (
@@ -643,8 +706,8 @@ class ApiRequest extends Component {
             claimData =
               claimFormat === 'stringified_json'
                 ? generateValidNameSpaceData(
-                  JSON.parse(payload[claimNameSpace])
-                )
+                    JSON.parse(payload[claimNameSpace])
+                  )
                 : generateValidNameSpaceData(payload[claimNameSpace]);
           } catch (e) {
             console.error(e);
@@ -728,7 +791,9 @@ class ApiRequest extends Component {
     };
 
     return (
-      <div className={styles.apiRequestWrapper}>
+      <div
+        className={`${styles.apiRequestWrapper} ${styles.height100} ${styles.flexColumn}`}
+      >
         {getGraphQLEndpointBar()}
         {getHeaderTable()}
         {getRequestBody()}

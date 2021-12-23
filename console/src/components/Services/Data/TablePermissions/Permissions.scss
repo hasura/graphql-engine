@@ -37,7 +37,7 @@
   // TODO: make common with Roles page
   .clickableCell {
     cursor: pointer;
-    
+
     .editPermsIcon {
       font-size: 12px;
       position: absolute;
@@ -116,11 +116,6 @@
     margin: 5px;
     padding: 10px;
     word-wrap: break-word;
-
-    .columnListElement {
-      float: left;
-      margin-right: 50px;
-    }
 
     .form_permission_insert_set_wrapper {
       .permission_insert_set_wrapper {

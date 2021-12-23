@@ -1,44 +1,45 @@
 package api
 
 import (
-	"encoding/json"
-	"io/ioutil"
 	"net/http"
 	"strings"
 
-	"github.com/ghodss/yaml"
+	"github.com/hasura/graphql-engine/cli/v2/internal/projectmetadata"
+
+	"github.com/hasura/graphql-engine/cli/v2"
+	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
+
 	"github.com/gin-gonic/gin"
-	"github.com/hasura/graphql-engine/cli/migrate"
+	"github.com/hasura/graphql-engine/cli/v2/migrate"
 )
 
 func MetadataAPI(c *gin.Context) {
 	// Get migrate instance
-	migratePtr, ok := c.Get("migrate")
+	ecPtr, ok := c.Get("ec")
 	if !ok {
 		return
 	}
 
 	// Convert to url.URL
-	t := migratePtr.(*migrate.Migrate)
-
-	metadataFilePtr, ok := c.Get("metadataFile")
+	ec, ok := ecPtr.(*cli.ExecutionContext)
 	if !ok {
+		c.JSON(http.StatusInternalServerError, &Response{Code: "internal_error", Message: "cannot get execution context"})
 		return
 	}
-	metadataFile := metadataFilePtr.(string)
-
+	t, err := migrate.NewMigrate(ec, false, "", hasura.SourceKindPG)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, &Response{Code: "internal_error", Message: err.Error()})
+		return
+	}
+	mdHandler := projectmetadata.NewHandlerFromEC(ec)
 	// Switch on request method
 	switch c.Request.Method {
 	case "GET":
-		metaData, err := t.ExportMetadata()
+		var files map[string][]byte
+		files, err = mdHandler.ExportMetadata()
 		if err != nil {
 			if strings.HasPrefix(err.Error(), DataAPIError) {
 				c.JSON(http.StatusInternalServerError, &Response{Code: "data_api_error", Message: err.Error()})
-				return
-			}
-
-			if err == migrate.ErrMigrationMode {
-				c.JSON(http.StatusBadRequest, &Response{Code: "migration_mode_enabled", Message: err.Error()})
 				return
 			}
 
@@ -49,25 +50,13 @@ func MetadataAPI(c *gin.Context) {
 		queryValues := c.Request.URL.Query()
 		export := queryValues.Get("export")
 		if export == "true" {
-			t, err := json.Marshal(metaData)
-			if err != nil {
-				c.JSON(http.StatusInternalServerError, &Response{Code: "internal_error", Message: err.Error()})
-				return
-			}
-
-			data, err := yaml.JSONToYAML(t)
-			if err != nil {
-				c.JSON(http.StatusInternalServerError, &Response{Code: "internal_error", Message: err.Error()})
-				return
-			}
-
-			err = ioutil.WriteFile(metadataFile, data, 0644)
+			err := mdHandler.WriteMetadata(files)
 			if err != nil {
 				c.JSON(http.StatusInternalServerError, &Response{Code: "internal_error", Message: err.Error()})
 				return
 			}
 		}
-		c.JSON(http.StatusOK, &gin.H{"metadata": metaData})
+		c.JSON(http.StatusOK, &gin.H{"metadata": "Success"})
 	case "POST":
 		var request Request
 
@@ -92,8 +81,8 @@ func MetadataAPI(c *gin.Context) {
 			c.JSON(http.StatusInternalServerError, &Response{Code: "internal_error", Message: err.Error()})
 			return
 		}
-
-		metaData, err := t.ExportMetadata()
+		var files map[string][]byte
+		files, err = mdHandler.ExportMetadata()
 		if err != nil {
 			if strings.HasPrefix(err.Error(), DataAPIError) {
 				c.JSON(http.StatusInternalServerError, &Response{Code: "data_api_error", Message: err.Error()})
@@ -102,21 +91,12 @@ func MetadataAPI(c *gin.Context) {
 			c.JSON(http.StatusInternalServerError, &Response{Code: "internal_error", Message: err.Error()})
 			return
 		}
-
-		t, err := json.Marshal(metaData)
+		err = mdHandler.WriteMetadata(files)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, &Response{Code: "internal_error", Message: err.Error()})
-			return
-		}
-
-		data, err := yaml.JSONToYAML(t)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, &Response{Code: "internal_error", Message: err.Error()})
-			return
-		}
-
-		err = ioutil.WriteFile(metadataFile, data, 0644)
-		if err != nil {
+			if strings.HasPrefix(err.Error(), DataAPIError) {
+				c.JSON(http.StatusInternalServerError, &Response{Code: "data_api_error", Message: err.Error()})
+				return
+			}
 			c.JSON(http.StatusInternalServerError, &Response{Code: "internal_error", Message: err.Error()})
 			return
 		}

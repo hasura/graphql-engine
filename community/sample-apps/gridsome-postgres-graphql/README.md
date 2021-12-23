@@ -8,16 +8,13 @@ Boilerplate to get started with Gridsome, Hasura GraphQL engine as CMS and postg
 
 # Tutorial
 
-- Deploy Postgres and GraphQL Engine on Heroku:
+- Deploy GraphQL Engine on Hasura Cloud and setup PostgreSQL via Heroku:
   
-  [![Deploy to
-  heroku](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/hasura/graphql-engine-heroku)
-
-- Get the Heroku app URL (say `my-app.herokuapp.com`)
-
+  [![Deploy to Hasura Cloud](https://graphql-engine-cdn.hasura.io/img/deploy_to_hasura.png)](https://cloud.hasura.io/signup)
+- Get the Hasura app URL (say `gridsome-graphql.hasura.app`)
 - Create `author` table:
   
-  Open Hasura console: visit https://my-app.herokuapp.com on a browser  
+  Open Hasura console: visit https://gridsome-graphql.hasura.app on a browser  
   Navigate to `Data` section in the top nav bar and create a table as follows:
 
   ![Create author table](../gatsby-postgres-graphql/assets/add_table.jpg)
@@ -42,9 +39,21 @@ columns: `id`, `title`, `content`, `author_id` (foreign key to `author` table's 
 
 `npm install --global @gridsome/cli`
 
+- Create a Gridsome project
+
+`gridsome create my-gridsome-site`
+
+- Go to your project directory
+
+`cd my-gridsome-site`
+
 - Install node modules:
   ```bash
   yarn install
+  ```
+  or npm
+  ```bash
+  npm install
   ```
 
 - Configure Gridsome to use `source-graphql` plugin and a connection GraphQL url to stitch the schema. Open the file `gridsome.config.js` and modify the plugin section to configure the GraphQL Endpoint.
@@ -55,7 +64,7 @@ columns: `id`, `title`, `content`, `author_id` (foreign key to `author` table's 
     {
       use: '@gridsome/source-graphql',
       options: {
-        url: 'http://localhost:8080/v1/graphql',
+        url: 'https://gridsome-graphql.hasura.app/v1/graphql',
         fieldName: 'hasura',
         headers: {
           // Authorization: `Bearer ${process.env.AUTH_TOKEN}`,

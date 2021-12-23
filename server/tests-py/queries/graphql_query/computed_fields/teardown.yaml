@@ -1,0 +1,16 @@
+type: bulk
+args:
+- type: run_sql
+  args:
+    sql: |
+      DROP FUNCTION fetch_articles(text, author);
+      DROP FUNCTION fetch_articles_plain(author);
+      DROP FUNCTION full_name(author);
+      DROP TABLE article;
+      DROP TABLE author;
+      DROP FUNCTION locations_distance(json, locations);
+      DROP TABLE locations;
+      DROP FUNCTION get_sum(float_test);
+      DROP FUNCTION get_sum_offset(float_test, json);
+      DROP TABLE float_test;
+    cascade: true

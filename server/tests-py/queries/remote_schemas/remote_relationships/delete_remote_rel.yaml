@@ -1,0 +1,4 @@
+type: delete_remote_relationship
+args:
+  table: profiles
+  name: messageBasic

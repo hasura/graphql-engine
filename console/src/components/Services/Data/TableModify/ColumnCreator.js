@@ -1,9 +1,7 @@
 import React, { useState } from 'react';
 import { showErrorNotification } from '../../Common/Notification';
 import gqlPattern, { gqlColumnErrorNotif } from '../Common/GraphQLValidation';
-import { commonDataTypes } from '../utils';
-
-import SearchableSelectBox from '../../../Common/SearchableSelect/SearchableSelect';
+import ExpandableEditor from '../../../Common/Layout/ExpandableEditor/Editor';
 import CustomInputAutoSuggest from '../../../Common/CustomInputAutoSuggest/CustomInputAutoSuggest';
 
 import {
@@ -12,11 +10,11 @@ import {
   inferDefaultValues,
 } from '../Common/utils';
 
-import Button from '../../../Common/Button/Button';
 import { addColSql } from '../TableModify/ModifyActions';
 
-import styles from './ModifyTable.scss';
-import FrequentlyUsedColumnSelector from '../Common/ReusableComponents/FrequentlyUsedColumnSelector';
+import FrequentlyUsedColumnSelector from '../Common/Components/FrequentlyUsedColumnSelector';
+import { ColumnTypeSelector } from '../Common/Components/ColumnTypeSelector';
+import { dataSource, isFeatureSupported } from '../../../../dataSources';
 
 const useColumnEditor = (dispatch, tableName) => {
   const initialState = {
@@ -38,11 +36,12 @@ const useColumnEditor = (dispatch, tableName) => {
     colDependentSQLGenerator,
   } = columnState;
 
-  const onSubmit = e => {
-    e.preventDefault();
+  const onSubmit = () => {
+    // auto-trim column name
+    const trimmedColName = colName.trim();
 
     // validate before sending
-    if (!gqlPattern.test(colName)) {
+    if (!gqlPattern.test(trimmedColName)) {
       dispatch(
         showErrorNotification(
           gqlColumnErrorNotif[0],
@@ -50,7 +49,7 @@ const useColumnEditor = (dispatch, tableName) => {
           gqlColumnErrorNotif[2]
         )
       );
-    } else if (colName === '' || colType === '') {
+    } else if (trimmedColName === '' || colType === '') {
       dispatch(
         showErrorNotification(
           'Error creating column!',
@@ -61,7 +60,7 @@ const useColumnEditor = (dispatch, tableName) => {
       dispatch(
         addColSql(
           tableName,
-          colName,
+          trimmedColName,
           colType,
           colNull,
           colUnique,
@@ -126,6 +125,7 @@ const ColumnCreator = ({
   dataTypes: restTypes = [],
   validTypeCasts,
   columnDefaultFunctions,
+  postgresVersion,
 }) => {
   const {
     colName,
@@ -142,7 +142,7 @@ const ColumnCreator = ({
       <input
         placeholder="column name"
         type="text"
-        className={`${styles.input} input-sm form-control`}
+        className={`form-control`}
         data-test="column-name"
         {...colName}
       />
@@ -151,40 +151,32 @@ const ColumnCreator = ({
 
   const getColumnTypeInput = () => {
     const { columnDataTypes, columnTypeValueMap } = getDataOptions(
-      commonDataTypes,
+      dataSource.commonDataTypes,
       restTypes,
       0
     );
 
-    const customSelectBoxStyles = {
-      container: {
-        width: '186px',
-      },
-      dropdownIndicator: {
-        padding: '5px',
-      },
-      placeholder: {
-        top: '44%',
-        fontSize: '12px',
-      },
-      singleValue: {
-        fontSize: '12px',
-        top: '44%',
-        color: '#555555',
-      },
-    };
-
     return (
-      <span className={`${styles.select}`} data-test="col-type-0">
-        <SearchableSelectBox
-          options={columnDataTypes}
-          onChange={colType.onChange}
-          value={colType.value && columnTypeValueMap[colType.value]}
-          bsClass={`col-type-${0} modify_select`}
-          styleOverrides={customSelectBoxStyles}
-          filterOption={'prefix'}
-          placeholder="column_type"
-        />
+      <span data-test="col-type-0">
+        {isFeatureSupported('tables.create.frequentlyUsedColumns') ? (
+          <ColumnTypeSelector
+            options={columnDataTypes}
+            onChange={colType.onChange}
+            value={columnTypeValueMap[colType.value] || colType.value}
+            colIdentifier={0}
+            bsClass={`col-type-${0}`}
+          />
+        ) : (
+          <input
+            type="text"
+            className={`form-control col-type-${0}`}
+            onChange={e => {
+              e.persist();
+              colType.onChange({ value: e.target.value });
+            }}
+            placeholder="column_type"
+          />
+        )}
       </span>
     );
   };
@@ -192,13 +184,16 @@ const ColumnCreator = ({
   const getColumnNullableInput = () => {
     return (
       <span>
-        <input
-          type="checkbox"
-          className={`${styles.input} ${styles.nullable} input-sm form-control`}
-          data-test="nullable-checkbox"
-          {...colNull}
-        />
-        <label className={styles.nullLabel}>Nullable</label>
+        <label className="flex items-center mr-sm">
+          <input
+            type="checkbox"
+            style={{ margin: '0' }}
+            className={`legacy-input-fix`}
+            data-test="nullable-checkbox"
+            {...colNull}
+          />
+          <span className="ml-xs">Nullable</span>
+        </label>
       </span>
     );
   };
@@ -206,20 +201,21 @@ const ColumnCreator = ({
   const getColumnUniqueInput = () => {
     return (
       <span>
-        <input
-          type="checkbox"
-          className={`${styles.input} ${styles.nullable} input-sm form-control`}
-          {...colUnique}
-          data-test="unique-checkbox"
-        />
-        <label className={styles.nullLabel}>Unique</label>
+        <label className="flex items-center mr-sm">
+          <input
+            type="checkbox"
+            style={{ margin: '0' }}
+            className={`legacy-input-fix`}
+            {...colUnique}
+            data-test="unique-checkbox"
+          />
+          <span className="ml-xs">Unique</span>
+        </label>
       </span>
     );
   };
 
   const getColumnDefaultInput = () => {
-    const theme = require('../../../Common/CustomInputAutoSuggest/CustomThemes/AddColumnDefault.scss');
-
     let defaultOptions = [];
 
     const getInferredDefaultValues = () =>
@@ -238,26 +234,10 @@ const ColumnCreator = ({
       <CustomInputAutoSuggest
         placeholder="default value"
         options={defaultOptions}
-        className={`${styles.input}
-          ${styles.defaultInput}
-          input-sm form-control`}
+        className="form-control"
         {...colDefault}
         data-test="default-value"
-        theme={theme}
       />
-    );
-  };
-
-  const getSubmitButton = () => {
-    return (
-      <Button
-        type="submit"
-        color="yellow"
-        size="sm"
-        data-test="add-column-button"
-      >
-        + Add column
-      </Button>
     );
   };
 
@@ -266,28 +246,40 @@ const ColumnCreator = ({
       <FrequentlyUsedColumnSelector
         onSelect={frequentlyUsedColumn.onSelect}
         action={'modify'}
+        postgresVersion={postgresVersion}
       />
     );
   };
 
-  return (
-    <div className={styles.activeEdit}>
-      <form
-        className={`form-inline ${styles.display_flex}`}
-        onSubmit={onSubmit}
-      >
+  const expandedContent = () => (
+    <div>
+      <form className="mb-sm grid gap-sm grid-cols-1 sm:grid-cols-4">
         {getColumnNameInput()}
         {getColumnTypeInput()}
-        {getColumnNullableInput()}
-        {getColumnUniqueInput()}
         {getColumnDefaultInput()}
-
-        {getSubmitButton()}
+        <div className="flex items-center">
+          {getColumnNullableInput()}
+          {getColumnUniqueInput()}
+        </div>
       </form>
-      <div className={styles.add_mar_top}>
-        {getFrequentlyUsedColumnSelector()}
+      <div>
+        {isFeatureSupported('tables.modify.columns.frequentlyUsedColumns')
+          ? getFrequentlyUsedColumnSelector()
+          : null}
       </div>
     </div>
+  );
+
+  return (
+    <ExpandableEditor
+      key={'new-col'}
+      editorExpanded={expandedContent}
+      property={'add-new-column'}
+      service={'modify-table'}
+      expandButtonText={'Add a new column'}
+      saveFunc={onSubmit}
+      isCollapsable
+    />
   );
 };
 

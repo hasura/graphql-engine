@@ -1,0 +1,6 @@
+---
+- typeDefinitionFile: './generated/HasuraMetadataV2.ts'
+  jsonInputTests:
+    - files: './src/tests/**.json'
+      # This gets called as "Convert.to(expectType)" -> Convert.toHasuraMetadataV2 in generated TS SDK
+      expectType: HasuraMetadataV2

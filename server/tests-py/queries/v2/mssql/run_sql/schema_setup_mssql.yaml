@@ -1,0 +1,17 @@
+type: bulk
+args:
+
+- type: mssql_run_sql
+  args:
+    source: mssql
+    sql: |
+      CREATE TABLE [author] (
+        id INT IDENTITY NOT NULL PRIMARY KEY,
+        name TEXT NOT NULL
+      );
+      CREATE TABLE [article] (
+        id INT IDENTITY NOT NULL PRIMARY KEY,
+        title text not null,
+        content text,
+        author_id INT NOT NULL REFERENCES author(id)
+      );

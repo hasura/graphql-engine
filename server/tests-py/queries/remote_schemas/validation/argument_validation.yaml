@@ -1,0 +1,104 @@
+- description: query the remote with a non-existing input argument 'foo'
+  url: /v1/graphql
+  status: 200
+  query:
+    query: |
+      {
+        user(foo:1) {
+          id
+          username
+        }
+      }
+  response:
+    errors:
+      - extensions:
+          path: $.selectionSet.user
+          code: validation-failed
+        message: '"user" has no argument named "foo"'
+
+- description: query the remote with a string literal for an int
+  url: /v1/graphql
+  status: 200
+  query:
+    query: |
+      {
+        user(id:"1") {
+          id
+          username
+        }
+      }
+  response:
+    data:
+    errors:
+    - message: "Argument \"id\" has invalid value \"1\".\nExpected type \"Int\", found \"1\"."
+      locations:
+      - line: 1
+        column: 19
+
+- description: query the remote with a non-existing input object field 'foo'
+  url: /v1/graphql
+  status: 200
+  query:
+    query: |
+       mutation {
+         createUserInputObj(userData:{id:5,username:"somethin",foo:"baz"}) {
+           user {
+             id
+             username
+           }
+         }
+       }
+  response:
+    errors:
+      - extensions:
+          path: $.selectionSet.createUserInputObj.args.userData.foo
+          code: validation-failed
+        message: "field \"foo\" not found in type: 'UserDetailsInput'"
+
+- description: an argument expecting a list of input objects should work properly
+  url: /v1/graphql
+  status: 200
+  query:
+    query: |
+      {
+        objectPassedToArrayType: user(id:1, userInfo: {id: 1, username: "foo"}) {
+          id
+          username
+        }
+        user(id:1, userInfo: {id: 1, username: "foo"}) {
+          id
+          username
+        }
+      }
+  response:
+    data:
+      objectPassedToArrayType:
+        id: 1
+        username: jane
+      user:
+        id: 1
+        username: jane
+
+- description: an argument expecting a list of input objects should work properly
+  url: /v1/graphql
+  status: 200
+  query:
+    query: |
+      {
+        objectPassedToArrayType: user(id:1, userInfo: {id: 1, username: "foo"}) {
+          id
+          username
+        }
+        user(id:1, userInfo: [{id: 1, username: "foo"}]) {
+          id
+          username
+        }
+      }
+  response:
+    data:
+      objectPassedToArrayType:
+        id: 1
+        username: jane
+      user:
+        id: 1
+        username: jane

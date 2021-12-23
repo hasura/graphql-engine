@@ -24,6 +24,11 @@ query:
             title
             content
           }
+          fetch_articles(args: {search: "Article"}){
+            id
+            title
+            content
+          }
         }
       }
     }
@@ -35,3 +40,4 @@ response:
       - id: 4
         name: Author 4
         articles: []
+        fetch_articles: []

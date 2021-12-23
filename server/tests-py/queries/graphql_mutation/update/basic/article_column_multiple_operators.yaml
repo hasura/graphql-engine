@@ -1,0 +1,21 @@
+description: Update an article with a column used in multiple operators
+url: /v1/graphql
+status: 200
+response:
+  errors:
+  - extensions:
+      path: "$.selectionSet.update_article.args"
+      code: validation-failed
+    message: 'Column found in multiple operators: "author_id", "id".'
+
+query:
+  query: |
+    mutation {
+      update_article(
+        _set: {id: 1, author_id: 1}
+        _inc: {id: 2, author_id: 2}
+        where: {author_id: {_eq: 1}}
+      ){
+        affected_rows
+      }
+    }

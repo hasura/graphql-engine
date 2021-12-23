@@ -1,23 +1,14 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import Helmet from 'react-helmet';
-import { push } from 'react-router-redux';
 import { Link } from 'react-router';
 
-import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
-
-import {
-  untrackedTablesTip,
-  untrackedRelTip,
-  trackableFunctionsTip,
-  nonTrackableFunctionsTip,
-} from './Tooltips';
+import _push from '../push';
 import Button from '../../../Common/Button/Button';
 import {
   setTableName,
   addExistingTableSql,
   addAllUntrackedTablesSql,
-  addExistingFunction,
 } from '../Add/AddExistingTableViewActions';
 import {
   updateSchemaInfo,
@@ -30,14 +21,141 @@ import {
 } from '../TableRelationships/Actions';
 import { getRelDef } from '../TableRelationships/utils';
 import {
+  getDataSourceBaseRoute,
   getSchemaAddTableRoute,
+  getSchemaBaseRoute,
   getSchemaPermissionsRoute,
 } from '../../../Common/utils/routesUtils';
 import { createNewSchema, deleteCurrentSchema } from './Actions';
 import CollapsibleToggle from '../../../Common/CollapsibleToggle/CollapsibleToggle';
-import gqlPattern from '../Common/GraphQLValidation';
 import GqlCompatibilityWarning from '../../../Common/GqlCompatibilityWarning/GqlCompatibilityWarning';
-import { displayTableName } from '../../../Common/utils/pgUtils';
+import {
+  getSchemaTables,
+  getUntrackedTables,
+  dataSource,
+  currentDriver,
+  isFeatureSupported,
+} from '../../../../dataSources';
+import { isEmpty } from '../../../Common/utils/jsUtils';
+import { getConfirmation } from '../../../Common/utils/jsUtils';
+import ToolTip from '../../../Common/Tooltip/Tooltip';
+import KnowMoreLink from '../../../Common/KnowMoreLink/KnowMoreLink';
+import RawSqlButton from '../Common/Components/RawSqlButton';
+import styles from '../../../Common/Common.scss';
+import { getConsistentFunctions } from '../../../../metadata/selector';
+import { RightContainer } from '../../../Common/Layout/RightContainer';
+import { TrackableFunctionsList } from './FunctionsList';
+import { getTrackableFunctions } from './utils';
+import BreadCrumb from '../../../Common/Layout/BreadCrumb/BreadCrumb';
+
+const DeleteSchemaButton = ({ dispatch, migrationMode, currentDataSource }) => {
+  const successCb = () => {
+    dispatch(updateCurrentSchema('public', currentDataSource));
+  };
+
+  const handleDelete = () => {
+    dispatch(deleteCurrentSchema(successCb));
+  };
+
+  return (
+    migrationMode && (
+      <Button
+        color="white"
+        size="xs"
+        onClick={handleDelete}
+        title="Delete current schema"
+        style={{ marginRight: '20px', maxHeight: '22px' }}
+      >
+        Delete Schema
+      </Button>
+    )
+  );
+};
+
+const OpenCreateSection = React.forwardRef(
+  ({ ref, value, handleInputChange, handleCreate, handleCancelCreate }) => (
+    <div className={styles.display_inline}>
+      <div className={styles.display_inline}>
+        <input
+          type="text"
+          value={value}
+          onChange={handleInputChange}
+          placeholder="schema_name"
+          className={`form-control input-sm ${styles.display_inline}`}
+          ref={ref}
+        />
+      </div>
+      <Button
+        color="white"
+        size="xs"
+        onClick={handleCreate}
+        className={styles.add_mar_left_mid}
+      >
+        Create New Schema
+      </Button>
+      <Button
+        color="white"
+        size="xs"
+        onClick={handleCancelCreate}
+        className={styles.add_mar_left_mid}
+      >
+        Cancel
+      </Button>
+    </div>
+  )
+);
+
+const ClosedCreateSection = ({ onClick }) => (
+  <Button color="white" size="xs" onClick={onClick} title="Create new schema">
+    Create New Schema
+  </Button>
+);
+
+const CreateSchemaSection = React.forwardRef(
+  ({
+    ref,
+    schema,
+    migrationMode,
+    createSchemaOpen,
+    schemaNameEdit,
+    handleCancelCreateNewSchema,
+    handleCreateNewClick,
+    handleSchemaNameChange,
+    handleCreateClick,
+    currentDataSource,
+  }) =>
+    migrationMode && (
+      <div className={`${styles.display_flex}`}>
+        {isFeatureSupported('schemas.create.enabled') ? (
+          <span>
+            {createSchemaOpen ? (
+              <OpenCreateSection
+                ref={ref}
+                value={schemaNameEdit}
+                handleInputChange={handleSchemaNameChange}
+                handleCreate={handleCreateClick}
+                handleCancelCreate={handleCancelCreateNewSchema}
+              />
+            ) : (
+              <ClosedCreateSection onClick={handleCreateNewClick} />
+            )}
+          </span>
+        ) : null}
+        <SchemaPermissionsButton schema={schema} source={currentDataSource} />
+      </div>
+    )
+);
+
+const SchemaPermissionsButton = ({ schema, source }) => (
+  <Link
+    to={getSchemaPermissionsRoute(schema, source)}
+    style={{ marginLeft: '20px' }}
+  >
+    <Button color="white" size="xs">
+      Show Permissions Summary
+    </Button>
+  </Link>
+);
 
 class Schema extends Component {
   constructor(props) {
@@ -47,101 +165,102 @@ class Schema extends Component {
       isExporting: false,
       createSchemaOpen: false,
       schemaNameEdit: '',
+      loadingSchemas: false,
     };
 
     this.props.dispatch(fetchFunctionInit());
-    this.props.dispatch(
-      updateSchemaInfo({ schemas: [this.props.currentSchema] })
-    );
+    this.props.dispatch(updateSchemaInfo({ schemas: this.props.schemaList }));
+
+    this.schemaNameInputRef = React.createRef(null);
   }
+
+  componentDidUpdate(prevProps) {
+    if (prevProps.currentSchema !== this.props.currentSchema) {
+      this.props.dispatch(updateSchemaInfo({ schemas: this.props.schemaList }));
+    }
+  }
+
+  cancelCreateNewSchema = () => {
+    this.setState({
+      createSchemaOpen: false,
+    });
+  };
+
+  onCreateNewClick = () => {
+    this.setState({ createSchemaOpen: true });
+  };
+
+  onChangeSchemaName = e => {
+    this.setState({ schemaNameEdit: e.target.value });
+  };
+
+  handleCreateClick = () => {
+    const schemaName = this.state.schemaNameEdit.trim();
+
+    if (!schemaName) {
+      this.schemaNameInputRef.current.focus();
+      return;
+    }
+
+    const successCb = () => {
+      this.props.dispatch(
+        updateCurrentSchema(schemaName, this.props.currentDataSource)
+      );
+
+      this.setState({
+        schemaNameEdit: '',
+        createSchemaOpen: false,
+      });
+    };
+
+    this.props.dispatch(createNewSchema(schemaName, successCb));
+  };
 
   render() {
     const {
       schema,
-      schemaList,
       migrationMode,
+      readOnlyMode,
       untrackedRelations,
       currentSchema,
       dispatch,
       functionsList,
       nonTrackableFunctions,
       trackedFunctions,
+      currentDataSource,
     } = this.props;
-
-    const styles = require('../../../Common/Common.scss');
-
-    const handleSchemaChange = e => {
-      dispatch(updateCurrentSchema(e.target.value));
-    };
-
-    /***********/
-
-    const getTrackableFunctions = () => {
-      const trackedFuncNames = trackedFunctions.map(t => t.function_name);
-
-      // Assuming schema for both function and tables are same
-      // return function which are tracked && function name whose
-      // set of tables are tracked
-      const filterCondition = func => {
-        return (
-          !trackedFuncNames.includes(func.function_name) &&
-          !!func.return_table_info
-        );
-      };
-
-      return functionsList.filter(filterCondition);
-    };
-
-    const getUntrackedTables = () => {
-      const tableSortFunc = (a, b) => {
-        return a.table_name === b.table_name
-          ? 0
-          : +(a.table_name > b.table_name) || -1;
-      };
-
-      const _untrackedTables = schema.filter(
-        table => !table.is_table_tracked && table.table_schema === currentSchema
-      );
-
-      // update tableInfo with graphql compatibility
-      _untrackedTables.forEach(t => {
-        t.isGQLCompatible = gqlPattern.test(t.table_name);
-      });
-
-      return _untrackedTables.sort(tableSortFunc);
-    };
-
-    const getSectionHeading = (headingText, tooltip, actionBtn = null) => {
+    const getSectionHeading = (headingText, tooltip, actionElement = null) => {
       return (
         <div>
-          <h4
-            className={`${styles.subheading_text} ${styles.display_inline} ${
-              styles.add_mar_right_mid
-            }`}
-          >
+          <h4 className={`${styles.subheading_text} ${styles.display_inline}`}>
             {headingText}
           </h4>
-          <OverlayTrigger placement="right" overlay={tooltip}>
-            <i className="fa fa-info-circle" aria-hidden="true" />
-          </OverlayTrigger>
-          {actionBtn}
+          <span className={styles.add_mar_left_small}>
+            <ToolTip message={tooltip} />
+          </span>
+          <span className={styles.add_mar_left}>{actionElement}</span>
         </div>
       );
     };
 
-    /***********/
+    const allUntrackedTables = getUntrackedTables(
+      getSchemaTables(schema, currentSchema)
+    );
 
-    const allUntrackedTables = getUntrackedTables();
-    const trackableFuncs = getTrackableFunctions();
-
+    const trackableFuncs = getTrackableFunctions(
+      functionsList,
+      trackedFunctions
+    );
     const getCreateBtn = () => {
       let createBtn = null;
 
-      if (migrationMode) {
+      if (migrationMode && isFeatureSupported('tables.create.enabled')) {
         const handleClick = e => {
           e.preventDefault();
 
-          dispatch(push(getSchemaAddTableRoute(currentSchema)));
+          dispatch(
+            _push(getSchemaAddTableRoute(currentSchema, currentDataSource))
+          );
         };
 
         createBtn = (
@@ -161,152 +280,35 @@ class Schema extends Component {
     };
 
     const getCurrentSchemaSection = () => {
-      const getSchemaOptions = () => {
-        return schemaList.map(s => (
-          <option key={s.schema_name}>{s.schema_name}</option>
-        ));
-      };
-
-      const getCreateSchemaSection = () => {
-        let createSchemaSection = null;
-
-        if (migrationMode) {
-          const { createSchemaOpen, schemaNameEdit } = this.state;
-
-          const handleCreateNewClick = () => {
-            this.setState({ createSchemaOpen: true });
-          };
-
-          const handleSchemaNameChange = e => {
-            this.setState({ schemaNameEdit: e.target.value });
-          };
-
-          const handleCreateClick = () => {
-            const schemaName = schemaNameEdit.trim();
-
-            if (!schemaName) {
-              document.getElementById('schema-name-input').focus();
-              return;
-            }
-
-            const successCb = () => {
-              dispatch(updateCurrentSchema(schemaName));
-
-              this.setState({
-                schemaNameEdit: '',
-                createSchemaOpen: false,
-              });
-            };
-
-            dispatch(createNewSchema(schemaName, successCb));
-          };
-
-          const handleCancelCreateNewSchema = () => {
-            this.setState({
-              createSchemaOpen: false,
-            });
-          };
-
-          const closedCreateSection = (
-            <Button
-              color="white"
-              size="xs"
-              onClick={handleCreateNewClick}
-              title="Create new schema"
-            >
-              <i className="fa fa-plus" aria-hidden="true" />
-            </Button>
-          );
-
-          const openCreateSection = (
-            <div className={styles.display_inline + ' ' + styles.add_mar_left}>
-              <div className={styles.display_inline}>
-                <input
-                  id="schema-name-input"
-                  type="text"
-                  value={schemaNameEdit}
-                  onChange={handleSchemaNameChange}
-                  placeholder="schema_name"
-                  className={'form-control input-sm ' + styles.display_inline}
-                />
-              </div>
-              <Button
-                color="white"
-                size="xs"
-                onClick={handleCreateClick}
-                className={styles.add_mar_left_mid}
-              >
-                Create
-              </Button>
-              <Button
-                color="white"
-                size="xs"
-                onClick={handleCancelCreateNewSchema}
-                className={styles.add_mar_left_mid}
-              >
-                Cancel
-              </Button>
-            </div>
-          );
-
-          createSchemaSection = createSchemaOpen
-            ? openCreateSection
-            : closedCreateSection;
-        }
-
-        return createSchemaSection;
-      };
-
-      const getDeleteSchemaBtn = () => {
-        let deleteSchemaBtn = null;
-
-        if (migrationMode) {
-          const handleDelete = () => {
-            const successCb = () => {
-              dispatch(updateCurrentSchema('public'));
-            };
-
-            dispatch(deleteCurrentSchema(successCb));
-          };
-
-          deleteSchemaBtn = (
-            <Button
-              color="white"
-              size="xs"
-              onClick={handleDelete}
-              title="Delete current schema"
-            >
-              <i className="fa fa-trash" aria-hidden="true" />
-            </Button>
-          );
-        }
-
-        return deleteSchemaBtn;
-      };
-
       return (
         <div className={styles.add_mar_top}>
-          <div className={styles.display_inline}>Current Postgres schema</div>
-          <div className={styles.display_inline}>
-            <select
-              onChange={handleSchemaChange}
-              className={
-                styles.add_mar_left_mid +
-                ' ' +
-                styles.width_auto +
-                ' form-control'
-              }
-              value={currentSchema}
-            >
-              {getSchemaOptions()}
-            </select>
-          </div>
-          <div className={styles.display_inline + ' ' + styles.add_mar_left}>
-            <div className={styles.display_inline}>{getDeleteSchemaBtn()}</div>
-            <div
-              className={`${styles.display_inline} ${styles.add_mar_left_mid}`}
-            >
-              {getCreateSchemaSection()}
+          <div style={{ marginTop: '20px' }}>
+            <div className={styles.display_inline} style={{ width: '120px' }}>
+              Database Schema
+            </div>
+            <div className={`${styles.display_inline} ${styles.add_mar_left}`}>
+              <div style={{ display: 'flex', alignItems: 'center' }}>
+                {isFeatureSupported('schemas.delete.enabled') ? (
+                  <DeleteSchemaButton
+                    dispatch={dispatch}
+                    migrationMode={migrationMode}
+                    currentDataSource={currentDataSource}
+                    schemaList={this.props.schemaList}
+                  />
+                ) : null}
+                <CreateSchemaSection
+                  ref={this.schemaNameInputRef}
+                  migrationMode={migrationMode}
+                  schemaNameEdit={this.state.schemaNameEdit}
+                  createSchemaOpen={this.state.createSchemaOpen}
+                  handleCancelCreateNewSchema={this.cancelCreateNewSchema}
+                  handleCreateNewClick={this.onCreateNewClick}
+                  handleSchemaNameChange={this.onChangeSchemaName}
+                  handleCreateClick={this.handleCreateClick}
+                  currentDataSource={currentDataSource}
+                  schema={currentSchema}
+                />
+              </div>
             </div>
           </div>
         </div>
@@ -315,11 +317,22 @@ class Schema extends Component {
 
     const getUntrackedTablesSection = () => {
       const getTrackAllBtn = () => {
+        if (readOnlyMode) {
+          return null;
+        }
+
         let trackAllBtn = null;
 
         const trackAllTables = e => {
           e.stopPropagation();
           e.preventDefault();
+
+          const isOk = getConfirmation(
+            'This will expose all the listed tables/views over the GraphQL API'
+          );
+          if (!isOk) {
+            return;
+          }
 
           dispatch(addAllUntrackedTablesSql(allUntrackedTables));
         };
@@ -327,7 +340,7 @@ class Schema extends Component {
         if (allUntrackedTables.length > 0) {
           trackAllBtn = (
             <Button
-              className={`${styles.display_inline} ${styles.add_mar_left}`}
+              className={`${styles.display_inline}`}
               color="white"
               size="xs"
               onClick={trackAllTables}
@@ -343,47 +356,57 @@ class Schema extends Component {
       const getUntrackedTablesList = () => {
         const untrackedTablesList = [];
 
-        allUntrackedTables.forEach((table, i) => {
-          const handleTrackTable = e => {
-            e.preventDefault();
-
-            dispatch(setTableName(table.table_name));
-            dispatch(addExistingTableSql());
-          };
-
-          const gqlCompatibilityWarning = !table.isGQLCompatible ? (
-            <span className={styles.add_mar_left_mid}>
-              <GqlCompatibilityWarning />
-            </span>
-          ) : null;
-
-          untrackedTablesList.push(
-            <div className={styles.padd_bottom} key={`untracked-${i}`}>
-              <div
-                className={`${styles.display_inline} ${styles.add_mar_right}`}
-              >
-                <Button
-                  data-test={`add-track-table-${table.table_name}`}
-                  className={`${styles.display_inline}`}
-                  color="white"
-                  size="xs"
-                  onClick={handleTrackTable}
-                >
-                  Track
-                </Button>
-              </div>
-              <div className={styles.display_inline}>
-                {displayTableName(table)}
-              </div>
-              {gqlCompatibilityWarning}
-            </div>
-          );
-        });
-
-        if (!untrackedTablesList.length) {
+        if (isEmpty(allUntrackedTables)) {
           untrackedTablesList.push(
             <div key="no-untracked">There are no untracked tables or views</div>
           );
+        } else {
+          allUntrackedTables.forEach((table, i) => {
+            const tableName = table.table_name;
+
+            const getTrackBtn = () => {
+              if (readOnlyMode) {
+                return null;
+              }
+
+              const handleTrackTable = e => {
+                e.preventDefault();
+
+                dispatch(setTableName(tableName));
+                dispatch(addExistingTableSql());
+              };
+
+              return (
+                <div
+                  className={`${styles.display_inline} ${styles.add_mar_right}`}
+                >
+                  <Button
+                    data-test={`add-track-table-${tableName}`}
+                    className={`${styles.display_inline}`}
+                    color="white"
+                    size="xs"
+                    onClick={handleTrackTable}
+                  >
+                    Track
+                  </Button>
+                </div>
+              );
+            };
+
+            untrackedTablesList.push(
+              <div className={styles.padd_bottom} key={`untracked-${i}`}>
+                {getTrackBtn()}
+                <div className={styles.display_inline}>
+                  {dataSource.displayTableName(table)}
+                </div>
+                <GqlCompatibilityWarning
+                  identifier={tableName}
+                  className={styles.add_mar_left_mid}
+                  ifWarningCanBeFixed
+                />
+              </div>
+            );
+          });
         }
 
         return untrackedTablesList;
@@ -391,7 +414,7 @@ class Schema extends Component {
 
       const heading = getSectionHeading(
         'Untracked tables or views',
-        untrackedTablesTip,
+        'Tables or views that are not exposed over the GraphQL API',
         getTrackAllBtn()
       );
 
@@ -409,11 +432,22 @@ class Schema extends Component {
 
     const getUntrackedRelationsSection = () => {
       const getTrackAllBtn = () => {
+        if (readOnlyMode) {
+          return null;
+        }
+
         let trackAllBtn = null;
 
         const trackAllRelations = e => {
           e.stopPropagation();
           e.preventDefault();
+
+          const isOk = getConfirmation(
+            'This will add all the listed foreign-keys as relationships in the GraphQL schema'
+          );
+          if (!isOk) {
+            return;
+          }
 
           this.props.dispatch(autoTrackRelations(untrackedRelations));
         };
@@ -422,7 +456,7 @@ class Schema extends Component {
           trackAllBtn = (
             <Button
               onClick={trackAllRelations}
-              className={`${styles.display_inline} ${styles.add_mar_left}`}
+              className={`${styles.display_inline}`}
               color="white"
               size="xs"
               data-test="track-all-relationships"
@@ -438,61 +472,74 @@ class Schema extends Component {
       const getUntrackedRelList = () => {
         const untrackedRelList = [];
 
-        untrackedRelations.forEach((rel, i) => {
-          const relData = rel.data;
-
-          const handleAddRel = e => {
-            e.preventDefault();
-
-            dispatch(autoAddRelName(rel));
-          };
-
-          const relFrom = <b>{relData.lTable}</b>;
-
-          const relTo = relData.isObjRel ? (
-            <b>{relData.rTable}</b>
-          ) : (
-            <b>[ {relData.rTable} ]</b>
-          );
-
-          untrackedRelList.push(
-            <div className={styles.padd_bottom} key={`untracked-rel-${i}`}>
-              <div
-                className={`${styles.display_inline} ${styles.add_mar_right}`}
-              >
-                <Button
-                  className={styles.display_inline}
-                  color="white"
-                  size="xs"
-                  onClick={handleAddRel}
-                >
-                  Track
-                </Button>
-              </div>
-              <div className={styles.display_inline}>
-                <span>
-                  {relFrom} &rarr; {relTo}
-                </span>
-                &nbsp;&nbsp; - &nbsp;&nbsp;
-                <span>{getRelDef(relData)}</span>
-              </div>
-            </div>
-          );
-        });
-
-        if (!untrackedRelList.length) {
+        if (isEmpty(untrackedRelations)) {
           untrackedRelList.push(
             <div key="no-untracked-rel">There are no untracked relations</div>
           );
+        } else {
+          untrackedRelations.forEach((rel, i) => {
+            const relData = rel.data;
+
+            const getTrackBtn = () => {
+              if (readOnlyMode) {
+                return null;
+              }
+
+              const handleTrackRel = e => {
+                e.preventDefault();
+
+                dispatch(autoAddRelName(rel));
+              };
+
+              return (
+                <div
+                  className={`${styles.display_inline} ${styles.add_mar_right}`}
+                >
+                  <Button
+                    className={styles.display_inline}
+                    color="white"
+                    size="xs"
+                    onClick={handleTrackRel}
+                  >
+                    Track
+                  </Button>
+                </div>
+              );
+            };
+
+            const relFrom = <b>{relData.lTable}</b>;
+
+            const relTo = relData.isObjRel ? (
+              <b>{relData.rTable}</b>
+            ) : (
+              <b>[ {relData.rTable} ]</b>
+            );
+
+            untrackedRelList.push(
+              <div className={styles.padd_bottom} key={`untracked-rel-${i}`}>
+                {getTrackBtn()}
+                <div className={styles.display_inline}>
+                  <span>
+                    {relFrom} &rarr; {relTo}
+                  </span>
+                  &nbsp;&nbsp; - &nbsp;&nbsp;
+                  <span>{getRelDef(relData)}</span>
+                </div>
+              </div>
+            );
+          });
         }
 
         return untrackedRelList;
       };
 
       const heading = getSectionHeading(
-        'Untracked foreign-key relations',
-        untrackedRelTip,
-        getTrackAllBtn()
+        'Untracked foreign-key relationships',
+        'Relationships inferred via foreign-keys that are not exposed over the GraphQL API',
+        <>
+          <KnowMoreLink href="https://hasura.io/docs/latest/graphql/core/schema/table-relationships/index.html" />
+          <span className={styles.add_mar_left}>{getTrackAllBtn()}</span>
+        </>
       );
 
       return (
@@ -507,131 +554,142 @@ class Schema extends Component {
       );
     };
 
-    const getUntrackedFunctionsSection = () => {
-      let trackableFunctionList = null;
+    const getUntrackedFunctionsSection = isSupported => {
+      const heading = getSectionHeading(
+        'Untracked custom functions',
+        'Custom functions that are not exposed over the GraphQL API',
+        <KnowMoreLink href="https://hasura.io/docs/latest/graphql/core/schema/custom-functions.html" />
+      );
 
-      if (trackableFuncs.length > 0) {
-        const heading = getSectionHeading(
-          'Untracked custom functions',
-          trackableFunctionsTip
-        );
-
-        trackableFunctionList = (
-          <div className={styles.add_mar_top} key={'custom-functions-content'}>
-            <CollapsibleToggle title={heading} isOpen>
-              <div className={`${styles.padd_left_remove} col-xs-12`}>
-                {trackableFuncs.map((p, i) => (
-                  <div
-                    className={styles.padd_bottom}
-                    key={`${i}untracked-function`}
-                  >
-                    <div
-                      className={`${styles.display_inline} ${
-                        styles.add_mar_right
-                      }`}
-                    >
-                      <Button
-                        data-test={`add-track-function-${p.function_name}`}
-                        className={`${
-                          styles.display_inline
-                        } btn btn-xs btn-default`}
-                        onClick={e => {
-                          e.preventDefault();
-
-                          dispatch(addExistingFunction(p.function_name));
-                        }}
-                      >
-                        Track
-                      </Button>
-                    </div>
-                    <div className={styles.display_inline}>
-                      <span>{p.function_name}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              <div className={styles.clear_fix} />
-            </CollapsibleToggle>
-          </div>
-        );
-      }
-
-      return trackableFunctionList;
+      return (
+        <div className={styles.add_mar_top} key={'custom-functions-content'}>
+          <CollapsibleToggle
+            title={heading}
+            isOpen
+            testId={'toggle-trackable-functions'}
+          >
+            <div className={`${styles.padd_left_remove} col-xs-12`}>
+              {isSupported ? (
+                <TrackableFunctionsList
+                  dispatch={dispatch}
+                  funcs={trackableFuncs}
+                  readOnlyMode={readOnlyMode}
+                  source={currentDataSource}
+                  allSchemas={schema}
+                />
+              ) : (
+                `Currently unsupported for ${(
+                  currentDriver + ''
+                ).toUpperCase()}`
+              )}
+            </div>
+            <div className={styles.clear_fix} />
+          </CollapsibleToggle>
+        </div>
+      );
     };
 
     const getNonTrackableFunctionsSection = () => {
-      let nonTrackableFuncList = null;
+      const noNonTrackableFuncs = isEmpty(nonTrackableFunctions);
 
-      if (nonTrackableFunctions.length > 0) {
-        const heading = getSectionHeading(
-          'Non trackable custom functions',
-          nonTrackableFunctionsTip
-        );
+      const getNonTrackableFuncList = () => {
+        const nonTrackableFunctionList = [];
 
-        nonTrackableFuncList = (
-          <div
-            className={styles.add_mar_top}
-            key={'non-trackable-custom-functions'}
-          >
-            <CollapsibleToggle title={heading} isOpen>
-              <div className={`${styles.padd_left_remove} col-xs-12`}>
-                {nonTrackableFunctions.map((p, i) => (
-                  <div
-                    className={styles.padd_bottom}
-                    key={`${i}untracked-function`}
+        if (noNonTrackableFuncs) {
+          nonTrackableFunctionList.push(
+            <div key="no-nontracked-fns">
+              <div>There are no non trackable functions</div>
+            </div>
+          );
+        } else {
+          nonTrackableFunctions.forEach((p, i) => {
+            nonTrackableFunctionList.push(
+              <div
+                className={styles.padd_bottom}
+                key={`untracked-function-${i}`}
+              >
+                <div
+                  className={`${styles.display_inline} ${styles.add_mar_right}`}
+                >
+                  <RawSqlButton
+                    dataTestId={`view-function-${p.function_name}`}
+                    customStyles={styles.display_inline}
+                    sql={p.function_definition}
+                    dispatch={dispatch}
+                    source={currentDataSource}
                   >
-                    <div
-                      className={`${styles.padd_right} ${
-                        styles.display_inline
-                      }`}
-                    >
-                      {p.function_name}
-                    </div>
-                  </div>
-                ))}
+                    View
+                  </RawSqlButton>
+                </div>
+                <div className={styles.display_inline}>{p.function_name}</div>
               </div>
-              <div className={styles.clear_fix} />
-            </CollapsibleToggle>
-          </div>
-        );
-      }
+            );
+          });
+        }
+        return nonTrackableFunctionList;
+      };
 
-      return nonTrackableFuncList;
-    };
+      const heading = getSectionHeading(
+        'Non trackable functions',
+        'Functions that do not conform to Hasura requirements to be exposed over the GraphQL API'
+      );
 
-    const getPermissionsSummaryLink = () => {
       return (
-        <div className={styles.add_mar_top}>
-          <Link to={getSchemaPermissionsRoute(currentSchema)}>
-            Schema permissions summary
-          </Link>
+        <div
+          className={styles.add_mar_top}
+          key={'non-trackable-custom-functions'}
+        >
+          <CollapsibleToggle title={heading}>
+            <div className={`${styles.padd_left_remove} col-xs-12`}>
+              {getNonTrackableFuncList()}
+            </div>
+            <div className={styles.clear_fix} />
+          </CollapsibleToggle>
         </div>
       );
     };
 
     return (
-      <div
-        className={`container-fluid ${styles.padd_left_remove} ${
-          styles.padd_top
-        }`}
-      >
-        <div className={styles.padd_left}>
-          <Helmet title="Schema - Data | Hasura" />
-          <div className={styles.display_flex}>
-            <h2 className={`${styles.headerText} ${styles.display_inline}`}>
-              Schema
-            </h2>
-            {getCreateBtn()}
+      <RightContainer>
+        <div className={`container-fluid ${styles.padd_left_remove}`}>
+          <div className={styles.padd_left}>
+            <Helmet title="Schema - Data | Hasura" />
+            <BreadCrumb
+              breadCrumbs={[
+                { url: `/data`, title: 'Data' },
+                {
+                  url: getDataSourceBaseRoute(currentDataSource),
+                  title: currentDataSource,
+                  prefix: <i className="fa fa-database" />,
+                },
+                {
+                  url: getSchemaBaseRoute(currentSchema, currentDataSource),
+                  title: currentSchema,
+                  prefix: <i className="fa fa-folder" />,
+                },
+              ]}
+            />
+            <div className={styles.display_flex}>
+              <h2 className={`${styles.headerText} ${styles.display_inline}`}>
+                {currentSchema}
+              </h2>
+              {getCreateBtn()}
+            </div>
+            <hr className="my-md" />
+            {getCurrentSchemaSection()}
+            <hr className="my-md" />
+            {getUntrackedTablesSection()}
+            {isFeatureSupported('tables.relationships.track') &&
+              getUntrackedRelationsSection()}
+            {getUntrackedFunctionsSection(
+              isFeatureSupported('functions.track.enabled')
+            )}
+            {isFeatureSupported('functions.nonTrackableFunctions.enabled') &&
+              getNonTrackableFunctionsSection()}
+            <hr className="my-md" />
           </div>
-          {getCurrentSchemaSection()}
-          {getUntrackedTablesSection()}
-          {getUntrackedRelationsSection()}
-          {getUntrackedFunctionsSection()}
-          {false && getNonTrackableFunctionsSection()}
-          <hr />
-          {getPermissionsSummaryLink()}
         </div>
-      </div>
+      </RightContainer>
     );
   }
 }
@@ -648,12 +706,15 @@ const mapStateToProps = state => ({
   schema: state.tables.allSchemas,
   schemaList: state.tables.schemaList,
   migrationMode: state.main.migrationMode,
+  readOnlyMode: state.main.readOnlyMode,
   untrackedRelations: state.tables.untrackedRelations,
   currentSchema: state.tables.currentSchema,
-  functionsList: [...state.tables.postgresFunctions],
-  nonTrackableFunctions: [...state.tables.nonTrackablePostgresFunctions],
-  trackedFunctions: [...state.tables.trackedFunctions],
+  functionsList: state.tables.postgresFunctions,
+  nonTrackableFunctions: state.tables.nonTrackablePostgresFunctions,
+  trackedFunctions: getConsistentFunctions(state),
   serverVersion: state.main.serverVersion ? state.main.serverVersion : '',
+  metadata: state.metadata.metadataObject,
+  currentDataSource: state.tables.currentDataSource,
 });
 
 const schemaConnector = connect => connect(mapStateToProps)(Schema);

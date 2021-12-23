@@ -1,0 +1,1 @@
+DROP FUNCTION hdb_catalog.check_violation(text);

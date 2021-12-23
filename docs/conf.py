@@ -31,24 +31,31 @@ from sphinx.util import compat
 compat.make_admonition = BaseAdmonition
 
 # from sphinx.util.osutil import relative_uri
-StandaloneHTMLBuilder.script_files = ["_static/vendor.js"]
+StandaloneHTMLBuilder.script_files = ["_static/scripts/vendor.js"]
 # StandaloneHTMLBuilder.imgpath = relative_uri("v0.13", '_images')
 
 # Defaults to development
 CURRENT_ENV = os.getenv("ENV") if os.getenv("ENV") else "development"
-BASE_DOMAIN = os.getenv("BASE_DOMAIN", "development")
+RELEASE_MODE = os.getenv("RELEASE_MODE", "development")
 
 # GraphiQL defaults
 GRAPHIQL_DEFAULT_ENDPOINT = "http://localhost:8080/v1/graphql"
+
 # Get from env if set
 if os.getenv("GRAPHIQL_DEFAULT_ENDPOINT"):
     GRAPHIQL_DEFAULT_ENDPOINT = os.getenv("GRAPHIQL_DEFAULT_ENDPOINT")
 
+BASE_DOMAIN = "hasura.io" if RELEASE_MODE == "production" else "hasura-stg.hasura-app.io"
+
+SITEMAP_DOMAIN = BASE_DOMAIN + '/docs'
+
 # set context
 html_context = {
-    "SITEMAP_DOMAIN": "https://docs.hasura.io/",
-    "BASE_DOMAIN": "hasura.io" if BASE_DOMAIN == "production" else "hasura-stg.hasura-app.io",
+    "BASE_DOMAIN": BASE_DOMAIN,
+    "RELEASE_MODE": RELEASE_MODE,
+    "SITEMAP_DOMAIN": SITEMAP_DOMAIN,
     "GRAPHIQL_DEFAULT_ENDPOINT": GRAPHIQL_DEFAULT_ENDPOINT,
+    "CURRENT_ENV": CURRENT_ENV,
 }
 
 # End of it
@@ -78,7 +85,6 @@ extensions = [
     "sphinxcontrib.httpdomain",
     "sphinxcontrib.images",
     "sphinx.ext.todo",
-    "global_tabs",
     "sphinx_tabs.tabs",
     "graphiql",
     "lexer_jsx",
@@ -194,7 +200,7 @@ html_theme = "djangodocs"
 
 # Add any paths that contain custom themes here, relative to this directory.
 html_theme_path = ["_theme"]
-# html_title = '| Hasura ' + version + ' documentation'
+html_title = 'Hasura GraphQL Docs'
 
 # The name for this set of Sphinx documents.
 # "<project> v<release> documentation" by default.
@@ -214,7 +220,7 @@ html_theme_path = ["_theme"]
 # the docs.  This file should be a Windows icon file (.ico) being 16x16 or 32x32
 # pixels large.
 #
-html_favicon = "img/layout/favicon_yellow.png"
+html_favicon = "img/layout/favicon_dark_yellow.png"
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
@@ -275,7 +281,7 @@ html_show_copyright = True
 # contain a <link> tag referring to it.  The value of this option must be the
 # base URL from which the finished HTML is served.
 #
-html_use_opensearch = 'https://docs.hasura.io'
+html_use_opensearch = 'https://hasura.io/docs'
 
 # This is the file name suffix for HTML files (e.g. ".xhtml").
 # html_file_suffix = None

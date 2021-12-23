@@ -4,7 +4,7 @@ status: 400
 response:
   code: unexpected-payload
   error: cannot cast column of type "geography" to type "integer"
-  path: $.args.where.geog_col.$cast
+  path: $.args.where.geog_col['$cast']
 query:
   type: select
   args:

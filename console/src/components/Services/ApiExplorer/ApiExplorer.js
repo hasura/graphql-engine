@@ -5,52 +5,9 @@ import Helmet from 'react-helmet';
 import ApiRequestWrapper from './ApiRequestWrapper';
 
 import globals from '../../../Globals';
-
-/*
-import ApiCollectionPanel from './ApiCollectionPanel';
-
-import {
-  changeTabSelection,
-  changeApiSelection,
-  expandAuthApi,
-  clearHistory,
-  // changeRequestParams,
-} from './Actions';
-
-import {triggerOnBoarding} from '../Main/Actions';
-*/
+import { getTables } from '../../../metadata/selector';
 
 class ApiExplorer extends Component {
-  /*
-  onTabSelectionChanged = tabIndex => {
-    this.props.dispatch(changeTabSelection(tabIndex));
-  };
-
-  onApiSelectionChanged = (selectedApi, authApiExpanded) => {
-    this.props.dispatch(changeApiSelection(selectedApi, authApiExpanded));
-  };
-
-  onAuthApiExpanded = index => {
-    this.props.dispatch(expandAuthApi(index));
-  };
-
-  onClearHistoryClicked = () => {
-    this.props.dispatch(clearHistory());
-  };
-
-  getDQBQuery(propsObj) {
-    const { type, args } = propsObj;
-    const _query = {};
-    _query.type = type;
-    _query.args = JSON.parse(JSON.stringify(args));
-    return _query;
-  }
-
-  updateDQBState(data) {
-    this.props.dispatch(hydrateDQBData(data));
-  }
-  */
-
   render() {
     const {
       displayedApi,
@@ -63,6 +20,8 @@ class ApiExplorer extends Component {
       location,
       serverVersion,
       serverConfig,
+      mode,
+      loading,
     } = this.props;
 
     const styles = require('./ApiExplorer.scss');
@@ -83,12 +42,14 @@ class ApiExplorer extends Component {
             details={displayedApi.details}
             request={displayedApi.request}
             route={route}
+            mode={mode}
             dataHeaders={dataHeaders}
             numberOfTables={tables.length}
             headerFocus={headerFocus}
             urlParams={location.query}
             serverVersion={serverVersion}
             consoleUrl={consoleUrl}
+            loading={loading}
             serverConfig={serverConfig}
           />
         </div>
@@ -105,6 +66,7 @@ ApiExplorer.propTypes = {
   tables: PropTypes.array.isRequired,
   headerFocus: PropTypes.bool.isRequired,
   location: PropTypes.object.isRequired,
+  mode: PropTypes.string.isRequired,
 };
 
 const generatedApiExplorer = connect => {
@@ -115,7 +77,7 @@ const generatedApiExplorer = connect => {
       credentials: {},
       dataApiExplorerData: { ...state.dataApiExplorer },
       dataHeaders: state.tables.dataHeaders,
-      tables: state.tables.allSchemas,
+      tables: getTables(state),
       serverConfig: state.main.serverConfig ? state.main.serverConfig.data : {},
     };
   };

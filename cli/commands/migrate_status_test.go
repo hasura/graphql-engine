@@ -1,70 +1,62 @@
 package commands
 
 import (
-	"math/rand"
-	"net/url"
+	"fmt"
 	"os"
 	"path/filepath"
-	"strconv"
-	"testing"
-	"time"
 
-	"github.com/briandowns/spinner"
-	"github.com/hasura/graphql-engine/cli"
-	"github.com/hasura/graphql-engine/cli/migrate"
-	"github.com/hasura/graphql-engine/cli/version"
-	"github.com/sirupsen/logrus/hooks/test"
-	"github.com/stretchr/testify/assert"
+	"github.com/hasura/graphql-engine/cli/v2/internal/testutil"
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
+	. "github.com/onsi/gomega/gbytes"
+	. "github.com/onsi/gomega/gexec"
 )
 
-func testMigrateStatus(t *testing.T, endpoint *url.URL, migrationsDir string, expectedStatus *migrate.Status) {
-	logger, _ := test.NewNullLogger()
-	opts := &migrateStatusOptions{
-		EC: &cli.ExecutionContext{
-			Logger:       logger,
-			Spinner:      spinner.New(spinner.CharSets[7], 100*time.Millisecond),
-			MigrationDir: migrationsDir,
-			ServerConfig: &cli.ServerConfig{
-				Endpoint:       endpoint.String(),
-				AdminSecret:    os.Getenv("HASURA_GRAPHQL_TEST_ADMIN_SECRET"),
-				ParsedEndpoint: endpoint,
-			},
-		},
-	}
+var _ = Describe("hasura migrate status", func() {
+	var dirName string
+	var session *Session
+	var teardown func()
+	BeforeEach(func() {
+		dirName = testutil.RandDirName()
+		hgeEndPort, teardownHGE := testutil.StartHasura(GinkgoT(), testutil.HasuraDockerImage)
+		hgeEndpoint := fmt.Sprintf("http://0.0.0.0:%s", hgeEndPort)
+		testutil.RunCommandAndSucceed(testutil.CmdOpts{
+			Args: []string{"init", dirName},
+		})
+		editEndpointInConfig(filepath.Join(dirName, defaultConfigFilename), hgeEndpoint)
 
-	opts.EC.Version = version.New()
-	v, err := version.FetchServerVersion(opts.EC.ServerConfig.Endpoint)
-	if err != nil {
-		t.Fatalf("getting server version failed: %v", err)
-	}
-	opts.EC.Version.SetServerVersion(v)
+		teardown = func() {
+			session.Kill()
+			os.RemoveAll(dirName)
+			teardownHGE()
+		}
+	})
 
-	status, err := opts.run()
-	if err != nil {
-		t.Fatalf("failed fetching migration status: %v", err)
-	}
-	assert.Equal(t, expectedStatus, status)
-}
+	AfterEach(func() { teardown() })
 
-func TestMigrateStatusWithInvalidEndpoint(t *testing.T) {
-	logger, _ := test.NewNullLogger()
-	opts := &migrateStatusOptions{
-		EC: &cli.ExecutionContext{
-			Logger:       logger,
-			Spinner:      spinner.New(spinner.CharSets[7], 100*time.Millisecond),
-			MigrationDir: filepath.Join(os.TempDir(), "hasura-cli-test-"+strconv.Itoa(rand.Intn(1000))),
-			ServerConfig: &cli.ServerConfig{
-				Endpoint:       ":",
-				AdminSecret:    "",
-				ParsedEndpoint: &url.URL{},
-			},
-		},
-	}
+	Context("migrate status test", func() {
+		It("should show the status of migrations between local and server ", func() {
+			testutil.RunCommandAndSucceed(testutil.CmdOpts{
+				Args:             []string{"migrate", "create", "schema_creation", "--up-sql", "create schema \"testing\";", "--down-sql", "drop schema \"testing\" cascade;", "--database-name", "default"},
+				WorkingDirectory: dirName,
+			})
+			session = testutil.Hasura(testutil.CmdOpts{
+				Args:             []string{"migrate", "status", "--database-name", "default"},
+				WorkingDirectory: dirName,
+			})
+			wantKeywordList := []string{
+				".*VERSION*.",
+				".*SOURCE STATUS*.",
+				".*DATABASE STATUS*.",
+				".*schema_creation*.",
+				".*Present        Not Present*.",
+			}
 
-	opts.EC.Version = version.New()
-	opts.EC.Version.SetServerVersion("")
-	_, err := opts.run()
-	if err == nil {
-		t.Fatalf("expected err not to be nil")
-	}
-}
+			for _, keyword := range wantKeywordList {
+				Expect(session.Wait(timeout).Out).Should(Say(keyword))
+			}
+			Eventually(session, timeout).Should(Exit(0))
+		})
+	})
+
+})

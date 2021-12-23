@@ -4,12 +4,12 @@ status: 200
 response:
   data:
     update_person:
+      affected_rows: 1
       returning:
-      - details:
+      - id: 1
+        details:
           name:
             first: John
-        id: 1
-      affected_rows: 1
 query:
   query: |
     mutation update_person($value: jsonb) {

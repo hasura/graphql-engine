@@ -1,11 +1,8 @@
 import React, { useEffect } from 'react';
 import { ordinalColSort } from '../utils';
 import ExpandableEditor from '../../../Common/Layout/ExpandableEditor/Editor';
-import UniqueKeySelector from '../Common/ReusableComponents/UniqueKeySelector';
-import {
-  getUkeyPkeyConfig,
-  getKeyDef,
-} from '../Common/ReusableComponents/utils';
+import UniqueKeySelector from '../Common/Components/UniqueKeySelector';
+import { getUkeyPkeyConfig, getKeyDef } from '../Common/Components/utils';
 import { saveUniqueKey, removeUniqueKey } from './ModifyActions';
 
 import { getConfirmation } from '../../../Common/utils/jsUtils';
@@ -15,6 +12,7 @@ const UniqueKeyEditor = ({
   tableSchema,
   setUniqueKeys,
   dispatch,
+  readOnlyMode,
 }) => {
   const columns = tableSchema.columns.sort(ordinalColSort);
   // columns in the right order with their indices
@@ -87,9 +85,6 @@ const UniqueKeyEditor = ({
     // label text when unique key is collapsed
     const collapsedLabel = () => {
       if (isLast) {
-        if (numUniqueKeys === 1) {
-          return 'No unique keys';
-        }
         return null;
       }
 
@@ -157,7 +152,8 @@ const UniqueKeyEditor = ({
       expandButtonText = 'Edit';
       collapseButtonText = 'Close';
     } else {
-      expandButtonText = numUniqueKeys === 1 ? 'Add' : 'Add a new unique key';
+      expandButtonText =
+        numUniqueKeys === 1 ? 'Add a unique key' : 'Add a new unique key';
       collapseButtonText = 'Cancel';
     }
 
@@ -167,6 +163,7 @@ const UniqueKeyEditor = ({
           editorExpanded={expandedContent}
           expandedLabel={expandedLabel}
           collapsedLabel={collapsedLabel}
+          readOnlyMode={readOnlyMode}
           property={`unique-key-${i}`}
           service="modify-table"
           saveFunc={saveFunc}

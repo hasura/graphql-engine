@@ -1,5 +1,3 @@
-// require('babel-polyfill');
-
 // Webpack config for development
 const fs = require('fs');
 const path = require('path');
@@ -10,27 +8,28 @@ const host = hasuraConfig.hmrHost;
 const port = hasuraConfig.hmrPort;
 
 const autoprefixer = require('autoprefixer');
-const BundleAnalyzerPlugin = require('webpack-bundle-analyzer')
-  .BundleAnalyzerPlugin;
 
 const WebpackIsomorphicToolsPlugin = require('webpack-isomorphic-tools/plugin');
 const webpackIsomorphicToolsPlugin = new WebpackIsomorphicToolsPlugin(
   require('./webpack-isomorphic-tools')
 );
-
-// const { UnusedFilesWebpackPlugin } = require('unused-files-webpack-plugin');
+const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
+const CaseSensitivePathsPlugin = require('case-sensitive-paths-webpack-plugin');
+const commonConfig = require('./common.config');
 
 module.exports = {
   mode: 'development',
   devtool: 'inline-source-map',
   context: path.resolve(__dirname, '..'),
+  node: {
+    module: 'empty',
+    fs: 'empty',
+    net: 'empty',
+    child_process: 'empty',
+  },
   entry: {
     main: [
-      'webpack-hot-middleware/client?path=http://' +
-        host +
-        ':' +
-        port +
-        '/__webpack_hmr',
+      `webpack-hot-middleware/client?path=http://${host}:${port}/__webpack_hmr`,
       'bootstrap-loader?extractStyles',
       'font-awesome-webpack!./src/theme/font-awesome.config.js',
       './src/client.js',
@@ -40,7 +39,7 @@ module.exports = {
     path: assetsPath,
     filename: '[name]-[hash].js',
     chunkFilename: '[name]-[chunkhash].js',
-    publicPath: 'http://' + host + ':' + port + hasuraConfig.webpackPrefix,
+    publicPath: `http://${host}:${port}${hasuraConfig.webpackPrefix}`,
   },
   module: {
     rules: [
@@ -50,7 +49,7 @@ module.exports = {
         type: 'javascript/auto',
       },
       {
-        test: /\.jsx?$/,
+        test: /\.(j|t)sx?$/,
         exclude: /node_modules/,
         use: 'babel-loader',
       },
@@ -59,74 +58,38 @@ module.exports = {
         loader: 'ignore-loader',
       },
       {
-        test: /\.css$/,
+        test: /\.scss$/,
         use: [
           'style-loader',
           {
             loader: 'css-loader',
             options: {
-              importLoaders: 1,
+              importLoaders: 2,
+              modules: {
+                localIdentName: '[local]___[hash:base64:5]',
+              },
+            },
+          },
+          {
+            loader: 'sass-loader',
+            options: {
+              // Prefer `dart-sass`
+              implementation: require('sass'),
+              sassOptions: {
+                outputStyle: 'expanded',
+              },
+              sourceMap: true,
             },
           },
         ],
       },
-      {
-        test: /\.scss$/,
-        use: [
-          'style-loader',
-          'css-loader?modules&importLoaders=2&sourceMap&localIdentName=[local]___[hash:base64:5]',
-          'sass-loader?outputStyle=expanded&sourceMap',
-        ],
-      },
-      {
-        test: /\.woff(\?v=\d+\.\d+\.\d+)?$/,
-        use: [
-          {
-            loader: 'url-loader',
-            options: { limit: 10000, mimetype: 'application/font-woff' },
-          },
-        ],
-      },
-      {
-        test: /\.woff2(\?v=\d+\.\d+\.\d+)?$/,
-        use: [
-          {
-            loader: 'url-loader',
-            options: { limit: 10000, mimetype: 'application/font-woff' },
-          },
-        ],
-      },
-      {
-        test: /\.ttf(\?v=\d+\.\d+\.\d+)?$/,
-        use: [
-          {
-            loader: 'url-loader',
-            options: { limit: 10000, mimetype: 'application/octet-stream' },
-          },
-        ],
-      },
-      {
-        test: /\.eot(\?v=\d+\.\d+\.\d+)?$/,
-        use: [{ loader: 'file-loader' }],
-      },
-      {
-        test: /\.svg(\?v=\d+\.\d+\.\d+)?$/,
-        use: [
-          {
-            loader: 'url-loader',
-            options: { limit: 10000, mimetype: 'image/svg+xml' },
-          },
-        ],
-      },
-      {
-        test: webpackIsomorphicToolsPlugin.regular_expression('images'),
-        use: [{ loader: 'url-loader', options: { limit: 10240 } }],
-      },
+      ...commonConfig.assetsRules,
     ],
   },
   resolve: {
     modules: ['src', 'node_modules'],
-    extensions: ['.json', '.js', '.jsx', '.mjs'],
+    extensions: ['.json', '.js', '.jsx', '.mjs', '.ts', '.tsx'],
+    plugins: commonConfig.resolvePlugins,
   },
   plugins: [
     // hot reload
@@ -150,7 +113,15 @@ module.exports = {
     // set global consts
     new webpack.DefinePlugin({
       CONSOLE_ASSET_VERSION: Date.now().toString(),
+      'process.hrtime': () => null,
     }),
     webpackIsomorphicToolsPlugin.development(),
+    new ForkTsCheckerWebpackPlugin({
+      compilerOptions: {
+        allowJs: true,
+        checkJs: false,
+      },
+    }),
+    new CaseSensitivePathsPlugin(),
   ],
 };

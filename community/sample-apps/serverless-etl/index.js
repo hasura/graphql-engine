@@ -5,7 +5,7 @@ if (!("Notification" in window)) {
 
 const screens = ['#loading-screen', '#input-screen', '#search-screen'];
 // Replace with HGE_URL
-const HGE_URL = '/v1/graphql';
+const HGE_URL = 'https://serverless-etl.hasura.app/v1/graphql';
 
 function showScreen(name) {
   for (screen of screens) {

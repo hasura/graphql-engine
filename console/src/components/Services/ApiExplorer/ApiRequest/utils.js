@@ -4,31 +4,33 @@ import {
   ADMIN_SECRET_HEADER_KEY,
   SERVER_CONSOLE_MODE,
 } from '../../../../constants';
+import {
+  setLSItem,
+  getLSItem,
+  removeLSItem,
+  LS_KEYS,
+} from '../../../../utils/localStorage';
 
 export const setEndPointSectionIsOpen = isOpen => {
-  window.localStorage.setItem('ApiExplorer:EndpointSectionIsOpen', isOpen);
+  setLSItem(LS_KEYS.apiExplorerEndpointSectionIsOpen, isOpen);
 };
 
 export const getEndPointSectionIsOpen = () => {
   const defaultIsOpen = true;
 
-  const isOpen = window.localStorage.getItem(
-    'ApiExplorer:EndpointSectionIsOpen'
-  );
+  const isOpen = getLSItem(LS_KEYS.apiExplorerEndpointSectionIsOpen);
 
   return isOpen ? isOpen === 'true' : defaultIsOpen;
 };
 
 export const setHeadersSectionIsOpen = isOpen => {
-  window.localStorage.setItem('ApiExplorer:HeadersSectionIsOpen', isOpen);
+  setLSItem(LS_KEYS.apiExplorerHeaderSectionIsOpen, isOpen);
 };
 
 export const getHeadersSectionIsOpen = () => {
   const defaultIsOpen = true;
 
-  const isOpen = window.localStorage.getItem(
-    'ApiExplorer:HeadersSectionIsOpen'
-  );
+  const isOpen = getLSItem(LS_KEYS.apiExplorerHeaderSectionIsOpen);
 
   return isOpen ? isOpen === 'true' : defaultIsOpen;
 };
@@ -48,17 +50,17 @@ export const getAdminSecret = () => {
 };
 
 export const persistAdminSecretHeaderWasAdded = () => {
-  window.localStorage.setItem('ApiExplorer:AdminSecretHeaderWasAdded', true);
+  setLSItem(LS_KEYS.apiExplorerAdminSecretWasAdded, 'true');
+};
+
+export const removePersistedAdminSecretHeaderWasAdded = () => {
+  removeLSItem(LS_KEYS.apiExplorerAdminSecretWasAdded);
 };
 
 export const getPersistedAdminSecretHeaderWasAdded = () => {
-  const defaultIsSet = false;
+  const lsValue = getLSItem(LS_KEYS.apiExplorerAdminSecretWasAdded);
 
-  const isSet = window.localStorage.getItem(
-    'ApiExplorer:AdminSecretHeaderWasAdded'
-  );
-
-  return isSet ? isSet === 'true' : defaultIsSet;
+  return lsValue ? lsValue === 'true' : false;
 };
 
 export const persistGraphiQLHeaders = headers => {
@@ -76,16 +78,14 @@ export const persistGraphiQLHeaders = headers => {
     return maskedHeader;
   });
 
-  window.localStorage.setItem(
-    'HASURA_CONSOLE_GRAPHIQL_HEADERS',
+  setLSItem(
+    LS_KEYS.apiExplorerConsoleGraphQLHeaders,
     JSON.stringify(maskedHeaders)
   );
 };
 
 export const getPersistedGraphiQLHeaders = () => {
-  const headersString = window.localStorage.getItem(
-    'HASURA_CONSOLE_GRAPHIQL_HEADERS'
-  );
+  const headersString = getLSItem(LS_KEYS.apiExplorerConsoleGraphQLHeaders);
 
   let headers = null;
   if (headersString) {
@@ -138,4 +138,12 @@ export const parseAuthHeader = header => {
   }
 
   return { isAuthHeader, token };
+};
+
+export const persistGraphiQLMode = mode => {
+  setLSItem(LS_KEYS.apiExplorerGraphiqlMode, mode);
+};
+
+export const getPersistedGraphiQLMode = () => {
+  return getLSItem(LS_KEYS.apiExplorerGraphiqlMode) || 'graphql';
 };

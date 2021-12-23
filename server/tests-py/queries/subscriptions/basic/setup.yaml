@@ -1,5 +1,6 @@
 type: bulk
 args:
+
 - type: run_sql
   args:
     sql: |
@@ -7,7 +8,19 @@ args:
           c1 int,
           c2 text
       );
+
 - type: track_table
   args:
     schema: hge_tests
     name: test_t1
+
+- type: create_select_permission
+  args:
+    table:
+      name: test_t1
+      schema: hge_tests
+    role: user
+    permission:
+      columns: '*'
+      filter:
+        c1: X-Hasura-Custom

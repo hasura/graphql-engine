@@ -1,3 +1,6 @@
+# Be warned, this test's behavior varies between versions of PostGIS due
+# to what seems like a floating point bug:
+# https://trac.osgeo.org/postgis/ticket/4604
 description: Test PostGIS spatial operators on a geography column
 url: /v1/graphql
 status: 200
@@ -34,8 +37,8 @@ query:
   variables:
     ipoint:
       coordinates:
-      - -43.23456
-      - 72.4567772
+      - 0.0
+      - 0.5
       crs:
         type: name
         properties:

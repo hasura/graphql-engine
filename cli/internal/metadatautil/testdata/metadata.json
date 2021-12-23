@@ -1,0 +1,189 @@
+{
+  "version": 3,
+  "sources": [
+    {
+      "name": "default",
+      "kind": "postgres",
+      "tables": [
+        {
+          "table": {
+            "schema": "public",
+            "name": "t1"
+          },
+          "insert_permissions": [
+            {
+              "role": "user",
+              "permission": {
+                "check": {
+                  "id": {
+                    "_eq": "X-Hasura-User-Id"
+                  }
+                },
+                "columns": [],
+                "backend_only": false
+              }
+            }
+          ],
+          "event_triggers": [
+            {
+              "name": "t1",
+              "definition": {
+                "enable_manual": false,
+                "insert": {
+                  "columns": "*"
+                }
+              },
+              "retry_conf": {
+                "num_retries": 0,
+                "interval_sec": 10,
+                "timeout_sec": 60
+              },
+              "webhook": "https://httpbin.org/post"
+            }
+          ]
+        },
+        {
+          "table": {
+            "schema": "public",
+            "name": "t2"
+          }
+        }
+      ],
+      "functions": [
+        {
+          "function": {
+            "schema": "public",
+            "name": "get_t1"
+          },
+          "some_amazing_stuff": {
+            "test1": "test",
+            "test2": "test"
+          },
+          "xyz_test": {
+            "test1": "test",
+            "test2": "test"
+          }
+        },
+        {
+          "function": {
+            "schema": "public",
+            "name": "get_t2"
+          }
+        }
+      ],
+      "configuration": {
+        "connection_info": {
+          "database_url": {
+            "from_env": "HASURA_GRAPHQL_DATABASE_URL"
+          },
+          "isolation_level": "read-committed",
+          "pool_settings": {
+            "retries": 1,
+            "idle_timeout": 180,
+            "max_connections": 50
+          },
+          "use_prepared_statements": true
+        }
+      }
+    },
+    {
+      "name": "bg",
+      "kind": "bigquery",
+      "tables": [
+        {
+          "table": {
+            "dataset": "london_cycles",
+            "name": "cycle_hire"
+          }
+        },
+        {
+          "table": {
+            "dataset": "london_cycles",
+            "name": "cycle_stations"
+          }
+        }
+      ],
+      "configuration": {
+        "service_account": {
+          "project_id": "some_test",
+          "client_email": "some_email",
+          "private_key": "the private key"
+        },
+        "project_id": "test_id",
+        "datasets": [
+          "t1"
+        ]
+      }
+    }
+  ],
+  "remote_schemas": [
+    {
+      "name": "countries",
+      "definition": {
+        "url": "https://countries.trevorblades.com/",
+        "timeout_seconds": 60,
+        "forward_client_headers": true
+      }
+    }
+  ],
+  "actions": [
+    {
+      "name": "action1",
+      "definition": {
+        "handler": "http://localhost:3000",
+        "output_type": "SampleOutput",
+        "arguments": [
+          {
+            "name": "arg1",
+            "type": "SampleInput!"
+          }
+        ],
+        "type": "mutation",
+        "kind": "synchronous"
+      }
+    },
+    {
+      "name": "action2",
+      "definition": {
+        "handler": "http://localhost:3000",
+        "output_type": "SampleOutput",
+        "arguments": [
+          {
+            "name": "arg1",
+            "type": "SampleInput!"
+          }
+        ],
+        "type": "mutation",
+        "kind": "synchronous"
+      }
+    }
+  ],
+  "custom_types": {
+    "input_objects": [
+      {
+        "name": "SampleInput",
+        "fields": [
+          {
+            "name": "username",
+            "type": "String!"
+          },
+          {
+            "name": "password",
+            "type": "String!"
+          }
+        ]
+      }
+    ],
+    "objects": [
+      {
+        "name": "SampleOutput",
+        "fields": [
+          {
+            "name": "accessToken",
+            "type": "String!"
+          }
+        ]
+      }
+    ]
+  }
+}

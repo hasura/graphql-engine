@@ -3,8 +3,7 @@ FROM ubuntu:16.04
 ARG docker_ver="17.09.0-ce"
 ARG upx_version="3.94"
 ARG gcloud_version="207.0.0"
-ARG ghr_version="0.10.0"
-ARG hub_version="2.5.0"
+ARG hub_version="2.14.2"
 
 RUN apt-get -y update \
     && apt-get install -y curl make xz-utils git python \
@@ -15,9 +14,6 @@ RUN apt-get -y update \
     && xz -d -c /tmp/upx-${upx_version}.tar.xz \
        | tar -xOf - upx-${upx_version}-amd64_linux/upx > /bin/upx \
     && chmod a+x /bin/upx \
-    && curl -Lo /tmp/ghr-${ghr_version}.tar.gz https://github.com/tcnksm/ghr/releases/download/v${ghr_version}/ghr_v${ghr_version}_linux_amd64.tar.gz \
-    && tar -xz -C /tmp -f /tmp/ghr-${ghr_version}.tar.gz \
-    && mv /tmp/ghr_v${ghr_version}_linux_amd64/* /usr/bin \
     && curl -Lo /tmp/gcloud-${gcloud_version}.tar.gz https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-sdk-${gcloud_version}-linux-x86_64.tar.gz \
     && tar -xzf /tmp/gcloud-${gcloud_version}.tar.gz -C /usr/local \
     && /usr/local/google-cloud-sdk/install.sh \

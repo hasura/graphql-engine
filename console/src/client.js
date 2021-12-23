@@ -1,126 +1,22 @@
 /**
  * THIS IS THE ENTRY POINT FOR THE CLIENT, JUST LIKE server.js IS THE ENTRY POINT FOR THE SERVER.
  */
+
 import React from 'react';
 import ReactDOM from 'react-dom';
-import { createLogger } from 'redux-logger';
-import thunk from 'redux-thunk';
 
 import { Provider } from 'react-redux';
 
 import { Router, browserHistory } from 'react-router';
-import { routerMiddleware, syncHistoryWithStore } from 'react-router-redux';
-import { compose, createStore, applyMiddleware } from 'redux';
+import { syncHistoryWithStore } from 'react-router-redux';
 import { useBasename } from 'history';
+import { ReactQueryProvider } from './lib/reactQuery';
+import './theme/tailwind.css';
 
 import getRoutes from './routes';
 
-import reducer from './reducer';
 import globals from './Globals';
-import Endpoints from './Endpoints';
-import { filterEventsBlockList, sanitiseUrl } from './telemetryFilter';
-
-const analyticsUrl = Endpoints.telemetryServer;
-let analyticsConnection;
-const { consoleMode, enableTelemetry, cliUUID } = window.__env;
-const telemetryEnabled =
-  enableTelemetry !== undefined && enableTelemetry === true;
-if (telemetryEnabled) {
-  try {
-    analyticsConnection = new WebSocket(analyticsUrl);
-  } catch (error) {
-    console.error(error);
-  }
-}
-
-const onError = error => {
-  console.error('WebSocket Error for Events' + error);
-};
-
-const onClose = () => {
-  try {
-    analyticsConnection = new WebSocket(analyticsUrl);
-  } catch (error) {
-    console.error(error);
-  }
-  analyticsConnection.onclose = onClose();
-  analyticsConnection.onerror = onError();
-};
-
-function analyticsLogger({ getState }) {
-  return next => action => {
-    // Call the next dispatch method in the middleware chain.
-    const returnValue = next(action);
-    // check if analytics tracking is enabled
-    if (telemetryEnabled) {
-      const serverVersion = getState().main.serverVersion;
-      const actionType = action.type;
-      const url = sanitiseUrl(window.location.pathname);
-      const reqBody = {
-        server_version: serverVersion,
-        event_type: actionType,
-        url,
-        console_mode: consoleMode,
-        cli_uuid: cliUUID,
-        server_uuid: getState().telemetry.hasura_uuid,
-      };
-
-      let isLocationType = false;
-      if (actionType === '@@router/LOCATION_CHANGE') {
-        isLocationType = true;
-      }
-      // filter events
-      if (!filterEventsBlockList.includes(actionType)) {
-        if (
-          analyticsConnection &&
-          analyticsConnection.readyState === analyticsConnection.OPEN
-        ) {
-          // When the connection is open, send data to the server
-          if (isLocationType) {
-            // capture page views
-            const payload = action.payload;
-            reqBody.url = sanitiseUrl(payload.pathname);
-          }
-          analyticsConnection.send(
-            JSON.stringify({ data: reqBody, topic: globals.telemetryTopic })
-          ); // Send the data
-          // check for possible error events and store more data?
-        } else {
-          // retry websocket connection
-          // analyticsConnection = new WebSocket(analyticsUrl);
-        }
-      }
-    }
-    // This will likely be the action itself, unless
-    // a middleware further in chain changed it.
-    return returnValue;
-  };
-}
-
-// Create the store
-let _finalCreateStore;
-
-if (__DEVELOPMENT__) {
-  const tools = [
-    applyMiddleware(
-      thunk,
-      routerMiddleware(browserHistory),
-      createLogger({ diff: true, duration: true }),
-      analyticsLogger
-    ),
-    require('redux-devtools').persistState(
-      window.location.href.match(/[?&]debug_session=([^&]+)\b/)
-    ),
-  ];
-  if (typeof window === 'object' && window.__REDUX_DEVTOOLS_EXTENSION__) {
-    tools.push(window.__REDUX_DEVTOOLS_EXTENSION__());
-  }
-  _finalCreateStore = compose(...tools)(createStore);
-} else {
-  _finalCreateStore = compose(
-    applyMiddleware(thunk, routerMiddleware(browserHistory), analyticsLogger)
-  )(createStore);
-}
+import { store } from './store';
 
 const hashLinkScroll = () => {
   const { hash } = window.location;
@@ -146,7 +42,6 @@ const hashLinkScroll = () => {
   }
 };
 
-const store = _finalCreateStore(reducer);
 const history = syncHistoryWithStore(browserHistory, store);
 
 /* ****************************************************************** */
@@ -160,20 +55,26 @@ if (__DEVELOPMENT__ && module.hot) {
   */
   module.hot.accept();
 }
-
 // Main routes and rendering
-const main = (
-  <Router
-    history={useBasename(() => history)({ basename: globals.urlPrefix })}
-    routes={getRoutes(store)}
-    onUpdate={hashLinkScroll}
-  />
-);
+const Main = () => {
+  const routeHistory = useBasename(() => history)({
+    basename: globals.urlPrefix,
+  });
+  return (
+    <ReactQueryProvider>
+      <Router
+        history={routeHistory}
+        routes={getRoutes(store)}
+        onUpdate={hashLinkScroll}
+      />
+    </ReactQueryProvider>
+  );
+};
 
 const dest = document.getElementById('content');
 ReactDOM.render(
   <Provider store={store} key="provider">
-    {main}
+    <Main />
   </Provider>,
   dest
 );

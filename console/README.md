@@ -24,9 +24,9 @@ Feel free to open pull requests to address these issues or to add/fix  console f
 
 ### Prerequisites
 
-- [Node.js](https://nodejs.org/en/) (v8.9+)
-- [Hasura GraphQL Engine](https://docs.hasura.io/1.0/graphql/manual/getting-started/index.html)
-- [Hasura CLI](https://docs.hasura.io/1.0/graphql/manual/hasura-cli/install-hasura-cli.html) (for working with migrations)
+- [Node.js](https://nodejs.org/en/) (v12+, it is recommended that you use `node` with version `v12.x.x` A.K.A `erbium` or version `14.x.x` A.K.A `Fermium`)
+- [Hasura GraphQL Engine](https://hasura.io/docs/latest/graphql/core/getting-started/index.html)
+- [Hasura CLI](https://hasura.io/docs/latest/graphql/core/hasura-cli/install-hasura-cli.html) (for working with migrations)
 
 ### Set up and install dependencies
 
@@ -37,14 +37,14 @@ Feel free to open pull requests to address these issues or to add/fix  console f
 git clone https://github.com/<your-user-name>/graphql-engine
 cd graphql-engine
 cd console
-npm install
+npm ci
 ```
 
 ### Run console development server
 
 Hasura console can be developed in two modes, `server` or `cli` mode. If you are looking to add/tweak functionality related to migrations, check out [Develop with Hasura CLI](#develop-with-hasura-cli-cli-mode), otherwise check out [Develop with Hasura GraphQL engine](#develop-with-hasura-graphql-engine-server-mode).
 
-Both modes require a running instance of GraphQL Engine. The easiest way to get Hasura GraphQL engine instance is by Heroku. You can get it by following the steps given in [this](https://docs.hasura.io/1.0/graphql/manual/getting-started/heroku-simple.html) link. Other methods to install Hasura GraphQL engine are documented [here](https://docs.hasura.io/1.0/graphql/manual/getting-started/index.html).
+Both modes require a running instance of GraphQL Engine. The easiest way to get Hasura GraphQL engine instance is by Heroku. You can get it by following the steps given in [this](https://hasura.io/docs/latest/graphql/core/getting-started/heroku-simple.html) link. Other methods to install Hasura GraphQL engine are documented [here](https://hasura.io/docs/latest/graphql/core/getting-started/index.html).
 
 [Dotenv](https://github.com/motdotla/dotenv) is used for setting environment variables for development. In production, these environment variables are templated by the server or CLI.
 
@@ -62,7 +62,7 @@ Environment variables accepted in `server` mode:
 - `ASSETS_VERSION`: Version of console assets being served 
 - `ENABLE_TELEMETRY`: Whether to enable telemetry (`true`/`false`)
 - `URL_PREFIX`: Path at which the console is running
-- `DATA_API_URL`: The Hasura GraphQL engine url. (If you are running it on Heroku, it will look like <app-name\>.herokuapp.com, if you are running locally, it will look like http://localhost:<port\>)
+- `DATA_API_URL`: The Hasura GraphQL engine url. (If you are running it on Heroku, it will look like https://<app-name\>.herokuapp.com, if you are running locally, it will look like http://localhost:<port\>)
 - `SERVER_VERSION`: Hasura GraphQL Engine server version
 - `CONSOLE_MODE`: In server mode, it should be `server`
 - `IS_ADMIN_SECRET_SET`: Is GraphQl engine configured with an admin secret (`true`/`false`)
@@ -74,11 +74,11 @@ NODE_ENV=development
 PORT=3000
 CDN_ASSETS=true
 ASSETS_PATH=https://graphql-engine-cdn.hasura.io/console/assets
-ASSETS_VERSION=channel/beta/v1.0
+ASSETS_VERSION=channel/stable/v1.0
 ENABLE_TELEMETRY=true
 URL_PREFIX=/
 DATA_API_URL=http://localhost:8080
-SERVER_VERSION=v1.0.0-beta.6
+SERVER_VERSION=v1.0.0
 CONSOLE_MODE=server
 IS_ADMIN_SECRET_SET=true
 ```
@@ -120,11 +120,11 @@ API_HOST=http://localhost
 API_PORT=9693
 CDN_ASSETS=true
 ASSETS_PATH=https://graphql-engine-cdn.hasura.io/console/assets
-ASSETS_VERSION=channel/beta/v1.0
+ASSETS_VERSION=channel/stable/v1.0
 ENABLE_TELEMETRY=true
 URL_PREFIX=/
 DATA_API_URL=http://localhost:8080
-SERVER_VERSION=v1.0.0-beta.6
+SERVER_VERSION=v1.0.0
 CONSOLE_MODE=cli
 ADMIN_SECRET=my-admin-secret
 ```
@@ -147,6 +147,12 @@ hasura console --endpoint <DATA_API_URL> --admin-secret <your-admin-secret> (opt
 npm run dev
 ```
 
+###### Start development storybook
+
+```bash
+npm run storybook
+```
+
 ### Check out the console
 
 Visit [http://localhost:3000](http://localhost:3000) to confirm the setup.
@@ -158,18 +164,40 @@ Visit [http://localhost:3000](http://localhost:3000) to confirm the setup.
 Make changes to the code and the console will reload automatically to reflect the new changes. Keep iterating.
 When adding a new feature, it is recommended to add corresponding tests too.
 
-Tests are written using [Cypress](https://www.cypress.io/).
-
 You can use the [Redux DevTools Extension](http://extension.remotedev.io/) to inspect and debug the Redux store.
 It should automatically connect to the Redux store when started in development mode.
 
 By default [redux-logger](https://www.npmjs.com/package/redux-logger) is enabled to assist in development.
 You can disable it if you wish by commenting out the `createLogger` line in `src/client.js`
 
-### Run tests
+### E2E and Unit Tests
 
-- Run tests: `npm run cypress`
-- Write your tests in the `cypress` directory, integration.
+* E2E Tests are written using [Cypress](https://www.cypress.io/) .  
+   - Run tests: `npm run cypress`
+   - Write your tests in the `cypress/integration` directory.
+
+* Unit tests are written using [Jest Framework](https://jestjs.io/)
+    - Tests are written inside `__test__` folder of respective services. 
+    - Unit testing is mostly applied on the utility functions.
+    - If you want to run tests, execute `npm run jest` or `npm run jest-watch` (for watch mode)
+    - [Snapshot testing](https://jestjs.io/docs/en/snapshot-testing) is also used with unit tests.
+    - when you want to update the snapshot, you can run `npm run jest -- -u` or press `u` if you are in jest-watch mode.  
+
+### Linter and formatter
+
+Pre-commit git-hook that runs linter and formatter is by default disabled. You can enable it by adding `HUSKY_PRE_COMMIT=true` to your `.env` file.
+
+If you want to run a linter for all files, you can do:
+
+```bash
+npm run lint
+```
+
+To format all files, you can run:
+
+```bash
+npm run format
+```
 
 ### Submitting a pull request
 
@@ -181,3 +209,7 @@ You can disable it if you wish by commenting out the `createLogger` line in `src
 - The source code and the preview app will be reviewed by maintainers.
 
 <!-- prettier-ignore-end -->
+
+### Working with PRO console
+
+Wiki page: https://github.com/hasura/graphql-engine-internal/wiki/Console:-Code-Sharing-Between-OSS-and-PRO

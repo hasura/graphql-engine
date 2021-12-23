@@ -1,0 +1,30 @@
+{
+  "compilerOptions": {
+    "lib": ["es6", "dom", "es2017"],
+    "checkJs": false,
+    "allowJs": true,
+    "jsx": "react",
+    "allowSyntheticDefaultImports": true,
+    "strict": true,
+    "esModuleInterop": true,
+    "noEmitOnError": false,
+    "noEmit": true,
+    "types": ["react"],
+    "typeRoots": ["./src/types", "node_modules/@types"],
+    "resolveJsonModule": true,
+    "target": "es5",
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  },
+  "exclude": [
+    "node_modules",
+    "**/*.spec.ts",
+    "**/*.spec.tsx",
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "cypress"
+  ],
+  "include": ["src/**/*"]
+}

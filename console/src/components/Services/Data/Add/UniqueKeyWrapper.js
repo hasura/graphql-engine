@@ -1,10 +1,7 @@
 import React from 'react';
 import ExpandableEditor from '../../../Common/Layout/ExpandableEditor/Editor';
-import UniqueKeySelector from '../Common/ReusableComponents/UniqueKeySelector';
-import {
-  getUkeyPkeyConfig,
-  getKeyDef,
-} from '../Common/ReusableComponents/utils';
+import UniqueKeySelector from '../Common/Components/UniqueKeySelector';
+import { getUkeyPkeyConfig, getKeyDef } from '../Common/Components/utils';
 
 const UniqueKeyWrapper = ({
   // allSchemas,
@@ -45,7 +42,9 @@ const UniqueKeyWrapper = ({
       if (isLast && numUniqueKeys === 1) {
         return (
           <div>
-            <i>(You can add unique keys later as well)</i>
+            <span className="italic text-sm text-gray-600">
+              (You can add unique keys later as well)
+            </span>
           </div>
         );
       }
@@ -77,7 +76,7 @@ const UniqueKeyWrapper = ({
     }
 
     return (
-      <div key={`unique-key-${i}`}>
+      <div className="space-y-md" key={`unique-key-${i}`}>
         <ExpandableEditor
           editorExpanded={expandedContent}
           expandedLabel={expandedLabel}

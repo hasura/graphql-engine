@@ -28,6 +28,8 @@ community [Discord](https://discord.gg/vBPpJkS).
 
 ## Steps for contributing
 
+We use the [fork-and-branch git workflow](https://blog.scottlowe.org/2015/01/27/using-fork-branch-git-workflow/).
+
 - Fork the repo and clone it:
   ```bash
   git clone https://github.com/<your-username>/graphql-engine
@@ -65,45 +67,25 @@ community [Discord](https://discord.gg/vBPpJkS).
 [main contributing guide](../CONTRIBUTING.md#common-guidelines).
 - Push the changes to your fork and submit a pull request.
 
+### Changelog 
+
+In order for all the checks to pass on GitHub, it's required to do one of the following:
+
+- Make an entry to the `CHANGELOG.md` file (under "Next release") to describe the change from a user's perspective.
+
+- Add the `no-changelog-required` label.
+
+For docs, a changelog entry is required for the following:
+
+- Entire new docs pages
+- Considerable changes in the overall structure
+
+For small changes (such as fixes, adding examples, UI changes etc.), the `no-changelog-required` label will suffice.
+
 ## Some guidelines while adding docs
 
-### Header section
-- Page titles should be self sufficient. Users might not have the context of the hierarchy of the page in the 
-docs tree. A user can land on a page via search as well. e.g. Say you are adding a new deployment guide for AWS under 
-`Guides -> Deployment -> AWS`. The title of this page should not be just `AWS` but instead `AWS deployment guide for 
-Hasura GraphQL engine`. It's ok to alias it to just `AWS` in the sidebar as there the user has the context of the 
-page hierarchy.
-- Ensure every new added page has a ``Table of contents`` section with the appropriate depth.
-
-### Content
-- Add appropriate cross-links in content to assist users. i.e. if you refer to some functionality that is documented in 
-some other docs page, add a link to that page. e.g. if you have a statement like "create a relationship between tables
-X and Y ...", make "create a relationship" a link to the `Create relationships` page.
-- Try to make each section within a page self-sufficient. i.e. avoid structuring all pages as step-by-step guides
-unless it really is the intent. This ensures that we can refer to sections externally (from other docs pages, console, 
-etc.) and expect that the user will be able to follow the section without being lost on context that was set in earlier 
-sections of the page. Adding statements such as "As we have described in the above section ..." might help to set up 
-the needed context.
-
-### GraphQL request examples
-While adding GraphQL request examples:
-- Use a tab width of 2 for nesting the requests and responses for optimal use 
-of the space and maintaining consistency.
-- Nest query arguments for logical readability. Unfortunately GraphiQL prettify does not do a good job of doing this 
-by default.
-- Ensure that the order of fields in the responses is the same as in the requests for better readability.
-
-### Images
-- Before adding images to docs, first compress them via some tool to ensure users don't have to unnecessarily 
-download more data than needed. You can use www.tinypng.com for this. Sometimes you can compress images by over 75% 
-without losing any visible quality.
-- Use the `thumbnail` directive for images to allow click-to-zoom.
-
-### Syntax
-- Ensure heading underlines are the same length as the headings. Short underlines will throw warnings during builds.
-- Use bold in headings in place of string literals for aesthetics (i.e. ** in place of ``)
-- While adding code blocks ensure the right language type is set. Sometimes adding placeholders breaks the language's
-syntax in which case you'll have to set the language type to `none` to avoid warnings during builds.
+### Style guide
+Please follow our [guide on how to write docs pages](https://github.com/hasura/graphql-engine/wiki/How-to-write-docs-pages) in order to keep the structure and style of our docs consistent.
 
 ### Pre-commit checks
 - Just before committing your changes, delete your local `_build` folder completely and then build docs again. Scan 

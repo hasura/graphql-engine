@@ -1,0 +1,21 @@
+type: bulk
+args:
+- type: set_custom_types
+  args:
+    objects:
+    - name: User
+      fields:
+      - name: user_id
+        type: ID!
+      - name: name
+        type: String!
+- type: create_action
+  args:
+    name: create_user
+    definition:
+      kind: synchronous
+      arguments:
+      - name: name
+        type: String!
+      output_type: User!
+      handler: http://127.0.0.1:5593/create-user

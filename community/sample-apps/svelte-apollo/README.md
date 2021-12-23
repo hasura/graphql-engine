@@ -1,22 +1,19 @@
 # svelte-graphql-app
 
-A sample [Svelte 3](https://svelte.dev) app to demonstrate usage of GraphQL Queries, Mutations and Subscriptions with [svelte-apollo](https://github.com/timhall/svelte-apollo), Hasura GraphQL engine and Postgres as database. Forked from the standard svelte [template](https://github.com/sveltejs/template)
+A sample [Svelte 3](https://svelte.dev) app to demonstrate usage of GraphQL Queries, Mutations and Subscriptions with [svelte-apollo](https://github.com/timhall/svelte-apollo), Hasura Cloud and Postgres as database. Forked from the standard svelte [template](https://github.com/sveltejs/template)
 
 [![Edit svelte-graphql](https://codesandbox.io/static/img/play-codesandbox.svg)](https://codesandbox.io/s/github/hasura/graphql-engine/tree/master/community/sample-apps/svelte-apollo?fontsize=14)
 
-## Deploy Hasura
+## Create new Hasura Cloud project
 
-- Deploy Postgres and GraphQL Engine on Heroku:
+- Deploy GraphQL Engine on Hasura Cloud and setup PostgreSQL via Heroku:
   
-  [![Deploy to
-  heroku](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/hasura/graphql-engine-heroku)
+  [![Deploy to Hasura Cloud](https://graphql-engine-cdn.hasura.io/img/deploy_to_hasura.png)](https://cloud.hasura.io/signup)
 
-  Please checkout our [docs](https://docs.hasura.io/1.0/graphql/manual/deployment/index.html) for other deployment methods
-
-- Get the Heroku app URL (say `my-app.herokuapp.com`)
+- Get the app URL (something like `https://<my-project-name>.hasura.app`)
 - Create `author` table:
-  
-  Open Hasura console: visit https://my-app.herokuapp.com on a browser  
+
+  Open your Hasura Cloud project's console: visit `https://<my-project-name>.hasura.app` on a browser  
   Navigate to `Data` section in the top nav bar and create a table as follows:
 
   ![Create author table](../gatsby-postgres-graphql/assets/add_table.jpg)
@@ -51,7 +48,7 @@ Install the dependencies...
 npm install
 ```
 
-- Open `src/apollo.js` and configure Hasura's GraphQL Endpoint as follows: 
+- Open `src/apollo.js` and configure Hasura's GraphQL Endpoint as follows:
 
 ```javascript
 
@@ -72,7 +69,7 @@ npm install
   });
 
 ```
-Replace the `uri` argument with your Hasura GraphQL Endpoint for both `wsLink` and `httpLink`
+Replace the `uri` argument with your Hasura GraphQL Endpoint (something like `https://<my-project-name>.hasura.app/v1/graphql`) for both `wsLink` and `httpLink`
 
 Start [Rollup](https://rollupjs.org):
 
@@ -99,4 +96,3 @@ now
 ```
 
 This will deploy the app on Now 2.0 Platform and you have the Svetle app running live :)
-

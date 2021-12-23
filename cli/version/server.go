@@ -1,13 +1,10 @@
 package version
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"net/url"
-
-	yaml "github.com/ghodss/yaml"
-	"github.com/pkg/errors"
 )
 
 type serverVersionResponse struct {
@@ -15,33 +12,28 @@ type serverVersionResponse struct {
 }
 
 // FetchServerVersion reads the version from server.
-func FetchServerVersion(endpoint string) (version string, err error) {
-	ep, err := url.Parse(endpoint)
+func FetchServerVersion(endpoint string, client *http.Client) (version string, err error) {
+	response, err := client.Get(endpoint)
 	if err != nil {
-		return "", errors.Wrap(err, "cannot parse endpoint as a valid url")
-	}
-	versionEndpoint := fmt.Sprintf("%s/v1/version", ep.String())
-	response, err := http.Get(versionEndpoint)
-	if err != nil {
-		return "", errors.Wrap(err, "failed making version api call")
+		return "", fmt.Errorf("failed making version api call: %w", err)
 	}
 	if response.StatusCode != http.StatusOK {
 		switch response.StatusCode {
 		case http.StatusNotFound:
 			return "", nil
 		default:
-			return "", errors.Errorf("GET %s failed - [%d]", versionEndpoint, response.StatusCode)
+			return "", fmt.Errorf("GET %s failed - [%d]", endpoint, response.StatusCode)
 		}
 	} else {
 		defer response.Body.Close()
 		data, err := ioutil.ReadAll(response.Body)
 		if err != nil {
-			return "", errors.Wrap(err, "cannot read version api response")
+			return "", fmt.Errorf("cannot read version api response: %w", err)
 		}
 		var v serverVersionResponse
-		err = yaml.Unmarshal(data, &v)
+		err = json.Unmarshal(data, &v)
 		if err != nil {
-			return "", errors.Wrap(err, "failed to parse version api response")
+			return "", fmt.Errorf("failed to parse version api response: %w", err)
 		}
 		return v.Version, nil
 	}

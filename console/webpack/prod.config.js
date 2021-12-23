@@ -8,13 +8,10 @@ const hasuraConfig = require('../hasuraconfig');
 const relativeAssetsPath = '../static/dist';
 const assetsPath = path.join(__dirname, relativeAssetsPath);
 
-const WebpackIsomorphicToolsPlugin = require('webpack-isomorphic-tools/plugin');
-const webpackIsomorphicToolsPlugin = new WebpackIsomorphicToolsPlugin(
-  require('./webpack-isomorphic-tools')
-);
-
-const UglifyJSPlugin = require('uglifyjs-webpack-plugin');
+const TerserPlugin = require('terser-webpack-plugin');
 const OptimizeCssAssetsPlugin = require('optimize-css-assets-webpack-plugin');
+const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
+const commonConfig = require('./common.config');
 
 const cleanOptions = {
   root: process.cwd(),
@@ -34,6 +31,12 @@ module.exports = {
     chunkFilename: '[name].js',
     publicPath: hasuraConfig.webpackPrefix,
   },
+  node: {
+    module: 'empty',
+    fs: 'empty',
+    net: 'empty',
+    child_process: 'empty',
+  },
   module: {
     rules: [
       {
@@ -42,7 +45,7 @@ module.exports = {
         type: 'javascript/auto',
       },
       {
-        test: /\.jsx?$/,
+        test: /\.(j|t)sx?$/,
         exclude: /node_modules/,
         use: 'babel-loader',
       },
@@ -51,74 +54,38 @@ module.exports = {
         loader: 'ignore-loader',
       },
       {
-        test: /\.css$/,
+        test: /\.scss$/,
         use: [
-          'style-loader',
+          MiniCssExtractPlugin.loader,
           {
             loader: 'css-loader',
             options: {
-              importLoaders: 1,
+              importLoaders: 2,
+              sourceMap: false,
+              modules: {},
+            },
+          },
+          {
+            loader: 'sass-loader',
+            options: {
+              // Prefer `dart-sass`
+              implementation: require('sass'),
+              sassOptions: {
+                outputStyle: 'expanded',
+              },
+              sourceMap: false,
+              sourceMapContents: false,
             },
           },
         ],
       },
-      {
-        test: /\.scss$/,
-        use: [
-          MiniCssExtractPlugin.loader,
-          'css-loader?modules&importLoaders=2&sourceMap=false',
-          'sass-loader?outputStyle=expanded&sourceMap=false&sourceMapContents=false',
-        ],
-      },
-      {
-        test: /\.woff(\?v=\d+\.\d+\.\d+)?$/,
-        use: [
-          {
-            loader: 'url-loader',
-            options: { limit: 10000, mimetype: 'application/font-woff' },
-          },
-        ],
-      },
-      {
-        test: /\.woff2(\?v=\d+\.\d+\.\d+)?$/,
-        use: [
-          {
-            loader: 'url-loader',
-            options: { limit: 10000, mimetype: 'application/font-woff' },
-          },
-        ],
-      },
-      {
-        test: /\.ttf(\?v=\d+\.\d+\.\d+)?$/,
-        use: [
-          {
-            loader: 'url-loader',
-            options: { limit: 10000, mimetype: 'application/octet-stream' },
-          },
-        ],
-      },
-      {
-        test: /\.eot(\?v=\d+\.\d+\.\d+)?$/,
-        use: [{ loader: 'file-loader' }],
-      },
-      {
-        test: /\.svg(\?v=\d+\.\d+\.\d+)?$/,
-        use: [
-          {
-            loader: 'url-loader',
-            options: { limit: 10000, mimetype: 'image/svg+xml' },
-          },
-        ],
-      },
-      {
-        test: webpackIsomorphicToolsPlugin.regular_expression('images'),
-        use: [{ loader: 'url-loader', options: { limit: 10240 } }],
-      },
+      ...commonConfig.assetsRules,
     ],
   },
   resolve: {
     modules: ['src', 'node_modules'],
-    extensions: ['.json', '.js', '.jsx', '.mjs'],
+    extensions: ['.json', '.js', '.jsx', '.mjs', '.ts', '.tsx'],
+    plugins: commonConfig.resolvePlugins,
   },
   optimization: {
     minimize: true,
@@ -126,8 +93,8 @@ module.exports = {
       name: 'vendor',
     },
     minimizer: [
-      new UglifyJSPlugin({
-        uglifyOptions: {
+      new TerserPlugin({
+        terserOptions: {
           ecma: 8,
           warnings: false,
           compress: false,
@@ -142,7 +109,9 @@ module.exports = {
           keep_classnames: undefined,
           keep_fnames: false,
           safari10: false,
+          parallel: 2,
         },
+        extractComments: false,
       }),
       new OptimizeCssAssetsPlugin({
         assetNameRegExp: /\.css$/,
@@ -188,6 +157,13 @@ module.exports = {
         NODE_ENV: JSON.stringify('production'),
       },
       CONSOLE_ASSET_VERSION: Date.now().toString(),
+      'process.hrtime': () => null,
+    }),
+    new ForkTsCheckerWebpackPlugin({
+      compilerOptions: {
+        allowJs: true,
+        checkJs: false,
+      },
     }),
   ],
 };

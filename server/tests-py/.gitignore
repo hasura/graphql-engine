@@ -119,6 +119,7 @@ dmypy.json
 ### Python.VirtualEnv Stack ###
 # Virtualenv
 # http://iamzed.com/2009/05/07/a-primer-on-virtualenv/
+.hasura-dev-python-venv
 [Bb]in
 [Ii]nclude
 [Ll]ib
@@ -135,3 +136,7 @@ ca.srl
 webhook-req.cnf
 webhook.csr
 *.tix
+
+# nodejs:
+/node_modules/
+/package-lock.json

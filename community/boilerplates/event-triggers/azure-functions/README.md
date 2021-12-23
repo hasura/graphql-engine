@@ -1,7 +1,7 @@
 # Boilerplates for Azure Cloud Function serverless functions and Hasura GraphQL Engine's Event Triggers
 
 **NOTE**
-Some of the language/platforms are work in progress. We welcome contributions for the WIP langauages. See issues and the following checklist:
+Some of the language/platforms are work in progress. We welcome contributions for the WIP languages. See issues and the following checklist:
 
 | Folder name | Use-case| Javascript | Java | C# | F#
 |-------------|---------|:--------:|:------:|:----:|:---:

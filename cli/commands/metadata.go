@@ -1,102 +1,108 @@
 package commands
 
 import (
+	"bytes"
 	"encoding/json"
-	"io/ioutil"
-	"os"
+	"fmt"
+	"io"
 
-	"github.com/ghodss/yaml"
-	"github.com/hasura/graphql-engine/cli"
-	"github.com/hasura/graphql-engine/cli/migrate"
-	"github.com/pkg/errors"
+	"github.com/goccy/go-yaml"
+	"github.com/hasura/graphql-engine/cli/v2"
+	"github.com/hasura/graphql-engine/cli/v2/internal/scripts"
+	"github.com/hasura/graphql-engine/cli/v2/util"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
+type rawOutputFormat string
+
+const rawOutputFormatJSON rawOutputFormat = "json"
+const rawOutputFormatYAML rawOutputFormat = "yaml"
+
+// NewMetadataCmd returns the metadata command
 func NewMetadataCmd(ec *cli.ExecutionContext) *cobra.Command {
+	v := viper.New()
 	metadataCmd := &cobra.Command{
-		Use:          "metadata",
-		Short:        "Manage Hasura GraphQL Engine metadata saved in the database",
+		Use:     "metadata",
+		Aliases: []string{"md"},
+		Short:   "Manage Hasura GraphQL engine metadata saved in the database",
+		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+			cmd.Root().PersistentPreRun(cmd, args)
+			ec.Viper = v
+			err := ec.Prepare()
+			if err != nil {
+				return err
+			}
+			err = ec.Validate()
+			if err != nil {
+				return err
+			}
+			return scripts.CheckIfUpdateToConfigV3IsRequired(ec)
+		},
 		SilenceUsage: true,
 	}
 	metadataCmd.AddCommand(
+		newMetadataDiffCmd(ec),
 		newMetadataExportCmd(ec),
 		newMetadataClearCmd(ec),
 		newMetadataReloadCmd(ec),
 		newMetadataApplyCmd(ec),
+		newMetadataInconsistencyCmd(ec),
 	)
+
+	f := metadataCmd.PersistentFlags()
+
+	f.String("endpoint", "", "http(s) endpoint for Hasura GraphQL engine")
+	f.String("admin-secret", "", "admin secret for Hasura GraphQL engine")
+	f.String("access-key", "", "access key for Hasura GraphQL engine")
+	if err := f.MarkDeprecated("access-key", "use --admin-secret instead"); err != nil {
+		ec.Logger.WithError(err).Errorf("error while using a dependency library")
+	}
+	f.Bool("insecure-skip-tls-verify", false, "skip TLS verification and disable cert checking (default: false)")
+	f.String("certificate-authority", "", "path to a cert file for the certificate authority")
+
+	util.BindPFlag(v, "endpoint", f.Lookup("endpoint"))
+	util.BindPFlag(v, "admin_secret", f.Lookup("admin-secret"))
+	util.BindPFlag(v, "access_key", f.Lookup("access-key"))
+	util.BindPFlag(v, "insecure_skip_tls_verify", f.Lookup("insecure-skip-tls-verify"))
+	util.BindPFlag(v, "certificate_authority", f.Lookup("certificate-authority"))
+
 	return metadataCmd
 }
 
-func executeMetadata(cmd string, t *migrate.Migrate, ec *cli.ExecutionContext) error {
-	switch cmd {
-	case "export":
-		metaData, err := t.ExportMetadata()
-		if err != nil {
-			return errors.Wrap(err, "cannot export metadata")
-		}
-
-		t, err := json.Marshal(metaData)
-		if err != nil {
-			return errors.Wrap(err, "cannot Marshal metadata")
-		}
-
-		data, err := yaml.JSONToYAML(t)
+func writeByOutputFormat(w io.Writer, b []byte, format rawOutputFormat) error {
+	switch format {
+	case rawOutputFormatJSON:
+		out := new(bytes.Buffer)
+		err := json.Indent(out, b, "", "  ")
 		if err != nil {
 			return err
 		}
-
-		metadataPath, err := ec.GetMetadataFilePath("yaml")
+		_, err = io.Copy(w, out)
 		if err != nil {
-			return errors.Wrap(err, "cannot save metadata")
+			return fmt.Errorf("writing output failed: %w", err)
 		}
-
-		err = ioutil.WriteFile(metadataPath, data, 0644)
+	case rawOutputFormatYAML:
+		o, err := yaml.JSONToYAML(b)
 		if err != nil {
-			return errors.Wrap(err, "cannot save metadata")
+			return err
 		}
-	case "clear":
-		err := t.ResetMetadata()
+		_, err = io.Copy(w, bytes.NewReader(o))
 		if err != nil {
-			return errors.Wrap(err, "cannot clear Metadata")
+			return fmt.Errorf("writing output failed: %w", err)
 		}
-	case "reload":
-		err := t.ReloadMetadata()
-		if err != nil {
-			return errors.Wrap(err, "cannot reload Metadata")
-		}
-	case "apply":
-		var data interface{}
-		var metadataContent []byte
-		for _, format := range []string{"yaml", "json"} {
-			metadataPath, err := ec.GetMetadataFilePath(format)
-			if err != nil {
-				return errors.Wrap(err, "cannot apply metadata")
-			}
-
-			metadataContent, err = ioutil.ReadFile(metadataPath)
-			if err != nil {
-				if os.IsNotExist(err) {
-					continue
-				}
-				return err
-			}
-			break
-		}
-
-		if metadataContent == nil {
-			return errors.New("Unable to locate metadata.[yaml|json] file under migrations directory")
-		}
-
-		err := yaml.Unmarshal(metadataContent, &data)
-		if err != nil {
-			return errors.Wrap(err, "cannot parse metadata file")
-		}
-
-		err = t.ApplyMetadata(data)
-		if err != nil {
-			return errors.Wrap(err, "cannot apply metadata on the database")
-		}
-		return nil
+	default:
+		return fmt.Errorf("output format '%v' is not supported. supported formats: %v, %v", format, rawOutputFormatJSON, rawOutputFormatYAML)
 	}
 	return nil
+}
+
+func isJSON(str []byte) bool {
+	var js json.RawMessage
+	return json.Unmarshal(str, &js) == nil
+}
+
+func isYAML(str []byte) bool {
+	var y yaml.MapSlice
+	return yaml.Unmarshal(str, &y) == nil
 }

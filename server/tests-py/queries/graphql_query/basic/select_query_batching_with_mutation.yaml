@@ -1,0 +1,42 @@
+description: GraphQL query to test batching with mixed queries and mutations
+url: /v1/graphql
+status: 200
+response:
+  - data:
+      update_user:
+        affected_rows: 1
+        returning:
+        - id: '2'
+  - data:
+      user:
+      - id: '1'
+        name: User 1
+      - id: '2'
+        name: Temp User
+  - data:
+      update_user:
+        affected_rows: 1
+        returning:
+        - id: '2'
+query:
+  - query: |
+      mutation {
+        update_user(where: {number: {_eq: "123456780"}}, _set: {name: "Temp User"}) {
+          affected_rows
+          returning { id }
+        }
+      }
+  - query: |
+      query {
+        user {
+          id
+          name
+        }
+      }
+  - query: |
+      mutation {
+        update_user(where: {number: {_eq: "123456780"}}, _set: {name: "User 2"}) {
+          affected_rows
+          returning { id }
+        }
+      }

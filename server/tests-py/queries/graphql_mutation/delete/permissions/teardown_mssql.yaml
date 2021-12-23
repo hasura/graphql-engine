@@ -1,0 +1,16 @@
+type: bulk
+args:
+
+- type: mssql_drop_relationship
+  args:
+    source: mssql
+    relationship: author
+    table:
+      name: article
+
+- type: mssql_drop_relationship
+  args:
+    source: mssql
+    relationship: articles
+    table:
+      name: author

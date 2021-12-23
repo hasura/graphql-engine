@@ -22,6 +22,8 @@ import { NotFoundError } from '../../../Error/PageNotFound';
 
 import globals from '../../../../Globals';
 import { getConfirmation } from '../../../Common/utils/jsUtils';
+import styles from '../RemoteSchema.scss';
+import { getRemoteSchemasSelector } from '../../../../metadata/selector';
 
 const prefixUrl = globals.urlPrefix + appPrefix;
 
@@ -49,17 +51,17 @@ class Edit extends React.Component {
     ]);
   }
 
-  componentWillReceiveProps(nextProps) {
+  componentDidUpdate(prevProps) {
     if (
-      nextProps.params.remoteSchemaName !== this.props.params.remoteSchemaName
+      prevProps.params.remoteSchemaName !== this.props.params.remoteSchemaName
     ) {
       Promise.all([
         this.props.dispatch(
-          fetchRemoteSchema(nextProps.params.remoteSchemaName)
+          fetchRemoteSchema(this.props.params.remoteSchemaName)
         ),
         this.props.dispatch({
           type: VIEW_REMOTE_SCHEMA,
-          data: nextProps.params.remoteSchemaName,
+          data: this.props.params.remoteSchemaName,
         }),
       ]);
     }
@@ -120,10 +122,22 @@ class Edit extends React.Component {
       throw new NotFoundError();
     }
 
-    const styles = require('../RemoteSchema.scss');
-
-    const { isFetching, isRequesting, editState } = this.props;
+    const {
+      isFetching,
+      isRequesting,
+      editState,
+      inconsistentObjects,
+    } = this.props;
     const { remoteSchemaName } = this.props.params;
+
+    const inconsistencyDetails = inconsistentObjects.find(
+      inconObj =>
+        inconObj.type === 'remote_schema' &&
+        inconObj?.definition?.name === remoteSchemaName
+    );
+
+    const fixInconsistencyMsg =
+      'This remote schema is in an inconsistent state. Please fix inconsistencies and reload metadata first';
 
     const generateMigrateBtns = () => {
       return 'isModify' in editState && !editState.isModify ? (
@@ -137,7 +151,8 @@ class Edit extends React.Component {
               this.modifyClick();
             }}
             data-test={'remote-schema-edit-modify-btn'}
-            disabled={isRequesting}
+            disabled={isRequesting || inconsistencyDetails}
+            title={inconsistencyDetails ? fixInconsistencyMsg : ''}
           >
             Modify
           </Button>
@@ -148,7 +163,8 @@ class Edit extends React.Component {
               e.preventDefault();
               this.handleDeleteRemoteSchema(e);
             }}
-            disabled={isRequesting}
+            disabled={isRequesting || inconsistencyDetails}
+            title={inconsistencyDetails ? fixInconsistencyMsg : ''}
             data-test={'remote-schema-edit-delete-btn'}
           >
             {isRequesting ? 'Deleting ...' : 'Delete'}
@@ -252,8 +268,9 @@ const mapStateToProps = state => {
   return {
     ...state.remoteSchemas.addData,
     ...state.remoteSchemas.headerData,
-    allRemoteSchemas: state.remoteSchemas.listData.remoteSchemas,
-    dataHeaders: { ...state.tables.dataHeaders },
+    allRemoteSchemas: getRemoteSchemasSelector(state),
+    dataHeaders: state.tables.dataHeaders,
+    inconsistentObjects: state.metadata.inconsistentObjects,
   };
 };
 

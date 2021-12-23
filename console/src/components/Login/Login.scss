@@ -1,4 +1,4 @@
-@import "../Common/Common.scss";
+@import '../Common/Common.scss';
 
 .container {
   display: flex;
@@ -26,8 +26,8 @@
 }
 
 .mainWrapper {
-  background-color: #F8FAFB;
-}      
+  background-color: #f8fafb;
+}
 .input_addon_group {
   margin-bottom: 10px;
   padding: 0 15px;
@@ -58,18 +58,18 @@
 }
 
 .login_btn {
-   padding: 0 15px;
-   padding-bottom: 15px;
-   padding-top: 10px;
+  padding: 0 15px;
+  padding-bottom: 15px;
+  padding-top: 10px;
 
-   button {
-     background-color: #27AE60;
-     height: 60px;
-     border: 0;
-     border-radius: 5px;
-     color: #fff;
-     text-transform: uppercase;
-   }
+  button {
+    background-color: #27ae60;
+    height: 60px;
+    border: 0;
+    border-radius: 5px;
+    color: #fff;
+    text-transform: uppercase;
+  }
 }
 
 .loginHeading {

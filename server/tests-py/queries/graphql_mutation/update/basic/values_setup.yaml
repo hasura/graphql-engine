@@ -7,6 +7,13 @@ args:
     table: author
     objects:
       - name: Author 1
+        info:
+          age: 23
+        location:
+          type: Point
+          coordinates:
+          - -118.4079
+          - 33.9434
       - name: Author 2
 
 #Insert Person table data
@@ -19,3 +26,16 @@ args:
           first: foo
           last: bar
         address: foobar
+
+#Insert numerics table data
+- type: insert
+  args:
+    table: numerics
+    objects:
+    - num_smallint: 12345
+      num_integer: 12345
+      num_bigint: 12345
+      num_real: 12345.67
+      num_double: 12345.67
+      num_money: 12345.67
+      num_numeric: 12345.67

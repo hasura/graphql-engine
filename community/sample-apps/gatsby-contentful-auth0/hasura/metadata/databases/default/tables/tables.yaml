@@ -1,0 +1,5 @@
+- "!include public_album.yaml"
+- "!include public_playlist.yaml"
+- "!include public_playlist_track.yaml"
+- "!include public_track.yaml"
+- "!include public_users.yaml"

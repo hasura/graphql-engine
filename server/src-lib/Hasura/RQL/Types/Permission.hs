@@ -1,137 +1,60 @@
 module Hasura.RQL.Types.Permission
-       ( RoleName(..)
-       , roleNameToTxt
+  ( DelPerm (..),
+    DelPermDef,
+    InsPerm (..),
+    InsPermDef,
+    PermColSpec (..),
+    PermDef (..),
+    PermType (..),
+    SelPerm (..),
+    SelPermDef,
+    UpdPerm (..),
+    UpdPermDef,
+    pdComment,
+    pdPermission,
+    pdRole,
+    permTypeToCode,
+  )
+where
 
-       , SessVar
-       , SessVarVal
-
-       , UserVars
-       , mkUserVars
-       , isUserVar
-       , getVarNames
-       , getVarVal
-       , roleFromVars
-
-       , UserInfo(..)
-       , mkUserInfo
-       , userInfoToList
-       , adminUserInfo
-       , adminRole
-       , isAdmin
-       , PermType(..)
-       , permTypeToCode
-       , PermId(..)
-       ) where
-
-import           Hasura.Prelude
-import           Hasura.RQL.Types.Common    (NonEmptyText, adminText, mkNonEmptyText,
-                                             unNonEmptyText)
-import           Hasura.Server.Utils        (adminSecretHeader,
-                                             deprecatedAccessKeyHeader,
-                                             userRoleHeader)
-import           Hasura.SQL.Types
-
-import qualified Database.PG.Query          as Q
-
-import           Data.Aeson
-import           Data.Hashable
-import           Instances.TH.Lift          ()
-import           Language.Haskell.TH.Syntax (Lift)
-
-import qualified Data.HashMap.Strict        as Map
-import qualified Data.Text                  as T
-import qualified PostgreSQL.Binary.Decoding as PD
-
-newtype RoleName
-  = RoleName {getRoleTxt :: NonEmptyText}
-  deriving ( Show, Eq, Hashable, FromJSONKey, ToJSONKey, FromJSON
-           , ToJSON, Q.FromCol, Q.ToPrepArg, Lift)
-
-instance DQuote RoleName where
-  dquoteTxt = roleNameToTxt
-
-roleNameToTxt :: RoleName -> Text
-roleNameToTxt = unNonEmptyText . getRoleTxt
-
-adminRole :: RoleName
-adminRole = RoleName adminText
-
-isAdmin :: RoleName -> Bool
-isAdmin = (adminRole ==)
-
-type SessVar = Text
-type SessVarVal = Text
-
-newtype UserVars
-  = UserVars { unUserVars :: Map.HashMap SessVar SessVarVal}
-  deriving (Show, Eq, FromJSON, ToJSON, Hashable)
-
-isUserVar :: T.Text -> Bool
-isUserVar = T.isPrefixOf "x-hasura-" . T.toLower
-
--- returns Nothing if x-hasura-role is an empty string
-roleFromVars :: UserVars -> Maybe RoleName
-roleFromVars uv =
-  getVarVal userRoleHeader uv >>= fmap RoleName . mkNonEmptyText
-
-getVarVal :: SessVar -> UserVars -> Maybe SessVarVal
-getVarVal k =
-  Map.lookup (T.toLower k) . unUserVars
-
-getVarNames :: UserVars -> [T.Text]
-getVarNames =
-  Map.keys . unUserVars
-
-mkUserVars :: [(T.Text, T.Text)] -> UserVars
-mkUserVars l =
-  UserVars $ Map.fromList
-  [ (T.toLower k, v)
-  | (k, v) <- l, isUserVar k
-  ]
-
-data UserInfo
-  = UserInfo
-  { userRole :: !RoleName
-  , userVars :: !UserVars
-  } deriving (Show, Eq, Generic)
-
-mkUserInfo :: RoleName -> UserVars -> UserInfo
-mkUserInfo rn (UserVars v) =
-  UserInfo rn $ UserVars $ Map.insert userRoleHeader (roleNameToTxt rn) $
-  foldl (flip Map.delete) v [adminSecretHeader, deprecatedAccessKeyHeader]
-
-instance Hashable UserInfo
-
--- $(J.deriveToJSON (J.aesonDrop 4 J.camelCase){J.omitNothingFields=True}
---   ''UserInfo
---  )
-
-userInfoToList :: UserInfo -> [(Text, Text)]
-userInfoToList userInfo =
-  let vars = Map.toList $ unUserVars . userVars $ userInfo
-      rn = roleNameToTxt . userRole $ userInfo
-  in (userRoleHeader, rn) : vars
-
-adminUserInfo :: UserInfo
-adminUserInfo =
-  mkUserInfo adminRole $ mkUserVars []
+import Control.Lens (makeLenses)
+import Data.Aeson
+import Data.Aeson.TH
+import Data.Hashable
+import Data.Text qualified as T
+import Database.PG.Query qualified as Q
+import Hasura.Incremental (Cacheable)
+import Hasura.Prelude
+import Hasura.RQL.IR.BoolExp
+import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.Column
+import Hasura.RQL.Types.Common
+import Hasura.RQL.Types.ComputedField
+import Hasura.SQL.Backend
+import Hasura.Session
+import PostgreSQL.Binary.Decoding qualified as PD
 
 data PermType
   = PTInsert
   | PTSelect
   | PTUpdate
   | PTDelete
-  deriving (Eq, Lift)
+  deriving (Eq, Generic)
+
+instance NFData PermType
+
+instance Cacheable PermType
 
 instance Q.FromCol PermType where
-  fromCol bs = flip Q.fromColHelper bs $ PD.enum $ \case
-    "insert" -> Just PTInsert
-    "update" -> Just PTUpdate
-    "select" -> Just PTSelect
-    "delete" -> Just PTDelete
-    _   -> Nothing
+  fromCol bs = flip Q.fromColHelper bs $
+    PD.enum $ \case
+      "insert" -> Just PTInsert
+      "update" -> Just PTUpdate
+      "select" -> Just PTSelect
+      "delete" -> Just PTDelete
+      _ -> Nothing
 
-permTypeToCode :: PermType -> T.Text
+permTypeToCode :: PermType -> Text
 permTypeToCode PTInsert = "insert"
 permTypeToCode PTSelect = "select"
 permTypeToCode PTUpdate = "update"
@@ -157,19 +80,133 @@ instance FromJSON PermType where
 instance ToJSON PermType where
   toJSON = String . permTypeToCode
 
-data PermId
-  = PermId
-  { pidTable :: !TableName
-  , pidRole  :: !RoleName
-  , pidType  :: !PermType
-  } deriving (Eq)
+data PermColSpec b
+  = PCStar
+  | PCCols ![Column b]
+  deriving (Generic)
 
-instance Show PermId where
-  show (PermId tn rn pType) =
-    show $ mconcat
-    [ getTableTxt tn
-    , "."
-    , roleNameToTxt rn
-    , "."
-    , T.pack $ show pType
+deriving instance (Backend b) => Show (PermColSpec b)
+
+deriving instance (Backend b) => Eq (PermColSpec b)
+
+instance (Backend b) => Cacheable (PermColSpec b)
+
+instance (Backend b) => FromJSON (PermColSpec b) where
+  parseJSON (String "*") = return PCStar
+  parseJSON x = PCCols <$> parseJSON x
+
+instance (Backend b) => ToJSON (PermColSpec b) where
+  toJSON (PCCols cols) = toJSON cols
+  toJSON PCStar = "*"
+
+data PermDef a = PermDef
+  { _pdRole :: !RoleName,
+    _pdPermission :: !a,
+    _pdComment :: !(Maybe T.Text)
+  }
+  deriving (Show, Eq, Generic)
+
+instance (Cacheable a) => Cacheable (PermDef a)
+
+$(deriveFromJSON hasuraJSON {omitNothingFields = True} ''PermDef)
+$(makeLenses ''PermDef)
+
+instance (ToJSON a) => ToJSON (PermDef a) where
+  toJSON = object . toAesonPairs
+
+instance (ToJSON a) => ToAesonPairs (PermDef a) where
+  toAesonPairs (PermDef rn perm comment) =
+    [ "role" .= rn,
+      "permission" .= perm,
+      "comment" .= comment
     ]
+
+-- Insert permission
+data InsPerm (b :: BackendType) = InsPerm
+  { ipCheck :: !(BoolExp b),
+    ipSet :: !(Maybe (ColumnValues b Value)),
+    ipColumns :: !(Maybe (PermColSpec b)),
+    ipBackendOnly :: !(Maybe Bool) -- see Note [Backend only permissions]
+  }
+  deriving (Show, Eq, Generic)
+
+instance Backend b => Cacheable (InsPerm b)
+
+instance Backend b => FromJSON (InsPerm b) where
+  parseJSON = genericParseJSON hasuraJSON {omitNothingFields = True}
+
+instance Backend b => ToJSON (InsPerm b) where
+  toJSON = genericToJSON hasuraJSON {omitNothingFields = True}
+
+type InsPermDef b = PermDef (InsPerm b)
+
+-- Select constraint
+data SelPerm (b :: BackendType) = SelPerm
+  { -- | Allowed columns
+    spColumns :: !(PermColSpec b),
+    -- | Filter expression
+    spFilter :: !(BoolExp b),
+    -- | Limit value
+    spLimit :: !(Maybe Int),
+    -- | Allow aggregation
+    spAllowAggregations :: !Bool,
+    -- | Allowed computed fields
+    spComputedFields :: ![ComputedFieldName]
+  }
+  deriving (Show, Eq, Generic)
+
+instance Backend b => Cacheable (SelPerm b)
+
+instance Backend b => ToJSON (SelPerm b) where
+  toJSON = genericToJSON hasuraJSON {omitNothingFields = True}
+
+instance Backend b => FromJSON (SelPerm b) where
+  parseJSON =
+    withObject "SelPerm" $ \o ->
+      SelPerm
+        <$> o .: "columns"
+        <*> o .: "filter"
+        <*> o .:? "limit"
+        <*> o .:? "allow_aggregations" .!= False
+        <*> o .:? "computed_fields" .!= []
+
+type SelPermDef b = PermDef (SelPerm b)
+
+-- Delete permission
+data DelPerm (b :: BackendType) = DelPerm
+  {dcFilter :: !(BoolExp b)}
+  deriving (Show, Eq, Generic)
+
+instance Backend b => Cacheable (DelPerm b)
+
+instance Backend b => FromJSON (DelPerm b) where
+  parseJSON = genericParseJSON hasuraJSON {omitNothingFields = True}
+
+instance Backend b => ToJSON (DelPerm b) where
+  toJSON = genericToJSON hasuraJSON {omitNothingFields = True}
+
+type DelPermDef b = PermDef (DelPerm b)
+
+-- Update constraint
+data UpdPerm (b :: BackendType) = UpdPerm
+  { ucColumns :: !(PermColSpec b), -- Allowed columns
+    ucSet :: !(Maybe (ColumnValues b Value)), -- Preset columns
+    ucFilter :: !(BoolExp b), -- Filter expression (applied before update)
+
+    -- | Check expression, which must be true after update.
+    -- This is optional because we don't want to break the v1 API
+    -- but Nothing should be equivalent to the expression which always
+    -- returns true.
+    ucCheck :: !(Maybe (BoolExp b))
+  }
+  deriving (Show, Eq, Generic)
+
+instance Backend b => Cacheable (UpdPerm b)
+
+instance Backend b => FromJSON (UpdPerm b) where
+  parseJSON = genericParseJSON hasuraJSON {omitNothingFields = True}
+
+instance Backend b => ToJSON (UpdPerm b) where
+  toJSON = genericToJSON hasuraJSON {omitNothingFields = True}
+
+type UpdPermDef b = PermDef (UpdPerm b)

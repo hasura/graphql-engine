@@ -1,0 +1,22 @@
+description: Query node interface with a non-integer GUID version
+url: /v1beta1/relay
+status: 200
+query:
+  query: |
+    query {
+      node(id: "WyIxIiwgInB1YmxpYyIsICJ1c2VyIiwgImZpcnN0XzIiLCAibGFzdF8yIiwgMl0K"){
+        ... on user{
+          first_name
+          last_name
+          age
+          address
+        }
+      }
+    }
+response:
+  errors:
+  - extensions:
+      path: $.selectionSet.node.args.id
+      code: validation-failed
+    message: 'the node id is invalid: Error in $: unexpected GUID format, needs to
+      start with a version number'

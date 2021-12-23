@@ -1,88 +1,44 @@
-project  := graphql-engine
-registry := hasura
-VERSION  ?= $(shell ../scripts/get-version.sh)
+SHELL := /bin/bash
+
+VERSION ?= $(shell ../scripts/get-version.sh)
 export VERSION
-nproc    := $(shell nproc)
 
-# TODO: needs to be replaced with something like yq
-stack_resolver := $(shell awk '/^resolver:/ {print $$2;}' stack.yaml)
-packager_ver := 20190923
-pg_dump_ver := 11
-project_dir := $(shell pwd)
-build_dir := $(project_dir)/$(shell stack path --dist-dir)/build
+registry := hasura
+# This packager version is built using the packeger.df in the packaging folder:
+# docker build -t "hasura/graphql-engine-packager:20210218" -f packager.df .
+packager_ver := 20210218
+SERVER_BUILD_OUTPUT ?= /build/_server_output
+docs_output := /build/_server_output/docs.tar.gz
 
-build_output := /build/_server_output
-
-build:
-	stack build --fast --ghc-options '-j$(nproc)'
-
-exec: build
-	stack exec graphql-engine -- serve
-
-exec-local-console: build-local-console
-	stack exec graphql-engine -- serve --enable-console --console-assets-dir ../console/static/dist
-
-image: $(project).cabal
-	docker build -t "$(registry)/$(project):$(VERSION)" \
-		-f packaging/Dockerfile \
-		--build-arg build_flags=--fast \
-		--build-arg project=$(project) \
-		--build-arg stack_resolver=$(stack_resolver) \
-		--build-arg packager_version=$(packager_ver) \
-		.
-
-local-image:
-	$(eval build_dir_docker := $(project_dir)/$(shell stack --docker path --dist-dir)/build)
-	stack docker pull
-	stack --docker build --fast
-	mkdir -p packaging/build/rootfs
-	docker run --rm -v "$(build_dir_docker)/$(project)/$(project):/root/$(project)" \
-		$(registry)/graphql-engine-packager:$(packager_ver) /build.sh \
-		$(project) | tar -x -C packaging/build/rootfs
-	strip --strip-unneeded packaging/build/rootfs/bin/$(project)
-	upx packaging/build/rootfs/bin/$(project)
-	docker build -t "$(registry)/$(project):$(VERSION)" packaging/build
-
-release-image: $(project).cabal
-	docker build -t "$(registry)/$(project):$(VERSION)" \
-		-f packaging/Dockerfile \
-		--build-arg project=$(project) \
-		--build-arg stack_resolver=$(stack_resolver) \
-		--build-arg packager_version=$(packager_ver) \
-		.
+# Getting access to the built products with the `cabal v2-*` commands is really awkward; see
+# <https://www.haskell.org/cabal/users-guide/nix-local-build.html#where-are-my-build-products> for a
+# little more context. Ideally, we could use `cabal v2-install` for this, but `v2-install` does
+# strange and complicated things, and I could not get it to work.
+#
+# This glob is a pretty heavy hammer designed to work regardless of `cabal-install` version (see the
+# aforementioned link for why that’s tricky). If `cabal v2-*` ever gets a better way to do this,
+# please replace this with something less hacky.
+executables_glob := ../dist-newstyle/build/*/*/graphql-engine-*/**/opt/build/{graphql-engine/graphql-engine,graphql-engine-tests/graphql-engine-tests,graphql-engine-integration-tests/graphql-engine-integration-tests}
 
 # assumes this is built in circleci
-ci-binary:
-	mkdir -p packaging/build/rootfs
-	stack $(STACK_FLAGS) build --ghc-options=-Werror $(BUILD_FLAGS)
-	mkdir -p $(build_output)
-	cp $(build_dir)/$(project)/$(project) $(build_output)
-	echo "$(VERSION)" > $(build_output)/version.txt
+ci-build:
+	## configure
+	cabal v2-update --project-file=cabal.project.ci
+	## build
+	cabal v2-build --project-file=cabal.project.ci
+	## install
+	mkdir -p '$(SERVER_BUILD_OUTPUT)'
+	echo '$(VERSION)' > '$(SERVER_BUILD_OUTPUT)/version.txt'
+	shopt -s failglob globstar && cp $(executables_glob) '$(SERVER_BUILD_OUTPUT)/'
 
 # assumes this is built in circleci
-ci-image:
-	docker create -v /root/ --name dummy alpine:3.4 /bin/true
-	docker cp $(build_dir)/$(project)/$(project) dummy:/root/
-	docker run --rm --volumes-from dummy $(registry)/graphql-engine-packager:$(packager_ver) /build.sh $(project) | tar -x -C packaging/build/rootfs
-	strip --strip-unneeded packaging/build/rootfs/bin/$(project)
-	cp /usr/lib/postgresql/$(pg_dump_ver)/bin/pg_dump packaging/build/rootfs/bin/pg_dump
-	upx packaging/build/rootfs/bin/$(project)
-	docker build -t $(registry)/$(project):$(VERSION) packaging/build/
-
-ci-save-image:
-	docker save -o $(build_output)/image.tar $(registry)/$(project):$(VERSION)
-
-ci-load-image:
-	docker load -i $(build_output)/image.tar
-
-push:
-	docker push $(registry)/$(project):$(VERSION)
-
-push-latest:
-	docker tag $(registry)/$(project):$(VERSION) $(registry)/$(project):latest
-	docker push $(registry)/$(project):latest
+ci-docs:
+	# build
+	cabal haddock
+	# copy
+	cd ../dist-newstyle/build/*/*/graphql-engine-*/**/doc/html/graphql-engine/ && tar czf $(docs_output) *
 
 packager: packaging/packager.df
-	docker build -t "$(registry)/graphql-engine-packager:$(packager_ver)" -f packaging/packager.df ./packaging/
+	docker build -t '$(registry)/graphql-engine-packager:$(packager_ver)' -f packaging/packager.df ./packaging/
 
-.PHONY: image local-image release-image push packager ci-binary-and-test ci-image ci-save-image ci-load-image build exec build-local-console exec-local-console
+.PHONY: ci-build ci-docs packager

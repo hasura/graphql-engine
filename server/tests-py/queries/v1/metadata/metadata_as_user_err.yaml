@@ -1,0 +1,490 @@
+- description: Clear metadata
+  url: /v1/metadata
+  headers:
+    X-Hasura-Role: user
+  status: 400
+  response:
+    path: $.args
+    error: 'restricted access : admin only'
+    code: access-denied
+  query:
+    type: clear_metadata
+    args: {}
+
+- description: Check if metadata is cleared
+  url: /v1/query
+  headers:
+    X-Hasura-Role: user
+  status: 400
+  query:
+    type: export_metadata
+    args: {}
+
+- description: Export metadata
+  url: /v1/metadata
+  headers:
+    X-Hasura-Role: user
+  status: 400
+  response:
+    path: $.args
+    error: 'restricted access : admin only'
+    code: access-denied
+  query:
+    type: export_metadata
+    args: {}
+
+- description: Replace metadata
+  url: /v1/metadata
+  headers:
+    X-Hasura-Role: user
+  status: 400
+  response:
+    path: $.args
+    error: 'restricted access : admin only'
+    code: access-denied
+  query:
+    type: replace_metadata
+    args:
+      allow_inconsistent_metadata: true
+      metadata:
+        {
+          "version": 3,
+          "sources": [
+            {
+              "name": "default",
+              "kind": "postgres",
+              "tables": [],
+              "configuration": {
+                "connection_info": {
+                  "database_url": "postgres://postgres:postgrespassword@127.0.0.1:10432/tenant1",
+                  "pool_settings": {
+                    "retries": 1,
+                    "idle_timeout": 185,
+                    "max_connections": 50
+                  }
+                }
+              }
+            }
+          ]
+        }
+
+- description: Reload metadata
+  url: /v1/metadata
+  headers:
+    X-Hasura-Role: user
+  status: 400
+  response:
+    path: $.args
+    error: 'restricted access : admin only'
+    code: access-denied
+  query:
+    type: reload_metadata
+    args:
+      reload_remote_schemas: true
+
+- description: Get Inconsistent Metadata
+  url: /v1/metadata
+  headers:
+    X-Hasura-Role: user
+  status: 400
+  response:
+    path: $.args
+    error: 'restricted access : admin only'
+    code: access-denied
+  query:
+    type: get_inconsistent_metadata
+    args: {}
+
+- description: Drop Inconsistent Metadata
+  url: /v1/metadata
+  headers:
+    X-Hasura-Role: user
+  status: 400
+  response:
+    path: $.args
+    error: 'restricted access : admin only'
+    code: access-denied
+  query:
+    type: drop_inconsistent_metadata
+    args: {}
+
+- description: PG Add Source Metadata
+  url: /v1/metadata
+  headers:
+    X-Hasura-Role: user
+  status: 400
+  response:
+    path: $.args
+    error: 'restricted access : admin only'
+    code: access-denied
+  query:
+    type: pg_add_source
+    args:
+      {
+        "name": "pg1",
+        "configuration": {
+          "connection_info": {
+            "database_url": {
+               "from_env": "DB_URL_ENV_VAR"
+             },
+            "pool_settings": {
+              "max_connections": 50,
+              "idle_timeout": 180,
+              "retries": 1,
+              "pool_timeout": 360,
+              "connection_lifetime": 600
+            },
+            "use_prepared_statements": true,
+            "isolation_level": "read-committed",
+          }
+        },
+        "replace_configuration": false
+      }
+
+- description: PG Drop Source Metadata
+  url: /v1/metadata
+  headers:
+    X-Hasura-Role: user
+  status: 400
+  response:
+    path: $.args
+    error: 'restricted access : admin only'
+    code: access-denied
+  query:
+    type: pg_drop_source
+    args:
+      name: pg1
+      cascade: true
+
+- description: PG Rename Source Metadata
+  url: /v1/metadata
+  headers:
+    X-Hasura-Role: user
+  status: 400
+  response:
+    path: $.args
+    error: 'restricted access : admin only'
+    code: access-denied
+  query:
+    type: rename_source
+    args:
+      name: pg1
+      new_name: pg2
+
+- description: PG Track Table Metadata
+  url: /v1/metadata
+  headers:
+    X-Hasura-Role: user
+  status: 400
+  response:
+    path: $.args
+    error: 'restricted access : admin only'
+    code: access-denied
+  query:
+    type: pg_track_table
+    args: {
+      "table": "author",
+      "source": "default",
+      "configuration": {
+         "custom_root_fields": {
+            "select": "Authors",
+            "select_by_pk": "Author",
+            "select_aggregate": "AuthorAggregate",
+            "insert": "AddAuthors",
+            "insert_one":"AddAuthor",
+            "update": "UpdateAuthors",
+            "update_by_pk": "UpdateAuthor",
+            "delete": "DeleteAuthors",
+            "delete_by_pk": "DeleteAuthor"
+         },
+         "custom_column_names": {
+            "id": "authorId"
+         }
+      }
+    }
+
+- description: PG Untrack Table Metadata
+  url: /v1/metadata
+  headers:
+    X-Hasura-Role: user
+  status: 400
+  response:
+    path: $.args
+    error: 'restricted access : admin only'
+    code: access-denied
+  query:
+    type: pg_untrack_table
+    args: {
+      "table": {
+          "schema": "public",
+          "name": "author"
+       },
+      "source": "default",
+      "cascade": true
+    }
+
+- description: PG Set Table Is Enum Metadata
+  url: /v1/metadata
+  headers:
+    X-Hasura-Role: user
+  status: 400
+  response:
+    path: $.args
+    error: 'restricted access : admin only'
+    code: access-denied
+  query:
+    type: pg_set_table_is_enum
+    args: {
+      "table": {
+        "schema": "public",
+        "name": "user_role"
+      },
+      "source": "default",
+      "is_enum": true
+    }
+
+- description: PG Set Table Customization
+  url: /v1/metadata
+  headers:
+    X-Hasura-Role: user
+  status: 400
+  response:
+    path: $.args
+    error: 'restricted access : admin only'
+    code: access-denied
+  query:
+    type: pg_set_table_customization
+    args: {
+      "table": "author_details",
+      "source": "default",
+      "configuration": {
+        "identifier": "author",
+        "custom_root_fields": {
+           "select": "Authors",
+           "select_by_pk": "Author",
+           "select_aggregate": "AuthorAggregate",
+           "insert": "AddAuthors",
+           "insert_one":"AddAuthor",
+           "update": "UpdateAuthors",
+           "update_by_pk": "UpdateAuthor",
+           "delete": "DeleteAuthors",
+           "delete_by_pk": "DeleteAuthor"
+        },
+        "custom_column_names": {
+           "id": "authorId"
+        }
+      }
+    }
+
+- description: PG Track Function
+  url: /v1/metadata
+  headers:
+    X-Hasura-Role: user
+  status: 400
+  response:
+    path: $.args
+    error: 'restricted access : admin only'
+    code: access-denied
+  query:
+    type: pg_track_function
+    args: {
+        "function": {
+            "schema": "public",
+            "name": "search_articles"
+        },
+        "source": "default",
+        "configuration": {
+            "session_argument": "hasura_session"
+        }
+    }
+
+- description: PG Untrack Function
+  url: /v1/metadata
+  headers:
+    X-Hasura-Role: user
+  status: 400
+  response:
+    path: $.args
+    error: 'restricted access : admin only'
+    code: access-denied
+  query:
+    type: pg_untrack_function
+    args: {
+        "function": {
+           "schema": "public",
+           "name": "search_articles"
+        },
+        "source": "default"
+    }
+
+- description: PG Create Function Permission
+  url: /v1/metadata
+  headers:
+    X-Hasura-Role: user
+  status: 400
+  response:
+    path: $.args
+    error: 'restricted access : admin only'
+    code: access-denied
+  query:
+    type: pg_create_function_permission
+    args: {
+       "function": "get_articles",
+       "source": "default",
+       "role": "user"
+    }
+
+- description: PG Drop Function Permission
+  url: /v1/metadata
+  headers:
+    X-Hasura-Role: user
+  status: 400
+  response:
+    path: $.args
+    error: 'restricted access : admin only'
+    code: access-denied
+  query:
+    type: pg_drop_function_permission
+    args: {
+       "function": "get_articles",
+       "role": "user",
+       "source": "default"
+    }
+
+- description: MSSQL Add Source Metadata
+  url: /v1/metadata
+  headers:
+    X-Hasura-Role: user
+  status: 400
+  response:
+    path: $.args
+    error: 'restricted access : admin only'
+    code: access-denied
+  query:
+    type: mssql_add_source
+    args: {
+      "name": "mssql1",
+      "configuration": {
+        "connection_info": {
+          "connection_string": {
+             "from_env": "CONN_STRING_ENV_VAR"
+           },
+          "pool_settings": {
+            "max_connections": 50,
+            "idle_timeout": 180
+          }
+        }
+      }
+    }
+
+- description: MSSQL Drop Source Metadata
+  url: /v1/metadata
+  headers:
+    X-Hasura-Role: user
+  status: 400
+  response:
+    path: $.args
+    error: 'restricted access : admin only'
+    code: access-denied
+  query:
+    type: mssql_drop_source
+    args:
+      name: mssql1
+
+- description: MSSQL Track Table
+  url: /v1/metadata
+  headers:
+    X-Hasura-Role: user
+  status: 400
+  response:
+    path: $.args
+    error: 'restricted access : admin only'
+    code: access-denied
+  query:
+    type: mssql_track_table
+    args: {
+      "table": "author",
+      "source": "default"
+    }
+
+- description: MSSQL Untrack Table
+  url: /v1/metadata
+  headers:
+    X-Hasura-Role: user
+  status: 400
+  response:
+    path: $.args
+    error: 'restricted access : admin only'
+    code: access-denied
+  query:
+    type: mssql_untrack_table
+    args: {
+        "table": {
+            "schema": "dbo",
+            "name": "author"
+          },
+        "source": "default",
+        "cascade": true
+    }
+
+- description: MSSQL Set Table Customization
+  url: /v1/metadata
+  headers:
+    X-Hasura-Role: user
+  status: 400
+  response:
+    path: $.args
+    error: 'restricted access : admin only'
+    code: access-denied
+  query:
+    type: mssql_set_table_customization
+    args: {
+      "table": "author_details",
+      "source": "default",
+      "configuration": {
+        "identifier": "author",
+        "custom_root_fields": {
+            "select": "Authors",
+            "select_aggregate": "AuthorAggregate",
+        },
+        "custom_column_names": {
+            "id": "authorId"
+        }
+      }
+    }
+
+# TODO: Failing to parse `configuration.service_account`
+# - description: BigQuery Add Source Metadata
+#   url: /v1/metadata
+#   headers:
+#     X-Hasura-Role: user
+#   status: 400
+#   response:
+#     path: $.args
+#     error: 'restricted access : admin only'
+#     code: access-denied
+#   query:
+#     type: bigquery_add_source
+#     args:
+#       {
+#         "name": "bigquery1",
+#         "configuration": {
+#           "service_account": "bigquery_service_account",
+#           "project_id": "bigquery_project_id",
+#           "datasets": "dataset1, dataset2"
+#         }
+#       }
+
+- description: BigQuery Drop Source Metadata
+  url: /v1/metadata
+  headers:
+    X-Hasura-Role: user
+  status: 400
+  response:
+    path: $.args
+    error: 'restricted access : admin only'
+    code: access-denied
+  query:
+    type: bigquery_drop_source
+    args:
+      name: bigquery1

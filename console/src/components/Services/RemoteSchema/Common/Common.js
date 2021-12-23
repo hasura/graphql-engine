@@ -1,6 +1,4 @@
 import React from 'react';
-import globals from '../../../../Globals';
-import { REMOTE_SCHEMA_TIMEOUT_CONF_SUPPORT } from '../../../../helpers/versionUtils';
 import PropTypes from 'prop-types';
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 import Tooltip from 'react-bootstrap/lib/Tooltip';
@@ -12,6 +10,7 @@ import {
 } from '../Add/addRemoteSchemaReducer';
 
 import CommonHeader from '../../../Common/Layout/ReusableHeader/Header';
+import GraphQLCustomizationEdit from './GraphQLCustomization/GraphQLCustomizationEdit';
 
 class Common extends React.Component {
   getPlaceHolderText(valType) {
@@ -24,6 +23,10 @@ class Common extends React.Component {
   handleInputChange(e) {
     const fieldName = e.target.getAttribute('data-key');
     this.props.dispatch(inputChange(fieldName, e.target.value));
+  }
+
+  handleCustomizationInputChange(updateValue) {
+    this.props.dispatch(inputChange('customization', updateValue));
   }
 
   toggleUrlParam(e) {
@@ -44,10 +47,14 @@ class Common extends React.Component {
       envName,
       timeoutConf,
       forwardClientHeaders,
+      comment,
+      isNew = false,
+      customization,
     } = this.props;
-    const { isModify, id } = this.props.editState;
 
-    const isDisabled = id >= 0 && !isModify;
+    const { isModify } = this.props.editState;
+
+    const isDisabled = !isNew && !isModify;
     const urlRequired = !manualUrl && !envName;
 
     const tooltips = {
@@ -78,17 +85,14 @@ class Common extends React.Component {
           seconds.
         </Tooltip>
       ),
+      comment: (
+        <Tooltip id="tooltip-cascade">
+          A statement to help describe the remote schema in brief
+        </Tooltip>
+      ),
     };
 
     const getTimeoutSection = () => {
-      const supportTimeoutConf =
-        globals.featuresCompatibility &&
-        globals.featuresCompatibility[REMOTE_SCHEMA_TIMEOUT_CONF_SUPPORT];
-
-      if (!supportTimeoutConf) {
-        return null;
-      }
-
       return (
         <React.Fragment>
           <div className={styles.subheading_text}>
@@ -139,14 +143,14 @@ class Common extends React.Component {
             value={name}
             data-key="name"
             onChange={this.handleInputChange.bind(this)}
-            disabled={isDisabled}
+            disabled={!isNew}
             required
             data-test="remote-schema-schema-name"
             pattern="^[a-zA-Z0-9-_]*$"
             title="Special characters except '-' or '_' are not allowed"
           />
         </label>
-        <hr />
+        <hr className="my-md" />
         <div className={styles.subheading_text}>
           GraphQL server URL *
           <OverlayTrigger placement="right" overlay={tooltips.graphqlurl}>
@@ -195,7 +199,7 @@ class Common extends React.Component {
           <label>
             <input
               onChange={this.toggleForwardHeaders.bind(this)}
-              className={styles.display_inline + ' ' + styles.add_mar_right}
+              className={`${styles.display_inline} ${styles.add_mar_right} legacy-input-fix`}
               type="checkbox"
               value="forwardHeaders"
               data-test="forward-remote-schema-headers"
@@ -232,8 +236,55 @@ class Common extends React.Component {
           placeHolderText={this.getPlaceHolderText.bind(this)}
           keyInputPlaceholder="header name"
         />
-        <hr />
+        <hr className="my-md" />
         {getTimeoutSection()}
+        <hr className="my-md" />
+        <div className={styles.subheading_text}>
+          Comment
+          <OverlayTrigger placement="right" overlay={tooltips.comment}>
+            <i className="fa fa-question-circle" aria-hidden="true" />
+          </OverlayTrigger>
+        </div>
+        <label
+          className={`${styles.inputLabel} radio-inline ${styles.padd_left_remove}`}
+        >
+          <input
+            className="form-control"
+            type="text"
+            placeholder="Comment"
+            value={comment}
+            data-key="comment"
+            onChange={this.handleInputChange.bind(this)}
+            disabled={isDisabled}
+            data-test="remote-schema-comment"
+          />
+        </label>
+        <hr className="my-lg" />
+        {/* <GraphQLCustomization mode="edit" customization={customization} dispatch={this.props.dispatch} /> */}
+        {isNew ? null : (
+          <>
+            <div className="text-lg font-bold">
+              GraphQL Customizations{' '}
+              <OverlayTrigger
+                placement="right"
+                overlay={
+                  <Tooltip id="tooltip-cascade">
+                    Individual Types and Fields will be editable after saving.
+                  </Tooltip>
+                }
+              >
+                <i className="fa fa-question-circle" aria-hidden="true" />
+              </OverlayTrigger>
+            </div>
+            <GraphQLCustomizationEdit
+              remoteSchemaName={name}
+              graphQLCustomization={customization}
+              dispatch={this.props.dispatch}
+              onChange={this.handleCustomizationInputChange.bind(this)}
+              isDisabled={isDisabled}
+            />
+          </>
+        )}
       </div>
     );
   }

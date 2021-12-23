@@ -3,18 +3,18 @@ url: /v1/graphql
 status: 200
 response:
   data:
-   article:
-   - author:
-       articles:
-       - author:
-           articles:
-           - author: {id: 1}
-             id: 1
-           id: 1
-         id: 1
-       id: 1
-     id: 1
-
+    article:
+    - id: 1
+      author:
+        id: 1
+        articles:
+        - id: 1
+          author:
+            id: 1
+            articles:
+            - id: 1
+              author:
+                id: 1
 query:
   query: |
     query {

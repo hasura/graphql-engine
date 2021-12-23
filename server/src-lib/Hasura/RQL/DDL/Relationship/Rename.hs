@@ -1,59 +1,65 @@
 module Hasura.RQL.DDL.Relationship.Rename
-  (runRenameRel)
+  ( RenameRel,
+    runRenameRel,
+  )
 where
 
-import           Hasura.EncJSON
-import           Hasura.Prelude
-import           Hasura.RQL.DDL.Relationship       (validateRelP1)
-import           Hasura.RQL.DDL.Relationship.Types
-import           Hasura.RQL.DDL.Schema             (buildSchemaCache,
-                                                    renameRelInCatalog,
-                                                    withNewInconsistentObjsCheck)
-import           Hasura.RQL.Types
-import           Hasura.SQL.Types
+import Data.Aeson
+import Data.HashMap.Strict qualified as Map
+import Data.Text.Extended
+import Hasura.Base.Error
+import Hasura.EncJSON
+import Hasura.Prelude
+import Hasura.RQL.DDL.Schema (renameRelationshipInMetadata)
+import Hasura.RQL.Types
 
-import qualified Data.HashMap.Strict               as HM
+data RenameRel b = RenameRel
+  { _rrSource :: !SourceName,
+    _rrTable :: !(TableName b),
+    _rrName :: !RelName,
+    _rrNewName :: !RelName
+  }
 
-renameRelP2
-  :: ( QErrM m
-     , MonadTx m
-     , CacheRWM m
-     , MonadIO m
-     , HasHttpManager m
-     , HasSystemDefined m
-     , HasSQLGenCtx m
-     )
-  => QualifiedTable -> RelName -> RelInfo -> m ()
-renameRelP2 qt newRN relInfo = withNewInconsistentObjsCheck $ do
-  tabInfo <- askTabInfo qt
+instance (Backend b) => FromJSON (RenameRel b) where
+  parseJSON = withObject "RenameRel" $ \o ->
+    RenameRel
+      <$> o .:? "source" .!= defaultSource
+      <*> o .: "table"
+      <*> o .: "name"
+      <*> o .: "new_name"
+
+renameRelP2 ::
+  forall b m.
+  (QErrM m, CacheRM m, BackendMetadata b) =>
+  SourceName ->
+  TableName b ->
+  RelName ->
+  RelInfo b ->
+  m MetadataModifier
+renameRelP2 source qt newRN relInfo = withNewInconsistentObjsCheck $ do
+  tabInfo <- askTableCoreInfo @b source qt
   -- check for conflicts in fieldInfoMap
-  case HM.lookup (fromRel newRN) $ _tiFieldInfoMap tabInfo of
+  case Map.lookup (fromRel newRN) $ _tciFieldInfoMap tabInfo of
     Nothing -> return ()
-    Just _  ->
-      throw400 AlreadyExists $ "cannot rename relationship " <> oldRN
-      <<> " to " <> newRN <<> " in table " <> qt <<>
-      " as a column/relationship with the name already exists"
-  -- update catalog
-  renameRelInCatalog qt oldRN newRN
-  -- update schema cache
-  buildSchemaCache
+    Just _ ->
+      throw400 AlreadyExists $
+        "cannot rename relationship " <> oldRN
+          <<> " to " <> newRN
+          <<> " in table " <> qt
+          <<> " as a column/relationship with the name already exists"
+  -- update metadata
+  execWriterT $ renameRelationshipInMetadata @b source qt oldRN (riType relInfo) newRN
   where
     oldRN = riName relInfo
 
-runRenameRel
-  :: ( QErrM m
-     , CacheRWM m
-     , MonadTx m
-     , UserInfoM m
-     , MonadIO m
-     , HasHttpManager m
-     , HasSystemDefined m
-     , HasSQLGenCtx m
-     )
-  => RenameRel -> m EncJSON
-runRenameRel defn = do
-  ri <- validateRelP1 qt rn
-  renameRelP2 qt newRN ri
-  return successMsg
-  where
-    RenameRel qt rn newRN = defn
+runRenameRel ::
+  forall b m.
+  (MonadError QErr m, CacheRWM m, MetadataM m, BackendMetadata b) =>
+  RenameRel b ->
+  m EncJSON
+runRenameRel (RenameRel source qt rn newRN) = do
+  tabInfo <- askTableCoreInfo @b source qt
+  ri <- askRelType (_tciFieldInfoMap tabInfo) rn ""
+  withNewInconsistentObjsCheck $
+    renameRelP2 source qt newRN ri >>= buildSchemaCache
+  pure successMsg

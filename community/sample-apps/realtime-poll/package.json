@@ -3,21 +3,14 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "apollo-boost": "^0.1.13",
-    "apollo-cache-inmemory": "^1.2.7",
-    "apollo-client": "^2.3.8",
-    "apollo-link": "^1.2.2",
-    "apollo-link-http": "^1.5.4",
-    "apollo-link-ws": "^1.0.8",
-    "apollo-utilities": "^1.0.18",
-    "graphql": "^0.13.2",
-    "react": "^16.4.2",
-    "react-apollo": "^2.1.11",
-    "react-bootstrap": "^0.32.1",
+    "@apollo/client": "^3.4.16",
+    "graphql": "^15.6.0",
+    "react": "^17.0.2",
+    "react-bootstrap": "^1.0.0",
     "react-dom": "^16.4.2",
     "react-google-charts": "^3.0.5",
-    "react-scripts": "1.1.4",
-    "subscriptions-transport-ws": "^0.9.14"
+    "react-scripts": "^3.4.1",
+    "subscriptions-transport-ws": "^0.9.19"
   },
   "scripts": {
     "start": "react-scripts start",
@@ -28,7 +21,19 @@
     "eject": "react-scripts eject"
   },
   "devDependencies": {
-    "eslint-plugin-jsx-a11y": "5.1.1",
-    "gh-pages": "^1.2.0"
+    "eslint-plugin-jsx-a11y": "^6.2.3",
+    "gh-pages": "^2.2.0"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
   }
 }

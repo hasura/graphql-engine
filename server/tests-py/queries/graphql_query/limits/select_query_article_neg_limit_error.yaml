@@ -4,9 +4,9 @@ status: 200
 response:
   errors:
   - extensions:
-      code: not-supported
+      code: validation-failed
       path: $.selectionSet.article.args.limit
-    message: unexpected negative value
+    message: expected a non-negative 32-bit integer for type "Int", but found an integer
 query:
   query: |
     query {

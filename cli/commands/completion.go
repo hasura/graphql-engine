@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/hasura/graphql-engine/cli"
+	"github.com/hasura/graphql-engine/cli/v2"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -12,7 +12,7 @@ import (
 const completionCmdExample = `# Bash
     # Linux
       # Add Bash completion file using:
-      $ sudo hasura completion bash --file=/etc/bash.completion.d/hasura
+      $ sudo hasura completion bash --file=/etc/bash_completion.d/hasura
     # Mac
       # Install bash-completion using homebrew:
       $ brew install bash-completion
@@ -63,7 +63,6 @@ func NewCompletionCmd(ec *cli.ExecutionContext) *cobra.Command {
 	}
 
 	completionCmd.Flags().StringVar(&opts.File, "file", "", "file to which output has to be written")
-	completionCmd.MarkFlagFilename("file")
 	return completionCmd
 }
 
@@ -91,7 +90,7 @@ func (o *completionOptions) run() error {
 			err = o.Cmd.Root().GenZshCompletion(os.Stdout)
 		}
 	default:
-		err = fmt.Errorf("Unknown shell: %s. Use bash or zsh", o.Shell)
+		err = fmt.Errorf("unknown shell: %s. Use bash or zsh", o.Shell)
 	}
 	if err != nil {
 		return err

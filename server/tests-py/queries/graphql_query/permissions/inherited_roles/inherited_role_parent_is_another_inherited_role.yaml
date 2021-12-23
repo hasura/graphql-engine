@@ -1,0 +1,30 @@
+description: |
+  `non_paying_user_and_guest` is an inherited role which inherits from a couple of roles, `non_paying_user` (inherited) and `guest` (non-inherited)
+url: /v1/graphql
+status: 200
+headers:
+  X-Hasura-Role: non_paying_user_and_guest
+query:
+  query: |
+    query {
+      articles (order_by: [{author_id: asc}, {title: asc}]){
+        title
+        content
+        author_id
+      }
+    }
+response:
+  data:
+    articles:
+      - title: title 3
+        content: content 3
+        author_id: 1
+      - title: title 2
+        content: content 2
+        author_id: 2
+      - title: title 5
+        content: content 5
+        author_id: 2
+      - title: title 4
+        content: content 4
+        author_id: 3

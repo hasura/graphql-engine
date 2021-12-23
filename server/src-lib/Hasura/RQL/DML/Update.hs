@@ -1,144 +1,117 @@
+{-# LANGUAGE ScopedTypeVariables #-}
+
 module Hasura.RQL.DML.Update
-  ( validateUpdateQueryWith
-  , validateUpdateQuery
-  , AnnUpdG(..)
-  , traverseAnnUpd
-  , AnnUpd
-  , updateQueryToTx
-  , runUpdate
-  ) where
+  ( runUpdate,
+  )
+where
 
-import           Data.Aeson.Types
-import           Instances.TH.Lift        ()
+import Control.Monad.Trans.Control (MonadBaseControl)
+import Data.Aeson.Types
+import Data.HashMap.Strict qualified as M
+import Data.HashMap.Strict qualified as Map
+import Data.Sequence qualified as DS
+import Data.Text.Extended
+import Database.PG.Query qualified as Q
+import Hasura.Backends.Postgres.Connection
+import Hasura.Backends.Postgres.Execute.Mutation
+import Hasura.Backends.Postgres.SQL.DML qualified as S
+import Hasura.Backends.Postgres.SQL.Types
+import Hasura.Backends.Postgres.Translate.Returning
+import Hasura.Backends.Postgres.Types.Table
+import Hasura.Backends.Postgres.Types.Update
+import Hasura.Base.Error
+import Hasura.EncJSON
+import Hasura.Prelude
+import Hasura.QueryTags
+import Hasura.RQL.DML.Internal
+import Hasura.RQL.DML.Types
+import Hasura.RQL.IR.BoolExp
+import Hasura.RQL.IR.Update
+import Hasura.RQL.Types
+import Hasura.SQL.Types
+import Hasura.Session
+import Hasura.Tracing qualified as Tracing
 
-import qualified Data.HashMap.Strict      as M
-import qualified Data.Sequence            as DS
-
-import           Hasura.EncJSON
-import           Hasura.Prelude
-import           Hasura.RQL.DML.Internal
-import           Hasura.RQL.DML.Mutation
-import           Hasura.RQL.DML.Returning
-import           Hasura.RQL.GBoolExp
-import           Hasura.RQL.Instances     ()
-import           Hasura.RQL.Types
-import           Hasura.SQL.Types
-
-import qualified Database.PG.Query        as Q
-import qualified Hasura.SQL.DML           as S
-
-data AnnUpdG v
-  = AnnUpd
-  { uqp1Table   :: !QualifiedTable
-  , uqp1SetExps :: ![(PGCol, v)]
-  , uqp1Where   :: !(AnnBoolExp v, AnnBoolExp v)
-  -- we don't prepare the arguments for returning
-  -- however the session variable can still be
-  -- converted as desired
-  , uqp1MutFlds :: !(MutFldsG v)
-  , uqp1AllCols :: ![PGColumnInfo]
-  } deriving (Show, Eq)
-
-traverseAnnUpd
-  :: (Applicative f)
-  => (a -> f b)
-  -> AnnUpdG a
-  -> f (AnnUpdG b)
-traverseAnnUpd f annUpd =
-  AnnUpd tn
-  <$> traverse (traverse f) setExps
-  <*> ((,) <$> traverseAnnBoolExp f whr <*> traverseAnnBoolExp f fltr)
-  <*> traverseMutFlds f mutFlds
-  <*> pure allCols
-  where
-    AnnUpd tn setExps (whr, fltr) mutFlds allCols = annUpd
-
-type AnnUpd = AnnUpdG S.SQLExp
-
-mkUpdateCTE
-  :: AnnUpd -> S.CTE
-mkUpdateCTE (AnnUpd tn setExps (permFltr, wc) _ _) =
-  S.CTEUpdate update
-  where
-    update = S.SQLUpdate tn setExp Nothing tableFltr $ Just S.returningStar
-    setExp    = S.SetExp $ map S.SetExpItem setExps
-    tableFltr = Just $ S.WhereFrag $
-                toSQLBoolExp (S.QualTable tn) $ andAnnBoolExps permFltr wc
-
-convInc
-  :: (QErrM m)
-  => (PGColumnType -> Value -> m S.SQLExp)
-  -> PGCol
-  -> PGColumnType
-  -> Value
-  -> m (PGCol, S.SQLExp)
+convInc ::
+  (QErrM m) =>
+  ValueParser ('Postgres 'Vanilla) m S.SQLExp ->
+  PGCol ->
+  ColumnType ('Postgres 'Vanilla) ->
+  Value ->
+  m (PGCol, S.SQLExp)
 convInc f col colType val = do
-  prepExp <- f colType val
+  prepExp <- f (CollectableTypeScalar colType) val
   return (col, S.SEOpApp S.incOp [S.mkSIdenExp col, prepExp])
 
-convMul
-  :: (QErrM m)
-  => (PGColumnType -> Value -> m S.SQLExp)
-  -> PGCol
-  -> PGColumnType
-  -> Value
-  -> m (PGCol, S.SQLExp)
+convMul ::
+  (QErrM m) =>
+  ValueParser ('Postgres 'Vanilla) m S.SQLExp ->
+  PGCol ->
+  ColumnType ('Postgres 'Vanilla) ->
+  Value ->
+  m (PGCol, S.SQLExp)
 convMul f col colType val = do
-  prepExp <- f colType val
+  prepExp <- f (CollectableTypeScalar colType) val
   return (col, S.SEOpApp S.mulOp [S.mkSIdenExp col, prepExp])
 
-convSet
-  :: (QErrM m)
-  => (PGColumnType -> Value -> m S.SQLExp)
-  -> PGCol
-  -> PGColumnType
-  -> Value
-  -> m (PGCol, S.SQLExp)
+convSet ::
+  (QErrM m) =>
+  ValueParser ('Postgres 'Vanilla) m S.SQLExp ->
+  PGCol ->
+  ColumnType ('Postgres 'Vanilla) ->
+  Value ->
+  m (PGCol, S.SQLExp)
 convSet f col colType val = do
-  prepExp <- f colType val
+  prepExp <- f (CollectableTypeScalar colType) val
   return (col, prepExp)
 
-convDefault :: (Monad m) => PGCol -> PGColumnType -> () -> m (PGCol, S.SQLExp)
+convDefault :: (Monad m) => PGCol -> ColumnType ('Postgres 'Vanilla) -> () -> m (PGCol, S.SQLExp)
 convDefault col _ _ = return (col, S.SEUnsafe "DEFAULT")
 
-convOp
-  :: (UserInfoM m, QErrM m)
-  => FieldInfoMap PGColumnInfo
-  -> [PGCol]
-  -> UpdPermInfo
-  -> [(PGCol, a)]
-  -> (PGCol -> PGColumnType -> a -> m (PGCol, S.SQLExp))
-  -> m [(PGCol, S.SQLExp)]
+convOp ::
+  (UserInfoM m, QErrM m) =>
+  FieldInfoMap (FieldInfo ('Postgres 'Vanilla)) ->
+  [PGCol] ->
+  UpdPermInfo ('Postgres 'Vanilla) ->
+  [(PGCol, a)] ->
+  (PGCol -> ColumnType ('Postgres 'Vanilla) -> a -> m (PGCol, S.SQLExp)) ->
+  m [(PGCol, S.SQLExp)]
 convOp fieldInfoMap preSetCols updPerm objs conv =
   forM objs $ \(pgCol, a) -> do
     -- if column has predefined value then throw error
     when (pgCol `elem` preSetCols) $ throwNotUpdErr pgCol
-    checkPermOnCol PTUpdate allowedCols pgCol
-    colType <- askPGType fieldInfoMap pgCol relWhenPgErr
+    checkPermOnCol @('Postgres 'Vanilla) PTUpdate allowedCols pgCol
+    colType <- askColumnType fieldInfoMap pgCol relWhenPgErr
     res <- conv pgCol colType a
     -- build a set expression's entry
     withPathK (getPGColTxt pgCol) $ return res
   where
-    allowedCols  = upiCols updPerm
+    allowedCols = upiCols updPerm
     relWhenPgErr = "relationships can't be updated"
     throwNotUpdErr c = do
-      role <- userRole <$> askUserInfo
-      throw400 NotSupported $ "column " <> c <<> " is not updatable"
-        <> " for role " <> role <<> "; its value is predefined in permission"
+      roleName <- _uiRole <$> askUserInfo
+      throw400 NotSupported $
+        "column " <> c <<> " is not updatable"
+          <> " for role "
+          <> roleName <<> "; its value is predefined in permission"
 
-validateUpdateQueryWith
-  :: (UserInfoM m, QErrM m, CacheRM m)
-  => SessVarBldr m
-  -> (PGColumnType -> Value -> m S.SQLExp)
-  -> UpdateQuery
-  -> m AnnUpd
+validateUpdateQueryWith ::
+  (UserInfoM m, QErrM m, TableInfoRM ('Postgres 'Vanilla) m) =>
+  SessionVariableBuilder ('Postgres 'Vanilla) m ->
+  ValueParser ('Postgres 'Vanilla) m S.SQLExp ->
+  UpdateQuery ->
+  m (AnnotatedUpdate ('Postgres 'Vanilla))
 validateUpdateQueryWith sessVarBldr prepValBldr uq = do
   let tableName = uqTable uq
-  tableInfo <- withPathK "table" $ askTabInfo tableName
+  tableInfo <- withPathK "table" $ askTabInfoSource tableName
+  let coreInfo = _tiCoreInfo tableInfo
 
   -- If it is view then check if it is updatable
-  mutableView tableName viIsUpdatable
-    (_tiViewInfo tableInfo) "updatable"
+  mutableView
+    tableName
+    viIsUpdatable
+    (_tciViewInfo coreInfo)
+    "updatable"
 
   -- Check if the role has update permissions
   updPerm <- askUpdPermInfo tableInfo
@@ -147,77 +120,108 @@ validateUpdateQueryWith sessVarBldr prepValBldr uq = do
   validateHeaders $ upiRequiredHeaders updPerm
 
   -- Check if select is allowed
-  selPerm <- modifyErr (<> selNecessaryMsg) $
-             askSelPermInfo tableInfo
+  selPerm <-
+    modifyErr (<> selNecessaryMsg) $
+      askSelPermInfo tableInfo
 
-  let fieldInfoMap = _tiFieldInfoMap tableInfo
+  let fieldInfoMap = _tciFieldInfoMap coreInfo
       allCols = getCols fieldInfoMap
       preSetObj = upiSet updPerm
       preSetCols = M.keys preSetObj
 
   -- convert the object to SQL set expression
-  setItems <- withPathK "$set" $
-    convOp fieldInfoMap preSetCols updPerm (M.toList $ uqSet uq) $ convSet prepValBldr
+  setItems <-
+    withPathK "$set" $
+      convOp fieldInfoMap preSetCols updPerm (M.toList $ uqSet uq) $ convSet prepValBldr
 
-  incItems <- withPathK "$inc" $
-    convOp fieldInfoMap preSetCols updPerm (M.toList $ uqInc uq) $ convInc prepValBldr
+  incItems <-
+    withPathK "$inc" $
+      convOp fieldInfoMap preSetCols updPerm (M.toList $ uqInc uq) $ convInc prepValBldr
 
-  mulItems <- withPathK "$mul" $
-    convOp fieldInfoMap preSetCols updPerm (M.toList $ uqMul uq) $ convMul prepValBldr
+  mulItems <-
+    withPathK "$mul" $
+      convOp fieldInfoMap preSetCols updPerm (M.toList $ uqMul uq) $ convMul prepValBldr
 
-  defItems <- withPathK "$default" $
-    convOp fieldInfoMap preSetCols updPerm (zip (uqDefault uq) [()..]) convDefault
+  defItems <-
+    withPathK "$default" $
+      convOp fieldInfoMap preSetCols updPerm ((,()) <$> uqDefault uq) convDefault
 
   -- convert the returning cols into sql returing exp
   mAnnRetCols <- forM mRetCols $ \retCols ->
     withPathK "returning" $ checkRetCols fieldInfoMap selPerm retCols
 
-  resolvedPreSetItems <- M.toList <$>
-                         mapM (convPartialSQLExp sessVarBldr) preSetObj
+  resolvedPreSetItems <-
+    M.toList
+      <$> mapM (convPartialSQLExp sessVarBldr) preSetObj
 
-  let setExpItems = resolvedPreSetItems ++ setItems ++ incItems ++
-                    mulItems ++ defItems
+  let setExpItems =
+        resolvedPreSetItems
+          ++ setItems
+          ++ incItems
+          ++ mulItems
+          ++ defItems
 
   when (null setExpItems) $
     throw400 UnexpectedPayload "atleast one of $set, $inc, $mul has to be present"
 
   -- convert the where clause
-  annSQLBoolExp <- withPathK "where" $
-    convBoolExp fieldInfoMap selPerm (uqWhere uq) sessVarBldr prepValBldr
+  annSQLBoolExp <-
+    withPathK "where" $
+      convBoolExp fieldInfoMap selPerm (uqWhere uq) sessVarBldr tableName prepValBldr
 
-  resolvedUpdFltr <- convAnnBoolExpPartialSQL sessVarBldr $
-                     upiFilter updPerm
+  resolvedUpdFltr <-
+    convAnnBoolExpPartialSQL sessVarBldr $
+      upiFilter updPerm
+  resolvedUpdCheck <-
+    fromMaybe gBoolExpTrue
+      <$> traverse
+        (convAnnBoolExpPartialSQL sessVarBldr)
+        (upiCheck updPerm)
 
-  return $ AnnUpd
-    tableName
-    setExpItems
-    (resolvedUpdFltr, annSQLBoolExp)
-    (mkDefaultMutFlds mAnnRetCols)
-    allCols
+  return $
+    AnnotatedUpdateG
+      tableName
+      (resolvedUpdFltr, annSQLBoolExp)
+      resolvedUpdCheck
+      (BackendUpdate $ Map.fromList $ fmap UpdateSet <$> setExpItems)
+      (mkDefaultMutFlds mAnnRetCols)
+      allCols
   where
     mRetCols = uqReturning uq
     selNecessaryMsg =
       "; \"update\" is only allowed if the role "
-      <> "has \"select\" permission as \"where\" can't be used "
-      <> "without \"select\" permission on the table"
+        <> "has \"select\" permission as \"where\" can't be used "
+        <> "without \"select\" permission on the table"
 
-validateUpdateQuery
-  :: (QErrM m, UserInfoM m, CacheRM m, HasSQLGenCtx m)
-  => UpdateQuery -> m (AnnUpd, DS.Seq Q.PrepArg)
-validateUpdateQuery =
-  liftDMLP1 . validateUpdateQueryWith sessVarFromCurrentSetting binRHSBuilder
+validateUpdateQuery ::
+  (QErrM m, UserInfoM m, CacheRM m) =>
+  UpdateQuery ->
+  m (AnnotatedUpdate ('Postgres 'Vanilla), DS.Seq Q.PrepArg)
+validateUpdateQuery query = do
+  let source = uqSource query
+  tableCache :: TableCache ('Postgres 'Vanilla) <- askTableCache source
+  flip runTableCacheRT (source, tableCache) $
+    runDMLP1T $
+      validateUpdateQueryWith sessVarFromCurrentSetting (valueParserWithCollectableType binRHSBuilder) query
 
-updateQueryToTx
-  :: Bool -> (AnnUpd, DS.Seq Q.PrepArg) -> Q.TxE QErr EncJSON
-updateQueryToTx strfyNum (u, p) =
-  runMutation $ Mutation (uqp1Table u) (updateCTE, p)
-                (uqp1MutFlds u) (uqp1AllCols u) strfyNum
-  where
-    updateCTE = mkUpdateCTE u
-
-runUpdate
-  :: (QErrM m, UserInfoM m, CacheRWM m, MonadTx m, HasSQLGenCtx m)
-  => UpdateQuery -> m EncJSON
+runUpdate ::
+  forall m.
+  ( QErrM m,
+    UserInfoM m,
+    CacheRM m,
+    HasServerConfigCtx m,
+    MonadBaseControl IO m,
+    MonadIO m,
+    Tracing.MonadTrace m,
+    MetadataM m
+  ) =>
+  UpdateQuery ->
+  m EncJSON
 runUpdate q = do
-  strfyNum <- stringifyNum <$> askSQLGenCtx
-  validateUpdateQuery q >>= liftTx . updateQueryToTx strfyNum
+  sourceConfig <- askSourceConfig @('Postgres 'Vanilla) (uqSource q)
+  userInfo <- askUserInfo
+  strfyNum <- stringifyNum . _sccSQLGenCtx <$> askServerConfigCtx
+  validateUpdateQuery q
+    >>= runTxWithCtx (_pscExecCtx sourceConfig) Q.ReadWrite
+      . flip runReaderT emptyQueryTagsComment
+      . execUpdateQuery strfyNum userInfo

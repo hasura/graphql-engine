@@ -1,28 +1,76 @@
 import React, { useState } from 'react';
 import Button from '../../../Common/Button/Button';
-import { dropInconsistentObjects, loadInconsistentObjects } from '../Actions';
 import { permissionTypes, getTableNameFromDef } from '../utils';
-import {
-  showSuccessNotification,
-  showErrorNotification,
-} from '../../Common/Notification';
 import metaDataStyles from '../Settings.scss';
 import styles from '../../../Common/TableCommon/Table.scss';
 import CheckIcon from '../../../Common/Icons/Check';
 import CrossIcon from '../../../Common/Icons/Cross';
 import { getConfirmation } from '../../../Common/utils/jsUtils';
+import ReloadMetadata from '../MetadataOptions/ReloadMetadata';
+import { dropInconsistentObjects } from '../../../../metadata/actions';
+import {
+  fetchDataInit,
+  SET_INCONSISTENT_INHERITED_ROLE,
+  updateCurrentSchema,
+  UPDATE_CURRENT_DATA_SOURCE,
+} from '../../Data/DataActions';
+import { setDriver } from '../../../../dataSources';
+import _push from '../../Data/push';
 
 const MetadataStatus = ({ dispatch, metadata }) => {
   const [shouldShowErrorBanner, toggleErrorBanner] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const dismissErrorBanner = () => {
     toggleErrorBanner(false);
   };
+
+  const resolveInconsistentInheritedRole = inconsistentInheritedRoleObj => {
+    const {
+      table,
+      source,
+      permission_type,
+    } = inconsistentInheritedRoleObj.entity;
+    const role = inconsistentInheritedRoleObj.name;
+    const schema = metadata.metadataObject.sources
+      .find(s => s.name === source)
+      .tables.find(t => t.table.name === table).table.schema;
+
+    const driver = metadata.metadataObject.sources.find(s => s.name === source)
+      .kind;
+
+    /* 
+      Load up the database details and schema details
+    */
+
+    dispatch({
+      type: UPDATE_CURRENT_DATA_SOURCE,
+      source: source,
+    });
+    setDriver(driver);
+
+    dispatch(fetchDataInit(source, driver)).finally(() => {
+      dispatch(updateCurrentSchema(schema, source)).then(() => {
+        dispatch({
+          type: SET_INCONSISTENT_INHERITED_ROLE,
+          inconsistent_inherited_role: {
+            role: role,
+            permission_type: permission_type,
+            table: table,
+            schema: schema,
+            source: source,
+          },
+        });
+        dispatch(
+          _push(`/data/${source}/schema/${schema}/tables/${table}/permissions`)
+        );
+      });
+    });
+  };
+
   const inconsistentObjectsTable = () => {
     return (
       <table
-        className={`${metaDataStyles.metadataStatusTable} ${
-          metaDataStyles.wd750
-        }`}
+        className={`${metaDataStyles.metadataStatusTable} ${metaDataStyles.wd750}`}
         id="t01"
       >
         <thead>
@@ -31,51 +79,98 @@ const MetadataStatus = ({ dispatch, metadata }) => {
             <th>Type</th>
             <th>Description</th>
             <th>Reason</th>
+            <th>Action</th>
           </tr>
         </thead>
         <tbody>
-          {metadata.inconsistentObjects.map((ico, _i) => {
+          {[
+            ...metadata.inconsistentObjects,
+            ...metadata.inconsistentInheritedRoles,
+          ].map((inconsistentObject, _i) => {
             let name;
             let definition;
+            if (inconsistentObject.type === 'source') {
+              name = inconsistentObject.definition;
+            }
             if (
-              ico.type === 'object_relation' ||
-              ico.type === 'array_relation'
+              inconsistentObject.type === 'object_relation' ||
+              inconsistentObject.type === 'array_relation'
             ) {
-              name = ico.definition.name;
+              name = inconsistentObject.definition.name;
               definition = `relationship of table "${getTableNameFromDef(
-                ico.definition.table
+                inconsistentObject.definition.table
               )}"`;
-            } else if (permissionTypes.includes(ico.type)) {
-              name = `${ico.definition.role}-permission`;
-              definition = `${ico.type} on table "${getTableNameFromDef(
-                ico.definition.table
+            } else if (inconsistentObject.type === 'remote_relationship') {
+              name = inconsistentObject.definition.name;
+              definition = `relationship between table "${getTableNameFromDef(
+                inconsistentObject.definition.table
+              )}" and remote schema "${
+                inconsistentObject.definition.remote_schema
+              }"`;
+            } else if (permissionTypes.includes(inconsistentObject.type)) {
+              name = `${inconsistentObject.definition.role}-permission`;
+              definition = `${
+                inconsistentObject.type
+              } on table "${getTableNameFromDef(
+                inconsistentObject.definition.table
               )}"`;
-            } else if (ico.type === 'table') {
-              name = getTableNameFromDef(ico.definition);
+            } else if (inconsistentObject.type === 'table') {
+              name = getTableNameFromDef(inconsistentObject.definition);
               definition = name;
-            } else if (ico.type === 'function') {
-              name = getTableNameFromDef(ico.definition);
+            } else if (inconsistentObject.type === 'function') {
+              name = getTableNameFromDef(inconsistentObject.definition);
               definition = name;
-            } else if (ico.type === 'event_trigger') {
-              name = ico.definition.configuration.name;
+            } else if (inconsistentObject.type === 'event_trigger') {
+              name = inconsistentObject.definition.configuration.name;
               definition = `event trigger on table "${getTableNameFromDef(
-                ico.definition.table
+                inconsistentObject.definition.table
               )}"`;
-            } else if (ico.type === 'remote_schema') {
-              name = ico.definition.name;
-              let url = `"${ico.definition.definition.url ||
-                ico.definition.definition.url_from_env}"`;
-              if (ico.definition.definition.url_from_env) {
+            } else if (inconsistentObject.type === 'remote_schema') {
+              name = inconsistentObject.definition.name;
+              let url = `"${
+                inconsistentObject.definition.definition.url ||
+                inconsistentObject.definition.definition.url_from_env
+              }"`;
+              if (inconsistentObject.definition.definition.url_from_env) {
                 url = `the url from the value of env var ${url}`;
               }
               definition = `remote schema named "${name}" at ${url}`;
             }
+            const message = inconsistentObject.message;
             return (
               <tr key={_i}>
-                <td>{name}</td>
-                <td>{ico.type}</td>
-                <td>{definition}</td>
-                <td>{ico.reason}</td>
+                <td data-test={`inconsistent_name_${_i}`}>{name}</td>
+                <td data-test={`inconsistent_type_${_i}`}>
+                  {`${inconsistentObject.type} `}
+                </td>
+                <td data-test={`inconsistent_description_${_i}`}>
+                  {definition}
+                </td>
+                <td data-test={`inconsistent_reason_${_i}`}>
+                  <div>
+                    <b>{inconsistentObject.reason}</b>
+                    <br />
+                    {typeof message === 'string' ? (
+                      message
+                    ) : message ? (
+                      <pre className="text-base">
+                        <code>{JSON.stringify(message, null, 2)}</code>
+                      </pre>
+                    ) : null}
+                  </div>
+                </td>
+                <td data-test={`inconsistent_action_${_i}`}>
+                  {inconsistentObject.type ===
+                  'inherited role permission inconsistency' ? (
+                    <Button
+                      onClick={() =>
+                        resolveInconsistentInheritedRole(inconsistentObject)
+                      }
+                    >
+                      Resolve
+                    </Button>
+                  ) : null}
+                </td>
               </tr>
             );
           })}
@@ -88,25 +183,21 @@ const MetadataStatus = ({ dispatch, metadata }) => {
     const confirmMessage =
       'This will drop all the inconsistent objects in your metadata. This action is irreversible.';
     const isOk = getConfirmation(confirmMessage);
+    const callback = () => setIsLoading(false);
     if (isOk) {
-      dispatch(dropInconsistentObjects());
+      setIsLoading(true);
+      dispatch(dropInconsistentObjects(callback, callback));
     }
   };
 
-  const reloadCacheAndLoadInconsistentObjects = () => {
-    dispatch(loadInconsistentObjects(true))
-      .then(() => {
-        dispatch(showSuccessNotification('Metadata reloaded'));
-      })
-      .catch(e => {
-        // todo error handling
-        console.error('reloadMetadata error: ', e);
-        dispatch(showErrorNotification('Error reloading metadata', null, e));
-      });
-  };
-
   const content = () => {
-    if (metadata.inconsistentObjects.length === 0) {
+    const isInconsistentRemoteSchemaPresent = metadata.inconsistentObjects.some(
+      i => i.type === 'remote_schema'
+    );
+    if (
+      metadata.inconsistentObjects.length === 0 &&
+      metadata.inconsistentInheritedRoles.length === 0
+    ) {
       return (
         <div className={styles.add_mar_top}>
           <div className={metaDataStyles.content_width}>
@@ -137,16 +228,14 @@ const MetadataStatus = ({ dispatch, metadata }) => {
               of the metadata
             </div>
             <div className={styles.add_mar_top_small}>
-              The console will also not be able to display these inconsistent
+              The console might also not be able to display these inconsistent
               objects
             </div>
           </div>
         </div>
         <div className={styles.add}>{inconsistentObjectsTable()}</div>
         <div
-          className={`${metaDataStyles.wd50percent} ${
-            metaDataStyles.add_mar_top
-          }`}
+          className={`${metaDataStyles.wd50percent} ${metaDataStyles.add_mar_top}`}
         >
           To resolve these inconsistencies, you can do one of the following:
           <ul className={styles.add_mar_top_small}>
@@ -161,47 +250,49 @@ const MetadataStatus = ({ dispatch, metadata }) => {
             </li>
           </ul>
         </div>
-        <div className={metaDataStyles.display_flex}>
-          <Button
-            color="yellow"
-            size="sm"
-            className={`${metaDataStyles.add_mar_top_small} ${
-              metaDataStyles.add_mar_right
-            }`}
-            onClick={reloadCacheAndLoadInconsistentObjects}
-          >
-            Reload metadata
-          </Button>
+        <div
+          className={`${metaDataStyles.display_flex} ${metaDataStyles.add_mar_top_small}`}
+        >
           <Button
             color="red"
             size="sm"
-            className={metaDataStyles.add_mar_top_small}
+            className={metaDataStyles.add_mar_right}
             onClick={verifyAndDropAll}
+            disabled={isLoading}
           >
             Delete all
           </Button>
+          <ReloadMetadata
+            dispatch={dispatch}
+            buttonText="Reload metadata"
+            shouldReloadRemoteSchemas={isInconsistentRemoteSchemaPresent}
+          />
         </div>
       </div>
     );
   };
 
   const banner = () => {
-    if (metadata.inconsistentObjects.length === 0) {
+    if (
+      metadata.inconsistentObjects.length === 0 &&
+      metadata.inconsistentInheritedRoles.length === 0
+    ) {
       return null;
     }
     if (!shouldShowErrorBanner) {
       return null;
     }
     const urlSearchParams = new URLSearchParams(window.location.search);
-    if (urlSearchParams.get('is_redirected') !== 'true') {
+    if (
+      urlSearchParams.get('is_redirected') !== 'true' &&
+      metadata.inconsistentObjects.length !== 0
+    ) {
       return null;
     }
     return (
       <div className={`${styles.errorBanner} alert alert-danger`}>
         <i
-          className={`${styles.add_mar_right_small} ${
-            styles.fontStyleNormal
-          } fa fa-exclamation-circle`}
+          className={`${styles.add_mar_right_small} ${styles.fontStyleNormal} fa fa-exclamation-circle`}
           aria-hidden="true"
         />
         <strong>
@@ -209,9 +300,7 @@ const MetadataStatus = ({ dispatch, metadata }) => {
           inconsistent state
         </strong>
         <i
-          className={`${styles.align_right} ${styles.fontStyleNormal} ${
-            styles.cursorPointer
-          } fa fa-times`}
+          className={`${styles.align_right} ${styles.fontStyleNormal} ${styles.cursorPointer} fa fa-times`}
           aria-hidden="true"
           onClick={dismissErrorBanner}
         />
@@ -223,13 +312,9 @@ const MetadataStatus = ({ dispatch, metadata }) => {
     <div className={styles.add_mar_bottom}>
       {banner()}
       <div
-        className={`${styles.clear_fix} ${styles.padd_left} ${
-          styles.padd_top
-        } ${metaDataStyles.metadata_wrapper} container-fluid`}
+        className={`${styles.clear_fix} ${styles.padd_left} ${styles.padd_top} ${metaDataStyles.metadata_wrapper} container-fluid`}
       >
-        <h2 className={`${styles.heading_text} ${styles.remove_pad_bottom}`}>
-          Hasura Metadata Status
-        </h2>
+        <h2 className={styles.headerText}>Hasura Metadata Status</h2>
         {content()}
       </div>
     </div>

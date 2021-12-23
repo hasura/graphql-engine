@@ -1,55 +1,120 @@
 package commands
 
 import (
-	"math/rand"
+	"fmt"
 	"os"
 	"path/filepath"
-	"strconv"
-	"testing"
-	"time"
 
-	"github.com/briandowns/spinner"
-	"github.com/hasura/graphql-engine/cli"
-	"github.com/hasura/graphql-engine/cli/util/fake"
-	"github.com/sirupsen/logrus/hooks/test"
+	"github.com/Pallinder/go-randomdata"
+	"github.com/hasura/graphql-engine/cli/v2/internal/testutil"
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
+	. "github.com/onsi/gomega/gexec"
 )
 
-func init() {
-	rand.Seed(time.Now().UTC().UnixNano())
-}
+var _ = Describe("hasura init --endpoint (config v3)", func() {
+	var projectDirectory string
+	var teardown func()
+	var hgeEndpoint string
+	sourceName := randomdata.SillyName()
 
-func TestInitCmd(t *testing.T) {
-	logger, _ := test.NewNullLogger()
-	ec := cli.NewExecutionContext()
-	ec.Logger = logger
-	ec.Spinner = spinner.New(spinner.CharSets[7], 100*time.Millisecond)
-	tt := []struct {
-		name string
-		opts *initOptions
-		err  error
-	}{
-		{"only-init-dir", &initOptions{
-			EC:          ec,
-			Endpoint:    "",
-			AdminSecret: "",
-			InitDir:     filepath.Join(os.TempDir(), "hasura-cli-test-"+strconv.Itoa(rand.Intn(1000))),
-		}, nil},
-	}
+	BeforeEach(func() {
+		projectDirectory = testutil.RandDirName()
+		hgeEndPort, teardownHGE := testutil.StartHasura(GinkgoT(), testutil.HasuraDockerImage)
+		hgeEndpoint = fmt.Sprintf("http://0.0.0.0:%s", hgeEndPort)
+		connectionString, teardownPG := testutil.StartPGContainer(GinkgoT())
+		testutil.AddPGSourceToHasura(GinkgoT(), hgeEndpoint, connectionString, sourceName)
+		copyTestConfigV3Project(projectDirectory)
+		editEndpointInConfig(filepath.Join(projectDirectory, defaultConfigFilename), hgeEndpoint)
+		editSourceNameInConfigV3ProjectTemplate(projectDirectory, "default", connectionString)
+		teardown = func() {
+			os.RemoveAll(projectDirectory)
+			teardownHGE()
+			teardownPG()
+		}
+	})
 
-	for _, tc := range tt {
-		t.Run(tc.name, func(t *testing.T) {
-			tc.opts.EC.Spinner.Writer = &fake.FakeWriter{}
-			err := tc.opts.EC.Prepare()
-			if err != nil {
-				t.Fatalf("%s: prep failed: %v", tc.name, err)
-			}
-			err = tc.opts.run()
-			if err != tc.err {
-				t.Fatalf("%s: expected %v, got %v", tc.name, tc.err, err)
-			} else {
-				// TODO: (shahidhk) need to verify the contents of the spec generated
-				os.RemoveAll(tc.opts.InitDir)
-			}
+	AfterEach(func() {
+		teardown()
+	})
+
+	It("should create directory with metadata and migrations from server", func() {
+		Context("create migrations and apply those on server", func() {
+			testMigrateApply(projectDirectory, []string{"--database-name", sourceName})
 		})
-	}
-}
+		Context("test init --endpoint for config v2", func() {
+			err := os.RemoveAll(projectDirectory)
+			Expect(err).To(BeNil())
+			session := testutil.Hasura(testutil.CmdOpts{
+				Args: []string{"init", projectDirectory, "--endpoint", hgeEndpoint, "--fetch"},
+			})
+
+			wantKeywordList := []string{
+				fmt.Sprintf("cd %s", projectDirectory),
+				"hasura console",
+				"Metadata exported",
+				"migrations applied",
+			}
+			Eventually(session, timeout).Should(Exit(0))
+			for _, keyword := range wantKeywordList {
+				Expect(session.Err.Contents()).Should(ContainSubstring(keyword))
+			}
+			fileInfos, err := os.ReadDir(filepath.Join(projectDirectory, "migrations", sourceName))
+			Expect(err).To(BeNil())
+			Expect(len(fileInfos)).Should(BeEquivalentTo(1))
+		})
+
+	})
+
+})
+
+var _ = Describe("hasura init --endpoint (config v2)", func() {
+	var projectDirectory string
+	var teardown func()
+	var hgeEndpoint string
+
+	BeforeEach(func() {
+		projectDirectory = testutil.RandDirName()
+		hgeEndPort, teardownHGE := testutil.StartHasura(GinkgoT(), testutil.HasuraDockerImage)
+		hgeEndpoint = fmt.Sprintf("http://0.0.0.0:%s", hgeEndPort)
+		copyTestConfigV2Project(projectDirectory)
+		editEndpointInConfig(filepath.Join(projectDirectory, defaultConfigFilename), hgeEndpoint)
+		teardown = func() {
+			os.RemoveAll(projectDirectory)
+			teardownHGE()
+		}
+	})
+
+	AfterEach(func() {
+		teardown()
+	})
+
+	It("should create directory with metadata and migrations from server", func() {
+		Context("create migrations and apply those on server", func() {
+			testMigrateApply(projectDirectory, nil)
+		})
+		Context("test init --endpoint for config v2", func() {
+			err := os.RemoveAll(projectDirectory)
+			Expect(err).To(BeNil())
+			session := testutil.Hasura(testutil.CmdOpts{
+				Args: []string{"init", projectDirectory, "--endpoint", hgeEndpoint, "--version", "2", "--fetch"},
+			})
+
+			wantKeywordList := []string{
+				fmt.Sprintf("cd %s", projectDirectory),
+				"hasura console",
+				"Metadata exported",
+				"migrations applied",
+			}
+			Eventually(session, timeout).Should(Exit(0))
+			for _, keyword := range wantKeywordList {
+				Expect(session.Err.Contents()).Should(ContainSubstring(keyword))
+			}
+			fileInfos, err := os.ReadDir(filepath.Join(projectDirectory, "migrations"))
+			Expect(err).To(BeNil())
+			Expect(len(fileInfos)).Should(BeEquivalentTo(1))
+		})
+
+	})
+
+})

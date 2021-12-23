@@ -11,9 +11,9 @@ const validateLogin = ({ dispatch }) => {
     // care about admin secret only if it is set
     if (globals.isAdminSecretSet) {
       const validationSuccessCallback = () => {
-        if (nextState.location.pathname === '/login') {
-          replaceState('/');
-        }
+        // if (nextState.location.pathname === '/login') {
+        //   replaceState('/');
+        // }
         cb();
       };
 
@@ -37,6 +37,9 @@ const validateLogin = ({ dispatch }) => {
         dispatch,
       });
     } else {
+      clearAdminSecretState();
+      globals.isAdminSecretSet = true;
+
       cb();
     }
   };

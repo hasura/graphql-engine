@@ -6,6 +6,16 @@ Hasura allows 'live queries' for clients (over GraphQL subscriptions). For examp
 
 This document describes Hasura's architecture which lets you scale to handle a million active live queries.
 
+##### Table of Contents  
+- [TL;DR](#tldr)
+- [GraphQL and subscriptions](#graphql-and-subscriptions)  
+- [Implementing GraphQL live-queries](#implementing-graphql-live-queries)  
+  - [Refetching results for a GraphQL query](#refetching-results-for-a-graphql-query)  
+  - [Hasura approach](#hasura-approach)  
+- [Testing](#testing)  
+- [Benefits of this approach](#benefits-of-this-approach)  
+
+
 ## TL;DR:
 **The setup:** Each client (a web/mobile app) subscribes to data or a live-result with an auth token. The data is in Postgres. 1 million rows are updated in Postgres every second (ensuring a new result pushed per client). Hasura is the GraphQL API provider (with authorization).
 
@@ -15,7 +25,7 @@ This document describes Hasura's architecture which lets you scale to handle a m
 
 ![single-instance-results](https://storage.googleapis.com/graphql-engine-cdn.hasura.io/img/subscriptions-images/images2/single-instance-fs8.png)
 
-|single instance configuration| No. of active live queries | CPU load average |
+|Single instance configuration| No. of active live queries | CPU load average |
 |-----------------------------|----------------------------|------------------|
 | 1xCPU, 2GB RAM | 5000 | 60% |
 | 2xCPU, 4GB RAM | 10000 | 73% |
@@ -88,7 +98,7 @@ Authorization when it comes to accessing data is essentially a constraint that d
 
 To model this, we implemented an authorization layer similar to Postgres RLS at the API layer to provide a declarative framework to configure access control. If you’re familiar with RLS, the analogy is that the “current session” variables in a SQL query are now HTTP “session-variables” coming from cookies or JWTs or HTTP headers.
 
-Incidentally, because we had started the engineering work behind Hasura many years ago, we ended up implementing Postgres RLS features at the application layer before it landed in Postgres. We even had the same bug in our equivalent of the insert returning clause that Postgres RLS fixed 🤓 https://www.postgresql.org/about/news/1614/
+Incidentally, because we had started the engineering work behind Hasura many years ago, we ended up implementing Postgres RLS features at the application layer before it landed in Postgres. We even had the same bug in our equivalent of the insert returning clause that Postgres RLS fixed 🤓 https://www.postgresql.org/about/news/1614/.
 
 Because of implementing authorization at the application layer in Hasura (instead of using RLS and passing user-details via current session settings in the postgres connection) had significant benefits, which we’ll soon see.
 
@@ -100,7 +110,7 @@ GraphQL query → GraphQL AST → Internal AST with authorization rules → SQL 
 
 #### Idea #3: Batch multiple live-queries into one SQL query
 
-With only ideas #1, #2 implemented we would still result in the situation where a 100k connected clients could result in a proportional load of 100k postgres queries to fetch the latest data (let’s say if 100k updates happen, 1 update relevant to each client).
+With only ideas [#1](#idea-1-compile-a-graphql-query-to-a-single-sql-query), [#2](#idea-2-make-authorization-declarative) implemented we would still result in the situation where a 100k connected clients could result in a proportional load of 100k postgres queries to fetch the latest data (let’s say if 100k updates happen, 1 update relevant to each client).
 
 However, considering that we have all the application-user level session variables available at the API layer, we can actually create a single SQL query to re-fetch data for a number of clients all at once!
 
@@ -129,9 +139,9 @@ Testing scalability & reliability for live-queries with websockets has been a ch
 
 1. A nodejs script that runs a large number of GraphQL live-query clients and logs events in memory which are later ingested into a database. [\[github\]](https://github.com/hasura/subscription-benchmark)
 
-1. A script that creates a write load on the database that causes changes across all clients running their live queries (1 million rows are updated every second)
+1. A script that creates a write load on the database that causes changes across all clients running their live queries (1 million rows are updated every second).
 
-1. Once the test suites finish running, a verification script runs on the database where the logs/events were ingested to verify that there were no errors and all events were received
+1. Once the test suites finish running, a verification script runs on the database where the logs/events were ingested to verify that there were no errors and all events were received.
 
 1. Tests are considered valid only if:
    - There are 0 errors in the payload received

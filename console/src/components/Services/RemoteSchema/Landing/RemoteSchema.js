@@ -12,35 +12,19 @@ class RemoteSchema extends React.Component {
   render() {
     const styles = require('../RemoteSchema.scss');
 
-    const { dispatch, remoteSchemaList } = this.props;
-    const showIntroSection = !remoteSchemaList.remoteSchemas.length;
-    const getIntroSection = () => {
-      if (!showIntroSection) {
-        return null;
-      }
-
-      return (
-        <div>
-          <TopicDescription
-            title="What are Remote Schemas?"
-            imgUrl={`${globals.assetsPath}/common/img/remote_schema.png`}
-            imgAlt="Remote Schema"
-            description="Remote schemas are external GraphQL services which can be merged with Hasura to provide a unified GraphQL API. Think of it like automated schema stitching. All you need to do is build a GraphQL service and then provide its HTTP endpoint to Hasura. Your GraphQL service can be written in any language or framework."
-          />
-          <hr className={styles.clear_fix} />
-        </div>
-      );
-    };
+    const { dispatch, readOnlyMode } = this.props;
 
     const getAddBtn = () => {
-      let addBtn = null;
+      if (readOnlyMode) {
+        return null;
+      }
 
       const handleClick = e => {
         e.preventDefault();
         dispatch(push(`${globals.urlPrefix}${appPrefix}/manage/add`));
       };
 
-      addBtn = (
+      return (
         <Button
           data-test="data-create-remote-schemas"
           color="yellow"
@@ -51,15 +35,11 @@ class RemoteSchema extends React.Component {
           Add
         </Button>
       );
-
-      return addBtn;
     };
 
     return (
       <div
-        className={`${styles.padd_left_remove} ${
-          styles.remoteSchemaWrapper
-        } container-fluid ${styles.padd_top}`}
+        className={`${styles.padd_left_remove} ${styles.remoteSchemaWrapper} container-fluid ${styles.padd_top}`}
       >
         <div className={styles.padd_left}>
           <Helmet title={`${pageTitle}s | Hasura`} />
@@ -70,9 +50,16 @@ class RemoteSchema extends React.Component {
               </h2>
               {getAddBtn()}
             </div>
-            <hr />
+            <hr className="my-md" />
 
-            {getIntroSection()}
+            <TopicDescription
+              title="What are Remote Schemas?"
+              imgUrl={`${globals.assetsPath}/common/img/remote_schema.png`}
+              imgAlt="Remote Schema"
+              description="Remote schemas are external GraphQL services which can be merged with Hasura to provide a unified GraphQL API. Think of it like automated schema stitching. All you need to do is build a GraphQL service and then provide its HTTP endpoint to Hasura. Your GraphQL service can be written in any language or framework."
+              knowMoreHref="https://hasura.io/docs/latest/graphql/core/remote-schemas/index.html"
+            />
+            <hr className={`${styles.clear_fix} my-lg`} />
 
             <TryItOut
               service="remoteSchema"
@@ -84,7 +71,7 @@ class RemoteSchema extends React.Component {
               MicrosoftAzureLink="https://github.com/hasura/graphql-engine/tree/master/community/boilerplates/remote-schemas/azure-functions/nodejs"
               awsLink="https://github.com/hasura/graphql-engine/tree/master/community/boilerplates/remote-schemas/aws-lambda/nodejs"
               adMoreLink="https://github.com/hasura/graphql-engine/tree/master/community/boilerplates/remote-schemas/"
-              isAvailable={showIntroSection}
+              isAvailable
             />
           </div>
         </div>
@@ -95,7 +82,7 @@ class RemoteSchema extends React.Component {
 
 const mapStateToProps = state => {
   return {
-    remoteSchemaList: state.remoteSchemas.listData,
+    readOnlyMode: state.main.readOnlyMode,
   };
 };
 

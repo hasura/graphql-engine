@@ -1,69 +1,63 @@
 module Data.Parser.JSONPath
-  ( parseJSONPath
-  , JSONPathElement(..)
-  , JSONPath
-  ) where
+  ( parseJSONPath,
+    JSONPathElement (..),
+    JSONPath,
+  )
+where
 
-import           Control.Applicative  ((<|>))
-import           Data.Aeson.Internal  (JSONPath, JSONPathElement (..))
-import           Data.Attoparsec.Text
-import           Data.Bool            (bool)
-import           Data.Char            (isDigit)
-import qualified Data.Text            as T
-import           Prelude              hiding (takeWhile)
-import           Text.Read            (readMaybe)
-
-parseKey :: Parser T.Text
-parseKey = do
-  firstChar <- letter
-           <?> "the first character of property name must be a letter."
-  name <- many' (letter
-           <|> digit
-           <|> satisfy (`elem` ("-_" :: String))
-            )
-  return $ T.pack (firstChar:name)
-
-parseIndex :: Parser Int
-parseIndex = skip (== '[') *> anyChar >>= parseDigits
-  where
-    parseDigits :: Char -> Parser Int
-    parseDigits firstDigit
-      | firstDigit == ']' = fail "empty array index"
-      | not $ isDigit firstDigit =
-          fail $ "invalid array index: " ++ [firstDigit]
-      | otherwise = do
-          remain <- many' (notChar ']')
-          skip (== ']')
-          let content = firstDigit:remain
-          case (readMaybe content :: Maybe Int) of
-            Nothing -> fail $ "invalid array index: " ++ content
-            Just v  -> return v
-
-parseElement :: Parser JSONPathElement
-parseElement = do
-  dotLen <- T.length <$> takeWhile (== '.')
-  if dotLen > 1
-    then fail "multiple dots in json path"
-    else peekChar >>= \case
-      Nothing ->  fail "empty json path"
-      Just '[' -> Index <$> parseIndex
-      _ -> Key <$> parseKey
-
-parseElements :: Parser JSONPath
-parseElements = skipWhile (== '$') *> many1 parseElement
+import Control.Applicative
+import Control.Monad (void)
+import Data.Aeson.Internal (JSONPath, JSONPathElement (..))
+import Data.Attoparsec.Text
+import Data.Bifunctor
+import Data.Text qualified as T
+import Prelude
 
 parseJSONPath :: T.Text -> Either String JSONPath
-parseJSONPath = parseResult . parse parseElements
+parseJSONPath "$" = Right []
+parseJSONPath txt =
+  first (const invalidMessage) $
+    parseOnly (optional (char '$') *> many1' element <* endOfInput) txt
   where
-    parseResult = \case
-      Fail _ pos err ->
-        Left $ bool (head pos) err (null pos)
-      Partial p ->  parseResult $ p ""
-      Done remain r ->
-        if not $ T.null remain then
-          Left $ invalidMessage remain
-        else
-          Right r
+    invalidMessage =
+      T.unpack txt
+        ++ ". Accept letters, digits, underscore (_) or hyphen (-) only"
+        ++ ". Use single quotes enclosed in bracket (['...']) if there is any special character"
 
-    invalidMessage s = "invalid property name: "  ++ T.unpack s
-      ++ ". Accept letters, digits, underscore (_) or hyphen (-) only"
+element :: Parser JSONPathElement
+element =
+  Key <$> (optional (char '.') *> name) -- field or .field
+    <|> bracketElement -- [42] or ['field']
+
+name :: Parser T.Text
+name = go <?> "property name"
+  where
+    go = do
+      firstChar <-
+        letter
+          <|> char '_'
+          <?> "first character of property name must be a letter or underscore"
+      otherChars <- many' (letter <|> digit <|> satisfy (inClass "-_"))
+      pure $ T.pack (firstChar : otherChars)
+
+-- | Parses a JSON property key or index in square bracket format, e.g.
+-- > [42]
+-- > ["hello"]
+-- > ['你好']
+bracketElement :: Parser JSONPathElement
+bracketElement = do
+  void $ optional (char '.') *> char '['
+  result <-
+    Index <$> decimal
+      <|> Key <$> quotedString '"'
+      <|> Key <$> quotedString '\''
+  void $ char ']'
+  pure result
+  where
+    quotedString delimiter = do
+      void $ char delimiter
+      result <- T.pack <$> many' (charOrEscape delimiter)
+      void $ char delimiter
+      pure result
+
+    charOrEscape delimiter = (char '\\' *> anyChar) <|> notChar delimiter

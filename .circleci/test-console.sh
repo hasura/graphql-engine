@@ -22,9 +22,11 @@ mkdir -p /build/_console_output
 touch /build/_console_output/server.log
 touch /build/_console_output/cli.log
 
+echo "ldd is $(ldd --version)"
+
 # start graphql-engine
 /build/_server_output/graphql-engine \
-    --database-url postgres://gql_test@localhost:5432/gql_test serve > /build/_console_output/server.log 2>&1 &
+    --database-url postgres://gql_test@localhost:5432/gql_test serve --enable-remote-schema-permissions > /build/_console_output/server.log 2>&1 &
 
 wait_for_port 8080
 
@@ -44,6 +46,7 @@ export API_PORT=9693
 export CONSOLE_MODE=cli
 export DEV_DATA_API_URL=http://localhost:8080
 export URL_PREFIX=/
+export SERVER_VERSION=$(cat /build/_server_output/version.txt)
 
 # test console
 npm run dev &
