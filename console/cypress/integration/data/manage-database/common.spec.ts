@@ -78,5 +78,11 @@ export type driverSpecType = {
   helpers: {
     createDB: (dbName: string) => void;
     removeDB: (dbName: string) => void;
+    createTable: (tableName: string) => void;
+    deleteTable: (tableName: string) => void;
+    trackTable: (tableName: string) => void;
+    untrackTable: (tableName: string) => void;
+    createRemoteSchema: (remoteSchemaName: string) => void;
+    deleteRemoteSchema: (remoteSchemaName: string) => void;
   };
 };

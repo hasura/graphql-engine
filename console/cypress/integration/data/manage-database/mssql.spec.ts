@@ -72,6 +72,12 @@ const mssql: driverSpecType = {
   helpers: {
     removeDB,
     createDB,
+    createTable: () => {},
+    createRemoteSchema: () => {},
+    deleteRemoteSchema: () => {},
+    deleteTable: () => {},
+    trackTable: () => {},
+    untrackTable: () => {},
   },
 };
 

@@ -122,6 +122,7 @@ const RemoteRelEditor: React.FC<Props> = ({
               onChange={handleNameChange}
               disabled={!isLast}
               title={!isLast ? 'Name cannot be changed' : undefined}
+              data-test="remote-rel-name-input"
             />
           </div>
         </div>
@@ -141,6 +142,7 @@ const RemoteRelEditor: React.FC<Props> = ({
               className={`form-control ${styles.wd300Px}`}
               value={state.remoteSchema}
               onChange={handleRemoteSchemaChange}
+              data-test="remote-rel-schema-input"
             >
               <option key="placeholder" value="">
                 {' '}
