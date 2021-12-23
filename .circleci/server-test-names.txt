@@ -3,7 +3,8 @@ haskell-tests
 no-auth
 admin-secret
 admin-secret-unauthorized-role
-jwt
+jwt-rs512
+jwt-ed25519
 jwt-stringified
 jwt-audience-check-single-string
 jwt-audience-check-list-string
