@@ -13,6 +13,7 @@ import {
   TableFields,
 } from '../../validators/validators';
 import { setPromptValue } from '../../../helpers/common';
+import { AWAIT_SHORT } from '../../../helpers/constants';
 
 const delRel = (table: string, relname: string) => {
   cy.get(getElementFromAlias(table)).click();
@@ -276,6 +277,47 @@ export const failRTAddSuggestedRel = () => {
   cy.wait(15000);
   delRel('article_table_rt', 'author');
   delRel('article_table_rt', 'comments');
+};
+
+export const passRSTSetup = () => {
+  createTable('countries', {
+    id: 'integer',
+    name: 'text',
+    countryCode: 'text',
+  });
+};
+
+export const passRSTReset = () => {
+  Deletetable('countries_table_rt');
+};
+
+const AWAIT_MINOR = 500;
+
+export const passRSTAddRSRel = () => {
+  cy.reload();
+  cy.getBySel('countries_table_rt').click();
+  cy.getBySel('table-relationships').click();
+  cy.getBySel('table-relationship-edit-remote-relationship-add').click();
+  cy.wait(AWAIT_MINOR);
+  cy.getBySel('remote-rel-name-input').type('remote');
+  cy.getBySel('remote-rel-schema-input').select('remote_rel_test_rs');
+  cy.get('input[type="checkbox"]').eq(3).check();
+  cy.wait(AWAIT_MINOR);
+  cy.get('input[type="checkbox"]').eq(4).check();
+  cy.get('select').eq(2).select('countryCode');
+  cy.getBySel('table-relationship-remote-relationship-add-save').click();
+  cy.get('.notification', { timeout: AWAIT_SHORT })
+    .should('be.visible')
+    .and('contain', 'Successfully created remote relationship');
+};
+
+export const passRSTDeleteRSRel = () => {
+  cy.reload();
+  cy.getBySel('table-relationship-edit-remote-relationship-edit').click();
+  cy.getBySel('table-relationship-remote-relationship-edit-remove').click();
+  cy.get('.notification', { timeout: AWAIT_SHORT })
+    .should('be.visible')
+    .and('contain', 'Successfully deleted remote relationship');
 };
 
 export const setValidationMetaData = () => {

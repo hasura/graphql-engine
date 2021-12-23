@@ -48,7 +48,7 @@ const fillDetailsForEnvVarForm = (dbName: string) => {
   cy.getBySel('database-url-env').type('HASURA_GRAPHQL_DATABASE_URL');
 };
 
-export const createDB = (dbName: string) => {
+const createDB = (dbName: string) => {
   const postBody = {
     type: 'pg_add_source',
     args: {
@@ -67,13 +67,119 @@ export const createDB = (dbName: string) => {
   );
 };
 
-export const removeDB = (dbName: string) => {
+const removeDB = (dbName: string) => {
   const postBody = { type: 'pg_drop_source', args: { name: dbName } };
   cy.request('POST', 'http://localhost:8080/v1/metadata', postBody).then(
     response => {
       expect(response.body).to.have.property('message', 'success'); // true
-  });
+    }
+  );
   cy.reload();
+};
+
+const createTable = (tableName: string) => {
+  const postBody = {
+    type: 'run_sql',
+    args: {
+      source: 'default',
+      sql: `CREATE TABLE "public"."${tableName}" ("id" serial NOT NULL, "name" text NOT NULL, "countryCode" text DEFAULT 'IN', PRIMARY KEY ("id") );`,
+      cascade: false,
+      read_only: false,
+    },
+  };
+  cy.request('POST', 'http://localhost:8080/v2/query', postBody).then(
+    response => {
+      expect(response.body).to.have.property('result_type', 'CommandOk'); // true
+    }
+  );
+};
+
+const trackTable = (tableName: string) => {
+  const postBody = {
+    type: 'pg_track_table',
+    args: {
+      table: {
+        name: tableName,
+        schema: 'public',
+      },
+      source: 'default',
+    },
+  };
+  cy.request('POST', 'http://localhost:8080/v1/metadata', postBody).then(
+    response => {
+      expect(response.body).to.have.property('message', 'success'); // true
+    }
+  );
+};
+
+const untrackTable = (tableName: string) => {
+  const postBody = {
+    type: 'pg_untrack_table',
+    args: {
+      table: {
+        schema: 'public',
+        name: tableName,
+      },
+      source: 'default',
+    },
+  };
+  cy.request('POST', 'http://localhost:8080/v1/metadata', postBody).then(
+    response => {
+      expect(response.body).to.have.property('message', 'success'); // true
+    }
+  );
+};
+
+const deleteTable = (tableName: string) => {
+  const postBody = {
+    type: 'run_sql',
+    args: {
+      source: 'default',
+      sql: `DROP table "public"."${tableName}";`,
+      cascade: false,
+      read_only: false,
+    },
+  };
+  cy.request('POST', 'http://localhost:8080/v2/query', postBody).then(
+    response => {
+      expect(response.body).to.have.property('result_type', 'CommandOk'); // true
+    }
+  );
+};
+
+const createRemoteSchema = (remoteSchemaName: string) => {
+  const postBody = {
+    type: 'add_remote_schema',
+    args: {
+      name: remoteSchemaName,
+      definition: {
+        timeout_seconds: 60,
+        forward_client_headers: false,
+        headers: [],
+        url: 'https://countries.trevorblades.com/',
+      },
+      comment: '',
+    },
+  };
+  cy.request('POST', 'http://localhost:8080/v1/metadata', postBody).then(
+    response => {
+      expect(response.body).to.have.property('message', 'success'); // true
+    }
+  );
+};
+
+const deleteRemoteSchema = (remoteSchemaName: string) => {
+  const postBody = {
+    type: 'remove_remote_schema',
+    args: {
+      name: remoteSchemaName,
+    },
+  };
+  cy.request('POST', 'http://localhost:8080/v1/metadata', postBody).then(
+    response => {
+      expect(response.body).to.have.property('message', 'success'); // true
+    }
+  );
 };
 
 const postgres: driverSpecType = {
@@ -86,6 +192,12 @@ const postgres: driverSpecType = {
   helpers: {
     createDB,
     removeDB,
+    createTable,
+    createRemoteSchema,
+    deleteRemoteSchema,
+    deleteTable,
+    trackTable,
+    untrackTable,
   },
 };
 
