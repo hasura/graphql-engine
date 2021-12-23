@@ -315,9 +315,9 @@ case "$SERVER_TEST_TO_RUN" in
     #unset HASURA_GRAPHQL_UNAUTHORIZED_ROLE
     ;;
 
-  jwt)
-    echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH ADMIN SECRET AND JWT #####################################>\n"
-    TEST_TYPE="jwt"
+  jwt-rs512)
+    echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH ADMIN SECRET AND JWT (RS512) #####################################>\n"
+    TEST_TYPE="jwt-rs512"
 
     init_jwt
 
@@ -330,8 +330,16 @@ case "$SERVER_TEST_TO_RUN" in
 
     kill_hge_servers
 
-    # Ed25519 test
+    #unset HASURA_GRAPHQL_JWT_SECRET
+    ;;
 
+  jwt-ed25519)
+    echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH ADMIN SECRET AND JWT (Ed25519) #####################################>\n"
+    TEST_TYPE="jwt-ed25519"
+    
+    init_jwt
+
+    export HASURA_GRAPHQL_ADMIN_SECRET="HGE$RANDOM$RANDOM"
     export HASURA_GRAPHQL_JWT_SECRET="$(jq -n --arg key "$(cat $OUTPUT_FOLDER/ssl/ed25519_jwt_public.key)" '{ type: "Ed25519", key: $key }')"
 
     start_multiple_hge_servers
