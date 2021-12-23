@@ -6,6 +6,7 @@ import (
 	"text/tabwriter"
 
 	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
+	"github.com/hasura/graphql-engine/cli/v2/internal/metadatautil"
 
 	"github.com/hasura/graphql-engine/cli/v2/util"
 
@@ -17,7 +18,8 @@ import (
 
 func newMigrateStatusCmd(ec *cli.ExecutionContext) *cobra.Command {
 	opts := &MigrateStatusOptions{
-		EC: ec,
+		EC:         ec,
+		StatusOpts: make(StatusOptions),
 	}
 	migrateStatusCmd := &cobra.Command{
 		Use:   "status",
@@ -29,17 +31,13 @@ func newMigrateStatusCmd(ec *cli.ExecutionContext) *cobra.Command {
   hasura migrate status --endpoint "<endpoint>"`,
 		SilenceUsage: true,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
-			return validateConfigV3Flags(cmd, ec)
+			return validateConfigV3FlagsWithAll(cmd, ec)
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			opts.EC.Spin("Fetching migration status...")
-			opts.Source = ec.Source
-			status, err := opts.Run()
-			opts.EC.Spinner.Stop()
-			if err != nil {
+			if err := opts.Run(); err != nil {
 				return err
 			}
-			buf := printStatus(status)
+			buf := printStatus(opts.StatusOpts)
 			fmt.Fprintf(ec.Stdout, "%s", buf)
 			return nil
 		},
@@ -47,12 +45,41 @@ func newMigrateStatusCmd(ec *cli.ExecutionContext) *cobra.Command {
 	return migrateStatusCmd
 }
 
-type MigrateStatusOptions struct {
-	EC     *cli.ExecutionContext
-	Source cli.Source
+func (o *MigrateStatusOptions) Run() error {
+	o.EC.Spin("Fetching migration status...")
+	defer o.EC.Spinner.Stop()
+	if ec.AllDatabases {
+		sourcesAndKind, err := metadatautil.GetSourcesAndKind(o.EC.APIClient.V1Metadata.ExportMetadata)
+		if err != nil {
+			return fmt.Errorf("got error while getting the sources list : %v", err)
+		}
+		for _, source := range sourcesAndKind {
+			o.Source = cli.Source(source)
+			status, err := o.RunOnSource()
+			if err != nil {
+				return fmt.Errorf("error getting status for database %s: %v", o.Source.Name, err)
+			}
+			o.StatusOpts[o.Source] = status
+		}
+		return err
+	}
+	o.Source = ec.Source
+	status, err := o.RunOnSource()
+	if err != nil {
+		return fmt.Errorf("error getting status for database %s: %v", o.Source.Name, err)
+	}
+	o.StatusOpts[o.Source] = status
+	return err
 }
 
-func (o *MigrateStatusOptions) Run() (*migrate.Status, error) {
+type StatusOptions map[cli.Source]*migrate.Status
+type MigrateStatusOptions struct {
+	EC         *cli.ExecutionContext
+	Source     cli.Source
+	StatusOpts StatusOptions
+}
+
+func (o *MigrateStatusOptions) RunOnSource() (*migrate.Status, error) {
 	if o.EC.Config.Version <= cli.V2 {
 		o.Source.Name = ""
 		o.Source.Kind = hasura.SourceKindPG
@@ -68,19 +95,24 @@ func (o *MigrateStatusOptions) Run() (*migrate.Status, error) {
 	return status, nil
 }
 
-func printStatus(status *migrate.Status) *bytes.Buffer {
+func printStatus(statusOpts StatusOptions) *bytes.Buffer {
 	out := new(tabwriter.Writer)
 	buf := &bytes.Buffer{}
 	out.Init(buf, 0, 8, 2, ' ', 0)
 	w := util.NewPrefixWriter(out)
-	w.Write(util.LEVEL_0, "VERSION\tNAME\tSOURCE STATUS\tDATABASE STATUS\n")
-	for _, version := range status.Index {
-		w.Write(util.LEVEL_0, "%d\t%s\t%s\t%s\n",
-			version,
-			status.Migrations[version].Name,
-			convertBool(status.Migrations[version].IsPresent),
-			convertBool(status.Migrations[version].IsApplied),
-		)
+	for source, status := range statusOpts {
+		if source.Name != "" {
+			w.Write(util.LEVEL_0, fmt.Sprintf("\nDatabase: %s\n", source.Name))
+		}
+		w.Write(util.LEVEL_0, "VERSION\tNAME\tSOURCE STATUS\tDATABASE STATUS\n")
+		for _, version := range status.Index {
+			w.Write(util.LEVEL_0, "%d\t%s\t%s\t%s\n",
+				version,
+				status.Migrations[version].Name,
+				convertBool(status.Migrations[version].IsPresent),
+				convertBool(status.Migrations[version].IsApplied),
+			)
+		}
 	}
 	out.Flush()
 	return buf

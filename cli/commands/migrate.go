@@ -118,6 +118,60 @@ func executeStatus(t *migrate.Migrate) (*migrate.Status, error) {
 }
 
 func validateConfigV3Flags(cmd *cobra.Command, ec *cli.ExecutionContext) error {
+	if err := validateConfigV3Prechecks(cmd, ec); err != nil {
+		return err
+	}
+	if ec.Config.Version < cli.V3 {
+		return nil
+	}
+
+	if err := databaseChooser(ec); err != nil {
+		return err
+	}
+
+	if err := validateSourceInfo(ec); err != nil {
+		return err
+	}
+
+	// check if migration ops are supported for the database
+	if !migrate.IsMigrationsSupported(ec.Source.Kind) {
+		return fmt.Errorf("migrations on source %s of kind %s is not supported", ec.Source.Name, ec.Source.Kind)
+	}
+	return nil
+}
+
+func validateConfigV3FlagsWithAll(cmd *cobra.Command, ec *cli.ExecutionContext) error {
+	if err := validateConfigV3Prechecks(cmd, ec); err != nil {
+		return err
+	}
+	if ec.Config.Version < cli.V3 {
+		return nil
+	}
+	// if --all-databases flag is present, ignore --database-name and showing UI prompt for choosing a single database
+	if cmd.Flags().Changed("all-databases") {
+		return nil
+	}
+
+	if err := databaseChooserWithAllOption(ec); err != nil {
+		return err
+	}
+
+	if ec.AllDatabases {
+		return nil
+	}
+	if err := validateSourceInfo(ec); err != nil {
+		return err
+	}
+
+	// check if migration ops are supported for the database
+	if !migrate.IsMigrationsSupported(ec.Source.Kind) {
+		return fmt.Errorf("migrations on source %s of kind %s is not supported", ec.Source.Name, ec.Source.Kind)
+	}
+
+	return nil
+}
+
+func validateConfigV3Prechecks(cmd *cobra.Command, ec *cli.ExecutionContext) error {
 	// for project using config older than v3, use PG source kind
 	if ec.Config.Version < cli.V3 {
 		ec.Source.Kind = hasura.SourceKindPG
@@ -127,34 +181,16 @@ func validateConfigV3Flags(cmd *cobra.Command, ec *cli.ExecutionContext) error {
 		return nil
 	}
 
-	// if --all-databases flag is present, ignore --database-name and showing UI prompt for choosing a single database
-	if cmd.Flags().Changed("all-databases") {
-		return nil
-	}
-
-	// In case of single database, just choose the source automatically
-	sources, err := metadatautil.GetSources(ec.APIClient.V1Metadata.ExportMetadata)
-	if err != nil {
-		return fmt.Errorf("unable to get available databases: %w", err)
-	}
-	if !cmd.Flags().Changed("database-name") && len(sources) == 1 {
-		ec.Source.Name = sources[0]
-	}
 	// for project using config equal to or greater than v3
 	// database-name flag is required when running in non-terminal mode
-	if (!ec.IsTerminal || ec.Config.DisableInteractive) && ec.Source.Name == "" {
+	if (!ec.IsTerminal || ec.Config.DisableInteractive) && !cmd.Flags().Changed("all-databases") && !cmd.Flags().Changed("database-name") {
 		return errDatabaseNameNotSet
 	}
 
-	// prompt UI for choosing database if source name is not set
-	if ec.Source.Name == "" {
-		databaseName, err := metadatautil.DatabaseChooserUI(ec.APIClient.V1Metadata.ExportMetadata)
-		if err != nil {
-			return err
-		}
-		ec.Source.Name = databaseName
-	}
+	return nil
+}
 
+func validateSourceInfo(ec *cli.ExecutionContext) error {
 	// find out the database kind by making a API call to server
 	// and update ec to include the database name and kind
 	sourceKind, err := metadatautil.GetSourceKind(ec.APIClient.V1Metadata.ExportMetadata, ec.Source.Name)
@@ -165,10 +201,33 @@ func validateConfigV3Flags(cmd *cobra.Command, ec *cli.ExecutionContext) error {
 		return fmt.Errorf("%w: error determining database kind for %s, check if database exists on hasura", errDatabaseNotFound, ec.Source.Name)
 	}
 	ec.Source.Kind = *sourceKind
+	return nil
+}
 
-	// check if migration ops are supported for the database
-	if !migrate.IsMigrationsSupported(*sourceKind) {
-		return fmt.Errorf("migrations on source %s of kind %s is not supported", ec.Source.Name, *sourceKind)
+func databaseChooser(ec *cli.ExecutionContext) error {
+	// prompt UI for choosing database if source name is not set
+	if ec.Source.Name == "" {
+		databaseName, err := metadatautil.DatabaseChooserUI(ec.APIClient.V1Metadata.ExportMetadata)
+		if err != nil {
+			return err
+		}
+		ec.Source.Name = databaseName
+	}
+	return nil
+}
+
+func databaseChooserWithAllOption(ec *cli.ExecutionContext) error {
+	// prompt UI for choosing database if source name is not set
+	if ec.Source.Name == "" {
+		databaseName, err := metadatautil.DatabaseChooserUIWithAll(ec.APIClient.V1Metadata.ExportMetadata)
+		if err != nil {
+			return err
+		}
+		if databaseName == metadatautil.ChooseAllDatabases {
+			ec.AllDatabases = true
+			return nil
+		}
+		ec.Source.Name = databaseName
 	}
 	return nil
 }

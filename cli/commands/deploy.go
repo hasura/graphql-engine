@@ -93,8 +93,9 @@ func (opts *DeployOptions) Run() error {
 		if configV2FSM.Current == failedOperation {
 			return fmt.Errorf("operation failed: %w", context.err)
 		}
-
+		return nil
 	}
+
 	configV3FSM := newConfigV3DeployFSM()
 	if err := configV3FSM.SendEvent(applyInitialMetadata, context); err != nil {
 		return err
@@ -176,9 +177,9 @@ func (a *applyingMigrationsAction) Execute(ctx fsm.EventContext) eventType {
 
 	context.ec.Config.DisableInteractive = true
 	opts := MigrateApplyOptions{
-		EC:           context.ec,
-		AllDatabases: true,
+		EC: context.ec,
 	}
+	opts.EC.AllDatabases = true
 	if err := opts.Run(); err != nil {
 		context.err = err
 		return applyMigrationsFailed

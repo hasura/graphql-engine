@@ -50,7 +50,25 @@ func newSeedCreateCmd(ec *cli.ExecutionContext) *cobra.Command {
 		Args:         cobra.ExactArgs(1),
 		SilenceUsage: false,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
-			return ec.Validate()
+			if err := validateConfigV3Prechecks(cmd, ec); err != nil {
+				return err
+			}
+			if ec.Config.Version < cli.V3 {
+				return nil
+			}
+
+			if err := databaseChooser(ec); err != nil {
+				return err
+			}
+
+			if err := validateSourceInfo(ec); err != nil {
+				return err
+			}
+			// check if seed ops are supported for the database
+			if !seed.IsSeedsSupported(ec.Source.Kind) {
+				return fmt.Errorf("seed operations on database %s of kind %s is not supported", ec.Source.Name, ec.Source.Kind)
+			}
+			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			opts.SeedName = args[0]

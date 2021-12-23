@@ -9,6 +9,7 @@
 (Add entries below in the order of server, console, cli, docs, others)
 
 - server: extend support for insert mutations to tables without primary key constraint in a MSSQL backend
+- cli: migrate and seed subcommands has an option in prompt to choose and apply operation on all available databases
 
 ## v2.1.1
 
