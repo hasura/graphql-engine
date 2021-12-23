@@ -187,7 +187,7 @@ func TestMigrateCmd(t *testing.T, ec *cli.ExecutionContext) {
 				EC:     ec,
 				Source: cli.Source{Name: "", Kind: hasura.SourceKindPG},
 			}
-			actualStatus, err := statusOpts.Run()
+			actualStatus, err := statusOpts.RunOnSource()
 			if err != nil {
 				t.Fatalf("%s: unable to fetch migrate status, got %v", tc.name, err)
 			}

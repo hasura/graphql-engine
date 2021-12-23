@@ -19,7 +19,7 @@ type ProjectMigrationApplierOption func(applier *projectMigrationsApplier)
 
 func ApplyOnAllDatabases() ProjectMigrationApplierOption {
 	return func(p *projectMigrationsApplier) {
-		p.opts.AllDatabases = true
+		p.opts.EC.AllDatabases = true
 	}
 }
 

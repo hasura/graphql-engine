@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	"github.com/hasura/graphql-engine/cli/v2"
+	"github.com/hasura/graphql-engine/cli/v2/internal/metadatautil"
 	"github.com/hasura/graphql-engine/cli/v2/migrate"
 	mig "github.com/hasura/graphql-engine/cli/v2/migrate/cmd"
 	"github.com/hasura/graphql-engine/cli/v2/util"
@@ -28,7 +29,7 @@ func newMigrateDeleteCmd(ec *cli.ExecutionContext) *cobra.Command {
 		SilenceUsage: true,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			ec.Logger.Warn("[PREVIEW] this command is in preview. usage may change in future\n")
-			if err := validateConfigV3Flags(cmd, ec); err != nil {
+			if err := validateConfigV3FlagsWithAll(cmd, ec); err != nil {
 				return err
 			}
 			if !cmd.Flags().Changed("all") && !cmd.Flags().Changed("version") {
@@ -52,21 +53,17 @@ func newMigrateDeleteCmd(ec *cli.ExecutionContext) *cobra.Command {
 				}
 			}
 
-			opts.Source = ec.Source
-			if ec.Config.Version >= cli.V3 {
-				var err error
-				opts.EC.Spin("Removing migrations")
-				err = opts.Run()
-				opts.EC.Spinner.Stop()
+			if ec.AllDatabases && !opts.force {
+				confirmation, err := util.GetYesNoPrompt("clear all mentioned migrations of all databases and it's history on the server?")
 				if err != nil {
-					return fmt.Errorf("operation failed: %w", err)
+					return fmt.Errorf("error getting user input: %w", err)
 				}
-				return err
+				if !confirmation {
+					return nil
+				}
 			}
-			opts.EC.Spin("Removing migrations")
-			err := opts.Run()
-			opts.EC.Spinner.Stop()
-			if err != nil {
+
+			if err := opts.Run(); err != nil {
 				return fmt.Errorf("operation failed: %w", err)
 			}
 			return nil
@@ -93,6 +90,27 @@ type MigrateDeleteOptions struct {
 }
 
 func (o *MigrateDeleteOptions) Run() error {
+	o.EC.Spin("Removing migrations")
+	defer o.EC.Spinner.Stop()
+	if ec.AllDatabases {
+		sourcesAndKind, err := metadatautil.GetSourcesAndKind(o.EC.APIClient.V1Metadata.ExportMetadata)
+		if err != nil {
+			return fmt.Errorf("got error while getting the sources list : %v", err)
+		}
+		for _, source := range sourcesAndKind {
+			o.Source = cli.Source(source)
+			err := o.RunOnSource()
+			if err != nil {
+				return fmt.Errorf("error while deleting status for database %s: %v", o.Source.Name, err)
+			}
+		}
+		return nil
+	}
+	o.Source = ec.Source
+	return o.RunOnSource()
+}
+
+func (o *MigrateDeleteOptions) RunOnSource() error {
 	o.EC.Spin("Deleting migration...")
 
 	migrateDrv, err := migrate.NewMigrate(o.EC, true, o.Source.Name, o.Source.Kind)
