@@ -120,9 +120,15 @@ This will launch a server on port 8080, and it will serve the console assets if 
 
   1. A small set of unit tests and integration tests written in Haskell, in `server/src-test`.
 
-  2. An extensive set of end-to-end tests written in Python, in `server/tests-py`.
+  2. A new integration test suite written in Haskell, in `server/tests-hspec`.
 
-Both sets of tests require a running Postgres database.
+  3. An extensive set of end-to-end tests written in Python, in `server/tests-py`.
+
+All sets of tests require running databases:
+
+- some unit tests hit the database, and running the unit test suite requires passing in a postgres connection string,
+- the Haskell integration test suite requires databases to run (they can be started via the docker command listed below),
+- the Python integration test suite also requires databases AND the engine to be running, which can be started via either the `dev.sh` script, or manually.
 
 ##### Running the Haskell test suite
 
@@ -130,6 +136,20 @@ Both sets of tests require a running Postgres database.
 cabal new-run -- test:graphql-engine-tests unit
 HASURA_GRAPHQL_DATABASE_URL='postgres://<user>:<password>@<host>:<port>/<dbname>' \
     cabal new-run -- test:graphql-engine-tests postgres
+```
+
+##### Running the Haskell integration test suite
+
+1. To run the Haskell integration test suite, you'll first need to bring up the database containers:
+
+```sh
+docker-compose up
+```
+
+2. Once the containers are up, you can run the test suite via
+
+```sh
+cabal test tests-hspec --test-show-details=direct
 ```
 
 ##### Running the Python test suite
