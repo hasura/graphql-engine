@@ -4,7 +4,6 @@ sidebar_position: 3
 
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
-import CustomLink from '@site/src/components/CustomLink';
 
 # Links
 
@@ -79,6 +78,10 @@ Since MDX doesn't yet support direct document referencing with `id/ref` unlike s
 
 > [MDX Root Relative Link](/migration-guide/index.mdx#contents-covered)
 
+:::tip Dont forget the extension!
+Make sure to include file extension as MDX links are parsed as a file path and will be resolved correctly.
+:::
+
 
 ## Links in React
 
@@ -94,53 +97,10 @@ import Link from '@docusaurus/Link';
 <Link to="https://hasura.io">Hasura</Link>
 ```
 
-## Versioned Links
-When docs are versioned there is a decent chance of broken internal links as the URL path will include a version number.
-
-External links have no effect and will link to external resource.
-
-### When using MDX links
-All absolute links will be broken and have to be manually fixed. So, it is always recommended to use root relative/relative links which would point to correct versioned docs.
-
-
-Switch versions and observe below to see how docusaurus parses file path links and result in full URL path for different versions
-Base URL is always prefixed.
-
-`[=>](/migration-guide/index.mdx#contents-covered)`
-
-:::tip Dont forget the extension!
-Make sure to include file extension as MDX links are parsed a file path and will be resolved to correct version.
-:::
-
-### When using React Link
-React Link's to attribute will always accept a URL path and not file path. So, this will be broken.
-
-As a workwround, added a new `CustomLink` component which will prefix the path with respective version number.
-
-```jsx
-import Link from '@docusaurus/Link';
-import CustomLink from '@site/src/components/CustomLink';
-
-// Internal Link
-<CustomLink to="/migration-guide/links#when-using-react-link">Root Relative Versioned Links</CustomLink>
-
-// External Link - Please use Link from docusaurus.
-<Link to="https://hasura.io">Hasura</Link>
-```
-
-Verify this in versioned page of Link and here. The URL should point to correct verisoned link.
-<CustomLink to="/migration-guide/links#when-using-react-link">Root Relative Versioned Links</CustomLink>
-
-
-The base URL is prefixed by default for all internal relative links and version number is prefixed alng with base URL when using Custom Link.
-
-:::danger User for Internal Links only
-Please use CustomLink only for Internal Links with root relative path. Using for external links will break as it will be prefixed with version number.
-:::
-
-
 <hr />
 
 :::info
+React Link's `to` attribute will always accept a URL path and not file path.
+
 Docusaurus catches [broken markdown links](https://docusaurus.io/docs/api/docusaurus-config#onbrokenmarkdownlinks) if enabled
 :::
