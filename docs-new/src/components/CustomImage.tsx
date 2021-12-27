@@ -1,10 +1,10 @@
-// Ref: https://github.com/facebook/docusaurus/issues/2302#issuecomment-674175068
-
 import React from 'react';
 import Thumbnail from './Thumbnail/Thumbnail';
 import {useActiveVersion, useLatestVersion} from '@theme/hooks/useDocs';
+import useBaseUrl from '@docusaurus/useBaseUrl';
 // import {usePluginData} from '@docusaurus/useGlobalData';
 
+// Ref: https://github.com/facebook/docusaurus/issues/2302#issuecomment-674175068
 
 const CustomImage = ({src, ...restProps}) => {
   const activeVersion = useActiveVersion('default');
@@ -13,10 +13,8 @@ const CustomImage = ({src, ...restProps}) => {
   const pathPrefix = activeVersion.path === latestVersion.path ? "docs" : `versioned_docs/version-${activeVersion.name}`;
   const versionedSrcPath = `@site/${pathPrefix}${src}`;
   const versionedSrc = versionedSrcPath;
-  
-  console.log({activeVersion, latestVersion, versionedSrc, versionedSrcPath});
 
-  return <Thumbnail src={require(versionedSrc).default} {...restProps} />;
+  return <img src={versionedSrc} {...restProps} />;
 };
 
 export default CustomImage;

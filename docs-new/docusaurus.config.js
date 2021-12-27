@@ -31,10 +31,6 @@ const config = {
             current: {
               label: "v2.x",
             },
-            "1.x": {
-              label: "v1.x",
-              path: "1.0"
-            }
           }
         },
         theme: {

@@ -44,16 +44,16 @@ const Modal = (props) => {
   );
 }
 
-const Thumbnail = (props) => {
+const Thumbnail = ({src, ...restProps}) => {
   const [openModal, setOpenModal] = useState(false);
-
+  const resolvedImage = require(`@site/static${src}`).default;
   return (
     <div className={styles["thumbnail"]}>
-      <img {...props} className={styles["main-img"]} onClick={() => setOpenModal(true)} />
+      <img src={resolvedImage} {...restProps} className={styles["main-img"]} onClick={() => setOpenModal(true)} />
       <BrowserOnly>
         {() => (
           <Modal onClose={() => setOpenModal(false)} show={openModal}>
-            <img {...props} className={styles["modal-img"]} />
+            <img src={resolvedImage} {...restProps} className={styles["modal-img"]} />
           </Modal>
         )}
       </BrowserOnly>
