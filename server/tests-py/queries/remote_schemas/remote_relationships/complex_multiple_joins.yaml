@@ -57,7 +57,7 @@
         # A top-level object
         p_1: profiles_by_pk(id: 1) {
           id
-          name
+          name: profile_name
           remoteUser {
             user_id
           }
@@ -71,7 +71,7 @@
             name
             msg
           }
-          name
+          name: profile_name
           # use alias for kicks:
           r_user: remoteUser {
             user_id
@@ -80,7 +80,7 @@
         # A top-level object
         profiles_by_pk(id: 2) {
           id
-          name
+          name: profile_name
           remoteUser {
             user_id
           }
@@ -117,7 +117,7 @@
         # A top-level object
         p_1: profiles_by_pk(id: 1) {
           id
-          name
+          name: profile_name
           remoteUser {
             user_id
           }
@@ -129,7 +129,7 @@
             name
             msg
           }
-          name
+          name: profile_name
           # use alias for kicks:
           r_user: remoteUser {
             user_id
@@ -138,7 +138,7 @@
         # A top-level object (not permitted)
         profiles_by_pk(id: 2) {
           id
-          name
+          name: profile_name
           remoteUser {
             user_id
           }
@@ -172,7 +172,7 @@
         # A top-level object
         p_1: profiles_by_pk(id: 1) {
           id
-          name
+          name: profile_name
           remoteUser {
             user_id
           }
@@ -184,7 +184,7 @@
             name
             msg
           }
-          name
+          name: profile_name
           # use alias for kicks:
           r_user: remoteUser {
             user_id
@@ -193,7 +193,7 @@
         # A top-level object
         profiles_by_pk(id: 2) {
           id
-          name
+          name: profile_name
           remoteUser {
             user_id
           }

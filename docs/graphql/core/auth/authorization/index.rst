@@ -54,6 +54,16 @@ Follow the example at :ref:`access control basics <auth_basics>`.
 
   basics
   roles-variables
+  inherited-roles
   permission-rules
   common-roles-auth-examples
   role-multiple-rules
+
+.. admonition:: API limits and access controls in Hasura Cloud
+  :class: dhc
+  
+  Additional access controls and API limits like maximum query depth can be found in Hasura Cloud. See more at :ref:`API limits with Hasura Cloud <api_limits>`.
+
+.. admonition:: Additional Resources
+
+  Enterprise Grade Authorization - `Watch Webinar <https://hasura.io/events/webinar/authorization-modeling-hasura/?pg=docs&plcmt=body&cta=watch-webinar&tech=>`__.

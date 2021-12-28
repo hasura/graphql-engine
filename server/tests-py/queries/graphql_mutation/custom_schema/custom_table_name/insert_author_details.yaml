@@ -1,0 +1,37 @@
+description: Insert into "author details" table
+url: /v1/graphql
+status: 200
+response:
+  data:
+    insert_author_details:
+      affected_rows: 1
+      returning:
+      - id: 3
+        name: Author 3
+        phone: "1234567890"
+    insert_author_details_one:
+      id: 3
+      name: Author 3 updated
+
+query:
+  query: |
+    mutation {
+      insert_author_details(
+        objects: [{name: "Author 3", phone: "1234567890"}]
+      ){
+        affected_rows
+        returning{
+          id
+          name
+          phone
+        }
+      }
+
+      insert_author_details_one(
+        object: {name: "Author 3 updated", phone:"1234567890"},
+        on_conflict: { constraint: author_details_phone_key, update_columns: [name]}
+      ){
+        id
+        name
+      }
+    }

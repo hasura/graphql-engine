@@ -1,0 +1,37 @@
+# Test case for bug reported at https://github.com/hasura/graphql-engine/issues/6931
+- description: Select author and their articles as an admin
+  url: /v1/graphql
+  status: 200
+  response:
+    data:
+      author:
+        - name: Author 1
+        - name: Author 2
+        - name: Author 3
+  headers:
+    X-Hasura-Role: admin
+  query:
+    query: |
+      query {
+        author(where: {articles: {}}) {
+          name
+        }
+      }
+
+- description: Select author and their articles as a user
+  url: /v1/graphql
+  status: 200
+  response:
+    data:
+      author:
+        - name: Author 1
+        - name: Author 3
+  headers:
+    X-Hasura-Role: user
+  query:
+    query: |
+      query {
+        author(where: {articles: {}}) {
+          name
+        }
+      }

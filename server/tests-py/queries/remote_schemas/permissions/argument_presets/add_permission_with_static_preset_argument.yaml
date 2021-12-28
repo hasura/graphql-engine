@@ -1,0 +1,67 @@
+type: add_remote_schema_permissions
+args:
+  remote_schema: my-remote-schema
+  role: user
+  definition:
+    schema: |
+     type User {
+       user_id: Int
+       userMessages(whered: MessageWhereInpObj): [Message]
+       gimmeText(text: String @preset(value: "world")): String
+     }
+
+     interface Communication {
+       id: Int!
+       msg: String!
+     }
+
+     type Message implements Communication {
+       id: Int!
+       name: String!
+       msg: String!
+       errorMsg: String
+     }
+
+     input MessageWhereInpObj {
+       id: IntCompareObj @preset(value: {eq: 2})
+       name: StringCompareObj
+     }
+
+     input IntCompareObj {
+       eq : Int
+       gt : Int
+       lt : Int
+     }
+
+     input StringCompareObj {
+       eq : String
+     }
+
+     input IncludeInpObj {
+       id: [Int] @preset(value: [1,2,3])
+       name: [String]
+     }
+
+     type Photo {
+       height : Int
+       width  : Int
+     }
+
+     input Dimensions {
+       height : Int @preset(value: 42)
+       width  : Int @preset(value: 101)
+     }
+
+     type Query {
+       hello: String
+       messages(where: MessageWhereInpObj @preset(value: {id: {eq: 1}}), includes: IncludeInpObj): [Message]
+       user(user_id: Int! @preset(value: 2)): User
+       users(user_ids: [Int]!): [User]
+       message(id: Int!) : Message
+       communications(id: Int): [Communication]
+       profilePicture(dimensions: Dimensions): Photo
+     }
+
+     schema {
+       query: Query
+     }

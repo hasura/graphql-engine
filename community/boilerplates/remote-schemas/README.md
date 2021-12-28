@@ -18,7 +18,7 @@ Typical use-cases:
 
 ## Docs
 
-[Remote Schema documentation](https://hasura.io/docs/1.0/graphql/manual/remote-schemas/index.html)
+[Remote Schema documentation](https://hasura.io/docs/latest/graphql/core/remote-schemas/index.html)
 
 ## Architecture
 

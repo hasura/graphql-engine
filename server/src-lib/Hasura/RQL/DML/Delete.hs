@@ -1,137 +1,123 @@
+{-# LANGUAGE ScopedTypeVariables #-}
+
 module Hasura.RQL.DML.Delete
-  ( validateDeleteQWith
-  , validateDeleteQ
-  , AnnDelG(..)
-  , traverseAnnDel
-  , AnnDel
-  , execDeleteQuery
-  , runDelete
-  ) where
-
-import           Data.Aeson
-import           Instances.TH.Lift           ()
-
-import qualified Data.Sequence            as DS
-import qualified Data.Environment         as Env
-import qualified Hasura.Tracing           as Tracing
-
-import           Hasura.EncJSON
-import           Hasura.Prelude
-import           Hasura.RQL.DML.Delete.Types
-import           Hasura.RQL.DML.Internal
-import           Hasura.RQL.DML.Mutation
-import           Hasura.RQL.DML.Returning
-import           Hasura.RQL.GBoolExp
-import           Hasura.Server.Version       (HasVersion)
-import           Hasura.RQL.Types
-
-import qualified Database.PG.Query           as Q
-import qualified Hasura.SQL.DML              as S
-
-
-traverseAnnDel
-  :: (Applicative f)
-  => (a -> f b)
-  -> AnnDelG a
-  -> f (AnnDelG b)
-traverseAnnDel f annUpd =
-  AnnDel tn
-  <$> ((,) <$> traverseAnnBoolExp f whr <*> traverseAnnBoolExp f fltr)
-  <*> traverseMutationOutput f mutOutput
-  <*> pure allCols
-  where
-    AnnDel tn (whr, fltr) mutOutput allCols = annUpd
-
-mkDeleteCTE
-  :: AnnDel -> S.CTE
-mkDeleteCTE (AnnDel tn (fltr, wc) _ _) =
-  S.CTEDelete delete
-  where
-    delete = S.SQLDelete tn Nothing tableFltr $ Just S.returningStar
-    tableFltr = Just $ S.WhereFrag $
-                toSQLBoolExp (S.QualTable tn) $ andAnnBoolExps fltr wc
-
-validateDeleteQWith
-  :: (UserInfoM m, QErrM m, CacheRM m)
-  => SessVarBldr m
-  -> (PGColumnType -> Value -> m S.SQLExp)
-  -> DeleteQuery
-  -> m AnnDel
-validateDeleteQWith sessVarBldr prepValBldr
-  (DeleteQuery tableName rqlBE mRetCols) = do
-  tableInfo <- askTabInfo tableName
-  let coreInfo = _tiCoreInfo tableInfo
-
-  -- If table is view then check if it deletable
-  mutableView tableName viIsDeletable
-    (_tciViewInfo coreInfo) "deletable"
-
-  -- Check if the role has delete permissions
-  delPerm <- askDelPermInfo tableInfo
-
-  -- Check if all dependent headers are present
-  validateHeaders $ dpiRequiredHeaders delPerm
-
-  -- Check if select is allowed
-  selPerm <- modifyErr (<> selNecessaryMsg) $
-             askSelPermInfo tableInfo
-
-  let fieldInfoMap = _tciFieldInfoMap coreInfo
-      allCols = getCols fieldInfoMap
-
-  -- convert the returning cols into sql returing exp
-  mAnnRetCols <- forM mRetCols $ \retCols ->
-    withPathK "returning" $ checkRetCols fieldInfoMap selPerm retCols
-
-  -- convert the where clause
-  annSQLBoolExp <- withPathK "where" $
-    convBoolExp fieldInfoMap selPerm rqlBE sessVarBldr prepValBldr
-
-  resolvedDelFltr <- convAnnBoolExpPartialSQL sessVarBldr $
-                     dpiFilter delPerm
-
-  return $ AnnDel tableName
-    (resolvedDelFltr, annSQLBoolExp)
-    (mkDefaultMutFlds mAnnRetCols) allCols
-
-  where
-    selNecessaryMsg =
-      "; \"delete\" is only allowed if the role "
-      <> "has \"select\" permission as \"where\" can't be used "
-      <> "without \"select\" permission on the table"
-
-validateDeleteQ
-  :: (QErrM m, UserInfoM m, CacheRM m)
-  => DeleteQuery -> m (AnnDel, DS.Seq Q.PrepArg)
-validateDeleteQ =
-  runDMLP1T . validateDeleteQWith sessVarFromCurrentSetting binRHSBuilder
-
-execDeleteQuery
-  ::
-  ( HasVersion
-  , MonadTx m
-  , MonadIO m
-  , Tracing.MonadTrace m
+  ( validateDeleteQWith,
+    validateDeleteQ,
+    AnnDelG (..),
+    AnnDel,
+    execDeleteQuery,
+    runDelete,
   )
-  => Env.Environment
-  -> Bool
-  -> Maybe MutationRemoteJoinCtx
-  -> (AnnDel, DS.Seq Q.PrepArg)
-  -> m EncJSON
-execDeleteQuery env strfyNum remoteJoinCtx (u, p) =
-  runMutation env $ mkMutation remoteJoinCtx (dqp1Table u) (deleteCTE, p)
-                (dqp1Output u) (dqp1AllCols u) strfyNum
-  where
-    deleteCTE = mkDeleteCTE u
+where
 
-runDelete
-  :: ( HasVersion, QErrM m, UserInfoM m, CacheRM m
-     , MonadTx m, HasSQLGenCtx m, MonadIO m
-     , Tracing.MonadTrace m
-     )
-  => Env.Environment
-  -> DeleteQuery
-  -> m EncJSON
-runDelete env q = do
-  strfyNum <- stringifyNum <$> askSQLGenCtx
-  validateDeleteQ q >>= execDeleteQuery env strfyNum Nothing
+import Control.Monad.Trans.Control (MonadBaseControl)
+import Data.Aeson
+import Data.Sequence qualified as DS
+import Database.PG.Query qualified as Q
+import Hasura.Backends.Postgres.Connection
+import Hasura.Backends.Postgres.Execute.Mutation
+import Hasura.Backends.Postgres.SQL.DML qualified as S
+import Hasura.Backends.Postgres.Translate.Returning
+import Hasura.Backends.Postgres.Types.Table
+import Hasura.Base.Error
+import Hasura.EncJSON
+import Hasura.Prelude
+import Hasura.QueryTags
+import Hasura.RQL.DML.Internal
+import Hasura.RQL.DML.Types
+import Hasura.RQL.IR.Delete
+import Hasura.RQL.Types
+import Hasura.Session
+import Hasura.Tracing qualified as Tracing
+
+validateDeleteQWith ::
+  (UserInfoM m, QErrM m, TableInfoRM ('Postgres 'Vanilla) m) =>
+  SessionVariableBuilder ('Postgres 'Vanilla) m ->
+  (ColumnType ('Postgres 'Vanilla) -> Value -> m S.SQLExp) ->
+  DeleteQuery ->
+  m (AnnDel ('Postgres 'Vanilla))
+validateDeleteQWith
+  sessVarBldr
+  prepValBldr
+  (DeleteQuery tableName _ rqlBE mRetCols) = do
+    tableInfo <- askTabInfoSource tableName
+    let coreInfo = _tiCoreInfo tableInfo
+
+    -- If table is view then check if it deletable
+    mutableView
+      tableName
+      viIsDeletable
+      (_tciViewInfo coreInfo)
+      "deletable"
+
+    -- Check if the role has delete permissions
+    delPerm <- askDelPermInfo tableInfo
+
+    -- Check if all dependent headers are present
+    validateHeaders $ dpiRequiredHeaders delPerm
+
+    -- Check if select is allowed
+    selPerm <-
+      modifyErr (<> selNecessaryMsg) $
+        askSelPermInfo tableInfo
+
+    let fieldInfoMap = _tciFieldInfoMap coreInfo
+        allCols = getCols fieldInfoMap
+
+    -- convert the returning cols into sql returing exp
+    mAnnRetCols <- forM mRetCols $ \retCols ->
+      withPathK "returning" $ checkRetCols fieldInfoMap selPerm retCols
+
+    -- convert the where clause
+    annSQLBoolExp <-
+      withPathK "where" $
+        convBoolExp fieldInfoMap selPerm rqlBE sessVarBldr tableName (valueParserWithCollectableType prepValBldr)
+
+    resolvedDelFltr <-
+      convAnnBoolExpPartialSQL sessVarBldr $
+        dpiFilter delPerm
+
+    return $
+      AnnDel
+        tableName
+        (resolvedDelFltr, annSQLBoolExp)
+        (mkDefaultMutFlds mAnnRetCols)
+        allCols
+    where
+      selNecessaryMsg =
+        "; \"delete\" is only allowed if the role "
+          <> "has \"select\" permission as \"where\" can't be used "
+          <> "without \"select\" permission on the table"
+
+validateDeleteQ ::
+  (QErrM m, UserInfoM m, CacheRM m) =>
+  DeleteQuery ->
+  m (AnnDel ('Postgres 'Vanilla), DS.Seq Q.PrepArg)
+validateDeleteQ query = do
+  let source = doSource query
+  tableCache :: TableCache ('Postgres 'Vanilla) <- askTableCache source
+  flip runTableCacheRT (source, tableCache) $
+    runDMLP1T $
+      validateDeleteQWith sessVarFromCurrentSetting binRHSBuilder query
+
+runDelete ::
+  forall m.
+  ( QErrM m,
+    UserInfoM m,
+    CacheRM m,
+    HasServerConfigCtx m,
+    MonadIO m,
+    Tracing.MonadTrace m,
+    MonadBaseControl IO m,
+    MetadataM m
+  ) =>
+  DeleteQuery ->
+  m EncJSON
+runDelete q = do
+  sourceConfig <- askSourceConfig @('Postgres 'Vanilla) (doSource q)
+  strfyNum <- stringifyNum . _sccSQLGenCtx <$> askServerConfigCtx
+  userInfo <- askUserInfo
+  validateDeleteQ q
+    >>= runTxWithCtx (_pscExecCtx sourceConfig) Q.ReadWrite
+      . flip runReaderT emptyQueryTagsComment
+      . execDeleteQuery strfyNum userInfo

@@ -39,6 +39,7 @@ Commands
 - :ref:`hasura actions use-codegen <hasura_actions_use-codegen>`
 - :ref:`hasura completion <hasura_completion>`
 - :ref:`hasura console <hasura_console>`
+- :ref:`hasura deploy <hasura_deploy>`
 - :ref:`hasura init <hasura_init>`
 - :ref:`hasura metadata <hasura_metadata>`
 - :ref:`hasura metadata apply <hasura_metadata_apply>`
@@ -53,6 +54,7 @@ Commands
 - :ref:`hasura migrate <hasura_migrate>`
 - :ref:`hasura migrate apply <hasura_migrate_apply>`
 - :ref:`hasura migrate create <hasura_migrate_create>`
+- :ref:`hasura migrate delete <hasura_migrate_delete>`
 - :ref:`hasura migrate squash <hasura_migrate_squash>`
 - :ref:`hasura migrate status <hasura_migrate_status>`
 - :ref:`hasura plugins <hasura_plugins>`
@@ -62,9 +64,10 @@ Commands
 - :ref:`hasura plugins upgrade <hasura_plugins_upgrade>`
 - :ref:`hasura scripts <hasura_scripts>`
 - :ref:`hasura scripts update-project-v2 <hasura_scripts_update-project-v2>`
-- :ref:`hasura seeds <hasura_seeds>`
-- :ref:`hasura seeds apply <hasura_seeds_apply>`
-- :ref:`hasura seeds create <hasura_seeds_create>`
+- :ref:`hasura scripts update-project-v3 <hasura_scripts_update-project-v3>`
+- :ref:`hasura seed <hasura_seed>`
+- :ref:`hasura seed apply <hasura_seed_apply>`
+- :ref:`hasura seed create <hasura_seed_create>`
 - :ref:`hasura update-cli <hasura_update-cli>`
 - :ref:`hasura version <hasura_version>`
 
@@ -87,6 +90,7 @@ Refer to :ref:`uninstall_hasura_cli`.
    hasura actions use-codegen <hasura_actions_use-codegen>
    hasura completion <hasura_completion>
    hasura console <hasura_console>
+   hasura deploy <hasura_deploy>
    hasura init <hasura_init>
    hasura metadata <hasura_metadata>
    hasura metadata apply <hasura_metadata_apply>
@@ -101,6 +105,7 @@ Refer to :ref:`uninstall_hasura_cli`.
    hasura migrate <hasura_migrate>
    hasura migrate apply <hasura_migrate_apply>
    hasura migrate create <hasura_migrate_create>
+   hasura migrate delete <hasura_migrate_delete>
    hasura migrate squash <hasura_migrate_squash>
    hasura migrate status <hasura_migrate_status>
    hasura plugins <hasura_plugins>
@@ -110,9 +115,10 @@ Refer to :ref:`uninstall_hasura_cli`.
    hasura plugins upgrade <hasura_plugins_upgrade>
    hasura scripts <hasura_scripts>
    hasura scripts update-project-v2 <hasura_scripts_update-project-v2>
-   hasura seeds <hasura_seeds>
-   hasura seeds apply <hasura_seeds_apply>
-   hasura seeds create <hasura_seeds_create>
+   hasura scripts update-project-v3 <hasura_scripts_update-project-v3>
+   hasura seed <hasura_seed>
+   hasura seed apply <hasura_seed_apply>
+   hasura seed create <hasura_seed_create>
    hasura update-cli <hasura_update-cli>
    hasura version <hasura_version>
    uninstall-hasura-cli

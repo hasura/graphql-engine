@@ -31,22 +31,22 @@ const handlePayload = (payload) => {
           a.definition.type,
           a.definition.arguments,
           a.definition.output_type,
-        )}\n`;
+        )}`;
       });
     } catch (e) {
       actionSdlError = e;
     }
   }
 
+  let sdl = `${actionSdl}`;
   if (types) {
     try {
       typesSdl = getTypesSdl(types);
+      sdl = `${sdl}${typesSdl}`;
     } catch (e) {
       typesSdlError = e;
     }
   }
-
-  let sdl = `${actionSdl}\n\n${typesSdl}`;
 
   if (toDeriveOperation) {
     try {
@@ -62,7 +62,7 @@ const handlePayload = (payload) => {
         derivation.action.output_type,
       );
       const derivedTypesSdl = getTypesSdl(derivation.types);
-      sdl = `${derivedActionSdl}\n\n${derivedTypesSdl}\n\n${sdl}`;
+      sdl = `${derivedActionSdl}${derivedTypesSdl}${sdl}`;
     } catch (e) {
       deriveActionError = e;
     }

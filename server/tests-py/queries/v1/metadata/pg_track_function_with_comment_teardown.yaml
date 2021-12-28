@@ -1,0 +1,46 @@
+- description: untrack function
+  url: /v1/metadata
+  status: 200
+  response:
+    message: success
+  query:
+    type: pg_untrack_function
+    args:
+      function:
+        schema: public
+        name: search_authors_s1
+      source: new_pg_db
+
+- description: untrack table
+  url: /v1/metadata
+  status: 200
+  response:
+    message: success
+  query:
+    type: pg_untrack_table
+    args:
+      table: author_s1
+      source: new_pg_db
+
+- description: drop table
+  url: /v1/query
+  status: 200
+  response:
+    result_type: CommandOk
+    result:
+  query:
+    type: run_sql
+    args:
+      source: new_pg_db
+      sql: |
+        drop table author_s1 cascade;
+
+- description: PG Drop Source
+  url: /v1/metadata
+  status: 200
+  response:
+    message: success
+  query:
+    type: pg_drop_source
+    args:
+      name: new_pg_db

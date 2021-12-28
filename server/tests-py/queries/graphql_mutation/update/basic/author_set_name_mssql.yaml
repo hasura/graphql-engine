@@ -1,0 +1,36 @@
+description: Update mutation on author
+url: /v1/graphql
+status: 200
+query:
+  query: |
+    mutation {
+      update_author(
+        where: {id: {_eq: 1}},
+        _set: {name: "Author 1 updated"}
+      ){
+        affected_rows
+        returning{
+          id
+          name
+          articles{
+            id
+            title
+            content
+          }
+        }
+      }
+    }
+response:
+  data:
+    update_author:
+      affected_rows: 1
+      returning:
+      - id: 1
+        name: Author 1 updated
+        articles:
+        - id: 1
+          title: Article 1
+          content: Sample article content 1
+        - id: 2
+          title: Article 2
+          content: Sample article content 2

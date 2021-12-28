@@ -9,6 +9,7 @@ import {
   loadEventInvocations,
   RESET,
 } from './InvokeManualTriggerAction';
+import styles from './InvokeManualTrigger.scss';
 
 /* This component accepts for following props
  *  1) Trigger name
@@ -24,30 +25,33 @@ import {
  *    - Failure - Notify user
  * */
 
-class InvokeManualTrigger extends React.Component {
-  onModalClose = () => {
-    this.setState({
-      isModalOpen: false,
-    });
-    const { onClose } = this.props;
-    if (onClose && typeof onClose !== 'undefined') {
-      onClose();
-    }
-  };
-  constructor() {
-    super();
+class InvokeManualTrigger extends React.PureComponent {
+  constructor(props) {
+    super(props);
     this.state = {
       isModalOpen: true,
       pollId: null,
     };
   }
+
+  onModalClose = () => {
+    this.setState({
+      isModalOpen: false,
+    });
+    if (this.props.onClose) {
+      this.props.onClose();
+    }
+  };
+
   componentDidMount() {
     const { name, args, dispatch } = this.props;
-    dispatch(invokeManualTrigger(name, args))
+    dispatch(invokeManualTrigger(name, args, this.props.source))
       .then(data => {
         const currThis = this;
         const pollId = setInterval(() => {
-          dispatch(loadEventInvocations(data.event_id)).then(d => {
+          dispatch(
+            loadEventInvocations(data.event_id, currThis.props.source)
+          ).then(d => {
             if (d.length > 0) {
               clearInterval(currThis.state.pollId);
             }
@@ -55,15 +59,15 @@ class InvokeManualTrigger extends React.Component {
         }, 5000);
         this.setPoll(pollId);
       })
-      .catch(err => {
-        console.error('Error invoking trigger' + err);
-      });
+      .catch(err => console.error(`Error invoking trigger: ${err}`));
   }
+
   setPoll(pollId) {
     this.setState({
       pollId,
     });
   }
+
   componentWillUnmount() {
     const { dispatch } = this.props;
     clearInterval(this.state.pollId);
@@ -71,6 +75,7 @@ class InvokeManualTrigger extends React.Component {
       type: RESET,
     });
   }
+
   render() {
     const { isModalOpen } = this.state;
     const { name, invokeEventTrigger } = this.props;
@@ -81,13 +86,21 @@ class InvokeManualTrigger extends React.Component {
       err,
       identifier,
     } = invokeEventTrigger;
-    const styles = require('./InvokeManualTrigger.scss');
     const loader = () => <i className="fa fa-spinner fa-spin" />;
     const getEventId = () =>
       (isCreatingManualTrigger && loader()) || success.event_id;
     const getEventPayload = () => {
       if (status.length === 0) {
         return <div>Fetching invocation info {loader()}</div>;
+      }
+      let request;
+      let response;
+      try {
+        request = JSON.parse(status[0].request);
+        response = JSON.parse(status[0].response);
+      } catch {
+        request = "Can't parse request";
+        response = "Can't parse response";
       }
       return (
         <div className={styles.displayFlexContainer}>
@@ -97,7 +110,7 @@ class InvokeManualTrigger extends React.Component {
               mode="json"
               theme="github"
               name="event_payload"
-              value={JSON.stringify(status[0].request, null, 2)}
+              value={JSON.stringify(request, null, 2)}
               minLines={8}
               maxLines={15}
               width="100%"
@@ -112,7 +125,7 @@ class InvokeManualTrigger extends React.Component {
               mode="json"
               theme="github"
               name="event_payload"
-              value={JSON.stringify(status[0].response, null, 2)}
+              value={JSON.stringify(response, null, 2)}
               minLines={8}
               maxLines={15}
               width="100%"
@@ -151,16 +164,13 @@ class InvokeManualTrigger extends React.Component {
         </div>
       </div>
     );
-    const modalStyle = () => {
-      return {
-        minHeight: '100px',
-      };
-    };
     return (
       <div key={identifier}>
         <Modal
           show={isModalOpen}
-          style={modalStyle()}
+          style={{
+            minHeight: '100px',
+          }}
           onHide={this.onModalClose}
           dialogClassName={styles.invoke_trigger_modal}
           id="invokeEventTrigger"

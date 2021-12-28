@@ -19,8 +19,9 @@ The Hasura metadata catalogue is a set of internal tables used to manage the sta
 GraphQL schema. Hasura GraphQL engine uses the data in the catalogue to generate the GraphQL API
 which then can be accessed from different clients.
 
-The Hasura GraphQL engine when initialized, creates a schema called ``hdb_catalog`` in the Postgres database and
-initializes a few tables under it as described below.
+The Hasura GraphQL engine stores this catalogue in a Postgres metadata database *(which is by default the same database
+from which data is served over the GraphQL API if it is Postgres)*. When initialized, the Hasura GraphQL engine creates a
+schema called ``hdb_catalog`` in the metadata database and initializes a few tables under it as described below.
 
 **hdb_catalog** schema
 ----------------------
@@ -80,7 +81,7 @@ Column Definitions
 +---------------------+------------------------------------------------------------------------------------------+
 | table_name          | Captures name of the table/view under which a relationship is created.                   |
 +---------------------+------------------------------------------------------------------------------------------+
-| rel_na me           | Captures name of the relationship.                                                       |
+| rel_name            | Captures name of the relationship.                                                       |
 +---------------------+------------------------------------------------------------------------------------------+
 | rel_type            | Captures the permission type (insert/select/update/delete).                              |
 +---------------------+------------------------------------------------------------------------------------------+
@@ -163,7 +164,7 @@ Exploring the catalogue
 -----------------------
 
 You can check the current schema and contents of the catalogue by exploring the ``hdb_catalog``
-schema through a Postgres client.
+schema in the metadata database through a Postgres client.
 
 Catalogue versioning
 --------------------

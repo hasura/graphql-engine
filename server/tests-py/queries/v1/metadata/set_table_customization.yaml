@@ -1,0 +1,14 @@
+- description: set table custom fields
+  url: /v1/metadata
+  status: 200
+  response:
+    message: success
+  query:
+    type: pg_set_table_customization
+    args:
+      source: default
+      table: table_to_customize
+      configuration:
+        custom_name: customized_table
+        custom_column_names: {column_to_customize: "customized_column"}
+        custom_root_fields: {select: "gather"}

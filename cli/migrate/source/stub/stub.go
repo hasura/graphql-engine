@@ -7,7 +7,7 @@ import (
 	"io/ioutil"
 	"os"
 
-	"github.com/hasura/graphql-engine/cli/migrate/source"
+	"github.com/hasura/graphql-engine/cli/v2/migrate/source"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -46,7 +46,6 @@ func (s *Stub) Scan() error {
 }
 
 func (s *Stub) DefaultParser(p source.Parser) {
-	return
 }
 
 func (s *Stub) First() (version uint64, err error) {

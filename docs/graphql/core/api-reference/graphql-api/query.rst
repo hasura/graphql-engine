@@ -394,7 +394,7 @@ AndExp
     {
       _and: [BoolExp_]
     }
-    
+
 *Example*
 
 .. code-block:: graphql
@@ -410,7 +410,7 @@ AndExp
 
   You can simplify an ``_and`` expression by passing the sub-expressions separated by a ``,``.
 
-  **For example:**
+  **First example: _and expression with different fields**
 
   .. code-block:: graphql
 
@@ -427,6 +427,30 @@ AndExp
       rating: { _gte: 4 },
       published_on: { _gte: "2018-01-01" }
     }
+
+  **Second example: _and expression with same field**
+
+  .. code-block:: graphql
+
+      _and: [
+        {
+          rating: {
+            _gt: 1
+          }
+        },
+        {
+          rating: {
+            _lt: 5
+          }
+        }
+      ]
+
+      # can be simplified to:
+
+      rating: {
+        _gt: 1,
+        _lt: 5
+      }
 
 .. _OrExp:
 
@@ -572,15 +596,15 @@ Operator
    * - ``_gt``
      - ``>``
    * - ``_lt``
-     - ``<`` 
+     - ``<``
    * - ``_gte``
      - ``>=``
    * - ``_lte``
-     - ``<=``  
+     - ``<=``
    * - ``_in``
      - ``IN``
    * - ``_nin``
-     - ``NOT IN``  
+     - ``NOT IN``
 
 (For more details, refer to the Postgres docs for `comparison operators <https://www.postgresql.org/docs/current/functions-comparison.html>`__ and `list based search operators <https://www.postgresql.org/docs/current/functions-comparisons.html>`__.)
 
@@ -605,6 +629,14 @@ Operator
      - ``SIMILAR TO``
    * - ``_nsimilar``
      - ``NOT SIMILAR TO``
+   * - ``_regex``
+     - ``~``
+   * - ``_iregex``
+     - ``~*``
+   * - ``_nregex``
+     - ``!~``
+   * - ``_niregex``
+     - ``!~*``
 
 (For more details on text related operators, refer to the `Postgres docs <https://www.postgresql.org/docs/current/functions-matching.html>`__.)
 
@@ -719,6 +751,32 @@ Operator
 
 (For more details on intersect operators on ``raster`` columns refer to the `PostGIS docs <https://postgis.net/docs/RT_ST_Intersects.html>`__.)
 
+.. _ltree_operators:
+
+**ltree operators:**
+
+.. list-table::
+   :header-rows: 1
+
+   * - Operator
+     - PostgreSQL equivalent
+   * - ``_ancestor``
+     - ``@>``
+   * - ``_ancestor_any``
+     - ``@>``
+   * - ``_descendant``
+     - ``<@``
+   * - ``_descendant_any``
+     - ``<@``
+   * - ``_matches``
+     - ``~``
+   * - ``_matches_any``
+     - ``?``
+   * - ``_matches_fulltext``
+     - ``@``
+
+(For more details on operators on ``ltree`` columns refer to the `Postgres docs <https://www.postgresql.org/docs/current/ltree.html>`__.)
+
 .. _CastExp:
 
 CastExp
@@ -745,7 +803,7 @@ CastExp
       id
     }
   }
-  
+
   Variables:
   {
     "coordinate": {
@@ -852,6 +910,25 @@ TableOrderBy
     }
   }
 
+**For computed fields**
+
+Returning scalar values:
+
+.. parsed-literal::
+
+    {computed-field-name: OrderByEnum_}
+
+Returning set of table rows:
+
+.. parsed-literal::
+
+    {computed-field-name: TableOrderBy_}
+
+.. parsed-literal::
+
+    {computed-field-name_aggregate: AggregateOrderBy_}
+
+
 Order by type for ``article`` table:
 
 .. code-block:: graphql
@@ -865,7 +942,55 @@ Order by type for ``article`` table:
      author: author_order_by
      #order by using "likes" array relationship aggregates
      likes_aggregate: likes_aggregate_order_by
-   }  
+   }
+
+**For computed fields returning scalar type**
+
+.. parsed-literal::
+   {computed-field-name: OrderByEnum_}
+
+*Example*
+
+Consider a table ``student`` contains integer columns for course subjects to store marks. A
+computed field with the name ``total_marks`` defined to calculate sum of all subject marks.
+We need to fetch ``student`` rows sorted by ``total_marks``.
+
+.. code-block:: graphql
+
+   query {
+     student(order_by: {total_marks: desc}){
+       id
+       name
+       total_marks
+     }
+   }
+
+**For computed fields returning table row type**
+
+Computed fields returning set of table rows can be used to sort the query by their aggregate
+fields.
+
+.. parsed-literal::
+   {computed-field-name_aggregate: AggregateOrderBy_}
+
+*Example*
+
+A computed field ``get_articles`` is defined on the ``author`` table which returns set of
+``article`` table rows. Fetch authors sorted by the count of their articles.
+
+.. code-block:: graphql
+
+   query {
+     author(order_by: {get_articles_aggregate: {count: desc}}){
+       id
+       name
+       get_articles{
+         id
+         title
+         content
+       }
+     }
+   }
 
 .. _OrderByEnum:
 

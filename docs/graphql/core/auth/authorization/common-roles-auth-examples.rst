@@ -155,7 +155,7 @@ The following is a reference database schema for our example:
 .. thumbnail:: /img/graphql/core/auth/multirole-example-db-schema.png
    :alt: Database schema example for multiple roles per user
 
-Based on this schema, we'll create the following tables:
+Based on the above schema, we'll create the following tables:
 
 .. code-block:: sql
 
@@ -292,6 +292,10 @@ Permissions for role ``editor``
 
   .. thumbnail:: /img/graphql/core/auth/multirole-example-editor-update.png
      :alt: Column access for the role editor
+     
+.. admonition:: Additional Resources
+
+  Enterprise Grade Authorization - `Watch Webinar <https://hasura.io/events/webinar/authorization-modeling-hasura/?pg=docs&plcmt=body&cta=watch-webinar&tech=>`__.
 
 
 

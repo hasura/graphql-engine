@@ -1,0 +1,18 @@
+description: Custom GraphQL query using search_author_view view which returns results from another table
+url: /v1/graphql
+status: 200
+response:
+  data:
+    hasura_search_author_view:
+    - id: 1
+      name: Author 1
+      createdAt: "2017-09-21 09:39:44"
+query:
+  query: |
+    query {
+     hasura_search_author_view(where: {id: {_eq: 1}}) {
+      id
+      name
+      createdAt
+     }
+    }

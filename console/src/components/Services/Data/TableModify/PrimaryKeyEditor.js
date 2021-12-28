@@ -18,6 +18,7 @@ const PrimaryKeyEditor = ({
   pkModify,
   dispatch,
   currentSchema,
+  readOnlyMode,
 }) => {
   const columns = tableSchema.columns;
   const tablePrimaryKeyColumns = tableSchema.primary_key
@@ -36,7 +37,6 @@ const PrimaryKeyEditor = ({
     return orderedCols.find(c => c.name === pk).index;
   });
 
-  // get PK constraint name
   const pkConstraintName = tableSchema.primary_key
     ? tableSchema.primary_key.constraint_name
     : '';
@@ -50,9 +50,11 @@ const PrimaryKeyEditor = ({
     );
   }
 
-  const pkEditorCollapsedLabel = () => (
-    <div>{pkConfigText ? pkConfigText : 'No primary key'}</div>
-  );
+  const pkEditorCollapsedLabel = () => {
+    if (pkConfigText) {
+      return <div className="text-gray-600">{pkConfigText}</div>;
+    }
+  };
 
   // label next to the button when the editor is expanded
   const pkEditorExpandedLabel = () => (
@@ -113,7 +115,7 @@ const PrimaryKeyEditor = ({
   };
 
   // Toggle button text when the editor is expanded and collapsed
-  const expandButtonText = pkConfigText ? 'Edit' : 'Add';
+  const expandButtonText = pkConfigText ? 'Edit' : 'Add primary key';
   const collapsedButtonText = pkConfigText ? 'Close' : 'Cancel';
 
   // Wrap inside an expandable editor
@@ -122,6 +124,7 @@ const PrimaryKeyEditor = ({
       collapsedLabel={pkEditorCollapsedLabel}
       expandedLabel={pkEditorExpandedLabel}
       editorExpanded={pkEditorExpanded}
+      readOnlyMode={readOnlyMode}
       property={'pks'}
       service="modify-table"
       saveFunc={onSave}

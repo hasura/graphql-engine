@@ -1,0 +1,75 @@
+{
+  "type": "replace_metadata",
+  "args": {
+    "version": 3,
+    "sources": [],
+    "remote_schemas": [
+      {
+        "name": "character",
+        "definition": {
+          "url": "http://localhost:5000//character-iface-graphql/character-iface-graphql",
+          "timeout_seconds": 60
+        }
+      },
+      {
+        "name": "character_foo",
+        "definition": {
+          "url": "http://localhost:5000//character-iface-graphql/character-iface-graphql",
+          "timeout_seconds": 60,
+          "customization": {
+            "root_fields_namespace": "foo",
+            "type_names": {
+              "prefix": "foo_",
+              "suffix": "_bar"
+            },
+            "field_names": [
+              {
+                "parent_type": "Character",
+                "prefix": "foo_"
+              },
+              {
+                "parent_type": "Human",
+                "prefix": "foo_"
+              },
+              {
+                "parent_type": "Droid",
+                "prefix": "foo_"
+              }
+            ]
+          }
+        }
+      },
+      {
+        "name": "big",
+        "definition": {
+          "url": "http://localhost:5000//big/big",
+          "timeout_seconds": 60
+        }
+      },
+      {
+        "name": "big_foo",
+        "definition": {
+          "url": "http://localhost:5000//big/big",
+          "timeout_seconds": 60,
+          "customization": {
+            "root_fields_namespace": "big_foo",
+            "type_names": {
+              "prefix": "foo_",
+              "suffix": "_bar"
+            },
+            "field_names": [
+              {
+                "parent_type": "Big",
+                "prefix": "foo_"
+              },
+              {
+                "parent_type": "BigInterface",
+                "prefix": "foo_"
+              }
+            ]
+          }
+        }
+      }
+    ]
+  }
+}

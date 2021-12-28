@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { showErrorNotification } from '../../Common/Notification';
 import gqlPattern, { gqlColumnErrorNotif } from '../Common/GraphQLValidation';
-import { commonDataTypes } from '../utils';
 import ExpandableEditor from '../../../Common/Layout/ExpandableEditor/Editor';
 import CustomInputAutoSuggest from '../../../Common/CustomInputAutoSuggest/CustomInputAutoSuggest';
 
@@ -13,9 +12,9 @@ import {
 
 import { addColSql } from '../TableModify/ModifyActions';
 
-import styles from './ModifyTable.scss';
 import FrequentlyUsedColumnSelector from '../Common/Components/FrequentlyUsedColumnSelector';
 import { ColumnTypeSelector } from '../Common/Components/ColumnTypeSelector';
+import { dataSource, isFeatureSupported } from '../../../../dataSources';
 
 const useColumnEditor = (dispatch, tableName) => {
   const initialState = {
@@ -143,7 +142,7 @@ const ColumnCreator = ({
       <input
         placeholder="column name"
         type="text"
-        className={`${styles.input} input-sm form-control`}
+        className={`form-control`}
         data-test="column-name"
         {...colName}
       />
@@ -152,39 +151,32 @@ const ColumnCreator = ({
 
   const getColumnTypeInput = () => {
     const { columnDataTypes, columnTypeValueMap } = getDataOptions(
-      commonDataTypes,
+      dataSource.commonDataTypes,
       restTypes,
       0
     );
 
-    const customSelectBoxStyles = {
-      container: {
-        width: '186px',
-      },
-      dropdownIndicator: {
-        padding: '5px',
-      },
-      placeholder: {
-        top: '44%',
-        fontSize: '12px',
-      },
-      singleValue: {
-        fontSize: '12px',
-        top: '44%',
-        color: '#555555',
-      },
-    };
-
     return (
-      <span className={styles.select} data-test="col-type-0">
-        <ColumnTypeSelector
-          options={columnDataTypes}
-          onChange={colType.onChange}
-          value={columnTypeValueMap[colType.value] || colType.value}
-          colIdentifier={0}
-          bsClass={`col-type-${0} modify_select`}
-          styleOverrides={customSelectBoxStyles}
-        />
+      <span data-test="col-type-0">
+        {isFeatureSupported('tables.create.frequentlyUsedColumns') ? (
+          <ColumnTypeSelector
+            options={columnDataTypes}
+            onChange={colType.onChange}
+            value={columnTypeValueMap[colType.value] || colType.value}
+            colIdentifier={0}
+            bsClass={`col-type-${0}`}
+          />
+        ) : (
+          <input
+            type="text"
+            className={`form-control col-type-${0}`}
+            onChange={e => {
+              e.persist();
+              colType.onChange({ value: e.target.value });
+            }}
+            placeholder="column_type"
+          />
+        )}
       </span>
     );
   };
@@ -192,14 +184,15 @@ const ColumnCreator = ({
   const getColumnNullableInput = () => {
     return (
       <span>
-        <label className={styles.nullLabel}>
+        <label className="flex items-center mr-sm">
           <input
             type="checkbox"
-            className={`${styles.input} ${styles.nullable} input-sm form-control`}
+            style={{ margin: '0' }}
+            className={`legacy-input-fix`}
             data-test="nullable-checkbox"
             {...colNull}
           />
-          Nullable
+          <span className="ml-xs">Nullable</span>
         </label>
       </span>
     );
@@ -208,22 +201,21 @@ const ColumnCreator = ({
   const getColumnUniqueInput = () => {
     return (
       <span>
-        <label className={styles.nullLabel}>
+        <label className="flex items-center mr-sm">
           <input
             type="checkbox"
-            className={`${styles.input} ${styles.nullable} input-sm form-control`}
+            style={{ margin: '0' }}
+            className={`legacy-input-fix`}
             {...colUnique}
             data-test="unique-checkbox"
           />
-          Unique
+          <span className="ml-xs">Unique</span>
         </label>
       </span>
     );
   };
 
   const getColumnDefaultInput = () => {
-    const theme = require('../../../Common/CustomInputAutoSuggest/CustomThemes/AddColumnDefault.scss');
-
     let defaultOptions = [];
 
     const getInferredDefaultValues = () =>
@@ -242,12 +234,9 @@ const ColumnCreator = ({
       <CustomInputAutoSuggest
         placeholder="default value"
         options={defaultOptions}
-        className={`${styles.input}
-          ${styles.defaultInput}
-          input-sm form-control`}
+        className="form-control"
         {...colDefault}
         data-test="default-value"
-        theme={theme}
       />
     );
   };
@@ -264,15 +253,19 @@ const ColumnCreator = ({
 
   const expandedContent = () => (
     <div>
-      <form className={`form-inline ${styles.display_flex}`}>
+      <form className="mb-sm grid gap-sm grid-cols-1 sm:grid-cols-4">
         {getColumnNameInput()}
         {getColumnTypeInput()}
-        {getColumnNullableInput()}
-        {getColumnUniqueInput()}
         {getColumnDefaultInput()}
+        <div className="flex items-center">
+          {getColumnNullableInput()}
+          {getColumnUniqueInput()}
+        </div>
       </form>
-      <div className={styles.add_mar_top_small}>
-        {getFrequentlyUsedColumnSelector()}
+      <div>
+        {isFeatureSupported('tables.modify.columns.frequentlyUsedColumns')
+          ? getFrequentlyUsedColumnSelector()
+          : null}
       </div>
     </div>
   );

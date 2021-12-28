@@ -1,0 +1,3 @@
+type: run_sql
+args:
+  sql : delete from hdb_catalog.hdb_scheduled_events

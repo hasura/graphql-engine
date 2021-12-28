@@ -2,8 +2,8 @@ description: Set custom fields of table which does not exist
 url: /v1/query
 status: 400
 response:
-  path: "$.args"
-  error: table "author1" does not exist
+  path: $.args
+  error: 'table "author1" does not exist in source: default'
   code: not-exists
 query:
   type: set_table_custom_fields

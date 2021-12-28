@@ -40,7 +40,8 @@ The request payload is of the format:
       "session_variables": {
         "x-hasura-user-id": "<session-user-id>",
         "x-hasura-role": "<session-user-role>"
-      }
+      },
+      "request_query": "<request-query>"
     }
 
 .. note::
@@ -65,10 +66,28 @@ An error object looks like:
 
     {
       "message": "<mandatory-error-message>",
-      "code": "<optional-error-code>"
+      "extensions": "<optional-json-object>"
     }
 
-The HTTP status code must be ``4xx`` for an error response.
+where ``extensions`` is an optional JSON value. 
+
+If present, ``extensions`` should be a JSON object, which may have a status code
+field ``code``, along with other data you may want to add to your errors:
+
+.. code-block:: json
+
+    {
+      "code": "<optional-error-code>",
+      "optionalField1": "<custom-data-here>"
+    }
+
+The HTTP status code must be ``4xx`` in order to indicate an error response.
+
+For backwards compatibility with previous versions of Hasura, the ``code`` field
+may also be supplied at the root of the error object, i.e. at ``$.code``. This
+will be deprecated in a future release, and providing ``code`` within
+``extensions`` is preferred.
+
 
 
 Example
@@ -79,7 +98,7 @@ For example, consider the following mutation.
 .. code-block:: graphql
 
     extend type Mutation {
-      UserLogin (username: String!, email: String!): UserInfo
+      UserLogin (username: String!, password: String!): UserInfo
     }
 
     type UserInfo {
@@ -114,7 +133,8 @@ Hasura will call the handler with the following payload:
       "session_variables": {
         "x-hasura-user-id": "423",
         "x-hasura-role": "user"
-      }
+      },
+      "request_query": "mutation {\n  UserLogin (username: \"jake\", password: \"secretpassword\") {\n    accessToken\n    userId\n  }\n}\n"
     }
 
 To return a success response, you must send the response of the action's output
@@ -125,10 +145,10 @@ response would be:
 
     {
       "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVC",
-      "userId": 4829
+      "userId": 423
     }
 
-To throw an error, you must a response payload of the following type while
+To throw an error, you must send a response of the following type while
 setting the status code as ``4xx``.
 
 .. code-block:: json
@@ -203,13 +223,53 @@ For your action, add a header that will act as an action secret.
                definition:
                   kind: synchronous
                   handler: http://localhost:3000
-                forward_client_headers: true
-                headers:
-                  - name: ACTION_SECRET
-                    value_from_env: ACTION_SECRET_ENV
+                  forward_client_headers: true
+                  headers:
+                    - name: ACTION_SECRET
+                      value_from_env: ACTION_SECRET_ENV
 
      Save the changes and run ``hasura metadata apply`` to set the
      headers.
+
+  .. tab:: API
+
+    Headers can be set when creating :ref:`creating <metadata_create_action>` or :ref:`updating <metadata_update_action>` an action via the metadata API.
+
+    .. code-block:: http
+      :emphasize-lines: 12-17
+
+      POST /v1/query HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: admin
+
+      {
+        "type": "create_action",
+        "args": {
+          "name": "addNumbers",
+          "definition": {
+            "kind": "synchronous",
+            "type": "query",
+            "headers": [
+              {
+                "name": "ACTION_SECRET",
+                "value_from_env": "ACTION_SECRET_ENV"
+              }
+            ],
+            "arguments": [
+              {
+                "name": "numbers",
+                "type": "[Int]!"
+              }
+            ],
+            "output_type": "AddResult",
+            "handler": "https://hasura-actions-demo.glitch.me/addNumbers"
+          }
+        }
+      }
+
+    .. note::
+
+      Before creating an action via the :ref:`create_action metadata API <metadata_create_action>`, all custom types need to be defined via the :ref:`set_custom_types metadata API <metadata_set_custom_types>`.
 
 
 This secret is only known by Hasura and is passed to your endpoint with every call,
@@ -248,3 +308,6 @@ The following is an example of a simple authorization middleware with Express:
         return requiredSecret == providedSecret;
     }
 
+.. admonition:: Additional Resources
+
+  Introduction to Hasura Actions - `View Recording <https://hasura.io/events/webinar/hasura-actions/?pg=docs&plcmt=body&cta=view-recording&tech=>`__.

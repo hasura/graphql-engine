@@ -4,8 +4,8 @@
 
 .. _api_tables_views:
 
-Schema/Metadata API Reference: Tables/Views
-===========================================
+Schema/Metadata API Reference: Tables/Views (Deprecated)
+========================================================
 
 .. contents:: Table of contents
   :backlinks: none
@@ -18,6 +18,13 @@ Introduction
 Track/untrack a table/view in Hasura GraphQL engine.
 
 Only tracked tables/views are available for querying/mutating/subscribing data over the GraphQL API.
+
+.. admonition:: Deprecation
+
+  In versions ``v2.0.0`` and above, the schema/metadata API is deprecated in favour of the :ref:`schema API <schema_apis>` and the
+  :ref:`metadata API <metadata_apis>`.
+
+  Though for backwards compatibility, the schema/metadata APIs will continue to function.
 
 .. _track_table:
 
@@ -149,6 +156,45 @@ Add a table/view ``author``:
       }
    }
 
+A table can be tracked with a ``custom name``. This can be useful when a table
+name is not GraphQL compliant, like ``Users Address``. A ``custom name`` like
+``users_address`` will complement the ``"Users Address"``
+table, so that it can be added to the GraphQL schema.
+
+.. code-block:: http
+
+   POST /v1/query HTTP/1.1
+   Content-Type: application/json
+   X-Hasura-Role: admin
+
+   {
+      "type": "track_table",
+      "version": 2,
+      "args": {
+        "table": "Author Details",
+        "configuration": {
+           "custom_name": "author_details"
+        }
+      }
+   }
+
+The GraphQL nodes and typenames
+that are generated will be according to the ``identifier``. For example, in this case,
+the nodes generated will be:
+
+- ``users_address``
+- ``users_address_one``
+- ``users_address_aggregate``
+- ``insert_users_address``
+- ``insert_users_address_one``
+- ``update_users_address``
+- ``update_users_address_by_pk``
+- ``delete_users_address``
+- ``delete_users_address_by_pk``
+
+.. note::
+  graphql-engine requires the constraint names (if any) of a table to be `GraphQL compliant <https://spec.graphql.org/June2018/#sec-Names>`__ in order to be able to track it.
+
 .. _track_table_args_syntax_v2:
 
 Args syntax
@@ -170,80 +216,14 @@ Args syntax
      - :ref:`Table Config <table_config>`
      - Configuration for the table/view
 
-.. _table_config:
-
-Table Config
-^^^^^^^^^^^^
-
-.. list-table::
-   :header-rows: 1
-
-   * - Key
-     - Required
-     - Schema
-     - Description
-   * - custom_root_fields
-     - false
-     - :ref:`Custom Root Fields <custom_root_fields>`
-     - Customise the root fields
-   * - custom_column_names
-     - false
-     - :ref:`CustomColumnNames`
-     - Customise the column fields
-
-.. _custom_root_fields:
-
-Custom Root Fields
-^^^^^^^^^^^^^^^^^^
-
-.. list-table::
-   :header-rows: 1
-
-   * - Key
-     - Required
-     - Schema
-     - Description
-   * - select
-     - false
-     - ``String``
-     - Customise the ``<table-name>`` root field
-   * - select_by_pk
-     - false
-     - ``String``
-     - Customise the ``<table-name>_by_pk`` root field
-   * - select_aggregate
-     - false
-     - ``String``
-     - Customise the ``<table-name>_aggregete`` root field
-   * - insert
-     - false
-     - ``String``
-     - Customise the ``insert_<table-name>`` root field
-   * - insert_one
-     - false
-     - ``String``
-     - Customise the ``insert_<table-name>_one`` root field
-   * - update
-     - false
-     - ``String``
-     - Customise the ``update_<table-name>`` root field
-   * - update_by_pk
-     - false
-     - ``String``
-     - Customise the ``update_<table-name>_by_pk`` root field
-   * - delete
-     - false
-     - ``String``
-     - Customise the ``delete_<table-name>`` root field
-   * - delete_by_pk
-     - false
-     - ``String``
-     - Customise the ``delete_<table-name>_by_pk`` root field
-
 .. _set_table_custom_fields:
 
-set_table_custom_fields
------------------------
+set_table_custom_fields (deprecated)
+------------------------------------
+
+``set_table_custom_fields`` has been deprecated. Use the
+:ref:`set_table_customization <set_table_customization>` API to set the custom
+table fields.
 
 ``set_table_custom_fields`` in version ``2`` sets the custom root fields and
 custom column names of already tracked table. This will **replace** the already
@@ -304,6 +284,70 @@ Args syntax
      - :ref:`CustomColumnNames`
      - Customise the column fields
 
+.. _set_table_customization:
+
+set_table_customization
+-----------------------
+
+``set_table_customization`` allows you to customize any given table with
+a custom name, custom root fields and custom column names of an already tracked
+table. This will **replace** the already present customization.
+
+:ref:`set_table_custom_fields <set_table_custom_fields>` has been deprecated in
+favour of this API.
+
+Set the configuration for a table/view called ``author``:
+
+.. code-block:: http
+
+   POST /v1/query HTTP/1.1
+   Content-Type: application/json
+   X-Hasura-Role: admin
+
+   {
+      "type": "set_table_customization",
+      "args": {
+        "table": "author_details",
+        "configuration": {
+          "identifier": "author",
+          "custom_root_fields": {
+             "select": "Authors",
+             "select_by_pk": "Author",
+             "select_aggregate": "AuthorAggregate",
+             "insert": "AddAuthors",
+             "insert_one":"AddAuthor",
+             "update": "UpdateAuthors",
+             "update_by_pk": "UpdateAuthor",
+             "delete": "DeleteAuthors",
+             "delete_by_pk": "DeleteAuthor"
+          },
+          "custom_column_names": {
+             "id": "authorId"
+          }
+        }
+      }
+   }
+
+.. _set_table_customization_syntax:
+
+Args syntax
+^^^^^^^^^^^
+
+.. list-table::
+   :header-rows: 1
+
+   * - Key
+     - Required
+     - Schema
+     - Description
+   * - table
+     - true
+     - :ref:`TableName <TableName>`
+     - Name of the table
+   * - configuration
+     - false
+     - :ref:`TableConfig <table_config>`
+     - Configuration for the table/view
 
 .. _untrack_table:
 

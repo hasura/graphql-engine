@@ -1,0 +1,18 @@
+# Test case for bug reported at https://github.com/hasura/graphql-engine/issues/6217
+description: Select projects with a given ID of type `character`
+url: /v1/graphql
+status: 200
+response:
+  data:
+    project:
+      - id: "bcd"
+      - id: "BCD"
+query:
+  query: |
+    query {
+      project (
+      where: {id: { _ilike: "b%"}}
+      ) {
+        id
+      }
+    }

@@ -6,13 +6,18 @@ const asyncState = {
   isFetching: false,
   isUpdating: false,
   isFetchError: null,
+  isPermissionSet: false,
+  isPermissionDrop: false,
 };
 
 const functionData = {
   functionName: '',
   functionSchema: '',
   functionDefinition: '',
+  functionComment: '',
+  isEditingComment: false,
   configuration: {},
+  permissions: {},
   setOffTable: '',
   setOffTableSchema: '',
   inputArgNames: [],

@@ -1,0 +1,19 @@
+description: Simple remote relationship GraphQL query with aliases (#7180)
+url: /v1/graphql
+status: 200
+response:
+  data:
+    profiles:
+      - aliased_id: 1
+        messageBasic:
+          name: alice
+query:
+  query: |
+    query {
+      profiles(limit: 1) {
+        aliased_id: id
+        messageBasic {
+          name
+        }
+      }
+    }

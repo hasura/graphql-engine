@@ -1,0 +1,144 @@
+@import '../Settings.scss';
+
+.layout {
+  padding: 2rem;
+  background-color: rgba(248, 250, 252, 1);
+  overflow-y: auto;
+  width: 100%;
+}
+
+.max_width {
+  max-width: 72rem;
+}
+
+.min_width {
+  min-width: 100%;
+}
+
+.header {
+  line-height: 1.5rem;
+  font-weight: 600;
+  font-size: 2.25rem;
+  margin-bottom: 1rem;
+}
+
+.sub_heading {
+  color: rgba(71, 85, 105, 1);
+  margin-bottom: 2rem;
+}
+
+.table_flex {
+  flex-direction: column;
+  display: flex;
+  margin-bottom: 1rem;
+}
+
+.upper_border {
+  border-top: 1px solid #ccc;
+}
+
+.table_border {
+  border: 1px solid #ccc;
+  border-radius: 0.25rem;
+  overflow-x: auto;
+}
+
+.bg_grey {
+  background-color: rgba(248, 250, 252, 1);
+}
+
+.table_heading {
+  color: rgba(71, 85, 105, 1);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  text-align: left;
+}
+
+.padding {
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+.align_text_right {
+  text-align: right;
+}
+
+.table_container {
+  background-color: rgba(255, 255, 255, 1);
+}
+
+.red_text {
+  color: rgba(220, 38, 38, 1);
+}
+
+.mb_sm {
+  margin-bottom: 0.5rem;
+}
+
+.mb_md {
+  margin-bottom: 1rem;
+}
+
+.heading_style {
+  color: rgba(75, 85, 99, 1);
+  font-weight: 500;
+  display: block;
+  padding-bottom: 0.25rem;
+}
+
+.text_red_700 {
+  color: rgba(185, 28, 28, 1);
+}
+
+.http_box {
+  padding: 6px 12px;
+  background-color: rgba(248, 250, 252, 1);
+  border: 1px solid #ccc;
+  border-right: 0;
+  border-right-width: 0px;
+  border-width: 1px;
+  border-radius: 3px;
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+  align-items: center;
+  height: 34px;
+  display: inline-block;
+}
+
+.http_input {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}
+
+.flex_pad {
+  display: flex;
+  padding-bottom: 20px;
+}
+
+.dialog_box {
+  padding: 1rem;
+  background-color: rgba(255, 255, 255, 1);
+  border-color: rgba(203, 213, 225, 1); 
+  border-width: 1px;
+  border-radius: 0.25rem;
+  width: 40rem;
+  margin-bottom: 1rem;
+}
+
+.text_button {
+  background: none;
+  border: none;
+  margin: 0;
+  padding: 0;
+  cursor: pointer;
+}
+
+.select_type {
+  height: 30px;
+  padding: 5px 10px;
+  font-size: 12px;
+  line-height: 1.5;
+  border-radius: 3px;
+}

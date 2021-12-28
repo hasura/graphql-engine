@@ -1,0 +1,12 @@
+type: bulk
+args:
+   
+- type: run_sql
+  args:
+    sql: |
+       INSERT INTO "user" (name, score) VALUES
+         ('Starke Blake',  0)
+       , ('Bellamy Blake', 10)
+       , ('Dora Black', 50)
+       ;
+

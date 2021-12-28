@@ -21,7 +21,7 @@ const Codegen = ({ dispatch, allActions, allTypes, currentAction }) => {
   const [error, setError] = React.useState(null);
 
   const [parentMutation] = React.useState(
-    getPersistedDerivedAction(currentAction.action_name)
+    getPersistedDerivedAction(currentAction.name)
   );
   const [shouldDerive, setShouldDerive] = React.useState(true);
 
@@ -177,9 +177,7 @@ const Codegen = ({ dispatch, allActions, allTypes, currentAction }) => {
 
   return (
     <div style={{ width: '600px' }}>
-      <Helmet
-        title={`Codegen - ${currentAction.action_name} - Actions | Hasura`}
-      />
+      <Helmet title={`Codegen - ${currentAction.name} - Actions | Hasura`} />
       {getFrameworkActions()}
       <div className={`${styles.add_mar_bottom}`}>
         <CodeTabs
@@ -191,7 +189,7 @@ const Codegen = ({ dispatch, allActions, allTypes, currentAction }) => {
           dispatch={dispatch}
         />
       </div>
-      <hr />
+      <hr className="my-md" />
       {getDerivationInfo()}
     </div>
   );

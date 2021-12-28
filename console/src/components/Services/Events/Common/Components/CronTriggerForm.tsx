@@ -53,7 +53,7 @@ const Form: React.FC<Props> = props => {
       </FormSection>
       <FormSection
         heading="Webhook"
-        tooltip="The HTTP endpoint that must be triggered"
+        tooltip="The HTTP URL that should be triggered. You can also provide the URL from environment variables, e.g. {{MY_WEBHOOK_URL}}"
         id="trigger-webhook"
       >
         <input

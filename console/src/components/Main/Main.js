@@ -1,47 +1,75 @@
 import React from 'react';
-import { connect } from 'react-redux';
-import { Link } from 'react-router';
+
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 import Tooltip from 'react-bootstrap/lib/Tooltip';
+import { connect } from 'react-redux';
+import { Link } from 'react-router';
 
-import * as tooltips from './Tooltips';
+import { HASURA_COLLABORATOR_TOKEN } from '../../constants';
 import globals from '../../Globals';
-import { getPathRoot } from '../Common/utils/urlUtils';
+import { versionGT } from '../../helpers/versionUtils';
+import { loadInconsistentObjects } from '../../metadata/actions';
+import { UPDATE_CONSOLE_NOTIFICATIONS } from '../../telemetry/Actions';
+import { getLSItem, LS_KEYS, setLSItem } from '../../utils/localStorage';
+import Onboarding from '../Common/Onboarding';
 import Spinner from '../Common/Spinner/Spinner';
-import WarningSymbol from '../Common/WarningSymbol/WarningSymbol';
-import logo from './images/white-logo.svg';
-import pixHeart from './images/pix-heart.svg';
-
-import styles from './Main.scss';
-
 import {
-  loadServerVersion,
+  getSchemaBaseRoute,
+  redirectToMetadataStatus,
+  getDataSourceBaseRoute,
+} from '../Common/utils/routesUtils';
+import { getPathRoot } from '../Common/utils/urlUtils';
+import WarningSymbol from '../Common/WarningSymbol/WarningSymbol';
+import _push from '../Services/Data/push';
+import {
+  emitProClickedEvent,
+  featureCompatibilityInit,
+  fetchConsoleNotifications,
   fetchServerConfig,
   loadLatestServerVersion,
-  featureCompatibilityInit,
-  emitProClickedEvent,
-  fetchPostgresVersion,
+  loadServerVersion,
 } from './Actions';
-
-import {
-  loadInconsistentObjects,
-  redirectToMetadataStatus,
-} from '../Services/Settings/Actions';
-
+import { Help, ProPopup } from './components/';
+import { UpdateVersion } from './components/UpdateVersion';
+import logo from './images/white-logo.svg';
+import LoveSection from './LoveSection';
+import styles from './Main.scss';
+import NotificationSection from './NotificationSection';
+import * as tooltips from './Tooltips';
 import {
   getLoveConsentState,
-  setLoveConsentState,
   getProClickState,
+  getUserType,
+  setLoveConsentState,
   setProClickState,
 } from './utils';
 
-import { checkStableVersion, versionGT } from '../../helpers/versionUtils';
-import { getSchemaBaseRoute } from '../Common/utils/routesUtils';
-import ToolTip from '../Common/Tooltip/Tooltip';
-import { setPreReleaseNotificationOptOutInDB } from '../../telemetry/Actions';
-import { Icon } from '../UIKit/atoms/Icon';
-import { getLSItem, setLSItem, LS_KEYS } from '../../utils/localStorage';
-import { Help, ProPopup } from './components/';
+export const updateRequestHeaders = props => {
+  const { requestHeaders, dispatch } = props;
+
+  const collabTokenKey = Object.keys(requestHeaders).find(
+    hdr => hdr.toLowerCase() === HASURA_COLLABORATOR_TOKEN
+  );
+
+  if (collabTokenKey) {
+    const userID = getUserType(requestHeaders[collabTokenKey]);
+    if (props.console_opts && props.console_opts.console_notifications) {
+      if (!props.console_opts.console_notifications[userID]) {
+        dispatch({
+          type: UPDATE_CONSOLE_NOTIFICATIONS,
+          data: {
+            ...props.console_opts.console_notifications,
+            [userID]: {
+              read: [],
+              date: null,
+              showBadge: true,
+            },
+          },
+        });
+      }
+    }
+  }
+};
 
 class Main extends React.Component {
   constructor(props) {
@@ -49,21 +77,17 @@ class Main extends React.Component {
 
     this.state = {
       updateNotificationVersion: null,
-      loveConsentState: getLoveConsentState(),
       proClickState: getProClickState(),
+      loveConsentState: getLoveConsentState(),
       isPopUpOpen: false,
+      isDropdownOpen: false,
+      isLoveSectionOpen: false,
     };
-
-    this.handleBodyClick = this.handleBodyClick.bind(this);
   }
 
   componentDidMount() {
     const { dispatch } = this.props;
-
-    document
-      .querySelector('body')
-      .addEventListener('click', this.handleBodyClick);
-
+    updateRequestHeaders(this.props);
     dispatch(loadServerVersion()).then(() => {
       dispatch(featureCompatibilityInit());
 
@@ -76,17 +100,96 @@ class Main extends React.Component {
       dispatch(loadLatestServerVersion()).then(() => {
         this.setShowUpdateNotification();
       });
+
+      dispatch(fetchConsoleNotifications());
     });
 
-    dispatch(fetchPostgresVersion);
-
     dispatch(fetchServerConfig);
+  }
+
+  componentDidUpdate(prevProps) {
+    const prevHeaders = Object.keys(prevProps.requestHeaders);
+    const currHeaders = Object.keys(this.props.requestHeaders);
+
+    if (
+      prevHeaders.length !== currHeaders.length ||
+      prevHeaders.filter(hdr => !currHeaders.includes(hdr)).length
+    ) {
+      updateRequestHeaders(this.props);
+    }
   }
 
   toggleProPopup = () => {
     const { dispatch } = this.props;
     dispatch(emitProClickedEvent({ open: !this.state.isPopUpOpen }));
     this.setState({ isPopUpOpen: !this.state.isPopUpOpen });
+  };
+
+  handleMetadataRedirect() {
+    if (this.props.metadata.inconsistentObjects.length > 0) {
+      this.props.dispatch(redirectToMetadataStatus());
+    }
+    if (
+      this.props.metadata.inconsistentInheritedRoles.length > 0 &&
+      !this.props.inconsistentInheritedRole
+    ) {
+      this.props.dispatch(
+        _push(`${globals.urlPrefix}/settings/metadata-status`)
+      );
+    }
+  }
+
+  updateLocalStorageState() {
+    const s = getProClickState();
+    if (s && 'isProClicked' in s && !s.isProClicked) {
+      setProClickState({
+        isProClicked: !s.isProClicked,
+      });
+      this.setState({
+        proClickState: { ...getProClickState() },
+      });
+    }
+  }
+
+  onProIconClick = () => {
+    this.updateLocalStorageState();
+    this.toggleProPopup();
+  };
+
+  closeDropDown = () => {
+    this.setState({
+      isDropdownOpen: false,
+    });
+  };
+
+  toggleDropDown = () => {
+    this.setState(prevState => ({
+      isDropdownOpen: !prevState.isDropdownOpen,
+    }));
+  };
+
+  closeLoveSection = () => {
+    this.setState(
+      {
+        isLoveSectionOpen: false,
+      },
+      () => {
+        setLoveConsentState({ isDismissed: true });
+        this.setState({ loveConsentState: { ...getLoveConsentState() } });
+      }
+    );
+  };
+
+  toggleLoveSection = () => {
+    this.setState(prevState => ({
+      isLoveSectionOpen: !prevState.isLoveSectionOpen,
+    }));
+  };
+
+  closeUpdateBanner = () => {
+    const { updateNotificationVersion } = this.state;
+    setLSItem(LS_KEYS.versionUpdateCheckLastClosed, updateNotificationVersion);
+    this.setState({ updateNotificationVersion: null });
   };
 
   setShowUpdateNotification() {
@@ -132,64 +235,6 @@ class Main extends React.Component {
     }
   }
 
-  handleBodyClick(e) {
-    const heartDropDown = document.getElementById('dropdown_wrapper');
-    const heartDropDownOpen = document.querySelectorAll(
-      '#dropdown_wrapper.open'
-    );
-
-    if (
-      heartDropDown &&
-      !heartDropDown.contains(e.target) &&
-      heartDropDownOpen.length !== 0
-    ) {
-      heartDropDown.classList.remove('open');
-    }
-  }
-
-  handleDropdownToggle() {
-    document.getElementById('dropdown_wrapper').classList.toggle('open');
-  }
-
-  handleMetadataRedirect() {
-    if (this.props.metadata.inconsistentObjects.length > 0) {
-      this.props.dispatch(redirectToMetadataStatus());
-    }
-  }
-
-  closeLoveIcon() {
-    const s = {
-      isDismissed: true,
-    };
-    setLoveConsentState(s);
-    this.setState({
-      loveConsentState: { ...getLoveConsentState() },
-    });
-  }
-
-  updateLocalStorageState() {
-    const s = getProClickState();
-    if (s && 'isProClicked' in s && !s.isProClicked) {
-      setProClickState({
-        isProClicked: !s.isProClicked,
-      });
-      this.setState({
-        proClickState: { ...getProClickState() },
-      });
-    }
-  }
-
-  onProIconClick = () => {
-    this.updateLocalStorageState();
-    this.toggleProPopup();
-  };
-
-  closeUpdateBanner() {
-    const { updateNotificationVersion } = this.state;
-    setLSItem(LS_KEYS.versionUpdateCheckLastClosed, updateNotificationVersion);
-    this.setState({ updateNotificationVersion: null });
-  }
-
   render() {
     const {
       children,
@@ -198,7 +243,10 @@ class Main extends React.Component {
       currentSchema,
       serverVersion,
       metadata,
+      console_opts,
+      currentSource,
       dispatch,
+      schemaList,
     } = this.props;
 
     const {
@@ -261,7 +309,7 @@ class Main extends React.Component {
         adminSecretHtml = (
           <div className={styles.secureSection}>
             <a
-              href="https://hasura.io/docs/1.0/graphql/manual/deployment/securing-graphql-endpoint.html"
+              href="https://hasura.io/docs/latest/graphql/core/deployment/securing-graphql-endpoint.html"
               target="_blank"
               rel="noopener noreferrer"
             >
@@ -270,212 +318,14 @@ class Main extends React.Component {
                 tooltipPlacement={'left'}
                 customStyle={styles.secureSectionSymbol}
               />
-              &nbsp;Secure your endpoint
+              <span className={styles.secureSectionText}>
+                &nbsp;Secure your endpoint
+              </span>
             </a>
           </div>
         );
       }
       return adminSecretHtml;
-    };
-
-    const getUpdateNotification = () => {
-      let updateNotificationHtml = null;
-
-      const { updateNotificationVersion } = this.state;
-
-      const isStableRelease = checkStableVersion(updateNotificationVersion);
-
-      const getPreReleaseNote = () => {
-        const handlePreRelNotifOptOut = e => {
-          e.preventDefault();
-          e.stopPropagation();
-
-          this.closeUpdateBanner();
-
-          dispatch(setPreReleaseNotificationOptOutInDB());
-        };
-
-        return (
-          <React.Fragment>
-            <span className={styles.middot}> &middot; </span>
-            <i>
-              This is a pre-release version. Not recommended for production use.
-              <span className={styles.middot}> &middot; </span>
-              <a href={'#'} onClick={handlePreRelNotifOptOut}>
-                Opt out of pre-release notifications
-              </a>
-              <ToolTip
-                message={'Only be notified about stable releases'}
-                placement={'top'}
-              />
-            </i>
-          </React.Fragment>
-        );
-      };
-
-      if (updateNotificationVersion) {
-        updateNotificationHtml = (
-          <div>
-            <div className={styles.phantom} />{' '}
-            {/* phantom div to prevent overlapping of banner with content. */}
-            <div className={styles.updateBannerWrapper}>
-              <div className={styles.updateBanner}>
-                <span> Hey there! A new server version </span>
-                <span className={styles.versionUpdateText}>
-                  {' '}
-                  {updateNotificationVersion}
-                </span>
-                <span> is available </span>
-                <span className={styles.middot}> &middot; </span>
-                <a
-                  href={
-                    'https://github.com/hasura/graphql-engine/releases/tag/' +
-                    updateNotificationVersion
-                  }
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <span>View Changelog</span>
-                </a>
-                <span className={styles.middot}> &middot; </span>
-                <a
-                  className={styles.updateLink}
-                  href="https://hasura.io/docs/1.0/graphql/manual/deployment/updating.html"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <span>Update Now</span>
-                </a>
-                {!isStableRelease && getPreReleaseNote()}
-                <span
-                  className={styles.updateBannerClose}
-                  onClick={this.closeUpdateBanner.bind(this)}
-                >
-                  <i className={'fa fa-times'} />
-                </span>
-              </div>
-            </div>
-          </div>
-        );
-      }
-
-      return updateNotificationHtml;
-    };
-
-    const getLoveSection = () => {
-      let loveSectionHtml = null;
-
-      if (!this.state.loveConsentState.isDismissed) {
-        loveSectionHtml = [
-          <div
-            key="main_love_1"
-            className={styles.shareSection + ' dropdown-toggle'}
-            aria-expanded="false"
-            onClick={this.handleDropdownToggle.bind(this)}
-          >
-            <img
-              className={'img-responsive'}
-              src={pixHeart}
-              alt={'pix Heart'}
-            />
-            {/* <i className={styles.heart + ' fa fa-heart'} /> */}
-          </div>,
-          <ul
-            key="main_love_2"
-            className={'dropdown-menu ' + styles.dropdown_menu}
-          >
-            <div className={styles.dropdown_menu_container}>
-              <div className={styles.closeDropDown}>
-                <i
-                  className="fa fa-close"
-                  onClick={this.closeLoveIcon.bind(this)}
-                />
-                {/*
-                        <img
-                          className={'img-responsive'}
-                          src={closeIcon}
-                          alt={'closeIcon'}
-                          onClick={this.closeLoveIcon.bind(this)}
-                        />
-                        */}
-              </div>
-              {/*
-                      <div className={styles.arrow_up_dropdown} />
-                      <div className={styles.graphqlHeartText}>
-                        Love GraphQL Engine? Shout it from the rooftops!
-                        <br />
-                        Or just spread the word{' '}
-                        <span role="img" aria-label="smile">
-                          😊
-                        </span>
-                      </div>
-                      */}
-              <div className={styles.displayFlex}>
-                <li className={styles.pixelText1}>
-                  Roses are red, <br />
-                  Violets are blue;
-                  <br />
-                  Star us on GitHub,
-                  <br />
-                  To make our <i className={'fa fa-heart'} /> go wooooo!
-                </li>
-                <li className={'dropdown-item'}>
-                  <a
-                    href="https://github.com/hasura/graphql-engine"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    <div className={styles.socialIcon}>
-                      <img
-                        className="img img-responsive"
-                        src={`${globals.assetsPath}/common/img/githubicon.png`}
-                        alt={'GitHub'}
-                      />
-                    </div>
-                    <div className={styles.pixelText}>
-                      <i className="fa fa-star" />
-                      &nbsp; Star
-                    </div>
-                  </a>
-                  {/*
-                          <div className={styles.gitHubBtn}>
-                            <iframe
-                              title="github"
-                              src="https://ghbtns.com/github-btn.html?user=hasura&repo=graphql-engine&type=star&count=true"
-                              frameBorder="0"
-                              scrolling="0"
-                              width="100px"
-                              height="30px"
-                            />
-                          </div>
-                          */}
-                </li>
-                <li className={'dropdown-item '}>
-                  <a
-                    href="https://twitter.com/intent/tweet?hashtags=graphql,postgres&text=Just%20deployed%20a%20GraphQL%20backend%20with%20@HasuraHQ!%20%E2%9D%A4%EF%B8%8F%20%F0%9F%9A%80%0Ahttps://github.com/hasura/graphql-engine%0A"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    <div className={styles.socialIcon}>
-                      <img
-                        className="img img-responsive"
-                        src={`${globals.assetsPath}/common/img/twittericon.png`}
-                        alt={'Twitter'}
-                      />
-                    </div>
-                    <div className={styles.pixelText}>
-                      <i className="fa fa-twitter" />
-                      &nbsp; Tweet
-                    </div>
-                  </a>
-                </li>
-              </div>
-            </div>
-          </ul>,
-        ];
-      }
-
-      return loveSectionHtml;
     };
 
     const getSidebarItem = (
@@ -500,6 +350,7 @@ class Main extends React.Component {
                   : ''
               }
               to={appPrefix + path}
+              data-test={`${title.toLowerCase()}-tab-link`}
             >
               <div className={styles.iconCenter} data-test={block}>
                 <i className={`fa ${icon}`} aria-hidden="true" />
@@ -511,67 +362,13 @@ class Main extends React.Component {
       );
     };
 
-    const getVulnerableVersionNotification = () => {
-      let vulnerableVersionNotificationHtml = null;
-
-      // vulnerable version to fixed version mapping
-      const vulnerableVersionsMapping = {
-        'v1.2.0-beta.5': 'v1.2.1',
-        'v1.2.0': 'v1.2.1',
-      };
-
-      if (Object.keys(vulnerableVersionsMapping).includes(serverVersion)) {
-        const fixedVersion = vulnerableVersionsMapping[serverVersion];
-
-        vulnerableVersionNotificationHtml = (
-          <div>
-            <div className={styles.phantom} />{' '}
-            {/* phantom div to prevent overlapping of banner with content. */}
-            <div
-              className={
-                styles.updateBannerWrapper +
-                ' ' +
-                styles.vulnerableVersionBannerWrapper
-              }
-            >
-              <div className={styles.updateBanner}>
-                <span>
-                  <Icon type={'warning'} /> <b>ATTENTION</b>
-                  <span className={styles.middot}> &middot; </span>
-                  This current server version has a security vulnerability.
-                  Please upgrade to <b>{fixedVersion}</b> immediately
-                </span>
-                <span className={styles.middot}> &middot; </span>
-                <a
-                  href={
-                    'https://github.com/hasura/graphql-engine/releases/tag/' +
-                    fixedVersion
-                  }
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <span>View Changelog</span>
-                </a>
-                <span className={styles.middot}> &middot; </span>
-                <a
-                  className={styles.updateLink}
-                  href="https://hasura.io/docs/1.0/graphql/manual/deployment/updating.html"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <span>Update Now</span>
-                </a>
-              </div>
-            </div>
-          </div>
-        );
-      }
-
-      return vulnerableVersionNotificationHtml;
-    };
-
     return (
       <div className={styles.container}>
+        <Onboarding
+          dispatch={dispatch}
+          console_opts={console_opts}
+          metadata={metadata.metadataObject}
+        />
         <div className={styles.flexRow}>
           <div className={styles.sidebar}>
             <div className={styles.header_logo_wrapper}>
@@ -589,17 +386,21 @@ class Main extends React.Component {
             <div className={styles.header_items}>
               <ul className={styles.sidebarItems}>
                 {getSidebarItem(
-                  'GraphiQL',
+                  'API',
                   'fa-flask',
                   tooltips.apiExplorer,
-                  '/api-explorer',
+                  '/api/api-explorer',
                   true
                 )}
                 {getSidebarItem(
                   'Data',
                   'fa-database',
                   tooltips.data,
-                  getSchemaBaseRoute(currentSchema)
+                  currentSource
+                    ? schemaList.length
+                      ? getSchemaBaseRoute(currentSchema, currentSource)
+                      : getDataSourceBaseRoute(currentSource)
+                    : '/data'
                 )}
                 {getSidebarItem(
                   'Actions',
@@ -612,15 +413,7 @@ class Main extends React.Component {
                   'fa-plug',
                   tooltips.remoteSchema,
                   '/remote-schemas/manage/schemas'
-                )}
-                {/*                {getSidebarItem(
-                  'Events',
-                  'fa-cloud',
-                  tooltips.events,
-                  '/events/manage/triggers'
-                )}
-                {' '}
-*/}{' '}
+                )}{' '}
                 {getSidebarItem(
                   'Events',
                   'fa-cloud',
@@ -629,7 +422,12 @@ class Main extends React.Component {
                 )}
               </ul>
             </div>
-            <div id="dropdown_wrapper" className={styles.clusterInfoWrapper}>
+            <div
+              id="dropdown_wrapper"
+              className={`${styles.clusterInfoWrapper} ${
+                this.state.isDropdownOpen ? 'open' : ''
+              }`}
+            >
               {getAdminSecretSection()}
               <div
                 className={`${styles.headerRightNavbarBtn} ${styles.proWrapper}`}
@@ -651,16 +449,32 @@ class Main extends React.Component {
                 </div>
               </Link>
               <Help isSelected={currentActiveBlock === 'support'} />
-              {getLoveSection()}
+              <NotificationSection
+                isDropDownOpen={this.state.isDropdownOpen}
+                closeDropDown={this.closeDropDown}
+                toggleDropDown={this.toggleDropDown}
+              />
+              {!this.state.loveConsentState.isDismissed ? (
+                <div
+                  id="dropdown_wrapper"
+                  className={`${this.state.isLoveSectionOpen ? 'open' : ''}`}
+                >
+                  <LoveSection
+                    closeLoveSection={this.closeLoveSection}
+                    toggleLoveSection={this.toggleLoveSection}
+                  />
+                </div>
+              ) : null}
             </div>
           </div>
-
           <div className={styles.main + ' container-fluid'}>
             {getMainContent()}
           </div>
-
-          {getUpdateNotification()}
-          {getVulnerableVersionNotification()}
+          <UpdateVersion
+            closeUpdateBanner={this.closeUpdateBanner}
+            dispatch={this.props.dispatch}
+            updateNotificationVersion={this.state.updateNotificationVersion}
+          />
         </div>
       </div>
     );
@@ -670,11 +484,16 @@ class Main extends React.Component {
 const mapStateToProps = (state, ownProps) => {
   return {
     ...state.main,
-    header: { ...state.header },
+    header: state.header,
     pathname: ownProps.location.pathname,
     currentSchema: state.tables.currentSchema,
+    currentSource: state.tables.currentDataSource,
     metadata: state.metadata,
     console_opts: state.telemetry.console_opts,
+    requestHeaders: state.tables.dataHeaders,
+    schemaList: state.tables.schemaList,
+    inconsistentInheritedRole:
+      state.tables.modify.permissionsState.inconsistentInhertiedRole,
   };
 };
 

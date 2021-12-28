@@ -41,7 +41,8 @@ Request
 
    {
      "opts": ["-O", "-x", "--schema-only", "--schema", "public"],
-     "clean_output": true
+     "clean_output": true,
+     "source": "<database-source-name>"
    }
 
 - ``opts``: Arguments to be passed to the ``pg_dump`` tool. Represented as array
@@ -60,6 +61,8 @@ Request
   -  Comments (``--``) and empty newlines.
   -  Postgres triggers created by Hasura for event triggers.
 
+- ``source``: the name of the connected database on which to run ``pg_dump`` on. If skipped, 
+  it is set to ``default``
 
 Sample response
 ^^^^^^^^^^^^^^^
@@ -69,6 +72,7 @@ Sample response
   HTTP/1.1 200 OK
   Content-Type: application/sql
 
+  SET check_function_bodies = false;
   CREATE TABLE public.author (
       id integer NOT NULL,
       name text NOT NULL

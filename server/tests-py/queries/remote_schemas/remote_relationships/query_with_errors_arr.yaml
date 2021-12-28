@@ -26,29 +26,29 @@ response:
       internal:
         errors:
         - path:
-          - messagesNestedArgs__0
+          - f0
           - 0
           - errorMsg
           message: intentional-error
           locations:
           - line: 1
-            column: 71
+            column: 52
         - path:
-          - messagesNestedArgs__1
+          - f1
           - 0
           - errorMsg
           message: intentional-error
           locations:
           - line: 1
-            column: 144
+            column: 106
         - path:
-          - messagesNestedArgs__2
+          - f2
           - 0
           - errorMsg
           message: intentional-error
           locations:
           - line: 1
-            column: 217
+            column: 160
       path: $
       code: unexpected
     message: Errors from remote server

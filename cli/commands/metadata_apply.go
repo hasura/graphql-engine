@@ -1,25 +1,21 @@
 package commands
 
 import (
-	"os"
+	"fmt"
 
-	"github.com/hasura/graphql-engine/cli/migrate"
-
-	"github.com/hasura/graphql-engine/cli"
-	"github.com/pkg/errors"
+	"github.com/hasura/graphql-engine/cli/v2"
 	"github.com/spf13/cobra"
 )
 
 func newMetadataApplyCmd(ec *cli.ExecutionContext) *cobra.Command {
 	opts := &MetadataApplyOptions{
-		EC:         ec,
-		ActionType: "apply",
+		EC: ec,
 	}
 
 	metadataApplyCmd := &cobra.Command{
 		Use:   "apply",
 		Short: "Apply Hasura metadata on a database",
-		Example: `  # Apply Hasura GraphQL Engine metadata present in metadata.[yaml|json] file:
+		Example: `  # Apply Hasura GraphQL engine metadata present in metadata.[yaml|json] file:
   hasura metadata apply
 
   # Use with admin secret:
@@ -29,54 +25,50 @@ func newMetadataApplyCmd(ec *cli.ExecutionContext) *cobra.Command {
   hasura metadata apply --endpoint "<endpoint>"`,
 		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if opts.dryRun {
-				o := &MetadataDiffOptions{
-					EC:     ec,
-					Output: os.Stdout,
-					Args:   []string{},
-				}
-				return o.Run()
+			if opts.FromFile {
+				return fmt.Errorf("use of deprecated flag")
 			}
-			opts.EC.Spin("Applying metadata...")
+			if !opts.DryRun && len(opts.rawOutput) == 0 {
+				ec.Spin("Applying metadata...")
+			}
 			err := opts.Run()
-			opts.EC.Spinner.Stop()
+			ec.Spinner.Stop()
 			if err != nil {
-				return errors.Wrap(err, "failed to apply metadata")
+				return err
 			}
-			opts.EC.Logger.Info("Metadata applied")
+			if len(opts.rawOutput) <= 0 && !opts.DryRun {
+				opts.EC.Logger.Info("Metadata applied")
+			}
 			return nil
 		},
 	}
 
 	f := metadataApplyCmd.Flags()
 
+	// deprecated flag
 	f.BoolVar(&opts.FromFile, "from-file", false, "apply metadata from migrations/metadata.[yaml|json]")
-	f.BoolVar(&opts.dryRun, "dry-run", false, "show a diff instead of applying the metadata")
-
+	if err := f.MarkDeprecated("from-file", "deprecation is a side effect of config v1 deprecation from v2.0.0"); err != nil {
+		ec.Logger.WithError(err).Errorf("error while using a dependency library")
+	}
+	f.BoolVar(&opts.DryRun, "dry-run", false, "show metadata generated from project directory without applying to server.  generated metadata will be printed as JSON by default, use -o flag for other display formats")
+	f.StringVarP(&opts.rawOutput, "output", "o", "", `specify an output format to show applied metadata. Allowed values: json, yaml (default "json")`)
 	return metadataApplyCmd
 }
 
 type MetadataApplyOptions struct {
 	EC *cli.ExecutionContext
 
-	ActionType string
-
-	FromFile bool
-	dryRun   bool
+	FromFile  bool
+	DryRun    bool
+	rawOutput string
 }
 
 func (o *MetadataApplyOptions) Run() error {
-	if o.FromFile {
-		actualMetadataDir := o.EC.MetadataDir
-		o.EC.MetadataDir = ""
-		defer func() {
-			o.EC.MetadataDir = actualMetadataDir
-		}()
-	}
+	return getMetadataModeHandler(o.EC.MetadataMode).Apply(o)
+}
 
-	migrateDrv, err := migrate.NewMigrate(o.EC, true)
-	if err != nil {
-		return err
-	}
-	return executeMetadata(o.ActionType, migrateDrv, o.EC)
+func errorApplyingMetadata(err error) error {
+	// a helper function to have consistent error messages for errors
+	// when applying metadata
+	return fmt.Errorf("error applying metadata \n%w", err)
 }

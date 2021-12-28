@@ -38,6 +38,40 @@
         - title
         - name
 
+# Introspecting the GraphQL schema for query field for the materialized view
+- description: Checking query fields by introspection
+  url: /v1/graphql
+  status: 200
+  response:
+    data:
+      __type: 
+        name: "articles"
+  query:
+    query: "query checkQuery {__type(name:\"articles\"){name}}"
+
+# Test for checking if the mutation field doesn't exist for the materialized view
+- description: Checking mutation fields for materialized view
+  url: /v1/graphql
+  status: 200
+  response:
+    errors:
+      - extensions: 
+          path: "$"
+          code: "validation-failed"
+        message: "no mutations exist"
+  query:
+    query: "mutation MyMutation { delete_articles(where: {title: {_eq: \"Lorem ipsum dolor sit amet\"}}) { affected_rows }}"
+
+# Introspecting the GraphQL schema for mutation fields for the materialized view
+- description: Checking mutation fields by introspection
+  url: /v1/graphql
+  status: 200
+  response:
+    data:
+      __type: null
+  query:
+    query: "query checkMutation {__type(name:\"articles_insert_input\"){name}}"
+
 - description: Untrack materialized view
   url: /v1/query
   status: 200

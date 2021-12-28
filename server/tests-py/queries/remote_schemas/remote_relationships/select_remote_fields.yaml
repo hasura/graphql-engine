@@ -6,20 +6,20 @@ response:
     __type:
       name: profiles
       fields:
-      - args: []
-        name: id
-      - args: []
-        name: messageBasic
-      - args:
+      - name: id
+        args: []
+      - name: messageBasic
+        args: []
+      - name: messagesNestedArgs
+        args:
         - name: includes
           type:
             name: IncludeInpObj
         - name: where
           type:
-            name: MessageWhereInpObj_remote_rel_public_profilesmessagesNestedArgs
-        name: messagesNestedArgs
-      - args: []
-        name: name
+            name: MessageWhereInpObj_remote_rel_profilesmessagesNestedArgs
+      - name: name
+        args: []
 query:
   query: |
     query {

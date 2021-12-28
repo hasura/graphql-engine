@@ -7,8 +7,8 @@ import (
 
 	"github.com/Masterminds/semver"
 
-	"github.com/hasura/graphql-engine/cli"
-	"github.com/hasura/graphql-engine/cli/update"
+	"github.com/hasura/graphql-engine/cli/v2"
+	"github.com/hasura/graphql-engine/cli/v2/update"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -90,13 +90,15 @@ func (o *updateOptions) run(showPrompt bool) (err error) {
 				}
 				versionToBeInstalled = latestVersion
 			case hasPreReleaseUpdate:
-				o.EC.Logger.Infof(`a new pre-release version is available:
-- %s (changelog: %s)
-to update cli to this version, execute:
+				o.EC.Logger.WithFields(logrus.Fields{
+					"version":   preReleaseVersion.Original(),
+					"changelog": getChangeLogLink(preReleaseVersion),
+				}).Infof(`a new pre-release version is available`)
+				o.EC.Logger.Infof(`to update cli to this version, execute:
 
   hasura update-cli --version %s
 
-`, preReleaseVersion.Original(), getChangeLogLink(preReleaseVersion), preReleaseVersion.Original())
+`, preReleaseVersion.Original())
 				return nil
 			}
 		} else {

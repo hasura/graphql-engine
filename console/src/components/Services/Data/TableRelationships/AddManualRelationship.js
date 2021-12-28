@@ -4,14 +4,10 @@ import { addRelViewMigrate, resetManualRelationshipForm } from './Actions';
 import ExpandableEditor from '../../../Common/Layout/ExpandableEditor/Editor';
 import ManualRelationshipSelector from './ManualRelationshipSelector';
 import {
-  getColumnName,
-  getSchemaName,
   getSchemaTables,
   getTableColumnNames,
-  getTableName,
-  getTableSchema,
   getTrackedTables,
-} from '../../../Common/utils/pgUtils';
+} from '../../../../dataSources';
 
 const AddManualRelationship = ({
   tableSchema,
@@ -26,21 +22,21 @@ const AddManualRelationship = ({
 
   // columns in the right order with their indices
   const orderedColumns = columns.map((c, i) => ({
-    name: getColumnName(c),
+    name: c.column_name,
     index: i,
   }));
 
-  relAdd.rSchema = relAdd.rSchema || getTableSchema(tableSchema);
+  relAdd.rSchema = relAdd.rSchema || tableSchema.table_schema;
 
   const refTables = {};
   const trackedSchemaTables = getTrackedTables(
     getSchemaTables(allSchemas, relAdd.rSchema)
   );
   trackedSchemaTables.forEach(
-    ts => (refTables[getTableName(ts)] = getTableColumnNames(ts))
+    ts => (refTables[ts.table_name] = getTableColumnNames(ts))
   );
 
-  const orderedSchemaList = schemaList.map(s => getSchemaName(s)).sort();
+  const orderedSchemaList = schemaList.sort();
 
   const resetManualRel = () => {
     dispatch(resetManualRelationshipForm());

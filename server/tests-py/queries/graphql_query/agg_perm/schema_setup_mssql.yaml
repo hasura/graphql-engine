@@ -1,0 +1,85 @@
+type: bulk
+args:
+
+- type: mssql_run_sql
+  args:
+    source: mssql
+    sql: |
+      -- author table
+      create table author(
+          id int identity not null primary key,
+          name text
+      );
+      -- insert data
+      INSERT INTO author (name)
+        VALUES
+        ('Author 1'),
+        ('Author 2')
+      ;
+      -- article table
+      CREATE TABLE article (
+        id INT IDENTITY NOT NULL PRIMARY KEY,
+        title TEXT,
+        content TEXT,
+        author_id INTEGER REFERENCES author(id),
+        is_published BIT,
+        published_on TIMESTAMP
+      );
+
+      INSERT INTO article (title,content,author_id,is_published)
+        VALUES
+        (
+          'Article 1',
+          'Sample article content 1',
+          1,
+          0
+        ),
+        (
+          'Article 2',
+          'Sample article content 2',
+          1,
+          1
+        ),
+        (
+          'Article 3',
+          'Sample article content 3',
+          2,
+          1
+        )
+      ;
+
+      CREATE TABLE post (
+        id INT IDENTITY NOT NULL PRIMARY KEY,
+        title TEXT,
+        content TEXT,
+        author_id INTEGER REFERENCES author(id)
+      );
+
+      INSERT INTO post (title, content, author_id)
+        VALUES
+        (
+          'Post 1',
+          'Post 1 Content',
+          1
+        ),
+        (
+          'Post 2',
+          'Post 2 Content',
+          1
+        ),
+        (
+          'Post 3',
+          'Post 3 Content',
+          1
+        ),
+        (
+          'Post 4',
+          'Post 4 Content',
+          2
+        ),
+        (
+          'Post 5',
+          'Post 5 Content',
+          2
+        )
+      ;

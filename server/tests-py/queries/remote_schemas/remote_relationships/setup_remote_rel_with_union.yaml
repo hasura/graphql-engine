@@ -1,0 +1,11 @@
+type: create_remote_relationship
+args:
+  name: searchUnion
+  table: profiles
+  hasura_fields:
+    - id
+  remote_schema: my-remote-schema
+  remote_field:
+    search:
+      arguments:
+          id: $id

@@ -1,0 +1,50 @@
+- description: When permissions conflict, the metadata should be inconsistent
+  url: /v1/metadata
+  status: 200
+  query:
+    type: get_inconsistent_metadata
+    args: {}
+  response:
+    is_consistent: False
+    inconsistent_objects:
+      - reason: "Could not inherit permission for the role 'inherited_role2' for the entity: 'remote schema: 'my-remote-schema''"
+        name: inherited_role2
+        type: inherited role permission inconsistency
+        entity:
+          remote_schema: my-remote-schema
+
+- description: When permissions conflict, the metadata should be inconsistent
+  url: /v1/metadata
+  status: 200
+  query:
+    type: add_remote_schema_permissions
+    args:
+      remote_schema: my-remote-schema
+      role: inherited_role2
+      definition:
+        schema: |
+          type User {
+            user_id: Int
+            gimmeText(text: String): String
+          }
+
+          type Query {
+            hello: String
+            user(user_id: Int! @preset(value: "x-hasura-user-id")): User
+          }
+  response:
+    message: success
+
+- description: Query using the newly added permission
+  url: /v1/graphql
+  headers:
+    X-Hasura-Role: inherited_role2
+  status: 200
+  query:
+    query: |
+      query {
+        hello
+      }
+  response:
+    data:
+      hello: world

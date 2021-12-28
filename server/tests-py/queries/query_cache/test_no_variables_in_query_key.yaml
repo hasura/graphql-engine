@@ -1,0 +1,47 @@
+- description: call the simple endpoint to write to the cache
+  url: /v1/graphql
+  status: 200
+  headers:
+    X-Hasura-Role: user
+    X-Hasura-User-Id: Foo
+  query:
+    query: |
+      query @cached(ttl: 300) {
+        test_table {
+          first_name
+          last_name
+        }
+      }
+  resp_headers:
+    Cache-Control: max-age=300
+    X-Hasura-Query-Cache-Key: bca58af9a86473a6b818de7e2138526dc9e0e324
+    X-Hasura-Query-Family-Cache-Key: f0793691acb14b24d912a466fd15c2a542ec8a74
+  response:
+    data:
+      test_table:
+        - first_name: Foo
+          last_name: Bar
+
+- description: call the simple endpoint to write to the cache
+  url: /v1/graphql
+  status: 200
+  headers:
+    X-Hasura-Role: user
+    X-Hasura-User-Id: Baz
+  query:
+    query: |
+      query @cached(ttl: 300) {
+        test_table {
+          first_name
+          last_name
+        }
+      }
+  resp_headers:
+    Cache-Control: max-age=300
+    X-Hasura-Query-Cache-Key: c0a906a58c7b74421a891aeb4f2747ce44762098
+    X-Hasura-Query-Family-Cache-Key: f0793691acb14b24d912a466fd15c2a542ec8a74
+  response:
+    data:
+      test_table:
+        - first_name: Baz
+          last_name: Qux

@@ -10,10 +10,10 @@ source: https://github.com/kubernetes-sigs/krew/blob/master/cmd/krew/cmd/install
 import (
 	"fmt"
 
-	"github.com/hasura/graphql-engine/cli/util"
+	"github.com/hasura/graphql-engine/cli/v2/util"
 
-	"github.com/hasura/graphql-engine/cli"
-	"github.com/hasura/graphql-engine/cli/plugins"
+	"github.com/hasura/graphql-engine/cli/v2"
+	"github.com/hasura/graphql-engine/cli/v2/plugins"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
@@ -63,7 +63,9 @@ func newPluginsInstallCmd(ec *cli.ExecutionContext) *cobra.Command {
 
 	f.Var(&opts.Version, "version", "version to be installed")
 	f.StringVar(&opts.ManifestFile, "manifest-file", "", "(dev) speficy local manifest file")
-	f.MarkHidden("manifest-file")
+	if err := f.MarkHidden("manifest-file"); err != nil {
+		ec.Logger.WithError(err).Errorf("error while using a dependency library")
+	}
 
 	return pluginsInstallCmd
 }

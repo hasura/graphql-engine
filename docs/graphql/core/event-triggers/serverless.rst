@@ -44,7 +44,7 @@ You can find the complete example at:
 
 https://github.com/hasura/graphql-engine/tree/master/community/boilerplates/event-triggers/aws-lambda/nodejs6/mutation.
 
-Consider the following simplified schema for the above:
+Let's consider the following simplified schema for the above:
 
 .. code-block:: SQL
    

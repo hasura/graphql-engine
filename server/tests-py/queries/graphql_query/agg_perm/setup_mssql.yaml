@@ -1,0 +1,119 @@
+type: bulk
+args:
+
+- type: mssql_track_table
+  args:
+    source: mssql
+    table:
+      name: author
+
+- type: mssql_track_table
+  args:
+    source: mssql
+    table:
+      name: article
+
+- type: mssql_track_table
+  args:
+    source: mssql
+    table:
+      name: post
+
+#Object relationship article <-> author
+- type: mssql_create_object_relationship
+  args:
+    source: mssql
+    table: article
+    name: author
+    using:
+      foreign_key_constraint_on: author_id
+
+#Array relationship author <-> article
+- type: mssql_create_array_relationship
+  args:
+    source: mssql
+    table: author
+    name: articles
+    using:
+      foreign_key_constraint_on:
+        table: article
+        column: author_id
+
+#Array relationship author <-> post
+- type: mssql_create_array_relationship
+  args:
+    source: mssql
+    table: author
+    name: posts
+    using:
+      foreign_key_constraint_on:
+        table: post
+        column: author_id
+
+#Select pemissions on User
+- type: mssql_create_select_permission
+  args:
+    source: mssql
+    table: author
+    role: user
+    permission:
+      columns: '*'
+      filter: {}
+      allow_aggregations: true
+      limit: 1
+
+- type: mssql_create_select_permission
+  args:
+    source: mssql
+    table: article
+    role: user
+    permission:
+      columns: '*'
+      filter: {}
+      allow_aggregations: false
+      limit: 1
+
+- type: mssql_create_select_permission
+  args:
+    source: mssql
+    table: post
+    role: user
+    permission:
+      columns: '*'
+      filter: {}
+      allow_aggregations: true
+      limit: 1
+
+- type: mssql_create_select_permission
+  args:
+    source: mssql
+    table: article
+    role: user_with_filter
+    permission:
+      columns: '*'
+      filter:
+        author_id:
+          _eq: X-Hasura-User-Id
+      allow_aggregations: true
+
+- type: mssql_create_select_permission
+  args:
+    source: mssql
+    table: article
+    role: role_without_access_to_cols
+    permission:
+      columns: []
+      filter: {}
+      allow_aggregations: true
+      limit: 1
+
+- type: mssql_create_select_permission
+  args:
+    source: mssql
+    table: article
+    role: role_with_access_to_cols
+    permission:
+      columns: '*'
+      filter: {}
+      allow_aggregations: true
+      limit: 1

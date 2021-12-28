@@ -1,0 +1,75 @@
+- description: Schema customization with field mapping inconsistency between interface and object type
+  url: /v1/metadata
+  status: 400
+  query:
+      {
+        "type": "add_remote_schema",
+        "args": {
+            "name": "character-foo",
+            "definition": {
+                "url": "http://localhost:5000/character-iface-graphql",
+                "customization": { "field_names": [{"parent_type": "Droid", "mapping": {"primaryFunction": "name", "name": "primaryFunction"}}] }
+            }
+        }
+      }
+  response:
+    path: $.args
+    error: 'Remote schema customization inconsistency: field name mapping for field "name" of interface "Character" is inconsistent with mapping for type "Droid". Interface field name maps to "name". Type field name maps to "primaryFunction".'
+    code: remote-schema-error
+
+- description: Schema customization with two types mapping to same name
+  url: /v1/metadata
+  status: 400
+  query:
+      {
+        "type": "add_remote_schema",
+        "args": {
+            "name": "character-foo",
+            "definition": {
+                "url": "http://localhost:5000/character-iface-graphql",
+                "customization": { "type_names": {"mapping": {"Droid": "Foo", "Human": "Foo"}} }
+            }
+        }
+      }
+  response:
+    path: $.args
+    error: 'Type name mappings are not distinct; the following types appear more than once: "Foo"'
+    code: remote-schema-error
+
+- description: Schema customization with two fields mapping to same name
+  url: /v1/metadata
+  status: 400
+  query:
+      {
+        "type": "add_remote_schema",
+        "args": {
+            "name": "character-foo",
+            "definition": {
+                "url": "http://localhost:5000/character-iface-graphql",
+                "customization": { "field_names": [{"parent_type": "Droid", "mapping": {"primaryFunction": "name"}}] }
+            }
+        }
+      }
+  response:
+    path: $.args
+    error: 'Field name mappings for object type "Droid" are not distinct; the following fields appear more than once: "name"'
+    code: remote-schema-error
+
+- description: Attempt to customize __typename field
+  url: /v1/metadata
+  status: 400
+  query:
+      {
+        "type": "add_remote_schema",
+        "args": {
+            "name": "character-foo",
+            "definition": {
+                "url": "http://localhost:5000/character-iface-graphql",
+                "customization": { "field_names": [{"parent_type": "Droid", "mapping": {"__typename": "my_typename"}}] }
+            }
+        }
+      }
+  response:
+    path: $.args
+    error: 'attempt to customize reserved field name "__typename"'
+    code: invalid-params
