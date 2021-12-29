@@ -806,7 +806,7 @@ deleteAtPathOp = SU.UpdateOperator {..}
         desc
         desc
 
--- | Various update operators
+-- | The update operators that we support on Postgres.
 updateOperators ::
   forall pgKind m n r.
   ( MonadParse n,
