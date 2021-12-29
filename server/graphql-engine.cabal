@@ -882,6 +882,7 @@ test-suite tests-hspec
     , dependent-sum
     , graphql-engine
     , graphql-parser
+    , haskell-src-meta
     , hedgehog
     , hspec >=2.6.1 && <3
     , hspec-core >=2.6.1 && <3
@@ -902,6 +903,7 @@ test-suite tests-hspec
     , natural-transformation >=0.4 && <0.5
     , network-uri
     , optparse-applicative
+    , parsec
     , pg-client
     , process
     , QuickCheck

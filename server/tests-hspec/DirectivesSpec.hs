@@ -4,8 +4,10 @@
 -- | Test directives.
 module DirectivesSpec (spec) where
 
+import Data.Aeson (Value)
 import Harness.Constants
 import Harness.Feature qualified as Feature
+import Harness.Graphql (graphql)
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Mysql as Mysql
 import Harness.Sql
@@ -98,24 +100,29 @@ DROP TABLE author;
 --------------------------------------------------------------------------------
 -- Tests
 
+data QueryParams = QueryParams
+  { includeId :: Bool,
+    skipId :: Bool
+  }
+
+query :: QueryParams -> Value
+query QueryParams {includeId, skipId} =
+  [graphql|
+  query author_with_both {
+    hasura_author {
+      id @include(if: #{includeId}) @skip(if: #{skipId})
+      name
+    }
+  }
+|]
+
 tests :: SpecWith State
 tests = do
   it "Skip id field conditionally" \state ->
     shouldReturnYaml
-      ( GraphqlEngine.postGraphqlYaml
+      ( GraphqlEngine.postGraphql
           state
-          [yaml|
-query: |
-  query author_with_both($includeId: Boolean!, $skipId: Boolean!) {
-    hasura_author {
-      id @include(if: $includeId) @skip(if: $skipId)
-      name
-    }
-  }
-variables:
-  includeId: false
-  skipId: false
-|]
+          (query QueryParams {includeId = False, skipId = False})
       )
       [yaml|
 data:
@@ -126,20 +133,9 @@ data:
 
   it "Skip id field conditionally, includeId=true" \state ->
     shouldReturnYaml
-      ( GraphqlEngine.postGraphqlYaml
+      ( GraphqlEngine.postGraphql
           state
-          [yaml|
-query: |
-  query author_with_both($includeId: Boolean!, $skipId: Boolean!) {
-    hasura_author {
-      id @include(if: $includeId) @skip(if: $skipId)
-      name
-    }
-  }
-variables:
-  includeId: true
-  skipId: false
-|]
+          (query QueryParams {includeId = True, skipId = False})
       )
       [yaml|
 data:
@@ -152,20 +148,9 @@ data:
 
   it "Skip id field conditionally, skipId=true" \state ->
     shouldReturnYaml
-      ( GraphqlEngine.postGraphqlYaml
+      ( GraphqlEngine.postGraphql
           state
-          [yaml|
-query: |
-  query author_with_both($includeId: Boolean!, $skipId: Boolean!) {
-    hasura_author {
-      id @include(if: $includeId) @skip(if: $skipId)
-      name
-    }
-  }
-variables:
-  includeId: false
-  skipId: true
-|]
+          (query QueryParams {includeId = False, skipId = True})
       )
       [yaml|
 data:
@@ -176,20 +161,9 @@ data:
 
   it "Skip id field conditionally, skipId=true, includeId=true" \state ->
     shouldReturnYaml
-      ( GraphqlEngine.postGraphqlYaml
+      ( GraphqlEngine.postGraphql
           state
-          [yaml|
-query: |
-  query author_with_both($includeId: Boolean!, $skipId: Boolean!) {
-    hasura_author {
-      id @include(if: $includeId) @skip(if: $skipId)
-      name
-    }
-  }
-variables:
-  includeId: true
-  skipId: true
-|]
+          (query QueryParams {includeId = True, skipId = True})
       )
       [yaml|
 data:
