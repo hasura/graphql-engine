@@ -313,7 +313,10 @@ The current convention is to indicate the backend(s) tests can be run against in
 
 This naming convention enables easier test filtering with [pytest command line flags](https://docs.pytest.org/en/6.2.x/usage.html#specifying-tests-selecting-tests).
 
-The backend-specific and common test suites are disjoint; for example, run `pytest --integration -k "Common or MySQL" --backend mysql` to run all MySQL tests.
+The backend-specific and common test suites are disjoint; for example, run `pytest --integration -k "Common or MySQL" --backend mysql** to run all MySQL tests.
+
+**Note:** The `-k` option flag is case sensitive for pytest version(s) `< 5.4`. Until the pytest is [upgraded](https://github.com/hasura/graphql-engine-mono/issues/3236),
+keywords `MySQL`, `MSSQL`, `Bigquery` and `Common` strictly be used for suffixing class names.
 
 #### Building with profiling
 
