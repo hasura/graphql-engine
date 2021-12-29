@@ -514,7 +514,7 @@ class TestGraphqlUpdatePermissions:
 
 @pytest.mark.parametrize("backend", ['mssql'])
 @use_mutation_fixtures
-class TestGraphqlUpdateBasicMssql:
+class TestGraphqlUpdateBasicMSSQL:
 
     def test_set_author_name(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/author_set_name_mssql.yaml")
@@ -543,7 +543,7 @@ class TestGraphqlUpdateBasicMssql:
 
 @pytest.mark.parametrize("backend", ['mssql'])
 @use_mutation_fixtures
-class TestGraphqlUpdatePermissionsMssql:
+class TestGraphqlUpdatePermissionsMSSQL:
 
     def test_user_update_author(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/user_update_author_mssql.yaml")
