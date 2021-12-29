@@ -38,45 +38,48 @@ import Hasura.RQL.Types.Common (SourceName)
 import Hasura.RQL.Types.Table (SelPermInfo, TableInfo, UpdPermInfo (..), tableInfoName)
 import Language.GraphQL.Draft.Syntax (Description (..), Name (..), Nullability (..), litName)
 
--- | @UpdateOperator b m n t@ represents one single update operator for a
--- backend @b@, parsing a value of type @t@. @UpdateOperator b m n@ is a
--- @Functor@, which (apart from the type variable @b@) is what enables
--- multi-backend support.
+-- | @UpdateOperator b m n op@ represents one single update operator for a
+-- backend @b@.
 --
--- Use the 'Functor (UpdateOperator b m n)' instance to inject the
--- @UpdateOperator b m n (UnpreparedValue b)@ operators into backend-specific
--- IR types that encode update operators.
-data UpdateOperator b m n t = UpdateOperator
+-- The type variable @op@ is the backend-specific data type that represents
+-- update operators, typically in the form of a sum-type with an
+-- @UnpreparedValue b@ in each constructor.
+--
+-- The @UpdateOperator b m n@ is a @Functor@. There exist building blocks of
+-- common update operators (such as 'setOp', etc.) which have @op ~
+-- UnpreparedValue b@. The Functor instance lets you wrap the generic update
+-- operators in backend-specific tags.
+data UpdateOperator b m n op = UpdateOperator
   { updateOperatorApplicableColumn :: ColumnInfo b -> Bool,
     updateOperatorParser ::
       Name ->
       TableName b ->
       NonEmpty (ColumnInfo b) ->
-      m (P.InputFieldsParser n (HashMap (Column b) t))
+      m (P.InputFieldsParser n (HashMap (Column b) op))
   }
   deriving (Functor)
 
 -- | The top-level component for building update operators parsers.
 --
--- * It implements the 'preset' functionality from Update Permissions (see
+-- * It implements the @preset@ functionality from Update Permissions (see
 --   <https://hasura.io/docs/latest/graphql/core/auth/authorization/permission-rules.html#column-presets
---   Permissions user docs>)
+--   Permissions user docs>). Use the 'presetColumns' function to extract those from the update permissions.
 -- * It validates that that the update fields parsed are sound when taken as a
 --   whole, i.e. that some changes are actually specified (either in the
 --   mutation query text or in update preset columns) and that each column is
 --   only used in one operator.
 buildUpdateOperators ::
-  forall b n t m.
+  forall b n op m.
   (BackendSchema b, P.MonadSchema n m, MonadError QErr m) =>
   -- | Columns with @preset@ expressions
-  (HashMap (Column b) t) ->
+  (HashMap (Column b) op) ->
   -- | Update operators to include in the Schema
-  [UpdateOperator b m n t] ->
+  [UpdateOperator b m n op] ->
   TableInfo b ->
   UpdPermInfo b ->
-  m (P.InputFieldsParser n (HashMap (Column b) t))
+  m (P.InputFieldsParser n (HashMap (Column b) op))
 buildUpdateOperators presetCols ops tableInfo updatePermissions = do
-  parsers :: P.InputFieldsParser n [HashMap (Column b) t] <-
+  parsers :: P.InputFieldsParser n [HashMap (Column b) op] <-
     sequenceA . catMaybes <$> traverse (runUpdateOperator tableInfo updatePermissions) ops
   pure $
     parsers
@@ -94,16 +97,16 @@ presetColumns = fmap partialSQLExpToUnpreparedValue . upiSet
 -- | Produce an InputFieldsParser from an UpdateOperator, but only if the operator
 -- applies to the table (i.e., it admits a non-empty column set).
 runUpdateOperator ::
-  forall b m n t.
+  forall b m n op.
   (Backend b, P.MonadSchema n m, MonadError QErr m) =>
   TableInfo b ->
   UpdPermInfo b ->
-  UpdateOperator b m n t ->
+  UpdateOperator b m n op ->
   m
     ( Maybe
         ( P.InputFieldsParser
             n
-            (HashMap (Column b) t)
+            (HashMap (Column b) op)
         )
     )
 runUpdateOperator tableInfo updatePermissions UpdateOperator {..} = do
