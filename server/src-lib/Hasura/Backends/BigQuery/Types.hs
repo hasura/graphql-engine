@@ -80,7 +80,7 @@ import Hasura.Prelude
 import Hasura.RQL.Types.Common qualified as RQL
 import Language.GraphQL.Draft.Syntax qualified as G
 import Language.Haskell.TH.Syntax
-import Text.ParserCombinators.ReadP (readP_to_S)
+import Text.ParserCombinators.ReadP (eof, readP_to_S)
 
 data Select = Select
   { selectTop :: !Top,
@@ -939,8 +939,16 @@ liberalDecimalParser fromText json = viaText <|> viaNumber
       text <- J.parseJSON json
       -- Parsing scientific is safe; it doesn't normalise until we ask
       -- it to.
-      case readP_to_S scientificP (T.unpack text) of
+      let -- See https://cloud.google.com/bigquery/docs/reference/standard-sql/conversion_functions#cast_as_floating_point
+          isNonFinite =
+            let noSign = case T.uncons text of
+                  Just ('+', rest) -> rest
+                  Just ('-', rest) -> rest
+                  _ -> text
+             in T.toLower noSign `elem` ["nan", "infinity", "inf"]
+      case readP_to_S (scientificP <* eof) (T.unpack text) of
         [_] -> pure (fromText text)
+        [] | isNonFinite -> pure (fromText text)
         _ -> fail ("String containing decimal places is invalid: " ++ show text)
     viaNumber = do
       d <- J.parseJSON json

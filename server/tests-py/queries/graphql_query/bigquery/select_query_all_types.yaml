@@ -8,6 +8,10 @@ response:
       bytes: AAECAwQF
       integer: '1'
       float: '1.0'
+      special_floats:
+        - '1.23E23'
+        - '-Infinity'
+        - 'NaN'
       numeric: '1'
       bignumeric: '1'
       boolean: true
@@ -24,6 +28,7 @@ query:
         bytes
         integer
         float
+        special_floats
         numeric
         bignumeric
         boolean

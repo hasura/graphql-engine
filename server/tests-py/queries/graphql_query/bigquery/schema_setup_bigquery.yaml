@@ -11,6 +11,7 @@ args:
         `bytes` BYTES,
         `integer` INT64,
         `float` FLOAT64,
+        `special_floats` ARRAY<FLOAT64>,
         `numeric` NUMERIC,
         `bignumeric` BIGNUMERIC,
         `boolean` BOOL,
@@ -39,6 +40,8 @@ args:
         CODE_POINTS_TO_BYTES([0,1,2,3,4,5]),
         1,
         1,
+        -- IEEE_DIVIDE(x, 0) returns Infinity and Infinity/Infinity is NaN
+        [1.23e23, IEEE_DIVIDE(-1, 0), IEEE_DIVIDE(1, 0)/IEEE_DIVIDE(1, 0)],
         1,
         1,
         true,
