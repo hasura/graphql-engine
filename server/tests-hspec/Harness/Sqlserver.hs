@@ -1,7 +1,7 @@
 {-# OPTIONS -Wno-redundant-constraints #-}
 
--- | MySQL helpers.
-module Harness.Mysql
+-- | SQLServer helpers.
+module Harness.Sqlserver
   ( livenessCheck,
     run_,
   )
@@ -11,27 +11,27 @@ import Control.Concurrent
 import Control.Exception
 import Control.Monad.Reader
 import Data.String
-import Database.MySQL.Simple as Mysql
+import Database.ODBC.SQLServer qualified as Sqlserver
 import GHC.Stack
 import Harness.Constants as Constants
 import System.Process.Typed
 import Prelude
 
--- | Check that the MySQL service is live and ready to accept connections.
+-- | Check that the SQLServer service is live and ready to accept connections.
 livenessCheck :: HasCallStack => IO ()
-livenessCheck = loop Constants.mysqlLivenessCheckAttempts
+livenessCheck = loop Constants.sqlserverLivenessCheckAttempts
   where
-    loop 0 = error ("Liveness check failed for MySQL.")
+    loop 0 = error ("Liveness check failed for SQLServer.")
     loop attempts =
       catch
         ( bracket
-            (Mysql.connect Constants.mysqlConnectInfo)
-            Mysql.close
+            (Sqlserver.connect Constants.sqlserverConnectInfo)
+            Sqlserver.close
             (const (pure ()))
         )
         ( \(_failure :: ExitCodeException) -> do
             threadDelay
-              Constants.mysqlLivenessCheckIntervalMicroseconds
+              Constants.sqlserverLivenessCheckIntervalMicroseconds
             loop (attempts - 1)
         )
 
@@ -41,14 +41,14 @@ run_ :: HasCallStack => String -> IO ()
 run_ query' =
   catch
     ( bracket
-        (Mysql.connect Constants.mysqlConnectInfo)
-        Mysql.close
-        (\conn -> void (Mysql.execute_ conn (fromString query')))
+        (Sqlserver.connect Constants.sqlserverConnectInfo)
+        Sqlserver.close
+        (\conn -> void (Sqlserver.exec conn (fromString query')))
     )
     ( \(e :: SomeException) ->
         error
           ( unlines
-              [ "MySQL query error:",
+              [ "SQLServer query error:",
                 show e,
                 "SQL was:",
                 query'

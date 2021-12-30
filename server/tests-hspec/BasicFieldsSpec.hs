@@ -1,57 +1,22 @@
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE RecordWildCards #-}
-{-# LANGUAGE UndecidableInstances #-}
 
 -- | Test querying an entity for a couple fields.
 module BasicFieldsSpec (spec) where
 
-import Control.Monad.IO.Unlift
-import Control.Monad.Reader
-import Data.Int
-import Data.Text (Text)
-import Database.Persist
-import Database.Persist.MySQL qualified as Mysql
-import Database.Persist.Postgresql qualified as Postgresql
-import Database.Persist.Sql
-import Database.Persist.TH
-import Harness.Constants as Constants
+import Harness.Citus as Citus
+import Harness.Constants
 import Harness.Feature qualified as Feature
 import Harness.Graphql
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Mysql as Mysql
 import Harness.Postgres as Postgres
 import Harness.Sql
+import Harness.Sqlserver as Sqlserver
 import Harness.State (State)
 import Harness.Yaml
 import Test.Hspec
 import Prelude
-
---------------------------------------------------------------------------------
--- Schema
-
-share
-  [mkPersist sqlSettings, mkMigrate "migrateAll"]
-  [persistLowerCase|
-Author
-    Id Int32
-    name Text
-    deriving Eq
-    deriving Show
-|]
-
---------------------------------------------------------------------------------
--- Data setup
-
-setupDatabase :: (MonadIO m) => ReaderT SqlBackend m ()
-setupDatabase = do
-  void $
-    insertKey
-      (AuthorKey {unAuthorKey = 1} :: AuthorId)
-      Author {authorName = "Author 1"}
-  void $
-    insertKey
-      AuthorKey {unAuthorKey = 2}
-      Author {authorName = "Author 2"}
 
 --------------------------------------------------------------------------------
 -- Preamble
@@ -70,6 +35,16 @@ spec =
               { name = "PostgreSQL",
                 setup = postgresSetup,
                 teardown = postgresTeardown
+              },
+            Feature.Backend
+              { name = "Citus",
+                setup = citusSetup,
+                teardown = citusTeardown
+              },
+            Feature.Backend
+              { name = "SQLServer",
+                setup = sqlserverSetup,
+                teardown = sqlserverTeardown
               }
           ],
         Feature.tests = tests
@@ -101,10 +76,23 @@ args:
       pool_settings: {}
 |]
 
-  -- Setup database
-  Mysql.runPersistent do
-    Mysql.runMigration migrateAll
-    setupDatabase
+  -- Setup tables
+  Mysql.run_
+    [sql|
+CREATE TABLE hasura.author
+(
+    id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(45) UNIQUE KEY
+);
+|]
+  Mysql.run_
+    [sql|
+INSERT INTO hasura.author
+    (name)
+VALUES
+    ( 'Author 1'),
+    ( 'Author 2');
+|]
 
   -- Track the tables
   GraphqlEngine.post_
@@ -149,10 +137,23 @@ args:
         pool_settings: {}
 |]
 
-  -- Setup database
-  Postgres.runPersistent do
-    Postgresql.runMigration migrateAll
-    setupDatabase
+  -- Setup tables
+  Postgres.run_
+    [sql|
+CREATE TABLE hasura.author
+(
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(45) UNIQUE
+);
+|]
+  Postgres.run_
+    [sql|
+INSERT INTO hasura.author
+    (name)
+VALUES
+    ( 'Author 1'),
+    ( 'Author 2');
+|]
 
   -- Track the tables
   GraphqlEngine.post_
@@ -170,6 +171,128 @@ args:
 postgresTeardown :: State -> IO ()
 postgresTeardown _ = do
   Postgres.run_
+    [sql|
+DROP TABLE hasura.author;
+|]
+
+--------------------------------------------------------------------------------
+-- Citus backend
+
+citusSetup :: State -> IO ()
+citusSetup state = do
+  -- Clear and reconfigure the metadata
+  GraphqlEngine.post_
+    state
+    "/v1/metadata"
+    [yaml|
+type: replace_metadata
+args:
+  version: 3
+  sources:
+  - name: citus
+    kind: citus
+    tables: []
+    configuration:
+      connection_info:
+        database_url: *citusConnectionString
+        pool_settings: {}
+|]
+
+  -- Setup tables
+  Citus.run_
+    [sql|
+CREATE TABLE hasura.author
+(
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(45) UNIQUE
+);
+|]
+  Citus.run_
+    [sql|
+INSERT INTO hasura.author
+    (name)
+VALUES
+    ( 'Author 1'),
+    ( 'Author 2');
+|]
+
+  -- Track the tables
+  GraphqlEngine.post_
+    state
+    "/v1/metadata"
+    [yaml|
+type: citus_track_table
+args:
+  source: citus
+  table:
+    schema: hasura
+    name: author
+|]
+
+citusTeardown :: State -> IO ()
+citusTeardown _ = do
+  Citus.run_
+    [sql|
+DROP TABLE IF EXISTS hasura.author;
+|]
+
+--------------------------------------------------------------------------------
+-- SQL Server backend
+
+sqlserverSetup :: State -> IO ()
+sqlserverSetup state = do
+  -- Clear and reconfigure the metadata
+  GraphqlEngine.post_
+    state
+    "/v1/metadata"
+    [yaml|
+type: replace_metadata
+args:
+  version: 3
+  sources:
+  - name: mssql
+    kind: mssql
+    tables: []
+    configuration:
+      connection_info:
+        database_url: *sqlserverConnectInfo
+        pool_settings: {}
+|]
+
+  -- Setup tables
+  Sqlserver.run_
+    [sql|
+CREATE TABLE hasura.author
+(
+    id INT NOT NULL IDENTITY(1,1) PRIMARY KEY CLUSTERED,
+    name NVARCHAR(45) NOT NULL UNIQUE NONCLUSTERED
+);
+|]
+  Sqlserver.run_
+    [sql|
+INSERT INTO hasura.author
+    (name)
+VALUES
+    ('Author 1'),
+    ('Author 2');
+|]
+
+  -- Track the tables
+  GraphqlEngine.post_
+    state
+    "/v1/metadata"
+    [yaml|
+type: mssql_track_table
+args:
+  source: mssql
+  table:
+    schema: hasura
+    name: author
+|]
+
+sqlserverTeardown :: State -> IO ()
+sqlserverTeardown _ = do
+  Sqlserver.run_
     [sql|
 DROP TABLE hasura.author;
 |]

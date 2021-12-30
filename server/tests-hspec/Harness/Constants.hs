@@ -20,9 +20,14 @@ module Harness.Constants
     mysqlHost,
     mysqlPort,
     mysqlConnectInfo,
+    sqlserverLivenessCheckAttempts,
+    sqlserverLivenessCheckIntervalSeconds,
+    sqlserverLivenessCheckIntervalMicroseconds,
+    sqlserverConnectInfo,
     httpHealthCheckAttempts,
     httpHealthCheckIntervalSeconds,
     httpHealthCheckIntervalMicroseconds,
+    citusConnectionString,
     serveOptions,
     debugMessagesEnabled,
   )
@@ -69,11 +74,53 @@ postgresqlConnectionString =
     ++ "/"
     ++ postgresDb
 
+citusPassword :: String
+citusPassword = "hasura"
+
+citusUser :: String
+citusUser = "hasura"
+
+citusDb :: String
+citusDb = "hasura"
+
+citusHost :: String
+citusHost = "127.0.0.1"
+
+citusPort :: Word16
+citusPort = 65004
+
+citusConnectionString :: String
+citusConnectionString =
+  "postgres://"
+    ++ citusUser
+    ++ ":"
+    ++ citusPassword
+    ++ "@"
+    ++ citusHost
+    ++ ":"
+    ++ show citusPort
+    ++ "/"
+    ++ citusDb
+
 postgresLivenessCheckAttempts :: Int
 postgresLivenessCheckAttempts = 5
 
 postgresLivenessCheckIntervalSeconds :: Int
 postgresLivenessCheckIntervalSeconds = 1
+
+sqlserverLivenessCheckAttempts :: Int
+sqlserverLivenessCheckAttempts = 5
+
+sqlserverLivenessCheckIntervalSeconds :: Int
+sqlserverLivenessCheckIntervalSeconds = 1
+
+-- | SQL Server has strict password requirements, that's why it's not
+-- simply @hasura@ like the others.
+sqlserverConnectInfo :: Text
+sqlserverConnectInfo = "DRIVER={ODBC Driver 17 for SQL Server};SERVER=127.0.0.1,65003;Uid=hasura;Pwd=Hasura1!;Encrypt=no"
+
+sqlserverLivenessCheckIntervalMicroseconds :: Int
+sqlserverLivenessCheckIntervalMicroseconds = 1000 * 1000 * sqlserverLivenessCheckIntervalSeconds
 
 postgresLivenessCheckIntervalMicroseconds :: Int
 postgresLivenessCheckIntervalMicroseconds = 1000 * 1000 * postgresLivenessCheckIntervalSeconds
