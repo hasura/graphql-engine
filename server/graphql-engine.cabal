@@ -944,10 +944,6 @@ test-suite tests-hspec
     , th-lift
     , yaml
     , postgresql-simple
-    , persistent
-    , persistent-mysql
-    , persistent-postgresql
-    , persistent-template
     , monad-logger
     , unliftio-core
   hs-source-dirs: tests-hspec
@@ -959,9 +955,11 @@ test-suite tests-hspec
     Harness.Mysql
     Harness.Http
     Harness.Postgres
+    Harness.Citus
     Harness.Constants
     Harness.Feature
     Harness.Yaml
+    Harness.Sqlserver
     Harness.Sql
     Harness.State
     Harness.Graphql

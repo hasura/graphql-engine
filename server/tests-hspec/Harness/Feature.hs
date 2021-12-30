@@ -40,9 +40,13 @@ feature Feature {backends, tests} =
         describe
           name
           ( aroundAllWith
-              ( \actionWith server -> do
-                  setup server
-                  finally (actionWith server) (teardown server)
+              ( \actionWith state -> do
+                  finally
+                    ( do
+                        setup state
+                        actionWith state
+                    )
+                    (teardown state)
               )
               tests
           )
