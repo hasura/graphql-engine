@@ -11,6 +11,7 @@
 - server: extend support for insert mutations to tables without primary key constraint in a MSSQL backend
 - cli: migrate and seed subcommands has an option in prompt to choose and apply operation on all available databases
 - server: fix parsing FLOAT64s in scientific notation and non-finite ones in BigQuery
+- server: extend support for the `min`/`max` aggregates to all comparable types in BigQuery
 
 ## v2.1.1
 

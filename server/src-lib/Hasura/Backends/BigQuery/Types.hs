@@ -869,12 +869,25 @@ parseScalarValue scalarType jValue = case scalarType of
     parseJValue :: (J.FromJSON a) => J.Value -> Either QErr a
     parseJValue = runAesonParser J.parseJSON
 
+-- see comparable BigQuery data types in
+-- https://cloud.google.com/bigquery/docs/reference/standard-sql/data-types
+-- in practice only Geography data type is not comparable
+-- as ARRAY isn't a scalar type in the backend
 isComparableType, isNumType :: ScalarType -> Bool
--- TODO: What does this mean?
 isComparableType = \case
-  BoolScalarType -> True
+  StringScalarType -> True
   BytesScalarType -> True
-  _ -> False
+  IntegerScalarType -> True
+  FloatScalarType -> True
+  BoolScalarType -> True
+  TimestampScalarType -> True
+  DateScalarType -> True
+  TimeScalarType -> True
+  DatetimeScalarType -> True
+  GeographyScalarType -> False
+  DecimalScalarType -> True
+  BigDecimalScalarType -> True
+  StructScalarType -> True
 isNumType =
   \case
     StringScalarType -> False
