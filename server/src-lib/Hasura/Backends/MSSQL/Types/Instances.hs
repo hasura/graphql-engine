@@ -42,7 +42,8 @@ $( fmap concat $ for
        ''UnifiedUsing,
        ''UnifiedOn,
        ''UnifiedColumn,
-       ''TempTableName
+       ''TempTableName,
+       ''SomeTableName
      ]
      \name ->
        [d|
@@ -96,7 +97,23 @@ $( fmap concat $ for
        ''JsonFieldSpec,
        ''Join,
        ''JoinSource,
-       ''SelectIntoTempTable
+       ''SelectIntoTempTable,
+       ''SITTConstraints,
+       ''InsertValuesIntoTempTable,
+       ''InsertOutput,
+       ''Inserted,
+       ''OutputColumn,
+       ''TempTable,
+       ''Deleted,
+       ''DeleteOutput,
+       ''Values,
+       ''Delete,
+       ''Insert,
+       ''Merge,
+       ''MergeUsing,
+       ''MergeOn,
+       ''MergeWhenMatched,
+       ''MergeWhenNotMatched
      ]
      \name ->
        [d|

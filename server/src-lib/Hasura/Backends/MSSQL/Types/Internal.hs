@@ -19,6 +19,11 @@ module Hasura.Backends.MSSQL.Types.Internal
     ForJson (..),
     From (..),
     FunctionName,
+    MergeUsing (..),
+    MergeOn (..),
+    MergeWhenMatched (..),
+    MergeWhenNotMatched (..),
+    Merge (..),
     Insert (..),
     InsertOutput,
     Join (..),
@@ -44,9 +49,12 @@ module Hasura.Backends.MSSQL.Types.Internal
     Select (..),
     SetIdentityInsert (..),
     TempTableName (..),
+    SomeTableName (..),
     TempTable (..),
     SetValue (..),
     SelectIntoTempTable (..),
+    SITTConstraints (..),
+    InsertValuesIntoTempTable (..),
     SpatialOp (..),
     TableName (..),
     Top (..),
@@ -71,6 +79,7 @@ module Hasura.Backends.MSSQL.Types.Internal
     snakeCaseTableName,
     stringTypes,
     tempTableNameInserted,
+    tempTableNameValues,
     tempTableNameDeleted,
     tempTableNameUpdated,
   )
@@ -193,7 +202,7 @@ data SetValue
   | SetOFF
 
 data SetIdentityInsert = SetIdentityInsert
-  { setTable :: !TableName,
+  { setTable :: SomeTableName,
     setValue :: !SetValue
   }
 
@@ -206,12 +215,66 @@ data Delete = Delete
     deleteWhere :: !Where
   }
 
+-- | MERGE statement.
+-- Used for upserts and is responsible for actually inserting or updating the data in the table.
+data Merge = Merge
+  { mergeTargetTable :: TableName,
+    mergeUsing :: MergeUsing,
+    mergeOn :: MergeOn,
+    mergeWhenMatched :: MergeWhenMatched,
+    mergeWhenNotMatched :: MergeWhenNotMatched,
+    mergeInsertOutput :: InsertOutput,
+    mergeOutputTempTable :: TempTable
+  }
+
+-- | The @USING@ section of a @MERGE@ statement.
+--   Specifies the temp table schema where the input values are.
+data MergeUsing = MergeUsing
+  { mergeUsingTempTable :: TempTableName,
+    mergeUsingColumns :: [ColumnName]
+  }
+
+-- | The @ON@ section of a @MERGE@ statement.
+--   Which columns to match on?
+data MergeOn = MergeOn
+  { mergeOnColumns :: [ColumnName]
+  }
+
+-- | The @WHEN MATCHED@ section of a @MERGE@ statement.
+--   Which columns to update when @match_columns@ match (including presets),
+--   and on which condition to actually update the values.
+data MergeWhenMatched = MergeWhenMatched
+  { mwmUpdateColumns :: [ColumnName],
+    mwmCondition :: Expression,
+    mwmUpdatePreset :: HashMap ColumnName Expression
+  }
+
+-- | The @WHEN MATCHED@ section of a @MERGE@ statement.
+--   Which columns to insert?
+newtype MergeWhenNotMatched = MergeWhenNotMatched
+  { mergeWhenNotMatchedInsertColumns :: [ColumnName]
+  }
+
 -- | SELECT INTO temporary table statement without values.
 --   Used to create a temporary table with the same schema as an existing table.
 data SelectIntoTempTable = SelectIntoTempTable
   { sittTempTableName :: TempTableName,
     sittColumns :: [UnifiedColumn],
-    sittFromTableName :: TableName
+    sittFromTableName :: TableName,
+    sittConstraints :: SITTConstraints
+  }
+
+-- | When creating a temporary table from an existing table schema,
+--   what should we do with the constraints (such as @IDENTITY@?)
+data SITTConstraints
+  = KeepConstraints
+  | RemoveConstraints
+
+-- | Simple insert into a temporary table.
+data InsertValuesIntoTempTable = InsertValuesIntoTempTable
+  { ivittTempTableName :: TempTableName,
+    ivittColumns :: [ColumnName],
+    ivittValues :: [Values]
   }
 
 -- | A temporary table name is prepended by a hash-sign
@@ -220,11 +283,19 @@ newtype TempTableName = TempTableName Text
 tempTableNameInserted :: TempTableName
 tempTableNameInserted = TempTableName "inserted"
 
+tempTableNameValues :: TempTableName
+tempTableNameValues = TempTableName "values"
+
 tempTableNameDeleted :: TempTableName
 tempTableNameDeleted = TempTableName "deleted"
 
 tempTableNameUpdated :: TempTableName
 tempTableNameUpdated = TempTableName "updated"
+
+-- | A name of a regular table or temporary table
+data SomeTableName
+  = RegularTableName TableName
+  | TemporaryTableName TempTableName
 
 data TempTable = TempTable
   { ttName :: !TempTableName,

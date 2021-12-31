@@ -1,0 +1,41 @@
+description: Upserts article data via GraphQL mutation
+url: /v1/graphql
+response:
+  data:
+    insert_article:
+      affected_rows: 2
+      returning:
+      - id: 4
+        title: Article 4
+        content: New Article 4 content
+      - id: 1
+        title: Article 1
+        content: Updated Article 1 content
+status: 200
+query:
+  query: |
+    mutation insert_article {
+      insert_article (
+        objects: [
+          {
+            title: "Article 1",
+            content: "Updated Article 1 content"
+          },
+          {
+            title: "Article 4",
+            content: "New Article 4 content"
+          }
+          ],
+        if_matched: {
+          match_columns: title,
+          update_columns: content
+        }
+      ) {
+        affected_rows
+        returning {
+          id
+          title
+          content
+          }
+        }
+      }

@@ -1,0 +1,30 @@
+type: bulk
+args:
+
+# Author table
+
+- type: mssql_run_sql
+  args:
+    source: mssql
+    sql: |
+      create table author (
+          id INT IDENTITY primary key,
+          name TEXT
+      );
+      CREATE TABLE article (
+        id INT IDENTITY PRIMARY KEY,
+        title varchar(256),
+        content TEXT,
+        author_id INT REFERENCES author(id),
+        is_published BIT,
+        published_on DATETIME
+      );
+      CREATE TABLE person (
+        id INT IDENTITY PRIMARY KEY,
+        details TEXT NOT NULL
+      );
+      CREATE TABLE orders (
+        id INT IDENTITY PRIMARY KEY,
+        placed DATETIME NOT NULL,
+        shipped DATETIME
+      );

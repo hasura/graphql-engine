@@ -8,10 +8,12 @@ module Hasura.Backends.MSSQL.ToQuery
     toQueryFlat,
     toQueryPretty,
     fromInsert,
+    fromMerge,
     fromSetIdentityInsert,
     fromDelete,
     fromUpdate,
     fromSelectIntoTempTable,
+    fromInsertValuesIntoTempTable,
     dropTempTableQuery,
     Printer (..),
   )
@@ -198,6 +200,10 @@ fromValues :: Values -> Printer
 fromValues (Values values) =
   "( " <+> SepByPrinter ", " (map fromExpression values) <+> " )"
 
+fromValuesList :: [Values] -> Printer
+fromValuesList valuesList =
+  "VALUES " <+> SepByPrinter ", " (map fromValues valuesList)
+
 fromInsert :: Insert -> Printer
 fromInsert Insert {..} =
   SepByPrinter
@@ -206,7 +212,7 @@ fromInsert Insert {..} =
       "(" <+> SepByPrinter ", " (map (fromNameText . columnNameText) insertColumns) <+> ")",
       fromInsertOutput insertOutput,
       "INTO " <+> fromTempTable insertTempTable,
-      "VALUES " <+> SepByPrinter ", " (map fromValues insertValues)
+      fromValuesList insertValues
     ]
 
 fromSetValue :: SetValue -> Printer
@@ -219,9 +225,123 @@ fromSetIdentityInsert SetIdentityInsert {..} =
   SepByPrinter
     " "
     [ "SET IDENTITY_INSERT",
-      fromTableName setTable,
+      tableName,
       fromSetValue setValue
     ]
+  where
+    tableName =
+      case setTable of
+        RegularTableName name -> fromTableName name
+        TemporaryTableName name -> fromTempTableName name
+
+-- | Generate a statement to insert values into temporary table.
+fromInsertValuesIntoTempTable :: InsertValuesIntoTempTable -> Printer
+fromInsertValuesIntoTempTable InsertValuesIntoTempTable {..} =
+  SepByPrinter
+    NewlinePrinter
+    [ "INSERT INTO " <+> fromTempTableName ivittTempTableName,
+      "(" <+> SepByPrinter ", " (map (fromNameText . columnNameText) ivittColumns) <+> ")",
+      fromValuesList ivittValues
+    ]
+
+-- | Alias for the source table in a MERGE statement. Used when pretty printing MERGE statments.
+mergeSourceAlias :: Text
+mergeSourceAlias = "source"
+
+-- | Alias for the target table in a MERGE statement. Used when pretty printing MERGE statments.
+mergeTargetAlias :: Text
+mergeTargetAlias = "target"
+
+-- | USING section of a MERGE statement. Used in 'fromMerge'.
+fromMergeUsing :: MergeUsing -> Printer
+fromMergeUsing MergeUsing {..} =
+  "USING (" <+> fromSelect selectSubQuery <+> ") AS " <+> fromNameText mergeSourceAlias
+  where
+    selectSubQuery :: Select
+    selectSubQuery =
+      let alias = "merge_temptable"
+          columnNameToProjection ColumnName {columnNameText} =
+            -- merge_temptable.column_name AS column_name
+            FieldNameProjection $
+              Aliased
+                { aliasedThing = FieldName columnNameText alias,
+                  aliasedAlias = columnNameText
+                }
+       in emptySelect
+            { selectProjections = map columnNameToProjection mergeUsingColumns,
+              selectFrom = Just (FromTempTable $ Aliased mergeUsingTempTable alias) -- FROM temp_table AS merge_temptable
+            }
+
+-- | ON section of a MERGE statement. Used in 'fromMerge'.
+fromMergeOn :: MergeOn -> Printer
+fromMergeOn MergeOn {..} =
+  "ON (" <+> onExpression <+> ")"
+  where
+    onExpression
+      | null mergeOnColumns =
+        falsePrinter
+      | otherwise =
+        (fromExpression . AndExpression) (map matchColumn mergeOnColumns)
+
+    matchColumn :: ColumnName -> Expression
+    matchColumn ColumnName {..} =
+      let sourceColumn = ColumnExpression $ FieldName columnNameText mergeSourceAlias
+          targetColumn = ColumnExpression $ FieldName columnNameText mergeTargetAlias
+       in OpExpression EQ' sourceColumn targetColumn
+
+-- | WHEN MATCHED section of a MERGE statement. Used in 'fromMerge'.
+fromMergeWhenMatched :: MergeWhenMatched -> Printer
+fromMergeWhenMatched (MergeWhenMatched updateColumns updateCondition updatePreset) =
+  if null updates
+    then ""
+    else
+      "WHEN MATCHED AND "
+        <+> fromExpression updateCondition
+        <+> " THEN UPDATE "
+        <+> fromUpdateSet updates
+  where
+    updates = updateSet <> HM.map UpdateSet updatePreset
+
+    updateSet :: UpdateSet
+    updateSet =
+      HM.fromList $
+        map
+          ( \cn@ColumnName {..} ->
+              ( cn,
+                UpdateSet $ ColumnExpression $ FieldName columnNameText mergeSourceAlias
+              )
+          )
+          updateColumns
+
+-- | WHEN NOT MATCHED section of a MERGE statement. Used in 'fromMerge'.
+fromMergeWhenNotMatched :: MergeWhenNotMatched -> Printer
+fromMergeWhenNotMatched (MergeWhenNotMatched insertColumns) =
+  SepByPrinter
+    NewlinePrinter
+    [ "WHEN NOT MATCHED THEN INSERT (" <+> SepByPrinter ", " (map fromColumnName insertColumns) <+> ")",
+      fromValuesList [Values columnsFromSource]
+    ]
+  where
+    columnsFromSource =
+      insertColumns <&> \ColumnName {..} -> ColumnExpression $ FieldName columnNameText mergeSourceAlias
+
+-- | Generate a MERGE SQL statement
+fromMerge :: Merge -> Printer
+fromMerge Merge {..} =
+  SepByPrinter
+    NewlinePrinter
+    [ "MERGE " <+> fromAliased (fmap fromTableName mergeTableAsTarget),
+      fromMergeUsing mergeUsing,
+      fromMergeOn mergeOn,
+      fromMergeWhenMatched mergeWhenMatched,
+      fromMergeWhenNotMatched mergeWhenNotMatched,
+      fromInsertOutput mergeInsertOutput,
+      "INTO " <+> fromTempTable mergeOutputTempTable,
+      ";" -- Always, a Merge statement should end with a ";"
+    ]
+  where
+    mergeTableAsTarget :: Aliased TableName
+    mergeTableAsTarget = Aliased mergeTargetTable mergeTargetAlias
 
 -- | Generate a delete statement
 --
@@ -268,13 +388,13 @@ fromUpdate Update {..} =
       "FROM " <+> fromAliased (fmap fromTableName updateTable),
       fromWhere updateWhere
     ]
-  where
-    fromUpdateSet :: UpdateSet -> Printer
-    fromUpdateSet setColumns =
-      let updateColumnValue (column, updateOp) =
-            fromColumnName column <+> fromUpdateOperator (fromExpression <$> updateOp)
-       in "SET " <+> SepByPrinter ", " (map updateColumnValue (HM.toList setColumns))
 
+fromUpdateSet :: UpdateSet -> Printer
+fromUpdateSet setColumns =
+  let updateColumnValue (column, updateOp) =
+        fromColumnName column <+> fromUpdateOperator (fromExpression <$> updateOp)
+   in "SET " <+> SepByPrinter ", " (map updateColumnValue (HM.toList setColumns))
+  where
     fromUpdateOperator :: UpdateOperator Printer -> Printer
     fromUpdateOperator = \case
       UpdateSet p -> " = " <+> p
@@ -291,18 +411,23 @@ fromUpdate Update {..} =
 --  We add the `UNION ALL` part to avoid copying identity constraints, and we cast columns with types such as `timestamp`
 --  which are non-insertable to a different type.
 fromSelectIntoTempTable :: SelectIntoTempTable -> Printer
-fromSelectIntoTempTable SelectIntoTempTable {sittTempTableName, sittColumns, sittFromTableName} =
+fromSelectIntoTempTable SelectIntoTempTable {sittTempTableName, sittColumns, sittFromTableName, sittConstraints} =
   SepByPrinter
     NewlinePrinter
-    [ "SELECT "
-        <+> columns,
-      "INTO " <+> fromTempTableName sittTempTableName,
-      "FROM " <+> fromTableName sittFromTableName,
-      "WHERE " <+> falsePrinter,
-      "UNION ALL SELECT " <+> columns,
-      "FROM " <+> fromTableName sittFromTableName,
-      "WHERE " <+> falsePrinter
-    ]
+    $ [ "SELECT "
+          <+> columns,
+        "INTO " <+> fromTempTableName sittTempTableName,
+        "FROM " <+> fromTableName sittFromTableName,
+        "WHERE " <+> falsePrinter
+      ]
+      <> case sittConstraints of
+        RemoveConstraints ->
+          [ "UNION ALL SELECT " <+> columns,
+            "FROM " <+> fromTableName sittFromTableName,
+            "WHERE " <+> falsePrinter
+          ]
+        KeepConstraints ->
+          []
   where
     -- column names separated by commas
     columns =

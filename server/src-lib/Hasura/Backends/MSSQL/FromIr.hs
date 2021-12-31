@@ -28,9 +28,11 @@ module Hasura.Backends.MSSQL.FromIr
     FromIr,
     jsonFieldName,
     fromInsert,
+    toMerge,
     fromDelete,
     fromUpdate,
     toSelectIntoTempTable,
+    toInsertValuesIntoTempTable,
   )
 where
 
@@ -42,7 +44,7 @@ import Data.Proxy
 import Data.Text qualified as T
 import Database.ODBC.SQLServer qualified as ODBC
 import Hasura.Backends.MSSQL.Instances.Types ()
-import Hasura.Backends.MSSQL.Types.Insert as TSQL (BackendInsert (..))
+import Hasura.Backends.MSSQL.Types.Insert as TSQL (BackendInsert (..), IfMatched (..))
 import Hasura.Backends.MSSQL.Types.Internal as TSQL
 import Hasura.Backends.MSSQL.Types.Update as TSQL (BackendUpdate (..), Update (..))
 import Hasura.Prelude
@@ -396,7 +398,7 @@ unfurlAnnotatedOrderByElement =
       fieldName <- lift (fromPGColumnInfo pgColumnInfo)
       pure
         ( fieldName,
-          case (IR.pgiType pgColumnInfo) of
+          case IR.pgiType pgColumnInfo of
             IR.ColumnScalar t -> Just t
             -- Above: It is of interest to us whether the type is
             -- text/ntext/image. See ToQuery for more explanation.
@@ -1070,7 +1072,7 @@ fromGBoolExp =
 fromInsert :: IR.AnnInsert 'MSSQL Void Expression -> Insert
 fromInsert IR.AnnInsert {..} =
   let IR.AnnIns {..} = _aiData
-      insertRows = normalizeInsertRows _aiData $ map (IR.getInsertColumns) _aiInsObj
+      insertRows = normalizeInsertRows (_biIdentityColumns _aiBackendInsert) _aiTableCols $ map (IR.getInsertColumns) _aiInsObj
       insertColumnNames = maybe [] (map fst) $ listToMaybe insertRows
       insertValues = map (Values . map snd) insertRows
       allColumnNames = map (ColumnName . unName . IR.pgiName) _aiTableCols
@@ -1098,17 +1100,71 @@ fromInsert IR.AnnInsert {..} =
 -- We consider 'DEFAULT' value for "age" column which is missing in second insert row. The INSERT statement look like
 --
 -- INSERT INTO author (id, name, age) OUTPUT INSERTED.id VALUES (1, 'Foo', 21), (2, 'Bar', DEFAULT)
-normalizeInsertRows :: IR.AnnIns 'MSSQL [] Expression -> [[(Column 'MSSQL, Expression)]] -> [[(Column 'MSSQL, Expression)]]
-normalizeInsertRows IR.AnnIns {..} insertRows =
-  let isIdentityColumn column =
-        IR.pgiColumn column `elem` _biIdentityColumns _aiBackendInsert
+normalizeInsertRows ::
+  [ColumnName] ->
+  [IR.ColumnInfo 'MSSQL] ->
+  [[(Column 'MSSQL, Expression)]] ->
+  [[(Column 'MSSQL, Expression)]]
+normalizeInsertRows identityColumnNames tableColumns insertRows =
+  let isIdentityColumn column = IR.pgiColumn column `elem` identityColumnNames
       allColumnsWithDefaultValue =
         -- DEFAULT or NULL are not allowed as explicit identity values.
-        map ((,DefaultExpression) . IR.pgiColumn) $ filter (not . isIdentityColumn) _aiTableCols
+        map ((,DefaultExpression) . IR.pgiColumn) $ filter (not . isIdentityColumn) tableColumns
       addMissingColumns insertRow =
         HM.toList $ HM.fromList insertRow `HM.union` HM.fromList allColumnsWithDefaultValue
       sortByColumn = sortBy (\l r -> compare (fst l) (fst r))
    in map (sortByColumn . addMissingColumns) insertRows
+
+-- | Construct a MERGE statement from AnnInsert information.
+--   A MERGE statement is responsible for actually inserting and/or updating
+--   the data in the table.
+toMerge ::
+  TableName ->
+  [IR.AnnotatedInsertRow 'MSSQL Expression] ->
+  [ColumnName] ->
+  [IR.ColumnInfo 'MSSQL] ->
+  IfMatched Expression ->
+  FromIr Merge
+toMerge tableName insertRows identityColumnNames tableColumns IfMatched {..} = do
+  let normalizedInsertRows =
+        normalizeInsertRows identityColumnNames tableColumns $
+          map (IR.getInsertColumns) insertRows
+      insertColumnNames = maybe [] (map fst) $ listToMaybe normalizedInsertRows
+      allColumnNames = map (ColumnName . unName . IR.pgiName) tableColumns
+
+  matchConditions <-
+    flip runReaderT (EntityAlias "target") $ -- the table is aliased as "target" in MERGE sql
+      fromGBoolExp _imConditions
+
+  pure $
+    Merge
+      { mergeTargetTable = tableName,
+        mergeUsing = MergeUsing tempTableNameValues allColumnNames,
+        mergeOn = MergeOn _imMatchColumns,
+        mergeWhenMatched = MergeWhenMatched _imUpdateColumns matchConditions _imColumnPresets,
+        mergeWhenNotMatched = MergeWhenNotMatched insertColumnNames,
+        mergeInsertOutput = Output Inserted $ map OutputColumn allColumnNames,
+        mergeOutputTempTable = TempTable tempTableNameInserted allColumnNames
+      }
+
+-- | As part of an INSERT/UPSERT process, insert VALUES into a temporary table.
+--   The content of the temporary table will later be inserted into the original table
+--   using a MERGE statement.
+--
+--   We insert the values into a temporary table first in order to replace the missing
+--   fields with @DEFAULT@ in @normalizeInsertRows@, and we can't do that in a
+--   MERGE statement directly.
+toInsertValuesIntoTempTable :: TempTableName -> IR.AnnInsert 'MSSQL Void Expression -> InsertValuesIntoTempTable
+toInsertValuesIntoTempTable tempTable IR.AnnInsert {..} =
+  let IR.AnnIns {..} = _aiData
+      insertRows = normalizeInsertRows (_biIdentityColumns _aiBackendInsert) _aiTableCols $ map IR.getInsertColumns _aiInsObj
+      insertColumnNames = maybe [] (map fst) $ listToMaybe insertRows
+      insertValues = map (Values . map snd) insertRows
+   in InsertValuesIntoTempTable
+        { ivittTempTableName = tempTable,
+          ivittColumns = insertColumnNames,
+          ivittValues = insertValues
+        }
 
 --------------------------------------------------------------------------------
 -- Delete
@@ -1161,12 +1217,13 @@ fromUpdate (IR.AnnotatedUpdateG tableName (permFilter, whereClause) _ backendUpd
     tableAlias
 
 -- | Create a temporary table with the same schema as the given table.
-toSelectIntoTempTable :: TempTableName -> TableName -> [IR.ColumnInfo 'MSSQL] -> SelectIntoTempTable
-toSelectIntoTempTable tempTableName fromTable allColumns = do
+toSelectIntoTempTable :: TempTableName -> TableName -> [IR.ColumnInfo 'MSSQL] -> SITTConstraints -> SelectIntoTempTable
+toSelectIntoTempTable tempTableName fromTable allColumns withConstraints = do
   SelectIntoTempTable
     { sittTempTableName = tempTableName,
       sittColumns = map columnInfoToUnifiedColumn allColumns,
-      sittFromTableName = fromTable
+      sittFromTableName = fromTable,
+      sittConstraints = withConstraints
     }
 
 -- | Extracts the type and column name of a ColumnInfo
