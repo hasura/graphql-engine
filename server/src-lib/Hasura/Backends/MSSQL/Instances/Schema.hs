@@ -9,6 +9,7 @@ import Data.List.NonEmpty qualified as NE
 import Data.Text.Encoding (encodeUtf8)
 import Data.Text.Extended
 import Database.ODBC.SQLServer qualified as ODBC
+import Hasura.Backends.MSSQL.Schema.IfMatched
 import Hasura.Backends.MSSQL.Types.Insert (BackendInsert (..))
 import Hasura.Backends.MSSQL.Types.Internal qualified as MSSQL
 import Hasura.Backends.MSSQL.Types.Update (BackendUpdate (..), UpdateOperator (..))
@@ -36,7 +37,8 @@ instance BackendSchema 'MSSQL where
   -- top level parsers
   buildTableQueryFields = GSB.buildTableQueryFields
   buildTableRelayQueryFields = msBuildTableRelayQueryFields
-  buildTableInsertMutationFields = msBuildTableInsertMutationFields
+  buildTableInsertMutationFields =
+    GSB.buildTableInsertMutationFields backendInsertParser
   buildTableDeleteMutationFields = GSB.buildTableDeleteMutationFields
   buildTableUpdateMutationFields = msBuildTableUpdateMutationFields
 
@@ -80,19 +82,6 @@ msBuildTableRelayQueryFields ::
 msBuildTableRelayQueryFields _sourceName _tableName _tableInfo _gqlName _pkeyColumns _selPerms =
   pure []
 
-msBuildTableInsertMutationFields ::
-  forall r m n.
-  MonadBuildSchema 'MSSQL r m n =>
-  SourceName ->
-  TableName 'MSSQL ->
-  TableInfo 'MSSQL ->
-  G.Name ->
-  InsPermInfo 'MSSQL ->
-  Maybe (SelPermInfo 'MSSQL) ->
-  Maybe (UpdPermInfo 'MSSQL) ->
-  m [FieldParser n (AnnInsert 'MSSQL (RemoteRelationshipField UnpreparedValue) (UnpreparedValue 'MSSQL))]
-msBuildTableInsertMutationFields = GSB.buildTableInsertMutationFields backendInsertParser
-
 backendInsertParser ::
   forall m r n.
   MonadBuildSchema 'MSSQL r m n =>
@@ -101,14 +90,11 @@ backendInsertParser ::
   Maybe (SelPermInfo 'MSSQL) ->
   Maybe (UpdPermInfo 'MSSQL) ->
   m (InputFieldsParser n (BackendInsert (UnpreparedValue 'MSSQL)))
-backendInsertParser _sourceName tableInfo _selectPerms _updatePerms = do
-  -- Uncomment when we implement execution of upserts.
-  -- import Hasura.Backends.MSSQL.Schema.IfMatched
-  -- ifMatched <- ifMatchedFieldParser sourceName tableInfo selectPerms updatePerms
+backendInsertParser sourceName tableInfo selectPerms updatePerms = do
+  ifMatched <- ifMatchedFieldParser sourceName tableInfo selectPerms updatePerms
+  let _biIdentityColumns = _tciExtraTableMetadata $ _tiCoreInfo tableInfo
   pure $ do
-    -- _biIfMatched <- ifMatched
-    let _biIfMatched = Nothing
-        _biIdentityColumns = _tciExtraTableMetadata $ _tiCoreInfo tableInfo
+    _biIfMatched <- ifMatched
     pure $ BackendInsert {..}
 
 msBuildTableUpdateMutationFields ::

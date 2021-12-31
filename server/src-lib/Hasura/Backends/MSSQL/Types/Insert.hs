@@ -7,6 +7,7 @@ module Hasura.Backends.MSSQL.Types.Insert
   )
 where
 
+import Hasura.Backends.MSSQL.Types.Instances ()
 import Hasura.Backends.MSSQL.Types.Internal
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp (AnnBoolExp)
@@ -17,6 +18,8 @@ data BackendInsert v = BackendInsert
   { _biIfMatched :: Maybe (IfMatched v),
     _biIdentityColumns :: [ColumnName]
   }
+
+deriving instance (Backend 'MSSQL, Show (IfMatched v), Show v) => Show (BackendInsert v)
 
 deriving instance Backend 'MSSQL => Functor BackendInsert
 
@@ -31,6 +34,8 @@ data IfMatched v = IfMatched
     _imConditions :: AnnBoolExp 'MSSQL v,
     _imColumnPresets :: HashMap ColumnName v
   }
+
+deriving instance (Backend 'MSSQL, Show (AnnBoolExp 'MSSQL v), Show v) => Show (IfMatched v)
 
 deriving instance Backend 'MSSQL => Functor IfMatched
 

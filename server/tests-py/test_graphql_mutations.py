@@ -884,3 +884,26 @@ class TestGraphqlInsertPermissionMSSQL:
 
     def test_insert_permission_columns_fail(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/article_user_role_columns_fail_mssql.yaml")
+
+@pytest.mark.parametrize("backend", ['mssql'])
+@use_mutation_fixtures
+class TestGraphqlInsertIfMatchedMSSQL:
+
+    def test_if_matched_update(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/article_if_matched_update.yaml")
+
+    def test_if_matched_no_update(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/article_if_matched_no_update.yaml")
+
+    def test_order_if_matched_where(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/order_if_matched_where.yaml')
+
+    def test_if_matched_no_match_columns(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/article_if_matched_no_match_columns.yaml")
+
+    def test_match_non_id_column(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/article_if_matched_match_non_id_column.yaml')
+
+    @classmethod
+    def dir(cls):
+        return "queries/graphql_mutation/insert/ifmatched"
