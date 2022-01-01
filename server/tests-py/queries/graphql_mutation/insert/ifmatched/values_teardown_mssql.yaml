@@ -1,0 +1,18 @@
+type: bulk
+args:
+
+# Reset values and sequence objects (for identities)
+- type: mssql_run_sql
+  args:
+    source: mssql
+    sql: |
+      DELETE from person;
+      DELETE from orders;
+      DELETE from article;
+      DELETE from author;
+
+      -- reset identity columns
+      DBCC CHECKIDENT ('person', RESEED, 0);
+      DBCC CHECKIDENT ('orders', RESEED, 0);
+      DBCC CHECKIDENT ('article', RESEED, 0);
+      DBCC CHECKIDENT ('author', RESEED, 0);
