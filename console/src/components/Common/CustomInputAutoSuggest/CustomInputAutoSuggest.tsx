@@ -34,18 +34,19 @@ const CustomInputAutoSuggest: React.FC<CustomInputAutoSuggest> = ({
 
   const getSuggestions = (value: string) => {
     const inputValue = value.trim().toLowerCase();
-    const inputLength = inputValue.length;
-    const filterResults = () => {
-      return options.map(option => {
-        return {
-          title: option.title,
-          suggestions: option.suggestions.filter(
-            op => op.value.toLowerCase().slice(0, inputLength) === inputValue
-          ),
-        };
-      });
-    };
-    return inputLength === 0 ? [...options] : filterResults();
+
+    if (inputValue === '') {
+      return options;
+    }
+
+    return options.map(option => ({
+      title: option.title,
+      suggestions: option.suggestions.filter(
+        suggestion =>
+          suggestion.value.toLowerCase().slice(0, inputValue.length) ===
+          inputValue
+      ),
+    }));
   };
 
   const onSuggestionsFetchRequested: SuggestionsFetchRequested = ({
@@ -75,9 +76,7 @@ const CustomInputAutoSuggest: React.FC<CustomInputAutoSuggest> = ({
   const getSectionSuggestions: GetSectionSuggestions<
     AutoSuggestOption,
     AutoSuggestSection
-  > = section => {
-    return section.suggestions;
-  };
+  > = suggestionSection => suggestionSection.suggestions;
 
   return (
     <Autosuggest<AutoSuggestOption, AutoSuggestSection>
