@@ -465,11 +465,9 @@ class Permissions extends Component {
 
         const dispatchRoleNameChange = e => {
           const newRole = e.target.value;
-          if (permissionsState.query) {
-            dispatch(
-              permOpenEdit(tableSchema, newRole, permissionsState.query)
-            );
-          }
+          dispatch(permOpenEdit(tableSchema, newRole, permissionsState.query));
+          // select default query
+          dispatch(permOpenEdit(tableSchema, newRole, 'insert'));
           dispatch(permSetRoleName(newRole));
         };
 
