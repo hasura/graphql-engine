@@ -1,13 +1,23 @@
-import React from 'react';
+import React, { useState } from 'react';
 import styles from '../Common.scss';
 
-const HiddenMore = ({ title, more, expanded = false }) => {
-  const [isExpanded, setIsExpanded] = React.useState(expanded);
+interface HiddenMoreProps {
+  title: string;
+  more: React.ReactNode;
+  defaultExpanded?: boolean;
+}
 
-  const toggle = () => setIsExpanded(!isExpanded);
+const HiddenMore: React.VFC<HiddenMoreProps> = ({
+  title,
+  more,
+  defaultExpanded = false,
+}) => {
+  const [isExpanded, setIsExpanded] = useState(defaultExpanded);
 
-  const getTitle = () => {
-    return (
+  const toggle = () => setIsExpanded(prev => !prev);
+
+  return (
+    <div>
       <div
         className={`${styles.display_flex} ${styles.add_mar_bottom} ${styles.cursorPointer} ${styles.hiddenMoreWidth}`}
         onClick={toggle}
@@ -20,12 +30,6 @@ const HiddenMore = ({ title, more, expanded = false }) => {
         />
         <b>{title}</b>
       </div>
-    );
-  };
-
-  return (
-    <div>
-      {getTitle()}
       {isExpanded && more}
     </div>
   );
