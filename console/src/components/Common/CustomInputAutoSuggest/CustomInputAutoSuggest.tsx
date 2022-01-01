@@ -10,22 +10,22 @@ import type {
 } from 'react-autosuggest';
 import styles from './Theme.scss';
 
-interface AutoSuggestOption {
+export interface AutoSuggestOption {
   label: string;
   value: string;
 }
 
-interface AutoSuggestSection {
+export interface AutoSuggestSection {
   title: string;
   suggestions: AutoSuggestOption[];
 }
 
-interface CustomInputAutoSuggest extends InputProps<AutoSuggestOption> {
+interface CustomInputAutoSuggestProps extends InputProps<AutoSuggestOption> {
   options: AutoSuggestSection[];
-  theme: any;
+  theme?: any;
 }
 
-const CustomInputAutoSuggest: React.FC<CustomInputAutoSuggest> = ({
+const CustomInputAutoSuggest: React.FC<CustomInputAutoSuggestProps> = ({
   options,
   theme = styles,
   ...inputProps
