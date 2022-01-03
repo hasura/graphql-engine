@@ -2,6 +2,11 @@
 
 -- | Convert the simple T-SQL AST to an SQL query, ready to be passed
 -- to the odbc package's query/exec functions.
+--
+-- We define a custom prettyprinter with the type 'Printer'.
+--
+-- If you'd like to trace and see what a 'Printer' looks like as SQL, you can use something like:
+-- > ltraceM "sql" (ODBC.renderQuery (toQueryPretty myPrinter))
 module Hasura.Backends.MSSQL.ToQuery
   ( fromSelect,
     fromReselect,
@@ -32,7 +37,8 @@ import Hasura.Backends.MSSQL.Types
 import Hasura.Prelude hiding (GT, LT)
 
 --------------------------------------------------------------------------------
--- Types
+
+-- * Types
 
 data Printer
   = SeqPrinter [Printer]
@@ -57,7 +63,8 @@ instance IsString Printer where
 (?<+>) (Just x) y = SeqPrinter [x, y]
 
 --------------------------------------------------------------------------------
--- Instances
+
+-- * Instances
 
 -- This is a debug instance, only here because it avoids a circular
 -- dependency between this module and Types/Instances.
@@ -65,7 +72,8 @@ instance ToJSON Expression where
   toJSON = toJSON . T.toTxt . toQueryFlat . fromExpression
 
 --------------------------------------------------------------------------------
--- Printer generators
+
+-- * Printer generators
 
 fromExpression :: Expression -> Printer
 fromExpression =
@@ -658,7 +666,7 @@ fromWhere =
         "WHERE " <+> IndentPrinter 6 (fromExpression whereExp)
       | otherwise -> ""
 
--- Drop useless examples like this from the output:
+-- | Drop useless examples like this from the output:
 --
 -- WHERE (((1<>1))
 --       AND ((1=1)))
@@ -787,8 +795,10 @@ wrapFor for' inner = coalesceNull
         _ -> inner
 
 --------------------------------------------------------------------------------
--- Basic printing API
 
+-- * Basic printing API
+
+-- | Pretty-prints a 'Printer' as one line, converting 'NewlinePrinter' to space.
 toQueryFlat :: Printer -> Query
 toQueryFlat = go 0
   where
@@ -803,6 +813,7 @@ toQueryFlat = go 0
         IndentPrinter n p -> go (level + n) p
     notEmpty = (/= mempty) . renderQuery
 
+-- | Pretty-prints a 'Printer' as multiple lines as defined by the printer.
 toQueryPretty :: Printer -> Query
 toQueryPretty = go 0
   where

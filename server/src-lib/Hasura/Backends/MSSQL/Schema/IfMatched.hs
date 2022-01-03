@@ -1,6 +1,7 @@
 {-# LANGUAGE ApplicativeDo #-}
 
--- | This module contains the building blocks for parsing @if_matched@ clauses,
+-- | This module contains the building blocks for parsing @if_matched@ clauses
+-- (represented as 'IfMatched'),
 -- which in the MSSQL backend are used to implement upsert functionality.
 -- These are used by 'Hasura.Backends.MSSQL.Instances.Schema.backendInsertParser' to
 -- construct a mssql-specific schema parser for insert (and upsert) mutations.

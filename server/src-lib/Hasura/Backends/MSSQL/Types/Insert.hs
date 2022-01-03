@@ -14,8 +14,15 @@ import Hasura.RQL.IR.BoolExp (AnnBoolExp)
 import Hasura.RQL.Types.Backend (Backend)
 import Hasura.SQL.Backend (BackendType (MSSQL))
 
+-- | Defines the part in insert mutation that is unique for MSSQL the @if_matched@ clause.
 data BackendInsert v = BackendInsert
-  { _biIfMatched :: Maybe (IfMatched v),
+  { -- | @if_matched@ can be omitted (and in that case will be @Nothing@).
+    --   If omitted, we only insert new rows (without upserting).
+    _biIfMatched :: Maybe (IfMatched v),
+    -- | identity columns are needed for the sql generation and are not part
+    --   of the user input. If the table has identity columns we need to add
+    --   the SQL statements @SET IDENTITY_INSERT ...@ to be able to insert
+    --   into that table.
     _biIdentityColumns :: [ColumnName]
   }
 
@@ -29,9 +36,13 @@ deriving instance Backend 'MSSQL => Traversable BackendInsert
 
 -- | The IR data representing an @if_matched@ clause, which handles upserts.
 data IfMatched v = IfMatched
-  { _imMatchColumns :: [Column 'MSSQL],
+  { -- | Columns to compare when checking if there's a match
+    _imMatchColumns :: [Column 'MSSQL],
+    -- | Columns to update when there's a match
     _imUpdateColumns :: [Column 'MSSQL],
+    -- | A condition for updating columns in case of a match
     _imConditions :: AnnBoolExp 'MSSQL v,
+    -- | Default values (presets) for some columns
     _imColumnPresets :: HashMap ColumnName v
   }
 

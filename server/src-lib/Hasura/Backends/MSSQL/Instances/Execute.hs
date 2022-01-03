@@ -1,5 +1,12 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
+-- | Defines a 'BackendExecute' type class instance for MSSQL.
+--
+-- This module implements the needed functionality for implementing a 'BackendExecute'
+-- instance for MSSQL, which defines an interface for translating a root field into an execution plan
+-- and interacting with a database.
+--
+-- This module includes the MSSQL implementation of queries, mutations, and more.
 module Hasura.Backends.MSSQL.Instances.Execute
   ( MultiplexedQuery' (..),
     multiplexRootReselect,
@@ -58,14 +65,14 @@ instance BackendExecute 'MSSQL where
   mkDBRemoteRelationshipPlan =
     msDBRemoteRelationshipPlan
 
--- Multiplexed query
+-- * Multiplexed query
 
 newtype MultiplexedQuery' = MultiplexedQuery' Reselect
 
 instance T.ToTxt MultiplexedQuery' where
   toTxt (MultiplexedQuery' reselect) = T.toTxt $ toQueryPretty $ fromReselect reselect
 
--- Query
+-- * Query
 
 msDBQueryPlan ::
   forall m.
@@ -212,7 +219,7 @@ multiplexRootReselect variables rootReselect =
       selectOffset = Nothing
     }
 
--- mutation
+-- * Mutation
 
 msDBMutationPlan ::
   forall m.
@@ -553,6 +560,8 @@ buildDeleteTx deleteOperation stringifyNum = do
   -- Execute SELECT query and fetch mutation response
   encJFromText <$> Tx.singleRowQueryE fromMSSQLTxError mutationOutputSelectQuery
 
+-- ** Update
+
 -- | Executes an Update IR AST and return results as JSON.
 executeUpdate ::
   MonadError QErr m =>
@@ -623,6 +632,8 @@ buildUpdateTx updateOperation stringifyNum = do
   unless (checkConditionInt == (0 :: Int)) $
     throw400 PermissionError "check constraint of an update permission has failed"
   pure $ encJFromText responseText
+
+-- ** Mutation response
 
 -- | Generate a SQL SELECT statement which outputs the mutation response
 --
@@ -708,7 +719,7 @@ textSelect t =
   let textProjection = ExpressionProjection $ Aliased (ValueExpression (ODBC.TextValue t)) "exp"
    in emptySelect {selectProjections = [textProjection]}
 
--- subscription
+-- * Subscription
 
 msDBSubscriptionPlan ::
   forall m.
@@ -845,9 +856,7 @@ validateVariables sourceConfig sessionVariableValues prepState = do
     sessionReference :: Text -> Aliased Expression
     sessionReference var = Aliased (ColumnExpression (TSQL.FieldName var "session")) var
 
---------------------------------------------------------------------------------
--- Remote Relationships (e.g. DB-to-DB Joins, remote schema joins, etc.)
---------------------------------------------------------------------------------
+-- * Remote Relationships (e.g. DB-to-DB Joins, remote schema joins, etc.)
 
 -- | Construct an action (i.e. 'DBStepInfo') which can marshal some remote
 -- relationship information into a form that SQL Server can query against.

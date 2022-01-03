@@ -1,3 +1,4 @@
+-- | Metadata related types, functions and helpers.
 module Hasura.Backends.MSSQL.Meta
   ( loadDBMetadata,
   )
@@ -24,7 +25,8 @@ import Hasura.RQL.Types.Table
 import Hasura.SQL.Backend
 
 --------------------------------------------------------------------------------
--- Loader
+
+-- * Loader
 
 loadDBMetadata :: (MonadIO m) => Tx.TxET QErr m (DBTablesMetadata 'MSSQL)
 loadDBMetadata = do
@@ -36,7 +38,8 @@ loadDBMetadata = do
     Right sysTables -> pure $ HM.fromList $ map transformTable sysTables
 
 --------------------------------------------------------------------------------
--- Local types
+
+-- * Local types
 
 data SysTable = SysTable
   { staName :: Text,
@@ -117,7 +120,8 @@ instance FromJSON SysForeignKeyColumn where
   parseJSON = genericParseJSON hasuraJSON
 
 --------------------------------------------------------------------------------
--- Transform
+
+-- * Transform
 
 transformTable :: SysTable -> (TableName, DBTableMetadata 'MSSQL)
 transformTable tableInfo =
@@ -171,7 +175,8 @@ transformPrimaryKey (SysPrimaryKey {..}) =
    in PrimaryKey constraint columns
 
 --------------------------------------------------------------------------------
--- Helpers
+
+-- * Helpers
 
 coalesceKeys :: [ForeignKey 'MSSQL] -> [ForeignKey 'MSSQL]
 coalesceKeys = HM.elems . foldl' coalesce HM.empty

@@ -1,3 +1,8 @@
+-- | MSSQL Connection
+--
+--   This module handles the connection against an MS SQL Server.
+--   It defines the connection string, connection pool, default settings,
+--   and conversion functions between MSSQL and graphql-engine.
 module Hasura.Backends.MSSQL.Connection
   ( MSSQLConnConfiguration (MSSQLConnConfiguration),
     MSSQLPool,
