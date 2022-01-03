@@ -83,7 +83,7 @@ const config = {
             items: [
               {
                 label: 'Migration Guide',
-                to: '/migration-guide/',
+                to: '/migration-guide/index',
               },
             ],
           },
