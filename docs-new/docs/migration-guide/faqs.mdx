@@ -90,13 +90,3 @@ Ex: Link from above screnshot `/graphql/core/api-reference/metadata-api/actions.
 ```
 Please refer [Links](/migration-guide/links.mdx) for more information about links usage.
 </details>
-
-
-## How to ...
-
-```bash
-for f in docs/graphql/**/**/*.rst; do
-  mkdir -pv -- "docs-new/${f%/*}" && touch -- "docs-new/${f%.*}.txt";
-  pandoc "$f" -f rst -t gfm -s -o "docs-new/${f%.*}.txt";
-done
-```
