@@ -85,6 +85,8 @@ IS_ADMIN_SECRET_SET=true
 
 > The server also templates `consolePath` in `window.__env` which is the relative path of the current page (something like `/console/data/schema/public`). Using this path, the console determines the DATA_API_URL in production. You do not need to worry about this in development since you are hardcoding the value of DATA_API_URL in `.env`.
 
+*If you're contributing to team-console i.e. console for Hasura Cloud or Hasura EE, refer to [this doc](https://github.com/hasura/lux/blob/main/docs/team-console.md).*
+
 ##### Run console development server:
 
 ```bash
