@@ -31,7 +31,8 @@ import Hasura.RQL.Types hiding (BackendInsert)
 import Language.GraphQL.Draft.Syntax qualified as G
 
 ----------------------------------------------------------------
--- BackendSchema instance
+
+-- * BackendSchema instance
 
 instance BackendSchema 'MSSQL where
   -- top level parsers
@@ -68,7 +69,8 @@ instance BackendSchema 'MSSQL where
   columnDefaultValue = msColumnDefaultValue
 
 ----------------------------------------------------------------
--- Top level parsers
+
+-- * Top level parsers
 
 msBuildTableRelayQueryFields ::
   MonadBuildSchema 'MSSQL r m n =>
@@ -166,7 +168,8 @@ msBuildFunctionMutationFields _ _ _ _ _ =
   pure []
 
 ----------------------------------------------------------------
--- Table arguments
+
+-- * Table arguments
 
 msTableArgs ::
   forall r m n.
@@ -213,7 +216,8 @@ msMkRelationshipParser _sourceName _relationshipInfo = do
   return Nothing
 
 ----------------------------------------------------------------
--- Individual components
+
+-- * Individual components
 
 msColumnParser ::
   (MonadSchema n m, MonadError QErr m, MonadReader r m, Has MkTypename r) =>
@@ -455,7 +459,8 @@ msNode ::
 msNode = throw500 "MSSQL does not support relay; `node` should never be exposed in the schema."
 
 ----------------------------------------------------------------
--- SQL literals
+
+-- * SQL literals
 
 -- FIXME: this is nonsensical for MSSQL, we'll need to adjust the corresponding mutation
 -- and its representation.

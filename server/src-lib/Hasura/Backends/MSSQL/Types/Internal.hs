@@ -1,6 +1,17 @@
 {-# LANGUAGE DuplicateRecordFields #-}
 
 -- | Types for Transact-SQL aka T-SQL; the language of SQL Server.
+--
+-- In this module we define various MS SQL Server specific data types used for T-SQL generation.
+--
+-- These types are also used as underlying types in the @Backend 'MSSQL@ instance
+-- which is defined in "Hasura.Backends.MSSQL.Instances.Types".
+--
+-- We convert RQL IR ASTs to types defined here in the "Hasura.Backends.MSSQL.FromIr" module,
+-- and we implement pretty-printing for these types in the "Hasura.Backends.MSSQL.ToQuery" module.
+--
+-- NOTE: Various type class instances (including simple once such as Eq and Show) are implemented
+-- in the "Hasura.Backends.MSSQL.Types.Instances" module.
 module Hasura.Backends.MSSQL.Types.Internal
   ( Aggregate (..),
     Aliased (..),
