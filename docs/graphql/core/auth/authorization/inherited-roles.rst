@@ -26,30 +26,14 @@ have a different permission than the inherited one for a particular entity and r
 then it can be done by creating a permission for the entity and role pair. After creating this permission,
 it will override the inherited permission, if any.
 
-.. note::
-
-   Inherited roles cannot form cycles.
-
-   **For example:**
-
-   Suppose there are two inherited roles: ``inherited_role1``, ``inherited_role2`` and
-   two non-inherited roles: ``role1``, ``role2`` and:
-
-   - ``inherited_role1`` inherits from ``role1`` and ``inherited_role2``
-
-   - ``inherited_role2`` inherits from ``role2`` and ``inherited_role1``
-
-   The above setup won't work because ``inherited_role1`` and ``inherited_role2`` form a cycle.
-
 .. admonition:: Supported from
 
-   Inherited roles will be supported for versions ``v2.0.0-alpha.4`` and above. The inherited roles feature
-   is an experimental feature from the ``v2.0.0-alpha.4`` till the ``v2.1.0-beta.1`` version i.e it must be
+   Inherited roles are supported for versions ``v2.0.0-alpha.4`` and above. The inherited roles feature
+   is an experimental feature from verions ``v2.0.0-alpha.4`` till ``v2.1.0-beta.1``, i.e it must be
    explicitly toggled in order to be enabled. This can be done either by setting the env
    var ``HASURA_GRAPHQL_EXPERIMENTAL_FEATURES`` or the server flag ``--experimental-features`` to ``inherited_roles``.
 
-   After the ``v2.1.0-beta.1`` version, inherited roles will be enabled by default in the graphql-engine.
-
+   For versions ``v2.1.0-beta.1`` and above, inherited roles are enabled by default.
 
 Creating inherited roles
 ------------------------
@@ -103,12 +87,27 @@ Creating inherited roles
            ]
         }
       }
+      
+      
+.. note::
 
+   Inherited roles cannot form cycles.
+
+   **For example:**
+
+   Suppose there are two inherited roles: ``inherited_role1``, ``inherited_role2`` and
+   two non-inherited roles: ``role1``, ``role2`` and:
+
+   - ``inherited_role1`` inherits from ``role1`` and ``inherited_role2``
+
+   - ``inherited_role2`` inherits from ``role2`` and ``inherited_role1``
+
+   The above configuration won't work because ``inherited_role1`` and ``inherited_role2`` form a cycle.
 
 How is the permission of the inherited role inherited?
 ------------------------------------------------------
 
-1. Select Permissions
+1. Select permissions
 ^^^^^^^^^^^^^^^^^^^^^
 
 A select permission is comprised of the following things:
@@ -119,7 +118,9 @@ A select permission is comprised of the following things:
 4. Allow aggregation
 5. Scalar computed fields accessible to the role
 
-Suppose there are two roles, ``role1`` gives access to column ``C1`` with row filter ``P1`` and ``role2`` gives access to columns ``C1`` and ``C2`` with row filter ``P2``. Consider the following GraphQL query executed with an inherited role comprised of ``role1`` and ``role2``:
+Suppose there are two roles, ``role1`` gives access to column ``C1`` with row filter ``P1`` and ``role2`` gives access to columns
+``C1`` and ``C2`` with row filter ``P2``. Consider the following GraphQL query executed with an inherited role comprised of ``role1``
+and ``role2``:
 
 .. code-block:: graphql
 
@@ -299,7 +300,9 @@ Let's create a new inherited role called ``user_anonymous_inherited_role`` which
 
 
 4. Suppose we have two tables ``users`` and ``authors`` and similarly two roles ``user`` and ``author`` are defined. The ``user``
-   role doesn't have permission to query the ``authors`` table and the ``author`` role doesn't have permission to query the ``users`` table. With only the ``user`` and the ``author`` role, we won't be able to construct a query which fetches data from both the tables. This can be solved by creating an inherited role out of ``user`` and ``author`` which can query both the
+   role doesn't have permission to query the ``authors`` table and the ``author`` role doesn't have permission to query the ``users``
+   table. With only the ``user`` and the ``author`` role, we won't be able to construct a query which fetches data from both the tables.
+   This can be solved by creating an inherited role out of ``user`` and ``author`` which can query both the
    tables in a single query.
 
 
@@ -345,7 +348,7 @@ Let's create a new inherited role called ``user_anonymous_inherited_role`` which
             }
           }
 
-2. Mutation and remote schema permissions
+2. Mutation and Remote Schema permissions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 A mutation (insert, update and delete) or remote schema permission is inherited in the following manner:
@@ -397,7 +400,7 @@ resolve this conflict.
 
 Whenever a conflict occurs while a role inherits from its parents,
 then the metadata for that entity and role combination will be marked as inconsistent.
-These can be seen by calling the :ref:`get_inconsistent_metadata <get_inconsistent_metadata>` API.
+These can be seen by calling the :ref:`get_inconsistent_metadata <metadata_get_inconsistent_metadata>` API.
 Following the above example, the role ``R`` which is trying to inherit permissions from the
 role ``pr1`` and ``pr2`` will be marked as inconsistent for the table permission of the table ``article``.
 
@@ -405,10 +408,10 @@ This inconsistency is informational and can be ignored if the conflicting role e
 is not going to be used. If this inconsistency needs to be resolved, then it can be done by adding
 a permission explicitly for the conflicting role entity pair.
 
-3. Actions and Custom Function Permissions
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+3. Actions and Custom Functions permissions
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Inheritance of permissions of actions and custom function work in the following manner:
+Inheritance of permissions of actions and custom functions work in the following manner:
 
 If any of the parent roles have permission configured for a given action or custom function, then the
-inherited role will also be able to access the given action or remote schema.
+inherited role will also be able to access the given action or custom function.
