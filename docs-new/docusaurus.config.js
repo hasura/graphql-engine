@@ -9,7 +9,7 @@ const config = {
   title: 'Hasura GraphQL Engine Documentation | Hasura GraphQL Docs',
   tagline: 'Instant GraphQL on all your data',
   url: 'https://hasura.io/',
-  baseUrl: '/docs/',
+  baseUrl: '/',
   onBrokenLinks: 'throw',
   onBrokenMarkdownLinks: 'throw',
   favicon: '/img/favicon.png',
