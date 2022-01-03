@@ -11,7 +11,7 @@ const config = {
   url: 'https://hasura.io/',
   baseUrl: '/',
   onBrokenLinks: 'throw',
-  onBrokenMarkdownLinks: 'throw',
+  onBrokenMarkdownLinks: 'warn',
   favicon: '/img/favicon.png',
   organizationName: 'hasura',
   projectName: 'graphql-engine',

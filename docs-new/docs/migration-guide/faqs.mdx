@@ -23,7 +23,7 @@ Verify content correctness and preview in UI.
 **For Individual Files**
 Make use of `sidebar_label` and `sidebar_position` meta
 
-```mdx
+```markdown
 ---
 sidebar_label: Hasura Core
 sidebar_position: 3
@@ -48,7 +48,7 @@ Please read the docusaurus docs about this here - https://docusaurus.io/docs/sid
 
 Use `slug` metadata to manually set the slug to `directory/index`. Please check [this PR on docusaurus](https://github.com/facebook/docusaurus/pull/5830) for more information.
 
-```mdx title="index.mdx"
+```markdown title="index.mdx"
 ---
 ...
 slug: /migration-guide/index
@@ -63,6 +63,30 @@ slug: /migration-guide/index
 This is known and default behaviour from docusaurus. `index` is considered direct link to directory index and won't be visible unless there is one more file.
 
 To fix, rename the file from `index.mdx` to `directory-name.mdx` and remove the directory.
+</details>
+
+<details>
+<summary>How to link (internal) other documents that are not migrated yet?</summary>
+
+Currently, broken MDX links are set to warn to ease the migration process. So, add the file path as link.
+
+To get the file path, do a global search for id in `graphql-engine/docs/graphql/` directory and use the respective file path.
+
+![Link File Path From Ref Screencapture](/img/migration-guide/link-file-path-from-ref.png)
+
+You can prepend the id with `.. _` to only get the file id as result and not include the usage.
+
+:::info
+The root relative link should start at `graphql` directory level.
+
+Ex: Link from above screnshot `/graphql/core/api-reference/metadata-api/actions.mdx`
+
+Please refer [Links](/migration-guide/links.mdx) for more information about links usage.
+:::
+
+```markdown
+[actions Metadata API](/graphql/core/api-reference/metadata-api/actions.mdx)
+```
 </details>
 
 
