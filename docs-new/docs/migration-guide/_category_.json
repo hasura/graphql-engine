@@ -1,3 +1,7 @@
 {
-  "label": "Migration Guide"
+  "label": "Migration Guide",
+  "link": {
+    "type": "generated-index",
+    "title": "Migration Guide Index"
+  }
 }

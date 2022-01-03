@@ -1,5 +1,8 @@
-# FAQs
+---
+sidebar_position: 11
+---
 
+# FAQs
 
 <details>
 <summary>How to start the migration process?</summary>
@@ -74,19 +77,18 @@ To get the file path, do a global search for id in `graphql-engine/docs/graphql/
 
 ![Link File Path From Ref Screencapture](/img/migration-guide/link-file-path-from-ref.png)
 
-You can prepend the id with `.. _` to only get the file id as result and not include the usage.
+:::tip
+You can prepend the id with `.. _` to only get the file id as result and not include the usage files.
+:::
 
-:::info
 The root relative link should start at `graphql` directory level.
 
 Ex: Link from above screnshot `/graphql/core/api-reference/metadata-api/actions.mdx`
 
-Please refer [Links](/migration-guide/links.mdx) for more information about links usage.
-:::
-
 ```markdown
 [actions Metadata API](/graphql/core/api-reference/metadata-api/actions.mdx)
 ```
+Please refer [Links](/migration-guide/links.mdx) for more information about links usage.
 </details>
 
 
