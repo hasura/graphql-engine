@@ -288,7 +288,7 @@ First, load the action secret as an environment variable in your action handler 
 Second, you need to write some code in your action handler to check that the action secret
 passed as a header equals to the one you stored as an environment variable.
 
-The following is an example of a simple authorization middleware with Express:
+The following is an example of a simple authorization middleware with Express which can be included before the request handler logic:
 
 .. code-block:: javascript
 
@@ -305,8 +305,13 @@ The following is an example of a simple authorization middleware with Express:
     function correctSecretProvided(req) {
         const requiredSecret = process.env.ACTION_SECRET_ENV;
         const providedSecret = req.headers['ACTION_SECRET'];
-        return requiredSecret == providedSecret;
+        return requiredSecret === providedSecret;
     }
+    
+    // Request handler
+    app.post('/actionHandler', async (req, res) => {
+      // handler logic
+    });
 
 .. admonition:: Additional Resources
 
