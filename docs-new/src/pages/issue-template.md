@@ -25,7 +25,8 @@ Below is the steps to complete the migration cylcle for each doc file.
 
   1.4. The misc populated divs exist to ease adding metadata and any sphinx directives that can't be auto transformed to markdown. Please cross referene the actual RST file for content validation.
 
-2. Verify content correctness (compare against the current live version of docs) and preview in UI.
+2. Verify content correctness (compare against the current live version of [Hasura docs](https://hasura.io/docs/)) and preview in UI.
+
 3. Submit a PR! 🎉
 
 ### Available (includes WIP) Doc Files
@@ -108,10 +109,88 @@ We will periodically add new batches as we complete the existing ones here, so y
 
 <details>
 <summary>Hasura Core (`docs/graphql/core/`)</summary>
+
+- [ ] [docs/graphql/core/index.rst](https://github.com/hasura/graphql-engine/tree/master/docs/graphql/core/index.rst)
+- [ ] [docs/graphql/core/actions](https://github.com/hasura/graphql-engine/tree/master/docs/graphql/core/actions)
+    - [ ] [docs/graphql/core/actions/action-examples.rst.wip](https://github.com/hasura/graphql-engine/tree/master/docs/graphql/core/actions/action-examples.rst.wip)
+    - [ ] [docs/graphql/core/actions/action-handlers.rst](https://github.com/hasura/graphql-engine/tree/master/docs/graphql/core/actions/action-handlers.rst)
+    - [ ] [docs/graphql/core/actions/action-permissions.rst](https://github.com/hasura/graphql-engine/tree/master/docs/graphql/core/actions/action-permissions.rst)
+    - [ ] [docs/graphql/core/actions/action-relationships.rst](https://github.com/hasura/graphql-engine/tree/master/docs/graphql/core/actions/action-relationships.rst)
+    - [ ] [docs/graphql/core/actions/async-actions.rst](https://github.com/hasura/graphql-engine/tree/master/docs/graphql/core/actions/async-actions.rst)
+    - [ ] [docs/graphql/core/actions/create.rst](https://github.com/hasura/graphql-engine/tree/master/docs/graphql/core/actions/create.rst)
+    - [ ] [docs/graphql/core/actions/debugging.rst](https://github.com/hasura/graphql-engine/tree/master/docs/graphql/core/actions/debugging.rst)
+    - [ ] [docs/graphql/core/actions/derive.rst](https://github.com/hasura/graphql-engine/tree/master/docs/graphql/core/actions/derive.rst)
+    - [ ] [docs/graphql/core/actions/index.rst](https://github.com/hasura/graphql-engine/tree/master/docs/graphql/core/actions/index.rst)
+    - [ ] [docs/graphql/core/actions/logs-clean-up.rst](https://github.com/hasura/graphql-engine/tree/master/docs/graphql/core/actions/logs-clean-up.rst)
+    - [ ] [docs/graphql/core/actions/transforms.rst](https://github.com/hasura/graphql-engine/tree/master/docs/graphql/core/actions/transforms.rst)
+    - [ ] [docs/graphql/core/actions/codegen](https://github.com/hasura/graphql-engine/tree/master/docs/graphql/core/actions/codegen)
+        - [ ] [docs/graphql/core/actions/codegen/index.rst](https://github.com/hasura/graphql-engine/tree/master/docs/graphql/core/actions/codegen/index.rst)
+        - [ ] [docs/graphql/core/actions/codegen/python-flask.rst](https://github.com/hasura/graphql-engine/tree/master/docs/graphql/core/actions/codegen/python-flask.rst)
+    - [ ] [docs/graphql/core/actions/types](https://github.com/hasura/graphql-engine/tree/master/docs/graphql/core/actions/types)
+        - [ ] [docs/graphql/core/actions/types/index.rst](https://github.com/hasura/graphql-engine/tree/master/docs/graphql/core/actions/types/index.rst)
+- [ ] [docs/graphql/core/api-reference](https://github.com/hasura/graphql-engine/tree/master/docs/graphql/core/api-reference)
+    - [ ] [docs/graphql/core/api-reference/config.rst](https://github.com/hasura/graphql-engine/tree/master/docs/graphql/core/api-reference/config.rst)
+    - [ ] [docs/graphql/core/api-reference/explain.rst](https://github.com/hasura/graphql-engine/tree/master/docs/graphql/core/api-reference/explain.rst)
+    - [ ] [docs/graphql/core/api-reference/health.rst](https://github.com/hasura/graphql-engine/tree/master/docs/graphql/core/api-reference/health.rst)
+    - [ ] [docs/graphql/core/api-reference/index.rst](https://github.com/hasura/graphql-engine/tree/master/docs/graphql/core/api-reference/index.rst)
+    - [ ] [docs/graphql/core/api-reference/pgdump.rst](https://github.com/hasura/graphql-engine/tree/master/docs/graphql/core/api-reference/pgdump.rst)
+    - [ ] [docs/graphql/core/api-reference/restified.rst](https://github.com/hasura/graphql-engine/tree/master/docs/graphql/core/api-reference/restified.rst)
+    - [ ] [docs/graphql/core/api-reference/syntax-defs.rst](https://github.com/hasura/graphql-engine/tree/master/docs/graphql/core/api-reference/syntax-defs.rst)
+    - [ ] [docs/graphql/core/api-reference/version.rst](https://github.com/hasura/graphql-engine/tree/master/docs/graphql/core/api-reference/version.rst)
+    - [ ] [docs/graphql/core/api-reference/graphql-api](https://github.com/hasura/graphql-engine/tree/master/docs/graphql/core/api-reference/graphql-api)
+        - [ ] [docs/graphql/core/api-reference/graphql-api/index.rst](https://github.com/hasura/graphql-engine/tree/master/docs/graphql/core/api-reference/graphql-api/index.rst)
+        - [ ] [docs/graphql/core/api-reference/graphql-api/mutation.rst](https://github.com/hasura/graphql-engine/tree/master/docs/graphql/core/api-reference/graphql-api/mutation.rst)
+        - [ ] [docs/graphql/core/api-reference/graphql-api/query.rst](https://github.com/hasura/graphql-engine/tree/master/docs/graphql/core/api-reference/graphql-api/query.rst)
+    - [ ] [docs/graphql/core/api-reference/metadata-api](https://github.com/hasura/graphql-engine/tree/master/docs/graphql/core/api-reference/metadata-api)
+        - [ ] [docs/graphql/core/api-reference/metadata-api/actions.rst](https://github.com/hasura/graphql-engine/tree/master/docs/graphql/core/api-reference/metadata-api/actions.rst)
+        - [ ] [docs/graphql/core/api-reference/metadata-api/computed-field.rst](https://github.com/hasura/graphql-engine/tree/master/docs/graphql/core/api-reference/metadata-api/computed-field.rst)
+        - [ ] [docs/graphql/core/api-reference/metadata-api/custom-functions.rst](https://github.com/hasura/graphql-engine/tree/master/docs/graphql/core/api-reference/metadata-api/custom-functions.rst)
+        - [ ] [docs/graphql/core/api-reference/metadata-api/custom-types.rst](https://github.com/hasura/graphql-engine/tree/master/docs/graphql/core/api-reference/metadata-api/custom-types.rst)
+        - [ ] [docs/graphql/core/api-reference/metadata-api/dataerrors.csv](https://github.com/hasura/graphql-engine/tree/master/docs/graphql/core/api-reference/metadata-api/dataerrors.csv)
+        - [ ] [docs/graphql/core/api-reference/metadata-api/event-triggers.rst](https://github.com/hasura/graphql-engine/tree/master/docs/graphql/core/api-reference/metadata-api/event-triggers.rst)
+        - [ ] [docs/graphql/core/api-reference/metadata-api/index.rst](https://github.com/hasura/graphql-engine/tree/master/docs/graphql/core/api-reference/metadata-api/index.rst)
+        - [ ] [docs/graphql/core/api-reference/metadata-api/inherited-roles.rst](https://github.com/hasura/graphql-engine/tree/master/docs/graphql/core/api-reference/metadata-api/inherited-roles.rst)
+        - [ ] [docs/graphql/core/api-reference/metadata-api/introspection.rst](https://github.com/hasura/graphql-engine/tree/master/docs/graphql/core/api-reference/metadata-api/introspection.rst)
+        - [ ] [docs/graphql/core/api-reference/metadata-api/manage-metadata.rst](https://github.com/hasura/graphql-engine/tree/master/docs/graphql/core/api-reference/metadata-api/manage-metadata.rst)
+        - [ ] [docs/graphql/core/api-reference/metadata-api/network.rst](https://github.com/hasura/graphql-engine/tree/master/docs/graphql/core/api-reference/metadata-api/network.rst)
+        - [ ] [docs/graphql/core/api-reference/metadata-api/permission.rst](https://github.com/hasura/graphql-engine/tree/master/docs/graphql/core/api-reference/metadata-api/permission.rst)
+        - [ ] [docs/graphql/core/api-reference/metadata-api/query-collections.rst](https://github.com/hasura/graphql-engine/tree/master/docs/graphql/core/api-reference/metadata-api/query-collections.rst)
+        - [ ] [docs/graphql/core/api-reference/metadata-api/relationship.rst](https://github.com/hasura/graphql-engine/tree/master/docs/graphql/core/api-reference/metadata-api/relationship.rst)
+        - [ ] [docs/graphql/core/api-reference/metadata-api/remote-relationships.rst](https://github.com/hasura/graphql-engine/tree/master/docs/graphql/core/api-reference/metadata-api/remote-relationships.rst)
+        - [ ] [docs/graphql/core/api-reference/metadata-api/remote-schema-permissions.rst](https://github.com/hasura/graphql-engine/tree/master/docs/graphql/core/api-reference/metadata-api/remote-schema-permissions.rst)
+        - [ ] [docs/graphql/core/api-reference/metadata-api/remote-schemas.rst](https://github.com/hasura/graphql-engine/tree/master/docs/graphql/core/api-reference/metadata-api/remote-schemas.rst)
+        - [ ] [docs/graphql/core/api-reference/metadata-api/restified-endpoints.rst](https://github.com/hasura/graphql-engine/tree/master/docs/graphql/core/api-reference/metadata-api/restified-endpoints.rst)
+        - [ ] [docs/graphql/core/api-reference/metadata-api/scheduled-triggers.rst](https://github.com/hasura/graphql-engine/tree/master/docs/graphql/core/api-reference/metadata-api/scheduled-triggers.rst)
+        - [ ] [docs/graphql/core/api-reference/metadata-api/source.rst](https://github.com/hasura/graphql-engine/tree/master/docs/graphql/core/api-reference/metadata-api/source.rst)
+        - [ ] [docs/graphql/core/api-reference/metadata-api/table-view.rst](https://github.com/hasura/graphql-engine/tree/master/docs/graphql/core/api-reference/metadata-api/table-view.rst)
+    - [ ] [docs/graphql/core/api-reference/relay-graphql-api](https://github.com/hasura/graphql-engine/tree/master/docs/graphql/core/api-reference/relay-graphql-api)
+        - [ ] [docs/graphql/core/api-reference/relay-graphql-api/index.rst](https://github.com/hasura/graphql-engine/tree/master/docs/graphql/core/api-reference/relay-graphql-api/index.rst)
+        - [ ] [docs/graphql/core/api-reference/relay-graphql-api/mutation.rst](https://github.com/hasura/graphql-engine/tree/master/docs/graphql/core/api-reference/relay-graphql-api/mutation.rst)
+        - [ ] [docs/graphql/core/api-reference/relay-graphql-api/query.rst](https://github.com/hasura/graphql-engine/tree/master/docs/graphql/core/api-reference/relay-graphql-api/query.rst)
+    - [ ] [docs/graphql/core/api-reference/schema-api](https://github.com/hasura/graphql-engine/tree/master/docs/graphql/core/api-reference/schema-api)
+        - [ ] [docs/graphql/core/api-reference/schema-api/index.rst](https://github.com/hasura/graphql-engine/tree/master/docs/graphql/core/api-reference/schema-api/index.rst)
+        - [ ] [docs/graphql/core/api-reference/schema-api/run-sql.rst](https://github.com/hasura/graphql-engine/tree/master/docs/graphql/core/api-reference/schema-api/run-sql.rst)
+    - [ ] [docs/graphql/core/api-reference/schema-metadata-api](https://github.com/hasura/graphql-engine/tree/master/docs/graphql/core/api-reference/schema-metadata-api)
+        - [ ] [docs/graphql/core/api-reference/schema-metadata-api/actions.rst](https://github.com/hasura/graphql-engine/tree/master/docs/graphql/core/api-reference/schema-metadata-api/actions.rst)
+        - [ ] [docs/graphql/core/api-reference/schema-metadata-api/computed-field.rst](https://github.com/hasura/graphql-engine/tree/master/docs/graphql/core/api-reference/schema-metadata-api/computed-field.rst)
+        - [ ] [docs/graphql/core/api-reference/schema-metadata-api/custom-functions.rst](https://github.com/hasura/graphql-engine/tree/master/docs/graphql/core/api-reference/schema-metadata-api/custom-functions.rst)
+        - [ ] [docs/graphql/core/api-reference/schema-metadata-api/custom-types.rst](https://github.com/hasura/graphql-engine/tree/master/docs/graphql/core/api-reference/schema-metadata-api/custom-types.rst)
+        - [ ] [docs/graphql/core/api-reference/schema-metadata-api/dataerrors.csv](https://github.com/hasura/graphql-engine/tree/master/docs/graphql/core/api-reference/schema-metadata-api/dataerrors.csv)
+        - [ ] [docs/graphql/core/api-reference/schema-metadata-api/event-triggers.rst](https://github.com/hasura/graphql-engine/tree/master/docs/graphql/core/api-reference/schema-metadata-api/event-triggers.rst)
+        - [ ] [docs/graphql/core/api-reference/schema-metadata-api/index.rst](https://github.com/hasura/graphql-engine/tree/master/docs/graphql/core/api-reference/schema-metadata-api/index.rst)
+        - [ ] [docs/graphql/core/api-reference/schema-metadata-api/manage-metadata.rst](https://github.com/hasura/graphql-engine/tree/master/docs/graphql/core/api-reference/schema-metadata-api/manage-metadata.rst)
+        - [ ] [docs/graphql/core/api-reference/schema-metadata-api/permission.rst](https://github.com/hasura/graphql-engine/tree/master/docs/graphql/core/api-reference/schema-metadata-api/permission.rst)
+        - [ ] [docs/graphql/core/api-reference/schema-metadata-api/query-collections.rst](https://github.com/hasura/graphql-engine/tree/master/docs/graphql/core/api-reference/schema-metadata-api/query-collections.rst)
+        - [ ] [docs/graphql/core/api-reference/schema-metadata-api/relationship.rst](https://github.com/hasura/graphql-engine/tree/master/docs/graphql/core/api-reference/schema-metadata-api/relationship.rst)
+        - [ ] [docs/graphql/core/api-reference/schema-metadata-api/remote-relationships.rst](https://github.com/hasura/graphql-engine/tree/master/docs/graphql/core/api-reference/schema-metadata-api/remote-relationships.rst)
+        - [ ] [docs/graphql/core/api-reference/schema-metadata-api/remote-schema-permissions.rst](https://github.com/hasura/graphql-engine/tree/master/docs/graphql/core/api-reference/schema-metadata-api/remote-schema-permissions.rst)
+        - [ ] [docs/graphql/core/api-reference/schema-metadata-api/remote-schemas.rst](https://github.com/hasura/graphql-engine/tree/master/docs/graphql/core/api-reference/schema-metadata-api/remote-schemas.rst)
+        - [ ] [docs/graphql/core/api-reference/schema-metadata-api/restified-endpoints.rst](https://github.com/hasura/graphql-engine/tree/master/docs/graphql/core/api-reference/schema-metadata-api/restified-endpoints.rst)
+        - [ ] [docs/graphql/core/api-reference/schema-metadata-api/run-sql.rst](https://github.com/hasura/graphql-engine/tree/master/docs/graphql/core/api-reference/schema-metadata-api/run-sql.rst)
+        - [ ] [docs/graphql/core/api-reference/schema-metadata-api/scheduled-triggers.rst](https://github.com/hasura/graphql-engine/tree/master/docs/graphql/core/api-reference/schema-metadata-api/scheduled-triggers.rst)
+        - [ ] [docs/graphql/core/api-reference/schema-metadata-api/table-view.rst](https://github.com/hasura/graphql-engine/tree/master/docs/graphql/core/api-reference/schema-metadata-api/table-view.rst)
+
 </details>
-
-- [ ] [Core](https://github.com/hasura/graphql-engine/tree/master/docs-new/docs/graphql/core/) @KRRISH96 https://github.com/hasura/graphql-engine/pull/xyz
-
 
 ### Completed Doc Files
 The completed ones will be moved here periodically to have the available ones easy visibility.
