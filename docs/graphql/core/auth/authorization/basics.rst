@@ -23,7 +23,7 @@ To understand the basics of access control in Hasura, let's take a look at this 
   :alt: Understanding access control in Hasura
 
 This query returns the right set of results by defining the requirements for columns and rows in a given
-table. Hasura's rule-based access control works similary - you define the following permissions for a
+table. Hasura's rule-based access control works similarly - you define the following permissions for a
 combination of **role**, **table** and **action** (*insert, update, select and delete*):
 
 **Row-level permissions**
@@ -128,7 +128,7 @@ Now let's define an access control rule for the ``authors`` table for a role ``u
 
   .. tab:: API
 
-    You can add select permissions by using the :ref:`create_select_permission metadata API <create_select_permission>`:
+    You can add select permissions by using the :ref:`pg_create_select_permission metadata API <pg_create_select_permission>`:
 
     .. code-block:: http
 
@@ -168,7 +168,7 @@ the ``Request Headers`` section of ``GraphiQL`` as highlighted below:
 
 As you can see, the results are now filtered based on the access control rule for the role ``user``
 (*since that is the role indicated by the* ``X-Hasura-Role`` *session variable*) and the results are
-restricted to only those rows where the value in the ``id`` column is equal to ``1`` (*as indicated by
+restricted to only those rows where the value in the ``id`` column is equal to ``3`` (*as indicated by
 the* ``X-Hasura-User-ID`` *session variable*).
 
 As described in the :ref:`Introduction to Authentication and Authorization <authorization>` section of the docs,
