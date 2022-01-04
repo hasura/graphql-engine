@@ -10,7 +10,7 @@ const config = {
   tagline: 'Instant GraphQL on all your data',
   url: 'https://hasura.io/',
   baseUrl: '/',
-  onBrokenLinks: 'throw',
+  onBrokenLinks: 'warn',
   onBrokenMarkdownLinks: 'warn',
   favicon: '/img/favicon.png',
   organizationName: 'hasura',
