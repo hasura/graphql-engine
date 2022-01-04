@@ -104,7 +104,7 @@ func GetServerStatus(endpoint string) (err error) {
 	if err != nil {
 		return fmt.Errorf("error while parsing the endpoint :%w", err)
 	}
-	uri.Path = path.Join(uri.Path, "healthz")
+	uri.Path = path.Join(uri.Path, "hasura/healthz")
 	resp, err := http.Get(uri.String())
 	if err != nil {
 		return fmt.Errorf("making http request failed: %w", err)
