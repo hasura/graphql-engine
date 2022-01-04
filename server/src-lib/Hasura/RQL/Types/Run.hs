@@ -50,7 +50,8 @@ instance (Monad m) => HasServerConfigCtx (RunT m) where
   askServerConfigCtx = asks _rcServerConfigCtx
 
 instance (MonadResolveSource m) => MonadResolveSource (RunT m) where
-  getSourceResolver = RunT . lift . lift $ getSourceResolver
+  getPGSourceResolver = RunT . lift . lift $ getPGSourceResolver
+  getMSSQLSourceResolver = RunT . lift . lift $ getMSSQLSourceResolver
 
 peelRun ::
   RunCtx ->

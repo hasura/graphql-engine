@@ -22,6 +22,7 @@ import Hasura.App
     initGlobalCtx,
     initialiseServeCtx,
     mkHGEServer,
+    mkMSSQLSourceResolver,
     mkPgSourceResolver,
     notifySchemaCacheSyncTx,
     setCatalogStateTx,
@@ -171,7 +172,8 @@ runInSeparateTx tx = do
   liftEitherM $ liftIO $ runExceptT $ Q.runTx pool (Q.RepeatableRead, Nothing) tx
 
 instance MonadResolveSource TestM where
-  getSourceResolver = mkPgSourceResolver <$> asks tcPostgresLogger
+  getPGSourceResolver = mkPgSourceResolver <$> asks tcPostgresLogger
+  getMSSQLSourceResolver = return mkMSSQLSourceResolver
 
 instance UserAuthentication (TraceT TestM) where
   resolveUserInfo logger manager headers authMode reqs =

@@ -32,6 +32,7 @@ module Hasura.App
     -- * Exported for testing
     mkHGEServer,
     mkPgSourceResolver,
+    mkMSSQLSourceResolver,
   )
 where
 
@@ -65,6 +66,7 @@ import Data.Time.Clock qualified as Clock
 import Data.Yaml qualified as Y
 import Database.PG.Query qualified as Q
 import GHC.AssertNF.CPP
+import Hasura.Backends.MSSQL.Connection
 import Hasura.Backends.Postgres.Connection
 import Hasura.Base.Error
 import Hasura.Eventing.Common
@@ -386,6 +388,7 @@ initialiseServeCtx env GlobalCtx {..} so@ServeOptions {..} = do
         _gcHttpManager
         serverConfigCtx
         (mkPgSourceResolver pgLogger)
+        mkMSSQLSourceResolver
 
   -- Start a background thread for listening schema sync events from other server instances,
   metaVersionRef <- liftIO $ STM.newEmptyTMVarIO
@@ -433,7 +436,8 @@ migrateCatalogSchema ::
   Maybe (SourceConnConfiguration ('Postgres 'Vanilla)) ->
   HTTP.Manager ->
   ServerConfigCtx ->
-  SourceResolver ->
+  SourceResolver ('Postgres 'Vanilla) ->
+  SourceResolver ('MSSQL) ->
   m (RebuildableSchemaCache, UTCTime)
 migrateCatalogSchema
   env
@@ -442,7 +446,8 @@ migrateCatalogSchema
   defaultSourceConfig
   httpManager
   serverConfigCtx
-  sourceResolver = do
+  pgSourceResolver
+  mssqlSourceResolver = do
     currentTime <- liftIO Clock.getCurrentTime
     initialiseResult <- runExceptT $ do
       -- TODO: should we allow the migration to happen during maintenance mode?
@@ -455,7 +460,7 @@ migrateCatalogSchema
             (_sccMaintenanceMode serverConfigCtx)
             currentTime
       let cacheBuildParams =
-            CacheBuildParams httpManager sourceResolver serverConfigCtx
+            CacheBuildParams httpManager pgSourceResolver mssqlSourceResolver serverConfigCtx
           buildReason = CatalogSync
       schemaCache <-
         runCacheBuild cacheBuildParams $
@@ -1053,7 +1058,8 @@ instance (MonadIO m) => WS.MonadWSLog (PGMetadataStorageAppT m) where
   logWSLog = unLogger
 
 instance (Monad m) => MonadResolveSource (PGMetadataStorageAppT m) where
-  getSourceResolver = mkPgSourceResolver <$> asks snd
+  getPGSourceResolver = mkPgSourceResolver <$> asks snd
+  getMSSQLSourceResolver = return mkMSSQLSourceResolver
 
 instance (Monad m) => EB.MonadQueryTags (PGMetadataStorageAppT m) where
   createQueryTags _attributes _qtSourceConfig = return $ emptyQueryTagsComment
@@ -1185,7 +1191,7 @@ telemetryNotice =
     <> "usage stats which allows us to keep improving Hasura at warp speed. "
     <> "To read more or opt-out, visit https://hasura.io/docs/latest/graphql/core/guides/telemetry.html"
 
-mkPgSourceResolver :: Q.PGLogger -> SourceResolver
+mkPgSourceResolver :: Q.PGLogger -> SourceResolver ('Postgres 'Vanilla)
 mkPgSourceResolver pgLogger _ config = runExceptT do
   env <- lift Env.getEnvironment
   let PostgresSourceConnInfo urlConf poolSettings allowPrepare isoLevel _ = _pccConnectionInfo config
@@ -1204,3 +1210,10 @@ mkPgSourceResolver pgLogger _ config = runExceptT do
   pgPool <- liftIO $ Q.initPGPool connInfo connParams pgLogger
   let pgExecCtx = mkPGExecCtx isoLevel pgPool
   pure $ PGSourceConfig pgExecCtx connInfo Nothing mempty
+
+mkMSSQLSourceResolver :: SourceResolver ('MSSQL)
+mkMSSQLSourceResolver _name (MSSQLConnConfiguration connInfo _) = runExceptT do
+  env <- lift Env.getEnvironment
+  (connString, mssqlPool) <- createMSSQLPool connInfo env
+  let mssqlExecCtx = mkMSSQLExecCtx mssqlPool
+  pure $ MSSQLSourceConfig connString mssqlExecCtx

@@ -18,6 +18,7 @@ import Database.MSSQL.TransactionSpec qualified as TransactionSpec
 import Database.PG.Query qualified as Q
 import Hasura.App
   ( PGMetadataStorageAppT (..),
+    mkMSSQLSourceResolver,
     mkPgSourceResolver,
   )
 import Hasura.Backends.MySQL.DataLoader.ExecuteTests qualified as MySQLDataLoader
@@ -151,7 +152,7 @@ buildPostgresSpecs = do
             readOnlyMode = ReadOnlyModeDisabled
             serverConfigCtx =
               ServerConfigCtx FunctionPermissionsInferred RemoteSchemaPermsDisabled sqlGenCtx maintenanceMode mempty EventingEnabled readOnlyMode
-            cacheBuildParams = CacheBuildParams httpManager (mkPgSourceResolver print) serverConfigCtx
+            cacheBuildParams = CacheBuildParams httpManager (mkPgSourceResolver print) mkMSSQLSourceResolver serverConfigCtx
             pgLogger = print
 
             run :: MetadataStorageT (PGMetadataStorageAppT CacheBuild) a -> IO a

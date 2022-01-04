@@ -63,7 +63,7 @@ resolveSourceConfig ::
   Env.Environment ->
   m (Either QErr (SourceConfig ('Postgres pgKind)))
 resolveSourceConfig name config _env = runExceptT do
-  sourceResolver <- getSourceResolver
+  sourceResolver <- getPGSourceResolver
   liftEitherM $ liftIO $ sourceResolver name config
 
 -- | 'PGSourceLockQuery' is a data type which represents the contents of a single object of the

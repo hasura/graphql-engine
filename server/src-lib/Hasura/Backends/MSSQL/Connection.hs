@@ -6,7 +6,8 @@
 module Hasura.Backends.MSSQL.Connection
   ( MSSQLConnConfiguration (MSSQLConnConfiguration),
     MSSQLPool,
-    MSSQLSourceConfig (MSSQLSourceConfig, _mscConnectionPool),
+    MSSQLSourceConfig (MSSQLSourceConfig, _mscExecCtx),
+    MSSQLExecCtx (..),
     createMSSQLPool,
     drainMSSQLPool,
     fromMSSQLTxError,
@@ -15,6 +16,7 @@ module Hasura.Backends.MSSQL.Connection
     odbcValueToJValue,
     runJSONPathQuery,
     withMSSQLPool,
+    mkMSSQLExecCtx,
   )
 where
 
@@ -109,7 +111,8 @@ instance FromJSON MSSQLConnectionInfo where
       <*> o .:? "pool_settings" .!= defaultMSSQLPoolSettings
 
 data MSSQLConnConfiguration = MSSQLConnConfiguration
-  { _mccConnectionInfo :: !MSSQLConnectionInfo
+  { _mccConnectionInfo :: !MSSQLConnectionInfo,
+    _mccReadReplicas :: !(Maybe (NonEmpty MSSQLConnectionInfo))
   }
   deriving (Show, Eq, Generic)
 
@@ -169,11 +172,10 @@ odbcExceptionToJSONValue =
 
 runJSONPathQuery ::
   (MonadError QErr m, MonadIO m, MonadBaseControl IO m) =>
-  MSSQLPool ->
+  MSSQLRunTx ->
   ODBC.Query ->
   m Text
-runJSONPathQuery pool query =
-  mconcat <$> withMSSQLPool pool (`ODBC.query` query)
+runJSONPathQuery mssqlRunTx query = mconcat <$> mssqlRunTx (`ODBC.query` query)
 
 withMSSQLPool ::
   (MonadIO m, MonadBaseControl IO m, MonadError QErr m) =>
@@ -185,9 +187,31 @@ withMSSQLPool (MSSQLPool pool) f = do
   onLeft res $ \e ->
     throw500WithDetail "sql server exception" $ odbcExceptionToJSONValue e
 
+type MSSQLRunTx =
+  forall m a. (MonadError QErr m, MonadIO m, MonadBaseControl IO m) => (ODBC.Connection -> m a) -> m a
+
+-- | Execution Context required to execute MSSQL transactions
+data MSSQLExecCtx = MSSQLExecCtx
+  { -- | A function that runs read-only queries
+    mssqlRunReadOnly :: !MSSQLRunTx,
+    -- | A function that runs read-write queries
+    mssqlRunReadWrite :: !MSSQLRunTx,
+    -- | Destroys connection pools
+    mssqlDestroyConn :: IO ()
+  }
+
+-- | Creates a MSSQL execution context for a single primary pool
+mkMSSQLExecCtx :: MSSQLPool -> MSSQLExecCtx
+mkMSSQLExecCtx pool =
+  MSSQLExecCtx
+    { mssqlRunReadOnly = withMSSQLPool pool,
+      mssqlRunReadWrite = withMSSQLPool pool,
+      mssqlDestroyConn = drainMSSQLPool pool
+    }
+
 data MSSQLSourceConfig = MSSQLSourceConfig
   { _mscConnectionString :: !MSSQLConnectionString,
-    _mscConnectionPool :: !MSSQLPool
+    _mscExecCtx :: !MSSQLExecCtx
   }
   deriving (Generic)
 

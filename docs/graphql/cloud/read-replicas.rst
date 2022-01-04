@@ -9,7 +9,7 @@ Read replicas
 
 .. contents:: Table of contents
   :backlinks: none
-  :depth: 1
+  :depth: 2
   :local:
 
 Introduction
@@ -20,14 +20,15 @@ Hasura Cloud can load balance queries and subscriptions across read replicas whi
 Adding read replica urls
 ------------------------
 
+Postgres
+^^^^^^^^
+
 .. rst-class:: api_tabs
 .. tabs::
 
    .. tab:: Console
 
-     Currently it is only possible to add read replicas for a database at the time of connecting.
-
-     Head to ``Data -> Manage -> Connect database``
+     Head to ``Data -> Manage -> <db-name> -> Edit``
 
      .. thumbnail:: /img/graphql/cloud/read-replicas/connect-db-with-replica.png
         :alt: Connect database with read replica
@@ -66,10 +67,10 @@ Adding read replica urls
 
    .. tab:: API
 
-      Currently it is only possible to add read replicas for a database at the time of connecting using the :ref:`pg_add_source metadata API <pg_add_source>`
+      You can add read replicas for a database using the :ref:`pg_add_source metadata API <pg_add_source>`
 
       .. code-block:: http
-         :emphasize-lines: 15-26
+         :emphasize-lines: 16-27
 
          POST /v1/metadata HTTP/1.1
          Content-Type: application/json
@@ -79,6 +80,7 @@ Adding read replica urls
            "type": "pg_add_source",
            "args": {
              "name": "<db_name>",
+             "replace_configuration": true,
              "configuration": {
                "connection_info": {
                  "database_url": {
@@ -115,3 +117,81 @@ Adding read replica urls
    ``HASURA_GRAPHQL_CONNECTIONS_PER_READ_REPLICA``
 
    ``HASURA_GRAPHQL_STRIPES_PER_READ_REPLICA``
+
+MS SQL Server
+^^^^^^^^^^^^^
+
+.. rst-class:: api_tabs
+.. tabs::
+
+   .. tab:: Console
+   
+      Support will be added soon
+      
+   .. tab:: CLI
+
+      You can add read replicas for a database by adding their config to the ``/metadata/databases/database.yaml`` file:
+
+      .. code-block:: yaml
+         :emphasize-lines: 9 - 13 
+
+         - name: <db-name>
+           kind: mssql
+           configuration:
+              connection_info:
+                connection_string: <DATABASE_URL>
+                pool_settings:
+                  idle_timeout: 180
+                  max_connections: 50
+              read_replicas:
+                - connection_string: <DATABASE_REPLICA_URL>
+                  pool_settings: 
+                    idle_timeout: 25,
+                    max_connections: 100
+
+      Apply the metadata by running:
+
+      .. code-block:: yaml
+
+         hasura metadata apply
+
+   .. tab:: API
+
+      You can add read replicas for a database using the using the :ref:`mssql_add_source metadata API <mssql_add_source>`
+
+      .. code-block:: http
+          :emphasize-lines: 19-27
+
+          POST /v1/metadata HTTP/1.1
+          Content-Type: application/json
+          X-Hasura-Role: admin
+
+          {
+            "type":"mssql_add_source",
+            "args":{
+                "name":"<db_name>",
+                "replace_configuration": true,
+                "configuration":{
+                  "connection_info":{
+                      "connection_string":{
+                        "from_env":"<DATABASE_URL>"
+                      },
+                      "pool_settings":{
+                        "max_connections":50,
+                        "idle_timeout":180
+                      },
+                      "read_replicas":[
+                        {
+                            "connection_string":"<DATABASE_REPLICA_URL>",
+                            "pool_settings":{
+                              "idle_timeout":180,
+                              "max_connections":50
+                            }
+                        }
+                      ]
+                  }
+                }
+            }
+          }
+
+         
