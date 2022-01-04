@@ -187,18 +187,21 @@ func (o *MigrateApplyOptions) Apply() (chan MigrateApplyResult, error) {
 		if err == nil {
 			return "", nil
 		}
-		if err == migrate.ErrNoChange {
+		var errPath *os.PathError
+		var errNotFound *errDatabaseMigrationDirectoryNotFound
+
+		if errors.Is(err, migrate.ErrNoChange) {
 			return fmt.Sprintf("nothing to apply on database %s", o.Source.Name), nil
-		} else if e, ok := err.(*os.PathError); ok {
+		} else if errors.As(err, &errPath) {
 			// If Op is first, then log No migrations to apply
-			if e.Op == "first" {
+			if errPath.Op == "first" {
 				return fmt.Sprintf("nothing to apply on database %s", o.Source.Name), nil
 			}
-		} else if e, ok := err.(*errDatabaseMigrationDirectoryNotFound); ok {
+		} else if errors.As(err, &errNotFound) {
 			// check if the returned error is a directory not found error
 			// ie might be because  a migrations/<source_name> directory is not found
 			// if so skip this
-			return "", fmt.Errorf("skipping applying migrations on database %s, encountered: \n%s", o.Source.Name, e.Error())
+			return "", fmt.Errorf("skipping applying migrations on database %s, encountered: \n%s", o.Source.Name, errNotFound.Error())
 		}
 		return "", fmt.Errorf("skipping applying migrations on database %s, encountered: \n%w", o.Source.Name, err)
 	}
