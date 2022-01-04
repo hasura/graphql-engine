@@ -447,7 +447,7 @@ getJobResults sc@BigQuerySourceConfig {..} Job {jobId, location} Fetch {pageToke
         <> T.unpack _scProjectId
         <> "/queries/"
         <> T.unpack jobId
-        <> "?alt=json"
+        <> "?alt=json&prettyPrint=false"
         <> "&location="
         <> T.unpack location
         <> "&"
@@ -517,7 +517,7 @@ createQueryJob sc@BigQuerySourceConfig {..} BigQuery {..} =
       let url =
             "POST https://content-bigquery.googleapis.com/bigquery/v2/projects/"
               <> T.unpack _scProjectId
-              <> "/jobs?alt=json"
+              <> "/jobs?alt=json&prettyPrint=false"
       let req =
             setRequestHeader "Content-Type" ["application/json"] $
               setRequestBodyLBS body $
