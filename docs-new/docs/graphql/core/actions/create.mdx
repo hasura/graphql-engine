@@ -41,7 +41,7 @@ Let's look at **examples** for mutation and query type actions.
   </TabItem>
   <TabItem value="cli" label="CLI">
   
-<Link to="#install_hasura_cli">Install</Link> or <Link to="#hasura_update-cli">update to</Link> the latest version of Hasura CLI.
+<Link to="/graphql/core/hasura-cli/install-hasura-cli">Install</Link> or <Link to="/graphql/core/hasura-cli/hasura_update-cli">update to</Link> the latest version of Hasura CLI.
 
 You can either get started with an existing project or create a new project.
 
@@ -69,7 +69,7 @@ Run `hasura metadata export` so that you get server's metadata into the `metadat
 
   </TabItem>
   <TabItem value="api" label="API">
-    There is no setup required for defining actions via the <Link to="#metadata_api_actions">actions metadata API</Link>.
+    There is no setup required for defining actions via the <Link to="/graphql/core/api-reference/metadata-api/actions">actions metadata API</Link>.
   </TabItem>
 </Tabs>
 
@@ -143,7 +143,7 @@ type LoginResponse {
   </TabItem>
   <TabItem value="api" label="API">
 
-It is essential that the custom types used in the action are defined *beforehand* via the <Link to="#metadata_set_custom_types">set_custom_types metadata API</Link>:
+It is essential that the custom types used in the action are defined *beforehand* via the <Link to="/graphql/core/api-reference/metadata-api/custom-types#metadata_set_custom_types">set_custom_types metadata API</Link>:
 
 ```http
 POST /v1/query HTTP/1.1
@@ -171,7 +171,7 @@ X-Hasura-Role: admin
 }
 ```
 
-Once the custom types are defined, we can create an action via the <Link to="#metadata_create_action">create_action metadata API</Link>:
+Once the custom types are defined, we can create an action via the <Link to="/graphql/core/api-reference/metadata-api/actions#metadata_create_action">create_action metadata API</Link>:
 
 ```http
 POST /v1/query HTTP/1.1
@@ -260,9 +260,9 @@ Update the `handler` to the above endpoint.
   </TabItem>
   <TabItem value="api" label="API">
 
-The action handler must be set when creating an action via the <Link to="#metadata_create_action">create_action metadata API</Link>.
+The action handler must be set when creating an action via the <Link to="/graphql/core/api-reference/metadata-api/actions#metadata_create_action">create_action metadata API</Link>.
 
-It can be updated later by using the <Link to="#metadata_update_action">update_action metadata API</Link>.
+It can be updated later by using the <Link to="/graphql/core/api-reference/metadata-api/actions#metadata_update_action">update_action metadata API</Link>.
 
   </TabItem>
 </Tabs>
@@ -280,7 +280,7 @@ ENV variable whose value is set to `https://my-handler-endpoint`
 :::
 
 :::info Note
-If you are running Hasura using Docker, ensure that the Hasura Docker container can reach the handler endpoint. See [this page](#docker_networking) for Docker networking.
+If you are running Hasura using Docker, ensure that the Hasura Docker container can reach the handler endpoint. See [this page](/graphql/core/guides/docker-networking.mdx) for Docker networking.
 :::
 
 <hr />
@@ -302,7 +302,7 @@ Run `hasura metadata apply`.
   </TabItem>
   <TabItem value="api" label="API">
 
-An action will be created when sending a request to the <Link to="#metadata_create_action">create_action metadata API</Link>.
+An action will be created when sending a request to the <Link to="/graphql/core/api-reference/metadata-api/actions#metadata_create_action">create_action metadata API</Link>.
 
   </TabItem>
 </Tabs>
@@ -395,7 +395,7 @@ type AddResult {
   </TabItem>
   <TabItem value="api" label="API">
 
-It is essential that the custom types used in the action are defined *beforehand* via the <Link to="#metadata_set_custom_types">set_custom_types metadata API</Link>:
+It is essential that the custom types used in the action are defined *beforehand* via the <Link to="/graphql/core/api-reference/metadata-api/custom-types#metadata_set_custom_types">set_custom_types metadata API</Link>:
 
 ```http
 POST /v1/query HTTP/1.1
@@ -423,7 +423,7 @@ X-Hasura-Role: admin
 }
 ```
 
-Once the custom types are defined, we can create an action via the <Link to="#metadata_create_action">create_action metadata API</Link>:
+Once the custom types are defined, we can create an action via the <Link to="/graphql/core/api-reference/metadata-api/actions#metadata_create_action">create_action metadata API</Link>:
 
 ```http
 POST /v1/query HTTP/1.1
@@ -510,9 +510,9 @@ Update the `handler` to the above endpoint.
   <TabItem value="api" label="API">
 
 
-The action handler must be set when creating an action via the Once the custom types are defined, we can create an action via the <Link to="#metadata_create_action">create_action metadata API</Link>.
+The action handler must be set when creating an action via the Once the custom types are defined, we can create an action via the <Link to="/graphql/core/api-reference/metadata-api/actions#metadata_create_action">create_action metadata API</Link>.
 
-It can be updated later by using the <Link to="#metadata_update_action">update_action metadata API</Link>.
+It can be updated later by using the <Link to="/graphql/core/api-reference/metadata-api/actions#metadata_update_action">update_action metadata API</Link>.
   </TabItem>
 </Tabs>
 
@@ -540,7 +540,7 @@ Run `hasura metadata apply`.
   </TabItem>
   <TabItem value="api" label="API">
 
-An action will be created when sending a request to the <Link to="#metadata_create_action">create_action metadata API</Link>.
+An action will be created when sending a request to the <Link to="/graphql/core/api-reference/metadata-api/actions#metadata_create_action">create_action metadata API</Link>.
 
   </TabItem>
 </Tabs>

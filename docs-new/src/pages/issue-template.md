@@ -117,7 +117,6 @@ We will periodically add new batches as we complete the existing ones here, so y
     - [ ] [docs/graphql/core/actions/action-permissions.rst](https://github.com/hasura/graphql-engine/tree/master/docs/graphql/core/actions/action-permissions.rst)
     - [ ] [docs/graphql/core/actions/action-relationships.rst](https://github.com/hasura/graphql-engine/tree/master/docs/graphql/core/actions/action-relationships.rst)
     - [ ] [docs/graphql/core/actions/async-actions.rst](https://github.com/hasura/graphql-engine/tree/master/docs/graphql/core/actions/async-actions.rst)
-    - [ ] [docs/graphql/core/actions/create.rst](https://github.com/hasura/graphql-engine/tree/master/docs/graphql/core/actions/create.rst)
     - [ ] [docs/graphql/core/actions/debugging.rst](https://github.com/hasura/graphql-engine/tree/master/docs/graphql/core/actions/debugging.rst)
     - [ ] [docs/graphql/core/actions/derive.rst](https://github.com/hasura/graphql-engine/tree/master/docs/graphql/core/actions/derive.rst)
     - [ ] [docs/graphql/core/actions/index.rst](https://github.com/hasura/graphql-engine/tree/master/docs/graphql/core/actions/index.rst)
@@ -202,7 +201,7 @@ The completed ones will be moved here periodically to have the available ones ea
 <details>
 <summary>Hasura Core (`docs/graphql/core/`)</summary>
 
-- [x] [docs/graphql/core/actions/create](https://github.com/hasura/graphql-engine/tree/master/docs-new/docs/graphql/core/actions/create.mdx) @KRRISH96 https://github.com/hasura/graphql-engine/pull/xyz
+- [x] [docs/graphql/core/actions/create.rst](https://github.com/hasura/graphql-engine/tree/master/docs/graphql/core/actions/create.rst) @KRRISH96 PR#TODO
 
 </details>
 
