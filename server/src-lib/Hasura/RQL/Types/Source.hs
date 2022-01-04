@@ -28,7 +28,6 @@ import Control.Lens
 import Data.Aeson.Extended
 import Data.HashMap.Strict qualified as M
 import Database.PG.Query qualified as Q
-import Hasura.Backends.Postgres.Connection
 import Hasura.Base.Error
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
@@ -105,23 +104,28 @@ data ResolvedSource b = ResolvedSource
 
 type SourceTables b = HashMap SourceName (TableCache b)
 
-type SourceResolver =
-  SourceName -> PostgresConnConfiguration -> IO (Either QErr (SourceConfig ('Postgres 'Vanilla)))
+type SourceResolver b =
+  SourceName -> SourceConnConfiguration b -> IO (Either QErr (SourceConfig b))
 
 class (Monad m) => MonadResolveSource m where
-  getSourceResolver :: m SourceResolver
+  getPGSourceResolver :: m (SourceResolver ('Postgres 'Vanilla))
+  getMSSQLSourceResolver :: m (SourceResolver 'MSSQL)
 
 instance (MonadResolveSource m) => MonadResolveSource (ExceptT e m) where
-  getSourceResolver = lift getSourceResolver
+  getPGSourceResolver = lift getPGSourceResolver
+  getMSSQLSourceResolver = lift getMSSQLSourceResolver
 
 instance (MonadResolveSource m) => MonadResolveSource (ReaderT r m) where
-  getSourceResolver = lift getSourceResolver
+  getPGSourceResolver = lift getPGSourceResolver
+  getMSSQLSourceResolver = lift getMSSQLSourceResolver
 
 instance (MonadResolveSource m) => MonadResolveSource (Tracing.TraceT m) where
-  getSourceResolver = lift getSourceResolver
+  getPGSourceResolver = lift getPGSourceResolver
+  getMSSQLSourceResolver = lift getMSSQLSourceResolver
 
 instance (MonadResolveSource m) => MonadResolveSource (Q.TxET QErr m) where
-  getSourceResolver = lift getSourceResolver
+  getPGSourceResolver = lift getPGSourceResolver
+  getMSSQLSourceResolver = lift getMSSQLSourceResolver
 
 data MaintenanceModeVersion
   = -- | should correspond to the source catalog version from which the user

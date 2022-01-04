@@ -18,14 +18,14 @@ import Hasura.RQL.Types.SourceCustomization
 import Hasura.SQL.Backend
 
 resolveSourceConfig ::
-  (MonadIO m) =>
+  (MonadIO m, MonadResolveSource m) =>
   SourceName ->
   MSSQLConnConfiguration ->
   Env.Environment ->
   m (Either QErr MSSQLSourceConfig)
-resolveSourceConfig _name (MSSQLConnConfiguration connInfo) env = runExceptT do
-  (connString, mssqlPool) <- createMSSQLPool connInfo env
-  pure $ MSSQLSourceConfig connString mssqlPool
+resolveSourceConfig name config _env = runExceptT do
+  sourceResolver <- getMSSQLSourceResolver
+  liftEitherM $ liftIO $ sourceResolver name config
 
 resolveDatabaseMetadata ::
   (MonadIO m, MonadBaseControl IO m) =>
@@ -33,15 +33,15 @@ resolveDatabaseMetadata ::
   SourceTypeCustomization ->
   m (Either QErr (ResolvedSource 'MSSQL))
 resolveDatabaseMetadata config customization = runExceptT do
-  dbTablesMetadata <- withMSSQLPool pool $ Tx.runTxE fromMSSQLTxError loadDBMetadata
+  dbTablesMetadata <- (mssqlRunReadOnly mssqlExecCtx) $ Tx.runTxE fromMSSQLTxError loadDBMetadata
   pure $ ResolvedSource config customization dbTablesMetadata mempty mempty
   where
-    MSSQLSourceConfig _connString pool = config
+    MSSQLSourceConfig _connString mssqlExecCtx = config
 
 postDropSourceHook ::
   (MonadIO m) =>
   MSSQLSourceConfig ->
   m ()
-postDropSourceHook (MSSQLSourceConfig _ pool) =
+postDropSourceHook (MSSQLSourceConfig _ mssqlExecCtx) = do
   -- Close the connection
-  liftIO $ drainMSSQLPool pool
+  liftIO $ mssqlDestroyConn mssqlExecCtx

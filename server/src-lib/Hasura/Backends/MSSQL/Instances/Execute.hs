@@ -89,8 +89,7 @@ msDBQueryPlan userInfo sourceName sourceConfig qrf = do
   statement <- planQuery sessionVariables qrf
   let printer = fromSelect statement
       queryString = ODBC.renderQuery $ toQueryPretty printer
-      pool = _mscConnectionPool sourceConfig
-      odbcQuery = encJFromText <$> runJSONPathQuery pool (toQueryFlat printer)
+      odbcQuery = encJFromText <$> runJSONPathQuery (mssqlRunReadOnly $ _mscExecCtx sourceConfig) (toQueryFlat printer)
   pure $ DBStepInfo @'MSSQL sourceName sourceConfig (Just queryString) odbcQuery
 
 runShowplan ::
@@ -116,10 +115,9 @@ msDBQueryExplain fieldName userInfo sourceName sourceConfig qrf = do
   statement <- planQuery sessionVariables qrf
   let query = toQueryPretty (fromSelect statement)
       queryString = ODBC.renderQuery query
-      pool = _mscConnectionPool sourceConfig
       odbcQuery =
-        withMSSQLPool
-          pool
+        mssqlRunReadOnly
+          (_mscExecCtx sourceConfig)
           ( \conn -> liftIO do
               showplan <- runShowplan query conn
               pure
@@ -141,8 +139,8 @@ msDBLiveQueryExplain ::
 msDBLiveQueryExplain (LiveQueryPlan plan sourceConfig variables _) = do
   let (MultiplexedQuery' reselect) = _plqpQuery plan
       query = toQueryPretty $ fromSelect $ multiplexRootReselect [(dummyCohortId, variables)] reselect
-      pool = _mscConnectionPool sourceConfig
-  explainInfo <- withMSSQLPool pool (liftIO . runShowplan query)
+      mssqlExecCtx = (_mscExecCtx sourceConfig)
+  explainInfo <- (mssqlRunReadOnly mssqlExecCtx) (liftIO . runShowplan query)
   pure $ LiveQueryPlanExplanation (T.toTxt query) explainInfo variables
 
 --------------------------------------------------------------------------------
@@ -255,10 +253,9 @@ executeInsert userInfo stringifyNum sourceConfig annInsert = do
   -- Convert the leaf values from @'UnpreparedValue' to sql @'Expression'
   insert <- traverse (prepareValueQuery sessionVariables) annInsert
   let insertTx = buildInsertTx tableName withAlias stringifyNum insert
-  pure $ withMSSQLPool pool $ Tx.runTxE fromMSSQLTxError insertTx
+  pure $ mssqlRunReadWrite (_mscExecCtx sourceConfig) $ Tx.runTxE fromMSSQLTxError insertTx
   where
     sessionVariables = _uiSession userInfo
-    pool = _mscConnectionPool sourceConfig
     tableName = _aiTableName $ _aiData annInsert
     withAlias = "with_alias"
 
@@ -514,8 +511,7 @@ executeDelete ::
   m (ExceptT QErr IO EncJSON)
 executeDelete userInfo stringifyNum sourceConfig deleteOperation = do
   preparedDelete <- traverse (prepareValueQuery $ _uiSession userInfo) deleteOperation
-  let pool = _mscConnectionPool sourceConfig
-  pure $ withMSSQLPool pool $ Tx.runTxE fromMSSQLTxError (buildDeleteTx preparedDelete stringifyNum)
+  pure $ mssqlRunReadWrite (_mscExecCtx sourceConfig) $ Tx.runTxE fromMSSQLTxError (buildDeleteTx preparedDelete stringifyNum)
 
 -- | Converts a Delete IR AST to a transaction of three delete sql statements.
 --
@@ -572,10 +568,10 @@ executeUpdate ::
   m (ExceptT QErr IO EncJSON)
 executeUpdate userInfo stringifyNum sourceConfig updateOperation = do
   preparedUpdate <- traverse (prepareValueQuery $ _uiSession userInfo) updateOperation
-  let pool = _mscConnectionPool sourceConfig
+  let mssqlExecCtx = (_mscExecCtx sourceConfig)
   if null $ updateOperations . _auBackend $ updateOperation
     then pure $ pure $ IR.buildEmptyMutResp $ _auOutput preparedUpdate
-    else pure $ withMSSQLPool pool $ Tx.runTxE fromMSSQLTxError (buildUpdateTx preparedUpdate stringifyNum)
+    else pure $ (mssqlRunReadWrite mssqlExecCtx) $ Tx.runTxE fromMSSQLTxError (buildUpdateTx preparedUpdate stringifyNum)
 
 -- | Converts an Update IR AST to a transaction of three update sql statements.
 --
@@ -819,7 +815,7 @@ validateVariables sourceConfig sessionVariableValues prepState = do
   onJust
     canaryQuery
     ( \q -> do
-        _ :: [[ODBC.Value]] <- withMSSQLPool (_mscConnectionPool sourceConfig) (`ODBC.query` q)
+        _ :: [[ODBC.Value]] <- mssqlRunReadOnly (_mscExecCtx sourceConfig) (`ODBC.query` q)
         pure ()
     )
 

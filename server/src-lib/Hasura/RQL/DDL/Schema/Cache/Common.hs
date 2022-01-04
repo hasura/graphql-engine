@@ -165,7 +165,8 @@ $(makeLenses ''BuildOutputs)
 -- | Parameters required for schema cache build
 data CacheBuildParams = CacheBuildParams
   { _cbpManager :: !HTTP.Manager,
-    _cbpSourceResolver :: !SourceResolver,
+    _cbpPGSourceResolver :: !(SourceResolver ('Postgres 'Vanilla)),
+    _cbpMSSQLSourceResolver :: !(SourceResolver 'MSSQL),
     _cbpServerConfigCtx :: !ServerConfigCtx
   }
 
@@ -190,7 +191,8 @@ instance HasServerConfigCtx CacheBuild where
   askServerConfigCtx = asks _cbpServerConfigCtx
 
 instance MonadResolveSource CacheBuild where
-  getSourceResolver = asks _cbpSourceResolver
+  getPGSourceResolver = asks _cbpPGSourceResolver
+  getMSSQLSourceResolver = asks _cbpMSSQLSourceResolver
 
 runCacheBuild ::
   ( MonadIO m,
@@ -215,7 +217,8 @@ runCacheBuildM m = do
   params <-
     CacheBuildParams
       <$> askHttpManager
-      <*> getSourceResolver
+      <*> getPGSourceResolver
+      <*> getMSSQLSourceResolver
       <*> askServerConfigCtx
   runCacheBuild params m
 
