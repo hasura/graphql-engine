@@ -29,11 +29,12 @@ import Control.Monad.Morph (MFunctor (hoist), MonadTrans (..))
 import Control.Monad.Reader (MonadFix, MonadReader, ReaderT (..))
 import Database.ODBC.SQLServer (FromRow)
 import Database.ODBC.SQLServer qualified as ODBC
-import Hasura.Prelude (hoistEither, liftEither, mapLeft)
+import Hasura.Prelude (Text, hoistEither, liftEither, mapLeft)
 import Prelude
 
 data MSSQLTxError
-  = MSSQLTxError !ODBC.Query !ODBC.ODBCException
+  = MSSQLQueryError !ODBC.Query !ODBC.ODBCException
+  | MSSQLInternal !Text
   deriving (Eq, Show)
 
 -- | A successful result from a query is a list of rows where each row contains list of column values
@@ -59,12 +60,27 @@ beginTx =
   unitQuery "BEGIN TRANSACTION"
 
 commitTx :: MonadIO m => TxT m ()
-commitTx =
-  unitQuery "COMMIT TRANSACTION"
+commitTx = do
+  transactionState <- getTransactionState
+  case transactionState of
+    TSActive -> unitQuery "COMMIT TRANSACTION"
+    TSUncommittable -> throwError $ MSSQLInternal "Transaction is uncommittable"
+    TSNoActive -> throwError $ MSSQLInternal "No active transaction exist; cannot commit"
 
 rollbackTx :: MonadIO m => TxT m ()
-rollbackTx =
-  unitQuery "ROLLBACK TRANSACTION"
+rollbackTx = do
+  transactionState <- getTransactionState
+  let rollback = unitQuery "ROLLBACK TRANSACTION"
+  case transactionState of
+    TSActive -> rollback
+    TSUncommittable ->
+      -- We can only do a full rollback of an uncommittable transaction
+      rollback
+    TSNoActive ->
+      -- Few query exceptions result in an auto-rollback of the transaction.
+      -- For eg. Creating a table with already existing table name (See https://github.com/hasura/graphql-engine-mono/issues/3046)
+      -- In such cases, we shouldn't rollback the transaction again.
+      pure ()
 
 -- | Useful for building transactions which returns no data
 --
@@ -109,6 +125,28 @@ singleRowQueryE ef = rawQueryE ef singleRowResult
     singleRowResult (MSSQLResult [row]) = ODBC.fromRow row
     singleRowResult (MSSQLResult _) = Left "expecting single row"
 
+-- | The transaction state of the current connection
+data TransactionState
+  = -- | Has an active transaction.
+    TSActive
+  | -- | Has no active transaction.
+    TSNoActive
+  | -- | An error occurred that caused the transaction to be uncommittable. We cannot commit or
+    -- rollback to a savepoint; we can only do a full rollback of the transaction.
+    TSUncommittable
+
+-- | Get the @'TransactionState' of current connection
+-- For more details, refer to https://docs.microsoft.com/en-us/sql/t-sql/functions/xact-state-transact-sql?view=sql-server-ver15
+getTransactionState :: (MonadIO m) => TxT m TransactionState
+getTransactionState = do
+  let query = "SELECT XACT_STATE()"
+  xactState :: Int <- singleRowQuery query
+  case xactState of
+    1 -> pure TSActive
+    0 -> pure TSNoActive
+    -1 -> pure TSUncommittable
+    _ -> throwError $ MSSQLQueryError query $ ODBC.DataRetrievalError "Unexpected value for XACT_STATE"
+
 -- | Useful for building query transactions which returns multiple rows.
 --
 -- selectIds :: TxT m [Int]
@@ -149,7 +187,7 @@ rawQueryE ef rf q = TxET $
     hoist liftIO $
       withExceptT ef $
         execQuery conn q
-          >>= liftEither . mapLeft (MSSQLTxError q . ODBC.DataRetrievalError) . rf
+          >>= liftEither . mapLeft (MSSQLQueryError q . ODBC.DataRetrievalError) . rf
 
 -- | Build a generic transaction out of an IO action
 buildGenericTxE ::
@@ -171,7 +209,7 @@ execQuery ::
   ExceptT MSSQLTxError m MSSQLResult
 execQuery conn query = do
   result :: Either ODBC.ODBCException [[ODBC.Value]] <- liftIO $ try $ ODBC.query conn query
-  withExceptT (MSSQLTxError query) $ hoistEither $ MSSQLResult <$> result
+  withExceptT (MSSQLQueryError query) $ hoistEither $ MSSQLResult <$> result
 
 -- | Run a command on the given connection wrapped in a transaction.
 runTx ::

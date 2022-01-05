@@ -31,7 +31,10 @@ spec connString = do
     it "an unsuccesful transaction, expecting Int" $ do
       result <- runInConn connString selectIntQueryFail
       either
-        (\(MSSQLTxError _ err) -> err `shouldBe` DataRetrievalError "Expected Int, but got: ByteStringValue \"hello\"")
+        ( \case
+            (MSSQLQueryError _ err) -> err `shouldBe` DataRetrievalError "Expected Int, but got: ByteStringValue \"hello\""
+            (MSSQLInternal _) -> expectationFailure unexpectedMSSQLInternalError
+        )
         (\r -> expectationFailure $ "expected Left, returned " <> show r)
         result
 
@@ -42,16 +45,21 @@ spec connString = do
     it "an unsuccesful transaction; expecting single row" $ do
       result <- runInConn connString selectIdQueryFail
       either
-        (\(MSSQLTxError _ err) -> err `shouldBe` DataRetrievalError "expecting single row")
+        ( \case
+            (MSSQLQueryError _ err) -> err `shouldBe` DataRetrievalError "expecting single row"
+            (MSSQLInternal _) -> expectationFailure unexpectedMSSQLInternalError
+        )
         (\r -> expectationFailure $ "expected Left, returned " <> show r)
         result
 
     it "displays the SQL Server error on an unsuccessful transaction" $ do
       result <- runInConn connString badQuery
       either
-        ( \(MSSQLTxError _ err) ->
-            err
-              `shouldBe` UnsuccessfulReturnCode "odbc_SQLExecDirectW" (-1) invalidSyntaxError
+        ( \case
+            (MSSQLQueryError _ err) ->
+              err
+                `shouldBe` UnsuccessfulReturnCode "odbc_SQLExecDirectW" (-1) invalidSyntaxError
+            (MSSQLInternal _) -> expectationFailure unexpectedMSSQLInternalError
         )
         (\() -> expectationFailure "expected Left, returned ()")
         result
@@ -112,3 +120,7 @@ runInConn connString query =
 invalidSyntaxError :: String
 invalidSyntaxError =
   "[Microsoft][ODBC Driver 17 for SQL Server][SQL Server]The definition for column 'INVALID_SYNTAX' must include a data type.[Microsoft][ODBC Driver 17 for SQL Server][SQL Server]The definition for column 'INVALID_SYNTAX' must include a data type."
+
+unexpectedMSSQLInternalError :: String
+unexpectedMSSQLInternalError =
+  "Expected MSSQLQueryError, but got: MSSQLInternal"

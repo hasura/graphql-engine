@@ -34,6 +34,9 @@ class TestRunSQLMSSQL:
     def test_drop_article_table_with_cascade(self, hge_ctx, backend):
         check_query_f(hge_ctx, self.dir() + '/drop_article_table_with_cascade.yaml')
 
+    def test_create_author_table_fail(self, hge_ctx, backend):
+        check_query_f(hge_ctx, self.dir() + '/create_author_table_fail.yaml')
+
     @classmethod
     def dir(cls):
         return 'queries/v2/mssql/run_sql'
