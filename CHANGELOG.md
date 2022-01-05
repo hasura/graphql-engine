@@ -3,6 +3,7 @@
 ## Next release
 (Add highlights/major features below)
 
+- server: in mssql transactions, rollback only if the transaction is active
 - server: add request and response bodies to OpenAPI specification of REST endpoints
 - server: implement upsert mutations for MS SQL Server (close #7864)
 
