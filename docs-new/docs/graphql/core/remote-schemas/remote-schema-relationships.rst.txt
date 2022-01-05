@@ -1,0 +1,31 @@
+<div class="meta"
+description="Manage remote schema relationships with Hasura"
+keywords="hasura, docs, remote schema, relationships">
+
+</div>
+
+# Remote schema relationships
+
+<div class="contents" backlinks="none" depth="1" local="">
+
+Table of contents
+
+</div>
+
+## Introduction
+
+You can create remote relationships between your tables/views and fields
+from your remote schema.
+
+Read more about this at:
+
+-   `pg_remote_schema_relationships`
+
+<div class="admonition">
+
+Additional Resources
+
+Data Federation with Hasura - [Watch
+Webinar](https://hasura.io/events/webinar/data-federation-hasura-graphql/?pg=docs&plcmt=body&cta=watch-webinar&tech=).
+
+</div>

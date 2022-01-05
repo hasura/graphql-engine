@@ -1,0 +1,94 @@
+<div class="meta" description="Transferring Ownership on Hasura Cloud"
+keywords="hasura, docs, project, team, ownership transfer">
+
+</div>
+
+# Project ownership transfer
+
+<div class="contents" backlinks="none" depth="2" local="">
+
+Table of contents
+
+</div>
+
+## Introduction
+
+You can transfer ownership of your project to another user. After the
+ownership is transferred successfully, the original owner will lose all
+access to the project.
+
+<div class="note">
+
+<div class="title">
+
+Note
+
+</div>
+
+If the project is on the `Standard` (pay-as-you-go) tier, the new owner
+will pay for the entire data usage for the month in which the ownership
+is transferred.
+
+</div>
+
+## Send an ownership transfer invitation
+
+Go to the project settings page and scroll to the bottom. Enter the
+email of the user you want to transfer the project ownership to.
+
+<div class="thumbnail" alt="Transfer Project Ownership" width="1146px">
+
+/img/graphql/cloud/projects/transfer-ownership.png
+
+</div>
+
+## Revoke an ownership transfer invitation
+
+To revoke the ownership transfer invitation, click on the `Revoke`
+button right next to the email of the invitee.
+
+<div class="thumbnail" alt="Remove transfer ownership invite"
+width="1146px">
+
+/img/graphql/cloud/projects/remove-ownership.png
+
+</div>
+
+## Resend an ownership transfer invitation
+
+To resend the ownership transfer invitation, click on the resend symbol
+right next to the email of the invitee.
+
+<div class="thumbnail" alt="Resend transfer ownership invite"
+width="1146px">
+
+/img/graphql/cloud/projects/resent-ownership.png
+
+</div>
+
+## Invitations
+
+You can see the projects that you have been invited to become the owner
+of, on the project listing page.
+
+<div class="thumbnail" alt="Projects invited to own" width="1146px">
+
+/img/graphql/cloud/projects/project-ownership-invitation.png
+
+</div>
+
+You can accept an invitation by clicking on the `Accept` button.
+
+<div class="note">
+
+<div class="title">
+
+Note
+
+</div>
+
+If the project is on the `Standard` (pay-as-you-go) tier, the new owner
+must have an active card associated with their Hasura Cloud account to
+accept the invitation.
+
+</div>

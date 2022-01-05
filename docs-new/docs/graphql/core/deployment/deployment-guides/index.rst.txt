@@ -1,0 +1,71 @@
+<div class="meta" description="Deploy Hasura GraphQL engine"
+keywords="hasura, docs, deployment">
+
+</div>
+
+# Deployment guides
+
+<div class="contents" backlinks="none" depth="1" local="">
+
+Table of contents
+
+</div>
+
+## Introduction
+
+The Hasura GraphQL engine is a binary that is shipped as a Docker
+container.
+
+Choose from the below guides to deploy the Hasura GraphQL engine and
+connect it to a Postgres database.
+
+## One-click deployment options
+
+If you want to take Hasura for a spin and check out the features, the
+following one-click deployments will be useful for you:
+
+-   `Deploy using Hasura Cloud <cloud_getting_started>`
+    (**recommended**)
+-   `Deploy using Heroku <heroku_one_click>`
+-   `Deploy using Render One-click Deploy with Managed PostgreSQL <deploy_render>`
+-   `Deploy using Nhost One-click Deploy with Managed PostgreSQL, Storage, and Auth <deploy_nhost>`
+
+## Deployment guides
+
+Choose from the full list of deployment guides:
+
+-   `Deploy using Hasura Cloud <cloud_getting_started>`
+    (**recommended**)
+-   `Deploy using Docker <deployment_docker>`
+-   `Deploy using Kubernetes <deploy_kubernetes>`
+-   `Deploy using Heroku <deploy_heroku>`
+-   `Deploy using Digital Ocean One-click App on Marketplace <deploy_do_marketplace>`
+-   `Deploy using Azure Container Instances with Postgres <deploy_azure_ci_pg>`
+-   `Deploy using Google Cloud Platform with Kubernetes engine and Cloud SQL <deploy_gc_kubernetes>`
+-   [Deploy using Instant GraphQL on AWS RDS
+    (blog)](https://hasura.io/blog/instant-graphql-on-aws-rds-1edfb85b5985/)
+-   `Deploy using Render One-click Deploy with Managed PostgreSQL <deploy_render>`
+-   `Deploy using Nhost One-click Deploy with Managed PostgreSQL, Storage, and Auth <deploy_nhost>`
+
+<div class="admonition">
+
+Custom Docker images or binaries
+
+If you need a custom Docker image or binary for GraphQL engine, please
+see `this page <custom_docker_image>`.
+
+</div>
+
+<div class="toctree" maxdepth="1" titlesonly="" hidden="">
+
+Using Hasura Cloud
+\<<https://hasura.io/docs/latest/graphql/cloud/getting-started/index.html>\>
+Using Docker \<docker> Using Kubernetes \<kubernetes> Using Heroku
+(one-click) \<heroku> Using DigitalOcean (one-click)
+\<digital-ocean-one-click> Using Azure Container Instances
+\<azure-container-instances-postgres> Using Google Cloud Platform &
+Kubernetes \<google-kubernetes-engine-cloud-sql> Using Render
+(one-click) \<render-one-click> Using Nhost (one-click)
+\<nhost-one-click>
+
+</div>

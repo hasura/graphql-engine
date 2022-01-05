@@ -1,0 +1,30 @@
+<div class="meta" description="Hasura Cloud usage analysis"
+keywords="hasura, docs, cloud, reliability, usage">
+
+</div>
+
+# Usage
+
+<div class="contents" backlinks="none" depth="1" local="">
+
+Table of contents
+
+</div>
+
+Learn about usage with aggregate summaries and filtering tools:
+
+<div class="thumbnail" alt="Hasura Cloud Console usage tab">
+
+/img/graphql/cloud/metrics/pro-tab-usage.png
+
+</div>
+
+Drill into an operation via its magnifying-glass icon in the 'Query
+List' table. You'll be taken to a list of similar operations, and can
+choose one to inspect for content, metadata, and error generated:
+
+<div class="thumbnail" alt="Hasura Cloud Console inspect an operation">
+
+/img/graphql/cloud/metrics/pro-tab-operations-inspect.png
+
+</div>

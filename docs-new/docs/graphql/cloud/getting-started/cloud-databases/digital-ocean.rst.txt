@@ -1,0 +1,211 @@
+<div class="meta" description="Using Hasura with a DO Postgres database"
+keywords="hasura, docs, existing database, guide, digital ocean">
+
+</div>
+
+# Using Hasura Cloud with a Digital Ocean Postgres database
+
+<div class="contents" backlinks="none" depth="1" local="">
+
+Table of contents
+
+</div>
+
+## Introduction
+
+This guide explains how to connect a new or existing Digital Ocean
+Postgres database to a Hasura Cloud project.
+
+## Step 0: Sign up or log in to Hasura Cloud
+
+Navigate to [Hasura
+Cloud](https://cloud.hasura.io/signup/?pg=docs&plcmt=body&cta=navigate-to-hasura-cloud&tech=default)
+and sign up or log in.
+
+## Step 1: Create a Hasura Cloud project
+
+On the Hasura Cloud dashboard, create a new project:
+
+<div class="thumbnail" alt="Create Hasura Cloud project" width="1000px">
+
+/img/graphql/cloud/cloud-dbs/create-hasura-cloud-project.png
+
+</div>
+
+After the project is initialized successfully, click on `Launch console`
+to open the Hasura console in your browser.
+
+On the Hasura console, navigate to
+`Data -> Manage -> Connect Database -> Connect existing database`:
+
+You will get prompted for a Postgres Database URL. We will create this
+in the next step and then come back here.
+
+<div class="thumbnail" alt="Hasura Cloud database setup" width="700px">
+
+/img/graphql/cloud/cloud-dbs/existing-db-setup.png
+
+</div>
+
+## Step 2: Create a Postgres DB on Digital Ocean (skip if you have an existing DB)
+
+Log into [Digital Ocean](https://cloud.digitalocean.com/).
+
+On the top right, click the `Create` button. Then click on `Databases`:
+
+<div class="thumbnail" alt="Create database on Digital Ocean"
+width="1000px">
+
+/img/graphql/cloud/cloud-dbs/do/create-database.png
+
+</div>
+
+Scroll down and choose a `Cluster configuration`, as well as a
+`Datacenter` based on your requirements.
+
+Scroll to the bottom and choose a unique database cluster name. Also,
+select a project the new database will be associated with.
+
+<div class="thumbnail"
+alt="Select cluster name for database on Digital Ocean" width="1000px">
+
+/img/graphql/cloud/cloud-dbs/do/cluster-name.png
+
+</div>
+
+Then click `Create a Database Cluster`.
+
+## Step 3: Allow connections to your DB from Hasura Cloud
+
+Navigate to the database cluster's `Overview` page:
+
+<div class="thumbnail"
+alt="Navigate to database settings in Digital Ocean" width="1000px">
+
+/img/graphql/cloud/cloud-dbs/do/db-settings.png
+
+</div>
+
+Scroll down to `Trusted sources` and click the `Edit` button:
+
+<div class="thumbnail"
+alt="Edit trusted sources for database in Digital Ocean" width="1000px">
+
+/img/graphql/cloud/cloud-dbs/do/edit-trusted-sources.png
+
+</div>
+
+Copy the IP address from the copy icon in the `Hasura Cloud IP` field on
+the project's details view on Hasura Cloud.
+
+<div class="thumbnail" alt="Hasura Cloud IP field" width="1000px">
+
+/img/graphql/cloud/projects/hasura-cloud-ip.png
+
+</div>
+
+Enter the Hasura IP address that you copied:
+
+<div class="thumbnail" alt="Add Hasura IP to database in Digital Ocean"
+width="700px">
+
+/img/graphql/cloud/cloud-dbs/do/add-hasura-ip.png
+
+</div>
+
+Then click `Save`.
+
+<div class="note">
+
+<div class="title">
+
+Note
+
+</div>
+
+If you're using a database user other than the default one, make sure to
+give it the right `Postgres permissions <cloud_postgres_permissions>`.
+
+</div>
+
+## Step 4: Get the database connection URL
+
+The structure of the database connection URL looks as follows:
+
+``` bash
+postgresql://<user-name>:<password>@<public-ip>:<postgres-port>/<db>
+```
+
+To get it, navigate to the database cluster's `Overview` page:
+
+<div class="thumbnail"
+alt="Navigate to database overview in Digital Ocean" width="1000px">
+
+/img/graphql/cloud/cloud-dbs/do/db-overview.png
+
+</div>
+
+Scroll down to `Connection details`. Select `Public network` on the left
+and `Connection string` on the right.
+
+<div class="thumbnail"
+alt="Get the database connection string in Digital Ocean" width="600px">
+
+/img/graphql/cloud/cloud-dbs/do/connection-string.png
+
+</div>
+
+Then click the `Copy` button for the next step.
+
+## Step 5: Finish connecting the database
+
+Back on Hasura Console, enter the database URL that we retrieved in
+`step 4 <get_db_url_do>`:
+
+<div class="thumbnail" width="600px">
+
+/img/graphql/cloud/getting-started/connect-db.png
+
+</div>
+
+Then click `Connect Database`.
+
+<div class="note">
+
+<div class="title">
+
+Note
+
+</div>
+
+For security reasons, it is recommended to set database URLs as
+`env vars <manage_project_env_vars>` and using the env vars to connect
+to the databases in place of the raw database URLs.
+
+</div>
+
+Voilà. You are ready to start developing.
+
+<div class="thumbnail" alt="Hasura console" width="1100px">
+
+/img/graphql/cloud/cloud-dbs/hasura-console.png
+
+</div>
+
+## Next steps
+
+You can check out our [30-Minute Hasura Basics
+Course](https://hasura.io/learn/graphql/hasura/introduction/) and other
+[GraphQL & Hasura Courses](https://hasura.io/learn/) for a more detailed
+introduction to Hasura.
+
+You can also click the gear icon to manage your Hasura Cloud project.
+(e.g. add `collaborators <manage_project_collaborators>`,
+`env vars <manage_project_env_vars>` or
+`custom domains <manage_project_domains>`).
+
+<div class="thumbnail" alt="Project actions" width="860px">
+
+/img/graphql/cloud/getting-started/project-manage.png
+
+</div>

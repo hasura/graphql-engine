@@ -1,0 +1,35 @@
+<div class="meta" description="Managing env vars on Hasura Cloud"
+keywords="hasura, docs, project, env vars">
+
+</div>
+
+# Project Env vars
+
+<div class="contents" backlinks="none" depth="2" local="">
+
+Table of contents
+
+</div>
+
+## Introduction
+
+The `Env vars` tab allows setting
+`Hasura GraphQL Engine env variables <command-flags>` and adding other
+custom env variables as well.
+
+## Adding an env var
+
+Click on the `New Env Var` button and either choose an env var from the
+dropdown or add a custom env var.
+
+<div class="thumbnail" alt="add env var options" width="1200px">
+
+/img/graphql/cloud/projects/new-envvars.png
+
+</div>
+
+<div class="thumbnail" alt="add env var options" width="1200px">
+
+/img/graphql/cloud/projects/add-env-var.png
+
+</div>

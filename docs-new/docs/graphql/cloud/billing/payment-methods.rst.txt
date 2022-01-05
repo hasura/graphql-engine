@@ -1,0 +1,81 @@
+<div class="meta" description="Manage Payment Methods"
+keywords="hasura, cloud, docs, payment, cards, manage cards, payment methods, manage payment methods">
+
+</div>
+
+# Manage payment methods
+
+<div class="contents" backlinks="none" depth="1" local="">
+
+Table of contents
+
+</div>
+
+## Introduction
+
+You can add one or more cards as a payment method for upcoming billing
+cycles on your Hasura Cloud account.
+
+## Add a new card
+
+Go to the billing section, and click on `View Cards`.
+
+<div class="thumbnail" alt="view saved cards">
+
+/img/graphql/cloud/billing/manage_cards.png
+
+</div>
+
+Click the `+` sign to add a new card.
+
+<div class="thumbnail" alt="add a new card" width="437px">
+
+/img/graphql/cloud/billing/add_new_card.png
+
+</div>
+
+After adding appropriate values, click `Save`.
+
+## Setting a default card
+
+The default card is used for the payment of upcoming billing cycles.
+
+Select the card you want to set as the default payment method or add a
+new card, check the `Set Card as Default` option and click `Save`.
+
+<div class="thumbnail" alt="set an exiting card as the default card"
+width="437px">
+
+/img/graphql/cloud/billing/set_existing_default.png
+
+</div>
+
+<div class="thumbnail" alt="Add a new card as the default card"
+width="437px">
+
+/img/graphql/cloud/billing/set_new_default.png
+
+</div>
+
+## Delete a card
+
+Select the card you want to delete and click the `Remove Card` option.
+
+<div class="thumbnail" alt="Delete card" width="437px">
+
+/img/graphql/cloud/billing/delete_card.png
+
+</div>
+
+<div class="note">
+
+<div class="title">
+
+Note
+
+</div>
+
+A card set as default can not be deleted if the user has billable
+projects or pending dues.
+
+</div>

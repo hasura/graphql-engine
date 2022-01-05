@@ -1,0 +1,22 @@
+<div class="meta" description="Hasura Cloud subscription workers"
+keywords="hasura, docs, cloud, reliability, subscriptions">
+
+</div>
+
+# Subscription workers
+
+<div class="contents" backlinks="none" depth="1" local="">
+
+Table of contents
+
+</div>
+
+Subscription workers offers a subscription-worker-specific version of
+usage statistics:
+
+<div class="thumbnail"
+alt="Hasura Cloud Console subscription workers tab">
+
+/img/graphql/cloud/metrics/pro-tab-subscription-workers.png
+
+</div>

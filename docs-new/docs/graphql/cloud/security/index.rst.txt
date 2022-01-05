@@ -1,0 +1,32 @@
+<div class="meta" description="Hasura Cloud API Security"
+keywords="hasura, docs, cloud, security, API security, secure">
+
+</div>
+
+# API Security
+
+<div class="contents" backlinks="none" depth="1" local="">
+
+Table of contents
+
+</div>
+
+## Introduction
+
+All API security related features can be found under the `Security` tab
+in the API explorer page of Hasura console.
+
+<div class="thumbnail" alt="Security">
+
+/img/graphql/cloud/security/security.png
+
+</div>
+
+## Features
+
+<div class="toctree" maxdepth="1" titlesonly="">
+
+allow-lists api-limits disable-graphql-introspection
+rotating-admin-secrets
+
+</div>

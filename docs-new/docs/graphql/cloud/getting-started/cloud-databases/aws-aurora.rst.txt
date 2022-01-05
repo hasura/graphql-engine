@@ -1,0 +1,272 @@
+<div class="meta"
+description="Using Hasura with an AWS RDS Aurora database"
+keywords="hasura, docs, existing database, guide, aws rds aurora">
+
+</div>
+
+# Using Hasura Cloud with an AWS RDS Aurora Postgres database
+
+<div class="contents" backlinks="none" depth="2" local="">
+
+Table of contents
+
+</div>
+
+## Introduction
+
+This guide explains how to connect a new or existing AWS RDS Aurora
+Postgres database to a Hasura Cloud project.
+
+## Step 0: Sign up or log in to Hasura Cloud
+
+Navigate to [Hasura
+Cloud](https://cloud.hasura.io/signup/?pg=docs&plcmt=body&cta=navigate-to-hasura-cloud&tech=default)
+and sign up or log in.
+
+## Step 1: Create a Hasura Cloud project
+
+On the Hasura Cloud dashboard, create a new project:
+
+<div class="thumbnail" alt="Create Hasura Cloud project" width="1000px">
+
+/img/graphql/cloud/cloud-dbs/create-hasura-cloud-project.png
+
+</div>
+
+After the project is initialized successfully, click on `Launch console`
+to open the Hasura console in your browser.
+
+On the Hasura console, navigate to
+`Data -> Manage -> Connect Database -> Connect existing database`:
+
+You will get prompted for a Postgres Database URL. We will create this
+in the next step and then come back here.
+
+<div class="thumbnail" alt="Hasura Cloud database setup" width="700px">
+
+/img/graphql/cloud/cloud-dbs/existing-db-setup.png
+
+</div>
+
+## Step 2: Create an Aurora DB on AWS RDS (skip if you have an existing DB)
+
+Log into the [AWS console](https://console.aws.amazon.com//).
+
+On the top left, click on `Services` and type "RDS" into the search
+field. Then click on `RDS`:
+
+<div class="thumbnail" alt="Navigate to RDS in AWS" width="1000px">
+
+/img/graphql/cloud/cloud-dbs/aws/search-for-rds.png
+
+</div>
+
+Click on the `Create database` button:
+
+<div class="thumbnail" alt="Create database in AWS" width="1000px">
+
+/img/graphql/cloud/cloud-dbs/aws/create-database.png
+
+</div>
+
+In `Engine options`, select `Amazon Aurora` as `Engine type`. Also,
+select `Amazon Aurora with PostgreSQL compatibility` as `Edition`:
+
+<div class="thumbnail" alt="Select Aurora for RDS instance on AWS"
+width="600px">
+
+/img/graphql/cloud/cloud-dbs/aws/aurora/rds-select-aurora.png
+
+</div>
+
+Scroll down to `Settings`:
+
+<div class="thumbnail" alt="Settings for RDS instance on AWS"
+width="600px">
+
+/img/graphql/cloud/cloud-dbs/aws/rds-settings.png
+
+</div>
+
+Now you can choose a `DB instance identifier` as a name for your
+database. The `Master username` is `postgres` by default. You can change
+that if you have to. As for the password, you can click the checkbox for
+AWS to auto-generate one for you, or you can type in a password of your
+choice.
+
+Scroll down and customize other database options such as
+`DB instance size` and `Storage`, based on your requirements.
+
+In the `Connectivity` section, expand the
+`Additional connectivity configuration`. Then set `Public access` to
+`Yes` and choose or add a new security group:
+
+<div class="thumbnail" alt="Connectivity for RDS instance on AWS"
+width="600px">
+
+/img/graphql/cloud/cloud-dbs/aws/rds-connectivity.png
+
+</div>
+
+When you're done, at the bottom, click the `Create database` button:
+
+<div class="thumbnail" alt="Create RDS instance on AWS" width="700px">
+
+/img/graphql/cloud/cloud-dbs/aws/rds-click-create.png
+
+</div>
+
+<div class="note">
+
+<div class="title">
+
+Note
+
+</div>
+
+If you're using a database user other than the default one, make sure to
+give it the right `Postgres permissions <cloud_postgres_permissions>`.
+
+</div>
+
+## Step 3: Allow connections to your DB from Hasura Cloud
+
+On the database dashboard, click on `Connectivity & security`. On the
+right, click on the security group that you selected or added in
+`step 2 <create_pg_aws_rds_aurora>`.
+
+<div class="thumbnail" alt="Find the security group on AWS RDS"
+width="1000px">
+
+/img/graphql/cloud/cloud-dbs/aws/aurora/find-security-group.png
+
+</div>
+
+Click on the security group:
+
+<div class="thumbnail" alt="Click on the security group" width="1000px">
+
+/img/graphql/cloud/cloud-dbs/aws/select-security-group.png
+
+</div>
+
+Click on `Edit inbound rules`:
+
+<div class="thumbnail" alt="Edit inbound rules for AWS RDS database"
+width="1000px">
+
+/img/graphql/cloud/cloud-dbs/aws/inbound-rules.png
+
+</div>
+
+Click on `Add rule`:
+
+<div class="thumbnail" alt="Add an inbound rule for AWS RDS database"
+width="1000px">
+
+/img/graphql/cloud/cloud-dbs/aws/add-inbound-rule.png
+
+</div>
+
+Copy the IP address from the copy icon in the `Hasura Cloud IP` field on
+the project's details view on Hasura Cloud.
+
+<div class="thumbnail" alt="Hasura Cloud IP field" width="1000px">
+
+/img/graphql/cloud/projects/hasura-cloud-ip.png
+
+</div>
+
+Add the Hasura IP address that you copied:
+
+<div class="thumbnail" alt="Add the Hasura IP for AWS RDS database"
+width="1000px">
+
+/img/graphql/cloud/cloud-dbs/aws/add-hasura-ip.png
+
+</div>
+
+Then click `Save rules`.
+
+## Step 4: Construct the database connection URL
+
+The structure of the database connection URL looks as follows:
+
+``` bash
+postgresql://<user-name>:<password>@<public-ip>:<postgres-port>/<db>
+```
+
+On the database dashboard, click on `Connectivity & security`:
+
+<div class="thumbnail"
+alt="Construct the database connection string for AWS RDS"
+width="1000px">
+
+/img/graphql/cloud/cloud-dbs/aws/aurora/get-db-connection-string.png
+
+</div>
+
+-   `user-name`: If you have a separate database user the user name will
+    be their name. If you didn't specify a user, the default user name
+    is `postgres`.
+-   `password`: If you have a separate database user, use their
+    password. Otherwise, use the password that you chose when creating
+    the database.
+-   `public-ip`: On the screenshot above, the `Endpoint` is the public
+    IP.
+-   `postgres-port`: On the screenshot above you can find it under
+    `Port`. The default port for Postgres is `5432`.
+-   `db`: The DB is `postgres` by default unless otherwise specified.
+
+## Step 5: Finish connecting the database
+
+Back on Hasura Console, enter the database URL that we retrieved in
+`step 4 <construct_db_url_aurora>`:
+
+<div class="thumbnail" alt="Database setup" width="600px">
+
+/img/graphql/cloud/getting-started/connect-db.png
+
+</div>
+
+Then click `Connect Database`.
+
+<div class="note">
+
+<div class="title">
+
+Note
+
+</div>
+
+For security reasons, it is recommended to set database URLs as
+`env vars <manage_project_env_vars>` and using the env vars to connect
+to the databases in place of the raw database URLs.
+
+</div>
+
+Voilà. You are ready to start developing.
+
+<div class="thumbnail" alt="Hasura console" width="1100px">
+
+/img/graphql/cloud/cloud-dbs/hasura-console.png
+
+</div>
+
+## Next steps
+
+You can check out our [30-Minute Hasura Basics
+Course](https://hasura.io/learn/graphql/hasura/introduction/) and other
+[GraphQL & Hasura Courses](https://hasura.io/learn/) for a more detailed
+introduction to Hasura.
+
+You can also click the gear icon to manage your Hasura Cloud project.
+(e.g. add `collaborators <manage_project_collaborators>`,
+`env vars <manage_project_env_vars>` or
+`custom domains <manage_project_domains>`).
+
+<div class="thumbnail" alt="Project actions" width="860px">
+
+/img/graphql/cloud/getting-started/project-manage.png
+
+</div>

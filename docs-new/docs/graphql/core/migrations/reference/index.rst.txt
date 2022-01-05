@@ -1,0 +1,13 @@
+<div class="meta" description="Migrations reference documentation"
+keywords="hasura, docs, migration, reference">
+
+</div>
+
+# Migrations reference documentation
+
+<div class="toctree" maxdepth="1">
+
+how-it-works Migration file format \<migration-file-format> Metadata
+format \<metadata-format>
+
+</div>

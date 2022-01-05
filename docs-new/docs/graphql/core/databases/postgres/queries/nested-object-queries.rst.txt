@@ -1,0 +1,163 @@
+<div class="meta"
+description="Make nested object queries on Postgres in Hasura"
+keywords="hasura, docs, postgres, query, nested object query">
+
+</div>
+
+# Postgres: Nested object queries
+
+<div class="contents" backlinks="none" depth="2" local="">
+
+Table of contents
+
+</div>
+
+## Introduction
+
+You can use the object (one-to-one) or array (one-to-many)
+`relationships <table_relationships>` defined in your schema to make a
+nested query i.e. fetch data for a type along with data from a nested or
+related type.
+
+The **name of the nested object** is the same as the name of the
+object/array relationship configured in the console.
+
+You can also filter, sort, aggregate and paginate nested objects in case
+of array relationships. These are not exposed for object relationships
+as they have only one nested object.
+
+## Fetch nested object using an object relationship
+
+The following is an example of a nested object query using the **object
+relationship** between an article and an author.
+
+**Example:** Fetch a list of articles and the name of each article’s
+author:
+
+<div class="graphiql" view_only="" query="query {
+  articles {
+    id
+    title
+    author {
+      name
+    }
+  }
+}
+:response:
+{
+  &quot;data&quot;: {
+    &quot;articles&quot;: [
+      {
+        &quot;id&quot;: 1,
+        &quot;title&quot;: &quot;sit amet&quot;,
+        &quot;author&quot;: {
+          &quot;name&quot;: &quot;Anjela&quot;
+        }
+      },
+      {
+        &quot;id&quot;: 2,
+        &quot;title&quot;: &quot;a nibh&quot;,
+        &quot;author&quot;: {
+          &quot;name&quot;: &quot;Beltran&quot;
+        }
+      },
+      {
+        &quot;id&quot;: 3,
+        &quot;title&quot;: &quot;amet justo morbi&quot;,
+        &quot;author&quot;: {
+          &quot;name&quot;: &quot;Anjela&quot;
+        }
+      }
+    ]
+  }
+}">
+
+</div>
+
+## Fetch nested objects using an array relationship
+
+The following is an example of a nested object query using the **array
+relationship** between an author and articles.
+
+**Example:** Fetch a list of authors and a nested list of each author’s
+articles:
+
+<div class="graphiql" view_only="" query="query {
+  authors {
+    id
+    name
+    articles {
+      id
+      title
+    }
+  }
+}
+:response:
+{
+  &quot;data&quot;: {
+    &quot;authors&quot;: [
+      {
+        &quot;id&quot;: 1,
+        &quot;name&quot;: &quot;Justin&quot;,
+        &quot;articles&quot;: [
+          {
+            &quot;id&quot;: 15,
+            &quot;title&quot;: &quot;vel dapibus at&quot;
+          },
+          {
+            &quot;id&quot;: 16,
+            &quot;title&quot;: &quot;sem duis aliquam&quot;
+          }
+        ]
+      },
+      {
+        &quot;id&quot;: 2,
+        &quot;name&quot;: &quot;Beltran&quot;,
+        &quot;articles&quot;: [
+          {
+            &quot;id&quot;: 2,
+            &quot;title&quot;: &quot;a nibh&quot;
+          },
+          {
+            &quot;id&quot;: 9,
+            &quot;title&quot;: &quot;sit amet&quot;
+          }
+        ]
+      },
+      {
+        &quot;id&quot;: 3,
+        &quot;name&quot;: &quot;Sidney&quot;,
+        &quot;articles&quot;: [
+          {
+            &quot;id&quot;: 6,
+            &quot;title&quot;: &quot;sapien ut&quot;
+          },
+          {
+            &quot;id&quot;: 11,
+            &quot;title&quot;: &quot;turpis eget&quot;
+          },
+          {
+            &quot;id&quot;: 14,
+            &quot;title&quot;: &quot;congue etiam justo&quot;
+          }
+        ]
+      }
+    ]
+  }
+}">
+
+</div>
+
+<div class="note">
+
+<div class="title">
+
+Note
+
+</div>
+
+You can also `filter <nested_filter>`, `sort <nested_sort>`,
+`aggregate <nested_aggregate>` and `paginate <nested_paginate>` nested
+objects in case of array relationships.
+
+</div>

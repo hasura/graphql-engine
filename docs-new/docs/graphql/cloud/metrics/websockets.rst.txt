@@ -1,0 +1,20 @@
+<div class="meta" description="Hasura Cloud websockets analysis"
+keywords="hasura, docs, cloud, reliability, websockets">
+
+</div>
+
+# Websockets
+
+<div class="contents" backlinks="none" depth="1" local="">
+
+Table of contents
+
+</div>
+
+Websockets is a ws-specific version of usage statistics:
+
+<div class="thumbnail" alt="Hasura Cloud Console websockets tab">
+
+/img/graphql/cloud/metrics/pro-tab-websockets.png
+
+</div>

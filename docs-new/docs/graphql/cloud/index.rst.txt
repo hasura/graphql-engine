@@ -1,0 +1,114 @@
+<div class="meta" description="Hasura Cloud documentation"
+keywords="hasura, docs, manual, graphql engine, cloud, hosted">
+
+</div>
+
+<div class="title">
+
+Hasura Cloud Documentation
+
+</div>
+
+# Hasura Cloud Documentation
+
+[Hasura
+Cloud](https://cloud.hasura.io/signup/?pg=docs&plcmt=body&cta=hasura-cloud&tech=default)
+offers hosted [GraphQL Engine](https://github.com/hasura/graphql-engine)
+projects with extra features for reliability and security. It includes
+all the `core features <core_docs>` of GraphQL Engine, while taking care
+of infrastructure concerns, such as the number of instances, cores,
+memory, concurrent users, high-availability, realtime monitoring,
+caching, tracing, and rate-limiting. It supports both new and existing
+databases.
+
+<div class="container toc-list">
+
+<div class="container toc-list-section">
+
+<div class="container toc-list-head">
+
+Basics
+
+</div>
+
+<div class="container toc-list-content">
+
+-   `cloud_getting_started`
+-   `create_project`
+-   `manage_project_collaborators`
+-   `manage_project_env_vars`
+-   `manage_project_domains`
+
+</div>
+
+</div>
+
+<div class="container toc-list-section">
+
+<div class="container toc-list-head">
+
+Features
+
+</div>
+
+<div class="container toc-list-content">
+
+-   `metrics`
+-   `regression_tests`
+-   `read_replicas`
+-   `response_caching`
+-   `tracing`
+-   `query_tags`
+-   `dedicated_vpc`
+
+</div>
+
+</div>
+
+<div class="container toc-list-section">
+
+<div class="container toc-list-head">
+
+API Security
+
+</div>
+
+<div class="container toc-list-content">
+
+-   `api_limits`
+-   `allow_lists`
+
+</div>
+
+</div>
+
+<div class="container toc-list-section">
+
+<div class="container toc-list-head">
+
+Reference
+
+</div>
+
+<div class="container toc-list-content">
+
+-   `cloud_api_reference`
+-   `glossary`
+-   `hasurapro_cli`
+-   `cloud_changelog`
+
+</div>
+
+</div>
+
+</div>
+
+<div class="toctree" maxdepth="1" titlesonly="" hidden="">
+
+Getting Started \<getting-started/index> projects/index metrics/index
+API Security \<security/index> regression-tests read-replicas
+response-caching tracing query-tags Preview Apps \<preview-apps>
+dedicated-vpc Billing \<billing/index> hasurapro-cli/index api-reference
+glossary Changelog \<changelog>
+
+</div>

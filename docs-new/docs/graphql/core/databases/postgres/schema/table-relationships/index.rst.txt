@@ -1,0 +1,115 @@
+<div class="meta"
+description="Manage relationships between Postgres tables/views in Hasura"
+keywords="hasura, docs, postgres, schema, relationship">
+
+</div>
+
+# Postgres: Relationships between tables/views
+
+<div class="contents" backlinks="none" depth="1" local="">
+
+Table of contents
+
+</div>
+
+## Introduction
+
+To make `nested object queries <nested_object_queries>`, the
+tables/views in your database need to be connected via relationships.
+
+Let's say we have the following tables in our database: `authors`,
+`passport_infos`, `articles` and `tags`.
+
+## Table relationships
+
+The tables/views in any relational database are typically related to
+each other via one of the following types of table relationships:
+
+<table>
+<colgroup>
+<col style="width: 17%" />
+<col style="width: 35%" />
+<col style="width: 46%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Type</th>
+<th>Example</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>one-to-one</code></td>
+<td><code>authors</code> and <code>passport_infos</code></td>
+<td><ul>
+<li>an <code>author</code> can have one <code>passport_info</code></li>
+<li>a <code>passport_info</code> can have one <code>owner</code></li>
+</ul></td>
+</tr>
+<tr class="even">
+<td><code>one-to-many</code></td>
+<td><code>authors</code> and <code>articles</code></td>
+<td><ul>
+<li>an <code>author</code> can have many <code>articles</code></li>
+<li>an <code>article</code> can have one <code>author</code></li>
+</ul></td>
+</tr>
+<tr class="odd">
+<td><code>many-to-many</code></td>
+<td><code>articles</code> and <code>tags</code></td>
+<td><ul>
+<li>an <code>article</code> can have many <code>tags</code></li>
+<li>a <code>tag</code> can have many <code>articles</code></li>
+</ul></td>
+</tr>
+</tbody>
+</table>
+
+## GraphQL schema relationships
+
+Each table relationship, as you can see from the above section, will
+have two component relationships (one in either direction) in the
+GraphQL schema. These relationships can be one of the following types:
+
+| Type                               | Example                              | Meaning                                                                           |
+|------------------------------------|--------------------------------------|-----------------------------------------------------------------------------------|
+| `object relationship` (one-to-one) | an `article` can have one `author`   | an `article` object will have a single nested author object called `author`       |
+| `array relationship` (one-to-many) | an `author` can have many `articles` | an `author` object will have an array of nested article objects called `articles` |
+
+<div class="note">
+
+<div class="title">
+
+Note
+
+</div>
+
+The relationship name is used to refer to the nested objects in queries.
+For example, "`articles`" of an `author` and "`author`" of an `article`.
+
+</div>
+
+## Managing GraphQL relationships
+
+See the following to manage the object/array relationships between
+tables/views for the GraphQL schema:
+
+-   `create_relationships`
+-   `rename_relationships`
+
+## Table relationships modelling guides
+
+The following guides will help you model the different types of table
+relationships in the database:
+
+-   `one_to_one_modelling`
+-   `one_to_many_modelling`
+-   `many_to_many_modelling`
+
+<div class="toctree" maxdepth="1" hidden="">
+
+Creating relationships \<create> Renaming relationships \<rename>
+Database modelling \<database-modelling>
+
+</div>

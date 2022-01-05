@@ -1,0 +1,41 @@
+<div class="meta"
+description="Server configuration for Hasura GraphQL engine"
+keywords="hasura, docs, deployment, flags, server, server configuration">
+
+</div>
+
+# GraphQL engine server configuration
+
+<div class="contents" backlinks="none" depth="1" local="">
+
+Table of contents
+
+</div>
+
+## Introduction
+
+Hasura supports various flags/env vars for customizing how you are
+running the GraphQL engine in your environment.
+
+## Server config
+
+See the `server config reference <server_flag_reference>` for all the
+available flags/env vars.
+
+## Use cases
+
+The following are a few configuration use cases:
+
+-   `add-admin-secret`
+-   `cli-with-admin-secret`
+-   `configure-cors`
+-   `console-assets-on-server`
+-   `dev-mode`
+-   `add-metadata-database`
+
+<div class="toctree" hidden="">
+
+Server config reference \<reference> Server config examples
+\<config-examples>
+
+</div>

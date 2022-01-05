@@ -1,0 +1,301 @@
+<div class="meta" description="Use cases for Hasura subscriptions"
+keywords="hasura, docs, subscription, use case">
+
+</div>
+
+# Subscriptions sample use cases
+
+<div class="contents" backlinks="none" depth="1" local="">
+
+Table of contents
+
+</div>
+
+## Introduction
+
+The following are a few use cases for using subscriptions:
+
+## Subscribe to the latest value of a particular field
+
+In case you are interested only in the latest value of a particular
+field, you can use subscriptions to fetch the field and get updated with
+its latest value whenever it changes.
+
+### Example: Live location tracking
+
+Use subscriptions to show the current location of a vehicle on a map.
+
+Let's say we have the following database schema:
+
+``` sql
+vehicle (
+  id INT PRIMARY KEY,
+  vehicle_number TEXT
+)
+
+vehicle_location (
+  id INT PRIMARY KEY,
+  location TEXT,
+  time_stamp TIMESTAMP with time zone DEFAULT now(),
+  /* used to create relationship 'locations' for vehicle */
+  vehicle_id INT FOREIGN KEY REFERENCES vehicle(id)
+)
+```
+
+Now we can use the following subscription to fetch the latest location
+of a vehicle to display it on a map:
+
+<div class="graphiql" view_only="" query="# $vehicleId = 3
+subscription getLocation($vehicleId: Int!) {
+  vehicle(where: {id: {_eq: $vehicleId}}) {
+    id
+    vehicle_number
+    locations(order_by: {time_stamp: desc}, limit: 1) {
+      location
+      time_stamp
+    }
+  }
+}
+:response:
+{
+  &quot;data&quot;: {
+    &quot;vehicle&quot;: [
+      {
+        &quot;id&quot;: 3,
+        &quot;vehicle_number&quot;: &quot;KA04AD4583&quot;,
+        &quot;locations&quot;: [
+          {
+            &quot;location&quot;: &quot;(12.93623,77.61701)&quot;,
+            &quot;time_stamp&quot;: &quot;2018-09-05T06:52:44.383588+00:00&quot;
+          }
+        ]
+      }
+    ]
+  }
+}
+:variables:
+{
+ &quot;vehicleId&quot;: 3
+}">
+
+</div>
+
+## Subscribe to changes to a table's entries
+
+In case you are interested in all the additions/changes to a table's
+entries, you can use subscriptions to fetch the table rows and get
+updates whenever there are any additions/changes to the table.
+
+### Example: Chat app
+
+Use subscriptions to show new messages in a chatroom.
+
+Let's say we have the following database schema:
+
+``` sql
+user (
+  id INT PRIMARY KEY,
+  username TEXT UNIQUE
+)
+
+message (
+  id INT PRIMARY KEY,
+  texts TEXT,
+  time_stamp TIMESTAMP default now(),
+  /* used to create relationship 'author' with the 'user' table */
+  user_id INT FOREIGN KEY REFERENCES user(id)
+)
+```
+
+Now we can use the following subscription to display the latest messages
+in a chatroom:
+
+<div class="graphiql" view_only="" query="subscription getMessages {
+  message(order_by: {time_stamp: desc}) {
+    texts
+    time_stamp
+    author {
+      username
+    }
+  }
+}
+:response:
+{
+  &quot;data&quot;: {
+    &quot;message&quot;: [
+      {
+        &quot;texts&quot;: &quot;I am fine, and you?&quot;,
+        &quot;time_stamp&quot;: &quot;2021-11-29T07:42:56.689135&quot;,
+        &quot;author&quot;: {
+          &quot;username&quot;: &quot;Jane&quot;
+        }
+      },
+      {
+        &quot;texts&quot;: &quot;Hi! How are you?&quot;,
+        &quot;time_stamp&quot;: &quot;2021-11-29T07:42:19.506049&quot;,
+        &quot;author&quot;: {
+          &quot;username&quot;: &quot;Musk&quot;
+        },
+      },
+      {
+        &quot;texts&quot;: &quot;Hi!&quot;,
+        &quot;time_stamp&quot;: &quot;2021-11-29T07:38:52.347136&quot;,
+        &quot;author&quot;: {
+          &quot;username&quot;: &quot;Jane&quot;
+        }
+      }
+    ]
+  }
+}">
+
+</div>
+
+## Subscribe to the latest value of some derived data
+
+In case you are interested in the latest value of some derived data, you
+can `create a view to query the derived
+data <custom_views>` and then use subscriptions to fetch the derived
+value and get its latest value whenever it updates.
+
+### Example: A poll dashboard
+
+Use subscriptions to show the result of a poll.
+
+Let's say we have the following database schema:
+
+``` sql
+poll (
+  id INT PRIMARY KEY,
+  question TEXT
+)
+
+option (
+  id INT PRIMARY KEY
+  poll_id INT FOREIGN KEY REFERENCES poll(id)
+  texts TEXT
+)
+
+user (
+  id INT PRIMARY KEY
+  name TEXT
+)
+
+vote (
+  id INT PRIMARY KEY,
+  option_id INT FOREIGN KEY REFERENCES option(id),
+  user_id INT FOREIGN KEY REFERENCES user(id),
+  time_stamp TIMESTAMP
+)
+```
+
+First, create a view `poll_results` to give the result of the poll:
+
+``` sql
+CREATE OR REPLACE VIEW public."poll_results" AS
+  SELECT poll.id AS poll_id,
+         o.option_id,
+         count(*) AS votes
+    FROM (
+      (
+        SELECT vote.option_id,
+               option.poll_id,
+               option.texts
+          FROM (
+            vote
+              LEFT JOIN option ON ((option.id = vote.option_id))
+          )
+        ) o
+            LEFT JOIN poll ON ((poll.id = o.poll_id))
+      )
+  GROUP BY poll.question, o.option_id, poll.id;
+```
+
+This view will have the following fields: `poll_id`, `option_id` and
+`votes`, i.e. it gives the number of votes received by each option for a
+poll.
+
+Next, `set up relationships <table_relationships>` `poll` and `option`
+between the `poll_results` view and the `poll` and `option` tables using
+the `poll_id` and `option_id` fields respectively.
+
+Now we can use the following subscription to display the latest poll
+result:
+
+<div class="graphiql" view_only="" query="# $pollId = 1
+subscription getResult($pollId: Int!) {
+  poll_results (
+    where: { poll_id: {_eq: $pollId} }
+  ) {
+    poll_id
+    poll {
+      question    
+    }
+    option {
+      texts
+    }
+    votes
+  }
+}
+:response:
+{
+  &quot;data&quot;: {
+    &quot;poll_results&quot;: [
+      {
+        &quot;poll_id&quot;: 1,
+        &quot;poll&quot;:{
+          &quot;question&quot;: &quot;What's your favourite food?&quot;
+        },
+        &quot;option&quot;: {
+          &quot;texts&quot;: &quot;Pizza&quot;
+        },
+        &quot;votes&quot;: 1
+      },
+      {
+        &quot;poll_id&quot;: 1,
+        &quot;poll&quot;:{
+          &quot;question&quot;: &quot;What's your favourite food?&quot;
+        },
+        &quot;option&quot;: {
+          &quot;texts&quot;: &quot;Salad&quot;
+        },
+        &quot;votes&quot;: 1
+      },
+      {
+        &quot;poll_id&quot;: 1,
+        &quot;poll&quot;:{
+          &quot;question&quot;: &quot;What's your favourite food?&quot;
+        },
+        &quot;option&quot;: {
+          &quot;texts&quot;: &quot;Sandwich&quot;
+        },
+        &quot;votes&quot;: 2
+      },
+      {
+        &quot;poll_id&quot;: 1,
+        &quot;poll&quot;:{
+          &quot;question&quot;: &quot;What's your favourite food?&quot;
+        },
+        &quot;option&quot;: {
+          &quot;texts&quot;: &quot;Burger&quot;
+        },           
+        &quot;votes&quot;: 3
+      },
+      {
+        &quot;poll_id&quot;: 1,
+        &quot;poll&quot;:{
+          &quot;question&quot;: &quot;What's your favourite food?&quot;
+        },
+        &quot;option&quot;: {
+          &quot;texts&quot;: &quot;Lasagna&quot;
+        },
+        &quot;votes&quot;: 1
+      }
+    ]
+  }
+}
+:variables:
+{
+ &quot;pollId&quot;: 1
+}">
+
+</div>

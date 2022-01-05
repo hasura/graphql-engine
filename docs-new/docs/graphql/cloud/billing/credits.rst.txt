@@ -1,0 +1,54 @@
+<div class="meta" description="Hasura Cloud coupon and credits"
+keywords="hasura, docs, cloud, coupon,  credits">
+
+</div>
+
+# Coupons and credits
+
+<div class="contents" backlinks="none" depth="1" local="">
+
+Table of contents
+
+</div>
+
+## Introduction
+
+If you have a coupon, you can redeem it from the dashboard to get a
+credit waiver on your next invoice. Discounts will be adjusted while
+creating the invoice.
+
+## Redeem a coupon
+
+Navigate to the `Billing` tab, click on `Coupons and Credits`, enter the
+code and click on the redeem button. Only one coupon is applied.
+
+<div class="note">
+
+<div class="title">
+
+Note
+
+</div>
+
+If there is an active coupon and another coupon is applied, then the
+later coupon is used.
+
+</div>
+
+<div class="thumbnail" alt="Coupons and Credits">
+
+/img/graphql/cloud/billing/coupon_redemption.png
+
+</div>
+
+<div class="thumbnail" alt="Applied coupon">
+
+/img/graphql/cloud/billing/applied_coupon.png
+
+</div>
+
+## View applied coupon
+
+You can see the applied coupon on the `Active` tab under
+`Coupon and Credits` and you can view previous coupons on the `Past`
+tab.

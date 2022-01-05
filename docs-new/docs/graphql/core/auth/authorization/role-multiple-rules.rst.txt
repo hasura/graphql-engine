@@ -1,0 +1,150 @@
+<div class="meta"
+description="Manage multiple column + row permissions for the same role in Hasura"
+keywords="hasura, docs, authorization, access control, permission, role">
+
+</div>
+
+# Multiple column + row permissions for the same role
+
+<div class="contents" backlinks="none" depth="1" local="">
+
+Table of contents
+
+</div>
+
+## Use case
+
+In some cases we might want to allow access to certain columns for a
+role only if a particular condition is met while allowing access to
+other columns based on a different condition i.e. have different column
+permissions based on different row permissions.
+
+Currently it is not possible to define multiple column + row permission
+rules for the same role.
+
+We can work around this limitation by using `views <custom_views>`.
+
+**Example**
+
+Let's say we have a table called `user_info` with columns
+`(id, name, city, email, phone, address)`.
+
+We want the role `user` to be able to access:
+
+-   the `email`, `phone` and `address` columns only if the `id` column
+    is the requesting user's id i.e. the current user is the owner of
+    the row.
+-   the `id`, `name` and `city` columns for all rows.
+
+We can achieve this via the following steps:
+
+## Step 1: Create a view
+
+`Create a view <create_views>` called `user_private` with columns
+`(user_id, email, phone, address)`:
+
+``` SQL
+CREATE VIEW user_private AS
+  SELECT id AS user_id, email, phone, address
+    FROM user_info;
+```
+
+## Step 2: Create a relationship
+
+For the table `user_info`,
+`create a manual object relationship <create_manual_relationships>`
+called `private_info` using `user_info : id -> user_private : user_id`:
+
+<div class="thumbnail" alt="Create a manual object relationship">
+
+/img/graphql/core/auth/multiple-rules-create-manual-relationship.png
+
+</div>
+
+## Step 3: Define permissions
+
+For the role `user`, create the following permissions for `select`:
+
+-   Table `user_info`: allow access to `id`, `name` and `city` without
+    any row conditions.
+
+<div class="thumbnail" alt="Column access for the role user">
+
+/img/graphql/core/auth/multiple-rules-define-public-permissions.png
+
+</div>
+
+-   View `user_private`: allow access to `id`, `phone`, `email` and
+    `address` if the `user-id` passed in the session variable is equal
+    to the row's `user_id`.
+
+<div class="thumbnail"
+alt="Column access for the role user based on row level permissions">
+
+/img/graphql/core/auth/multiple-rules-define-private-permissions.png
+
+</div>
+
+## Step 4: Query with appropriate access control
+
+Now we can fetch the required data with the appropriate access control
+by using the relationship.
+
+If the `X-Hasura-Role` and the `X-Hasura-User-Id` session variables are
+set to `user` and `2` respectively, we'll get the following result:
+
+<div class="graphiql" view_only="" query="query {
+  user_info {
+    id
+    name
+    city
+    private_info {
+      email
+      phone
+      address
+    }
+  }
+}
+:response:
+{
+  &quot;data&quot;: {
+    &quot;user_info&quot;: [
+      {
+        &quot;id&quot;: 1,
+        &quot;name&quot;: &quot;Julie&quot;,
+        &quot;city&quot;: &quot;Boston&quot;,
+        &quot;private_info&quot;: null
+      },
+      {
+          &quot;id&quot;: 2,
+          &quot;name&quot;: &quot;Josh&quot;,
+          &quot;city&quot;: &quot;Bangalore&quot;,
+          &quot;private_info&quot;: {
+            &quot;email&quot;: &quot;josh@josh.com&quot;,
+            &quot;phone&quot;: &quot;+91-9787675678&quot;,
+            &quot;address&quot;: &quot;#141, 7th Main Road, Koramangala 3rd Block&quot;,
+          }
+        },
+        {
+          &quot;id&quot;: 3,
+          &quot;name&quot;: &quot;John&quot;,
+          &quot;city&quot;: &quot;Berlin&quot;,
+          &quot;private_info&quot;: null
+        }
+    ]
+  }
+}">
+
+</div>
+
+Observe that the `private_info` field is returned as `null` for all rows
+without the appropriate access.
+
+<div class="admonition">
+
+Additional Resources
+
+Enterprise Grade Authorization - [Watch
+Webinar](https://hasura.io/events/webinar/authorization-modeling-hasura/?pg=docs&plcmt=body&cta=watch-webinar&tech=).
+
+</div>

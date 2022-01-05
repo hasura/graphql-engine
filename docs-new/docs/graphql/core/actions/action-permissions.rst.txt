@@ -1,0 +1,101 @@
+<div class="meta" description="Permissions for Hasura actions"
+keywords="hasura, docs, actions, permissions">
+
+</div>
+
+# Actions permissions
+
+<div class="contents" backlinks="none" depth="2" local="">
+
+Table of contents
+
+</div>
+
+## Introduction
+
+As with the other fields in the GraphQL schema, users need to be given
+access to an action.
+
+## Set action permissions
+
+<div class="rst-class">
+
+api_tabs
+
+</div>
+
+<div class="tabs">
+
+<div class="tab">
+
+Console
+
+Head to the `Actions -> [action-name] -> Permissions` tab in the
+console.
+
+<div class="thumbnail" alt="Console action permission">
+
+/img/graphql/core/actions/actions-permissions.png
+
+</div>
+
+Hit `Save` to give the role permission to access the action.
+
+</div>
+
+<div class="tab">
+
+CLI
+
+Go to `metadata/actions.yaml` in the Hasura project directory.
+
+Update the definition of the `insertAuthor` action as:
+
+``` yaml
+- actions
+  - name: insertAuthor
+    definition:
+      kind: synchronous
+      handler: '{{ACTIONS_BASE_URL}}/insertAuthor'
+    permissions:
+    - role: user
+    - role: publisher
+```
+
+Save the changes and run `hasura metadata apply` to set the permissions.
+
+</div>
+
+<div class="tab">
+
+API
+
+Action permissions can be set by using the
+`create_action_permission metadata API <metadata_create_action_permission>`:
+
+``` http
+POST /v1/query HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: admin
+
+{
+  "type": "create_action_permission",
+  "args": {
+    "action": "insertAuthor",
+    "role": "user"
+  }
+}
+```
+
+</div>
+
+</div>
+
+<div class="admonition">
+
+Additional Resources
+
+Introduction to Hasura Actions - [View
+Recording](https://hasura.io/events/webinar/hasura-actions/?pg=docs&plcmt=body&cta=view-recording&tech=).
+
+</div>
