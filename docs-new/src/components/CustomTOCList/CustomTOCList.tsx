@@ -21,7 +21,7 @@ const CustomTOCListHead = ({children}) => (
 
 const CustomTOCListContent = ({children}) => (
   <ul className={styles["toc-list-content"]}>
-    {children.map(child => <li>{child}</li>)}
+    {children.map((child, index) => <li key={`toc-lc-${index}`}>{child}</li>)}
   </ul>
 );
 
