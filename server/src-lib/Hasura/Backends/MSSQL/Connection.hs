@@ -247,13 +247,18 @@ newtype MSSQLConnErr = MSSQLConnErr {getConnErr :: Text}
   deriving (Show, Eq, ToJSON)
 
 fromMSSQLTxError :: MSSQLTxError -> QErr
-fromMSSQLTxError (MSSQLTxError query exception) =
-  (internalError "database query error")
-    { qeInternal =
-        Just $
-          ExtraInternal $
-            object
-              [ "query" .= ODBC.renderQuery query,
-                "exception" .= odbcExceptionToJSONValue exception
-              ]
-    }
+fromMSSQLTxError = \case
+  MSSQLQueryError query exception ->
+    (internalError "database query error")
+      { qeInternal =
+          Just $
+            ExtraInternal $
+              object
+                [ "query" .= ODBC.renderQuery query,
+                  "exception" .= odbcExceptionToJSONValue exception
+                ]
+      }
+  MSSQLInternal err ->
+    (internalError "mssql internal error")
+      { qeInternal = Just $ ExtraInternal $ object ["error" .= err]
+      }
