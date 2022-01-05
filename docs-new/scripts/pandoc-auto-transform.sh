@@ -11,9 +11,15 @@ for f in **/*.rst; do # Whitespace-safe and recursive
     mkdir -pv -- "../$1/${f%/*}" && touch -- "../$1/${f%}.txt";
     pandoc "$f" -f rst -t gfm -s -o "../$1/${f%}.txt";
 done
+cd ..
+
+
 # wc -l graphql/**/* > files.txt
 # tree -f
-cd ..
+
+# run on only one file
+# ./docs-new/scripts/pandoc-auto-transform.sh "graphql/core/actions/create.rst"
+# pandoc "docs/$1" -f rst -t gfm -s -o "docs-new/docs/${1%}.txt";
 
   # mkdir -pv -- "$1/${f%/*}" && touch -- "$1/${f%}.txt";
   # pandoc "$f" -f rst -t gfm -s -o "$1/${f%}.txt";
