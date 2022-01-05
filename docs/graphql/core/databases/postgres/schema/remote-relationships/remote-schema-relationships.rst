@@ -36,7 +36,7 @@ Create remote schema relationships
 Step 0: Add a remote schema
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Add a remote schema as described :ref:`here <adding_schema>`.
+Add a remote schema as described :ref:`here <adding_schema>`, if the schema isn't already added.
 
 Step 1: Define and create the relationship
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

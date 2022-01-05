@@ -9,7 +9,7 @@ Remote schema permissions
 
 .. contents:: Table of contents
    :backlinks: none
-   :depth: 1
+   :depth: 2
    :local:
 
 Introduction
@@ -27,15 +27,22 @@ Remote schema permissions can be defined to:
    Remote schema permissions are supported in Hasura GraphQL engine versions
    ``v2.0.0`` and above.
 
-.. note::
+.. admonition:: Enable remote schema permissions
 
-   Remote schema permissions are **not** enabled by default in the graphql-engine.
-   To enable them, you will have to run the graphql-engine either with the
+   Remote schema permissions are **not** enabled by default.
+   
+   To enable them, you will have to run the GraphQL engine either with the
    server flag ``--enable-remote-schema-permissions`` or environment variable
-   ``HASURA_GRAPHQL_ENABLE_REMOTE_SCHEMA_PERMISSIONS`` set to ``true``. When remote
-   schema permissions are not enabled in the graphql-engine, the remote schemas are
-   considered to be a public entity i.e. all roles will have unrestricted access to the
-   remote schema.
+   ``HASURA_GRAPHQL_ENABLE_REMOTE_SCHEMA_PERMISSIONS`` set to ``true``.
+   
+   When remote schema permissions are not enabled, all remote schemas are
+   considered to be public entities, i.e. all roles will have unrestricted access to the
+   remote schemas. Once enabled, access to remote schemas will be restricted for all roles
+   (other than ``admin``) unless explicit permissions for the remote schema fields are
+   granted to the roles.
+
+
+.. _role_based_remote_schemas:
 
 Role based remote schemas
 -------------------------
@@ -45,8 +52,8 @@ Role based remote schemas allow you to expose only certain parts of the remote s
 doing this will ensure that these fields are not exposed for the role and they will not
 be able to query the fields that have been hidden.
 
-For example, let's say we have the following remote schema added to the
-graphql-engine:
+**For example**, let's say we have the following remote schema added to the
+GraphQL engine:
 
 .. code-block:: graphql
 
@@ -132,7 +139,7 @@ Argument presets are set on an argument value using the ``@preset`` directive.
    system directive locations i.e. only at an input object field or an argument field.
 
 For example, let's say we have the following remote schema added to the
-graphql-engine:
+GraphQL engine:
 
 .. code-block:: graphql
 
@@ -203,7 +210,7 @@ this change should look like:
      get_user(id: ID! @preset(value: "x-hasura-user-id", static: true)) : User
 
 Input object field presets
-^^^^^^^^^^^^^^^^^^^^^^^^^^
+--------------------------
 
 Input object fields can also have preset values set. When an input object
 contains multiple fields and only some of them have a preset set, the other
@@ -213,7 +220,7 @@ object field preset arguments.
 
 Let's see an example, to see input object field presets in action.
 
-Suppose, a remote schema with the following schema is added to the graphql-engine:
+Suppose, a remote schema with the following schema is added to the GraphQL engine:
 
 .. code-block:: graphql
 
@@ -275,7 +282,7 @@ do it in the following manner:
    }
 
 The ``from`` field will get injected into the input object before the
-graphql-engine queries the remote server. The final query that will
+GraphQL engine queries the remote server. The final query that will
 be sent to the remote server will be:
 
 .. code-block:: graphql
@@ -283,6 +290,103 @@ be sent to the remote server will be:
    mutation {
      create_message(message: {to: "2", content: "hello world", from: "<x-hasura-user-id>"})
    }
+   
+Add remote schema permissions
+-----------------------------
+
+Step 0: Add a remote schema
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Add a remote schema as described :ref:`here <adding_schema>`, if the schema isn't already added.
+
+Step 1: Set permissions
+^^^^^^^^^^^^^^^^^^^^^^^
+
+.. rst-class:: api_tabs
+.. tabs::
+
+  .. tab:: Console
+
+    - Head to the ``Remote Schemas -> [remote-schema-name] -> Permissions`` tab.
+    - Select an existing role or create a new role by entering a role name (say ``user``) in the ``Enter new role`` box.
+    - Click the permissions column next to the role.
+    - Select the schema fields that the role is allowed to access and set any presets.
+    - Hit ``Save Permissions``.
+
+    .. thumbnail:: /img/graphql/core/remote-schemas/remote-schemas-user-role.png
+       :alt: Opening the remote relationship section
+       :width: 1000px
+
+  .. tab:: CLI
+
+    You can add a new role or edit the permissions for an existing role by editing the ``metadata -> remote_schemas.yaml`` file:
+
+    Add the subset of the remote schema that the role is allowed to access and set any presets.
+
+    .. code-block:: yaml
+       :emphasize-lines: 7-24 
+        
+       - name: countries    
+         definition:   
+           url: https://countries.trevorblades.com/
+           timeout_seconds: 60
+         comment: "remote schema permissions for role: user"         
+         permissions:  
+          - role: user  
+            definition:
+              schema: |-        
+                schema  { query: Query }
+
+                type Continent { 
+                  countries: [Country!]!
+                  name: String!
+                }
+
+                type Country {
+                  name: String!
+                  capital: String
+                }  
+
+                type Query {
+                  continent(code: ID!): Continent
+                }
+
+    Apply the metadata by running:
+
+    .. code-block:: bash
+
+      hasura metadata apply
+
+  .. tab:: API
+
+    You can create remote schema permissions by using the :ref:`add_remote_schema_permissions metadata API <metadata_add_remote_schema_permissions>`:
+
+    .. code-block:: http
+
+      POST /v1/metadata HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: admin
+
+      {
+        "type": "add_remote_schema_permissions",
+        "args": {
+          "remote_schema" : "countries",
+          "role" : "user",
+          "definition" : {
+              "schema" : "schema { query: Query } type Continent { countries: [Country!]! name : String!} type Country { name: String! capital: String } type Query { continent(code: ID!): Continent}"
+          },
+          "comment": "remote schema permissions for role: user"
+        }
+      }
+
+Step 2: Test and verify the permissions
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Head to the ``API`` section. Add the session variable ``X-Hasura-Role`` with the value as the role for which we set permissions in the previous step.
+
+.. thumbnail:: /img/graphql/core/remote-schemas/role-based-schema.png
+
+As we see, the role ``user`` has access restricted to certain fields of the remote schema.    
 
 .. admonition:: Additional Resources
 
