@@ -676,7 +676,7 @@ selectMutationOutputAndCheckCondition alias mutationOutputSelect checkBoolExp =
       checkConstraintProjection =
         -- apply ISNULL() to avoid check constraint select statement yielding empty rows
         ExpressionProjection $
-          Aliased (FunctionExpression "ISNULL" [SelectExpression checkConstraintSelect, ValueExpression (ODBC.IntValue 0)]) "check_constraint_select"
+          Aliased (FunctionApplicationExpression $ FunExpISNULL (SelectExpression checkConstraintSelect) (ValueExpression (ODBC.IntValue 0))) "check_constraint_select"
    in emptySelect {selectProjections = [mutationOutputProjection, checkConstraintProjection]}
   where
     checkConstraintSelect =
