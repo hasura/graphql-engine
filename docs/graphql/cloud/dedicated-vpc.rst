@@ -29,15 +29,10 @@ Creating a VPC
 
 Once the feature is enabled for your account, you'll see a new tab on the dashboard called **VPCs**.
 All existing VPCs can be found here. You can also initiate a request to create a new VPC.
+To request a new VPC, click on the **Create New VPC** button on top. It'll open up a form with the following fields:
 
 .. thumbnail:: /img/graphql/cloud/dedicated-vpc/view-vpc-list.png
    :alt: VPC list
-   :width: 1146px
-
-To request a new VPC, click on the **Create New VPC** button on top. It'll open up a form with the following fields:
-
-.. thumbnail:: /img/graphql/cloud/dedicated-vpc/vpc-create-request.png
-   :alt: VPC Create Request
    :width: 1146px
 
 Enter the following details:
