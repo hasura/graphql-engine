@@ -1,5 +1,8 @@
 .main-img {
   cursor: pointer;
+  box-shadow: -1px 2px 20px 2px #d9d9d9;
+  margin-top: 20px;
+  margin-bottom: 30px;
 }
 
 .modal {
