@@ -7,16 +7,24 @@ sidebar_position: 11
 <details>
 <summary>How to start the migration process?</summary>
 
-Convert file from `.rst` to `.mdx`. 
-We used an auto transform tool [Pandoc](https://pandoc.org) to automate this and added the resultant content in `.txt` file.
+Used an auto transform tool [Pandoc](https://pandoc.org) to transform `reStructiredText` to `GitHub flavoured markdown` and added the resultant markdown content in respective `.txt` files.
 
-1. Convert the transsformed `.rst.txt` to `.mdx` extension for the file to be able to show up in sidebar and UI.
-2. Use this guide for syntactical and usage reference.
-3. Validate content and cleanup misc divs that are populated during auto transform and any invalid mdx data.
-4. The misc populated divs exist to ease adding metadata and any sphinx directives that can't be auto transformed to mdx. Please cross referene the actual RST file for content validation.
+You will be working in the `docs-new/docs/graphql` directory. Here you can find the `.txt` files already added from auto-transform result. So, you don't have to create any new files.
 
+Below is the steps to complete the migration cylcle for each doc file.
 
-Verify content correctness and preview in UI. 
+Update the extension and migrate content.
+
+1. Convert the transformed `.rst.txt` to `.mdx` extension for the file to be able to show up in sidebar and UI.
+
+1. Use the [migration guide](https://hge-docs-migration.netlify.app/) for syntactical and usage reference.
+
+1. Validate content and cleanup misc divs that are populated during auto transform and any invalid mdx data.
+
+1. The misc populated divs exist to ease adding metadata and any sphinx directives that can't be auto transformed to markdown. Please cross referene the actual RST file for content validation.
+
+Verify content correctness (compare against the current live version of [Hasura docs](https://hasura.io/docs/)) and preview in UI.
+
 
 </details>
 

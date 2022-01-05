@@ -11,6 +11,27 @@ This page will act as a migration guide for the docs migration.
 This page will cover all the factors that require a clarification during the migration process. If missed any, please let us know.
 
 
+## How to Start the Migration?
+
+> Used an auto transform tool [Pandoc](https://pandoc.org) to transform `reStructiredText` to `GitHub flavoured markdown` and added the resultant markdown content in respective `.txt` files.
+
+You will be working in the `/docs-new/docs/graphql` directory. Here you can find the `.txt` files already added from auto-transform result. So, you don't have to create any new files.
+
+Below is the steps to complete the migration cylcle for each doc file.
+
+- Update the extension and migrate content.
+
+1. Convert the transformed `.rst.txt` to `.mdx` extension for the file to be able to show up in sidebar and UI.
+
+2. Use the [migration guide](https://hge-docs-migration.netlify.app/) for syntactical and usage reference.
+
+3. Validate content and cleanup misc divs that are populated during auto transform and any invalid mdx data.
+
+4. The misc populated divs exist to ease adding metadata and any sphinx directives that can't be auto transformed to markdown. Please cross referene the actual RST file for content validation.
+
+- Verify content correctness (compare against the current live version of [Hasura docs](https://hasura.io/docs/)) and preview in UI.
+
+
 :::tip
 Please go through the [FAQs](/migration-guide/faqs.mdx) section to understand the common caveats with docusaurus and their workarounds.
 :::
