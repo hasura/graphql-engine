@@ -21,7 +21,7 @@ multiple filters in the same `where` clause using the `_and` or the
 
 For example, to fetch data for an author whose name is "Sidney":
 
-``` graphql
+```graphql
 query {
   authors(
     where: {name: {_eq: "Sidney"}}
@@ -38,7 +38,7 @@ also filter the nested objects as well.
 For example, to fetch a list of authors who have articles with a rating
 greater than 4 along with those articles:
 
-``` graphql
+```graphql
 query {
   authors (where: {articles: {rating: {_gt: 4}}}) {
     id
@@ -829,7 +829,7 @@ results.
 
 For example:
 
-``` graphql
+```graphql
 query {
   articles (where: {author: {name: {_eq: "Sidney"}}}) {
     id

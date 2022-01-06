@@ -74,14 +74,14 @@ like *Integer*, *Boolean*, *Geography* etc. are scalar computed fields.
 
 Let's say we have the following schema:
 
-``` plpgsql
+```plpgsql
 authors(id integer, first_name text, last_name text)
 ```
 
 `Define an SQL function <create_sql_functions>` called
 `author_full_name`:
 
-``` plpgsql
+```plpgsql
 CREATE FUNCTION author_full_name(author_row authors)
 RETURNS TEXT AS $$
   SELECT author_row.first_name || ' ' || author_row.last_name
@@ -127,7 +127,7 @@ tracked to define such a computed field.
 
 Let's say we have the following schema:
 
-``` plpgsql
+```plpgsql
 authors(id integer, first_name text, last_name text)
 
 articles(id integer, title text, content text, author_id integer)
@@ -142,7 +142,7 @@ search parameter.
 `Define an SQL function <create_sql_functions>` called
 `filter_author_articles`:
 
-``` plpgsql
+```plpgsql
 CREATE FUNCTION filter_author_articles(author_row authors, search text)
 RETURNS SETOF articles AS $$
   SELECT *
@@ -234,7 +234,7 @@ CLI
 You can add a computed field in the `tables.yaml` file inside the
 `metadata` directory:
 
-``` yaml
+```yaml
 - table:
     schema: public
     name: authors
@@ -250,7 +250,7 @@ You can add a computed field in the `tables.yaml` file inside the
 
 Apply the metadata by running:
 
-``` bash
+```bash
 hasura metadata apply
 ```
 
@@ -263,7 +263,7 @@ API
 A computed field can be added to a table/view using the
 `add_computed_field metadata API <api_computed_field>`:
 
-``` http
+```http
 POST /v1/query HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
@@ -317,7 +317,7 @@ session argument is a JSON object where keys are session variable names
 (in lower case) and values are strings. Use the `->>` JSON operator to
 fetch the value of a session variable as shown in the following example.
 
-``` plpgsql
+```plpgsql
 -- 'hasura_session' will be the session argument
 CREATE OR REPLACE FUNCTION article_liked_by_user(article_row articles, hasura_session json)
 RETURNS boolean AS $$
@@ -329,7 +329,7 @@ SELECT EXISTS (
 $$ LANGUAGE sql STABLE;
 ```
 
-``` http
+```http
 POST /v1/query HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
@@ -424,7 +424,7 @@ schema.
 
 </div>
 
-``` plpgsql
+```plpgsql
 CREATE TABLE "user" (id SERIAL PRIMARY KEY, name TEXT UNIQUE NOT NULL, address json NOT NULL);
 
 -- SQL function returns city of a "user" using "->>" json operator
@@ -437,7 +437,7 @@ $$ LANGUAGE sql STABLE;
 Now, let's track the table and add computed field `user_city` using the
 SQL function `get_city`. Consider the following remote schema.
 
-``` graphql
+```graphql
 type Query {
   get_coordinates(city: String): Coordinates
 }

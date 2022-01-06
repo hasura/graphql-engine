@@ -47,7 +47,7 @@ Let's look at an example, a permission for the `user` role to insert
 into the `article` table. What is the constraint that we would like to
 enforce here? *A user can only insert articles for themselves* .
 
-``` http
+```http
 POST /v1/metadata HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
@@ -89,7 +89,7 @@ expressive.
 
 An example:
 
-``` http
+```http
 POST /v1/metadata HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
@@ -139,7 +139,7 @@ permission for a role on a table.
 
 An example:
 
-``` http
+```http
 POST /v1/metadata HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
@@ -171,7 +171,7 @@ Let's look at an example, a permission for the `user` role to select
 from the `article` table: all columns can be read, as well as the rows
 that have been published or authored by the user themselves.
 
-``` http
+```http
 POST /v1/metadata HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
@@ -225,7 +225,7 @@ permission for a role on a table.
 
 An example:
 
-``` http
+```http
 POST /v1/metadata HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
@@ -255,7 +255,7 @@ be updated. Its structure is quite similar to the select permission.
 
 An example:
 
-``` http
+```http
 POST /v1/metadata HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
@@ -330,7 +330,7 @@ permission for a role on a table.
 
 An example:
 
-``` http
+```http
 POST /v1/metadata HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
@@ -359,7 +359,7 @@ A delete permission is used to restrict the rows that can be deleted.
 
 An example:
 
-``` http
+```http
 POST /v1/metadata HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
@@ -402,7 +402,7 @@ permission for a role on a table.
 
 An example:
 
-``` http
+```http
 POST /v1/metadata HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
@@ -432,7 +432,7 @@ permission. Setting the comment to `null` removes it.
 
 An example:
 
-``` http
+```http
 POST /v1/metadata HTTP/1.1
 Content-Type: application/json
 Authorization: Bearer <auth-token> # optional if cookie is set
@@ -469,7 +469,7 @@ Let's look at an example, a permission for the `user` role to insert
 into the `article` table. What is the constraint that we would like to
 enforce here? *A user can only insert articles for themselves* .
 
-``` http
+```http
 POST /v1/metadata HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
@@ -511,7 +511,7 @@ expressive.
 
 An example:
 
-``` http
+```http
 POST /v1/metadata HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
@@ -561,7 +561,7 @@ insert permission for a role on a table.
 
 An example:
 
-``` http
+```http
 POST /v1/metadata HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
@@ -593,7 +593,7 @@ Let's look at an example, a permission for the `user` role to select
 from the `article` table: all columns can be read, as well as the rows
 that have been published or authored by the user themselves.
 
-``` http
+```http
 POST /v1/metadata HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
@@ -647,7 +647,7 @@ permission for a role on a table.
 
 An example:
 
-``` http
+```http
 POST /v1/metadata HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
@@ -677,7 +677,7 @@ be updated. Its structure is quite similar to the select permission.
 
 An example:
 
-``` http
+```http
 POST /v1/metadata HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
@@ -752,7 +752,7 @@ update permission for a role on a table.
 
 An example:
 
-``` http
+```http
 POST /v1/metadata HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
@@ -781,7 +781,7 @@ A delete permission is used to restrict the rows that can be deleted.
 
 An example:
 
-``` http
+```http
 POST /v1/metadata HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
@@ -824,7 +824,7 @@ delete permission for a role on a table.
 
 An example:
 
-``` http
+```http
 POST /v1/metadata HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
@@ -854,7 +854,7 @@ permission. Setting the comment to `null` removes it.
 
 An example:
 
-``` http
+```http
 POST /v1/metadata HTTP/1.1
 Content-Type: application/json
 Authorization: Bearer <auth-token> # optional if cookie is set

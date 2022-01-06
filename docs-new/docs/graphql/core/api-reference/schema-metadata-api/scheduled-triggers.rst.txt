@@ -42,7 +42,7 @@ continue to function.
 
 `create_cron_trigger` is used to create a new cron trigger.
 
-``` http
+```http
 POST /v1/query HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
@@ -90,7 +90,7 @@ Scheduled triggers are supported from versions `v1.3.0` and above.
 `delete_cron_trigger` is used to delete an existing cron trigger. The
 scheduled events associated with the cron trigger will also be deleted.
 
-``` http
+```http
 POST /v1/query HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
@@ -121,7 +121,7 @@ Scheduled triggers are supported from versions `v1.3.0` and above.
 
 `create_scheduled_event` is used to create a scheduled event.
 
-``` http
+```http
 POST /v1/query HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin

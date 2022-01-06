@@ -35,7 +35,7 @@ You can add or remove a operation in the allow-list in two ways:
         collection, it is not related to the operation name of the
         query.
 
-        ``` graphql
+        ```graphql
         query ($id: Int!){
            user_by_pk(id: $id){
              __typename
@@ -73,7 +73,7 @@ Note
     assuming the query in the first example above is part of the
     allow-list, the following query will be **rejected**:
 
-    ``` graphql
+    ```graphql
     query ($id: Int!){
        user_by_pk(id: $id){
          __typename

@@ -34,7 +34,7 @@ continue to function.
 `export_metadata` is used to export the current metadata from the server
 as a JSON file.
 
-``` http
+```http
 POST /v1/query HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
@@ -56,7 +56,7 @@ metadata object is just a JSON version of the
 `replace_metadata` is used to replace/import metadata into Hasura.
 Existing metadata will be replaced with the new one.
 
-``` none
+```none
 POST /v1/query HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
@@ -75,7 +75,7 @@ same as the output of `export_metadata`.
 
 For version 2, the following structure is used:
 
-``` none
+```none
 {
     allow_inconsistent_metadata: Boolean,
     metadata: metadata-object
@@ -94,7 +94,7 @@ If the version is not specified, then it is inferred from the format of
 
 Example with inconsistencies:
 
-``` none
+```none
 HTTP/1.1 400 Bad Request
 
 {
@@ -123,7 +123,7 @@ Postgres database that Hasura should be aware of. Example: a new column
 is added to a table using `psql` and this column should now be added to
 the GraphQL schema.
 
-``` http
+```http
 POST /v1/query HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
@@ -148,7 +148,7 @@ X-Hasura-Role: admin
 current state by forgetting the tables tracked, relationships,
 permissions, event triggers etc.
 
-``` http
+```http
 POST /v1/query HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
@@ -164,7 +164,7 @@ X-Hasura-Role: admin
 `get_inconsistent_metadata` can be used to fetch all inconsistent
 metadata objects.
 
-``` http
+```http
 POST /v1/query HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
@@ -177,7 +177,7 @@ X-Hasura-Role: admin
 
 Response:
 
-``` json
+```json
 [
     {
         "definition": {
@@ -219,7 +219,7 @@ Response:
 `drop_inconsistent_metadata` can be used to purge all inconsistent
 objects from the metadata.
 
-``` http
+```http
 POST /v1/query HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin

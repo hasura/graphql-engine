@@ -15,7 +15,7 @@ Table of contents
 
 Each migration file has the following format:
 
-``` bash
+```bash
 <version>_<name>.{up|down}.{sql|yaml}
 ```
 
@@ -36,7 +36,7 @@ example file:
 
 **1551151778747_create_table_public_author.up.yaml**
 
-``` yaml
+```yaml
 - type: run_sql
   args:
     sql: |
@@ -53,7 +53,7 @@ example file:
 
 **1551151778747_create_table_public_author.down.yaml**
 
-``` yaml
+```yaml
 - type: untrack_table
   args:
     schema: public

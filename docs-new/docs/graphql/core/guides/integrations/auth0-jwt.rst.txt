@@ -54,7 +54,7 @@ the rule anything you want.
 
 For Auth0.js:
 
-``` javascript
+```javascript
 function (user, context, callback) {
   const namespace = "https://hasura.io/jwt/claims";
   context.idToken[namespace] = 
@@ -70,7 +70,7 @@ function (user, context, callback) {
 
 For auth0-spa-js:
 
-``` javascript
+```javascript
 function (user, context, callback) {
   const namespace = "https://hasura.io/jwt/claims";
   context.accessToken[namespace] =
@@ -99,7 +99,7 @@ Read more about this
 -   In your application code, configure your API `identifier` as the
     `audience` when initializing Auth0, e.g.:
 
-``` javascript
+```javascript
 <Auth0Provider
   domain={process.env.AUTH_DOMAIN}
   client_id={process.env.AUTH_CLIENT_ID}
@@ -180,7 +180,7 @@ Current workaround is to download the X590 certificate from:
 
 And use it in the `key` field:
 
-``` json
+```json
 {
   "type":"RS512",
   "key": "-----BEGIN CERTIFICATE-----
@@ -256,7 +256,7 @@ need is the Auth0 `user_id` in something like a `users` table.
 Using Auth0 Rules again, add the following rule which will insert a new
 user every time someone signs up.
 
-``` javascript
+```javascript
 function (user, context, callback) {
   const userId = user.user_id;
   const url = "https://my-hasura-app.hasura.app/v1/graphql";

@@ -49,13 +49,13 @@ The `Droplet IP` is highlighted in the image below:
 
 The Hasura console will be at:
 
-``` bash
+```bash
 http://<your_droplet_ip>/console
 ```
 
 The GraphQL endpoint will be:
 
-``` bash
+```bash
 http://<your_droplet_ip>/v1/graphql
 ```
 
@@ -112,7 +112,7 @@ Choose `id` as the Primary key and click the `Add Table` button.
 Once the table is created, go to the `Insert Row` tab and insert some
 sample rows:
 
-``` bash
+```bash
 Thor
 Iron Man
 Hulk
@@ -131,7 +131,7 @@ Black Widow
 Switch to the `GraphiQL` tab on top and execute the following GraphQL
 query:
 
-``` graphql
+```graphql
 query {
   profile {
     id
@@ -157,13 +157,13 @@ To add an admin secret key, follow the steps described below:
 
 ### Step 1: Connect to the Droplet via SSH
 
-``` bash
+```bash
 ssh root@<your_droplet_ip>
 ```
 
 ### Step 2: Go to the `/etc/hasura` directory
 
-``` bash
+```bash
 cd /etc/hasura
 ```
 
@@ -172,7 +172,7 @@ cd /etc/hasura
 Edit `docker-compose.yaml` and un-comment the line that mentions admin
 secret key. Also change it to some unique secret:
 
-``` bash
+```bash
 vim docker-compose.yaml
 
 ...
@@ -185,7 +185,7 @@ HASURA_GRAPHQL_ADMIN_SECRET: <myadminsecretkey>
 
 ### Step 4: Update the container
 
-``` bash
+```bash
 docker-compose up -d
 ```
 
@@ -193,7 +193,7 @@ That's it. Visit the console at `http://<your_droplet_ip>/console` and
 it should prompt for the admin secret key. Further API requests can be
 made by adding the following header:
 
-``` bash
+```bash
 X-Hasura-Admin-Secret: <myadminsecretkey>
 ```
 
@@ -211,19 +211,19 @@ to the Droplet IP.
 
 ### Step 2: Connect to the Droplet via SSH
 
-``` bash
+```bash
 ssh root@<your_droplet_ip>
 ```
 
 ### Step 3: Go to the `/etc/hasura` directory
 
-``` bash
+```bash
 cd /etc/hasura
 ```
 
 ### Step 4: Edit the `Caddyfile` and change `:80` to your domain
 
-``` bash
+```bash
 vim Caddyfile
 
 ...
@@ -239,7 +239,7 @@ add_your-domain-here {
 
 ### Step 5: Restart the container
 
-``` bash
+```bash
 docker-compose restart caddy
 ```
 
@@ -254,19 +254,19 @@ page](https://github.com/hasura/graphql-engine/releases).
 
 ### Step 1: Connect to the Droplet via SSH
 
-``` bash
+```bash
 ssh root@<your_droplet_ip>
 ```
 
 ### Step 2: Go to the `/etc/hasura` directory
 
-``` bash
+```bash
 cd /etc/hasura
 ```
 
 ### Step 3: Edit `docker-compose.yaml` and change the image tag to the latest one
 
-``` bash
+```bash
 vim docker-compose.yaml
 
 ...
@@ -279,7 +279,7 @@ graphql-engine:
 
 ### Step 4: Restart the container
 
-``` bash
+```bash
 docker-compose up -d
 ```
 
@@ -298,19 +298,19 @@ dropdown. "Connection string" is the "Database URL". Copy it.
 
 ### Step 3: Connect to the Droplet via SSH
 
-``` bash
+```bash
 ssh root@<your_droplet_ip>
 ```
 
 ### Step 4: Go to the `/etc/hasura` directory
 
-``` bash
+```bash
 cd /etc/hasura
 ```
 
 ### Step 5: Edit `docker-compose.yaml` and change the database URL
 
-``` bash
+```bash
 vim docker-compose.yaml
 
 ...
@@ -368,14 +368,14 @@ on DigitalOcean, you should do so in the `session` mode.
 To access the Postgres database via `psql`, you can use the following
 command via the terminal:
 
-``` bash
+```bash
 docker exec -it hasura_postgres_1 psql -U postgres
 ```
 
 If you are using a hosted database
 `as outlined above <do_managed_pg_db>`, it's a little different:
 
-``` bash
+```bash
 docker exec -it hasura_postgres_1 psql -h <your database url> -p <your port> -d <your database> -U <your database user>
 ```
 
@@ -397,13 +397,13 @@ documentation for generating the proper `psql` command flags.
 
 ### Step 1: Connect to the Droplet via SSH
 
-``` bash
+```bash
 ssh root@<your_droplet_ip>
 ```
 
 ### Step 2: Go to the `/etc/hasura` directory
 
-``` bash
+```bash
 cd /etc/hasura
 ```
 
@@ -411,7 +411,7 @@ cd /etc/hasura
 
 To checks logs for any container, use the following command:
 
-``` bash
+```bash
 docker-compose logs <container_name>
 ```
 

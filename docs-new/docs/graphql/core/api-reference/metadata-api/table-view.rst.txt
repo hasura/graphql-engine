@@ -35,7 +35,7 @@ configuration. You can customise the root field names.
 
 Add a table/view `author`:
 
-``` http
+```http
 POST /v1/metadata HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
@@ -70,7 +70,7 @@ table name is not GraphQL compliant, like `Users Address`. A
 `custom name` like `users_address` will complement the `"Users Address"`
 table, so that it can be added to the GraphQL schema.
 
-``` http
+```http
 POST /v1/metadata HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
@@ -128,7 +128,7 @@ in order to be able to track it.
 
 Remove a table/view `author`:
 
-``` http
+```http
 POST /v1/metadata HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
@@ -161,7 +161,7 @@ used as an `enum table <create_enum_table>`.
 
 Use table `user_role` as an enum table:
 
-``` http
+```http
 POST /v1/metadata HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
@@ -199,7 +199,7 @@ deprecated in favour of this API.
 
 Set the configuration for a table/view called `author`:
 
-``` http
+```http
 POST /v1/metadata HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
@@ -245,7 +245,7 @@ with configuration. You can customise the root field names.
 
 Add a table/view `author`:
 
-``` http
+```http
 POST /v1/metadata HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
@@ -265,7 +265,7 @@ X-Hasura-Role: admin
 > `"Users Address"` table, so that it can be added to the GraphQL
 > schema.
 >
-> ``` http
+> ```http
 > POST /v1/metadata HTTP/1.1
 > Content-Type: application/json
 > X-Hasura-Role: admin
@@ -320,7 +320,7 @@ in order to be able to track it.
 
 Remove a table/view `author`:
 
-``` http
+```http
 POST /v1/metadata HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
@@ -358,7 +358,7 @@ deprecated in favour of this API.
 
 Set the configuration for a table/view called `author`:
 
-``` http
+```http
 POST /v1/metadata HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
@@ -397,7 +397,7 @@ with configuration. You can customise the root field names.
 
 Add a table/view `author`:
 
-``` http
+```http
 POST /v1/metadata HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
@@ -427,7 +427,7 @@ result in the root field name being `hasura_author`.
 > `"Users Address"` table, so that it can be added to the GraphQL
 > schema.
 >
-> ``` http
+> ```http
 > POST /v1/metadata HTTP/1.1
 > Content-Type: application/json
 > X-Hasura-Role: admin
@@ -446,7 +446,7 @@ result in the root field name being `hasura_author`.
 > `writer_info` will complement the `"Users Address"` table, in the
 > following case.
 >
-> ``` http
+> ```http
 > POST /v1/metadata HTTP/1.1
 > Content-Type: application/json
 > X-Hasura-Role: admin
@@ -511,7 +511,7 @@ schema.
 
 Remove a table/view `author`:
 
-``` http
+```http
 POST /v1/metadata HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
@@ -547,7 +547,7 @@ customization.
 Set the configuration for a table/view called `hasura_author_details` to
 `author`:
 
-``` http
+```http
 POST /v1/metadata HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin

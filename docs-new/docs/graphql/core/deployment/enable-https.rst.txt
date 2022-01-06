@@ -28,7 +28,7 @@ Here are a few sample configurations for some popular proxies:
 
 Here is a sample `nginx.conf` to proxy requests to Hasura:
 
-``` nginx
+```nginx
 server {
   listen 80;
   server_name hasura.<my-domain.com>;
@@ -53,7 +53,7 @@ To serve Hasura with a URL prefix instead of a separate subdomain, use
 
 Here is a sample `Caddyfile` to proxy requests to Hasura:
 
-``` bash
+```bash
 hasura.<my-domain.com> {
   proxy / http://localhost:8080
   websocket
@@ -62,7 +62,7 @@ hasura.<my-domain.com> {
 
 The sample `Caddyfile` for Caddy 2:
 
-``` bash
+```bash
 hasura.<my-domain.com> {
   reverse_proxy localhost:8080
 }
@@ -73,7 +73,7 @@ docs at [Caddy website](https://caddyserver.com/docs/automatic-https).
 
 In order to serve at a URL prefix, use the following configuration:
 
-``` bash
+```bash
 <my-domain.com> {
   proxy /hasura http://localhost:8080
   websocket

@@ -15,7 +15,7 @@ Table of contents
 Hasura ships a special Docker container which can be used to
 automatically apply migrations/metadata when the server starts:
 
-``` bash
+```bash
 hasura/graphql-engine:<version>.cli-migrations
 ```
 
@@ -43,7 +43,7 @@ designated path, the server will start ignoring migrations.
 If you want to mount the migrations directory at some location other
 than `/hasura-migrations`, set the following environment variable:
 
-``` bash
+```bash
 HASURA_GRAPHQL_MIGRATIONS_DIR=/custom-path-for-migrations
 ```
 
@@ -52,7 +52,7 @@ normal Hasura GraphQL engine server.
 
 Example:
 
-``` bash
+```bash
 # Start Hasura after applying the migrations present in /home/me/my-project/migrations
 docker run -p 8080:8080 \
        -v /home/me/my-project/migrations:/hasura-migrations \

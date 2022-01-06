@@ -333,7 +333,7 @@ Hasura v2, you can downgrade back to Hasura v1 by reverting the Hasura
 docker image version and using the `downgrade command <downgrade_hge>`
 to revert the Hasura metadata catalogue changes:
 
-``` bash
+```bash
 docker run -e HASURA_GRAPHQL_DATABASE_URL=$POSTGRES_URL hasura/graphql-engine:v2.0.0 graphql-engine downgrade --to-v1.3.3
 ```
 

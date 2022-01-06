@@ -26,7 +26,7 @@ We create two `actions <create_actions>` and
 
 1.  `Signup`: returns a `CreateUserOutput`
 
-``` graphql
+```graphql
 type Mutation {
   Signup (email: String! password: String!): CreateUserOutput
 }
@@ -40,7 +40,7 @@ type CreateUserOutput {
 
 2.  `Login`: returns a `JsonWebToken`
 
-``` graphql
+```graphql
 type Mutation {
   Login (email: String! password: String!): JsonWebToken
 }
@@ -101,7 +101,7 @@ which has methods `.hash(password)`,
 In our signup handler, the first thing we'll do is convert the action
 input password to a secure hash:
 
-``` python
+```python
 from argon2 import PasswordHasher
 Password = PasswordHasher()
 
@@ -117,7 +117,7 @@ Next, since we have the user's email and hashed password, we need to
 send a request to Hasura to save them in the database. For that, we'll
 need a request client implementation:
 
-``` python
+```python
 from requests import request
 
 @dataclass
@@ -156,7 +156,7 @@ method as well.
 
 We can instantiate the `Client` like this:
 
-``` python
+```python
 HASURA_URL = "http://graphql-engine:8080/v1/graphql"
 HASURA_HEADERS = {"X-Hasura-Admin-Secret": "your-secret"}
 
@@ -167,7 +167,7 @@ Now, in our `Signup` action handler, we need to call
 `client.create_user()` with the input email and the hashed password
 value to save them, then return the result:
 
-``` python
+```python
 @app.route("/signup", methods=["POST"])
 def signup_handler():
     args = AuthArgs.from_request(request.get_json())
@@ -183,7 +183,7 @@ def signup_handler():
 To test this out, send an HTTP request to your Flask API at `/signup`
 with an email and password:
 
-``` http
+```http
 POST http://localhost:5000/signup HTTP/1.1
 content-type: application/json
 
@@ -197,7 +197,7 @@ content-type: application/json
 
 You should get a successful response like this:
 
-``` http
+```http
 HTTP/1.0 200 OK
 Content-Type: text/html; charset=utf-8
 Content-Length: 129
@@ -221,7 +221,7 @@ The first thing we need is a new request method on our `Client` class to
 find a user by email, so that we can look them up to compare the
 password. Under `create_user`, create the following new method:
 
-``` python
+```python
 find_user_by_email = lambda self, email: self.run_query(
     """
         query UserByEmail($email: String!) {
@@ -247,7 +247,7 @@ and it's no longer valid. If so, we should re-hash and then save the
 updated password in the database through an update mutation to Hasura,
 `client.update_password()`.
 
-``` python
+```python
 @app.route("/login", methods=["POST"])
 def login_handler():
     args = LoginArgs.from_request(request.get_json())
@@ -264,7 +264,7 @@ def login_handler():
 Here is what the implementation of `generate_token()` and
 `rehash_and_save_password_if_needed()` could look like:
 
-``` python
+```python
 import os
 import jwt
 
@@ -305,7 +305,7 @@ def rehash_and_save_password_if_needed(user, plaintext_password):
 
 And finally, `client.update_password()`:
 
-``` python
+```python
 update_password = lambda self, id, password: self.run_query(
     """
         mutation UpdatePassword($id: Int!, $password: String!) {
@@ -322,7 +322,7 @@ update_password = lambda self, id, password: self.run_query(
 
 Call the `/signup` endpoint with `email` and `password`:
 
-``` http
+```http
 POST http://localhost:5000/signup HTTP/1.1
 content-type: application/json
 
@@ -336,7 +336,7 @@ content-type: application/json
 
 Action handler response:
 
-``` http
+```http
 HTTP/1.0 200 OK
 Content-Type: text/html; charset=utf-8
 Content-Length: 256
@@ -350,7 +350,7 @@ Date: Sun, 10 May 2020 19:59:36 GMT
 
 Decode the JWT token to access the Hasura claims:
 
-``` bash
+```bash
 $ decode_jwt 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.z9ey1lw9p89gUkAmWEa7Qbpa1R71TgfkjZnEunGJ1ig'
 
 {
@@ -452,7 +452,7 @@ Call the `Login` action with invalid credentials:
 
 ## Complete app code
 
-``` python
+```python
 import os
 import jwt
 import json

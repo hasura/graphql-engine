@@ -24,7 +24,7 @@ blog](https://dbtut.com/index.php/2020/06/09/sql-server-2019-alwayson-availabili
 
 ### Create Docker file
 
-``` docker
+```docker
 FROM ubuntu:18.04
 ARG DEBIAN_FRONTEND=noninteractive
 
@@ -49,7 +49,7 @@ ENTRYPOINT /opt/mssql/bin/sqlservr
 
 ### Build Docker image
 
-``` bash
+```bash
 docker build -t sqlag:ha .
 ```
 
@@ -60,7 +60,7 @@ Create three nodes:
 -   **sqlNode1**: Primary server
 -   **sqlNode2** and **sqlNode3**: Secondary Servers
 
-``` yaml
+```yaml
 services:
   db1:
      container_name: sqlNode1
@@ -121,13 +121,13 @@ internal:
             - subnet: 172.16.238.0/24
 ```
 
-``` bash
+```bash
 docker-compose up -d
 ```
 
 ## Step 3: Figure the IP address of the gateway to connect
 
-``` bash
+```bash
 $> ifconfig
 
 br-7d762e376414: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
@@ -146,11 +146,11 @@ Once the docker container is up, we can connect to the sql server via
 
 Test it out by trying to connect to any one of the node:
 
-``` bash
+```bash
 $> sqlcmd -S 172.16.238.1,1501 -U SA -P "Password1"
 ```
 
-``` sql
+```sql
 1> SELECT name FROM master.dbo.sysdatabases;
 2> GO
 ```
@@ -165,7 +165,7 @@ Follow the steps to create certificates on the nodes:
 3.  Copy the certificate from local system to secondary nodes
 4.  Apply the certificate on secondary nodes
 
-``` sql
+```sql
 USE master
 GO
 
@@ -189,7 +189,7 @@ Store the above sql file in <span
 class="title-ref">1-primary-setup-certificate.sql</span>. Then apply the
 transaction to primary node via the following.
 
-``` bash
+```bash
 sqlcmd -S 172.16.238.1,1501 -U SA -P "Password1" -i 1-primary-setup-certificate.sql
 ```
 
@@ -200,7 +200,7 @@ transaction via sqlcmd
 Now, let's copy the certificate from primary and paste them into the
 secondary nodes.
 
-``` bash
+```bash
 docker cp sqlNode1:/tmp/dbm_certificate.cer .
 docker cp sqlNode1:/tmp/dbm_certificate.pvk .
 docker cp dbm_certificate.cer sqlNode2:/tmp/
@@ -211,7 +211,7 @@ docker cp dbm_certificate.pvk sqlNode3:/tmp/
 
 Connect to all the secondary nodes and execute the following SQL:
 
-``` sql
+```sql
 CREATE LOGIN dbm_login WITH PASSWORD = 'Password1';
 CREATE USER dbm_user FOR LOGIN dbm_login;
 GO
@@ -233,7 +233,7 @@ CREATE CERTIFICATE dbm_certificate
 Execute the following SQL first on primary node and then on the
 secondary nodes.
 
-``` sql
+```sql
 CREATE ENDPOINT [Hadr_endpoint]
    AS TCP (LISTENER_IP = (0.0.0.0), LISTENER_PORT = 5022)
    FOR DATA_MIRRORING (
@@ -247,7 +247,7 @@ GRANT CONNECT ON ENDPOINT::[Hadr_endpoint] TO [dbm_login];
 
 To enable the health monitoring, execute the SQL on all nodes:
 
-``` sql
+```sql
 ALTER EVENT SESSION  AlwaysOn_health ON SERVER WITH (STARTUP_STATE=ON);
 GO
 ```
@@ -256,7 +256,7 @@ GO
 
 Execute the following SQL on primary node.
 
-``` sql
+```sql
 CREATE AVAILABILITY GROUP [AG1]
       WITH (CLUSTER_TYPE = NONE)
       FOR REPLICA ON
@@ -294,7 +294,7 @@ GO
 
 Execute the following SQL only on secondary nodes.
 
-``` sql
+```sql
 ALTER AVAILABILITY GROUP [ag1] JOIN WITH (CLUSTER_TYPE = NONE);
 ALTER AVAILABILITY GROUP [ag1] GRANT CREATE ANY DATABASE;
 GO
@@ -307,7 +307,7 @@ and verify that the replication happens on secondary nodes successfully.
 
 Execute the following SQL on primary node.
 
-``` sql
+```sql
 CREATE DATABASE agtestdb;
 GO
 ALTER DATABASE agtestdb SET RECOVERY FULL;
@@ -330,7 +330,7 @@ GO
 Connect to secondary replica and see the database and values. Test if
 the database has been replicated on secondary nodes
 
-``` bash
+```bash
 ➜ sqlcmd -S 172.16.238.1,1502 -U SA -P "Password1"
 1> SELECT name FROM master.dbo.sysdatabases;
 2> GO
@@ -350,7 +350,7 @@ IP of the node.
 
 Execute the following SQL on primary node.
 
-``` sql
+```sql
 ALTER AVAILABILITY GROUP [AG1]
 MODIFY REPLICA ON
 N'sqlNode1' WITH
@@ -409,7 +409,7 @@ Read only secondary replicas
 
 Execute the following SQL on primary node.
 
-``` sql
+```sql
 ALTER AVAILABILITY GROUP [AG1] REMOVE LISTENER 'AGListener';
 GO
 
@@ -425,12 +425,12 @@ we provide the ApplicationIntent as `ReadOnly`
 
 Let's first connect to out primary replica
 
-``` sql
+```sql
 sqlcmd -S 172.16.238.21,1434 -U SA  -d agtestdb -P "Password1"
 ```
 
 Now let's connect to secondary replicas using ReadIntent Only
 
-``` sql
+```sql
 sqlcmd -S 172.16.238.21,1434 -U SA  -d agtestdb -P "Password1" -K ReadOnly
 ```

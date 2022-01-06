@@ -43,7 +43,7 @@ We can achieve this via the following steps:
 `Create a view <create_views>` called `user_private` with columns
 `(user_id, email, phone, address)`:
 
-``` SQL
+```SQL
 CREATE VIEW user_private AS
   SELECT id AS user_id, email, phone, address
     FROM user_info;

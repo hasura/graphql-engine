@@ -30,7 +30,7 @@ Let's assume we have the following CSV file, which is named
 
 Let us create a table to match the data structure in your CSV file.
 
-``` sql
+```sql
 profile (
   firstName TEXT, 
   lastName TEXT, 
@@ -43,7 +43,7 @@ profile (
 Connect to your Postgres database by using the `psql` command on the
 terminal:
 
-``` bash
+```bash
 psql postgres://<username>:<password>@<host>:<port>/<database>
 
 # for example
@@ -55,7 +55,7 @@ psql postgres://postgres:postgres@localhost:5432/postgres
 Once connected to the database, use the following command from inside
 `psql` to import the data:
 
-``` bash
+```bash
 \copy <table_name> from '</path/to/file/filename.csv>' delimiter ',' CSV HEADER;
 
 # for example

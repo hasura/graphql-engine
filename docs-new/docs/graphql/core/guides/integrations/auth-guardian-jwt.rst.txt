@@ -198,7 +198,7 @@ AuthGuardian also has built-in support for that!
 
 The generated config has the following structure:
 
-``` json
+```json
 {
   "type": "RS256",
   "jwk_url": "https://serve.onegraph.com/app/35bcf98c-1df0-4644-a453-bf06a1349449/.well-known/jwks.json",

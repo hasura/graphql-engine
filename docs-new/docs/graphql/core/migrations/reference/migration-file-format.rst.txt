@@ -33,7 +33,7 @@ For `config v2`, see `migration_file_format_v2`.
 Each migration is stored inside a directory, which has the following
 structure:
 
-``` bash
+```bash
 <version>_<name>/{up|down}.sql
 ```
 

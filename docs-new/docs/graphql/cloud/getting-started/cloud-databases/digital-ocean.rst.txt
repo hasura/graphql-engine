@@ -132,7 +132,7 @@ give it the right `Postgres permissions <cloud_postgres_permissions>`.
 
 The structure of the database connection URL looks as follows:
 
-``` bash
+```bash
 postgresql://<user-name>:<password>@<public-ip>:<postgres-port>/<db>
 ```
 

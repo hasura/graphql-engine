@@ -60,7 +60,7 @@ Let's see access control in action using a simple example.
 Head to your console and `create a table <create_tables>` called
 `authors` with the following schema:
 
-``` sql
+```sql
 authors (
   id INT PRIMARY KEY,
   name TEXT
@@ -74,7 +74,7 @@ of the `authors` table.
 
 Head to the `GraphiQL` tab in your console and try out the below query:
 
-``` graphql
+```graphql
 query {
   authors {
     id
@@ -129,7 +129,7 @@ CLI
 You can add permissions in the `tables.yaml` file inside the `metadata`
 directory:
 
-``` yaml
+```yaml
 - table:
     schema: public
     name: authors
@@ -146,7 +146,7 @@ directory:
 
 Apply the metadata by running:
 
-``` bash
+```bash
 hasura metadata apply
 ```
 
@@ -159,7 +159,7 @@ API
 You can add select permissions by using the
 `pg_create_select_permission metadata API <pg_create_select_permission>`:
 
-``` http
+```http
 POST /v1/query HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin

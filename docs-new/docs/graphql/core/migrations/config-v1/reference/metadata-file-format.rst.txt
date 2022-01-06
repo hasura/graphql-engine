@@ -19,7 +19,7 @@ on the Postgres database.
 
 The top level keys will be the following arrays:
 
-``` yaml
+```yaml
 functions: []
 remote_schemas: []
 tables: []
@@ -33,7 +33,7 @@ defined for each table. Here is an example metadata file:
 
 ## metadata.yaml
 
-``` yaml
+```yaml
 functions:
 - search_articles
 remote_schemas:

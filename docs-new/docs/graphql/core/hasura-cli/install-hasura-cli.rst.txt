@@ -28,7 +28,7 @@ Linux
 
 In your Linux shell, run the following command:
 
-``` bash
+```bash
 curl -L https://github.com/hasura/graphql-engine/raw/stable/cli/get.sh | bash
 ```
 
@@ -39,14 +39,14 @@ provide your `sudo` password depending on the permissions of your
 If you'd prefer to install to a different location other than
 `/usr/local/bin`, set the `INSTALL_PATH` variable accordingly:
 
-``` bash
+```bash
 curl -L https://github.com/hasura/graphql-engine/raw/stable/cli/get.sh | INSTALL_PATH=$HOME/bin bash
 ```
 
 You can also install a specific version of the CLI by providing the
 `VERSION` variable:
 
-``` bash
+```bash
 curl -L https://github.com/hasura/graphql-engine/raw/stable/cli/get.sh | VERSION=v2.1.1 bash
 ```
 
@@ -58,7 +58,7 @@ Mac
 
 In your Terminal, run the following command:
 
-``` bash
+```bash
 curl -L https://github.com/hasura/graphql-engine/raw/stable/cli/get.sh | bash
 ```
 
@@ -69,14 +69,14 @@ provide your `sudo` password depending on the permissions of your
 If you'd prefer to install to a different location other than
 `/usr/local/bin`, set the `INSTALL_PATH` variable accordingly:
 
-``` bash
+```bash
 curl -L https://github.com/hasura/graphql-engine/raw/stable/cli/get.sh | INSTALL_PATH=$HOME/bin bash
 ```
 
 You can also install a specific version of the CLI by providing the
 `VERSION` variable:
 
-``` bash
+```bash
 curl -L https://github.com/hasura/graphql-engine/raw/stable/cli/get.sh | VERSION=v2.1.1 bash
 ```
 
@@ -105,7 +105,7 @@ the npm package if you want a version-fixed cli dedicated to your
 node.js project. You can find usage details (e.g. flag information) in
 the [original repository](https://github.com/jjangga0214/hasura-cli).
 
-``` bash
+```bash
 # install as a devDependency of your project
 npm install --save-dev hasura-cli[@tag|@version]
 

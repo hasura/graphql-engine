@@ -20,13 +20,13 @@ webhook when an event trigger is invoked.
 
 Delivered over `HTTP POST` with the following headers:
 
-``` none
+```none
 Content-Type: application/json
 ```
 
 ## JSON payload
 
-``` none
+```none
 {
   "event": {
       "session_variables": <session-variables>,
@@ -95,7 +95,7 @@ Note
 
 **For example**:
 
-``` json
+```json
 {
   "id": "85558393-c75d-4d2f-9c15-e80591b83894",
   "created_at": "2018-09-05T07:14:21.601701Z",
@@ -128,7 +128,7 @@ Note
 
 ### Object
 
-``` none
+```none
 {
   "column1": "value1",
   "column2": "value2",

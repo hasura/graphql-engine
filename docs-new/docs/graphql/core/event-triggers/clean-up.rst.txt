@@ -32,13 +32,13 @@ Event Triggers have 2 tables managed by Hasura:
 
 ## Option 1: Clear only HTTP logs
 
-``` SQL
+```SQL
 DELETE FROM hdb_catalog.event_invocation_logs;
 ```
 
 ## Option 2: Clear only processed events
 
-``` SQL
+```SQL
 DELETE FROM hdb_catalog.event_log
 WHERE delivered = true OR error = true;
 ```
@@ -47,7 +47,7 @@ WHERE delivered = true OR error = true;
 
 This is the combination of Option 1 and Option 2.
 
-``` SQL
+```SQL
 DELETE FROM hdb_catalog.event_invocation_logs;
 
 DELETE FROM hdb_catalog.event_log
@@ -56,7 +56,7 @@ WHERE delivered = true OR error = true;
 
 ## Option 4: Clear all event data for a particular event trigger only
 
-``` SQL
+```SQL
 DELETE FROM
 hdb_catalog.event_invocation_logs
 WHERE event_id IN (
@@ -79,7 +79,7 @@ This will clear all events including yet to be delivered events.
 
 </div>
 
-``` SQL
+```SQL
 DELETE FROM hdb_catalog.event_invocation_logs;
 
 DELETE FROM hdb_catalog.event_log;
@@ -91,7 +91,7 @@ If you wish to keep recent data and only clear data before a particular
 time period you can add the following time clause to your query's where
 clause:
 
-``` SQL
+```SQL
 -- units can be 'minutes', 'hours', 'days', 'months', 'years'
 created_at < now() - interval '<x> <units>'
 ```
@@ -99,7 +99,7 @@ created_at < now() - interval '<x> <units>'
 For example: to delete all processed events and HTTP logs older than 3
 months:
 
-``` SQL
+```SQL
 DELETE FROM hdb_catalog.event_invocation_logs
 WHERE created_at < now() - interval '3 months';
 

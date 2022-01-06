@@ -56,7 +56,7 @@ Following are sample SQL blocks that you can run on your database (as a
 **1. Different roles to manage** `user database` **and**
 `metadata database`
 
-``` sql
+```sql
 -- We will create separate users to manage the user database 
 -- and metadata database and grant permissions on hasura-specific
 -- schemas and information_schema and pg_catalog.
@@ -111,7 +111,7 @@ GRANT ALL ON ALL FUNCTIONS IN SCHEMA public TO hasurauser;
 **2. A single role to manage** `user database` **and**
 `metadata database`
 
-``` sql
+```sql
 -- We will create a separate user to grant permissions on hasura-specific  
 -- schemas and information_schema and pg_catalog.
 -- These permissions/grants are required for Hasura to work properly.
@@ -170,7 +170,7 @@ a new user and giving the `above <postgres_permissions>` privileges,
 then you may notice that the following commands may throw
 warnings/errors:
 
-``` sql
+```sql
 postgres=> ALTER SCHEMA hdb_catalog OWNER TO hasurauser;
 ERROR:  must be member of role "hasurauser"
 ```
@@ -179,7 +179,7 @@ This happens because the superuser created by the cloud provider
 sometimes has different permissions. To fix this, you can run the
 following command first:
 
-``` sql
+```sql
 -- assuming "postgres" is the superuser that you are running the commands with.
 postgres=> GRANT hasurauser to postgres;
 GRANT
@@ -188,7 +188,7 @@ postgres=> ALTER SCHEMA hdb_catalog OWNER TO hasurauser;
 
 You may also notice the following commands throw warnings/errors:
 
-``` sql
+```sql
 postgres=> GRANT SELECT ON ALL TABLES IN SCHEMA information_schema TO hasurauser;
 WARNING:  no privileges were granted for "sql_packages"
 WARNING:  no privileges were granted for "sql_features"
@@ -222,7 +222,7 @@ If `pgcrypto` is installed in a schema that is not in the search path,
 the schema can be added to the search path by executing one of the
 following SQL commands depending on your setup:
 
-``` sql
+```sql
 -- set search path to include schemas for the entire database
 ALTER DATABASE <database_name> SET search_path TO schema1,schema2;
 

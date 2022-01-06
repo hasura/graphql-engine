@@ -56,7 +56,7 @@ Add this personal access token in your GitHub repo secrets as
 `HASURA_CLOUD_ACCESS_TOKEN`. You can do this in the `Settings` tab of
 your GitHub repo.
 
-``` bash
+```bash
 HASURA_CLOUD_ACCESS_TOKEN=<token>
 ```
 
@@ -65,7 +65,7 @@ HASURA_CLOUD_ACCESS_TOKEN=<token>
 Create a file `.github/workflows/hasura-cloud-preview-app.yml` in your
 GitHub repo and add the following code:
 
-``` yaml
+```yaml
 name: 'preview-apps'
 on: # rebuild any PRs and main branch changes
   pull_request:
@@ -144,7 +144,7 @@ To set this up:
 3.  Add the following snippet above `hasuraProjectDirectoryPath: hasura`
     to your `hasura-cloud-preview-app.yml` file.
 
-``` yaml
+```yaml
 postgresDBConfig: |
   POSTGRES_SERVER_CONNECTION_URI=${{secrets.POSTGRES_SERVER_CONNECTION_URI}}
   PG_ENV_VARS_FOR_HASURA=PG_DB_URL_1,PG_DB_URL_2, PG_DB_URL3
@@ -165,7 +165,7 @@ databases yourself and pass the env vars in the `hasuraEnv` field.
 Create a file `.github/workflows/delete-hasura-cloud-preview-app.yml` in
 your git repo and add the following code:
 
-``` yaml
+```yaml
 on:
   pull_request:
     types: [closed]
@@ -202,7 +202,7 @@ your needs, you can also directly contact the
 [createGitHubPreviewApp](/graphql/cloud/api-reference#api-ref-create-preview-app) API to manually
 setup preview apps on your GitHub repo.
 
-``` graphql
+```graphql
 mutation createGitHubPreviewApp {
   createGitHubPreviewApp (
     payload: {
@@ -238,7 +238,7 @@ This mutation queues the creation of the preview app and returns a UUID:
 app by running the following query at
 `https://data.pro.hasura.io/v1/graphql`:
 
-``` graphql
+```graphql
 query getPreviewAppCreationStatus($jobId: uuid!) {
   jobs_by_pk(id: $jobId) {
     id

@@ -45,7 +45,7 @@ You can find the complete example at:
 
 Let's consider the following simplified schema for the above:
 
-``` SQL
+```SQL
 notes (
   id INT PRIMARY KEY,
   note TEXT
@@ -71,7 +71,7 @@ the old note data in our revision table.
 
 Our AWS Lambda code looks like this:
 
-``` javascript
+```javascript
 // Lambda which gets triggered on insert, and in turns performs a mutation
 
 const fetch = require('node-fetch');

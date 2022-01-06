@@ -31,7 +31,7 @@ replaces the older `schema/metadata API <schema_metadata_apis>`.
 
 Add a database with name `pg1`:
 
-``` http
+```http
 POST /v1/metadata HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
@@ -87,7 +87,7 @@ X-Hasura-Role: admin
 
 Remove a database with name `pg1`:
 
-``` http
+```http
 POST /v1/metadata HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
@@ -115,7 +115,7 @@ X-Hasura-Role: admin
 Given there already exists a database with name `pg1`, we can rename it
 to `pg2` using:
 
-``` http
+```http
 POST /v1/metadata HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
@@ -145,7 +145,7 @@ Hasura.
 
 Add a database with name `mssql1`:
 
-``` http
+```http
 POST /v1/metadata HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
@@ -196,7 +196,7 @@ Hasura.
 
 Remove a database with name `mssql1`:
 
-``` http
+```http
 POST /v1/metadata HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
@@ -222,7 +222,7 @@ X-Hasura-Role: admin
 
 Add a database with name `bigquery1`:
 
-``` http
+```http
 POST /v1/metadata HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
@@ -267,7 +267,7 @@ Hasura.
 
 Remove a database with name `bigquery1`:
 
-``` http
+```http
 POST /v1/metadata HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin

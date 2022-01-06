@@ -30,7 +30,7 @@ level type.
 **For example**, the auto-generated schema for the query field for a
 table `author` looks like the following:
 
-``` graphql
+```graphql
 author (
   distinct_on: [author_select_column]
   where: author_bool_exp

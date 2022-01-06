@@ -75,7 +75,7 @@ executed.
 
 Once the CLI is installed, login to your Azure account:
 
-``` bash
+```bash
 az login
 ```
 
@@ -85,7 +85,7 @@ As the name suggestes, Resource Groups are used to group together
 various resources on Azure. We'll create a resource group called
 `hasura` at the `westus` location.
 
-``` bash
+```bash
 az group create --name hasura --location westus
 ```
 
@@ -107,7 +107,7 @@ directly to `azure_allow_access`.
 Once the resource group is created, we create a Postgres server
 instance:
 
-``` bash
+```bash
 az postgres server create --resource-group hasura \
    --name "<server_name>" \
    --location westus \
@@ -135,7 +135,7 @@ shell).
 
 Note down the hostname. It will be shown as below in the output:
 
-``` bash
+```bash
 ...
 "fullyQualifiedDomainName": "<server_name>.postgres.database.azure.com",
 ...
@@ -160,7 +160,7 @@ change the value of `--name` (`<server_name>`) to something else.
 
 Create a new database on the server:
 
-``` bash
+```bash
 az postgres db create --resource-group hasura \
    --server-name "<server_name>" \
    --name hasura
@@ -170,7 +170,7 @@ az postgres db create --resource-group hasura \
 
 Create a firewall rule allowing acess from Azure internal services:
 
-``` bash
+```bash
 az postgres server firewall-rule create --resource-group hasura \
    --server-name "<server_name>" \
    --name "allow-azure-internal" \
@@ -182,7 +182,7 @@ az postgres server firewall-rule create --resource-group hasura \
 
 Launch Hasura using a container instance:
 
-``` bash
+```bash
 az container create --resource-group hasura \
    --name hasura-graphql-engine \
    --image hasura/graphql-engine \
@@ -194,7 +194,7 @@ az container create --resource-group hasura \
 
 `<database-url>` should be replaced by the following format:
 
-``` bash
+```bash
 postgres://hasura%40<server_name>:<server_admin_password>@<hostname>:5432/hasura
 ```
 
@@ -224,7 +224,7 @@ and execute the command again.
 That's it! Once the deployment is complete, navigate to the container
 instance's IP or hostname to open the Hasura console:
 
-``` bash
+```bash
 az container show --resource-group hasura \
    --name hasura-graphql-engine \
    --query "{FQDN:ipAddress.fqdn,ProvisioningState:provisioningState}" \
@@ -236,7 +236,7 @@ The output will contain the FQDN in the format
 
 Visit the following URL for the Hasura console:
 
-``` 
+```
 http://<dns-name-label>.westus.azurecontainer.io/console
 ```
 
@@ -263,7 +263,7 @@ rules for the database allow connection for Azure services.
 If the console is not loading, you might want to check the logs and see
 if something is wrong:
 
-``` bash
+```bash
 az container logs --resource-group hasura \
    --name hasura-graphql-engine \
    --container-name hasura-graphql-engine
@@ -274,7 +274,7 @@ az container logs --resource-group hasura \
 
 To clean-up, just delete the resource group:
 
-``` bash
+```bash
 az group delete --resource-group hasura
 ```
 

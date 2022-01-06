@@ -58,7 +58,7 @@ auth:
 
 For example, the generated JWT can be:
 
-``` json
+```json
 {
   "sub": "0000000000",
   "iat": 1516239022,

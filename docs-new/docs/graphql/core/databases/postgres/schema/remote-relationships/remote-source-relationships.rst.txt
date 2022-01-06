@@ -61,7 +61,7 @@ For this example, we assume that our source `orders_db` database has an
 the target `users_db` database has a `users` table with the fields `id`
 and `name`.
 
-``` http
+```http
 POST /v1/query HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin

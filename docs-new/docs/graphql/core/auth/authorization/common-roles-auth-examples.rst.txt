@@ -149,7 +149,7 @@ alt="Database schema example for multiple roles per user">
 
 Based on the above schema, we'll create the following tables:
 
-``` sql
+```sql
 -- user information from your auth system
 
 users (

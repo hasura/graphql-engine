@@ -14,7 +14,7 @@ Table of contents
 
 ## **query** / **subscription** syntax
 
-``` none
+```none
 query|subscription [<op-name>] {
   connection-object [([argument])]{
     connection-object-fields
@@ -30,7 +30,7 @@ query|subscription [<op-name>] {
 
 **Example: Relay Query**
 
-``` graphql
+```graphql
 query {
   author_connection(first: 2){
     pageInfo {
@@ -51,7 +51,7 @@ query {
 
 **Example: Relay Subscription**
 
-``` graphql
+```graphql
 subscription {
   author_connection(first: 2){
     pageInfo {
@@ -86,7 +86,7 @@ For details of usage, please see `this page <relay_schema>`.
 
 ### Connection Object
 
-``` none
+```none
 connection-object {
   pageInfo: {
     hasNextPage
@@ -134,7 +134,7 @@ docs](https://relay.dev/graphql/connections.htm#sec-Connection-Types).
 
 Information useful for pagination.
 
-``` graphql
+```graphql
 type PageInfo {
   hasNextPage: Boolean!
   hasPreviousPage: Boolean!
@@ -163,7 +163,7 @@ Edge is an object type that consists of a `cursor <Cursor>` and `node`
 fields. `node` is a table object type which implements the Relay `Node`
 interface.
 
-``` graphql
+```graphql
 type tableEdge {
   cursor: String!
   node: table!
@@ -219,7 +219,7 @@ first: Integer \[after: [Cursor](#cursor)\]
 
 </div>
 
-``` graphql
+```graphql
 query {
   article_connection(
     first: 2
@@ -251,7 +251,7 @@ query {
 
 </div>
 
-``` graphql
+```graphql
 query {
   article_connection(
     last: 2

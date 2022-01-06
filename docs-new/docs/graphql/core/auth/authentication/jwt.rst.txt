@@ -81,7 +81,7 @@ via the `Authorization: Bearer <JWT>` header.
 
 Example JWT claim:
 
-``` json
+```json
 {
   "sub": "1234567890",
   "name": "John Doe",
@@ -125,7 +125,7 @@ converted to the right type automatically.
 The default role can be overridden by the `x-hasura-role` header, while
 making a request.
 
-``` http
+```http
 POST /v1/graphql HTTP/1.1
 Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWI...
 X-Hasura-Role: editor
@@ -139,7 +139,7 @@ You can enable JWT mode by using the `--jwt-secret` flag or
 `HASURA_GRAPHQL_JWT_SECRET` environment variable; the value of which is
 a JSON object:
 
-``` none
+```none
 {
   "type": "<optional-type-of-key>",
   "key": "<optional-key-as-string>",
@@ -257,7 +257,7 @@ Example values are `$.hasura.claims` or `$` (i.e. root of the payload)
 The JWT token should be in this format if the `claims_namespace_path` is
 set to `$.hasura.claims`:
 
-``` json
+```json
 {
   "sub": "1234567890",
   "name": "John Doe",
@@ -306,7 +306,7 @@ in the JWT claims. [See
 
 If `claims_format` is `json` then JWT claims should look like:
 
-``` json
+```json
 {
   "sub": "1234567890",
   "name": "John Doe",
@@ -325,7 +325,7 @@ If `claims_format` is `json` then JWT claims should look like:
 If `claims_format` is `stringified_json` then JWT claims should look
 like:
 
-``` json
+```json
 {
   "sub": "1234567890",
   "name": "John Doe",
@@ -352,7 +352,7 @@ This field can be a string, or a list of strings.
 
 Examples:
 
-``` json
+```json
 {
   "jwk_url": "https://......",
   "audience": "myapp-1234"
@@ -361,7 +361,7 @@ Examples:
 
 or
 
-``` json
+```json
 {
   "jwk_url": "https://......",
   "audience": ["myapp-1234", "myapp-6789"]
@@ -397,7 +397,7 @@ details.
 
 Examples:
 
-``` json
+```json
 {
   "jwk_url": "https://......",
   "issuer": "https://my-auth-server.com"
@@ -433,13 +433,13 @@ The value of a claim referred by a JSON path must be a `String`. To use
 the JSON path value, the path needs to be given in a JSON object with
 `path` as the key and the JSON path as the value:
 
-``` json
+```json
 {
   "path" : "$.user.all_roles",
 }
 ```
 
-``` json
+```json
 {
   "path" : "$.roles.default",
   "default": "user"
@@ -448,7 +448,7 @@ the JSON path value, the path needs to be given in a JSON object with
 
 **Example: JWT config with JSON path values**
 
-``` json
+```json
 {
   "sub": "1234567890",
   "name": "John Doe",
@@ -468,7 +468,7 @@ The mapping for `x-hasura-allowed-roles`, `x-hasura-default-role` and
 `x-hasura-user-id` session variables can be specified in the
 `claims_map` configuration as follows:
 
-``` json
+```json
 {
   "type":"RS512",
   "key": "-----BEGIN PUBLIC KEY-----\nMIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDdlatRjRjogo3WojgGHFHYLugd\nUWAY9iR3fy4arWNA1KoS8kVw33cJibXr8bvwUAUparCwlvdbH6dvEOfou0/gCFQs\nHUfQrSDv+MuSUMAe8jzKE4qW+jK+xQU9a03GUnKHkkle+Q0pX/g6jXZ7r1/xAK5D\no2kQ+X5xK9cipRgEKwIDAQAB\n-----END PUBLIC KEY-----\n",
@@ -482,7 +482,7 @@ The mapping for `x-hasura-allowed-roles`, `x-hasura-default-role` and
 
 **Example: JWT config with JSON path values and default values**
 
-``` json
+```json
 {
   "sub": "1234567890",
   "name": "John Doe",
@@ -495,7 +495,7 @@ The mapping for `x-hasura-allowed-roles`, `x-hasura-default-role` and
 }
 ```
 
-``` json
+```json
 {
   "type":"RS512",
   "key": "-----BEGIN PUBLIC KEY-----\nMIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDdlatRjRjogo3WojgGHFHYLugd\nUWAY9iR3fy4arWNA1KoS8kVw33cJibXr8bvwUAUparCwlvdbH6dvEOfou0/gCFQs\nHUfQrSDv+MuSUMAe8jzKE4qW+jK+xQU9a03GUnKHkkle+Q0pX/g6jXZ7r1/xAK5D\no2kQ+X5xK9cipRgEKwIDAQAB\n-----END PUBLIC KEY-----\n",
@@ -512,7 +512,7 @@ the default value of the `x-hasura-user-id` i.e "ujdh739kd" will be used
 
 **Example: JWT config containing literal values**
 
-``` json
+```json
 {
   "sub": "1234567890",
   "name": "John Doe",
@@ -526,7 +526,7 @@ the default value of the `x-hasura-user-id` i.e "ujdh739kd" will be used
 
 The corresponding JWT config should be:
 
-``` json
+```json
 {
   "type":"RS512",
   "key": "-----BEGIN PUBLIC KEY-----\nMIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDdlatRjRjogo3WojgGHFHYLugd\nUWAY9iR3fy4arWNA1KoS8kVw33cJibXr8bvwUAUparCwlvdbH6dvEOfou0/gCFQs\nHUfQrSDv+MuSUMAe8jzKE4qW+jK+xQU9a03GUnKHkkle+Q0pX/g6jXZ7r1/xAK5D\no2kQ+X5xK9cipRgEKwIDAQAB\n-----END PUBLIC KEY-----\n",
@@ -572,14 +572,14 @@ given cookie name. The value of the cookie should be the exact JWT.
 If `header` is `{"type": "Authorization"}` then JWT header should look
 like:
 
-``` none
+```none
 Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWI...
 ```
 
 If `header` is `{"type": "Cookie", "name": "cookie_name" }` then JWT
 header should look like:
 
-``` none
+```none
 Cookie: cookie_name=eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWI...
 ```
 
@@ -590,7 +590,7 @@ Cookie: cookie_name=eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWI...
 Your auth server is using HMAC-SHA algorithms to sign JWTs, and is using
 a 256-bit key. In this case, the JWT config will look like:
 
-``` json
+```json
 {
   "type":"HS256",
   "key": "3EK6FD+o0+c7tzBNVfjpMkNDi2yARAAKzQlk8O2IKoxQu4nF7EdAh8s3TwpHwrdWT6R"
@@ -607,7 +607,7 @@ key, the JWT config only needs to have the public key.
 
 **Example 1**: public key in PEM format (not OpenSSH format):
 
-``` json
+```json
 {
   "type":"RS512",
   "key": "-----BEGIN PUBLIC KEY-----\nMIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDdlatRjRjogo3WojgGHFHYLugd\nUWAY9iR3fy4arWNA1KoS8kVw33cJibXr8bvwUAUparCwlvdbH6dvEOfou0/gCFQs\nHUfQrSDv+MuSUMAe8jzKE4qW+jK+xQU9a03GUnKHkkle+Q0pX/g6jXZ7r1/xAK5D\no2kQ+X5xK9cipRgEKwIDAQAB\n-----END PUBLIC KEY-----\n"
@@ -616,7 +616,7 @@ key, the JWT config only needs to have the public key.
 
 **Example 2**: public key as X509 certificate:
 
-``` json
+```json
 {
   "type":"RS512",
   "key": "-----BEGIN CERTIFICATE-----\nMIIDHDCCAgSgAwIBAgIINw9gva8BPPIwDQYJKoZIhvcNAQEFBQAwMTEvMC0GA1UE\nAxMmc2VjdXJldG9rZW4uc3lzdGVtLmdzZXJ2aWNlYWNjb3VudC5jb20wHhcNMTgQt7dIsMTIU9k1SUrFviZOGnmHWtIAw\nmtYBcM9I0f9/ka45JIRp5Y1NKpAMFSShs7Wv0m1JS1kXQHdJsPSmjmDKcwnBe3R/\nTU3foRRywR/3AJRM15FNjTqvUm7TeaW16LkkRoECAwEAAaM4MDYwDAYDVR0TAQH/\nBAIwADAOBgNVHQ8BAf8EBAMCB4AwFgYDVR0lAQH/BAwwCgYIKwYBBQUHAwIwDQYJ\nKoZIhvcNAQEFBQADggEBADfY2DEmc2gb8/pqMNWHYq/nTYfJPpK4VA9A0lFTNeoq\nzmnbGwhKj24X+Nw8trsvkrKxHvCI1alDgBaCyzjGGvgOrh8X0wLtymp1yj6PWwee\nR2ZPdUaB62TCzO0iRv7W6o39ey+mU/FyYRtxF0ecxG2a0KNsIyFkciXUAeC5UVDo\nBNp678/SDDx9Ltuxc6h56a/hpBGf9Yzhr0RvYy3DmjBs6eopiGFmjnOKNxQrZ5t2\n339JWR+yiGEAtoHqk/fINMf1An6Rung1xYowrm4guhCIVi5unAvQ89fq0I6mzPg6\nLhTpeP0o+mVYrBmtYVpDpv0e71cfYowSJCCkod/9YbY=\n-----END CERTIFICATE-----"
@@ -625,7 +625,7 @@ key, the JWT config only needs to have the public key.
 
 **Example 3**: public key published as JWKs:
 
-``` json
+```json
 {
   "jwk_url": "https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com"
 }
@@ -638,7 +638,7 @@ Ed25519 variant key, the JWT config only needs to have the public key.
 
 **Example 1**: public key in PEM format (not OpenSSH format):
 
-``` json
+```json
 {
   "type":"Ed25519", 
   "key": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAG9I+toAAJicilbPt36tiC4wi7E1Dp9rMmfnwdKyVXi0=\n-----END PUBLIC KEY-----"
@@ -647,7 +647,7 @@ Ed25519 variant key, the JWT config only needs to have the public key.
 
 **Example 2**: public key as X509 certificate:
 
-``` json
+```json
 {
   "type":"Ed25519",
   "key": "-----BEGIN CERTIFICATE REQUEST-----\nMIIBAzCBtgIBADAnMQswCQYDVQQGEwJERTEYMBYGA1UEAwwPd3d3LmV4YW1wbGUu\nY29tMCowBQYDK2VwAyEA/9DV/InajW02Q0tC/tyr9mCSbSnNP1txICXVJrTGKDSg\nXDBaBgkqhkiG9w0BCQ4xTTBLMAsGA1UdDwQEAwIEMDATBgNVHSUEDDAKBggrBgEF\nBQcDATAnBgNVHREEIDAegg93d3cuZXhhbXBsZS5jb22CC2V4YW1wbGUuY29tMAUG\nAytlcANBAKbTqnTyPcf4ZkVuq2tC108pBGY19VgyoI+PP2wD2KaRz4QAO7Bjd+7S\nljyJoN83UDdtdtgb7aFgb611gx9W4go=\n-----END CERTIFICATE REQUEST-----
@@ -659,7 +659,7 @@ Ed25519 variant key, the JWT config only needs to have the public key.
 
 Using the flag:
 
-``` shell
+```shell
 $ docker run -p 8080:8080 \
     hasura/graphql-engine:latest \
     graphql-engine \
@@ -671,7 +671,7 @@ $ docker run -p 8080:8080 \
 
 Using env vars:
 
-``` shell
+```shell
 $ docker run -p 8080:8080 \
     -e HASURA_GRAPHQL_ADMIN_SECRET="<myadminsecretkey>" \
     -e HASURA_GRAPHQL_JWT_SECRET='{"type":"RS512", "key": "-----BEGIN PUBLIC KEY-----\nMIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDdlatRjRjogo3WojgGHFHYLugd\nUWAY9iR3fy4arWNA1KoS8kVw33cJibXr8bvwUAUparCwlvdbH6dvEOfou0/gCFQs\nHUfQrSDv+MuSUMAe8jzKE4qW+jK+xQU9a03GUnKHkkle+Q0pX/g6jXZ7r1/xAK5D\no2kQ+X5xK9cipRgEKwIDAQAB\n-----END PUBLIC KEY-----\n"}' \
@@ -714,7 +714,7 @@ certificates as proper JWK format under:
 
 If you are using Firebase and Hasura, use this config:
 
-``` json
+```json
 {
   "jwk_url": "https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com",
   "audience": "<firebase-project-id>",
@@ -741,7 +741,7 @@ Current workaround is - download the X590 certificate from:
 
 And use it in the `key` field:
 
-``` json
+```json
 {
   "type":"RS512",
   "key": "-----BEGIN CERTIFICATE-----

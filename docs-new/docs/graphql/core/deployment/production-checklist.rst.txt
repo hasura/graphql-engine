@@ -33,7 +33,7 @@ information about our hosted Hasura product, see
 Set an admin secret to protect the API from unauthorized access. It is
 recommended to keep this as a long string.
 
-``` bash
+```bash
 # set env var
 HASURA_GRAPHQL_ADMIN_SECRET=averylongpasswordstring
 
@@ -79,7 +79,7 @@ enabled using the corresponding flag or environment variable.
 In most production scenarios, you would only need GraphQL API to be
 enabled.
 
-``` bash
+```bash
 # set this env var to enable only the graphql api
 HASURA_GRAPHQL_ENABLED_APIS=graphql
 
@@ -117,7 +117,7 @@ working.
 
 The console is disabled by default.
 
-``` bash
+```bash
 # set the env var to false or do not set it at all to disable console
 HASURA_GRAPHQL_ENABLE_CONSOLE=false
 
@@ -146,7 +146,7 @@ debugging information to the clients in case of API errors.
 
 The dev mode is disabled by default.
 
-``` bash
+```bash
 # set the env var to false or do not set it at all to disable dev mode
 HASURA_GRAPHQL_DEV_MODE=false
 
@@ -169,7 +169,7 @@ Read more at `allow_list`.
 By default, all cross-origin requests are allowed by Hasura GraphQL
 engine. You should restrict them to the domains which you trust.
 
-``` bash
+```bash
 # set the env var, accept cross-origin requests from https://my-ui.com
 HASURA_GRAPHQL_CORS_DOMAIN=https://my-ui.com
 
@@ -197,7 +197,7 @@ If you are collecting your logs using an agent and you're interested in
 capturing the request logs along with the SQL that is generated, you
 should enable `query-log` *(it is not enabled by default)*.
 
-``` bash
+```bash
 # enable all log types
 HASURA_GRAPHQL_ENABLED_LOG_TYPES=startup,http-log,query-log,websocket-log,webhook-log
 

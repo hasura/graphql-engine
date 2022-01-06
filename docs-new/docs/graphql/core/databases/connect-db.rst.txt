@@ -53,7 +53,7 @@ In your `config v3` project, head to the
 `/metadata/databases/databases.yaml` file and add the database
 configuration as below:
 
-``` yaml
+```yaml
 - name: <db_name>
   configuration:
     connection_info:
@@ -69,7 +69,7 @@ configuration as below:
 
 Apply the metadata by running:
 
-``` bash
+```bash
 hasura metadata apply
 ```
 
@@ -84,7 +84,7 @@ Depending on the type of database, you can add a database using the
 
 For example:
 
-``` http
+```http
 POST /v1/metadata HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin

@@ -21,7 +21,7 @@ multiple filters in the same `where` clause using the `_and` or the
 
 For example, to fetch data for an author whose name is "Sidney":
 
-``` graphql
+```graphql
 query {
   authors(
     where: {name: {_eq: "Sidney"}}
@@ -38,7 +38,7 @@ also filter the nested objects as well.
 For example, to fetch a list of authors who have articles with a rating
 greater than 4 along with those articles:
 
-``` graphql
+```graphql
 query {
   authors (where: {articles: {rating: {_gt: 4}}}) {
     id
@@ -1014,7 +1014,7 @@ Filter the raster values which intersect the input raster value.
 
 Executes the following SQL function:
 
-``` sql
+```sql
 boolean ST_Intersects( raster <raster-col> , raster <raster-value> );
 ```
 
@@ -1054,7 +1054,7 @@ optional band number.
 
 Executes the following SQL function:
 
-``` sql
+```sql
 boolean ST_Intersects( raster <raster-col> , geometry geommin , integer nband=NULL );
 ```
 
@@ -1106,7 +1106,7 @@ the input geometry value.
 
 Executes the following SQL function:
 
-``` sql
+```sql
 boolean ST_Intersects( raster <raster-col> , integer nband , geometry geommin );
 ```
 
@@ -1516,7 +1516,7 @@ results.
 
 For example:
 
-``` graphql
+```graphql
 query {
   articles (where: {author: {name: {_eq: "Sidney"}}}) {
     id
@@ -1951,7 +1951,7 @@ You can use computed fields to filter your query results.
 
 For example:
 
-``` graphql
+```graphql
 query {
   author (where: {full_name: {_ilike: "%bob%"}}){
     id
@@ -2184,7 +2184,7 @@ on the casted column. For example, if you frequently perform queries on
 a field `location` of type `geometry` casted to type `geography`, you
 should create an index like the following:
 
-``` sql
+```sql
 CREATE INDEX cities_location_geography ON cities USING GIST ((location::geography));
 ```
 

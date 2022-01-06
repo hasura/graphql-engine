@@ -26,7 +26,7 @@ completely.
 
 ### Request
 
-``` http
+```http
 GET /healthz HTTP/1.1
 ```
 
@@ -57,7 +57,7 @@ find out what the inconsistent objects are and resolve them.
 
 #### Sample response
 
-``` http
+```http
 HTTP/1.1 200 OK
 ```
 

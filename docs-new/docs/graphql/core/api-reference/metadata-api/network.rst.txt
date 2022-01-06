@@ -31,7 +31,7 @@ optionally (service id) `port`.
 This API could be supplied with just the hostname in the `args` field of
 the request instead of the complete object.
 
-``` http
+```http
 POST /v1/metadata HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
@@ -61,7 +61,7 @@ X-Hasura-Role: admin
 `drop_host_from_tls_allowlist` is used to drop an endpoint from the TLS
 allowlist.
 
-``` http
+```http
 POST /v1/metadata HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin

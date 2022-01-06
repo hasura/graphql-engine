@@ -45,7 +45,7 @@ represent the result of a query without actually storing data.
 
 **View with authors whose rating is larger than 6:**
 
-``` sql
+```sql
 CREATE VIEW popular_authors AS
   SELECT name, rating
   FROM authors
@@ -54,13 +54,13 @@ CREATE VIEW popular_authors AS
 
 The created view can now be queried as follows:
 
-``` sql
+```sql
 SELECT name, rating from popular_authors;
 ```
 
 **View with authors ordered by their rating:**
 
-``` sql
+```sql
 CREATE VIEW authors_ordered_by_rating AS
     SELECT name, rating
     FROM authors
@@ -69,7 +69,7 @@ CREATE VIEW authors_ordered_by_rating AS
 
 The created view can now be queried as follows:
 
-``` sql
+```sql
 SELECT name, rating from authors_ordered_by_rating;
 ```
 
@@ -89,7 +89,7 @@ are active, ordered by rating:**
 
 </div>
 
-``` sql
+```sql
 CREATE MATERIALIZED VIEW popular_active_authors AS
     SELECT name, rating
     FROM authors
@@ -99,7 +99,7 @@ CREATE MATERIALIZED VIEW popular_active_authors AS
 
 The created materialized view can now be queried as follows:
 
-``` sql
+```sql
 SELECT name, rating from popular_active_authors;
 ```
 
@@ -109,7 +109,7 @@ Materialized views don't always have the most recent data. Since the
 result of a query is stored in a materialized view like in a cache, you
 need to make sure to refresh it periodically:
 
-``` sql
+```sql
 REFRESH MATERIALIZED VIEW popular_active_authors;
 ```
 

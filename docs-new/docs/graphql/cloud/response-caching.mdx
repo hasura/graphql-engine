@@ -44,7 +44,7 @@ In order to enable caching for a query response, or to return an
 existing response from the cache (if one exists), simply add the
 `@cached` directive to your query:
 
-``` graphql
+```graphql
 query MyCachedQuery @cached {
   users {
     id
@@ -63,7 +63,7 @@ The maximum lifetime of an entry in the cache can be controlled using
 the `ttl` argument to the `@cached` query directive. The value is an
 integer number of seconds:
 
-``` graphql
+```graphql
 query MyCachedQuery @cached(ttl: 120) {
   users {
     id
@@ -81,7 +81,7 @@ The cache entry can be forced to refresh, regardless of the maximum
 lifetime using the `refresh` argument to `@cached`. The value is a
 boolean:
 
-``` graphql
+```graphql
 query MyCachedQuery @cached(refresh: true) {
   users {
     id

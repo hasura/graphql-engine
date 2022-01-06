@@ -50,7 +50,7 @@ Config v2 is available since `v1.2.0`.
 
 Run:
 
-``` bash
+```bash
 hasura update-cli
 ```
 
@@ -58,7 +58,7 @@ hasura update-cli
 
 In your project directory, run:
 
-``` bash
+```bash
 hasura scripts update-project-v2
 ```
 

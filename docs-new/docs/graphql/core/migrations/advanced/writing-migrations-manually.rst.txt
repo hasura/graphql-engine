@@ -23,7 +23,7 @@ the SQL for the Postgres schema.
 
 1.  Set up the migration files:
 
-    ``` bash
+    ```bash
     hasura migrate create <name-of-migration> --database-name <database-name>
     ```
 
@@ -40,7 +40,7 @@ the SQL for the Postgres schema.
 
 4.  Apply the metadata and migrations:
 
-    ``` bash
+    ```bash
     hasura metadata apply
     hasura migrate apply --database-name <database-name>
     hasura metadata reload

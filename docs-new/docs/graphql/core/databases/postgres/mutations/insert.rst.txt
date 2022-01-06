@@ -17,7 +17,7 @@ Table of contents
 **For example**, the auto-generated schema for the insert mutation field
 for a table `article` looks like the following:
 
-``` graphql
+```graphql
 insert_article (
   objects: [article_insert_input!]!
   on_conflict: article_on_conflict

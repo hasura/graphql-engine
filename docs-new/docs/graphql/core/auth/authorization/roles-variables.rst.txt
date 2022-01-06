@@ -276,7 +276,7 @@ user is a member of*.
 
 The permission for `org-member` role changes to this:
 
-``` json
+```json
 {
   "_or": [
     {
@@ -330,7 +330,7 @@ doubt about the Postgres format for a type, you can always test it in
 the SQL window. To check if `s` is a valid literal for type `t` then,
 you can check it as follows:
 
-``` sql
+```sql
 select 's'::t;
 ```
 
@@ -338,7 +338,7 @@ If the above command returns data, then `s` is a valid literal of type
 `t`. For example, to check if `{hello,world}` is a valid format of type
 `text[]`, you can run:
 
-``` sql
+```sql
 select '{hello,world}'::text[];
 ```
 

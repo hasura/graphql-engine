@@ -39,7 +39,7 @@ MySQL database as follows:
 
 Get the Hasura MySQL preview docker compose file:
 
-``` bash
+```bash
 # in a new directory run
 wget https://raw.githubusercontent.com/hasura/graphql-engine/master/install-manifests/docker-compose-mysql-preview/docker-compose.yaml
 # or run
@@ -51,7 +51,7 @@ curl https://raw.githubusercontent.com/hasura/graphql-engine/master/install-mani
 You need to now update the `docker-compose.yaml` file with credentials
 for your MySQL database *(replace the values surrounded by \<\>)*
 
-``` yaml
+```yaml
 ...
 command:
  - graphql-engine
@@ -76,13 +76,13 @@ the appropriate value for `mysql-host`. *(See Hasura to API)*
 The following command will run Hasura along with a Postgres database
 required for its functioning.
 
-``` bash
+```bash
 $ docker-compose up -d
 ```
 
 Check if the containers are running:
 
-``` bash
+```bash
 $ docker ps
 
 CONTAINER ID IMAGE                 ... CREATED STATUS PORTS          ...

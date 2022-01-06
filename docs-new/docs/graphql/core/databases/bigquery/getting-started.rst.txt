@@ -34,7 +34,7 @@ width="556px">
 
 Get the Hasura docker-compose file:
 
-``` bash
+```bash
 # in a new directory run
 wget https://raw.githubusercontent.com/hasura/graphql-engine/stable/install-manifests/docker-compose/docker-compose.yaml
 # or run
@@ -44,13 +44,13 @@ curl https://raw.githubusercontent.com/hasura/graphql-engine/stable/install-mani
 The following command will run Hasura along with a Postgres database
 required for its functioning.
 
-``` bash
+```bash
 $ docker-compose up -d
 ```
 
 Check if the containers are running:
 
-``` bash
+```bash
 $ docker ps
 
 CONTAINER ID IMAGE                 ... CREATED STATUS PORTS          ...
@@ -111,7 +111,7 @@ project:
 
 For example, this maybe done as follows if you are using docker:
 
-``` bash
+```bash
 docker run -e BIGQUERY_SA_ACCOUNT=$(cat /path/to/the/service-account.json) <rest-of-the-flags>
 ```
 

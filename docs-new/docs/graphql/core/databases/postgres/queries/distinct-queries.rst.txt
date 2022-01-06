@@ -24,7 +24,7 @@ a distinct value of the column may be returned)*. Note that the
 expression. See `sort queries <sort_query_results>` for more info on
 using `order_by`.
 
-``` graphql
+```graphql
 employees (
   distinct_on: [employees_select_column]
   order_by: [employees_order_by]

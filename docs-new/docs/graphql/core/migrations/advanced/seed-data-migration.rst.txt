@@ -31,7 +31,7 @@ link on the left hand side.
 The next step is to write an insert statement that populates the
 database with seed data like the following:
 
-``` SQL
+```SQL
 INSERT INTO addresses (id, location) VALUES
   (1, 'Bangalore'),
   (2, 'Tel Aviv'),

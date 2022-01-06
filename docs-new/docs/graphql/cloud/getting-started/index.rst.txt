@@ -89,7 +89,7 @@ connectivity from Hasura Cloud:
 On the Hasura console, navigate to `Data -> Create table` and create a
 sample table called `profiles` with the following columns:
 
-``` sql
+```sql
 profiles (
   id SERIAL PRIMARY KEY, -- serial -> auto-incrementing integer
   name TEXT
@@ -110,7 +110,7 @@ of the `profiles` table.
 Head to the `GraphiQL` tab in the console and try running the following
 query:
 
-``` graphql
+```graphql
 query {
   profiles {
     id

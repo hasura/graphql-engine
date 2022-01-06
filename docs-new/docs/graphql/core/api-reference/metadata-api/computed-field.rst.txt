@@ -41,7 +41,7 @@ with the same name.
 Create a `computed field` called `full_name` on an `author` *table*,
 using an SQL function called `author_full_name`:
 
-``` http
+```http
 POST /v1/metadata HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
@@ -86,7 +86,7 @@ objects are also dropped.
 
 Drop a computed field `full_name` from a table `author`:
 
-``` http
+```http
 POST /v1/metadata HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin

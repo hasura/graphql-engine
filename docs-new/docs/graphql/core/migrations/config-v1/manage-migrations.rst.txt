@@ -24,7 +24,7 @@ your CI/CD system to make incremental updates.
 
 Let's say we have the following two tables in our schema:
 
-``` sql
+```sql
 author (id uuid, name text, rating integer)
 article (id uuid, title text, content text, author_id uuid)
 ```
@@ -43,7 +43,7 @@ engine server. In order to do that, remove the `--enable-console` flag
 from the command that starts the server or set the following environment
 variable to false:
 
-``` bash
+```bash
 HASURA_GRAPHQL_ENABLE_CONSOLE=false
 ```
 
@@ -75,7 +75,7 @@ hostname and any sub-path if it is configured that way.
 
 Let's set up a project directory by executing the following command:
 
-``` bash
+```bash
 hasura init my-project --endpoint http://my-graphql.hasura.app
 
 cd my-project
@@ -110,7 +110,7 @@ migrations with the current state of the database.
 Create a migration called `init` by exporting the current Postgres
 schema and metadata from the server:
 
-``` bash
+```bash
 # (available after version v1.0.0-alpha45)
 # create migration files (note that this will only export the public schema from postgres)
 hasura migrate create "init" --from-server
@@ -158,7 +158,7 @@ them using the `--schema` flag.
 For example, to export schemas `public`, `schema1` and `schema2`,
 execute the following command:
 
-``` bash
+```bash
 hasura migrate create "init" --from-server --schema "public" --schema "schema1" --schema "schema2"
 ```
 
@@ -170,7 +170,7 @@ From this point onwards, instead of using the console at
 `http://my-graphql.hasura.app/console` you should use the console from
 the CLI by running:
 
-``` bash
+```bash
 # in project dir
 hasura console
 ```
@@ -183,7 +183,7 @@ directory in your project.
 
 Let's add the following table to our schema:
 
-``` sql
+```sql
 address (id uuid, street text, zip text, city text, country text)
 ```
 
@@ -207,7 +207,7 @@ Migrations are only created when using the console through CLI.
 Apply all migrations present in the `migrations/` directory on a new
 instance at `http://another-graphql-instance.hasura.app`:
 
-``` bash
+```bash
 # in project dir
 hasura migrate apply --endpoint http://another-graphql-instance.hasura.app
 ```
@@ -229,7 +229,7 @@ width="30%">
 
 ## Step 7: Check the status of migrations
 
-``` bash
+```bash
 # in project dir
 hasura migrate status
 ```
@@ -240,7 +240,7 @@ a status text.
 
 For example,
 
-``` bash
+```bash
 $ hasura migrate status
 VERSION        SOURCE STATUS  DATABASE STATUS
 1550925483858  Present        Present

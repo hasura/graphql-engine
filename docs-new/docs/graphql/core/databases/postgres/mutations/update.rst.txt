@@ -17,7 +17,7 @@ Table of contents
 **For example**, the auto-generated schema for the update mutation field
 for a table `article` looks like the following:
 
-``` graphql
+```graphql
 update_article (
   _inc: article_inc_input
   _set: article_set_input

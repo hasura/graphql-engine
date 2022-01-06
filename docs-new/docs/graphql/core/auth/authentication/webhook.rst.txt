@@ -76,7 +76,7 @@ Docker networking.
 
 #### GET request
 
-``` http
+```http
 GET https://<your-custom-webhook>/ HTTP/1.1
 <Header-Key>: <Header-Value>
 ```
@@ -104,7 +104,7 @@ all client headers except**:
 POST requests will receive the contents of the request body in addition
 to client headers. Given a request like
 
-``` graphql
+```graphql
 query UserQuery($a: Int) {
   users(where: {id: {_eq: $a}}){
     id
@@ -115,7 +115,7 @@ query UserQuery($a: Int) {
 with variables <span class="title-ref">{"a": 1}</span>, the webhook will
 receive a request of the following form:
 
-``` http
+```http
 POST https://<your-custom-webhook>/ HTTP/1.1
 Content-Type: application/json
 
@@ -158,7 +158,7 @@ To allow the GraphQL request to go through, your webhook must return a
 `200` status code. You should send the `X-Hasura-*` "session variables"
 to your permission rules in Hasura.
 
-``` http
+```http
 HTTP/1.1 200 OK
 Content-Type: application/json
 
@@ -190,7 +190,7 @@ optionally add one; to do so, you need to return either:
     Header](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control),
     to specify a **relative** expiration time, in seconds.
 
-``` http
+```http
 HTTP/1.1 200 OK
 Content-Type: application/json
 
@@ -207,7 +207,7 @@ Content-Type: application/json
     to specify an **absolute** expiration time. The expected format is
     `"%a, %d %b %Y %T GMT"`.
 
-``` http
+```http
 HTTP/1.1 200 OK
 Content-Type: application/json
 
@@ -238,7 +238,7 @@ headers for both GET/POST request methods.
 If you want to deny the GraphQL request, return a `401 Unauthorized`
 exception.
 
-``` http
+```http
 HTTP/1.1 401 Unauthorized
 ```
 

@@ -32,7 +32,7 @@ For `config v1`, see `migration_file_format_v1`.
 
 Each migration file has the following format:
 
-``` bash
+```bash
 <version>_<name>.{up|down}.sql
 ```
 

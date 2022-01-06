@@ -51,7 +51,7 @@ Go to `metadata/actions.yaml` in the Hasura project directory.
 
 Update the definition of the `insertAuthor` action as:
 
-``` yaml
+```yaml
 - actions
   - name: insertAuthor
     definition:
@@ -73,7 +73,7 @@ API
 Action permissions can be set by using the
 `create_action_permission metadata API <metadata_create_action_permission>`:
 
-``` http
+```http
 POST /v1/query HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin

@@ -71,7 +71,7 @@ API
 You can define a scheduled event via the
 `create_scheduled_event metadata API <create_scheduled_event>`:
 
-``` http
+```http
 POST /v1/query HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
@@ -128,7 +128,7 @@ API
 You can define advanced options when defining a scheduled event via the
 `create_scheduled_event metadata API <create_scheduled_event>`:
 
-``` http
+```http
 POST /v1/query HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin

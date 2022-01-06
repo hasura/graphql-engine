@@ -36,7 +36,7 @@ existing action with the same name.
 
 Create a synchronous action with name `create_user`:
 
-``` http
+```http
 POST /v1/query HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
@@ -81,7 +81,7 @@ actions are also dropped automatically.
 
 Drop an action `create_user`:
 
-``` http
+```http
 POST /v1/query HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
@@ -109,7 +109,7 @@ Definition thus provided is replaced with existing one.
 
 Update an action `create_user` by making it's kind to `asynchronous`:
 
-``` http
+```http
 POST /v1/query HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
@@ -151,7 +151,7 @@ X-Hasura-Role: admin
 `create_action_permission` is used to define a permission to make action
 visible for a role.
 
-``` http
+```http
 POST /v1/query HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
@@ -178,7 +178,7 @@ X-Hasura-Role: admin
 `drop_action_permission` is used to drop a permission defined on an
 action.
 
-``` http
+```http
 POST /v1/query HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin

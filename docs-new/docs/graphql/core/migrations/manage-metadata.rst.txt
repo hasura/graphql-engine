@@ -78,7 +78,7 @@ JSON object with the Hasura metadata.
 
 Here is an example using `curl` to save this as a file:
 
-``` bash
+```bash
 curl -d'{"type": "export_metadata", "args": {}}' http://localhost:8080/v1/metadata -o hasura_metadata.json
 ```
 
@@ -163,7 +163,7 @@ The exported JSON can be imported via the
 
 Here is an example using `curl`:
 
-``` bash
+```bash
 curl -d'{"type":"replace_metadata", "args":'$(cat hasura_metadata.json)'}' http://localhost:8080/v1/metadata
 ```
 
@@ -242,7 +242,7 @@ The reload of metadata can be done via the
 
 Here is an example using `curl`:
 
-``` bash
+```bash
 curl -d'{"type": "reload_metadata", "args": {}}' http://localhost:8080/v1/metadata
 ```
 
@@ -323,7 +323,7 @@ The reset of metadata can be done via the
 
 Here is an example using `curl`:
 
-``` bash
+```bash
 curl -d'{"type": "clear_metadata", "args": {}}' http://localhost:8080/v1/metadata
 ```
 

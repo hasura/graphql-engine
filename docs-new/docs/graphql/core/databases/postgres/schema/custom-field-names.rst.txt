@@ -59,7 +59,7 @@ CLI
 You can customize auto-generated field names in the `tables.yaml` file
 inside the `metadata` directory:
 
-``` yaml
+```yaml
 - table:
     schema: public
     name: author
@@ -70,7 +70,7 @@ inside the `metadata` directory:
 
 Apply the metadata by running:
 
-``` bash
+```bash
 hasura metadata apply
 ```
 
@@ -85,7 +85,7 @@ A custom field name can be set for a column via the following 2 methods:
 1.  passing a `table_config` with the `CustomColumnNames` to the
     `track_table_v2` API while tracking a table:
 
-    ``` http
+    ```http
     POST /v1/query HTTP/1.1
     Content-Type: application/json
     X-Hasura-Role: admin
@@ -107,7 +107,7 @@ A custom field name can be set for a column via the following 2 methods:
 2.  using the `set_table_custom_fields` API to set the
     `CustomColumnNames`:
 
-    ``` http
+    ```http
     POST /v1/query HTTP/1.1
     Content-Type: application/json
     X-Hasura-Role: admin
@@ -161,7 +161,7 @@ CLI
 You can expose table root fields with a different name in the GraphQL
 API in the `tables.yaml` file inside the `metadata` directory:
 
-``` yaml
+```yaml
 - table:
     schema: public
     name: author
@@ -173,7 +173,7 @@ API in the `tables.yaml` file inside the `metadata` directory:
 
 After that, apply the metadata by running:
 
-``` bash
+```bash
 hasura metadata apply
 ```
 
@@ -189,7 +189,7 @@ A custom field name can be set for a table root field via the following
 1.  passing a `table_config` with the `custom_root_fields` names to the
     `track_table_v2` API while tracking a table:
 
-    ``` http
+    ```http
     POST /v1/query HTTP/1.1
     Content-Type: application/json
     X-Hasura-Role: admin
@@ -212,7 +212,7 @@ A custom field name can be set for a table root field via the following
 2.  using the `set_table_custom_fields` API to set the
     `custom_root_fields` names
 
-    ``` http
+    ```http
     POST /v1/query HTTP/1.1
     Content-Type: application/json
     X-Hasura-Role: admin

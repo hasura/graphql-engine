@@ -23,7 +23,7 @@ Table of contents
 
 Get the Hasura MS SQL Server docker compose file:
 
-``` bash
+```bash
 # in a new directory run
 wget https://raw.githubusercontent.com/hasura/graphql-engine/master/install-manifests/docker-compose-ms-sql-server/docker-compose.yaml
 # or run
@@ -35,13 +35,13 @@ curl https://raw.githubusercontent.com/hasura/graphql-engine/master/install-mani
 The following command will run Hasura along with a Postgres database
 required for its functioning.
 
-``` bash
+```bash
 $ docker-compose up -d
 ```
 
 Check if the containers are running:
 
-``` bash
+```bash
 $ docker ps
 
 CONTAINER ID IMAGE                 ... CREATED STATUS PORTS          ...

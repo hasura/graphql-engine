@@ -17,7 +17,7 @@ Table of contents
 If you installed the binary directly on your system (probably through
 shell script), delete the binary file from its installation location.
 
-``` bash
+```bash
 # By default, the binary is installed at /usr/local/bin/hasura
 $ which hasura
   /usr/local/bin/hasura
@@ -30,7 +30,7 @@ $ rm /usr/local/bin/hasura
 
 If you installed the CLI as an npm package, use npm (or yarn).
 
-``` bash
+```bash
 # if installed as a project dependency
 npm uninstall hasura-cli
 

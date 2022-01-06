@@ -28,7 +28,7 @@ Example:
 
 When the following query is sent to Hasura
 
-``` graphql
+```graphql
 query GetChild {
   child {
     name
@@ -39,7 +39,7 @@ query GetChild {
 Hasura attaches query tags (*unless disabled*) to the generated SQL
 statement it sends to the database.
 
-``` sql
+```sql
 SELECT name FROM child /* request_id=487c2ed5-08a4-429a-b0e0-4666a82e3cc6, field_name=child, operation_name=GetChild */
 ```
 
@@ -60,7 +60,7 @@ comma `,` . **This is the default format for Query Tags**
 
 For eg:
 
-``` sql
+```sql
 SELECT name FROM child /* request_id=487c2ed5-08a4-429a-b0e0-4666a82e3cc6, field_name=child, parameterized_query_hash=b2a71ce23928ca7f0021f9060e5d590e9f9bb00f, operation_name=GetChild */
 ```
 
@@ -71,7 +71,7 @@ The specification for this format is defined at
 
 For eg:
 
-``` sql
+```sql
 SELECT name FROM child /* field_name='child', operation_name='GetChild', parameterized_query_hash='b2a71ce23928ca7f0021f9060e5d590e9f9bb00f' ,  request_id='487c2ed5-08a4-429a-b0e0-4666a82e3cc6' */
 ```
 
@@ -94,7 +94,7 @@ operations.
 
 ## Metadata Specification
 
-``` yaml
+```yaml
 sources:
   name: # Name of the source
   configuration :
@@ -123,7 +123,7 @@ In the above metadata spec:
 
 ## Example Metadata Specification
 
-``` yaml
+```yaml
 sources:
   - name: test_db
     configuration:
@@ -144,7 +144,7 @@ sources:
 
 ## Metadata API To Set Query Tags
 
-``` yaml
+```yaml
 type: "set_query_tags"
 args:
   source_name: # Name of the source | Required

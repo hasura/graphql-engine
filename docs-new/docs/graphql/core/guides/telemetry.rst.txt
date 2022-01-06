@@ -41,7 +41,7 @@ also sent.
 
 Here is a sample row from the telemetry database:
 
-``` json
+```json
 {
    "id": 12,
    "timestamp": "2019-01-21T19:43:33.63838+00:00",
@@ -79,7 +79,7 @@ connected to.
 
 Here is a sample:
 
-``` json
+```json
 {
   "id": 902,
   "timestamp": "2019-01-21T10:00:23.849202+00:00",
@@ -107,7 +107,7 @@ and architecture is also noted along with the CLI version.
 
 Sample data:
 
-``` json
+```json
 {
   "id": 115,
   "timestamp": "2019-01-21T11:36:07.86783+00:00",

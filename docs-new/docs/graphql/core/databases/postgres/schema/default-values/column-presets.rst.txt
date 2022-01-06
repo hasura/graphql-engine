@@ -82,7 +82,7 @@ CLI
 You can set column presets in the `tables.yaml` file inside the
 `metadata` directory:
 
-``` yaml
+```yaml
 - table:
     schema: public
     name: article
@@ -101,7 +101,7 @@ You can set column presets in the `tables.yaml` file inside the
 
 Apply the metadata by running:
 
-``` bash
+```bash
 hasura metadata apply
 ```
 
@@ -114,7 +114,7 @@ API
 You can add column presets by using the
 `create_insert_permission metadata API <create_insert_permission>`:
 
-``` http
+```http
 POST /v1/query HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
@@ -194,7 +194,7 @@ Note
 
 Not passing the configured header will result in a run-time error:
 
-``` JSON
+```JSON
 {
     "errors": [
       {

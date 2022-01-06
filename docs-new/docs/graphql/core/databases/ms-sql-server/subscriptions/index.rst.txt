@@ -72,7 +72,7 @@ If you are using Apollo Client, headers can be passed to a subscription
 by setting `connectionParams` while [creating the
 wsLink](https://www.apollographql.com/docs/react/data/subscriptions/#client-setup):
 
-``` js
+```js
 // Create a WebSocket link:
 const wsLink = new WebSocketLink({
   uri: `<graphql-endpoint>`,

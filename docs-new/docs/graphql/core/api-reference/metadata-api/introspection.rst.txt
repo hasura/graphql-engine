@@ -26,7 +26,7 @@ introspection options.
 This API can be used to disable graphql introspection for the specified
 roles.
 
-``` http
+```http
 POST /v1/metadata HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin

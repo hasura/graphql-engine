@@ -112,7 +112,7 @@ will log the full GraphQL query object on each request.
 It will also log the generated SQL for GraphQL queries (but not
 mutations and subscriptions).
 
-``` json
+```json
 {
   "timestamp": "2019-06-03T13:25:10.915+0530",
   "level": "info",
@@ -163,7 +163,7 @@ This is how the HTTP access logs look like:
 
 -   On success response:
 
-``` json
+```json
 {
   "timestamp": "2019-05-30T23:40:24.654+0530",
   "level": "info",
@@ -194,7 +194,7 @@ This is how the HTTP access logs look like:
 
 -   On error response:
 
-``` json
+```json
 {
   "timestamp": "2019-05-29T15:22:37.834+0530",
   "level": "error",
@@ -266,7 +266,7 @@ query/operation.
     is successful. For example, all the queries mentioned in the below
     snippet will compute the same parametrized query hash.
 
-``` graphql
+```graphql
 # sample query
 query {
   authors (where: {id: {_eq: 2}}) {
@@ -317,7 +317,7 @@ This is how the Websocket logs look like:
 
 -   On successful operation start:
 
-``` json
+```json
 {
   "timestamp": "2019-06-10T10:52:54.247+0530",
   "level": "info",
@@ -352,7 +352,7 @@ This is how the Websocket logs look like:
 
 -   On operation stop:
 
-``` json
+```json
 {
   "timestamp": "2019-06-10T11:01:40.939+0530",
   "level": "info",
@@ -384,7 +384,7 @@ This is how the Websocket logs look like:
 
 -   On error:
 
-``` json
+```json
 {
   "timestamp": "2019-06-10T10:55:20.650+0530",
   "level": "error",

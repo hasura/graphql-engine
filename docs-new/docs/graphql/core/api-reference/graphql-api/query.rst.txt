@@ -14,7 +14,7 @@ Table of contents
 
 ## **query** / **subscription** syntax
 
-``` none
+```none
 query|subscription [<op-name>] {
   object [([argument])]{
     object-fields
@@ -30,7 +30,7 @@ query|subscription [<op-name>] {
 
 **Example: Query**
 
-``` graphql
+```graphql
 query {
   author(where: {articles: {rating: {_gte: 4}}} order_by: {name: asc}) {
     id
@@ -41,7 +41,7 @@ query {
 
 **Example: Subscription**
 
-``` graphql
+```graphql
 subscription {
   author(where: {articles: rating: {_gte: 4}}} order_by: {name: asc}) {
     id
@@ -64,7 +64,7 @@ For more examples and details of usage, please see `this <queries>`.
 
 ## **query_by_pk** / **subscription_by_pk** syntax
 
-``` none
+```none
 query|subscription [<op-name>] {
   <query-field-name> (
     column1: value1
@@ -81,7 +81,7 @@ query|subscription [<op-name>] {
 
 **Example: Query by PK**
 
-``` graphql
+```graphql
 query {
   article_by_pk(id: 1) {
     id
@@ -92,7 +92,7 @@ query {
 
 **Example: Subscription by PK**
 
-``` graphql
+```graphql
 subscription {
   article_by_pk(id: 1) {
     id
@@ -113,7 +113,7 @@ subscription {
 
 #### Simple object
 
-``` none
+```none
 object-name {
   field1
   field2
@@ -132,7 +132,7 @@ object-name {
 
 *Example*
 
-``` graphql
+```graphql
 author {
    id  # scalar integer field
 
@@ -163,7 +163,7 @@ author {
 
 #### Aggregate object
 
-``` none
+```none
 object-name_aggregate {
   aggregate {
     count
@@ -224,7 +224,7 @@ docs](https://www.postgresql.org/docs/current/functions-aggregate.html#FUNCTIONS
 
 *Example*
 
-``` graphql
+```graphql
 author_aggregate {
   aggregate {
     count  # total count
@@ -299,7 +299,7 @@ distinct_on: \[ [TableSelectColumnEnum](#tableselectcolumnenum) \]
 
 *Example*
 
-``` graphql
+```graphql
 query {
   article(distinct_on: title) {
     title
@@ -310,7 +310,7 @@ query {
 
 ##### TableSelectColumnEnum
 
-``` graphql
+```graphql
 #example table_select_column enum for "article" table
 enum article_select_column {
   id
@@ -331,7 +331,7 @@ where: [BoolExp](#boolexp)
 
 *Example*
 
-``` graphql
+```graphql
 query {
   author(where: {rating: {_gt: 4}}) {
     name
@@ -364,7 +364,7 @@ query {
 
 *Example*
 
-``` graphql
+```graphql
 query {
   article(where: {_and: [{rating: {_gt: 4}}, {published_on: {_gt: "2018-01-01"}}]}) {
     title
@@ -382,7 +382,7 @@ separated by a `,`.
 
 **First example: \_and expression with different fields**
 
-``` graphql
+```graphql
 {
   _and: [
     { rating: { _gte: 4 } },
@@ -400,7 +400,7 @@ separated by a `,`.
 
 **Second example: \_and expression with same field**
 
-``` graphql
+```graphql
 _and: [
   {
     rating: {
@@ -437,7 +437,7 @@ rating: {
 
 *Example*
 
-``` graphql
+```graphql
 query {
   article(where: {_or: [{rating: {_gt: 4}}, {is_published: {_eq: true}}]}) {
     title
@@ -462,7 +462,7 @@ behaves.
 
 *Example:*
 
-``` graphql
+```graphql
 {
   _or: {
    rating: { _gte: 4 },
@@ -508,7 +508,7 @@ behaves.
 
 *Example*
 
-``` graphql
+```graphql
 query {
   article(where: {_not: {title: {_eq: ""}}} ) {
     title
@@ -527,7 +527,7 @@ query {
 
 *Example*
 
-``` graphql
+```graphql
 query {
   author(where: {articles: {}}) {
     name
@@ -560,7 +560,7 @@ field-name : {[Operator](#operator): Value }
 
 *Example*
 
-``` graphql
+```graphql
 query {
   article(where: {title: {_eq: "GraphQL Tutorial"}}) {
     title
@@ -743,7 +743,7 @@ docs](https://www.postgresql.org/docs/current/ltree.html).)
 
 *Example*
 
-``` graphql
+```graphql
 query MyQuery($coordinate: geography!) {
   postgis_test_table(
     where: {
@@ -791,7 +791,7 @@ order_by: ([TableOrderBy](#tableorderby) \| \[
 
 *Example 1*
 
-``` graphql
+```graphql
 query {
   author(order_by: {rating: desc}) {
     name
@@ -802,7 +802,7 @@ query {
 
 *Example 2*
 
-``` graphql
+```graphql
 query {
   article(order_by: [{id: desc}, {author: {id: asc}}]) {
     title
@@ -813,7 +813,7 @@ query {
 
 *Example 3*
 
-``` graphql
+```graphql
 query {
   article(order_by: [{id: desc}, {author: {id: asc}}]) {
     title
@@ -834,7 +834,7 @@ query {
 
 *Example*
 
-``` graphql
+```graphql
 query {
   article(order_by: {rating: asc}) {
     title
@@ -853,7 +853,7 @@ query {
 
 *Example*
 
-``` graphql
+```graphql
 query {
   article(order_by: {author: {rating: desc}}) {
     title
@@ -872,7 +872,7 @@ query {
 
 *Example*
 
-``` graphql
+```graphql
 query {
   author(order_by: {articles_aggregate: {max: {rating: asc}}}) {
     name
@@ -906,7 +906,7 @@ Returning set of table rows:
 
 Order by type for `article` table:
 
-``` graphql
+```graphql
 input article_order_by {
   id: order_by
   title: order_by
@@ -934,7 +934,7 @@ to store marks. A computed field with the name `total_marks` defined to
 calculate sum of all subject marks. We need to fetch `student` rows
 sorted by `total_marks`.
 
-``` graphql
+```graphql
 query {
   student(order_by: {total_marks: desc}){
     id
@@ -961,7 +961,7 @@ A computed field `get_articles` is defined on the `author` table which
 returns set of `article` table rows. Fetch authors sorted by the count
 of their articles.
 
-``` graphql
+```graphql
 query {
   author(order_by: {get_articles_aggregate: {count: desc}}){
     id
@@ -977,7 +977,7 @@ query {
 
 ###### OrderByEnum
 
-``` graphql
+```graphql
 #the order_by enum type
 enum order_by {
   #in the ascending order, nulls last
@@ -1007,7 +1007,7 @@ enum order_by {
 
 *Example*
 
-``` graphql
+```graphql
 query {
   author(order_by: {articles_aggregate: {count: desc}}) {
     name
@@ -1025,7 +1025,7 @@ query {
 
 *Example*
 
-``` graphql
+```graphql
 query {
   author (order_by: {articles_aggregate: {sum: {id: desc}}}) {
     id
@@ -1054,7 +1054,7 @@ limit: Integer \[offset: Integer\]
 
 *Example*
 
-``` graphql
+```graphql
 query {
   article(limit: 6, offset: 2) {
     title

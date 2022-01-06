@@ -40,7 +40,7 @@ Follow the instructions in [install_hasura_cli](/graphql/core/hasura-cli/install
 
 ### Step 3: Initialize a Hasura CLI project locally
 
-``` bash
+```bash
 hasura init <project-name>
 ```
 
@@ -49,7 +49,7 @@ hasura init <project-name>
 This will get your database schema from the cloud project to your local
 setup
 
-``` bash
+```bash
 hasura migrate create init --from-server --endpoint <hasura-cloud-project-url> --admin-secret <admin-secret> --database-name <database-name>
 
 # note down the version
@@ -66,7 +66,7 @@ state.
 
 ### Step 5: Export metadata
 
-``` bash
+```bash
 hasura metadata export --endpoint <hasura-project-url> --admin-secret <admin-secret>
 ```
 
@@ -77,7 +77,7 @@ Next, we apply all these changes to our local Hasura with Docker setup.
 
 ### Step 6: Apply metadata and migrations to your local Hasura instance
 
-``` bash
+```bash
 hasura metadata apply
 hasura migrate apply --all-databases
 hasura metadata reload
@@ -125,7 +125,7 @@ Follow the instructions in [install_hasura_cli](/graphql/core/hasura-cli/install
 
 ### Step 2: Setup a project directory
 
-``` bash
+```bash
 hasura init <project-name> --endpoint <local-project-endpoint>
 ```
 
@@ -138,7 +138,7 @@ how it was setup initially). This creates a project directory with
 This will get your database schema from your local setup into the
 project folder.
 
-``` bash
+```bash
 hasura migrate create init --from-server --admin-secret <admin-secret> --database-name <database-name>
 
 # note down the version
@@ -150,7 +150,7 @@ hasura migrate apply --admin-secret <admin-secret> --version <version-number> --
 
 ### Step 4: Initialize Hasura metadata
 
-``` bash
+```bash
 hasura metadata export
 ```
 
@@ -159,7 +159,7 @@ files in the `metadata` directory.
 
 ### Step 5: Setup version control & Git Deploy
 
-``` bash
+```bash
 # in the project directory
 
 git init

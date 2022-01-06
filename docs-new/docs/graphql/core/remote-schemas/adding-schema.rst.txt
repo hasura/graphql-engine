@@ -88,7 +88,7 @@ CLI
 To add a remote schema, edit the `remote_schemas.yaml` file in the
 `metadata` directory as in this example:
 
-``` yaml
+```yaml
 - name: my-remote-schema
   definition:
     url: https://graphql-pokemon.now.sh/
@@ -98,7 +98,7 @@ To add a remote schema, edit the `remote_schemas.yaml` file in the
 
 Apply the metadata by running:
 
-``` bash
+```bash
 hasura metadata apply
 ```
 
@@ -111,7 +111,7 @@ API
 You can add a remote schema by using the
 `add_remote_schema metadata API <add_remote_schema>`:
 
-``` http
+```http
 POST /v1/query HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin

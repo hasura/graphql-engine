@@ -27,7 +27,7 @@ The
 repo contains all installation manifests required to deploy Hasura
 anywhere. Get the Kubernetes deployment and service files from there:
 
-``` bash
+```bash
 $ wget https://raw.githubusercontent.com/hasura/graphql-engine/stable/install-manifests/kubernetes/deployment.yaml
 $ wget https://raw.githubusercontent.com/hasura/graphql-engine/stable/install-manifests/kubernetes/svc.yaml
 ```
@@ -36,7 +36,7 @@ $ wget https://raw.githubusercontent.com/hasura/graphql-engine/stable/install-ma
 
 Edit `deployment.yaml` and set the right database url:
 
-``` yaml
+```yaml
 ...
   env:
   - name: HASURA_GRAPHQL_DATABASE_URL
@@ -73,7 +73,7 @@ Note
 
 ### Step 3: Create the Kubernetes deployment and service
 
-``` bash
+```bash
 $ kubectl create -f deployment.yaml
 $ kubectl create -f svc.yaml
 ```
@@ -85,7 +85,7 @@ should be able to access the console at the external IP.
 
 For example, using Docker-for-desktop on Mac:
 
-``` bash
+```bash
 $ kubectl get svc
 NAME         TYPE           CLUSTER-IP      EXTERNAL-IP   PORT(S)        AGE
 hasura       LoadBalancer   10.96.214.240   localhost     80:30303/TCP   4m
@@ -108,7 +108,7 @@ publicly accessible, you need to configure an admin secret key.
 Update the `deployment.yaml` to set the `HASURA_GRAPHQL_ADMIN_SECRET`
 environment variable.
 
-``` yaml
+```yaml
 ...
 spec:
    containers:
@@ -146,7 +146,7 @@ authentication.
 In case you're using the CLI to open the Hasura console, use the
 `admin-secret` flag when you open the console:
 
-``` bash
+```bash
 hasura console --admin-secret=<myadminsecretkey>
 ```
 
@@ -156,7 +156,7 @@ You can check the logs of the Hasura GraphQL engine deployed on
 Kubernetes by checking the logs of the GraphQL engine service, i.e.
 `hasura`:
 
-``` bash
+```bash
 $ kubectl logs -f svc/hasura
 
 {"timestamp":"2018-10-09T11:20:32.054+0000", "level":"info", "type":"http-log", "detail":{"status":200, "query_hash":"01640c6dd131826cff44308111ed40d7fbd1cbed", "http_version":"HTTP/1.1", "query_execution_time":3.0177627e-2, "request_id":null, "url":"/v1/graphql", "user":{"x-hasura-role":"admin"}, "ip":"127.0.0.1", "response_size":209329, "method":"POST", "detail":null}}
@@ -205,7 +205,7 @@ you should change it to:
 
 ### Step 3: Rollout the change
 
-``` bash
+```bash
 $ kubectl replace -f deployment.yaml
 ```
 

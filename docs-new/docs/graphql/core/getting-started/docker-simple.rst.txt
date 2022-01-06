@@ -30,7 +30,7 @@ The
 repo contains all installation manifests required to deploy Hasura
 anywhere. Get the docker compose file from there:
 
-``` bash
+```bash
 # in a new directory run
 wget https://raw.githubusercontent.com/hasura/graphql-engine/stable/install-manifests/docker-compose/docker-compose.yaml
 # or run
@@ -42,13 +42,13 @@ curl https://raw.githubusercontent.com/hasura/graphql-engine/stable/install-mani
 The following command will run Hasura GraphQL engine along with a
 Postgres database to store its metadata.
 
-``` bash
+```bash
 $ docker-compose up -d
 ```
 
 Check if the containers are running:
 
-``` bash
+```bash
 $ docker ps
 
 CONTAINER ID IMAGE                 ... CREATED STATUS PORTS          ...
@@ -103,7 +103,7 @@ connect the same database as a data source and continue.
 On the Hasura console, navigate to `Data -> Create table` and create a
 sample table called `profiles` with the following columns:
 
-``` sql
+```sql
 profiles (
   id SERIAL PRIMARY KEY, -- serial -> auto-incrementing integer
   name TEXT
@@ -124,7 +124,7 @@ of the `profiles` table.
 Head to the `GraphiQL` tab in the console and try running the following
 query:
 
-``` graphql
+```graphql
 query {
   profiles {
     id

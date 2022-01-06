@@ -20,7 +20,7 @@ to enable subscriptions.
 
 ### Install packages
 
-``` bash
+```bash
 npm install --save apollo-client apollo-link-ws apollo-link-http apollo-link apollo-utilities apollo-cache-inmemory subscriptions-transport-ws
 ```
 
@@ -28,7 +28,7 @@ Once these packages are installed, import them as follows in the file
 where you have currently initialised your client (usually your `App.js`
 file).
 
-``` js
+```js
 // Remove the apollo-boost import and change to this:
 import ApolloClient from "apollo-client";
 // Setup the network "links"
@@ -42,7 +42,7 @@ import { InMemoryCache } from 'apollo-cache-inmemory';
 Below these imports initialise your client to fetch subscriptions along
 with query and mutation.
 
-``` js
+```js
 const httpLink = new HttpLink({
   uri: "http://<your-app>/v1/graphql", // use https for secure endpoint
 });
@@ -82,7 +82,7 @@ few things that you might miss out on.
 Below is an example where you can convert a query to subscription and
 see what changes need to be made when doing so.
 
-``` js
+```js
 <Query
   query = {
     gql`
@@ -128,7 +128,7 @@ We can see that there are in total 3 places where the word `query` is
 changed to `subscription` and has to be taken care of when switching to
 subscriptions.
 
-``` none
+```none
 <Query                                    <subscription
   query = {gql`          ->                 subscription = {gql`
       query {                                 subscription {
@@ -142,7 +142,7 @@ Caveat
 If all the 3 changes are not made, **it works like a query instead of a
 subscription** since the code that sets up apollo-link doesn't work.
 
-``` js
+```js
 const link = split(
   // split based on operation type
   ({ query }) => {

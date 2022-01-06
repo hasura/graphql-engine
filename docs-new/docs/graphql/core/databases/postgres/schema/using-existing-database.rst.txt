@@ -54,7 +54,7 @@ CLI
 To track the table and expose it over the GraphQL API, add it to the
 `tables.yaml` file in the `metadata` directory as follows:
 
-``` yaml
+```yaml
 - table:
    schema: public
    name: <table name>
@@ -62,7 +62,7 @@ To track the table and expose it over the GraphQL API, add it to the
 
 Apply the metadata by running:
 
-``` bash
+```bash
 hasura metadata apply
 ```
 
@@ -75,7 +75,7 @@ API
 To track a table and expose it over the GraphQL API, use the
 `track_table metadata API <track_table>`:
 
-``` http
+```http
 POST /v1/query HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
@@ -120,7 +120,7 @@ CLI
 To track all tables and expose them over the GraphQL API, add them to
 the `tables.yaml` file in the `metadata` directory as follows:
 
-``` yaml
+```yaml
 - table:
    schema: public
    name: <table-name-1>
@@ -133,7 +133,7 @@ To automate this, you could add the tables in a loop through a script.
 
 Apply the metadata by running:
 
-``` bash
+```bash
 hasura metadata apply
 ```
 
@@ -146,7 +146,7 @@ API
 To track all tables and expose them over the GraphQL API, use the
 `track_table metadata API <track_table>`:
 
-``` http
+```http
 POST /v1/query HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
@@ -219,7 +219,7 @@ the `tables.yaml` file in the `metadata` directory as follows:
 
 **Object relationship**
 
-``` yaml
+```yaml
 - table:
     schema: public
     name: <table name>
@@ -231,7 +231,7 @@ the `tables.yaml` file in the `metadata` directory as follows:
 
 **Array relationship**
 
-``` yaml
+```yaml
 - table:
       schema: public
       name: <table name>
@@ -247,7 +247,7 @@ the `tables.yaml` file in the `metadata` directory as follows:
 
 Apply the metadata by running:
 
-``` bash
+```bash
 hasura metadata apply
 ```
 
@@ -262,7 +262,7 @@ API
 You can create an object relationship by using the
 `create_object_relationship metadata API <create_object_relationship>`:
 
-``` http
+```http
 POST /v1/query HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
@@ -284,7 +284,7 @@ X-Hasura-Role: admin
 You can create an array relationship by using the
 `create_array_relationship metadata API <create_array_relationship>`:
 
-``` http
+```http
 POST /v1/query HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
@@ -338,7 +338,7 @@ them to the `tables.yaml` file in the `metadata` directory as follows:
 
 **Object relationship**
 
-``` yaml
+```yaml
 - table:
     schema: public
     name: <table name>
@@ -350,7 +350,7 @@ them to the `tables.yaml` file in the `metadata` directory as follows:
 
 **Array relationship**
 
-``` yaml
+```yaml
 - table:
     schema: public
     name: <table name>
@@ -369,7 +369,7 @@ script.
 
 Apply the metadata by running:
 
-``` bash
+```bash
 hasura metadata apply
 ```
 
@@ -384,7 +384,7 @@ You can create multiple relationships by using the
 and the
 `create_array_relationship metadata API <create_array_relationship>`:
 
-``` http
+```http
 POST /v1/query HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin

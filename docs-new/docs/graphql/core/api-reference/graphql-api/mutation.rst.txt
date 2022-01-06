@@ -14,7 +14,7 @@ Table of contents
 
 ## **insert** (upsert) syntax
 
-``` none
+```none
 mutation [<mutation-name>] {
   <mutation-field-name> (
     [<input-object>!]
@@ -34,7 +34,7 @@ mutation [<mutation-name>] {
 
 **Example: Insert**
 
-``` graphql
+```graphql
 mutation insert_article {
   insert_article(
     objects: [
@@ -55,7 +55,7 @@ mutation insert_article {
 
 **Example: Upsert**
 
-``` graphql
+```graphql
 mutation upsert_author {
   insert_author (
     objects: [
@@ -76,7 +76,7 @@ mutation upsert_author {
 
 ## **insert_one** syntax
 
-``` none
+```none
 mutation [<mutation-name>] {
   <mutation-field-name> (
     [<input-object>!]
@@ -96,7 +96,7 @@ mutation [<mutation-name>] {
 
 **Example: Insert One**
 
-``` graphql
+```graphql
 mutation insert_article_one {
   insert_article_one(
     object: {
@@ -113,7 +113,7 @@ mutation insert_article_one {
 
 ## **update_by_pk** syntax
 
-``` none
+```none
 mutation [<mutation-name>] {
   <mutation-field-name> (
     [pk-columns-argument!],
@@ -138,7 +138,7 @@ mutation [<mutation-name>] {
 
 **Example: Update by PK**
 
-``` graphql
+```graphql
 mutation update_articles {
   update_article_by_pk (
     pk_columns: {
@@ -154,7 +154,7 @@ mutation update_articles {
 
 ## **update** syntax
 
-``` none
+```none
 mutation [<mutation-name>] {
   <mutation-field-name> (
     [where-argument!],
@@ -180,7 +180,7 @@ mutation [<mutation-name>] {
 
 **Example: Update**
 
-``` graphql
+```graphql
 mutation update_author{
   update_author(
     where: {id: {_eq: 3}},
@@ -193,7 +193,7 @@ mutation update_author{
 
 ## **delete_by_pk** syntax
 
-``` none
+```none
 mutation [<mutation-name>] {
   <mutation-field-name> (
     column1: value1
@@ -210,7 +210,7 @@ mutation [<mutation-name>] {
 
 **Example: Delete by PK**
 
-``` graphql
+```graphql
 mutation delete_articles {
   delete_article_by_pk (
     id: 1
@@ -223,7 +223,7 @@ mutation delete_articles {
 
 ## **delete** syntax
 
-``` none
+```none
 mutation [<mutation-name>] {
   <mutation-field-name> (
     [where-argument!]
@@ -241,7 +241,7 @@ mutation [<mutation-name>] {
 
 **Example: Delete**
 
-``` graphql
+```graphql
 mutation delete_articles {
   delete_article(
     where: {author: {id: {_eq: 7}}}
@@ -270,7 +270,7 @@ For more examples and details of usage, please see `this <mutations>`.
 
 ### Mutation response
 
-``` none
+```none
 {
   affected_rows
   returning {
@@ -283,7 +283,7 @@ For more examples and details of usage, please see `this <mutations>`.
 
 **Example**
 
-``` graphql
+```graphql
 {
   affected_rows
   returning {
@@ -295,7 +295,7 @@ For more examples and details of usage, please see `this <mutations>`.
 
 ### **objects** argument
 
-``` none
+```none
 objects: [
   {
     field1: value,
@@ -317,7 +317,7 @@ objects: [
 
 **Example**
 
-``` graphql
+```graphql
 objects: [
   {
     title: "Software is eating the world",
@@ -334,7 +334,7 @@ objects: [
 
 ### **object** argument
 
-``` none
+```none
 object: {
   field1: value,
   field2: value,
@@ -352,7 +352,7 @@ object: {
 
 **Example**
 
-``` graphql
+```graphql
 object: {
   title: "Software is eating the world",
   content: "This week, Hewlett-Packard...",
@@ -372,7 +372,7 @@ The conflict clause is used to convert an *insert* mutation to an
 before editing an existing row in case of a conflict. Hence the conflict
 clause is permitted only if a table has *update* permissions defined.
 
-``` none
+```none
 on_conflict: {
   constraint: table_constraint!
   update_columns: [table_update_column!]!
@@ -382,7 +382,7 @@ on_conflict: {
 
 **Example**
 
-``` graphql
+```graphql
 on_conflict: {
   constraint: author_name_key
   update_columns: [name]
@@ -395,7 +395,7 @@ on_conflict: {
 The `pk_columns` argument is used to identify an object by its primary
 key columns in *update* mutations.
 
-``` none
+```none
 pk_columns: {
   column-1: value-1
   column-2: value-2
@@ -404,7 +404,7 @@ pk_columns: {
 
 **Example**
 
-``` graphql
+```graphql
 pk_columns: {
   id: 1
   name: "Harry"
@@ -421,7 +421,7 @@ where: [BoolExp](#boolexp)
 
 **Example**
 
-``` graphql
+```graphql
 where: {
   rating: {_eq: 5}
 }
@@ -449,7 +449,7 @@ where: {
 
 **Example**
 
-``` graphql
+```graphql
 _and: [
   {rating: {_gt: 5}}, 
   {updated_at: {_gt: "2019-01-01"}}
@@ -469,7 +469,7 @@ _and: [
 
 **Example**
 
-``` graphql
+```graphql
 _or: [
   {rating: {_is_null: true}}, 
   {rating: {_lt: 4}}
@@ -489,7 +489,7 @@ _or: [
 
 **Example**
 
-``` graphql
+```graphql
 _not: {
   title: {_eq: ""}
 }
@@ -505,7 +505,7 @@ _not: {
 
 **Example**
 
-``` graphql
+```graphql
 author(where: {articles: {}})
 ```
 
@@ -534,7 +534,7 @@ field-name: {[Operator](#operator): Value }
 
 **Example**
 
-``` graphql
+```graphql
 {rating: {_eq: 5}}
 ```
 
@@ -570,7 +570,7 @@ field-name: {[Operator](#operator): Value }
 
 ### **\_set** argument
 
-``` none
+```none
 _set: {
   field-name-1 : value,
   field-name-2 : value,
@@ -580,7 +580,7 @@ _set: {
 
 ### **\_inc** argument
 
-``` none
+```none
 _inc: {
   field-name-1 : int-value,
   field-name-2 : int-value,
@@ -590,7 +590,7 @@ _inc: {
 
 ### **\_append** argument
 
-``` none
+```none
 _append: {
   field-name-1 : $json-variable-1,
   field-name-2 : $json-variable-1,
@@ -600,7 +600,7 @@ _append: {
 
 **Example**
 
-``` json
+```json
 {
   "json-variable-1": "value",
   "json-variable-2": "value"
@@ -609,7 +609,7 @@ _append: {
 
 ### **\_prepend** argument
 
-``` none
+```none
 _prepend: {
   field-name-1 : $json-variable-1,
   field-name-2 : $json-variable-1,
@@ -619,7 +619,7 @@ _prepend: {
 
 **Example**
 
-``` json
+```json
 {
   "json-variable-1": "value",
   "json-variable-2": "value"
@@ -628,7 +628,7 @@ _prepend: {
 
 ### **\_delete_key** argument
 
-``` none
+```none
 _delete_key: {
   field-name-1 : "key",
   field-name-2 : "key",
@@ -638,7 +638,7 @@ _delete_key: {
 
 ### **\_delete_elem** argument
 
-``` none
+```none
 _delete_elem: {
   field-name-1 : int-index,
   field-name-2 : int-index,
@@ -648,7 +648,7 @@ _delete_elem: {
 
 ### **\_delete_at_path** argument
 
-``` none
+```none
 _delete_at_path: {
   field-name-1 : ["path-array"],
   field-name-2 : ["path-array"],

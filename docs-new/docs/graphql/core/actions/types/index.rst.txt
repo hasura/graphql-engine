@@ -31,7 +31,7 @@ The most basic components of a GraphQL schema are object types, which
 just represent a kind of object a GraphQL query can return, and what
 fields it has. In the GraphQL SDL, we might represent it like this:
 
-``` graphql
+```graphql
 type UserInfo {
   accessToken: String!
   userId: Int!
@@ -47,7 +47,7 @@ This is an object type called `UserInfo` that has two fields:
 Hasura supports nested objects. For example, you can define a type like
 the following:
 
-``` graphql
+```graphql
 type UserInfo {
   accessToken: String!
   userId: Int!
@@ -64,7 +64,7 @@ type UserObj {
 Recursive nested objects are also supported. For example, you can use
 the following type:
 
-``` graphql
+```graphql
 type UserObj {
   name: String!
   favFood: String!
@@ -83,7 +83,7 @@ up `action relationships <pg_action_relationships>` with tables/views.
 
 **For example**, given the object type:
 
-``` graphql
+```graphql
 type UserInfo {
   accessToken: String!
   userId: Int!
@@ -92,7 +92,7 @@ type UserInfo {
 
 and tables:
 
-``` sql
+```sql
 user (id int, name text)
 order (id int, user_id int, ...)
 ```
@@ -108,7 +108,7 @@ We can create:
 
 The object type will now be modified as:
 
-``` graphql
+```graphql
 type UserInfo {
   accessToken: String!
   userId: Int!
@@ -140,7 +140,7 @@ types:
 1.  For nested objects, relationships can only be defined for top-level
     fields. For example, for the following type definition:
 
-    ``` graphql
+    ```graphql
     type UserInfo {
       accessToken: String!
       userId: Int!
@@ -171,7 +171,7 @@ whole object to be created. In the GraphQL SDL, input types look exactly
 the same as regular object types, but with the keyword input instead of
 type:
 
-``` graphql
+```graphql
 input LoginInfo {
   username: String!
   password: String!
@@ -210,7 +210,7 @@ start using while defining your actions:
 Hasura allows you to define custom scalars. For example, if you want to
 define a scalar called `Date`, you can define it like.
 
-``` graphql
+```graphql
 scalar Date
 ```
 
@@ -225,7 +225,7 @@ Postgres base types are implicitly made available as GraphQL scalars;
 there is no need to declare them separately. For example, in the
 definition
 
-``` graphql
+```graphql
 type User {
   id: uuid!
   name: String!
@@ -251,7 +251,7 @@ set of allowed values. This allows you to:
 Here's what an enum definition might look like in the GraphQL schema
 language:
 
-``` graphql
+```graphql
 enum Color {
   RED
   GREEN

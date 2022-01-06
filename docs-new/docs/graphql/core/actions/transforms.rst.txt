@@ -63,7 +63,7 @@ Action transforms can be added to actions using the
 `update_action metadata API <metadata_update_action>` by adding a
 `request_transform <RequestTransformation>` field to the args:
 
-``` http
+```http
 POST /v1/metadata HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
@@ -145,7 +145,7 @@ In the `Configure Transformations` section, click on
 
 API
 
-``` json
+```json
 {
   "request_transform": {
      "body": {
@@ -186,7 +186,7 @@ Console support coming soon.
 
 API
 
-``` json
+```json
 {
   "request_transform": {
      "body": {
@@ -238,7 +238,7 @@ API
 
 </div>
 
-``` json
+```json
 {
   "request_transform": {
     "url": "{{$base_url}}/{{$session_variables['x-hasura-user-id']}}",
@@ -296,7 +296,7 @@ In the `Configure Transformations` section, click on
 
 API
 
-``` json
+```json
 {
   "request_transform": {
      "method": "GET",
@@ -358,7 +358,7 @@ API
 
 Action definition:
 
-``` graphql
+```graphql
 type Mutation {
   updateProfile(picture_url : String!) : ProfileOutput
 }
@@ -371,7 +371,7 @@ type ProfileOutput {
 
 The transform is given by:
 
-``` json
+```json
 {
   "request_transform": {
     "body": "{\"user_metadata\": {\"picture\": {{$body.input.picture_url}} } }",

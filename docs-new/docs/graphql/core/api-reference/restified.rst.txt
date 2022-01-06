@@ -89,11 +89,11 @@ listing the methods that you can use.
 
 #### Sample requests
 
-``` http
+```http
 GET /api/rest/simple_query/1 HTTP/1.1
 ```
 
-``` http
+```http
 POST /api/rest/complicated_mutation/2?time=now HTTP/1.1
 Content-Type: application/json
 
@@ -114,7 +114,7 @@ See the `api_reference_graphql` for more details.
 The OpenAPI 3 specification of the REST endpoints are exposed at
 `/api/swagger/json` for admin role only:
 
-``` http
+```http
 GET /api/swagger/json HTTP/1.1
 X-Hasura-Role: admin
 ```
@@ -125,14 +125,14 @@ OAS 3.0, [click here](https://swagger.io/specification/).
 
 ### Sample request
 
-``` http
+```http
 GET /api/swagger/json HTTP/1.1
 X-Hasura-Role: admin
 ```
 
 ### Response
 
-``` JSON
+```JSON
 {
   "openapi": "3.0.0",
   "info": {
@@ -144,7 +144,7 @@ X-Hasura-Role: admin
       "/api/rest/users": {
           "get": {
               "summary": "Fetch user data",
-              "description": "This API fetches user data (first name and last name) from the users table.\n***\nThe GraphQl query for this endpoint is:\n``` graphql\nquery MyQuery{\n  users {\n    first_name\n    last_name\n  }\n}\n```",
+              "description": "This API fetches user data (first name and last name) from the users table.\n***\nThe GraphQl query for this endpoint is:\n```graphql\nquery MyQuery{\n  users {\n    first_name\n    last_name\n  }\n}\n```",
               "responses": {}
           },
           "parameters": [

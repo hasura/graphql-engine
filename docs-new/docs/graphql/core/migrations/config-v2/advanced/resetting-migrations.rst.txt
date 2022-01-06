@@ -24,7 +24,7 @@ later.
 
 You can use the following command:
 
-``` bash
+```bash
 # move the contents of the migrations folder into the migrations_backup folder
 
 mv migrations migrations_backup
@@ -34,7 +34,7 @@ mv migrations migrations_backup
 
 On the SQL tab of the Hasura console, run the following command:
 
-``` bash
+```bash
 TRUNCATE hdb_catalog.schema_migrations;
 ```
 
@@ -44,20 +44,20 @@ If the migrations were reset, then we will set up fresh migrations by
 pulling the schema and metadata from the server using the following
 commands:
 
-``` bash
+```bash
 ## create migration files - "this will only export public schema from postgres"
 
 hasura migrate create "init" --from-server
 ```
 
-``` bash
+```bash
 ## note down the version
 ## mark the migration as applied on this server
 
 hasura migrate apply --version "<version>" --skip-execution
 ```
 
-``` bash
+```bash
 ## to also export the Hasura metadata and save it in the ``/metadata`` directory
 
 hasura metadata export   
@@ -81,7 +81,7 @@ command. This flag can be used multiple times.
 
 Run the following command to verify the migration status:
 
-``` bash
+```bash
 hasura migrate status   
 ```
 

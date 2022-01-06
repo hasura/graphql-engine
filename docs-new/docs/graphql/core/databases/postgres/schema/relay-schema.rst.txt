@@ -153,13 +153,13 @@ field resolver's `id` input.
 For the `author` table in the `public` schema whose primary key column
 is `author_id`, of type `uuid`.
 
-``` json
+```json
 [1, "public", "author", "296d30b1-474d-4011-a907-2701992b04c1"]
 ```
 
 And `base64` encoded value is
 
-``` none
+```none
 WzEsICJwdWJsaWMiLCAiYXV0aG9yIiwgIjI5NmQzMGIxLTQ3NGQtNDAxMS1hOTA3LTI3MDE5OTJiMDRjMSJd
 ```
 

@@ -42,7 +42,7 @@ token.
     function
 -   Add the following code for the `Function Code`
 
-``` javascript
+```javascript
 exports.handler = (event, context, callback) => {
     event.response = {
         "claimsOverrideDetails": {
@@ -144,7 +144,7 @@ While starting Hasura, set the environmental variable
 `HASURA_GRAPHQL_JWT_SECRET` or the flag `--jwt-secret` to the below
 JSON:
 
-``` javascript
+```javascript
 {
 "type":"RS256",
 "jwk_url": "https://cognito-idp.<aws-region>.amazonaws.com/<user-pool-id>/.well-known/jwks.json",
@@ -190,7 +190,7 @@ are described
 [here](https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-lambda-post-authentication.html)
 . Here is a sample lambda function:
 
-``` javascript
+```javascript
 function (event, context, callback) {
   const userId = event.userName;
   const hasuraAdminSecret = "xxxx";

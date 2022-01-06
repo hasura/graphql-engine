@@ -60,7 +60,7 @@ the fields that have been hidden.
 **For example**, let's say we have the following remote schema added to
 the GraphQL engine:
 
-``` graphql
+```graphql
 type User {
   id         ID!
   first_name String!
@@ -87,7 +87,7 @@ object, so we'll remove that field as well.
 We can accomplish this by specifying the restricted schema (in GraphQL
 IDL format) for the `public` role. In the above case, it will be:
 
-``` graphql
+```graphql
 type User {
   first_name String!
   last_name  String!
@@ -128,7 +128,7 @@ but in this case we want the `public` role to use the `get_user_by_name`
 with only the `first_name` argument and the `public` role should not be
 able to access the `last_name` argument. The schema should look like:
 
-``` graphql
+```graphql
 type User {
   first_name String!
   last_name  String!
@@ -167,7 +167,7 @@ object field or an argument field.
 For example, let's say we have the following remote schema added to the
 GraphQL engine:
 
-``` graphql
+```graphql
 type User {
   id         ID!
   first_name String!
@@ -196,7 +196,7 @@ value of the `id` argument set in one of the
 argument with the session variable. Using the above schema, we can do
 that in the following manner:
 
-``` graphql
+```graphql
 type Query {
   get_user(id: ID! @preset(value: "x-hasura-user-id")) : User
   get_user_activities(user_id: ID!, limit: Int!)
@@ -219,7 +219,7 @@ setting a `preset` value for the `limit` argument of the
 `get_user_activities` to 10. The schema implementing this change should
 look like:
 
-``` graphql
+```graphql
 type Query {
   get_user(id: ID! @preset(value: "x-hasura-user-id")) : User
   get_user_activities(user_id: ID!, limit: Int! @preset(value: 10)) : [Activity]
@@ -240,7 +240,7 @@ override this behaviour i.e. to treat the value literally, the `static`
 argument equal to `true` needs to be added in the `preset` directive. In
 the following example, the `x-hasura-user-id` will be treated literally.
 
-``` graphql
+```graphql
 get_user(id: ID! @preset(value: "x-hasura-user-id", static: true)) : User
 ```
 
@@ -259,7 +259,7 @@ Let's see an example, to see input object field presets in action.
 Suppose, a remote schema with the following schema is added to the
 GraphQL engine:
 
-``` graphql
+```graphql
 input MessageInput {
   from:       ID!
   to:         ID!
@@ -288,7 +288,7 @@ of the `from` field of the `MessageInput` to come from the
 `content`) to be set by the user. The schema for the `user` role should
 be configured in the following manner:
 
-``` graphql
+```graphql
 input MessageInput {
   from:       ID! @preset(value: "x-hasura-user-id")
   to:         ID!
@@ -313,7 +313,7 @@ type Mutation {
 Now, when the `user` role wants to create a new message, they can do it
 in the following manner:
 
-``` graphql
+```graphql
 mutation {
   create_message(message: {to: "2", content: "hello world"})
 }
@@ -323,7 +323,7 @@ The `from` field will get injected into the input object before the
 GraphQL engine queries the remote server. The final query that will be
 sent to the remote server will be:
 
-``` graphql
+```graphql
 mutation {
   create_message(message: {to: "2", content: "hello world", from: "<x-hasura-user-id>"})
 }
@@ -378,7 +378,7 @@ editing the `metadata -> remote_schemas.yaml` file:
 Add the subset of the remote schema that the role is allowed to access
 and set any presets.
 
-``` yaml
+```yaml
 - name: countries    
   definition:   
     url: https://countries.trevorblades.com/
@@ -407,7 +407,7 @@ and set any presets.
 
 Apply the metadata by running:
 
-``` bash
+```bash
 hasura metadata apply
 ```
 
@@ -420,7 +420,7 @@ API
 You can create remote schema permissions by using the
 `add_remote_schema_permissions metadata API <metadata_add_remote_schema_permissions>`:
 
-``` http
+```http
 POST /v1/metadata HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin

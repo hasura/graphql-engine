@@ -63,7 +63,7 @@ There are 3 ways in which you can create an object relationship.
 Create an `object relationship` `author` on `article` *table*, *using*
 the *foreign_key_constraint_on* the `author_id` column:
 
-``` http
+```http
 POST /v1/metadata HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
@@ -101,7 +101,7 @@ Create an `object relationship` `details` on `author` *table*, *using*
 the *foreign_key_constraint_on* the `author_details` *table*'s
 `author_id` *column*:
 
-``` http
+```http
 POST /v1/metadata HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
@@ -128,7 +128,7 @@ Deprecation
 For compatibility with previous versions we also support the form of
 `foreign_key_constraint_on` with a `column`-field, e.g.:
 
-``` json
+```json
 {
   "foreign_key_constraint_on" : {
     "table": "author_details",
@@ -163,7 +163,7 @@ Let's say we have a view called `article_detail` which has three columns
 object relationship called `article_detail` on the `article` table as
 follows:
 
-``` http
+```http
 POST /v1/metadata HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
@@ -227,7 +227,7 @@ Create an `array relationship` `articles` on `author` *table*, *using*
 the *foreign_key_constraint_on* the `author_id` column of the `article`
 table:
 
-``` http
+```http
 POST /v1/metadata HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
@@ -255,7 +255,7 @@ Deprecation
 For compatibility with previous version we also support the form of
 `foreign_key_constraint_on` with a `column`-field, e.g.:
 
-``` json
+```json
 {
   "foreign_key_constraint_on" : {
     "table": "author_details",
@@ -281,7 +281,7 @@ Let's say we have a view called `article_detail` which has four columns
 define an array relationship called `article_details` on the `author`
 table as follows:
 
-``` http
+```http
 POST /v1/metadata HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
@@ -341,7 +341,7 @@ If `cascade` is set to `true`, the dependent objects are also dropped.
 
 An example:
 
-``` http
+```http
 POST /v1/metadata HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
@@ -385,7 +385,7 @@ relationship. Setting the comment to `null` removes it.
 
 An example:
 
-``` http
+```http
 POST /v1/metadata HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
@@ -417,7 +417,7 @@ relationship.
 
 An example:
 
-``` http
+```http
 POST /v1/metadata HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
@@ -455,7 +455,7 @@ There are 3 ways in which you can create an object relationship.
 Create an `object relationship` `author` on `article` *table*, *using*
 the *foreign_key_constraint_on* the `author_id` column:
 
-``` http
+```http
 POST /v1/metadata HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
@@ -493,7 +493,7 @@ Create an `object relationship` `details` on `author` *table*, *using*
 the *foreign_key_constraint_on* the `author_details` *table*'s
 `author_id` *column*:
 
-``` http
+```http
 POST /v1/metadata HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
@@ -520,7 +520,7 @@ Deprecation
 For compatibility with previous versions we also support the form of
 `foreign_key_constraint_on` with a `column`-field, e.g.:
 
-``` json
+```json
 {
   "foreign_key_constraint_on" : {
       "table": "author_details",
@@ -555,7 +555,7 @@ Let's say we have a view called `article_detail` which has three columns
 object relationship called `article_detail` on the `article` table as
 follows:
 
-``` http
+```http
 POST /v1/metadata HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
@@ -619,7 +619,7 @@ Create an `array relationship` `articles` on `author` *table*, *using*
 the *foreign_key_constraint_on* the `author_id` column of the `article`
 table:
 
-``` http
+```http
 POST /v1/metadata HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
@@ -647,7 +647,7 @@ Deprecation
 For compatibility with previous version we also support the form of
 `foreign_key_constraint_on` with a `column`-field, e.g.:
 
-``` json
+```json
 {
  "foreign_key_constraint_on" : {
      "table": "author_details",
@@ -673,7 +673,7 @@ Let's say we have a view called `article_detail` which has four columns
 define an array relationship called `article_details` on the `author`
 table as follows:
 
-``` http
+```http
 POST /v1/metadata HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
@@ -733,7 +733,7 @@ If `cascade` is set to `true`, the dependent objects are also dropped.
 
 An example:
 
-``` http
+```http
 POST /v1/metadata HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
@@ -777,7 +777,7 @@ relationship. Setting the comment to `null` removes it.
 
 An example:
 
-``` http
+```http
 POST /v1/metadata HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
@@ -809,7 +809,7 @@ relationship.
 
 An example:
 
-``` http
+```http
 POST /v1/metadata HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin

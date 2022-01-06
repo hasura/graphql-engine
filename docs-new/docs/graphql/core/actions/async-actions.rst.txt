@@ -32,7 +32,7 @@ always executed synchronously.
 
 For example, let's say `place_order` is an asynchronous action
 
-``` graphql
+```graphql
 mutation placeOrderRequest($order_input: place_order_input!) {
   place_order(input: $order_input) 
 }
@@ -40,7 +40,7 @@ mutation placeOrderRequest($order_input: place_order_input!) {
 
 Executing this mutation will return a response like:
 
-``` json
+```json
 {
   "data": {
     "place_order": "23b1c256-7aff-4b95-95bd-68220d9f93f2"
@@ -52,7 +52,7 @@ The returned `uuid` is the `action id` of the async action. To get the
 actual response of the action, you can `query` or `subscribe` to the
 action using this `action id`.
 
-``` graphql
+```graphql
 subscription getPlaceOrderResponse {
   place_order (id: "23b1c256-7aff-4b95-95bd-68220d9f93f2") {
     output

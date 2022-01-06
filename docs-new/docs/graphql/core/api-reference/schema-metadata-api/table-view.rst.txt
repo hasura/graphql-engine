@@ -38,7 +38,7 @@ continue to function.
 
 Add a table/view `author`:
 
-``` http
+```http
 POST /v1/query HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
@@ -66,7 +66,7 @@ as an `enum table <create_enum_table>`.
 
 Use table `user_role` as an enum table:
 
-``` http
+```http
 POST /v1/query HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
@@ -97,7 +97,7 @@ schema with configuration. You can customise the root field names.
 
 Add a table/view `author`:
 
-``` http
+```http
 POST /v1/query HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
@@ -132,7 +132,7 @@ table name is not GraphQL compliant, like `Users Address`. A
 `custom name` like `users_address` will complement the `"Users Address"`
 table, so that it can be added to the GraphQL schema.
 
-``` http
+```http
 POST /v1/query HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
@@ -196,7 +196,7 @@ already present custom fields configuration.
 
 Set custom fields for table/view `author`:
 
-``` http
+```http
 POST /v1/query HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
@@ -243,7 +243,7 @@ in favour of this API.
 
 Set the configuration for a table/view called `author`:
 
-``` http
+```http
 POST /v1/query HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
@@ -286,7 +286,7 @@ X-Hasura-Role: admin
 
 Remove a table/view `author`:
 
-``` http
+```http
 POST /v1/query HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin

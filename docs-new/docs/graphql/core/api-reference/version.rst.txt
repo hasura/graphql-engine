@@ -24,13 +24,13 @@ All requests are `GET` requests to the `/v1/version` endpoint.
 
 ### Request
 
-``` http
+```http
 GET /v1/version HTTP/1.1
 ```
 
 ### Sample response
 
-``` http
+```http
 HTTP/1.1 200 OK
 Content-Type: application/json
 

@@ -31,7 +31,7 @@ replaces the older `schema/metadata API <schema_metadata_apis>`.
 `add_inherited_role` is used to create a new inherited role with other
 existing roles.
 
-``` http
+```http
 POST /v1/metadata HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
@@ -59,7 +59,7 @@ X-Hasura-Role: admin
 
 `drop_inherited_role` is used to delete an existing inherited role.
 
-``` http
+```http
 POST /v1/metadata HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin

@@ -37,7 +37,7 @@ schema. GraphQL engine stitches it's schema with existing.
 
 An example request as follows:
 
-``` http
+```http
 POST /v1/query HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
@@ -78,7 +78,7 @@ relationships or remote schema permissions) they will be reported as
 
 An example request as follows:
 
-``` http
+```http
 POST /v1/query HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
@@ -115,7 +115,7 @@ de-stitches it's schema.
 
 An example request as follows:
 
-``` http
+```http
 POST /v1/query HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
@@ -143,7 +143,7 @@ GraphQL engine refetches schema from server and stitches.
 
 An example request as follows:
 
-``` http
+```http
 POST /v1/query HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin

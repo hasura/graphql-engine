@@ -27,7 +27,7 @@ Use subscriptions to show the current location of a vehicle on a map.
 
 Let's say we have the following database schema:
 
-``` sql
+```sql
 vehicle (
   id INT PRIMARY KEY,
   vehicle_number TEXT
@@ -92,7 +92,7 @@ Use subscriptions to show new messages in a chatroom.
 
 Let's say we have the following database schema:
 
-``` sql
+```sql
 user (
   id INT PRIMARY KEY,
   username TEXT UNIQUE
@@ -163,7 +163,7 @@ Use subscriptions to show the result of a poll.
 
 Let's say we have the following database schema:
 
-``` sql
+```sql
 poll (
   id INT PRIMARY KEY,
   question TEXT
@@ -190,7 +190,7 @@ vote (
 
 First, create a view `poll_results` to give the result of the poll:
 
-``` sql
+```sql
 CREATE OR REPLACE VIEW public."poll_results" AS
   SELECT poll.id AS poll_id,
          o.option_id,

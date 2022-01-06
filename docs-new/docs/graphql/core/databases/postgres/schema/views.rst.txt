@@ -58,7 +58,7 @@ CLI
 
 2.  Apply the migration and metadata by running:
 
-    ``` bash
+    ```bash
     hasura migrate apply
     ```
 
@@ -70,7 +70,7 @@ API
 
 You can add a view by using the `run_sql metadata API <run_sql>`:
 
-``` http
+```http
 POST /v1/query HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
@@ -127,7 +127,7 @@ CLI
 1.  To track the view and expose it over the GraphQL API, edit the
     `tables.yaml` file in the `metadata` directory as follows:
 
-    ``` yaml
+    ```yaml
     - table:
         schema: public
         name: author
@@ -141,7 +141,7 @@ CLI
 
 2.  Apply the metadata by running:
 
-    ``` bash
+    ```bash
     hasura metadata apply
     ```
 
@@ -154,7 +154,7 @@ API
 To track the view and expose it over the GraphQL API, make the following
 API call to the `track_table metadata API <track_table>`:
 
-``` http
+```http
 POST /v1/query HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
@@ -188,7 +188,7 @@ min, max, etc.) over a group of rows in a table.
 Let’s say we want to fetch the average article rating for each author in
 the following schema:
 
-``` plpgsql
+```plpgsql
 author(id integer, name text, city text, email text, phone integer, address text)
 
 article(id integer, title text, content text, rating integer, author_id integer)
@@ -197,7 +197,7 @@ article(id integer, title text, content text, rating integer, author_id integer)
 A view that averages the rating of articles for each author can be
 created using the following SQL query:
 
-``` SQL
+```SQL
 CREATE VIEW author_average_rating AS
   SELECT author_id, avg(rating)
     FROM article
@@ -212,14 +212,14 @@ wouldn't want to expose.
 Let's say, we want to expose the following `author` table without the
 fields `email`, `phone` and `address`:
 
-``` plpgsql
+```plpgsql
 author(id integer, name text, city text, email text, phone integer, address text)
 ```
 
 A view that only exposes the non-sensitive fields of the `author` table
 can be created using the following SQL query:
 
-``` SQL
+```SQL
 CREATE VIEW author_public AS
   SELECT id, name, city
     FROM author

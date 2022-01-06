@@ -62,7 +62,7 @@ You can monitor the deployment of the Hasura web service from the
 **Logs** tab. Once the service is up, use the link on the service page
 to access your Hasura console:
 
-``` bash
+```bash
 https://<your-hasura-slug>.onrender.com/
 ```
 

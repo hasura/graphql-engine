@@ -29,7 +29,7 @@ The request expects a JSON object with the following keys:
 -   `query`: the GraphQL query to be analysed
 -   `user` (optional): the `x-hasura-role` along with session variables
 
-``` http
+```http
 POST /v1/graphql/explain HTTP/1.1
 Content-Type: application/json
 
@@ -44,7 +44,7 @@ Content-Type: application/json
 
 #### Sample request
 
-``` http
+```http
 POST /v1/graphql/explain HTTP/1.1
 Content-Type: application/json
 
@@ -60,7 +60,7 @@ Content-Type: application/json
 
 The response for a query is a list of plans, one for each field:
 
-``` none
+```none
 [
     {
         "field": String -- "name of the field",
@@ -73,7 +73,7 @@ The response for a query is a list of plans, one for each field:
 The response for a subscription is a single plan, along with the
 variables used to determine how the subscription will be multiplexed:
 
-``` none
+```none
 {
     "sql": String -- "generated SQL for the operation",
     "plan": [String] -- "the database's execution plan for the generated SQL"
@@ -89,7 +89,7 @@ variables used to determine how the subscription will be multiplexed:
 
 PostgreSQL backend:
 
-``` json
+```json
 [
     {
         "field": "user",
@@ -106,7 +106,7 @@ PostgreSQL backend:
 
 Microsoft SQL Server backend:
 
-``` json
+```json
 [
     {
         "field": "user",
@@ -125,7 +125,7 @@ Microsoft SQL Server backend:
 
 PostgreSQL backend:
 
-``` json
+```json
 {
     "sql": "SELECT  \"_subs\".\"result_id\" , \"_fld_resp\".\"root\" AS \"result\" FROM UNNEST(($1)::uuid[], ($2)::json[]) AS \"_subs\"(\"result_id\", \"result_vars\") LEFT OUTER JOIN LATERAL (SELECT  json_build_object('user', \"user\".\"root\" ) AS \"root\" FROM  (SELECT  coalesce(json_agg(\"root\" ), '[]' ) AS \"root\" FROM  (SELECT  row_to_json((SELECT  \"_1_e\"  FROM  (SELECT  \"_0_root.base\".\"name\" AS \"name\"       ) AS \"_1_e\"      ) ) AS \"root\" FROM  (SELECT  *  FROM \"public\".\"user\"  WHERE ('true')     ) AS \"_0_root.base\"      ) AS \"_2_root\"      ) AS \"user\"      ) AS \"_fld_resp\" ON ('true')      ",
     "plan": [
@@ -148,7 +148,7 @@ PostgreSQL backend:
 
 Microsoft SQL Server backend:
 
-``` json
+```json
 {
     "sql": "SELECT ISNULL((SELECT [row].[result_id] AS [result_id],\n       [result].[json] AS [result]\nFROM OPENJSON((N''+NCHAR(91)+''+NCHAR(91)+''+NCHAR(34)+'00000000-0000-0000-0000-000000000000'+NCHAR(34)+','+NCHAR(123)+''+NCHAR(34)+'synthetic'+NCHAR(34)+''+NCHAR(58)+''+NCHAR(91)+''+NCHAR(93)+','+NCHAR(34)+'query'+NCHAR(34)+''+NCHAR(58)+''+NCHAR(123)+''+NCHAR(125)+','+NCHAR(34)+'session'+NCHAR(34)+''+NCHAR(58)+''+NCHAR(123)+''+NCHAR(125)+''+NCHAR(125)+''+NCHAR(93)+''+NCHAR(93)+''))\n     WITH ([result_id] UNIQUEIDENTIFIER '$[0]',\n          [result_vars] NVARCHAR(MAX) '$[1]' AS JSON) AS [row]\nOUTER APPLY (SELECT ISNULL((SELECT (SELECT ISNULL((SELECT [t_user1].[name] AS [name]\n                     FROM [dbo].[user] AS [t_user1]\n                     FOR JSON PATH, INCLUDE_NULL_VALUES), '[]')) AS [user]\n             FOR JSON PATH, INCLUDE_NULL_VALUES, WITHOUT_ARRAY_WRAPPER), '[]')) \nAS [result]([json])\nFOR JSON PATH, INCLUDE_NULL_VALUES), '[]')",
     "plan": [

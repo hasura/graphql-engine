@@ -40,13 +40,13 @@ documentation](https://www.postgresql.org/docs/current/sql-createindex.html).
 Let's say the database receives a large number of requests of authors
 being queried by their name, for example:
 
-``` sql
+```sql
 SELECT * FROM authors WHERE name = 'J.K. Rowling';
 ```
 
 We can now create an index on the `name` column of the `authors` table:
 
-``` sql
+```sql
 CREATE INDEX author_name_index ON authors (name);
 ```
 

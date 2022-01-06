@@ -71,7 +71,7 @@ GraphQL default scalar with name **Int**.
 
 E.g.
 
-``` graphql
+```graphql
 objects: [
   {
     int_col: 27
@@ -85,7 +85,7 @@ GraphQL custom scalar type with name **float8**.
 
 E.g.
 
-``` graphql
+```graphql
 objects: [
   {
     float_col: 0.8
@@ -114,7 +114,7 @@ GraphQL custom scalar type with name **numeric**.
 
 E.g.
 
-``` graphql
+```graphql
 objects: [
   {
     numeric_col: 0.00000008
@@ -129,7 +129,7 @@ type represents `true` or `false`.
 
 E.g.
 
-``` graphql
+```graphql
 objects: [
   {
     is_published: true
@@ -144,7 +144,7 @@ single character.
 
 E.g.
 
-``` graphql
+```graphql
 objects: [
   {
     char_column: "a"
@@ -161,7 +161,7 @@ human-readable text.
 
 E.g.
 
-``` graphql
+```graphql
 objects: [
   {
     name: "Raven"
@@ -176,7 +176,7 @@ values are yyyy-mm-dd.
 
 E.g.
 
-``` graphql
+```graphql
 objects: [
   {
     date: "1996-03-15"
@@ -192,7 +192,7 @@ time zone. Allowed values should be of ISO8601 format (e.g. 17:30:15Z,
 
 E.g.
 
-``` graphql
+```graphql
 objects: [
   {
     time: "17:30:15+05:30"
@@ -209,7 +209,7 @@ time, with time zone. Allowed values should be of ISO8601 format (e.g.
 
 E.g.
 
-``` graphql
+```graphql
 objects: [
   {
     timestamptz_col: "2016-07-20T17:30:15+05:30"
@@ -224,7 +224,7 @@ value.
 
 E.g.
 
-``` graphql
+```graphql
 objects: [
   {
     json_col: "{ \"name\": \"raven\" }"
@@ -239,7 +239,7 @@ through a variable of type **jsonb**.
 
 E.g.
 
-``` graphql
+```graphql
 mutation insert_test($value : jsonb) {
   insert_test(
     objects: [
@@ -258,7 +258,7 @@ mutation insert_test($value : jsonb) {
 
 variables:
 
-``` json
+```json
 {
   "value": {
     "name": "raven"
@@ -274,7 +274,7 @@ GeoJSON.
 
 E.g.
 
-``` graphql
+```graphql
 mutation insertGeometry($point: geometry!) {
   insert_test(
     objects: [{
@@ -291,7 +291,7 @@ mutation insertGeometry($point: geometry!) {
 
 variables:
 
-``` json
+```json
 {
   "point": {
     "type": "Point",
@@ -308,7 +308,7 @@ GeoJSON.
 
 E.g.
 
-``` graphql
+```graphql
 mutation insertGeography($point: geography!) {
   insert_test(
     objects: [{
@@ -325,7 +325,7 @@ mutation insertGeography($point: geography!) {
 
 variables:
 
-``` json
+```json
 {
   "point": {
     "type": "Point",
@@ -344,7 +344,7 @@ E.g. For time without time zone type
 
 In ISO 8601 format
 
-``` graphql
+```graphql
 objects: [
   {
     time_col: "04:05:06.789"
@@ -354,7 +354,7 @@ objects: [
 
 E.g. For macaddr type
 
-``` graphql
+```graphql
 objects: [
   {
     macaddr_col: "08:00:2b:01:02:03"

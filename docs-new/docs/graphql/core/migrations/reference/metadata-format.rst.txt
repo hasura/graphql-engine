@@ -58,7 +58,7 @@ definitions and `custom type<custom_types>` definitions.
 **Example**: A query action called `greet` and two custom types called
 `SampleInput` and `SampleOutput`.
 
-``` graphql
+```graphql
 type Query {
   greet (
     arg1: SampleInput!
@@ -80,7 +80,7 @@ The `actions.yaml` file contains metadata related to `actions<actions>`.
 `<base_url>/greet` and two custom types called `SampleInput` and
 `SampleOutput`.
 
-``` yaml
+```yaml
 actions:
 - name: greet
   definition:
@@ -102,7 +102,7 @@ custom_types:
 **Example**: Same example as above but with the base URL of the
 `handler` passed as an environment variable.
 
-``` yaml
+```yaml
 actions:
 - name: greet
   definition:
@@ -129,7 +129,7 @@ The `allow_list.yaml` file contains the metadata related to
 **Example**: A query collection called `allowed-queries` set as the
 allow-list.
 
-``` yaml
+```yaml
 - collection: allowed-queries
 ```
 
@@ -141,7 +141,7 @@ endpoint or an environment variable containing the HTTP endpoint.
 
 **Example**: A cron trigger called `test-trigger`.
 
-``` yaml
+```yaml
 - name: test-trigger
 webhook: <webhook-url>
 schedule: 0 12 * * 1-5
@@ -177,7 +177,7 @@ The `query_collections.yaml` file conatins metadata information about
 **Example**: A query collection called `sample-collection` which
 contains two queries `test` and `test2`.
 
-``` yaml
+```yaml
 - name: sample-collection
   definition:
     queries:
@@ -208,7 +208,7 @@ The `remote_schemas.yaml` file contains the metadata related to
 **Example**: A remote schema called `my-remote-schema` with URL
 `<remote-schema-url>`.
 
-``` yaml
+```yaml
 - name: my-remote-schema
   definition:
     url: <remote-schema-url>
@@ -218,7 +218,7 @@ The `remote_schemas.yaml` file contains the metadata related to
 **Example**: A remote schema called `my-remote-schema` with URL passed
 as environment variable.
 
-``` yaml
+```yaml
 - name: my-remote-schema
   definition:
     url_from_env: REMOTE_SCHEMA
@@ -229,7 +229,7 @@ as environment variable.
 
 The `version.yaml` file contains the metadata format version.
 
-``` yaml
+```yaml
 version: 3
 ```
 
@@ -239,7 +239,7 @@ version: 3
 
 </div>
 
-``` bash
+```bash
 metadata
 ├── actions.graphql
 ├── actions.yaml
@@ -257,7 +257,7 @@ metadata
 
 ### databases.yaml
 
-``` yaml
+```yaml
 - name: default
   configuration:
     connection_info:
@@ -282,7 +282,7 @@ Note
 `database_url` can be set from an environment variable by specifying it
 as:
 
-``` yaml
+```yaml
 database_url:
   from_env: SOME_ENVIRONMENT_VARIABLE
 ```
@@ -291,7 +291,7 @@ database_url:
 
 ### public_t1.yaml
 
-``` yaml
+```yaml
 table:
 name: t1
 schema: public

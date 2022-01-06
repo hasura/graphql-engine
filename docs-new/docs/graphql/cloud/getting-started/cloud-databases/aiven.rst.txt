@@ -137,7 +137,7 @@ Then click on `Save changes`.
 
 The structure of the database connection URL looks as follows:
 
-``` bash
+```bash
 postgresql://<user-name>:<password>@<public-ip>:<postgres-port>/<db>
 ```
 

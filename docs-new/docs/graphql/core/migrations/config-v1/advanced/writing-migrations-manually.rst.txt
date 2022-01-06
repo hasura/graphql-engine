@@ -19,7 +19,7 @@ the SQL for the Postgres schema and YAML for Hasura metadata actions.
 
 1.  Set up the migration files:
 
-    ``` bash
+    ```bash
     hasura migrate create <name-of-migration>
     ```
 
@@ -32,6 +32,6 @@ the SQL for the Postgres schema and YAML for Hasura metadata actions.
 
 3.  Apply the migration:
 
-    ``` bash
+    ```bash
     hasura migrate apply
     ```

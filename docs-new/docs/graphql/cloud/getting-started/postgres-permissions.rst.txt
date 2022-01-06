@@ -26,7 +26,7 @@ Here's a sample SQL block that you can run on your database (as a
 **superuser**) to create the right credentials for a sample Hasura user
 called `hasurauser`:
 
-``` sql
+```sql
 -- create a separate user for hasura (if you don't already have one)
 CREATE USER hasurauser WITH PASSWORD 'hasurauser';
 
@@ -62,7 +62,7 @@ GRANT ALL ON ALL FUNCTIONS IN SCHEMA public TO hasurauser;
 
 You may notice the following commands throw warnings/errors:
 
-``` sql
+```sql
 postgres=> GRANT SELECT ON ALL TABLES IN SCHEMA information_schema TO hasurauser;
 WARNING:  no privileges were granted for "sql_packages"
 WARNING:  no privileges were granted for "sql_features"
@@ -98,7 +98,7 @@ On Google Cloud SQL, if you are creating a new user and giving the
 `above <postgres_permissions>` privileges, then you may notice that the
 following commands may throw warnings/errors:
 
-``` sql
+```sql
 postgres=> ALTER SCHEMA hdb_catalog OWNER TO hasurauser;
 ERROR:  must be member of role "hasurauser"
 ```
@@ -107,7 +107,7 @@ This happens because the superuser created by the cloud provider
 sometimes has different permissions. To fix this, you can run the
 following command first:
 
-``` sql
+```sql
 -- assuming "postgres" is the superuser that you are running the commands with.
 postgres=> GRANT hasurauser to postgres;
 GRANT

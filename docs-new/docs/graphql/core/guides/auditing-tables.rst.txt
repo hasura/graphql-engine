@@ -19,7 +19,7 @@ done through the GraphQL engine.
 
 For every mutation, Hasura roughly executes the following transaction:
 
-``` sql
+```sql
 BEGIN;
 SET local "hasura.user" = '{"x-hasura-role": "role", ... various session variables}'
 SQL related to the mutation
@@ -29,7 +29,7 @@ COMMIT;
 This information can therefore be captured in any trigger on the
 underlying tables by using the `current_setting` function as follows:
 
-``` sql
+```sql
 current_setting('hasura.user');
 ```
 

@@ -35,7 +35,7 @@ continue to function.
 `set_custom_types` is used to set user-defined GraphQL types. This API
 will replace the given types with existing ones.
 
-``` http
+```http
 POST /v1/query HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin

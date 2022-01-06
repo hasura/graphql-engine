@@ -28,7 +28,7 @@ make your local development easier.
 Launch VS Code Quick Open (Ctrl+P), paste the following command, and
 press enter.
 
-``` bash
+```bash
 ext install apollographql.vscode-apollo
 ```
 
@@ -37,7 +37,7 @@ ext install apollographql.vscode-apollo
 Create a file called `apollo.config.js` in the root of your project and
 add the following content:
 
-``` javascript
+```javascript
 module.exports = {
   client: {
     service: {

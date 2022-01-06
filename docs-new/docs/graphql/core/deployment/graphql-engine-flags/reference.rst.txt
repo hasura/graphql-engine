@@ -16,7 +16,7 @@ Table of contents
 
 Every GraphQL engine command is structured as:
 
-``` bash
+```bash
 $ graphql-engine <server-flags> serve <command-flags>
 ```
 
@@ -61,7 +61,7 @@ environment variables:
 
 Or you can specify the following options *(only via flags)*:
 
-``` none
+```none
 --host                      Postgres server host
 -p, --port                      Postgres server port
 -u, --user                      Database user name

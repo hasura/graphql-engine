@@ -69,7 +69,7 @@ CLI.
 
 Run:
 
-``` bash
+```bash
 hasura actions use-codegen
 ```
 
@@ -104,7 +104,7 @@ per your preferences. You can also set these values manually in
 
 For example:
 
-``` yaml
+```yaml
 version: "2"
 endpoint: http://localhost:8080
 metadata_directory: metadata
@@ -121,7 +121,7 @@ actions:
 
 To finally get auto-generated code for an action, run:
 
-``` bash
+```bash
 hasura actions codegen <action-name>
 ```
 

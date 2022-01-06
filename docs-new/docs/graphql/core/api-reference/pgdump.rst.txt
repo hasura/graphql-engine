@@ -29,7 +29,7 @@ All requests are `POST` requests to the `/v1alpha1/pg_dump` endpoint.
 
 ### Request
 
-``` http
+```http
 POST /v1alpha1/pg_dump HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
@@ -44,7 +44,7 @@ X-Hasura-Role: admin
 -   `opts`: Arguments to be passed to the `pg_dump` tool. Represented as
     array of strings. The underlying command that is executed is:
 
-    ``` bash
+    ```bash
     pg_dump $DATABASE_URL $OPTS -f $FILENAME
     ```
 
@@ -62,7 +62,7 @@ X-Hasura-Role: admin
 
 ### Sample response
 
-``` http
+```http
 HTTP/1.1 200 OK
 Content-Type: application/sql
 
@@ -92,7 +92,7 @@ be used to enable/disable this API. By default, The PG DumpAPI is
 enabled. To disable it, you need to explicitly state that this API is
 not enabled. i.e. remove it from the list of enabled APIs.
 
-``` bash
+```bash
 # enable only graphql & metadata apis, disable pgdump
 --enabled-apis="graphql,metadata"
 HASURA_GRAPHQL_ENABLED_APIS="graphql,metadata"

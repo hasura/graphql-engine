@@ -653,7 +653,7 @@ A [JSONObject](https://tools.ietf.org/html/rfc7159)
 
 An empty [JSONObject](https://tools.ietf.org/html/rfc7159)
 
-``` json
+```json
 {}
 ```
 
@@ -675,7 +675,7 @@ session variable.
 E.g. where `id` is derived from a session variable and `city` is a
 static value.
 
-``` json
+```json
 {
    "id" : "x-hasura-User-Id",
    "city" : "San Francisco"
@@ -1189,7 +1189,7 @@ the remote field maybe nested deeply in the remote schema.
 
 Examples:
 
-``` http
+```http
 POST /v1/query HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
@@ -1203,7 +1203,7 @@ X-Hasura-Role: admin
 }
 ```
 
-``` http
+```http
 POST /v1/query HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin

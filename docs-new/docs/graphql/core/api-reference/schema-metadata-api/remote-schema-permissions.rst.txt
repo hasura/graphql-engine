@@ -46,7 +46,7 @@ for setting argument presets.
 
 Suppose the following is the schema document of the remote.
 
-``` graphql
+```graphql
 type User {
   user_id: Int
   name: String
@@ -119,7 +119,7 @@ Let's say we want to impose some restrictions on the `user` role:
 
 The schema document, implementing the above restrictions will look like:
 
-``` graphql
+```graphql
 type User {
   user_id: Int
   name: String
@@ -171,7 +171,7 @@ schema {
 To add the remote schema permission for the role `user`, the following
 API should be called with the schema document.
 
-``` http
+```http
 POST /v1/query HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
@@ -201,7 +201,7 @@ input values. Argument presets are of two types:
 A preset value can be added to an input value via the `@preset`
 directive.
 
-``` graphql
+```graphql
 type User {
   name String
   id   Int
@@ -239,7 +239,7 @@ defining the preset.
 
 For example:
 
-``` graphql
+```graphql
 type Query {
   hello(text: String! @preset(value: "x-hasura-hello", static: true))
 }
@@ -276,7 +276,7 @@ called `payments` and we have a remote relationship
 
 Suppose, the `payments` remote schema is defined in the following way:
 
-``` graphql
+```graphql
 type Transaction {
   customer_id    Int!
   amount         Int!
@@ -291,7 +291,7 @@ type Query {
 
 And, the `customer` table is defined in the following manner.
 
-``` sql
+```sql
 CREATE TABLE customer (
   id SERIAL PRIMARY KEY,
   name TEXT NOT NULL
@@ -307,7 +307,7 @@ the `Transaction` object, and introduce a preset for the `limit`
 argument of the `transaction` field, resulting in the following schema
 being presented.
 
-``` graphql
+```graphql
 type Transaction {
   amount   Int!
   time     String!
@@ -326,7 +326,7 @@ Two changes have been made for the `user` role:
 
 Now, consider the following query:
 
-``` graphql
+```graphql
 query {
   customer {
     name
@@ -375,7 +375,7 @@ delete permission for a role on a remote schema.
 
 An example:
 
-``` http
+```http
 POST /v1/query HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin

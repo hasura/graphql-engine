@@ -40,25 +40,25 @@ There is a specific table for action logs that is managed by Hasura:
 
 ## Option 1: Delete log of a particular action invocation
 
-``` SQL
+```SQL
 DELETE FROM hdb_catalog.hdb_action_log WHERE id = '<async-action-id>';
 ```
 
 ## Option 2: Delete all logs of a specific action
 
-``` SQL
+```SQL
 DELETE FROM hdb_catalog.hdb_action_log WHERE action_name = '<action-name>';
 ```
 
 ## Option 3: Delete all logs older than a time period
 
-``` SQL
+```SQL
 DELETE FROM hdb_catalog.hdb_action_log WHERE created_at < NOW() - INTERVAL '3 months';
 ```
 
 ## Option 4: Delete all logs
 
-``` SQL
+```SQL
 DELETE FROM hdb_catalog.hdb_action_log;
 ```
 

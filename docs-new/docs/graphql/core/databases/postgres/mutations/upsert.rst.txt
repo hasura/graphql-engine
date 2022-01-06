@@ -53,7 +53,7 @@ Fetching Postgres constraint names
 You can fetch details of unique or primary key constraints on a table by
 running the following SQL:
 
-``` sql
+```sql
 SELECT * FROM "information_schema"."table_constraints" WHERE table_name='<table>' AND table_schema='<schema>';
 ```
 

@@ -33,7 +33,7 @@ traversing the graph via the output type's relationships.
 
 **For example**, given the action:
 
-``` graphql
+```graphql
 type Mutation {
   updateAuthor (
     id: Int!
@@ -52,7 +52,7 @@ We can create an object relationship called `updatedAuthor` between the
 
 The object type will now be modified as:
 
-``` graphql
+```graphql
 type UpdateAuthorOutput {
    author_id : Int!
    updatedAuthor: author
@@ -61,7 +61,7 @@ type UpdateAuthorOutput {
 
 Now we can make a mutation request with a complex response such as:
 
-``` graphql
+```graphql
 mutation updateAuthorAndGetArticles($id: Int, $name: String) {
   updateAuthor(id: $id, name: $name) {
     author_id
@@ -119,7 +119,7 @@ Go to `metadata/actions.yaml` in the Hasura project directory.
 
 Update the definition of the `UpdateAuthorOutput` object type as:
 
-``` yaml
+```yaml
 - custom_types
   - objects
     - name: UpdateAuthorOutput
@@ -145,7 +145,7 @@ API
 Action relationships can be added while defining custom types via the
 `set_custom_types metadata API <metadata_set_custom_types>`:
 
-``` http
+```http
 POST /v1/query HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin

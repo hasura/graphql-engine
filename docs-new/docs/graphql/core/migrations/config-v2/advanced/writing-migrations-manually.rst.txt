@@ -35,7 +35,7 @@ For `config v1`, see `manual_migrations_v1`.
 
 1.  Set up the migration files:
 
-    ``` bash
+    ```bash
     hasura migrate create <name-of-migration>
     ```
 
@@ -52,7 +52,7 @@ For `config v1`, see `manual_migrations_v1`.
 
 4.  Apply the migration and metadata:
 
-    ``` bash
+    ```bash
     hasura migrate apply
     hasura metadata apply
     ```

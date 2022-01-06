@@ -31,7 +31,7 @@ replaces the older `schema/metadata API <schema_metadata_apis>`.
 `set_custom_types` is used to set user-defined GraphQL types. This API
 will replace the given types with existing ones.
 
-``` http
+```http
 POST /v1/metadata HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin

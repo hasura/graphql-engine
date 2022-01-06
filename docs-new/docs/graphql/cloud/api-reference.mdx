@@ -57,7 +57,7 @@ List of some useful APIs:
 
 ### Create a Project
 
-``` graphql
+```graphql
 mutation createProject {
   createTenant(
     cloud: "aws"
@@ -78,7 +78,7 @@ mutation createProject {
 
 ### Get Project tenant id
 
-``` graphql
+```graphql
 query getProjectTenantId {
   projects_by_pk(
     id: "7a79cf94-0e53-4520-a560-1b02bf522f08"
@@ -93,7 +93,7 @@ query getProjectTenantId {
 
 ### Get Tenant details
 
-``` graphql
+```graphql
 query getTenantDetails {
   tenant_by_pk(
     id: "7a79cf94-0e53-4520-a560-1b02bf522f08"
@@ -110,7 +110,7 @@ query getTenantDetails {
 
 ### Delete a Tenant
 
-``` graphql
+```graphql
 mutation deleteTenant {
   deleteTenant(
     tenantId: "7a79cf94-0e53-4520-a560-1b02bf522f08"
@@ -122,7 +122,7 @@ mutation deleteTenant {
 
 ### Get ENV Vars
 
-``` graphql
+```graphql
 query getTenantENV {
   getTenantEnv(
     tenantId: "7a79cf94-0e53-4520-a560-1b02bf522f08"
@@ -135,7 +135,7 @@ query getTenantENV {
 
 ### Update ENV Vars
 
-``` graphql
+```graphql
 mutation updateTenantEnv {
   updateTenantEnv(
     tenantId: "7a79cf94-0e53-4520-a560-1b02bf522f08"
@@ -156,7 +156,7 @@ mutation updateTenantEnv {
 Schedules the creation of a Hasura Cloud project with metadata and
 migrations from a branch of a GitHub repo.
 
-``` graphql
+```graphql
 mutation createGitHubPreviewApp {
   createGitHubPreviewApp (
     payload: {

@@ -38,13 +38,13 @@ Here are some example scenarios:
 
 To roll back a particular migration version:
 
-``` bash
+```bash
 hasura migrate apply --version 1550925483858 --type down
 ```
 
 To roll back the last 2 migration versions:
 
-``` bash
+```bash
 hasura migrate apply --down 2
 ```
 
@@ -71,7 +71,7 @@ back Hasura metadata to a particular state you need the metadata
 snapshot at that point. This is typically achieved by marking stable
 checkpoints of a project in version control via commits.
 
-``` bash
+```bash
 git checkout <stable-feature-commit>
 
 hasura metadata apply

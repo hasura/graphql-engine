@@ -53,7 +53,7 @@ the older `schema/metadata API <schema_metadata_apis>`.
 
 An example:
 
-``` http
+```http
 POST /v2/query HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
@@ -76,7 +76,7 @@ Example: If we were to drop the 'bio' column from the author table
 (let's say the column is used in some permission), you would see an
 error.
 
-``` http
+```http
 POST /v2/query HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
@@ -90,7 +90,7 @@ X-Hasura-Role: admin
 }
 ```
 
-``` http
+```http
 HTTP/1.1 400 BAD REQUEST
 Content-Type: application/json
 
@@ -102,7 +102,7 @@ Content-Type: application/json
 
 We can however, cascade these changes.
 
-``` http
+```http
 POST /v2/query HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
@@ -117,7 +117,7 @@ X-Hasura-Role: admin
 }
 ```
 
-``` http
+```http
 HTTP/1.1 200 OK
 Content-Type: application/json
 
@@ -132,7 +132,7 @@ Example: If we were to drop a foreign key constraint from the article
 table (let's say the column involved in the foreign key is used to
 define a relationship), you would see an error.
 
-``` http
+```http
 POST /v2/query HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
@@ -146,7 +146,7 @@ X-Hasura-Role: admin
 }
 ```
 
-``` http
+```http
 HTTP/1.1 400 BAD REQUEST
 Content-Type: application/json
 
@@ -158,7 +158,7 @@ Content-Type: application/json
 
 We can however, cascade these changes.
 
-``` http
+```http
 POST /v2/query HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
@@ -173,7 +173,7 @@ X-Hasura-Role: admin
 }
 ```
 
-``` http
+```http
 HTTP/1.1 200 OK
 Content-Type: application/json
 
@@ -240,7 +240,7 @@ columns.
 
 An SQL query returning results.
 
-``` http
+```http
 POST /v2/query HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
@@ -254,7 +254,7 @@ X-Hasura-Role: admin
 }
 ```
 
-``` http
+```http
 HTTP/1.1 200 OK
 Content-Type: application/json
 
@@ -279,7 +279,7 @@ Content-Type: application/json
 
 An SQL query to create a table:
 
-``` http
+```http
 POST /v2/query HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
@@ -294,7 +294,7 @@ X-Hasura-Role: admin
 }
 ```
 
-``` http
+```http
 HTTP/1.1 200 OK
 Content-Type: application/json
 

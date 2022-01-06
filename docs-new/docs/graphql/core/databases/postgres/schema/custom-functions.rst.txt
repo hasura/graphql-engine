@@ -89,7 +89,7 @@ CLI
 
 2.  Apply the migration by running:
 
-    ``` bash
+    ```bash
     hasura migrate apply
     ```
 
@@ -102,7 +102,7 @@ API
 You can add a function by making an API call to the
 `run_sql metadata API <run_sql>`:
 
-``` http
+```http
 POST /v1/query HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
@@ -159,7 +159,7 @@ CLI
 1.  To track the function and expose it over the GraphQL API, edit the
     `functions.yaml` file in the `metadata` directory as follows:
 
-    ``` yaml
+    ```yaml
     - function:
         schema: public
         name: <function name>
@@ -167,7 +167,7 @@ CLI
 
 2.  Apply the metadata by running:
 
-    ``` bash
+    ```bash
     hasura metadata apply
     ```
 
@@ -181,7 +181,7 @@ To track the function and expose it over the GraphQL API, make the
 following API call to the
 `track_function metadata API <track_function>`:
 
-``` http
+```http
 POST /v1/query HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
@@ -228,14 +228,14 @@ Let's see a few example use cases for custom functions:
 Let's take a look at an example where the `SETOF` table is already part
 of the existing schema:
 
-``` plpgsql
+```plpgsql
 articles(id integer, title text, content text)
 ```
 
 Let's say we've created and tracked a custom function,
 `search_articles`, with the following definition:
 
-``` plpgsql
+```plpgsql
 CREATE FUNCTION search_articles(search text)
 RETURNS SETOF articles AS $$
     SELECT *
@@ -289,21 +289,21 @@ First install the
 [pg_trgm](https://www.postgresql.org/docs/current/pgtrgm.html)
 PostgreSQL extension:
 
-``` sql
+```sql
 CREATE EXTENSION pg_trgm;
 ```
 
 Next create a GIN (or GIST) index in your database for the columns
 you'll be querying:
 
-``` sql
+```sql
 CREATE INDEX address_gin_idx ON properties
 USING GIN ((unit || ' ' || num || ' ' || street || ' ' || city || ' ' || region || ' ' || postcode) gin_trgm_ops);
 ```
 
 And finally create the custom SQL function in the Hasura console:
 
-``` plpgsql
+```plpgsql
 CREATE FUNCTION search_properties(search text)
 RETURNS SETOF properties AS $$
     SELECT *
@@ -369,7 +369,7 @@ Say you have 2 tables, for user and landmark location data, with the
 following definitions (*this example uses the popular spatial database
 extension,* [PostGIS](https://postgis.net/)):
 
-``` sql
+```sql
 -- User location data
 CREATE TABLE user_location (
   user_id INTEGER PRIMARY KEY,
@@ -395,7 +395,7 @@ create this table and then create our location search function.
 
 -   create and track the following table:
 
-    ``` sql
+    ```sql
     -- SETOF table
     CREATE TABLE user_landmarks (
       user_id INTEGER,
@@ -406,7 +406,7 @@ create this table and then create our location search function.
 
 -   create and track the following function:
 
-    ``` plpgsql
+    ```plpgsql
     -- function returns a list of landmarks near a user based on the
     -- input arguments distance_kms and userid
     CREATE FUNCTION search_landmarks_near_user(userid integer, distance_kms integer)
@@ -487,7 +487,7 @@ You can query aggregations on a function result using the
 **For example**, count the number of articles returned by the function
 defined in the text-search example above:
 
-``` graphql
+```graphql
 query {
   search_articles_aggregate(
     args: {search: "hasura"}
@@ -507,7 +507,7 @@ etc. are also available for use with function-based queries.
 **For example**, limit the number of articles returned by the function
 defined in the text-search example above:
 
-``` graphql
+```graphql
 query {
   search_articles(
     args: {search: "hasura"},
@@ -531,7 +531,7 @@ definition.
 `PostGIS functions example <custom_functions_postgis>`, the function
 definition can be updated as follows:
 
-``` plpgsql
+```plpgsql
 -- input arguments distance_kms (default: 2) and userid
 CREATE FUNCTION search_landmarks_near_user(userid integer, distance_kms integer default 2)
 ```
@@ -591,7 +591,7 @@ object where keys are session variable names (in lower case) and values
 are strings. Use the `->>` JSON operator to fetch the value of a session
 variable as shown in the following example.
 
-``` plpgsql
+```plpgsql
 -- single text column table
 CREATE TABLE text_result(
   result text

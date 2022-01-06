@@ -36,7 +36,7 @@ All requests are `POST` requests to the `/v2/query` endpoint.
 
 ## Request structure
 
-``` http
+```http
 POST /v2/query HTTP/1.1
 
 {
@@ -128,7 +128,7 @@ be used to enable/disable this API. By default, the schema/metadata API
 is enabled. To disable it, you need to explicitly state that this API is
 not enabled i.e. remove it from the list of enabled APIs.
 
-``` bash
+```bash
 # enable only graphql api, disable metadata and pgdump
 --enabled-apis="graphql"
 HASURA_GRAPHQL_ENABLED_APIS="graphql"

@@ -34,7 +34,7 @@ copy-pasted and executed.
 
 Once the CLI is installed, initialize the SDK:
 
-``` bash
+```bash
 gcloud init
 ```
 
@@ -43,7 +43,7 @@ gcloud init
 A Google Cloud Project is used to group together resources. We'll create
 a project called `hasura` for this guide.
 
-``` bash
+```bash
 gcloud projects create hasura
 ```
 
@@ -52,7 +52,7 @@ gcloud projects create hasura
 Create a Cloud SQL Postgres instance called `hasura-postgres` in the
 `us-west2` region.
 
-``` bash
+```bash
 gcloud sql instances create hasura-postgres --database-version POSTGRES_9_6 \
        --cpu 1 --memory 3840MiB --region us-west2 --project hasura
 ```
@@ -60,7 +60,7 @@ gcloud sql instances create hasura-postgres --database-version POSTGRES_9_6 \
 Once the instance is created, set a password for the default `postgres`
 user. Make sure you substitute `[PASSWORD]` with a strong password.
 
-``` bash
+```bash
 gcloud sql users set-password postgres --instance hasura-postgres \
        --password [PASSWORD] --project hasura
 ```
@@ -73,14 +73,14 @@ API. Visit the below link in a browser to enable the API. Replace
 not using the same name. Note that, you will need a billing account
 added to the project to enable the API.
 
-``` bash
+```bash
 https://console.cloud.google.com/apis/api/container.googleapis.com/overview?project=hasura
 ```
 
 Once the API is enabled, create a new Kubernetes cluster called
 `hasura-k8s` in the `us-west2-a` zone with 1 node.
 
-``` bash
+```bash
 gcloud container clusters create hasura-k8s --zone us-west2-a \
        --num-nodes 1 --project hasura
 ```
@@ -110,7 +110,7 @@ Create a Kubernetes secret with this JSON key file; replace
 `[JSON_KEY_FILE_PATH]` with the filename including the complete path of
 the download JSON key file.
 
-``` bash
+```bash
 kubectl create secret generic cloudsql-instance-credentials \
         --from-file=credentials.json=[JSON_KEY_FILE_PATH]
 ```
@@ -118,7 +118,7 @@ kubectl create secret generic cloudsql-instance-credentials \
 Create another secret with the database username and password (use the
 `[PASSWORD]` used earlier):
 
-``` bash
+```bash
 kubectl create secret generic cloudsql-db-credentials \
         --from-literal=username=postgres --from-literal=password=[PASSWORD]
 ```
@@ -127,14 +127,14 @@ kubectl create secret generic cloudsql-db-credentials \
 
 Download the `deployment.yaml` file:
 
-``` bash
+```bash
 wget https://raw.githubusercontent.com/hasura/graphql-engine/stable/install-manifests/google-cloud-k8s-sql/deployment.yaml
 ```
 
 Get the `[INSTANCE_CONNECTION_NAME]` using the following command and
 note it down.
 
-``` bash
+```bash
 gcloud sql instances describe hasura-postgres \
        --format="value(connectionName)" --project hasura
 ```
@@ -145,19 +145,19 @@ you've followed this guide without modifying any names.
 
 Create the deployment:
 
-``` bash
+```bash
 kubectl apply -f deployment.yaml
 ```
 
 Ensure the pods are running:
 
-``` bash
+```bash
 kubectl get pods
 ```
 
 If there are any errors, check the logs of the GraphQL engine:
 
-``` bash
+```bash
 kubectl logs deployment/hasura -c graphql-engine
 ```
 
@@ -168,7 +168,7 @@ kubectl logs deployment/hasura -c graphql-engine
 Now that we have Hasura running, let's expose it on an IP using a
 LoadBalancer.
 
-``` bash
+```bash
 kubectl expose deploy/hasura \
      --port 80 --target-port 8080 \
      --type LoadBalancer
@@ -179,7 +179,7 @@ kubectl expose deploy/hasura \
 Wait for the external IP to be allocated, check the status using the
 command below. It usually takes a couple of minutes.
 
-``` bash
+```bash
 kubectl get service
 ```
 
@@ -192,7 +192,7 @@ Let's expose Hasura with
 [Ingress](https://cloud.google.com/kubernetes-engine/docs/concepts/ingress/).
 Create service:
 
-``` yaml
+```yaml
 apiVersion: v1
 kind: Service
 metadata:
@@ -211,7 +211,7 @@ spec:
 
 Create Managed Certificate:
 
-``` yaml
+```yaml
 apiVersion: networking.gke.io/v1beta1
 kind: ManagedCertificate
 metadata:
@@ -223,7 +223,7 @@ spec:
 
 Create Ingress:
 
-``` yaml
+```yaml
 apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
@@ -245,13 +245,13 @@ spec:
 Check the status for pods to see if they are running. If there are any
 errors, check the logs of the GraphQL engine:
 
-``` bash
+```bash
 kubectl logs deployment/hasura -c graphql-engine
 ```
 
 You might also want to check the logs for cloudsql-proxy:
 
-``` bash
+```bash
 kubectl logs deployment/hasura -c cloudsql-proxy
 ```
 
@@ -263,6 +263,6 @@ created earlier.
 
 To clean up the resources created, just delete the Google Cloud Project:
 
-``` bash
+```bash
 gcloud projects delete hasura
 ```

@@ -34,18 +34,18 @@ scenarios:
 
 To roll back all the applied migrations, execute:
 
-``` bash
+```bash
 hasura migrate apply --down all
 ```
 
 To roll back the last 2 migration versions:
 
-``` bash
+```bash
 hasura migrate apply --down 2
 ```
 
 To roll back a particular migration version:
 
-``` bash
+```bash
 hasura migrate apply --version 1550925483858 --type down
 ```

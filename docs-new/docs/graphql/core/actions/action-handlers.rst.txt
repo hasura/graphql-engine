@@ -24,7 +24,7 @@ arguments and the session variables.
 
 The request payload is of the format:
 
-``` json
+```json
 {
   "action": {
     "name": "<action-name>"
@@ -64,7 +64,7 @@ successful response.
 To return an error response, you must send back an error object. An
 error object looks like:
 
-``` json
+```json
 {
   "message": "<mandatory-error-message>",
   "extensions": "<optional-json-object>"
@@ -77,7 +77,7 @@ If present, `extensions` should be a JSON object, which may have a
 status code field `code`, along with other data you may want to add to
 your errors:
 
-``` json
+```json
 {
   "code": "<optional-error-code>",
   "optionalField1": "<custom-data-here>"
@@ -96,7 +96,7 @@ field may also be supplied at the root of the error object, i.e. at
 
 For example, consider the following mutation.
 
-``` graphql
+```graphql
 extend type Mutation {
   UserLogin (username: String!, password: String!): UserInfo
 }
@@ -109,7 +109,7 @@ type UserInfo {
 
 Let's say, the following mutation is executed:
 
-``` graphql
+```graphql
 mutation {
   UserLogin (username: "jake", password: "secretpassword") {
     accessToken
@@ -120,7 +120,7 @@ mutation {
 
 Hasura will call the handler with the following payload:
 
-``` json
+```json
 {
   "action": {
     "name": "UserLogin"
@@ -141,7 +141,7 @@ To return a success response, you must send the response of the action's
 output type (in this case, `UserInfo`) with a status code `2xx`. So a
 sample response would be:
 
-``` json
+```json
 {
   "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVC",
   "userId": 423
@@ -151,7 +151,7 @@ sample response would be:
 To throw an error, you must send a response of the following type while
 setting the status code as `4xx`.
 
-``` json
+```json
 {
   "message": "invalid credentials"
 }
@@ -233,7 +233,7 @@ Go to `metadata/actions.yaml` in the Hasura project directory.
 Update the definition of your action by adding the action secret as a
 header:
 
-``` yaml
+```yaml
 - actions
   - name: actionName
     definition:
@@ -256,7 +256,7 @@ API
 Headers can be set when creating `creating <metadata_create_action>` or
 `updating <metadata_update_action>` an action via the metadata API.
 
-``` http
+```http
 POST /v1/query HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
@@ -336,7 +336,7 @@ environment variable.
 The following is an example of a simple authorization middleware with
 Express which can be included before the request handler logic:
 
-``` javascript
+```javascript
 // use authorization for all routes
 app.use(authorizationMiddleware);
 

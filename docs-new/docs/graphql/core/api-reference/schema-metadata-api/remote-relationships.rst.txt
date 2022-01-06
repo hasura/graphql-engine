@@ -34,7 +34,7 @@ continue to function.
 `create_remote_relationship` is used to create a new remote relationship
 with an existing remote schema.
 
-``` http
+```http
 POST /v1/query HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
@@ -72,7 +72,7 @@ X-Hasura-Role: admin
 `update_remote_relationship` is used to update an existing remote
 relationship.
 
-``` http
+```http
 POST /v1/query HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
@@ -113,7 +113,7 @@ X-Hasura-Role: admin
 `delete_remote_relationship` is used to delete an existing remote
 relationship.
 
-``` http
+```http
 POST /v1/query HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin

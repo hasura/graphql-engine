@@ -23,7 +23,7 @@ In order for the Hasura CLI to work, the `config.yaml` file is required
 (created automatically via the `hasura init<hasura_init>` command). The
 configuration file can be configured with the following config keys:
 
-``` yaml
+```yaml
 version: 
 endpoint: 
 admin_secret:

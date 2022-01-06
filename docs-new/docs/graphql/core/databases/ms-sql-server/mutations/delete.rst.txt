@@ -17,7 +17,7 @@ Table of contents
 **For example**, the auto-generated schema for the delete mutation field
 for a table `article` looks like the following:
 
-``` graphql
+```graphql
 delete_article (
   where: article_bool_exp!
 ): article_mutation_response

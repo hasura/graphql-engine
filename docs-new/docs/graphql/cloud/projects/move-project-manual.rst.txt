@@ -53,7 +53,7 @@ See `deleting projects <delete_project>` to delete the earlier project.
     existing migrations as applied on the new project using the
     following Hasura CLI command:
 
-    ``` bash
+    ```bash
     hasura migrate apply --skip-execution --endpoint <new-project-endpoint> --admin-secret <new-project-admin-secret> --all-databases
     ```
 

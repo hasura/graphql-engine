@@ -31,7 +31,7 @@ replaces the older `schema/metadata API <schema_metadata_apis>`.
 `pg_create_event_trigger` is used to create a new event trigger or
 replace an existing event trigger.
 
-``` http
+```http
 POST /v1/metadata HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
@@ -96,7 +96,7 @@ X-Hasura-Role: admin
 
 `pg_delete_event_trigger` is used to delete an event trigger.
 
-``` http
+```http
 POST /v1/metadata HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
@@ -125,7 +125,7 @@ you can redeliver it using this API. Note that this will reset the count
 of retries so far. If the event fails to deliver, it will be retried
 automatically according to its `retry_conf`.
 
-``` http
+```http
 POST /v1/metadata HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
@@ -149,7 +149,7 @@ X-Hasura-Role: admin
 `invoke_event_trigger` is used to invoke an event trigger with custom
 payload.
 
-``` http
+```http
 POST /v1/metadata HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin

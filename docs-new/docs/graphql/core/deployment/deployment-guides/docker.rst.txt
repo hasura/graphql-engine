@@ -30,7 +30,7 @@ The
 repo contains all installation manifests required to deploy Hasura
 anywhere. Get the docker compose file from there:
 
-``` bash
+```bash
 # in a new directory run
 wget https://raw.githubusercontent.com/hasura/graphql-engine/stable/install-manifests/docker-compose/docker-compose.yaml
 # or run
@@ -42,13 +42,13 @@ curl https://raw.githubusercontent.com/hasura/graphql-engine/stable/install-mani
 The following command will run Hasura GraphQL engine along with a
 Postgres database to store its metadata.
 
-``` bash
+```bash
 $ docker-compose up -d
 ```
 
 Check if the containers are running:
 
-``` bash
+```bash
 $ docker ps
 
 CONTAINER ID IMAGE                 ... CREATED STATUS PORTS          ...
@@ -63,7 +63,7 @@ publicly accessible, you need to configure an admin secret key.
 
 ### Run the Docker container with an admin-secret env var
 
-``` yaml
+```yaml
 graphql-engine:
   image: hasura/graphql-engine:v2.0.0
   environment:
@@ -105,7 +105,7 @@ authentication.
 You can check the logs of the Hasura GraphQL engine deployed using
 Docker by checking the logs of the GraphQL engine container:
 
-``` bash
+```bash
 $ docker ps
 
 CONTAINER ID IMAGE                 ... CREATED STATUS PORTS          ...
