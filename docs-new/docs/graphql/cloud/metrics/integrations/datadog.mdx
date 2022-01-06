@@ -1,15 +1,18 @@
-<div class="meta" description="Datadog Integration on Hasura Cloud"
-keywords="hasura, docs, metrics, integration, export logs, datadog">
+---
+title: Datadog Integration
+sidebar_label: Datadog
+sidebar_position: 2
+description: Datadog Integration on Hasura Cloud
+keywords: 
+ - hasura
+ - docs
+ - metrics
+ - integration
+ - export logs
+ - datadog
+---
 
-</div>
-
-# Datadog Integration
-
-<div class="contents" backlinks="none" depth="2" local="">
-
-Table of contents
-
-</div>
+import Thumbnail from "@site/src/components/Thumbnail/Thumbnail";
 
 ## Introduction
 
@@ -17,30 +20,21 @@ You can export metrics and operation logs of your Hasura Cloud project
 to your organisation's Datadog dashboard. This can be configured on the
 integrations tab on the project's setting page.
 
-<div class="note">
-
-<div class="title">
-
-Note
-
-</div>
-
+:::note
 Datadog Integration is only available for Hasura Cloud projects on the
 `Standard` (pay-as-you-go) tier and above.
-
-</div>
+:::
 
 ## Configure Datadog integration
 
 Navigate to the integrations tab on project settings page to find
 Datadog integration.
 
-<div class="thumbnail" alt="Configure Datadog Integration"
-width="1146px">
-
-/img/graphql/cloud/metrics/integrate-datadog.png
-
-</div>
+<Thumbnail
+  src="/img/graphql/cloud/metrics/integrate-datadog.png"
+  alt="Configure Datadog Integration"
+  width="437px"
+/>
 
 Select the Datadog API region and enter the Datadog API key (can be
 retrieved by navigating to Datadog's settings page by clicking the
@@ -55,12 +49,11 @@ exported logs and metrics.
 | Tags         | Tags associated with your logs and metrics. Default tags `project_id` and `project_name` are exported with all logs and metrics. A source tag `hasura-cloud-metrics` is added to all exported logs.                                                                                                                                          |
 | Service Name | The name of the application or service generating the log events.                                                                                                                                                                                                                                                                            |
 
-<div class="thumbnail" alt="Configure Datadog Integration"
-width="437px">
-
-/img/graphql/cloud/metrics/configure-datadog.png
-
-</div>
+<Thumbnail
+  src="/img/graphql/cloud/metrics/configure-datadog.png"
+  alt="Configure Datadog Integration"
+  width="437px"
+/>
 
 After adding appropriate values, click `Save`.
 
@@ -72,58 +65,46 @@ successfully exported, `Last Exported` is continuously updated,
 indicating the timestamp of the last log line successfully exported to
 your Datadog dashboard.
 
-<div class="thumbnail" alt="Datadog Integration successfully configured"
-width="1146px">
-
-/img/graphql/cloud/metrics/configure-datadog-done.png
-
-</div>
+<Thumbnail
+  src="/img/graphql/cloud/metrics/configure-datadog-done.png"
+  alt="Datadog Integration successfully configured"
+  width="437px"
+/>
 
 In case there is an error while exporting logs to datadog, the dot is
 red and the HTTP status code of the error is displayed right below it.
 
-<div class="thumbnail" alt="Datadog Integration successfully configured"
-width="1146px">
-
-/img/graphql/cloud/metrics/configure-datadog-fail.png
-
-</div>
+<Thumbnail
+  src="/img/graphql/cloud/metrics/configure-datadog-fail.png"
+  alt="Datadog Integration successfully configured"
+  width="437px"
+/>
 
 ## View logs
 
 The logs can be viewed in your Datadog dashboard, under the `Logs` tab.
 To navigate to the same, click `View Logs`.
 
-<div class="thumbnail" alt="Datadog Integration successfully configured"
-width="1146px">
+<Thumbnail
+  src="/img/graphql/cloud/metrics/datadog-view-logs.png"
+  alt="Datadog Integration successfully configured"
+  width="437px"
+/>
 
-/img/graphql/cloud/metrics/datadog-view-logs.png
-
-</div>
-
-<div class="thumbnail" alt="Logs successfully exported to Datadog"
-width="1146px">
-
-/img/graphql/cloud/metrics/datadog-logs.png
-
-</div>
+<Thumbnail
+  src="/img/graphql/cloud/metrics/datadog-logs.png"
+  alt="Logs successfully exported to Datadog"
+  width="437px"
+/>
 
 To view only logs exported by Hasura Cloud, filter your logs using
 `host` and/or `tags` you configured with this integration.
 
-<div class="note">
-
-<div class="title">
-
-Note
-
-</div>
-
+:::note
 Datadog allows ingestion of logs with maximum size 256kB for a single
 log. If a log exceeds this limit, Datadog will truncate the log at
 256kB.
-
-</div>
+:::
 
 ## View metrics
 
@@ -145,20 +126,18 @@ Graphs for all the above metrics can be viewed in your Datadog
 dashboard, under the `Metrics` tab. To navigate to the same, click
 `View Metrics`.
 
-<div class="thumbnail" alt="Datadog Integration successfully configured"
-width="1146px">
-
-/img/graphql/cloud/metrics/datadog-view-metrics.png
-
-</div>
+<Thumbnail
+  src="/img/graphql/cloud/metrics/datadog-view-metrics.png"
+  alt="Datadog Integration successfully configured"
+  width="437px"
+/>
 
 Select the graphs you want to view from the metrics explorer.
 Alternatively, select the `host` you configured with this integration to
 see all the graphs corresponding to metrics exported by Hasura Cloud.
 
-<div class="thumbnail" alt="Metrics successfully exported to Datadog"
-width="1146px">
-
-/img/graphql/cloud/metrics/datadog-metrics.png
-
-</div>
+<Thumbnail
+  src="/img/graphql/cloud/metrics/datadog-metrics.png"
+  alt="Metrics successfully exported to Datadog"
+  width="437px"
+/>
