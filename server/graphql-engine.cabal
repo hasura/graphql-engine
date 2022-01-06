@@ -379,6 +379,10 @@ library
                      , Hasura.Backends.MSSQL.DDL.BoolExp
                      , Hasura.Backends.MSSQL.DDL.RunSQL
                      , Hasura.Backends.MSSQL.DDL.Source
+                     , Hasura.Backends.MSSQL.Execute.MutationResponse
+                     , Hasura.Backends.MSSQL.Execute.Delete
+                     , Hasura.Backends.MSSQL.Execute.Insert
+                     , Hasura.Backends.MSSQL.Execute.Update
                      , Hasura.Backends.MSSQL.FromIr
                      , Hasura.Backends.MSSQL.Instances.API
                      , Hasura.Backends.MSSQL.Instances.Execute
