@@ -55,6 +55,16 @@ Please read the docusaurus docs about this here - https://docusaurus.io/docs/sid
 </details>
 
 <details>
+<summary>Why is live docs content different from the txt files?</summary>
+
+The transformed _txt_ *txt* files are populated from `main` branch which is always ahead of the live version.
+We deploy only when there is major / simignoficant changes are added. Hence, the difference.
+
+We would recommend not to copy content from live but use it only for reference. Please always refer the original `.rst` file under `<REPO_ROOT>/docs/graphql/` for content reference.
+
+</details>
+
+<details>
 <summary>index file routes are resolved to `directory/` and not `directory/index`</summary>
 
 Use `slug` metadata to manually set the slug to `directory/index`. Please check [this PR on docusaurus](https://github.com/facebook/docusaurus/pull/5830) for more information.
