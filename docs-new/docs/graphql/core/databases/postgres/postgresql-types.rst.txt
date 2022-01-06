@@ -1,0 +1,376 @@
+<div class="meta"
+description="Supported Postgres types in the Hasura API"
+keywords="hasura, docs, postgres types">
+
+</div>
+
+# Postgres: Supported types
+
+<div class="contents" backlinks="none" depth="1" local="">
+
+Table of contents
+
+</div>
+
+## Introduction
+
+List of PostgreSQL types supported by the Hasura GraphQL engine with
+their equivalent Hasura types:
+
+| Name                                    | Aliases            | Description                                                 | Hasura Type                        |
+| --------------------------------------- | ------------------ | ----------------------------------------------------------- | ---------------------------------- |
+| bigint                                  | int8               | signed eight-byte integer                                   | String_                            |
+| bigserial                               | serial8            | autoincrementing eight-byte integer                         | String_                            |
+| bit [ (n) ]                             |                    | fixed-length bit string                                     | Implicit_                          |
+| bit varying [ (n) ]                     | varbit [ (n) ]     | variable-length bit string                                  | Implicit_                          |
+| boolean                                 | bool               | logical Boolean (true/false)                                | Bool_                              |
+| box                                     |                    | rectangular box on a plane                                  | Implicit_                          |
+| bytea                                   |                    | binary data (“byte array”)                                  | Implicit_                          |
+| character [ (n) ]                       | char [ (n) ]       | fixed-length character string                               | Char_                              |
+| character varying [ (n) ]               | varchar [ (n) ]    | variable-length character string                            | String_                            |
+| cidr                                    |                    | IPv4 or IPv6 network address                                |  Implicit_                         |
+| circle                                  |                    | circle on a plane                                           | Implicit_                          |
+| date                                    |                    | calendar date (year, month, day)                            | Date_                              |
+| double precision                        | float8             | double precision floating-point number (8 bytes)            | Float_                             |
+| inet                                    |                    | IPv4 or IPv6 host address                                   | Implicit_                          |
+| integer                                 | int, int4          | signed four-byte integer                                    | Int_                               |
+| interval [ fields ] [ (p) ]             |                    | time span                                                   | Implicit_                          |
+| json                                    |                    | textual JSON data                                           | JSON_                              |
+| jsonb                                   |                    | binary JSON data, decomposed                                | JSONB_                             |
+| line                                    |                    | infinite line on a plane                                    | Implicit_                          |
+| lseg                                    |                    | line segment on a plane                                     |  Implicit_                         |
+| ltree                                   |                    | labels of data stored in a hierarchical tree-like structure | Implicit_                          |
+| geometry                                |                    | PostGIS Geometry type                                       |  Geometry_                         |
+| geography                               |                    | PostGIS Geography type                                      |  Geography_                        |
+| macaddr                                 |                    | MAC (Media Access Control) address                          |  Implicit_                         |
+| macaddr8                                |                    | MAC (Media Access Control) address (EUI-64 format)          |  Implicit_                         |
+| money                                   |                    | currency amount                                             | Implicit_                          |
+| numeric [ (p, s) ]                      | decimal [ (p, s) ] | exact numeric of selectable precision                       |              Numeric_              |
+| path                                    |                    | geometric path on a plane                                   | Implicit_                          |
+| pg_lsn                                  |                    | PostgreSQL Log Sequence Number                              | Implicit_                          |
+| point                                   |                    | geometric point on a plane                                  | Implicit_                          |
+| polygon                                 |                    | closed geometric path on a plane                            | Implicit_                          |
+| real                                    | float4             | single precision floating-point number (4 bytes)            | Float_                             |
+| smallint                                | int2               | signed two-byte integer                                     | Int_                               |
+| smallserial                             | serial2            | autoincrementing two-byte integer                           | Int_                               |
+| serial                                  | serial4            | autoincrementing four-byte integer                          | Int_                               |
+| text                                    |                    | variable-length character string                            | String_                            |
+| time [ (p) ] [ without time zone ]      |                    | time of day (no time zone)                                  | Implicit_                          |
+| time [ (p) ] with time zone             | timetz             | time of day, including time zone                            | Timetz_                            |
+| timestamp [ (p) ] [ without time zone ] |                    | date and time (no time zone)                                | Implicit_                          |
+| timestamp [ (p) ] with time zone        | timestamptz        | date and time, including time zone                          | Timestamptz_                       |
+| tsquery                                 |                    | text search query                                           | Implicit_                          |
+| tsvector                                |                    | text search document                                        | Implicit_                          |
+| txid_snapshot                           |                    | user-level transaction ID snapshot                          | Implicit_                          |
+| uuid                                    |                    | universally unique identifier                               | Implicit_                          |
+| xml                                     |                    | XML data                                                    | Implicit_                          |
+
+## Int
+
+GraphQL default scalar with name **Int**.
+
+E.g.
+
+``` graphql
+objects: [
+  {
+    int_col: 27
+  }
+]
+```
+
+## Float
+
+GraphQL custom scalar type with name **float8**.
+
+E.g.
+
+``` graphql
+objects: [
+  {
+    float_col: 0.8
+  }
+]
+```
+
+<div class="note">
+
+<div class="title">
+
+Note
+
+</div>
+
+To avoid loss of data when retrieving IEEE 754 style data from the
+database, please refer to the `server_flag_reference` for instructions
+on setting the `extra_float_digits` parameter, which has a bad default
+value in PostgreSQL 11 and older.
+
+</div>
+
+## Numeric
+
+GraphQL custom scalar type with name **numeric**.
+
+E.g.
+
+``` graphql
+objects: [
+  {
+    numeric_col: 0.00000008
+  }
+]
+```
+
+## Bool
+
+GraphQL default Scalar with name **Boolean**. The **Boolean** scalar
+type represents `true` or `false`.
+
+E.g.
+
+``` graphql
+objects: [
+  {
+    is_published: true
+  }
+]
+```
+
+## Char
+
+GraphQL custom scalar with name **character**. It is a `String` with
+single character.
+
+E.g.
+
+``` graphql
+objects: [
+  {
+    char_column: "a"
+  }
+]
+```
+
+## String
+
+GraphQL default scalar with name **String**. The **String** scalar type
+represents textual data, represented as UTF-8 character sequences. The
+String type is most often used by GraphQL to represent free-form
+human-readable text.
+
+E.g.
+
+``` graphql
+objects: [
+  {
+    name: "Raven"
+  }
+]
+```
+
+## Date
+
+GraphQL custom scalar with name **date**. Date (no time of day). Allowed
+values are yyyy-mm-dd.
+
+E.g.
+
+``` graphql
+objects: [
+  {
+    date: "1996-03-15"
+  }
+]
+```
+
+## Time with time zone
+
+GraphQL custom scalar type with name **timetz**. Time of day only, with
+time zone. Allowed values should be of ISO8601 format (e.g. 17:30:15Z,
+17:30:15+05:30, 17:30:15.234890+05:30).
+
+E.g.
+
+``` graphql
+objects: [
+  {
+    time: "17:30:15+05:30"
+  }
+]
+```
+
+## Timestamp with time zone
+
+GraphQL custom scalar type with name **timestamptz**. Both date and
+time, with time zone. Allowed values should be of ISO8601 format (e.g.
+2016-07-20T17:30:15Z, 2016-07-20T17:30:15+05:30,
+2016-07-20T17:30:15.234890+05:30).
+
+E.g.
+
+``` graphql
+objects: [
+  {
+    timestamptz_col: "2016-07-20T17:30:15+05:30"
+  }
+]
+```
+
+## JSON
+
+GraphQL custom scalar type with name **json**. It is a stringified json
+value.
+
+E.g.
+
+``` graphql
+objects: [
+  {
+    json_col: "{ \"name\": \"raven\" }"
+  }
+]
+```
+
+## JSONB
+
+GraphQL custom scalar type with name **jsonb**. Value should be given
+through a variable of type **jsonb**.
+
+E.g.
+
+``` graphql
+mutation insert_test($value : jsonb) {
+  insert_test(
+    objects: [
+      {
+        jsonb_col: $value
+      }
+    ]
+  ) {
+     affected_rows
+     returning{
+       jsonb_col
+     }
+  }
+}
+```
+
+variables:
+
+``` json
+{
+  "value": {
+    "name": "raven"
+  }
+}
+```
+
+## Geometry
+
+GraphQL custom scalar type `geometry` is generated for a `GEOMETRY`
+column on a PostGIS enabled Postgres instance. Value should be given as
+GeoJSON.
+
+E.g.
+
+``` graphql
+mutation insertGeometry($point: geometry!) {
+  insert_test(
+    objects: [{
+      geometry_col: $point
+    }]
+  ) {
+    affected_rows
+    returning {
+      geometry_col
+    }
+  }
+}
+```
+
+variables:
+
+``` json
+{
+  "point": {
+    "type": "Point",
+    "coordinates": [0, 0]
+  }
+}
+```
+
+## Geography
+
+GraphQL custom scalar type `geography` is generated for a `GEOGRAPHY`
+column on a PostGIS enabled Postgres instance. Value should be given as
+GeoJSON.
+
+E.g.
+
+``` graphql
+mutation insertGeography($point: geography!) {
+  insert_test(
+    objects: [{
+      geography_col: $point
+    }]
+  ) {
+    affected_rows
+    returning {
+      geography_col
+    }
+  }
+}
+```
+
+variables:
+
+``` json
+{
+  "point": {
+    "type": "Point",
+    "coordinates": [0, 0]
+  }
+}
+```
+
+## Implicitly Supported types
+
+All `Implicit` types in the `above table <types_table>` are implicitly
+supported by the GraphQL engine. You have to provide the value as a
+**String**.
+
+E.g. For time without time zone type
+
+In ISO 8601 format
+
+``` graphql
+objects: [
+  {
+    time_col: "04:05:06.789"
+  }
+]
+```
+
+E.g. For macaddr type
+
+``` graphql
+objects: [
+  {
+    macaddr_col: "08:00:2b:01:02:03"
+  }
+]
+```
+
+<div class="note">
+
+<div class="title">
+
+Note
+
+</div>
+
+You can learn more about PostgreSQL data types
+[here](https://www.postgresql.org/docs/current/static/datatype.html).
+
+</div>
