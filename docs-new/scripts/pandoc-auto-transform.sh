@@ -23,7 +23,7 @@
 
 # run on list of files
 # ./docs-new/scripts/pandoc-auto-transform.sh
-# files=( "graphql/core/databases/postgres/schema/remote-relationships/remote-schema-relationships.rst" "graphql/core/remote-schemas/adding-schema.rst" "graphql/core/remote-schemas/auth/remote-schema-permissions.rst" )
+# files=( "graphql/core/databases/ms-sql-server/index.rst" "graphql/core/databases/ms-sql-server/mutations/index.rst" "graphql/core/databases/ms-sql-server/mutations/insert.rst" "graphql/core/databases/ms-sql-server/mutations/upsert.rst" "graphql/core/databases/postgres/mutations/upsert.rst" )
 # for f in "${files[@]}"; do
 #     mkdir -pv -- "docs/${f%/*}" && touch -- "docs-new/docs/${f%}.txt";
 #     pandoc "docs/$f" -f rst -t gfm -s -o "docs-new/docs/${f%}.txt";

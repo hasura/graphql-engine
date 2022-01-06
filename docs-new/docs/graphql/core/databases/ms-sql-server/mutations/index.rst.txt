@@ -31,12 +31,24 @@ The following types of mutation requests are possible:
 
 <div class="toctree" maxdepth="1">
 
-Delete \<delete>
+Insert \<insert> Upsert \<upsert> Delete \<delete>
+
+</div>
+
+<div class="note">
+
+<div class="title">
+
+Note
+
+</div>
+
+Support for the update mutation will be added soon.
 
 </div>
 
 > <div class="toctree" maxdepth="1">
 >
-> Insert \<insert> Upsert \<upsert> Update \<update> multiple-mutations
+> Update \<update> multiple-mutations
 >
 > </div>
