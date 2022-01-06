@@ -1,0 +1,84 @@
+---
+description: Managing teams in Hasura Cloud
+keywords:
+  - hasura
+  - docs
+  - cloud
+  - teams
+slug: index
+---
+
+import TOCInline from '@theme/TOCInline';
+import Link from '@docusaurus/Link';
+import Thumbnail from "@site/src/components/Thumbnail/Thumbnail";
+import { CustomTOCList, CustomTOCListSection, CustomTOCListHead, CustomTOCListContent } from "@site/src/components/CustomTOCList/CustomTOCList";
+
+# Projects & collaborators
+
+<CustomTOCListHead>Table of contents</CustomTOCListHead>
+<TOCInline toc={toc} />
+
+## Introduction
+
+The `Projects` page shows a list of your projects.
+
+<Thumbnail
+  src="/img/graphql/cloud/projects/projects-list.png"
+  alt="Projects list"
+  width="1200px"
+/>
+
+For each project, you can do the one of the following actions:
+
+<Thumbnail
+  src="/img/graphql/cloud/projects/project-actions.png"
+  alt="Project actions"
+  width="860px"
+/>
+
+-   Click `Launch Console` to open the Hasura console in your browser.
+    The `Monitoring` tab lets you use the Pro features that Hasura Cloud
+    has set up for you.
+
+<Thumbnail
+  src="/img/graphql/cloud/metrics/monitoring-tab-overview.png"
+  alt="Hasura Console: Monitoring tab"
+  width="900px"
+/>
+
+-   Click the gear icon to manage your project
+
+<Thumbnail
+  src="/img/graphql/cloud/projects/project-details.png"
+  alt="General tab"
+  width="900px"
+/>
+
+:::info Note
+Please see the [API reference](docs/graphql/cloud/api-reference.mdx) to create and
+manage Hasura Cloud projects programmatically.
+:::
+
+## Dig deeper
+
+<CustomTOCList>
+  <CustomTOCListSection>
+    <CustomTOCListContent>
+      <Link to="/graphql/cloud/projects/create">Creating projects</Link>
+      <Link to="/graphql/cloud/projects/details">Project Details</Link>
+      <Link to="/graphql/cloud/projects/collaborators">Project Collaborators</Link>
+      <Link to="/graphql/cloud/projects/ownership">Transfer Ownership</Link>
+      <Link to="/graphql/cloud/projects/env-vars">Project Env vars</Link>
+      <Link to="/graphql/cloud/projects/domains">Project Domains</Link>
+      <Link to="/graphql/cloud/projects/secure">Securing projects</Link>
+      <Link to="/graphql/cloud/projects/pricing">Switching pricing plans</Link>
+      <Link to="/graphql/cloud/projects/regions">Deployment regions</Link>
+      <Link to="/graphql/cloud/projects/environments">Managing development environments</Link>
+      <Link to="/graphql/cloud/projects/github-integration">GitHub Deployment</Link>
+      <Link to="/graphql/cloud/projects/heroku-url-sync">Heroku database URL Sync</Link>
+      <Link to="/graphql/cloud/projects/maintenance-mode">Maintenance mode</Link>
+      <Link to="/graphql/cloud/projects/delete">Deleting projects</Link>
+      <Link to="/graphql/cloud/projects/move-project-v2">Updating v1.3 projects to v2.0</Link>
+    </CustomTOCListContent>
+  </CustomTOCListSection>
+</CustomTOCList>

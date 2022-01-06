@@ -1,15 +1,20 @@
-<div class="meta" description="Query response caching in Hasura Cloud"
-keywords="hasura, docs, cloud, response, caching">
+---
+description: Query response caching in Hasura Cloud
+keywords:
+  - hasura
+  - docs
+  - cloud
+  - response
+  - caching
+---
 
-</div>
+import TOCInline from '@theme/TOCInline';
+import { CustomTOCListHead } from "@site/src/components/CustomTOCList/CustomTOCList";
 
 # Query response caching
 
-<div class="contents" backlinks="none" depth="1" local="">
-
-Table of contents
-
-</div>
+<CustomTOCListHead>Table of contents</CustomTOCListHead>
+<TOCInline toc={toc} />
 
 ## Introduction
 
@@ -25,17 +30,13 @@ A query's response can be cached only if the following conditions hold:
 -   The query does **not** make use of `remote schemas` or
     `remote joins`.
 -   The query **isn't** an `Action` that has `forward_client_headers`
-    (see `ActionDefinition`) set to `true`.
+    (see [ActionDefinition](/graphql/core/api-reference/syntax-defs.mdx#actiondefinition)) set to `true`.
 -   The response JSON is **under** 100KB in size
 
-<div class="admonition">
-
-Support
-
+:::info Support
 Query response caching is available for Hasura Cloud projects on the
 `Standard` (pay-as-you-go) tier and above.
-
-</div>
+:::
 
 ## Enable caching
 

@@ -1,15 +1,20 @@
-<div class="meta" description="Distributed tracing with Hasura Cloud"
-keywords="hasura, docs, cloud, tracing">
+---
+description: Distributed tracing with Hasura Cloud
+keywords:
+  - hasura
+  - docs
+  - cloud
+  - tracing
+---
 
-</div>
+import TOCInline from '@theme/TOCInline';
+import { CustomTOCListHead } from "@site/src/components/CustomTOCList/CustomTOCList";
+import Thumbnail from "@site/src/components/Thumbnail/Thumbnail";
 
 # Distributed tracing
 
-<div class="contents" backlinks="none" depth="1" local="">
-
-Table of contents
-
-</div>
+<CustomTOCListHead>Table of contents</CustomTOCListHead>
+<TOCInline toc={toc} />
 
 ## Introduction
 
@@ -27,11 +32,10 @@ The Hasura Pro console makes it possible to view Hasura's own tracing
 data, by opening the details view for an operation in the Operations
 tab:
 
-<div class="thumbnail" alt="View timing data in the Operations tab">
-
-/img/graphql/cloud/tracing/tracing-operations-timing.png
-
-</div>
+<Thumbnail
+  src="/img/graphql/cloud/tracing/tracing-operations-timing.png"
+  alt="View timing data in the Operations tab"
+/>
 
 Given that other system components will report their own tracing data to
 your APM system, and not to Hasura, it is not possible to give a

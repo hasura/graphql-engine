@@ -1,15 +1,20 @@
-<div class="meta" description="Creating projects on Hasura Cloud"
-keywords="hasura, cloud, docs, start">
+---
+description: Creating projects on Hasura Cloud
+keywords:
+  - hasura
+  - cloud
+  - docs
+  - start
+---
 
-</div>
+import TOCInline from '@theme/TOCInline';
+import Thumbnail from "@site/src/components/Thumbnail/Thumbnail";
+import { CustomTOCListHead } from "@site/src/components/CustomTOCList/CustomTOCList";
 
 # Creating projects
 
-<div class="contents" backlinks="none" depth="2" local="">
-
-Table of contents
-
-</div>
+<CustomTOCListHead>Table of contents</CustomTOCListHead>
+<TOCInline toc={toc} />
 
 ## Introduction
 
@@ -22,22 +27,22 @@ address.
 To begin, navigate to the `Projects` page, and click the `New Project`
 link.
 
-<div class="thumbnail" alt="create new project button" width="400px">
-
-/img/graphql/cloud/projects/create-new-project.png
-
-</div>
+<Thumbnail
+  src="/img/graphql/cloud/projects/create-new-project.png"
+  alt="create new project button"
+  width="400px"
+/>
 
 This opens a form on the right where you can create your new project.
 
 Choose a pricing plan, select a region and optionally enter the project
 name for your project in this form.
 
-<div class="thumbnail" alt="project setup" width="1100px">
-
-/img/graphql/cloud/projects/project-setup.png
-
-</div>
+<Thumbnail
+  src="/img/graphql/cloud/projects/project-setup.png"
+  alt="project setup"
+  width="1100px"
+/>
 
 Once you have completed the project setup, click `Create Project`.
 
@@ -46,12 +51,11 @@ Once you have completed the project setup, click `Create Project`.
 To get started, Click `Launch Console` to open the Hasura console in
 your browser.
 
-<div class="thumbnail" alt="database setup with new database"
-width="900px">
-
-/img/graphql/cloud/getting-started/details-launch-console.png
-
-</div>
+<Thumbnail
+  src="/img/graphql/cloud/getting-started/details-launch-console.png"
+  alt="database setup with new database"
+  width="900px"
+/>
 
 On the Hasura console, navigate to `Data -> Manage -> Connect Database`:
 
@@ -67,12 +71,11 @@ integrate with your Heroku account and manage the initial setup of a
 dev-tier Postgres instance. You can always upgrade the instance and
 manage options later through your Heroku account.
 
-<div class="thumbnail" alt="database setup with new database"
-width="700px">
-
-/img/graphql/cloud/projects/project-new-database-setup.png
-
-</div>
+<Thumbnail
+  src="/img/graphql/cloud/projects/project-new-database-setup.png"
+  alt="database setup with new database"
+  width="700px"
+/>
 
 ### Existing database
 
@@ -80,28 +83,19 @@ To use an existing database, choose `Connect existing database` and
 enter your database connection URL and enter your database connection
 string (looks like `postgres://username:password@hostname:port/dbname`).
 
-<div class="thumbnail" alt="database setup with existing database"
-width="700px">
+<Thumbnail
+  src="/img/graphql/cloud/getting-started/connect-db.png"
+  alt="database setup with existing database"
+  width="700px"
+/>
 
-/img/graphql/cloud/getting-started/connect-db.png
-
-</div>
-
-<div class="note">
-
-<div class="title">
-
-Note
-
-</div>
-
+:::info Note
 You can connect to databases either using env vars or by using their raw
 connection string/parameters. It is recommended to use env vars for
 better security *(as connection details are part of Hasura metadata)* as
 well as to allow configuring different databases in different
 environments *(like staging/production)* easily.
-
-</div>
+:::
 
 ### Allowing connections from Hasura Cloud IP
 
@@ -110,25 +104,24 @@ connection settings to allow connections from the Hasura Cloud IP
 address. You can copy the IP address from the copy icon in the
 `Hasura Cloud IP` field on the project's details view.
 
-<div class="thumbnail" alt="Hasura Cloud IP field" width="1000px">
+<Thumbnail
+  src="/img/graphql/cloud/projects/hasura-cloud-ip.png"
+  alt="Hasura Cloud IP field"
+  width="1000px"
+/>
 
-/img/graphql/cloud/projects/hasura-cloud-ip.png
-
-</div>
-
-<div class="thumbnail"
-alt="whitelist Hasura instance IP in Postgres settings" width="727px">
-
-/img/graphql/cloud/projects/gcp-postgres-authorized-network.png
-
-</div>
+<Thumbnail
+  src="/img/graphql/cloud/projects/gcp-postgres-authorized-network.png"
+  alt="whitelist Hasura instance IP in Postgres settings"
+  width="727px"
+/>
 
 ## Postgres requirements
 
 Hasura Cloud works with **Postgres versions 9.5 and above**.
 
 Make sure your database user has the right
-`Postgres permissions <cloud_postgres_permissions>`.
+[Postgres permissions](/graphql/cloud/getting-started/postgres-permissions.mdx).
 
 ## Connecting to a database not exposed over the internet
 

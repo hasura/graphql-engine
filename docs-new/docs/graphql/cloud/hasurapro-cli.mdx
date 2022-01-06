@@ -1,22 +1,25 @@
-<div class="meta" description="Hasura Pro CLI"
-keywords="hasura, docs, command line interface, cli">
+---
+description: Hasura Pro CLI
+keywords:
+  - hasura
+  - docs
+  - command line interface
+  - cli
+---
 
-</div>
+import TOCInline from '@theme/TOCInline';
+import { CustomTOCListHead } from "@site/src/components/CustomTOCList/CustomTOCList";
 
 # Hasura Pro CLI
 
-<div class="contents" backlinks="none" depth="1" local="">
-
-Table of contents
-
-</div>
+<CustomTOCListHead>Table of contents</CustomTOCListHead>
+<TOCInline toc={toc} />
 
 ## Installing the Hasura Pro CLI
 
-Hasura Pro CLI is distributed as a plugin to the
-`Hasura Core CLI <hasuracli_manual>`
+Hasura Pro CLI is distributed as a plugin to the [Hasura Core CLI](docs/graphql/core/hasura-cli/index.mdx)
 
--   Follow the instructions `here <install_hasura_cli>` to install
+-   Follow the instructions [here](docs/graphql/core/hasura-cli/install-hasura-cli.mdx) to install
     Hasura Core CLI
 
 -   Then execute the following command to install the Hasura Pro CLI
@@ -50,15 +53,11 @@ create a new token. You can name it something like "cli". Note that the
 token will be shown only once and as soon as you copy the token, paste
 it in your terminal prompt.
 
-<div class="admonition">
-
-Keep this token secure!
-
+:::info Keep this token secure!
 This token can be used to authenticate against Hasura Pro APIs and your
 Hasura Cloud projects. Make sure you keep it secure. This is a one-time
 operation. The token will be valid until you delete it.
-
-</div>
+:::
 
 ## Upgrading the CLI
 

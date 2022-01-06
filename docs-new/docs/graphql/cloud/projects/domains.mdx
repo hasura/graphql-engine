@@ -1,15 +1,20 @@
-<div class="meta" description="Managing domains on Hasura Cloud"
-keywords="hasura, docs, project, domains">
+---
+description: Managing domains on Hasura Cloud
+keywords:
+  - hasura
+  - docs
+  - project
+  - domains
+---
 
-</div>
+import TOCInline from '@theme/TOCInline';
+import Thumbnail from "@site/src/components/Thumbnail/Thumbnail";
+import { CustomTOCListHead } from "@site/src/components/CustomTOCList/CustomTOCList";
 
 # Project Domains
 
-<div class="contents" backlinks="none" depth="2" local="">
-
-Table of contents
-
-</div>
+<CustomTOCListHead>Table of contents</CustomTOCListHead>
+<TOCInline toc={toc} />
 
 ## Introduction
 
@@ -25,78 +30,62 @@ the steps below.
 
 On the `Domains` tab, click on the `New Custom Domain` button.
 
-<div class="thumbnail" alt="Add custom domain" width="727px">
-
-/img/graphql/cloud/projects/add-custom-domain.png
-
-</div>
+<Thumbnail
+  src="/img/graphql/cloud/projects/add-custom-domain.png"
+  alt="Add custom domain"
+  width="727px"
+/>
 
 ### Step 2: Add your custom domain
 
 Enter your custom domain and click the `Add` button.
 
-<div class="thumbnail" alt="Choose custom domain" width="727px">
-
-/img/graphql/cloud/projects/choose-custom-domain.png
-
-</div>
+<Thumbnail
+  src="/img/graphql/cloud/projects/choose-custom-domain.png"
+  alt="Choose custom domain"
+  width="727px"
+/>
 
 ### Step 3: Add the record to your DNS
 
 After adding a custom domain, the following window will show up:
 
-<div class="thumbnail" alt="DNS settings" width="727px">
-
-/img/graphql/cloud/projects/dns-settings.png
-
-</div>
+<Thumbnail
+  src="/img/graphql/cloud/projects/dns-settings.png"
+  alt="DNS settings"
+  width="727px"
+/>
 
 Add the default Hasura domain as a `CNAME` record to your DNS.
 
-<div class="note">
-
-<div class="title">
-
-Note
-
-</div>
-
+:::info Note
 If you're using [Cloudflare](https://www.cloudflare.com) as your DNS
 provider, do not enable the proxy (orange cloud) until the certificate
 is generated. i.e. `Proxy status` should be `DNS only`. You can enable
 the proxy after SSL certificate is generated.
-
-</div>
+:::
 
 Until this is done, the dashboard will show a notice that the DNS
 validation is pending.
 
-<div class="thumbnail" alt="DNS validation pending" width="727px">
+<Thumbnail
+  src="/img/graphql/cloud/projects/dns-validation-pending.png"
+  alt="DNS validation pending"
+  width="727px"
+/>
 
-/img/graphql/cloud/projects/dns-validation-pending.png
-
-</div>
-
-<div class="note">
-
-<div class="title">
-
-Note
-
-</div>
-
+:::info Note
 Depending on your DNS provider, it might take up to 24 hours for the DNS
 record to be added.
-
-</div>
+:::
 
 ## DNS validated
 
 Once the DNS is validated, the dashboard will update the status with the
 following notice:
 
-<div class="thumbnail" alt="DNS validated" width="727px">
-
-/img/graphql/cloud/projects/dns-validated.png
-
-</div>
+<Thumbnail
+  src="/img/graphql/cloud/projects/dns-validated.png"
+  alt="DNS validated"
+  width="727px"
+/>

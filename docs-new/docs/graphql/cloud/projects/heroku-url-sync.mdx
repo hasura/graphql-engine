@@ -1,16 +1,23 @@
-<div class="meta"
-description="Automatically sync database URL of a Heroku Postgres into a Hasura Cloud project"
-keywords="hasura, docs, project, team, heroku, database url, sync">
+---
+description: Automatically sync database URL of a Heroku Postgres into a Hasura Cloud project
+keywords:
+  - hasura
+  - docs
+  - project
+  - team
+  - heroku
+  - database url
+  - sync
+---
 
-</div>
+import TOCInline from '@theme/TOCInline';
+import { CustomTOCListHead } from "@site/src/components/CustomTOCList/CustomTOCList";
+import Thumbnail from "@site/src/components/Thumbnail/Thumbnail";
 
 # Heroku database URL sync
 
-<div class="contents" backlinks="none" depth="1" local="">
-
-Table of contents
-
-</div>
+<CustomTOCListHead>Table of contents</CustomTOCListHead>
+<TOCInline toc={toc} />
 
 ## Introduction
 
@@ -19,20 +26,12 @@ Hasura Cloud can keep your project's Heroku database URL i.e. the
 is especially helpful in cases when the database credentials of Heroku
 Postgres are rotated automatically by Heroku.
 
-<div class="note">
-
-<div class="title">
-
-Note
-
-</div>
-
+:::info Note
 The database sync automatically gets disconnected if you transfer the
 ownership of your project to another account. The new project owner can
 restart the sync with the Heroku account that they have connected their
 Hasura Cloud account to.
-
-</div>
+:::
 
 ## Enable Heroku database URL sync
 
@@ -51,11 +50,11 @@ follows:
 
 2.  Click on `Opt out of the sync` button next to Heroku note.
 
-    <div class="thumbnail" alt="Add collaborator" width="1100px">
-
-    /img/graphql/cloud/projects/heroku-db-sync-enabled.png
-
-    </div>
+    <Thumbnail
+      src="/img/graphql/cloud/projects/heroku-db-sync-enabled.png"
+      alt="Add collaborator"
+      width="1100px"
+    />
 
 ## How it works?
 

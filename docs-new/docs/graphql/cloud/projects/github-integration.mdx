@@ -1,15 +1,22 @@
-<div class="meta" description="GitHub Integration"
-keywords="hasura, docs, project, github, deployment, git">
+---
+description: GitHub Integration
+keywords:
+  - hasura
+  - docs
+  - project
+  - github
+  - deployment
+  - git
+---
 
-</div>
+import TOCInline from '@theme/TOCInline';
+import { CustomTOCListHead } from "@site/src/components/CustomTOCList/CustomTOCList";
+import Thumbnail from "@site/src/components/Thumbnail/Thumbnail";
 
 # GitHub Deployment
 
-<div class="contents" backlinks="none" depth="2" local="">
-
-Table of contents
-
-</div>
+<CustomTOCListHead>Table of contents</CustomTOCListHead>
+<TOCInline toc={toc} />
 
 ## Introduction
 
@@ -22,20 +29,15 @@ Check out our [Starter
 Kit](https://github.com/hasura/github-integration-starter) to see a few
 example workflows.
 
-<div class="admonition">
-
-Under preview
-
+:::info Under preview
 This feature is currently available for preview. Enhancements to it will
 continue to be made over the coming days. To try it out you can ask for
 early access to the feature from the Hasura Cloud dashboard.
 
 Please do share any feedback you may have regarding any improvements or
 extra capabilities that you would like to see in this feature by raising
-an issue/discussion on our [GitHub
-repo](https://github.com/hasura/graphql-engine).
-
-</div>
+an issue/discussion on our [GitHub repo](https://github.com/hasura/graphql-engine).
+:::
 
 ## Deployment modes
 
@@ -45,11 +47,11 @@ With the `Automatic deployment mode`, Hasura Cloud automatically
 triggers a deployment for every commit pushed to the GitHub repository
 from the given branch and directory.
 
-<div class="thumbnail" width="900px" alt="Automatic GitHub deployment">
-
-/img/graphql/cloud/projects/automatic-commit-deployment.png
-
-</div>
+<Thumbnail
+  src="/img/graphql/cloud/projects/automatic-commit-deployment.png"
+  alt="Automatic GitHub deployment"
+  width="900px"
+/>
 
 The Automatic deployment mode also has the `Deploy Now` button which
 allows the user to retry deploying the latest commit.
@@ -61,11 +63,11 @@ deploy the commits pushed to the configured branch. The deployment of
 the latest commit in that branch can be triggered manually by clicking
 the `Deploy Now` button.
 
-<div class="thumbnail" width="900px" alt="Manual GitHub deployment">
-
-/img/graphql/cloud/projects/manual-commit-deployment.png
-
-</div>
+<Thumbnail
+  src="/img/graphql/cloud/projects/manual-commit-deployment.png"
+  alt="Manual GitHub deployment"
+  width="900px"
+/>
 
 ## Initial setup
 
@@ -74,22 +76,22 @@ the `Deploy Now` button.
 To link a GitHub account, click on the `Sign in with GitHub` button in
 the Git Deployment section of the project details.
 
-<div class="thumbnail" width="900px" alt="Link GitHub Account">
-
-/img/graphql/cloud/projects/github-link-account.png
-
-</div>
+<Thumbnail
+  src="/img/graphql/cloud/projects/github-link-account.png"
+  alt="Link GitHub Account"
+  width="900px"
+/>
 
 When you link a new GitHub account, Hasura Cloud installs the Hasura
 Cloud GitHub App on your GitHub account. While authenticating, you can
 choose to grant access to all repositories or to specific repositories
 only.
 
-<div class="thumbnail" width="500px" alt="GitHub grant access">
-
-/img/graphql/cloud/projects/github-grant-access.png
-
-</div>
+<Thumbnail
+  src="/img/graphql/cloud/projects/github-grant-access.png"
+  alt="GitHub grant access"
+  width="500px"
+/>
 
 The permissions requested by Hasura Cloud can be viewed in the GitHub
 app settings once you install the app.
@@ -103,11 +105,11 @@ GitHub integration from the UI.
 Specify the GitHub repository, branch and the hasura-project directory
 in the form as shown below.
 
-<div class="thumbnail" width="900px" alt="Setup GitHub Integration">
-
-/img/graphql/cloud/projects/setup-github-integration.png
-
-</div>
+<Thumbnail
+  src="/img/graphql/cloud/projects/setup-github-integration.png"
+  alt="Setup GitHub Integration"
+  width="900px"
+/>
 
 If the repository that you're looking for doesn't show up in the
 repository list, click `Configure Hasura Cloud on GitHub` to grant
@@ -118,11 +120,11 @@ GitHub repository, branch and directory with the Hasura Cloud project.
 The details for the integration can be viewed in the `Git Deployment`
 section of project details.
 
-<div class="thumbnail" width="900px" alt="Setup GitHub Integration">
-
-/img/graphql/cloud/projects/github-integration-details.png
-
-</div>
+<Thumbnail
+  src="/img/graphql/cloud/projects/github-integration-details.png"
+  alt="Setup GitHub Integration"
+  width="900px"
+/>
 
 ## Edit GitHub Integration
 
@@ -130,22 +132,22 @@ Click on the `Edit Deployment` button in the GitHub Deployment section
 to edit the GitHub repository/branch/directory/deployment mode for the
 GitHub integration.
 
-<div class="thumbnail" width="900px" alt="Setup GitHub Integration">
-
-/img/graphql/cloud/projects/edit-github-integration.png
-
-</div>
+<Thumbnail
+  src="/img/graphql/cloud/projects/edit-github-integration.png"
+  alt="Setup GitHub Integration"
+  width="900px"
+/>
 
 ## Deployment Log
 
 User can view the deployed commits and their deployment status in the
 `Deployment Log` section of Git Deployment.
 
-<div class="thumbnail" width="900px" alt="GitHub deployment log">
-
-/img/graphql/cloud/projects/deployment-log.png
-
-</div>
+<Thumbnail
+  src="/img/graphql/cloud/projects/deployment-log.png"
+  alt="GitHub deployment log"
+  width="900px"
+/>
 
 ## Deployment Process
 
@@ -164,11 +166,11 @@ problems post the deployment.
 
 The following is a task wise breakdown of the commit deployment job.
 
-<div class="thumbnail" width="500px" alt="GitHub deployment Progress">
-
-/img/graphql/cloud/projects/github-deployment-status.png
-
-</div>
+<Thumbnail
+  src="/img/graphql/cloud/projects/github-deployment-status.png"
+  alt="GitHub deployment Progress"
+  width="500px"
+/>
 
 Each task in the deployment has realtime logs and can be viewed by
 clicking on the `Logs` option for each successful/failed step.
@@ -221,7 +223,7 @@ in the deployment sub-tasks:
 -   Typically happens due to some issue with the metadata directory
     structure or the format of the metadata files.
 -   Check the reported error message and fix the issues in the metadata.
-    See `metadata format <metadata_format>`.
+    See [metadata format](/graphql/core/migrations/reference/metadata-format.mdx).
 -   Push the fix to GitHub to redeploy.
 
 ### Error parsing migrations
@@ -231,7 +233,7 @@ in the deployment sub-tasks:
 -   Typically happens due to some issue with the migration directory
     structure or the format of the migration files.
 -   Check the reported error message and fix the issues in the
-    migrations. See `migrations format <migration_file_format>`.
+    migrations. See [migrations format](docs/graphql/core/migrations/reference/migration-file-format.mdx).
 -   Push the fix to GitHub to redeploy.
 
 ### Error applying metadata
@@ -241,7 +243,7 @@ in the deployment sub-tasks:
 -   Typically happens due to some invalid metadata (e.g. due to type
     mismatches, missing required keys, etc.) trying to be applied.
 -   Check the reported error message and fix the issues in the metadata.
-    See `metadata format <metadata_format>`.
+    See [metadata format](/graphql/core/migrations/reference/metadata-format.mdx).
 -   Push the fix to GitHub to redeploy.
 
 ### Error applying migrations
@@ -256,8 +258,7 @@ in the deployment sub-tasks:
 -   Look at the underlying database error. Make the appropriate fix
     depending on the error and redeploy.
 -   Some common errors:
-    -   <span class="title-ref">source with name “default” is
-        inconsistent</span>
+    -   <em>source with name “default” is inconsistent</em>
 
         In this situation, most likely either the target project doesn't
         have the required database connected or the ENV VARS or the
@@ -267,8 +268,7 @@ in the deployment sub-tasks:
         To fix this, use the same ENV VARS and connect the database with
         the same name in both your projects.
 
-    -   <span class="title-ref">“relation “\<some-object>” already
-        exists”</span>
+    -   `“relation '<some-object>' already exists”`
 
         In such situations when you get errors of tables or other
         objects already existing, this might be because the migration
@@ -295,9 +295,8 @@ in the deployment sub-tasks:
 -   If objects depending on upstream services are inconsistent, e.g.
     remote schemas, the upstream service might be unavailable or
     inconsistent. In this case please fix them and redeploy the commit.
--   If database objects are inconsistent with errors such as <span
-    class="title-ref">Inconsistent object: no such table/view exists in
-    source: “\<table-name>“</span>, it could be because:
+-   If database objects are inconsistent with errors such as <em>Inconsistent object: no such table/view exists in
+    source: `<table-name>`</em>, it could be because:
     -   a migration might have been skipped as the project believes its
         already been applied though its not the case. To fix it, mark
         the migration as unapplied using the following Hasura CLI

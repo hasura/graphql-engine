@@ -1,15 +1,22 @@
-<div class="meta" description="Hasura Cloud regression tests"
-keywords="hasura, docs, cloud, reliability, regression, migration">
+---
+description: Hasura Cloud regression tests
+keywords:
+  - hasura
+  - docs
+  - cloud
+  - reliability
+  - regression
+  - migration
+---
 
-</div>
+import TOCInline from '@theme/TOCInline';
+import { CustomTOCListHead } from "@site/src/components/CustomTOCList/CustomTOCList";
+import Thumbnail from "@site/src/components/Thumbnail/Thumbnail";
 
 # Regression tests
 
-<div class="contents" backlinks="none" depth="2" local="">
-
-Table of contents
-
-</div>
+<CustomTOCListHead>Table of contents</CustomTOCListHead>
+<TOCInline toc={toc} />
 
 ## Introduction
 
@@ -33,11 +40,10 @@ Here's a reference development workflow that is enabled by Hasura Cloud:
         team
 6.  Promote changes to prod
 
-<div class="thumbnail" alt="Regression testing process diagram">
-
-/img/graphql/cloud/reliability/regression-testing-diagram.png
-
-</div>
+<Thumbnail
+  src="/img/graphql/cloud/reliability/regression-testing-diagram.png"
+  alt="Regression testing process diagram"
+/>
 
 ## Manage test suites
 
@@ -48,22 +54,20 @@ or ensure are not “broken” - production or a shared QA project which
 receives operations in your app or, if you have a public GraphQL API,
 those from your consumers.
 
-<div class="thumbnail" alt="Manage regression test suites">
-
-/img/graphql/cloud/reliability/regression-tests-suites.png
-
-</div>
+<Thumbnail
+  src="/img/graphql/cloud/reliability/regression-tests-suites.png"
+  alt="Manage regression test suites"
+/>
 
 ## Quick-create tests
 
 Add important operations to your test suite with one click by adding
 them from your project's operation history:
 
-<div class="thumbnail" alt="Add tests to regression test suites">
-
-/img/graphql/cloud/reliability/regression-tests-add-operations.png
-
-</div>
+<Thumbnail
+  src="/img/graphql/cloud/reliability/regression-tests-add-operations.png"
+  alt="Add tests to regression test suites"
+/>
 
 ## Run test suites
 
@@ -88,22 +92,20 @@ test suite from your production instance (or a suitable alternative) as
 the default suite to be used for this, and you can choose to run this
 test suite on your local or development instance.
 
-<div class="thumbnail" alt="Run regression tests">
-
-/img/graphql/cloud/reliability/regressions-run-prod-tests-on-dev.png
-
-</div>
+<Thumbnail
+  src="/img/graphql/cloud/reliability/regressions-run-prod-tests-on-dev.png"
+  alt="Run regression tests"
+/>
 
 For example, if the column ‘title’ (in a typical authors and articles
 schema) has been modified as part of a feature iteration. Assuming the
 operation from the previous example is part of the test suite on
 production, here’s how the feedback on this change looks like:
 
-<div class="thumbnail" alt="Regression test results">
-
-/img/graphql/cloud/reliability/regression-tests-results.png
-
-</div>
+<Thumbnail
+  src="/img/graphql/cloud/reliability/regression-tests-results.png"
+  alt="Regression test results"
+/>
 
 As you can see, one of the tests fails because it expects a field,
 title, to be part of the type articles - which is something our proposed
@@ -111,11 +113,10 @@ change just modified and removed support for.
 
 ### Run regression tests in CI/CD flow
 
-<div class="thumbnail" alt="Run regression tests via CLI">
-
-/img/graphql/cloud/reliability/regression-tests-run-cli.png
-
-</div>
+<Thumbnail
+  src="/img/graphql/cloud/reliability/regression-tests-run-cli.png"
+  alt="Run regression tests via CLI"
+/>
 
 This command will fetch the entire test suite from Hasura Pro and run
 the tests against given endpoint using the admin secret and report the
@@ -137,8 +138,7 @@ pat: <token>
 
 ## View test suite results
 
-<div class="thumbnail" alt="Regression tests past results">
-
-/img/graphql/cloud/reliability/regression-tests-past-runs.png
-
-</div>
+<Thumbnail
+  src="/img/graphql/cloud/reliability/regression-tests-past-runs.png"
+  alt="Regression tests past results"
+/>
