@@ -1,15 +1,21 @@
-<div class="meta" description="Hasura Cloud API limits"
-keywords="hasura, docs, cloud, security, limits">
+---
+description: Hasura Cloud API limits
+keywords:
+  - hasura
+  - docs
+  - cloud
+  - security
+  - limits
+---
 
-</div>
+import TOCInline from '@theme/TOCInline';
+import { CustomTOCListHead } from '@site/src/components/CustomTOCList/CustomTOCList';
+import Thumbnail from '@site/src/components/Thumbnail/Thumbnail';
 
 # API limits
 
-<div class="contents" backlinks="none" depth="2" local="">
-
-Table of contents
-
-</div>
+<CustomTOCListHead>Table of contents</CustomTOCListHead>
+<TOCInline toc={toc} />
 
 ## Introduction
 
@@ -20,8 +26,8 @@ performance issues caused by malicious or poorly implemented queries.
 
 API limits are defined by **role** (e.g. anonymous, user) and can
 restrict request rate, depth, or both. Unique request parameters can
-include IP address or session variables (*x-hasura-user-id*,
-*x-hasura-org-id*, etc.)
+include IP address or session variables (_x-hasura-user-id_,
+_x-hasura-org-id_, etc.)
 
 ### Rate limits
 
@@ -69,7 +75,7 @@ A node is defined as a field with a selection set.
 For example, in the below query the number of nodes is 3 and they are
 `author`, `articles` and `homepage_entries`.
 
-``` graphql
+```graphql
 {
   author {
     name
@@ -94,24 +100,19 @@ Currently, cancellation only works for Postgres sources.
 
 ## Manage API limits
 
-API limits can have a *global* or *per role* configuration. If an
+API limits can have a _global_ or _per role_ configuration. If an
 incoming request does not contain a valid role then the global limit is
 applied.
 
-<div class="thumbnail" alt="Hasura Cloud Console api limit tab">
+<Thumbnail
+  src="/img/graphql/cloud/security/pro-tab-apilimits.png"
+  alt="Hasura Cloud Console api limit tab"
+/>
 
-/img/graphql/cloud/security/pro-tab-apilimits.png
-
-</div>
-
-<div class="admonition">
-
-Admin & IntrospectionQuery exemptions
-
+:::info Admin & IntrospectionQuery exemptions
 All API limits are **not** applied for the admin role, and depth limits
 are **NOT** applied to introspection queries
-
-</div>
+:::
 
 ## Metadata Specification
 
@@ -121,7 +122,7 @@ Hasura provides two metadata API's to manage API limits
 
 You can configure api limits using the `set_api_limits` API.
 
-``` yaml
+```yaml
 type: set_api_limits
 args:
   disabled: # Optional Field (Either True or False, The value is False by default)
@@ -168,7 +169,7 @@ In the above metadata spec:
 
 Example Metadata Spec:
 
-``` yaml
+```yaml
 type: set_api_limits
 args:
   disabled: false
@@ -190,11 +191,11 @@ args:
     per_role:
       anonymous:
         max_reqs_per_min: 10
-        unique_params: "ip"
+        unique_params: 'ip'
       user:
         unique_params:
-        - x-hasura-user-id
-        - x-hasura-team-id
+          - x-hasura-user-id
+          - x-hasura-team-id
         max_reqs_per_min: 20
 
   time_limit:
@@ -208,7 +209,7 @@ args:
 You can remove **all** the api limits that have been set using
 `remove_api_limit` API.
 
-``` yaml
+```yaml
 type: remove_api_limits
 args: {}
 ```

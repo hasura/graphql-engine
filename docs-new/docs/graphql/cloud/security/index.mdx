@@ -1,0 +1,50 @@
+---
+description: Hasura Cloud API Security
+keywords:
+  - hasura
+  - docs
+  - cloud
+  - security
+  - API security
+  - secure
+slug: index
+---
+
+import TOCInline from '@theme/TOCInline';
+import Thumbnail from '@site/src/components/Thumbnail/Thumbnail';
+import Link from '@docusaurus/Link';
+import {
+  CustomTOCList,
+  CustomTOCListSection,
+  CustomTOCListHead,
+  CustomTOCListContent,
+} from '@site/src/components/CustomTOCList/CustomTOCList';
+
+# API Security
+
+<CustomTOCListHead>Table of contents</CustomTOCListHead>
+<TOCInline toc={toc} />
+
+## Introduction
+
+All API security related features can be found under the `Security` tab
+in the API explorer page of Hasura console.
+
+<Thumbnail src="/img/graphql/cloud/security/security.png" alt="Security" />
+
+## Features
+
+<CustomTOCList>
+  <CustomTOCListSection>
+    <CustomTOCListContent>
+      <Link to="/graphql/cloud/security/allow-lists">Allow Lists</Link>
+      <Link to="/graphql/cloud/security/api-limits">API Limits</Link>
+      <Link to="/graphql/cloud/security/disable-graphql-introspection">
+        Disable GraphQL Introspection
+      </Link>
+      <Link to="/graphql/cloud/security/rotating-admin-secrets">
+        Rotating Admin Secrets
+      </Link>
+    </CustomTOCListContent>
+  </CustomTOCListSection>
+</CustomTOCList>
