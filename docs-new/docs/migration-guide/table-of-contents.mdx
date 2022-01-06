@@ -113,7 +113,7 @@ The children alone of a subitem can be rendered too. Read more about the TOCItem
 
 <TOCInline toc={toc[1].children} />
 
-:::warning
+:::caution
 The `toc` prop value should always be an array.
 ```jsx
 toc={`[ toc[2], ... ]`} or toc={`toc[1].children`}
@@ -144,46 +144,56 @@ Please refer [reStructured text `toctree` Directive](https://www.sphinx-doc.org/
   </TabItem>
   <TabItem value="docusaurus" label="Docusaurus - MDX">
 
-Unfortunately, there is no direct alternative for this in either MDX or Docusaurus. So, have to list these links manually using this `CustomTOCList` component.
+Unfortunately, there is no direct alternative for this in either MDX or Docusaurus.
+
+So, have to rely on simple MDX links and manually find file paths, similar to how we handle refs in [Links](/migration-guide/links.mdx#internal-links).
+
+```markdown
+- [Allow Lists](/graphql/cloud/security/allow-lists.mdx)
+- [API Limits](/graphql/cloud/security/api-limits.mdx)
+- [Disable GraphQL Introspection](/graphql/cloud/security/disable-graphql-introspection.mdx)
+- [Rotating Admin Secrets](/graphql/cloud/security/rotating-admin-secrets.mdx)
+```
+
+or if this needs to be done nested in a react component that doesn't support MDX.
 
 ```jsx
-  import Link from '@docusaurus/Link';
-  import {
-    CustomTOCList, CustomTOCListSection, CustomTOCListHead, CustomTOCListContent,
-  } from "@site/src/components/CustomTOCList/CustomTOCList";
+import Link from '@docusaurus/Link';
+import {
+  CustomTOCList, CustomTOCListSection, CustomTOCListHead, CustomTOCListContent,
+} from "@site/src/components/CustomTOCList/CustomTOCList";
 
-  <CustomTOCList>
-
-    <CustomTOCListSection>
-
-      <CustomTOCListContent>
-        <Link to="/root/relative/path/to/allow-lists">Allow Lists</Link>
-        <Link to="/root/relative/path/to/api-limits">API Limits</Link>
-        <Link to="/root/relative/path/to/disable-graphql-introspection">Disable GraphQL Introspection</Link>
-        <Link to="/root/relative/path/to/rotating-admin-secrets">Rotating Admin Secrets</Link>
-      </CustomTOCListContent>
-
-    </CustomTOCListSection>
-
-  </CustomTOCList>
+<CustomTOCList>
+  <CustomTOCListSection>
+    <CustomTOCListContent>
+      <Link to="/graphql/cloud/security/allow-lists">Allow Lists</Link>
+      <Link to="/graphql/cloud/security/api-limits">API Limits</Link>
+      <Link to="/graphql/cloud/security/disable-graphql-introspection">Disable GraphQL Introspection</Link>
+      <Link to="/graphql/cloud/security/rotating-admin-secrets">Rotating Admin Secrets</Link>
+    </CustomTOCListContent>
+  </CustomTOCListSection>
+</CustomTOCList>
 ```
+
+:::caution Watchout the link type
+If you notice, we have added extension to the paths in link where as in `<Link />` component we didn't.
+
+Thats beacuse, the MDX links are treated as file-paths and is resolved to generated url paths automatically by docusaurus.
+On the other hand, the path in `Link` component should already be a url path as it cannot resolve file-paths.
+
+Best practice is to keep the directory/file path structure and url structure same to avooid the maintainence burden when using both types of syntax.
+:::
 
   </TabItem>
 </Tabs>
 
 #### Result UI
-will render something like below. Please note that links will be broken as they are just samples.
+will render something like below.
 
-<CustomTOCList>
-  <CustomTOCListSection>
-    <CustomTOCListContent>
-      <Link to="#allow-lists">Allow Lists</Link>
-      <Link to="#api-limits">API Limits</Link>
-      <Link to="#disable-graphql-introspection">Disable GraphQL Introspection</Link>
-      <Link to="#rotating-admin-secrets">Rotating Admin Secrets</Link>
-    </CustomTOCListContent>
-  </CustomTOCListSection>
-</CustomTOCList>
+- [Allow Lists](/graphql/cloud/security/allow-lists.mdx)
+- [API Limits](/graphql/cloud/security/api-limits.mdx)
+- [Disable GraphQL Introspection](/graphql/cloud/security/disable-graphql-introspection.mdx)
+- [Rotating Admin Secrets](/graphql/cloud/security/rotating-admin-secrets.mdx)
 
 ### Group of Lists
 Its a list of simple lists (UI wise).
