@@ -277,23 +277,16 @@ const saveFunctionComment = updatedComment => (dispatch, getState) => {
   const { currentSchema } = getState().tables;
   const { functionName } = getState().functions;
 
-  const upQuery = dataSource.getSetCommentSql(
-    'function',
-    '',
-    currentSchema,
-    updatedComment || null,
-    null,
-    functionName
-  );
-
-  const downQuery = dataSource.getSetCommentSql(
-    'function',
-    '',
-    currentSchema,
-    'NULL',
-    null,
-    functionName
-  );
+  const upQuery = dataSource.getAlterFunctionCommentSql({
+    functionName,
+    schemaName: currentSchema,
+    comment: updatedComment ?? null,
+  });
+  const downQuery = dataSource.getAlterFunctionCommentSql({
+    functionName,
+    schemaName: currentSchema,
+    comment: null,
+  });
 
   const migration = new Migration();
   migration.add(

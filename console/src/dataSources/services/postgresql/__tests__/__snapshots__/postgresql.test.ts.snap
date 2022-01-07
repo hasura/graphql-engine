@@ -1,5 +1,17 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`postgresql datasource tests getAlterColumnCommentSql should generate SQL for modifying column comment 1`] = `
+"
+  comment on column \\"public\\".\\"users\\".\\"id\\" is E'user\\\\'s comment'
+"
+`;
+
+exports[`postgresql datasource tests getAlterFunctionCommentSql should generate SQL for modifying function comment 1`] = `
+"
+comment on function \\"public\\".\\"users\\" is E'user\\\\'s comment'
+"
+`;
+
 exports[`postgresql datasource tests getAlterPkSql should generate alter operation as a single transaction  1`] = `
 "BEGIN TRANSACTION;
 ALTER TABLE \\"public\\".\\"users\\" DROP CONSTRAINT \\"PK__users__1234\\";
@@ -17,3 +29,5 @@ ALTER TABLE \\"public\\".\\"users\\"
     ADD CONSTRAINT \\"test_constraint\\" PRIMARY KEY (\\"id\\", \\"account\\");
 COMMIT TRANSACTION;"
 `;
+
+exports[`postgresql datasource tests getAlterTableCommentSql should generate SQL for modifying table comment 1`] = `"comment on table \\"public\\".\\"users\\" is E'user\\\\'s comment'"`;
