@@ -7,6 +7,7 @@ import DirectivesSpec qualified
 import Harness.GraphqlEngine (startServerThread, stopServer)
 import Harness.State (State (..))
 import LimitOffsetSpec qualified
+import NestedRelationshipsSpec qualified
 import ObjectRelationshipsSpec qualified
 import OrderingSpec qualified
 import ServiceLivenessSpec qualified
@@ -41,3 +42,4 @@ main =
       describe "ArrayRelationships" ArrayRelationshipsSpec.spec
       describe "Directives" DirectivesSpec.spec
       describe "Views" ViewsSpec.spec
+      describe "NestedRelationships" NestedRelationshipsSpec.spec
