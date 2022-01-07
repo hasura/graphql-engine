@@ -110,7 +110,8 @@ X-Hasura-Role: admin
 </TabItem>
 </Tabs>
 
-:::info For existing v1.3 projects If you have configured your Postgres instances with replicas, the replica URLs can be added to Hasura using the following environment variable in your project ENV Vars tab:
+:::info 
+For existing v1.3 projects If you have configured your Postgres instances with replicas, the replica URLs can be added to Hasura using the following environment variable in your project ENV Vars tab:
 
 ```bash
 HASURA_GRAPHQL_READ_REPLICA_URLS=postgres://user:password@replica-host:5432/db
@@ -122,7 +123,8 @@ Additional environment variables for read replicas specifically:
 
 `HASURA_GRAPHQL_CONNECTIONS_PER_READ_REPLICA`
 
-`HASURA_GRAPHQL_STRIPES_PER_READ_REPLICA` :::
+`HASURA_GRAPHQL_STRIPES_PER_READ_REPLICA` 
+:::
 
 ### MS SQL Server
 

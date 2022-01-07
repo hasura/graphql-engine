@@ -34,7 +34,8 @@ Once you have the token it can be used with the header: `Authorization: pat <tok
 
 :::info Note
 
-This token can be used to authenticate against Hasura Cloud APIs and your Hasura Cloud projects. Make sure you keep it secure. The token will be valid until you delete it from the dashboard. :::
+This token can be used to authenticate against Hasura Cloud APIs and your Hasura Cloud projects. Make sure you keep it secure. The token will be valid until you delete it from the dashboard. 
+:::
 
 ## APIs
 
@@ -51,10 +52,13 @@ mutation createProject {
   createTenant(
     cloud: "aws"
     region: "us-east-2"
-    envs: [
-      { key: "HASURA_GRAPHQL_CORS_DOMAIN", value: "*" }
-      { key: "MY_ENV_VAR_1", value: "my value 1" }
-    ]
+    envs: [{ 
+      key: "HASURA_GRAPHQL_CORS_DOMAIN",
+      value: "*"
+    }, { 
+      key: "MY_ENV_VAR_1", 
+      value: "my value 1" 
+    }]
   ) {
     id
     name
@@ -119,9 +123,9 @@ mutation updateTenantEnv {
     tenantId: "7a79cf94-0e53-4520-a560-1b02bf522f08"
     currentHash: "6902a395d70072fbf8d36288f0eacc36c9d82e68"
     envs: [
-      { key: "HASURA_GRAPHQL_ENABLE_CONSOLE", value: "true" }
+      { key: "HASURA_GRAPHQL_ENABLE_CONSOLE", value: "true" },
       {
-        key: "ACTIONS_ENDPOINT"
+        key: "ACTIONS_ENDPOINT",
         value: "https://my-actions-endpoint.com/actions"
       }
     ]
@@ -144,16 +148,16 @@ mutation createGitHubPreviewApp {
       githubRepoDetails: {
         branch: "main"
         owner: "my-org"
-        repo: "my-repo"
+        repo: "my-repo",
         directory: "backend/hasura"
-      }
+      },
       projectOptions: {
-        cloud: "aws"
-        region: "us-east-2"
-        plan: "cloud_free"
+        cloud: "aws",
+        region: "us-east-2",
+        plan: "cloud_free",
         name: "my-app_name"
         envVars: [
-          { key: "HASURA_GRAPHQL_AUTH_HOOK", value: "https://my-webhook.com" }
+          { key: "HASURA_GRAPHQL_AUTH_HOOK", value: "https://my-webhook.com" },
           { key: "MY_ENV_VAR_1", value: "my value 1" }
         ]
       }

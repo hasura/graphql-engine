@@ -26,7 +26,9 @@ import { CustomTOCListHead } from "@site/src/components/CustomTOCList/CustomTOCL
 
 Hasura Cloud exposes an [API](/graphql/cloud/api-reference#api-ref-create-preview-app) to create preview apps with metadata and migrations from a branch of a GitHub repo. You can use this API for creating preview Hasura GraphQL Engine instances on pull requests and for previewing a Hasura project with metadata and migrations from a GitHub branch. This can be done either by triggering the API directly from your CI/CD or by using the [hasura-cloud-preview-apps](https://github.com/hasura/hasura-cloud-preview-apps) GitHub action.
 
-:::note Usage limits Usage is limited to 60 preview app API calls per month for users with only `Free` tier projects on Hasura Cloud. More plans coming soon. :::
+:::note
+Usage limits Usage is limited to 60 preview app API calls per month for users with only `Free` tier projects on Hasura Cloud. More plans coming soon.
+:::
 
 ## Using the hasura-cloud-preview-apps GitHub action
 
@@ -118,7 +120,9 @@ postgresDBConfig: |
 
 The above snippet will create three temporary databases and expose their connection string to the created preview app through `PG_DB_URL1`, `PG_DB_URL2` and `PG_DB_URL3` env vars. Edit the snippet as per the env var requirements of your Hasura instance.
 
-:::info Note If you use databases other than Postgres, you can create the ephemeral databases yourself and pass the env vars in the `hasuraEnv` field. :::
+:::info
+Note If you use databases other than Postgres, you can create the ephemeral databases yourself and pass the env vars in the `hasuraEnv` field.
+:::
 
 ### Step 4: Set up the deletion of preview apps
 
@@ -147,7 +151,9 @@ jobs:
 
 This will make sure that whenever the pull request is closed, the preview app gets deleted.
 
-:::info Note If you have used `postgresDBConfig` in the creation workflow, make sure that you include it in the deletion workflow as well so that the created databases get deleted when the pull request is gets closed/merged. :::
+:::info
+Note If you have used `postgresDBConfig` in the creation workflow, make sure that you include it in the deletion workflow as well so that the created databases get deleted when the pull request is gets closed/merged. 
+:::
 
 ## Using the API manually
 
