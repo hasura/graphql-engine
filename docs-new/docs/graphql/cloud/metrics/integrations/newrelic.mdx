@@ -1,14 +1,14 @@
 ---
 sidebar_position: 2
 description: New Relic Integration on Hasura Cloud
-keywords: 
- - hasura
- - docs
- - metrics
- - integration
- - export logs
- - newrelic
- - new relic
+keywords:
+  - hasura
+  - docs
+  - metrics
+  - integration
+  - export logs
+  - newrelic
+  - new relic
 ---
 
 import Thumbnail from "@site/src/components/Thumbnail/Thumbnail";
@@ -17,19 +17,13 @@ import Thumbnail from "@site/src/components/Thumbnail/Thumbnail";
 
 ## Introduction
 
-You can export metrics and operation logs of your Hasura Cloud project
-to [New Relic](https://newrelic.com/). This can be configured on the
-integrations tab on the project's setting page.
+You can export metrics and operation logs of your Hasura Cloud project to [New Relic](https://newrelic.com/). This can be configured on the integrations tab on the project's setting page.
 
-:::note
-New Relic Integration is only available for Hasura Cloud projects on the
-`Standard` (pay-as-you-go) tier and above.
-:::
+:::note New Relic Integration is only available for Hasura Cloud projects on the `Standard` (pay-as-you-go) tier and above. :::
 
 ## Configure New Relic integration
 
-Navigate to the integrations tab on project settings page to find New
-Relic integration.
+Navigate to the integrations tab on project settings page to find New Relic integration.
 
 <Thumbnail
   src="/img/graphql/cloud/metrics/integrate-newrelic.png"
@@ -37,11 +31,7 @@ Relic integration.
   width="1146px"
 />
 
-Select the New Relic API region and enter the New Relic Insights Insert
-API key (follow [New Relic docs to retrieve the API
-key](https://docs.newrelic.com/docs/apis/get-started/intro-apis/new-relic-api-keys/#insights-insert-key)),
-host, service name and custom attributes to associate with exported logs
-and metrics.
+Select the New Relic API region and enter the New Relic Insights Insert API key (follow [New Relic docs to retrieve the API key](https://docs.newrelic.com/docs/apis/get-started/intro-apis/new-relic-api-keys/#insights-insert-key)), host, service name and custom attributes to associate with exported logs and metrics.
 
 | Field             | Description                                                                                                                                                                                                                                                                                                                                                                              |
 |-------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -54,18 +44,13 @@ and metrics.
 <Thumbnail
   src="/img/graphql/cloud/metrics/configure-newrelic.png"
   alt="Configure New Relic Integration"
-  width="437px"
 />
 
 After adding appropriate values, click `Save`.
 
 ## Checking the status of the integration
 
-The green/red dot signifies the status of the integration. Green
-signifies successful exporting of logs to New Relic. When logs are
-successfully exported, `Last Exported` is continuously updated,
-indicating the timestamp of the last log line successfully exported to
-your New Relic account.
+The green/red dot signifies the status of the integration. Green signifies successful exporting of logs to New Relic. When logs are successfully exported, `Last Exported` is continuously updated, indicating the timestamp of the last log line successfully exported to your New Relic account.
 
 <Thumbnail
   src="/img/graphql/cloud/metrics/configure-newrelic-done.png"
@@ -73,8 +58,7 @@ your New Relic account.
   width="1146px"
 />
 
-In case there is an error while exporting logs to New Relic, the dot is
-red and the HTTP status code of the error is displayed right below it.
+In case there is an error while exporting logs to New Relic, the dot is red and the HTTP status code of the error is displayed right below it.
 
 <Thumbnail
   src="/img/graphql/cloud/metrics/configure-newrelic-fail.png"
@@ -84,10 +68,7 @@ red and the HTTP status code of the error is displayed right below it.
 
 ## View logs
 
-The logs can be viewed in your New Relic dashboard, under the `Logs` tab
-([read more on New Relic
-docs](https://docs.newrelic.com/docs/logs/log-management/get-started/get-started-log-management/#find-data)).
-To navigate to the same, click `View Logs`.
+The logs can be viewed in your New Relic dashboard, under the `Logs` tab ([read more on New Relic docs](https://docs.newrelic.com/docs/logs/log-management/get-started/get-started-log-management/#find-data)). To navigate to the same, click `View Logs`.
 
 <Thumbnail
   src="/img/graphql/cloud/metrics/newrelic-view-logs.png"
@@ -101,13 +82,11 @@ To navigate to the same, click `View Logs`.
   width="1146px"
 />
 
-To view only logs exported by Hasura Cloud, filter your logs using
-`attributes` you configured with this integration.
+To view only logs exported by Hasura Cloud, filter your logs using `attributes` you configured with this integration.
 
 ## View metrics
 
-The integration exports the following five metrics to your New Relic
-account:
+The integration exports the following five metrics to your New Relic account:
 
 | Metric Exported                | Metric Name in New Relic      |
 |--------------------------------|-------------------------------|
@@ -117,12 +96,9 @@ account:
 | Active subscriptions           | `active_subscriptions`        |
 | Number of websockets open      | `websockets_open`             |
 
-Non zero values of all the above metrics are exported over a one minute
-time interval. Each metric name is prefixed with `hasura_cloud`.
+Non zero values of all the above metrics are exported over a one minute time interval. Each metric name is prefixed with `hasura_cloud`.
 
-Graphs for all the above metrics can be viewed in your New Relic
-account. Under `Browse Data` select `Metrics` and choose the metrics
-name. To navigate to New Relic dashboard, click `View Metrics`.
+Graphs for all the above metrics can be viewed in your New Relic account. Under `Browse Data` select `Metrics` and choose the metrics name. To navigate to New Relic dashboard, click `View Metrics`.
 
 <Thumbnail
   src="/img/graphql/cloud/metrics/newrelic-view-metrics.png"

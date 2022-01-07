@@ -7,7 +7,7 @@ keywords:
   - domains
 ---
 
-import TOCInline from '@theme/TOCInline';
+import TOCInline from "@theme/TOCInline";
 import Thumbnail from "@site/src/components/Thumbnail/Thumbnail";
 import { CustomTOCListHead } from "@site/src/components/CustomTOCList/CustomTOCList";
 
@@ -18,13 +18,11 @@ import { CustomTOCListHead } from "@site/src/components/CustomTOCList/CustomTOCL
 
 ## Introduction
 
-In the `Domains` tab, you can see the default Hasura domain, and you
-have the possibility to add custom domains.
+In the `Domains` tab, you can see the default Hasura domain, and you have the possibility to add custom domains.
 
 ## Adding a custom domain
 
-You can add a custom domain to your Hasura Cloud project by following
-the steps below.
+You can add a custom domain to your Hasura Cloud project by following the steps below.
 
 ### Step 1: Navigate to add a custom domain
 
@@ -58,15 +56,9 @@ After adding a custom domain, the following window will show up:
 
 Add the default Hasura domain as a `CNAME` record to your DNS.
 
-:::info Note
-If you're using [Cloudflare](https://www.cloudflare.com) as your DNS
-provider, do not enable the proxy (orange cloud) until the certificate
-is generated. i.e. `Proxy status` should be `DNS only`. You can enable
-the proxy after SSL certificate is generated.
-:::
+:::info Note If you're using [Cloudflare](https://www.cloudflare.com) as your DNS provider, do not enable the proxy (orange cloud) until the certificate is generated. i.e. `Proxy status` should be `DNS only`. You can enable the proxy after SSL certificate is generated. :::
 
-Until this is done, the dashboard will show a notice that the DNS
-validation is pending.
+Until this is done, the dashboard will show a notice that the DNS validation is pending.
 
 <Thumbnail
   src="/img/graphql/cloud/projects/dns-validation-pending.png"
@@ -74,15 +66,11 @@ validation is pending.
   width="727px"
 />
 
-:::info Note
-Depending on your DNS provider, it might take up to 24 hours for the DNS
-record to be added.
-:::
+:::info Note Depending on your DNS provider, it might take up to 24 hours for the DNS record to be added. :::
 
 ## DNS validated
 
-Once the DNS is validated, the dashboard will update the status with the
-following notice:
+Once the DNS is validated, the dashboard will update the status with the following notice:
 
 <Thumbnail
   src="/img/graphql/cloud/projects/dns-validated.png"

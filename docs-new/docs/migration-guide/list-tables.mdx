@@ -8,9 +8,10 @@ import CodeBlock from '@theme/CodeBlock';
 import Link from '@docusaurus/Link';
 
 # List Tables
-This might be a bit of complex part in migration.
 
-This section probably needs a direct migration from RST to MDX rather than from pandoc migrated files as the auto migration messes up the code block syntax witj lot of `span`'s. Apologies for inconvinience.
+Listing tables might be a bit of a complex part in the migration.
+
+This section probably needs a direct migration from RST to MDX rather than from `pandoc` migrated files as the auto migration messes up the code block syntax with lots of `span`'s. Apologies for the inconvenience.
 
 ## Sphinx - RST
 
@@ -23,7 +24,7 @@ This section probably needs a direct migration from RST to MDX rather than from 
      - Description
 
    * - Region 
-     - The region of the datacentre where your New Relic account stores its data. `Read more about regions on New Relic docs. <https://docs.newrelic.com/docs/using-new-relic/welcome-new-relic/get-started/our-eu-us-region-data-centers>`_
+     - The region of the data centre where your New Relic account stores its data. `Read more about regions on New Relic docs. <https://docs.newrelic.com/docs/using-new-relic/welcome-new-relic/get-started/our-eu-us-region-data-centers>`_
 
    * - API Key 
      - API keys are unique to your organization. An API key is required by the New Relic API to submit metrics and events to New Relic. You can get the API key from `here <https://one.newrelic.com/launcher/api-keys-ui.api-keys-launcher>`__ if you are in New Relic US region and `here <https://one.eu.newrelic.com/launcher/api-keys-ui.api-keys-launcher>`__ if you're in New Relic EU region.
@@ -39,19 +40,20 @@ This section probably needs a direct migration from RST to MDX rather than from 
 ```
 
 ## Docusaurus - MDX
-If the table consist of simple text and no complex UI and no colum width control. This can be plain markdown syntax as below.
+
+If the table consists of simple text and no complex UI and no column width control. This can be plain markdown syntax as below:
 
 ```markdown
-| Field             | Description                                                                                                                                                                                                                                              |
-|-------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Region            | The region of the datacentre where your New Relic account stores its data. [Read more about regions on New Relic docs.](https://docs.newrelic.com/docs/using-new-relic/welcome-new-relic/get-started/our-eu-us-region-data-centers)                                                                                                                                |
+| Field             | Description                                                                                                                                                                                                                                                                                                                                                                              |
+|-------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Region            | The region of the datacentre where your New Relic account stores its data. [Read more about regions on New Relic docs.](https://docs.newrelic.com/docs/using-new-relic/welcome-new-relic/get-started/our-eu-us-region-data-centers)                                                                                                                                                      |
 | API Key           | API keys are unique to your organization. An API key is required by the New Relic API to submit metrics and events to New Relic. You can get the API key from [here](https://one.newrelic.com/launcher/api-keys-ui.api-keys-launcher) if you are in New Relic US region and [here](https://one.eu.newrelic.com/launcher/api-keys-ui.api-keys-launcher) if you're in New Relic EU region. |
-| Host              | The name of the originating host of the log and metrics.                                                                                                                                                                                                 |
-| Custom Attributes | Custom Attributes associated with your logs and metrics. A default source tag `hasura-cloud-metrics` is added to all exported logs and metrics. Attributes `project_id` and `project_name` are added to all exported metrics.                            |
-| Service Name      | The name of the application or service generating the log events.                                                                                                                                                                                        |
+| Host              | The name of the originating host of the log and metrics.                                                                                                                                                                                                                                                                                                                                 |
+| Custom Attributes | Custom Attributes associated with your logs and metrics. A default source tag `hasura-cloud-metrics` is added to all exported logs and metrics. Attributes `project_id` and `project_name` are added to all exported metrics.                                                                                                                                                            |
+| Service Name      | The name of the application or service generating the log events.                                                                                                                                                                                                                                                                                                                        |
 ```
 
-Unfortunatly, `markdown` doesn't not have straight forward syntax to control width and had to rely on html for this.
+Unfortunately, `markdown` doesn't have straightforward syntax to control the width and had to rely on html for this.
 
 ```html {4,5}
 <table>
@@ -87,7 +89,7 @@ Unfortunatly, `markdown` doesn't not have straight forward syntax to control wid
 ```
 
 :::tip Few things to note:
-If a table cell is mixed with text and markdown stuff (`code highlighters`, [links](/migration-guide/links) etc., Please prefer `html` syntax over markdown as markdown wont be parsed correctly.
+If a table cell is mixed with text and markdown stuff (`code highlighters`, [links](/migration-guide/links) etc., Please prefer `html` syntax over markdown as markdown won't be parsed correctly.
 
 ```html
 <!-- Usage of <Link> for `[link](https://...)` -->
@@ -104,6 +106,7 @@ If a table cell is mixed with text and markdown stuff (`code highlighters`, [lin
   <td>Custom ... tag <code>hasura-cloud-metrics</code> is ... Attributes <code>project_id</code> and <code>project_name</code> are ... metrics.</td>
 </tr>
 ```
+
 :::
 
 Which would render like this
@@ -142,7 +145,7 @@ Which would render like this
 ## With Code Blocks
 
 When a table cell is just a codeblock, the normal triple tick syntax works fine. But, please do leave an intentional empty line before and after the code block.
-Also, start the codeblock and respective cell (`td/th`) at the very beginning of line (no empty tabs/spaces at start).
+Also, start the code block and respective cell (`td/th`) at the very beginning of line (no empty tabs/spaces at start).
 
 ```html
     <table>
@@ -169,8 +172,8 @@ Also, start the codeblock and respective cell (`td/th`) at the very beginning of
     </table>
 ```
 
-Do one better and ignore the indentation altogether for all tags in table. This might be bit of not so eye friendly to read, but works.
-Please do not that this is required only when there is a cell invloving code block.
+Do one better and ignore the indentation altogether for all tags in table. This might be bit of not so eye-friendly to read, but works.
+Please do not that this is required only when there is a cell involving code block.
 
 <table>
   <thead>
@@ -238,6 +241,7 @@ Please do not that this is required only when there is a cell invloving code blo
 ```
 
 ### Docusaurus - MDX
+
 The `:widths:` can be added as `width` attribute to `html` - `th`. And the `:header-rows:` determines the number of header rows to be considered for `<thead>`.
 
 Each row in RST syntax starts with `*` prefix (ex: `* - Status Code`). SO the first row will be header and rest of them will be `tr`s under table body.

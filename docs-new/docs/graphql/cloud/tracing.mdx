@@ -89,7 +89,7 @@ There is no standard method for trace propagation via Postgres
 transactions. For example, event triggers can be invoked by mutations,
 and so their traces should be correlated.
 
-For this reason, we have adopted our own method of propagating a trace
+For this reason, we have adopted our method of propagating a trace
 context in Postgres transactions.
 
 The trace context will be serialized during mutations as a

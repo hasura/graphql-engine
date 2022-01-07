@@ -11,7 +11,7 @@ Used an auto transform tool [Pandoc](https://pandoc.org) to transform `reStructi
 
 You will be working in the `docs-new/docs/graphql` directory. Here you can find the `.txt` files already added from auto-transform result. So, you don't have to create any new files.
 
-Below is the steps to complete the migration cylcle for each doc file.
+Below are the steps to complete the migration cycle for each doc file.
 
 Update the extension and migrate content.
 
@@ -19,12 +19,11 @@ Update the extension and migrate content.
 
 2. Use this migration guide for syntactical and usage reference.
 
-3. Validate content and cleanup misc divs that are populated during auto transform and any invalid mdx data.
+3. Validate content and cleanup misc divs that are populated during auto transform and any invalid `.mdx` data.
 
 4. The misc populated divs exist to ease adding metadata and any sphinx directives that can't be auto transformed to markdown. Please cross referene the actual RST file for content validation.
 
 Verify content correctness (compare against the current live version of [Hasura docs](https://hasura.io/docs/)) and preview in UI.
-
 
 </details>
 
@@ -58,7 +57,7 @@ Please read the docusaurus docs about this here - https://docusaurus.io/docs/sid
 <summary>Why is live docs content different from the txt files?</summary>
 
 The transformed _txt_ *txt* files are populated from `main` branch which is always ahead of the live version.
-We deploy only when there is major / simignoficant changes are added. Hence, the difference.
+We deploy only when there are major/significant changes are added. Hence, the difference.
 
 We would recommend not to copy content from live but use it only for reference. Please always refer the original `.rst` file under `<REPO_ROOT>/docs/graphql/` for content reference.
 
@@ -75,13 +74,13 @@ Use `slug` metadata to manually set the slug to `directory/index`. Please check 
 slug: /migration-guide/index
 ---
 ```
-</details>
 
+</details>
 
 <details>
 <summary>A directory is not visible in sidebar when only index.mdx file exists</summary>
 
-This is known and default behaviour from docusaurus. `index` is considered direct link to directory index and won't be visible unless there is one more file.
+This is known and default behavior from docusaurus. `index` is considered direct link to directory index and won't be visible unless there is one more file.
 
 To fix, rename the file from `index.mdx` to `directory-name.mdx` and remove the directory.
 
@@ -103,12 +102,12 @@ To get the file path, do a global search for id in `graphql-engine/docs/graphql/
 You can prepend the id with `.. _` to only get the file id as result and not include the usage files.
 :::
 
-Hey, this can be even simplified if you reference the current [live docs](https://hasura.io/docs/). Click the link in docs and copy the URL strarting from `graphql`.
-Please make sure to handle extension (remove `.html`) and also add the `#hash-part` if linking to a sub section.
+Hey, this can be even simplified if you reference the current [live docs](https://hasura.io/docs/). Click the link in docs and copy the URL starting from `graphql`.
+Please make sure to handle extension (remove `.html`) and also add the `#hash-part` if linking to a sub-section.
 
 The root relative link should start at `graphql` directory level.
 
-Ex: Link from above screnshot `/graphql/core/api-reference/metadata-api/actions.mdx`
+Ex: Link from above screenshot `/graphql/core/api-reference/metadata-api/actions.mdx`
 
 ```markdown
 [actions Metadata API](/graphql/core/api-reference/metadata-api/actions.mdx)
@@ -116,5 +115,6 @@ Ex: Link from above screnshot `/graphql/core/api-reference/metadata-api/actions.
 <!-- If using Link component -->
 <Link to="/graphql/core/api-reference/metadata-api/actions">actions Metadata API</Link>
 ```
+
 Please refer [Links](/migration-guide/links.mdx) for more information about links usage.
 </details>

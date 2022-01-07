@@ -11,7 +11,7 @@ Please refer [this](https://www.sphinx-doc.org/en/master/usage/restructuredtext/
 
 ## External Links
 
-These are straight forward syntax swap as give below.
+These are straightforward syntax swap as given below.
 
 <Tabs>
   <TabItem value="sphinx" label="Sphinx - RST" default>
@@ -64,7 +64,7 @@ Similar to how a top level id will resolve to file/document, a sub-section can a
 
 This is similar to using hash in the url (`#sub-section`) to directly link to a section in the page.
 
-While the top level can be added as `id` attribute in metadata. The sub-section (h2's, h3's and stuff) can have id's with speacial mdx syntax `{#id-for-sub-section}`
+While the top level can be added as `id` attribute in metadata. The sub-section (h2's, h3's and stuff) can have id's with special mdx syntax `{#id-for-sub-section}`
 
 ![Referencing sub-section in rst vs markdown](/img/migration-guide/link-sub-section-ids.png)
 :::
@@ -87,7 +87,7 @@ To avoid this scenario, we can use root relative paths. The path will still brea
 Find `/folder1/subfolder2/doc3.mdx` and replace with `/folder1/newsubfolder4/doc5.mdx`
 ```
 
-Since MDX doesn't yet support direct document referencing with `id/ref` unlike sphinx, we need to settle with root relative path liniking for now.
+Since MDX doesn't yet support direct document referencing with `id/ref` unlike sphinx, we need to settle with root relative path linking for now.
 
 ```
 [MDX Root Relative Link](/migration-guide/index.mdx#contents-covered)
@@ -96,7 +96,7 @@ Since MDX doesn't yet support direct document referencing with `id/ref` unlike s
 
 > [MDX Root Relative Link](/migration-guide/index.mdx#contents-covered)
 
-:::tip Dont forget the extension!
+:::tip Don't forget the extension!
 Make sure to include file extension as MDX links are parsed as a file path and will be resolved correctly.
 :::
 
