@@ -69,6 +69,24 @@ While the top level can be added as `id` attribute in metadata. The sub-section 
 ![Referencing sub-section in rst vs markdown](/img/migration-guide/link-sub-section-ids.png)
 :::
 
+:::caution
+
+```rst
+:ref:`cloud_getting_started`
+```
+
+this Will actually resolve to a link with label. Label is the title of the document with respective id.
+
+So the MDX, should be with the label (please always refer live docs site to see how this link looks in UI - lable + url)
+
+```markdown
+[Getting Started with Hasura Cloud](/graphql/cloud/getting-started/index.mdx)
+```
+
+The Result UI: [Getting Started with Hasura Cloud](/graphql/cloud/getting-started/index.mdx)
+
+:::
+
 :::danger be cautious with URL slug
 If we add an `id` metadata for the document, the url slug for this page will be overridden to `id` as opposed to default filename. Thus requiring us to set a slug if we intend to leave it default.
 
