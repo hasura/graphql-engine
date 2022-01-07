@@ -1,8 +1,10 @@
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE RecordWildCards #-}
 
--- | Testing object relationships.
-module ObjectRelationshipsSpec (spec) where
+-- | Testing nested relationships.
+--
+-- Original inspiration for this module is <https://github.com/hasura/graphql-engine-mono/blob/08caf7df10cad0aea0916327736147a0a8f808d1/server/tests-py/queries/graphql_query/mysql/nested_select_query_deep.yaml>
+module NestedRelationshipsSpec (spec) where
 
 import Harness.Constants
 import Harness.Feature qualified as Feature
@@ -82,18 +84,24 @@ VALUES
     [sql|
 CREATE TABLE article (
     id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    title TEXT,
+    content TEXT,
+    is_published BIT,
+    published_on TIMESTAMP,
     author_id INT UNSIGNED,
-    FOREIGN KEY (author_id) REFERENCES author(id)
+    co_author_id INT UNSIGNED,
+    FOREIGN KEY (author_id) REFERENCES author(id),
+    FOREIGN KEY (co_author_id) REFERENCES author(id)
 );
 |]
   Mysql.run_
     [sql|
 INSERT INTO article
-    (author_id)
+    (title, content, author_id, is_published)
 VALUES
-    ( 1 ),
-    ( 1 ),
-    ( 2 );
+    ( 'Article 1', 'Sample article content 1', 1, 0 ),
+    ( 'Article 2', 'Sample article content 2', 1, 1 ),
+    ( 'Article 3', 'Sample article content 3', 2, 1 );
 |]
 
   -- Track the tables
@@ -135,6 +143,24 @@ args:
   using:
     foreign_key_constraint_on: author_id
 |]
+  GraphqlEngine.post_
+    state
+    "/v1/metadata"
+    [yaml|
+type: mysql_create_array_relationship
+args:
+  source: mysql
+  table:
+    name: author
+    schema: hasura
+  name: articles
+  using:
+    foreign_key_constraint_on:
+      table:
+        name: article
+        schema: hasura
+      column: author_id
+|]
 
 mysqlTeardown :: State -> IO ()
 mysqlTeardown _ = do
@@ -152,7 +178,7 @@ DROP TABLE author;
 
 tests :: SpecWith State
 tests = do
-  it "Author of article where id=1" $ \state ->
+  it "Nested select on article" $ \state ->
     shouldReturnYaml
       ( GraphqlEngine.postGraphql
           state
@@ -162,46 +188,35 @@ query {
     id
     author {
       id
+      articles(where: {id: {_eq: 1}}) {
+        id
+        author {
+          id
+          articles(where: {id: {_eq: 1}}) {
+            id
+            author {
+              id
+            }
+          }
+        }
+      }
     }
   }
 }
 |]
       )
       [yaml|
-data:
-  hasura_article:
-  - id: 1
-    author:
-      id: 1
-|]
-
-  -- originally from <https://github.com/hasura/graphql-engine-mono/blob/cf64da26e818ca0e4ec39667296c67021bc03c2a/server/tests-py/queries/graphql_query/mysql/select_query_author_quoted_col.yaml>
-  it "Simple GraphQL object query on author" $ \state ->
-    shouldReturnYaml
-      ( GraphqlEngine.postGraphql
-          state
-          [graphql|
-query {
- hasura_author {
-    createdAt
-    name
-    id
-  }
-}
-|]
-      )
-      -- I believe that the order is not necessarily guaranteed, but
-      -- the Python test was written like this. We can't use
-      -- limit/order here without requiring that new backends
-      -- implement those too. Approach: hope that ordering is never
-      -- violated, and if it is, rework this test.
-      [yaml|
-data:
-  hasura_author:
-  - createdAt: '2017-09-21 09:39:44'
-    name: Author 1
-    id: 1
-  - createdAt: '2017-09-21 09:50:44'
-    name: Author 2
-    id: 2
+  data:
+    hasura_article:
+    - id: 1
+      author:
+        id: 1
+        articles:
+        - id: 1
+          author:
+            id: 1
+            articles:
+            - id: 1
+              author:
+                id: 1
 |]

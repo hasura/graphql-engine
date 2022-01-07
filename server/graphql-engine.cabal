@@ -970,6 +970,7 @@ test-suite tests-hspec
     Harness.GraphqlEngine
 
     ArrayRelationshipsSpec
+    NestedRelationshipsSpec
     BasicFieldsSpec
     DirectivesSpec
     HelloWorldSpec
