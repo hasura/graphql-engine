@@ -36,7 +36,7 @@ Configuring actions transforms
 
     .. thumbnail:: /img/graphql/core/actions/configure-transformation.png
        :alt: Configure action transformation
-       :width: 70%
+       :width: 800px
 
 
   .. tab:: API
@@ -107,15 +107,13 @@ You can use the `Kriti templating language <https://github.com/hasura/kriti-lang
 .. rst-class:: api_tabs
 .. tabs::
 
-
   .. tab:: Console
 
     In the ``Configure Transformations`` section, click on ``Add Payload Transformation``:
 
     .. thumbnail:: /img/graphql/core/actions/payload-transformation.png
        :alt: Add payload transformation
-       :width: 90%
-
+       :width: 1100px
 
   .. tab:: API
 
@@ -175,7 +173,7 @@ You can use the `Kriti templating language <https://github.com/hasura/kriti-lang
 
     .. thumbnail:: /img/graphql/core/actions/request-options-transformation.png
        :alt: Console action create
-       :width: 90%
+       :width: 800px
 
   .. tab:: API
 
@@ -212,7 +210,7 @@ Transform the method. This can be used to change the request method, say from ``
 
     .. thumbnail:: /img/graphql/core/actions/request-options-transformation.png
        :alt: Console action create
-       :width: 90%
+       :width: 800px
 
   .. tab:: API
 
@@ -243,17 +241,17 @@ Let's integrate Auth0's management API to update the profile of a user:
 
     .. thumbnail:: /img/graphql/core/actions/example-transformation-0.png
        :alt: Console action create
-       :width: 90%
+       :width: 1100px
 
     The transformation is given by:
 
     .. thumbnail:: /img/graphql/core/actions/example-transformation-1.png
        :alt: Console action create
-       :width: 90%
+       :width: 800px
 
     .. thumbnail:: /img/graphql/core/actions/example-transformation-2.png
        :alt: Console action create
-       :width: 90%
+       :width: 1000px
 
   .. tab:: API
 

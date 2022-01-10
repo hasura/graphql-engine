@@ -34,19 +34,20 @@ Invoke event trigger manually
 
    .. tab:: API
 
-      When creating an event trigger over the :ref:`create_event_trigger metadata API<create_event_trigger>`, you can set the argument ``enable_manual`` to true.
+      When creating an event trigger over the :ref:`metadata_pg_create_event_trigger` metadata API, you can set the argument ``enable_manual`` to true.
 
-      Then you can use the :ref:`invoke_event_trigger metadata API<invoke_event_trigger>` to invoke triggers manually:
+      Then you can use the :ref:`metadata_pg_invoke_event_trigger` metadata API to invoke triggers manually:
 
       .. code-block:: http
 
-         POST /v1/query HTTP/1.1
+         POST /v1/metadata HTTP/1.1
          Content-Type: application/json
          X-Hasura-Role: admin
 
          {
-            "type" : "invoke_event_trigger",
+            "type" : "pg_invoke_event_trigger",
             "args" : {
+               "source": "<db_name>",
                "name": "send_email",
                "payload": {}
             }

@@ -84,8 +84,7 @@ Update process
 
 .. admonition:: Update option might not be currently enabled for all users
 
-  If you do not see the option to update your project as mentioned below yet, you can expect to see so
-  in the coming few days.
+  If you do not see the option to update your project as mentioned below, please reach out to support.
 
 To start the update, you should see a button called ``Update`` next to your project on the Project list page
 as shown below:

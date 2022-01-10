@@ -45,7 +45,7 @@ for every ``author_details`` and a single ``details`` for every ``author``
   The metadata API is supported for versions ``v2.0.0`` and above and replaces the older
   :ref:`schema/metadata API <schema_metadata_apis>`.
 
-.. _pg_create_object_relationship:
+.. _metadata_pg_create_object_relationship:
 
 pg_create_object_relationship
 -----------------------------
@@ -133,7 +133,7 @@ Create an ``object relationship`` ``details`` on ``author`` *table*, *using* the
 
     Relationships via remote table are supported for versions ``v2.0.0-alpha.3`` and above.
 
-.. _pg_manual_obj_relationship:
+.. _metadata_pg_manual_obj_relationship:
 
 3. Manual configuration
 ^^^^^^^^^^^^^^^^^^^^^^^
@@ -181,7 +181,7 @@ follows:
    ``article`` table's ``id`` column to ``article_detail`` view's ``article_id``
    column.
 
-.. _pg_create_object_relationship_syntax:
+.. _metadata_pg_create_object_relationship_syntax:
 
 Args syntax
 ^^^^^^^^^^^
@@ -214,7 +214,7 @@ Args syntax
      - :ref:`SourceName <SourceName>`
      - Name of the source database of the table (default: ``default``)
 
-.. _pg_create_array_relationship:
+.. _metadata_pg_create_array_relationship:
 
 pg_create_array_relationship
 ----------------------------
@@ -314,7 +314,7 @@ follows:
    ``author`` table's ``id`` column to ``article_detail`` view's ``author_id``
    column.
 
-.. _pg_create_array_relationship_syntax:
+.. _metadata_pg_create_array_relationship_syntax:
 
 Args syntax
 ^^^^^^^^^^^
@@ -347,7 +347,7 @@ Args syntax
      - :ref:`SourceName <SourceName>`
      - Name of the source database of the table (default: ``default``)
 
-.. _pg_drop_relationship:
+.. _metadata_pg_drop_relationship:
 
 pg_drop_relationship
 --------------------
@@ -375,7 +375,7 @@ An example:
        }
    }
 
-.. _pg_drop_relationship_syntax:
+.. _metadata_pg_drop_relationship_syntax:
 
 Args syntax
 ^^^^^^^^^^^
@@ -409,7 +409,7 @@ Args syntax
    Be careful when using ``cascade``. First, try running the request without
    ``cascade`` or ``cascade`` set to ``false``.
 
-.. _pg_set_relationship_comment:
+.. _metadata_pg_set_relationship_comment:
 
 pg_set_relationship_comment
 ---------------------------
@@ -435,7 +435,7 @@ An example:
        }
    }
 
-.. _pg_set_relationship_comment_syntax:
+.. _metadata_pg_set_relationship_comment_syntax:
 
 Args syntax
 ^^^^^^^^^^^
@@ -465,7 +465,7 @@ Args syntax
      - Name of the source database of the table (default: ``default``)
 
 
-.. _pg_rename_relationship:
+.. _metadata_pg_rename_relationship:
 
 pg_rename_relationship
 ----------------------
@@ -490,7 +490,7 @@ An example:
        }
    }
 
-.. _pg_rename_relationship_syntax:
+.. _metadata_pg_rename_relationship_syntax:
 
 Args syntax
 ^^^^^^^^^^^

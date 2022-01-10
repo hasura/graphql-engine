@@ -2,7 +2,7 @@
    :description: Manage RESTified endpoints with the Hasura schema/metadata API
    :keywords: hasura, docs, restified-endpoints/metadata API, API reference, RESTified endpoints
 
-.. _api_restified_endpoints:
+.. _schema_metadata_api_restified_endpoints:
 
 Schema/Metadata API Reference: RESTified GraphQL Endpoints (Deprecated)
 =======================================================================
@@ -24,7 +24,7 @@ Add/Remove a RESTified GraphQL endpoint to Hasura GraphQL engine.
 
   Though for backwards compatibility, the schema/metadata APIs will continue to function.
 
-.. _create_rest_endpoint:
+.. _schema_metadata_create_rest_endpoint:
 
 create_rest_endpoint
 --------------------
@@ -56,7 +56,7 @@ An example request as follows:
    }
 
 
-.. _create_rest_endpoint_syntax:
+.. _schema_metadata_create_rest_endpoint_syntax:
 
 .. list-table::
    :header-rows: 1
@@ -90,7 +90,7 @@ An example request as follows:
 
   RESTified endpoints are supported from versions ``v2.0.0-alpha.1`` and above.
 
-.. _drop_rest_endpoint:
+.. _schema_metadata_drop_rest_endpoint:
 
 drop_rest_endpoint
 ------------------
@@ -112,7 +112,7 @@ An example request as follows:
        }
    }
 
-.. _drop_rest_endpoint_syntax:
+.. _schema_metadata_drop_rest_endpoint_syntax:
 
 .. list-table::
    :header-rows: 1

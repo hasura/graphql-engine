@@ -93,7 +93,7 @@ We can accomplish this by specifying the restricted schema (in GraphQL IDL forma
    }
 
 We use the above schema document to configure the remote schema permissions for the ``public``
-role by using the :ref:`add_remote_schema_permissions` API.
+role by using the :ref:`metadata_add_remote_schema_permissions` metadata API.
 
 You can modify different `GraphQL Types <https://spec.graphql.org/June2018/#sec-Types>`__ in the following manner:
 
@@ -385,6 +385,7 @@ Step 2: Test and verify the permissions
 Head to the ``API`` section. Add the session variable ``X-Hasura-Role`` with the value as the role for which we set permissions in the previous step.
 
 .. thumbnail:: /img/graphql/core/remote-schemas/role-based-schema.png
+  :width: 1100px
 
 As we see, the role ``user`` has access restricted to certain fields of the remote schema.    
 
