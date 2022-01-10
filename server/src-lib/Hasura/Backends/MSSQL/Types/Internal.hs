@@ -1,6 +1,8 @@
 {-# LANGUAGE DuplicateRecordFields #-}
 
--- | Types for Transact-SQL aka T-SQL; the language of SQL Server.
+-- | MSSQL Types Internal
+--
+-- Types for Transact-SQL aka T-SQL; the language of SQL Server.
 --
 -- In this module we define various MS SQL Server specific data types used for T-SQL generation.
 --

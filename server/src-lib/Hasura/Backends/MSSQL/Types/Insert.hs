@@ -1,6 +1,8 @@
 {-# LANGUAGE UndecidableInstances #-}
 
--- | Types for MSSQL Insert IR.
+-- | MSSQL Types Insert
+--
+-- Types for MSSQL Insert IR.
 module Hasura.Backends.MSSQL.Types.Insert
   ( BackendInsert (..),
     IfMatched (..),

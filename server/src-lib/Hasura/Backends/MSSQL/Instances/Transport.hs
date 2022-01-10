@@ -1,8 +1,10 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
--- | Defines the MSSQL instance of 'BackendTransport' and how to
---   interact with the database for running queries, mutations, subscriptions,
---   and so on.
+-- | MSSQL Instances Transport
+--
+-- Defines the MSSQL instance of 'BackendTransport' and how to
+-- interact with the database for running queries, mutations, subscriptions,
+-- and so on.
 module Hasura.Backends.MSSQL.Instances.Transport () where
 
 import Data.Aeson qualified as J
