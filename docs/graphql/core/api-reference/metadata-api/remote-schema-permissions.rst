@@ -314,7 +314,7 @@ Now, consider the following query:
 
 The ``user`` role won't be able to provide the value for the ``limit`` argument in
 the ``customer_transactions_history`` field because the ``limit`` has a preset set
-and the value will be added by the graphql-engine before it queries the remote schema.
+and the value will be added by the GraphQL engine before it queries the remote schema.
 
 .. _metadata_add_remote_schema_permissions_syntax:
 

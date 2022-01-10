@@ -132,7 +132,7 @@ Head to the ``GraphiQL`` tab in the console and try running a GraphQL query! Use
 
 .. thumbnail:: /img/graphql/core/databases/ms-sql-server/6-make-graphql-query.png
    :alt: Make GraphQL query
-   :width: 1000px
+   :width: 1100px
 
 
 Keep up to date

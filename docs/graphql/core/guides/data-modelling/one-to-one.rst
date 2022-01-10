@@ -54,7 +54,7 @@ the ``authors`` table and there will be only one row with a particular ``owner_i
 Step 2: Set up GraphQL relationships
 ------------------------------------
 
-To access the nested objects via the GraphQL API, :ref:`create the following relationships <create_relationships>`:
+To access the nested objects via the GraphQL API, :ref:`create the following relationships <pg_create_relationships>`:
 
 - Object relationship, ``passport_info`` from the ``authors`` table using  ``id -> passport_info :: owner_id``
 - Object relationship, ``owner`` from the ``passport_info`` table using ``owner_id -> authors :: id``
@@ -201,7 +201,7 @@ We can now:
 Caveat for nested inserts
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Due to the way nested inserts are typically handled (described :ref:`here <nested_inserts>`),
+Due to the way nested inserts are typically handled (described :ref:`here <pg_nested_inserts>`),
 the order of object insertion needs to be specified using the :ref:`insertion_order <ObjRelUsingManualMapping>` option while
 creating one-to-one relationships via the API. This is necessary to ensure nested inserts are possible
 using either side as the parent which would otherwise error out with a ``Not-NULL violation`` error in one of the cases.

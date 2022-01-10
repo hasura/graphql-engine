@@ -163,7 +163,7 @@ if you want to :ref:`secure your endpoint <heroku_secure>`.
 Step 4: Track tables and relationships
 **************************************
 
-Wait for the GraphQL engine to restart and then see :ref:`schema_existing_db` to enable GraphQL
+Wait for the GraphQL engine to restart and then see :ref:`pg_schema_existing_db` to enable GraphQL
 over the database.
 
 Option 2: Via Heroku CLI

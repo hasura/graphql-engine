@@ -105,4 +105,4 @@ Postgres views & Hasura
 
 After creating a view, you can expose it over your GraphQL API and query it like a normal table.
 
-See :ref:`this page <custom_views>` for more info on how to create and expose views in Hasura.
+See :ref:`this page <pg_custom_views>` for more info on how to create and expose views in Hasura.

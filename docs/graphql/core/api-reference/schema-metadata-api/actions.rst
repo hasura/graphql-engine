@@ -2,7 +2,7 @@
    :description: Manage actions with the Hasura schema/metadata API
    :keywords: hasura, docs, schema/metadata API, API reference, actions
 
-.. _api_actions:
+.. _schema_metadata_api_actions:
 
 Schema/Metadata API Reference: Actions (Deprecated)
 ===================================================
@@ -24,7 +24,7 @@ Introduction
 
   Though for backwards compatibility, the schema/metadata APIs will continue to function.
 
-.. _create_action:
+.. _schema_metadata_create_action:
 
 create_action
 -------------
@@ -64,7 +64,7 @@ Create a synchronous action with name ``create_user``:
    }
 
 
-.. _create_action_syntax:
+.. _schema_metadata_create_action_syntax:
 
 Args syntax
 ^^^^^^^^^^^
@@ -89,7 +89,7 @@ Args syntax
      - text
      - comment
 
-.. _drop_action:
+.. _schema_metadata_drop_action:
 
 drop_action
 -----------
@@ -112,7 +112,7 @@ Drop an action ``create_user``:
       }
    }
 
-.. _drop_action_syntax:
+.. _schema_metadata_drop_action_syntax:
 
 Args syntax
 ^^^^^^^^^^^
@@ -133,7 +133,7 @@ Args syntax
      - boolean
      - If set to ``true`` and action kind is ``asynchronous``, related data is deleted from catalog. (default: ``true``)
 
-.. _update_action:
+.. _schema_metadata_update_action:
 
 update_action
 -------------
@@ -173,7 +173,7 @@ Update an action ``create_user`` by making it's kind to ``asynchronous``:
    }
 
 
-.. _update_action_syntax:
+.. _schema_metadata_update_action_syntax:
 
 Args syntax
 ^^^^^^^^^^^
@@ -198,7 +198,7 @@ Args syntax
      - text
      - comment
 
-.. _create_action_permission:
+.. _schema_metadata_create_action_permission:
 
 create_action_permission
 ------------------------
@@ -219,7 +219,7 @@ create_action_permission
      }
    }
 
-.. _create_action_permission_syntax:
+.. _schema_metadata_create_action_permission_syntax:
 
 Args syntax
 ^^^^^^^^^^^
@@ -244,7 +244,7 @@ Args syntax
      - text
      - comment
 
-.. _drop_action_permission:
+.. _schema_metadata_drop_action_permission:
 
 drop_action_permission
 ----------------------
@@ -265,7 +265,7 @@ drop_action_permission
      }
    }
 
-.. _drop_action_permission_syntax:
+.. _schema_metadata_drop_action_permission_syntax:
 
 Args syntax
 ^^^^^^^^^^^

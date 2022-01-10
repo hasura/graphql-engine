@@ -53,7 +53,7 @@ Exporting Hasura metadata
 
   .. tab:: API
 
-     The export can be done via the :ref:`export_metadata metadata API <export_metadata>`.
+     The export can be done via the :ref:`metadata_export_metadata` metadata API.
      Response will be a JSON object with the Hasura metadata.
 
      Here is an example using ``curl`` to save this as a file:
@@ -108,7 +108,7 @@ before.
 
   .. tab:: API
 
-     The exported JSON can be imported via the :ref:`replace_metadata metadata API <replace_metadata>`.
+     The exported JSON can be imported via the :ref:`metadata_replace_metadata` metadata API.
 
      Here is an example using ``curl``:
 
@@ -157,7 +157,7 @@ when a new column has been added to a table via an external tool such as ``psql`
 
   .. tab:: API
 
-     The reload of metadata can be done via the :ref:`reload_metadata metadata API <reload_metadata>`.
+     The reload of metadata can be done via the :ref:`metadata_reload_metadata` metadata API.
 
      Here is an example using ``curl``:
 
@@ -205,7 +205,7 @@ again from scratch (e.g. tracking tables, relationships, creating triggers, acti
 
   .. tab:: API
 
-   The reset of metadata can be done via the :ref:`clear_metadata metadata API <clear_metadata>`.
+   The reset of metadata can be done via the :ref:`metadata_clear_metadata` metadata API.
 
    Here is an example using ``curl``:
 

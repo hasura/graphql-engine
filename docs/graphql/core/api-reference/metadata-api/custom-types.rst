@@ -15,7 +15,7 @@ Metadata API Reference: Custom Types
 Introduction
 ------------
 
-**Custom Types** are user-defined GraphQL types which help to define :ref:`Actions <api_actions>`.
+**Custom Types** are user-defined GraphQL types which help to define :ref:`Actions <metadata_api_actions>`.
 
 .. admonition:: Supported from
 

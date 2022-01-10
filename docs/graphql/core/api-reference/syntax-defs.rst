@@ -1656,7 +1656,7 @@ InputArgument
 
 .. note::
 
-   The ``GraphQL Types`` used in creating an action must be defined before via :ref:`Custom Types <api_custom_types>`
+   The ``GraphQL Types`` used in creating an action must be defined before via :ref:`Custom Types <metadata_api_custom_types>`
 
 .. _ComputedFieldDefinition:
 
@@ -2134,11 +2134,8 @@ RemoteField
 
 Examples:
 
-.. code-block:: http
-
-   POST /v1/query HTTP/1.1
-   Content-Type: application/json
-   X-Hasura-Role: admin
+.. parsed-literal::
+   :class: haskell-pre
 
    {
       "message": {
@@ -2148,11 +2145,8 @@ Examples:
       }
    }
 
-.. code-block:: http
-
-   POST /v1/query HTTP/1.1
-   Content-Type: application/json
-   X-Hasura-Role: admin
+.. parsed-literal::
+   :class: haskell-pre
 
    {
       "messages": {

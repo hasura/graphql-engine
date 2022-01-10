@@ -21,7 +21,7 @@ i.e. have different column permissions based on different row permissions.
 
 Currently it is not possible to define multiple column + row permission rules for the same role.
 
-We can work around this limitation by using :ref:`views <custom_views>`.
+We can work around this limitation by using :ref:`views <pg_custom_views>`.
 
 **Example**
 
@@ -39,7 +39,7 @@ We can achieve this via the following steps:
 Step 1: Create a view 
 ---------------------
 
-:ref:`Create a view <create_views>` called ``user_private`` with columns ``(user_id, email, phone, address)``:
+:ref:`Create a view <pg_create_views>` called ``user_private`` with columns ``(user_id, email, phone, address)``:
 
 .. code-block:: SQL
 
@@ -50,7 +50,7 @@ Step 1: Create a view
 Step 2: Create a relationship
 -----------------------------
 
-For the table ``user_info``, :ref:`create a manual object relationship <create_manual_relationships>` called
+For the table ``user_info``, :ref:`create a manual object relationship <pg_create_manual_relationships>` called
 ``private_info`` using ``user_info : id -> user_private : user_id``:
 
 .. thumbnail:: /img/graphql/core/auth/multiple-rules-create-manual-relationship.png

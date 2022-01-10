@@ -27,7 +27,7 @@ used for running any other CI/CD scripts in your workflow.
 
 .. note::
 
-  For ``config v1``, see :ref:`auto_apply_migrations_v1`.
+  For ``config v3``, see :ref:`auto_apply_migrations`.
 
 Applying migrations
 -------------------

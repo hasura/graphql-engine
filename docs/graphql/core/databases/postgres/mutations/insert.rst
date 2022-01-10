@@ -2,7 +2,7 @@
    :description: Insert an object into Postgres using a mutation
    :keywords: hasura, docs, postgres, mutation, insert
 
-.. _insert:
+.. _pg_insert:
 
 Postgres: Insert mutation
 =========================
@@ -41,7 +41,7 @@ Auto-generated insert mutation schema
 As you can see from the schema:
 
 - ``objects`` argument is necessary and you can pass multiple ``objects`` to the mutation.
-- You can pass an ``on_conflict`` argument to convert the mutation to an :ref:`upsert mutation <upsert>`.
+- You can pass an ``on_conflict`` argument to convert the mutation to an :ref:`upsert mutation <pg_upsert>`.
 - You can return the number of affected rows and the affected objects (with nested objects) in the response.
 - You can use the single object insert to get the inserted object directly as the mutation response.
 
@@ -260,7 +260,7 @@ Insert an object and get a nested object in response
       }
     }
 
-.. _nested_inserts:
+.. _pg_nested_inserts:
 
 Insert an object along with its related objects through relationships
 ---------------------------------------------------------------------
@@ -483,7 +483,7 @@ a bridge table ``article_tags``.
 **on_conflict**
 
 ``on_conflict`` can be passed as an argument in a nested insert statement. In our example, we say that if the unique key (``label``) already
-exists for a tag, we update the ``label`` of this respective tag (see :ref:`nested upsert caveats <nested-upsert-caveats>`).
+exists for a tag, we update the ``label`` of this respective tag (see :ref:`nested upsert caveats <pg_nested_upsert_caveats>`).
 
 Insert an object with a JSONB field
 -----------------------------------
@@ -631,7 +631,7 @@ Set a field to its default value during insert
 ----------------------------------------------
 
 To set a field to its ``default`` value, just omit it from the input object, irrespective of the
-:ref:`default value configuration <postgres_defaults>` i.e. via Postgres defaults or using column presets.
+:ref:`default value configuration <pg_postgres_defaults>` i.e. via Postgres defaults or using column presets.
 
 **Example:** If the default value of ``id`` is set to auto-incrementing integer, there's no need to pass the ``id`` field to the input object:
 

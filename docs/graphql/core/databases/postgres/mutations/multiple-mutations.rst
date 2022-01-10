@@ -2,7 +2,7 @@
    :description: Run multiple mutations in a request in Hasura
    :keywords: hasura, docs, mutation, multiple mutations, request
 
-.. _multiple_mutations:
+.. _pg_multiple_mutations:
 
 Multiple mutations in a request
 ===============================

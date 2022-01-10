@@ -2,7 +2,7 @@
    :description: Performance of Hasura GraphQL queries on Postgres
    :keywords: hasura, docs, postgres, schema, queries, performance
 
-.. _query_performance:
+.. _pg_query_performance:
 
 Postgres: Query performance
 ===========================
@@ -18,7 +18,7 @@ Introduction
 Sometimes queries can become slow due to large data volumes or levels of nesting.
 This page explains how to identify the query performance, and how queries can be optimized.
 
-.. _analysing_query_performance:
+.. _pg_analysing_query_performance:
 
 Analysing query performance
 ---------------------------
@@ -37,15 +37,13 @@ Let's say we want to analyse the following query:
 In order to analyse the performance of a query, you can click on the ``Analyze`` button on the Hasura console:
 
 .. thumbnail:: /img/graphql/core/queries/analyze-query.png
-   :class: no-shadow
-   :width: 75%
+   :width: 800px
    :alt: Query analyze button on Hasura console
 
 The following query execution plan is generated:
 
 .. thumbnail:: /img/graphql/core/queries/query-analysis-before-index.png
-   :class: no-shadow
-   :width: 75%
+   :width: 800px
    :alt: Execution plan for Hasura GraphQL query
 
 We can see that a sequential scan is conducted on the ``authors`` table. This means that Postgres goes through every row of the ``authors`` table in order to check if the author's name equals "Mario".
@@ -56,7 +54,7 @@ Read more about query performance analysis in the `Postgres explain statement do
 Query optimization
 ------------------
 
-.. _data_validation_pg_indexes:
+.. _pg_data_validation_pg_indexes:
 
 Using PG indexes
 ^^^^^^^^^^^^^^^^
@@ -75,7 +73,7 @@ Let's say we know that ``authors`` table is frequently queried by ``name``:
       }
    }
 
-We've seen in the :ref:`above example <analysing_query_performance>` that by default Postgres conducts a sequential scan i.e. going through all the rows.
+We've seen in the :ref:`above example <pg_analysing_query_performance>` that by default Postgres conducts a sequential scan i.e. going through all the rows.
 Whenever there is a sequential scan, it can be optimized by adding an index.
 
 The following statement sets an index on ``name`` in the ``authors`` table.
@@ -104,28 +102,28 @@ The following statement sets an index on ``name`` in the ``authors`` table.
 
   .. tab:: API
 
-   You can add an index by making an API call to the :ref:`run_sql metadata API <run_sql>`:
+   You can add an index by making an API call to the :ref:`run_sql schema API <schema_run_sql>`:
 
    .. code-block:: http
 
-      POST /v1/query HTTP/1.1
+      POST /v2/query HTTP/1.1
       Content-Type: application/json
       X-Hasura-Role: admin
 
       {
          "type": "run_sql",
          "args": {
+            "source": "<db_name>",
             "sql": "<create index statement>"
          }
       }
 
-Let's compare the performance analysis to :ref:`the one before adding the index <analysing_query_performance>`.
+Let's compare the performance analysis to :ref:`the one before adding the index <pg_analysing_query_performance>`.
 What was a ``sequential scan`` in the example earlier is now an ``index scan``. ``Index scans`` are usually more performant than ``sequential scans``.
 We can also see that the ``cost`` of the query is now lower than the one before we added the index.
 
 .. thumbnail:: /img/graphql/core/queries/query-analysis-after-index.png
-   :class: no-shadow
-   :width: 75%
+   :width: 800px
    :alt: Execution plan for Hasura GraphQL query
 
 .. note::

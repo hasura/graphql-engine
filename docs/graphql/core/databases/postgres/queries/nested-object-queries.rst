@@ -2,7 +2,7 @@
    :description: Make nested object queries on Postgres in Hasura
    :keywords: hasura, docs, postgres, query, nested object query
 
-.. _nested_object_queries:
+.. _pg_nested_object_queries:
 
 Postgres: Nested object queries
 ===============================
@@ -15,7 +15,7 @@ Postgres: Nested object queries
 Introduction
 ------------
 
-You can use the object (one-to-one) or array (one-to-many) :ref:`relationships <table_relationships>` defined
+You can use the object (one-to-one) or array (one-to-many) :ref:`relationships <pg_table_relationships>` defined
 in your schema to make a nested query i.e. fetch data for a type along with data from a nested or related type.
 
 The **name of the nested object** is the same as the name of the object/array relationship configured in
@@ -149,5 +149,5 @@ articles.
 
 .. note::
 
-    You can also :ref:`filter <nested_filter>`, :ref:`sort <nested_sort>`, :ref:`aggregate <nested_aggregate>`
-    and :ref:`paginate <nested_paginate>` nested objects in case of array relationships.
+    You can also :ref:`filter <pg_nested_filter>`, :ref:`sort <pg_nested_sort>`, :ref:`aggregate <pg_nested_aggregate>`
+    and :ref:`paginate <pg_nested_paginate>` nested objects in case of array relationships.

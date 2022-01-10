@@ -93,191 +93,191 @@ The various types of queries are listed in the following table:
      - Synopsis
 
    * - **bulk**
-     - :ref:`Query <metadata_query>` array
+     - :ref:`metadata_query` array
      - 1
      - Execute multiple operations in a single query
 
-   * - :ref:`pg_add_source <pg_add_source>`
-     - :ref:`pg_add_source_args <pg_add_source_syntax>`
+   * - :ref:`metadata_pg_add_source`
+     - :ref:`pg_add_source_args <metadata_pg_add_source_syntax>`
      - 1
      - Add a Postgres database
 
-   * - :ref:`pg_drop_source <pg_drop_source>`
-     - :ref:`pg_drop_source_args <pg_drop_source_syntax>`
+   * - :ref:`metadata_pg_drop_source`
+     - :ref:`pg_drop_source_args <metadata_pg_drop_source_syntax>`
      - 1
      - Remove a Postgres database
 
-   * - :ref:`pg_track_table <pg_track_table>`
-     - :ref:`pg_track_table_args <pg_track_table_syntax>`
+   * - :ref:`metadata_pg_track_table`
+     - :ref:`pg_track_table_args <metadata_pg_track_table_syntax>`
      - 1
      - Add a Postgres table/view with configuration
 
-   * - :ref:`pg_untrack_table`
-     - :ref:`pg_untrack_table_args <pg_untrack_table_syntax>`
+   * - :ref:`metadata_pg_untrack_table`
+     - :ref:`pg_untrack_table_args <metadata_pg_untrack_table_syntax>`
      - 1
      - Remove a Postgres table/view
 
-   * - :ref:`pg_set_table_customization <pg_set_table_customization>`
-     - :ref:`pg_set_table_customization_args <pg_set_table_customization_syntax>`
+   * - :ref:`metadata_pg_set_table_customization`
+     - :ref:`pg_set_table_customization_args <metadata_pg_set_table_customization_syntax>`
      - 1
      - Set table customization of an already tracked Postgres table
 
-   * - :ref:`pg_set_table_is_enum`
-     - :ref:`pg_set_table_is_enum_args <pg_set_table_is_enum_syntax>`
+   * - :ref:`metadata_pg_set_table_is_enum`
+     - :ref:`pg_set_table_is_enum_args <metadata_pg_set_table_is_enum_syntax>`
      - 1
      - Set a tracked Postgres table as an enum table
 
-   * - :ref:`pg_track_function`
-     - :ref:`pg_track_function_args <pg_track_function_syntax>`
+   * - :ref:`metadata_pg_track_function`
+     - :ref:`pg_track_function_args <metadata_pg_track_function_syntax>`
      - 1
      - Add a Postgres SQL function with configuration
 
-   * - :ref:`pg_untrack_function`
+   * - :ref:`metadata_pg_untrack_function`
      - :ref:`FunctionName <FunctionName>`
      - 1
      - Remove a Postgres SQL function
 
-   * - :ref:`pg_set_function_customization <pg_set_function_customization>`
-     - :ref:`pg_set_function_customization_args <pg_set_function_customization_syntax>`
+   * - :ref:`metadata_pg_set_function_customization`
+     - :ref:`pg_set_function_customization_args <metadata_pg_set_function_customization_syntax>`
      - 1
      - Set function customization of an already tracked Postgres function
 
-   * - :ref:`pg_create_function_permission`
-     - :ref:`pg_create_function_permission_args <pg_create_function_permission_syntax>`
+   * - :ref:`metadata_pg_create_function_permission`
+     - :ref:`pg_create_function_permission_args <metadata_pg_create_function_permission_syntax>`
      - 1
      - Create a Postgres function permission
 
-   * - :ref:`pg_drop_function_permission`
-     - :ref:`pg_drop_function_permission_args <pg_drop_function_permission_syntax>`
+   * - :ref:`metadata_pg_drop_function_permission`
+     - :ref:`pg_drop_function_permission_args <metadata_pg_drop_function_permission_syntax>`
      - 1
      - Drop an existing Postgres function permission
 
-   * - :ref:`pg_create_object_relationship`
-     - :ref:`pg_create_object_relationship_args <pg_create_object_relationship_syntax>`
+   * - :ref:`metadata_pg_create_object_relationship`
+     - :ref:`pg_create_object_relationship_args <metadata_pg_create_object_relationship_syntax>`
      - 1
      - Define a new object relationship between Postgres tables/views
 
-   * - :ref:`pg_create_array_relationship`
-     - :ref:`pg_create_array_relationship_args <pg_create_array_relationship_syntax>`
+   * - :ref:`metadata_pg_create_array_relationship`
+     - :ref:`pg_create_array_relationship_args <metadata_pg_create_array_relationship_syntax>`
      - 1
      - Define a new array relationship between Postgres tables/views
 
-   * - :ref:`pg_drop_relationship`
-     - :ref:`pg_drop_relationship_args <pg_drop_relationship_syntax>`
+   * - :ref:`metadata_pg_drop_relationship`
+     - :ref:`pg_drop_relationship_args <metadata_pg_drop_relationship_syntax>`
      - 1
      - Drop an existing Postgres relationship
 
-   * - :ref:`pg_rename_relationship`
-     - :ref:`pg_rename_relationship_args <pg_rename_relationship_syntax>`
+   * - :ref:`metadata_pg_rename_relationship`
+     - :ref:`pg_rename_relationship_args <metadata_pg_rename_relationship_syntax>`
      - 1
      - Modify name of an existing Postgres relationship
 
-   * - :ref:`pg_set_relationship_comment`
-     - :ref:`pg_set_relationship_comment_args <pg_set_relationship_comment_syntax>`
+   * - :ref:`metadata_pg_set_relationship_comment`
+     - :ref:`pg_set_relationship_comment_args <metadata_pg_set_relationship_comment_syntax>`
      - 1
      - Set comment on an existing Postgres relationship
 
-   * - :ref:`pg_add_computed_field`
-     - :ref:`pg_add_computed_field_args <pg_add_computed_field_syntax>`
+   * - :ref:`metadata_pg_add_computed_field`
+     - :ref:`pg_add_computed_field_args <metadata_pg_add_computed_field_syntax>`
      - 1
      - Add a computed field to a Postgres table/view
 
-   * - :ref:`pg_drop_computed_field`
-     - :ref:`pg_drop_computed_field_args <pg_drop_computed_field_syntax>`
+   * - :ref:`metadata_pg_drop_computed_field`
+     - :ref:`pg_drop_computed_field_args <metadata_pg_drop_computed_field_syntax>`
      - 1
      - Drop a Postgres computed field
 
-   * - :ref:`pg_create_insert_permission`
-     - :ref:`pg_create_insert_permission_args <pg_create_insert_permission_syntax>`
+   * - :ref:`metadata_pg_create_insert_permission`
+     - :ref:`pg_create_insert_permission_args <metadata_pg_create_insert_permission_syntax>`
      - 1
      - Specify insert permission for a Postgres table/view
 
-   * - :ref:`pg_drop_insert_permission`
-     - :ref:`pg_drop_insert_permission_args <pg_drop_insert_permission_syntax>`
+   * - :ref:`metadata_pg_drop_insert_permission`
+     - :ref:`pg_drop_insert_permission_args <metadata_pg_drop_insert_permission_syntax>`
      - 1
      - Remove existing insert permission for a Postgres table/view
 
-   * - :ref:`pg_create_select_permission`
-     - :ref:`pg_create_select_permission_args <pg_create_select_permission_syntax>`
+   * - :ref:`metadata_pg_create_select_permission`
+     - :ref:`pg_create_select_permission_args <metadata_pg_create_select_permission_syntax>`
      - 1
      - Specify select permission for a Postgres table/view
 
-   * - :ref:`pg_drop_select_permission`
-     - :ref:`pg_drop_select_permission_args <pg_drop_select_permission_syntax>`
+   * - :ref:`metadata_pg_drop_select_permission`
+     - :ref:`pg_drop_select_permission_args <metadata_pg_drop_select_permission_syntax>`
      - 1
      - Remove existing select permission for a Postgres table/view
 
-   * - :ref:`pg_create_update_permission`
-     - :ref:`pg_create_update_permission_args <pg_create_update_permission_syntax>`
+   * - :ref:`metadata_pg_create_update_permission`
+     - :ref:`pg_create_update_permission_args <metadata_pg_create_update_permission_syntax>`
      - 1
      - Specify update permission for a Postgres table/view
 
-   * - :ref:`pg_drop_update_permission`
-     - :ref:`pg_drop_update_permission_args <pg_drop_update_permission_syntax>`
+   * - :ref:`metadata_pg_drop_update_permission`
+     - :ref:`pg_drop_update_permission_args <metadata_pg_drop_update_permission_syntax>`
      - 1
      - Remove existing update permission for a Postgres table/view
 
-   * - :ref:`pg_create_delete_permission`
-     - :ref:`pg_create_delete_permission_args <pg_create_delete_permission_syntax>`
+   * - :ref:`metadata_pg_create_delete_permission`
+     - :ref:`pg_create_delete_permission_args <metadata_pg_create_delete_permission_syntax>`
      - 1
      - Specify delete permission for a Postgres table/view
 
-   * - :ref:`pg_drop_delete_permission`
-     - :ref:`pg_drop_delete_permission_args <pg_drop_delete_permission_syntax>`
+   * - :ref:`metadata_pg_drop_delete_permission`
+     - :ref:`pg_drop_delete_permission_args <metadata_pg_drop_delete_permission_syntax>`
      - 1
      - Remove existing delete permission for a Postgres table/view
 
-   * - :ref:`pg_set_permission_comment`
-     - :ref:`pg_set_permission_comment_args <pg_set_permission_comment_syntax>`
+   * - :ref:`metadata_pg_set_permission_comment`
+     - :ref:`pg_set_permission_comment_args <metadata_pg_set_permission_comment_syntax>`
      - 1
      - Set comment on an existing permission for a Postgres table/view
 
-   * - :ref:`pg_create_event_trigger`
-     - :ref:`pg_create_event_trigger_args <pg_create_event_trigger_syntax>`
+   * - :ref:`metadata_pg_create_event_trigger`
+     - :ref:`pg_create_event_trigger_args <metadata_pg_create_event_trigger_syntax>`
      - 1
      - Create or replace an event trigger on a Postgres table
 
-   * - :ref:`pg_delete_event_trigger`
-     - :ref:`pg_delete_event_trigger_args <pg_delete_event_trigger_syntax>`
+   * - :ref:`metadata_pg_delete_event_trigger`
+     - :ref:`pg_delete_event_trigger_args <metadata_pg_delete_event_trigger_syntax>`
      - 1
      - Delete an existing event trigger on a Postgres table
 
-   * - :ref:`pg_redeliver_event`
-     - :ref:`pg_redeliver_event_args <pg_redeliver_event_syntax>`
+   * - :ref:`metadata_pg_redeliver_event`
+     - :ref:`pg_redeliver_event_args <metadata_pg_redeliver_event_syntax>`
      - 1
      - Redeliver an existing event on a Postgres table
 
-   * - :ref:`pg_invoke_event_trigger`
-     - :ref:`pg_invoke_event_trigger_args <pg_invoke_event_trigger_syntax>`
+   * - :ref:`metadata_pg_invoke_event_trigger`
+     - :ref:`pg_invoke_event_trigger_args <metadata_pg_invoke_event_trigger_syntax>`
      - 1
      - Invoke a trigger with custom payload on a Postgres table
 
-   * - :ref:`bigquery_track_table <bigquery_track_table>`
-     - :ref:`bigquery_track_table_args <bigquery_track_table_syntax>`
+   * - :ref:`metadata_bigquery_track_table`
+     - :ref:`bigquery_track_table_args <metadata_bigquery_track_table_syntax>`
      - 1
      - Add a BigQuery table/view with configuration
 
-   * - :ref:`bigquery_untrack_table <bigquery_untrack_table>`
-     - :ref:`bigquery_untrack_table_args <bigquery_untrack_table_syntax>`
+   * - :ref:`metadata_bigquery_untrack_table`
+     - :ref:`bigquery_untrack_table_args <metadata_bigquery_untrack_table_syntax>`
      - 1
      - Remove a BigQuery table/view
 
-   * - :ref:`bigquery_set_table_customization <bigquery_set_table_customization>`
-     - :ref:`bigquery_set_table_customization_args <bigquery_set_table_customization_syntax>`
+   * - :ref:`metadata_bigquery_set_table_customization`
+     - :ref:`bigquery_set_table_customization_args <metadata_bigquery_set_table_customization_syntax>`
      - 1
      - Set table customization of an already tracked BigQuery table
 
-   * - :ref:`mssql_add_source <mssql_add_source>`
+   * - :ref:`mssql_add_source`
      - :ref:`mssql_add_source_args <mssql_add_source_syntax>`
      - 1
      - Add an MS SQL Server database
 
-   * - :ref:`mssql_drop_source <mssql_drop_source>`
+   * - :ref:`mssql_drop_source`
      - :ref:`mssql_drop_source_args <mssql_drop_source_syntax>`
      - 1
      - Remove an MS SQL Server database
 
-   * - :ref:`mssql_track_table <mssql_track_table>`
+   * - :ref:`mssql_track_table`
      - :ref:`mssql_track_table_args <mssql_track_table_syntax>`
      - 1
      - Add an MS SQL Server table/view with configuration
@@ -549,7 +549,7 @@ The various types of queries are listed in the following table:
      - Drop an inherited role
 
    * - :ref:`metadata_set_graphql_introspection_options`
-     - :ref:`set_graphql_schema_introspection_options_args <set_graphql_schema_introspection_options_syntax>`
+     - :ref:`set_graphql_schema_introspection_options_args <metadata_set_graphql_schema_introspection_options_syntax>`
      - 1
      - Set graphql introspection options
 

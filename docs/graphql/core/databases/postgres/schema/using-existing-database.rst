@@ -2,7 +2,7 @@
    :description: Set up a Hasura GraphQL schema with an existing database
    :keywords: hasura, docs, schema, existing database
 
-.. _schema_existing_db:
+.. _pg_schema_existing_db:
 
 Setting up a GraphQL schema using an existing Postgres database
 ===============================================================
@@ -56,19 +56,20 @@ To track a table or a view
 
   .. tab:: API
 
-   To track a table and expose it over the GraphQL API, use the :ref:`track_table metadata API <track_table>`:
+   To track a table and expose it over the GraphQL API, use the :ref:`metadata_pg_track_table` metadata API:
 
    .. code-block:: http
 
-      POST /v1/query HTTP/1.1
+      POST /v1/metadata HTTP/1.1
       Content-Type: application/json
       X-Hasura-Role: admin
 
       {
-         "type": "track_table",
+         "type": "pg_track_table",
          "args": {
+            "source": "<db_name>",
             "schema": "public",
-            "name": "<table name>"
+            "name": "<table_name>"
          }
       }
 
@@ -107,11 +108,11 @@ To track all tables and views present in the database
 
   .. tab:: API 
 
-   To track all tables and expose them over the GraphQL API, use the :ref:`track_table metadata API <track_table>`:
+   To track all tables and expose them over the GraphQL API, use the :ref:`metadata_pg_track_table` metadata API:
 
    .. code-block:: http
 
-      POST /v1/query HTTP/1.1
+      POST /v1/metadata HTTP/1.1
       Content-Type: application/json
       X-Hasura-Role: admin
 
@@ -119,15 +120,17 @@ To track all tables and views present in the database
         "type": "bulk",
         "args": [
           {
-             "type": "track_table",
+             "type": "pg_track_table",
              "args": {
+                "source": "<db_name>",
                 "schema": "public",
                 "name": "<table-name-1>"
              }
           },
           {
-             "type": "track_table",
+             "type": "pg_track_table",
              "args": {
+                "source": "<db_name>",
                 "schema": "public",
                 "name": "<table-name-2>"
              }
@@ -135,12 +138,12 @@ To track all tables and views present in the database
         ]
       }
 
-   To automate this, you could add the ``track_table`` requests to the ``bulk`` request in a loop through a script.
+   To automate this, you could add the ``pg_track_table`` requests to the ``bulk`` request in a loop through a script.
 
 Step 2: Track foreign-keys
 --------------------------
 
-Tracking a foreign-key means creating a :ref:`relationship <table_relationships>` between the tables involved in the
+Tracking a foreign-key means creating a :ref:`relationship <pg_table_relationships>` between the tables involved in the
 foreign-key.
 
 To track a foreign-key between two tables in the database
@@ -154,7 +157,7 @@ To track a foreign-key between two tables in the database
       #. Head to the ``Data -> Schema`` section of the console.
       #. Click on a table involved in the foreign-key and head to the ``Relationships`` tab.
       #. You should see a suggested relationship based on the foreign-key. Click ``Add``, give a name to your relationship
-         (this will be the name of the :ref:`nested object <nested_object_queries>` in the GraphQL query), and
+         (this will be the name of the :ref:`nested object <pg_nested_object_queries>` in the GraphQL query), and
          hit ``Save`` to create the relationship.
       #. Repeat with the other table involved in the foreign-key.
 
@@ -202,17 +205,18 @@ To track a foreign-key between two tables in the database
 
       **Object relationship**
 
-      You can create an object relationship by using the :ref:`create_object_relationship metadata API <create_object_relationship>`:
+      You can create an object relationship by using the :ref:`metadata_pg_create_object_relationship` metadata API:
 
       .. code-block:: http
 
-         POST /v1/query HTTP/1.1
+         POST /v1/metadata HTTP/1.1
          Content-Type: application/json
          X-Hasura-Role: admin
 
          {
-            "type": "create_object_relationship",
+            "type": "pg_create_object_relationship",
             "args": {
+               "source": "<db_name>",
                "table": "<table name>",
                "name": "<relationship name>",
                "using": {
@@ -223,17 +227,18 @@ To track a foreign-key between two tables in the database
 
       **Array relationship**
 
-      You can create an array relationship by using the :ref:`create_array_relationship metadata API <create_array_relationship>`:
+      You can create an array relationship by using the :ref:`metadata_pg_create_array_relationship` metadata API:
 
       .. code-block:: http
 
-         POST /v1/query HTTP/1.1
+         POST /v1/metadata HTTP/1.1
          Content-Type: application/json
          X-Hasura-Role: admin
 
          {
-            "type": "create_array_relationship",
+            "type": "pg_create_array_relationship",
             "args": {
+               "source": "<db_name>",
                "table": "<table name>",
                "name": "<relationship name>",
                "using": {
@@ -301,12 +306,12 @@ To track all the foreign-keys of all tables in the database
 
    .. tab:: API
 
-      You can create multiple relationships by using the :ref:`create_object_relationship metadata API <create_object_relationship>`
-      and the :ref:`create_array_relationship metadata API <create_array_relationship>`:
+      You can create multiple relationships by using the :ref:`metadata_pg_create_object_relationship`
+      and the :ref:`metadata_pg_create_array_relationship` metadata APIs:
 
       .. code-block:: http
 
-        POST /v1/query HTTP/1.1
+        POST /v1/metadata HTTP/1.1
         Content-Type: application/json
         X-Hasura-Role: admin
 
@@ -314,8 +319,9 @@ To track all the foreign-keys of all tables in the database
           "type": "bulk",
           "args": [
             {
-              "type": "create_object_relationship",
+              "type": "pg_create_object_relationship",
               "args": {
+                "source": "<db_name>",
                 "table": "<table name>",
                 "name": "<relationship name>",
                 "using": {
@@ -324,8 +330,9 @@ To track all the foreign-keys of all tables in the database
               }
             },
             {
-              "type": "create_array_relationship",
+              "type": "pg_create_array_relationship",
               "args": {
+                "source": "<db_name>",
                 "table": "<table name>",
                 "name": "<relationship name>",
                 "using": {
@@ -344,7 +351,7 @@ To track all the foreign-keys of all tables in the database
 .. admonition:: Relationship nomenclature
 
   In this case, Hasura GraphQL engine will **automatically generate relationship names** (the names of the
-  :ref:`nested objects <nested_object_queries>` in the GraphQL query) based on the table names and the
+  :ref:`nested objects <pg_nested_object_queries>` in the GraphQL query) based on the table names and the
   foreign-key names.
 
   The name is generated in the following format:
@@ -360,5 +367,5 @@ To track all the foreign-keys of all tables in the database
 
   Note that, **this is just  an arbitrary naming convention** chosen by Hasura to ensure the generation of unique
   relationship names. You can choose to rename your relationships to anything you wish. You can **change the
-  relationship names** with a name of your choice as shown in :ref:`rename_relationships`.
+  relationship names** with a name of your choice as shown in :ref:`renaming relationships <pg_rename_relationships>`.
 

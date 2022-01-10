@@ -19,7 +19,7 @@ Introduction
 To understand the basics of access control in Hasura, let's take a look at this analogy to a SQL query: 
 
 .. thumbnail:: /img/graphql/core/auth/permissions-rule-analogy.png
-  :width: 70%
+  :width: 700px
   :alt: Understanding access control in Hasura
 
 This query returns the right set of results by defining the requirements for columns and rows in a given
@@ -51,7 +51,7 @@ Let's see access control in action using a simple example.
 Create a table
 ^^^^^^^^^^^^^^
 
-Head to your console and :ref:`create a table <create_tables>` called ``authors`` with the following
+Head to your console and :ref:`create a table <pg_create_tables>` called ``authors`` with the following
 schema:
 
 .. code-block:: sql
@@ -82,6 +82,7 @@ query is accepted with **admin** permissions.
 
 .. thumbnail:: /img/graphql/core/auth/fetch-authors.png
   :alt: Run a query without access control
+  :width: 1200px
 
 Define access control rules
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -99,6 +100,7 @@ Now let's define an access control rule for the ``authors`` table for a role ``u
 
     .. thumbnail:: /img/graphql/core/auth/permission-basics-simple-example.png
       :alt: Define access control rules
+      :width: 1100px
 
   .. tab:: CLI
 
@@ -128,17 +130,18 @@ Now let's define an access control rule for the ``authors`` table for a role ``u
 
   .. tab:: API
 
-    You can add select permissions by using the :ref:`pg_create_select_permission metadata API <pg_create_select_permission>`:
+    You can add select permissions by using the :ref:`pg_create_select_permission metadata API <metadata_pg_create_select_permission>`:
 
     .. code-block:: http
 
-      POST /v1/query HTTP/1.1
+      POST /v1/metadata HTTP/1.1
       Content-Type: application/json
       X-Hasura-Role: admin
 
       {
-          "type" : "create_select_permission",
+          "type" : "pg_create_select_permission",
           "args" : {
+              "source": "<db_name>",
               "table" : "authors",
               "role" : "user",
               "permission" : {
@@ -165,6 +168,7 @@ the ``Request Headers`` section of ``GraphiQL`` as highlighted below:
 
 .. thumbnail:: /img/graphql/core/auth/permission-basics-query-with-access-control.png
   :alt: Run a query with access control
+  :width: 1200px
 
 As you can see, the results are now filtered based on the access control rule for the role ``user``
 (*since that is the role indicated by the* ``X-Hasura-Role`` *session variable*) and the results are

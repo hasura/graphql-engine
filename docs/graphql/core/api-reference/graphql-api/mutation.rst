@@ -416,7 +416,7 @@ API Reference - Mutation
 
 .. note::
 
-    For more examples and details of usage, please see :ref:`this <mutations>`.
+    For more examples and details of usage, please see :ref:`this <pg_mutations>`.
 
 Syntax definitions
 ------------------

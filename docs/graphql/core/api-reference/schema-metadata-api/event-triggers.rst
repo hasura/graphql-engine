@@ -2,7 +2,7 @@
    :description: Manage event triggers with the Hasura schema/metadata API
    :keywords: hasura, docs, schema/metadata API, API reference, event trigger
 
-.. _api_event_triggers:
+.. _schema_metadata_api_event_triggers:
 
 Schema/Metadata API Reference: Event Triggers (Deprecated)
 ==========================================================
@@ -24,7 +24,7 @@ Event triggers are used to capture database changes and send them to a configure
 
   Though for backwards compatibility, the schema/metadata APIs will continue to function.
 
-.. _create_event_trigger:
+.. _schema_metadata_create_event_trigger:
 
 create_event_trigger
 --------------------
@@ -71,7 +71,7 @@ create_event_trigger
        }
    }
 
-.. _create_event_trigger_syntax:
+.. _schema_metadata_create_event_trigger_syntax:
 
 Args syntax
 ^^^^^^^^^^^
@@ -130,7 +130,7 @@ Args syntax
 
 (*) Either ``webhook`` or ``webhook_from_env`` are required.
 
-.. _delete_event_trigger:
+.. _schema_metadata_delete_event_trigger:
 
 delete_event_trigger
 --------------------
@@ -150,7 +150,7 @@ delete_event_trigger
        }
    }
 
-.. _delete_event_trigger_syntax:
+.. _schema_metadata_delete_event_trigger_syntax:
 
 Args syntax
 ^^^^^^^^^^^
@@ -168,7 +168,7 @@ Args syntax
      - Name of the event trigger
 
 
-.. _redeliver_event:
+.. _schema_metadata_redeliver_event:
 
 redeliver_event
 ---------------
@@ -190,7 +190,7 @@ If the event fails to deliver, it will be retried automatically according to its
        }
    }
 
-.. _redeliver_event_syntax:
+.. _schema_metadata_redeliver_event_syntax:
 
 Args syntax
 ^^^^^^^^^^^
@@ -208,7 +208,7 @@ Args syntax
      - UUID of the event
 
 
-.. _invoke_event_trigger:
+.. _schema_metadata_invoke_event_trigger:
 
 invoke_event_trigger
 --------------------
@@ -229,7 +229,7 @@ invoke_event_trigger
        }
    }
 
-.. _invoke_event_trigger_syntax:
+.. _schema_metadata_invoke_event_trigger_syntax:
 
 Args syntax
 ^^^^^^^^^^^

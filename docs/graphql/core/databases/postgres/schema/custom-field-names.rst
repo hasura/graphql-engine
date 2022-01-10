@@ -2,7 +2,7 @@
    :description: Use custom field names for Postgres in Hasura
    :keywords: hasura, docs, postgres, schema, custom field name, rename
 
-.. _custom_field_names:
+.. _pg_custom_field_names:
 
 Postgres: Customise auto-generated field names
 ==============================================
@@ -59,18 +59,18 @@ Expose columns with a different name in the GraphQL API
 
     A custom field name can be set for a column via the following 2 methods:
 
-    1. passing a :ref:`table_config` with the :ref:`CustomColumnNames` to the :ref:`track_table_v2` API while tracking a table:
+    1. passing a :ref:`table_config` with the :ref:`CustomColumnNames` to the :ref:`metadata_pg_track_table` API while tracking a table:
 
        .. code-block:: http
 
-         POST /v1/query HTTP/1.1
+         POST /v1/metadata HTTP/1.1
          Content-Type: application/json
          X-Hasura-Role: admin
 
          {
-           "type": "track_table",
-           "version": 2,
+           "type": "pg_track_table",
            "args": {
+             "source": "<db_name>",
              "table": "author",
              "configuration": {
                "custom_column_names": {
@@ -80,18 +80,18 @@ Expose columns with a different name in the GraphQL API
            }
          }
 
-    2. using the :ref:`set_table_custom_fields` API to set the :ref:`CustomColumnNames`:
+    2. using the :ref:`metadata_pg_set_table_customization` API to set the :ref:`CustomColumnNames`:
 
        .. code-block:: http
 
-         POST /v1/query HTTP/1.1
+         POST /v1/metadata HTTP/1.1
          Content-Type: application/json
          X-Hasura-Role: admin
 
          {
-           "type": "set_table_custom_fields",
-           "version": 2,
+           "type": "pg_set_table_customization",
            "args": {
+             "source": "<db_name>",
              "table": "author",
              "custom_column_names": {
                "addr": "address"
@@ -137,18 +137,18 @@ Expose table root fields with a different name in the GraphQL API
 
     A custom field name can be set for a table root field via the following 2 methods:
 
-    1. passing a :ref:`table_config` with the :ref:`custom_root_fields` names to the :ref:`track_table_v2` API while tracking a table:
+    1. passing a :ref:`table_config` with the :ref:`custom_root_fields` names to the :ref:`metadata_pg_track_table` API while tracking a table:
 
        .. code-block:: http
 
-         POST /v1/query HTTP/1.1
+         POST /v1/metadata HTTP/1.1
          Content-Type: application/json
          X-Hasura-Role: admin
 
          {
-           "type": "track_table",
-           "version": 2,
+           "type": "pg_track_table",
            "args": {
+             "source": "<db_name>",
              "table": "author",
              "configuration": {
                "custom_root_fields": {
@@ -159,18 +159,18 @@ Expose table root fields with a different name in the GraphQL API
            }
          }
 
-    2. using the :ref:`set_table_custom_fields` API to set the :ref:`custom_root_fields` names
+    2. using the :ref:`metadata_pg_set_table_customization` metadata API to set the :ref:`custom_root_fields` names
 
        .. code-block:: http
 
-         POST /v1/query HTTP/1.1
+         POST /v1/metadata HTTP/1.1
          Content-Type: application/json
          X-Hasura-Role: admin
 
          {
-           "type": "set_table_custom_fields",
-           "version": 2,
+           "type": "pg_set_table_customization",
            "args": {
+             "source": "<db_name>",
              "table": "author",
              "custom_root_fields": {
                  "select": "authors",

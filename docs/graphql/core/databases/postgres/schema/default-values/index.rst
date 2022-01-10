@@ -2,7 +2,7 @@
    :description: Set default field values for Postgres in Hasura
    :keywords: hasura, docs, postgres, schema, default value
 
-.. _default_field_values:
+.. _pg_default_field_values:
 
 Postgres: Setting default values for fields
 ===========================================
@@ -15,16 +15,16 @@ Postgres: Setting default values for fields
 Let's say you want certain fields to have their values set automatically when not explicitly passed. You can do this in
 the following ways:
 
-- :ref:`Postgres defaults <postgres_defaults>`: configure default values, using fixed values or simple SQL functions,
+- :ref:`Postgres defaults <pg_postgres_defaults>`: configure default values, using fixed values or simple SQL functions,
   for columns in the table definition. E.g. an auto-incrementing ``id``, a ``created_at`` timestamp, etc.
-- :ref:`Custom SQL functions <sql_functions_as_default>`: set up Postgres triggers which run custom SQL functions/stored procedures
+- :ref:`Custom SQL functions <pg_sql_functions_as_default>`: set up Postgres triggers which run custom SQL functions/stored procedures
   to set the values of certain columns on inserts/updates on the table. This is useful to set values of fields which
   depend on other fields passed in the input. e.g. set ``submission_time`` of an online quiz as 1 hour from the
   ``start_time``.
-- :ref:`Role based column presets <column_presets>`: set up presets, using session variables or fixed values, that are
+- :ref:`Role based column presets <pg_column_presets>`: set up presets, using session variables or fixed values, that are
   applied when a row is created/updated with a particular :ref:`user role <roles_variables>`.
   E.g. set a ``user_id`` field automatically from a session variable/authorization header.
-- :ref:`Created_at / updated_at timestamps <created_updated_timestamps>`: set up ``created_at`` and ``updated_at`` timestamp values.
+- :ref:`Created_at / updated_at timestamps <pg_created_updated_timestamps>`: set up ``created_at`` and ``updated_at`` timestamp values.
 
 .. toctree::
   :maxdepth: 1

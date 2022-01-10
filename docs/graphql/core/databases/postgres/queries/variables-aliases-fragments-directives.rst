@@ -2,7 +2,7 @@
    :description: Use variables, aliases, fragments and directives in Hasura queries
    :keywords: hasura, docs, query, variable, alias, fragment, directive
 
-.. _variables_aliases_fragments_directives:
+.. _pg_variables_aliases_fragments_directives:
 
 Using variables / aliases / fragments / directives in queries
 =============================================================

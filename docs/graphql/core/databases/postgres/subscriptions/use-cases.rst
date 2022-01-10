@@ -2,7 +2,7 @@
    :description: Use cases for Hasura subscriptions
    :keywords: hasura, docs, subscription, use case
 
-.. _subscription_use_cases:
+.. _pg_subscription_use_cases:
 
 Subscriptions sample use cases
 ==============================
@@ -17,7 +17,7 @@ Introduction
 
 The following are a few use cases for using subscriptions:
 
-.. _subscribe_field:
+.. _pg_subscribe_field:
 
 Subscribe to the latest value of a particular field
 ---------------------------------------------------
@@ -85,7 +85,7 @@ Now we can use the following subscription to fetch the latest location of a vehi
      "vehicleId": 3
    }
 
-.. _subscribe_table:
+.. _pg_subscribe_table:
 
 Subscribe to changes to a table's entries
 -----------------------------------------
@@ -158,13 +158,13 @@ Now we can use the following subscription to display the latest messages in a ch
       }
     }
 
-.. _subscribe_derived:
+.. _pg_subscribe_derived:
 
 Subscribe to the latest value of some derived data
 --------------------------------------------------
 
 In case you are interested in the latest value of some derived data, you can :ref:`create a view to query the derived
-data <custom_views>` and then use subscriptions to fetch the derived value and get its latest value
+data <pg_custom_views>` and then use subscriptions to fetch the derived value and get its latest value
 whenever it updates.
 
 Example: A poll dashboard
@@ -224,7 +224,7 @@ First, create a view ``poll_results`` to give the result of the poll:
 This view will have the following fields: ``poll_id``, ``option_id`` and ``votes``, i.e. it gives the number of votes
 received by each option for a poll.
 
-Next, :ref:`set up relationships <table_relationships>` ``poll`` and ``option`` between the ``poll_results`` view
+Next, :ref:`set up relationships <pg_table_relationships>` ``poll`` and ``option`` between the ``poll_results`` view
 and the ``poll`` and ``option`` tables using the ``poll_id`` and ``option_id`` fields respectively.
 
 Now we can use the following subscription to display the latest poll result:

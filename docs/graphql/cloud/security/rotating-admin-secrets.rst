@@ -5,7 +5,7 @@
 .. _rotating_admin_secrets:
 
 Rotating Admin Secrets
-===========
+======================
 
 .. contents:: Table of contents
   :backlinks: none
@@ -23,14 +23,14 @@ How to use multiple admin secrets
 Multiple admin secrets can be provided in the env var ``HASURA_GRAPHQL_ADMIN_SECRETS`` which takes a JSON array of admin secrets (strings).
 
 When you launch the console from the Hasura Cloud dashboard, you can use any secret from the admin secrets list to authenticate yourself as an admin.
-If you want to make API calls from outside the console, you need to pass any one of the admin secrets as the `x-hasura-admin-secret` request header.
+If you want to make API calls from outside the console, you need to pass any one of the admin secrets as the ``x-hasura-admin-secret`` request header.
 
 .. note::
 
     If both ``HASURA_GRAPHQL_ADMIN_SECRET`` and ``HASURA_GRAPHQL_ADMIN_SECRETS`` are set, then only ``HASURA_GRAPH_ADMIN_SECRETS`` will be used.
 
 How to rotate an admin secret
------------------------------------
+-----------------------------
 
 To implement a secret rotation mechanism, the following can be done:
 

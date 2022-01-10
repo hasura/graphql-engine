@@ -2,7 +2,7 @@
    :description: Rename Postgres relationships in Hasura
    :keywords: hasura, docs, postgres, schema, relationship, rename
 
-.. _rename_relationships:
+.. _pg_rename_relationships:
 
 Postgres: Renaming relationships
 ================================
@@ -49,17 +49,18 @@ An existing relationship can be renamed as follows:
 
   .. tab:: API
 
-    You can rename a relationship by using the :ref:`rename_relationship metadata API <rename_relationship>`:
+    You can rename a relationship by using the :ref:`metadata_pg_rename_relationship` metadata API:
 
     .. code-block:: http
 
-      POST /v1/query HTTP/1.1
+      POST /v1/metadata HTTP/1.1
       Content-Type: application/json
       X-Hasura-Role: admin
 
       {
-        "type": "rename_relationship",
+        "type": "pg_rename_relationship",
         "args": {
+          "source": "<db_name>",
           "table": "articles",
           "name": "article_details",
           "new_name": "article_detail"

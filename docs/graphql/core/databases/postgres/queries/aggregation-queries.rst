@@ -2,7 +2,7 @@
    :description: Make aggregation queries on Postgres with Hasura
    :keywords: hasura, docs, postgres, query, aggregation query
 
-.. _aggregation_queries:
+.. _pg_aggregation_queries:
 
 Postgres: Aggregation queries
 =============================
@@ -24,8 +24,8 @@ specification of the aggregate field in the :ref:`API reference <AggregateObject
 
 .. note::
 
-  For more advanced use cases, you can use :ref:`views <custom_views>` or
-  :ref:`custom SQL functions <custom_sql_functions>`.
+  For more advanced use cases, you can use :ref:`views <pg_custom_views>` or
+  :ref:`custom SQL functions <pg_custom_sql_functions>`.
 
 Fetch aggregated data of an object
 ----------------------------------
@@ -128,7 +128,7 @@ Fetch aggregated data of an object
       }
     }
 
-.. _nested_aggregate:
+.. _pg_nested_aggregate:
 
 Fetch aggregated data on nested objects
 ---------------------------------------

@@ -101,7 +101,7 @@ in the GraphQL schema.
 
      .. thumbnail:: /img/graphql/core/actions/mutation-action-create.png
         :alt: Console action create
-        :width: 70%
+        :width: 800px
 
      Define the action as follows in the ``Action Definition`` editor.
 
@@ -145,11 +145,11 @@ in the GraphQL schema.
 
   .. tab:: API
 
-    It is essential that the custom types used in the action are defined *beforehand* via the :ref:`set_custom_types metadata API <metadata_set_custom_types>`:
+    It is essential that the custom types used in the action are defined *beforehand* via the :ref:`metadata_set_custom_types` metadata API:
 
     .. code-block:: http
 
-      POST /v1/query HTTP/1.1
+      POST /v1/metadata HTTP/1.1
       Content-Type: application/json
       X-Hasura-Role: admin
 
@@ -177,7 +177,7 @@ in the GraphQL schema.
 
     .. code-block:: http
 
-        POST /v1/query HTTP/1.1
+        POST /v1/metadata HTTP/1.1
         Content-Type: application/json
         X-Hasura-Role: admin
 
@@ -347,7 +347,7 @@ the GraphQL schema.
 
      .. thumbnail:: /img/graphql/core/actions/query-action-create.png
         :alt: Console action create
-        :width: 70%
+        :width: 800px
 
      Define the action as follows in the ``Action Definition`` editor.
 
@@ -391,11 +391,11 @@ the GraphQL schema.
 
   .. tab:: API
 
-    It is essential that the custom types used in the action are defined *beforehand* via the :ref:`set_custom_types metadata API <metadata_set_custom_types>`:
+    It is essential that the custom types used in the action are defined *beforehand* via the :ref:`metadata_set_custom_types` metadata API:
 
     .. code-block:: http
 
-      POST /v1/query HTTP/1.1
+      POST /v1/metadata HTTP/1.1
       Content-Type: application/json
       X-Hasura-Role: admin
 
@@ -423,7 +423,7 @@ the GraphQL schema.
 
     .. code-block:: http
 
-        POST /v1/query HTTP/1.1
+        POST /v1/metadata HTTP/1.1
         Content-Type: application/json
         X-Hasura-Role: admin
 

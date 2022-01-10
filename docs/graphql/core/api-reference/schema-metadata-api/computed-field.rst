@@ -2,7 +2,7 @@
    :description: Manage computed fields with the Hasura schema/metadata API
    :keywords: hasura, docs, schema/metadata API, API reference, computed field
 
-.. _api_computed_field:
+.. _schema_metadata_api_computed_field:
 
 Schema/Metadata API Reference: Computed Fields (Deprecated)
 ===========================================================
@@ -29,7 +29,7 @@ as computed fields.
 
   Though for backwards compatibility, the schema/metadata APIs will continue to function.
 
-.. _add_computed_field:
+.. _schema_metadata_add_computed_field:
 
 add_computed_field
 ------------------
@@ -65,7 +65,7 @@ an SQL function called ``author_full_name``:
        }
    }
 
-.. _add_computed_field_syntax:
+.. _schema_metadata_add_computed_field_syntax:
 
 Args syntax
 ^^^^^^^^^^^
@@ -94,7 +94,7 @@ Args syntax
      - text
      - comment
 
-.. _drop_computed_field:
+.. _schema_metadata_drop_computed_field:
 
 drop_computed_field
 -------------------
@@ -124,7 +124,7 @@ Drop a computed field ``full_name`` from a table ``author``:
        }
    }
 
-.. _drop_computed_field_syntax:
+.. _schema_metadata_drop_computed_field_syntax:
 
 Args syntax
 ^^^^^^^^^^^

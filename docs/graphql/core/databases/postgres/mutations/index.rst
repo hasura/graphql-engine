@@ -2,7 +2,7 @@
    :description: Manage mutations on Postgres with Hasura
    :keywords: hasura, docs, postgres, mutation
 
-.. _mutations:
+.. _pg_mutations:
 
 Postgres: Mutations
 ===================

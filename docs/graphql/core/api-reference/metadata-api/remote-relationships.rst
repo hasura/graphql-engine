@@ -23,7 +23,7 @@ Remote Relationships allow you to join tables with remote schemas.
 .. _metadata_pg_create_remote_relationship:
 
 pg_create_remote_relationship
---------------------------
+-----------------------------
 
 ``pg_create_remote_relationship`` is used to create a new remote relationship with an existing remote schema.
 
@@ -86,7 +86,7 @@ Args syntax
 .. _metadata_pg_update_remote_relationship:
 
 pg_update_remote_relationship
---------------------------
+-----------------------------
 
 ``pg_update_remote_relationship`` is used to update an existing remote relationship.
 
@@ -152,7 +152,7 @@ Args syntax
 .. _metadata_pg_delete_remote_relationship:
 
 pg_delete_remote_relationship
---------------------------
+-----------------------------
 
 ``pg_delete_remote_relationship`` is used to delete an existing remote relationship.
 

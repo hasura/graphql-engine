@@ -60,9 +60,9 @@ An existing relationship can be renamed as follows:
       {
         "type": "mssql_rename_relationship",
         "args": {
+          "source": "<db_name>",
           "table": "articles",
           "name": "article_details",
-          "source": "default",
           "new_name": "article_detail"
         }
       }

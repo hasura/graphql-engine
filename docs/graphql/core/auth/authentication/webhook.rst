@@ -19,7 +19,7 @@ You can configure the GraphQL engine to use a webhook to authenticate all incomi
 
 .. thumbnail:: /img/graphql/core/auth/webhook-auth.png
    :alt: Authentication using webhooks
-   :width: 800px
+   :width: 1000px
 
 .. admonition:: Prerequisite
    

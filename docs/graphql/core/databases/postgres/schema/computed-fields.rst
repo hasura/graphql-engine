@@ -2,7 +2,7 @@
    :description: Use computed fields over Postgres in Hasura
    :keywords: hasura, docs, postgres, schema, computed field
 
-.. _computed_fields:
+.. _pg_computed_fields:
 
 Postgres: Computed fields
 =========================
@@ -60,7 +60,7 @@ Let's say we have the following schema:
 
   authors(id integer, first_name text, last_name text)
 
-:ref:`Define an SQL function <create_sql_functions>` called ``author_full_name``:
+:ref:`Define an SQL function <pg_create_sql_functions>` called ``author_full_name``:
 
 .. code-block:: plpgsql
 
@@ -69,7 +69,7 @@ Let's say we have the following schema:
     SELECT author_row.first_name || ' ' || author_row.last_name
   $$ LANGUAGE sql STABLE;
 
-:ref:`Add a computed field <add-computed-field>` called ``full_name`` to the ``authors`` table using the SQL function above.
+:ref:`Add a computed field <pg_adding_computed_field>` called ``full_name`` to the ``authors`` table using the SQL function above.
 
 Query data from the ``authors`` table:
 
@@ -114,12 +114,12 @@ Let's say we have the following schema:
 
   articles(id integer, title text, content text, author_id integer)
 
-Now we can define a :ref:`table relationship <table_relationships>` on the ``authors``
+Now we can define a :ref:`table relationship <pg_table_relationships>` on the ``authors``
 table to fetch authors along with their articles.
 
 We can make use of computed fields to fetch the author's articles with a search parameter.
 
-:ref:`Define an SQL function <create_sql_functions>` called ``filter_author_articles``:
+:ref:`Define an SQL function <pg_create_sql_functions>` called ``filter_author_articles``:
 
 .. code-block:: plpgsql
 
@@ -133,7 +133,7 @@ We can make use of computed fields to fetch the author's articles with a search 
        ) AND author_id = author_row.id
    $$ LANGUAGE sql STABLE;
 
-:ref:`Add a computed field <add-computed-field>` called ``filtered_articles`` to the ``authors`` table using the SQL function above.
+:ref:`Add a computed field <pg_adding_computed_field>` called ``filtered_articles`` to the ``authors`` table using the SQL function above.
 
 Query data from the ``authors`` table:
 
@@ -172,7 +172,7 @@ Query data from the ``authors`` table:
       }
     }
 
-.. _add-computed-field:
+.. _pg_adding_computed_field:
 
 Adding a computed field to a table/view
 ---------------------------------------
@@ -186,6 +186,8 @@ Adding a computed field to a table/view
      section:
 
      .. thumbnail:: /img/graphql/core/schema/computed-field-create.png
+        :alt: Add computed field
+        :width: 700px
 
      .. admonition:: Supported from
 
@@ -219,17 +221,18 @@ Adding a computed field to a table/view
 
   .. tab:: API
 
-     A computed field can be added to a table/view using the :ref:`add_computed_field metadata API <api_computed_field>`:
+     A computed field can be added to a table/view using the :ref:`metadata_pg_add_computed_field` metadata API:
 
      .. code-block:: http
 
-      POST /v1/query HTTP/1.1
+      POST /v1/metadata HTTP/1.1
       Content-Type: application/json
       X-Hasura-Role: admin
 
       {
-        "type": "add_computed_field",
+        "type": "pg_add_computed_field",
         "args": {
+          "source": "<db_name>",
           "table": {
             "name": "authors",
             "schema": "public"
@@ -265,7 +268,7 @@ For instance, suppose we want to record which users have liked which articles. W
 case it can be useful to know if the current user has liked a specific article, and this information can be
 exposed as a *Boolean* computed field on ``articles``.
 
-Create a function with an argument for session variables and add it with the :ref:`add_computed_field` API with the
+Create a function with an argument for session variables and add it with the :ref:`metadata_pg_add_computed_field` API with the
 ``session_argument`` key set. The session argument is a JSON object where keys are session variable names
 (in lower case) and values are strings.  Use the ``->>`` JSON operator to fetch the value of a session variable
 as shown in the following example.
@@ -284,13 +287,14 @@ as shown in the following example.
 
 .. code-block:: http
 
-   POST /v1/query HTTP/1.1
+   POST /v1/metadata HTTP/1.1
    Content-Type: application/json
    X-Hasura-Role: admin
 
    {
-       "type":"add_computed_field",
+       "type":"pg_add_computed_field",
        "args":{
+           "source": "<db_name>",
            "table":{
                "name":"articles",
                "schema":"public"
@@ -356,6 +360,7 @@ field which returns a scalar type of the field value in the ``json`` column and 
 the remote schema. Consider the following Postgres schema.
 
 .. thumbnail:: /img/graphql/core/databases/postgres/schema/computed-fields-remote-relationship.png
+   :width: 700px
 
 .. code-block:: plpgsql
 
@@ -381,7 +386,7 @@ following remote schema.
      }
 
 
-:ref:`Define a remote relationship<create_remote_relationship>` with name ``user_location`` from ``user_city``
+:ref:`Define a remote relationship <metadata_pg_create_remote_relationship>` with name ``user_location`` from ``user_city``
 scalar computed field to ``get_coordinates`` remote schema field. We can query users with the pincode of their residing place.
 
 .. graphiql::

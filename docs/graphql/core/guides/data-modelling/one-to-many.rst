@@ -52,7 +52,7 @@ the ``authors`` table.
 Step 2: Set up GraphQL relationships
 ------------------------------------
 
-To access the nested objects via the GraphQL API, :ref:`create the following relationships <create_relationships>`:
+To access the nested objects via the GraphQL API, :ref:`create the following relationships <pg_create_relationships>`:
 
 - Array relationship, ``articles`` from ``authors`` table using  ``articles :: author_id  ->  id``
 - Object relationship, ``author`` from ``articles`` table using ``author_id -> authors :: id``

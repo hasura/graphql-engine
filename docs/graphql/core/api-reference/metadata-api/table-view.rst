@@ -24,7 +24,7 @@ Only tracked tables/views are available for querying/mutating/subscribing data o
   The metadata API is supported for versions ``v2.0.0`` and above and replaces the older
   :ref:`schema/metadata API <schema_metadata_apis>`.
 
-.. _pg_track_table:
+.. _metadata_pg_track_table:
 
 pg_track_table
 --------------
@@ -43,8 +43,8 @@ Add a table/view ``author``:
    {
       "type": "pg_track_table",
       "args": {
-        "table": "author",
         "source": "default",
+        "table": "author",
         "configuration": {
            "custom_root_fields": {
               "select": "Authors",
@@ -78,6 +78,7 @@ table, so that it can be added to the GraphQL schema.
    {
       "type": "pg_track_table",
       "args": {
+        "source": "default",
         "table": "Author Details",
         "configuration": {
            "custom_name": "author_details"
@@ -104,7 +105,7 @@ the nodes generated will be:
    Hasura GraphQL engine requires the constraint names (if any) of a table to be
    `GraphQL compliant <https://spec.graphql.org/June2018/#sec-Names>`__ in order to be able to track it.
 
-.. _pg_track_table_syntax:
+.. _metadata_pg_track_table_syntax:
 
 Args syntax
 ^^^^^^^^^^^
@@ -129,7 +130,7 @@ Args syntax
      - :ref:`SourceName <SourceName>`
      - Name of the source database of the table (default: ``default``)
 
-.. _pg_untrack_table:
+.. _metadata_pg_untrack_table:
 
 pg_untrack_table
 ----------------
@@ -156,7 +157,7 @@ Remove a table/view ``author``:
        }
    }
 
-.. _pg_untrack_table_syntax:
+.. _metadata_pg_untrack_table_syntax:
 
 Args syntax
 ^^^^^^^^^^^
@@ -181,12 +182,12 @@ Args syntax
      - :ref:`SourceName <SourceName>`
      - Name of the source database of the table (default: ``default``)
 
-.. _pg_set_table_is_enum:
+.. _metadata_pg_set_table_is_enum:
 
 pg_set_table_is_enum
 --------------------
 
-``pg_set_table_is_enum`` sets whether an already-tracked table should be used as an :ref:`enum table <create_enum_table>`.
+``pg_set_table_is_enum`` sets whether an already-tracked table should be used as an :ref:`enum table <pg_create_enum_table>`.
 
 Use table ``user_role`` as an enum table:
 
@@ -208,7 +209,7 @@ Use table ``user_role`` as an enum table:
     }
   }
 
-.. _pg_set_table_is_enum_syntax:
+.. _metadata_pg_set_table_is_enum_syntax:
 
 Args syntax
 ^^^^^^^^^^^
@@ -233,7 +234,7 @@ Args syntax
      - :ref:`SourceName <SourceName>`
      - Name of the source database of the table (default: ``default``)
 
-.. _pg_set_table_customization:
+.. _metadata_pg_set_table_customization:
 
 pg_set_table_customization
 --------------------------
@@ -241,9 +242,6 @@ pg_set_table_customization
 ``pg_set_table_customization`` allows you to customize any given table with
 a custom name, custom root fields and custom column names of an already tracked
 table. This will **replace** the already present customization.
-
-:ref:`pg_set_table_custom_fields <set_table_custom_fields>` has been deprecated in
-favour of this API.
 
 Set the configuration for a table/view called ``author``:
 
@@ -278,7 +276,7 @@ Set the configuration for a table/view called ``author``:
       }
    }
 
-.. _pg_set_table_customization_syntax:
+.. _metadata_pg_set_table_customization_syntax:
 
 Args syntax
 ^^^^^^^^^^^
@@ -454,9 +452,6 @@ mssql_set_table_customization
 a custom name, custom root fields and custom column names of an already tracked
 table. This will **replace** the already present customization.
 
-:ref:`mssql_set_table_custom_fields <set_table_custom_fields>` has been deprecated in
-favour of this API.
-
 Set the configuration for a table/view called ``author``:
 
 .. code-block:: http
@@ -509,7 +504,7 @@ Args syntax
       - Name of the source database of the table (default: ``default``)
 
 
-.. _bigquery_track_table:
+.. _metadata_bigquery_track_table:
 
 bigquery_track_table
 --------------------
@@ -558,6 +553,7 @@ field name being ``hasura_author``.
     {
         "type": "bigquery_track_table",
         "args": {
+          "source": "default",
           "table": {
             "dataset": "hasura",
             "name": "Author Details"
@@ -578,6 +574,7 @@ field name being ``hasura_author``.
     {
         "type": "bigquery_track_table",
         "args": {
+          "source": "default",
           "table": {
             "dataset": "hasura",
             "name": "Author Details"
@@ -611,7 +608,7 @@ field name being ``hasura_author``.
   Hasura GraphQL engine requires the constraint names (if any) of a table to be
   `GraphQL compliant <https://spec.graphql.org/June2018/#sec-Names>`__ in order to be able to track it.
 
-.. _bigquery_track_table_syntax:
+.. _metadata_bigquery_track_table_syntax:
 
 Args syntax
 ^^^^^^^^^^^
@@ -636,7 +633,7 @@ Args syntax
     - :ref:`SourceName <SourceName>`
     - Name of the source database of the table (default: ``default``)
 
-.. _bigquery_untrack_table:
+.. _metadata_bigquery_untrack_table:
 
 bigquery_untrack_table
 ----------------------
@@ -663,7 +660,7 @@ Remove a table/view ``author``:
       }
   }
 
-.. _bigquery_untrack_table_syntax:
+.. _metadata_bigquery_untrack_table_syntax:
 
 Args syntax
 ^^^^^^^^^^^
@@ -688,7 +685,7 @@ Args syntax
     - :ref:`SourceName <SourceName>`
     - Name of the source database of the table (default: ``default``)
 
-.. _bigquery_set_table_customization:
+.. _metadata_bigquery_set_table_customization:
 
 bigquery_set_table_customization
 --------------------------------
@@ -726,7 +723,7 @@ Set the configuration for a table/view called ``hasura_author_details`` to ``aut
       }
     }
 
-.. _bigquery_set_table_customization_syntax:
+.. _metadata_bigquery_set_table_customization_syntax:
 
 Args syntax
 ^^^^^^^^^^^

@@ -67,7 +67,7 @@ API Reference - Query / Subscription
 
 .. note::
 
-    For more examples and details of usage, please see :ref:`this <queries>`.
+    For more examples and details of usage, please see :ref:`this <pg_queries>`.
 
 **query_by_pk** / **subscription_by_pk** syntax
 -----------------------------------------------

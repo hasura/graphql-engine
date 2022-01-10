@@ -81,10 +81,6 @@ Now we can use the following subscription to fetch the latest location of a vehi
       }
     }
 
-
-Check this `sample app <https://realtime-location-tracking.demo.hasura.app/>`__ for a working demo
-(`source code <https://github.com/hasura/graphql-engine/tree/master/community/sample-apps/realtime-location-tracking>`__).
-
 .. _ms_sql_server_subscribe_table:
 
 Subscribe to changes to a table's entries
@@ -157,9 +153,6 @@ Now we can use the following subscription to display the latest messages in a ch
         ]
       }
     }
-
-Check this `sample app <https://realtime-chat.demo.hasura.app/>`__ for a working demo
-(`source code <https://github.com/hasura/graphql-engine/tree/master/community/sample-apps/realtime-chat>`__).
 
 .. _ms_sql_server_subscribe_derived:
 
@@ -289,6 +282,3 @@ Now we can use the following subscription to display the latest poll result:
         ]
       }
     }
-
-Check this `sample app <https://realtime-poll.demo.hasura.app/>`__ for a working demo
-(`source code <https://github.com/hasura/graphql-engine/tree/master/community/sample-apps/realtime-poll>`__).

@@ -20,7 +20,7 @@ is possible to roll back their state to a previous stable version.
 
 .. note::
 
-  For ``config v1``, see :ref:`roll_back_migrations_v1`.
+  For ``config v2``, see :ref:`roll_back_migrations_v2`.
 
 Rolling back database schema
 ----------------------------

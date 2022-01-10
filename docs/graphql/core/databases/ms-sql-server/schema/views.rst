@@ -123,8 +123,8 @@ In order to expose a view over the GraphQL API, it needs to be **tracked**.
       {
         "type": "mssql_track_table",
         "args": {
+          "source": "<db_name>",
           "table": "authors",
-          "source": "default",
           "schema": "dbo",
           "name": "<name of view>"
         }

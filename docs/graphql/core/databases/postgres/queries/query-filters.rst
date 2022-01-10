@@ -2,7 +2,7 @@
    :description: Filter query results and search queries on Postgres in Hasura
    :keywords: hasura, docs, postgres, query, filter, search
 
-.. _filter_queries:
+.. _pg_filter_queries:
 
 Postgres: Filter query results / search queries
 ===============================================
@@ -1389,7 +1389,7 @@ Fetch a list of articles rated more than 4 or published after "01/01/2018":
   The ``_or`` operator expects an array of expressions as input. If an object is passed as input it will behave like
   the ``_and`` operator as explained in the :ref:`API reference <OrExp>`
 
-.. _nested_filter:
+.. _pg_nested_filter:
 
 Filter nested objects
 ---------------------
@@ -2133,7 +2133,7 @@ Columns of type ``geography`` are more accurate, but they don’t support as man
 
     CREATE INDEX cities_location_geography ON cities USING GIST ((location::geography));
 
-.. _true_expression:
+.. _pg_true_expression:
 
 The TRUE expression ( **{ }** )
 -------------------------------
@@ -2148,7 +2148,7 @@ The expression ``{}`` evaluates to ``true`` if an object exists (even if it's ``
 - any query with the condition ``{ where: { nested_object: {} } }`` will return all
   objects for which atleast one ``nested_object`` exists.
 
-.. _null_value_evaluation:
+.. _pg_null_value_evaluation:
 
 Evaluation of **null** values in comparison expressions
 -------------------------------------------------------
@@ -2160,7 +2160,7 @@ For example, the expression ``{ where: {id: { _eq: null }}}`` will throw an erro
 
 
 In **versions v1.3.3 and below**, if in any comparison expression a ``null`` value is passed, the expression gets
-reduced to ``{}``, the :ref:`TRUE expression <true_expression>`.
+reduced to ``{}``, the :ref:`TRUE expression <pg_true_expression>`.
 
 For example, the expression ``{ where: { id: {_eq: null }}}`` will be reduced to ``{ where: {id: {}} }`` which
 will return all objects for which an ``id`` is set, i.e. all objects will be returned.

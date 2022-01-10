@@ -2,7 +2,7 @@
    :description: Create relationships between Postgres tables/views in Hasura
    :keywords: hasura, docs, postgres, schema, relationship, create
 
-.. _create_relationships:
+.. _pg_create_relationships:
 
 Postgres: Creating relationships
 ================================
@@ -22,7 +22,7 @@ Typically, relationships are defined using foreign-key constraints. But in some 
 use foreign-key constraints to create the relation. For example, while trying to create a relationship involving a view
 as foreign-keys can't be created on views.
 
-.. _relationships-using-fkey:
+.. _pg_relationships_using_fkey:
 
 Using foreign keys
 ------------------
@@ -47,6 +47,7 @@ Let's add a foreign-key constraint to the ``author_id`` column in the ``articles
 
     .. thumbnail:: /img/graphql/core/schema/add-foreign-key.png
       :alt: Add foreign-key constraint
+      :width: 700px
 
   .. tab:: CLI
 
@@ -72,17 +73,18 @@ Let's add a foreign-key constraint to the ``author_id`` column in the ``articles
 
   .. tab:: API
 
-    You can add a foreign-key constraint using the :ref:`run_sql metadata API <run_sql>`:
+    You can add a foreign-key constraint using the :ref:`schema_run_sql` schema API:
 
     .. code-block:: http
 
-      POST /v1/query HTTP/1.1
+      POST /v2/query HTTP/1.1
       Content-Type: application/json
       X-Hasura-Role: admin
 
       {
         "type": "run_sql",
         "args": {
+          "source": "<db_name>",
           "sql": "ALTER TABLE articles ADD FOREIGN KEY (author_id) REFERENCES authors(id);"
         }
       }
@@ -104,6 +106,7 @@ Each article has one author. This is an ``object relationship``.
 
     .. thumbnail:: /img/graphql/core/schema/add-1-1-relationship.png
       :alt: Create an object relationship
+      :width: 1100px
 
   .. tab:: CLI
 
@@ -131,17 +134,18 @@ Each article has one author. This is an ``object relationship``.
 
   .. tab:: API
 
-    You can create an object relationship by using the :ref:`create_object_relationship metadata API <create_object_relationship>`:
+    You can create an object relationship by using the :ref:`metadata_pg_create_object_relationship` metadata API:
 
     .. code-block:: http
 
-      POST /v1/query HTTP/1.1
+      POST /v1/metadata HTTP/1.1
       Content-Type: application/json
       X-Hasura-Role: admin
 
       {
-        "type": "create_object_relationship",
+        "type": "pg_create_object_relationship",
         "args": {
+          "source": "<db_name>",
           "table": "articles",
           "name": "author",
           "using": {
@@ -215,6 +219,7 @@ You can add an ``array relationship`` in the same fashion as an ``object relatio
 
     .. thumbnail:: /img/graphql/core/schema/add-1-many-relationship.png
       :alt: Create an array relationship
+      :width: 1100px
 
     We can now run a nested object query that is based on this ``array relationship``.
 
@@ -252,17 +257,18 @@ You can add an ``array relationship`` in the same fashion as an ``object relatio
 
   .. tab:: API
 
-    You can create an array relationship by using the :ref:`create_array_relationship metadata API <create_array_relationship>`:
+    You can create an array relationship by using the :ref:`metadata_pg_create_array_relationship` metadata API:
 
     .. code-block:: http
 
-      POST /v1/query HTTP/1.1
+      POST /v1/metadata HTTP/1.1
       Content-Type: application/json
       X-Hasura-Role: admin
 
       {
-        "type": "create_array_relationship",
+        "type": "pg_create_array_relationship",
         "args": {
+          "source": "<db_name>",
           "table": "authors",
           "name": "articles",
           "using": {
@@ -343,12 +349,12 @@ Fetch a list of authors and a nested list of each author's articles:
       }
     }
 
-.. _create_manual_relationships:
+.. _pg_create_manual_relationships:
 
 Using manual relationships
 --------------------------
 
-Let's say you have a table ``authors (id, name)`` and a :ref:`view <custom_views>` ``author_avg_rating (id, avg)`` which has the
+Let's say you have a table ``authors (id, name)`` and a :ref:`view <pg_custom_views>` ``author_avg_rating (id, avg)`` which has the
 average rating of articles for each author.
 
 Let us now create an ``object relationship`` called ``avg_rating`` from the ``authors`` table to the
@@ -366,6 +372,7 @@ Let us now create an ``object relationship`` called ``avg_rating`` from the ``au
 
     .. thumbnail:: /img/graphql/core/schema/manual-relationship-btn.png
       :alt: Open the manual relationship section
+      :width: 1100px
 
     **Step 2: Define the relationship**
 
@@ -373,6 +380,7 @@ Let us now create an ``object relationship`` called ``avg_rating`` from the ``au
 
     .. thumbnail:: /img/graphql/core/schema/manual-relationship-create.png
       :alt: Define the relationship
+      :width: 700px
 
     In this case:
 
@@ -418,17 +426,18 @@ Let us now create an ``object relationship`` called ``avg_rating`` from the ``au
 
   .. tab:: API
 
-    You can add a manual relationship by using the :ref:`create_object_relationship metadata API <create_object_relationship>`:
+    You can add a manual relationship by using the :ref:`metadata_pg_create_object_relationship` metadata API:
 
     .. code-block:: http
 
-      POST /v1/query HTTP/1.1
+      POST /v1/metadata HTTP/1.1
       Content-Type: application/json
       X-Hasura-Role: admin
 
       {
-        "type": "create_object_relationship",
+        "type": "pg_create_object_relationship",
         "args": {
+          "source": "<db_name>",
           "table": "authors",
           "name": "avg_rating",
           "using": {
@@ -501,6 +510,7 @@ As mentioned in the Introduction section above, relationships can be inferred vi
 
     .. thumbnail:: /img/graphql/core/schema/schema-track-relationships.png
       :alt: Track all relationships
+      :width: 700px
 
     You can choose to track the relationships individually using the ``Track`` buttons or hit the ``Track all`` button to
     track all the inferred relationships in one go.
@@ -539,12 +549,12 @@ As mentioned in the Introduction section above, relationships can be inferred vi
 
   .. tab:: API
 
-    You can create multiple relationships by using the :ref:`create_object_relationship metadata API <create_object_relationship>`
-    and the :ref:`create_array_relationship metadata API <create_array_relationship>`:
+    You can create multiple relationships by using the :ref:`metadata_pg_create_object_relationship`
+    and the :ref:`metadata_pg_create_array_relationship` metadata APIs:
 
     .. code-block:: http
 
-      POST /v1/query HTTP/1.1
+      POST /v1/metadata HTTP/1.1
       Content-Type: application/json
       X-Hasura-Role: admin
 
@@ -552,8 +562,9 @@ As mentioned in the Introduction section above, relationships can be inferred vi
         "type": "bulk",
         "args": [
           {
-            "type": "create_object_relationship",
+            "type": "pg_create_object_relationship",
             "args": {
+              "source": "<db_name>",
               "table": "articles",
               "name": "author",
               "using": {
@@ -562,8 +573,9 @@ As mentioned in the Introduction section above, relationships can be inferred vi
             }
           },
           {
-            "type": "create_array_relationship",
+            "type": "pg_create_array_relationship",
             "args": {
+              "source": "<db_name>",
               "table": "authors",
               "name": "articles",
               "using": {

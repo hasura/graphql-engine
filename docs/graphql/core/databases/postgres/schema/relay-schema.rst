@@ -2,7 +2,7 @@
    :description: Using Hasura's Relay API
    :keywords: hasura, docs, Relay, schema, API
 
-.. _relay_schema:
+.. _pg_relay_schema:
 
 Postgres: Relay schema
 ======================
@@ -19,6 +19,7 @@ The Hasura GraphQL engine serves a `Relay <https://relay.dev/>`__ schema for Pos
 
 .. thumbnail:: /img/graphql/core/schema/relay.png
    :alt: Relay API toggle
+   :width: 1200px
 
 .. admonition:: Supported from
 

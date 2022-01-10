@@ -24,7 +24,7 @@ Only tracked custom functions are available for querying/mutating/subscribing da
   The metadata API is supported for versions ``v2.0.0`` and above and replaces the older
   :ref:`schema/metadata API <schema_metadata_apis>`.
 
-.. _pg_track_function:
+.. _metadata_pg_track_function:
 
 pg_track_function
 -----------------
@@ -45,11 +45,11 @@ Track an SQL function called ``search_articles`` with a Hasura session argument:
    {
        "type": "pg_track_function",
        "args": {
+           "source": "default",
            "function": {
                "schema": "public",
                "name": "search_articles"
            },
-           "source": "default",
            "configuration": {
                "session_argument": "hasura_session"
            },
@@ -75,7 +75,8 @@ as a top-level field under the ``mutation`` root field:
            },
            "configuration": {
                "exposed_as": "mutation"
-           }
+           },
+           "source": "default"
        }
    }
 
@@ -98,7 +99,7 @@ some logging visible only to administrators.
    It's easy to accidentally give an SQL function the wrong volatility (or for a
    function to end up with ``VOLATILE`` mistakenly, since it's the default).
 
-.. _pg_track_function_syntax:
+.. _metadata_pg_track_function_syntax:
 
 Args syntax
 ^^^^^^^^^^^
@@ -128,7 +129,7 @@ Args syntax
      - Comment for the function. This comment would replace the auto-generated
        comment for the function field in the GraphQL schema.
 
-.. _pg_untrack_function:
+.. _metadata_pg_untrack_function:
 
 pg_untrack_function
 -------------------
@@ -173,7 +174,7 @@ Args syntax
      - :ref:`SourceName <SourceName>`
      - Name of the source database of the function (default: ``default``)
 
-.. _pg_set_function_customization:
+.. _metadata_pg_set_function_customization:
 
 pg_set_function_customization
 -----------------------------
@@ -204,7 +205,7 @@ Set the configuration for a function called ``search_articles``:
       }
    }
 
-.. _pg_set_function_customization_syntax:
+.. _metadata_pg_set_function_customization_syntax:
 
 Args syntax
 ^^^^^^^^^^^
@@ -229,7 +230,7 @@ Args syntax
      - :ref:`SourceName <SourceName>`
      - Name of the source database of the function (default: ``default``)
 
-.. _pg_create_function_permission:
+.. _metadata_pg_create_function_permission:
 
 pg_create_function_permission
 -----------------------------
@@ -253,7 +254,7 @@ target table of the function.
        }
    }
 
-.. _pg_create_function_permission_syntax:
+.. _metadata_pg_create_function_permission_syntax:
 
 Args syntax
 ^^^^^^^^^^^
@@ -278,7 +279,7 @@ Args syntax
      - Text
      - Name of the source database of the function (default: ``default``)
 
-.. _pg_drop_function_permission:
+.. _metadata_pg_drop_function_permission:
 
 pg_drop_function_permission
 ---------------------------
@@ -300,7 +301,7 @@ pg_drop_function_permission
        }
    }
 
-.. _pg_drop_function_permission_syntax:
+.. _metadata_pg_drop_function_permission_syntax:
 
 Args syntax
 ^^^^^^^^^^^

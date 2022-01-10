@@ -73,7 +73,7 @@ permutations of their association via the foreign keys.
 Step 2: Set up GraphQL relationships
 ------------------------------------
 
-To access the nested objects via the GraphQL API, :ref:`create the following relationships <create_relationships>`:
+To access the nested objects via the GraphQL API, :ref:`create the following relationships <pg_create_relationships>`:
 
 - Array relationship, ``article_tags`` from ``articles`` table using  ``article_tag :: article_id -> id``
 - Object relationship, ``tag`` from ``article_tag`` table using  ``tag_id -> tags :: id``
@@ -434,7 +434,7 @@ Flattening a many-to-many relationship query
 --------------------------------------------
 
 In case you would like to flatten the above queries and avoid the intermediate fields ``article_tags`` &
-``tag_articles``, you can :ref:`create the following views <custom_views>` additionally and then
+``tag_articles``, you can :ref:`create the following views <pg_custom_views>` additionally and then
 query using relationships created on these views:
 
 .. code-block:: sql
@@ -449,7 +449,7 @@ query using relationships created on these views:
       FROM article_tag LEFT JOIN articles
         ON article_tag.article_id = articles.id
 
-Now :ref:`create the following relationships <create_relationships>`:
+Now :ref:`create the following relationships <pg_create_relationships>`:
 
 - Array relationship, ``tags`` from the ``articles`` table using  ``article_tags_view :: article_id -> id``
 - Array relationship, ``articles`` from the ``tags`` table using  ``tag_articles_view :: tag_id -> id``

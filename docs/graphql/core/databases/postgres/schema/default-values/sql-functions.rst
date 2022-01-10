@@ -2,7 +2,7 @@
    :description: Set default field values in Postgres using SQL functions in Hasura
    :keywords: hasura, docs, postgres, schema, default value, sql function, stored procedure
 
-.. _sql_functions_as_default:
+.. _pg_sql_functions_as_default:
 
 Postgres: Setting values of fields using SQL functions
 ======================================================
@@ -72,17 +72,18 @@ Modify the table ``sql_function_table`` and make its ``output`` column nullable.
 
   .. tab:: API
 
-    You can modify a table column by using the :ref:`run_sql metadata API <run_sql>`:
+    You can modify a table column by using the :ref:`schema_run_sql` schema API:
 
     .. code-block:: http
 
-      POST /v1/query HTTP/1.1
+      POST /v2/query HTTP/1.1
       Content-Type: application/json
       X-Hasura-Role: admin
 
       {
         "type": "run_sql",
         "args": {
+          "source": "<db_name>",
           "sql": "ALTER TABLE sql_function_table ALTER COLUMN output DROP NOT NULL;"
         }
       }
@@ -127,17 +128,18 @@ the ``output`` field whenever an insert or update is made to the ``sql_function_
 
   .. tab:: API
 
-    You can create a trigger by using the :ref:`run_sql metadata API <run_sql>`:
+    You can create a trigger by using the :ref:`schema_run_sql` schema API:
 
     .. code-block:: http
 
-      POST /v1/query HTTP/1.1
+      POST /v2/query HTTP/1.1
       Content-Type: application/json
       X-Hasura-Role: admin
 
       {
         "type": "run_sql",
         "args": {
+          "source": "<db_name>",
           "sql": "<above SQL>"
         }
       }
@@ -180,5 +182,5 @@ value (output="YABBA DABBA DOO!") will be set automatically.
 Also see
 --------
 
-- :ref:`postgres_defaults`
-- :ref:`column_presets`
+- :ref:`pg_postgres_defaults`
+- :ref:`pg_column_presets`

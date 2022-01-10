@@ -32,7 +32,7 @@ Step 1: Define and create the relationship
 
 The following values can be defined for an action relationship:
 
-- **Relationship type**: Select a :ref:`type of relationship <relationship_database_modelling>`.
+- **Relationship type**: Select a type of relationship.
 
   - **Object relationship**: For one-to-one relationships.
   - **Array relationship**: For one-to-many relationships.
@@ -55,13 +55,13 @@ In this example, we're creating a relationship for the ``createUser`` action.
 
     .. thumbnail:: /img/graphql/core/schema/add-action-relationship.png
        :alt: Opening the action relationship section
-       :width: 559px
+       :width: 600px
 
     - In the section opened by the above step, fill out the following fields and hit ``Save``.
 
     .. thumbnail:: /img/graphql/core/schema/define-action-relationship.png
       :alt: Defining the relationship
-      :width: 850px
+      :width: 700px
 
   .. tab:: CLI
 
@@ -90,12 +90,12 @@ In this example, we're creating a relationship for the ``createUser`` action.
 
   .. tab:: API
 
-    You can create an action relationship when defining custom types via the :ref:`set_custom_types metadata API <metadata_set_custom_types>`:
+    You can create an action relationship when defining custom types via the :ref:`metadata_set_custom_types` metadata API:
 
     .. code-block:: http
       :emphasize-lines: 20-29
 
-      POST /v1/query HTTP/1.1
+      POST /v1/metadata HTTP/1.1
       Content-Type: application/json
       X-Hasura-Role: admin
 

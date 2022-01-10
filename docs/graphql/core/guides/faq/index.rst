@@ -104,7 +104,7 @@ exposes over databases, Hasura allows you to expose stored procedures or functio
 the GraphQL schema. This is a great way to bring in existing business logic that maybe in your
 database, or to write custom, high-performance logic if you’re familiar with databases!
 
-- Read more about :ref:`custom functions <custom_sql_functions>`
+- Read more about :ref:`custom functions <pg_custom_sql_functions>`
 
 Choose one or more of the methods above depending on where your existing business logic is, and
 where you want it to be in the future.

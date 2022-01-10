@@ -31,7 +31,7 @@ role has unrestricted access to all operations.
   The metadata API is supported for versions ``v2.0.0`` and above and replaces the older
   :ref:`schema/metadata API <schema_metadata_apis>`.
 
-.. _pg_create_insert_permission:
+.. _metadata_pg_create_insert_permission:
 
 pg_create_insert_permission
 ---------------------------
@@ -113,7 +113,7 @@ In the above definition, the row is allowed to be inserted if the ``author_id``
 is the same as the request's user id and ``is_reviewed`` is ``false`` when the
 ``category`` is "editorial".
 
-.. _pg_create_insert_permission_syntax:
+.. _metadata_pg_create_insert_permission_syntax:
 
 Args syntax
 ^^^^^^^^^^^
@@ -146,7 +146,7 @@ Args syntax
      - :ref:`SourceName <SourceName>`
      - Name of the source database of the table (default: ``default``)
 
-.. _pg_drop_insert_permission:
+.. _metadata_pg_drop_insert_permission:
 
 pg_drop_insert_permission
 -------------------------
@@ -170,7 +170,7 @@ An example:
        }
    }
 
-.. _pg_drop_insert_permission_syntax:
+.. _metadata_pg_drop_insert_permission_syntax:
 
 Args syntax
 ^^^^^^^^^^^
@@ -195,7 +195,7 @@ Args syntax
      - :ref:`SourceName <SourceName>`
      - Name of the source database of the table (default: ``default``)
 
-.. _pg_create_select_permission:
+.. _metadata_pg_create_select_permission:
 
 pg_create_select_permission
 ---------------------------
@@ -242,7 +242,7 @@ This reads as follows - For the ``user`` role:
 
 * Allow aggregate queries.
 
-.. _pg_create_select_permission_syntax:
+.. _metadata_pg_create_select_permission_syntax:
 
 Args syntax
 ^^^^^^^^^^^
@@ -275,7 +275,7 @@ Args syntax
      - :ref:`SourceName <SourceName>`
      - Name of the source database of the table (default: ``default``)
 
-.. _pg_drop_select_permission:
+.. _metadata_pg_drop_select_permission:
 
 pg_drop_select_permission
 -------------------------
@@ -299,7 +299,7 @@ An example:
        }
    }
 
-.. _pg_drop_select_permission_syntax:
+.. _metadata_pg_drop_select_permission_syntax:
 
 Args syntax
 ^^^^^^^^^^^
@@ -324,7 +324,7 @@ Args syntax
      - :ref:`SourceName <SourceName>`
      - Name of the source database of the table (default: ``default``)
 
-.. _pg_create_update_permission:
+.. _metadata_pg_create_update_permission:
 
 pg_create_update_permission
 ---------------------------
@@ -380,7 +380,7 @@ This reads as follows - for the ``user`` role:
    ownership of a row in the ``article`` table. Columns such as this should
    never be allowed to be updated.
 
-.. _pg_create_update_permission_syntax:
+.. _metadata_pg_create_update_permission_syntax:
 
 Args syntax
 ^^^^^^^^^^^
@@ -413,7 +413,7 @@ Args syntax
      - :ref:`SourceName <SourceName>`
      - Name of the source database of the table (default: ``default``)
 
-.. _pg_drop_update_permission:
+.. _metadata_pg_drop_update_permission:
 
 pg_drop_update_permission
 -------------------------
@@ -437,7 +437,7 @@ An example:
        }
    }
 
-.. _pg_drop_update_permission_syntax:
+.. _metadata_pg_drop_update_permission_syntax:
 
 Args syntax
 ^^^^^^^^^^^
@@ -462,7 +462,7 @@ Args syntax
      - :ref:`SourceName <SourceName>`
      - Name of the source database of the table (default: ``default``)
 
-.. _pg_create_delete_permission:
+.. _metadata_pg_create_delete_permission:
 
 pg_create_delete_permission
 ---------------------------
@@ -496,7 +496,7 @@ This reads as follows:
 "``delete`` for the ``user`` role on the ``article`` table is allowed on rows where
 ``author_id`` is the same as the request header ``X-HASURA-USER-ID`` value."
 
-.. _pg_create_delete_permission_syntax:
+.. _metadata_pg_create_delete_permission_syntax:
 
 Args syntax
 ^^^^^^^^^^^
@@ -529,7 +529,7 @@ Args syntax
      - :ref:`SourceName <SourceName>`
      - Name of the source database of the table (default: ``default``)
 
-.. _pg_drop_delete_permission:
+.. _metadata_pg_drop_delete_permission:
 
 pg_drop_delete_permission
 -------------------------
@@ -553,7 +553,7 @@ An example:
        }
    }
 
-.. _pg_drop_delete_permission_syntax:
+.. _metadata_pg_drop_delete_permission_syntax:
 
 Args syntax
 ^^^^^^^^^^^
@@ -578,7 +578,7 @@ Args syntax
      - :ref:`SourceName <SourceName>`
      - Name of the source database of the table (default: ``default``)
 
-.. _pg_set_permission_comment:
+.. _metadata_pg_set_permission_comment:
 
 pg_set_permission_comment
 -------------------------
@@ -606,7 +606,7 @@ An example:
        }
    }
 
-.. _pg_set_permission_comment_syntax:
+.. _metadata_pg_set_permission_comment_syntax:
 
 Args syntax
 ^^^^^^^^^^^

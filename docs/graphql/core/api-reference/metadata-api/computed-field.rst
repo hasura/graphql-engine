@@ -27,7 +27,7 @@ as computed fields.
   The metadata API is supported for versions ``v2.0.0`` and above and replaces the older
   :ref:`schema/metadata API <schema_metadata_apis>`.
 
-.. _pg_add_computed_field:
+.. _metadata_pg_add_computed_field:
 
 pg_add_computed_field
 ---------------------
@@ -64,7 +64,7 @@ an SQL function called ``author_full_name``:
        }
    }
 
-.. _pg_add_computed_field_syntax:
+.. _metadata_pg_add_computed_field_syntax:
 
 Args syntax
 ^^^^^^^^^^^
@@ -97,7 +97,7 @@ Args syntax
      - :ref:`SourceName <SourceName>`
      - Name of the source database of the table (default: ``default``)
 
-.. _pg_drop_computed_field:
+.. _metadata_pg_drop_computed_field:
 
 pg_drop_computed_field
 ----------------------
@@ -128,7 +128,7 @@ Drop a computed field ``full_name`` from a table ``author``:
        }
    }
 
-.. _pg_drop_computed_field_syntax:
+.. _metadata_pg_drop_computed_field_syntax:
 
 Args syntax
 ^^^^^^^^^^^

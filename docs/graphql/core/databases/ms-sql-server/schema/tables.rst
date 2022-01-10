@@ -51,6 +51,7 @@ Let's say we want to create two simple tables for ``articles`` and ``authors`` s
 
     .. thumbnail:: /img/graphql/core/schema/create-table-graphql-mssql.png
       :alt: Schema for an article table
+      :width: 1100px
 
   .. tab:: CLI
 
@@ -107,6 +108,7 @@ In order to expose a table over the GraphQL API, it needs to be **tracked**.
 
     .. thumbnail:: /img/graphql/core/schema/schema-track-tables-mssql.png
        :alt: Track table
+       :width: 700px
 
   .. tab:: CLI
 
@@ -116,10 +118,10 @@ In order to expose a table over the GraphQL API, it needs to be **tracked**.
          :emphasize-lines: 4-6
 
           - table:
-              schema: public
+              schema: dbo
               name: authors
           - table:
-              schema: public
+              schema: dbo
               name: articles
 
     2. Apply the metadata by running:
@@ -141,7 +143,8 @@ In order to expose a table over the GraphQL API, it needs to be **tracked**.
       {
         "type": "mssql_track_table",
         "args": {
-          "table": "authors",
+          "source": "<db_name>",
+          "table": "authors"
         }
       }
 

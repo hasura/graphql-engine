@@ -2,7 +2,7 @@
    :description: Use upsert mutations on Postgres with Hasura
    :keywords: hasura, docs, postgres, mutation, upsert
 
-.. _upsert:
+.. _pg_upsert:
 
 Postgres: Upsert mutation
 =========================
@@ -27,7 +27,7 @@ Convert insert mutation to upsert
   Only tables with **update** permissions are **upsertable**. i.e. a table's update permissions are respected
   before updating an existing row in case of a conflict.
 
-To convert an :ref:`insert mutation <insert>` into an upsert, you need to use the ``on_conflict`` argument to specify:
+To convert an :ref:`insert mutation <pg_insert>` into an upsert, you need to use the ``on_conflict`` argument to specify:
 
 - a **unique or primary key constraint** using the ``constraint`` field, and
 - the **columns to be updated** in the case of a violation of that constraint using the ``update_columns`` field.
@@ -168,6 +168,7 @@ value is lesser than the new value:
 
 Ignore request on conflict
 --------------------------
+
 If ``update_columns`` is an **empty array** then on conflict the changes are ignored.
 
 **Example**: Insert a new object into the author table or, if the unique constraint ``author_name_key`` is violated,
@@ -203,6 +204,7 @@ In this case, the insert mutation is ignored because there is a conflict and ``u
 
 Upsert in nested mutations
 --------------------------
+
 You can specify the ``on_conflict`` clause while inserting nested objects:
 
 **Example**:
@@ -243,14 +245,14 @@ You can specify the ``on_conflict`` clause while inserting nested objects:
     }
 
 
-.. _nested-upsert-caveats:
+.. _pg_nested_upsert_caveats:
 
 Nested upsert caveats
 ^^^^^^^^^^^^^^^^^^^^^
 
 .. note::
 
-  The process by which nested inserts/upserts are executed is documented :ref:`here <nested_inserts>`.
+  The process by which nested inserts/upserts are executed is documented :ref:`here <pg_nested_inserts>`.
 
   Nested upserts will fail when:
 

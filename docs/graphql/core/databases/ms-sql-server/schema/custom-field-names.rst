@@ -72,6 +72,7 @@ Expose columns with a different name in the GraphQL API
          {
            "type": "mssql_set_table_customization",
            "args": {
+             "source": "<db_name>",
              "table": "authors",
              "configuration": {
                "custom_column_names": {
@@ -106,7 +107,7 @@ Expose table root fields with a different name in the GraphQL API
     You can expose table root fields with a different name in the GraphQL API in the ``tables.yaml`` file inside the ``metadata`` directory:
 
     .. code-block:: yaml
-       :emphasize-lines: 3-6
+       :emphasize-lines: 4-6
 
         - table:
             schema: dbo
@@ -136,11 +137,12 @@ Expose table root fields with a different name in the GraphQL API
          {
            "type": "mssql_set_table_customization",
            "args": {
+             "source": "<db_name>",
              "table": "authors",
              "configuration": {
                "custom_column_names": {
                  "id": "AuthorId"
-               }
+               },
                "custom_root_fields": {
                  "select": "authors",
                  "select_aggregate": "authors_aggregate"

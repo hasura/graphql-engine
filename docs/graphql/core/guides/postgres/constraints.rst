@@ -117,6 +117,6 @@ This Boolean expression must be satisfied (equal to ``true``) by the column valu
 Postgres constraints & Hasura
 -----------------------------
 
-Most Postgres constraints (primary key, foreign key, not-null and unique constraints) can be added to Hasura natively when :ref:`creating tables <create_tables>`.
+Most Postgres constraints (primary key, foreign key, not-null and unique constraints) can be added to Hasura natively when :ref:`creating tables <pg_create_tables>`.
 
-Postgres check constraints can be used as a form of data validation in Hasura and can be added :ref:`as described here <data_validations_check_constraints>`.
+Postgres check constraints can be used as a form of data validation in Hasura and can be added :ref:`as described here <pg_data_validations_check_constraints>`.
