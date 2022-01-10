@@ -1,4 +1,7 @@
--- | Planning T-SQL queries and subscriptions.
+-- | MSSQL Plan
+--
+-- Planning T-SQL queries and subscription by translating IR to MSSQL-specific
+-- SQL query types.
 module Hasura.Backends.MSSQL.Plan
   ( PrepareState (..),
     planQuery,

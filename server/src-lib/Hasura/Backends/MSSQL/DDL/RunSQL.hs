@@ -1,5 +1,8 @@
 {-# LANGUAGE ViewPatterns #-}
 
+-- | MSSQL DDL RunSQL
+--
+-- Provides primitives for running raw text SQL on MSSQL backends.
 module Hasura.Backends.MSSQL.DDL.RunSQL
   ( runSQL,
     MSSQLRunSQL (..),

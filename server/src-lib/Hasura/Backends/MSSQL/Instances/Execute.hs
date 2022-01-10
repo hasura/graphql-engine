@@ -1,6 +1,8 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
--- | Defines a 'BackendExecute' type class instance for MSSQL.
+-- | MSSQL Instances Execute
+--
+-- Defines a 'BackendExecute' type class instance for MSSQL.
 --
 -- This module implements the needed functionality for implementing a 'BackendExecute'
 -- instance for MSSQL, which defines an interface for translating a root field into an execution plan

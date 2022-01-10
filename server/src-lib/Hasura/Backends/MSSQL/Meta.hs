@@ -1,4 +1,10 @@
 -- | Metadata related types, functions and helpers.
+--
+-- Provides a single function which loads the MSSQL database metadata.
+-- See the file at src-rsr/mssql_table_metadata.sql for the SQL we use to build
+-- this metadata.
+-- See 'Hasura.RQL.Types.Table.DBTableMetadata' for the Haskell type we use forall
+-- storing this metadata.
 module Hasura.Backends.MSSQL.Meta
   ( loadDBMetadata,
   )
