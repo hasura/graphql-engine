@@ -1,16 +1,16 @@
-<div class="meta"
-description="Postgres permissions for Hasura Cloud projects"
-keywords="hasura cloud, docs, deployment, postgres, postgres permissions">
-
-</div>
+---
+description: Postgres permissions for Hasura Cloud projects
+keywords:
+  - hasura
+  - cloud
+  - docs
+  - deployment
+  - postgres
+  - postgres permissions
+sidebar_position: 2
+---
 
 # Postgres permissions
-
-<div class="contents" backlinks="none" depth="1" local="">
-
-Table of contents
-
-</div>
 
 ## Introduction
 
@@ -78,24 +78,16 @@ permission as usually all users have relevant access to
 `information_schema` and `pg_catalog` schemas by default (see keyword
 [PUBLIC](https://www.postgresql.org/docs/current/sql-grant.html)).
 
-<div class="note">
-
-<div class="title">
-
-Note
-
-</div>
-
+:::info Note
 If you first connect Postgres with the default superuser, and afterwards
 with another user, you might get an error. You then need to reset the
 permissions to the new user.
-
-</div>
+:::
 
 ### Note for GCP
 
 On Google Cloud SQL, if you are creating a new user and giving the
-`above <postgres_permissions>` privileges, then you may notice that the
+[above](/graphql/core/deployment/postgres-requirements.mdx#postgres-permissions) privileges, then you may notice that the
 following commands may throw warnings/errors:
 
 ```sql
@@ -118,4 +110,4 @@ postgres=> ALTER SCHEMA hdb_catalog OWNER TO hasurauser;
 
 For more information and a more detailed explanation on Postgres
 permissions, refer to the
-`Hasura core Postgres requirements <postgres_requirements>` page.
+[Hasura core Postgres requirements](/graphql/core/deployment/postgres-requirements.mdx) page.

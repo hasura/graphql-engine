@@ -1,15 +1,20 @@
-<div class="meta" description="Updating v1 Cloud project to v2"
-keywords="hasura, docs, project, upgrade, update, v2">
+---
+description: Updating v1 Cloud project to v2
+keywords:
+  - hasura
+  - docs
+  - project
+  - upgrade
+  - update
+  - v2
+sidebar_label: Updating v1.3 projects to v2.0
+toc_max_heading_level: 5
+sidebar_position: 15
+---
 
-</div>
+import Thumbnail from "@site/src/components/Thumbnail/Thumbnail";
 
 # Updating Hasura Cloud v1.3 projects to Hasura v2.0
-
-<div class="contents" backlinks="none" depth="2" local="">
-
-Table of contents
-
-</div>
 
 ## Introduction
 
@@ -19,16 +24,9 @@ existing projects have not been auto-updated to `v2.0`. You can update
 your older `v1.3` projects to `v2.0` by following this guide.
 
 (*You can find the older guide to do this process manually*
-`here <move_project_v2>`)
+[here](/graphql/cloud/projects/move-project-v2-manual.mdx))
 
-<div class="note">
-
-<div class="title">
-
-Note
-
-</div>
-
+:::info Note
 In case you happen to have a large number of past cron and event trigger
 logs in your database, this might slow down the update to v2 and might
 even cause DB errors in certain scenarios.
@@ -39,12 +37,11 @@ historical data.**
 
 You can take a dump of this data before cleaning up if you wish to keep
 the log history.
-
-</div>
+:::
 
 ## What has changed?
 
-Check the `core updating to v2.0 guide <upgrade_hasura_v2>` and the
+Check the [core updating to v2.0 guide](/graphql/core/guides/upgrade-hasura-v2.mdx) and the
 [release notes](https://github.com/hasura/graphql-engine/releases) to
 see what new concepts, features and behaviour changes have been
 introduced in Hasura `v2.0`.
@@ -54,7 +51,7 @@ DBs managed by Hasura Cloud. Hence the new
 `HASURA_GRAPHQL_METADATA_DATABASE_URL` env var is not configurable on
 Hasura Cloud and is managed by Hasura Cloud itself.
 
-See the section on `hasura_v1_v2_compatibility` to use a Hasura v2 Cloud
+See the section on [hasura_v1_v2_compatibility](/graphql/core/guides/upgrade-hasura-v2.mdx#hasura-v1-v2-compatibility) to use a Hasura v2 Cloud
 project like a Hasura v1 Cloud project.
 
 ## Estimated time needed for update
@@ -91,32 +88,29 @@ this period.**
 -   You can choose to unset the
     `HASURA_GRAPHQL_V1_BOOLEAN_NULL_COLLAPSE` env var that was added to
     your project during the update to preserve a `v1.3` behaviour that
-    was modified in `v2.0`. `See details <hasura_v2_null_where_change>`.
+    was modified in `v2.0`. [See details](/graphql/core/guides/upgrade-hasura-v2.mdx#hasura-v2-null-where-change).
     We recommend moving to the new behaviour by unsetting the env var
     after verifying your project is not impacted by the change.
--   Check the `Post update steps <hasura_v1_to_v2_post_update_steps>`
+-   Check the [Post update steps](/graphql/core/guides/upgrade-hasura-v2.mdx#hasura-v1-to-v2-post-update-steps)
     section of the core updating to v2.0 guide for other changes you
     should make post your project update.
 
 ## Update process
 
-<div class="admonition">
-
-Update option might not be currently enabled for all users
+:::info Update option might not be currently enabled for all users
 
 If you do not see the option to update your project as mentioned below
 yet, you can expect to see so in the coming few days.
-
-</div>
+:::
 
 To start the update, you should see a button called `Update` next to
 your project on the Project list page as shown below:
 
-<div class="thumbnail" width="700px" alt="Update project">
-
-/img/graphql/cloud/projects/update-project.png
-
-</div>
+<Thumbnail
+  src="/img/graphql/cloud/projects/update-project.png"
+  alt="Update project"
+  width="700px"
+/>
 
 Clicking on this button will trigger an update job that will perform a
 few tasks to update your current `v1.3` project to `v2.0`.
@@ -136,10 +130,6 @@ Each task in the update job has a **rollback strategy** in case any
 failures occur. If the rollback steps of any task fail, the project
 might be in an unhealthy state in which case please get in touch with
 support immediately for assistance.
-
-<div class="contents" backlinks="none" depth="2" local="">
-
-</div>
 
 #### Step 1: Initializing
 
@@ -163,7 +153,7 @@ support immediately for assistance.
     server maintenance mode
 -   Set `HASURA_GRAPHQL_V1_BOOLEAN_NULL_COLLAPSE` env var to `true` to
     maintain `v1.3` behaviour for `null` values in `where` filters.
-    `(Know more) <hasura_v2_behaviour_changes>`
+    [(Know more)](/graphql/core/guides/upgrade-hasura-v2.mdx#hasura-v2-behaviour-changes)
 
 ###### On Failure:
 

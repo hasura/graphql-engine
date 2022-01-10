@@ -5,16 +5,12 @@ keywords:
   - cloud
   - docs
   - start
+sidebar_position: 1
 ---
 
-import TOCInline from "@theme/TOCInline";
 import Thumbnail from "@site/src/components/Thumbnail/Thumbnail";
-import { CustomTOCListHead } from "@site/src/components/CustomTOCList/CustomTOCList";
 
 # Creating projects
-
-<CustomTOCListHead>Table of contents</CustomTOCListHead>
-<TOCInline toc={toc} />
 
 ## Introduction
 
@@ -76,8 +72,8 @@ To use an existing database, choose `Connect existing database` and enter your d
   width="700px"
 />
 
-:::info 
-Note You can connect to databases either using env vars or by using their raw connection string/parameters. It is recommended to use env vars for better security _(as connection details are part of Hasura metadata)_ as well as to allow configuring different databases in different environments _(like staging/production)_ easily. 
+:::info
+Note You can connect to databases either using env vars or by using their raw connection string/parameters. It is recommended to use env vars for better security _(as connection details are part of Hasura metadata)_ as well as to allow configuring different databases in different environments _(like staging/production)_ easily.
 :::
 
 ### Allowing connections from Hasura Cloud IP

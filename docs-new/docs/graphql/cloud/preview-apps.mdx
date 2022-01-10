@@ -11,16 +11,12 @@ keywords:
   - request
   - github
 sidebar_label: Preview Apps
+sidebar_position: 10
 ---
 
 import Thumbnail from "@site/src/components/Thumbnail/Thumbnail";
-import TOCInline from "@theme/TOCInline";
-import { CustomTOCListHead } from "@site/src/components/CustomTOCList/CustomTOCList";
 
 # Hasura Cloud Preview Apps
-
-<CustomTOCListHead>Table of contents</CustomTOCListHead>
-<TOCInline toc={toc} />
 
 ## Introduction
 
@@ -152,7 +148,7 @@ jobs:
 This will make sure that whenever the pull request is closed, the preview app gets deleted.
 
 :::info
-Note If you have used `postgresDBConfig` in the creation workflow, make sure that you include it in the deletion workflow as well so that the created databases get deleted when the pull request is gets closed/merged. 
+Note If you have used `postgresDBConfig` in the creation workflow, make sure that you include it in the deletion workflow as well so that the created databases get deleted when the pull request is gets closed/merged.
 :::
 
 ## Using the API manually

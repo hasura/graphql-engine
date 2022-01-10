@@ -6,16 +6,12 @@ keywords:
   - cloud
   - security
   - limits
+sidebar_position: 2
 ---
 
-import TOCInline from "@theme/TOCInline";
-import { CustomTOCListHead } from "@site/src/components/CustomTOCList/CustomTOCList";
 import Thumbnail from "@site/src/components/Thumbnail/Thumbnail";
 
 # API limits
-
-<CustomTOCListHead>Table of contents</CustomTOCListHead>
-<TOCInline toc={toc} />
 
 ## Introduction
 
@@ -86,7 +82,7 @@ API limits can have a _global_ or _per role_ configuration. If an incoming reque
   alt="Hasura Cloud Console api limit tab"
 />
 
-:::info Admin & IntrospectionQuery exemptions 
+:::info Admin & IntrospectionQuery exemptions
 All API limits are **not** applied for the admin role, and depth limits are **NOT** applied to introspection queries.
 :::
 

@@ -7,18 +7,14 @@ keywords:
   - read replicas
   - connections
   - pool
+sidebar_position: 6
 ---
 
-import TOCInline from "@theme/TOCInline";
 import Tabs from "@theme/Tabs";
 import TabItem from "@theme/TabItem";
-import { CustomTOCListHead } from "@site/src/components/CustomTOCList/CustomTOCList";
 import Thumbnail from "@site/src/components/Thumbnail/Thumbnail";
 
 # Read replicas
-
-<CustomTOCListHead>Table of contents</CustomTOCListHead>
-<TOCInline toc={toc} />
 
 ## Introduction
 
@@ -110,7 +106,7 @@ X-Hasura-Role: admin
 </TabItem>
 </Tabs>
 
-:::info 
+:::info
 For existing v1.3 projects If you have configured your Postgres instances with replicas, the replica URLs can be added to Hasura using the following environment variable in your project ENV Vars tab:
 
 ```bash
@@ -123,7 +119,7 @@ Additional environment variables for read replicas specifically:
 
 `HASURA_GRAPHQL_CONNECTIONS_PER_READ_REPLICA`
 
-`HASURA_GRAPHQL_STRIPES_PER_READ_REPLICA` 
+`HASURA_GRAPHQL_STRIPES_PER_READ_REPLICA`
 :::
 
 ### MS SQL Server
