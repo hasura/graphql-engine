@@ -2,7 +2,7 @@
    :description: Manage remote schema permissions with the Hasura metadata API
    :keywords: hasura, docs, schema/metadata API, API reference, remote schema permissions, permission
 
-.. _remote_schema_api_permission:
+.. _schema_metadata_remote_schema_api_permission:
 
 Schema/Metadata API Reference: Remote Schema Permissions (Deprecated)
 =====================================================================
@@ -30,7 +30,7 @@ the  remote schema.
 
   Though for backwards compatibility, the schema/metadata APIs will continue to function.
 
-.. _add_remote_schema_permissions:
+.. _schema_metadata_add_remote_schema_permissions:
 
 add_remote_schema_permissions
 -----------------------------
@@ -317,9 +317,9 @@ Now, consider the following query:
 
 The ``user`` role won't be able to provide the value for the ``limit`` argument in
 the ``customer_transactions_history`` field because the ``limit`` has a preset set
-and the value will be added by the graphql-engine before it queries the remote schema.
+and the value will be added by the GraphQL engine before it queries the remote schema.
 
-.. _add_remote_schema_permissions_syntax:
+.. _schema_metadata_add_remote_schema_permissions_syntax:
 
 Args syntax
 ^^^^^^^^^^^
@@ -350,12 +350,12 @@ Args syntax
 
 .. note::
 
-   ``add_remote_schema_permissions`` will only work when the graphql-engine has enabled remote
+   ``add_remote_schema_permissions`` will only work when the GraphQL engine has enabled remote
    schema permissions. Remote schema permissions can be enabled by running the graphql-engine
    with the ``--enable-remote-schema-permissions`` server flag or by setting the   ``HASURA_GRAPHQL_ENABLE_REMOTE_SCHEMA_PERMISSIONS`` environment variable.
 
 
-.. _drop_remote_schema_permissions:
+.. _schema_metadata_drop_remote_schema_permissions:
 
 drop_remote_schema_permissions
 ------------------------------
@@ -378,7 +378,7 @@ An example:
        }
    }
 
-.. _drop_remote_schema_permissions_syntax:
+.. _schema_metadata_drop_remote_schema_permissions_syntax:
 
 Args syntax
 ^^^^^^^^^^^

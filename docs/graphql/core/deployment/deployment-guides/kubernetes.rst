@@ -92,7 +92,7 @@ Head to: ``http://localhost`` and the console should load!
 Step 5: Track existing tables and relationships
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-See :ref:`schema_existing_db` to enable GraphQL over the database.
+See :ref:`pg_schema_existing_db` to enable GraphQL over the database.
 
 .. _kubernetes_secure:
 

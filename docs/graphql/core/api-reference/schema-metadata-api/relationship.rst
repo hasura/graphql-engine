@@ -2,7 +2,7 @@
    :description: Use relationships with the Hasura schema/metadata API
    :keywords: hasura, docs, schema/metadata API, API reference, relationship
 
-.. _api_relationship:
+.. _schema_metadata_api_relationship:
 
 Schema/Metadata API Reference: Relationships (Deprecated)
 =========================================================
@@ -47,7 +47,7 @@ for every ``author_details`` and a single ``details`` for every ``author``
 
   Though for backwards compatibility, the schema/metadata APIs will continue to function.
 
-.. _create_object_relationship:
+.. _schema_metadata_create_object_relationship:
 
 create_object_relationship
 --------------------------
@@ -111,7 +111,7 @@ Create an ``object relationship`` ``details`` on ``author`` *table*, *using* the
 
     Relationships via remote table are supported for versions ``v2.0.0-alpha.3`` and above.
 
-.. _manual_obj_relationship:
+.. _schema_metadata_manual_obj_relationship:
 
 3. Manual configuration
 ^^^^^^^^^^^^^^^^^^^^^^^
@@ -158,7 +158,7 @@ follows:
    ``article`` table's ``id`` column to ``article_detail`` view's ``article_id``
    column.
 
-.. _create_object_relationship_syntax:
+.. _schema_metadata_create_object_relationship_syntax:
 
 Args syntax
 ^^^^^^^^^^^
@@ -187,7 +187,7 @@ Args syntax
      - text
      - comment
 
-.. _create_array_relationship:
+.. _schema_metadata_create_array_relationship:
 
 create_array_relationship
 -------------------------
@@ -269,7 +269,7 @@ follows:
    ``author`` table's ``id`` column to ``article_detail`` view's ``author_id``
    column.
 
-.. _create_array_relationship_syntax:
+.. _schema_metadata_create_array_relationship_syntax:
 
 Args syntax
 ^^^^^^^^^^^
@@ -298,7 +298,7 @@ Args syntax
      - text
      - comment
 
-.. _drop_relationship:
+.. _schema_metadata_drop_relationship:
 
 drop_relationship
 -----------------
@@ -325,7 +325,7 @@ An example:
        }
    }
 
-.. _drop_relationship_syntax:
+.. _schema_metadata_drop_relationship_syntax:
 
 Args syntax
 ^^^^^^^^^^^
@@ -355,7 +355,7 @@ Args syntax
    Be careful when using ``cascade``. First, try running the request without
    ``cascade`` or ``cascade`` set to ``false``.
 
-.. _set_relationship_comment:
+.. _schema_metadata_set_relationship_comment:
 
 set_relationship_comment
 ------------------------
@@ -380,7 +380,7 @@ An example:
        }
    }
 
-.. _set_relationship_comment_syntax:
+.. _schema_metadata_set_relationship_comment_syntax:
 
 Args syntax
 ^^^^^^^^^^^
@@ -405,7 +405,7 @@ Args syntax
      - Text
      - Comment
 
-.. _rename_relationship:
+.. _schema_metadata_rename_relationship:
 
 rename_relationship
 -------------------
@@ -429,7 +429,7 @@ An example:
        }
    }
 
-.. _rename_relationship_syntax:
+.. _schema_metadata_rename_relationship_syntax:
 
 Args syntax
 ^^^^^^^^^^^

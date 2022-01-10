@@ -205,7 +205,7 @@ For your action, add a header that will act as an action secret.
 
      .. thumbnail:: /img/graphql/core/actions/action-secret-header.png
         :alt: Console action secret
-        :width: 75%
+        :width: 700px
 
      Then hit ``Save``.
 
@@ -238,7 +238,7 @@ For your action, add a header that will act as an action secret.
     .. code-block:: http
       :emphasize-lines: 12-17
 
-      POST /v1/query HTTP/1.1
+      POST /v1/metadata HTTP/1.1
       Content-Type: application/json
       X-Hasura-Role: admin
 
@@ -269,7 +269,7 @@ For your action, add a header that will act as an action secret.
 
     .. note::
 
-      Before creating an action via the :ref:`create_action metadata API <metadata_create_action>`, all custom types need to be defined via the :ref:`set_custom_types metadata API <metadata_set_custom_types>`.
+      Before creating an action via the :ref:`create_action metadata API <metadata_create_action>`, all custom types need to be defined via the :ref:`metadata_set_custom_types` metadata API.
 
 
 This secret is only known by Hasura and is passed to your endpoint with every call,

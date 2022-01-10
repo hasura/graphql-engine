@@ -71,7 +71,7 @@ Citus supported ``plpgsql`` functions are supported on Hasura with the following
 Mutations
 ---------
 
-Mutations are supported in graphql-engine with the following restrictions:
+Mutations are supported in GraphQL engine with the following restrictions:
 
 - Fetching relationship data as part of ``returning`` is not yet supported
 

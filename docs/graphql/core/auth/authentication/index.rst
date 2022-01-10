@@ -41,6 +41,7 @@ Here's how a GraphQL request is processed in webhook mode:
 
 .. thumbnail:: /img/graphql/core/auth/auth-webhook-overview.png
    :alt: Authentication using webhooks
+   :width: 1000px
 
 2. JWT (JSON Web Token)
 ^^^^^^^^^^^^^^^^^^^^^^^
@@ -53,6 +54,7 @@ Here's how a GraphQL query is processed in JWT mode:
 
 .. thumbnail:: /img/graphql/core/auth/auth-jwt-overview.png
    :alt: Authentication using JWT
+   :width: 1000px
 
 **See more details at:**
 

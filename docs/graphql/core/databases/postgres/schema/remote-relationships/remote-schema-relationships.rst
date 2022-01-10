@@ -99,17 +99,18 @@ For this example, we assume that our schema has a ``users`` table with the field
 
   .. tab:: API
 
-    You can add a remote schema relationship by using the :ref:`create_remote_relationship metadata API <create_remote_relationship>`:
+    You can add a remote schema relationship by using the :ref:`metadata_pg_create_remote_relationship` metadata API:
 
     .. code-block:: http
 
-      POST /v1/query HTTP/1.1
+      POST /v1/metadata HTTP/1.1
       Content-Type: application/json
       X-Hasura-Role: admin
 
       {
-        "type": "create_remote_relationship",
+        "type": "pg_create_remote_relationship",
         "args": {
+          "source": "<db_name>",
           "name": "auth0_profile",
           "table": "users",
           "hasura_fields": [
@@ -167,7 +168,7 @@ In the GraphiQL tab, test out your remote schema relationship.
       }
     }
 
-.. _remote_schema_relationship_permissions:
+.. _pg_remote_schema_relationship_permissions:
 
 Remote schema relationship permissions
 --------------------------------------

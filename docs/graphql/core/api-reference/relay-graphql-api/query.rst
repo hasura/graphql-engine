@@ -83,11 +83,11 @@ Relay API Reference - Query / Subscription
            }
          }
        }
-     }
+     }q
 
 .. note::
 
-    For details of usage, please see :ref:`this page <relay_schema>`.
+    For details of usage, please see :ref:`this page <pg_relay_schema>`.
 
 Syntax definitions
 ------------------

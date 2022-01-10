@@ -1,3 +1,4 @@
+import { DataSourcesAPI } from '@/dataSources';
 import { AlterFKTableInfo, MySQLTrigger, CreatePKArgs } from './types';
 
 export const getMySQLNameString = (schemaName: string, itemName: string) =>
@@ -179,28 +180,35 @@ export const getDropNotNullSql = (
   return sql;
 };
 
-export const getSetCommentSql = (
-  on: 'column' | 'table' | string,
-  tableName: string,
-  schemaName: string,
-  columnName: string,
-  comment: string | null,
-  columnType?: string
-) => {
+export const getAlterTableCommentSql: DataSourcesAPI['getAlterTableCommentSql'] = ({
+  tableName,
+  schemaName,
+  comment,
+}) => {
   const commentStr = sqlEscapeText(comment);
-
-  if (on === 'column') {
-    return `alter table ${getMySQLNameString(
-      schemaName,
-      tableName
-    )} modify column \`${columnName}\` ${columnType} comment ${commentStr};`;
-  }
-
-  // FIXME: this is only meant to be for on = table
   return `alter table ${getMySQLNameString(
     schemaName,
     tableName
   )} comment = ${commentStr};`;
+};
+
+export const getAlterColumnCommentSql: DataSourcesAPI['getAlterColumnCommentSql'] = ({
+  tableName,
+  schemaName,
+  columnName,
+  columnType,
+  comment,
+}) => {
+  const commentStr = sqlEscapeText(comment);
+
+  return `alter table ${getMySQLNameString(
+    schemaName,
+    tableName
+  )} modify column \`${columnName}\` ${columnType} comment ${commentStr};`;
+};
+
+export const getAlterFunctionCommentSql: DataSourcesAPI['getAlterFunctionCommentSql'] = () => {
+  return '';
 };
 
 export const getSetColumnDefaultSql = (

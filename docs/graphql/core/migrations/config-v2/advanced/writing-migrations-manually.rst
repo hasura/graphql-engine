@@ -22,7 +22,7 @@ Postgres schema.
 
 .. note::
 
-  For ``config v1``, see :ref:`manual_migrations_v1`.
+  For ``config v3``, see :ref:`manual_migrations`.
 
 Create migration manually
 -------------------------

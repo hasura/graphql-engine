@@ -26,7 +26,7 @@ Scheduled triggers are used to invoke webhooks based on a timestamp or cron.
 
   Though for backwards compatibility, the schema/metadata APIs will continue to function.
 
-.. _create_cron_trigger:
+.. _schema_metadata_create_cron_trigger:
 
 create_cron_trigger
 -------------------
@@ -54,7 +54,7 @@ create_cron_trigger
        }
    }
 
-.. _create_cron_trigger_syntax:
+.. _schema_metadata_create_cron_trigger_syntax:
 
 Args syntax
 ^^^^^^^^^^^
@@ -111,7 +111,7 @@ Args syntax
 
   Scheduled triggers are supported from versions ``v1.3.0`` and above.
 
-.. _delete_cron_trigger:
+.. _schema_metadata_delete_cron_trigger:
 
 delete_cron_trigger
 -------------------
@@ -132,7 +132,7 @@ delete_cron_trigger
        }
    }
 
-.. _delete_cron_trigger_syntax:
+.. _schema_metadata_delete_cron_trigger_syntax:
 
 Args syntax
 ^^^^^^^^^^^
@@ -153,7 +153,7 @@ Args syntax
 
   Scheduled triggers are supported from versions ``v1.3.0`` and above.
 
-.. _create_scheduled_event:
+.. _schema_metadata_create_scheduled_event:
 
 create_scheduled_event
 ----------------------
@@ -183,7 +183,7 @@ create_scheduled_event
        }
    }
 
-.. _create_scheduled_event_syntax:
+.. _schema_metadata_create_scheduled_event_syntax:
 
 Args syntax
 ^^^^^^^^^^^

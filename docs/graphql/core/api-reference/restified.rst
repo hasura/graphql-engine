@@ -20,7 +20,7 @@ The RESTified GraphQL API allows for the use of a REST interface to saved GraphQ
 Users specify the query or mutation they wish to make available, as well a URL template.
 Segments of the URL template can potentially capture data to be used as GraphQL variables.
 
-See :ref:`api_restified_endpoints` for information on how to work with endpoints through the metadata apis.
+See :ref:`metadata_api_restified_endpoints` for information on how to work with endpoints through the metadata apis.
 
 .. admonition:: Supported from
 

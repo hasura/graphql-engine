@@ -45,4 +45,4 @@ Since the database is now able to look up the result of these queries more quick
 Postgres indexes & Hasura
 -------------------------
 
-Indexes can be used to optimize query performance in Hasura. :ref:`Refer to this page <data_validation_pg_indexes>` for information about query performance and how to add Postgres indexes to Hasura.
+Indexes can be used to optimize query performance in Hasura. :ref:`Refer to this page <pg_data_validation_pg_indexes>` for information about query performance and how to add Postgres indexes to Hasura.

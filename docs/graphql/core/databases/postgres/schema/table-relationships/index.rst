@@ -2,7 +2,7 @@
    :description: Manage relationships between Postgres tables/views in Hasura
    :keywords: hasura, docs, postgres, schema, relationship
 
-.. _table_relationships:
+.. _pg_table_relationships:
 
 Postgres: Relationships between tables/views
 ============================================
@@ -15,7 +15,7 @@ Postgres: Relationships between tables/views
 Introduction
 ------------
 
-To make :ref:`nested object queries <nested_object_queries>`, the tables/views in your database need to
+To make :ref:`nested object queries <pg_nested_object_queries>`, the tables/views in your database need to
 be connected via relationships.
 
 Let's say we have the following tables in our database: ``authors``, ``passport_infos``, ``articles`` and ``tags``.
@@ -39,7 +39,7 @@ following types of table relationships:
 |                  |                                     | - a ``tag`` can have many ``articles``         |
 +------------------+-------------------------------------+------------------------------------------------+
 
-.. _graphql_relationships:
+.. _pg_graphql_relationships:
 
 GraphQL schema relationships
 ----------------------------
@@ -65,8 +65,8 @@ Managing GraphQL relationships
 
 See the following to manage the object/array relationships between tables/views for the GraphQL schema:
 
-- :ref:`create_relationships`
-- :ref:`rename_relationships`
+- :ref:`pg_create_relationships`
+- :ref:`pg_rename_relationships`
 
 Table relationships modelling guides
 ------------------------------------

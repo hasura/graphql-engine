@@ -423,4 +423,17 @@ describe('mssql datasource tests', () => {
       expect(query).toMatchSnapshot();
     });
   });
+
+  describe('getAlterColumnCommentSql', () => {
+    const { getAlterColumnCommentSql } = mssql;
+    it('should generate SQL for modifying column comment', () => {
+      const query = getAlterColumnCommentSql({
+        tableName: 'users',
+        schemaName: 'public',
+        columnName: 'id',
+        comment: "user's comment",
+      });
+      expect(query).toMatchSnapshot();
+    });
+  });
 });

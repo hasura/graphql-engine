@@ -2,7 +2,7 @@
    :description: Delete an object from Postgres using a mutation
    :keywords: hasura, docs, postgres, mutation, delete
 
-.. _delete:
+.. _pg_delete:
 
 Postgres: Delete mutation
 =========================
@@ -39,7 +39,7 @@ Auto-generated delete mutation schema
 
 As you can see from the schema:
 
-- The ``where`` argument is compulsory to filter rows to be deleted. See :ref:`Filter queries <filter_queries>`
+- The ``where`` argument is compulsory to filter rows to be deleted. See :ref:`Filter queries <pg_filter_queries>`
   for filtering options. Objects can be deleted based on filters on their own fields or those in their nested objects.
   The ``{}`` expression can be used to delete all rows.
 - You can return the number of affected rows and the affected objects (with nested objects) in the response.
