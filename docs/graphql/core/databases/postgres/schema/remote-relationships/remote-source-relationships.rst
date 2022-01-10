@@ -50,7 +50,7 @@ that the target ``users_db`` database has a ``users`` table with the fields ``id
 
 .. code-block:: http
 
-  POST /v1/query HTTP/1.1
+  POST /v1/metadata HTTP/1.1
   Content-Type: application/json
   X-Hasura-Role: admin
 

@@ -81,7 +81,7 @@ Now, to make sure this function gets called whenever a new author is inserted, w
 Postgres triggers & Hasura
 --------------------------
 
-Postgres triggers can be used to perform business logic such as data validation and can be added :ref:`as described here <data_validations_pg_triggers>`.
+Postgres triggers can be used to perform business logic such as data validation and can be added :ref:`as described here <pg_data_validations_pg_triggers>`.
 
 .. note::
 

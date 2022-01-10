@@ -9,7 +9,7 @@ Adding a remote schema
 
 .. contents:: Table of contents
   :backlinks: none
-  :depth: 1
+  :depth: 2
   :local:
 
 Introduction
@@ -64,6 +64,7 @@ The following details need to be specified for merging a remote schema:
 
     .. thumbnail:: /img/graphql/core/remote-schemas/add-remote-schemas-interface.png
       :alt: Merge remote schema
+      :width: 1100px
 
   .. tab:: CLI
 
@@ -86,11 +87,11 @@ The following details need to be specified for merging a remote schema:
 
   .. tab:: API
 
-    You can add a remote schema by using the :ref:`add_remote_schema metadata API <add_remote_schema>`:
+    You can add a remote schema by using the :ref:`metadata_add_remote_schema` metadata API:
 
     .. code-block:: http
 
-      POST /v1/query HTTP/1.1
+      POST /v1/metadata HTTP/1.1
       Content-Type: application/json
       X-Hasura-Role: admin
 
@@ -160,7 +161,7 @@ A remote server's GraphQL schema is cached and refreshed only when user explicit
 
   .. tab:: API
 
-    Make a request to the :ref:`reload_remote_schema <reload_remote_schema>` metadata API.
+    Make a request to the :ref:`metadata_reload_remote_schema` metadata API.
 
 Current limitations
 ^^^^^^^^^^^^^^^^^^^
@@ -170,15 +171,15 @@ Current limitations
 Extending the auto-generated GraphQL schema fields
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-For some use cases, you may need to extend the GraphQL schema fields exposed by the Hasura GraphQL engine
-(and not merely add new fields as we have done :ref:`here <merge_remote_schema>`) with a custom schema/server.
-To support them, you can use community tooling to write your own client-facing GraphQL gateway that interacts with the GraphQL engine.
+For some use cases, you may need to extend the GraphQL schema fields exposed by the Hasura GraphQL engine and not merely add new fields as we have done here.
+
+To achieve this you can use community tooling to write your own client-facing GraphQL gateway which wraps around and interacts with the GraphQL engine API underneath.
 
 .. note::
 
   **Adding an additional layer on top of the Hasura GraphQL engine significantly impacts the performance provided by
   it out of the box** (*by as much as 4x*). If you need any help with remodelling these kinds of use cases to use the
-  built-in remote schemas feature, please get in touch with us on `Discord <https://discord.gg/vBPpJkS>`__.
+  built-in remote schemas feature, please get in touch with us on `GitHub <https://github.com/hasura/graphql-engine/discussions>`__.
 
 .. admonition:: Additional Resources
 

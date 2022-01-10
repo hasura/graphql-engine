@@ -113,7 +113,7 @@ JSON payload
      is used to compare the old and new rows. If rows contain columns, which cannot be
      compared using ``<>`` operator, then internal binary representation of rows by Postgres is compared.
      
-   - :ref:`Table computed fields <computed_fields>` are not included in the event trigger payload data  
+   - :ref:`Table computed fields <pg_computed_fields>` are not included in the event trigger payload data
 
 **For example**:
 

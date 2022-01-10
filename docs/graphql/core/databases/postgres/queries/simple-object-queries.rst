@@ -2,7 +2,7 @@
    :description: Make simple object queries on Postgres in Hasura
    :keywords: hasura, docs, postgres, query, object query
 
-.. _simple_object_queries:
+.. _pg_simple_object_queries:
 
 Postgres: Simple object queries
 ===============================

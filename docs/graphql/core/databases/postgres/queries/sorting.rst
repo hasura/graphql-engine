@@ -2,7 +2,7 @@
    :description: Sort query results on Postgres in Hasura
    :keywords: hasura, docs, postgres, query, sort
 
-.. _sort_query_results:
+.. _pg_sort_query_results:
 
 Postgres: Sort query results
 ============================
@@ -83,7 +83,7 @@ Sorting objects
       }
     }
 
-.. _nested_sort:
+.. _pg_nested_sort:
 
 Sorting nested objects
 ----------------------

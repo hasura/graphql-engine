@@ -106,6 +106,7 @@ the following columns:
 
 .. thumbnail:: /img/graphql/core/getting-started/create-profile-table.png
    :alt: Create a table
+   :width: 1200px
 
 Now, insert some sample data into the table using the ``Insert Row`` tab of the ``profiles`` table.
 
@@ -127,6 +128,7 @@ You'll see that you get all the inserted data!
 
 .. thumbnail:: /img/graphql/core/getting-started/profile-query.png
    :alt: Try out a query
+   :width: 1200px
 
 Next steps
 ----------
@@ -145,9 +147,9 @@ We release new features every month. Sign up for our newsletter by using the lin
 Database operations
 ^^^^^^^^^^^^^^^^^^^
 
-- :ref:`Database modelling <schema>`: Learn how to model your database schema, as well as how to extend it.
-- :ref:`Querying data <queries>`: Use GraphQL queries to query data from your GraphQL API.
-- :ref:`Inserting data <mutations>`: Use GraphQL mutations to insert data into your GraphQL API.
+- :ref:`Database modelling <pg_schema>`: Learn how to model your database schema, as well as how to extend it.
+- :ref:`Querying data <pg_queries>`: Use GraphQL queries to query data from your GraphQL API.
+- :ref:`Inserting data <pg_mutations>`: Use GraphQL mutations to insert data into your GraphQL API.
 
 Business logic
 ^^^^^^^^^^^^^^

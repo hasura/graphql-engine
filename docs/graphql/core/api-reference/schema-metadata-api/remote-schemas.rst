@@ -2,7 +2,7 @@
    :description: Manage remote schemas with the Hasura schema/metadata API
    :keywords: hasura, docs, schema/metadata API, API reference, remote schema
 
-.. _api_remote_schemas:
+.. _schema_metadata_api_remote_schemas:
 
 Schema/Metadata API Reference: Remote schemas (Deprecated)
 ==========================================================
@@ -24,7 +24,7 @@ Add/Remove a remote GraphQL server as remote schema in Hasura GraphQL engine.
 
   Though for backwards compatibility, the schema/metadata APIs will continue to function.
 
-.. _add_remote_schema:
+.. _schema_metadata_add_remote_schema:
 
 add_remote_schema
 -----------------
@@ -54,7 +54,7 @@ An example request as follows:
    }
 
 
-.. _add_remote_schema_syntax:
+.. _schema_metadata_add_remote_schema_syntax:
 
 .. list-table::
    :header-rows: 1
@@ -76,7 +76,7 @@ An example request as follows:
      - Text
      - comment
 
-.. _update_remote_schema:
+.. _schema_metadata_update_remote_schema:
 
 update_remote_schema
 --------------------
@@ -108,7 +108,7 @@ An example request as follows:
    }
 
 
-.. _update_remote_schema_syntax:
+.. _schema_metadata_update_remote_schema_syntax:
 
 .. list-table::
    :header-rows: 1
@@ -130,7 +130,7 @@ An example request as follows:
      - Text
      - comment
 
-.. _remove_remote_schema:
+.. _schema_metadata_remove_remote_schema:
 
 remove_remote_schema
 --------------------
@@ -152,7 +152,7 @@ An example request as follows:
        }
    }
 
-.. _remove_remote_schema_syntax:
+.. _schema_metadata_remove_remote_schema_syntax:
 
 .. list-table::
    :header-rows: 1
@@ -166,7 +166,7 @@ An example request as follows:
      - :ref:`RemoteSchemaName`
      - Name of the remote schema
 
-.. _reload_remote_schema:
+.. _schema_metadata_reload_remote_schema:
 
 reload_remote_schema
 --------------------
@@ -188,7 +188,7 @@ An example request as follows:
        }
    }
 
-.. _reload_remote_schema_syntax:
+.. _schema_metadata_reload_remote_schema_syntax:
 
 .. list-table::
    :header-rows: 1

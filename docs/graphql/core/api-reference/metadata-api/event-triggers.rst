@@ -22,7 +22,7 @@ Event triggers are used to capture database changes and send them to a configure
   The metadata API is supported for versions ``v2.0.0`` and above and replaces the older
   :ref:`schema/metadata API <schema_metadata_apis>`.
 
-.. _pg_create_event_trigger:
+.. _metadata_pg_create_event_trigger:
 
 pg_create_event_trigger
 -----------------------
@@ -70,7 +70,7 @@ pg_create_event_trigger
        }
    }
 
-.. _pg_create_event_trigger_syntax:
+.. _metadata_pg_create_event_trigger_syntax:
 
 Args syntax
 ^^^^^^^^^^^
@@ -137,7 +137,7 @@ Args syntax
 
 (*) Either ``webhook`` or ``webhook_from_env`` are required.
 
-.. _pg_delete_event_trigger:
+.. _metadata_pg_delete_event_trigger:
 
 pg_delete_event_trigger
 -----------------------
@@ -158,7 +158,7 @@ pg_delete_event_trigger
        }
    }
 
-.. _pg_delete_event_trigger_syntax:
+.. _metadata_pg_delete_event_trigger_syntax:
 
 Args syntax
 ^^^^^^^^^^^
@@ -179,7 +179,7 @@ Args syntax
      - :ref:`SourceName <SourceName>`
      - Name of the source database of the trigger (default: ``default``)
 
-.. _pg_redeliver_event:
+.. _metadata_pg_redeliver_event:
 
 pg_redeliver_event
 ------------------
@@ -201,7 +201,7 @@ If the event fails to deliver, it will be retried automatically according to its
        }
    }
 
-.. _pg_redeliver_event_syntax:
+.. _metadata_pg_redeliver_event_syntax:
 
 Args syntax
 ^^^^^^^^^^^
@@ -219,7 +219,7 @@ Args syntax
      - UUID of the event
 
 
-.. _pg_invoke_event_trigger:
+.. _metadata_pg_invoke_event_trigger:
 
 pg_invoke_event_trigger
 -----------------------
@@ -241,7 +241,7 @@ pg_invoke_event_trigger
        }
    }
 
-.. _pg_invoke_event_trigger_syntax:
+.. _metadata_pg_invoke_event_trigger_syntax:
 
 Args syntax
 ^^^^^^^^^^^

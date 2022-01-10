@@ -56,7 +56,7 @@ Depending on the server health status any of the following responses can be retu
 
 .. note::
 
-  If there are metadata inconsistencies, you should use the Hasura console or the :ref:`get_inconsistent_metadata <get_inconsistent_metadata>` API to find out what
+  If there are metadata inconsistencies, you should use the Hasura console or the :ref:`metadata_get_inconsistent_metadata` metadata API to find out what
   the inconsistent objects are and resolve them.
 
 

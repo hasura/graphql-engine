@@ -2,7 +2,7 @@
    :description: Manage queries on Postgres with Hasura
    :keywords: hasura, docs, postgres, query
 
-.. _queries:
+.. _pg_queries:
 
 Postgres: Queries
 =================

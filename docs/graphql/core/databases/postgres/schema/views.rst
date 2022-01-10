@@ -2,7 +2,7 @@
    :description: Customise the Hasura GraphQL schema with views
    :keywords: hasura, docs, schema, view
 
-.. _custom_views:
+.. _pg_custom_views:
 
 Postgres: Extend schema with views
 ==================================
@@ -23,7 +23,7 @@ data is requested from the view.
 Hasura GraphQL engine lets you expose views over the GraphQL API to allow querying them using both ``queries`` and
 ``subscriptions`` just like regular tables.
 
-.. _create_views:
+.. _pg_create_views:
 
 Creating views
 --------------
@@ -51,17 +51,18 @@ Creating views
 
   .. tab:: API
 
-    You can add a view by using the :ref:`run_sql metadata API <run_sql>`:
+    You can add a view by using the :ref:`schema_run_sql` schema API:
 
     .. code-block:: http
 
-      POST /v1/query HTTP/1.1
+      POST /v2/query HTTP/1.1
       Content-Type: application/json
       X-Hasura-Role: admin
 
       {
         "type": "run_sql",
         "args": {
+          "source": "<db_name>",
           "sql": "<create view statement>"
         }
       }
@@ -111,17 +112,18 @@ In order to expose a view over the GraphQL API, it needs to be **tracked**.
 
   .. tab:: API
 
-    To track the view and expose it over the GraphQL API, make the following API call to the :ref:`track_table metadata API <track_table>`:
+    To track the view and expose it over the GraphQL API, make the following API call to the :ref:`metadata_pg_track_table` metadata API:
 
     .. code-block:: http
 
-      POST /v1/query HTTP/1.1
+      POST /v1/metadata HTTP/1.1
       Content-Type: application/json
       X-Hasura-Role: admin
 
       {
-        "type": "track_table",
+        "type":"pg_track_table",
         "args": {
+          "source": "<db_name>",
           "schema": "public",
           "name": "<name of view>"
         }
@@ -132,7 +134,7 @@ Use cases
 ---------
 
 Views are ideal solutions for retrieving some derived data based on some custom business logic. If your custom logic
-requires any user input, you should use :ref:`custom SQL functions <custom_sql_functions>` instead.
+requires any user input, you should use :ref:`custom SQL functions <pg_custom_sql_functions>` instead.
 
 Let's look at a few example use cases for views:
 

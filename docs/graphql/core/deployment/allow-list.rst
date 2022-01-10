@@ -45,7 +45,7 @@ You can add or remove a operation in the allow-list in two ways:
     to add multiple operations to the allow-list (each operation needs to have a name).
 
 * **Using metadata APIs:** Queries can be stored in collections and a collection can be added to or removed
-  from the allow-list. See :ref:`Collections & Allow-list APIs <api_query_collections>`
+  from the allow-list. See :ref:`Collections & Allow-list APIs <metadata_api_query_collections>`
   for API reference.
 
 .. note::

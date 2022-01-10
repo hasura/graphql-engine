@@ -23,6 +23,7 @@ verified by the GraphQL engine, to authorize and get metadata about the request
 
 .. thumbnail:: /img/graphql/core/auth/jwt-auth.png
    :alt: Authentication using JWT
+   :width: 1000px
 
 The JWT is decoded, the signature is verified, then it is asserted that the
 requested role of the user (if specified in the request) is in the list of allowed roles.

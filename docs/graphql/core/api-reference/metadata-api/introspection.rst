@@ -44,7 +44,7 @@ This API can be used to disable graphql introspection for the specified roles.
        }
    }
 
-.. _set_graphql_schema_introspection_options_syntax:
+.. _metadata_set_graphql_schema_introspection_options_syntax:
 
 .. list-table::
    :header-rows: 1
