@@ -195,6 +195,8 @@ data PartialSQLExp (b :: BackendType)
 
 deriving instance (Backend b) => Eq (PartialSQLExp b)
 
+deriving instance (Backend b) => Show (PartialSQLExp b)
+
 instance (Backend b, NFData (BooleanOperators b (PartialSQLExp b))) => NFData (PartialSQLExp b)
 
 instance (Backend b, Hashable (BooleanOperators b (PartialSQLExp b))) => Hashable (PartialSQLExp b)

@@ -72,7 +72,7 @@ ifMatchedObjectParser sourceName tableInfo maybeSelectPerms maybeUpdatePerms = r
   selectPerms <- hoistMaybe maybeSelectPerms
   updatePerms <- hoistMaybe maybeUpdatePerms
   matchColumnsEnum <- MaybeT $ tableInsertMatchColumnsEnum sourceName tableInfo selectPerms
-  updateColumnsEnum <- MaybeT $ tableUpdateColumnsEnum tableInfo updatePerms
+  updateColumnsEnum <- lift $ updateColumnsPlaceholderParser tableInfo updatePerms
 
   -- The style of the above code gives me some cognitive dissonance: We could
   -- push the @hoistMaybe@ checks further away to callers, but not the enum
@@ -98,7 +98,10 @@ ifMatchedObjectParser sourceName tableInfo maybeSelectPerms maybeUpdatePerms = r
       _imMatchColumns <-
         P.fieldWithDefault matchColumnsName Nothing (G.VList []) (P.list matchColumnsEnum)
       _imUpdateColumns <-
-        P.fieldWithDefault updateColumnsName Nothing (G.VList []) (P.list updateColumnsEnum)
+        P.fieldWithDefault updateColumnsName Nothing (G.VList []) (P.list updateColumnsEnum) `P.bindFields` \cs ->
+          -- this can only happen if the placeholder was used
+          sequenceA cs `onNothing` parseError "erroneous column name"
+
       pure $ IfMatched {..}
 
 -- | Table insert_match_columns enum

@@ -3,6 +3,7 @@ module Hasura.GraphQL.Schema.Table
   ( getTableGQLName,
     tableSelectColumnsEnum,
     tableUpdateColumnsEnum,
+    updateColumnsPlaceholderParser,
     tablePermissions,
     tableSelectPermissions,
     tableSelectFields,
@@ -105,6 +106,28 @@ tableUpdateColumnsEnum tableInfo updatePermissions = do
   pure $ P.enum enumName enumDesc <$> nonEmpty enumValues
   where
     define name = P.Definition name (Just $ G.Description "column name") P.EnumValueInfo
+
+-- If there's no column for which the current user has "update"
+-- permissions, this functions returns an enum that only contains a
+-- placeholder, so as to still allow this type to exist in the schema.
+updateColumnsPlaceholderParser ::
+  MonadBuildSchema backend r m n =>
+  TableInfo backend ->
+  UpdPermInfo backend ->
+  m (Parser 'Both n (Maybe (Column backend)))
+updateColumnsPlaceholderParser tableInfo updatePerms = do
+  maybeEnum <- tableUpdateColumnsEnum tableInfo updatePerms
+  case maybeEnum of
+    Just e -> pure $ Just <$> e
+    Nothing -> do
+      tableGQLName <- getTableGQLName tableInfo
+      enumName <- P.mkTypename $ tableGQLName <> $$(G.litName "_update_column")
+      pure $
+        P.enum enumName (Just $ G.Description $ "placeholder for update columns of table " <> tableInfoName tableInfo <<> " (current role has no relevant permissions)") $
+          pure
+            ( P.Definition @P.EnumValueInfo $$(G.litName "_PLACEHOLDER") (Just $ G.Description "placeholder (do not use)") P.EnumValueInfo,
+              Nothing
+            )
 
 tablePermissions ::
   forall m n r b.
