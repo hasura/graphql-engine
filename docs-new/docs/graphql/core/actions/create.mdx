@@ -91,7 +91,7 @@ take you to a page like this:
 <Thumbnail
   src="/img/graphql/core/actions/mutation-action-create.png"
   alt="Console action create"
-  width="70%"
+  width="800px"
 />
 
 
@@ -139,10 +139,10 @@ type LoginResponse {
   </TabItem>
   <TabItem value="api" label="API">
 
-It is essential that the custom types used in the action are defined *beforehand* via the <Link to="/graphql/core/api-reference/metadata-api/custom-types#metadata_set_custom_types">set_custom_types metadata API</Link>:
+It is essential that the custom types used in the action are defined *beforehand* via the [set_custom_types](/graphql/core/api-reference/metadata-api/custom-types.mdx#metadata-set-custom-types) metadata API:
 
 ```http
-POST /v1/query HTTP/1.1
+POST /v1/metadata HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
 
@@ -170,7 +170,7 @@ X-Hasura-Role: admin
 Once the custom types are defined, we can create an action via the <Link to="/graphql/core/api-reference/metadata-api/actions#metadata_create_action">create_action metadata API</Link>:
 
 ```http
-POST /v1/query HTTP/1.1
+POST /v1/metadata HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
 
@@ -349,7 +349,7 @@ Go to the `Actions` tab on the console and click on `Create`. This will take you
 <Thumbnail
   src="/img/graphql/core/actions/query-action-create.png"
   alt="Console action create"
-  width="70%"
+  width="800px"
 />
 
 Define the action as follows in the `Action Definition` editor.
@@ -391,10 +391,10 @@ type AddResult {
   </TabItem>
   <TabItem value="api" label="API">
 
-It is essential that the custom types used in the action are defined *beforehand* via the <Link to="/graphql/core/api-reference/metadata-api/custom-types#metadata_set_custom_types">set_custom_types metadata API</Link>:
+It is essential that the custom types used in the action are defined *beforehand* via the [set_custom_types](/graphql/core/api-reference/metadata-api/custom-types.mdx#metadata-set-custom-types) metadata API:
 
 ```http
-POST /v1/query HTTP/1.1
+POST /v1/metadata HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
 
@@ -422,7 +422,7 @@ X-Hasura-Role: admin
 Once the custom types are defined, we can create an action via the <Link to="/graphql/core/api-reference/metadata-api/actions#metadata_create_action">create_action metadata API</Link>:
 
 ```http
-POST /v1/query HTTP/1.1
+POST /v1/metadata HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
 
