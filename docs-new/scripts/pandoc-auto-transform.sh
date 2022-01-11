@@ -22,6 +22,8 @@
 # pandoc "docs/$1" -f rst -t gfm -s -o "docs-new/docs/${1%}.txt";
 
 # run on list of files
+# Ref: https://stackoverflow.com/a/424142/10208226 to get list of changed files in a commit
+# git diff-tree --no-commit-id --name-only -r 90c8f75
 # ./docs-new/scripts/pandoc-auto-transform.sh
 # files=( "graphql/core/databases/ms-sql-server/index.rst" "graphql/core/databases/ms-sql-server/mutations/index.rst" "graphql/core/databases/ms-sql-server/mutations/insert.rst" "graphql/core/databases/ms-sql-server/mutations/upsert.rst" "graphql/core/databases/postgres/mutations/upsert.rst" )
 # for f in "${files[@]}"; do
