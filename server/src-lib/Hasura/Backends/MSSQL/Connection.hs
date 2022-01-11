@@ -122,7 +122,7 @@ instance Hashable MSSQLConnConfiguration
 
 instance NFData MSSQLConnConfiguration
 
-$(deriveJSON hasuraJSON ''MSSQLConnConfiguration)
+$(deriveJSON hasuraJSON {omitNothingFields = True} ''MSSQLConnConfiguration)
 
 newtype MSSQLPool = MSSQLPool (Pool.Pool ODBC.Connection)
 
