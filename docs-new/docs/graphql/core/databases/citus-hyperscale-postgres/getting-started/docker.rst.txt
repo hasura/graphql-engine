@@ -99,7 +99,7 @@ Head to the `GraphiQL` tab in the console and try running a GraphQL
 query! Use the explorer sidebar on GraphQL to get help in creating a
 GraphQL query.
 
-<div class="thumbnail" alt="Make GraphQL query" width="1000px">
+<div class="thumbnail" alt="Make GraphQL query" width="1100px">
 
 /img/graphql/core/databases/ms-sql-server/6-make-graphql-query.png
 

@@ -53,7 +53,7 @@ Click the `Add` button in the Foreign Keys section and configure the
 `author_id` column as a foreign-key for the `id` column in the `authors`
 table:
 
-<div class="thumbnail" alt="Add foreign-key constraint">
+<div class="thumbnail" alt="Add foreign-key constraint" width="700px">
 
 /img/graphql/core/schema/add-foreign-key.png
 
@@ -93,17 +93,18 @@ hasura migrate apply
 
 API
 
-You can add a foreign-key constraint using the
-`run_sql metadata API <run_sql>`:
+You can add a foreign-key constraint using the `schema_run_sql` schema
+API:
 
 ```http
-POST /v1/query HTTP/1.1
+POST /v2/query HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
 
 {
   "type": "run_sql",
   "args": {
+    "source": "<db_name>",
     "sql": "ALTER TABLE articles ADD FOREIGN KEY (author_id) REFERENCES authors(id);"
   }
 }
@@ -136,7 +137,8 @@ table.
 Add an `object relationship` named `author` for the `articles` table as
 shown here:
 
-<div class="thumbnail" alt="Create an object relationship">
+<div class="thumbnail" alt="Create an object relationship"
+width="1100px">
 
 /img/graphql/core/schema/add-1-1-relationship.png
 
@@ -177,16 +179,17 @@ hasura metadata apply
 API
 
 You can create an object relationship by using the
-`create_object_relationship metadata API <create_object_relationship>`:
+`metadata_pg_create_object_relationship` metadata API:
 
 ```http
-POST /v1/query HTTP/1.1
+POST /v1/metadata HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
 
 {
-  "type": "create_object_relationship",
+  "type": "pg_create_object_relationship",
   "args": {
+    "source": "<db_name>",
     "table": "articles",
     "name": "author",
     "using": {
@@ -271,7 +274,8 @@ Console
 On the console, add an `array relationship` named `articles` for the
 `authors` table as shown here:
 
-<div class="thumbnail" alt="Create an array relationship">
+<div class="thumbnail" alt="Create an array relationship"
+width="1100px">
 
 /img/graphql/core/schema/add-1-many-relationship.png
 
@@ -323,16 +327,17 @@ hasura metadata apply
 API
 
 You can create an array relationship by using the
-`create_array_relationship metadata API <create_array_relationship>`:
+`metadata_pg_create_array_relationship` metadata API:
 
 ```http
-POST /v1/query HTTP/1.1
+POST /v1/metadata HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
 
 {
-  "type": "create_array_relationship",
+  "type": "pg_create_array_relationship",
   "args": {
+    "source": "<db_name>",
     "table": "authors",
     "name": "articles",
     "using": {
@@ -420,7 +425,7 @@ Fetch a list of authors and a nested list of each author's articles:
 ## Using manual relationships
 
 Let's say you have a table `authors (id, name)` and a
-`view <custom_views>` `author_avg_rating (id, avg)` which has the
+`view <pg_custom_views>` `author_avg_rating (id, avg)` which has the
 average rating of articles for each author.
 
 Let us now create an `object relationship` called `avg_rating` from the
@@ -445,7 +450,8 @@ Console
     `Data -> authors -> Relationships` tab.
 -   Click on the `Configure` button:
 
-<div class="thumbnail" alt="Open the manual relationship section">
+<div class="thumbnail" alt="Open the manual relationship section"
+width="1100px">
 
 /img/graphql/core/schema/manual-relationship-btn.png
 
@@ -455,7 +461,7 @@ Console
 
 The above step will open up a section as shown below:
 
-<div class="thumbnail" alt="Define the relationship">
+<div class="thumbnail" alt="Define the relationship" width="700px">
 
 /img/graphql/core/schema/manual-relationship-create.png
 
@@ -515,16 +521,17 @@ hasura metadata apply
 API
 
 You can add a manual relationship by using the
-`create_object_relationship metadata API <create_object_relationship>`:
+`metadata_pg_create_object_relationship` metadata API:
 
 ```http
-POST /v1/query HTTP/1.1
+POST /v1/metadata HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
 
 {
-  "type": "create_object_relationship",
+  "type": "pg_create_object_relationship",
   "args": {
+    "source": "<db_name>",
     "table": "authors",
     "name": "avg_rating",
     "using": {
@@ -608,7 +615,7 @@ Console
 The console infers potential relationships using existing foreign-keys
 and recommends these on the `Data -> Schema` page
 
-<div class="thumbnail" alt="Track all relationships">
+<div class="thumbnail" alt="Track all relationships" width="700px">
 
 /img/graphql/core/schema/schema-track-relationships.png
 
@@ -661,12 +668,11 @@ hasura metadata apply
 API
 
 You can create multiple relationships by using the
-`create_object_relationship metadata API <create_object_relationship>`
-and the
-`create_array_relationship metadata API <create_array_relationship>`:
+`metadata_pg_create_object_relationship` and the
+`metadata_pg_create_array_relationship` metadata APIs:
 
 ```http
-POST /v1/query HTTP/1.1
+POST /v1/metadata HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
 
@@ -674,8 +680,9 @@ X-Hasura-Role: admin
   "type": "bulk",
   "args": [
     {
-      "type": "create_object_relationship",
+      "type": "pg_create_object_relationship",
       "args": {
+        "source": "<db_name>",
         "table": "articles",
         "name": "author",
         "using": {
@@ -684,8 +691,9 @@ X-Hasura-Role: admin
       }
     },
     {
-      "type": "create_array_relationship",
+      "type": "pg_create_array_relationship",
       "args": {
+        "source": "<db_name>",
         "table": "authors",
         "name": "articles",
         "using": {

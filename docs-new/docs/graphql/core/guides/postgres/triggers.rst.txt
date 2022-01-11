@@ -97,7 +97,7 @@ CREATE TRIGGER update_materialized_view AFTER INSERT ON "authors" FOR EACH ROW E
 
 Postgres triggers can be used to perform business logic such as data
 validation and can be added
-`as described here <data_validations_pg_triggers>`.
+`as described here <pg_data_validations_pg_triggers>`.
 
 <div class="note">
 

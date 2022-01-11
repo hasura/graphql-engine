@@ -57,7 +57,7 @@ X-Hasura-Role: admin
 }
 ```
 
-<div id="create_rest_endpoint_syntax">
+<div id="schema_metadata_create_rest_endpoint_syntax">
 
 | Key        | Required | Schema            | Description                                             |
 |------------|----------|-------------------|---------------------------------------------------------|
@@ -98,7 +98,7 @@ X-Hasura-Role: admin
 }
 ```
 
-<div id="drop_rest_endpoint_syntax">
+<div id="schema_metadata_drop_rest_endpoint_syntax">
 
 | Key  | Required | Schema | Description                   |
 |------|----------|--------|-------------------------------|

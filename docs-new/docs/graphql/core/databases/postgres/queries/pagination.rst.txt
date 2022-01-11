@@ -333,7 +333,7 @@ query="query articles ($where: articles_bool_exp!) {
 
 Caveat
 
-If this needs to be done over `subscriptions <subscriptions>`, two
+If this needs to be done over `subscriptions <pg_subscriptions>`, two
 subscriptions will need to be run as Hasura follows the [GraphQL
 spec](https://graphql.github.io/graphql-spec/June2018/#sec-Single-root-field)
 which allows for only one root field in a subscription.

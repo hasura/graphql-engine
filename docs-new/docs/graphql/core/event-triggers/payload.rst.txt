@@ -88,7 +88,7 @@ Note
     is used to compare the old and new rows. If rows contain columns,
     which cannot be compared using `<>` operator, then internal binary
     representation of rows by Postgres is compared.
--   `Table computed fields <computed_fields>` are not included in the
+-   `Table computed fields <pg_computed_fields>` are not included in the
     event trigger payload data
 
 </div>

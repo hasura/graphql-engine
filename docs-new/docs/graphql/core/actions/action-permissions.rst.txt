@@ -71,10 +71,10 @@ Save the changes and run `hasura metadata apply` to set the permissions.
 API
 
 Action permissions can be set by using the
-`create_action_permission metadata API <metadata_create_action_permission>`:
+`metadata_create_action_permission` metadata API:
 
 ```http
-POST /v1/query HTTP/1.1
+POST /v1/metadata HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
 

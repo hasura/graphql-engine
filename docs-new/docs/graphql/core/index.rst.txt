@@ -20,7 +20,7 @@ Table of contents
 The Hasura GraphQL engine makes your data instantly accessible over a
 real-time GraphQL API, so you can build and ship modern apps and APIs
 faster. Hasura connects to your databases, REST servers, GraphQL
-servers, and third party APIs to provide a unified realtime GraphQL API
+servers, and third party APIs to provide a unified real-time GraphQL API
 across all your data sources.
 
 <div class="container toc-list">
@@ -36,10 +36,10 @@ Basics
 <div class="container toc-list-content">
 
 -   `getting_started`
--   `schema`
--   `queries`
--   `mutations`
--   `subscriptions`
+-   `pg_schema`
+-   `pg_queries`
+-   `pg_mutations`
+-   `pg_subscriptions`
 
 </div>
 

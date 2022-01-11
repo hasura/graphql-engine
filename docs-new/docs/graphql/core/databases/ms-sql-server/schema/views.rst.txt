@@ -164,8 +164,8 @@ X-Hasura-Role: admin
 {
   "type": "mssql_track_table",
   "args": {
+    "source": "<db_name>",
     "table": "authors",
-    "source": "default",
     "schema": "dbo",
     "name": "<name of view>"
   }

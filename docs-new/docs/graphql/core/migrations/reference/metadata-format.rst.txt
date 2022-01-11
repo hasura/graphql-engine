@@ -45,14 +45,14 @@ Note
 
 </div>
 
-The output of the `export_metadata <export_metadata>` API is a JSON
+The output of the `metadata_export_metadata` metadata API is a JSON
 version of the metadata files.
 
 </div>
 
 ### actions.graphql
 
-The `actions.graphql` file contains all the `action<actions>`
+The `actions.graphql` file contains all the `action <actions>`
 definitions and `custom type<custom_types>` definitions.
 
 **Example**: A query action called `greet` and two custom types called
@@ -74,7 +74,8 @@ type SampleOutput {
 
 ### actions.yaml
 
-The `actions.yaml` file contains metadata related to `actions<actions>`.
+The `actions.yaml` file contains metadata related to
+`actions <actions>`.
 
 **Example**: An action called `greet` with the `handler` set to
 `<base_url>/greet` and two custom types called `SampleInput` and
@@ -171,8 +172,8 @@ option of `events` on the console or `include_in_metadata` is passed as
 
 ### query_collections.yaml
 
-The `query_collections.yaml` file conatins metadata information about
-`query collections<api_query_collections>`.
+The `query_collections.yaml` file contains metadata information about
+`query collections <metadata_api_query_collections>`.
 
 **Example**: A query collection called `sample-collection` which
 contains two queries `test` and `test2`.

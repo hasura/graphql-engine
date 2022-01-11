@@ -73,18 +73,19 @@ hasura metadata apply
 
 API
 
-Add an event trigger by using the
-`create_event_trigger metadata API<create_event_trigger>`.
+Add an event trigger by using the `metadata_pg_create_event_trigger`
+metadata API.
 
 ```http
-POST /v1/query HTTP/1.1
+POST /v1/metadata HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
 
 {
-   "type" : "create_event_trigger",
+   "type" : "pg_create_event_trigger",
    "args" : {
       "name": "author_trigger",
+      "source": "<db_name>",
       "table": {
          "name": "author",
          "schema": "public"
@@ -216,17 +217,18 @@ hasura metadata apply
 API
 
 You can configure advanced settings via the
-`create_event_trigger metadata API<create_event_trigger>`.
+`metadata_pg_create_event_trigger` metadata API.
 
 ```http
-POST /v1/query HTTP/1.1
+POST /v1/metadata HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
 
 {
-   "type": "create_event_trigger",
+   "type": "pg_create_event_trigger",
    "args": {
       "name": "author_trigger",
+      "source": "<db_name>",
       "table": {
          "name": "author",
          "schema": "public"
@@ -341,17 +343,18 @@ hasura metadata apply
 API
 
 You can configure advanced settings via the
-`create_event_trigger metadata API<create_event_trigger>`.
+`metadata_pg_create_event_trigger` metadata API.
 
 ```http
-POST /v1/query HTTP/1.1
+POST /v1/metadata HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
 
 {
-   "type": "create_event_trigger",
+   "type": "pg_create_event_trigger",
    "args": {
       "name": "author_trigger",
+      "source": "<db_name>",
       "table": {
          "name": "author",
          "schema": "public"
@@ -470,17 +473,18 @@ hasura metadata apply
 API
 
 You can configure advanced settings via the
-`create_event_trigger metadata API<create_event_trigger>`.
+`metadata_pg_create_event_trigger` metadata API.
 
 ```http
-POST /v1/query HTTP/1.1
+POST /v1/metadata HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
 
 {
-   "type": "create_event_trigger",
+   "type": "pg_create_event_trigger",
    "args": {
       "name": "author_trigger",
+      "source": "<db_name>",
       "table": {
          "name": "author",
          "schema": "public"

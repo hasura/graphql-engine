@@ -45,7 +45,7 @@ Note
 
 </div>
 
-The output of the `export_metadata <export_metadata>` API is a JSON
+The output of the `metadata_export_metadata` metadata API is a JSON
 version of the metadata files.
 
 </div>
@@ -172,7 +172,7 @@ option of `events` on the console or `include_in_metadata` is passed as
 ### functions.yaml
 
 Contains the metadata related to
-`custom functions<custom_sql_functions>`.
+`custom functions<pg_custom_sql_functions>`.
 
 **Example**: A custom SQL function called `search_books`.
 
@@ -185,7 +185,7 @@ Contains the metadata related to
 ### query_collections.yaml
 
 The `query_collections.yaml` file conatins metadata information about
-`query collections<api_query_collections>`.
+`query collections<metadata_api_query_collections>`.
 
 **Example**: A query collection called `sample-collection` which
 contains two queries `test` and `test2`.
@@ -241,7 +241,7 @@ as environment variable.
 ### tables.yaml
 
 The `tables.yaml` file contains metadata related to
-`tables<schema_tables>`.
+`tables <pg_schema_tables>`.
 
 **Example**: Two tables called `authors` and `books` including
 relationships and an event trigger defined on the `authors` table.

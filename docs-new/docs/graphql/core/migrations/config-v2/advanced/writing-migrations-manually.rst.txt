@@ -27,7 +27,7 @@ Note
 
 </div>
 
-For `config v1`, see `manual_migrations_v1`.
+For `config v3`, see `manual_migrations`.
 
 </div>
 

@@ -68,16 +68,17 @@ CLI
 
 API
 
-You can add a view by using the `run_sql metadata API <run_sql>`:
+You can add a view by using the `schema_run_sql` schema API:
 
 ```http
-POST /v1/query HTTP/1.1
+POST /v2/query HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
 
 {
   "type": "run_sql",
   "args": {
+    "source": "<db_name>",
     "sql": "<create view statement>"
   }
 }
@@ -152,16 +153,17 @@ CLI
 API
 
 To track the view and expose it over the GraphQL API, make the following
-API call to the `track_table metadata API <track_table>`:
+API call to the `metadata_pg_track_table` metadata API:
 
 ```http
-POST /v1/query HTTP/1.1
+POST /v1/metadata HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
 
 {
-  "type": "track_table",
+  "type":"pg_track_table",
   "args": {
+    "source": "<db_name>",
     "schema": "public",
     "name": "<name of view>"
   }
@@ -176,7 +178,7 @@ X-Hasura-Role: admin
 
 Views are ideal solutions for retrieving some derived data based on some
 custom business logic. If your custom logic requires any user input, you
-should use `custom SQL functions <custom_sql_functions>` instead.
+should use `custom SQL functions <pg_custom_sql_functions>` instead.
 
 Let's look at a few example use cases for views:
 

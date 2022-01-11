@@ -28,7 +28,7 @@ profiles (
 )
 ```
 
-<div class="thumbnail" alt="Create a table">
+<div class="thumbnail" alt="Create a table" width="1200px">
 
 /img/graphql/core/getting-started/create-profile-table.png
 
@@ -53,7 +53,7 @@ query {
 
 You'll see that you get all the inserted data!
 
-<div class="thumbnail" alt="Try out a query">
+<div class="thumbnail" alt="Try out a query" width="1200px">
 
 /img/graphql/core/getting-started/profile-query.png
 

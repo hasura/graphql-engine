@@ -67,7 +67,7 @@ subscription {
       }
     }
   }
-}
+}q
 ```
 
 <div class="note">
@@ -78,7 +78,7 @@ Note
 
 </div>
 
-For details of usage, please see `this page <relay_schema>`.
+For details of usage, please see `this page <pg_relay_schema>`.
 
 </div>
 

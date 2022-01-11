@@ -262,7 +262,8 @@ Note
 
 </div>
 
-For more examples and details of usage, please see `this <mutations>`.
+For more examples and details of usage, please see
+`this <pg_mutations>`.
 
 </div>
 

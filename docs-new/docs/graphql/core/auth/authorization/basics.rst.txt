@@ -16,7 +16,7 @@ Table of contents
 To understand the basics of access control in Hasura, let's take a look
 at this analogy to a SQL query:
 
-<div class="thumbnail" width="70%"
+<div class="thumbnail" width="700px"
 alt="Understanding access control in Hasura">
 
 /img/graphql/core/auth/permissions-rule-analogy.png
@@ -57,7 +57,7 @@ Let's see access control in action using a simple example.
 
 ### Create a table
 
-Head to your console and `create a table <create_tables>` called
+Head to your console and `create a table <pg_create_tables>` called
 `authors` with the following schema:
 
 ```sql
@@ -87,7 +87,8 @@ You'll see that this results in a response that contains all the authors
 because by default the GraphQL query is accepted with **admin**
 permissions.
 
-<div class="thumbnail" alt="Run a query without access control">
+<div class="thumbnail" alt="Run a query without access control"
+width="1200px">
 
 /img/graphql/core/auth/fetch-authors.png
 
@@ -114,7 +115,7 @@ Head to the **Permissions** section of the table
 (`Data -> [table] -> Permissions` tab) and define permissions as shown
 below:
 
-<div class="thumbnail" alt="Define access control rules">
+<div class="thumbnail" alt="Define access control rules" width="1100px">
 
 /img/graphql/core/auth/permission-basics-simple-example.png
 
@@ -157,16 +158,17 @@ hasura metadata apply
 API
 
 You can add select permissions by using the
-`pg_create_select_permission metadata API <pg_create_select_permission>`:
+`pg_create_select_permission metadata API <metadata_pg_create_select_permission>`:
 
 ```http
-POST /v1/query HTTP/1.1
+POST /v1/metadata HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
 
 {
-    "type" : "create_select_permission",
+    "type" : "pg_create_select_permission",
     "args" : {
+        "source": "<db_name>",
         "table" : "authors",
         "role" : "user",
         "permission" : {
@@ -198,7 +200,8 @@ Let's run the same query as above but now with the `X-Hasura-Role` and
 user information. These session variables are passed in the
 `Request Headers` section of `GraphiQL` as highlighted below:
 
-<div class="thumbnail" alt="Run a query with access control">
+<div class="thumbnail" alt="Run a query with access control"
+width="1200px">
 
 /img/graphql/core/auth/permission-basics-query-with-access-control.png
 

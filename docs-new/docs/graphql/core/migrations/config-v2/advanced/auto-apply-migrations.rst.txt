@@ -32,7 +32,7 @@ Note
 
 </div>
 
-For `config v1`, see `auto_apply_migrations_v1`.
+For `config v3`, see `auto_apply_migrations`.
 
 </div>
 

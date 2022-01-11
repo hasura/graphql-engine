@@ -35,8 +35,8 @@ in case of a conflict.
 
 </div>
 
-To convert an `insert mutation <insert>` into an upsert, you need to use
-the `on_conflict` argument to specify:
+To convert an `insert mutation <pg_insert>` into an upsert, you need to
+use the `on_conflict` argument to specify:
 
 -   a **unique or primary key constraint** using the `constraint` field,
     and
@@ -274,7 +274,7 @@ Note
 </div>
 
 The process by which nested inserts/upserts are executed is documented
-`here <nested_inserts>`.
+`here <pg_nested_inserts>`.
 
 Nested upserts will fail when:
 

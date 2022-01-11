@@ -180,8 +180,8 @@ database as described in `Postgres permissions <postgres_permissions>`.
 
 #### Step 4: Track tables and relationships
 
-Wait for the GraphQL engine to restart and then see `schema_existing_db`
-to enable GraphQL over the database.
+Wait for the GraphQL engine to restart and then see
+`pg_schema_existing_db` to enable GraphQL over the database.
 
 ### Option 2: Via Heroku CLI
 

@@ -72,14 +72,13 @@ Console
 
 API
 
-The export can be done via the
-`export_metadata metadata API <export_metadata>`. Response will be a
-JSON object with the Hasura metadata.
+The export can be done via the `metadata_export_metadata` metadata API.
+Response will be a JSON object with the Hasura metadata.
 
 Here is an example using `curl` to save this as a file:
 
 ```bash
-curl -d'{"type": "export_metadata", "args": {}}' http://localhost:8080/v1/query -o hasura_metadata.json
+curl -d'{"type": "export_metadata", "args": {}}' http://localhost:8080/v1/metadata -o hasura_metadata.json
 ```
 
 This command will create a `hasura_metadata.json` file. If an admin
@@ -159,13 +158,13 @@ Console
 
 API
 
-The exported JSON can be imported via the
-`replace_metadata metadata API <replace_metadata>`.
+The exported JSON can be imported via the `metadata_replace_metadata`
+metadata API.
 
 Here is an example using `curl`:
 
 ```bash
-curl -d'{"type":"replace_metadata", "args":'$(cat hasura_metadata.json)'}' http://localhost:8080/v1/query
+curl -d'{"type":"replace_metadata", "args":'$(cat hasura_metadata.json)'}' http://localhost:8080/v1/metadata
 ```
 
 This command reads the `hasura_metadata.json` file and makes a POST
@@ -238,13 +237,13 @@ Console
 
 API
 
-The reload of metadata can be done via the
-`reload_metadata metadata API <reload_metadata>`.
+The reload of metadata can be done via the `metadata_reload_metadata`
+metadata API.
 
 Here is an example using `curl`:
 
 ```bash
-curl -d'{"type": "reload_metadata", "args": {}}' http://localhost:8080/v1/query
+curl -d'{"type": "reload_metadata", "args": {}}' http://localhost:8080/v1/metadata
 ```
 
 If an admin secret is set, add
@@ -319,13 +318,13 @@ Console
 
 API
 
-The reset of metadata can be done via the
-`clear_metadata metadata API <clear_metadata>`.
+The reset of metadata can be done via the `metadata_clear_metadata`
+metadata API.
 
 Here is an example using `curl`:
 
 ```bash
-curl -d'{"type": "clear_metadata", "args": {}}' http://localhost:8080/v1/query
+curl -d'{"type": "clear_metadata", "args": {}}' http://localhost:8080/v1/metadata
 ```
 
 If an admin secret is set, add

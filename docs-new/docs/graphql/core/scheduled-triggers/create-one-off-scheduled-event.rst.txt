@@ -66,13 +66,22 @@ In the form opened by the above step, fill out the following fields:
 
 <div class="tab">
 
+CLI
+
+One-off scheduled events cannot be set using the CLI as they are not
+tracked as a part of Hasura metadata.
+
+</div>
+
+<div class="tab">
+
 API
 
 You can define a scheduled event via the
-`create_scheduled_event metadata API <create_scheduled_event>`:
+`metadata_create_scheduled_event` metadata API:
 
 ```http
-POST /v1/query HTTP/1.1
+POST /v1/metadata HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
 
@@ -123,13 +132,22 @@ alt="Defining advanced options for a scheduled event" width="700px">
 
 <div class="tab">
 
+CLI
+
+One-off scheduled events cannot be set using the CLI as they are not
+tracked as a part of Hasura metadata.
+
+</div>
+
+<div class="tab">
+
 API
 
 You can define advanced options when defining a scheduled event via the
-`create_scheduled_event metadata API <create_scheduled_event>`:
+`metadata_create_scheduled_event` metadata API:
 
 ```http
-POST /v1/query HTTP/1.1
+POST /v1/metadata HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
 

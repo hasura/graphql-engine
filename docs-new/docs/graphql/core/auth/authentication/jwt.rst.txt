@@ -20,7 +20,7 @@ The idea is that your auth server will return JWT tokens, which are
 decoded and verified by the GraphQL engine, to authorize and get
 metadata about the request (`x-hasura-*` values).
 
-<div class="thumbnail" alt="Authentication using JWT">
+<div class="thumbnail" alt="Authentication using JWT" width="1000px">
 
 /img/graphql/core/auth/jwt-auth.png
 

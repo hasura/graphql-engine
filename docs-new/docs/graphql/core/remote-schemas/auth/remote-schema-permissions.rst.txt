@@ -100,7 +100,7 @@ type Query {
 
 We use the above schema document to configure the remote schema
 permissions for the `public` role by using the
-`add_remote_schema_permissions` API.
+`metadata_add_remote_schema_permissions` metadata API.
 
 You can modify different [GraphQL
 Types](https://spec.graphql.org/June2018/#sec-Types) in the following
@@ -447,7 +447,7 @@ X-Hasura-Role: admin
 Head to the `API` section. Add the session variable `X-Hasura-Role` with
 the value as the role for which we set permissions in the previous step.
 
-<div class="thumbnail">
+<div class="thumbnail" width="1100px">
 
 /img/graphql/core/remote-schemas/role-based-schema.png
 

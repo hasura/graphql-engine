@@ -96,7 +96,7 @@ Head to: `http://localhost` and the console should load!
 
 ### Step 5: Track existing tables and relationships
 
-See `schema_existing_db` to enable GraphQL over the database.
+See `pg_schema_existing_db` to enable GraphQL over the database.
 
 ## Securing the GraphQL endpoint
 

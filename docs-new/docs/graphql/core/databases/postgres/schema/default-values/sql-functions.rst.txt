@@ -107,17 +107,17 @@ hasura migrate apply
 
 API
 
-You can modify a table column by using the
-`run_sql metadata API <run_sql>`:
+You can modify a table column by using the `schema_run_sql` schema API:
 
 ```http
-POST /v1/query HTTP/1.1
+POST /v2/query HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
 
 {
   "type": "run_sql",
   "args": {
+    "source": "<db_name>",
     "sql": "ALTER TABLE sql_function_table ALTER COLUMN output DROP NOT NULL;"
   }
 }
@@ -187,16 +187,17 @@ hasura migrate apply
 
 API
 
-You can create a trigger by using the `run_sql metadata API <run_sql>`:
+You can create a trigger by using the `schema_run_sql` schema API:
 
 ```http
-POST /v1/query HTTP/1.1
+POST /v2/query HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
 
 {
   "type": "run_sql",
   "args": {
+    "source": "<db_name>",
     "sql": "<above SQL>"
   }
 }
@@ -242,5 +243,5 @@ will be set automatically.
 
 ## Also see
 
--   `postgres_defaults`
--   `column_presets`
+-   `pg_postgres_defaults`
+-   `pg_column_presets`

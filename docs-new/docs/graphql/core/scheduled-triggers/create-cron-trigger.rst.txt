@@ -101,11 +101,11 @@ hasura metadata apply
 
 API
 
-You can define a cron trigger via the
-`create_cron_trigger metadata API <create_cron_trigger>`:
+You can define a cron trigger via the `metadata_create_cron_trigger`
+metadata API:
 
 ```http
-POST /v1/query HTTP/1.1
+POST /v1/metadata HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
 
@@ -192,10 +192,10 @@ hasura metadata apply
 API
 
 You can define advanced options for a cron trigger when defining it via
-the `create_cron_trigger metadata API <create_cron_trigger>`:
+the `metadata_create_cron_trigger` metadata API:
 
 ```http
-POST /v1/query HTTP/1.1
+POST /v1/metadata HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
 

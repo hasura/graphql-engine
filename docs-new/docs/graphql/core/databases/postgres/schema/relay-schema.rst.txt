@@ -17,7 +17,7 @@ The Hasura GraphQL engine serves a [Relay](https://relay.dev/) schema
 for Postgres tables which have a primary key defined. The Relay schema
 can be accessed through the `/v1beta1/relay` endpoint.
 
-<div class="thumbnail" alt="Relay API toggle">
+<div class="thumbnail" alt="Relay API toggle" width="1200px">
 
 /img/graphql/core/schema/relay.png
 

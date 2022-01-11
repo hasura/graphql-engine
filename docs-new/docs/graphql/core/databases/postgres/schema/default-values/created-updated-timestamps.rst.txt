@@ -35,8 +35,8 @@ Console
 On the Hasura console, click on the `Modify` tab of a table. When
 clicking on the `+Frequently used columns` button, choose `created_at`:
 
-<div class="thumbnail"
-alt="Add a created_at time on the Hasura console">
+<div class="thumbnail" alt="Add a created_at time on the Hasura console"
+width="1000px">
 
 /img/graphql/core/schema/created-at.png
 
@@ -77,17 +77,18 @@ hasura metadata reload
 
 API
 
-You can add a `created_at` timestamp by using the
-`run_sql metadata API <run_sql>`:
+You can add a `created_at` timestamp by using the `schema_run_sql`
+schema API:
 
 ```http
-POST /v1/query HTTP/1.1
+POST /v2/query HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
 
 {
   "type": "run_sql",
   "args": {
+      "source": "<db_name>",
       "sql": "ALTER TABLE ONLY \"article\" ADD COLUMN \"created_at\" TIMESTAMP DEFAULT NOW();"
   }
 }
@@ -115,7 +116,7 @@ On the Hasura console, click on the `Modify` tab of a table. When
 clicking on the `+Frequently used columns` button, choose `updated_at`:
 
 <div class="thumbnail"
-alt="Add an updated_at time on the Hasura console">
+alt="Add an updated_at time on the Hasura console" width="1000px">
 
 /img/graphql/core/schema/updated-at.png
 
@@ -181,8 +182,8 @@ hasura metadata reload
 
 API
 
-You can add an `updated_at` timestamp by using the
-`run_sql metadata API <run_sql>`.
+You can add an `updated_at` timestamp by using the `schema_run_sql`
+schema API.
 
 The below SQL statement will achieve the following:
 
@@ -195,13 +196,14 @@ The below SQL statement will achieve the following:
     to call the defined function whenever an article is updated.
 
 ```http
-POST /v1/query HTTP/1.1
+POST /v2/query HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
 
 {
   "type": "run_sql",
   "args": {
+      "source": "<db_name>",
       "sql": 
         "ALTER TABLE ONLY \"public\".\"article\"
         ADD COLUMN \"updated_at\" TIMESTAMP DEFAULT NOW();

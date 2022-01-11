@@ -72,9 +72,8 @@ Console
 
 API
 
-The export can be done via the
-`export_metadata metadata API <export_metadata>`. Response will be a
-JSON object with the Hasura metadata.
+The export can be done via the `metadata_export_metadata` metadata API.
+Response will be a JSON object with the Hasura metadata.
 
 Here is an example using `curl` to save this as a file:
 
@@ -158,8 +157,8 @@ Console
 
 API
 
-The exported JSON can be imported via the
-`replace_metadata metadata API <replace_metadata>`.
+The exported JSON can be imported via the `metadata_replace_metadata`
+metadata API.
 
 Here is an example using `curl`:
 
@@ -237,8 +236,8 @@ Console
 
 API
 
-The reload of metadata can be done via the
-`reload_metadata metadata API <reload_metadata>`.
+The reload of metadata can be done via the `metadata_reload_metadata`
+metadata API.
 
 Here is an example using `curl`:
 
@@ -318,8 +317,8 @@ Console
 
 API
 
-The reset of metadata can be done via the
-`clear_metadata metadata API <clear_metadata>`.
+The reset of metadata can be done via the `metadata_clear_metadata`
+metadata API.
 
 Here is an example using `curl`:
 

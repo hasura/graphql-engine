@@ -15,7 +15,7 @@ Table of contents
 ## Introduction
 
 **Custom Types** are user-defined GraphQL types which help to define
-`Actions <api_actions>`.
+`Actions <metadata_api_actions>`.
 
 <div class="admonition">
 

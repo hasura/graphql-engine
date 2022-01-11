@@ -5,7 +5,7 @@ keywords="hasura, docs, remote schema, add">
 
 # Adding a remote schema
 
-<div class="contents" backlinks="none" depth="1" local="">
+<div class="contents" backlinks="none" depth="2" local="">
 
 Table of contents
 
@@ -73,7 +73,7 @@ button on the left sidebar.
 Add the required details and click on the `Add Remote Schema` button to
 merge the remote schema.
 
-<div class="thumbnail" alt="Merge remote schema">
+<div class="thumbnail" alt="Merge remote schema" width="1100px">
 
 /img/graphql/core/remote-schemas/add-remote-schemas-interface.png
 
@@ -108,11 +108,11 @@ hasura metadata apply
 
 API
 
-You can add a remote schema by using the
-`add_remote_schema metadata API <add_remote_schema>`:
+You can add a remote schema by using the `metadata_add_remote_schema`
+metadata API:
 
 ```http
-POST /v1/query HTTP/1.1
+POST /v1/metadata HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
 
@@ -230,8 +230,7 @@ the `Reload` button.
 
 API
 
-Make a request to the `reload_remote_schema <reload_remote_schema>`
-metadata API.
+Make a request to the `metadata_reload_remote_schema` metadata API.
 
 </div>
 
@@ -244,10 +243,12 @@ metadata API.
 ### Extending the auto-generated GraphQL schema fields
 
 For some use cases, you may need to extend the GraphQL schema fields
-exposed by the Hasura GraphQL engine (and not merely add new fields as
-we have done `here <merge_remote_schema>`) with a custom schema/server.
-To support them, you can use community tooling to write your own
-client-facing GraphQL gateway that interacts with the GraphQL engine.
+exposed by the Hasura GraphQL engine and not merely add new fields as we
+have done here.
+
+To achieve this you can use community tooling to write your own
+client-facing GraphQL gateway which wraps around and interacts with the
+GraphQL engine API underneath.
 
 <div class="note">
 
@@ -261,7 +262,8 @@ Note
 significantly impacts the performance provided by it out of the box**
 (*by as much as 4x*). If you need any help with remodelling these kinds
 of use cases to use the built-in remote schemas feature, please get in
-touch with us on [Discord](https://discord.gg/vBPpJkS).
+touch with us on
+[GitHub](https://github.com/hasura/graphql-engine/discussions).
 
 </div>
 

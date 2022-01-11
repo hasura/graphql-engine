@@ -43,8 +43,8 @@ X-Hasura-Role: admin
 {
    "type": "pg_track_table",
    "args": {
-     "table": "author",
      "source": "default",
+     "table": "author",
      "configuration": {
         "custom_root_fields": {
            "select": "Authors",
@@ -78,6 +78,7 @@ X-Hasura-Role: admin
 {
    "type": "pg_track_table",
    "args": {
+     "source": "default",
      "table": "Author Details",
      "configuration": {
         "custom_name": "author_details"
@@ -157,7 +158,7 @@ X-Hasura-Role: admin
 ## pg_set_table_is_enum
 
 `pg_set_table_is_enum` sets whether an already-tracked table should be
-used as an `enum table <create_enum_table>`.
+used as an `enum table <pg_create_enum_table>`.
 
 Use table `user_role` as an enum table:
 
@@ -193,9 +194,6 @@ X-Hasura-Role: admin
 with a custom name, custom root fields and custom column names of an
 already tracked table. This will **replace** the already present
 customization.
-
-`pg_set_table_custom_fields <set_table_custom_fields>` has been
-deprecated in favour of this API.
 
 Set the configuration for a table/view called `author`:
 
@@ -353,9 +351,6 @@ with a custom name, custom root fields and custom column names of an
 already tracked table. This will **replace** the already present
 customization.
 
-`mssql_set_table_custom_fields <set_table_custom_fields>` has been
-deprecated in favour of this API.
-
 Set the configuration for a table/view called `author`:
 
 ```http
@@ -435,6 +430,7 @@ result in the root field name being `hasura_author`.
 > {
 >     "type": "bigquery_track_table",
 >     "args": {
+>       "source": "default",
 >       "table": {
 >         "dataset": "hasura",
 >         "name": "Author Details"
@@ -454,6 +450,7 @@ result in the root field name being `hasura_author`.
 > {
 >     "type": "bigquery_track_table",
 >     "args": {
+>       "source": "default",
 >       "table": {
 >         "dataset": "hasura",
 >         "name": "Author Details"

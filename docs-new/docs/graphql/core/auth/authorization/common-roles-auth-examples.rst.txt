@@ -36,7 +36,7 @@ Here are some examples of common use cases.
     exposed.
 
 <div class="thumbnail no-shadow"
-alt="Access control for an anonymous role">
+alt="Access control for an anonymous role" width="1300px">
 
 /img/graphql/core/auth/anonymous-role-examples.png
 
@@ -59,7 +59,7 @@ role in Hasura.
     you're testing.
 
 <div class="thumbnail no-shadow"
-alt="Access control for a logged-in user">
+alt="Access control for a logged-in user" width="1300px">
 
 /img/graphql/core/auth/user-select-graphiql.png
 
@@ -81,7 +81,7 @@ or via a related table.
     GraphQL request.
 
 <div class="thumbnail no-shadow"
-alt="Access control for a manager of an organisation">
+alt="Access control for a manager of an organisation" width="1300px">
 
 /img/graphql/core/auth/org-manager-graphiql.png
 
@@ -106,7 +106,7 @@ related table. In this case, let's say there is an `article` table and a
         `X-Hasura-User-Id`.
 
 <div class="thumbnail no-shadow"
-alt="Access control for collaborators of an article">
+alt="Access control for collaborators of an article" width="1300px">
 
 /img/graphql/core/auth/collaborator-relationship.png
 
@@ -141,7 +141,8 @@ permissions in the context of a blog app with the following roles:
 The following is a reference database schema for our example:
 
 <div class="thumbnail"
-alt="Database schema example for multiple roles per user">
+alt="Database schema example for multiple roles per user"
+width="1300px">
 
 /img/graphql/core/auth/multirole-example-db-schema.png
 
@@ -242,11 +243,11 @@ We'll create permission rules for the roles and actions listed above
 
     1.  `Column-level permissions<col-level-permissions>`: Restrict
         access to certain columns only.
-    2.  `Column presets <column_presets>`: Session-variable-based column
-        preset for the `author_id` column to automatically insert the
-        user's ID i.e. the `X-Hasura-User-Id` session-variable's value.
-        It also helps us avoid explicitly passing the user's ID in the
-        insert mutation.
+    2.  `Column presets <pg_column_presets>`: Session-variable-based
+        column preset for the `author_id` column to automatically insert
+        the user's ID i.e. the `X-Hasura-User-Id` session-variable's
+        value. It also helps us avoid explicitly passing the user's ID
+        in the insert mutation.
 
     <div class="thumbnail" alt="Permissions for the role author">
 

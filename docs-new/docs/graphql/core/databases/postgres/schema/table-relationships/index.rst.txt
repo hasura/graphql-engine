@@ -14,7 +14,7 @@ Table of contents
 
 ## Introduction
 
-To make `nested object queries <nested_object_queries>`, the
+To make `nested object queries <pg_nested_object_queries>`, the
 tables/views in your database need to be connected via relationships.
 
 Let's say we have the following tables in our database: `authors`,
@@ -95,8 +95,8 @@ For example, "`articles`" of an `author` and "`author`" of an `article`.
 See the following to manage the object/array relationships between
 tables/views for the GraphQL schema:
 
--   `create_relationships`
--   `rename_relationships`
+-   `pg_create_relationships`
+-   `pg_rename_relationships`
 
 ## Table relationships modelling guides
 

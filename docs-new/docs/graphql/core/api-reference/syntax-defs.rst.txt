@@ -962,7 +962,7 @@ Note
 </div>
 
 The `GraphQL Types` used in creating an action must be defined before
-via `Custom Types <api_custom_types>`
+via `Custom Types <metadata_api_custom_types>`
 
 </div>
 
@@ -1189,40 +1189,33 @@ the remote field maybe nested deeply in the remote schema.
 
 Examples:
 
-```http
-POST /v1/query HTTP/1.1
-Content-Type: application/json
-X-Hasura-Role: admin
+<div class="parsed-literal haskell-pre">
 
-{
-   "message": {
-      "arguments":{
-         "message_id":"$id"
-       }
-   }
+{  
+"message": {  
+"arguments":{  
+"message_id":"$id" }
+
 }
-```
 
-```http
-POST /v1/query HTTP/1.1
-Content-Type: application/json
-X-Hasura-Role: admin
-
-{
-   "messages": {
-      "arguments": {
-         "limit": 100
-      },
-      "field": {
-        "private": {
-          "arguments": {
-             "id" : "$id"
-          }
-        }
-      }
-   }
 }
-```
+
+</div>
+
+<div class="parsed-literal haskell-pre">
+
+{  
+"messages": {  
+"arguments": {  
+"limit": 100
+
+}, "field": { "private": { "arguments": { "id" : "$id" } } }
+
+}
+
+}
+
+</div>
 
 ## InputArguments
 

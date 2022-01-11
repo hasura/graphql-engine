@@ -18,7 +18,7 @@ A GraphQL subscription is essentially a query where the client receives
 an update whenever the value of any field changes upstream.
 
 Subscriptions are supported for all kinds of queries. All the concepts
-of `queries <queries>` hold true for subscriptions as well.
+of `queries <pg_queries>` hold true for subscriptions as well.
 
 ## Implementation
 
@@ -28,7 +28,7 @@ made and not necessarily all the individual events leading up to the
 result. By default, updates are delivered to clients every **1 sec**.
 
 See more details on
-`subscriptions execution and performance <subscriptions_execution_and_performance>`.
+`subscriptions execution and performance <pg_subscriptions_execution_and_performance>`.
 
 ## Convert a query to a subscription
 
@@ -47,9 +47,9 @@ which allows for only one root field in a subscription.
 
 ## Use cases
 
--   `subscribe_field`
--   `subscribe_table`
--   `subscribe_derived`
+-   `pg_subscribe_field`
+-   `pg_subscribe_table`
+-   `pg_subscribe_derived`
 
 ## Communication protocol
 
@@ -61,9 +61,9 @@ library and the [GraphQL over WebSocket
 Protocol](https://github.com/enisdenjo/graphql-ws/blob/master/PROTOCOL.md)
 by the [graphql-ws](https://github.com/enisdenjo/graphql-ws) library for
 sending and receiving events. The support for `graphql-ws` is currently
-considered as `BETA`. The graphql-engine uses the
+considered as `BETA`. The GraphQL engine uses the
 `Sec-WebSocket-Protocol` header to determine the server Implementation
-that'll be used. By default, the graphql-engine will use the
+that'll be used. By default, the GraphQL engine will use the
 `apollographql/subscriptions-transport-ws` implementation.
 
 <div class="admonition">

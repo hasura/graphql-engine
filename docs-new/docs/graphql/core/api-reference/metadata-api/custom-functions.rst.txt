@@ -46,11 +46,11 @@ X-Hasura-Role: admin
 {
     "type": "pg_track_function",
     "args": {
+        "source": "default",
         "function": {
             "schema": "public",
             "name": "search_articles"
         },
-        "source": "default",
         "configuration": {
             "session_argument": "hasura_session"
         },
@@ -76,7 +76,8 @@ X-Hasura-Role: admin
         },
         "configuration": {
             "exposed_as": "mutation"
-        }
+        },
+        "source": "default"
     }
 }
 ```

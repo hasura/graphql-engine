@@ -15,9 +15,9 @@ Table of contents
 ## Introduction
 
 You can use the object (one-to-one) or array (one-to-many)
-`relationships <table_relationships>` defined in your schema to make a
-nested query i.e. fetch data for a type along with data from a nested or
-related type.
+`relationships <pg_table_relationships>` defined in your schema to make
+a nested query i.e. fetch data for a type along with data from a nested
+or related type.
 
 The **name of the nested object** is the same as the name of the
 object/array relationship configured in the console.
@@ -156,8 +156,8 @@ Note
 
 </div>
 
-You can also `filter <nested_filter>`, `sort <nested_sort>`,
-`aggregate <nested_aggregate>` and `paginate <nested_paginate>` nested
-objects in case of array relationships.
+You can also `filter <pg_nested_filter>`, `sort <pg_nested_sort>`,
+`aggregate <pg_nested_aggregate>` and `paginate <pg_nested_paginate>`
+nested objects in case of array relationships.
 
 </div>

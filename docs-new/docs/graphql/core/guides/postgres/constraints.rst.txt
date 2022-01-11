@@ -122,8 +122,8 @@ CREATE TABLE authors(
 
 Most Postgres constraints (primary key, foreign key, not-null and unique
 constraints) can be added to Hasura natively when
-`creating tables <create_tables>`.
+`creating tables <pg_create_tables>`.
 
 Postgres check constraints can be used as a form of data validation in
 Hasura and can be added
-`as described here <data_validations_check_constraints>`.
+`as described here <pg_data_validations_check_constraints>`.

@@ -102,17 +102,17 @@ hasura migrate apply
 
 API
 
-You can add a check constraint by using the
-`run_sql metadata API <run_sql>`:
+You can add a check constraint by using the `schema_run_sql` schema API:
 
 ```http
-POST /v1/query HTTP/1.1
+POST /v2/query HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
 
 {
   "type": "run_sql",
   "args": {
+    "source": "<db_name>",
     "sql": "ALTER TABLE author ADD CONSTRAINT authors_rating_check CHECK (rating > 0 AND rating <= 10);"
   }
 }
@@ -217,16 +217,17 @@ hasura migrate apply
 API
 
 You can add a Postgres function and trigger by using the
-`run_sql metadata API <run_sql>`:
+`schema_run_sql` schema API:
 
 ```http
-POST /v1/query HTTP/1.1
+POST /v2/query HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
 
 {
   "type": "run_sql",
   "args": {
+    "source": "<db_name>",
     "sql": "<SQL statement below>"
   }
 }
@@ -370,16 +371,17 @@ hasura metadata apply
 API
 
 You can add an insert permission rule by using the
-`create_insert_permission metadata API <create_insert_permission>`:
+`metadata_pg_create_insert_permission` metadata API:
 
 ```http
-POST /v1/query HTTP/1.1
+POST /v1/metadata HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
 
 {
-  "type": "create_insert_permission",
+  "type": "pg_create_insert_permission",
   "args": {
+    "source": "<db_name>",
     "table": "article",
     "role": "user",
     "permission": {
@@ -435,8 +437,9 @@ author (id uuid, name text, is_active boolean)
 article (id uuid, author_id uuid, content text)
 ```
 
-Also, suppose there is an `object relationship <graphql_relationships>`
-`article.author` defined as:
+Also, suppose there is an
+`object relationship <pg_graphql_relationships>` `article.author`
+defined as:
 
 ```sql
 article.author_id -> author.id
@@ -499,16 +502,17 @@ hasura metadata apply
 API
 
 You can add an insert permission rule by using the
-`create_insert_permission metadata API <create_insert_permission>`:
+`metadata_pg_create_insert_permission` metadata API:
 
 ```http
-POST /v1/query HTTP/1.1
+POST /v1/metadata HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
 
 {
-  "type": "create_insert_permission",
+  "type": "pg_create_insert_permission",
   "args": {
+    "source": "<db_name>",
     "table": "article",
     "role": "user",
     "permission": {

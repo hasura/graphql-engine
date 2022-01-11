@@ -76,11 +76,6 @@ subscription getLocation($vehicleId: Int!) {
 
 </div>
 
-Check this [sample
-app](https://realtime-location-tracking.demo.hasura.app/) for a working
-demo ([source
-code](https://github.com/hasura/graphql-engine/tree/master/community/sample-apps/realtime-location-tracking)).
-
 ## Subscribe to changes to a table's entries
 
 In case you are interested in all the additions/changes to a table's
@@ -150,10 +145,6 @@ in a chatroom:
 }">
 
 </div>
-
-Check this [sample app](https://realtime-chat.demo.hasura.app/) for a
-working demo ([source
-code](https://github.com/hasura/graphql-engine/tree/master/community/sample-apps/realtime-chat)).
 
 ## Subscribe to the latest value of some derived data
 
@@ -282,7 +273,3 @@ subscription getResult($pollId: Int!) {
 }">
 
 </div>
-
-Check this [sample app](https://realtime-poll.demo.hasura.app/) for a
-working demo ([source
-code](https://github.com/hasura/graphql-engine/tree/master/community/sample-apps/realtime-poll)).

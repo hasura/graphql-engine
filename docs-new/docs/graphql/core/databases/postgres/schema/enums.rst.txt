@@ -47,9 +47,9 @@ cascaded to references, and they may be done within a transaction).
 ## Enums in the Hasura GraphQL engine
 
 Given the limitations of native Postgres enum types (as described
-`above <native_pg_enum>`), Hasura currently only generates GraphQL enum
+`above <pg_native_enum>`), Hasura currently only generates GraphQL enum
 types for enums defined using the
-`referenced tables <reference_table_enum>` approach.
+`referenced tables <pg_reference_table_enum>` approach.
 
 You may use native Postgres enum types in your database schema, but they
 will essentially be treated like text fields in the generated GraphQL
@@ -57,7 +57,7 @@ schema. Therefore, this guide focuses primarily on modeling an enum
 using a reference table, but you may still use native Postgres enum
 types to help maintain data consistency in your database. You can always
 choose to create a table with the values of a Postgres enum as shown in
-the `section below <create_enum_table_from_pg_enum>`.
+the `section below <pg_create_enum_table_from_pg_enum>`.
 
 **Example:** Let’s say we have a database that tracks user information,
 and users may only have one of three specific roles: user, moderator, or
@@ -123,7 +123,7 @@ INSERT INTO user_role (value, comment) VALUES
   ('administrator', 'Users with the privilege to set users’ roles');
 ```
 
-<div id="create_enum_table_from_pg_enum">
+<div id="pg_create_enum_table_from_pg_enum">
 
 <div class="admonition">
 
@@ -146,8 +146,8 @@ Next, we need to tell Hasura that this table represents an enum.
 ### Setting a table as an enum table
 
 Once we have a table which satisfies the conditions for an enum table as
-described `above <create_enum_table>`, we need to tell Hasura that this
-table represents an enum.
+described `above <pg_create_enum_table>`, we need to tell Hasura that
+this table represents an enum.
 
 <div class="rst-class">
 
@@ -201,16 +201,17 @@ API
 A table can be set as an enum via the following 2 methods:
 
 1.  Passing `true` for the `is_enum` option of the
-    `track_table metadata API <track_table>` while tracking a table:
+    `metadata_pg_track_table` metadata API while tracking a table:
 
     ```http
-    POST /v1/query HTTP/1.1
+    POST /v1/metadata HTTP/1.1
     Content-Type: application/json
     X-Hasura-Role: admin
 
     {
-      "type": "track_table",
+      "type": "pg_track_table",
       "args": {
+        "source": "<db_name>",
         "schema": "public",
         "name": "user_role",
         "is_enum": true
@@ -218,18 +219,18 @@ A table can be set as an enum via the following 2 methods:
     }
     ```
 
-2.  Using the `set_table_is_enum metadata API<set_table_is_enum>` to
-    change whether or not an already-tracked table should be used as an
-    enum:
+2.  Using the `metadata_pg_set_table_is_enum` metadata API to change
+    whether or not an already-tracked table should be used as an enum:
 
     ```http
-    POST /v1/query HTTP/1.1
+    POST /v1/metadata HTTP/1.1
     Content-Type: application/json
     X-Hasura-Role: admin
 
     {
-      "type": "set_table_is_enum",
+      "type": "pg_set_table_is_enum",
       "args": {
+        "source": "<db_name>",
         "table": {
           "schema": "public",
           "name": "user_role"

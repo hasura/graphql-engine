@@ -58,7 +58,7 @@ Note
 
 </div>
 
-For more examples and details of usage, please see `this <queries>`.
+For more examples and details of usage, please see `this <pg_queries>`.
 
 </div>
 

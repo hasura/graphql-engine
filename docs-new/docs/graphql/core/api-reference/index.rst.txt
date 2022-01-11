@@ -40,7 +40,7 @@ See details at `api_reference_graphql`.
 Hasura exposes a Relay schema for GraphQL requests for queries,
 subscriptions and mutations.
 
-See docs at `relay_schema`.
+See docs at `pg_relay_schema`.
 
 See details at `api_reference_relay_graphql`.
 

@@ -32,8 +32,8 @@ Note
 
 </div>
 
-For more advanced use cases, you can use `views <custom_views>` or
-`custom SQL functions <custom_sql_functions>`.
+For more advanced use cases, you can use `views <pg_custom_views>` or
+`custom SQL functions <pg_custom_sql_functions>`.
 
 </div>
 

@@ -71,7 +71,7 @@ X-Hasura-Role: admin
 ### Args syntax
 
 If version is set to 1, then args should be the JSON object which is
-same as the output of `export_metadata`.
+same as the output of `schema_metadata_export_metadata`.
 
 For version 2, the following structure is used:
 
@@ -82,10 +82,10 @@ For version 2, the following structure is used:
 }
 ```
 
-| Key                         | Required | Schema            | Description                                                                                                                           |
-|-----------------------------|----------|-------------------|---------------------------------------------------------------------------------------------------------------------------------------|
-| allow_inconsistent_metadata | false    | Boolean           | If set to `true`, metadata will be replaced with a warning in the response indicating which items are inconsistent (default: `false`) |
-| metadata                    | true     | `export_metadata` | The metadata that will replace the current metadata.                                                                                  |
+| Key                         | Required | Schema                            | Description                                                                                                                           |
+|-----------------------------|----------|-----------------------------------|---------------------------------------------------------------------------------------------------------------------------------------|
+| allow_inconsistent_metadata | false    | Boolean                           | If set to `true`, metadata will be replaced with a warning in the response indicating which items are inconsistent (default: `false`) |
+| metadata                    | true     | `schema_metadata_export_metadata` | The metadata that will replace the current metadata.                                                                                  |
 
 If the version is not specified, then it is inferred from the format of
 `args`.

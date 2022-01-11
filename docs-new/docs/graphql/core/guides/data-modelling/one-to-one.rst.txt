@@ -54,7 +54,7 @@ table and there will be only one row with a particular `owner_id`.
 ## Step 2: Set up GraphQL relationships
 
 To access the nested objects via the GraphQL API,
-`create the following relationships <create_relationships>`:
+`create the following relationships <pg_create_relationships>`:
 
 -   Object relationship, `passport_info` from the `authors` table using
     `id -> passport_info :: owner_id`
@@ -205,7 +205,7 @@ You can avoid the `on_conflict` clause if you will never have conflicts.
 ### Caveat for nested inserts
 
 Due to the way nested inserts are typically handled (described
-`here <nested_inserts>`), the order of object insertion needs to be
+`here <pg_nested_inserts>`), the order of object insertion needs to be
 specified using the `insertion_order <ObjRelUsingManualMapping>` option
 while creating one-to-one relationships via the API. This is necessary
 to ensure nested inserts are possible using either side as the parent

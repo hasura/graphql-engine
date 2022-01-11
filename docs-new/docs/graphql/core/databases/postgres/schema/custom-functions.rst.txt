@@ -34,7 +34,7 @@ Note
 </div>
 
 Custom SQL functions can also be queried as
-`computed fields <computed_fields>` of tables.
+`computed fields <pg_computed_fields>` of tables.
 
 </div>
 
@@ -99,17 +99,18 @@ CLI
 
 API
 
-You can add a function by making an API call to the
-`run_sql metadata API <run_sql>`:
+You can add a function by making an API call to the `schema_run_sql`
+schema API:
 
 ```http
-POST /v1/query HTTP/1.1
+POST /v2/query HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
 
 {
   "type": "run_sql",
   "args": {
+    "source": "<db_name>",
     "sql": "<create function statement>"
   }
 }
@@ -178,17 +179,17 @@ CLI
 API
 
 To track the function and expose it over the GraphQL API, make the
-following API call to the
-`track_function metadata API <track_function>`:
+following API call to the `metadata_pg_track_function` metadata API:
 
 ```http
-POST /v1/query HTTP/1.1
+POST /v1/metadata HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
 
 {
-  "type": "track_function",
+  "type": "pg_track_function",
   "args": {
+    "source": "<db_name>",
     "schema": "public",
     "name": "<name of function>"
   }
@@ -219,7 +220,7 @@ steps.
 Custom functions are ideal solutions for retrieving some derived data
 based on some custom business logic that requires user input to be
 calculated. If your custom logic does not require any user input, you
-can use `views <custom_views>` instead.
+can use `views <pg_custom_views>` instead.
 
 Let's see a few example use cases for custom functions:
 
@@ -528,7 +529,7 @@ function will use the default value of that argument set in its
 definition.
 
 **For example:** In the above
-`PostGIS functions example <custom_functions_postgis>`, the function
+`PostGIS functions example <pg_custom_functions_postgis>`, the function
 definition can be updated as follows:
 
 ```plpgsql
@@ -585,7 +586,7 @@ kms:
 ### Accessing Hasura session variables in custom functions
 
 Create a function with an argument for session variables and track it
-with the `track_function_v2 <track_function_v2>` API with the
+with the `metadata_pg_track_function` metadata API with the
 `session_argument` config set. The session argument will be a JSON
 object where keys are session variable names (in lower case) and values
 are strings. Use the `->>` JSON operator to fetch the value of a session
@@ -638,8 +639,8 @@ The specified session argument will not be included in the
 
 ### Tracking functions with side effects
 
-You can also use the `track_function_v2 <track_function_v2>` API to
-track [VOLATILE
+You can also use the `metadata_pg_track_function` metadata API to track
+[VOLATILE
 functions](https://www.postgresql.org/docs/current/xfunc-volatility.html)
 as mutations.
 
@@ -671,9 +672,9 @@ default).
 
 A custom function `f` is only accessible to a role `r` if there is a
 function permission (see
-`Create function permission <pg_create_function_permission>`) defined on
-the function `f` for the role `r`. Additionally, role `r` must have
-SELECT permissions on the returning table of the function `f`.
+`Create function permission <metadata_pg_create_function_permission>`)
+defined on the function `f` for the role `r`. Additionally, role `r`
+must have SELECT permissions on the returning table of the function `f`.
 
 `Access control permissions <permission_rules>` configured for the
 `SETOF` table of a function are also applicable to the function itself.

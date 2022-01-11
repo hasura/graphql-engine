@@ -57,7 +57,7 @@ X-Hasura-Role: admin
 }
 ```
 
-<div id="add_remote_schema_syntax">
+<div id="schema_metadata_add_remote_schema_syntax">
 
 | Key        | Required | Schema             | Description                      |
 |------------|----------|--------------------|----------------------------------|
@@ -98,7 +98,7 @@ X-Hasura-Role: admin
 }
 ```
 
-<div id="update_remote_schema_syntax">
+<div id="schema_metadata_update_remote_schema_syntax">
 
 | Key        | Required | Schema             | Description                      |
 |------------|----------|--------------------|----------------------------------|
@@ -128,7 +128,7 @@ X-Hasura-Role: admin
 }
 ```
 
-<div id="remove_remote_schema_syntax">
+<div id="schema_metadata_remove_remote_schema_syntax">
 
 | Key  | Required | Schema             | Description               |
 |------|----------|--------------------|---------------------------|
@@ -156,7 +156,7 @@ X-Hasura-Role: admin
 }
 ```
 
-<div id="reload_remote_schema_syntax">
+<div id="schema_metadata_reload_remote_schema_syntax">
 
 | Key  | Required | Schema             | Description               |
 |------|----------|--------------------|---------------------------|

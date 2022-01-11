@@ -110,7 +110,7 @@ profiles (
 )
 ```
 
-<div class="thumbnail" alt="Create a table">
+<div class="thumbnail" alt="Create a table" width="1200px">
 
 /img/graphql/core/getting-started/create-profile-table.png
 
@@ -135,7 +135,7 @@ query {
 
 You'll see that you get all the inserted data!
 
-<div class="thumbnail" alt="Try out a query">
+<div class="thumbnail" alt="Try out a query" width="1200px">
 
 /img/graphql/core/getting-started/profile-query.png
 
@@ -156,12 +156,12 @@ the link below. We send newsletters only once a month.
 
 ### Database operations
 
--   `Database modelling <schema>`: Learn how to model your database
+-   `Database modelling <pg_schema>`: Learn how to model your database
     schema, as well as how to extend it.
--   `Querying data <queries>`: Use GraphQL queries to query data from
+-   `Querying data <pg_queries>`: Use GraphQL queries to query data from
     your GraphQL API.
--   `Inserting data <mutations>`: Use GraphQL mutations to insert data
-    into your GraphQL API.
+-   `Inserting data <pg_mutations>`: Use GraphQL mutations to insert
+    data into your GraphQL API.
 
 ### Business logic
 

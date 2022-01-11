@@ -86,6 +86,7 @@ A custom field name can be set for a column via the following 2 methods:
     {
       "type": "mssql_set_table_customization",
       "args": {
+        "source": "<db_name>",
         "table": "authors",
         "configuration": {
           "custom_column_names": {
@@ -163,11 +164,12 @@ A custom field name can be set for a table root field via the following
     {
       "type": "mssql_set_table_customization",
       "args": {
+        "source": "<db_name>",
         "table": "authors",
         "configuration": {
           "custom_column_names": {
             "id": "AuthorId"
-          }
+          },
           "custom_root_fields": {
             "select": "authors",
             "select_aggregate": "authors_aggregate"

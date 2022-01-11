@@ -20,8 +20,8 @@ Users specify the query or mutation they wish to make available, as well
 a URL template. Segments of the URL template can potentially capture
 data to be used as GraphQL variables.
 
-See `api_restified_endpoints` for information on how to work with
-endpoints through the metadata apis.
+See `metadata_api_restified_endpoints` for information on how to work
+with endpoints through the metadata apis.
 
 <div class="admonition">
 

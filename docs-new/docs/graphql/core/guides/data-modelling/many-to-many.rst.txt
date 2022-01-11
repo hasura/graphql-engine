@@ -84,7 +84,7 @@ association via the foreign keys.
 ## Step 2: Set up GraphQL relationships
 
 To access the nested objects via the GraphQL API,
-`create the following relationships <create_relationships>`:
+`create the following relationships <pg_create_relationships>`:
 
 -   Array relationship, `article_tags` from `articles` table using
     `article_tag :: article_id -> id`
@@ -452,8 +452,8 @@ fetch as follows:
 
 In case you would like to flatten the above queries and avoid the
 intermediate fields `article_tags` & `tag_articles`, you can
-`create the following views <custom_views>` additionally and then query
-using relationships created on these views:
+`create the following views <pg_custom_views>` additionally and then
+query using relationships created on these views:
 
 ```sql
 CREATE VIEW article_tags_view AS
@@ -467,7 +467,7 @@ CREATE VIEW tag_articles_view AS
       ON article_tag.article_id = articles.id
 ```
 
-Now `create the following relationships <create_relationships>`:
+Now `create the following relationships <pg_create_relationships>`:
 
 -   Array relationship, `tags` from the `articles` table using
     `article_tags_view :: article_id -> id`

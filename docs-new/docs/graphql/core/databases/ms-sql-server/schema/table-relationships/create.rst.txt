@@ -53,7 +53,7 @@ Click the `Add` button in the Foreign Keys section and configure the
 `author_id` column as a foreign-key for the `id` column in the `authors`
 table:
 
-<div class="thumbnail" alt="Add foreign-key constraint">
+<div class="thumbnail" alt="Add foreign-key constraint" width="700px">
 
 /img/graphql/core/schema/add-foreign-key-mssql.png
 
@@ -137,7 +137,8 @@ table.
 Add an `object relationship` named `author` for the `articles` table as
 shown here:
 
-<div class="thumbnail" alt="Create an object relationship">
+<div class="thumbnail" alt="Create an object relationship"
+width="1100px">
 
 /img/graphql/core/schema/add-1-1-relationship.png
 
@@ -175,9 +176,10 @@ hasura metadata apply
 
 <div class="tab">
 
-API .. TODO: BROKEN_LINK You can create an object relationship by using
-the
-`mssql_create_object_relationship metadata API <mssql_create_object_relationship>`:
+API
+
+You can create an object relationship by using the
+`mssql_create_object_relationship` metadata API:
 
 ```http
 POST /v1/metadata HTTP/1.1
@@ -187,9 +189,9 @@ X-Hasura-Role: admin
 {
   "type": "mssql_create_object_relationship",
   "args": {
+    "source": "<db_name>",
     "table": "articles",
     "name": "author",
-    "source": "default",
     "using": {
       "foreign_key_constraint_on" : ["author_id"]
     }
@@ -272,7 +274,8 @@ Console
 On the console, add an `array relationship` named `articles` for the
 `authors` table as shown here:
 
-<div class="thumbnail" alt="Create an array relationship">
+<div class="thumbnail" alt="Create an array relationship"
+width="1100px">
 
 /img/graphql/core/schema/add-1-many-relationship.png
 
@@ -321,9 +324,10 @@ hasura metadata apply
 
 <div class="tab">
 
-API .. TODO: BROKEN_LINK You can create an array relationship by using
-the
-`mssql_create_array_relationship metadata API <mssql_create_array_relationship>`:
+API
+
+You can create an array relationship by using the
+`mssql_create_array_relationship` metadata API:
 
 ```http
 POST /v1/metadata HTTP/1.1
@@ -335,7 +339,7 @@ X-Hasura-Role: admin
   "args": {
     "table": "author",
     "name": "articles",
-    "source": "default",
+    "source": "<db_name>",
     "using": {
       "foreign_key_constraint_on" : {
           "table" : "articles",
@@ -446,7 +450,8 @@ Console
     `Data -> authors -> Relationships` tab.
 -   Click on the `Configure` button:
 
-<div class="thumbnail" alt="Open the manual relationship section">
+<div class="thumbnail" alt="Open the manual relationship section"
+width="1100px">
 
 /img/graphql/core/schema/manual-relationship-btn.png
 
@@ -456,7 +461,7 @@ Console
 
 The above step will open up a section as shown below:
 
-<div class="thumbnail" alt="Define the relationship">
+<div class="thumbnail" alt="Define the relationship" width="700px">
 
 /img/graphql/core/schema/manual-relationship-create.png
 
@@ -516,7 +521,7 @@ hasura metadata apply
 API
 
 You can add a manual relationship by using the
-`mssql_create_object_relationship metadata API <mssql_create_object_relationship>`:
+`mssql_create_object_relationship` metadata API:
 
 ```http
 POST /v1/metadata HTTP/1.1
@@ -528,7 +533,7 @@ X-Hasura-Role: admin
   "args": {
     "table": "authors",
     "name": "avg_rating",
-    "source": "default",
+    "source": "<db_name>",
     "using": {
       "manual_configuration": {
         "remote_table": "author_average_rating",
@@ -610,7 +615,7 @@ Console
 The console infers potential relationships using existing foreign-keys
 and recommends these on the `Data -> Schema` page
 
-<div class="thumbnail" alt="Track all relationships">
+<div class="thumbnail" alt="Track all relationships" width="800px">
 
 /img/graphql/core/schema/schema-track-relationships.png
 
@@ -660,11 +665,11 @@ hasura metadata apply
 
 <div class="tab">
 
-API .. TODO: BROKEN_LINK You can create multiple relationships by using
-the
-`mssql_create_object_relationship metadata API <mssql_create_object_relationship>`
-and the
-`mssql_create_array_relationship metadata API <mssql_create_array_relationship>`:
+API
+
+You can create multiple relationships by using the
+`mssql_create_object_relationship` and the
+`mssql_create_array_relationship` metadata APIs:
 
 ```http
 POST /v1/metadata HTTP/1.1
@@ -677,6 +682,7 @@ X-Hasura-Role: admin
     {
       "type": "mssql_create_object_relationship",
       "args": {
+        "source": "<db_name>",
         "table": "articles",
         "name": "author",
         "using": {
@@ -687,6 +693,7 @@ X-Hasura-Role: admin
     {
       "type": "mssql_create_array_relationship",
       "args": {
+        "source": "<db_name>",
         "table": "authors",
         "name": "articles",
         "using": {

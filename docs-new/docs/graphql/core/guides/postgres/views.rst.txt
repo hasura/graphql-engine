@@ -121,5 +121,5 @@ changes using `Postgres triggers <postgres_triggers>`.
 After creating a view, you can expose it over your GraphQL API and query
 it like a normal table.
 
-See `this page <custom_views>` for more info on how to create and expose
-views in Hasura.
+See `this page <pg_custom_views>` for more info on how to create and
+expose views in Hasura.

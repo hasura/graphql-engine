@@ -25,11 +25,7 @@ replaces the older `schema/metadata API <schema_metadata_apis>`.
 
 </div>
 
-<div id="metadata_pg_create_remote_relationship">
-
-pg_create_remote_relationship --------------------------
-
-</div>
+## pg_create_remote_relationship
 
 `pg_create_remote_relationship` is used to create a new remote
 relationship with an existing remote schema.
@@ -67,11 +63,7 @@ X-Hasura-Role: admin
 | remote_schema | true     | `RemoteSchemaName <RemoteSchemaName>`                                | Name of the remote schema to join with                                                                                                     |
 | remote_field  | true     | `RemoteField`                                                        | The schema tree ending at the field in remote schema which needs to be joined with.                                                        |
 
-<div id="metadata_pg_update_remote_relationship">
-
-pg_update_remote_relationship --------------------------
-
-</div>
+## pg_update_remote_relationship
 
 `pg_update_remote_relationship` is used to update an existing remote
 relationship.
@@ -112,11 +104,7 @@ X-Hasura-Role: admin
 | remote_schema | true     | `RemoteSchemaName <RemoteSchemaName>` | Name of the remote schema to join with                                                                                      |
 | remote_field  | true     | `RemoteField`                         | The schema tree ending at the field in remote schema which needs to be joined with.                                         |
 
-<div id="metadata_pg_delete_remote_relationship">
-
-pg_delete_remote_relationship --------------------------
-
-</div>
+## pg_delete_remote_relationship
 
 `pg_delete_remote_relationship` is used to delete an existing remote
 relationship.

@@ -42,7 +42,7 @@ X-Hasura-Role: admin
 }
 ```
 
-<div id="set_graphql_schema_introspection_options_syntax">
+<div id="metadata_set_graphql_schema_introspection_options_syntax">
 
 | Key                | Required | Schema              | Description                                                                                                     |
 |--------------------|----------|---------------------|-----------------------------------------------------------------------------------------------------------------|

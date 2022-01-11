@@ -24,7 +24,7 @@ be passed by your auth service as per your requirements.
 
 **For example:**
 
-<div class="thumbnail" width="80 %" alt="Create a permission rule">
+<div class="thumbnail" width="800px" alt="Create a permission rule">
 
 /img/graphql/core/auth/hasura-perms.png
 

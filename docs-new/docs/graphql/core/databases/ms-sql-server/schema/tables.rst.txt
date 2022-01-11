@@ -55,7 +55,7 @@ button on the left side bar to open up an interface to create tables.
 For example, here is the schema for the `articles` table in this
 interface:
 
-<div class="thumbnail" alt="Schema for an article table">
+<div class="thumbnail" alt="Schema for an article table" width="1100px">
 
 /img/graphql/core/schema/create-table-graphql-mssql.png
 
@@ -138,7 +138,7 @@ default.
 You can track any existing tables in your database from the
 `Data -> Schema` page:
 
-<div class="thumbnail" alt="Track table">
+<div class="thumbnail" alt="Track table" width="700px">
 
 /img/graphql/core/schema/schema-track-tables-mssql.png
 
@@ -155,10 +155,10 @@ CLI
 
     ```yaml
     - table:
-        schema: public
+        schema: dbo
         name: authors
     - table:
-        schema: public
+        schema: dbo
         name: articles
     ```
 
@@ -186,7 +186,8 @@ X-Hasura-Role: admin
 {
   "type": "mssql_track_table",
   "args": {
-    "table": "authors",
+    "source": "<db_name>",
+    "table": "authors"
   }
 }
 ```

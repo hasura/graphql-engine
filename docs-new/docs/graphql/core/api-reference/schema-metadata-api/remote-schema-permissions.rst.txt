@@ -340,8 +340,8 @@ query {
 
 The `user` role won't be able to provide the value for the `limit`
 argument in the `customer_transactions_history` field because the
-`limit` has a preset set and the value will be added by the
-graphql-engine before it queries the remote schema.
+`limit` has a preset set and the value will be added by the GraphQL
+engine before it queries the remote schema.
 
 ### Args syntax
 
@@ -360,7 +360,7 @@ Note
 
 </div>
 
-`add_remote_schema_permissions` will only work when the graphql-engine
+`add_remote_schema_permissions` will only work when the GraphQL engine
 has enabled remote schema permissions. Remote schema permissions can be
 enabled by running the graphql-engine with the
 `--enable-remote-schema-permissions` server flag or by setting the

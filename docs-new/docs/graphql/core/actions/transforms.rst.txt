@@ -46,7 +46,7 @@ Go to the `Actions` tab on the console and create or modify an action.
 Scroll down to `Configure Transformations` section:
 
 <div class="thumbnail" alt="Configure action transformation"
-width="70%">
+width="800px">
 
 /img/graphql/core/actions/configure-transformation.png
 
@@ -133,7 +133,7 @@ Console
 In the `Configure Transformations` section, click on
 `Add Payload Transformation`:
 
-<div class="thumbnail" alt="Add payload transformation" width="90%">
+<div class="thumbnail" alt="Add payload transformation" width="1100px">
 
 /img/graphql/core/actions/payload-transformation.png
 
@@ -226,7 +226,7 @@ api_tabs
 In the `Configure Transformations` section, click on
 `Add Request Options Transformation`:
 
-<div class="thumbnail" alt="Console action create" width="90%">
+<div class="thumbnail" alt="Console action create" width="800px">
 
 /img/graphql/core/actions/request-options-transformation.png
 
@@ -284,7 +284,7 @@ Console
 In the `Configure Transformations` section, click on
 `Add Request Options Transformation`:
 
-<div class="thumbnail" alt="Console action create" width="90%">
+<div class="thumbnail" alt="Console action create" width="800px">
 
 /img/graphql/core/actions/request-options-transformation.png
 
@@ -330,7 +330,7 @@ Scroll down to `Configure Transformations` section:
 
 Action definition:
 
-<div class="thumbnail" alt="Console action create" width="90%">
+<div class="thumbnail" alt="Console action create" width="1100px">
 
 /img/graphql/core/actions/example-transformation-0.png
 
@@ -338,13 +338,13 @@ Action definition:
 
 The transformation is given by:
 
-<div class="thumbnail" alt="Console action create" width="90%">
+<div class="thumbnail" alt="Console action create" width="800px">
 
 /img/graphql/core/actions/example-transformation-1.png
 
 </div>
 
-<div class="thumbnail" alt="Console action create" width="90%">
+<div class="thumbnail" alt="Console action create" width="1000px">
 
 /img/graphql/core/actions/example-transformation-2.png
 

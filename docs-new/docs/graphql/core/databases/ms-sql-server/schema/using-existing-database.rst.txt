@@ -83,6 +83,7 @@ X-Hasura-Role: admin
 {
    "type": "mssql_track_table",
    "args": {
+      "source": "<db_name>",
       "schema": "dbo",
       "name": "<table name>"
    }
@@ -157,6 +158,7 @@ X-Hasura-Role: admin
     {
        "type": "mssql_track_table",
        "args": {
+          "source": "<db_name>",
           "schema": "dbo",
           "name": "<table-name-1>"
        }
@@ -164,6 +166,7 @@ X-Hasura-Role: admin
     {
        "type": "mssql_track_table",
        "args": {
+          "source": "<db_name>",
           "schema": "dbo",
           "name": "<table-name-2>"
        }
@@ -260,7 +263,7 @@ API
 **Object relationship**
 
 You can create an object relationship by using the
-`mssql_create_object_relationship metadata API <mssql_create_object_relationship>`:
+`mssql_create_object_relationship` metadata API:
 
 ```http
 POST /v1/metadata HTTP/1.1
@@ -270,6 +273,7 @@ X-Hasura-Role: admin
 {
    "type": "mssql_create_object_relationship",
    "args": {
+      "source": "<db_name>",
       "table": "<table name>",
       "name": "<relationship name>",
       "using": {
@@ -282,7 +286,7 @@ X-Hasura-Role: admin
 **Array relationship**
 
 You can create an array relationship by using the
-`mssql_create_array_relationship metadata API <mssql_create_array_relationship>`:
+`mssql_create_array_relationship` metadata API:
 
 ```http
 POST /v1/metadata HTTP/1.1
@@ -292,6 +296,7 @@ X-Hasura-Role: admin
 {
    "type": "mssql_create_array_relationship",
    "args": {
+      "source": "<db_name>",
       "table": "<table name>",
       "name": "<relationship name>",
       "using": {
@@ -380,9 +385,8 @@ hasura metadata apply
 API
 
 You can create multiple relationships by using the
-`mssql_create_object_relationship metadata API <mssql_create_object_relationship>`
-and the
-`mssql_create_array_relationship metadata API <mssql_create_array_relationship>`:
+`mssql_create_object_relationship` and the
+`mssql_create_array_relationship` metadata APIs:
 
 ```http
 POST /v1/metadata HTTP/1.1
@@ -395,6 +399,7 @@ X-Hasura-Role: admin
     {
       "type": "mssql_create_object_relationship",
       "args": {
+        "source": "<db_name>",
         "table": "<table name>",
         "name": "<relationship name>",
         "using": {
@@ -405,6 +410,7 @@ X-Hasura-Role: admin
     {
       "type": "mssql_create_array_relationship",
       "args": {
+        "source": "<db_name>",
         "table": "<table name>",
         "name": "<relationship name>",
         "using": {

@@ -137,11 +137,13 @@ X-Hasura-Role: admin
 ### Responses
 
 Version 2 with inconsistencies and allow_inconsistent_metadata=false, or
-omitted corresponds with the response document in `replace_metadata`.
+omitted corresponds with the response document in
+`metadata_replace_metadata`.
 
 Version 2 example with inconsistencies and
 allow_inconsistent_metadata=true includes an `is_consistent` and
-`inconsistent_objects` corresponding to `get_inconsistent_metadata`.
+`inconsistent_objects` corresponding to
+`metadata_get_inconsistent_metadata`.
 
 ```none
 HTTP/1.1 400 Bad Request

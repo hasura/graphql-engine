@@ -25,7 +25,7 @@ Note
 
 </div>
 
-For `config v1`, see `roll_back_migrations_v1`.
+For `config v3`, see `roll_back_migrations`.
 
 </div>
 

@@ -73,18 +73,19 @@ hasura metadata apply
 API
 
 To track a table and expose it over the GraphQL API, use the
-`track_table metadata API <track_table>`:
+`metadata_pg_track_table` metadata API:
 
 ```http
-POST /v1/query HTTP/1.1
+POST /v1/metadata HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
 
 {
-   "type": "track_table",
+   "type": "pg_track_table",
    "args": {
+      "source": "<db_name>",
       "schema": "public",
-      "name": "<table name>"
+      "name": "<table_name>"
    }
 }
 ```
@@ -144,10 +145,10 @@ hasura metadata apply
 API
 
 To track all tables and expose them over the GraphQL API, use the
-`track_table metadata API <track_table>`:
+`metadata_pg_track_table` metadata API:
 
 ```http
-POST /v1/query HTTP/1.1
+POST /v1/metadata HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
 
@@ -155,15 +156,17 @@ X-Hasura-Role: admin
   "type": "bulk",
   "args": [
     {
-       "type": "track_table",
+       "type": "pg_track_table",
        "args": {
+          "source": "<db_name>",
           "schema": "public",
           "name": "<table-name-1>"
        }
     },
     {
-       "type": "track_table",
+       "type": "pg_track_table",
        "args": {
+          "source": "<db_name>",
           "schema": "public",
           "name": "<table-name-2>"
        }
@@ -172,8 +175,8 @@ X-Hasura-Role: admin
 }
 ```
 
-To automate this, you could add the `track_table` requests to the `bulk`
-request in a loop through a script.
+To automate this, you could add the `pg_track_table` requests to the
+`bulk` request in a loop through a script.
 
 </div>
 
@@ -182,8 +185,8 @@ request in a loop through a script.
 ## Step 2: Track foreign-keys
 
 Tracking a foreign-key means creating a
-`relationship <table_relationships>` between the tables involved in the
-foreign-key.
+`relationship <pg_table_relationships>` between the tables involved in
+the foreign-key.
 
 ### To track a foreign-key between two tables in the database
 
@@ -204,7 +207,7 @@ Console
     `Relationships` tab.
 3.  You should see a suggested relationship based on the foreign-key.
     Click `Add`, give a name to your relationship (this will be the name
-    of the `nested object <nested_object_queries>` in the GraphQL
+    of the `nested object <pg_nested_object_queries>` in the GraphQL
     query), and hit `Save` to create the relationship.
 4.  Repeat with the other table involved in the foreign-key.
 
@@ -260,16 +263,17 @@ API
 **Object relationship**
 
 You can create an object relationship by using the
-`create_object_relationship metadata API <create_object_relationship>`:
+`metadata_pg_create_object_relationship` metadata API:
 
 ```http
-POST /v1/query HTTP/1.1
+POST /v1/metadata HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
 
 {
-   "type": "create_object_relationship",
+   "type": "pg_create_object_relationship",
    "args": {
+      "source": "<db_name>",
       "table": "<table name>",
       "name": "<relationship name>",
       "using": {
@@ -282,16 +286,17 @@ X-Hasura-Role: admin
 **Array relationship**
 
 You can create an array relationship by using the
-`create_array_relationship metadata API <create_array_relationship>`:
+`metadata_pg_create_array_relationship` metadata API:
 
 ```http
-POST /v1/query HTTP/1.1
+POST /v1/metadata HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
 
 {
-   "type": "create_array_relationship",
+   "type": "pg_create_array_relationship",
    "args": {
+      "source": "<db_name>",
       "table": "<table name>",
       "name": "<relationship name>",
       "using": {
@@ -380,12 +385,11 @@ hasura metadata apply
 API
 
 You can create multiple relationships by using the
-`create_object_relationship metadata API <create_object_relationship>`
-and the
-`create_array_relationship metadata API <create_array_relationship>`:
+`metadata_pg_create_object_relationship` and the
+`metadata_pg_create_array_relationship` metadata APIs:
 
 ```http
-POST /v1/query HTTP/1.1
+POST /v1/metadata HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
 
@@ -393,8 +397,9 @@ X-Hasura-Role: admin
   "type": "bulk",
   "args": [
     {
-      "type": "create_object_relationship",
+      "type": "pg_create_object_relationship",
       "args": {
+        "source": "<db_name>",
         "table": "<table name>",
         "name": "<relationship name>",
         "using": {
@@ -403,8 +408,9 @@ X-Hasura-Role: admin
       }
     },
     {
-      "type": "create_array_relationship",
+      "type": "pg_create_array_relationship",
       "args": {
+        "source": "<db_name>",
         "table": "<table name>",
         "name": "<relationship name>",
         "using": {
@@ -432,8 +438,8 @@ Relationship nomenclature
 
 In this case, Hasura GraphQL engine will **automatically generate
 relationship names** (the names of the
-`nested objects <nested_object_queries>` in the GraphQL query) based on
-the table names and the foreign-key names.
+`nested objects <pg_nested_object_queries>` in the GraphQL query) based
+on the table names and the foreign-key names.
 
 The name is generated in the following format:
 
@@ -452,6 +458,6 @@ Note that, **this is just an arbitrary naming convention** chosen by
 Hasura to ensure the generation of unique relationship names. You can
 choose to rename your relationships to anything you wish. You can
 **change the relationship names** with a name of your choice as shown in
-`rename_relationships`.
+`renaming relationships <pg_rename_relationships>`.
 
 </div>
