@@ -21,34 +21,53 @@ import TabItem from '@theme/TabItem';
   <TabItem value="docusaurus" label="Docusaurus - MDX">
 
 ```markdown
-  :::note
-    **Adding an additional layer on top of the Hasura GraphQL engine significantly impacts the performance provided by
-    it out of the box** (*by as much as 4x*). If you need any help with remodelling these kinds of use cases to use the
-    built-in remote schemas feature, please get in touch with us on [Discord](https://discord.gg/vBPpJkS).
-  :::
+:::note
 
-  :::note Additional Resources
-    Data Federation with Hasura - [Watch Webinar](https://hasura.io/events/webinar/data-federation-hasura-graphql/).
-  :::
+**Adding an additional layer on top of the Hasura GraphQL engine significantly impacts the performance provided by
+it out of the box** (*by as much as 4x*). If you need any help with remodelling these kinds of use cases to use the
+built-in remote schemas feature, please get in touch with us on [Discord](https://discord.gg/vBPpJkS).
+
+:::
+
+:::note Additional Resources
+
+Data Federation with Hasura - [Watch Webinar](https://hasura.io/events/webinar/data-federation-hasura-graphql/).
+
+:::
   
 ```
+
+:::caution Please note the empty lines
+
+Please ensure to leave empty lines in the start and the end (first and last lines). This is due to avoid prettier messing up the formatting as this is docusaurus special syntax.
+
+Read about it on the [Docusaurus Docs](https://docusaurus.io/docs/markdown-features/admonitions#usage-with-prettier)
+
+:::
+
   </TabItem>
 </Tabs>
 
 which would render as below
 
 :::note
-  **Adding an additional layer on top of the Hasura GraphQL engine significantly impacts the performance provided by
-  it out of the box** (*by as much as 4x*). If you need any help with remodelling these kinds of use cases to use the
-  built-in remote schemas feature, please get in touch with us on [Discord](https://discord.gg/vBPpJkS).
+
+**Adding an additional layer on top of the Hasura GraphQL engine significantly impacts the performance provided by
+it out of the box** (*by as much as 4x*). If you need any help with remodelling these kinds of use cases to use the
+built-in remote schemas feature, please get in touch with us on [Discord](https://discord.gg/vBPpJkS).
+
 :::
 
 :::note Additionl Resources
-  Data Federation with Hasura - [Watch Webinar](https://hasura.io/events/webinar/data-federation-hasura-graphql/).
+
+Data Federation with Hasura - [Watch Webinar](https://hasura.io/events/webinar/data-federation-hasura-graphql/).
+
 :::
 
 <hr />
 
 :::info
+
 For further syntax and usage reference please check docusaurus [Admonitions docs](https://docusaurus.io/docs/markdown-features/admonitions)
+
 :::
