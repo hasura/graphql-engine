@@ -18,7 +18,9 @@ import Thumbnail from "@site/src/components/Thumbnail/Thumbnail";
 Users can request a Dedicated VPC to be provisioned for them on Hasura Cloud so that they have better isolation in terms of their project placement and they can initiate VPC peering with their own networks for secure connectivity.
 
 :::info Note
+
 Dedicated VPC is only available as part of **Cloud Enterprise** plan. Peering requests are only available for **AWS** or services running on AWS. [Contact Sales](https://hasura.io/contact-us/) to know more.
+
 :::
 
 ## Creating a VPC
@@ -134,7 +136,9 @@ This popup shows all the required info to create a peering request from the 3rd 
 Enter these details into the peering connection form of the 3rd party service. Once you do that, the 3rd party service will show similar details so that they can be entered into the form on Hasura Cloud Dashboard.
 
 :::info Note
+
 VPC CIDR on the 3rd party service could be any valid CIDR block other than `10.2.0.0/16` and the CIDR of your VPC on Hasura Cloud.
+
 :::
 
 Once you enter and initiate the peering request, you will see the peering as **Request Pending** on the dashboard. Hasura Cloud team may take 1-2 days to process the request. Once Hasura accepts the request, you will see that the peering is **Active**.

@@ -20,16 +20,20 @@ demand no interruptions to your instance's configuration, maintenance
 mode is activated for your project.
 
 :::info Note
+
 Currently, cloud maintenance mode will only be activated for your
 project while you are updating it to Hasura GraphQL Engine `v2.0`.
+
 :::
 
 :::info Note
+
 This is not to be confused with environment variable
 `HASURA_GRAPHQL_ENABLE_MAINTENANCE_MODE`. The two are different as the
 env var enables the server maintenance mode which disables metadata APIs
 (writes) on the project while the cloud maintenance mode does not. See
 below for actions disabled by the cloud maintenance mode.
+
 :::
 
 ## Check if maintenance mode is activated

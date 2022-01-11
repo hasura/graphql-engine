@@ -275,10 +275,13 @@ template the endpoints using ENV variables.
 e.g. `https://my-handler-endpoint/addNumbers` can be templated to
 `{{ACTION_BASE_ENDPOINT}}/addNumbers` where `ACTION_BASE_ENDPOINT` is an
 ENV variable whose value is set to `https://my-handler-endpoint`
+
 :::
 
 :::info Note
+
 If you are running Hasura using Docker, ensure that the Hasura Docker container can reach the handler endpoint. See [this page](/graphql/core/guides/docker-networking.mdx) for Docker networking.
+
 :::
 
 <hr />
@@ -521,6 +524,7 @@ It can be updated later by using the [update_action metadata API](/graphql/core/
 To manage handler endpoints across environments it is possible to template the endpoints using ENV variables.
 
 e.g. `https://my-handler-endpoint/addNumbers` can be templated to `{{ACTION_BASE_ENDPOINT}}/addNumbers` where `ACTION_BASE_ENDPOINT` is an ENV variable whose value is set to `https://my-handler-endpoint`
+
 :::
 
 <hr />
@@ -574,5 +578,7 @@ action.
 And that's it. You have extended your Hasura schema with a new query.
 
 :::info Additional Resources
+
 Introduction to Hasura Actions - [View Recording](https://hasura.io/events/webinar/hasura-actions/?pg=docs&plcmt=body&cta=view-recording&tech=).
+
 :::

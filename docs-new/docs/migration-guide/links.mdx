@@ -60,6 +60,7 @@ Link label will by default be title of page. For custom link labels, the syntax 
 </Tabs>
 
 :::info A quick note on id's in reStructuredText
+
 Similar to how a top level id will resolve to file/document, a sub-section can also have id's and they resolve to a section within the document.
 
 This is similar to using hash in the url (`#sub-section`) to directly link to a section in the page.
@@ -67,6 +68,7 @@ This is similar to using hash in the url (`#sub-section`) to directly link to a 
 While the top level can be added as `id` attribute in metadata. The sub-section (h2's, h3's and stuff) can have id's with special mdx syntax `{#id-for-sub-section}`
 
 ![Referencing sub-section in rst vs markdown](/img/migration-guide/link-sub-section-ids.png)
+
 :::
 
 :::caution
@@ -88,11 +90,13 @@ The Result UI: [Getting Started with Hasura Cloud](/graphql/cloud/getting-starte
 :::
 
 :::danger be cautious with URL slug
+
 If we add an `id` metadata for the document, the url slug for this page will be overridden to `id` as opposed to default filename. Thus requiring us to set a slug if we intend to leave it default.
 
 So, we can skip the top level id in metadata as it is by default the filename without extension.
 
 Read more about it from [Docusaurus Document Id Section](https://docusaurus.io/docs/docs-introduction#document-id)
+
 :::
 
 ### Root Relative Links
@@ -115,7 +119,9 @@ Since MDX doesn't yet support direct document referencing with `id/ref` unlike s
 > [MDX Root Relative Link](/migration-guide/index.mdx#contents-covered)
 
 :::tip Don't forget the extension!
+
 Make sure to include file extension as MDX links are parsed as a file path and will be resolved correctly.
+
 :::
 
 
@@ -136,7 +142,9 @@ import Link from '@docusaurus/Link';
 <hr />
 
 :::info
+
 React Link's `to` attribute will always accept a URL path and not file path.
 
 Docusaurus catches [broken markdown links](https://docusaurus.io/docs/api/docusaurus-config#onbrokenmarkdownlinks) if enabled
+
 :::

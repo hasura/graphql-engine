@@ -61,9 +61,11 @@ Will see more about this component in below sections.
 </Tabs>
 
 :::info
- - The `:depth:` param can be controlled by [`toc_min_heading_level` and `toc_max_heading_level`](https://docusaurus.io/docs/api/plugins/@docusaurus/plugin-content-docs#toc_min_heading_level) meta for individual files and [`minHeadingLevel` and `maxHeadingLevel`](https://docusaurus.io/docs/api/themes/configuration#table-of-contents) for global theme config in docusaurus as given in docs.
- - The `:backlinks:` seems to be set to `none` for all and also there is no direct replacement in MDX via Docusaurus. So, can be ignored.
- - The `:local` can be ignored as well cause the `TOCInline` component works only for local (same) document
+
+- The `:depth:` param can be controlled by [`toc_min_heading_level` and `toc_max_heading_level`](https://docusaurus.io/docs/api/plugins/@docusaurus/plugin-content-docs#toc_min_heading_level) meta for individual files and [`minHeadingLevel` and `maxHeadingLevel`](https://docusaurus.io/docs/api/themes/configuration#table-of-contents) for global theme config in docusaurus as given in docs.
+- The `:backlinks:` seems to be set to `none` for all and also there is no direct replacement in MDX via Docusaurus. So, can be ignored.
+- The `:local` can be ignored as well cause the `TOCInline` component works only for local (same) document
+
 :::
 
 :::caution Important Note
@@ -73,6 +75,7 @@ Please ignore top level TOC (the one at beginning of file). Only add for sub sec
 The existing docs do not have a right sidebar thus the necessity to have TOC at top to give an overview and uick navigation.
 
 With Docusaurus, we dont have to add the top TOC.
+
 :::
 
 ## Partial (Sub) Table of Contents
@@ -123,10 +126,12 @@ The children alone of a subitem can be rendered too. Read more about the TOCItem
 <TOCInline toc={toc[1].children} />
 
 :::caution
+
 The `toc` prop value should always be an array.
 ```jsx
 toc={`[ toc[2], ... ]`} or toc={`toc[1].children`}
 ```
+
 :::
 
 ## Custom Table of Contents
@@ -185,12 +190,14 @@ import {
 ```
 
 :::caution Watchout the link type
+
 If you notice, we have added extension to the paths in link where as in `<Link />` component we didn't.
 
 Thats beacuse, the MDX links are treated as file-paths and is resolved to generated url paths automatically by docusaurus.
 On the other hand, the path in `Link` component should already be a url path as it cannot resolve file-paths.
 
 Best practice is to keep the directory/file path structure and url structure same to avoid the maintenance burden when using both types of syntax.
+
 :::
 
   </TabItem>
@@ -305,6 +312,7 @@ will render something like below. Please note that links will be broken as they 
 <hr />
 
 :::tip How to use links within React?
+
 - Please refer [Links in React](/migration-guide/links#links-in-react) section in Links.
 
 ```jsx
@@ -314,4 +322,5 @@ import Link from '@docusaurus/Link';
 ```
 
 - Please refer the [Root Relative Links](/migration-guide/links#root-relative-links) section too.
+
 :::

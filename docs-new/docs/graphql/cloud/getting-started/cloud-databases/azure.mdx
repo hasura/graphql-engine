@@ -89,15 +89,19 @@ Configure your database with all required fields:
 Then click `Review + create`.
 
 :::info Note
+
 If you're using a database user other than the default one, make sure to
 give it the right [Postgres permissions](/graphql/cloud/getting-started/postgres-permissions.mdx#cloud-postgres-permissions).
+
 :::
 
 :::info Note
+
 For Azure flexible server, Hasura v1.x does not work with
 [JIT](https://www.postgresql.org/docs/11/runtime-config-query.html#GUC-JIT)
 turned on. JIT can be turned off from Azure console. Hasura v2.x works
 fine with JIT enabled.
+
 :::
 
 ## Step 3: Allow connections to your DB from Hasura Cloud
@@ -166,9 +170,11 @@ Back on Hasura Console, enter the database URL that we retrieved in
 Then click `Connect Database`.
 
 :::info Note
+
 For security reasons, it is recommended to set database URLs as
 [env vars](/graphql/cloud/projects/env-vars.mdx#manage-project-env-vars) and using the env vars to connect
 to the databases in place of the raw database URLs.
+
 :::
 
 Voilà. You are ready to start developing.

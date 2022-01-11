@@ -19,8 +19,10 @@ import Thumbnail from "@site/src/components/Thumbnail/Thumbnail";
 
 You can export metrics and operation logs of your Hasura Cloud project to your organisation's Datadog dashboard. This can be configured on the integrations tab on the project's setting page.
 
-:::note 
+:::note
+
 Datadog Integration is only available for Hasura Cloud projects on the `Standard` (pay-as-you-go) tier and above. 
+
 :::
 
 ## Configure Datadog integration
@@ -87,7 +89,9 @@ The logs can be viewed in your Datadog dashboard, under the `Logs` tab. To navig
 To view only logs exported by Hasura Cloud, filter your logs using `host` and/or `tags` you configured with this integration.
 
 :::note
+
 Datadog allows ingestion of logs with maximum size 256kB for a single log. If a log exceeds this limit, Datadog will truncate the log at 256kB. 
+
 :::
 
 ## View metrics
