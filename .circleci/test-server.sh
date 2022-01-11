@@ -94,6 +94,13 @@ IP.1 = 127.0.0.1'
 	cd "$CUR_DIR"
 }
 
+webhook_tests_check_root() {
+	if [ $EUID != 0 ]; then
+		echo -e "webhook tests require root (in order to trust certificate authority)."
+		exit 1
+	fi
+}
+
 combine_all_hpc_reports() {
 	combined_file="${OUTPUT_FOLDER}/graphql-engine.tix"
 	combined_file_intermediate="${OUTPUT_FOLDER}/hpc/graphql-engine-combined-intermediate.tix"
@@ -196,13 +203,6 @@ TIX_FILE_INDEX="1"
 TIX_FILES=""
 
 cd $PYTEST_ROOT
-
-# TODO(swann): false if not root
-RUN_WEBHOOK_TESTS=true
-if [ $EUID != 0 ]; then
-	echo -e "SKIPPING webhook based tests, as \nroot permission is required for running webhook tests (inorder to trust certificate authority)."
-	RUN_WEBHOOK_TESTS=false
-fi
 
 for port in 8080 8081 9876 5592 5000 5001 5594; do
 	fail_if_port_busy $port
@@ -879,119 +879,118 @@ remote-schema-https)
 	;;
 
 post-webhook)
-	if [ "$RUN_WEBHOOK_TESTS" == "true" ]; then
-		TEST_TYPE="post-webhook"
-		echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH ADMIN SECRET & WEBHOOK (POST) #########################>\n"
+	webhook_tests_check_root
 
-		export HASURA_GRAPHQL_AUTH_HOOK="https://localhost:9090/"
-		export HASURA_GRAPHQL_AUTH_HOOK_MODE="POST"
-		export HASURA_GRAPHQL_ADMIN_SECRET="HGE$RANDOM$RANDOM"
-		init_ssl
+	TEST_TYPE="post-webhook"
+	echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH ADMIN SECRET & WEBHOOK (POST) #########################>\n"
 
-		start_multiple_hge_servers
+	export HASURA_GRAPHQL_AUTH_HOOK="https://localhost:9090/"
+	export HASURA_GRAPHQL_AUTH_HOOK_MODE="POST"
+	export HASURA_GRAPHQL_ADMIN_SECRET="HGE$RANDOM$RANDOM"
+	init_ssl
 
-		python3 webhook.py 9090 "$OUTPUT_FOLDER/ssl/webhook-key.pem" "$OUTPUT_FOLDER/ssl/webhook.pem" >"$OUTPUT_FOLDER/webhook.log" 2>&1 &
-		WH_PID=$!
-		wait_for_port 9090
+	start_multiple_hge_servers
 
-		run_pytest_parallel --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --hge-webhook="$HASURA_GRAPHQL_AUTH_HOOK"
+	python3 webhook.py 9090 "$OUTPUT_FOLDER/ssl/webhook-key.pem" "$OUTPUT_FOLDER/ssl/webhook.pem" >"$OUTPUT_FOLDER/webhook.log" 2>&1 &
+	WH_PID=$!
+	wait_for_port 9090
 
-		kill_hge_servers
-	fi
+	run_pytest_parallel --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --hge-webhook="$HASURA_GRAPHQL_AUTH_HOOK"
+
+	kill_hge_servers
 	;;
 
 webhook-request-context)
-	if [ "$RUN_WEBHOOK_TESTS" == "true" ]; then
-		echo -e "\n$(time_elapsed): <########## TEST WEBHOOK RECEIVES REQUEST DATA AS CONTEXT #########################>\n"
-		TEST_TYPE="webhook-request-context"
-		export HASURA_GRAPHQL_AUTH_HOOK="http://localhost:5594/"
-		export HASURA_GRAPHQL_AUTH_HOOK_MODE="POST"
-		export HASURA_GRAPHQL_ADMIN_SECRET="HGE$RANDOM$RANDOM"
+	webhook_tests_check_root
 
-		run_hge_with_args serve
-		wait_for_port 8080
+	echo -e "\n$(time_elapsed): <########## TEST WEBHOOK RECEIVES REQUEST DATA AS CONTEXT #########################>\n"
+	TEST_TYPE="webhook-request-context"
+	export HASURA_GRAPHQL_AUTH_HOOK="http://localhost:5594/"
+	export HASURA_GRAPHQL_AUTH_HOOK_MODE="POST"
+	export HASURA_GRAPHQL_ADMIN_SECRET="HGE$RANDOM$RANDOM"
 
-		pytest -s -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --hge-webhook="$HASURA_GRAPHQL_AUTH_HOOK" --test-webhook-request-context test_webhook_request_context.py
+	run_hge_with_args serve
+	wait_for_port 8080
 
-		kill_hge_servers
-	fi
+	pytest -s -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --hge-webhook="$HASURA_GRAPHQL_AUTH_HOOK" --test-webhook-request-context test_webhook_request_context.py
+
+	kill_hge_servers
 	;;
 
 get-webhook)
-	if [ "$RUN_WEBHOOK_TESTS" == "true" ]; then
-		echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH ADMIN SECRET & WEBHOOK (GET) #########################>\n"
-		TEST_TYPE="get-webhook"
-		export HASURA_GRAPHQL_AUTH_HOOK="https://localhost:9090/"
-		export HASURA_GRAPHQL_AUTH_HOOK_MODE="GET"
-		export HASURA_GRAPHQL_ADMIN_SECRET="HGE$RANDOM$RANDOM"
-		init_ssl
+	webhook_tests_check_root
 
-		start_multiple_hge_servers
+	echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH ADMIN SECRET & WEBHOOK (GET) #########################>\n"
+	TEST_TYPE="get-webhook"
+	export HASURA_GRAPHQL_AUTH_HOOK="https://localhost:9090/"
+	export HASURA_GRAPHQL_AUTH_HOOK_MODE="GET"
+	export HASURA_GRAPHQL_ADMIN_SECRET="HGE$RANDOM$RANDOM"
+	init_ssl
 
-		python3 webhook.py 9090 "$OUTPUT_FOLDER/ssl/webhook-key.pem" "$OUTPUT_FOLDER/ssl/webhook.pem" >"$OUTPUT_FOLDER/webhook.log" 2>&1 &
-		WH_PID=$!
-		wait_for_port 9090
+	start_multiple_hge_servers
 
-		run_pytest_parallel --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --hge-webhook="$HASURA_GRAPHQL_AUTH_HOOK"
+	python3 webhook.py 9090 "$OUTPUT_FOLDER/ssl/webhook-key.pem" "$OUTPUT_FOLDER/ssl/webhook.pem" >"$OUTPUT_FOLDER/webhook.log" 2>&1 &
+	WH_PID=$!
+	wait_for_port 9090
 
-		kill_hge_servers
-	fi
+	run_pytest_parallel --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --hge-webhook="$HASURA_GRAPHQL_AUTH_HOOK"
+
+	kill_hge_servers
 	;;
 
 insecure-webhook)
-	if [ "$RUN_WEBHOOK_TESTS" == "true" ]; then
-		echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH ADMIN SECRET & HTTPS INSECURE WEBHOOK (GET) ########>\n"
-		TEST_TYPE="insecure-webhook"
-		export HASURA_GRAPHQL_AUTH_HOOK="https://localhost:9090/"
-		export HASURA_GRAPHQL_AUTH_HOOK_MODE="GET"
-		export HASURA_GRAPHQL_ADMIN_SECRET="HGE$RANDOM$RANDOM"
-		init_ssl
-		rm /etc/ssl/certs/webhook.crt
-		update-ca-certificates
+	webhook_tests_check_root
 
-		run_hge_with_args serve
-		wait_for_port 8080
+	echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH ADMIN SECRET & HTTPS INSECURE WEBHOOK (GET) ########>\n"
+	TEST_TYPE="insecure-webhook"
+	export HASURA_GRAPHQL_AUTH_HOOK="https://localhost:9090/"
+	export HASURA_GRAPHQL_AUTH_HOOK_MODE="GET"
+	export HASURA_GRAPHQL_ADMIN_SECRET="HGE$RANDOM$RANDOM"
+	init_ssl
+	rm /etc/ssl/certs/webhook.crt
+	update-ca-certificates
 
-		echo -e "running webhook"
-		python3 webhook.py 9090 "$OUTPUT_FOLDER/ssl/webhook-key.pem" "$OUTPUT_FOLDER/ssl/webhook.pem" &
-		WH_PID=$!
-		echo -e "webhook pid $WH_PID"
-		wait_for_port 9090
+	run_hge_with_args serve
+	wait_for_port 8080
 
-		pytest -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --hge-webhook="$HASURA_GRAPHQL_AUTH_HOOK" --test-webhook-insecure test_webhook_insecure.py
+	echo -e "running webhook"
+	python3 webhook.py 9090 "$OUTPUT_FOLDER/ssl/webhook-key.pem" "$OUTPUT_FOLDER/ssl/webhook.pem" &
+	WH_PID=$!
+	echo -e "webhook pid $WH_PID"
+	wait_for_port 9090
 
-		kill_hge_servers
-	fi
+	pytest -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --hge-webhook="$HASURA_GRAPHQL_AUTH_HOOK" --test-webhook-insecure test_webhook_insecure.py
+
+	kill_hge_servers
 	;;
 
 insecure-webhook-with-admin-secret)
-	if [ "$RUN_WEBHOOK_TESTS" == "true" ]; then
-		echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH ADMIN_SECRET & HTTPS INSECURE WEBHOOK WITH ADMIN SECRET (POST) ########>\n"
-		TEST_TYPE="insecure-webhook-with-admin-secret"
-		export HASURA_GRAPHQL_AUTH_HOOK="https://localhost:9090/"
-		export HASURA_GRAPHQL_AUTH_HOOK_MODE="POST"
-		export HASURA_GRAPHQL_ADMIN_SECRET="HGE$RANDOM$RANDOM"
-		init_ssl
-		rm /etc/ssl/certs/webhook.crt
-		update-ca-certificates
+	webhook_tests_check_root
 
-		run_hge_with_args serve
-		wait_for_port 8080
+	echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH ADMIN_SECRET & HTTPS INSECURE WEBHOOK WITH ADMIN SECRET (POST) ########>\n"
+	TEST_TYPE="insecure-webhook-with-admin-secret"
+	export HASURA_GRAPHQL_AUTH_HOOK="https://localhost:9090/"
+	export HASURA_GRAPHQL_AUTH_HOOK_MODE="POST"
+	export HASURA_GRAPHQL_ADMIN_SECRET="HGE$RANDOM$RANDOM"
+	init_ssl
+	rm /etc/ssl/certs/webhook.crt
+	update-ca-certificates
 
-		python3 webhook.py 9090 "$OUTPUT_FOLDER/ssl/webhook-key.pem" "$OUTPUT_FOLDER/ssl/webhook.pem" >"$OUTPUT_FOLDER/webhook.log" 2>&1 &
-		WH_PID=$!
-		echo -e "webhook pid $WH_PID"
-		wait_for_port 9090
+	run_hge_with_args serve
+	wait_for_port 8080
 
-		pytest -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --hge-webhook="$HASURA_GRAPHQL_AUTH_HOOK" --test-webhook-insecure test_webhook_insecure.py
+	python3 webhook.py 9090 "$OUTPUT_FOLDER/ssl/webhook-key.pem" "$OUTPUT_FOLDER/ssl/webhook.pem" >"$OUTPUT_FOLDER/webhook.log" 2>&1 &
+	WH_PID=$!
+	echo -e "webhook pid $WH_PID"
+	wait_for_port 9090
 
-		kill_hge_servers
+	pytest -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --hge-webhook="$HASURA_GRAPHQL_AUTH_HOOK" --test-webhook-insecure test_webhook_insecure.py
 
-		kill $WH_PID
-	fi
+	kill_hge_servers
+
+	kill $WH_PID
 	;;
 
-# TODO(swann): guard rest of the tests with RUN_WEBHOOK_TESTS either in each case or at toplevel
 allowlist-queries)
 	# allowlist queries test
 	# unset HASURA_GRAPHQL_AUTH_HOOK
