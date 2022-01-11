@@ -276,6 +276,12 @@ deriving instance
   ) =>
   Eq (InsPermInfo b)
 
+deriving instance
+  ( Backend b,
+    Show (BooleanOperators b (PartialSQLExp b))
+  ) =>
+  Show (InsPermInfo b)
+
 instance
   ( Backend b,
     NFData (BooleanOperators b (PartialSQLExp b))
@@ -383,6 +389,12 @@ deriving instance
   ) =>
   Eq (SelPermInfo b)
 
+deriving instance
+  ( Backend b,
+    Show (BooleanOperators b (PartialSQLExp b))
+  ) =>
+  Show (SelPermInfo b)
+
 instance
   ( Backend b,
     NFData (BooleanOperators b (PartialSQLExp b))
@@ -420,6 +432,12 @@ deriving instance
   ) =>
   Eq (UpdPermInfo b)
 
+deriving instance
+  ( Backend b,
+    Show (BooleanOperators b (PartialSQLExp b))
+  ) =>
+  Show (UpdPermInfo b)
+
 instance
   ( Backend b,
     NFData (BooleanOperators b (PartialSQLExp b))
@@ -453,6 +471,12 @@ deriving instance
     Eq (BooleanOperators b (PartialSQLExp b))
   ) =>
   Eq (DelPermInfo b)
+
+deriving instance
+  ( Backend b,
+    Show (BooleanOperators b (PartialSQLExp b))
+  ) =>
+  Show (DelPermInfo b)
 
 instance
   ( Backend b,

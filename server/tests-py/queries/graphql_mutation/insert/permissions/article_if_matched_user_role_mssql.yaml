@@ -1,0 +1,107 @@
+- description: Upserts article data via GraphQL mutation as user_with_all_perms role
+  url: /v1/graphql
+  status: 200
+  headers:
+    X-Hasura-Role: user_with_all_perms
+    X-Hasura-User-Id: '1'
+  response:
+    data:
+      insert_article:
+        affected_rows: 1
+        returning:
+        - id: 1
+          title: Article 1
+          content: Updated Article 1 content
+          author_id: 1
+  query:
+    query: |
+      mutation insert_article {
+        insert_article (
+          objects: [
+            {
+              id: 1
+              title: "unexpected"
+              content: "Updated Article 1 content"
+              author_id: 1
+            }
+            ],
+          if_matched: {
+            match_columns: id
+            update_columns: [content]
+          }
+        ) {
+          affected_rows
+          returning {
+            id
+            title
+            content
+            author_id
+            }
+          }
+        }
+
+- description: Upserting article data via GraphQL mutation as user role fails without update permissions
+  url: /v1/graphql
+  status: 200
+  headers:
+    X-Hasura-Role: user_with_select_and_insert
+    X-Hasura-User-Id: '1'
+  response:
+      errors:
+      - extensions:
+          path: $.selectionSet.insert_article
+          code: validation-failed
+        message: '"insert_article" has no argument named "if_matched"'
+  query:
+    query: |
+      mutation insert_article {
+        insert_article (
+          objects: [
+            {
+              id: 1
+              title: "unexpected"
+              content: "Updated Article 1 content"
+              author_id: 1
+            }
+            ],
+          if_matched: {
+            match_columns: id
+            update_columns: [content]
+          }
+        ) {
+          affected_rows
+          }
+        }
+
+- description: Upserting article data via GraphQL mutation as user role fails without select permissions
+  url: /v1/graphql
+  status: 200
+  headers:
+    X-Hasura-Role: user_with_update_and_insert
+    X-Hasura-User-Id: '1'
+  response:
+      errors:
+      - extensions:
+          path: $.selectionSet.insert_article
+          code: validation-failed
+        message: '"insert_article" has no argument named "if_matched"'
+  query:
+    query: |
+      mutation insert_article {
+        insert_article (
+          objects: [
+            {
+              id: 1
+              title: "unexpected"
+              content: "Updated Article 1 content"
+              author_id: 1
+            }
+            ],
+          if_matched: {
+            match_columns: id
+            update_columns: [content]
+          }
+        ) {
+          affected_rows
+          }
+        }
