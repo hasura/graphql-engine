@@ -11,11 +11,11 @@
 (Add entries below in the order of server, console, cli, docs, others)
 
 - server: extend support for insert mutations to tables without primary key constraint in a MSSQL backend
-- cli: migrate and seed subcommands has an option in prompt to choose and apply operation on all available databases
 - server: fix parsing FLOAT64s in scientific notation and non-finite ones in BigQuery
 - server: extend support for the `min`/`max` aggregates to all comparable types in BigQuery
 - cli: migrate and seed subcommands has an option in prompt to choose and apply operation on all available databases
 - cli: fix `metadata diff --type json | unified-json` behaving incorrectly and showing diff in YAML format.
+- cli: fix regression in `migrate create` command (#7971)
 
 ## v2.1.1
 
