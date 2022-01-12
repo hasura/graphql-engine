@@ -235,6 +235,12 @@ export type Partition = {
 
 export type ColumnAction = 'add' | 'modify';
 
+export type DependentSQLGenerator = (
+  schemaName: string,
+  tableName: string,
+  columnName: string
+) => { upSql: string; downSql: string };
+
 export interface FrequentlyUsedColumn {
   name: string;
   validFor: ColumnAction[];
@@ -243,11 +249,7 @@ export interface FrequentlyUsedColumn {
   primary?: boolean;
   default?: string;
   defaultText?: string;
-  dependentSQLGenerator?: (
-    schemaName: string,
-    tableName: string,
-    columnName: string
-  ) => { upSql: string; downSql: string };
+  dependentSQLGenerator?: DependentSQLGenerator;
   minPGVersion?: number;
 }
 
