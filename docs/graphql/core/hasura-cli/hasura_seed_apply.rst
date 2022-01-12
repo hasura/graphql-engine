@@ -28,7 +28,7 @@ Examples
     hasura seed apply
 
     # Apply only a particular file:
-    hasura seed apply --file seeds/1234_add_some_seed_data.sql
+    hasura seed apply --file 1234_add_some_seed_data.sql --database-name default
 
 Options
 ~~~~~~~

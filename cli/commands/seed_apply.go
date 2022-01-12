@@ -31,7 +31,7 @@ func newSeedApplyCmd(ec *cli.ExecutionContext) *cobra.Command {
   hasura seed apply
 
   # Apply only a particular file:
-  hasura seed apply --file seeds/1234_add_some_seed_data.sql`,
+  hasura seed apply --file 1234_add_some_seed_data.sql --database-name default`,
 		SilenceUsage: false,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			if err := validateConfigV3Prechecks(cmd, ec); err != nil {
