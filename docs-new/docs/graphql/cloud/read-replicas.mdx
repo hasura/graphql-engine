@@ -105,9 +105,9 @@ X-Hasura-Role: admin
 </TabItem>
 </Tabs>
 
-:::info
+:::info For existing v1.3 projects
 
-For existing v1.3 projects, if you have configured your Postgres instances with replicas; then the replica URLs can be added to Hasura using the following environment variable in your project ENV Vars tab:
+If you have configured your Postgres instances with replicas; then the replica URLs can be added to Hasura using the following environment variable in your project ENV Vars tab:
 
 ```bash
 HASURA_GRAPHQL_READ_REPLICA_URLS=postgres://user:password@replica-host:5432/db
