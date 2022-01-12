@@ -1,6 +1,14 @@
 import React from 'react';
 
-const KnowMoreLink = ({ href, text = 'Know more' }) => (
+interface KnowMoreLinkProps {
+  href: string;
+  text?: string;
+}
+
+const KnowMoreLink: React.VFC<KnowMoreLinkProps> = ({
+  href,
+  text = 'Know more',
+}) => (
   <a
     href={href}
     target="_blank"
