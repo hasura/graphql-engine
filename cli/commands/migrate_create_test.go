@@ -64,6 +64,35 @@ var _ = Describe("hasura migrate create (config v3)", func() {
 		}
 	})
 
+	It("can create empty migrations when no data is provided", func() {
+		migrationName := "no_data_migration"
+		sourceName := randomdata.SillyName()
+		session := testutil.Hasura(testutil.CmdOpts{
+			Args: []string{
+				"migrate",
+				"create",
+				migrationName,
+				"--database-name", sourceName,
+			},
+			WorkingDirectory: projectDirectory,
+		})
+		wantKeywordList := []string{
+			"Migrations files created",
+			migrationName,
+			"version",
+		}
+
+		Eventually(session, timeout).Should(Exit(0))
+		for _, keyword := range wantKeywordList {
+			Expect(session.Err.Contents()).Should(ContainSubstring(keyword))
+		}
+		dirs, err := os.ReadDir(filepath.Join(projectDirectory, "migrations", sourceName))
+		Expect(err).To(BeNil())
+		for _, d := range dirs {
+			Expect(d.Name()).Should(ContainSubstring(migrationName))
+		}
+	})
+
 	It("can create migrations for database that is not connected to server", func() {
 		migrationName := "create_schema_testing"
 		sourceName := randomdata.SillyName()
