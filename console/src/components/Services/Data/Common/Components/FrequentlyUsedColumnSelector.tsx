@@ -27,18 +27,18 @@ const getFreqUsedColDisplayInfo = (c: FrequentlyUsedColumn) => {
 };
 
 interface FrequentlyUsedColumnSelectorProps {
-  onSelect: any;
-  action: ColumnAction | null;
-  dispatch: Dispatch | null;
+  onSelect: (column: FrequentlyUsedColumn) => any;
   postgresVersion: string | null;
+  action?: ColumnAction | null;
+  dispatch?: Dispatch | null;
 }
 
-const FrequentlyUsedColumnSelector = ({
+const FrequentlyUsedColumnSelector: React.VFC<FrequentlyUsedColumnSelectorProps> = ({
   onSelect,
+  postgresVersion,
   action = null,
   dispatch = null,
-  postgresVersion,
-}: FrequentlyUsedColumnSelectorProps) => {
+}) => {
   const frequentlyUsedColumnsOptions = frequentlyUsedColumns
     .filter(fuc => !action || fuc.validFor.includes(action))
     .filter(col =>
