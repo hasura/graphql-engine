@@ -59,6 +59,19 @@ By default, it shows changes between the exported metadata file and server metad
   # Diff metadata on a different Hasura instance:
   hasura metadata diff --endpoint "<endpoint>"`,
 		Args: cobra.MaximumNArgs(2),
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			if len(opts.DiffType) > 0 {
+				optsDiffType := DiffType(opts.DiffType)
+				diffTypes := []DiffType{DifftypeJSON, DifftypeYAML, DifftypeUnifiedJSON, DifftypeUnifiedYAML}
+				for _, diffType := range diffTypes {
+					if optsDiffType == diffType {
+						return nil
+					}
+				}
+				return fmt.Errorf("metadata diff doesn't support difftype %s", optsDiffType)
+			}
+			return nil
+		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			opts.Args = args
 			opts.DisableColor = ec.NoColor
@@ -68,7 +81,7 @@ By default, it shows changes between the exported metadata file and server metad
 
 	f := metadataDiffCmd.Flags()
 
-	f.StringVar(&opts.DiffType, "type", "", fmt.Sprintf(`specify a type of diff [allowed values: %v, %v, %v]`, DifftypeUnifiedJSON, DifftypeYAML, DifftypeJSON))
+	f.StringVar(&opts.DiffType, "type", "", fmt.Sprintf(`specify a type of diff [allowed values: %v,%v, %v, %v]`, DifftypeUnifiedJSON, DifftypeUnifiedYAML, DifftypeYAML, DifftypeJSON))
 
 	return metadataDiffCmd
 }
@@ -84,6 +97,7 @@ func (o *MetadataDiffOptions) Run() error {
 type DiffType string
 
 const DifftypeUnifiedJSON DiffType = "unified-json"
+const DifftypeUnifiedYAML DiffType = "unified-yaml"
 const DifftypeYAML DiffType = "yaml"
 const DifftypeJSON DiffType = "json"
 
@@ -130,29 +144,30 @@ func printGeneratedMetadataFileDiffBetweenProjectDirectories(opts printGenerated
 
 	switch opts.diffType {
 	case DifftypeJSON:
-		newJson, err := goyaml.YAMLToJSON(newYaml)
+		newJson, err := convertYamlToJsonWithIndent(newYaml)
 		if err != nil {
 			return fmt.Errorf("cannot unmarshal local metadata to json: %w", err)
 		}
-		oldJson, err := goyaml.YAMLToJSON(oldYaml)
+		oldJson, err := convertYamlToJsonWithIndent(oldYaml)
 		if err != nil {
 			return fmt.Errorf("cannot unmarshal server metadata to json: %w", err)
 		}
-		var newJsonBuf, oldJsonBuf bytes.Buffer
-		err = json.Indent(&newJsonBuf, newJson, "", "  ")
-		if err != nil {
-			return fmt.Errorf("cannot indent server localmetadata to json: %w", err)
-		}
-		err = json.Indent(&oldJsonBuf, oldJson, "", "  ")
-		if err != nil {
-			return fmt.Errorf("cannot indent server metadata to json: %w", err)
-		}
 
-		return printMyersDiff(string(newYaml), string(oldYaml), opts.toFriendlyName, opts.fromFriendlyName, opts.writer, opts.disableColor)
+		return printMyersDiff(string(newJson), string(oldJson), opts.toFriendlyName, opts.fromFriendlyName, opts.writer, opts.disableColor)
 	case DifftypeYAML:
 		return printMyersDiff(string(newYaml), string(oldYaml), opts.toFriendlyName, opts.fromFriendlyName, opts.writer, opts.disableColor)
+	case DifftypeUnifiedYAML:
+		printUnifiedDiff(string(newYaml), string(oldYaml), opts.writer)
 	case DifftypeUnifiedJSON:
-		printUnifiedJSONDiff(string(newYaml), string(oldYaml), opts.writer)
+		newJson, err := convertYamlToJsonWithIndent(newYaml)
+		if err != nil {
+			return fmt.Errorf("cannot unmarshal local metadata to json: %w", err)
+		}
+		oldJson, err := convertYamlToJsonWithIndent(oldYaml)
+		if err != nil {
+			return fmt.Errorf("cannot unmarshal server metadata to json: %w", err)
+		}
+		printUnifiedDiff(string(newJson), string(oldJson), opts.writer)
 	}
 	return nil
 }
@@ -170,7 +185,7 @@ func printMyersDiff(before, after, from, to string, writer io.Writer, disableCol
 	return nil
 }
 
-func printUnifiedJSONDiff(before, after string, to io.Writer) {
+func printUnifiedDiff(before, after string, to io.Writer) {
 	diffs := difflib.Diff(strings.Split(before, "\n"), strings.Split(after, "\n"))
 
 	for _, diff := range diffs {
@@ -195,4 +210,17 @@ func checkDir(path string) error {
 		return fmt.Errorf("metadata diff only works with folder but got file %s", path)
 	}
 	return nil
+}
+
+func convertYamlToJsonWithIndent(yamlByt []byte) ([]byte, error) {
+	jsonByt, err := goyaml.YAMLToJSON(yamlByt)
+	if err != nil {
+		return nil, fmt.Errorf("cannot convert yaml to json: %w", err)
+	}
+	var jsonBuf bytes.Buffer
+	err = json.Indent(&jsonBuf, jsonByt, "", "  ")
+	if err != nil {
+		return nil, fmt.Errorf("cannot indent json: %w", err)
+	}
+	return jsonBuf.Bytes(), nil
 }
