@@ -83,17 +83,17 @@ this period.**
 
 ## Post-update steps
 
--   As with most major updates, we would recommend you to monitor and
+-  As with most major updates, we would recommend you to monitor and
     ensure all functionalities of your project are working as expected
     post the update and the update did not cause any unexpected changes.
     Do get in touch with us in case you notice anything unexpected.
--   You can choose to unset the
+-  You can choose to unset the
     `HASURA_GRAPHQL_V1_BOOLEAN_NULL_COLLAPSE` env var that was added to
     your project during the update to preserve a `v1.3` behaviour that
     was modified in `v2.0`. [See details](/graphql/core/guides/upgrade-hasura-v2.mdx#hasura-v2-null-where-change).
     We recommend moving to the new behaviour by unsetting the env var
     after verifying your project is not impacted by the change.
--   Check the [Post update steps](/graphql/core/guides/upgrade-hasura-v2.mdx#hasura-v1-to-v2-post-update-steps)
+-  Check the [Post update steps](/graphql/core/guides/upgrade-hasura-v2.mdx#hasura-v1-to-v2-post-update-steps)
     section of the core updating to v2.0 guide for other changes you
     should make post your project update.
 
@@ -139,31 +139,31 @@ support immediately for assistance.
 
 ###### Sub-tasks:
 
--   Enable cloud maintenance mode
--   Ensure infrastructure for update is available
+-  Enable cloud maintenance mode
+-  Ensure infrastructure for update is available
 
 ###### On Failure:
 
--   Disable cloud maintenance mode
--   **Project stays in v1.3**
+-  Disable cloud maintenance mode
+-  **Project stays in v1.3**
 
 ##### Step 1.2: Enabling maintenance mode
 
 ###### Sub-tasks:
 
--   Set `HASURA_GRAPHQL_ENABLE_MAINTENANCE_MODE` env var to enable
+-  Set `HASURA_GRAPHQL_ENABLE_MAINTENANCE_MODE` env var to enable
     server maintenance mode
--   Set `HASURA_GRAPHQL_V1_BOOLEAN_NULL_COLLAPSE` env var to `true` to
+-  Set `HASURA_GRAPHQL_V1_BOOLEAN_NULL_COLLAPSE` env var to `true` to
     maintain `v1.3` behaviour for `null` values in `where` filters.
     [(Know more)](/graphql/core/guides/upgrade-hasura-v2.mdx#hasura-v2-behaviour-changes)
 
 ###### On Failure:
 
--   Unset `HASURA_GRAPHQL_V1_BOOLEAN_NULL_COLLAPSE` env var
--   Unset `HASURA_GRAPHQL_ENABLE_MAINTENANCE_MODE` env var to disable
+-  Unset `HASURA_GRAPHQL_V1_BOOLEAN_NULL_COLLAPSE` env var
+-  Unset `HASURA_GRAPHQL_ENABLE_MAINTENANCE_MODE` env var to disable
     server maintenance mode
--   Disable cloud maintenance mode
--   **Project stays in v1.3**
+-  Disable cloud maintenance mode
+-  **Project stays in v1.3**
 
 #### Step 2: Updating project
 
@@ -171,92 +171,92 @@ support immediately for assistance.
 
 ###### Sub-tasks:
 
--   Take a backup of server metadata from user database & move metadata
+-  Take a backup of server metadata from user database & move metadata
     to cloud metadata database
 
 ###### On Failure:
 
--   Unset `HASURA_GRAPHQL_V1_BOOLEAN_NULL_COLLAPSE` env var
--   Unset `HASURA_GRAPHQL_ENABLE_MAINTENANCE_MODE` env var to disable
+-  Unset `HASURA_GRAPHQL_V1_BOOLEAN_NULL_COLLAPSE` env var
+-  Unset `HASURA_GRAPHQL_ENABLE_MAINTENANCE_MODE` env var to disable
     server maintenance mode
--   Disable cloud maintenance mode
--   **Project stays in v1.3**
+-  Disable cloud maintenance mode
+-  **Project stays in v1.3**
 
 ##### Step 2.2: Creating v2.0 instance
 
 ###### Sub-tasks:
 
--   Create `v2.0` instance
--   Start routing requests to `v2.0` instance
+-  Create `v2.0` instance
+-  Start routing requests to `v2.0` instance
 
 ###### On Failure:
 
--   Start routing requests back to `v1.3` instance
--   Unset `HASURA_GRAPHQL_ENABLE_MAINTENANCE_MODE` env var to disable
+-  Start routing requests back to `v1.3` instance
+-  Unset `HASURA_GRAPHQL_ENABLE_MAINTENANCE_MODE` env var to disable
     server maintenance mode
--   Disable cloud maintenance mode
--   **Project stays in v1.3**
+-  Disable cloud maintenance mode
+-  **Project stays in v1.3**
 
 ##### Step 2.3: Migrating pending events, async actions data
 
 ###### Sub-tasks:
 
--   Send signal to shutdown `v1.3` instance
--   Wait for `v1.3` to gracefully shutdown after completing processing
+-  Send signal to shutdown `v1.3` instance
+-  Wait for `v1.3` to gracefully shutdown after completing processing
     of any in-flight events
--   Migrate pending events, async actions data to cloud metadata
+-  Migrate pending events, async actions data to cloud metadata
     database
 
 ###### On Failure:
 
--   Restart `v1.3` instance
--   Start routing requests back to `v1.3` instance
--   Unset `HASURA_GRAPHQL_ENABLE_MAINTENANCE_MODE` env var to disable
+-  Restart `v1.3` instance
+-  Start routing requests back to `v1.3` instance
+-  Unset `HASURA_GRAPHQL_ENABLE_MAINTENANCE_MODE` env var to disable
     server maintenance mode
--   Disable cloud maintenance mode
--   **Project stays in v1.3**
+-  Disable cloud maintenance mode
+-  **Project stays in v1.3**
 
-##### Step 2.4: Migrating processed events, async actions data
+##### Step 2.4: Migrating processed events, async actions data {#v2-update-migrate-invocation-logs}
 
 ###### Sub-tasks:
 
--   Migrate invocation logs of processed events, async actions to cloud
+-  Migrate invocation logs of processed events, async actions to cloud
     metadata database
 
 ###### On Failure:
 
--   **No action taken. Job continues to next task**
--   Invocation logs of already processed events, async actions are not
+-  **No action taken. Job continues to next task**
+-  Invocation logs of already processed events, async actions are not
     migrated. Contact support to assist with a manual migration of the
     logs if needed
 
 #### Step 3: Validating update
 
-##### Step 3.1: Disabling maintenance mode
+##### Step 3.1: Disabling maintenance mode {#v2-update-disable-maintenance-mode}
 
 ###### Sub-tasks:
 
--   Unset `HASURA_GRAPHQL_ENABLE_MAINTENANCE_MODE` env var to disable
+-  Unset `HASURA_GRAPHQL_ENABLE_MAINTENANCE_MODE` env var to disable
     server maintenance mode
--   Disable cloud maintenance mode
+-  Disable cloud maintenance mode
 
 ###### On Failure:
 
--   **No action taken. Job continues to next task**
--   Server maintenance mode can be disabled manually by setting
+-  **No action taken. Job continues to next task**
+-  Server maintenance mode can be disabled manually by setting
     `HASURA_GRAPHQL_ENABLE_MAINTENANCE_MODE` env var to `false`
--   Contact support if your project is in an unexpected state
+-  Contact support if your project is in an unexpected state
 
-##### Step 3.2: Check metadata consistency
+##### Step 3.2: Check metadata consistency {#v2-update-check-consistency}
 
 ###### Sub-tasks:
 
--   Check if metadata is consistent
+-  Check if metadata is consistent
 
 ###### On Failure:
 
--   **No action taken. Job continues to next task**
--   Check your project metadata status on the console *(Settings (⚙) ->
+-  **No action taken. Job continues to next task**
+-  Check your project metadata status on the console *(Settings (⚙) ->
     Metadata status)* and attempt reloading metadata if there is an
     unexpected inconsistency reported. Contact support if the
     inconsistency doesn't go away on metadata reload.

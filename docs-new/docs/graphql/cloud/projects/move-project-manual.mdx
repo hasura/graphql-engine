@@ -51,7 +51,7 @@ See [deleting projects](/graphql/cloud/projects/delete.mdx) to delete the earlie
 
 ## Optional steps
 
--   If you are using Hasura migrations on your project, please mark all
+-  If you are using Hasura migrations on your project, please mark all
     existing migrations as applied on the new project using the
     following Hasura CLI command:
 
@@ -59,10 +59,10 @@ See [deleting projects](/graphql/cloud/projects/delete.mdx) to delete the earlie
     hasura migrate apply --skip-execution --endpoint <new-project-endpoint> --admin-secret <new-project-admin-secret> --all-databases
     ```
 
--   You can [rename](/graphql/cloud/projects/details.mdx) your new project to the same name
+-  You can [rename](/graphql/cloud/projects/details.mdx#rename-project) your new project to the same name
     as the earlier project if you wish.
 
--   If you haven't renamed your new project or set up a
+-  If you haven't renamed your new project or set up a
     [custom domain](/graphql/cloud/projects/domains.mdx) for your project, you might
     want to update any clients consuming the GraphQL API to point to the
     new project's GraphQL endpoint.
@@ -76,7 +76,7 @@ update the DNS entries for your custom domain to the new project to have
 a seamless transfer of traffic to the new project.
 
 If you simply want to avoid updating your clients with the new project's
-API endpoint, you can simply [rename](/graphql/cloud/projects/details.mdx) your new project
+API endpoint, you can simply [rename](/graphql/cloud/projects/details.mdx#rename-project) your new project
 with the same name as the earlier project. This will cause a short
 downtime of your API after you delete your old project until you rename
 the new one.
@@ -86,9 +86,9 @@ the new one.
 You will lose the following data from your earlier project in the
 process:
 
--   all existing scheduled events
--   all existing async actions
--   past invocation logs of cron triggers
+-  all existing scheduled events
+-  all existing async actions
+-  past invocation logs of cron triggers
 
 If you would like these to be transferred to the new project as well
 please get in touch with support regarding this before deleting the old

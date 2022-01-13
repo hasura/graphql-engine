@@ -192,19 +192,19 @@ sources.
 The metadata on the server is reloaded and project health is verified
 before finalizing the update.
 
-## Things to check before running your first deployment
+## Things to check before running your first deployment {#github-integration-pre-checks}
 
 You need to ensure the your Cloud project has been appropriately set up
 to execute the deployment.
 
--   Ensure all the required Hasura config related and any other custom
+-  Ensure all the required Hasura config related and any other custom
     ENV vars that might be used in the metadata are added to your Cloud
     project as well.
--   Ensure that you have connected the required database(s) with the
+-  Ensure that you have connected the required database(s) with the
     right name and connection params as you have in the metadata to the
     Cloud project.
 
-## Troubleshooting Failures
+## Troubleshooting Failures {#github-integration-troubleshooting}
 
 If a deployment fails, depending on the kind of error, you can fix it by
 retrying the deployment by either updating your metadata and migrations
@@ -216,47 +216,47 @@ in the deployment sub-tasks:
 
 ### Error parsing metadata
 
--   Nothing has been modified on your project yet so there will be no
+-  Nothing has been modified on your project yet so there will be no
     service impact.
--   Typically happens due to some issue with the metadata directory
+-  Typically happens due to some issue with the metadata directory
     structure or the format of the metadata files.
--   Check the reported error message and fix the issues in the metadata.
+-  Check the reported error message and fix the issues in the metadata.
     See [metadata format](/graphql/core/migrations/reference/metadata-format.mdx).
--   Push the fix to GitHub to redeploy.
+-  Push the fix to GitHub to redeploy.
 
 ### Error parsing migrations
 
--   Nothing has been modified on your project yet so there will be no
+-  Nothing has been modified on your project yet so there will be no
     service impact.
--   Typically happens due to some issue with the migration directory
+-  Typically happens due to some issue with the migration directory
     structure or the format of the migration files.
--   Check the reported error message and fix the issues in the
+-  Check the reported error message and fix the issues in the
     migrations. See [migrations format](/graphql/core/migrations/reference/migration-file-format.mdx).
--   Push the fix to GitHub to redeploy.
+-  Push the fix to GitHub to redeploy.
 
 ### Error applying metadata
 
--   Nothing has been modified on your project yet so there will be no
+-  Nothing has been modified on your project yet so there will be no
     service impact.
--   Typically happens due to some invalid metadata (e.g. due to type
+-  Typically happens due to some invalid metadata (e.g. due to type
     mismatches, missing required keys, etc.) trying to be applied.
--   Check the reported error message and fix the issues in the metadata.
+-  Check the reported error message and fix the issues in the metadata.
     See [metadata format](/graphql/core/migrations/reference/metadata-format.mdx).
--   Push the fix to GitHub to redeploy.
+-  Push the fix to GitHub to redeploy.
 
 ### Error applying migrations
 
--   As your metadata has already been applied but applying your
+-  As your metadata has already been applied but applying your
     migrations have failed, your project might be in an unhealthy state.
     If your migrations and metadata had only incremental changes, i.e.
     no existing objects were modified, you likely won’t have any service
     impact because existing parts of your metadata are likely to be
     still valid and your existing functionality will be working as it
     were.
--   Look at the underlying database error. Make the appropriate fix
+-  Look at the underlying database error. Make the appropriate fix
     depending on the error and redeploy.
--   Some common errors:
-    -   <em>source with name “default” is inconsistent</em>
+-  Some common errors:
+    -  <em>source with name “default” is inconsistent</em>
 
         In this situation, most likely either the target project doesn't
         have the required database connected or the ENV VARS or the
@@ -266,7 +266,7 @@ in the deployment sub-tasks:
         To fix this, use the same ENV VARS and connect the database with
         the same name in both your projects.
 
-    -   `“relation '<some-object>' already exists”`
+    -  `“relation '<some-object>' already exists”`
 
         In such situations when you get errors of tables or other
         objects already existing, this might be because the migration
@@ -280,30 +280,30 @@ in the deployment sub-tasks:
 
 ### Inconsistent metadata after finalizing update
 
--   It is possible your project might be in an unhealthy state depending
+-  It is possible your project might be in an unhealthy state depending
     on which metadata objects are inconsistent and what migrations were
     applied. If your metadata and migrations had only incremental
     changes, i.e. no existing objects were modified, you likely won’t
     have any service impact because existing parts of your metadata are
     likely to be still valid and your existing functionality will be
     working as it were.
--   Check the logs under `Applying Migrations` and `Finalizing Update`.
--   In the situation that the applied metadata applied was indeed
+-  Check the logs under `Applying Migrations` and `Finalizing Update`.
+-  In the situation that the applied metadata applied was indeed
     incorrect, fix the metadata and push a new commit to redeploy.
--   If objects depending on upstream services are inconsistent, e.g.
+-  If objects depending on upstream services are inconsistent, e.g.
     remote schemas, the upstream service might be unavailable or
     inconsistent. In this case please fix them and redeploy the commit.
--   If database objects are inconsistent with errors such as <em>Inconsistent object: no such table/view exists in
+-  If database objects are inconsistent with errors such as <em>Inconsistent object: no such table/view exists in
     source: `<table-name>`</em>, it could be because:
-    -   a migration might have been skipped as the project believes its
+    -  a migration might have been skipped as the project believes its
         already been applied though its not the case. To fix it, mark
         the migration as unapplied using the following Hasura CLI
         command
         `hasura migrate delete --version <migration_version> --server --database-name <database-name> --endpoint <cloud_project_endpoint>`
         and redeploy the commit.
-    -   a migration to create the database objects might be missing
+    -  a migration to create the database objects might be missing
         completely. To fix this create a new migration for creation of
         the missing objects and push a new commit to redeploy.
--   A rollback can be done to the previous functioning state of metadata
+-  A rollback can be done to the previous functioning state of metadata
     by reverting your metadata changes on your branch and then pushing
     to redeploy.

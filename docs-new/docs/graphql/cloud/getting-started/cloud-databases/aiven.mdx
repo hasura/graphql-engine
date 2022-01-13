@@ -21,11 +21,10 @@ database to a Hasura Cloud project.
 
 ## Step 0: Sign up or log in to Hasura Cloud
 
-Navigate to [Hasura
-Cloud](https://cloud.hasura.io/signup/?pg=docs&plcmt=body&cta=navigate-to-hasura-cloud&tech=default)
+Navigate to [Hasura Cloud](https://cloud.hasura.io/signup/?pg=docs&plcmt=body&cta=navigate-to-hasura-cloud&tech=default)
 and sign up or log in.
 
-## Step 1: Create a Hasura Cloud project
+## Step 1: Create a Hasura Cloud project {#create-hasura-project-aiven}
 
 On the Hasura Cloud dashboard, create a new project:
 
@@ -50,7 +49,7 @@ in the next step and then come back here.
   width="700px"
 />
 
-## Step 2: Create a Postgres DB on Aiven (skip if you have an existing DB)
+## Step 2: Create a Postgres DB on Aiven (skip if you have an existing DB) {#create-pg-db-aiven}
 
 Log into the [Aiven console](https://console.aiven.io/login).
 
@@ -127,7 +126,7 @@ Add the Hasura IP address that you copied, click on the `+`:
 
 Then click on `Save changes`.
 
-## Step 4: Get the database connection URL
+## Step 4: Get the database connection URL {#get-db-url-aiven}
 
 The structure of the database connection URL looks as follows:
 
@@ -147,7 +146,7 @@ copy the `Service URI`:
 ## Step 5: Finish connecting the database
 
 Back on Hasura Console, enter the database URL that we retrieved in
-[step 4](/graphql/cloud/getting-started/cloud-databases/aiven.mdx#get-db-url-aiven):
+[step 4](#get-db-url-aiven):
 
 <Thumbnail
   src="/img/graphql/cloud/getting-started/connect-db.png"

@@ -20,7 +20,7 @@ import Thumbnail from "@site/src/components/Thumbnail/Thumbnail";
 
 ## Introduction
 
-Hasura Cloud exposes an [API](/graphql/cloud/api-reference#api-ref-create-preview-app) to create preview apps with metadata and migrations from a branch of a GitHub repo. You can use this API for creating preview Hasura GraphQL Engine instances on pull requests and for previewing a Hasura project with metadata and migrations from a GitHub branch. This can be done either by triggering the API directly from your CI/CD or by using the [hasura-cloud-preview-apps](https://github.com/hasura/hasura-cloud-preview-apps) GitHub action.
+Hasura Cloud exposes an [API](/graphql/cloud/api-reference.mdx#api-ref-create-preview-app) to create preview apps with metadata and migrations from a branch of a GitHub repo. You can use this API for creating preview Hasura GraphQL Engine instances on pull requests and for previewing a Hasura project with metadata and migrations from a GitHub branch. This can be done either by triggering the API directly from your CI/CD or by using the [hasura-cloud-preview-apps](https://github.com/hasura/hasura-cloud-preview-apps) GitHub action.
 
 :::note
 
@@ -159,7 +159,7 @@ Note If you have used `postgresDBConfig` in the creation workflow, make sure tha
 
 ## Using the API manually
 
-If the `hasura/hasura-cloud-preview-apps` GitHub action does not suit your needs, you can also directly contact the [createGitHubPreviewApp](/graphql/cloud/api-reference#api-ref-create-preview-app) API to manually setup preview apps on your GitHub repo.
+If the `hasura/hasura-cloud-preview-apps` GitHub action does not suit your needs, you can also directly contact the [createGitHubPreviewApp](/graphql/cloud/api-reference.mdx#api-ref-create-preview-app) API to manually setup preview apps on your GitHub repo.
 
 ```graphql
 mutation createGitHubPreviewApp {
@@ -214,6 +214,6 @@ Make sure to set the `githubPreviewAppJobID` in the the `id` argument to the Gra
 
 ## How it works?
 
-Hasura cloud exposes the GraphQL mutations [createGitHubPreviewApp](/graphql/cloud/api-reference#api-ref-create-preview-app) that can be triggered programmatically using your personal access token. This mutation creates a Hasura Cloud project with the given set of environment variables and metadata-migrations from a branch of a GitHub repo.
+Hasura cloud exposes the GraphQL mutations [createGitHubPreviewApp](/graphql/cloud/api-reference.mdx#api-ref-create-preview-app) that can be triggered programmatically using your personal access token. This mutation creates a Hasura Cloud project with the given set of environment variables and metadata-migrations from a branch of a GitHub repo.
 
 When the mutation is triggered, Hasura Cloud queues the given preview app for creation. If a preview app with the given name exists for a user, it is cleaned up and metadata and migrations are applied on a fresh preview app. The cleanup is done so that every deployment is declarative and reproducible.

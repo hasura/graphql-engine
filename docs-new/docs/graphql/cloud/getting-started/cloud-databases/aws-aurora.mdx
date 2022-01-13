@@ -21,11 +21,10 @@ Postgres database to a Hasura Cloud project.
 
 ## Step 0: Sign up or log in to Hasura Cloud
 
-Navigate to [Hasura
-Cloud](https://cloud.hasura.io/signup/?pg=docs&plcmt=body&cta=navigate-to-hasura-cloud&tech=default)
+Navigate to [Hasura Cloud](https://cloud.hasura.io/signup/?pg=docs&plcmt=body&cta=navigate-to-hasura-cloud&tech=default)
 and sign up or log in.
 
-## Step 1: Create a Hasura Cloud project
+## Step 1: Create a Hasura Cloud project {#create-hasura-project-aws-rds-aurora}
 
 On the Hasura Cloud dashboard, create a new project:
 
@@ -50,7 +49,7 @@ in the next step and then come back here.
   width="700px"
 />
 
-## Step 2: Create an Aurora DB on AWS RDS (skip if you have an existing DB)
+## Step 2: Create an Aurora DB on AWS RDS (skip if you have an existing DB) {#create-pg-aws-rds-aurora}
 
 Log into the [AWS console](https://console.aws.amazon.com//).
 
@@ -126,7 +125,7 @@ give it the right [Postgres permissions](/graphql/cloud/getting-started/postgres
 
 On the database dashboard, click on `Connectivity & security`. On the
 right, click on the security group that you selected or added in
-[step 2](/graphql/cloud/getting-started/cloud-databases/aws-aurora.mdx#create-pg-aws-rds-aurora).
+[step 2](#create-pg-aws-rds-aurora).
 
 <Thumbnail
   src="/img/graphql/cloud/cloud-dbs/aws/aurora/find-security-group.png"
@@ -177,7 +176,7 @@ Add the Hasura IP address that you copied:
 
 Then click `Save rules`.
 
-## Step 4: Construct the database connection URL
+## Step 4: Construct the database connection URL {#construct-db-url-aurora}
 
 The structure of the database connection URL looks as follows:
 
@@ -193,22 +192,22 @@ On the database dashboard, click on `Connectivity & security`:
   width="1000px"
 />
 
--   `user-name`: If you have a separate database user the user name will
+-  `user-name`: If you have a separate database user the user name will
     be their name. If you didn't specify a user, the default user name
     is `postgres`.
--   `password`: If you have a separate database user, use their
+-  `password`: If you have a separate database user, use their
     password. Otherwise, use the password that you chose when creating
     the database.
--   `public-ip`: On the screenshot above, the `Endpoint` is the public
+-  `public-ip`: On the screenshot above, the `Endpoint` is the public
     IP.
--   `postgres-port`: On the screenshot above you can find it under
+-  `postgres-port`: On the screenshot above you can find it under
     `Port`. The default port for Postgres is `5432`.
--   `db`: The DB is `postgres` by default unless otherwise specified.
+-  `db`: The DB is `postgres` by default unless otherwise specified.
 
 ## Step 5: Finish connecting the database
 
 Back on Hasura Console, enter the database URL that we retrieved in
-[step 4](/graphql/cloud/getting-started/cloud-databases/aws-aurora.mdx#construct-db-url-aurora):
+[step 4](#construct-db-url-aurora):
 
 <Thumbnail
   src="/img/graphql/cloud/getting-started/connect-db.png"
