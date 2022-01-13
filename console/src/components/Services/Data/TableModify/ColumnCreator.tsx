@@ -32,8 +32,16 @@ const useColumnEditor = (dispatch: Dispatch, tableName: string) => {
     colNull: boolean;
     colUnique: boolean;
     colDefault: string;
+    colDependentSQLGenerator: undefined;
   }>(initialColumnEditorState);
-  const { colName, colType, colNull, colUnique, colDefault } = columnState;
+  const {
+    colName,
+    colType,
+    colNull,
+    colUnique,
+    colDefault,
+    colDependentSQLGenerator,
+  } = columnState;
 
   const onSubmit = () => {
     // auto-trim column name
@@ -64,6 +72,7 @@ const useColumnEditor = (dispatch: Dispatch, tableName: string) => {
           colNull,
           colUnique,
           colDefault,
+          colDependentSQLGenerator,
           () => setColumnState(initialColumnEditorState)
         )
       );
