@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Suggested usage:
-# https://github.com/hasura/graphql-engine/blob/master/server/CONTRIBUTING.md#running-the-python-test-suite-on-bigquery
+# https://github.com/hasura/graphql-engine/blob/master/server/py-tests/README.md#running-bigquery-tests
 # https://cloud.google.com/iam/docs/creating-managing-service-accounts#iam-service-accounts-create-rest
 
 project_id=${1}
