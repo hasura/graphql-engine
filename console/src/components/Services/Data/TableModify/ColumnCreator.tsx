@@ -1,32 +1,39 @@
 import React, { useState } from 'react';
+import { Dispatch } from '@/types';
+import { FrequentlyUsedColumn } from '@/dataSources/types';
+import { addColSql } from './ModifyActions';
 import { showErrorNotification } from '../../Common/Notification';
 import gqlPattern, { gqlColumnErrorNotif } from '../Common/GraphQLValidation';
 import ExpandableEditor from '../../../Common/Layout/ExpandableEditor/Editor';
 import CustomInputAutoSuggest from '../../../Common/CustomInputAutoSuggest/CustomInputAutoSuggest';
-
+import type { AutoSuggestSection } from '../../../Common/CustomInputAutoSuggest/CustomInputAutoSuggest';
 import {
   getDataOptions,
   getDefaultFunctionsOptions,
   inferDefaultValues,
 } from '../Common/utils';
-
-import { addColSql } from '../TableModify/ModifyActions';
-
 import FrequentlyUsedColumnSelector from '../Common/Components/FrequentlyUsedColumnSelector';
 import { ColumnTypeSelector } from '../Common/Components/ColumnTypeSelector';
 import { dataSource, isFeatureSupported } from '../../../../dataSources';
 
-const useColumnEditor = (dispatch, tableName) => {
-  const initialState = {
-    colName: '',
-    colType: '',
-    colNull: true,
-    colUnique: false,
-    colDefault: '',
-    colDependentSQLGenerator: null,
-  };
+const initialColumnEditorState = {
+  colName: '',
+  colType: '',
+  colNull: true,
+  colUnique: false,
+  colDefault: '',
+  colDependentSQLGenerator: undefined,
+};
 
-  const [columnState, setColumnState] = useState(initialState);
+const useColumnEditor = (dispatch: Dispatch, tableName: string) => {
+  const [columnState, setColumnState] = useState<{
+    colName: string;
+    colType: string;
+    colNull: boolean;
+    colUnique: boolean;
+    colDefault: string;
+    colDependentSQLGenerator: undefined;
+  }>(initialColumnEditorState);
   const {
     colName,
     colType,
@@ -66,7 +73,7 @@ const useColumnEditor = (dispatch, tableName) => {
           colUnique,
           colDefault,
           colDependentSQLGenerator,
-          () => setColumnState(initialState)
+          () => setColumnState(initialColumnEditorState)
         )
       );
     }
@@ -75,43 +82,41 @@ const useColumnEditor = (dispatch, tableName) => {
   return {
     colName: {
       value: colName,
-      onChange: e => {
-        setColumnState({ ...columnState, colName: e.target.value });
+      onChange: (value: string) => {
+        setColumnState({ ...columnState, colName: value });
       },
     },
     colType: {
       value: colType,
-      onChange: selected => {
-        setColumnState({ ...columnState, colType: selected.value });
+      onChange: (value: string) => {
+        setColumnState({ ...columnState, colType: value });
       },
     },
     colNull: {
       checked: colNull,
-      onChange: e => {
-        setColumnState({ ...columnState, colNull: e.target.checked });
+      onChange: (value: boolean) => {
+        setColumnState({ ...columnState, colNull: value });
       },
     },
     colUnique: {
       checked: colUnique,
-      onChange: e => {
-        setColumnState({ ...columnState, colUnique: e.target.checked });
+      onChange: (value: boolean) => {
+        setColumnState({ ...columnState, colUnique: value });
       },
     },
     colDefault: {
       value: colDefault,
-      onChange: (e, data) => {
-        const { newValue } = data;
-        setColumnState({ ...columnState, colDefault: newValue });
+      onChange: (value: string) => {
+        setColumnState({ ...columnState, colDefault: value });
       },
     },
     frequentlyUsedColumn: {
-      onSelect: fuc => {
+      onSelect: (column: FrequentlyUsedColumn) => {
         setColumnState({
-          ...initialState,
-          colName: fuc.name,
-          colType: fuc.type,
-          colDefault: fuc.default,
-          colDependentSQLGenerator: fuc.dependentSQLGenerator,
+          ...initialColumnEditorState,
+          colName: column.name,
+          colType: column.type,
+          colDefault: column.default ?? '',
         });
       },
     },
@@ -119,7 +124,16 @@ const useColumnEditor = (dispatch, tableName) => {
   };
 };
 
-const ColumnCreator = ({
+interface ColumnCreatorProps {
+  dispatch: Dispatch;
+  tableName: string;
+  dataTypes: string[];
+  validTypeCasts: Record<string, string[]>;
+  columnDefaultFunctions: Record<string, string[]>;
+  postgresVersion: string;
+}
+
+const ColumnCreator: React.VFC<ColumnCreatorProps> = ({
   dispatch,
   tableName,
   dataTypes: restTypes = [],
@@ -140,11 +154,12 @@ const ColumnCreator = ({
   const getColumnNameInput = () => {
     return (
       <input
+        value={colName.value}
+        onChange={e => colName.onChange(e.target.value)}
         placeholder="column name"
         type="text"
-        className={`form-control`}
+        className="form-control"
         data-test="column-name"
-        {...colName}
       />
     );
   };
@@ -161,18 +176,18 @@ const ColumnCreator = ({
         {isFeatureSupported('tables.create.frequentlyUsedColumns') ? (
           <ColumnTypeSelector
             options={columnDataTypes}
-            onChange={colType.onChange}
-            value={columnTypeValueMap[colType.value] || colType.value}
+            onChange={option => colType.onChange(option.value)}
+            value={(columnTypeValueMap as any)[colType.value] || colType.value}
             colIdentifier={0}
-            bsClass={`col-type-${0}`}
+            bsClass="col-type-0"
           />
         ) : (
           <input
             type="text"
-            className={`form-control col-type-${0}`}
+            className="form-control col-type-0"
             onChange={e => {
               e.persist();
-              colType.onChange({ value: e.target.value });
+              colType.onChange(e.target.value);
             }}
             placeholder="column_type"
           />
@@ -187,10 +202,11 @@ const ColumnCreator = ({
         <label className="flex items-center mr-sm">
           <input
             type="checkbox"
+            checked={colNull.checked}
+            onChange={e => colNull.onChange(e.target.checked)}
             style={{ margin: '0' }}
-            className={`legacy-input-fix`}
+            className="legacy-input-fix"
             data-test="nullable-checkbox"
-            {...colNull}
           />
           <span className="ml-xs">Nullable</span>
         </label>
@@ -204,9 +220,10 @@ const ColumnCreator = ({
         <label className="flex items-center mr-sm">
           <input
             type="checkbox"
+            checked={colUnique.checked}
+            onChange={e => colUnique.onChange(e.target.checked)}
             style={{ margin: '0' }}
-            className={`legacy-input-fix`}
-            {...colUnique}
+            className="legacy-input-fix"
             data-test="unique-checkbox"
           />
           <span className="ml-xs">Unique</span>
@@ -216,8 +233,6 @@ const ColumnCreator = ({
   };
 
   const getColumnDefaultInput = () => {
-    let defaultOptions = [];
-
     const getInferredDefaultValues = () =>
       inferDefaultValues(columnDefaultFunctions, validTypeCasts)(colType.value);
 
@@ -226,6 +241,7 @@ const ColumnCreator = ({
         ? columnDefaultFunctions[colType.value]
         : getInferredDefaultValues();
 
+    let defaultOptions: AutoSuggestSection[] = [];
     if (colDefaultFunctions && colDefaultFunctions.length > 0) {
       defaultOptions = getDefaultFunctionsOptions(colDefaultFunctions, 0);
     }
@@ -235,7 +251,8 @@ const ColumnCreator = ({
         placeholder="default value"
         options={defaultOptions}
         className="form-control"
-        {...colDefault}
+        value={colDefault.value}
+        onChange={(_, params) => colDefault.onChange(params.newValue)}
         data-test="default-value"
       />
     );
@@ -245,7 +262,7 @@ const ColumnCreator = ({
     return (
       <FrequentlyUsedColumnSelector
         onSelect={frequentlyUsedColumn.onSelect}
-        action={'modify'}
+        action="modify"
         postgresVersion={postgresVersion}
       />
     );
@@ -272,11 +289,11 @@ const ColumnCreator = ({
 
   return (
     <ExpandableEditor
-      key={'new-col'}
+      key="new-col"
       editorExpanded={expandedContent}
-      property={'add-new-column'}
-      service={'modify-table'}
-      expandButtonText={'Add a new column'}
+      property="add-new-column"
+      service="modify-table"
+      expandButtonText="Add a new column"
       saveFunc={onSubmit}
       isCollapsable
     />

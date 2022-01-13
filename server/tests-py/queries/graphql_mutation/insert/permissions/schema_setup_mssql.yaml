@@ -11,12 +11,6 @@ args:
           [is_registered] bit NOT NULL DEFAULT 0
       );
 
-      INSERT INTO
-          author([name], [is_registered])
-      VALUES
-          ('Author 1', 1),
-          ('Author 2', 0);
-
       CREATE TABLE article (
           id int identity NOT NULL PRIMARY KEY,
           title TEXT,

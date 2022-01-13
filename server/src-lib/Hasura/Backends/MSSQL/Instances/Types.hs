@@ -1,6 +1,8 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
--- | Defines the ''MSSQL' instance of the 'Backend' type class.
+-- | MSSQL Instances Types
+--
+-- Defines a 'Hasura.RQL.Types.Backend.Backend' type class instance for MSSQL.
 module Hasura.Backends.MSSQL.Instances.Types () where
 
 import Data.Aeson

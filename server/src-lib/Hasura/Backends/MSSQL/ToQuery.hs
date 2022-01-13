@@ -1,7 +1,9 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
--- | Convert the simple T-SQL AST to an SQL query, ready to be passed
--- to the odbc package's query/exec functions.
+-- | MSSQL ToQuery
+--
+-- Convert the simple T-SQL AST to an SQL query, ready to be passed to the odbc
+-- package's query/exec functions.
 --
 -- We define a custom prettyprinter with the type 'Printer'.
 --

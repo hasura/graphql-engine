@@ -1,7 +1,7 @@
 # IF YOU CHANGE THIS PLEASE INCREMENT DEVSH_VERSION in `scripts/dev.sh`
 psycopg2-binary
 sqlalchemy
-pytest==4.5.0
+pytest==6.2.5
 pytest-xdist
 requests
 pyyaml

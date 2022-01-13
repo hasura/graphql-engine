@@ -84,6 +84,10 @@ Types of transformations
 ------------------------
 
 You can practically create an arbitrary request using the context available in the Action execution.
+
+Context Variables
+*****************
+
 The context variables available during transformation are:
 
 .. list-table::
@@ -97,6 +101,46 @@ The context variables available during transformation are:
      - Original configured URL
    * - $session_variables
      - Session variables 
+    
+Sample Context
+~~~~~~~~~~~~~~
+
+In this section, you can provide mock ``session variables`` and ``env variables`` to test your transforms.
+Actual environment variables are not resolved during testing transforms as it could expose sensitive information to the UI.
+
+.. rst-class:: api_tabs
+.. tabs::
+
+
+  .. tab:: Console
+
+    Configure an ``env var`` in the action webhook handler.
+
+    .. thumbnail:: /img/graphql/core/actions/transformation-context-vars-0.png
+       :alt: Console action webhook handler
+       :width: 90%
+
+    Add the ``env var`` value to the ``Sample Context`` under ``Sample Env Variables``.
+
+    .. thumbnail:: /img/graphql/core/actions/transformation-context-vars-1.png
+       :alt: Console action context env
+       :width: 90%
+
+    The value should be reflected in the ``{{$base_url}}`` in ``Request Options Transformation``:
+
+    .. thumbnail:: /img/graphql/core/actions/transformation-context-vars-2.png
+       :alt: Console action req options transformation
+       :width: 90%
+
+    ``Session vars`` could also be added to the ``Sample context`` as shown above, 
+    and they could be used like so: ``{{$session_variables['x-hasura-user-id']}}``.
+    The above screen also shows an example of using the session vars from context.
+
+    .. admonition:: Context variables validation error
+
+      Note that if you don't provide mock ``env/session variables`` and test your transform, you would get a UI validation error.
+      Considering this section is only used for testing, ``Create Action`` button will still be usable.
+      When you click on ``Create Action``, any referenced envs are validated at the server without leaking any sensitive information to the UI.
 
 Request body
 ************
@@ -118,14 +162,11 @@ You can use the `Kriti templating language <https://github.com/hasura/kriti-lang
   .. tab:: API
 
     .. code-block:: json
-      :emphasize-lines: 3-6
+      :emphasize-lines: 3
 
       {
         "request_transform": {
-           "body": {
-               "name": "{{$body.input.name}}",
-               "email": "{{$body.input.email}}"
-           }
+           "body": "{\n  \"users\": {\n    \"name\": {{$body.input.arg1.username}},\n    \"password\": {{$body.input.arg1.password}}\n  }\n}",
         }
       }
 
