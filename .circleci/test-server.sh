@@ -1220,7 +1220,7 @@ admin_users = postgres' >pgbouncer/pgbouncer.ini
 # time as we add more backends and tests.
 #
 # https://docs.pytest.org/en/6.2.x/usage.html#specifying-tests-selecting-tests
-# https://github.com/hasura/graphql-engine/blob/master/server/CONTRIBUTING.md#adding-test-support-for-a-new-backend
+# https://github.com/hasura/graphql-engine/blob/master/server/py-tests/README.md#running-bigquery-tests
 #
 backend-mssql)
 	echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH SQL SERVER BACKEND ###########################################>\n"

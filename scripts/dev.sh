@@ -250,7 +250,7 @@ function start_dbs() {
       mysql_start
     ;;
     # bigquery deliberately omitted as its test setup is atypical. See:
-    # https://github.com/hasura/graphql-engine/blob/master/server/CONTRIBUTING.md#running-the-python-test-suite-on-bigquery
+    # https://github.com/hasura/graphql-engine/blob/master/server/py-tests/README.md#running-bigquery-tests
   esac
 }
 
