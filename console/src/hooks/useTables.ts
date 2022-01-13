@@ -1,158 +1,156 @@
-import React from 'react';
-import Endpoints from '@/Endpoints';
-import { useQuery, UseQueryOptions } from 'react-query';
-import {
-  mergeLoadSchemaDataPostgres,
-  mergeDataCitus,
-  mergeDataMssql,
-  mergeDataBigQuery,
-} from '@/components/Services/Data/mergeData';
-import { getRunSqlQuery } from '@/components/Common/utils/v1QueryUtils';
-import { useMetadataTables, useMetadataVersion } from '@/features/MetadataAPI';
+import { useMetadataVersion, useMetadataTables } from '@/features/MetadataAPI';
+import { trimDefaultValue } from '@/components/Services/Data/mergeData';
 import { dataSourceSqlQueries } from '@/features/SqlQueries';
-import { Api } from './apiUtils';
-import { QualifiedTable, TableEntry } from './../metadata/types';
+import type { QualifiedTable, TableEntry } from './../metadata/types';
 import { useAppSelector } from './../store';
-import { Table } from '../dataSources/types';
-import { currentDriver, useDataSource, Driver } from '../dataSources';
+import type { NormalizedTable, TableType } from '../dataSources/types';
+import type { RunSQLResponse } from './types';
+import { currentDriver, Driver } from '../dataSources';
+import { RunSQLQueryOptions, useRunSQL } from './common';
 
-interface FetchTablesArgs {
-  options: { schemas: string[]; tables?: QualifiedTable[] };
-  source: string;
-  headers: Record<string, string>;
-  metadataTables: TableEntry[];
-  driver: Driver;
-}
+type TableQueryOptions<T, N, Data> = RunSQLQueryOptions<
+  [
+    name: N,
+    currentDataSource: string,
+    schemasOrTable: T,
+    metadataVersion: number | undefined
+  ],
+  Data
+>;
 
-const mergeData = (metadataTables: TableEntry[], driver: Driver) => (
-  data: {
-    result: string[];
-  }[]
-) => {
-  if (!data || !data[0] || !data[0].result) return [];
-
-  switch (driver) {
-    case 'postgres':
-      return mergeLoadSchemaDataPostgres(data, metadataTables);
-    case 'citus':
-      return mergeDataCitus(data, metadataTables);
-    case 'mssql':
-      return mergeDataMssql(data, metadataTables);
-    case 'bigquery':
-      return mergeDataBigQuery(data, metadataTables);
-    default:
-      throw new Error(`Unsupported datasource: ${currentDriver}`);
-  }
+type BigQueryMssqlTableResponse = {
+  result: [string, ...string[][]];
 };
 
-const fetchTables = (args: FetchTablesArgs) => {
-  const { options, source, headers, metadataTables, driver } = args;
-  const dataSource = dataSourceSqlQueries[driver];
-
-  const fetchTrackedTableFkQuery = () => {
-    const runSql = dataSource.getFKRelations(options);
-    return getRunSqlQuery(runSql, source, false, true);
-  };
-
-  const fetchTableListQuery = () => {
-    const runSql = dataSource.getFetchTablesListQuery(options);
-    return getRunSqlQuery(runSql, source, false, true);
-  };
-
-  const body = {
-    type: 'bulk',
-    source,
-    args: [
-      fetchTableListQuery(),
-      fetchTrackedTableFkQuery(),
-      getRunSqlQuery(
-        dataSource.primaryKeysInfoSql(options),
-        source,
-        false,
-        true
-      ),
-      getRunSqlQuery(dataSource.uniqueKeysSql(options), source, false, true),
-      getRunSqlQuery(
-        dataSource.checkConstraintsSql(options),
-        source,
-        false,
-        true
-      ),
-    ],
-  };
-
-  return Api.post<Array<{ result: string[] }>, Table[]>(
-    {
-      url: Endpoints.query,
-      headers,
-      body,
-    },
-    mergeData(metadataTables, driver)
-  );
-};
-
-export function useTables(
-  options: { schemas: string[]; tables?: QualifiedTable[] },
-  queryOptions?: Omit<
-    UseQueryOptions<
-      Table[],
-      Error,
-      Table[],
-      ['tables', FetchTablesArgs['options'], number | undefined]
-    >,
-    'queryKey' | 'queryFn'
-  >
+function useTableBase<T extends string[] | QualifiedTable, N, D>(
+  schemasOrTable: T,
+  name: N,
+  transformFn: (
+    driver: Driver
+  ) => (mt?: TableEntry[]) => (d: RunSQLResponse) => D,
+  queryOptions?: TableQueryOptions<T, N, D>
 ) {
+  const dataSource = dataSourceSqlQueries[currentDriver];
+  const sql = () => {
+    return Array.isArray(schemasOrTable)
+      ? dataSource.getFetchTablesListQuery({ schemas: schemasOrTable })
+      : dataSource.getFetchTablesListQuery({ tables: [schemasOrTable] });
+  };
   const source: string = useAppSelector(
     state => state.tables.currentDataSource
   );
-  const headers = useAppSelector(state => state.tables.dataHeaders);
-
-  const { data: metadataTables } = useMetadataTables();
-  const { data: version, isSuccess } = useMetadataVersion();
-
-  const { driver } = useDataSource();
-
-  return useQuery({
-    ...queryOptions,
-    queryKey: ['tables', options, version],
-    queryFn: () =>
-      fetchTables({
-        options,
-        source,
-        headers,
-        metadataTables: metadataTables ?? [],
-        driver,
-      }),
-    enabled: isSuccess && queryOptions?.enabled,
+  const { data: metadataTables, isSuccess } = useMetadataTables();
+  const { data: version } = useMetadataVersion();
+  return useRunSQL({
+    sql,
+    queryKey: [name, source, schemasOrTable, version],
+    transformFn: transformFn(currentDriver)(metadataTables),
+    queryOptions: {
+      ...queryOptions,
+      enabled: isSuccess && queryOptions?.enabled,
+    },
   });
 }
 
-//! Warning: Don't use this hook yet, use useTables above and find the target table in it
-//! This is cos we need to split amount of things fetched at once. If not, this is same as calling useTables
-//! and then finding the table except it is worse cos react query cache for previously fetched tables are not used
-//! The plan is for this hook to work similar to useFunction hook
-export function useTable(
-  table: QualifiedTable,
-  /* UseQueryOptions is generic over Table[] instead Table cos this hooks uses useTables under the hood */
-  queryOptions?: Omit<
-    UseQueryOptions<
-      Table[],
-      Error,
-      Table[],
-      ['tables', FetchTablesArgs['options'], number | undefined]
-    >,
-    'queryKey' | 'queryFn'
+const parseBigQueryMssqlTableResponse = (
+  data: BigQueryMssqlTableResponse,
+  driver: Driver
+) => {
+  const tables: Omit<NormalizedTable, 'is_table_tracked'>[] = [];
+  data.result?.slice(1).forEach(row => {
+    try {
+      tables.push({
+        table_schema: row[0],
+        table_name: row[1],
+        table_type: row[2] as TableType,
+        comment:
+          driver === 'bigquery' ? row[3] : JSON.parse(row[3])[0]?.comment,
+        columns:
+          driver === 'bigquery'
+            ? JSON.parse(row[4])
+            : JSON.parse(row[4])?.map(
+                (columnData: { column_default?: string }) => {
+                  if (columnData?.column_default) {
+                    return {
+                      ...columnData,
+                      column_default: trimDefaultValue(
+                        columnData.column_default
+                      ),
+                    };
+                  }
+                  return columnData;
+                }
+              ) ?? [],
+      });
+    } catch (err) {
+      throw new Error(
+        'Error while passing sql table result, please create an issue'
+      );
+    }
+  });
+  return tables;
+};
+
+const transformTables = (driver: Driver) => (
+  metadataTables: TableEntry[] = []
+) => (data: RunSQLResponse | BigQueryMssqlTableResponse): NormalizedTable[] => {
+  let tables: Omit<NormalizedTable, 'is_table_tracked'>[] = [];
+  if (driver === 'bigquery' || driver === 'mssql') {
+    tables = parseBigQueryMssqlTableResponse(
+      data as BigQueryMssqlTableResponse,
+      driver
+    );
+  } else {
+    tables = JSON.parse(data.result?.[1]?.[0] ?? '[]');
+  }
+  return tables.map(table => ({
+    ...table,
+    is_table_tracked: metadataTables?.some(
+      t =>
+        t.table.name === table.table_name &&
+        t.table.schema === table.table_schema
+    ),
+  }));
+};
+
+const transformFindTables = (table: QualifiedTable) => (driver: Driver) => (
+  metadataTables: TableEntry[] = []
+) => (data: RunSQLResponse): NormalizedTable | null => {
+  return (
+    transformTables(driver)(metadataTables)(data).find(
+      t => t.table_name === table.name && t.table_schema === table.schema
+    ) ?? null
+  );
+};
+
+export function useDataSourceTables(
+  schemas: string[],
+  queryOptions?: TableQueryOptions<
+    string[],
+    'dataSourceTables',
+    NormalizedTable[]
   >
 ) {
-  const options = { schemas: [table.schema], tables: [table] };
-  const response = useTables(options, queryOptions);
-  return {
-    ...response,
-    data: React.useMemo(() => {
-      return response.data?.find(
-        t => t.table_name === table.name && t.table_schema === table.schema
-      );
-    }, [response.data, table]),
-  };
+  return useTableBase(
+    schemas,
+    'dataSourceTables',
+    transformTables,
+    queryOptions
+  );
+}
+
+export function useSingleTable(
+  table: QualifiedTable,
+  queryOptions?: TableQueryOptions<
+    QualifiedTable,
+    'singleTable',
+    NormalizedTable | null
+  >
+) {
+  return useTableBase(
+    table,
+    'singleTable',
+    transformFindTables(table),
+    queryOptions
+  );
 }

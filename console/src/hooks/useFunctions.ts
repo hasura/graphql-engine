@@ -6,10 +6,10 @@ import { QualifiedFunction } from '@/metadata/types';
 import { useAppSelector } from '@/store';
 import { useQuery, UseQueryOptions, UseQueryResult } from 'react-query';
 import { Api } from './apiUtils';
+import { RunSQLResponse } from './types';
 
 interface FetchFunctionsArgs {
   dataSource: DataSourcesAPI;
-  //   body: ReturnType<typeof getRunSqlQuery>;
   headers: Record<string, string>;
   trackable: boolean;
   schemaList: string[];
@@ -36,41 +36,41 @@ const fetchFunctions = (args: FetchFunctionsArgs) => () => {
     return Promise.resolve([] as PGFunction[]);
   const fnType = trackable ? 'trackable' : 'non-trackable';
   const body = getRunSqlQuery(
-    dataSource.getFunctionDefinitionSql!(schemaList, null, fnType),
+    dataSource.getFunctionDefinitionSql(schemaList, null, fnType),
     currentDataSource,
     false,
     true,
     driver
   );
-  return Api.post<{ result: [[string], [string]] }, PGFunction[]>(
+  return Api.post<RunSQLResponse, PGFunction[]>(
     {
       url: Endpoints.query,
       headers,
       body,
     },
-    data => JSON.parse(data.result[1]?.[0]) as PGFunction[]
+    data => JSON.parse(data.result?.[1]?.[0] ?? '[]') as PGFunction[]
   );
 };
 
-const fetchSingleFunction = (args: FetchSingleFunctionArg) => (): Promise<
-  PGFunction | undefined
-> => {
+const fetchSingleFunction = (
+  args: FetchSingleFunctionArg
+) => (): Promise<PGFunction | null> => {
   const { dataSource, headers, driver, currentDataSource, schema, name } = args;
-  if (!dataSource.getFunctionDefinitionSql) return Promise.resolve(undefined);
+  if (!dataSource.getFunctionDefinitionSql) return Promise.resolve(null);
   const body = getRunSqlQuery(
-    dataSource.getFunctionDefinitionSql!(schema, name),
+    dataSource.getFunctionDefinitionSql(schema, name),
     currentDataSource,
     false,
     true,
     driver
   );
-  return Api.post<{ result: [[string], [string]] }, PGFunction>(
+  return Api.post<RunSQLResponse, PGFunction>(
     {
       url: Endpoints.query,
       headers,
       body,
     },
-    data => JSON.parse(data.result[1]?.[0])?.[0]
+    data => JSON.parse(data.result?.[1]?.[0] ?? '[]')?.[0]
   );
 };
 
@@ -87,7 +87,7 @@ export function useTrackableFunctions(
   );
   const headers = useAppSelector(state => state.tables.dataHeaders);
   return useQuery(
-    ['trackableFunctions', { schemaList }],
+    ['trackableFunctions', schemaList, currentDataSource],
     fetchFunctions({
       dataSource,
       driver,
@@ -113,7 +113,7 @@ export function useNonTrackableFunctions(
   );
   const headers = useAppSelector(state => state.tables.dataHeaders);
   return useQuery(
-    ['nonTrackableFunctions', { schemaList }],
+    ['nonTrackableFunctions', schemaList, currentDataSource],
     fetchFunctions({
       dataSource,
       driver,
@@ -153,10 +153,10 @@ export function useAllFunctions(
   };
 }
 
-export function useFunction(
+export function useSingleFunction(
   args: QualifiedFunction,
   queryOptions?: Omit<
-    UseQueryOptions<PGFunction | undefined, Error>,
+    UseQueryOptions<PGFunction | null, Error>,
     'queryKey' | 'queryFn' | 'refetchInterval'
   >
 ) {
@@ -166,7 +166,7 @@ export function useFunction(
   );
   const headers = useAppSelector(state => state.tables.dataHeaders);
   return useQuery(
-    ['function', args],
+    ['function', args, currentDataSource],
     fetchSingleFunction({
       dataSource,
       headers,
