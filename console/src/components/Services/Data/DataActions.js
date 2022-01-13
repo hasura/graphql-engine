@@ -145,6 +145,8 @@ const setUntrackedRelations = () => (dispatch, getState) => {
  * @param {{schemas: string[], tables: import('@/metadata/types').QualifiedTable[]}} [configOptions={}]
  */
 // todo: it's called 4 times on start
+//! This has been solved by the hooks in src/hooks.
+//! They should be used to phase this out
 const loadSchema = (configOptions = {}) => {
   return (dispatch, getState) => {
     const url = Endpoints.query;
