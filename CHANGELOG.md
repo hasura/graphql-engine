@@ -17,6 +17,7 @@
 - cli: migrate and seed subcommands has an option in prompt to choose and apply operation on all available databases
 - cli: fix `metadata diff --type json | unified-json` behaving incorrectly and showing diff in YAML format.
 - cli: fix regression in `migrate create` command (#7971)
+- server: fix support for joins in aggregates nodes in BigQuery
 
 ## v2.1.1
 
