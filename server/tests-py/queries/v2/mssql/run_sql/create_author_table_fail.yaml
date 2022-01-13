@@ -14,8 +14,7 @@ response:
     - odbc_SQLExecDirectW
     - -1
     - "[Microsoft][ODBC Driver 17 for SQL Server][SQL Server]There is already an object\
-      \ named 'author' in the database.[Microsoft][ODBC Driver 17 for SQL Server][SQL\
-      \ Server]There is already an object named 'author' in the database."
+      \ named 'author' in the database."
   path: $
   error: sql query exception
   code: mssql-error

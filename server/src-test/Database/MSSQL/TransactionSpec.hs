@@ -119,7 +119,7 @@ runInConn connString query =
 
 invalidSyntaxError :: String
 invalidSyntaxError =
-  "[Microsoft][ODBC Driver 17 for SQL Server][SQL Server]The definition for column 'INVALID_SYNTAX' must include a data type.[Microsoft][ODBC Driver 17 for SQL Server][SQL Server]The definition for column 'INVALID_SYNTAX' must include a data type."
+  "[Microsoft][ODBC Driver 17 for SQL Server][SQL Server]The definition for column 'INVALID_SYNTAX' must include a data type."
 
 unexpectedMSSQLInternalError :: String
 unexpectedMSSQLInternalError =
