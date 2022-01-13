@@ -195,7 +195,7 @@ Hasura marka varlıkları (logolar, Hasura maskotu, rozetler vb.) [assets/brand]
 
 **Diğer tüm içerikler** ([`sunucu`](../server), [`cli`](../cli) ve
 [`konsol`](../console) dizinleri hariç) [MIT License](../LICENSE-community) altındadır.
-Buna, [`doküman`](../docs) ve [`topluluk`](../community) dizinleri içindeki herşey dahildir.
+Buna, [`doküman`](../docs) ve [`topluluk`](../community) dizinleri içindeki her şey dahildir.
 
 ## Çeviriler
 
