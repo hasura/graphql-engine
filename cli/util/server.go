@@ -4,9 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net/http"
-	"net/url"
-	"path"
 
 	"github.com/hasura/graphql-engine/cli/v2/internal/httpc"
 
@@ -99,18 +98,16 @@ func GetServerState(client *httpc.Client, endpoint string, hasMetadataV3 bool, l
 
 }
 
-func GetServerStatus(endpoint string) (err error) {
-	uri, err := url.Parse(endpoint)
-	if err != nil {
-		return fmt.Errorf("error while parsing the endpoint :%w", err)
-	}
-	uri.Path = path.Join(uri.Path, "healthz")
-	resp, err := http.Get(uri.String())
+func GetServerStatus(versionEndpoint string) (err error) {
+	resp, err := http.Get(versionEndpoint)
 	if err != nil {
 		return fmt.Errorf("making http request failed: %w", err)
 	}
+	defer resp.Body.Close()
+	// ignore error
+	body, _ := ioutil.ReadAll(resp.Body)
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("request failed: url: %s status code: %v status: %s", uri.String(), resp.StatusCode, resp.Status)
+		return fmt.Errorf("request failed: url: %s status code: %v status: %s \n%s", versionEndpoint, resp.StatusCode, resp.Status, string(body))
 	}
 	return nil
 }
