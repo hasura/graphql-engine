@@ -12,6 +12,7 @@ import Data.ByteString qualified as B
 import Data.String (fromString)
 import Data.Text.Encoding (encodeUtf8)
 import Data.Text.Extended
+import Database.MSSQL.Transaction (singleRowQueryE)
 import Database.ODBC.SQLServer qualified as ODBC
 import Hasura.Backends.MSSQL.Connection
 import Hasura.Backends.MSSQL.Instances.Execute
@@ -119,7 +120,7 @@ executeMultiplexedQuery mssqlExecCtx query = do
   let parseResult r = J.eitherDecodeStrict (encodeUtf8 r) `onLeft` \s -> throw400 ParseFailed (fromString s)
       convertFromJSON :: [CohortResult] -> [(CohortId, B.ByteString)]
       convertFromJSON = map \(CohortResult (cid, cresult)) -> (cid, encodeUtf8 cresult)
-  textResult <- run $ runJSONPathQuery (mssqlRunReadOnly mssqlExecCtx) query
+  textResult <- run $ mssqlRunReadOnly mssqlExecCtx $ singleRowQueryE fromMSSQLTxError query
   parsedResult <- parseResult textResult
   pure $ convertFromJSON parsedResult
 

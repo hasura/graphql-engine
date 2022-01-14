@@ -3,6 +3,7 @@
 ## Next release
 (Add highlights/major features below)
 
+- server: extend transactions to MSSQL GraphQL queries and `mssql_run_sql` /v2/query API
 - server: improve error messages in MSSQL database query exceptions
 - server: in mssql transactions, rollback only if the transaction is active
 - server: add request and response bodies to OpenAPI specification of REST endpoints

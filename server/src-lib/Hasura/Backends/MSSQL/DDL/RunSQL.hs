@@ -11,6 +11,7 @@ module Hasura.Backends.MSSQL.DDL.RunSQL
 where
 
 import Control.Monad.Trans.Control (MonadBaseControl)
+import Data.Aeson
 import Data.Aeson qualified as J
 import Data.HashMap.Strict qualified as M
 import Data.HashSet qualified as HS
@@ -18,6 +19,7 @@ import Data.String (fromString)
 import Data.Text qualified as T
 import Database.MSSQL.Transaction qualified as Tx
 import Database.ODBC.Internal qualified as ODBC
+import Database.ODBC.SQLServer qualified as ODBC hiding (query)
 import Hasura.Backends.MSSQL.Connection
 import Hasura.Backends.MSSQL.Meta
 import Hasura.Base.Error
@@ -28,6 +30,7 @@ import Hasura.RQL.DDL.Schema.Diff
 import Hasura.RQL.Types hiding (TableName, runTx, tmTable)
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.Server.Utils (quoteRegex)
+import Network.HTTP.Types qualified as N
 import Text.Regex.TDFA qualified as TDFA
 
 data MSSQLRunSQL = MSSQLRunSQL
@@ -56,65 +59,69 @@ instance J.ToJSON MSSQLRunSQL where
       ]
 
 runSQL ::
+  forall m.
   (MonadIO m, MonadBaseControl IO m, CacheRWM m, MonadError QErr m, MetadataM m) =>
   MSSQLRunSQL ->
   m EncJSON
 runSQL mssqlRunSQL@MSSQLRunSQL {..} = do
   SourceInfo _ tableCache _ sourceConfig _ _ <- askSourceInfo @'MSSQL _mrsSource
-  results <- mssqlRunReadWrite (_mscExecCtx sourceConfig) $ \conn ->
+  results <-
     -- If the SQL modifies the schema of the database then check for any metadata changes
     if isSchemaCacheBuildRequiredRunSQL mssqlRunSQL
       then do
-        (results, metadataUpdater) <- withMetadataCheck tableCache conn
+        (results, metadataUpdater) <- runTx sourceConfig $ withMetadataCheck tableCache
         -- Build schema cache with updated metadata
         withNewInconsistentObjsCheck $
           buildSchemaCacheWithInvalidations mempty {ciSources = HS.singleton _mrsSource} metadataUpdater
         pure results
-      else liftEitherM $ runExceptT $ runTx conn sqlQueryTx
+      else runTx sourceConfig sqlQueryTx
   pure $ encJFromJValue $ toResult results
   where
-    runTx :: (MonadIO m) => ODBC.Connection -> Tx.TxET QErr m a -> ExceptT QErr m a
-    runTx conn tx = Tx.runTxE fromMSSQLTxError tx conn
+    runTx :: SourceConfig 'MSSQL -> Tx.TxET QErr m a -> m a
+    runTx sourceConfig =
+      liftEitherM . runExceptT . mssqlRunReadWrite (_mscExecCtx sourceConfig)
 
-    sqlQueryTx :: (MonadIO m) => Tx.TxET QErr m [[(ODBC.Column, ODBC.Value)]]
+    sqlQueryTx :: Tx.TxET QErr m [[(ODBC.Column, ODBC.Value)]]
     sqlQueryTx =
-      Tx.buildGenericTxE fromODBCException (\conn -> ODBC.query conn $ fromString $ T.unpack _mrsSql)
+      Tx.buildGenericQueryTxE fromMSSQLTxErrorRunSQL _mrsSql textToODBCQuery ODBC.query
       where
-        fromODBCException :: ODBC.ODBCException -> QErr
-        fromODBCException e =
-          (err400 MSSQLError "sql query exception")
-            { qeInternal = Just (ExtraInternal $ odbcExceptionToJSONValue e)
-            }
+        textToODBCQuery :: Text -> ODBC.Query
+        textToODBCQuery = fromString . T.unpack
+
+        fromMSSQLTxErrorRunSQL :: Tx.MSSQLTxError -> QErr
+        fromMSSQLTxErrorRunSQL = \case
+          err@Tx.MSSQLQueryError {} ->
+            -- The SQL query is user provided. Make error status to 400, bad request in case of MSSQL query error
+            -- and message as 'sql query exception'
+            let qErr = fromMSSQLTxError err
+             in qErr {qeStatus = N.status400, qeError = "sql query exception", qeCode = MSSQLError}
+          err -> fromMSSQLTxError err
 
     withMetadataCheck ::
-      (MonadIO m, CacheRWM m, MonadError QErr m) =>
       TableCache 'MSSQL ->
-      ODBC.Connection ->
-      m ([[(ODBC.Column, ODBC.Value)]], MetadataModifier)
-    withMetadataCheck tableCache conn = liftEitherM $
-      runExceptT $
-        runTx conn $ do
-          preActionTablesMeta <- toTableMeta <$> loadDBMetadata
-          results <- sqlQueryTx
-          postActionTablesMeta <- toTableMeta <$> loadDBMetadata
-          let trackedTablesMeta = filter (flip M.member tableCache . tmTable) preActionTablesMeta
-              tablesDiff = getTablesDiff trackedTablesMeta postActionTablesMeta
+      Tx.TxET QErr m ([[(ODBC.Column, ODBC.Value)]], MetadataModifier)
+    withMetadataCheck tableCache = do
+      preActionTablesMeta <- toTableMeta <$> loadDBMetadata
+      results <- sqlQueryTx
+      postActionTablesMeta <- toTableMeta <$> loadDBMetadata
+      let trackedTablesMeta = filter (flip M.member tableCache . tmTable) preActionTablesMeta
+          tablesDiff = getTablesDiff trackedTablesMeta postActionTablesMeta
 
-          -- Get indirect dependencies
-          indirectDeps <- getIndirectDependencies _mrsSource tablesDiff
-          -- Report indirect dependencies, if any, when cascade is not set
-          when (indirectDeps /= [] && not _mrsCascade) $ reportDependentObjectsExist indirectDeps
+      -- Get indirect dependencies
+      indirectDeps <- getIndirectDependencies _mrsSource tablesDiff
+      -- Report indirect dependencies, if any, when cascade is not set
+      when (indirectDeps /= [] && not _mrsCascade) $ reportDependentObjectsExist indirectDeps
 
-          metadataUpdater <- execWriterT $ do
-            -- Purge all the indirect dependents from state
-            for_ indirectDeps \case
-              SOSourceObj sourceName objectID -> do
-                AB.dispatchAnyBackend @BackendMetadata objectID $ purgeDependentObject sourceName >=> tell
-              _ ->
-                pure ()
-            processTablesDiff _mrsSource tableCache tablesDiff
+      metadataUpdater <- execWriterT $ do
+        -- Purge all the indirect dependents from state
+        for_ indirectDeps \case
+          SOSourceObj sourceName objectID -> do
+            AB.dispatchAnyBackend @BackendMetadata objectID $ purgeDependentObject sourceName >=> tell
+          _ ->
+            pure ()
+        processTablesDiff _mrsSource tableCache tablesDiff
 
-          pure (results, metadataUpdater)
+      pure (results, metadataUpdater)
       where
         toTableMeta :: DBTablesMetadata 'MSSQL -> [TableMeta 'MSSQL]
         toTableMeta dbTablesMeta =

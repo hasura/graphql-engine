@@ -35,7 +35,7 @@ executeDelete ::
   m (ExceptT QErr IO EncJSON)
 executeDelete userInfo stringifyNum sourceConfig deleteOperation = do
   preparedDelete <- traverse (prepareValueQuery $ _uiSession userInfo) deleteOperation
-  pure $ mssqlRunReadWrite (_mscExecCtx sourceConfig) $ Tx.runTxE fromMSSQLTxError (buildDeleteTx preparedDelete stringifyNum)
+  pure $ mssqlRunReadWrite (_mscExecCtx sourceConfig) (buildDeleteTx preparedDelete stringifyNum)
 
 -- | Converts a Delete IR AST to a transaction of three delete sql statements.
 --
