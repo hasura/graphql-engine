@@ -15,7 +15,6 @@ where
 
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Environment qualified as Env
-import Database.MSSQL.Transaction qualified as Tx
 import Hasura.Backends.MSSQL.Connection
 import Hasura.Backends.MSSQL.Meta
 import Hasura.Base.Error
@@ -41,7 +40,7 @@ resolveDatabaseMetadata ::
   SourceTypeCustomization ->
   m (Either QErr (ResolvedSource 'MSSQL))
 resolveDatabaseMetadata config customization = runExceptT do
-  dbTablesMetadata <- mssqlRunReadOnly mssqlExecCtx $ Tx.runTxE fromMSSQLTxError loadDBMetadata
+  dbTablesMetadata <- mssqlRunReadOnly mssqlExecCtx $ loadDBMetadata
   pure $ ResolvedSource config customization dbTablesMetadata mempty mempty
   where
     MSSQLSourceConfig _connString mssqlExecCtx = config

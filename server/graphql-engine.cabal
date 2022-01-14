@@ -347,6 +347,7 @@ library
                      , Data.Time.Clock.Units
                      , Data.URL.Template
                      , Database.MSSQL.Transaction
+                     , Database.MSSQL.Pool
                      , GHC.AssertNF.CPP
                      , GHC.Stats.Extended
                      , Hasura.App

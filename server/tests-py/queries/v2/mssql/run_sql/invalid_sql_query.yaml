@@ -1,0 +1,22 @@
+description: Run an invalid SQL expecting an exception
+url: /v2/query
+status: 400
+query:
+  type: mssql_run_sql
+  args:
+    source: mssql
+    sql: |
+      SOME RANDOM INVALID QUERY;
+response:
+  internal:
+    exception:
+      tag: unsuccessful_return_code
+      contents:
+      - odbc_SQLExecDirectW
+      - -1
+      - "[Microsoft][ODBC Driver 17 for SQL Server][SQL Server]Incorrect syntax near\
+        \ the keyword 'SOME'."
+    query: "SOME RANDOM INVALID QUERY;\n"
+  path: $
+  error: sql query exception
+  code: mssql-error

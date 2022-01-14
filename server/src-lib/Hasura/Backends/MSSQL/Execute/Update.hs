@@ -40,7 +40,7 @@ executeUpdate userInfo stringifyNum sourceConfig updateOperation = do
   preparedUpdate <- traverse (prepareValueQuery $ _uiSession userInfo) updateOperation
   if null $ updateOperations . _auBackend $ updateOperation
     then pure $ pure $ IR.buildEmptyMutResp $ _auOutput preparedUpdate
-    else pure $ (mssqlRunReadWrite mssqlExecCtx) $ Tx.runTxE fromMSSQLTxError (buildUpdateTx preparedUpdate stringifyNum)
+    else pure $ (mssqlRunReadWrite mssqlExecCtx) (buildUpdateTx preparedUpdate stringifyNum)
 
 -- | Converts an Update IR AST to a transaction of three update sql statements.
 --
