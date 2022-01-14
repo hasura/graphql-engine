@@ -1,0 +1,1126 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Hasura.RQL.Types.EventTrigger</span><span>
+</span><span id="line-2"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#SubscribeOpSpec"><span class="hs-identifier">SubscribeOpSpec</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-3"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#SubscribeColumns"><span class="hs-identifier">SubscribeColumns</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-4"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#TriggerName"><span class="hs-identifier">TriggerName</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-5"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#triggerNameToTxt"><span class="hs-identifier">triggerNameToTxt</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-6"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#Ops"><span class="hs-identifier">Ops</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-7"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#TriggerOpsDef"><span class="hs-identifier">TriggerOpsDef</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-8"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#EventTriggerConf"><span class="hs-identifier">EventTriggerConf</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-9"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#RetryConf"><span class="hs-identifier">RetryConf</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-10"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#EventHeaderInfo"><span class="hs-identifier">EventHeaderInfo</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-11"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#WebhookConf"><span class="hs-identifier">WebhookConf</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-12"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#WebhookConfInfo"><span class="hs-identifier">WebhookConfInfo</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-13"></span><span>    </span><span class="annot"><a href="Hasura.RQL.DDL.Headers.html#HeaderConf"><span class="hs-identifier">HeaderConf</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-14"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#defaultRetryConf"><span class="hs-identifier">defaultRetryConf</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-15"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#defaultTimeoutSeconds"><span class="hs-identifier">defaultTimeoutSeconds</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-16"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#RecreateEventTriggers"><span class="hs-identifier">RecreateEventTriggers</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-17"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#EventWithSource"><span class="hs-identifier">EventWithSource</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-18"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#TriggerMetadata"><span class="hs-identifier">TriggerMetadata</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-19"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#Event"><span class="hs-identifier">Event</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-20"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#TriggerTypes"><span class="hs-identifier">TriggerTypes</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-21"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#Invocation"><span class="hs-identifier">Invocation</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-22"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#ProcessEventError"><span class="hs-identifier">ProcessEventError</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-23"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#EventTriggerInfoMap"><span class="hs-identifier">EventTriggerInfoMap</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-24"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#EventTriggerInfo"><span class="hs-identifier">EventTriggerInfo</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-25"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#FetchBatchSize"><span class="hs-identifier">FetchBatchSize</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-26"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-27"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-28"></span><span>
+</span><span id="line-29"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/aeson-1.5.5.1-d565b322355c9794eb059b7477592fe0d20db50e9f4ac0ae0328e907dd753173/share/doc/html/src"><span class="hs-identifier">Data.Aeson</span></a></span><span>
+</span><span id="line-30"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/aeson-1.5.5.1-d565b322355c9794eb059b7477592fe0d20db50e9f4ac0ae0328e907dd753173/share/doc/html/src"><span class="hs-identifier">Data.Aeson.TH</span></a></span><span>
+</span><span id="line-31"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/unordered-containers-0.2.13.0-3905cc0dd583bf2295f4fffefb94c9b368aca205fb5d2fe8619d64b3bfba7af9/share/doc/html/src"><span class="hs-identifier">Data.HashMap.Strict</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">M</span></span><span>
+</span><span id="line-32"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Data.Text.Extended.html"><span class="hs-identifier">Data.Text.Extended</span></a></span><span>
+</span><span id="line-33"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Data.Text.NonEmpty.html"><span class="hs-identifier">Data.Text.NonEmpty</span></a></span><span>
+</span><span id="line-34"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/time-1.9.3/src"><span class="hs-identifier">Data.Time.Clock</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Time</span></span><span>
+</span><span id="line-35"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/pg-client-0.1.0-25b31efe2444cb76aa2939f99040399278f7a20b0fefdb30fa4af9b1c213eb3c/share/doc/html/src"><span class="hs-identifier">Database.PG.Query</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Q</span></span><span>
+</span><span id="line-36"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Incremental.html"><span class="hs-identifier">Hasura.Incremental</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier">Cacheable</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-37"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-38"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Headers.html"><span class="hs-identifier">Hasura.RQL.DDL.Headers</span></a></span><span>
+</span><span id="line-39"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.RequestTransform.html"><span class="hs-identifier">Hasura.RQL.DDL.RequestTransform</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.DDL.RequestTransform.html#MetadataTransform"><span class="hs-identifier">MetadataTransform</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-40"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html"><span class="hs-identifier">Hasura.RQL.Types.Backend</span></a></span><span>
+</span><span id="line-41"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Common.html"><span class="hs-identifier">Hasura.RQL.Types.Common</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Common.html#InputWebhook"><span class="hs-identifier">InputWebhook</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#ResolvedWebhook"><span class="hs-identifier">ResolvedWebhook</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#SourceName"><span class="hs-identifier">SourceName</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-42"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Eventing.html"><span class="hs-identifier">Hasura.RQL.Types.Eventing</span></a></span><span>
+</span><span id="line-43"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.SQL.Backend.html"><span class="hs-identifier">Hasura.SQL.Backend</span></a></span><span>
+</span><span id="line-44"></span><span>
+</span><span id="line-45"></span><span class="hs-comment">-- | Unique name for event trigger.</span><span>
+</span><span id="line-46"></span><span id="local-6989586621690070718"><span id="local-6989586621690070719"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="TriggerName"><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#TriggerName"><span class="hs-identifier hs-var">TriggerName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="TriggerName"><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#TriggerName"><span class="hs-identifier hs-var">TriggerName</span></a></span></span><span> </span><span class="hs-special">{</span><span id="unTriggerName"><span class="annot"><span class="annottext">TriggerName -&gt; NonEmptyText
+</span><a href="Hasura.RQL.Types.EventTrigger.html#unTriggerName"><span class="hs-identifier hs-var hs-var">unTriggerName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Data.Text.NonEmpty.html#NonEmptyText"><span class="hs-identifier hs-type">NonEmptyText</span></a></span><span class="hs-special">}</span><span>
+</span><span id="line-47"></span><span>  </span><span class="hs-keyword">deriving</span><span>
+</span><span id="line-48"></span><span>    </span><span class="hs-special">(</span><span> </span><span id="local-6989586621690070710"><span id="local-6989586621690070712"><span id="local-6989586621690070714"><span class="annot"><span class="annottext">Int -&gt; TriggerName -&gt; ShowS
+[TriggerName] -&gt; ShowS
+TriggerName -&gt; String
+(Int -&gt; TriggerName -&gt; ShowS)
+-&gt; (TriggerName -&gt; String)
+-&gt; ([TriggerName] -&gt; ShowS)
+-&gt; Show TriggerName
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [TriggerName] -&gt; ShowS
+$cshowList :: [TriggerName] -&gt; ShowS
+show :: TriggerName -&gt; String
+$cshow :: TriggerName -&gt; String
+showsPrec :: Int -&gt; TriggerName -&gt; ShowS
+$cshowsPrec :: Int -&gt; TriggerName -&gt; ShowS
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span>
+</span><span id="line-49"></span><span>      </span><span id="local-6989586621690070705"><span id="local-6989586621690070707"><span class="annot"><span class="annottext">TriggerName -&gt; TriggerName -&gt; Bool
+(TriggerName -&gt; TriggerName -&gt; Bool)
+-&gt; (TriggerName -&gt; TriggerName -&gt; Bool) -&gt; Eq TriggerName
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: TriggerName -&gt; TriggerName -&gt; Bool
+$c/= :: TriggerName -&gt; TriggerName -&gt; Bool
+== :: TriggerName -&gt; TriggerName -&gt; Bool
+$c== :: TriggerName -&gt; TriggerName -&gt; Bool
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/ghc-prim-0.6.1/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span>
+</span><span id="line-50"></span><span>      </span><span id="local-6989586621690070689"><span id="local-6989586621690070691"><span id="local-6989586621690070693"><span id="local-6989586621690070695"><span id="local-6989586621690070697"><span id="local-6989586621690070699"><span id="local-6989586621690070701"><span class="annot"><span class="annottext">Eq TriggerName
+Eq TriggerName
+-&gt; (TriggerName -&gt; TriggerName -&gt; Ordering)
+-&gt; (TriggerName -&gt; TriggerName -&gt; Bool)
+-&gt; (TriggerName -&gt; TriggerName -&gt; Bool)
+-&gt; (TriggerName -&gt; TriggerName -&gt; Bool)
+-&gt; (TriggerName -&gt; TriggerName -&gt; Bool)
+-&gt; (TriggerName -&gt; TriggerName -&gt; TriggerName)
+-&gt; (TriggerName -&gt; TriggerName -&gt; TriggerName)
+-&gt; Ord TriggerName
+TriggerName -&gt; TriggerName -&gt; Bool
+TriggerName -&gt; TriggerName -&gt; Ordering
+TriggerName -&gt; TriggerName -&gt; TriggerName
+forall a.
+Eq a
+-&gt; (a -&gt; a -&gt; Ordering)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; Ord a
+min :: TriggerName -&gt; TriggerName -&gt; TriggerName
+$cmin :: TriggerName -&gt; TriggerName -&gt; TriggerName
+max :: TriggerName -&gt; TriggerName -&gt; TriggerName
+$cmax :: TriggerName -&gt; TriggerName -&gt; TriggerName
+&gt;= :: TriggerName -&gt; TriggerName -&gt; Bool
+$c&gt;= :: TriggerName -&gt; TriggerName -&gt; Bool
+&gt; :: TriggerName -&gt; TriggerName -&gt; Bool
+$c&gt; :: TriggerName -&gt; TriggerName -&gt; Bool
+&lt;= :: TriggerName -&gt; TriggerName -&gt; Bool
+$c&lt;= :: TriggerName -&gt; TriggerName -&gt; Bool
+&lt; :: TriggerName -&gt; TriggerName -&gt; Bool
+$c&lt; :: TriggerName -&gt; TriggerName -&gt; Bool
+compare :: TriggerName -&gt; TriggerName -&gt; Ordering
+$ccompare :: TriggerName -&gt; TriggerName -&gt; Ordering
+$cp1Ord :: Eq TriggerName
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/ghc-prim-0.6.1/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></a></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span>
+</span><span id="line-51"></span><span>      </span><span id="local-6989586621690070684"><span id="local-6989586621690070686"><span class="annot"><span class="annottext">Int -&gt; TriggerName -&gt; Int
+TriggerName -&gt; Int
+(Int -&gt; TriggerName -&gt; Int)
+-&gt; (TriggerName -&gt; Int) -&gt; Hashable TriggerName
+forall a. (Int -&gt; a -&gt; Int) -&gt; (a -&gt; Int) -&gt; Hashable a
+hash :: TriggerName -&gt; Int
+$chash :: TriggerName -&gt; Int
+hashWithSalt :: Int -&gt; TriggerName -&gt; Int
+$chashWithSalt :: Int -&gt; TriggerName -&gt; Int
+</span><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/hashable-1.3.0.0-788b52f2a84e4f56df08780d211980a9db35c8fd0786c16a6d78251880c45f3d/share/doc/html/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">,</span><span>
+</span><span id="line-52"></span><span>      </span><span id="local-6989586621690070681"><span class="annot"><span class="annottext">TriggerName -&gt; Text
+(TriggerName -&gt; Text) -&gt; ToTxt TriggerName
+forall a. (a -&gt; Text) -&gt; ToTxt a
+toTxt :: TriggerName -&gt; Text
+$ctoTxt :: TriggerName -&gt; Text
+</span><a href="Data.Text.Extended.html#C%3AToTxt"><span class="hs-identifier hs-var hs-var hs-var hs-var">ToTxt</span></a></span></span><span class="hs-special">,</span><span>
+</span><span id="line-53"></span><span>      </span><span id="local-6989586621690070676"><span id="local-6989586621690070678"><span class="annot"><span class="annottext">Value -&gt; Parser [TriggerName]
+Value -&gt; Parser TriggerName
+(Value -&gt; Parser TriggerName)
+-&gt; (Value -&gt; Parser [TriggerName]) -&gt; FromJSON TriggerName
+forall a.
+(Value -&gt; Parser a) -&gt; (Value -&gt; Parser [a]) -&gt; FromJSON a
+parseJSONList :: Value -&gt; Parser [TriggerName]
+$cparseJSONList :: Value -&gt; Parser [TriggerName]
+parseJSON :: Value -&gt; Parser TriggerName
+$cparseJSON :: Value -&gt; Parser TriggerName
+</span><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/aeson-1.5.5.1-d565b322355c9794eb059b7477592fe0d20db50e9f4ac0ae0328e907dd753173/share/doc/html/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></a></span></span></span><span class="hs-special">,</span><span>
+</span><span id="line-54"></span><span>      </span><span id="local-6989586621690070667"><span id="local-6989586621690070669"><span id="local-6989586621690070671"><span id="local-6989586621690070673"><span class="annot"><span class="annottext">[TriggerName] -&gt; Value
+[TriggerName] -&gt; Encoding
+TriggerName -&gt; Value
+TriggerName -&gt; Encoding
+(TriggerName -&gt; Value)
+-&gt; (TriggerName -&gt; Encoding)
+-&gt; ([TriggerName] -&gt; Value)
+-&gt; ([TriggerName] -&gt; Encoding)
+-&gt; ToJSON TriggerName
+forall a.
+(a -&gt; Value)
+-&gt; (a -&gt; Encoding)
+-&gt; ([a] -&gt; Value)
+-&gt; ([a] -&gt; Encoding)
+-&gt; ToJSON a
+toEncodingList :: [TriggerName] -&gt; Encoding
+$ctoEncodingList :: [TriggerName] -&gt; Encoding
+toJSONList :: [TriggerName] -&gt; Value
+$ctoJSONList :: [TriggerName] -&gt; Value
+toEncoding :: TriggerName -&gt; Encoding
+$ctoEncoding :: TriggerName -&gt; Encoding
+toJSON :: TriggerName -&gt; Value
+$ctoJSON :: TriggerName -&gt; Value
+</span><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/aeson-1.5.5.1-d565b322355c9794eb059b7477592fe0d20db50e9f4ac0ae0328e907dd753173/share/doc/html/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></a></span></span></span></span></span><span class="hs-special">,</span><span>
+</span><span id="line-55"></span><span>      </span><span id="local-6989586621690070662"><span id="local-6989586621690070664"><span class="annot"><span class="annottext">ToJSONKeyFunction [TriggerName]
+ToJSONKeyFunction TriggerName
+ToJSONKeyFunction TriggerName
+-&gt; ToJSONKeyFunction [TriggerName] -&gt; ToJSONKey TriggerName
+forall a.
+ToJSONKeyFunction a -&gt; ToJSONKeyFunction [a] -&gt; ToJSONKey a
+toJSONKeyList :: ToJSONKeyFunction [TriggerName]
+$ctoJSONKeyList :: ToJSONKeyFunction [TriggerName]
+toJSONKey :: ToJSONKeyFunction TriggerName
+$ctoJSONKey :: ToJSONKeyFunction TriggerName
+</span><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/aeson-1.5.5.1-d565b322355c9794eb059b7477592fe0d20db50e9f4ac0ae0328e907dd753173/share/doc/html/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">ToJSONKey</span></a></span></span></span><span class="hs-special">,</span><span>
+</span><span id="line-56"></span><span>      </span><span id="local-6989586621690070659"><span class="annot"><span class="annottext">TriggerName -&gt; PrepArg
+(TriggerName -&gt; PrepArg) -&gt; ToPrepArg TriggerName
+forall a. (a -&gt; PrepArg) -&gt; ToPrepArg a
+toPrepVal :: TriggerName -&gt; PrepArg
+$ctoPrepVal :: TriggerName -&gt; PrepArg
+</span><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/pg-client-0.1.0-25b31efe2444cb76aa2939f99040399278f7a20b0fefdb30fa4af9b1c213eb3c/share/doc/html/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">Q.ToPrepArg</span></a></span></span><span class="hs-special">,</span><span>
+</span><span id="line-57"></span><span>      </span><span class="annot"><span class="annottext">(forall x. TriggerName -&gt; Rep TriggerName x)
+-&gt; (forall x. Rep TriggerName x -&gt; TriggerName)
+-&gt; Generic TriggerName
+forall x. Rep TriggerName x -&gt; TriggerName
+forall x. TriggerName -&gt; Rep TriggerName x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+$cto :: forall x. Rep TriggerName x -&gt; TriggerName
+$cfrom :: forall x. TriggerName -&gt; Rep TriggerName x
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-58"></span><span>      </span><span id="local-6989586621690070653"><span class="annot"><span class="annottext">TriggerName -&gt; ()
+(TriggerName -&gt; ()) -&gt; NFData TriggerName
+forall a. (a -&gt; ()) -&gt; NFData a
+rnf :: TriggerName -&gt; ()
+$crnf :: TriggerName -&gt; ()
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/deepseq-1.4.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span class="hs-special">,</span><span>
+</span><span id="line-59"></span><span>      </span><span id="local-6989586621690070649"><span class="annot"><span class="annottext">Eq TriggerName
+Eq TriggerName
+-&gt; (Accesses -&gt; TriggerName -&gt; TriggerName -&gt; Bool)
+-&gt; Cacheable TriggerName
+Accesses -&gt; TriggerName -&gt; TriggerName -&gt; Bool
+forall a. Eq a -&gt; (Accesses -&gt; a -&gt; a -&gt; Bool) -&gt; Cacheable a
+unchanged :: Accesses -&gt; TriggerName -&gt; TriggerName -&gt; Bool
+$cunchanged :: Accesses -&gt; TriggerName -&gt; TriggerName -&gt; Bool
+$cp1Cacheable :: Eq TriggerName
+</span><a href="Hasura.Incremental.Internal.Dependency.html#C%3ACacheable"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">Cacheable</span></a></span></span><span class="hs-special">,</span><span>
+</span><span id="line-60"></span><span>      </span><span id="local-6989586621690070646"><span class="annot"><span class="annottext">Maybe ByteString -&gt; Either Text TriggerName
+(Maybe ByteString -&gt; Either Text TriggerName)
+-&gt; FromCol TriggerName
+forall a. (Maybe ByteString -&gt; Either Text a) -&gt; FromCol a
+fromCol :: Maybe ByteString -&gt; Either Text TriggerName
+$cfromCol :: Maybe ByteString -&gt; Either Text TriggerName
+</span><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/pg-client-0.1.0-25b31efe2444cb76aa2939f99040399278f7a20b0fefdb30fa4af9b1c213eb3c/share/doc/html/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">Q.FromCol</span></a></span></span><span>
+</span><span id="line-61"></span><span>    </span><span class="hs-special">)</span><span>
+</span><span id="line-62"></span><span>
+</span><span id="line-63"></span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#triggerNameToTxt"><span class="hs-identifier hs-type">triggerNameToTxt</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#TriggerName"><span class="hs-identifier hs-type">TriggerName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/text-1.2.3.2-4200bf40e86b2107f4b06242de65d549c52e58e8833e72545e35f7712661e715/share/doc/html/src"><span class="hs-identifier hs-type">Text</span></a></span><span>
+</span><span id="line-64"></span><span id="triggerNameToTxt"><span class="annot"><span class="annottext">triggerNameToTxt :: TriggerName -&gt; Text
+</span><a href="Hasura.RQL.Types.EventTrigger.html#triggerNameToTxt"><span class="hs-identifier hs-var hs-var">triggerNameToTxt</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">NonEmptyText -&gt; Text
+</span><a href="Data.Text.NonEmpty.html#unNonEmptyText"><span class="hs-identifier hs-var hs-var">unNonEmptyText</span></a></span><span> </span><span class="annot"><span class="annottext">(NonEmptyText -&gt; Text)
+-&gt; (TriggerName -&gt; NonEmptyText) -&gt; TriggerName -&gt; Text
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">TriggerName -&gt; NonEmptyText
+</span><a href="Hasura.RQL.Types.EventTrigger.html#unTriggerName"><span class="hs-identifier hs-var hs-var">unTriggerName</span></a></span><span>
+</span><span id="line-65"></span><span>
+</span><span id="line-66"></span><span class="hs-keyword">data</span><span> </span><span id="Ops"><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#Ops"><span class="hs-identifier hs-var">Ops</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="INSERT"><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#INSERT"><span class="hs-identifier hs-var">INSERT</span></a></span></span><span> </span><span class="hs-glyph">|</span><span> </span><span id="UPDATE"><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#UPDATE"><span class="hs-identifier hs-var">UPDATE</span></a></span></span><span> </span><span class="hs-glyph">|</span><span> </span><span id="DELETE"><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#DELETE"><span class="hs-identifier hs-var">DELETE</span></a></span></span><span> </span><span class="hs-glyph">|</span><span> </span><span id="MANUAL"><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#MANUAL"><span class="hs-identifier hs-var">MANUAL</span></a></span></span><span> </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690070633"><span id="local-6989586621690070635"><span id="local-6989586621690070637"><span class="annot"><span class="annottext">Int -&gt; Ops -&gt; ShowS
+[Ops] -&gt; ShowS
+Ops -&gt; String
+(Int -&gt; Ops -&gt; ShowS)
+-&gt; (Ops -&gt; String) -&gt; ([Ops] -&gt; ShowS) -&gt; Show Ops
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [Ops] -&gt; ShowS
+$cshowList :: [Ops] -&gt; ShowS
+show :: Ops -&gt; String
+$cshow :: Ops -&gt; String
+showsPrec :: Int -&gt; Ops -&gt; ShowS
+$cshowsPrec :: Int -&gt; Ops -&gt; ShowS
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-67"></span><span>
+</span><span id="line-68"></span><span id="local-6989586621690070631"><span id="local-6989586621690070632"></span></span><span class="hs-keyword">data</span><span> </span><span id="SubscribeColumns"><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#SubscribeColumns"><span class="hs-identifier hs-var">SubscribeColumns</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621690070859"><span class="annot"><a href="#local-6989586621690070859"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.SQL.Backend.html#BackendType"><span class="hs-identifier hs-type">BackendType</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span id="SubCStar"><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#SubCStar"><span class="hs-identifier hs-var">SubCStar</span></a></span></span><span> </span><span class="hs-glyph">|</span><span> </span><span id="SubCArray"><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#SubCArray"><span class="hs-identifier hs-var">SubCArray</span></a></span></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Column"><span class="hs-identifier hs-type">Column</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690070859"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-69"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(forall x. SubscribeColumns b -&gt; Rep (SubscribeColumns b) x)
+-&gt; (forall x. Rep (SubscribeColumns b) x -&gt; SubscribeColumns b)
+-&gt; Generic (SubscribeColumns b)
+forall x. Rep (SubscribeColumns b) x -&gt; SubscribeColumns b
+forall x. SubscribeColumns b -&gt; Rep (SubscribeColumns b) x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+forall (b :: BackendType) x.
+Rep (SubscribeColumns b) x -&gt; SubscribeColumns b
+forall (b :: BackendType) x.
+SubscribeColumns b -&gt; Rep (SubscribeColumns b) x
+$cto :: forall (b :: BackendType) x.
+Rep (SubscribeColumns b) x -&gt; SubscribeColumns b
+$cfrom :: forall (b :: BackendType) x.
+SubscribeColumns b -&gt; Rep (SubscribeColumns b) x
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-70"></span><span>
+</span><span id="line-71"></span><span id="local-6989586621690070620"><span id="local-6989586621690070622"><span id="local-6989586621690070624"><span id="local-6989586621690070626"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690070626"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-type">Show</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#SubscribeColumns"><span class="hs-identifier hs-type">SubscribeColumns</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690070626"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span></span></span><span>
+</span><span id="line-72"></span><span>
+</span><span id="line-73"></span><span id="local-6989586621690070615"><span id="local-6989586621690070617"><span id="local-6989586621690070619"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690070619"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/ghc-prim-0.6.1/src"><span class="hs-identifier hs-type">Eq</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#SubscribeColumns"><span class="hs-identifier hs-type">SubscribeColumns</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690070619"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span></span><span>
+</span><span id="line-74"></span><span>
+</span><span id="line-75"></span><span id="local-6989586621690070614"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690070612"><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690070614"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/deepseq-1.4.4.0/src"><span class="hs-identifier hs-type">NFData</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#SubscribeColumns"><span class="hs-identifier hs-type">SubscribeColumns</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690070614"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-76"></span><span>
+</span><span id="line-77"></span><span id="local-6989586621690070611"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690070608"><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690070611"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier hs-type">Cacheable</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#SubscribeColumns"><span class="hs-identifier hs-type">SubscribeColumns</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690070611"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-78"></span><span>
+</span><span id="line-79"></span><span id="local-6989586621690070607"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690070604"><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690070607"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/aeson-1.5.5.1-d565b322355c9794eb059b7477592fe0d20db50e9f4ac0ae0328e907dd753173/share/doc/html/src"><span class="hs-identifier hs-type">FromJSON</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#SubscribeColumns"><span class="hs-identifier hs-type">SubscribeColumns</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690070607"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-80"></span><span>  </span><span id="local-6989586621690070603"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser (SubscribeColumns b)
+</span><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/aeson-1.5.5.1-d565b322355c9794eb059b7477592fe0d20db50e9f4ac0ae0328e907dd753173/share/doc/html/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/aeson-1.5.5.1-d565b322355c9794eb059b7477592fe0d20db50e9f4ac0ae0328e907dd753173/share/doc/html/src"><span class="hs-identifier hs-type">String</span></a></span><span> </span><span id="local-6989586621690070600"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621690070600"><span class="hs-identifier hs-var">s</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621690070600"><span class="hs-identifier hs-var">s</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-81"></span><span>    </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;*&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">SubscribeColumns b -&gt; Parser (SubscribeColumns b)
+forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var">return</span></a></span><span> </span><span class="annot"><span class="annottext">SubscribeColumns b
+forall (b :: BackendType). SubscribeColumns b
+</span><a href="Hasura.RQL.Types.EventTrigger.html#SubCStar"><span class="hs-identifier hs-var">SubCStar</span></a></span><span>
+</span><span id="line-82"></span><span>    </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">String -&gt; Parser (SubscribeColumns b)
+forall (m :: * -&gt; *) a. MonadFail m =&gt; String -&gt; m a
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var">fail</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;only * or [] allowed&quot;</span></span><span>
+</span><span id="line-83"></span><span>  </span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/aeson-1.5.5.1-d565b322355c9794eb059b7477592fe0d20db50e9f4ac0ae0328e907dd753173/share/doc/html/src"><span class="hs-identifier hs-var">parseJSON</span></a></span><span> </span><span id="local-6989586621690070599"><span class="annot"><span class="annottext">v :: Value
+</span><a href="#local-6989586621690070599"><span class="hs-identifier hs-var">v</span></a></span></span><span class="hs-glyph">@</span><span class="hs-special">(</span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/aeson-1.5.5.1-d565b322355c9794eb059b7477592fe0d20db50e9f4ac0ae0328e907dd753173/share/doc/html/src"><span class="hs-identifier hs-type">Array</span></a></span><span> </span><span class="annot"><span class="annottext">Array
+</span><span class="hs-identifier">_</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Column b] -&gt; SubscribeColumns b
+forall (b :: BackendType). [Column b] -&gt; SubscribeColumns b
+</span><a href="Hasura.RQL.Types.EventTrigger.html#SubCArray"><span class="hs-identifier hs-var">SubCArray</span></a></span><span> </span><span class="annot"><span class="annottext">([Column b] -&gt; SubscribeColumns b)
+-&gt; Parser [Column b] -&gt; Parser (SubscribeColumns b)
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Value -&gt; Parser [Column b]
+forall a. FromJSON a =&gt; Value -&gt; Parser a
+</span><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/aeson-1.5.5.1-d565b322355c9794eb059b7477592fe0d20db50e9f4ac0ae0328e907dd753173/share/doc/html/src"><span class="hs-identifier hs-var">parseJSON</span></a></span><span> </span><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621690070599"><span class="hs-identifier hs-var">v</span></a></span><span>
+</span><span id="line-84"></span><span>  </span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/aeson-1.5.5.1-d565b322355c9794eb059b7477592fe0d20db50e9f4ac0ae0328e907dd753173/share/doc/html/src"><span class="hs-identifier hs-var">parseJSON</span></a></span><span> </span><span class="annot"><span class="annottext">Value
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; Parser (SubscribeColumns b)
+forall (m :: * -&gt; *) a. MonadFail m =&gt; String -&gt; m a
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var">fail</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;unexpected columns&quot;</span></span></span><span>
+</span><span id="line-85"></span><span>
+</span><span id="line-86"></span><span id="local-6989586621690070596"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690070589"><span id="local-6989586621690070591"><span id="local-6989586621690070593"><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690070596"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/aeson-1.5.5.1-d565b322355c9794eb059b7477592fe0d20db50e9f4ac0ae0328e907dd753173/share/doc/html/src"><span class="hs-identifier hs-type">ToJSON</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#SubscribeColumns"><span class="hs-identifier hs-type">SubscribeColumns</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690070596"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-87"></span><span>  </span><span id="local-6989586621690070588"><span class="annot"><span class="annottext">toJSON :: SubscribeColumns b -&gt; Value
+</span><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/aeson-1.5.5.1-d565b322355c9794eb059b7477592fe0d20db50e9f4ac0ae0328e907dd753173/share/doc/html/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="annot"><span class="annottext">SubscribeColumns b
+</span><a href="Hasura.RQL.Types.EventTrigger.html#SubCStar"><span class="hs-identifier hs-var">SubCStar</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Value
+</span><span class="hs-string">&quot;*&quot;</span></span><span>
+</span><span id="line-88"></span><span>  </span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/aeson-1.5.5.1-d565b322355c9794eb059b7477592fe0d20db50e9f4ac0ae0328e907dd753173/share/doc/html/src"><span class="hs-identifier hs-var">toJSON</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#SubCArray"><span class="hs-identifier hs-type">SubCArray</span></a></span><span> </span><span id="local-6989586621690070586"><span class="annot"><span class="annottext">[Column b]
+</span><a href="#local-6989586621690070586"><span class="hs-identifier hs-var">cols</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Column b] -&gt; Value
+forall a. ToJSON a =&gt; a -&gt; Value
+</span><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/aeson-1.5.5.1-d565b322355c9794eb059b7477592fe0d20db50e9f4ac0ae0328e907dd753173/share/doc/html/src"><span class="hs-identifier hs-var">toJSON</span></a></span><span> </span><span class="annot"><span class="annottext">[Column b]
+</span><a href="#local-6989586621690070586"><span class="hs-identifier hs-var">cols</span></a></span></span><span>
+</span><span id="line-89"></span><span>
+</span><span id="line-90"></span><span id="local-6989586621690070584"><span id="local-6989586621690070585"></span></span><span class="hs-keyword">data</span><span> </span><span id="SubscribeOpSpec"><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#SubscribeOpSpec"><span class="hs-identifier hs-var">SubscribeOpSpec</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621690070583"><span class="annot"><a href="#local-6989586621690070583"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.SQL.Backend.html#BackendType"><span class="hs-identifier hs-type">BackendType</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span id="SubscribeOpSpec"><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#SubscribeOpSpec"><span class="hs-identifier hs-var">SubscribeOpSpec</span></a></span></span><span>
+</span><span id="line-91"></span><span>  </span><span class="hs-special">{</span><span> </span><span class="hs-comment">-- | Columns of the table that user can subscribe to listen for changes.</span><span>
+</span><span id="line-92"></span><span>    </span><span id="sosColumns"><span class="annot"><span class="annottext">SubscribeOpSpec b -&gt; SubscribeColumns b
+</span><a href="Hasura.RQL.Types.EventTrigger.html#sosColumns"><span class="hs-identifier hs-var hs-var">sosColumns</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#SubscribeColumns"><span class="hs-identifier hs-type">SubscribeColumns</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690070583"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-93"></span><span>    </span><span class="hs-comment">-- | Columns that the event trigger payload should consists. If set, only those columns will be</span><span>
+</span><span id="line-94"></span><span>    </span><span class="hs-comment">-- visible in the payload. By default, the payload consists of all the columns of the table.</span><span>
+</span><span id="line-95"></span><span>    </span><span id="sosPayload"><span class="annot"><span class="annottext">SubscribeOpSpec b -&gt; Maybe (SubscribeColumns b)
+</span><a href="Hasura.RQL.Types.EventTrigger.html#sosPayload"><span class="hs-identifier hs-var hs-var">sosPayload</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#SubscribeColumns"><span class="hs-identifier hs-type">SubscribeColumns</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690070583"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-96"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-97"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690070574"><span id="local-6989586621690070576"><span id="local-6989586621690070578"><span class="annot"><span class="annottext">Int -&gt; SubscribeOpSpec b -&gt; ShowS
+[SubscribeOpSpec b] -&gt; ShowS
+SubscribeOpSpec b -&gt; String
+(Int -&gt; SubscribeOpSpec b -&gt; ShowS)
+-&gt; (SubscribeOpSpec b -&gt; String)
+-&gt; ([SubscribeOpSpec b] -&gt; ShowS)
+-&gt; Show (SubscribeOpSpec b)
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+forall (b :: BackendType).
+Backend b =&gt;
+Int -&gt; SubscribeOpSpec b -&gt; ShowS
+forall (b :: BackendType).
+Backend b =&gt;
+[SubscribeOpSpec b] -&gt; ShowS
+forall (b :: BackendType). Backend b =&gt; SubscribeOpSpec b -&gt; String
+showList :: [SubscribeOpSpec b] -&gt; ShowS
+$cshowList :: forall (b :: BackendType).
+Backend b =&gt;
+[SubscribeOpSpec b] -&gt; ShowS
+show :: SubscribeOpSpec b -&gt; String
+$cshow :: forall (b :: BackendType). Backend b =&gt; SubscribeOpSpec b -&gt; String
+showsPrec :: Int -&gt; SubscribeOpSpec b -&gt; ShowS
+$cshowsPrec :: forall (b :: BackendType).
+Backend b =&gt;
+Int -&gt; SubscribeOpSpec b -&gt; ShowS
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690070570"><span id="local-6989586621690070572"><span class="annot"><span class="annottext">SubscribeOpSpec b -&gt; SubscribeOpSpec b -&gt; Bool
+(SubscribeOpSpec b -&gt; SubscribeOpSpec b -&gt; Bool)
+-&gt; (SubscribeOpSpec b -&gt; SubscribeOpSpec b -&gt; Bool)
+-&gt; Eq (SubscribeOpSpec b)
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+forall (b :: BackendType).
+Backend b =&gt;
+SubscribeOpSpec b -&gt; SubscribeOpSpec b -&gt; Bool
+/= :: SubscribeOpSpec b -&gt; SubscribeOpSpec b -&gt; Bool
+$c/= :: forall (b :: BackendType).
+Backend b =&gt;
+SubscribeOpSpec b -&gt; SubscribeOpSpec b -&gt; Bool
+== :: SubscribeOpSpec b -&gt; SubscribeOpSpec b -&gt; Bool
+$c== :: forall (b :: BackendType).
+Backend b =&gt;
+SubscribeOpSpec b -&gt; SubscribeOpSpec b -&gt; Bool
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/ghc-prim-0.6.1/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">(forall x. SubscribeOpSpec b -&gt; Rep (SubscribeOpSpec b) x)
+-&gt; (forall x. Rep (SubscribeOpSpec b) x -&gt; SubscribeOpSpec b)
+-&gt; Generic (SubscribeOpSpec b)
+forall x. Rep (SubscribeOpSpec b) x -&gt; SubscribeOpSpec b
+forall x. SubscribeOpSpec b -&gt; Rep (SubscribeOpSpec b) x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+forall (b :: BackendType) x.
+Rep (SubscribeOpSpec b) x -&gt; SubscribeOpSpec b
+forall (b :: BackendType) x.
+SubscribeOpSpec b -&gt; Rep (SubscribeOpSpec b) x
+$cto :: forall (b :: BackendType) x.
+Rep (SubscribeOpSpec b) x -&gt; SubscribeOpSpec b
+$cfrom :: forall (b :: BackendType) x.
+SubscribeOpSpec b -&gt; Rep (SubscribeOpSpec b) x
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-98"></span><span>
+</span><span id="line-99"></span><span id="local-6989586621690070567"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690070565"><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690070567"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/deepseq-1.4.4.0/src"><span class="hs-identifier hs-type">NFData</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#SubscribeOpSpec"><span class="hs-identifier hs-type">SubscribeOpSpec</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690070567"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-100"></span><span>
+</span><span id="line-101"></span><span id="local-6989586621690070564"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690070561"><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690070564"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier hs-type">Cacheable</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#SubscribeOpSpec"><span class="hs-identifier hs-type">SubscribeOpSpec</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690070564"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-102"></span><span>
+</span><span id="line-103"></span><span id="local-6989586621690070560"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690070557"><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690070560"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/aeson-1.5.5.1-d565b322355c9794eb059b7477592fe0d20db50e9f4ac0ae0328e907dd753173/share/doc/html/src"><span class="hs-identifier hs-type">FromJSON</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#SubscribeOpSpec"><span class="hs-identifier hs-type">SubscribeOpSpec</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690070560"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-104"></span><span>  </span><span id="local-6989586621690070556"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser (SubscribeOpSpec b)
+</span><a href="#local-6989586621690070556"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Options -&gt; Value -&gt; Parser (SubscribeOpSpec b)
+forall a.
+(Generic a, GFromJSON Zero (Rep a)) =&gt;
+Options -&gt; Value -&gt; Parser a
+</span><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/aeson-1.5.5.1-d565b322355c9794eb059b7477592fe0d20db50e9f4ac0ae0328e907dd753173/share/doc/html/src"><span class="hs-identifier hs-var">genericParseJSON</span></a></span><span> </span><span class="annot"><span class="annottext">Options
+</span><a href="Hasura.Prelude.html#hasuraJSON"><span class="hs-identifier hs-var">hasuraJSON</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">omitNothingFields :: Bool
+</span><a href="#local-6989586621690070553"><span class="hs-identifier hs-var">omitNothingFields</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/ghc-prim-0.6.1/src"><span class="hs-identifier hs-var">True</span></a></span><span class="hs-special">}</span></span><span>
+</span><span id="line-105"></span><span>
+</span><span id="line-106"></span><span id="local-6989586621690070552"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690070545"><span id="local-6989586621690070547"><span id="local-6989586621690070549"><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690070552"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/aeson-1.5.5.1-d565b322355c9794eb059b7477592fe0d20db50e9f4ac0ae0328e907dd753173/share/doc/html/src"><span class="hs-identifier hs-type">ToJSON</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#SubscribeOpSpec"><span class="hs-identifier hs-type">SubscribeOpSpec</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690070552"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-107"></span><span>  </span><span id="local-6989586621690070544"><span class="annot"><span class="annottext">toJSON :: SubscribeOpSpec b -&gt; Value
+</span><a href="#local-6989586621690070544"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Options -&gt; SubscribeOpSpec b -&gt; Value
+forall a.
+(Generic a, GToJSON' Value Zero (Rep a)) =&gt;
+Options -&gt; a -&gt; Value
+</span><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/aeson-1.5.5.1-d565b322355c9794eb059b7477592fe0d20db50e9f4ac0ae0328e907dd753173/share/doc/html/src"><span class="hs-identifier hs-var">genericToJSON</span></a></span><span> </span><span class="annot"><span class="annottext">Options
+</span><a href="Hasura.Prelude.html#hasuraJSON"><span class="hs-identifier hs-var">hasuraJSON</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">omitNothingFields :: Bool
+</span><a href="#local-6989586621690070553"><span class="hs-identifier hs-var">omitNothingFields</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/ghc-prim-0.6.1/src"><span class="hs-identifier hs-var">True</span></a></span><span class="hs-special">}</span></span><span>
+</span><span id="line-108"></span><span>
+</span><span id="line-109"></span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#defaultNumRetries"><span class="hs-identifier hs-type">defaultNumRetries</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/ghc-prim-0.6.1/src"><span class="hs-identifier hs-type">Int</span></a></span><span>
+</span><span id="line-110"></span><span id="defaultNumRetries"><span class="annot"><span class="annottext">defaultNumRetries :: Int
+</span><a href="Hasura.RQL.Types.EventTrigger.html#defaultNumRetries"><span class="hs-identifier hs-var hs-var">defaultNumRetries</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int
+</span><span class="hs-number">0</span></span><span>
+</span><span id="line-111"></span><span>
+</span><span id="line-112"></span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#defaultRetryInterval"><span class="hs-identifier hs-type">defaultRetryInterval</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/ghc-prim-0.6.1/src"><span class="hs-identifier hs-type">Int</span></a></span><span>
+</span><span id="line-113"></span><span id="defaultRetryInterval"><span class="annot"><span class="annottext">defaultRetryInterval :: Int
+</span><a href="Hasura.RQL.Types.EventTrigger.html#defaultRetryInterval"><span class="hs-identifier hs-var hs-var">defaultRetryInterval</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int
+</span><span class="hs-number">10</span></span><span>
+</span><span id="line-114"></span><span>
+</span><span id="line-115"></span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#defaultTimeoutSeconds"><span class="hs-identifier hs-type">defaultTimeoutSeconds</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/ghc-prim-0.6.1/src"><span class="hs-identifier hs-type">Int</span></a></span><span>
+</span><span id="line-116"></span><span id="defaultTimeoutSeconds"><span class="annot"><span class="annottext">defaultTimeoutSeconds :: Int
+</span><a href="Hasura.RQL.Types.EventTrigger.html#defaultTimeoutSeconds"><span class="hs-identifier hs-var hs-var">defaultTimeoutSeconds</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int
+</span><span class="hs-number">60</span></span><span>
+</span><span id="line-117"></span><span>
+</span><span id="line-118"></span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#defaultRetryConf"><span class="hs-identifier hs-type">defaultRetryConf</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#RetryConf"><span class="hs-identifier hs-type">RetryConf</span></a></span><span>
+</span><span id="line-119"></span><span id="defaultRetryConf"><span class="annot"><span class="annottext">defaultRetryConf :: RetryConf
+</span><a href="Hasura.RQL.Types.EventTrigger.html#defaultRetryConf"><span class="hs-identifier hs-var hs-var">defaultRetryConf</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Maybe Int -&gt; RetryConf
+</span><a href="Hasura.RQL.Types.EventTrigger.html#RetryConf"><span class="hs-identifier hs-var">RetryConf</span></a></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="Hasura.RQL.Types.EventTrigger.html#defaultNumRetries"><span class="hs-identifier hs-var">defaultNumRetries</span></a></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="Hasura.RQL.Types.EventTrigger.html#defaultRetryInterval"><span class="hs-identifier hs-var">defaultRetryInterval</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Int -&gt; Maybe Int
+forall a. a -&gt; Maybe a
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var">Just</span></a></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="Hasura.RQL.Types.EventTrigger.html#defaultTimeoutSeconds"><span class="hs-identifier hs-var">defaultTimeoutSeconds</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-120"></span><span>
+</span><span id="line-121"></span><span id="local-6989586621690070538"><span id="local-6989586621690070539"></span></span><span class="hs-keyword">data</span><span> </span><span id="RetryConf"><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#RetryConf"><span class="hs-identifier hs-var">RetryConf</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="RetryConf"><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#RetryConf"><span class="hs-identifier hs-var">RetryConf</span></a></span></span><span>
+</span><span id="line-122"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="rcNumRetries"><span class="annot"><span class="annottext">RetryConf -&gt; Int
+</span><a href="Hasura.RQL.Types.EventTrigger.html#rcNumRetries"><span class="hs-identifier hs-var hs-var">rcNumRetries</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/ghc-prim-0.6.1/src"><span class="hs-identifier hs-type">Int</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-123"></span><span>    </span><span id="rcIntervalSec"><span class="annot"><span class="annottext">RetryConf -&gt; Int
+</span><a href="Hasura.RQL.Types.EventTrigger.html#rcIntervalSec"><span class="hs-identifier hs-var hs-var">rcIntervalSec</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/ghc-prim-0.6.1/src"><span class="hs-identifier hs-type">Int</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-124"></span><span>    </span><span id="rcTimeoutSec"><span class="annot"><span class="annottext">RetryConf -&gt; Maybe Int
+</span><a href="Hasura.RQL.Types.EventTrigger.html#rcTimeoutSec"><span class="hs-identifier hs-var hs-var">rcTimeoutSec</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/ghc-prim-0.6.1/src"><span class="hs-identifier hs-type">Int</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-125"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-126"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690070529"><span id="local-6989586621690070531"><span id="local-6989586621690070533"><span class="annot"><span class="annottext">Int -&gt; RetryConf -&gt; ShowS
+[RetryConf] -&gt; ShowS
+RetryConf -&gt; String
+(Int -&gt; RetryConf -&gt; ShowS)
+-&gt; (RetryConf -&gt; String)
+-&gt; ([RetryConf] -&gt; ShowS)
+-&gt; Show RetryConf
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [RetryConf] -&gt; ShowS
+$cshowList :: [RetryConf] -&gt; ShowS
+show :: RetryConf -&gt; String
+$cshow :: RetryConf -&gt; String
+showsPrec :: Int -&gt; RetryConf -&gt; ShowS
+$cshowsPrec :: Int -&gt; RetryConf -&gt; ShowS
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690070525"><span id="local-6989586621690070527"><span class="annot"><span class="annottext">RetryConf -&gt; RetryConf -&gt; Bool
+(RetryConf -&gt; RetryConf -&gt; Bool)
+-&gt; (RetryConf -&gt; RetryConf -&gt; Bool) -&gt; Eq RetryConf
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: RetryConf -&gt; RetryConf -&gt; Bool
+$c/= :: RetryConf -&gt; RetryConf -&gt; Bool
+== :: RetryConf -&gt; RetryConf -&gt; Bool
+$c== :: RetryConf -&gt; RetryConf -&gt; Bool
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/ghc-prim-0.6.1/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">(forall x. RetryConf -&gt; Rep RetryConf x)
+-&gt; (forall x. Rep RetryConf x -&gt; RetryConf) -&gt; Generic RetryConf
+forall x. Rep RetryConf x -&gt; RetryConf
+forall x. RetryConf -&gt; Rep RetryConf x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+$cto :: forall x. Rep RetryConf x -&gt; RetryConf
+$cfrom :: forall x. RetryConf -&gt; Rep RetryConf x
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-127"></span><span>
+</span><span id="line-128"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690070521"><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/deepseq-1.4.4.0/src"><span class="hs-identifier hs-type">NFData</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#RetryConf"><span class="hs-identifier hs-type">RetryConf</span></a></span></span><span>
+</span><span id="line-129"></span><span>
+</span><span id="line-130"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690070518"><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier hs-type">Cacheable</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#RetryConf"><span class="hs-identifier hs-type">RetryConf</span></a></span></span><span>
+</span><span id="line-131"></span><span>
+</span><span id="line-132"></span><span class="hs-special">$(</span><span id="local-6989586621690070506"><span id="local-6989586621690070508"><span id="local-6989586621690070510"><span id="local-6989586621690070512"><span id="local-6989586621690070514"><span id="local-6989586621690070516"><span class="hs-identifier">deriveJSON</span><span> </span><span class="hs-identifier">hasuraJSON</span><span> </span><span class="hs-special">{</span><span class="hs-identifier">omitNothingFields</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-identifier">True</span><span class="hs-special">}</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">RetryConf</span></span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-133"></span><span>
+</span><span id="line-134"></span><span id="local-6989586621690070503"><span id="local-6989586621690070504"></span></span><span class="hs-keyword">data</span><span> </span><span id="EventHeaderInfo"><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#EventHeaderInfo"><span class="hs-identifier hs-var">EventHeaderInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="EventHeaderInfo"><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#EventHeaderInfo"><span class="hs-identifier hs-var">EventHeaderInfo</span></a></span></span><span>
+</span><span id="line-135"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="ehiHeaderConf"><span class="annot"><span class="annottext">EventHeaderInfo -&gt; HeaderConf
+</span><a href="Hasura.RQL.Types.EventTrigger.html#ehiHeaderConf"><span class="hs-identifier hs-var hs-var">ehiHeaderConf</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.RQL.DDL.Headers.html#HeaderConf"><span class="hs-identifier hs-type">HeaderConf</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-136"></span><span>    </span><span id="ehiCachedValue"><span class="annot"><span class="annottext">EventHeaderInfo -&gt; Text
+</span><a href="Hasura.RQL.Types.EventTrigger.html#ehiCachedValue"><span class="hs-identifier hs-var hs-var">ehiCachedValue</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/text-1.2.3.2-4200bf40e86b2107f4b06242de65d549c52e58e8833e72545e35f7712661e715/share/doc/html/src"><span class="hs-identifier hs-type">Text</span></a></span><span>
+</span><span id="line-137"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-138"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690070494"><span id="local-6989586621690070496"><span id="local-6989586621690070498"><span class="annot"><span class="annottext">Int -&gt; EventHeaderInfo -&gt; ShowS
+[EventHeaderInfo] -&gt; ShowS
+EventHeaderInfo -&gt; String
+(Int -&gt; EventHeaderInfo -&gt; ShowS)
+-&gt; (EventHeaderInfo -&gt; String)
+-&gt; ([EventHeaderInfo] -&gt; ShowS)
+-&gt; Show EventHeaderInfo
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [EventHeaderInfo] -&gt; ShowS
+$cshowList :: [EventHeaderInfo] -&gt; ShowS
+show :: EventHeaderInfo -&gt; String
+$cshow :: EventHeaderInfo -&gt; String
+showsPrec :: Int -&gt; EventHeaderInfo -&gt; ShowS
+$cshowsPrec :: Int -&gt; EventHeaderInfo -&gt; ShowS
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690070490"><span id="local-6989586621690070492"><span class="annot"><span class="annottext">EventHeaderInfo -&gt; EventHeaderInfo -&gt; Bool
+(EventHeaderInfo -&gt; EventHeaderInfo -&gt; Bool)
+-&gt; (EventHeaderInfo -&gt; EventHeaderInfo -&gt; Bool)
+-&gt; Eq EventHeaderInfo
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: EventHeaderInfo -&gt; EventHeaderInfo -&gt; Bool
+$c/= :: EventHeaderInfo -&gt; EventHeaderInfo -&gt; Bool
+== :: EventHeaderInfo -&gt; EventHeaderInfo -&gt; Bool
+$c== :: EventHeaderInfo -&gt; EventHeaderInfo -&gt; Bool
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/ghc-prim-0.6.1/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">(forall x. EventHeaderInfo -&gt; Rep EventHeaderInfo x)
+-&gt; (forall x. Rep EventHeaderInfo x -&gt; EventHeaderInfo)
+-&gt; Generic EventHeaderInfo
+forall x. Rep EventHeaderInfo x -&gt; EventHeaderInfo
+forall x. EventHeaderInfo -&gt; Rep EventHeaderInfo x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+$cto :: forall x. Rep EventHeaderInfo x -&gt; EventHeaderInfo
+$cfrom :: forall x. EventHeaderInfo -&gt; Rep EventHeaderInfo x
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-139"></span><span>
+</span><span id="line-140"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690070486"><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/deepseq-1.4.4.0/src"><span class="hs-identifier hs-type">NFData</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#EventHeaderInfo"><span class="hs-identifier hs-type">EventHeaderInfo</span></a></span></span><span>
+</span><span id="line-141"></span><span>
+</span><span id="line-142"></span><span class="hs-special">$(</span><span id="local-6989586621690070478"><span id="local-6989586621690070480"><span id="local-6989586621690070482"><span id="local-6989586621690070484"><span class="hs-identifier">deriveToJSON</span><span> </span><span class="hs-identifier">hasuraJSON</span><span> </span><span class="hs-special">{</span><span class="hs-identifier">omitNothingFields</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-identifier">True</span><span class="hs-special">}</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">EventHeaderInfo</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-143"></span><span>
+</span><span id="line-144"></span><span id="local-6989586621690070476"><span id="local-6989586621690070477"></span></span><span class="hs-keyword">data</span><span> </span><span id="WebhookConf"><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#WebhookConf"><span class="hs-identifier hs-var">WebhookConf</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="WCValue"><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#WCValue"><span class="hs-identifier hs-var">WCValue</span></a></span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#InputWebhook"><span class="hs-identifier hs-type">InputWebhook</span></a></span><span> </span><span class="hs-glyph">|</span><span> </span><span id="WCEnv"><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#WCEnv"><span class="hs-identifier hs-var">WCEnv</span></a></span></span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/text-1.2.3.2-4200bf40e86b2107f4b06242de65d549c52e58e8833e72545e35f7712661e715/share/doc/html/src"><span class="hs-identifier hs-type">Text</span></a></span><span>
+</span><span id="line-145"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690070468"><span id="local-6989586621690070470"><span id="local-6989586621690070472"><span class="annot"><span class="annottext">Int -&gt; WebhookConf -&gt; ShowS
+[WebhookConf] -&gt; ShowS
+WebhookConf -&gt; String
+(Int -&gt; WebhookConf -&gt; ShowS)
+-&gt; (WebhookConf -&gt; String)
+-&gt; ([WebhookConf] -&gt; ShowS)
+-&gt; Show WebhookConf
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [WebhookConf] -&gt; ShowS
+$cshowList :: [WebhookConf] -&gt; ShowS
+show :: WebhookConf -&gt; String
+$cshow :: WebhookConf -&gt; String
+showsPrec :: Int -&gt; WebhookConf -&gt; ShowS
+$cshowsPrec :: Int -&gt; WebhookConf -&gt; ShowS
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690070464"><span id="local-6989586621690070466"><span class="annot"><span class="annottext">WebhookConf -&gt; WebhookConf -&gt; Bool
+(WebhookConf -&gt; WebhookConf -&gt; Bool)
+-&gt; (WebhookConf -&gt; WebhookConf -&gt; Bool) -&gt; Eq WebhookConf
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: WebhookConf -&gt; WebhookConf -&gt; Bool
+$c/= :: WebhookConf -&gt; WebhookConf -&gt; Bool
+== :: WebhookConf -&gt; WebhookConf -&gt; Bool
+$c== :: WebhookConf -&gt; WebhookConf -&gt; Bool
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/ghc-prim-0.6.1/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">(forall x. WebhookConf -&gt; Rep WebhookConf x)
+-&gt; (forall x. Rep WebhookConf x -&gt; WebhookConf)
+-&gt; Generic WebhookConf
+forall x. Rep WebhookConf x -&gt; WebhookConf
+forall x. WebhookConf -&gt; Rep WebhookConf x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+$cto :: forall x. Rep WebhookConf x -&gt; WebhookConf
+$cfrom :: forall x. WebhookConf -&gt; Rep WebhookConf x
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-146"></span><span>
+</span><span id="line-147"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690070460"><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/deepseq-1.4.4.0/src"><span class="hs-identifier hs-type">NFData</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#WebhookConf"><span class="hs-identifier hs-type">WebhookConf</span></a></span></span><span>
+</span><span id="line-148"></span><span>
+</span><span id="line-149"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690070457"><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier hs-type">Cacheable</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#WebhookConf"><span class="hs-identifier hs-type">WebhookConf</span></a></span></span><span>
+</span><span id="line-150"></span><span>
+</span><span id="line-151"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690070450"><span id="local-6989586621690070452"><span id="local-6989586621690070454"><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/aeson-1.5.5.1-d565b322355c9794eb059b7477592fe0d20db50e9f4ac0ae0328e907dd753173/share/doc/html/src"><span class="hs-identifier hs-type">ToJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#WebhookConf"><span class="hs-identifier hs-type">WebhookConf</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-152"></span><span>  </span><span id="local-6989586621690070449"><span class="annot"><span class="annottext">toJSON :: WebhookConf -&gt; Value
+</span><a href="#local-6989586621690070449"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#WCValue"><span class="hs-identifier hs-type">WCValue</span></a></span><span> </span><span id="local-6989586621690070448"><span class="annot"><span class="annottext">InputWebhook
+</span><a href="#local-6989586621690070448"><span class="hs-identifier hs-var">w</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">InputWebhook -&gt; Value
+forall a. ToJSON a =&gt; a -&gt; Value
+</span><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/aeson-1.5.5.1-d565b322355c9794eb059b7477592fe0d20db50e9f4ac0ae0328e907dd753173/share/doc/html/src"><span class="hs-identifier hs-var">toJSON</span></a></span><span> </span><span class="annot"><span class="annottext">InputWebhook
+</span><a href="#local-6989586621690070448"><span class="hs-identifier hs-var">w</span></a></span><span>
+</span><span id="line-153"></span><span>  </span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/aeson-1.5.5.1-d565b322355c9794eb059b7477592fe0d20db50e9f4ac0ae0328e907dd753173/share/doc/html/src"><span class="hs-identifier hs-var">toJSON</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#WCEnv"><span class="hs-identifier hs-type">WCEnv</span></a></span><span> </span><span id="local-6989586621690070447"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621690070447"><span class="hs-identifier hs-var">wEnv</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
+</span><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/aeson-1.5.5.1-d565b322355c9794eb059b7477592fe0d20db50e9f4ac0ae0328e907dd753173/share/doc/html/src"><span class="hs-identifier hs-var">object</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;from_env&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Pair
+forall kv v. (KeyValue kv, ToJSON v) =&gt; Text -&gt; v -&gt; kv
+</span><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/aeson-1.5.5.1-d565b322355c9794eb059b7477592fe0d20db50e9f4ac0ae0328e907dd753173/share/doc/html/src"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621690070447"><span class="hs-identifier hs-var">wEnv</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-154"></span><span>
+</span><span id="line-155"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690070442"><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/aeson-1.5.5.1-d565b322355c9794eb059b7477592fe0d20db50e9f4ac0ae0328e907dd753173/share/doc/html/src"><span class="hs-identifier hs-type">FromJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#WebhookConf"><span class="hs-identifier hs-type">WebhookConf</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-156"></span><span>  </span><span id="local-6989586621690070441"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser WebhookConf
+</span><a href="#local-6989586621690070441"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/aeson-1.5.5.1-d565b322355c9794eb059b7477592fe0d20db50e9f4ac0ae0328e907dd753173/share/doc/html/src"><span class="hs-identifier hs-type">Object</span></a></span><span> </span><span id="local-6989586621690070439"><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621690070439"><span class="hs-identifier hs-var">o</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; WebhookConf
+</span><a href="Hasura.RQL.Types.EventTrigger.html#WCEnv"><span class="hs-identifier hs-var">WCEnv</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; WebhookConf) -&gt; Parser Text -&gt; Parser WebhookConf
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621690070439"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Text -&gt; Parser Text
+forall a. FromJSON a =&gt; Object -&gt; Text -&gt; Parser a
+</span><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/aeson-1.5.5.1-d565b322355c9794eb059b7477592fe0d20db50e9f4ac0ae0328e907dd753173/share/doc/html/src"><span class="hs-operator hs-var">.:</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;from_env&quot;</span></span><span>
+</span><span id="line-157"></span><span>  </span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/aeson-1.5.5.1-d565b322355c9794eb059b7477592fe0d20db50e9f4ac0ae0328e907dd753173/share/doc/html/src"><span class="hs-identifier hs-var">parseJSON</span></a></span><span> </span><span id="local-6989586621690070437"><span class="annot"><span class="annottext">t :: Value
+</span><a href="#local-6989586621690070437"><span class="hs-identifier hs-var">t</span></a></span></span><span class="hs-glyph">@</span><span class="hs-special">(</span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/aeson-1.5.5.1-d565b322355c9794eb059b7477592fe0d20db50e9f4ac0ae0328e907dd753173/share/doc/html/src"><span class="hs-identifier hs-type">String</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-identifier">_</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-158"></span><span>    </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Value -&gt; Result InputWebhook
+forall a. FromJSON a =&gt; Value -&gt; Result a
+</span><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/aeson-1.5.5.1-d565b322355c9794eb059b7477592fe0d20db50e9f4ac0ae0328e907dd753173/share/doc/html/src"><span class="hs-identifier hs-var">fromJSON</span></a></span><span> </span><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621690070437"><span class="hs-identifier hs-var">t</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-159"></span><span>      </span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/aeson-1.5.5.1-d565b322355c9794eb059b7477592fe0d20db50e9f4ac0ae0328e907dd753173/share/doc/html/src"><span class="hs-identifier hs-type">Error</span></a></span><span> </span><span id="local-6989586621690070434"><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621690070434"><span class="hs-identifier hs-var">s</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">String -&gt; Parser WebhookConf
+forall (m :: * -&gt; *) a. MonadFail m =&gt; String -&gt; m a
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var">fail</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621690070434"><span class="hs-identifier hs-var">s</span></a></span><span>
+</span><span id="line-160"></span><span>      </span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/aeson-1.5.5.1-d565b322355c9794eb059b7477592fe0d20db50e9f4ac0ae0328e907dd753173/share/doc/html/src"><span class="hs-identifier hs-type">Success</span></a></span><span> </span><span id="local-6989586621690070432"><span class="annot"><span class="annottext">InputWebhook
+</span><a href="#local-6989586621690070432"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">WebhookConf -&gt; Parser WebhookConf
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="annot"><span class="annottext">(WebhookConf -&gt; Parser WebhookConf)
+-&gt; WebhookConf -&gt; Parser WebhookConf
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">InputWebhook -&gt; WebhookConf
+</span><a href="Hasura.RQL.Types.EventTrigger.html#WCValue"><span class="hs-identifier hs-var">WCValue</span></a></span><span> </span><span class="annot"><span class="annottext">InputWebhook
+</span><a href="#local-6989586621690070432"><span class="hs-identifier hs-var">a</span></a></span><span>
+</span><span id="line-161"></span><span>  </span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/aeson-1.5.5.1-d565b322355c9794eb059b7477592fe0d20db50e9f4ac0ae0328e907dd753173/share/doc/html/src"><span class="hs-identifier hs-var">parseJSON</span></a></span><span> </span><span class="annot"><span class="annottext">Value
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; Parser WebhookConf
+forall (m :: * -&gt; *) a. MonadFail m =&gt; String -&gt; m a
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var">fail</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;one of string or object must be provided for webhook&quot;</span></span><span>
+</span><span id="line-162"></span><span>
+</span><span id="line-163"></span><span id="local-6989586621690070430"><span id="local-6989586621690070431"></span></span><span class="hs-keyword">data</span><span> </span><span id="WebhookConfInfo"><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#WebhookConfInfo"><span class="hs-identifier hs-var">WebhookConfInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="WebhookConfInfo"><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#WebhookConfInfo"><span class="hs-identifier hs-var">WebhookConfInfo</span></a></span></span><span>
+</span><span id="line-164"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="wciWebhookConf"><span class="annot"><span class="annottext">WebhookConfInfo -&gt; WebhookConf
+</span><a href="Hasura.RQL.Types.EventTrigger.html#wciWebhookConf"><span class="hs-identifier hs-var hs-var">wciWebhookConf</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#WebhookConf"><span class="hs-identifier hs-type">WebhookConf</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-165"></span><span>    </span><span id="wciCachedValue"><span class="annot"><span class="annottext">WebhookConfInfo -&gt; ResolvedWebhook
+</span><a href="Hasura.RQL.Types.EventTrigger.html#wciCachedValue"><span class="hs-identifier hs-var hs-var">wciCachedValue</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.RQL.Types.Common.html#ResolvedWebhook"><span class="hs-identifier hs-type">ResolvedWebhook</span></a></span><span>
+</span><span id="line-166"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-167"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690070421"><span id="local-6989586621690070423"><span id="local-6989586621690070425"><span class="annot"><span class="annottext">Int -&gt; WebhookConfInfo -&gt; ShowS
+[WebhookConfInfo] -&gt; ShowS
+WebhookConfInfo -&gt; String
+(Int -&gt; WebhookConfInfo -&gt; ShowS)
+-&gt; (WebhookConfInfo -&gt; String)
+-&gt; ([WebhookConfInfo] -&gt; ShowS)
+-&gt; Show WebhookConfInfo
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [WebhookConfInfo] -&gt; ShowS
+$cshowList :: [WebhookConfInfo] -&gt; ShowS
+show :: WebhookConfInfo -&gt; String
+$cshow :: WebhookConfInfo -&gt; String
+showsPrec :: Int -&gt; WebhookConfInfo -&gt; ShowS
+$cshowsPrec :: Int -&gt; WebhookConfInfo -&gt; ShowS
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690070417"><span id="local-6989586621690070419"><span class="annot"><span class="annottext">WebhookConfInfo -&gt; WebhookConfInfo -&gt; Bool
+(WebhookConfInfo -&gt; WebhookConfInfo -&gt; Bool)
+-&gt; (WebhookConfInfo -&gt; WebhookConfInfo -&gt; Bool)
+-&gt; Eq WebhookConfInfo
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: WebhookConfInfo -&gt; WebhookConfInfo -&gt; Bool
+$c/= :: WebhookConfInfo -&gt; WebhookConfInfo -&gt; Bool
+== :: WebhookConfInfo -&gt; WebhookConfInfo -&gt; Bool
+$c== :: WebhookConfInfo -&gt; WebhookConfInfo -&gt; Bool
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/ghc-prim-0.6.1/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">(forall x. WebhookConfInfo -&gt; Rep WebhookConfInfo x)
+-&gt; (forall x. Rep WebhookConfInfo x -&gt; WebhookConfInfo)
+-&gt; Generic WebhookConfInfo
+forall x. Rep WebhookConfInfo x -&gt; WebhookConfInfo
+forall x. WebhookConfInfo -&gt; Rep WebhookConfInfo x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+$cto :: forall x. Rep WebhookConfInfo x -&gt; WebhookConfInfo
+$cfrom :: forall x. WebhookConfInfo -&gt; Rep WebhookConfInfo x
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-168"></span><span>
+</span><span id="line-169"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690070413"><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/deepseq-1.4.4.0/src"><span class="hs-identifier hs-type">NFData</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#WebhookConfInfo"><span class="hs-identifier hs-type">WebhookConfInfo</span></a></span></span><span>
+</span><span id="line-170"></span><span>
+</span><span id="line-171"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690070410"><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier hs-type">Cacheable</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#WebhookConfInfo"><span class="hs-identifier hs-type">WebhookConfInfo</span></a></span></span><span>
+</span><span id="line-172"></span><span>
+</span><span id="line-173"></span><span class="hs-special">$(</span><span id="local-6989586621690070402"><span id="local-6989586621690070404"><span id="local-6989586621690070406"><span id="local-6989586621690070408"><span class="hs-identifier">deriveToJSON</span><span> </span><span class="hs-identifier">hasuraJSON</span><span> </span><span class="hs-special">{</span><span class="hs-identifier">omitNothingFields</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-identifier">True</span><span class="hs-special">}</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">WebhookConfInfo</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-174"></span><span>
+</span><span id="line-175"></span><span class="hs-comment">-- | The table operations on which the event trigger will be invoked.</span><span>
+</span><span id="line-176"></span><span id="local-6989586621690070400"><span id="local-6989586621690070401"></span></span><span class="hs-keyword">data</span><span> </span><span id="TriggerOpsDef"><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#TriggerOpsDef"><span class="hs-identifier hs-var">TriggerOpsDef</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621690070399"><span class="annot"><a href="#local-6989586621690070399"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.SQL.Backend.html#BackendType"><span class="hs-identifier hs-type">BackendType</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span id="TriggerOpsDef"><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#TriggerOpsDef"><span class="hs-identifier hs-var">TriggerOpsDef</span></a></span></span><span>
+</span><span id="line-177"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="tdInsert"><span class="annot"><span class="annottext">TriggerOpsDef b -&gt; Maybe (SubscribeOpSpec b)
+</span><a href="Hasura.RQL.Types.EventTrigger.html#tdInsert"><span class="hs-identifier hs-var hs-var">tdInsert</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#SubscribeOpSpec"><span class="hs-identifier hs-type">SubscribeOpSpec</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690070399"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-178"></span><span>    </span><span id="tdUpdate"><span class="annot"><span class="annottext">TriggerOpsDef b -&gt; Maybe (SubscribeOpSpec b)
+</span><a href="Hasura.RQL.Types.EventTrigger.html#tdUpdate"><span class="hs-identifier hs-var hs-var">tdUpdate</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#SubscribeOpSpec"><span class="hs-identifier hs-type">SubscribeOpSpec</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690070399"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-179"></span><span>    </span><span id="tdDelete"><span class="annot"><span class="annottext">TriggerOpsDef b -&gt; Maybe (SubscribeOpSpec b)
+</span><a href="Hasura.RQL.Types.EventTrigger.html#tdDelete"><span class="hs-identifier hs-var hs-var">tdDelete</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#SubscribeOpSpec"><span class="hs-identifier hs-type">SubscribeOpSpec</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690070399"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-180"></span><span>    </span><span id="tdEnableManual"><span class="annot"><span class="annottext">TriggerOpsDef b -&gt; Maybe Bool
+</span><a href="Hasura.RQL.Types.EventTrigger.html#tdEnableManual"><span class="hs-identifier hs-var hs-var">tdEnableManual</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/ghc-prim-0.6.1/src"><span class="hs-identifier hs-type">Bool</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-181"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-182"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690070388"><span id="local-6989586621690070390"><span id="local-6989586621690070392"><span class="annot"><span class="annottext">Int -&gt; TriggerOpsDef b -&gt; ShowS
+[TriggerOpsDef b] -&gt; ShowS
+TriggerOpsDef b -&gt; String
+(Int -&gt; TriggerOpsDef b -&gt; ShowS)
+-&gt; (TriggerOpsDef b -&gt; String)
+-&gt; ([TriggerOpsDef b] -&gt; ShowS)
+-&gt; Show (TriggerOpsDef b)
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+forall (b :: BackendType).
+Backend b =&gt;
+Int -&gt; TriggerOpsDef b -&gt; ShowS
+forall (b :: BackendType). Backend b =&gt; [TriggerOpsDef b] -&gt; ShowS
+forall (b :: BackendType). Backend b =&gt; TriggerOpsDef b -&gt; String
+showList :: [TriggerOpsDef b] -&gt; ShowS
+$cshowList :: forall (b :: BackendType). Backend b =&gt; [TriggerOpsDef b] -&gt; ShowS
+show :: TriggerOpsDef b -&gt; String
+$cshow :: forall (b :: BackendType). Backend b =&gt; TriggerOpsDef b -&gt; String
+showsPrec :: Int -&gt; TriggerOpsDef b -&gt; ShowS
+$cshowsPrec :: forall (b :: BackendType).
+Backend b =&gt;
+Int -&gt; TriggerOpsDef b -&gt; ShowS
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690070384"><span id="local-6989586621690070386"><span class="annot"><span class="annottext">TriggerOpsDef b -&gt; TriggerOpsDef b -&gt; Bool
+(TriggerOpsDef b -&gt; TriggerOpsDef b -&gt; Bool)
+-&gt; (TriggerOpsDef b -&gt; TriggerOpsDef b -&gt; Bool)
+-&gt; Eq (TriggerOpsDef b)
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+forall (b :: BackendType).
+Backend b =&gt;
+TriggerOpsDef b -&gt; TriggerOpsDef b -&gt; Bool
+/= :: TriggerOpsDef b -&gt; TriggerOpsDef b -&gt; Bool
+$c/= :: forall (b :: BackendType).
+Backend b =&gt;
+TriggerOpsDef b -&gt; TriggerOpsDef b -&gt; Bool
+== :: TriggerOpsDef b -&gt; TriggerOpsDef b -&gt; Bool
+$c== :: forall (b :: BackendType).
+Backend b =&gt;
+TriggerOpsDef b -&gt; TriggerOpsDef b -&gt; Bool
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/ghc-prim-0.6.1/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">(forall x. TriggerOpsDef b -&gt; Rep (TriggerOpsDef b) x)
+-&gt; (forall x. Rep (TriggerOpsDef b) x -&gt; TriggerOpsDef b)
+-&gt; Generic (TriggerOpsDef b)
+forall x. Rep (TriggerOpsDef b) x -&gt; TriggerOpsDef b
+forall x. TriggerOpsDef b -&gt; Rep (TriggerOpsDef b) x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+forall (b :: BackendType) x.
+Rep (TriggerOpsDef b) x -&gt; TriggerOpsDef b
+forall (b :: BackendType) x.
+TriggerOpsDef b -&gt; Rep (TriggerOpsDef b) x
+$cto :: forall (b :: BackendType) x.
+Rep (TriggerOpsDef b) x -&gt; TriggerOpsDef b
+$cfrom :: forall (b :: BackendType) x.
+TriggerOpsDef b -&gt; Rep (TriggerOpsDef b) x
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-183"></span><span>
+</span><span id="line-184"></span><span id="local-6989586621690070381"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690070379"><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690070381"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/deepseq-1.4.4.0/src"><span class="hs-identifier hs-type">NFData</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#TriggerOpsDef"><span class="hs-identifier hs-type">TriggerOpsDef</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690070381"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-185"></span><span>
+</span><span id="line-186"></span><span id="local-6989586621690070378"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690070375"><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690070378"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier hs-type">Cacheable</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#TriggerOpsDef"><span class="hs-identifier hs-type">TriggerOpsDef</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690070378"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-187"></span><span>
+</span><span id="line-188"></span><span id="local-6989586621690070374"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690070371"><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690070374"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/aeson-1.5.5.1-d565b322355c9794eb059b7477592fe0d20db50e9f4ac0ae0328e907dd753173/share/doc/html/src"><span class="hs-identifier hs-type">FromJSON</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#TriggerOpsDef"><span class="hs-identifier hs-type">TriggerOpsDef</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690070374"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-189"></span><span>  </span><span id="local-6989586621690070370"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser (TriggerOpsDef b)
+</span><a href="#local-6989586621690070370"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Options -&gt; Value -&gt; Parser (TriggerOpsDef b)
+forall a.
+(Generic a, GFromJSON Zero (Rep a)) =&gt;
+Options -&gt; Value -&gt; Parser a
+</span><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/aeson-1.5.5.1-d565b322355c9794eb059b7477592fe0d20db50e9f4ac0ae0328e907dd753173/share/doc/html/src"><span class="hs-identifier hs-var">genericParseJSON</span></a></span><span> </span><span class="annot"><span class="annottext">Options
+</span><a href="Hasura.Prelude.html#hasuraJSON"><span class="hs-identifier hs-var">hasuraJSON</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">omitNothingFields :: Bool
+</span><a href="#local-6989586621690070553"><span class="hs-identifier hs-var">omitNothingFields</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/ghc-prim-0.6.1/src"><span class="hs-identifier hs-var">True</span></a></span><span class="hs-special">}</span></span><span>
+</span><span id="line-190"></span><span>
+</span><span id="line-191"></span><span id="local-6989586621690070369"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690070362"><span id="local-6989586621690070364"><span id="local-6989586621690070366"><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690070369"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/aeson-1.5.5.1-d565b322355c9794eb059b7477592fe0d20db50e9f4ac0ae0328e907dd753173/share/doc/html/src"><span class="hs-identifier hs-type">ToJSON</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#TriggerOpsDef"><span class="hs-identifier hs-type">TriggerOpsDef</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690070369"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-192"></span><span>  </span><span id="local-6989586621690070361"><span class="annot"><span class="annottext">toJSON :: TriggerOpsDef b -&gt; Value
+</span><a href="#local-6989586621690070361"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Options -&gt; TriggerOpsDef b -&gt; Value
+forall a.
+(Generic a, GToJSON' Value Zero (Rep a)) =&gt;
+Options -&gt; a -&gt; Value
+</span><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/aeson-1.5.5.1-d565b322355c9794eb059b7477592fe0d20db50e9f4ac0ae0328e907dd753173/share/doc/html/src"><span class="hs-identifier hs-var">genericToJSON</span></a></span><span> </span><span class="annot"><span class="annottext">Options
+</span><a href="Hasura.Prelude.html#hasuraJSON"><span class="hs-identifier hs-var">hasuraJSON</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">omitNothingFields :: Bool
+</span><a href="#local-6989586621690070553"><span class="hs-identifier hs-var">omitNothingFields</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/ghc-prim-0.6.1/src"><span class="hs-identifier hs-var">True</span></a></span><span class="hs-special">}</span></span><span>
+</span><span id="line-193"></span><span>
+</span><span id="line-194"></span><span id="local-6989586621690070359"><span id="local-6989586621690070360"></span></span><span class="hs-keyword">data</span><span> </span><span id="EventTriggerConf"><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#EventTriggerConf"><span class="hs-identifier hs-var">EventTriggerConf</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621690070358"><span class="annot"><a href="#local-6989586621690070358"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.SQL.Backend.html#BackendType"><span class="hs-identifier hs-type">BackendType</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span id="EventTriggerConf"><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#EventTriggerConf"><span class="hs-identifier hs-var">EventTriggerConf</span></a></span></span><span>
+</span><span id="line-195"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="etcName"><span class="annot"><span class="annottext">EventTriggerConf b -&gt; TriggerName
+</span><a href="Hasura.RQL.Types.EventTrigger.html#etcName"><span class="hs-identifier hs-var hs-var">etcName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#TriggerName"><span class="hs-identifier hs-type">TriggerName</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-196"></span><span>    </span><span id="etcDefinition"><span class="annot"><span class="annottext">EventTriggerConf b -&gt; TriggerOpsDef b
+</span><a href="Hasura.RQL.Types.EventTrigger.html#etcDefinition"><span class="hs-identifier hs-var hs-var">etcDefinition</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#TriggerOpsDef"><span class="hs-identifier hs-type">TriggerOpsDef</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690070358"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-197"></span><span>    </span><span id="etcWebhook"><span class="annot"><span class="annottext">EventTriggerConf b -&gt; Maybe InputWebhook
+</span><a href="Hasura.RQL.Types.EventTrigger.html#etcWebhook"><span class="hs-identifier hs-var hs-var">etcWebhook</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#InputWebhook"><span class="hs-identifier hs-type">InputWebhook</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-198"></span><span>    </span><span id="etcWebhookFromEnv"><span class="annot"><span class="annottext">EventTriggerConf b -&gt; Maybe Text
+</span><a href="Hasura.RQL.Types.EventTrigger.html#etcWebhookFromEnv"><span class="hs-identifier hs-var hs-var">etcWebhookFromEnv</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/text-1.2.3.2-4200bf40e86b2107f4b06242de65d549c52e58e8833e72545e35f7712661e715/share/doc/html/src"><span class="hs-identifier hs-type">Text</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-199"></span><span>    </span><span id="etcRetryConf"><span class="annot"><span class="annottext">EventTriggerConf b -&gt; RetryConf
+</span><a href="Hasura.RQL.Types.EventTrigger.html#etcRetryConf"><span class="hs-identifier hs-var hs-var">etcRetryConf</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#RetryConf"><span class="hs-identifier hs-type">RetryConf</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-200"></span><span>    </span><span id="etcHeaders"><span class="annot"><span class="annottext">EventTriggerConf b -&gt; Maybe [HeaderConf]
+</span><a href="Hasura.RQL.Types.EventTrigger.html#etcHeaders"><span class="hs-identifier hs-var hs-var">etcHeaders</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.DDL.Headers.html#HeaderConf"><span class="hs-identifier hs-type">HeaderConf</span></a></span><span class="hs-special">]</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-201"></span><span>    </span><span id="etcRequestTransform"><span class="annot"><span class="annottext">EventTriggerConf b -&gt; Maybe MetadataTransform
+</span><a href="Hasura.RQL.Types.EventTrigger.html#etcRequestTransform"><span class="hs-identifier hs-var hs-var">etcRequestTransform</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.RequestTransform.html#MetadataTransform"><span class="hs-identifier hs-type">MetadataTransform</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-202"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-203"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690070344"><span id="local-6989586621690070346"><span id="local-6989586621690070348"><span class="annot"><span class="annottext">Int -&gt; EventTriggerConf b -&gt; ShowS
+[EventTriggerConf b] -&gt; ShowS
+EventTriggerConf b -&gt; String
+(Int -&gt; EventTriggerConf b -&gt; ShowS)
+-&gt; (EventTriggerConf b -&gt; String)
+-&gt; ([EventTriggerConf b] -&gt; ShowS)
+-&gt; Show (EventTriggerConf b)
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+forall (b :: BackendType).
+Backend b =&gt;
+Int -&gt; EventTriggerConf b -&gt; ShowS
+forall (b :: BackendType).
+Backend b =&gt;
+[EventTriggerConf b] -&gt; ShowS
+forall (b :: BackendType).
+Backend b =&gt;
+EventTriggerConf b -&gt; String
+showList :: [EventTriggerConf b] -&gt; ShowS
+$cshowList :: forall (b :: BackendType).
+Backend b =&gt;
+[EventTriggerConf b] -&gt; ShowS
+show :: EventTriggerConf b -&gt; String
+$cshow :: forall (b :: BackendType).
+Backend b =&gt;
+EventTriggerConf b -&gt; String
+showsPrec :: Int -&gt; EventTriggerConf b -&gt; ShowS
+$cshowsPrec :: forall (b :: BackendType).
+Backend b =&gt;
+Int -&gt; EventTriggerConf b -&gt; ShowS
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690070340"><span id="local-6989586621690070342"><span class="annot"><span class="annottext">EventTriggerConf b -&gt; EventTriggerConf b -&gt; Bool
+(EventTriggerConf b -&gt; EventTriggerConf b -&gt; Bool)
+-&gt; (EventTriggerConf b -&gt; EventTriggerConf b -&gt; Bool)
+-&gt; Eq (EventTriggerConf b)
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+forall (b :: BackendType).
+Backend b =&gt;
+EventTriggerConf b -&gt; EventTriggerConf b -&gt; Bool
+/= :: EventTriggerConf b -&gt; EventTriggerConf b -&gt; Bool
+$c/= :: forall (b :: BackendType).
+Backend b =&gt;
+EventTriggerConf b -&gt; EventTriggerConf b -&gt; Bool
+== :: EventTriggerConf b -&gt; EventTriggerConf b -&gt; Bool
+$c== :: forall (b :: BackendType).
+Backend b =&gt;
+EventTriggerConf b -&gt; EventTriggerConf b -&gt; Bool
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/ghc-prim-0.6.1/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">(forall x. EventTriggerConf b -&gt; Rep (EventTriggerConf b) x)
+-&gt; (forall x. Rep (EventTriggerConf b) x -&gt; EventTriggerConf b)
+-&gt; Generic (EventTriggerConf b)
+forall x. Rep (EventTriggerConf b) x -&gt; EventTriggerConf b
+forall x. EventTriggerConf b -&gt; Rep (EventTriggerConf b) x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+forall (b :: BackendType) x.
+Rep (EventTriggerConf b) x -&gt; EventTriggerConf b
+forall (b :: BackendType) x.
+EventTriggerConf b -&gt; Rep (EventTriggerConf b) x
+$cto :: forall (b :: BackendType) x.
+Rep (EventTriggerConf b) x -&gt; EventTriggerConf b
+$cfrom :: forall (b :: BackendType) x.
+EventTriggerConf b -&gt; Rep (EventTriggerConf b) x
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-204"></span><span>
+</span><span id="line-205"></span><span id="local-6989586621690070337"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690070334"><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690070337"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier hs-type">Cacheable</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#EventTriggerConf"><span class="hs-identifier hs-type">EventTriggerConf</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690070337"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-206"></span><span>
+</span><span id="line-207"></span><span id="local-6989586621690070333"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690070330"><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690070333"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/aeson-1.5.5.1-d565b322355c9794eb059b7477592fe0d20db50e9f4ac0ae0328e907dd753173/share/doc/html/src"><span class="hs-identifier hs-type">FromJSON</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#EventTriggerConf"><span class="hs-identifier hs-type">EventTriggerConf</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690070333"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-208"></span><span>  </span><span id="local-6989586621690070329"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser (EventTriggerConf b)
+</span><a href="#local-6989586621690070329"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Options -&gt; Value -&gt; Parser (EventTriggerConf b)
+forall a.
+(Generic a, GFromJSON Zero (Rep a)) =&gt;
+Options -&gt; Value -&gt; Parser a
+</span><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/aeson-1.5.5.1-d565b322355c9794eb059b7477592fe0d20db50e9f4ac0ae0328e907dd753173/share/doc/html/src"><span class="hs-identifier hs-var">genericParseJSON</span></a></span><span> </span><span class="annot"><span class="annottext">Options
+</span><a href="Hasura.Prelude.html#hasuraJSON"><span class="hs-identifier hs-var">hasuraJSON</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">omitNothingFields :: Bool
+</span><a href="#local-6989586621690070553"><span class="hs-identifier hs-var">omitNothingFields</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/ghc-prim-0.6.1/src"><span class="hs-identifier hs-var">True</span></a></span><span class="hs-special">}</span></span><span>
+</span><span id="line-209"></span><span>
+</span><span id="line-210"></span><span id="local-6989586621690070328"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690070321"><span id="local-6989586621690070323"><span id="local-6989586621690070325"><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690070328"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/aeson-1.5.5.1-d565b322355c9794eb059b7477592fe0d20db50e9f4ac0ae0328e907dd753173/share/doc/html/src"><span class="hs-identifier hs-type">ToJSON</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#EventTriggerConf"><span class="hs-identifier hs-type">EventTriggerConf</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690070328"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-211"></span><span>  </span><span id="local-6989586621690070320"><span class="annot"><span class="annottext">toJSON :: EventTriggerConf b -&gt; Value
+</span><a href="#local-6989586621690070320"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Options -&gt; EventTriggerConf b -&gt; Value
+forall a.
+(Generic a, GToJSON' Value Zero (Rep a)) =&gt;
+Options -&gt; a -&gt; Value
+</span><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/aeson-1.5.5.1-d565b322355c9794eb059b7477592fe0d20db50e9f4ac0ae0328e907dd753173/share/doc/html/src"><span class="hs-identifier hs-var">genericToJSON</span></a></span><span> </span><span class="annot"><span class="annottext">Options
+</span><a href="Hasura.Prelude.html#hasuraJSON"><span class="hs-identifier hs-var">hasuraJSON</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">omitNothingFields :: Bool
+</span><a href="#local-6989586621690070553"><span class="hs-identifier hs-var">omitNothingFields</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/ghc-prim-0.6.1/src"><span class="hs-identifier hs-var">True</span></a></span><span class="hs-special">}</span></span><span>
+</span><span id="line-212"></span><span>
+</span><span id="line-213"></span><span id="local-6989586621690070318"><span id="local-6989586621690070319"></span></span><span class="hs-keyword">data</span><span> </span><span id="RecreateEventTriggers"><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#RecreateEventTriggers"><span class="hs-identifier hs-var">RecreateEventTriggers</span></a></span></span><span>
+</span><span id="line-214"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="RETRecreate"><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#RETRecreate"><span class="hs-identifier hs-var">RETRecreate</span></a></span></span><span>
+</span><span id="line-215"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="RETDoNothing"><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#RETDoNothing"><span class="hs-identifier hs-var">RETDoNothing</span></a></span></span><span>
+</span><span id="line-216"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690070310"><span id="local-6989586621690070312"><span id="local-6989586621690070314"><span class="annot"><span class="annottext">Int -&gt; RecreateEventTriggers -&gt; ShowS
+[RecreateEventTriggers] -&gt; ShowS
+RecreateEventTriggers -&gt; String
+(Int -&gt; RecreateEventTriggers -&gt; ShowS)
+-&gt; (RecreateEventTriggers -&gt; String)
+-&gt; ([RecreateEventTriggers] -&gt; ShowS)
+-&gt; Show RecreateEventTriggers
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [RecreateEventTriggers] -&gt; ShowS
+$cshowList :: [RecreateEventTriggers] -&gt; ShowS
+show :: RecreateEventTriggers -&gt; String
+$cshow :: RecreateEventTriggers -&gt; String
+showsPrec :: Int -&gt; RecreateEventTriggers -&gt; ShowS
+$cshowsPrec :: Int -&gt; RecreateEventTriggers -&gt; ShowS
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690070306"><span id="local-6989586621690070308"><span class="annot"><span class="annottext">RecreateEventTriggers -&gt; RecreateEventTriggers -&gt; Bool
+(RecreateEventTriggers -&gt; RecreateEventTriggers -&gt; Bool)
+-&gt; (RecreateEventTriggers -&gt; RecreateEventTriggers -&gt; Bool)
+-&gt; Eq RecreateEventTriggers
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: RecreateEventTriggers -&gt; RecreateEventTriggers -&gt; Bool
+$c/= :: RecreateEventTriggers -&gt; RecreateEventTriggers -&gt; Bool
+== :: RecreateEventTriggers -&gt; RecreateEventTriggers -&gt; Bool
+$c== :: RecreateEventTriggers -&gt; RecreateEventTriggers -&gt; Bool
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/ghc-prim-0.6.1/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">(forall x. RecreateEventTriggers -&gt; Rep RecreateEventTriggers x)
+-&gt; (forall x. Rep RecreateEventTriggers x -&gt; RecreateEventTriggers)
+-&gt; Generic RecreateEventTriggers
+forall x. Rep RecreateEventTriggers x -&gt; RecreateEventTriggers
+forall x. RecreateEventTriggers -&gt; Rep RecreateEventTriggers x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+$cto :: forall x. Rep RecreateEventTriggers x -&gt; RecreateEventTriggers
+$cfrom :: forall x. RecreateEventTriggers -&gt; Rep RecreateEventTriggers x
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-217"></span><span>
+</span><span id="line-218"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690070301"><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier hs-type">Cacheable</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#RecreateEventTriggers"><span class="hs-identifier hs-type">RecreateEventTriggers</span></a></span></span><span>
+</span><span id="line-219"></span><span>
+</span><span id="line-220"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690070296"><span id="local-6989586621690070298"><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-type">Semigroup</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#RecreateEventTriggers"><span class="hs-identifier hs-type">RecreateEventTriggers</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-221"></span><span>  </span><span class="annot"><span class="annottext">RecreateEventTriggers
+</span><a href="Hasura.RQL.Types.EventTrigger.html#RETRecreate"><span class="hs-identifier hs-var">RETRecreate</span></a></span><span> </span><span id="local-6989586621690070294"><span class="annot"><span class="annottext">&lt;&gt; :: RecreateEventTriggers
+-&gt; RecreateEventTriggers -&gt; RecreateEventTriggers
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var hs-var hs-var hs-var">&lt;&gt;</span></a></span></span><span> </span><span class="annot"><span class="annottext">RecreateEventTriggers
+</span><a href="Hasura.RQL.Types.EventTrigger.html#RETRecreate"><span class="hs-identifier hs-var">RETRecreate</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">RecreateEventTriggers
+</span><a href="Hasura.RQL.Types.EventTrigger.html#RETRecreate"><span class="hs-identifier hs-var">RETRecreate</span></a></span><span>
+</span><span id="line-222"></span><span>  </span><span class="annot"><span class="annottext">RecreateEventTriggers
+</span><a href="Hasura.RQL.Types.EventTrigger.html#RETRecreate"><span class="hs-identifier hs-var">RETRecreate</span></a></span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">RecreateEventTriggers
+</span><a href="Hasura.RQL.Types.EventTrigger.html#RETDoNothing"><span class="hs-identifier hs-var">RETDoNothing</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">RecreateEventTriggers
+</span><a href="Hasura.RQL.Types.EventTrigger.html#RETRecreate"><span class="hs-identifier hs-var">RETRecreate</span></a></span><span>
+</span><span id="line-223"></span><span>  </span><span class="annot"><span class="annottext">RecreateEventTriggers
+</span><a href="Hasura.RQL.Types.EventTrigger.html#RETDoNothing"><span class="hs-identifier hs-var">RETDoNothing</span></a></span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">RecreateEventTriggers
+</span><a href="Hasura.RQL.Types.EventTrigger.html#RETRecreate"><span class="hs-identifier hs-var">RETRecreate</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">RecreateEventTriggers
+</span><a href="Hasura.RQL.Types.EventTrigger.html#RETRecreate"><span class="hs-identifier hs-var">RETRecreate</span></a></span><span>
+</span><span id="line-224"></span><span>  </span><span class="annot"><span class="annottext">RecreateEventTriggers
+</span><a href="Hasura.RQL.Types.EventTrigger.html#RETDoNothing"><span class="hs-identifier hs-var">RETDoNothing</span></a></span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">RecreateEventTriggers
+</span><a href="Hasura.RQL.Types.EventTrigger.html#RETDoNothing"><span class="hs-identifier hs-var">RETDoNothing</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">RecreateEventTriggers
+</span><a href="Hasura.RQL.Types.EventTrigger.html#RETDoNothing"><span class="hs-identifier hs-var">RETDoNothing</span></a></span><span>
+</span><span id="line-225"></span><span>
+</span><span id="line-226"></span><span class="hs-keyword">data</span><span> </span><span id="TriggerMetadata"><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#TriggerMetadata"><span class="hs-identifier hs-var">TriggerMetadata</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="TriggerMetadata"><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#TriggerMetadata"><span class="hs-identifier hs-var">TriggerMetadata</span></a></span></span><span> </span><span class="hs-special">{</span><span id="tmName"><span class="annot"><span class="annottext">TriggerMetadata -&gt; TriggerName
+</span><a href="Hasura.RQL.Types.EventTrigger.html#tmName"><span class="hs-identifier hs-var hs-var">tmName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#TriggerName"><span class="hs-identifier hs-type">TriggerName</span></a></span><span class="hs-special">}</span><span>
+</span><span id="line-227"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690070286"><span id="local-6989586621690070288"><span id="local-6989586621690070290"><span class="annot"><span class="annottext">Int -&gt; TriggerMetadata -&gt; ShowS
+[TriggerMetadata] -&gt; ShowS
+TriggerMetadata -&gt; String
+(Int -&gt; TriggerMetadata -&gt; ShowS)
+-&gt; (TriggerMetadata -&gt; String)
+-&gt; ([TriggerMetadata] -&gt; ShowS)
+-&gt; Show TriggerMetadata
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [TriggerMetadata] -&gt; ShowS
+$cshowList :: [TriggerMetadata] -&gt; ShowS
+show :: TriggerMetadata -&gt; String
+$cshow :: TriggerMetadata -&gt; String
+showsPrec :: Int -&gt; TriggerMetadata -&gt; ShowS
+$cshowsPrec :: Int -&gt; TriggerMetadata -&gt; ShowS
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690070282"><span id="local-6989586621690070284"><span class="annot"><span class="annottext">TriggerMetadata -&gt; TriggerMetadata -&gt; Bool
+(TriggerMetadata -&gt; TriggerMetadata -&gt; Bool)
+-&gt; (TriggerMetadata -&gt; TriggerMetadata -&gt; Bool)
+-&gt; Eq TriggerMetadata
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: TriggerMetadata -&gt; TriggerMetadata -&gt; Bool
+$c/= :: TriggerMetadata -&gt; TriggerMetadata -&gt; Bool
+== :: TriggerMetadata -&gt; TriggerMetadata -&gt; Bool
+$c== :: TriggerMetadata -&gt; TriggerMetadata -&gt; Bool
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/ghc-prim-0.6.1/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-228"></span><span>
+</span><span id="line-229"></span><span class="hs-special">$(</span><span id="local-6989586621690070270"><span id="local-6989586621690070272"><span id="local-6989586621690070274"><span id="local-6989586621690070276"><span id="local-6989586621690070278"><span id="local-6989586621690070280"><span class="hs-identifier">deriveJSON</span><span> </span><span class="hs-identifier">hasuraJSON</span><span> </span><span class="hs-special">{</span><span class="hs-identifier">omitNothingFields</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-identifier">True</span><span class="hs-special">}</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">TriggerMetadata</span></span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-230"></span><span>
+</span><span id="line-231"></span><span class="hs-comment">-- | Change data for a particular row</span><span>
+</span><span id="line-232"></span><span class="hs-comment">--</span><span>
+</span><span id="line-233"></span><span class="hs-comment">-- https://docs.hasura.io/1.0/graphql/manual/event-triggers/payload.html</span><span>
+</span><span id="line-234"></span><span id="local-6989586621690070268"><span id="local-6989586621690070269"></span></span><span class="hs-keyword">data</span><span> </span><span id="Event"><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#Event"><span class="hs-identifier hs-var">Event</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621690070267"><span class="annot"><a href="#local-6989586621690070267"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.SQL.Backend.html#BackendType"><span class="hs-identifier hs-type">BackendType</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Event"><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#Event"><span class="hs-identifier hs-var">Event</span></a></span></span><span>
+</span><span id="line-235"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="eId"><span class="annot"><span class="annottext">Event b -&gt; EventId
+</span><a href="Hasura.RQL.Types.EventTrigger.html#eId"><span class="hs-identifier hs-var hs-var">eId</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#EventId"><span class="hs-identifier hs-type">EventId</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-236"></span><span>    </span><span id="eSource"><span class="annot"><span class="annottext">Event b -&gt; SourceName
+</span><a href="Hasura.RQL.Types.EventTrigger.html#eSource"><span class="hs-identifier hs-var hs-var">eSource</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.RQL.Types.Common.html#SourceName"><span class="hs-identifier hs-type">SourceName</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-237"></span><span>    </span><span id="eTable"><span class="annot"><span class="annottext">Event b -&gt; TableName b
+</span><a href="Hasura.RQL.Types.EventTrigger.html#eTable"><span class="hs-identifier hs-var hs-var">eTable</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#TableName"><span class="hs-identifier hs-type">TableName</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690070267"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-238"></span><span>    </span><span id="eTrigger"><span class="annot"><span class="annottext">Event b -&gt; TriggerMetadata
+</span><a href="Hasura.RQL.Types.EventTrigger.html#eTrigger"><span class="hs-identifier hs-var hs-var">eTrigger</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#TriggerMetadata"><span class="hs-identifier hs-type">TriggerMetadata</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-239"></span><span>    </span><span id="eEvent"><span class="annot"><span class="annottext">Event b -&gt; Value
+</span><a href="Hasura.RQL.Types.EventTrigger.html#eEvent"><span class="hs-identifier hs-var hs-var">eEvent</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/aeson-1.5.5.1-d565b322355c9794eb059b7477592fe0d20db50e9f4ac0ae0328e907dd753173/share/doc/html/src"><span class="hs-identifier hs-type">Value</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-240"></span><span>    </span><span id="eTries"><span class="annot"><span class="annottext">Event b -&gt; Int
+</span><a href="Hasura.RQL.Types.EventTrigger.html#eTries"><span class="hs-identifier hs-var hs-var">eTries</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/ghc-prim-0.6.1/src"><span class="hs-identifier hs-type">Int</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-241"></span><span>    </span><span id="eCreatedAt"><span class="annot"><span class="annottext">Event b -&gt; UTCTime
+</span><a href="Hasura.RQL.Types.EventTrigger.html#eCreatedAt"><span class="hs-identifier hs-var hs-var">eCreatedAt</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/time-1.9.3/src"><span class="hs-identifier hs-type">Time.UTCTime</span></a></span><span>
+</span><span id="line-242"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-243"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(forall x. Event b -&gt; Rep (Event b) x)
+-&gt; (forall x. Rep (Event b) x -&gt; Event b) -&gt; Generic (Event b)
+forall x. Rep (Event b) x -&gt; Event b
+forall x. Event b -&gt; Rep (Event b) x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+forall (b :: BackendType) x. Rep (Event b) x -&gt; Event b
+forall (b :: BackendType) x. Event b -&gt; Rep (Event b) x
+$cto :: forall (b :: BackendType) x. Rep (Event b) x -&gt; Event b
+$cfrom :: forall (b :: BackendType) x. Event b -&gt; Rep (Event b) x
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-244"></span><span>
+</span><span id="line-245"></span><span id="local-6989586621690070250"><span id="local-6989586621690070252"><span id="local-6989586621690070254"><span id="local-6989586621690070256"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690070256"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-type">Show</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#Event"><span class="hs-identifier hs-type">Event</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690070256"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span></span></span><span>
+</span><span id="line-246"></span><span>
+</span><span id="line-247"></span><span id="local-6989586621690070245"><span id="local-6989586621690070247"><span id="local-6989586621690070249"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690070249"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/ghc-prim-0.6.1/src"><span class="hs-identifier hs-type">Eq</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#Event"><span class="hs-identifier hs-type">Event</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690070249"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span></span><span>
+</span><span id="line-248"></span><span>
+</span><span id="line-249"></span><span id="local-6989586621690070244"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690070241"><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690070244"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/aeson-1.5.5.1-d565b322355c9794eb059b7477592fe0d20db50e9f4ac0ae0328e907dd753173/share/doc/html/src"><span class="hs-identifier hs-type">FromJSON</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#Event"><span class="hs-identifier hs-type">Event</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690070244"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-250"></span><span>  </span><span id="local-6989586621690070240"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser (Event b)
+</span><a href="#local-6989586621690070240"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Options -&gt; Value -&gt; Parser (Event b)
+forall a.
+(Generic a, GFromJSON Zero (Rep a)) =&gt;
+Options -&gt; Value -&gt; Parser a
+</span><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/aeson-1.5.5.1-d565b322355c9794eb059b7477592fe0d20db50e9f4ac0ae0328e907dd753173/share/doc/html/src"><span class="hs-identifier hs-var">genericParseJSON</span></a></span><span> </span><span class="annot"><span class="annottext">Options
+</span><a href="Hasura.Prelude.html#hasuraJSON"><span class="hs-identifier hs-var">hasuraJSON</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">omitNothingFields :: Bool
+</span><a href="#local-6989586621690070553"><span class="hs-identifier hs-var">omitNothingFields</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/ghc-prim-0.6.1/src"><span class="hs-identifier hs-var">True</span></a></span><span class="hs-special">}</span></span><span>
+</span><span id="line-251"></span><span>
+</span><span id="line-252"></span><span class="hs-comment">-- | The event payload processed by 'processEvent'</span><span>
+</span><span id="line-253"></span><span class="hs-keyword">data</span><span> </span><span id="EventWithSource"><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#EventWithSource"><span class="hs-identifier hs-var">EventWithSource</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621690070239"><span class="annot"><a href="#local-6989586621690070239"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.SQL.Backend.html#BackendType"><span class="hs-identifier hs-type">BackendType</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span id="EventWithSource"><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#EventWithSource"><span class="hs-identifier hs-var">EventWithSource</span></a></span></span><span>
+</span><span id="line-254"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_ewsEvent"><span class="annot"><span class="annottext">EventWithSource b -&gt; Event b
+</span><a href="Hasura.RQL.Types.EventTrigger.html#_ewsEvent"><span class="hs-identifier hs-var hs-var">_ewsEvent</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#Event"><span class="hs-identifier hs-type">Event</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690070239"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-255"></span><span>    </span><span id="_ewsSourceConfig"><span class="annot"><span class="annottext">EventWithSource b -&gt; SourceConfig b
+</span><a href="Hasura.RQL.Types.EventTrigger.html#_ewsSourceConfig"><span class="hs-identifier hs-var hs-var">_ewsSourceConfig</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#SourceConfig"><span class="hs-identifier hs-type">SourceConfig</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690070239"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-256"></span><span>    </span><span id="_ewsSourceName"><span class="annot"><span class="annottext">EventWithSource b -&gt; SourceName
+</span><a href="Hasura.RQL.Types.EventTrigger.html#_ewsSourceName"><span class="hs-identifier hs-var hs-var">_ewsSourceName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.RQL.Types.Common.html#SourceName"><span class="hs-identifier hs-type">SourceName</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-257"></span><span>    </span><span class="hs-comment">-- | The 'Time.UTCTime' represents the time when the event was fetched from DB.</span><span>
+</span><span id="line-258"></span><span>    </span><span class="hs-comment">-- ^ Used to calculate Event Lock time</span><span>
+</span><span id="line-259"></span><span>    </span><span id="_ewsFetchTime"><span class="annot"><span class="annottext">EventWithSource b -&gt; UTCTime
+</span><a href="Hasura.RQL.Types.EventTrigger.html#_ewsFetchTime"><span class="hs-identifier hs-var hs-var">_ewsFetchTime</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/time-1.9.3/src"><span class="hs-identifier hs-type">Time.UTCTime</span></a></span><span>
+</span><span id="line-260"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-261"></span><span>
+</span><span id="line-262"></span><span class="hs-keyword">data</span><span> </span><span id="ProcessEventError"><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#ProcessEventError"><span class="hs-identifier hs-var">ProcessEventError</span></a></span></span><span>
+</span><span id="line-263"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="PESetRetry"><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#PESetRetry"><span class="hs-identifier hs-var">PESetRetry</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/time-1.9.3/src"><span class="hs-identifier hs-type">Time.UTCTime</span></a></span><span>
+</span><span id="line-264"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="PESetError"><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#PESetError"><span class="hs-identifier hs-var">PESetError</span></a></span></span><span>
+</span><span id="line-265"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690070226"><span id="local-6989586621690070228"><span id="local-6989586621690070230"><span class="annot"><span class="annottext">Int -&gt; ProcessEventError -&gt; ShowS
+[ProcessEventError] -&gt; ShowS
+ProcessEventError -&gt; String
+(Int -&gt; ProcessEventError -&gt; ShowS)
+-&gt; (ProcessEventError -&gt; String)
+-&gt; ([ProcessEventError] -&gt; ShowS)
+-&gt; Show ProcessEventError
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [ProcessEventError] -&gt; ShowS
+$cshowList :: [ProcessEventError] -&gt; ShowS
+show :: ProcessEventError -&gt; String
+$cshow :: ProcessEventError -&gt; String
+showsPrec :: Int -&gt; ProcessEventError -&gt; ShowS
+$cshowsPrec :: Int -&gt; ProcessEventError -&gt; ShowS
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690070222"><span id="local-6989586621690070224"><span class="annot"><span class="annottext">ProcessEventError -&gt; ProcessEventError -&gt; Bool
+(ProcessEventError -&gt; ProcessEventError -&gt; Bool)
+-&gt; (ProcessEventError -&gt; ProcessEventError -&gt; Bool)
+-&gt; Eq ProcessEventError
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: ProcessEventError -&gt; ProcessEventError -&gt; Bool
+$c/= :: ProcessEventError -&gt; ProcessEventError -&gt; Bool
+== :: ProcessEventError -&gt; ProcessEventError -&gt; Bool
+$c== :: ProcessEventError -&gt; ProcessEventError -&gt; Bool
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/ghc-prim-0.6.1/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-266"></span><span>
+</span><span id="line-267"></span><span id="local-6989586621690070220"><span id="local-6989586621690070221"></span></span><span class="hs-keyword">data</span><span> </span><span id="EventTriggerInfo"><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#EventTriggerInfo"><span class="hs-identifier hs-var">EventTriggerInfo</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621690070219"><span class="annot"><a href="#local-6989586621690070219"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.SQL.Backend.html#BackendType"><span class="hs-identifier hs-type">BackendType</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span id="EventTriggerInfo"><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#EventTriggerInfo"><span class="hs-identifier hs-var">EventTriggerInfo</span></a></span></span><span>
+</span><span id="line-268"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="etiName"><span class="annot"><span class="annottext">EventTriggerInfo b -&gt; TriggerName
+</span><a href="Hasura.RQL.Types.EventTrigger.html#etiName"><span class="hs-identifier hs-var hs-var">etiName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#TriggerName"><span class="hs-identifier hs-type">TriggerName</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-269"></span><span>    </span><span id="etiOpsDef"><span class="annot"><span class="annottext">EventTriggerInfo b -&gt; TriggerOpsDef b
+</span><a href="Hasura.RQL.Types.EventTrigger.html#etiOpsDef"><span class="hs-identifier hs-var hs-var">etiOpsDef</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#TriggerOpsDef"><span class="hs-identifier hs-type">TriggerOpsDef</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690070219"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-270"></span><span>    </span><span id="etiRetryConf"><span class="annot"><span class="annottext">EventTriggerInfo b -&gt; RetryConf
+</span><a href="Hasura.RQL.Types.EventTrigger.html#etiRetryConf"><span class="hs-identifier hs-var hs-var">etiRetryConf</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#RetryConf"><span class="hs-identifier hs-type">RetryConf</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-271"></span><span>    </span><span class="hs-comment">-- | The HTTP(s) URL which will be called with the event payload on configured operation.</span><span>
+</span><span id="line-272"></span><span>    </span><span class="hs-comment">-- Must be a POST handler. This URL can be entered manually or can be picked up from an</span><span>
+</span><span id="line-273"></span><span>    </span><span class="hs-comment">-- environment variable (the environment variable needs to be set before using it for</span><span>
+</span><span id="line-274"></span><span>    </span><span class="hs-comment">-- this configuration).</span><span>
+</span><span id="line-275"></span><span>    </span><span id="etiWebhookInfo"><span class="annot"><span class="annottext">EventTriggerInfo b -&gt; WebhookConfInfo
+</span><a href="Hasura.RQL.Types.EventTrigger.html#etiWebhookInfo"><span class="hs-identifier hs-var hs-var">etiWebhookInfo</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#WebhookConfInfo"><span class="hs-identifier hs-type">WebhookConfInfo</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-276"></span><span>    </span><span class="hs-comment">-- | Custom headers can be added to an event trigger. Each webhook request will have these</span><span>
+</span><span id="line-277"></span><span>    </span><span class="hs-comment">-- headers added.</span><span>
+</span><span id="line-278"></span><span>    </span><span id="etiHeaders"><span class="annot"><span class="annottext">EventTriggerInfo b -&gt; [EventHeaderInfo]
+</span><a href="Hasura.RQL.Types.EventTrigger.html#etiHeaders"><span class="hs-identifier hs-var hs-var">etiHeaders</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#EventHeaderInfo"><span class="hs-identifier hs-type">EventHeaderInfo</span></a></span><span class="hs-special">]</span><span class="hs-special">,</span><span>
+</span><span id="line-279"></span><span>    </span><span id="etiRequestTransform"><span class="annot"><span class="annottext">EventTriggerInfo b -&gt; Maybe MetadataTransform
+</span><a href="Hasura.RQL.Types.EventTrigger.html#etiRequestTransform"><span class="hs-identifier hs-var hs-var">etiRequestTransform</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.RequestTransform.html#MetadataTransform"><span class="hs-identifier hs-type">MetadataTransform</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-280"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-281"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(forall x. EventTriggerInfo b -&gt; Rep (EventTriggerInfo b) x)
+-&gt; (forall x. Rep (EventTriggerInfo b) x -&gt; EventTriggerInfo b)
+-&gt; Generic (EventTriggerInfo b)
+forall x. Rep (EventTriggerInfo b) x -&gt; EventTriggerInfo b
+forall x. EventTriggerInfo b -&gt; Rep (EventTriggerInfo b) x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+forall (b :: BackendType) x.
+Rep (EventTriggerInfo b) x -&gt; EventTriggerInfo b
+forall (b :: BackendType) x.
+EventTriggerInfo b -&gt; Rep (EventTriggerInfo b) x
+$cto :: forall (b :: BackendType) x.
+Rep (EventTriggerInfo b) x -&gt; EventTriggerInfo b
+$cfrom :: forall (b :: BackendType) x.
+EventTriggerInfo b -&gt; Rep (EventTriggerInfo b) x
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></a></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690070206"><span id="local-6989586621690070208"><span class="annot"><span class="annottext">EventTriggerInfo b -&gt; EventTriggerInfo b -&gt; Bool
+(EventTriggerInfo b -&gt; EventTriggerInfo b -&gt; Bool)
+-&gt; (EventTriggerInfo b -&gt; EventTriggerInfo b -&gt; Bool)
+-&gt; Eq (EventTriggerInfo b)
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+forall (b :: BackendType).
+Backend b =&gt;
+EventTriggerInfo b -&gt; EventTriggerInfo b -&gt; Bool
+/= :: EventTriggerInfo b -&gt; EventTriggerInfo b -&gt; Bool
+$c/= :: forall (b :: BackendType).
+Backend b =&gt;
+EventTriggerInfo b -&gt; EventTriggerInfo b -&gt; Bool
+== :: EventTriggerInfo b -&gt; EventTriggerInfo b -&gt; Bool
+$c== :: forall (b :: BackendType).
+Backend b =&gt;
+EventTriggerInfo b -&gt; EventTriggerInfo b -&gt; Bool
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/ghc-prim-0.6.1/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-282"></span><span>
+</span><span id="line-283"></span><span id="local-6989586621690070205"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690070203"><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690070205"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/deepseq-1.4.4.0/src"><span class="hs-identifier hs-type">NFData</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#EventTriggerInfo"><span class="hs-identifier hs-type">EventTriggerInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690070205"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-284"></span><span>
+</span><span id="line-285"></span><span id="local-6989586621690070202"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690070195"><span id="local-6989586621690070197"><span id="local-6989586621690070199"><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690070202"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/aeson-1.5.5.1-d565b322355c9794eb059b7477592fe0d20db50e9f4ac0ae0328e907dd753173/share/doc/html/src"><span class="hs-identifier hs-type">ToJSON</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#EventTriggerInfo"><span class="hs-identifier hs-type">EventTriggerInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690070202"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-286"></span><span>  </span><span id="local-6989586621690070194"><span class="annot"><span class="annottext">toJSON :: EventTriggerInfo b -&gt; Value
+</span><a href="#local-6989586621690070194"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Options -&gt; EventTriggerInfo b -&gt; Value
+forall a.
+(Generic a, GToJSON' Value Zero (Rep a)) =&gt;
+Options -&gt; a -&gt; Value
+</span><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/aeson-1.5.5.1-d565b322355c9794eb059b7477592fe0d20db50e9f4ac0ae0328e907dd753173/share/doc/html/src"><span class="hs-identifier hs-var">genericToJSON</span></a></span><span> </span><span class="annot"><span class="annottext">Options
+</span><a href="Hasura.Prelude.html#hasuraJSON"><span class="hs-identifier hs-var">hasuraJSON</span></a></span></span><span>
+</span><span id="line-287"></span><span>
+</span><span id="line-288"></span><span class="hs-keyword">type</span><span> </span><span id="EventTriggerInfoMap"><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#EventTriggerInfoMap"><span class="hs-identifier hs-var">EventTriggerInfoMap</span></a></span></span><span> </span><span id="local-6989586621690070193"><span class="annot"><a href="#local-6989586621690070193"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/unordered-containers-0.2.13.0-3905cc0dd583bf2295f4fffefb94c9b368aca205fb5d2fe8619d64b3bfba7af9/share/doc/html/src"><span class="hs-identifier hs-type">M.HashMap</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#TriggerName"><span class="hs-identifier hs-type">TriggerName</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#EventTriggerInfo"><span class="hs-identifier hs-type">EventTriggerInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690070193"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-289"></span><span>
+</span><span id="line-290"></span><span class="hs-keyword">newtype</span><span> </span><span id="FetchBatchSize"><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#FetchBatchSize"><span class="hs-identifier hs-var">FetchBatchSize</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="FetchBatchSize"><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#FetchBatchSize"><span class="hs-identifier hs-var">FetchBatchSize</span></a></span></span><span> </span><span class="hs-special">{</span><span id="_unFetchBatchSize"><span class="annot"><span class="annottext">FetchBatchSize -&gt; Int
+</span><a href="Hasura.RQL.Types.EventTrigger.html#_unFetchBatchSize"><span class="hs-identifier hs-var hs-var">_unFetchBatchSize</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/ghc-prim-0.6.1/src"><span class="hs-identifier hs-type">Int</span></a></span><span class="hs-special">}</span><span>
+</span><span id="line-291"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690070184"><span id="local-6989586621690070186"><span id="local-6989586621690070188"><span class="annot"><span class="annottext">Int -&gt; FetchBatchSize -&gt; ShowS
+[FetchBatchSize] -&gt; ShowS
+FetchBatchSize -&gt; String
+(Int -&gt; FetchBatchSize -&gt; ShowS)
+-&gt; (FetchBatchSize -&gt; String)
+-&gt; ([FetchBatchSize] -&gt; ShowS)
+-&gt; Show FetchBatchSize
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [FetchBatchSize] -&gt; ShowS
+$cshowList :: [FetchBatchSize] -&gt; ShowS
+show :: FetchBatchSize -&gt; String
+$cshow :: FetchBatchSize -&gt; String
+showsPrec :: Int -&gt; FetchBatchSize -&gt; ShowS
+$cshowsPrec :: Int -&gt; FetchBatchSize -&gt; ShowS
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690070180"><span id="local-6989586621690070182"><span class="annot"><span class="annottext">FetchBatchSize -&gt; FetchBatchSize -&gt; Bool
+(FetchBatchSize -&gt; FetchBatchSize -&gt; Bool)
+-&gt; (FetchBatchSize -&gt; FetchBatchSize -&gt; Bool) -&gt; Eq FetchBatchSize
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: FetchBatchSize -&gt; FetchBatchSize -&gt; Bool
+$c/= :: FetchBatchSize -&gt; FetchBatchSize -&gt; Bool
+== :: FetchBatchSize -&gt; FetchBatchSize -&gt; Bool
+$c== :: FetchBatchSize -&gt; FetchBatchSize -&gt; Bool
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/ghc-prim-0.6.1/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-292"></span></pre></body></html>

@@ -1,0 +1,916 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE DeriveAnyClass #-}</span><span>
+</span><span id="line-2"></span><span class="hs-pragma">{-# LANGUAGE UndecidableInstances #-}</span><span>
+</span><span id="line-3"></span><span>
+</span><span id="line-4"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Hasura.GraphQL.Execute.RemoteJoin.Types</span><span>
+</span><span id="line-5"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.RemoteJoin.Types.html#RemoteJoin"><span class="hs-identifier">RemoteJoin</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-6"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Execute.RemoteJoin.Types.html#getPhantomFields"><span class="hs-identifier">getPhantomFields</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-7"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Execute.RemoteJoin.Types.html#getJoinColumnMapping"><span class="hs-identifier">getJoinColumnMapping</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-8"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Execute.RemoteJoin.Types.html#getRemoteSchemaJoins"><span class="hs-identifier">getRemoteSchemaJoins</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-9"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Execute.RemoteJoin.Types.html#RemoteSchemaJoin"><span class="hs-identifier">RemoteSchemaJoin</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-10"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Execute.RemoteJoin.Types.html#RemoteSourceJoin"><span class="hs-identifier">RemoteSourceJoin</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-11"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Execute.RemoteJoin.Types.html#RemoteJoins"><span class="hs-identifier">RemoteJoins</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-12"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Execute.RemoteJoin.Types.html#JoinColumnAlias"><span class="hs-identifier">JoinColumnAlias</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-13"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Execute.RemoteJoin.Types.html#getAliasFieldName"><span class="hs-identifier">getAliasFieldName</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-14"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Execute.RemoteJoin.Types.html#JoinTree"><span class="hs-identifier">JoinTree</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-15"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Execute.RemoteJoin.Types.html#JoinNode"><span class="hs-identifier">JoinNode</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-16"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Execute.RemoteJoin.Types.html#JoinCallId"><span class="hs-identifier">JoinCallId</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-17"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Execute.RemoteJoin.Types.html#JoinArgumentId"><span class="hs-identifier">JoinArgumentId</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-18"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Execute.RemoteJoin.Types.html#JoinArgument"><span class="hs-identifier">JoinArgument</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-19"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Execute.RemoteJoin.Types.html#JoinIndex"><span class="hs-identifier">JoinIndex</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-20"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Execute.RemoteJoin.Types.html#JoinArguments"><span class="hs-identifier">JoinArguments</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-21"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-22"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-23"></span><span>
+</span><span id="line-24"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/lens-4.19.2-daf3092aeea9938626e934a14668e9805779308a8fd5b5104ece8391dad21dcb/share/doc/html/src"><span class="hs-identifier">Control.Lens</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/lens-4.19.2-daf3092aeea9938626e934a14668e9805779308a8fd5b5104ece8391dad21dcb/share/doc/html/src"><span class="hs-identifier">view</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/lens-4.19.2-daf3092aeea9938626e934a14668e9805779308a8fd5b5104ece8391dad21dcb/share/doc/html/src"><span class="hs-identifier">_1</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-25"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Data.Aeson.Ordered.html"><span class="hs-identifier">Data.Aeson.Ordered</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">AO</span></span><span>
+</span><span id="line-26"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/unordered-containers-0.2.13.0-3905cc0dd583bf2295f4fffefb94c9b368aca205fb5d2fe8619d64b3bfba7af9/share/doc/html/src"><span class="hs-identifier">Data.HashMap.Strict</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Map</span></span><span>
+</span><span id="line-27"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/containers-0.6.5.1/src"><span class="hs-identifier">Data.IntMap.Strict</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">IntMap</span></span><span>
+</span><span id="line-28"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier">Data.List.NonEmpty</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">NE</span></span><span>
+</span><span id="line-29"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.html"><span class="hs-identifier">Hasura.GraphQL.Parser</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">P</span></span><span>
+</span><span id="line-30"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-31"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Select.html"><span class="hs-identifier">Hasura.RQL.IR.Select</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">IR</span></span><span>
+</span><span id="line-32"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.html"><span class="hs-identifier">Hasura.RQL.Types</span></a></span><span>
+</span><span id="line-33"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.SQL.AnyBackend.html"><span class="hs-identifier">Hasura.SQL.AnyBackend</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">AB</span></span><span>
+</span><span id="line-34"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/graphql-parser-0.2.0.0-2f2855e50df08ca093d7ce5946fba1f88b716fe40529e565a631b700f43b2d07/share/doc/html/src"><span class="hs-identifier">Language.GraphQL.Draft.Syntax</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">G</span></span><span>
+</span><span id="line-35"></span><span>
+</span><span id="line-36"></span><span class="hs-comment">-- | A JoinTree represents the set of operations that need to be executed to</span><span>
+</span><span id="line-37"></span><span class="hs-comment">-- enrich the response of a source with data from remote sources. A tree</span><span>
+</span><span id="line-38"></span><span class="hs-comment">-- structure is used to capture the locations in the response where the join</span><span>
+</span><span id="line-39"></span><span class="hs-comment">-- has to happpen as it offers an efficient traversal mechanism.</span><span>
+</span><span id="line-40"></span><span class="hs-comment">--</span><span>
+</span><span id="line-41"></span><span class="hs-comment">-- For a query such as this:</span><span>
+</span><span id="line-42"></span><span class="hs-comment">--</span><span>
+</span><span id="line-43"></span><span class="hs-comment">-- {</span><span>
+</span><span id="line-44"></span><span class="hs-comment">--   city {</span><span>
+</span><span id="line-45"></span><span class="hs-comment">--     name</span><span>
+</span><span id="line-46"></span><span class="hs-comment">--     code</span><span>
+</span><span id="line-47"></span><span class="hs-comment">--     # weather is a remote relationship</span><span>
+</span><span id="line-48"></span><span class="hs-comment">--     weather { forecast }</span><span>
+</span><span id="line-49"></span><span class="hs-comment">--     state {</span><span>
+</span><span id="line-50"></span><span class="hs-comment">--     # weather is a remote relationship</span><span>
+</span><span id="line-51"></span><span class="hs-comment">--       weather { forecast }</span><span>
+</span><span id="line-52"></span><span class="hs-comment">--     }</span><span>
+</span><span id="line-53"></span><span class="hs-comment">--   }</span><span>
+</span><span id="line-54"></span><span class="hs-comment">--  }</span><span>
+</span><span id="line-55"></span><span class="hs-comment">--</span><span>
+</span><span id="line-56"></span><span class="hs-comment">--  the join tree would look like</span><span>
+</span><span id="line-57"></span><span class="hs-comment">--  [</span><span>
+</span><span id="line-58"></span><span class="hs-comment">--  , (&quot;weather&quot;, Leaf RemoteJoinInfoOfWeather),</span><span>
+</span><span id="line-59"></span><span class="hs-comment">--  , (&quot;state&quot;, [ (&quot;weather&quot;, Leaf RemoteJoinInfoOfWeather) ])</span><span>
+</span><span id="line-60"></span><span class="hs-comment">--  ]</span><span>
+</span><span id="line-61"></span><span class="hs-comment">--</span><span>
+</span><span id="line-62"></span><span class="hs-comment">-- Note that the same join tree will be emitted even if 'city' is of type</span><span>
+</span><span id="line-63"></span><span class="hs-comment">-- '[City]' and 'state' is of type [State], we currently do not capture any</span><span>
+</span><span id="line-64"></span><span class="hs-comment">-- information if any of the fields in the path expect json arrays. It is</span><span>
+</span><span id="line-65"></span><span class="hs-comment">-- similar in spirit to a GraphQL selection set in this regard</span><span>
+</span><span id="line-66"></span><span id="local-6989586621690152601"><span id="local-6989586621690152602"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="JoinTree"><span class="annot"><a href="Hasura.GraphQL.Execute.RemoteJoin.Types.html#JoinTree"><span class="hs-identifier hs-var">JoinTree</span></a></span></span><span> </span><span id="local-6989586621690152600"><span class="annot"><a href="#local-6989586621690152600"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-67"></span><span>  </span><span class="hs-comment">-- Ideally this should be represented as 'NonEmptyMap FieldName (JoinNode a)'</span><span>
+</span><span id="line-68"></span><span>  </span><span class="hs-comment">-- if there is a good package which implements the above type</span><span>
+</span><span id="line-69"></span><span>  </span><span id="JoinTree"><span class="annot"><a href="Hasura.GraphQL.Execute.RemoteJoin.Types.html#JoinTree"><span class="hs-identifier hs-var">JoinTree</span></a></span></span><span> </span><span class="hs-special">{</span><span id="unJoinTree"><span class="annot"><span class="annottext">JoinTree a -&gt; NonEmpty (FieldName, JoinNode a)
+</span><a href="Hasura.GraphQL.Execute.RemoteJoin.Types.html#unJoinTree"><span class="hs-identifier hs-var hs-var">unJoinTree</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-type">NE.NonEmpty</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Common.html#FieldName"><span class="hs-identifier hs-type">FieldName</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.RemoteJoin.Types.html#JoinNode"><span class="hs-identifier hs-type">JoinNode</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690152600"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span class="hs-special">}</span><span>
+</span><span id="line-70"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621690152594"><span id="local-6989586621690152596"><span class="annot"><span class="annottext">JoinTree a -&gt; JoinTree a -&gt; Bool
+(JoinTree a -&gt; JoinTree a -&gt; Bool)
+-&gt; (JoinTree a -&gt; JoinTree a -&gt; Bool) -&gt; Eq (JoinTree a)
+forall a. Eq a =&gt; JoinTree a -&gt; JoinTree a -&gt; Bool
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: JoinTree a -&gt; JoinTree a -&gt; Bool
+$c/= :: forall a. Eq a =&gt; JoinTree a -&gt; JoinTree a -&gt; Bool
+== :: JoinTree a -&gt; JoinTree a -&gt; Bool
+$c== :: forall a. Eq a =&gt; JoinTree a -&gt; JoinTree a -&gt; Bool
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/ghc-prim-0.6.1/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690152559"><span id="local-6989586621690152561"><span id="local-6989586621690152563"><span id="local-6989586621690152565"><span id="local-6989586621690152567"><span id="local-6989586621690152569"><span id="local-6989586621690152571"><span id="local-6989586621690152573"><span id="local-6989586621690152575"><span id="local-6989586621690152577"><span id="local-6989586621690152579"><span id="local-6989586621690152581"><span id="local-6989586621690152583"><span id="local-6989586621690152585"><span id="local-6989586621690152587"><span id="local-6989586621690152589"><span id="local-6989586621690152591"><span class="annot"><span class="annottext">JoinTree a -&gt; Bool
+(a -&gt; m) -&gt; JoinTree a -&gt; m
+(a -&gt; b -&gt; b) -&gt; b -&gt; JoinTree a -&gt; b
+(forall m. Monoid m =&gt; JoinTree m -&gt; m)
+-&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; JoinTree a -&gt; m)
+-&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; JoinTree a -&gt; m)
+-&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; JoinTree a -&gt; b)
+-&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; JoinTree a -&gt; b)
+-&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; JoinTree a -&gt; b)
+-&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; JoinTree a -&gt; b)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; JoinTree a -&gt; a)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; JoinTree a -&gt; a)
+-&gt; (forall a. JoinTree a -&gt; [a])
+-&gt; (forall a. JoinTree a -&gt; Bool)
+-&gt; (forall a. JoinTree a -&gt; Int)
+-&gt; (forall a. Eq a =&gt; a -&gt; JoinTree a -&gt; Bool)
+-&gt; (forall a. Ord a =&gt; JoinTree a -&gt; a)
+-&gt; (forall a. Ord a =&gt; JoinTree a -&gt; a)
+-&gt; (forall a. Num a =&gt; JoinTree a -&gt; a)
+-&gt; (forall a. Num a =&gt; JoinTree a -&gt; a)
+-&gt; Foldable JoinTree
+forall a. Eq a =&gt; a -&gt; JoinTree a -&gt; Bool
+forall a. Num a =&gt; JoinTree a -&gt; a
+forall a. Ord a =&gt; JoinTree a -&gt; a
+forall m. Monoid m =&gt; JoinTree m -&gt; m
+forall a. JoinTree a -&gt; Bool
+forall a. JoinTree a -&gt; Int
+forall a. JoinTree a -&gt; [a]
+forall a. (a -&gt; a -&gt; a) -&gt; JoinTree a -&gt; a
+forall m a. Monoid m =&gt; (a -&gt; m) -&gt; JoinTree a -&gt; m
+forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; JoinTree a -&gt; b
+forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; JoinTree a -&gt; b
+forall (t :: * -&gt; *).
+(forall m. Monoid m =&gt; t m -&gt; m)
+-&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; t a -&gt; m)
+-&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; t a -&gt; m)
+-&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; t a -&gt; b)
+-&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; t a -&gt; b)
+-&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; t a -&gt; b)
+-&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; t a -&gt; b)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; t a -&gt; a)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; t a -&gt; a)
+-&gt; (forall a. t a -&gt; [a])
+-&gt; (forall a. t a -&gt; Bool)
+-&gt; (forall a. t a -&gt; Int)
+-&gt; (forall a. Eq a =&gt; a -&gt; t a -&gt; Bool)
+-&gt; (forall a. Ord a =&gt; t a -&gt; a)
+-&gt; (forall a. Ord a =&gt; t a -&gt; a)
+-&gt; (forall a. Num a =&gt; t a -&gt; a)
+-&gt; (forall a. Num a =&gt; t a -&gt; a)
+-&gt; Foldable t
+product :: JoinTree a -&gt; a
+$cproduct :: forall a. Num a =&gt; JoinTree a -&gt; a
+sum :: JoinTree a -&gt; a
+$csum :: forall a. Num a =&gt; JoinTree a -&gt; a
+minimum :: JoinTree a -&gt; a
+$cminimum :: forall a. Ord a =&gt; JoinTree a -&gt; a
+maximum :: JoinTree a -&gt; a
+$cmaximum :: forall a. Ord a =&gt; JoinTree a -&gt; a
+elem :: a -&gt; JoinTree a -&gt; Bool
+$celem :: forall a. Eq a =&gt; a -&gt; JoinTree a -&gt; Bool
+length :: JoinTree a -&gt; Int
+$clength :: forall a. JoinTree a -&gt; Int
+null :: JoinTree a -&gt; Bool
+$cnull :: forall a. JoinTree a -&gt; Bool
+toList :: JoinTree a -&gt; [a]
+$ctoList :: forall a. JoinTree a -&gt; [a]
+foldl1 :: (a -&gt; a -&gt; a) -&gt; JoinTree a -&gt; a
+$cfoldl1 :: forall a. (a -&gt; a -&gt; a) -&gt; JoinTree a -&gt; a
+foldr1 :: (a -&gt; a -&gt; a) -&gt; JoinTree a -&gt; a
+$cfoldr1 :: forall a. (a -&gt; a -&gt; a) -&gt; JoinTree a -&gt; a
+foldl' :: (b -&gt; a -&gt; b) -&gt; b -&gt; JoinTree a -&gt; b
+$cfoldl' :: forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; JoinTree a -&gt; b
+foldl :: (b -&gt; a -&gt; b) -&gt; b -&gt; JoinTree a -&gt; b
+$cfoldl :: forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; JoinTree a -&gt; b
+foldr' :: (a -&gt; b -&gt; b) -&gt; b -&gt; JoinTree a -&gt; b
+$cfoldr' :: forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; JoinTree a -&gt; b
+foldr :: (a -&gt; b -&gt; b) -&gt; b -&gt; JoinTree a -&gt; b
+$cfoldr :: forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; JoinTree a -&gt; b
+foldMap' :: (a -&gt; m) -&gt; JoinTree a -&gt; m
+$cfoldMap' :: forall m a. Monoid m =&gt; (a -&gt; m) -&gt; JoinTree a -&gt; m
+foldMap :: (a -&gt; m) -&gt; JoinTree a -&gt; m
+$cfoldMap :: forall m a. Monoid m =&gt; (a -&gt; m) -&gt; JoinTree a -&gt; m
+fold :: JoinTree m -&gt; m
+$cfold :: forall m. Monoid m =&gt; JoinTree m -&gt; m
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Foldable</span></a></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690152554"><span id="local-6989586621690152556"><span class="annot"><span class="annottext">a -&gt; JoinTree b -&gt; JoinTree a
+(a -&gt; b) -&gt; JoinTree a -&gt; JoinTree b
+(forall a b. (a -&gt; b) -&gt; JoinTree a -&gt; JoinTree b)
+-&gt; (forall a b. a -&gt; JoinTree b -&gt; JoinTree a) -&gt; Functor JoinTree
+forall a b. a -&gt; JoinTree b -&gt; JoinTree a
+forall a b. (a -&gt; b) -&gt; JoinTree a -&gt; JoinTree b
+forall (f :: * -&gt; *).
+(forall a b. (a -&gt; b) -&gt; f a -&gt; f b)
+-&gt; (forall a b. a -&gt; f b -&gt; f a) -&gt; Functor f
+&lt;$ :: a -&gt; JoinTree b -&gt; JoinTree a
+$c&lt;$ :: forall a b. a -&gt; JoinTree b -&gt; JoinTree a
+fmap :: (a -&gt; b) -&gt; JoinTree a -&gt; JoinTree b
+$cfmap :: forall a b. (a -&gt; b) -&gt; JoinTree a -&gt; JoinTree b
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Functor</span></a></span></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">(forall x. JoinTree a -&gt; Rep (JoinTree a) x)
+-&gt; (forall x. Rep (JoinTree a) x -&gt; JoinTree a)
+-&gt; Generic (JoinTree a)
+forall x. Rep (JoinTree a) x -&gt; JoinTree a
+forall x. JoinTree a -&gt; Rep (JoinTree a) x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+forall a x. Rep (JoinTree a) x -&gt; JoinTree a
+forall a x. JoinTree a -&gt; Rep (JoinTree a) x
+$cto :: forall a x. Rep (JoinTree a) x -&gt; JoinTree a
+$cfrom :: forall a x. JoinTree a -&gt; Rep (JoinTree a) x
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></a></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690152540"><span id="local-6989586621690152542"><span id="local-6989586621690152544"><span id="local-6989586621690152546"><span class="annot"><span class="annottext">Functor JoinTree
+Foldable JoinTree
+Functor JoinTree
+-&gt; Foldable JoinTree
+-&gt; (forall (f :: * -&gt; *) a b.
+    Applicative f =&gt;
+    (a -&gt; f b) -&gt; JoinTree a -&gt; f (JoinTree b))
+-&gt; (forall (f :: * -&gt; *) a.
+    Applicative f =&gt;
+    JoinTree (f a) -&gt; f (JoinTree a))
+-&gt; (forall (m :: * -&gt; *) a b.
+    Monad m =&gt;
+    (a -&gt; m b) -&gt; JoinTree a -&gt; m (JoinTree b))
+-&gt; (forall (m :: * -&gt; *) a.
+    Monad m =&gt;
+    JoinTree (m a) -&gt; m (JoinTree a))
+-&gt; Traversable JoinTree
+(a -&gt; f b) -&gt; JoinTree a -&gt; f (JoinTree b)
+forall (t :: * -&gt; *).
+Functor t
+-&gt; Foldable t
+-&gt; (forall (f :: * -&gt; *) a b.
+    Applicative f =&gt;
+    (a -&gt; f b) -&gt; t a -&gt; f (t b))
+-&gt; (forall (f :: * -&gt; *) a. Applicative f =&gt; t (f a) -&gt; f (t a))
+-&gt; (forall (m :: * -&gt; *) a b.
+    Monad m =&gt;
+    (a -&gt; m b) -&gt; t a -&gt; m (t b))
+-&gt; (forall (m :: * -&gt; *) a. Monad m =&gt; t (m a) -&gt; m (t a))
+-&gt; Traversable t
+forall (m :: * -&gt; *) a. Monad m =&gt; JoinTree (m a) -&gt; m (JoinTree a)
+forall (f :: * -&gt; *) a.
+Applicative f =&gt;
+JoinTree (f a) -&gt; f (JoinTree a)
+forall (m :: * -&gt; *) a b.
+Monad m =&gt;
+(a -&gt; m b) -&gt; JoinTree a -&gt; m (JoinTree b)
+forall (f :: * -&gt; *) a b.
+Applicative f =&gt;
+(a -&gt; f b) -&gt; JoinTree a -&gt; f (JoinTree b)
+sequence :: JoinTree (m a) -&gt; m (JoinTree a)
+$csequence :: forall (m :: * -&gt; *) a. Monad m =&gt; JoinTree (m a) -&gt; m (JoinTree a)
+mapM :: (a -&gt; m b) -&gt; JoinTree a -&gt; m (JoinTree b)
+$cmapM :: forall (m :: * -&gt; *) a b.
+Monad m =&gt;
+(a -&gt; m b) -&gt; JoinTree a -&gt; m (JoinTree b)
+sequenceA :: JoinTree (f a) -&gt; f (JoinTree a)
+$csequenceA :: forall (f :: * -&gt; *) a.
+Applicative f =&gt;
+JoinTree (f a) -&gt; f (JoinTree a)
+traverse :: (a -&gt; f b) -&gt; JoinTree a -&gt; f (JoinTree b)
+$ctraverse :: forall (f :: * -&gt; *) a b.
+Applicative f =&gt;
+(a -&gt; f b) -&gt; JoinTree a -&gt; f (JoinTree b)
+$cp2Traversable :: Foldable JoinTree
+$cp1Traversable :: Functor JoinTree
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Traversable</span></a></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690152533"><span id="local-6989586621690152535"><span id="local-6989586621690152537"><span class="annot"><span class="annottext">Int -&gt; JoinTree a -&gt; ShowS
+[JoinTree a] -&gt; ShowS
+JoinTree a -&gt; String
+(Int -&gt; JoinTree a -&gt; ShowS)
+-&gt; (JoinTree a -&gt; String)
+-&gt; ([JoinTree a] -&gt; ShowS)
+-&gt; Show (JoinTree a)
+forall a. Show a =&gt; Int -&gt; JoinTree a -&gt; ShowS
+forall a. Show a =&gt; [JoinTree a] -&gt; ShowS
+forall a. Show a =&gt; JoinTree a -&gt; String
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [JoinTree a] -&gt; ShowS
+$cshowList :: forall a. Show a =&gt; [JoinTree a] -&gt; ShowS
+show :: JoinTree a -&gt; String
+$cshow :: forall a. Show a =&gt; JoinTree a -&gt; String
+showsPrec :: Int -&gt; JoinTree a -&gt; ShowS
+$cshowsPrec :: forall a. Show a =&gt; Int -&gt; JoinTree a -&gt; ShowS
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-71"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">newtype</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621690152526"><span id="local-6989586621690152528"><span id="local-6989586621690152530"><span class="annot"><span class="annottext">b -&gt; JoinTree a -&gt; JoinTree a
+NonEmpty (JoinTree a) -&gt; JoinTree a
+JoinTree a -&gt; JoinTree a -&gt; JoinTree a
+(JoinTree a -&gt; JoinTree a -&gt; JoinTree a)
+-&gt; (NonEmpty (JoinTree a) -&gt; JoinTree a)
+-&gt; (forall b. Integral b =&gt; b -&gt; JoinTree a -&gt; JoinTree a)
+-&gt; Semigroup (JoinTree a)
+forall b. Integral b =&gt; b -&gt; JoinTree a -&gt; JoinTree a
+forall a. NonEmpty (JoinTree a) -&gt; JoinTree a
+forall a. JoinTree a -&gt; JoinTree a -&gt; JoinTree a
+forall a.
+(a -&gt; a -&gt; a)
+-&gt; (NonEmpty a -&gt; a)
+-&gt; (forall b. Integral b =&gt; b -&gt; a -&gt; a)
+-&gt; Semigroup a
+forall a b. Integral b =&gt; b -&gt; JoinTree a -&gt; JoinTree a
+stimes :: b -&gt; JoinTree a -&gt; JoinTree a
+$cstimes :: forall a b. Integral b =&gt; b -&gt; JoinTree a -&gt; JoinTree a
+sconcat :: NonEmpty (JoinTree a) -&gt; JoinTree a
+$csconcat :: forall a. NonEmpty (JoinTree a) -&gt; JoinTree a
+&lt;&gt; :: JoinTree a -&gt; JoinTree a -&gt; JoinTree a
+$c&lt;&gt; :: forall a. JoinTree a -&gt; JoinTree a -&gt; JoinTree a
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Semigroup</span></a></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-72"></span><span>
+</span><span id="line-73"></span><span id="local-6989586621690152523"><span id="local-6989586621690152524"></span></span><span class="hs-keyword">data</span><span> </span><span id="JoinNode"><span class="annot"><a href="Hasura.GraphQL.Execute.RemoteJoin.Types.html#JoinNode"><span class="hs-identifier hs-var">JoinNode</span></a></span></span><span> </span><span id="local-6989586621690152522"><span class="annot"><a href="#local-6989586621690152522"><span class="hs-identifier hs-type">a</span></a></span></span><span>
+</span><span id="line-74"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="Leaf"><span class="annot"><a href="Hasura.GraphQL.Execute.RemoteJoin.Types.html#Leaf"><span class="hs-identifier hs-var">Leaf</span></a></span></span><span> </span><span class="annot"><a href="#local-6989586621690152522"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-75"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="Tree"><span class="annot"><a href="Hasura.GraphQL.Execute.RemoteJoin.Types.html#Tree"><span class="hs-identifier hs-var">Tree</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Execute.RemoteJoin.Types.html#JoinTree"><span class="hs-identifier hs-type">JoinTree</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690152522"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-76"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621690152516"><span id="local-6989586621690152518"><span class="annot"><span class="annottext">JoinNode a -&gt; JoinNode a -&gt; Bool
+(JoinNode a -&gt; JoinNode a -&gt; Bool)
+-&gt; (JoinNode a -&gt; JoinNode a -&gt; Bool) -&gt; Eq (JoinNode a)
+forall a. Eq a =&gt; JoinNode a -&gt; JoinNode a -&gt; Bool
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: JoinNode a -&gt; JoinNode a -&gt; Bool
+$c/= :: forall a. Eq a =&gt; JoinNode a -&gt; JoinNode a -&gt; Bool
+== :: JoinNode a -&gt; JoinNode a -&gt; Bool
+$c== :: forall a. Eq a =&gt; JoinNode a -&gt; JoinNode a -&gt; Bool
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/ghc-prim-0.6.1/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690152482"><span id="local-6989586621690152484"><span id="local-6989586621690152486"><span id="local-6989586621690152488"><span id="local-6989586621690152490"><span id="local-6989586621690152492"><span id="local-6989586621690152494"><span id="local-6989586621690152496"><span id="local-6989586621690152498"><span id="local-6989586621690152500"><span id="local-6989586621690152502"><span id="local-6989586621690152504"><span id="local-6989586621690152506"><span id="local-6989586621690152508"><span id="local-6989586621690152510"><span id="local-6989586621690152512"><span id="local-6989586621690152514"><span class="annot"><span class="annottext">JoinNode a -&gt; Bool
+(a -&gt; m) -&gt; JoinNode a -&gt; m
+(a -&gt; b -&gt; b) -&gt; b -&gt; JoinNode a -&gt; b
+(forall m. Monoid m =&gt; JoinNode m -&gt; m)
+-&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; JoinNode a -&gt; m)
+-&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; JoinNode a -&gt; m)
+-&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; JoinNode a -&gt; b)
+-&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; JoinNode a -&gt; b)
+-&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; JoinNode a -&gt; b)
+-&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; JoinNode a -&gt; b)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; JoinNode a -&gt; a)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; JoinNode a -&gt; a)
+-&gt; (forall a. JoinNode a -&gt; [a])
+-&gt; (forall a. JoinNode a -&gt; Bool)
+-&gt; (forall a. JoinNode a -&gt; Int)
+-&gt; (forall a. Eq a =&gt; a -&gt; JoinNode a -&gt; Bool)
+-&gt; (forall a. Ord a =&gt; JoinNode a -&gt; a)
+-&gt; (forall a. Ord a =&gt; JoinNode a -&gt; a)
+-&gt; (forall a. Num a =&gt; JoinNode a -&gt; a)
+-&gt; (forall a. Num a =&gt; JoinNode a -&gt; a)
+-&gt; Foldable JoinNode
+forall a. Eq a =&gt; a -&gt; JoinNode a -&gt; Bool
+forall a. Num a =&gt; JoinNode a -&gt; a
+forall a. Ord a =&gt; JoinNode a -&gt; a
+forall m. Monoid m =&gt; JoinNode m -&gt; m
+forall a. JoinNode a -&gt; Bool
+forall a. JoinNode a -&gt; Int
+forall a. JoinNode a -&gt; [a]
+forall a. (a -&gt; a -&gt; a) -&gt; JoinNode a -&gt; a
+forall m a. Monoid m =&gt; (a -&gt; m) -&gt; JoinNode a -&gt; m
+forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; JoinNode a -&gt; b
+forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; JoinNode a -&gt; b
+forall (t :: * -&gt; *).
+(forall m. Monoid m =&gt; t m -&gt; m)
+-&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; t a -&gt; m)
+-&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; t a -&gt; m)
+-&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; t a -&gt; b)
+-&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; t a -&gt; b)
+-&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; t a -&gt; b)
+-&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; t a -&gt; b)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; t a -&gt; a)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; t a -&gt; a)
+-&gt; (forall a. t a -&gt; [a])
+-&gt; (forall a. t a -&gt; Bool)
+-&gt; (forall a. t a -&gt; Int)
+-&gt; (forall a. Eq a =&gt; a -&gt; t a -&gt; Bool)
+-&gt; (forall a. Ord a =&gt; t a -&gt; a)
+-&gt; (forall a. Ord a =&gt; t a -&gt; a)
+-&gt; (forall a. Num a =&gt; t a -&gt; a)
+-&gt; (forall a. Num a =&gt; t a -&gt; a)
+-&gt; Foldable t
+product :: JoinNode a -&gt; a
+$cproduct :: forall a. Num a =&gt; JoinNode a -&gt; a
+sum :: JoinNode a -&gt; a
+$csum :: forall a. Num a =&gt; JoinNode a -&gt; a
+minimum :: JoinNode a -&gt; a
+$cminimum :: forall a. Ord a =&gt; JoinNode a -&gt; a
+maximum :: JoinNode a -&gt; a
+$cmaximum :: forall a. Ord a =&gt; JoinNode a -&gt; a
+elem :: a -&gt; JoinNode a -&gt; Bool
+$celem :: forall a. Eq a =&gt; a -&gt; JoinNode a -&gt; Bool
+length :: JoinNode a -&gt; Int
+$clength :: forall a. JoinNode a -&gt; Int
+null :: JoinNode a -&gt; Bool
+$cnull :: forall a. JoinNode a -&gt; Bool
+toList :: JoinNode a -&gt; [a]
+$ctoList :: forall a. JoinNode a -&gt; [a]
+foldl1 :: (a -&gt; a -&gt; a) -&gt; JoinNode a -&gt; a
+$cfoldl1 :: forall a. (a -&gt; a -&gt; a) -&gt; JoinNode a -&gt; a
+foldr1 :: (a -&gt; a -&gt; a) -&gt; JoinNode a -&gt; a
+$cfoldr1 :: forall a. (a -&gt; a -&gt; a) -&gt; JoinNode a -&gt; a
+foldl' :: (b -&gt; a -&gt; b) -&gt; b -&gt; JoinNode a -&gt; b
+$cfoldl' :: forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; JoinNode a -&gt; b
+foldl :: (b -&gt; a -&gt; b) -&gt; b -&gt; JoinNode a -&gt; b
+$cfoldl :: forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; JoinNode a -&gt; b
+foldr' :: (a -&gt; b -&gt; b) -&gt; b -&gt; JoinNode a -&gt; b
+$cfoldr' :: forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; JoinNode a -&gt; b
+foldr :: (a -&gt; b -&gt; b) -&gt; b -&gt; JoinNode a -&gt; b
+$cfoldr :: forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; JoinNode a -&gt; b
+foldMap' :: (a -&gt; m) -&gt; JoinNode a -&gt; m
+$cfoldMap' :: forall m a. Monoid m =&gt; (a -&gt; m) -&gt; JoinNode a -&gt; m
+foldMap :: (a -&gt; m) -&gt; JoinNode a -&gt; m
+$cfoldMap :: forall m a. Monoid m =&gt; (a -&gt; m) -&gt; JoinNode a -&gt; m
+fold :: JoinNode m -&gt; m
+$cfold :: forall m. Monoid m =&gt; JoinNode m -&gt; m
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Foldable</span></a></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690152478"><span id="local-6989586621690152480"><span class="annot"><span class="annottext">a -&gt; JoinNode b -&gt; JoinNode a
+(a -&gt; b) -&gt; JoinNode a -&gt; JoinNode b
+(forall a b. (a -&gt; b) -&gt; JoinNode a -&gt; JoinNode b)
+-&gt; (forall a b. a -&gt; JoinNode b -&gt; JoinNode a) -&gt; Functor JoinNode
+forall a b. a -&gt; JoinNode b -&gt; JoinNode a
+forall a b. (a -&gt; b) -&gt; JoinNode a -&gt; JoinNode b
+forall (f :: * -&gt; *).
+(forall a b. (a -&gt; b) -&gt; f a -&gt; f b)
+-&gt; (forall a b. a -&gt; f b -&gt; f a) -&gt; Functor f
+&lt;$ :: a -&gt; JoinNode b -&gt; JoinNode a
+$c&lt;$ :: forall a b. a -&gt; JoinNode b -&gt; JoinNode a
+fmap :: (a -&gt; b) -&gt; JoinNode a -&gt; JoinNode b
+$cfmap :: forall a b. (a -&gt; b) -&gt; JoinNode a -&gt; JoinNode b
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Functor</span></a></span></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">(forall x. JoinNode a -&gt; Rep (JoinNode a) x)
+-&gt; (forall x. Rep (JoinNode a) x -&gt; JoinNode a)
+-&gt; Generic (JoinNode a)
+forall x. Rep (JoinNode a) x -&gt; JoinNode a
+forall x. JoinNode a -&gt; Rep (JoinNode a) x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+forall a x. Rep (JoinNode a) x -&gt; JoinNode a
+forall a x. JoinNode a -&gt; Rep (JoinNode a) x
+$cto :: forall a x. Rep (JoinNode a) x -&gt; JoinNode a
+$cfrom :: forall a x. JoinNode a -&gt; Rep (JoinNode a) x
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></a></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690152466"><span id="local-6989586621690152468"><span id="local-6989586621690152470"><span id="local-6989586621690152472"><span class="annot"><span class="annottext">Functor JoinNode
+Foldable JoinNode
+Functor JoinNode
+-&gt; Foldable JoinNode
+-&gt; (forall (f :: * -&gt; *) a b.
+    Applicative f =&gt;
+    (a -&gt; f b) -&gt; JoinNode a -&gt; f (JoinNode b))
+-&gt; (forall (f :: * -&gt; *) a.
+    Applicative f =&gt;
+    JoinNode (f a) -&gt; f (JoinNode a))
+-&gt; (forall (m :: * -&gt; *) a b.
+    Monad m =&gt;
+    (a -&gt; m b) -&gt; JoinNode a -&gt; m (JoinNode b))
+-&gt; (forall (m :: * -&gt; *) a.
+    Monad m =&gt;
+    JoinNode (m a) -&gt; m (JoinNode a))
+-&gt; Traversable JoinNode
+(a -&gt; f b) -&gt; JoinNode a -&gt; f (JoinNode b)
+forall (t :: * -&gt; *).
+Functor t
+-&gt; Foldable t
+-&gt; (forall (f :: * -&gt; *) a b.
+    Applicative f =&gt;
+    (a -&gt; f b) -&gt; t a -&gt; f (t b))
+-&gt; (forall (f :: * -&gt; *) a. Applicative f =&gt; t (f a) -&gt; f (t a))
+-&gt; (forall (m :: * -&gt; *) a b.
+    Monad m =&gt;
+    (a -&gt; m b) -&gt; t a -&gt; m (t b))
+-&gt; (forall (m :: * -&gt; *) a. Monad m =&gt; t (m a) -&gt; m (t a))
+-&gt; Traversable t
+forall (m :: * -&gt; *) a. Monad m =&gt; JoinNode (m a) -&gt; m (JoinNode a)
+forall (f :: * -&gt; *) a.
+Applicative f =&gt;
+JoinNode (f a) -&gt; f (JoinNode a)
+forall (m :: * -&gt; *) a b.
+Monad m =&gt;
+(a -&gt; m b) -&gt; JoinNode a -&gt; m (JoinNode b)
+forall (f :: * -&gt; *) a b.
+Applicative f =&gt;
+(a -&gt; f b) -&gt; JoinNode a -&gt; f (JoinNode b)
+sequence :: JoinNode (m a) -&gt; m (JoinNode a)
+$csequence :: forall (m :: * -&gt; *) a. Monad m =&gt; JoinNode (m a) -&gt; m (JoinNode a)
+mapM :: (a -&gt; m b) -&gt; JoinNode a -&gt; m (JoinNode b)
+$cmapM :: forall (m :: * -&gt; *) a b.
+Monad m =&gt;
+(a -&gt; m b) -&gt; JoinNode a -&gt; m (JoinNode b)
+sequenceA :: JoinNode (f a) -&gt; f (JoinNode a)
+$csequenceA :: forall (f :: * -&gt; *) a.
+Applicative f =&gt;
+JoinNode (f a) -&gt; f (JoinNode a)
+traverse :: (a -&gt; f b) -&gt; JoinNode a -&gt; f (JoinNode b)
+$ctraverse :: forall (f :: * -&gt; *) a b.
+Applicative f =&gt;
+(a -&gt; f b) -&gt; JoinNode a -&gt; f (JoinNode b)
+$cp2Traversable :: Foldable JoinNode
+$cp1Traversable :: Functor JoinNode
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Traversable</span></a></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690152460"><span id="local-6989586621690152462"><span id="local-6989586621690152464"><span class="annot"><span class="annottext">Int -&gt; JoinNode a -&gt; ShowS
+[JoinNode a] -&gt; ShowS
+JoinNode a -&gt; String
+(Int -&gt; JoinNode a -&gt; ShowS)
+-&gt; (JoinNode a -&gt; String)
+-&gt; ([JoinNode a] -&gt; ShowS)
+-&gt; Show (JoinNode a)
+forall a. Show a =&gt; Int -&gt; JoinNode a -&gt; ShowS
+forall a. Show a =&gt; [JoinNode a] -&gt; ShowS
+forall a. Show a =&gt; JoinNode a -&gt; String
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [JoinNode a] -&gt; ShowS
+$cshowList :: forall a. Show a =&gt; [JoinNode a] -&gt; ShowS
+show :: JoinNode a -&gt; String
+$cshow :: forall a. Show a =&gt; JoinNode a -&gt; String
+showsPrec :: Int -&gt; JoinNode a -&gt; ShowS
+$cshowsPrec :: forall a. Show a =&gt; Int -&gt; JoinNode a -&gt; ShowS
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-77"></span><span>
+</span><span id="line-78"></span><span class="hs-keyword">type</span><span> </span><span id="RemoteJoins"><span class="annot"><a href="Hasura.GraphQL.Execute.RemoteJoin.Types.html#RemoteJoins"><span class="hs-identifier hs-var">RemoteJoins</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.RemoteJoin.Types.html#JoinTree"><span class="hs-identifier hs-type">JoinTree</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.RemoteJoin.Types.html#RemoteJoin"><span class="hs-identifier hs-type">RemoteJoin</span></a></span><span>
+</span><span id="line-79"></span><span>
+</span><span id="line-80"></span><span class="hs-comment">-- | TODO(jkachmar): Documentation</span><span>
+</span><span id="line-81"></span><span id="local-6989586621690152458"><span id="local-6989586621690152459"></span></span><span class="hs-keyword">data</span><span> </span><span id="RemoteJoin"><span class="annot"><a href="Hasura.GraphQL.Execute.RemoteJoin.Types.html#RemoteJoin"><span class="hs-identifier hs-var">RemoteJoin</span></a></span></span><span>
+</span><span id="line-82"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="RemoteJoinSource"><span class="annot"><a href="Hasura.GraphQL.Execute.RemoteJoin.Types.html#RemoteJoinSource"><span class="hs-identifier hs-var">RemoteJoinSource</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.SQL.AnyBackend.html#AnyBackend"><span class="hs-identifier hs-type">AB.AnyBackend</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.RemoteJoin.Types.html#RemoteSourceJoin"><span class="hs-identifier hs-type">RemoteSourceJoin</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.RemoteJoin.Types.html#RemoteJoins"><span class="hs-identifier hs-type">RemoteJoins</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-83"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="RemoteJoinRemoteSchema"><span class="annot"><a href="Hasura.GraphQL.Execute.RemoteJoin.Types.html#RemoteJoinRemoteSchema"><span class="hs-identifier hs-var">RemoteJoinRemoteSchema</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.GraphQL.Execute.RemoteJoin.Types.html#RemoteSchemaJoin"><span class="hs-identifier hs-type">RemoteSchemaJoin</span></a></span><span>
+</span><span id="line-84"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621690152452"><span id="local-6989586621690152454"><span class="annot"><span class="annottext">RemoteJoin -&gt; RemoteJoin -&gt; Bool
+(RemoteJoin -&gt; RemoteJoin -&gt; Bool)
+-&gt; (RemoteJoin -&gt; RemoteJoin -&gt; Bool) -&gt; Eq RemoteJoin
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: RemoteJoin -&gt; RemoteJoin -&gt; Bool
+$c/= :: RemoteJoin -&gt; RemoteJoin -&gt; Bool
+== :: RemoteJoin -&gt; RemoteJoin -&gt; Bool
+$c== :: RemoteJoin -&gt; RemoteJoin -&gt; Bool
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/ghc-prim-0.6.1/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">(forall x. RemoteJoin -&gt; Rep RemoteJoin x)
+-&gt; (forall x. Rep RemoteJoin x -&gt; RemoteJoin) -&gt; Generic RemoteJoin
+forall x. Rep RemoteJoin x -&gt; RemoteJoin
+forall x. RemoteJoin -&gt; Rep RemoteJoin x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+$cto :: forall x. Rep RemoteJoin x -&gt; RemoteJoin
+$cfrom :: forall x. RemoteJoin -&gt; Rep RemoteJoin x
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-85"></span><span>
+</span><span id="line-86"></span><span class="hs-comment">-- | This collects all the remote joins from a join tree</span><span>
+</span><span id="line-87"></span><span class="annot"><a href="Hasura.GraphQL.Execute.RemoteJoin.Types.html#getRemoteSchemaJoins"><span class="hs-identifier hs-type">getRemoteSchemaJoins</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.RemoteJoin.Types.html#RemoteJoins"><span class="hs-identifier hs-type">RemoteJoins</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.GraphQL.Execute.RemoteJoin.Types.html#RemoteSchemaJoin"><span class="hs-identifier hs-type">RemoteSchemaJoin</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-88"></span><span id="getRemoteSchemaJoins"><span class="annot"><span class="annottext">getRemoteSchemaJoins :: RemoteJoins -&gt; [RemoteSchemaJoin]
+</span><a href="Hasura.GraphQL.Execute.RemoteJoin.Types.html#getRemoteSchemaJoins"><span class="hs-identifier hs-var hs-var">getRemoteSchemaJoins</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(RemoteJoin -&gt; Maybe RemoteSchemaJoin)
+-&gt; [RemoteJoin] -&gt; [RemoteSchemaJoin]
+forall a b. (a -&gt; Maybe b) -&gt; [a] -&gt; [b]
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var">mapMaybe</span></a></span><span> </span><span class="annot"><span class="annottext">RemoteJoin -&gt; Maybe RemoteSchemaJoin
+</span><a href="#local-6989586621690152448"><span class="hs-identifier hs-var">getRemoteSchemaJoin</span></a></span><span> </span><span class="annot"><span class="annottext">([RemoteJoin] -&gt; [RemoteSchemaJoin])
+-&gt; (RemoteJoins -&gt; [RemoteJoin])
+-&gt; RemoteJoins
+-&gt; [RemoteSchemaJoin]
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">RemoteJoins -&gt; [RemoteJoin]
+forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; [a]
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var">toList</span></a></span><span>
+</span><span id="line-89"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-90"></span><span>    </span><span class="annot"><a href="#local-6989586621690152448"><span class="hs-identifier hs-type">getRemoteSchemaJoin</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.RemoteJoin.Types.html#RemoteJoin"><span class="hs-identifier hs-type">RemoteJoin</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.RemoteJoin.Types.html#RemoteSchemaJoin"><span class="hs-identifier hs-type">RemoteSchemaJoin</span></a></span><span>
+</span><span id="line-91"></span><span>    </span><span id="local-6989586621690152448"><span class="annot"><span class="annottext">getRemoteSchemaJoin :: RemoteJoin -&gt; Maybe RemoteSchemaJoin
+</span><a href="#local-6989586621690152448"><span class="hs-identifier hs-var hs-var">getRemoteSchemaJoin</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-92"></span><span>      </span><span class="annot"><a href="Hasura.GraphQL.Execute.RemoteJoin.Types.html#RemoteJoinSource"><span class="hs-identifier hs-type">RemoteJoinSource</span></a></span><span> </span><span class="annot"><span class="annottext">AnyBackend RemoteSourceJoin
+</span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">Maybe RemoteJoins
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Maybe RemoteSchemaJoin
+forall a. Maybe a
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span>
+</span><span id="line-93"></span><span>      </span><span class="annot"><a href="Hasura.GraphQL.Execute.RemoteJoin.Types.html#RemoteJoinRemoteSchema"><span class="hs-identifier hs-type">RemoteJoinRemoteSchema</span></a></span><span> </span><span id="local-6989586621690152445"><span class="annot"><span class="annottext">RemoteSchemaJoin
+</span><a href="#local-6989586621690152445"><span class="hs-identifier hs-var">s</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">RemoteSchemaJoin -&gt; Maybe RemoteSchemaJoin
+forall a. a -&gt; Maybe a
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var">Just</span></a></span><span> </span><span class="annot"><span class="annottext">RemoteSchemaJoin
+</span><a href="#local-6989586621690152445"><span class="hs-identifier hs-var">s</span></a></span><span>
+</span><span id="line-94"></span><span>
+</span><span id="line-95"></span><span class="annot"><a href="Hasura.GraphQL.Execute.RemoteJoin.Types.html#getPhantomFields"><span class="hs-identifier hs-type">getPhantomFields</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.RemoteJoin.Types.html#RemoteJoin"><span class="hs-identifier hs-type">RemoteJoin</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.Types.Common.html#FieldName"><span class="hs-identifier hs-type">FieldName</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-96"></span><span id="getPhantomFields"><span class="annot"><span class="annottext">getPhantomFields :: RemoteJoin -&gt; [FieldName]
+</span><a href="Hasura.GraphQL.Execute.RemoteJoin.Types.html#getPhantomFields"><span class="hs-identifier hs-var hs-var">getPhantomFields</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-97"></span><span>  </span><span class="annot"><span class="annottext">(JoinColumnAlias -&gt; Maybe FieldName)
+-&gt; [JoinColumnAlias] -&gt; [FieldName]
+forall a b. (a -&gt; Maybe b) -&gt; [a] -&gt; [b]
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var">mapMaybe</span></a></span><span> </span><span class="annot"><span class="annottext">JoinColumnAlias -&gt; Maybe FieldName
+</span><a href="#local-6989586621690152444"><span class="hs-identifier hs-var">getPhantomFieldName</span></a></span><span> </span><span class="annot"><span class="annottext">([JoinColumnAlias] -&gt; [FieldName])
+-&gt; (RemoteJoin -&gt; [JoinColumnAlias]) -&gt; RemoteJoin -&gt; [FieldName]
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap FieldName JoinColumnAlias -&gt; [JoinColumnAlias]
+forall k v. HashMap k v -&gt; [v]
+</span><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/unordered-containers-0.2.13.0-3905cc0dd583bf2295f4fffefb94c9b368aca205fb5d2fe8619d64b3bfba7af9/share/doc/html/src"><span class="hs-identifier hs-var">Map.elems</span></a></span><span> </span><span class="annot"><span class="annottext">(HashMap FieldName JoinColumnAlias -&gt; [JoinColumnAlias])
+-&gt; (RemoteJoin -&gt; HashMap FieldName JoinColumnAlias)
+-&gt; RemoteJoin
+-&gt; [JoinColumnAlias]
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">RemoteJoin -&gt; HashMap FieldName JoinColumnAlias
+</span><a href="Hasura.GraphQL.Execute.RemoteJoin.Types.html#getJoinColumnMapping"><span class="hs-identifier hs-var">getJoinColumnMapping</span></a></span><span>
+</span><span id="line-98"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-99"></span><span>    </span><span class="annot"><a href="#local-6989586621690152444"><span class="hs-identifier hs-type">getPhantomFieldName</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.RemoteJoin.Types.html#JoinColumnAlias"><span class="hs-identifier hs-type">JoinColumnAlias</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#FieldName"><span class="hs-identifier hs-type">FieldName</span></a></span><span>
+</span><span id="line-100"></span><span>    </span><span id="local-6989586621690152444"><span class="annot"><span class="annottext">getPhantomFieldName :: JoinColumnAlias -&gt; Maybe FieldName
+</span><a href="#local-6989586621690152444"><span class="hs-identifier hs-var hs-var">getPhantomFieldName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-101"></span><span>      </span><span class="annot"><a href="Hasura.GraphQL.Execute.RemoteJoin.Types.html#JCSelected"><span class="hs-identifier hs-type">JCSelected</span></a></span><span> </span><span class="annot"><span class="annottext">FieldName
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Maybe FieldName
+forall a. Maybe a
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span>
+</span><span id="line-102"></span><span>      </span><span class="annot"><a href="Hasura.GraphQL.Execute.RemoteJoin.Types.html#JCPhantom"><span class="hs-identifier hs-type">JCPhantom</span></a></span><span> </span><span id="local-6989586621690152440"><span class="annot"><span class="annottext">FieldName
+</span><a href="#local-6989586621690152440"><span class="hs-identifier hs-var">f</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">FieldName -&gt; Maybe FieldName
+forall a. a -&gt; Maybe a
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var">Just</span></a></span><span> </span><span class="annot"><span class="annottext">FieldName
+</span><a href="#local-6989586621690152440"><span class="hs-identifier hs-var">f</span></a></span><span>
+</span><span id="line-103"></span><span>
+</span><span id="line-104"></span><span class="annot"><a href="Hasura.GraphQL.Execute.RemoteJoin.Types.html#getJoinColumnMapping"><span class="hs-identifier hs-type">getJoinColumnMapping</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.RemoteJoin.Types.html#RemoteJoin"><span class="hs-identifier hs-type">RemoteJoin</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/unordered-containers-0.2.13.0-3905cc0dd583bf2295f4fffefb94c9b368aca205fb5d2fe8619d64b3bfba7af9/share/doc/html/src"><span class="hs-identifier hs-type">Map.HashMap</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#FieldName"><span class="hs-identifier hs-type">FieldName</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.RemoteJoin.Types.html#JoinColumnAlias"><span class="hs-identifier hs-type">JoinColumnAlias</span></a></span><span>
+</span><span id="line-105"></span><span id="getJoinColumnMapping"><span class="annot"><span class="annottext">getJoinColumnMapping :: RemoteJoin -&gt; HashMap FieldName JoinColumnAlias
+</span><a href="Hasura.GraphQL.Execute.RemoteJoin.Types.html#getJoinColumnMapping"><span class="hs-identifier hs-var hs-var">getJoinColumnMapping</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-106"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Execute.RemoteJoin.Types.html#RemoteJoinSource"><span class="hs-identifier hs-type">RemoteJoinSource</span></a></span><span> </span><span id="local-6989586621690152439"><span class="annot"><span class="annottext">AnyBackend RemoteSourceJoin
+</span><a href="#local-6989586621690152439"><span class="hs-identifier hs-var">sourceJoin</span></a></span></span><span> </span><span class="annot"><span class="annottext">Maybe RemoteJoins
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">AnyBackend RemoteSourceJoin
+-&gt; (forall (b :: BackendType).
+    RemoteSourceJoin b -&gt; HashMap FieldName JoinColumnAlias)
+-&gt; HashMap FieldName JoinColumnAlias
+forall (i :: BackendType -&gt; *) r.
+AnyBackend i -&gt; (forall (b :: BackendType). i b -&gt; r) -&gt; r
+</span><a href="Hasura.SQL.AnyBackend.html#runBackend"><span class="hs-identifier hs-var">AB.runBackend</span></a></span><span>
+</span><span id="line-107"></span><span>    </span><span class="annot"><span class="annottext">AnyBackend RemoteSourceJoin
+</span><a href="#local-6989586621690152439"><span class="hs-identifier hs-var">sourceJoin</span></a></span><span>
+</span><span id="line-108"></span><span>    </span><span class="hs-glyph">\</span><span class="annot"><a href="Hasura.GraphQL.Execute.RemoteJoin.Types.html#RemoteSourceJoin"><span class="hs-identifier hs-type">RemoteSourceJoin</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621690152436"><span class="annot"><span class="annottext">HashMap FieldName (JoinColumnAlias, ScalarType b, Column b)
+_rsjJoinColumns :: forall (b :: BackendType).
+RemoteSourceJoin b
+-&gt; HashMap FieldName (JoinColumnAlias, ScalarType b, Column b)
+_rsjJoinColumns :: HashMap FieldName (JoinColumnAlias, ScalarType b, Column b)
+</span><a href="Hasura.GraphQL.Execute.RemoteJoin.Types.html#_rsjJoinColumns"><span class="hs-identifier hs-var hs-var">_rsjJoinColumns</span></a></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-109"></span><span>      </span><span class="annot"><span class="annottext">((JoinColumnAlias, ScalarType b, Column b) -&gt; JoinColumnAlias)
+-&gt; HashMap FieldName (JoinColumnAlias, ScalarType b, Column b)
+-&gt; HashMap FieldName JoinColumnAlias
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var">fmap</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Getting
+  JoinColumnAlias
+  (JoinColumnAlias, ScalarType b, Column b)
+  JoinColumnAlias
+-&gt; (JoinColumnAlias, ScalarType b, Column b) -&gt; JoinColumnAlias
+forall s (m :: * -&gt; *) a. MonadReader s m =&gt; Getting a s a -&gt; m a
+</span><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/lens-4.19.2-daf3092aeea9938626e934a14668e9805779308a8fd5b5104ece8391dad21dcb/share/doc/html/src"><span class="hs-identifier hs-var">view</span></a></span><span> </span><span class="annot"><span class="annottext">Getting
+  JoinColumnAlias
+  (JoinColumnAlias, ScalarType b, Column b)
+  JoinColumnAlias
+forall s t a b. Field1 s t a b =&gt; Lens s t a b
+</span><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/lens-4.19.2-daf3092aeea9938626e934a14668e9805779308a8fd5b5104ece8391dad21dcb/share/doc/html/src"><span class="hs-identifier hs-var">_1</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">HashMap FieldName (JoinColumnAlias, ScalarType b, Column b)
+</span><a href="#local-6989586621690152436"><span class="hs-identifier hs-var">_rsjJoinColumns</span></a></span><span>
+</span><span id="line-110"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Execute.RemoteJoin.Types.html#RemoteJoinRemoteSchema"><span class="hs-identifier hs-type">RemoteJoinRemoteSchema</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.RemoteJoin.Types.html#RemoteSchemaJoin"><span class="hs-identifier hs-type">RemoteSchemaJoin</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621690152433"><span class="annot"><span class="annottext">HashMap FieldName JoinColumnAlias
+_rsjJoinColumnAliases :: RemoteSchemaJoin -&gt; HashMap FieldName JoinColumnAlias
+_rsjJoinColumnAliases :: HashMap FieldName JoinColumnAlias
+</span><a href="Hasura.GraphQL.Execute.RemoteJoin.Types.html#_rsjJoinColumnAliases"><span class="hs-identifier hs-var hs-var">_rsjJoinColumnAliases</span></a></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-111"></span><span>    </span><span class="annot"><span class="annottext">HashMap FieldName JoinColumnAlias
+</span><a href="#local-6989586621690152433"><span class="hs-identifier hs-var">_rsjJoinColumnAliases</span></a></span><span>
+</span><span id="line-112"></span><span>
+</span><span id="line-113"></span><span class="hs-comment">-- | TODO(jkachmar): Documentation.</span><span>
+</span><span id="line-114"></span><span id="local-6989586621690152430"><span id="local-6989586621690152431"></span></span><span class="hs-keyword">data</span><span> </span><span id="RemoteSourceJoin"><span class="annot"><a href="Hasura.GraphQL.Execute.RemoteJoin.Types.html#RemoteSourceJoin"><span class="hs-identifier hs-var">RemoteSourceJoin</span></a></span></span><span> </span><span id="local-6989586621690152664"><span class="annot"><a href="#local-6989586621690152664"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="RemoteSourceJoin"><span class="annot"><a href="Hasura.GraphQL.Execute.RemoteJoin.Types.html#RemoteSourceJoin"><span class="hs-identifier hs-var">RemoteSourceJoin</span></a></span></span><span>
+</span><span id="line-115"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_rsjSource"><span class="annot"><span class="annottext">RemoteSourceJoin b -&gt; SourceName
+</span><a href="Hasura.GraphQL.Execute.RemoteJoin.Types.html#_rsjSource"><span class="hs-identifier hs-var hs-var">_rsjSource</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.RQL.Types.Common.html#SourceName"><span class="hs-identifier hs-type">SourceName</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-116"></span><span>    </span><span id="_rsjSourceConfig"><span class="annot"><span class="annottext">RemoteSourceJoin b -&gt; SourceConfig b
+</span><a href="Hasura.GraphQL.Execute.RemoteJoin.Types.html#_rsjSourceConfig"><span class="hs-identifier hs-var hs-var">_rsjSourceConfig</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#SourceConfig"><span class="hs-identifier hs-type">SourceConfig</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690152664"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-117"></span><span>    </span><span id="_rsjRelationship"><span class="annot"><span class="annottext">RemoteSourceJoin b
+-&gt; SourceRelationshipSelection b Void UnpreparedValue
+</span><a href="Hasura.GraphQL.Execute.RemoteJoin.Types.html#_rsjRelationship"><span class="hs-identifier hs-var hs-var">_rsjRelationship</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Select.html#SourceRelationshipSelection"><span class="hs-identifier hs-type">IR.SourceRelationshipSelection</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690152664"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-type">Void</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Column.html#UnpreparedValue"><span class="hs-identifier hs-type">P.UnpreparedValue</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-118"></span><span>    </span><span id="_rsjJoinColumns"><span class="annot"><span class="annottext">RemoteSourceJoin b
+-&gt; HashMap FieldName (JoinColumnAlias, ScalarType b, Column b)
+</span><a href="Hasura.GraphQL.Execute.RemoteJoin.Types.html#_rsjJoinColumns"><span class="hs-identifier hs-var hs-var">_rsjJoinColumns</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/unordered-containers-0.2.13.0-3905cc0dd583bf2295f4fffefb94c9b368aca205fb5d2fe8619d64b3bfba7af9/share/doc/html/src"><span class="hs-identifier hs-type">Map.HashMap</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#FieldName"><span class="hs-identifier hs-type">FieldName</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Execute.RemoteJoin.Types.html#JoinColumnAlias"><span class="hs-identifier hs-type">JoinColumnAlias</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#ScalarType"><span class="hs-identifier hs-type">ScalarType</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690152664"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Column"><span class="hs-identifier hs-type">Column</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690152664"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-119"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-120"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(forall x. RemoteSourceJoin b -&gt; Rep (RemoteSourceJoin b) x)
+-&gt; (forall x. Rep (RemoteSourceJoin b) x -&gt; RemoteSourceJoin b)
+-&gt; Generic (RemoteSourceJoin b)
+forall x. Rep (RemoteSourceJoin b) x -&gt; RemoteSourceJoin b
+forall x. RemoteSourceJoin b -&gt; Rep (RemoteSourceJoin b) x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+forall (b :: BackendType) x.
+Rep (RemoteSourceJoin b) x -&gt; RemoteSourceJoin b
+forall (b :: BackendType) x.
+RemoteSourceJoin b -&gt; Rep (RemoteSourceJoin b) x
+$cto :: forall (b :: BackendType) x.
+Rep (RemoteSourceJoin b) x -&gt; RemoteSourceJoin b
+$cfrom :: forall (b :: BackendType) x.
+RemoteSourceJoin b -&gt; Rep (RemoteSourceJoin b) x
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-121"></span><span>
+</span><span id="line-122"></span><span id="local-6989586621690152418"><span id="local-6989586621690152420"><span id="local-6989586621690152422"><span id="local-6989586621690152424"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span>
+</span><span id="line-123"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690152424"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-124"></span><span>    </span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-type">Show</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#ScalarValue"><span class="hs-identifier hs-type">ScalarValue</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690152424"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-125"></span><span>    </span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-type">Show</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#SourceConfig"><span class="hs-identifier hs-type">SourceConfig</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690152424"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-126"></span><span>    </span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-type">Show</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#BooleanOperators"><span class="hs-identifier hs-type">BooleanOperators</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690152424"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Column.html#UnpreparedValue"><span class="hs-identifier hs-type">P.UnpreparedValue</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690152424"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-127"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-128"></span><span>  </span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-type">Show</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Execute.RemoteJoin.Types.html#RemoteSourceJoin"><span class="hs-identifier hs-type">RemoteSourceJoin</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690152424"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span></span></span><span>
+</span><span id="line-129"></span><span>
+</span><span id="line-130"></span><span id="local-6989586621690152413"><span id="local-6989586621690152415"><span id="local-6989586621690152417"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span>
+</span><span id="line-131"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690152417"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-132"></span><span>    </span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/ghc-prim-0.6.1/src"><span class="hs-identifier hs-type">Eq</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#ScalarValue"><span class="hs-identifier hs-type">ScalarValue</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690152417"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-133"></span><span>    </span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/ghc-prim-0.6.1/src"><span class="hs-identifier hs-type">Eq</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#BooleanOperators"><span class="hs-identifier hs-type">BooleanOperators</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690152417"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Column.html#UnpreparedValue"><span class="hs-identifier hs-type">P.UnpreparedValue</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690152417"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-134"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-135"></span><span>  </span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/ghc-prim-0.6.1/src"><span class="hs-identifier hs-type">Eq</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Execute.RemoteJoin.Types.html#RemoteSourceJoin"><span class="hs-identifier hs-type">RemoteSourceJoin</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690152417"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span></span><span>
+</span><span id="line-136"></span><span>
+</span><span id="line-137"></span><span class="hs-comment">-- | Disambiguates between 'FieldName's which are provided as part of the</span><span>
+</span><span id="line-138"></span><span class="hs-comment">-- GraphQL selection provided by the user (i.e. 'JCSelected') and those which</span><span>
+</span><span id="line-139"></span><span class="hs-comment">-- we need to retreive data but which are not expressly requested (i.e.</span><span>
+</span><span id="line-140"></span><span class="hs-comment">-- 'JCPhantom').</span><span>
+</span><span id="line-141"></span><span class="hs-comment">--</span><span>
+</span><span id="line-142"></span><span class="hs-comment">-- After processing the remote join, we remove all phantom 'FieldName's and</span><span>
+</span><span id="line-143"></span><span class="hs-comment">-- only return those which fall under the 'JCSelected' branch of this type.</span><span>
+</span><span id="line-144"></span><span id="local-6989586621690152411"><span id="local-6989586621690152412"></span></span><span class="hs-keyword">data</span><span> </span><span id="JoinColumnAlias"><span class="annot"><a href="Hasura.GraphQL.Execute.RemoteJoin.Types.html#JoinColumnAlias"><span class="hs-identifier hs-var">JoinColumnAlias</span></a></span></span><span>
+</span><span id="line-145"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span class="hs-comment">-- | This fieldname is already part of the response.</span><span>
+</span><span id="line-146"></span><span>    </span><span id="JCSelected"><span class="annot"><a href="Hasura.GraphQL.Execute.RemoteJoin.Types.html#JCSelected"><span class="hs-identifier hs-var">JCSelected</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.RQL.Types.Common.html#FieldName"><span class="hs-identifier hs-type">FieldName</span></a></span><span>
+</span><span id="line-147"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="hs-comment">-- | This is explicitly added for the join.</span><span>
+</span><span id="line-148"></span><span>    </span><span class="hs-comment">--</span><span>
+</span><span id="line-149"></span><span>    </span><span class="hs-comment">-- Such keys will have to be removed from the response eventually.</span><span>
+</span><span id="line-150"></span><span>    </span><span id="JCPhantom"><span class="annot"><a href="Hasura.GraphQL.Execute.RemoteJoin.Types.html#JCPhantom"><span class="hs-identifier hs-var">JCPhantom</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.RQL.Types.Common.html#FieldName"><span class="hs-identifier hs-type">FieldName</span></a></span><span>
+</span><span id="line-151"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621690152407"><span id="local-6989586621690152409"><span class="annot"><span class="annottext">JoinColumnAlias -&gt; JoinColumnAlias -&gt; Bool
+(JoinColumnAlias -&gt; JoinColumnAlias -&gt; Bool)
+-&gt; (JoinColumnAlias -&gt; JoinColumnAlias -&gt; Bool)
+-&gt; Eq JoinColumnAlias
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: JoinColumnAlias -&gt; JoinColumnAlias -&gt; Bool
+$c/= :: JoinColumnAlias -&gt; JoinColumnAlias -&gt; Bool
+== :: JoinColumnAlias -&gt; JoinColumnAlias -&gt; Bool
+$c== :: JoinColumnAlias -&gt; JoinColumnAlias -&gt; Bool
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/ghc-prim-0.6.1/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">(forall x. JoinColumnAlias -&gt; Rep JoinColumnAlias x)
+-&gt; (forall x. Rep JoinColumnAlias x -&gt; JoinColumnAlias)
+-&gt; Generic JoinColumnAlias
+forall x. Rep JoinColumnAlias x -&gt; JoinColumnAlias
+forall x. JoinColumnAlias -&gt; Rep JoinColumnAlias x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+$cto :: forall x. Rep JoinColumnAlias x -&gt; JoinColumnAlias
+$cfrom :: forall x. JoinColumnAlias -&gt; Rep JoinColumnAlias x
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></a></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690152399"><span id="local-6989586621690152401"><span id="local-6989586621690152403"><span class="annot"><span class="annottext">Int -&gt; JoinColumnAlias -&gt; ShowS
+[JoinColumnAlias] -&gt; ShowS
+JoinColumnAlias -&gt; String
+(Int -&gt; JoinColumnAlias -&gt; ShowS)
+-&gt; (JoinColumnAlias -&gt; String)
+-&gt; ([JoinColumnAlias] -&gt; ShowS)
+-&gt; Show JoinColumnAlias
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [JoinColumnAlias] -&gt; ShowS
+$cshowList :: [JoinColumnAlias] -&gt; ShowS
+show :: JoinColumnAlias -&gt; String
+$cshow :: JoinColumnAlias -&gt; String
+showsPrec :: Int -&gt; JoinColumnAlias -&gt; ShowS
+$cshowsPrec :: Int -&gt; JoinColumnAlias -&gt; ShowS
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-152"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621690152395"><span id="local-6989586621690152397"><span class="annot"><span class="annottext">Int -&gt; JoinColumnAlias -&gt; Int
+JoinColumnAlias -&gt; Int
+(Int -&gt; JoinColumnAlias -&gt; Int)
+-&gt; (JoinColumnAlias -&gt; Int) -&gt; Hashable JoinColumnAlias
+forall a. (Int -&gt; a -&gt; Int) -&gt; (a -&gt; Int) -&gt; Hashable a
+hash :: JoinColumnAlias -&gt; Int
+$chash :: JoinColumnAlias -&gt; Int
+hashWithSalt :: Int -&gt; JoinColumnAlias -&gt; Int
+$chashWithSalt :: Int -&gt; JoinColumnAlias -&gt; Int
+</span><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/hashable-1.3.0.0-788b52f2a84e4f56df08780d211980a9db35c8fd0786c16a6d78251880c45f3d/share/doc/html/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-153"></span><span>
+</span><span id="line-154"></span><span class="annot"><a href="Hasura.GraphQL.Execute.RemoteJoin.Types.html#getAliasFieldName"><span class="hs-identifier hs-type">getAliasFieldName</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.RemoteJoin.Types.html#JoinColumnAlias"><span class="hs-identifier hs-type">JoinColumnAlias</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#FieldName"><span class="hs-identifier hs-type">FieldName</span></a></span><span>
+</span><span id="line-155"></span><span id="getAliasFieldName"><span class="annot"><span class="annottext">getAliasFieldName :: JoinColumnAlias -&gt; FieldName
+</span><a href="Hasura.GraphQL.Execute.RemoteJoin.Types.html#getAliasFieldName"><span class="hs-identifier hs-var hs-var">getAliasFieldName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-156"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Execute.RemoteJoin.Types.html#JCSelected"><span class="hs-identifier hs-type">JCSelected</span></a></span><span> </span><span id="local-6989586621690152393"><span class="annot"><span class="annottext">FieldName
+</span><a href="#local-6989586621690152393"><span class="hs-identifier hs-var">f</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">FieldName
+</span><a href="#local-6989586621690152393"><span class="hs-identifier hs-var">f</span></a></span><span>
+</span><span id="line-157"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Execute.RemoteJoin.Types.html#JCPhantom"><span class="hs-identifier hs-type">JCPhantom</span></a></span><span> </span><span id="local-6989586621690152392"><span class="annot"><span class="annottext">FieldName
+</span><a href="#local-6989586621690152392"><span class="hs-identifier hs-var">f</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">FieldName
+</span><a href="#local-6989586621690152392"><span class="hs-identifier hs-var">f</span></a></span><span>
+</span><span id="line-158"></span><span>
+</span><span id="line-159"></span><span class="hs-comment">-- | A 'RemoteSchemaJoin' represents the context of a remote relationship to be</span><span>
+</span><span id="line-160"></span><span class="hs-comment">-- extracted from 'AnnFieldG's.</span><span>
+</span><span id="line-161"></span><span id="local-6989586621690152390"><span id="local-6989586621690152391"></span></span><span class="hs-keyword">data</span><span> </span><span id="RemoteSchemaJoin"><span class="annot"><a href="Hasura.GraphQL.Execute.RemoteJoin.Types.html#RemoteSchemaJoin"><span class="hs-identifier hs-var">RemoteSchemaJoin</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="RemoteSchemaJoin"><span class="annot"><a href="Hasura.GraphQL.Execute.RemoteJoin.Types.html#RemoteSchemaJoin"><span class="hs-identifier hs-var">RemoteSchemaJoin</span></a></span></span><span>
+</span><span id="line-162"></span><span>  </span><span class="hs-special">{</span><span> </span><span class="hs-comment">-- | User-provided arguments with variables.</span><span>
+</span><span id="line-163"></span><span>    </span><span id="_rsjArgs"><span class="annot"><span class="annottext">RemoteSchemaJoin -&gt; HashMap Name (InputValue RemoteSchemaVariable)
+</span><a href="Hasura.GraphQL.Execute.RemoteJoin.Types.html#_rsjArgs"><span class="hs-identifier hs-var hs-var">_rsjArgs</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/unordered-containers-0.2.13.0-3905cc0dd583bf2295f4fffefb94c9b368aca205fb5d2fe8619d64b3bfba7af9/share/doc/html/src"><span class="hs-identifier hs-type">Map.HashMap</span></a></span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/graphql-parser-0.2.0.0-2f2855e50df08ca093d7ce5946fba1f88b716fe40529e565a631b700f43b2d07/share/doc/html/src"><span class="hs-identifier hs-type">G.Name</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#InputValue"><span class="hs-identifier hs-type">P.InputValue</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.RemoteSchema.html#RemoteSchemaVariable"><span class="hs-identifier hs-type">RemoteSchemaVariable</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-164"></span><span>    </span><span class="hs-comment">-- | Customizer for JSON result from the remote server.</span><span>
+</span><span id="line-165"></span><span>    </span><span id="_rsjResultCustomizer"><span class="annot"><span class="annottext">RemoteSchemaJoin -&gt; ResultCustomizer
+</span><a href="Hasura.GraphQL.Execute.RemoteJoin.Types.html#_rsjResultCustomizer"><span class="hs-identifier hs-var hs-var">_rsjResultCustomizer</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.RQL.Types.ResultCustomization.html#ResultCustomizer"><span class="hs-identifier hs-type">ResultCustomizer</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-166"></span><span>    </span><span class="hs-comment">-- | User-provided selection set of remote field.</span><span>
+</span><span id="line-167"></span><span>    </span><span id="_rsjSelSet"><span class="annot"><span class="annottext">RemoteSchemaJoin -&gt; SelectionSet NoFragments RemoteSchemaVariable
+</span><a href="Hasura.GraphQL.Execute.RemoteJoin.Types.html#_rsjSelSet"><span class="hs-identifier hs-var hs-var">_rsjSelSet</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/graphql-parser-0.2.0.0-2f2855e50df08ca093d7ce5946fba1f88b716fe40529e565a631b700f43b2d07/share/doc/html/src"><span class="hs-identifier hs-type">G.SelectionSet</span></a></span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/graphql-parser-0.2.0.0-2f2855e50df08ca093d7ce5946fba1f88b716fe40529e565a631b700f43b2d07/share/doc/html/src"><span class="hs-identifier hs-type">G.NoFragments</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.RemoteSchema.html#RemoteSchemaVariable"><span class="hs-identifier hs-type">RemoteSchemaVariable</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-168"></span><span>    </span><span class="hs-comment">-- | A map of the join column to its alias in the response</span><span>
+</span><span id="line-169"></span><span>    </span><span id="_rsjJoinColumnAliases"><span class="annot"><span class="annottext">RemoteSchemaJoin -&gt; HashMap FieldName JoinColumnAlias
+</span><a href="Hasura.GraphQL.Execute.RemoteJoin.Types.html#_rsjJoinColumnAliases"><span class="hs-identifier hs-var hs-var">_rsjJoinColumnAliases</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/unordered-containers-0.2.13.0-3905cc0dd583bf2295f4fffefb94c9b368aca205fb5d2fe8619d64b3bfba7af9/share/doc/html/src"><span class="hs-identifier hs-type">Map.HashMap</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#FieldName"><span class="hs-identifier hs-type">FieldName</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.RemoteJoin.Types.html#JoinColumnAlias"><span class="hs-identifier hs-type">JoinColumnAlias</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-170"></span><span>    </span><span class="hs-comment">-- | Remote server fields.</span><span>
+</span><span id="line-171"></span><span>    </span><span id="_rsjFieldCall"><span class="annot"><span class="annottext">RemoteSchemaJoin -&gt; NonEmpty FieldCall
+</span><a href="Hasura.GraphQL.Execute.RemoteJoin.Types.html#_rsjFieldCall"><span class="hs-identifier hs-var hs-var">_rsjFieldCall</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-type">NonEmpty</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Relationships.ToSchema.html#FieldCall"><span class="hs-identifier hs-type">FieldCall</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-172"></span><span>    </span><span class="hs-comment">-- | The remote schema server info.</span><span>
+</span><span id="line-173"></span><span>    </span><span id="_rsjRemoteSchema"><span class="annot"><span class="annottext">RemoteSchemaJoin -&gt; RemoteSchemaInfo
+</span><a href="Hasura.GraphQL.Execute.RemoteJoin.Types.html#_rsjRemoteSchema"><span class="hs-identifier hs-var hs-var">_rsjRemoteSchema</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.RQL.Types.RemoteSchema.html#RemoteSchemaInfo"><span class="hs-identifier hs-type">RemoteSchemaInfo</span></a></span><span>
+</span><span id="line-174"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-175"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(forall x. RemoteSchemaJoin -&gt; Rep RemoteSchemaJoin x)
+-&gt; (forall x. Rep RemoteSchemaJoin x -&gt; RemoteSchemaJoin)
+-&gt; Generic RemoteSchemaJoin
+forall x. Rep RemoteSchemaJoin x -&gt; RemoteSchemaJoin
+forall x. RemoteSchemaJoin -&gt; Rep RemoteSchemaJoin x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+$cto :: forall x. Rep RemoteSchemaJoin x -&gt; RemoteSchemaJoin
+$cfrom :: forall x. RemoteSchemaJoin -&gt; Rep RemoteSchemaJoin x
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-176"></span><span>
+</span><span id="line-177"></span><span class="hs-comment">-- NOTE: This cannot be derived automatically, as 'RemoteResultCustomizer' does</span><span>
+</span><span id="line-178"></span><span class="hs-comment">-- not permit a proper 'Eq' instance (it's a newtype around a function).</span><span>
+</span><span id="line-179"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690152380"><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/ghc-prim-0.6.1/src"><span class="hs-identifier hs-type">Eq</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.RemoteJoin.Types.html#RemoteSchemaJoin"><span class="hs-identifier hs-type">RemoteSchemaJoin</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-180"></span><span>  </span><span id="local-6989586621690152379"><span class="annot"><span class="annottext">== :: RemoteSchemaJoin -&gt; RemoteSchemaJoin -&gt; Bool
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/ghc-prim-0.6.1/src"><span class="hs-operator hs-var hs-var hs-var hs-var">(==)</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">((HashMap Name (InputValue RemoteSchemaVariable),
+  SelectionSet NoFragments RemoteSchemaVariable,
+  HashMap FieldName JoinColumnAlias, NonEmpty FieldCall,
+  RemoteSchemaInfo)
+ -&gt; (HashMap Name (InputValue RemoteSchemaVariable),
+     SelectionSet NoFragments RemoteSchemaVariable,
+     HashMap FieldName JoinColumnAlias, NonEmpty FieldCall,
+     RemoteSchemaInfo)
+ -&gt; Bool)
+-&gt; (RemoteSchemaJoin
+    -&gt; (HashMap Name (InputValue RemoteSchemaVariable),
+        SelectionSet NoFragments RemoteSchemaVariable,
+        HashMap FieldName JoinColumnAlias, NonEmpty FieldCall,
+        RemoteSchemaInfo))
+-&gt; RemoteSchemaJoin
+-&gt; RemoteSchemaJoin
+-&gt; Bool
+forall b c a. (b -&gt; b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; a -&gt; c
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var">on</span></a></span><span> </span><span class="annot"><span class="annottext">(HashMap Name (InputValue RemoteSchemaVariable),
+ SelectionSet NoFragments RemoteSchemaVariable,
+ HashMap FieldName JoinColumnAlias, NonEmpty FieldCall,
+ RemoteSchemaInfo)
+-&gt; (HashMap Name (InputValue RemoteSchemaVariable),
+    SelectionSet NoFragments RemoteSchemaVariable,
+    HashMap FieldName JoinColumnAlias, NonEmpty FieldCall,
+    RemoteSchemaInfo)
+-&gt; Bool
+forall a. Eq a =&gt; a -&gt; a -&gt; Bool
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/ghc-prim-0.6.1/src"><span class="hs-operator hs-var">(==)</span></a></span><span> </span><span class="hs-glyph">\</span><span class="annot"><a href="Hasura.GraphQL.Execute.RemoteJoin.Types.html#RemoteSchemaJoin"><span class="hs-identifier hs-type">RemoteSchemaJoin</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621690152372"><span id="local-6989586621690152373"><span id="local-6989586621690152374"><span id="local-6989586621690152375"><span id="local-6989586621690152376"><span id="local-6989586621690152377"><span class="annot"><span class="annottext">SelectionSet NoFragments RemoteSchemaVariable
+HashMap Name (InputValue RemoteSchemaVariable)
+HashMap FieldName JoinColumnAlias
+NonEmpty FieldCall
+ResultCustomizer
+RemoteSchemaInfo
+_rsjRemoteSchema :: RemoteSchemaInfo
+_rsjFieldCall :: NonEmpty FieldCall
+_rsjJoinColumnAliases :: HashMap FieldName JoinColumnAlias
+_rsjSelSet :: SelectionSet NoFragments RemoteSchemaVariable
+_rsjResultCustomizer :: ResultCustomizer
+_rsjArgs :: HashMap Name (InputValue RemoteSchemaVariable)
+_rsjRemoteSchema :: RemoteSchemaJoin -&gt; RemoteSchemaInfo
+_rsjFieldCall :: RemoteSchemaJoin -&gt; NonEmpty FieldCall
+_rsjSelSet :: RemoteSchemaJoin -&gt; SelectionSet NoFragments RemoteSchemaVariable
+_rsjResultCustomizer :: RemoteSchemaJoin -&gt; ResultCustomizer
+_rsjArgs :: RemoteSchemaJoin -&gt; HashMap Name (InputValue RemoteSchemaVariable)
+_rsjJoinColumnAliases :: RemoteSchemaJoin -&gt; HashMap FieldName JoinColumnAlias
+</span><a href="#local-6989586621690152372"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-181"></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="annottext">HashMap Name (InputValue RemoteSchemaVariable)
+</span><a href="#local-6989586621690152377"><span class="hs-identifier hs-var">_rsjArgs</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">SelectionSet NoFragments RemoteSchemaVariable
+</span><a href="#local-6989586621690152375"><span class="hs-identifier hs-var">_rsjSelSet</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">HashMap FieldName JoinColumnAlias
+</span><a href="#local-6989586621690152374"><span class="hs-identifier hs-var">_rsjJoinColumnAliases</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">NonEmpty FieldCall
+</span><a href="#local-6989586621690152373"><span class="hs-identifier hs-var">_rsjFieldCall</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">RemoteSchemaInfo
+</span><a href="#local-6989586621690152372"><span class="hs-identifier hs-var">_rsjRemoteSchema</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-182"></span><span>
+</span><span id="line-183"></span><span class="hs-comment">-- | A unique id that gets assigned to each 'RemoteJoin' (this is to avoid the</span><span>
+</span><span id="line-184"></span><span class="hs-comment">-- requirement of Ord/Hashable implementation for RemoteJoin)</span><span>
+</span><span id="line-185"></span><span class="hs-keyword">type</span><span> </span><span id="JoinCallId"><span class="annot"><a href="Hasura.GraphQL.Execute.RemoteJoin.Types.html#JoinCallId"><span class="hs-identifier hs-var">JoinCallId</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/ghc-prim-0.6.1/src"><span class="hs-identifier hs-type">Int</span></a></span><span>
+</span><span id="line-186"></span><span>
+</span><span id="line-187"></span><span class="hs-comment">-- | A map of fieldname to values extracted from each LHS row/object</span><span>
+</span><span id="line-188"></span><span class="hs-comment">--</span><span>
+</span><span id="line-189"></span><span class="hs-comment">-- For example, if a remote relationship 'weather' on 'city' table</span><span>
+</span><span id="line-190"></span><span class="hs-comment">-- is defined as follows:</span><span>
+</span><span id="line-191"></span><span class="hs-comment">--   city.weather = get_weather(city: city.code, cityState: city.state_code)</span><span>
+</span><span id="line-192"></span><span class="hs-comment">-- a join argument for this join would have the values of columns 'code' and</span><span>
+</span><span id="line-193"></span><span class="hs-comment">-- 'state_code' for each 'city' row that participates in the join</span><span>
+</span><span id="line-194"></span><span id="local-6989586621690152370"><span id="local-6989586621690152371"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="JoinArgument"><span class="annot"><a href="Hasura.GraphQL.Execute.RemoteJoin.Types.html#JoinArgument"><span class="hs-identifier hs-var">JoinArgument</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="JoinArgument"><span class="annot"><a href="Hasura.GraphQL.Execute.RemoteJoin.Types.html#JoinArgument"><span class="hs-identifier hs-var">JoinArgument</span></a></span></span><span> </span><span class="hs-special">{</span><span id="unJoinArgument"><span class="annot"><span class="annottext">JoinArgument -&gt; HashMap FieldName Value
+</span><a href="Hasura.GraphQL.Execute.RemoteJoin.Types.html#unJoinArgument"><span class="hs-identifier hs-var hs-var">unJoinArgument</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/unordered-containers-0.2.13.0-3905cc0dd583bf2295f4fffefb94c9b368aca205fb5d2fe8619d64b3bfba7af9/share/doc/html/src"><span class="hs-identifier hs-type">Map.HashMap</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#FieldName"><span class="hs-identifier hs-type">FieldName</span></a></span><span> </span><span class="annot"><a href="Data.Aeson.Ordered.html#Value"><span class="hs-identifier hs-type">AO.Value</span></a></span><span class="hs-special">}</span><span>
+</span><span id="line-195"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621690152364"><span id="local-6989586621690152366"><span class="annot"><span class="annottext">JoinArgument -&gt; JoinArgument -&gt; Bool
+(JoinArgument -&gt; JoinArgument -&gt; Bool)
+-&gt; (JoinArgument -&gt; JoinArgument -&gt; Bool) -&gt; Eq JoinArgument
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: JoinArgument -&gt; JoinArgument -&gt; Bool
+$c/= :: JoinArgument -&gt; JoinArgument -&gt; Bool
+== :: JoinArgument -&gt; JoinArgument -&gt; Bool
+$c== :: JoinArgument -&gt; JoinArgument -&gt; Bool
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/ghc-prim-0.6.1/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">(forall x. JoinArgument -&gt; Rep JoinArgument x)
+-&gt; (forall x. Rep JoinArgument x -&gt; JoinArgument)
+-&gt; Generic JoinArgument
+forall x. Rep JoinArgument x -&gt; JoinArgument
+forall x. JoinArgument -&gt; Rep JoinArgument x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+$cto :: forall x. Rep JoinArgument x -&gt; JoinArgument
+$cfrom :: forall x. JoinArgument -&gt; Rep JoinArgument x
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></a></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690152356"><span id="local-6989586621690152358"><span id="local-6989586621690152360"><span class="annot"><span class="annottext">Int -&gt; JoinArgument -&gt; ShowS
+[JoinArgument] -&gt; ShowS
+JoinArgument -&gt; String
+(Int -&gt; JoinArgument -&gt; ShowS)
+-&gt; (JoinArgument -&gt; String)
+-&gt; ([JoinArgument] -&gt; ShowS)
+-&gt; Show JoinArgument
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [JoinArgument] -&gt; ShowS
+$cshowList :: [JoinArgument] -&gt; ShowS
+show :: JoinArgument -&gt; String
+$cshow :: JoinArgument -&gt; String
+showsPrec :: Int -&gt; JoinArgument -&gt; ShowS
+$cshowsPrec :: Int -&gt; JoinArgument -&gt; ShowS
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-196"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">newtype</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621690152352"><span id="local-6989586621690152354"><span class="annot"><span class="annottext">Int -&gt; JoinArgument -&gt; Int
+JoinArgument -&gt; Int
+(Int -&gt; JoinArgument -&gt; Int)
+-&gt; (JoinArgument -&gt; Int) -&gt; Hashable JoinArgument
+forall a. (Int -&gt; a -&gt; Int) -&gt; (a -&gt; Int) -&gt; Hashable a
+hash :: JoinArgument -&gt; Int
+$chash :: JoinArgument -&gt; Int
+hashWithSalt :: Int -&gt; JoinArgument -&gt; Int
+$chashWithSalt :: Int -&gt; JoinArgument -&gt; Int
+</span><a href="#local-6989586621690152352"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-197"></span><span>
+</span><span id="line-198"></span><span class="hs-comment">-- | A unique id assigned to each join argument</span><span>
+</span><span id="line-199"></span><span class="hs-keyword">type</span><span> </span><span id="JoinArgumentId"><span class="annot"><a href="Hasura.GraphQL.Execute.RemoteJoin.Types.html#JoinArgumentId"><span class="hs-identifier hs-var">JoinArgumentId</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/ghc-prim-0.6.1/src"><span class="hs-identifier hs-type">Int</span></a></span><span>
+</span><span id="line-200"></span><span>
+</span><span id="line-201"></span><span class="hs-comment">-- | A map of JoinArgumentId to its value fetched from the RHS source of a join</span><span>
+</span><span id="line-202"></span><span class="hs-keyword">type</span><span> </span><span id="JoinIndex"><span class="annot"><a href="Hasura.GraphQL.Execute.RemoteJoin.Types.html#JoinIndex"><span class="hs-identifier hs-var">JoinIndex</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/containers-0.6.5.1/src"><span class="hs-identifier hs-type">IntMap.IntMap</span></a></span><span> </span><span class="annot"><a href="Data.Aeson.Ordered.html#Value"><span class="hs-identifier hs-type">AO.Value</span></a></span><span>
+</span><span id="line-203"></span><span>
+</span><span id="line-204"></span><span id="local-6989586621690152349"><span id="local-6989586621690152350"></span></span><span class="hs-keyword">data</span><span> </span><span id="JoinArguments"><span class="annot"><a href="Hasura.GraphQL.Execute.RemoteJoin.Types.html#JoinArguments"><span class="hs-identifier hs-var">JoinArguments</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="JoinArguments"><span class="annot"><a href="Hasura.GraphQL.Execute.RemoteJoin.Types.html#JoinArguments"><span class="hs-identifier hs-var">JoinArguments</span></a></span></span><span>
+</span><span id="line-205"></span><span>  </span><span class="hs-special">{</span><span> </span><span class="hs-comment">-- | The 'RemoteJoin' associated with the join arguments within this</span><span>
+</span><span id="line-206"></span><span>    </span><span class="hs-comment">-- structure.</span><span>
+</span><span id="line-207"></span><span>    </span><span id="_jalJoin"><span class="annot"><span class="annottext">JoinArguments -&gt; RemoteJoin
+</span><a href="Hasura.GraphQL.Execute.RemoteJoin.Types.html#_jalJoin"><span class="hs-identifier hs-var hs-var">_jalJoin</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.GraphQL.Execute.RemoteJoin.Types.html#RemoteJoin"><span class="hs-identifier hs-type">RemoteJoin</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-208"></span><span>    </span><span class="hs-comment">-- | Arguments for which we must fetch a response from the remote, along with</span><span>
+</span><span id="line-209"></span><span>    </span><span class="hs-comment">-- the identifiers that are used to stitch the final response together.</span><span>
+</span><span id="line-210"></span><span>    </span><span class="hs-comment">--</span><span>
+</span><span id="line-211"></span><span>    </span><span class="hs-comment">-- NOTE: 'Map.HashMap' is used to deduplicate multiple 'JoinArgument's so that</span><span>
+</span><span id="line-212"></span><span>    </span><span class="hs-comment">-- we avoid fetching more data from a remote than is necessary (i.e. in the</span><span>
+</span><span id="line-213"></span><span>    </span><span class="hs-comment">-- case of duplicate arguments).</span><span>
+</span><span id="line-214"></span><span>    </span><span id="_jalArguments"><span class="annot"><span class="annottext">JoinArguments -&gt; HashMap JoinArgument Int
+</span><a href="Hasura.GraphQL.Execute.RemoteJoin.Types.html#_jalArguments"><span class="hs-identifier hs-var hs-var">_jalArguments</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/unordered-containers-0.2.13.0-3905cc0dd583bf2295f4fffefb94c9b368aca205fb5d2fe8619d64b3bfba7af9/share/doc/html/src"><span class="hs-identifier hs-type">Map.HashMap</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.RemoteJoin.Types.html#JoinArgument"><span class="hs-identifier hs-type">JoinArgument</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.RemoteJoin.Types.html#JoinArgumentId"><span class="hs-identifier hs-type">JoinArgumentId</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-215"></span><span>    </span><span class="hs-comment">-- | The 'FieldName' associated with the &quot;replacement token&quot; for this join</span><span>
+</span><span id="line-216"></span><span>    </span><span class="hs-comment">-- argument.</span><span>
+</span><span id="line-217"></span><span>    </span><span class="hs-comment">--</span><span>
+</span><span id="line-218"></span><span>    </span><span class="hs-comment">-- NOTE: We need this for query logging; ideally we would use the full path</span><span>
+</span><span id="line-219"></span><span>    </span><span class="hs-comment">-- for the GraphQL query associated with this remote join, but we don't have</span><span>
+</span><span id="line-220"></span><span>    </span><span class="hs-comment">-- access to that here so this is the next best thing to do.</span><span>
+</span><span id="line-221"></span><span>    </span><span id="_jalFieldName"><span class="annot"><span class="annottext">JoinArguments -&gt; FieldName
+</span><a href="Hasura.GraphQL.Execute.RemoteJoin.Types.html#_jalFieldName"><span class="hs-identifier hs-var hs-var">_jalFieldName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.RQL.Types.Common.html#FieldName"><span class="hs-identifier hs-type">FieldName</span></a></span><span>
+</span><span id="line-222"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-223"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(forall x. JoinArguments -&gt; Rep JoinArguments x)
+-&gt; (forall x. Rep JoinArguments x -&gt; JoinArguments)
+-&gt; Generic JoinArguments
+forall x. Rep JoinArguments x -&gt; JoinArguments
+forall x. JoinArguments -&gt; Rep JoinArguments x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+$cto :: forall x. Rep JoinArguments x -&gt; JoinArguments
+$cfrom :: forall x. JoinArguments -&gt; Rep JoinArguments x
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-224"></span></pre></body></html>

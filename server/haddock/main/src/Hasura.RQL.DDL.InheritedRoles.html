@@ -1,0 +1,244 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Hasura.RQL.DDL.InheritedRoles</span><span>
+</span><span id="line-2"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.InheritedRoles.html#runAddInheritedRole"><span class="hs-identifier">runAddInheritedRole</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-3"></span><span>    </span><span class="annot"><a href="Hasura.RQL.DDL.InheritedRoles.html#runDropInheritedRole"><span class="hs-identifier">runDropInheritedRole</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-4"></span><span>    </span><span class="annot"><a href="Hasura.RQL.DDL.InheritedRoles.html#dropInheritedRoleInMetadata"><span class="hs-identifier">dropInheritedRoleInMetadata</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-5"></span><span>    </span><span class="annot"><a href="Hasura.RQL.DDL.InheritedRoles.html#resolveInheritedRole"><span class="hs-identifier">resolveInheritedRole</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-6"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-7"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-8"></span><span>
+</span><span id="line-9"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/insert-ordered-containers-0.2.3.1-a6ef36dcd5bb45cec62ca1bf3d0c8b97a58137fe3bcd53ccaab2b037abdddbd2/share/doc/html/src"><span class="hs-identifier">Data.HashMap.Strict.InsOrd</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">OMap</span></span><span>
+</span><span id="line-10"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/unordered-containers-0.2.13.0-3905cc0dd583bf2295f4fffefb94c9b368aca205fb5d2fe8619d64b3bfba7af9/share/doc/html/src"><span class="hs-identifier">Data.HashSet</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Set</span></span><span>
+</span><span id="line-11"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Data.Text.Extended.html"><span class="hs-identifier">Data.Text.Extended</span></a></span><span>
+</span><span id="line-12"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Base.Error.html"><span class="hs-identifier">Hasura.Base.Error</span></a></span><span>
+</span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.EncJSON.html"><span class="hs-identifier">Hasura.EncJSON</span></a></span><span>
+</span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.html"><span class="hs-identifier">Hasura.RQL.Types</span></a></span><span>
+</span><span id="line-16"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Session.html"><span class="hs-identifier">Hasura.Session</span></a></span><span>
+</span><span id="line-17"></span><span>
+</span><span id="line-18"></span><span id="local-6989586621690147598"><span class="annot"><a href="Hasura.RQL.DDL.InheritedRoles.html#runAddInheritedRole"><span class="hs-identifier hs-type">runAddInheritedRole</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-19"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/mtl-2.2.2/src"><span class="hs-identifier hs-type">MonadError</span></a></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690147598"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-20"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.Build.html#CacheRWM"><span class="hs-identifier hs-type">CacheRWM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690147598"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-21"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.Build.html#MetadataM"><span class="hs-identifier hs-type">MetadataM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690147598"><span class="hs-identifier hs-type">m</span></a></span><span>
+</span><span id="line-22"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-23"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Roles.html#InheritedRole"><span class="hs-identifier hs-type">InheritedRole</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-24"></span><span>  </span><span class="annot"><a href="#local-6989586621690147598"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.EncJSON.html#EncJSON"><span class="hs-identifier hs-type">EncJSON</span></a></span></span><span>
+</span><span id="line-25"></span><span id="runAddInheritedRole"><span class="annot"><span class="annottext">runAddInheritedRole :: InheritedRole -&gt; m EncJSON
+</span><a href="Hasura.RQL.DDL.InheritedRoles.html#runAddInheritedRole"><span class="hs-identifier hs-var hs-var">runAddInheritedRole</span></a></span></span><span> </span><span id="local-6989586621690147595"><span class="annot"><span class="annottext">addInheritedRoleQ :: InheritedRole
+</span><a href="#local-6989586621690147595"><span class="hs-identifier hs-var">addInheritedRoleQ</span></a></span></span><span class="hs-glyph">@</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Roles.html#Role"><span class="hs-identifier hs-type">Role</span></a></span><span> </span><span id="local-6989586621690147593"><span class="annot"><span class="annottext">RoleName
+</span><a href="#local-6989586621690147593"><span class="hs-identifier hs-var">inheritedRoleName</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Roles.html#ParentRoles"><span class="hs-identifier hs-type">ParentRoles</span></a></span><span> </span><span id="local-6989586621690147591"><span class="annot"><span class="annottext">HashSet RoleName
+</span><a href="#local-6989586621690147591"><span class="hs-identifier hs-var">parentRoles</span></a></span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-26"></span><span>  </span><span class="annot"><span class="annottext">Bool -&gt; m () -&gt; m ()
+forall (f :: * -&gt; *). Applicative f =&gt; Bool -&gt; f () -&gt; f ()
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var">when</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">RoleName
+</span><a href="#local-6989586621690147593"><span class="hs-identifier hs-var">inheritedRoleName</span></a></span><span> </span><span class="annot"><span class="annottext">RoleName -&gt; HashSet RoleName -&gt; Bool
+forall (t :: * -&gt; *) a. (Foldable t, Eq a) =&gt; a -&gt; t a -&gt; Bool
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var">`elem`</span></a></span><span> </span><span class="annot"><span class="annottext">HashSet RoleName
+</span><a href="#local-6989586621690147591"><span class="hs-identifier hs-var">parentRoles</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(m () -&gt; m ()) -&gt; m () -&gt; m ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
+</span><span id="line-27"></span><span>    </span><span class="annot"><span class="annottext">Code -&gt; Text -&gt; m ()
+forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
+</span><a href="Hasura.Base.Error.html#throw400"><span class="hs-identifier hs-var">throw400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
+</span><a href="Hasura.Base.Error.html#InvalidParams"><span class="hs-identifier hs-var">InvalidParams</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;an inherited role name cannot be in the role combination&quot;</span></span><span>
+</span><span id="line-28"></span><span>  </span><span class="annot"><span class="annottext">MetadataObjId -&gt; MetadataModifier -&gt; m ()
+forall (m :: * -&gt; *).
+(QErrM m, CacheRWM m, MetadataM m) =&gt;
+MetadataObjId -&gt; MetadataModifier -&gt; m ()
+</span><a href="Hasura.RQL.Types.SchemaCache.Build.html#buildSchemaCacheFor"><span class="hs-identifier hs-var">buildSchemaCacheFor</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">RoleName -&gt; MetadataObjId
+</span><a href="Hasura.RQL.Types.Metadata.Object.html#MOInheritedRole"><span class="hs-identifier hs-var">MOInheritedRole</span></a></span><span> </span><span class="annot"><span class="annottext">RoleName
+</span><a href="#local-6989586621690147593"><span class="hs-identifier hs-var">inheritedRoleName</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(MetadataModifier -&gt; m ()) -&gt; MetadataModifier -&gt; m ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
+</span><span id="line-29"></span><span>    </span><span class="annot"><span class="annottext">(Metadata -&gt; Metadata) -&gt; MetadataModifier
+</span><a href="Hasura.RQL.Types.Metadata.html#MetadataModifier"><span class="hs-identifier hs-var">MetadataModifier</span></a></span><span> </span><span class="annot"><span class="annottext">((Metadata -&gt; Metadata) -&gt; MetadataModifier)
+-&gt; (Metadata -&gt; Metadata) -&gt; MetadataModifier
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
+</span><span id="line-30"></span><span>      </span><span class="annot"><span class="annottext">(InheritedRoles -&gt; Identity InheritedRoles)
+-&gt; Metadata -&gt; Identity Metadata
+Lens' Metadata InheritedRoles
+</span><a href="Hasura.RQL.Types.Metadata.html#metaInheritedRoles"><span class="hs-identifier hs-var">metaInheritedRoles</span></a></span><span> </span><span class="annot"><span class="annottext">((InheritedRoles -&gt; Identity InheritedRoles)
+ -&gt; Metadata -&gt; Identity Metadata)
+-&gt; (InheritedRoles -&gt; InheritedRoles) -&gt; Metadata -&gt; Metadata
+forall s t a b. ASetter s t a b -&gt; (a -&gt; b) -&gt; s -&gt; t
+</span><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/lens-4.19.2-daf3092aeea9938626e934a14668e9805779308a8fd5b5104ece8391dad21dcb/share/doc/html/src"><span class="hs-operator hs-var">%~</span></a></span><span> </span><span class="annot"><span class="annottext">RoleName -&gt; InheritedRole -&gt; InheritedRoles -&gt; InheritedRoles
+forall k v.
+(Eq k, Hashable k) =&gt;
+k -&gt; v -&gt; InsOrdHashMap k v -&gt; InsOrdHashMap k v
+</span><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/insert-ordered-containers-0.2.3.1-a6ef36dcd5bb45cec62ca1bf3d0c8b97a58137fe3bcd53ccaab2b037abdddbd2/share/doc/html/src"><span class="hs-identifier hs-var">OMap.insert</span></a></span><span> </span><span class="annot"><span class="annottext">RoleName
+</span><a href="#local-6989586621690147593"><span class="hs-identifier hs-var">inheritedRoleName</span></a></span><span> </span><span class="annot"><span class="annottext">InheritedRole
+</span><a href="#local-6989586621690147595"><span class="hs-identifier hs-var">addInheritedRoleQ</span></a></span><span>
+</span><span id="line-31"></span><span>  </span><span class="annot"><span class="annottext">EncJSON -&gt; m EncJSON
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="annot"><span class="annottext">EncJSON
+</span><a href="Hasura.RQL.Types.Common.html#successMsg"><span class="hs-identifier hs-var">successMsg</span></a></span><span>
+</span><span id="line-32"></span><span>
+</span><span id="line-33"></span><span class="annot"><a href="Hasura.RQL.DDL.InheritedRoles.html#dropInheritedRoleInMetadata"><span class="hs-identifier hs-type">dropInheritedRoleInMetadata</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Session.html#RoleName"><span class="hs-identifier hs-type">RoleName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.html#MetadataModifier"><span class="hs-identifier hs-type">MetadataModifier</span></a></span><span>
+</span><span id="line-34"></span><span id="dropInheritedRoleInMetadata"><span class="annot"><span class="annottext">dropInheritedRoleInMetadata :: RoleName -&gt; MetadataModifier
+</span><a href="Hasura.RQL.DDL.InheritedRoles.html#dropInheritedRoleInMetadata"><span class="hs-identifier hs-var hs-var">dropInheritedRoleInMetadata</span></a></span></span><span> </span><span id="local-6989586621690147579"><span class="annot"><span class="annottext">RoleName
+</span><a href="#local-6989586621690147579"><span class="hs-identifier hs-var">roleName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-35"></span><span>  </span><span class="annot"><span class="annottext">(Metadata -&gt; Metadata) -&gt; MetadataModifier
+</span><a href="Hasura.RQL.Types.Metadata.html#MetadataModifier"><span class="hs-identifier hs-var">MetadataModifier</span></a></span><span> </span><span class="annot"><span class="annottext">((Metadata -&gt; Metadata) -&gt; MetadataModifier)
+-&gt; (Metadata -&gt; Metadata) -&gt; MetadataModifier
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">(InheritedRoles -&gt; Identity InheritedRoles)
+-&gt; Metadata -&gt; Identity Metadata
+Lens' Metadata InheritedRoles
+</span><a href="Hasura.RQL.Types.Metadata.html#metaInheritedRoles"><span class="hs-identifier hs-var">metaInheritedRoles</span></a></span><span> </span><span class="annot"><span class="annottext">((InheritedRoles -&gt; Identity InheritedRoles)
+ -&gt; Metadata -&gt; Identity Metadata)
+-&gt; (InheritedRoles -&gt; InheritedRoles) -&gt; Metadata -&gt; Metadata
+forall s t a b. ASetter s t a b -&gt; (a -&gt; b) -&gt; s -&gt; t
+</span><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/lens-4.19.2-daf3092aeea9938626e934a14668e9805779308a8fd5b5104ece8391dad21dcb/share/doc/html/src"><span class="hs-operator hs-var">%~</span></a></span><span> </span><span class="annot"><span class="annottext">RoleName -&gt; InheritedRoles -&gt; InheritedRoles
+forall k v.
+(Eq k, Hashable k) =&gt;
+k -&gt; InsOrdHashMap k v -&gt; InsOrdHashMap k v
+</span><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/insert-ordered-containers-0.2.3.1-a6ef36dcd5bb45cec62ca1bf3d0c8b97a58137fe3bcd53ccaab2b037abdddbd2/share/doc/html/src"><span class="hs-identifier hs-var">OMap.delete</span></a></span><span> </span><span class="annot"><span class="annottext">RoleName
+</span><a href="#local-6989586621690147579"><span class="hs-identifier hs-var">roleName</span></a></span><span>
+</span><span id="line-36"></span><span>
+</span><span id="line-37"></span><span id="local-6989586621690147577"><span class="annot"><a href="Hasura.RQL.DDL.InheritedRoles.html#runDropInheritedRole"><span class="hs-identifier hs-type">runDropInheritedRole</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-38"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/mtl-2.2.2/src"><span class="hs-identifier hs-type">MonadError</span></a></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690147577"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.Build.html#CacheRWM"><span class="hs-identifier hs-type">CacheRWM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690147577"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.Build.html#MetadataM"><span class="hs-identifier hs-type">MetadataM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690147577"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-39"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Roles.html#DropInheritedRole"><span class="hs-identifier hs-type">DropInheritedRole</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-40"></span><span>  </span><span class="annot"><a href="#local-6989586621690147577"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.EncJSON.html#EncJSON"><span class="hs-identifier hs-type">EncJSON</span></a></span></span><span>
+</span><span id="line-41"></span><span id="runDropInheritedRole"><span class="annot"><span class="annottext">runDropInheritedRole :: DropInheritedRole -&gt; m EncJSON
+</span><a href="Hasura.RQL.DDL.InheritedRoles.html#runDropInheritedRole"><span class="hs-identifier hs-var hs-var">runDropInheritedRole</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Roles.html#DropInheritedRole"><span class="hs-identifier hs-type">DropInheritedRole</span></a></span><span> </span><span id="local-6989586621690147575"><span class="annot"><span class="annottext">RoleName
+</span><a href="#local-6989586621690147575"><span class="hs-identifier hs-var">roleName</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-42"></span><span>  </span><span id="local-6989586621690147574"><span class="annot"><span class="annottext">InheritedRoles
+</span><a href="#local-6989586621690147574"><span class="hs-identifier hs-var">inheritedRolesMetadata</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Metadata -&gt; InheritedRoles
+</span><a href="Hasura.RQL.Types.Metadata.html#_metaInheritedRoles"><span class="hs-identifier hs-var hs-var">_metaInheritedRoles</span></a></span><span> </span><span class="annot"><span class="annottext">(Metadata -&gt; InheritedRoles) -&gt; m Metadata -&gt; m InheritedRoles
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">m Metadata
+forall (m :: * -&gt; *). MetadataM m =&gt; m Metadata
+</span><a href="Hasura.RQL.Types.SchemaCache.Build.html#getMetadata"><span class="hs-identifier hs-var">getMetadata</span></a></span><span>
+</span><span id="line-43"></span><span>  </span><span class="annot"><span class="annottext">Bool -&gt; m () -&gt; m ()
+forall (f :: * -&gt; *). Applicative f =&gt; Bool -&gt; f () -&gt; f ()
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var">unless</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">RoleName
+</span><a href="#local-6989586621690147575"><span class="hs-identifier hs-var">roleName</span></a></span><span> </span><span class="annot"><span class="annottext">RoleName -&gt; InheritedRoles -&gt; Bool
+forall k a. (Eq k, Hashable k) =&gt; k -&gt; InsOrdHashMap k a -&gt; Bool
+</span><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/insert-ordered-containers-0.2.3.1-a6ef36dcd5bb45cec62ca1bf3d0c8b97a58137fe3bcd53ccaab2b037abdddbd2/share/doc/html/src"><span class="hs-operator hs-var">`OMap.member`</span></a></span><span> </span><span class="annot"><span class="annottext">InheritedRoles
+</span><a href="#local-6989586621690147574"><span class="hs-identifier hs-var">inheritedRolesMetadata</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(m () -&gt; m ()) -&gt; m () -&gt; m ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
+</span><span id="line-44"></span><span>    </span><span class="annot"><span class="annottext">Code -&gt; Text -&gt; m ()
+forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
+</span><a href="Hasura.Base.Error.html#throw400"><span class="hs-identifier hs-var">throw400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
+</span><a href="Hasura.Base.Error.html#NotExists"><span class="hs-identifier hs-var">NotExists</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; m ()) -&gt; Text -&gt; m ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">RoleName
+</span><a href="#local-6989586621690147575"><span class="hs-identifier hs-var">roleName</span></a></span><span> </span><span class="annot"><span class="annottext">RoleName -&gt; Text -&gt; Text
+forall t. ToTxt t =&gt; t -&gt; Text -&gt; Text
+</span><a href="Data.Text.Extended.html#%3C%3C%3E"><span class="hs-operator hs-var">&lt;&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot; inherited role doesn't exist&quot;</span></span><span>
+</span><span id="line-45"></span><span>  </span><span class="annot"><span class="annottext">MetadataObjId -&gt; MetadataModifier -&gt; m ()
+forall (m :: * -&gt; *).
+(QErrM m, CacheRWM m, MetadataM m) =&gt;
+MetadataObjId -&gt; MetadataModifier -&gt; m ()
+</span><a href="Hasura.RQL.Types.SchemaCache.Build.html#buildSchemaCacheFor"><span class="hs-identifier hs-var">buildSchemaCacheFor</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">RoleName -&gt; MetadataObjId
+</span><a href="Hasura.RQL.Types.Metadata.Object.html#MOInheritedRole"><span class="hs-identifier hs-var">MOInheritedRole</span></a></span><span> </span><span class="annot"><span class="annottext">RoleName
+</span><a href="#local-6989586621690147575"><span class="hs-identifier hs-var">roleName</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">RoleName -&gt; MetadataModifier
+</span><a href="Hasura.RQL.DDL.InheritedRoles.html#dropInheritedRoleInMetadata"><span class="hs-identifier hs-var">dropInheritedRoleInMetadata</span></a></span><span> </span><span class="annot"><span class="annottext">RoleName
+</span><a href="#local-6989586621690147575"><span class="hs-identifier hs-var">roleName</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-46"></span><span>  </span><span class="annot"><span class="annottext">EncJSON -&gt; m EncJSON
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="annot"><span class="annottext">EncJSON
+</span><a href="Hasura.RQL.Types.Common.html#successMsg"><span class="hs-identifier hs-var">successMsg</span></a></span><span>
+</span><span id="line-47"></span><span>
+</span><span id="line-48"></span><span class="hs-comment">-- | `resolveInheritedRole` resolves an inherited role by checking if</span><span>
+</span><span id="line-49"></span><span class="hs-comment">-- all the parent roles of an inherited role exists and report</span><span>
+</span><span id="line-50"></span><span class="hs-comment">-- the dependencies of the inherited role which will be the list</span><span>
+</span><span id="line-51"></span><span class="hs-comment">-- of the parent roles</span><span>
+</span><span id="line-52"></span><span id="local-6989586621690147566"><span class="annot"><a href="Hasura.RQL.DDL.InheritedRoles.html#resolveInheritedRole"><span class="hs-identifier hs-type">resolveInheritedRole</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-53"></span><span>  </span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/mtl-2.2.2/src"><span class="hs-identifier hs-type">MonadError</span></a></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690147566"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-54"></span><span>  </span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/unordered-containers-0.2.13.0-3905cc0dd583bf2295f4fffefb94c9b368aca205fb5d2fe8619d64b3bfba7af9/share/doc/html/src"><span class="hs-identifier hs-type">HashSet</span></a></span><span> </span><span class="annot"><a href="Hasura.Session.html#RoleName"><span class="hs-identifier hs-type">RoleName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-55"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Roles.html#InheritedRole"><span class="hs-identifier hs-type">InheritedRole</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-56"></span><span>  </span><span class="annot"><a href="#local-6989586621690147566"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Roles.html#Role"><span class="hs-identifier hs-type">Role</span></a></span><span class="hs-special">,</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.Types.SchemaCacheTypes.html#SchemaDependency"><span class="hs-identifier hs-type">SchemaDependency</span></a></span><span class="hs-special">]</span><span class="hs-special">)</span></span><span>
+</span><span id="line-57"></span><span id="resolveInheritedRole"><span class="annot"><span class="annottext">resolveInheritedRole :: HashSet RoleName
+-&gt; InheritedRole -&gt; m (InheritedRole, [SchemaDependency])
+</span><a href="Hasura.RQL.DDL.InheritedRoles.html#resolveInheritedRole"><span class="hs-identifier hs-var hs-var">resolveInheritedRole</span></a></span></span><span> </span><span id="local-6989586621690147564"><span class="annot"><span class="annottext">HashSet RoleName
+</span><a href="#local-6989586621690147564"><span class="hs-identifier hs-var">allRoles</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Roles.html#Role"><span class="hs-identifier hs-type">Role</span></a></span><span> </span><span id="local-6989586621690147563"><span class="annot"><span class="annottext">RoleName
+</span><a href="#local-6989586621690147563"><span class="hs-identifier hs-var">roleName</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Roles.html#ParentRoles"><span class="hs-identifier hs-type">ParentRoles</span></a></span><span> </span><span id="local-6989586621690147562"><span class="annot"><span class="annottext">HashSet RoleName
+</span><a href="#local-6989586621690147562"><span class="hs-identifier hs-var">parentRoles</span></a></span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-58"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621690147561"><span class="annot"><span class="annottext">missingParentRoles :: HashSet RoleName
+</span><a href="#local-6989586621690147561"><span class="hs-identifier hs-var hs-var">missingParentRoles</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(RoleName -&gt; Bool) -&gt; HashSet RoleName -&gt; HashSet RoleName
+forall a. (a -&gt; Bool) -&gt; HashSet a -&gt; HashSet a
+</span><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/unordered-containers-0.2.13.0-3905cc0dd583bf2295f4fffefb94c9b368aca205fb5d2fe8619d64b3bfba7af9/share/doc/html/src"><span class="hs-identifier hs-var">Set.filter</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">RoleName -&gt; HashSet RoleName -&gt; Bool
+forall (t :: * -&gt; *) a. (Foldable t, Eq a) =&gt; a -&gt; t a -&gt; Bool
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var">`notElem`</span></a></span><span> </span><span class="annot"><span class="annottext">HashSet RoleName
+</span><a href="#local-6989586621690147564"><span class="hs-identifier hs-var">allRoles</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">HashSet RoleName
+</span><a href="#local-6989586621690147562"><span class="hs-identifier hs-var">parentRoles</span></a></span><span>
+</span><span id="line-59"></span><span>  </span><span class="annot"><span class="annottext">Bool -&gt; m () -&gt; m ()
+forall (f :: * -&gt; *). Applicative f =&gt; Bool -&gt; f () -&gt; f ()
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var">unless</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">HashSet RoleName -&gt; Bool
+forall a. HashSet a -&gt; Bool
+</span><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/unordered-containers-0.2.13.0-3905cc0dd583bf2295f4fffefb94c9b368aca205fb5d2fe8619d64b3bfba7af9/share/doc/html/src"><span class="hs-identifier hs-var">Set.null</span></a></span><span> </span><span class="annot"><span class="annottext">HashSet RoleName
+</span><a href="#local-6989586621690147561"><span class="hs-identifier hs-var">missingParentRoles</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(m () -&gt; m ()) -&gt; m () -&gt; m ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
+</span><span id="line-60"></span><span>    </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621690147557"><span class="annot"><span class="annottext">errMessage :: Text -&gt; Text
+</span><a href="#local-6989586621690147557"><span class="hs-identifier hs-var hs-var">errMessage</span></a></span></span><span> </span><span id="local-6989586621690147556"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621690147556"><span class="hs-identifier hs-var">roles</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-61"></span><span>          </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;the following parent role(s) are not found: &quot;</span></span><span>
+</span><span id="line-62"></span><span>            </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621690147556"><span class="hs-identifier hs-var">roles</span></a></span><span>
+</span><span id="line-63"></span><span>            </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot; which are required to construct the inherited role: &quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; RoleName -&gt; Text
+forall t. ToTxt t =&gt; Text -&gt; t -&gt; Text
+</span><a href="Data.Text.Extended.html#%3C%3E%3E"><span class="hs-operator hs-var">&lt;&gt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">RoleName
+</span><a href="#local-6989586621690147563"><span class="hs-identifier hs-var">roleName</span></a></span><span>
+</span><span id="line-64"></span><span>     </span><span class="hs-keyword">in</span><span> </span><span class="annot"><span class="annottext">Code -&gt; Text -&gt; m ()
+forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
+</span><a href="Hasura.Base.Error.html#throw400"><span class="hs-identifier hs-var">throw400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
+</span><a href="Hasura.Base.Error.html#NotExists"><span class="hs-identifier hs-var">NotExists</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; m ()) -&gt; Text -&gt; m ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text
+</span><a href="#local-6989586621690147557"><span class="hs-identifier hs-var">errMessage</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Text) -&gt; Text -&gt; Text
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">HashSet Text -&gt; Text
+forall t (f :: * -&gt; *). (ToTxt t, Foldable f) =&gt; f t -&gt; Text
+</span><a href="Data.Text.Extended.html#commaSeparated"><span class="hs-identifier hs-var">commaSeparated</span></a></span><span> </span><span class="annot"><span class="annottext">(HashSet Text -&gt; Text) -&gt; HashSet Text -&gt; Text
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">(RoleName -&gt; Text) -&gt; HashSet RoleName -&gt; HashSet Text
+forall b a.
+(Hashable b, Eq b) =&gt;
+(a -&gt; b) -&gt; HashSet a -&gt; HashSet b
+</span><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/unordered-containers-0.2.13.0-3905cc0dd583bf2295f4fffefb94c9b368aca205fb5d2fe8619d64b3bfba7af9/share/doc/html/src"><span class="hs-identifier hs-var">Set.map</span></a></span><span> </span><span class="annot"><span class="annottext">RoleName -&gt; Text
+</span><a href="Hasura.Session.html#roleNameToTxt"><span class="hs-identifier hs-var">roleNameToTxt</span></a></span><span> </span><span class="annot"><span class="annottext">HashSet RoleName
+</span><a href="#local-6989586621690147561"><span class="hs-identifier hs-var">missingParentRoles</span></a></span><span>
+</span><span id="line-65"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621690147551"><span class="annot"><span class="annottext">schemaDependencies :: [SchemaDependency]
+</span><a href="#local-6989586621690147551"><span class="hs-identifier hs-var hs-var">schemaDependencies</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-66"></span><span>        </span><span class="annot"><span class="annottext">(RoleName -&gt; SchemaDependency) -&gt; [RoleName] -&gt; [SchemaDependency]
+forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var">map</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621690147550"><span class="annot"><span class="annottext">RoleName
+</span><a href="#local-6989586621690147550"><span class="hs-identifier hs-var">parentRole</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">SchemaObjId -&gt; DependencyReason -&gt; SchemaDependency
+</span><a href="Hasura.RQL.Types.SchemaCacheTypes.html#SchemaDependency"><span class="hs-identifier hs-var">SchemaDependency</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">RoleName -&gt; SchemaObjId
+</span><a href="Hasura.RQL.Types.SchemaCacheTypes.html#SORole"><span class="hs-identifier hs-var">SORole</span></a></span><span> </span><span class="annot"><span class="annottext">RoleName
+</span><a href="#local-6989586621690147550"><span class="hs-identifier hs-var">parentRole</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">DependencyReason
+</span><a href="Hasura.RQL.Types.SchemaCacheTypes.html#DRParentRole"><span class="hs-identifier hs-var">DRParentRole</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">([RoleName] -&gt; [SchemaDependency])
+-&gt; [RoleName] -&gt; [SchemaDependency]
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">HashSet RoleName -&gt; [RoleName]
+forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; [a]
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var">toList</span></a></span><span> </span><span class="annot"><span class="annottext">HashSet RoleName
+</span><a href="#local-6989586621690147562"><span class="hs-identifier hs-var">parentRoles</span></a></span><span>
+</span><span id="line-67"></span><span>  </span><span class="annot"><span class="annottext">(InheritedRole, [SchemaDependency])
+-&gt; m (InheritedRole, [SchemaDependency])
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="annot"><span class="annottext">((InheritedRole, [SchemaDependency])
+ -&gt; m (InheritedRole, [SchemaDependency]))
+-&gt; (InheritedRole, [SchemaDependency])
+-&gt; m (InheritedRole, [SchemaDependency])
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">RoleName -&gt; ParentRoles -&gt; InheritedRole
+</span><a href="Hasura.RQL.Types.Roles.html#Role"><span class="hs-identifier hs-var">Role</span></a></span><span> </span><span class="annot"><span class="annottext">RoleName
+</span><a href="#local-6989586621690147563"><span class="hs-identifier hs-var">roleName</span></a></span><span> </span><span class="annot"><span class="annottext">(ParentRoles -&gt; InheritedRole) -&gt; ParentRoles -&gt; InheritedRole
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">HashSet RoleName -&gt; ParentRoles
+</span><a href="Hasura.RQL.Types.Roles.html#ParentRoles"><span class="hs-identifier hs-var">ParentRoles</span></a></span><span> </span><span class="annot"><span class="annottext">HashSet RoleName
+</span><a href="#local-6989586621690147562"><span class="hs-identifier hs-var">parentRoles</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">[SchemaDependency]
+</span><a href="#local-6989586621690147551"><span class="hs-identifier hs-var">schemaDependencies</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-68"></span></pre></body></html>

@@ -1,0 +1,24 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# OPTIONS_GHC -fno-warn-orphans #-}</span><span>
+</span><span id="line-2"></span><span>
+</span><span id="line-3"></span><span class="hs-comment">-- | A convenience wrapper around &quot;GHC.Stats&quot;, which makes RTS stats available</span><span>
+</span><span id="line-4"></span><span class="hs-comment">-- (when the program is run with +RTS -T)</span><span>
+</span><span id="line-5"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">GHC.Stats.Extended</span><span>
+</span><span id="line-6"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="hs-keyword">module</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier">GHC.Stats</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-7"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-8"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-9"></span><span>
+</span><span id="line-10"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/aeson-1.5.5.1-d565b322355c9794eb059b7477592fe0d20db50e9f4ac0ae0328e907dd753173/share/doc/html/src"><span class="hs-identifier">Data.Aeson</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">A</span></span><span>
+</span><span id="line-11"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/aeson-1.5.5.1-d565b322355c9794eb059b7477592fe0d20db50e9f4ac0ae0328e907dd753173/share/doc/html/src"><span class="hs-identifier">Data.Aeson.TH</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">A</span></span><span>
+</span><span id="line-12"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier">GHC.Stats</span></a></span><span>
+</span><span id="line-13"></span><span>
+</span><span id="line-14"></span><span class="hs-special">$(</span><span id="local-6989586621690048176"><span id="local-6989586621690048178"><span id="local-6989586621690048180"><span id="local-6989586621690048182"><span class="hs-identifier">A.deriveToJSON</span><span> </span><span class="hs-identifier">A.defaultOptions</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">GCDetails</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-15"></span><span class="hs-special">$(</span><span id="local-6989586621690048165"><span id="local-6989586621690048167"><span id="local-6989586621690048169"><span id="local-6989586621690048171"><span class="hs-identifier">A.deriveToJSON</span><span> </span><span class="hs-identifier">A.defaultOptions</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">RTSStats</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-16"></span><span>
+</span><span id="line-17"></span><span class="hs-comment">{- for base &gt;= 4.15
+instance A.ToJSON S.GCDetails where
+    toEncoding = A.genericToEncoding A.defaultOptions
+
+instance A.ToJSON S.RTSStats where
+    toEncoding = A.genericToEncoding A.defaultOptions
+-}</span><span>
+</span><span id="line-24"></span></pre></body></html>

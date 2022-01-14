@@ -1,0 +1,1497 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE DeriveAnyClass #-}</span><span>
+</span><span id="line-2"></span><span class="hs-pragma">{-# LANGUAGE NoGeneralisedNewtypeDeriving #-}</span><span>
+</span><span id="line-3"></span><span class="hs-pragma">{-# OPTIONS_GHC -fno-warn-orphans #-}</span><span>
+</span><span id="line-4"></span><span>
+</span><span id="line-5"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Hasura.Backends.BigQuery.Source</span><span>
+</span><span id="line-6"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#BigQueryConnSourceConfig"><span class="hs-identifier">BigQueryConnSourceConfig</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-7"></span><span>    </span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#BigQuerySourceConfig"><span class="hs-identifier">BigQuerySourceConfig</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-8"></span><span>    </span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#ConfigurationInput"><span class="hs-identifier">ConfigurationInput</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-9"></span><span>    </span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#ConfigurationInputs"><span class="hs-identifier">ConfigurationInputs</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-10"></span><span>    </span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#ConfigurationJSON"><span class="hs-identifier">ConfigurationJSON</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-11"></span><span>    </span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#GoogleAccessToken"><span class="hs-identifier">GoogleAccessToken</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#GoogleAccessToken"><span class="hs-identifier">GoogleAccessToken</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-12"></span><span>    </span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#PKey"><span class="hs-identifier">PKey</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#unPKey"><span class="hs-identifier">unPKey</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-13"></span><span>    </span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#ServiceAccount"><span class="hs-identifier">ServiceAccount</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-14"></span><span>    </span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#TokenResp"><span class="hs-identifier">TokenResp</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-15"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-16"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-17"></span><span>
+</span><span id="line-18"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier">Control.Concurrent.MVar</span></a></span><span>
+</span><span id="line-19"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/cryptonite-0.28-3f2248fbe68e5efcd97603d2514825d85aecf953096454a5dc2f4018e47bbeb0/share/doc/html/src"><span class="hs-identifier">Crypto.PubKey.RSA.Types</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Cry</span></span><span>
+</span><span id="line-20"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/aeson-1.5.5.1-d565b322355c9794eb059b7477592fe0d20db50e9f4ac0ae0328e907dd753173/share/doc/html/src"><span class="hs-identifier">Data.Aeson</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">J</span></span><span>
+</span><span id="line-21"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/aeson-casing-0.2.0.0-c713682bca682a018a127de90aaad0b9fb1c46959e3854d614e24909b6a02020/share/doc/html/src"><span class="hs-identifier">Data.Aeson.Casing</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">J</span></span><span>
+</span><span id="line-22"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/aeson-1.5.5.1-d565b322355c9794eb059b7477592fe0d20db50e9f4ac0ae0328e907dd753173/share/doc/html/src"><span class="hs-identifier">Data.Aeson.TH</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">J</span></span><span>
+</span><span id="line-23"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/bytestring-0.10.12.0/src"><span class="hs-identifier">Data.ByteString.Lazy</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">BL</span></span><span>
+</span><span id="line-24"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/unordered-containers-0.2.13.0-3905cc0dd583bf2295f4fffefb94c9b368aca205fb5d2fe8619d64b3bfba7af9/share/doc/html/src"><span class="hs-identifier">Data.HashMap.Strict</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">HM</span></span><span>
+</span><span id="line-25"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/text-1.2.3.2-4200bf40e86b2107f4b06242de65d549c52e58e8833e72545e35f7712661e715/share/doc/html/src"><span class="hs-identifier">Data.Text.Encoding</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">TE</span></span><span>
+</span><span id="line-26"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/x509-1.7.5-db115e75c7193d20a33d83027394d25158b0aab1c4eaf17ed415d90224e74307/share/doc/html/src"><span class="hs-identifier">Data.X509</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">X509</span></span><span>
+</span><span id="line-27"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/x509-store-1.6.7-090dfd7ed8c0c01d70800d1810f3c5695a9085e0bf376edf791e16c880cac113/share/doc/html/src"><span class="hs-identifier">Data.X509.Memory</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">X509</span></span><span>
+</span><span id="line-28"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Incremental.html"><span class="hs-identifier">Hasura.Incremental</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier">Cacheable</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-29"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-30"></span><span>
+</span><span id="line-31"></span><span id="local-6989586621690090425"><span id="local-6989586621690090426"></span></span><span class="hs-keyword">data</span><span> </span><span id="PKey"><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#PKey"><span class="hs-identifier hs-var">PKey</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="PKey"><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#PKey"><span class="hs-identifier hs-var">PKey</span></a></span></span><span>
+</span><span id="line-32"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="unPKey"><span class="annot"><span class="annottext">PKey -&gt; PrivateKey
+</span><a href="Hasura.Backends.BigQuery.Source.html#unPKey"><span class="hs-identifier hs-var hs-var">unPKey</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/cryptonite-0.28-3f2248fbe68e5efcd97603d2514825d85aecf953096454a5dc2f4018e47bbeb0/share/doc/html/src"><span class="hs-identifier hs-type">Cry.PrivateKey</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-33"></span><span>    </span><span id="originalBS"><span class="annot"><span class="annottext">PKey -&gt; Text
+</span><a href="Hasura.Backends.BigQuery.Source.html#originalBS"><span class="hs-identifier hs-var hs-var">originalBS</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/text-1.2.3.2-4200bf40e86b2107f4b06242de65d549c52e58e8833e72545e35f7712661e715/share/doc/html/src"><span class="hs-identifier hs-type">Text</span></a></span><span>
+</span><span id="line-34"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-35"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690090417"><span id="local-6989586621690090419"><span id="local-6989586621690090421"><span class="annot"><span class="annottext">Int -&gt; PKey -&gt; ShowS
+[PKey] -&gt; ShowS
+PKey -&gt; String
+(Int -&gt; PKey -&gt; ShowS)
+-&gt; (PKey -&gt; String) -&gt; ([PKey] -&gt; ShowS) -&gt; Show PKey
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [PKey] -&gt; ShowS
+$cshowList :: [PKey] -&gt; ShowS
+show :: PKey -&gt; String
+$cshow :: PKey -&gt; String
+showsPrec :: Int -&gt; PKey -&gt; ShowS
+$cshowsPrec :: Int -&gt; PKey -&gt; ShowS
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690090412"><span id="local-6989586621690090414"><span class="annot"><span class="annottext">PKey -&gt; PKey -&gt; Bool
+(PKey -&gt; PKey -&gt; Bool) -&gt; (PKey -&gt; PKey -&gt; Bool) -&gt; Eq PKey
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: PKey -&gt; PKey -&gt; Bool
+$c/= :: PKey -&gt; PKey -&gt; Bool
+== :: PKey -&gt; PKey -&gt; Bool
+$c== :: PKey -&gt; PKey -&gt; Bool
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/ghc-prim-0.6.1/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="%24cPKey"><span id="%24tPKey"><span id="local-6989586621690090382"><span id="local-6989586621690090384"><span id="local-6989586621690090386"><span id="local-6989586621690090388"><span id="local-6989586621690090390"><span id="local-6989586621690090392"><span id="local-6989586621690090394"><span id="local-6989586621690090396"><span id="local-6989586621690090398"><span id="local-6989586621690090400"><span id="local-6989586621690090402"><span id="local-6989586621690090404"><span id="local-6989586621690090406"><span id="local-6989586621690090408"><span class="annot"><span class="annottext">Typeable PKey
+DataType
+Constr
+Typeable PKey
+-&gt; (forall (c :: * -&gt; *).
+    (forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+    -&gt; (forall g. g -&gt; c g) -&gt; PKey -&gt; c PKey)
+-&gt; (forall (c :: * -&gt; *).
+    (forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+    -&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c PKey)
+-&gt; (PKey -&gt; Constr)
+-&gt; (PKey -&gt; DataType)
+-&gt; (forall (t :: * -&gt; *) (c :: * -&gt; *).
+    Typeable t =&gt;
+    (forall d. Data d =&gt; c (t d)) -&gt; Maybe (c PKey))
+-&gt; (forall (t :: * -&gt; * -&gt; *) (c :: * -&gt; *).
+    Typeable t =&gt;
+    (forall d e. (Data d, Data e) =&gt; c (t d e)) -&gt; Maybe (c PKey))
+-&gt; ((forall b. Data b =&gt; b -&gt; b) -&gt; PKey -&gt; PKey)
+-&gt; (forall r r'.
+    (r -&gt; r' -&gt; r) -&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; PKey -&gt; r)
+-&gt; (forall r r'.
+    (r' -&gt; r -&gt; r) -&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; PKey -&gt; r)
+-&gt; (forall u. (forall d. Data d =&gt; d -&gt; u) -&gt; PKey -&gt; [u])
+-&gt; (forall u. Int -&gt; (forall d. Data d =&gt; d -&gt; u) -&gt; PKey -&gt; u)
+-&gt; (forall (m :: * -&gt; *).
+    Monad m =&gt;
+    (forall d. Data d =&gt; d -&gt; m d) -&gt; PKey -&gt; m PKey)
+-&gt; (forall (m :: * -&gt; *).
+    MonadPlus m =&gt;
+    (forall d. Data d =&gt; d -&gt; m d) -&gt; PKey -&gt; m PKey)
+-&gt; (forall (m :: * -&gt; *).
+    MonadPlus m =&gt;
+    (forall d. Data d =&gt; d -&gt; m d) -&gt; PKey -&gt; m PKey)
+-&gt; Data PKey
+PKey -&gt; DataType
+PKey -&gt; Constr
+(forall b. Data b =&gt; b -&gt; b) -&gt; PKey -&gt; PKey
+(forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+-&gt; (forall g. g -&gt; c g) -&gt; PKey -&gt; c PKey
+(forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+-&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c PKey
+forall a.
+Typeable a
+-&gt; (forall (c :: * -&gt; *).
+    (forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+    -&gt; (forall g. g -&gt; c g) -&gt; a -&gt; c a)
+-&gt; (forall (c :: * -&gt; *).
+    (forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+    -&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c a)
+-&gt; (a -&gt; Constr)
+-&gt; (a -&gt; DataType)
+-&gt; (forall (t :: * -&gt; *) (c :: * -&gt; *).
+    Typeable t =&gt;
+    (forall d. Data d =&gt; c (t d)) -&gt; Maybe (c a))
+-&gt; (forall (t :: * -&gt; * -&gt; *) (c :: * -&gt; *).
+    Typeable t =&gt;
+    (forall d e. (Data d, Data e) =&gt; c (t d e)) -&gt; Maybe (c a))
+-&gt; ((forall b. Data b =&gt; b -&gt; b) -&gt; a -&gt; a)
+-&gt; (forall r r'.
+    (r -&gt; r' -&gt; r) -&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; a -&gt; r)
+-&gt; (forall r r'.
+    (r' -&gt; r -&gt; r) -&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; a -&gt; r)
+-&gt; (forall u. (forall d. Data d =&gt; d -&gt; u) -&gt; a -&gt; [u])
+-&gt; (forall u. Int -&gt; (forall d. Data d =&gt; d -&gt; u) -&gt; a -&gt; u)
+-&gt; (forall (m :: * -&gt; *).
+    Monad m =&gt;
+    (forall d. Data d =&gt; d -&gt; m d) -&gt; a -&gt; m a)
+-&gt; (forall (m :: * -&gt; *).
+    MonadPlus m =&gt;
+    (forall d. Data d =&gt; d -&gt; m d) -&gt; a -&gt; m a)
+-&gt; (forall (m :: * -&gt; *).
+    MonadPlus m =&gt;
+    (forall d. Data d =&gt; d -&gt; m d) -&gt; a -&gt; m a)
+-&gt; Data a
+forall u. Int -&gt; (forall d. Data d =&gt; d -&gt; u) -&gt; PKey -&gt; u
+forall u. (forall d. Data d =&gt; d -&gt; u) -&gt; PKey -&gt; [u]
+forall r r'.
+(r -&gt; r' -&gt; r) -&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; PKey -&gt; r
+forall r r'.
+(r' -&gt; r -&gt; r) -&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; PKey -&gt; r
+forall (m :: * -&gt; *).
+Monad m =&gt;
+(forall d. Data d =&gt; d -&gt; m d) -&gt; PKey -&gt; m PKey
+forall (m :: * -&gt; *).
+MonadPlus m =&gt;
+(forall d. Data d =&gt; d -&gt; m d) -&gt; PKey -&gt; m PKey
+forall (c :: * -&gt; *).
+(forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+-&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c PKey
+forall (c :: * -&gt; *).
+(forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+-&gt; (forall g. g -&gt; c g) -&gt; PKey -&gt; c PKey
+forall (t :: * -&gt; *) (c :: * -&gt; *).
+Typeable t =&gt;
+(forall d. Data d =&gt; c (t d)) -&gt; Maybe (c PKey)
+forall (t :: * -&gt; * -&gt; *) (c :: * -&gt; *).
+Typeable t =&gt;
+(forall d e. (Data d, Data e) =&gt; c (t d e)) -&gt; Maybe (c PKey)
+$cPKey :: Constr
+$tPKey :: DataType
+gmapMo :: (forall d. Data d =&gt; d -&gt; m d) -&gt; PKey -&gt; m PKey
+$cgmapMo :: forall (m :: * -&gt; *).
+MonadPlus m =&gt;
+(forall d. Data d =&gt; d -&gt; m d) -&gt; PKey -&gt; m PKey
+gmapMp :: (forall d. Data d =&gt; d -&gt; m d) -&gt; PKey -&gt; m PKey
+$cgmapMp :: forall (m :: * -&gt; *).
+MonadPlus m =&gt;
+(forall d. Data d =&gt; d -&gt; m d) -&gt; PKey -&gt; m PKey
+gmapM :: (forall d. Data d =&gt; d -&gt; m d) -&gt; PKey -&gt; m PKey
+$cgmapM :: forall (m :: * -&gt; *).
+Monad m =&gt;
+(forall d. Data d =&gt; d -&gt; m d) -&gt; PKey -&gt; m PKey
+gmapQi :: Int -&gt; (forall d. Data d =&gt; d -&gt; u) -&gt; PKey -&gt; u
+$cgmapQi :: forall u. Int -&gt; (forall d. Data d =&gt; d -&gt; u) -&gt; PKey -&gt; u
+gmapQ :: (forall d. Data d =&gt; d -&gt; u) -&gt; PKey -&gt; [u]
+$cgmapQ :: forall u. (forall d. Data d =&gt; d -&gt; u) -&gt; PKey -&gt; [u]
+gmapQr :: (r' -&gt; r -&gt; r) -&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; PKey -&gt; r
+$cgmapQr :: forall r r'.
+(r' -&gt; r -&gt; r) -&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; PKey -&gt; r
+gmapQl :: (r -&gt; r' -&gt; r) -&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; PKey -&gt; r
+$cgmapQl :: forall r r'.
+(r -&gt; r' -&gt; r) -&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; PKey -&gt; r
+gmapT :: (forall b. Data b =&gt; b -&gt; b) -&gt; PKey -&gt; PKey
+$cgmapT :: (forall b. Data b =&gt; b -&gt; b) -&gt; PKey -&gt; PKey
+dataCast2 :: (forall d e. (Data d, Data e) =&gt; c (t d e)) -&gt; Maybe (c PKey)
+$cdataCast2 :: forall (t :: * -&gt; * -&gt; *) (c :: * -&gt; *).
+Typeable t =&gt;
+(forall d e. (Data d, Data e) =&gt; c (t d e)) -&gt; Maybe (c PKey)
+dataCast1 :: (forall d. Data d =&gt; c (t d)) -&gt; Maybe (c PKey)
+$cdataCast1 :: forall (t :: * -&gt; *) (c :: * -&gt; *).
+Typeable t =&gt;
+(forall d. Data d =&gt; c (t d)) -&gt; Maybe (c PKey)
+dataTypeOf :: PKey -&gt; DataType
+$cdataTypeOf :: PKey -&gt; DataType
+toConstr :: PKey -&gt; Constr
+$ctoConstr :: PKey -&gt; Constr
+gunfold :: (forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+-&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c PKey
+$cgunfold :: forall (c :: * -&gt; *).
+(forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+-&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c PKey
+gfoldl :: (forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+-&gt; (forall g. g -&gt; c g) -&gt; PKey -&gt; c PKey
+$cgfoldl :: forall (c :: * -&gt; *).
+(forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+-&gt; (forall g. g -&gt; c g) -&gt; PKey -&gt; c PKey
+$cp1Data :: Typeable PKey
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Data</span></a></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">(forall x. PKey -&gt; Rep PKey x)
+-&gt; (forall x. Rep PKey x -&gt; PKey) -&gt; Generic PKey
+forall x. Rep PKey x -&gt; PKey
+forall x. PKey -&gt; Rep PKey x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+$cto :: forall x. Rep PKey x -&gt; PKey
+$cfrom :: forall x. PKey -&gt; Rep PKey x
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></a></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690090374"><span class="annot"><span class="annottext">PKey -&gt; ()
+(PKey -&gt; ()) -&gt; NFData PKey
+forall a. (a -&gt; ()) -&gt; NFData a
+rnf :: PKey -&gt; ()
+$crnf :: PKey -&gt; ()
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/deepseq-1.4.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690090369"><span id="local-6989586621690090371"><span class="annot"><span class="annottext">Int -&gt; PKey -&gt; Int
+PKey -&gt; Int
+(Int -&gt; PKey -&gt; Int) -&gt; (PKey -&gt; Int) -&gt; Hashable PKey
+forall a. (Int -&gt; a -&gt; Int) -&gt; (a -&gt; Int) -&gt; Hashable a
+hash :: PKey -&gt; Int
+$chash :: PKey -&gt; Int
+hashWithSalt :: Int -&gt; PKey -&gt; Int
+$chashWithSalt :: Int -&gt; PKey -&gt; Int
+</span><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/hashable-1.3.0.0-788b52f2a84e4f56df08780d211980a9db35c8fd0786c16a6d78251880c45f3d/share/doc/html/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-36"></span><span>
+</span><span id="line-37"></span><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-type">Generic</span></a></span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/cryptonite-0.28-3f2248fbe68e5efcd97603d2514825d85aecf953096454a5dc2f4018e47bbeb0/share/doc/html/src"><span class="hs-identifier hs-type">Cry.PrivateKey</span></a></span><span> </span><span class="hs-comment">-- orphan</span><span>
+</span><span id="line-38"></span><span>
+</span><span id="line-39"></span><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-type">Generic</span></a></span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/cryptonite-0.28-3f2248fbe68e5efcd97603d2514825d85aecf953096454a5dc2f4018e47bbeb0/share/doc/html/src"><span class="hs-identifier hs-type">Cry.PublicKey</span></a></span><span> </span><span class="hs-comment">-- orphan</span><span>
+</span><span id="line-40"></span><span>
+</span><span id="line-41"></span><span id="local-6989586621690090356"><span id="local-6989586621690090358"><span id="local-6989586621690090360"><span id="local-6989586621690090362"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/aeson-1.5.5.1-d565b322355c9794eb059b7477592fe0d20db50e9f4ac0ae0328e907dd753173/share/doc/html/src"><span class="hs-identifier hs-type">J.ToJSON</span></a></span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/cryptonite-0.28-3f2248fbe68e5efcd97603d2514825d85aecf953096454a5dc2f4018e47bbeb0/share/doc/html/src"><span class="hs-identifier hs-type">Cry.PrivateKey</span></a></span></span></span></span></span><span> </span><span class="hs-comment">-- orphan</span><span>
+</span><span id="line-42"></span><span>
+</span><span id="line-43"></span><span id="local-6989586621690090347"><span id="local-6989586621690090349"><span id="local-6989586621690090351"><span id="local-6989586621690090353"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/aeson-1.5.5.1-d565b322355c9794eb059b7477592fe0d20db50e9f4ac0ae0328e907dd753173/share/doc/html/src"><span class="hs-identifier hs-type">J.ToJSON</span></a></span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/cryptonite-0.28-3f2248fbe68e5efcd97603d2514825d85aecf953096454a5dc2f4018e47bbeb0/share/doc/html/src"><span class="hs-identifier hs-type">Cry.PublicKey</span></a></span></span></span></span></span><span> </span><span class="hs-comment">-- orphan</span><span>
+</span><span id="line-44"></span><span>
+</span><span id="line-45"></span><span id="local-6989586621690090343"><span id="local-6989586621690090345"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/hashable-1.3.0.0-788b52f2a84e4f56df08780d211980a9db35c8fd0786c16a6d78251880c45f3d/share/doc/html/src"><span class="hs-identifier hs-type">Hashable</span></a></span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/cryptonite-0.28-3f2248fbe68e5efcd97603d2514825d85aecf953096454a5dc2f4018e47bbeb0/share/doc/html/src"><span class="hs-identifier hs-type">Cry.PrivateKey</span></a></span></span></span><span> </span><span class="hs-comment">-- orphan</span><span>
+</span><span id="line-46"></span><span>
+</span><span id="line-47"></span><span id="local-6989586621690090339"><span id="local-6989586621690090341"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/hashable-1.3.0.0-788b52f2a84e4f56df08780d211980a9db35c8fd0786c16a6d78251880c45f3d/share/doc/html/src"><span class="hs-identifier hs-type">Hashable</span></a></span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/cryptonite-0.28-3f2248fbe68e5efcd97603d2514825d85aecf953096454a5dc2f4018e47bbeb0/share/doc/html/src"><span class="hs-identifier hs-type">Cry.PublicKey</span></a></span></span></span><span> </span><span class="hs-comment">-- orphan</span><span>
+</span><span id="line-48"></span><span>
+</span><span id="line-49"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690090336"><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/aeson-1.5.5.1-d565b322355c9794eb059b7477592fe0d20db50e9f4ac0ae0328e907dd753173/share/doc/html/src"><span class="hs-identifier hs-type">J.FromJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#PKey"><span class="hs-identifier hs-type">PKey</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-50"></span><span>  </span><span id="local-6989586621690090334"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser PKey
+</span><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/aeson-1.5.5.1-d565b322355c9794eb059b7477592fe0d20db50e9f4ac0ae0328e907dd753173/share/doc/html/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; (Text -&gt; Parser PKey) -&gt; Value -&gt; Parser PKey
+forall a. String -&gt; (Text -&gt; Parser a) -&gt; Value -&gt; Parser a
+</span><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/aeson-1.5.5.1-d565b322355c9794eb059b7477592fe0d20db50e9f4ac0ae0328e907dd753173/share/doc/html/src"><span class="hs-identifier hs-var">J.withText</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;private_key&quot;</span></span><span> </span><span class="annot"><span class="annottext">((Text -&gt; Parser PKey) -&gt; Value -&gt; Parser PKey)
+-&gt; (Text -&gt; Parser PKey) -&gt; Value -&gt; Parser PKey
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621690090331"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621690090331"><span class="hs-identifier hs-var">k</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-51"></span><span>    </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; [PrivKey]
+</span><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/x509-store-1.6.7-090dfd7ed8c0c01d70800d1810f3c5695a9085e0bf376edf791e16c880cac113/share/doc/html/src"><span class="hs-identifier hs-var">X509.readKeyFileFromMemory</span></a></span><span> </span><span class="annot"><span class="annottext">(ByteString -&gt; [PrivKey]) -&gt; ByteString -&gt; [PrivKey]
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; ByteString
+</span><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/text-1.2.3.2-4200bf40e86b2107f4b06242de65d549c52e58e8833e72545e35f7712661e715/share/doc/html/src"><span class="hs-identifier hs-var">TE.encodeUtf8</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621690090331"><span class="hs-identifier hs-var">k</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-52"></span><span>      </span><span class="hs-special">[</span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/x509-1.7.5-db115e75c7193d20a33d83027394d25158b0aab1c4eaf17ed415d90224e74307/share/doc/html/src"><span class="hs-identifier hs-type">X509.PrivKeyRSA</span></a></span><span> </span><span id="local-6989586621690090327"><span class="annot"><span class="annottext">PrivateKey
+</span><a href="#local-6989586621690090327"><span class="hs-identifier hs-var">k'</span></a></span></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">PKey -&gt; Parser PKey
+forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var">return</span></a></span><span> </span><span class="annot"><span class="annottext">(PKey -&gt; Parser PKey) -&gt; PKey -&gt; Parser PKey
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">PrivateKey -&gt; Text -&gt; PKey
+</span><a href="Hasura.Backends.BigQuery.Source.html#PKey"><span class="hs-identifier hs-var">PKey</span></a></span><span> </span><span class="annot"><span class="annottext">PrivateKey
+</span><a href="#local-6989586621690090327"><span class="hs-identifier hs-var">k'</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621690090331"><span class="hs-identifier hs-var">k</span></a></span><span>
+</span><span id="line-53"></span><span>      </span><span class="annot"><span class="annottext">[PrivKey]
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">String -&gt; Parser PKey
+forall (m :: * -&gt; *) a. MonadFail m =&gt; String -&gt; m a
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var">fail</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;unable to parse private key&quot;</span></span><span>
+</span><span id="line-54"></span><span>
+</span><span id="line-55"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690090320"><span id="local-6989586621690090322"><span id="local-6989586621690090324"><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/aeson-1.5.5.1-d565b322355c9794eb059b7477592fe0d20db50e9f4ac0ae0328e907dd753173/share/doc/html/src"><span class="hs-identifier hs-type">J.ToJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#PKey"><span class="hs-identifier hs-type">PKey</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-56"></span><span>  </span><span id="local-6989586621690090319"><span class="annot"><span class="annottext">toJSON :: PKey -&gt; Value
+</span><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/aeson-1.5.5.1-d565b322355c9794eb059b7477592fe0d20db50e9f4ac0ae0328e907dd753173/share/doc/html/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#PKey"><span class="hs-identifier hs-type">PKey</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621690090316"><span id="local-6989586621690090317"><span class="annot"><span class="annottext">Text
+PrivateKey
+originalBS :: Text
+unPKey :: PrivateKey
+originalBS :: PKey -&gt; Text
+unPKey :: PKey -&gt; PrivateKey
+</span><a href="#local-6989586621690090316"><span class="hs-glyph hs-var hs-var hs-var hs-var">..</span></a></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Value
+forall a. ToJSON a =&gt; a -&gt; Value
+</span><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/aeson-1.5.5.1-d565b322355c9794eb059b7477592fe0d20db50e9f4ac0ae0328e907dd753173/share/doc/html/src"><span class="hs-identifier hs-var">J.toJSON</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621690090316"><span class="hs-identifier hs-var">originalBS</span></a></span><span>
+</span><span id="line-57"></span><span>
+</span><span id="line-58"></span><span id="local-6989586621690090314"><span id="local-6989586621690090315"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="GoogleAccessToken"><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#GoogleAccessToken"><span class="hs-identifier hs-var">GoogleAccessToken</span></a></span></span><span>
+</span><span id="line-59"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="GoogleAccessToken"><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#GoogleAccessToken"><span class="hs-identifier hs-var">GoogleAccessToken</span></a></span></span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/text-1.2.3.2-4200bf40e86b2107f4b06242de65d549c52e58e8833e72545e35f7712661e715/share/doc/html/src"><span class="hs-identifier hs-type">Text</span></a></span><span>
+</span><span id="line-60"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690090308"><span id="local-6989586621690090310"><span id="local-6989586621690090312"><span class="annot"><span class="annottext">Int -&gt; GoogleAccessToken -&gt; ShowS
+[GoogleAccessToken] -&gt; ShowS
+GoogleAccessToken -&gt; String
+(Int -&gt; GoogleAccessToken -&gt; ShowS)
+-&gt; (GoogleAccessToken -&gt; String)
+-&gt; ([GoogleAccessToken] -&gt; ShowS)
+-&gt; Show GoogleAccessToken
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [GoogleAccessToken] -&gt; ShowS
+$cshowList :: [GoogleAccessToken] -&gt; ShowS
+show :: GoogleAccessToken -&gt; String
+$cshow :: GoogleAccessToken -&gt; String
+showsPrec :: Int -&gt; GoogleAccessToken -&gt; ShowS
+$cshowsPrec :: Int -&gt; GoogleAccessToken -&gt; ShowS
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690090304"><span id="local-6989586621690090306"><span class="annot"><span class="annottext">GoogleAccessToken -&gt; GoogleAccessToken -&gt; Bool
+(GoogleAccessToken -&gt; GoogleAccessToken -&gt; Bool)
+-&gt; (GoogleAccessToken -&gt; GoogleAccessToken -&gt; Bool)
+-&gt; Eq GoogleAccessToken
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: GoogleAccessToken -&gt; GoogleAccessToken -&gt; Bool
+$c/= :: GoogleAccessToken -&gt; GoogleAccessToken -&gt; Bool
+== :: GoogleAccessToken -&gt; GoogleAccessToken -&gt; Bool
+$c== :: GoogleAccessToken -&gt; GoogleAccessToken -&gt; Bool
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/ghc-prim-0.6.1/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690090300"><span id="local-6989586621690090302"><span class="annot"><span class="annottext">Value -&gt; Parser [GoogleAccessToken]
+Value -&gt; Parser GoogleAccessToken
+(Value -&gt; Parser GoogleAccessToken)
+-&gt; (Value -&gt; Parser [GoogleAccessToken])
+-&gt; FromJSON GoogleAccessToken
+forall a.
+(Value -&gt; Parser a) -&gt; (Value -&gt; Parser [a]) -&gt; FromJSON a
+parseJSONList :: Value -&gt; Parser [GoogleAccessToken]
+$cparseJSONList :: Value -&gt; Parser [GoogleAccessToken]
+parseJSON :: Value -&gt; Parser GoogleAccessToken
+$cparseJSON :: Value -&gt; Parser GoogleAccessToken
+</span><a href="#local-6989586621690090300"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">J.FromJSON</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690090292"><span id="local-6989586621690090294"><span id="local-6989586621690090296"><span id="local-6989586621690090298"><span class="annot"><span class="annottext">[GoogleAccessToken] -&gt; Value
+[GoogleAccessToken] -&gt; Encoding
+GoogleAccessToken -&gt; Value
+GoogleAccessToken -&gt; Encoding
+(GoogleAccessToken -&gt; Value)
+-&gt; (GoogleAccessToken -&gt; Encoding)
+-&gt; ([GoogleAccessToken] -&gt; Value)
+-&gt; ([GoogleAccessToken] -&gt; Encoding)
+-&gt; ToJSON GoogleAccessToken
+forall a.
+(a -&gt; Value)
+-&gt; (a -&gt; Encoding)
+-&gt; ([a] -&gt; Value)
+-&gt; ([a] -&gt; Encoding)
+-&gt; ToJSON a
+toEncodingList :: [GoogleAccessToken] -&gt; Encoding
+$ctoEncodingList :: [GoogleAccessToken] -&gt; Encoding
+toJSONList :: [GoogleAccessToken] -&gt; Value
+$ctoJSONList :: [GoogleAccessToken] -&gt; Value
+toEncoding :: GoogleAccessToken -&gt; Encoding
+$ctoEncoding :: GoogleAccessToken -&gt; Encoding
+toJSON :: GoogleAccessToken -&gt; Value
+$ctoJSON :: GoogleAccessToken -&gt; Value
+</span><a href="#local-6989586621690090292"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">J.ToJSON</span></a></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690090288"><span id="local-6989586621690090290"><span class="annot"><span class="annottext">Int -&gt; GoogleAccessToken -&gt; Int
+GoogleAccessToken -&gt; Int
+(Int -&gt; GoogleAccessToken -&gt; Int)
+-&gt; (GoogleAccessToken -&gt; Int) -&gt; Hashable GoogleAccessToken
+forall a. (Int -&gt; a -&gt; Int) -&gt; (a -&gt; Int) -&gt; Hashable a
+hash :: GoogleAccessToken -&gt; Int
+$chash :: GoogleAccessToken -&gt; Int
+hashWithSalt :: Int -&gt; GoogleAccessToken -&gt; Int
+$chashWithSalt :: Int -&gt; GoogleAccessToken -&gt; Int
+</span><a href="#local-6989586621690090288"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">(forall x. GoogleAccessToken -&gt; Rep GoogleAccessToken x)
+-&gt; (forall x. Rep GoogleAccessToken x -&gt; GoogleAccessToken)
+-&gt; Generic GoogleAccessToken
+forall x. Rep GoogleAccessToken x -&gt; GoogleAccessToken
+forall x. GoogleAccessToken -&gt; Rep GoogleAccessToken x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+$cto :: forall x. Rep GoogleAccessToken x -&gt; GoogleAccessToken
+$cfrom :: forall x. GoogleAccessToken -&gt; Rep GoogleAccessToken x
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></a></span><span class="hs-special">,</span><span> </span><span id="%24cGoogleAccessToken"><span id="%24tGoogleAccessToken"><span id="local-6989586621690090257"><span id="local-6989586621690090259"><span id="local-6989586621690090261"><span id="local-6989586621690090263"><span id="local-6989586621690090265"><span id="local-6989586621690090267"><span id="local-6989586621690090269"><span id="local-6989586621690090271"><span id="local-6989586621690090273"><span id="local-6989586621690090275"><span id="local-6989586621690090277"><span id="local-6989586621690090279"><span id="local-6989586621690090281"><span id="local-6989586621690090283"><span class="annot"><span class="annottext">Typeable GoogleAccessToken
+DataType
+Constr
+Typeable GoogleAccessToken
+-&gt; (forall (c :: * -&gt; *).
+    (forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+    -&gt; (forall g. g -&gt; c g)
+    -&gt; GoogleAccessToken
+    -&gt; c GoogleAccessToken)
+-&gt; (forall (c :: * -&gt; *).
+    (forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+    -&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c GoogleAccessToken)
+-&gt; (GoogleAccessToken -&gt; Constr)
+-&gt; (GoogleAccessToken -&gt; DataType)
+-&gt; (forall (t :: * -&gt; *) (c :: * -&gt; *).
+    Typeable t =&gt;
+    (forall d. Data d =&gt; c (t d)) -&gt; Maybe (c GoogleAccessToken))
+-&gt; (forall (t :: * -&gt; * -&gt; *) (c :: * -&gt; *).
+    Typeable t =&gt;
+    (forall d e. (Data d, Data e) =&gt; c (t d e))
+    -&gt; Maybe (c GoogleAccessToken))
+-&gt; ((forall b. Data b =&gt; b -&gt; b)
+    -&gt; GoogleAccessToken -&gt; GoogleAccessToken)
+-&gt; (forall r r'.
+    (r -&gt; r' -&gt; r)
+    -&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; GoogleAccessToken -&gt; r)
+-&gt; (forall r r'.
+    (r' -&gt; r -&gt; r)
+    -&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; GoogleAccessToken -&gt; r)
+-&gt; (forall u.
+    (forall d. Data d =&gt; d -&gt; u) -&gt; GoogleAccessToken -&gt; [u])
+-&gt; (forall u.
+    Int -&gt; (forall d. Data d =&gt; d -&gt; u) -&gt; GoogleAccessToken -&gt; u)
+-&gt; (forall (m :: * -&gt; *).
+    Monad m =&gt;
+    (forall d. Data d =&gt; d -&gt; m d)
+    -&gt; GoogleAccessToken -&gt; m GoogleAccessToken)
+-&gt; (forall (m :: * -&gt; *).
+    MonadPlus m =&gt;
+    (forall d. Data d =&gt; d -&gt; m d)
+    -&gt; GoogleAccessToken -&gt; m GoogleAccessToken)
+-&gt; (forall (m :: * -&gt; *).
+    MonadPlus m =&gt;
+    (forall d. Data d =&gt; d -&gt; m d)
+    -&gt; GoogleAccessToken -&gt; m GoogleAccessToken)
+-&gt; Data GoogleAccessToken
+GoogleAccessToken -&gt; DataType
+GoogleAccessToken -&gt; Constr
+(forall b. Data b =&gt; b -&gt; b)
+-&gt; GoogleAccessToken -&gt; GoogleAccessToken
+(forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+-&gt; (forall g. g -&gt; c g) -&gt; GoogleAccessToken -&gt; c GoogleAccessToken
+(forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+-&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c GoogleAccessToken
+forall a.
+Typeable a
+-&gt; (forall (c :: * -&gt; *).
+    (forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+    -&gt; (forall g. g -&gt; c g) -&gt; a -&gt; c a)
+-&gt; (forall (c :: * -&gt; *).
+    (forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+    -&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c a)
+-&gt; (a -&gt; Constr)
+-&gt; (a -&gt; DataType)
+-&gt; (forall (t :: * -&gt; *) (c :: * -&gt; *).
+    Typeable t =&gt;
+    (forall d. Data d =&gt; c (t d)) -&gt; Maybe (c a))
+-&gt; (forall (t :: * -&gt; * -&gt; *) (c :: * -&gt; *).
+    Typeable t =&gt;
+    (forall d e. (Data d, Data e) =&gt; c (t d e)) -&gt; Maybe (c a))
+-&gt; ((forall b. Data b =&gt; b -&gt; b) -&gt; a -&gt; a)
+-&gt; (forall r r'.
+    (r -&gt; r' -&gt; r) -&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; a -&gt; r)
+-&gt; (forall r r'.
+    (r' -&gt; r -&gt; r) -&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; a -&gt; r)
+-&gt; (forall u. (forall d. Data d =&gt; d -&gt; u) -&gt; a -&gt; [u])
+-&gt; (forall u. Int -&gt; (forall d. Data d =&gt; d -&gt; u) -&gt; a -&gt; u)
+-&gt; (forall (m :: * -&gt; *).
+    Monad m =&gt;
+    (forall d. Data d =&gt; d -&gt; m d) -&gt; a -&gt; m a)
+-&gt; (forall (m :: * -&gt; *).
+    MonadPlus m =&gt;
+    (forall d. Data d =&gt; d -&gt; m d) -&gt; a -&gt; m a)
+-&gt; (forall (m :: * -&gt; *).
+    MonadPlus m =&gt;
+    (forall d. Data d =&gt; d -&gt; m d) -&gt; a -&gt; m a)
+-&gt; Data a
+forall u.
+Int -&gt; (forall d. Data d =&gt; d -&gt; u) -&gt; GoogleAccessToken -&gt; u
+forall u. (forall d. Data d =&gt; d -&gt; u) -&gt; GoogleAccessToken -&gt; [u]
+forall r r'.
+(r -&gt; r' -&gt; r)
+-&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; GoogleAccessToken -&gt; r
+forall r r'.
+(r' -&gt; r -&gt; r)
+-&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; GoogleAccessToken -&gt; r
+forall (m :: * -&gt; *).
+Monad m =&gt;
+(forall d. Data d =&gt; d -&gt; m d)
+-&gt; GoogleAccessToken -&gt; m GoogleAccessToken
+forall (m :: * -&gt; *).
+MonadPlus m =&gt;
+(forall d. Data d =&gt; d -&gt; m d)
+-&gt; GoogleAccessToken -&gt; m GoogleAccessToken
+forall (c :: * -&gt; *).
+(forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+-&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c GoogleAccessToken
+forall (c :: * -&gt; *).
+(forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+-&gt; (forall g. g -&gt; c g) -&gt; GoogleAccessToken -&gt; c GoogleAccessToken
+forall (t :: * -&gt; *) (c :: * -&gt; *).
+Typeable t =&gt;
+(forall d. Data d =&gt; c (t d)) -&gt; Maybe (c GoogleAccessToken)
+forall (t :: * -&gt; * -&gt; *) (c :: * -&gt; *).
+Typeable t =&gt;
+(forall d e. (Data d, Data e) =&gt; c (t d e))
+-&gt; Maybe (c GoogleAccessToken)
+$cGoogleAccessToken :: Constr
+$tGoogleAccessToken :: DataType
+gmapMo :: (forall d. Data d =&gt; d -&gt; m d)
+-&gt; GoogleAccessToken -&gt; m GoogleAccessToken
+$cgmapMo :: forall (m :: * -&gt; *).
+MonadPlus m =&gt;
+(forall d. Data d =&gt; d -&gt; m d)
+-&gt; GoogleAccessToken -&gt; m GoogleAccessToken
+gmapMp :: (forall d. Data d =&gt; d -&gt; m d)
+-&gt; GoogleAccessToken -&gt; m GoogleAccessToken
+$cgmapMp :: forall (m :: * -&gt; *).
+MonadPlus m =&gt;
+(forall d. Data d =&gt; d -&gt; m d)
+-&gt; GoogleAccessToken -&gt; m GoogleAccessToken
+gmapM :: (forall d. Data d =&gt; d -&gt; m d)
+-&gt; GoogleAccessToken -&gt; m GoogleAccessToken
+$cgmapM :: forall (m :: * -&gt; *).
+Monad m =&gt;
+(forall d. Data d =&gt; d -&gt; m d)
+-&gt; GoogleAccessToken -&gt; m GoogleAccessToken
+gmapQi :: Int -&gt; (forall d. Data d =&gt; d -&gt; u) -&gt; GoogleAccessToken -&gt; u
+$cgmapQi :: forall u.
+Int -&gt; (forall d. Data d =&gt; d -&gt; u) -&gt; GoogleAccessToken -&gt; u
+gmapQ :: (forall d. Data d =&gt; d -&gt; u) -&gt; GoogleAccessToken -&gt; [u]
+$cgmapQ :: forall u. (forall d. Data d =&gt; d -&gt; u) -&gt; GoogleAccessToken -&gt; [u]
+gmapQr :: (r' -&gt; r -&gt; r)
+-&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; GoogleAccessToken -&gt; r
+$cgmapQr :: forall r r'.
+(r' -&gt; r -&gt; r)
+-&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; GoogleAccessToken -&gt; r
+gmapQl :: (r -&gt; r' -&gt; r)
+-&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; GoogleAccessToken -&gt; r
+$cgmapQl :: forall r r'.
+(r -&gt; r' -&gt; r)
+-&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; GoogleAccessToken -&gt; r
+gmapT :: (forall b. Data b =&gt; b -&gt; b)
+-&gt; GoogleAccessToken -&gt; GoogleAccessToken
+$cgmapT :: (forall b. Data b =&gt; b -&gt; b)
+-&gt; GoogleAccessToken -&gt; GoogleAccessToken
+dataCast2 :: (forall d e. (Data d, Data e) =&gt; c (t d e))
+-&gt; Maybe (c GoogleAccessToken)
+$cdataCast2 :: forall (t :: * -&gt; * -&gt; *) (c :: * -&gt; *).
+Typeable t =&gt;
+(forall d e. (Data d, Data e) =&gt; c (t d e))
+-&gt; Maybe (c GoogleAccessToken)
+dataCast1 :: (forall d. Data d =&gt; c (t d)) -&gt; Maybe (c GoogleAccessToken)
+$cdataCast1 :: forall (t :: * -&gt; *) (c :: * -&gt; *).
+Typeable t =&gt;
+(forall d. Data d =&gt; c (t d)) -&gt; Maybe (c GoogleAccessToken)
+dataTypeOf :: GoogleAccessToken -&gt; DataType
+$cdataTypeOf :: GoogleAccessToken -&gt; DataType
+toConstr :: GoogleAccessToken -&gt; Constr
+$ctoConstr :: GoogleAccessToken -&gt; Constr
+gunfold :: (forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+-&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c GoogleAccessToken
+$cgunfold :: forall (c :: * -&gt; *).
+(forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+-&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c GoogleAccessToken
+gfoldl :: (forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+-&gt; (forall g. g -&gt; c g) -&gt; GoogleAccessToken -&gt; c GoogleAccessToken
+$cgfoldl :: forall (c :: * -&gt; *).
+(forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+-&gt; (forall g. g -&gt; c g) -&gt; GoogleAccessToken -&gt; c GoogleAccessToken
+$cp1Data :: Typeable GoogleAccessToken
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Data</span></a></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690090253"><span class="annot"><span class="annottext">GoogleAccessToken -&gt; ()
+(GoogleAccessToken -&gt; ()) -&gt; NFData GoogleAccessToken
+forall a. (a -&gt; ()) -&gt; NFData a
+rnf :: GoogleAccessToken -&gt; ()
+$crnf :: GoogleAccessToken -&gt; ()
+</span><a href="#local-6989586621690090253"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span class="hs-special">)</span><span>
+</span><span id="line-61"></span><span>
+</span><span id="line-62"></span><span id="local-6989586621690090251"><span id="local-6989586621690090252"></span></span><span class="hs-keyword">data</span><span> </span><span id="TokenResp"><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#TokenResp"><span class="hs-identifier hs-var">TokenResp</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="TokenResp"><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#TokenResp"><span class="hs-identifier hs-var">TokenResp</span></a></span></span><span>
+</span><span id="line-63"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_trAccessToken"><span class="annot"><span class="annottext">TokenResp -&gt; GoogleAccessToken
+</span><a href="Hasura.Backends.BigQuery.Source.html#_trAccessToken"><span class="hs-identifier hs-var hs-var">_trAccessToken</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#GoogleAccessToken"><span class="hs-identifier hs-type">GoogleAccessToken</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-64"></span><span>    </span><span id="_trExpiresAt"><span class="annot"><span class="annottext">TokenResp -&gt; Integer
+</span><a href="Hasura.Backends.BigQuery.Source.html#_trExpiresAt"><span class="hs-identifier hs-var hs-var">_trExpiresAt</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/integer-gmp-1.0.3.0/src"><span class="hs-identifier hs-type">Integer</span></a></span><span> </span><span class="hs-comment">-- Number of seconds until expiry from `now`, but we add `now` seconds to this for easy tracking</span><span>
+</span><span id="line-65"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-66"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690090244"><span id="local-6989586621690090246"><span class="annot"><span class="annottext">TokenResp -&gt; TokenResp -&gt; Bool
+(TokenResp -&gt; TokenResp -&gt; Bool)
+-&gt; (TokenResp -&gt; TokenResp -&gt; Bool) -&gt; Eq TokenResp
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: TokenResp -&gt; TokenResp -&gt; Bool
+$c/= :: TokenResp -&gt; TokenResp -&gt; Bool
+== :: TokenResp -&gt; TokenResp -&gt; Bool
+$c== :: TokenResp -&gt; TokenResp -&gt; Bool
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/ghc-prim-0.6.1/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690090238"><span id="local-6989586621690090240"><span id="local-6989586621690090242"><span class="annot"><span class="annottext">Int -&gt; TokenResp -&gt; ShowS
+[TokenResp] -&gt; ShowS
+TokenResp -&gt; String
+(Int -&gt; TokenResp -&gt; ShowS)
+-&gt; (TokenResp -&gt; String)
+-&gt; ([TokenResp] -&gt; ShowS)
+-&gt; Show TokenResp
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [TokenResp] -&gt; ShowS
+$cshowList :: [TokenResp] -&gt; ShowS
+show :: TokenResp -&gt; String
+$cshow :: TokenResp -&gt; String
+showsPrec :: Int -&gt; TokenResp -&gt; ShowS
+$cshowsPrec :: Int -&gt; TokenResp -&gt; ShowS
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="%24cTokenResp"><span id="%24tTokenResp"><span id="local-6989586621690090209"><span id="local-6989586621690090211"><span id="local-6989586621690090213"><span id="local-6989586621690090215"><span id="local-6989586621690090217"><span id="local-6989586621690090219"><span id="local-6989586621690090221"><span id="local-6989586621690090223"><span id="local-6989586621690090225"><span id="local-6989586621690090227"><span id="local-6989586621690090229"><span id="local-6989586621690090231"><span id="local-6989586621690090233"><span id="local-6989586621690090235"><span class="annot"><span class="annottext">Typeable TokenResp
+DataType
+Constr
+Typeable TokenResp
+-&gt; (forall (c :: * -&gt; *).
+    (forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+    -&gt; (forall g. g -&gt; c g) -&gt; TokenResp -&gt; c TokenResp)
+-&gt; (forall (c :: * -&gt; *).
+    (forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+    -&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c TokenResp)
+-&gt; (TokenResp -&gt; Constr)
+-&gt; (TokenResp -&gt; DataType)
+-&gt; (forall (t :: * -&gt; *) (c :: * -&gt; *).
+    Typeable t =&gt;
+    (forall d. Data d =&gt; c (t d)) -&gt; Maybe (c TokenResp))
+-&gt; (forall (t :: * -&gt; * -&gt; *) (c :: * -&gt; *).
+    Typeable t =&gt;
+    (forall d e. (Data d, Data e) =&gt; c (t d e)) -&gt; Maybe (c TokenResp))
+-&gt; ((forall b. Data b =&gt; b -&gt; b) -&gt; TokenResp -&gt; TokenResp)
+-&gt; (forall r r'.
+    (r -&gt; r' -&gt; r)
+    -&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; TokenResp -&gt; r)
+-&gt; (forall r r'.
+    (r' -&gt; r -&gt; r)
+    -&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; TokenResp -&gt; r)
+-&gt; (forall u. (forall d. Data d =&gt; d -&gt; u) -&gt; TokenResp -&gt; [u])
+-&gt; (forall u.
+    Int -&gt; (forall d. Data d =&gt; d -&gt; u) -&gt; TokenResp -&gt; u)
+-&gt; (forall (m :: * -&gt; *).
+    Monad m =&gt;
+    (forall d. Data d =&gt; d -&gt; m d) -&gt; TokenResp -&gt; m TokenResp)
+-&gt; (forall (m :: * -&gt; *).
+    MonadPlus m =&gt;
+    (forall d. Data d =&gt; d -&gt; m d) -&gt; TokenResp -&gt; m TokenResp)
+-&gt; (forall (m :: * -&gt; *).
+    MonadPlus m =&gt;
+    (forall d. Data d =&gt; d -&gt; m d) -&gt; TokenResp -&gt; m TokenResp)
+-&gt; Data TokenResp
+TokenResp -&gt; DataType
+TokenResp -&gt; Constr
+(forall b. Data b =&gt; b -&gt; b) -&gt; TokenResp -&gt; TokenResp
+(forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+-&gt; (forall g. g -&gt; c g) -&gt; TokenResp -&gt; c TokenResp
+(forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+-&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c TokenResp
+forall a.
+Typeable a
+-&gt; (forall (c :: * -&gt; *).
+    (forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+    -&gt; (forall g. g -&gt; c g) -&gt; a -&gt; c a)
+-&gt; (forall (c :: * -&gt; *).
+    (forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+    -&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c a)
+-&gt; (a -&gt; Constr)
+-&gt; (a -&gt; DataType)
+-&gt; (forall (t :: * -&gt; *) (c :: * -&gt; *).
+    Typeable t =&gt;
+    (forall d. Data d =&gt; c (t d)) -&gt; Maybe (c a))
+-&gt; (forall (t :: * -&gt; * -&gt; *) (c :: * -&gt; *).
+    Typeable t =&gt;
+    (forall d e. (Data d, Data e) =&gt; c (t d e)) -&gt; Maybe (c a))
+-&gt; ((forall b. Data b =&gt; b -&gt; b) -&gt; a -&gt; a)
+-&gt; (forall r r'.
+    (r -&gt; r' -&gt; r) -&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; a -&gt; r)
+-&gt; (forall r r'.
+    (r' -&gt; r -&gt; r) -&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; a -&gt; r)
+-&gt; (forall u. (forall d. Data d =&gt; d -&gt; u) -&gt; a -&gt; [u])
+-&gt; (forall u. Int -&gt; (forall d. Data d =&gt; d -&gt; u) -&gt; a -&gt; u)
+-&gt; (forall (m :: * -&gt; *).
+    Monad m =&gt;
+    (forall d. Data d =&gt; d -&gt; m d) -&gt; a -&gt; m a)
+-&gt; (forall (m :: * -&gt; *).
+    MonadPlus m =&gt;
+    (forall d. Data d =&gt; d -&gt; m d) -&gt; a -&gt; m a)
+-&gt; (forall (m :: * -&gt; *).
+    MonadPlus m =&gt;
+    (forall d. Data d =&gt; d -&gt; m d) -&gt; a -&gt; m a)
+-&gt; Data a
+forall u. Int -&gt; (forall d. Data d =&gt; d -&gt; u) -&gt; TokenResp -&gt; u
+forall u. (forall d. Data d =&gt; d -&gt; u) -&gt; TokenResp -&gt; [u]
+forall r r'.
+(r -&gt; r' -&gt; r)
+-&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; TokenResp -&gt; r
+forall r r'.
+(r' -&gt; r -&gt; r)
+-&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; TokenResp -&gt; r
+forall (m :: * -&gt; *).
+Monad m =&gt;
+(forall d. Data d =&gt; d -&gt; m d) -&gt; TokenResp -&gt; m TokenResp
+forall (m :: * -&gt; *).
+MonadPlus m =&gt;
+(forall d. Data d =&gt; d -&gt; m d) -&gt; TokenResp -&gt; m TokenResp
+forall (c :: * -&gt; *).
+(forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+-&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c TokenResp
+forall (c :: * -&gt; *).
+(forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+-&gt; (forall g. g -&gt; c g) -&gt; TokenResp -&gt; c TokenResp
+forall (t :: * -&gt; *) (c :: * -&gt; *).
+Typeable t =&gt;
+(forall d. Data d =&gt; c (t d)) -&gt; Maybe (c TokenResp)
+forall (t :: * -&gt; * -&gt; *) (c :: * -&gt; *).
+Typeable t =&gt;
+(forall d e. (Data d, Data e) =&gt; c (t d e)) -&gt; Maybe (c TokenResp)
+$cTokenResp :: Constr
+$tTokenResp :: DataType
+gmapMo :: (forall d. Data d =&gt; d -&gt; m d) -&gt; TokenResp -&gt; m TokenResp
+$cgmapMo :: forall (m :: * -&gt; *).
+MonadPlus m =&gt;
+(forall d. Data d =&gt; d -&gt; m d) -&gt; TokenResp -&gt; m TokenResp
+gmapMp :: (forall d. Data d =&gt; d -&gt; m d) -&gt; TokenResp -&gt; m TokenResp
+$cgmapMp :: forall (m :: * -&gt; *).
+MonadPlus m =&gt;
+(forall d. Data d =&gt; d -&gt; m d) -&gt; TokenResp -&gt; m TokenResp
+gmapM :: (forall d. Data d =&gt; d -&gt; m d) -&gt; TokenResp -&gt; m TokenResp
+$cgmapM :: forall (m :: * -&gt; *).
+Monad m =&gt;
+(forall d. Data d =&gt; d -&gt; m d) -&gt; TokenResp -&gt; m TokenResp
+gmapQi :: Int -&gt; (forall d. Data d =&gt; d -&gt; u) -&gt; TokenResp -&gt; u
+$cgmapQi :: forall u. Int -&gt; (forall d. Data d =&gt; d -&gt; u) -&gt; TokenResp -&gt; u
+gmapQ :: (forall d. Data d =&gt; d -&gt; u) -&gt; TokenResp -&gt; [u]
+$cgmapQ :: forall u. (forall d. Data d =&gt; d -&gt; u) -&gt; TokenResp -&gt; [u]
+gmapQr :: (r' -&gt; r -&gt; r)
+-&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; TokenResp -&gt; r
+$cgmapQr :: forall r r'.
+(r' -&gt; r -&gt; r)
+-&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; TokenResp -&gt; r
+gmapQl :: (r -&gt; r' -&gt; r)
+-&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; TokenResp -&gt; r
+$cgmapQl :: forall r r'.
+(r -&gt; r' -&gt; r)
+-&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; TokenResp -&gt; r
+gmapT :: (forall b. Data b =&gt; b -&gt; b) -&gt; TokenResp -&gt; TokenResp
+$cgmapT :: (forall b. Data b =&gt; b -&gt; b) -&gt; TokenResp -&gt; TokenResp
+dataCast2 :: (forall d e. (Data d, Data e) =&gt; c (t d e)) -&gt; Maybe (c TokenResp)
+$cdataCast2 :: forall (t :: * -&gt; * -&gt; *) (c :: * -&gt; *).
+Typeable t =&gt;
+(forall d e. (Data d, Data e) =&gt; c (t d e)) -&gt; Maybe (c TokenResp)
+dataCast1 :: (forall d. Data d =&gt; c (t d)) -&gt; Maybe (c TokenResp)
+$cdataCast1 :: forall (t :: * -&gt; *) (c :: * -&gt; *).
+Typeable t =&gt;
+(forall d. Data d =&gt; c (t d)) -&gt; Maybe (c TokenResp)
+dataTypeOf :: TokenResp -&gt; DataType
+$cdataTypeOf :: TokenResp -&gt; DataType
+toConstr :: TokenResp -&gt; Constr
+$ctoConstr :: TokenResp -&gt; Constr
+gunfold :: (forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+-&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c TokenResp
+$cgunfold :: forall (c :: * -&gt; *).
+(forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+-&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c TokenResp
+gfoldl :: (forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+-&gt; (forall g. g -&gt; c g) -&gt; TokenResp -&gt; c TokenResp
+$cgfoldl :: forall (c :: * -&gt; *).
+(forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+-&gt; (forall g. g -&gt; c g) -&gt; TokenResp -&gt; c TokenResp
+$cp1Data :: Typeable TokenResp
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Data</span></a></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690090205"><span class="annot"><span class="annottext">TokenResp -&gt; ()
+(TokenResp -&gt; ()) -&gt; NFData TokenResp
+forall a. (a -&gt; ()) -&gt; NFData a
+rnf :: TokenResp -&gt; ()
+$crnf :: TokenResp -&gt; ()
+</span><a href="#local-6989586621690090205"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">(forall x. TokenResp -&gt; Rep TokenResp x)
+-&gt; (forall x. Rep TokenResp x -&gt; TokenResp) -&gt; Generic TokenResp
+forall x. Rep TokenResp x -&gt; TokenResp
+forall x. TokenResp -&gt; Rep TokenResp x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+$cto :: forall x. Rep TokenResp x -&gt; TokenResp
+$cfrom :: forall x. TokenResp -&gt; Rep TokenResp x
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></a></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690090199"><span id="local-6989586621690090201"><span class="annot"><span class="annottext">Int -&gt; TokenResp -&gt; Int
+TokenResp -&gt; Int
+(Int -&gt; TokenResp -&gt; Int)
+-&gt; (TokenResp -&gt; Int) -&gt; Hashable TokenResp
+forall a. (Int -&gt; a -&gt; Int) -&gt; (a -&gt; Int) -&gt; Hashable a
+hash :: TokenResp -&gt; Int
+$chash :: TokenResp -&gt; Int
+hashWithSalt :: Int -&gt; TokenResp -&gt; Int
+$chashWithSalt :: Int -&gt; TokenResp -&gt; Int
+</span><a href="#local-6989586621690090199"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-67"></span><span>
+</span><span id="line-68"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690090196"><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/aeson-1.5.5.1-d565b322355c9794eb059b7477592fe0d20db50e9f4ac0ae0328e907dd753173/share/doc/html/src"><span class="hs-identifier hs-type">J.FromJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#TokenResp"><span class="hs-identifier hs-type">TokenResp</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-69"></span><span>  </span><span id="local-6989586621690090195"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser TokenResp
+</span><a href="#local-6989586621690090195"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; (Object -&gt; Parser TokenResp) -&gt; Value -&gt; Parser TokenResp
+forall a. String -&gt; (Object -&gt; Parser a) -&gt; Value -&gt; Parser a
+</span><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/aeson-1.5.5.1-d565b322355c9794eb059b7477592fe0d20db50e9f4ac0ae0328e907dd753173/share/doc/html/src"><span class="hs-identifier hs-var">J.withObject</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;TokenResp&quot;</span></span><span> </span><span class="annot"><span class="annottext">((Object -&gt; Parser TokenResp) -&gt; Value -&gt; Parser TokenResp)
+-&gt; (Object -&gt; Parser TokenResp) -&gt; Value -&gt; Parser TokenResp
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621690090193"><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621690090193"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-70"></span><span>    </span><span class="annot"><span class="annottext">GoogleAccessToken -&gt; Integer -&gt; TokenResp
+</span><a href="Hasura.Backends.BigQuery.Source.html#TokenResp"><span class="hs-identifier hs-var">TokenResp</span></a></span><span>
+</span><span id="line-71"></span><span>      </span><span class="annot"><span class="annottext">(GoogleAccessToken -&gt; Integer -&gt; TokenResp)
+-&gt; Parser GoogleAccessToken -&gt; Parser (Integer -&gt; TokenResp)
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621690090193"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Text -&gt; Parser GoogleAccessToken
+forall a. FromJSON a =&gt; Object -&gt; Text -&gt; Parser a
+</span><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/aeson-1.5.5.1-d565b322355c9794eb059b7477592fe0d20db50e9f4ac0ae0328e907dd753173/share/doc/html/src"><span class="hs-operator hs-var">J..:</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;access_token&quot;</span></span><span>
+</span><span id="line-72"></span><span>      </span><span class="annot"><span class="annottext">Parser (Integer -&gt; TokenResp) -&gt; Parser Integer -&gt; Parser TokenResp
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621690090193"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Text -&gt; Parser Integer
+forall a. FromJSON a =&gt; Object -&gt; Text -&gt; Parser a
+</span><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/aeson-1.5.5.1-d565b322355c9794eb059b7477592fe0d20db50e9f4ac0ae0328e907dd753173/share/doc/html/src"><span class="hs-operator hs-var">J..:</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;expires_in&quot;</span></span><span>
+</span><span id="line-73"></span><span>
+</span><span id="line-74"></span><span id="local-6989586621690090189"><span id="local-6989586621690090190"></span></span><span class="hs-keyword">data</span><span> </span><span id="ServiceAccount"><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#ServiceAccount"><span class="hs-identifier hs-var">ServiceAccount</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ServiceAccount"><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#ServiceAccount"><span class="hs-identifier hs-var">ServiceAccount</span></a></span></span><span>
+</span><span id="line-75"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_saClientEmail"><span class="annot"><span class="annottext">ServiceAccount -&gt; Text
+</span><a href="Hasura.Backends.BigQuery.Source.html#_saClientEmail"><span class="hs-identifier hs-var hs-var">_saClientEmail</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/text-1.2.3.2-4200bf40e86b2107f4b06242de65d549c52e58e8833e72545e35f7712661e715/share/doc/html/src"><span class="hs-identifier hs-type">Text</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-76"></span><span>    </span><span id="_saPrivateKey"><span class="annot"><span class="annottext">ServiceAccount -&gt; PKey
+</span><a href="Hasura.Backends.BigQuery.Source.html#_saPrivateKey"><span class="hs-identifier hs-var hs-var">_saPrivateKey</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#PKey"><span class="hs-identifier hs-type">PKey</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-77"></span><span>    </span><span id="_saProjectId"><span class="annot"><span class="annottext">ServiceAccount -&gt; Text
+</span><a href="Hasura.Backends.BigQuery.Source.html#_saProjectId"><span class="hs-identifier hs-var hs-var">_saProjectId</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/text-1.2.3.2-4200bf40e86b2107f4b06242de65d549c52e58e8833e72545e35f7712661e715/share/doc/html/src"><span class="hs-identifier hs-type">Text</span></a></span><span>
+</span><span id="line-78"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-79"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690090181"><span id="local-6989586621690090183"><span class="annot"><span class="annottext">ServiceAccount -&gt; ServiceAccount -&gt; Bool
+(ServiceAccount -&gt; ServiceAccount -&gt; Bool)
+-&gt; (ServiceAccount -&gt; ServiceAccount -&gt; Bool) -&gt; Eq ServiceAccount
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: ServiceAccount -&gt; ServiceAccount -&gt; Bool
+$c/= :: ServiceAccount -&gt; ServiceAccount -&gt; Bool
+== :: ServiceAccount -&gt; ServiceAccount -&gt; Bool
+$c== :: ServiceAccount -&gt; ServiceAccount -&gt; Bool
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/ghc-prim-0.6.1/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690090175"><span id="local-6989586621690090177"><span id="local-6989586621690090179"><span class="annot"><span class="annottext">Int -&gt; ServiceAccount -&gt; ShowS
+[ServiceAccount] -&gt; ShowS
+ServiceAccount -&gt; String
+(Int -&gt; ServiceAccount -&gt; ShowS)
+-&gt; (ServiceAccount -&gt; String)
+-&gt; ([ServiceAccount] -&gt; ShowS)
+-&gt; Show ServiceAccount
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [ServiceAccount] -&gt; ShowS
+$cshowList :: [ServiceAccount] -&gt; ShowS
+show :: ServiceAccount -&gt; String
+$cshow :: ServiceAccount -&gt; String
+showsPrec :: Int -&gt; ServiceAccount -&gt; ShowS
+$cshowsPrec :: Int -&gt; ServiceAccount -&gt; ShowS
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="%24cServiceAccount"><span id="%24tServiceAccount"><span id="local-6989586621690090146"><span id="local-6989586621690090148"><span id="local-6989586621690090150"><span id="local-6989586621690090152"><span id="local-6989586621690090154"><span id="local-6989586621690090156"><span id="local-6989586621690090158"><span id="local-6989586621690090160"><span id="local-6989586621690090162"><span id="local-6989586621690090164"><span id="local-6989586621690090166"><span id="local-6989586621690090168"><span id="local-6989586621690090170"><span id="local-6989586621690090172"><span class="annot"><span class="annottext">Typeable ServiceAccount
+DataType
+Constr
+Typeable ServiceAccount
+-&gt; (forall (c :: * -&gt; *).
+    (forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+    -&gt; (forall g. g -&gt; c g) -&gt; ServiceAccount -&gt; c ServiceAccount)
+-&gt; (forall (c :: * -&gt; *).
+    (forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+    -&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c ServiceAccount)
+-&gt; (ServiceAccount -&gt; Constr)
+-&gt; (ServiceAccount -&gt; DataType)
+-&gt; (forall (t :: * -&gt; *) (c :: * -&gt; *).
+    Typeable t =&gt;
+    (forall d. Data d =&gt; c (t d)) -&gt; Maybe (c ServiceAccount))
+-&gt; (forall (t :: * -&gt; * -&gt; *) (c :: * -&gt; *).
+    Typeable t =&gt;
+    (forall d e. (Data d, Data e) =&gt; c (t d e))
+    -&gt; Maybe (c ServiceAccount))
+-&gt; ((forall b. Data b =&gt; b -&gt; b)
+    -&gt; ServiceAccount -&gt; ServiceAccount)
+-&gt; (forall r r'.
+    (r -&gt; r' -&gt; r)
+    -&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; ServiceAccount -&gt; r)
+-&gt; (forall r r'.
+    (r' -&gt; r -&gt; r)
+    -&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; ServiceAccount -&gt; r)
+-&gt; (forall u.
+    (forall d. Data d =&gt; d -&gt; u) -&gt; ServiceAccount -&gt; [u])
+-&gt; (forall u.
+    Int -&gt; (forall d. Data d =&gt; d -&gt; u) -&gt; ServiceAccount -&gt; u)
+-&gt; (forall (m :: * -&gt; *).
+    Monad m =&gt;
+    (forall d. Data d =&gt; d -&gt; m d)
+    -&gt; ServiceAccount -&gt; m ServiceAccount)
+-&gt; (forall (m :: * -&gt; *).
+    MonadPlus m =&gt;
+    (forall d. Data d =&gt; d -&gt; m d)
+    -&gt; ServiceAccount -&gt; m ServiceAccount)
+-&gt; (forall (m :: * -&gt; *).
+    MonadPlus m =&gt;
+    (forall d. Data d =&gt; d -&gt; m d)
+    -&gt; ServiceAccount -&gt; m ServiceAccount)
+-&gt; Data ServiceAccount
+ServiceAccount -&gt; DataType
+ServiceAccount -&gt; Constr
+(forall b. Data b =&gt; b -&gt; b) -&gt; ServiceAccount -&gt; ServiceAccount
+(forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+-&gt; (forall g. g -&gt; c g) -&gt; ServiceAccount -&gt; c ServiceAccount
+(forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+-&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c ServiceAccount
+forall a.
+Typeable a
+-&gt; (forall (c :: * -&gt; *).
+    (forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+    -&gt; (forall g. g -&gt; c g) -&gt; a -&gt; c a)
+-&gt; (forall (c :: * -&gt; *).
+    (forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+    -&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c a)
+-&gt; (a -&gt; Constr)
+-&gt; (a -&gt; DataType)
+-&gt; (forall (t :: * -&gt; *) (c :: * -&gt; *).
+    Typeable t =&gt;
+    (forall d. Data d =&gt; c (t d)) -&gt; Maybe (c a))
+-&gt; (forall (t :: * -&gt; * -&gt; *) (c :: * -&gt; *).
+    Typeable t =&gt;
+    (forall d e. (Data d, Data e) =&gt; c (t d e)) -&gt; Maybe (c a))
+-&gt; ((forall b. Data b =&gt; b -&gt; b) -&gt; a -&gt; a)
+-&gt; (forall r r'.
+    (r -&gt; r' -&gt; r) -&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; a -&gt; r)
+-&gt; (forall r r'.
+    (r' -&gt; r -&gt; r) -&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; a -&gt; r)
+-&gt; (forall u. (forall d. Data d =&gt; d -&gt; u) -&gt; a -&gt; [u])
+-&gt; (forall u. Int -&gt; (forall d. Data d =&gt; d -&gt; u) -&gt; a -&gt; u)
+-&gt; (forall (m :: * -&gt; *).
+    Monad m =&gt;
+    (forall d. Data d =&gt; d -&gt; m d) -&gt; a -&gt; m a)
+-&gt; (forall (m :: * -&gt; *).
+    MonadPlus m =&gt;
+    (forall d. Data d =&gt; d -&gt; m d) -&gt; a -&gt; m a)
+-&gt; (forall (m :: * -&gt; *).
+    MonadPlus m =&gt;
+    (forall d. Data d =&gt; d -&gt; m d) -&gt; a -&gt; m a)
+-&gt; Data a
+forall u.
+Int -&gt; (forall d. Data d =&gt; d -&gt; u) -&gt; ServiceAccount -&gt; u
+forall u. (forall d. Data d =&gt; d -&gt; u) -&gt; ServiceAccount -&gt; [u]
+forall r r'.
+(r -&gt; r' -&gt; r)
+-&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; ServiceAccount -&gt; r
+forall r r'.
+(r' -&gt; r -&gt; r)
+-&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; ServiceAccount -&gt; r
+forall (m :: * -&gt; *).
+Monad m =&gt;
+(forall d. Data d =&gt; d -&gt; m d)
+-&gt; ServiceAccount -&gt; m ServiceAccount
+forall (m :: * -&gt; *).
+MonadPlus m =&gt;
+(forall d. Data d =&gt; d -&gt; m d)
+-&gt; ServiceAccount -&gt; m ServiceAccount
+forall (c :: * -&gt; *).
+(forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+-&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c ServiceAccount
+forall (c :: * -&gt; *).
+(forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+-&gt; (forall g. g -&gt; c g) -&gt; ServiceAccount -&gt; c ServiceAccount
+forall (t :: * -&gt; *) (c :: * -&gt; *).
+Typeable t =&gt;
+(forall d. Data d =&gt; c (t d)) -&gt; Maybe (c ServiceAccount)
+forall (t :: * -&gt; * -&gt; *) (c :: * -&gt; *).
+Typeable t =&gt;
+(forall d e. (Data d, Data e) =&gt; c (t d e))
+-&gt; Maybe (c ServiceAccount)
+$cServiceAccount :: Constr
+$tServiceAccount :: DataType
+gmapMo :: (forall d. Data d =&gt; d -&gt; m d)
+-&gt; ServiceAccount -&gt; m ServiceAccount
+$cgmapMo :: forall (m :: * -&gt; *).
+MonadPlus m =&gt;
+(forall d. Data d =&gt; d -&gt; m d)
+-&gt; ServiceAccount -&gt; m ServiceAccount
+gmapMp :: (forall d. Data d =&gt; d -&gt; m d)
+-&gt; ServiceAccount -&gt; m ServiceAccount
+$cgmapMp :: forall (m :: * -&gt; *).
+MonadPlus m =&gt;
+(forall d. Data d =&gt; d -&gt; m d)
+-&gt; ServiceAccount -&gt; m ServiceAccount
+gmapM :: (forall d. Data d =&gt; d -&gt; m d)
+-&gt; ServiceAccount -&gt; m ServiceAccount
+$cgmapM :: forall (m :: * -&gt; *).
+Monad m =&gt;
+(forall d. Data d =&gt; d -&gt; m d)
+-&gt; ServiceAccount -&gt; m ServiceAccount
+gmapQi :: Int -&gt; (forall d. Data d =&gt; d -&gt; u) -&gt; ServiceAccount -&gt; u
+$cgmapQi :: forall u.
+Int -&gt; (forall d. Data d =&gt; d -&gt; u) -&gt; ServiceAccount -&gt; u
+gmapQ :: (forall d. Data d =&gt; d -&gt; u) -&gt; ServiceAccount -&gt; [u]
+$cgmapQ :: forall u. (forall d. Data d =&gt; d -&gt; u) -&gt; ServiceAccount -&gt; [u]
+gmapQr :: (r' -&gt; r -&gt; r)
+-&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; ServiceAccount -&gt; r
+$cgmapQr :: forall r r'.
+(r' -&gt; r -&gt; r)
+-&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; ServiceAccount -&gt; r
+gmapQl :: (r -&gt; r' -&gt; r)
+-&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; ServiceAccount -&gt; r
+$cgmapQl :: forall r r'.
+(r -&gt; r' -&gt; r)
+-&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; ServiceAccount -&gt; r
+gmapT :: (forall b. Data b =&gt; b -&gt; b) -&gt; ServiceAccount -&gt; ServiceAccount
+$cgmapT :: (forall b. Data b =&gt; b -&gt; b) -&gt; ServiceAccount -&gt; ServiceAccount
+dataCast2 :: (forall d e. (Data d, Data e) =&gt; c (t d e))
+-&gt; Maybe (c ServiceAccount)
+$cdataCast2 :: forall (t :: * -&gt; * -&gt; *) (c :: * -&gt; *).
+Typeable t =&gt;
+(forall d e. (Data d, Data e) =&gt; c (t d e))
+-&gt; Maybe (c ServiceAccount)
+dataCast1 :: (forall d. Data d =&gt; c (t d)) -&gt; Maybe (c ServiceAccount)
+$cdataCast1 :: forall (t :: * -&gt; *) (c :: * -&gt; *).
+Typeable t =&gt;
+(forall d. Data d =&gt; c (t d)) -&gt; Maybe (c ServiceAccount)
+dataTypeOf :: ServiceAccount -&gt; DataType
+$cdataTypeOf :: ServiceAccount -&gt; DataType
+toConstr :: ServiceAccount -&gt; Constr
+$ctoConstr :: ServiceAccount -&gt; Constr
+gunfold :: (forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+-&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c ServiceAccount
+$cgunfold :: forall (c :: * -&gt; *).
+(forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+-&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c ServiceAccount
+gfoldl :: (forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+-&gt; (forall g. g -&gt; c g) -&gt; ServiceAccount -&gt; c ServiceAccount
+$cgfoldl :: forall (c :: * -&gt; *).
+(forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+-&gt; (forall g. g -&gt; c g) -&gt; ServiceAccount -&gt; c ServiceAccount
+$cp1Data :: Typeable ServiceAccount
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Data</span></a></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690090142"><span class="annot"><span class="annottext">ServiceAccount -&gt; ()
+(ServiceAccount -&gt; ()) -&gt; NFData ServiceAccount
+forall a. (a -&gt; ()) -&gt; NFData a
+rnf :: ServiceAccount -&gt; ()
+$crnf :: ServiceAccount -&gt; ()
+</span><a href="#local-6989586621690090142"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">(forall x. ServiceAccount -&gt; Rep ServiceAccount x)
+-&gt; (forall x. Rep ServiceAccount x -&gt; ServiceAccount)
+-&gt; Generic ServiceAccount
+forall x. Rep ServiceAccount x -&gt; ServiceAccount
+forall x. ServiceAccount -&gt; Rep ServiceAccount x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+$cto :: forall x. Rep ServiceAccount x -&gt; ServiceAccount
+$cfrom :: forall x. ServiceAccount -&gt; Rep ServiceAccount x
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></a></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690090136"><span id="local-6989586621690090138"><span class="annot"><span class="annottext">Int -&gt; ServiceAccount -&gt; Int
+ServiceAccount -&gt; Int
+(Int -&gt; ServiceAccount -&gt; Int)
+-&gt; (ServiceAccount -&gt; Int) -&gt; Hashable ServiceAccount
+forall a. (Int -&gt; a -&gt; Int) -&gt; (a -&gt; Int) -&gt; Hashable a
+hash :: ServiceAccount -&gt; Int
+$chash :: ServiceAccount -&gt; Int
+hashWithSalt :: Int -&gt; ServiceAccount -&gt; Int
+$chashWithSalt :: Int -&gt; ServiceAccount -&gt; Int
+</span><a href="#local-6989586621690090136"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-80"></span><span>
+</span><span id="line-81"></span><span class="hs-special">$(</span><span id="local-6989586621690090124"><span id="local-6989586621690090126"><span id="local-6989586621690090128"><span id="local-6989586621690090130"><span id="local-6989586621690090132"><span id="local-6989586621690090134"><span class="hs-identifier">J.deriveJSON</span><span> </span><span class="hs-special">(</span><span class="hs-identifier">J.aesonDrop</span><span> </span><span class="hs-number">3</span><span> </span><span class="hs-identifier">J.snakeCase</span><span class="hs-special">)</span><span> </span><span class="hs-special">{</span><span class="hs-identifier">J.omitNothingFields</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-identifier">False</span><span class="hs-special">}</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">ServiceAccount</span></span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-82"></span><span>
+</span><span id="line-83"></span><span id="local-6989586621690090121"><span id="local-6989586621690090122"></span></span><span class="hs-keyword">data</span><span> </span><span id="ConfigurationJSON"><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#ConfigurationJSON"><span class="hs-identifier hs-var">ConfigurationJSON</span></a></span></span><span> </span><span id="local-6989586621690090459"><span class="annot"><a href="#local-6989586621690090459"><span class="hs-identifier hs-type">a</span></a></span></span><span>
+</span><span id="line-84"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="FromEnvJSON"><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#FromEnvJSON"><span class="hs-identifier hs-var">FromEnvJSON</span></a></span></span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/text-1.2.3.2-4200bf40e86b2107f4b06242de65d549c52e58e8833e72545e35f7712661e715/share/doc/html/src"><span class="hs-identifier hs-type">Text</span></a></span><span>
+</span><span id="line-85"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="FromYamlJSON"><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#FromYamlJSON"><span class="hs-identifier hs-var">FromYamlJSON</span></a></span></span><span> </span><span class="annot"><a href="#local-6989586621690090459"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-86"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621690090113"><span id="local-6989586621690090115"><span id="local-6989586621690090117"><span class="annot"><span class="annottext">Int -&gt; ConfigurationJSON a -&gt; ShowS
+[ConfigurationJSON a] -&gt; ShowS
+ConfigurationJSON a -&gt; String
+(Int -&gt; ConfigurationJSON a -&gt; ShowS)
+-&gt; (ConfigurationJSON a -&gt; String)
+-&gt; ([ConfigurationJSON a] -&gt; ShowS)
+-&gt; Show (ConfigurationJSON a)
+forall a. Show a =&gt; Int -&gt; ConfigurationJSON a -&gt; ShowS
+forall a. Show a =&gt; [ConfigurationJSON a] -&gt; ShowS
+forall a. Show a =&gt; ConfigurationJSON a -&gt; String
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [ConfigurationJSON a] -&gt; ShowS
+$cshowList :: forall a. Show a =&gt; [ConfigurationJSON a] -&gt; ShowS
+show :: ConfigurationJSON a -&gt; String
+$cshow :: forall a. Show a =&gt; ConfigurationJSON a -&gt; String
+showsPrec :: Int -&gt; ConfigurationJSON a -&gt; ShowS
+$cshowsPrec :: forall a. Show a =&gt; Int -&gt; ConfigurationJSON a -&gt; ShowS
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690090109"><span id="local-6989586621690090111"><span class="annot"><span class="annottext">ConfigurationJSON a -&gt; ConfigurationJSON a -&gt; Bool
+(ConfigurationJSON a -&gt; ConfigurationJSON a -&gt; Bool)
+-&gt; (ConfigurationJSON a -&gt; ConfigurationJSON a -&gt; Bool)
+-&gt; Eq (ConfigurationJSON a)
+forall a.
+Eq a =&gt;
+ConfigurationJSON a -&gt; ConfigurationJSON a -&gt; Bool
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: ConfigurationJSON a -&gt; ConfigurationJSON a -&gt; Bool
+$c/= :: forall a.
+Eq a =&gt;
+ConfigurationJSON a -&gt; ConfigurationJSON a -&gt; Bool
+== :: ConfigurationJSON a -&gt; ConfigurationJSON a -&gt; Bool
+$c== :: forall a.
+Eq a =&gt;
+ConfigurationJSON a -&gt; ConfigurationJSON a -&gt; Bool
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/ghc-prim-0.6.1/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">(forall x. ConfigurationJSON a -&gt; Rep (ConfigurationJSON a) x)
+-&gt; (forall x. Rep (ConfigurationJSON a) x -&gt; ConfigurationJSON a)
+-&gt; Generic (ConfigurationJSON a)
+forall x. Rep (ConfigurationJSON a) x -&gt; ConfigurationJSON a
+forall x. ConfigurationJSON a -&gt; Rep (ConfigurationJSON a) x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+forall a x. Rep (ConfigurationJSON a) x -&gt; ConfigurationJSON a
+forall a x. ConfigurationJSON a -&gt; Rep (ConfigurationJSON a) x
+$cto :: forall a x. Rep (ConfigurationJSON a) x -&gt; ConfigurationJSON a
+$cfrom :: forall a x. ConfigurationJSON a -&gt; Rep (ConfigurationJSON a) x
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-87"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690090105"><span class="annot"><span class="annottext">ConfigurationJSON a -&gt; ()
+(ConfigurationJSON a -&gt; ()) -&gt; NFData (ConfigurationJSON a)
+forall a. NFData a =&gt; ConfigurationJSON a -&gt; ()
+forall a. (a -&gt; ()) -&gt; NFData a
+rnf :: ConfigurationJSON a -&gt; ()
+$crnf :: forall a. NFData a =&gt; ConfigurationJSON a -&gt; ()
+</span><a href="#local-6989586621690090105"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690090101"><span id="local-6989586621690090103"><span class="annot"><span class="annottext">Int -&gt; ConfigurationJSON a -&gt; Int
+ConfigurationJSON a -&gt; Int
+(Int -&gt; ConfigurationJSON a -&gt; Int)
+-&gt; (ConfigurationJSON a -&gt; Int) -&gt; Hashable (ConfigurationJSON a)
+forall a. Hashable a =&gt; Int -&gt; ConfigurationJSON a -&gt; Int
+forall a. Hashable a =&gt; ConfigurationJSON a -&gt; Int
+forall a. (Int -&gt; a -&gt; Int) -&gt; (a -&gt; Int) -&gt; Hashable a
+hash :: ConfigurationJSON a -&gt; Int
+$chash :: forall a. Hashable a =&gt; ConfigurationJSON a -&gt; Int
+hashWithSalt :: Int -&gt; ConfigurationJSON a -&gt; Int
+$chashWithSalt :: forall a. Hashable a =&gt; Int -&gt; ConfigurationJSON a -&gt; Int
+</span><a href="#local-6989586621690090101"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-88"></span><span>
+</span><span id="line-89"></span><span id="local-6989586621690090100"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690090097"><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/aeson-1.5.5.1-d565b322355c9794eb059b7477592fe0d20db50e9f4ac0ae0328e907dd753173/share/doc/html/src"><span class="hs-identifier hs-type">J.FromJSON</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690090100"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/aeson-1.5.5.1-d565b322355c9794eb059b7477592fe0d20db50e9f4ac0ae0328e907dd753173/share/doc/html/src"><span class="hs-identifier hs-type">J.FromJSON</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#ConfigurationJSON"><span class="hs-identifier hs-type">ConfigurationJSON</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690090100"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-90"></span><span>  </span><span id="local-6989586621690090096"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser (ConfigurationJSON a)
+</span><a href="#local-6989586621690090096"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-91"></span><span>    </span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/aeson-1.5.5.1-d565b322355c9794eb059b7477592fe0d20db50e9f4ac0ae0328e907dd753173/share/doc/html/src"><span class="hs-identifier hs-type">J.Object</span></a></span><span> </span><span id="local-6989586621690090094"><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621690090094"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">|</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-type">Just</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/aeson-1.5.5.1-d565b322355c9794eb059b7477592fe0d20db50e9f4ac0ae0328e907dd753173/share/doc/html/src"><span class="hs-identifier hs-type">J.String</span></a></span><span> </span><span id="local-6989586621690090092"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621690090092"><span class="hs-identifier hs-var">text</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Object -&gt; Maybe Value
+forall k v. (Eq k, Hashable k) =&gt; k -&gt; HashMap k v -&gt; Maybe v
+</span><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/unordered-containers-0.2.13.0-3905cc0dd583bf2295f4fffefb94c9b368aca205fb5d2fe8619d64b3bfba7af9/share/doc/html/src"><span class="hs-identifier hs-var">HM.lookup</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;from_env&quot;</span></span><span> </span><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621690090094"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ConfigurationJSON a -&gt; Parser (ConfigurationJSON a)
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; ConfigurationJSON a
+forall a. Text -&gt; ConfigurationJSON a
+</span><a href="Hasura.Backends.BigQuery.Source.html#FromEnvJSON"><span class="hs-identifier hs-var">FromEnvJSON</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621690090092"><span class="hs-identifier hs-var">text</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-92"></span><span>    </span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/aeson-1.5.5.1-d565b322355c9794eb059b7477592fe0d20db50e9f4ac0ae0328e907dd753173/share/doc/html/src"><span class="hs-identifier hs-type">J.String</span></a></span><span> </span><span id="local-6989586621690090090"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621690090090"><span class="hs-identifier hs-var">s</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; Either String (ConfigurationJSON a)
+forall a. FromJSON a =&gt; ByteString -&gt; Either String a
+</span><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/aeson-1.5.5.1-d565b322355c9794eb059b7477592fe0d20db50e9f4ac0ae0328e907dd753173/share/doc/html/src"><span class="hs-identifier hs-var">J.eitherDecode</span></a></span><span> </span><span class="annot"><span class="annottext">(ByteString -&gt; Either String (ConfigurationJSON a))
+-&gt; (Text -&gt; ByteString)
+-&gt; Text
+-&gt; Either String (ConfigurationJSON a)
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; ByteString
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/bytestring-0.10.12.0/src"><span class="hs-identifier hs-var">BL.fromStrict</span></a></span><span> </span><span class="annot"><span class="annottext">(ByteString -&gt; ByteString)
+-&gt; (Text -&gt; ByteString) -&gt; Text -&gt; ByteString
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; ByteString
+</span><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/text-1.2.3.2-4200bf40e86b2107f4b06242de65d549c52e58e8833e72545e35f7712661e715/share/doc/html/src"><span class="hs-identifier hs-var">TE.encodeUtf8</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Either String (ConfigurationJSON a))
+-&gt; Text -&gt; Either String (ConfigurationJSON a)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621690090090"><span class="hs-identifier hs-var">s</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-93"></span><span>      </span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-type">Left</span></a></span><span> </span><span class="hs-special">{</span><span class="hs-special">}</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">String -&gt; Parser (ConfigurationJSON a)
+forall (m :: * -&gt; *) a. MonadFail m =&gt; String -&gt; m a
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var">fail</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;error parsing configuration json&quot;</span></span><span>
+</span><span id="line-94"></span><span>      </span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-type">Right</span></a></span><span> </span><span id="local-6989586621690090086"><span class="annot"><span class="annottext">ConfigurationJSON a
+</span><a href="#local-6989586621690090086"><span class="hs-identifier hs-var">sa</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ConfigurationJSON a -&gt; Parser (ConfigurationJSON a)
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="annot"><span class="annottext">ConfigurationJSON a
+</span><a href="#local-6989586621690090086"><span class="hs-identifier hs-var">sa</span></a></span><span>
+</span><span id="line-95"></span><span>    </span><span id="local-6989586621690090085"><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621690090085"><span class="hs-identifier hs-var">j</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">(a -&gt; ConfigurationJSON a)
+-&gt; Parser a -&gt; Parser (ConfigurationJSON a)
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var">fmap</span></a></span><span> </span><span class="annot"><span class="annottext">a -&gt; ConfigurationJSON a
+forall a. a -&gt; ConfigurationJSON a
+</span><a href="Hasura.Backends.BigQuery.Source.html#FromYamlJSON"><span class="hs-identifier hs-var">FromYamlJSON</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Value -&gt; Parser a
+forall a. FromJSON a =&gt; Value -&gt; Parser a
+</span><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/aeson-1.5.5.1-d565b322355c9794eb059b7477592fe0d20db50e9f4ac0ae0328e907dd753173/share/doc/html/src"><span class="hs-identifier hs-var">J.parseJSON</span></a></span><span> </span><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621690090085"><span class="hs-identifier hs-var">j</span></a></span><span class="hs-special">)</span></span><span>
+</span><span id="line-96"></span><span>
+</span><span id="line-97"></span><span id="local-6989586621690090084"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690090077"><span id="local-6989586621690090079"><span id="local-6989586621690090081"><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/aeson-1.5.5.1-d565b322355c9794eb059b7477592fe0d20db50e9f4ac0ae0328e907dd753173/share/doc/html/src"><span class="hs-identifier hs-type">J.ToJSON</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690090084"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/aeson-1.5.5.1-d565b322355c9794eb059b7477592fe0d20db50e9f4ac0ae0328e907dd753173/share/doc/html/src"><span class="hs-identifier hs-type">J.ToJSON</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#ConfigurationJSON"><span class="hs-identifier hs-type">ConfigurationJSON</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690090084"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-98"></span><span>  </span><span id="local-6989586621690090076"><span class="annot"><span class="annottext">toJSON :: ConfigurationJSON a -&gt; Value
+</span><a href="#local-6989586621690090076"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-99"></span><span>    </span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#FromEnvJSON"><span class="hs-identifier hs-type">FromEnvJSON</span></a></span><span> </span><span id="local-6989586621690090075"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621690090075"><span class="hs-identifier hs-var">i</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
+</span><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/aeson-1.5.5.1-d565b322355c9794eb059b7477592fe0d20db50e9f4ac0ae0328e907dd753173/share/doc/html/src"><span class="hs-identifier hs-var">J.object</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;from_env&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Pair
+forall kv v. (KeyValue kv, ToJSON v) =&gt; Text -&gt; v -&gt; kv
+</span><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/aeson-1.5.5.1-d565b322355c9794eb059b7477592fe0d20db50e9f4ac0ae0328e907dd753173/share/doc/html/src"><span class="hs-operator hs-var">J..=</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621690090075"><span class="hs-identifier hs-var">i</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-100"></span><span>    </span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#FromYamlJSON"><span class="hs-identifier hs-type">FromYamlJSON</span></a></span><span> </span><span id="local-6989586621690090072"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621690090072"><span class="hs-identifier hs-var">j</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">a -&gt; Value
+forall a. ToJSON a =&gt; a -&gt; Value
+</span><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/aeson-1.5.5.1-d565b322355c9794eb059b7477592fe0d20db50e9f4ac0ae0328e907dd753173/share/doc/html/src"><span class="hs-identifier hs-var">J.toJSON</span></a></span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621690090072"><span class="hs-identifier hs-var">j</span></a></span></span><span>
+</span><span id="line-101"></span><span>
+</span><span id="line-102"></span><span class="hs-comment">-- | Configuration inputs when they are a YAML array or an Env var whos value is</span><span>
+</span><span id="line-103"></span><span class="hs-comment">-- a comma-separated string</span><span>
+</span><span id="line-104"></span><span id="local-6989586621690090070"><span id="local-6989586621690090071"></span></span><span class="hs-keyword">data</span><span> </span><span id="ConfigurationInputs"><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#ConfigurationInputs"><span class="hs-identifier hs-var">ConfigurationInputs</span></a></span></span><span>
+</span><span id="line-105"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="FromYamls"><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#FromYamls"><span class="hs-identifier hs-var">FromYamls</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="hs-special">[</span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/text-1.2.3.2-4200bf40e86b2107f4b06242de65d549c52e58e8833e72545e35f7712661e715/share/doc/html/src"><span class="hs-identifier hs-type">Text</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-106"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="FromEnvs"><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#FromEnvs"><span class="hs-identifier hs-var">FromEnvs</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/text-1.2.3.2-4200bf40e86b2107f4b06242de65d549c52e58e8833e72545e35f7712661e715/share/doc/html/src"><span class="hs-identifier hs-type">Text</span></a></span><span>
+</span><span id="line-107"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621690090062"><span id="local-6989586621690090064"><span id="local-6989586621690090066"><span class="annot"><span class="annottext">Int -&gt; ConfigurationInputs -&gt; ShowS
+[ConfigurationInputs] -&gt; ShowS
+ConfigurationInputs -&gt; String
+(Int -&gt; ConfigurationInputs -&gt; ShowS)
+-&gt; (ConfigurationInputs -&gt; String)
+-&gt; ([ConfigurationInputs] -&gt; ShowS)
+-&gt; Show ConfigurationInputs
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [ConfigurationInputs] -&gt; ShowS
+$cshowList :: [ConfigurationInputs] -&gt; ShowS
+show :: ConfigurationInputs -&gt; String
+$cshow :: ConfigurationInputs -&gt; String
+showsPrec :: Int -&gt; ConfigurationInputs -&gt; ShowS
+$cshowsPrec :: Int -&gt; ConfigurationInputs -&gt; ShowS
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690090058"><span id="local-6989586621690090060"><span class="annot"><span class="annottext">ConfigurationInputs -&gt; ConfigurationInputs -&gt; Bool
+(ConfigurationInputs -&gt; ConfigurationInputs -&gt; Bool)
+-&gt; (ConfigurationInputs -&gt; ConfigurationInputs -&gt; Bool)
+-&gt; Eq ConfigurationInputs
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: ConfigurationInputs -&gt; ConfigurationInputs -&gt; Bool
+$c/= :: ConfigurationInputs -&gt; ConfigurationInputs -&gt; Bool
+== :: ConfigurationInputs -&gt; ConfigurationInputs -&gt; Bool
+$c== :: ConfigurationInputs -&gt; ConfigurationInputs -&gt; Bool
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/ghc-prim-0.6.1/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">(forall x. ConfigurationInputs -&gt; Rep ConfigurationInputs x)
+-&gt; (forall x. Rep ConfigurationInputs x -&gt; ConfigurationInputs)
+-&gt; Generic ConfigurationInputs
+forall x. Rep ConfigurationInputs x -&gt; ConfigurationInputs
+forall x. ConfigurationInputs -&gt; Rep ConfigurationInputs x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+$cto :: forall x. Rep ConfigurationInputs x -&gt; ConfigurationInputs
+$cfrom :: forall x. ConfigurationInputs -&gt; Rep ConfigurationInputs x
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-108"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690090054"><span class="annot"><span class="annottext">ConfigurationInputs -&gt; ()
+(ConfigurationInputs -&gt; ()) -&gt; NFData ConfigurationInputs
+forall a. (a -&gt; ()) -&gt; NFData a
+rnf :: ConfigurationInputs -&gt; ()
+$crnf :: ConfigurationInputs -&gt; ()
+</span><a href="#local-6989586621690090054"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690090050"><span id="local-6989586621690090052"><span class="annot"><span class="annottext">Int -&gt; ConfigurationInputs -&gt; Int
+ConfigurationInputs -&gt; Int
+(Int -&gt; ConfigurationInputs -&gt; Int)
+-&gt; (ConfigurationInputs -&gt; Int) -&gt; Hashable ConfigurationInputs
+forall a. (Int -&gt; a -&gt; Int) -&gt; (a -&gt; Int) -&gt; Hashable a
+hash :: ConfigurationInputs -&gt; Int
+$chash :: ConfigurationInputs -&gt; Int
+hashWithSalt :: Int -&gt; ConfigurationInputs -&gt; Int
+$chashWithSalt :: Int -&gt; ConfigurationInputs -&gt; Int
+</span><a href="#local-6989586621690090050"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-109"></span><span>
+</span><span id="line-110"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690090043"><span id="local-6989586621690090045"><span id="local-6989586621690090047"><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/aeson-1.5.5.1-d565b322355c9794eb059b7477592fe0d20db50e9f4ac0ae0328e907dd753173/share/doc/html/src"><span class="hs-identifier hs-type">J.ToJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#ConfigurationInputs"><span class="hs-identifier hs-type">ConfigurationInputs</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-111"></span><span>  </span><span id="local-6989586621690090042"><span class="annot"><span class="annottext">toJSON :: ConfigurationInputs -&gt; Value
+</span><a href="#local-6989586621690090042"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-112"></span><span>    </span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#FromYamls"><span class="hs-identifier hs-type">FromYamls</span></a></span><span> </span><span id="local-6989586621690090041"><span class="annot"><span class="annottext">[Text]
+</span><a href="#local-6989586621690090041"><span class="hs-identifier hs-var">i</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">[Text] -&gt; Value
+forall a. ToJSON a =&gt; a -&gt; Value
+</span><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/aeson-1.5.5.1-d565b322355c9794eb059b7477592fe0d20db50e9f4ac0ae0328e907dd753173/share/doc/html/src"><span class="hs-identifier hs-var">J.toJSON</span></a></span><span> </span><span class="annot"><span class="annottext">[Text]
+</span><a href="#local-6989586621690090041"><span class="hs-identifier hs-var">i</span></a></span><span>
+</span><span id="line-113"></span><span>    </span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#FromEnvs"><span class="hs-identifier hs-type">FromEnvs</span></a></span><span> </span><span id="local-6989586621690090040"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621690090040"><span class="hs-identifier hs-var">i</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
+</span><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/aeson-1.5.5.1-d565b322355c9794eb059b7477592fe0d20db50e9f4ac0ae0328e907dd753173/share/doc/html/src"><span class="hs-identifier hs-var">J.object</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;from_env&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Pair
+forall kv v. (KeyValue kv, ToJSON v) =&gt; Text -&gt; v -&gt; kv
+</span><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/aeson-1.5.5.1-d565b322355c9794eb059b7477592fe0d20db50e9f4ac0ae0328e907dd753173/share/doc/html/src"><span class="hs-operator hs-var">J..=</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621690090040"><span class="hs-identifier hs-var">i</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-114"></span><span>
+</span><span id="line-115"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690090037"><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/aeson-1.5.5.1-d565b322355c9794eb059b7477592fe0d20db50e9f4ac0ae0328e907dd753173/share/doc/html/src"><span class="hs-identifier hs-type">J.FromJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#ConfigurationInputs"><span class="hs-identifier hs-type">ConfigurationInputs</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-116"></span><span>  </span><span id="local-6989586621690090036"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser ConfigurationInputs
+</span><a href="#local-6989586621690090036"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-117"></span><span>    </span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/aeson-1.5.5.1-d565b322355c9794eb059b7477592fe0d20db50e9f4ac0ae0328e907dd753173/share/doc/html/src"><span class="hs-identifier hs-type">J.Object</span></a></span><span> </span><span id="local-6989586621690090035"><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621690090035"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; ConfigurationInputs
+</span><a href="Hasura.Backends.BigQuery.Source.html#FromEnvs"><span class="hs-identifier hs-var">FromEnvs</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; ConfigurationInputs)
+-&gt; Parser Text -&gt; Parser ConfigurationInputs
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621690090035"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Text -&gt; Parser Text
+forall a. FromJSON a =&gt; Object -&gt; Text -&gt; Parser a
+</span><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/aeson-1.5.5.1-d565b322355c9794eb059b7477592fe0d20db50e9f4ac0ae0328e907dd753173/share/doc/html/src"><span class="hs-operator hs-var">J..:</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;from_env&quot;</span></span><span>
+</span><span id="line-118"></span><span>    </span><span id="local-6989586621690090034"><span class="annot"><span class="annottext">s :: Value
+</span><a href="#local-6989586621690090034"><span class="hs-identifier hs-var">s</span></a></span></span><span class="hs-glyph">@</span><span class="hs-special">(</span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/aeson-1.5.5.1-d565b322355c9794eb059b7477592fe0d20db50e9f4ac0ae0328e907dd753173/share/doc/html/src"><span class="hs-identifier hs-type">J.Array</span></a></span><span> </span><span class="annot"><span class="annottext">Array
+</span><span class="hs-identifier">_</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">[Text] -&gt; ConfigurationInputs
+</span><a href="Hasura.Backends.BigQuery.Source.html#FromYamls"><span class="hs-identifier hs-var">FromYamls</span></a></span><span> </span><span class="annot"><span class="annottext">([Text] -&gt; ConfigurationInputs)
+-&gt; Parser [Text] -&gt; Parser ConfigurationInputs
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Value -&gt; Parser [Text]
+forall a. FromJSON a =&gt; Value -&gt; Parser a
+</span><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/aeson-1.5.5.1-d565b322355c9794eb059b7477592fe0d20db50e9f4ac0ae0328e907dd753173/share/doc/html/src"><span class="hs-identifier hs-var">J.parseJSON</span></a></span><span> </span><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621690090034"><span class="hs-identifier hs-var">s</span></a></span><span>
+</span><span id="line-119"></span><span>    </span><span class="annot"><span class="annottext">Value
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">String -&gt; Parser ConfigurationInputs
+forall (m :: * -&gt; *) a. MonadFail m =&gt; String -&gt; m a
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var">fail</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;one of array or object must be provided&quot;</span></span><span>
+</span><span id="line-120"></span><span>
+</span><span id="line-121"></span><span class="hs-comment">-- | Configuration input when the YAML value as well as the Env var have</span><span>
+</span><span id="line-122"></span><span class="hs-comment">-- singlular values</span><span>
+</span><span id="line-123"></span><span id="local-6989586621690090031"><span id="local-6989586621690090032"></span></span><span class="hs-keyword">data</span><span> </span><span id="ConfigurationInput"><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#ConfigurationInput"><span class="hs-identifier hs-var">ConfigurationInput</span></a></span></span><span>
+</span><span id="line-124"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="FromYaml"><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#FromYaml"><span class="hs-identifier hs-var">FromYaml</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/text-1.2.3.2-4200bf40e86b2107f4b06242de65d549c52e58e8833e72545e35f7712661e715/share/doc/html/src"><span class="hs-identifier hs-type">Text</span></a></span><span>
+</span><span id="line-125"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="FromEnv"><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#FromEnv"><span class="hs-identifier hs-var">FromEnv</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/text-1.2.3.2-4200bf40e86b2107f4b06242de65d549c52e58e8833e72545e35f7712661e715/share/doc/html/src"><span class="hs-identifier hs-type">Text</span></a></span><span>
+</span><span id="line-126"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621690090023"><span id="local-6989586621690090025"><span id="local-6989586621690090027"><span class="annot"><span class="annottext">Int -&gt; ConfigurationInput -&gt; ShowS
+[ConfigurationInput] -&gt; ShowS
+ConfigurationInput -&gt; String
+(Int -&gt; ConfigurationInput -&gt; ShowS)
+-&gt; (ConfigurationInput -&gt; String)
+-&gt; ([ConfigurationInput] -&gt; ShowS)
+-&gt; Show ConfigurationInput
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [ConfigurationInput] -&gt; ShowS
+$cshowList :: [ConfigurationInput] -&gt; ShowS
+show :: ConfigurationInput -&gt; String
+$cshow :: ConfigurationInput -&gt; String
+showsPrec :: Int -&gt; ConfigurationInput -&gt; ShowS
+$cshowsPrec :: Int -&gt; ConfigurationInput -&gt; ShowS
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690090019"><span id="local-6989586621690090021"><span class="annot"><span class="annottext">ConfigurationInput -&gt; ConfigurationInput -&gt; Bool
+(ConfigurationInput -&gt; ConfigurationInput -&gt; Bool)
+-&gt; (ConfigurationInput -&gt; ConfigurationInput -&gt; Bool)
+-&gt; Eq ConfigurationInput
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: ConfigurationInput -&gt; ConfigurationInput -&gt; Bool
+$c/= :: ConfigurationInput -&gt; ConfigurationInput -&gt; Bool
+== :: ConfigurationInput -&gt; ConfigurationInput -&gt; Bool
+$c== :: ConfigurationInput -&gt; ConfigurationInput -&gt; Bool
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/ghc-prim-0.6.1/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">(forall x. ConfigurationInput -&gt; Rep ConfigurationInput x)
+-&gt; (forall x. Rep ConfigurationInput x -&gt; ConfigurationInput)
+-&gt; Generic ConfigurationInput
+forall x. Rep ConfigurationInput x -&gt; ConfigurationInput
+forall x. ConfigurationInput -&gt; Rep ConfigurationInput x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+$cto :: forall x. Rep ConfigurationInput x -&gt; ConfigurationInput
+$cfrom :: forall x. ConfigurationInput -&gt; Rep ConfigurationInput x
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-127"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690090015"><span class="annot"><span class="annottext">ConfigurationInput -&gt; ()
+(ConfigurationInput -&gt; ()) -&gt; NFData ConfigurationInput
+forall a. (a -&gt; ()) -&gt; NFData a
+rnf :: ConfigurationInput -&gt; ()
+$crnf :: ConfigurationInput -&gt; ()
+</span><a href="#local-6989586621690090015"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690090011"><span id="local-6989586621690090013"><span class="annot"><span class="annottext">Int -&gt; ConfigurationInput -&gt; Int
+ConfigurationInput -&gt; Int
+(Int -&gt; ConfigurationInput -&gt; Int)
+-&gt; (ConfigurationInput -&gt; Int) -&gt; Hashable ConfigurationInput
+forall a. (Int -&gt; a -&gt; Int) -&gt; (a -&gt; Int) -&gt; Hashable a
+hash :: ConfigurationInput -&gt; Int
+$chash :: ConfigurationInput -&gt; Int
+hashWithSalt :: Int -&gt; ConfigurationInput -&gt; Int
+$chashWithSalt :: Int -&gt; ConfigurationInput -&gt; Int
+</span><a href="#local-6989586621690090011"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-128"></span><span>
+</span><span id="line-129"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690090004"><span id="local-6989586621690090006"><span id="local-6989586621690090008"><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/aeson-1.5.5.1-d565b322355c9794eb059b7477592fe0d20db50e9f4ac0ae0328e907dd753173/share/doc/html/src"><span class="hs-identifier hs-type">J.ToJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#ConfigurationInput"><span class="hs-identifier hs-type">ConfigurationInput</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-130"></span><span>  </span><span id="local-6989586621690090003"><span class="annot"><span class="annottext">toJSON :: ConfigurationInput -&gt; Value
+</span><a href="#local-6989586621690090003"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-131"></span><span>    </span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#FromYaml"><span class="hs-identifier hs-type">FromYaml</span></a></span><span> </span><span id="local-6989586621690090002"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621690090002"><span class="hs-identifier hs-var">i</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Value
+forall a. ToJSON a =&gt; a -&gt; Value
+</span><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/aeson-1.5.5.1-d565b322355c9794eb059b7477592fe0d20db50e9f4ac0ae0328e907dd753173/share/doc/html/src"><span class="hs-identifier hs-var">J.toJSON</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621690090002"><span class="hs-identifier hs-var">i</span></a></span><span>
+</span><span id="line-132"></span><span>    </span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#FromEnv"><span class="hs-identifier hs-type">FromEnv</span></a></span><span> </span><span id="local-6989586621690090001"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621690090001"><span class="hs-identifier hs-var">i</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
+</span><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/aeson-1.5.5.1-d565b322355c9794eb059b7477592fe0d20db50e9f4ac0ae0328e907dd753173/share/doc/html/src"><span class="hs-identifier hs-var">J.object</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;from_env&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Pair
+forall kv v. (KeyValue kv, ToJSON v) =&gt; Text -&gt; v -&gt; kv
+</span><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/aeson-1.5.5.1-d565b322355c9794eb059b7477592fe0d20db50e9f4ac0ae0328e907dd753173/share/doc/html/src"><span class="hs-operator hs-var">J..=</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621690090001"><span class="hs-identifier hs-var">i</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-133"></span><span>
+</span><span id="line-134"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690089998"><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/aeson-1.5.5.1-d565b322355c9794eb059b7477592fe0d20db50e9f4ac0ae0328e907dd753173/share/doc/html/src"><span class="hs-identifier hs-type">J.FromJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#ConfigurationInput"><span class="hs-identifier hs-type">ConfigurationInput</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-135"></span><span>  </span><span id="local-6989586621690089997"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser ConfigurationInput
+</span><a href="#local-6989586621690089997"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-136"></span><span>    </span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/aeson-1.5.5.1-d565b322355c9794eb059b7477592fe0d20db50e9f4ac0ae0328e907dd753173/share/doc/html/src"><span class="hs-identifier hs-type">J.Object</span></a></span><span> </span><span id="local-6989586621690089996"><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621690089996"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; ConfigurationInput
+</span><a href="Hasura.Backends.BigQuery.Source.html#FromEnv"><span class="hs-identifier hs-var">FromEnv</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; ConfigurationInput)
+-&gt; Parser Text -&gt; Parser ConfigurationInput
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621690089996"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Text -&gt; Parser Text
+forall a. FromJSON a =&gt; Object -&gt; Text -&gt; Parser a
+</span><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/aeson-1.5.5.1-d565b322355c9794eb059b7477592fe0d20db50e9f4ac0ae0328e907dd753173/share/doc/html/src"><span class="hs-operator hs-var">J..:</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;from_env&quot;</span></span><span>
+</span><span id="line-137"></span><span>    </span><span id="local-6989586621690089995"><span class="annot"><span class="annottext">s :: Value
+</span><a href="#local-6989586621690089995"><span class="hs-identifier hs-var">s</span></a></span></span><span class="hs-glyph">@</span><span class="hs-special">(</span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/aeson-1.5.5.1-d565b322355c9794eb059b7477592fe0d20db50e9f4ac0ae0328e907dd753173/share/doc/html/src"><span class="hs-identifier hs-type">J.String</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-identifier">_</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; ConfigurationInput
+</span><a href="Hasura.Backends.BigQuery.Source.html#FromYaml"><span class="hs-identifier hs-var">FromYaml</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; ConfigurationInput)
+-&gt; Parser Text -&gt; Parser ConfigurationInput
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Value -&gt; Parser Text
+forall a. FromJSON a =&gt; Value -&gt; Parser a
+</span><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/aeson-1.5.5.1-d565b322355c9794eb059b7477592fe0d20db50e9f4ac0ae0328e907dd753173/share/doc/html/src"><span class="hs-identifier hs-var">J.parseJSON</span></a></span><span> </span><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621690089995"><span class="hs-identifier hs-var">s</span></a></span><span>
+</span><span id="line-138"></span><span>    </span><span class="hs-special">(</span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/aeson-1.5.5.1-d565b322355c9794eb059b7477592fe0d20db50e9f4ac0ae0328e907dd753173/share/doc/html/src"><span class="hs-identifier hs-type">J.Number</span></a></span><span> </span><span id="local-6989586621690089993"><span class="annot"><span class="annottext">Scientific
+</span><a href="#local-6989586621690089993"><span class="hs-identifier hs-var">n</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; ConfigurationInput
+</span><a href="Hasura.Backends.BigQuery.Source.html#FromYaml"><span class="hs-identifier hs-var">FromYaml</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; ConfigurationInput)
+-&gt; Parser Text -&gt; Parser ConfigurationInput
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Value -&gt; Parser Text
+forall a. FromJSON a =&gt; Value -&gt; Parser a
+</span><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/aeson-1.5.5.1-d565b322355c9794eb059b7477592fe0d20db50e9f4ac0ae0328e907dd753173/share/doc/html/src"><span class="hs-identifier hs-var">J.parseJSON</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; Value
+</span><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/aeson-1.5.5.1-d565b322355c9794eb059b7477592fe0d20db50e9f4ac0ae0328e907dd753173/share/doc/html/src"><span class="hs-identifier hs-var">J.String</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Scientific -&gt; Text
+forall a. Show a =&gt; a -&gt; Text
+</span><a href="Hasura.Prelude.html#tshow"><span class="hs-identifier hs-var">tshow</span></a></span><span> </span><span class="annot"><span class="annottext">Scientific
+</span><a href="#local-6989586621690089993"><span class="hs-identifier hs-var">n</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-139"></span><span>    </span><span class="annot"><span class="annottext">Value
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">String -&gt; Parser ConfigurationInput
+forall (m :: * -&gt; *) a. MonadFail m =&gt; String -&gt; m a
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var">fail</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;one of string or number or object must be provided&quot;</span></span><span>
+</span><span id="line-140"></span><span>
+</span><span id="line-141"></span><span id="local-6989586621690089990"><span id="local-6989586621690089991"></span></span><span class="hs-keyword">data</span><span> </span><span id="BigQueryConnSourceConfig"><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#BigQueryConnSourceConfig"><span class="hs-identifier hs-var">BigQueryConnSourceConfig</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="BigQueryConnSourceConfig"><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#BigQueryConnSourceConfig"><span class="hs-identifier hs-var">BigQueryConnSourceConfig</span></a></span></span><span>
+</span><span id="line-142"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_cscServiceAccount"><span class="annot"><span class="annottext">BigQueryConnSourceConfig -&gt; ConfigurationJSON ServiceAccount
+</span><a href="Hasura.Backends.BigQuery.Source.html#_cscServiceAccount"><span class="hs-identifier hs-var hs-var">_cscServiceAccount</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#ConfigurationJSON"><span class="hs-identifier hs-type">ConfigurationJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#ServiceAccount"><span class="hs-identifier hs-type">ServiceAccount</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-143"></span><span>    </span><span id="_cscDatasets"><span class="annot"><span class="annottext">BigQueryConnSourceConfig -&gt; ConfigurationInputs
+</span><a href="Hasura.Backends.BigQuery.Source.html#_cscDatasets"><span class="hs-identifier hs-var hs-var">_cscDatasets</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#ConfigurationInputs"><span class="hs-identifier hs-type">ConfigurationInputs</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-144"></span><span>    </span><span id="_cscProjectId"><span class="annot"><span class="annottext">BigQueryConnSourceConfig -&gt; ConfigurationInput
+</span><a href="Hasura.Backends.BigQuery.Source.html#_cscProjectId"><span class="hs-identifier hs-var hs-var">_cscProjectId</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#ConfigurationInput"><span class="hs-identifier hs-type">ConfigurationInput</span></a></span><span class="hs-special">,</span><span> </span><span class="hs-comment">-- this is part of service-account.json, but we put it here on purpose</span><span>
+</span><span id="line-145"></span><span>    </span><span id="_cscGlobalSelectLimit"><span class="annot"><span class="annottext">BigQueryConnSourceConfig -&gt; Maybe ConfigurationInput
+</span><a href="Hasura.Backends.BigQuery.Source.html#_cscGlobalSelectLimit"><span class="hs-identifier hs-var hs-var">_cscGlobalSelectLimit</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#ConfigurationInput"><span class="hs-identifier hs-type">ConfigurationInput</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-146"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-147"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690089981"><span id="local-6989586621690089983"><span class="annot"><span class="annottext">BigQueryConnSourceConfig -&gt; BigQueryConnSourceConfig -&gt; Bool
+(BigQueryConnSourceConfig -&gt; BigQueryConnSourceConfig -&gt; Bool)
+-&gt; (BigQueryConnSourceConfig -&gt; BigQueryConnSourceConfig -&gt; Bool)
+-&gt; Eq BigQueryConnSourceConfig
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: BigQueryConnSourceConfig -&gt; BigQueryConnSourceConfig -&gt; Bool
+$c/= :: BigQueryConnSourceConfig -&gt; BigQueryConnSourceConfig -&gt; Bool
+== :: BigQueryConnSourceConfig -&gt; BigQueryConnSourceConfig -&gt; Bool
+$c== :: BigQueryConnSourceConfig -&gt; BigQueryConnSourceConfig -&gt; Bool
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/ghc-prim-0.6.1/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">(forall x.
+ BigQueryConnSourceConfig -&gt; Rep BigQueryConnSourceConfig x)
+-&gt; (forall x.
+    Rep BigQueryConnSourceConfig x -&gt; BigQueryConnSourceConfig)
+-&gt; Generic BigQueryConnSourceConfig
+forall x.
+Rep BigQueryConnSourceConfig x -&gt; BigQueryConnSourceConfig
+forall x.
+BigQueryConnSourceConfig -&gt; Rep BigQueryConnSourceConfig x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+$cto :: forall x.
+Rep BigQueryConnSourceConfig x -&gt; BigQueryConnSourceConfig
+$cfrom :: forall x.
+BigQueryConnSourceConfig -&gt; Rep BigQueryConnSourceConfig x
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></a></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690089977"><span class="annot"><span class="annottext">BigQueryConnSourceConfig -&gt; ()
+(BigQueryConnSourceConfig -&gt; ()) -&gt; NFData BigQueryConnSourceConfig
+forall a. (a -&gt; ()) -&gt; NFData a
+rnf :: BigQueryConnSourceConfig -&gt; ()
+$crnf :: BigQueryConnSourceConfig -&gt; ()
+</span><a href="#local-6989586621690089977"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span class="hs-special">)</span><span>
+</span><span id="line-148"></span><span>
+</span><span id="line-149"></span><span class="hs-special">$(</span><span id="local-6989586621690089965"><span id="local-6989586621690089967"><span id="local-6989586621690089969"><span id="local-6989586621690089971"><span id="local-6989586621690089973"><span id="local-6989586621690089975"><span class="hs-identifier">J.deriveJSON</span><span> </span><span class="hs-special">(</span><span class="hs-identifier">J.aesonDrop</span><span> </span><span class="hs-number">4</span><span> </span><span class="hs-identifier">J.snakeCase</span><span class="hs-special">)</span><span> </span><span class="hs-special">{</span><span class="hs-identifier">J.omitNothingFields</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-identifier">True</span><span class="hs-special">}</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">BigQueryConnSourceConfig</span></span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-150"></span><span>
+</span><span id="line-151"></span><span id="local-6989586621690089959"><span id="local-6989586621690089961"><span id="local-6989586621690089963"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-type">Show</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#BigQueryConnSourceConfig"><span class="hs-identifier hs-type">BigQueryConnSourceConfig</span></a></span></span></span></span><span>
+</span><span id="line-152"></span><span>
+</span><span id="line-153"></span><span id="local-6989586621690089955"><span id="local-6989586621690089957"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/hashable-1.3.0.0-788b52f2a84e4f56df08780d211980a9db35c8fd0786c16a6d78251880c45f3d/share/doc/html/src"><span class="hs-identifier hs-type">Hashable</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#BigQueryConnSourceConfig"><span class="hs-identifier hs-type">BigQueryConnSourceConfig</span></a></span></span></span><span>
+</span><span id="line-154"></span><span>
+</span><span id="line-155"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier hs-type">Cacheable</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#BigQueryConnSourceConfig"><span class="hs-identifier hs-type">BigQueryConnSourceConfig</span></a></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-156"></span><span>  </span><span id="local-6989586621690089951"><span class="annot"><span class="annottext">unchanged :: Accesses
+-&gt; BigQueryConnSourceConfig -&gt; BigQueryConnSourceConfig -&gt; Bool
+</span><a href="Hasura.Incremental.Internal.Dependency.html#unchanged"><span class="hs-identifier hs-var hs-var hs-var hs-var">unchanged</span></a></span></span><span> </span><span class="annot"><span class="annottext">Accesses
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">BigQueryConnSourceConfig -&gt; BigQueryConnSourceConfig -&gt; Bool
+forall a. Eq a =&gt; a -&gt; a -&gt; Bool
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/ghc-prim-0.6.1/src"><span class="hs-operator hs-var">(==)</span></a></span><span>
+</span><span id="line-157"></span><span>
+</span><span id="line-158"></span><span class="hs-keyword">data</span><span> </span><span id="BigQuerySourceConfig"><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#BigQuerySourceConfig"><span class="hs-identifier hs-var">BigQuerySourceConfig</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="BigQuerySourceConfig"><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#BigQuerySourceConfig"><span class="hs-identifier hs-var">BigQuerySourceConfig</span></a></span></span><span>
+</span><span id="line-159"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_scServiceAccount"><span class="annot"><span class="annottext">BigQuerySourceConfig -&gt; ServiceAccount
+</span><a href="Hasura.Backends.BigQuery.Source.html#_scServiceAccount"><span class="hs-identifier hs-var hs-var">_scServiceAccount</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#ServiceAccount"><span class="hs-identifier hs-type">ServiceAccount</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-160"></span><span>    </span><span id="_scDatasets"><span class="annot"><span class="annottext">BigQuerySourceConfig -&gt; [Text]
+</span><a href="Hasura.Backends.BigQuery.Source.html#_scDatasets"><span class="hs-identifier hs-var hs-var">_scDatasets</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">[</span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/text-1.2.3.2-4200bf40e86b2107f4b06242de65d549c52e58e8833e72545e35f7712661e715/share/doc/html/src"><span class="hs-identifier hs-type">Text</span></a></span><span class="hs-special">]</span><span class="hs-special">,</span><span>
+</span><span id="line-161"></span><span>    </span><span id="_scProjectId"><span class="annot"><span class="annottext">BigQuerySourceConfig -&gt; Text
+</span><a href="Hasura.Backends.BigQuery.Source.html#_scProjectId"><span class="hs-identifier hs-var hs-var">_scProjectId</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/text-1.2.3.2-4200bf40e86b2107f4b06242de65d549c52e58e8833e72545e35f7712661e715/share/doc/html/src"><span class="hs-identifier hs-type">Text</span></a></span><span class="hs-special">,</span><span> </span><span class="hs-comment">-- this is part of service-account.json, but we put it here on purpose</span><span>
+</span><span id="line-162"></span><span>    </span><span id="_scAccessTokenMVar"><span class="annot"><span class="annottext">BigQuerySourceConfig -&gt; MVar (Maybe TokenResp)
+</span><a href="Hasura.Backends.BigQuery.Source.html#_scAccessTokenMVar"><span class="hs-identifier hs-var hs-var">_scAccessTokenMVar</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-type">MVar</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#TokenResp"><span class="hs-identifier hs-type">TokenResp</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-163"></span><span>    </span><span id="_scGlobalSelectLimit"><span class="annot"><span class="annottext">BigQuerySourceConfig -&gt; Int
+</span><a href="Hasura.Backends.BigQuery.Source.html#_scGlobalSelectLimit"><span class="hs-identifier hs-var hs-var">_scGlobalSelectLimit</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/ghc-prim-0.6.1/src"><span class="hs-identifier hs-type">Int</span></a></span><span>
+</span><span id="line-164"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-165"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690089940"><span id="local-6989586621690089942"><span class="annot"><span class="annottext">BigQuerySourceConfig -&gt; BigQuerySourceConfig -&gt; Bool
+(BigQuerySourceConfig -&gt; BigQuerySourceConfig -&gt; Bool)
+-&gt; (BigQuerySourceConfig -&gt; BigQuerySourceConfig -&gt; Bool)
+-&gt; Eq BigQuerySourceConfig
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: BigQuerySourceConfig -&gt; BigQuerySourceConfig -&gt; Bool
+$c/= :: BigQuerySourceConfig -&gt; BigQuerySourceConfig -&gt; Bool
+== :: BigQuerySourceConfig -&gt; BigQuerySourceConfig -&gt; Bool
+$c== :: BigQuerySourceConfig -&gt; BigQuerySourceConfig -&gt; Bool
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/ghc-prim-0.6.1/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-166"></span><span>
+</span><span id="line-167"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier hs-type">Cacheable</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#BigQuerySourceConfig"><span class="hs-identifier hs-type">BigQuerySourceConfig</span></a></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-168"></span><span>  </span><span id="local-6989586621690089937"><span class="annot"><span class="annottext">unchanged :: Accesses -&gt; BigQuerySourceConfig -&gt; BigQuerySourceConfig -&gt; Bool
+</span><a href="#local-6989586621690089937"><span class="hs-identifier hs-var hs-var hs-var hs-var">unchanged</span></a></span></span><span> </span><span class="annot"><span class="annottext">Accesses
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">BigQuerySourceConfig -&gt; BigQuerySourceConfig -&gt; Bool
+forall a. Eq a =&gt; a -&gt; a -&gt; Bool
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/ghc-prim-0.6.1/src"><span class="hs-operator hs-var">(==)</span></a></span><span>
+</span><span id="line-169"></span><span>
+</span><span id="line-170"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690089930"><span id="local-6989586621690089932"><span id="local-6989586621690089934"><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/aeson-1.5.5.1-d565b322355c9794eb059b7477592fe0d20db50e9f4ac0ae0328e907dd753173/share/doc/html/src"><span class="hs-identifier hs-type">J.ToJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#BigQuerySourceConfig"><span class="hs-identifier hs-type">BigQuerySourceConfig</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-171"></span><span>  </span><span id="local-6989586621690089929"><span class="annot"><span class="annottext">toJSON :: BigQuerySourceConfig -&gt; Value
+</span><a href="#local-6989586621690089929"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#BigQuerySourceConfig"><span class="hs-identifier hs-type">BigQuerySourceConfig</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621690089924"><span id="local-6989586621690089925"><span id="local-6989586621690089926"><span id="local-6989586621690089927"><span id="local-6989586621690089928"><span class="annot"><span class="annottext">Int
+[Text]
+Text
+MVar (Maybe TokenResp)
+ServiceAccount
+_scGlobalSelectLimit :: Int
+_scAccessTokenMVar :: MVar (Maybe TokenResp)
+_scProjectId :: Text
+_scDatasets :: [Text]
+_scServiceAccount :: ServiceAccount
+_scGlobalSelectLimit :: BigQuerySourceConfig -&gt; Int
+_scAccessTokenMVar :: BigQuerySourceConfig -&gt; MVar (Maybe TokenResp)
+_scProjectId :: BigQuerySourceConfig -&gt; Text
+_scDatasets :: BigQuerySourceConfig -&gt; [Text]
+_scServiceAccount :: BigQuerySourceConfig -&gt; ServiceAccount
+</span><a href="#local-6989586621690089924"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-172"></span><span>    </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
+</span><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/aeson-1.5.5.1-d565b322355c9794eb059b7477592fe0d20db50e9f4ac0ae0328e907dd753173/share/doc/html/src"><span class="hs-identifier hs-var">J.object</span></a></span><span>
+</span><span id="line-173"></span><span>      </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;service_account&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; ServiceAccount -&gt; Pair
+forall kv v. (KeyValue kv, ToJSON v) =&gt; Text -&gt; v -&gt; kv
+</span><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/aeson-1.5.5.1-d565b322355c9794eb059b7477592fe0d20db50e9f4ac0ae0328e907dd753173/share/doc/html/src"><span class="hs-operator hs-var">J..=</span></a></span><span> </span><span class="annot"><span class="annottext">ServiceAccount
+</span><a href="#local-6989586621690089928"><span class="hs-identifier hs-var">_scServiceAccount</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-174"></span><span>        </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;datasets&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; [Text] -&gt; Pair
+forall kv v. (KeyValue kv, ToJSON v) =&gt; Text -&gt; v -&gt; kv
+</span><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/aeson-1.5.5.1-d565b322355c9794eb059b7477592fe0d20db50e9f4ac0ae0328e907dd753173/share/doc/html/src"><span class="hs-operator hs-var">J..=</span></a></span><span> </span><span class="annot"><span class="annottext">[Text]
+</span><a href="#local-6989586621690089927"><span class="hs-identifier hs-var">_scDatasets</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-175"></span><span>        </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;project_id&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Pair
+forall kv v. (KeyValue kv, ToJSON v) =&gt; Text -&gt; v -&gt; kv
+</span><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/aeson-1.5.5.1-d565b322355c9794eb059b7477592fe0d20db50e9f4ac0ae0328e907dd753173/share/doc/html/src"><span class="hs-operator hs-var">J..=</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621690089926"><span class="hs-identifier hs-var">_scProjectId</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-176"></span><span>        </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;global_select_limit&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Int -&gt; Pair
+forall kv v. (KeyValue kv, ToJSON v) =&gt; Text -&gt; v -&gt; kv
+</span><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/aeson-1.5.5.1-d565b322355c9794eb059b7477592fe0d20db50e9f4ac0ae0328e907dd753173/share/doc/html/src"><span class="hs-operator hs-var">J..=</span></a></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621690089924"><span class="hs-identifier hs-var">_scGlobalSelectLimit</span></a></span><span>
+</span><span id="line-177"></span><span>      </span><span class="hs-special">]</span><span>
+</span><span id="line-178"></span></pre></body></html>
