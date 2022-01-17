@@ -34,6 +34,10 @@ module Hasura.Backends.BigQuery.Types
     Reselect (..),
     ScalarType (..),
     Select (..),
+    PartitionableSelect (..),
+    noExtraPartitionFields,
+    withExtraPartitionFields,
+    simpleSelect,
     SelectJson (..),
     TableName (..),
     Time (..),
@@ -48,6 +52,7 @@ module Hasura.Backends.BigQuery.Types
     doubleToFloat64,
     getGQLTableName,
     intToInt64,
+    int64Expr,
     isComparableType,
     isNumType,
     parseScalarValue,
@@ -65,6 +70,7 @@ import Data.ByteString (ByteString)
 import Data.ByteString.Base64 qualified as Base64
 import Data.ByteString.Lazy qualified as L
 import Data.Coerce
+import Data.Int qualified as Int
 import Data.Scientific
 import Data.Text qualified as T
 import Data.Text.Encoding qualified as T
@@ -104,6 +110,29 @@ instance Hashable Select
 instance Cacheable Select
 
 instance NFData Select
+
+-- | Helper type allowing addition of extra fields used
+-- in PARTITION BY.
+--
+-- The main purpose of this type is sumulation of DISTINCT ON
+-- implemented in Hasura.Backends.BigQuery.FromIr.simulateDistinctOn
+data PartitionableSelect = PartitionableSelect
+  { pselectFinalize :: Maybe [FieldName] -> Select,
+    pselectFrom :: !From
+  }
+
+simpleSelect :: Select -> PartitionableSelect
+simpleSelect select =
+  PartitionableSelect
+    { pselectFinalize = const select,
+      pselectFrom = selectFrom select
+    }
+
+noExtraPartitionFields :: PartitionableSelect -> Select
+noExtraPartitionFields PartitionableSelect {..} = pselectFinalize Nothing
+
+withExtraPartitionFields :: PartitionableSelect -> [FieldName] -> Select
+withExtraPartitionFields PartitionableSelect {..} = pselectFinalize . Just
 
 data ArrayAgg = ArrayAgg
   { arrayAggProjections :: !(NonEmpty Projection),
@@ -327,7 +356,7 @@ instance NFData AsStruct
 
 data Top
   = NoTop
-  | Top Int
+  | Top Int.Int64
   deriving (Eq, Ord, Show, Generic, Data, Lift)
 
 instance FromJSON Top
@@ -678,8 +707,11 @@ instance FromJSON Int64 where parseJSON = liberalInt64Parser Int64
 
 instance ToJSON Int64 where toJSON = liberalIntegralPrinter
 
-intToInt64 :: Int -> Int64
+intToInt64 :: Int.Int64 -> Int64
 intToInt64 = Int64 . tshow
+
+int64Expr :: Int.Int64 -> Expression
+int64Expr = ValueExpression . IntegerValue . intToInt64
 
 -- | BigQuery's conception of a fixed precision decimal.
 newtype Decimal = Decimal Text

@@ -16,10 +16,10 @@ where
 
 import Control.Monad.Validate
 import Data.HashMap.Strict qualified as HM
+import Data.Int qualified as Int
 import Data.List.NonEmpty qualified as NE
 import Data.Map.Strict (Map)
 import Data.Map.Strict qualified as M
-import Data.Proxy
 import Data.Text qualified as T
 import Hasura.Backends.BigQuery.Instances.Types ()
 import Hasura.Backends.BigQuery.Source (BigQuerySourceConfig (..))
@@ -49,7 +49,6 @@ data Error
   | UnsupportedSQLExp Expression
   | UnsupportedDistinctOn
   | InvalidIntegerishSql Expression
-  | DistinctIsn'tSupported
   | ConnectionsNotSupported
   | ActionsNotSupported
 
@@ -69,7 +68,6 @@ instance Show Error where
       UnsupportedSQLExp {} -> "UnsupportedSQLExp"
       UnsupportedDistinctOn {} -> "UnsupportedDistinctOn"
       InvalidIntegerishSql {} -> "InvalidIntegerishSql"
-      DistinctIsn'tSupported {} -> "DistinctIsn'tSupported"
       ConnectionsNotSupported {} -> "ConnectionsNotSupported"
       ActionsNotSupported {} -> "ActionsNotSupported"
 
@@ -140,7 +138,7 @@ mkSQLSelect ::
   Ir.AnnSelectG 'BigQuery Void (Ir.AnnFieldG 'BigQuery Void) Expression ->
   FromIr BigQuery.Select
 mkSQLSelect jsonAggSelect annSimpleSel = do
-  select <- fromSelectRows annSimpleSel
+  select <- noExtraPartitionFields <$> fromSelectRows annSimpleSel
   pure
     ( select
         { selectCardinality =
@@ -177,8 +175,22 @@ fromUnnestedJSON json columns _fields = do
         )
     )
 
-fromSelectRows :: Ir.AnnSelectG 'BigQuery Void (Ir.AnnFieldG 'BigQuery Void) Expression -> FromIr BigQuery.Select
+fromSelectRows :: Ir.AnnSelectG 'BigQuery Void (Ir.AnnFieldG 'BigQuery Void) Expression -> FromIr BigQuery.PartitionableSelect
 fromSelectRows annSelectG = do
+  let Ir.AnnSelectG
+        { _asnFields = fields,
+          _asnFrom = from,
+          _asnPerm = perm,
+          _asnArgs = args,
+          _asnStrfyNum = num
+        } = annSelectG
+      Ir.TablePerm {_tpLimit = mPermLimit, _tpFilter = permFilter} = perm
+      permissionBasedTop =
+        maybe NoTop (Top . fromIntegral) mPermLimit
+      stringifyNumbers =
+        if num
+          then StringifyNumbers
+          else LeaveNumbersAlone
   selectFrom <-
     case from of
       Ir.FromTable qualifiedObject -> fromQualifiedTable qualifiedObject
@@ -190,7 +202,7 @@ fromSelectRows annSelectG = do
       argsWhere,
       argsJoins,
       argsTop,
-      argsDistinct = Proxy,
+      argsDistinct,
       argsOffset,
       argsExistingJoins
     } <-
@@ -205,35 +217,119 @@ fromSelectRows annSelectG = do
     NE.nonEmpty (concatMap (toList . fieldSourceProjections True) fieldSources)
       `onNothing` refute (pure NoProjectionFields)
   globalTop <- getGlobalTop
+  let select =
+        Select
+          { selectCardinality = Many,
+            selectFinalWantedFields = pure (fieldTextNames fields),
+            selectGroupBy = mempty,
+            selectOrderBy = argsOrderBy,
+            -- We DO APPLY the global top here, because this pulls down all rows.
+            selectTop = globalTop <> permissionBasedTop <> argsTop,
+            selectProjections,
+            selectFrom,
+            selectJoins = argsJoins <> concat (mapMaybe fieldSourceJoins fieldSources),
+            selectWhere = argsWhere <> Where [filterExpression],
+            selectOffset = int64Expr <$> argsOffset
+          }
+  case argsDistinct of
+    Nothing ->
+      pure $ simpleSelect select
+    Just distinct ->
+      simulateDistinctOn select distinct argsOrderBy
+
+-- | Simulates DISTINCT ON for BigQuery using ROW_NUMBER() partitioned over distinct fields
+--
+-- Example:
+--
+-- For a GraphQL query:
+-- @
+-- hasura_test_article(distinct_on: author_id, order_by: [{author_id: asc}, {created_at: asc}]) {
+--   id
+--   title
+-- }
+-- @
+--
+-- it should produce from a query without a `distinct_on` clause:
+--
+-- SELECT `id`, `title`
+-- FROM `hasura_test`.`article`
+-- ORDER BY `author_id` ASC, `created_at` ASC
+--
+-- a query of the following form:
+--
+-- SELECT `id`, `title`
+-- FROM (SELECT *,
+--              ROW_NUMBER() OVER (PARTITION BY `author_id` ORDER BY `created_at` ASC) as `idx1`
+--       FROM `hasura_test`.`article`) as `t_article1`
+-- WHERE (`t_article1`.`idx1` = 1)
+-- ORDER BY `t_article1`.`author_id` ASC
+--
+-- Note: this method returns PartitionableSelect as it could be joined using an array relation
+-- which requires extra fields added to the PARTITION BY clause to return proper results
+simulateDistinctOn :: Select -> NonEmpty ColumnName -> Maybe (NonEmpty OrderBy) -> FromIr PartitionableSelect
+simulateDistinctOn select distinctOnColumns orderByColumns = do
+  rowNumAlias <- generateEntityAlias IndexTemplate
   pure
-    Select
-      { selectCardinality = Many,
-        selectFinalWantedFields = pure (fieldTextNames fields),
-        selectGroupBy = mempty,
-        selectOrderBy = argsOrderBy,
-        -- We DO APPLY the global top here, because this pulls down all rows.
-        selectTop = globalTop <> permissionBasedTop <> argsTop,
-        selectProjections,
-        selectFrom,
-        selectJoins = argsJoins <> concat (mapMaybe fieldSourceJoins fieldSources),
-        selectWhere = argsWhere <> Where [filterExpression],
-        selectOffset = argsOffset
+    PartitionableSelect
+      { pselectFrom = selectFrom select,
+        pselectFinalize = \mExtraPartitionField ->
+          let -- we use the same alias both for outer and inner selects
+              alias = entityAliasText (fromAlias (selectFrom select))
+              distinctFields = fmap (\(ColumnName name) -> FieldName name alias) distinctOnColumns
+              finalDistinctFields = case mExtraPartitionField of
+                Just extraFields
+                  | Just neExtraFields <- nonEmpty extraFields ->
+                    neExtraFields <> distinctFields
+                _ -> distinctFields
+              (distinctOnOrderBy, innerOrderBy) =
+                case orderByColumns of
+                  Just orderBy ->
+                    let (distincts, others) = NE.partition (\OrderBy {..} -> orderByFieldName `elem` distinctFields) orderBy
+                     in (NE.nonEmpty distincts, NE.nonEmpty others)
+                  Nothing ->
+                    (Nothing, Nothing)
+              innerFrom =
+                FromSelect
+                  Aliased
+                    { aliasedAlias = alias,
+                      aliasedThing =
+                        select
+                          { selectProjections =
+                              StarProjection
+                                :| [ WindowProjection
+                                       ( Aliased
+                                           { aliasedAlias = unEntityAlias rowNumAlias,
+                                             aliasedThing =
+                                               RowNumberOverPartitionBy
+                                                 finalDistinctFields
+                                                 innerOrderBy
+                                                 -- Above: Having the order by
+                                                 -- in here ensures that we get the proper
+                                                 -- row as the first one we select
+                                                 -- in the outer select WHERE condition
+                                                 -- to simulate DISTINCT ON semantics
+                                           }
+                                       )
+                                   ],
+                            selectTop = mempty,
+                            selectJoins = mempty,
+                            selectOrderBy = mempty,
+                            selectOffset = Nothing,
+                            selectGroupBy = mempty,
+                            selectFinalWantedFields = mempty
+                          }
+                    }
+           in select
+                { selectFrom = innerFrom,
+                  selectWhere =
+                    Where
+                      [ EqualExpression
+                          (ColumnExpression FieldName {fieldNameEntity = alias, fieldName = unEntityAlias rowNumAlias})
+                          (int64Expr 1)
+                      ],
+                  selectOrderBy = distinctOnOrderBy
+                }
       }
-  where
-    Ir.AnnSelectG
-      { _asnFields = fields,
-        _asnFrom = from,
-        _asnPerm = perm,
-        _asnArgs = args,
-        _asnStrfyNum = num
-      } = annSelectG
-    Ir.TablePerm {_tpLimit = mPermLimit, _tpFilter = permFilter} = perm
-    permissionBasedTop =
-      maybe NoTop Top mPermLimit
-    stringifyNumbers =
-      if num
-        then StringifyNumbers
-        else LeaveNumbersAlone
 
 fromSelectAggregate ::
   Maybe (EntityAlias, HashMap ColumnName ColumnName) ->
@@ -244,7 +340,7 @@ fromSelectAggregate minnerJoinFields annSelectG = do
     case from of
       Ir.FromTable qualifiedObject -> fromQualifiedTable qualifiedObject
       _ -> refute (pure (FromTypeUnsupported from))
-  args'@Args {argsWhere, argsOrderBy, argsJoins, argsTop, argsOffset, argsDistinct = Proxy} <-
+  args'@Args {argsWhere, argsOrderBy, argsJoins, argsTop, argsOffset, argsDistinct} <-
     runReaderT (fromSelectArgsG args) (fromAlias selectFrom)
   filterExpression <-
     runReaderT (fromAnnBoolExp permFilter) (fromAlias selectFrom)
@@ -271,6 +367,45 @@ fromSelectAggregate minnerJoinFields annSelectG = do
       )
       (refute (pure NoProjectionFields))
   indexAlias <- generateEntityAlias IndexTemplate
+  let innerSelectAlias = entityAliasText (fromAlias selectFrom)
+      mDistinctFields = fmap (fmap (\(ColumnName name) -> FieldName name innerSelectAlias)) argsDistinct
+      mPartitionFields =
+        fmap (NE.fromList . map fst) mforeignKeyConditions <> mDistinctFields
+      innerProjections =
+        case mPartitionFields of
+          Nothing -> pure StarProjection
+          Just partitionFields ->
+            StarProjection
+              :|
+              -- We setup an index over every row in
+              -- the sub select.  Then if you look at
+              -- the outer Select, you can see we apply
+              -- a WHERE that uses this index for
+              -- LIMIT/OFFSET or DISTINCT ON.
+              [ WindowProjection
+                  ( Aliased
+                      { aliasedAlias = unEntityAlias indexAlias,
+                        aliasedThing =
+                          RowNumberOverPartitionBy
+                            -- The row numbers start from 1.
+                            partitionFields
+                            argsOrderBy
+                            -- Above: Having the order by
+                            -- in here ensures that the
+                            -- row numbers are ordered by
+                            -- this ordering. Below, we
+                            -- order again for the
+                            -- general row order. Both
+                            -- are needed!
+                      }
+                  )
+              ]
+      indexColumn =
+        ColumnExpression $
+          FieldName
+            { fieldNameEntity = innerSelectAlias,
+              fieldName = unEntityAlias indexAlias
+            }
   pure
     Select
       { selectCardinality = One,
@@ -283,36 +418,7 @@ fromSelectAggregate minnerJoinFields annSelectG = do
             ( Aliased
                 { aliasedThing =
                     Select
-                      { selectProjections =
-                          case mforeignKeyConditions of
-                            Nothing -> pure StarProjection
-                            Just innerJoinFields ->
-                              pure StarProjection
-                                <>
-                                -- We setup an index over every row in
-                                -- the sub select.  Then if you look at
-                                -- the outer Select, you can see we apply
-                                -- a WHERE that uses this index for
-                                -- LIMIT/OFFSET.
-                                pure
-                                  ( WindowProjection
-                                      ( Aliased
-                                          { aliasedAlias = unEntityAlias indexAlias,
-                                            aliasedThing =
-                                              RowNumberOverPartitionBy
-                                                -- The row numbers start from 1.
-                                                (NE.fromList (map fst innerJoinFields))
-                                                argsOrderBy
-                                                -- Above: Having the order by
-                                                -- in here ensures that the
-                                                -- row numbers are ordered by
-                                                -- this ordering. Below, we
-                                                -- order again for the
-                                                -- general row order. Both
-                                                -- are needed!
-                                          }
-                                      )
-                                  ),
+                      { selectProjections = innerProjections,
                         selectFrom,
                         selectJoins = argsJoins,
                         selectWhere = argsWhere <> (Where [filterExpression]),
@@ -325,55 +431,51 @@ fromSelectAggregate minnerJoinFields annSelectG = do
                         selectFinalWantedFields = Nothing,
                         selectCardinality = Many,
                         selectTop = maybe argsTop (const NoTop) mforeignKeyConditions,
-                        selectOffset = maybe argsOffset (const Nothing) mforeignKeyConditions,
+                        -- we apply offset only if we don't have partitions
+                        -- when we do OFFSET/LIMIT based on ROW_NUMBER()
+                        selectOffset = maybe (int64Expr <$> argsOffset) (const Nothing) mPartitionFields,
                         selectGroupBy = mempty
                       },
-                  aliasedAlias = entityAliasText (fromAlias selectFrom)
+                  aliasedAlias = innerSelectAlias
                 }
             ),
         selectJoins = concat (mapMaybe fieldSourceJoins fieldSources),
         selectWhere =
-          case mforeignKeyConditions of
+          case mPartitionFields of
             Nothing -> mempty
             Just {} ->
               let offset =
-                    case argsOffset of
-                      Nothing -> mempty
-                      Just offset' ->
-                        Where
-                          -- Apply an offset using the row_number from above.
-                          [ OpExpression
-                              MoreOp
-                              ( ColumnExpression
-                                  FieldName
-                                    { fieldNameEntity =
-                                        coerce (fromAlias selectFrom),
-                                      fieldName = unEntityAlias indexAlias
-                                    }
-                              )
-                              offset'
-                          ]
+                    case argsDistinct of
+                      Nothing ->
+                        case argsOffset of
+                          Nothing -> mempty
+                          Just offset' ->
+                            -- Apply an offset using the row_number from above.
+                            [ OpExpression
+                                MoreOp
+                                indexColumn
+                                (int64Expr offset')
+                            ]
+                      Just {} ->
+                        -- in case of distinct_on we need to select the row number offset+1
+                        -- effectively skipping number of rows equal to offset
+                        [ EqualExpression
+                            indexColumn
+                            (int64Expr (fromMaybe 0 argsOffset + 1))
+                        ]
                   limit =
                     case argsTop of
                       NoTop -> mempty
                       Top limit' ->
-                        Where
-                          -- Apply a limit using the row_number from above.
-                          [ OpExpression
-                              LessOp
-                              ( ColumnExpression
-                                  FieldName
-                                    { fieldNameEntity =
-                                        coerce (fromAlias selectFrom),
-                                      fieldName = unEntityAlias indexAlias
-                                    }
-                              )
-                              ( ValueExpression . IntegerValue . Int64 . tshow $
-                                  limit' + 1 -- Because the row_number() indexing starts at 1.
-                                  -- So idx<l+1  means idx<2 where l = 1 i.e. "limit to 1 row".
-                              )
-                          ]
-               in offset <> limit,
+                        -- Apply a limit using the row_number from above.
+                        [ OpExpression
+                            LessOp
+                            indexColumn
+                            ( int64Expr (limit' + 1) -- Because the row_number() indexing starts at 1.
+                            -- So idx<l+1  means idx<2 where l = 1 i.e. "limit to 1 row".
+                            )
+                        ]
+               in Where (offset <> limit),
         selectOrderBy = Nothing,
         selectOffset = Nothing
       }
@@ -387,7 +489,7 @@ fromSelectAggregate minnerJoinFields annSelectG = do
       } = annSelectG
     Ir.TablePerm {_tpLimit = mPermLimit, _tpFilter = permFilter} = perm
     permissionBasedTop =
-      maybe NoTop Top mPermLimit
+      maybe NoTop (Top . fromIntegral) mPermLimit
     stringifyNumbers =
       if num
         then StringifyNumbers
@@ -401,8 +503,8 @@ data Args = Args
     argsOrderBy :: Maybe (NonEmpty OrderBy),
     argsJoins :: [Join],
     argsTop :: Top,
-    argsOffset :: Maybe Expression,
-    argsDistinct :: Proxy (Maybe (NonEmpty FieldName)),
+    argsOffset :: Maybe Int.Int64,
+    argsDistinct :: Maybe (NonEmpty ColumnName),
     argsExistingJoins :: Map TableName EntityAlias
   }
   deriving (Show)
@@ -416,20 +518,9 @@ data UnfurledJoin = UnfurledJoin
 
 fromSelectArgsG :: Ir.SelectArgsG 'BigQuery Expression -> ReaderT EntityAlias FromIr Args
 fromSelectArgsG selectArgsG = do
-  let argsOffset = ValueExpression . IntegerValue . Int64 . tshow <$> moffset
   argsWhere <-
     maybe (pure mempty) (fmap (Where . pure) . fromAnnBoolExp) mannBoolExp
-  argsTop <- maybe (pure mempty) (pure . Top) mlimit
-  -- Not supported presently, per Vamshi:
-  --
-  -- > It is hardly used and we don't have to go to great lengths to support it.
-  --
-  -- But placeholdering the code so that when it's ready to be used,
-  -- you can just drop the Proxy wrapper.
-  argsDistinct <-
-    case mdistinct of
-      Nothing -> pure Proxy
-      Just {} -> refute (pure DistinctIsn'tSupported)
+  let argsTop = maybe mempty (Top . fromIntegral) mlimit
   (argsOrderBy, joins) <-
     runWriterT (traverse fromAnnotatedOrderByItemG (maybe [] toList orders))
   -- Any object-relation joins that we generated, we record their
@@ -440,13 +531,14 @@ fromSelectArgsG selectArgsG = do
     Args
       { argsJoins = toList (fmap unfurledJoin joins),
         argsOrderBy = NE.nonEmpty argsOrderBy,
+        argsDistinct = mdistinct,
         ..
       }
   where
     Ir.SelectArgs
       { _saWhere = mannBoolExp,
         _saLimit = mlimit,
-        _saOffset = moffset,
+        _saOffset = argsOffset,
         _saDistinct = mdistinct,
         _saOrderBy = orders
       } = selectArgsG
@@ -1213,17 +1305,22 @@ fromArrayAggregateSelectG annRelationSelectG = do
 --
 --     ORDER BY artist_other_id;
 --     ^ Ordering for the artist table should appear here.
+--
+-- Note: if original select already uses a PARTITION BY internally (for distinct_on)
+-- join fields are added to partition expressions to give proper semantics of distinct_on
+-- combined with an array relation
 fromArrayRelationSelectG ::
   Ir.ArrayRelationSelectG 'BigQuery Void Expression ->
   ReaderT EntityAlias FromIr Join
 fromArrayRelationSelectG annRelationSelectG = do
-  select <- lift (fromSelectRows annSelectG) -- Take the original select.
+  pselect <- lift (fromSelectRows annSelectG) -- Take the original select.
   joinFieldName <- lift (fromRelName aarRelationshipName)
   alias <- lift (generateEntityAlias (ArrayRelationTemplate joinFieldName))
   indexAlias <- lift (generateEntityAlias IndexTemplate)
   joinOn <- fromMappingFieldNames alias mapping
   innerJoinFields <-
-    fromMappingFieldNames (fromAlias (selectFrom select)) mapping
+    fromMappingFieldNames (fromAlias (pselectFrom pselect)) mapping
+  let select = withExtraPartitionFields pselect $ map fst innerJoinFields
   let joinFieldProjections =
         map
           ( \(fieldName', _) ->

@@ -216,6 +216,9 @@ class TestGraphQLQueryBasicBigquery:
     def test_agg_nodes(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + "/agg_nodes.yaml", transport)
 
+    def test_distinct_on(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + "/distinct_on.yaml", transport)
+
     @classmethod
     def dir(cls):
         return 'queries/graphql_query/bigquery'
