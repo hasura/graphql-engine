@@ -3,6 +3,7 @@
 ## Next release
 (Add highlights/major features below)
 
+- server: extend transactions to MSSQL GraphQL queries and `mssql_run_sql` /v2/query API
 - server: improve error messages in MSSQL database query exceptions
 - server: in mssql transactions, rollback only if the transaction is active
 - server: add request and response bodies to OpenAPI specification of REST endpoints
@@ -14,10 +15,11 @@
 - server: extend support for insert mutations to tables without primary key constraint in a MSSQL backend
 - server: fix parsing FLOAT64s in scientific notation and non-finite ones in BigQuery
 - server: extend support for the `min`/`max` aggregates to all comparable types in BigQuery
+- server: fix support for joins in aggregates nodes in BigQuery
 - cli: migrate and seed subcommands has an option in prompt to choose and apply operation on all available databases
 - cli: fix `metadata diff --type json | unified-json` behaving incorrectly and showing diff in YAML format.
 - cli: fix regression in `migrate create` command (#7971)
-- server: fix support for joins in aggregates nodes in BigQuery
+- cli: stop using `/healthz` endpoint to determine server health
 
 ## v2.1.1
 

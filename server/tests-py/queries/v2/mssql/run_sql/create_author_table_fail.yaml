@@ -9,12 +9,14 @@ query:
       CREATE TABLE [author]([id] int not null);
 response:
   internal:
-    tag: unsuccessful_return_code
-    contents:
-    - odbc_SQLExecDirectW
-    - -1
-    - "[Microsoft][ODBC Driver 17 for SQL Server][SQL Server]There is already an object\
-      \ named 'author' in the database."
+    exception:
+      tag: unsuccessful_return_code
+      contents:
+      - odbc_SQLExecDirectW
+      - -1
+      - "[Microsoft][ODBC Driver 17 for SQL Server][SQL Server]There is already an object\
+        \ named 'author' in the database."
+    query: "CREATE TABLE [author]([id] int not null);\n"
   path: $
   error: sql query exception
   code: mssql-error

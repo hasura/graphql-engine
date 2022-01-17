@@ -9,10 +9,11 @@ module Database.MSSQL.Transaction
     multiRowQueryE,
     rawQuery,
     rawQueryE,
-    buildGenericTxE,
+    buildGenericQueryTxE,
     TxT,
     TxET (..),
     MSSQLTxError (..),
+    withTxET,
   )
 where
 
@@ -27,6 +28,8 @@ import Control.Monad.Except
 import Control.Monad.IO.Class (MonadIO (..))
 import Control.Monad.Morph (MFunctor (hoist), MonadTrans (..))
 import Control.Monad.Reader (MonadFix, MonadReader, ReaderT (..))
+import Control.Monad.Trans.Control (MonadBaseControl)
+import Database.MSSQL.Pool
 import Database.ODBC.SQLServer (FromRow)
 import Database.ODBC.SQLServer qualified as ODBC
 import Hasura.Prelude (Text, hoistEither, liftEither, mapLeft)
@@ -34,6 +37,7 @@ import Prelude
 
 data MSSQLTxError
   = MSSQLQueryError !ODBC.Query !ODBC.ODBCException
+  | MSSQLConnError !ODBC.ODBCException
   | MSSQLInternal !Text
   deriving (Eq, Show)
 
@@ -182,52 +186,56 @@ rawQueryE ::
   -- | Query to run
   ODBC.Query ->
   TxET e m a
-rawQueryE ef rf q = TxET $
-  ReaderT $ \conn ->
-    hoist liftIO $
-      withExceptT ef $
-        execQuery conn q
-          >>= liftEither . mapLeft (MSSQLQueryError q . ODBC.DataRetrievalError) . rf
+rawQueryE ef rf q = do
+  rows <- buildGenericQueryTxE ef q id ODBC.query
+  liftEither $ mapLeft (ef . MSSQLQueryError q . ODBC.DataRetrievalError) $ rf (MSSQLResult rows)
 
 -- | Build a generic transaction out of an IO action
-buildGenericTxE ::
+buildGenericQueryTxE ::
   (MonadIO m) =>
   -- | Exception modifier
-  (ODBC.ODBCException -> e) ->
+  (MSSQLTxError -> e) ->
+  -- | The Query
+  query ->
+  -- | Query to ODBC.Query converter
+  (query -> ODBC.Query) ->
   -- | IO action
-  (ODBC.Connection -> IO a) ->
+  (ODBC.Connection -> query -> IO a) ->
   TxET e m a
-buildGenericTxE ef f = TxET $
-  ReaderT $ \conn -> do
-    result <- liftIO $ try $ f conn
-    withExceptT ef $ hoistEither result
+buildGenericQueryTxE errorF query convertQ runQuery = TxET $
+  ReaderT $ \conn -> withExceptT errorF $ execQuery query convertQ (runQuery conn)
 
 execQuery ::
+  forall m a query.
   (MonadIO m) =>
-  ODBC.Connection ->
-  ODBC.Query ->
-  ExceptT MSSQLTxError m MSSQLResult
-execQuery conn query = do
-  result :: Either ODBC.ODBCException [[ODBC.Value]] <- liftIO $ try $ ODBC.query conn query
-  withExceptT (MSSQLQueryError query) $ hoistEither $ MSSQLResult <$> result
+  query ->
+  (query -> ODBC.Query) ->
+  (query -> IO a) ->
+  ExceptT MSSQLTxError m a
+execQuery query toODBCQuery runQuery = do
+  result :: Either ODBC.ODBCException a <- liftIO $ try $ runQuery query
+  withExceptT (MSSQLQueryError $ toODBCQuery query) $ hoistEither result
 
 -- | Run a command on the given connection wrapped in a transaction.
 runTx ::
-  MonadIO m =>
+  (MonadIO m, MonadBaseControl IO m) =>
   TxT m a ->
-  ODBC.Connection ->
+  MSSQLPool ->
   ExceptT MSSQLTxError m a
 runTx = runTxE id
 
 -- | Run a command on the given connection wrapped in a transaction.
 runTxE ::
-  MonadIO m =>
+  (MonadIO m, MonadBaseControl IO m) =>
   (MSSQLTxError -> e) ->
   TxET e m a ->
-  ODBC.Connection ->
+  MSSQLPool ->
   ExceptT e m a
-runTxE ef tx =
-  asTransaction ef (`execTx` tx)
+runTxE ef tx pool = do
+  withMSSQLPool pool (asTransaction ef (`execTx` tx))
+    >>= hoistEither . mapLeft (ef . MSSQLConnError)
+
+-- withConn pool $ asTransaction txm $ \connRsrc -> execTx connRsrc tx
 
 {-# INLINE execTx #-}
 execTx :: ODBC.Connection -> TxET e m a -> ExceptT e m a
@@ -251,3 +259,6 @@ asTransaction ef f conn = do
     rollback err = do
       withExceptT ef $ execTx conn rollbackTx
       throwError err
+
+withTxET :: Monad m => (e1 -> e2) -> TxET e1 m a -> TxET e2 m a
+withTxET f (TxET m) = TxET $ hoist (withExceptT f) m

@@ -1,3 +1,5 @@
+{-# OPTIONS_GHC -fno-warn-orphans #-}
+
 -- | MSSQL Connection
 --
 --   This module handles the connection against an MS SQL Server.
@@ -5,42 +7,41 @@
 --   and conversion functions between MSSQL and graphql-engine.
 module Hasura.Backends.MSSQL.Connection
   ( MSSQLConnConfiguration (MSSQLConnConfiguration),
-    MSSQLPool,
     MSSQLSourceConfig (MSSQLSourceConfig, _mscExecCtx),
     MSSQLExecCtx (..),
     createMSSQLPool,
-    drainMSSQLPool,
     fromMSSQLTxError,
     getEnv,
     odbcExceptionToJSONValue,
     odbcValueToJValue,
-    runJSONPathQuery,
-    withMSSQLPool,
     mkMSSQLExecCtx,
   )
 where
 
-import Control.Exception.Lifted qualified as EL
 import Control.Monad.Trans.Control
 import Data.Aeson
 import Data.Aeson qualified as J
 import Data.Aeson.Casing
 import Data.Aeson.TH
 import Data.Environment qualified as Env
-import Data.Pool qualified as Pool
 import Data.Text (pack, unpack)
-import Database.MSSQL.Transaction
+import Database.MSSQL.Pool qualified as MSPool
+import Database.MSSQL.Transaction qualified as MSTx
 import Database.ODBC.SQLServer qualified as ODBC
 import Hasura.Base.Error
 import Hasura.Incremental (Cacheable (..))
 import Hasura.Prelude
 
--- | ODBC connection string for MSSQL server
-newtype MSSQLConnectionString = MSSQLConnectionString {unMSSQLConnectionString :: Text}
-  deriving (Show, Eq, ToJSON, FromJSON, Cacheable, Hashable, NFData)
+-- * Orphan instances
+
+instance Cacheable MSPool.ConnectionString
+
+instance Hashable MSPool.ConnectionString
+
+instance NFData MSPool.ConnectionString
 
 data InputConnectionString
-  = RawString !MSSQLConnectionString
+  = RawString !MSPool.ConnectionString
   | FromEnvironment !Text
   deriving stock (Show, Eq, Generic)
 
@@ -124,36 +125,32 @@ instance NFData MSSQLConnConfiguration
 
 $(deriveJSON hasuraJSON {omitNothingFields = True} ''MSSQLConnConfiguration)
 
-newtype MSSQLPool = MSSQLPool (Pool.Pool ODBC.Connection)
-
 createMSSQLPool ::
   MonadIO m =>
   QErrM m =>
   MSSQLConnectionInfo ->
   Env.Environment ->
-  m (MSSQLConnectionString, MSSQLPool)
+  m (MSPool.ConnectionString, MSPool.MSSQLPool)
 createMSSQLPool (MSSQLConnectionInfo iConnString MSSQLPoolSettings {..}) env = do
   connString <- resolveInputConnectionString env iConnString
-  pool <-
-    liftIO $
-      MSSQLPool
-        <$> Pool.createPool
-          (ODBC.connect $ unMSSQLConnectionString connString)
-          ODBC.close
-          1
-          (fromIntegral _mpsIdleTimeout)
-          _mpsMaxConnections
+  let connOptions =
+        MSPool.ConnectionOptions
+          { _coConnections = _mpsMaxConnections,
+            _coStripes = 1,
+            _coIdleTime = fromIntegral _mpsIdleTimeout
+          }
+  pool <- liftIO $ MSPool.initMSSQLPool connString connOptions
   pure (connString, pool)
 
 resolveInputConnectionString ::
   QErrM m =>
   Env.Environment ->
   InputConnectionString ->
-  m MSSQLConnectionString
+  m MSPool.ConnectionString
 resolveInputConnectionString env =
   \case
     (RawString cs) -> pure cs
-    (FromEnvironment envVar) -> MSSQLConnectionString <$> getEnv env envVar
+    (FromEnvironment envVar) -> MSPool.ConnectionString <$> getEnv env envVar
 
 getEnv :: QErrM m => Env.Environment -> Text -> m Text
 getEnv env k = do
@@ -162,55 +159,34 @@ getEnv env k = do
     Nothing -> throw400 NotFound $ "environment variable '" <> k <> "' not set"
     Just envVal -> return (pack envVal)
 
-drainMSSQLPool :: MSSQLPool -> IO ()
-drainMSSQLPool (MSSQLPool pool) =
-  Pool.destroyAllResources pool
-
 odbcExceptionToJSONValue :: ODBC.ODBCException -> Value
 odbcExceptionToJSONValue =
   $(mkToJSON defaultOptions {constructorTagModifier = snakeCase} ''ODBC.ODBCException)
 
-runJSONPathQuery ::
-  (MonadError QErr m, MonadIO m, MonadBaseControl IO m) =>
-  MSSQLRunTx ->
-  ODBC.Query ->
-  m Text
-runJSONPathQuery mssqlRunTx query = mconcat <$> mssqlRunTx (`ODBC.query` query)
-
-withMSSQLPool ::
-  (MonadIO m, MonadBaseControl IO m, MonadError QErr m) =>
-  MSSQLPool ->
-  (ODBC.Connection -> m a) ->
-  m a
-withMSSQLPool (MSSQLPool pool) f = do
-  res <- EL.try $ Pool.withResource pool f
-  onLeft res $ \e ->
-    throw500WithDetail "sql server exception" $ odbcExceptionToJSONValue e
-
 type MSSQLRunTx =
-  forall m a. (MonadError QErr m, MonadIO m, MonadBaseControl IO m) => (ODBC.Connection -> m a) -> m a
+  forall m a. (MonadIO m, MonadBaseControl IO m) => MSTx.TxET QErr m a -> ExceptT QErr m a
 
 -- | Execution Context required to execute MSSQL transactions
 data MSSQLExecCtx = MSSQLExecCtx
   { -- | A function that runs read-only queries
-    mssqlRunReadOnly :: !MSSQLRunTx,
-    -- | A function that runs read-write queries
-    mssqlRunReadWrite :: !MSSQLRunTx,
+    mssqlRunReadOnly :: MSSQLRunTx,
+    -- | A function that runs read-write queries; run in a transaction
+    mssqlRunReadWrite :: MSSQLRunTx,
     -- | Destroys connection pools
     mssqlDestroyConn :: IO ()
   }
 
 -- | Creates a MSSQL execution context for a single primary pool
-mkMSSQLExecCtx :: MSSQLPool -> MSSQLExecCtx
+mkMSSQLExecCtx :: MSPool.MSSQLPool -> MSSQLExecCtx
 mkMSSQLExecCtx pool =
   MSSQLExecCtx
-    { mssqlRunReadOnly = withMSSQLPool pool,
-      mssqlRunReadWrite = withMSSQLPool pool,
-      mssqlDestroyConn = drainMSSQLPool pool
+    { mssqlRunReadOnly = \tx -> MSTx.runTxE fromMSSQLTxError tx pool,
+      mssqlRunReadWrite = \tx -> MSTx.runTxE fromMSSQLTxError tx pool,
+      mssqlDestroyConn = MSPool.drainMSSQLPool pool
     }
 
 data MSSQLSourceConfig = MSSQLSourceConfig
-  { _mscConnectionString :: !MSSQLConnectionString,
+  { _mscConnectionString :: !MSPool.ConnectionString,
     _mscExecCtx :: !MSSQLExecCtx
   }
   deriving (Generic)
@@ -243,12 +219,9 @@ odbcValueToJValue = \case
   ODBC.LocalTimeValue l -> J.toJSON l
   ODBC.NullValue -> J.Null
 
-newtype MSSQLConnErr = MSSQLConnErr {getConnErr :: Text}
-  deriving (Show, Eq, ToJSON)
-
-fromMSSQLTxError :: MSSQLTxError -> QErr
+fromMSSQLTxError :: MSTx.MSSQLTxError -> QErr
 fromMSSQLTxError = \case
-  MSSQLQueryError query exception ->
+  MSTx.MSSQLQueryError query exception ->
     (internalError "database query error")
       { qeInternal =
           Just $
@@ -258,7 +231,14 @@ fromMSSQLTxError = \case
                   "exception" .= odbcExceptionToJSONValue exception
                 ]
       }
-  MSSQLInternal err ->
+  MSTx.MSSQLConnError exception ->
+    (internalError "mssql connection error")
+      { qeInternal =
+          Just $
+            ExtraInternal $
+              object ["exception" .= odbcExceptionToJSONValue exception]
+      }
+  MSTx.MSSQLInternal err ->
     (internalError "mssql internal error")
       { qeInternal = Just $ ExtraInternal $ object ["error" .= err]
       }

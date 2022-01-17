@@ -22,6 +22,7 @@ import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.HashSet qualified as Set
 import Data.List.NonEmpty qualified as NE
 import Data.Text.Extended qualified as T
+import Database.MSSQL.Transaction qualified as Tx
 import Database.ODBC.SQLServer qualified as ODBC
 import Hasura.Backends.MSSQL.Connection
 import Hasura.Backends.MSSQL.Execute.Delete
@@ -89,15 +90,21 @@ msDBQueryPlan userInfo sourceName sourceConfig qrf = do
   statement <- planQuery sessionVariables qrf
   let printer = fromSelect statement
       queryString = ODBC.renderQuery $ toQueryPretty printer
-      odbcQuery = encJFromText <$> runJSONPathQuery (mssqlRunReadOnly $ _mscExecCtx sourceConfig) (toQueryFlat printer)
-  pure $ DBStepInfo @'MSSQL sourceName sourceConfig (Just queryString) odbcQuery
+  pure $ DBStepInfo @'MSSQL sourceName sourceConfig (Just queryString) (runSelectQuery printer)
+  where
+    runSelectQuery :: Printer -> ExceptT QErr IO EncJSON
+    runSelectQuery queryPrinter = do
+      let queryTx = encJFromText <$> Tx.singleRowQueryE fromMSSQLTxError (toQueryFlat queryPrinter)
+      mssqlRunReadOnly (_mscExecCtx sourceConfig) queryTx
 
 runShowplan ::
-  ODBC.Query -> ODBC.Connection -> IO [Text]
-runShowplan query conn = do
-  ODBC.exec conn "SET SHOWPLAN_TEXT ON"
-  texts <- ODBC.query conn query
-  ODBC.exec conn "SET SHOWPLAN_TEXT OFF"
+  MonadIO m =>
+  ODBC.Query ->
+  Tx.TxET QErr m [Text]
+runShowplan query = Tx.withTxET fromMSSQLTxError do
+  Tx.unitQuery "SET SHOWPLAN_TEXT ON"
+  texts <- Tx.multiRowQuery query
+  Tx.unitQuery "SET SHOWPLAN_TEXT OFF"
   -- we don't need to use 'finally' here - if an exception occurs,
   -- the connection is removed from the resource pool in 'withResource'.
   pure texts
@@ -118,16 +125,15 @@ msDBQueryExplain fieldName userInfo sourceName sourceConfig qrf = do
       odbcQuery =
         mssqlRunReadOnly
           (_mscExecCtx sourceConfig)
-          ( \conn -> liftIO do
-              showplan <- runShowplan query conn
-              pure
-                ( encJFromJValue $
-                    ExplainPlan
-                      fieldName
-                      (Just queryString)
-                      (Just showplan)
-                )
-          )
+          do
+            showplan <- runShowplan query
+            pure
+              ( encJFromJValue $
+                  ExplainPlan
+                    fieldName
+                    (Just queryString)
+                    (Just showplan)
+              )
   pure $
     AB.mkAnyBackend $
       DBStepInfo @'MSSQL sourceName sourceConfig Nothing odbcQuery
@@ -140,7 +146,7 @@ msDBLiveQueryExplain (LiveQueryPlan plan sourceConfig variables _) = do
   let (MultiplexedQuery' reselect) = _plqpQuery plan
       query = toQueryPretty $ fromSelect $ multiplexRootReselect [(dummyCohortId, variables)] reselect
       mssqlExecCtx = (_mscExecCtx sourceConfig)
-  explainInfo <- (mssqlRunReadOnly mssqlExecCtx) (liftIO . runShowplan query)
+  explainInfo <- liftEitherM $ runExceptT $ (mssqlRunReadOnly mssqlExecCtx) (runShowplan query)
   pure $ LiveQueryPlanExplanation (T.toTxt query) explainInfo variables
 
 --------------------------------------------------------------------------------
@@ -338,7 +344,7 @@ validateVariables sourceConfig sessionVariableValues prepState = do
   onJust
     canaryQuery
     ( \q -> do
-        _ :: [[ODBC.Value]] <- mssqlRunReadOnly (_mscExecCtx sourceConfig) (`ODBC.query` q)
+        _ :: [[ODBC.Value]] <- liftEitherM $ runExceptT $ mssqlRunReadOnly (_mscExecCtx sourceConfig) (Tx.multiRowQueryE fromMSSQLTxError q)
         pure ()
     )
 

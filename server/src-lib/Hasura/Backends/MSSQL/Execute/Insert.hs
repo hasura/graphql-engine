@@ -39,7 +39,7 @@ executeInsert userInfo stringifyNum sourceConfig annInsert = do
   -- Convert the leaf values from @'UnpreparedValue' to sql @'Expression'
   insert <- traverse (prepareValueQuery sessionVariables) annInsert
   let insertTx = buildInsertTx tableName withAlias stringifyNum insert
-  pure $ mssqlRunReadWrite (_mscExecCtx sourceConfig) $ Tx.runTxE fromMSSQLTxError insertTx
+  pure $ mssqlRunReadWrite (_mscExecCtx sourceConfig) insertTx
   where
     sessionVariables = _uiSession userInfo
     tableName = _aiTableName $ _aiData annInsert
