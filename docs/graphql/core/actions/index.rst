@@ -164,7 +164,7 @@ Learn more
   derive
   action-permissions
   action-relationships
-  transforms
+  rest-connectors
   debugging
   logs-clean-up
 
