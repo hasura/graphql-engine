@@ -4,11 +4,12 @@ import time
 import pytest
 import json
 import queue
-import ruamel.yaml as yaml
 from validate import check_query_f
 from collections import OrderedDict
+from ruamel.yaml import YAML
 
 usefixtures = pytest.mark.usefixtures
+yaml=YAML(typ='safe', pure=True)
 
 @pytest.fixture(scope='class')
 def ws_conn_init(hge_ctx, ws_client):
@@ -345,7 +346,7 @@ class TestSubscriptionLiveQueries:
         ws_client.init_as_admin()
 
         with open(self.dir() + "/steps.yaml") as c:
-            conf = yaml.safe_load(c)
+            conf = yaml.load(c)
 
         queryTmplt = """
         subscription ($result_limit: Int!) {
@@ -427,7 +428,7 @@ class TestSubscriptionLiveQueriesForGraphQLWS:
         ws_client_graphql_ws.init_as_admin()
 
         with open(self.dir() + "/steps.yaml") as c:
-            conf = yaml.safe_load(c)
+            conf = yaml.load(c)
 
         queryTmplt = """
         subscription ($result_limit: Int!) {
@@ -503,7 +504,7 @@ class TestSubscriptionMultiplexing:
 
     def test_extraneous_session_variables_are_discarded_from_query(self, hge_ctx):
         with open(self.dir() + '/articles_query.yaml') as c:
-            config = yaml.safe_load(c)
+            config = yaml.load(c)
 
         query = config['query']
         session_variables = {

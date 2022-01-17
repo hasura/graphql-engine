@@ -279,8 +279,8 @@ def pytest_configure_node(node):
     if is_help_option_present(node.config):
         return
     # Pytest has removed the global pytest.config
-    node.slaveinput["hge-url"] = node.config.hge_url_list.pop()
-    node.slaveinput["pg-url"] = node.config.pg_url_list.pop()
+    node.workerinput["hge-url"] = node.config.hge_url_list.pop()
+    node.workerinput["pg-url"] = node.config.pg_url_list.pop()
 
 def pytest_unconfigure(config):
     if is_help_option_present(config):
@@ -294,12 +294,12 @@ def hge_ctx(request):
     if is_master(config):
         hge_url = config.hge_url_list[0]
     else:
-        hge_url = config.slaveinput["hge-url"]
+        hge_url = config.workerinput["hge-url"]
 
     if is_master(config):
         pg_url = config.pg_url_list[0]
     else:
-        pg_url = config.slaveinput["pg-url"]
+        pg_url = config.workerinput["pg-url"]
 
     try:
         hge_ctx = HGECtx(hge_url, pg_url, config)
@@ -704,4 +704,4 @@ def is_master(config):
     """True if the code running the given pytest.config object is running in a xdist master
     node or not running xdist at all.
     """
-    return not hasattr(config, 'slaveinput')
+    return not hasattr(config, 'workerinput')

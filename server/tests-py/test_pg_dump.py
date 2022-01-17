@@ -1,6 +1,8 @@
 import pytest
-import ruamel.yaml as yaml
 import os
+from ruamel.yaml import YAML
+
+yaml=YAML(typ='safe', pure=True)
 
 resp_pg_version_map = {
     '9_5': 'response_9',
@@ -19,7 +21,7 @@ class TestPGDump:
         query_file = self.dir() + '/pg_dump_public.yaml'
         PG_VERSION = os.getenv('PG_VERSION', 'latest')
         with open(query_file, 'r') as stream:
-            q = yaml.safe_load(stream)
+            q = yaml.load(stream)
             headers = q['headers'] or {}
             if hge_ctx.hge_key is not None:
                 headers['x-hasura-admin-secret'] = hge_ctx.hge_key
@@ -33,7 +35,7 @@ class TestPGDump:
     def test_pg_dump_for_public_schema_for_user_role(self, hge_ctx):
         query_file = self.dir() + '/pg_dump_public.yaml'
         with open(query_file, 'r') as stream:
-            q = yaml.safe_load(stream)
+            q = yaml.load(stream)
             headers = q['headers'] or {}
             if hge_ctx.hge_key is not None:
                 headers['x-hasura-admin-secret'] = hge_ctx.hge_key
