@@ -126,7 +126,7 @@ func (o *ConsoleOptions) Run() error {
 	}
 
 	consoleRouter, err := console.BuildConsoleRouter(templateProvider, consoleTemplateVersion, o.StaticDir, gin.H{
-		"apiHost":              o.APIHost,
+		"apiHost":              o.addressOrAPIHost(),
 		"apiPort":              o.APIPort,
 		"cliVersion":           o.EC.Version.GetCLIVersion(),
 		"serverVersion":        o.EC.Version.GetServerVersion(),
@@ -174,4 +174,12 @@ func (o *ConsoleOptions) Run() error {
 	}
 
 	return console.Serve(serveOpts)
+}
+
+func (o *ConsoleOptions) addressOrAPIHost() string {
+	if o.Address != "localhost" {
+		return "http://" + o.Address
+	}
+
+	return o.APIHost
 }
