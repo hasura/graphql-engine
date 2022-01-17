@@ -12,6 +12,7 @@ import Data.Aeson qualified as J
 import Data.ByteString.Lazy qualified as L
 import Data.Environment qualified as Env
 import Data.HashMap.Strict qualified as HM
+import Data.Int qualified as Int
 import Data.Text qualified as T
 import Data.Text.Encoding qualified as T
 import Data.Time.Clock.System
@@ -28,7 +29,7 @@ import Hasura.RQL.Types.SourceCustomization
 import Hasura.RQL.Types.Table
 import Hasura.SQL.Backend
 
-defaultGlobalSelectLimit :: Int
+defaultGlobalSelectLimit :: Int.Int64
 defaultGlobalSelectLimit = 1000
 
 resolveSourceConfig ::

@@ -22,6 +22,12 @@ response:
       author:
         id: '2'
         name: Author 2
+    - id: '4'
+      title: Title 4
+      content: Content 4
+      author:
+        id: '2'
+        name: Author 2
 query:
   query: |
     query {

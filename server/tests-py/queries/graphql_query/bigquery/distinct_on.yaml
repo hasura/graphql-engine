@@ -1,0 +1,175 @@
+- description: oldest articles by author, distinct on is_published with author and count of citations
+  url: /v1/graphql
+  status: 200
+  response:
+    data:
+      hasura_test_article:
+      - id: '1'
+        title: Title 1
+        created_at: '2008-12-25T07:30:01Z'
+        is_published: false
+        author:
+          name: Author 1
+        article_citations_aggregate:
+          aggregate:
+            count: '2'
+      - id: '2'
+        title: Title 2
+        created_at: '2008-12-25T07:30:02Z'
+        is_published: true
+        author:
+          name: Author 1
+        article_citations_aggregate:
+          aggregate:
+            count: '1'
+      - id: '3'
+        title: Title 3
+        created_at: '2008-12-25T07:30:03Z'
+        is_published: false
+        author:
+          name: Author 2
+        article_citations_aggregate:
+          aggregate:
+            count: '0'
+  query:
+    query: |
+      query {
+        hasura_test_article(distinct_on: [author_id, is_published], order_by: [{author_id:asc}, {is_published: asc}, {created_at: asc}]) {
+          id
+          title
+          created_at
+          is_published
+          author {
+            name
+          }
+          article_citations_aggregate {
+            aggregate {
+              count
+            }
+          }
+        }
+      }
+
+- description: author with oldest articles, distinct on is_published, with sums of ids of those articles
+  url: /v1/graphql
+  status: 200
+  response:
+    data:
+      hasura_test_author:
+      - id: '1'
+        name: Author 1
+        articles:
+        - title: Title 1
+          id: '1'
+        - title: Title 2
+          id: '2'
+        articles_aggregate:
+          aggregate:
+            sum:
+              id: '3'
+      - id: '2'
+        name: Author 2
+        articles:
+        - title: Title 3
+          id: '3'
+        articles_aggregate:
+          aggregate:
+            sum:
+              id: '3'
+  query:
+    query: |
+      query {
+        hasura_test_author(order_by: [{id:asc}]) {
+          id
+          name
+          articles(distinct_on: is_published, order_by: [{is_published: asc}, {created_at: asc}]) {
+            title
+            id
+          }
+          articles_aggregate(distinct_on: is_published, order_by: [{is_published: asc}, {created_at: asc}]) {
+            aggregate {
+              sum {
+                id
+              }
+            }
+          }
+        }
+      }
+
+- description: author with newest articles, distinct on is_published, with sums of ids of those articles
+  url: /v1/graphql
+  status: 200
+  response:
+    data:
+      hasura_test_author:
+      - id: '1'
+        name: Author 1
+        articles:
+        - title: Title 1
+          id: '1'
+        - title: Title 2
+          id: '2'
+        articles_aggregate:
+          aggregate:
+            sum:
+              id: '3'
+      - id: '2'
+        name: Author 2
+        articles:
+        - title: Title 4
+          id: '4'
+        articles_aggregate:
+          aggregate:
+            sum:
+              id: '4'
+  query:
+    query: |
+      query {
+        hasura_test_author(order_by: [{id:asc}]) {
+          id
+          name
+          articles(distinct_on: is_published, order_by: [{is_published: asc}, {created_at: desc}]) {
+            title
+            id
+          }
+          articles_aggregate(distinct_on: is_published, order_by: [{is_published: asc}, {created_at: desc}]) {
+            aggregate {
+              sum {
+                id
+              }
+            }
+          }
+        }
+      }
+
+- description: first and last articles distinct by author and published status
+  url: /v1/graphql
+  status: 200
+  response:
+    data:
+      first:
+      - id: '1'
+        title: Title 1
+      - id: '2'
+        title: Title 2
+      - id: '3'
+        title: Title 3
+      last:
+      - id: '1'
+        title: Title 1
+      - id: '2'
+        title: Title 2
+      - id: '4'
+        title: Title 4
+  query:
+    query: |
+      query {
+        first: hasura_test_article(distinct_on: [author_id, is_published], order_by: [{author_id: asc}, {is_published: asc}, {created_at: asc}]) {
+          id
+          title
+        }
+        last: hasura_test_article(distinct_on: [author_id, is_published], order_by: [{author_id: asc}, {is_published: asc}, {created_at: desc}]) {
+          id
+          title
+        }
+      }

@@ -50,6 +50,28 @@
               author:
                 id: '2'
                 name: Author 2
+            - id: '4'
+              title: Title 4
+              author:
+                id: '2'
+                name: Author 2
+      - id: '4'
+        title: Title 4
+        author:
+          id: '2'
+          name: Author 2
+          articles_aggregate:
+            nodes:
+            - id: '3'
+              title: Title 3
+              author:
+                id: '2'
+                name: Author 2
+            - id: '4'
+              title: Title 4
+              author:
+                id: '2'
+                name: Author 2
   query:
     query: |
       query {
@@ -95,6 +117,8 @@
         articles_aggregate:
           nodes:
           - title: Title 3
+            article_citations: []
+          - title: Title 4
             article_citations: []
   query:
     query: |

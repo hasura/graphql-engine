@@ -184,6 +184,8 @@ instance Cacheable Int where unchanged _ = (==)
 
 instance Cacheable Int32 where unchanged _ = (==)
 
+instance Cacheable Int64 where unchanged _ = (==)
+
 instance Cacheable Integer where unchanged _ = (==)
 
 instance Cacheable Scientific where unchanged _ = (==)

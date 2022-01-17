@@ -20,7 +20,6 @@ import Hasura.GraphQL.Schema.Build qualified as GSB
 import Hasura.GraphQL.Schema.Common
 import Hasura.GraphQL.Schema.Select
 import Hasura.Prelude
-import Hasura.RQL.IR
 import Hasura.RQL.IR.Select qualified as IR
 import Hasura.RQL.Types
 import Language.GraphQL.Draft.Syntax qualified as G
@@ -44,7 +43,7 @@ instance BackendSchema 'BigQuery where
   nodesAggExtension = Just ()
 
   -- table arguments
-  tableArguments = bqTableArgs
+  tableArguments = defaultTableArgs
 
   -- indivdual components
   columnParser = bqColumnParser
@@ -144,34 +143,6 @@ bqBuildFunctionMutationFields ::
   m [a]
 bqBuildFunctionMutationFields _ _ _ _ _ =
   pure []
-
-----------------------------------------------------------------
--- Table arguments
-
-bqTableArgs ::
-  forall r m n.
-  MonadBuildSchema 'BigQuery r m n =>
-  SourceName ->
-  TableInfo 'BigQuery ->
-  SelPermInfo 'BigQuery ->
-  m (InputFieldsParser n (IR.SelectArgsG 'BigQuery (UnpreparedValue 'BigQuery)))
-bqTableArgs sourceName tableInfo selectPermissions = do
-  whereParser <- tableWhereArg sourceName tableInfo selectPermissions
-  orderByParser <- tableOrderByArg sourceName tableInfo selectPermissions
-  pure do
-    whereArg <- whereParser
-    orderByArg <- orderByParser
-    limitArg <- tableLimitArg
-    offsetArg <- tableOffsetArg
-    pure $
-      IR.SelectArgs
-        { IR._saWhere = whereArg,
-          IR._saOrderBy = orderByArg,
-          IR._saLimit = limitArg,
-          IR._saOffset = offsetArg,
-          -- not supported on BigQuery for now
-          IR._saDistinct = Nothing
-        }
 
 ----------------------------------------------------------------
 -- Individual components

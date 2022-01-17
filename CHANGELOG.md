@@ -8,6 +8,7 @@
 - server: in mssql transactions, rollback only if the transaction is active
 - server: add request and response bodies to OpenAPI specification of REST endpoints
 - server: implement upsert mutations for MS SQL Server (close #7864)
+- server: bigquery: implement `distinct_on`.
 
 ### Bug fixes and improvements
 (Add entries below in the order of server, console, cli, docs, others)

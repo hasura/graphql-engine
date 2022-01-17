@@ -37,6 +37,10 @@
           title: Title 3
           content: Content 3
           article_citations: []
+        - id: '4'
+          title: Title 4
+          content: Content 4
+          article_citations: []
   query:
     query: |
       query {
@@ -89,6 +93,12 @@
           article_citations_aggregate:
             aggregate:
               count: '0'
+        - id: '4'
+          title: Title 4
+          content: Content 4
+          article_citations_aggregate:
+            aggregate:
+              count: '0'
   query:
     query: |
       query {
@@ -135,6 +145,10 @@
           title: Title 3
           content: Content 3
           article_citations2: []
+        - id: '4'
+          title: Title 4
+          content: Content 4
+          article_citations2: []
   query:
     query: |
       query {
@@ -145,7 +159,7 @@
             id
             title
             content
-            article_citations2 {
+            article_citations2 (order_by: {cited_article_id: asc}) {
               description
             }
           }
