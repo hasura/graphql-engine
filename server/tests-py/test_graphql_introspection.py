@@ -1,13 +1,15 @@
 import pytest
-import ruamel.yaml as yaml
+from ruamel.yaml import YAML
 from validate import check_query_f, check_query
+
+yaml=YAML(typ='safe', pure=True)
 
 @pytest.mark.usefixtures('per_class_tests_db_state')
 class TestGraphqlIntrospection:
 
     def test_introspection(self, hge_ctx):
         with open(self.dir() + "/introspection.yaml") as c:
-            conf = yaml.safe_load(c)
+            conf = yaml.load(c)
         resp, _ = check_query(hge_ctx, conf)
         hasArticle = False
         hasArticleAuthorFKRel = False
@@ -58,7 +60,7 @@ class TestGraphqlIntrospectionWithCustomTableName:
     # while tracking a table with a custom name
     def test_introspection(self, hge_ctx):
         with open(self.dir() + "/introspection.yaml") as c:
-            conf = yaml.safe_load(c)
+            conf = yaml.load(c)
         resp, _ = check_query(hge_ctx, conf)
         hasMultiSelect = False
         hasAggregate = False
