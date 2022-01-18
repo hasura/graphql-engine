@@ -1,8 +1,0 @@
-type: bulk
-args:
-
-- type: mssql_track_table
-  args:
-    source: mssql
-    table:
-      name: author
