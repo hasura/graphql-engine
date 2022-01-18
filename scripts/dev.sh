@@ -486,7 +486,7 @@ elif [ "$MODE" = "test" ]; then
 
   if [ "$RUN_HLINT" = true ]; then
     if command -v hlint >/dev/null; then
-      (cd "$PROJECT_ROOT/server" && hlint src-*)
+      hlint "${PROJECT_ROOT}/server/src-"*
     else
       echo_warn "hlint is not installed: skipping"
     fi
