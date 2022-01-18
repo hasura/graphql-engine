@@ -109,11 +109,13 @@ const CreateETForm: React.FC<CreateETFormProps> = props => {
         value={table.schema}
       >
         <option value="">Select schema</option>
-        {Object.keys(databaseInfo).map(s => (
-          <option value={s} key={s}>
-            {s}
-          </option>
-        ))}
+        {Object.keys(databaseInfo)
+          .sort()
+          .map(s => (
+            <option value={s} key={s}>
+              {s}
+            </option>
+          ))}
       </select>
       <select
         onChange={handleTableChange}
@@ -124,13 +126,15 @@ const CreateETForm: React.FC<CreateETFormProps> = props => {
       >
         <option value="">Select table</option>
         {databaseInfo[table.schema] &&
-          Object.keys(databaseInfo[table.schema]).map(t => {
-            return (
-              <option key={t} value={t}>
-                {t}
-              </option>
-            );
-          })}
+          Object.keys(databaseInfo[table.schema])
+            .sort()
+            .map(t => {
+              return (
+                <option key={t} value={t}>
+                  {t}
+                </option>
+              );
+            })}
       </select>
       <hr className="my-md" />
       <div className={`${styles.add_mar_bottom} ${styles.selectOperations}`}>

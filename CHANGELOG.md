@@ -10,6 +10,7 @@
 - server: implement upsert mutations for MS SQL Server (close #7864)
 - server: bigquery: implement `distinct_on`.
 - console: action/event trigger transforms are now called REST connectors
+- console: fix list of tables (and schemas) being unsorted when creating a new trigger event (fix #6391)
 
 ### Bug fixes and improvements
 (Add entries below in the order of server, console, cli, docs, others)
