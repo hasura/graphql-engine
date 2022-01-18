@@ -263,7 +263,7 @@ Set a field to its default value during insert
 ----------------------------------------------
 
 To set a field to its ``default`` value, just omit it from the input object, irrespective of the
-default value configuration i.e. via MS SQL Server defaults or using column presets.
+default value configuration i.e. via MS SQL Server :ref:`defaults <mssql_defaults>` or using :ref:`column presets <mssql_column_presets>`.
 
 **Example:** If the default value of ``id`` is set to auto-incrementing integer, there's no need to pass the ``id`` field to the input object:
 

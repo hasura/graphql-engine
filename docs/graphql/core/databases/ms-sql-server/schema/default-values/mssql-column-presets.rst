@@ -1,11 +1,11 @@
 .. meta::
-  :description: Set field values for Postgres using role-based column presets
-  :keywords: hasura, docs, postgres, schema, role-based, column preset
+  :description: Set field values for MS SQL Server using role-based column presets
+  :keywords: hasura, docs, ms sql server, schema, role-based, column preset
 
-.. _pg_column_presets:
+.. _mssql_column_presets:
 
-Postgres: Setting values for fields using role-based column presets
-===================================================================
+MS SQL Server: Setting values for fields using role-based column presets
+========================================================================
 
 .. contents:: Table of contents
   :backlinks: none
@@ -37,20 +37,7 @@ Step 1: Configure a column preset
 
   .. tab:: Console
 
-    The column preset option is available under the ``Permissions`` tab of a table. Open the console and head to
-    ``Data -> [article] -> Permissions``:
-
-    .. thumbnail:: /img/graphql/core/schema/column-presets-option.png
-      :alt: Add a column preset in the permissions tab
-
-    Enable the column preset option to define presets for one or more columns. For each column, you can pick between
-    setting the preset using a static value or from a session variable.
-
-    .. thumbnail:: /img/graphql/core/schema/column-presets-value-options.png
-      :alt: Configure the column preset
-
-    For our chosen example, we'll use the ``from session variable`` option and configure the ``user_id`` column to be
-    automatically populated based on the value of the ``X-Hasura-User-Id`` session variable.
+    Support will be added soon.
 
   .. tab:: CLI
 
@@ -82,7 +69,7 @@ Step 1: Configure a column preset
 
   .. tab:: API
 
-    You can add column presets by using the :ref:`metadata_pg_create_insert_permission` metadata API:
+    You can add column presets by using the :ref:`mssql_create_insert_permission` metadata API:
 
     .. code-block:: http
       :emphasize-lines: 13-15
@@ -92,7 +79,7 @@ Step 1: Configure a column preset
       X-Hasura-Role: admin
 
       {
-        "type" : "pg_create_insert_permission",
+        "type" : "mssql_create_insert_permission",
         "args" : {
           "source": "<db_name>",
           "table" : "article",
@@ -154,5 +141,4 @@ passed in the ``X-Hasura-User-Id`` variable:
 Also see
 --------
 
-- :ref:`pg_postgres_defaults`
-- :ref:`pg_sql_functions_as_default`
+- :ref:`mssql_defaults`
