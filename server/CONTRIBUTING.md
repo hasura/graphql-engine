@@ -189,7 +189,7 @@ are not met.
   `-Werror` to `ghc-options` in your `cabal.project` is a good way of checking
   this.)
 - No lint failures: Use [hlint](https://github.com/ndmitchell/hlint) with our
-  custom config to validate your code, using `hlint --hint=server/.hlint.yaml`.
+  custom config to validate your code, using `hlint --hint=../.hlint.yaml`.
 - Consistent formatting: Use [ormolu](https://github.com/tweag/ormolu) to
   format your code. `ormolu -ei '*.hs'` will format all files with a `.hs`
   extension in the current directory.
