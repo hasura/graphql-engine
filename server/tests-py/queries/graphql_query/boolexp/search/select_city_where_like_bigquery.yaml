@@ -1,0 +1,21 @@
+description: Select cities ending with ham
+url: /v1/graphql
+status: 200
+response:
+  data:
+    hasura_test_city:
+    - name: Durham
+      country: USA
+    - name: Framlingham
+      country: UK
+query:
+  query: |
+    query {
+      hasura_test_city (
+      where: {name: {_like: "%ham" }},
+      order_by: {name: asc}
+      ) {
+        name
+        country
+      }
+    }

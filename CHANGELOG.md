@@ -67,6 +67,7 @@
 - cli: fix cli-console failing to add migrations if there are tabs in SQL body (#7362)
 - cli: sign windows binary of Hasura CLI (#7147)
 - cli: core CLI features are not blocked in environments without internet (#7695)
+- server: add `_like`/`_nlike` and spatial operators for BigQuery
 
 ## v2.1.0-beta.2
 

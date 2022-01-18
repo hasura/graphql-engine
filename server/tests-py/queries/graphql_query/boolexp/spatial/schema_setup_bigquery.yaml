@@ -1,0 +1,45 @@
+type: bulk
+args:
+- type: bigquery_run_sql
+  args:
+    source: bigquery
+    sql: |
+      DROP TABLE IF EXISTS `hasura_test.spatial_types_geog`;
+      CREATE TABLE `hasura_test.spatial_types_geog` (
+        `point` GEOGRAPHY,
+        `linestring` GEOGRAPHY,
+        `polygon` GEOGRAPHY,
+        `multipoint` GEOGRAPHY,
+        `multilinestring` GEOGRAPHY,
+        `multipolygon` GEOGRAPHY,
+        `geometrycollection` GEOGRAPHY
+      );
+      INSERT INTO `hasura_test.spatial_types_geog` (
+        `point`,
+        `linestring`,
+        `polygon`,
+        `multipoint`,
+        `multilinestring`,
+        `multipolygon`,
+        `geometrycollection`
+      )
+      VALUES (
+        st_geogfromtext('POINT(3 4)'),
+        st_geogfromtext('LINESTRING(1 1,2 3,4 8, -6 3)'),
+        st_geogfromtext('POLYGON((1 1, 1 2, 2 1, 1 1))'),
+        st_geogfromtext('MULTIPOINT((2 3), (7 8))'),
+        st_geogfromtext(
+          'MULTILINESTRING((1 1, 3 3, 5 5),(3 3, 5 5, 7 7))'
+        ),
+        st_geogfromtext(
+          -- for some odd reason this multipolygon from 3 polygons goes through a very odd conversion in BigQuery
+          -- st_geogfromtext('MULTIPOLYGON(((-120.533 46.566, -118.283 46.1, -122.3 47.45, -120.533 46.566)),((2 2, 2 -2, -2 -2, -2 2, 2 2)),((1 1, 3 1, 3 3, 1 3, 1 1)))')
+          -- ->
+          -- MULTIPOLYGON(((-120.533 46.566, -118.283 46.1, -122.3 47.45, -120.533 46.566)), ((-2 2, -2 -2, 2 -2, 2 1.00015229710421, 3 1, 3 3, 1 3, 1 2.00091355021717, -2 2)))
+          'MULTIPOLYGON(((-120.533 46.566, -118.283 46.1, -122.3 47.45, -120.533 46.566)),((2 2, 2 -2, -2 -2, -2 2, 2 2)))'
+        ),
+        st_geogfromtext(
+          'GEOMETRYCOLLECTION(LINESTRING(1 1, 3 5),POLYGON((-1 -1, -1 -5, -5 -5, -5 -1, -1 -1)))'
+        )
+      );
+      

@@ -1,0 +1,21 @@
+description: Query data from spatial_types_geo using _st_contains
+url: /v1/graphql
+status: 200
+response:
+  data:
+    hasura_test_spatial_types_geog:
+      - multipolygon:
+          MULTIPOLYGON(((-120.533 46.566, -118.283 46.1, -122.3 47.45, -120.533 46.566)), ((-2 2, -2 -2, 2 -2, 2 2, -2 2)))
+query:
+  query: |
+    query {
+      hasura_test_spatial_types_geog(
+        where: {
+          multipolygon: {
+            _st_contains: "POINT(0.5 0)"
+          }
+        }
+      ) {
+        multipolygon
+      }
+    }
