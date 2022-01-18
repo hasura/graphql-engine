@@ -1016,12 +1016,17 @@ tableAggregationFields sourceName tableInfo selectPermissions = memoizeOn 'table
     countField :: m (FieldParser n (IR.AggregateField b))
     countField = do
       columnsEnum <- tableSelectColumnsEnum sourceName tableInfo selectPermissions
-      let columnsName = $$(G.litName "columns")
-          distinctName = $$(G.litName "distinct")
+      let distinctName = $$(G.litName "distinct")
           args = do
             distinct <- P.fieldOptional distinctName Nothing P.boolean
-            columns <- maybe (pure Nothing) (P.fieldOptional columnsName Nothing . P.list) columnsEnum
-            pure $ mkCountType @b distinct columns
+            mkCountType <- countTypeInput @b columnsEnum
+            pure $
+              mkCountType $
+                maybe
+                  IR.SelectCountNonDistinct -- If "distinct" is "null" or absent, we default to @'SelectCountNonDistinct'
+                  (bool IR.SelectCountNonDistinct IR.SelectCountDistinct)
+                  distinct
+
       pure $ IR.AFCount <$> P.selection $$(G.litName "count") Nothing args P.int
 
     parseAggOperator ::

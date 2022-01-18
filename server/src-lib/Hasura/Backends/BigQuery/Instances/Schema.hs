@@ -50,7 +50,7 @@ instance BackendSchema 'BigQuery where
   jsonPathArg = bqJsonPathArg
   orderByOperators = bqOrderByOperators
   comparisonExps = bqComparisonExps
-  mkCountType = bqMkCountType
+  countTypeInput = bqCountTypeInput
   aggregateOrderByCountType = BigQuery.IntegerScalarType
   computedField = bqComputedField
   node = bqNode
@@ -352,6 +352,23 @@ bqComparisonExps = P.memoize 'comparisonExps $ \columnType -> do
                    ]
             ]
 
+bqCountTypeInput ::
+  MonadParse n =>
+  Maybe (Parser 'Both n (Column 'BigQuery)) ->
+  InputFieldsParser n (IR.CountDistinct -> CountType 'BigQuery)
+bqCountTypeInput = \case
+  Just columnEnum -> do
+    columns <- P.fieldOptional $$(G.litName "columns") Nothing $ P.list columnEnum
+    pure $ flip mkCountType columns
+  Nothing -> pure $ flip mkCountType Nothing
+  where
+    mkCountType :: IR.CountDistinct -> Maybe [Column 'BigQuery] -> CountType 'BigQuery
+    mkCountType _ Nothing = BigQuery.StarCountable
+    mkCountType IR.SelectCountDistinct (Just cols) =
+      maybe BigQuery.StarCountable BigQuery.DistinctCountable $ nonEmpty cols
+    mkCountType IR.SelectCountNonDistinct (Just cols) =
+      maybe BigQuery.StarCountable BigQuery.NonNullFieldCountable $ nonEmpty cols
+
 geographyWithinDistanceInput ::
   forall m n r.
   (MonadSchema n m, MonadError QErr m, MonadReader r m, Has MkTypename r) =>
@@ -366,17 +383,6 @@ geographyWithinDistanceInput = do
       DWithinGeogOp <$> (mkParameter <$> P.field $$(G.litName "distance") Nothing floatParser)
         <*> (mkParameter <$> P.field $$(G.litName "from") Nothing geographyParser)
         <*> (mkParameter <$> P.fieldWithDefault $$(G.litName "use_spheroid") Nothing (G.VBoolean False) booleanParser)
-
-bqMkCountType ::
-  -- | distinct values
-  Maybe Bool ->
-  Maybe [Column 'BigQuery] ->
-  CountType 'BigQuery
-bqMkCountType _ Nothing = BigQuery.StarCountable
-bqMkCountType (Just True) (Just cols) =
-  maybe BigQuery.StarCountable BigQuery.DistinctCountable $ nonEmpty cols
-bqMkCountType _ (Just cols) =
-  maybe BigQuery.StarCountable BigQuery.NonNullFieldCountable $ nonEmpty cols
 
 -- | Computed field parser.
 -- Currently unsupported: returns Nothing for now.

@@ -1,3 +1,4 @@
+{-# LANGUAGE ApplicativeDo #-}
 {-# LANGUAGE UndecidableInstances #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
@@ -149,7 +150,7 @@ instance
   jsonPathArg = jsonPathArg
   orderByOperators = orderByOperators
   comparisonExps = comparisonExps
-  mkCountType = mkCountType
+  countTypeInput = countTypeInput
   aggregateOrderByCountType = PG.PGInteger
   computedField = computedFieldPG
   node = pgkNode
@@ -642,10 +643,20 @@ intersectsGeomNbandInput = do
         <$> (mkParameter <$> P.field $$(G.litName "geommin") Nothing geometryParser)
         <*> (fmap mkParameter <$> P.fieldOptional $$(G.litName "nband") Nothing integerParser)
 
-mkCountType :: Maybe Bool -> Maybe [Column ('Postgres pgKind)] -> CountType ('Postgres pgKind)
-mkCountType _ Nothing = PG.CTStar
-mkCountType (Just True) (Just cols) = PG.CTDistinct cols
-mkCountType _ (Just cols) = PG.CTSimple cols
+countTypeInput ::
+  MonadParse n =>
+  Maybe (Parser 'Both n (Column ('Postgres pgKind))) ->
+  InputFieldsParser n (IR.CountDistinct -> CountType ('Postgres pgKind))
+countTypeInput = \case
+  Just columnEnum -> do
+    columns <- P.fieldOptional $$(G.litName "columns") Nothing (P.list columnEnum)
+    pure $ flip mkCountType columns
+  Nothing -> pure $ flip mkCountType Nothing
+  where
+    mkCountType :: IR.CountDistinct -> Maybe [Column ('Postgres pgKind)] -> CountType ('Postgres pgKind)
+    mkCountType _ Nothing = PG.CTStar
+    mkCountType IR.SelectCountDistinct (Just cols) = PG.CTDistinct cols
+    mkCountType IR.SelectCountNonDistinct (Just cols) = PG.CTSimple cols
 
 -- | Update operator that prepends a value to a column containing jsonb arrays.
 --

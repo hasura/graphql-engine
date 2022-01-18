@@ -3,22 +3,35 @@
 ## Next release
 (Add highlights/major features below)
 
+### Breaking Changes
+- For any **MSSQL** backend, count aggregate query on multiple columns is restricted with a GraphQL
+  schema change as follows
+
+```diff
+count (
+---  columns: [table_select_column!]
++++  column: table_select_column
+  distinct: Boolean
+): Int!
+```
+  MSSQL doesn't support applying `COUNT()` on multiple columns.
+
+
+### Bug fixes and improvements
+(Add entries below in the order of server, console, cli, docs, others)
+
+- server: bigquery: implement `distinct_on`.
 - server: extend transactions to MSSQL GraphQL queries and `mssql_run_sql` /v2/query API
 - server: improve error messages in MSSQL database query exceptions
 - server: in mssql transactions, rollback only if the transaction is active
 - server: add request and response bodies to OpenAPI specification of REST endpoints
 - server: implement upsert mutations for MS SQL Server (close #7864)
-- server: bigquery: implement `distinct_on`.
-- console: action/event trigger transforms are now called REST connectors
-- console: fix list of tables (and schemas) being unsorted when creating a new trigger event (fix #6391)
-
-### Bug fixes and improvements
-(Add entries below in the order of server, console, cli, docs, others)
-
 - server: extend support for insert mutations to tables without primary key constraint in a MSSQL backend
 - server: fix parsing FLOAT64s in scientific notation and non-finite ones in BigQuery
 - server: extend support for the `min`/`max` aggregates to all comparable types in BigQuery
 - server: fix support for joins in aggregates nodes in BigQuery
+- console: action/event trigger transforms are now called REST connectors
+- console: fix list of tables (and schemas) being unsorted when creating a new trigger event (fix #6391)
 - cli: migrate and seed subcommands has an option in prompt to choose and apply operation on all available databases
 - cli: fix `metadata diff --type json | unified-json` behaving incorrectly and showing diff in YAML format.
 - cli: fix regression in `migrate create` command (#7971)
