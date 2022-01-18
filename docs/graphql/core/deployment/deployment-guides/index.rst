@@ -48,6 +48,7 @@ Choose from the full list of deployment guides:
 - `Deploy using Instant GraphQL on AWS RDS (blog) <https://hasura.io/blog/instant-graphql-on-aws-rds-1edfb85b5985/>`__
 - :ref:`Deploy using Render One-click Deploy with Managed PostgreSQL <deploy_render>`
 - :ref:`Deploy using Nhost One-click Deploy with Managed PostgreSQL, Storage, and Auth <deploy_nhost>`
+- :ref:`Deploy using Koyeb Serverless Platform <deploy_koyeb>`
 
 .. admonition:: Custom Docker images or binaries
 
@@ -67,3 +68,4 @@ Choose from the full list of deployment guides:
    Using Google Cloud Platform & Kubernetes <google-kubernetes-engine-cloud-sql>
    Using Render (one-click) <render-one-click>
    Using Nhost (one-click) <nhost-one-click>
+   Using Koyeb Serverless Platform <koyeb>
