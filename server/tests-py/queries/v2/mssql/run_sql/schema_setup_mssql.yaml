@@ -9,6 +9,7 @@ args:
         id INT IDENTITY NOT NULL PRIMARY KEY,
         name TEXT NOT NULL
       );
+      INSERT INTO author (name) VALUES ('Bob'), ('Alice');
       CREATE TABLE [article] (
         id INT IDENTITY NOT NULL PRIMARY KEY,
         title text not null,
