@@ -1544,8 +1544,9 @@ fromOpExpG expression op =
     Ir.AGTE val -> pure (OpExpression MoreOrEqualOp expression val)
     Ir.ALTE val -> pure (OpExpression LessOrEqualOp expression val)
     Ir.ACast _casts -> refute (pure (UnsupportedOpExpG op)) -- mkCastsExp casts
-    Ir.ALIKE _val -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SLIKE lhs val
-    Ir.ANLIKE _val -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SNLIKE lhs val
+    Ir.ALIKE val -> pure (OpExpression LikeOp expression val)
+    Ir.ANLIKE val -> pure (OpExpression NotLikeOp expression val)
+    Ir.ABackendSpecific op' -> pure (fromBackendSpecificOpExpG expression op')
     Ir.CEQ _rhsCol -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SEQ lhs $ mkQCol rhsCol
     Ir.CNE _rhsCol -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SNE lhs $ mkQCol rhsCol
     Ir.CGT _rhsCol -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SGT lhs $ mkQCol rhsCol
@@ -1553,6 +1554,18 @@ fromOpExpG expression op =
     Ir.CGTE _rhsCol -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SGTE lhs $ mkQCol rhsCol
     Ir.CLTE _rhsCol -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SLTE lhs $ mkQCol rhsCol
     -- These are new as of 2021-02-18 to this API. Not sure what to do with them at present, marking as unsupported.
+
+fromBackendSpecificOpExpG :: Expression -> BigQuery.BooleanOperators Expression -> Expression
+fromBackendSpecificOpExpG expression op =
+  let func name val = FunctionExpression name [expression, val]
+   in case op of
+        BigQuery.ASTContains v -> func "ST_CONTAINS" v
+        BigQuery.ASTEquals v -> func "ST_EQUALS" v
+        BigQuery.ASTTouches v -> func "ST_TOUCHES" v
+        BigQuery.ASTWithin v -> func "ST_WITHIN" v
+        BigQuery.ASTIntersects v -> func "ST_INTERSECTS" v
+        BigQuery.ASTDWithin (Ir.DWithinGeogOp r v sph) ->
+          FunctionExpression "ST_DWITHIN" [expression, v, r, sph]
 
 nullableBoolEquality :: Expression -> Expression -> Expression
 nullableBoolEquality x y =

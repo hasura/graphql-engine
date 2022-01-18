@@ -1,0 +1,21 @@
+description: Select cities not ending with ham
+url: /v1/graphql
+status: 200
+response:
+  data:
+    hasura_test_city:
+    - name: New Orleans
+      country: USA
+    - name:  New York
+      country: USA
+query:
+  query: |
+    query {
+      hasura_test_city (
+      where: {name: {_nlike: "%ham" }},
+      order_by: {name: asc}
+      ) {
+        name
+        country
+      }
+    }

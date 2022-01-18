@@ -157,7 +157,7 @@ bqColumnParser columnType (G.Nullability isNullable) =
     ColumnScalar scalarType -> case scalarType of
       -- bytestrings
       -- we only accept string literals
-      BigQuery.BytesScalarType -> pure $ possiblyNullable scalarType $ BigQuery.StringValue <$> P.string
+      BigQuery.BytesScalarType -> pure $ possiblyNullable scalarType $ BigQuery.StringValue <$> stringBased $$(G.litName "Bytes")
       -- text
       BigQuery.StringScalarType -> pure $ possiblyNullable scalarType $ BigQuery.StringValue <$> P.string
       -- floating point values
@@ -171,12 +171,13 @@ bqColumnParser columnType (G.Nullability isNullable) =
       BigQuery.BigDecimalScalarType -> pure $ possiblyNullable scalarType $ BigQuery.BigDecimalValue . BigQuery.doubleToBigDecimal <$> P.float
       -- boolean type
       BigQuery.BoolScalarType -> pure $ possiblyNullable scalarType $ BigQuery.BoolValue <$> P.boolean
-      BigQuery.DateScalarType -> pure $ possiblyNullable scalarType $ BigQuery.DateValue . BigQuery.Date <$> P.string
-      BigQuery.TimeScalarType -> pure $ possiblyNullable scalarType $ BigQuery.TimeValue . BigQuery.Time <$> P.string
-      BigQuery.DatetimeScalarType -> pure $ possiblyNullable scalarType $ BigQuery.DatetimeValue . BigQuery.Datetime <$> P.string
-      BigQuery.GeographyScalarType -> pure $ possiblyNullable scalarType $ BigQuery.GeographyValue . BigQuery.Geography <$> P.string
+      BigQuery.DateScalarType -> pure $ possiblyNullable scalarType $ BigQuery.DateValue . BigQuery.Date <$> stringBased $$(G.litName "Date")
+      BigQuery.TimeScalarType -> pure $ possiblyNullable scalarType $ BigQuery.TimeValue . BigQuery.Time <$> stringBased $$(G.litName "Time")
+      BigQuery.DatetimeScalarType -> pure $ possiblyNullable scalarType $ BigQuery.DatetimeValue . BigQuery.Datetime <$> stringBased $$(G.litName "Datetime")
+      BigQuery.GeographyScalarType ->
+        pure $ possiblyNullable scalarType $ BigQuery.GeographyValue . BigQuery.Geography <$> throughJSON $$(G.litName "Geography")
       BigQuery.TimestampScalarType -> do
-        let schemaType = P.TNamed P.Nullable $ P.Definition stringScalar Nothing P.TIScalar
+        let schemaType = P.TNamed P.Nullable $ P.Definition $$(G.litName "Timestamp") Nothing P.TIScalar
         pure $
           possiblyNullable scalarType $
             Parser
@@ -212,6 +213,9 @@ bqColumnParser columnType (G.Nullability isNullable) =
                 valueToJSON (P.toGraphQLType schemaType)
                   >=> either (parseErrorWith ParseFailed . qeError) pure . runAesonParser J.parseJSON
             }
+    stringBased :: MonadParse m => G.Name -> Parser 'Both m Text
+    stringBased scalarName =
+      P.string {pType = P.TNamed P.NonNullable $ P.Definition scalarName Nothing P.TIScalar}
 
 bqJsonPathArg ::
   MonadParse n =>
@@ -255,6 +259,7 @@ bqComparisonExps ::
   m (Parser 'Input n [ComparisonExp 'BigQuery])
 bqComparisonExps = P.memoize 'comparisonExps $ \columnType -> do
   collapseIfNull <- asks $ qcDangerousBooleanCollapse . getter
+  dWithinGeogOpParser <- geographyWithinDistanceInput
   -- see Note [Columns in comparison expression are never nullable]
   typedParser <- columnParser columnType (G.Nullability False)
   nullableTextParser <- columnParser (ColumnScalar @'BigQuery BigQuery.StringScalarType) (G.Nullability True)
@@ -275,14 +280,92 @@ bqComparisonExps = P.memoize 'comparisonExps $ \columnType -> do
       fmap catMaybes $
         sequenceA $
           concat
-            [ equalityOperators
-                collapseIfNull
-                (mkParameter <$> typedParser)
-                (mkListLiteral <$> columnListParser),
-              comparisonOperators
-                collapseIfNull
-                (mkParameter <$> typedParser)
+            [ -- from https://cloud.google.com/bigquery/docs/reference/standard-sql/data-types:
+              -- GEOGRAPHY comparisons are not supported. To compare GEOGRAPHY values, use ST_Equals.
+              guard (isScalarColumnWhere (/= BigQuery.GeographyScalarType) columnType)
+                *> equalityOperators
+                  collapseIfNull
+                  (mkParameter <$> typedParser)
+                  (mkListLiteral <$> columnListParser),
+              guard (isScalarColumnWhere (/= BigQuery.GeographyScalarType) columnType)
+                *> comparisonOperators
+                  collapseIfNull
+                  (mkParameter <$> typedParser),
+              -- Ops for String type
+              guard (isScalarColumnWhere (== BigQuery.StringScalarType) columnType)
+                *> [ mkBoolOperator
+                       collapseIfNull
+                       $$(G.litName "_like")
+                       (Just "does the column match the given pattern")
+                       (ALIKE . mkParameter <$> typedParser),
+                     mkBoolOperator
+                       collapseIfNull
+                       $$(G.litName "_nlike")
+                       (Just "does the column NOT match the given pattern")
+                       (ANLIKE . mkParameter <$> typedParser)
+                   ],
+              -- Ops for Bytes type
+              guard (isScalarColumnWhere (== BigQuery.BytesScalarType) columnType)
+                *> [ mkBoolOperator
+                       collapseIfNull
+                       $$(G.litName "_like")
+                       (Just "does the column match the given pattern")
+                       (ALIKE . mkParameter <$> typedParser),
+                     mkBoolOperator
+                       collapseIfNull
+                       $$(G.litName "_nlike")
+                       (Just "does the column NOT match the given pattern")
+                       (ANLIKE . mkParameter <$> typedParser)
+                   ],
+              -- Ops for Geography type
+              guard (isScalarColumnWhere (== BigQuery.GeographyScalarType) columnType)
+                *> [ mkBoolOperator
+                       collapseIfNull
+                       $$(G.litName "_st_contains")
+                       (Just "does the column contain the given geography value")
+                       (ABackendSpecific . BigQuery.ASTContains . mkParameter <$> typedParser),
+                     mkBoolOperator
+                       collapseIfNull
+                       $$(G.litName "_st_equals")
+                       (Just "is the column equal to given geography value (directionality is ignored)")
+                       (ABackendSpecific . BigQuery.ASTEquals . mkParameter <$> typedParser),
+                     mkBoolOperator
+                       collapseIfNull
+                       $$(G.litName "_st_touches")
+                       (Just "does the column have at least one point in common with the given geography value")
+                       (ABackendSpecific . BigQuery.ASTTouches . mkParameter <$> typedParser),
+                     mkBoolOperator
+                       collapseIfNull
+                       $$(G.litName "_st_within")
+                       (Just "is the column contained in the given geography value")
+                       (ABackendSpecific . BigQuery.ASTWithin . mkParameter <$> typedParser),
+                     mkBoolOperator
+                       collapseIfNull
+                       $$(G.litName "_st_intersects")
+                       (Just "does the column spatially intersect the given geography value")
+                       (ABackendSpecific . BigQuery.ASTIntersects . mkParameter <$> typedParser),
+                     mkBoolOperator
+                       collapseIfNull
+                       $$(G.litName "_st_d_within")
+                       (Just "is the column within a given distance from the given geometry value")
+                       (ABackendSpecific . BigQuery.ASTDWithin <$> dWithinGeogOpParser)
+                   ]
             ]
+
+geographyWithinDistanceInput ::
+  forall m n r.
+  (MonadSchema n m, MonadError QErr m, MonadReader r m, Has MkTypename r) =>
+  m (Parser 'Input n (DWithinGeogOp (UnpreparedValue 'BigQuery)))
+geographyWithinDistanceInput = do
+  geographyParser <- columnParser (ColumnScalar BigQuery.GeographyScalarType) (G.Nullability False)
+  -- practically BigQuery (as of 2021-11-19) doesn't support TRUE as use_spheroid parameter for ST_DWITHIN
+  booleanParser <- columnParser (ColumnScalar BigQuery.BoolScalarType) (G.Nullability True)
+  floatParser <- columnParser (ColumnScalar BigQuery.FloatScalarType) (G.Nullability False)
+  pure $
+    P.object $$(G.litName "st_dwithin_input") Nothing $
+      DWithinGeogOp <$> (mkParameter <$> P.field $$(G.litName "distance") Nothing floatParser)
+        <*> (mkParameter <$> P.field $$(G.litName "from") Nothing geographyParser)
+        <*> (mkParameter <$> P.fieldWithDefault $$(G.litName "use_spheroid") Nothing (G.VBoolean False) booleanParser)
 
 bqMkCountType ::
   -- | distinct values
