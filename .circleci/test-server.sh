@@ -101,62 +101,17 @@ webhook_tests_check_root() {
 	fi
 }
 
-combine_all_hpc_reports() {
-	combined_file="${OUTPUT_FOLDER}/graphql-engine.tix"
-	combined_file_intermediate="${OUTPUT_FOLDER}/hpc/graphql-engine-combined-intermediate.tix"
-	rm -f "$combined_file"
-	IFS=: tix_files_arr=($TIX_FILES)
-	unset IFS
-	for tix_file in "${tix_files_arr[@]}"; do
-		if ! [ -f "$tix_file" ]; then
-			continue
-		fi
-		if [ -f "$combined_file" ]; then
-			# Unset GHCRTS as hpc combine fails if GCHRTS=-N2 is present
-			(
-				unset GHCRTS
-				set -x
-				hpc combine "$combined_file" "$tix_file" --union --output="$combined_file_intermediate"
-				set +x
-				mv "$combined_file_intermediate" "$combined_file"
-				rm "$tix_file"
-			) || true
-		else
-			mv "$tix_file" "$combined_file" || true
-		fi
-	done
-}
-
-generate_coverage_report() {
-	combine_all_hpc_reports
-	(
-		shopt -s failglob
-		unset GHCRTS
-		cd ~/graphql-engine/server
-		mix_dirs=("$MIX_FILES_FOLDER"/*)
-		# This is the bash syntax to prepend `--hpcdir=` to each element of an array. Yeah, I don’t like
-		# it, either.
-		hpcdir_args=("${mix_dirs[@]/#/--hpcdir=}")
-		hpc_args=("${hpcdir_args[@]}" --reset-hpcdirs "$OUTPUT_FOLDER/graphql-engine.tix")
-		hpc report "${hpc_args[@]}"
-		mkdir -p "$OUTPUT_FOLDER/coverage"
-		hpc markup "${hpc_args[@]}" --destdir="$OUTPUT_FOLDER/coverage"
-	)
-}
-
 kill_hge_servers() {
 	kill -s INT $HGE_PIDS || true
 	wait $HGE_PIDS || true
 	HGE_PIDS=""
 }
 
+HGE_INDEX=1
 run_hge_with_args() {
-	i=$((TIX_FILE_INDEX++))
-	export HPCTIXFILE="${OUTPUT_FOLDER}/hpc/graphql-engine-${i}-${TEST_TYPE}.tix"
-	rm -f "$HPCTIXFILE"
-	TIX_FILES="$TIX_FILES:$HPCTIXFILE"
+	i=$((HGE_INDEX++))
 	set -x
-	"$GRAPHQL_ENGINE" "$@" 2>&1 >"$OUTPUT_FOLDER/graphql-engine-${i}-${TEST_TYPE}.log" &
+	"$GRAPHQL_ENGINE" "$@" 2>&1 >"$OUTPUT_FOLDER/graphql-engine-${i}.log" &
 	HGE_PIDS="$HGE_PIDS $!"
 	set +x
 }
@@ -197,11 +152,6 @@ PYTEST_ROOT="$CIRCLECI_FOLDER/../server/tests-py"
 OUTPUT_FOLDER=${OUTPUT_FOLDER:-"$CIRCLECI_FOLDER/test-server-output"}
 mkdir -p "$OUTPUT_FOLDER"
 
-TEST_TYPE="no-auth"
-HPCTIXFILE=""
-TIX_FILE_INDEX="1"
-TIX_FILES=""
-
 cd $PYTEST_ROOT
 
 for port in 8080 8081 9876 5592 5000 5001 5594; do
@@ -221,8 +171,6 @@ pip3 install -r requirements.txt ||
 	pip3 install -i http://mirrors.digitalocean.com/pypi/web/simple --trusted-host mirrors.digitalocean.com -r requirements.txt
 
 (cd remote_schemas/nodejs && npm_config_loglevel=error npm ci)
-
-mkdir -p "$OUTPUT_FOLDER/hpc"
 
 export EVENT_WEBHOOK_HEADER="MyEnvValue"
 
@@ -277,7 +225,6 @@ haskell-tests)
 
 no-auth)
 	echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITHOUT ADMIN SECRET ###########################################>\n"
-	TEST_TYPE="no-auth"
 
 	start_multiple_hge_servers
 
@@ -288,7 +235,6 @@ no-auth)
 
 admin-secret)
 	echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH ADMIN SECRET #####################################>\n"
-	TEST_TYPE="admin-secret"
 
 	export HASURA_GRAPHQL_ADMIN_SECRET="HGE$RANDOM$RANDOM"
 
@@ -301,7 +247,6 @@ admin-secret)
 
 admin-secret-unauthorized-role)
 	echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH ADMIN SECRET AND UNAUTHORIZED ROLE #####################################>\n"
-	TEST_TYPE="admin-secret-unauthorized-role"
 
 	export HASURA_GRAPHQL_ADMIN_SECRET="HGE$RANDOM$RANDOM"
 	export HASURA_GRAPHQL_UNAUTHORIZED_ROLE="anonymous"
@@ -319,7 +264,6 @@ admin-secret-unauthorized-role)
 
 jwt-rs512)
 	echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH ADMIN SECRET AND JWT (RS512) #####################################>\n"
-	TEST_TYPE="jwt-rs512"
 
 	init_jwt
 
@@ -337,7 +281,6 @@ jwt-rs512)
 
 jwt-ed25519)
 	echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH ADMIN SECRET AND JWT (Ed25519) #####################################>\n"
-	TEST_TYPE="jwt-ed25519"
 
 	init_jwt
 
@@ -355,7 +298,6 @@ jwt-ed25519)
 
 jwt-stringified)
 	echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH ADMIN SECRET AND JWT (in stringified mode) #####################################>\n"
-	TEST_TYPE="jwt-stringified"
 
 	init_jwt
 
@@ -374,7 +316,6 @@ jwt-stringified)
 
 jwt-audience-check-single-string)
 	echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH ADMIN SECRET AND JWT (with audience check - string) #####################################>\n"
-	TEST_TYPE="jwt-audience-check-single-string"
 
 	init_jwt
 
@@ -393,7 +334,6 @@ jwt-audience-check-single-string)
 
 jwt-audience-check-list-string)
 	echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH ADMIN SECRET AND JWT (with audience check - list of strings) #################################>\n"
-	TEST_TYPE="jwt-audience-check-list-string"
 
 	init_jwt
 
@@ -411,7 +351,6 @@ jwt-audience-check-list-string)
 
 jwt-issuer-check)
 	echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH ADMIN SECRET AND JWT (with issuer check) #####################################>\n"
-	TEST_TYPE="jwt-issuer-check"
 
 	init_jwt
 
@@ -432,7 +371,6 @@ jwt-with-claims-namespace-path)
 	##########
 	# TODO(swann): should these not be run in parallel?
 	echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH ADMIN SECRET AND JWT (with claims_namespace_path) #####################################>\n"
-	TEST_TYPE="jwt-with-claims-namespace-path"
 
 	init_jwt
 
@@ -476,7 +414,6 @@ jwt-with-claims-namespace-path)
 jwt-claims-map-with-json-path-values)
 	# test JWT with Claims map
 	echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH ADMIN SECRET AND JWT (with claims_map and values are json path) #####################################>\n"
-	TEST_TYPE="jwt-claims-map-with-json-path-values"
 
 	init_jwt
 
@@ -493,7 +430,6 @@ jwt-claims-map-with-json-path-values)
 	unset HASURA_GRAPHQL_JWT_SECRET
 
 	echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH ADMIN SECRET AND JWT (with claims_map and values are json path with default values set) #####################################>\n"
-	TEST_TYPE="jwt-claims-map-with-json-path-values-with-default-values"
 
 	export HASURA_GRAPHQL_JWT_SECRET="$(jq -n --arg key "$(cat $OUTPUT_FOLDER/ssl/jwt_public.key)" '{ type: "RS512", key: $key , claims_map: {"x-hasura-user-id": {"path":"$.['"'"'https://myapp.com/jwt/claims'"'"'].user.id", "default":"1"}, "x-hasura-allowed-roles": {"path":"$.['"'"'https://myapp.com/jwt/claims'"'"'].role.allowed", "default":["user","editor"]}, "x-hasura-default-role": {"path":"$.['"'"'https://myapp.com/jwt/claims'"'"'].role.default","default":"user"}}}')"
 	export HASURA_GRAPHQL_ADMIN_SECRET="HGE$RANDOM$RANDOM"
@@ -509,7 +445,6 @@ jwt-claims-map-with-json-path-values)
 
 jwt-with-expiry-time-leeway)
 	echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH ADMIN SECRET AND JWT (with JWT config allowing for leeway) #####################################>\n"
-	TEST_TYPE="jwt-with-expiry-time-leeway"
 
 	init_jwt
 	export HASURA_GRAPHQL_JWT_SECRET="$(jq -n --arg key "$(cat $OUTPUT_FOLDER/ssl/jwt_public.key)" '{ type: "RS512", key: $key , allowed_skew: 60}')"
@@ -527,7 +462,6 @@ jwt-with-expiry-time-leeway)
 jwt-claims-map-with-literal-values)
 
 	echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH ADMIN SECRET AND JWT (with claims_map and values are literal values) #####################################>\n"
-	TEST_TYPE="jwt-claims-map-with-literal-values"
 
 	init_jwt
 
@@ -547,7 +481,6 @@ jwt-claims-map-with-literal-values)
 jwt-cookie)
 
 	echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH ADMIN SECRET AND JWT (in cookie mode) #####################################>\n"
-	TEST_TYPE="jwt-cookie"
 
 	init_jwt
 
@@ -565,7 +498,6 @@ jwt-cookie)
 
 jwt-cookie-unauthorized-role)
 	echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH JWT (in cookie mode) AND UNAUTHORIZED ROLE #####################################>\n"
-	TEST_TYPE="jwt-cookie-unauthorized-role"
 
 	init_jwt
 
@@ -598,8 +530,6 @@ cors-domains)
 	export HASURA_GRAPHQL_CORS_DOMAIN="http://*.localhost, http://localhost:3000, https://*.foo.bar.com"
 	export HASURA_GRAPHQL_ADMIN_SECRET="HGE$RANDOM$RANDOM"
 
-	TEST_TYPE="cors-domains"
-
 	run_hge_with_args serve
 	wait_for_port 8080
 
@@ -614,7 +544,6 @@ auth-webhook-cookie)
 	# test auth webhook set-cookie forwarding on response
 
 	echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH SET-COOKIE HEADER IN AUTH WEBHOOK ########>\n"
-	TEST_TYPE="auth-webhook-cookie"
 	export HASURA_GRAPHQL_AUTH_HOOK="http://localhost:9876/auth"
 	export HASURA_GRAPHQL_ADMIN_SECRET="HGE$RANDOM$RANDOM"
 
@@ -634,7 +563,6 @@ ws-init-cookie-read-cors-enabled)
 	# test websocket transport with initial cookie header
 
 	echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH COOKIE IN WEBSOCKET INIT ########>\n"
-	TEST_TYPE="ws-init-cookie-read-cors-enabled"
 	export HASURA_GRAPHQL_AUTH_HOOK="http://localhost:9876/auth"
 	export HASURA_GRAPHQL_AUTH_HOOK_MODE="POST"
 	export HASURA_GRAPHQL_ADMIN_SECRET="HGE$RANDOM$RANDOM"
@@ -656,7 +584,6 @@ ws-init-cookie-noread)
 	echo "$(time_elapsed): testcase 2: no read cookie, cors disabled"
 	export HASURA_GRAPHQL_ADMIN_SECRET="HGE$RANDOM$RANDOM"
 
-	TEST_TYPE="ws-init-cookie-noread"
 	export HASURA_GRAPHQL_AUTH_HOOK="http://localhost:9876/auth"
 	export HASURA_GRAPHQL_AUTH_HOOK_MODE="POST"
 	run_hge_with_args serve --disable-cors
@@ -676,7 +603,6 @@ ws-init-cookie-read-cors-disabled)
 	echo "$(time_elapsed): testcase 3: read cookie, cors disabled and ws-read-cookie"
 	export HASURA_GRAPHQL_ADMIN_SECRET="HGE$RANDOM$RANDOM"
 
-	TEST_TYPE="ws-init-cookie-read-cors-disabled"
 	export HASURA_GRAPHQL_AUTH_HOOK="http://localhost:9876/auth"
 	export HASURA_GRAPHQL_AUTH_HOOK_MODE="POST"
 	export HASURA_GRAPHQL_WS_READ_COOKIE="true"
@@ -702,7 +628,6 @@ ws-init-cookie-read-cors-disabled)
 
 ws-graphql-api-disabled)
 	echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH GRAPHQL DISABLED ########>\n"
-	TEST_TYPE="ws-graphql-api-disabled"
 	export HASURA_GRAPHQL_ENABLED_APIS="metadata"
 	export HASURA_GRAPHQL_ADMIN_SECRET="HGE$RANDOM$RANDOM"
 	export HASURA_GRAPHQL_AUTH_HOOK="http://localhost:9876/auth"
@@ -731,7 +656,6 @@ ws-graphql-api-disabled)
 
 ws-metadata-api-disabled)
 	echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH METADATA DISABLED ########>\n"
-	TEST_TYPE="ws-metadata-api-disabled"
 
 	export HASURA_GRAPHQL_ENABLED_APIS="graphql"
 	export HASURA_GRAPHQL_ADMIN_SECRET="HGE$RANDOM$RANDOM"
@@ -760,7 +684,6 @@ ws-metadata-api-disabled)
 
 remote-schema-permissions)
 	echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH REMOTE SCHEMA PERMISSIONS ENABLED ########>\n"
-	TEST_TYPE="remote-schema-permissions"
 	export HASURA_GRAPHQL_ENABLE_REMOTE_SCHEMA_PERMISSIONS=true
 	export HASURA_GRAPHQL_ADMIN_SECRET="HGE$RANDOM$RANDOM"
 
@@ -776,7 +699,6 @@ remote-schema-permissions)
 
 function-permissions)
 	echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH FUNCTION PERMISSIONS ENABLED ########>\n"
-	TEST_TYPE="function-permissions"
 	export HASURA_GRAPHQL_INFER_FUNCTION_PERMISSIONS=false
 	export HASURA_GRAPHQL_ADMIN_SECRET="HGE$RANDOM$RANDOM"
 
@@ -794,7 +716,6 @@ function-permissions)
 
 roles-inheritance)
 	echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH EXPERIMENTAL FEATURE: ROLES INHERITANCE ########>\n"
-	TEST_TYPE="experimental-features-roles-inheritance"
 
 	export HASURA_GRAPHQL_ADMIN_SECRET="HGE$RANDOM$RANDOM"
 	export HASURA_GRAPHQL_ENABLE_REMOTE_SCHEMA_PERMISSIONS="true"
@@ -814,7 +735,6 @@ roles-inheritance)
 
 query-caching)
 	echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE QUERY CACHING #####################################>\n"
-	TEST_TYPE="query-caching"
 	export HASURA_GRAPHQL_ADMIN_SECRET="HGE$RANDOM$RANDOM"
 
 	# use only one capability to disable cache striping
@@ -827,7 +747,6 @@ query-caching)
 query-logs)
 	# verbose logging tests
 	echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH QUERY LOG ########>\n"
-	TEST_TYPE="query-logs"
 	export HASURA_GRAPHQL_ADMIN_SECRET="HGE$RANDOM$RANDOM"
 
 	export HASURA_GRAPHQL_ENABLED_LOG_TYPES=" startup,http-log,webhook-log,websocket-log,query-log"
@@ -835,10 +754,6 @@ query-logs)
 
 	#run_hge_with_args serve
 	# we are doing this instead of calling run_hge_with_args, because we want to save in a custom log file
-	i=$((TIX_FILE_INDEX++))
-	export HPCTIXFILE="${OUTPUT_FOLDER}/hpc/graphql-engine-${i}-${TEST_TYPE}.tix"
-	rm -f "$HPCTIXFILE"
-	TIX_FILES="$TIX_FILES:$HPCTIXFILE"
 	set -x
 	export LOGGING_TEST_LOGFILE_PATH="$OUTPUT_FOLDER/graphql-engine-verbose-logging.log"
 	"$GRAPHQL_ENGINE" serve 2>&1 >"$LOGGING_TEST_LOGFILE_PATH" &
@@ -856,7 +771,6 @@ query-logs)
 	;;
 
 remote-schema-https)
-	TEST_TYPE="remote-schemas-https"
 	echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH SECURE REMOTE SCHEMA #########################>\n"
 
 	export REMOTE_SCHEMAS_WEBHOOK_DOMAIN="https://127.0.0.1:5001/"
@@ -881,7 +795,6 @@ remote-schema-https)
 post-webhook)
 	webhook_tests_check_root
 
-	TEST_TYPE="post-webhook"
 	echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH ADMIN SECRET & WEBHOOK (POST) #########################>\n"
 
 	export HASURA_GRAPHQL_AUTH_HOOK="https://localhost:9090/"
@@ -904,7 +817,6 @@ webhook-request-context)
 	webhook_tests_check_root
 
 	echo -e "\n$(time_elapsed): <########## TEST WEBHOOK RECEIVES REQUEST DATA AS CONTEXT #########################>\n"
-	TEST_TYPE="webhook-request-context"
 	export HASURA_GRAPHQL_AUTH_HOOK="http://localhost:5594/"
 	export HASURA_GRAPHQL_AUTH_HOOK_MODE="POST"
 	export HASURA_GRAPHQL_ADMIN_SECRET="HGE$RANDOM$RANDOM"
@@ -921,7 +833,6 @@ get-webhook)
 	webhook_tests_check_root
 
 	echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH ADMIN SECRET & WEBHOOK (GET) #########################>\n"
-	TEST_TYPE="get-webhook"
 	export HASURA_GRAPHQL_AUTH_HOOK="https://localhost:9090/"
 	export HASURA_GRAPHQL_AUTH_HOOK_MODE="GET"
 	export HASURA_GRAPHQL_ADMIN_SECRET="HGE$RANDOM$RANDOM"
@@ -942,7 +853,6 @@ insecure-webhook)
 	webhook_tests_check_root
 
 	echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH ADMIN SECRET & HTTPS INSECURE WEBHOOK (GET) ########>\n"
-	TEST_TYPE="insecure-webhook"
 	export HASURA_GRAPHQL_AUTH_HOOK="https://localhost:9090/"
 	export HASURA_GRAPHQL_AUTH_HOOK_MODE="GET"
 	export HASURA_GRAPHQL_ADMIN_SECRET="HGE$RANDOM$RANDOM"
@@ -968,7 +878,6 @@ insecure-webhook-with-admin-secret)
 	webhook_tests_check_root
 
 	echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH ADMIN_SECRET & HTTPS INSECURE WEBHOOK WITH ADMIN SECRET (POST) ########>\n"
-	TEST_TYPE="insecure-webhook-with-admin-secret"
 	export HASURA_GRAPHQL_AUTH_HOOK="https://localhost:9090/"
 	export HASURA_GRAPHQL_AUTH_HOOK_MODE="POST"
 	export HASURA_GRAPHQL_ADMIN_SECRET="HGE$RANDOM$RANDOM"
@@ -1001,7 +910,6 @@ allowlist-queries)
 	echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH ALLOWLIST QUERIES ########> \n"
 	export HASURA_GRAPHQL_ADMIN_SECRET="HGE$RANDOM$RANDOM"
 	export HASURA_GRAPHQL_ENABLE_ALLOWLIST=true
-	TEST_TYPE="allowlist-queries"
 
 	run_hge_with_args serve
 	wait_for_port 8080
@@ -1022,7 +930,6 @@ allowlist-queries)
 
 developer-api-tests)
 	echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH DEVELOPER API ENABLED ########>\n"
-	TEST_TYPE="developer-api-tests"
 	export HASURA_GRAPHQL_ENABLED_APIS="metadata,graphql,developer,config,pgdump"
 	export HASURA_GRAPHQL_ADMIN_SECRET="HGE$RANDOM$RANDOM"
 
@@ -1046,7 +953,6 @@ jwk-url)
 
 	export HASURA_GRAPHQL_ADMIN_SECRET="HGE$RANDOM$RANDOM"
 	echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH JWK URL ########> \n"
-	TEST_TYPE="jwk-url"
 
 	# start the JWK server
 	python3 jwk_server.py >"$OUTPUT_FOLDER/jwk_server.log" 2>&1 &
@@ -1124,7 +1030,6 @@ horizontal-scaling)
 	unset HASURA_GRAPHQL_ADMIN_SECRET
 
 	echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH HORIZONTAL SCALING ########>\n"
-	TEST_TYPE="horizontal-scaling"
 
 	HASURA_HS_TEST_DB='postgresql://postgres:postgres@localhost:6543/hs_hge_test'
 
@@ -1224,7 +1129,6 @@ admin_users = postgres' >pgbouncer/pgbouncer.ini
 #
 backend-mssql)
 	echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH SQL SERVER BACKEND ###########################################>\n"
-	TEST_TYPE="no-auth"
 
 	run_hge_with_args serve
 	wait_for_port 8080
@@ -1246,7 +1150,6 @@ backend-mssql)
 	;;
 backend-citus)
 	echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH CITUS BACKEND ###########################################>\n"
-	TEST_TYPE="no-auth"
 
 	run_hge_with_args serve
 	wait_for_port 8080
@@ -1261,7 +1164,6 @@ backend-citus)
 	;;
 backend-bigquery)
 	echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH BIGQUERY BACKEND ###########################################>\n"
-	TEST_TYPE="no-auth"
 
 	source_data_sources_utils
 	verify_bigquery_pytest_env
@@ -1279,10 +1181,6 @@ backend-bigquery)
 	kill_hge_servers
 	;;
 esac
-
-# FIXME(swann): we have to combine hpc reports outside this
-# echo -e "\n$(time_elapsed): <########## COMBINE ALL HPC REPORTS ########>\n"
-# generate_coverage_report || true
 
 echo "Finished running tests on node $CIRCLE_NODE_INDEX of $CIRCLE_NODE_TOTAL"
 echo -e "\n$(time_elapsed): <########## DONE ########>\n"
