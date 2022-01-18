@@ -211,7 +211,12 @@ class Backend b => BackendSchema (b :: BackendType) where
     ColumnType b ->
     m (Parser 'Input n [ComparisonExp b])
 
-  mkCountType :: Maybe Bool -> Maybe [Column b] -> CountType b
+  -- | The input fields parser, for "count" aggregate field, yielding a function
+  -- which generates @'CountType b' from optional "distinct" field value
+  countTypeInput ::
+    MonadParse n =>
+    Maybe (Parser 'Both n (Column b)) ->
+    InputFieldsParser n (CountDistinct -> CountType b)
 
   aggregateOrderByCountType :: ScalarType b
 

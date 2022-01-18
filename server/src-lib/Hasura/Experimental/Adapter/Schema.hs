@@ -49,8 +49,8 @@ instance BackendSchema 'Experimental where
   comparisonExps =
     error "comparisonExps: Unimplemented for Experimental backend."
 
-  mkCountType =
-    error "mkCountType: Unimplemented for Experimental backend."
+  countTypeInput =
+    error "countTypeInput: Unimplemented for Experimental backend."
   aggregateOrderByCountType =
     error "aggregateOrderByCountType: Unimplemented for Experimental backend."
   computedField =

@@ -654,8 +654,8 @@ fromAggregateField alias aggregateField =
     IR.AFExp text -> AggregateProjection $ Aliased (TextAggregate text) alias
     IR.AFCount countType -> AggregateProjection . flip Aliased alias . CountAggregate $ case countType of
       StarCountable -> StarCountable
-      NonNullFieldCountable names -> NonNullFieldCountable $ fmap columnFieldAggEntity names
-      DistinctCountable names -> DistinctCountable $ fmap columnFieldAggEntity names
+      NonNullFieldCountable name -> NonNullFieldCountable $ columnFieldAggEntity name
+      DistinctCountable name -> DistinctCountable $ columnFieldAggEntity name
     IR.AFOp IR.AggregateOp {_aoOp = op, _aoFields = fields} ->
       let projections :: [Projection] =
             fields <&> \(fieldName, pgColFld) ->

@@ -93,6 +93,7 @@ module Hasura.RQL.IR.Select
     TableAggregateFieldsG,
     TablePerm,
     TablePermG (..),
+    CountDistinct (..),
     actionResponsePayloadColumn,
     asnArgs,
     asnFields,
@@ -929,6 +930,15 @@ deriving instance
 type ActionFieldsG b r v = Fields (ActionFieldG b r v)
 
 type ActionFields b = ActionFieldsG b Void (SQLExpression b)
+
+-- | The "distinct" input field inside "count" aggregate field
+--
+-- count (
+--   distinct: Boolean
+-- ): Int!
+data CountDistinct
+  = SelectCountDistinct
+  | SelectCountNonDistinct
 
 -- Lenses
 
