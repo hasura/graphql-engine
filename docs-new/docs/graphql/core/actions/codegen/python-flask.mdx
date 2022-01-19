@@ -1,16 +1,18 @@
-<div class="meta"
-description="Codegen for Hasura actions in Python &amp; Flask"
-keywords="hasura, docs, actions, codegen, guide, python, flask">
+---
+  description: Codegen for Hasura actions in Python & Flask
+  keywords:
+    - hasura
+    - docs
+    - actions
+    - codegen
+    - guide
+    - python
+    - flask
+---
 
-</div>
+import Thumbnail from "@site/src/components/Thumbnail/Thumbnail";
 
 # GraphQL API with Python & Flask: JWT authentication
-
-<div class="contents" backlinks="none" depth="1" local="">
-
-Table of contents
-
-</div>
 
 ## Introduction
 
@@ -21,8 +23,8 @@ to build a Python & Flask API for JWT authentication.
 
 We assume a `user` table with fields `email` and `password`.
 
-We create two `actions <create_actions>` and
-`custom types <custom_types>`:
+We create two [actions](/graphql/core/actions/create.mdx) and
+[custom types](/graphql/core/actions/types/index.mdx):
 
 1.  `Signup`: returns a `CreateUserOutput`
 
@@ -52,12 +54,11 @@ type JsonWebToken {
 
 Example: creating the `Signup` action
 
-<div class="thumbnail no-shadow" width="1000px"
-alt="Python Flask signup types">
-
-../../../../img/graphql/core/actions/python-flask-signup-types.png
-
-</div>
+<Thumbnail
+  src="/img/graphql/core/actions/python-flask-signup-types.png"
+  alt="Python Flask signup types"
+  width="1000px"
+/>
 
 ## Step 2: Action handler implementation for signup
 
@@ -78,8 +79,7 @@ will do the following:
 The first thing we have to implement is the Argon2 password hashing. We
 will use [argon2-cffi](https://github.com/hynek/argon2-cffi) for this.
 The second thing is a library for making requests to Hasura for
-mutations/queries, our choice will be
-[requests](https://github.com/psf/requests).
+mutations/queries, our choice will be [requests](https://github.com/psf/requests).
 
 Our `requirements.txt` will now look like: :
 
@@ -623,11 +623,9 @@ if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0")
 ```
 
-<div class="admonition">
-
-Additional Resources
+:::info Additional Resources
 
 Introduction to Hasura Actions - [View
 Recording](https://hasura.io/events/webinar/hasura-actions/?pg=docs&plcmt=body&cta=view-recording&tech=).
 
-</div>
+:::

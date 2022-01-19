@@ -1,15 +1,17 @@
-<div class="meta" description="Codegen for Hasura actions"
-keywords="hasura, docs, actions, codegen">
+---
+  description: Codegen for Hasura actions
+  keywords:
+    - hasura
+    - docs
+    - actions
+    - codegen
+---
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import Thumbnail from "@site/src/components/Thumbnail/Thumbnail";
 
-</div>
 
 # Actions codegen
-
-<div class="contents" backlinks="none" depth="2" local="">
-
-Table of contents
-
-</div>
 
 ## Introduction
 
@@ -18,49 +20,30 @@ inconvenient to write the complete handler code for every action.
 Luckily, GraphQL's type system allows us to auto-generate the
 boilerplate code for actions.
 
-<div class="note">
-
-<div class="title">
-
-Note
-
-</div>
+:::info Note
 
 Hasura currently has codegen set up for a few frameworks. The list of
 supported frameworks should grow with contributions from the community.
 
-</div>
+:::
 
 ## Generating handler code for your action
 
-<div class="rst-class">
-
-api_tabs
-
-</div>
-
-<div class="tabs">
-
-<div class="tab">
-
-Console
+<Tabs className="api-tabs">
+<TabItem value="console" label="Console">
 
 Head to the `Actions -> [action-name] -> Codegen` tab in the console
 
 You can select the framework of your choice to get the corresponding
 handler boilerplate code.
 
-<div class="thumbnail" alt="Console codegen tab">
+<Thumbnail
+  src="/img/graphql/core/actions/console-codegen-tab.png"
+  alt="Console codegen tab"
+/>
 
-/img/graphql/core/actions/console-codegen-tab.png
-
-</div>
-
-</div>
-
-<div class="tab">
-
-CLI
+</TabItem>
+<TabItem value="cli" label="CLI">
 
 **Configuration**
 
@@ -74,29 +57,22 @@ hasura actions use-codegen
 ```
 
 1.  Choose which framework you want to codegen for:
+    <Thumbnail
+      src="/img/graphql/core/actions/cli-framework-prompt.png"
+      alt="CLI Framework Prompt"
+    />
 
-    <div class="thumbnail" alt="CLI Framework Prompt">
-
-    /img/graphql/core/actions/cli-framework-prompt.png
-
-    </div>
-
-2.  Choose if you also wish to clone a starter kit for the chosen
-    framework:
-
-    <div class="thumbnail" alt="CLI Starter Kit Prompt">
-
-    /img/graphql/core/actions/cli-starter-kit-prompt.png
-
-    </div>
+2.  Choose if you also wish to clone a starter kit for the chosen framework:
+    <Thumbnail
+    src="/img/graphql/core/actions/cli-starter-kit-prompt.png"
+    alt="CLI Starter Kit Prompt"
+    />
 
 3.  Choose a path where you want to output the auto-generated code files
-
-    <div class="thumbnail" alt="CLI Starter Kit Prompt">
-
-    /img/graphql/core/actions/cli-output-dir-prompt.png
-
-    </div>
+    <Thumbnail
+    src="/img/graphql/core/actions/cli-output-dir-prompt.png"
+    alt="CLI Starter Kit Prompt"
+    />
 
 This command will update your `config.yaml` with the codegen config as
 per your preferences. You can also set these values manually in
@@ -127,25 +103,19 @@ hasura actions codegen <action-name>
 
 The codegen files will be generated at the `output_dir` path from
 `config.yaml`.
-
-</div>
-
-</div>
+</TabItem>
+</Tabs>
 
 ## Codegen for your framework
 
 As of now, Hasura provides codegen for a few frameworks
 (`nodejs-express`, `typescript-zeit`, `python-flask` and many more). You
 can see the full list in the `Codegen` tab on the console after you've
-`created an action <create_actions>`.
+[created an action](/graphql/core/actions/create.mdx).
 
 We will continue adding more examples to the documentation.
 
-<div class="toctree" maxdepth="1">
-
-Python & Flask \<python-flask>
-
-</div>
+- [Python & Flask](/graphql/core/actions/codegen/python-flask.mdx)
 
 ### Building your own codegen
 
@@ -153,11 +123,9 @@ If you wish to build a code generator for your framework [read the
 contrib
 guide](https://github.com/hasura/codegen-assets/blob/master/builder-kit/README.md).
 
-<div class="admonition">
-
-Additional Resources
+:::info Additional Resources
 
 Introduction to Hasura Actions - [View
 Recording](https://hasura.io/events/webinar/hasura-actions/?pg=docs&plcmt=body&cta=view-recording&tech=).
 
-</div>
+:::
