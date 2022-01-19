@@ -1,10 +1,10 @@
 ---
-  description: Action handlers for Hasura actions
-  keywords:
-    - hasura
-    - docs
-    - actions
-    - handlers
+description: Action handlers for Hasura actions
+keywords:
+  - hasura
+  - docs
+  - actions
+  - handlers
 ---
 
 import Tabs from '@theme/Tabs';
@@ -179,12 +179,12 @@ security solutions tailored to your needs.
 
 :::
 
-#### Step 1: Configure your Hasura instance{#configure-your-hasura-instance)
+#### Step 1: Configure your Hasura instance {#configure-your-hasura-instance)
 
 In your Hasura server, add the action secret as an environment variable,
 say `ACTION_SECRET_ENV`.
 
-#### Step 2: Add a header to your action{#add-a-header-to-your-action)
+#### Step 2: Add a header to your action {#add-a-header-to-your-action)
 
 For your action, add a header that will act as an action secret.
 
@@ -227,8 +227,8 @@ Save the changes and run `hasura metadata apply` to set the headers.
 </TabItem>
 <TabItem value="api" label="API">
 
-Headers can be set when creating `creating <metadata_create_action>` or
-`updating <metadata_update_action>` an action via the metadata API.
+Headers can be set when [creating](/graphql/core/api-reference/metadata-api/actions.mdx#metadata-create-action) or
+[updating](/graphql/core/api-reference/metadata-api/actions.mdx#metadata-update-action) an action via the metadata API.
 
 ```http
 POST /v1/metadata HTTP/1.1
@@ -265,7 +265,7 @@ X-Hasura-Role: admin
 
 :::info Note
 
-Before creating an action via the [create_action metadata API](/graphql/core/api-reference/metadata-api/actions.mdx) <metadata_create_action>`, all custom types
+Before creating an action via the [create_action metadata API](/graphql/core/api-reference/metadata-api/actions.mdx), all custom types
 need to be defined via the [metadata_set_custom_types](/graphql/core/api-reference/metadata-api/custom-types.mdx) metadata API.
 
 :::
@@ -276,13 +276,12 @@ with the action handler.
 
 :::info Note
 
-
 The name for the action secret is not defined by Hasura and can be
 chosen freely.
 
 :::
 
-#### Step 3: Verify the secret in your action handler{#verify-the-secret-in-your-action-handler}
+#### Step 3: Verify the secret in your action handler {#verify-the-secret-in-your-action-handler}
 
 First, load the action secret as an environment variable in your action
 handler by adding it to your `.env` file (this file might be a different

@@ -1,10 +1,10 @@
 ---
-  description: Creating Hasura actions
-  keywords:
-    - hasura
-    - docs
-    - actions
-    - create
+description: Creating Hasura actions
+keywords:
+  - hasura
+  - docs
+  - actions
+  - create
 ---
 import TOCInline from '@theme/TOCInline';
 import Tabs from '@theme/Tabs';
@@ -22,19 +22,21 @@ type of its response.
 
 To create an action, you have to:
 
-1.  Define the query or mutation
-2.  Define the required types
-3.  Create a handler
+1. Define the query or mutation
+2. Define the required types
+3. Create a handler
 
 Let's look at **examples** for mutation and query type actions.
 
 ## Setup
 
 <Tabs className="api-tabs">
-  <TabItem value="console" label="Console">
-    There is no setup required for defining actions via the console.
-  </TabItem>
-  <TabItem value="cli" label="CLI">
+<TabItem value="console" label="Console">
+
+There is no setup required for defining actions via the console.
+
+</TabItem>
+<TabItem value="cli" label="CLI">
 
 [Install](/graphql/core/hasura-cli/install-hasura-cli.mdx) or [update to](/graphql/core/hasura-cli/hasura_update-cli.mdx) the latest version of Hasura CLI.
 
@@ -84,7 +86,7 @@ Start with defining the mutation and the required types. These types
 will reflect in the GraphQL schema.
 
 <Tabs className="api-tabs">
-  <TabItem value="console" label="Console">
+<TabItem value="console" label="Console">
 
 Go to the `Actions` tab on the console and click on `Create`. This will
 take you to a page like this:
@@ -113,8 +115,8 @@ type LoginResponse {
 }
 ```
 
-  </TabItem>
-  <TabItem value="cli" label="CLI">
+</TabItem>
+<TabItem value="cli" label="CLI">
 
 To create an action, run
 
@@ -137,8 +139,8 @@ type LoginResponse {
 }
 ```
 
-  </TabItem>
-  <TabItem value="api" label="API">
+</TabItem>
+<TabItem value="api" label="API">
 
 It is essential that the custom types used in the action are defined *beforehand* via the [set_custom_types](/graphql/core/api-reference/metadata-api/custom-types.mdx#metadata-set-custom-types) metadata API:
 
@@ -199,16 +201,16 @@ X-Hasura-Role: admin
 }
 ```
 
-  </TabItem>
+</TabItem>
 </Tabs>
 
 
 The above definition means:
 
--   This action will be available in your GraphQL schema as a mutation called `login`.
--   It accepts two arguments called `username` and `password` of type `String!`.
--   It returns an output type called `LoginResponse`.
--   `LoginResponse` is a simple object type with a field called `accessToken` of type `String!`.
+- This action will be available in your GraphQL schema as a mutation called `login`.
+- It accepts two arguments called `username` and `password` of type `String!`.
+- It returns an output type called `LoginResponse`.
+- `LoginResponse` is a simple object type with a field called `accessToken` of type `String!`.
 
 <hr />
 
@@ -244,25 +246,25 @@ quickly, we also have this handler ready at
 Now, set the handler for the action:
 
 <Tabs className="api-tabs">
-  <TabItem value="console" label="Console">
+<TabItem value="console" label="Console">
 
 Set the value of the `handler` field to the above endpoint.
 
-  </TabItem>
-  <TabItem value="cli" label="CLI">
+</TabItem>
+<TabItem value="cli" label="CLI">
 
 Go to `metadata/actions.yaml`. You must see a handler like `http://localhost:3000` or `http://host.docker.internal:3000` under the
 action named `login`. This is a default value taken from `config.yaml`.
 Update the `handler` to the above endpoint.
 
-  </TabItem>
-  <TabItem value="api" label="API">
+</TabItem>
+<TabItem value="api" label="API">
 
 The action handler must be set when creating an action via the [create_action metadata API](/graphql/core/api-reference/metadata-api/actions.mdx#metadata-create-action).
 
 It can be updated later by using the [update_action metadata API](/graphql/core/api-reference/metadata-api/actions.mdx#metadata-update-action).
 
-  </TabItem>
+</TabItem>
 </Tabs>
 
 <br />
@@ -346,7 +348,7 @@ Let's start with a basic query that accepts a list of numbers and returns their 
 Start with defining the query and the required types. These types will reflect in the GraphQL schema.
 
 <Tabs className="api_tabs">
-  <TabItem value="console" label="Console">
+<TabItem value="console" label="Console">
 
 Go to the `Actions` tab on the console and click on `Create`. This will take you to a page like this:
 
@@ -371,8 +373,8 @@ type AddResult {
   sum: Int
 }
 ```
-  </TabItem>
-  <TabItem value="cli" label="CLI">
+</TabItem>
+<TabItem value="cli" label="CLI">
 
 To create an action, run
 
@@ -393,8 +395,8 @@ type AddResult {
 }
 ```
 
-  </TabItem>
-  <TabItem value="api" label="API">
+</TabItem>
+<TabItem value="api" label="API">
 
 It is essential that the custom types used in the action are defined *beforehand* via the [set_custom_types](/graphql/core/api-reference/metadata-api/custom-types.mdx#metadata-set-custom-types) metadata API:
 
@@ -451,15 +453,15 @@ X-Hasura-Role: admin
 }
 ```
 
-  </TabItem>
+</TabItem>
 </Tabs>
 
 The above definition means:
 
--   This action will be available in your GraphQL schema as a query called `addNumbers`
--   It accepts an argument called `numbers` which is a list of integers.
--   It returns an output type called `AddResult`.
--   `AddResult` is a simple object type with a field called `sum` of type integer.
+- This action will be available in your GraphQL schema as a query called `addNumbers`
+- It accepts an argument called `numbers` which is a list of integers.
+- It returns an output type called `AddResult`.
+- `AddResult` is a simple object type with a field called `sum` of type integer.
 
 <hr />
 
@@ -496,27 +498,26 @@ You can deploy this code somewhere and get the URI. For getting started quickly,
 Now, set the handler for the action:
 
 <Tabs className="api_tabs">
-  <TabItem value="console" label="Console">
+<TabItem value="console" label="Console">
 
 Set the value of the `handler` field to the above endpoint.
 
-  </TabItem>
-  <TabItem value="cli" label="CLI">
+</TabItem>
+<TabItem value="cli" label="CLI">
 
 Go to `metadata/actions.yaml`. You must see a handler like `http://localhost:3000` or `http://host.docker.internal:3000` under the
 action named `addNumbers`. This is a default value taken from `config.yaml`.
 
 Update the `handler` to the above endpoint.
 
-  </TabItem>
-  <TabItem value="api" label="API">
-
+</TabItem>
+<TabItem value="api" label="API">
 
 The action handler must be set when creating an action via the Once the custom types are defined, we can create an action via the [create_action metadata API](/graphql/core/api-reference/metadata-api/actions.mdx#metadata-create-action).
 
 It can be updated later by using the [update_action metadata API](/graphql/core/api-reference/metadata-api/actions.mdx#metadata-update-action).
 
-  </TabItem>
+</TabItem>
 </Tabs>
 
 :::info URL templating

@@ -1,10 +1,10 @@
 ---
-  description: Deriving Hasura actions
-  keywords:
-    - hasura
-    - docs
-    - actions
-    - derive
+description: Deriving Hasura actions
+keywords:
+  - hasura
+  - docs
+  - actions
+  - derive
 ---
 
 import Tabs from '@theme/Tabs';
@@ -124,6 +124,7 @@ type InsertAuthorOutput {
 
 The action name will be picked up from the argument of the command and
 not the mutation string.
+
 :::
 
 </TabItem>
@@ -166,7 +167,9 @@ handler boilerplate code.
 The information about derived actions are stored locally on the browser
 and hence it is currently only possible to generate the delegation code
 from the browser where the action was created.
+
 :::
+
 </TabItem>
 <TabItem value="cli" label="CLI">
 
@@ -189,7 +192,6 @@ hasura actions codegen <action-name> --derive-from '<query/mutation string>'
 
 </TabItem>
 </Tabs>
-
 
 ## Hiding the original mutation in the API
 

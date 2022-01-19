@@ -1,14 +1,14 @@
 ---
-  description: Deriving Hasura actions
-  keywords:
-    - hasura
-    - docs
-    - actions
-    - debug
-    - debugging
+description: Deriving Hasura actions
+keywords:
+  - hasura
+  - docs
+  - actions
+  - debug
+  - debugging
 ---
 
-import GraphiQLIDE from '@site/src/components/GraphiQLIDE/GraphiQLIDE';
+import GraphiQLIDE from "@site/src/components/GraphiQLIDE/GraphiQLIDE";
 
 # Debugging actions
 
@@ -25,7 +25,6 @@ If you are using action transforms, then you will also see the
 
 **For example**:
 
-
 <GraphiQLIDE
   query={`mutation {
   create_user(email: "foo@bar.com", name: "Foo"){
@@ -36,61 +35,62 @@ If you are using action transforms, then you will also see the
     }
   }
 }`}
-response={
-`{
-"errors": [
-{
-"message": "expecting null, object or array of objects for action webhook response",
-"extensions": {
-"code": "parse-failed",
-"path": "$",
-"internal": {
-"error": "expecting null, object or array of objects for action webhook response",
-"response": {
-"status": 200,
-"headers": [
-{
-"value": "application/json",
-"name": "Content-Type"
+  response={`{
+  "errors": [
+    {
+      "message": "expecting null, object or array of objects for action webhook response",
+      "extensions": {
+        "code": "parse-failed",
+        "path": "$",
+        "internal": {
+          "error": "expecting null, object or array of objects for action webhook response",
+          "response": {
+            "status": 200,
+            "headers": [
+              {
+              "value": "application/json",
+              "name": "Content-Type"
+              }
+            ],
+          "body": "[incorrect response]"
+        },
+        "request": {
+          "url": "http://127.0.0.1:5593/invalid-response",
+          "headers": [],
+          "body": {
+            "action": {
+              "name": "create_user"
+            },
+            "session_variables": {
+              "x-hasura-role": "admin"
+            },
+            "input": {
+              "email": "foo@boo.com",
+              "name": "Foo"
+            },
+            "request_query": "mutation {\\n    create_user(email: \\"foo@bar.com\\", name: \\"Foo\\"){\\n id\\n user {\\n name\\n email\\n }\\n }\\n }\\n"
+          },
+          "transformed_request": {
+            "query_string": "",
+            "body": "[transformed body]",
+            "url": "http://127.0.0.1:3000/abcd",
+            "headers": [
+                [
+                  "Content-Type",
+                  "application/json"
+                ]
+              ],
+            "method": "PATCH",
+            "response_timeout": "30000000"
+            },
+          }
+        }
+      }
+    }
+  ]
 }
-],
-"body": "[incorrect response]"
-},
-"request": {
-"url": "http://127.0.0.1:5593/invalid-response",
-"headers": [],
-"body": {
-"action": {
-"name": "create_user"
-},
-"session_variables": {
-"x-hasura-role": "admin"
-},
-"input": {
-"email": "foo@boo.com",
-"name": "Foo"
-},
-"request_query": "mutation {\\n    create_user(email: \\"foo@bar.com\\", name: \\"Foo\\"){\\n id\\n user {\\n name\\n email\\n }\\n }\\n }\\n"
-},
-"transformed_request": {
-"query_string": "",
-"body": "[transformed body]",
-"url": "http://127.0.0.1:3000/abcd",
-"headers": [
-[
-  "Content-Type",
-  "application/json"
-]
-],
-"method": "PATCH",
-"response_timeout": "30000000"
-},
-}
-}
-}
-}
-]
-}`}/>
+`}
+/>
 
 :::info Additional Resources
 

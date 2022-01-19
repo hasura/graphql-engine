@@ -1,11 +1,11 @@
 ---
-  description: Invoke event triggers manually on the Hasura console or over the API
-  keywords:
-    - hasura
-    - docs
-    - event trigger
-    - console
-    - invoke
+description: Invoke event triggers manually on the Hasura console or over the API
+keywords:
+  - hasura
+  - docs
+  - event trigger
+  - console
+  - invoke
 ---
 import Tabs from "@theme/Tabs";
 import TabItem from "@theme/TabItem";
@@ -43,11 +43,10 @@ the request and response.
 </TabItem>
 <TabItem value="api" label="API">
 
-When creating an event trigger over the
-`metadata_pg_create_event_trigger` metadata API, you can set the
-argument `enable_manual` to true.
+When creating an event trigger over the [pg_create_event_trigger](/graphql/core/api-reference/metadata-api/event-triggers.mdx#metadata-pg-create-event-trigger)
+metadata API, you can set the argument `enable_manual` to true.
 
-Then you can use the `metadata_pg_invoke_event_trigger` metadata API to
+Then you can use the [pg_invoke_event_trigger](/graphql/core/api-reference/metadata-api/event-triggers.mdx#metadata-pg-invoke-event-trigger) metadata API to
 invoke triggers manually:
 
 ```http

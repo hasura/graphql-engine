@@ -1,10 +1,10 @@
 ---
-  description: Manage Hasura actions relationships
-  keywords:
-    - hasura
-    - docs
-    - actions
-    - relationships
+description: Manage Hasura actions relationships
+keywords:
+  - hasura
+  - docs
+  - actions
+  - relationships
 ---
 
 import Tabs from '@theme/Tabs';
@@ -121,13 +121,12 @@ Update the definition of the `UpdateAuthorOutput` object type as:
           author_id: id
 ```
 
-Save the changes and run `hasura metadata apply` to create the
-relationship.
+Save the changes and run `hasura metadata apply` to create the relationship.
 </TabItem>
 <TabItem value="api" label="API">
 
 Action relationships can be added while defining custom types via the
-`metadata_set_custom_types` metadata API:
+[set_custom_types](/graphql/core/api-reference/metadata-api/custom-types.mdx#metadata-set-custom-types) metadata API:
 
 ```http
 POST /v1/metadata HTTP/1.1
@@ -167,11 +166,8 @@ X-Hasura-Role: admin
   </TabItem>
 </Tabs>
 
-
-
 :::info  Additional Resources
 
-Introduction to Hasura Actions - [View
-Recording](https://hasura.io/events/webinar/hasura-actions/?pg=docs&plcmt=body&cta=view-recording&tech=).
+Introduction to Hasura Actions - [View Recording](https://hasura.io/events/webinar/hasura-actions/?pg=docs&plcmt=body&cta=view-recording&tech=).
 
 :::

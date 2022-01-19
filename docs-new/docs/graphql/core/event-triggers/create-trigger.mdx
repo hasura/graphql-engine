@@ -1,10 +1,10 @@
 ---
-  description: Create an event trigger with Hasura
-  keywords:
-    - hasura
-    - docs
-    - event trigger
-    - create
+description: Create an event trigger with Hasura
+keywords:
+   - hasura
+   - docs
+   - event trigger
+   - create
 ---
 import Tabs from "@theme/Tabs";
 import TabItem from "@theme/TabItem";
@@ -29,7 +29,7 @@ alt="Create an event trigger"
 </TabItem>
 <TabItem value="cli" label="CLI">
 
-   You can add an event triggers in the ``tables.yaml`` file inside the ``metadata`` directory:
+You can add an event triggers in the `tables.yaml` file inside the `metadata` directory:
 
 ```yaml
 - table:
@@ -55,7 +55,7 @@ hasura metadata apply
 </TabItem>
 <TabItem value="api" label="API">
 
-Add an event trigger by using the `pg_create_event_trigger` metadata API.
+Add an event trigger by using the [pg_create_event_trigger](/graphql/core/api-reference/metadata-api/event-triggers.mdx#metadata-pg-create-event-trigger) metadata API.
 
 ```http
 POST /v1/metadata HTTP/1.1
@@ -172,7 +172,7 @@ hasura metadata apply
 </TabItem>
 <TabItem value="api" label="API">
 
-You can configure advanced settings via the `metadata_pg_create_event_trigger` metadata API.
+You can configure advanced settings via the [pg_create_event_trigger](/graphql/core/api-reference/metadata-api/event-triggers.mdx#metadata-pg-create-event-trigger) metadata API.
 
 ```http
 POST /v1/metadata HTTP/1.1
@@ -276,7 +276,7 @@ hasura metadata apply
 </TabItem>
 <TabItem value="api" label="API">
 
-You can configure advanced settings via the `metadata_pg_create_event_trigger` metadata API.
+You can configure advanced settings via the [pg_create_event_trigger](/graphql/core/api-reference/metadata-api/event-triggers.mdx#metadata-pg-create-event-trigger) metadata API.
 
 ```http
 POST /v1/metadata HTTP/1.1
@@ -385,7 +385,7 @@ hasura metadata apply
 </TabItem>
 <TabItem value="api" label="API">
 
-You can configure advanced settings via the `metadata_pg_create_event_trigger` metadata API.
+You can configure advanced settings via the [pg_create_event_trigger](/graphql/core/api-reference/metadata-api/event-triggers.mdx#metadata-pg-create-event-trigger) metadata API.
 
 ```http
 POST /v1/metadata HTTP/1.1
