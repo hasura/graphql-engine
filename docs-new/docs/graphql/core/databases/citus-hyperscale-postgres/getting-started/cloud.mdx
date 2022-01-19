@@ -1,33 +1,32 @@
-<div class="meta" description="Hasura Cloud for Citus - Hyperscale"
-keywords="hasura, docs, databases, citus, hasura-cloud">
+---
+  description: Hasura Cloud for Citus - Hyperscale
+  keywords:
+    - hasura
+    - docs
+    - databases
+    - citus
+    - hasura-cloud
+---
 
-</div>
+import Thumbnail from "@site/src/components/Thumbnail/Thumbnail";
 
 # Get Started with Hasura Cloud & Citus - Hyperscale
-
-<div class="contents" backlinks="none" depth="2" local="">
-
-Table of contents
-
-</div>
 
 ## Try it out
 
 ### Step 1: Create an account on Hasura Cloud and create a new Hasura Project
 
-Navigate to
-[cloud.hasura.io](https://cloud.hasura.io/signup/?pg=docs&plcmt=body&cta=navigate-to-cloud-hasura-io&tech=default),
+Navigate to [cloud.hasura.io](https://cloud.hasura.io/signup/?pg=docs&plcmt=body&cta=navigate-to-cloud-hasura-io&tech=default),
 and create a new Hasura Cloud account.
 
 Once you create a project on Hasura Cloud, hit the "Launch Console"
 button to open the Hasura Console for your project.
 
-<div class="thumbnail" alt="Connect new or existing database"
-width="600px">
-
-/img/graphql/cloud/getting-started/create-project.png
-
-</div>
+<Thumbnail
+  src="/img/graphql/cloud/getting-started/create-project.png"
+  alt="Connect new or existing database"
+  width="600px"
+/>
 
 ### Step 2: Add your Citus database as a source to Hasura
 
@@ -38,11 +37,11 @@ Citus speaks the same protocol as Postgres, the connection string will
 start with `postgres://`, i.e, there is no difference between Citus’s
 connection strings and Postgres’s connection strings.
 
-<div class="thumbnail" alt="Add source" width="600px">
-
-/img/graphql/core/databases/citus-hyperscale-postgres/1-add-source.png
-
-</div>
+<Thumbnail
+  src="/img/graphql/core/databases/citus-hyperscale-postgres/1-add-source.png"
+  alt="Add source"
+  width="600px"
+/>
 
 Once you add the database, you'll see your database pop up on the
 sidebar.
@@ -67,11 +66,11 @@ Head to the `GraphiQL` tab in the console and try running a GraphQL
 query! Use the explorer sidebar on GraphQL to get help in creating a
 GraphQL query.
 
-<div class="thumbnail" alt="Make GraphQL query" width="1100px">
-
-/img/graphql/core/databases/ms-sql-server/6-make-graphql-query.png
-
-</div>
+<Thumbnail
+  src="/img/graphql/core/databases/ms-sql-server/6-make-graphql-query.png"
+  alt="Make GraphQL query"
+  width="1100px"
+/>
 
 ## Keep up to date
 
@@ -85,5 +84,5 @@ directly.
 If you'd like to stay informed about the status of Citus support,
 subscribe to our newsletter and join our discord!
 
--   <https://hasura.io/newsletter/>
--   <https://discord.com/invite/hasura>
+- <https://hasura.io/newsletter/>
+- <https://discord.com/invite/hasura>
