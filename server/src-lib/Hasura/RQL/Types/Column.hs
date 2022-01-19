@@ -165,15 +165,15 @@ parseScalarValuesColumnType columnType =
 -- containing a 'PGColumnType', it only contains a 'PGScalarType', which is combined with the
 -- 'pcirReferences' field and other table data to eventually resolve the type to a 'PGColumnType'.
 data RawColumnInfo (b :: BackendType) = RawColumnInfo
-  { prciName :: !(Column b),
+  { rciName :: !(Column b),
     -- | The “ordinal position” of the column according to Postgres. Numbering starts at 1 and
     -- increases. Dropping a column does /not/ cause the columns to be renumbered, so a column can be
     -- consistently identified by its position.
-    prciPosition :: !Int,
-    prciType :: !(ScalarType b),
-    prciIsNullable :: !Bool,
-    prciDescription :: !(Maybe G.Description),
-    prciMutability :: ColumnMutability
+    rciPosition :: !Int,
+    rciType :: !(ScalarType b),
+    rciIsNullable :: !Bool,
+    rciDescription :: !(Maybe G.Description),
+    rciMutability :: ColumnMutability
   }
   deriving (Generic)
 
@@ -223,14 +223,14 @@ instance ToJSON ColumnMutability where
 -- | “Resolved” column info, produced from a 'RawColumnInfo' value that has been combined with
 -- other schema information to produce a 'PGColumnType'.
 data ColumnInfo (b :: BackendType) = ColumnInfo
-  { pgiColumn :: !(Column b),
+  { ciColumn :: !(Column b),
     -- | field name exposed in GraphQL interface
-    pgiName :: !G.Name,
-    pgiPosition :: !Int,
-    pgiType :: !(ColumnType b),
-    pgiIsNullable :: !Bool,
-    pgiDescription :: !(Maybe G.Description),
-    pgiMutability :: ColumnMutability
+    ciName :: !G.Name,
+    ciPosition :: !Int,
+    ciType :: !(ColumnType b),
+    ciIsNullable :: !Bool,
+    ciDescription :: !(Maybe G.Description),
+    ciMutability :: ColumnMutability
   }
   deriving (Generic)
 
@@ -254,14 +254,14 @@ onlyNumCols :: forall b. Backend b => [ColumnInfo b] -> [ColumnInfo b]
 onlyNumCols = filter isNumCol
 
 isNumCol :: forall b. Backend b => ColumnInfo b -> Bool
-isNumCol = isScalarColumnWhere (isNumType @b) . pgiType
+isNumCol = isScalarColumnWhere (isNumType @b) . ciType
 
 onlyComparableCols :: forall b. Backend b => [ColumnInfo b] -> [ColumnInfo b]
-onlyComparableCols = filter (isScalarColumnWhere (isComparableType @b) . pgiType)
+onlyComparableCols = filter (isScalarColumnWhere (isComparableType @b) . ciType)
 
 getColInfos :: Backend b => [Column b] -> [ColumnInfo b] -> [ColumnInfo b]
 getColInfos cols allColInfos =
-  flip filter allColInfos $ \ci -> pgiColumn ci `elem` cols
+  flip filter allColInfos $ \ci -> ciColumn ci `elem` cols
 
 fromCol :: Backend b => Column b -> FieldName
 fromCol = FieldName . toTxt
@@ -277,13 +277,13 @@ data ColumnReference (b :: BackendType)
 
 columnReferenceType :: ColumnReference backend -> ColumnType backend
 columnReferenceType = \case
-  ColumnReferenceColumn column -> pgiType column
+  ColumnReferenceColumn column -> ciType column
   ColumnReferenceComputedField _ scalarType -> ColumnScalar scalarType
   ColumnReferenceCast _ targetType -> targetType
 
 instance Backend b => ToTxt (ColumnReference b) where
   toTxt = \case
-    ColumnReferenceColumn column -> toTxt $ pgiColumn column
+    ColumnReferenceColumn column -> toTxt $ ciColumn column
     ColumnReferenceComputedField name _ -> toTxt name
     ColumnReferenceCast reference targetType ->
       toTxt reference <> "::" <> toTxt targetType

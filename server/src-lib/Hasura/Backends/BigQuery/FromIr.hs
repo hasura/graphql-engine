@@ -84,7 +84,7 @@ instance Show Error where
 --
 -- A ReaderT is used around this in most of the module too, for
 -- setting the current entity that a given field name refers to. See
--- @fromPGCol@.
+-- @fromColumn@.
 newtype FromIr a = FromIr
   { unFromIr :: ReaderT FromIrReader (StateT FromIrState (Validate (NonEmpty Error))) a
   }
@@ -564,7 +564,7 @@ unfurlAnnotatedOrderByElement ::
   Ir.AnnotatedOrderByElement 'BigQuery Expression -> WriterT (Seq UnfurledJoin) (ReaderT EntityAlias FromIr) FieldName
 unfurlAnnotatedOrderByElement =
   \case
-    Ir.AOCColumn pgColumnInfo -> lift (fromPGColumnInfo pgColumnInfo)
+    Ir.AOCColumn columnInfo -> lift (fromColumnInfo columnInfo)
     Ir.AOCObjectRelation Rql.RelInfo {riMapping = mapping, riRTable = tableName} annBoolExp annOrderByElementG -> do
       selectFrom <- lift (lift (fromQualifiedTable tableName))
       joinAliasEntity <-
@@ -618,8 +618,8 @@ unfurlAnnotatedOrderByElement =
               (const (fromAlias selectFrom))
               ( case annAggregateOrderBy of
                   Ir.AAOCount -> pure (CountAggregate StarCountable)
-                  Ir.AAOOp text pgColumnInfo -> do
-                    fieldName <- fromPGColumnInfo pgColumnInfo
+                  Ir.AAOOp text columnInfo -> do
+                    fieldName <- fromColumnInfo columnInfo
                     pure (OpAggregate text (ColumnExpression fieldName))
               )
           )
@@ -706,8 +706,8 @@ fromAnnBoolExpFld ::
   Ir.AnnBoolExpFld 'BigQuery Expression -> ReaderT EntityAlias FromIr Expression
 fromAnnBoolExpFld =
   \case
-    Ir.AVColumn pgColumnInfo opExpGs -> do
-      expression <- fmap ColumnExpression (fromPGColumnInfo pgColumnInfo)
+    Ir.AVColumn columnInfo opExpGs -> do
+      expression <- fmap ColumnExpression (fromColumnInfo columnInfo)
       expressions <- traverse (lift . fromOpExpG expression) opExpGs
       pure (AndExpression expressions)
     Ir.AVRelationship Rql.RelInfo {riMapping = mapping, riRTable = table} annBoolExp -> do
@@ -739,12 +739,12 @@ fromAnnBoolExpFld =
               }
         )
 
-fromPGColumnInfo :: Rql.ColumnInfo 'BigQuery -> ReaderT EntityAlias FromIr FieldName
-fromPGColumnInfo Rql.ColumnInfo {pgiColumn = ColumnName pgCol} = do
+fromColumnInfo :: Rql.ColumnInfo 'BigQuery -> ReaderT EntityAlias FromIr FieldName
+fromColumnInfo Rql.ColumnInfo {ciColumn = ColumnName column} = do
   EntityAlias {entityAliasText} <- ask
   pure
     ( FieldName
-        { fieldName = pgCol,
+        { fieldName = column,
           fieldNameEntity = entityAliasText
         }
     )
@@ -811,18 +811,18 @@ data FieldSource
 -- @
 -- TAFAgg
 --   [ ( FieldName {getFieldNameTxt = "count"}
---     , AFCount (CTSimple [PGCol {getPGColTxt = "AlbumId"}]))
+--     , AFCount (NonNullFieldCountable [ColumnName {columnName = "AlbumId"}]))
 --   , ( FieldName {getFieldNameTxt = "foo"}
---     , AFCount (CTSimple [PGCol {getPGColTxt = "AlbumId"}]))
+--     , AFCount (NonNullFieldCountable [ColumnName {columnName = "AlbumId"}]))
 --   , ( FieldName {getFieldNameTxt = "max"}
 --     , AFOp
 --         (AggregateOp
 --            { _aoOp = "max"
 --            , _aoFields =
 --                [ ( FieldName {getFieldNameTxt = "AlbumId"}
---                  , CFCol (PGCol {getPGColTxt = "AlbumId"}))
+--                  , CFCol (ColumnName {columnName = "AlbumId"} (ColumnScalar IntegerScalarType)))
 --                , ( FieldName {getFieldNameTxt = "TrackId"}
---                  , CFCol (PGCol {getPGColTxt = "TrackId"}))
+--                  , CFCol (ColumnName {columnName = "TrackId"} (ColumnScalar IntegerScalarType)))
 --                ]
 --            }))
 --   ]
@@ -894,16 +894,16 @@ fromAggregateField aggregateField =
     Ir.AFCount countType ->
       CountAggregate <$> case countType of
         StarCountable -> pure StarCountable
-        NonNullFieldCountable names -> NonNullFieldCountable <$> traverse fromPGCol names
-        DistinctCountable names -> DistinctCountable <$> traverse fromPGCol names
+        NonNullFieldCountable names -> NonNullFieldCountable <$> traverse fromColumn names
+        DistinctCountable names -> DistinctCountable <$> traverse fromColumn names
     Ir.AFOp Ir.AggregateOp {_aoOp = op, _aoFields = fields} -> do
       fs <- NE.nonEmpty fields `onNothing` refute (pure MalformedAgg)
       args <-
         traverse
-          ( \(Rql.FieldName fieldName, pgColFld) -> do
+          ( \(Rql.FieldName fieldName, columnField) -> do
               expression' <-
-                case pgColFld of
-                  Ir.CFCol pgCol _columnType -> fmap ColumnExpression (fromPGCol pgCol)
+                case columnField of
+                  Ir.CFCol column _columnType -> fmap ColumnExpression (fromColumn column)
                   Ir.CFExp text -> pure (ValueExpression (StringValue text))
               pure (fieldName, expression')
           )
@@ -953,7 +953,7 @@ fromAnnColumnField ::
   Ir.AnnColumnField 'BigQuery Expression ->
   ReaderT EntityAlias FromIr Expression
 fromAnnColumnField _stringifyNumbers annColumnField = do
-  fieldName <- fromPGCol pgCol
+  fieldName <- fromColumn column
   if asText || False -- TOOD: (Rql.isScalarColumnWhere Psql.isBigNum typ && stringifyNumbers == StringifyNumbers)
     then pure (ToStringExpression (ColumnExpression fieldName))
     else case caseBoolExpMaybe of
@@ -963,7 +963,7 @@ fromAnnColumnField _stringifyNumbers annColumnField = do
         pure (ConditionalProjection ex' fieldName)
   where
     Ir.AnnColumnField
-      { _acfColumn = pgCol,
+      { _acfColumn = column,
         _acfAsText = asText :: Bool,
         _acfOp = _ :: Maybe (Ir.ColumnOp 'BigQuery), -- TODO: What's this?
         _acfCaseBoolExpression = caseBoolExpMaybe :: Maybe (Ir.AnnColumnCaseBoolExp 'BigQuery Expression)
@@ -972,8 +972,8 @@ fromAnnColumnField _stringifyNumbers annColumnField = do
 -- | This is where a field name "foo" is resolved to a fully qualified
 -- field name [table].[foo]. The table name comes from EntityAlias in
 -- the ReaderT.
-fromPGCol :: ColumnName -> ReaderT EntityAlias FromIr FieldName
-fromPGCol (ColumnName txt) = do
+fromColumn :: ColumnName -> ReaderT EntityAlias FromIr FieldName
+fromColumn (ColumnName txt) = do
   EntityAlias {entityAliasText} <- ask
   pure (FieldName {fieldName = txt, fieldNameEntity = entityAliasText})
 
@@ -1497,9 +1497,9 @@ fromMapping ::
   ReaderT EntityAlias FromIr [Expression]
 fromMapping localFrom =
   traverse
-    ( \(remotePgCol, localPgCol) -> do
-        localFieldName <- local (const (fromAlias localFrom)) (fromPGCol localPgCol)
-        remoteFieldName <- fromPGCol remotePgCol
+    ( \(remoteColumn, localColumn) -> do
+        localFieldName <- local (const (fromAlias localFrom)) (fromColumn localColumn)
+        remoteFieldName <- fromColumn remoteColumn
         pure
           ( EqualExpression
               (ColumnExpression localFieldName)
@@ -1514,9 +1514,9 @@ fromMappingFieldNames ::
   ReaderT EntityAlias FromIr [(FieldName, FieldName)]
 fromMappingFieldNames localFrom =
   traverse
-    ( \(remotePgCol, localPgCol) -> do
-        localFieldName <- local (const localFrom) (fromPGCol localPgCol)
-        remoteFieldName <- fromPGCol remotePgCol
+    ( \(remoteColumn, localColumn) -> do
+        localFieldName <- local (const localFrom) (fromColumn localColumn)
+        remoteFieldName <- fromColumn remoteColumn
         pure
           ( (,)
               (localFieldName)

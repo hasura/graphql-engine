@@ -89,15 +89,15 @@ resolveSource sourceConfig customization =
                           { _ptmiOid = OID (fromIntegral seconds + index :: Int), -- TODO: The seconds are used for uniqueness. BigQuery doesn't support a "stable" ID for a table.
                             _ptmiColumns =
                               [ RawColumnInfo
-                                  { prciName = ColumnName name,
-                                    prciPosition = position,
-                                    prciType = restTypeToScalarType type',
-                                    prciIsNullable =
+                                  { rciName = ColumnName name,
+                                    rciPosition = position,
+                                    rciType = restTypeToScalarType type',
+                                    rciIsNullable =
                                       case mode of
                                         Nullable -> True
                                         _ -> False,
-                                    prciDescription = Nothing,
-                                    prciMutability = ColumnMutability {_cmIsInsertable = True, _cmIsUpdatable = True}
+                                    rciDescription = Nothing,
+                                    rciMutability = ColumnMutability {_cmIsInsertable = True, _cmIsUpdatable = True}
                                   }
                                 | (position, RestFieldSchema {name, type', mode}) <-
                                     zip [1 ..] fields -- TODO: Same trouble as Oid above.

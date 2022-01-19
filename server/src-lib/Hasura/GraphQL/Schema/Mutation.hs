@@ -178,7 +178,7 @@ tableFieldsInput sourceName tableInfo insertPerms =
       FIComputedField _ -> pure Nothing
       FIRemoteRelationship _ -> pure Nothing
       FIColumn columnInfo -> do
-        if (_cmIsInsertable $ pgiMutability columnInfo)
+        if (_cmIsInsertable $ ciMutability columnInfo)
           then mkColumnParser columnInfo
           else pure Nothing
       FIRelationship relInfo -> mkRelationshipParser sourceName relInfo
@@ -187,14 +187,14 @@ tableFieldsInput sourceName tableInfo insertPerms =
       ColumnInfo b ->
       m (Maybe (InputFieldsParser n (Maybe (IR.AnnotatedInsert b (UnpreparedValue b)))))
     mkColumnParser columnInfo = do
-      let columnName = pgiName columnInfo
-          columnDesc = pgiDescription columnInfo
-          isAllowed = Set.member (pgiColumn columnInfo) (ipiCols insertPerms)
+      let columnName = ciName columnInfo
+          columnDesc = ciDescription columnInfo
+          isAllowed = Set.member (ciColumn columnInfo) (ipiCols insertPerms)
       whenMaybe isAllowed do
-        fieldParser <- columnParser (pgiType columnInfo) (G.Nullability $ pgiIsNullable columnInfo)
+        fieldParser <- columnParser (ciType columnInfo) (G.Nullability $ ciIsNullable columnInfo)
         pure $
           P.fieldOptional columnName columnDesc fieldParser `mapField` \value ->
-            IR.AIColumn (pgiColumn columnInfo, mkParameter value)
+            IR.AIColumn (ciColumn columnInfo, mkParameter value)
 
 mkDefaultRelationshipParser ::
   forall b r m n.
@@ -320,7 +320,7 @@ mkInsertObject objects tableInfo backendInsert insertPerms updatePerms =
     updateCheck = (fmap . fmap . fmap) partialSQLExpToUnpreparedValue $ upiCheck =<< updatePerms
     defaultValues =
       Map.union (partialSQLExpToUnpreparedValue <$> ipiSet insertPerms) $
-        Map.fromList [(column, UVLiteral $ columnDefaultValue @b column) | column <- pgiColumn <$> columns]
+        Map.fromList [(column, UVLiteral $ columnDefaultValue @b column) | column <- ciColumn <$> columns]
 
 -- delete
 
@@ -448,10 +448,10 @@ primaryKeysArguments ::
 primaryKeysArguments tableInfo selectPerms = runMaybeT $ do
   primaryKeys <- hoistMaybe $ _tciPrimaryKey . _tiCoreInfo $ tableInfo
   let columns = _pkColumns primaryKeys
-  guard $ all (\c -> pgiColumn c `Map.member` spiCols selectPerms) columns
+  guard $ all (\c -> ciColumn c `Map.member` spiCols selectPerms) columns
   lift $
     fmap (BoolAnd . toList) . sequenceA <$> for columns \columnInfo -> do
-      field <- columnParser (pgiType columnInfo) (G.Nullability False)
+      field <- columnParser (ciType columnInfo) (G.Nullability False)
       pure $
         BoolFld . AVColumn columnInfo . pure . AEQ True . mkParameter
-          <$> P.field (pgiName columnInfo) (pgiDescription columnInfo) field
+          <$> P.field (ciName columnInfo) (ciDescription columnInfo) field

@@ -429,7 +429,7 @@ instance (Backend b, Hashable (BooleanOperators b a), Hashable a) => Hashable (A
 instance (Backend b, ToJSONKeyValue (BooleanOperators b a), ToJSON a) => ToJSONKeyValue (AnnBoolExpFld b a) where
   toJSONKeyValue = \case
     AVColumn pci opExps ->
-      ( toTxt $ pgiColumn pci,
+      ( toTxt $ ciColumn pci,
         toJSON (pci, object . pure . toJSONKeyValue <$> opExps)
       )
     AVRelationship ri relBoolExp ->

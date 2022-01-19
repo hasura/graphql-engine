@@ -463,7 +463,7 @@ mkAnnColumnFieldAsText ::
   ColumnInfo backend ->
   AnnFieldG backend r v
 mkAnnColumnFieldAsText ci =
-  AFColumn (AnnColumnField (pgiColumn ci) (pgiType ci) True Nothing Nothing)
+  AFColumn (AnnColumnField (ciColumn ci) (ciType ci) True Nothing Nothing)
 
 -- Aggregation fields
 
