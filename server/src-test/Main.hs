@@ -34,10 +34,10 @@ import Hasura.RQL.DDL.Schema.Cache
 import Hasura.RQL.DDL.Schema.Cache.Common
 import Hasura.RQL.MetadataSpec qualified as MetadataSpec
 import Hasura.RQL.PermissionSpec qualified as PermSpec
-import Hasura.RQL.RequestTransformSpec qualified as RequestTransformSpec
 import Hasura.RQL.Types
 import Hasura.RQL.Types.CommonSpec qualified as CommonTypesSpec
 import Hasura.RQL.Types.EndpointSpec qualified as EndpointSpec
+import Hasura.RQL.WebhookTransformsSpec qualified as WebhookTransformsSpec
 import Hasura.SQL.WKTSpec qualified as WKTSpec
 import Hasura.Server.AuthSpec qualified as AuthSpec
 import Hasura.Server.Init
@@ -98,7 +98,7 @@ unitSpecs = do
   describe "Hasura.Server.Telemetry" TelemetrySpec.spec
   describe "Hasura.RQL.PermissionSpec" PermSpec.spec
   describe "Hasura.RQL.MetadataSpec" MetadataSpec.spec
-  describe "Hasura.RQL.RequestTransformSpec" RequestTransformSpec.spec
+  describe "Hasura.RQL.WebhookTransformsSpec" WebhookTransformsSpec.spec
   describe "Network.HTTP.Client.TransformableSpec" TransformableSpec.spec
 
 buildMSSQLSpecs :: IO Spec

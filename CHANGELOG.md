@@ -16,10 +16,10 @@ count (
 ```
   MSSQL doesn't support applying `COUNT()` on multiple columns.
 
-
 ### Bug fixes and improvements
 (Add entries below in the order of server, console, cli, docs, others)
 
+- server: add response transforms for actions, events, and triggers
 - server: bigquery: implement `distinct_on`.
 - server: extend transactions to MSSQL GraphQL queries and `mssql_run_sql` /v2/query API
 - server: improve error messages in MSSQL database query exceptions

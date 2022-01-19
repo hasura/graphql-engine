@@ -95,6 +95,12 @@ class TestActionsSync:
     def test_mirror_action_transformed_success(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/mirror_action_transformed_success.yaml')
 
+    def test_mirror_action_transformed_output_success(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/mirror_action_transformed_output_success.yaml')
+
+    def test_results_list_transformed_output_success(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/results_list_transformed_output_success.yaml')
+
     #https://github.com/hasura/graphql-engine/issues/6631
     def test_create_users_output_type(self, hge_ctx):
         gql_query = '''
@@ -645,11 +651,11 @@ class TestCreateActionNestedTypeWithRelation:
     @classmethod
     def dir(cls):
         return 'queries/actions/nested-relation'
-    
+
     # no toplevel, extensions with no error
     def test_create_async_action_with_nested_output_and_relation_fail(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/create_async_action_with_nested_output_and_relation.yaml')
-    
+
     # no toplevel, extensions with no error
     def test_create_sync_action_with_nested_output_and_nested_relation_fail(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/create_sync_action_with_nested_output_and_nested_relation.yaml')

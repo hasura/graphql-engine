@@ -1631,6 +1631,10 @@ ActionDefinition
      - false
      - :ref:`RequestTransformation`
      - Request Transformation to be applied to this Action's request
+   * - response_transform
+     - false
+     - :ref:`ResponseTransformation`
+     - Response Transformation to be applied to this Action's response
 
 
 .. _InputArgument:
@@ -2079,6 +2083,24 @@ The JSON templating language to be used for this JSON transformation.
 
    "Kriti"
 
+ResponseTransformation
+^^^^^^^^^^^^^^^^^^^^^
+
+.. list-table::
+   :header-rows: 1
+
+   * - Key
+     - required
+     - Schema
+     - Description
+   * - body
+     - false
+     - String
+     - A template script for transforming the response body.
+   * - template_engine
+     - false
+     - :ref:`TemplateEngine`
+     - Template language to be used for this transformation. Default: "Kriti"
 
 .. _RetryConf:
 

@@ -988,7 +988,7 @@ metadataToOrdJSON
                   <> catMaybes [maybeCommentToMaybeOrdPair comment]
 
             eventTriggerConfToOrdJSON :: Backend b => EventTriggerConf b -> AO.Value
-            eventTriggerConfToOrdJSON (EventTriggerConf name definition webhook webhookFromEnv retryConf headers metadataTransform) =
+            eventTriggerConfToOrdJSON (EventTriggerConf name definition webhook webhookFromEnv retryConf headers reqTransform respTransform) =
               AO.object $
                 [ ("name", AO.toOrdered name),
                   ("definition", AO.toOrdered definition),
@@ -998,7 +998,8 @@ metadataToOrdJSON
                     [ maybeAnyToMaybeOrdPair "webhook" AO.toOrdered webhook,
                       maybeAnyToMaybeOrdPair "webhook_from_env" AO.toOrdered webhookFromEnv,
                       headers >>= listToMaybeOrdPair "headers" AO.toOrdered,
-                      fmap (("request_transform",) . AO.toOrdered) metadataTransform
+                      fmap (("request_transform",) . AO.toOrdered) reqTransform,
+                      fmap (("response_transform",) . AO.toOrdered) respTransform
                     ]
 
       functionMetadataToOrdJSON :: Backend b => FunctionMetadata b -> AO.Value
@@ -1074,7 +1075,7 @@ metadataToOrdJSON
 
       crontriggerQToOrdJSON :: CronTriggerMetadata -> AO.Value
       crontriggerQToOrdJSON
-        (CronTriggerMetadata name webhook schedule payload retryConf headers includeInMetadata comment) =
+        (CronTriggerMetadata name webhook schedule payload retryConf headers includeInMetadata comment reqTransform respTransform) =
           AO.object $
             [ ("name", AO.toOrdered name),
               ("webhook", AO.toOrdered webhook),
@@ -1085,7 +1086,9 @@ metadataToOrdJSON
                 [ maybeAnyToMaybeOrdPair "payload" AO.toOrdered payload,
                   maybeAnyToMaybeOrdPair "retry_conf" AO.toOrdered (maybeRetryConfiguration retryConf),
                   maybeAnyToMaybeOrdPair "headers" AO.toOrdered (maybeHeader headers),
-                  maybeAnyToMaybeOrdPair "comment" AO.toOrdered comment
+                  maybeAnyToMaybeOrdPair "comment" AO.toOrdered comment,
+                  fmap (("request_transform",) . AO.toOrdered) reqTransform,
+                  fmap (("response_transform",) . AO.toOrdered) respTransform
                 ]
           where
             maybeRetryConfiguration retryConfig
@@ -1187,6 +1190,7 @@ metadataToOrdJSON
                 timeout
                 handler
                 requestTransform
+                responseTransform
               ) =
               let typeAndKind = case actionType of
                     ActionQuery -> [("type", AO.toOrdered ("query" :: String))]
@@ -1202,7 +1206,8 @@ metadataToOrdJSON
                       <> catMaybes
                         [ listToMaybeOrdPair "headers" AO.toOrdered headers,
                           listToMaybeOrdPair "arguments" argDefinitionToOrdJSON args,
-                          fmap (("request_transform",) . AO.toOrdered) requestTransform
+                          fmap (("request_transform",) . AO.toOrdered) requestTransform,
+                          fmap (("response_transform",) . AO.toOrdered) responseTransform
                         ]
                       <> typeAndKind
                       <> bool [("timeout", AO.toOrdered timeout)] mempty (timeout == defaultActionTimeoutSecs)
