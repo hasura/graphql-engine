@@ -74,8 +74,8 @@ tableSelectColumnsEnum sourceName tableInfo selectPermissions = do
   pure $
     P.enum enumName description
       <$> nonEmpty
-        [ ( define $ pgiName column,
-            pgiColumn column
+        [ ( define $ ciName column,
+            ciColumn column
           )
           | column <- columns
         ]
@@ -102,7 +102,7 @@ tableUpdateColumnsEnum tableInfo updatePermissions = do
       enumDesc = Just $ G.Description $ "update columns of table " <>> tableName
       enumValues = do
         column <- columns
-        pure (define $ pgiName column, pgiColumn column)
+        pure (define $ ciName column, ciColumn column)
   pure $ P.enum enumName enumDesc <$> nonEmpty enumValues
   where
     define name = P.Definition name (Just $ G.Description "column name") P.EnumValueInfo
@@ -157,7 +157,7 @@ tableSelectFields sourceName tableInfo permissions = do
   filterM canBeSelected $ Map.elems tableFields
   where
     canBeSelected (FIColumn columnInfo) =
-      pure $ Map.member (pgiColumn columnInfo) (spiCols permissions)
+      pure $ Map.member (ciColumn columnInfo) (spiCols permissions)
     canBeSelected (FIRelationship relationshipInfo) = do
       tableInfo' <- askTableInfo sourceName $ riRTable relationshipInfo
       isJust <$> tableSelectPermissions @b tableInfo'
@@ -206,6 +206,6 @@ tableUpdateColumns tableInfo permissions = pure $ filter isUpdatable $ tableColu
     isUpdatable :: ColumnInfo b -> Bool
     isUpdatable columnInfo = columnIsUpdatable && columnIsPermitted && columnHasNoPreset
       where
-        columnIsUpdatable = _cmIsUpdatable (pgiMutability columnInfo)
-        columnIsPermitted = Set.member (pgiColumn columnInfo) (upiCols permissions)
-        columnHasNoPreset = not (Map.member (pgiColumn columnInfo) (upiSet permissions))
+        columnIsUpdatable = _cmIsUpdatable (ciMutability columnInfo)
+        columnIsPermitted = Set.member (ciColumn columnInfo) (upiCols permissions)
+        columnHasNoPreset = not (Map.member (ciColumn columnInfo) (upiSet permissions))

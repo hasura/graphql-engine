@@ -225,10 +225,10 @@ buildRemoteFieldInfo lhsIdentifier lhsJoinFields RemoteRelationship {..} allSour
           tgtField <- askFieldInfo targetColumns tgtFieldName
           pure (srcFieldName, lhsJoinField, tgtField)
         mapping <- for columnPairs \(srcFieldName, srcColumn, tgtColumn) -> do
-          tgtScalar <- case pgiType tgtColumn of
+          tgtScalar <- case ciType tgtColumn of
             ColumnScalar scalarType -> pure scalarType
             ColumnEnumReference _ -> throw400 NotSupported "relationships to enum fields are not supported yet"
-          pure (srcFieldName, (srcColumn, tgtScalar, pgiColumn tgtColumn))
+          pure (srcFieldName, (srcColumn, tgtScalar, ciColumn tgtColumn))
         let sourceConfig = _rsConfig targetSourceInfo
             sourceCustomization = _rsCustomization targetSourceInfo
             rsri =
@@ -239,7 +239,7 @@ buildRemoteFieldInfo lhsIdentifier lhsJoinFields RemoteRelationship {..} allSour
               flip map columnPairs \(_, _srcColumn, tgtColumn) ->
                 SchemaDependency
                   ( SOSourceObj _tsrdSource $
-                      AB.mkAnyBackend $ SOITableObj @b' targetTable $ TOCol @b' $ pgiColumn tgtColumn
+                      AB.mkAnyBackend $ SOITableObj @b' targetTable $ TOCol @b' $ ciColumn tgtColumn
                   )
                   DRRemoteRelationship
             requiredLHSJoinFields = fmap (\(srcField, _, _) -> srcField) $ Map.fromList mapping

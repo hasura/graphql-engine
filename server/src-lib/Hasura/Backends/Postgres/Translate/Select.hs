@@ -282,7 +282,7 @@ mkAggregateOrderByAlias :: AnnotatedAggregateOrderBy ('Postgres pgKind) -> S.Ali
 mkAggregateOrderByAlias =
   (S.Alias . Identifier) . \case
     AAOCount -> "count"
-    AAOOp opText col -> opText <> "." <> getPGColTxt (pgiColumn col)
+    AAOOp opText col -> opText <> "." <> getPGColTxt (ciColumn col)
 
 mkArrayRelationSourcePrefix ::
   Identifier ->
@@ -350,8 +350,8 @@ mkAggregateOrderByExtractorAndFields annAggOrderBy =
         [(FieldName "count", AFCount S.CTStar)]
       )
     AAOOp opText pgColumnInfo ->
-      let pgColumn = pgiColumn pgColumnInfo
-          pgType = pgiType pgColumnInfo
+      let pgColumn = ciColumn pgColumnInfo
+          pgType = ciType pgColumnInfo
        in ( S.Extractor (S.SEFnApp opText [S.SEIdentifier $ toIdentifier pgColumn] Nothing) alias,
             [ ( FieldName opText,
                 AFOp $
@@ -372,7 +372,7 @@ mkAnnOrderByAlias ::
   Identifier -> FieldName -> SimilarArrayFields -> AnnotatedOrderByElement ('Postgres pgKind) v -> S.Alias
 mkAnnOrderByAlias pfx parAls similarFields = \case
   AOCColumn pgColumnInfo ->
-    let pgColumn = pgiColumn pgColumnInfo
+    let pgColumn = ciColumn pgColumnInfo
         obColAls = mkBaseTableColumnAlias pfx pgColumn
      in S.Alias obColAls
   -- "pfx.or.relname"."pfx.ob.or.relname.rest" AS "pfx.ob.or.relname.rest"
@@ -865,7 +865,7 @@ processOrderByItems sourcePrefix' fieldAlias' similarArrayFields distOnCols = \c
       (ordByAlias,) <$> case annObCol of
         AOCColumn pgColInfo ->
           pure $
-            S.mkQIdenExp (mkBaseTableAlias sourcePrefix) $ toIdentifier $ pgiColumn pgColInfo
+            S.mkQIdenExp (mkBaseTableAlias sourcePrefix) $ toIdentifier $ ciColumn pgColInfo
         AOCObjectRelation relInfo relFilter rest -> withWriteObjectRelation $ do
           let RelInfo relName _ colMapping relTable _ _ = relInfo
               relSourcePrefix = mkObjectRelationTableAlias sourcePrefix relName
@@ -973,7 +973,7 @@ processOrderByItems sourcePrefix' fieldAlias' similarArrayFields distOnCols = \c
         sortAtNodeAndBase baseColumnOrderBys =
           let mkBaseOrderByItem (OrderByItemG orderByType columnInfo nullsOrder) =
                 S.OrderByItem
-                  (S.SEIdentifier $ toIdentifier $ pgiColumn columnInfo)
+                  (S.SEIdentifier $ toIdentifier $ ciColumn columnInfo)
                   orderByType
                   nullsOrder
               baseOrderByExp = S.OrderByExp $ mkBaseOrderByItem <$> baseColumnOrderBys
@@ -995,11 +995,11 @@ processOrderByItems sourcePrefix' fieldAlias' similarArrayFields distOnCols = \c
           AAOCount -> [S.SELit "count", valExp]
           AAOOp opText colInfo ->
             [ S.SELit opText,
-              S.applyJsonBuildObj [S.SELit $ getPGColTxt $ pgiColumn colInfo, valExp]
+              S.applyJsonBuildObj [S.SELit $ getPGColTxt $ ciColumn colInfo, valExp]
             ]
 
         annObColToJSONField valExp = \case
-          AOCColumn pgCol -> [S.SELit $ getPGColTxt $ pgiColumn pgCol, valExp]
+          AOCColumn pgCol -> [S.SELit $ getPGColTxt $ ciColumn pgCol, valExp]
           AOCObjectRelation relInfo _ obCol ->
             [ S.SELit $ relNameToTxt $ riName relInfo,
               S.applyJsonBuildObj $ annObColToJSONField valExp obCol
@@ -1208,8 +1208,8 @@ processAnnFields sourcePrefix fieldAlias similarArrFields annFields = do
     mkNodeId :: QualifiedTable -> PrimaryKeyColumns ('Postgres pgKind) -> S.SQLExp
     mkNodeId (QualifiedObject tableSchema tableName) pkeyColumns =
       let columnInfoToSQLExp pgColumnInfo =
-            toJSONableExp False (pgiType pgColumnInfo) False $
-              S.mkQIdenExp (mkBaseTableAlias sourcePrefix) $ pgiColumn pgColumnInfo
+            toJSONableExp False (ciType pgColumnInfo) False $
+              S.mkQIdenExp (mkBaseTableAlias sourcePrefix) $ ciColumn pgColumnInfo
        in -- See Note [Relay Node id].
           encodeBase64 $
             flip S.SETyAnn S.textTypeAnn $
@@ -1532,15 +1532,15 @@ processConnectionSelect sourcePrefixes fieldAlias relAlias colMapping connection
       S.applyJsonBuildObj $
         flip concatMap (toList primaryKeyColumns) $
           \pgColumnInfo ->
-            [ S.SELit $ getPGColTxt $ pgiColumn pgColumnInfo,
-              toJSONableExp False (pgiType pgColumnInfo) False $
-                S.mkQIdenExp (mkBaseTableAlias thisPrefix) $ pgiColumn pgColumnInfo
+            [ S.SELit $ getPGColTxt $ ciColumn pgColumnInfo,
+              toJSONableExp False (ciType pgColumnInfo) False $
+                S.mkQIdenExp (mkBaseTableAlias thisPrefix) $ ciColumn pgColumnInfo
             ]
 
     primaryKeyColumnExtractors =
       flip map (toList primaryKeyColumns) $
         \pgColumnInfo ->
-          let pgColumn = pgiColumn pgColumnInfo
+          let pgColumn = ciColumn pgColumnInfo
            in ( S.Alias $ mkBaseTableColumnAlias thisPrefix pgColumn,
                 S.mkQIdenExp (mkBaseTableAlias thisPrefix) pgColumn
               )

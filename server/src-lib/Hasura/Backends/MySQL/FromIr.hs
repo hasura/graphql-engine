@@ -54,7 +54,7 @@ data Error
 --
 -- A ReaderT is used around this in most of the module too, for
 -- setting the current entity that a given field name refers to. See
--- @fromPGCol@.
+-- @fromColumn@.
 newtype FromIr a = FromIr
   { unFromIr :: StateT (Map Text Int) (Validate (NonEmpty Error)) a
   }
@@ -172,8 +172,8 @@ fromAnnBoolExp boolExp = do
 -- special handling to ensure that SQL Server won't outright reject
 -- the comparison. See also 'shouldCastToVarcharMax'.
 fromColumnInfoForBoolExp :: IR.ColumnInfo 'MySQL -> ReaderT EntityAlias FromIr Expression
-fromColumnInfoForBoolExp IR.ColumnInfo {pgiColumn = pgCol, pgiType = _pgiType} = do
-  fieldName <- columnNameToFieldName pgCol <$> ask
+fromColumnInfoForBoolExp IR.ColumnInfo {ciColumn = column, ciType = _ciType} = do
+  fieldName <- columnNameToFieldName column <$> ask
   pure (ColumnExpression fieldName)
 
 fromAnnBoolExpFld ::
@@ -181,8 +181,8 @@ fromAnnBoolExpFld ::
   ReaderT EntityAlias FromIr Expression
 fromAnnBoolExpFld =
   \case
-    IR.AVColumn pgColumnInfo opExpGs -> do
-      expression <- fromColumnInfoForBoolExp pgColumnInfo
+    IR.AVColumn columnInfo opExpGs -> do
+      expression <- fromColumnInfoForBoolExp columnInfo
       expressions <- traverse (lift . fromOpExpG expression) opExpGs
       pure (AndExpression expressions)
     IR.AVRelationship IR.RelInfo {riMapping = mapping, riRTable = table} annBoolExp -> do
@@ -230,9 +230,9 @@ fromMapping ::
   ReaderT EntityAlias FromIr [Expression]
 fromMapping localFrom = traverse columnsToEqs . HM.toList
   where
-    columnsToEqs (remotePgCol, localPgCol) = do
-      localFieldName <- local (const (fromAlias localFrom)) (fromPGCol localPgCol)
-      remoteFieldName <- fromPGCol remotePgCol
+    columnsToEqs (remoteColumn, localColumn) = do
+      localFieldName <- local (const (fromAlias localFrom)) (fromColumn localColumn)
+      remoteFieldName <- fromColumn remoteColumn
       pure
         ( OpExpression
             EQ'
@@ -240,8 +240,8 @@ fromMapping localFrom = traverse columnsToEqs . HM.toList
             (ColumnExpression remoteFieldName)
         )
 
-fromPGCol :: Column -> ReaderT EntityAlias FromIr FieldName
-fromPGCol pgCol = columnNameToFieldName pgCol <$> ask
+fromColumn :: Column -> ReaderT EntityAlias FromIr FieldName
+fromColumn column = columnNameToFieldName column <$> ask
 
 columnNameToFieldName :: Column -> EntityAlias -> FieldName
 columnNameToFieldName (Column fieldName) EntityAlias {entityAliasText = fieldNameEntity} =
@@ -272,9 +272,9 @@ data UnfurledJoin = UnfurledJoin
   }
   deriving (Show)
 
-fromPGColumnInfo :: IR.ColumnInfo 'MySQL -> ReaderT EntityAlias FromIr FieldName
-fromPGColumnInfo IR.ColumnInfo {pgiColumn = pgCol} =
-  columnNameToFieldName pgCol <$> ask
+fromColumnInfo :: IR.ColumnInfo 'MySQL -> ReaderT EntityAlias FromIr FieldName
+fromColumnInfo IR.ColumnInfo {ciColumn = column} =
+  columnNameToFieldName column <$> ask
 
 tableNameText :: TableName -> Text
 tableNameText (TableName {name}) = name
@@ -290,11 +290,11 @@ unfurlAnnOrderByElement ::
   WriterT (Seq UnfurledJoin) (ReaderT EntityAlias FromIr) (FieldName, Maybe ScalarType)
 unfurlAnnOrderByElement =
   \case
-    IR.AOCColumn pgColumnInfo -> do
-      fieldName <- lift (fromPGColumnInfo pgColumnInfo)
+    IR.AOCColumn columnInfo -> do
+      fieldName <- lift (fromColumnInfo columnInfo)
       pure
         ( fieldName,
-          case IR.pgiType pgColumnInfo of
+          case IR.ciType columnInfo of
             IR.ColumnScalar t -> Just t
             _ -> Nothing
         )
@@ -348,8 +348,8 @@ unfurlAnnOrderByElement =
               (const (fromAlias selectFrom))
               ( case annAggregateOrderBy of
                   IR.AAOCount -> pure (CountAggregate StarCountable)
-                  IR.AAOOp text pgColumnInfo -> do
-                    fieldName <- fromPGColumnInfo pgColumnInfo
+                  IR.AAOOp text columnInfo -> do
+                    fieldName <- fromColumnInfo columnInfo
                     pure (OpAggregate text (pure (ColumnExpression fieldName)))
               )
           )
@@ -441,13 +441,13 @@ fromAnnColumnField ::
   IR.AnnColumnField 'MySQL Expression ->
   ReaderT EntityAlias FromIr Expression
 fromAnnColumnField _stringifyNumbers annColumnField = do
-  fieldName <- fromPGCol pgCol
+  fieldName <- fromColumn column
   if typ == IR.ColumnScalar MySQL.Geometry
     then pure $ MethodExpression (ColumnExpression fieldName) "STAsText" []
     else pure (ColumnExpression fieldName)
   where
     IR.AnnColumnField
-      { _acfColumn = pgCol,
+      { _acfColumn = column,
         _acfType = typ,
         _acfAsText = _asText :: Bool,
         _acfOp = _ :: Maybe (IR.ColumnOp 'MySQL)
@@ -463,8 +463,8 @@ fromRelName relName =
 --     IR.AFExp text        -> pure (TextAggregate text)
 --     IR.AFCount countType -> CountAggregate <$> case countType of
 --       StarCountable               -> pure StarCountable
---       NonNullFieldCountable names -> NonNullFieldCountable <$> traverse fromPGCol names
---       DistinctCountable     names -> DistinctCountable     <$> traverse fromPGCol names
+--       NonNullFieldCountable names -> NonNullFieldCountable <$> traverse fromColumn names
+--       DistinctCountable     names -> DistinctCountable     <$> traverse fromColumn names
 --     IR.AFOp _ -> error "fromAggregatefield: not implemented"
 
 fromTableAggregateFieldG ::
@@ -725,7 +725,7 @@ fromSelectRows annSelectG = do
         selectProjections = OSet.fromList selectProjections,
         selectFrom = selectFrom,
         selectJoins = argsJoins <> mapMaybe fieldSourceJoin fieldSources,
-        selectWhere = argsWhere <> Where (if isEmptyExpression filterExpression then [] else [filterExpression]),
+        selectWhere = argsWhere <> Where ([filterExpression | not (isEmptyExpression filterExpression)]),
         selectSqlOffset = argsOffset,
         selectSqlTop = permissionBasedTop <> argsTop,
         selectFinalWantedFields = pure (fieldTextNames fields)
@@ -847,9 +847,9 @@ fromMappingFieldNames ::
   ReaderT EntityAlias FromIr [(FieldName, FieldName)]
 fromMappingFieldNames localFrom =
   traverse
-    ( \(remotePgCol, localPgCol) -> do
-        localFieldName <- local (const localFrom) (fromPGCol localPgCol)
-        remoteFieldName <- fromPGCol remotePgCol
+    ( \(remoteColumn, localColumn) -> do
+        localFieldName <- local (const localFrom) (fromColumn localColumn)
+        remoteFieldName <- fromColumn remoteColumn
         pure
           ( (,)
               (localFieldName)

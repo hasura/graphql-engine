@@ -130,8 +130,8 @@ tableInsertMatchColumnsEnum sourceName tableInfo selectPermissions = do
   pure $
     P.enum enumName description
       <$> nonEmpty
-        [ ( define $ pgiName column,
-            pgiColumn column
+        [ ( define $ ciName column,
+            ciColumn column
           )
           | column <- columns,
             isMatchColumnValid column
@@ -144,5 +144,5 @@ tableInsertMatchColumnsEnum sourceName tableInfo selectPermissions = do
 isMatchColumnValid :: ColumnInfo 'MSSQL -> Bool
 isMatchColumnValid = \case
   -- Unfortunately MSSQL does not support comparison for TEXT types.
-  ColumnInfo {pgiType = ColumnScalar TextType} -> False
+  ColumnInfo {ciType = ColumnScalar TextType} -> False
   _ -> True

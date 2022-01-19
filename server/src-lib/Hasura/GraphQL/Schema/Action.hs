@@ -244,7 +244,7 @@ actionOutputFields outputType annotatedObject objectTypes = do
           tableRelName = RelName $ mkNonEmptyTextUnsafe $ G.unName fieldName
           columnMapping = Map.fromList $ do
             (k, v) <- Map.toList fieldMapping
-            pure (unsafePGCol $ G.unName $ unObjectFieldName k, pgiColumn v)
+            pure (unsafePGCol $ G.unName $ unObjectFieldName k, ciColumn v)
       roleName <- lift askRoleName
       tablePerms <- hoistMaybe $ RQL.getPermInfoMaybe roleName PASelect tableInfo
       case relType of
@@ -282,7 +282,7 @@ mkDefinitionList AnnotatedObjectType {..} =
     (unsafePGCol . G.unName . unObjectFieldName $ _ofdName,) $
       case Map.lookup _ofdName fieldReferences of
         Nothing -> fieldTypeToScalarType $ snd _ofdType
-        Just columnInfo -> unsafePGColumnToBackend $ pgiType columnInfo
+        Just columnInfo -> unsafePGColumnToBackend $ ciType columnInfo
   where
     ObjectTypeDefinition {..} = _aotDefinition
     fieldReferences =

@@ -57,7 +57,7 @@ orderByExp sourceName tableInfo selectPermissions = memoizeOn 'orderByExp (sourc
     mkField fieldInfo = runMaybeT $
       case fieldInfo of
         FIColumn columnInfo -> do
-          let fieldName = pgiName columnInfo
+          let fieldName = ciName columnInfo
           pure $
             P.fieldOptional fieldName Nothing (orderByOperator @b)
               <&> fmap (pure . mkOrderByItemG @b (IR.AOCColumn columnInfo)) . join
@@ -164,7 +164,7 @@ orderByAggregation sourceName tableInfo selectPermissions = memoizeOn 'orderByAg
 
     mkField :: ColumnInfo b -> InputFieldsParser n (Maybe (ColumnInfo b, (BasicOrderType b, NullsOrderType b)))
     mkField columnInfo =
-      P.fieldOptional (pgiName columnInfo) (pgiDescription columnInfo) (orderByOperator @b)
+      P.fieldOptional (ciName columnInfo) (ciDescription columnInfo) (orderByOperator @b)
         <&> fmap (columnInfo,) . join
 
     parseOperator ::

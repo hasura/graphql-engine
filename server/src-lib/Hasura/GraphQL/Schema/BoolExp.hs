@@ -78,7 +78,7 @@ boolExp sourceName tableInfo selectPermissions = memoizeOn 'boolExp (sourceName,
       P.fieldOptional fieldName Nothing <$> case fieldInfo of
         -- field_name: field_type_comparison_exp
         FIColumn columnInfo ->
-          lift $ fmap (AVColumn columnInfo) <$> comparisonExps @b (pgiType columnInfo)
+          lift $ fmap (AVColumn columnInfo) <$> comparisonExps @b (ciType columnInfo)
         -- field_name: field_type_bool_exp
         FIRelationship relationshipInfo -> do
           remoteTableInfo <- askTableInfo sourceName $ riRTable relationshipInfo

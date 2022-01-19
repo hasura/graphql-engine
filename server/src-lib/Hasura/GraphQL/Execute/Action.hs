@@ -339,25 +339,25 @@ resolveAsyncActionQuery userInfo annAction =
     -- TODO (from master):- Avoid using ColumnInfo
     mkPGColumnInfo (column', columnType) =
       ColumnInfo
-        { pgiColumn = column',
-          pgiName = G.unsafeMkName $ getPGColTxt column',
-          pgiPosition = 0,
-          pgiType = ColumnScalar columnType,
-          pgiIsNullable = True,
-          pgiDescription = Nothing,
-          pgiMutability = ColumnMutability False False
+        { ciColumn = column',
+          ciName = G.unsafeMkName $ getPGColTxt column',
+          ciPosition = 0,
+          ciType = ColumnScalar columnType,
+          ciIsNullable = True,
+          ciDescription = Nothing,
+          ciMutability = ColumnMutability False False
         }
 
     tableBoolExpression =
       let actionIdColumnInfo =
             ColumnInfo
-              { pgiColumn = unsafePGCol "id",
-                pgiName = $$(G.litName "id"),
-                pgiPosition = 0,
-                pgiType = ColumnScalar PGUUID,
-                pgiIsNullable = False,
-                pgiDescription = Nothing,
-                pgiMutability = ColumnMutability False False
+              { ciColumn = unsafePGCol "id",
+                ciName = $$(G.litName "id"),
+                ciPosition = 0,
+                ciType = ColumnScalar PGUUID,
+                ciIsNullable = False,
+                ciDescription = Nothing,
+                ciMutability = ColumnMutability False False
               }
           actionIdColumnEq = BoolFld $ AVColumn actionIdColumnInfo [AEQ True $ UVLiteral $ S.SELit $ actionIdToText actionId]
           sessionVarsColumnInfo = mkPGColumnInfo sessionVarsColumn

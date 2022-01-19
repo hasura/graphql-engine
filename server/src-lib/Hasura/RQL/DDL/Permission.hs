@@ -215,7 +215,7 @@ buildInsPermInfo source tn fieldInfoMap (PermDef _rn (InsPerm checkCond set mCol
           _ <- askColumnType fieldInfoMap col relInInsErr
           -- Check that the column is insertable
           ci <- askColInfo fieldInfoMap col ""
-          unless (_cmIsInsertable $ pgiMutability ci) $
+          unless (_cmIsInsertable $ ciMutability ci) $
             throw500
               ( "Column " <> col
                   <<> " is not insertable and so cannot have insert permissions defined"
@@ -230,7 +230,7 @@ buildInsPermInfo source tn fieldInfoMap (PermDef _rn (InsPerm checkCond set mCol
     return (InsPermInfo (HS.fromList insColsWithoutPresets) be setColsSQL backendOnly reqHdrs, deps)
   where
     backendOnly = Just True == mBackendOnly
-    allCols = map pgiColumn $ getCols fieldInfoMap
+    allCols = map ciColumn $ getCols fieldInfoMap
     insCols = maybe allCols (convColSpec fieldInfoMap) mCols
     relInInsErr = "Only table columns can have insert permissions defined, not relationships or other field types"
 
@@ -332,7 +332,7 @@ buildUpdPermInfo source tn fieldInfoMap (UpdPerm colSpec set fltr check) = do
         _ <- askColumnType fieldInfoMap updCol relInUpdErr
         -- Check that the column is updatable
         ci <- askColInfo fieldInfoMap updCol ""
-        unless (_cmIsUpdatable $ pgiMutability ci) $
+        unless (_cmIsUpdatable $ ciMutability ci) $
           throw500
             ( "Column " <> updCol
                 <<> " is not updatable and so cannot have update permissions defined"

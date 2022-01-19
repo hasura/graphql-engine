@@ -156,22 +156,22 @@ transformColumn ::
   SysColumn ->
   (RawColumnInfo 'MSSQL, [ForeignKey 'MSSQL])
 transformColumn columnInfo =
-  let prciName = ColumnName $ scName columnInfo
-      prciPosition = scColumnId columnInfo
+  let rciName = ColumnName $ scName columnInfo
+      rciPosition = scColumnId columnInfo
 
-      prciIsNullable = scIsNullable columnInfo
-      prciDescription = Nothing
-      prciType = parseScalarType $ styName $ scJoinedSysType columnInfo
+      rciIsNullable = scIsNullable columnInfo
+      rciDescription = Nothing
+      rciType = parseScalarType $ styName $ scJoinedSysType columnInfo
       foreignKeys =
         scJoinedForeignKeyColumns columnInfo <&> \foreignKeyColumn ->
           let _fkConstraint = Constraint "fk_mssql" $ OID $ sfkcConstraintObjectId foreignKeyColumn
 
               schemaName = ssName $ sfkcJoinedReferencedSysSchema foreignKeyColumn
               _fkForeignTable = TableName (sfkcJoinedReferencedTableName foreignKeyColumn) schemaName
-              _fkColumnMapping = HM.singleton prciName $ ColumnName $ sfkcJoinedReferencedColumnName foreignKeyColumn
+              _fkColumnMapping = HM.singleton rciName $ ColumnName $ sfkcJoinedReferencedColumnName foreignKeyColumn
            in ForeignKey {..}
 
-      prciMutability = ColumnMutability {_cmIsInsertable = True, _cmIsUpdatable = True}
+      rciMutability = ColumnMutability {_cmIsInsertable = True, _cmIsUpdatable = True}
    in (RawColumnInfo {..}, foreignKeys)
 
 transformPrimaryKey :: SysPrimaryKey -> PrimaryKey 'MSSQL (Column 'MSSQL)

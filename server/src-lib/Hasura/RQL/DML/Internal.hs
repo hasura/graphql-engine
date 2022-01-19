@@ -74,7 +74,7 @@ mkAdminRolePermInfo ti =
   RolePermInfo (Just i) (Just s) (Just u) (Just d)
   where
     fields = _tciFieldInfoMap ti
-    pgCols = map pgiColumn $ getCols fields
+    pgCols = map ciColumn $ getCols fields
     pgColsWithFilter = M.fromList $ map (,Nothing) pgCols
     scalarComputedFields =
       HS.fromList $ map _cfiName $ onlyScalarComputedFields $ getComputedFieldInfos fields
@@ -282,7 +282,7 @@ checkOnColExp ::
   m (AnnBoolExpFldSQL b)
 checkOnColExp spi sessVarBldr annFld = case annFld of
   AVColumn colInfo _ -> do
-    let cn = pgiColumn colInfo
+    let cn = ciColumn colInfo
     checkSelOnCol spi cn
     return annFld
   AVRelationship relInfo nesAnn -> do

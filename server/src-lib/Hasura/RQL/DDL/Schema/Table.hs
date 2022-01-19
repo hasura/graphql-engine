@@ -462,7 +462,7 @@ buildTableCache = Inc.cache proc (source, sourceConfig, dbTablesMeta, tableBuild
           |) maybeInfo
 
       let columns :: [RawColumnInfo b] = _ptmiColumns metadataTable
-          columnMap = mapFromL (FieldName . toTxt . prciName) columns
+          columnMap = mapFromL (FieldName . toTxt . rciName) columns
           primaryKey = _ptmiPrimaryKey metadataTable
       rawPrimaryKey <- liftEitherA -< traverse (resolvePrimaryKeyColumns columnMap) primaryKey
       enumValues <-
@@ -550,36 +550,36 @@ buildTableCache = Inc.cache proc (source, sourceConfig, dbTablesMeta, tableBuild
       resolvedType <- resolveColumnType
       pure
         ColumnInfo
-          { pgiColumn = pgCol,
-            pgiName = name,
-            pgiPosition = prciPosition rawInfo,
-            pgiType = resolvedType,
-            pgiIsNullable = prciIsNullable rawInfo,
-            pgiDescription = prciDescription rawInfo,
-            pgiMutability = prciMutability rawInfo
+          { ciColumn = pgCol,
+            ciName = name,
+            ciPosition = rciPosition rawInfo,
+            ciType = resolvedType,
+            ciIsNullable = rciIsNullable rawInfo,
+            ciDescription = rciDescription rawInfo,
+            ciMutability = rciMutability rawInfo
           }
       where
-        pgCol = prciName rawInfo
+        pgCol = rciName rawInfo
         resolveColumnType =
           case Map.lookup pgCol tableEnumReferences of
             -- no references? not an enum
-            Nothing -> pure $ ColumnScalar (prciType rawInfo)
+            Nothing -> pure $ ColumnScalar (rciType rawInfo)
             -- one reference? is an enum
             Just (enumReference :| []) -> pure $ ColumnEnumReference enumReference
             -- multiple referenced enums? the schema is strange, so let’s reject it
             Just enumReferences ->
               throw400 ConstraintViolation $
-                "column " <> prciName rawInfo <<> " in table " <> tableName
+                "column " <> rciName rawInfo <<> " in table " <> tableName
                   <<> " references multiple enum tables ("
                   <> commaSeparated (map (dquote . erTable) $ toList enumReferences)
                   <> ")"
 
     assertNoDuplicateFieldNames columns =
-      void $ flip Map.traverseWithKey (Map.groupOn pgiName columns) \name columnsWithName ->
+      void $ flip Map.traverseWithKey (Map.groupOn ciName columns) \name columnsWithName ->
         case columnsWithName of
           one : two : more ->
             throw400 AlreadyExists $
               "the definitions of columns "
-                <> englishList "and" (dquote . pgiColumn <$> (one :| two : more))
+                <> englishList "and" (dquote . ciColumn <$> (one :| two : more))
                 <> " are in conflict: they are mapped to the same field name, " <>> name
           _ -> pure ()

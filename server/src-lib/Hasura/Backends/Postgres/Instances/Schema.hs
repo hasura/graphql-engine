@@ -673,14 +673,14 @@ prependOp ::
   SU.UpdateOperator ('Postgres pgKind) m n (UnpreparedValue ('Postgres pgKind))
 prependOp = SU.UpdateOperator {..}
   where
-    updateOperatorApplicableColumn = isScalarColumnWhere (== PGJSONB) . pgiType
+    updateOperatorApplicableColumn = isScalarColumnWhere (== PGJSONB) . ciType
 
     updateOperatorParser tableGQLName tableName columns = do
       let typedParser columnInfo =
             fmap P.mkParameter
               <$> BS.columnParser
-                (pgiType columnInfo)
-                (G.Nullability $ pgiIsNullable columnInfo)
+                (ciType columnInfo)
+                (G.Nullability $ ciIsNullable columnInfo)
 
           desc = "prepend existing jsonb value of filtered columns with new jsonb value"
 
@@ -707,14 +707,14 @@ appendOp ::
   SU.UpdateOperator ('Postgres pgKind) m n (UnpreparedValue ('Postgres pgKind))
 appendOp = SU.UpdateOperator {..}
   where
-    updateOperatorApplicableColumn = isScalarColumnWhere (== PGJSONB) . pgiType
+    updateOperatorApplicableColumn = isScalarColumnWhere (== PGJSONB) . ciType
 
     updateOperatorParser tableGQLName tableName columns = do
       let typedParser columnInfo =
             fmap P.mkParameter
               <$> BS.columnParser
-                (pgiType columnInfo)
-                (G.Nullability $ pgiIsNullable columnInfo)
+                (ciType columnInfo)
+                (G.Nullability $ ciIsNullable columnInfo)
 
           desc = "append existing jsonb value of filtered columns with new jsonb value"
       SU.updateOperator
@@ -741,7 +741,7 @@ deleteKeyOp ::
   SU.UpdateOperator ('Postgres pgKind) m n (UnpreparedValue ('Postgres pgKind))
 deleteKeyOp = SU.UpdateOperator {..}
   where
-    updateOperatorApplicableColumn = isScalarColumnWhere (== PGJSONB) . pgiType
+    updateOperatorApplicableColumn = isScalarColumnWhere (== PGJSONB) . ciType
 
     updateOperatorParser tableGQLName tableName columns = do
       let nullableTextParser _ = fmap P.mkParameter <$> columnParser (ColumnScalar PGText) (G.Nullability True)
@@ -771,7 +771,7 @@ deleteElemOp ::
   SU.UpdateOperator ('Postgres pgKind) m n (UnpreparedValue ('Postgres pgKind))
 deleteElemOp = SU.UpdateOperator {..}
   where
-    updateOperatorApplicableColumn = isScalarColumnWhere (== PGJSONB) . pgiType
+    updateOperatorApplicableColumn = isScalarColumnWhere (== PGJSONB) . ciType
 
     updateOperatorParser tableGQLName tableName columns = do
       let nonNullableIntParser _ = fmap P.mkParameter <$> columnParser (ColumnScalar PGInteger) (G.Nullability False)
@@ -803,7 +803,7 @@ deleteAtPathOp ::
   SU.UpdateOperator ('Postgres pgKind) m n [UnpreparedValue ('Postgres pgKind)]
 deleteAtPathOp = SU.UpdateOperator {..}
   where
-    updateOperatorApplicableColumn = isScalarColumnWhere (== PGJSONB) . pgiType
+    updateOperatorApplicableColumn = isScalarColumnWhere (== PGJSONB) . ciType
 
     updateOperatorParser tableGQLName tableName columns = do
       let nonNullableTextListParser _ = P.list . fmap P.mkParameter <$> columnParser (ColumnScalar PGText) (G.Nullability False)

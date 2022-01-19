@@ -180,12 +180,12 @@ updateOperator ::
 updateOperator tableGQLName opName mkParser columns opDesc objDesc = do
   fieldParsers :: NonEmpty (P.InputFieldsParser n (Maybe (Column b, a))) <-
     for columns \columnInfo -> do
-      let fieldName = pgiName columnInfo
-          fieldDesc = pgiDescription columnInfo
+      let fieldName = ciName columnInfo
+          fieldDesc = ciDescription columnInfo
       fieldParser <- mkParser columnInfo
       pure $
         P.fieldOptional fieldName fieldDesc fieldParser
-          `mapField` \value -> (pgiColumn columnInfo, value)
+          `mapField` \value -> (ciColumn columnInfo, value)
 
   objName <- P.mkTypename $ tableGQLName <> opName <> $$(litName "_input")
 
@@ -213,8 +213,8 @@ setOp = UpdateOperator {..}
       let typedParser columnInfo =
             fmap P.mkParameter
               <$> columnParser
-                (pgiType columnInfo)
-                (Nullability $ pgiIsNullable columnInfo)
+                (ciType columnInfo)
+                (Nullability $ ciIsNullable columnInfo)
 
       updateOperator
         tableGQLName
@@ -242,8 +242,8 @@ incOp = UpdateOperator {..}
       let typedParser columnInfo =
             fmap P.mkParameter
               <$> columnParser
-                (pgiType columnInfo)
-                (Nullability $ pgiIsNullable columnInfo)
+                (ciType columnInfo)
+                (Nullability $ ciIsNullable columnInfo)
 
       updateOperator
         tableGQLName
