@@ -1,16 +1,14 @@
-<div class="meta"
-description="Clean up event data of event triggers in Hasura"
-keywords="hasura, docs, event trigger, event data, clean up">
-
-</div>
+---
+  description: Clean up event data of event triggers in Hasura
+  keywords:
+    - hasura
+    - docs
+    - event trigger
+    - event data
+    - clean up
+---
 
 # Clean up event data
-
-<div class="contents" backlinks="none" depth="1" local="">
-
-Table of contents
-
-</div>
 
 ## Introduction
 
@@ -71,13 +69,11 @@ AND (delivered = true OR error = true);
 
 ## Option 5: Clear everything
 
-<div class="admonition">
-
-Warning
+:::info Warning
 
 This will clear all events including yet to be delivered events.
 
-</div>
+:::
 
 ```SQL
 DELETE FROM hdb_catalog.event_invocation_logs;
@@ -108,6 +104,5 @@ WHERE (delivered = true OR error = true)
  AND created_at < now() - interval '3 months';
 ```
 
-See the [Postgres date/time
-functions](https://www.postgresql.org/docs/current/functions-datetime.html)
+See the [Postgres date/time functions](https://www.postgresql.org/docs/current/functions-datetime.html)
 for more details.

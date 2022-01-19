@@ -1,64 +1,49 @@
-<div class="meta" description="Create an event trigger with Hasura"
-keywords="hasura, docs, event trigger, create">
-
-</div>
+---
+  description: Create an event trigger with Hasura
+  keywords:
+    - hasura
+    - docs
+    - event trigger
+    - create
+---
+import Tabs from "@theme/Tabs";
+import TabItem from "@theme/TabItem";
+import Thumbnail from "@site/src/components/Thumbnail/Thumbnail";
+import TOCInline from '@theme/TOCInline';
 
 # Creating an event trigger
 
-<div class="contents" backlinks="none" depth="2" local="">
-
-Table of contents
-
-</div>
-
 ## Introduction
 
-Event triggers can be created using the Hasura console, CLI or metadata
-APIs.
+Event triggers can be created using the Hasura console, CLI or metadata APIs.
 
-<div class="rst-class">
+<Tabs className="api-tabs">
+<TabItem value="console" label="Console">
 
-api_tabs
+Open the Hasura console, head to the `Events` tab and click on the `Create` button to open the page below:
+<Thumbnail
+src="/img/graphql/core/event-triggers/create-event-trigger.png"
+alt="Create an event trigger"
+/>
 
-</div>
+</TabItem>
+<TabItem value="cli" label="CLI">
 
-<div class="tabs">
-
-<div class="tab">
-
-Console
-
-Open the Hasura console, head to the `Events` tab and click on the
-`Create` button to open the page below:
-
-<div class="thumbnail" alt="Create an event trigger">
-
-/img/graphql/core/event-triggers/create-event-trigger.png
-
-</div>
-
-</div>
-
-<div class="tab">
-
-CLI
-
-You can add an event triggers in the `tables.yaml` file inside the
-`metadata` directory:
+   You can add an event triggers in the ``tables.yaml`` file inside the ``metadata`` directory:
 
 ```yaml
 - table:
    schema: public
    name: author
-  event_triggers:
-  - name: author_trigger
-    definition:
+event_triggers:
+   - name: author_trigger
+   definition:
       enable_manual: false
       insert:
-        columns: '*'
+         columns: "*"
       update:
-        columns: '*'
-    webhook: https://httpbin.org/post
+         columns: "*"
+   webhook: https://httpbin.org/post
 ```
 
 Apply the metadata by running:
@@ -67,14 +52,10 @@ Apply the metadata by running:
 hasura metadata apply
 ```
 
-</div>
+</TabItem>
+<TabItem value="api" label="API">
 
-<div class="tab">
-
-API
-
-Add an event trigger by using the `metadata_pg_create_event_trigger`
-metadata API.
+Add an event trigger by using the `pg_create_event_trigger` metadata API.
 
 ```http
 POST /v1/metadata HTTP/1.1
@@ -82,28 +63,27 @@ Content-Type: application/json
 X-Hasura-Role: admin
 
 {
-   "type" : "pg_create_event_trigger",
-   "args" : {
-      "name": "author_trigger",
-      "source": "<db_name>",
-      "table": {
-         "name": "author",
-         "schema": "public"
-      },
-      "webhook": "https://httpbin.org/post",
-      "insert": {
-          "columns": "*"
-      },
-      "update": {
-          "columns": "*"
-      }
+"type" : "pg_create_event_trigger",
+"args" : {
+   "name": "author_trigger",
+   "source": "<db_name>",
+   "table": {
+      "name": "author",
+      "schema": "public"
+   },
+   "webhook": "https://httpbin.org/post",
+   "insert": {
+         "columns": "*"
+   },
+   "update": {
+         "columns": "*"
    }
+}
 }
 ```
 
-</div>
-
-</div>
+</TabItem>
+</Tabs>
 
 ## Parameters
 
@@ -124,29 +104,21 @@ The table operation on which the event trigger will be invoked.
 
 The HTTP(s) URL which will be called with the event payload on
 configured operation. Must be a `POST` handler. This URL can be entered
-manually or can be picked up from an environment variable (*the
+manually or can be picked up from an environment variable (_the
 environment variable needs to be set before using it for this
-configuration*).
+configuration_).
 
-<div class="note">
-
-<div class="title">
-
-Note
-
-</div>
+:::info Note
 
 If you are running Hasura using Docker, ensure that the Hasura Docker
-container can reach the webhook. See `this page <docker_networking>` for
+container can reach the webhook. See [this page](/graphql/core/guides/docker-networking.mdx) for
 Docker networking.
 
-</div>
+:::
 
 ## Advanced Settings
 
-<div class="contents" backlinks="none" depth="1" local="">
-
-</div>
+<TOCInline toc={toc[2].children} />
 
 ### Listen columns for update
 
@@ -157,51 +129,38 @@ which you want the update operation to listen to.
 If a column is not selected here, then an update to that column will not
 trigger the webhook.
 
-<div class="rst-class">
-
-api_tabs
-
-</div>
-
-<div class="tabs">
-
-<div class="tab">
-
-Console
+<Tabs className="api-tabs">
+<TabItem value="console" label="Console">
 
 Expand the `Advanced Settings` section on the Hasura console to define
 advanced settings for an event trigger:
 
-<div class="thumbnail" alt="Listen columns for update event triggers">
+<Thumbnail
+  src="/img/graphql/core/event-triggers/create-event-trigger-listen-columns.png"
+  alt="Listen columns for update event triggers"
+/>
 
-/img/graphql/core/event-triggers/create-event-trigger-listen-columns.png
-
-</div>
-
-</div>
-
-<div class="tab">
-
-CLI
+</TabItem>
+<TabItem value="cli" label="CLI">
 
 You can configure advanced settings for event triggers in the
 `tables.yaml` file inside the `metadata` directory:
 
 ```yaml
 - table:
-   schema: public
-   name: author
+    schema: public
+    name: author
   event_triggers:
-  - name: author_trigger
-    definition:
-      enable_manual: false
-      insert:
-        columns: '*'
-      update:
-        columns:
-        - name
-        - addr
-    webhook: https://httpbin.org/post
+    - name: author_trigger
+      definition:
+        enable_manual: false
+        insert:
+          columns: "*"
+        update:
+          columns:
+            - name
+            - addr
+      webhook: https://httpbin.org/post
 ```
 
 Apply the metadata by running:
@@ -210,14 +169,10 @@ Apply the metadata by running:
 hasura metadata apply
 ```
 
-</div>
+</TabItem>
+<TabItem value="api" label="API">
 
-<div class="tab">
-
-API
-
-You can configure advanced settings via the
-`metadata_pg_create_event_trigger` metadata API.
+You can configure advanced settings via the `metadata_pg_create_event_trigger` metadata API.
 
 ```http
 POST /v1/metadata HTTP/1.1
@@ -260,96 +215,73 @@ X-Hasura-Role: admin
 }
 ```
 
-</div>
-
-</div>
+</TabItem>
+</Tabs>
 
 ### Retry Logic
 
 Retry configuration is available in the "Advanced settings" when you
 create a trigger.
 
-1.  `num_retries`: Number of times a failed invocation is retried.
+1. `num_retries`: Number of times a failed invocation is retried.
     Default value is **0**.
-2.  `interval_sec`: Number of seconds after which a failed invocation is
+2. `interval_sec`: Number of seconds after which a failed invocation is
     retried. Default value is **10**.
-3.  `timeout_sec`:: Number of seconds before which client closes the
+3. `timeout_sec`:: Number of seconds before which client closes the
     connection to the webhook. Default value is **60**.
 
-<div class="rst-class">
-
-api_tabs
-
-</div>
-
-<div class="tabs">
-
-<div class="tab">
-
-Console
+<Tabs className="api-tabs">
+<TabItem value="console" label="Console">
 
 Expand the `Advanced Settings` section on the Hasura console to define
 advanced settings for an event trigger:
+<Thumbnail
+   src="/img/graphql/core/event-triggers/create-event-trigger-retry.png"
+   alt="Retry settings for event triggers"
+/>
+</TabItem>
+<TabItem value="cli" label="CLI">
 
-<div class="thumbnail" alt="Retry settings for event triggers">
-
-/img/graphql/core/event-triggers/create-event-trigger-retry.png
-
-</div>
-
-</div>
-
-<div class="tab">
-
-CLI
-
-You can configure advanced settings for event triggers in the
-`tables.yaml` file inside the `metadata` directory:
+You can configure advanced settings for event triggers in the `tables.yaml` file inside the `metadata` directory:
 
 ```yaml
 - table:
    schema: public
    name: author
-  event_triggers:
-  - name: author_trigger
-    definition:
-      enable_manual: false
-      insert:
-        columns: '*'
-      update:
-        columns: ['name']
-    retry_conf:
-      num_retries: 0
-      interval_sec: 10
-      timeout_sec: 60
-    headers:
-    - name: X-Hasura-From-Val
-      value: static-value'
-    - name: X-Hasura-From-Env
-      value_from_env: EVENT_WEBHOOK_HEADER
-    webhook: https://httpbin.org/post
+   event_triggers:
+   - name: author_trigger
+      definition:
+         enable_manual: false
+         insert:
+         columns: '*'
+         update:
+         columns: ['name']
+      retry_conf:
+         num_retries: 0
+         interval_sec: 10
+         timeout_sec: 60
+      headers:
+      - name: X-Hasura-From-Val
+         value: static-value'
+      - name: X-Hasura-From-Env
+         value_from_env: EVENT_WEBHOOK_HEADER
+      webhook: https://httpbin.org/post
 ```
-
 Apply the metadata by running:
 
 ```bash
 hasura metadata apply
 ```
 
-</div>
+</TabItem>
+<TabItem value="api" label="API">
 
-<div class="tab">
-
-API
-
-You can configure advanced settings via the
-`metadata_pg_create_event_trigger` metadata API.
+You can configure advanced settings via the `metadata_pg_create_event_trigger` metadata API.
 
 ```http
 POST /v1/metadata HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
-
 {
    "type": "pg_create_event_trigger",
    "args": {
@@ -386,9 +318,8 @@ X-Hasura-Role: admin
 }
 ```
 
-</div>
-
-</div>
+</TabItem>
+</Tabs>
 
 ### Headers
 
@@ -397,67 +328,52 @@ will have these headers added.
 
 Each header has 3 parameters:
 
-1.  `Key`: Name of the header e.g. Authorization or X-My-Header.
-2.  `Type`: One of `static` or `from env variable`. `static` means the
-    value provided in the `Value` field is the raw value of the header.
-    `from env variable` means the value provided in the `Value` field is
-    the name of the environment variable in the GraphQL engine which
-    will be resolved before sending the header.
-3.  `Value`: The value of the header. Either a static value or the name
+1. `Key`: Name of the header e.g. Authorization or X-My-Header.
+2. `Type`: One of `static` or `from env variable`. `static` means the
+   value provided in the `Value` field is the raw value of the header.
+   `from env variable` means the value provided in the `Value` field is
+   the name of the environment variable in the GraphQL engine which
+   will be resolved before sending the header.
+3. `Value`: The value of the header. Either a static value or the name
     of an environment variable.
 
-<div class="rst-class">
 
-api_tabs
-
-</div>
-
-<div class="tabs">
-
-<div class="tab">
-
-Console
+<Tabs className="api-tabs">
+<TabItem value="console" label="Console">
 
 Expand the `Advanced Settings` section on the Hasura console to define
 advanced settings for an event trigger:
+<Thumbnail
+   src="/img/graphql/core/event-triggers/create-event-trigger-headers.png"
+   alt="Headers for event triggers"
+/>
+</TabItem>
+<TabItem value="cli" label="CLI">
 
-<div class="thumbnail" alt="Headers for event triggers">
-
-/img/graphql/core/event-triggers/create-event-trigger-headers.png
-
-</div>
-
-</div>
-
-<div class="tab">
-
-CLI
-
-You can configure advanced settings for event triggers in the
-`tables.yaml` file inside the `metadata` directory:
+You can configure advanced settings for event triggers in the `tables.yaml` file inside the `metadata` directory:
 
 ```yaml
 - table:
-   schema: public
-   name: author
+    schema: public
+    name: author
   event_triggers:
-  - name: author_trigger
-    definition:
-      enable_manual: false
-      insert:
-        columns: '*'
-      update:
-        columns: ['name']
-    retry_conf:
-      num_retries: 0
-      interval_sec: 10
-      timeout_sec: 60
-    headers:
-    - name: X-Hasura-From-Val
-      value: static-value'
-    - name: X-Hasura-From-Env
-      value_from_env: EVENT_WEBHOOK_HEADER
-    webhook: https://httpbin.org/post
+    - name: author_trigger
+      definition:
+        enable_manual: false
+        insert:
+          columns: "*"
+        update:
+          columns: ["name"]
+      retry_conf:
+        num_retries: 0
+        interval_sec: 10
+        timeout_sec: 60
+      headers:
+        - name: X-Hasura-From-Val
+          value: static-value'
+        - name: X-Hasura-From-Env
+          value_from_env: EVENT_WEBHOOK_HEADER
+      webhook: https://httpbin.org/post
 ```
 
 Apply the metadata by running:
@@ -466,14 +382,10 @@ Apply the metadata by running:
 hasura metadata apply
 ```
 
-</div>
+</TabItem>
+<TabItem value="api" label="API">
 
-<div class="tab">
-
-API
-
-You can configure advanced settings via the
-`metadata_pg_create_event_trigger` metadata API.
+You can configure advanced settings via the `metadata_pg_create_event_trigger` metadata API.
 
 ```http
 POST /v1/metadata HTTP/1.1
@@ -516,6 +428,5 @@ X-Hasura-Role: admin
 }
 ```
 
-</div>
-
-</div>
+</TabItem>
+</Tabs>

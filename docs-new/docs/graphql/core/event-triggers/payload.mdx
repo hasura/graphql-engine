@@ -1,15 +1,13 @@
-<div class="meta" description="Event trigger payload in Hasura"
-keywords="hasura, docs, event trigger, payload">
-
-</div>
+---
+  description: Event trigger payload in Hasura
+  keywords:
+    - hasura
+    - docs
+    - event trigger
+    - payload
+---
 
 # Event trigger payload
-
-<div class="contents" backlinks="none" depth="1" local="">
-
-Table of contents
-
-</div>
 
 ## Introduction
 
@@ -49,7 +47,7 @@ Content-Type: application/json
 ```
 
 | Key               | Type                      | Description                                                                                                               |
-|-------------------|---------------------------|---------------------------------------------------------------------------------------------------------------------------|
+| ----------------- | ------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
 | session-variables | [Object](#object) or NULL | Key-value pairs of session variables (i.e. "x-hasura-\*" variables) and their values (NULL if no session variables found) |
 | op-name           | [OpName](#opname)         | Name of the operation. Can only be "INSERT", "UPDATE", "DELETE", "MANUAL"                                                 |
 | column-values     | [Object](#object)         | Key-value pairs of column name and their values of the table                                                              |
@@ -61,37 +59,31 @@ Content-Type: application/json
 
 **In case of**:
 
--   INSERT
-    -   `event.data.old` will be `null`
-    -   `event.data.new` will contain the insert row
--   UPDATE
-    -   `event.data.old` will be values before the update
-    -   `event.data.new` will contain the values after the update
--   DELETE
-    -   `event.data.old` will contain the row that is deleted
-    -   `event.data.new` will be `null`
--   MANUAL
-    -   `event.data.old` will be `null`
-    -   `event.data.new` will contain the current row
+- INSERT
+  - `event.data.old` will be `null`
+  - `event.data.new` will contain the insert row
+- UPDATE
+  - `event.data.old` will be values before the update
+  - `event.data.new` will contain the values after the update
+- DELETE
+  - `event.data.old` will contain the row that is deleted
+  - `event.data.new` will be `null`
+- MANUAL
+  - `event.data.old` will be `null`
+  - `event.data.new` will contain the current row
 
-<div class="note">
+:::info Note
 
-<div class="title">
+- In case of `UPDATE`, the events are delivered only if new data is
+  distinct from old data. The [composite type
+  comparison](https://www.postgresql.org/docs/current/functions-comparisons.html#COMPOSITE-TYPE-COMPARISON)
+  is used to compare the old and new rows. If rows contain columns,
+  which cannot be compared using `<>` operator, then internal binary
+  representation of rows by Postgres is compared.
+- [Table computed fields](/graphql/core/databases/postgres/schema/computed-fields.mdx) are not included in the
+  event trigger payload data
 
-Note
-
-</div>
-
--   In case of `UPDATE`, the events are delivered only if new data is
-    distinct from old data. The [composite type
-    comparison](https://www.postgresql.org/docs/current/functions-comparisons.html#COMPOSITE-TYPE-COMPARISON)
-    is used to compare the old and new rows. If rows contain columns,
-    which cannot be compared using `<>` operator, then internal binary
-    representation of rows by Postgres is compared.
--   `Table computed fields <pg_computed_fields>` are not included in the
-    event trigger payload data
-
-</div>
+:::
 
 **For example**:
 
@@ -100,26 +92,26 @@ Note
   "id": "85558393-c75d-4d2f-9c15-e80591b83894",
   "created_at": "2018-09-05T07:14:21.601701Z",
   "trigger": {
-      "name": "insert_user_trigger"
+    "name": "insert_user_trigger"
   },
   "table": {
-      "schema": "public",
-      "name": "users"
+    "schema": "public",
+    "name": "users"
   },
   "event": {
-      "session_variables": {
-          "x-hasura-role": "admin",
-          "x-hasura-allowed-roles": "['user', 'boo', 'admin']",
-          "x-hasura-user-id": "1"
-      },
-      "op": "INSERT",
-      "data": {
-        "old": null,
-        "new": {
-            "id":"42",
-            "name": "john doe"
-        }
+    "session_variables": {
+      "x-hasura-role": "admin",
+      "x-hasura-allowed-roles": "['user', 'boo', 'admin']",
+      "x-hasura-user-id": "1"
+    },
+    "op": "INSERT",
+    "data": {
+      "old": null,
+      "new": {
+        "id": "42",
+        "name": "john doe"
       }
+    }
   }
 }
 ```
@@ -138,12 +130,7 @@ Note
 
 ### OpName
 
-<div class="parsed-literal">
-
-"INSERT" \| "UPDATE" \| "DELETE" \| "MANUAL"
-
-</div>
-
+` "INSERT" | "UPDATE" | "DELETE" | "MANUAL"`
 ## Webhook response structure
 
 A `2xx` response status code is deemed to be a successful invocation of
