@@ -1,29 +1,25 @@
-<div class="meta" description="Custom GraphQL types for Hasura actions"
-keywords="hasura, docs, actions, custom types">
-
-</div>
+---
+  description: Custom GraphQL types for Hasura actions
+  keywords:
+    - hasura
+    - docs
+    - actions
+    - custom types
+---
 
 # Custom GraphQL types
-
-<div class="contents" backlinks="none" depth="1" local="">
-
-Table of contents
-
-</div>
 
 ## Introduction
 
 You can add custom GraphQL types in Hasura that you can utilise for
 defining your actions.
 
-<div class="admonition">
-
-Limitations
+:::info Limitations
 
 It is currently not possible to define `Interfaces` and `Union types` as
 custom types
 
-</div>
+:::
 
 ## Object types
 
@@ -73,13 +69,12 @@ type UserObj {
 }
 ```
 
-[See
-reference](https://graphql.org/learn/schema/#object-types-and-fields)
+[See reference](https://graphql.org/learn/schema/#object-types-and-fields)
 
 ### Relationships
 
 Custom object types can be connected to the rest of the graph by setting
-up `action relationships <pg_action_relationships>` with tables/views.
+up [action relationships](/graphql/core/databases/postgres/schema/remote-relationships/action-relationships.mdx) with tables/views.
 
 **For example**, given the object type:
 
@@ -117,22 +112,14 @@ type UserInfo {
 }
 ```
 
-<div class="note">
-
-<div class="title">
-
-Note
-
-</div>
+:::info Note
 
 Only fields with non-list scalar types (e.g. `Int`, `String`) can be
 used to define relationships
 
-</div>
+:::
 
-<div class="admonition">
-
-Limitations
+:::info Limitations
 
 Hasura has the following limitations for relationship in nested object
 types:
@@ -161,7 +148,7 @@ types:
 2.  For `async` actions, you cannot have nested object types and
     relationships in the same action.
 
-</div>
+:::
 
 ## Input types
 
@@ -217,9 +204,7 @@ scalar Date
 These scalars can be used as arguments of queries and mutations or as
 fields of object types and input types.
 
-<div class="admonition">
-
-Postgres scalars
+:::info Postgres scalars
 
 Postgres base types are implicitly made available as GraphQL scalars;
 there is no need to declare them separately. For example, in the
@@ -236,7 +221,7 @@ type User {
 the `uuid` and `geography` types are assumed to refer to Postgres
 scalars (assuming no other definition for them is provided).
 
-</div>
+:::
 
 ## Enum types
 
@@ -264,11 +249,9 @@ expect it to be exactly one of RED, GREEN, or BLUE.
 
 [See reference](https://graphql.org/learn/schema/#enumeration-types)
 
-<div class="admonition">
-
-Additional Resources
+:::info Additional Resources
 
 Introduction to Hasura Actions - [View
 Recording](https://hasura.io/events/webinar/hasura-actions/?pg=docs&plcmt=body&cta=view-recording&tech=).
 
-</div>
+:::
