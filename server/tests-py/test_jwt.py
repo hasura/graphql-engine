@@ -3,17 +3,18 @@ import math
 import json
 import time
 
-import ruamel.yaml as yaml
 import pytest
 import jwt
 from test_subscriptions import init_ws_conn
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives import serialization
+from ruamel.yaml import YAML
 
 from validate import check_query, mk_claims_with_namespace_path
 from context import PytestConf
 
+yaml=YAML(typ='safe', pure=True)
 
 if not PytestConf.config.getoption('--hge-jwt-key-file'):
     pytest.skip('--hge-jwt-key-file is missing, skipping JWT tests', allow_module_level=True)
@@ -107,7 +108,7 @@ class TestJWTExpirySkew():
     def transact(self, setup):
         self.dir = 'queries/graphql_query/permissions'
         with open(self.dir + '/user_select_query_unpublished_articles.yaml') as c:
-            self.conf = yaml.safe_load(c)
+            self.conf = yaml.load(c)
         curr_time = datetime.now()
         exp_time = curr_time + timedelta(hours=10)
         self.claims = {
@@ -378,7 +379,7 @@ class TestJWTBasic():
     def transact(self, setup):
         self.dir = 'queries/graphql_query/permissions'
         with open(self.dir + '/user_select_query_unpublished_articles.yaml') as c:
-            self.conf = yaml.safe_load(c)
+            self.conf = yaml.load(c)
         curr_time = datetime.now()
         exp_time = curr_time + timedelta(hours=10)
         self.claims = {
@@ -504,7 +505,7 @@ class TestJwtAudienceCheck():
     def transact(self, setup):
         self.dir = 'queries/graphql_query/permissions'
         with open(self.dir + '/user_select_query_unpublished_articles.yaml') as c:
-            self.conf = yaml.safe_load(c)
+            self.conf = yaml.load(c)
         curr_time = datetime.now()
         exp_time = curr_time + timedelta(hours=1)
         self.claims = {
@@ -586,7 +587,7 @@ class TestJwtIssuerCheck():
     def transact(self, setup):
         self.dir = 'queries/graphql_query/permissions'
         with open(self.dir + '/user_select_query_unpublished_articles.yaml') as c:
-            self.conf = yaml.safe_load(c)
+            self.conf = yaml.load(c)
         curr_time = datetime.now()
         exp_time = curr_time + timedelta(hours=1)
         self.claims = {

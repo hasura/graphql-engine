@@ -63,7 +63,7 @@ instance BackendSchema 'MSSQL where
   jsonPathArg = msJsonPathArg
   orderByOperators = msOrderByOperators
   comparisonExps = msComparisonExps
-  mkCountType = msMkCountType
+  countTypeInput = msCountTypeInput
   aggregateOrderByCountType = MSSQL.IntegerType
   computedField = msComputedField
   node = msNode
@@ -410,16 +410,20 @@ msComparisonExps = P.memoize 'comparisonExps \columnType -> do
     mkListLiteral =
       P.UVLiteral . MSSQL.ListExpression . fmap (MSSQL.ValueExpression . cvValue)
 
-msMkCountType ::
-  -- | distinct values
-  Maybe Bool ->
-  Maybe [Column 'MSSQL] ->
-  CountType 'MSSQL
-msMkCountType _ Nothing = MSSQL.StarCountable
-msMkCountType (Just True) (Just cols) =
-  maybe MSSQL.StarCountable MSSQL.DistinctCountable $ nonEmpty cols
-msMkCountType _ (Just cols) =
-  maybe MSSQL.StarCountable MSSQL.NonNullFieldCountable $ nonEmpty cols
+msCountTypeInput ::
+  MonadParse n =>
+  Maybe (Parser 'Both n (Column 'MSSQL)) ->
+  InputFieldsParser n (IR.CountDistinct -> CountType 'MSSQL)
+msCountTypeInput = \case
+  Just columnEnum -> do
+    column <- P.fieldOptional $$(G.litName "column") Nothing columnEnum
+    pure $ flip mkCountType column
+  Nothing -> pure $ flip mkCountType Nothing
+  where
+    mkCountType :: IR.CountDistinct -> Maybe (Column 'MSSQL) -> CountType 'MSSQL
+    mkCountType _ Nothing = MSSQL.StarCountable
+    mkCountType IR.SelectCountDistinct (Just col) = MSSQL.DistinctCountable col
+    mkCountType IR.SelectCountNonDistinct (Just col) = MSSQL.NonNullFieldCountable col
 
 -- | Computed field parser.
 -- Currently unsupported: returns Nothing for now.

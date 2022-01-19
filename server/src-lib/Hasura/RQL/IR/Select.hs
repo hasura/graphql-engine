@@ -93,6 +93,7 @@ module Hasura.RQL.IR.Select
     TableAggregateFieldsG,
     TablePerm,
     TablePermG (..),
+    CountDistinct (..),
     actionResponsePayloadColumn,
     asnArgs,
     asnFields,
@@ -462,7 +463,7 @@ mkAnnColumnFieldAsText ::
   ColumnInfo backend ->
   AnnFieldG backend r v
 mkAnnColumnFieldAsText ci =
-  AFColumn (AnnColumnField (pgiColumn ci) (pgiType ci) True Nothing Nothing)
+  AFColumn (AnnColumnField (ciColumn ci) (ciType ci) True Nothing Nothing)
 
 -- Aggregation fields
 
@@ -929,6 +930,15 @@ deriving instance
 type ActionFieldsG b r v = Fields (ActionFieldG b r v)
 
 type ActionFields b = ActionFieldsG b Void (SQLExpression b)
+
+-- | The "distinct" input field inside "count" aggregate field
+--
+-- count (
+--   distinct: Boolean
+-- ): Int!
+data CountDistinct
+  = SelectCountDistinct
+  | SelectCountNonDistinct
 
 -- Lenses
 

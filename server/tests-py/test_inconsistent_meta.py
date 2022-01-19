@@ -1,7 +1,9 @@
 import pytest
-import ruamel.yaml as yaml
 import json
 import jsondiff
+from ruamel.yaml import YAML
+
+yaml=YAML(typ='safe', pure=True)
 
 class TestInconsistentObjects():
 
@@ -24,7 +26,7 @@ class TestInconsistentObjects():
 
     def test_inconsistent_objects(self, hge_ctx):
         with open(self.dir() + "/test.yaml") as c:
-            test = yaml.safe_load(c)
+            test = yaml.load(c)
 
         # setup
         st_code, resp = hge_ctx.v1q(json.loads(json.dumps(test['setup'])))

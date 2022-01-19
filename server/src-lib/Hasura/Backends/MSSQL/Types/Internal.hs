@@ -438,8 +438,8 @@ data Aggregate
 
 data Countable name
   = StarCountable
-  | NonNullFieldCountable (NonEmpty name)
-  | DistinctCountable (NonEmpty name)
+  | NonNullFieldCountable name
+  | DistinctCountable name
 
 deriving instance Functor Countable
 

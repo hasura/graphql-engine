@@ -76,7 +76,6 @@ module Hasura.RQL.Types.SchemaCache
     getCols,
     getRels,
     getComputedFieldInfos,
-    isPGColInfo,
     RelInfo (..),
     PermAccessor (..),
     permAccToLens,
@@ -134,6 +133,7 @@ import Hasura.Incremental
     selectKeyD,
   )
 import Hasura.Prelude
+import Hasura.RQL.DDL.WebhookTransforms
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.Types.Action
 import Hasura.RQL.Types.ApiLimit
@@ -262,7 +262,9 @@ data CronTriggerInfo = CronTriggerInfo
     ctiRetryConf :: !STRetryConf,
     ctiWebhookInfo :: !ResolvedWebhook,
     ctiHeaders :: ![EventHeaderInfo],
-    ctiComment :: !(Maybe Text)
+    ctiComment :: !(Maybe Text),
+    ctiRequestTransform :: !(Maybe MetadataRequestTransform),
+    ctiResponseTransform :: !(Maybe MetadataResponseTransform)
   }
   deriving (Show, Eq)
 
@@ -556,7 +558,7 @@ getColExpDeps bexp = do
   BoolExpCtx {source, currTable} <- ask
   case bexp of
     AVColumn colInfo opExps ->
-      let columnName = pgiColumn colInfo
+      let columnName = ciColumn colInfo
           colDepReason = bool DRSessionVariable DROnType $ any hasStaticExp opExps
           colDep = mkColDep @b colDepReason source currTable columnName
        in (colDep :) <$> mkOpExpDeps opExps

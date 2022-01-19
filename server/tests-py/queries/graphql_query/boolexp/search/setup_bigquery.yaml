@@ -1,0 +1,10 @@
+type: bulk
+args:
+
+#City table
+- type: bigquery_track_table
+  args:
+    source: bigquery
+    table:
+      dataset: hasura_test
+      name: city

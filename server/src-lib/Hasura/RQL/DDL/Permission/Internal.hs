@@ -25,7 +25,7 @@ import Hasura.Session
 
 convColSpec :: FieldInfoMap (FieldInfo b) -> PermColSpec b -> [Column b]
 convColSpec _ (PCCols cols) = cols
-convColSpec cim PCStar = map pgiColumn $ getCols cim
+convColSpec cim PCStar = map ciColumn $ getCols cim
 
 permissionIsDefined ::
   Maybe (RolePermInfo backend) -> PermAccessor backend a -> Bool

@@ -50,9 +50,9 @@ import Hasura.RQL.DDL.Permission
 import Hasura.RQL.DDL.Relationship
 import Hasura.RQL.DDL.RemoteRelationship
 import Hasura.RQL.DDL.RemoteSchema
-import Hasura.RQL.DDL.RequestTransform
 import Hasura.RQL.DDL.ScheduledTrigger
 import Hasura.RQL.DDL.Schema
+import Hasura.RQL.DDL.WebhookTransforms
 import Hasura.RQL.Types
 import Hasura.RQL.Types.Eventing.Backend (BackendEventTrigger (..))
 import Hasura.SQL.AnyBackend qualified as AB
@@ -483,7 +483,7 @@ runTestWebhookTransform ::
   (QErrM m) =>
   TestWebhookTransform ->
   m EncJSON
-runTestWebhookTransform (TestWebhookTransform env urlE payload mt sv) = do
+runTestWebhookTransform (TestWebhookTransform env urlE payload mt _ sv) = do
   url <- case urlE of
     URL url' -> pure url'
     EnvVar var ->
@@ -494,14 +494,15 @@ runTestWebhookTransform (TestWebhookTransform env urlE payload mt sv) = do
     let env' = bimap T.pack (J.String . T.pack) <$> Env.toList env
         decodeKritiResult = TE.decodeUtf8 . BL.toStrict . J.encode
 
-    kritiUrlResult <- hoistEither $ first UrlInterpError $ decodeKritiResult <$> K.runKriti ("\"" <> url <> "\"") env'
+    kritiUrlResult <- hoistEither $ first UrlInterpError $ decodeKritiResult <$> K.runKriti (TE.encodeUtf8 $ "\"" <> url <> "\"") env'
 
     let unwrappedUrl = T.drop 1 $ T.dropEnd 1 kritiUrlResult
     initReq <- hoistEither $ first RequestInitializationError $ HTTP.mkRequestEither unwrappedUrl
 
     let req = initReq & HTTP.body .~ pure (J.encode payload)
-        dataTransform = mkRequestTransform mt
-    hoistEither $ first (RequestTransformationError req) $ applyRequestTransform unwrappedUrl dataTransform req sv
+        reqTransform = mkRequestTransform mt
+        reqTransformCtx = buildReqTransformCtx unwrappedUrl sv
+    hoistEither $ first (RequestTransformationError req) $ applyRequestTransform reqTransformCtx reqTransform req
 
   case result of
     Right transformed ->

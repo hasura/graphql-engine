@@ -53,7 +53,7 @@
         author {
           articles_aggregate {
             aggregate {
-              count(columns: author_id)
+              count(column: author_id)
               max {
                 id
               }
@@ -92,7 +92,7 @@
         author {
           articles_aggregate {
             aggregate {
-              count(columns: author_id)
+              count(column: author_id)
               max {
                 id
                 author_id

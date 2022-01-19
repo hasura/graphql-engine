@@ -68,17 +68,17 @@ const ConfigureTransformation: React.FC<ConfigureTransformationProps> = ({
     : `Show Sample Context`;
 
   const requestUrlTransformText = isRequestUrlTransform
-    ? `Remove Request Options Transformation`
-    : `Add Request Options Transformation`;
+    ? `Remove Request Options Transform`
+    : `Add Request Options Transform`;
 
   const requestPayloadTransformText = isRequestPayloadTransform
-    ? `Remove Payload Transformation`
-    : `Add Payload Transformation`;
+    ? `Remove Payload Transform`
+    : `Add Payload Transform`;
 
   return (
     <>
       <h2 className="text-lg font-semibold mb-sm flex items-center">
-        Configure Transformations
+        Configure REST Connectors
       </h2>
 
       <div className="mb-lg">
@@ -86,7 +86,7 @@ const ConfigureTransformation: React.FC<ConfigureTransformationProps> = ({
           Sample Context
         </label>
         <p className="text-sm text-gray-600 mb-sm">
-          Add sample env vars and session vars for testing the transformation
+          Add sample env vars and session vars for testing the connector
         </p>
         <Button
           color="white"
@@ -112,11 +112,10 @@ const ConfigureTransformation: React.FC<ConfigureTransformationProps> = ({
 
       <div className="mb-lg">
         <label className="block text-gray-600 font-medium mb-xs">
-          Request Options Transformation
+          Change Request Options
         </label>
         <p className="text-sm text-gray-600 mb-sm">
-          Transform your method and URL to adapt to your webhook&apos;s expected
-          format.
+          Change the method and URL to adapt to your API&apos;s expected format.
         </p>
         <Button
           color="white"
@@ -149,11 +148,10 @@ const ConfigureTransformation: React.FC<ConfigureTransformationProps> = ({
 
       <div className="mb-lg">
         <label className="block text-gray-600 font-medium mb-xs">
-          Payload Transformation
+          Change Payload
         </label>
         <p className="text-sm text-gray-600 mb-sm">
-          Transform your payload to adapt to your webhook&apos;s expected
-          format.
+          Change the payload to adapt to your API&apos;s expected format.
         </p>
         <Button
           color="white"

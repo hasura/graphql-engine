@@ -675,11 +675,8 @@ fromCountable :: Countable FieldName -> Printer
 fromCountable =
   \case
     StarCountable -> "*"
-    NonNullFieldCountable fields ->
-      SepByPrinter ", " (map fromFieldName (toList fields))
-    DistinctCountable fields ->
-      "DISTINCT "
-        <+> SepByPrinter ", " (map fromFieldName (toList fields))
+    NonNullFieldCountable field -> fromFieldName field
+    DistinctCountable field -> "DISTINCT " <+> fromFieldName field
 
 fromWhere :: Where -> Printer
 fromWhere =

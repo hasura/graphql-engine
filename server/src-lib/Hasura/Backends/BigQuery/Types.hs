@@ -7,6 +7,7 @@ module Hasura.Backends.BigQuery.Types
     ArrayAgg (..),
     Base64,
     BigDecimal,
+    BooleanOperators (..),
     Cardinality (..),
     ColumnName (ColumnName),
     Countable (..),
@@ -34,6 +35,10 @@ module Hasura.Backends.BigQuery.Types
     Reselect (..),
     ScalarType (..),
     Select (..),
+    PartitionableSelect (..),
+    noExtraPartitionFields,
+    withExtraPartitionFields,
+    simpleSelect,
     SelectJson (..),
     TableName (..),
     Time (..),
@@ -48,6 +53,7 @@ module Hasura.Backends.BigQuery.Types
     doubleToFloat64,
     getGQLTableName,
     intToInt64,
+    int64Expr,
     isComparableType,
     isNumType,
     parseScalarValue,
@@ -60,11 +66,13 @@ where
 
 import Data.Aeson (FromJSON, FromJSONKey, ToJSON, ToJSONKey)
 import Data.Aeson qualified as J
+import Data.Aeson.Extended qualified as J
 import Data.Aeson.Types qualified as J
 import Data.ByteString (ByteString)
 import Data.ByteString.Base64 qualified as Base64
 import Data.ByteString.Lazy qualified as L
 import Data.Coerce
+import Data.Int qualified as Int
 import Data.Scientific
 import Data.Text qualified as T
 import Data.Text.Encoding qualified as T
@@ -77,6 +85,7 @@ import Data.Vector.Instances ()
 import Hasura.Base.Error
 import Hasura.Incremental.Internal.Dependency
 import Hasura.Prelude
+import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.Types.Common qualified as RQL
 import Language.GraphQL.Draft.Syntax qualified as G
 import Language.Haskell.TH.Syntax
@@ -104,6 +113,29 @@ instance Hashable Select
 instance Cacheable Select
 
 instance NFData Select
+
+-- | Helper type allowing addition of extra fields used
+-- in PARTITION BY.
+--
+-- The main purpose of this type is sumulation of DISTINCT ON
+-- implemented in Hasura.Backends.BigQuery.FromIr.simulateDistinctOn
+data PartitionableSelect = PartitionableSelect
+  { pselectFinalize :: Maybe [FieldName] -> Select,
+    pselectFrom :: !From
+  }
+
+simpleSelect :: Select -> PartitionableSelect
+simpleSelect select =
+  PartitionableSelect
+    { pselectFinalize = const select,
+      pselectFrom = selectFrom select
+    }
+
+noExtraPartitionFields :: PartitionableSelect -> Select
+noExtraPartitionFields PartitionableSelect {..} = pselectFinalize Nothing
+
+withExtraPartitionFields :: PartitionableSelect -> [FieldName] -> Select
+withExtraPartitionFields PartitionableSelect {..} = pselectFinalize . Just
 
 data ArrayAgg = ArrayAgg
   { arrayAggProjections :: !(NonEmpty Projection),
@@ -327,7 +359,7 @@ instance NFData AsStruct
 
 data Top
   = NoTop
-  | Top Int
+  | Top Int.Int64
   deriving (Eq, Ord, Show, Generic, Data, Lift)
 
 instance FromJSON Top
@@ -373,6 +405,7 @@ data Expression
   | OpExpression Op Expression Expression
   | ListExpression [Expression]
   | CastExpression Expression ScalarType
+  | FunctionExpression !Text [Expression]
   | ConditionalProjection Expression FieldName
   deriving (Eq, Ord, Show, Generic, Data, Lift)
 
@@ -582,9 +615,9 @@ data Op
   | MoreOrEqualOp
   | InOp
   | NotInOp
+  | LikeOp
+  | NotLikeOp
   --  | SNE
-  --  | SLIKE
-  --  | SNLIKE
   --  | SILIKE
   --  | SNILIKE
   --  | SSIMILAR
@@ -678,8 +711,11 @@ instance FromJSON Int64 where parseJSON = liberalInt64Parser Int64
 
 instance ToJSON Int64 where toJSON = liberalIntegralPrinter
 
-intToInt64 :: Int -> Int64
+intToInt64 :: Int.Int64 -> Int64
 intToInt64 = Int64 . tshow
+
+int64Expr :: Int.Int64 -> Expression
+int64Expr = ValueExpression . IntegerValue . intToInt64
 
 -- | BigQuery's conception of a fixed precision decimal.
 newtype Decimal = Decimal Text
@@ -825,6 +861,30 @@ data UnifiedOn = UnifiedOn
 -- Copied from feature/mssql
 newtype FunctionName = FunctionName Text -- TODO: Improve this type when SQL function support added
   deriving (FromJSON, ToJSON, ToJSONKey, ToTxt, Show, Eq, Ord, Hashable, Cacheable, NFData)
+
+data BooleanOperators a
+  = ASTContains !a
+  | ASTEquals !a
+  | ASTTouches !a
+  | ASTWithin !a
+  | ASTIntersects !a
+  | ASTDWithin !(DWithinGeogOp a)
+  deriving stock (Eq, Generic, Foldable, Functor, Traversable, Show)
+
+instance NFData a => NFData (BooleanOperators a)
+
+instance Hashable a => Hashable (BooleanOperators a)
+
+instance Cacheable a => Cacheable (BooleanOperators a)
+
+instance ToJSON a => J.ToJSONKeyValue (BooleanOperators a) where
+  toJSONKeyValue = \case
+    ASTContains a -> ("_st_contains", J.toJSON a)
+    ASTEquals a -> ("_st_equals", J.toJSON a)
+    ASTIntersects a -> ("_st_intersects", J.toJSON a)
+    ASTTouches a -> ("_st_touches", J.toJSON a)
+    ASTWithin a -> ("_st_within", J.toJSON a)
+    ASTDWithin a -> ("_st_dwithin", J.toJSON a)
 
 --------------------------------------------------------------------------------
 -- Backend-related stuff

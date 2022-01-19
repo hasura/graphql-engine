@@ -15,6 +15,7 @@ module Hasura.RQL.Types.Action
     adHandler,
     adTimeout,
     adRequestTransform,
+    adResponseTransform,
     ActionType (..),
     _ActionMutation,
     ActionDefinitionInput,
@@ -76,7 +77,7 @@ import Hasura.Base.Error
 import Hasura.Incremental (Cacheable)
 import Hasura.Prelude
 import Hasura.RQL.DDL.Headers
-import Hasura.RQL.DDL.RequestTransform (MetadataTransform)
+import Hasura.RQL.DDL.WebhookTransforms (MetadataRequestTransform, MetadataResponseTransform)
 import Hasura.RQL.IR.Select
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Common
@@ -178,7 +179,8 @@ data ActionDefinition a b = ActionDefinition
     -- the default timeout of 30 seconds will be used
     _adTimeout :: !Timeout,
     _adHandler :: !b,
-    _adRequestTransform :: !(Maybe MetadataTransform)
+    _adRequestTransform :: !(Maybe MetadataRequestTransform),
+    _adResponseTransform :: !(Maybe MetadataResponseTransform)
   }
   deriving (Show, Eq, Functor, Foldable, Traversable, Generic)
 
@@ -202,10 +204,11 @@ instance (J.FromJSON a, J.FromJSON b) => J.FromJSON (ActionDefinition a b) where
       "query" -> pure ActionQuery
       t -> fail $ "expected mutation or query, but found " <> t
     _adRequestTransform <- o J..:? "request_transform"
+    _adResponseTransform <- o J..:? "response_transform"
     return ActionDefinition {..}
 
 instance (J.ToJSON a, J.ToJSON b) => J.ToJSON (ActionDefinition a b) where
-  toJSON (ActionDefinition args outputType actionType headers forwardClientHeaders timeout handler requestTransform) =
+  toJSON (ActionDefinition args outputType actionType headers forwardClientHeaders timeout handler requestTransform responseTransform) =
     let typeAndKind = case actionType of
           ActionQuery -> ["type" J..= ("query" :: String)]
           ActionMutation kind ->
@@ -220,7 +223,10 @@ instance (J.ToJSON a, J.ToJSON b) => J.ToJSON (ActionDefinition a b) where
             "handler" J..= handler,
             "timeout" J..= timeout
           ]
-            <> catMaybes [(\trans -> "request_transform" J..= trans) <$> requestTransform]
+            <> catMaybes
+              [ ("request_transform" J..=) <$> requestTransform,
+                ("response_transform" J..=) <$> responseTransform
+              ]
             <> typeAndKind
 
 type ResolvedActionDefinition =
@@ -327,7 +333,8 @@ data AnnActionExecution (b :: BackendType) (r :: Type) v = AnnActionExecution
     _aaeStrfyNum :: !Bool,
     _aaeTimeOut :: !Timeout,
     _aaeSource :: !(ActionSourceInfo b),
-    _aaeRequestTransform :: !(Maybe MetadataTransform)
+    _aaeRequestTransform :: !(Maybe MetadataRequestTransform),
+    _aaeResponseTransform :: !(Maybe MetadataResponseTransform)
   }
   deriving (Functor, Foldable, Traversable)
 

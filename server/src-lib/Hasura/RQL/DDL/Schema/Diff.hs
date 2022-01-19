@@ -113,8 +113,8 @@ getTableDiff oldtm newtm =
 
     mNewDesc = _ptmiDescription $ tmInfo newtm
 
-    droppedCols = map prciName $ getDifferenceOn prciPosition oldCols newCols
-    existingCols = getOverlapWith prciPosition oldCols newCols
+    droppedCols = map rciName $ getDifferenceOn rciPosition oldCols newCols
+    existingCols = getOverlapWith rciPosition oldCols newCols
     alteredCols = filter (uncurry (/=)) existingCols
 
     -- foreign keys are considered dropped only if their oid
@@ -375,8 +375,8 @@ alterColumnsInMetadata ::
   m ()
 alterColumnsInMetadata source alteredCols fields sc tn =
   for_ alteredCols $
-    \( RawColumnInfo {prciName = oldName, prciType = oldType},
-       RawColumnInfo {prciName = newName, prciType = newType}
+    \( RawColumnInfo {rciName = oldName, rciType = oldType},
+       RawColumnInfo {rciName = newName, rciType = newType}
        ) -> do
         if
             | oldName /= newName ->

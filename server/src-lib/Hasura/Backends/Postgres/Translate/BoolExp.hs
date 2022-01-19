@@ -174,7 +174,7 @@ translateBoolExp = \case
   BoolFld boolExp -> case boolExp of
     AVColumn colInfo opExps -> do
       BoolExpCtx {rootReference, currTableReference} <- ask
-      let colFld = fromCol @('Postgres pgKind) $ pgiColumn colInfo
+      let colFld = fromCol @('Postgres pgKind) $ ciColumn colInfo
           bExps = map (mkFieldCompExp rootReference currTableReference $ LColumn colFld) opExps
       return $ foldr (S.BEBin S.AndOp) (S.BELit True) bExps
     AVRelationship (RelInfo _ _ colMapping relTN _ _) nesAnn -> do

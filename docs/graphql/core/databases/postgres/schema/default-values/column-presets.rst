@@ -102,7 +102,7 @@ Step 1: Configure a column preset
             "set":{
               "user_id":"X-Hasura-User-Id"
             },
-            "columns":["title","content", "rating"]
+            "columns":["title", "content", "rating"]
           }
         }
       }
@@ -137,7 +137,7 @@ passed in the ``X-Hasura-User-Id`` variable:
 .. note::
 
   Not passing the configured header will result in a run-time error:
-  
+
   .. code-block:: JSON
 
     {

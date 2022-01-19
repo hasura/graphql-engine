@@ -68,19 +68,19 @@ fetchAndValidateEnumValues pgSourceConfig tableName maybePrimaryKey columnInfos 
         validatePrimaryKey = case maybePrimaryKey of
           Nothing -> refute [EnumTableMissingPrimaryKey]
           Just primaryKey -> case _pkColumns primaryKey of
-            column NESeq.:<|| Seq.Empty -> case prciType column of
+            column NESeq.:<|| Seq.Empty -> case rciType column of
               PGText -> pure column
               _ -> refute [EnumTableNonTextualPrimaryKey column]
-            columns -> refute [EnumTableMultiColumnPrimaryKey $ map prciName (toList columns)]
+            columns -> refute [EnumTableMultiColumnPrimaryKey $ map rciName (toList columns)]
 
         validateColumns primaryKeyColumn = do
           let nonPrimaryKeyColumns = maybe columnInfos (`delete` columnInfos) primaryKeyColumn
           case nonPrimaryKeyColumns of
             [] -> pure Nothing
-            [column] -> case prciType column of
+            [column] -> case rciType column of
               PGText -> pure $ Just column
               _ -> dispute [EnumTableNonTextualCommentColumn column] $> Nothing
-            columns -> dispute [EnumTableTooManyColumns $ map prciName columns] $> Nothing
+            columns -> dispute [EnumTableTooManyColumns $ map rciName columns] $> Nothing
 
     showErrors :: [EnumTableIntegrityError ('Postgres pgKind)] -> Text
     showErrors allErrors =
@@ -116,8 +116,8 @@ fetchAndValidateEnumValues pgSourceConfig tableName maybePrimaryKey columnInfos 
               <> ")"
           where
             typeMismatch description colInfo expected =
-              "the table’s " <> description <> " (" <> prciName colInfo <<> ") must have type "
-                <> expected <<> ", not type " <>> prciType colInfo
+              "the table’s " <> description <> " (" <> rciName colInfo <<> ") must have type "
+                <> expected <<> ", not type " <>> rciType colInfo
 
 fetchEnumValuesFromDb ::
   forall pgKind m.
@@ -128,13 +128,13 @@ fetchEnumValuesFromDb ::
   m EnumValues
 fetchEnumValuesFromDb tableName primaryKeyColumn maybeCommentColumn = do
   let nullExtr = Extractor SENull Nothing
-      commentExtr = maybe nullExtr (mkExtr . prciName) maybeCommentColumn
+      commentExtr = maybe nullExtr (mkExtr . rciName) maybeCommentColumn
       query =
         Q.fromBuilder $
           toSQL
             mkSelect
               { selFrom = Just $ mkSimpleFromExp tableName,
-                selExtr = [mkExtr (prciName primaryKeyColumn), commentExtr]
+                selExtr = [mkExtr (rciName primaryKeyColumn), commentExtr]
               }
   rawEnumValues <- liftTx $ Q.withQE defaultTxErrorHandler query () True
   when (null rawEnumValues) $ dispute [EnumTableNoEnumValues]

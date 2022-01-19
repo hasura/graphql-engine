@@ -41,7 +41,7 @@ instance BackendSchema 'MySQL where
   jsonPathArg = jsonPathArg'
   orderByOperators = orderByOperators'
   comparisonExps = comparisonExps'
-  mkCountType = error "mkCountType: MySQL backend does not support this operation yet."
+  countTypeInput = error "countTypeInput: MySQL backend does not support this operation yet."
   aggregateOrderByCountType = error "aggregateOrderByCountType: MySQL backend does not support this operation yet."
   computedField = error "computedField: MySQL backend does not support this operation yet."
   node = error "node: MySQL backend does not support this operation yet."

@@ -208,15 +208,15 @@ selectTableByPk ::
   m (Maybe (FieldParser n (SelectExp b)))
 selectTableByPk sourceName tableInfo fieldName description selectPermissions = runMaybeT do
   primaryKeys <- hoistMaybe $ fmap _pkColumns . _tciPrimaryKey . _tiCoreInfo $ tableInfo
-  guard $ all (\c -> pgiColumn c `Map.member` spiCols selectPermissions) primaryKeys
+  guard $ all (\c -> ciColumn c `Map.member` spiCols selectPermissions) primaryKeys
   lift $ memoizeOn 'selectTableByPk (sourceName, tableName, fieldName) do
     stringifyNum <- asks $ qcStringifyNum . getter
     argsParser <-
       sequenceA <$> for primaryKeys \columnInfo -> do
-        field <- columnParser (pgiType columnInfo) (G.Nullability $ pgiIsNullable columnInfo)
+        field <- columnParser (ciType columnInfo) (G.Nullability $ ciIsNullable columnInfo)
         pure $
           BoolFld . AVColumn columnInfo . pure . AEQ True . mkParameter
-            <$> P.field (pgiName columnInfo) (pgiDescription columnInfo) field
+            <$> P.field (ciName columnInfo) (ciDescription columnInfo) field
     selectionSetParser <- tableSelectionSet sourceName tableInfo selectPermissions
     pure $
       P.subselection fieldName description argsParser selectionSetParser
@@ -697,7 +697,7 @@ defaultTableArgs sourceName tableInfo selectPermissions = do
           initOrderBys = take colsLen $ NE.toList orderByCols
           initOrdByCols = flip mapMaybe initOrderBys $ \ob ->
             case IR.obiColumn ob of
-              IR.AOCColumn pgCol -> Just $ pgiColumn pgCol
+              IR.AOCColumn columnInfo -> Just $ ciColumn columnInfo
               _ -> Nothing
           isValid =
             (colsLen == length initOrdByCols)
@@ -861,11 +861,11 @@ tableConnectionArgs pkeyColumns sourceName tableInfo selectPermissions = do
     appendPrimaryKeyOrderBy :: NonEmpty (IR.AnnotatedOrderByItemG b v) -> NonEmpty (IR.AnnotatedOrderByItemG b v)
     appendPrimaryKeyOrderBy orderBys@(h NE.:| t) =
       let orderByColumnNames =
-            orderBys ^.. traverse . to IR.obiColumn . IR._AOCColumn . to pgiColumn
-          pkeyOrderBys = flip mapMaybe (toList pkeyColumns) $ \pgColumnInfo ->
-            if pgiColumn pgColumnInfo `elem` orderByColumnNames
+            orderBys ^.. traverse . to IR.obiColumn . IR._AOCColumn . to ciColumn
+          pkeyOrderBys = flip mapMaybe (toList pkeyColumns) $ \columnInfo ->
+            if ciColumn columnInfo `elem` orderByColumnNames
               then Nothing
-              else Just $ IR.OrderByItemG Nothing (IR.AOCColumn pgColumnInfo) Nothing
+              else Just $ IR.OrderByItemG Nothing (IR.AOCColumn columnInfo) Nothing
        in h NE.:| (t <> pkeyOrderBys)
 
     parseConnectionSplit ::
@@ -877,17 +877,17 @@ tableConnectionArgs pkeyColumns sourceName tableInfo selectPermissions = do
       cursorValue <- J.eitherDecode cursorSplit `onLeft` const throwInvalidCursor
       case maybeOrderBys of
         Nothing -> forM (NESeq.toNonEmpty pkeyColumns) $
-          \pgColumnInfo -> do
-            let columnJsonPath = [J.Key $ toTxt $ pgiColumn pgColumnInfo]
-                columnType = pgiType pgColumnInfo
-            pgColumnValue <-
+          \columnInfo -> do
+            let columnJsonPath = [J.Key $ toTxt $ ciColumn columnInfo]
+                columnType = ciType columnInfo
+            columnValue <-
               iResultToMaybe (executeJSONPath columnJsonPath cursorValue)
                 `onNothing` throwInvalidCursor
-            pgValue <- liftQErr $ parseScalarValueColumnType columnType pgColumnValue
+            pgValue <- liftQErr $ parseScalarValueColumnType columnType columnValue
             let unresolvedValue = UVParameter Nothing $ ColumnValue columnType pgValue
             pure $
               IR.ConnectionSplit splitKind unresolvedValue $
-                IR.OrderByItemG Nothing (IR.AOCColumn pgColumnInfo) Nothing
+                IR.OrderByItemG Nothing (IR.AOCColumn columnInfo) Nothing
         Just orderBys ->
           forM orderBys $ \orderBy -> do
             let IR.OrderByItemG orderType annObCol nullsOrder = orderBy
@@ -906,11 +906,11 @@ tableConnectionArgs pkeyColumns sourceName tableInfo selectPermissions = do
 
         mkAggregateOrderByPath = \case
           IR.AAOCount -> [J.Key "count"]
-          IR.AAOOp t col -> [J.Key t, J.Key $ toTxt $ pgiColumn col]
+          IR.AAOOp t col -> [J.Key t, J.Key $ toTxt $ ciColumn col]
 
         getPathFromOrderBy = \case
-          IR.AOCColumn pgColInfo ->
-            let pathElement = J.Key $ toTxt $ pgiColumn pgColInfo
+          IR.AOCColumn columnInfo ->
+            let pathElement = J.Key $ toTxt $ ciColumn columnInfo
              in [pathElement]
           IR.AOCObjectRelation relInfo _ obCol ->
             let pathElement = J.Key $ relNameToTxt $ riName relInfo
@@ -926,7 +926,7 @@ tableConnectionArgs pkeyColumns sourceName tableInfo selectPermissions = do
                     J.Key (fieldNameText <> "_aggregate") : mkAggregateOrderByPath aggOb
 
         getOrderByColumnType = \case
-          IR.AOCColumn pgColInfo -> pgiType pgColInfo
+          IR.AOCColumn columnInfo -> ciType columnInfo
           IR.AOCObjectRelation _ _ obCol -> getOrderByColumnType obCol
           IR.AOCArrayAggregation _ _ aggOb -> aggregateOrderByColumnType aggOb
           IR.AOCComputedField cfob ->
@@ -936,7 +936,7 @@ tableConnectionArgs pkeyColumns sourceName tableInfo selectPermissions = do
           where
             aggregateOrderByColumnType = \case
               IR.AAOCount -> ColumnScalar (aggregateOrderByCountType @b)
-              IR.AAOOp _ colInfo -> pgiType colInfo
+              IR.AAOOp _ colInfo -> ciType colInfo
 
 -- | Aggregation fields
 --
@@ -998,30 +998,35 @@ tableAggregationFields sourceName tableInfo selectPermissions = memoizeOn 'table
       | otherwise = traverse \columnInfo ->
         pure $
           P.selection_
-            (pgiName columnInfo)
-            (pgiDescription columnInfo)
+            (ciName columnInfo)
+            (ciDescription columnInfo)
             (P.nullable P.float)
-            $> IR.CFCol (pgiColumn columnInfo) (pgiType columnInfo)
+            $> IR.CFCol (ciColumn columnInfo) (ciType columnInfo)
 
     mkColumnAggField :: ColumnInfo b -> m (FieldParser n (IR.ColFld b))
     mkColumnAggField columnInfo = do
-      field <- columnParser (pgiType columnInfo) (G.Nullability True)
+      field <- columnParser (ciType columnInfo) (G.Nullability True)
       pure $
         P.selection_
-          (pgiName columnInfo)
-          (pgiDescription columnInfo)
+          (ciName columnInfo)
+          (ciDescription columnInfo)
           field
-          $> IR.CFCol (pgiColumn columnInfo) (pgiType columnInfo)
+          $> IR.CFCol (ciColumn columnInfo) (ciType columnInfo)
 
     countField :: m (FieldParser n (IR.AggregateField b))
     countField = do
       columnsEnum <- tableSelectColumnsEnum sourceName tableInfo selectPermissions
-      let columnsName = $$(G.litName "columns")
-          distinctName = $$(G.litName "distinct")
+      let distinctName = $$(G.litName "distinct")
           args = do
             distinct <- P.fieldOptional distinctName Nothing P.boolean
-            columns <- maybe (pure Nothing) (P.fieldOptional columnsName Nothing . P.list) columnsEnum
-            pure $ mkCountType @b distinct columns
+            mkCountType <- countTypeInput @b columnsEnum
+            pure $
+              mkCountType $
+                maybe
+                  IR.SelectCountNonDistinct -- If "distinct" is "null" or absent, we default to @'SelectCountNonDistinct'
+                  (bool IR.SelectCountNonDistinct IR.SelectCountDistinct)
+                  distinct
+
       pure $ IR.AFCount <$> P.selection $$(G.litName "count") Nothing args P.int
 
     parseAggOperator ::
@@ -1057,8 +1062,8 @@ fieldSelection sourceName table maybePkeyColumns fieldInfo selectPermissions = d
     FIColumn columnInfo ->
       maybeToList <$> runMaybeT do
         queryType <- asks $ qcQueryType . getter
-        let columnName = pgiColumn columnInfo
-            fieldName = pgiName columnInfo
+        let columnName = ciColumn columnInfo
+            fieldName = ciName columnInfo
         if fieldName == $$(G.litName "id") && queryType == ET.QueryRelay
           then do
             xRelayInfo <- hoistMaybe $ relayExtension @b
@@ -1071,7 +1076,7 @@ fieldSelection sourceName table maybePkeyColumns fieldInfo selectPermissions = d
             let caseBoolExp = join $ Map.lookup columnName (spiCols selectPermissions)
             let caseBoolExpUnpreparedValue =
                   (fmap . fmap) partialSQLExpToUnpreparedValue <$> caseBoolExp
-            let pathArg = jsonPathArg $ pgiType columnInfo
+            let pathArg = jsonPathArg $ ciType columnInfo
                 -- In an inherited role, when a column is part of all the select
                 -- permissions which make up the inherited role then the nullability
                 -- of the field is determined by the nullability of the DB column
@@ -1091,11 +1096,11 @@ fieldSelection sourceName table maybePkeyColumns fieldInfo selectPermissions = d
                 -- The above is the paper which talks about the idea of cell-level
                 -- authorization and multiple roles. The paper says that we should only
                 -- allow the case analysis only on nullable columns.
-                nullability = pgiIsNullable columnInfo || isJust caseBoolExp
-            field <- lift $ columnParser (pgiType columnInfo) (G.Nullability nullability)
+                nullability = ciIsNullable columnInfo || isJust caseBoolExp
+            field <- lift $ columnParser (ciType columnInfo) (G.Nullability nullability)
             pure $
-              P.selection fieldName (pgiDescription columnInfo) pathArg field
-                <&> IR.mkAnnColumnField (pgiColumn columnInfo) (pgiType columnInfo) caseBoolExpUnpreparedValue
+              P.selection fieldName (ciDescription columnInfo) pathArg field
+                <&> IR.mkAnnColumnField (ciColumn columnInfo) (ciType columnInfo) caseBoolExpUnpreparedValue
     FIRelationship relationshipInfo ->
       concat . maybeToList <$> relationshipField sourceName table relationshipInfo
     FIComputedField computedFieldInfo ->
@@ -1165,7 +1170,7 @@ relationshipField sourceName table RelInfo {..} = runMaybeT do
           colInfo <-
             traverse findColumn columns
               `onNothing` throw500 "could not find column info in schema cache"
-          pure $ boolToNullable $ any pgiIsNullable colInfo
+          pure $ boolToNullable $ any ciIsNullable colInfo
         -- Manual or reverse relationships are always nullable
         _ -> pure Nullable
       pure $
@@ -1612,7 +1617,7 @@ nodeField = do
 
       unless (null nonAlignedPkColumns) $
         throwInvalidNodeId $
-          "primary key columns " <> dquoteList (map pgiColumn nonAlignedPkColumns) <> " are missing"
+          "primary key columns " <> dquoteList (map ciColumn nonAlignedPkColumns) <> " are missing"
 
       unless (null nonAlignedColumnValues) $
         throwInvalidNodeId $
@@ -1625,9 +1630,9 @@ nodeField = do
           fmap IR.BoolAnd $
             for allTuples $ \(columnInfo, columnValue) -> do
               let modifyErrFn t =
-                    "value of column " <> pgiColumn columnInfo
+                    "value of column " <> ciColumn columnInfo
                       <<> " in node id: " <> t
-                  pgColumnType = pgiType columnInfo
+                  pgColumnType = ciType columnInfo
               pgValue <- modifyErr modifyErrFn $ parseScalarValueColumnType pgColumnType columnValue
               let unpreparedValue = UVParameter Nothing $ ColumnValue pgColumnType pgValue
               pure $ IR.BoolFld $ IR.AVColumn columnInfo [IR.AEQ True unpreparedValue]

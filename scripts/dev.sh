@@ -78,7 +78,7 @@ try_jq() {
 
 # Bump this to:
 #  - force a reinstall of python dependencies, etc.
-DEVSH_VERSION=1.6
+DEVSH_VERSION=1.7
 
 case "${1-}" in
   graphql-engine)
@@ -486,7 +486,7 @@ elif [ "$MODE" = "test" ]; then
 
   if [ "$RUN_HLINT" = true ]; then
     if command -v hlint >/dev/null; then
-      (cd "$PROJECT_ROOT/server" && hlint src-*)
+      hlint "${PROJECT_ROOT}/server/src-"*
     else
       echo_warn "hlint is not installed: skipping"
     fi

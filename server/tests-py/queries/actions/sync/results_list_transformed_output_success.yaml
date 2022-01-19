@@ -1,0 +1,32 @@
+- description: A successful query to get result list
+  url: /v1/graphql
+  status: 200
+  response:
+    data:
+      result_list:
+        result_ids: [1, 2, 3, 4]
+  query:
+    query: |
+      query {
+        result_list {
+          result_ids
+        }
+      }
+
+- description: A successful query to get transformed results
+  url: /v1/graphql
+  status: 200
+  response:
+    data:
+      results:
+        - id: 1
+        - id: 2
+        - id: 3
+        - id: 4
+  query:
+    query: |
+      query myresults {
+        results {
+          id
+        }
+      }

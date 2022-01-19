@@ -138,6 +138,7 @@ import Hasura.Metadata.Class
 import Hasura.Prelude
 import Hasura.RQL.DDL.EventTrigger (getHeaderInfosFromConf)
 import Hasura.RQL.DDL.Headers
+import Hasura.RQL.DDL.WebhookTransforms
 import Hasura.RQL.Types
 import Hasura.SQL.Types
 import Hasura.Tracing qualified as Tracing
@@ -249,6 +250,8 @@ processCronEvents logger logBehavior httpMgr cronEvents getSC lockedCronEvents =
                 (fromMaybe J.Null ctiPayload)
                 ctiComment
                 Nothing
+                ctiRequestTransform
+                ctiResponseTransform
             retryCtx = RetryContext tries ctiRetryConf
         finally <-
           runMetadataStorageT $
@@ -301,6 +304,8 @@ processOneOffScheduledEvents
                 (fromMaybe J.Null _oosePayload)
                 _ooseComment
                 (Just _ooseCreatedAt)
+                _ooseRequestTransform
+                _ooseResponseTransform
             retryCtx = RetryContext _ooseTries _ooseRetryConf
 
         flip runReaderT (logger, httpMgr) $
@@ -373,12 +378,15 @@ processScheduledEvent logBehavior eventId eventHeaders retryCtx payload webhookU
             extraLogCtx = ExtraLogContext eventId (sewpName payload)
             webhookReqBodyJson = J.toJSON payload
             webhookReqBody = J.encode webhookReqBodyJson
+            requestTransform = mkRequestTransform <$> sewpRequestTransform payload
+            responseTransform = mkResponseTransform <$> sewpResponseTransform payload
+
         eitherReqRes <-
           runExceptT $
-            mkRequest headers httpTimeout webhookReqBody Nothing webhookUrl >>= \reqDetails -> do
+            mkRequest headers httpTimeout webhookReqBody requestTransform webhookUrl >>= \reqDetails -> do
               let request = extractRequest reqDetails
                   logger e d = logHTTPForST e extraLogCtx d logBehavior
-              resp <- invokeRequest reqDetails logger
+              resp <- invokeRequest reqDetails responseTransform logger
               pure (request, resp)
         case eitherReqRes of
           Right (req, resp) ->

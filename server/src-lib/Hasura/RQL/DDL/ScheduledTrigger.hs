@@ -60,6 +60,8 @@ runCreateCronTrigger CreateCronTrigger {..} = do
           cctHeaders
           cctIncludeInMetadata
           cctComment
+          cctRequestTransform
+          cctResponseTransform
   case cctReplace of
     True -> updateCronTrigger q
     False -> do
@@ -83,6 +85,8 @@ runCreateCronTrigger CreateCronTrigger {..} = do
               cctHeaders
               cctIncludeInMetadata
               cctComment
+              cctRequestTransform
+              cctResponseTransform
       buildSchemaCacheFor metadataObj $
         MetadataModifier $
           metaCronTriggers %~ OMap.insert cctName metadata
@@ -106,6 +110,8 @@ resolveCronTrigger env CronTriggerMetadata {..} = do
       webhookInfo
       headerInfo
       ctComment
+      ctRequestTransform
+      ctResponseTransform
 
 updateCronTrigger ::
   ( CacheRWM m,

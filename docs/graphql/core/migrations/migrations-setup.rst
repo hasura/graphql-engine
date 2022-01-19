@@ -30,10 +30,12 @@ Let's say we have the following two tables in our schema:
 
 Now we want to set up migrations starting with this schema.
 
-Step 0: Disable the console on the server
------------------------------------------
+Step 0: Disable the console served by the server
+------------------------------------------------
 
-To use migrations effectively, the console on the server (which is served at ``/console``) should be
+The Hasura console UI can be served directly by the GraphQL engine server and also by the Hasura CLI.
+
+To use migrations effectively, the console served by the server (which is served at ``/console``) should be
 disabled and all changes must go through the console served by the CLI. Otherwise, changes could be
 made through the server console and they will not be tracked by migrations.
 
@@ -177,11 +179,11 @@ Commit the current project state to version control:
 
   The version control set up should typically be done right after :ref:`Step 2 <migrations_project_init>`
 
-Step 4: Use the console from the CLI
-------------------------------------
+Step 4: Use the console served by the CLI
+-----------------------------------------
 
 From this point onwards, instead of using the console at
-``http://my-graphql.hasura.app/console`` you should use the console from the CLI
+``http://my-graphql.hasura.app/console`` you should use the console served by the CLI
 by running:
 
 .. code-block:: bash

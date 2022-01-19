@@ -40,6 +40,24 @@ class TestRunSQLMSSQL:
     def test_invalid_sql_query(self, hge_ctx, backend):
         check_query_f(hge_ctx, self.dir() + '/invalid_sql_query.yaml')
 
+    def test_select_query(self, hge_ctx, backend):
+        check_query_f(hge_ctx, self.dir() + '/sql_select_query_mssql.yaml')
+
+    def test_drop_table(self, hge_ctx, backend):
+        check_query_f(hge_ctx, self.dir() + '/sql_drop_table_mssql.yaml')
+
+    def test_rename_table(self, hge_ctx, backend):
+        check_query_f(hge_ctx, self.dir() + '/sql_rename_table_mssql.yaml')
+
+    def test_drop_column(self, hge_ctx, backend):
+        check_query_f(hge_ctx, self.dir() + '/sql_drop_column_mssql.yaml')
+
+    def test_add_column(self, hge_ctx, backend):
+        check_query_f(hge_ctx, self.dir() + '/sql_add_column_mssql.yaml')
+
+    def test_rename_column(self, hge_ctx, backend):
+        check_query_f(hge_ctx, self.dir() + '/sql_rename_column_mssql.yaml')
+
     @classmethod
     def dir(cls):
         return 'queries/v2/mssql/run_sql'

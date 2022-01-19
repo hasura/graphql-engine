@@ -611,17 +611,17 @@ mkTriggerQ trn qt@(QualifiedObject schema table) allCols op (SubscribeOpSpec lis
       mkRowExp $ map (\col -> toExtractor (mkQId opVar strfyNum col) col) columns
 
     mkQId opVar strfyNum colInfo =
-      toJSONableExp strfyNum (pgiType colInfo) False $
-        SEQIdentifier $ QIdentifier (opToQual opVar) $ toIdentifier $ pgiColumn colInfo
+      toJSONableExp strfyNum (ciType colInfo) False $
+        SEQIdentifier $ QIdentifier (opToQual opVar) $ toIdentifier $ ciColumn colInfo
 
     -- Generate the SQL expression
     toExtractor sqlExp column
       -- If the column type is either 'Geography' or 'Geometry', then after applying the 'ST_AsGeoJSON' function
       -- to the column, alias the value of the expression with the column name else it uses `st_asgeojson` as
       -- the column name.
-      | isScalarColumnWhere isGeoType (pgiType column) = Extractor sqlExp (Just $ getAlias column)
+      | isScalarColumnWhere isGeoType (ciType column) = Extractor sqlExp (Just $ getAlias column)
       | otherwise = Extractor sqlExp Nothing
-    getAlias col = toAlias $ Identifier $ getPGColTxt (pgiColumn col)
+    getAlias col = toAlias $ Identifier $ getPGColTxt (ciColumn col)
 
 mkAllTriggersQ ::
   forall pgKind m.
