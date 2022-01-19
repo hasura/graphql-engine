@@ -1,15 +1,14 @@
-<div class="meta" description="Hasura actions"
-keywords="hasura, docs, actions">
+---
+  description: Hasura actions
+  keywords:
+    - hasura
+    - docs
+    - actions
+---
 
-</div>
+import Thumbnail from "@site/src/components/Thumbnail/Thumbnail";
 
 # Actions
-
-<div class="contents" backlinks="none" depth="2" local="">
-
-Table of contents
-
-</div>
 
 ## What are actions?
 
@@ -18,22 +17,18 @@ using custom queries and mutations. Actions can be added to Hasura to
 handle various use cases such as data validation, data enrichment from
 external sources and any other complex business logic.
 
-<div class="thumbnail no-shadow" alt="Actions high level architecture">
+<Thumbnail
+  src="/img/graphql/core/actions/actions-arch.png"
+  alt="Actions high level architecture"
+/>
 
-/img/graphql/core/actions/actions-arch.png
+:::info Supported from
 
-</div>
-
-<div class="admonition">
-
-Supported from
-
-Actions are supported in Hasura GraphQL engine versions `v1.2.0` and
-above.
+Actions are supported in Hasura GraphQL engine versions `v1.2.0` and above.
 
 Actions are supported for **Postgres versions 10 and above**.
 
-</div>
+:::
 
 ## Action description
 
@@ -100,7 +95,7 @@ type UserInfo {
 }
 ```
 
-Read more about `custom types<custom_types>`.
+Read more about [custom types](/graphql/core/actions/types.mdx#custom-types).
 
 ### Handler
 
@@ -109,7 +104,7 @@ run when the action is executed. This can be done in an HTTP webhook,
 also called the action handler. It could be a REST endpoint or a
 serverless function.
 
-Learn more about `writing an action handler<action_handlers>`.
+Learn more about [writing an action handler](/graphql/core/actions/action-handlers.mdx).
 
 ### Kind
 
@@ -117,7 +112,7 @@ Learn more about `writing an action handler<action_handlers>`.
 
 -   **Synchronous**: Sync actions return a response to the client after
     receiving a response from the handler.
--   **Asynchronous**: `Async actions <async_actions>` return an
+-   **Asynchronous**: [Async actions](/graphql/core/actions/async-actions.mdx) return an
     `action id` as response to the client before receiving a response
     from the handler and allow the client to subscribe to the actual
     response using the `action id`.
@@ -150,24 +145,26 @@ up serverless functions as resolvers.
 **Remote schemas**
 
 If you have an existing GraphQL API or if you're comfortable building a
-GraphQL server yourself, you can use `remote schemas <remote_schemas>`
+GraphQL server yourself, you can use [remote schemas](/graphql/core/remote-schemas/index.mdx)
 to add custom types and resolvers.
 
 ## Learn more
 
-<div class="toctree" maxdepth="1" titlesonly="">
+- [Creating actions](/graphql/core/actions/create.mdx)
+- [Custom types](/graphql/core/actions/types.mdx)
+- [Action handlers](/graphql/core/actions/action-handlers.mdx)
+- [Async actions](/graphql/core/actions/async-actions.mdx)
+- [Codegen](/graphql/core/actions/codegen/index.mdx)
+- [Deriving actions](/graphql/core/actions/derive.mdx)
+- [Actions permissions](/graphql/core/actions/action-permissions.mdx)
+- [Actions relationships](/graphql/core/actions/action-relationships.mdx)
+- [Actions transforms](/graphql/core/actions/transforms.mdx)
+- [Debugging actions](/graphql/core/actions/debugging.mdx)
+- [Cleaning up async action logs](/graphql/core/actions/logs-clean-up.mdx)
 
-create Custom types \<types/index> action-handlers async-actions Codegen
-\<codegen/index> derive action-permissions action-relationships
-transforms debugging logs-clean-up
-
-</div>
-
-<div class="admonition">
-
-Additional Resources
+:::info Additional Resources
 
 Introduction to Hasura Actions - [View
 Recording](https://hasura.io/events/webinar/hasura-actions/?pg=docs&plcmt=body&cta=view-recording&tech=).
 
-</div>
+:::

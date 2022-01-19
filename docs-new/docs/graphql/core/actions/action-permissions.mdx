@@ -1,15 +1,17 @@
-<div class="meta" description="Permissions for Hasura actions"
-keywords="hasura, docs, actions, permissions">
+---
+  description: Permissions for Hasura actions
+  keywords:
+    - hasura
+    - docs
+    - actions
+    - permissions
+---
 
-</div>
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import Thumbnail from "@site/src/components/Thumbnail/Thumbnail";
 
 # Actions permissions
-
-<div class="contents" backlinks="none" depth="2" local="">
-
-Table of contents
-
-</div>
 
 ## Introduction
 
@@ -18,34 +20,20 @@ access to an action.
 
 ## Set action permissions
 
-<div class="rst-class">
-
-api_tabs
-
-</div>
-
-<div class="tabs">
-
-<div class="tab">
-
-Console
+<Tabs className="api-tabs">
+<TabItem value="console" label="Console">
 
 Head to the `Actions -> [action-name] -> Permissions` tab in the
 console.
 
-<div class="thumbnail" alt="Console action permission">
-
-/img/graphql/core/actions/actions-permissions.png
-
-</div>
+<Thumbnail
+  src="/img/graphql/core/actions/actions-permissions.png"
+  alt="Console action permission"
+/>
 
 Hit `Save` to give the role permission to access the action.
-
-</div>
-
-<div class="tab">
-
-CLI
+</TabItem>
+<TabItem value="cli" label="CLI">
 
 Go to `metadata/actions.yaml` in the Hasura project directory.
 
@@ -64,14 +52,10 @@ Update the definition of the `insertAuthor` action as:
 
 Save the changes and run `hasura metadata apply` to set the permissions.
 
-</div>
+</TabItem>
+<TabItem value="api" label="API">
 
-<div class="tab">
-
-API
-
-Action permissions can be set by using the
-`metadata_create_action_permission` metadata API:
+Action permissions can be set by using the [metadata_create_action_permission](/graphql/core/api-reference/metadata-api/actions.mdx) metadata API:
 
 ```http
 POST /v1/metadata HTTP/1.1
@@ -86,16 +70,9 @@ X-Hasura-Role: admin
   }
 }
 ```
+</TabItem>
+</Tabs>
 
-</div>
-
-</div>
-
-<div class="admonition">
-
-Additional Resources
-
-Introduction to Hasura Actions - [View
-Recording](https://hasura.io/events/webinar/hasura-actions/?pg=docs&plcmt=body&cta=view-recording&tech=).
-
-</div>
+:::info Additional Resources
+Introduction to Hasura Actions - [View Recording](https://hasura.io/events/webinar/hasura-actions/?pg=docs&plcmt=body&cta=view-recording&tech=).
+:::

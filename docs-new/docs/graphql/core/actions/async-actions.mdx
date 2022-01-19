@@ -1,15 +1,13 @@
-<div class="meta" description="Async actions"
-keywords="hasura, docs, actions, async actions">
-
-</div>
+---
+  description: Async actions
+  keywords:
+    - hasura
+    - docs
+    - actions
+    - async actions
+---
 
 # Async actions
-
-<div class="contents" backlinks="none" depth="1" local="">
-
-Table of contents
-
-</div>
 
 Sometimes you may not want to wait for an action to complete before
 sending a response back to the client (say if the business logic takes a
@@ -21,20 +19,18 @@ If you mark an action as **asynchronous**, Hasura also generates a
 `query` and a `subscription` field for the action so that you can
 query/subscribe to its status.
 
-<div class="admonition">
-
-Note
+:::info Note
 
 Only actions of type `mutation` can be async. Actions of type query are
 always executed synchronously.
 
-</div>
+:::
 
 For example, let's say `place_order` is an asynchronous action
 
 ```graphql
 mutation placeOrderRequest($order_input: place_order_input!) {
-  place_order(input: $order_input) 
+  place_order(input: $order_input)
 }
 ```
 
@@ -61,11 +57,9 @@ subscription getPlaceOrderResponse {
 }
 ```
 
-<div class="admonition">
-
-Additional Resources
+:::info Additional Resources
 
 Introduction to Hasura Actions - [View
 Recording](https://hasura.io/events/webinar/hasura-actions/?pg=docs&plcmt=body&cta=view-recording&tech=).
 
-</div>
+:::

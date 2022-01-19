@@ -1,15 +1,17 @@
-<div class="meta" description="Action handlers for Hasura actions"
-keywords="hasura, docs, actions, handlers">
+---
+  description: Action handlers for Hasura actions
+  keywords:
+    - hasura
+    - docs
+    - actions
+    - handlers
+---
 
-</div>
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import Thumbnail from "@site/src/components/Thumbnail/Thumbnail";
 
 # Action handlers
-
-<div class="contents" backlinks="none" depth="1" local="">
-
-Table of contents
-
-</div>
 
 ## Introduction
 
@@ -41,17 +43,11 @@ The request payload is of the format:
 }
 ```
 
-<div class="note">
-
-<div class="title">
-
-Note
-
-</div>
+:::info Note
 
 All `session_variables` in the request payload have lowercase keys.
 
-</div>
+:::
 
 ## Returning a success response
 
@@ -170,63 +166,44 @@ a header to the action that is automatically sent with each request to
 the webhook, and then adding a check against that in your action
 handler.
 
-<div class="contents" backlinks="none" depth="1" local="">
+- [Step 1: Configure your Hasura instance](/graphql/core/actions/action-handlers.mdx#configure-your-hasura-instance)
+- [Step 2: Add a header to your action](/graphql/core/actions/action-handlers.mdx#add-a-header-to-your-action)
+- [Step 3: Verify the secret in your action handler](/graphql/core/actions/action-handlers.mdx#verify-the-secret-in-your-action-handler)
 
-</div>
-
-<div class="note">
-
-<div class="title">
-
-Note
-
-</div>
+:::info Note
 
 Adding an action secret is a simple way of restricting access to an
 action handler and will suffice in most use cases. However, if you have
 more profound security requirements, you might want to choose advanced
 security solutions tailored to your needs.
 
-</div>
+:::
 
-#### Step 1: Configure your Hasura instance
+#### Step 1: Configure your Hasura instance{#configure-your-hasura-instance)
 
 In your Hasura server, add the action secret as an environment variable,
 say `ACTION_SECRET_ENV`.
 
-#### Step 2: Add a header to your action
+#### Step 2: Add a header to your action{#add-a-header-to-your-action)
 
 For your action, add a header that will act as an action secret.
 
-<div class="rst-class">
-
-api_tabs
-
-</div>
-
-<div class="tabs">
-
-<div class="tab">
-
-Console
+<Tabs className="api-tabs">
+<TabItem value="console" label="Console">
 
 Head to the `Actions -> [action-name]` tab in the console and scroll
 down to `Headers`. You can now configure an action secret by adding a
 header:
 
-<div class="thumbnail" alt="Console action secret" width="700px">
-
-/img/graphql/core/actions/action-secret-header.png
-
-</div>
+<Thumbnail
+  src="/img/graphql/core/actions/action-secret-header.png"
+  alt="Console action secret"
+  width="700px"
+/>
 
 Then hit `Save`.
-
-</div>
-
-<div class="tab">
-
-CLI
+</TabItem>
+<TabItem value="cli" label="CLI">
 
 Go to `metadata/actions.yaml` in the Hasura project directory.
 
@@ -247,11 +224,8 @@ header:
 
 Save the changes and run `hasura metadata apply` to set the headers.
 
-</div>
-
-<div class="tab">
-
-API
+</TabItem>
+<TabItem value="api" label="API">
 
 Headers can be set when creating `creating <metadata_create_action>` or
 `updating <metadata_update_action>` an action via the metadata API.
@@ -286,43 +260,29 @@ X-Hasura-Role: admin
   }
 }
 ```
+</TabItem>
+</Tabs>
 
-<div class="note">
+:::info Note
 
-<div class="title">
+Before creating an action via the [create_action metadata API](/graphql/core/api-reference/metadata-api/actions.mdx) <metadata_create_action>`, all custom types
+need to be defined via the [metadata_set_custom_types](/graphql/core/api-reference/metadata-api/custom-types.mdx) metadata API.
 
-Note
-
-</div>
-
-Before creating an action via the
-`create_action metadata API <metadata_create_action>`, all custom types
-need to be defined via the `metadata_set_custom_types` metadata API.
-
-</div>
-
-</div>
-
-</div>
+:::
 
 This secret is only known by Hasura and is passed to your endpoint with
 every call, thus making sure only Hasura can successfully authenticate
 with the action handler.
 
-<div class="note">
+:::info Note
 
-<div class="title">
-
-Note
-
-</div>
 
 The name for the action secret is not defined by Hasura and can be
 chosen freely.
 
-</div>
+:::
 
-#### Step 3: Verify the secret in your action handler
+#### Step 3: Verify the secret in your action handler{#verify-the-secret-in-your-action-handler}
 
 First, load the action secret as an environment variable in your action
 handler by adding it to your `.env` file (this file might be a different
@@ -358,11 +318,9 @@ app.post('/actionHandler', async (req, res) => {
 });
 ```
 
-<div class="admonition">
-
-Additional Resources
+:::info Additional Resources
 
 Introduction to Hasura Actions - [View
 Recording](https://hasura.io/events/webinar/hasura-actions/?pg=docs&plcmt=body&cta=view-recording&tech=).
 
-</div>
+:::

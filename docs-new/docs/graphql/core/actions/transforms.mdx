@@ -1,15 +1,18 @@
-<div class="meta" description="Transform actions requests"
-keywords="hasura, docs, action, transforms, rest connectors">
+---
+  description: Transform actions requests
+  keywords:
+    - hasura
+    - docs
+    - action
+    - transforms
+    - rest connectors
+---
 
-</div>
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import Thumbnail from "@site/src/components/Thumbnail/Thumbnail";
 
 # Actions transforms
-
-<div class="contents" backlinks="none" depth="2" local="">
-
-Table of contents
-
-</div>
 
 ## Introduction
 
@@ -19,49 +22,34 @@ existing API without needing to write or deploy any middleware code.
 Action transforms can be seen as "REST connectors" as you can integrate
 any REST endpoint as a GraphQL API with a suitable transformation.
 
-<div class="admonition">
-
-Supported from
+:::info Supported from
 
 Transforms are supported in Hasura GraphQL Engine versions `v2.1.0` and
 above
 
-</div>
+:::
 
 ## Configuring actions transforms
 
-<div class="rst-class">
-
-api_tabs
-
-</div>
-
-<div class="tabs">
-
-<div class="tab">
-
-Console
+<Tabs className="api-tabs">
+<TabItem value="console" label="Console">
 
 Go to the `Actions` tab on the console and create or modify an action.
 Scroll down to `Configure Transformations` section:
 
-<div class="thumbnail" alt="Configure action transformation"
-width="800px">
+<Thumbnail
+  src="/img/graphql/core/actions/configure-transformation.png"
+  alt="Configure action transformation"
+  width="800px"
+/>
 
-/img/graphql/core/actions/configure-transformation.png
-
-</div>
-
-</div>
-
-<div class="tab">
-
-API
+</TabItem>
+<TabItem value="api" label="API">
 
 Action transforms can be added to actions using the
-`create_action metadata API <metadata_create_action>` or
-`update_action metadata API <metadata_update_action>` by adding a
-`request_transform <RequestTransformation>` field to the args:
+[create_action metadata API](/graphql/core/api-reference/metadata-api/actions.mdx#metadata-create-action) or
+[update_action metadata API](/graphql/core/api-reference/metadata-api/actions.mdx#metadata_update_action) by adding a
+[request_transform](/graphql/core/api-reference/syntax-defs.mdx#requesttransformation) field to the args:
 
 ```http
 POST /v1/metadata HTTP/1.1
@@ -95,10 +83,9 @@ X-Hasura-Role: admin
    }
 }
 ```
+</TabItem>
+</Tabs>
 
-</div>
-
-</div>
 
 ## Types of transformations
 
@@ -122,53 +109,42 @@ In this section, you can provide mock `session variables` and
 are not resolved during testing transforms as it could expose sensitive
 information to the UI.
 
-<div class="rst-class">
 
-api_tabs
-
-</div>
-
-<div class="tabs">
-
-<div class="tab">
-
-Console
+<Tabs className="api-tabs">
+<TabItem value="console" label="Console">
 
 Configure an `env var` in the action webhook handler.
 
-<div class="thumbnail" alt="Console action webhook handler" width="90%">
-
-/img/graphql/core/actions/transformation-context-vars-0.png
-
-</div>
+<Thumbnail
+  src="/img/graphql/core/actions/transformation-context-vars-0.png"
+  alt="Console action webhook handler"
+  width="90%"
+/>
 
 Add the `env var` value to the `Sample Context` under
 `Sample Env Variables`.
 
-<div class="thumbnail" alt="Console action context env" width="90%">
-
-/img/graphql/core/actions/transformation-context-vars-1.png
-
-</div>
+<Thumbnail
+  src="/img/graphql/core/actions/transformation-context-vars-1.png"
+  alt="Console action context env"
+  width="90%"
+/>
 
 The value should be reflected in the `{{$base_url}}` in
 `Request Options Transformation`:
 
-<div class="thumbnail" alt="Console action req options transformation"
-width="90%">
-
-/img/graphql/core/actions/transformation-context-vars-2.png
-
-</div>
+<Thumbnail
+  src="/img/graphql/core/actions/transformation-context-vars-2.png"
+  alt="Console action req options transformation"
+  width="90%"
+/>
 
 `Session vars` could also be added to the `Sample context` as shown
 above, and they could be used like so:
 `{{$session_variables['x-hasura-user-id']}}`. The above screen also
 shows an example of using the session vars from context.
 
-<div class="admonition">
-
-Context variables validation error
+:::info Context variables validation error
 
 Note that if you don't provide mock `env/session variables` and test
 your transform, you would get a UI validation error. Considering this
@@ -177,11 +153,9 @@ usable. When you click on `Create Action`, any referenced envs are
 validated at the server without leaking any sensitive information to the
 UI.
 
-</div>
-
-</div>
-
-</div>
+:::
+</TabItem>
+</Tabs>
 
 ### Request body
 
@@ -189,32 +163,19 @@ Generate a custom body by giving a `body` key to the
 `request_transform`. You can use the [Kriti templating
 language](https://github.com/hasura/kriti-lang) to construct the body.
 
-<div class="rst-class">
-
-api_tabs
-
-</div>
-
-<div class="tabs">
-
-<div class="tab">
-
-Console
+<Tabs className="api-tabs">
+<TabItem value="console" label="Console">
 
 In the `Configure Transformations` section, click on
 `Add Payload Transformation`:
 
-<div class="thumbnail" alt="Add payload transformation" width="1100px">
-
-/img/graphql/core/actions/payload-transformation.png
-
-</div>
-
-</div>
-
-<div class="tab">
-
-API
+<Thumbnail
+  src="/img/graphql/core/actions/payload-transformation.png"
+  alt="Add payload transformation"
+  width="1100px"
+/>
+</TabItem>
+<TabItem value="api" label="API">
 
 ```json
 {
@@ -223,10 +184,9 @@ API
   }
 }
 ```
+</TabItem>
+</Tabs>
 
-</div>
-
-</div>
 
 ### Content Type
 
@@ -234,25 +194,11 @@ You can change the `Content-Type` of the request to either
 `application/json` or `x-www-form-urlencoded`. The default is
 `application/json`.
 
-<div class="rst-class">
-
-api_tabs
-
-</div>
-
-<div class="tabs">
-
-<div class="tab">
-
-Console
-
+<Tabs className="api-tabs">
+<TabItem value="console" label="Console">
 Console support coming soon.
-
-</div>
-
-<div class="tab">
-
-API
+</TabItem>
+<TabItem value="api" label="API">
 
 ```json
 {
@@ -265,10 +211,8 @@ API
   }
 }
 ```
-
-</div>
-
-</div>
+</TabItem>
+</Tabs>
 
 With `x-www-form-urlencoded`, the key-value pairs in `body` are
 transformed to `name={{$body.input.name}}&key2={{$body.input.email}}`.
@@ -281,30 +225,21 @@ can use the [Kriti templating
 language](https://github.com/hasura/kriti-lang) to construct any string
 value here.
 
-<div class="rst-class">
 
-api_tabs
-
-</div>
-
-<div class="tabs">
-
-.. tab:: Console
+<Tabs className="api-tabs">
+<TabItem value="console" label="Console">
 
 In the `Configure Transformations` section, click on
 `Add Request Options Transformation`:
 
-<div class="thumbnail" alt="Console action create" width="800px">
+<Thumbnail
+  src="/img/graphql/core/actions/request-options-transformation.png"
+  alt="Console action create"
+  width="800px"
+/>
 
-/img/graphql/core/actions/request-options-transformation.png
-
-</div>
-
-<div class="tab">
-
-API
-
-</div>
+</TabItem>
+<TabItem value="api" label="API">
 
 ```json
 {
@@ -318,51 +253,37 @@ API
 }
 ```
 
-</div>
+</TabItem>
+</Tabs>
 
-<div class="admonition">
-
-escapeUri
+:::info escapeUri
 
 Note that you must use the `escapeUri` function to urlencode templated
 values. For example, if you have to use session variables in the URL and
 those may contain non-ASCII values, then you should provide the template
-URL as
-`{{$base_url}}/{{escapeUri $session_variables['x-hasura-user-id']}}`
+URL as `{{$base_url}}/{{escapeUri $session_variables['x-hasura-user-id']}}`
 
-</div>
+:::
 
 ### Method
 
 Transform the method. This can be used to change the request method, say
 from `POST` to `GET`, as shown below.
 
-<div class="rst-class">
 
-api_tabs
-
-</div>
-
-<div class="tabs">
-
-<div class="tab">
-
-Console
+<Tabs className="api-tabs">
+<TabItem value="console" label="Console">
 
 In the `Configure Transformations` section, click on
 `Add Request Options Transformation`:
 
-<div class="thumbnail" alt="Console action create" width="800px">
-
-/img/graphql/core/actions/request-options-transformation.png
-
-</div>
-
-</div>
-
-<div class="tab">
-
-API
+<Thumbnail
+  src="/img/graphql/core/actions/request-options-transformation.png"
+  alt="Console action create"
+  width="800px"
+/>
+</TabItem>
+<TabItem value="api" label="API">
 
 ```json
 {
@@ -372,58 +293,42 @@ API
   }
 }
 ```
-
-</div>
-
-</div>
+</TabItem>
+</Tabs>
 
 ## Example
 
 Let's integrate Auth0's management API to update the profile of a user:
-
-<div class="rst-class">
-
-api_tabs
-
-</div>
-
-<div class="tabs">
-
-<div class="tab">
-
-Console
+<Tabs className="api-tabs">
+<TabItem value="console" label="Console">
 
 Go to the `Actions` tab on the console and create or modify an action.
 Scroll down to `Configure Transformations` section:
 
 Action definition:
 
-<div class="thumbnail" alt="Console action create" width="1100px">
-
-/img/graphql/core/actions/example-transformation-0.png
-
-</div>
+<Thumbnail
+  src="/img/graphql/core/actions/example-transformation-0.png"
+  alt="Console action create"
+  width="1100px"
+/>
 
 The transformation is given by:
 
-<div class="thumbnail" alt="Console action create" width="800px">
+<Thumbnail
+  src="/img/graphql/core/actions/example-transformation-1.png"
+  alt="Console action create"
+  width="800px"
+/>
 
-/img/graphql/core/actions/example-transformation-1.png
+<Thumbnail
+  src="/img/graphql/core/actions/example-transformation-2.png"
+  alt="Console action create"
+  width="1000px"
+/>
 
-</div>
-
-<div class="thumbnail" alt="Console action create" width="1000px">
-
-/img/graphql/core/actions/example-transformation-2.png
-
-</div>
-
-</div>
-
-<div class="tab">
-
-API
-
+</TabItem>
+<TabItem value="api" label="API">
 Action definition:
 
 ```graphql
@@ -448,7 +353,5 @@ The transform is given by:
   }
 }
 ```
-
-</div>
-
-</div>
+</TabItem>
+</Tabs>
