@@ -70,7 +70,7 @@ source-repository-package
 source-repository-package
   type: git
   location: https://github.com/fpco/odbc.git
-  tag: fc5b592a607d932e5fc96c0f74c0df7c3e910883
+  tag: f4f04ea15d14e9a3ed455f7c728dc08734eef8ae
 
 package odbc
   ghc-options: -Wwarn
