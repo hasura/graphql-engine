@@ -2,7 +2,7 @@ module Hasura.Eventing.ScheduledTrigger.Types
   ( CronTriggerStats (CronTriggerStats, ctsMaxScheduledTime, ctsName),
     RetryContext (RetryContext, _rctxConf),
     ScheduledEventOp (..),
-    ScheduledEventWebhookPayload (ScheduledEventWebhookPayload, sewpName, sewpScheduledTime),
+    ScheduledEventWebhookPayload (ScheduledEventWebhookPayload, sewpName, sewpScheduledTime, sewpRequestTransform, sewpResponseTransform),
     ScheduledTriggerInternalErr (ScheduledTriggerInternalErr),
   )
 where
@@ -14,6 +14,7 @@ import Hasura.Base.Error
 import Hasura.Eventing.HTTP
 import Hasura.Logging qualified as L
 import Hasura.Prelude
+import Hasura.RQL.DDL.WebhookTransforms (MetadataRequestTransform, MetadataResponseTransform)
 import Hasura.RQL.Types
 
 newtype ScheduledTriggerInternalErr
@@ -49,7 +50,9 @@ data ScheduledEventWebhookPayload = ScheduledEventWebhookPayload
     -- graphql-engine generator, generates the cron events, the
     -- `created_at` is just an implementation detail, so we
     -- don't send it
-    sewpCreatedAt :: !(Maybe UTCTime)
+    sewpCreatedAt :: !(Maybe UTCTime),
+    sewpRequestTransform :: !(Maybe MetadataRequestTransform),
+    sewpResponseTransform :: !(Maybe MetadataResponseTransform)
   }
   deriving (Show, Eq)
 

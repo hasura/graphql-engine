@@ -27,7 +27,7 @@ import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.Prelude
 import Hasura.RQL.DDL.Headers
-import Hasura.RQL.DDL.RequestTransform (MetadataTransform)
+import Hasura.RQL.DDL.WebhookTransforms (MetadataRequestTransform, MetadataResponseTransform)
 import Hasura.RQL.Types
 import Hasura.RQL.Types.Eventing.Backend
 import Hasura.SQL.AnyBackend qualified as AB
@@ -48,7 +48,8 @@ data CreateEventTriggerQuery (b :: BackendType) = CreateEventTriggerQuery
     _cetqWebhookFromEnv :: !(Maybe Text),
     _cetqHeaders :: !(Maybe [HeaderConf]),
     _cetqReplace :: !Bool,
-    _cetqRequestTransform :: !(Maybe MetadataTransform)
+    _cetqRequestTransform :: !(Maybe MetadataRequestTransform),
+    _cetqResponseTrasnform :: !(Maybe MetadataResponseTransform)
   }
 
 instance Backend b => FromJSON (CreateEventTriggerQuery b) where
@@ -66,6 +67,7 @@ instance Backend b => FromJSON (CreateEventTriggerQuery b) where
     headers <- o .:? "headers"
     replace <- o .:? "replace" .!= False
     requestTransform <- o .:? "request_transform"
+    responseTransform <- o .:? "response_transform"
     let regex = "^[A-Za-z]+[A-Za-z0-9_\\-]*$" :: LBS.ByteString
         compiledRegex = TDFA.makeRegex regex :: TDFA.Regex
         isMatch = TDFA.match compiledRegex . T.unpack $ triggerNameToTxt name
@@ -81,7 +83,7 @@ instance Backend b => FromJSON (CreateEventTriggerQuery b) where
       (Just _, Just _) -> fail "only one of webhook or webhook_from_env should be given"
       _ -> fail "must provide webhook or webhook_from_env"
     mapM_ checkEmptyCols [insert, update, delete]
-    return $ CreateEventTriggerQuery sourceName name table insert update delete (Just enableManual) retryConf webhook webhookFromEnv headers replace requestTransform
+    return $ CreateEventTriggerQuery sourceName name table insert update delete (Just enableManual) retryConf webhook webhookFromEnv headers replace requestTransform responseTransform
     where
       checkEmptyCols spec =
         case spec of
@@ -129,7 +131,7 @@ resolveEventTriggerQuery ::
   (Backend b, UserInfoM m, QErrM m, CacheRM m) =>
   CreateEventTriggerQuery b ->
   m (TableCoreInfo b, Bool, EventTriggerConf b)
-resolveEventTriggerQuery (CreateEventTriggerQuery source name qt insert update delete enableManual retryConf webhook webhookFromEnv mheaders replace metaTransform) = do
+resolveEventTriggerQuery (CreateEventTriggerQuery source name qt insert update delete enableManual retryConf webhook webhookFromEnv mheaders replace reqTransform respTransform) = do
   ti <- askTableCoreInfo source qt
   -- can only replace for same table
   when replace $ do
@@ -141,7 +143,7 @@ resolveEventTriggerQuery (CreateEventTriggerQuery source name qt insert update d
   assertCols ti delete
 
   let rconf = fromMaybe defaultRetryConf retryConf
-  return (ti, replace, EventTriggerConf name (TriggerOpsDef insert update delete enableManual) webhook webhookFromEnv rconf mheaders metaTransform)
+  return (ti, replace, EventTriggerConf name (TriggerOpsDef insert update delete enableManual) webhook webhookFromEnv rconf mheaders reqTransform respTransform)
   where
     assertCols :: TableCoreInfo b -> Maybe (SubscribeOpSpec b) -> m ()
     assertCols ti opSpec = onJust opSpec \sos -> case sosColumns sos of
@@ -312,7 +314,7 @@ buildEventTriggerInfo ::
   TableName b ->
   EventTriggerConf b ->
   m (EventTriggerInfo b, [SchemaDependency])
-buildEventTriggerInfo env source tableName (EventTriggerConf name def webhook webhookFromEnv rconf mheaders metaTransform) = do
+buildEventTriggerInfo env source tableName (EventTriggerConf name def webhook webhookFromEnv rconf mheaders reqTransform respTransform) = do
   webhookConf <- case (webhook, webhookFromEnv) of
     (Just w, Nothing) -> return $ WCValue w
     (Nothing, Just wEnv) -> return $ WCEnv wEnv
@@ -320,7 +322,7 @@ buildEventTriggerInfo env source tableName (EventTriggerConf name def webhook we
   let headerConfs = fromMaybe [] mheaders
   webhookInfo <- getWebhookInfoFromConf env webhookConf
   headerInfos <- getHeaderInfosFromConf env headerConfs
-  let eTrigInfo = EventTriggerInfo name def rconf webhookInfo headerInfos metaTransform
+  let eTrigInfo = EventTriggerInfo name def rconf webhookInfo headerInfos reqTransform respTransform
       tabDep =
         SchemaDependency
           ( SOSourceObj source $

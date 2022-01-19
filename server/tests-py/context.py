@@ -373,6 +373,10 @@ class ActionsWebhookHandler(http.server.BaseHTTPRequestHandler):
             resp, status = self.recursive_output()
             self._send_response(status, resp)
 
+        elif req_path == "/get-results":
+            resp, status = self.get_results()
+            self._send_response(status, resp)
+
         else:
             self.send_response(HTTPStatus.NO_CONTENT)
             self.end_headers()
@@ -556,6 +560,11 @@ class ActionsWebhookHandler(http.server.BaseHTTPRequestHandler):
             'direct': {'id': 1, 'this': {'id': 2, 'this': {'id': 3 }}},
             'list': {'id': 1, 'these': [{'id': 2, 'these': [{'id': 3}]}, {'id': 4}]},
             'mutual': {'id': 1, 'that': {'id': 2, 'other': {'id': 3, 'that': {'id': 4}}}}
+        }, HTTPStatus.OK
+
+    def get_results(self):
+        return {
+            'result_ids': [1,2,3,4]
         }, HTTPStatus.OK
 
     def check_email(self, email):

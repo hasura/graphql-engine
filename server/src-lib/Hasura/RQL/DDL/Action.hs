@@ -188,7 +188,8 @@ resolveAction env AnnotatedCustomTypes {..} ActionDefinition {..} allScalars = d
         _adForwardClientHeaders
         _adTimeout
         resolvedWebhook
-        _adRequestTransform,
+        _adRequestTransform
+        _adResponseTransform,
       outputObject
     )
 

@@ -594,7 +594,7 @@ library
                      , Hasura.RQL.DDL.RemoteRelationship.Validate
                      , Hasura.RQL.DDL.RemoteSchema
                      , Hasura.RQL.DDL.RemoteSchema.Permission
-                     , Hasura.RQL.DDL.RequestTransform
+                     , Hasura.RQL.DDL.WebhookTransforms
                      , Hasura.RQL.DDL.Schema
                      , Hasura.RQL.DDL.Schema.Cache
                      , Hasura.RQL.DDL.Schema.Cache.Common
@@ -862,7 +862,7 @@ test-suite graphql-engine-tests
     Hasura.RQL.MetadataSpec
     Hasura.RQL.IR.Postgres
     Hasura.RQL.PermissionSpec
-    Hasura.RQL.RequestTransformSpec
+    Hasura.RQL.WebhookTransformsSpec
     Hasura.RQL.Types.EndpointSpec
     Hasura.RQL.Types.CommonSpec
     Hasura.RQL.Types.EndpointSpec

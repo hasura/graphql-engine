@@ -25,6 +25,6 @@
         template_engine: Kriti
         request_headers:
           add_headers:
-            foo: "\"bar\""
+            foo: "bar"
           remove_headers:
             - Content-Type

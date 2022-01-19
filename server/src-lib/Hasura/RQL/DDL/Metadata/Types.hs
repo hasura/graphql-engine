@@ -24,7 +24,7 @@ import Data.Environment qualified as Env
 import Data.HashMap.Strict qualified as H
 import Data.Text qualified as T
 import Hasura.Prelude
-import Hasura.RQL.DDL.RequestTransform (MetadataTransform)
+import Hasura.RQL.DDL.WebhookTransforms (MetadataRequestTransform, MetadataResponseTransform)
 import Hasura.RQL.Types
 import Hasura.Session (SessionVariables)
 
@@ -205,7 +205,8 @@ data TestWebhookTransform = TestWebhookTransform
   { _twtEnv :: Env.Environment,
     _twtWebhookUrl :: WebHookUrl,
     _twtPayload :: Value,
-    _twtTransformer :: MetadataTransform,
+    _twtTransformer :: MetadataRequestTransform,
+    _twtResponseTransformer :: !(Maybe MetadataResponseTransform),
     _twtSessionVariables :: Maybe SessionVariables
   }
   deriving (Eq)
@@ -216,16 +217,18 @@ instance FromJSON TestWebhookTransform where
     let env = fromMaybe mempty env'
     url <- o .: "webhook_url"
     payload <- o .: "body"
-    transformer <- o .: "request_transform"
+    reqTransform <- o .: "request_transform"
+    respTransform <- o .:? "response_transform"
     sessionVars <- o .:? "session_variables"
-    pure $ TestWebhookTransform env url payload transformer sessionVars
+    pure $ TestWebhookTransform env url payload reqTransform respTransform sessionVars
 
 instance ToJSON TestWebhookTransform where
-  toJSON (TestWebhookTransform env url payload mt sv) =
+  toJSON (TestWebhookTransform env url payload mt mrt sv) =
     object
       [ "env" .= env,
         "webhook_url" .= url,
         "body" .= payload,
         "request_transform" .= mt,
+        "response_transform" .= mrt,
         "session_variables" .= sv
       ]

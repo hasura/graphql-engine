@@ -63,7 +63,7 @@ import Hasura.HTTP (HttpException (..), addDefaultHeaders)
 import Hasura.Logging
 import Hasura.Prelude
 import Hasura.RQL.DDL.Headers
-import Hasura.RQL.DDL.RequestTransform (RequestTransform, TransformErrorBundle (..), applyRequestTransform)
+import Hasura.RQL.DDL.WebhookTransforms
 import Hasura.RQL.Types.Common (ResolvedWebhook (..))
 import Hasura.RQL.Types.EventTrigger
 import Hasura.RQL.Types.Eventing
@@ -152,7 +152,8 @@ data RequestDetails = RequestDetails
   { _rdOriginalRequest :: HTTP.Request,
     _rdOriginalSize :: Int64,
     _rdTransformedRequest :: Maybe HTTP.Request,
-    _rdTransformedSize :: Maybe Int64
+    _rdTransformedSize :: Maybe Int64,
+    _rdReqTransformCtx :: ReqTransformCtx
   }
 
 extractRequest :: RequestDetails -> HTTP.Request
@@ -274,7 +275,9 @@ runHTTP manager req = do
   res <- liftIO $ try $ HTTP.performRequest req manager
   return $ either (Left . HClient . HttpException) anyBodyParser res
 
-data TransformableRequestError a = HTTPError J.Value (HTTPErr a) | TransformationError J.Value TransformErrorBundle
+data TransformableRequestError a
+  = HTTPError J.Value (HTTPErr a)
+  | TransformationError J.Value TransformErrorBundle
   deriving (Show)
 
 mkRequest ::
@@ -298,40 +301,62 @@ mkRequest headers timeout payload mRequestTransform (ResolvedWebhook webhook) =
                   & set HTTP.headers headers
                   & set HTTP.body (Just payload)
                   & set HTTP.timeout timeout
+              sessionVars = do
+                val <- J.decode @J.Value payload
+                varVal <- preview (key "event" . key "session_variables") val
+                case J.fromJSON @SessionVariables varVal of
+                  J.Success sessionVars' -> pure sessionVars'
+                  _ -> Nothing
            in case mRequestTransform of
-                Nothing -> pure $ RequestDetails req (LBS.length payload) Nothing Nothing
+                Nothing ->
+                  let reqTransformCtx = buildReqTransformCtx webhook sessionVars req
+                   in pure $ RequestDetails req (LBS.length payload) Nothing Nothing reqTransformCtx
                 Just reqTransform ->
-                  let sessionVars = do
-                        val <- J.decode @J.Value payload
-                        varVal <- preview (key "event" . key "session_variables") val
-                        case J.fromJSON @SessionVariables varVal of
-                          J.Success sessionVars' -> pure sessionVars'
-                          _ -> Nothing
-                   in case applyRequestTransform webhook reqTransform req sessionVars of
+                  let reqTransformCtx = buildReqTransformCtx webhook sessionVars
+                   in case applyRequestTransform reqTransformCtx reqTransform req of
                         Left err -> throwError $ TransformationError body err
                         Right transformedReq ->
                           let transformedReqSize = HTTP.getReqSize transformedReq
-                           in pure $ RequestDetails req (LBS.length payload) (Just transformedReq) (Just transformedReqSize)
+                           in pure $ RequestDetails req (LBS.length payload) (Just transformedReq) (Just transformedReqSize) (reqTransformCtx req)
 
 invokeRequest ::
   ( MonadReader r m,
     MonadError (TransformableRequestError a) m,
     Has HTTP.Manager r,
+    Has (Logger Hasura) r,
     MonadIO m,
     MonadTrace m
   ) =>
   RequestDetails ->
+  Maybe ResponseTransform ->
   ((Either (HTTPErr a) (HTTPResp a)) -> RequestDetails -> m ()) ->
   m (HTTPResp a)
-invokeRequest reqDetails@RequestDetails {_rdOriginalRequest, _rdTransformedRequest} logger = do
+invokeRequest reqDetails@RequestDetails {..} respTransform' logger = do
   let finalReq = fromMaybe _rdOriginalRequest _rdTransformedRequest
-      body = fromMaybe J.Null $ view HTTP.body finalReq >>= J.decode @J.Value
+      reqBody = fromMaybe J.Null $ view HTTP.body finalReq >>= J.decode @J.Value
   manager <- asks getter
   -- Perform the HTTP Request
   eitherResp <- tracedHttpRequest finalReq $ runHTTP manager
   -- Log the result along with the pre/post transformation Request data
   logger eitherResp reqDetails
-  onLeft eitherResp (\err -> throwError $ HTTPError body err)
+
+  resp <- eitherResp `onLeft` (throwError . HTTPError reqBody)
+  case respTransform' of
+    Nothing -> pure resp
+    Just respTransform -> do
+      case TBS.toLBS $ hrsBody resp of
+        -- If we fail to decode the body then carry on without performing a transformation
+        Nothing -> pure resp
+        Just respBody ->
+          let respTransformCtx = buildRespTransformCtx _rdReqTransformCtx respBody
+           in case applyResponseTransform respTransform respTransformCtx of
+                Left err -> do
+                  -- Log The Response Transformation Error
+                  logger' :: Logger Hasura <- asks getter
+                  unLogger logger' $ UnstructuredLog LevelError (TBS.fromLBS $ J.encode err)
+                  -- Throw an exception with the Transformation Error
+                  throwError $ HTTPError reqBody $ HOther $ T.unpack $ TE.decodeUtf8 $ LBS.toStrict $ J.encode $ J.toJSON err
+                Right transformedBody -> pure $ resp {hrsBody = TBS.fromLBS transformedBody}
 
 mkResp :: Int -> TBS.TByteString -> [HeaderConf] -> Response a
 mkResp status payload headers =

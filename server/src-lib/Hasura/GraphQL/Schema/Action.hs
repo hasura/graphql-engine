@@ -74,7 +74,8 @@ actionExecute customTypes actionInfo = runMaybeT do
             _aaeStrfyNum = stringifyNum,
             _aaeTimeOut = _adTimeout definition,
             _aaeSource = getActionSourceInfo outputObject,
-            _aaeRequestTransform = _adRequestTransform definition
+            _aaeRequestTransform = _adRequestTransform definition,
+            _aaeResponseTransform = _adResponseTransform definition
           }
   where
     ActionInfo actionName (outputType, outputObject) definition permissions _ comment = actionInfo
