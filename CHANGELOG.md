@@ -36,6 +36,7 @@ count (
 - cli: fix `metadata diff --type json | unified-json` behaving incorrectly and showing diff in YAML format.
 - cli: fix regression in `migrate create` command (#7971)
 - cli: stop using `/healthz` endpoint to determine server health
+- cli: fix regression with `--address` flag of `hasura console` command (#8005)
 
 ## v2.1.1
 
