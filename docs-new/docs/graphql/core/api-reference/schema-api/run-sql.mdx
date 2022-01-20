@@ -1,16 +1,14 @@
-<div class="meta"
-description="Execute SQL with the Hasura schema/metadata API"
-keywords="hasura, docs, schema/metadata API, API reference, run_sql">
-
-</div>
+---
+description: Execute SQL with the Hasura schema/metadata API
+keywords:
+  - hasura
+  - docs
+  - schema/metadata API
+  - API reference
+  - run_sql
+---
 
 # Schema API Reference: Run SQL (v2.0 and above)
-
-<div class="contents" backlinks="none" depth="2" local="">
-
-Table of contents
-
-</div>
 
 ## run_sql
 
@@ -19,9 +17,7 @@ Table of contents
 Multiple SQL statements can be separated by a `;`, however, only the
 result of the last SQL statement will be returned.
 
-<div class="admonition">
-
-Admin-only
+:::info Admin-only
 
 This is an admin-only request, i.e. the request can only be executed
 with `X-Hasura-Role: admin`. This can be set by passing
@@ -33,16 +29,14 @@ arbitrary SQL. If you find yourself in the need of using `run_sql` to
 run custom DML requests, consider creating a view. You can now define
 permissions on that particular view for various roles.
 
-</div>
+:::
 
-<div class="admonition">
-
-Supported from
+:::info Supported from
 
 The schema API is supported for versions `v2.0.0` and above and replaces
-the older `schema/metadata API <schema_metadata_apis>`.
+the older [schema/metadata API](/graphql/core/api-reference/schema-metadata-api/index.mdx).
 
-</div>
+:::
 
 ### Use cases
 
@@ -223,18 +217,12 @@ The response is a JSON Object with the following structure.
 | result_type | true           | String                                                      | One of "CommandOk" or "TuplesOk"                          |
 | result      | false          | `[[Text]]` (An array of rows, each row an array of columns) | This is present only when the `result_type` is "TuplesOk" |
 
-<div class="note">
-
-<div class="title">
-
-Note
-
-</div>
+:::info Note
 
 The first row in the `result` (when present) will be the names of the
 columns.
 
-</div>
+:::
 
 ### Some examples
 
