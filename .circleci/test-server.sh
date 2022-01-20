@@ -13,9 +13,14 @@ fi
 ### Functions
 
 stop_services() {
-	kill -s INT $HGE_PIDS || true
-	kill $WH_PID || true
-	kill -s INT $WHC_PID || true
+	echo "killing and waiting for spawned services"
+
+	[ -n "$HGE_PIDS" ] && kill -s INT $HGE_PIDS || true
+	[ -n "$WH_PID" ] && kill $WH_PID || true
+	[ -n "$WHC_PID" ] && kill $WHC_PID || true
+	[ -n "$GQL_SERVER_PID" ] && kill $GQL_SERVER_PID || true
+
+	wait $HGE_PIDS $WH_PID $WHC_PID $GQL_SERVER_PID || true
 }
 
 time_elapsed() {
@@ -191,6 +196,7 @@ GQL_SERVER_PID=""
 
 trap stop_services ERR
 trap stop_services INT
+trap stop_services EXIT
 
 run_pytest_parallel() {
 	trap stop_services ERR
@@ -616,14 +622,6 @@ ws-init-cookie-read-cors-disabled)
 	pytest -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --test-ws-init-cookie=read test_websocket_init_cookie.py
 
 	kill_hge_servers
-
-	kill $WHC_PID
-	# unset HASURA_GRAPHQL_WS_READ_COOKIE
-	# unset HASURA_GRAPHQL_AUTH_HOOK
-	# unset HASURA_GRAPHQL_AUTH_HOOK_MODE
-
-	# required?
-	# sleep 4
 	;;
 
 ws-graphql-api-disabled)
