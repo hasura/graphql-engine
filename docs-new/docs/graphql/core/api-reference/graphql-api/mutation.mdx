@@ -1,16 +1,15 @@
-<div class="meta"
-description="Hasura GraphQL API mutations API reference"
-keywords="hasura, docs, GraphQL API, API reference, mutation">
-
-</div>
+---
+description: Hasura GraphQL API mutations API reference
+keywords:
+  - hasura
+  - docs
+  - GraphQL API
+  - API reference
+  - mutation
+---
 
 # API Reference - Mutation
 
-<div class="contents" backlinks="none" depth="2" local="">
-
-Table of contents
-
-</div>
 
 ## **insert** (upsert) syntax
 
@@ -254,18 +253,11 @@ mutation delete_articles {
 }
 ```
 
-<div class="note">
+:::info Note
 
-<div class="title">
+For more examples and details of usage, please see [this](/graphql/core/databases/postgres/mutations/index.mdx#pg-mutations).
 
-Note
-
-</div>
-
-For more examples and details of usage, please see
-`this <pg_mutations>`.
-
-</div>
+:::
 
 ## Syntax definitions
 
@@ -414,11 +406,7 @@ pk_columns: {
 
 ### **where** argument
 
-<div class="parsed-literal">
-
 where: [BoolExp](#boolexp)
-
-</div>
 
 **Example**
 
@@ -430,23 +418,17 @@ where: {
 
 #### BoolExp
 
-<div class="parsed-literal">
-
-[AndExp](#andexp) \| [OrExp](#orexp) \| [NotExp](#notexp) \|
-[TrueExp](#trueexp) \| [ColumnExp](#columnexp)
-
-</div>
+[AndExp](#andexp) | [OrExp](#orexp) | [NotExp](#notexp) | [TrueExp](#trueexp) | [ColumnExp](#columnexp)
 
 ##### AndExp
 
-<div class="parsed-literal">
 
+```
 {  
 \_and: \[[BoolExp](#boolexp)\]
 
 }
-
-</div>
+```
 
 **Example**
 
@@ -459,14 +441,11 @@ _and: [
 
 ##### OrExp
 
-<div class="parsed-literal">
-
+```
 {  
-\_or: \[[BoolExp](#boolexp)\]
-
+  _or: [[BoolExp](#boolexp)]
 }
-
-</div>
+```
 
 **Example**
 
@@ -479,14 +458,11 @@ _or: [
 
 ##### NotExp
 
-<div class="parsed-literal">
-
+```
 {  
-\_not: [BoolExp](#boolexp)
-
+  _not: [BoolExp](#boolexp)
 }
-
-</div>
+```
 
 **Example**
 
@@ -498,11 +474,7 @@ _not: {
 
 ##### TrueExp
 
-<div class="parsed-literal">
-
-{}
-
-</div>
+`{}`
 
 **Example**
 
@@ -510,28 +482,19 @@ _not: {
 author(where: {articles: {}})
 ```
 
-<div class="note">
-
-<div class="title">
-
-Note
-
-</div>
+:::info Note
 
 `{}` evaluates to true whenever an object exists (even if it's `null`).
 
-</div>
+:::
 
 ##### ColumnExp
 
-<div class="parsed-literal">
-
+```
 {  
-field-name: {[Operator](#operator): Value }
-
+  field-name: {[Operator](#operator): Value }
 }
-
-</div>
+```
 
 **Example**
 
@@ -543,31 +506,31 @@ field-name: {[Operator](#operator): Value }
 
 **Generic operators (all column types except json, jsonb):**
 
--   `_eq`
--   `_ne`
--   `_in`
--   `_nin`
--   `_gt`
--   `_lt`
--   `_gte`
--   `_lte`
+- `_eq`
+- `_ne`
+- `_in`
+- `_nin`
+- `_gt`
+- `_lt`
+- `_gte`
+- `_lte`
 
 **Text related operators:**
 
--   `_like`
--   `_nlike`
--   `_ilike`
--   `_nilike`
--   `_similar`
--   `_nsimilar`
--   `_iregex`
--   `_niregex`
--   `_regex`
--   `_nregex`
+- `_like`
+- `_nlike`
+- `_ilike`
+- `_nilike`
+- `_similar`
+- `_nsimilar`
+- `_iregex`
+- `_niregex`
+- `_regex`
+- `_nregex`
 
 **Checking for NULL values:**
 
--   `_is_null` (takes true/false as values)
+- `_is_null` (takes true/false as values)
 
 ### **\_set** argument
 

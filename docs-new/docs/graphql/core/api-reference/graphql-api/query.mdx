@@ -1,16 +1,15 @@
-<div class="meta"
-description="Hasura GraphQL API queries and subscriptions API reference"
-keywords="hasura, docs, GraphQL API, API reference, query, subscription">
-
-</div>
+---
+description: Hasura GraphQL API queries and subscriptions API reference
+keywords:
+  - hasura
+  - docs
+  - GraphQL API
+  - API reference
+  - query
+  - subscription
+---
 
 # API Reference - Query / Subscription
-
-<div class="contents" backlinks="none" depth="3" local="">
-
-Table of contents
-
-</div>
 
 ## **query** / **subscription** syntax
 
@@ -49,18 +48,11 @@ subscription {
   }
 }
 ```
+:::info Note
 
-<div class="note">
+For more examples and details of usage, please see [this](/graphql/core/databases/postgres/queries/index.mdx).
 
-<div class="title">
-
-Note
-
-</div>
-
-For more examples and details of usage, please see `this <pg_queries>`.
-
-</div>
+:::
 
 ## **query_by_pk** / **subscription_by_pk** syntax
 
@@ -105,11 +97,7 @@ subscription {
 
 ### Object
 
-<div class="parsed-literal">
-
-[SimpleObject](#SimpleObject) \| [AggregateObject](#AggregateObject)
-
-</div>
+`[SimpleObject](#SimpleObject) | [AggregateObject](#AggregateObject)`
 
 #### Simple object
 
@@ -282,20 +270,11 @@ author_aggregate {
 
 ### Argument
 
-<div class="parsed-literal">
-
-[DistinctOnExp](#distinctonexp) \| [WhereExp](#whereexp) \|
-[OrderByExp](#orderbyexp) \| [PaginationExp](#paginationexp)
-
-</div>
+`[DistinctOnExp](#distinctonexp) | [WhereExp](#whereexp) | [OrderByExp](#orderbyexp) | [PaginationExp](#paginationexp)`
 
 #### DistinctOnExp
 
-<div class="parsed-literal">
-
-distinct_on: \[ [TableSelectColumnEnum](#tableselectcolumnenum) \]
-
-</div>
+`distinct_on: [[TableSelectColumnEnum](#tableselectcolumnenum)]`
 
 *Example*
 
@@ -322,12 +301,7 @@ enum article_select_column {
 ```
 
 #### WhereExp
-
-<div class="parsed-literal">
-
-where: [BoolExp](#boolexp)
-
-</div>
+`where: [BoolExp](#boolexp)`
 
 *Example*
 
@@ -344,23 +318,16 @@ query {
 
 ##### BoolExp
 
-<div class="parsed-literal">
+[AndExp](#andexp) \| [OrExp](#orexp) \| [NotExp](#notexp) \| [TrueExp](#trueexp) \| [ColumnExp](#columnexp)
 
-[AndExp](#andexp) \| [OrExp](#orexp) \| [NotExp](#notexp) \|
-[TrueExp](#trueexp) \| [ColumnExp](#columnexp)
-
-</div>
 
 ###### AndExp
 
-<div class="parsed-literal">
-
+```
 {  
-\_and: \[[BoolExp](#boolexp)\]
-
+  _and: [[BoolExp](#boolexp)]
 }
-
-</div>
+```
 
 *Example*
 
@@ -373,9 +340,7 @@ query {
 }
 ```
 
-<div class="admonition">
-
-Syntactic sugar
+:::info Syntactic sugar
 
 You can simplify an `_and` expression by passing the sub-expressions
 separated by a `,`.
@@ -422,18 +387,15 @@ rating: {
 }
 ```
 
-</div>
+:::
 
 ###### OrExp
 
-<div class="parsed-literal">
-
+```
 {  
-\_or: \[[BoolExp](#boolexp)\]
-
+  _or: [[BoolExp](#boolexp)]
 }
-
-</div>
+```
 
 *Example*
 
@@ -446,13 +408,7 @@ query {
 }
 ```
 
-<div class="note">
-
-<div class="title">
-
-Note
-
-</div>
+:::info Note
 
 The `_or` operator expects an array of expressions as input. Passing an
 object to it will result in the behaviour of the `_and` operator due to
@@ -493,18 +449,15 @@ behaves.
 }
 ```
 
-</div>
+:::
 
 ###### NotExp
 
-<div class="parsed-literal">
-
+```
 {  
-\_not: [BoolExp](#boolexp)
-
+  _not: [BoolExp](#boolexp)
 }
-
-</div>
+```
 
 *Example*
 
@@ -519,11 +472,7 @@ query {
 
 ###### TrueExp
 
-<div class="parsed-literal">
-
-{}
-
-</div>
+`{}`
 
 *Example*
 
@@ -535,28 +484,19 @@ query {
 }
 ```
 
-<div class="note">
-
-<div class="title">
-
-Note
-
-</div>
+:::info Note
 
 `{}` evaluates to true whenever an object exists (even if it's `null`).
 
-</div>
+:::
 
 ###### ColumnExp
 
-<div class="parsed-literal">
-
+```
 {  
-field-name : {[Operator](#operator): Value }
-
+  field-name : {[Operator](#operator): Value }
 }
-
-</div>
+```
 
 *Example*
 
@@ -571,11 +511,7 @@ query {
 
 ###### Operator
 
-<div id="generic_operators">
-
 **Generic operators (all column types except json, jsonb):**
-
-</div>
 
 | Operator | PostgreSQL equivalent |
 |----------|-----------------------|
@@ -593,11 +529,7 @@ operators](https://www.postgresql.org/docs/current/functions-comparison.html)
 and [list based search
 operators](https://www.postgresql.org/docs/current/functions-comparisons.html).)
 
-<div id="text_operators">
-
 **Text related operators:**
-
-</div>
 
 | Operator    | PostgreSQL equivalent |
 |-------------|-----------------------|
@@ -615,11 +547,7 @@ operators](https://www.postgresql.org/docs/current/functions-comparisons.html).)
 (For more details on text related operators, refer to the [Postgres
 docs](https://www.postgresql.org/docs/current/functions-matching.html).)
 
-<div id="null_expression">
-
 **Checking for NULL values:**
-
-</div>
 
 | Operator                                | PostgreSQL equivalent |
 |-----------------------------------------|-----------------------|
@@ -628,11 +556,7 @@ docs](https://www.postgresql.org/docs/current/functions-matching.html).)
 (For more details on the `IS NULL` expression, refer to the [Postgres
 docs](https://www.postgresql.org/docs/current/functions-comparison.html).)
 
-<div id="type_casting">
-
 **Type casting:**
-
-</div>
 
 | Operator                                         | PostgreSQL equivalent |
 |--------------------------------------------------|-----------------------|
@@ -641,11 +565,7 @@ docs](https://www.postgresql.org/docs/current/functions-comparison.html).)
 (For more details on type casting, refer to the [Postgres
 docs](https://www.postgresql.org/docs/current/sql-createcast.html).)
 
-<div id="jsonb_operators">
-
 **JSONB operators:**
-
-</div>
 
 | Operator        | PostgreSQL equivalent |
 |-----------------|-----------------------|
@@ -658,11 +578,7 @@ docs](https://www.postgresql.org/docs/current/sql-createcast.html).)
 (For more details on JSONB operators, refer to the [Postgres
 docs](https://www.postgresql.org/docs/current/static/functions-json.html#FUNCTIONS-JSONB-OP-TABLE).)
 
-<div id="geometry_operators">
-
 **PostGIS related operators on GEOMETRY columns:**
-
-</div>
 
 | Operator         | PostGIS equivalent             |
 |------------------|--------------------------------|
@@ -679,29 +595,19 @@ docs](https://www.postgresql.org/docs/current/static/functions-json.html#FUNCTIO
 [PostGIS
 docs](http://postgis.net/workshops/postgis-intro/spatial_relationships.html).)
 
-<div class="note">
-
-<div class="title">
-
-Note
-
-</div>
+:::info Note
 
 -   All operators take a JSON representation of `geometry/geography`
     values as input value.
 
 -   The input value for `_st_d_within` operator is an object:
-
-    <div class="parsed-literal">
-
+    ```
     {  
-    field-name : {\_st_d\_within: {distance: Float, from: Value} }
-
+      field-name : {_st_d_within: {distance: Float, from: Value} }
     }
+    ```
 
-    </div>
-
-</div>
+:::
 
 <div id="intersect_operators">
 
@@ -767,27 +673,17 @@ Variables:
 }
 ```
 
-<div class="note">
-
-<div class="title">
-
-Note
-
-</div>
+:::info Note
 
 Currently, only casting between `geometry` and `geography` types is
 allowed.
 
-</div>
+:::
 
 #### OrderByExp
 
-<div class="parsed-literal">
-
-order_by: ([TableOrderBy](#tableorderby) \| \[
-[TableOrderBy](#tableorderby) \])
-
-</div>
+`order_by: ([TableOrderBy](#tableorderby) \| \[
+[TableOrderBy](#tableorderby) \])`
 
 *Example 1*
 
@@ -826,11 +722,7 @@ query {
 
 **For columns**
 
-<div class="parsed-literal">
-
-{column: [OrderByEnum](#orderbyenum)}
-
-</div>
+`{column: [OrderByEnum](#orderbyenum)}`
 
 *Example*
 
@@ -845,11 +737,7 @@ query {
 
 **For object relations**
 
-<div class="parsed-literal">
-
-{relation-name: [TableOrderBy](#tableorderby)}
-
-</div>
+`{relation-name: [TableOrderBy](#tableorderby)}`
 
 *Example*
 
@@ -864,11 +752,7 @@ query {
 
 **For array relations aggregate**
 
-<div class="parsed-literal">
-
-{relation-name_aggregate: [AggregateOrderBy](#aggregateorderby)}
-
-</div>
+`{relation-name_aggregate: [AggregateOrderBy](#aggregateorderby)}`
 
 *Example*
 
@@ -884,25 +768,13 @@ query {
 
 Returning scalar values:
 
-<div class="parsed-literal">
-
-{computed-field-name: [OrderByEnum](#orderbyenum)}
-
-</div>
+`{computed-field-name: [OrderByEnum](#orderbyenum)}`
 
 Returning set of table rows:
 
-<div class="parsed-literal">
+`{computed-field-name: [TableOrderBy](#tableorderby)}`
 
-{computed-field-name: [TableOrderBy](#tableorderby)}
-
-</div>
-
-<div class="parsed-literal">
-
-{computed-field-name_aggregate: [AggregateOrderBy](#aggregateorderby)}
-
-</div>
+`{computed-field-name_aggregate: [AggregateOrderBy](#aggregateorderby)}`
 
 Order by type for `article` table:
 
@@ -921,11 +793,7 @@ input article_order_by {
 
 **For computed fields returning scalar type**
 
-<div class="parsed-literal">
-
-{computed-field-name: [OrderByEnum](#orderbyenum)}
-
-</div>
+`{computed-field-name: [OrderByEnum](#orderbyenum)}`
 
 *Example*
 
@@ -949,11 +817,7 @@ query {
 Computed fields returning set of table rows can be used to sort the
 query by their aggregate fields.
 
-<div class="parsed-literal">
-
-{computed-field-name_aggregate: [AggregateOrderBy](#aggregateorderby)}
-
-</div>
+`{computed-field-name_aggregate: [AggregateOrderBy](#aggregateorderby)}`
 
 *Example*
 
@@ -999,11 +863,7 @@ enum order_by {
 
 **Count aggregate**
 
-<div class="parsed-literal">
-
-{count: [OrderByEnum](#orderbyenum)}
-
-</div>
+`{count: [OrderByEnum](#orderbyenum)}`
 
 *Example*
 
@@ -1017,11 +877,7 @@ query {
 
 **Operation aggregate**
 
-<div class="parsed-literal">
-
-{op_name: [TableAggOpOrderBy](#tableaggoporderby)}
-
-</div>
+`{op_name: [TableAggOpOrderBy](#tableaggoporderby)}`
 
 *Example*
 
@@ -1036,21 +892,13 @@ query {
 Available operations are `sum`, `avg`, `max`, `min`, `stddev`,
 `stddev_samp`, `stddev_pop`, `variance`, `var_samp` and `var_pop`.
 
-####### TableAggOpOrderBy
+###### TableAggOpOrderBy
 
-<div class="parsed-literal">
-
-{column: [OrderByEnum](#orderbyenum)}
-
-</div>
+`{column: [OrderByEnum](#orderbyenum)}`
 
 #### PaginationExp
 
-<div class="parsed-literal">
-
-limit: Integer \[offset: Integer\]
-
-</div>
+`limit: Integer \[offset: Integer\]`
 
 *Example*
 
