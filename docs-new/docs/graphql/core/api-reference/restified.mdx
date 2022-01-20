@@ -1,15 +1,13 @@
-<div class="meta" description="Hasura RESTified GraphQL API reference"
-keywords="hasura, docs, REST API, API reference">
-
-</div>
+---
+description: Hasura RESTified GraphQL API reference
+keywords:
+  - hasura
+  - docs
+  - REST API
+  - API reference
+---
 
 # RESTified GraphQL Endpoints API Reference
-
-<div class="contents" backlinks="none" depth="1" local="">
-
-Table of contents
-
-</div>
 
 ## Introduction
 
@@ -20,17 +18,15 @@ Users specify the query or mutation they wish to make available, as well
 a URL template. Segments of the URL template can potentially capture
 data to be used as GraphQL variables.
 
-See `metadata_api_restified_endpoints` for information on how to work
+See [Metadata API Reference: RESTified GraphQL Endpoints](/graphql/core/api-reference/metadata-api/restified-endpoints.mdx#metadata-api-restified-endpoints) for information on how to work
 with endpoints through the metadata apis.
 
-<div class="admonition">
-
-Supported from
+:::info Supported from
 
 RESTified endpoints are supported from versions `v2.0.0-alpha.1` and
 above.
 
-</div>
+:::
 
 ## Endpoint
 
@@ -107,7 +103,7 @@ Content-Type: application/json
 The response is determined by the saved query. The response will be the
 same as if you had made the query directly in the GraphQL console.
 
-See the `api_reference_graphql` for more details.
+See the [GraphQL API Reference](/graphql/core/api-reference/graphql-api/index.mdx) for more details.
 
 ## OpenAPI 3 Specification
 

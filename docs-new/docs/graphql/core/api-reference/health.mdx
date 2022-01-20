@@ -1,15 +1,13 @@
-<div class="meta" description="Hasura health API reference"
-keywords="hasura, docs, health API, API reference">
-
-</div>
+---
+description: Hasura health API reference
+keywords:
+  - hasura
+  - docs
+  - health API
+  - API reference
+---
 
 # Health check API Reference
-
-<div class="contents" backlinks="none" depth="1" local="">
-
-Table of contents
-
-</div>
 
 ## Introduction
 
@@ -41,19 +39,13 @@ be returned:
 | Serving requests but some metadata objects are inconsistent/not-available | 200         | WARN: inconsistent objects in schema |
 | Unhealthy                                                                 | 500         | ERROR                                |
 
-<div class="note">
-
-<div class="title">
-
-Note
-
-</div>
+:::info Note
 
 If there are metadata inconsistencies, you should use the Hasura console
-or the `metadata_get_inconsistent_metadata` metadata API to find out
+or the [get_inconsistent_metadata](/graphql/core/api-reference/metadata-api/manage-metadata.mdx#metadata-get-inconsistent-metadata) metadata API to find out
 what the inconsistent objects are and resolve them.
 
-</div>
+:::
 
 #### Sample response
 

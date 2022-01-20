@@ -1,78 +1,52 @@
-<div class="meta"
-description="Common syntax definitions for the Hasura schema/metadata API"
-keywords="hasura, docs, schema/metadata API, API reference, syntax definitions">
-
-</div>
+---
+description: Common syntax definitions for the Hasura schema/metadata API
+keywords:
+  - hasura
+  - docs
+  - schema/metadata API
+  - API reference
+  - syntax definitions
+---
 
 # API Reference: Common syntax definitions
 
-<div class="contents" backlinks="none" depth="1" local="">
-
-Table of contents
-
-</div>
-
 ## TableName
 
-<div class="parsed-literal haskell-pre">
-
-String \| [QualifiedTable](#qualifiedtable)
-
-</div>
+`String | [QualifiedTable](#qualifiedtable)`
 
 ## QualifiedTable
 
-<div class="parsed-literal haskell-pre">
-
+```
 {  
-"name": String, "schema": String
-
+    "name": String, 
+    "schema": String
 }
-
-</div>
+```
 
 ## SourceName
 
-<div class="parsed-literal">
-
-String
-
-</div>
+`String`
 
 ## FunctionName
 
-<div class="parsed-literal haskell-pre">
-
-String \| [QualifiedFunction](#qualifiedfunction)
-
-</div>
+`String | [QualifiedFunction](#qualifiedfunction)`
 
 ## QualifiedFunction
 
-<div class="parsed-literal haskell-pre">
-
+```
 {  
-"name": String, "schema": String
-
+    "name": String, 
+    "schema": String
 }
-
-</div>
+```
 
 ## RoleName
 
-<div class="parsed-literal">
-
-String
-
-</div>
+`String`
 
 ## ComputedFieldName
 
-<div class="parsed-literal">
-
-String
-
-</div>
+`String`
 
 ## PGConfiguration
 
@@ -157,11 +131,7 @@ String
 
 ## PGColumnType
 
-<div class="parsed-literal">
-
-String
-
-</div>
+`String`
 
 1.  Numeric types
 
@@ -205,27 +175,19 @@ String
 
 ## PGColumn
 
-<div class="parsed-literal">
-
-String
-
-</div>
+`String`
 
 ## RelationshipName
 
-<div class="parsed-literal">
-
-String
-
-</div>
+`String`
 
 ## Table Config
 
 | Key                 | Required | Schema                                    | Description                                                                                                                                       |
 |---------------------|----------|-------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------|
 | custom_name         | false    | `String`                                  | Customise the `<table-name>` with the provided custom name value. The GraphQL nodes for the table will be generated according to the custom name. |
-| custom_root_fields  | false    | `Custom Root Fields <custom_root_fields>` | Customise the root fields                                                                                                                         |
-| custom_column_names | false    | `CustomColumnNames`                       | Customise the column fields                                                                                                                       |
+| custom_root_fields  | false    | [Custom Root Fields](#custom-root-fields) | Customise the root fields                                                                                                                         |
+| custom_column_names | false    | [CustomColumnNames](#customcolumnnames)   | Customise the column fields                                                                                                                       |
 
 ## Custom Root Fields
 
@@ -252,18 +214,18 @@ String
 
 | Key          | Required | Schema                      | Description                                                                                                                                                                                                               |
 |--------------|----------|-----------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| check        | true     | `BoolExp`                   | This expression has to hold true for every new row that is inserted                                                                                                                                                       |
-| set          | false    | `ColumnPresetExp`           | Preset values for columns that can be sourced from session variables or static values                                                                                                                                     |
-| columns      | false    | `PGColumn` array (or) `'*'` | Can insert into only these columns (or all when `'*'` is specified)                                                                                                                                                       |
+| check        | true     | [BoolExp](#boolexp)                   | This expression has to hold true for every new row that is inserted                                                                                                                                                       |
+| set          | false    | [ColumnPresetExp](#columnpresetexp)           | Preset values for columns that can be sourced from session variables or static values                                                                                                                                     |
+| columns      | false    | [PGColumn](#pgcolumn) array (or) `'*'` | Can insert into only these columns (or all when `'*'` is specified)                                                                                                                                                       |
 | backend_only | false    | Boolean                     | When set to `true` the mutation is accessible only if `x-hasura-use-backend-only-permissions` session variable exists and is set to `true` and request is made with `x-hasura-admin-secret` set if any auth is configured |
 
 ## SelectPermission
 
 | Key                | Required | Schema                      | Description                                                        |
 |--------------------|----------|-----------------------------|--------------------------------------------------------------------|
-| columns            | true     | `PGColumn` array (or) `'*'` | Only these columns are selectable (or all when `'*'` is specified) |
-| computed_fields    | false    | `ComputedFieldName` array   | Only these computed fields are selectable                          |
-| filter             | true     | `BoolExp`                   | Only the rows where this expression holds true are selectable      |
+| columns            | true     | [PGColumn](#pgcolumn) array (or) `'*'` | Only these columns are selectable (or all when `'*'` is specified) |
+| computed_fields    | false    | [ComputedFieldName](#computedfieldname) array   | Only these computed fields are selectable                          |
+| filter             | true     | [BoolExp](#boolexp)                   | Only the rows where this expression holds true are selectable      |
 | limit              | false    | `Integer`                   | The maximum number of rows that can be returned                    |
 | allow_aggregations | false    | `Boolean`                   | Toggle allowing aggregate queries                                  |
 
@@ -271,79 +233,61 @@ String
 
 | Key     | Required | Schema                      | Description                                                                            |
 |---------|----------|-----------------------------|----------------------------------------------------------------------------------------|
-| columns | true     | `PGColumn` array (or) `'*'` | Only these columns are selectable (or all when `'*'` is specified)                     |
-| filter  | true     | `BoolExp`                   | Only the rows where this precondition holds true are updatable                         |
-| check   | false    | `BoolExp`                   | Postcondition which must be satisfied by rows which have been updated                  |
-| set     | false    | `ColumnPresetExp`           | Preset values for columns that can be sourced from session variables or static values. |
+| columns | true     | [PGColumn](#pgcolumn) array (or) `'*'` | Only these columns are selectable (or all when `'*'` is specified)                     |
+| filter  | true     | [BoolExp](#boolexp)                   | Only the rows where this precondition holds true are updatable                         |
+| check   | false    | [BoolExp](#boolexp)                   | Postcondition which must be satisfied by rows which have been updated                  |
+| set     | false    | [ColumnPresetExp](#columnpresetexp)           | Preset values for columns that can be sourced from session variables or static values. |
 
 ## DeletePermission
 
 | Key    | Required | Schema    | Description                                                  |
 |--------|----------|-----------|--------------------------------------------------------------|
-| filter | true     | `BoolExp` | Only the rows where this expression holds true are deletable |
+| filter | true     | [BoolExp](#boolexp) | Only the rows where this expression holds true are deletable |
 
 ## ObjRelUsing
 
 | Key                       | Required | Schema                                                | Description                                                           |
 |---------------------------|----------|-------------------------------------------------------|-----------------------------------------------------------------------|
-| foreign_key_constraint_on | false    | `ObjRelUsingChoice <ObjRelUsingChoice>`               | The column with foreign key constraint or the remote table and column |
-| manual_configuration      | false    | `ObjRelUsingManualMapping <ObjRelUsingManualMapping>` | Manual mapping of table and columns                                   |
+| foreign_key_constraint_on | false    | [ObjRelUsingChoice](#objrelusingchoice)               | The column with foreign key constraint or the remote table and column |
+| manual_configuration      | false    | [ObjRelUsingManualMapping](#objrelusingmanualmapping) | Manual mapping of table and columns                                   |
 
-<div class="note">
-
-<div class="title">
-
-Note
-
-</div>
+:::info Note
 
 There has to be at least one and only one of `foreign_key_constraint_on`
 and `manual_configuration`.
 
-</div>
+:::
 
 ## ObjRelUsingChoice
 
-<div class="parsed-literal haskell-pre">
-
-[SameTable](#sametable) \| [RemoteTable](#remotetable)
-
-</div>
+`[SameTable](#sametable) | [RemoteTable](#remotetable)`
 
 ## SameTable
 
-<div class="parsed-literal">
-
-[PGColumn](#pgcolumn)
-
-</div>
+`[PGColumn](#pgcolumn)`
 
 ## RemoteTable
 
-<div class="parsed-literal haskell-pre">
-
+```
 {  
-"table" : [TableName](#tablename), "column" : [PGColumn](#pgcolumn)
-
+    "table" : [TableName](#tablename), 
+    "column" : [PGColumn](#pgcolumn)
 }
+```
 
-</div>
-
-<div class="admonition">
-
-Supported from
+:::info Supported from
 
 Supported in `v2.0.0-alpha.3` and above.
 
-</div>
+:::
 
 ## ObjRelUsingManualMapping
 
 | Key             | Required | Schema                           | Description                                               |
 |-----------------|----------|----------------------------------|-----------------------------------------------------------|
-| remote_table    | true     | `TableName`                      | The table to which the relationship has to be established |
-| column_mapping  | true     | Object (`PGColumn` : `PGColumn`) | Mapping of columns from current table to remote table     |
-| insertion_order | false    | `InsertOrder`                    | insertion order: before or after parent (default: before) |
+| remote_table    | true     | [TableName](#tablename)                      | The table to which the relationship has to be established |
+| column_mapping  | true     | Object ([PGColumn](#pgcolumn) : [PGColumn](#pgcolumn)) | Mapping of columns from current table to remote table     |
+| insertion_order | false    | [InsertOrder](#insertorder)                    | insertion order: before or after parent (default: before) |
 
 ## InsertOrder
 
@@ -351,19 +295,13 @@ Describes when should the referenced table row be inserted in relation
 to the current table row in case of a nested insert. Defaults to
 "before_parent".
 
-<div class="parsed-literal haskell-pre">
+`"before_parent" | "after_parent"`
 
-"before_parent" \| "after_parent"
-
-</div>
-
-<div class="admonition">
-
-Supported from
+:::info Supported from
 
 Supported in `v2.0.0-alpha.3` and above.
 
-</div>
+:::
 
 ## ArrRelUsing
 
@@ -376,92 +314,69 @@ Supported in `v2.0.0-alpha.3` and above.
 
 | Key    | Required | Schema      | Description                                    |
 |--------|----------|-------------|------------------------------------------------|
-| table  | true     | `TableName` | Name of the table                              |
-| column | true     | `PGColumn`  | Name of the column with foreign key constraint |
+| table  | true     | [TableName](#tablename) | Name of the table                              |
+| column | true     | [PGColumn](#pgcolumn)  | Name of the column with foreign key constraint |
 
 ## ArrRelUsingManualMapping
 
 | Key            | Required | Schema                           | Description                                               |
 |----------------|----------|----------------------------------|-----------------------------------------------------------|
-| remote_table   | true     | `TableName`                      | The table to which the relationship has to be established |
-| column_mapping | true     | Object (`PGColumn` : `PGColumn`) | Mapping of columns from current table to remote table     |
+| remote_table   | true     | [TableName](#tablename)                      | The table to which the relationship has to be established |
+| column_mapping | true     | Object ([PGColumn](#pgcolumn) : [PGColumn](#pgcolumn)) | Mapping of columns from current table to remote table     |
 
 ## BoolExp
 
-<div class="parsed-literal haskell-pre">
-
-[AndExp](#andexp) \| [OrExp](#orexp) \| [NotExp](#notexp) \|
-[ExistsExp](#existsexp) \| [TrueExp](#trueexp) \|
+```
+[AndExp](#andexp) | [OrExp](#orexp) | [NotExp](#notexp) |
+[ExistsExp](#existsexp) | [TrueExp](#trueexp) |
 [ColumnExp](#columnexp)
-
-</div>
+```
 
 ## AndExp
 
-<div class="parsed-literal haskell-pre">
-
+```
 {  
-"$and" : \[[BoolExp](#boolexp)\],
-
+    "$and" : [[BoolExp](#boolexp)],
 }
-
-</div>
+```
 
 ## OrExp
 
-<div class="parsed-literal haskell-pre">
-
+```
 {  
-"$or" : \[[BoolExp](#boolexp)\],
-
+    "$or" : [[BoolExp](#boolexp)],
 }
-
-</div>
+```
 
 ## NotExp
 
-<div class="parsed-literal haskell-pre">
-
+```
 {  
-"$not" : [BoolExp](#boolexp)
-
+    "$not" : [BoolExp](#boolexp)
 }
-
-</div>
+```
 
 ## ExistsExp
 
-<div class="parsed-literal haskell-pre">
-
+```
 {  
-"$exists" : {  
-"\_table": [TableName](#tablename), "\_where": [BoolExp](#boolexp)
-
+    "$exists" : {  
+        "_table": [TableName](#tablename), "_where": [BoolExp](#boolexp)
+    }
 }
-
-}
-
-</div>
+```
 
 ## TrueExp
 
-<div class="parsed-literal haskell-pre">
-
-{}
-
-</div>
+`{}`
 
 ## ColumnExp
 
-<div class="parsed-literal haskell-pre">
-
+```
 {  
-[PGColumn](#pgcolumn) \| scalar [ComputedFieldName](#computedfieldname)
-: { [Operator](#operator) : Value }
-
+[PGColumn](#pgcolumn) | scalar [ComputedFieldName](#computedfieldname) : { [Operator](#operator) : Value }
 }
-
-</div>
+```
 
 ## Operator
 
@@ -506,20 +421,15 @@ jsonb):**
 
 **Column Comparison Operator**
 
-<div class="parsed-literal haskell-pre">
-
+```
 {  
-[PGColumn](#pgcolumn): {  
-[Operator](#operator): {  
-[PGColumn](#pgcolumn) \| \["$", [PGColumn](#pgcolumn)\]
-
+    [PGColumn](#pgcolumn): {  
+        [Operator](#operator): {  
+            [PGColumn](#pgcolumn) | ["$", [PGColumn](#pgcolumn)]
+        }
+    }
 }
-
-}
-
-}
-
-</div>
+```
 
 Column comparison operators can be used to compare columns of the same
 table or a related table. To compare a column of a table with another
@@ -527,37 +437,27 @@ column of :
 
 1.  The same table -
 
-<div class="parsed-literal haskell-pre">
-
+```
 {  
-[PGColumn](#pgcolumn): {  
-[Operator](#operator): {  
-[PGColumn](#pgcolumn)
-
+  [PGColumn](#pgcolumn): {  
+    [Operator](#operator): {  
+      [PGColumn](#pgcolumn)
+    }
+  }
 }
-
-}
-
-}
-
-</div>
+```
 
 2.  The table on which the permission is being defined on -
 
-<div class="parsed-literal haskell-pre">
-
+```
 {  
-[PGColumn](#pgcolumn): {  
-[Operator](#operator): {  
-\[$, [PGColumn](#pgcolumn)\]
-
+  [PGColumn](#pgcolumn): {  
+    [Operator](#operator): {  
+      [$, [PGColumn](#pgcolumn)]
+    }
+  }
 }
-
-}
-
-}
-
-</div>
+```
 
 | Operator  | PostgreSQL equivalent |
 |-----------|-----------------------|
@@ -612,42 +512,32 @@ docs](https://www.postgresql.org/docs/current/static/functions-json.html#FUNCTIO
 [PostGIS
 docs](http://postgis.net/workshops/postgis-intro/spatial_relationships.html).)
 
-<div class="note">
-
-<div class="title">
-
-Note
-
-</div>
+:::info Note
 
 -   All operators take a JSON representation of `geometry/geography`
     values as input value.
 
 -   The input value for `_st_d_within` operator is an object:
 
-    <div class="parsed-literal">
-
+    ```
     {  
-    field-name : {\_st_d\_within: {distance: Float, from: Value} }
-
+        field-name : {\_st_d\_within: {distance: Float, from: Value} }
     }
+    ```
 
-    </div>
-
-</div>
+:::
 
 ## Object
 
 A [JSONObject](https://tools.ietf.org/html/rfc7159)
 
-<div class="parsed-literal haskell-pre">
-
+```
 {  
-"k1" : v1, "k2" : v2, ..
-
+  "k1" : v1, 
+  "k2" : v2, 
+  ..
 }
-
-</div>
+```
 
 ## Empty Object
 
@@ -663,14 +553,13 @@ A [JSONObject](https://tools.ietf.org/html/rfc7159) of a Postgres column
 name to value mapping, where the value can be static or derived from a
 session variable.
 
-<div class="parsed-literal haskell-pre">
-
+```
 {  
-"column1" : colVal1, "column2" : colVal2, ..
-
+  "column1" : colVal1, 
+  "column2" : colVal2, 
+  ..
 }
-
-</div>
+```
 
 E.g. where `id` is derived from a session variable and `city` is a
 static value.
@@ -682,56 +571,61 @@ static value.
 }
 ```
 
-<div class="note">
-
-<div class="title">
-
-Note
-
-</div>
+:::info Note
 
 If the value of any key begins with "x-hasura-" (*case-insensitive*),
 the value of the column specified in the key will be derived from a
 session variable of the same name.
 
-</div>
+:::
 
 ## RemoteSchemaName
 
-<div class="parsed-literal">
-
-String
-
-</div>
+`String`
 
 ## RemoteSchemaDef
 
-<div class="parsed-literal haskell-pre">
-
+```
 {  
-"url" : url-string, "url_from_env" : env-var-string, "headers": \[ {
-"name": header-name-string, "value": header-value-string,
-"value_from_env": env-var-string } \], "forward_client_headers":
-boolean, "timeout_seconds": integer, "customization":
-[RemoteSchemaCustomization](#remoteschemacustomization)
-
+    "url" : url-string, 
+    "url_from_env" : env-var-string, 
+    "headers": [ 
+        {
+            "name": header-name-string, 
+            "value": header-value-string,
+            "value_from_env": env-var-string 
+        } 
+    ], 
+    "forward_client_headers": boolean, 
+    "timeout_seconds": integer, 
+    "customization": [RemoteSchemaCustomization](#remoteschemacustomization)
 }
-
-</div>
+```
 
 ## RemoteSchemaCustomization
 
-<div class="parsed-literal haskell-pre">
-
+```
 {  
-"root_fields_namespace": String, "type_names": { "prefix": String,
-"suffix": String, "mapping": { String: String } }, "field_names": \[ {
-"parent_type": String, "prefix": String, "suffix": String, "mapping": {
-String: String } } \]
-
+  "root_fields_namespace": String, 
+  "type_names": { 
+    "prefix": String,
+    "suffix": String, 
+    "mapping": { 
+        String: String 
+        } 
+    }, 
+  "field_names": [ 
+      {
+      "parent_type": String, 
+      "prefix": String, 
+      "suffix": String, 
+      "mapping": { 
+          String: String 
+          } 
+      } 
+    ]
 }
-
-</div>
+```
 
 | Key                     | Required | Schema                                                    | Description                                                                            |
 |-------------------------|----------|-----------------------------------------------------------|----------------------------------------------------------------------------------------|
@@ -768,17 +662,19 @@ String: String } } \]
 
 ## SourceCustomization
 
-<div class="parsed-literal haskell-pre">
-
-</div>
-
-> {  
-> "root_fields": {  
-> "namespace": String, "prefix": String, "suffix": String
->
-> }, "type_names": { "prefix": String, "suffix": String }
->
-> }
+```
+{  
+  "root_fields": {  
+    "namespace": String, 
+    "prefix": String, 
+    "suffix": String
+    }, 
+  "type_names": { 
+    "prefix": String, 
+    "suffix": String 
+    }
+}
+```
 
 | Key           | Required | Schema                                              | Description                                    |
 |---------------|----------|-----------------------------------------------------|------------------------------------------------|
@@ -802,93 +698,62 @@ String: String } } \]
 
 ## CollectionName
 
-<div class="parsed-literal">
-
-String
-
-</div>
+`String`
 
 ## QueryName
 
-<div class="parsed-literal">
-
-String
-
-</div>
+`String`
 
 ## CollectionQuery
 
-<div class="parsed-literal haskell-pre">
-
+```
 {  
-"name": String, "query": String
-
+    "name": String, 
+    "query": String
 }
-
-</div>
+```
 
 ## EndpointUrl
 
-<div class="parsed-literal">
-
-String
-
-</div>
+`String`
 
 ## EndpointMethods
 
-<div class="parsed-literal">
-
-\[String\]
-
-</div>
+`[String]`
 
 ## EndpointDefinition
 
-<div class="parsed-literal haskell-pre">
-
+```
 {  
-"query": {  
-"query_name : String, "collection_name" : CollectionName
-
+  "query": {  
+    "query_name : String, "collection_name" : CollectionName
+  }
 }
-
-}
-
-</div>
+```
 
 ## CustomColumnNames
 
 A [JSONObject](https://tools.ietf.org/html/rfc7159) of Postgres column
 name to GraphQL name mapping
 
-<div class="parsed-literal haskell-pre">
-
+```
 {  
-"column1" : String, "column2" : String, ..
-
+  "column1" : String, 
+  "column2" : String, 
+  ..
 }
-
-</div>
+```
 
 ## ActionName
 
-<div class="parsed-literal haskell-pre">
-
-String
-
-</div>
+`String`
 
 ## WebhookURL
 
 A String value which supports templating environment variables enclosed
 in `{{` and `}}`.
 
-<div class="parsed-literal haskell-pre">
-
-String
-
-</div>
+`String`
 
 Template example: `https://{{ACTION_API_DOMAIN}}/create-user`
 
@@ -912,11 +777,7 @@ A GraphQL [Type
 Reference](https://spec.graphql.org/June2018/#sec-Type-References)
 string.
 
-<div class="parsed-literal haskell-pre">
-
-String
-
-</div>
+`String`
 
 Example: `String!` for non-nullable String type and `[String]` for array
 of String types
@@ -926,51 +787,41 @@ of String types
 A string literal that conform to [GraphQL
 spec](https://spec.graphql.org/June2018/#Name).
 
-<div class="parsed-literal haskell-pre">
-
-String
-
-</div>
+`String`
 
 ## ActionDefinition
 
 | Key                    | Required | Schema                                                                       | Description                                                                                                                             |
 |------------------------|----------|------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------|
 | arguments              | false    | Array of [InputArgument](#inputargument)                                     | Input arguments                                                                                                                         |
-| output_type            | true     | `GraphQLType <GraphQLType>`                                                  | The output type of the action. Only object and list of objects are allowed.                                                             |
+| output_type            | true     | [GraphQLType](#graphqltype)                                                  | The output type of the action. Only object and list of objects are allowed.                                                             |
 | kind                   | false    | \[ `synchronous` \| `asynchronous` \]                                        | The kind of the mutation action (default: `synchronous`). If the type of the action is `query` then the `kind` field should be omitted. |
-| headers                | false    | \[ `HeaderFromValue <HeaderFromValue>` \| `HeaderFromEnv <HeaderFromEnv>` \] | List of defined headers to be sent to the handler                                                                                       |
+| headers                | false    | \[[HeaderFromValue](#headerfromvalue) \| [HeaderFromEnv](#headerfromenv) \]   | List of defined headers to be sent to the handler                                                                                       |
 | forward_client_headers | false    | boolean                                                                      | If set to `true` the client headers are forwarded to the webhook handler (default: `false`)                                             |
-| handler                | true     | `WebhookURL <WebhookURL>`                                                    | The action's webhook URL                                                                                                                |
+| handler                | true     | [WebhookURL](#webhookurl)                                                    | The action's webhook URL                                                                                                                |
 | type                   | false    | \[ `mutation` \| `query` \]                                                  | The type of the action (default: `mutation`)                                                                                            |
 | timeout                | false    | Integer                                                                      | Number of seconds to wait for response before timing out. Default: 30                                                                   |
-| request_transform      | false    | `RequestTransformation`                                                      | Request Transformation to be applied to this Action's request                                                                           |
+| request_transform      | false    | [RequestTransformation](#requesttransformation)                                                      | Request Transformation to be applied to this Action's request                                                                           |
 
 ## InputArgument
 
 | Key  | Required | Schema                      | Description          |
 |------|----------|-----------------------------|----------------------|
 | name | true     | text                        | Name of the argument |
-| type | true     | `GraphQLType <GraphQLType>` | Type of the argument |
+| type | true     | [GraphQLType](#graphqltype) | Type of the argument |
 
-<div class="note">
-
-<div class="title">
-
-Note
-
-</div>
+:::info Note
 
 The `GraphQL Types` used in creating an action must be defined before
-via `Custom Types <metadata_api_custom_types>`
+via [Custom Types](/graphql/core/api-reference/metadata-api/custom-types.mdx)
 
-</div>
+:::
 
 ## ComputedFieldDefinition
 
 | Key              | Required | Schema                        | Description                                                                                                                                             |
 |------------------|----------|-------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------|
-| function         | true     | `FunctionName <FunctionName>` | The SQL function                                                                                                                                        |
+| function         | true     | [FunctionName](#functionname) | The SQL function                                                                                                                                        |
 | table_argument   | false    | String                        | Name of the argument which accepts a table row type. If omitted, the first argument is considered a table argument                                      |
 | session_argument | false    | String                        | Name of the argument which accepts the Hasura session object as a JSON/JSONB value. If omitted, the Hasura session object is not passed to the function |
 
@@ -979,19 +830,11 @@ via `Custom Types <metadata_api_custom_types>`
 | Key                | Required | Schema                                                      | Description                                                                                                                                             |
 |--------------------|----------|-------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------|
 | custom_name        | false    | `String`                                                    | Customise the `<function-name>` with the provided custom name value. The GraphQL nodes for the function will be generated according to the custom name. |
-| custom_root_fields | false    | `Custom Function Root Fields <custom_function_root_fields>` | Customise the root fields                                                                                                                               |
+| custom_root_fields | false    | [Custom Function Root Fields](#custom-function-root-fields) | Customise the root fields                                                                                                                               |
 | session_argument   | false    | <span class="title-ref">String</span>                       | Function argument which accepts session info JSON                                                                                                       |
 | exposed_as         | false    | <span class="title-ref">String</span>                       | In which part of the schema should we expose this function? Either "mutation" or "query".                                                               |
 
-<div id="function_req_note">
-
-<div class="note">
-
-<div class="title">
-
-Note
-
-</div>
+:::info Note
 
 Currently, only functions which satisfy the following constraints can be
 exposed over the GraphQL API (*terminology from* [Postgres
@@ -1004,9 +847,7 @@ docs](https://www.postgresql.org/docs/current/sql-createfunction.html)):
     where `<table-name>` is already tracked
 -   **Argument modes**: ONLY `IN`
 
-</div>
-
-</div>
+:::
 
 ## InputObjectType
 
@@ -1015,7 +856,7 @@ Object](https://spec.graphql.org/June2018/#sec-Input-Objects)
 
 | Key         | Required | Schema                                         | Description                          |
 |-------------|----------|------------------------------------------------|--------------------------------------|
-| name        | true     | `GraphQLName`                                  | Name of the Input object type        |
+| name        | true     | [GraphQLName](#graphqlname)                                  | Name of the Input object type        |
 | description | false    | String                                         | Description of the Input object type |
 | fields      | true     | Array of [InputObjectField](#inputobjectfield) | Fields of the Input object type      |
 
@@ -1023,9 +864,9 @@ Object](https://spec.graphql.org/June2018/#sec-Input-Objects)
 
 | Key         | Required | Schema                      | Description                           |
 |-------------|----------|-----------------------------|---------------------------------------|
-| name        | true     | `GraphQLName`               | Name of the Input object field        |
+| name        | true     | [GraphQLName](#graphqlname)               | Name of the Input object field        |
 | description | false    | String                      | Description of the Input object field |
-| type        | true     | `GraphQLType <GraphQLType>` | GraphQL ype of the input object field |
+| type        | true     | [GraphQLType](#graphqltype) | GraphQL ype of the input object field |
 
 ## ObjectType
 
@@ -1034,7 +875,7 @@ Object](https://spec.graphql.org/June2018/#sec-Objects)
 
 | Key           | Required | Schema                                             | Description                                |
 |---------------|----------|----------------------------------------------------|--------------------------------------------|
-| name          | true     | `GraphQLName`                                      | Name of the Object type                    |
+| name          | true     | [GraphQLName](#graphqlname)                                      | Name of the Object type                    |
 | description   | false    | String                                             | Description of the Object type             |
 | fields        | true     | Array of [ObjectField](#objectfield)               | Fields of the Object type                  |
 | relationships | false    | Array of [ObjectRelationship](#objectrelationship) | Relationships of the Object type to tables |
@@ -1043,18 +884,18 @@ Object](https://spec.graphql.org/June2018/#sec-Objects)
 
 | Key         | Required | Schema                      | Description                            |
 |-------------|----------|-----------------------------|----------------------------------------|
-| name        | true     | `GraphQLName`               | Name of the Input object field         |
+| name        | true     | [GraphQLName](#graphqlname)               | Name of the Input object field         |
 | description | false    | String                      | Description of the Input object field  |
-| type        | true     | `GraphQLType <GraphQLType>` | GraphQL type of the input object field |
+| type        | true     | [GraphQLType](#graphqltype) | GraphQL type of the input object field |
 
 ### ObjectRelationship
 
 | Key           | Required | Schema                                                                | Description                                                            |
 |---------------|----------|-----------------------------------------------------------------------|------------------------------------------------------------------------|
-| name          | true     | `RelationshipName`                                                    | Name of the relationship, shouldn't conflict with existing field names |
+| name          | true     | [RelationshipName](#relationshipname)                                                    | Name of the relationship, shouldn't conflict with existing field names |
 | type          | true     | \[ `object` \| `array` \]                                             | Type of the relationship                                               |
-| remote_table  | true     | `TableName`                                                           | The table to which relationship is defined                             |
-| field_mapping | true     | Object ([ObjectField](#objectfield) name : Remote table's `PGColumn`) | Mapping of fields of object type to columns of remote table            |
+| remote_table  | true     | [TableName](#tablename)                                                           | The table to which relationship is defined                             |
+| field_mapping | true     | Object ([ObjectField](#objectfield) name : Remote table's [PGColumn](#pgcolumn)) | Mapping of fields of object type to columns of remote table            |
 
 ## ScalarType
 
@@ -1063,7 +904,7 @@ Scalar](https://spec.graphql.org/June2018/#sec-Scalars)
 
 | Key         | Required | Schema        | Description                    |
 |-------------|----------|---------------|--------------------------------|
-| name        | true     | `GraphQLName` | Name of the Scalar type        |
+| name        | true     | [GraphQLName](#graphqlname) | Name of the Scalar type        |
 | description | false    | String        | Description of the Scalar type |
 
 ## EnumType
@@ -1073,7 +914,7 @@ Enum](https://spec.graphql.org/June2018/#sec-Enums)
 
 | Key         | Required | Schema                           | Description                  |
 |-------------|----------|----------------------------------|------------------------------|
-| name        | true     | `GraphQLName`                    | Name of the Enum type        |
+| name        | true     | [GraphQLName](#graphqlname)                    | Name of the Enum type        |
 | description | false    | String                           | Description of the Enum type |
 | values      | true     | Array of [EnumValue](#enumvalue) | Values of the Enum type      |
 
@@ -1081,17 +922,13 @@ Enum](https://spec.graphql.org/June2018/#sec-Enums)
 
 | Key           | Required | Schema        | Description                                              |
 |---------------|----------|---------------|----------------------------------------------------------|
-| value         | true     | `GraphQLName` | Value of the Enum type                                   |
+| value         | true     | [GraphQLName](#graphqlname) | Value of the Enum type                                   |
 | description   | false    | String        | Description of the value                                 |
 | is_deprecated | false    | Boolean       | If set to `true`, the enum value is marked as deprecated |
 
 ## TriggerName
 
-<div class="parsed-literal">
-
-String
-
-</div>
+`String`
 
 ## OperationSpec
 
@@ -1102,11 +939,9 @@ String
 
 ## EventTriggerColumns
 
-<div class="parsed-literal haskell-pre">
-
-"\*" \| \[`PGColumn`\]
-
-</div>
+```
+"*" | [[PGColumn](#pgcolumn)]
+```
 
 ## RequestTransformation
 
@@ -1117,41 +952,31 @@ String
 | body            | false    | String                   | A template script for transforming the request body.                                                                                               |
 | content_type    | false    | String                   | Replace the Content-Type with this value. Only "application/json" and "application/x-www-form-urlencoded" are allowed. Default: "application/json" |
 | query_params    | false    | Object (String : String) | Replace the query params on the URL with this value.                                                                                               |
-| request_headers | false    | `TransformHeaders`       | Transform headers as described here.                                                                                                               |
-| template_engine | false    | `TemplateEngine`         | Template language to be used for this transformation. Default: "Kriti"                                                                             |
+| request_headers | false    | [TransformHeaders](#transformheaders)       | Transform headers as described here.                                                                                                               |
+| template_engine | false    | [TemplateEngine](#templateengine)         | Template language to be used for this transformation. Default: "Kriti"                                                                             |
 
 ## TransformHeaders
 
 | Key           | required | Schema                               | Description                                                                                            |
 |---------------|----------|--------------------------------------|--------------------------------------------------------------------------------------------------------|
-| addHeaders    | false    | Object (`HeaderKey` : `HeaderValue`) | A map of Header Key Value pairs to be added to the request. Content-Type cannot be added via this map. |
-| removeHeaders | false    | Array of (`HeaderKey`)               | Headers to be removed from the request. Content-Type cannot be removed.                                |
+| addHeaders    | false    | Object ([HeaderKey](#headerkey) : [HeaderValue](#headervalue)) | A map of Header Key Value pairs to be added to the request. Content-Type cannot be added via this map. |
+| removeHeaders | false    | Array of ([HeaderKey](#headerkey))               | Headers to be removed from the request. Content-Type cannot be removed.                                |
 
 ## HeaderKey
 
-<div class="parsed-literal haskell-pre">
+`String`
 
-String
+## HeaderValue
 
-</div>
-
-## HeaderKey
-
-<div class="parsed-literal haskell-pre">
-
-String
-
-</div>
+`String`
 
 ## TemplateEngine
 
 The JSON templating language to be used for this JSON transformation.
 
-<div class="parsed-literal haskell-pre">
-
+```
 "Kriti"
-
-</div>
+```
 
 ## RetryConf
 
@@ -1163,25 +988,16 @@ The JSON templating language to be used for this JSON transformation.
 
 ## RemoteRelationshipName
 
-<div class="parsed-literal">
-
-String
-
-</div>
+`String`
 
 ## RemoteField
-
-<div class="parsed-literal haskell-pre">
-
+```
 {  
-FieldName: {  
-"arguments": InputArguments "field": RemoteField # optional
-
+  FieldName: {  
+    "arguments": InputArguments "field": RemoteField # optional
+  }
 }
-
-}
-
-</div>
+```
 
 `RemoteField` is a recursive tree structure that points to the field in
 the remote schema that needs to be joined with. It is recursive because
@@ -1189,44 +1005,41 @@ the remote field maybe nested deeply in the remote schema.
 
 Examples:
 
-<div class="parsed-literal haskell-pre">
-
+```
 {  
-"message": {  
-"arguments":{  
-"message_id":"$id" }
-
+  "message": {  
+    "arguments":{  
+      "message_id":"$id" 
+      }
+  }
 }
+```
 
+
+```
+{
+  "messages": {
+    "arguments": {
+      "limit": 100
+    },
+    "field": {
+    "private": {
+      "arguments": {
+        "id" : "$id"
+      }
+    }
+    }
+  }
 }
-
-</div>
-
-<div class="parsed-literal haskell-pre">
-
-{  
-"messages": {  
-"arguments": {  
-"limit": 100
-
-}, "field": { "private": { "arguments": { "id" : "$id" } } }
-
-}
-
-}
-
-</div>
+```
 
 ## InputArguments
 
-<div class="parsed-literal haskell-pre">
-
+```
 {  
-InputField : $PGColumn \| Scalar
-
+InputField : $PGColumn | Scalar
 }
-
-</div>
+```
 
 Table columns can be referred by prefixing `$` e.g `$id`.
 
