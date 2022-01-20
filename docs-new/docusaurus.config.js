@@ -59,7 +59,7 @@ const config = {
           },
           {
             type: 'doc',
-            docId: 'graphql/core/actions/create',
+            docId: 'graphql/core/index',
             position: 'left',
             label: 'Core',
           },
