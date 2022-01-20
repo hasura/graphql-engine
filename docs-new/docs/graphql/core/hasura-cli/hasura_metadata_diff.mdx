@@ -19,10 +19,13 @@ keywords:
 default, it shows changes between the exported metadata file and server
 metadata.
 
+```
     hasura metadata diff [file1] [file2] [flags]
+```
 
 ## Examples
 
+```
     # NOTE: This command is in preview, usage and diff format may change.
 
     # Show changes between server metadata and the exported metadata file:
@@ -42,14 +45,18 @@ metadata.
 
     # Diff metadata on a different Hasura instance:
     hasura metadata diff --endpoint "<endpoint>"
+```
 
 ## Options
 
+```
     -h, --help          help for diff
         --type string   specify a type of diff [allowed values: unified-common] (default "default")
+```
 
 ## Options inherited from parent commands
 
+```
     --admin-secret string            admin secret for Hasura GraphQL engine (env "HASURA_GRAPHQL_ADMIN_SECRET")
     --certificate-authority string   path to a cert file for the certificate authority (env "HASURA_GRAPHQL_CERTIFICATE_AUTHORITY")
     --endpoint string                http(s) endpoint for Hasura GraphQL engine (env "HASURA_GRAPHQL_ENDPOINT")
@@ -59,6 +66,7 @@ metadata.
     --no-color                       do not colorize output (default: false)
     --project string                 directory where commands are executed (default: current dir)
     --skip-update-check              skip automatic update check on command execution
+```
 
 ## SEE ALSO
 

@@ -17,22 +17,29 @@ Display current status of migrations on a database.
 
 Display current status of migrations on a database.
 
+```
     hasura migrate status [flags]
+```
 
 ## Examples
 
+```
     # Use with admin secret:
     hasura migrate status --admin-secret "<your-admin-secret>"
 
     # Check status on a different server:
     hasura migrate status --endpoint "<endpoint>"
+```
 
 ## Options
 
+```
     -h, --help   help for status
+```
 
 ## Options inherited from parent commands
 
+```
     --admin-secret string            admin secret for Hasura GraphQL engine (env "HASURA_GRAPHQL_ADMIN_SECRET")
     --certificate-authority string   path to a cert file for the certificate authority (env "HASURA_GRAPHQL_CERTIFICATE_AUTHORITY")
     --database-name string           database on which operation should be applied
@@ -44,6 +51,7 @@ Display current status of migrations on a database.
     --no-color                       do not colorize output (default: false)
     --project string                 directory where commands are executed (default: current dir)
     --skip-update-check              skip automatic update check on command execution
+```
 
 ## SEE ALSO
 

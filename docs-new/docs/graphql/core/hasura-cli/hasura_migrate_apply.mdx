@@ -17,10 +17,13 @@ Apply migrations on the database.
 
 Apply migrations on the database.
 
+```
     hasura migrate apply [flags]
+```
 
 ## Examples
 
+```
     # Apply all migrations
     hasura migrate apply
 
@@ -62,9 +65,11 @@ Apply migrations on the database.
 
     # Rollback all migrations:
     hasura migrate apply --down all
+```
 
 ## Options
 
+```
     --up string        apply all or N up migration steps
     --down string      apply all or N down migration steps
     --goto string      apply migration chain up to to the version specified
@@ -73,10 +78,12 @@ Apply migrations on the database.
     --type string      type of migration (up, down) to be used with version flag (default "up")
     --dry-run          print the names of migrations which are going to be applied
     --all-databases    set this flag to attempt to apply migrations on all databases present on server
-    -h, --help             help for apply
+-h, --help             help for apply
+```
 
 ## Options inherited from parent commands
 
+```
     --admin-secret string            admin secret for Hasura GraphQL engine (env "HASURA_GRAPHQL_ADMIN_SECRET")
     --certificate-authority string   path to a cert file for the certificate authority (env "HASURA_GRAPHQL_CERTIFICATE_AUTHORITY")
     --database-name string           database on which operation should be applied
@@ -88,6 +95,7 @@ Apply migrations on the database.
     --no-color                       do not colorize output (default: false)
     --project string                 directory where commands are executed (default: current dir)
     --skip-update-check              skip automatic update check on command execution
+```
 
 ## SEE ALSO
 

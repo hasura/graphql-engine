@@ -11,28 +11,15 @@ keywords:
   - windows
 ---
 
+import Tabs from "@theme/Tabs";
+import TabItem from "@theme/TabItem";
+
 # Installing the Hasura CLI
-
-<div class="contents" backlinks="none" depth="1" local="">
-
-Table of contents
-
-</div>
 
 ## Install a binary globally
 
-<div class="rst-class">
-
-api_tabs
-
-</div>
-
-<div class="tabs">
-
-<div class="tab">
-
-Linux
-
+<Tabs className="api-tabs">
+    <TabItem value="linux" label="Linux">
 In your Linux shell, run the following command:
 
 ```bash
@@ -57,11 +44,9 @@ You can also install a specific version of the CLI by providing the
 curl -L https://github.com/hasura/graphql-engine/raw/stable/cli/get.sh | VERSION=v2.1.1 bash
 ```
 
-</div>
+  </TabItem>
 
-<div class="tab">
-
-Mac
+<TabItem value="mac" label="Mac">
 
 In your Terminal, run the following command:
 
@@ -87,11 +72,8 @@ You can also install a specific version of the CLI by providing the
 curl -L https://github.com/hasura/graphql-engine/raw/stable/cli/get.sh | VERSION=v2.1.1 bash
 ```
 
-</div>
-
-<div class="tab">
-
-Windows
+</TabItem>
+<TabItem value="windows" label="Windows">
 
 Download the binary `cli-hasura-windows-amd64.exe` available under
 `Assets` of the latest release from the GitHub release page:
@@ -100,9 +82,9 @@ Download the binary `cli-hasura-windows-amd64.exe` available under
 Rename the downloaded file to `hasura`. You can add the path to the
 environment variable `PATH` for making `hasura` accessible globally.
 
-</div>
+</TabItem>
 
-</div>
+  </Tabs>
 
 ## Install through npm
 
@@ -122,5 +104,4 @@ npm install --global hasura-cli[@tag|@version]
 
 ## (Optional) Add shell completion
 
-To add command auto completion in the shell, refer to
-`hasura completion <hasura_completion>`.
+To add command auto completion in the shell, refer to [hasura completion](/graphql/core/hasura-cli/hasura_completion).

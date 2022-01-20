@@ -17,10 +17,13 @@ Create a new seed file.
 
 Create a new seed file.
 
+```
     hasura seed create seed_name [flags]
+```
 
 ## Examples
 
+```
     # Create a new seed file and use editor to add SQL:
     hasura seed create new_table_seed
 
@@ -29,14 +32,18 @@ Create a new seed file.
 
     # Export data from multiple tables:
     hasura seed create tables_seed --from-table table1 --from-table table2
+```
 
 ## Options
 
+```
     --from-table stringArray   name of table from which seed file has to be initialized. e.g. table1, myschema1.table1
-    -h, --help                     help for create
+-h, --help                     help for create
+```
 
 ## Options inherited from parent commands
 
+```
     --admin-secret string            admin secret for Hasura GraphQL engine (env "HASURA_GRAPHQL_ADMIN_SECRET")
     --certificate-authority string   path to a cert file for the certificate authority (env "HASURA_GRAPHQL_CERTIFICATE_AUTHORITY")
     --database-name string           database on which operation should be applied
@@ -48,6 +55,7 @@ Create a new seed file.
     --no-color                       do not colorize output (default: false)
     --project string                 directory where commands are executed (default: current dir)
     --skip-update-check              skip automatic update check on command execution
+```
 
 ## SEE ALSO
 

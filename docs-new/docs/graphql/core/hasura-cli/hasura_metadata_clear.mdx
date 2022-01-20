@@ -17,12 +17,15 @@ Clear Hasura GraphQL engine metadata on the database.
 
 Clear Hasura GraphQL engine metadata on the database.
 
+```
     hasura metadata clear [flags]
+```
 
 Alias: reset
 
 ## Examples
 
+```
     # Clear all the metadata information from database:
     hasura metadata clear
 
@@ -31,13 +34,17 @@ Alias: reset
 
     # Clear metadata on a different Hasura instance:
     hasura metadata clear --endpoint "<endpoint>"
+```
 
 ## Options
 
+```
     -h, --help   help for clear
+```
 
 ## Options inherited from parent commands
 
+```
     --admin-secret string            admin secret for Hasura GraphQL engine (env "HASURA_GRAPHQL_ADMIN_SECRET")
     --certificate-authority string   path to a cert file for the certificate authority (env "HASURA_GRAPHQL_CERTIFICATE_AUTHORITY")
     --endpoint string                http(s) endpoint for Hasura GraphQL engine (env "HASURA_GRAPHQL_ENDPOINT")
@@ -47,6 +54,7 @@ Alias: reset
     --no-color                       do not colorize output (default: false)
     --project string                 directory where commands are executed (default: current dir)
     --skip-update-check              skip automatic update check on command execution
+```
 
 ## SEE ALSO
 

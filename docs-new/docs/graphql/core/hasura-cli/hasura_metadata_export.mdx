@@ -21,10 +21,13 @@ by the GraphQL engine. This includes info about tables that are tracked,
 permission rules, relationships and event triggers that are defined on
 those tables.
 
+```
     hasura metadata export [flags]
+```
 
 ## Examples
 
+```
     # Export metadata and save it in migrations/metadata.yaml file:
     hasura metadata export
 
@@ -33,14 +36,18 @@ those tables.
 
     # Export metadata to another instance specified by the flag:
     hasura metadata export --endpoint "<endpoint>"
+```
 
 ## Options
 
+```
     -h, --help            help for export
     -o, --output string   write metadata to standard output in given format for exported metadata (note: this won't modify project metadata) Allowed values: json, yaml")
+```
 
 ## Options inherited from parent commands
 
+```
     --admin-secret string            admin secret for Hasura GraphQL engine (env "HASURA_GRAPHQL_ADMIN_SECRET")
     --certificate-authority string   path to a cert file for the certificate authority (env "HASURA_GRAPHQL_CERTIFICATE_AUTHORITY")
     --endpoint string                http(s) endpoint for Hasura GraphQL engine (env "HASURA_GRAPHQL_ENDPOINT")
@@ -50,6 +57,7 @@ those tables.
     --no-color                       do not colorize output (default: false)
     --project string                 directory where commands are executed (default: current dir)
     --skip-update-check              skip automatic update check on command execution
+```
 
 ## SEE ALSO
 

@@ -17,10 +17,13 @@ Generate auto completion code.
 
 Output shell completion code for the specified shell (bash or zsh).
 
+```
     hasura completion [shell] [flags]
+```
 
 ## Examples
 
+```
     # Bash
         # Linux
           # Add Bash completion file using:
@@ -50,19 +53,24 @@ Output shell completion code for the specified shell (bash or zsh).
         $ hasura completion zsh --file=$HOME/.oh-my-zsh/completions/_hasura
 
       # Reload the shell for the changes to take effect!
+```
 
 ## Options
 
+```
     --file string   file to which output has to be written
-    -h, --help          help for completion
+-h, --help          help for completion
+```
 
 ## Options inherited from parent commands
 
+```
     --envfile string      .env filename to load ENV vars from (default ".env")
     --log-level string    log level (DEBUG, INFO, WARN, ERROR, FATAL) (default "INFO")
     --no-color            do not colorize output (default: false)
     --project string      directory where commands are executed (default: current dir)
     --skip-update-check   skip automatic update check on command execution
+```
 
 ## SEE ALSO
 
