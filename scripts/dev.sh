@@ -63,6 +63,9 @@ Available COMMANDs:
     passed to the pytest invocation. Run the hlint code linter individually
     using '--hlint'.
 
+    For unit tests, you can limit the number of tests by using
+    'test --unit --match "runTx" mssql'
+
 EOL
 exit 1
 }
@@ -105,6 +108,7 @@ case "${1-}" in
   test)
     case "${2-}" in
       --unit)
+      UNIT_TEST_ARGS=( "${@:3}" )
       RUN_INTEGRATION_TESTS=false
       RUN_UNIT_TESTS=true
       RUN_HLINT=false
@@ -479,9 +483,10 @@ elif [ "$MODE" = "test" ]; then
     mssql_start
     pg_start
 
+    echo "${UNIT_TEST_ARGS[@]}"
     HASURA_GRAPHQL_DATABASE_URL="$PG_DB_URL" \
       HASURA_MSSQL_CONN_STR="$MSSQL_CONN_STR" \
-      cabal new-run --project-file=cabal.project.dev-sh -- test:graphql-engine-tests
+      cabal new-run --project-file=cabal.project.dev-sh test:graphql-engine-tests -- "${UNIT_TEST_ARGS[@]}"
   fi
 
   if [ "$RUN_HLINT" = true ]; then
