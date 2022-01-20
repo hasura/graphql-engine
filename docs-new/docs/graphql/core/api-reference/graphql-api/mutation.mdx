@@ -406,7 +406,11 @@ pk_columns: {
 
 ### **where** argument
 
+<div class="parsed-literal">
+
 where: [BoolExp](#boolexp)
+
+</div>
 
 **Example**
 
@@ -418,17 +422,23 @@ where: {
 
 #### BoolExp
 
-[AndExp](#andexp) | [OrExp](#orexp) | [NotExp](#notexp) | [TrueExp](#trueexp) | [ColumnExp](#columnexp)
+<div class="parsed-literal">
+
+[AndExp](#andexp) \| [OrExp](#orexp) \| [NotExp](#notexp) \|
+[TrueExp](#trueexp) \| [ColumnExp](#columnexp)
+
+</div>
 
 ##### AndExp
 
+<div class="parsed-literal">
 
-```
 {  
 \_and: \[[BoolExp](#boolexp)\]
 
 }
-```
+
+</div>
 
 **Example**
 
@@ -441,11 +451,13 @@ _and: [
 
 ##### OrExp
 
-```
+<div class="parsed-literal">
+
 {  
-  _or: [[BoolExp](#boolexp)]
+  \_or: \[[BoolExp](#boolexp)\]
 }
-```
+
+</div>
 
 **Example**
 
@@ -458,11 +470,13 @@ _or: [
 
 ##### NotExp
 
-```
+<div class="parsed-literal">
+
 {  
-  _not: [BoolExp](#boolexp)
+  \_not: [BoolExp](#boolexp)
 }
-```
+
+</div>
 
 **Example**
 
@@ -490,11 +504,13 @@ author(where: {articles: {}})
 
 ##### ColumnExp
 
-```
+<div class="parsed-literal">
+
 {  
   field-name: {[Operator](#operator): Value }
 }
-```
+
+</div>
 
 **Example**
 

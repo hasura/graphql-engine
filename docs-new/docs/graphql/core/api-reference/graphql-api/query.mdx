@@ -97,7 +97,11 @@ subscription {
 
 ### Object
 
-`[SimpleObject](#SimpleObject) | [AggregateObject](#AggregateObject)`
+<div class="parsed-literal">
+
+[SimpleObject](#SimpleObject) \| [AggregateObject](#AggregateObject)
+
+</div>
 
 #### Simple object
 
@@ -270,11 +274,20 @@ author_aggregate {
 
 ### Argument
 
-`[DistinctOnExp](#distinctonexp) | [WhereExp](#whereexp) | [OrderByExp](#orderbyexp) | [PaginationExp](#paginationexp)`
+<div class="parsed-literal">
+
+[DistinctOnExp](#distinctonexp) \| [WhereExp](#whereexp) \|
+[OrderByExp](#orderbyexp) \| [PaginationExp](#paginationexp)
+
+</div>
 
 #### DistinctOnExp
 
-`distinct_on: [[TableSelectColumnEnum](#tableselectcolumnenum)]`
+<div class="parsed-literal">
+
+distinct_on: \[ [TableSelectColumnEnum](#tableselectcolumnenum) \]
+
+</div>
 
 *Example*
 
@@ -301,7 +314,12 @@ enum article_select_column {
 ```
 
 #### WhereExp
-`where: [BoolExp](#boolexp)`
+
+<div class="parsed-literal">
+
+where: [BoolExp](#boolexp)
+
+</div>
 
 *Example*
 
@@ -318,16 +336,22 @@ query {
 
 ##### BoolExp
 
-[AndExp](#andexp) \| [OrExp](#orexp) \| [NotExp](#notexp) \| [TrueExp](#trueexp) \| [ColumnExp](#columnexp)
+<div class="parsed-literal">
 
+[AndExp](#andexp) \| [OrExp](#orexp) \| [NotExp](#notexp) \|
+[TrueExp](#trueexp) \| [ColumnExp](#columnexp)
+
+</div>
 
 ###### AndExp
 
-```
+<div class="parsed-literal">
+
 {  
-  _and: [[BoolExp](#boolexp)]
+  \_and: \[[BoolExp](#boolexp)\]
 }
-```
+
+</div>
 
 *Example*
 
@@ -391,11 +415,13 @@ rating: {
 
 ###### OrExp
 
-```
+<div class="parsed-literal">
+
 {  
-  _or: [[BoolExp](#boolexp)]
+  \_or: \[[BoolExp](#boolexp)\]
 }
-```
+
+</div>
 
 *Example*
 
@@ -453,11 +479,13 @@ behaves.
 
 ###### NotExp
 
-```
+<div class="parsed-literal">
+
 {  
-  _not: [BoolExp](#boolexp)
+  \_not: [BoolExp](#boolexp)
 }
-```
+
+</div>
 
 *Example*
 
@@ -492,11 +520,13 @@ query {
 
 ###### ColumnExp
 
-```
+<div class="parsed-literal">
+
 {  
   field-name : {[Operator](#operator): Value }
 }
-```
+
+</div>
 
 *Example*
 
@@ -511,7 +541,7 @@ query {
 
 ###### Operator
 
-**Generic operators (all column types except json, jsonb):**
+**Generic operators (all column types except json, jsonb):** {#generic-operators}
 
 | Operator | PostgreSQL equivalent |
 |----------|-----------------------|
@@ -529,7 +559,7 @@ operators](https://www.postgresql.org/docs/current/functions-comparison.html)
 and [list based search
 operators](https://www.postgresql.org/docs/current/functions-comparisons.html).)
 
-**Text related operators:**
+**Text related operators:** {#text-operators}
 
 | Operator    | PostgreSQL equivalent |
 |-------------|-----------------------|
@@ -547,7 +577,7 @@ operators](https://www.postgresql.org/docs/current/functions-comparisons.html).)
 (For more details on text related operators, refer to the [Postgres
 docs](https://www.postgresql.org/docs/current/functions-matching.html).)
 
-**Checking for NULL values:**
+**Checking for NULL values:** {#null-expression}
 
 | Operator                                | PostgreSQL equivalent |
 |-----------------------------------------|-----------------------|
@@ -556,7 +586,7 @@ docs](https://www.postgresql.org/docs/current/functions-matching.html).)
 (For more details on the `IS NULL` expression, refer to the [Postgres
 docs](https://www.postgresql.org/docs/current/functions-comparison.html).)
 
-**Type casting:**
+**Type casting:** {#type-casting}
 
 | Operator                                         | PostgreSQL equivalent |
 |--------------------------------------------------|-----------------------|
@@ -565,7 +595,7 @@ docs](https://www.postgresql.org/docs/current/functions-comparison.html).)
 (For more details on type casting, refer to the [Postgres
 docs](https://www.postgresql.org/docs/current/sql-createcast.html).)
 
-**JSONB operators:**
+**JSONB operators:** {#jsonb-operators}
 
 | Operator        | PostgreSQL equivalent |
 |-----------------|-----------------------|
@@ -578,7 +608,7 @@ docs](https://www.postgresql.org/docs/current/sql-createcast.html).)
 (For more details on JSONB operators, refer to the [Postgres
 docs](https://www.postgresql.org/docs/current/static/functions-json.html#FUNCTIONS-JSONB-OP-TABLE).)
 
-**PostGIS related operators on GEOMETRY columns:**
+**PostGIS related operators on GEOMETRY columns:** {#geometry-operators}
 
 | Operator         | PostGIS equivalent             |
 |------------------|--------------------------------|
@@ -609,11 +639,7 @@ docs](http://postgis.net/workshops/postgis-intro/spatial_relationships.html).)
 
 :::
 
-<div id="intersect_operators">
-
-**Intersect Operators on RASTER columns:**
-
-</div>
+**Intersect Operators on RASTER columns:** {#intersect-operators}
 
 | Operator                    | PostgreSQL equivalent                   | Input object                                                        |
 |-----------------------------|-----------------------------------------|---------------------------------------------------------------------|
@@ -624,11 +650,7 @@ docs](http://postgis.net/workshops/postgis-intro/spatial_relationships.html).)
 (For more details on intersect operators on `raster` columns refer to
 the [PostGIS docs](https://postgis.net/docs/RT_ST_Intersects.html).)
 
-<div id="ltree_operators">
-
-**ltree operators:**
-
-</div>
+**ltree operators:** {#ltree-operators}
 
 | Operator            | PostgreSQL equivalent |
 |---------------------|-----------------------|
@@ -675,15 +697,18 @@ Variables:
 
 :::info Note
 
-Currently, only casting between `geometry` and `geography` types is
-allowed.
+Currently, only casting between `geometry` and `geography` types is allowed.
 
 :::
 
 #### OrderByExp
 
-`order_by: ([TableOrderBy](#tableorderby) \| \[
-[TableOrderBy](#tableorderby) \])`
+<div class="parsed-literal">
+
+order_by: ([TableOrderBy](#tableorderby) \| \[
+[TableOrderBy](#tableorderby) \])
+
+</div>
 
 *Example 1*
 
@@ -722,7 +747,11 @@ query {
 
 **For columns**
 
-`{column: [OrderByEnum](#orderbyenum)}`
+<div class="parsed-literal">
+
+{column: [OrderByEnum](#orderbyenum)}
+
+</div>
 
 *Example*
 
@@ -737,7 +766,11 @@ query {
 
 **For object relations**
 
-`{relation-name: [TableOrderBy](#tableorderby)}`
+<div class="parsed-literal">
+
+{relation-name: [TableOrderBy](#tableorderby)}
+
+</div>
 
 *Example*
 
@@ -752,7 +785,11 @@ query {
 
 **For array relations aggregate**
 
-`{relation-name_aggregate: [AggregateOrderBy](#aggregateorderby)}`
+<div class="parsed-literal">
+
+{relation-name_aggregate: [AggregateOrderBy](#aggregateorderby)}
+
+</div>
 
 *Example*
 
@@ -768,13 +805,25 @@ query {
 
 Returning scalar values:
 
-`{computed-field-name: [OrderByEnum](#orderbyenum)}`
+<div class="parsed-literal">
+
+{computed-field-name: [OrderByEnum](#orderbyenum)}
+
+</div>
 
 Returning set of table rows:
 
-`{computed-field-name: [TableOrderBy](#tableorderby)}`
+<div class="parsed-literal">
 
-`{computed-field-name_aggregate: [AggregateOrderBy](#aggregateorderby)}`
+{computed-field-name: [TableOrderBy](#tableorderby)}
+
+</div>
+
+<div class="parsed-literal">
+
+{computed-field-name_aggregate: [AggregateOrderBy](#aggregateorderby)}
+
+</div>
 
 Order by type for `article` table:
 
@@ -793,7 +842,11 @@ input article_order_by {
 
 **For computed fields returning scalar type**
 
-`{computed-field-name: [OrderByEnum](#orderbyenum)}`
+<div class="parsed-literal">
+
+{computed-field-name: [OrderByEnum](#orderbyenum)}
+
+</div>
 
 *Example*
 
@@ -817,7 +870,11 @@ query {
 Computed fields returning set of table rows can be used to sort the
 query by their aggregate fields.
 
-`{computed-field-name_aggregate: [AggregateOrderBy](#aggregateorderby)}`
+<div class="parsed-literal">
+
+{computed-field-name_aggregate: [AggregateOrderBy](#aggregateorderby)}
+
+</div>
 
 *Example*
 
@@ -863,7 +920,11 @@ enum order_by {
 
 **Count aggregate**
 
-`{count: [OrderByEnum](#orderbyenum)}`
+<div class="parsed-literal">
+
+{count: [OrderByEnum](#orderbyenum)}
+
+</div>
 
 *Example*
 
@@ -877,7 +938,11 @@ query {
 
 **Operation aggregate**
 
-`{op_name: [TableAggOpOrderBy](#tableaggoporderby)}`
+<div class="parsed-literal">
+
+{op_name: [TableAggOpOrderBy](#tableaggoporderby)}
+
+</div>
 
 *Example*
 
@@ -894,7 +959,11 @@ Available operations are `sum`, `avg`, `max`, `min`, `stddev`,
 
 ###### TableAggOpOrderBy
 
-`{column: [OrderByEnum](#orderbyenum)}`
+<div class="parsed-literal">
+
+{column: [OrderByEnum](#orderbyenum)}
+
+</div>
 
 #### PaginationExp
 

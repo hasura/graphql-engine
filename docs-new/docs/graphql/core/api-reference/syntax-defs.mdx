@@ -12,7 +12,11 @@ keywords:
 
 ## TableName
 
-`String | [QualifiedTable](#qualifiedtable)`
+<div class="parsed-literal haskell-pre">
+
+String \| [QualifiedTable](#qualifiedtable)
+
+</div>
 
 ## QualifiedTable
 
@@ -29,7 +33,11 @@ keywords:
 
 ## FunctionName
 
-`String | [QualifiedFunction](#qualifiedfunction)`
+<div class="parsed-literal haskell-pre">
+
+String \| [QualifiedFunction](#qualifiedfunction)
+
+</div>
 
 ## QualifiedFunction
 
@@ -260,20 +268,30 @@ and `manual_configuration`.
 
 ## ObjRelUsingChoice
 
-`[SameTable](#sametable) | [RemoteTable](#remotetable)`
+<div class="parsed-literal haskell-pre">
+
+[SameTable](#sametable) \| [RemoteTable](#remotetable)
+
+</div>
 
 ## SameTable
 
-`[PGColumn](#pgcolumn)`
+<div class="parsed-literal">
+
+[PGColumn](#pgcolumn)
+
+</div>
 
 ## RemoteTable
 
-```
+<div class="parsed-literal haskell-pre">
+
 {  
-    "table" : [TableName](#tablename), 
-    "column" : [PGColumn](#pgcolumn)
+  "table" : [TableName](#tablename), "column" : [PGColumn](#pgcolumn)
+
 }
-```
+
+</div>
 
 :::info Supported from
 
@@ -326,45 +344,55 @@ Supported in `v2.0.0-alpha.3` and above.
 
 ## BoolExp
 
-```
-[AndExp](#andexp) | [OrExp](#orexp) | [NotExp](#notexp) |
-[ExistsExp](#existsexp) | [TrueExp](#trueexp) |
-[ColumnExp](#columnexp)
-```
+<div class="parsed-literal haskell-pre">
+
+[AndExp](#andexp) \| [OrExp](#orexp) \| [NotExp](#notexp) \|
+[ExistsExp](#existsexp) \| [TrueExp](#trueexp) \|
+ColumnExp](#columnexp)
+
+</div>
 
 ## AndExp
 
-```
+<div class="parsed-literal haskell-pre">
+
 {  
-    "$and" : [[BoolExp](#boolexp)],
+    "$and" : \[[BoolExp](#boolexp)\],
 }
-```
+
+</div>
 
 ## OrExp
 
-```
+<div class="parsed-literal haskell-pre">
+
 {  
-    "$or" : [[BoolExp](#boolexp)],
+    "$or" : \[[BoolExp](#boolexp)\],
 }
-```
+
+</div>
 
 ## NotExp
 
-```
+<div class="parsed-literal haskell-pre">
+
 {  
     "$not" : [BoolExp](#boolexp)
 }
-```
+
+</div>
 
 ## ExistsExp
 
-```
+<div class="parsed-literal haskell-pre">
+
 {  
     "$exists" : {  
-        "_table": [TableName](#tablename), "_where": [BoolExp](#boolexp)
+        "\_table": [TableName](#tablename), "\_where": [BoolExp](#boolexp)
     }
 }
-```
+
+</div>
 
 ## TrueExp
 
@@ -372,11 +400,13 @@ Supported in `v2.0.0-alpha.3` and above.
 
 ## ColumnExp
 
-```
+<div class="parsed-literal haskell-pre">
+
 {  
-[PGColumn](#pgcolumn) | scalar [ComputedFieldName](#computedfieldname) : { [Operator](#operator) : Value }
-}
-```
+[PGColumn](#pgcolumn) \| scalar [ComputedFieldName](#computedfieldname)
+: { [Operator](#operator) : Value }
+
+</div>
 
 ## Operator
 
@@ -421,15 +451,17 @@ jsonb):**
 
 **Column Comparison Operator**
 
-```
+<div class="parsed-literal haskell-pre">
+
 {  
     [PGColumn](#pgcolumn): {  
         [Operator](#operator): {  
-            [PGColumn](#pgcolumn) | ["$", [PGColumn](#pgcolumn)]
+            [PGColumn](#pgcolumn) \| \["$", [PGColumn](#pgcolumn)\]
         }
     }
 }
-```
+
+</div>
 
 Column comparison operators can be used to compare columns of the same
 table or a related table. To compare a column of a table with another
@@ -437,27 +469,37 @@ column of :
 
 1.  The same table -
 
-```
+<div class="parsed-literal haskell-pre">
+
 {  
-  [PGColumn](#pgcolumn): {  
-    [Operator](#operator): {  
-      [PGColumn](#pgcolumn)
-    }
-  }
+[PGColumn](#pgcolumn): {  
+[Operator](#operator): {  
+[PGColumn](#pgcolumn)
+
 }
-```
+
+}
+
+}
+
+</div>
 
 2.  The table on which the permission is being defined on -
 
-```
-{  
-  [PGColumn](#pgcolumn): {  
-    [Operator](#operator): {  
-      [$, [PGColumn](#pgcolumn)]
-    }
-  }
+<div class="parsed-literal haskell-pre">
+
+{
+[PGColumn](#pgcolumn): {  
+[Operator](#operator): {  
+\[$, [PGColumn](#pgcolumn)\]
+
 }
-```
+
+}
+
+}
+
+</div>
 
 | Operator  | PostgreSQL equivalent |
 |-----------|-----------------------|
@@ -585,22 +627,18 @@ session variable of the same name.
 
 ## RemoteSchemaDef
 
-```
+<div class="parsed-literal haskell-pre">
+
 {  
-    "url" : url-string, 
-    "url_from_env" : env-var-string, 
-    "headers": [ 
-        {
-            "name": header-name-string, 
-            "value": header-value-string,
-            "value_from_env": env-var-string 
-        } 
-    ], 
-    "forward_client_headers": boolean, 
-    "timeout_seconds": integer, 
-    "customization": [RemoteSchemaCustomization](#remoteschemacustomization)
+"url" : url-string, "url_from_env" : env-var-string, "headers": \[ {
+"name": header-name-string, "value": header-value-string,
+"value_from_env": env-var-string } \], "forward_client_headers":
+boolean, "timeout_seconds": integer, "customization":
+[RemoteSchemaCustomization](#remoteschemacustomization)
+
 }
-```
+
+</div>
 
 ## RemoteSchemaCustomization
 
@@ -939,9 +977,11 @@ Enum](https://spec.graphql.org/June2018/#sec-Enums)
 
 ## EventTriggerColumns
 
-```
-"*" | [[PGColumn](#pgcolumn)]
-```
+<div class="parsed-literal haskell-pre">
+
+"\*" \| \[[PGColumn](#pgcolumn)\]
+
+</div>
 
 ## RequestTransformation
 
