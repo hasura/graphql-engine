@@ -3,6 +3,7 @@ package v3
 import (
 	"fmt"
 	"net"
+	"net/url"
 	"os"
 	"sync"
 	"testing"
@@ -15,9 +16,14 @@ import (
 )
 
 func TestConsoleCmd(t *testing.T, ec *cli.ExecutionContext) {
+	apiHost := &url.URL{
+		Host:   "localhost",
+		Scheme: "http",
+	}
 	opts := &commands.ConsoleOptions{
 		EC:                           ec,
 		APIPort:                      "9693",
+		APIHost:                      apiHost,
 		ConsolePort:                  "9695",
 		Address:                      "localhost",
 		DontOpenBrowser:              true,
