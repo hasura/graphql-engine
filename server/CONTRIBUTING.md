@@ -141,6 +141,29 @@ For more details please check out the `README` at `server/tests-py/README`.
 
 ##### Running the Haskell test suite
 
+There are three categories of unit tests:
+- true unit tests
+- Postgres unit tests (require a postgres instance)
+- MSSQL unit tests (require a MSSQL instance)
+
+The easiest way to run these tests is through `dev.sh`:
+
+```
+./scripts/dev.sh test --unit
+```
+
+If you want to limit to a specific set of tests:
+
+```
+./scripts/dev.sh test --unit --match "some pattern" mssql
+```
+
+Note that you have to use one of 'unit', 'postgres' or 'mssql' when
+using '--match'. There is no way to match without specifying the subset
+of tests to run.
+
+Alternatively, you can run unit tests directly through cabal:
+
 ```
 cabal new-run -- test:graphql-engine-tests unit
 HASURA_GRAPHQL_DATABASE_URL='postgres://<user>:<password>@<host>:<port>/<dbname>' \
