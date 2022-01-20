@@ -27,7 +27,7 @@ following actions:
 6.  Re-write the config.yaml file to new format
 
 ```
-    hasura scripts update-project-v2 [flags]
+hasura scripts update-project-v2 [flags]
 ```
 
 Alias: update-config-v2
@@ -35,13 +35,13 @@ Alias: update-config-v2
 ## Examples
 
 ```
-    # Read more about v2 configuration for CLI at https://docs.hasura.io
+# Read more about v2 configuration for CLI at https://docs.hasura.io
 
-    # Update the Hasura project from config v1 to v2
-    hasura scripts update-project-v2
+# Update the Hasura project from config v1 to v2
+hasura scripts update-project-v2
 
-    # Update the Hasura project from config v1 to v2 with a different metadata directory:
-    hasura scripts update-project-v2 --metadata-dir "metadata"
+# Update the Hasura project from config v1 to v2 with a different metadata directory:
+hasura scripts update-project-v2 --metadata-dir "metadata"
 ```
 
 ## Options
@@ -58,11 +58,11 @@ Alias: update-config-v2
 ## Options inherited from parent commands
 
 ```
-    --envfile string      .env filename to load ENV vars from (default ".env")
-    --log-level string    log level (DEBUG, INFO, WARN, ERROR, FATAL) (default "INFO")
-    --no-color            do not colorize output (default: false)
-    --project string      directory where commands are executed (default: current dir)
-    --skip-update-check   skip automatic update check on command execution
+--envfile string      .env filename to load ENV vars from (default ".env")
+--log-level string    log level (DEBUG, INFO, WARN, ERROR, FATAL) (default "INFO")
+--no-color            do not colorize output (default: false)
+--project string      directory where commands are executed (default: current dir)
+--skip-update-check   skip automatic update check on command execution
 ```
 
 ## SEE ALSO

@@ -18,29 +18,29 @@ Create files required for a migration.
 Create `sql` and `yaml` files required for a migration.
 
 ```
-    hasura migrate create [migration-name] [flags]
+hasura migrate create [migration-name] [flags]
 ```
 
 ## Examples
 
 ```
-    # Setup migration files for the first time by introspecting a server:
-    hasura migrate create "init" --from-server
+# Setup migration files for the first time by introspecting a server:
+hasura migrate create "init" --from-server
 
-    # Use with admin secret:
-    hasura migrate create --admin-secret "<admin-secret>"
+# Use with admin secret:
+hasura migrate create --admin-secret "<admin-secret>"
 
-    # Setup migration files from an instance mentioned by the flag:
-    hasura migrate create init --from-server --endpoint "<endpoint>"
+# Setup migration files from an instance mentioned by the flag:
+hasura migrate create init --from-server --endpoint "<endpoint>"
 
-    # Take pg_dump of schema and hasura metadata from server while specifying the schemas to include
-    hasura migrate create init --from-server --schema myschema1,myschema2
+# Take pg_dump of schema and hasura metadata from server while specifying the schemas to include
+hasura migrate create init --from-server --schema myschema1,myschema2
 
-    # Take pg_dump from server and save it as a migration and specify the schemas to include
-    hasura migrate create init --sql-from-server --schema myschema1,myschema2
+# Take pg_dump from server and save it as a migration and specify the schemas to include
+hasura migrate create init --sql-from-server --schema myschema1,myschema2
 
-    # Create up and down SQL migrations, providing contents as flags
-    hasura migrate create migration-name --up-sql "CREATE TABLE article(id serial NOT NULL, title text NOT NULL, content text NOT NULL);"  --down-sql "DROP TABLE article;"
+# Create up and down SQL migrations, providing contents as flags
+hasura migrate create migration-name --up-sql "CREATE TABLE article(id serial NOT NULL, title text NOT NULL, content text NOT NULL);"  --down-sql "DROP TABLE article;"
 ```
 
 ## Options
@@ -60,17 +60,17 @@ Create `sql` and `yaml` files required for a migration.
 ## Options inherited from parent commands
 
 ```
-    --admin-secret string            admin secret for Hasura GraphQL engine (env "HASURA_GRAPHQL_ADMIN_SECRET")
-    --certificate-authority string   path to a cert file for the certificate authority (env "HASURA_GRAPHQL_CERTIFICATE_AUTHORITY")
-    --database-name string           database on which operation should be applied
-    --disable-interactive            disables interactive prompts (default: false) (env "HASURA_GRAPHQL_DISABLE_INTERACTIVE")
-    --endpoint string                http(s) endpoint for Hasura GraphQL engine (env "HASURA_GRAPHQL_ENDPOINT")
-    --envfile string                 .env filename to load ENV vars from (default ".env")
-    --insecure-skip-tls-verify       skip TLS verification and disable cert checking (default: false) (env "HASURA_GRAPHQL_INSECURE_SKIP_TLS_VERIFY")
-    --log-level string               log level (DEBUG, INFO, WARN, ERROR, FATAL) (default "INFO")
-    --no-color                       do not colorize output (default: false)
-    --project string                 directory where commands are executed (default: current dir)
-    --skip-update-check              skip automatic update check on command execution
+--admin-secret string            admin secret for Hasura GraphQL engine (env "HASURA_GRAPHQL_ADMIN_SECRET")
+--certificate-authority string   path to a cert file for the certificate authority (env "HASURA_GRAPHQL_CERTIFICATE_AUTHORITY")
+--database-name string           database on which operation should be applied
+--disable-interactive            disables interactive prompts (default: false) (env "HASURA_GRAPHQL_DISABLE_INTERACTIVE")
+--endpoint string                http(s) endpoint for Hasura GraphQL engine (env "HASURA_GRAPHQL_ENDPOINT")
+--envfile string                 .env filename to load ENV vars from (default ".env")
+--insecure-skip-tls-verify       skip TLS verification and disable cert checking (default: false) (env "HASURA_GRAPHQL_INSECURE_SKIP_TLS_VERIFY")
+--log-level string               log level (DEBUG, INFO, WARN, ERROR, FATAL) (default "INFO")
+--no-color                       do not colorize output (default: false)
+--project string                 directory where commands are executed (default: current dir)
+--skip-update-check              skip automatic update check on command execution
 ```
 
 ## SEE ALSO

@@ -18,23 +18,23 @@ Create a Hasura action.
 Create a Hasura action.
 
 ```
-    hasura actions create [action-name] [flags]
+hasura actions create [action-name] [flags]
 ```
 
 ## Examples
 
 ```
-    # Create a Hasura action
-    hasura actions create [action-name]
+# Create a Hasura action
+hasura actions create [action-name]
 
-    # Create a Hasura action with codegen
-    hasura actions create [action-name] --with-codegen
+# Create a Hasura action with codegen
+hasura actions create [action-name] --with-codegen
 
-    # Create a Hasura action by deriving from a hasura operation
-    hasura actions create [action-name] --derive-from ''
+# Create a Hasura action by deriving from a hasura operation
+hasura actions create [action-name] --derive-from ''
 
-    # Create a Hasura action with a different kind or webhook
-    hasura actions create [action-name] --kind [synchronous|asynchronous] --webhook [http://localhost:3000]
+# Create a Hasura action with a different kind or webhook
+hasura actions create [action-name] --kind [synchronous|asynchronous] --webhook [http://localhost:3000]
 ```
 
 ## Options
@@ -50,15 +50,15 @@ Create a Hasura action.
 ## Options inherited from parent commands
 
 ```
-    --admin-secret string            admin secret for Hasura GraphQL engine (env "HASURA_GRAPHQL_ADMIN_SECRET")
-    --certificate-authority string   path to a cert file for the certificate authority (env "HASURA_GRAPHQL_CERTIFICATE_AUTHORITY")
-    --endpoint string                http(s) endpoint for Hasura GraphQL engine (env "HASURA_GRAPHQL_ENDPOINT")
-    --envfile string                 .env filename to load ENV vars from (default ".env")
-    --insecure-skip-tls-verify       skip TLS verification and disable cert checking (default: false) (env "HASURA_GRAPHQL_INSECURE_SKIP_TLS_VERIFY")
-    --log-level string               log level (DEBUG, INFO, WARN, ERROR, FATAL) (default "INFO")
-    --no-color                       do not colorize output (default: false)
-    --project string                 directory where commands are executed (default: current dir)
-    --skip-update-check              skip automatic update check on command execution
+--admin-secret string            admin secret for Hasura GraphQL engine (env "HASURA_GRAPHQL_ADMIN_SECRET")
+--certificate-authority string   path to a cert file for the certificate authority (env "HASURA_GRAPHQL_CERTIFICATE_AUTHORITY")
+--endpoint string                http(s) endpoint for Hasura GraphQL engine (env "HASURA_GRAPHQL_ENDPOINT")
+--envfile string                 .env filename to load ENV vars from (default ".env")
+--insecure-skip-tls-verify       skip TLS verification and disable cert checking (default: false) (env "HASURA_GRAPHQL_INSECURE_SKIP_TLS_VERIFY")
+--log-level string               log level (DEBUG, INFO, WARN, ERROR, FATAL) (default "INFO")
+--no-color                       do not colorize output (default: false)
+--project string                 directory where commands are executed (default: current dir)
+--skip-update-check              skip automatic update check on command execution
 ```
 
 ## SEE ALSO
