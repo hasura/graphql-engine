@@ -5,3 +5,5 @@ COPY run-init.sh /run-init.sh
 COPY entrypoint.sh /entrypoint.sh
 
 CMD /bin/bash ./entrypoint.sh
+
+ENV PATH="/opt/mssql-tools/bin:${PATH}"

@@ -2,17 +2,17 @@
 {-# LANGUAGE RecordWildCards #-}
 
 -- | Test directives.
-module DirectivesSpec (spec) where
+module Test.DirectivesSpec (spec) where
 
 import Data.Aeson (Value)
+import Harness.Backend.Mysql as Mysql
 import Harness.Constants
-import Harness.Feature qualified as Feature
-import Harness.Graphql (graphql)
 import Harness.GraphqlEngine qualified as GraphqlEngine
-import Harness.Mysql as Mysql
-import Harness.Sql
+import Harness.Quoter.Graphql (graphql)
+import Harness.Quoter.Sql
+import Harness.Quoter.Yaml
 import Harness.State (State)
-import Harness.Yaml
+import Harness.Test.Feature qualified as Feature
 import Test.Hspec
 import Prelude
 

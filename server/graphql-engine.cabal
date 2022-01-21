@@ -961,27 +961,36 @@ test-suite tests-hspec
   main-is: Spec.hs
   other-modules:
     SpecHook
-    Harness.Mysql
-    Harness.Http
-    Harness.Postgres
-    Harness.Citus
-    Harness.Constants
-    Harness.Feature
-    Harness.Yaml
-    Harness.Sqlserver
-    Harness.Sql
-    Harness.State
-    Harness.Graphql
-    Harness.GraphqlEngine
+ -- Harness
+      Harness.Constants
 
-    ArrayRelationshipsSpec
-    NestedRelationshipsSpec
-    BasicFieldsSpec
-    DirectivesSpec
-    HelloWorldSpec
-    LimitOffsetSpec
-    ObjectRelationshipsSpec
-    OrderingSpec
-    ServiceLivenessSpec
-    ViewsSpec
-    WhereSpec
+   -- Harness.Backend
+        Harness.Backend.Mysql
+        Harness.Backend.Sqlserver
+        Harness.Backend.Postgres
+        Harness.Backend.Citus
+
+      Harness.GraphqlEngine
+      Harness.Http
+      Harness.State
+
+   -- Harness.Test
+        Harness.Test.Feature
+
+   -- Harness.Quoter
+        Harness.Quoter.Yaml
+        Harness.Quoter.Sql
+        Harness.Quoter.Graphql
+
+ -- Test
+      Test.ArrayRelationshipsSpec
+      Test.NestedRelationshipsSpec
+      Test.BasicFieldsSpec
+      Test.DirectivesSpec
+      Test.HelloWorldSpec
+      Test.LimitOffsetSpec
+      Test.ObjectRelationshipsSpec
+      Test.OrderingSpec
+      Test.ServiceLivenessSpec
+      Test.ViewsSpec
+      Test.WhereSpec

@@ -2,19 +2,19 @@
 {-# LANGUAGE RecordWildCards #-}
 
 -- | Test querying an entity for a couple fields.
-module BasicFieldsSpec (spec) where
+module Test.BasicFieldsSpec (spec) where
 
-import Harness.Citus as Citus
+import Harness.Backend.Citus as Citus
+import Harness.Backend.Mysql as Mysql
+import Harness.Backend.Postgres as Postgres
+import Harness.Backend.Sqlserver as Sqlserver
 import Harness.Constants
-import Harness.Feature qualified as Feature
-import Harness.Graphql
 import Harness.GraphqlEngine qualified as GraphqlEngine
-import Harness.Mysql as Mysql
-import Harness.Postgres as Postgres
-import Harness.Sql
-import Harness.Sqlserver as Sqlserver
+import Harness.Quoter.Graphql
+import Harness.Quoter.Sql
+import Harness.Quoter.Yaml
 import Harness.State (State)
-import Harness.Yaml
+import Harness.Test.Feature qualified as Feature
 import Test.Hspec
 import Prelude
 

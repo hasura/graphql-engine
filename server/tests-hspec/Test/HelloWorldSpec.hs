@@ -1,8 +1,8 @@
 -- | A starting point feature test.
-module HelloWorldSpec (spec) where
+module Test.HelloWorldSpec (spec) where
 
-import Harness.Feature qualified as Feature
 import Harness.State (State)
+import Harness.Test.Feature qualified as Feature
 import Test.Hspec
 import Prelude
 

@@ -1,6 +1,6 @@
--- | GRAPHQL quasi quoter with built-in interpolation.
+-- | GraphQL quasi quoter with built-in interpolation.
 -- Interpolation works via the #{expression} syntax.
-module Harness.Graphql (graphql) where
+module Harness.Quoter.Graphql (graphql) where
 
 import Data.Aeson (ToJSON)
 import Data.Aeson.Extended (encode)
