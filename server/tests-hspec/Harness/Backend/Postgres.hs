@@ -1,8 +1,7 @@
 {-# OPTIONS -Wno-redundant-constraints #-}
 
--- | CitusQL helpers. Pretty much the same as postgres. Could refactor
--- if we add more things here.
-module Harness.Citus
+-- | PostgreSQL helpers.
+module Harness.Backend.Postgres
   ( livenessCheck,
     run_,
   )
@@ -19,16 +18,16 @@ import Harness.Constants as Constants
 import System.Process.Typed
 import Prelude
 
--- | Check the citus server is live and ready to accept connections.
+-- | Check the postgres server is live and ready to accept connections.
 livenessCheck :: HasCallStack => IO ()
 livenessCheck = loop Constants.postgresLivenessCheckAttempts
   where
-    loop 0 = error ("Liveness check failed for Citus.")
+    loop 0 = error ("Liveness check failed for PostgreSQL.")
     loop attempts =
       catch
         ( bracket
             ( Postgres.connectPostgreSQL
-                (fromString Constants.citusConnectionString)
+                (fromString Constants.postgresqlConnectionString)
             )
             Postgres.close
             (const (pure ()))
@@ -46,7 +45,7 @@ run_ q =
   catch
     ( bracket
         ( Postgres.connectPostgreSQL
-            (fromString Constants.citusConnectionString)
+            (fromString Constants.postgresqlConnectionString)
         )
         Postgres.close
         (\conn -> void (Postgres.execute_ conn (fromString q)))
@@ -54,7 +53,7 @@ run_ q =
     ( \(e :: Postgres.SqlError) ->
         error
           ( unlines
-              [ "Citus query error:",
+              [ "PostgreSQL query error:",
                 S8.unpack (Postgres.sqlErrorMsg e),
                 "SQL was:",
                 q

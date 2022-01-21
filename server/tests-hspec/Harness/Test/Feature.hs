@@ -1,5 +1,5 @@
 -- | Helper functions for easily testing features.
-module Harness.Feature
+module Harness.Test.Feature
   ( feature,
     Feature (..),
     Backend (..),

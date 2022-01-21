@@ -4,7 +4,7 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
 -- | Templating yaml files.
-module Harness.Yaml
+module Harness.Quoter.Yaml
   ( yaml,
     shouldReturnYaml,
   )

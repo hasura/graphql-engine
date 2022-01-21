@@ -1,7 +1,7 @@
 -- | Simple SQL quasi quoter. Even if this doesn't do anything, it's
 -- still useful. Some editors (Emacs) display [sql| ...|] with SQL
 -- syntax highlighting.
-module Harness.Sql (sql) where
+module Harness.Quoter.Sql (sql) where
 
 import Language.Haskell.TH
 import Language.Haskell.TH.Quote

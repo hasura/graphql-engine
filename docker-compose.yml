@@ -59,6 +59,7 @@ services:
     environment:
       ACCEPT_EULA: "Y"
       SA_PASSWORD: "DockerComposePassword!"
+      MSSQL_SA_PASSWORD: "DockerComposePassword!"
 
   citus:
     image: citusdata/citus:10.1@sha256:7e497e5ca18d7f2ae2a66c1d5d676b548e9221b7e6294adfb03006adad85502c

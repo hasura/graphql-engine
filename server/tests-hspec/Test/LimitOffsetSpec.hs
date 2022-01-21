@@ -1,17 +1,17 @@
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE RecordWildCards #-}
 
--- | Test views.
-module ViewsSpec (spec) where
+-- | Tests for limit/offset.
+module Test.LimitOffsetSpec (spec) where
 
+import Harness.Backend.Mysql as Mysql
 import Harness.Constants
-import Harness.Feature qualified as Feature
-import Harness.Graphql
 import Harness.GraphqlEngine qualified as GraphqlEngine
-import Harness.Mysql as Mysql
-import Harness.Sql
+import Harness.Quoter.Graphql
+import Harness.Quoter.Sql
+import Harness.Quoter.Yaml
 import Harness.State (State)
-import Harness.Yaml
+import Harness.Test.Feature qualified as Feature
 import Test.Hspec
 import Prelude
 
@@ -64,24 +64,18 @@ args:
 CREATE TABLE author
 (
     id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(45) UNIQUE KEY,
-    createdAt DATETIME
+    name VARCHAR(45) UNIQUE KEY
 );
 |]
   Mysql.run_
     [sql|
 INSERT INTO author
-    (name, createdAt)
+    (name)
 VALUES
-    ( 'Author 1', '2017-09-21 09:39:44' ),
-    ( 'Author 2', '2017-09-21 09:50:44' );
-|]
-
-  -- Setup views
-  Mysql.run_
-    [sql|
-CREATE OR REPLACE VIEW search_author_view AS
-  SELECT * FROM author;
+    ( 'Author 1'),
+    ( 'Author 2'),
+    ( 'Author 3'),
+    ( 'Author 4');
 |]
 
   -- Track the tables
@@ -96,26 +90,9 @@ args:
     schema: hasura
     name: author
 |]
-  -- Track the views
-
-  GraphqlEngine.post_
-    state
-    "/v1/metadata"
-    [yaml|
-type: mysql_track_table
-args:
-  source: mysql
-  table:
-    name: search_author_view
-    schema: hasura
-|]
 
 mysqlTeardown :: State -> IO ()
 mysqlTeardown _ = do
-  Mysql.run_
-    [sql|
-DROP VIEW IF EXISTS search_author_view;
-|]
   Mysql.run_
     [sql|
 DROP TABLE author;
@@ -126,24 +103,73 @@ DROP TABLE author;
 
 tests :: SpecWith State
 tests = do
-  it "Query that a view works properly" \state ->
+  it "limit 1" $ \state ->
     shouldReturnYaml
       ( GraphqlEngine.postGraphql
           state
           [graphql|
 query {
-  hasura_search_author_view(where: {id: {_eq: 1}}) {
-    id
+  hasura_author(limit: 1) {
     name
-    createdAt
+    id
   }
 }
 |]
       )
       [yaml|
 data:
-  hasura_search_author_view:
-  - id: 1
-    name: Author 1
-    createdAt: "2017-09-21 09:39:44"
+  hasura_author:
+  - name: Author 1
+    id: 1
+|]
+
+  -- Originally from <https://github.com/hasura/graphql-engine-mono/blob/719d03bd970def443e25d04210a37556d350d84b/server/tests-py/queries/graphql_query/mysql/select_query_author_offset.yaml>
+  --
+  -- Technically without an ORDER, the results are UB-ish. Keep an eye
+  -- on ordering with tests like this.
+  it "Basic offset query" $ \state ->
+    shouldReturnYaml
+      ( GraphqlEngine.postGraphql
+          state
+          [graphql|
+query {
+  hasura_author(offset: 1) {
+    name
+    id
+  }
+}
+|]
+      )
+      [yaml|
+data:
+  hasura_author:
+  - name: Author 2
+    id: 2
+  - name: Author 3
+    id: 3
+  - name: Author 4
+    id: 4
+|]
+
+  -- This is a more precise version of <https://github.com/hasura/graphql-engine-mono/blob/dbf32f15c25c12fba88afced311fd876111cb987/server/tests-py/queries/graphql_query/mysql/select_query_author_limit_offset.yaml#L1>
+  --
+  -- We use ordering here, which yields a stable result.
+  it "order descending, offset 2, limit 1" $ \state ->
+    shouldReturnYaml
+      ( GraphqlEngine.postGraphql
+          state
+          [graphql|
+query {
+  hasura_author(limit: 1, offset: 2, order_by: {id: desc}) {
+    id
+    name
+  }
+}
+|]
+      )
+      [yaml|
+data:
+  hasura_author:
+  - id: 2
+    name: Author 2
 |]
