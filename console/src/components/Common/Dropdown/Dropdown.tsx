@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 
 import { getParentNodeByAttribute } from '../../../utils/domFunctions';
 import styles from './Dropdown.scss';
@@ -11,13 +11,13 @@ export type DropdownOption = {
   onClick?: () => void;
 };
 
-interface ComponentDataProps {
+interface DropdownListProps {
   options: DropdownOption[];
   dismiss: () => void;
   position: DropdownPosition;
 }
 
-const ComponentData: React.VFC<ComponentDataProps> = ({
+const DropdownList: React.VFC<DropdownListProps> = ({
   options,
   dismiss,
   position,
@@ -70,44 +70,36 @@ const Dropdown: React.VFC<DropdownProps> = ({
   options,
   position = 'right',
 }) => {
+  const nodeId = `data-dropdown-element_${testId}`;
   const [isOpen, setIsOpen] = useState(false);
 
-  const nodeId = `data-dropdown-element_${testId}`;
-
-  const cb = (d: boolean) => (e: MouseEvent) => {
-    /*
-     * Update the state only if the element clicked on is not the data dropdown component
-     * */
-    const dataElement = getParentNodeByAttribute(e.target, 'data-element');
-    if (d) {
-      /* If the element has parent whose `nodeId` is same as the current one
-       * */
-      if (dataElement && dataElement.getAttribute('data-element') === nodeId) {
-        return;
-      }
-      setIsOpen(!d);
-    }
-  };
-
   const toggle = useCallback(() => {
-    /*
-     * If the dropdown is not open, attach event on body
-     * */
-    setIsOpen(!isOpen);
-
-    if (isOpen) {
-      document.removeEventListener('click', cb(false));
-    } else {
-      document.addEventListener('click', cb(true), { once: true });
-    }
-  }, [isOpen]);
+    setIsOpen(_isOpen => !_isOpen);
+  }, []);
 
   const dismissDropdown = useCallback(() => setIsOpen(false), []);
+
+  useEffect(() => {
+    if (isOpen) {
+      const handler = (e: MouseEvent) => {
+        const dataElement = getParentNodeByAttribute(e.target, 'data-element');
+        if (
+          !dataElement ||
+          dataElement.getAttribute('data-element') !== nodeId
+        ) {
+          setIsOpen(false);
+        }
+      };
+      document.addEventListener('click', handler);
+
+      return () => document.removeEventListener('click', handler);
+    }
+  }, [isOpen, nodeId]);
 
   return (
     <div
       key={`${keyPrefix}_wrapper`}
-      data-test={`${testId}`}
+      data-test={testId}
       className={styles.data_dropdown_wrapper}
       data-element={nodeId}
     >
@@ -115,15 +107,15 @@ const Dropdown: React.VFC<DropdownProps> = ({
         className={styles.dataDropdown}
         key={`${keyPrefix}_children_wrapper`}
       >
-        <span key={`${keyPrefix}_children`}>
+        <div key={`${keyPrefix}_children`}>
           {typeof children === 'function' ? (
             children({ onClick: toggle })
           ) : (
             <button onClick={toggle}>{children}</button>
           )}
-        </span>
+        </div>
         {isOpen && (
-          <ComponentData
+          <DropdownList
             position={position}
             options={options}
             dismiss={dismissDropdown}
