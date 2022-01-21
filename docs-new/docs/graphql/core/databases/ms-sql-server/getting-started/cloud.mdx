@@ -1,4 +1,6 @@
 ---
+sidebar_label: Hasura Cloud
+sidebar_position: 1
 description: Hasura Cloud for MS SQL Server
 keywords:
   - hasura
@@ -36,13 +38,13 @@ your MS SQL Server as a source to Hasura. You'll need your ODBC connection strin
 your ODBC driver is set to version 17.
 
 Here's an example of what your connection strings might look like with a SQL server database on Azure SQL Serverless:
-
+   
 Driver={ODBC Driver 17 for SQL Server};Server=tcp:<b>hasura-test.database.windows.net</b>,<b>1433</b>;Database=<b>db-name</b>;Uid=<b>username</b>;Pwd=<b>password</b>;Encrypt=yes;TrustServerCertificate=no;Connection Timeout=30;
 
 :::note Make sure your SQL server database is reachable by Hasura Cloud:
 
 1.  Allow public connections or
-    [whitelist the Hasura Cloud IP](\graphql\cloud\projects\create.mdx#cloud-projects-create-allow-nat-ip)
+    [whitelist the Hasura Cloud IP](/graphql/cloud/projects/create.mdx#cloud-projects-create-allow-nat-ip)
     on your SQL Server firewall: This is good for testing and will allow
     you to try Hasura out with your database quickly!
 2.  VPC peering: VPC peering and private network access is available on
