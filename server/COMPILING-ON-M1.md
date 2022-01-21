@@ -14,6 +14,7 @@
     brew install mysql-client@5.7
     brew install libffi
     brew install llvm@11
+    brew install mssql-tools
     ```
 
      And add them to your environment:
