@@ -43,3 +43,6 @@ class TestOpenAPISpec:
 
     def test_endpoint_with_recursive_arg(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/openapi_post_endpoint_test_recursive_arg.yaml', transport)
+
+    def test_duplicate_field_name(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/openapi_get_endpoint_test_duplicate_field_name.yaml', transport)
