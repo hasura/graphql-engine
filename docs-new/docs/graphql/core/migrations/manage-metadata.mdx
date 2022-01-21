@@ -1,15 +1,19 @@
-<div class="meta" description="Manage Hasura metadata"
-keywords="hasura, docs, metadata">
+---
+sidebar_label: Manage metadata
+sidebar_position: 1
+description: Manage Hasura metadata
+keywords:
+  - hasura
+  - docs
+  - metadata
+---
 
-</div>
+import Tabs from "@theme/Tabs";
+import TabItem from "@theme/TabItem";
+import Link from "@docusaurus/Link";
+import Thumbnail from "@site/src/components/Thumbnail/Thumbnail";
 
 # Managing Hasura metadata
-
-<div class="contents" backlinks="none" depth="1" local="">
-
-Table of contents
-
-</div>
 
 ## Introduction
 
@@ -28,50 +32,32 @@ objects to it and then use it to update the instance.
 
 ## Exporting Hasura metadata
 
-<div class="rst-class">
+<Tabs className="api-tabs">
+  <TabItem value="cli" label="CLI">
+    Metadata can be exported with the{" "}
+    <Link to="/graphql/core/hasura-cli/hasura_metadata_export">
+      hasura metadata export
+    </Link>{" "}
+    command.
+    <br />
+    This will export the metadata as yaml files in the `/metadata` directory
+  </TabItem>
+  <TabItem value="console" label="Console">
+1.Click on the settings (⚙) icon at the top right corner of the
+console screen.
 
-api_tabs
+2.In the Hasura metadata actions page that opens, click on the `Export Metadata` button.
 
-</div>
+<Thumbnail
+  src="/img/graphql/core/migrations/metadata-export.png"
+  alt="Export metadata"
+/>
 
-<div class="tabs">
+3.This will prompt a file download for
+`hasura_metadata_<timestamp>.json`. Save the file.
 
-<div class="tab">
-
-CLI
-
-Metadata can be exported with the
-`hasura metadata export <hasura_metadata_export>` command.
-
-This will export the metadata as yaml files in the `/metadata` directory
-
-</div>
-
-<div class="tab">
-
-Console
-
-1.  Click on the settings (⚙) icon at the top right corner of the
-    console screen.
-
-2.  In the Hasura metadata actions page that opens, click on the
-    `Export Metadata` button.
-
-    <div class="thumbnail" alt="Export metadata">
-
-    /img/graphql/core/migrations/metadata-export.png
-
-    </div>
-
-3.  This will prompt a file download for
-    `hasura_metadata_<timestamp>.json`. Save the file.
-
-</div>
-
-<div class="tab">
-
-API
-
+  </TabItem>
+  <TabItem value="api" label="API">
 The export can be done via the `metadata_export_metadata` metadata API.
 Response will be a JSON object with the Hasura metadata.
 
@@ -85,26 +71,19 @@ This command will create a `hasura_metadata.json` file. If an admin
 secret is set, add `-H 'X-Hasura-Admin-Secret: <your-admin-secret>'` as
 the API is an admin-only API.
 
-</div>
+  </TabItem>
+</Tabs>
 
-</div>
-
-<div class="note">
-
-<div class="title">
-
-Note
-
-</div>
+:::info Note
 
 The metadata exported via the **console and API** will be a single JSON
 file that can be applied via the console or the API only.
 
 The metadata exported via the **CLI** is broken into multiple YAML files
 for easier management in version control and CI/CD and can be applied
-via the CLI or the `cli-migrations <auto_apply_migrations>` image only.
+via the CLI or the [cli migrations](/graphql/core/migrations/advanced/auto-apply-migrations.mdx) image only.
 
-</div>
+:::
 
 ## Applying/Importing Hasura metadata
 
@@ -115,47 +94,30 @@ instance's metadata onto itself.
 Importing completely replaces the metadata on that instance, i.e. you
 lose any metadata that was already present before.
 
-<div class="rst-class">
+<Tabs className="api-tabs">
+<TabItem value="cli" label="CLI">
+Metadata can be applied with the <Link to="/graphql/core/hasura-cli/hasura_metadata_apply">
+hasura metadata apply
+</Link> command.
+</TabItem>
+<TabItem value="console" label="Console">
+1.Click on the settings (⚙) icon at the top right corner of the
+console screen.
 
-api_tabs
+2.Click on `Import Metadata` button.
 
-</div>
+<Thumbnail
+  src="/img/graphql/core/migrations/metadata-import.png"
+  alt="Import metadata"
+/>
 
-<div class="tabs">
+3.Choose a `hasura_metadata.json` file that was exported earlier.
 
-<div class="tab">
+4.A notification should appear indicating the success or error.
 
-CLI
+</TabItem>
 
-Metadata can be applied with the
-`hasura metadata apply <hasura_metadata_apply>` command.
-
-</div>
-
-<div class="tab">
-
-Console
-
-1.  Click on the settings (⚙) icon at the top right corner of the
-    console screen.
-
-2.  Click on `Import Metadata` button.
-
-    <div class="thumbnail" alt="Import metadata">
-
-    /img/graphql/core/migrations/metadata-import.png
-
-    </div>
-
-3.  Choose a `hasura_metadata.json` file that was exported earlier.
-
-4.  A notification should appear indicating the success or error.
-
-</div>
-
-<div class="tab">
-
-API
+<TabItem value="api" label="API">
 
 The exported JSON can be imported via the `metadata_replace_metadata`
 metadata API.
@@ -171,24 +133,18 @@ request to replace the metadata. If an admin secret is set, add
 `-H 'X-Hasura-Admin-Secret: <your-admin-secret>'` as the API is an
 admin-only API.
 
-</div>
+</TabItem>
 
-</div>
+</Tabs>
 
-<div class="note">
-
-<div class="title">
-
-Note
-
-</div>
+:::info Note
 
 All the dependent objects, like tables, views, functions etc. should
 exist on Postgres before importing the metadata. Otherwise, it will
 result in an error saying the object does not exist. So, apply the
 Postgres schema first, before importing the metadata.
 
-</div>
+:::
 
 ## Reloading Hasura metadata
 
@@ -196,45 +152,27 @@ In some cases, the metadata can be out of sync with the Postgres schema.
 For example, when a new column has been added to a table via an external
 tool such as `psql`.
 
-<div class="rst-class">
+<Tabs className="api-tabs">
 
-api_tabs
+<TabItem value="cli" label="CLI">
+Metadata can be reloaded with the <Link to="/graphql/core/hasura-cli/hasura_metadata_reload.mdx">hasura metadata reload</Link> command.
+</TabItem>
+<TabItem value="console" label="Console">
+1.Click on the settings (⚙) icon at the top right corner of the
+console screen.
 
-</div>
+2.Click on `Reload` button.
 
-<div class="tabs">
+<Thumbnail
+  alt="reload metadata"
+  src="/img/graphql/core/migrations/metadata-reload.png"
+/>
 
-<div class="tab">
+3.A notification should appear indicating the success.
 
-CLI
+</TabItem>
 
-Metadata can be reloaded with the
-`hasura metadata reload <hasura_metadata_reload>` command.
-
-</div>
-
-<div class="tab">
-
-Console
-
-1.  Click on the settings (⚙) icon at the top right corner of the
-    console screen.
-
-2.  Click on `Reload` button.
-
-    <div class="thumbnail" alt="Reload metadata">
-
-    /img/graphql/core/migrations/metadata-reload.png
-
-    </div>
-
-3.  A notification should appear indicating the success.
-
-</div>
-
-<div class="tab">
-
-API
+<TabItem value="api" label="API">
 
 The reload of metadata can be done via the `metadata_reload_metadata`
 metadata API.
@@ -249,23 +187,17 @@ If an admin secret is set, add
 `-H 'X-Hasura-Admin-Secret: <your-admin-secret>'` as the API is an
 admin-only API.
 
-</div>
+</TabItem>
 
-</div>
+</Tabs>
 
-<div class="note">
-
-<div class="title">
-
-Note
-
-</div>
+:::info Note
 
 Reloading may result in inconsistent metadata status. You may need to
 resolve all inconsistent objects manually or delete them. After that,
 you need to reload metadata again.
 
-</div>
+:::
 
 ## Resetting Hasura metadata
 
@@ -275,47 +207,29 @@ needed or else that information will be lost and Hasura will have to be
 configured again from scratch (e.g. tracking tables, relationships,
 creating triggers, actions, etc.).
 
-<div class="rst-class">
+<Tabs className="api-tabs">
 
-api_tabs
+<TabItem value="cli" label="CLI">
+Metadata can be reset with the <Link to="/graphql/core/hasura-cli/hasura_metadata_clear.mdx">hasura metadata clear</Link> command.
+</TabItem>
+<TabItem value="console" label="Console">
+1.Click on the settings (⚙) icon at the top right corner of the
+console screen.
 
-</div>
+2.Click on `Reset` button.
 
-<div class="tabs">
+<Thumbnail
+  alt="reset metadata"
+  src="/img/graphql/core/migrations/metadata-reset.png"
+/>
 
-<div class="tab">
+3.A pop-up will appear prompting you to confirm the process.
 
-CLI
+4.A notification should appear indicating the success.
 
-Metadata can be reset with the
-`hasura metadata clear <hasura_metadata_clear>` command.
+</TabItem>
 
-</div>
-
-<div class="tab">
-
-Console
-
-1.  Click on the settings (⚙) icon at the top right corner of the
-    console screen.
-
-2.  Click on `Reset` button.
-
-    <div class="thumbnail" alt="Reset metadata">
-
-    /img/graphql/core/migrations/metadata-reset.png
-
-    </div>
-
-3.  A pop-up will appear prompting you to confirm the process.
-
-4.  A notification should appear indicating the success.
-
-</div>
-
-<div class="tab">
-
-API
+<TabItem value="api" label="API">
 
 The reset of metadata can be done via the `metadata_clear_metadata`
 metadata API.
@@ -330,13 +244,13 @@ If an admin secret is set, add
 `-H 'X-Hasura-Admin-Secret: <your-admin-secret>'` as the API is an
 admin-only API.
 
-</div>
+</TabItem>
 
-</div>
+</Tabs>
 
 ## Managing Hasura metadata in CI/CD
 
 In case you need an automated way of applying/importing the metadata,
-take a look at the `cli-migrations <auto_apply_migrations>` Docker
+take a look at the [cli-migrations](/graphql/core/migrations/advanced/auto-apply-migrations.mdx) Docker
 image, which can start the GraphQL engine after automatically importing
 a mounted metadata directory.

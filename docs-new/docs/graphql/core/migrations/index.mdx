@@ -1,16 +1,17 @@
-<div class="meta"
-description="Manage Hasura migrations and metadata in CI/CD"
-keywords="hasura, docs, migration, metadata, ci, cd">
-
-</div>
+---
+title: Migrations
+description: Manage Hasura migrations and metadata in CI/CD
+keywords:
+  - hasura
+  - docs
+  - migration
+  - metadata
+  - ci
+  - cd
+slug: index
+---
 
 # Migrations & Metadata (CI/CD)
-
-<div class="contents" backlinks="none" depth="2" local="">
-
-Table of contents
-
-</div>
 
 ## Introduction
 
@@ -19,20 +20,14 @@ you can apply it on another instance to reproduce the same setup. For
 example, to achieve a dev -> staging -> production environment promotion
 scenario.
 
-<div class="note">
-
-<div class="title">
-
-Note
-
-</div>
+:::info Note
 
 This documentation is for Hasura migrations `config v3`, supported from
-`v2.0.0-alpha.1`. (See `upgrade guide <migrations_upgrade_v3>`).
+`v2.0.0-alpha.1`. (See [upgrade guide](/graphql/core/migrations/upgrade-v3.mdx)).
 
-For `config v2`, see `migrations_v2`.
+For `config v2`, see [Migrations (config v2)](/graphql/core/migrations/config-v2/index.mdx).
 
-</div>
+:::
 
 ## How is Hasura state managed?
 
@@ -40,7 +35,7 @@ Hasura needs 2 pieces of information to recreate your GraphQL API, the
 underlying PG database schema and the Hasura metadata which is used to
 describe the exposed GraphQL API.
 
-The `Hasura CLI <hasuracli_manual>` lets you manage these pieces of
+The [Hasura CLI](/graphql/core/hasura-cli/index.mdx) lets you manage these pieces of
 information as you build your project via:
 
 ### Database migration files
@@ -53,18 +48,12 @@ DB migration files can be generated incrementally and can by applied in
 parts to reach particular checkpoints. They can be used to roll-back the
 DB schema as well.
 
-<div class="note">
-
-<div class="title">
-
-Note
-
-</div>
+:::info Note
 
 You can choose to manage database migrations using external tools like
 knex, TypeORM, Django/Rails migrations, etc. as well.
 
-</div>
+:::
 
 ### Hasura metadata files
 
@@ -76,26 +65,17 @@ Hasura metadata can be exported and imported as a whole.
 
 ## Setting up migrations
 
-See `migrations_setup`.
+See [Setting up Hasura Migrations](/graphql/core/migrations/migrations-setup.mdx).
 
 ## Advanced use cases
 
--   `auto_apply_migrations`
--   `manual_migrations`
--   `roll_back_migrations`
--   `seed_data_migration`
+- [Auto-apply migrations](/graphql/core/migrations/advanced/auto-apply-migrations.mdx)
+- [Writing migrations manually](/graphql/core/migrations/advanced/writing-migrations-manually.mdx)
+- [Rolling back applied migrations](/graphql/core/migrations/advanced/rolling-back-migrations.mdx)
+- [Creating a seed data migration](/graphql/core/migrations/advanced/seed-data-migration.mdx)
 
 ## Reference documentation
 
--   `migrations_how_it_works`
--   `Migration file format <migration_file_format>`
--   `Metadata format <metadata_format>`
-
-<div class="toctree" maxdepth="10" hidden="">
-
-Setting up migrations \<migrations-setup> Managing metadata
-\<manage-metadata> Advanced use cases \<advanced/index> Reference
-documentation \<reference/index> Upgrading to config v3 \<upgrade-v3>
-Config v2 \<config-v2/index> Config v1 \<config-v1/index>
-
-</div>
+- [How Hasura Migrations work](/graphql/core/migrations/reference/how-it-works.mdx)
+- [Migration file format](/graphql/core/migrations/reference/migration-file-format.mdx)
+- [Metadata format](/graphql/core/migrations/reference/metadata-format.mdx)
