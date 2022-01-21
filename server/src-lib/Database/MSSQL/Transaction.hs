@@ -125,7 +125,7 @@ singleRowQueryE ef = rawQueryE ef singleRowResult
 -- @
 --
 -- See 'multiRowQueryE' if you need to map the error type as well.
-multiRowQuery :: (MonadIO m, FromRow a) => ODBC.Query -> TxT m [a]
+multiRowQuery :: forall a m. (MonadIO m, FromRow a) => ODBC.Query -> TxT m [a]
 multiRowQuery = multiRowQueryE id
 
 -- | Useful for building query transactions which return multiple rows.
