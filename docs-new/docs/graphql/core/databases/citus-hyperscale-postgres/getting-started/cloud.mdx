@@ -52,14 +52,58 @@ Once you add the database, you'll see your database pop up on the sidebar.
 If you have existing tables, head to the database page by clicking on
 the database name on the sidebar. You should see a list of tables.
 
+<!--
+
+   .. thumbnail:: /img/graphql/core/databases/ms-sql-server/3-manage-mydb.png
+      :alt: Manage my-db
+      :width: 1000px
+
+-->
+
 Track tables selectively or all of them so that Hasura can introspect
 the tables and create the corresponding GraphQL schema.
+
+<!--
+
+   .. thumbnail:: /img/graphql/core/databases/ms-sql-server/4-track-tables.png
+      :alt: Track tables
+      :width: 1000px
+
+-->
 
 If you have foreign keys, you'll also see suggested relationships.
 Again, you can choose to track them selectively or all at once.
 
+<!--
+
+   .. thumbnail:: /img/graphql/core/databases/ms-sql-server/5-track-rels.png
+      :alt: Track relationships
+      :width: 1000px
+
+-->
+
 If you don't have existing tables, go ahead and add new tables and data
 and try out some queries, just like with a regular Postgres database.
+
+<!--
+
+   Step 3: Option 2: Create new tables
+   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+   If you don't have existing tables, head to the Run SQL window
+   to run SQL against your SQL Server database and create tables or hit the Create Table button
+   to create a table.
+
+   If you're running raw SQL queries to create your tables, Don't forget to check "track metadata"
+   at the bottom of the Run SQL window to make sure Hasura tracks your new database objects 
+   in its GraphQL schema.
+
+
+   .. thumbnail:: /img/graphql/core/databases/ms-sql-server/7-run-sql.png
+      :alt: Run SQL to create table
+      :width: 1000px
+
+-->
 
 ### Step 4: Try out a GraphQL query
 
