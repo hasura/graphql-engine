@@ -1,30 +1,28 @@
-<div class="meta"
-description="Manage scheduled triggers with the Hasura metadata API"
-keywords="hasura, docs, metadata API, API reference, scheduled trigger">
-
-</div>
+---
+sidebar_label: Scheduled Triggers
+sidebar_position: 10
+description: Manage scheduled triggers with the Hasura metadata API
+keywords:
+   - hasura
+   - docs
+   - metadata API
+   - API reference
+   - scheduled trigger
+---
 
 # Metadata API Reference: Scheduled Triggers
-
-<div class="contents" backlinks="none" depth="1" local="">
-
-Table of contents
-
-</div>
 
 ## Introduction
 
 Scheduled triggers are used to invoke webhooks based on a timestamp or
 cron.
 
-<div class="admonition">
-
-Supported from
+:::info Supported from
 
 The metadata API is supported for versions `v2.0.0` and above and
-replaces the older `schema/metadata API <schema_metadata_apis>`.
+replaces the older [schema/metadata API](/graphql/core/api-reference/schema-metadata-api/index.mdx).
 
-</div>
+:::
 
 ## create_cron_trigger
 
@@ -55,23 +53,21 @@ X-Hasura-Role: admin
 
 | Key                 | Required | Schema                                                                       | Description                                                                                                                                                                                                     |
 |---------------------|----------|------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| name                | true     | `TriggerName <TriggerName>`                                                  | Name of the cron trigger                                                                                                                                                                                        |
-| webhook             | true     | `WebhookURL <WebhookURL>`                                                    | URL of the webhook                                                                                                                                                                                              |
+| name                | true     | [TriggerName](/graphql/core/api-reference/syntax-defs.mdx#triggername)                                                  | Name of the cron trigger                                                                                                                                                                                        |
+| webhook             | true     | [WebhookURL](/graphql/core/api-reference/syntax-defs.mdx#webhookurl)                                                    | URL of the webhook                                                                                                                                                                                              |
 | schedule            | true     | Cron Expression                                                              | Cron expression at which the trigger should be invoked.                                                                                                                                                         |
 | payload             | false    | JSON                                                                         | Any JSON payload which will be sent when the webhook is invoked.                                                                                                                                                |
-| headers             | false    | \[ `HeaderFromValue <HeaderFromValue>` \| `HeaderFromEnv <HeaderFromEnv>` \] | List of headers to be sent with the webhook                                                                                                                                                                     |
-| retry_conf          | false    | `RetryConfST`                                                                | Retry configuration if scheduled invocation delivery fails                                                                                                                                                      |
+| headers             | false    | [[HeaderFromValue](/graphql/core/api-reference/syntax-defs.mdx#headerfromvalue) \| [HeaderFromEnv](/graphql/core/api-reference/syntax-defs.mdx#headerfromenv)] | List of headers to be sent with the webhook                                                                                                                                                                     |
+| retry_conf          | false    | [RetryConfST](/graphql/core/api-reference/syntax-defs.mdx#retryconfst)                                                                | Retry configuration if scheduled invocation delivery fails                                                                                                                                                      |
 | include_in_metadata | true     | Boolean                                                                      | Flag to indicate whether a trigger should be included in the metadata. When a cron trigger is included in the metadata, the user will be able to export it when the metadata of the graphql-engine is exported. |
 | comment             | false    | Text                                                                         | Custom comment.                                                                                                                                                                                                 |
 | replace             | false    | Bool                                                                         | When replace is set to `true`, the cron trigger will be updated(if exists) and when it's `false` or the field is omitted, then a new cron trigger will be created.                                              |
 
-<div class="admonition">
-
-Supported from
+:::info Supported from
 
 Scheduled triggers are supported from versions `v1.3.0` and above.
 
-</div>
+:::
 
 ## delete_cron_trigger
 
@@ -95,15 +91,13 @@ X-Hasura-Role: admin
 
 | Key  | Required | Schema                      | Description              |
 |------|----------|-----------------------------|--------------------------|
-| name | true     | `TriggerName <TriggerName>` | Name of the cron trigger |
+| name | true     | [TriggerName](/graphql/core/api-reference/syntax-defs.mdx#triggername) | Name of the cron trigger |
 
-<div class="admonition">
-
-Supported from
+:::info Supported from
 
 Scheduled triggers are supported from versions `v1.3.0` and above.
 
-</div>
+:::
 
 ## create_scheduled_event
 
@@ -149,20 +143,18 @@ Content-Type: application/json
 
 | Key         | Required | Schema                                                                       | Description                                                      |
 |-------------|----------|------------------------------------------------------------------------------|------------------------------------------------------------------|
-| webhook     | true     | `WebhookURL <WebhookURL>`                                                    | URL of the webhook                                               |
+| webhook     | true     | [WebhookURL](/graphql/core/api-reference/syntax-defs.mdx#webhookurl)                                                    | URL of the webhook                                               |
 | schedule_at | true     | Timestamp (ISO8601 format)                                                   | The time at which the invocation should be invoked.              |
 | payload     | false    | JSON                                                                         | Any JSON payload which will be sent when the webhook is invoked. |
-| headers     | false    | \[ `HeaderFromValue <HeaderFromValue>` \| `HeaderFromEnv <HeaderFromEnv>` \] | List of headers to be sent with the webhook                      |
-| retry_conf  | false    | `RetryConfST`                                                                | Retry configuration if scheduled event delivery fails            |
+| headers     | false    | [[HeaderFromValue](/graphql/core/api-reference/syntax-defs.mdx#headerfromvalue) \| [HeaderFromEnv](/graphql/core/api-reference/syntax-defs.mdx#headerfromenv)] | List of headers to be sent with the webhook                      |
+| retry_conf  | false    | [RetryConfST](/graphql/core/api-reference/syntax-defs.mdx#retryconfst)                                                                | Retry configuration if scheduled event delivery fails            |
 | comment     | false    | Text                                                                         | Custom comment.                                                  |
 
-<div class="admonition">
-
-Supported from
+:::info Supported from
 
 Scheduled triggers are supported from versions `v1.3.0` and above.
 
-</div>
+:::
 
 ## delete_scheduled_event
 
@@ -190,10 +182,8 @@ X-Hasura-Role: admin
 | type     | true     | `one_off` \| `cron` | Type of the event trigger.       |
 | event_id | true     | UUID                | The `id` of the scheduled event. |
 
-<div class="admonition">
-
-Supported from
+:::info Supported from
 
 Scheduled triggers are supported from versions `v1.3.0` and above.
 
-</div>
+:::

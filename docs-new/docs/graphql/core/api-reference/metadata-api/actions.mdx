@@ -1,29 +1,27 @@
-<div class="meta"
-description="Manage actions with the Hasura metadata API"
-keywords="hasura, docs, metadata API, API reference, actions">
-
-</div>
+---
+sidebar_label: Actions
+sidebar_position: 16
+description: Manage actions with the Hasura metadata API
+keywords:
+   - hasura
+   - docs
+   - metadata API
+   - API reference
+   - actions
+---
 
 # Metadata API Reference: Actions
-
-<div class="contents" backlinks="none" depth="1" local="">
-
-Table of contents
-
-</div>
 
 ## Introduction
 
 **actions** are user defined mutations with custom business logic.
 
-<div class="admonition">
-
-Supported from
+:::info Supported from
 
 The metadata API is supported for versions `v2.0.0` and above and
-replaces the older `schema/metadata API <schema_metadata_apis>`.
+replaces the older [schema/metadata API](/graphql/core/api-reference/schema-metadata-api/index.mdx).
 
-</div>
+:::
 
 ## create_action
 
@@ -66,22 +64,16 @@ X-Hasura-Role: admin
 
 | Key        | Required | Schema                    | Description              |
 |------------|----------|---------------------------|--------------------------|
-| name       | true     | `ActionName <ActionName>` | Name of the action       |
-| definition | true     | `ActionDefinition`        | Definition of the action |
+| name       | true     | [ActionName](/graphql/core/api-reference/syntax-defs.mdx#actionname) | Name of the action       |
+| definition | true     | [ActionDefinition](/graphql/core/api-reference/syntax-defs.mdx#actiondefinition)        | Definition of the action |
 | comment    | false    | text                      | comment                  |
 
-<div class="note">
-
-<div class="title">
-
-Note
-
-</div>
+:::info Note
 
 The `GraphQL Types` used in creating an action must be defined before
-via `Custom Types <metadata_api_custom_types>`
+via [Custom Types](/graphql/core/api-reference/metadata-api/custom-types.mdx)
 
-</div>
+:::
 
 ## drop_action
 
@@ -108,7 +100,7 @@ X-Hasura-Role: admin
 
 | Key        | Required | Schema                    | Description                                                                                                 |
 |------------|----------|---------------------------|-------------------------------------------------------------------------------------------------------------|
-| name       | true     | `ActionName <ActionName>` | Name of the action                                                                                          |
+| name       | true     | [ActionName](/graphql/core/api-reference/syntax-defs.mdx#actionname) | Name of the action                                                                                          |
 | clear_data | false    | boolean                   | If set to `true` and action kind is `asynchronous`, related data is deleted from catalog. (default: `true`) |
 
 ## update_action
@@ -150,8 +142,8 @@ X-Hasura-Role: admin
 
 | Key        | Required | Schema                    | Description                             |
 |------------|----------|---------------------------|-----------------------------------------|
-| name       | true     | `ActionName <ActionName>` | Name of the action                      |
-| definition | true     | `ActionDefinition`        | Definition of the action to be replaced |
+| name       | true     | [ActionName](/graphql/core/api-reference/syntax-defs.mdx#actionname) | Name of the action                      |
+| definition | true     | [ActionDefinition](/graphql/core/api-reference/syntax-defs.mdx#actiondefinition)        | Definition of the action to be replaced |
 
 ## create_action_permission
 
@@ -176,8 +168,8 @@ X-Hasura-Role: admin
 
 | Key     | Required | Schema                    | Description        |
 |---------|----------|---------------------------|--------------------|
-| action  | true     | `ActionName <ActionName>` | Name of the action |
-| role    | true     | `RoleName <RoleName>`     | Name of the role   |
+| action  | true     | [ActionName](/graphql/core/api-reference/syntax-defs.mdx#actionname) | Name of the action |
+| role    | true     | [RoleName](/graphql/core/api-reference/syntax-defs.html#rolename)    | Name of the role   |
 | comment | false    | text                      | comment            |
 
 ## drop_action_permission
@@ -203,5 +195,5 @@ X-Hasura-Role: admin
 
 | Key  | Required | Schema                    | Description        |
 |------|----------|---------------------------|--------------------|
-| name | true     | `ActionName <ActionName>` | Name of the action |
-| role | true     | `RoleName <RoleName>`     | Name of the role   |
+| name | true     | [ActionName](/graphql/core/api-reference/syntax-defs.mdx#actionname)  | Name of the action |
+| role | true     | [RoleName](/graphql/core/api-reference/syntax-defs.html#rolename)     | Name of the role   |

@@ -1,16 +1,16 @@
-<div class="meta"
-description="Manage custom functions with the Hasura metadata API"
-keywords="hasura, docs, metadata API, API reference, custom function">
-
-</div>
+---
+sidebar_label: Custom Functions
+sidebar_position: 3
+description: Manage custom functions with the Hasura metadata API
+keywords:
+   - hasura
+   - docs
+   - metadata API
+   - API reference
+   - custom function
+---
 
 # Metadata API Reference: Custom Functions
-
-<div class="contents" backlinks="none" depth="1" local="">
-
-Table of contents
-
-</div>
 
 ## Introduction
 
@@ -19,24 +19,21 @@ Track/untrack a custom SQL function in the Hasura GraphQL engine.
 Only tracked custom functions are available for
 querying/mutating/subscribing data over the GraphQL API.
 
-<div class="admonition">
-
-Supported from
+:::info Supported from
 
 The metadata API is supported for versions `v2.0.0` and above and
-replaces the older `schema/metadata API <schema_metadata_apis>`.
+replaces the older [schema/metadata API](/graphql/core/api-reference/schema-metadata-api/index.mdx).
 
-</div>
+:::
 
 ## pg_track_function
 
 `pg_track_function` is used to add a custom SQL function to the GraphQL
 schema. It supports more configuration options than v1, and also
 supports tracking functions as mutations. Also refer a note
-`here <function_req_note>`.
+[here](/graphql/core/api-reference/syntax-defs.mdx#function-req-note).
 
-Track an SQL function called `search_articles` with a Hasura session
-argument:
+Track an SQL function called `search_articles` with a Hasura session argument:
 
 ```http
 POST /v1/metadata HTTP/1.1
@@ -96,33 +93,26 @@ the context of the resulting GraphQL API.
 One such use case might be a function that wraps a simple query and
 performs some logging visible only to administrators.
 
-<div class="note">
-
-<div class="title">
-
-Note
-
-</div>
+:::info Note
 
 It's easy to accidentally give an SQL function the wrong volatility (or
 for a function to end up with `VOLATILE` mistakenly, since it's the
 default).
 
-</div>
+:::
 
 ### Args syntax
 
 | Key           | Required | Schema                                            | Description                                                                                                                   |
 |---------------|----------|---------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------|
-| function      | true     | `FunctionName <FunctionName>`                     | Name of the SQL function                                                                                                      |
-| configuration | false    | `Function Configuration <function_configuration>` | Configuration for the SQL function                                                                                            |
-| source        | false    | `SourceName <SourceName>`                         | Name of the source database of the function (default: `default`)                                                              |
+| function      | true     | [FunctionName](/graphql/core/api-reference/syntax-defs.mdx#functionname)                     | Name of the SQL function                                                                                                      |
+| configuration | false    | [Function Configuration](/graphql/core/api-reference/syntax-defs.mdx#function-configuration) | Configuration for the SQL function                                                                                            |
+| source        | false    | [SourceName](/graphql/core/api-reference/syntax-defs.mdx#sourcename)                         | Name of the source database of the function (default: `default`)                                                              |
 | comment       | false    | String                                            | Comment for the function. This comment would replace the auto-generated comment for the function field in the GraphQL schema. |
 
 ## pg_untrack_function
 
-`pg_untrack_function` is used to remove a SQL function from the GraphQL
-schema.
+`pg_untrack_function` is used to remove a SQL function from the GraphQL schema.
 
 Remove an SQL function `search_articles`:
 
@@ -147,8 +137,8 @@ X-Hasura-Role: admin
 
 | Key      | Required | Schema                        | Description                                                      |
 |----------|----------|-------------------------------|------------------------------------------------------------------|
-| function | true     | `FunctionName <FunctionName>` | Name of the SQL function                                         |
-| source   | false    | `SourceName <SourceName>`     | Name of the source database of the function (default: `default`) |
+| function | true     | [FunctionName](/graphql/core/api-reference/syntax-defs.mdx#functionname) | Name of the SQL function                                         |
+| source   | false    | [SourceName](/graphql/core/api-reference/syntax-defs.mdx#sourcename)     | Name of the source database of the function (default: `default`) |
 
 ## pg_set_function_customization
 
@@ -182,9 +172,9 @@ X-Hasura-Role: admin
 
 | Key           | Required | Schema                                            | Description                                                      |
 |---------------|----------|---------------------------------------------------|------------------------------------------------------------------|
-| function      | true     | `FunctionName <FunctionName>`                     | Name of the function                                             |
-| configuration | false    | `Function Configuration <function_configuration>` | Configuration for the function                                   |
-| source        | false    | `SourceName <SourceName>`                         | Name of the source database of the function (default: `default`) |
+| function      | true     | [FunctionName](/graphql/core/api-reference/syntax-defs.mdx#functionname)                     | Name of the function                                             |
+| configuration | false    | [Function Configuration](/graphql/core/api-reference/syntax-defs.mdx#function-configuration) | Configuration for the function                                   |
+| source        | false    | [SourceName](/graphql/core/api-reference/syntax-defs.mdx#sourcename)                         | Name of the source database of the function (default: `default`) |
 
 ## pg_create_function_permission
 
@@ -211,14 +201,13 @@ X-Hasura-Role: admin
 
 | Key      | Required | Schema                        | Description                                                      |
 |----------|----------|-------------------------------|------------------------------------------------------------------|
-| function | true     | `FunctionName <FunctionName>` | Name of the SQL function                                         |
-| role     | true     | `RoleName <RoleName>`         | Name of the role                                                 |
+| function | true     | [FunctionName](/graphql/core/api-reference/syntax-defs.mdx#functionname) | Name of the SQL function                                         |
+| role     | true     | [RoleName](/graphql/core/api-reference/syntax-defs.mdx#rolename)         | Name of the role                                                 |
 | source   | false    | Text                          | Name of the source database of the function (default: `default`) |
 
 ## pg_drop_function_permission
 
-`pg_drop_function_permission` is used to drop an existing function
-permission.
+`pg_drop_function_permission` is used to drop an existing function permission.
 
 ```http
 POST /v1/metadata HTTP/1.1
@@ -239,6 +228,6 @@ X-Hasura-Role: admin
 
 | Key      | Required | Schema                        | Description                                                      |
 |----------|----------|-------------------------------|------------------------------------------------------------------|
-| function | true     | `FunctionName <FunctionName>` | Name of the SQL function                                         |
-| role     | true     | `RoleName <RoleName>`         | Name of the role                                                 |
+| function | true     | [FunctionName](/graphql/core/api-reference/syntax-defs.mdx#functionname) | Name of the SQL function                                         |
+| role     | true     | [RoleName](/graphql/core/api-reference/syntax-defs.mdx#rolename)         | Name of the role                                                 |
 | source   | false    | Text                          | Name of the source database of the function (default: `default`) |

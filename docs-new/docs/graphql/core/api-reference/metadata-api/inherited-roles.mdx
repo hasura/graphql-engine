@@ -1,35 +1,33 @@
-<div class="meta"
-description="Manage inherited roles with the Hasura metadata API"
-keywords="hasura, docs, metadata API, API reference, inherited roles, multiple roles">
-
-</div>
+---
+sidebar_label: Inherited Roles
+sidebar_position: 6
+description: Manage inherited roles with the Hasura metadata API
+keywords:
+   - hasura
+   - docs
+   - metadata API
+   - API reference
+   - inherited roles
+   - multiple roles
+---
 
 # Metadata API Reference: Inherited Roles
-
-<div class="contents" backlinks="none" depth="1" local="">
-
-Table of contents
-
-</div>
 
 ## Introduction
 
 Inherited roles allow you to create a role which inherits permissions
 from other existing roles.
 
-<div class="admonition">
-
-Supported from
+:::info Supported from
 
 The metadata API is supported for versions `v2.0.0` and above and
-replaces the older `schema/metadata API <schema_metadata_apis>`.
+replaces the older [schema/metadata API](/graphql/core/api-reference/schema-metadata-api/index.mdx).
 
-</div>
+:::
 
 ## add_inherited_role
 
-`add_inherited_role` is used to create a new inherited role with other
-existing roles.
+`add_inherited_role` is used to create a new inherited role with other existing roles.
 
 ```http
 POST /v1/metadata HTTP/1.1
@@ -52,8 +50,8 @@ X-Hasura-Role: admin
 
 | Key       | Required | Schema         | Description                                                            |
 |-----------|----------|----------------|------------------------------------------------------------------------|
-| role_name | true     | `RoleName`     | Name of the inherited role                                             |
-| role_set  | true     | \[`RoleName`\] | List of non-inherited roles from which permissions should be inherited |
+| role_name | true     | [RoleName](/graphql/core/api-reference/syntax-defs.mdx#rolename)     | Name of the inherited role                                             |
+| role_set  | true     | [[RoleName](/graphql/core/api-reference/syntax-defs.mdx#rolename)] | List of non-inherited roles from which permissions should be inherited |
 
 ## drop_inherited_role
 
@@ -76,4 +74,4 @@ X-Hasura-Role: admin
 
 | Key       | Required | Schema     | Description                |
 |-----------|----------|------------|----------------------------|
-| role_name | true     | `RoleName` | Name of the inherited role |
+| role_name | true     | [RoleName](/graphql/core/api-reference/syntax-defs.mdx#rolename) | Name of the inherited role |

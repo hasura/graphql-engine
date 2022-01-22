@@ -1,29 +1,28 @@
-<div class="meta"
-description="Manage databases with the Hasura metadata API"
-keywords="hasura, docs, metadata API, API reference, database, source">
-
-</div>
+---
+sidebar_label: Databases
+sidebar_position: 1
+description: Manage databases with the Hasura metadata API
+keywords:
+   - hasura
+   - docs
+   - metadata API
+   - API reference
+   - database
+   - source
+---
 
 # Metadata API Reference: Databases
-
-<div class="contents" backlinks="none" depth="1" local="">
-
-Table of contents
-
-</div>
 
 ## Introduction
 
 Add/remove databases in Hasura GraphQL engine.
 
-<div class="admonition">
-
-Supported from
+:::info Supported from
 
 The metadata API is supported for versions `v2.0.0` and above and
-replaces the older `schema/metadata API <schema_metadata_apis>`.
+replaces the older [schema/metadata API](/graphql/core/api-reference/schema-metadata-api/index.mdx).
 
-</div>
+:::
 
 ## pg_add_source
 
@@ -74,12 +73,12 @@ X-Hasura-Role: admin
 
 ### Args syntax
 
-| Key                   | Required | Schema                              | Description                                                                                                         |
-|-----------------------|----------|-------------------------------------|---------------------------------------------------------------------------------------------------------------------|
-| name                  | true     | `SourceName <SourceName>`           | Name of the Postgres database                                                                                       |
-| configuration         | true     | `PGConfiguration <PGConfiguration>` | Database connection configuration                                                                                   |
-| replace_configuration | false    | Boolean                             | If set to `true` the configuration will be replaced if the source with given name already exists (default: `false`) |
-| customization         | false    | `SourceCustomization`               | Customize root fields and type names for the source                                                                 |
+| Key                   | Required | Schema                                                                                   | Description                                                                                                         |
+|-----------------------|----------|------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------|
+| name                  | true     | [SourceName](/graphql/core/api-reference/syntax-defs.mdx#sourcename)                     | Name of the Postgres database                                                                                       |
+| configuration         | true     | [PGConfiguration](/graphql/core/api-reference/syntax-defs.mdx#pgconfiguration)           | Database connection configuration                                                                                   |
+| replace_configuration | false    | Boolean                                                                                  | If set to `true` the configuration will be replaced if the source with given name already exists (default: `false`) |
+| customization         | false    | [SourceCustomization](/graphql/core/api-reference/syntax-defs.mdx#sourcecustomization)   | Customize root fields and type names for the source                                                                 |
 
 ## pg_drop_source
 
@@ -105,15 +104,14 @@ X-Hasura-Role: admin
 
 | Key     | Required | Schema                    | Description                                                                                                                                                        |
 |---------|----------|---------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| name    | true     | `SourceName <SourceName>` | Name of the Postgres database                                                                                                                                      |
+| name    | true     | [SourceName](/graphql/core/api-reference/syntax-defs.mdx#sourcename) | Name of the Postgres database                                                                                                                                      |
 | cascade | false    | Boolean                   | When set to `true`, the effect (if possible) is cascaded to any metadata dependent objects (relationships, permissions etc.) from other sources (default: `false`) |
 
 ## rename_source
 
 `rename_source` is used to rename an existing source.
 
-Given there already exists a database with name `pg1`, we can rename it
-to `pg2` using:
+Given there already exists a database with name `pg1`, we can rename it to `pg2` using:
 
 ```http
 POST /v1/metadata HTTP/1.1
@@ -135,13 +133,12 @@ Note that all settings are kept, only the name is changed.
 
 | Key      | Required | Schema                    | Description          |
 |----------|----------|---------------------------|----------------------|
-| name     | true     | `SourceName <SourceName>` | Name of the database |
-| new_name | true     | `SourceName <SourceName>` | Name of the database |
+| name     | true     | [SourceName](/graphql/core/api-reference/syntax-defs.mdx#sourcename) | Name of the database |
+| new_name | true     | [SourceName](/graphql/core/api-reference/syntax-defs.mdx#sourcename) | Name of the database |
 
 ## mssql_add_source
 
-`mssql_add_source` is used to connect an MS SQL Server database to
-Hasura.
+`mssql_add_source` is used to connect an MS SQL Server database to Hasura.
 
 Add a database with name `mssql1`:
 
@@ -184,15 +181,14 @@ X-Hasura-Role: admin
 
 | Key                   | Required | Schema                                    | Description                                                                                                         |
 |-----------------------|----------|-------------------------------------------|---------------------------------------------------------------------------------------------------------------------|
-| name                  | true     | `SourceName <SourceName>`                 | Name of the MS SQL Server database                                                                                  |
-| configuration         | true     | `MsSQLConfiguration <MsSQLConfiguration>` | Database connection configuration                                                                                   |
+| name                  | true     | [SourceName](/graphql/core/api-reference/syntax-defs.mdx#sourcename)                 | Name of the MS SQL Server database                                                                                  |
+| configuration         | true     | [MsSQLConfiguration](/graphql/core/api-reference/syntax-defs.mdx#mssqlconfiguration) | Database connection configuration                                                                                   |
 | replace_configuration | false    | Boolean                                   | If set to `true` the configuration will be replaced if the source with given name already exists (default: `false`) |
-| customization         | false    | `SourceCustomization`                     | Customize root fields and type names for the source                                                                 |
+| customization         | false    | [SourceCustomization](/graphql/core/api-reference/syntax-defs.mdx#sourcecustomization)                     | Customize root fields and type names for the source                                                                 |
 
 ## mssql_drop_source
 
-`mssql_drop_source` is used to remove an MS SQL Server database from
-Hasura.
+`mssql_drop_source` is used to remove an MS SQL Server database from Hasura.
 
 Remove a database with name `mssql1`:
 
@@ -213,7 +209,7 @@ X-Hasura-Role: admin
 
 | Key     | Required | Schema                    | Description                                                                                                                                                        |
 |---------|----------|---------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| name    | true     | `SourceName <SourceName>` | Name of the MS SQL Server database                                                                                                                                 |
+| name    | true     | [SourceName](/graphql/core/api-reference/syntax-defs.mdx#sourcename) | Name of the MS SQL Server database                                                                                                                                 |
 | cascade | false    | Boolean                   | When set to `true`, the effect (if possible) is cascaded to any metadata dependent objects (relationships, permissions etc.) from other sources (default: `false`) |
 
 ## bigquery_add_source
@@ -255,15 +251,14 @@ X-Hasura-Role: admin
 
 | Key                   | Required | Schema                                          | Description                                                                                                         |
 |-----------------------|----------|-------------------------------------------------|---------------------------------------------------------------------------------------------------------------------|
-| name                  | true     | `SourceName <SourceName>`                       | Name of the BigQuery database                                                                                       |
-| configuration         | true     | `BigQueryConfiguration <BigQueryConfiguration>` | Database connection configuration                                                                                   |
+| name                  | true     | [SourceName](/graphql/core/api-reference/syntax-defs.mdx#sourcename)                       | Name of the BigQuery database                                                                                       |
+| configuration         | true     | [BigQueryConfiguration](/graphql/core/api-reference/syntax-defs.mdx#bigqueryconfiguration) | Database connection configuration                                                                                   |
 | replace_configuration | false    | Boolean                                         | If set to `true` the configuration will be replaced if the source with given name already exists (default: `false`) |
-| customization         | false    | `SourceCustomization`                           | Customize root fields and type names for the source                                                                 |
+| customization         | false    | [SourceCustomization](/graphql/core/api-reference/syntax-defs.mdx#sourcecustomization)                           | Customize root fields and type names for the source                                                                 |
 
 ## bigquery_drop_source
 
-`bigquery_drop_source` is used to remove a BigQuery database from
-Hasura.
+`bigquery_drop_source` is used to remove a BigQuery database from Hasura.
 
 Remove a database with name `bigquery1`:
 
@@ -284,5 +279,5 @@ X-Hasura-Role: admin
 
 | Key     | Required | Schema                    | Description                                                                                                                                                        |
 |---------|----------|---------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| name    | true     | `SourceName <SourceName>` | Name of the BigQuery database                                                                                                                                      |
+| name    | true     | [SourceName](/graphql/core/api-reference/syntax-defs.mdx#sourcename) | Name of the BigQuery database                                                                                                                                      |
 | cascade | false    | Boolean                   | When set to `true`, the effect (if possible) is cascaded to any metadata dependent objects (relationships, permissions etc.) from other sources (default: `false`) |
