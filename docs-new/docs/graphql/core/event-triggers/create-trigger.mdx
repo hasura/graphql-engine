@@ -63,22 +63,22 @@ Content-Type: application/json
 X-Hasura-Role: admin
 
 {
-"type" : "pg_create_event_trigger",
-"args" : {
-   "name": "author_trigger",
-   "source": "<db_name>",
-   "table": {
-      "name": "author",
-      "schema": "public"
-   },
-   "webhook": "https://httpbin.org/post",
-   "insert": {
-         "columns": "*"
-   },
-   "update": {
-         "columns": "*"
+   "type" : "pg_create_event_trigger",
+   "args" : {
+      "name": "author_trigger",
+      "source": "<db_name>",
+      "table": {
+         "name": "author",
+         "schema": "public"
+      },
+      "webhook": "https://httpbin.org/post",
+      "insert": {
+            "columns": "*"
+      },
+      "update": {
+            "columns": "*"
+      }
    }
-}
 }
 ```
 
