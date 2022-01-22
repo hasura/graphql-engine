@@ -1,16 +1,18 @@
-<div class="meta"
-description="Hasura Relay GraphQL API queries and subscriptions API reference"
-keywords="hasura, docs, GraphQL API, API reference, query, subscription, relay">
-
-</div>
+---
+sidebar_label: Query / Subscription
+sidebar_position: 1
+description: Hasura Relay GraphQL API queries and subscriptions API reference
+keywords:
+  - hasura
+  - docs
+  - GraphQL API
+  - API reference
+  - query
+  - subscription
+  - relay
+---
 
 # Relay API Reference - Query / Subscription
-
-<div class="contents" backlinks="none" depth="3" local="">
-
-Table of contents
-
-</div>
 
 ## **query** / **subscription** syntax
 
@@ -70,17 +72,11 @@ subscription {
 }q
 ```
 
-<div class="note">
+:::info Note
 
-<div class="title">
+For details of usage, please see [this page](/graphql/core/databases/postgres/schema/relay-schema.mdx).
 
-Note
-
-</div>
-
-For details of usage, please see `this page <pg_relay_schema>`.
-
-</div>
+:::
 
 ## Syntax definitions
 
@@ -116,19 +112,12 @@ connection-object {
 | pageInfo | [PageInfo](#pageinfo)! |
 | edges    | \[[Edge](#edge)!\]!    |
 
-<div class="note">
-
-<div class="title">
-
-Note
-
-</div>
+:::info Note
 
 For more details on the Relay `connection` object type, refer to the
-[Relay
-docs](https://relay.dev/graphql/connections.htm#sec-Connection-Types).
+[Relay docs](https://relay.dev/graphql/connections.htm#sec-Connection-Types).
 
-</div>
+:::
 
 ### PageInfo
 
@@ -143,23 +132,16 @@ type PageInfo {
 }
 ```
 
-<div class="note">
-
-<div class="title">
-
-Note
-
-</div>
+:::info Note
 
 For more details on the Relay `PageInfo` object type, refer to the
-[Relay
-docs](https://relay.dev/graphql/connections.htm#sec-undefined.PageInfo).
+[Relay docs](https://relay.dev/graphql/connections.htm#sec-undefined.PageInfo).
 
-</div>
+:::
 
 ### Edge
 
-Edge is an object type that consists of a `cursor <Cursor>` and `node`
+Edge is an object type that consists of a [cursor](#cursor) and `node`
 fields. `node` is a table object type which implements the Relay `Node`
 interface.
 
@@ -173,41 +155,34 @@ type tableEdge {
 ### Cursor
 
 The cursor field returns a unique non-null String value which is useful
-for `pagination <RelayPaginationExp>`.
+for [pagination](#paginationexp).
 
-<div class="note">
+:::info Note
 
-<div class="title">
+For more details on the Relay `cursor`, refer to the [Relay docs](https://relay.dev/graphql/connections.htm#sec-Cursor).
 
-Note
-
-</div>
-
-For more details on the Relay `cursor`, refer to the [Relay
-docs](https://relay.dev/graphql/connections.htm#sec-Cursor).
-
-</div>
+:::
 
 ### Argument
 
 <div class="parsed-literal">
 
-`DistinctOnExp <RelayDistinctOnExp>` \| `WhereExp <RelayWhereExp>` \|
-`OrderByExp <RelayOrderByExp>` \| `PaginationExp <RelayPaginationExp>`
+[DistinctOnExp](#distinctonexp) | [WhereExp](#whereexp) |
+[OrderByExp](#orderbyexp) | [PaginationExp](#paginationexp)
 
 </div>
 
 #### DistinctOnExp
 
-Same as the generic `DistinctOnExp`
+Same as the generic [DistinctOnExp](/graphql/core/api-reference/graphql-api/query.mdx#distinctonexp)
 
 #### WhereExp
 
-Same as the generic `WhereExp`
+Same as the generic [WhereExp](/graphql/core/api-reference/graphql-api/query.mdx#whereexp)
 
 #### OrderByExp
 
-Same as the generic `OrderByExp`
+Same as the generic [OrderByExp](/graphql/core/api-reference/graphql-api/query.mdx#orderbyexp)
 
 #### PaginationExp
 
