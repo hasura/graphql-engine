@@ -27,7 +27,7 @@ query|subscription [<op-name>] {
 | Key               | Required | Schema                                | Description                                                               |
 |-------------------|----------|---------------------------------------|---------------------------------------------------------------------------|
 | op-name           | false    | Value                                 | Name query/subscription for observability                                 |
-| connection-object | true     | [ConnectionObject](#ConnectionObject) | Name of the table connection                                              |
+| connection-object | true     | [ConnectionObject](#connection-object) | Name of the table connection                                              |
 | argument          | false    | [Argument](#argument)                 | One or more filter criteria, instructions for sorting order or pagination |
 
 **Example: Relay Query**
@@ -80,7 +80,7 @@ For details of usage, please see [this page](/graphql/core/databases/postgres/sc
 
 ## Syntax definitions
 
-### Connection Object
+### Connection Object {#connection-object}
 
 ```none
 connection-object {
