@@ -13,9 +13,9 @@ import Thumbnail from "@site/src/components/Thumbnail/Thumbnail";
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-# Creating a cron trigger
+# Creating a cron trigger {#creating-cron-trigger}
 
-## Introduction
+## Introduction {#creating-cron-trigger}
 
 Cron triggers are used to reliably trigger HTTP endpoints to run custom business logic periodically based on a [cron schedule](https://en.wikipedia.org/wiki/Cron). For example, you can create a cron trigger to generate an end-of-day sales report every weekday at 10pm.
 
@@ -77,7 +77,7 @@ hasura metadata apply
 </TabItem>
 <TabItem value="api" label="API">
 
-You can define a cron trigger via the `metadata_create_cron_trigger` metadata API:
+You can define a cron trigger via the [create_cron_trigger](/graphql/core/api-reference/metadata-api/scheduled-triggers.mdx#metadata-create-cron-trigger) metadata API:
 
 ```http
 POST /v1/metadata HTTP/1.1
@@ -146,7 +146,7 @@ hasura metadata apply
 
 </TabItem>
 <TabItem value="api" label="API">
-You can define advanced options for a cron trigger when defining it via the `metadata_create_cron_trigger` metadata API:
+You can define advanced options for a cron trigger when defining it via the [create_cron_trigger](/graphql/core/api-reference/metadata-api/scheduled-triggers#metadata-create-cron-trigger) metadata API:
 
 ```http
 POST /v1/metadata HTTP/1.1

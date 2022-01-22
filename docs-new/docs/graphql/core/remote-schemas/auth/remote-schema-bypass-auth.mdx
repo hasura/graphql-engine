@@ -21,7 +21,7 @@ There is no first-class option to currently do this via any configuration in Has
 
 ## Bypassing webhook authentication
 
-If you have a [webhook authorization setup](/graphql/core/auth/authentication/webhook#auth-webhooks), in the normal scenario, your authorization webhook would return `200` on success and `401` if it is either unable to authorize the current request or if the authorization information is absent (like cookie, authorization header etc.)
+If you have a [webhook authorization setup](/graphql/core/auth/authentication/webhook.mdx), in the normal scenario, your authorization webhook would return `200` on success and `401` if it is either unable to authorize the current request or if the authorization information is absent (like cookie, authorization header etc.)
 
 To bypass the webhook auth:
 
@@ -30,7 +30,7 @@ To bypass the webhook auth:
 
 ## Bypassing JWT authentication
 
-If you have a [JWT authorization setup](/graphql/core/auth/authentication/jwt#auth-jwt), to bypass the JWT auth:
+If you have a [JWT authorization setup](/graphql/core/auth/authentication/jwt.mdx), to bypass the JWT auth:
 
 - your authentication server should generate a static JWT token for `anonymous` i.e. unauthenticated users.
 - when adding the remote schema, check the `Forward all headers from client` option so that the remote server will get the JWT (from the client).

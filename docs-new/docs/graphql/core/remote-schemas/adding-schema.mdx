@@ -12,7 +12,7 @@ import Thumbnail from "@site/src/components/Thumbnail/Thumbnail";
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-# Adding a remote schema{#adding-schema}
+# Adding a remote schema
 
 ## Introduction
 
@@ -26,7 +26,7 @@ You need to create a custom GraphQL server with a schema and corresponding resol
 
 You can use any language/framework of your choice to author this server and deploy it anywhere. A great way to get started is to use one of our [boilerplates](https://github.com/hasura/graphql-engine/tree/master/community/boilerplates/remote-schemas)
 
-## Step 1: Merge remote schema {#merge_remote_schema}
+## Step 1: Merge remote schema {#merge-remote-schema}
 
 The following details need to be specified for merging a remote schema:
 
@@ -74,7 +74,7 @@ hasura metadata apply
 </TabItem>
 <TabItem value="api" label="API">
 
-You can add a remote schema by using the [add_remote_schema](/graphql/core/api-reference/metadata-api/remote-schemas#metadata-add-remote-schema) metadata API:
+You can add a remote schema by using the [add_remote_schema](/graphql/core/api-reference/metadata-api/remote-schemas.mdx#metadata-add-remote-schema) metadata API:
 
 ```http
 POST /v1/metadata HTTP/1.1
@@ -99,7 +99,7 @@ X-Hasura-Role: admin
 
 :::info Note
 
-If you are running Hasura using Docker, ensure that the Hasura Docker container can reach the server endpoint. See [this page](/graphql/core/guides/docker-networking#docker-networking) for Docker networking.
+If you are running Hasura using Docker, ensure that the Hasura Docker container can reach the server endpoint. See [this page](/graphql/core/guides/docker-networking.mdx) for Docker networking.
 
 If you are adding the URL using env variable, then run the Hasura docker container with the env variable added during _docker run_. Example `-e REMOTE_SCHEMA_ENDPOINT=http://host.docker.internal:4000/mycustomgraphql`.
 
@@ -149,7 +149,7 @@ Head to `Remote Schemas -> [remote_schema_name] -> Details` and click the `Reloa
 </TabItem>
 <TabItem value="api" label="API">
 
-Make a request to the [reload_remote_schema](/graphql/core/api-reference/metadata-api/remote-schemas#metadata-reload-remote-schema) metadata API.
+Make a request to the [reload_remote_schema](/graphql/core/api-reference/metadata-api/remote-schemas.mdx#metadata-reload-remote-schema) metadata API.
 
 </TabItem>
 </Tabs>

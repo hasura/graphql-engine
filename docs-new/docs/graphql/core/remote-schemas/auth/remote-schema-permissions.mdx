@@ -16,7 +16,7 @@ import TabItem from '@theme/TabItem';
 
 ## Introduction
 
-Hasura supports [role-based authorization](/graphql/core/auth/authorization/index#authorization) for remote schemas.
+Hasura supports [role-based authorization](/graphql/core/auth/authorization/index.mdx) for remote schemas.
 
 Remote schema permissions can be defined to:
 
@@ -76,7 +76,7 @@ type Query {
 }
 ```
 
-We use the above schema document to configure the remote schema permissions for the `public` role by using the [add_remote_schema_permissions](/graphql/core/api-reference/metadata-api/remote-schema-permissions#metadata-add-remote-schema-permissions) metadata API.
+We use the above schema document to configure the remote schema permissions for the `public` role by using the [add_remote_schema_permissions](/graphql/core/api-reference/metadata-api/remote-schema-permissions.mdx#metadata-add-remote-schema-permissions) metadata API.
 
 You can modify different [GraphQL Types](https://spec.graphql.org/June2018/#sec-Types) in the following manner:
 
@@ -137,7 +137,7 @@ type Query {
 }
 ```
 
-We want to configure the `user` role to only be able to query their own record. To do this, we need to preset the `id` parameter of the `get_user` field defined in the `Query` object. Let's say we have the value of the `id` argument set in one of the [session variables](/graphql/core/auth/authorization/roles-variables#dynamic-session-variables), we can preset the `id` argument with the session variable. Using the above schema, we can do that in the following manner:
+We want to configure the `user` role to only be able to query their own record. To do this, we need to preset the `id` parameter of the `get_user` field defined in the `Query` object. Let's say we have the value of the `id` argument set in one of the [session variables](/graphql/core/auth/authorization/roles-variables.mdx#dynamic-session-variables), we can preset the `id` argument with the session variable. Using the above schema, we can do that in the following manner:
 
 ```graphql
 type Query {
@@ -163,7 +163,7 @@ type Query {
 
 :::info Note
 
-By default, any preset string value in the format of `x-hasura-*` is assumed to be a [session variable](/graphql/core/auth/authorization/roles-variables#dynamic-session-variables)`. To override this behaviour i.e. to treat the value literally, the `static` argument equal to `true` needs to be added in the `preset` directive. In the following example, the `x-hasura-user-id` will be treated literally.
+By default, any preset string value in the format of `x-hasura-*` is assumed to be a [session variable](/graphql/core/auth/authorization/roles-variables.mdx#dynamic-session-variables)`. To override this behaviour i.e. to treat the value literally, the `static` argument equal to `true` needs to be added in the `preset` directive. In the following example, the `x-hasura-user-id` will be treated literally.
 
 ```graphql
 get_user(id: ID! @preset(value: "x-hasura-user-id", static: true)) : User
@@ -245,7 +245,7 @@ mutation {
 
 ### Step 0: Add a remote schema
 
-Add a remote schema as described [here](/graphql/core/remote-schemas/adding-schema#adding-schema), if the schema isn't already added.
+Add a remote schema as described [here](/graphql/core/remote-schemas/adding-schema.mdx), if the schema isn't already added.
 
 ### Step 1: Set permissions
 
@@ -307,7 +307,7 @@ hasura metadata apply
 </TabItem>
 <TabItem value="api" label="API">
 
-You can create remote schema permissions by using the [add_remote_schema_permissions metadata API](/graphql/core/api-reference/metadata-api/remote-schema-permissions#metadata-add-remote-schema-permissions):
+You can create remote schema permissions by using the [add_remote_schema_permissions metadata API](/graphql/core/api-reference/metadata-api/remote-schema-permissions.mdx#metadata-add-remote-schema-permissions):
 
 ```http
 POST /v1/metadata HTTP/1.1
