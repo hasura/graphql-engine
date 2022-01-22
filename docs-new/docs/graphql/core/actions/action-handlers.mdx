@@ -212,7 +212,7 @@ Go to `metadata/actions.yaml` in the Hasura project directory.
 Update the definition of your action by adding the action secret as a
 header:
 
-```yaml
+```yaml {7-9}
 - actions
   - name: actionName
     definition:
@@ -232,7 +232,7 @@ Save the changes and run `hasura metadata apply` to set the headers.
 Headers can be set when [creating](/graphql/core/api-reference/metadata-api/actions.mdx#metadata-create-action) or
 [updating](/graphql/core/api-reference/metadata-api/actions.mdx#metadata-update-action) an action via the metadata API.
 
-```http
+```http  {12-17}
 POST /v1/metadata HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin

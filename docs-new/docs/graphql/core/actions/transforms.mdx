@@ -52,7 +52,7 @@ Action transforms can be added to actions using the
 [update_action metadata API](/graphql/core/api-reference/metadata-api/actions.mdx#metadata_update_action) by adding a
 [request_transform](/graphql/core/api-reference/syntax-defs.mdx#requesttransformation) field to the args:
 
-```http
+```http {24-26}
 POST /v1/metadata HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
@@ -178,7 +178,7 @@ In the `Configure Transformations` section, click on
 </TabItem>
 <TabItem value="api" label="API">
 
-```json
+```json {3}
 {
   "request_transform": {
      "body": "{\n  \"users\": {\n    \"name\": {{$body.input.arg1.username}},\n    \"password\": {{$body.input.arg1.password}}\n  }\n}",
@@ -203,7 +203,7 @@ Console support coming soon.
 </TabItem>
 <TabItem value="api" label="API">
 
-```json
+```json {7}
 {
   "request_transform": {
      "body": {
@@ -244,7 +244,7 @@ In the `Configure Transformations` section, click on
 </TabItem>
 <TabItem value="api" label="API">
 
-```json
+```json {3}
 {
   "request_transform": {
     "url": "{{$base_url}}/{{$session_variables['x-hasura-user-id']}}",
@@ -289,7 +289,7 @@ In the `Configure Transformations` section, click on
 </TabItem>
 <TabItem value="api" label="API">
 
-```json
+```json {3}
 {
   "request_transform": {
      "method": "GET",
