@@ -198,9 +198,99 @@ constraint `reviewers` :: `article_id` → `articles` :: `id`:
 The following is an example summary of the access control requirements
 for the `articles` table based on the above schema:
 
-<!-- todo: inder table -->
+<table>
+<thead>
+<tr>
+<th width="30%" rowspan="2" colspan="1" >
+    Client Name
+</th>
+<th width="25%" rowspan="1" colspan="2">
+    author
+</th>
+<th width="25%" rowspan="1" colspan="2">
+    reviewer
+</th>
+<th width="25%" rowspan="1" colspan="2" >
+    editor
+</th>
+</tr>
+<tr>
+<th>insert</th>
+<th>select</th>
+<th>update</th>
+<th>select</th>
+<th>update</th>
+<th>select</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>id</td>
+<td>✔</td>
+<td>✔</td>
+<td>✖</td>
+<td>✔</td>
+<td>✖</td>
+<td>✔</td>
+</tr>
+<tr>
+<td>title</td>
+<td>✔</td>
+<td>✔</td>
+<td>✔</td>
+<td>✔</td>
+<td>✔</td>
+<td>✔</td>
+</tr>
+<tr>
+<td>author_id</td>
+<td>✔</td>
+<td>✔</td>
+<td>✖</td>
+<td>✔</td>
+<td>✖</td>
+<td>✔</td>
+</tr>
+<tr>
+<td>is_reviewed</td>
+<td>✖</td>
+<td>✔</td>
+<td>✔</td>
+<td>✔</td>
+<td>✔</td>
+<td>✔</td>
+</tr>
+<tr>
+<td>review_comment</td>
+<td>✖</td>
+<td>✔</td>
+<td>✔</td>
+<td>✔</td>
+<td>✖</td>
+<td>✔</td>
+</tr>
+<tr>
+<td>is_published</td>
+<td>✖</td>
+<td>✔</td>
+<td>✖</td>
+<td>✔</td>
+<td>✔</td>
+<td>✔</td>
+</tr>
+<tr>
+<td>editor_rating</td>
+<td>✖</td>
+<td>✖</td>
+<td>✖</td>
+<td>✖</td>
+<td>✔</td>
+<td>✔</td>
+</tr>
+</tbody>
+</table>
 
-<sup>*</sup> Additional restriction required to ensure that a user with the role `author` _can submit only their own article i.e._
+_Additional restriction required to ensure that a user with the role_ `author` _can submit only their own article i.e._
 `author_id` _should be the same as the user's id_.
 
 We'll create permission rules for the roles and actions listed above

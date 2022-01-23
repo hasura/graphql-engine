@@ -11,6 +11,7 @@ sidebar_position: 4
 
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
+import GraphiQLIDE from "@site/src/components/GraphiQLIDE/GraphiQLIDE"
 
 # Inherited roles
 
@@ -210,42 +211,28 @@ X-Hasura-Role: user
 X-Hasura-User-Id: 1
 ```
 
-<table>
-<tbody>
-<tr>
-<td width="60%">
-
-```
-query {
-users {
-id
-name
-email
-}
-}
-```
-
-</td>
-<td width="50%">
-
-```
-{
-"data": {
-"users": [
-{
-"id": 1,
-"name": "alice",
-"email": "alice@xyz.com"
-}
-]
-}
-}
-```
-
-</td>
-</tr>
-</tbody>
-</table>
+<GraphiQLIDE
+  query={`{
+    query {
+        users {
+            id
+            name
+            email
+        }
+    }
+  }`}
+  response={`{
+  "data": {
+    "users": [
+        {
+            "id": 1,
+            "name": "alice",
+            "email": "alice@xyz.com"
+        }
+    ]
+    }
+  }`}
+/>
 
 2.  Executing the query as `anonymous` role
 
@@ -255,48 +242,34 @@ Content-Type: application/json
 X-Hasura-Role: anonymous
 ```
 
-<table>
-<tbody>
-<tr>
-<td width="60%">
-
-```
-query {
-users {
-id
-name
-}
-}
-```
-
-</td>
-<td width="50%">
-
-```
-{
-"data": {
-"users": [
-{
-"id": 1,
-"name": "Alice"
-},
-{
-"id": 2,
-"name": "Bob"
-},
-{
-"id": 3,
-"name": "Sam"
-}
-]
-}
-}
-```
-
-</td>
-</tr>
-</tbody>
-</table>
+<GraphiQLIDE
+  query={`{
+    query {
+        users {
+            id
+            name
+        }
+    }
+  }`}
+  response={`{
+  "data": {
+        "users": [
+            {
+            "id": 1,
+            "name": "Alice"
+            },
+            {
+            "id": 2,
+            "name": "Bob"
+            },
+            {
+            "id": 3,
+            "name": "Sam"
+            }
+        ]
+    }
+  }`}
+/>
 
 3.  Executing the query as `user_anonymous_inherited_role` role
 
@@ -307,52 +280,38 @@ X-Hasura-Role: user_anonymous_inherited_role
 X-Hasura-User-Id: 1
 ```
 
-<table>
-<tbody>
-<tr>
-<td width="60%">
-
-```
-query {
-users {
-id
-name
-email
-}
-}
-```
-
-</td>
-<td width="50%">
-
-```
-{
-"data": {
-"users": [
-{
-"id": 1,
-"name": "Alice",
-"email": "alice@xyz.com"
-},
-{
-"id": 2,
-"name": "Bob",
-"email": null
-},
-{
-"id": 3,
-"name": "Sam",
-"email": null
-}
-]
-}
-}
-```
-
-</td>
-</tr>
-</tbody>
-</table>
+<GraphiQLIDE
+  query={`{
+    query {
+        users {
+            id
+            name
+            email
+        }
+    }
+  }`}
+  response={`{
+  "data": {
+        "users": [
+        {
+            "id": 1,
+            "name": "Alice",
+            "email": "alice@xyz.com"
+        },
+        {
+            "id": 2,
+            "name": "Bob",
+            "email": null
+        },
+        {
+            "id": 3,
+            "name": "Sam",
+            "email": null
+        }
+        ]
+    }
+  }`}
+/>
 
 In the response of the query being executed with the
 `user_anonymous_inherited_role` role, there are 3 rows returned and
@@ -382,54 +341,41 @@ X-Hasura-Role: user_authors_inherited_role
 X-Hasura-User-Id: 1
 ```
 
-<table>
-<tbody>
-<tr>
-<td width="60%">
+<GraphiQLIDE
+  query={`{
+    query {
+        users {
+            id
+            name
+            email
+        }
+        authors {
+            id
+            name
+            followers
+        }
+    }
+  }`}
+  response={`{
+  "data": {
+        "users": [
+        {
+            "id": 1,
+            "name": "Alice",
+            "email": "alice@xyz.com"
+        }
+        ],
+        "authors": [
+        {
+            "id": 1,
+            "name": "Paulo Coelho",
+            "followers": 10382193
+        }
+        ]
+    }
+  }`}
+/>
 
-```
-query {
-users {
-id
-name
-email
-}
-authors {
-id
-name
-followers
-}
-}
-```
-
-</td>
-<td width="50%">
-
-```
-{
-"data": {
-"users": [
-{
-"id": 1,
-"name": "Alice",
-"email": "alice@xyz.com"
-}
-],
-"authors": [
-{
-"id": 1,
-"name": "Paulo Coelho",
-"followers": 10382193
-}
-]
-}
-}
-```
-
-</td>
-</tr>
-</tbody>
-</table>
 
 ### 2. Mutation and Remote Schema permissions
 
