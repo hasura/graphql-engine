@@ -1,38 +1,37 @@
-<div class="meta"
-description="Use authenticaton with webhooks in Hasura"
-keywords="hasura, docs, authentication, auth, webhook">
+---
+description: Use authentication with webhooks in Hasura
+keywords:
+  - hasura
+  - docs
+  - authentication
+  - auth
+  - webhook
+sidebar_position: 2
+sidebar_label: Using Webhooks
+---
 
-</div>
+import Thumbnail from "@site/src/components/Thumbnail/Thumbnail";
 
 # Authentication using webhooks
-
-<div class="contents" backlinks="none" depth="2" local="">
-
-Table of contents
-
-</div>
 
 ## Introduction
 
 You can configure the GraphQL engine to use a webhook to authenticate
 all incoming requests to the Hasura GraphQL engine server.
 
-<div class="thumbnail" alt="Authentication using webhooks"
-width="1000px">
+<Thumbnail
+  src="/img/graphql/core/auth/webhook-auth.png"
+  alt="Authentication using webhooks"
+  width="1000px"
+/>
 
-/img/graphql/core/auth/webhook-auth.png
-
-</div>
-
-<div class="admonition">
-
-Prerequisite
+:::info Prerequisite
 
 It is mandatory to first
-`secure your GraphQL endpoint <securing_graphql_endpoint>` for the
+[secure your GraphQL endpoint](/graphql/core/deployment/securing-graphql-endpoint.mdx) for the
 webhook mode to take effect.
 
-</div>
+:::
 
 In webhook mode, on a secured endpoint:
 
@@ -47,28 +46,21 @@ In webhook mode, on a secured endpoint:
 -   You can configure Hasura to run in webhook mode by running the
     GraphQL engine with the `--auth-hook` flag or the
     `HASURA_GRAPHQL_AUTH_HOOK` environment variable (see
-    `GraphQL engine server options <server_flag_reference>`), the value
+    [GraphQL engine server options](/graphql/core/deployment/graphql-engine-flags/reference.mdx)), the value
     of which is the webhook endpoint.
 -   You can configure Hasura to send either a `GET` or a `POST` request
     to your auth webhook. The default configuration is `GET` and you can
     override this with `POST` by using the `--auth-hook-mode` flag or
     the `HASURA_GRAPHQL_AUTH_HOOK_MODE` environment variable (*in
-    addition to those specified above; see*
-    `GraphQL engine server options <server_flag_reference>`).
+    addition to those specified above; see* [GraphQL engine server options](/graphql/core/deployment/graphql-engine-flags/reference.mdx)).
 
-<div class="note">
-
-<div class="title">
-
-Note
-
-</div>
+:::info Note
 
 If you are running Hasura using Docker, ensure that the Hasura Docker
-container can reach the webhook. See `this page <docker_networking>` for
+container can reach the webhook. See [this page](/graphql/core/guides/docker-networking.mdx) for
 Docker networking.
 
-</div>
+:::
 
 ## Spec for the webhook
 
@@ -137,20 +129,14 @@ Content-Type: application/json
 If you configure your webhook to use `POST`, then Hasura **will send all
 client headers in payload**.
 
-<div class="note">
-
-<div class="title">
-
-Note
-
-</div>
+:::info Note
 
 If an invalid JSON request is sent, then the request body is not
 forwarded to the webhook
 
-</div>
+:::
 
-### Response
+### Response {#webhook-response}
 
 #### Success
 
@@ -170,24 +156,17 @@ Content-Type: application/json
 }
 ```
 
-<div class="note">
-
-<div class="title">
-
-Note
-
-</div>
+:::info Note
 
 All values should be `String`. They will be converted to the right type
 automatically.
 
-</div>
+:::
 
 There is no default timeout on the resulting connection. You can
 optionally add one; to do so, you need to return either:
 
--   a `Cache-Control` variable, modeled on the [Cache-Control HTTP
-    Header](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control),
+-   a `Cache-Control` variable, modeled on the [Cache-Control HTTP Header](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control),
     to specify a **relative** expiration time, in seconds.
 
 ```http
@@ -202,8 +181,7 @@ Content-Type: application/json
 }
 ```
 
--   an `Expires` variable, modeled on the [Expires HTTP
-    Header](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Expires),
+-   an `Expires` variable, modeled on the [Expires HTTP Header](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Expires),
     to specify an **absolute** expiration time. The expected format is
     `"%a, %d %b %Y %T GMT"`.
 
@@ -219,19 +197,13 @@ Content-Type: application/json
 }
 ```
 
-<div class="note">
-
-<div class="title">
-
-Note
-
-</div>
+:::info Note
 
 If the <span class="title-ref">Set-Cookie</span> headers are set by the
 auth webhook, they are forwarded by the GraphQL Engine as response
 headers for both GET/POST request methods.
 
-</div>
+:::
 
 #### Failure
 
@@ -242,55 +214,35 @@ exception.
 HTTP/1.1 401 Unauthorized
 ```
 
-<div class="note">
-
-<div class="title">
-
-Note
-
-</div>
+:::info Note
 
 Anything other than a `200` or `401` response from webhook makes the
 server raise a `500 Internal Server Error` exception.
 
-</div>
+:::
 
 ## Auth webhook samples
 
-We have put together a [GitHub Node.js
-repo](https://github.com/hasura/graphql-engine/tree/master/community/boilerplates/auth-webhooks/nodejs-express)
+We have put together a [GitHub Node.js repo](https://github.com/hasura/graphql-engine/tree/master/community/boilerplates/auth-webhooks/nodejs-express)
 that has some sample auth webhooks configured.
 
 You can deploy these samples using [glitch](https://glitch.com/):
 
-[<img src="https://raw.githubusercontent.com/hasura/sample-auth-webhook/master/assets/deploy-glitch.png" class="no-shadow no-shadow" width="200" alt="deploy_auth_webhook_with_glitch" />](http://glitch.com/edit/#!/import/github/hasura/sample-auth-webhook)
-
 Once deployed, you can use any of the following endpoints as your auth
 webhook in the GraphQL engine:
 
--   `/simple/webhook` ([View
-    source](https://github.com/hasura/graphql-engine/blob/master/community/boilerplates/auth-webhooks/nodejs-express/server.js))
--   `/firebase/webhook` ([View
-    source](https://github.com/hasura/graphql-engine/blob/master/community/boilerplates/auth-webhooks/nodejs-firebase/firebase/firebaseHandler.js))
+-   `/simple/webhook` ([View source](https://github.com/hasura/graphql-engine/blob/master/community/boilerplates/auth-webhooks/nodejs-express/server.js))
+-   `/firebase/webhook` ([View source](https://github.com/hasura/graphql-engine/blob/master/community/boilerplates/auth-webhooks/nodejs-firebase/firebase/firebaseHandler.js))
 
-<div class="note">
-
-<div class="title">
-
-Note
-
-</div>
+:::info Note
 
 If you are using `Firebase`, you will have to set the associated
 environment variables.
 
-</div>
+:::
 
-<div class="admonition">
+:::info Additional Resources
 
-Additional Resources
+Enterprise Grade Authorization - [Watch Webinar](https://hasura.io/events/webinar/authorization-modeling-hasura/?pg=docs&plcmt=body&cta=watch-webinar&tech=).
 
-Enterprise Grade Authorization - [Watch
-Webinar](https://hasura.io/events/webinar/authorization-modeling-hasura/?pg=docs&plcmt=body&cta=watch-webinar&tech=).
-
-</div>
+:::

@@ -1,15 +1,18 @@
-<div class="meta" description="Use authenticaton with JWT in Hasura"
-keywords="hasura, docs, authentication, auth, JWT">
+---
+description: Use authenticaton with JWT in Hasura
+keywords:
+  - hasura
+  - docs
+  - authentication
+  - auth
+  - JWT
+sidebar_position: 4
+sidebar_label: Using JWT
+---
 
-</div>
+import Thumbnail from "@site/src/components/Thumbnail/Thumbnail";
 
 # Authentication using JWT
-
-<div class="contents" backlinks="none" depth="1" local="">
-
-Table of contents
-
-</div>
 
 ## Introduction
 
@@ -20,11 +23,11 @@ The idea is that your auth server will return JWT tokens, which are
 decoded and verified by the GraphQL engine, to authorize and get
 metadata about the request (`x-hasura-*` values).
 
-<div class="thumbnail" alt="Authentication using JWT" width="1000px">
-
-/img/graphql/core/auth/jwt-auth.png
-
-</div>
+<Thumbnail
+  src="/img/graphql/core/auth/jwt-auth.png"
+  alt="Authentication using JWT"
+  width="1000px"
+/>
 
 The JWT is decoded, the signature is verified, then it is asserted that
 the requested role of the user (if specified in the request) is in the
@@ -33,15 +36,13 @@ request, then the default role is applied. If the authorization passes,
 then all of the `x-hasura-*` values in the claim are used for the
 permissions system.
 
-<div class="admonition">
-
-Prerequisite
+:::info Prerequisite
 
 It is mandatory to first
-`secure your GraphQL endpoint <securing_graphql_endpoint>` for the JWT
+[secure your GraphQL endpoint](/graphql/core/deployment/securing-graphql-endpoint.mdx) for the JWT
 mode to take effect.
 
-</div>
+:::
 
 In JWT mode, on a secured endpoint:
 
@@ -109,18 +110,12 @@ while starting the server.
 **Note**: `x-hasura-default-role` and `x-hasura-allowed-roles` are
 mandatory, while the rest of them are optional.
 
-<div class="note">
-
-<div class="title">
-
-Note
-
-</div>
+:::info Note
 
 All `x-hasura-*` values should be of type `String`, they will be
 converted to the right type automatically.
 
-</div>
+:::
 
 The default role can be overridden by the `x-hasura-role` header, while
 making a request.
@@ -160,7 +155,7 @@ a JSON object:
 ### `type`
 
 Valid values are : `HS256`, `HS384`, `HS512`, `RS256`, `RS384`, `RS512`,
-`Ed25519`. (see <https://jwt.io>).
+`Ed25519`. (see [https://jwt.io](https://jwt.io/)).
 
 `HS*` is for HMAC-SHA based algorithms. `RS*` is for RSA based signing.
 `Ed*` is for Edwards-curve Digital Signature algorithms. For example, if
@@ -187,7 +182,7 @@ using the `jwk_url` field.
 
 A URL where a provider publishes their JWKs (which are used for signing
 the JWTs). The URL **must** publish the JWKs in the standard format as
-described in <https://tools.ietf.org/html/rfc7517>.
+described in [https://tools.ietf.org/html/rfc7517](https://tools.ietf.org/html/rfc7517).
 
 This is an optional field. You can also provide the key (certificate,
 PEM encoded public key) as a string - in the `key` field along with the
@@ -236,7 +231,7 @@ Following is the behaviour in detail:
 
 -   Auth0 publishes their JWK url at:
     `https://<YOUR_AUTH0_DOMAIN>.auth0.com`. But Auth0 has a bug. See
-    known issues: `auth0-issues`.
+    known issues: [Auth0](/graphql/core/auth/authentication/jwt.mdx#auth0-issues).
 -   Firebase publishes their JWK url at:
     `https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com`.
 
@@ -275,20 +270,15 @@ set to `$.hasura.claims`:
 }
 ```
 
-<div class="note">
-
-<div class="title">
-
-Note
-
-</div>
+:::info Note
 
 The JWT config can only have one of `claims_namespace` or
 `claims_namespace_path` values set. If neither keys are set, then the
-default value of `claims_namespace` i.e. <https://hasura.io/jwt/claims>
+default value of `claims_namespace` i.e. [https://hasura.io/jwt/claims](https://hasura.io/jwt/claims)
 will be used.
 
-</div>
+:::
+
 
 This is an optional field, with only the following possible values: -
 `json` - `stringified_json`
@@ -299,10 +289,9 @@ This is to indicate whether the Hasura specific claims are a regular
 JSON object or a stringified JSON.
 
 This is required because providers like AWS Cognito only allow strings
-in the JWT claims. [See
-#1176](https://github.com/hasura/graphql-engine/issues/1176).
+in the JWT claims. [See #1176](https://github.com/hasura/graphql-engine/issues/1176).
 
-<Example:->
+Example:-
 
 If `claims_format` is `json` then JWT claims should look like:
 
@@ -368,9 +357,7 @@ or
 }
 ```
 
-<div class="admonition">
-
-Important!
+:::info Important!
 
 Certain JWT providers share JWKs between multiple tenants. They use the
 `aud` claim of JWT to specify the intended audience for the JWT. Setting
@@ -382,7 +369,7 @@ well.
 In these cases, you **MUST** set the `audience` field to the appropriate
 value. Failing to do so is a major security vulnerability.
 
-</div>
+:::
 
 ### `issuer`
 
@@ -404,18 +391,12 @@ Examples:
 }
 ```
 
-<div class="note">
-
-<div class="title">
-
-Note
-
-</div>
+:::info Note
 
 Certain providers require you to verify the `iss` claim on the JWT. To
 do that you can set this field to the appropriate value.
 
-</div>
+:::
 
 ### `claims_map`
 
@@ -567,7 +548,7 @@ In the default mode, Hasura expects an `Authorization` header with a
 In the cookie mode, Hasura will try to parse the cookie header with the
 given cookie name. The value of the cookie should be the exact JWT.
 
-<Example:->
+Example:-
 
 If `header` is `{"type": "Authorization"}` then JWT header should look
 like:
@@ -703,13 +684,13 @@ This page of Firebase
 [docs](https://firebase.google.com/docs/auth/admin/verify-id-tokens#verify_id_tokens_using_a_third-party_jwt_library)
 mentions that JWKs are published under:
 
-<https://www.googleapis.com/robot/v1/metadata/x509/securetoken@system.gserviceaccount.com>
+[https://www.googleapis.com/robot/v1/metadata/x509/securetoken@system.gserviceaccount.com](https://www.googleapis.com/robot/v1/metadata/x509/securetoken@system.gserviceaccount.com)
 .
 
 But that is a non-standard format. Firebase also publishes the same
 certificates as proper JWK format under:
 
-<https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com>
+[https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com](https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com)
 .
 
 If you are using Firebase and Hasura, use this config:
@@ -722,17 +703,16 @@ If you are using Firebase and Hasura, use this config:
 }
 ```
 
-### Auth0
+### Auth0 {#auth0-issues}
 
-Refer the `Auth0 JWT Integration guide <guides_auth0_jwt>` for a full
+Refer the [Auth0 JWT Integration guide](https://hasura.io/docs/latest/graphql/core/guides/integrations/auth0-jwt.mdx#guides-auth0-jwt) for a full
 integration guide with Auth0.
 
 Auth0 publishes their JWK under:
 
 `https://<your-auth0-domain>.auth0.com/.well-known/jwks.json`
 
-But they have a [bug where the certificate thumbprint does not
-match](https://community.auth0.com/t/certificate-thumbprint-is-longer-than-20-bytes/7794/3).
+But they have a [bug where the certificate thumbprint does not match](https://community.auth0.com/t/certificate-thumbprint-is-longer-than-20-bytes/7794/3).
 Hence, currently this URL does not work with Hasura.
 
 Current workaround is - download the X590 certificate from:
@@ -771,40 +751,35 @@ frGYaw+0cxO6/WvSir0eA=
 
 The JWT Config to be used in env `HASURA_GRAPHQL_JWT_SECRET` or
 `--jwt-secret` flag can be generated using:
-<https://hasura.io/jwt-config/>.
+[https://hasura.io/jwt-config](https://hasura.io/jwt-config).
 
 **Currently the UI supports generating config for Auth0 and Firebase**.
 
 The config generated from this page can be directly pasted in yaml files
 and command line arguments as it takes care of escaping new lines.
 
-<div class="thumbnail" width="75%" alt="Generating JWT config">
-
-/img/graphql/core/auth/jwt-config-generated.png
-
-</div>
+<Thumbnail
+  src="/img/graphql/core/auth/jwt-config-generated.png"
+  alt="Generating JWT config"
+  width="75%"
+/>
 
 ## Auth JWT Examples
 
 Here are some sample apps that use JWT authorization. You can follow the
 instructions in the READMEs of the repositories to get started.
 
--   `Custom JWT server with Hasura actions<actions_codegen_python_flask>`:
+-   [Custom JWT server with Hasura actions](https://hasura.io/docs/latest/graphql/core/actions/codegen/python-flask.mdx):
     A simple Python / Flask API that implements `Signup` and `Login`
     methods as actions returning JWTs
--   [Auth0 JWT
-    example](https://github.com/hasura/graphql-engine/tree/master/community/sample-apps/todo-auth0-jwt):
+-   [Auth0 JWT example](https://github.com/hasura/graphql-engine/tree/master/community/sample-apps/todo-auth0-jwt):
     A todo app that uses Hasura GraphQL engine and Auth0 JWT
--   [Firebase JWT
-    example](https://github.com/hasura/graphql-engine/tree/master/community/sample-apps/firebase-jwt):
+-   [Firebase JWT example](https://github.com/hasura/graphql-engine/tree/master/community/sample-apps/firebase-jwt):
     Barebones example to show how to have Firebase Auth integrated with
     Hasura JWT mode
 
-<div class="admonition">
+:::info Additional Resources
 
-Additional Resources
+Enterprise Grade Authorization - [Watch Webinar](https://hasura.io/events/webinar/authorization-modeling-hasura/?pg=docs&plcmt=body&cta=watch-webinar&tech=).
 
-Enterprise Grade Authorization - [Watch
-Webinar](https://hasura.io/events/webinar/authorization-modeling-hasura/?pg=docs&plcmt=body&cta=watch-webinar&tech=).
-
-</div>
+:::

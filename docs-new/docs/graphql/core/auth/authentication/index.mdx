@@ -1,21 +1,23 @@
-<div class="meta" description="Manage authenticaton with Hasura"
-keywords="hasura, docs, authentication, auth">
+---
+description: Manage authentication with Hasura
+keywords:
+  - hasura
+  - docs
+  - authentication
+  - auth
+slug: index
+sidebar_position: 1
+---
 
-</div>
+import Thumbnail from "@site/src/components/Thumbnail/Thumbnail";
 
 # Authentication
-
-<div class="contents" backlinks="none" depth="1" local="">
-
-Table of contents
-
-</div>
 
 ## Overview
 
 Authentication is handled outside of Hasura. Hasura delegates
 authentication and resolution of request headers into session variables
-to your authentication service *(existing or new)*.
+to your authentication service _(existing or new)_.
 
 Your authentication service is required to pass a user's **role**
 information in the form of session variables like `X-Hasura-Role`, etc.
@@ -39,12 +41,11 @@ metadata about the request to evaluate access control rules.
 
 Here's how a GraphQL request is processed in webhook mode:
 
-<div class="thumbnail" alt="Authentication using webhooks"
-width="1000px">
-
-/img/graphql/core/auth/auth-webhook-overview.png
-
-</div>
+<Thumbnail
+  src="/img/graphql/core/auth/auth-webhook-overview.png"
+  alt="Authentication using webhooks"
+  width="1000px"
+/>
 
 ### 2. JWT (JSON Web Token)
 
@@ -54,26 +55,19 @@ get metadata about the request to evaluate access control rules.
 
 Here's how a GraphQL query is processed in JWT mode:
 
-<div class="thumbnail" alt="Authentication using JWT" width="1000px">
-
-/img/graphql/core/auth/auth-jwt-overview.png
-
-</div>
+<Thumbnail
+  src="/img/graphql/core/auth/auth-jwt-overview.png"
+  alt="Authentication using JWT" width="1000px"
+/>
 
 **See more details at:**
 
-<div class="toctree" maxdepth="1">
+- [Using webhooks](/graphql/core/auth/authentication/webhook.mdx/)
+- [Using JWT](/graphql/core/auth/authentication/jwt.mdx/)
+- [Unauthenticated / Public access](/graphql/core/auth/authentication/unauthenticated-access.mdx/)
 
-Using webhooks \<webhook> Using JWT \<jwt> Unauthenticated / Public
-access \<unauthenticated-access>
+:::info Additional Resources
 
-</div>
+Enterprise Grade Authorization - [Watch Webinar](https://hasura.io/events/webinar/authorization-modeling-hasura/?pg=docs&plcmt=body&cta=watch-webinar&tech=).
 
-<div class="admonition">
-
-Additional Resources
-
-Enterprise Grade Authorization - [Watch
-Webinar](https://hasura.io/events/webinar/authorization-modeling-hasura/?pg=docs&plcmt=body&cta=watch-webinar&tech=).
-
-</div>
+:::
