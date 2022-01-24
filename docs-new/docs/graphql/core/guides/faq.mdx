@@ -1,15 +1,14 @@
-<div class="meta" description="Hasura FAQs"
-keywords="hasura, docs, FAQs">
-
-</div>
+---
+description: Hasura FAQs
+keywords:
+  - hasura
+  - docs
+  - FAQs
+sidebar_position: 14
+sidebar_label: FAQs
+---
 
 # FAQs
-
-<div class="contents" backlinks="none" depth="1" local="">
-
-Table of contents
-
-</div>
 
 ## What types of workloads and databases does Hasura support?
 
@@ -25,8 +24,7 @@ Although Hasura presents itself as a web-service, Hasura is quite a JIT
 compiler, Hasura takes incoming GraphQL API calls over HTTP and then
 tries to achieve theoretically optimal performance while delegating the
 data fetches to downstream data-sources. You can read more about
-Hasura’s design philosophy in this [blog
-post.](https://hasura.io/blog/how-hasura-works/)
+Hasura’s design philosophy in this [blog post.](https://hasura.io/blog/how-hasura-works/)
 
 ## How much time & effort does Hasura save?
 
@@ -65,11 +63,11 @@ asynchronously. Apart from attaching specific pieces of logic to events,
 this is especially useful if you’re thinking about building end to end
 realtime and reactive applications.
 
--   Read more about this architecture at <https://3factor.app>
+-   Read more about this architecture at [https://3factor.app](https://3factor.app)
 -   Read more about event triggers in the Hasura
-    `docs. <event_triggers>`
+    [docs.](/graphql/core/event-triggers/index.mdx)
 -   Go through a quick tutorial on how to set event triggers up at
-    <https://learn.hasura.io>
+    [https://learn.hasura.io](https://learn.hasura.io)
 
 **REST APIs:** If you have new or existing REST APIs that serve domain
 data or logic, you can easily connect Hasura to them and extend the
@@ -78,7 +76,7 @@ have legacy APIs that contain a lot of transactional or application
 logic, but also when you want to build and serve custom logic with
 cloud-native code deployed as containers or serverless functions.
 
--   Read more about `Hasura Actions <actions>`
+-   Read more about [Hasura Actions](/graphql/core/actions/index.mdx)
 
 **GraphQL APIs:** If you have a new or existing GraphQL service that
 extends the schema, say with custom mutations that incorporate your
@@ -87,7 +85,7 @@ custom logic, or if you’d like to extend your overall GraphQL API with a
 you can use “Remote Schemas” in Hasura to bring in GraphQL services as
 data & logic providers to your GraphQL API.
 
--   Read more about `Remote Schemas <remote_schemas>`
+-   Read more about [Remote Schemas](/graphql/core/remote-schemas/index.mdx)
 
 **Stored procedures / functions in the database:** Stored procedures and
 functions are a common way to write and store high-performance business
@@ -98,7 +96,7 @@ This is a great way to bring in existing business logic that maybe in
 your database, or to write custom, high-performance logic if you’re
 familiar with databases!
 
--   Read more about `custom functions <pg_custom_sql_functions>`
+-   Read more about [custom functions](/graphql/core/databases/postgres/schema/custom-functions.mdx)
 
 Choose one or more of the methods above depending on where your existing
 business logic is, and where you want it to be in the future.
@@ -112,7 +110,7 @@ Python or Go!
 
 Hasura 2.0 added support for REST APIs. Hasura 2.0 allows users to
 create idiomatic REST endpoints based on GraphQL templates. Read more
-`here. <restified_api_reference>`
+[here.](/graphql/core/api-reference/restified.mdx)
 
 ## Can Hasura integrate with my authentication system?
 

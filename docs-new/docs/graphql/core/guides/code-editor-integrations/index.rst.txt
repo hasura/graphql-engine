@@ -1,3 +1,16 @@
+---
+description: Create a cron trigger with Hasura
+keywords:
+  - hasura
+  - cloud
+  - cron trigger
+  - scheduled trigger
+  - create
+sidebar_position: 1
+slug: index
+sidebar_label: Auditing tables
+---
+
 <div class="meta"
 description="Guides for code editor integrations with Hasura"
 keywords="hasura, docs, guide, code editor, integration">

@@ -1,15 +1,18 @@
-<div class="meta" description="Docker networking with Hasura"
-keywords="hasura, docs, deployment, network, docker">
+---
+description: Docker networking with Hasura
+keywords:
+  - hasura
+  - docs
+  - deployment
+  - network
+  - docker
+sidebar_position: 4
+---
 
-</div>
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
 
 # Docker networking
-
-<div class="contents" backlinks="none" depth="2" local="">
-
-Table of contents
-
-</div>
 
 ## Introduction
 
@@ -21,28 +24,19 @@ to connect in each of these use cases.
 
 ## Network config
 
-<div class="rst-class">
-
-api_tabs
-
-</div>
-
-<div class="tabs">
-
-<div class="tab">
-
-Linux
+<Tabs className="api-tabs">
+<TabItem value="linux" label="Linux">
 
 <table>
 <thead>
-<tr class="header">
+<tr>
 <th>Connection</th>
 <th>Config</th>
 <th>Comment</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><strong>Hasura to API (outside Docker)</strong></td>
 <td><ol type="1">
 <li>With <code>--net=host</code>, <code>localhost:3000</code></li>
@@ -53,27 +47,27 @@ Linux
 <li>The Docker bridge IP can be found via <code>ifconfig</code></li>
 </ol></td>
 </tr>
-<tr class="even">
+<tr>
 <td><strong>API (outside Docker) to Hasura</strong></td>
 <td><code>localhost:8080</code></td>
 <td>Hasura runs on port <code>8080</code> by default</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><strong>Hasura to API (both in docker-compose)</strong></td>
 <td>service name, e.g.: <code>api:3000</code></td>
 <td>Assuming the API is running on port <code>3000</code></td>
 </tr>
-<tr class="even">
+<tr>
 <td><strong>API to Hasura (both in docker-compose)</strong></td>
 <td>service name, e.g.: <code>hasura:8080</code></td>
 <td>Hasura runs on port <code>8080</code> by default</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><strong>Hasura to API (both running with separate docker run)</strong></td>
 <td>Docker internal IP address</td>
 <td>Can be obtained with <code>docker inspect</code></td>
 </tr>
-<tr class="even">
+<tr>
 <td><strong>API to Hasura (both running with separate docker run)</strong></td>
 <td>Docker internal IP address</td>
 <td>Can be obtained with <code>docker inspect</code></td>
@@ -81,11 +75,8 @@ Linux
 </tbody>
 </table>
 
-</div>
-
-<div class="tab">
-
-Mac
+</TabItem>
+<TabItem value="mac" label="Mac">
 
 | Connection                                                | Config                            | Comment                                    |
 |-----------------------------------------------------------|-----------------------------------|--------------------------------------------|
@@ -96,11 +87,9 @@ Mac
 | **Hasura to API (both running with separate docker run)** | Docker internal IP address        | Can be obtained with `docker inspect`      |
 | **API to Hasura (both running with separate docker run)** | Docker internal IP address        | Can be obtained with `docker inspect`      |
 
-</div>
+</TabItem>
+<TabItem value="windows" label="Windows">
 
-<div class="tab">
-
-Windows
 
 | Connection                                                | Config                            | Comment                                    |
 |-----------------------------------------------------------|-----------------------------------|--------------------------------------------|
@@ -111,11 +100,9 @@ Windows
 | **Hasura to API (both running with separate docker run)** | Docker internal IP address        | Can be obtained with `docker inspect`      |
 | **API to Hasura (both running with separate docker run)** | Docker internal IP address        | Can be obtained with `docker inspect`      |
 
-</div>
-
-</div>
+</TabItem>
+</Tabs>
 
 ## Advanced
 
-Learn more about Docker specific networking in the [Docker
-documentation](https://docs.docker.com/network/).
+Learn more about Docker specific networking in the [Docker documentation](https://docs.docker.com/network/).

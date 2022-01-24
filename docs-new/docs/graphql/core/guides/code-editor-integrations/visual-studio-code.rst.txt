@@ -1,3 +1,15 @@
+---
+description: Create a cron trigger with Hasura
+keywords:
+  - hasura
+  - cloud
+  - cron trigger
+  - scheduled trigger
+  - create
+sidebar_position: 2
+sidebar_label: Visual Studio Code
+---
+
 <div class="meta"
 description="Visual studio code integration with Hasura"
 keywords="hasura, docs, guide, code editor, integration, visual studio code, vs code">

@@ -1,15 +1,15 @@
-<div class="meta" description="Export the GraphQL schema in Hasura"
-keywords="hasura, docs, schema, graphql schema, export">
-
-</div>
+---
+description: Export the GraphQL schema in Hasura
+keywords:
+  - hasura
+  - docs
+  - schema
+  - graphql schema
+  - export
+sidebar_position: 8
+---
 
 # Exporting the Hasura GraphQL schema
-
-<div class="contents" backlinks="none" depth="1" local="">
-
-Table of contents
-
-</div>
 
 ## Introduction
 
@@ -60,8 +60,7 @@ apollo schema:download --endpoint https://my-graphql-engine.com/v1/graphql
 apollo schema:download --endpoint https://my-graphql-engine.com/v1/graphql --header "X-Hasura-Admin-Secret: adminsecretkey"
 ```
 
-Note that `apollo schema:download` is an alias of the command [apollo
-service:download](https://github.com/apollographql/apollo-tooling#apollo-servicedownload-output).
+Note that `apollo schema:download` is an alias of the command [apollo service:download](https://github.com/apollographql/apollo-tooling#apollo-servicedownload-output).
 
 By default, this downloads the schema to a file called `schema.json`.
 This command has no other output types.

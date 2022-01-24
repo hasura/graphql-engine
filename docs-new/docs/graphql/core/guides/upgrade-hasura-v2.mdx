@@ -1,15 +1,16 @@
-<div class="meta" description="Updating to Hasura GraphQL engine v2"
-keywords="hasura, docs, guide, compatibility, update v2">
-
-</div>
+---
+description: Updating to Hasura GraphQL engine v2
+keywords:
+  - hasura
+  - docs
+  - guide
+  - compatibility
+  - update v2
+sidebar_position: 13
+sidebar_label: Updating to Hasura v2
+---
 
 # Updating to Hasura GraphQL engine v2
-
-<div class="contents" backlinks="none" depth="2" local="">
-
-Table of contents
-
-</div>
 
 ## Introduction
 
@@ -33,33 +34,23 @@ Hasura v2:
 -   Config for connecting a database used to be a startup configuration
     (i.e. set via env vars/flags) but since v2, it is a part of Hasura
     metadata and can be managed dynamically. See
-    `connecting databases <connect_database>`.
+    [connecting databases](/graphql/core/databases/connect-db.mdx).
 -   Hasura metadata can now be stored in a separate dedicated Postgres
     DB.
 
-<div class="note">
-
-<div class="title">
-
-Note
-
-</div>
+:::info Note
 
 A detailed changelog with all the new features introduced in Hasura v2
-is available on the [releases
-page](https://github.com/hasura/graphql-engine/releases).
+is available on the [releases page](https://github.com/hasura/graphql-engine/releases).
 
-</div>
+:::
 
 ### Breaking behaviour changes
-
-<div id="hasura_v2_null_where_change">
 
 -   **Semantics of explicit "null" values in "where" filters have
     changed**
 
-    According to the discussion in [this GitHub
-    issue](https://github.com/hasura/graphql-engine/issues/704#issuecomment-635571407),
+    According to the discussion in [this GitHub issue](https://github.com/hasura/graphql-engine/issues/704#issuecomment-635571407),
     an explicit `null` value in a comparison input object will be
     treated as an error rather than resulting in the expression being
     evaluated to `True`.
@@ -95,8 +86,7 @@ page](https://github.com/hasura/graphql-engine/releases).
     the input object and hence the appropriate `order by` clauses with
     the fields in the right order were generated .
 
-    As the [GraphQL
-    spec](http://spec.graphql.org/June2018/#sec-Input-Object-Values)
+    As the [GraphQL spec](http://spec.graphql.org/June2018/#sec-Input-Object-Values)
     mentions that input object keys are unordered, Hasura v2.0's new and
     stricter query parsing logic doesn't maintain the order of keys in
     the input object taking away the guarantee of the generated
@@ -144,17 +134,13 @@ page](https://github.com/hasura/graphql-engine/releases).
     successfully executed migrations up till that point will not be
     rolled back.
 
-</div>
-
-<div id="hasura_v2_env_changes">
-
--   **Deprecation of database specific env vars**
+-   **Deprecation of database specific env vars** {#hasura-v2-env-changes}
 
     In v2.0, the values of the following env vars are used to define the
     connection parameters of the `default` database while updating an
     existing instance or while starting a fresh instance. During
     metadata initialization, their values are moved to the metadata of
-    the `default` database as defined `here <PGConfiguration>`.
+    the `default` database as defined [here](/graphql/core/api-reference/syntax-defs.mdx#pgconfiguration).
 
     -   `HASURA_GRAPHQL_PG_CONNECTIONS`
     -   `HASURA_GRAPHQL_PG_TIMEOUT`
@@ -171,8 +157,6 @@ page](https://github.com/hasura/graphql-engine/releases).
     setting values of these env vars will have no impact as the values
     in the Hasura metadata are now used to define the connection
     parameters.
-
-</div>
 
 ### Hasura configuration
 
@@ -209,7 +193,7 @@ page](https://github.com/hasura/graphql-engine/releases).
     runtime.
 
 -   With support for multiple databases, older database specific env
-    vars have been deprecated. `See details <hasura_v2_env_changes>`
+    vars have been deprecated. [See details](/graphql/core/guides/upgrade-hasura-v2.mdx#hasura-v2-env-changes)
 
 ## Moving from Hasura v1 to Hasura v2
 
@@ -225,7 +209,7 @@ Post adding a database named `default`, the Hasura v2 instance should
 behave equivalently to the Hasura v1 instance and all previous workflows
 will continue working as they were.
 
-Refer to `connecting databases <connect_database>` to add a database to
+Refer to [connecting databases](/graphql/core/databases/connect-db.mdx) to add a database to
 Hasura v2.
 
 ### Migrate Hasura v1 instance to Hasura v2
@@ -237,13 +221,7 @@ instance should work seamlessly. The database connected using the
 the name `default` automatically and all existing metadata and
 migrations will be assumed to belong to it.
 
-<div class="note">
-
-<div class="title">
-
-Note
-
-</div>
+:::info Note
 
 In case you happen to have a large number of past cron and event trigger
 logs in your database, this might slow down the update to v2 and might
@@ -257,7 +235,7 @@ You can take a dump of this data before cleaning up if you wish to keep
 the log history. This data can be restored back into the DB if required
 post the update.
 
-</div>
+:::
 
 ## Post update steps
 
@@ -265,7 +243,7 @@ post the update.
 
 With support for multiple databases, database connection related config
 is now stored in Hasura metadata and the older database specific env
-vars have been deprecated. `See details <hasura_v2_env_changes>`.
+vars have been deprecated. [See details](/graphql/core/guides/upgrade-hasura-v2.mdx#hasura-v2-env-changes).
 
 Post update to Hasura v2 these env vars can be removed as they will now
 be ignored.
@@ -276,7 +254,7 @@ connected database(s) via the console/CLI/APIs.
 ### Upgrade CLI project to enable multiple database and other new features support
 
 Update your Hasura CLI project to `config v3` using the steps mentioned
-in `this guide <migrations_upgrade_v3>` to take full advantages of the
+in [this guide](/graphql/core/migrations/upgrade-v3.mdx) to take full advantages of the
 features introduced in Hasura v2.
 
 Post upgrading to `config v3`, the database connection parameters would
@@ -285,13 +263,7 @@ the same env vars are used for storing database connection strings
 across all environments and the metadata being applied also uses the
 appropriate env vars.
 
-<div class="note">
-
-<div class="title">
-
-Note
-
-</div>
+:::info Note
 
 If you do not need multiple database support or any of new features
 introduced in Hasura v2, like REST endpoints, inherited roles etc., then
@@ -300,7 +272,7 @@ you can continue to use `config v2` project directory and workflows.
 Though we would recommend to upgrade to `config v3` anyway as it
 includes some useful directory structure changes.
 
-</div>
+:::
 
 ### Updates to CI/CD after updating to Hasura v2
 
@@ -330,22 +302,16 @@ apply metadata and migrations in CI/CD workflows
 
 In case there are some issues with your Hasura instance post updating to
 Hasura v2, you can downgrade back to Hasura v1 by reverting the Hasura
-docker image version and using the `downgrade command <downgrade_hge>`
+docker image version and using the [downgrade command](/graphql/core/deployment/downgrading.mdx)
 to revert the Hasura metadata catalogue changes:
 
 ```bash
 docker run -e HASURA_GRAPHQL_DATABASE_URL=$POSTGRES_URL hasura/graphql-engine:v2.0.0 graphql-engine downgrade --to-v1.3.3
 ```
 
-<div class="note">
-
-<div class="title">
-
-Note
-
-</div>
+:::info Note
 
 You can downgrade a Hasura v2 instance to Hasura v1 only if there is
 only one database connected to it.
 
-</div>
+:::
