@@ -1,36 +1,28 @@
-<div class="meta" description="Use Postgres constraints with Hasura"
-keywords="hasura, docs, postgres, constraints">
-
-</div>
+---
+description: Use Postgres constraints with Hasura
+keywords:
+  - hasura
+  - docs
+  - postgres
+  - constraints
+sidebar_position: 2
+sidebar_label: Constraints
+---
 
 # Postgres constraints
 
-<div class="contents" backlinks="none" depth="2" local="">
-
-Table of contents
-
-</div>
-
 ## Introduction
 
-[Postgres
-constraints](https://www.postgresql.org/docs/current/ddl-constraints.html)
+[Postgres constraints](https://www.postgresql.org/docs/current/ddl-constraints.html)
 are used to define rules for columns in a database table. They ensure
 that no invalid data is entered into the database.
 
-<div class="note">
-
-<div class="title">
-
-Note
-
-</div>
+:::info Note
 
 For more detailed information on Postgres constraints, please refer to
-the [Postgres
-documentation](https://www.postgresql.org/docs/current/ddl-constraints.html).
+the [Postgres documentation](https://www.postgresql.org/docs/current/ddl-constraints.html).
 
-</div>
+:::
 
 ## Postgres constraints
 
@@ -122,8 +114,8 @@ CREATE TABLE authors(
 
 Most Postgres constraints (primary key, foreign key, not-null and unique
 constraints) can be added to Hasura natively when
-`creating tables <pg_create_tables>`.
+[creating tables](/graphql/core/databases/postgres/schema/tables.mdx#pg-create-tables).
 
 Postgres check constraints can be used as a form of data validation in
 Hasura and can be added
-`as described here <pg_data_validations_check_constraints>`.
+[as described here](/graphql/core/databases/postgres/schema/data-validations.mdx#pg-data-validations-check-constraints).

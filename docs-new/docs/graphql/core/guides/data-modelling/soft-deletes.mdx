@@ -1,15 +1,18 @@
-<div class="meta" description="Set up soft deletes for data with Hasura"
-keywords="hasura, docs, guide, soft deletes">
+---
+description: Set up soft deletes for data with Hasura
+keywords:
+  - hasura
+  - docs
+  - guide
+  - soft deletes
+sidebar_position: 5
+sidebar_label: Setting up soft deletes for data
+---
 
-</div>
+import Thumbnail from "@site/src/components/Thumbnail/Thumbnail";
+import GraphiQLIDE from "@site/src/components/GraphiQLIDE/GraphiQLIDE"
 
 # Setting up soft deletes for data
-
-<div class="contents" backlinks="none" depth="1" local="">
-
-Table of contents
-
-</div>
 
 ## Overview
 
@@ -24,11 +27,10 @@ the record should be treated as deleted.
 **For example:** Let's imagine that we have a simple Todo application,
 our `todos` table would resemble the following:
 
-<div class="thumbnail" alt="Todo table of a todo application">
-
-/img/graphql/core/guides/soft-deletes-example-data.png
-
-</div>
+<Thumbnail
+  src="/img/graphql/core/guides/soft-deletes-example-data.png"
+  alt="Todo table of a todo application"
+/>
 
 In this example we only have two todos, one has `deleted_at` with a
 timestamp value and the other contains a `null` value. The todo with the
@@ -72,7 +74,7 @@ mutation {
 
 ## Step 3: Set up appropriate insert/update/delete permissions
 
-Now, we need to ensure that appropriate `permissions <authorization>`
+Now, we need to ensure that appropriate [permissions](/graphql/core/auth/authorization/index.mdx)
 are set to avoid actual deletes from happening and allowing update of
 the `deleted_at` field.
 
@@ -80,66 +82,65 @@ Here are some typical rules we should set:
 
 **Delete permissions** - remove all access
 
-<div class="thumbnail" alt="Delete permissions for role user">
-
-/img/graphql/core/guides/soft-deletes-delete-perms.png
-
-</div>
+<Thumbnail
+  src="/img/graphql/core/guides/soft-deletes-delete-perms.png"
+  alt="Delete permissions for role user"
+/>
 
 **Insert permissions** - remove access for inserting into `deleted_at`
 column
 
-<div class="thumbnail" alt="Insert permissions for role user">
-
-/img/graphql/core/guides/soft-deletes-insert-perms.png
-
-</div>
+<Thumbnail
+  src="/img/graphql/core/guides/soft-deletes-insert-perms.png"
+  alt="Insert permissions for role user"
+/>
 
 **Update permissions** - allow access for updating `deleted_at` column
 
-<div class="thumbnail" alt="Update permissions for role user">
-
-/img/graphql/core/guides/soft-deletes-update-perms.png
-
-</div>
+<Thumbnail
+  src="/img/graphql/core/guides/soft-deletes-update-perms.png"
+  alt="Update permissions for role user"
+/>
 
 ## Step 4: Restrict access to soft-deleted records
 
 Now that we have set up the soft deleting pattern for records, we need
 to ensure that we restrict the "deleted" records from being accessed.
 
-We can achieve this by setting appropriate `permissions <authorization>`
+We can achieve this by setting appropriate [permissions](/graphql/core/auth/authorization/index.mdx)
 for roles which have access to the `todos` table.
 
 For example, let's say that a role `user` can only access non-deleted
 todos, we need to add the following permission rule to ensure this:
 
-<div class="thumbnail" alt="Restrict access to soft-deleted records">
-
-/img/graphql/core/guides/soft-deletes-select-perms.png
-
-</div>
+<Thumbnail
+  src="/img/graphql/core/guides/soft-deletes-select-perms.png"
+  alt="Restrict access to soft-deleted records"
+/>
 
 Now the role `user` can only access non-deleted `todos`:
 
-<div class="graphiql" view_only="" query="query {
-  todos {
-    id
-    name
-    deleted_at
-  }
+<GraphiQLIDE
+  query={`{
+    query {
+todos {
+id
+name
+deleted_at
 }
-:response:
+}
+  }`}
+  response={`{
+  {
+"data": {
+"todos": [
 {
-  &quot;data&quot;: {
-    &quot;todos&quot;: [
-      {
-        &quot;id&quot;: &quot;34c4e2f9-c3e2-4147-9138-f67b6e7e2947&quot;,
-        &quot;name&quot;: &quot;Get stuff done&quot;,
-        &quot;deleted_at&quot;: null
-      }
-    ]
-  }
-}">
-
-</div>
+"id": "34c4e2f9-c3e2-4147-9138-f67b6e7e2947",
+"name": "Get stuff done",
+"deleted_at": null
+}
+]
+}
+}
+  }`}
+/>

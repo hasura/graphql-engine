@@ -1,37 +1,29 @@
-<div class="meta" description="Use Postgres indexes with Hasura"
-keywords="hasura, docs, postgres, indexes">
-
-</div>
+---
+description: Use Postgres indexes with Hasura
+keywords:
+  - hasura
+  - docs
+  - postgres
+  - indexes
+sidebar_position: 6
+sidebar_label: Indexes
+---
 
 # Postgres indexes
 
-<div class="contents" backlinks="none" depth="1" local="">
-
-Table of contents
-
-</div>
-
 ## Introduction
 
-[Postgres
-indexes](https://www.postgresql.org/docs/current/sql-createindex.html)
+[Postgres indexes](https://www.postgresql.org/docs/current/sql-createindex.html)
 are a way of increasing query performance based on columns that are
 queried frequently. The concept is similar to the one of an index in a
 book. It helps accessing the data you're looking for more quickly by
 maintaining additional metadata.
 
-<div class="note">
+:::info Note
 
-<div class="title">
+Learn more about indexes in the [Postgres documentation](https://www.postgresql.org/docs/current/sql-createindex.html).
 
-Note
-
-</div>
-
-Learn more about indexes in the [Postgres
-documentation](https://www.postgresql.org/docs/current/sql-createindex.html).
-
-</div>
+:::
 
 ## Example
 
@@ -57,5 +49,5 @@ significantly.
 ## Postgres indexes & Hasura
 
 Indexes can be used to optimize query performance in Hasura.
-`Refer to this page <pg_data_validation_pg_indexes>` for information
+[Refer to this page](/graphql/core/databases/postgres/queries/performance.mdx#pg-data-validation-pg-indexes) for information
 about query performance and how to add Postgres indexes to Hasura.

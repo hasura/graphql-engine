@@ -1,39 +1,32 @@
-<div class="meta" description="Use Postgres functions with Hasura"
-keywords="hasura, docs, postgres, functions, stored procedures">
-
-</div>
+---
+description: Use Postgres functions with Hasura
+keywords:
+  - hasura
+  - docs
+  - postgres
+  - functions
+  - stored procedures
+sidebar_position: 4
+sidebar_label: Functions
+---
 
 # Postgres functions
 
-<div class="contents" backlinks="none" depth="1" local="">
-
-Table of contents
-
-</div>
-
 ## Introduction
 
-[Postgres
-functions](https://www.postgresql.org/docs/current/sql-createfunction.html)
+[Postgres functions](https://www.postgresql.org/docs/current/sql-createfunction.html)
 allow you to customize your database schema by defining a set of
 operations that can include several statements such as declarations,
 assignments and conditional workflows. Postgres functions are similar to
 views but allow more procedural computations and can take arguments. SQL
 functions are also referred to as **stored procedures**.
 
-<div class="note">
-
-<div class="title">
-
-Note
-
-</div>
+:::info Note
 
 For more information on Postgres functions, please refer to the
-[Postgres
-documentation](https://www.postgresql.org/docs/current/sql-createfunction.html).
+[Postgres documentation](https://www.postgresql.org/docs/current/sql-createfunction.html).
 
-</div>
+:::
 
 ## Examples
 
@@ -69,6 +62,6 @@ Postgres functions can be exposed in Hasura's GraphQL schema as a
 top-level field or as a computed field for a table. They are typically
 used for performing custom business logic in the database.
 
-Refer to `Custom SQL functions <pg_custom_sql_functions>` and
-`Computed fields <pg_computed_fields>` for more use cases and for
+Refer to [Custom SQL functions](/graphql/core/databases/postgres/schema/custom-functions.mdx) and
+[Computed fields](/graphql/core/databases/postgres/schema/computed-fields.mdx) for more use cases and for
 instructions on how to create and expose Postgres functions in Hasura.

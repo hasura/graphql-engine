@@ -1,44 +1,34 @@
-<div class="meta" description="Use Postgres views with Hasura"
-keywords="hasura, docs, postgres, views">
-
-</div>
+---
+description: Use Postgres views with Hasura
+keywords:
+  - hasura
+  - docs
+  - postgres
+  - views
+sidebar_position: 3
+sidebar_label: Views
+---
 
 # Postgres views
 
-<div class="contents" backlinks="none" depth="1" local="">
-
-Table of contents
-
-</div>
-
 ## Introduction
 
-A [Postgres
-view](https://www.postgresql.org/docs/current/sql-createview.html) is a
+A [Postgres view](https://www.postgresql.org/docs/current/sql-createview.html) is a
 virtual table in Postgres. It represents the result of a query to one or
 more underlying tables in Postgres. Views are used to simplify complex
 queries since these queries are defined once in the view, and can then
 be directly queried via the same.
 
-<div class="note">
+:::info Note
 
-<div class="title">
+Please refer to the Postgres documentation for more details on [standard views](https://www.postgresql.org/docs/current/sql-createview.html) and
+[materialized views](https://www.postgresql.org/docs/current/rules-materializedviews.html).
 
-Note
-
-</div>
-
-Please refer to the Postgres documentation for more details on [standard
-views](https://www.postgresql.org/docs/current/sql-createview.html) and
-[materialized
-views](https://www.postgresql.org/docs/current/rules-materializedviews.html).
-
-</div>
+:::
 
 ## Standard views
 
-[Standard
-views](https://www.postgresql.org/docs/current/sql-createview.html)
+[Standard views](https://www.postgresql.org/docs/current/sql-createview.html)
 represent the result of a query without actually storing data.
 
 ### Examples
@@ -75,19 +65,14 @@ SELECT name, rating from authors_ordered_by_rating;
 
 ## Materialized views
 
-Compared to the standard view described above, [materialized
-views](https://www.postgresql.org/docs/current/rules-materializedviews.html)
+Compared to the standard view described above, [materialized views](https://www.postgresql.org/docs/current/rules-materializedviews.html)
 **do** store data physically in the database. Materialized views are
 used if data from complex queries needs to be accessed quickly.
 
 ### Example
 
-<div id="pg_materialized_view_example">
-
 **Materialized view with authors whose rating is larger than 6 and who
 are active, ordered by rating:**
-
-</div>
 
 ```sql
 CREATE MATERIALIZED VIEW popular_active_authors AS
@@ -114,12 +99,12 @@ REFRESH MATERIALIZED VIEW popular_active_authors;
 ```
 
 Materialized views can be refreshed when their underlying source data
-changes using `Postgres triggers <postgres_triggers>`.
+changes using [Postgres triggers](/graphql/core/guides/postgres/triggers.mdx).
 
 ## Postgres views & Hasura
 
 After creating a view, you can expose it over your GraphQL API and query
 it like a normal table.
 
-See `this page <pg_custom_views>` for more info on how to create and
+See [this page](/graphql/core/databases/postgres/schema/views.mdx#pg-custom-views) for more info on how to create and
 expose views in Hasura.

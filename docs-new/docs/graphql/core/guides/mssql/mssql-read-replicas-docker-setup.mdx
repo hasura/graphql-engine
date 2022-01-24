@@ -1,24 +1,23 @@
-<div class="meta"
-description="Sample Docker Setup for MSSQL Read Replica"
-keywords="hasura, docs, cloud, read replicas, mssql">
-
-</div>
+---
+description: Sample Docker Setup for MSSQL Read Replica
+keywords:
+  - hasura
+  - docs
+  - cloud
+  - read replicas
+  - mssql
+sidebar_position: 2
+sidebar_label: MS SQL Server Read Replicas - Docker Setup
+---
 
 # MS SQL Server Read Replicas - Docker Setup
-
-<div class="contents" backlinks="none" depth="1" local="">
-
-Table of contents
-
-</div>
 
 ## Introduction
 
 The following tutorial helps setting up a Docker container setup for the
 MS SQL Server Read Replicas.
 
-This tutorial was highly influenced by [this
-blog](https://dbtut.com/index.php/2020/06/09/sql-server-2019-alwayson-availability-group-on-docker-containers)
+This tutorial was highly influenced by [this blog](https://dbtut.com/index.php/2020/06/09/sql-server-2019-alwayson-availability-group-on-docker-containers)
 
 ## Step 1: Set up the Docker image with SQL Server
 
@@ -185,8 +184,7 @@ WITH PRIVATE KEY (
 GO
 ```
 
-Store the above sql file in <span
-class="title-ref">1-primary-setup-certificate.sql</span>. Then apply the
+Store the above sql file in `1-primary-setup-certificate.sql`. Then apply the
 transaction to primary node via the following.
 
 ```bash

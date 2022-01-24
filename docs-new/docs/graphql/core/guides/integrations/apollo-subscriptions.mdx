@@ -1,21 +1,24 @@
-<div class="meta"
-description="Set up GraphQL subscriptions with apollo-client"
-keywords="hasura, docs, guide, GraphQL subscriptions, apollo, apollo-client">
+---
+description: Set up GraphQL subscriptions with apollo-client
+keywords:
+  - hasura
+  - docs
+  - guide
+  - GraphQL subscriptions
+  - apollo
+  - apollo-client
+sidebar_position: 5
+sidebar_label: Subscriptions using apollo-client
+---
 
-</div>
+import Thumbnail from "@site/src/components/Thumbnail/Thumbnail";
 
 # Setting up GraphQL subscriptions using apollo-client
-
-<div class="contents" backlinks="none" depth="1" local="">
-
-Table of contents
-
-</div>
 
 ## Setup
 
 This guide assumes you have the basic apollo-client working as per
-<https://www.apollographql.com/docs/react/get-started/> and now you want
+[https://www.apollographql.com/docs/react/get-started/](https://www.apollographql.com/docs/react/get-started/) and now you want
 to enable subscriptions.
 
 ### Install packages
@@ -135,9 +138,7 @@ subscriptions.
         ...                                     ...
 ```
 
-<div class="admonition">
-
-Caveat
+:::note Caveat
 
 If all the 3 changes are not made, **it works like a query instead of a
 subscription** since the code that sets up apollo-link doesn't work.
@@ -155,7 +156,7 @@ const link = split(
 )
 ```
 
-</div>
+:::
 
 ## Related Blog
 

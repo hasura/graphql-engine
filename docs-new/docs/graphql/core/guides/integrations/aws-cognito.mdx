@@ -1,16 +1,20 @@
-<div class="meta"
-description="Using AWS Cognito for authentication with Hasura"
-keywords="hasura, docs, guide, authentication, auth, jwt, integration">
+---
+description: Using AWS Cognito for authentication with Hasura
+keywords:
+  - hasura
+  - docs
+  - guide
+  - authentication
+  - auth
+  - jwt
+  - integration
+sidebar_position: 3
+sidebar_label: Using AWS Cognito for authentication
+---
 
-</div>
+import Thumbnail from "@site/src/components/Thumbnail/Thumbnail";
 
 # Using AWS Cognito for authentication
-
-<div class="contents" backlinks="none" depth="1" local="">
-
-Table of contents
-
-</div>
 
 ## Introduction
 
@@ -19,17 +23,15 @@ with the Hasura GraphQL engine.
 
 ## Set up user pools and hosted web UI
 
-Follow [these
-instructions](https://docs.aws.amazon.com/cognito/latest/developerguide/getting-started-with-cognito-user-pools.html)
+Follow [these instructions](https://docs.aws.amazon.com/cognito/latest/developerguide/getting-started-with-cognito-user-pools.html)
 to set up a user pool, add an app and enable the hosted web UI in AWS
 cognito. While enabling the hosted web UI, you need to select the
 checkbox `Implicit Grant`.
 
-<div class="thumbnail" alt="Cognito App Client Settings">
-
-/img/graphql/core/guides/cognito-app-client-settings.png
-
-</div>
+<Thumbnail
+  src="/img/graphql/core/guides/cognito-app-client-settings.png"
+  alt="Cognito App Client Settings"
+/>
 
 ## Create a lambda function to add claims to the JWT
 
@@ -59,30 +61,25 @@ exports.handler = (event, context, callback) => {
     callback(null, event)
 }
 ```
+<Thumbnail
+  src="/img/graphql/core/guides/cognito-lambda.png"
+  alt="Cognito Lambda function to add claims to the JWT"
+/>
 
-<div class="thumbnail"
-alt="Cognito Lambda function to add claims to the JWT">
-
-/img/graphql/core/guides/cognito-lambda.png
-
-</div>
-
-## Configure Cognito to trigger the lambda function
+## Configure Cognito to trigger the lambda function {#test-cognito}
 
 In cognito, select `Triggers` -> `Pre Token Generation` and choose the
 lambda function created above:
 
-<div class="thumbnail" alt="Select lambda for the trigger">
+<Thumbnail
+  src="/img/graphql/core/guides/cognito-triggers-1.png"
+  alt="Select lambda for the trigger"
+/>
 
-/img/graphql/core/guides/cognito-triggers-1.png
-
-</div>
-
-<div class="thumbnail" alt="Select lambda for the trigger">
-
-/img/graphql/core/guides/cognito-triggers-2.png
-
-</div>
+<Thumbnail
+  src="/img/graphql/core/guides/cognito-triggers-2.png"
+  alt="Select lambda for the trigger"
+/>
 
 ## Test the Cognito login and generate sample JWTs for testing
 
@@ -91,45 +88,37 @@ follow the steps below:
 
 1.  Launch the hosted UI from AWS Cognito.
 
-<div class="thumbnail" alt="Launch Cognito Login UI">
-
-/img/graphql/core/guides/cognito-launch-hosted-ui.png
-
-</div>
+<Thumbnail
+  src="/img/graphql/core/guides/cognito-launch-hosted-ui.png"
+  alt="Launch Cognito Login UI"
+/>
 
 2.  You should see the Cognito login page where you can log in or sign
     up.
 
-<div class="thumbnail" alt="Cognito Login Page">
+<Thumbnail
+  src="/img/graphql/core/guides/cognito-login.png"
+  alt="Cognito Login Page"
+/>
 
-/img/graphql/core/guides/cognito-login.png
-
-</div>
-
-<div id="test-cognito">
-
-3\. After successfully logging in, you will be redirected to
+3. After successfully logging in, you will be redirected to
 `https://localhost:3000/cognito-callback#id_token=xxxxxx&yyyyyy`. This
 page may be a 404 if you don't have a UI running on localhost:3000.
 Extract the `id_token` value from this URL.
 
-</div>
-
-<div class="thumbnail" alt="JWT from id_token query param">
-
-/img/graphql/core/guides/cognito-redirect.png
-
-</div>
+<Thumbnail
+  src="/img/graphql/core/guides/cognito-redirect.png"
+  alt="JWT from id_token query param"
+/>
 
 4.  To test this JWT, and to see if all the Hasura claims are added as
     per the sections above, let's test this out with
     [jwt.io](https://jwt.io)!
 
-<div class="thumbnail" alt="JWT debug on jwt.io">
-
-/img/graphql/core/guides/cognito-jwt.png
-
-</div>
+<Thumbnail
+  src="/img/graphql/core/guides/cognito-jwt.png"
+  alt="JWT debug on jwt.io"
+/>
 
 **Save this JWT token value so that we can use it later to test the
 authorization using the Hasura console.**
@@ -158,12 +147,12 @@ Cognito is configured and ready to be used in the application. You can
 now set up access control rules that will automatically get applied
 whenever a client makes a GraphQL request with the Cognito token.
 
-Refer to `auth_basics` for more information.
+Refer to [auth_basics](/graphql/core/auth/authorization/basics.mdx) for more information.
 
 To test this out, add an access control rule that uses
 `x-hasura-user-id` for the role `user`. Then make a GraphQL query or a
 mutation, with the authorization token from the
-`previous step <test-cognito>` where we generated an Cognito token.
+[previous step](/graphql/core/guides/integrations/aws-cognito.mdx#test-cognito) where we generated an Cognito token.
 
 <img src="https://graphql-engine-cdn.hasura.io/img/jwt-header-auth-hasura.png" class="no-shadow no-shadow" alt="JWT token used as bearer token on hasura console" />
 
@@ -186,8 +175,7 @@ sync your users in Postgres as well. All you really need is the Cognito
 
 This can be done creating a lambda function and configuring it as the
 `Post Authentication Trigger`. The parameters available for this trigger
-are described
-[here](https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-lambda-post-authentication.html)
+are described [here](https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-lambda-post-authentication.html)
 . Here is a sample lambda function:
 
 ```javascript
@@ -217,28 +205,20 @@ function (event, context, callback) {
 That’s it! This lambda function will be triggered on every successful
 sign up/log in and sync your Cognito user into your Postgres database.
 
-<div class="note">
-
-<div class="title">
-
-Note
-
-</div>
+:::info Note
 
 We need to use an `upsert` operation here because social logins do not
 distinguish between sign up and login. Hence, we need to run this rule
 every time a successful login is made and do nothing if the user already
 exists.
 
-</div>
+:::
 
-<div class="admonition">
-
-Local dev with Cognito rules
+:::note Local dev with Cognito rules
 
 The sync step will require a reachable endpoint to Hasura and this is
 not possible in localhost. You can use [ngrok](https://ngrok.com/) or
 similar services to expose your locally running Hasura with a public
 endpoint temporarily.
 
-</div>
+:::

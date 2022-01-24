@@ -1,35 +1,27 @@
-<div class="meta" description="Use Postgres triggers with Hasura"
-keywords="hasura, docs, postgres, triggers">
-
-</div>
+---
+description: Use Postgres triggers with Hasura
+keywords:
+  - hasura
+  - docs
+  - postgres
+  - triggers
+sidebar_position: 5
+sidebar_label: Triggers
+---
 
 # Postgres triggers
 
-<div class="contents" backlinks="none" depth="1" local="">
-
-Table of contents
-
-</div>
-
 ## Introduction
 
-[Postgres
-triggers](https://www.postgresql.org/docs/current/sql-createtrigger.html)
+[Postgres triggers](https://www.postgresql.org/docs/current/sql-createtrigger.html)
 are used to invoke previously defined Postgres functions *before* or
 *after* a specific database event (e.g. `INSERT`) occurs.
 
-<div class="note">
+:::info Note
 
-<div class="title">
+For more information on Postgres triggers, please refer to the [Postgres documentation](https://www.postgresql.org/docs/current/sql-createtrigger.html).
 
-Note
-
-</div>
-
-For more information on Postgres triggers, please refer to the [Postgres
-documentation](https://www.postgresql.org/docs/current/sql-createtrigger.html).
-
-</div>
+:::
 
 ## Examples
 
@@ -97,18 +89,12 @@ CREATE TRIGGER update_materialized_view AFTER INSERT ON "authors" FOR EACH ROW E
 
 Postgres triggers can be used to perform business logic such as data
 validation and can be added
-`as described here <pg_data_validations_pg_triggers>`.
+[as described here](/graphql/core/databases/postgres/schema/data-validations.mdx).
 
-<div class="note">
+:::info Note
 
-<div class="title">
-
-Note
-
-</div>
-
-Hasura also has `event triggers <event_triggers>` that can be used to
+Hasura also has [event triggers](/graphql/core/event-triggers/index.mdx) that can be used to
 invoke external HTTP APIs for executing custom business logic on
 database events.
 
-</div>
+:::
