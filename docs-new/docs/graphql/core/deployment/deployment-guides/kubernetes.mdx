@@ -1,16 +1,15 @@
-<div class="meta"
-description="Deploy Hasura GraphQL engine with Kubernetes"
-keywords="hasura, docs, deployment, kubernetes">
-
-</div>
+---
+description: Deploy Hasura GraphQL engine with Kubernetes
+keywords:
+  - hasura
+  - docs
+  - deployment
+  - kubernetes
+sidebar_position: 4
+sidebar_label: Using Kubernetes
+---
 
 # Run Hasura GraphQL engine on Kubernetes
-
-<div class="contents" backlinks="none" depth="1" local="">
-
-Table of contents
-
-</div>
 
 ## Introduction
 
@@ -22,8 +21,7 @@ Postgres database.
 
 ### Step 1: Get the Kubernetes deployment and service files
 
-The
-[hasura/graphql-engine/install-manifests](https://github.com/hasura/graphql-engine/tree/stable/install-manifests)
+The [hasura/graphql-engine/install-manifests](https://github.com/hasura/graphql-engine/tree/stable/install-manifests)
 repo contains all installation manifests required to deploy Hasura
 anywhere. Get the Kubernetes deployment and service files from there:
 
@@ -49,27 +47,21 @@ Examples of `HASURA_GRAPHQL_DATABASE_URL`:
 -   `postgres://admin:password@localhost:5432/my-db`
 -   `postgres://admin:@localhost:5432/my-db` *(if there is no password)*
 
-<div class="note">
-
-<div class="title">
-
-Note
-
-</div>
+:::info Note
 
 -   If your **password contains special characters** (e.g. #, %, $, @,
     etc.), you need to URL encode them in the
     `HASURA_GRAPHQL_DATABASE_URL` env var (e.g. %40 for @).
 
-    You can check the `logs <kubernetes_logs>` to see if the database
+    You can check the [logs](/graphql/core/deployment/deployment-guides/kubernetes.mdx/) to see if the database
     credentials are proper and if Hasura is able to connect to the
     database.
 
 -   The Hasura GraphQL engine needs access permissions on your Postgres
     database as described in
-    `Postgres permissions <postgres_permissions>`.
+    [Postgres permissions](/graphql/core/deployment/postgres-requirements.mdx#postgres-permissions).
 
-</div>
+:::
 
 ### Step 3: Create the Kubernetes deployment and service
 
@@ -96,7 +88,7 @@ Head to: `http://localhost` and the console should load!
 
 ### Step 5: Track existing tables and relationships
 
-See `pg_schema_existing_db` to enable GraphQL over the database.
+See [Setting up a GraphQL schema using an existing Postgres database](/graphql/core/databases/postgres/schema/using-existing-database.mdx#pg-schema-existing-db) to enable GraphQL over the database.
 
 ## Securing the GraphQL endpoint
 
@@ -126,20 +118,14 @@ spec:
      resources: {}
 ```
 
-<div class="note">
-
-<div class="title">
-
-Note
-
-</div>
+:::info  Note
 
 The `HASURA_GRAPHQL_ADMIN_SECRET` should never be passed from the client
 to the Hasura GraphQL engine as it would give the client full admin
-rights to your Hasura instance. See `auth` for information on setting up
+rights to your Hasura instance. See [Authentication & Authorization](/graphql/core/auth/index.mdx/) for information on setting up
 authentication.
 
-</div>
+:::
 
 ### (optional) Use the admin secret key with the CLI
 
@@ -165,9 +151,9 @@ $ kubectl logs -f svc/hasura
 
 **See:**
 
--   <https://kubernetes.io/docs/concepts/cluster-administration/logging>
+-   [https://kubernetes.io/docs/concepts/cluster-administration/logging](https://kubernetes.io/docs/concepts/cluster-administration/logging)
     for more details on logging in Kubernetes.
--   `hge_logs` for more details on Hasura logs
+-   [Hasura GraphQL engine logs](/graphql/core/deployment/logging.mdx/) for more details on Hasura logs
 
 ## Updating Hasura GraphQL engine
 
@@ -179,10 +165,9 @@ engine running on Kubernetes.
 
 The current latest version is:
 
-<code>hasura/graphql-engine:<span class="latest-release-tag">latest</span></code>
+<code>hasura/graphql-engine:v1.3.3</code>
 
-All the versions can be found at:
-<https://github.com/hasura/graphql-engine/releases>.
+All the versions can be found at: [https://github.com/hasura/graphql-engine/releases](https://github.com/hasura/graphql-engine/releases).
 
 ### Step 2: Update the container image
 
@@ -191,38 +176,35 @@ version.
 
 For example, if you had:
 
-<code>
-  containers:<br>
+```
+
+  containers:
     - image: hasura/graphql-engine:v1.0.0-alpha01
-</code>
+
+```
 
 you should change it to:
 
-<code>
-  containers:<br>
-    - image: hasura/graphql-engine:<span class="latest-release-tag">latest</span>
-</code>
+```
 
+  containers:
+    - image: hasura/graphql-engine:v1.3.3
+    
+```
 ### Step 3: Rollout the change
 
 ```bash
 $ kubectl replace -f deployment.yaml
 ```
 
-<div class="note">
-
-<div class="title">
-
-Note
-
-</div>
+:::info Note
 
 If you are downgrading to an older version of the GraphQL engine you
 might need to downgrade your metadata catalogue version as described in
-`downgrade_hge`
+[Downgrading Hasura GraphQL engine](/graphql/core/deployment/downgrading.mdx/)
 
-</div>
+:::
 
 ## Advanced
 
--   `Setting up migrations <migrations>`
+-   [Setting up migrations](/graphql/core/migrations/index.mdx/)

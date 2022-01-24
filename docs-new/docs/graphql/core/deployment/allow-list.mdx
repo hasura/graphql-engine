@@ -1,16 +1,14 @@
-<div class="meta"
-description="Manage allow list with Hasura GraphQL engine"
-keywords="hasura, docs, deployment, allow list">
-
-</div>
+---
+description: Manage allow list with Hasura GraphQL engine
+keywords:
+  - hasura
+  - docs
+  - deployment
+  - allow list
+sidebar_position: 8
+---
 
 # Allow-list of operations
-
-<div class="contents" backlinks="none" depth="1" local="">
-
-Table of contents
-
-</div>
 
 ## Introduction
 
@@ -46,22 +44,15 @@ You can add or remove a operation in the allow-list in two ways:
         }
         ```
 
-    -   You can upload files, like this [sample
-        file](https://gist.github.com/dsandip/8b1b4aa87708289d4c9f8fd9621eb025),
+    -   You can upload files, like this [sample file](https://gist.github.com/dsandip/8b1b4aa87708289d4c9f8fd9621eb025),
         to add multiple operations to the allow-list (each operation
         needs to have a name).
 -   **Using metadata APIs:** Queries can be stored in collections and a
     collection can be added to or removed from the allow-list. See
-    `Collections & Allow-list APIs <metadata_api_query_collections>` for
+    [Collections & Allow-list APIs](/graphql/core/api-reference/metadata-api/query-collections.mdx) for
     API reference.
 
-<div class="note">
-
-<div class="title">
-
-Note
-
-</div>
+:::info Note
 
 -   `__typename` introspection fields will be ignored when adding
     operations and comparing them to the allow-list.
@@ -86,32 +77,24 @@ Note
 
 -   The allow-list is stored in the metadata. To version control the
     state of the list, you are required to export the metadata. See
-    `Managing Hasura metadata <manage_hasura_metadata>` for more
+    [Managing Hasura metadata](/graphql/core/migrations/manage-metadata.mdx/) for more
     details.
 
 -   You can modify the allow-list without actually enabling it on your
     instance.
-
-</div>
 
 ## Enable allow-list
 
 The allow-list validation can be enabled by setting the
 `HASURA_GRAPHQL_ENABLE_ALLOWLIST` environment variable to `true` or
 running the GraphQL engine with the `--enable-allowlist` flag (*default
-value is* `false`). See `reference docs <command-flags>`.
+value is* `false`). See `reference docs [command-flags](/graphql/core/deployment/graphql-engine-flags/reference.mdx#command-flags).
 
-<div class="note">
-
-<div class="title">
-
-Note
-
-</div>
+:::info Note
 
 The allow-list validation will not be enforced for the `admin` role.
 
-</div>
+:::
 
 ## Recommended usage
 
@@ -127,12 +110,10 @@ allow-list based validation:
 -   **In production instances**: Enabling the allow-list is highly
     recommended when running the GraphQL engine in production.
 
-<div class="admonition dhc">
-
-Allow Lists in Hasura Cloud
+:::info Allow Lists in Hasura Cloud
 
 Hasura Cloud lets you generate allowed queries from real usage in your
 application. For more, information, see
-`Allow Lists in Hasura Cloud <allow_lists>`.
+[Allow Lists in Hasura Cloud](/graphql/cloud/security/allow-lists.mdx/).
 
-</div>
+:::

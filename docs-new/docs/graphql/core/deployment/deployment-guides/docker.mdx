@@ -1,15 +1,15 @@
-<div class="meta" description="Deploy Hasura GraphQL engine with Docker"
-keywords="hasura, docs, deployment, docker">
-
-</div>
+---
+description: Deploy Hasura GraphQL engine with Docker
+keywords:
+  - hasura
+  - docs
+  - deployment
+  - docker
+sidebar_position: 3
+sidebar_label: Using Docker
+---
 
 # Run Hasura GraphQL engine using Docker
-
-<div class="contents" backlinks="none" depth="1" local="">
-
-Table of contents
-
-</div>
 
 ## Introduction
 
@@ -72,33 +72,14 @@ graphql-engine:
   ...
 ```
 
-<div class="note">
-
-<div class="title">
-
-Note
-
-</div>
+:::info Note
 
 The `HASURA_GRAPHQL_ADMIN_SECRET` should never be passed from the client
 to the Hasura GraphQL engine as it would give the client full admin
-rights to your Hasura instance. See `auth` for information on setting up
+rights to your Hasura instance. See [Authentication & Authorization](/graphql/core/auth/index.mdx) for information on setting up
 authentication.
 
-</div>
-
-> <div class="admonition dhc">
->
-> Using collaborators as an alternative to Hasura Admin Secret sharing
-> with Hasura Cloud
->
-> Hasura Cloud offers console collaborators which avoids sharing the
-> <span class="title-ref">HASURA-ADMIN-SECRET</span> with those that
-> shouldn't have unrestricted access to your project. For more
-> information about collaborator management, see
-> `Collaborators in Hasura Cloud <manage_project_collaborators>`.
->
-> </div>
+:::
 
 ## Hasura GraphQL engine server logs
 
@@ -121,9 +102,9 @@ $ docker logs 097f58433a2b
 
 **See:**
 
--   <https://docs.docker.com/config/containers/logging> for more details
+-   [https://docs.docker.com/config/containers/logging](https://docs.docker.com/config/containers/logging) for more details
     on logging in Docker.
--   `hge_logs` for more details on Hasura logs.
+-   [Hasura GraphQL engine logs](/graphql/core/deployment/logging.mdx/) for more details on Hasura logs.
 
 ## Updating Hasura GraphQL engine
 
@@ -138,7 +119,7 @@ The current latest version is:
 <code>hasura/graphql-engine:<span class="latest-release-tag">latest</span></code>
 
 All the versions can be found at:
-<https://github.com/hasura/graphql-engine/releases>
+[https://github.com/hasura/graphql-engine/releases](https://github.com/hasura/graphql-engine/releases)
 
 ### Step 2: Update the Docker image
 
@@ -148,31 +129,25 @@ tag to this latest version.
 For example, if you had:
 
 <code>
-  graphql-engine:<br/>
-  &nbsp;&nbsp;image: hasura/graphql-engine:v1.2.0
+  graphql-engine:
+    image: hasura/graphql-engine:v1.2.0
 </code>
 
 you should change it to:
 
 <code>
-  graphql-engine:<br/>
-  &nbsp;&nbsp;image: hasura/graphql-engine:<span class="latest-release-tag">latest</span>
+  graphql-engine:
+    image: hasura/graphql-engine:v1.3.3
 </code>
 
-<div class="note">
-
-<div class="title">
-
-Note
-
-</div>
+:::info Note
 
 If you are downgrading to an older version of the GraphQL engine you
 might need to downgrade your metadata catalogue version as described in
-`downgrade_hge`
+[Downgrading Hasura GraphQL engine](/graphql/core/deployment/downgrading.mdx/)
 
-</div>
+:::
 
 ## Advanced
 
--   `Setting up migrations <migrations>`
+-   [Setting up migrations](/graphql/core/migrations/index.mdx/)

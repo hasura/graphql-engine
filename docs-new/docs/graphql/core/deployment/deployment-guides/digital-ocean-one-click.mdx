@@ -1,16 +1,19 @@
-<div class="meta"
-description="Deploy Hasura GraphQL engine One-click App on DigitalOcean Marketplace"
-keywords="hasura, docs, guide, deployment, digital ocean, marketplace">
+---
+description: Deploy Hasura GraphQL engine One-click App on DigitalOcean Marketplace
+keywords:
+  - hasura
+  - docs
+  - guide
+  - deployment
+  - digital ocean
+  - marketplace
+sidebar_position: 6
+sidebar_label: Using DigitalOcean (one-click)
+---
 
-</div>
+import Thumbnail from "@site/src/components/Thumbnail/Thumbnail";
 
 # Hasura GraphQL engine One-click App on DigitalOcean Marketplace
-
-<div class="contents" backlinks="none" depth="1" local="">
-
-Table of contents
-
-</div>
 
 ## Introduction
 
@@ -30,7 +33,6 @@ also contains a referral code with gives you $100 over days. A $5
 droplet is good enough to support most workloads. (`Ctrl+Click` to open
 in a new tab)
 
-[<img src="https://graphql-engine-cdn.hasura.io/img/create_hasura_droplet.png" class="no-shadow no-shadow" width="300" alt="do_create_droplet_button" />](https://marketplace.digitalocean.com/apps/hasura?action=deploy&refcode=c4d9092d2c48&utm_source=hasura&utm_campaign=docs)
 
 ### Step 2: Open console
 
@@ -41,11 +43,10 @@ everything to start running.
 
 The `Droplet IP` is highlighted in the image below:
 
-<div class="thumbnail" alt="Dashboard for digital ocean droplet">
-
-/img/graphql/core/deployment/dashboard-digital-ocean.png
-
-</div>
+<Thumbnail
+  src="/img/graphql/core/deployment/dashboard-digital-ocean.png"
+  alt="Dashboard for digital ocean droplet"
+/>
 
 The Hasura console will be at:
 
@@ -63,11 +64,10 @@ A Postgres database is also provisioned on the Droplet. Using the
 console, you can create a table on this Postgres instance and make your
 first GraphQL query.
 
-<div class="thumbnail" alt="Hasura console">
-
-/img/graphql/core/deployment/digital-ocean-hasura-console.png
-
-</div>
+<Thumbnail
+  src="/img/graphql/core/deployment/digital-ocean-hasura-console.png"
+  alt="Hasura console"
+/>
 
 ### Step 3: Create a table
 
@@ -78,34 +78,29 @@ Navigate to `Data -> Add table` on the console and create a table called
 
 <table>
 <thead>
-<tr class="header">
-<th>column name</th>
-<th>type</th>
+<tr>
+<th width="50%">column name</th>
+<th width="50%">type</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
-<td><code>id</code></td>
-<td><blockquote>
-<p>Integer (auto-increment)</p>
-</blockquote></td>
+<tr>
+<td>`id`</td>
+<td>Integer (auto-increment)</td>
 </tr>
-<tr class="even">
-<td><code>name</code></td>
-<td><blockquote>
-<p>Text</p>
-</blockquote></td>
+<tr>
+<td>`name`</td>
+<td>Text</td>
 </tr>
 </tbody>
 </table>
 
 Choose `id` as the Primary key and click the `Add Table` button.
 
-<div class="thumbnail" alt="Create a table">
-
-/img/graphql/core/deployment/digital-ocean-create-table.png
-
-</div>
+<Thumbnail
+  src="/img/graphql/core/deployment/digital-ocean-create-table.png"
+  alt="Create a table"
+/>
 
 ### Step 4: Insert sample data
 
@@ -120,11 +115,10 @@ Captain America
 Black Widow
 ```
 
-<div class="thumbnail" alt="Hasura console - insert data">
-
-/img/graphql/core/deployment/digital-ocean-hasura-insert-data.png
-
-</div>
+<Thumbnail
+  src="/img/graphql/core/deployment/digital-ocean-hasura-insert-data.png"
+  alt="Hasura console - insert data"
+/>
 
 ### Step 5: Try out GraphQL
 
@@ -140,11 +134,10 @@ query {
 }
 ```
 
-<div class="thumbnail" alt="Hasura console - GraphiQL">
-
-/img/graphql/core/deployment/hasura-graphql-query.png
-
-</div>
+<Thumbnail
+  src="/img/graphql/core/deployment/hasura-graphql-query.png"
+  alt="Hasura console - GraphiQL"
+/>
 
 ## Securing the GraphQL endpoint
 
@@ -249,8 +242,7 @@ Go to `https://<your_domain>/console` to visit the Hasura console.
 
 When a new version of the GraphQL engine is released, you can upgrade to
 it by just changing the version tag in `docker-compose.yaml`. You can
-find the latest releases on the [GitHub releases
-page](https://github.com/hasura/graphql-engine/releases).
+find the latest releases on the [GitHub releases page](https://github.com/hasura/graphql-engine/releases).
 
 ### Step 1: Connect to the Droplet via SSH
 
@@ -283,7 +275,7 @@ graphql-engine:
 docker-compose up -d
 ```
 
-## Using DigitalOcean Managed Postgres Database
+## Using DigitalOcean Managed Postgres Database {#do-managed-pg-db}
 
 ### Step 1: Create a Postgres database
 
@@ -324,20 +316,14 @@ HASURA_GRAPHQL_DATABASE_URL: <database-url>
 Similarly, the database URL can be changed to connect to any other
 Postgres database.
 
-<div class="note">
-
-<div class="title">
-
-Note
-
-</div>
+:::info Note
 
 If you're using Hasura with a restricted database user, make sure you go
-through `Postgres permissions <postgres_permissions>` to configure all
+through [Postgres permissions](/graphql/core/deployment/postgres-requirements.mdx#postgres-permissions) to configure all
 required permissions (not applicable with the default connection string
 with DO Managed Postgres).
 
-</div>
+:::
 
 #### Connection pooling
 
@@ -350,18 +336,12 @@ the timeout, you can use the below environment variables.
 -   `HASURA_GRAPHQL_PG_TIMEOUT`: Each connection’s idle time before it
     is closed (default: 180 sec)
 
-<div class="note">
-
-<div class="title">
-
-Note
-
-</div>
+:::info Note
 
 If you still want to enable connection pooling on your managed database
 on DigitalOcean, you should do so in the `session` mode.
 
-</div>
+:::
 
 ## Access database via psql
 
@@ -373,25 +353,19 @@ docker exec -it hasura_postgres_1 psql -U postgres
 ```
 
 If you are using a hosted database
-`as outlined above <do_managed_pg_db>`, it's a little different:
+[as outlined above](/graphql/core/deployment/deployment-guides/digital-ocean-one-click.mdx#do-managed-pg-db), it's a little different:
 
 ```bash
 docker exec -it hasura_postgres_1 psql -h <your database url> -p <your port> -d <your database> -U <your database user>
 ```
 
-<div class="note">
-
-<div class="title">
-
-Note
-
-</div>
+:::info Note
 
 Different hosted Postgres providers may have different requirements for
 connection, e.g. setting `sslmode`. Please refer to your provider's
 documentation for generating the proper `psql` command flags.
 
-</div>
+:::
 
 ## Logs
 

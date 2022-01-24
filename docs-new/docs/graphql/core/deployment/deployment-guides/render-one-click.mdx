@@ -1,49 +1,44 @@
-<div class="meta"
-description="One-Click Deploy for Hasura GraphQL Engine on Render"
-keywords="hasura, docs, guide, deployment, render, postgresql">
+---
+description: Deploy Hasura GraphQL engine on Google Cloud Platform with Kubernetes engine and Cloud SQL
+keywords:
+  - hasura
+  - docs
+  - guide
+  - deployment
+  - render
+  - postgresql
+sidebar_position: 9
+sidebar_label: Using Render (one-click)
+---
 
-</div>
+import Thumbnail from "@site/src/components/Thumbnail/Thumbnail";
 
 # Deploying Hasura GraphQL engine on Render
 
-<div class="contents" backlinks="none" depth="1" local="">
-
-</div>
-
 ## Introduction
 
-This guide shows how to deploy the Hasura GraphQL engine on
-[Render](https://render.com).
+This guide shows how to deploy the Hasura GraphQL engine on [Render](https://render.com).
 
 ## One-click Deploy on Render
 
-<div class="note">
-
-<div class="title">
-
-Note
-
-</div>
+:::info Note
 
 Make sure to [create a free Render account](https://render.com/register)
 first.
 
-</div>
+:::
 
 Once you're logged into your Render account, click the button below to
 deploy Hasura and a new managed PostgreSQL database wired up to your
 Hasura instance.
 
-[<img src="https://render.com/images/deploy-to-render-button.svg" class="no-shadow no-shadow" width="200" alt="render_deploy_button" />](https://render.com/deploy?repo=https://github.com/render-examples/hasura-graphql)
-
 You will see the Hasura web service and PostgreSQL instance to be
 created:
 
-<div class="thumbnail" alt="Deploy To Render Hasura Page">
-
-/img/graphql/core/deployment/deploy-to-render-hasura.png
-
-</div>
+<Thumbnail
+  src="/img/graphql/core/deployment/deploy-to-render-hasura.png"
+  alt="Deploy To Render Hasura Page"
+/>
 
 That's it! Read on to configure your Hasura instance.
 
@@ -52,11 +47,10 @@ That's it! Read on to configure your Hasura instance.
 Once **Deploy to Render** succeeds, you can click through to your Hasura
 service page on Render's dashboard.
 
-<div class="thumbnail" alt="Render Hasura Header">
-
-/img/graphql/core/deployment/deploy-to-render-hasura-header.png
-
-</div>
+<Thumbnail
+  src="/img/graphql/core/deployment/deploy-to-render-hasura-header.png"
+  alt="Render Hasura Header"
+/>
 
 You can monitor the deployment of the Hasura web service from the
 **Logs** tab. Once the service is up, use the link on the service page

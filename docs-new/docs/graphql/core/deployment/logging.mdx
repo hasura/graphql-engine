@@ -1,37 +1,36 @@
-<div class="meta" description="Hasura GraphQL engine server logs"
-keywords="hasura, docs, deployment, logs, server logs">
-
-</div>
+---
+description: Secure the Hasura GraphQL endpoint
+keywords:
+  - hasura
+  - docs
+  - deployment
+  - logs
+  - server logs
+sidebar_position: 6
+sidebar_label: Server logs
+---
 
 # Hasura GraphQL engine logs
-
-<div class="contents" backlinks="none" depth="1" local="">
-
-Table of contents
-
-</div>
 
 ## Accessing logs
 
 Based on your deployment method, the Hasura GraphQL engine logs can be
 accessed as follows:
 
--   `On Heroku <heroku_logs>`
--   `On Docker <docker_logs>`
--   `On Kubernetes <kubernetes_logs>`
--   `On Digital Ocean <do_logs>`
--   `On Azure <azure_logs>`
--   `On Google Cloud & Kubernetes <gc_kubernetes_logs>`
+-   [On Heroku](/graphql/core/deployment/deployment-guides/heroku.mdx#heroku-logs)
+-   [On Docker](/graphql/core/deployment/deployment-guides/docker.mdx#docker-logs)
+-   [On Kubernetes](/graphql/core/deployment/deployment-guides/kubernetes.mdx#kubernetes-logs)
+-   [On Digital Ocean](/graphql/core/deployment/deployment-guides/digital-ocean-one-click.mdx#do-logs)
+-   [On Azure](/graphql/core/deployment/deployment-guides/azure-container-instances-postgres.mdx#azure-logs)
+-   [On Google Cloud & Kubernetes](/graphql/core/deployment/deployment-guides/google-kubernetes-engine-cloud-sql.mdx#gc-kubernetes-logs)
 
-<div class="admonition dhc">
-
-Detailed Logging in Hasura Cloud
+:::note Detailed Logging in Hasura Cloud
 
 If you’re looking for more in-depth logging information, along with a
 console for browsing logs, please see
-`Metrics with Hasura Cloud <metrics>`.
+[Metrics with Hasura Cloud](/graphql/cloud/metrics/index.mdx).
 
-</div>
+:::
 
 ## Different log-types
 
@@ -46,7 +45,7 @@ called `websocket-log`, logs from the event trigger system are called
 
 You can configure the GraphQL engine to enable/disable certain log-types
 using the the `--enabled-log-types` flag or the
-`HASURA_GRAPHQL_ENABLED_LOG_TYPES` env var. See `server_flag_reference`
+`HASURA_GRAPHQL_ENABLED_LOG_TYPES` env var. See [GraphQL Engine server config reference](/graphql/core/deployment/graphql-engine-flags/reference.mdx#server-flag-reference)
 
 Default enabled log-types are:
 `startup, http-log, webhook-log, websocket-log`
@@ -82,7 +81,7 @@ Internal log-types
 
 You can set the desired logging level on the server using the
 `log-level` flag or the `HASURA_GRAPHQL_LOG_LEVEL` env var. See
-`server_flag_reference`.
+[server_flag_reference](/graphql/core/deployment/graphql-engine-flags/reference.mdx/).
 
 The default log-level is `info`.
 
@@ -93,7 +92,7 @@ For example, setting `--log-level=warn`, will enable all warn and error
 level logs only. So even if you have enabled `query-log` it won't be
 printed as the level of `query-log` is `info`.
 
-See `log-types <log-types>` for more details on log-level of each
+See [log-types](/graphql/core/deployment/logging.mdx/) for more details on log-level of each
 log-type.
 
 ## Log structure and metrics
@@ -309,7 +308,7 @@ query {
 }
 ```
 
-(\*) - Supported only in Cloud and Enterprise editions only
+(*) - Supported only in Cloud and Enterprise editions only
 
 ### **websocket-log** structure
 
@@ -427,4 +426,4 @@ This is how the Websocket logs look like:
 You can integrate the logs emitted by Hasura GraphQL with external
 monitoring tools for better visibility as per your convenience.
 
-For some examples, see `guides_monitoring_frameworks`.
+For some examples, see [Guides: Integrating with monitoring frameworks](/graphql/core/guides/monitoring/index.mdx)

@@ -1,16 +1,22 @@
-<div class="meta"
-description="Deploy Hasura GraphQL engine on Azure with Container Instances and Postgres"
-keywords="hasura, docs, guide, deployment, azure, container, postgres">
+---
+description: Deploy Hasura GraphQL engine on Azure with Container Instances and Postgres
+keywords:
+  - hasura
+  - docs
+  - guide
+  - deployment
+  - azure
+  - container
+  - postgres
+sidebar_position: 7
+sidebar_label: Using Azure Container Instances
+---
 
-</div>
+import Thumbnail from "@site/src/components/Thumbnail/Thumbnail";
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
 
 # Hasura GraphQL engine on Azure with Container Instances and Postgres
-
-<div class="contents" backlinks="none" depth="1" local="">
-
-Table of contents
-
-</div>
 
 ## Introduction
 
@@ -25,48 +31,29 @@ server](https://azure.microsoft.com/en-us/services/postgresql/).
 All resources mentioned in this guide can be deployed using the
 one-click button below.
 
-<div class="rst-class">
-
-api_tabs
-
-</div>
-
-<div class="tabs">
-
-<div class="tab">
-
-With a new Postgres Server
-
-[<img src="https://azuredeploy.net/deploybutton.png" class="no-shadow no-shadow" width="200" alt="azure_deploy_button_new_pg" />](https://portal.azure.com/#create/Microsoft.Template/uri/https%3a%2f%2fraw.githubusercontent.com%2fhasura%2fgraphql-engine%2fstable%2finstall-manifests%2fazure-container-with-pg%2fazuredeploy.json)
+<Tabs className="rst-class">
+<TabItem value="postgres server" label="With a new Postgres Server">
 
 (This button takes you to the Azure Portal, you might want to
 `Ctrl+Click` to open it in a new tab. Read more about this Resource
 Manager Template
 [here](https://github.com/hasura/graphql-engine/tree/stable/install-manifests/azure-container-with-pg)).
 
-</div>
-
-<div class="tab">
-
-With an existing Postgres Server
-
-[<img src="https://azuredeploy.net/deploybutton.png" class="no-shadow no-shadow" width="200" alt="azure_deploy_button_existing_pg" />](https://portal.azure.com/#create/Microsoft.Template/uri/https%3a%2f%2fraw.githubusercontent.com%2fhasura%2fgraphql-engine%2fstable%2finstall-manifests%2fazure-container%2fazuredeploy.json)
+</TabItem>
+<TabItem value="cli" label="With an existing Postgres Server">
 
 (This button takes you to the Azure Portal, you might want to
 `Ctrl+Click` to open it in a new tab. Read more about this Resource
 Manager Template
 [here](https://github.com/hasura/graphql-engine/tree/stable/install-manifests/azure-container)).
 
-</div>
-
-</div>
+</TabItem>
+</Tabs>
 
 ## Pre-requisites
 
--   Valid Azure Subscription with billing enabled or credits ([click
-    here](https://azure.microsoft.com/en-us/free/) for a free trial).
--   [Azure
-    CLI](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli).
+-   Valid Azure Subscription with billing enabled or credits ([click here](https://azure.microsoft.com/en-us/free/) for a free trial).
+-   [Azure CLI](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli).
 
 The actions mentioned below can be executed using the Azure Portal and
 the Azure CLI. But, for the sake of simplicity in documentation, we are
@@ -91,18 +78,12 @@ az group create --name hasura --location westus
 
 ## Provision a PostgreSQL server
 
-<div class="note">
-
-<div class="title">
-
-Note
-
-</div>
+:::info Note
 
 If you already have a database setup, you can skip these steps and jump
-directly to `azure_allow_access`.
+directly to [Allow access to Azure Services](/graphql/core/deployment/deployment-guides/azure-container-instances-postgres.mdx#azure-allow-access).
 
-</div>
+:::
 
 Once the resource group is created, we create a Postgres server
 instance:
@@ -117,13 +98,7 @@ az postgres server create --resource-group hasura \
    --version 10
 ```
 
-<div class="note">
-
-<div class="title">
-
-Note
-
-</div>
+:::info Note
 
 Choose a unique name for `<server_name>`. Also choose a strong password
 for `<server_admin_password>`, including uppercase, lowercase and
@@ -131,7 +106,7 @@ numeric characters. This will be required later to connect to the
 database (make sure you escape the special characters depending on your
 shell).
 
-</div>
+:::
 
 Note down the hostname. It will be shown as below in the output:
 
@@ -143,18 +118,12 @@ Note down the hostname. It will be shown as below in the output:
 
 `<server_name>.postgres.database.azure.com` is the hostname here.
 
-<div class="note">
-
-<div class="title">
-
-Note
-
-</div>
+:::info Note
 
 If you get an error saying `Specified server name is already used`,
 change the value of `--name` (`<server_name>`) to something else.
 
-</div>
+:::
 
 ## Create a new database
 
@@ -201,20 +170,14 @@ postgres://hasura%40<server_name>:<server_admin_password>@<hostname>:5432/hasura
 If you'd like to connect to an existing database, use that server's
 database url.
 
-<div class="note">
-
-<div class="title">
-
-Note
-
-</div>
+:::info Note
 
 `%40` is used in the username because Azure creates usernames as
 `admin-user@server-name` and since the database url uses `@` to separate
 username-password from hostname, we need to url-escape it in the
 username. Any other special character should be url-encoded.
 
-</div>
+:::
 
 If the `<dns-name-label>` is not available, choose another unique name
 and execute the command again.
@@ -241,8 +204,6 @@ http://<dns-name-label>.westus.azurecontainer.io/console
 ```
 
 Replace `<dns-name-label>` with the label given earlier.
-
-<img src="https://storage.googleapis.com/graphql-engine-cdn.hasura.io/main-repo/img/azure_arm_aci_console_graphiql.png" class="no-shadow no-shadow" alt="Hasura console" />
 
 You can create tables and test your GraphQL queries here.
 
@@ -280,9 +241,6 @@ az group delete --resource-group hasura
 
 ## References
 
--   [Installing Azure
-    CLI](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli)
--   [Creating a Azure Postgres
-    Server](https://docs.microsoft.com/en-us/azure/postgresql/quickstart-create-server-database-azure-cli)
--   [Using Azure Container
-    Instances](https://docs.microsoft.com/en-us/azure/container-instances/container-instances-quickstart)
+-   [Installing Azure CLI](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli)
+-   [Creating a Azure Postgres Server](https://docs.microsoft.com/en-us/azure/postgresql/quickstart-create-server-database-azure-cli)
+-   [Using Azure Container Instances](https://docs.microsoft.com/en-us/azure/container-instances/container-instances-quickstart)

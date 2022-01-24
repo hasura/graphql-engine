@@ -1,15 +1,17 @@
-<div class="meta" description="Deploy Hasura GraphQL engine with Heroku"
-keywords="hasura, docs, deployment, heroku">
+---
+description: Deploy Hasura GraphQL engine with Heroku
+keywords:
+  - hasura
+  - docs
+  - deployment
+  - heroku
+sidebar_position: 5
+sidebar_label: Using Heroku (one-click)
+---
 
-</div>
+import Thumbnail from "@site/src/components/Thumbnail/Thumbnail";
 
 # Run Hasura GraphQL engine on Heroku
-
-<div class="contents" backlinks="none" depth="1" local="">
-
-Table of contents
-
-</div>
 
 ## Introduction
 
@@ -17,39 +19,30 @@ This guide shows how to deploy Hasura GraphQL engine on Heroku.
 
 ## Deploying Hasura with a new Postgres DB
 
-<div class="contents" backlinks="none" depth="1" local="">
+- [Option 1: One-click deployment](/graphql/core/deployment/deployment-guides/heroku.mdx#option-1-one-click-deployment)
+- [Option 2: Deploy via Heroku CLI](/graphql/core/deployment/deployment-guides/heroku.mdx#option-2-deploy-via-heroku-cli)
 
-</div>
-
-### Option 1: One-click deployment
+### Option 1: One-click deployment {#option-1-one-click-deployment}
 
 Click the below button to deploy Hasura on Heroku in a few seconds:
 
-[<img src="https://camo.githubusercontent.com/83b0e95b38892b49184e07ad572c94c8038323fb/68747470733a2f2f7777772e6865726f6b7563646e2e636f6d2f6465706c6f792f627574746f6e2e737667" class="no-shadow no-shadow" width="200" alt="heroku_deploy_button" />](https://heroku.com/deploy?template=https://github.com/hasura/graphql-engine-heroku)
 
-<div class="note">
-
-<div class="title">
-
-Note
-
-</div>
+:::info Note
 
 If you don't have an account on Heroku, you need to sign up on Heroku.
 You won't need a credit card, and once you sign up you'll be redirected
 to your Heroku app creation page automatically.
 
-</div>
+:::
 
-<div class="thumbnail" alt="Deploy to Heroku">
-
-/img/graphql/core/deployment/heroku-app.png
-
-</div>
+<Thumbnail
+  src="/img/graphql/core/deployment/heroku-app.png"
+  alt="Deploy to Heroku"
+/>
 
 Heroku's free Postgres add-on is automatically provisioned.
 
-### Option 2: Deploy via Heroku CLI
+### Option 2: Deploy via Heroku CLI {#option-2-deploy-via-heroku-cli}
 
 Follow these instructions to create a new Heroku app with a Postgres
 add-on using the Heroku CLI.
@@ -58,7 +51,7 @@ add-on using the Heroku CLI.
 
 The Hasura app with Heroku buildpack/configuration is available at:
 
-<https://github.com/hasura/graphql-engine-heroku>
+[https://github.com/hasura/graphql-engine-heroku](https://github.com/hasura/graphql-engine-heroku)
 
 #### Step 2: Create an app with **--stack=container**
 
@@ -76,10 +69,8 @@ https://todo-hasura1.herokuapp.com/ | https://git.heroku.com/todo-hasura1.git
 
 **Note**:
 
--   `HEROKU_GIT_REMOTE`: <span
-    class="title-ref">https://git.heroku.com/todo-hasura1.git</span>
--   `HEROKU_APP_URL`: <span
-    class="title-ref">https://todo-hasura1.herokuapp.com/</span>
+-   `HEROKU_GIT_REMOTE`: _https://git.heroku.com/todo-hasura1.git_
+-   `HEROKU_APP_URL`: _https://todo-hasura1.herokuapp.com/_
 
 #### Step 3: Create the Heroku Postgres add-on
 
@@ -113,87 +104,70 @@ your app name) and you should see the Hasura console.
 
 ## Deploying using an existing Postgres DB
 
-Let's say you have an existing [Heroku
-Postgres](https://www.heroku.com/postgres) database with data in it, and
+Let's say you have an existing [Heroku Postgres](https://www.heroku.com/postgres) database with data in it, and
 you'd like to add GraphQL to it.
 
-<div class="contents" backlinks="none" depth="1" local="">
+- [Option 1: Via Heroku UI](/graphql/core/deployment/deployment-guides/heroku.mdx#option-1-via-heroku-ui)
+- [Option 2: Via Heroku CLI](/graphql/core/deployment/deployment-guides/heroku.mdx#option-2-via-heroku-cli)
 
-</div>
-
-<div class="note">
-
-<div class="title">
-
-Note
-
-</div>
+:::info Note
 
 As you're exposing an existing database, please
-`configure an admin secret <heroku_secure>` to prevent public access of
+[configure an admin secret](/graphql/core/deployment/deployment-guides/heroku.mdx#heroku-secure) to prevent public access of
 the console and the GraphQL endpoint.
 
-</div>
+:::
 
-### Option 1: Via Heroku UI
+### Option 1: Via Heroku UI {#option-1-via-heroku-ui}
 
 #### Step 1: Deploy Hasura on Heroku
 
 Deploy Hasura on Heroku as described in
-`this section <heroku_one_click>`.
+[this section](/graphql/core/deployment/deployment-guides/heroku.mdx#option-1-one-click-deployment).
 
 #### Step 2: Remove the created Postgres add-on in the app
 
 Head to your Heroku dashboard and delete the Postgres add-on created in
 the previous step:
 
-<div class="thumbnail" alt="Delete the Postgres add-on">
-
-/img/graphql/core/deployment/delete-heroku-postgres-addon.png
-
-</div>
+<Thumbnail
+  src="/img/graphql/core/deployment/delete-heroku-postgres-addon.png"
+  alt="Delete the Postgres add-on"
+/>
 
 #### Step 3: Configure environment variables
 
 Now configure the `DATABASE_URL` with your existing Heroku Postgres
 database URL and a `HASURA_GRAPHQL_ADMIN_SECRET` if you want to
-`secure your endpoint <heroku_secure>`.
+[secure your endpoint](/graphql/core/deployment/deployment-guides/heroku.mdx#heroku-secure).
 
-<div class="thumbnail" alt="Configure environment variables">
+<Thumbnail
+  src="/img/graphql/core/deployment/heroku-database-access-url.png"
+  alt="Configure environment variables"
+/>
 
-/img/graphql/core/deployment/heroku-database-access-url.png
-
-</div>
-
-<div class="note">
-
-<div class="title">
-
-Note
-
-</div>
+:::info Note
 
 The Hasura GraphQL engine needs access permissions to your Postgres
 database as described in `Postgres permissions <postgres_permissions>`.
 
-</div>
+:::
 
 #### Step 4: Track tables and relationships
 
 Wait for the GraphQL engine to restart and then see
-`pg_schema_existing_db` to enable GraphQL over the database.
+[Setting up a GraphQL schema using an existing Postgres database](/graphql/core/databases/postgres/schema/using-existing-database.mdx/) to enable GraphQL over the database.
 
-### Option 2: Via Heroku CLI
+### Option 2: Via Heroku CLI {#option-2-via-heroku-cli}
 
 You can set up the Hasura GraphQL engine as a "git push to deploy" app
-on [Heroku](https://www.heroku.com/platform) and connect it to a [Heroku
-Postgres](https://www.heroku.com/postgres) instance.
+on [Heroku](https://www.heroku.com/platform) and connect it to a [Heroku Postgres](https://www.heroku.com/postgres) instance.
 
 #### Step 1: Clone the Hasura GraphQL engine Heroku app
 
 The Hasura app with Heroku buildpack/configuration is available at:
 
-<https://github.com/hasura/graphql-engine-heroku>
+[https://github.com/hasura/graphql-engine-heroku](https://github.com/hasura/graphql-engine-heroku)
 
 #### Step 2: Configure the database URL
 
@@ -213,22 +187,16 @@ CMD graphql-engine \
   --enable-console
 ```
 
-Read about more configuration options `here <server_flag_reference>`.
+Read about more configuration options [here](/graphql/core/deployment/graphql-engine-flags/reference.mdx/).
 
-<div class="note">
-
-<div class="title">
-
-Note
-
-</div>
+:::info Note
 
 Hasura GraphQL engine needs access permissions to your Postgres database
-as described in `Postgres permissions <postgres_permissions>`.
+as described in [Postgres permissions](/graphql/core/deployment/postgres-requirements.mdx#postgres-permissions).
 
-</div>
+:::
 
-## Securing the GraphQL endpoint
+## Securing the GraphQL endpoint {#heroku-secure}
 
 To make sure that your GraphQL endpoint and the Hasura console are not
 publicly accessible, you need to configure an admin secret key.
@@ -238,36 +206,28 @@ publicly accessible, you need to configure an admin secret key.
 Head to the config-vars URL on your Heroku dashboard and set the
 `HASURA_GRAPHQL_ADMIN_SECRET` environment variable.
 
-<div class="thumbnail" alt="Add an admin secret">
-
-/img/graphql/core/deployment/secure-heroku.png
-
-</div>
+<Thumbnail
+  src="/img/graphql/core/deployment/secure-heroku.png"
+  alt="Add an admin secret"
+/>
 
 Setting this environment variable will automatically restart the dyno.
 Now when you access your console, you'll be prompted for the admin
 secret key.
 
-<div class="thumbnail" alt="Prompt for the admin secret">
+<Thumbnail
+  src="/img/graphql/core/deployment/access-key-console.png"
+  alt="Prompt for the admin secret"
+/>
 
-/img/graphql/core/deployment/access-key-console.png
-
-</div>
-
-<div class="note">
-
-<div class="title">
-
-Note
-
-</div>
+:::info Note
 
 The `HASURA_GRAPHQL_ADMIN_SECRET` should never be passed from the client
 to Hasura GraphQL engine as it would give the client full admin rights
-to your Hasura instance. See `auth` for information on setting up
+to your Hasura instance. See [auth](/graphql/core/auth/index.mdx/) for information on setting up
 authentication.
 
-</div>
+:::
 
 #### (optional) Use the admin secret with the CLI
 
@@ -280,8 +240,7 @@ hasura console --admin-secret=myadminsecretkey
 
 ## GraphQL engine server logs
 
-You can use the [Heroku
-CLI](https://devcenter.heroku.com/articles/heroku-cli) to check the logs
+You can use the [Heroku CLI](https://devcenter.heroku.com/articles/heroku-cli) to check the logs
 of the Hasura GraphQL engine deployed on Heroku:
 
 ```bash
@@ -293,9 +252,9 @@ $ heroku logs --app <hasura-graphql-engine-app-name>
 
 **See:**
 
--   <https://devcenter.heroku.com/articles/logging> for more details on
+-   [https://devcenter.heroku.com/articles/logging](https://devcenter.heroku.com/articles/logging) for more details on
     logging on Heroku.
--   `hge_logs` for more details on Hasura logs
+-   [Hasura GraphQL engine logs](/graphql/core/deployment/logging.mdx/) for more details on Hasura logs
 
 ## Updating GraphQL engine
 
@@ -304,14 +263,16 @@ Heroku.
 
 The current latest version is:
 
-<code>hasura/graphql-engine:<span class="latest-release-tag">latest</span></code>
+```bash
+hasura/graphql-engine:v1.3.3
+```
 
 ### Update to the latest version
 
 #### Step 1: Clone the Hasura GraphQL engine Heroku app
 
 The Hasura app with Heroku buildpack/configuration is available at:
-<https://github.com/hasura/graphql-engine-heroku>.
+[https://github.com/hasura/graphql-engine-heroku](https://github.com/hasura/graphql-engine-heroku).
 
 Clone the above repository.
 
@@ -328,8 +289,7 @@ the updated GraphQL engine Docker image.
 Let's say your Heroku app is called `hasura-heroku` and is running on
 `https://hasura-heroku.herokuapp.com`.
 
-From inside the `graphql-engine-heroku` directory, use the [Heroku
-CLI](https://devcenter.heroku.com/articles/heroku-cli) to configure the
+From inside the `graphql-engine-heroku` directory, use the [Heroku CLI](https://devcenter.heroku.com/articles/heroku-cli) to configure the
 git repo you cloned in Step 1 to be able to push to this app.
 
 ```bash
@@ -354,7 +314,7 @@ git push heroku master
 
 Head to the `Dockerfile` in the git repo you cloned in step 1. Change
 the `FROM` line to the specific version you want. A list of all releases
-can be found at <https://github.com/hasura/graphql-engine/releases>.
+can be found at [https://github.com/hasura/graphql-engine/releases](https://github.com/hasura/graphql-engine/releases).
 
 ```Dockerfile
 FROM hasura/graphql-engine:v1.0.0
@@ -366,20 +326,14 @@ FROM hasura/graphql-engine:v1.0.0
 Change `v1.0.0` to `v1.1.0` for example, commit this and then
 `git push heroku master` to deploy.
 
-<div class="note">
-
-<div class="title">
-
-Note
-
-</div>
+:::info Note
 
 If you are downgrading to an older version of the GraphQL engine you
 might need to downgrade your metadata catalogue version as described in
-`downgrade_hge`
+[downgrade_hge](/graphql/core/deployment/downgrading.mdx/)
 
-</div>
+:::
 
 ## Advanced
 
--   `Setting up migrations <migrations>`
+-   [Setting up migrations](/graphql/core/migrations/index.mdx/)

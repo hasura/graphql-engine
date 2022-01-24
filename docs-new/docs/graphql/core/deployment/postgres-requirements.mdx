@@ -1,16 +1,16 @@
-<div class="meta"
-description="Postgres requirements for Hasura GraphQL engine"
-keywords="hasura, docs, deployment, postgres, postgres permissions, postgres version">
-
-</div>
+---
+description: Postgres requirements for Hasura GraphQL engine
+keywords:
+  - hasura
+  - docs
+  - deployment
+  - postgres
+  - postgres permissions
+  - postgres version
+sidebar_position: 4
+---
 
 # Postgres requirements
-
-<div class="contents" backlinks="none" depth="2" local="">
-
-Table of contents
-
-</div>
 
 ## Supported Postgres versions
 
@@ -18,9 +18,9 @@ Hasura GraphQL engine supports **Postgres versions 9.5 and above**.
 
 ### Feature requirements
 
--   `Hasura actions <actions>` are supported in Postgres 10 and above.
+- [Hasura actions](/graphql/core/actions/index.mdx) are supported in Postgres 10 and above.
 
-## Postgres permissions
+## Postgres permissions {#postgres-permissions}
 
 If you're running in a controlled environment, you might need to
 configure the Hasura GraphQL engine to use a specific Postgres user that
@@ -31,8 +31,8 @@ the following permissions.
 
 ### Metadata Database Permissions:
 
--   (required) Read & write access on 2 schemas: `hdb_catalog`.
--   (required) Read access to the `information_schema` and `pg_catalog`
+- (required) Read & write access on 2 schemas: `hdb_catalog`.
+- (required) Read access to the `information_schema` and `pg_catalog`
     schemas, to query for list of tables. Note that these permissions
     are usually available by default to all postgres users via
     [PUBLIC](https://www.postgresql.org/docs/current/sql-grant.html)
@@ -40,11 +40,11 @@ the following permissions.
 
 #### User Database Permissions:
 
--   (required) Read access to the schemas (public or otherwise) if you
+- (required) Read access to the schemas (public or otherwise) if you
     only want to support queries.
--   (optional) Write access to the schemas if you want to support
+- (optional) Write access to the schemas if you want to support
     mutations as well.
--   (optional) To create tables and views via the Hasura console (the
+- (optional) To create tables and views via the Hasura console (the
     admin UI) you'll need the privilege to create tables/views. This
     might not be required when you're working with an existing database.
 
@@ -166,7 +166,7 @@ Hasura works out of the box with the default superuser, usually called
 "postgres", created by most managed cloud database providers.
 
 On some cloud providers, like **Google Cloud SQL**, if you are creating
-a new user and giving the `above <postgres_permissions>` privileges,
+a new user and giving the [above](/graphql/core/deployment/postgres-requirements.mdx#postgres-permissions) privileges,
 then you may notice that the following commands may throw
 warnings/errors:
 
@@ -214,8 +214,7 @@ During initialization, Hasura GraphQL engine tries to install the
 installed.
 
 It needs to be ensured that `pgcrypto` is installed in a schema which is
-in the Postgres [search
-path](https://www.postgresql.org/docs/current/ddl-schemas.html#DDL-SCHEMAS-PATH)
+in the Postgres [search path](https://www.postgresql.org/docs/current/ddl-schemas.html#DDL-SCHEMAS-PATH)
 for the Postgres user/role that Hasura connects with.
 
 If `pgcrypto` is installed in a schema that is not in the search path,

@@ -1,15 +1,16 @@
-<div class="meta" description="Downgrade Hasura GraphQL engine version"
-keywords="hasura, docs, deployment, downgrade, version">
-
-</div>
+---
+description: Downgrade Hasura GraphQL engine version
+keywords:
+  - hasura
+  - docs
+  - deployment
+  - downgrade
+  - version
+sidebar_position: 13
+sidebar_label: Downgrading GraphQL engine
+---
 
 # Downgrading Hasura GraphQL engine
-
-<div class="contents" backlinks="none" depth="2" local="">
-
-Table of contents
-
-</div>
 
 ## Step 1: Update Hasura GraphQL engine image version
 
@@ -19,9 +20,9 @@ simple as changing the image tag to the version you want.
 Based on your deployment method, follow the appropriate guide to
 downgrade the GraphQL engine version you're running:
 
--   `Updating on Heroku <heroku_update>`
--   `Updating on Docker <docker_update>`
--   `Updating on Kubernetes <kubernetes_update>`
+- [Updating on Heroku](/graphql/core/deployment/deployment-guides/heroku.mdx#heroku-update)
+- [Updating on Docker](/graphql/core/deployment/deployment-guides/docker.mdx#docker-update)
+- [Updating on Kubernetes](/graphql/core/deployment/deployment-guides/kubernetes.mdx#kubernetes-update)
 
 If the GraphQL engine version you are downgrading to has a different
 catalogue version than your current, you will have to downgrade the
@@ -30,7 +31,7 @@ catalogue to the corresponding version manually as described below.
 ## Step 2: Downgrade Hasura catalogue version
 
 The Hasura GraphQL engine maintains its metadata state in a "catalogue"
-as described `here <hasura_metadata_schema>`. The schema of the
+as described [here](/graphql/core/how-it-works/metadata-schema.mdx#hasura-metadata-schema). The schema of the
 catalogue is versioned. Updates to the Hasura GraphQL engine may have
 Hasura catalogue version bumps.
 
@@ -61,29 +62,17 @@ the newer version, you should switch to the older version and run
 Catalogue version downgrades will be executed sequentially and in a
 single transaction.
 
-<div class="note">
-
-<div class="title">
-
-Note
-
-</div>
+:::info Note
 
 Running this command while Hasura GraphQL engine is running might lead
 to unexpected results. It is recommended to first bring down any running
 Hasura GraphQL engine instances before downgrading the catalogue
 
-</div>
+:::
 
-<div class="note">
-
-<div class="title">
-
-Note
-
-</div>
+:::info Note
 
 You can downgrade a Hasura GraphQL engine v2 instance to v1 only if
 there is only one database connected to it.
 
-</div>
+:::
