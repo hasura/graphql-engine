@@ -7,6 +7,8 @@ keywords:
   - docs
   - actions
   - custom types
+# adding to avoid redirect as this was only index file under the directory
+slug: types/index
 ---
 
 # Custom GraphQL types
@@ -16,7 +18,7 @@ keywords:
 You can add custom GraphQL types in Hasura that you can utilise for
 defining your actions.
 
-:::info Limitations
+:::caution Limitations
 
 It is currently not possible to define `Interfaces` and `Union types` as
 custom types
@@ -121,7 +123,7 @@ used to define relationships
 
 :::
 
-:::info Limitations
+:::caution Limitations
 
 Hasura has the following limitations for relationship in nested object
 types:
