@@ -94,18 +94,19 @@
   url: /v1/graphql
   status: 200
   query:
+    operationName: "HeroByArgs"
     query: |
-      query Hero($ep: MyInt!) {
-        hero(episode: $ep) {
+      query HeroByArgs($args: FooCharacterInputArgs!) {
+        heroByArgs(arguments: $args) {
           id
           name
         }
       }
     variables:
-      ep: 4
+      args: { episode: 4 }
   response:
     data:
-      hero:
+      heroByArgs:
         id: "1"
         name: R2-D2
 
@@ -113,21 +114,22 @@
   url: /v1/graphql
   status: 200
   query:
+    operationName: "HeroByArgs"
     query: |
-      query Hero($ep: Int!) {
-        hero(episode: $ep) {
+      query HeroByArgs($args: CharacterInputArgs!) {
+        heroByArgs(arguments: $args) {
           id
           name
         }
       }
     variables:
-      ep: 4
+      args: { episode: 4 }
   response:
     errors:
     - extensions:
-        path: $.selectionSet.hero.args.episode
+        path: $.selectionSet.heroByArgs.args.arguments
         code: validation-failed
-      message: variable "ep" is declared as Int!, but used where MyInt! is expected
+      message: variable "args" is declared as CharacterInputArgs!, but used where FooCharacterInputArgs! is expected
 
 - description: query with __type introspection
   url: /v1/graphql

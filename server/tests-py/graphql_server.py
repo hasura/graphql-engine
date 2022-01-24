@@ -354,6 +354,9 @@ character_search_results = {
  2: Human("Tatooine", r2, Character(7, "Luke Skywalker")),
 }
 
+class CharacterInputArgs(graphene.InputObjectType):
+    episode = graphene.Int(required=True)
+
 class CharacterIFaceQuery(graphene.ObjectType):
     hero = graphene.Field(
         Character,
@@ -366,11 +369,20 @@ class CharacterIFaceQuery(graphene.ObjectType):
         required=False
     )
 
+    hero_by_args = graphene.Field(
+        Character,
+        required=False,
+        arguments=CharacterInputArgs(required=True)
+    )
+
     def resolve_hero(_, info, episode):
         return all_characters.get(episode)
 
     def resolve_heroes(_, info):
         return all_characters.values()
+
+    def resolve_hero_by_args(_, info, arguments):
+        return all_characters.get(arguments.episode)
 
 schema = graphene.Schema(query=CharacterIFaceQuery, types=[Human, Droid])
 

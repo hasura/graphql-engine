@@ -30,6 +30,7 @@ count (
 - server: fix parsing FLOAT64s in scientific notation and non-finite ones in BigQuery
 - server: extend support for the `min`/`max` aggregates to all comparable types in BigQuery
 - server: fix support for joins in aggregates nodes in BigQuery
+- server: fix for passing input objects in query variables to remote schemas with type name customization (#7977)
 - console: action/event trigger transforms are now called REST connectors
 - console: fix list of tables (and schemas) being unsorted when creating a new trigger event (fix #6391)
 - cli: migrate and seed subcommands has an option in prompt to choose and apply operation on all available databases
