@@ -13,7 +13,7 @@ import TabItem from "@theme/TabItem";
 import Link from "@docusaurus/Link";
 import Thumbnail from "@site/src/components/Thumbnail/Thumbnail";
 
-# Managing Hasura metadata
+# Managing Hasura metadata (config v2)
 
 ## Introduction
 
@@ -81,7 +81,7 @@ file that can be applied via the console or the API only.
 
 The metadata exported via the **CLI** is broken into multiple YAML files
 for easier management in version control and CI/CD and can be applied
-via the CLI or the [cli migrations](/graphql/core/migrations/advanced/auto-apply-migrations.mdx) image only.
+via the CLI or the [cli migrations](/graphql/core/migrations/config-v2/advanced/auto-apply-migrations.mdx) image only.
 
 :::
 
@@ -251,6 +251,6 @@ admin-only API.
 ## Managing Hasura metadata in CI/CD
 
 In case you need an automated way of applying/importing the metadata,
-take a look at the [cli-migrations](/graphql/core/migrations/advanced/auto-apply-migrations.mdx) Docker
+take a look at the [cli-migrations](/graphql/core/migrations/config-v2/advanced/auto-apply-migrations.mdx) Docker
 image, which can start the GraphQL engine after automatically importing
 a mounted metadata directory.
