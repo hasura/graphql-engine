@@ -280,10 +280,11 @@ hasura metadata apply
 
 You can configure advanced settings via the [pg_create_event_trigger](/graphql/core/api-reference/metadata-api/event-triggers.mdx#metadata-pg-create-event-trigger) metadata API.
 
-```http {20-24}
+```http {21-25}
 POST /v1/metadata HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
+
 {
    "type": "pg_create_event_trigger",
    "args": {
