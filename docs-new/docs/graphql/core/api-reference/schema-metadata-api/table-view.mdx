@@ -1,16 +1,17 @@
-<div class="meta"
-description="Manage tables and views with the Hasura schema/metadata API"
-keywords="hasura, docs, schema/metadata API, API reference, table, view">
-
-</div>
+---
+sidebar_label: Tables/Views
+sidebar_position: 2
+description: Manage tables and views with the Hasura schema/metadata API
+keywords:
+   - hasura
+   - docs
+   - schema/metadata API
+   - API reference
+   - table
+   - view
+---
 
 # Schema/Metadata API Reference: Tables/Views (Deprecated)
-
-<div class="contents" backlinks="none" depth="1" local="">
-
-Table of contents
-
-</div>
 
 ## Introduction
 
@@ -19,20 +20,18 @@ Track/untrack a table/view in Hasura GraphQL engine.
 Only tracked tables/views are available for
 querying/mutating/subscribing data over the GraphQL API.
 
-<div class="admonition">
-
-Deprecation
+:::info Deprecation
 
 In versions `v2.0.0` and above, the schema/metadata API is deprecated in
-favour of the `schema API <schema_apis>` and the
-`metadata API <metadata_apis>`.
+favour of the [schema API](/graphql/core/api-reference/schema-api/index.mdx) and the
+[metadata API](/graphql/core/api-reference/metadata-api/index.mdx).
 
 Though for backwards compatibility, the schema/metadata APIs will
 continue to function.
 
-</div>
+:::
 
-## track_table
+## track_table {#track-table}
 
 `track_table` is used to add a table/view to the GraphQL schema.
 
@@ -54,12 +53,12 @@ X-Hasura-Role: admin
 
 ### Args syntax
 
-| Key     | Required | Schema                  | Description                                                                      |
-|---------|----------|-------------------------|----------------------------------------------------------------------------------|
-| table   | true     | `TableName <TableName>` | Name of the table                                                                |
-| is_enum | false    | Boolean                 | When set to `true`, creates the table as an `enum table <pg_create_enum_table>`. |
+| Key     | Required | Schema                                                             | Description                                                                      |
+|---------|----------|--------------------------------------------------------------------|----------------------------------------------------------------------------------|
+| table   | true     | [TableName](/graphql/core/api-reference/syntax-defs.mdx#tablename) | Name of the table                                                                |
+| is_enum | false    | Boolean                                                            | When set to `true`, creates the table as an [enum table](/graphql/core/databases/postgres/schema/enums.mdx#pg-create-enum-table). |
 
-## set_table_is_enum
+## set_table_is_enum {#set-table-is-enum}
 
 `set_table_is_enum` sets whether an already-tracked table should be used
 as an `enum table <pg_create_enum_table>`.
@@ -85,12 +84,12 @@ X-Hasura-Role: admin
 
 ### Args syntax
 
-| Key     | Required | Schema                  | Description                                                              |
-|---------|----------|-------------------------|--------------------------------------------------------------------------|
-| table   | true     | `TableName <TableName>` | Name of the table                                                        |
-| is_enum | true     | Boolean                 | Whether or not the table should be used as an `enum table <enum table>`. |
+| Key     | Required | Schema                                                             | Description                                                              |
+|---------|----------|--------------------------------------------------------------------|--------------------------------------------------------------------------|
+| table   | true     | [TableName](/graphql/core/api-reference/syntax-defs.mdx#tablename) | Name of the table                                                        |
+| is_enum | true     | Boolean                                                            | Whether or not the table should be used as an `enum table <enum table>`. |
 
-## track_table v2
+## track_table v2 {#track-table-v2}
 
 Version 2 of `track_table` is used to add a table/view to the GraphQL
 schema with configuration. You can customise the root field names.
@@ -163,31 +162,25 @@ be:
 -   `delete_users_address`
 -   `delete_users_address_by_pk`
 
-<div class="note">
-
-<div class="title">
-
-Note
-
-</div>
+:::info Note
 
 GraphQL engine requires the constraint names (if any) of a table to be
 [GraphQL compliant](https://spec.graphql.org/June2018/#sec-Names) in
 order to be able to track it.
 
-</div>
+:::
 
 ### Args syntax
 
 | Key           | Required | Schema                        | Description                      |
 |---------------|----------|-------------------------------|----------------------------------|
-| table         | true     | `TableName <TableName>`       | Name of the table                |
-| configuration | false    | `Table Config <table_config>` | Configuration for the table/view |
+| table         | true     | [TableName](/graphql/core/api-reference/syntax-defs.mdx#tablename)       | Name of the table                |
+| configuration | false    | [Table Config](/graphql/core/api-reference/syntax-defs.mdx#table-config) | Configuration for the table/view |
 
-## set_table_custom_fields (deprecated)
+## set_table_custom_fields (deprecated) {#set-table-custom-fields-deprecated}
 
 `set_table_custom_fields` has been deprecated. Use the
-`set_table_customization <schema_metadata_set_table_customization>` API
+`set_table_customization [set_table_customization](#schema-metadata-set-table-customization) API
 to set the custom table fields.
 
 `set_table_custom_fields` in version `2` sets the custom root fields and
@@ -226,19 +219,19 @@ X-Hasura-Role: admin
 
 ### Args syntax
 
-| Key                 | Required | Schema                                    | Description                 |
-|---------------------|----------|-------------------------------------------|-----------------------------|
-| table               | true     | `TableName <TableName>`                   | Name of the table           |
-| custom_root_fields  | false    | `Custom Root Fields <custom_root_fields>` | Customise the root fields   |
-| custom_column_names | false    | `CustomColumnNames`                       | Customise the column fields |
+| Key                 | Required | Schema                                                                               | Description                 |
+|---------------------|----------|--------------------------------------------------------------------------------------|-----------------------------|
+| table               | true     | [TableName](/graphql/core/api-reference/syntax-defs.mdx#tablename)                   | Name of the table           |
+| custom_root_fields  | false    | [Custom Root Fields](/graphql/core/api-reference/syntax-defs.mdx#custom-root-fields) | Customise the root fields   |
+| custom_column_names | false    | [CustomColumnNames](/graphql/core/api-reference/syntax-defs.mdx#customcolumnnames)   | Customise the column fields |
 
-## set_table_customization
+## set_table_customization {##schema-metadata-set-table-customization}
 
 `set_table_customization` allows you to customize any given table with a
 custom name, custom root fields and custom column names of an already
 tracked table. This will **replace** the already present customization.
 
-`set_table_custom_fields <schema_metadata_set_table_custom_fields>` has
+[set_table_custom_fields](#schema-metadata-set-table-custom-fields) has
 been deprecated in favour of this API.
 
 Set the configuration for a table/view called `author`:
@@ -275,12 +268,12 @@ X-Hasura-Role: admin
 
 ### Args syntax
 
-| Key           | Required | Schema                       | Description                      |
-|---------------|----------|------------------------------|----------------------------------|
-| table         | true     | `TableName <TableName>`      | Name of the table                |
-| configuration | false    | `TableConfig <table_config>` | Configuration for the table/view |
+| Key           | Required | Schema                                                                  | Description                      |
+|---------------|----------|-------------------------------------------------------------------------|----------------------------------|
+| table         | true     | [TableName](/graphql/core/api-reference/syntax-defs.mdx#tablename)      | Name of the table                |
+| configuration | false    | [TableConfig](/graphql/core/api-reference/syntax-defs.mdx#table-config) | Configuration for the table/view |
 
-## untrack_table
+## untrack_table {#untrack-table}
 
 `untrack_table` is used to remove a table/view from the GraphQL schema.
 
@@ -305,7 +298,7 @@ X-Hasura-Role: admin
 
 ### Args syntax
 
-| Key     | Required | Schema                  | Description                                                                                                                        |
-|---------|----------|-------------------------|------------------------------------------------------------------------------------------------------------------------------------|
-| table   | true     | `TableName <TableName>` | Name of the table                                                                                                                  |
-| cascade | false    | Boolean                 | When set to `true`, the effect (if possible) is cascaded to any metadata dependent objects (relationships, permissions, templates) |
+| Key     | Required | Schema                                                             | Description                                                                                                                        |
+|---------|----------|--------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------|
+| table   | true     | [TableName](/graphql/core/api-reference/syntax-defs.mdx#tablename) | Name of the table                                                                                                                  |
+| cascade | false    | Boolean                                                            | When set to `true`, the effect (if possible) is cascaded to any metadata dependent objects (relationships, permissions, templates) |

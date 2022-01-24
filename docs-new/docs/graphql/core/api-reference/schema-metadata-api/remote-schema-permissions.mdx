@@ -1,16 +1,17 @@
-<div class="meta"
-description="Manage remote schema permissions with the Hasura metadata API"
-keywords="hasura, docs, schema/metadata API, API reference, remote schema permissions, permission">
-
-</div>
+---
+sidebar_label: Remote Schema Permissions
+sidebar_position: 6 
+description: Manage remote schema permissions with the Hasura metadata API
+keywords:
+   - hasura
+   - docs
+   - schema/metadata API
+   - API reference
+   - remote schema permissions
+   - permission
+---
 
 # Schema/Metadata API Reference: Remote Schema Permissions (Deprecated)
-
-<div class="contents" backlinks="none" depth="1" local="">
-
-Table of contents
-
-</div>
 
 ## Introduction
 
@@ -23,23 +24,20 @@ Remote schema permissions can be defined to:
 By default, the `admin` role has unrestricted access to the remote
 schema.
 
-<div class="admonition">
-
-Deprecation
+:::info Deprecation
 
 In versions `v2.0.0` and above, the schema/metadata API is deprecated in
-favour of the `schema API <schema_apis>` and the
-`metadata API <metadata_apis>`.
+favour of the [schema API](/graphql/core/api-reference/schema-api/index.mdx) and the
+[metadata API](/graphql/core/api-reference/metadata-api/index.mdx).
 
 Though for backwards compatibility, the schema/metadata APIs will
 continue to function.
 
-</div>
+:::
 
 ## add_remote_schema_permissions
 
-This API takes the schema [(GraphQL IDL
-format)](http://spec.graphql.org/June2018/#sec-Type-System) which should
+This API takes the schema [(GraphQL IDL format)](http://spec.graphql.org/June2018/#sec-Type-System) which should
 be a subset of the remote schema and the role for which this restricted
 schema is exposed. The schema also accepts a custom `@preset` directive
 for setting argument presets.
@@ -196,7 +194,7 @@ fields during execution. This way the field is executed with limited
 input values. Argument presets are of two types:
 
 1.  Static Value
-2.  `Session Variable <dynamic_session_variables>`
+2.  [Session Variable](/graphql/core/auth/authorization/roles-variables.mdx#dynamic-session-variables)
 
 A preset value can be added to an input value via the `@preset`
 directive.
@@ -222,16 +220,10 @@ A preset value can also reference a session variable. When the preset
 value has a session variable, then its value is resolved and then added
 before querying the remote schema.
 
-<div class="note">
-
-<div class="title">
-
-Note
-
-</div>
+:::info Note
 
 By default, if the input value preset contains a
-`session variable value <dynamic_session_variables>`, then its value
+[session variable value](/graphql/core/auth/authorization/roles-variables.mdx#dynamic-session-variables), then its value
 will be resolved when the query is executed. To treat the session
 variable value as a literal value (avoiding resolving of the session
 variable value) can be done by specifying `static` as `true` while
@@ -248,7 +240,7 @@ type Query {
 In this case, `"x-hasura-hello"` will be the argument to the `hello`
 field whenever it's queried.
 
-</div>
+:::
 
 ### Remote Relationship Permissions
 
@@ -345,20 +337,14 @@ engine before it queries the remote schema.
 
 ### Args syntax
 
-| Key           | Required | Schema                   | Description                             |
-|---------------|----------|--------------------------|-----------------------------------------|
-| remote_schema | true     | `RemoteSchemaName`       | Name of the remote schema               |
-| role          | true     | `RoleName`               | Role                                    |
-| definition    | true     | `RemoteSchemaPermission` | The remote schema permission definition |
-| comment       | false    | text                     | Comment                                 |
+| Key           | Required | Schema                                                                                       | Description                             |
+|---------------|----------|----------------------------------------------------------------------------------------------|-----------------------------------------|
+| remote_schema | true     | [RemoteSchemaName](/graphql/core/api-reference/syntax-defs.mdx#remoteschemaname)             | Name of the remote schema               |
+| role          | true     | [RoleName](/graphql/core/api-reference/syntax-defs.mdx#rolename)                             | Role                                    |
+| definition    | true     | [RemoteSchemaPermission](/graphql/core/api-reference/syntax-defs.mdx#remoteschemapermission) | The remote schema permission definition |
+| comment       | false    | text                                                                                         | Comment                                 |
 
-<div class="note">
-
-<div class="title">
-
-Note
-
-</div>
+:::info Note
 
 `add_remote_schema_permissions` will only work when the GraphQL engine
 has enabled remote schema permissions. Remote schema permissions can be
@@ -366,7 +352,7 @@ enabled by running the graphql-engine with the
 `--enable-remote-schema-permissions` server flag or by setting the
 `HASURA_GRAPHQL_ENABLE_REMOTE_SCHEMA_PERMISSIONS` environment variable.
 
-</div>
+:::
 
 ## drop_remote_schema_permissions
 
@@ -391,7 +377,7 @@ X-Hasura-Role: admin
 
 ### Args syntax
 
-| Key   | Required | Schema             | Description               |
-|-------|----------|--------------------|---------------------------|
-| table | true     | `RemoteSchemaName` | Name of the remote schema |
-| role  | true     | `RoleName`         | Role                      |
+| Key   | Required | Schema                                                                            | Description               |
+|-------|----------|-----------------------------------------------------------------------------------|---------------------------|
+| table | true     | [RemoteSchemaName](/graphql/core/api-reference/syntax-defs.mdx#remoteschemaname)  | Name of the remote schema |
+| role  | true     | [RoleName](/graphql/core/api-reference/syntax-defs.mdx#rolename)                  | Role                      |

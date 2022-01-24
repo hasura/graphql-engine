@@ -1,16 +1,16 @@
-<div class="meta"
-description="Manage permissions with the Hasura schema/metadata API"
-keywords="hasura, docs, schema/metadata API, API reference, permission">
-
-</div>
+---
+sidebar_label: Permissions
+sidebar_position: 5 
+description: Manage permissions with the Hasura schema/metadata API
+keywords:
+   - hasura
+   - docs
+   - schema/metadata API
+   - API reference
+   - permission
+---
 
 # Schema/Metadata API Reference: Permissions (Deprecated)
-
-<div class="contents" backlinks="none" depth="1" local="">
-
-Table of contents
-
-</div>
 
 ## Introduction
 
@@ -19,30 +19,26 @@ performed by various users. Permissions can be defined on various
 operations (insert/select/update/delete) at a role level granularity. By
 default, the `admin` role has unrestricted access to all operations.
 
-<div class="admonition">
-
-Variables in rules
+:::info Variables in rules
 
 All `X-Hasura-*` header values can be used in the permission rules.
 These values can come with the request and can be validated using
 webhook or can be sent with the JWT token.
 
-</div>
+:::
 
-<div class="admonition">
-
-Deprecation
+:::info Deprecation
 
 In versions `v2.0.0` and above, the schema/metadata API is deprecated in
-favour of the `schema API <schema_apis>` and the
-`metadata API <metadata_apis>`.
+favour of the [schema API](/graphql/core/api-reference/schema-api/index.mdx) and the
+[metadata API](/graphql/core/api-reference/metadata-api/index.mdx).
 
 Though for backwards compatibility, the schema/metadata APIs will
 continue to function.
 
-</div>
+:::
 
-## create_insert_permission
+## create_insert_permission {#create-insert-permission}
 
 An insert permission is used to enforce constraints on the data that is
 being inserted.
@@ -126,14 +122,14 @@ In the above definition, the row is allowed to be inserted if the
 
 ### Args syntax
 
-| Key        | Required | Schema             | Description               |
-|------------|----------|--------------------|---------------------------|
-| table      | true     | `TableName`        | Name of the table         |
-| role       | true     | `RoleName`         | Role                      |
-| permission | true     | `InsertPermission` | The permission definition |
-| comment    | false    | text               | Comment                   |
+| Key        | Required | Schema                                                                            | Description               |
+|------------|----------|-----------------------------------------------------------------------------------|---------------------------|
+| table      | true     | [TableName](/graphql/core/api-reference/syntax-defs.mdx#tablename)                | Name of the table         |
+| role       | true     | [RoleName](/graphql/core/api-reference/syntax-defs.mdx#rolename)                  | Role                      |
+| permission | true     | [InsertPermission](/graphql/core/api-reference/syntax-defs.mdx#insertpermission)  | The permission definition |
+| comment    | false    | text                                                                              | Comment                   |
 
-## drop_insert_permission
+## drop_insert_permission {#drop-insert-permission}
 
 The `drop_insert_permission` API is used to drop an existing insert
 permission for a role on a table.
@@ -156,12 +152,12 @@ X-Hasura-Role: admin
 
 ### Args syntax
 
-| Key   | Required | Schema      | Description       |
-|-------|----------|-------------|-------------------|
-| table | true     | `TableName` | Name of the table |
-| role  | true     | `RoleName`  | Role              |
+| Key   | Required | Schema                                                             | Description       |
+|-------|----------|--------------------------------------------------------------------|-------------------|
+| table | true     | [TableName](/graphql/core/api-reference/syntax-defs.mdx#tablename) | Name of the table |
+| role  | true     | [RoleName](/graphql/core/api-reference/syntax-defs.mdx#rolename)   | Role              |
 
-## create_select_permission
+## create_select_permission {#create-select-permission}
 
 A select permission is used to restrict access to only the specified
 columns and rows.
@@ -208,14 +204,14 @@ This reads as follows - For the `user` role:
 
 ### Args syntax
 
-| Key        | Required | Schema             | Description               |
-|------------|----------|--------------------|---------------------------|
-| table      | true     | `TableName`        | Name of the table         |
-| role       | true     | `RoleName`         | Role                      |
-| permission | true     | `SelectPermission` | The permission definition |
-| comment    | false    | text               | Comment                   |
+| Key        | Required | Schema                                                                            | Description               |
+|------------|----------|-----------------------------------------------------------------------------------|---------------------------|
+| table      | true     | [TableName](/graphql/core/api-reference/syntax-defs.mdx#tablename)                | Name of the table         |
+| role       | true     | [RoleName](/graphql/core/api-reference/syntax-defs.mdx#rolename)                  | Role                      |
+| permission | true     | [SelectPermission](/graphql/core/api-reference/syntax-defs.mdx#selectpermission)  | The permission definition |
+| comment    | false    | text                                                                              | Comment                   |
 
-## drop_select_permission
+## drop_select_permission {#drop-select-permission}
 
 The `drop_select_permission` is used to drop an existing select
 permission for a role on a table.
@@ -238,12 +234,12 @@ X-Hasura-Role: admin
 
 ### Args syntax
 
-| Key   | Required | Schema      | Description       |
-|-------|----------|-------------|-------------------|
-| table | true     | `TableName` | Name of the table |
-| role  | true     | `RoleName`  | Role              |
+| Key   | Required | Schema                                                             | Description       |
+|-------|----------|--------------------------------------------------------------------|-------------------|
+| table | true     | [TableName](/graphql/core/api-reference/syntax-defs.mdx#tablename) | Name of the table |
+| role  | true     | [RoleName](/graphql/core/api-reference/syntax-defs.mdx#rolename)   | Role              |
 
-## create_update_permission
+## create_update_permission [#create-update-permission]
 
 An update permission is used to restrict the columns and rows that can
 be updated. Its structure is quite similar to the select permission.
@@ -292,31 +288,25 @@ This reads as follows - for the `user` role:
 -   When this update happens, the value of the column `updated_at` will
     be automatically `set` to the current timestamp.
 
-<div class="note">
-
-<div class="title">
-
-Note
-
-</div>
+:::info Note
 
 It is important to deny updates to columns that will determine the row
 ownership. In the above example, the `author_id` column determines the
 ownership of a row in the `article` table. Columns such as this should
 never be allowed to be updated.
 
-</div>
+:::
 
 ### Args syntax
 
-| Key        | Required | Schema             | Description               |
-|------------|----------|--------------------|---------------------------|
-| table      | true     | `TableName`        | Name of the table         |
-| role       | true     | `RoleName`         | Role                      |
-| permission | true     | `UpdatePermission` | The permission definition |
-| comment    | false    | text               | Comment                   |
+| Key        | Required | Schema                                                                            | Description               |
+|------------|----------|-----------------------------------------------------------------------------------|---------------------------|
+| table      | true     | [TableName](/graphql/core/api-reference/syntax-defs.mdx#tablename)                | Name of the table         |
+| role       | true     | [RoleName](/graphql/core/api-reference/syntax-defs.mdx#rolename)                  | Role                      |
+| permission | true     | [UpdatePermission](/graphql/core/api-reference/syntax-defs.mdx#updatepermission)  | The permission definition |
+| comment    | false    | text                                                                              | Comment                   |
 
-## drop_update_permission
+## drop_update_permission {#drop-update-permission}
 
 The `drop_update_permission` API is used to drop an existing update
 permission for a role on a table.
@@ -339,12 +329,12 @@ X-Hasura-Role: admin
 
 ### Args syntax
 
-| Key   | Required | Schema      | Description       |
-|-------|----------|-------------|-------------------|
-| table | true     | `TableName` | Name of the table |
-| role  | true     | `RoleName`  | Role              |
+| Key   | Required | Schema                                                             | Description       |
+|-------|----------|--------------------------------------------------------------------|-------------------|
+| table | true     | [TableName](/graphql/core/api-reference/syntax-defs.mdx#tablename) | Name of the table |
+| role  | true     | [RoleName](/graphql/core/api-reference/syntax-defs.mdx#rolename)   | Role              |
 
-## create_delete_permission
+## create_delete_permission {#create-delete-permission}
 
 A delete permission is used to restrict the rows that can be deleted.
 
@@ -377,14 +367,14 @@ value."
 
 ### Args syntax
 
-| Key        | Required | Schema             | Description               |
-|------------|----------|--------------------|---------------------------|
-| table      | true     | `TableName`        | Name of the table         |
-| role       | true     | `RoleName`         | Role                      |
-| permission | true     | `DeletePermission` | The permission definition |
-| comment    | false    | text               | Comment                   |
+| Key        | Required | Schema                                                                            | Description               |
+|------------|----------|-----------------------------------------------------------------------------------|---------------------------|
+| table      | true     | [TableName](/graphql/core/api-reference/syntax-defs.mdx#tablename)                | Name of the table         |
+| role       | true     | [RoleName](/graphql/core/api-reference/syntax-defs.mdx#rolename)                  | Role                      |
+| permission | true     | [DeletePermission](/graphql/core/api-reference/syntax-defs.mdx#deletepermission) | The permission definition |
+| comment    | false    | text                                                                              | Comment                   |
 
-## drop_delete_permission
+## drop_delete_permission {#drop-delete-permission}
 
 The `drop_delete_permission` API is used to drop an existing delete
 permission for a role on a table.
@@ -407,12 +397,12 @@ X-Hasura-Role: admin
 
 ### Args syntax
 
-| Key   | Required | Schema      | Description       |
-|-------|----------|-------------|-------------------|
-| table | true     | `TableName` | Name of the table |
-| role  | true     | `RoleName`  | Role              |
+| Key   | Required | Schema                                                             | Description       |
+|-------|----------|--------------------------------------------------------------------|-------------------|
+| table | true     | [TableName](/graphql/core/api-reference/syntax-defs.mdx#tablename) | Name of the table |
+| role  | true     | [RoleName](/graphql/core/api-reference/syntax-defs.mdx#rolename)   | Role              |
 
-## set_permission_comment
+## set_permission_comment {#set-permission-comment}
 
 `set_permission_comment` is used to set/update the comment on a
 permission. Setting the comment to `null` removes it.
@@ -438,9 +428,9 @@ X-Hasura-Role: admin
 
 ### Args syntax
 
-| Key     | Required | Schema                                               | Description                |
-|---------|----------|------------------------------------------------------|----------------------------|
-| table   | true     | `TableName`                                          | Name of the table          |
-| role    | true     | `RoleName`                                           | The role in the permission |
-| type    | true     | permission type (one of select/update/delete/insert) | The type of the permission |
-| comment | false    | Text                                                 | Comment                    |
+| Key     | Required | Schema                                                               | Description                |
+|---------|----------|----------------------------------------------------------------------|----------------------------|
+| table   | true     | [TableName](/graphql/core/api-reference/syntax-defs.mdx#tablename)   | Name of the table          |
+| role    | true     | [RoleName](/graphql/core/api-reference/syntax-defs.mdx#rolename)     | The role in the permission |
+| type    | true     | permission type (one of select/update/delete/insert)                 | The type of the permission |
+| comment | false    | Text                                                                 | Comment                    |
