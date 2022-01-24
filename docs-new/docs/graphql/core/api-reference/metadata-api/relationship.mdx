@@ -1,16 +1,16 @@
-<div class="meta"
-description="Use relationships with the Hasura metadata API"
-keywords="hasura, docs, metadata API, API reference, relationship">
-
-</div>
+---
+sidebar_label: Relationships
+sidebar_position: 4
+description: Use relationships with the Hasura metadata API
+keywords:
+   - hasura
+   - docs
+   - metadata API
+   - API reference
+   - relationship
+---
 
 # Metadata API Reference: Relationships
-
-<div class="contents" backlinks="none" depth="1" local="">
-
-Table of contents
-
-</div>
 
 ## Introduction
 
@@ -41,14 +41,12 @@ key to the `author` table's primary key `id`. In this case there will be
 a single `author` for every `author_details` and a single `details` for
 every `author`
 
-<div class="admonition">
-
-Supported from
+:::info Supported from
 
 The metadata API is supported for versions `v2.0.0` and above and
-replaces the older `schema/metadata API <schema_metadata_apis>`.
+replaces the older [schema/metadata API](/graphql/core/api-reference/schema-metadata-api/index.mdx).
 
-</div>
+:::
 
 ## pg_create_object_relationship
 
@@ -81,19 +79,13 @@ X-Hasura-Role: admin
 }
 ```
 
-<div class="note">
-
-<div class="title">
-
-Note
-
-</div>
+:::info Note
 
 In the case that the key uses only a single column it is permissible to
 give just a string instead of a list, i.e.:
 `"foreign_key_constraint_on" : "author_id"`.
 
-</div>
+:::
 
 ### 2. Using foreign key constraint on a remote table
 
@@ -121,9 +113,7 @@ X-Hasura-Role: admin
 }
 ```
 
-<div class="admonition">
-
-Deprecation
+:::info Deprecation
 
 For compatibility with previous versions we also support the form of
 `foreign_key_constraint_on` with a `column`-field, e.g.:
@@ -139,16 +129,14 @@ For compatibility with previous versions we also support the form of
 
 This form is deprecated in favor of the more general `columns` field.
 
-</div>
+:::
 
-<div class="admonition">
-
-Supported from
+:::info Supported from
 
 Relationships via remote table are supported for versions
 `v2.0.0-alpha.3` and above.
 
-</div>
+:::
 
 ### 3. Manual configuration
 
@@ -186,13 +174,7 @@ X-Hasura-Role: admin
 }
 ```
 
-<div class="note">
-
-<div class="title">
-
-Note
-
-</div>
+:::info Note
 
 It is easy to make mistakes while using `manual_configuration`. One
 simple check is to ensure that foreign key constraint semantics are
@@ -201,23 +183,22 @@ example, if it was allowed, a foreign key constraint could have been
 defined on `article` table's `id` column to `article_detail` view's
 `article_id` column.
 
-</div>
+:::
 
 ### Args syntax
 
-| Key     | Required | Schema                                | Description                                                    |
-|---------|----------|---------------------------------------|----------------------------------------------------------------|
-| table   | true     | `TableName <TableName>`               | Name of the table                                              |
-| name    | true     | `RelationshipName <RelationshipName>` | Name of the new relationship                                   |
-| using   | true     | `ObjRelUsing`                         | Use one of the available ways to define an object relationship |
-| comment | false    | text                                  | comment                                                        |
-| source  | false    | `SourceName <SourceName>`             | Name of the source database of the table (default: `default`)  |
+| Key     | Required | Schema                                                                           | Description                                                    |
+|---------|----------|----------------------------------------------------------------------------------|----------------------------------------------------------------|
+| table   | true     | [TableName](/graphql/core/api-reference/syntax-defs.mdx#tablename)               | Name of the table                                              |
+| name    | true     | [RelationshipName](/graphql/core/api-reference/syntax-defs.mdx#relationshipname) | Name of the new relationship                                   |
+| using   | true     | [ObjRelUsing](/graphql/core/api-reference/syntax-defs.mdx#objrelusing)           | Use one of the available ways to define an object relationship |
+| comment | false    | text                                                                             | comment                                                        |
+| source  | false    | [SourceName](/graphql/core/api-reference/syntax-defs.mdx#sourcename)             | Name of the source database of the table (default: `default`)  |
 
-## pg_create_array_relationship
+## pg_create_array_relationship {#pg-create-array-relationship}
 
 `create_array_relationship` is used to create an array relationship on a
-table. There cannot be an existing column or relationship with the same
-name.
+table. There cannot be an existing column or relationship with the same name.
 
 There are 2 ways in which you can create an array relationship.
 
@@ -248,9 +229,7 @@ X-Hasura-Role: admin
 }
 ```
 
-<div class="admonition">
-
-Deprecation
+:::info Deprecation
 
 For compatibility with previous version we also support the form of
 `foreign_key_constraint_on` with a `column`-field, e.g.:
@@ -266,7 +245,7 @@ For compatibility with previous version we also support the form of
 
 This form is deprecated in favor of the more general `columns` field.
 
-</div>
+:::
 
 ### 2. Manual configuration
 
@@ -304,13 +283,7 @@ X-Hasura-Role: admin
 }
 ```
 
-<div class="note">
-
-<div class="title">
-
-Note
-
-</div>
+:::info Note
 
 It is easy to make mistakes while using `manual_configuration`. One
 simple check is to ensure that foreign key constraint semantics are
@@ -319,19 +292,19 @@ example, if it was allowed, a foreign key constraint could have been
 defined on the `author` table's `id` column to `article_detail` view's
 `author_id` column.
 
-</div>
+:::
 
 ### Args syntax
 
-| Key     | Required | Schema                    | Description                                                   |
-|---------|----------|---------------------------|---------------------------------------------------------------|
-| table   | true     | `TableName`               | Name of the table                                             |
-| name    | true     | `RelationshipName`        | Name of the new relationship                                  |
-| using   | true     | `ArrRelUsing`             | Use one of the available ways to define an array relationship |
-| comment | false    | text                      | comment                                                       |
-| source  | false    | `SourceName <SourceName>` | Name of the source database of the table (default: `default`) |
+| Key     | Required | Schema                                                                           | Description                                                   |
+|---------|----------|----------------------------------------------------------------------------------|---------------------------------------------------------------|
+| table   | true     | [TableName](/graphql/core/api-reference/syntax-defs.mdx#tablename)               | Name of the table                                             |
+| name    | true     | [RelationshipName](/graphql/core/api-reference/syntax-defs.mdx#relationshipname) | Name of the new relationship                                  |
+| using   | true     | [ArrRelUsing](/graphql/core/api-reference/syntax-defs.mdx#arrrelusing)           | Use one of the available ways to define an array relationship |
+| comment | false    | text                                                                             | comment                                                       |
+| source  | false    | [SourceName](/graphql/core/api-reference/syntax-defs.mdx#sourcename)             | Name of the source database of the table (default: `default`) |
 
-## pg_drop_relationship
+## pg_drop_relationship {#pg-drop-relationship}
 
 `pg_drop_relationship` is used to drop a relationship (both object and
 array) on a table. If there are other objects dependent on this
@@ -358,27 +331,21 @@ X-Hasura-Role: admin
 
 ### Args syntax
 
-| Key          | Required | Schema                    | Description                                                                       |
-|--------------|----------|---------------------------|-----------------------------------------------------------------------------------|
-| table        | true     | `TableName`               | Name of the table                                                                 |
-| relationship | true     | `RelationshipName`        | Name of the relationship that needs to be dropped                                 |
-| cascade      | false    | Boolean                   | When set to `true`, all the dependent items on this relationship are also dropped |
-| source       | false    | `SourceName <SourceName>` | Name of the source database of the table (default: `default`)                     |
+| Key          | Required | Schema                                                                            | Description                                                                       |
+|--------------|----------|-----------------------------------------------------------------------------------|-----------------------------------------------------------------------------------|
+| table        | true     | [TableName](/graphql/core/api-reference/syntax-defs.mdx#tablename)                | Name of the table                                                                 |
+| relationship | true     | [RelationshipName](/graphql/core/api-reference/syntax-defs.mdx#relationshipname)  | Name of the relationship that needs to be dropped                                 |
+| cascade      | false    | Boolean                                                                           | When set to `true`, all the dependent items on this relationship are also dropped |
+| source       | false    | [SourceName](/graphql/core/api-reference/syntax-defs.mdx#sourcename)              | Name of the source database of the table (default: `default`)                     |
 
-<div class="note">
-
-<div class="title">
-
-Note
-
-</div>
+:::info Note
 
 Be careful when using `cascade`. First, try running the request without
 `cascade` or `cascade` set to `false`.
 
-</div>
+:::
 
-## pg_set_relationship_comment
+## pg_set_relationship_comment {#pg-set-relationship-comment}
 
 `pg_set_relationship_comment` is used to set/update the comment on a
 relationship. Setting the comment to `null` removes it.
@@ -403,17 +370,16 @@ X-Hasura-Role: admin
 
 ### Args syntax
 
-| Key          | Required | Schema                    | Description                                                   |
-|--------------|----------|---------------------------|---------------------------------------------------------------|
-| table        | true     | `TableName`               | Name of the table                                             |
-| relationship | true     | `RelationshipName`        | The relationship                                              |
-| comment      | false    | Text                      | Comment                                                       |
-| source       | false    | `SourceName <SourceName>` | Name of the source database of the table (default: `default`) |
+| Key          | Required | Schema                                                                              | Description                                                   |
+|--------------|----------|-------------------------------------------------------------------------------------|---------------------------------------------------------------|
+| table        | true     | [TableName](/graphql/core/api-reference/syntax-defs.mdx#tablename)                  | Name of the table                                             |
+| relationship | true     | [RelationshipName](/graphql/core/api-reference/syntax-defs.mdx#relationshipname)    | The relationship                                              |
+| comment      | false    | Text                                                                                | Comment                                                       |
+| source       | false    | [SourceName](/graphql/core/api-reference/syntax-defs.mdx#sourcename)                | Name of the source database of the table (default: `default`) |
 
-## pg_rename_relationship
+## pg_rename_relationship {#pg-rename-relationship}
 
-`pg_rename_relationship` is used to modify the name of an existing
-relationship.
+`pg_rename_relationship` is used to modify the name of an existing relationship.
 
 An example:
 
@@ -435,14 +401,14 @@ X-Hasura-Role: admin
 
 ### Args syntax
 
-| Key      | Required | Schema                    | Description                                                   |
-|----------|----------|---------------------------|---------------------------------------------------------------|
-| table    | true     | `TableName`               | Name of the table                                             |
-| name     | true     | `RelationshipName`        | The relationship                                              |
-| new_name | true     | `RelationshipName`        | New relationship name                                         |
-| source   | false    | `SourceName <SourceName>` | Name of the source database of the table (default: `default`) |
+| Key      | Required | Schema                                                                                  | Description                                                   |
+|----------|----------|-----------------------------------------------------------------------------------------|---------------------------------------------------------------|
+| table    | true     | [TableName](/graphql/core/api-reference/syntax-defs.mdx#tablename)                      | Name of the table                                             |
+| name     | true     | [RelationshipName](/graphql/core/api-reference/syntax-defs.mdx#relationshipname)        | The relationship                                              |
+| new_name | true     | [RelationshipName](/graphql/core/api-reference/syntax-defs.mdx#relationshipname)        | New relationship name                                         |
+| source   | false    | [SourceName](/graphql/core/api-reference/syntax-defs.mdx#sourcename)                    | Name of the source database of the table (default: `default`) |
 
-## mssql_create_object_relationship
+## mssql_create_object_relationship {#mssql-create-object-relationship}
 
 `create_object_relationship` is used to create an object relationship on
 a table. There cannot be an existing column or relationship with the
@@ -473,19 +439,13 @@ X-Hasura-Role: admin
 }
 ```
 
-<div class="note">
-
-<div class="title">
-
-Note
-
-</div>
+:::info Note
 
 In the case that the key uses only a single column it is permissible to
 give just a string instead of a list, i.e.:
 `"foreign_key_constraint_on" : "author_id"`.
 
-</div>
+:::
 
 ### 2. Using foreign key constraint on a remote table
 
@@ -513,9 +473,7 @@ X-Hasura-Role: admin
 }
 ```
 
-<div class="admonition">
-
-Deprecation
+:::info Deprecation
 
 For compatibility with previous versions we also support the form of
 `foreign_key_constraint_on` with a `column`-field, e.g.:
@@ -531,16 +489,14 @@ For compatibility with previous versions we also support the form of
 
 This form is deprecated in favor of the more general `columns` field.
 
-</div>
+:::
 
-<div class="admonition">
-
-Supported from
+:::info Supported from
 
 Relationships via remote table are supported for versions
 `v2.0.0-alpha.3` and above.
 
-</div>
+:::
 
 ### 3. Manual configuration
 
@@ -578,13 +534,7 @@ X-Hasura-Role: admin
 }
 ```
 
-<div class="note">
-
-<div class="title">
-
-Note
-
-</div>
+::info Note
 
 It is easy to make mistakes while using `manual_configuration`. One
 simple check is to ensure that foreign key constraint semantics are
@@ -593,19 +543,19 @@ example, if it was allowed, a foreign key constraint could have been
 defined on `article` table's `id` column to `article_detail` view's
 `article_id` column.
 
-</div>
+:::
 
 ### Args syntax
 
-| Key     | Required | Schema                                | Description                                                    |
-|---------|----------|---------------------------------------|----------------------------------------------------------------|
-| table   | true     | `TableName <TableName>`               | Name of the table                                              |
-| name    | true     | `RelationshipName <RelationshipName>` | Name of the new relationship                                   |
-| using   | true     | `ObjRelUsing`                         | Use one of the available ways to define an object relationship |
-| comment | false    | text                                  | comment                                                        |
-| source  | false    | `SourceName <SourceName>`             | Name of the source database of the table (default: `default`)  |
+| Key     | Required | Schema                                                                           | Description                                                    |
+|---------|----------|----------------------------------------------------------------------------------|----------------------------------------------------------------|
+| table   | true     | [TableName](/graphql/core/api-reference/syntax-defs.mdx#tablename)               | Name of the table                                              |
+| name    | true     | [RelationshipName](/graphql/core/api-reference/syntax-defs.mdx#relationshipname) | Name of the new relationship                                   |
+| using   | true     | [ObjRelUsing](/graphql/core/api-reference/syntax-defs.mdx#objrelusing)           | Use one of the available ways to define an object relationship |
+| comment | false    | text                                                                             | comment                                                        |
+| source  | false    | [SourceName](/graphql/core/api-reference/syntax-defs.mdx#sourcename)             | Name of the source database of the table (default: `default`)  |
 
-## mssql_create_array_relationship
+## mssql_create_array_relationship {#mssql-create-array-relationship}
 
 `create_array_relationship` is used to create an array relationship on a
 table. There cannot be an existing column or relationship with the same
@@ -640,9 +590,7 @@ X-Hasura-Role: admin
 }
 ```
 
-<div class="admonition">
-
-Deprecation
+:::info Deprecation
 
 For compatibility with previous version we also support the form of
 `foreign_key_constraint_on` with a `column`-field, e.g.:
@@ -658,7 +606,7 @@ For compatibility with previous version we also support the form of
 
 This form is deprecated in favor of the more general `columns` field.
 
-</div>
+:::
 
 ### 2. Manual configuration
 
@@ -696,13 +644,7 @@ X-Hasura-Role: admin
 }
 ```
 
-<div class="note">
-
-<div class="title">
-
-Note
-
-</div>
+:::info Note
 
 It is easy to make mistakes while using `manual_configuration`. One
 simple check is to ensure that foreign key constraint semantics are
@@ -711,19 +653,19 @@ example, if it was allowed, a foreign key constraint could have been
 defined on the `author` table's `id` column to `article_detail` view's
 `author_id` column.
 
-</div>
+:::
 
 ### Args syntax
 
-| Key     | Required | Schema                    | Description                                                   |
-|---------|----------|---------------------------|---------------------------------------------------------------|
-| table   | true     | `TableName`               | Name of the table                                             |
-| name    | true     | `RelationshipName`        | Name of the new relationship                                  |
-| using   | true     | `ArrRelUsing`             | Use one of the available ways to define an array relationship |
-| comment | false    | text                      | comment                                                       |
-| source  | false    | `SourceName <SourceName>` | Name of the source database of the table (default: `default`) |
+| Key     | Required | Schema                                                                           | Description                                                   |
+|---------|----------|----------------------------------------------------------------------------------|---------------------------------------------------------------|
+| table   | true     | [TableName](/graphql/core/api-reference/syntax-defs.mdx#tablename)               | Name of the table                                             |
+| name    | true     | [RelationshipName](/graphql/core/api-reference/syntax-defs.mdx#relationshipname) | Name of the new relationship                                  |
+| using   | true     | [ArrRelUsing](/graphql/core/api-reference/syntax-defs.mdx#arrrelusing)           | Use one of the available ways to define an array relationship |
+| comment | false    | text                                                                             | comment                                                       |
+| source  | false    | [SourceName](/graphql/core/api-reference/syntax-defs.mdx#sourcename)             | Name of the source database of the table (default: `default`) |
 
-## mssql_drop_relationship
+## mssql_drop_relationship {#mssql-drop-relationship}
 
 `mssql_drop_relationship` is used to drop a relationship (both object
 and array) on a table. If there are other objects dependent on this
@@ -750,27 +692,21 @@ X-Hasura-Role: admin
 
 ### Args syntax
 
-| Key          | Required | Schema                    | Description                                                                       |
-|--------------|----------|---------------------------|-----------------------------------------------------------------------------------|
-| table        | true     | `TableName`               | Name of the table                                                                 |
-| relationship | true     | `RelationshipName`        | Name of the relationship that needs to be dropped                                 |
-| cascade      | false    | Boolean                   | When set to `true`, all the dependent items on this relationship are also dropped |
-| source       | false    | `SourceName <SourceName>` | Name of the source database of the table (default: `default`)                     |
+| Key          | Required | Schema                                                                              | Description                                                                       |
+|--------------|----------|-------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------|
+| table        | true     | [TableName](/graphql/core/api-reference/syntax-defs.mdx#tablename)                  | Name of the table                                                                 |
+| relationship | true     | [RelationshipName](/graphql/core/api-reference/syntax-defs.mdx#relationshipname)    | Name of the relationship that needs to be dropped                                 |
+| cascade      | false    | Boolean                                                                             | When set to `true`, all the dependent items on this relationship are also dropped |
+| source       | false    | [SourceName](/graphql/core/api-reference/syntax-defs.mdx#sourcename)                | Name of the source database of the table (default: `default`)                     |
 
-<div class="note">
-
-<div class="title">
-
-Note
-
-</div>
+:::info Note
 
 Be careful when using `cascade`. First, try running the request without
 `cascade` or `cascade` set to `false`.
 
-</div>
+:
 
-## mssql_set_relationship_comment
+## mssql_set_relationship_comment {#mssql-set-relationship-comment}
 
 `mssql_set_relationship_comment` is used to set/update the comment on a
 relationship. Setting the comment to `null` removes it.
@@ -795,17 +731,16 @@ X-Hasura-Role: admin
 
 ### Args syntax
 
-| Key          | Required | Schema                    | Description                                                   |
-|--------------|----------|---------------------------|---------------------------------------------------------------|
-| table        | true     | `TableName`               | Name of the table                                             |
-| relationship | true     | `RelationshipName`        | The relationship                                              |
-| comment      | false    | Text                      | Comment                                                       |
-| source       | false    | `SourceName <SourceName>` | Name of the source database of the table (default: `default`) |
+| Key          | Required | Schema                                                                              | Description                                                   |
+|--------------|----------|-------------------------------------------------------------------------------------|---------------------------------------------------------------|
+| table        | true     | [TableName](/graphql/core/api-reference/syntax-defs.mdx#tablename)                  | Name of the table                                             |
+| relationship | true     | [RelationshipName](/graphql/core/api-reference/syntax-defs.mdx#relationshipname)    | The relationship                                              |
+| comment      | false    | Text                                                                                | Comment                                                       |
+| source       | false    | [SourceName](/graphql/core/api-reference/syntax-defs.mdx#sourcename)                | Name of the source database of the table (default: `default`) |
 
-## mssql_rename_relationship
+## mssql_rename_relationship {#mssql-rename-relationship}
 
-`mssql_rename_relationship` is used to modify the name of an existing
-relationship.
+`mssql_rename_relationship` is used to modify the name of an existing relationship.
 
 An example:
 
@@ -827,9 +762,9 @@ X-Hasura-Role: admin
 
 ### Args syntax
 
-| Key      | Required | Schema                    | Description                                                   |
-|----------|----------|---------------------------|---------------------------------------------------------------|
-| table    | true     | `TableName`               | Name of the table                                             |
-| name     | true     | `RelationshipName`        | The relationship                                              |
-| new_name | true     | `RelationshipName`        | New relationship name                                         |
-| source   | false    | `SourceName <SourceName>` | Name of the source database of the table (default: `default`) |
+| Key      | Required | Schema                                                                                  | Description                                                   |
+|----------|----------|-----------------------------------------------------------------------------------------|---------------------------------------------------------------|
+| table    | true     | [TableName](/graphql/core/api-reference/syntax-defs.mdx#tablename)                      | Name of the table                                             |
+| name     | true     | [RelationshipName](/graphql/core/api-reference/syntax-defs.mdx#relationshipname)        | The relationship                                              |
+| new_name | true     | [RelationshipName](/graphql/core/api-reference/syntax-defs.mdx#relationshipname)        | New relationship name                                         |
+| source   | false    | [SourceName](/graphql/core/api-reference/syntax-defs.mdx#sourcename)                    | Name of the source database of the table (default: `default`) |
