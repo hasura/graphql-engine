@@ -212,18 +212,6 @@ run_pytest_parallel() {
 }
 
 case "$SERVER_TEST_TO_RUN" in
-test-server-flags)
-	if ! $CIRCLECI_FOLDER/test-server-flags.sh; then
-		echo "Testing GraphQL server flags failed"
-		exit 1
-	fi
-
-	if ! $CIRCLECI_FOLDER/test-deprecated-server-flags.sh; then
-		echo "Testing GraphQL deprecated server flags failed"
-		exit 1
-	fi
-	;;
-
 haskell-tests)
 	echo -e "\n$(time_elapsed): <########## RUN GRAPHQL-ENGINE HASKELL TESTS ###########################################>\n"
 	"${GRAPHQL_ENGINE_TESTS:?}" postgres
