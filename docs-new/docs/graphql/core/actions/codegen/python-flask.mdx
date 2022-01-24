@@ -12,6 +12,7 @@ keywords:
   - flask
 ---
 
+import GraphiQLIDE from '@site/src/components/GraphiQLIDE/GraphiQLIDE';
 import Thumbnail from "@site/src/components/Thumbnail/Thumbnail";
 
 # GraphQL API with Python & Flask: JWT authentication
@@ -370,87 +371,88 @@ Let's try out our defined actions from the GraphQL API.
 
 Call the `Signup` action:
 
-<div class="graphiql" view_only="" query="mutation Signup {
-  signup(email: &quot;newuser@test.com&quot;, password: &quot;a-password&quot;) {
+<GraphiQLIDE
+  query={`mutation Signup {
+  signup(email: "newuser@test.com", password: "a-password") {
     id
     email
     password
   }
-}
-:response:
-{
-  &quot;data&quot;: {
-    &quot;Signup&quot;: {
-      &quot;id&quot;: 2,
-      &quot;email&quot;: &quot;newuser@test.com&quot;,
-      &quot;password&quot;: &quot;$argon2id$v=19$m=102400,t=2,p=8$fSmC349hY74QoGRTD0w$OYQYd/PP9kYsy9gRnDF1oQ&quot; 
+}`}
+  response={`{
+  "data": {
+    "Signup": {
+      "id": 2,
+      "email": "newuser@test.com",
+      "password": "$argon2id$v=19$m=102400,t=2,p=8$fSmC349hY74QoGRTD0w$OYQYd/PP9kYsy9gRnDF1oQ"
     }
   }
-}">
-
-</div>
+}`}
+/>
 
 Call the `Signup` action with a duplicate:
 
-<div class="graphiql" view_only="" query="mutation SignupDuplicate {
-  signup(email: &quot;newuser@test.com&quot;, password: &quot;a-password&quot;) {
+<GraphiQLIDE
+  query={`mutation SignupDuplicate {
+  signup(email: "newuser@test.com", password: "a-password") {
     id
     email
     password
   }
-}
-:response:
-{
-  &quot;errors&quot;: [
+}`}
+  response={`{
+  "errors": [
     {
-    &quot;extensions&quot;: {
-      &quot;path&quot;: &quot;$&quot;,
-      &quot;code&quot;: &quot;unexpected&quot;
-    },
-    &quot;message&quot;: &quot;Uniqueness violation. Duplicate key value violates unique constraint \&quot;user_email_key\&quot;&quot;
+      "extensions": {
+        "path": "$",
+        "code": "unexpected"
+      },
+      "message": "Uniqueness violation. Duplicate key value violates unique constraint \"user_email_key\""
+    }
   ]
-}">
-
-</div>
+}
+`}
+/>
 
 Call the `Login` action with valid credentials:
 
-<div class="graphiql" view_only="" query="query Login {
-  Login(email: &quot;newuser@test.com&quot;, password: &quot;a-password&quot;) {
+<GraphiQLIDE
+  query={`query Login {
+  Login(email: "newuser@test.com", password: "a-password") {
     token
   }
-}
-:response:
-{
-  &quot;data&quot;: {
-    &quot;Login&quot;: {
-      &quot;token&quot;: &quot;eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.z9ey1lw9p89gUkAmWEa7Qbpa1R71TgfkjZnEunGJ1ig&quot;
+}`}
+  response={`{
+  "data": {
+    "Login": {
+      "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.z9ey1lw9p89gUkAmWEa7Qbpa1R71TgfkjZnEunGJ1ig"
     }
   }
-}">
-
-</div>
+}
+`}
+/>
 
 Call the `Login` action with invalid credentials:
 
-<div class="graphiql" view_only="" query="query IncorrectLogin {
-  Login(email: &quot;newuser@test.com&quot;, password: &quot;bad-password&quot;) {
+<GraphiQLIDE
+  query={`query IncorrectLogin {
+  Login(email: "newuser@test.com", password: "bad-password") {
     token
   }
+}`}
+  response={`{
+  "errors": [
+      {
+        "extensions": {
+          "path": "$",
+          "code": "unexpected"
+        },
+        "message": "Invalid credentials"
+      }
+    ]
 }
-:response:
-{
-  &quot;errors&quot;: [
-    {
-    &quot;extensions&quot;: {
-      &quot;path&quot;: &quot;$&quot;,
-      &quot;code&quot;: &quot;unexpected&quot;
-    },
-    &quot;message&quot;: &quot;Invalid credentials&quot;
-  ]
-}">
-
-</div>
+`}
+/>
 
 ## Complete app code
 
