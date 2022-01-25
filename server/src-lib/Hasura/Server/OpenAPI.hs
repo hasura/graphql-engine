@@ -425,15 +425,11 @@ getComment d = comment
 
 getURL :: EndpointMetadata GQLQueryWithText -> Text
 getURL d =
-  "/api/rest/"
-    -- The url will be of the format <Endpoint>/:<Var1>/:<Var2> ... always, so we can
-    -- split and take the first element (it should never fail)
-    <> fst (T.breakOn "/" (unNonEmptyText . unEndpointUrl . _ceUrl $ d))
-    <> foldl
-      ( \b a -> b <> "/{" <> a <> "}"
-      )
-      ""
-      (map T.tail $ lefts $ splitPath Left Right (_ceUrl d))
+  "/api/rest/" <> T.intercalate "/" pathComponents
+  where
+    pathComponents = splitPath formatVariable id . _ceUrl $ d
+    formatVariable variable = "{" <> dropColonPrefix variable <> "}"
+    dropColonPrefix = T.drop 1
 
 extractEndpointInfo :: Maybe RemoteSchemaIntrospection -> EndpointMethod -> EndpointMetadata GQLQueryWithText -> Declare (Definitions Schema) EndpointData
 extractEndpointInfo sd method d = do
