@@ -1151,14 +1151,15 @@ backend-citus)
 backend-bigquery)
 	echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH BIGQUERY BACKEND ###########################################>\n"
 
-	source_data_sources_utils
-	verify_bigquery_pytest_env
+	source "$CIRCLECI_FOLDER/../scripts/bigquery.sh" && verify_bigquery_pytest_env
 
-	export HASURA_BIGQUERY_SERVICE_ACCOUNT=$(cat "$HASURA_BIGQUERY_SERVICE_ACCOUNT_FILE")
+	HASURA_BIGQUERY_SERVICE_ACCOUNT=$(cat "$HASURA_BIGQUERY_SERVICE_ACCOUNT_FILE")
+	export HASURA_BIGQUERY_SERVICE_ACCOUNT
 
 	run_hge_with_args serve
 	wait_for_port 8080
 
+	source_data_sources_utils
 	add_bigquery_source 8080
 
 	# See note [Specifying Pytests with -k flag]
