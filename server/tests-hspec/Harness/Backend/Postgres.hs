@@ -4,17 +4,20 @@
 module Harness.Backend.Postgres
   ( livenessCheck,
     run_,
+    defaultSourceMetadata,
   )
 where
 
 import Control.Concurrent
 import Control.Exception
 import Control.Monad.Reader
+import Data.Aeson (Value)
 import Data.ByteString.Char8 qualified as S8
 import Data.String
 import Database.PostgreSQL.Simple qualified as Postgres
 import GHC.Stack
 import Harness.Constants as Constants
+import Harness.Quoter.Yaml (yaml)
 import System.Process.Typed
 import Prelude
 
@@ -60,3 +63,16 @@ run_ q =
               ]
           )
     )
+
+-- | Metadata source information for the default Postgres instance.
+defaultSourceMetadata :: Value
+defaultSourceMetadata =
+  [yaml|
+name: postgres
+kind: postgres
+tables: []
+configuration:
+  connection_info:
+    database_url: *postgresqlConnectionString
+    pool_settings: {}
+  |]
