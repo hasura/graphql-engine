@@ -6,6 +6,8 @@ module Harness.GraphqlEngine
     post_,
     postGraphql,
     postGraphqlYaml,
+    setSource,
+    setSources,
     startServerThread,
     stopServer,
     serverUrl,
@@ -24,6 +26,7 @@ import Data.Time
 import GHC.Stack
 import Harness.Constants qualified as Constants
 import Harness.Http qualified as Http
+import Harness.Quoter.Yaml (yaml)
 import Harness.State
 import Hasura.App
 import Hasura.Logging (Hasura)
@@ -57,6 +60,23 @@ postGraphqlYaml server = post server "/v1/graphql"
 -- | Same as 'postGraphqlYaml', but adds the {query:..} wrapper.
 postGraphql :: HasCallStack => State -> Value -> IO Value
 postGraphql server value = postGraphqlYaml server (object ["query" .= value])
+
+-- | Replace the engine's metadata to use the given source as the only source.
+setSource :: State -> Value -> IO ()
+setSource s sourceMetadata = setSources s [sourceMetadata]
+
+-- | Replace the engine's metadata to use the given sources.
+setSources :: State -> [Value] -> IO ()
+setSources s sourcesMetadata =
+  post_
+    s
+    "/v1/metadata"
+    [yaml|
+type: replace_metadata
+args:
+  version: 3
+  sources: *sourcesMetadata
+  |]
 
 -- | Choose a random port and start a graphql-engine server on that
 -- port accessible from localhost. It waits until the server is

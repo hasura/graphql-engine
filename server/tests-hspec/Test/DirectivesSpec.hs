@@ -6,7 +6,6 @@ module Test.DirectivesSpec (spec) where
 
 import Data.Aeson (Value)
 import Harness.Backend.Mysql as Mysql
-import Harness.Constants
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Graphql (graphql)
 import Harness.Quoter.Sql
@@ -39,25 +38,7 @@ spec =
 mysqlSetup :: State -> IO ()
 mysqlSetup state = do
   -- Clear and reconfigure the metadata
-  GraphqlEngine.post_
-    state
-    "/v1/metadata"
-    [yaml|
-type: replace_metadata
-args:
-  version: 3
-  sources:
-  - name: mysql
-    kind: mysql
-    tables: []
-    configuration:
-      database: *mysqlDatabase
-      user: *mysqlUser
-      password: *mysqlPassword
-      host: *mysqlHost
-      port: *mysqlPort
-      pool_settings: {}
-|]
+  GraphqlEngine.setSource state Mysql.defaultSourceMetadata
 
   -- Setup tables
   Mysql.run_

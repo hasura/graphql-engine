@@ -4,16 +4,19 @@
 module Harness.Backend.Sqlserver
   ( livenessCheck,
     run_,
+    defaultSourceMetadata,
   )
 where
 
 import Control.Concurrent
 import Control.Exception
 import Control.Monad.Reader
+import Data.Aeson (Value)
 import Data.String
 import Database.ODBC.SQLServer qualified as Sqlserver
 import GHC.Stack
 import Harness.Constants as Constants
+import Harness.Quoter.Yaml (yaml)
 import System.Process.Typed
 import Prelude
 
@@ -55,3 +58,16 @@ run_ query' =
               ]
           )
     )
+
+-- | Metadata source information for the default MSSQL instance.
+defaultSourceMetadata :: Value
+defaultSourceMetadata =
+  [yaml|
+name: mssql
+kind: mssql
+tables: []
+configuration:
+  connection_info:
+    database_url: *sqlserverConnectInfo
+    pool_settings: {}
+  |]

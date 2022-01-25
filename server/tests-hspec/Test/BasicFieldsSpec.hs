@@ -8,7 +8,6 @@ import Harness.Backend.Citus as Citus
 import Harness.Backend.Mysql as Mysql
 import Harness.Backend.Postgres as Postgres
 import Harness.Backend.Sqlserver as Sqlserver
-import Harness.Constants
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Graphql
 import Harness.Quoter.Sql
@@ -56,25 +55,7 @@ spec =
 mysqlSetup :: State -> IO ()
 mysqlSetup state = do
   -- Clear and reconfigure the metadata
-  GraphqlEngine.post_
-    state
-    "/v1/metadata"
-    [yaml|
-type: replace_metadata
-args:
-  version: 3
-  sources:
-  - name: mysql
-    kind: mysql
-    tables: []
-    configuration:
-      database: *mysqlDatabase
-      user: *mysqlUser
-      password: *mysqlPassword
-      host: *mysqlHost
-      port: *mysqlPort
-      pool_settings: {}
-|]
+  GraphqlEngine.setSource state Mysql.defaultSourceMetadata
 
   -- Setup tables
   Mysql.run_
@@ -120,22 +101,7 @@ DROP TABLE hasura.author;
 postgresSetup :: State -> IO ()
 postgresSetup state = do
   -- Clear and reconfigure the metadata
-  GraphqlEngine.post_
-    state
-    "/v1/metadata"
-    [yaml|
-type: replace_metadata
-args:
-  version: 3
-  sources:
-  - name: postgres
-    kind: postgres
-    tables: []
-    configuration:
-      connection_info:
-        database_url: *postgresqlConnectionString
-        pool_settings: {}
-|]
+  GraphqlEngine.setSource state Postgres.defaultSourceMetadata
 
   -- Setup tables
   Postgres.run_
@@ -181,22 +147,7 @@ DROP TABLE hasura.author;
 citusSetup :: State -> IO ()
 citusSetup state = do
   -- Clear and reconfigure the metadata
-  GraphqlEngine.post_
-    state
-    "/v1/metadata"
-    [yaml|
-type: replace_metadata
-args:
-  version: 3
-  sources:
-  - name: citus
-    kind: citus
-    tables: []
-    configuration:
-      connection_info:
-        database_url: *citusConnectionString
-        pool_settings: {}
-|]
+  GraphqlEngine.setSource state Citus.defaultSourceMetadata
 
   -- Setup tables
   Citus.run_
@@ -242,22 +193,7 @@ DROP TABLE IF EXISTS hasura.author;
 sqlserverSetup :: State -> IO ()
 sqlserverSetup state = do
   -- Clear and reconfigure the metadata
-  GraphqlEngine.post_
-    state
-    "/v1/metadata"
-    [yaml|
-type: replace_metadata
-args:
-  version: 3
-  sources:
-  - name: mssql
-    kind: mssql
-    tables: []
-    configuration:
-      connection_info:
-        database_url: *sqlserverConnectInfo
-        pool_settings: {}
-|]
+  GraphqlEngine.setSource state Sqlserver.defaultSourceMetadata
 
   -- Setup tables
   Sqlserver.run_

@@ -4,16 +4,19 @@
 module Harness.Backend.Mysql
   ( livenessCheck,
     run_,
+    defaultSourceMetadata,
   )
 where
 
 import Control.Concurrent
 import Control.Exception
 import Control.Monad.Reader
+import Data.Aeson (Value)
 import Data.String
 import Database.MySQL.Simple as Mysql
 import GHC.Stack
 import Harness.Constants as Constants
+import Harness.Quoter.Yaml (yaml)
 import System.Process.Typed
 import Prelude
 
@@ -55,3 +58,19 @@ run_ query' =
               ]
           )
     )
+
+-- | Metadata source information for the default Mysql instance.
+defaultSourceMetadata :: Value
+defaultSourceMetadata =
+  [yaml|
+name: mysql
+kind: mysql
+tables: []
+configuration:
+  database: *mysqlDatabase
+  user: *mysqlUser
+  password: *mysqlPassword
+  host: *mysqlHost
+  port: *mysqlPort
+  pool_settings: {}
+  |]
