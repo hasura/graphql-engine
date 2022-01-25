@@ -1,11 +1,17 @@
-<!-- markdown-toc start - Don't edit this section. Run M-x markdown-toc-refresh-toc -->
+<!--
+Please make sure you update the table of contents when modifying this file. If
+you're using emacs, you can generate a default version of it with `M-x
+markdown-toc-refresh-toc` (provided by the package markdown-toc), and then edit
+it for readability.
+-->
+
+<!-- markdown-toc start -->
 **Table of Contents**
 
-- [Tips and tricks](#tips-and-tricks)
-    - [Use curl and yaml2json to test the graphql-engine API directly](#use-curl-and-yaml2json-to-test-the-graphql-engine-api-directly)
-    - [Convert a test case to a live example](#convert-a-test-case-to-a-live-example)
-    - [Run a remote MSSQL instance with dev.sh](#run-a-remote-mssql-instance-with-devsh)
-    - [Add a unit test for SQL generation](#add-a-unit-test-for-sql-generation)
+- [Use curl and yaml2json to test the graphql-engine API directly](#use-curl-and-yaml2json-to-test-the-graphql-engine-api-directly)
+- [Convert a test case to a live example](#convert-a-test-case-to-a-live-example)
+- [Run a remote MSSQL instance with dev.sh](#run-a-remote-mssql-instance-with-devsh)
+- [Add a unit test for SQL generation](#add-a-unit-test-for-sql-generation)
 
 <!-- markdown-toc end -->
 
