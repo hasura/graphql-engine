@@ -35,7 +35,7 @@ continue to function.
 
 :::
 
-## add_remote_schema_permissions
+## add_remote_schema_permissions {#add-remote-schema-permissions}
 
 This API takes the schema [(GraphQL IDL format)](http://spec.graphql.org/June2018/#sec-Type-System) which should
 be a subset of the remote schema and the role for which this restricted
@@ -335,7 +335,7 @@ argument in the `customer_transactions_history` field because the
 `limit` has a preset set and the value will be added by the GraphQL
 engine before it queries the remote schema.
 
-### Args syntax
+### Args syntax {#add-remote-schema-permissions-syntax}
 
 | Key           | Required | Schema                                                                                       | Description                             |
 |---------------|----------|----------------------------------------------------------------------------------------------|-----------------------------------------|
@@ -354,7 +354,7 @@ enabled by running the graphql-engine with the
 
 :::
 
-## drop_remote_schema_permissions
+## drop_remote_schema_permissions {#drop-remote-schema-permissions}
 
 The `drop_remote_schema_permissions` API is used to drop an existing
 delete permission for a role on a remote schema.
@@ -375,7 +375,7 @@ X-Hasura-Role: admin
 }
 ```
 
-### Args syntax
+### Args syntax {#drop-remote-schema-permissions-syntax}
 
 | Key   | Required | Schema                                                                            | Description               |
 |-------|----------|-----------------------------------------------------------------------------------|---------------------------|

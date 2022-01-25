@@ -32,7 +32,7 @@ continue to function.
 
 :::
 
-## add_computed_field
+## add_computed_field {#add-computed-field}
 
 `add_computed_field` is used to define a computed field in a table.
 There cannot be an existing column or relationship or computed field
@@ -65,7 +65,7 @@ X-Hasura-Role: admin
 }
 ```
 
-### Args syntax
+### Args syntax {#add-computed-field-syntax}
 
 | Key        | Required | Schema                                                                                            | Description                    |
 |------------|----------|---------------------------------------------------------------------------------------------------|--------------------------------|
@@ -74,7 +74,7 @@ X-Hasura-Role: admin
 | definition | true     | [ComputedFieldDefinition](/graphql/core/api-reference/syntax-defs.mdx#computedfielddefinition)    | The computed field definition  |
 | comment    | false    | text                                                                                              | comment                        |
 
-## drop_computed_field
+## drop_computed_field {#drop-computed-field}
 
 `drop_computed_field` is used to drop a computed field of a table. If
 there are other objects dependent on this computed field, like
@@ -102,7 +102,7 @@ X-Hasura-Role: admin
 }
 ```
 
-### Args syntax
+### Args syntax {#drop-computed-field-syntax}
 
 | Key     | Required | Schema                                                                               | Description                                                                                   |
 |---------|----------|--------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------|

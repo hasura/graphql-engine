@@ -1,35 +1,33 @@
-<div class="meta"
-description="Manage RESTified endpoints with the Hasura schema/metadata API"
-keywords="hasura, docs, restified-endpoints/metadata API, API reference, RESTified endpoints">
-
-</div>
+---
+sidebar_label: RESTified GraphQL Endpoints
+sidebar_position: 13 
+description: Manage RESTified endpoints with the Hasura schema/metadata API
+keywords:
+   - hasura
+   - docs
+   - restified-endpoints/metadata API
+   - API reference
+   - RESTified endpoints
+---
 
 # Schema/Metadata API Reference: RESTified GraphQL Endpoints (Deprecated)
-
-<div class="contents" backlinks="none" depth="1" local="">
-
-Table of contents
-
-</div>
 
 ## Introduction
 
 Add/Remove a RESTified GraphQL endpoint to Hasura GraphQL engine.
 
-<div class="admonition">
-
-Deprecation
+:::info Deprecation
 
 In versions `v2.0.0` and above, the schema/metadata API is deprecated in
-favour of the `schema API <schema_apis>` and the
-`metadata API <metadata_apis>`.
+favour of the [schema API](/graphql/core/api-reference/schema-api/index.mdx) and the
+[metadata API](/graphql/core/api-reference/metadata-api/index.mdx).
 
 Though for backwards compatibility, the schema/metadata APIs will
 continue to function.
 
-</div>
+:::
 
-## create_rest_endpoint
+## create_rest_endpoint {#create-rest-endpoint}
 
 `create_rest_endpoint` is used to associate a URL template with a query.
 
@@ -57,31 +55,26 @@ X-Hasura-Role: admin
 }
 ```
 
-<div id="schema_metadata_create_rest_endpoint_syntax">
+### Args syntax {#create-rest-endpoint-syntax}
 
 | Key        | Required | Schema            | Description                                             |
 |------------|----------|-------------------|---------------------------------------------------------|
 | name       | true     | Text              | A unique identifier for the endpoint                    |
-| url        | true     | `EndpointUrl`     | URL of the REST endpoint                                |
-| methods    | true     | `EndpointMethods` | Non-Empty case sensitive list of supported HTTP Methods |
-| definition | true     | `EndpointDef`     | Definition for the REST endpoint                        |
+| url        | true     | [EndpointUrl](/graphql/core/api-reference/syntax-defs.mdx#endpointurl)     | URL of the REST endpoint                                |
+| methods    | true     | [EndpointMethods](/graphql/core/api-reference/syntax-defs.mdx#endpointmethods) | Non-Empty case sensitive list of supported HTTP Methods |
+| definition | true     | [EndpointDefinition](/graphql/core/api-reference/syntax-defs.mdx#endpointdef)     | Definition for the REST endpoint                        |
 | comment    | false    | Text              | comment                                                 |
 
-</div>
-
-<div class="admonition">
-
-Supported from
+:::info Supported from
 
 RESTified endpoints are supported from versions `v2.0.0-alpha.1` and
 above.
 
-</div>
+:::
 
-## drop_rest_endpoint
+## drop_rest_endpoint {#drop-rest-endpoint}
 
-`drop_rest_endpoint` is used to delete an existing RESTified GraphQL
-Endpoint.
+`drop_rest_endpoint` is used to delete an existing RESTified GraphQL Endpoint.
 
 An example request as follows:
 
@@ -98,19 +91,14 @@ X-Hasura-Role: admin
 }
 ```
 
-<div id="schema_metadata_drop_rest_endpoint_syntax">
+### Args syntax {#drop-rest-endpoint-syntax}
 
 | Key  | Required | Schema | Description                   |
 |------|----------|--------|-------------------------------|
 | name | true     | Text   | URL of the RESTified endpoint |
 
-</div>
+:::info Supported from
 
-<div class="admonition">
+RESTified endpoints are supported from versions `v2.0.0-alpha.1` and above.
 
-Supported from
-
-RESTified endpoints are supported from versions `v2.0.0-alpha.1` and
-above.
-
-</div>
+:::

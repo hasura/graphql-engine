@@ -64,7 +64,7 @@ X-Hasura-Role: admin
 }
 ```
 
-### Args syntax
+### Args syntax {#create-action-syntax}
 
 | Key        | Required | Schema                                                                                  | Description              |
 |------------|----------|-----------------------------------------------------------------------------------------|--------------------------|
@@ -93,7 +93,7 @@ X-Hasura-Role: admin
 }
 ```
 
-### Args syntax
+### Args syntax {#drop-action-syntax}
 
 | Key        | Required | Schema                                                                | Description                                                                                                 |
 |------------|----------|-----------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------|
@@ -136,7 +136,7 @@ X-Hasura-Role: admin
 }
 ```
 
-### Args syntax
+### Args syntax {#update-action-syntax}
 
 | Key        | Required | Schema                                                                                  | Description                             |
 |------------|----------|-----------------------------------------------------------------------------------------|-----------------------------------------|
@@ -163,7 +163,7 @@ X-Hasura-Role: admin
 }
 ```
 
-### Args syntax
+### Args syntax {#create-action-permission-syntax}
 
 | Key     | Required | Schema                                                                | Description        |
 |---------|----------|-----------------------------------------------------------------------|--------------------|
@@ -171,10 +171,9 @@ X-Hasura-Role: admin
 | role    | true     | [RoleName](/graphql/core/api-reference/syntax-defs.mdx#rolename)      | Name of the role   |
 | comment | false    | text                                                                  | comment            |
 
-## drop_action_permission
+## drop_action_permission {#drop-action-permission}
 
-`drop_action_permission` is used to drop a permission defined on an
-action.
+`drop_action_permission` is used to drop a permission defined on an action.
 
 ```http
 POST /v1/query HTTP/1.1
@@ -190,7 +189,7 @@ X-Hasura-Role: admin
 }
 ```
 
-### Args syntax
+### Args syntax {#drop-action-permission-syntax}
 
 | Key  | Required | Schema                                                               | Description        |
 |------|----------|----------------------------------------------------------------------|--------------------|

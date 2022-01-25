@@ -28,7 +28,7 @@ continue to function.
 
 :::
 
-## create_event_trigger
+## create_event_trigger {#create-event-trigger}
 
 `create_event_trigger` is used to create a new event trigger or replace
 an existing event trigger.
@@ -73,7 +73,7 @@ X-Hasura-Role: admin
 }
 ```
 
-### Args syntax
+### Args syntax {#create-event-trigger-syntax}
 
 | Key              | Required | Schema                                                                                                                                                              | Description                                                           |
 |------------------|----------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------|
@@ -91,7 +91,7 @@ X-Hasura-Role: admin
 
 (\*) Either `webhook` or `webhook_from_env` are required.
 
-## delete_event_trigger
+## delete_event_trigger {#delete-event-trigger}
 
 `delete_event_trigger` is used to delete an event trigger.
 
@@ -108,7 +108,7 @@ X-Hasura-Role: admin
 }
 ```
 
-### Args syntax
+### Args syntax {#delete-event-trigger-syntax}
 
 | Key  | Required | Schema                                                                 | Description               |
 |------|----------|------------------------------------------------------------------------|---------------------------|
@@ -135,16 +135,15 @@ X-Hasura-Role: admin
 }
 ```
 
-### Args syntax
+### Args syntax {#redeliver-event-syntax}
 
 | Key      | Required | Schema | Description       |
 |----------|----------|--------|-------------------|
 | event_id | true     | String | UUID of the event |
 
-## invoke_event_trigger
+## invoke_event_trigger {#invoke-event-trigger}
 
-`invoke_event_trigger` is used to invoke an event trigger with custom
-payload.
+`invoke_event_trigger` is used to invoke an event trigger with custom payload.
 
 ```http
 POST /v1/query HTTP/1.1
@@ -160,7 +159,7 @@ X-Hasura-Role: admin
 }
 ```
 
-### Args syntax
+### Args syntax {#invoke-event-trigger-syntax}
 
 | Key     | Required | Schema                                                                 | Description                          |
 |---------|----------|------------------------------------------------------------------------|--------------------------------------|

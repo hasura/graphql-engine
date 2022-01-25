@@ -120,7 +120,7 @@ In the above definition, the row is allowed to be inserted if the
 `author_id` is the same as the request's user id and `is_reviewed` is
 `false` when the `category` is "editorial".
 
-### Args syntax
+### Args syntax {#create-insert-permission-syntax}
 
 | Key        | Required | Schema                                                                            | Description               |
 |------------|----------|-----------------------------------------------------------------------------------|---------------------------|
@@ -150,7 +150,7 @@ X-Hasura-Role: admin
 }
 ```
 
-### Args syntax
+### Args syntax {#drop-insert-permission-syntax}
 
 | Key   | Required | Schema                                                             | Description       |
 |-------|----------|--------------------------------------------------------------------|-------------------|
@@ -202,7 +202,7 @@ This reads as follows - For the `user` role:
     table by the `user` role to a maximum of 10.
 -   Allow aggregate queries.
 
-### Args syntax
+### Args syntax {#create-select-permission-syntax}
 
 | Key        | Required | Schema                                                                            | Description               |
 |------------|----------|-----------------------------------------------------------------------------------|---------------------------|
@@ -232,7 +232,7 @@ X-Hasura-Role: admin
 }
 ```
 
-### Args syntax
+### Args syntax {#drop-select-permission-syntax}
 
 | Key   | Required | Schema                                                             | Description       |
 |-------|----------|--------------------------------------------------------------------|-------------------|
@@ -297,7 +297,7 @@ never be allowed to be updated.
 
 :::
 
-### Args syntax
+### Args syntax {#create-update-permission-syntax}
 
 | Key        | Required | Schema                                                                            | Description               |
 |------------|----------|-----------------------------------------------------------------------------------|---------------------------|
@@ -327,7 +327,7 @@ X-Hasura-Role: admin
 }
 ```
 
-### Args syntax
+### Args syntax {#drop-update-permission-syntax}
 
 | Key   | Required | Schema                                                             | Description       |
 |-------|----------|--------------------------------------------------------------------|-------------------|
@@ -365,7 +365,7 @@ This reads as follows:
 where `author_id` is the same as the request header `X-HASURA-USER-ID`
 value."
 
-### Args syntax
+### Args syntax {#create-delete-permission-syntax}
 
 | Key        | Required | Schema                                                                            | Description               |
 |------------|----------|-----------------------------------------------------------------------------------|---------------------------|
@@ -395,7 +395,7 @@ X-Hasura-Role: admin
 }
 ```
 
-### Args syntax
+### Args syntax {#drop-delete-permission-syntax}
 
 | Key   | Required | Schema                                                             | Description       |
 |-------|----------|--------------------------------------------------------------------|-------------------|
@@ -426,7 +426,7 @@ X-Hasura-Role: admin
 }
 ```
 
-### Args syntax
+### Args syntax {#set-permission-comment-syntax}
 
 | Key     | Required | Schema                                                               | Description                |
 |---------|----------|----------------------------------------------------------------------|----------------------------|

@@ -51,7 +51,7 @@ X-Hasura-Role: admin
 }
 ```
 
-### Args syntax
+### Args syntax {#track-table-syntax}
 
 | Key     | Required | Schema                                                             | Description                                                                      |
 |---------|----------|--------------------------------------------------------------------|----------------------------------------------------------------------------------|
@@ -82,7 +82,7 @@ X-Hasura-Role: admin
 }
 ```
 
-### Args syntax
+### Args syntax {#set-table-is-enum-syntax}
 
 | Key     | Required | Schema                                                             | Description                                                              |
 |---------|----------|--------------------------------------------------------------------|--------------------------------------------------------------------------|
@@ -170,7 +170,7 @@ order to be able to track it.
 
 :::
 
-### Args syntax
+### Args syntax {#track-table-v2-syntax}
 
 | Key           | Required | Schema                        | Description                      |
 |---------------|----------|-------------------------------|----------------------------------|
@@ -217,7 +217,7 @@ X-Hasura-Role: admin
 }
 ```
 
-### Args syntax
+### Args syntax {#set-table-custom-fields-deprecated-syntax}
 
 | Key                 | Required | Schema                                                                               | Description                 |
 |---------------------|----------|--------------------------------------------------------------------------------------|-----------------------------|
@@ -225,7 +225,7 @@ X-Hasura-Role: admin
 | custom_root_fields  | false    | [Custom Root Fields](/graphql/core/api-reference/syntax-defs.mdx#custom-root-fields) | Customise the root fields   |
 | custom_column_names | false    | [CustomColumnNames](/graphql/core/api-reference/syntax-defs.mdx#customcolumnnames)   | Customise the column fields |
 
-## set_table_customization {##schema-metadata-set-table-customization}
+## set_table_customization {#set-table-customization}
 
 `set_table_customization` allows you to customize any given table with a
 custom name, custom root fields and custom column names of an already
@@ -266,7 +266,7 @@ X-Hasura-Role: admin
 }
 ```
 
-### Args syntax
+### Args syntax {#set-table-customization-syntax}
 
 | Key           | Required | Schema                                                                  | Description                      |
 |---------------|----------|-------------------------------------------------------------------------|----------------------------------|
@@ -296,7 +296,7 @@ X-Hasura-Role: admin
 }
 ```
 
-### Args syntax
+### Args syntax {#untrack-table-syntax}
 
 | Key     | Required | Schema                                                             | Description                                                                                                                        |
 |---------|----------|--------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------|
