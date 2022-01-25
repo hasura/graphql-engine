@@ -43,7 +43,7 @@
 </span><span id="line-42"></span><span>    </span><span id="rrResult"><span class="annot"><span class="annottext">RunSQLRes -&gt; Value
 </span><a href="Hasura.RQL.DDL.Schema.html#rrResult"><span class="hs-identifier hs-var hs-var">rrResult</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/aeson-1.5.5.1-d565b322355c9794eb059b7477592fe0d20db50e9f4ac0ae0328e907dd753173/share/doc/html/src"><span class="hs-identifier hs-type">Value</span></a></span><span>
 </span><span id="line-43"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-44"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690184606"><span id="local-6989586621690184608"><span id="local-6989586621690184610"><span class="annot"><span class="annottext">Int -&gt; RunSQLRes -&gt; ShowS
+</span><span id="line-44"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690265931"><span id="local-6989586621690265933"><span id="local-6989586621690265935"><span class="annot"><span class="annottext">Int -&gt; RunSQLRes -&gt; ShowS
 [RunSQLRes] -&gt; ShowS
 RunSQLRes -&gt; String
 (Int -&gt; RunSQLRes -&gt; ShowS)
@@ -58,7 +58,7 @@ show :: RunSQLRes -&gt; String
 $cshow :: RunSQLRes -&gt; String
 showsPrec :: Int -&gt; RunSQLRes -&gt; ShowS
 $cshowsPrec :: Int -&gt; RunSQLRes -&gt; ShowS
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690184601"><span id="local-6989586621690184603"><span class="annot"><span class="annottext">RunSQLRes -&gt; RunSQLRes -&gt; Bool
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690265926"><span id="local-6989586621690265928"><span class="annot"><span class="annottext">RunSQLRes -&gt; RunSQLRes -&gt; Bool
 (RunSQLRes -&gt; RunSQLRes -&gt; Bool)
 -&gt; (RunSQLRes -&gt; RunSQLRes -&gt; Bool) -&gt; Eq RunSQLRes
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -68,10 +68,10 @@ $c/= :: RunSQLRes -&gt; RunSQLRes -&gt; Bool
 $c== :: RunSQLRes -&gt; RunSQLRes -&gt; Bool
 </span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/ghc-prim-0.6.1/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-45"></span><span>
-</span><span id="line-46"></span><span class="hs-special">$(</span><span id="local-6989586621690184588"><span id="local-6989586621690184590"><span id="local-6989586621690184592"><span id="local-6989586621690184594"><span id="local-6989586621690184596"><span id="local-6989586621690184598"><span class="hs-identifier">deriveJSON</span><span> </span><span class="hs-identifier">hasuraJSON</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">RunSQLRes</span></span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-46"></span><span class="hs-special">$(</span><span id="local-6989586621690265913"><span id="local-6989586621690265915"><span id="local-6989586621690265917"><span id="local-6989586621690265919"><span id="local-6989586621690265921"><span id="local-6989586621690265923"><span class="hs-identifier">deriveJSON</span><span> </span><span class="hs-identifier">hasuraJSON</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">RunSQLRes</span></span></span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-47"></span><span>
 </span><span id="line-48"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/pg-client-0.1.0-25b31efe2444cb76aa2939f99040399278f7a20b0fefdb30fa4af9b1c213eb3c/share/doc/html/src"><span class="hs-identifier hs-type">Q.FromRes</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Schema.html#RunSQLRes"><span class="hs-identifier hs-type">RunSQLRes</span></a></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-49"></span><span>  </span><span id="local-6989586621690184580"><span class="annot"><span class="annottext">fromRes :: ResultOk -&gt; ExceptT Text IO RunSQLRes
+</span><span id="line-49"></span><span>  </span><span id="local-6989586621690265905"><span class="annot"><span class="annottext">fromRes :: ResultOk -&gt; ExceptT Text IO RunSQLRes
 </span><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/pg-client-0.1.0-25b31efe2444cb76aa2939f99040399278f7a20b0fefdb30fa4af9b1c213eb3c/share/doc/html/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">fromRes</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/pg-client-0.1.0-25b31efe2444cb76aa2939f99040399278f7a20b0fefdb30fa4af9b1c213eb3c/share/doc/html/src"><span class="hs-identifier hs-type">Q.ResultOkEmpty</span></a></span><span> </span><span class="annot"><span class="annottext">Result
 </span><span class="hs-identifier">_</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-50"></span><span>    </span><span class="annot"><span class="annottext">RunSQLRes -&gt; ExceptT Text IO RunSQLRes
@@ -83,12 +83,12 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="Hasura.RQL.DDL.Schema.html#RunSQLRes"><span class="hs-identifier hs-var">RunSQLRes</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;CommandOk&quot;</span></span><span> </span><span class="annot"><span class="annottext">Value
 </span><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/aeson-1.5.5.1-d565b322355c9794eb059b7477592fe0d20db50e9f4ac0ae0328e907dd753173/share/doc/html/src"><span class="hs-identifier hs-var">Null</span></a></span><span>
-</span><span id="line-51"></span><span>  </span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/pg-client-0.1.0-25b31efe2444cb76aa2939f99040399278f7a20b0fefdb30fa4af9b1c213eb3c/share/doc/html/src"><span class="hs-identifier hs-var">fromRes</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/pg-client-0.1.0-25b31efe2444cb76aa2939f99040399278f7a20b0fefdb30fa4af9b1c213eb3c/share/doc/html/src"><span class="hs-identifier hs-type">Q.ResultOkData</span></a></span><span> </span><span id="local-6989586621690184575"><span class="annot"><span class="annottext">Result
-</span><a href="#local-6989586621690184575"><span class="hs-identifier hs-var">res</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-52"></span><span>    </span><span id="local-6989586621690184574"><span class="annot"><span class="annottext">[[Text]]
-</span><a href="#local-6989586621690184574"><span class="hs-identifier hs-var">csvRows</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Result -&gt; ExceptT Text IO [[Text]]
-</span><a href="#local-6989586621690184573"><span class="hs-identifier hs-var">resToCSV</span></a></span><span> </span><span class="annot"><span class="annottext">Result
-</span><a href="#local-6989586621690184575"><span class="hs-identifier hs-var">res</span></a></span><span>
+</span><span id="line-51"></span><span>  </span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/pg-client-0.1.0-25b31efe2444cb76aa2939f99040399278f7a20b0fefdb30fa4af9b1c213eb3c/share/doc/html/src"><span class="hs-identifier hs-var">fromRes</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/pg-client-0.1.0-25b31efe2444cb76aa2939f99040399278f7a20b0fefdb30fa4af9b1c213eb3c/share/doc/html/src"><span class="hs-identifier hs-type">Q.ResultOkData</span></a></span><span> </span><span id="local-6989586621690265900"><span class="annot"><span class="annottext">Result
+</span><a href="#local-6989586621690265900"><span class="hs-identifier hs-var">res</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-52"></span><span>    </span><span id="local-6989586621690265899"><span class="annot"><span class="annottext">[[Text]]
+</span><a href="#local-6989586621690265899"><span class="hs-identifier hs-var">csvRows</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Result -&gt; ExceptT Text IO [[Text]]
+</span><a href="#local-6989586621690265898"><span class="hs-identifier hs-var">resToCSV</span></a></span><span> </span><span class="annot"><span class="annottext">Result
+</span><a href="#local-6989586621690265900"><span class="hs-identifier hs-var">res</span></a></span><span>
 </span><span id="line-53"></span><span>    </span><span class="annot"><span class="annottext">RunSQLRes -&gt; ExceptT Text IO RunSQLRes
 forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
 </span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var">return</span></a></span><span> </span><span class="annot"><span class="annottext">(RunSQLRes -&gt; ExceptT Text IO RunSQLRes)
@@ -101,32 +101,32 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">[[Text]] -&gt; Value
 forall a. ToJSON a =&gt; a -&gt; Value
 </span><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/aeson-1.5.5.1-d565b322355c9794eb059b7477592fe0d20db50e9f4ac0ae0328e907dd753173/share/doc/html/src"><span class="hs-identifier hs-var">toJSON</span></a></span><span> </span><span class="annot"><span class="annottext">[[Text]]
-</span><a href="#local-6989586621690184574"><span class="hs-identifier hs-var">csvRows</span></a></span><span>
+</span><a href="#local-6989586621690265899"><span class="hs-identifier hs-var">csvRows</span></a></span><span>
 </span><span id="line-54"></span><span>    </span><span class="hs-keyword">where</span><span>
-</span><span id="line-55"></span><span>      </span><span class="annot"><a href="#local-6989586621690184573"><span class="hs-identifier hs-type">resToCSV</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/postgresql-libpq-0.9.4.3-e0383c71c06cd443e6c9ebd2aa42a265e420139b865938d60756aa3533b30d97/share/doc/html/src"><span class="hs-identifier hs-type">PQ.Result</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/transformers-0.5.6.2/src"><span class="hs-identifier hs-type">ExceptT</span></a></span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/text-1.2.3.2-4200bf40e86b2107f4b06242de65d549c52e58e8833e72545e35f7712661e715/share/doc/html/src"><span class="hs-identifier hs-type">Text</span></a></span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/ghc-prim-0.6.1/src"><span class="hs-identifier hs-type">IO</span></a></span><span> </span><span class="hs-special">[</span><span class="hs-special">[</span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/text-1.2.3.2-4200bf40e86b2107f4b06242de65d549c52e58e8833e72545e35f7712661e715/share/doc/html/src"><span class="hs-identifier hs-type">Text</span></a></span><span class="hs-special">]</span><span class="hs-special">]</span><span>
-</span><span id="line-56"></span><span>      </span><span id="local-6989586621690184573"><span class="annot"><span class="annottext">resToCSV :: Result -&gt; ExceptT Text IO [[Text]]
-</span><a href="#local-6989586621690184573"><span class="hs-identifier hs-var hs-var">resToCSV</span></a></span></span><span> </span><span id="local-6989586621690184572"><span class="annot"><span class="annottext">Result
-</span><a href="#local-6989586621690184572"><span class="hs-identifier hs-var">r</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-57"></span><span>        </span><span id="local-6989586621690184571"><span class="annot"><span class="annottext">Row
-</span><a href="#local-6989586621690184571"><span class="hs-identifier hs-var">nr</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO Row -&gt; ExceptT Text IO Row
+</span><span id="line-55"></span><span>      </span><span class="annot"><a href="#local-6989586621690265898"><span class="hs-identifier hs-type">resToCSV</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/postgresql-libpq-0.9.4.3-e0383c71c06cd443e6c9ebd2aa42a265e420139b865938d60756aa3533b30d97/share/doc/html/src"><span class="hs-identifier hs-type">PQ.Result</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/transformers-0.5.6.2/src"><span class="hs-identifier hs-type">ExceptT</span></a></span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/text-1.2.3.2-4200bf40e86b2107f4b06242de65d549c52e58e8833e72545e35f7712661e715/share/doc/html/src"><span class="hs-identifier hs-type">Text</span></a></span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/ghc-prim-0.6.1/src"><span class="hs-identifier hs-type">IO</span></a></span><span> </span><span class="hs-special">[</span><span class="hs-special">[</span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/text-1.2.3.2-4200bf40e86b2107f4b06242de65d549c52e58e8833e72545e35f7712661e715/share/doc/html/src"><span class="hs-identifier hs-type">Text</span></a></span><span class="hs-special">]</span><span class="hs-special">]</span><span>
+</span><span id="line-56"></span><span>      </span><span id="local-6989586621690265898"><span class="annot"><span class="annottext">resToCSV :: Result -&gt; ExceptT Text IO [[Text]]
+</span><a href="#local-6989586621690265898"><span class="hs-identifier hs-var hs-var">resToCSV</span></a></span></span><span> </span><span id="local-6989586621690265897"><span class="annot"><span class="annottext">Result
+</span><a href="#local-6989586621690265897"><span class="hs-identifier hs-var">r</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-57"></span><span>        </span><span id="local-6989586621690265896"><span class="annot"><span class="annottext">Row
+</span><a href="#local-6989586621690265896"><span class="hs-identifier hs-var">nr</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO Row -&gt; ExceptT Text IO Row
 forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
 </span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var">liftIO</span></a></span><span> </span><span class="annot"><span class="annottext">(IO Row -&gt; ExceptT Text IO Row) -&gt; IO Row -&gt; ExceptT Text IO Row
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Result -&gt; IO Row
 </span><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/postgresql-libpq-0.9.4.3-e0383c71c06cd443e6c9ebd2aa42a265e420139b865938d60756aa3533b30d97/share/doc/html/src"><span class="hs-identifier hs-var">PQ.ntuples</span></a></span><span> </span><span class="annot"><span class="annottext">Result
-</span><a href="#local-6989586621690184572"><span class="hs-identifier hs-var">r</span></a></span><span>
-</span><span id="line-58"></span><span>        </span><span id="local-6989586621690184568"><span class="annot"><span class="annottext">Column
-</span><a href="#local-6989586621690184568"><span class="hs-identifier hs-var">nc</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO Column -&gt; ExceptT Text IO Column
+</span><a href="#local-6989586621690265897"><span class="hs-identifier hs-var">r</span></a></span><span>
+</span><span id="line-58"></span><span>        </span><span id="local-6989586621690265893"><span class="annot"><span class="annottext">Column
+</span><a href="#local-6989586621690265893"><span class="hs-identifier hs-var">nc</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO Column -&gt; ExceptT Text IO Column
 forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
 </span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var">liftIO</span></a></span><span> </span><span class="annot"><span class="annottext">(IO Column -&gt; ExceptT Text IO Column)
 -&gt; IO Column -&gt; ExceptT Text IO Column
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Result -&gt; IO Column
 </span><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/postgresql-libpq-0.9.4.3-e0383c71c06cd443e6c9ebd2aa42a265e420139b865938d60756aa3533b30d97/share/doc/html/src"><span class="hs-identifier hs-var">PQ.nfields</span></a></span><span> </span><span class="annot"><span class="annottext">Result
-</span><a href="#local-6989586621690184572"><span class="hs-identifier hs-var">r</span></a></span><span>
+</span><a href="#local-6989586621690265897"><span class="hs-identifier hs-var">r</span></a></span><span>
 </span><span id="line-59"></span><span>
-</span><span id="line-60"></span><span>        </span><span id="local-6989586621690184566"><span class="annot"><span class="annottext">[Text]
-</span><a href="#local-6989586621690184566"><span class="hs-identifier hs-var">hdr</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">[Column]
+</span><span id="line-60"></span><span>        </span><span id="local-6989586621690265891"><span class="annot"><span class="annottext">[Text]
+</span><a href="#local-6989586621690265891"><span class="hs-identifier hs-var">hdr</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">[Column]
 -&gt; (Column -&gt; ExceptT Text IO Text) -&gt; ExceptT Text IO [Text]
 forall (t :: * -&gt; *) (m :: * -&gt; *) a b.
 (Traversable t, Monad m) =&gt;
@@ -135,21 +135,21 @@ t a -&gt; (a -&gt; m b) -&gt; m (t b)
 </span><span class="hs-number">0</span></span><span> </span><span class="hs-glyph">..</span><span> </span><span class="annot"><span class="annottext">Column -&gt; Column
 forall a. Enum a =&gt; a -&gt; a
 </span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var">pred</span></a></span><span> </span><span class="annot"><span class="annottext">Column
-</span><a href="#local-6989586621690184568"><span class="hs-identifier hs-var">nc</span></a></span><span class="hs-special">]</span><span> </span><span class="annot"><span class="annottext">((Column -&gt; ExceptT Text IO Text) -&gt; ExceptT Text IO [Text])
+</span><a href="#local-6989586621690265893"><span class="hs-identifier hs-var">nc</span></a></span><span class="hs-special">]</span><span> </span><span class="annot"><span class="annottext">((Column -&gt; ExceptT Text IO Text) -&gt; ExceptT Text IO [Text])
 -&gt; (Column -&gt; ExceptT Text IO Text) -&gt; ExceptT Text IO [Text]
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621690184563"><span class="annot"><span class="annottext">Column
-</span><a href="#local-6989586621690184563"><span class="hs-identifier hs-var">ic</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-61"></span><span>          </span><span id="local-6989586621690184562"><span class="annot"><span class="annottext">Maybe ByteString
-</span><a href="#local-6989586621690184562"><span class="hs-identifier hs-var">colNameBS</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO (Maybe ByteString) -&gt; ExceptT Text IO (Maybe ByteString)
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621690265888"><span class="annot"><span class="annottext">Column
+</span><a href="#local-6989586621690265888"><span class="hs-identifier hs-var">ic</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-61"></span><span>          </span><span id="local-6989586621690265887"><span class="annot"><span class="annottext">Maybe ByteString
+</span><a href="#local-6989586621690265887"><span class="hs-identifier hs-var">colNameBS</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO (Maybe ByteString) -&gt; ExceptT Text IO (Maybe ByteString)
 forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
 </span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var">liftIO</span></a></span><span> </span><span class="annot"><span class="annottext">(IO (Maybe ByteString) -&gt; ExceptT Text IO (Maybe ByteString))
 -&gt; IO (Maybe ByteString) -&gt; ExceptT Text IO (Maybe ByteString)
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Result -&gt; Column -&gt; IO (Maybe ByteString)
 </span><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/postgresql-libpq-0.9.4.3-e0383c71c06cd443e6c9ebd2aa42a265e420139b865938d60756aa3533b30d97/share/doc/html/src"><span class="hs-identifier hs-var">PQ.fname</span></a></span><span> </span><span class="annot"><span class="annottext">Result
-</span><a href="#local-6989586621690184572"><span class="hs-identifier hs-var">r</span></a></span><span> </span><span class="annot"><span class="annottext">Column
-</span><a href="#local-6989586621690184563"><span class="hs-identifier hs-var">ic</span></a></span><span>
+</span><a href="#local-6989586621690265897"><span class="hs-identifier hs-var">r</span></a></span><span> </span><span class="annot"><span class="annottext">Column
+</span><a href="#local-6989586621690265888"><span class="hs-identifier hs-var">ic</span></a></span><span>
 </span><span id="line-62"></span><span>          </span><span class="annot"><span class="annottext">ExceptT Text IO Text
 -&gt; (ByteString -&gt; ExceptT Text IO Text)
 -&gt; Maybe ByteString
@@ -159,11 +159,11 @@ forall b a. b -&gt; (a -&gt; b) -&gt; Maybe a -&gt; b
 forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
 </span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var">return</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;unknown&quot;</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; ExceptT Text IO Text
-</span><a href="#local-6989586621690184559"><span class="hs-identifier hs-var">decodeBS</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe ByteString
-</span><a href="#local-6989586621690184562"><span class="hs-identifier hs-var">colNameBS</span></a></span><span>
+</span><a href="#local-6989586621690265884"><span class="hs-identifier hs-var">decodeBS</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe ByteString
+</span><a href="#local-6989586621690265887"><span class="hs-identifier hs-var">colNameBS</span></a></span><span>
 </span><span id="line-63"></span><span>
-</span><span id="line-64"></span><span>        </span><span id="local-6989586621690184558"><span class="annot"><span class="annottext">[[Text]]
-</span><a href="#local-6989586621690184558"><span class="hs-identifier hs-var">rows</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">[Row]
+</span><span id="line-64"></span><span>        </span><span id="local-6989586621690265883"><span class="annot"><span class="annottext">[[Text]]
+</span><a href="#local-6989586621690265883"><span class="hs-identifier hs-var">rows</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">[Row]
 -&gt; (Row -&gt; ExceptT Text IO [Text]) -&gt; ExceptT Text IO [[Text]]
 forall (t :: * -&gt; *) (m :: * -&gt; *) a b.
 (Traversable t, Monad m) =&gt;
@@ -172,11 +172,11 @@ t a -&gt; (a -&gt; m b) -&gt; m (t b)
 </span><span class="hs-number">0</span></span><span> </span><span class="hs-glyph">..</span><span> </span><span class="annot"><span class="annottext">Row -&gt; Row
 forall a. Enum a =&gt; a -&gt; a
 </span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var">pred</span></a></span><span> </span><span class="annot"><span class="annottext">Row
-</span><a href="#local-6989586621690184571"><span class="hs-identifier hs-var">nr</span></a></span><span class="hs-special">]</span><span> </span><span class="annot"><span class="annottext">((Row -&gt; ExceptT Text IO [Text]) -&gt; ExceptT Text IO [[Text]])
+</span><a href="#local-6989586621690265896"><span class="hs-identifier hs-var">nr</span></a></span><span class="hs-special">]</span><span> </span><span class="annot"><span class="annottext">((Row -&gt; ExceptT Text IO [Text]) -&gt; ExceptT Text IO [[Text]])
 -&gt; (Row -&gt; ExceptT Text IO [Text]) -&gt; ExceptT Text IO [[Text]]
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621690184557"><span class="annot"><span class="annottext">Row
-</span><a href="#local-6989586621690184557"><span class="hs-identifier hs-var">ir</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621690265882"><span class="annot"><span class="annottext">Row
+</span><a href="#local-6989586621690265882"><span class="hs-identifier hs-var">ir</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-65"></span><span>          </span><span class="annot"><span class="annottext">[Column]
 -&gt; (Column -&gt; ExceptT Text IO Text) -&gt; ExceptT Text IO [Text]
 forall (t :: * -&gt; *) (m :: * -&gt; *) a b.
@@ -186,22 +186,22 @@ t a -&gt; (a -&gt; m b) -&gt; m (t b)
 </span><span class="hs-number">0</span></span><span> </span><span class="hs-glyph">..</span><span> </span><span class="annot"><span class="annottext">Column -&gt; Column
 forall a. Enum a =&gt; a -&gt; a
 </span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var">pred</span></a></span><span> </span><span class="annot"><span class="annottext">Column
-</span><a href="#local-6989586621690184568"><span class="hs-identifier hs-var">nc</span></a></span><span class="hs-special">]</span><span> </span><span class="annot"><span class="annottext">((Column -&gt; ExceptT Text IO Text) -&gt; ExceptT Text IO [Text])
+</span><a href="#local-6989586621690265893"><span class="hs-identifier hs-var">nc</span></a></span><span class="hs-special">]</span><span> </span><span class="annot"><span class="annottext">((Column -&gt; ExceptT Text IO Text) -&gt; ExceptT Text IO [Text])
 -&gt; (Column -&gt; ExceptT Text IO Text) -&gt; ExceptT Text IO [Text]
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621690184556"><span class="annot"><span class="annottext">Column
-</span><a href="#local-6989586621690184556"><span class="hs-identifier hs-var">ic</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-66"></span><span>            </span><span id="local-6989586621690184555"><span class="annot"><span class="annottext">Maybe ByteString
-</span><a href="#local-6989586621690184555"><span class="hs-identifier hs-var">cellValBS</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO (Maybe ByteString) -&gt; ExceptT Text IO (Maybe ByteString)
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621690265881"><span class="annot"><span class="annottext">Column
+</span><a href="#local-6989586621690265881"><span class="hs-identifier hs-var">ic</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-66"></span><span>            </span><span id="local-6989586621690265880"><span class="annot"><span class="annottext">Maybe ByteString
+</span><a href="#local-6989586621690265880"><span class="hs-identifier hs-var">cellValBS</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO (Maybe ByteString) -&gt; ExceptT Text IO (Maybe ByteString)
 forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
 </span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var">liftIO</span></a></span><span> </span><span class="annot"><span class="annottext">(IO (Maybe ByteString) -&gt; ExceptT Text IO (Maybe ByteString))
 -&gt; IO (Maybe ByteString) -&gt; ExceptT Text IO (Maybe ByteString)
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Result -&gt; Row -&gt; Column -&gt; IO (Maybe ByteString)
 </span><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/postgresql-libpq-0.9.4.3-e0383c71c06cd443e6c9ebd2aa42a265e420139b865938d60756aa3533b30d97/share/doc/html/src"><span class="hs-identifier hs-var">PQ.getvalue</span></a></span><span> </span><span class="annot"><span class="annottext">Result
-</span><a href="#local-6989586621690184572"><span class="hs-identifier hs-var">r</span></a></span><span> </span><span class="annot"><span class="annottext">Row
-</span><a href="#local-6989586621690184557"><span class="hs-identifier hs-var">ir</span></a></span><span> </span><span class="annot"><span class="annottext">Column
-</span><a href="#local-6989586621690184556"><span class="hs-identifier hs-var">ic</span></a></span><span>
+</span><a href="#local-6989586621690265897"><span class="hs-identifier hs-var">r</span></a></span><span> </span><span class="annot"><span class="annottext">Row
+</span><a href="#local-6989586621690265882"><span class="hs-identifier hs-var">ir</span></a></span><span> </span><span class="annot"><span class="annottext">Column
+</span><a href="#local-6989586621690265881"><span class="hs-identifier hs-var">ic</span></a></span><span>
 </span><span id="line-67"></span><span>            </span><span class="annot"><span class="annottext">ExceptT Text IO Text
 -&gt; (ByteString -&gt; ExceptT Text IO Text)
 -&gt; Maybe ByteString
@@ -211,8 +211,8 @@ forall b a. b -&gt; (a -&gt; b) -&gt; Maybe a -&gt; b
 forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
 </span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var">return</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;NULL&quot;</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; ExceptT Text IO Text
-</span><a href="#local-6989586621690184559"><span class="hs-identifier hs-var">decodeBS</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe ByteString
-</span><a href="#local-6989586621690184555"><span class="hs-identifier hs-var">cellValBS</span></a></span><span>
+</span><a href="#local-6989586621690265884"><span class="hs-identifier hs-var">decodeBS</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe ByteString
+</span><a href="#local-6989586621690265880"><span class="hs-identifier hs-var">cellValBS</span></a></span><span>
 </span><span id="line-68"></span><span>
 </span><span id="line-69"></span><span>        </span><span class="annot"><span class="annottext">[[Text]] -&gt; ExceptT Text IO [[Text]]
 forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
@@ -220,13 +220,13 @@ forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
 -&gt; [[Text]] -&gt; ExceptT Text IO [[Text]]
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">[Text]
-</span><a href="#local-6989586621690184566"><span class="hs-identifier hs-var">hdr</span></a></span><span> </span><span class="annot"><span class="annottext">[Text] -&gt; [[Text]] -&gt; [[Text]]
+</span><a href="#local-6989586621690265891"><span class="hs-identifier hs-var">hdr</span></a></span><span> </span><span class="annot"><span class="annottext">[Text] -&gt; [[Text]] -&gt; [[Text]]
 forall a. a -&gt; [a] -&gt; [a]
 </span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/ghc-prim-0.6.1/src"><span class="hs-glyph hs-var">:</span></a></span><span> </span><span class="annot"><span class="annottext">[[Text]]
-</span><a href="#local-6989586621690184558"><span class="hs-identifier hs-var">rows</span></a></span><span>
+</span><a href="#local-6989586621690265883"><span class="hs-identifier hs-var">rows</span></a></span><span>
 </span><span id="line-70"></span><span>
-</span><span id="line-71"></span><span>      </span><span id="local-6989586621690184559"><span class="annot"><span class="annottext">decodeBS :: ByteString -&gt; ExceptT Text IO Text
-</span><a href="#local-6989586621690184559"><span class="hs-identifier hs-var hs-var">decodeBS</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(UnicodeException -&gt; ExceptT Text IO Text)
+</span><span id="line-71"></span><span>      </span><span id="local-6989586621690265884"><span class="annot"><span class="annottext">decodeBS :: ByteString -&gt; ExceptT Text IO Text
+</span><a href="#local-6989586621690265884"><span class="hs-identifier hs-var hs-var">decodeBS</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(UnicodeException -&gt; ExceptT Text IO Text)
 -&gt; (Text -&gt; ExceptT Text IO Text)
 -&gt; Either UnicodeException Text
 -&gt; ExceptT Text IO Text

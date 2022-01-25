@@ -14,7 +14,7 @@
 </span><span id="line-14"></span><span>
 </span><span id="line-15"></span><span class="hs-keyword">data</span><span> </span><span id="CompressionType"><span class="annot"><a href="Hasura.Server.Compression.html#CompressionType"><span class="hs-identifier hs-var">CompressionType</span></a></span></span><span>
 </span><span id="line-16"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="CTGZip"><span class="annot"><a href="Hasura.Server.Compression.html#CTGZip"><span class="hs-identifier hs-var">CTGZip</span></a></span></span><span>
-</span><span id="line-17"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690056173"><span id="local-6989586621690056175"><span id="local-6989586621690056177"><span class="annot"><span class="annottext">Int -&gt; CompressionType -&gt; ShowS
+</span><span id="line-17"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690136716"><span id="local-6989586621690136718"><span id="local-6989586621690136720"><span class="annot"><span class="annottext">Int -&gt; CompressionType -&gt; ShowS
 [CompressionType] -&gt; ShowS
 CompressionType -&gt; String
 (Int -&gt; CompressionType -&gt; ShowS)
@@ -29,7 +29,7 @@ show :: CompressionType -&gt; String
 $cshow :: CompressionType -&gt; String
 showsPrec :: Int -&gt; CompressionType -&gt; ShowS
 $cshowsPrec :: Int -&gt; CompressionType -&gt; ShowS
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690056168"><span id="local-6989586621690056170"><span class="annot"><span class="annottext">CompressionType -&gt; CompressionType -&gt; Bool
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690136711"><span id="local-6989586621690136713"><span class="annot"><span class="annottext">CompressionType -&gt; CompressionType -&gt; Bool
 (CompressionType -&gt; CompressionType -&gt; Bool)
 -&gt; (CompressionType -&gt; CompressionType -&gt; Bool)
 -&gt; Eq CompressionType
@@ -52,23 +52,23 @@ $c== :: CompressionType -&gt; CompressionType -&gt; Bool
 </span><span id="line-25"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/bytestring-0.10.12.0/src"><span class="hs-identifier hs-type">BL.ByteString</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/http-types-0.12.3-67581715184560fd6ad1570935f59db45bbfc9d69528eb11dab5ba2d42eb2e12/share/doc/html/src"><span class="hs-identifier hs-type">NH.Header</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="annot"><a href="Hasura.Server.Compression.html#CompressionType"><span class="hs-identifier hs-type">CompressionType</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-26"></span><span id="compressResponse"><span class="annot"><span class="annottext">compressResponse :: RequestHeaders
 -&gt; ByteString -&gt; (ByteString, Maybe Header, Maybe CompressionType)
-</span><a href="Hasura.Server.Compression.html#compressResponse"><span class="hs-identifier hs-var hs-var">compressResponse</span></a></span></span><span> </span><span id="local-6989586621690056166"><span class="annot"><span class="annottext">RequestHeaders
-</span><a href="#local-6989586621690056166"><span class="hs-identifier hs-var">reqHeaders</span></a></span></span><span> </span><span id="local-6989586621690056165"><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621690056165"><span class="hs-identifier hs-var">unCompressedResp</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-27"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621690056164"><span class="annot"><span class="annottext">compressionTypeM :: Maybe CompressionType
-</span><a href="#local-6989586621690056164"><span class="hs-identifier hs-var hs-var">compressionTypeM</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">RequestHeaders -&gt; Maybe CompressionType
+</span><a href="Hasura.Server.Compression.html#compressResponse"><span class="hs-identifier hs-var hs-var">compressResponse</span></a></span></span><span> </span><span id="local-6989586621690136709"><span class="annot"><span class="annottext">RequestHeaders
+</span><a href="#local-6989586621690136709"><span class="hs-identifier hs-var">reqHeaders</span></a></span></span><span> </span><span id="local-6989586621690136708"><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621690136708"><span class="hs-identifier hs-var">unCompressedResp</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-27"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621690136707"><span class="annot"><span class="annottext">compressionTypeM :: Maybe CompressionType
+</span><a href="#local-6989586621690136707"><span class="hs-identifier hs-var hs-var">compressionTypeM</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">RequestHeaders -&gt; Maybe CompressionType
 </span><a href="Hasura.Server.Compression.html#getRequestedCompression"><span class="hs-identifier hs-var">getRequestedCompression</span></a></span><span> </span><span class="annot"><span class="annottext">RequestHeaders
-</span><a href="#local-6989586621690056166"><span class="hs-identifier hs-var">reqHeaders</span></a></span><span>
-</span><span id="line-28"></span><span>      </span><span id="local-6989586621690056162"><span class="annot"><span class="annottext">appendCompressionType :: (ByteString, Maybe Header)
+</span><a href="#local-6989586621690136709"><span class="hs-identifier hs-var">reqHeaders</span></a></span><span>
+</span><span id="line-28"></span><span>      </span><span id="local-6989586621690136705"><span class="annot"><span class="annottext">appendCompressionType :: (ByteString, Maybe Header)
 -&gt; (ByteString, Maybe Header, Maybe CompressionType)
-</span><a href="#local-6989586621690056162"><span class="hs-identifier hs-var hs-var">appendCompressionType</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621690056161"><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621690056161"><span class="hs-identifier hs-var">res</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690056160"><span class="annot"><span class="annottext">Maybe Header
-</span><a href="#local-6989586621690056160"><span class="hs-identifier hs-var">headerM</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621690056161"><span class="hs-identifier hs-var">res</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Maybe Header
-</span><a href="#local-6989586621690056160"><span class="hs-identifier hs-var">headerM</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Maybe CompressionType
-</span><a href="#local-6989586621690056164"><span class="hs-identifier hs-var">compressionTypeM</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-29"></span><span>      </span><span id="local-6989586621690056159"><span class="annot"><span class="annottext">gzipCompressionParams :: CompressParams
-</span><a href="#local-6989586621690056159"><span class="hs-identifier hs-var hs-var">gzipCompressionParams</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="#local-6989586621690136705"><span class="hs-identifier hs-var hs-var">appendCompressionType</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621690136704"><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621690136704"><span class="hs-identifier hs-var">res</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690136703"><span class="annot"><span class="annottext">Maybe Header
+</span><a href="#local-6989586621690136703"><span class="hs-identifier hs-var">headerM</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621690136704"><span class="hs-identifier hs-var">res</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Maybe Header
+</span><a href="#local-6989586621690136703"><span class="hs-identifier hs-var">headerM</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Maybe CompressionType
+</span><a href="#local-6989586621690136707"><span class="hs-identifier hs-var">compressionTypeM</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-29"></span><span>      </span><span id="local-6989586621690136702"><span class="annot"><span class="annottext">gzipCompressionParams :: CompressParams
+</span><a href="#local-6989586621690136702"><span class="hs-identifier hs-var hs-var">gzipCompressionParams</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-30"></span><span>        </span><span class="annot"><span class="annottext">CompressParams
 </span><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/zlib-0.6.2.2-f48a9526312d051485474560178efd510c8b37c81f9bdbdcdfddf672b7903a50/share/doc/html/src"><span class="hs-identifier hs-var">GZ.defaultCompressParams</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">compressLevel :: CompressionLevel
 </span><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/zlib-0.6.2.2-f48a9526312d051485474560178efd510c8b37c81f9bdbdcdfddf672b7903a50/share/doc/html/src"><span class="hs-identifier hs-var">GZ.compressLevel</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int -&gt; CompressionLevel
@@ -76,36 +76,36 @@ $c== :: CompressionType -&gt; CompressionType -&gt; Bool
 </span><span class="hs-number">1</span></span><span class="hs-special">}</span><span>
 </span><span id="line-31"></span><span>   </span><span class="hs-keyword">in</span><span> </span><span class="annot"><span class="annottext">(ByteString, Maybe Header)
 -&gt; (ByteString, Maybe Header, Maybe CompressionType)
-</span><a href="#local-6989586621690056162"><span class="hs-identifier hs-var">appendCompressionType</span></a></span><span> </span><span class="annot"><span class="annottext">((ByteString, Maybe Header)
+</span><a href="#local-6989586621690136705"><span class="hs-identifier hs-var">appendCompressionType</span></a></span><span> </span><span class="annot"><span class="annottext">((ByteString, Maybe Header)
  -&gt; (ByteString, Maybe Header, Maybe CompressionType))
 -&gt; (ByteString, Maybe Header)
 -&gt; (ByteString, Maybe Header, Maybe CompressionType)
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Maybe CompressionType
-</span><a href="#local-6989586621690056164"><span class="hs-identifier hs-var">compressionTypeM</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621690136707"><span class="hs-identifier hs-var">compressionTypeM</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-32"></span><span>        </span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-type">Just</span></a></span><span> </span><span class="annot"><span class="annottext">CompressionType
 </span><a href="Hasura.Server.Compression.html#CTGZip"><span class="hs-identifier hs-var">CTGZip</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">CompressParams -&gt; ByteString -&gt; ByteString
 </span><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/zlib-0.6.2.2-f48a9526312d051485474560178efd510c8b37c81f9bdbdcdfddf672b7903a50/share/doc/html/src"><span class="hs-identifier hs-var">GZ.compressWith</span></a></span><span> </span><span class="annot"><span class="annottext">CompressParams
-</span><a href="#local-6989586621690056159"><span class="hs-identifier hs-var">gzipCompressionParams</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621690056165"><span class="hs-identifier hs-var">unCompressedResp</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Header -&gt; Maybe Header
+</span><a href="#local-6989586621690136702"><span class="hs-identifier hs-var">gzipCompressionParams</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621690136708"><span class="hs-identifier hs-var">unCompressedResp</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Header -&gt; Maybe Header
 forall a. a -&gt; Maybe a
 </span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var">Just</span></a></span><span> </span><span class="annot"><span class="annottext">Header
 </span><a href="Hasura.Server.Utils.html#gzipHeader"><span class="hs-identifier hs-var">gzipHeader</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-33"></span><span>        </span><span class="annot"><span class="annottext">Maybe CompressionType
 </span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621690056165"><span class="hs-identifier hs-var">unCompressedResp</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Maybe Header
+</span><a href="#local-6989586621690136708"><span class="hs-identifier hs-var">unCompressedResp</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Maybe Header
 forall a. Maybe a
 </span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-34"></span><span>
 </span><span id="line-35"></span><span class="annot"><a href="Hasura.Server.Compression.html#getRequestedCompression"><span class="hs-identifier hs-type">getRequestedCompression</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/http-types-0.12.3-67581715184560fd6ad1570935f59db45bbfc9d69528eb11dab5ba2d42eb2e12/share/doc/html/src"><span class="hs-identifier hs-type">NH.RequestHeaders</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="annot"><a href="Hasura.Server.Compression.html#CompressionType"><span class="hs-identifier hs-type">CompressionType</span></a></span><span>
 </span><span id="line-36"></span><span id="getRequestedCompression"><span class="annot"><span class="annottext">getRequestedCompression :: RequestHeaders -&gt; Maybe CompressionType
-</span><a href="Hasura.Server.Compression.html#getRequestedCompression"><span class="hs-identifier hs-var hs-var">getRequestedCompression</span></a></span></span><span> </span><span id="local-6989586621690056154"><span class="annot"><span class="annottext">RequestHeaders
-</span><a href="#local-6989586621690056154"><span class="hs-identifier hs-var">reqHeaders</span></a></span></span><span>
+</span><a href="Hasura.Server.Compression.html#getRequestedCompression"><span class="hs-identifier hs-var hs-var">getRequestedCompression</span></a></span></span><span> </span><span id="local-6989586621690136697"><span class="annot"><span class="annottext">RequestHeaders
+</span><a href="#local-6989586621690136697"><span class="hs-identifier hs-var">reqHeaders</span></a></span></span><span>
 </span><span id="line-37"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;gzip&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; [Text] -&gt; Bool
 forall (t :: * -&gt; *) a. (Foldable t, Eq a) =&gt; a -&gt; t a -&gt; Bool
 </span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var">`elem`</span></a></span><span> </span><span class="annot"><span class="annottext">[Text]
-</span><a href="#local-6989586621690056152"><span class="hs-identifier hs-var">acceptEncodingVals</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">CompressionType -&gt; Maybe CompressionType
+</span><a href="#local-6989586621690136695"><span class="hs-identifier hs-var">acceptEncodingVals</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">CompressionType -&gt; Maybe CompressionType
 forall a. a -&gt; Maybe a
 </span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var">Just</span></a></span><span> </span><span class="annot"><span class="annottext">CompressionType
 </span><a href="Hasura.Server.Compression.html#CTGZip"><span class="hs-identifier hs-var">CTGZip</span></a></span><span>
@@ -114,12 +114,12 @@ forall a. a -&gt; Maybe a
 forall a. Maybe a
 </span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span>
 </span><span id="line-39"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-40"></span><span>    </span><span id="local-6989586621690056152"><span class="annot"><span class="annottext">acceptEncodingVals :: [Text]
-</span><a href="#local-6989586621690056152"><span class="hs-identifier hs-var hs-var">acceptEncodingVals</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-40"></span><span>    </span><span id="local-6989586621690136695"><span class="annot"><span class="annottext">acceptEncodingVals :: [Text]
+</span><a href="#local-6989586621690136695"><span class="hs-identifier hs-var hs-var">acceptEncodingVals</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-41"></span><span>      </span><span class="annot"><span class="annottext">(Header -&gt; [Text]) -&gt; RequestHeaders -&gt; [Text]
 forall (t :: * -&gt; *) a b. Foldable t =&gt; (a -&gt; [b]) -&gt; t a -&gt; [b]
 </span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var">concatMap</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ByteString -&gt; [Text]
-</span><a href="#local-6989586621690056150"><span class="hs-identifier hs-var">splitHeaderVal</span></a></span><span> </span><span class="annot"><span class="annottext">(ByteString -&gt; [Text])
+</span><a href="#local-6989586621690136693"><span class="hs-identifier hs-var">splitHeaderVal</span></a></span><span> </span><span class="annot"><span class="annottext">(ByteString -&gt; [Text])
 -&gt; (Header -&gt; ByteString) -&gt; Header -&gt; [Text]
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">Header -&gt; ByteString
@@ -129,18 +129,18 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
 </span><span id="line-42"></span><span>        </span><span class="annot"><span class="annottext">(Header -&gt; Bool) -&gt; RequestHeaders -&gt; RequestHeaders
 forall a. (a -&gt; Bool) -&gt; [a] -&gt; [a]
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var">filter</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621690056148"><span class="annot"><span class="annottext">Header
-</span><a href="#local-6989586621690056148"><span class="hs-identifier hs-var">h</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Header -&gt; HeaderName
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var">filter</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621690136691"><span class="annot"><span class="annottext">Header
+</span><a href="#local-6989586621690136691"><span class="hs-identifier hs-var">h</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Header -&gt; HeaderName
 forall a b. (a, b) -&gt; a
 </span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var">fst</span></a></span><span> </span><span class="annot"><span class="annottext">Header
-</span><a href="#local-6989586621690056148"><span class="hs-identifier hs-var">h</span></a></span><span> </span><span class="annot"><span class="annottext">HeaderName -&gt; HeaderName -&gt; Bool
+</span><a href="#local-6989586621690136691"><span class="hs-identifier hs-var">h</span></a></span><span> </span><span class="annot"><span class="annottext">HeaderName -&gt; HeaderName -&gt; Bool
 forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/ghc-prim-0.6.1/src"><span class="hs-operator hs-var">==</span></a></span><span> </span><span class="annot"><span class="annottext">HeaderName
 </span><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/http-types-0.12.3-67581715184560fd6ad1570935f59db45bbfc9d69528eb11dab5ba2d42eb2e12/share/doc/html/src"><span class="hs-identifier hs-var">NH.hAcceptEncoding</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">RequestHeaders
-</span><a href="#local-6989586621690056154"><span class="hs-identifier hs-var">reqHeaders</span></a></span><span>
-</span><span id="line-43"></span><span>    </span><span id="local-6989586621690056150"><span class="annot"><span class="annottext">splitHeaderVal :: ByteString -&gt; [Text]
-</span><a href="#local-6989586621690056150"><span class="hs-identifier hs-var hs-var">splitHeaderVal</span></a></span></span><span> </span><span id="local-6989586621690056146"><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621690056146"><span class="hs-identifier hs-var">bs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Text) -&gt; [Text] -&gt; [Text]
+</span><a href="#local-6989586621690136697"><span class="hs-identifier hs-var">reqHeaders</span></a></span><span>
+</span><span id="line-43"></span><span>    </span><span id="local-6989586621690136693"><span class="annot"><span class="annottext">splitHeaderVal :: ByteString -&gt; [Text]
+</span><a href="#local-6989586621690136693"><span class="hs-identifier hs-var hs-var">splitHeaderVal</span></a></span></span><span> </span><span id="local-6989586621690136689"><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621690136689"><span class="hs-identifier hs-var">bs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Text) -&gt; [Text] -&gt; [Text]
 forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
 </span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var">map</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text
 </span><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/text-1.2.3.2-4200bf40e86b2107f4b06242de65d549c52e58e8833e72545e35f7712661e715/share/doc/html/src"><span class="hs-identifier hs-var">T.strip</span></a></span><span> </span><span class="annot"><span class="annottext">([Text] -&gt; [Text]) -&gt; [Text] -&gt; [Text]
@@ -151,5 +151,5 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; Text
 </span><a href="Hasura.Prelude.html#bsToTxt"><span class="hs-identifier hs-var">bsToTxt</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621690056146"><span class="hs-identifier hs-var">bs</span></a></span><span>
+</span><a href="#local-6989586621690136689"><span class="hs-identifier hs-var">bs</span></a></span><span>
 </span><span id="line-44"></span></pre></body></html>

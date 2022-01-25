@@ -24,7 +24,7 @@
 </span><span id="line-24"></span><span class="hs-keyword">data</span><span> </span><span id="CacheControlDirective"><span class="annot"><a href="Data.Parser.CacheControl.html#CacheControlDirective"><span class="hs-identifier hs-var">CacheControlDirective</span></a></span></span><span>
 </span><span id="line-25"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="CCDOnlyToken"><span class="annot"><a href="Data.Parser.CacheControl.html#CCDOnlyToken"><span class="hs-identifier hs-var">CCDOnlyToken</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/text-1.2.3.2-4200bf40e86b2107f4b06242de65d549c52e58e8833e72545e35f7712661e715/share/doc/html/src"><span class="hs-identifier hs-type">Text</span></a></span><span>
 </span><span id="line-26"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="CCDTokenWithVal"><span class="annot"><a href="Data.Parser.CacheControl.html#CCDTokenWithVal"><span class="hs-identifier hs-var">CCDTokenWithVal</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/text-1.2.3.2-4200bf40e86b2107f4b06242de65d549c52e58e8833e72545e35f7712661e715/share/doc/html/src"><span class="hs-identifier hs-type">Text</span></a></span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/text-1.2.3.2-4200bf40e86b2107f4b06242de65d549c52e58e8833e72545e35f7712661e715/share/doc/html/src"><span class="hs-identifier hs-type">Text</span></a></span><span>
-</span><span id="line-27"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690057672"><span id="local-6989586621690057674"><span id="local-6989586621690057676"><span class="annot"><span class="annottext">Int -&gt; CacheControlDirective -&gt; ShowS
+</span><span id="line-27"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690138215"><span id="local-6989586621690138217"><span id="local-6989586621690138219"><span class="annot"><span class="annottext">Int -&gt; CacheControlDirective -&gt; ShowS
 [CacheControlDirective] -&gt; ShowS
 CacheControlDirective -&gt; String
 (Int -&gt; CacheControlDirective -&gt; ShowS)
@@ -39,7 +39,7 @@ show :: CacheControlDirective -&gt; String
 $cshow :: CacheControlDirective -&gt; String
 showsPrec :: Int -&gt; CacheControlDirective -&gt; ShowS
 $cshowsPrec :: Int -&gt; CacheControlDirective -&gt; ShowS
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690057667"><span id="local-6989586621690057669"><span class="annot"><span class="annottext">CacheControlDirective -&gt; CacheControlDirective -&gt; Bool
+</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690138210"><span id="local-6989586621690138212"><span class="annot"><span class="annottext">CacheControlDirective -&gt; CacheControlDirective -&gt; Bool
 (CacheControlDirective -&gt; CacheControlDirective -&gt; Bool)
 -&gt; (CacheControlDirective -&gt; CacheControlDirective -&gt; Bool)
 -&gt; Eq CacheControlDirective
@@ -51,41 +51,41 @@ $c== :: CacheControlDirective -&gt; CacheControlDirective -&gt; Bool
 </span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/ghc-prim-0.6.1/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-28"></span><span>
 </span><span id="line-29"></span><span class="hs-comment">-- | Tries to parse the @max-age@ or @s-maxage@ present in the value of @Cache-Control@ header</span><span>
-</span><span id="line-30"></span><span id="local-6989586621690057665"><span class="annot"><a href="Data.Parser.CacheControl.html#parseMaxAge"><span class="hs-identifier hs-type">parseMaxAge</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-type">Integral</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690057665"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/text-1.2.3.2-4200bf40e86b2107f4b06242de65d549c52e58e8833e72545e35f7712661e715/share/doc/html/src"><span class="hs-identifier hs-type">Text</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-type">Either</span></a></span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-type">String</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690057665"><span class="hs-identifier hs-type">a</span></a></span></span><span>
+</span><span id="line-30"></span><span id="local-6989586621690138208"><span class="annot"><a href="Data.Parser.CacheControl.html#parseMaxAge"><span class="hs-identifier hs-type">parseMaxAge</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-type">Integral</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690138208"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/text-1.2.3.2-4200bf40e86b2107f4b06242de65d549c52e58e8833e72545e35f7712661e715/share/doc/html/src"><span class="hs-identifier hs-type">Text</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-type">Either</span></a></span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-type">String</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690138208"><span class="hs-identifier hs-type">a</span></a></span></span><span>
 </span><span id="line-31"></span><span id="parseMaxAge"><span class="annot"><span class="annottext">parseMaxAge :: Text -&gt; Either String a
-</span><a href="Data.Parser.CacheControl.html#parseMaxAge"><span class="hs-identifier hs-var hs-var">parseMaxAge</span></a></span></span><span> </span><span id="local-6989586621690057664"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621690057664"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-32"></span><span>  </span><span id="local-6989586621690057663"><span class="annot"><span class="annottext">[CacheControlDirective]
-</span><a href="#local-6989586621690057663"><span class="hs-identifier hs-var">cc</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Either String [CacheControlDirective]
+</span><a href="Data.Parser.CacheControl.html#parseMaxAge"><span class="hs-identifier hs-var hs-var">parseMaxAge</span></a></span></span><span> </span><span id="local-6989586621690138207"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621690138207"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-32"></span><span>  </span><span id="local-6989586621690138206"><span class="annot"><span class="annottext">[CacheControlDirective]
+</span><a href="#local-6989586621690138206"><span class="hs-identifier hs-var">cc</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Either String [CacheControlDirective]
 </span><a href="Data.Parser.CacheControl.html#parseCacheControl"><span class="hs-identifier hs-var">parseCacheControl</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621690057664"><span class="hs-identifier hs-var">t</span></a></span><span>
+</span><a href="#local-6989586621690138207"><span class="hs-identifier hs-var">t</span></a></span><span>
 </span><span id="line-33"></span><span>  </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">(CacheControlDirective -&gt; Bool)
 -&gt; [CacheControlDirective] -&gt; Maybe CacheControlDirective
 forall (t :: * -&gt; *) a. Foldable t =&gt; (a -&gt; Bool) -&gt; t a -&gt; Maybe a
 </span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var">find</span></a></span><span> </span><span class="annot"><span class="annottext">CacheControlDirective -&gt; Bool
-</span><a href="#local-6989586621690057661"><span class="hs-identifier hs-var">checkMaxAgeToken</span></a></span><span> </span><span class="annot"><span class="annottext">[CacheControlDirective]
-</span><a href="#local-6989586621690057663"><span class="hs-identifier hs-var">cc</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621690138204"><span class="hs-identifier hs-var">checkMaxAgeToken</span></a></span><span> </span><span class="annot"><span class="annottext">[CacheControlDirective]
+</span><a href="#local-6989586621690138206"><span class="hs-identifier hs-var">cc</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-34"></span><span>    </span><span class="annot"><span class="annottext">Maybe CacheControlDirective
 </span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">String -&gt; Either String a
 forall a b. a -&gt; Either a b
 </span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var">Left</span></a></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621690057660"><span class="hs-identifier hs-var">parseErr</span></a></span><span>
-</span><span id="line-35"></span><span>    </span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-type">Just</span></a></span><span> </span><span id="local-6989586621690057659"><span class="annot"><span class="annottext">CacheControlDirective
-</span><a href="#local-6989586621690057659"><span class="hs-identifier hs-var">d</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">CacheControlDirective
-</span><a href="#local-6989586621690057659"><span class="hs-identifier hs-var">d</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621690138203"><span class="hs-identifier hs-var">parseErr</span></a></span><span>
+</span><span id="line-35"></span><span>    </span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-type">Just</span></a></span><span> </span><span id="local-6989586621690138202"><span class="annot"><span class="annottext">CacheControlDirective
+</span><a href="#local-6989586621690138202"><span class="hs-identifier hs-var">d</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">CacheControlDirective
+</span><a href="#local-6989586621690138202"><span class="hs-identifier hs-var">d</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-36"></span><span>      </span><span class="annot"><a href="Data.Parser.CacheControl.html#CCDOnlyToken"><span class="hs-identifier hs-type">CCDOnlyToken</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">String -&gt; Either String a
 forall a b. a -&gt; Either a b
 </span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var">Left</span></a></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621690057660"><span class="hs-identifier hs-var">parseErr</span></a></span><span>
+</span><a href="#local-6989586621690138203"><span class="hs-identifier hs-var">parseErr</span></a></span><span>
 </span><span id="line-37"></span><span>      </span><span class="annot"><a href="Data.Parser.CacheControl.html#CCDTokenWithVal"><span class="hs-identifier hs-type">CCDTokenWithVal</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><span class="hs-identifier">_</span></span><span> </span><span id="local-6989586621690057658"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621690057658"><span class="hs-identifier hs-var">val</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ShowS -&gt; Either String a -&gt; Either String a
+</span><span class="hs-identifier">_</span></span><span> </span><span id="local-6989586621690138201"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621690138201"><span class="hs-identifier hs-var">val</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ShowS -&gt; Either String a -&gt; Either String a
 forall a a' b. (a -&gt; a') -&gt; Either a b -&gt; Either a' b
 </span><a href="Hasura.Server.Utils.html#fmapL"><span class="hs-identifier hs-var">fmapL</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String -&gt; ShowS
 forall a b. a -&gt; b -&gt; a
 </span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var">const</span></a></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621690057660"><span class="hs-identifier hs-var">parseErr</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(Either String a -&gt; Either String a)
+</span><a href="#local-6989586621690138203"><span class="hs-identifier hs-var">parseErr</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(Either String a -&gt; Either String a)
 -&gt; Either String a -&gt; Either String a
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Parser a -&gt; Text -&gt; Either String a
@@ -93,33 +93,33 @@ forall a. Parser a -&gt; Text -&gt; Either String a
 </span><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/attoparsec-0.13.2.5-3d770c98039c112b6194ae28c31335ab74372d4a845d2733e9f7205212da2215/share/doc/html/src"><span class="hs-identifier hs-var">AT.parseOnly</span></a></span><span> </span><span class="annot"><span class="annottext">Parser a
 forall a. Integral a =&gt; Parser a
 </span><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/attoparsec-0.13.2.5-3d770c98039c112b6194ae28c31335ab74372d4a845d2733e9f7205212da2215/share/doc/html/src"><span class="hs-identifier hs-var">AT.decimal</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621690057658"><span class="hs-identifier hs-var">val</span></a></span><span>
+</span><a href="#local-6989586621690138201"><span class="hs-identifier hs-var">val</span></a></span><span>
 </span><span id="line-38"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-39"></span><span>    </span><span id="local-6989586621690057660"><span class="annot"><span class="annottext">parseErr :: String
-</span><a href="#local-6989586621690057660"><span class="hs-identifier hs-var hs-var">parseErr</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
+</span><span id="line-39"></span><span>    </span><span id="local-6989586621690138203"><span class="annot"><span class="annottext">parseErr :: String
+</span><a href="#local-6989586621690138203"><span class="hs-identifier hs-var hs-var">parseErr</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;could not find max-age/s-maxage&quot;</span></span><span>
-</span><span id="line-40"></span><span>    </span><span id="local-6989586621690057661"><span class="annot"><span class="annottext">checkMaxAgeToken :: CacheControlDirective -&gt; Bool
-</span><a href="#local-6989586621690057661"><span class="hs-identifier hs-var hs-var">checkMaxAgeToken</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
-</span><span id="line-41"></span><span>      </span><span class="annot"><a href="Data.Parser.CacheControl.html#CCDOnlyToken"><span class="hs-identifier hs-type">CCDOnlyToken</span></a></span><span> </span><span id="local-6989586621690057654"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621690057654"><span class="hs-identifier hs-var">token</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621690057654"><span class="hs-identifier hs-var">token</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Bool
+</span><span id="line-40"></span><span>    </span><span id="local-6989586621690138204"><span class="annot"><span class="annottext">checkMaxAgeToken :: CacheControlDirective -&gt; Bool
+</span><a href="#local-6989586621690138204"><span class="hs-identifier hs-var hs-var">checkMaxAgeToken</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-41"></span><span>      </span><span class="annot"><a href="Data.Parser.CacheControl.html#CCDOnlyToken"><span class="hs-identifier hs-type">CCDOnlyToken</span></a></span><span> </span><span id="local-6989586621690138197"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621690138197"><span class="hs-identifier hs-var">token</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621690138197"><span class="hs-identifier hs-var">token</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Bool
 forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/ghc-prim-0.6.1/src"><span class="hs-operator hs-var">==</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;max-age&quot;</span></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
 </span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/ghc-prim-0.6.1/src"><span class="hs-operator hs-var">||</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621690057654"><span class="hs-identifier hs-var">token</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Bool
+</span><a href="#local-6989586621690138197"><span class="hs-identifier hs-var">token</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Bool
 forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/ghc-prim-0.6.1/src"><span class="hs-operator hs-var">==</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;s-maxage&quot;</span></span><span>
-</span><span id="line-42"></span><span>      </span><span class="annot"><a href="Data.Parser.CacheControl.html#CCDTokenWithVal"><span class="hs-identifier hs-type">CCDTokenWithVal</span></a></span><span> </span><span id="local-6989586621690057652"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621690057652"><span class="hs-identifier hs-var">token</span></a></span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span id="line-42"></span><span>      </span><span class="annot"><a href="Data.Parser.CacheControl.html#CCDTokenWithVal"><span class="hs-identifier hs-type">CCDTokenWithVal</span></a></span><span> </span><span id="local-6989586621690138195"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621690138195"><span class="hs-identifier hs-var">token</span></a></span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621690057652"><span class="hs-identifier hs-var">token</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Bool
+</span><a href="#local-6989586621690138195"><span class="hs-identifier hs-var">token</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Bool
 forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/ghc-prim-0.6.1/src"><span class="hs-operator hs-var">==</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;max-age&quot;</span></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
 </span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/ghc-prim-0.6.1/src"><span class="hs-operator hs-var">||</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621690057652"><span class="hs-identifier hs-var">token</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Bool
+</span><a href="#local-6989586621690138195"><span class="hs-identifier hs-var">token</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Bool
 forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/ghc-prim-0.6.1/src"><span class="hs-operator hs-var">==</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;s-maxage&quot;</span></span><span>
@@ -151,11 +151,11 @@ forall (m :: * -&gt; *) a. MonadPlus m =&gt; m a -&gt; m [a]
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f a -&gt; f b -&gt; f b
 </span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var">*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Parser Text (Maybe Char)
 </span><a href="Data.Parser.CacheControl.html#optionalWhitespaceParser"><span class="hs-identifier hs-var">optionalWhitespaceParser</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-53"></span><span>  </span><span id="local-6989586621690057647"><span class="annot"><span class="annottext">CacheControlDirective
-</span><a href="#local-6989586621690057647"><span class="hs-identifier hs-var">cd</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser CacheControlDirective
+</span><span id="line-53"></span><span>  </span><span id="local-6989586621690138190"><span class="annot"><span class="annottext">CacheControlDirective
+</span><a href="#local-6989586621690138190"><span class="hs-identifier hs-var">cd</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser CacheControlDirective
 </span><a href="Data.Parser.CacheControl.html#cacheDirectiveParser"><span class="hs-identifier hs-var">cacheDirectiveParser</span></a></span><span>
-</span><span id="line-54"></span><span>  </span><span id="local-6989586621690057645"><span class="annot"><span class="annottext">[Maybe CacheControlDirective]
-</span><a href="#local-6989586621690057645"><span class="hs-identifier hs-var">cds</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser Text (Maybe CacheControlDirective)
+</span><span id="line-54"></span><span>  </span><span id="local-6989586621690138188"><span class="annot"><span class="annottext">[Maybe CacheControlDirective]
+</span><a href="#local-6989586621690138188"><span class="hs-identifier hs-var">cds</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser Text (Maybe CacheControlDirective)
 -&gt; Parser Text [Maybe CacheControlDirective]
 forall (m :: * -&gt; *) a. MonadPlus m =&gt; m a -&gt; m [a]
 </span><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/attoparsec-0.13.2.5-3d770c98039c112b6194ae28c31335ab74372d4a845d2733e9f7205212da2215/share/doc/html/src"><span class="hs-identifier hs-var">AT.many'</span></a></span><span> </span><span class="annot"><span class="annottext">(Parser Text (Maybe CacheControlDirective)
@@ -184,23 +184,23 @@ forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 -&gt; Parser Text (Maybe CacheControlDirective)
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Parser CacheControlDirective
-</span><a href="#local-6989586621690057642"><span class="hs-identifier hs-var">optionalDirective</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621690138185"><span class="hs-identifier hs-var">optionalDirective</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-55"></span><span>  </span><span class="annot"><span class="annottext">[CacheControlDirective] -&gt; Parser [CacheControlDirective]
 forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
 </span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var">return</span></a></span><span> </span><span class="annot"><span class="annottext">([CacheControlDirective] -&gt; Parser [CacheControlDirective])
 -&gt; [CacheControlDirective] -&gt; Parser [CacheControlDirective]
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">CacheControlDirective
-</span><a href="#local-6989586621690057647"><span class="hs-identifier hs-var">cd</span></a></span><span> </span><span class="annot"><span class="annottext">CacheControlDirective
+</span><a href="#local-6989586621690138190"><span class="hs-identifier hs-var">cd</span></a></span><span> </span><span class="annot"><span class="annottext">CacheControlDirective
 -&gt; [CacheControlDirective] -&gt; [CacheControlDirective]
 forall a. a -&gt; [a] -&gt; [a]
 </span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/ghc-prim-0.6.1/src"><span class="hs-glyph hs-var">:</span></a></span><span> </span><span class="annot"><span class="annottext">[Maybe CacheControlDirective] -&gt; [CacheControlDirective]
 forall a. [Maybe a] -&gt; [a]
 </span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var">catMaybes</span></a></span><span> </span><span class="annot"><span class="annottext">[Maybe CacheControlDirective]
-</span><a href="#local-6989586621690057645"><span class="hs-identifier hs-var">cds</span></a></span><span>
+</span><a href="#local-6989586621690138188"><span class="hs-identifier hs-var">cds</span></a></span><span>
 </span><span id="line-56"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-57"></span><span>    </span><span id="local-6989586621690057642"><span class="annot"><span class="annottext">optionalDirective :: Parser CacheControlDirective
-</span><a href="#local-6989586621690057642"><span class="hs-identifier hs-var hs-var">optionalDirective</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Parser Text (Maybe Char)
+</span><span id="line-57"></span><span>    </span><span id="local-6989586621690138185"><span class="annot"><span class="annottext">optionalDirective :: Parser CacheControlDirective
+</span><a href="#local-6989586621690138185"><span class="hs-identifier hs-var hs-var">optionalDirective</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Parser Text (Maybe Char)
 </span><a href="Data.Parser.CacheControl.html#optionalWhitespaceParser"><span class="hs-identifier hs-var">optionalWhitespaceParser</span></a></span><span> </span><span class="annot"><span class="annottext">Parser Text (Maybe Char)
 -&gt; Parser CacheControlDirective -&gt; Parser CacheControlDirective
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f a -&gt; f b -&gt; f b
@@ -228,23 +228,23 @@ forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span id="line-66"></span><span class="annot"><a href="Data.Parser.CacheControl.html#cacheDirectiveParser"><span class="hs-identifier hs-type">cacheDirectiveParser</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/attoparsec-0.13.2.5-3d770c98039c112b6194ae28c31335ab74372d4a845d2733e9f7205212da2215/share/doc/html/src"><span class="hs-identifier hs-type">AT.Parser</span></a></span><span> </span><span class="annot"><a href="Data.Parser.CacheControl.html#CacheControlDirective"><span class="hs-identifier hs-type">CacheControlDirective</span></a></span><span>
 </span><span id="line-67"></span><span id="cacheDirectiveParser"><span class="annot"><span class="annottext">cacheDirectiveParser :: Parser CacheControlDirective
 </span><a href="Data.Parser.CacheControl.html#cacheDirectiveParser"><span class="hs-identifier hs-var hs-var">cacheDirectiveParser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Parser CacheControlDirective
-</span><a href="#local-6989586621690057639"><span class="hs-identifier hs-var">tokenWithValue</span></a></span><span> </span><span class="annot"><span class="annottext">Parser CacheControlDirective
+</span><a href="#local-6989586621690138182"><span class="hs-identifier hs-var">tokenWithValue</span></a></span><span> </span><span class="annot"><span class="annottext">Parser CacheControlDirective
 -&gt; Parser CacheControlDirective -&gt; Parser CacheControlDirective
 forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f a -&gt; f a
 </span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var">&lt;|&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Parser CacheControlDirective
-</span><a href="#local-6989586621690057637"><span class="hs-identifier hs-var">onlyToken</span></a></span><span>
+</span><a href="#local-6989586621690138180"><span class="hs-identifier hs-var">onlyToken</span></a></span><span>
 </span><span id="line-68"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-69"></span><span>    </span><span id="local-6989586621690057637"><span class="annot"><span class="annottext">onlyToken :: Parser CacheControlDirective
-</span><a href="#local-6989586621690057637"><span class="hs-identifier hs-var hs-var">onlyToken</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; CacheControlDirective
+</span><span id="line-69"></span><span>    </span><span id="local-6989586621690138180"><span class="annot"><span class="annottext">onlyToken :: Parser CacheControlDirective
+</span><a href="#local-6989586621690138180"><span class="hs-identifier hs-var hs-var">onlyToken</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; CacheControlDirective
 </span><a href="Data.Parser.CacheControl.html#CCDOnlyToken"><span class="hs-identifier hs-var">CCDOnlyToken</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; CacheControlDirective)
 -&gt; Parser Text Text -&gt; Parser CacheControlDirective
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Parser Text Text
 </span><a href="Data.Parser.CacheControl.html#tokenParser"><span class="hs-identifier hs-var">tokenParser</span></a></span><span>
-</span><span id="line-70"></span><span>    </span><span id="local-6989586621690057639"><span class="annot"><span class="annottext">tokenWithValue :: Parser CacheControlDirective
-</span><a href="#local-6989586621690057639"><span class="hs-identifier hs-var hs-var">tokenWithValue</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-71"></span><span>      </span><span id="local-6989586621690057635"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621690057635"><span class="hs-identifier hs-var">tok</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser Text Text
+</span><span id="line-70"></span><span>    </span><span id="local-6989586621690138182"><span class="annot"><span class="annottext">tokenWithValue :: Parser CacheControlDirective
+</span><a href="#local-6989586621690138182"><span class="hs-identifier hs-var hs-var">tokenWithValue</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-71"></span><span>      </span><span id="local-6989586621690138178"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621690138178"><span class="hs-identifier hs-var">tok</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser Text Text
 </span><a href="Data.Parser.CacheControl.html#tokenParser"><span class="hs-identifier hs-var">tokenParser</span></a></span><span>
 </span><span id="line-72"></span><span>      </span><span class="annot"><span class="annottext">Parser Text Char -&gt; Parser Text ()
 forall (f :: * -&gt; *) a. Functor f =&gt; f a -&gt; f ()
@@ -254,8 +254,8 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Char -&gt; Parser Text Char
 </span><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/attoparsec-0.13.2.5-3d770c98039c112b6194ae28c31335ab74372d4a845d2733e9f7205212da2215/share/doc/html/src"><span class="hs-identifier hs-var">AT.char</span></a></span><span> </span><span class="annot"><span class="annottext">Char
 </span><span class="hs-char">'='</span></span><span>
-</span><span id="line-73"></span><span>      </span><span id="local-6989586621690057633"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621690057633"><span class="hs-identifier hs-var">val</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser Text Text
+</span><span id="line-73"></span><span>      </span><span id="local-6989586621690138176"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621690138176"><span class="hs-identifier hs-var">val</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser Text Text
 </span><a href="Data.Parser.CacheControl.html#tokenParser"><span class="hs-identifier hs-var">tokenParser</span></a></span><span> </span><span class="annot"><span class="annottext">Parser Text Text -&gt; Parser Text Text -&gt; Parser Text Text
 forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f a -&gt; f a
 </span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var">&lt;|&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Parser Text Text
@@ -267,8 +267,8 @@ forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; CacheControlDirective
 </span><a href="Data.Parser.CacheControl.html#CCDTokenWithVal"><span class="hs-identifier hs-var">CCDTokenWithVal</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621690057635"><span class="hs-identifier hs-var">tok</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621690057633"><span class="hs-identifier hs-var">val</span></a></span><span>
+</span><a href="#local-6989586621690138178"><span class="hs-identifier hs-var">tok</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621690138176"><span class="hs-identifier hs-var">val</span></a></span><span>
 </span><span id="line-75"></span><span>
 </span><span id="line-76"></span><span class="hs-comment">-- ABNF: 1*tchar</span><span>
 </span><span id="line-77"></span><span class="hs-comment">-- https://tools.ietf.org/html/rfc7230#section-3.2.6</span><span>

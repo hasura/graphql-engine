@@ -1,11 +1,11 @@
 This note is in [Hasura.GraphQL.Parser.Class](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Parser/Class.hs#L25).
 It is referenced at:
   - line 54 of [Hasura.GraphQL.Parser.Internal.Types](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Parser/Internal/Types.hs#L54)
+  - line 93 of [Hasura.GraphQL.Parser.Class](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Parser/Class.hs#L93)
   - line 105 of [Hasura.GraphQL.Parser.Monad](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Parser/Monad.hs#L105)
   - line 424 of [Hasura.GraphQL.Parser.Schema](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Parser/Schema.hs#L424)
   - line 772 of [Hasura.GraphQL.Parser.Schema](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Parser/Schema.hs#L772)
   - line 791 of [Hasura.GraphQL.Parser.Schema](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Parser/Schema.hs#L791)
-  - line 93 of [Hasura.GraphQL.Parser.Class](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Parser/Class.hs#L93)
 
 # Tying the knot
 
@@ -13,18 +13,18 @@ GraphQL type definitions can be mutually recursive, and indeed, they quite often
 are! For example, two tables that reference one another will be represented by
 types such as the following:
 
-  type author {
-    id: Int!
-    name: String!
-    articles: [article!]!
-  }
+    type author {
+      id: Int!
+      name: String!
+      articles: [article!]!
+    }
 
-  type article {
-    id: Int!
-    title: String!
-    content: String!
-    author: author!
-  }
+    type article {
+      id: Int!
+      title: String!
+      content: String!
+      author: author!
+    }
 
 This doesn’t cause any trouble if the schema is represented by a mapping from
 type names to type definitions, but the Parser abstraction is all about avoiding
