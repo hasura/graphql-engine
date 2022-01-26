@@ -32,6 +32,7 @@ count (
 - server: fix support for joins in aggregates nodes in BigQuery
 - server: fix for passing input objects in query variables to remote schemas with type name customization (#7977)
 - server: fix REST endpoints with path segments not showing correctly in the OpenAPI spec
+- server: support nested output object types in actions (#4796)
 - console: action/event trigger transforms are now called REST connectors
 - console: fix list of tables (and schemas) being unsorted when creating a new trigger event (fix #6391)
 - cli: migrate and seed subcommands has an option in prompt to choose and apply operation on all available databases
@@ -69,7 +70,6 @@ count (
 - server: support database-to-database joins with BigQuery
 - server: improved startup time when using large remote schemas
 - server: fix rest-endpoints bug allow list arguments (fix #7135)
-- server: support nested output object types in actions (#4796)
 - server: fallback to unauthorized role when JWT is not found in cookie (fix #7272)
 - server: add support for building linux/arm64 docker image (#6337, #1266)
 - server: provide option to explicitly recreate event triggers for sources in the `reload_metadata` API
