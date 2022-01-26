@@ -4,6 +4,19 @@ Graphql-engine integration tests written in Haskell using the [hspec](https://hs
 
 For motivation, rationale, and more, see the [test suite rfc](../../rfcs/hspec-test-suite.md).
 
+**Table of Contents**
+
+- [Running the test suite](#running-the-test-suite)
+- [Test suite structure](#test-suite-structure)
+    - [Harness](#harness)
+    - [Test](#test)
+- [Adding a new test](#adding-a-new-test)
+    - [Specifying backends](#specifying-backends)
+        - [Setup action](#setup-action)
+        - [Teardown action](#teardown-action)
+    - [Writing tests](#writing-tests)
+    - [Style guide](#style-guide)
+
 ## Running the test suite
 
 1. To run the Haskell integration test suite, we'll first need to start the backends:
@@ -53,6 +66,13 @@ For motivation, rationale, and more, see the [test suite rfc](../../rfcs/hspec-t
 
    ```sh
    cabal run tests-hspec -- --help
+   ```
+
+3. The local databases presist even after shutting down docker-compose.
+   If this is undesirable, delete the databases using the following command:
+
+   ```sh
+   docker-compose down --volumes
    ```
 
 ## Test suite structure

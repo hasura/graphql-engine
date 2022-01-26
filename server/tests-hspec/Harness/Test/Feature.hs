@@ -41,7 +41,7 @@ feature Feature {backends, tests} =
           name
           ( aroundAllWith
               ( \actionWith state -> do
-                  finally
+                  finallyRethrow
                     ( do
                         setup state
                         actionWith state
@@ -51,3 +51,33 @@ feature Feature {backends, tests} =
               tests
           )
     )
+
+-- | A custom 'finally' which re-throws exceptions from both the main action and the sequel action.
+--
+--   The standard 'finally' only re-throws the @sequel@ exception.
+finallyRethrow :: IO a -> IO b -> IO a
+finallyRethrow a sequel =
+  mask $ \restore -> do
+    r <-
+      catch
+        (restore a)
+        ( \restoreEx -> do
+            _ <- sequel `catch` (throwIO . Exceptions restoreEx)
+            (throwIO restoreEx)
+        )
+    _ <- sequel
+    pure r
+
+-- | Two exceptions
+data Exceptions
+  = Exceptions SomeException SomeException
+
+instance Show Exceptions where
+  show (Exceptions e1 e2) =
+    unlines
+      [ "1. " <> show e1,
+        "",
+        "2. " <> show e2
+      ]
+
+instance Exception Exceptions
