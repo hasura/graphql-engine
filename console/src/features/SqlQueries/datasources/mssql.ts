@@ -1,4 +1,5 @@
 import type { TableORSchemaArg } from '@/dataSources/types';
+import { QualifiedTable } from '@/metadata/types';
 import { getSchemasWhereClause, getTablesWhereClause } from './common';
 import type { DatasourceSqlQueries } from '.';
 
@@ -189,5 +190,10 @@ FROM sys.objects as obj
   }
   for json path; 
   `;
+  },
+  getTableColumnsSql: ({ name, schema }: QualifiedTable) => {
+    if (!name || !schema) throw Error('empty parameters are not allowed!');
+
+    return `not implemented`;
   },
 };

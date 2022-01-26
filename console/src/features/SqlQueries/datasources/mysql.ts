@@ -1,4 +1,5 @@
 import type { TableORSchemaArg } from '@/dataSources/types';
+import { QualifiedTable } from '@/metadata/types';
 import type { DatasourceSqlQueries } from '.';
 import { getSchemasWhereClause, getTablesWhereClause } from './common';
 
@@ -124,5 +125,10 @@ GROUP BY
   on_update,
   on_delete;
   `;
+  },
+  getTableColumnsSql: ({ name, schema }: QualifiedTable) => {
+    if (!name || !schema) throw Error('empty parameters are not allowed!');
+
+    return `not implemented`;
   },
 };

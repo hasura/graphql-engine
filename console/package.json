@@ -63,6 +63,7 @@
     "@radix-ui/react-collapsible": "^0.1.1",
     "@radix-ui/react-tooltip": "^0.1.0",
     "@reduxjs/toolkit": "^1.5.1",
+    "@testing-library/react-hooks": "^7.0.2",
     "@types/lodash.get": "^4.4.6",
     "ace-builds": "^1.4.11",
     "apollo-link": "1.2.14",
