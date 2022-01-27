@@ -97,7 +97,7 @@ data ParameterizedQueryHashList
     PQHSetBatched ![ParameterizedQueryHash]
   deriving (Show, Eq)
 
--- we use something that explicitly produces an 'J.Object' instead of writing
+-- | we use something that explicitly produces an 'J.Object' instead of writing
 -- a 'J.ToJSON' instance. in the latter case, functions consuming the output of
 -- 'J.toJSON' would have to perform a partial pattern-match on the 'J.Value'
 -- output to extract a JSON object from it. for the other patterns, it would
@@ -154,6 +154,7 @@ normalizeSelectionSet = (normalizeSelection =<<)
       J.Number _ -> G.VNull
       J.Array l -> G.VList $ jsonToNormalizedGQLVal <$> toList l
       J.Object vals -> G.VObject $
+        -- FIXME(#3479): THIS WILL CREATE INVALID GRAPHQL OBJECTS
         Map.fromList $
           flip map (Map.toList vals) $ \(key, val) ->
             (G.unsafeMkName key, jsonToNormalizedGQLVal val)
