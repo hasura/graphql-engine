@@ -116,6 +116,7 @@ data RQLMetadataV1
   | RMDeleteScheduledEvent !DeleteScheduledEvent
   | RMGetScheduledEvents !GetScheduledEvents
   | RMGetEventInvocations !GetEventInvocations
+  | RMGetCronTriggers
   | -- Actions
     RMCreateAction !CreateAction
   | RMDropAction !DropAction
@@ -186,6 +187,7 @@ instance FromJSON RQLMetadataV1 where
       "delete_scheduled_event" -> RMDeleteScheduledEvent <$> args
       "get_scheduled_events" -> RMGetScheduledEvents <$> args
       "get_event_invocations" -> RMGetEventInvocations <$> args
+      "get_cron_triggers" -> pure RMGetCronTriggers
       "create_action" -> RMCreateAction <$> args
       "drop_action" -> RMDropAction <$> args
       "update_action" -> RMUpdateAction <$> args
@@ -341,6 +343,7 @@ queryModifiesMetadata = \case
       RMGetCatalogState _ -> False
       RMExportMetadata _ -> False
       RMGetEventInvocations _ -> False
+      RMGetCronTriggers -> False
       RMGetScheduledEvents _ -> False
       RMCreateScheduledEvent _ -> False
       RMDeleteScheduledEvent _ -> False
@@ -441,6 +444,7 @@ runMetadataQueryV1M env currentResourceVersion = \case
   RMDeleteScheduledEvent q -> runDeleteScheduledEvent q
   RMGetScheduledEvents q -> runGetScheduledEvents q
   RMGetEventInvocations q -> runGetEventInvocations q
+  RMGetCronTriggers -> runGetCronTriggers
   RMCreateAction q -> runCreateAction q
   RMDropAction q -> runDropAction q
   RMUpdateAction q -> runUpdateAction q

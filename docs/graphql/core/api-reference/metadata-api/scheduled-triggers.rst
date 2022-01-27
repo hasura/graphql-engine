@@ -274,3 +274,23 @@ Args syntax
 .. admonition:: Supported from
 
   Scheduled triggers are supported from versions ``v1.3.0`` and above.
+
+.. _metadata_get_cron_triggers:
+
+get_cron_triggers
+-----------------
+
+``get_cron_triggers`` fetches all the cron triggers from the metadata.
+This API also returns the cron triggers which have  ``include_in_metadata``
+set to ``false``, and thus are not exported in the ``export_metadata`` API.
+
+.. code-block:: http
+
+   POST /v1/metadata HTTP/1.1
+   Content-Type: application/json
+   X-Hasura-Role: admin
+
+   {
+       "type" : "get_cron_triggers",
+       "args" : {}
+   }

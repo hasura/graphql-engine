@@ -80,6 +80,7 @@ data RQLMetadataV1
   | RMDeleteScheduledEvent !DeleteScheduledEvent
   | RMGetScheduledEvents !GetScheduledEvents
   | RMGetEventInvocations !GetEventInvocations
+  | RMGetCronTriggers
   | -- Actions
     RMCreateAction !CreateAction
   | RMDropAction !DropAction
