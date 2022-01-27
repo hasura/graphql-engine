@@ -7,6 +7,7 @@
 module Harness.Quoter.Yaml
   ( yaml,
     shouldReturnYaml,
+    shouldReturnOneOfYaml,
   )
 where
 
@@ -26,35 +27,13 @@ import Language.Haskell.TH
 import Language.Haskell.TH.Lift as TH
 import Language.Haskell.TH.Quote
 import System.IO.Unsafe
-import Test.Hspec (shouldBe)
+import Test.Hspec (shouldBe, shouldContain)
 import Text.Libyaml qualified as Libyaml
 import Prelude
 
--- | Exceptions that will be thrown mercilessly.
-data YamlTemplateException
-  = AnchorsAreDisabled
-  | YamlEncodingProblem T.UnicodeException
-  deriving stock (Show)
+-------------------------------------------------------------------
 
-instance Exception YamlTemplateException
-
-deriving instance Lift Libyaml.Event
-
-deriving instance Lift Libyaml.Style
-
-deriving instance Lift Libyaml.Tag
-
-deriving instance Lift Libyaml.SequenceStyle
-
-deriving instance Lift Libyaml.MappingStyle
-
--- | For the test suite: diff structural, but display in a readable
--- way.
-newtype Visual = Visual {unVisual :: Value}
-  deriving (Eq)
-
-instance Show Visual where
-  show = BS8.unpack . Data.Yaml.encode . unVisual
+-- * Expectations
 
 -- | The action @actualIO@ should produce the @expected@ YAML,
 -- represented (by the yaml package) as an aeson 'Value'.
@@ -65,6 +44,20 @@ shouldReturnYaml :: IO Value -> Value -> IO ()
 shouldReturnYaml actualIO expected = do
   actual <- actualIO
   shouldBe (Visual actual) (Visual expected)
+
+-- | The action @actualIO@ should produce the @expected@ YAML,
+-- represented (by the yaml package) as an aeson 'Value'.
+--
+-- We use 'Visual' internally to easily display the 'Value' as YAML
+-- when the test suite uses its 'Show' instance.
+shouldReturnOneOfYaml :: IO Value -> [Value] -> IO ()
+shouldReturnOneOfYaml actualIO expected = do
+  actual <- actualIO
+  shouldContain (map Visual expected) [Visual actual]
+
+-------------------------------------------------------------------
+
+-- * Quasi quoters
 
 yaml :: QuasiQuoter
 yaml =
@@ -119,3 +112,33 @@ processor =
     (Libyaml.EventSequenceStart _ _ (Just {})) -> throwM AnchorsAreDisabled
     (Libyaml.EventMappingStart _ _ (Just {})) -> throwM AnchorsAreDisabled
     event -> pure (TH.lift [event])
+
+-------------------------------------------------------------------
+
+-- * YAML types
+
+-- | Exceptions that will be thrown mercilessly.
+data YamlTemplateException
+  = AnchorsAreDisabled
+  | YamlEncodingProblem T.UnicodeException
+  deriving stock (Show)
+
+instance Exception YamlTemplateException
+
+deriving instance Lift Libyaml.Event
+
+deriving instance Lift Libyaml.Style
+
+deriving instance Lift Libyaml.Tag
+
+deriving instance Lift Libyaml.SequenceStyle
+
+deriving instance Lift Libyaml.MappingStyle
+
+-- | For the test suite: diff structural, but display in a readable
+-- way.
+newtype Visual = Visual {unVisual :: Value}
+  deriving (Eq)
+
+instance Show Visual where
+  show = BS8.unpack . Data.Yaml.encode . unVisual
