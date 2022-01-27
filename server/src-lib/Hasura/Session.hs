@@ -89,9 +89,12 @@ instance ToJSONKey SessionVariable where
 instance ToTxt SessionVariable where
   toTxt = sessionVariableToText
 
--- | converts a `SessionVariable` value to a GraphQL name
-sessionVariableToGraphQLName :: SessionVariable -> G.Name
-sessionVariableToGraphQLName = G.unsafeMkName . T.replace "-" "_" . sessionVariableToText
+-- | Converts a `SessionVariable` value to a GraphQL name.
+-- This will fail if the session variable contains characters that are not valid
+-- for a graphql names. It is the caller's responsibility to decide what to do
+-- in such a case.
+sessionVariableToGraphQLName :: SessionVariable -> Maybe G.Name
+sessionVariableToGraphQLName = G.mkName . T.replace "-" "_" . sessionVariableToText
 
 parseSessionVariable :: Text -> Parser SessionVariable
 parseSessionVariable t =

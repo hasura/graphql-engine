@@ -336,7 +336,8 @@ resolveAsyncActionQuery userInfo annAction =
     mkAnnFldFromPGCol (column', columnType) =
       RS.mkAnnColumnField column' (ColumnScalar columnType) Nothing Nothing
 
-    -- TODO (from master):- Avoid using ColumnInfo
+    -- TODO: avoid using ColumnInfo
+    -- TODO(#3478): avoid using `unsafeMkName`
     mkPGColumnInfo (column', columnType) =
       ColumnInfo
         { ciColumn = column',

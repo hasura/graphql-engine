@@ -158,7 +158,9 @@ resolveRemoteVariable userInfo = \case
     sessionVarVal <-
       onNothing (getSessionVariableValue sessionVar $ _uiSession userInfo) $
         throw400 NotFound $ sessionVar <<> " session variable expected, but not found"
-    let varName = sessionVariableToGraphQLName sessionVar
+    varName <-
+      sessionVariableToGraphQLName sessionVar
+        `onNothing` throw500 ("'" <> sessionVariableToText sessionVar <> "' cannot be made into a valid GraphQL name")
     coercedValue <-
       case presetInfo of
         SessionArgumentPresetScalar ->
@@ -206,7 +208,11 @@ resolveRemoteVariable userInfo = \case
         let i = Map.size varMap + 1
         put . coerce $ Map.insert key i varMap
         pure i
-    let varName = G.unsafeMkName $ "hasura_json_var_" <> tshow index
+    -- This should never fail.
+    let varText = "hasura_json_var_" <> tshow index
+    varName <-
+      G.mkName varText
+        `onNothing` throw500 ("'" <> varText <> "' is not a valid GraphQL name")
     pure $ Variable (VIRequired varName) gtype $ JSONValue jsonValue
   QueryVariable variable -> pure variable
 

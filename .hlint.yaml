@@ -140,3 +140,11 @@
     - warn: {lhs: "Database.MSSQL.unitQueryE id q", rhs: "Database.MSSQL.unitQuery q"}
     - warn: {lhs: "Database.MSSQL.singleRowQueryE id tx pool", rhs: "Database.MSSQL.singleRowQuery tx pool"}
     - warn: {lhs: "Database.MSSQL.multiRowQueryE id tx pool", rhs: "Database.MSSQL.multiRowQuery tx pool"}
+
+- group:
+    name: unsafe
+    enabled: true
+    imports:
+      - package base
+    rules:
+      - suggest: {lhs: "Language.GraphQL.Draft.Syntax.unsafeMkName", rhs: "Language.GraphQL.Draft.Syntax.mkName", note: "avoid unsafeMkName if possible"}

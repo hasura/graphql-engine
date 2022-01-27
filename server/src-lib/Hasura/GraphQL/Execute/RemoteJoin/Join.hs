@@ -131,6 +131,12 @@ processRemoteJoins_ requestId logger env manager reqHdrs userInfo lhs joinTree g
                 (FieldName "__argument_id__")
                 (FieldName "f", _rsjRelationship)
 
+            let fieldNameText = getFieldNameTxt _jalFieldName
+            -- This should never fail, as field names in remote relationships
+            -- are validated when building the schema cache.
+            fieldName <-
+              G.mkName fieldNameText
+                `onNothing` throw500 ("'" <> fieldNameText <> "' is not a valid GraphQL name")
             (_, sourceResponse) <-
               TB.runDBQuery @b
                 requestId
@@ -138,7 +144,7 @@ processRemoteJoins_ requestId logger env manager reqHdrs userInfo lhs joinTree g
                 -- NOTE: We're making an assumption that the 'FieldName' propagated
                 -- upwards from 'collectJoinArguments' is reasonable to use for
                 -- logging.
-                (mkUnNamespacedRootFieldAlias $ G.unsafeMkName . getFieldNameTxt $ _jalFieldName)
+                (mkUnNamespacedRootFieldAlias fieldName)
                 userInfo
                 logger
                 _rsjSourceConfig
