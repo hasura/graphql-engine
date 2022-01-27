@@ -13,10 +13,10 @@ import Hasura.RQL.Types.RemoteSchema
   ( RemoteSchemaInputValueDefinition (RemoteSchemaInputValueDefinition, _rsitdDefinition),
     RemoteSchemaIntrospection (RemoteSchemaIntrospection),
   )
-import Language.GraphQL.Draft.Syntax (ExecutableDefinition, GType, Name, TypeDefinition)
+import Language.GraphQL.Draft.Syntax (ExecutableDefinition, Field, GType, Name, TypeDefinition)
 import Language.GraphQL.Draft.Syntax qualified as G
 
--- | Analyse and FieldAnalysis are almost similar, except, Analyse will have a bool field (in future)
+-- | Analysis and FieldAnalysis are almost similar, except, Analysis will have a bool field (in future)
 --   to indicate whether the GQL query is valid or not
 data Analysis var = Analysis
   { -- | ordered hashmap from the fields to it's definition and analysis
@@ -87,21 +87,23 @@ analyzeGraphqlQuery (G.ExecutableDefinitionOperation (G.OperationDefinitionTyped
   pure Analysis {_aFields = fieldMap, _aVars = varMap, _aErrs = errs}
 analyzeGraphqlQuery _ _ = Nothing
 
+getFieldName :: Field frag var -> Name
+getFieldName f = fromMaybe (G._fName f) (G._fAlias f)
+
 getFieldsMap ::
   RemoteSchemaIntrospection ->
   [(G.OperationType, G.Selection frag var)] ->
-  (InsOrdHashMap Name (FieldDef, Maybe (FieldAnalysis var)), [Text])
+  (InsOrdHashMap FieldName (FieldDef, Maybe (FieldAnalysis var)), [Text])
 getFieldsMap rs ss =
-  let fields = mapMaybe (\(o, s) -> (o,) <$> field s) ss
-      (ps, errs) =
-        foldl'
-          ( \(m, e) (o, f) -> case lookupRoot rs (o, f) of
-              Left x0 -> (safeInsertInFieldMap m (G._fName f, x0), e)
-              Right txts -> (m, e <> txts)
-          )
-          (OMap.empty, [])
-          fields
-   in (ps, errs)
+  foldl'
+    ( \(m, e) (o, f) -> case lookupRoot rs (o, f) of
+        Left x0 -> (safeInsertInFieldMap m (getFieldName f, x0), e)
+        Right txts -> (m, e <> txts)
+    )
+    (OMap.empty, [])
+    fields
+  where
+    fields = mapMaybe (\(o, s) -> (o,) <$> field s) ss
 
 lookupRoot ::
   RemoteSchemaIntrospection ->
@@ -195,15 +197,15 @@ mkFieldAnalysis ::
 -- TODO: Handle `SelectionFragmentSpread` and `SelectionInlineFragment` as well
 mkFieldAnalysis _ (G.SelectionFragmentSpread _) _ = Nothing
 mkFieldAnalysis _ (G.SelectionInlineFragment _) _ = Nothing
-mkFieldAnalysis rs (G.SelectionField sel) fd = do
-  let ag = G._fArguments sel
+mkFieldAnalysis rs (G.SelectionField f) fd = do
+  let ag = G._fArguments f
       ft = G._fldType fd
-      fn = G._fldName fd
+      fn = getFieldName f
       (fFds, fVrs, fErrs) = itrListWith ft \n ->
         case lookupRS rs n of
-          Nothing -> (mempty, mempty, ["Couldn't find definition for type " <> G.unName n <> " in field " <> G.unName fn <> " selected by " <> G.unName (G._fName sel)])
+          Nothing -> (mempty, mempty, ["Couldn't find definition for type " <> G.unName n <> " in field " <> G.unName fn <> " selected by " <> G.unName (G._fName f)])
           Just tDef ->
-            let (def, fAn) = getDefinition rs tDef (G._fSelectionSet sel)
+            let (def, fAn) = getDefinition rs tDef (G._fSelectionSet f)
              in case ft of
                   G.TypeNamed n' _ ->
                     (OMap.singleton fn (FieldInfo n' def, fAn), Map.fromList (getFieldVars fd ag), [])

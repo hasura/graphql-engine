@@ -53,6 +53,8 @@ args:
       queries:
       - name: simple_query
         query: "query { test_table { first_name last_name } }"
+      - name: simple_query_with_aliases
+        query: "query { test: test_table { firstName: first_name lastName: last_name surname: last_name } }"
       - name: query_with_arg
         query: "query ($first_name:String!) { test_table(where: {first_name: { _eq: $first_name } }) { first_name last_name } }"
       - name: query_with_args
