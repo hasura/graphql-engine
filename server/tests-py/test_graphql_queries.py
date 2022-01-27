@@ -99,6 +99,8 @@ class TestGraphQLQueryBasicMySQL:
 
 @pytest.mark.parametrize("transport", ['http', 'websocket'])
 class TestGraphQLEmpty:
+    def test_select_placeholder(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_placeholder.yaml', transport)
 
     def test_no_empty_roots(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/check_no_empty_roots.yaml', transport)
@@ -296,6 +298,9 @@ class TestGraphQLQueryBasicCommon:
 
     def test_select_query_author_pk_null(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/select_query_author_by_pkey_null.yaml', transport)
+
+    def test_select_placeholder_err(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_placeholder_err.yaml', transport)
 
     @classmethod
     def dir(cls):
