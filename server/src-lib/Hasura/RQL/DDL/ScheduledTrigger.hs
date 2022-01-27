@@ -8,6 +8,7 @@ module Hasura.RQL.DDL.ScheduledTrigger
     runGetScheduledEvents,
     runGetEventInvocations,
     populateInitialCronTriggerEvents,
+    runGetCronTriggers,
   )
 where
 
@@ -205,3 +206,12 @@ runGetEventInvocations GetEventInvocations {..} = do
         [ "invocations" J..= invocations,
           "count" J..= count
         ]
+
+-- | Metadata API handler to retrieve all the cron triggers from the metadata
+runGetCronTriggers :: MetadataM m => m EncJSON
+runGetCronTriggers = do
+  cronTriggers <- toList . _metaCronTriggers <$> getMetadata
+  pure $
+    encJFromJValue $
+      J.object
+        ["cron_triggers" J..= cronTriggers]

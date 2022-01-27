@@ -19,6 +19,7 @@ count (
 ### Bug fixes and improvements
 (Add entries below in the order of server, console, cli, docs, others)
 
+- server: add a new metadata API `get_cron_triggers` to fetch all the cron triggers
 - server: add response transforms for actions, events, and triggers
 - server: bigquery: implement `distinct_on`.
 - server: extend transactions to MSSQL GraphQL queries and `mssql_run_sql` /v2/query API
