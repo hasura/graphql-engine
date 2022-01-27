@@ -17,6 +17,9 @@ class TestOpenAPISpec:
     def test_endpoint_simple(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/openapi_get_endpoint_test_simple.yaml', transport)
 
+    def test_endpoint_with_aliases(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/openapi_endpoint_with_aliases.yaml', transport)
+
     def test_endpoint_with_args(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/openapi_post_endpoint_test_with_args.yaml', transport)
 
