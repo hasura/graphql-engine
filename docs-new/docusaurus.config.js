@@ -43,6 +43,12 @@ const config = {
   themeConfig:
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
     ({
+      hideableSidebar: true,
+      announcementBar: {
+        id: 'announcement_banner',
+        content:
+          'So this is an announcement banner, <a target="_blank" rel="noopener noreferrer" href="#">can have links too</a>',
+      },
       navbar: {
         title: '',
         logo: {
