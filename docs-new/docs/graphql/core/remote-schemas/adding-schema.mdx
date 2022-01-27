@@ -48,7 +48,7 @@ Add the required details and click on the `Add Remote Schema` button to merge th
 
 <Thumbnail
   src="/img/graphql/core/remote-schemas/add-remote-schemas-interface.png"
-  alt="Defining a cron trigger"
+  alt="Merge remote schema"
   width="1100px"
 />
 
@@ -57,7 +57,7 @@ Add the required details and click on the `Add Remote Schema` button to merge th
 
 To add a remote schema, edit the `remote_schemas.yaml` file in the `metadata` directory as in this example:
 
-```yaml
+```yaml {1-5}
 - name: my-remote-schema
   definition:
     url: https://graphql-pokemon.now.sh/
@@ -105,7 +105,7 @@ If you are adding the URL using env variable, then run the Hasura docker contain
 
 :::
 
-:::info Using environment variables
+:::note Using environment variables
 
 If you are using environment variables in the remote schema
 configuration - either for URL or headers - **the environment variables
@@ -170,7 +170,7 @@ To achieve this you can use community tooling to write your own client-facing Gr
 
 :::
 
-:::info Additional Resources
+:::note Additional Resources
 
 Data Federation with Hasura - [Watch Webinar](https://hasura.io/events/webinar/data-federation-hasura-graphql/?pg=docs&plcmt=body&cta=watch-webinar&tech=).
 

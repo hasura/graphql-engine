@@ -23,14 +23,14 @@ Remote schema permissions can be defined to:
 1. Expose only certain parts of the remote schema to a role
 2. Preset arguments with static values or session variables for any field.
 
-:::info Supported from
+:::note Supported from
 
 Remote schema permissions are supported in Hasura GraphQL engine
 versions `v2.0.0` and above.
 
 :::
 
-:::info Enable remote schema permissions
+:::note Enable remote schema permissions
 
 Remote schema permissions are **not** enabled by default.
 
@@ -40,7 +40,7 @@ When remote schema permissions are not enabled, all remote schemas are considere
 
 :::
 
-## Role based remote schemas
+## Role based remote schemas {#role-based-remote-schemas}
 
 Role based remote schemas allow you to expose only certain parts of the remote schema . You can choose to remove any fields from objects, interfaces and input object types, doing this will ensure that these fields are not exposed for the role and they will not be able to query the fields that have been hidden.
 
@@ -261,7 +261,7 @@ Add a remote schema as described [here](/graphql/core/remote-schemas/adding-sche
 <Thumbnail
   src="/img/graphql/core/remote-schemas/remote-schemas-user-role.png"
   alt="Opening the remote relationship section"
-  width="1100px"
+  width="1000px"
 />
 
 </TabItem>
@@ -271,13 +271,13 @@ You can add a new role or edit the permissions for an existing role by editing t
 
 Add the subset of the remote schema that the role is allowed to access and set any presets.
 
-```yaml
+```yaml {7-24}
 - name: countries    
   definition:   
     url: https://countries.trevorblades.com/
     timeout_seconds: 60
   comment: "remote schema permissions for role: user"         
-  permissions:  
+  permissions: 
    - role: user  
      definition:
        schema: |-        
@@ -336,13 +336,12 @@ Head to the `API` section. Add the session variable `X-Hasura-Role` with the val
 
 <Thumbnail
   src="/img/graphql/core/remote-schemas/role-based-schema.png"
-  alt="Defining a cron trigger"
   width="1100px"
 />
 
 As we see, the role `user` has access restricted to certain fields of the remote schema.
 
-:::info Additional Resources
+:::note Additional Resources
 
 Data Federation with Hasura - [Watch Webinar](https://hasura.io/events/webinar/data-federation-hasura-graphql/?pg=docs&plcmt=body&cta=watch-webinar&tech=).
 
