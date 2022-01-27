@@ -3,7 +3,7 @@ args:
 - type: create_remote_relationship
   args:
     name: remoteUsers
-    table: profiles
+    table: {schema: custom, name: profiles}
     hasura_fields:
       - id
     remote_schema: my-remote-schema
@@ -15,7 +15,7 @@ args:
 - type: create_remote_relationship
   args:
     name: remoteUsersMultipleIds
-    table: profiles
+    table: {schema: custom, name: profiles}
     hasura_fields:
       - id
     remote_schema: my-remote-schema

@@ -1,29 +1,29 @@
-description: Select metadata on articles for remote
+description:
+  Check that we do not generate an invalid graphql name in remote relationships
+  when the table is in a custom schema.
 url: /v1/graphql
 status: 200
 response:
   data:
     __type:
-      name: custom_profiles
+      name: custom_authors
       fields:
       - name: id
         args: []
-      - name: messageBasic
+      - name: name
         args: []
-      - name: messagesNestedArgs
+      - name: userInfo
         args:
         - name: includes
           type:
             name: IncludeInpObj
         - name: where
           type:
-            name: MessageWhereInpObj_remote_rel_custom_profilesmessagesNestedArgs
-      - name: name
-        args: []
+            name: MessageWhereInpObj_remote_rel_custom_authorsuserInfo
 query:
   query: |
     query {
-      __type(name: "custom_profiles") {
+      __type(name: "custom_authors") {
         name
         fields {
           name
