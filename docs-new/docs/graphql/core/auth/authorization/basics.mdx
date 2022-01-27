@@ -37,7 +37,7 @@ Limit access to a subset of the rows in the table based on this
 permission. Row-level permissions are essentially boolean expressions
 that, when evaluated against any row, determine access to it. These
 permissions are constructed from the values in columns,
-[session variables](/graphql/core/auth/authorization/roles-variables.mdx/) and static values to build this
+[session variables](/graphql/core/auth/authorization/roles-variables.mdx) and static values to build this
 boolean expression.
 
 **Column-level permissions**
@@ -45,9 +45,9 @@ boolean expression.
 For the rows that are accessible based on the above, limit access to a
 subset of the columns based on this permission rule.
 
-:::info More information
+:::note More information
 
-For details on all the configuration options, see [Configuring permission rules](/graphql/core/auth/authorization/permission-rules.mdx/).
+For details on all the configuration options, see [Configuring permission rules](/graphql/core/auth/authorization/permission-rules.mdx).
 
 :::
 
@@ -89,7 +89,7 @@ permissions.
 
 <Thumbnail
   src="/img/graphql/core/auth/fetch-authors.png"
-  alt="Authentication and authorization with Hasura"
+  alt="Run a query without access control"
   width="1200px"
 />
 
@@ -107,7 +107,7 @@ below:
 
 <Thumbnail
   src="/img/graphql/core/auth/permission-basics-simple-example.png"
-  alt="Opening the remote relationship section"
+  alt="Define access control rules"
   width="1100px"
 />
 
@@ -208,7 +208,7 @@ Read about roles and session variables at: [Roles & Session variables](/graphql/
 See more detailed examples at:
 [Common access control examples](/graphql/core/auth/authorization/common-roles-auth-examples.mdx)
 
-:::info Additional Resources
+:::note Additional Resources
 
 Enterprise Grade Authorization - [Watch
 Webinar](https://hasura.io/events/webinar/authorization-modeling-hasura/?pg=docs&plcmt=body&cta=watch-webinar&tech=).

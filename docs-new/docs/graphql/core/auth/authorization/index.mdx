@@ -19,7 +19,7 @@ Hasura supports **role-based** authorization where access control is
 done by creating rules for each role, table and operation (*insert*,
 *update*, etc.). These access control rules use dynamic session
 variables that are passed to the GraphQL engine from your
-[authentication service](/graphql/core/auth/authentication/index.mdx/) with every request. Role
+[authentication service](/graphql/core/auth/authentication/index.mdx) with every request. Role
 information is inferred from the `X-Hasura-Role` and
 `X-Hasura-Allowed-Roles` session variables. Other session variables can
 be passed by your auth service as per your requirements.
@@ -32,7 +32,7 @@ be passed by your auth service as per your requirements.
   width="800px"
 />
 
-:::info Note
+:::note Note
 
 Hasura roles and permissions are implemented at the Hasura layer. They
 have nothing to do with Postgres roles and users.
@@ -56,14 +56,14 @@ Follow the example at [access control basics](/graphql/core/auth/authorization/b
 
 **See:**
 
-- [Access control basics](/graphql/core/auth/authorization/basics.mdx/)
-- [Roles & Session variables](/graphql/core/auth/authorization/roles-variables.mdx/)
-- [Inherited roles](/graphql/core/auth/authorization/roles-variables.mdx/)
-- [Configuring permission rules](/graphql/core/auth/authorization/permission-rules.mdx/)
-- [Access control examples](/graphql/core/auth/authorization/common-roles-auth-examples.mdx/)
-- [Multiple column + row permissions for the same role](/graphql/core/auth/authorization/common-roles-auth-examples.mdx/)
+- [Access control basics](/graphql/core/auth/authorization/basics.mdx)
+- [Roles & Session variables](/graphql/core/auth/authorization/roles-variables.mdx)
+- [Inherited roles](/graphql/core/auth/authorization/inherited-roles.mdx)
+- [Configuring permission rules](/graphql/core/auth/authorization/permission-rules.mdx)
+- [Access control examples](/graphql/core/auth/authorization/common-roles-auth-examples.mdx)
+- [Multiple column + row permissions for the same role](/graphql/core/auth/authorization/role-multiple-rules.mdx)
 
-:::info API limits and access controls in Hasura Cloud
+:::note API limits and access controls in Hasura Cloud
 
 Additional access controls and API limits like maximum query depth can
 be found in Hasura Cloud. See more at
@@ -71,7 +71,7 @@ be found in Hasura Cloud. See more at
 
 :::
 
-:::info Additional Resources
+:::note Additional Resources
 
 Enterprise Grade Authorization - [Watch Webinar](https://hasura.io/events/webinar/authorization-modeling-hasura/?pg=docs&plcmt=body&cta=watch-webinar&tech=).
 

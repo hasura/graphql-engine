@@ -25,7 +25,7 @@ all incoming requests to the Hasura GraphQL engine server.
   width="1000px"
 />
 
-:::info Prerequisite
+:::note Prerequisite
 
 It is mandatory to first
 [secure your GraphQL endpoint](/graphql/core/deployment/securing-graphql-endpoint.mdx) for the
@@ -54,7 +54,7 @@ In webhook mode, on a secured endpoint:
     the `HASURA_GRAPHQL_AUTH_HOOK_MODE` environment variable (*in
     addition to those specified above; see* [GraphQL engine server options](/graphql/core/deployment/graphql-engine-flags/reference.mdx)).
 
-:::info Note
+:::note Note
 
 If you are running Hasura using Docker, ensure that the Hasura Docker
 container can reach the webhook. See [this page](/graphql/core/guides/docker-networking.mdx) for
@@ -129,7 +129,7 @@ Content-Type: application/json
 If you configure your webhook to use `POST`, then Hasura **will send all
 client headers in payload**.
 
-:::info Note
+:::note Note
 
 If an invalid JSON request is sent, then the request body is not
 forwarded to the webhook
@@ -156,7 +156,7 @@ Content-Type: application/json
 }
 ```
 
-:::info Note
+:::note Note
 
 All values should be `String`. They will be converted to the right type
 automatically.
@@ -197,7 +197,7 @@ Content-Type: application/json
 }
 ```
 
-:::info Note
+:::note Note
 
 If the <span class="title-ref">Set-Cookie</span> headers are set by the
 auth webhook, they are forwarded by the GraphQL Engine as response
@@ -214,7 +214,7 @@ exception.
 HTTP/1.1 401 Unauthorized
 ```
 
-:::info Note
+:::note Note
 
 Anything other than a `200` or `401` response from webhook makes the
 server raise a `500 Internal Server Error` exception.
@@ -236,14 +236,14 @@ webhook in the GraphQL engine:
 -   `/simple/webhook` ([View source](https://github.com/hasura/graphql-engine/blob/master/community/boilerplates/auth-webhooks/nodejs-express/server.js))
 -   `/firebase/webhook` ([View source](https://github.com/hasura/graphql-engine/blob/master/community/boilerplates/auth-webhooks/nodejs-firebase/firebase/firebaseHandler.js))
 
-:::info Note
+:::note Note
 
 If you are using `Firebase`, you will have to set the associated
 environment variables.
 
 :::
 
-:::info Additional Resources
+:::note Additional Resources
 
 Enterprise Grade Authorization - [Watch Webinar](https://hasura.io/events/webinar/authorization-modeling-hasura/?pg=docs&plcmt=body&cta=watch-webinar&tech=).
 

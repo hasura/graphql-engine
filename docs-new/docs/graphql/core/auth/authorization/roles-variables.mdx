@@ -48,7 +48,7 @@ Examples:
 </tbody>
 </table>
 
-See [this page](/graphql/core/auth/authorization/permission-rules.mdx/) on how to configure permission rules.
+See [this page](/graphql/core/auth/authorization/permission-rules.mdx) on how to configure permission rules.
 
 :::info Role-based schemas
 
@@ -58,7 +58,7 @@ mutations that are available to that role.
 
 :::
 
-## Dynamic session variables
+## Dynamic session variables {#dynamic_session_variables}
 
 Permission rules can also refer to *session variables*. Session
 variables are key-value pairs returned from the authentication service
@@ -98,7 +98,7 @@ Examples:
 <td><p><code>user_id</code> column is equal to <code>session-user-id</code> from a request</p></td>
 <td>
 
-```
+```json
 {
   "user_id": {
     "_eq": "X-Hasura-User-Id"
@@ -114,7 +114,7 @@ Examples:
 <td><p><code>project_id</code> column is equal to <code>project-id</code> of the "session user"</p></td>
 <td>
 
-```
+```json
 {
   "project_id": {
     "_eq": "X-Hasura-Project-Id"
@@ -176,7 +176,7 @@ _roles_, `repositories` _table and_ `select` _operation_):
 <td><p>Allow access to personally created repositories</p></td>
 <td>
 
-```
+```json
 {
   "creator_id": {
     "_eq": "X-Hasura-User-Id"
@@ -191,7 +191,7 @@ _roles_, `repositories` _table and_ `select` _operation_):
 <td><p>Allow access to personally created repositories and the organisation's repositories</p></td>
 <td>
 
-```
+```json
 {
   "_or": [
     {

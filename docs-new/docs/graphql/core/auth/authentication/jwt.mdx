@@ -36,7 +36,7 @@ request, then the default role is applied. If the authorization passes,
 then all of the `x-hasura-*` values in the claim are used for the
 permissions system.
 
-:::info Prerequisite
+:::note Prerequisite
 
 It is mandatory to first
 [secure your GraphQL endpoint](/graphql/core/deployment/securing-graphql-endpoint.mdx) for the JWT
@@ -110,7 +110,7 @@ while starting the server.
 **Note**: `x-hasura-default-role` and `x-hasura-allowed-roles` are
 mandatory, while the rest of them are optional.
 
-:::info Note
+:::note Note
 
 All `x-hasura-*` values should be of type `String`, they will be
 converted to the right type automatically.
@@ -270,7 +270,7 @@ set to `$.hasura.claims`:
 }
 ```
 
-:::info Note
+:::note Note
 
 The JWT config can only have one of `claims_namespace` or
 `claims_namespace_path` values set. If neither keys are set, then the
@@ -357,7 +357,7 @@ or
 }
 ```
 
-:::info Important!
+:::danger Important!
 
 Certain JWT providers share JWKs between multiple tenants. They use the
 `aud` claim of JWT to specify the intended audience for the JWT. Setting
@@ -391,7 +391,7 @@ Examples:
 }
 ```
 
-:::info Note
+:::note Note
 
 Certain providers require you to verify the `iss` claim on the JWT. To
 do that you can set this field to the appropriate value.
@@ -705,7 +705,7 @@ If you are using Firebase and Hasura, use this config:
 
 ### Auth0 {#auth0-issues}
 
-Refer the [Auth0 JWT Integration guide](https://hasura.io/docs/latest/graphql/core/guides/integrations/auth0-jwt.mdx#guides-auth0-jwt) for a full
+Refer the Refer the [Auth0 JWT Integration guide](https://hasura.io/docs/latest/graphql/core/guides/integrations/auth0-jwt.mdx#guides-auth0-jwt) for a full
 integration guide with Auth0.
 
 Auth0 publishes their JWK under:
@@ -778,7 +778,7 @@ instructions in the READMEs of the repositories to get started.
     Barebones example to show how to have Firebase Auth integrated with
     Hasura JWT mode
 
-:::info Additional Resources
+:::note Additional Resources
 
 Enterprise Grade Authorization - [Watch Webinar](https://hasura.io/events/webinar/authorization-modeling-hasura/?pg=docs&plcmt=body&cta=watch-webinar&tech=).
 

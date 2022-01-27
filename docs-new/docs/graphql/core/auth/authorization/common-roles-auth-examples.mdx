@@ -22,7 +22,7 @@ throughout this guide.
 
 Here are some examples of common use cases.
 
-## Anonymous (not logged in) users
+## Anonymous (not logged in) users {#anonymous-users-example}
 
 -   Create a role called `anonymous` (this value is up to you, you could
     even name the role `public`).
@@ -109,7 +109,7 @@ related table. In this case, let's say there is an `article` table and a
   width="1300px"
 />
 
-## Multiple roles per user
+## Multiple roles per user {#nested-object-permissions-example}
 
 Sometimes your data/user model requires that:
 
@@ -393,13 +393,12 @@ access to it_".
     need to restrict access to certain columns only:
 
 <Thumbnail
-  src="/img/graphql/core/auth/permissions-rule-analogy.png"
-  alt="Understanding access control in Hasura"
+  src="/img/graphql/core/auth/multirole-example-editor-update.png"
+  alt="Column access for the role editor"
 />
 
-:::note Additional Resources
+:::info Additional Resources
 
-Enterprise Grade Authorization - [Watch
-Webinar](https://hasura.io/events/webinar/authorization-modeling-hasura/?pg=docs&plcmt=body&cta=watch-webinar&tech=).
+Enterprise Grade Authorization - [Watch Webinar](https://hasura.io/events/webinar/authorization-modeling-hasura/?pg=docs&plcmt=body&cta=watch-webinar&tech=).
 
 :::
