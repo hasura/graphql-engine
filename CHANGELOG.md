@@ -19,6 +19,7 @@ count (
 ### Bug fixes and improvements
 (Add entries below in the order of server, console, cli, docs, others)
 
+- server: fix invalid GraphQL name in the schema arising from a remote relationship from a table in a custom schema
 - server: add a new metadata API `get_cron_triggers` to fetch all the cron triggers
 - server: add response transforms for actions, events, and triggers
 - server: bigquery: implement `distinct_on`.

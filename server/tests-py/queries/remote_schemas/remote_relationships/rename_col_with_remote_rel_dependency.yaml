@@ -4,14 +4,14 @@
   query:
     type: run_sql
     args:
-      sql: ALTER TABLE profiles rename column id to profile_id
+      sql: ALTER TABLE custom.profiles rename column id to profile_id
 
 - description: Check if the remote relationship works after renaming the column
   url: /v1/graphql
   status: 200
   response:
     data:
-      profiles:
+      custom_profiles:
         - profile_id: 1
           messagesNestedArgs:
             - id: 1
@@ -25,7 +25,7 @@
   query:
     query: |
       query {
-        profiles {
+        custom_profiles {
           profile_id
           messagesNestedArgs(where: { name: { eq:  "alice" } }) {
             id

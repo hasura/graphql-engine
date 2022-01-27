@@ -185,7 +185,7 @@ class TestRemoteRelationshipPermissions:
     # Test queries that combine several remote relationships, nested in
     # different ways, variously filtering different bits using permissions.
     def test_complex_multiple_joins(self, hge_ctx):
-        st_code, resp = hge_ctx.v1q_f(self.dir() + '../../remote_relationships/setup_multiple_remote_rel.yaml')
+        st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_multiple_remote_rel.yaml')
         assert st_code == 200, resp
         check_query_f(hge_ctx, self.dir() + 'complex_multiple_joins.yaml')
 

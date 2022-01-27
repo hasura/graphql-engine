@@ -18,14 +18,16 @@ args:
 - type: run_sql
   args:
     sql: |
-      create table profiles (
+      create schema custom;
+      create table custom.profiles (
           id serial primary key,
           name text
       );
-      insert into profiles (name) values
+      insert into custom.profiles (name) values
       ( 'alice' ),
       ( 'bob' ),
       ( 'alice');
+
       create table authors (
          id serial primary key,
          name text
@@ -62,7 +64,7 @@ args:
 
 - type: track_table
   args:
-    schema: public
+    schema: custom
     name: profiles
 
 - type: add_remote_schema

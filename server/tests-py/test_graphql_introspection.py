@@ -1,8 +1,16 @@
 import pytest
 from ruamel.yaml import YAML
 from validate import check_query_f, check_query
+from remote_server import NodeGraphQL
 
 yaml=YAML(typ='safe', pure=True)
+
+@pytest.fixture(scope="module")
+def graphql_service():
+    svc = NodeGraphQL(["node", "remote_schemas/nodejs/index.js"])
+    svc.start()
+    yield svc
+    svc.stop()
 
 @pytest.mark.usefixtures('per_class_tests_db_state')
 class TestGraphqlIntrospection:
@@ -52,6 +60,15 @@ def getTypeNameFromType(typeObject):
         return getTypeNameFromType(typeObject['ofType'])
     else:
         raise Exception("typeObject doesn't have name and ofType is not an object")
+
+@pytest.mark.usefixtures('per_class_tests_db_state', 'graphql_service')
+class TestRemoteRelationshipsGraphQLNames:
+    @classmethod
+    def dir(cls):
+        return "queries/graphql_introspection/remote_relationships"
+
+    def test_relation_from_custom_schema_has_correct_name(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/relation_custom_schema_has_correct_name.yaml")
 
 @pytest.mark.usefixtures('per_class_tests_db_state')
 class TestGraphqlIntrospectionWithCustomTableName:

@@ -6,7 +6,7 @@
     X-Hasura-User-Id: '1'
   response:
     data:
-      profiles:
+      custom_profiles:
         - id: 1
           profile_name: alice
           messageBasic:
@@ -14,7 +14,7 @@
   query:
     query: |
       query {
-        profiles {
+        custom_profiles {
           id
           profile_name
           messageBasic {
@@ -31,14 +31,14 @@
     X-Hasura-User-Id: '2'
   response:
     data:
-      profiles:
+      custom_profiles:
         - id: 2
           messageBasic:
             name: bob
   query:
     query: |
       query {
-        profiles {
+        custom_profiles {
           id
           messageBasic {
             name

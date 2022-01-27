@@ -302,10 +302,8 @@ stripObject name lhsIdentifier schemaDoc originalGtype templateArguments =
         Just (G.TypeDefinitionInputObject originalInpObjTyInfo) -> do
           let originalSchemaArguments =
                 mapFromL (G._ivdName . _rsitdDefinition) $ G._iotdValueDefinitions originalInpObjTyInfo
-              newNamedType =
-                renameNamedType
-                  (renameTypeForRelationship name lhsIdentifier)
-                  originalNamedType
+          newNamedType <-
+            renameTypeForRelationship name lhsIdentifier originalNamedType
           newSchemaArguments <-
             stripInMap
               name
@@ -324,19 +322,24 @@ stripObject name lhsIdentifier schemaDoc originalGtype templateArguments =
         _ -> lift (Left (InvalidGTypeForStripping originalGtype))
     _ -> lift (Left (InvalidGTypeForStripping originalGtype))
 
--- -- | Produce a new name for a type, used when stripping the schema
--- -- types for a remote relationship.
--- TODO: Consider a separator character to avoid conflicts. (from master)
-renameTypeForRelationship :: RelName -> LHSIdentifier -> Text -> Text
-renameTypeForRelationship relName (LHSIdentifier lhsIdentifier) text =
-  text <> "_remote_rel_" <> name
-  where
-    name = lhsIdentifier <> relNameToTxt relName
-
--- | Rename a type.
-renameNamedType :: (Text -> Text) -> G.Name -> G.Name
-renameNamedType rename =
-  G.unsafeMkName . rename . G.unName
+-- | Produce a new name for a type, used when stripping the schema
+-- types for a remote relationship.
+-- TODO: Consider a separator character to avoid conflicts.
+renameTypeForRelationship ::
+  MonadError ValidationError m =>
+  RelName ->
+  LHSIdentifier ->
+  G.Name ->
+  m G.Name
+renameTypeForRelationship (relNameToTxt -> relTxt) lhsIdentifier name = do
+  lhsName <-
+    lhsIdentifierToGraphQLName lhsIdentifier
+      `onNothing` throwError (InvalidGraphQLName $ getLHSIdentifier lhsIdentifier)
+  relName <-
+    G.mkName relTxt
+      `onNothing` throwError (InvalidGraphQLName relTxt)
+  pure $
+    name <> $$(G.litName "_remote_rel_") <> lhsName <> relName
 
 -- | Convert a field name to a variable name.
 hasuraFieldToVariable ::

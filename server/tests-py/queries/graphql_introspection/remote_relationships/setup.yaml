@@ -1,0 +1,44 @@
+type: bulk
+args:
+
+- type: run_sql
+  args:
+    sql: |
+      create schema custom;
+      create table custom.authors (
+          id serial primary key,
+          name text
+      );
+      insert into custom.authors (name) values
+        ( 'alice' ),
+        ( 'bob' ),
+        ( 'carlos' ),
+        ( 'david' ),
+        ( 'emily' ),
+        ( 'fiona' );
+
+- type: track_table
+  args:
+    schema: custom
+    name: authors
+
+- type: add_remote_schema
+  args:
+    name: my-remote-schema
+    definition:
+      url: http://localhost:4000
+      forward_client_headers: false
+
+- type: create_remote_relationship
+  args:
+    name: userInfo
+    table: {schema: custom, name: authors}
+    hasura_fields:
+      - id
+    remote_schema: my-remote-schema
+    remote_field:
+      messages:
+        arguments:
+          where:
+            id:
+              eq: "$id"

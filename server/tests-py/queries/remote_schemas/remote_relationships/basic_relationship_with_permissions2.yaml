@@ -6,11 +6,11 @@ headers:
   X-Hasura-User-Id: '1'
 response:
   data:
-    profiles: []
+    custom_profiles: []
 query:
   query: |
     query {
-      profiles(where: { id: {_eq: 2} }) {
+      custom_profiles(where: { id: {_eq: 2} }) {
         id
         messageBasic {
           name

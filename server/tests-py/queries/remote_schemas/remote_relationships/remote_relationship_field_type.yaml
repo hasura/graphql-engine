@@ -5,7 +5,7 @@ status: 200
 query:
   query: |
     query {
-      profiles_type: __type(name: "profiles"){
+      custom_profiles_type: __type(name: "custom_profiles"){
         fields{
           name
           type{
@@ -16,7 +16,7 @@ query:
     }
 response:
   data:
-    profiles_type:
+    custom_profiles_type:
       fields:
       - name: id
         type:
