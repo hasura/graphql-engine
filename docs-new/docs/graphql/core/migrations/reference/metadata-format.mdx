@@ -45,7 +45,7 @@ version of the metadata files.
 
 :::
 
-### actions.graphql
+### actions.graphql {#actionsgraphql}
 
 The `actions.graphql` file contains all the [actions](/graphql/core/actions/index.mdx)
 definitions and [custom type](/graphql/core/actions/types/index.mdx) definitions.
@@ -65,7 +65,7 @@ type SampleOutput {
 }
 ```
 
-### actions.yaml
+### actions.yaml {#actionsyaml}
 
 The `actions.yaml` file contains metadata related to [actions](/graphql/core/actions/index.mdx).
 
@@ -114,7 +114,7 @@ custom_types:
   scalars: []
 ```
 
-### allow_list.yaml
+### allow_list.yaml {#allow_listyaml}
 
 The `allow_list.yaml` file contains the metadata related to [allow lists](/graphql/core/deployment/allow-list.mdx).
 
@@ -125,7 +125,7 @@ allow-list.
 - collection: allowed-queries
 ```
 
-### cron_triggers.yaml
+### cron_triggers.yaml {#cron_triggersyaml}
 
 The `cron_triggers.yaml` file contains metadata related to [cron triggers](/graphql/core/scheduled-triggers/create-cron-trigger.mdx). The `webhook` can be an HTTP
 endpoint or an environment variable containing the HTTP endpoint.
@@ -154,7 +154,7 @@ option of `events` on the console or `include_in_metadata` is passed as
 
 :::
 
-### query_collections.yaml
+### query_collections.yaml {#query_collectionsyaml}
 
 The `query_collections.yaml` file contains metadata information about
 [query collections](/graphql/core/api-reference/metadata-api/query-collections.mdx).
@@ -185,7 +185,7 @@ contains two queries `test` and `test2`.
           }
 ```
 
-### remote_schemas.yaml
+### remote_schemas.yaml {#remote_schemasyaml}
 
 The `remote_schemas.yaml` file contains the metadata related to [remote schemas](/graphql/core/remote-schemas/index.mdx).
 
@@ -209,7 +209,7 @@ as environment variable.
     timeout_seconds: 40
 ```
 
-### version.yaml
+### version.yaml {#versionyaml}
 
 The `version.yaml` file contains the metadata format version.
 
@@ -217,7 +217,7 @@ The `version.yaml` file contains the metadata format version.
 version: 3
 ```
 
-### databases
+### databases {#databases}
 
 ```bash
 metadata
@@ -235,7 +235,7 @@ metadata
 └── version.yaml
 ```
 
-### databases.yaml
+### databases.yaml {#databasesyaml}
 
 ```yaml
 - name: default
@@ -263,7 +263,7 @@ database_url:
 
 :::
 
-### public_t1.yaml
+### public_t1.yaml {#public_t1yaml}
 
 ```yaml
 table:

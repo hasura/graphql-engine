@@ -60,7 +60,7 @@ If this is set in YAML, make sure you quote the word false, i.e.
 
 Follow the instructions in [Installing the Hasura CLI](/graphql/core/hasura-cli/install-hasura-cli.mdx).
 
-## Step 2: Set up a project directory
+## Step 2: Set up a project directory {#migrations-project-init}
 
 For the endpoint referred here, let's say you've deployed the GraphQL
 engine on Hasura Cloud, then this endpoint is:
@@ -107,7 +107,7 @@ git add .
 git commit -m "hasura project init"
 ```
 
-## Step 3: Initialize the migrations and metadata as per your current state
+## Step 3: Initialize the migrations and metadata as per your current state {#migrations_initialize}
 
 If you have already set up your database and GraphQL API, you need to
 initialize your database migrations and Hasura metadata with the current
@@ -179,7 +179,7 @@ git commit -m "initialize migrations and metadata"
 
 :::info note
 
-The version control set up should typically be done right after [Step 2](#step-2-set-up-a-project-directory)
+The version control set up should typically be done right after [Step 2](#migrations-project-init)
 
 :::
 

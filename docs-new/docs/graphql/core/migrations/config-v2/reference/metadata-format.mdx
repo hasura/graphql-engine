@@ -31,12 +31,11 @@ your project:
 - [actions.yaml](#actionsyaml)
 - [allow_list.yaml](#allow_listyaml)
 - [cron_triggers.yaml](#cron_triggersyaml)
+- [functions.yaml](#functions-yaml)
 - [query_collections.yaml](#query_collectionsyaml)
 - [remote_schemas.yaml](#remote_schemasyaml)
+- [tables.yaml](#tables-yaml)
 - [version.yaml](#versionyaml)
-- [databases](#databases)
-- [databases.yaml](#databasesyaml)
-- [public_t1.yaml](#public_t1yaml)
 
 :::info Note
 
@@ -45,7 +44,7 @@ version of the metadata files.
 
 :::
 
-### actions.graphql
+### actions.graphql {#actionsgraphql}
 
 The `actions.graphql` file contains all the [actions](/graphql/core/actions/index.mdx)
 definitions and [custom type](/graphql/core/actions/types/index.mdx) definitions.
@@ -65,7 +64,7 @@ type SampleOutput {
 }
 ```
 
-### actions.yaml
+### actions.yaml {#actionsyaml}
 
 The `actions.yaml` file contains metadata related to [actions](/graphql/core/actions/index.mdx).
 
@@ -114,7 +113,7 @@ custom_types:
   scalars: []
 ```
 
-### allow_list.yaml
+### allow_list.yaml {#allow_listyaml}
 
 The `allow_list.yaml` file contains the metadata related to [allow lists](/graphql/core/deployment/allow-list.mdx).
 
@@ -125,7 +124,7 @@ allow-list.
 - collection: allowed-queries
 ```
 
-### cron_triggers.yaml
+### cron_triggers.yaml {#cron_triggersyaml}
 
 The `cron_triggers.yaml` file contains metadata related to [cron triggers](/graphql/core/scheduled-triggers/create-cron-trigger.mdx). The `webhook` can be an HTTP
 endpoint or an environment variable containing the HTTP endpoint.
@@ -154,7 +153,7 @@ option of `events` on the console or `include_in_metadata` is passed as
 
 :::
 
-### functions.yaml
+### functions.yaml {#functions-yaml}
 
 Contains the metadata related to [custom functions](/graphql/core/databases/postgres/schema/custom-functions.mdx).
 
@@ -166,7 +165,7 @@ Contains the metadata related to [custom functions](/graphql/core/databases/post
   name: search_books
 ```
 
-### query_collections.yaml
+### query_collections.yaml {#query_collectionsyaml}
 
 The `query_collections.yaml` file contains metadata information about
 [query collections](/graphql/core/api-reference/metadata-api/query-collections.mdx).
@@ -197,7 +196,7 @@ contains two queries `test` and `test2`.
           }
 ```
 
-### remote_schemas.yaml
+### remote_schemas.yaml {#remote_schemasyaml}
 
 The `remote_schemas.yaml` file contains the metadata related to [remote schemas](/graphql/core/remote-schemas/index.mdx).
 
@@ -221,7 +220,7 @@ as environment variable.
     timeout_seconds: 40
 ```
 
-### tables.yaml
+### tables.yaml {#tables-yaml}
 
 The `tables.yaml` file contains metadata related to [tables](/graphql/core/databases/postgres/schema/tables.mdx).
 
@@ -303,7 +302,7 @@ relationships and an event trigger defined on the `authors` table.
         foreign_key_constraint_on: author_id
 ```
 
-### version.yaml
+### version.yaml {#versionyaml}
 
 The `version.yaml` file contains the metadata format version.
 

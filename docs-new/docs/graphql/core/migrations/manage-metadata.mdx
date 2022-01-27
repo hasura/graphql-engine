@@ -29,7 +29,7 @@ file can be later imported to another Hasura instance to get the same
 configuration. You can also manually edit the metadata file to add more
 objects to it and then use it to update the instance.
 
-## Exporting Hasura metadata
+## Exporting Hasura metadata {#exporting_metadata}
 
 <Tabs className="api-tabs">
 <TabItem value="cli" label="CLI">
@@ -84,7 +84,7 @@ via the CLI or the [cli migrations](/graphql/core/migrations/advanced/auto-apply
 
 :::
 
-## Applying/Importing Hasura metadata
+## Applying/Importing Hasura metadata {#applying_metadata}
 
 You can apply exported metadata from one Hasura GraphQL engine instance
 to another. You can also apply an older or modified version of an
@@ -145,7 +145,7 @@ Postgres schema first, before importing the metadata.
 
 :::
 
-## Reloading Hasura metadata
+## Reloading Hasura metadata {#reload_metadata_manual}
 
 In some cases, the metadata can be out of sync with the Postgres schema.
 For example, when a new column has been added to a table via an external
@@ -200,7 +200,7 @@ you need to reload metadata again.
 
 :::
 
-## Resetting Hasura metadata
+## Resetting Hasura metadata {#reset_metadata_manual}
 
 Resetting GraphQL engine's metadata is an irreversible process. It is
 recommended to first export the metadata so that it can be reapplied if
