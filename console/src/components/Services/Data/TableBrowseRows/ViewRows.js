@@ -173,7 +173,7 @@ const ViewRows = props => {
       let sortIcon = 'fa-sort';
       if (curQuery.order_by && curQuery.order_by.length) {
         curQuery.order_by.forEach(orderBy => {
-          if (orderBy.column === columnName) {
+          if (orderBy.column === col.id) {
             sortIcon = orderBy.type === 'asc' ? 'fa-caret-up' : 'fa-caret-down';
           }
         });
@@ -188,9 +188,9 @@ const ViewRows = props => {
           </div>
         ),
         accessor: columnName,
-        id: columnName,
+        id: col.id,
         foldable: true,
-        width: getColWidth(columnName, curRows),
+        width: getColWidth(col.id, curRows),
       });
     });
 
@@ -516,10 +516,13 @@ const ViewRows = props => {
             return {
               ...col,
               column_name:
-                _tableSchema.configuration.custom_column_names[col.column_name],
+                _tableSchema.configuration?.custom_column_names[
+                  col?.column_name
+                ],
+              id: col?.column_name,
             };
           }
-          return col;
+          return { ...col, id: col.column_name };
         })
         .forEach(col => {
           const columnName = col.column_name;
@@ -539,7 +542,7 @@ const ViewRows = props => {
            * */
 
           const getColCellContent = () => {
-            const rowColumnValue = row[columnName];
+            const rowColumnValue = row[col.id];
 
             let cellValue = '';
             let cellTitle = '';
@@ -659,12 +662,13 @@ const ViewRows = props => {
           ...col,
           column_name:
             tableSchema.configuration.custom_column_names[col.column_name],
+          id: col.column_name,
         };
       }
-      return col;
+      return { ...col, id: col.column_name };
     })
     .sort(ordinalColSort);
-  // const tableColumnsSorted = tableSchema.columns.sort(ordinalColSort)
+
   const tableRelationships = tableSchema.relationships;
 
   const hasPrimaryKey = isTableWithPK(tableSchema);
@@ -858,7 +862,7 @@ const ViewRows = props => {
     let disableSortColumn = false;
 
     const sortByColumn = (col, clearExisting = true) => {
-      const columnNames = tableColumnsSorted.map(column => column.column_name);
+      const columnNames = tableColumnsSorted.map(column => column.id);
       if (!columnNames.includes(col)) {
         return;
       }
