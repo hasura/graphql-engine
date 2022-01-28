@@ -11,6 +11,10 @@ module Data.Parser.CacheControl
     CacheControlDirective (..),
     parseCacheControl,
     parseMaxAge,
+    findMaxAge,
+    noCacheExists,
+    noStoreExists,
+    mustRevalidateExists,
   )
 where
 
@@ -28,18 +32,54 @@ data CacheControlDirective
 
 -- | Tries to parse the @max-age@ or @s-maxage@ present in the value of @Cache-Control@ header
 parseMaxAge :: Integral a => Text -> Either String a
-parseMaxAge t = do
-  cc <- parseCacheControl t
-  case find checkMaxAgeToken cc of
-    Nothing -> Left parseErr
-    Just d -> case d of
-      CCDOnlyToken _ -> Left parseErr
-      CCDTokenWithVal _ val -> fmapL (const parseErr) $ AT.parseOnly AT.decimal val
+parseMaxAge t =
+  parseCacheControl t >>= findMaxAge >>= maybe (Left notFoundErr) Right
   where
-    parseErr = "could not find max-age/s-maxage"
-    checkMaxAgeToken = \case
-      CCDOnlyToken token -> token == "max-age" || token == "s-maxage"
-      CCDTokenWithVal token _ -> token == "max-age" || token == "s-maxage"
+    notFoundErr = "could not find max-age/s-maxage"
+
+findMaxAge :: Integral a => CacheControl -> Either String (Maybe a)
+findMaxAge cacheControl = do
+  case findCCDTokenWithVal checkMaxAgeToken cacheControl of
+    Just (_, val) -> Just <$> fmapL parseErr (AT.parseOnly AT.decimal val)
+    Nothing -> Right Nothing
+  where
+    parseErr _ = "could not parse max-age/s-maxage value"
+    checkMaxAgeToken token = token == "max-age" || token == "s-maxage"
+
+-- | Checks if the @no-cache@ directive is present
+noCacheExists :: CacheControl -> Bool
+noCacheExists cacheControl =
+  isJust $ findCCDOnlyToken (== "no-cache") cacheControl
+
+-- | Checks if the @no-store@ directive is present
+noStoreExists :: CacheControl -> Bool
+noStoreExists cacheControl =
+  isJust $ findCCDOnlyToken (== "no-store") cacheControl
+
+-- | Checks if the @must-revalidate@ directive is present
+mustRevalidateExists :: CacheControl -> Bool
+mustRevalidateExists cacheControl =
+  isJust $ findCCDOnlyToken (== "must-revalidate") cacheControl
+
+findCCDOnlyToken :: (Text -> Bool) -> CacheControl -> Maybe Text
+findCCDOnlyToken tokenPredicate cacheControl =
+  listToMaybe $ mapMaybe check cacheControl
+  where
+    check = \case
+      CCDOnlyToken token
+        | tokenPredicate token -> Just token
+        | otherwise -> Nothing
+      CCDTokenWithVal _ _ -> Nothing
+
+findCCDTokenWithVal :: (Text -> Bool) -> CacheControl -> Maybe (Text, Text)
+findCCDTokenWithVal tokenPredicate cacheControl =
+  listToMaybe $ mapMaybe check cacheControl
+  where
+    check = \case
+      CCDOnlyToken _ -> Nothing
+      CCDTokenWithVal token value
+        | tokenPredicate token -> Just (token, value)
+        | otherwise -> Nothing
 
 -- | Parses a @Cache-Control@ header and returns a list of directives
 parseCacheControl :: Text -> Either String CacheControl

@@ -25,6 +25,7 @@ module Hasura.Server.Auth.JWT
     parseClaimsMap,
     JWTCustomClaimsMapValueG (..),
     JWTCustomClaimsMap (..),
+    determineJwkExpiryLifetime,
   )
 where
 
@@ -269,8 +270,8 @@ jwkRefreshCtrl logger manager url ref time = do
     res <- runExceptT $ updateJwkRef logger manager url ref
     mTime <- onLeft res (const $ logNotice >> return Nothing)
     -- if can't parse time from header, defaults to 1 min
-    -- let delay = maybe (minutes 1) fromUnits mTime
-    let delay = maybe (minutes 1) convertDuration mTime
+    -- and never use a smaller delay than one second to avoid a tight loop
+    let delay = max (seconds 1) $ maybe (minutes 1) convertDuration mTime
     liftIO $ C.sleep delay
   where
     logNotice = do
@@ -315,31 +316,8 @@ updateJwkRef (Logger logger) manager url jwkRef = do
     $assertNFHere jwkset -- so we don't write thunks to mutable vars
     writeIORef jwkRef jwkset
 
-  -- first check for Cache-Control header to get max-age, if not found, look for Expires header
-  runMaybeT $ timeFromCacheControl resp <|> timeFromExpires resp
+  determineJwkExpiryLifetime (liftIO getCurrentTime) (Logger logger) (resp ^. Wreq.responseHeaders)
   where
-    parseCacheControlErr e =
-      JFEExpiryParseError
-        (Just e)
-        "Failed parsing Cache-Control header from JWK response. Could not find max-age or s-maxage"
-    parseTimeErr =
-      JFEExpiryParseError
-        Nothing
-        "Failed parsing Expires header from JWK response. Value of header is not a valid timestamp"
-
-    timeFromCacheControl resp = do
-      header <- afold $ bsToTxt <$> resp ^? Wreq.responseHeader "Cache-Control"
-      fromInteger <$> parseMaxAge header `onLeft` \err -> logAndThrowInfo $ parseCacheControlErr $ T.pack err
-    timeFromExpires resp = do
-      header <- afold $ bsToTxt <$> resp ^? Wreq.responseHeader "Expires"
-      expiry <- parseExpirationTime header `onLeft` const (logAndThrowInfo parseTimeErr)
-      diffUTCTime expiry <$> liftIO getCurrentTime
-
-    logAndThrowInfo :: (MonadIO m, MonadError JwkFetchError m) => JwkFetchError -> m a
-    logAndThrowInfo err = do
-      liftIO $ logger $ JwkRefreshLog LevelInfo Nothing (Just err)
-      throwError err
-
     logAndThrow :: (MonadIO m, MonadError JwkFetchError m) => JwkFetchError -> m a
     logAndThrow err = do
       liftIO $ logger $ JwkRefreshLog (LevelOther "critical") Nothing (Just err)
@@ -354,6 +332,48 @@ updateJwkRef (Logger logger) manager url jwkRef = do
     getHttpExceptionMsg = \case
       HTTP.HttpExceptionRequest _ reason -> show reason
       HTTP.InvalidUrlException _ reason -> show reason
+
+-- | First check for Cache-Control header, if not found, look for Expires header
+determineJwkExpiryLifetime ::
+  forall m.
+  (MonadIO m, MonadError JwkFetchError m) =>
+  m UTCTime ->
+  Logger Hasura ->
+  ResponseHeaders ->
+  m (Maybe NominalDiffTime)
+determineJwkExpiryLifetime getCurrentTime' (Logger logger) responseHeaders =
+  runMaybeT $ timeFromCacheControl <|> timeFromExpires
+  where
+    parseCacheControlErr :: Text -> JwkFetchError
+    parseCacheControlErr e =
+      JFEExpiryParseError
+        (Just e)
+        "Failed parsing Cache-Control header from JWK response"
+
+    parseTimeErr :: JwkFetchError
+    parseTimeErr =
+      JFEExpiryParseError
+        Nothing
+        "Failed parsing Expires header from JWK response. Value of header is not a valid timestamp"
+
+    timeFromCacheControl :: MaybeT m NominalDiffTime
+    timeFromCacheControl = do
+      header <- afold $ bsToTxt <$> lookup "Cache-Control" responseHeaders
+      cacheControl <- parseCacheControl header `onLeft` \err -> logAndThrowInfo $ parseCacheControlErr $ T.pack err
+      if noCacheExists cacheControl || noStoreExists cacheControl || mustRevalidateExists cacheControl
+        then pure 0 -- In these cases we want don't want to cache the JWK, so we use an immediate expiry time
+        else fromInteger <$> MaybeT (findMaxAge cacheControl `onLeft` \err -> logAndThrowInfo $ parseCacheControlErr $ T.pack err)
+
+    timeFromExpires :: MaybeT m NominalDiffTime
+    timeFromExpires = do
+      header <- afold $ bsToTxt <$> lookup "Expires" responseHeaders
+      expiry <- parseExpirationTime header `onLeft` const (logAndThrowInfo parseTimeErr)
+      diffUTCTime expiry <$> lift getCurrentTime'
+
+    logAndThrowInfo :: (MonadIO m1, MonadError JwkFetchError m1) => JwkFetchError -> m1 a
+    logAndThrowInfo err = do
+      liftIO $ logger $ JwkRefreshLog LevelInfo Nothing (Just err)
+      throwError err
 
 type ClaimsMap = Map.HashMap SessionVariable J.Value
 
