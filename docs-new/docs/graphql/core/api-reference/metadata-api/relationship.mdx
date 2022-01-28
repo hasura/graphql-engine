@@ -48,7 +48,7 @@ replaces the older [schema/metadata API](/graphql/core/api-reference/schema-meta
 
 :::
 
-## pg_create_object_relationship
+## pg_create_object_relationship {#metadata-pg-create-object-relationship}
 
 `create_object_relationship` is used to create an object relationship on
 a table. There cannot be an existing column or relationship with the
@@ -185,7 +185,7 @@ defined on `article` table's `id` column to `article_detail` view's
 
 :::
 
-### Args syntax
+### Args syntax {#metadata-pg-create-object-relationship-syntax}
 
 | Key     | Required | Schema                                                                           | Description                                                    |
 |---------|----------|----------------------------------------------------------------------------------|----------------------------------------------------------------|
@@ -195,7 +195,7 @@ defined on `article` table's `id` column to `article_detail` view's
 | comment | false    | text                                                                             | comment                                                        |
 | source  | false    | [SourceName](/graphql/core/api-reference/syntax-defs.mdx#sourcename)             | Name of the source database of the table (default: `default`)  |
 
-## pg_create_array_relationship {#pg-create-array-relationship}
+## pg_create_array_relationship {#metadata-pg-create-array-relationship}
 
 `create_array_relationship` is used to create an array relationship on a
 table. There cannot be an existing column or relationship with the same name.
@@ -294,7 +294,7 @@ defined on the `author` table's `id` column to `article_detail` view's
 
 :::
 
-### Args syntax
+### Args syntax {#metadata-pg-create-array-relationship-syntax}
 
 | Key     | Required | Schema                                                                           | Description                                                   |
 |---------|----------|----------------------------------------------------------------------------------|---------------------------------------------------------------|
@@ -304,7 +304,7 @@ defined on the `author` table's `id` column to `article_detail` view's
 | comment | false    | text                                                                             | comment                                                       |
 | source  | false    | [SourceName](/graphql/core/api-reference/syntax-defs.mdx#sourcename)             | Name of the source database of the table (default: `default`) |
 
-## pg_drop_relationship {#pg-drop-relationship}
+## pg_drop_relationship {#metadata-pg-drop-relationship}
 
 `pg_drop_relationship` is used to drop a relationship (both object and
 array) on a table. If there are other objects dependent on this
@@ -329,7 +329,7 @@ X-Hasura-Role: admin
 }
 ```
 
-### Args syntax
+### Args syntax {#metadata-pg-drop-relationship-syntax}
 
 | Key          | Required | Schema                                                                            | Description                                                                       |
 |--------------|----------|-----------------------------------------------------------------------------------|-----------------------------------------------------------------------------------|
@@ -345,7 +345,7 @@ Be careful when using `cascade`. First, try running the request without
 
 :::
 
-## pg_set_relationship_comment {#pg-set-relationship-comment}
+## pg_set_relationship_comment {#metadata-pg-set-relationship-comment}
 
 `pg_set_relationship_comment` is used to set/update the comment on a
 relationship. Setting the comment to `null` removes it.
@@ -368,7 +368,7 @@ X-Hasura-Role: admin
 }
 ```
 
-### Args syntax
+### Args syntax {#metadata-pg-set-relationship-comment-syntax}
 
 | Key          | Required | Schema                                                                              | Description                                                   |
 |--------------|----------|-------------------------------------------------------------------------------------|---------------------------------------------------------------|
@@ -377,7 +377,7 @@ X-Hasura-Role: admin
 | comment      | false    | Text                                                                                | Comment                                                       |
 | source       | false    | [SourceName](/graphql/core/api-reference/syntax-defs.mdx#sourcename)                | Name of the source database of the table (default: `default`) |
 
-## pg_rename_relationship {#pg-rename-relationship}
+## pg_rename_relationship {#metadata-pg-rename-relationship}
 
 `pg_rename_relationship` is used to modify the name of an existing relationship.
 
@@ -399,7 +399,7 @@ X-Hasura-Role: admin
 }
 ```
 
-### Args syntax
+### Args syntax {#metadata-pg-rename-relationship-syntax}
 
 | Key      | Required | Schema                                                                                  | Description                                                   |
 |----------|----------|-----------------------------------------------------------------------------------------|---------------------------------------------------------------|
@@ -545,7 +545,7 @@ defined on `article` table's `id` column to `article_detail` view's
 
 :::
 
-### Args syntax
+### Args syntax {#mssql-create-object-relationship-syntax}
 
 | Key     | Required | Schema                                                                           | Description                                                    |
 |---------|----------|----------------------------------------------------------------------------------|----------------------------------------------------------------|
@@ -655,7 +655,7 @@ defined on the `author` table's `id` column to `article_detail` view's
 
 :::
 
-### Args syntax
+### Args syntax {#mssql-create-array-relationship-syntax}
 
 | Key     | Required | Schema                                                                           | Description                                                   |
 |---------|----------|----------------------------------------------------------------------------------|---------------------------------------------------------------|
@@ -690,7 +690,7 @@ X-Hasura-Role: admin
 }
 ```
 
-### Args syntax
+### Args syntax {#mssql-drop-relationship-syntax}
 
 | Key          | Required | Schema                                                                              | Description                                                                       |
 |--------------|----------|-------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------|
@@ -729,7 +729,7 @@ X-Hasura-Role: admin
 }
 ```
 
-### Args syntax
+### Args syntax {#mssql-set-relationship-comment-syntax}
 
 | Key          | Required | Schema                                                                              | Description                                                   |
 |--------------|----------|-------------------------------------------------------------------------------------|---------------------------------------------------------------|
@@ -760,7 +760,7 @@ X-Hasura-Role: admin
 }
 ```
 
-### Args syntax
+### Args syntax {#mssql-rename-relationship-syntax}
 
 | Key      | Required | Schema                                                                                  | Description                                                   |
 |----------|----------|-----------------------------------------------------------------------------------------|---------------------------------------------------------------|

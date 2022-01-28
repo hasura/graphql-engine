@@ -25,7 +25,7 @@ replaces the older [schema/metadata API](/graphql/core/api-reference/schema-meta
 
 :::
 
-## add_inherited_role
+## add_inherited_role {#metadata-add-inherited-role}
 
 `add_inherited_role` is used to create a new inherited role with other existing roles.
 
@@ -46,14 +46,14 @@ X-Hasura-Role: admin
 }
 ```
 
-### Args syntax
+### Args syntax {#metadata-add-inherited-role-syntax}
 
 | Key       | Required | Schema         | Description                                                            |
 |-----------|----------|----------------|------------------------------------------------------------------------|
 | role_name | true     | [RoleName](/graphql/core/api-reference/syntax-defs.mdx#rolename)     | Name of the inherited role                                             |
 | role_set  | true     | [[RoleName](/graphql/core/api-reference/syntax-defs.mdx#rolename)] | List of non-inherited roles from which permissions should be inherited |
 
-## drop_inherited_role
+## drop_inherited_role {#metadata-drop-inherited-role}
 
 `drop_inherited_role` is used to delete an existing inherited role.
 
@@ -70,7 +70,7 @@ X-Hasura-Role: admin
 }
 ```
 
-### Args syntax
+### Args syntax {#metadata-drop-inherited-role-syntax}
 
 | Key       | Required | Schema     | Description                |
 |-----------|----------|------------|----------------------------|

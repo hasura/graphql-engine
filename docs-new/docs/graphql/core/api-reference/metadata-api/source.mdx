@@ -24,7 +24,7 @@ replaces the older [schema/metadata API](/graphql/core/api-reference/schema-meta
 
 :::
 
-## pg_add_source
+## pg_add_source {#metadata-pg-add-source}
 
 `pg_add_source` is used to connect a Postgres database to Hasura.
 
@@ -71,7 +71,7 @@ X-Hasura-Role: admin
 }
 ```
 
-### Args syntax
+### Args syntax {#metadata-pg-add-source-syntax}
 
 | Key                   | Required | Schema                                                                                   | Description                                                                                                         |
 |-----------------------|----------|------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------|
@@ -80,7 +80,7 @@ X-Hasura-Role: admin
 | replace_configuration | false    | Boolean                                                                                  | If set to `true` the configuration will be replaced if the source with given name already exists (default: `false`) |
 | customization         | false    | [SourceCustomization](/graphql/core/api-reference/syntax-defs.mdx#sourcecustomization)   | Customize root fields and type names for the source                                                                 |
 
-## pg_drop_source
+## pg_drop_source {#metadata-pg-drop-source}
 
 `pg_drop_source` is used to remove a Postgres database from Hasura.
 
@@ -100,14 +100,14 @@ X-Hasura-Role: admin
 }
 ```
 
-### Args syntax
+### Args syntax {#metadata-pg-drop-source-syntax}
 
 | Key     | Required | Schema                    | Description                                                                                                                                                        |
 |---------|----------|---------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | name    | true     | [SourceName](/graphql/core/api-reference/syntax-defs.mdx#sourcename) | Name of the Postgres database                                                                                                                                      |
 | cascade | false    | Boolean                   | When set to `true`, the effect (if possible) is cascaded to any metadata dependent objects (relationships, permissions etc.) from other sources (default: `false`) |
 
-## rename_source
+## rename_source [#metadata-rename-source]
 
 `rename_source` is used to rename an existing source.
 
@@ -129,14 +129,14 @@ X-Hasura-Role: admin
 
 Note that all settings are kept, only the name is changed.
 
-### Args syntax
+### Args syntax {#metadata-rename-source-syntax}
 
 | Key      | Required | Schema                    | Description          |
 |----------|----------|---------------------------|----------------------|
 | name     | true     | [SourceName](/graphql/core/api-reference/syntax-defs.mdx#sourcename) | Name of the database |
 | new_name | true     | [SourceName](/graphql/core/api-reference/syntax-defs.mdx#sourcename) | Name of the database |
 
-## mssql_add_source
+## mssql_add_source {#mssql-add-source}
 
 `mssql_add_source` is used to connect an MS SQL Server database to Hasura.
 
@@ -177,7 +177,7 @@ X-Hasura-Role: admin
 }
 ```
 
-### Args syntax
+### Args syntax {#mssql-add-source-syntax}
 
 | Key                   | Required | Schema                                    | Description                                                                                                         |
 |-----------------------|----------|-------------------------------------------|---------------------------------------------------------------------------------------------------------------------|
@@ -186,7 +186,7 @@ X-Hasura-Role: admin
 | replace_configuration | false    | Boolean                                   | If set to `true` the configuration will be replaced if the source with given name already exists (default: `false`) |
 | customization         | false    | [SourceCustomization](/graphql/core/api-reference/syntax-defs.mdx#sourcecustomization)                     | Customize root fields and type names for the source                                                                 |
 
-## mssql_drop_source
+## mssql_drop_source {#mssql-drop-source}
 
 `mssql_drop_source` is used to remove an MS SQL Server database from Hasura.
 
@@ -205,14 +205,14 @@ X-Hasura-Role: admin
 }
 ```
 
-### Args syntax
+### Args syntax {#mssql-drop-source-syntax}
 
 | Key     | Required | Schema                    | Description                                                                                                                                                        |
 |---------|----------|---------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | name    | true     | [SourceName](/graphql/core/api-reference/syntax-defs.mdx#sourcename) | Name of the MS SQL Server database                                                                                                                                 |
 | cascade | false    | Boolean                   | When set to `true`, the effect (if possible) is cascaded to any metadata dependent objects (relationships, permissions etc.) from other sources (default: `false`) |
 
-## bigquery_add_source
+## bigquery_add_source {#metadata-bigquery-add-source}
 
 `bigquery_add_source` is used to connect a BigQuery database to Hasura.
 
@@ -247,7 +247,7 @@ X-Hasura-Role: admin
 }
 ```
 
-### Args syntax
+### Args syntax {#metadata-bigquery-add-source-syntax}
 
 | Key                   | Required | Schema                                          | Description                                                                                                         |
 |-----------------------|----------|-------------------------------------------------|---------------------------------------------------------------------------------------------------------------------|
@@ -256,7 +256,7 @@ X-Hasura-Role: admin
 | replace_configuration | false    | Boolean                                         | If set to `true` the configuration will be replaced if the source with given name already exists (default: `false`) |
 | customization         | false    | [SourceCustomization](/graphql/core/api-reference/syntax-defs.mdx#sourcecustomization)                           | Customize root fields and type names for the source                                                                 |
 
-## bigquery_drop_source
+## bigquery_drop_source {#metadata-bigquery-drop-source}
 
 `bigquery_drop_source` is used to remove a BigQuery database from Hasura.
 
@@ -275,7 +275,7 @@ X-Hasura-Role: admin
 }
 ```
 
-### Args syntax
+### Args syntax {#metadata-bigquery-drop-source-syntax}
 
 | Key     | Required | Schema                    | Description                                                                                                                                                        |
 |---------|----------|---------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------|

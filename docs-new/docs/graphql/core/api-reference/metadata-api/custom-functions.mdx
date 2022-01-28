@@ -26,7 +26,7 @@ replaces the older [schema/metadata API](/graphql/core/api-reference/schema-meta
 
 :::
 
-## pg_track_function
+## pg_track_function {#metadata-pg-track-function}
 
 `pg_track_function` is used to add a custom SQL function to the GraphQL
 schema. It supports more configuration options than v1, and also
@@ -101,7 +101,7 @@ default).
 
 :::
 
-### Args syntax
+### Args syntax {#metadata-pg-track-function-syntax}
 
 | Key           | Required | Schema                                            | Description                                                                                                                   |
 |---------------|----------|---------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------|
@@ -110,7 +110,7 @@ default).
 | source        | false    | [SourceName](/graphql/core/api-reference/syntax-defs.mdx#sourcename)                         | Name of the source database of the function (default: `default`)                                                              |
 | comment       | false    | String                                            | Comment for the function. This comment would replace the auto-generated comment for the function field in the GraphQL schema. |
 
-## pg_untrack_function
+## pg_untrack_function {#metadata-pg-untrack-function}
 
 `pg_untrack_function` is used to remove a SQL function from the GraphQL schema.
 
@@ -133,14 +133,14 @@ X-Hasura-Role: admin
 }
 ```
 
-### Args syntax
+### Args syntax {#metadata-pg-untrack-function-syntax}
 
 | Key      | Required | Schema                        | Description                                                      |
 |----------|----------|-------------------------------|------------------------------------------------------------------|
 | function | true     | [FunctionName](/graphql/core/api-reference/syntax-defs.mdx#functionname) | Name of the SQL function                                         |
 | source   | false    | [SourceName](/graphql/core/api-reference/syntax-defs.mdx#sourcename)     | Name of the source database of the function (default: `default`) |
 
-## pg_set_function_customization
+## pg_set_function_customization {#metadata-pg-set-function-customization}
 
 `pg_set_function_customization` allows you to customize any given
 function with a custom name and custom root fields of an already tracked
@@ -168,7 +168,7 @@ X-Hasura-Role: admin
 }
 ```
 
-### Args syntax
+### Args syntax {#metadata-pg-set-function-customization-syntax}
 
 | Key           | Required | Schema                                            | Description                                                      |
 |---------------|----------|---------------------------------------------------|------------------------------------------------------------------|
@@ -176,7 +176,7 @@ X-Hasura-Role: admin
 | configuration | false    | [Function Configuration](/graphql/core/api-reference/syntax-defs.mdx#function-configuration) | Configuration for the function                                   |
 | source        | false    | [SourceName](/graphql/core/api-reference/syntax-defs.mdx#sourcename)                         | Name of the source database of the function (default: `default`) |
 
-## pg_create_function_permission
+## pg_create_function_permission {#metadata-pg-create-function-permission}
 
 `pg_create_function_permission` is used to add permission to an existing
 custom function. To add a function permission, the provided role should
@@ -197,7 +197,7 @@ X-Hasura-Role: admin
 }
 ```
 
-### Args syntax
+### Args syntax {#metadata-pg-create-function-permission-syntax}
 
 | Key      | Required | Schema                        | Description                                                      |
 |----------|----------|-------------------------------|------------------------------------------------------------------|
@@ -205,7 +205,7 @@ X-Hasura-Role: admin
 | role     | true     | [RoleName](/graphql/core/api-reference/syntax-defs.mdx#rolename)         | Name of the role                                                 |
 | source   | false    | Text                          | Name of the source database of the function (default: `default`) |
 
-## pg_drop_function_permission
+## pg_drop_function_permission {#metadata-pg-drop-function-permission}
 
 `pg_drop_function_permission` is used to drop an existing function permission.
 
@@ -224,7 +224,7 @@ X-Hasura-Role: admin
 }
 ```
 
-### Args syntax
+### Args syntax {#metadata-pg-drop-function-permission-syntax}
 
 | Key      | Required | Schema                        | Description                                                      |
 |----------|----------|-------------------------------|------------------------------------------------------------------|

@@ -24,7 +24,7 @@ replaces the older [schema/metadata API](/graphql/core/api-reference/schema-meta
 
 :::
 
-## pg_create_event_trigger
+## pg_create_event_trigger {#metadata-pg-create-event-trigger}
 
 `pg_create_event_trigger` is used to create a new event trigger or
 replace an existing event trigger.
@@ -70,7 +70,7 @@ X-Hasura-Role: admin
 }
 ```
 
-### Args syntax
+### Args syntax {#metadata-pg-create-event-trigger-syntax}
 
 | Key              | Required | Schema                                                                                                                                                              | Description                                                           |
 |------------------|----------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------|
@@ -90,7 +90,7 @@ X-Hasura-Role: admin
 
 (\*) Either `webhook` or `webhook_from_env` are required.
 
-## pg_delete_event_trigger
+## pg_delete_event_trigger {#metadata-pg-delete-event-trigger}
 
 `pg_delete_event_trigger` is used to delete an event trigger.
 
@@ -108,14 +108,14 @@ X-Hasura-Role: admin
 }
 ```
 
-### Args syntax
+### Args syntax {#metadata-pg-delete-event-trigger-syntax}
 
 | Key    | Required | Schema                                                                 | Description                                                     |
 |--------|----------|------------------------------------------------------------------------|-----------------------------------------------------------------|
 | name   | true     | [TriggerName](/graphql/core/api-reference/syntax-defs.mdx#triggername) | Name of the event trigger                                       |
 | source | false    | [SourceName](/graphql/core/api-reference/syntax-defs.mdx#sourcename)   | Name of the source database of the trigger (default: `default`) |
 
-## pg_redeliver_event
+## pg_redeliver_event {#metadata-pg-redeliver-event}
 
 `redeliver_event` is used to redeliver an existing event. For example,
 if an event is marked as error ( say it did not succeed after retries),
@@ -136,13 +136,13 @@ X-Hasura-Role: admin
 }
 ```
 
-### Args syntax
+### Args syntax {#metadata-pg-redeliver-event-syntax}
 
 | Key      | Required | Schema | Description       |
 |----------|----------|--------|-------------------|
 | event_id | true     | String | UUID of the event |
 
-## pg_invoke_event_trigger
+## pg_invoke_event_trigger {#metadata-pg-invoke-event-trigger}
 
 `invoke_event_trigger` is used to invoke an event trigger with custom payload.
 
@@ -161,7 +161,7 @@ X-Hasura-Role: admin
 }
 ```
 
-### Args syntax
+### Args syntax {#metadata-pg-invoke-event-trigger-syntax}
 
 | Key     | Required | Schema                                                                 | Description                                                     |
 |---------|----------|------------------------------------------------------------------------|-----------------------------------------------------------------|

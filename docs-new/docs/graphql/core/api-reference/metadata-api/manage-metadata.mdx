@@ -23,7 +23,7 @@ replaces the older [schema/metadata API](/graphql/core/api-reference/schema-meta
 
 :::
 
-## export_metadata {#export-metadata}
+## export_metadata {#metadata-export-metadata}
 
 `export_metadata` is used to export the current metadata from the server as a JSON file.
 
@@ -75,7 +75,7 @@ Response:
                  ...
 ```
 
-## replace_metadata {#replace-metadata}
+## replace_metadata {#metadata-replace-metadata}
 
 `replace_metadata` is used to replace/import metadata into Hasura.
 Existing metadata will be replaced with the new one.
@@ -92,10 +92,10 @@ X-Hasura-Role: admin
 }
 ```
 
-### Args syntax
+### Args syntax {#metadata-replace-metadata-syntax}
 
 If version is set to 1, then args should be the JSON object which is
-same as the output of [export_metadata](#export-metadata).
+same as the output of [export_metadata](#metadata-export-metadata).
 
 For version 2, the following structure is used:
 
@@ -200,7 +200,7 @@ HTTP/1.1 409 Conflict
 }
 ```
 
-## reload_metadata
+## reload_metadata {#metadata-reload-metadata}
 
 `reload_metadata` should be used when there is a change in underlying
 Postgres database that Hasura should be aware of. Example: a new column
@@ -222,7 +222,7 @@ X-Hasura-Role: admin
 }
 ```
 
-### Args syntax
+### Args syntax {#metadata-reload-metadata-syntax}
 
 | Key                     | Required | Schema                              | Description                                                                                                                                                                                                                                                                                                                                                                         |
 |-------------------------|----------|-------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -230,7 +230,7 @@ X-Hasura-Role: admin
 | reload_sources          | false    | `Boolean` \| \[[SourceName](/graphql/core/api-reference/syntax-defs.mdx#sourcename)\]       | If set to `true`, all sources' (including inconsistent ones) cached GraphQL schemas are refreshed (default: `true`)                                                                                                                                                                                                                                                                 |
 | recreate_event_triggers | false    | `Boolean` \| \[[SourceName](/graphql/core/api-reference/syntax-defs.mdx#sourcename)\]       | If set to `true`, all sources' (including inconsistent ones) cached event triggers and their corresponding SQL triggers present in the source database will be recreated. When an array of [SourceName](/graphql/core/api-reference/syntax-defs.mdx#sourcename) is provided, the event triggers will only be recreated for those sources. (default: <span class="title-ref">false</span> i.e. no sources' event triggers will be recreated) |
 
-## clear_metadata {#clear-metadata}
+## clear_metadata {#metadata-clear-metadata}
 
 `clear_metadata` can be used to reset the state of Hasura -- clean the
 current state by forgetting the tables tracked, relationships,
@@ -247,7 +247,7 @@ X-Hasura-Role: admin
 }
 ```
 
-## get_inconsistent_metadata {#get-inconsistent-metadata}
+## get_inconsistent_metadata {#metadata-get-inconsistent-metadata}
 
 `get_inconsistent_metadata` can be used to fetch all inconsistent metadata objects.
 
@@ -301,7 +301,7 @@ Response:
 ]
 ```
 
-## drop_inconsistent_metadata {#drop-inconsistent-metadata}
+## drop_inconsistent_metadata {#metadata-drop-inconsistent-metadata}
 
 `drop_inconsistent_metadata` can be used to purge all inconsistent
 objects from the metadata.

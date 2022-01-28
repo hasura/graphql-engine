@@ -24,7 +24,7 @@ replaces the older [schema/metadata API](/graphql/core/api-reference/schema-meta
 
 :::
 
-## pg_create_remote_relationship
+## pg_create_remote_relationship {#metadata-pg-create-remote-relationship}
 
 `pg_create_remote_relationship` is used to create a new remote
 relationship with an existing remote schema.
@@ -52,7 +52,7 @@ X-Hasura-Role: admin
 }
 ```
 
-### Args syntax
+### Args syntax {#metadata-pg-create-remote-relationship-syntax}
 
 | Key           | Required | Schema                                                               | Description                                                                                                                                |
 |---------------|----------|----------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------|
@@ -62,7 +62,7 @@ X-Hasura-Role: admin
 | remote_schema | true     | [RemoteSchemaName](/graphql/core/api-reference/syntax-defs.mdx#remoteschemaname)                                | Name of the remote schema to join with                                                                                                     |
 | remote_field  | true     | [RemoteField](/graphql/core/api-reference/syntax-defs.mdx#remotefield)                                                        | The schema tree ending at the field in remote schema which needs to be joined with.                                                        |
 
-## pg_update_remote_relationship
+## pg_update_remote_relationship {#metadata-pg-update-remote-relationship}
 
 `pg_update_remote_relationship` is used to update an existing remote relationship.
 
@@ -92,7 +92,7 @@ X-Hasura-Role: admin
 }
 ```
 
-### Args syntax
+### Args syntax {#metadata-pg-update-remote-relationship-syntax}
 
 | Key           | Required | Schema                                | Description                                                                                                                 |
 |---------------|----------|---------------------------------------|-----------------------------------------------------------------------------------------------------------------------------|
@@ -102,7 +102,7 @@ X-Hasura-Role: admin
 | remote_schema | true     | [RemoteSchemaName](/graphql/core/api-reference/syntax-defs.mdx#remoteschemaname) | Name of the remote schema to join with                                                                                      |
 | remote_field  | true     | [RemoteField](/graphql/core/api-reference/syntax-defs.mdx#remotefield)                         | The schema tree ending at the field in remote schema which needs to be joined with.                                         |
 
-## pg_delete_remote_relationship
+## pg_delete_remote_relationship {#metadata-pg-delete-remote-relationship}
 
 `pg_delete_remote_relationship` is used to delete an existing remote relationship.
 
@@ -123,7 +123,7 @@ X-Hasura-Role: admin
 }
 ```
 
-### Args syntax
+### Args syntax {#metadata-pg-delete-remote-relationship-syntax}
 
 | Key   | Required | Schema                            | Description                       |
 |-------|----------|-----------------------------------|-----------------------------------|

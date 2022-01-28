@@ -23,7 +23,7 @@ replaces the older [schema/metadata API](/graphql/core/api-reference/schema-meta
 
 :::
 
-## create_rest_endpoint {#metadata-create-rest-endpoint-syntax}
+## create_rest_endpoint {#metadata-create-rest-endpoint}
 
 `create_rest_endpoint` is used to associate a URL template with a query.
 
@@ -51,6 +51,8 @@ X-Hasura-Role: admin
 }
 ```
 
+### Args syntax {#metadata-create-rest-endpoint-syntax}
+
 | Key        | Required | Schema            | Description                                             |
 |------------|----------|-------------------|---------------------------------------------------------|
 | name       | true     | Text              | A unique identifier for the endpoint                    |
@@ -65,7 +67,7 @@ RESTified endpoints are supported from versions `v2.0.0-alpha.1` and above.
 
 :::
 
-## drop_rest_endpoint {#metadata-drop-rest-endpoint-syntax}
+## drop_rest_endpoint {#metadata-drop-rest-endpoint}
 
 `drop_rest_endpoint` is used to delete an existing RESTified GraphQL Endpoint.
 
@@ -83,6 +85,8 @@ X-Hasura-Role: admin
     }
 }
 ```
+
+### Args syntax {#metadata-drop-rest-endpoint-syntax}
 
 | Key  | Required | Schema | Description                   |
 |------|----------|--------|-------------------------------|

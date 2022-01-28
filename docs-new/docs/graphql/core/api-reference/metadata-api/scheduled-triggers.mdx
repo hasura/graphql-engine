@@ -24,7 +24,7 @@ replaces the older [schema/metadata API](/graphql/core/api-reference/schema-meta
 
 :::
 
-## create_cron_trigger
+## create_cron_trigger {#metadata-create-cron-trigger}
 
 `create_cron_trigger` is used to create a new cron trigger.
 
@@ -49,7 +49,7 @@ X-Hasura-Role: admin
 }
 ```
 
-### Args syntax
+### Args syntax {#metadata-create-cron-trigger-syntax}
 
 | Key                 | Required | Schema                                                                       | Description                                                                                                                                                                                                     |
 |---------------------|----------|------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -69,7 +69,7 @@ Scheduled triggers are supported from versions `v1.3.0` and above.
 
 :::
 
-## delete_cron_trigger
+## delete_cron_trigger {#metadata-delete-cron-trigger}
 
 `delete_cron_trigger` is used to delete an existing cron trigger. The
 scheduled events associated with the cron trigger will also be deleted.
@@ -87,7 +87,7 @@ X-Hasura-Role: admin
 }
 ```
 
-### Args syntax
+### Args syntax {#metadata-delete-cron-trigger-syntax}
 
 | Key  | Required | Schema                      | Description              |
 |------|----------|-----------------------------|--------------------------|
@@ -99,7 +99,7 @@ Scheduled triggers are supported from versions `v1.3.0` and above.
 
 :::
 
-## create_scheduled_event
+## create_scheduled_event {#metadata-create-scheduled-event}
 
 `create_scheduled_event` is used to create a scheduled event.
 
@@ -139,7 +139,7 @@ Content-Type: application/json
 }
 ```
 
-### Args syntax
+### Args syntax {#metadata-create-scheduled-event-syntax}
 
 | Key         | Required | Schema                                                                       | Description                                                      |
 |-------------|----------|------------------------------------------------------------------------------|------------------------------------------------------------------|
@@ -156,7 +156,7 @@ Scheduled triggers are supported from versions `v1.3.0` and above.
 
 :::
 
-## delete_scheduled_event
+## delete_scheduled_event {#metadata-delete-scheduled-event}
 
 `delete_scheduled_event` is used to delete an existing scheduled event
 (one-off or cron).
@@ -175,7 +175,7 @@ X-Hasura-Role: admin
 }
 ```
 
-### Args syntax
+### Args syntax {#metadata-delete-scheduled-event-syntax}
 
 | Key      | Required | Schema              | Description                      |
 |----------|----------|---------------------|----------------------------------|

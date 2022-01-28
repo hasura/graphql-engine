@@ -31,7 +31,7 @@ replaces the older [schema/metadata API](/graphql/core/api-reference/schema-meta
 
 :::
 
-## add_remote_schema_permissions {#add-remote-schema-permissions}
+## add_remote_schema_permissions {#metadata-add-remote-schema-permissions}
 
 This API takes the schema [(GraphQL IDL format)](http://spec.graphql.org/June2018/#sec-Type-System) which should
 be a subset of the remote schema and the role for which this restricted
@@ -238,7 +238,7 @@ field whenever it's queried.
 
 :::
 
-### Remote Relationship Permissions {#remote-relationship-permissions}
+### Remote Relationship Permissions {#metadata-remote-relationship-permissions}
 
 Permissions for remote relationships are derived from the role's remote
 schema permissions. When permissions for a given remote relationship
@@ -331,7 +331,7 @@ argument in the `customer_transactions_history` field because the
 `limit` has a preset set and the value will be added by the GraphQL
 engine before it queries the remote schema.
 
-### Args syntax
+### Args syntax {#metadata-add-remote-schema-permissions-syntax}
 
 | Key           | Required | Schema                                                                                       | Description                             |
 |---------------|----------|----------------------------------------------------------------------------------------------|-----------------------------------------|
@@ -340,7 +340,7 @@ engine before it queries the remote schema.
 | definition    | true     | [RemoteSchemaPermission](/graphql/core/api-reference/syntax-defs.mdx#remoteschemapermission) | The remote schema permission definition |
 | comment       | false    | text                                                                                         | Comment                                 |
 
-## drop_remote_schema_permissions {#drop-remote-schema-permissions}
+## drop_remote_schema_permissions {#metadata-drop-remote-schema-permissions}
 
 The `drop_remote_schema_permissions` API is used to drop an existing
 delete permission for a role on a remote schema.
@@ -361,7 +361,7 @@ X-Hasura-Role: admin
 }
 ```
 
-### Args syntax
+### Args syntax {#metadata-drop-remote-schema-permissions-syntax}
 
 | Key   | Required | Schema                                                                           | Description               |
 |-------|----------|----------------------------------------------------------------------------------|---------------------------|

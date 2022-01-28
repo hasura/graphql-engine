@@ -49,7 +49,7 @@ The structure of args depends on the type and version.
 
 </div>
 
-#### Query
+#### Query {#metadata-query}
 
 | Key              | Required | Schema     | Description                                                    |
 |------------------|----------|------------|----------------------------------------------------------------|
@@ -194,12 +194,12 @@ TODO: MSSQL_UNSUPPORTED
 
 ## Response structure
 
-| Status code	 |  Description	           |  Response structure                     |
+| Status code	 |  Description	           |  Response structure                        |
 |--------------|-------------------------|--------------------------------------------|
 | 200	         |	Success                |  Request specific                          |
 | 400	         |	Bad request            |  `{ "path"  : String, "error" : String}`   |
 | 401	         |	Unauthorized           |  `{"error" : String}`                      |
-| 500	         |	Internal server error	 |  `{"error" : String}`                    |
+| 500	         |	Internal server error	 |  `{"error" : String}`                      |
 
 ## Disabling metadata API
 

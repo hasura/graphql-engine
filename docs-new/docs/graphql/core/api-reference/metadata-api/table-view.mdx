@@ -27,7 +27,7 @@ replaces the older [schema/metadata API](/graphql/core/api-reference/schema-meta
 
 :::
 
-## pg_track_table {#pg-track-table}
+## pg_track_table {#metadata-pg-track-table}
 
 `pg_track_table` is used to add a table/view to the GraphQL schema with
 configuration. You can customise the root field names.
@@ -108,7 +108,7 @@ in order to be able to track it.
 
 :::
 
-### Args syntax
+### Args syntax {#metadata-pg-track-table-syntax}
 
 | Key           | Required | Schema                                                                   | Description                                                   |
 |---------------|----------|--------------------------------------------------------------------------|---------------------------------------------------------------|
@@ -116,7 +116,7 @@ in order to be able to track it.
 | configuration | false    | [Table Config](/graphql/core/api-reference/syntax-defs.mdx#table-config) | Configuration for the table/view                              |
 | source        | false    | [SourceName](/graphql/core/api-reference/syntax-defs.mdx#sourcename)     | Name of the source database of the table (default: `default`) |
 
-## pg_untrack_table {#pg-untrack-table}
+## pg_untrack_table {#metadata-pg-untrack-table}
 
 `untrack_table` is used to remove a table/view from the GraphQL schema.
 
@@ -140,7 +140,7 @@ X-Hasura-Role: admin
 }
 ```
 
-### Args syntax
+### Args syntax {#metadata-pg-untrack-table-syntax}
 
 | Key     | Required | Schema                                                               | Description                                                                                                                        |
 |---------|----------|----------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------|
@@ -148,7 +148,7 @@ X-Hasura-Role: admin
 | cascade | false    | Boolean                                                              | When set to `true`, the effect (if possible) is cascaded to any metadata dependent objects (relationships, permissions, templates) |
 | source  | false    | [SourceName](/graphql/core/api-reference/syntax-defs.mdx#sourcename) | Name of the source database of the table (default: `default`)                                                                      |
 
-## pg_set_table_is_enum {#pg-set-table-is-enum}
+## pg_set_table_is_enum {#metadata-pg-set-table-is-enum}
 
 `pg_set_table_is_enum` sets whether an already-tracked table should be
 used as an `enum table <pg_create_enum_table>`.
@@ -173,7 +173,7 @@ X-Hasura-Role: admin
 }
 ```
 
-### Args syntax
+### Args syntax {#metadata-pg-set-table-is-enum-syntax}
 
 | Key     | Required | Schema                                                               | Description                                                              |
 |---------|----------|----------------------------------------------------------------------|--------------------------------------------------------------------------|
@@ -181,7 +181,7 @@ X-Hasura-Role: admin
 | is_enum | true     | Boolean                                                              | Whether or not the table should be used as an `enum table <enum table>`. |
 | source  | false    | [SourceName](/graphql/core/api-reference/syntax-defs.mdx#sourcename) | Name of the source database of the table (default: `default`)            |
 
-## pg_set_table_customization {#pg-set-table-customization}
+## pg_set_table_customization {#metadata-pg-set-table-customization}
 
 `pg_set_table_customization` allows you to customize any given table
 with a custom name, custom root fields and custom column names of an
@@ -221,7 +221,7 @@ X-Hasura-Role: admin
 }
 ```
 
-### Args syntax
+### Args syntax {#metadata-pg-set-table-customization-syntax}
 
 | Key           | Required | Schema                                                                  | Description                                                   |
 |---------------|----------|-------------------------------------------------------------------------|---------------------------------------------------------------|
@@ -297,7 +297,7 @@ in order to be able to track it.
 
 :::
 
-### Args syntax
+### Args syntax {#mssql-track-table-syntax}
 
 | Key           | Required | Schema                                                                   | Description                                                   |
 |---------------|----------|--------------------------------------------------------------------------|---------------------------------------------------------------|
@@ -329,7 +329,7 @@ X-Hasura-Role: admin
 }
 ```
 
-### Args syntax
+### Args syntax {#mssql-untrack-table-syntax}
 
 | Key     | Required | Schema                                                               | Description                                                                                                                        |
 |---------|----------|----------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------|
@@ -370,7 +370,7 @@ X-Hasura-Role: admin
 }
 ```
 
-### Args syntax
+### Args syntax {#mssql-set-table-customization-syntax}
 
 | Key           | Required | Schema                                                                  | Description                                                   |
 |---------------|----------|-------------------------------------------------------------------------|---------------------------------------------------------------|
@@ -378,7 +378,7 @@ X-Hasura-Role: admin
 | configuration | false    | [TableConfig](/graphql/core/api-reference/syntax-defs.mdx#table-config) | Configuration for the table/view                              |
 | source        | false    | [SourceName](/graphql/core/api-reference/syntax-defs.mdx#sourcename)    | Name of the source database of the table (default: `default`) |
 
-## bigquery_track_table {#bigquery-track-table}
+## bigquery_track_table {#metadata-bigquery-track-table}
 
 `bigquery_track_table` is used to add a table/view to the GraphQL schema
 with configuration. You can customise the root field names.
@@ -485,7 +485,7 @@ in order to be able to track it.
 
 :::
 
-### Args syntax
+### Args syntax {#metadata-bigquery-track-table-syntax}
 
 | Key           | Required | Schema                                                                   | Description                                                   |
 |---------------|----------|--------------------------------------------------------------------------|---------------------------------------------------------------|
@@ -493,7 +493,7 @@ in order to be able to track it.
 | configuration | false    | [Table Config](/graphql/core/api-reference/syntax-defs.mdx#table-config) | Configuration for the table/view                              |
 | source        | false    | [SourceName](/graphql/core/api-reference/syntax-defs.mdx#sourcename)     | Name of the source database of the table (default: `default`) |
 
-## bigquery_untrack_table {#bigquery-untrack-table}
+## bigquery_untrack_table {#metadata-bigquery-untrack-table}
 
 `bigquery_untrack_table` is used to remove a table/view from the GraphQL schema.
 
@@ -517,7 +517,7 @@ X-Hasura-Role: admin
 }
 ```
 
-### Args syntax
+### Args syntax {#metadata-bigquery-untrack-table-syntax}
 
 | Key     | Required | Schema                                                               | Description                                                                                                                        |
 |---------|----------|----------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------|
@@ -525,7 +525,7 @@ X-Hasura-Role: admin
 | cascade | false    | Boolean                                                              | When set to `true`, the effect (if possible) is cascaded to any metadata dependent objects (relationships, permissions, templates) |
 | source  | false    | [SourceName](/graphql/core/api-reference/syntax-defs.mdx#sourcename) | Name of the source database of the table (default: `default`)                                                                      |
 
-## bigquery_set_table_customization {#bigquery-set-table-customization}
+## bigquery_set_table_customization {#metadata-bigquery-set-table-customization}
 
 `bigquery_set_table_customization` allows you to customize any given
 table with a custom name, custom root fields and custom column names of
@@ -561,7 +561,7 @@ X-Hasura-Role: admin
 }
 ```
 
-### Args syntax
+### Args syntax {#metadata-bigquery-set-table-customization-syntax}
 
 | Key           | Required | Schema                                                                  | Description                                                   |
 |---------------|----------|-------------------------------------------------------------------------|---------------------------------------------------------------|

@@ -27,7 +27,7 @@ replaces the older [schema/metadata API](/graphql/core/api-reference/schema-meta
 
 :::
 
-## pg_add_computed_field
+## pg_add_computed_field {#metadata-pg-add-computed-field}
 
 `pg_add_computed_field` is used to define a computed field in a table.
 There cannot be an existing column or relationship or computed field
@@ -61,7 +61,7 @@ X-Hasura-Role: admin
 }
 ```
 
-### Args syntax
+### Args syntax {#metadata-pg-add-computed-field-syntax}
 
 | Key        | Required | Schema                                                                                            | Description                                                   |
 |------------|----------|---------------------------------------------------------------------------------------------------|---------------------------------------------------------------|
@@ -71,7 +71,7 @@ X-Hasura-Role: admin
 | comment    | false    | text                                                                                              | comment                                                       |
 | source     | false    | [SourceName](/graphql/core/api-reference/syntax-defs.mdx#sourcename)                              | Name of the source database of the table (default: `default`) |
 
-## pg_drop_computed_field
+## pg_drop_computed_field {#metadata-pg-drop-computed-field}
 
 `pg_drop_computed_field` is used to drop a computed field of a table. If
 there are other objects dependent on this computed field, like
@@ -100,7 +100,7 @@ X-Hasura-Role: admin
 }
 ```
 
-### Args syntax
+### Args syntax {#metadata-pg-drop-computed-field-syntax}
 
 | Key     | Required | Schema                                                                             | Description                                                                                   |
 |---------|----------|------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------|

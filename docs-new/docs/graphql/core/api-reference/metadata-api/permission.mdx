@@ -34,7 +34,7 @@ replaces the older [schema/metadata API](/graphql/core/api-reference/schema-meta
 
 :::
 
-## pg_create_insert_permission {#pg-create-insert-permission}
+## pg_create_insert_permission {#metadata-pg-create-insert-permission}
 
 An insert permission is used to enforce constraints on the data that is being inserted.
 
@@ -117,7 +117,7 @@ In the above definition, the row is allowed to be inserted if the
 `author_id` is the same as the request's user id and `is_reviewed` is
 `false` when the `category` is "editorial".
 
-### Args syntax
+### Args syntax {#metadata-pg-create-insert-permission-syntax}
 
 | Key        | Required | Schema                                                                            | Description                                                   |
 |------------|----------|-----------------------------------------------------------------------------------|---------------------------------------------------------------|
@@ -127,7 +127,7 @@ In the above definition, the row is allowed to be inserted if the
 | comment    | false    | text                                                                              | Comment                                                       |
 | source     | false    | [SourceName](/graphql/core/api-reference/syntax-defs.mdx#sourcename)              | Name of the source database of the table (default: `default`) |
 
-## pg_drop_insert_permission {#pg-drop-insert-permission}
+## pg_drop_insert_permission {#metadata-pg-drop-insert-permission}
 
 The `pg_drop_insert_permission` API is used to drop an existing insert
 permission for a role on a table.
@@ -149,7 +149,7 @@ X-Hasura-Role: admin
 }
 ```
 
-### Args syntax
+### Args syntax {#metadata-pg-drop-insert-permission-syntax}
 
 | Key    | Required | Schema                                                               | Description                                                   |
 |--------|----------|----------------------------------------------------------------------|---------------------------------------------------------------|
@@ -157,7 +157,7 @@ X-Hasura-Role: admin
 | role   | true     | [RoleName](/graphql/core/api-reference/syntax-defs.mdx#rolename)     | Role                                                          |
 | source | false    | [SourceName](/graphql/core/api-reference/syntax-defs.mdx#sourcename) | Name of the source database of the table (default: `default`) |
 
-## pg_create_select_permission {#pg-create-select-permission}
+## pg_create_select_permission {#metadata-pg-create-select-permission}
 
 A select permission is used to restrict access to only the specified columns and rows.
 
@@ -202,7 +202,7 @@ This reads as follows - For the `user` role:
     table by the `user` role to a maximum of 10.
 -   Allow aggregate queries.
 
-### Args syntax
+### Args syntax {#metadata-pg-create-select-permission-syntax}
 
 | Key        | Required | Schema                                                                            | Description                                                   |
 |------------|----------|-----------------------------------------------------------------------------------|---------------------------------------------------------------|
@@ -212,7 +212,7 @@ This reads as follows - For the `user` role:
 | comment    | false    | text                                                                              | Comment                                                       |
 | source     | false    | [SourceName](/graphql/core/api-reference/syntax-defs.mdx#sourcename)              | Name of the source database of the table (default: `default`) |
 
-## pg_drop_select_permission {#pg-drop-select-permission}
+## pg_drop_select_permission {#metadata-pg-drop-select-permission}
 
 The `pg_drop_select_permission` is used to drop an existing select
 permission for a role on a table.
@@ -234,7 +234,7 @@ X-Hasura-Role: admin
 }
 ```
 
-### Args syntax
+### Args syntax {#metadata-pg-drop-select-permission-syntax}
 
 | Key    | Required | Schema                                                               | Description                                                   |
 |--------|----------|----------------------------------------------------------------------|---------------------------------------------------------------|
@@ -242,7 +242,7 @@ X-Hasura-Role: admin
 | role   | true     | [RoleName](/graphql/core/api-reference/syntax-defs.mdx#rolename)     | Role                                                          |
 | source | false    | [SourceName](/graphql/core/api-reference/syntax-defs.mdx#sourcename) | Name of the source database of the table (default: `default`) |
 
-## pg_create_update_permission {#pg-create-update-permission}
+## pg_create_update_permission {#metadata-pg-create-update-permission}
 
 An update permission is used to restrict the columns and rows that can
 be updated. Its structure is quite similar to the select permission.
@@ -301,7 +301,7 @@ never be allowed to be updated.
 
 :::
 
-### Args syntax
+### Args syntax {#metadata-pg-create-update-permission-syntax}
 
 | Key        | Required | Schema                                                                            | Description                                                   |
 |------------|----------|-----------------------------------------------------------------------------------|---------------------------------------------------------------|
@@ -311,7 +311,7 @@ never be allowed to be updated.
 | comment    | false    | text                                                                              | Comment                                                       |
 | source     | false    | [SourceName](/graphql/core/api-reference/syntax-defs.mdx#sourcename)              | Name of the source database of the table (default: `default`) |
 
-## pg_drop_update_permission {#pg-drop-update-permission}
+## pg_drop_update_permission {#metadata-pg-drop-update-permission}
 
 The `pg_drop_update_permission` API is used to drop an existing update
 permission for a role on a table.
@@ -333,7 +333,7 @@ X-Hasura-Role: admin
 }
 ```
 
-### Args syntax
+### Args syntax {#metadata-pg-drop-update-permission-syntax}
 
 | Key    | Required | Schema                                                                | Description                                                   |
 |--------|----------|-----------------------------------------------------------------------|---------------------------------------------------------------|
@@ -341,7 +341,7 @@ X-Hasura-Role: admin
 | role   | true     | [RoleName](/graphql/core/api-reference/syntax-defs.mdx#rolename)      | Role                                                          |
 | source | false    | [SourceName](/graphql/core/api-reference/syntax-defs.mdx#sourcename)  | Name of the source database of the table (default: `default`) |
 
-## pg_create_delete_permission {#pg-create-delete-permission}
+## pg_create_delete_permission {#metadata-pg-create-delete-permission}
 
 A delete permission is used to restrict the rows that can be deleted.
 
@@ -373,7 +373,7 @@ This reads as follows:
 where `author_id` is the same as the request header `X-HASURA-USER-ID`
 value."
 
-### Args syntax
+### Args syntax {#metadata-pg-create-delete-permission-syntax}
 
 | Key        | Required | Schema                                                                            | Description                                                   |
 |------------|----------|-----------------------------------------------------------------------------------|---------------------------------------------------------------|
@@ -383,7 +383,7 @@ value."
 | comment    | false    | text                                                                              | Comment                                                       |
 | source     | false    | [SourceName](/graphql/core/api-reference/syntax-defs.mdx#sourcename)              | Name of the source database of the table (default: `default`) |
 
-## pg_drop_delete_permission {#pg-drop-delete-permission}
+## pg_drop_delete_permission {#metadata-pg-drop-delete-permission}
 
 The `pg_drop_delete_permission` API is used to drop an existing delete permission for a role on a table.
 
@@ -404,7 +404,7 @@ X-Hasura-Role: admin
 }
 ```
 
-### Args syntax
+### Args syntax {#metadata-pg-drop-delete-permission-syntax}
 
 | Key    | Required | Schema                                                               | Description                                                   |
 |--------|----------|----------------------------------------------------------------------|---------------------------------------------------------------|
@@ -412,7 +412,7 @@ X-Hasura-Role: admin
 | role   | true     | [RoleName](/graphql/core/api-reference/syntax-defs.mdx#rolename)     | Role                                                          |
 | source | false    | [SourceName](/graphql/core/api-reference/syntax-defs.mdx#sourcename) | Name of the source database of the table (default: `default`) |
 
-## pg_set_permission_comment {#pg-set-permission-comment}
+## pg_set_permission_comment {#metadata-pg-set-permission-comment}
 
 `pg_set_permission_comment` is used to set/update the comment on a permission. Setting the comment to `null` removes it.
 
@@ -436,7 +436,7 @@ X-Hasura-Role: admin
 }
 ```
 
-### Args syntax
+### Args syntax {#metadata-pg-set-permission-comment-syntax}
 
 | Key     | Required | Schema                                                                   | Description                                                   |
 |---------|----------|--------------------------------------------------------------------------|---------------------------------------------------------------|
@@ -529,7 +529,7 @@ In the above definition, the row is allowed to be inserted if the
 `author_id` is the same as the request's user id and `is_reviewed` is
 `false` when the `category` is "editorial".
 
-### Args syntax
+### Args syntax {#mssql-create-insert-permission-syntax}
 
 | Key        | Required | Schema                                                                                | Description                                                   |
 |------------|----------|---------------------------------------------------------------------------------------|---------------------------------------------------------------|
@@ -560,7 +560,7 @@ X-Hasura-Role: admin
 }
 ```
 
-### Args syntax
+### Args syntax {#mssql-drop-insert-permission-syntax}
 
 | Key    | Required | Schema                                                                    | Description                                                   |
 |--------|----------|---------------------------------------------------------------------------|---------------------------------------------------------------|
@@ -614,7 +614,7 @@ This reads as follows - For the `user` role:
     table by the `user` role to a maximum of 10.
 -   Allow aggregate queries.
 
-### Args syntax
+### Args syntax {#mssql-create-select-permission-syntax}
 
 | Key        | Required | Schema                                                                            | Description                                                   |
 |------------|----------|-----------------------------------------------------------------------------------|---------------------------------------------------------------|
@@ -645,7 +645,7 @@ X-Hasura-Role: admin
 }
 ```
 
-### Args syntax
+### Args syntax {#mssql-drop-select-permission-syntax}
 
 | Key    | Required | Schema                                                               | Description                                                   |
 |--------|----------|----------------------------------------------------------------------|---------------------------------------------------------------|
@@ -712,7 +712,7 @@ never be allowed to be updated.
 
 :::
 
-### Args syntax
+### Args syntax {#mssql-create-update-permission-syntax}
 
 | Key        | Required | Schema                                                                            | Description                                                   |
 |------------|----------|-----------------------------------------------------------------------------------|---------------------------------------------------------------|
@@ -744,7 +744,7 @@ X-Hasura-Role: admin
 }
 ```
 
-### Args syntax
+### Args syntax {#mssql-drop-update-permission-syntax}
 
 | Key    | Required | Schema                                                               | Description                                                   |
 |--------|----------|----------------------------------------------------------------------|---------------------------------------------------------------|
@@ -784,7 +784,7 @@ This reads as follows:
 where `author_id` is the same as the request header `X-HASURA-USER-ID`
 value."
 
-### Args syntax
+### Args syntax {#mssql-create-delete-permission-syntax}
 
 | Key        | Required | Schema                                                                            | Description                                                   |
 |------------|----------|-----------------------------------------------------------------------------------|---------------------------------------------------------------|
@@ -816,7 +816,7 @@ X-Hasura-Role: admin
 }
 ```
 
-### Args syntax
+### Args syntax {#mssql-drop-delete-permission-syntax}
 
 | Key    | Required | Schema                                                               | Description                                                   |
 |--------|----------|----------------------------------------------------------------------|---------------------------------------------------------------|
@@ -848,7 +848,7 @@ X-Hasura-Role: admin
 }
 ```
 
-### Args syntax
+### Args syntax {#mssql-set-permission-comment-syntax}
 
 | Key     | Required | Schema                                                               | Description                                                   |
 |---------|----------|----------------------------------------------------------------------|---------------------------------------------------------------|
