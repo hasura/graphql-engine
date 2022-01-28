@@ -20,7 +20,7 @@ String \| [QualifiedTable](#qualifiedtable)
 
 </div>
 
-## QualifiedTable
+## QualifiedTable {#qualifiedtable}
 
 ```
 {  
@@ -41,7 +41,7 @@ String \| [QualifiedFunction](#qualifiedfunction)
 
 </div>
 
-## QualifiedFunction
+## QualifiedFunction {#qualifiedfunction}
 
 ```
 {  
@@ -50,28 +50,28 @@ String \| [QualifiedFunction](#qualifiedfunction)
 }
 ```
 
-## RoleName
+## RoleName {#rolename}
 
 `String`
 
-## ComputedFieldName
+## ComputedFieldName {#computedfieldname}
 
 `String`
 
-## PGConfiguration
+## PGConfiguration {#pgconfiguration}
 
 | Key             | Required | Schema                                                | Description                                                                                 |
 |-----------------|----------|-------------------------------------------------------|---------------------------------------------------------------------------------------------|
 | connection_info | true     | [PGSourceConnectionInfo](#pgsourceconnectioninfo)     | Connection parameters for the source                                                        |
 | read_replicas   | false    | \[[PGSourceConnectionInfo](#pgsourceconnectioninfo)\] | Optional list of read replica configuration *(supported only in cloud/enterprise versions)* |
 
-## MsSQLConfiguration
+## MsSQLConfiguration {#mssqlconfiguration}
 
 | Key             | Required | Schema                                                  | Description                          |
 |-----------------|----------|---------------------------------------------------------|--------------------------------------|
 | connection_info | true     | [MsSQLSourceConnectionInfo](#mssqlsourceconnectioninfo) | Connection parameters for the source |
 
-## BigQueryConfiguration
+## BigQueryConfiguration {#bigqueryconfiguration}
 
 | Key             | Required | Schema                                         | Description                           |
 |-----------------|----------|------------------------------------------------|---------------------------------------|
@@ -79,7 +79,7 @@ String \| [QualifiedFunction](#qualifiedfunction)
 | project_id      | true     | `String` \| [FromEnv](#fromenv)                | Project Id for BigQuery database      |
 | datasets        | true     | `[String]` \| [FromEnv](#fromenv)              | List of BigQuery datasets             |
 
-## PGSourceConnectionInfo
+## PGSourceConnectionInfo {#pgsourceconnectioninfo}
 
 | Key                     | Required | Schema                                                                               | Description                                                                                                                                                                                                         |
 |-------------------------|----------|--------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -89,20 +89,20 @@ String \| [QualifiedFunction](#qualifiedfunction)
 | isolation_level         | false    | `read-committed` \| `repeatable-read` \| `serializable`                              | The transaction isolation level in which the queries made to the source will be run with (default: `read-committed`).                                                                                               |
 | ssl_configuration       | false    | [PGCertSettings](#pgcertsettings)                                                    | The client SSL certificate settings for the database (*Only available in Cloud*).                                                                                                                                   |
 
-## MsSQLSourceConnectionInfo
+## MsSQLSourceConnectionInfo {#mssqlsourceconnectioninfo}
 
 | Key               | Required | Schema                                  | Description                                                   |
 |-------------------|----------|-----------------------------------------|---------------------------------------------------------------|
 | connection_string | true     | `String` \| [FromEnv](#fromenv)         | The database connection string, or as an environment variable |
 | pool_settings     | false    | [MsSQLPoolSettings](#mssqlpoolsettings) | Connection pool settings                                      |
 
-## FromEnv
+## FromEnv {#fromenv}
 
 | Key      | Required | Schema   | Description                      |
 |----------|----------|----------|----------------------------------|
 | from_env | true     | `String` | Name of the environment variable |
 
-## PGConnectionParameters
+## PGConnectionParameters {#pgconnectionparameters}
 
 | Key      | Required | Schema    | Description                                         |
 |----------|----------|-----------|-----------------------------------------------------|
@@ -112,7 +112,7 @@ String \| [QualifiedFunction](#qualifiedfunction)
 | host     | true     | `String`  | The name of the host to connect to                  |
 | port     | true     | `Integer` | The port number to connect with, at the server host |
 
-## PGPoolSettings
+## PGPoolSettings {#pgpoolsettings}
 
 | Key                 | Required | Schema    | Description                                                                                                                                                                                                                                                       |
 |---------------------|----------|-----------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -122,7 +122,7 @@ String \| [QualifiedFunction](#qualifiedfunction)
 | pool_timeout        | false    | `Integer` | Maximum time to wait while acquiring a Postgres connection from the pool, in seconds (default: forever)                                                                                                                                                           |
 | connection_lifetime | false    | `Integer` | Time from connection creation after which the connection should be destroyed and a new one created. A value of 0 indicates we should never destroy an active connection. If 0 is passed, memory from large query results may not be reclaimed. (default: 600 sec) |
 
-## PGCertSettings
+## PGCertSettings {#pgcertsettings}
 
 | Key         | Required | Schema                          | Description                                                                                                                                                    |
 |-------------|----------|---------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -132,14 +132,14 @@ String \| [QualifiedFunction](#qualifiedfunction)
 | sslkey      | true     | [FromEnv](#fromenv)             | Environment variable which stores the client private key.                                                                                                      |
 | sslpassword | false    | `String` \| [FromEnv](#fromenv) | Password in the case where the sslkey is encrypted.                                                                                                            |
 
-## MsSQLPoolSettings
+## MsSQLPoolSettings {#mssqlpoolsettings}
 
 | Key             | Required | Schema    | Description                                                        |
 |-----------------|----------|-----------|--------------------------------------------------------------------|
 | max_connections | false    | `Integer` | Maximum number of connections to be kept in the pool (default: 50) |
 | idle_timeout    | false    | `Integer` | The idle timeout (in seconds) per connection (default: 180)        |
 
-## PGColumnType
+## PGColumnType {#pgcolumntype}
 
 `String`
 
@@ -183,15 +183,15 @@ String \| [QualifiedFunction](#qualifiedfunction)
     | `json`  |       | Stored as plain text                         |
     | `jsonb` |       | Stored in a binary format and can be indexed |
 
-## PGColumn
+## PGColumn {#pgcolumn}
 
 `String`
 
-## RelationshipName
+## RelationshipName {#relationshipname}
 
 `String`
 
-## Table Config
+## Table Config {#tableconfig}
 
 | Key                 | Required | Schema                                    | Description                                                                                                                                       |
 |---------------------|----------|-------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -199,7 +199,7 @@ String \| [QualifiedFunction](#qualifiedfunction)
 | custom_root_fields  | false    | [Custom Root Fields](#custom-root-fields) | Customise the root fields                                                                                                                         |
 | custom_column_names | false    | [CustomColumnNames](#customcolumnnames)   | Customise the column fields                                                                                                                       |
 
-## Custom Root Fields
+## Custom Root Fields {#customrootfields}
 
 | Key              | Required | Schema   | Description                                          |
 |------------------|----------|----------|------------------------------------------------------|
@@ -213,14 +213,14 @@ String \| [QualifiedFunction](#qualifiedfunction)
 | delete           | false    | `String` | Customise the `delete_<table-name>` root field       |
 | delete_by_pk     | false    | `String` | Customise the `delete_<table-name>_by_pk` root field |
 
-## Custom Function Root Fields
+## Custom Function Root Fields {#customfunctionrootfields}
 
 | Key                | Required | Schema   | Description                                          |
 |--------------------|----------|----------|------------------------------------------------------|
 | function           | false    | `String` | Customise the `<function-name>` root field           |
 | function_aggregate | false    | `String` | Customise the `<function-name>_aggregete` root field |
 
-## InsertPermission
+## InsertPermission {#insertpermission}
 
 | Key          | Required | Schema                      | Description                                                                                                                                                                                                               |
 |--------------|----------|-----------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -229,7 +229,7 @@ String \| [QualifiedFunction](#qualifiedfunction)
 | columns      | false    | [PGColumn](#pgcolumn) array (or) `'*'` | Can insert into only these columns (or all when `'*'` is specified)                                                                                                                                                       |
 | backend_only | false    | Boolean                     | When set to `true` the mutation is accessible only if `x-hasura-use-backend-only-permissions` session variable exists and is set to `true` and request is made with `x-hasura-admin-secret` set if any auth is configured |
 
-## SelectPermission
+## SelectPermission {#selectpermission}
 
 | Key                | Required | Schema                      | Description                                                        |
 |--------------------|----------|-----------------------------|--------------------------------------------------------------------|
@@ -239,7 +239,7 @@ String \| [QualifiedFunction](#qualifiedfunction)
 | limit              | false    | `Integer`                   | The maximum number of rows that can be returned                    |
 | allow_aggregations | false    | `Boolean`                   | Toggle allowing aggregate queries                                  |
 
-## UpdatePermission
+## UpdatePermission {#updatepermission}
 
 | Key     | Required | Schema                      | Description                                                                            |
 |---------|----------|-----------------------------|----------------------------------------------------------------------------------------|
@@ -248,13 +248,13 @@ String \| [QualifiedFunction](#qualifiedfunction)
 | check   | false    | [BoolExp](#boolexp)                   | Postcondition which must be satisfied by rows which have been updated                  |
 | set     | false    | [ColumnPresetExp](#columnpresetexp)           | Preset values for columns that can be sourced from session variables or static values. |
 
-## DeletePermission
+## DeletePermission {#deletepermission}
 
 | Key    | Required | Schema    | Description                                                  |
 |--------|----------|-----------|--------------------------------------------------------------|
 | filter | true     | [BoolExp](#boolexp) | Only the rows where this expression holds true are deletable |
 
-## ObjRelUsing
+## ObjRelUsing {#objrelusing}
 
 | Key                       | Required | Schema                                                | Description                                                           |
 |---------------------------|----------|-------------------------------------------------------|-----------------------------------------------------------------------|
@@ -268,7 +268,7 @@ and `manual_configuration`.
 
 :::
 
-## ObjRelUsingChoice
+## ObjRelUsingChoice {#objrelusingchoice}
 
 <div class="parsed-literal haskell-pre">
 
@@ -276,7 +276,7 @@ and `manual_configuration`.
 
 </div>
 
-## SameTable
+## SameTable {#sametable}
 
 <div class="parsed-literal">
 
@@ -284,7 +284,7 @@ and `manual_configuration`.
 
 </div>
 
-## RemoteTable
+## RemoteTable {#remotetable}
 
 <div class="parsed-literal haskell-pre">
 
@@ -301,7 +301,7 @@ Supported in `v2.0.0-alpha.3` and above.
 
 :::
 
-## ObjRelUsingManualMapping
+## ObjRelUsingManualMapping {#objrelusingmanualmapping}
 
 | Key             | Required | Schema                           | Description                                               |
 |-----------------|----------|----------------------------------|-----------------------------------------------------------|
@@ -309,7 +309,7 @@ Supported in `v2.0.0-alpha.3` and above.
 | column_mapping  | true     | Object ([PGColumn](#pgcolumn) : [PGColumn](#pgcolumn)) | Mapping of columns from current table to remote table     |
 | insertion_order | false    | [InsertOrder](#insertorder)                    | insertion order: before or after parent (default: before) |
 
-## InsertOrder
+## InsertOrder {#insertorder}
 
 Describes when should the referenced table row be inserted in relation
 to the current table row in case of a nested insert. Defaults to
@@ -323,28 +323,28 @@ Supported in `v2.0.0-alpha.3` and above.
 
 :::
 
-## ArrRelUsing
+## ArrRelUsing {#arrrelusing}
 
 | Key                       | Required | Schema                                                | Description                            |
 |---------------------------|----------|-------------------------------------------------------|----------------------------------------|
 | foreign_key_constraint_on | false    | [ArrRelUsingFKeyOn](#arrrelusingfkeyon)               | The column with foreign key constraint |
 | manual_configuration      | false    | [ArrRelUsingManualMapping](#arrrelusingmanualmapping) | Manual mapping of table and columns    |
 
-## ArrRelUsingFKeyOn
+## ArrRelUsingFKeyOn {#arrrelusingfkeyon}
 
 | Key    | Required | Schema      | Description                                    |
 |--------|----------|-------------|------------------------------------------------|
 | table  | true     | [TableName](#tablename) | Name of the table                              |
 | column | true     | [PGColumn](#pgcolumn)  | Name of the column with foreign key constraint |
 
-## ArrRelUsingManualMapping
+## ArrRelUsingManualMapping {#arrrelusingmanualmapping}
 
 | Key            | Required | Schema                           | Description                                               |
 |----------------|----------|----------------------------------|-----------------------------------------------------------|
 | remote_table   | true     | [TableName](#tablename)                      | The table to which the relationship has to be established |
 | column_mapping | true     | Object ([PGColumn](#pgcolumn) : [PGColumn](#pgcolumn)) | Mapping of columns from current table to remote table     |
 
-## BoolExp
+## BoolExp {#boolexp}
 
 <div class="parsed-literal haskell-pre">
 
@@ -354,7 +354,7 @@ ColumnExp](#columnexp)
 
 </div>
 
-## AndExp
+## AndExp {#andexp}
 
 <div class="parsed-literal haskell-pre">
 
@@ -364,7 +364,7 @@ ColumnExp](#columnexp)
 
 </div>
 
-## OrExp
+## OrExp {#orexp}
 
 <div class="parsed-literal haskell-pre">
 
@@ -374,7 +374,7 @@ ColumnExp](#columnexp)
 
 </div>
 
-## NotExp
+## NotExp {#notexp}
 
 <div class="parsed-literal haskell-pre">
 
@@ -384,7 +384,7 @@ ColumnExp](#columnexp)
 
 </div>
 
-## ExistsExp
+## ExistsExp {#existsexp}
 
 <div class="parsed-literal haskell-pre">
 
@@ -396,11 +396,11 @@ ColumnExp](#columnexp)
 
 </div>
 
-## TrueExp
+## TrueExp {#trueexp}
 
 `{}`
 
-## ColumnExp
+## ColumnExp {#columnexp}
 
 <div class="parsed-literal haskell-pre">
 
@@ -410,7 +410,7 @@ ColumnExp](#columnexp)
 
 </div>
 
-## Operator
+## Operator {#operator}
 
 **Generic operators (all column types except json, jsonb) :**
 
@@ -571,7 +571,7 @@ docs](http://postgis.net/workshops/postgis-intro/spatial_relationships.html).)
 
 :::
 
-## Object
+## Object {#object}
 
 A [JSONObject](https://tools.ietf.org/html/rfc7159)
 
@@ -583,7 +583,7 @@ A [JSONObject](https://tools.ietf.org/html/rfc7159)
 }
 ```
 
-## Empty Object
+## Empty Object {#empty-object}
 
 An empty [JSONObject](https://tools.ietf.org/html/rfc7159)
 
@@ -591,7 +591,7 @@ An empty [JSONObject](https://tools.ietf.org/html/rfc7159)
 {}
 ```
 
-## ColumnPresetsExp
+## ColumnPresetsExp {#columnpresetsexp}
 
 A [JSONObject](https://tools.ietf.org/html/rfc7159) of a Postgres column
 name to value mapping, where the value can be static or derived from a
@@ -623,11 +623,11 @@ session variable of the same name.
 
 :::
 
-## RemoteSchemaName
+## RemoteSchemaName {#remoteschemname}
 
 `String`
 
-## RemoteSchemaDef
+## RemoteSchemaDef {#remoteschemadef}
 
 <div class="parsed-literal haskell-pre">
 
@@ -642,7 +642,7 @@ boolean, "timeout_seconds": integer, "customization":
 
 </div>
 
-## RemoteSchemaCustomization
+## RemoteSchemaCustomization {#remoteschemacustomization}
 
 ```
 {  
@@ -673,7 +673,7 @@ boolean, "timeout_seconds": integer, "customization":
 | `type_names`            | false    | [RemoteTypeCustomization](#remotetypecustomization)       | Customization of type names in the remote schema                                       |
 | `field_names`           | false    | \[[RemoteFieldCustomization](#remotefieldcustomization)\] | Customization of field names for types in the remote schema                            |
 
-## RemoteTypeCustomization
+## RemoteTypeCustomization {#remotetypecustomization}
 
 | Key       | Required | Schema             | Description                                                                                                             |
 |-----------|----------|--------------------|-------------------------------------------------------------------------------------------------------------------------|
@@ -688,7 +688,7 @@ boolean, "timeout_seconds": integer, "customization":
 -   Root types, types starting with `__`, and standard scalar types may
     only be customized with an explicit mapping.
 
-## RemoteFieldCustomization
+## RemoteFieldCustomization {#remotefieldcustomization}
 
 | Key           | Required | Schema             | Description                                                                                                            |
 |---------------|----------|--------------------|------------------------------------------------------------------------------------------------------------------------|
@@ -700,7 +700,7 @@ boolean, "timeout_seconds": integer, "customization":
 -   Fields that are part of an interface must be renamed consistently
     across all object types that implement that interface.
 
-## SourceCustomization
+## SourceCustomization {#sourcecustomization}
 
 ```
 {  
@@ -721,7 +721,7 @@ boolean, "timeout_seconds": integer, "customization":
 | `root_fields` | false    | [RootFieldsCustomization](#rootfieldscustomization) | Customization of root field names for a source |
 | `type_names`  | false    | [SourceTypeCustomization](#sourcetypecustomization) | Customization of type names for a source       |
 
-## RootFieldsCustomization
+## RootFieldsCustomization {#rootfieldscustomization}
 
 | Key         | Required | Schema | Description                                                            |
 |-------------|----------|--------|------------------------------------------------------------------------|
@@ -729,22 +729,22 @@ boolean, "timeout_seconds": integer, "customization":
 | `prefix`    | false    | String | Prefix to be prepended to all root fields in this source               |
 | `suffix`    | false    | String | Suffix to be appended to all root fields in this source                |
 
-## SourceTypeCustomization
+## SourceTypeCustomization {#sourcetypecustomization}
 
 | Key      | Required | Schema | Description                                             |
 |----------|----------|--------|---------------------------------------------------------|
 | `prefix` | false    | String | Prefix to be prepended to all type names in this source |
 | `suffix` | false    | String | Suffix to be appended to all type names in this source  |
 
-## CollectionName
+## CollectionName {#collectionname}
 
 `String`
 
-## QueryName
+## QueryName {#queryname}
 
 `String`
 
-## CollectionQuery
+## CollectionQuery {#collectionquery}
 
 ```
 {  
@@ -753,15 +753,15 @@ boolean, "timeout_seconds": integer, "customization":
 }
 ```
 
-## EndpointUrl
+## EndpointUrl {#endpointurl}
 
 `String`
 
-## EndpointMethods
+## EndpointMethods {#endpointmethods}
 
 `[String]`
 
-## EndpointDefinition
+## EndpointDefinition {#endpointdefinition}
 
 ```
 {  
@@ -771,7 +771,7 @@ boolean, "timeout_seconds": integer, "customization":
 }
 ```
 
-## CustomColumnNames
+## CustomColumnNames {#customcolumnnames}
 
 A [JSONObject](https://tools.ietf.org/html/rfc7159) of Postgres column
 name to GraphQL name mapping
@@ -784,11 +784,11 @@ name to GraphQL name mapping
 }
 ```
 
-## ActionName
+## ActionName {#actionname}
 
 `String`
 
-## WebhookURL
+## WebhookURL {#webhookurl}
 
 A String value which supports templating environment variables enclosed
 in `{{` and `}}`.
@@ -797,21 +797,21 @@ in `{{` and `}}`.
 
 Template example: `https://{{ACTION_API_DOMAIN}}/create-user`
 
-## HeaderFromValue
+## HeaderFromValue {#headerfromvalue}
 
 | Key   | required | Schema | Description         |
 |-------|----------|--------|---------------------|
 | name  | true     | String | Name of the header  |
 | value | true     | String | Value of the header |
 
-## HeaderFromEnv
+## HeaderFromEnv {#headerfromenv}
 
 | Key            | required | Schema | Description                                                          |
 |----------------|----------|--------|----------------------------------------------------------------------|
 | name           | true     | String | Name of the header                                                   |
 | value_from_env | true     | String | Name of the environment variable which holds the value of the header |
 
-## GraphQLType
+## GraphQLType {#graphqltype}
 
 A GraphQL [Type
 Reference](https://spec.graphql.org/June2018/#sec-Type-References)
@@ -822,14 +822,14 @@ string.
 Example: `String!` for non-nullable String type and `[String]` for array
 of String types
 
-## GraphQLName
+## GraphQLName {#graphqlname}
 
 A string literal that conform to [GraphQL
 spec](https://spec.graphql.org/June2018/#Name).
 
 `String`
 
-## ActionDefinition
+## ActionDefinition {#actiondefinition}
 
 | Key                    | Required | Schema                                                                       | Description                                                                                                                             |
 |------------------------|----------|------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------|
@@ -843,7 +843,7 @@ spec](https://spec.graphql.org/June2018/#Name).
 | timeout                | false    | Integer                                                                      | Number of seconds to wait for response before timing out. Default: 30                                                                   |
 | request_transform      | false    | [RequestTransformation](#requesttransformation)                                                      | Request Transformation to be applied to this Action's request                                                                           |
 
-## InputArgument
+## InputArgument {#inputargument}
 
 | Key  | Required | Schema                      | Description          |
 |------|----------|-----------------------------|----------------------|
@@ -857,7 +857,7 @@ via [Custom Types](/graphql/core/api-reference/metadata-api/custom-types.mdx)
 
 :::
 
-## ComputedFieldDefinition
+## ComputedFieldDefinition {#computedfielddefinition}
 
 | Key              | Required | Schema                        | Description                                                                                                                                             |
 |------------------|----------|-------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -865,7 +865,7 @@ via [Custom Types](/graphql/core/api-reference/metadata-api/custom-types.mdx)
 | table_argument   | false    | String                        | Name of the argument which accepts a table row type. If omitted, the first argument is considered a table argument                                      |
 | session_argument | false    | String                        | Name of the argument which accepts the Hasura session object as a JSON/JSONB value. If omitted, the Hasura session object is not passed to the function |
 
-## Function Configuration
+## Function Configuration {#functionconfiguration}
 
 | Key                | Required | Schema                                                      | Description                                                                                                                                             |
 |--------------------|----------|-------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -889,7 +889,7 @@ docs](https://www.postgresql.org/docs/current/sql-createfunction.html)):
 
 :::
 
-## InputObjectType
+## InputObjectType {#inputobjecttype}
 
 A simple JSON object to define [GraphQL Input
 Object](https://spec.graphql.org/June2018/#sec-Input-Objects)
@@ -900,7 +900,7 @@ Object](https://spec.graphql.org/June2018/#sec-Input-Objects)
 | description | false    | String                                         | Description of the Input object type |
 | fields      | true     | Array of [InputObjectField](#inputobjectfield) | Fields of the Input object type      |
 
-### InputObjectField
+### InputObjectField {#inputobjectfield}
 
 | Key         | Required | Schema                      | Description                           |
 |-------------|----------|-----------------------------|---------------------------------------|
@@ -908,7 +908,7 @@ Object](https://spec.graphql.org/June2018/#sec-Input-Objects)
 | description | false    | String                      | Description of the Input object field |
 | type        | true     | [GraphQLType](#graphqltype) | GraphQL ype of the input object field |
 
-## ObjectType
+## ObjectType {#objecttype}
 
 A simple JSON object to define [GraphQL
 Object](https://spec.graphql.org/June2018/#sec-Objects)
@@ -920,7 +920,7 @@ Object](https://spec.graphql.org/June2018/#sec-Objects)
 | fields        | true     | Array of [ObjectField](#objectfield)               | Fields of the Object type                  |
 | relationships | false    | Array of [ObjectRelationship](#objectrelationship) | Relationships of the Object type to tables |
 
-### ObjectField
+### ObjectField {#objectfield}
 
 | Key         | Required | Schema                      | Description                            |
 |-------------|----------|-----------------------------|----------------------------------------|
@@ -928,7 +928,7 @@ Object](https://spec.graphql.org/June2018/#sec-Objects)
 | description | false    | String                      | Description of the Input object field  |
 | type        | true     | [GraphQLType](#graphqltype) | GraphQL type of the input object field |
 
-### ObjectRelationship
+### ObjectRelationship {#objectrelationship}
 
 | Key           | Required | Schema                                                                | Description                                                            |
 |---------------|----------|-----------------------------------------------------------------------|------------------------------------------------------------------------|
@@ -937,7 +937,7 @@ Object](https://spec.graphql.org/June2018/#sec-Objects)
 | remote_table  | true     | [TableName](#tablename)                                                           | The table to which relationship is defined                             |
 | field_mapping | true     | Object ([ObjectField](#objectfield) name : Remote table's [PGColumn](#pgcolumn)) | Mapping of fields of object type to columns of remote table            |
 
-## ScalarType
+## ScalarType {#scalartype}
 
 A simple JSON object to define [GraphQL
 Scalar](https://spec.graphql.org/June2018/#sec-Scalars)
@@ -947,7 +947,7 @@ Scalar](https://spec.graphql.org/June2018/#sec-Scalars)
 | name        | true     | [GraphQLName](#graphqlname) | Name of the Scalar type        |
 | description | false    | String        | Description of the Scalar type |
 
-## EnumType
+## EnumType {#enumtype}
 
 A simple JSON object to define [GraphQL
 Enum](https://spec.graphql.org/June2018/#sec-Enums)
@@ -958,7 +958,7 @@ Enum](https://spec.graphql.org/June2018/#sec-Enums)
 | description | false    | String                           | Description of the Enum type |
 | values      | true     | Array of [EnumValue](#enumvalue) | Values of the Enum type      |
 
-### EnumValue
+### EnumValue {#enumvalue}
 
 | Key           | Required | Schema        | Description                                              |
 |---------------|----------|---------------|----------------------------------------------------------|
@@ -966,18 +966,18 @@ Enum](https://spec.graphql.org/June2018/#sec-Enums)
 | description   | false    | String        | Description of the value                                 |
 | is_deprecated | false    | Boolean       | If set to `true`, the enum value is marked as deprecated |
 
-## TriggerName
+## TriggerName {#triggername}
 
 `String`
 
-## OperationSpec
+## OperationSpec {#operationspec}
 
 | Key     | Required | Schema                                      | Description                                                |
 |---------|----------|---------------------------------------------|------------------------------------------------------------|
 | columns | true     | [EventTriggerColumns](#eventtriggercolumns) | List of columns or "\*" to listen to changes               |
 | payload | false    | [EventTriggerColumns](#eventtriggercolumns) | List of columns or "\*" to send as part of webhook payload |
 
-## EventTriggerColumns
+## EventTriggerColumns {#eventtriggercolumns}
 
 <div class="parsed-literal haskell-pre">
 
@@ -985,7 +985,7 @@ Enum](https://spec.graphql.org/June2018/#sec-Enums)
 
 </div>
 
-## RequestTransformation
+## RequestTransformation {#requesttransformation}
 
 | Key             | required | Schema                   | Description                                                                                                                                        |
 |-----------------|----------|--------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -997,22 +997,22 @@ Enum](https://spec.graphql.org/June2018/#sec-Enums)
 | request_headers | false    | [TransformHeaders](#transformheaders)       | Transform headers as described here.                                                                                                               |
 | template_engine | false    | [TemplateEngine](#templateengine)         | Template language to be used for this transformation. Default: "Kriti"                                                                             |
 
-## TransformHeaders
+## TransformHeaders {#transformheaders}
 
 | Key           | required | Schema                               | Description                                                                                            |
 |---------------|----------|--------------------------------------|--------------------------------------------------------------------------------------------------------|
 | addHeaders    | false    | Object ([HeaderKey](#headerkey) : [HeaderValue](#headervalue)) | A map of Header Key Value pairs to be added to the request. Content-Type cannot be added via this map. |
 | removeHeaders | false    | Array of ([HeaderKey](#headerkey))               | Headers to be removed from the request. Content-Type cannot be removed.                                |
 
-## HeaderKey
+## HeaderKey {#headerkey}
 
 `String`
 
-## HeaderValue
+## HeaderValue {#headervalue}
 
 `String`
 
-## TemplateEngine
+## TemplateEngine {#templateengine}
 
 The JSON templating language to be used for this JSON transformation.
 
@@ -1020,7 +1020,7 @@ The JSON templating language to be used for this JSON transformation.
 "Kriti"
 ```
 
-## RetryConf
+## RetryConf {#retryconf}
 
 | Key          | required | Schema  | Description                                                           |
 |--------------|----------|---------|-----------------------------------------------------------------------|
@@ -1028,11 +1028,11 @@ The JSON templating language to be used for this JSON transformation.
 | interval_sec | false    | Integer | Number of seconds to wait between each retry. Default: 10             |
 | timeout_sec  | false    | Integer | Number of seconds to wait for response before timing out. Default: 60 |
 
-## RemoteRelationshipName
+## RemoteRelationshipName {#remoterelationshipname}
 
 `String`
 
-## RemoteField
+## RemoteField {#remotefield}
 ```
 {  
   FieldName: {  
@@ -1075,7 +1075,7 @@ Examples:
 }
 ```
 
-## InputArguments
+## InputArguments {#inputarguments}
 
 ```
 {  
@@ -1085,19 +1085,19 @@ InputField : $PGColumn | Scalar
 
 Table columns can be referred by prefixing `$` e.g `$id`.
 
-## RemoteSchemaPermission
+## RemoteSchemaPermission {#remoteschemapermission}
 
 | Key    | Required | Schema      | Description                                |
 |--------|----------|-------------|--------------------------------------------|
 | schema | true     | GraphQL SDL | GraphQL SDL defining the role based schema |
 
-## UrlFromEnv
+## UrlFromEnv {#urlfromenv}
 
 | Key      | required | Schema | Description                                        |
 |----------|----------|--------|----------------------------------------------------|
 | from_env | true     | String | Name of the environment variable which has the URL |
 
-## RetryConfST
+## RetryConfST {#retryconfst}
 
 | Key                    | required | Schema  | Description                                                                                                                                                                         |
 |------------------------|----------|---------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
