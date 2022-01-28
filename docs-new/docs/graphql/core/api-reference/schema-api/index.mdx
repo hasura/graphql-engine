@@ -44,13 +44,9 @@ POST /v2/query HTTP/1.1
 
 ### Request body
 
-<div class="parsed-literal">
+[Query](#schema-query)
 
-`Query <schema_query>`
-
-</div>
-
-#### Query
+#### Query{#schema-query}
 
 | Key     | Required | Schema     | Description                     |
 |---------|----------|------------|---------------------------------|
@@ -62,10 +58,10 @@ POST /v2/query HTTP/1.1
 
 The various types of queries are listed in the following table:
 
-| `type`           | `args`                                                                                                                | `version` | Synopsis                                      |
-|------------------|-----------------------------------------------------------------------------------------------------------------------|-----------|-----------------------------------------------|
-| **bulk**         | [Query](#query) array                                                                                                 | 1         | Execute multiple operations in a single query |
-| [schema_run_sql](/graphql/core/api-reference/schema-api/run-sql.mdx) | [run_sql_args](/graphql/core/api-reference/schema-api/run-sql.mdx)| 1         | Run SQL directly on Postgres                  |
+| `type`                                                                               | `args`                                                                                       | `version` | Synopsis                                      |
+|--------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------|-----------|-----------------------------------------------|
+| **bulk**                                                                             | [Query](#query) array                                                                        | 1         | Execute multiple operations in a single query |
+| [run_sql](/graphql/core/api-reference/schema-api/run-sql.mdx#schema-run-sql}) | [run_sql_args](/graphql/core/api-reference/schema-api/run-sql.mdx#schema-run-sql-syntax)     | 1         | Run SQL directly on Postgres                  |
 
 ## Response structure
 
@@ -92,6 +88,6 @@ not enabled i.e. remove it from the list of enabled APIs.
 HASURA_GRAPHQL_ENABLED_APIS="graphql"
 ```
 
-See [GraphQL Engine server config reference](/graphql/core/deployment/graphql-engine-flags/reference.mdx) for info on setting the above flag/env var.
+See [GraphQL Engine server config reference](/graphql/core/deployment/graphql-engine-flags/reference.mdx#server-flag-reference) for info on setting the above flag/env var.
 
 - [Run SQL](<run-sql>)
