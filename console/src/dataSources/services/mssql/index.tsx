@@ -9,6 +9,7 @@ import {
   SupportedFeaturesType,
   FrequentlyUsedColumn,
   ViolationActions,
+  NormalizedTable,
 } from '../../types';
 import {
   generateTableRowRequest,
@@ -62,8 +63,7 @@ const supportedColumnOperators = [
   '_lte',
 ];
 
-const isTable = (table: Table) => {
-  if (!table.table_type) return true; // todo
+const isTable = (table: NormalizedTable) => {
   return table.table_type === 'TABLE' || table.table_type === 'BASE TABLE';
 };
 
@@ -258,8 +258,13 @@ export const mssql: DataSourcesAPI = {
   isColumnAutoIncrement: () => {
     return false;
   },
-  getTableSupportedQueries: () => {
-    // since only subscriptions and queries are supported on MSSQL atm.
+  getTableSupportedQueries: (table: NormalizedTable) => {
+    // all query types are supported for tables
+    if (isTable(table)) {
+      return ['select', 'insert', 'delete'];
+    }
+
+    // only select permissions for views, until server can verify the other ones
     return ['select'];
   },
   getColumnType: (col: TableColumn) => col.data_type_name ?? col.data_type,

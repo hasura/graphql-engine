@@ -2,6 +2,7 @@
 
 ## Next release
 (Add highlights/major features below)
+- console: enable support for insert & delete permissions for mssql tables
 
 ### Breaking Changes
 - For any **MSSQL** backend, count aggregate query on multiple columns is restricted with a GraphQL
