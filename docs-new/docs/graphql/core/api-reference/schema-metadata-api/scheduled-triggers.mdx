@@ -34,7 +34,7 @@ continue to function.
 
 :::
 
-## create_cron_trigger {#create-cron-trigger}
+## create_cron_trigger {#schema-metadata-create-cron-trigger}
 
 `create_cron_trigger` is used to create a new cron trigger.
 
@@ -59,7 +59,7 @@ X-Hasura-Role: admin
 }
 ```
 
-### Args syntax {#create-cron-trigger-syntax}
+### Args syntax {#schema-metadata-create-cron-trigger-syntax}
 
 | Key                 | Required | Schema                                                                                                                                                           | Description                                                                                                                                                                                                     |
 |---------------------|----------|------------------------------------------------------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -79,7 +79,7 @@ Scheduled triggers are supported from versions `v1.3.0` and above.
 
 :::
 
-## delete_cron_trigger {#delete-cron-trigger}
+## delete_cron_trigger {#schema-metadata-delete-cron-trigger}
 
 `delete_cron_trigger` is used to delete an existing cron trigger. The
 scheduled events associated with the cron trigger will also be deleted.
@@ -97,7 +97,7 @@ X-Hasura-Role: admin
 }
 ```
 
-### Args syntax {#delete-cron-trigger-syntax}
+### Args syntax {#schema-metadata-delete-cron-trigger-syntax}
 
 | Key  | Required | Schema                                                                 | Description              |
 |------|----------|------------------------------------------------------------------------|--------------------------|
@@ -109,7 +109,7 @@ Scheduled triggers are supported from versions `v1.3.0` and above.
 
 :::
 
-## create_scheduled_event {#create-scheduled-event}
+## create_scheduled_event {#schema-metadata-create-scheduled-event}
 
 `create_scheduled_event` is used to create a scheduled event.
 
@@ -136,7 +136,7 @@ X-Hasura-Role: admin
 }
 ```
 
-### Args syntax {#create-scheduled-event-syntax}
+### Args syntax {#schema-metadata-create-scheduled-event-syntax}
 
 | Key         | Required | Schema                                                                                                                                                           | Description                                                      |
 |-------------|----------|------------------------------------------------------------------------------------------------------------------------------------------------------------------|------------------------------------------------------------------|

@@ -27,7 +27,7 @@ continue to function.
 
 :::
 
-## create_action {#create-action}
+## create_action {#schema-metadata-create-action}
 
 `create_action` is used to define an action. There shouldn't be an
 existing action with the same name.
@@ -64,7 +64,7 @@ X-Hasura-Role: admin
 }
 ```
 
-### Args syntax {#create-action-syntax}
+### Args syntax {#schema-metadata-create-action-syntax}
 
 | Key        | Required | Schema                                                                                  | Description              |
 |------------|----------|-----------------------------------------------------------------------------------------|--------------------------|
@@ -72,7 +72,7 @@ X-Hasura-Role: admin
 | definition | true     | [ActionDefinition](/graphql/core/api-reference/syntax-defs.mdx#actiondefinition)        | Definition of the action |
 | comment    | false    | text                                                                                    | comment                  |
 
-## drop_action {#drop-action}
+## drop_action {#schema-metadata-drop-action}
 
 `drop_action` is used to remove an action. Permissions defined on the
 actions are also dropped automatically.
@@ -93,14 +93,14 @@ X-Hasura-Role: admin
 }
 ```
 
-### Args syntax {#drop-action-syntax}
+### Args syntax {#schema-metadata-drop-action-syntax}
 
 | Key        | Required | Schema                                                                | Description                                                                                                 |
 |------------|----------|-----------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------|
 | name       | true     | [ActionName](/graphql/core/api-reference/syntax-defs.mdx#actionname)  | Name of the action                                                                                          |
 | clear_data | false    | boolean                                                               | If set to `true` and action kind is `asynchronous`, related data is deleted from catalog. (default: `true`) |
 
-## update_action {#update-action}
+## update_action {#schema-metadata-update-action}
 
 `update_action` is used to update the definition of the action.
 Definition thus provided is replaced with existing one.
@@ -136,7 +136,7 @@ X-Hasura-Role: admin
 }
 ```
 
-### Args syntax {#update-action-syntax}
+### Args syntax {#schema-metadata-update-action-syntax}
 
 | Key        | Required | Schema                                                                                  | Description                             |
 |------------|----------|-----------------------------------------------------------------------------------------|-----------------------------------------|
@@ -144,7 +144,7 @@ X-Hasura-Role: admin
 | definition | true     | [ActionDefinition](/graphql/core/api-reference/syntax-defs.mdx#actiondefinition)        | Definition of the action to be replaced |
 | comment    | false    | text                                                                                    | comment                                 |
 
-## create_action_permission {#create-action-permission}
+## create_action_permission {#schema-metadata-create-action-permission}
 
 `create_action_permission` is used to define a permission to make action
 visible for a role.
@@ -163,7 +163,7 @@ X-Hasura-Role: admin
 }
 ```
 
-### Args syntax {#create-action-permission-syntax}
+### Args syntax {#schema-metadata-create-action-permission-syntax}
 
 | Key     | Required | Schema                                                                | Description        |
 |---------|----------|-----------------------------------------------------------------------|--------------------|
@@ -171,7 +171,7 @@ X-Hasura-Role: admin
 | role    | true     | [RoleName](/graphql/core/api-reference/syntax-defs.mdx#rolename)      | Name of the role   |
 | comment | false    | text                                                                  | comment            |
 
-## drop_action_permission {#drop-action-permission}
+## drop_action_permission {#schema-metadata-drop-action-permission}
 
 `drop_action_permission` is used to drop a permission defined on an action.
 
@@ -189,7 +189,7 @@ X-Hasura-Role: admin
 }
 ```
 
-### Args syntax {#drop-action-permission-syntax}
+### Args syntax {#schema-metadata-drop-action-permission-syntax}
 
 | Key  | Required | Schema                                                               | Description        |
 |------|----------|----------------------------------------------------------------------|--------------------|

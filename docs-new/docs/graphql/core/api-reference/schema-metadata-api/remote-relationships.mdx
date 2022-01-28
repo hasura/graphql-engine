@@ -28,7 +28,7 @@ continue to function.
 
 :::
 
-## create_remote_relationship {#create-remote-relationship}
+## create_remote_relationship {#schema-metadata-create-remote-relationship}
 
 `create_remote_relationship` is used to create a new remote relationship
 with an existing remote schema.
@@ -56,7 +56,7 @@ X-Hasura-Role: admin
 }
 ```
 
-### Args syntax {#create-remote-relationship-syntax}
+### Args syntax {#schema-metadata-create-remote-relationship-syntax}
 
 | Key           | Required | Schema                                                                                                                                                       | Description                                                                                                                                |
 |---------------|----------|--------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------|
@@ -66,7 +66,7 @@ X-Hasura-Role: admin
 | remote_schema | true     | [RemoteSchemaName](/graphql/core/api-reference/syntax-defs.mdx#remoteschemaname)                                                                             | Name of the remote schema to join with                                                                                                     |
 | remote_field  | true     | [RemoteField](/graphql/core/api-reference/syntax-defs.mdx#remotefield)                                                                                       | The schema tree ending at the field in remote schema which needs to be joined with.                                                        |
 
-## update_remote_relationship {#update-remote-relationship}
+## update_remote_relationship {#schema-metadata-update-remote-relationship}
 
 `update_remote_relationship` is used to update an existing remote relationship.
 
@@ -96,7 +96,7 @@ X-Hasura-Role: admin
 }
 ```
 
-### Args syntax {#update-remote-relationship-syntax}
+### Args syntax {#schema-metadata-update-remote-relationship-syntax}
 
 | Key           | Required | Schema                                                                                        | Description                                                                                                                 |
 |---------------|----------|-----------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------|
@@ -106,7 +106,7 @@ X-Hasura-Role: admin
 | remote_schema | true     | [RemoteSchemaName](/graphql/core/api-reference/syntax-defs.mdx#remoteschemaname)              | Name of the remote schema to join with                                                                                      |
 | remote_field  | true     | [RemoteField](/graphql/core/api-reference/syntax-defs.mdx#remotefield)                        | The schema tree ending at the field in remote schema which needs to be joined with.                                         |
 
-## delete_remote_relationship {#delete-remote-relationship}
+## delete_remote_relationship {#schema-metadata-delete-remote-relationship}
 
 `delete_remote_relationship` is used to delete an existing remote relationship.
 
@@ -127,7 +127,7 @@ X-Hasura-Role: admin
 }
 ```
 
-### Args syntax {#delete-remote-relationship-syntax}
+### Args syntax {#schema-metadata-delete-remote-relationship-syntax}
 
 | Key   | Required | Schema                                                                                                | Description                       |
 |-------|----------|-------------------------------------------------------------------------------------------------------|-----------------------------------|

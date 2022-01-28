@@ -30,7 +30,7 @@ continue to function.
 
 :::
 
-## create_query_collection {#create-query-collection}
+## create_query_collection {#schema-metadata-create-query-collection}
 
 `create_query_collection` is used to define a collection.
 
@@ -53,7 +53,7 @@ X-Hasura-Role: admin
 }
 ```
 
-### Args Syntax {#create-query-collection-syntax}
+### Args Syntax {#schema-metadata-create-query-collection-syntax}
 
 | Key        | Required | Schema                                                                                | Description                  |
 |------------|----------|---------------------------------------------------------------------------------------|------------------------------|
@@ -61,7 +61,7 @@ X-Hasura-Role: admin
 | definition | true     | [CollectionQuery](/graphql/core/api-reference/syntax-defs.mdx#collectionquery) array  | List of queries              |
 | comment    | false    | text                                                                                  | Optional comment             |
 
-## drop_query_collection {#drop-query-collection}
+## drop_query_collection {#schema-metadata-drop-query-collection}
 
 `drop_query_collection` is used to drop a collection
 
@@ -79,14 +79,14 @@ X-Hasura-Role: admin
 }
 ```
 
-### Args syntax [#drop-query-collection-syntax]
+### Args syntax {#schema-metadata-drop-query-collection-syntax}
 
 | Key        | Required | Schema                                                                        | Description                                                                   |
 |------------|----------|-------------------------------------------------------------------------------|-------------------------------------------------------------------------------|
 | collection | true     | [CollectionName](/graphql/core/api-reference/syntax-defs.mdx#collectionname)  | Name of the query collection                                                  |
 | cascade    | true     | boolean                                                                       | When set to `true`, the collection (if present) is removed from the allowlist |
 
-## add_query_to_collection {#add-query-to-collection}
+## add_query_to_collection {#schema-metadata-add-query-to-collection}
 
 `add_query_to_collection` is used to add a query to a given collection.
 
@@ -105,7 +105,7 @@ X-Hasura-Role: admin
 }
 ```
 
-### Args Syntax [#add-query-to-collection-syntax]
+### Args Syntax {#schema-metadata-add-query-to-collection-syntax}
 
 | Key             | Required | Schema                                                                       | Description                  |
 |-----------------|----------|------------------------------------------------------------------------------|------------------------------|
@@ -113,7 +113,7 @@ X-Hasura-Role: admin
 | query_name      | true     | [QueryName](/graphql/core/api-reference/syntax-defs.mdx#queryname)           | Name of the query            |
 | query           | true     | text                                                                         | The GraphQL query text       |
 
-## drop_query_from_collection
+## drop_query_from_collection {#schema-metadata-drop-query-from-collection}
 
 `drop_query_from_collection` is used to remove a query from a given
 collection.
@@ -132,14 +132,14 @@ X-Hasura-Role: admin
 }
 ```
 
-### Args Syntax {#drop-query-from-collection-syntax}
+### Args Syntax {#schema-metadata-drop-query-from-collection-syntax}
 
 | Key             | Required | Schema                                                                       | Description                  |
 |-----------------|----------|------------------------------------------------------------------------------|------------------------------|
 | collection_name | true     | [CollectionName](/graphql/core/api-reference/syntax-defs.mdx#collectionname) | Name of the query collection |
 | query_name      | true     | [QueryName](/graphql/core/api-reference/syntax-defs.mdx#queryname)           | Name of the query            |
 
-## add_collection_to_allowlist {#add-collection-to-allowlist}
+## add_collection_to_allowlist {#schema-metadata-add-collection-to-allowlist}
 
 `add_collection_to_allowlist` is used to add a collection to the allow-list.
 
@@ -156,13 +156,13 @@ X-Hasura-Role: admin
 }
 ```
 
-### Args Syntax {#add-collection-to-allowlist-syntax}
+### Args Syntax {#schema-metadata-add-collection-to-allowlist-syntax}
 
 | Key        | Required | Schema                                                                       | Description                                              |
 |------------|----------|------------------------------------------------------------------------------|----------------------------------------------------------|
 | collection | true     | [CollectionName](/graphql/core/api-reference/syntax-defs.mdx#collectionname) | Name of a query collection to be added to the allow-list |
 
-## drop_collection_from_allowlist {#drop-collection-from-allowlist}
+## drop_collection_from_allowlist {#schema-metadata-drop-collection-from-allowlist}
 
 `drop_collection_from_allowlist` is used to remove a collection from the allow-list.
 
@@ -179,7 +179,7 @@ X-Hasura-Role: admin
 }
 ```
 
-### Args Syntax {#drop-collection-from-allowlist-syntax}
+### Args Syntax {#schema-metadata-drop-collection-from-allowlist-syntax}
 
 | Key        | Required | Schema                                                                       | Description                                                  |
 |------------|----------|------------------------------------------------------------------------------|--------------------------------------------------------------|

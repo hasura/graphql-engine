@@ -38,7 +38,7 @@ continue to function.
 
 :::
 
-## create_insert_permission {#create-insert-permission}
+## create_insert_permission {#schema-metadata-create-insert-permission}
 
 An insert permission is used to enforce constraints on the data that is
 being inserted.
@@ -120,7 +120,7 @@ In the above definition, the row is allowed to be inserted if the
 `author_id` is the same as the request's user id and `is_reviewed` is
 `false` when the `category` is "editorial".
 
-### Args syntax {#create-insert-permission-syntax}
+### Args syntax {#schema-metadata-create-insert-permission-syntax}
 
 | Key        | Required | Schema                                                                            | Description               |
 |------------|----------|-----------------------------------------------------------------------------------|---------------------------|
@@ -129,7 +129,7 @@ In the above definition, the row is allowed to be inserted if the
 | permission | true     | [InsertPermission](/graphql/core/api-reference/syntax-defs.mdx#insertpermission)  | The permission definition |
 | comment    | false    | text                                                                              | Comment                   |
 
-## drop_insert_permission {#drop-insert-permission}
+## drop_insert_permission {#schema-metadata-drop-insert-permission}
 
 The `drop_insert_permission` API is used to drop an existing insert
 permission for a role on a table.
@@ -150,14 +150,14 @@ X-Hasura-Role: admin
 }
 ```
 
-### Args syntax {#drop-insert-permission-syntax}
+### Args syntax {#schema-metadata-drop-insert-permission-syntax}
 
 | Key   | Required | Schema                                                             | Description       |
 |-------|----------|--------------------------------------------------------------------|-------------------|
 | table | true     | [TableName](/graphql/core/api-reference/syntax-defs.mdx#tablename) | Name of the table |
 | role  | true     | [RoleName](/graphql/core/api-reference/syntax-defs.mdx#rolename)   | Role              |
 
-## create_select_permission {#create-select-permission}
+## create_select_permission {#schema-metadata-create-select-permission}
 
 A select permission is used to restrict access to only the specified
 columns and rows.
@@ -202,7 +202,7 @@ This reads as follows - For the `user` role:
     table by the `user` role to a maximum of 10.
 -   Allow aggregate queries.
 
-### Args syntax {#create-select-permission-syntax}
+### Args syntax {#schema-metadata-create-select-permission-syntax}
 
 | Key        | Required | Schema                                                                            | Description               |
 |------------|----------|-----------------------------------------------------------------------------------|---------------------------|
@@ -211,7 +211,7 @@ This reads as follows - For the `user` role:
 | permission | true     | [SelectPermission](/graphql/core/api-reference/syntax-defs.mdx#selectpermission)  | The permission definition |
 | comment    | false    | text                                                                              | Comment                   |
 
-## drop_select_permission {#drop-select-permission}
+## drop_select_permission {#schema-metadata-drop-select-permission}
 
 The `drop_select_permission` is used to drop an existing select
 permission for a role on a table.
@@ -232,14 +232,14 @@ X-Hasura-Role: admin
 }
 ```
 
-### Args syntax {#drop-select-permission-syntax}
+### Args syntax {#schema-metadata-drop-select-permission-syntax}
 
 | Key   | Required | Schema                                                             | Description       |
 |-------|----------|--------------------------------------------------------------------|-------------------|
 | table | true     | [TableName](/graphql/core/api-reference/syntax-defs.mdx#tablename) | Name of the table |
 | role  | true     | [RoleName](/graphql/core/api-reference/syntax-defs.mdx#rolename)   | Role              |
 
-## create_update_permission [#create-update-permission]
+## create_update_permission {#schema-metadata-create-update-permission}
 
 An update permission is used to restrict the columns and rows that can
 be updated. Its structure is quite similar to the select permission.
@@ -297,7 +297,7 @@ never be allowed to be updated.
 
 :::
 
-### Args syntax {#create-update-permission-syntax}
+### Args syntax {#schema-metadata-create-update-permission-syntax}
 
 | Key        | Required | Schema                                                                            | Description               |
 |------------|----------|-----------------------------------------------------------------------------------|---------------------------|
@@ -306,7 +306,7 @@ never be allowed to be updated.
 | permission | true     | [UpdatePermission](/graphql/core/api-reference/syntax-defs.mdx#updatepermission)  | The permission definition |
 | comment    | false    | text                                                                              | Comment                   |
 
-## drop_update_permission {#drop-update-permission}
+## drop_update_permission {#schema-metadata-drop-update-permission}
 
 The `drop_update_permission` API is used to drop an existing update
 permission for a role on a table.
@@ -327,14 +327,14 @@ X-Hasura-Role: admin
 }
 ```
 
-### Args syntax {#drop-update-permission-syntax}
+### Args syntax {#schema-metadata-drop-update-permission-syntax}
 
 | Key   | Required | Schema                                                             | Description       |
 |-------|----------|--------------------------------------------------------------------|-------------------|
 | table | true     | [TableName](/graphql/core/api-reference/syntax-defs.mdx#tablename) | Name of the table |
 | role  | true     | [RoleName](/graphql/core/api-reference/syntax-defs.mdx#rolename)   | Role              |
 
-## create_delete_permission {#create-delete-permission}
+## create_delete_permission {#schema-metadata-create-delete-permission}
 
 A delete permission is used to restrict the rows that can be deleted.
 
@@ -365,7 +365,7 @@ This reads as follows:
 where `author_id` is the same as the request header `X-HASURA-USER-ID`
 value."
 
-### Args syntax {#create-delete-permission-syntax}
+### Args syntax {#schema-metadata-create-delete-permission-syntax}
 
 | Key        | Required | Schema                                                                            | Description               |
 |------------|----------|-----------------------------------------------------------------------------------|---------------------------|
@@ -374,7 +374,7 @@ value."
 | permission | true     | [DeletePermission](/graphql/core/api-reference/syntax-defs.mdx#deletepermission) | The permission definition |
 | comment    | false    | text                                                                              | Comment                   |
 
-## drop_delete_permission {#drop-delete-permission}
+## drop_delete_permission {#schema-metadata-drop-delete-permission}
 
 The `drop_delete_permission` API is used to drop an existing delete
 permission for a role on a table.
@@ -395,14 +395,14 @@ X-Hasura-Role: admin
 }
 ```
 
-### Args syntax {#drop-delete-permission-syntax}
+### Args syntax {#schema-metadata-drop-delete-permission-syntax}
 
 | Key   | Required | Schema                                                             | Description       |
 |-------|----------|--------------------------------------------------------------------|-------------------|
 | table | true     | [TableName](/graphql/core/api-reference/syntax-defs.mdx#tablename) | Name of the table |
 | role  | true     | [RoleName](/graphql/core/api-reference/syntax-defs.mdx#rolename)   | Role              |
 
-## set_permission_comment {#set-permission-comment}
+## set_permission_comment {#schema-metadata-set-permission-comment}
 
 `set_permission_comment` is used to set/update the comment on a
 permission. Setting the comment to `null` removes it.
@@ -426,7 +426,7 @@ X-Hasura-Role: admin
 }
 ```
 
-### Args syntax {#set-permission-comment-syntax}
+### Args syntax {#schema-metadata-set-permission-comment-syntax}
 
 | Key     | Required | Schema                                                               | Description                |
 |---------|----------|----------------------------------------------------------------------|----------------------------|

@@ -30,7 +30,7 @@ continue to function.
 
 :::
 
-## track_function {#track-function}
+## track_function {#schema-metadata-track-function}
 
 `track_function` is used to add a custom SQL function to the `query`
 root field of the GraphQL schema. Also refer a note
@@ -52,7 +52,7 @@ X-Hasura-Role: admin
 }
 ```
 
-## track_function v2 {#track-function-v2}
+## track_function v2 {#schema-metadata-track-function-v2}
 
 Version 2 of `track_function` is used to add a custom SQL function to
 the GraphQL schema. It supports more configuration options than v1, and
@@ -127,14 +127,14 @@ default).
 
 :::
 
-### Args syntax {#track-function-v2-syntax}
+### Args syntax {#schema-metadata-track-function-v2-syntax}
 
 | Key           | Required | Schema                                                                                       | Description                        |
 |---------------|----------|----------------------------------------------------------------------------------------------|------------------------------------|
 | function      | true     | [FunctionName](/graphql/core/api-reference/syntax-defs.mdx#functionname)                     | Name of the SQL function           |
 | configuration | false    | [Function Configuration](/graphql/core/api-reference/syntax-defs.mdx#function-configuration) | Configuration for the SQL function |
 
-## untrack_function {#untrack-function}
+## untrack_function {#schema-metadata-untrack-function}
 
 `untrack_function` is used to remove a SQL function from the GraphQL
 schema.

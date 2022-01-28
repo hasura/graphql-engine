@@ -52,7 +52,7 @@ continue to function.
 
 :::
 
-## create_object_relationship {#create-object-relationship}
+## create_object_relationship {#schema-metadata-create-object-relationship}
 
 `create_object_relationship` is used to create an object relationship on
 a table. There cannot be an existing column or relationship with the
@@ -161,7 +161,7 @@ defined on `article` table's `id` column to `article_detail` view's
 
 :::
 
-### Args syntax {#create-object-relationship-syntax}
+### Args syntax {#schema-metadata-create-object-relationship-syntax}
 
 | Key     | Required | Schema                                                                           | Description                                                    |
 |---------|----------|----------------------------------------------------------------------------------|----------------------------------------------------------------|
@@ -170,7 +170,7 @@ defined on `article` table's `id` column to `article_detail` view's
 | using   | true     | [ObjRelUsing](/graphql/core/api-reference/syntax-defs.mdx#objrelusing)           | Use one of the available ways to define an object relationship |
 | comment | false    | text                                                                             | comment                                                        |
 
-## create_array_relationship {#create-array-relationship}
+## create_array_relationship {#schema-metadata-create-array-relationship}
 
 `create_array_relationship` is used to create an array relationship on a
 table. There cannot be an existing column or relationship with the same
@@ -250,7 +250,7 @@ defined on the `author` table's `id` column to `article_detail` view's
 
 :::
 
-### Args syntax {#create-array-relationship-syntax}
+### Args syntax {#schema-metadata-create-array-relationship-syntax}
 
 | Key     | Required | Schema                                                                           | Description                                                   |
 |---------|----------|----------------------------------------------------------------------------------|---------------------------------------------------------------|
@@ -259,7 +259,7 @@ defined on the `author` table's `id` column to `article_detail` view's
 | using   | true     | [ArrRelUsing](/graphql/core/api-reference/syntax-defs.mdx#arrrelusing)           | Use one of the available ways to define an array relationship |
 | comment | false    | text                                                                             | comment                                                     |
 
-## drop_relationship {#drop-relationship}
+## drop_relationship {#schema-metadata-drop-relationship}
 
 `drop_relationship` is used to drop a relationship (both object and
 array) on a table. If there are other objects dependent on this
@@ -283,7 +283,7 @@ X-Hasura-Role: admin
 }
 ```
 
-### Args syntax {#drop-relationship-syntax}
+### Args syntax {#schema-metadata-drop-relationship-syntax}
 
 | Key          | Required | Schema                                                                              | Description                                                                       |
 |--------------|----------|-------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------|
@@ -298,7 +298,7 @@ Be careful when using `cascade`. First, try running the request without
 
 :::
 
-## set_relationship_comment {#set-relationship-comment}
+## set_relationship_comment {#schema-metadata-set-relationship-comment}
 
 `set_relationship_comment` is used to set/update the comment on a
 relationship. Setting the comment to `null` removes it.
@@ -320,7 +320,7 @@ X-Hasura-Role: admin
 }
 ```
 
-### Args syntax {#set-relationship-comment-syntax}
+### Args syntax {#schema-metadata-set-relationship-comment-syntax}
 
 | Key          | Required | Schema                                                                              | Description       |
 |--------------|----------|-------------------------------------------------------------------------------------|-------------------|
@@ -328,7 +328,7 @@ X-Hasura-Role: admin
 | relationship | true     | [RelationshipName](/graphql/core/api-reference/syntax-defs.mdx#relationshipname)    | The relationship  |
 | comment      | false    | Text                                                                                | Comment           |
 
-## rename_relationship {#rename-relationship}
+## rename_relationship {#schema-metadata-rename-relationship}
 
 `rename_relationship` is used to modify the name of an existing relationship.
 
@@ -349,7 +349,7 @@ X-Hasura-Role: admin
 }
 ```
 
-### Args syntax {#rename-relationship-syntax}
+### Args syntax {#schema-metadata-rename-relationship-syntax}
 
 | Key      | Required | Schema                                                                           | Description           |
 |----------|----------|----------------------------------------------------------------------------------|-----------------------|

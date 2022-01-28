@@ -31,7 +31,7 @@ continue to function.
 
 :::
 
-## track_table {#track-table}
+## track_table {#schema-metadata-track-table}
 
 `track_table` is used to add a table/view to the GraphQL schema.
 
@@ -51,14 +51,14 @@ X-Hasura-Role: admin
 }
 ```
 
-### Args syntax {#track-table-syntax}
+### Args syntax {#schema-metadata-track-table-syntax}
 
 | Key     | Required | Schema                                                             | Description                                                                      |
 |---------|----------|--------------------------------------------------------------------|----------------------------------------------------------------------------------|
 | table   | true     | [TableName](/graphql/core/api-reference/syntax-defs.mdx#tablename) | Name of the table                                                                |
 | is_enum | false    | Boolean                                                            | When set to `true`, creates the table as an [enum table](/graphql/core/databases/postgres/schema/enums.mdx#pg-create-enum-table). |
 
-## set_table_is_enum {#set-table-is-enum}
+## set_table_is_enum {#schema-metadata-set-table-is-enum}
 
 `set_table_is_enum` sets whether an already-tracked table should be used
 as an `enum table <pg_create_enum_table>`.
@@ -82,14 +82,14 @@ X-Hasura-Role: admin
 }
 ```
 
-### Args syntax {#set-table-is-enum-syntax}
+### Args syntax {#schema-metadata-set-table-is-enum-syntax}
 
 | Key     | Required | Schema                                                             | Description                                                              |
 |---------|----------|--------------------------------------------------------------------|--------------------------------------------------------------------------|
 | table   | true     | [TableName](/graphql/core/api-reference/syntax-defs.mdx#tablename) | Name of the table                                                        |
 | is_enum | true     | Boolean                                                            | Whether or not the table should be used as an `enum table <enum table>`. |
 
-## track_table v2 {#track-table-v2}
+## track_table v2 {#schema-metadata-track-table-v2}
 
 Version 2 of `track_table` is used to add a table/view to the GraphQL
 schema with configuration. You can customise the root field names.
@@ -170,14 +170,14 @@ order to be able to track it.
 
 :::
 
-### Args syntax {#track-table-v2-syntax}
+### Args syntax {#schema-metadata-track-table-v2-syntax}
 
 | Key           | Required | Schema                        | Description                      |
 |---------------|----------|-------------------------------|----------------------------------|
 | table         | true     | [TableName](/graphql/core/api-reference/syntax-defs.mdx#tablename)       | Name of the table                |
 | configuration | false    | [Table Config](/graphql/core/api-reference/syntax-defs.mdx#table-config) | Configuration for the table/view |
 
-## set_table_custom_fields (deprecated) {#set-table-custom-fields-deprecated}
+## set_table_custom_fields (deprecated) {#schema-metadata-set-table-custom-fields-deprecated}
 
 `set_table_custom_fields` has been deprecated. Use the
 `set_table_customization [set_table_customization](#schema-metadata-set-table-customization) API
@@ -217,7 +217,7 @@ X-Hasura-Role: admin
 }
 ```
 
-### Args syntax {#set-table-custom-fields-deprecated-syntax}
+### Args syntax {#schema-metadata-set-table-custom-fields-deprecated-syntax}
 
 | Key                 | Required | Schema                                                                               | Description                 |
 |---------------------|----------|--------------------------------------------------------------------------------------|-----------------------------|
@@ -225,7 +225,7 @@ X-Hasura-Role: admin
 | custom_root_fields  | false    | [Custom Root Fields](/graphql/core/api-reference/syntax-defs.mdx#custom-root-fields) | Customise the root fields   |
 | custom_column_names | false    | [CustomColumnNames](/graphql/core/api-reference/syntax-defs.mdx#customcolumnnames)   | Customise the column fields |
 
-## set_table_customization {#set-table-customization}
+## set_table_customization {#schema-metadata-set-table-customization}
 
 `set_table_customization` allows you to customize any given table with a
 custom name, custom root fields and custom column names of an already
@@ -266,14 +266,14 @@ X-Hasura-Role: admin
 }
 ```
 
-### Args syntax {#set-table-customization-syntax}
+### Args syntax {#schema-metadata-set-table-customization-syntax}
 
 | Key           | Required | Schema                                                                  | Description                      |
 |---------------|----------|-------------------------------------------------------------------------|----------------------------------|
 | table         | true     | [TableName](/graphql/core/api-reference/syntax-defs.mdx#tablename)      | Name of the table                |
 | configuration | false    | [TableConfig](/graphql/core/api-reference/syntax-defs.mdx#table-config) | Configuration for the table/view |
 
-## untrack_table {#untrack-table}
+## untrack_table {#schema-metadata-untrack-table}
 
 `untrack_table` is used to remove a table/view from the GraphQL schema.
 
@@ -296,7 +296,7 @@ X-Hasura-Role: admin
 }
 ```
 
-### Args syntax {#untrack-table-syntax}
+### Args syntax {#schema-metadata-untrack-table-syntax}
 
 | Key     | Required | Schema                                                             | Description                                                                                                                        |
 |---------|----------|--------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------|

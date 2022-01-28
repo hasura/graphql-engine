@@ -12,7 +12,7 @@ keywords:
 
 # Schema/Metadata API Reference: Run SQL (Deprecated)
 
-## run_sql {#run-sql}
+## run_sql {#schema-metadata-run-sql}
 
 `run_sql` can be used to run arbitrary SQL statements.
 
@@ -199,7 +199,7 @@ functions is not allowed.
 Set `check_metadata_consistency` field to `false` to force the server to
 not consider metadata dependencies.
 
-### Args syntax {#run-sql-args}
+### Args syntax {#schema-metadata-run-sql-args}
 
 | Key                        | Required | Schema  | Description                                                                                                                                                                                                                        |
 |----------------------------|----------|---------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -217,18 +217,11 @@ The response is a JSON Object with the following structure.
 | result_type | true           | String                                                      | One of "CommandOk" or "TuplesOk"                          |
 | result      | false          | `[[Text]]` (An array of rows, each row an array of columns) | This is present only when the `result_type` is "TuplesOk" |
 
-<div class="note">
+:::info Note
 
-<div class="title">
+The first row in the `result` (when present) will be the names of the columns.
 
-Note
-
-</div>
-
-The first row in the `result` (when present) will be the names of the
-columns.
-
-</div>
+:::
 
 ### Some examples
 
