@@ -34,7 +34,7 @@ A `PRIMARY KEY` is used to identify each row of a table uniquely.
 
 **Identify the author's id as the primary key of the authors table:**
 
-```sql
+```sql {2}
 CREATE TABLE authors(
   id INT PRIMARY KEY,
   name           TEXT    NOT NULL
@@ -50,7 +50,7 @@ constraints are used to create relationships between tables.
 **Define the author_id in the articles table as a foreign key to the id
 column in the authors table:**
 
-```sql
+```sql {11}
 CREATE TABLE authors(
   id SERIAL PRIMARY KEY,
   name           TEXT    NOT NULL,
@@ -72,7 +72,7 @@ be `null`.
 
 **Validate that an author's name cannot be null:**
 
-```sql
+```sql {2,3}
 CREATE TABLE authors(
   id SERIAL PRIMARY KEY,
   name           TEXT    NOT NULL
@@ -86,7 +86,7 @@ the respective column.
 
 **Validate that an author's email is unique:**
 
-```sql
+```sql {4}
 CREATE TABLE authors(
   id SERIAL PRIMARY KEY,
   name           TEXT    NOT NULL,
@@ -102,7 +102,7 @@ several columns. This Boolean expression must be satisfied (equal to
 
 **Validate that an author's rating is between 1 and 10:**
 
-```sql
+```sql {4}
 CREATE TABLE authors(
   id SERIAL PRIMARY KEY,
   name           TEXT    NOT NULL,

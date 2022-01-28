@@ -104,7 +104,7 @@ follow the steps below:
 3. After successfully logging in, you will be redirected to
 `https://localhost:3000/cognito-callback#id_token=xxxxxx&yyyyyy`. This
 page may be a 404 if you don't have a UI running on localhost:3000.
-Extract the `id_token` value from this URL.
+Extract the `id_token` value from this URL. {#test-cognito}
 
 <Thumbnail
   src="/img/graphql/core/guides/cognito-redirect.png"
@@ -147,7 +147,7 @@ Cognito is configured and ready to be used in the application. You can
 now set up access control rules that will automatically get applied
 whenever a client makes a GraphQL request with the Cognito token.
 
-Refer to [auth_basics](/graphql/core/auth/authorization/basics.mdx) for more information.
+Refer to [Access control basics](/graphql/core/auth/authorization/basics.mdx) for more information.
 
 To test this out, add an access control rule that uses
 `x-hasura-user-id` for the role `user`. Then make a GraphQL query or a

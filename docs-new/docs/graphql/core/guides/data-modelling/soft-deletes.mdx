@@ -123,24 +123,24 @@ Now the role `user` can only access non-deleted `todos`:
 <GraphiQLIDE
   query={`{
     query {
-todos {
-id
-name
-deleted_at
-}
-}
+      todos {
+        id
+        name
+        deleted_at
+      }
+    }
   }`}
   response={`{
   {
-"data": {
-"todos": [
-{
-"id": "34c4e2f9-c3e2-4147-9138-f67b6e7e2947",
-"name": "Get stuff done",
-"deleted_at": null
-}
-]
-}
-}
+    "data": {
+      "todos": [
+        {
+          "id": "34c4e2f9-c3e2-4147-9138-f67b6e7e2947",
+          "name": "Get stuff done",
+          "deleted_at": null
+        }
+      ]
+    }
+  }
   }`}
 />

@@ -74,39 +74,39 @@ We can now:
 <GraphiQLIDE
   query={`{
     query {
-authors {
-id
-name
-passport_info {
-id
-passport_number
-}
-}
-}
+      authors {
+        id
+        name
+        passport_info {
+          id
+          passport_number
+        }
+      }
+    }
   }`}
   response={`{
   {
-"data": {
-"authors": [
-{
-"id": 1,
-"name": "Justin",
-"passport_info": {
-"id": 1,
-"passport_number": "987456234"
-}
-},
-{
-"id": 2,
-"name": "Beltran",
-"passport_info": {
-"id": 2,
-"passport_number": "F0004586"
-}
-}
-]
-}
-}
+    "data": {
+      "authors": [
+        {
+          "id": 1,
+          "name": "Justin",
+          "passport_info": {
+            "id": 1,
+            "passport_number": "987456234"
+          }
+        },
+        {
+          "id": 2,
+          "name": "Beltran",
+          "passport_info": {
+            "id": 2,
+            "passport_number": "F0004586"
+          }
+        }
+      ]
+    }
+  }
   }`}
 />
 
@@ -115,43 +115,43 @@ passport_number
 <GraphiQLIDE
   query={`{
     query {
-passport_info {
-id
-passport_number
-owner {
-id
-name
-}
-}
-}
+      passport_info {
+        id
+        passport_number
+        owner {
+          id
+          name
+        }
+      }
+    }
   }`}
   response={`{
   {
-"data": {
-"passport_info": [
-{
-"id": 1,
-"passport_number": "987456234",
-"owner": {
-"id": 1,
-"name": "Justin"
-}
-},
-{
-"id": 2,
-"passport_number": "F0004586",
-"owner": {
-"id": 2,
-"name": "Beltran"
-}
-}
-]
-}
-}
+    "data": {
+      "passport_info": [
+        {
+          "id": 1,
+          "passport_number": "987456234",
+          "owner": {
+            "id": 1,
+            "name": "Justin"
+          }
+        },
+        {
+          "id": 2,
+          "passport_number": "F0004586",
+          "owner": {
+            "id": 2,
+            "name": "Beltran"
+          }
+        }
+      ]
+    }
+  }
   }`}
 />
 
-## Insert using one-to-one relationships
+## Insert using one-to-one relationships {#one-to-one-insert}
 
 We can now:
 
@@ -161,44 +161,44 @@ We can now:
 <GraphiQLIDE
   query={`{
     mutation upsertPassportInfoWithOwner {
-insert_passport_info(objects: [
-{
-passport_number: "X98973765",
-owner: {
-data: {
-name: "Kelly"
-},
-on_conflict: {
-constraint: owner_name_key,
-update_columns: [name]
-}
-},
-}
-]) {
-returning {
-passport_number
-owner {
-name
-}
-}
-}
-}
+      insert_passport_info(objects: [
+        {
+          passport_number: "X98973765",
+          owner: {
+            data: {
+              name: "Kelly"
+            },
+            on_conflict: {
+              constraint: owner_name_key,
+              update_columns: [name]
+            }
+          },
+        }
+      ]) {
+        returning {
+          passport_number
+          owner {
+            name
+          }
+        }
+      }
+    }
   }`}
   response={`{
   {
-"data": {
-"insert_passport_info": {
-"returning": [
-{
-"passport_number": "X98973765",
-"owner": {
-"name": "Kelly"
-}
-}
-]
-}
-}
-}
+    "data": {
+      "insert_passport_info": {
+        "returning": [
+          {
+            "passport_number": "X98973765",
+            "owner": {
+              "name": "Kelly"
+            }
+          }
+        ]
+      }
+    }
+  }
   }`}
 />
 
