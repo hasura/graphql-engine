@@ -39,6 +39,7 @@ import Hasura.RQL.Types.CommonSpec qualified as CommonTypesSpec
 import Hasura.RQL.Types.EndpointSpec qualified as EndpointSpec
 import Hasura.RQL.WebhookTransformsSpec qualified as WebhookTransformsSpec
 import Hasura.SQL.WKTSpec qualified as WKTSpec
+import Hasura.Server.Auth.JWTSpec qualified as JWTSpec
 import Hasura.Server.AuthSpec qualified as AuthSpec
 import Hasura.Server.Init
 import Hasura.Server.Migrate
@@ -94,6 +95,7 @@ unitSpecs = do
   describe "Hasura.RQL.Types.Endpoint" EndpointSpec.spec
   describe "Hasura.GraphQL.Namespace" NamespaceSpec.spec
   describe "Hasura.SQL.WKT" WKTSpec.spec
+  describe "Hasura.Server.Auth.JWT" JWTSpec.spec
   describe "Hasura.Server.Auth" AuthSpec.spec
   describe "Hasura.Server.Telemetry" TelemetrySpec.spec
   describe "Hasura.RQL.PermissionSpec" PermSpec.spec

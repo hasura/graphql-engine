@@ -181,7 +181,7 @@ export EVENT_WEBHOOK_HEADER="MyEnvValue"
 
 export HGE_URL="http://localhost:8080"
 export HGE_URL_2=""
-if [ -n ${HASURA_GRAPHQL_DATABASE_URL_2:-} ]; then
+if [ -n "${HASURA_GRAPHQL_DATABASE_URL_2:-}" ]; then
 	HGE_URL_2="http://localhost:8081"
 fi
 export WEBHOOK_FROM_ENV="http://127.0.0.1:5592"
@@ -945,61 +945,52 @@ jwk-url)
 	JWKS_PID=$!
 	wait_for_port 5001
 
-	cache_control_jwk_url='{"jwk_url": "http://localhost:5001/jwk-cache-control"}'
-	expires_jwk_url='{"jwk_url": "http://localhost:5001/jwk-expires"}'
-	cc_nomaxage_jwk_url='{"jwk_url": "http://localhost:5001/jwk-cache-control?nomaxage"}'
-	cc_nocache_jwk_url='{"jwk_url": "http://localhost:5001/jwk-cache-control?nocache"}'
-
-	# start HGE with cache control JWK URL
-	export HASURA_GRAPHQL_JWT_SECRET=$cache_control_jwk_url
+	echo "Test: Cache-Control with max-age=3"
+	export HASURA_GRAPHQL_JWT_SECRET='{"jwk_url": "http://localhost:5001/jwk-cache-control?max-age=3"}'
 	run_hge_with_args serve
 	wait_for_port 8080
 
-	pytest -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --test-jwk-url test_jwk.py -k 'test_cache_control_header'
+	pytest -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --test-jwk-url -k 'test_cache_control_header_max_age'
 
 	kill_hge_servers
 	unset HASURA_GRAPHQL_JWT_SECRET
 
-	run_hge_with_args serve --jwt-secret "$cache_control_jwk_url"
-	wait_for_port 8080
-
-	pytest -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --test-jwk-url test_jwk.py -k 'test_cache_control_header'
-
-	kill_hge_servers
-
-	# start HGE with expires JWK URL
-	export HASURA_GRAPHQL_JWT_SECRET=$expires_jwk_url
+	echo "Test: Cache-Control with must-revalidate"
+	export HASURA_GRAPHQL_JWT_SECRET='{"jwk_url": "http://localhost:5001/jwk-cache-control?must-revalidate=true"}'
 	run_hge_with_args serve
 	wait_for_port 8080
 
-	pytest -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --test-jwk-url test_jwk.py -k 'test_expires_header'
+	pytest -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --test-jwk-url -k 'test_cache_control_header_no_caching'
 
 	kill_hge_servers
 	unset HASURA_GRAPHQL_JWT_SECRET
 
-	run_hge_with_args serve --jwt-secret "$expires_jwk_url"
-	wait_for_port 8080
-
-	pytest -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --test-jwk-url test_jwk.py -k 'test_expires_header'
-
-	kill_hge_servers
-
-	# start HGE with nomaxage JWK URL
-	export HASURA_GRAPHQL_JWT_SECRET=$cc_nomaxage_jwk_url
+	echo "Test: Cache-Control with no-cache, public"
+	export HASURA_GRAPHQL_JWT_SECRET='{"jwk_url": "http://localhost:5001/jwk-cache-control?no-cache=true&public=true"}'
 	run_hge_with_args serve
 	wait_for_port 8080
 
-	pytest -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --test-jwk-url test_jwk.py -k 'test_cache_control_header'
+	pytest -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --test-jwk-url -k 'test_cache_control_header_no_caching'
 
 	kill_hge_servers
 	unset HASURA_GRAPHQL_JWT_SECRET
 
-	# start HGE with nocache JWK URL
-	export HASURA_GRAPHQL_JWT_SECRET=$cc_nocache_jwk_url
+	echo "Test: Cache-Control with no-store, max-age=3"
+	export HASURA_GRAPHQL_JWT_SECRET='{"jwk_url": "http://localhost:5001/jwk-cache-control?no-store=true&max-age=3"}'
 	run_hge_with_args serve
 	wait_for_port 8080
 
-	pytest -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --test-jwk-url test_jwk.py -k 'test_cache_control_header'
+	pytest -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --test-jwk-url -k 'test_cache_control_header_no_caching'
+
+	kill_hge_servers
+	unset HASURA_GRAPHQL_JWT_SECRET
+
+	echo "Test: Expires with three second expiry"
+	export HASURA_GRAPHQL_JWT_SECRET='{"jwk_url": "http://localhost:5001/jwk-expires?seconds=3"}'
+	run_hge_with_args serve
+	wait_for_port 8080
+
+	pytest -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --test-jwk-url -k 'test_expires_header'
 
 	kill_hge_servers
 	unset HASURA_GRAPHQL_JWT_SECRET
