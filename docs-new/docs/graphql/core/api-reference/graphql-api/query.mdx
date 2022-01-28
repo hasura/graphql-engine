@@ -283,7 +283,7 @@ author_aggregate {
 
 </div>
 
-#### DistinctOnExp
+#### DistinctOnExp {#distinctonexp}
 
 <div class="parsed-literal">
 
@@ -315,7 +315,7 @@ enum article_select_column {
 }
 ```
 
-#### WhereExp
+#### WhereExp {#whereexp}
 
 <div class="parsed-literal">
 
@@ -345,7 +345,7 @@ query {
 
 </div>
 
-###### AndExp
+###### AndExp {#andexp}
 
 <div class="parsed-literal">
 
@@ -415,7 +415,7 @@ rating: {
 
 :::
 
-###### OrExp
+###### OrExp {#orexp}
 
 <div class="parsed-literal">
 
@@ -541,9 +541,11 @@ query {
 }
 ```
 
-###### Operator
+###### Operator {#operator}
 
-**Generic operators (all column types except json, jsonb):** {#generic-operators}
+<div id="generic-operators"/>
+
+**Generic operators (all column types except json, jsonb):**
 
 | Operator | PostgreSQL equivalent |
 |----------|-----------------------|
@@ -561,7 +563,9 @@ operators](https://www.postgresql.org/docs/current/functions-comparison.html)
 and [list based search
 operators](https://www.postgresql.org/docs/current/functions-comparisons.html).)
 
-**Text related operators:** {#text-operators}
+<div id="text-operators"/>
+
+**Text related operators:**
 
 | Operator    | PostgreSQL equivalent |
 |-------------|-----------------------|
@@ -579,7 +583,9 @@ operators](https://www.postgresql.org/docs/current/functions-comparisons.html).)
 (For more details on text related operators, refer to the [Postgres
 docs](https://www.postgresql.org/docs/current/functions-matching.html).)
 
-**Checking for NULL values:** {#null-expression}
+<div id="null-expression"/>
+
+**Checking for NULL values:**
 
 | Operator                                | PostgreSQL equivalent |
 |-----------------------------------------|-----------------------|
@@ -588,7 +594,9 @@ docs](https://www.postgresql.org/docs/current/functions-matching.html).)
 (For more details on the `IS NULL` expression, refer to the [Postgres
 docs](https://www.postgresql.org/docs/current/functions-comparison.html).)
 
-**Type casting:** {#type-casting}
+<div id="type-casting"/>
+
+**Type casting:**
 
 | Operator                                         | PostgreSQL equivalent |
 |--------------------------------------------------|-----------------------|
@@ -597,7 +605,9 @@ docs](https://www.postgresql.org/docs/current/functions-comparison.html).)
 (For more details on type casting, refer to the [Postgres
 docs](https://www.postgresql.org/docs/current/sql-createcast.html).)
 
-**JSONB operators:** {#jsonb-operators}
+<div id="jsonb-operators"/>
+
+**JSONB operators:**
 
 | Operator        | PostgreSQL equivalent |
 |-----------------|-----------------------|
@@ -610,7 +620,9 @@ docs](https://www.postgresql.org/docs/current/sql-createcast.html).)
 (For more details on JSONB operators, refer to the [Postgres
 docs](https://www.postgresql.org/docs/current/static/functions-json.html#FUNCTIONS-JSONB-OP-TABLE).)
 
-**PostGIS related operators on GEOMETRY columns:** {#geometry-operators}
+<div id="geometry-operators"/>
+
+**PostGIS related operators on GEOMETRY columns:**
 
 | Operator         | PostGIS equivalent             |
 |------------------|--------------------------------|
@@ -641,7 +653,9 @@ docs](http://postgis.net/workshops/postgis-intro/spatial_relationships.html).)
 
 :::
 
-**Intersect Operators on RASTER columns:** {#intersect-operators}
+<div id="intersect-operators"/>
+
+**Intersect Operators on RASTER columns:**
 
 | Operator                    | PostgreSQL equivalent                   | Input object                                                        |
 |-----------------------------|-----------------------------------------|---------------------------------------------------------------------|
@@ -652,7 +666,9 @@ docs](http://postgis.net/workshops/postgis-intro/spatial_relationships.html).)
 (For more details on intersect operators on `raster` columns refer to
 the [PostGIS docs](https://postgis.net/docs/RT_ST_Intersects.html).)
 
-**ltree operators:** {#ltree-operators}
+<div id="ltree-operators"/>
+
+**ltree operators:**
 
 | Operator            | PostgreSQL equivalent |
 |---------------------|-----------------------|
@@ -667,7 +683,7 @@ the [PostGIS docs](https://postgis.net/docs/RT_ST_Intersects.html).)
 (For more details on operators on `ltree` columns refer to the [Postgres
 docs](https://www.postgresql.org/docs/current/ltree.html).)
 
-###### CastExp
+###### CastExp {#castexp}
 
 > {type-name: {[Operator](#operator): Value}}
 
@@ -703,7 +719,7 @@ Currently, only casting between `geometry` and `geography` types is allowed.
 
 :::
 
-#### OrderByExp
+#### OrderByExp {#orderbyexp}
 
 <div class="parsed-literal">
 
@@ -898,7 +914,7 @@ query {
 }
 ```
 
-###### OrderByEnum
+###### OrderByEnum {#orderbyenum}
 
 ```graphql
 #the order_by enum type
@@ -967,7 +983,7 @@ Available operations are `sum`, `avg`, `max`, `min`, `stddev`,
 
 </div>
 
-#### PaginationExp
+#### PaginationExp {#paginationexp}
 
 `limit: Integer [offset: Integer]`
 

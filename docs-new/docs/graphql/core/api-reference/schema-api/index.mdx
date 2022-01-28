@@ -60,8 +60,8 @@ The various types of queries are listed in the following table:
 
 | `type`                                                                               | `args`                                                                                       | `version` | Synopsis                                      |
 |--------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------|-----------|-----------------------------------------------|
-| **bulk**                                                                             | [Query](#query) array                                                                        | 1         | Execute multiple operations in a single query |
-| [run_sql](/graphql/core/api-reference/schema-api/run-sql.mdx#schema-run-sql}) | [run_sql_args](/graphql/core/api-reference/schema-api/run-sql.mdx#schema-run-sql-syntax)     | 1         | Run SQL directly on Postgres                  |
+| **bulk**                                                                             | [Query](#schema-query) array                                                                 | 1         | Execute multiple operations in a single query |
+| [run_sql](/graphql/core/api-reference/schema-api/run-sql.mdx#schema-run-sql)         | [run_sql_args](/graphql/core/api-reference/schema-api/run-sql.mdx#schema-run-sql-syntax)     | 1         | Run SQL directly on Postgres                  |
 
 ## Response structure
 
@@ -89,5 +89,3 @@ HASURA_GRAPHQL_ENABLED_APIS="graphql"
 ```
 
 See [GraphQL Engine server config reference](/graphql/core/deployment/graphql-engine-flags/reference.mdx#server-flag-reference) for info on setting the above flag/env var.
-
-- [Run SQL](<run-sql>)

@@ -13,7 +13,7 @@ keywords:
 # API Reference - Mutation
 
 
-## **insert** (upsert) syntax
+## **insert** (upsert) syntax {#insert-upsert-syntax}
 
 ```none
 mutation [<mutation-name>] {
@@ -75,7 +75,7 @@ mutation upsert_author {
 }
 ```
 
-## **insert_one** syntax
+## **insert_one** syntax {#insert-upsert-one-syntax}
 
 ```none
 mutation [<mutation-name>] {
@@ -112,7 +112,7 @@ mutation insert_article_one {
 }
 ```
 
-## **update_by_pk** syntax
+## **update_by_pk** syntax {#update-by-pk-syntax}
 
 ```none
 mutation [<mutation-name>] {
@@ -153,7 +153,7 @@ mutation update_articles {
 }
 ```
 
-## **update** syntax
+## **update** syntax {#update-syntax}
 
 ```none
 mutation [<mutation-name>] {
@@ -192,7 +192,7 @@ mutation update_author{
 }
 ```
 
-## **delete_by_pk** syntax
+## **delete_by_pk** syntax {#delete-by-pk-syntax}
 
 ```none
 mutation [<mutation-name>] {
@@ -222,7 +222,7 @@ mutation delete_articles {
 }
 ```
 
-## **delete** syntax
+## **delete** syntax {#delete-syntax}
 
 ```none
 mutation [<mutation-name>] {
@@ -263,7 +263,7 @@ For more examples and details of usage, please see [this](/graphql/core/database
 
 ## Syntax definitions
 
-### Mutation response
+### Mutation response {#mutationresponse}
 
 ```none
 {
@@ -288,7 +288,7 @@ For more examples and details of usage, please see [this](/graphql/core/database
 }
 ```
 
-### **objects** argument
+### **objects** argument {#inputobjects}
 
 ```none
 objects: [
@@ -327,7 +327,7 @@ objects: [
 ]
 ```
 
-### **object** argument
+### **object** argument {#inputobject}
 
 ```none
 object: {
@@ -360,7 +360,7 @@ object: {
 }
 ```
 
-### **on_conflict** argument
+### **on_conflict** argument {#conflictclause}
 
 The conflict clause is used to convert an *insert* mutation to an
 *upsert* mutation. *Upsert* respects the table's *update* permissions
@@ -385,7 +385,7 @@ on_conflict: {
 }
 ```
 
-### **pk_columns** argument
+### **pk_columns** argument {#pkcolumnsargexp}
 
 The `pk_columns` argument is used to identify an object by its primary
 key columns in *update* mutations.
@@ -406,7 +406,7 @@ pk_columns: {
 }
 ```
 
-### **where** argument
+### **where** argument {#whereargexp}
 
 <div class="parsed-literal">
 
@@ -550,7 +550,7 @@ author(where: {articles: {}})
 
 - `_is_null` (takes true/false as values)
 
-### **\_set** argument
+### **\_set** argument {#setargexp}
 
 ```none
 _set: {
@@ -560,7 +560,7 @@ _set: {
 }
 ```
 
-### **\_inc** argument
+### **\_inc** argument {#incargexp}
 
 ```none
 _inc: {
@@ -570,7 +570,7 @@ _inc: {
 }
 ```
 
-### **\_append** argument
+### **\_append** argument {#appendargexp}
 
 ```none
 _append: {
@@ -589,7 +589,7 @@ _append: {
 }
 ```
 
-### **\_prepend** argument
+### **\_prepend** argument {#prependargexp}
 
 ```none
 _prepend: {
@@ -608,7 +608,7 @@ _prepend: {
 }
 ```
 
-### **\_delete_key** argument
+### **\_delete_key** argument {#deletekeyargexp}
 
 ```none
 _delete_key: {
@@ -618,7 +618,7 @@ _delete_key: {
 }
 ```
 
-### **\_delete_elem** argument
+### **\_delete_elem** argument {#deleteelemargexp}
 
 ```none
 _delete_elem: {
@@ -628,7 +628,7 @@ _delete_elem: {
 }
 ```
 
-### **\_delete_at_path** argument
+### **\_delete_at_path** argument {#deleteatpathargexp}
 
 ```none
 _delete_at_path: {

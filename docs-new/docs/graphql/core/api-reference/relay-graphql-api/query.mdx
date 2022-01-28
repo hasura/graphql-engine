@@ -27,7 +27,7 @@ query|subscription [<op-name>] {
 | Key               | Required | Schema                                | Description                                                               |
 |-------------------|----------|---------------------------------------|---------------------------------------------------------------------------|
 | op-name           | false    | Value                                 | Name query/subscription for observability                                 |
-| connection-object | true     | [ConnectionObject](#connection-object) | Name of the table connection                                              |
+| connection-object | true     | [ConnectionObject](#connectionobject) | Name of the table connection                                              |
 | argument          | false    | [Argument](#argument)                 | One or more filter criteria, instructions for sorting order or pagination |
 
 **Example: Relay Query**
@@ -80,7 +80,7 @@ For details of usage, please see [this page](/graphql/core/databases/postgres/sc
 
 ## Syntax definitions
 
-### Connection Object {#connection-object}
+### ConnectionObject {#connectionobject}
 
 ```none
 connection-object {
@@ -119,7 +119,7 @@ For more details on the Relay `connection` object type, refer to the
 
 :::
 
-### PageInfo
+### PageInfo {#pageinfo}
 
 Information useful for pagination.
 
@@ -139,7 +139,7 @@ For more details on the Relay `PageInfo` object type, refer to the
 
 :::
 
-### Edge
+### Edge {#edge}
 
 Edge is an object type that consists of a [cursor](#cursor) and `node`
 fields. `node` is a table object type which implements the Relay `Node`
@@ -152,7 +152,7 @@ type tableEdge {
 }
 ```
 
-### Cursor
+### Cursor {#cursor}
 
 The cursor field returns a unique non-null String value which is useful
 for [pagination](#paginationexp).
@@ -172,19 +172,19 @@ For more details on the Relay `cursor`, refer to the [Relay docs](https://relay.
 
 </div>
 
-#### DistinctOnExp
+#### DistinctOnExp {#relaydistinctonep}
 
 Same as the generic [DistinctOnExp](/graphql/core/api-reference/graphql-api/query.mdx#distinctonexp)
 
-#### WhereExp
+#### WhereExp {#relaywhereexp}
 
 Same as the generic [WhereExp](/graphql/core/api-reference/graphql-api/query.mdx#whereexp)
 
-#### OrderByExp
+#### OrderByExp {#relayorderbyexp}
 
 Same as the generic [OrderByExp](/graphql/core/api-reference/graphql-api/query.mdx#orderbyexp)
 
-#### PaginationExp
+#### PaginationExp {#relaypaginationexp}
 
 **Forward Pagination:**
 
