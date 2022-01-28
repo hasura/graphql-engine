@@ -34,6 +34,8 @@ one-click button below.
 <Tabs className="rst-class">
 <TabItem value="postgres server" label="With a new Postgres Server">
 
+[<img src="https://azuredeploy.net/deploybutton.png" class="no-shadow no-shadow" width="200" alt="azure_deploy_button_new_pg" />](https://portal.azure.com/#create/Microsoft.Template/uri/https%3a%2f%2fraw.githubusercontent.com%2fhasura%2fgraphql-engine%2fstable%2finstall-manifests%2fazure-container-with-pg%2fazuredeploy.json)
+
 (This button takes you to the Azure Portal, you might want to
 `Ctrl+Click` to open it in a new tab. Read more about this Resource
 Manager Template
@@ -41,6 +43,8 @@ Manager Template
 
 </TabItem>
 <TabItem value="cli" label="With an existing Postgres Server">
+
+[<img src="https://azuredeploy.net/deploybutton.png" class="no-shadow no-shadow" width="200" alt="azure_deploy_button_existing_pg" />](https://portal.azure.com/#create/Microsoft.Template/uri/https%3a%2f%2fraw.githubusercontent.com%2fhasura%2fgraphql-engine%2fstable%2finstall-manifests%2fazure-container%2fazuredeploy.json)
 
 (This button takes you to the Azure Portal, you might want to
 `Ctrl+Click` to open it in a new tab. Read more about this Resource
@@ -135,7 +139,7 @@ az postgres db create --resource-group hasura \
    --name hasura
 ```
 
-## Allow access to Azure Services
+## Allow access to Azure Services {#azure_allow_access}
 
 Create a firewall rule allowing acess from Azure internal services:
 
@@ -224,7 +228,7 @@ if Hasura is able to connect to the database.
 If you're using an existing/external database, make sure the firewall
 rules for the database allow connection for Azure services.
 
-### Checking logs
+### Checking logs {#azure_logs}
 
 If the console is not loading, you might want to check the logs and see
 if something is wrong:

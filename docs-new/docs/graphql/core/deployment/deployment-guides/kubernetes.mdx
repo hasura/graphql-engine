@@ -34,7 +34,7 @@ $ wget https://raw.githubusercontent.com/hasura/graphql-engine/stable/install-ma
 
 Edit `deployment.yaml` and set the right database url:
 
-```yaml
+```yaml {4}
 ...
   env:
   - name: HASURA_GRAPHQL_DATABASE_URL
@@ -90,7 +90,7 @@ Head to: `http://localhost` and the console should load!
 
 See [Setting up a GraphQL schema using an existing Postgres database](/graphql/core/databases/postgres/schema/using-existing-database.mdx#pg-schema-existing-db) to enable GraphQL over the database.
 
-## Securing the GraphQL endpoint
+## Securing the GraphQL endpoint {#kubernetes_secure}
 
 To make sure that your GraphQL endpoint and the Hasura console are not
 publicly accessible, you need to configure an admin secret key.
@@ -100,7 +100,7 @@ publicly accessible, you need to configure an admin secret key.
 Update the `deployment.yaml` to set the `HASURA_GRAPHQL_ADMIN_SECRET`
 environment variable.
 
-```yaml
+```yaml {10-11}
 ...
 spec:
    containers:
@@ -122,7 +122,7 @@ spec:
 
 The `HASURA_GRAPHQL_ADMIN_SECRET` should never be passed from the client
 to the Hasura GraphQL engine as it would give the client full admin
-rights to your Hasura instance. See [Authentication & Authorization](/graphql/core/auth/index.mdx/) for information on setting up
+rights to your Hasura instance. See [Authentication & Authorization](/graphql/core/auth/index.mdx) for information on setting up
 authentication.
 
 :::
@@ -136,7 +136,7 @@ In case you're using the CLI to open the Hasura console, use the
 hasura console --admin-secret=<myadminsecretkey>
 ```
 
-## Hasura GraphQL engine server logs
+## Hasura GraphQL engine server logs {#kubernetes_logs}
 
 You can check the logs of the Hasura GraphQL engine deployed on
 Kubernetes by checking the logs of the GraphQL engine service, i.e.
@@ -153,9 +153,9 @@ $ kubectl logs -f svc/hasura
 
 -   [https://kubernetes.io/docs/concepts/cluster-administration/logging](https://kubernetes.io/docs/concepts/cluster-administration/logging)
     for more details on logging in Kubernetes.
--   [Hasura GraphQL engine logs](/graphql/core/deployment/logging.mdx/) for more details on Hasura logs
+-   [Hasura GraphQL engine logs](/graphql/core/deployment/logging.mdx) for more details on Hasura logs
 
-## Updating Hasura GraphQL engine
+## Updating Hasura GraphQL engine {#kubernetes_update}
 
 This guide will help you update the Hasura GraphQL engine running on
 Kubernetes. This guide assumes that you already have the Hasura GraphQL
@@ -201,10 +201,10 @@ $ kubectl replace -f deployment.yaml
 
 If you are downgrading to an older version of the GraphQL engine you
 might need to downgrade your metadata catalogue version as described in
-[Downgrading Hasura GraphQL engine](/graphql/core/deployment/downgrading.mdx/)
+[Downgrading Hasura GraphQL engine](/graphql/core/deployment/downgrading.mdx)
 
 :::
 
 ## Advanced
 
--   [Setting up migrations](/graphql/core/migrations/index.mdx/)
+-   [Setting up migrations](/graphql/core/migrations/index.mdx)

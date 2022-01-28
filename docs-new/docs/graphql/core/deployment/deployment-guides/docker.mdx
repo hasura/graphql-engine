@@ -56,14 +56,14 @@ CONTAINER ID IMAGE                 ... CREATED STATUS PORTS          ...
 b0b1aac0508d postgres              ... 1m ago  Up 1m  5432/tcp       ...
 ```
 
-## Securing the GraphQL endpoint
+## Securing the GraphQL endpoint {#docker_secure}
 
 To make sure that your GraphQL endpoint and the Hasura console are not
 publicly accessible, you need to configure an admin secret key.
 
 ### Run the Docker container with an admin-secret env var
 
-```yaml
+```yaml {5}
 graphql-engine:
   image: hasura/graphql-engine:v2.0.0
   environment:
@@ -81,7 +81,7 @@ authentication.
 
 :::
 
-## Hasura GraphQL engine server logs
+## Hasura GraphQL engine server logs {#docker_logs}
 
 You can check the logs of the Hasura GraphQL engine deployed using
 Docker by checking the logs of the GraphQL engine container:
@@ -104,9 +104,9 @@ $ docker logs 097f58433a2b
 
 -   [https://docs.docker.com/config/containers/logging](https://docs.docker.com/config/containers/logging) for more details
     on logging in Docker.
--   [Hasura GraphQL engine logs](/graphql/core/deployment/logging.mdx/) for more details on Hasura logs.
+-   [Hasura GraphQL engine logs](/graphql/core/deployment/logging.mdx) for more details on Hasura logs.
 
-## Updating Hasura GraphQL engine
+## Updating Hasura GraphQL engine {#docker_update}
 
 This guide will help you update the Hasura GraphQL engine running with
 Docker. This guide assumes that you already have Hasura GraphQL engine
@@ -144,10 +144,10 @@ you should change it to:
 
 If you are downgrading to an older version of the GraphQL engine you
 might need to downgrade your metadata catalogue version as described in
-[Downgrading Hasura GraphQL engine](/graphql/core/deployment/downgrading.mdx/)
+[Downgrading Hasura GraphQL engine](/graphql/core/deployment/downgrading.mdx)
 
 :::
 
 ## Advanced
 
--   [Setting up migrations](/graphql/core/migrations/index.mdx/)
+-   [Setting up migrations](/graphql/core/migrations/index.mdx)

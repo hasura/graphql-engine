@@ -32,7 +32,7 @@ console for browsing logs, please see
 
 :::
 
-## Different log-types
+## Different log-types {#log-types}
 
 The Hasura GraphQL engine has different kind of log-types depending on
 the sub-system or the layer. A log-type is simply the `type` field in a
@@ -81,7 +81,7 @@ Internal log-types
 
 You can set the desired logging level on the server using the
 `log-level` flag or the `HASURA_GRAPHQL_LOG_LEVEL` env var. See
-[server_flag_reference](/graphql/core/deployment/graphql-engine-flags/reference.mdx/).
+[GraphQL Engine server config reference](/graphql/core/deployment/graphql-engine-flags/reference.mdx#server-flag-reference).
 
 The default log-level is `info`.
 
@@ -92,7 +92,7 @@ For example, setting `--log-level=warn`, will enable all warn and error
 level logs only. So even if you have enabled `query-log` it won't be
 printed as the level of `query-log` is `info`.
 
-See [log-types](/graphql/core/deployment/logging.mdx/) for more details on log-level of each
+See [log-types](#log-types) for more details on log-level of each
 log-type.
 
 ## Log structure and metrics

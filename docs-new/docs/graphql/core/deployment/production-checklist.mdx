@@ -10,6 +10,7 @@ sidebar_position: 10
 ---
 
 import Thumbnail from "@site/src/components/Thumbnail/Thumbnail";
+import TOCInline from "@theme/TOCInline";
 
 # Production checklist
 
@@ -23,7 +24,7 @@ for a production deployment.
 Many of the following steps are pre-configured in a Hasura Cloud
 instance with integrated logging, API limits, caching and more. For more
 information about our hosted Hasura product, see
-[Hasura Cloud docs](/graphql/cloud/index.mdx/).
+[Hasura Cloud docs](/graphql/cloud/index.mdx).
 
 :::
 
@@ -40,14 +41,13 @@ HASURA_GRAPHQL_ADMIN_SECRET=averylongpasswordstring
 graphql-engine --database-url=<database-url> serve --admin-secret=averylongpasswordstring
 ```
 
-More details can be found at [Securing the GraphQL endpoint](/graphql/core/deployment/securing-graphql-endpoint.mdx/).
+More details can be found at [Securing the GraphQL endpoint](/graphql/core/deployment/securing-graphql-endpoint.mdx).
 
 ## Verify permissions
 
-- [Review the summary](/graphql/core/deployment/production-checklist.mdx#review-the-summary)
-- [Limit number of rows returned](/graphql/core/deployment/production-checklist.mdx#limit-number-of-rows-returned)
+<TOCInline toc={toc[2].children} />
 
-### Review the summary {#review-the-summary}
+### Review the summary
 
 Review the authorization/permission rules set on tables. You can make
 use of the "Schema permissions summary" page to get a bird's eye view on
@@ -60,7 +60,7 @@ to roles like "anonymous" which allow unauthenticated access.
   width="75%"
 />
 
-### Limit number of rows returned {#limit-number-of-rows-returned}
+### Limit number of rows returned
 
 You should [limit the number of rows](/graphql/core/auth/authorization/permission-rules.mdx#limit-rows-permissions) that can
 be accessed in one request, by setting the number in the select
@@ -147,7 +147,7 @@ frontend client, you can only allow those requests used by the client to
 pass through. Every other request will be rejected without even getting
 validated.
 
-Read more at [Allow-list of operations](/graphql/core/deployment/allow-list.mdx/).
+Read more at [Allow-list of operations](/graphql/core/deployment/allow-list.mdx).
 
 ## Restrict CORS domains
 
@@ -169,11 +169,11 @@ You can read more about this setting at [Configure CORS](/graphql/core/deploymen
 Production APIs should be served over HTTPS to be secure over the
 network.
 
-See [Enable HTTPS](/graphql/core/deployment/enable-https.mdx/) for details on achieving this.
+See [Enable HTTPS](/graphql/core/deployment/enable-https.mdx) for details on achieving this.
 
 ## Configure logging
 
-The [logs guide](/graphql/core/deployment/logging.mdx/) describes different log types and log levels
+The [logs guide](/graphql/core/deployment/logging.mdx) describes different log types and log levels
 Hasura GraphQL engine uses. You can configure the GraphQL engine to
 enable/disable certain log-types using the the `--enabled-log-types`
 flag or the `HASURA_GRAPHQL_ENABLED_LOG_TYPES` env var.
