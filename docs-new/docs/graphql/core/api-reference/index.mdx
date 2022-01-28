@@ -19,7 +19,7 @@ slug: index
 | Legacy GraphQL                 | [/v1alpha1/graphql](#graphql-api)                | Permission rules |
 | Schema *(> v2.0)*              | [/v2/query](#schema-api)                         | Admin only       |
 | Metadata *(> v2.0)*            | [/v1/metadata](#metadata-api)                    | Admin only       |
-| Schema/Metadata *(deprecated)* | [/v1/query](#schema-metadata-api-deprecated)     | Admin only       |
+| Schema/Metadata *(deprecated)* | [/v1/query](#schema-metadata-api)     | Admin only       |
 | Restified GQL                  | [/api/rest](#restified-graphql-api)              | GQL REST Routes  |
 | Version                        | [/v1/version](#version-api)                      | Public           |
 | Health                         | [/healthz](#health-check-api)                    | Public           |
@@ -57,7 +57,7 @@ This is primarily intended to be used as an `admin` API to manage the Hasura met
 
 See details at [Metadata API Reference](/graphql/core/api-reference/metadata-api/index.mdx).
 
-### Schema / metadata API (Deprecated) {#schema-metadata-api-deprecated}
+### Schema / metadata API (Deprecated) {#schema-metadata-api}
 
 Hasura exposes a schema / metadata API for managing metadata for
 permissions/relationships or for directly executing SQL on the underlying Postgres.

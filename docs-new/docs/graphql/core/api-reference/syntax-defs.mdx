@@ -12,7 +12,7 @@ keywords:
 
 # API Reference: Common syntax definitions
 
-## TableName
+## TableName {#tablename}
 
 <div class="parsed-literal haskell-pre">
 
@@ -29,11 +29,11 @@ String \| [QualifiedTable](#qualifiedtable)
 }
 ```
 
-## SourceName
+## SourceName {#sourcename}
 
 `String`
 
-## FunctionName
+## FunctionName {#functionname}
 
 <div class="parsed-literal haskell-pre">
 
@@ -191,7 +191,7 @@ String \| [QualifiedFunction](#qualifiedfunction)
 
 `String`
 
-## Table Config {#tableconfig}
+## Table Config {#table-config}
 
 | Key                 | Required | Schema                                    | Description                                                                                                                                       |
 |---------------------|----------|-------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -199,7 +199,7 @@ String \| [QualifiedFunction](#qualifiedfunction)
 | custom_root_fields  | false    | [Custom Root Fields](#custom-root-fields) | Customise the root fields                                                                                                                         |
 | custom_column_names | false    | [CustomColumnNames](#customcolumnnames)   | Customise the column fields                                                                                                                       |
 
-## Custom Root Fields {#customrootfields}
+## Custom Root Fields {#custom-root-fields}
 
 | Key              | Required | Schema   | Description                                          |
 |------------------|----------|----------|------------------------------------------------------|
@@ -213,7 +213,7 @@ String \| [QualifiedFunction](#qualifiedfunction)
 | delete           | false    | `String` | Customise the `delete_<table-name>` root field       |
 | delete_by_pk     | false    | `String` | Customise the `delete_<table-name>_by_pk` root field |
 
-## Custom Function Root Fields {#customfunctionrootfields}
+## Custom Function Root Fields {#custom-function-root-fields}
 
 | Key                | Required | Schema   | Description                                          |
 |--------------------|----------|----------|------------------------------------------------------|
@@ -225,7 +225,7 @@ String \| [QualifiedFunction](#qualifiedfunction)
 | Key          | Required | Schema                      | Description                                                                                                                                                                                                               |
 |--------------|----------|-----------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | check        | true     | [BoolExp](#boolexp)                   | This expression has to hold true for every new row that is inserted                                                                                                                                                       |
-| set          | false    | [ColumnPresetExp](#columnpresetexp)           | Preset values for columns that can be sourced from session variables or static values                                                                                                                                     |
+| set          | false    | [ColumnPresetsExp](#columnpresetexp)           | Preset values for columns that can be sourced from session variables or static values                                                                                                                                     |
 | columns      | false    | [PGColumn](#pgcolumn) array (or) `'*'` | Can insert into only these columns (or all when `'*'` is specified)                                                                                                                                                       |
 | backend_only | false    | Boolean                     | When set to `true` the mutation is accessible only if `x-hasura-use-backend-only-permissions` session variable exists and is set to `true` and request is made with `x-hasura-admin-secret` set if any auth is configured |
 
@@ -246,7 +246,7 @@ String \| [QualifiedFunction](#qualifiedfunction)
 | columns | true     | [PGColumn](#pgcolumn) array (or) `'*'` | Only these columns are selectable (or all when `'*'` is specified)                     |
 | filter  | true     | [BoolExp](#boolexp)                   | Only the rows where this precondition holds true are updatable                         |
 | check   | false    | [BoolExp](#boolexp)                   | Postcondition which must be satisfied by rows which have been updated                  |
-| set     | false    | [ColumnPresetExp](#columnpresetexp)           | Preset values for columns that can be sourced from session variables or static values. |
+| set     | false    | [ColumnPresetsExp](#columnpresetexp)           | Preset values for columns that can be sourced from session variables or static values. |
 
 ## DeletePermission {#deletepermission}
 
@@ -406,11 +406,11 @@ ColumnExp](#columnexp)
 
 {  
 [PGColumn](#pgcolumn) \| scalar [ComputedFieldName](#computedfieldname)
-: { [Operator](#operator) : Value }
+: { [Operator](#metadataoperator) : Value }
 
 </div>
 
-## Operator {#operator}
+## Operator {#metadataoperator}
 
 **Generic operators (all column types except json, jsonb) :**
 
@@ -457,7 +457,7 @@ jsonb):**
 
 {  
     [PGColumn](#pgcolumn): {  
-        [Operator](#operator): {  
+        [Operator](#metadataoperator): {  
             [PGColumn](#pgcolumn) \| \["$", [PGColumn](#pgcolumn)\]
         }
     }
@@ -475,7 +475,7 @@ column of :
 
 {  
 [PGColumn](#pgcolumn): {  
-[Operator](#operator): {  
+[Operator](#metadataoperator): {  
 [PGColumn](#pgcolumn)
 
 }
@@ -492,7 +492,7 @@ column of :
 
 {
 [PGColumn](#pgcolumn): {  
-[Operator](#operator): {  
+[Operator](#metadataoperator): {  
 \[$, [PGColumn](#pgcolumn)\]
 
 }
@@ -591,7 +591,7 @@ An empty [JSONObject](https://tools.ietf.org/html/rfc7159)
 {}
 ```
 
-## ColumnPresetsExp {#columnpresetsexp}
+## ColumnPresetsExp {#columnpresetexp}
 
 A [JSONObject](https://tools.ietf.org/html/rfc7159) of a Postgres column
 name to value mapping, where the value can be static or derived from a
@@ -761,7 +761,7 @@ boolean, "timeout_seconds": integer, "customization":
 
 `[String]`
 
-## EndpointDefinition {#endpointdefinition}
+## EndpointDefinition {#endpointdef}
 
 ```
 {  
@@ -865,7 +865,7 @@ via [Custom Types](/graphql/core/api-reference/metadata-api/custom-types.mdx)
 | table_argument   | false    | String                        | Name of the argument which accepts a table row type. If omitted, the first argument is considered a table argument                                      |
 | session_argument | false    | String                        | Name of the argument which accepts the Hasura session object as a JSON/JSONB value. If omitted, the Hasura session object is not passed to the function |
 
-## Function Configuration {#functionconfiguration}
+## Function Configuration {#functioncon-figuration}
 
 | Key                | Required | Schema                                                      | Description                                                                                                                                             |
 |--------------------|----------|-------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -873,6 +873,8 @@ via [Custom Types](/graphql/core/api-reference/metadata-api/custom-types.mdx)
 | custom_root_fields | false    | [Custom Function Root Fields](#custom-function-root-fields) | Customise the root fields                                                                                                                               |
 | session_argument   | false    | <span class="title-ref">String</span>                       | Function argument which accepts session info JSON                                                                                                       |
 | exposed_as         | false    | <span class="title-ref">String</span>                       | In which part of the schema should we expose this function? Either "mutation" or "query".                                                               |
+
+<div id="function-req-note" />
 
 :::info Note
 
