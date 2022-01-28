@@ -31,7 +31,7 @@ For `config v3`, see [Auto-apply migrations/metadata when the server starts](/gr
 
 :::
 
-## Applying migrations {#auto-apply-metadata-v2}
+## Applying migrations
 
 The `migrations` and `metadata` directories created by the Hasura CLI in
 a Hasura project can be mounted at the `/hasura-migrations` and
@@ -62,7 +62,7 @@ docker run -p 8080:8080 \
        hasura/graphql-engine:v1.2.0.cli-migrations-v2
 ```
 
-## Applying only metadata
+## Applying only metadata {#auto-apply-metadata-v2}
 
 If you're managing migrations with a different tool and want to use this
 image to apply only the metadata, mount the `metadata` directory of your

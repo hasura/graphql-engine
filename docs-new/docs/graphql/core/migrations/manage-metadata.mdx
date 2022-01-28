@@ -56,8 +56,8 @@ This will export the metadata as yaml files in the `/metadata` directory
 
 </TabItem>
 <TabItem value="api" label="API">
-  
-The export can be done via the `metadata_export_metadata` metadata API.
+
+The export can be done via the [export_metadata](/graphql/core/api-reference/metadata-api/manage-metadata.mdx#metadata-export-metadata) metadata API.
 Response will be a JSON object with the Hasura metadata.
 
 Here is an example using `curl` to save this as a file:
@@ -80,7 +80,7 @@ file that can be applied via the console or the API only.
 
 The metadata exported via the **CLI** is broken into multiple YAML files
 for easier management in version control and CI/CD and can be applied
-via the CLI or the [cli migrations](/graphql/core/migrations/advanced/auto-apply-migrations.mdx) image only.
+via the CLI or the [cli-migrations](/graphql/core/migrations/advanced/auto-apply-migrations.mdx) image only.
 
 :::
 
@@ -118,7 +118,7 @@ Metadata can be applied with the [hasura metadata apply](/graphql/core/hasura-cl
 
 <TabItem value="api" label="API">
 
-The exported JSON can be imported via the `metadata_replace_metadata`
+The exported JSON can be imported via the [replace_metadata](/graphql/core/api-reference/metadata-api/manage-metadata.mdx#metadata-replace-metadata)
 metadata API.
 
 Here is an example using `curl`:
@@ -175,7 +175,7 @@ Metadata can be reloaded with the [hasura metadata reload](/graphql/core/hasura-
 
 <TabItem value="api" label="API">
 
-The reload of metadata can be done via the `metadata_reload_metadata`
+The reload of metadata can be done via the [reload_metadata](/graphql/core/api-reference/metadata-api/manage-metadata.mdx#metadata-reload-metadata)
 metadata API.
 
 Here is an example using `curl`:
@@ -211,10 +211,11 @@ creating triggers, actions, etc.).
 <Tabs className="api-tabs">
 
 <TabItem value="cli" label="CLI">
-  
+
 Metadata can be reset with the [hasura metadata clear](/graphql/core/hasura-cli/hasura_metadata_clear.mdx) command.
 
 </TabItem>
+
 <TabItem value="console" label="Console">
 
 1. Click on the settings (⚙) icon at the top right corner of the
@@ -235,7 +236,7 @@ Metadata can be reset with the [hasura metadata clear](/graphql/core/hasura-cli/
 
 <TabItem value="api" label="API">
 
-The reset of metadata can be done via the `metadata_clear_metadata`
+The reset of metadata can be done via the [clear_metadata](/graphql/core/api-reference/metadata-api/manage-metadata.mdx#metadata-clear-metadata)
 metadata API.
 
 Here is an example using `curl`:

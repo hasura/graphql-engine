@@ -9,6 +9,8 @@ keywords:
   - file format
 ---
 
+import TOCInline from "@theme/TOCInline";
+
 # Metadata format reference
 
 ## Introduction
@@ -27,25 +29,16 @@ For `config v2`, see [Metadata format reference (config v2)](/graphql/core/migra
 The following files will be generated in the `metadata/` directory of
 your project:
 
-- [actions.graphql](#actionsgraphql)
-- [actions.yaml](#actionsyaml)
-- [allow_list.yaml](#allow_listyaml)
-- [cron_triggers.yaml](#cron_triggersyaml)
-- [query_collections.yaml](#query_collectionsyaml)
-- [remote_schemas.yaml](#remote_schemasyaml)
-- [version.yaml](#versionyaml)
-- [databases](#databases)
-- [databases.yaml](#databasesyaml)
-- [public_t1.yaml](#public_t1yaml)
+<TOCInline toc={toc[1].children} />
 
 :::info Note
 
-The output of the `metadata_export_metadata` metadata API is a JSON
+The output of the [export_metadata](/graphql/core/api-reference/metadata-api/manage-metadata.mdx#metadata-export-metadata) metadata API is a JSON
 version of the metadata files.
 
 :::
 
-### actions.graphql {#actionsgraphql}
+### actions.graphql
 
 The `actions.graphql` file contains all the [actions](/graphql/core/actions/index.mdx)
 definitions and [custom type](/graphql/core/actions/types/index.mdx) definitions.
@@ -65,7 +58,7 @@ type SampleOutput {
 }
 ```
 
-### actions.yaml {#actionsyaml}
+### actions.yaml
 
 The `actions.yaml` file contains metadata related to [actions](/graphql/core/actions/index.mdx).
 
@@ -114,7 +107,7 @@ custom_types:
   scalars: []
 ```
 
-### allow_list.yaml {#allow_listyaml}
+### allow_list.yaml
 
 The `allow_list.yaml` file contains the metadata related to [allow lists](/graphql/core/deployment/allow-list.mdx).
 
@@ -125,7 +118,7 @@ allow-list.
 - collection: allowed-queries
 ```
 
-### cron_triggers.yaml {#cron_triggersyaml}
+### cron_triggers.yaml
 
 The `cron_triggers.yaml` file contains metadata related to [cron triggers](/graphql/core/scheduled-triggers/create-cron-trigger.mdx). The `webhook` can be an HTTP
 endpoint or an environment variable containing the HTTP endpoint.
@@ -154,7 +147,7 @@ option of `events` on the console or `include_in_metadata` is passed as
 
 :::
 
-### query_collections.yaml {#query_collectionsyaml}
+### query_collections.yaml
 
 The `query_collections.yaml` file contains metadata information about
 [query collections](/graphql/core/api-reference/metadata-api/query-collections.mdx).
@@ -185,7 +178,7 @@ contains two queries `test` and `test2`.
           }
 ```
 
-### remote_schemas.yaml {#remote_schemasyaml}
+### remote_schemas.yaml
 
 The `remote_schemas.yaml` file contains the metadata related to [remote schemas](/graphql/core/remote-schemas/index.mdx).
 
@@ -209,7 +202,7 @@ as environment variable.
     timeout_seconds: 40
 ```
 
-### version.yaml {#versionyaml}
+### version.yaml
 
 The `version.yaml` file contains the metadata format version.
 
@@ -217,7 +210,7 @@ The `version.yaml` file contains the metadata format version.
 version: 3
 ```
 
-### databases {#databases}
+### databases
 
 ```bash
 metadata
@@ -235,7 +228,7 @@ metadata
 └── version.yaml
 ```
 
-### databases.yaml {#databasesyaml}
+### databases.yaml
 
 ```yaml
 - name: default
@@ -263,7 +256,7 @@ database_url:
 
 :::
 
-### public_t1.yaml {#public_t1yaml}
+### public_t1.yaml
 
 ```yaml
 table:
