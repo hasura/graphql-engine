@@ -37,6 +37,8 @@ Choose a pricing plan, select a region and optionally enter the project name for
 
 Once you have completed the project setup, click ``Create Project``.
 
+.. _cloud_projects_db_setup:
+
 Step 2: Database setup
 ----------------------
 
