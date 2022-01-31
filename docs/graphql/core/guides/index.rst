@@ -29,7 +29,6 @@ Guides / Tutorials / Resources
    Code Editor Integrations <code-editor-integrations/index>
    MySQL preview <mysql-preview>
    Updating to Hasura v2 <upgrade-hasura-v2>
-   FAQs <faq/index>
 
 .. note::
 
