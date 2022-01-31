@@ -20,7 +20,7 @@ Track/untrack a table/view in Hasura GraphQL engine.
 Only tracked tables/views are available for
 querying/mutating/subscribing data over the GraphQL API.
 
-:::info Supported from
+:::tip Supported from
 
 The metadata API is supported for versions `v2.0.0` and above and
 replaces the older [schema/metadata API](/graphql/core/api-reference/schema-metadata-api/index.mdx).
@@ -151,7 +151,7 @@ X-Hasura-Role: admin
 ## pg_set_table_is_enum {#metadata-pg-set-table-is-enum}
 
 `pg_set_table_is_enum` sets whether an already-tracked table should be
-used as an `enum table <pg_create_enum_table>`.
+used as an [enum table](/graphql/core/databases/postgres/schema/enums.mdx#pg-create-enum-table).
 
 Use table `user_role` as an enum table:
 

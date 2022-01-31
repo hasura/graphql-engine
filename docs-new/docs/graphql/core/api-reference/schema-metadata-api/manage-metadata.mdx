@@ -16,7 +16,7 @@ keywords:
 
 APIs to manage Hasura metadata which is stored in `hdb_catalog` schema.
 
-:::info Deprecation
+:::caution Deprecation
 
 In versions `v2.0.0` and above, the schema/metadata API is deprecated in
 favour of the [schema API](/graphql/core/api-reference/schema-api/index.mdx) and the
@@ -68,7 +68,7 @@ X-Hasura-Role: admin
 ### Args syntax {#schema-metadata-replace-metadata-syntax}
 
 If version is set to 1, then args should be the JSON object which is
-same as the output of [export_metadata](/graphql/core/api-reference/schema-metadata-api/manage-metadata.mdx#schema-metadata-export-metadata).
+same as the output of [export_metadata](#schema-metadata-export-metadata).
 
 For version 2, the following structure is used:
 
@@ -82,7 +82,7 @@ For version 2, the following structure is used:
 | Key                         | Required | Schema                                                                                                                 | Description                                                                                                                           |
 |-----------------------------|----------|------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------|
 | allow_inconsistent_metadata | false    | Boolean                                                                                                                | If set to `true`, metadata will be replaced with a warning in the response indicating which items are inconsistent (default: `false`) |
-| metadata                    | true     | [export_metadata](/graphql/core/api-reference/schema-metadata-api/manage-metadata.mdx#schema-metadata-export-metadata) | The metadata that will replace the current metadata.                                                                                  |
+| metadata                    | true     | [export_metadata](#schema-metadata-export-metadata) | The metadata that will replace the current metadata.                                                                                  |
 
 If the version is not specified, then it is inferred from the format of `args`.
 

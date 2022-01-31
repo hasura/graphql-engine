@@ -17,7 +17,7 @@ keywords:
 
 Add/remove databases in Hasura GraphQL engine.
 
-:::info Supported from
+:::tip Supported from
 
 The metadata API is supported for versions `v2.0.0` and above and
 replaces the older [schema/metadata API](/graphql/core/api-reference/schema-metadata-api/index.mdx).
@@ -107,7 +107,7 @@ X-Hasura-Role: admin
 | name    | true     | [SourceName](/graphql/core/api-reference/syntax-defs.mdx#sourcename) | Name of the Postgres database                                                                                                                                      |
 | cascade | false    | Boolean                   | When set to `true`, the effect (if possible) is cascaded to any metadata dependent objects (relationships, permissions etc.) from other sources (default: `false`) |
 
-## rename_source [#metadata-rename-source]
+## rename_source {#metadata-rename-source}
 
 `rename_source` is used to rename an existing source.
 

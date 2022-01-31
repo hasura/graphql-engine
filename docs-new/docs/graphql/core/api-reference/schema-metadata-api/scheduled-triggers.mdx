@@ -17,13 +17,13 @@ keywords:
 Scheduled triggers are used to invoke webhooks based on a timestamp or
 cron.
 
-:::info Supported from
+:::tip Supported from
 
 Scheduled triggers are supported from versions `v1.3.0` and above.
 
 :::
 
-:::info Deprecation
+:::caution Deprecation
 
 In versions `v2.0.0` and above, the schema/metadata API is deprecated in
 favour of the [schema API](/graphql/core/api-reference/schema-api/index.mdx) and the
@@ -73,7 +73,7 @@ X-Hasura-Role: admin
 | comment             | false    | Text                                                                                                                                                             | Custom comment.                                                                                                                                                                                                 |
 | replace             | false    | Bool                                                                                                                                                             | When replace is set to `true`, the cron trigger will be updated(if exists) and when it's `false` or the field is omitted, then a new cron trigger will be created.                                              |
 
-:::info Supported from
+:::tip Supported from
 
 Scheduled triggers are supported from versions `v1.3.0` and above.
 
@@ -103,7 +103,7 @@ X-Hasura-Role: admin
 |------|----------|------------------------------------------------------------------------|--------------------------|
 | name | true     | [TriggerName](/graphql/core/api-reference/syntax-defs.mdx#triggername) | Name of the cron trigger |
 
-:::info Supported from
+:::tip Supported from
 
 Scheduled triggers are supported from versions `v1.3.0` and above.
 
@@ -147,7 +147,7 @@ X-Hasura-Role: admin
 | retry_conf  | false    | [RetryConfST](/graphql/core/api-reference/syntax-defs.mdx#retryconfst)                                                                                           | Retry configuration if scheduled event delivery fails            |
 | comment     | false    | Text                                                                                                                                                             | Custom comment.                                                  |
 
-:::info Supported from
+:::tip Supported from
 
 Scheduled triggers are supported from versions `v1.3.0` and above.
 

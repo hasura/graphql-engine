@@ -21,7 +21,7 @@ returning [base types](https://www.postgresql.org/docs/current/extend-type-syste
 or [table row types](https://www.postgresql.org/docs/current/rowtypes.html#ROWTYPES-DECLARING)
 as computed fields.
 
-:::info Deprecation
+:::caution Deprecation
 
 In versions `v2.0.0` and above, the schema/metadata API is deprecated in
 favour of the [schema API](/graphql/core/api-reference/schema-api/index.mdx) and the
@@ -107,5 +107,5 @@ X-Hasura-Role: admin
 | Key     | Required | Schema                                                                               | Description                                                                                   |
 |---------|----------|--------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------|
 | table   | true     | [TableName](/graphql/core/api-reference/syntax-defs.mdx#tablename)                   | Name of the table                                                                             |
-| name    | true     | [ComputedFieldName](/graphql/core/api-reference/syntax-defs.html#computedfieldname)  | Name of the computed field                                                                    |
+| name    | true     | [ComputedFieldName](/graphql/core/api-reference/syntax-defs.mdx#computedfieldname)  | Name of the computed field                                                                    |
 | cascade | false    | Boolean                                                                              | When set to `true`, all the dependent items (if any) on this computed fields are also dropped |

@@ -16,7 +16,7 @@ keywords:
 
 APIs to manage Hasura metadata which is stored in `hdb_catalog` schema.
 
-:::info Supported from
+:::tip Supported from
 
 The metadata API is supported for versions `v2.0.0` and above and
 replaces the older [schema/metadata API](/graphql/core/api-reference/schema-metadata-api/index.mdx).
@@ -109,10 +109,9 @@ For version 2, the following structure is used:
 | Key                         | Required | Schema                               | Description                                                                                                                           |
 |-----------------------------|----------|--------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------|
 | allow_inconsistent_metadata | false    | Boolean                              | If set to `true`, metadata will be replaced with a warning in the response indicating which items are inconsistent (default: `false`) |
-| metadata                    | true     | [export_metadata](#export-metadata)  | The metadata that will replace the current metadata.                                                                                  |
+| metadata                    | true     | [export_metadata](#metadata-export-metadata)  | The metadata that will replace the current metadata.                                                                                  |
 
-If the version is not specified, then it is inferred from the format of
-`args`.
+If the version is not specified, then it is inferred from the format of `args`.
 
 ### Request
 
@@ -135,12 +134,12 @@ X-Hasura-Role: admin
 
 Version 2 with inconsistencies and allow_inconsistent_metadata=false, or
 omitted corresponds with the response document in
-[replace_metadata](#replace-metadata).
+[replace_metadata](#metadata-replace-metadata).
 
 Version 2 example with inconsistencies and
 allow_inconsistent_metadata=true includes an `is_consistent` and
 `inconsistent_objects` corresponding to
-[get_inconsistent_metadata](#get-inconsistent-metadata).
+[get_inconsistent_metadata](#metadata-get-inconsistent-metadata).
 
 ```none
 HTTP/1.1 400 Bad Request

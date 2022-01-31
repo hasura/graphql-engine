@@ -17,7 +17,7 @@ keywords:
 Add/Remove a remote GraphQL server as remote schema in Hasura GraphQL
 engine.
 
-:::info Supported from
+:::tip Supported from
 
 The metadata API is supported for versions `v2.0.0` and above and
 replaces the older [schema/metadata API](/graphql/core/api-reference/schema-metadata-api/index.mdx).
@@ -84,7 +84,7 @@ schema. If the remote schema URL has changed then it will perform a
 introspection as well. After introspection, if there are any
 inconsistencies detected with other metadata objects (like remote
 relationships or remote schema permissions) they will be reported as
-<span class="title-ref">inconsistent_metadata</span>.
+<em>inconsistent_metadata</em>.
 
 An example request as follows:
 

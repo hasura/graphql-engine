@@ -41,7 +41,7 @@ key to the `author` table's primary key `id`. In this case there will be
 a single `author` for every `author_details` and a single `details` for
 every `author`
 
-:::info Deprecation
+:::caution Deprecation
 
 In versions `v2.0.0` and above, the schema/metadata API is deprecated in
 favour of the [schema API](/graphql/core/api-reference/schema-api/index.mdx) and the
@@ -108,14 +108,14 @@ X-Hasura-Role: admin
 }
 ```
 
-:::info Supported from
+:::tip Supported from
 
 Relationships via remote table are supported for versions
 `v2.0.0-alpha.3` and above.
 
 :::
 
-### 3. Manual configuration
+### 3. Manual configuration {#schema-metadata-manual-obj-relationship}
 
 This is an advanced feature which is mostly used to define relationships
 on or to views. We cannot rely on foreign key constraints as they are

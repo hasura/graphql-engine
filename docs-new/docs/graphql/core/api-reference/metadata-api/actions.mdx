@@ -16,7 +16,7 @@ keywords:
 
 **actions** are user defined mutations with custom business logic.
 
-:::info Supported from
+:::tip Supported from
 
 The metadata API is supported for versions `v2.0.0` and above and
 replaces the older [schema/metadata API](/graphql/core/api-reference/schema-metadata-api/index.mdx).
@@ -169,7 +169,7 @@ X-Hasura-Role: admin
 | Key     | Required | Schema                                                               | Description        |
 |---------|----------|----------------------------------------------------------------------|--------------------|
 | action  | true     | [ActionName](/graphql/core/api-reference/syntax-defs.mdx#actionname) | Name of the action |
-| role    | true     | [RoleName](/graphql/core/api-reference/syntax-defs.html#rolename)    | Name of the role   |
+| role    | true     | [RoleName](/graphql/core/api-reference/syntax-defs.mdx#rolename)    | Name of the role   |
 | comment | false    | text                                                                 | comment            |
 
 ## drop_action_permission {#metadata-drop-action-permission}
@@ -195,4 +195,4 @@ X-Hasura-Role: admin
 | Key  | Required | Schema                                                                | Description        |
 |------|----------|-----------------------------------------------------------------------|--------------------|
 | name | true     | [ActionName](/graphql/core/api-reference/syntax-defs.mdx#actionname)  | Name of the action |
-| role | true     | [RoleName](/graphql/core/api-reference/syntax-defs.html#rolename)     | Name of the role   |
+| role | true     | [RoleName](/graphql/core/api-reference/syntax-defs.mdx#rolename)     | Name of the role   |

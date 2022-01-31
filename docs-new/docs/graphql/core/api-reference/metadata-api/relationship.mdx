@@ -41,7 +41,7 @@ key to the `author` table's primary key `id`. In this case there will be
 a single `author` for every `author_details` and a single `details` for
 every `author`
 
-:::info Supported from
+:::tip Supported from
 
 The metadata API is supported for versions `v2.0.0` and above and
 replaces the older [schema/metadata API](/graphql/core/api-reference/schema-metadata-api/index.mdx).
@@ -113,7 +113,7 @@ X-Hasura-Role: admin
 }
 ```
 
-:::info Deprecation
+:::caution Deprecation
 
 For compatibility with previous versions we also support the form of
 `foreign_key_constraint_on` with a `column`-field, e.g.:
@@ -131,14 +131,14 @@ This form is deprecated in favor of the more general `columns` field.
 
 :::
 
-:::info Supported from
+:::tip Supported from
 
 Relationships via remote table are supported for versions
 `v2.0.0-alpha.3` and above.
 
 :::
 
-### 3. Manual configuration
+### 3. Manual configuration {#metadata-pg-manual-obj-relationship}
 
 This is an advanced feature which is mostly used to define relationships
 on or to views. We cannot rely on foreign key constraints as they are
@@ -229,7 +229,7 @@ X-Hasura-Role: admin
 }
 ```
 
-:::info Deprecation
+:::caution Deprecation
 
 For compatibility with previous version we also support the form of
 `foreign_key_constraint_on` with a `column`-field, e.g.:
@@ -473,7 +473,7 @@ X-Hasura-Role: admin
 }
 ```
 
-:::info Deprecation
+:::caution Deprecation
 
 For compatibility with previous versions we also support the form of
 `foreign_key_constraint_on` with a `column`-field, e.g.:
@@ -491,14 +491,14 @@ This form is deprecated in favor of the more general `columns` field.
 
 :::
 
-:::info Supported from
+:::tip Supported from
 
 Relationships via remote table are supported for versions
 `v2.0.0-alpha.3` and above.
 
 :::
 
-### 3. Manual configuration
+### 3. Manual configuration {#mssql-manual-obj-relationship}
 
 This is an advanced feature which is mostly used to define relationships
 on or to views. We cannot rely on foreign key constraints as they are
@@ -534,7 +534,7 @@ X-Hasura-Role: admin
 }
 ```
 
-::info Note
+:::info Note
 
 It is easy to make mistakes while using `manual_configuration`. One
 simple check is to ensure that foreign key constraint semantics are
@@ -590,7 +590,7 @@ X-Hasura-Role: admin
 }
 ```
 
-:::info Deprecation
+:::caution Deprecation
 
 For compatibility with previous version we also support the form of
 `foreign_key_constraint_on` with a `column`-field, e.g.:

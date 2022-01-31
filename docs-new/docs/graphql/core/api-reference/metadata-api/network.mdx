@@ -48,7 +48,7 @@ X-Hasura-Role: admin
 }
 ```
 
-### Args syntax {#metadata-add-host-to-tls-allowlist-syntax}
+### Args syntax {#add-host-to-tls-allowlist-syntax}
 
 | Key         | Required | Schema     | Description                                                                                                                                          |
 |-------------|----------|------------|------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -57,7 +57,7 @@ X-Hasura-Role: admin
 | permissions | false    | `[String]` | Can be only `["self-signed"]` until more permissions are supported. "self-signed" allows self-signed, name mismatches, and non-X509.V3 certificates. |
 
 
-## drop_host_from_tls_allowlist {#metadata-drop-host-from-tls-allowlist-syntax}
+## drop_host_from_tls_allowlist {#metadata-drop-host-from-tls-allowlist}
 
 `drop_host_from_tls_allowlist` is used to drop an endpoint from the TLS allowlist.
 
@@ -74,7 +74,7 @@ X-Hasura-Role: admin
 }
 ```
 
-### Args syntax {#metadata-drop-host-from-tls-allowlist-syntax}
+### Args syntax {#drop-host-from-tls-allowlist-syntax}
 
 | Key  | Required | Schema   | Description                                                                    |
 |------|----------|----------|--------------------------------------------------------------------------------|

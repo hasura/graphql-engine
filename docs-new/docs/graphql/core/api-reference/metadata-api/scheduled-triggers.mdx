@@ -17,7 +17,7 @@ keywords:
 Scheduled triggers are used to invoke webhooks based on a timestamp or
 cron.
 
-:::info Supported from
+:::tip Supported from
 
 The metadata API is supported for versions `v2.0.0` and above and
 replaces the older [schema/metadata API](/graphql/core/api-reference/schema-metadata-api/index.mdx).
@@ -63,7 +63,7 @@ X-Hasura-Role: admin
 | comment             | false    | Text                                                                         | Custom comment.                                                                                                                                                                                                 |
 | replace             | false    | Bool                                                                         | When replace is set to `true`, the cron trigger will be updated(if exists) and when it's `false` or the field is omitted, then a new cron trigger will be created.                                              |
 
-:::info Supported from
+:::tip Supported from
 
 Scheduled triggers are supported from versions `v1.3.0` and above.
 
@@ -93,7 +93,7 @@ X-Hasura-Role: admin
 |------|----------|-----------------------------|--------------------------|
 | name | true     | [TriggerName](/graphql/core/api-reference/syntax-defs.mdx#triggername) | Name of the cron trigger |
 
-:::info Supported from
+:::tip Supported from
 
 Scheduled triggers are supported from versions `v1.3.0` and above.
 
@@ -150,7 +150,7 @@ Content-Type: application/json
 | retry_conf  | false    | [RetryConfST](/graphql/core/api-reference/syntax-defs.mdx#retryconfst)                                                                | Retry configuration if scheduled event delivery fails            |
 | comment     | false    | Text                                                                         | Custom comment.                                                  |
 
-:::info Supported from
+:::tip Supported from
 
 Scheduled triggers are supported from versions `v1.3.0` and above.
 
@@ -182,7 +182,7 @@ X-Hasura-Role: admin
 | type     | true     | `one_off` \| `cron` | Type of the event trigger.       |
 | event_id | true     | UUID                | The `id` of the scheduled event. |
 
-:::info Supported from
+:::tip Supported from
 
 Scheduled triggers are supported from versions `v1.3.0` and above.
 
