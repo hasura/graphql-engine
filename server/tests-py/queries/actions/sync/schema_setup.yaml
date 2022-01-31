@@ -90,6 +90,18 @@ args:
       - name: name
         type: String
 
+    - name: Headers
+      fields:
+      - name: name
+        type: String!
+      - name: value
+        type: String!
+
+    - name: OutHeaders
+      fields:
+      - name: headers
+        type: '[Headers]'
+
     - name: OutObjectTransformed
       fields:
       - name: foo
@@ -274,6 +286,14 @@ args:
             "foo": {{ $body.id }},
             "bar": {{ $body.name }}
           }
+
+- type: create_action
+  args:
+    name: mirror_headers
+    definition:
+      type: query
+      output_type: OutHeaders
+      handler: http://127.0.0.1:5593/mirror-headers
 
 - type: create_action
   args:

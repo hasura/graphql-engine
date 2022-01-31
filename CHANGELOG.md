@@ -38,6 +38,7 @@ count (
 - server: fix REST endpoints with path segments not showing correctly in the OpenAPI spec
 - server: fix aliases used in GraphQL queries in REST endpoints not being reflected in the OpenAPI spec
 - server: refresh JWKs a maximum of once per second (fix #5781)
+- server: action webhook requests now include a User-Agent header (fix #8070)
 - console: action/event trigger transforms are now called REST connectors
 - console: fix list of tables (and schemas) being unsorted when creating a new trigger event (fix #6391)
 - console: fix custom field names breaking browse table sorting and the pre-populating of the edit row form
