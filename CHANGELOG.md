@@ -2,7 +2,6 @@
 
 ## Next release
 (Add highlights/major features below)
-- console: enable support for insert & delete permissions for mssql tables
 
 ### Breaking Changes
 - For any **MSSQL** backend, count aggregate query on multiple columns is restricted with a GraphQL
@@ -38,10 +37,13 @@ count (
 - server: fix REST endpoints with path segments not showing correctly in the OpenAPI spec
 - server: fix aliases used in GraphQL queries in REST endpoints not being reflected in the OpenAPI spec
 - server: refresh JWKs a maximum of once per second (fix #5781)
+- server: implement update mutations for MS SQL Server (closes #7834)
+- server: support nested output object types in actions (#4796)
 - server: action webhook requests now include a User-Agent header (fix #8070)
 - console: action/event trigger transforms are now called REST connectors
 - console: fix list of tables (and schemas) being unsorted when creating a new trigger event (fix #6391)
 - console: fix custom field names breaking browse table sorting and the pre-populating of the edit row form
+- console: enable support for insert & delete permissions for mssql tables
 - cli: migrate and seed subcommands has an option in prompt to choose and apply operation on all available databases
 - cli: fix `metadata diff --type json | unified-json` behaving incorrectly and showing diff in YAML format.
 - cli: fix regression in `migrate create` command (#7971)
@@ -50,7 +52,6 @@ count (
 
 ## v2.1.1
 
-- server: implement update mutations for MS SQL Server (closes #7834)
 - server: provides a more comprehensive fix for the JSON ser/de backwards incompatibility that was initially addressed by 45481db (#7906)
 
 ## v2.1.0
@@ -77,7 +78,6 @@ count (
 - server: support database-to-database joins with BigQuery
 - server: improved startup time when using large remote schemas
 - server: fix rest-endpoints bug allow list arguments (fix #7135)
-- server: support nested output object types in actions (#4796)
 - server: fallback to unauthorized role when JWT is not found in cookie (fix #7272)
 - server: add support for building linux/arm64 docker image (#6337, #1266)
 - server: provide option to explicitly recreate event triggers for sources in the `reload_metadata` API
