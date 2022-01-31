@@ -345,6 +345,10 @@ class ActionsWebhookHandler(http.server.BaseHTTPRequestHandler):
             resp, status = self.mirror_action()
             self._send_response(status, resp)
 
+        elif req_path == "/mirror-headers":
+            resp, status = self.mirror_headers()
+            self._send_response(status, resp)
+
         elif req_path == "/get-user-by-email":
             resp, status = self.get_users_by_email(True)
             self._send_response(status, resp)
@@ -499,6 +503,12 @@ class ActionsWebhookHandler(http.server.BaseHTTPRequestHandler):
 
     def mirror_action(self):
         response = self.req_json['input']['arg']
+        return response, HTTPStatus.OK
+
+    def mirror_headers(self):
+        response = {
+            'headers': list(map(lambda header: { 'name': header[0], 'value': header[1] }, self.headers.items()))
+        }
         return response, HTTPStatus.OK
 
     def get_users_by_email(self, singleUser = False):

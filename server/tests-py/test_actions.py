@@ -98,6 +98,33 @@ class TestActionsSync:
     def test_mirror_action_transformed_output_success(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/mirror_action_transformed_output_success.yaml')
 
+    def test_mirror_headers(self, hge_ctx):
+        query = """
+          query {
+            mirror_headers {
+              headers {
+                name
+                value
+              }
+            }
+          }
+        """
+        query_obj = {
+            "query": query
+        }
+        headers = {}
+        admin_secret = hge_ctx.hge_key
+        if admin_secret is not None:
+            headers['X-Hasura-Admin-Secret'] = admin_secret
+        code, resp, _ = hge_ctx.anyq('/v1/graphql', query_obj, headers)
+        assert code == 200, resp
+
+        resp_headers = resp['data']['mirror_headers']['headers']
+
+        user_agent_header = next((h['value'] for h in resp_headers if h['name'] == 'User-Agent'), None)
+        assert user_agent_header is not None
+        assert user_agent_header.startswith("hasura-graphql-engine/")
+
     def test_results_list_transformed_output_success(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/results_list_transformed_output_success.yaml')
 
