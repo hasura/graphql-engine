@@ -124,5 +124,6 @@ APIs to provide a unified real-time GraphQL API across all your data sources.
   API Reference <api-reference/index>
   How It Works <how-it-works/index>
   Troubleshooting <troubleshooting/index>
+  FAQs <faq/index>
   guides/index
-  security-disclosure/index
+  security-disclosure/index 
