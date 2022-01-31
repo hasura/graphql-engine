@@ -28,18 +28,18 @@ GraphQL type definitions can be mutually recursive, and indeed, they quite often
 are! For example, two tables that reference one another will be represented by
 types such as the following:
 
-  type author {
-    id: Int!
-    name: String!
-    articles: [article!]!
-  }
+    type author {
+      id: Int!
+      name: String!
+      articles: [article!]!
+    }
 
-  type article {
-    id: Int!
-    title: String!
-    content: String!
-    author: author!
-  }
+    type article {
+      id: Int!
+      title: String!
+      content: String!
+      author: author!
+    }
 
 This doesn’t cause any trouble if the schema is represented by a mapping from
 type names to type definitions, but the Parser abstraction is all about avoiding
