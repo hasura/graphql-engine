@@ -121,6 +121,10 @@ MsSQLConfiguration
      - true
      - MsSQLSourceConnectionInfo_
      - Connection parameters for the source
+   * - read_replicas
+     - false
+     - [MsSQLSourceConnectionInfo_]
+     - Optional list of read replica configuration *(supported only in cloud/enterprise versions)*
 
 
 .. _BigQueryConfiguration:
