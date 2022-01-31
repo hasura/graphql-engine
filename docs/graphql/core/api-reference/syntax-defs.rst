@@ -2063,8 +2063,8 @@ HeaderKey
 
 .. _HeaderValue:
 
-HeaderKey
-^^^^^^^^^
+HeaderValue
+^^^^^^^^^^^
 
 .. parsed-literal::
    :class: haskell-pre
@@ -2083,8 +2083,10 @@ The JSON templating language to be used for this JSON transformation.
 
    "Kriti"
 
+.. _ResponseTransformation:
+
 ResponseTransformation
-^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^
 
 .. list-table::
    :header-rows: 1
