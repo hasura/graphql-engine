@@ -10,7 +10,7 @@ sidebar_label: FAQs
 
 # FAQs
 
-## What types of workloads and databases does Hasura support? {#faq_db}
+## What types of workloads and databases does Hasura support? {#faq-db}
 
 Hasura supports the following databases:  
 -   PostgresQL (and the Postgres family of databases: Yugabyte,
@@ -18,7 +18,7 @@ Hasura supports the following databases:
 -   SQL Server
 -   Big Query
 
-## How does Hasura work? {#faq_how_hasura_works}
+## How does Hasura work? {#faq-how-hasura-works}
 
 Although Hasura presents itself as a web-service, Hasura is quite a JIT
 compiler, Hasura takes incoming GraphQL API calls over HTTP and then
@@ -26,12 +26,12 @@ tries to achieve theoretically optimal performance while delegating the
 data fetches to downstream data-sources. You can read more about
 Hasura’s design philosophy in this [blog post.](https://hasura.io/blog/how-hasura-works/)
 
-## How much time & effort does Hasura save? {#faq_hasura_timesaving}
+## How much time & effort does Hasura save? {#faq-hasura-timesaving}
 
 Hasura cuts down development time by 50-80%. You can find out more from
 our case studies [here.](https://hasura.io/user-stories/)
 
-## How do I use Hasura if I already have an existing application or API? {#faq_hasura_existing_app_api}
+## How do I use Hasura if I already have an existing application or API? {#faq-hasura-existing-app-api}
 
 Hasura is designed for incremental adoption without having to
 rip-and-replace or entirely rebuild your stack. You can incrementally
@@ -43,7 +43,7 @@ applications by delegating to them via Hasura Actions. This will give
 you the time to migrate over any legacy code or rewrite existing
 microservices with Hasura.
 
-## Where do I put business logic? {#faq_business_logic}
+## Where do I put business logic? {#faq-business-logic}
 
 Hasura exposes your domain’s data and logic over a high-performance
 flexible API. If you’re pointing Hasura at a database you might be
@@ -106,13 +106,13 @@ Java or .NET, but you might want to write new logic as reactive event
 triggers deployed as serverless functions (or lambdas) in Javascript or
 Python or Go!
 
-## Can I use REST instead of GraphQL APIs? {#faq_REST_api}
+## Can I use REST instead of GraphQL APIs? {#faq-REST-api}
 
 Hasura 2.0 added support for REST APIs. Hasura 2.0 allows users to
 create idiomatic REST endpoints based on GraphQL templates. Read more
 [here.](/graphql/core/api-reference/restified.mdx)
 
-## Can Hasura integrate with my authentication system? {#faq_hasura_auth}
+## Can Hasura integrate with my authentication system? {#faq-hasura-auth}
 
 Hasura believes authentication should not be restricted to a particular
 provider, hence, we make it really easy for you to bring your own
@@ -123,14 +123,14 @@ that allows you to read through cookies or tokens that might have a
 custom format. We have guides for some of the popular authentication
 providers. Read more `here. <authentication>`
 
-## Does Hasura also automatically cache queries or data to improve performance? {#faq_hasura_query_caching}
+## Does Hasura also automatically cache queries or data to improve performance? {#faq-hasura-query-caching}
 
 Query response caching (available on Hasura Cloud & Hasura EE) can be
 enabled by specifying which query to cache using the @cached directive.
 Read more about caching
 [here.](https://hasura.io/learn/graphql/hasura-advanced/performance/1-caching/)
 
-## How does Hasura handle ABAC, RBAC style authorization policies? {#faq_ABAC_RBAC}
+## How does Hasura handle ABAC, RBAC style authorization policies? {#faq-ABAC-RBAC}
 
 Hasura implements RBAC by automatically publishing a different GraphQL
 schema that represents the right queries, fields, and mutations that are
@@ -140,7 +140,7 @@ For ABAC, session variables can be used as attributes and permission
 rules can be created that can use any dynamic variable that is a
 property of the request.
 
-## Does Hasura have other security features, specifically for GraphQL in production? {#faq_security}
+## Does Hasura have other security features, specifically for GraphQL in production? {#faq-security}
 
 Hasura has multiple security features to best utilize the power of our
 GraphQL Engine. Features like service level security, authentication &
@@ -148,7 +148,7 @@ authorization, allow lists, rate and response limiting are present.
 Learn more about Hasura security
 [here.](https://hasura.io/learn/graphql/hasura-advanced/security/)
 
-## How does the compiler approach provide superior performance? {#faq_compiler_performance}
+## How does the compiler approach provide superior performance? {#faq-compiler-performance}
 
 Typically when you think of GraphQL servers processing a query, you
 think of the number of resolvers involved in fetching the data for the
@@ -166,7 +166,7 @@ formed.
 This compiler based approach allows Hasura to form a single SQL query
 for a GraphQL query of any depth.
 
-## How does Hasura scale vertically and horizontally? {#faq_scaling}
+## How does Hasura scale vertically and horizontally? {#faq-scaling}
 
 Hasura Cloud lets you scale your applications automatically without
 having to think about the number of instances, cores, memory, thresholds
@@ -177,7 +177,7 @@ across read replicas while sending all mutations and metadata API calls
 to the master. Learn more about Horizontal scaling with Hasura,
 [here.](https://hasura.io/learn/graphql/hasura-advanced/performance/2-horizontal-scaling/)
 
-## How can I improve the performance of slow running API calls? {#faq_slow_api_perf}
+## How can I improve the performance of slow running API calls? {#faq-slow-api-perf}
 
 Hasura allows analyzing queries to identify the slow running calls and
 use Indexes to improve the performance. Learn more
