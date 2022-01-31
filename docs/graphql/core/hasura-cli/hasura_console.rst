@@ -38,6 +38,9 @@ Examples
 
     # Connect to an instance specified by the flag, overrides the one mentioned in config.yaml:
     hasura console --endpoint "<endpoint>"
+    
+    # Connect to a 2nd running instance, requires endpoint *and* unique ports:
+    hasura console --endpoint "<endpoint>" --console-port 9700 --api-port 9703
 
 Options
 ~~~~~~~
