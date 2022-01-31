@@ -5,24 +5,23 @@ import { ReactQueryDecorator } from '@/storybook/decorators/react-query';
 import { ReduxDecorator } from '@/storybook/decorators/redux-decorator';
 import { ComponentMeta, ComponentStory } from '@storybook/react';
 import React from 'react';
-import { useDropRemoteDatabaseRelationship } from '..';
+import { useAddRemoteSchemaRelationship } from '..';
 
-function DeleteRemoteDatabaseRelationshipComponent({
+function AddRemoteSchemaRelationshipComponent({
   rel,
 }: {
   rel: Record<string, unknown>;
 }) {
-  const mutation = useDropRemoteDatabaseRelationship();
+  const mutation = useAddRemoteSchemaRelationship();
   const { data: version, isSuccess } = useMetadataVersion();
   return (
     <div>
       <Button onClick={() => mutation.mutate(rel)}>
-        Delete Remote Database Relationship Mutation (Not compatible with CLI)
+        Add Remote Schema Relationship Mutation (Not compatible with CLI)
       </Button>
       <p className="mb-md text-muted mb-md pt-5">
-        Delets a remote relationship from the metadata using the name, source &
-        table as the input parameters. The hook, on success, invalidates the
-        existing metadata and refetches it again.
+        Adds a new remote schema relationship . The hook, on success,
+        invalidates the existing metadata and refetches it again.
       </p>
       <HookStatusWrapperWithMetadataVersion
         status={{
@@ -37,29 +36,41 @@ function DeleteRemoteDatabaseRelationshipComponent({
   );
 }
 
-export const DeleteRemoteDatabaseRelationship: ComponentStory<
-  typeof DeleteRemoteDatabaseRelationshipComponent
+export const AddRemoteSchemaRelationship: ComponentStory<
+  typeof AddRemoteSchemaRelationshipComponent
 > = args => {
-  return <DeleteRemoteDatabaseRelationshipComponent {...args} />;
+  return <AddRemoteSchemaRelationshipComponent {...args} />;
 };
 
-DeleteRemoteDatabaseRelationship.args = {
+AddRemoteSchemaRelationship.args = {
   rel: {
     source: 'default',
-    table: 'test',
+    table: 'person',
     name: 'name_of_the_remote_relationship',
+    definition: {
+      to_remote_schema: {
+        remote_schema: 'name_of_the_remote_schema',
+        lhs_fields: ['id'],
+        remote_field: {
+          countries: {
+            arguments: {
+              filter: {
+                code: {
+                  eq: '$id',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
   },
 };
 
-DeleteRemoteDatabaseRelationship.parameters = {
-  // Disable storybook for Remote Relationship stories
-  chromatic: { disableSnapshot: true },
-};
-
 export default {
-  title: 'hooks/Remote Database Relationships/Delete',
+  title: 'hooks/Remote Schema Relationships/Create',
   decorators: [
     ReduxDecorator({ tables: { currentDataSource: 'default' } }),
     ReactQueryDecorator(),
   ],
-} as ComponentMeta<typeof DeleteRemoteDatabaseRelationshipComponent>;
+} as ComponentMeta<typeof AddRemoteSchemaRelationshipComponent>;

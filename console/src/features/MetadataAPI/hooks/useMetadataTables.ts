@@ -18,3 +18,12 @@ export const useRemoteDatabaseRelationships = (
     MetadataSelector.getRemoteDatabaseRelationships(database, table)
   );
 };
+
+export const useRemoteSchemaRelationships = (
+  database: string,
+  table: QualifiedTable
+) => {
+  return useMetadata(
+    MetadataSelector.getRemoteSchemaRelationships(database, table)
+  );
+};
