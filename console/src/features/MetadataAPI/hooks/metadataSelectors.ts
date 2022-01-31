@@ -111,4 +111,15 @@ export namespace MetadataSelector {
     ).filter(field => 'to_source' in field.definition);
     return remote_database_relationships;
   };
+
+  export const getRemoteSchemaRelationships = (
+    currentDataSource: string,
+    table: QualifiedTable
+  ) => (m: MetadataResponse) => {
+    const metadataTable = getTable(currentDataSource, table)(m);
+    const remote_schema_relationships: RemoteRelationship[] = (
+      metadataTable?.remote_relationships ?? []
+    ).filter(field => 'to_remote_schema' in field.definition);
+    return remote_schema_relationships;
+  };
 }
