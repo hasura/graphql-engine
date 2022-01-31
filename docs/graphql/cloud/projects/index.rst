@@ -63,6 +63,7 @@ Dig deeper
    Managing development environments <environments>
    GitHub Deployment <github-integration>
    Heroku database URL Sync <heroku-url-sync>
+   Vercel Integration <vercel-integration>
    Maintenance mode <maintenance-mode>
    Deleting projects <delete>
    Updating v1.3 projects to v2.0 <move-project-v2>
