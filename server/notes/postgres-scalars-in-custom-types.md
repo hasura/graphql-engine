@@ -1,8 +1,8 @@
 This note is in [Hasura.RQL.DDL.CustomTypes](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/RQL/DDL/CustomTypes.hs#L27).
 It is referenced at:
+  - line 101 of [Hasura.RQL.DDL.Action](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/RQL/DDL/Action.hs#L101)
   - line 59 of [Hasura.RQL.DDL.CustomTypes](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/RQL/DDL/CustomTypes.hs#L59)
   - line 265 of [Hasura.RQL.DDL.CustomTypes](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/RQL/DDL/CustomTypes.hs#L265)
-  - line 101 of [Hasura.RQL.DDL.Action](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/RQL/DDL/Action.hs#L101)
 
 # Postgres scalars in custom types
 

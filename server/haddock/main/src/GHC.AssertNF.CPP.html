@@ -29,64 +29,64 @@
 </span><span id="line-29"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">GHC.AssertNF.CPP</span><span>
 </span><span id="line-30"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="GHC.AssertNF.CPP.html#assertNFHere"><span class="hs-identifier">assertNFHere</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-31"></span><span>    </span><span class="annot"><a href="GHC.AssertNF.CPP.html#disableAssertNF"><span class="hs-identifier">disableAssertNF</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-32"></span><span>    </span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/ghc-heap-view-0.6.2-4bb0eab809814735cd3daa3e49ec1094299461170512822764e05267e0793adc/share/doc/html/src"><span class="hs-identifier">GHC.AssertNF.assertNFNamed</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-32"></span><span>    </span><span class="annot"><span class="hs-identifier">GHC.AssertNF.assertNFNamed</span></span><span class="hs-special">,</span><span>
 </span><span id="line-33"></span><span>  </span><span class="hs-special">)</span><span>
 </span><span id="line-34"></span><span class="hs-keyword">where</span><span>
 </span><span id="line-35"></span><span>
-</span><span id="line-36"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/ghc-heap-view-0.6.2-4bb0eab809814735cd3daa3e49ec1094299461170512822764e05267e0793adc/share/doc/html/src"><span class="hs-identifier">GHC.AssertNF</span></a></span><span> </span><span class="hs-keyword">qualified</span><span>
+</span><span id="line-36"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">GHC.AssertNF</span></span><span> </span><span class="hs-keyword">qualified</span><span>
 </span><span id="line-37"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
-</span><span id="line-38"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/template-haskell-2.16.0.0/src"><span class="hs-identifier">Language.Haskell.TH</span></a></span><span>
-</span><span id="line-39"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier">Text.Printf</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier">printf</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-38"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Language.Haskell.TH</span></span><span>
+</span><span id="line-39"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Text.Printf</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">printf</span></span><span class="hs-special">)</span><span>
 </span><span id="line-40"></span><span>
-</span><span id="line-41"></span><span class="annot"><a href="GHC.AssertNF.CPP.html#assertNFHere"><span class="hs-identifier hs-type">assertNFHere</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/template-haskell-2.16.0.0/src"><span class="hs-identifier hs-type">Q</span></a></span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/template-haskell-2.16.0.0/src"><span class="hs-identifier hs-type">Exp</span></a></span><span>
+</span><span id="line-41"></span><span class="annot"><a href="GHC.AssertNF.CPP.html#assertNFHere"><span class="hs-identifier hs-type">assertNFHere</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Q</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Exp</span></span><span>
 </span><span id="line-42"></span><span class="hs-comment">-- This is a copy of 'GHC.AssertNF.assertNFHere'. We can't easily</span><span>
 </span><span id="line-43"></span><span class="hs-comment">-- use the original because that relies on an import of &quot;GHC.AssertNF&quot;.</span><span>
 </span><span id="line-44"></span><span class="hs-comment">-- Instead, we rewrite it to use the re-exported 'assertNFNamed'.</span><span>
 </span><span id="line-45"></span><span id="assertNFHere"><span class="annot"><span class="annottext">assertNFHere :: Q Exp
 </span><a href="GHC.AssertNF.CPP.html#assertNFHere"><span class="hs-identifier hs-var hs-var">assertNFHere</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-46"></span><span>    </span><span id="local-6989586621690131114"><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621690131114"><span class="hs-identifier hs-var">locStr</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Loc -&gt; String
-</span><a href="#local-6989586621690131113"><span class="hs-identifier hs-var">formatLoc</span></a></span><span> </span><span class="annot"><span class="annottext">(Loc -&gt; String) -&gt; Q Loc -&gt; Q String
+</span><span id="line-46"></span><span>    </span><span id="local-6989586621687911500"><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621687911500"><span class="hs-identifier hs-var">locStr</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Loc -&gt; String
+</span><a href="#local-6989586621687911499"><span class="hs-identifier hs-var">formatLoc</span></a></span><span> </span><span class="annot"><span class="annottext">(Loc -&gt; String) -&gt; Q Loc -&gt; Q String
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Q Loc
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/template-haskell-2.16.0.0/src"><span class="hs-identifier hs-var">location</span></a></span><span>
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Q Loc
+</span><span class="hs-identifier hs-var">location</span></span><span>
 </span><span id="line-47"></span><span>    </span><span class="annot"><span class="annottext">Exp -&gt; Q Exp
 forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var">return</span></a></span><span> </span><span class="annot"><span class="annottext">(Exp -&gt; Q Exp) -&gt; Exp -&gt; Q Exp
+</span><span class="hs-identifier hs-var">return</span></span><span> </span><span class="annot"><span class="annottext">(Exp -&gt; Q Exp) -&gt; Exp -&gt; Q Exp
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Exp -&gt; Exp -&gt; Exp
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/template-haskell-2.16.0.0/src"><span class="hs-identifier hs-var">AppE</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name -&gt; Exp
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/template-haskell-2.16.0.0/src"><span class="hs-identifier hs-var">VarE</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String -&gt; Name
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/template-haskell-2.16.0.0/src"><span class="hs-identifier hs-var">mkName</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Exp -&gt; Exp -&gt; Exp
+</span><span class="hs-identifier hs-var">AppE</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name -&gt; Exp
+</span><span class="hs-identifier hs-var">VarE</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String -&gt; Name
+</span><span class="hs-identifier hs-var">mkName</span></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;GHC.AssertNF.CPP.assertNFNamed&quot;</span></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-48"></span><span>                  </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Lit -&gt; Exp
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/template-haskell-2.16.0.0/src"><span class="hs-identifier hs-var">LitE</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String -&gt; Lit
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/template-haskell-2.16.0.0/src"><span class="hs-identifier hs-var">StringL</span></a></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621690131114"><span class="hs-identifier hs-var">locStr</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
-</span><span id="line-49"></span><span>  </span><span class="hs-keyword">where</span><span> </span><span class="annot"><a href="#local-6989586621690131113"><span class="hs-identifier hs-type">formatLoc</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/template-haskell-2.16.0.0/src"><span class="hs-identifier hs-type">Loc</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-type">String</span></a></span><span>
-</span><span id="line-50"></span><span>        </span><span id="local-6989586621690131113"><span class="annot"><span class="annottext">formatLoc :: Loc -&gt; String
-</span><a href="#local-6989586621690131113"><span class="hs-identifier hs-var hs-var">formatLoc</span></a></span></span><span> </span><span id="local-6989586621690131106"><span class="annot"><span class="annottext">Loc
-</span><a href="#local-6989586621690131106"><span class="hs-identifier hs-var">loc</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621690131105"><span class="annot"><span class="annottext">file :: String
-</span><a href="#local-6989586621690131105"><span class="hs-identifier hs-var hs-var">file</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Loc -&gt; String
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/template-haskell-2.16.0.0/src"><span class="hs-identifier hs-var hs-var">loc_filename</span></a></span><span> </span><span class="annot"><span class="annottext">Loc
-</span><a href="#local-6989586621690131106"><span class="hs-identifier hs-var">loc</span></a></span><span>
-</span><span id="line-51"></span><span>                            </span><span class="hs-special">(</span><span id="local-6989586621690131103"><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621690131103"><span class="hs-identifier hs-var">line</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690131102"><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621690131102"><span class="hs-identifier hs-var">col</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Loc -&gt; (Int, Int)
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/template-haskell-2.16.0.0/src"><span class="hs-identifier hs-var hs-var">loc_start</span></a></span><span> </span><span class="annot"><span class="annottext">Loc
-</span><a href="#local-6989586621690131106"><span class="hs-identifier hs-var">loc</span></a></span><span>
+</span><span class="hs-identifier hs-var">LitE</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String -&gt; Lit
+</span><span class="hs-identifier hs-var">StringL</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621687911500"><span class="hs-identifier hs-var">locStr</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-49"></span><span>  </span><span class="hs-keyword">where</span><span> </span><span class="annot"><a href="#local-6989586621687911499"><span class="hs-identifier hs-type">formatLoc</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Loc</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span>
+</span><span id="line-50"></span><span>        </span><span id="local-6989586621687911499"><span class="annot"><span class="annottext">formatLoc :: Loc -&gt; String
+</span><a href="#local-6989586621687911499"><span class="hs-identifier hs-var hs-var">formatLoc</span></a></span></span><span> </span><span id="local-6989586621687911492"><span class="annot"><span class="annottext">Loc
+</span><a href="#local-6989586621687911492"><span class="hs-identifier hs-var">loc</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621687911491"><span class="annot"><span class="annottext">file :: String
+</span><a href="#local-6989586621687911491"><span class="hs-identifier hs-var hs-var">file</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Loc -&gt; String
+</span><span class="hs-identifier hs-var hs-var">loc_filename</span></span><span> </span><span class="annot"><span class="annottext">Loc
+</span><a href="#local-6989586621687911492"><span class="hs-identifier hs-var">loc</span></a></span><span>
+</span><span id="line-51"></span><span>                            </span><span class="hs-special">(</span><span id="local-6989586621687911489"><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621687911489"><span class="hs-identifier hs-var">line</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687911488"><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621687911488"><span class="hs-identifier hs-var">col</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Loc -&gt; (Int, Int)
+</span><span class="hs-identifier hs-var hs-var">loc_start</span></span><span> </span><span class="annot"><span class="annottext">Loc
+</span><a href="#local-6989586621687911492"><span class="hs-identifier hs-var">loc</span></a></span><span>
 </span><span id="line-52"></span><span>                        </span><span class="hs-keyword">in</span><span>  </span><span class="annot"><span class="annottext">String -&gt; String -&gt; Int -&gt; Int -&gt; String
 forall r. PrintfType r =&gt; String -&gt; r
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var">printf</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-identifier hs-var">printf</span></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;parameter at %s:%d:%d&quot;</span></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621690131105"><span class="hs-identifier hs-var">file</span></a></span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621690131103"><span class="hs-identifier hs-var">line</span></a></span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621690131102"><span class="hs-identifier hs-var">col</span></a></span><span>
+</span><a href="#local-6989586621687911491"><span class="hs-identifier hs-var">file</span></a></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621687911489"><span class="hs-identifier hs-var">line</span></a></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621687911488"><span class="hs-identifier hs-var">col</span></a></span><span>
 </span><span id="line-53"></span><span>
-</span><span id="line-54"></span><span class="annot"><a href="GHC.AssertNF.CPP.html#disableAssertNF"><span class="hs-identifier hs-type">disableAssertNF</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/ghc-prim-0.6.1/src"><span class="hs-identifier hs-type">IO</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-54"></span><span class="annot"><a href="GHC.AssertNF.CPP.html#disableAssertNF"><span class="hs-identifier hs-type">disableAssertNF</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
 </span><span id="line-55"></span><span id="disableAssertNF"><span class="annot"><span class="annottext">disableAssertNF :: IO ()
 </span><a href="GHC.AssertNF.CPP.html#disableAssertNF"><span class="hs-identifier hs-var hs-var">disableAssertNF</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">IO ()
-</span><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/ghc-heap-view-0.6.2-4bb0eab809814735cd3daa3e49ec1094299461170512822764e05267e0793adc/share/doc/html/src"><span class="hs-identifier hs-var">GHC.AssertNF.disableAssertNF</span></a></span><span class="hs-cpp">
+</span><span class="hs-identifier hs-var">GHC.AssertNF.disableAssertNF</span></span><span class="hs-cpp">
 
 #endif
 </span></pre></body></html>

@@ -21,13 +21,13 @@
 </span><span id="line-21"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.GraphQL.ParameterizedQueryHash.html"><span class="hs-identifier">Hasura.GraphQL.ParameterizedQueryHash</span></a></span><span>
 </span><span id="line-22"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
 </span><span id="line-23"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Server.Types.html"><span class="hs-identifier">Hasura.Server.Types</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Types.html#RequestId"><span class="hs-identifier">RequestId</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
-</span><span id="line-24"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/graphql-parser-0.2.0.0-2f2855e50df08ca093d7ce5946fba1f88b716fe40529e565a631b700f43b2d07/share/doc/html/src"><span class="hs-identifier">Language.GraphQL.Draft.Syntax</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">GQL</span></span><span>
+</span><span id="line-24"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Language.GraphQL.Draft.Syntax</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">GQL</span></span><span>
 </span><span id="line-25"></span><span>
 </span><span id="line-26"></span><span class="hs-keyword">data</span><span> </span><span id="QueryTags"><span class="annot"><a href="Hasura.QueryTags.html#QueryTags"><span class="hs-identifier hs-var">QueryTags</span></a></span></span><span>
 </span><span id="line-27"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="QTQuery"><span class="annot"><a href="Hasura.QueryTags.html#QTQuery"><span class="hs-identifier hs-var">QTQuery</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.QueryTags.html#QueryMetadata"><span class="hs-identifier hs-type">QueryMetadata</span></a></span><span>
 </span><span id="line-28"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="QTMutation"><span class="annot"><a href="Hasura.QueryTags.html#QTMutation"><span class="hs-identifier hs-var">QTMutation</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.QueryTags.html#MutationMetadata"><span class="hs-identifier hs-type">MutationMetadata</span></a></span><span>
 </span><span id="line-29"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="QTLiveQuery"><span class="annot"><a href="Hasura.QueryTags.html#QTLiveQuery"><span class="hs-identifier hs-var">QTLiveQuery</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.QueryTags.html#LivequeryMetadata"><span class="hs-identifier hs-type">LivequeryMetadata</span></a></span><span>
-</span><span id="line-30"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690197679"><span id="local-6989586621690197681"><span id="local-6989586621690197683"><span class="annot"><span class="annottext">Int -&gt; QueryTags -&gt; ShowS
+</span><span id="line-30"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687978132"><span id="local-6989586621687978134"><span id="local-6989586621687978136"><span class="annot"><span class="annottext">Int -&gt; QueryTags -&gt; ShowS
 [QueryTags] -&gt; ShowS
 QueryTags -&gt; String
 (Int -&gt; QueryTags -&gt; ShowS)
@@ -42,11 +42,11 @@ show :: QueryTags -&gt; String
 $cshow :: QueryTags -&gt; String
 showsPrec :: Int -&gt; QueryTags -&gt; ShowS
 $cshowsPrec :: Int -&gt; QueryTags -&gt; ShowS
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">)</span><span>
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-31"></span><span>
 </span><span id="line-32"></span><span class="hs-comment">-- | query-tags as SQL comment which is appended to the prepared SQL statement</span><span>
 </span><span id="line-33"></span><span class="hs-keyword">newtype</span><span> </span><span id="QueryTagsComment"><span class="annot"><a href="Hasura.QueryTags.html#QueryTagsComment"><span class="hs-identifier hs-var">QueryTagsComment</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="QueryTagsComment"><span class="annot"><a href="Hasura.QueryTags.html#QueryTagsComment"><span class="hs-identifier hs-var">QueryTagsComment</span></a></span></span><span> </span><span class="hs-special">{</span><span id="_unQueryTagsComment"><span class="annot"><span class="annottext">QueryTagsComment -&gt; Text
-</span><a href="Hasura.QueryTags.html#_unQueryTagsComment"><span class="hs-identifier hs-var hs-var">_unQueryTagsComment</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/text-1.2.3.2-4200bf40e86b2107f4b06242de65d549c52e58e8833e72545e35f7712661e715/share/doc/html/src"><span class="hs-identifier hs-type">Text</span></a></span><span class="hs-special">}</span><span> </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690197670"><span id="local-6989586621690197672"><span id="local-6989586621690197674"><span class="annot"><span class="annottext">Int -&gt; QueryTagsComment -&gt; ShowS
+</span><a href="Hasura.QueryTags.html#_unQueryTagsComment"><span class="hs-identifier hs-var hs-var">_unQueryTagsComment</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">}</span><span> </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687978123"><span id="local-6989586621687978125"><span id="local-6989586621687978127"><span class="annot"><span class="annottext">Int -&gt; QueryTagsComment -&gt; ShowS
 [QueryTagsComment] -&gt; ShowS
 QueryTagsComment -&gt; String
 (Int -&gt; QueryTagsComment -&gt; ShowS)
@@ -61,7 +61,7 @@ show :: QueryTagsComment -&gt; String
 $cshow :: QueryTagsComment -&gt; String
 showsPrec :: Int -&gt; QueryTagsComment -&gt; ShowS
 $cshowsPrec :: Int -&gt; QueryTagsComment -&gt; ShowS
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690197666"><span id="local-6989586621690197668"><span class="annot"><span class="annottext">QueryTagsComment -&gt; QueryTagsComment -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687978119"><span id="local-6989586621687978121"><span class="annot"><span class="annottext">QueryTagsComment -&gt; QueryTagsComment -&gt; Bool
 (QueryTagsComment -&gt; QueryTagsComment -&gt; Bool)
 -&gt; (QueryTagsComment -&gt; QueryTagsComment -&gt; Bool)
 -&gt; Eq QueryTagsComment
@@ -70,12 +70,12 @@ forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 $c/= :: QueryTagsComment -&gt; QueryTagsComment -&gt; Bool
 == :: QueryTagsComment -&gt; QueryTagsComment -&gt; Bool
 $c== :: QueryTagsComment -&gt; QueryTagsComment -&gt; Bool
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/ghc-prim-0.6.1/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">)</span><span>
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-34"></span><span>
-</span><span id="line-35"></span><span class="hs-keyword">type</span><span> </span><span id="Attribute"><span class="annot"><a href="Hasura.QueryTags.html#Attribute"><span class="hs-identifier hs-var">Attribute</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/text-1.2.3.2-4200bf40e86b2107f4b06242de65d549c52e58e8833e72545e35f7712661e715/share/doc/html/src"><span class="hs-identifier hs-type">Text</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/text-1.2.3.2-4200bf40e86b2107f4b06242de65d549c52e58e8833e72545e35f7712661e715/share/doc/html/src"><span class="hs-identifier hs-type">Text</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-35"></span><span class="hs-keyword">type</span><span> </span><span id="Attribute"><span class="annot"><a href="Hasura.QueryTags.html#Attribute"><span class="hs-identifier hs-var">Attribute</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">)</span><span>
 </span><span id="line-36"></span><span>
 </span><span id="line-37"></span><span class="hs-keyword">newtype</span><span> </span><span id="QueryTagsAttributes"><span class="annot"><a href="Hasura.QueryTags.html#QueryTagsAttributes"><span class="hs-identifier hs-var">QueryTagsAttributes</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="QueryTagsAttributes"><span class="annot"><a href="Hasura.QueryTags.html#QueryTagsAttributes"><span class="hs-identifier hs-var">QueryTagsAttributes</span></a></span></span><span> </span><span class="hs-special">{</span><span id="_unQueryTagsAttributes"><span class="annot"><span class="annottext">QueryTagsAttributes -&gt; [Attribute]
-</span><a href="Hasura.QueryTags.html#_unQueryTagsAttributes"><span class="hs-identifier hs-var hs-var">_unQueryTagsAttributes</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.QueryTags.html#Attribute"><span class="hs-identifier hs-type">Attribute</span></a></span><span class="hs-special">]</span><span class="hs-special">}</span><span> </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690197658"><span id="local-6989586621690197660"><span id="local-6989586621690197662"><span class="annot"><span class="annottext">Int -&gt; QueryTagsAttributes -&gt; ShowS
+</span><a href="Hasura.QueryTags.html#_unQueryTagsAttributes"><span class="hs-identifier hs-var hs-var">_unQueryTagsAttributes</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.QueryTags.html#Attribute"><span class="hs-identifier hs-type">Attribute</span></a></span><span class="hs-special">]</span><span class="hs-special">}</span><span> </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687978111"><span id="local-6989586621687978113"><span id="local-6989586621687978115"><span class="annot"><span class="annottext">Int -&gt; QueryTagsAttributes -&gt; ShowS
 [QueryTagsAttributes] -&gt; ShowS
 QueryTagsAttributes -&gt; String
 (Int -&gt; QueryTagsAttributes -&gt; ShowS)
@@ -90,7 +90,7 @@ show :: QueryTagsAttributes -&gt; String
 $cshow :: QueryTagsAttributes -&gt; String
 showsPrec :: Int -&gt; QueryTagsAttributes -&gt; ShowS
 $cshowsPrec :: Int -&gt; QueryTagsAttributes -&gt; ShowS
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690197654"><span id="local-6989586621690197656"><span class="annot"><span class="annottext">QueryTagsAttributes -&gt; QueryTagsAttributes -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687978107"><span id="local-6989586621687978109"><span class="annot"><span class="annottext">QueryTagsAttributes -&gt; QueryTagsAttributes -&gt; Bool
 (QueryTagsAttributes -&gt; QueryTagsAttributes -&gt; Bool)
 -&gt; (QueryTagsAttributes -&gt; QueryTagsAttributes -&gt; Bool)
 -&gt; Eq QueryTagsAttributes
@@ -99,33 +99,33 @@ forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 $c/= :: QueryTagsAttributes -&gt; QueryTagsAttributes -&gt; Bool
 == :: QueryTagsAttributes -&gt; QueryTagsAttributes -&gt; Bool
 $c== :: QueryTagsAttributes -&gt; QueryTagsAttributes -&gt; Bool
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/ghc-prim-0.6.1/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">)</span><span>
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-38"></span><span>
 </span><span id="line-39"></span><span class="annot"><a href="Hasura.QueryTags.html#emptyQueryTagsAttributes"><span class="hs-identifier hs-type">emptyQueryTagsAttributes</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.QueryTags.html#QueryTagsAttributes"><span class="hs-identifier hs-type">QueryTagsAttributes</span></a></span><span>
 </span><span id="line-40"></span><span id="emptyQueryTagsAttributes"><span class="annot"><span class="annottext">emptyQueryTagsAttributes :: QueryTagsAttributes
 </span><a href="Hasura.QueryTags.html#emptyQueryTagsAttributes"><span class="hs-identifier hs-var hs-var">emptyQueryTagsAttributes</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Attribute] -&gt; QueryTagsAttributes
 </span><a href="Hasura.QueryTags.html#QueryTagsAttributes"><span class="hs-identifier hs-var">QueryTagsAttributes</span></a></span><span> </span><span class="annot"><span class="annottext">[Attribute]
 forall a. Monoid a =&gt; a
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var">mempty</span></a></span><span>
+</span><span class="hs-identifier hs-var">mempty</span></span><span>
 </span><span id="line-41"></span><span>
 </span><span id="line-42"></span><span class="annot"><a href="Hasura.QueryTags.html#emptyQueryTagsComment"><span class="hs-identifier hs-type">emptyQueryTagsComment</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.QueryTags.html#QueryTagsComment"><span class="hs-identifier hs-type">QueryTagsComment</span></a></span><span>
 </span><span id="line-43"></span><span id="emptyQueryTagsComment"><span class="annot"><span class="annottext">emptyQueryTagsComment :: QueryTagsComment
 </span><a href="Hasura.QueryTags.html#emptyQueryTagsComment"><span class="hs-identifier hs-var hs-var">emptyQueryTagsComment</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; QueryTagsComment
 </span><a href="Hasura.QueryTags.html#QueryTagsComment"><span class="hs-identifier hs-var">QueryTagsComment</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 forall a. Monoid a =&gt; a
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var">mempty</span></a></span><span>
+</span><span class="hs-identifier hs-var">mempty</span></span><span>
 </span><span id="line-44"></span><span>
 </span><span id="line-45"></span><span class="hs-keyword">data</span><span> </span><span id="QueryMetadata"><span class="annot"><a href="Hasura.QueryTags.html#QueryMetadata"><span class="hs-identifier hs-var">QueryMetadata</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="QueryMetadata"><span class="annot"><a href="Hasura.QueryTags.html#QueryMetadata"><span class="hs-identifier hs-var">QueryMetadata</span></a></span></span><span>
 </span><span id="line-46"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="qmRequestId"><span class="annot"><span class="annottext">QueryMetadata -&gt; RequestId
 </span><a href="Hasura.QueryTags.html#qmRequestId"><span class="hs-identifier hs-var hs-var">qmRequestId</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.Server.Types.html#RequestId"><span class="hs-identifier hs-type">RequestId</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-47"></span><span>    </span><span id="qmOperationName"><span class="annot"><span class="annottext">QueryMetadata -&gt; Maybe Name
-</span><a href="Hasura.QueryTags.html#qmOperationName"><span class="hs-identifier hs-var hs-var">qmOperationName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/graphql-parser-0.2.0.0-2f2855e50df08ca093d7ce5946fba1f88b716fe40529e565a631b700f43b2d07/share/doc/html/src"><span class="hs-identifier hs-type">GQL.Name</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><a href="Hasura.QueryTags.html#qmOperationName"><span class="hs-identifier hs-var hs-var">qmOperationName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">GQL.Name</span></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
 </span><span id="line-48"></span><span>    </span><span id="qmFieldName"><span class="annot"><span class="annottext">QueryMetadata -&gt; RootFieldAlias
 </span><a href="Hasura.QueryTags.html#qmFieldName"><span class="hs-identifier hs-var hs-var">qmFieldName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.GraphQL.Namespace.html#RootFieldAlias"><span class="hs-identifier hs-type">RootFieldAlias</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-49"></span><span>    </span><span id="qmParameterizedQueryHash"><span class="annot"><span class="annottext">QueryMetadata -&gt; ParameterizedQueryHash
 </span><a href="Hasura.QueryTags.html#qmParameterizedQueryHash"><span class="hs-identifier hs-var hs-var">qmParameterizedQueryHash</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.GraphQL.ParameterizedQueryHash.html#ParameterizedQueryHash"><span class="hs-identifier hs-type">ParameterizedQueryHash</span></a></span><span>
 </span><span id="line-50"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-51"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690197644"><span id="local-6989586621690197646"><span id="local-6989586621690197648"><span class="annot"><span class="annottext">Int -&gt; QueryMetadata -&gt; ShowS
+</span><span id="line-51"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687978097"><span id="local-6989586621687978099"><span id="local-6989586621687978101"><span class="annot"><span class="annottext">Int -&gt; QueryMetadata -&gt; ShowS
 [QueryMetadata] -&gt; ShowS
 QueryMetadata -&gt; String
 (Int -&gt; QueryMetadata -&gt; ShowS)
@@ -140,19 +140,19 @@ show :: QueryMetadata -&gt; String
 $cshow :: QueryMetadata -&gt; String
 showsPrec :: Int -&gt; QueryMetadata -&gt; ShowS
 $cshowsPrec :: Int -&gt; QueryMetadata -&gt; ShowS
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">)</span><span>
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-52"></span><span>
 </span><span id="line-53"></span><span class="hs-keyword">data</span><span> </span><span id="MutationMetadata"><span class="annot"><a href="Hasura.QueryTags.html#MutationMetadata"><span class="hs-identifier hs-var">MutationMetadata</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="MutationMetadata"><span class="annot"><a href="Hasura.QueryTags.html#MutationMetadata"><span class="hs-identifier hs-var">MutationMetadata</span></a></span></span><span>
 </span><span id="line-54"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="mmRequestId"><span class="annot"><span class="annottext">MutationMetadata -&gt; RequestId
 </span><a href="Hasura.QueryTags.html#mmRequestId"><span class="hs-identifier hs-var hs-var">mmRequestId</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.Server.Types.html#RequestId"><span class="hs-identifier hs-type">RequestId</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-55"></span><span>    </span><span id="mmOperationName"><span class="annot"><span class="annottext">MutationMetadata -&gt; Maybe Name
-</span><a href="Hasura.QueryTags.html#mmOperationName"><span class="hs-identifier hs-var hs-var">mmOperationName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/graphql-parser-0.2.0.0-2f2855e50df08ca093d7ce5946fba1f88b716fe40529e565a631b700f43b2d07/share/doc/html/src"><span class="hs-identifier hs-type">GQL.Name</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><a href="Hasura.QueryTags.html#mmOperationName"><span class="hs-identifier hs-var hs-var">mmOperationName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">GQL.Name</span></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
 </span><span id="line-56"></span><span>    </span><span id="mmFieldName"><span class="annot"><span class="annottext">MutationMetadata -&gt; RootFieldAlias
 </span><a href="Hasura.QueryTags.html#mmFieldName"><span class="hs-identifier hs-var hs-var">mmFieldName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.GraphQL.Namespace.html#RootFieldAlias"><span class="hs-identifier hs-type">RootFieldAlias</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-57"></span><span>    </span><span id="mmParameterizedQueryHash"><span class="annot"><span class="annottext">MutationMetadata -&gt; ParameterizedQueryHash
 </span><a href="Hasura.QueryTags.html#mmParameterizedQueryHash"><span class="hs-identifier hs-var hs-var">mmParameterizedQueryHash</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.GraphQL.ParameterizedQueryHash.html#ParameterizedQueryHash"><span class="hs-identifier hs-type">ParameterizedQueryHash</span></a></span><span>
 </span><span id="line-58"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-59"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690197634"><span id="local-6989586621690197636"><span id="local-6989586621690197638"><span class="annot"><span class="annottext">Int -&gt; MutationMetadata -&gt; ShowS
+</span><span id="line-59"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687978087"><span id="local-6989586621687978089"><span id="local-6989586621687978091"><span class="annot"><span class="annottext">Int -&gt; MutationMetadata -&gt; ShowS
 [MutationMetadata] -&gt; ShowS
 MutationMetadata -&gt; String
 (Int -&gt; MutationMetadata -&gt; ShowS)
@@ -167,7 +167,7 @@ show :: MutationMetadata -&gt; String
 $cshow :: MutationMetadata -&gt; String
 showsPrec :: Int -&gt; MutationMetadata -&gt; ShowS
 $cshowsPrec :: Int -&gt; MutationMetadata -&gt; ShowS
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">)</span><span>
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-60"></span><span>
 </span><span id="line-61"></span><span class="hs-keyword">data</span><span> </span><span id="LivequeryMetadata"><span class="annot"><a href="Hasura.QueryTags.html#LivequeryMetadata"><span class="hs-identifier hs-var">LivequeryMetadata</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="LivequeryMetadata"><span class="annot"><a href="Hasura.QueryTags.html#LivequeryMetadata"><span class="hs-identifier hs-var">LivequeryMetadata</span></a></span></span><span>
 </span><span id="line-62"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="lqmFieldName"><span class="annot"><span class="annottext">LivequeryMetadata -&gt; RootFieldAlias
@@ -175,7 +175,7 @@ $cshowsPrec :: Int -&gt; MutationMetadata -&gt; ShowS
 </span><span id="line-63"></span><span>    </span><span id="lqmParameterizedQueryHash"><span class="annot"><span class="annottext">LivequeryMetadata -&gt; ParameterizedQueryHash
 </span><a href="Hasura.QueryTags.html#lqmParameterizedQueryHash"><span class="hs-identifier hs-var hs-var">lqmParameterizedQueryHash</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.GraphQL.ParameterizedQueryHash.html#ParameterizedQueryHash"><span class="hs-identifier hs-type">ParameterizedQueryHash</span></a></span><span>
 </span><span id="line-64"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-65"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690197626"><span id="local-6989586621690197628"><span id="local-6989586621690197630"><span class="annot"><span class="annottext">Int -&gt; LivequeryMetadata -&gt; ShowS
+</span><span id="line-65"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687978079"><span id="local-6989586621687978081"><span id="local-6989586621687978083"><span class="annot"><span class="annottext">Int -&gt; LivequeryMetadata -&gt; ShowS
 [LivequeryMetadata] -&gt; ShowS
 LivequeryMetadata -&gt; String
 (Int -&gt; LivequeryMetadata -&gt; ShowS)
@@ -190,41 +190,41 @@ show :: LivequeryMetadata -&gt; String
 $cshow :: LivequeryMetadata -&gt; String
 showsPrec :: Int -&gt; LivequeryMetadata -&gt; ShowS
 $cshowsPrec :: Int -&gt; LivequeryMetadata -&gt; ShowS
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">)</span><span>
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-66"></span><span>
 </span><span id="line-67"></span><span class="annot"><a href="Hasura.QueryTags.html#encodeQueryTags"><span class="hs-identifier hs-type">encodeQueryTags</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.QueryTags.html#QueryTags"><span class="hs-identifier hs-type">QueryTags</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.QueryTags.html#QueryTagsAttributes"><span class="hs-identifier hs-type">QueryTagsAttributes</span></a></span><span>
 </span><span id="line-68"></span><span id="encodeQueryTags"><span class="annot"><span class="annottext">encodeQueryTags :: QueryTags -&gt; QueryTagsAttributes
 </span><a href="Hasura.QueryTags.html#encodeQueryTags"><span class="hs-identifier hs-var hs-var">encodeQueryTags</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
-</span><span id="line-69"></span><span>  </span><span class="annot"><a href="Hasura.QueryTags.html#QTQuery"><span class="hs-identifier hs-type">QTQuery</span></a></span><span> </span><span id="local-6989586621690197625"><span class="annot"><span class="annottext">QueryMetadata
-</span><a href="#local-6989586621690197625"><span class="hs-identifier hs-var">queryMetadata</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">[Attribute] -&gt; QueryTagsAttributes
+</span><span id="line-69"></span><span>  </span><span class="annot"><a href="Hasura.QueryTags.html#QTQuery"><span class="hs-identifier hs-type">QTQuery</span></a></span><span> </span><span id="local-6989586621687978078"><span class="annot"><span class="annottext">QueryMetadata
+</span><a href="#local-6989586621687978078"><span class="hs-identifier hs-var">queryMetadata</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">[Attribute] -&gt; QueryTagsAttributes
 </span><a href="Hasura.QueryTags.html#QueryTagsAttributes"><span class="hs-identifier hs-var">QueryTagsAttributes</span></a></span><span> </span><span class="annot"><span class="annottext">([Attribute] -&gt; QueryTagsAttributes)
 -&gt; [Attribute] -&gt; QueryTagsAttributes
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">QueryMetadata -&gt; [Attribute]
-</span><a href="#local-6989586621690197624"><span class="hs-identifier hs-var">encodeQueryMetadata</span></a></span><span> </span><span class="annot"><span class="annottext">QueryMetadata
-</span><a href="#local-6989586621690197625"><span class="hs-identifier hs-var">queryMetadata</span></a></span><span>
-</span><span id="line-70"></span><span>  </span><span class="annot"><a href="Hasura.QueryTags.html#QTMutation"><span class="hs-identifier hs-type">QTMutation</span></a></span><span> </span><span id="local-6989586621690197623"><span class="annot"><span class="annottext">MutationMetadata
-</span><a href="#local-6989586621690197623"><span class="hs-identifier hs-var">mutationMetadata</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">[Attribute] -&gt; QueryTagsAttributes
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">QueryMetadata -&gt; [Attribute]
+</span><a href="#local-6989586621687978077"><span class="hs-identifier hs-var">encodeQueryMetadata</span></a></span><span> </span><span class="annot"><span class="annottext">QueryMetadata
+</span><a href="#local-6989586621687978078"><span class="hs-identifier hs-var">queryMetadata</span></a></span><span>
+</span><span id="line-70"></span><span>  </span><span class="annot"><a href="Hasura.QueryTags.html#QTMutation"><span class="hs-identifier hs-type">QTMutation</span></a></span><span> </span><span id="local-6989586621687978076"><span class="annot"><span class="annottext">MutationMetadata
+</span><a href="#local-6989586621687978076"><span class="hs-identifier hs-var">mutationMetadata</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">[Attribute] -&gt; QueryTagsAttributes
 </span><a href="Hasura.QueryTags.html#QueryTagsAttributes"><span class="hs-identifier hs-var">QueryTagsAttributes</span></a></span><span> </span><span class="annot"><span class="annottext">([Attribute] -&gt; QueryTagsAttributes)
 -&gt; [Attribute] -&gt; QueryTagsAttributes
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">MutationMetadata -&gt; [Attribute]
-</span><a href="#local-6989586621690197622"><span class="hs-identifier hs-var">encodeMutationMetadata</span></a></span><span> </span><span class="annot"><span class="annottext">MutationMetadata
-</span><a href="#local-6989586621690197623"><span class="hs-identifier hs-var">mutationMetadata</span></a></span><span>
-</span><span id="line-71"></span><span>  </span><span class="annot"><a href="Hasura.QueryTags.html#QTLiveQuery"><span class="hs-identifier hs-type">QTLiveQuery</span></a></span><span> </span><span id="local-6989586621690197621"><span class="annot"><span class="annottext">LivequeryMetadata
-</span><a href="#local-6989586621690197621"><span class="hs-identifier hs-var">livequeryMetadata</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">[Attribute] -&gt; QueryTagsAttributes
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">MutationMetadata -&gt; [Attribute]
+</span><a href="#local-6989586621687978075"><span class="hs-identifier hs-var">encodeMutationMetadata</span></a></span><span> </span><span class="annot"><span class="annottext">MutationMetadata
+</span><a href="#local-6989586621687978076"><span class="hs-identifier hs-var">mutationMetadata</span></a></span><span>
+</span><span id="line-71"></span><span>  </span><span class="annot"><a href="Hasura.QueryTags.html#QTLiveQuery"><span class="hs-identifier hs-type">QTLiveQuery</span></a></span><span> </span><span id="local-6989586621687978074"><span class="annot"><span class="annottext">LivequeryMetadata
+</span><a href="#local-6989586621687978074"><span class="hs-identifier hs-var">livequeryMetadata</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">[Attribute] -&gt; QueryTagsAttributes
 </span><a href="Hasura.QueryTags.html#QueryTagsAttributes"><span class="hs-identifier hs-var">QueryTagsAttributes</span></a></span><span> </span><span class="annot"><span class="annottext">([Attribute] -&gt; QueryTagsAttributes)
 -&gt; [Attribute] -&gt; QueryTagsAttributes
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">LivequeryMetadata -&gt; [Attribute]
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">LivequeryMetadata -&gt; [Attribute]
 forall a. IsString a =&gt; LivequeryMetadata -&gt; [(a, Text)]
-</span><a href="#local-6989586621690197620"><span class="hs-identifier hs-var">encodeLivequeryMetadata</span></a></span><span> </span><span class="annot"><span class="annottext">LivequeryMetadata
-</span><a href="#local-6989586621690197621"><span class="hs-identifier hs-var">livequeryMetadata</span></a></span><span>
+</span><a href="#local-6989586621687978073"><span class="hs-identifier hs-var">encodeLivequeryMetadata</span></a></span><span> </span><span class="annot"><span class="annottext">LivequeryMetadata
+</span><a href="#local-6989586621687978074"><span class="hs-identifier hs-var">livequeryMetadata</span></a></span><span>
 </span><span id="line-72"></span><span>  </span><span class="hs-keyword">where</span><span>
 </span><span id="line-73"></span><span>    </span><span class="hs-comment">-- TODO: how do we want to encode RootFieldAlias?</span><span>
 </span><span id="line-74"></span><span>    </span><span class="hs-comment">-- Currently uses ToTxt instance, which produces &quot;namespace.fieldname&quot;</span><span>
-</span><span id="line-75"></span><span>    </span><span id="local-6989586621690197624"><span class="annot"><span class="annottext">encodeQueryMetadata :: QueryMetadata -&gt; [Attribute]
-</span><a href="#local-6989586621690197624"><span class="hs-identifier hs-var hs-var">encodeQueryMetadata</span></a></span></span><span> </span><span class="annot"><a href="Hasura.QueryTags.html#QueryMetadata"><span class="hs-identifier hs-type">QueryMetadata</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621690197616"><span id="local-6989586621690197617"><span id="local-6989586621690197618"><span id="local-6989586621690197619"><span class="annot"><span class="annottext">Maybe Name
+</span><span id="line-75"></span><span>    </span><span id="local-6989586621687978077"><span class="annot"><span class="annottext">encodeQueryMetadata :: QueryMetadata -&gt; [Attribute]
+</span><a href="#local-6989586621687978077"><span class="hs-identifier hs-var hs-var">encodeQueryMetadata</span></a></span></span><span> </span><span class="annot"><a href="Hasura.QueryTags.html#QueryMetadata"><span class="hs-identifier hs-type">QueryMetadata</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621687978069"><span id="local-6989586621687978070"><span id="local-6989586621687978071"><span id="local-6989586621687978072"><span class="annot"><span class="annottext">Maybe Name
 RequestId
 ParameterizedQueryHash
 RootFieldAlias
@@ -236,32 +236,32 @@ qmParameterizedQueryHash :: QueryMetadata -&gt; ParameterizedQueryHash
 qmFieldName :: QueryMetadata -&gt; RootFieldAlias
 qmOperationName :: QueryMetadata -&gt; Maybe Name
 qmRequestId :: QueryMetadata -&gt; RequestId
-</span><a href="#local-6989586621690197616"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="#local-6989586621687978069"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-76"></span><span>      </span><span class="hs-special">[</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;request_id&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">RequestId -&gt; Text
 </span><a href="Hasura.Server.Types.html#unRequestId"><span class="hs-identifier hs-var hs-var">unRequestId</span></a></span><span> </span><span class="annot"><span class="annottext">RequestId
-</span><a href="#local-6989586621690197619"><span class="hs-identifier hs-var">qmRequestId</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621687978072"><span class="hs-identifier hs-var">qmRequestId</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
 </span><span id="line-77"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;field_name&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">RootFieldAlias -&gt; Text
 forall a. ToTxt a =&gt; a -&gt; Text
 </span><a href="Data.Text.Extended.html#toTxt"><span class="hs-identifier hs-var">toTxt</span></a></span><span> </span><span class="annot"><span class="annottext">RootFieldAlias
-</span><a href="#local-6989586621690197617"><span class="hs-identifier hs-var">qmFieldName</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621687978070"><span class="hs-identifier hs-var">qmFieldName</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
 </span><span id="line-78"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;parameterized_query_hash&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; Text
 </span><a href="Hasura.Prelude.html#bsToTxt"><span class="hs-identifier hs-var">bsToTxt</span></a></span><span> </span><span class="annot"><span class="annottext">(ByteString -&gt; Text) -&gt; ByteString -&gt; Text
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">ParameterizedQueryHash -&gt; ByteString
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">ParameterizedQueryHash -&gt; ByteString
 </span><a href="Hasura.GraphQL.ParameterizedQueryHash.html#unParamQueryHash"><span class="hs-identifier hs-var hs-var">unParamQueryHash</span></a></span><span> </span><span class="annot"><span class="annottext">ParameterizedQueryHash
-</span><a href="#local-6989586621690197616"><span class="hs-identifier hs-var">qmParameterizedQueryHash</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621687978069"><span class="hs-identifier hs-var">qmParameterizedQueryHash</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-79"></span><span>      </span><span class="hs-special">]</span><span>
 </span><span id="line-80"></span><span>        </span><span class="annot"><span class="annottext">[Attribute] -&gt; [Attribute] -&gt; [Attribute]
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Name -&gt; [Attribute]
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Maybe Name -&gt; [Attribute]
 </span><a href="Hasura.QueryTags.html#operationNameAttributes"><span class="hs-identifier hs-var">operationNameAttributes</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Name
-</span><a href="#local-6989586621690197618"><span class="hs-identifier hs-var">qmOperationName</span></a></span><span>
+</span><a href="#local-6989586621687978071"><span class="hs-identifier hs-var">qmOperationName</span></a></span><span>
 </span><span id="line-81"></span><span>
-</span><span id="line-82"></span><span>    </span><span id="local-6989586621690197622"><span class="annot"><span class="annottext">encodeMutationMetadata :: MutationMetadata -&gt; [Attribute]
-</span><a href="#local-6989586621690197622"><span class="hs-identifier hs-var hs-var">encodeMutationMetadata</span></a></span></span><span> </span><span class="annot"><a href="Hasura.QueryTags.html#MutationMetadata"><span class="hs-identifier hs-type">MutationMetadata</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621690197607"><span id="local-6989586621690197608"><span id="local-6989586621690197609"><span id="local-6989586621690197610"><span class="annot"><span class="annottext">Maybe Name
+</span><span id="line-82"></span><span>    </span><span id="local-6989586621687978075"><span class="annot"><span class="annottext">encodeMutationMetadata :: MutationMetadata -&gt; [Attribute]
+</span><a href="#local-6989586621687978075"><span class="hs-identifier hs-var hs-var">encodeMutationMetadata</span></a></span></span><span> </span><span class="annot"><a href="Hasura.QueryTags.html#MutationMetadata"><span class="hs-identifier hs-type">MutationMetadata</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621687978060"><span id="local-6989586621687978061"><span id="local-6989586621687978062"><span id="local-6989586621687978063"><span class="annot"><span class="annottext">Maybe Name
 RequestId
 ParameterizedQueryHash
 RootFieldAlias
@@ -273,59 +273,59 @@ mmParameterizedQueryHash :: MutationMetadata -&gt; ParameterizedQueryHash
 mmFieldName :: MutationMetadata -&gt; RootFieldAlias
 mmOperationName :: MutationMetadata -&gt; Maybe Name
 mmRequestId :: MutationMetadata -&gt; RequestId
-</span><a href="#local-6989586621690197607"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="#local-6989586621687978060"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-83"></span><span>      </span><span class="hs-special">[</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;request_id&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">RequestId -&gt; Text
 </span><a href="Hasura.Server.Types.html#unRequestId"><span class="hs-identifier hs-var hs-var">unRequestId</span></a></span><span> </span><span class="annot"><span class="annottext">RequestId
-</span><a href="#local-6989586621690197610"><span class="hs-identifier hs-var">mmRequestId</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621687978063"><span class="hs-identifier hs-var">mmRequestId</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
 </span><span id="line-84"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;field_name&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">RootFieldAlias -&gt; Text
 forall a. ToTxt a =&gt; a -&gt; Text
 </span><a href="Data.Text.Extended.html#toTxt"><span class="hs-identifier hs-var">toTxt</span></a></span><span> </span><span class="annot"><span class="annottext">RootFieldAlias
-</span><a href="#local-6989586621690197608"><span class="hs-identifier hs-var">mmFieldName</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621687978061"><span class="hs-identifier hs-var">mmFieldName</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
 </span><span id="line-85"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;parameterized_query_hash&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; Text
 </span><a href="Hasura.Prelude.html#bsToTxt"><span class="hs-identifier hs-var">bsToTxt</span></a></span><span> </span><span class="annot"><span class="annottext">(ByteString -&gt; Text) -&gt; ByteString -&gt; Text
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">ParameterizedQueryHash -&gt; ByteString
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">ParameterizedQueryHash -&gt; ByteString
 </span><a href="Hasura.GraphQL.ParameterizedQueryHash.html#unParamQueryHash"><span class="hs-identifier hs-var hs-var">unParamQueryHash</span></a></span><span> </span><span class="annot"><span class="annottext">ParameterizedQueryHash
-</span><a href="#local-6989586621690197607"><span class="hs-identifier hs-var">mmParameterizedQueryHash</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621687978060"><span class="hs-identifier hs-var">mmParameterizedQueryHash</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-86"></span><span>      </span><span class="hs-special">]</span><span>
 </span><span id="line-87"></span><span>        </span><span class="annot"><span class="annottext">[Attribute] -&gt; [Attribute] -&gt; [Attribute]
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Name -&gt; [Attribute]
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Maybe Name -&gt; [Attribute]
 </span><a href="Hasura.QueryTags.html#operationNameAttributes"><span class="hs-identifier hs-var">operationNameAttributes</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Name
-</span><a href="#local-6989586621690197609"><span class="hs-identifier hs-var">mmOperationName</span></a></span><span>
+</span><a href="#local-6989586621687978062"><span class="hs-identifier hs-var">mmOperationName</span></a></span><span>
 </span><span id="line-88"></span><span>
-</span><span id="line-89"></span><span>    </span><span id="local-6989586621690197620"><span class="annot"><span class="annottext">encodeLivequeryMetadata :: LivequeryMetadata -&gt; [(a, Text)]
-</span><a href="#local-6989586621690197620"><span class="hs-identifier hs-var hs-var">encodeLivequeryMetadata</span></a></span></span><span> </span><span class="annot"><a href="Hasura.QueryTags.html#LivequeryMetadata"><span class="hs-identifier hs-type">LivequeryMetadata</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621690197605"><span id="local-6989586621690197606"><span class="annot"><span class="annottext">ParameterizedQueryHash
+</span><span id="line-89"></span><span>    </span><span id="local-6989586621687978073"><span class="annot"><span class="annottext">encodeLivequeryMetadata :: LivequeryMetadata -&gt; [(a, Text)]
+</span><a href="#local-6989586621687978073"><span class="hs-identifier hs-var hs-var">encodeLivequeryMetadata</span></a></span></span><span> </span><span class="annot"><a href="Hasura.QueryTags.html#LivequeryMetadata"><span class="hs-identifier hs-type">LivequeryMetadata</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621687978058"><span id="local-6989586621687978059"><span class="annot"><span class="annottext">ParameterizedQueryHash
 RootFieldAlias
 lqmParameterizedQueryHash :: ParameterizedQueryHash
 lqmFieldName :: RootFieldAlias
 lqmParameterizedQueryHash :: LivequeryMetadata -&gt; ParameterizedQueryHash
 lqmFieldName :: LivequeryMetadata -&gt; RootFieldAlias
-</span><a href="#local-6989586621690197605"><span class="hs-glyph hs-var hs-var hs-var hs-var">..</span></a></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="#local-6989586621687978058"><span class="hs-glyph hs-var hs-var hs-var hs-var">..</span></a></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-90"></span><span>      </span><span class="hs-special">[</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">a
 </span><span class="hs-string">&quot;field_name&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">RootFieldAlias -&gt; Text
 forall a. ToTxt a =&gt; a -&gt; Text
 </span><a href="Data.Text.Extended.html#toTxt"><span class="hs-identifier hs-var">toTxt</span></a></span><span> </span><span class="annot"><span class="annottext">RootFieldAlias
-</span><a href="#local-6989586621690197606"><span class="hs-identifier hs-var">lqmFieldName</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621687978059"><span class="hs-identifier hs-var">lqmFieldName</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
 </span><span id="line-91"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">a
 </span><span class="hs-string">&quot;parameterized_query_hash&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; Text
 </span><a href="Hasura.Prelude.html#bsToTxt"><span class="hs-identifier hs-var">bsToTxt</span></a></span><span> </span><span class="annot"><span class="annottext">(ByteString -&gt; Text) -&gt; ByteString -&gt; Text
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">ParameterizedQueryHash -&gt; ByteString
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">ParameterizedQueryHash -&gt; ByteString
 </span><a href="Hasura.GraphQL.ParameterizedQueryHash.html#unParamQueryHash"><span class="hs-identifier hs-var hs-var">unParamQueryHash</span></a></span><span> </span><span class="annot"><span class="annottext">ParameterizedQueryHash
-</span><a href="#local-6989586621690197605"><span class="hs-identifier hs-var">lqmParameterizedQueryHash</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621687978058"><span class="hs-identifier hs-var">lqmParameterizedQueryHash</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-92"></span><span>      </span><span class="hs-special">]</span><span>
 </span><span id="line-93"></span><span>
-</span><span id="line-94"></span><span class="annot"><a href="Hasura.QueryTags.html#operationNameAttributes"><span class="hs-identifier hs-type">operationNameAttributes</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/graphql-parser-0.2.0.0-2f2855e50df08ca093d7ce5946fba1f88b716fe40529e565a631b700f43b2d07/share/doc/html/src"><span class="hs-identifier hs-type">GQL.Name</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="hs-special">(</span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/text-1.2.3.2-4200bf40e86b2107f4b06242de65d549c52e58e8833e72545e35f7712661e715/share/doc/html/src"><span class="hs-identifier hs-type">Text</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/text-1.2.3.2-4200bf40e86b2107f4b06242de65d549c52e58e8833e72545e35f7712661e715/share/doc/html/src"><span class="hs-identifier hs-type">Text</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span><span>
+</span><span id="line-94"></span><span class="annot"><a href="Hasura.QueryTags.html#operationNameAttributes"><span class="hs-identifier hs-type">operationNameAttributes</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">GQL.Name</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">)</span><span class="hs-special">]</span><span>
 </span><span id="line-95"></span><span id="operationNameAttributes"><span class="annot"><span class="annottext">operationNameAttributes :: Maybe Name -&gt; [Attribute]
 </span><a href="Hasura.QueryTags.html#operationNameAttributes"><span class="hs-identifier hs-var hs-var">operationNameAttributes</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Attribute] -&gt; (Name -&gt; [Attribute]) -&gt; Maybe Name -&gt; [Attribute]
 forall b a. b -&gt; (a -&gt; b) -&gt; Maybe a -&gt; b
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var">maybe</span></a></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621690197603"><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621690197603"><span class="hs-identifier hs-var">opName</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
+</span><span class="hs-identifier hs-var">maybe</span></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621687978056"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621687978056"><span class="hs-identifier hs-var">opName</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;operation_name&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Name -&gt; Text
-</span><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/graphql-parser-0.2.0.0-2f2855e50df08ca093d7ce5946fba1f88b716fe40529e565a631b700f43b2d07/share/doc/html/src"><span class="hs-identifier hs-var hs-var">GQL.unName</span></a></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621690197603"><span class="hs-identifier hs-var">opName</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span><span class="hs-special">)</span><span>
+</span><span class="hs-identifier hs-var hs-var">GQL.unName</span></span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621687978056"><span class="hs-identifier hs-var">opName</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span><span class="hs-special">)</span><span>
 </span><span id="line-96"></span></pre></body></html>

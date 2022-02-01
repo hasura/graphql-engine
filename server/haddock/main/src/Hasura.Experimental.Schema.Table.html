@@ -24,18 +24,18 @@
 </span><span id="line-24"></span><span class="hs-comment">--</span><span>
 </span><span id="line-25"></span><span class="hs-comment">-- NOTE(jkachmar): This type shouldn't _need_ ser/de instances, but they're</span><span>
 </span><span id="line-26"></span><span class="hs-comment">-- imposed by the 'Backend' class.</span><span>
-</span><span id="line-27"></span><span id="local-6989586621690155612"><span id="local-6989586621690155613"></span></span><span class="hs-keyword">data</span><span> </span><span id="Table"><span class="annot"><a href="Hasura.Experimental.Schema.Table.html#Table"><span class="hs-identifier hs-var">Table</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Table"><span class="annot"><a href="Hasura.Experimental.Schema.Table.html#Table"><span class="hs-identifier hs-var">Table</span></a></span></span><span>
+</span><span id="line-27"></span><span id="local-6989586621687936044"><span id="local-6989586621687936045"></span></span><span class="hs-keyword">data</span><span> </span><span id="Table"><span class="annot"><a href="Hasura.Experimental.Schema.Table.html#Table"><span class="hs-identifier hs-var">Table</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Table"><span class="annot"><a href="Hasura.Experimental.Schema.Table.html#Table"><span class="hs-identifier hs-var">Table</span></a></span></span><span>
 </span><span id="line-28"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="name"><span class="annot"><span class="annottext">Table -&gt; Name
 </span><a href="Hasura.Experimental.Schema.Table.html#name"><span class="hs-identifier hs-var hs-var">name</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Experimental.IR.Table.html#Name"><span class="hs-identifier hs-type">Table.Name</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-29"></span><span>    </span><span id="columns"><span class="annot"><span class="annottext">Table -&gt; [Column]
 </span><a href="Hasura.Experimental.Schema.Table.html#columns"><span class="hs-identifier hs-var hs-var">columns</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.Experimental.Schema.Column.html#Column"><span class="hs-identifier hs-type">Column</span></a></span><span class="hs-special">]</span><span class="hs-special">,</span><span>
 </span><span id="line-30"></span><span>    </span><span class="hs-comment">-- TODO(cdparks): Composite primary keys</span><span>
 </span><span id="line-31"></span><span>    </span><span id="primaryKey"><span class="annot"><span class="annottext">Table -&gt; Maybe Text
-</span><a href="Hasura.Experimental.Schema.Table.html#primaryKey"><span class="hs-identifier hs-var hs-var">primaryKey</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/text-1.2.3.2-4200bf40e86b2107f4b06242de65d549c52e58e8833e72545e35f7712661e715/share/doc/html/src"><span class="hs-identifier hs-type">Text</span></a></span><span class="hs-special">,</span><span>
+</span><a href="Hasura.Experimental.Schema.Table.html#primaryKey"><span class="hs-identifier hs-var hs-var">primaryKey</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">,</span><span>
 </span><span id="line-32"></span><span>    </span><span id="description"><span class="annot"><span class="annottext">Table -&gt; Maybe Text
-</span><a href="Hasura.Experimental.Schema.Table.html#description"><span class="hs-identifier hs-var hs-var">description</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/text-1.2.3.2-4200bf40e86b2107f4b06242de65d549c52e58e8833e72545e35f7712661e715/share/doc/html/src"><span class="hs-identifier hs-type">Text</span></a></span><span>
+</span><a href="Hasura.Experimental.Schema.Table.html#description"><span class="hs-identifier hs-var hs-var">description</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
 </span><span id="line-33"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-34"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="%24cTable"><span id="%24tTable"><span id="local-6989586621690155578"><span id="local-6989586621690155580"><span id="local-6989586621690155582"><span id="local-6989586621690155584"><span id="local-6989586621690155586"><span id="local-6989586621690155588"><span id="local-6989586621690155590"><span id="local-6989586621690155592"><span id="local-6989586621690155594"><span id="local-6989586621690155596"><span id="local-6989586621690155598"><span id="local-6989586621690155600"><span id="local-6989586621690155602"><span id="local-6989586621690155604"><span class="annot"><span class="annottext">Typeable Table
+</span><span id="line-34"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="%24cTable"><span id="%24tTable"><span id="local-6989586621687936010"><span id="local-6989586621687936012"><span id="local-6989586621687936014"><span id="local-6989586621687936016"><span id="local-6989586621687936018"><span id="local-6989586621687936020"><span id="local-6989586621687936022"><span id="local-6989586621687936024"><span id="local-6989586621687936026"><span id="local-6989586621687936028"><span id="local-6989586621687936030"><span id="local-6989586621687936032"><span id="local-6989586621687936034"><span id="local-6989586621687936036"><span class="annot"><span class="annottext">Typeable Table
 DataType
 Constr
 Typeable Table
@@ -183,14 +183,14 @@ $cgfoldl :: forall (c :: * -&gt; *).
 (forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
 -&gt; (forall g. g -&gt; c g) -&gt; Table -&gt; c Table
 $cp1Data :: Typeable Table
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Data</span></a></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690155571"><span id="local-6989586621690155573"><span class="annot"><span class="annottext">Table -&gt; Table -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Data</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687936003"><span id="local-6989586621687936005"><span class="annot"><span class="annottext">Table -&gt; Table -&gt; Bool
 (Table -&gt; Table -&gt; Bool) -&gt; (Table -&gt; Table -&gt; Bool) -&gt; Eq Table
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 /= :: Table -&gt; Table -&gt; Bool
 $c/= :: Table -&gt; Table -&gt; Bool
 == :: Table -&gt; Table -&gt; Bool
 $c== :: Table -&gt; Table -&gt; Bool
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/ghc-prim-0.6.1/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">(forall x. Table -&gt; Rep Table x)
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">(forall x. Table -&gt; Rep Table x)
 -&gt; (forall x. Rep Table x -&gt; Table) -&gt; Generic Table
 forall x. Rep Table x -&gt; Table
 forall x. Table -&gt; Rep Table x
@@ -198,7 +198,7 @@ forall a.
 (forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
 $cto :: forall x. Rep Table x -&gt; Table
 $cfrom :: forall x. Table -&gt; Rep Table x
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></a></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690155552"><span id="local-6989586621690155554"><span id="local-6989586621690155556"><span id="local-6989586621690155558"><span id="local-6989586621690155560"><span id="local-6989586621690155562"><span id="local-6989586621690155564"><span class="annot"><span class="annottext">Eq Table
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687935984"><span id="local-6989586621687935986"><span id="local-6989586621687935988"><span id="local-6989586621687935990"><span id="local-6989586621687935992"><span id="local-6989586621687935994"><span id="local-6989586621687935996"><span class="annot"><span class="annottext">Eq Table
 Eq Table
 -&gt; (Table -&gt; Table -&gt; Ordering)
 -&gt; (Table -&gt; Table -&gt; Bool)
@@ -236,7 +236,7 @@ $c&lt; :: Table -&gt; Table -&gt; Bool
 compare :: Table -&gt; Table -&gt; Ordering
 $ccompare :: Table -&gt; Table -&gt; Ordering
 $cp1Ord :: Eq Table
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/ghc-prim-0.6.1/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></a></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690155545"><span id="local-6989586621690155547"><span id="local-6989586621690155549"><span class="annot"><span class="annottext">Int -&gt; Table -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687935977"><span id="local-6989586621687935979"><span id="local-6989586621687935981"><span class="annot"><span class="annottext">Int -&gt; Table -&gt; ShowS
 [Table] -&gt; ShowS
 Table -&gt; String
 (Int -&gt; Table -&gt; ShowS)
@@ -249,5 +249,5 @@ show :: Table -&gt; String
 $cshow :: Table -&gt; String
 showsPrec :: Int -&gt; Table -&gt; ShowS
 $cshowsPrec :: Int -&gt; Table -&gt; ShowS
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">)</span><span>
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-35"></span></pre></body></html>

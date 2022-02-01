@@ -12,43 +12,43 @@
 </span><span id="line-12"></span><span>  </span><span class="hs-special">)</span><span>
 </span><span id="line-13"></span><span class="hs-keyword">where</span><span>
 </span><span id="line-14"></span><span>
-</span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier">Control.Exception</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier">bracket</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier">tryJust</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-16"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/bytestring-0.10.12.0/src"><span class="hs-identifier">Data.ByteString</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/bytestring-0.10.12.0/src"><span class="hs-identifier">ByteString</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-17"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/bytestring-0.10.12.0/src"><span class="hs-identifier">Data.ByteString.Char8</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">BC</span></span><span>
-</span><span id="line-18"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/bytestring-0.10.12.0/src"><span class="hs-identifier">Data.ByteString.Lazy</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">BL</span></span><span>
-</span><span id="line-19"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/case-insensitive-1.2.1.0-f37403c31ae30565f4f5185c9552cd5be5494779aefc01c8b942134bc67ffc9b/share/doc/html/src"><span class="hs-identifier">Data.CaseInsensitive</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/ci-info-0.1.0.0-78d6c532ce72dc739a30f8e52e322a127befec2efbb3bd97efa3173471f3263b/share/doc/html/src"><span class="hs-identifier">CI</span></a></span><span>
-</span><span id="line-20"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/http-types-0.12.3-67581715184560fd6ad1570935f59db45bbfc9d69528eb11dab5ba2d42eb2e12/share/doc/html/src"><span class="hs-identifier">Network.HTTP.Types</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/http-types-0.12.3-67581715184560fd6ad1570935f59db45bbfc9d69528eb11dab5ba2d42eb2e12/share/doc/html/src"><span class="hs-identifier">status500</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Control.Exception</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">bracket</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">tryJust</span></span><span class="hs-special">)</span><span>
+</span><span id="line-16"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.ByteString</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">ByteString</span></span><span class="hs-special">)</span><span>
+</span><span id="line-17"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.ByteString.Char8</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">BC</span></span><span>
+</span><span id="line-18"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.ByteString.Lazy</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">BL</span></span><span>
+</span><span id="line-19"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.CaseInsensitive</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">CI</span></span><span>
+</span><span id="line-20"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Network.HTTP.Types</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">status500</span></span><span class="hs-special">)</span><span>
 </span><span id="line-21"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Network.Wai.Extended.html"><span class="hs-identifier">Network.Wai.Extended</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Wai</span></span><span>
-</span><span id="line-22"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/websockets-0.12.7.2-54be8c07268cf6e1c82991eac39b90fb18638af6160ffc369d45374ccd3cca70/share/doc/html/src"><span class="hs-identifier">Network.WebSockets</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">WS</span></span><span>
-</span><span id="line-23"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/websockets-0.12.7.2-54be8c07268cf6e1c82991eac39b90fb18638af6160ffc369d45374ccd3cca70/share/doc/html/src"><span class="hs-identifier">Network.WebSockets.Connection</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">WS</span></span><span>
-</span><span id="line-24"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/websockets-0.12.7.2-54be8c07268cf6e1c82991eac39b90fb18638af6160ffc369d45374ccd3cca70/share/doc/html/src"><span class="hs-identifier">Network.WebSockets.Stream</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">WS</span></span><span>
-</span><span id="line-25"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier">Prelude</span></a></span><span>
+</span><span id="line-22"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Network.WebSockets</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">WS</span></span><span>
+</span><span id="line-23"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Network.WebSockets.Connection</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">WS</span></span><span>
+</span><span id="line-24"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Network.WebSockets.Stream</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">WS</span></span><span>
+</span><span id="line-25"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Prelude</span></span><span>
 </span><span id="line-26"></span><span>
 </span><span id="line-27"></span><span class="hs-comment">--------------------------------------------------------------------------------</span><span>
 </span><span id="line-28"></span><span>
 </span><span id="line-29"></span><span class="hs-comment">-- | Returns whether or not the given 'Wai.Request' is a WebSocket request.</span><span>
-</span><span id="line-30"></span><span class="annot"><a href="Network.Wai.Handler.WebSockets.Custom.html#isWebSocketsReq"><span class="hs-identifier hs-type">isWebSocketsReq</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/wai-3.2.3-3ffd8fdbf143032d427236f446beeb491b0f9f40e6d9b0bb5baf254a3b4c1331/share/doc/html/src"><span class="hs-identifier hs-type">Wai.Request</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/ghc-prim-0.6.1/src"><span class="hs-identifier hs-type">Bool</span></a></span><span>
+</span><span id="line-30"></span><span class="annot"><a href="Network.Wai.Handler.WebSockets.Custom.html#isWebSocketsReq"><span class="hs-identifier hs-type">isWebSocketsReq</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Wai.Request</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span>
 </span><span id="line-31"></span><span id="isWebSocketsReq"><span class="annot"><span class="annottext">isWebSocketsReq :: Request -&gt; Bool
-</span><a href="Network.Wai.Handler.WebSockets.Custom.html#isWebSocketsReq"><span class="hs-identifier hs-var hs-var">isWebSocketsReq</span></a></span></span><span> </span><span id="local-6989586621690285463"><span class="annot"><span class="annottext">Request
-</span><a href="#local-6989586621690285463"><span class="hs-identifier hs-var">req</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="Network.Wai.Handler.WebSockets.Custom.html#isWebSocketsReq"><span class="hs-identifier hs-var hs-var">isWebSocketsReq</span></a></span></span><span> </span><span id="local-6989586621688065977"><span class="annot"><span class="annottext">Request
+</span><a href="#local-6989586621688065977"><span class="hs-identifier hs-var">req</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-32"></span><span>  </span><span class="annot"><span class="annottext">(ByteString -&gt; CI ByteString)
 -&gt; Maybe ByteString -&gt; Maybe (CI ByteString)
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var">fmap</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; CI ByteString
+</span><span class="hs-identifier hs-var">fmap</span></span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; CI ByteString
 forall s. FoldCase s =&gt; s -&gt; CI s
-</span><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/case-insensitive-1.2.1.0-f37403c31ae30565f4f5185c9552cd5be5494779aefc01c8b942134bc67ffc9b/share/doc/html/src"><span class="hs-identifier hs-var">CI.mk</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">CI ByteString -&gt; [(CI ByteString, ByteString)] -&gt; Maybe ByteString
+</span><span class="hs-identifier hs-var">CI.mk</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">CI ByteString -&gt; [(CI ByteString, ByteString)] -&gt; Maybe ByteString
 forall a b. Eq a =&gt; a -&gt; [(a, b)] -&gt; Maybe b
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var">lookup</span></a></span><span> </span><span class="annot"><span class="annottext">CI ByteString
+</span><span class="hs-identifier hs-var">lookup</span></span><span> </span><span class="annot"><span class="annottext">CI ByteString
 </span><span class="hs-string">&quot;upgrade&quot;</span></span><span> </span><span class="annot"><span class="annottext">([(CI ByteString, ByteString)] -&gt; Maybe ByteString)
 -&gt; [(CI ByteString, ByteString)] -&gt; Maybe ByteString
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Request -&gt; [(CI ByteString, ByteString)]
-</span><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/wai-3.2.3-3ffd8fdbf143032d427236f446beeb491b0f9f40e6d9b0bb5baf254a3b4c1331/share/doc/html/src"><span class="hs-identifier hs-var hs-var">Wai.requestHeaders</span></a></span><span> </span><span class="annot"><span class="annottext">Request
-</span><a href="#local-6989586621690285463"><span class="hs-identifier hs-var">req</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Maybe (CI ByteString) -&gt; Maybe (CI ByteString) -&gt; Bool
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Request -&gt; [(CI ByteString, ByteString)]
+</span><span class="hs-identifier hs-var hs-var">Wai.requestHeaders</span></span><span> </span><span class="annot"><span class="annottext">Request
+</span><a href="#local-6989586621688065977"><span class="hs-identifier hs-var">req</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Maybe (CI ByteString) -&gt; Maybe (CI ByteString) -&gt; Bool
 forall a. Eq a =&gt; a -&gt; a -&gt; Bool
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/ghc-prim-0.6.1/src"><span class="hs-operator hs-var">==</span></a></span><span> </span><span class="annot"><span class="annottext">CI ByteString -&gt; Maybe (CI ByteString)
+</span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="annottext">CI ByteString -&gt; Maybe (CI ByteString)
 forall a. a -&gt; Maybe a
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var">Just</span></a></span><span> </span><span class="annot"><span class="annottext">CI ByteString
+</span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">CI ByteString
 </span><span class="hs-string">&quot;websocket&quot;</span></span><span>
 </span><span id="line-33"></span><span>
 </span><span id="line-34"></span><span class="hs-comment">--------------------------------------------------------------------------------</span><span>
@@ -80,37 +80,37 @@ forall a. a -&gt; Maybe a
 </span><span id="line-60"></span><span class="hs-comment">--     backupApp _ respond = respond $ 'Wai.responseLBS' 'Network.HTTP.Types.status400' [] &quot;Not a WebSocket request&quot;</span><span>
 </span><span id="line-61"></span><span class="hs-comment">-- @</span><span>
 </span><span id="line-62"></span><span class="annot"><a href="Network.Wai.Handler.WebSockets.Custom.html#websocketsOr"><span class="hs-identifier hs-type">websocketsOr</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-63"></span><span>  </span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/websockets-0.12.7.2-54be8c07268cf6e1c82991eac39b90fb18638af6160ffc369d45374ccd3cca70/share/doc/html/src"><span class="hs-identifier hs-type">WS.ConnectionOptions</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-64"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Network.Wai.Extended.html#IpAddress"><span class="hs-identifier hs-type">Wai.IpAddress</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/websockets-0.12.7.2-54be8c07268cf6e1c82991eac39b90fb18638af6160ffc369d45374ccd3cca70/share/doc/html/src"><span class="hs-identifier hs-type">WS.PendingConnection</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/ghc-prim-0.6.1/src"><span class="hs-identifier hs-type">IO</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-65"></span><span>  </span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/wai-3.2.3-3ffd8fdbf143032d427236f446beeb491b0f9f40e6d9b0bb5baf254a3b4c1331/share/doc/html/src"><span class="hs-identifier hs-type">Wai.Application</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-66"></span><span>  </span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/wai-3.2.3-3ffd8fdbf143032d427236f446beeb491b0f9f40e6d9b0bb5baf254a3b4c1331/share/doc/html/src"><span class="hs-identifier hs-type">Wai.Application</span></a></span><span>
+</span><span id="line-63"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">WS.ConnectionOptions</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-64"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Network.Wai.Extended.html#IpAddress"><span class="hs-identifier hs-type">Wai.IpAddress</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">WS.PendingConnection</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-65"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Wai.Application</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-66"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Wai.Application</span></span><span>
 </span><span id="line-67"></span><span id="websocketsOr"><span class="annot"><span class="annottext">websocketsOr :: ConnectionOptions
 -&gt; (IpAddress -&gt; PendingConnection -&gt; IO ())
 -&gt; Application
 -&gt; Application
-</span><a href="Network.Wai.Handler.WebSockets.Custom.html#websocketsOr"><span class="hs-identifier hs-var hs-var">websocketsOr</span></a></span></span><span> </span><span id="local-6989586621690285459"><span class="annot"><span class="annottext">ConnectionOptions
-</span><a href="#local-6989586621690285459"><span class="hs-identifier hs-var">opts</span></a></span></span><span> </span><span id="local-6989586621690285458"><span class="annot"><span class="annottext">IpAddress -&gt; PendingConnection -&gt; IO ()
-</span><a href="#local-6989586621690285458"><span class="hs-identifier hs-var">app</span></a></span></span><span> </span><span id="local-6989586621690285457"><span class="annot"><span class="annottext">Application
-</span><a href="#local-6989586621690285457"><span class="hs-identifier hs-var">backup</span></a></span></span><span> </span><span id="local-6989586621690285456"><span class="annot"><span class="annottext">Request
-</span><a href="#local-6989586621690285456"><span class="hs-identifier hs-var">req</span></a></span></span><span> </span><span id="local-6989586621690285455"><span class="annot"><span class="annottext">Response -&gt; IO ResponseReceived
-</span><a href="#local-6989586621690285455"><span class="hs-identifier hs-var">sendResponse</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="Network.Wai.Handler.WebSockets.Custom.html#websocketsOr"><span class="hs-identifier hs-var hs-var">websocketsOr</span></a></span></span><span> </span><span id="local-6989586621688065973"><span class="annot"><span class="annottext">ConnectionOptions
+</span><a href="#local-6989586621688065973"><span class="hs-identifier hs-var">opts</span></a></span></span><span> </span><span id="local-6989586621688065972"><span class="annot"><span class="annottext">IpAddress -&gt; PendingConnection -&gt; IO ()
+</span><a href="#local-6989586621688065972"><span class="hs-identifier hs-var">app</span></a></span></span><span> </span><span id="local-6989586621688065971"><span class="annot"><span class="annottext">Application
+</span><a href="#local-6989586621688065971"><span class="hs-identifier hs-var">backup</span></a></span></span><span> </span><span id="local-6989586621688065970"><span class="annot"><span class="annottext">Request
+</span><a href="#local-6989586621688065970"><span class="hs-identifier hs-var">req</span></a></span></span><span> </span><span id="local-6989586621688065969"><span class="annot"><span class="annottext">Response -&gt; IO ResponseReceived
+</span><a href="#local-6989586621688065969"><span class="hs-identifier hs-var">sendResponse</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-68"></span><span>  </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">ConnectionOptions
 -&gt; (IpAddress -&gt; PendingConnection -&gt; IO ())
 -&gt; Request
 -&gt; Maybe Response
 </span><a href="Network.Wai.Handler.WebSockets.Custom.html#websocketsApp"><span class="hs-identifier hs-var">websocketsApp</span></a></span><span> </span><span class="annot"><span class="annottext">ConnectionOptions
-</span><a href="#local-6989586621690285459"><span class="hs-identifier hs-var">opts</span></a></span><span> </span><span class="annot"><span class="annottext">IpAddress -&gt; PendingConnection -&gt; IO ()
-</span><a href="#local-6989586621690285458"><span class="hs-identifier hs-var">app</span></a></span><span> </span><span class="annot"><span class="annottext">Request
-</span><a href="#local-6989586621690285456"><span class="hs-identifier hs-var">req</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621688065973"><span class="hs-identifier hs-var">opts</span></a></span><span> </span><span class="annot"><span class="annottext">IpAddress -&gt; PendingConnection -&gt; IO ()
+</span><a href="#local-6989586621688065972"><span class="hs-identifier hs-var">app</span></a></span><span> </span><span class="annot"><span class="annottext">Request
+</span><a href="#local-6989586621688065970"><span class="hs-identifier hs-var">req</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-69"></span><span>    </span><span class="annot"><span class="annottext">Maybe Response
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Application
-</span><a href="#local-6989586621690285457"><span class="hs-identifier hs-var">backup</span></a></span><span> </span><span class="annot"><span class="annottext">Request
-</span><a href="#local-6989586621690285456"><span class="hs-identifier hs-var">req</span></a></span><span> </span><span class="annot"><span class="annottext">Response -&gt; IO ResponseReceived
-</span><a href="#local-6989586621690285455"><span class="hs-identifier hs-var">sendResponse</span></a></span><span>
-</span><span id="line-70"></span><span>    </span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-type">Just</span></a></span><span> </span><span id="local-6989586621690285454"><span class="annot"><span class="annottext">Response
-</span><a href="#local-6989586621690285454"><span class="hs-identifier hs-var">res</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Response -&gt; IO ResponseReceived
-</span><a href="#local-6989586621690285455"><span class="hs-identifier hs-var">sendResponse</span></a></span><span> </span><span class="annot"><span class="annottext">Response
-</span><a href="#local-6989586621690285454"><span class="hs-identifier hs-var">res</span></a></span><span>
+</span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Application
+</span><a href="#local-6989586621688065971"><span class="hs-identifier hs-var">backup</span></a></span><span> </span><span class="annot"><span class="annottext">Request
+</span><a href="#local-6989586621688065970"><span class="hs-identifier hs-var">req</span></a></span><span> </span><span class="annot"><span class="annottext">Response -&gt; IO ResponseReceived
+</span><a href="#local-6989586621688065969"><span class="hs-identifier hs-var">sendResponse</span></a></span><span>
+</span><span id="line-70"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621688065968"><span class="annot"><span class="annottext">Response
+</span><a href="#local-6989586621688065968"><span class="hs-identifier hs-var">res</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Response -&gt; IO ResponseReceived
+</span><a href="#local-6989586621688065969"><span class="hs-identifier hs-var">sendResponse</span></a></span><span> </span><span class="annot"><span class="annottext">Response
+</span><a href="#local-6989586621688065968"><span class="hs-identifier hs-var">res</span></a></span><span>
 </span><span id="line-71"></span><span>
 </span><span id="line-72"></span><span class="hs-comment">--------------------------------------------------------------------------------</span><span>
 </span><span id="line-73"></span><span>
@@ -120,41 +120,41 @@ forall a. a -&gt; Maybe a
 </span><span id="line-77"></span><span class="hs-comment">--</span><span>
 </span><span id="line-78"></span><span class="hs-comment">-- Usually, 'websocketsOr' is more convenient.</span><span>
 </span><span id="line-79"></span><span class="annot"><a href="Network.Wai.Handler.WebSockets.Custom.html#websocketsApp"><span class="hs-identifier hs-type">websocketsApp</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-80"></span><span>  </span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/websockets-0.12.7.2-54be8c07268cf6e1c82991eac39b90fb18638af6160ffc369d45374ccd3cca70/share/doc/html/src"><span class="hs-identifier hs-type">WS.ConnectionOptions</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-81"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Network.Wai.Extended.html#IpAddress"><span class="hs-identifier hs-type">Wai.IpAddress</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/websockets-0.12.7.2-54be8c07268cf6e1c82991eac39b90fb18638af6160ffc369d45374ccd3cca70/share/doc/html/src"><span class="hs-identifier hs-type">WS.PendingConnection</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/ghc-prim-0.6.1/src"><span class="hs-identifier hs-type">IO</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-82"></span><span>  </span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/wai-3.2.3-3ffd8fdbf143032d427236f446beeb491b0f9f40e6d9b0bb5baf254a3b4c1331/share/doc/html/src"><span class="hs-identifier hs-type">Wai.Request</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-83"></span><span>  </span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/wai-3.2.3-3ffd8fdbf143032d427236f446beeb491b0f9f40e6d9b0bb5baf254a3b4c1331/share/doc/html/src"><span class="hs-identifier hs-type">Wai.Response</span></a></span><span>
+</span><span id="line-80"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">WS.ConnectionOptions</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-81"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Network.Wai.Extended.html#IpAddress"><span class="hs-identifier hs-type">Wai.IpAddress</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">WS.PendingConnection</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-82"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Wai.Request</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-83"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Wai.Response</span></span><span>
 </span><span id="line-84"></span><span id="websocketsApp"><span class="annot"><span class="annottext">websocketsApp :: ConnectionOptions
 -&gt; (IpAddress -&gt; PendingConnection -&gt; IO ())
 -&gt; Request
 -&gt; Maybe Response
-</span><a href="Network.Wai.Handler.WebSockets.Custom.html#websocketsApp"><span class="hs-identifier hs-var hs-var">websocketsApp</span></a></span></span><span> </span><span id="local-6989586621690285453"><span class="annot"><span class="annottext">ConnectionOptions
-</span><a href="#local-6989586621690285453"><span class="hs-identifier hs-var">opts</span></a></span></span><span> </span><span id="local-6989586621690285452"><span class="annot"><span class="annottext">IpAddress -&gt; PendingConnection -&gt; IO ()
-</span><a href="#local-6989586621690285452"><span class="hs-identifier hs-var">app</span></a></span></span><span> </span><span id="local-6989586621690285451"><span class="annot"><span class="annottext">Request
-</span><a href="#local-6989586621690285451"><span class="hs-identifier hs-var">req</span></a></span></span><span>
+</span><a href="Network.Wai.Handler.WebSockets.Custom.html#websocketsApp"><span class="hs-identifier hs-var hs-var">websocketsApp</span></a></span></span><span> </span><span id="local-6989586621688065967"><span class="annot"><span class="annottext">ConnectionOptions
+</span><a href="#local-6989586621688065967"><span class="hs-identifier hs-var">opts</span></a></span></span><span> </span><span id="local-6989586621688065966"><span class="annot"><span class="annottext">IpAddress -&gt; PendingConnection -&gt; IO ()
+</span><a href="#local-6989586621688065966"><span class="hs-identifier hs-var">app</span></a></span></span><span> </span><span id="local-6989586621688065965"><span class="annot"><span class="annottext">Request
+</span><a href="#local-6989586621688065965"><span class="hs-identifier hs-var">req</span></a></span></span><span>
 </span><span id="line-85"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Request -&gt; Bool
 </span><a href="Network.Wai.Handler.WebSockets.Custom.html#isWebSocketsReq"><span class="hs-identifier hs-var">isWebSocketsReq</span></a></span><span> </span><span class="annot"><span class="annottext">Request
-</span><a href="#local-6989586621690285451"><span class="hs-identifier hs-var">req</span></a></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="#local-6989586621688065965"><span class="hs-identifier hs-var">req</span></a></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-86"></span><span>    </span><span class="annot"><span class="annottext">Response -&gt; Maybe Response
 forall a. a -&gt; Maybe a
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var">Just</span></a></span><span> </span><span class="annot"><span class="annottext">(Response -&gt; Maybe Response) -&gt; Response -&gt; Maybe Response
+</span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">(Response -&gt; Maybe Response) -&gt; Response -&gt; Maybe Response
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
+</span><span class="hs-operator hs-var">$</span></span><span>
 </span><span id="line-87"></span><span>      </span><span class="annot"><span class="annottext">((IO ByteString -&gt; (ByteString -&gt; IO ()) -&gt; IO ())
  -&gt; Response -&gt; Response)
 -&gt; Response
 -&gt; (IO ByteString -&gt; (ByteString -&gt; IO ()) -&gt; IO ())
 -&gt; Response
 forall a b c. (a -&gt; b -&gt; c) -&gt; b -&gt; a -&gt; c
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var">flip</span></a></span><span> </span><span class="annot"><span class="annottext">(IO ByteString -&gt; (ByteString -&gt; IO ()) -&gt; IO ())
+</span><span class="hs-identifier hs-var">flip</span></span><span> </span><span class="annot"><span class="annottext">(IO ByteString -&gt; (ByteString -&gt; IO ()) -&gt; IO ())
 -&gt; Response -&gt; Response
-</span><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/wai-3.2.3-3ffd8fdbf143032d427236f446beeb491b0f9f40e6d9b0bb5baf254a3b4c1331/share/doc/html/src"><span class="hs-identifier hs-var">Wai.responseRaw</span></a></span><span> </span><span class="annot"><span class="annottext">Response
-</span><a href="#local-6989586621690285448"><span class="hs-identifier hs-var">backup</span></a></span><span> </span><span class="annot"><span class="annottext">((IO ByteString -&gt; (ByteString -&gt; IO ()) -&gt; IO ()) -&gt; Response)
+</span><span class="hs-identifier hs-var">Wai.responseRaw</span></span><span> </span><span class="annot"><span class="annottext">Response
+</span><a href="#local-6989586621688065962"><span class="hs-identifier hs-var">backup</span></a></span><span> </span><span class="annot"><span class="annottext">((IO ByteString -&gt; (ByteString -&gt; IO ()) -&gt; IO ()) -&gt; Response)
 -&gt; (IO ByteString -&gt; (ByteString -&gt; IO ()) -&gt; IO ()) -&gt; Response
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621690285447"><span class="annot"><span class="annottext">IO ByteString
-</span><a href="#local-6989586621690285447"><span class="hs-identifier hs-var">src</span></a></span></span><span> </span><span id="local-6989586621690285446"><span class="annot"><span class="annottext">ByteString -&gt; IO ()
-</span><a href="#local-6989586621690285446"><span class="hs-identifier hs-var">sink</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621688065961"><span class="annot"><span class="annottext">IO ByteString
+</span><a href="#local-6989586621688065961"><span class="hs-identifier hs-var">src</span></a></span></span><span> </span><span id="local-6989586621688065960"><span class="annot"><span class="annottext">ByteString -&gt; IO ()
+</span><a href="#local-6989586621688065960"><span class="hs-identifier hs-var">sink</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-88"></span><span>        </span><span class="annot"><span class="annottext">ConnectionOptions
 -&gt; RequestHead
 -&gt; IpAddress
@@ -171,28 +171,28 @@ ConnectionOptions
 -&gt; (ByteString -&gt; IO ())
 -&gt; IO a
 </span><a href="Network.Wai.Handler.WebSockets.Custom.html#runWebSockets"><span class="hs-identifier hs-var">runWebSockets</span></a></span><span> </span><span class="annot"><span class="annottext">ConnectionOptions
-</span><a href="#local-6989586621690285453"><span class="hs-identifier hs-var">opts</span></a></span><span> </span><span class="annot"><span class="annottext">RequestHead
-</span><a href="#local-6989586621690285445"><span class="hs-identifier hs-var">req'</span></a></span><span> </span><span class="annot"><span class="annottext">IpAddress
-</span><a href="#local-6989586621690285444"><span class="hs-identifier hs-var">ipAddress</span></a></span><span> </span><span class="annot"><span class="annottext">IpAddress -&gt; PendingConnection -&gt; IO ()
-</span><a href="#local-6989586621690285452"><span class="hs-identifier hs-var">app</span></a></span><span> </span><span class="annot"><span class="annottext">IO ByteString
-</span><a href="#local-6989586621690285447"><span class="hs-identifier hs-var">src</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; IO ()
-</span><a href="#local-6989586621690285446"><span class="hs-identifier hs-var">sink</span></a></span><span>
+</span><a href="#local-6989586621688065967"><span class="hs-identifier hs-var">opts</span></a></span><span> </span><span class="annot"><span class="annottext">RequestHead
+</span><a href="#local-6989586621688065959"><span class="hs-identifier hs-var">req'</span></a></span><span> </span><span class="annot"><span class="annottext">IpAddress
+</span><a href="#local-6989586621688065958"><span class="hs-identifier hs-var">ipAddress</span></a></span><span> </span><span class="annot"><span class="annottext">IpAddress -&gt; PendingConnection -&gt; IO ()
+</span><a href="#local-6989586621688065966"><span class="hs-identifier hs-var">app</span></a></span><span> </span><span class="annot"><span class="annottext">IO ByteString
+</span><a href="#local-6989586621688065961"><span class="hs-identifier hs-var">src</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; IO ()
+</span><a href="#local-6989586621688065960"><span class="hs-identifier hs-var">sink</span></a></span><span>
 </span><span id="line-89"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var">otherwise</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe Response
+</span><span class="hs-identifier hs-var">otherwise</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe Response
 forall a. Maybe a
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span>
+</span><span class="hs-identifier hs-var">Nothing</span></span><span>
 </span><span id="line-90"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-91"></span><span>    </span><span class="hs-special">(</span><span id="local-6989586621690285445"><span class="annot"><span class="annottext">RequestHead
-</span><a href="#local-6989586621690285445"><span class="hs-identifier hs-var">req'</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690285444"><span class="annot"><span class="annottext">IpAddress
-</span><a href="#local-6989586621690285444"><span class="hs-identifier hs-var">ipAddress</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Request -&gt; (RequestHead, IpAddress)
+</span><span id="line-91"></span><span>    </span><span class="hs-special">(</span><span id="local-6989586621688065959"><span class="annot"><span class="annottext">RequestHead
+</span><a href="#local-6989586621688065959"><span class="hs-identifier hs-var">req'</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688065958"><span class="annot"><span class="annottext">IpAddress
+</span><a href="#local-6989586621688065958"><span class="hs-identifier hs-var">ipAddress</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Request -&gt; (RequestHead, IpAddress)
 </span><a href="Network.Wai.Handler.WebSockets.Custom.html#getRequestHead"><span class="hs-identifier hs-var">getRequestHead</span></a></span><span> </span><span class="annot"><span class="annottext">Request
-</span><a href="#local-6989586621690285451"><span class="hs-identifier hs-var">req</span></a></span><span>
-</span><span id="line-92"></span><span>    </span><span id="local-6989586621690285448"><span class="annot"><span class="annottext">backup :: Response
-</span><a href="#local-6989586621690285448"><span class="hs-identifier hs-var hs-var">backup</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="#local-6989586621688065965"><span class="hs-identifier hs-var">req</span></a></span><span>
+</span><span id="line-92"></span><span>    </span><span id="local-6989586621688065962"><span class="annot"><span class="annottext">backup :: Response
+</span><a href="#local-6989586621688065962"><span class="hs-identifier hs-var hs-var">backup</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-93"></span><span>      </span><span class="annot"><span class="annottext">Status -&gt; [(CI ByteString, ByteString)] -&gt; ByteString -&gt; Response
-</span><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/wai-3.2.3-3ffd8fdbf143032d427236f446beeb491b0f9f40e6d9b0bb5baf254a3b4c1331/share/doc/html/src"><span class="hs-identifier hs-var">Wai.responseLBS</span></a></span><span>
+</span><span class="hs-identifier hs-var">Wai.responseLBS</span></span><span>
 </span><span id="line-94"></span><span>        </span><span class="annot"><span class="annottext">Status
-</span><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/http-types-0.12.3-67581715184560fd6ad1570935f59db45bbfc9d69528eb11dab5ba2d42eb2e12/share/doc/html/src"><span class="hs-identifier hs-var">status500</span></a></span><span>
+</span><span class="hs-identifier hs-var">status500</span></span><span>
 </span><span id="line-95"></span><span>        </span><span class="hs-special">[</span><span class="hs-special">(</span><span class="annot"><span class="annottext">CI ByteString
 </span><span class="hs-string">&quot;Content-Type&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">ByteString
 </span><span class="hs-string">&quot;text/plain&quot;</span></span><span class="hs-special">)</span><span class="hs-special">]</span><span>
@@ -200,42 +200,42 @@ forall a. Maybe a
 </span><span class="hs-string">&quot;The web application attempted to send a WebSockets response, but WebSockets are not supported by your WAI handler.&quot;</span></span><span>
 </span><span id="line-97"></span><span>
 </span><span id="line-98"></span><span class="hs-comment">--------------------------------------------------------------------------------</span><span>
-</span><span id="line-99"></span><span class="annot"><a href="Network.Wai.Handler.WebSockets.Custom.html#getRequestHead"><span class="hs-identifier hs-type">getRequestHead</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/wai-3.2.3-3ffd8fdbf143032d427236f446beeb491b0f9f40e6d9b0bb5baf254a3b4c1331/share/doc/html/src"><span class="hs-identifier hs-type">Wai.Request</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/websockets-0.12.7.2-54be8c07268cf6e1c82991eac39b90fb18638af6160ffc369d45374ccd3cca70/share/doc/html/src"><span class="hs-identifier hs-type">WS.RequestHead</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Network.Wai.Extended.html#IpAddress"><span class="hs-identifier hs-type">Wai.IpAddress</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-99"></span><span class="annot"><a href="Network.Wai.Handler.WebSockets.Custom.html#getRequestHead"><span class="hs-identifier hs-type">getRequestHead</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Wai.Request</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">WS.RequestHead</span></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Network.Wai.Extended.html#IpAddress"><span class="hs-identifier hs-type">Wai.IpAddress</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-100"></span><span id="getRequestHead"><span class="annot"><span class="annottext">getRequestHead :: Request -&gt; (RequestHead, IpAddress)
-</span><a href="Network.Wai.Handler.WebSockets.Custom.html#getRequestHead"><span class="hs-identifier hs-var hs-var">getRequestHead</span></a></span></span><span> </span><span id="local-6989586621690285442"><span class="annot"><span class="annottext">Request
-</span><a href="#local-6989586621690285442"><span class="hs-identifier hs-var">req</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">RequestHead
-</span><a href="#local-6989586621690285441"><span class="hs-identifier hs-var">reqHead</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Request -&gt; IpAddress
+</span><a href="Network.Wai.Handler.WebSockets.Custom.html#getRequestHead"><span class="hs-identifier hs-var hs-var">getRequestHead</span></a></span></span><span> </span><span id="local-6989586621688065956"><span class="annot"><span class="annottext">Request
+</span><a href="#local-6989586621688065956"><span class="hs-identifier hs-var">req</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">RequestHead
+</span><a href="#local-6989586621688065955"><span class="hs-identifier hs-var">reqHead</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Request -&gt; IpAddress
 </span><a href="Network.Wai.Extended.html#getSourceFromFallback"><span class="hs-identifier hs-var">Wai.getSourceFromFallback</span></a></span><span> </span><span class="annot"><span class="annottext">Request
-</span><a href="#local-6989586621690285442"><span class="hs-identifier hs-var">req</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621688065956"><span class="hs-identifier hs-var">req</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-101"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-102"></span><span>    </span><span id="local-6989586621690285441"><span class="annot"><span class="annottext">reqHead :: RequestHead
-</span><a href="#local-6989586621690285441"><span class="hs-identifier hs-var hs-var">reqHead</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-102"></span><span>    </span><span id="local-6989586621688065955"><span class="annot"><span class="annottext">reqHead :: RequestHead
+</span><a href="#local-6989586621688065955"><span class="hs-identifier hs-var hs-var">reqHead</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-103"></span><span>      </span><span class="annot"><span class="annottext">ByteString -&gt; [(CI ByteString, ByteString)] -&gt; Bool -&gt; RequestHead
-</span><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/websockets-0.12.7.2-54be8c07268cf6e1c82991eac39b90fb18638af6160ffc369d45374ccd3cca70/share/doc/html/src"><span class="hs-identifier hs-var">WS.RequestHead</span></a></span><span>
+</span><span class="hs-identifier hs-var">WS.RequestHead</span></span><span>
 </span><span id="line-104"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Request -&gt; ByteString
-</span><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/wai-3.2.3-3ffd8fdbf143032d427236f446beeb491b0f9f40e6d9b0bb5baf254a3b4c1331/share/doc/html/src"><span class="hs-identifier hs-var hs-var">Wai.rawPathInfo</span></a></span><span> </span><span class="annot"><span class="annottext">Request
-</span><a href="#local-6989586621690285442"><span class="hs-identifier hs-var">req</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; ByteString -&gt; ByteString
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/bytestring-0.10.12.0/src"><span class="hs-operator hs-var">`BC.append`</span></a></span><span> </span><span class="annot"><span class="annottext">Request -&gt; ByteString
-</span><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/wai-3.2.3-3ffd8fdbf143032d427236f446beeb491b0f9f40e6d9b0bb5baf254a3b4c1331/share/doc/html/src"><span class="hs-identifier hs-var hs-var">Wai.rawQueryString</span></a></span><span> </span><span class="annot"><span class="annottext">Request
-</span><a href="#local-6989586621690285442"><span class="hs-identifier hs-var">req</span></a></span><span class="hs-special">)</span><span>
+</span><span class="hs-identifier hs-var hs-var">Wai.rawPathInfo</span></span><span> </span><span class="annot"><span class="annottext">Request
+</span><a href="#local-6989586621688065956"><span class="hs-identifier hs-var">req</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; ByteString -&gt; ByteString
+</span><span class="hs-operator hs-var">`BC.append`</span></span><span> </span><span class="annot"><span class="annottext">Request -&gt; ByteString
+</span><span class="hs-identifier hs-var hs-var">Wai.rawQueryString</span></span><span> </span><span class="annot"><span class="annottext">Request
+</span><a href="#local-6989586621688065956"><span class="hs-identifier hs-var">req</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-105"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Request -&gt; [(CI ByteString, ByteString)]
-</span><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/wai-3.2.3-3ffd8fdbf143032d427236f446beeb491b0f9f40e6d9b0bb5baf254a3b4c1331/share/doc/html/src"><span class="hs-identifier hs-var hs-var">Wai.requestHeaders</span></a></span><span> </span><span class="annot"><span class="annottext">Request
-</span><a href="#local-6989586621690285442"><span class="hs-identifier hs-var">req</span></a></span><span class="hs-special">)</span><span>
+</span><span class="hs-identifier hs-var hs-var">Wai.requestHeaders</span></span><span> </span><span class="annot"><span class="annottext">Request
+</span><a href="#local-6989586621688065956"><span class="hs-identifier hs-var">req</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-106"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Request -&gt; Bool
-</span><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/wai-3.2.3-3ffd8fdbf143032d427236f446beeb491b0f9f40e6d9b0bb5baf254a3b4c1331/share/doc/html/src"><span class="hs-identifier hs-var hs-var">Wai.isSecure</span></a></span><span> </span><span class="annot"><span class="annottext">Request
-</span><a href="#local-6989586621690285442"><span class="hs-identifier hs-var">req</span></a></span><span class="hs-special">)</span><span>
+</span><span class="hs-identifier hs-var hs-var">Wai.isSecure</span></span><span> </span><span class="annot"><span class="annottext">Request
+</span><a href="#local-6989586621688065956"><span class="hs-identifier hs-var">req</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-107"></span><span>
 </span><span id="line-108"></span><span class="hs-comment">--------------------------------------------------------------------------------</span><span>
 </span><span id="line-109"></span><span>
 </span><span id="line-110"></span><span class="hs-comment">-- | Internal function to run the WebSocket io-streams using the conduit library.</span><span>
-</span><span id="line-111"></span><span id="local-6989586621690285494"><span class="annot"><a href="Network.Wai.Handler.WebSockets.Custom.html#runWebSockets"><span class="hs-identifier hs-type">runWebSockets</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-112"></span><span>  </span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/websockets-0.12.7.2-54be8c07268cf6e1c82991eac39b90fb18638af6160ffc369d45374ccd3cca70/share/doc/html/src"><span class="hs-identifier hs-type">WS.ConnectionOptions</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-113"></span><span>  </span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/websockets-0.12.7.2-54be8c07268cf6e1c82991eac39b90fb18638af6160ffc369d45374ccd3cca70/share/doc/html/src"><span class="hs-identifier hs-type">WS.RequestHead</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-111"></span><span id="local-6989586621688066008"><span class="annot"><a href="Network.Wai.Handler.WebSockets.Custom.html#runWebSockets"><span class="hs-identifier hs-type">runWebSockets</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-112"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">WS.ConnectionOptions</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-113"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">WS.RequestHead</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-114"></span><span>  </span><span class="annot"><a href="Network.Wai.Extended.html#IpAddress"><span class="hs-identifier hs-type">Wai.IpAddress</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-115"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Network.Wai.Extended.html#IpAddress"><span class="hs-identifier hs-type">Wai.IpAddress</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/websockets-0.12.7.2-54be8c07268cf6e1c82991eac39b90fb18638af6160ffc369d45374ccd3cca70/share/doc/html/src"><span class="hs-identifier hs-type">WS.PendingConnection</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/ghc-prim-0.6.1/src"><span class="hs-identifier hs-type">IO</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690285494"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-116"></span><span>  </span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/ghc-prim-0.6.1/src"><span class="hs-identifier hs-type">IO</span></a></span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/bytestring-0.10.12.0/src"><span class="hs-identifier hs-type">ByteString</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-117"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/bytestring-0.10.12.0/src"><span class="hs-identifier hs-type">ByteString</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/ghc-prim-0.6.1/src"><span class="hs-identifier hs-type">IO</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-118"></span><span>  </span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/ghc-prim-0.6.1/src"><span class="hs-identifier hs-type">IO</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690285494"><span class="hs-identifier hs-type">a</span></a></span></span><span>
+</span><span id="line-115"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Network.Wai.Extended.html#IpAddress"><span class="hs-identifier hs-type">Wai.IpAddress</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">WS.PendingConnection</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="annot"><a href="#local-6989586621688066008"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-116"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">ByteString</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-117"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">ByteString</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-118"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="annot"><a href="#local-6989586621688066008"><span class="hs-identifier hs-type">a</span></a></span></span><span>
 </span><span id="line-119"></span><span id="runWebSockets"><span class="annot"><span class="annottext">runWebSockets :: ConnectionOptions
 -&gt; RequestHead
 -&gt; IpAddress
@@ -243,106 +243,106 @@ forall a. Maybe a
 -&gt; IO ByteString
 -&gt; (ByteString -&gt; IO ())
 -&gt; IO a
-</span><a href="Network.Wai.Handler.WebSockets.Custom.html#runWebSockets"><span class="hs-identifier hs-var hs-var">runWebSockets</span></a></span></span><span> </span><span id="local-6989586621690285434"><span class="annot"><span class="annottext">ConnectionOptions
-</span><a href="#local-6989586621690285434"><span class="hs-identifier hs-var">opts</span></a></span></span><span> </span><span id="local-6989586621690285433"><span class="annot"><span class="annottext">RequestHead
-</span><a href="#local-6989586621690285433"><span class="hs-identifier hs-var">req</span></a></span></span><span> </span><span id="local-6989586621690285432"><span class="annot"><span class="annottext">IpAddress
-</span><a href="#local-6989586621690285432"><span class="hs-identifier hs-var">ipAddress</span></a></span></span><span> </span><span id="local-6989586621690285431"><span class="annot"><span class="annottext">IpAddress -&gt; PendingConnection -&gt; IO a
-</span><a href="#local-6989586621690285431"><span class="hs-identifier hs-var">app</span></a></span></span><span> </span><span id="local-6989586621690285430"><span class="annot"><span class="annottext">IO ByteString
-</span><a href="#local-6989586621690285430"><span class="hs-identifier hs-var">src</span></a></span></span><span> </span><span id="local-6989586621690285429"><span class="annot"><span class="annottext">ByteString -&gt; IO ()
-</span><a href="#local-6989586621690285429"><span class="hs-identifier hs-var">sink</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">IO Stream
+</span><a href="Network.Wai.Handler.WebSockets.Custom.html#runWebSockets"><span class="hs-identifier hs-var hs-var">runWebSockets</span></a></span></span><span> </span><span id="local-6989586621688065948"><span class="annot"><span class="annottext">ConnectionOptions
+</span><a href="#local-6989586621688065948"><span class="hs-identifier hs-var">opts</span></a></span></span><span> </span><span id="local-6989586621688065947"><span class="annot"><span class="annottext">RequestHead
+</span><a href="#local-6989586621688065947"><span class="hs-identifier hs-var">req</span></a></span></span><span> </span><span id="local-6989586621688065946"><span class="annot"><span class="annottext">IpAddress
+</span><a href="#local-6989586621688065946"><span class="hs-identifier hs-var">ipAddress</span></a></span></span><span> </span><span id="local-6989586621688065945"><span class="annot"><span class="annottext">IpAddress -&gt; PendingConnection -&gt; IO a
+</span><a href="#local-6989586621688065945"><span class="hs-identifier hs-var">app</span></a></span></span><span> </span><span id="local-6989586621688065944"><span class="annot"><span class="annottext">IO ByteString
+</span><a href="#local-6989586621688065944"><span class="hs-identifier hs-var">src</span></a></span></span><span> </span><span id="local-6989586621688065943"><span class="annot"><span class="annottext">ByteString -&gt; IO ()
+</span><a href="#local-6989586621688065943"><span class="hs-identifier hs-var">sink</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">IO Stream
 -&gt; (Stream -&gt; IO (Either () ())) -&gt; (Stream -&gt; IO a) -&gt; IO a
 forall a b c. IO a -&gt; (a -&gt; IO b) -&gt; (a -&gt; IO c) -&gt; IO c
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var">bracket</span></a></span><span> </span><span class="annot"><span class="annottext">IO Stream
-</span><a href="#local-6989586621690285428"><span class="hs-identifier hs-var">mkStream</span></a></span><span> </span><span class="annot"><span class="annottext">Stream -&gt; IO (Either () ())
-</span><a href="#local-6989586621690285427"><span class="hs-identifier hs-var">ensureClose</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">IpAddress -&gt; PendingConnection -&gt; IO a
-</span><a href="#local-6989586621690285431"><span class="hs-identifier hs-var">app</span></a></span><span> </span><span class="annot"><span class="annottext">IpAddress
-</span><a href="#local-6989586621690285432"><span class="hs-identifier hs-var">ipAddress</span></a></span><span> </span><span class="annot"><span class="annottext">(PendingConnection -&gt; IO a)
+</span><span class="hs-identifier hs-var">bracket</span></span><span> </span><span class="annot"><span class="annottext">IO Stream
+</span><a href="#local-6989586621688065942"><span class="hs-identifier hs-var">mkStream</span></a></span><span> </span><span class="annot"><span class="annottext">Stream -&gt; IO (Either () ())
+</span><a href="#local-6989586621688065941"><span class="hs-identifier hs-var">ensureClose</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">IpAddress -&gt; PendingConnection -&gt; IO a
+</span><a href="#local-6989586621688065945"><span class="hs-identifier hs-var">app</span></a></span><span> </span><span class="annot"><span class="annottext">IpAddress
+</span><a href="#local-6989586621688065946"><span class="hs-identifier hs-var">ipAddress</span></a></span><span> </span><span class="annot"><span class="annottext">(PendingConnection -&gt; IO a)
 -&gt; (Stream -&gt; PendingConnection) -&gt; Stream -&gt; IO a
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">Stream -&gt; PendingConnection
-</span><a href="#local-6989586621690285425"><span class="hs-identifier hs-var">pc</span></a></span><span class="hs-special">)</span><span>
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Stream -&gt; PendingConnection
+</span><a href="#local-6989586621688065939"><span class="hs-identifier hs-var">pc</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-120"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-121"></span><span>    </span><span id="local-6989586621690285427"><span class="annot"><span class="annottext">ensureClose :: Stream -&gt; IO (Either () ())
-</span><a href="#local-6989586621690285427"><span class="hs-identifier hs-var hs-var">ensureClose</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(ConnectionException -&gt; Maybe ()) -&gt; IO () -&gt; IO (Either () ())
+</span><span id="line-121"></span><span>    </span><span id="local-6989586621688065941"><span class="annot"><span class="annottext">ensureClose :: Stream -&gt; IO (Either () ())
+</span><a href="#local-6989586621688065941"><span class="hs-identifier hs-var hs-var">ensureClose</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(ConnectionException -&gt; Maybe ()) -&gt; IO () -&gt; IO (Either () ())
 forall e b a.
 Exception e =&gt;
 (e -&gt; Maybe b) -&gt; IO a -&gt; IO (Either b a)
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var">tryJust</span></a></span><span> </span><span class="annot"><span class="annottext">ConnectionException -&gt; Maybe ()
-</span><a href="#local-6989586621690285424"><span class="hs-identifier hs-var">onConnectionException</span></a></span><span> </span><span class="annot"><span class="annottext">(IO () -&gt; IO (Either () ()))
+</span><span class="hs-identifier hs-var">tryJust</span></span><span> </span><span class="annot"><span class="annottext">ConnectionException -&gt; Maybe ()
+</span><a href="#local-6989586621688065938"><span class="hs-identifier hs-var">onConnectionException</span></a></span><span> </span><span class="annot"><span class="annottext">(IO () -&gt; IO (Either () ()))
 -&gt; (Stream -&gt; IO ()) -&gt; Stream -&gt; IO (Either () ())
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">Stream -&gt; IO ()
-</span><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/websockets-0.12.7.2-54be8c07268cf6e1c82991eac39b90fb18638af6160ffc369d45374ccd3cca70/share/doc/html/src"><span class="hs-identifier hs-var">WS.close</span></a></span><span>
-</span><span id="line-122"></span><span>    </span><span class="annot"><a href="#local-6989586621690285424"><span class="hs-identifier hs-type">onConnectionException</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/websockets-0.12.7.2-54be8c07268cf6e1c82991eac39b90fb18638af6160ffc369d45374ccd3cca70/share/doc/html/src"><span class="hs-identifier hs-type">WS.ConnectionException</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
-</span><span id="line-123"></span><span>    </span><span id="local-6989586621690285424"><span class="annot"><span class="annottext">onConnectionException :: ConnectionException -&gt; Maybe ()
-</span><a href="#local-6989586621690285424"><span class="hs-identifier hs-var hs-var">onConnectionException</span></a></span></span><span> </span><span class="annot"><span class="annottext">ConnectionException
-</span><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/websockets-0.12.7.2-54be8c07268cf6e1c82991eac39b90fb18638af6160ffc369d45374ccd3cca70/share/doc/html/src"><span class="hs-identifier hs-var">WS.ConnectionClosed</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">() -&gt; Maybe ()
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Stream -&gt; IO ()
+</span><span class="hs-identifier hs-var">WS.close</span></span><span>
+</span><span id="line-122"></span><span>    </span><span class="annot"><a href="#local-6989586621688065938"><span class="hs-identifier hs-type">onConnectionException</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">WS.ConnectionException</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-123"></span><span>    </span><span id="local-6989586621688065938"><span class="annot"><span class="annottext">onConnectionException :: ConnectionException -&gt; Maybe ()
+</span><a href="#local-6989586621688065938"><span class="hs-identifier hs-var hs-var">onConnectionException</span></a></span></span><span> </span><span class="annot"><span class="annottext">ConnectionException
+</span><span class="hs-identifier hs-var">WS.ConnectionClosed</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">() -&gt; Maybe ()
 forall a. a -&gt; Maybe a
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var">Just</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
-</span><span id="line-124"></span><span>    </span><span class="annot"><a href="#local-6989586621690285424"><span class="hs-identifier hs-var">onConnectionException</span></a></span><span> </span><span class="annot"><span class="annottext">ConnectionException
+</span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-124"></span><span>    </span><span class="annot"><a href="#local-6989586621688065938"><span class="hs-identifier hs-var">onConnectionException</span></a></span><span> </span><span class="annot"><span class="annottext">ConnectionException
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe ()
 forall a. Maybe a
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span>
-</span><span id="line-125"></span><span>    </span><span id="local-6989586621690285428"><span class="annot"><span class="annottext">mkStream :: IO Stream
-</span><a href="#local-6989586621690285428"><span class="hs-identifier hs-var hs-var">mkStream</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span class="hs-identifier hs-var">Nothing</span></span><span>
+</span><span id="line-125"></span><span>    </span><span id="local-6989586621688065942"><span class="annot"><span class="annottext">mkStream :: IO Stream
+</span><a href="#local-6989586621688065942"><span class="hs-identifier hs-var hs-var">mkStream</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-126"></span><span>      </span><span class="annot"><span class="annottext">IO (Maybe ByteString) -&gt; (Maybe ByteString -&gt; IO ()) -&gt; IO Stream
-</span><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/websockets-0.12.7.2-54be8c07268cf6e1c82991eac39b90fb18638af6160ffc369d45374ccd3cca70/share/doc/html/src"><span class="hs-identifier hs-var">WS.makeStream</span></a></span><span>
+</span><span class="hs-identifier hs-var">WS.makeStream</span></span><span>
 </span><span id="line-127"></span><span>        </span><span class="hs-special">(</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-128"></span><span>            </span><span id="local-6989586621690285420"><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621690285420"><span class="hs-identifier hs-var">bs</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO ByteString
-</span><a href="#local-6989586621690285430"><span class="hs-identifier hs-var">src</span></a></span><span>
+</span><span id="line-128"></span><span>            </span><span id="local-6989586621688065934"><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621688065934"><span class="hs-identifier hs-var">bs</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO ByteString
+</span><a href="#local-6989586621688065944"><span class="hs-identifier hs-var">src</span></a></span><span>
 </span><span id="line-129"></span><span>            </span><span class="annot"><span class="annottext">Maybe ByteString -&gt; IO (Maybe ByteString)
 forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var">return</span></a></span><span> </span><span class="annot"><span class="annottext">(Maybe ByteString -&gt; IO (Maybe ByteString))
+</span><span class="hs-identifier hs-var">return</span></span><span> </span><span class="annot"><span class="annottext">(Maybe ByteString -&gt; IO (Maybe ByteString))
 -&gt; Maybe ByteString -&gt; IO (Maybe ByteString)
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; Bool
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/bytestring-0.10.12.0/src"><span class="hs-identifier hs-var">BC.null</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621690285420"><span class="hs-identifier hs-var">bs</span></a></span><span> </span><span class="hs-keyword">then</span><span> </span><span class="annot"><span class="annottext">Maybe ByteString
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; Bool
+</span><span class="hs-identifier hs-var">BC.null</span></span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621688065934"><span class="hs-identifier hs-var">bs</span></a></span><span> </span><span class="hs-keyword">then</span><span> </span><span class="annot"><span class="annottext">Maybe ByteString
 forall a. Maybe a
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span> </span><span class="hs-keyword">else</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; Maybe ByteString
+</span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-keyword">else</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; Maybe ByteString
 forall a. a -&gt; Maybe a
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var">Just</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621690285420"><span class="hs-identifier hs-var">bs</span></a></span><span>
+</span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621688065934"><span class="hs-identifier hs-var">bs</span></a></span><span>
 </span><span id="line-130"></span><span>        </span><span class="hs-special">)</span><span>
 </span><span id="line-131"></span><span>        </span><span class="hs-special">(</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
 </span><span id="line-132"></span><span>            </span><span class="annot"><span class="annottext">Maybe ByteString
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">() -&gt; IO ()
+</span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">() -&gt; IO ()
 forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var">return</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
-</span><span id="line-133"></span><span>            </span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-type">Just</span></a></span><span> </span><span id="local-6989586621690285418"><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621690285418"><span class="hs-identifier hs-var">bl</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">(ByteString -&gt; IO ()) -&gt; [ByteString] -&gt; IO ()
+</span><span class="hs-identifier hs-var">return</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-133"></span><span>            </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621688065932"><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621688065932"><span class="hs-identifier hs-var">bl</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">(ByteString -&gt; IO ()) -&gt; [ByteString] -&gt; IO ()
 forall (t :: * -&gt; *) (m :: * -&gt; *) a b.
 (Foldable t, Monad m) =&gt;
 (a -&gt; m b) -&gt; t a -&gt; m ()
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var">mapM_</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; IO ()
-</span><a href="#local-6989586621690285429"><span class="hs-identifier hs-var">sink</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ByteString -&gt; [ByteString]
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/bytestring-0.10.12.0/src"><span class="hs-identifier hs-var">BL.toChunks</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621690285418"><span class="hs-identifier hs-var">bl</span></a></span><span class="hs-special">)</span><span>
+</span><span class="hs-identifier hs-var">mapM_</span></span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; IO ()
+</span><a href="#local-6989586621688065943"><span class="hs-identifier hs-var">sink</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ByteString -&gt; [ByteString]
+</span><span class="hs-identifier hs-var">BL.toChunks</span></span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621688065932"><span class="hs-identifier hs-var">bl</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-134"></span><span>        </span><span class="hs-special">)</span><span>
 </span><span id="line-135"></span><span>
-</span><span id="line-136"></span><span>    </span><span id="local-6989586621690285425"><span class="annot"><span class="annottext">pc :: Stream -&gt; PendingConnection
-</span><a href="#local-6989586621690285425"><span class="hs-identifier hs-var hs-var">pc</span></a></span></span><span> </span><span id="local-6989586621690285415"><span class="annot"><span class="annottext">Stream
-</span><a href="#local-6989586621690285415"><span class="hs-identifier hs-var">stream</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-136"></span><span>    </span><span id="local-6989586621688065939"><span class="annot"><span class="annottext">pc :: Stream -&gt; PendingConnection
+</span><a href="#local-6989586621688065939"><span class="hs-identifier hs-var hs-var">pc</span></a></span></span><span> </span><span id="local-6989586621688065929"><span class="annot"><span class="annottext">Stream
+</span><a href="#local-6989586621688065929"><span class="hs-identifier hs-var">stream</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-137"></span><span>      </span><span class="annot"><span class="annottext">PendingConnection :: ConnectionOptions
 -&gt; RequestHead
 -&gt; (Connection -&gt; IO ())
 -&gt; Stream
 -&gt; PendingConnection
-</span><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/websockets-0.12.7.2-54be8c07268cf6e1c82991eac39b90fb18638af6160ffc369d45374ccd3cca70/share/doc/html/src"><span class="hs-identifier hs-type">WS.PendingConnection</span></a></span><span>
+</span><span class="hs-identifier hs-type">WS.PendingConnection</span></span><span>
 </span><span id="line-138"></span><span>        </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">pendingOptions :: ConnectionOptions
-</span><a href="#local-6989586621690285413"><span class="hs-identifier hs-var">WS.pendingOptions</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ConnectionOptions
-</span><a href="#local-6989586621690285434"><span class="hs-identifier hs-var">opts</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621688065927"><span class="hs-identifier hs-var">WS.pendingOptions</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ConnectionOptions
+</span><a href="#local-6989586621688065948"><span class="hs-identifier hs-var">opts</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-139"></span><span>          </span><span class="annot"><span class="annottext">pendingRequest :: RequestHead
-</span><a href="#local-6989586621690285412"><span class="hs-identifier hs-var">WS.pendingRequest</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">RequestHead
-</span><a href="#local-6989586621690285433"><span class="hs-identifier hs-var">req</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621688065926"><span class="hs-identifier hs-var">WS.pendingRequest</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">RequestHead
+</span><a href="#local-6989586621688065947"><span class="hs-identifier hs-var">req</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-140"></span><span>          </span><span class="annot"><span class="annottext">pendingOnAccept :: Connection -&gt; IO ()
-</span><a href="#local-6989586621690285411"><span class="hs-identifier hs-var">WS.pendingOnAccept</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="annot"><span class="annottext">Connection
+</span><a href="#local-6989586621688065925"><span class="hs-identifier hs-var">WS.pendingOnAccept</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="annot"><span class="annottext">Connection
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">() -&gt; IO ()
 forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var">return</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span class="hs-identifier hs-var">return</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
 </span><span id="line-141"></span><span>          </span><span class="annot"><span class="annottext">pendingStream :: Stream
-</span><a href="#local-6989586621690285410"><span class="hs-identifier hs-var">WS.pendingStream</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Stream
-</span><a href="#local-6989586621690285415"><span class="hs-identifier hs-var">stream</span></a></span><span>
+</span><a href="#local-6989586621688065924"><span class="hs-identifier hs-var">WS.pendingStream</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Stream
+</span><a href="#local-6989586621688065929"><span class="hs-identifier hs-var">stream</span></a></span><span>
 </span><span id="line-142"></span><span>        </span><span class="hs-special">}</span><span>
 </span><span id="line-143"></span></pre></body></html>

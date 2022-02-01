@@ -8,8 +8,8 @@
 </span><span id="line-8"></span><span>
 </span><span id="line-9"></span><span class="hs-comment">--------------------------------------------------------------------------------</span><span>
 </span><span id="line-10"></span><span>
-</span><span id="line-11"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/aeson-1.5.5.1-d565b322355c9794eb059b7477592fe0d20db50e9f4ac0ae0328e907dd753173/share/doc/html/src"><span class="hs-identifier">Data.Aeson</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/aeson-1.5.5.1-d565b322355c9794eb059b7477592fe0d20db50e9f4ac0ae0328e907dd753173/share/doc/html/src"><span class="hs-identifier">FromJSON</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/aeson-1.5.5.1-d565b322355c9794eb059b7477592fe0d20db50e9f4ac0ae0328e907dd753173/share/doc/html/src"><span class="hs-identifier">FromJSONKey</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/aeson-1.5.5.1-d565b322355c9794eb059b7477592fe0d20db50e9f4ac0ae0328e907dd753173/share/doc/html/src"><span class="hs-identifier">ToJSON</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/aeson-1.5.5.1-d565b322355c9794eb059b7477592fe0d20db50e9f4ac0ae0328e907dd753173/share/doc/html/src"><span class="hs-identifier">ToJSONKey</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-12"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier">Data.Kind</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/ghc-prim-0.6.1/src"><span class="hs-identifier">Type</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-11"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">FromJSON</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">FromJSONKey</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">ToJSON</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">ToJSONKey</span></span><span class="hs-special">)</span><span>
+</span><span id="line-12"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Kind</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Type</span></span><span class="hs-special">)</span><span>
 </span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Data.Text.Extended.html"><span class="hs-identifier">Data.Text.Extended</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.Text.Extended.html#ToTxt"><span class="hs-identifier">ToTxt</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Incremental.html"><span class="hs-identifier">Hasura.Incremental</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier">Cacheable</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
@@ -22,10 +22,10 @@
 </span><span id="line-22"></span><span class="hs-comment">-- This wrapper is indexed by 'NameType' so that different &quot;names&quot; can be</span><span>
 </span><span id="line-23"></span><span class="hs-comment">-- represented as semantically distinct types without the boilerplate of</span><span>
 </span><span id="line-24"></span><span class="hs-comment">-- actually defining these wrappers separately.</span><span>
-</span><span id="line-25"></span><span class="hs-keyword">type</span><span> </span><span class="annot"><a href="Hasura.Experimental.IR.Name.html#Name"><span class="hs-identifier hs-type">Name</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Experimental.IR.Name.html#NameType"><span class="hs-identifier hs-type">NameType</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/ghc-prim-0.6.1/src"><span class="hs-identifier hs-type">Type</span></a></span><span>
-</span><span id="line-26"></span><span id="local-6989586621690155300"><span id="local-6989586621690155301"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="Name"><span class="annot"><a href="Hasura.Experimental.IR.Name.html#Name"><span class="hs-identifier hs-var">Name</span></a></span></span><span> </span><span id="local-6989586621690155299"><span class="annot"><a href="#local-6989586621690155299"><span class="hs-identifier hs-type">ty</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Name"><span class="annot"><a href="Hasura.Experimental.IR.Name.html#Name"><span class="hs-identifier hs-var">Name</span></a></span></span><span> </span><span class="hs-special">{</span><span id="unName"><span class="annot"><span class="annottext">Name ty -&gt; Text
-</span><a href="Hasura.Experimental.IR.Name.html#unName"><span class="hs-identifier hs-var hs-var">unName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/text-1.2.3.2-4200bf40e86b2107f4b06242de65d549c52e58e8833e72545e35f7712661e715/share/doc/html/src"><span class="hs-identifier hs-type">Text</span></a></span><span class="hs-special">}</span><span>
-</span><span id="line-27"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="%24cName"><span id="%24tName"><span id="local-6989586621690155268"><span id="local-6989586621690155270"><span id="local-6989586621690155272"><span id="local-6989586621690155274"><span id="local-6989586621690155276"><span id="local-6989586621690155278"><span id="local-6989586621690155280"><span id="local-6989586621690155282"><span id="local-6989586621690155284"><span id="local-6989586621690155286"><span id="local-6989586621690155288"><span id="local-6989586621690155290"><span id="local-6989586621690155292"><span id="local-6989586621690155294"><span class="annot"><span class="annottext">Typeable (Name ty)
+</span><span id="line-25"></span><span class="hs-keyword">type</span><span> </span><span class="annot"><a href="Hasura.Experimental.IR.Name.html#Name"><span class="hs-identifier hs-type">Name</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Experimental.IR.Name.html#NameType"><span class="hs-identifier hs-type">NameType</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Type</span></span><span>
+</span><span id="line-26"></span><span id="local-6989586621687935732"><span id="local-6989586621687935733"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="Name"><span class="annot"><a href="Hasura.Experimental.IR.Name.html#Name"><span class="hs-identifier hs-var">Name</span></a></span></span><span> </span><span id="local-6989586621687935731"><span class="annot"><a href="#local-6989586621687935731"><span class="hs-identifier hs-type">ty</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Name"><span class="annot"><a href="Hasura.Experimental.IR.Name.html#Name"><span class="hs-identifier hs-var">Name</span></a></span></span><span> </span><span class="hs-special">{</span><span id="unName"><span class="annot"><span class="annottext">Name ty -&gt; Text
+</span><a href="Hasura.Experimental.IR.Name.html#unName"><span class="hs-identifier hs-var hs-var">unName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">}</span><span>
+</span><span id="line-27"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="%24cName"><span id="%24tName"><span id="local-6989586621687935700"><span id="local-6989586621687935702"><span id="local-6989586621687935704"><span id="local-6989586621687935706"><span id="local-6989586621687935708"><span id="local-6989586621687935710"><span id="local-6989586621687935712"><span id="local-6989586621687935714"><span id="local-6989586621687935716"><span id="local-6989586621687935718"><span id="local-6989586621687935720"><span id="local-6989586621687935722"><span id="local-6989586621687935724"><span id="local-6989586621687935726"><span class="annot"><span class="annottext">Typeable (Name ty)
 DataType
 Constr
 Typeable (Name ty)
@@ -231,7 +231,7 @@ Typeable ty =&gt;
 (forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
 -&gt; (forall g. g -&gt; c g) -&gt; Name ty -&gt; c (Name ty)
 $cp1Data :: forall (ty :: NameType). Typeable ty =&gt; Typeable (Name ty)
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Data</span></a></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690155261"><span id="local-6989586621690155263"><span class="annot"><span class="annottext">Name ty -&gt; Name ty -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Data</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687935693"><span id="local-6989586621687935695"><span class="annot"><span class="annottext">Name ty -&gt; Name ty -&gt; Bool
 (Name ty -&gt; Name ty -&gt; Bool)
 -&gt; (Name ty -&gt; Name ty -&gt; Bool) -&gt; Eq (Name ty)
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -240,7 +240,7 @@ forall (ty :: NameType). Name ty -&gt; Name ty -&gt; Bool
 $c/= :: forall (ty :: NameType). Name ty -&gt; Name ty -&gt; Bool
 == :: Name ty -&gt; Name ty -&gt; Bool
 $c== :: forall (ty :: NameType). Name ty -&gt; Name ty -&gt; Bool
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/ghc-prim-0.6.1/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">(forall x. Name ty -&gt; Rep (Name ty) x)
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">(forall x. Name ty -&gt; Rep (Name ty) x)
 -&gt; (forall x. Rep (Name ty) x -&gt; Name ty) -&gt; Generic (Name ty)
 forall x. Rep (Name ty) x -&gt; Name ty
 forall x. Name ty -&gt; Rep (Name ty) x
@@ -250,7 +250,7 @@ forall (ty :: NameType) x. Rep (Name ty) x -&gt; Name ty
 forall (ty :: NameType) x. Name ty -&gt; Rep (Name ty) x
 $cto :: forall (ty :: NameType) x. Rep (Name ty) x -&gt; Name ty
 $cfrom :: forall (ty :: NameType) x. Name ty -&gt; Rep (Name ty) x
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></a></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690155242"><span id="local-6989586621690155244"><span id="local-6989586621690155246"><span id="local-6989586621690155248"><span id="local-6989586621690155250"><span id="local-6989586621690155252"><span id="local-6989586621690155254"><span class="annot"><span class="annottext">Eq (Name ty)
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687935674"><span id="local-6989586621687935676"><span id="local-6989586621687935678"><span id="local-6989586621687935680"><span id="local-6989586621687935682"><span id="local-6989586621687935684"><span id="local-6989586621687935686"><span class="annot"><span class="annottext">Eq (Name ty)
 Eq (Name ty)
 -&gt; (Name ty -&gt; Name ty -&gt; Ordering)
 -&gt; (Name ty -&gt; Name ty -&gt; Bool)
@@ -292,7 +292,7 @@ $c&lt; :: forall (ty :: NameType). Name ty -&gt; Name ty -&gt; Bool
 compare :: Name ty -&gt; Name ty -&gt; Ordering
 $ccompare :: forall (ty :: NameType). Name ty -&gt; Name ty -&gt; Ordering
 $cp1Ord :: forall (ty :: NameType). Eq (Name ty)
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/ghc-prim-0.6.1/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></a></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690155235"><span id="local-6989586621690155237"><span id="local-6989586621690155239"><span class="annot"><span class="annottext">Int -&gt; Name ty -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687935667"><span id="local-6989586621687935669"><span id="local-6989586621687935671"><span class="annot"><span class="annottext">Int -&gt; Name ty -&gt; ShowS
 [Name ty] -&gt; ShowS
 Name ty -&gt; String
 (Int -&gt; Name ty -&gt; ShowS)
@@ -308,9 +308,9 @@ show :: Name ty -&gt; String
 $cshow :: forall (ty :: NameType). Name ty -&gt; String
 showsPrec :: Int -&gt; Name ty -&gt; ShowS
 $cshowsPrec :: forall (ty :: NameType). Int -&gt; Name ty -&gt; ShowS
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">)</span><span>
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-28"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">newtype</span></span><span>
-</span><span id="line-29"></span><span>    </span><span class="hs-special">(</span><span> </span><span id="local-6989586621690155231"><span class="annot"><span class="annottext">Eq (Name ty)
+</span><span id="line-29"></span><span>    </span><span class="hs-special">(</span><span> </span><span id="local-6989586621687935663"><span class="annot"><span class="annottext">Eq (Name ty)
 Eq (Name ty)
 -&gt; (Accesses -&gt; Name ty -&gt; Name ty -&gt; Bool) -&gt; Cacheable (Name ty)
 Accesses -&gt; Name ty -&gt; Name ty -&gt; Bool
@@ -321,7 +321,7 @@ unchanged :: Accesses -&gt; Name ty -&gt; Name ty -&gt; Bool
 $cunchanged :: forall (ty :: NameType). Accesses -&gt; Name ty -&gt; Name ty -&gt; Bool
 $cp1Cacheable :: forall (ty :: NameType). Eq (Name ty)
 </span><a href="Hasura.Incremental.Internal.Dependency.html#C%3ACacheable"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">Cacheable</span></a></span></span><span class="hs-special">,</span><span>
-</span><span id="line-30"></span><span>      </span><span id="local-6989586621690155226"><span id="local-6989586621690155228"><span class="annot"><span class="annottext">Value -&gt; Parser [Name ty]
+</span><span id="line-30"></span><span>      </span><span id="local-6989586621687935658"><span id="local-6989586621687935660"><span class="annot"><span class="annottext">Value -&gt; Parser [Name ty]
 Value -&gt; Parser (Name ty)
 (Value -&gt; Parser (Name ty))
 -&gt; (Value -&gt; Parser [Name ty]) -&gt; FromJSON (Name ty)
@@ -333,8 +333,8 @@ parseJSONList :: Value -&gt; Parser [Name ty]
 $cparseJSONList :: forall (ty :: NameType). Value -&gt; Parser [Name ty]
 parseJSON :: Value -&gt; Parser (Name ty)
 $cparseJSON :: forall (ty :: NameType). Value -&gt; Parser (Name ty)
-</span><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/aeson-1.5.5.1-d565b322355c9794eb059b7477592fe0d20db50e9f4ac0ae0328e907dd753173/share/doc/html/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></a></span></span></span><span class="hs-special">,</span><span>
-</span><span id="line-31"></span><span>      </span><span id="local-6989586621690155221"><span id="local-6989586621690155223"><span class="annot"><span class="annottext">FromJSONKeyFunction [Name ty]
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></span></span></span><span class="hs-special">,</span><span>
+</span><span id="line-31"></span><span>      </span><span id="local-6989586621687935653"><span id="local-6989586621687935655"><span class="annot"><span class="annottext">FromJSONKeyFunction [Name ty]
 FromJSONKeyFunction (Name ty)
 FromJSONKeyFunction (Name ty)
 -&gt; FromJSONKeyFunction [Name ty] -&gt; FromJSONKey (Name ty)
@@ -346,8 +346,8 @@ fromJSONKeyList :: FromJSONKeyFunction [Name ty]
 $cfromJSONKeyList :: forall (ty :: NameType). FromJSONKeyFunction [Name ty]
 fromJSONKey :: FromJSONKeyFunction (Name ty)
 $cfromJSONKey :: forall (ty :: NameType). FromJSONKeyFunction (Name ty)
-</span><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/aeson-1.5.5.1-d565b322355c9794eb059b7477592fe0d20db50e9f4ac0ae0328e907dd753173/share/doc/html/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSONKey</span></a></span></span></span><span class="hs-special">,</span><span>
-</span><span id="line-32"></span><span>      </span><span id="local-6989586621690155216"><span id="local-6989586621690155218"><span class="annot"><span class="annottext">Int -&gt; Name ty -&gt; Int
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSONKey</span></span></span></span><span class="hs-special">,</span><span>
+</span><span id="line-32"></span><span>      </span><span id="local-6989586621687935648"><span id="local-6989586621687935650"><span class="annot"><span class="annottext">Int -&gt; Name ty -&gt; Int
 Name ty -&gt; Int
 (Int -&gt; Name ty -&gt; Int) -&gt; (Name ty -&gt; Int) -&gt; Hashable (Name ty)
 forall a. (Int -&gt; a -&gt; Int) -&gt; (a -&gt; Int) -&gt; Hashable a
@@ -357,15 +357,15 @@ hash :: Name ty -&gt; Int
 $chash :: forall (ty :: NameType). Name ty -&gt; Int
 hashWithSalt :: Int -&gt; Name ty -&gt; Int
 $chashWithSalt :: forall (ty :: NameType). Int -&gt; Name ty -&gt; Int
-</span><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/hashable-1.3.0.0-788b52f2a84e4f56df08780d211980a9db35c8fd0786c16a6d78251880c45f3d/share/doc/html/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">,</span><span>
-</span><span id="line-33"></span><span>      </span><span id="local-6989586621690155213"><span class="annot"><span class="annottext">Name ty -&gt; ()
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></span></span></span><span class="hs-special">,</span><span>
+</span><span id="line-33"></span><span>      </span><span id="local-6989586621687935645"><span class="annot"><span class="annottext">Name ty -&gt; ()
 (Name ty -&gt; ()) -&gt; NFData (Name ty)
 forall a. (a -&gt; ()) -&gt; NFData a
 forall (ty :: NameType). Name ty -&gt; ()
 rnf :: Name ty -&gt; ()
 $crnf :: forall (ty :: NameType). Name ty -&gt; ()
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/deepseq-1.4.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span class="hs-special">,</span><span>
-</span><span id="line-34"></span><span>      </span><span id="local-6989586621690155204"><span id="local-6989586621690155206"><span id="local-6989586621690155208"><span id="local-6989586621690155210"><span class="annot"><span class="annottext">[Name ty] -&gt; Value
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></span></span><span class="hs-special">,</span><span>
+</span><span id="line-34"></span><span>      </span><span id="local-6989586621687935636"><span id="local-6989586621687935638"><span id="local-6989586621687935640"><span id="local-6989586621687935642"><span class="annot"><span class="annottext">[Name ty] -&gt; Value
 [Name ty] -&gt; Encoding
 Name ty -&gt; Value
 Name ty -&gt; Encoding
@@ -392,8 +392,8 @@ toEncoding :: Name ty -&gt; Encoding
 $ctoEncoding :: forall (ty :: NameType). Name ty -&gt; Encoding
 toJSON :: Name ty -&gt; Value
 $ctoJSON :: forall (ty :: NameType). Name ty -&gt; Value
-</span><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/aeson-1.5.5.1-d565b322355c9794eb059b7477592fe0d20db50e9f4ac0ae0328e907dd753173/share/doc/html/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></a></span></span></span></span></span><span class="hs-special">,</span><span>
-</span><span id="line-35"></span><span>      </span><span id="local-6989586621690155199"><span id="local-6989586621690155201"><span class="annot"><span class="annottext">ToJSONKeyFunction [Name ty]
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></span></span></span></span></span><span class="hs-special">,</span><span>
+</span><span id="line-35"></span><span>      </span><span id="local-6989586621687935631"><span id="local-6989586621687935633"><span class="annot"><span class="annottext">ToJSONKeyFunction [Name ty]
 ToJSONKeyFunction (Name ty)
 ToJSONKeyFunction (Name ty)
 -&gt; ToJSONKeyFunction [Name ty] -&gt; ToJSONKey (Name ty)
@@ -405,8 +405,8 @@ toJSONKeyList :: ToJSONKeyFunction [Name ty]
 $ctoJSONKeyList :: forall (ty :: NameType). ToJSONKeyFunction [Name ty]
 toJSONKey :: ToJSONKeyFunction (Name ty)
 $ctoJSONKey :: forall (ty :: NameType). ToJSONKeyFunction (Name ty)
-</span><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/aeson-1.5.5.1-d565b322355c9794eb059b7477592fe0d20db50e9f4ac0ae0328e907dd753173/share/doc/html/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">ToJSONKey</span></a></span></span></span><span class="hs-special">,</span><span>
-</span><span id="line-36"></span><span>      </span><span id="local-6989586621690155196"><span class="annot"><span class="annottext">Name ty -&gt; Text
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">ToJSONKey</span></span></span></span><span class="hs-special">,</span><span>
+</span><span id="line-36"></span><span>      </span><span id="local-6989586621687935628"><span class="annot"><span class="annottext">Name ty -&gt; Text
 (Name ty -&gt; Text) -&gt; ToTxt (Name ty)
 forall a. (a -&gt; Text) -&gt; ToTxt a
 forall (ty :: NameType). Name ty -&gt; Text

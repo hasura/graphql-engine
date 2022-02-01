@@ -22,17 +22,17 @@
 </span><span id="line-22"></span><span class="hs-comment">--</span><span>
 </span><span id="line-23"></span><span class="hs-comment">-- NOTE(cdparks): Instead of an isNullable flag, should we instead</span><span>
 </span><span id="line-24"></span><span class="hs-comment">-- add a Nullable constructor to Scalar.Type?</span><span>
-</span><span id="line-25"></span><span id="local-6989586621690155478"><span id="local-6989586621690155479"></span></span><span class="hs-keyword">data</span><span> </span><span id="Column"><span class="annot"><a href="Hasura.Experimental.Schema.Column.html#Column"><span class="hs-identifier hs-var">Column</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Column"><span class="annot"><a href="Hasura.Experimental.Schema.Column.html#Column"><span class="hs-identifier hs-var">Column</span></a></span></span><span>
+</span><span id="line-25"></span><span id="local-6989586621687935910"><span id="local-6989586621687935911"></span></span><span class="hs-keyword">data</span><span> </span><span id="Column"><span class="annot"><a href="Hasura.Experimental.Schema.Column.html#Column"><span class="hs-identifier hs-var">Column</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Column"><span class="annot"><a href="Hasura.Experimental.Schema.Column.html#Column"><span class="hs-identifier hs-var">Column</span></a></span></span><span>
 </span><span id="line-26"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="name"><span class="annot"><span class="annottext">Column -&gt; Name
 </span><a href="Hasura.Experimental.Schema.Column.html#name"><span class="hs-identifier hs-var hs-var">name</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Experimental.IR.Column.html#Name"><span class="hs-identifier hs-type">Column.Name</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-27"></span><span>    </span><span id="type_"><span class="annot"><span class="annottext">Column -&gt; Type
 </span><a href="Hasura.Experimental.Schema.Column.html#type_"><span class="hs-identifier hs-var hs-var">type_</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Experimental.IR.Scalar.Type.html#Type"><span class="hs-identifier hs-type">Scalar.Type</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-28"></span><span>    </span><span id="isNullable"><span class="annot"><span class="annottext">Column -&gt; Bool
-</span><a href="Hasura.Experimental.Schema.Column.html#isNullable"><span class="hs-identifier hs-var hs-var">isNullable</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/ghc-prim-0.6.1/src"><span class="hs-identifier hs-type">Bool</span></a></span><span class="hs-special">,</span><span>
+</span><a href="Hasura.Experimental.Schema.Column.html#isNullable"><span class="hs-identifier hs-var hs-var">isNullable</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span class="hs-special">,</span><span>
 </span><span id="line-29"></span><span>    </span><span id="description"><span class="annot"><span class="annottext">Column -&gt; Maybe Text
-</span><a href="Hasura.Experimental.Schema.Column.html#description"><span class="hs-identifier hs-var hs-var">description</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/text-1.2.3.2-4200bf40e86b2107f4b06242de65d549c52e58e8833e72545e35f7712661e715/share/doc/html/src"><span class="hs-identifier hs-type">Text</span></a></span><span>
+</span><a href="Hasura.Experimental.Schema.Column.html#description"><span class="hs-identifier hs-var hs-var">description</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
 </span><span id="line-30"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-31"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="%24cColumn"><span id="%24tColumn"><span id="local-6989586621690155444"><span id="local-6989586621690155446"><span id="local-6989586621690155448"><span id="local-6989586621690155450"><span id="local-6989586621690155452"><span id="local-6989586621690155454"><span id="local-6989586621690155456"><span id="local-6989586621690155458"><span id="local-6989586621690155460"><span id="local-6989586621690155462"><span id="local-6989586621690155464"><span id="local-6989586621690155466"><span id="local-6989586621690155468"><span id="local-6989586621690155470"><span class="annot"><span class="annottext">Typeable Column
+</span><span id="line-31"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="%24cColumn"><span id="%24tColumn"><span id="local-6989586621687935876"><span id="local-6989586621687935878"><span id="local-6989586621687935880"><span id="local-6989586621687935882"><span id="local-6989586621687935884"><span id="local-6989586621687935886"><span id="local-6989586621687935888"><span id="local-6989586621687935890"><span id="local-6989586621687935892"><span id="local-6989586621687935894"><span id="local-6989586621687935896"><span id="local-6989586621687935898"><span id="local-6989586621687935900"><span id="local-6989586621687935902"><span class="annot"><span class="annottext">Typeable Column
 DataType
 Constr
 Typeable Column
@@ -182,7 +182,7 @@ $cgfoldl :: forall (c :: * -&gt; *).
 (forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
 -&gt; (forall g. g -&gt; c g) -&gt; Column -&gt; c Column
 $cp1Data :: Typeable Column
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Data</span></a></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690155437"><span id="local-6989586621690155439"><span class="annot"><span class="annottext">Column -&gt; Column -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Data</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687935869"><span id="local-6989586621687935871"><span class="annot"><span class="annottext">Column -&gt; Column -&gt; Bool
 (Column -&gt; Column -&gt; Bool)
 -&gt; (Column -&gt; Column -&gt; Bool) -&gt; Eq Column
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -190,7 +190,7 @@ forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 $c/= :: Column -&gt; Column -&gt; Bool
 == :: Column -&gt; Column -&gt; Bool
 $c== :: Column -&gt; Column -&gt; Bool
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/ghc-prim-0.6.1/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">(forall x. Column -&gt; Rep Column x)
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">(forall x. Column -&gt; Rep Column x)
 -&gt; (forall x. Rep Column x -&gt; Column) -&gt; Generic Column
 forall x. Rep Column x -&gt; Column
 forall x. Column -&gt; Rep Column x
@@ -198,7 +198,7 @@ forall a.
 (forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
 $cto :: forall x. Rep Column x -&gt; Column
 $cfrom :: forall x. Column -&gt; Rep Column x
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></a></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690155418"><span id="local-6989586621690155420"><span id="local-6989586621690155422"><span id="local-6989586621690155424"><span id="local-6989586621690155426"><span id="local-6989586621690155428"><span id="local-6989586621690155430"><span class="annot"><span class="annottext">Eq Column
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687935850"><span id="local-6989586621687935852"><span id="local-6989586621687935854"><span id="local-6989586621687935856"><span id="local-6989586621687935858"><span id="local-6989586621687935860"><span id="local-6989586621687935862"><span class="annot"><span class="annottext">Eq Column
 Eq Column
 -&gt; (Column -&gt; Column -&gt; Ordering)
 -&gt; (Column -&gt; Column -&gt; Bool)
@@ -236,7 +236,7 @@ $c&lt; :: Column -&gt; Column -&gt; Bool
 compare :: Column -&gt; Column -&gt; Ordering
 $ccompare :: Column -&gt; Column -&gt; Ordering
 $cp1Ord :: Eq Column
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/ghc-prim-0.6.1/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></a></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690155411"><span id="local-6989586621690155413"><span id="local-6989586621690155415"><span class="annot"><span class="annottext">Int -&gt; Column -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687935843"><span id="local-6989586621687935845"><span id="local-6989586621687935847"><span class="annot"><span class="annottext">Int -&gt; Column -&gt; ShowS
 [Column] -&gt; ShowS
 Column -&gt; String
 (Int -&gt; Column -&gt; ShowS)
@@ -249,5 +249,5 @@ show :: Column -&gt; String
 $cshow :: Column -&gt; String
 showsPrec :: Int -&gt; Column -&gt; ShowS
 $cshowsPrec :: Int -&gt; Column -&gt; ShowS
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">)</span><span>
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-32"></span></pre></body></html>

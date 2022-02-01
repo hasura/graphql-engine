@@ -1,5 +1,5 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Control.Concurrent.Extended</span><span>
-</span><span id="line-2"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="hs-keyword">module</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier">Control.Concurrent</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-2"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="hs-keyword">module</span><span> </span><span class="annot"><span class="hs-identifier">Control.Concurrent</span></span><span class="hs-special">,</span><span>
 </span><span id="line-3"></span><span>    </span><span class="annot"><a href="Control.Concurrent.Extended.html#sleep"><span class="hs-identifier">sleep</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-4"></span><span>    </span><span class="annot"><a href="Control.Concurrent.Extended.html#ForkableMonadIO"><span class="hs-identifier">ForkableMonadIO</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-5"></span><span>
@@ -18,140 +18,140 @@
 </span><span id="line-18"></span><span>  </span><span class="hs-special">)</span><span>
 </span><span id="line-19"></span><span class="hs-keyword">where</span><span>
 </span><span id="line-20"></span><span>
-</span><span id="line-21"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier">Control.Concurrent</span></a></span><span> </span><span class="hs-keyword">hiding</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier">forkIO</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier">threadDelay</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-22"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier">Control.Concurrent</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Base</span></span><span>
-</span><span id="line-23"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/lifted-async-0.10.1.2-70a9df6008ea58467d7c683ae746761f1165de5ec8787caa425cc1d9a98e79cc/share/doc/html/src"><span class="hs-identifier">Control.Concurrent.Async.Lifted.Safe</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">LA</span></span><span>
-</span><span id="line-24"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/stm-2.5.0.1/src"><span class="hs-identifier">Control.Concurrent.STM</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">STM</span></span><span>
-</span><span id="line-25"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier">Control.Exception</span></a></span><span>
-</span><span id="line-26"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/immortal-0.2.2.1-43132e6fb91a4ebc2dbfee266833fe0c27ee89aed59dffd8b840482dd2103a87/share/doc/html/src"><span class="hs-identifier">Control.Immortal</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Immortal</span></span><span>
-</span><span id="line-27"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier">Control.Monad</span></a></span><span>
-</span><span id="line-28"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier">Control.Monad.IO.Class</span></a></span><span>
-</span><span id="line-29"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/monad-loops-0.4.3-2a83c29f0688678414755c1f44115159428867e9fc7514f4fd0b6d2f38f4711f/share/doc/html/src"><span class="hs-identifier">Control.Monad.Loops</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/monad-loops-0.4.3-2a83c29f0688678414755c1f44115159428867e9fc7514f4fd0b6d2f38f4711f/share/doc/html/src"><span class="hs-identifier">iterateM_</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-30"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/monad-control-1.0.2.3-db642c66d41630a40c34679ab5150dcca77dac61d0ab3814ba3733e421b240c4/share/doc/html/src"><span class="hs-identifier">Control.Monad.Trans.Control</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">MC</span></span><span>
+</span><span id="line-21"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Control.Concurrent</span></span><span> </span><span class="hs-keyword">hiding</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">forkIO</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">threadDelay</span></span><span class="hs-special">)</span><span>
+</span><span id="line-22"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Control.Concurrent</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Base</span></span><span>
+</span><span id="line-23"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Control.Concurrent.Async.Lifted.Safe</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">LA</span></span><span>
+</span><span id="line-24"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Control.Concurrent.STM</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">STM</span></span><span>
+</span><span id="line-25"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Control.Exception</span></span><span>
+</span><span id="line-26"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Control.Immortal</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Immortal</span></span><span>
+</span><span id="line-27"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Control.Monad</span></span><span>
+</span><span id="line-28"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Control.Monad.IO.Class</span></span><span>
+</span><span id="line-29"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Control.Monad.Loops</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">iterateM_</span></span><span class="hs-special">)</span><span>
+</span><span id="line-30"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Control.Monad.Trans.Control</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">MC</span></span><span>
 </span><span id="line-31"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Control.Monad.Trans.Managed.html"><span class="hs-identifier">Control.Monad.Trans.Managed</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Control.Monad.Trans.Managed.html#ManagedT"><span class="hs-identifier">ManagedT</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Control.Monad.Trans.Managed.html#allocate"><span class="hs-identifier">allocate</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-32"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/aeson-1.5.5.1-d565b322355c9794eb059b7477592fe0d20db50e9f4ac0ae0328e907dd753173/share/doc/html/src"><span class="hs-identifier">Data.Aeson</span></a></span><span>
-</span><span id="line-33"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Data.Time.Clock.Units.html"><span class="hs-identifier">Data.Time.Clock.Units</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/time-1.9.3/src"><span class="hs-identifier">DiffTime</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Data.Time.Clock.Units.html#Microseconds"><span class="hs-identifier">Microseconds</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Data.Time.Clock.Units.html#seconds"><span class="hs-identifier">seconds</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-34"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier">Data.Void</span></a></span><span>
+</span><span id="line-32"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson</span></span><span>
+</span><span id="line-33"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Data.Time.Clock.Units.html"><span class="hs-identifier">Data.Time.Clock.Units</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">DiffTime</span></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Data.Time.Clock.Units.html#Microseconds"><span class="hs-identifier">Microseconds</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Data.Time.Clock.Units.html#seconds"><span class="hs-identifier">seconds</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-34"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Void</span></span><span>
 </span><span id="line-35"></span><span class="hs-comment">-- For forkImmortal. We could also have it take a cumbersome continuation if we</span><span>
 </span><span id="line-36"></span><span class="hs-comment">-- want to break this dependency. Probably best to move Hasura.Logging into a</span><span>
 </span><span id="line-37"></span><span class="hs-comment">-- separate lib with this if we do the override thing.</span><span>
 </span><span id="line-38"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Logging.html"><span class="hs-identifier">Hasura.Logging</span></a></span><span>
-</span><span id="line-39"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier">Prelude</span></a></span><span>
+</span><span id="line-39"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Prelude</span></span><span>
 </span><span id="line-40"></span><span>
 </span><span id="line-41"></span><span class="hs-comment">-- | Like 'Base.threadDelay', but takes a 'DiffTime' instead of an 'Int' microseconds.</span><span>
 </span><span id="line-42"></span><span class="hs-comment">--</span><span>
 </span><span id="line-43"></span><span class="hs-comment">-- NOTE: you cannot simply replace e.g. @threadDelay 1000@ with @sleep 1000@ since those literals</span><span>
 </span><span id="line-44"></span><span class="hs-comment">-- have different meanings!</span><span>
-</span><span id="line-45"></span><span class="annot"><a href="Control.Concurrent.Extended.html#sleep"><span class="hs-identifier hs-type">sleep</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/time-1.9.3/src"><span class="hs-identifier hs-type">DiffTime</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/ghc-prim-0.6.1/src"><span class="hs-identifier hs-type">IO</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-45"></span><span class="annot"><a href="Control.Concurrent.Extended.html#sleep"><span class="hs-identifier hs-type">sleep</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">DiffTime</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
 </span><span id="line-46"></span><span id="sleep"><span class="annot"><span class="annottext">sleep :: DiffTime -&gt; IO ()
 </span><a href="Control.Concurrent.Extended.html#sleep"><span class="hs-identifier hs-var hs-var">sleep</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int -&gt; IO ()
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var">Base.threadDelay</span></a></span><span> </span><span class="annot"><span class="annottext">(Int -&gt; IO ()) -&gt; (DiffTime -&gt; Int) -&gt; DiffTime -&gt; IO ()
+</span><span class="hs-identifier hs-var">Base.threadDelay</span></span><span> </span><span class="annot"><span class="annottext">(Int -&gt; IO ()) -&gt; (DiffTime -&gt; Int) -&gt; DiffTime -&gt; IO ()
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">Microseconds -&gt; Int
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Microseconds -&gt; Int
 forall a b. (RealFrac a, Integral b) =&gt; a -&gt; b
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var">round</span></a></span><span> </span><span class="annot"><span class="annottext">(Microseconds -&gt; Int)
+</span><span class="hs-identifier hs-var">round</span></span><span> </span><span class="annot"><span class="annottext">(Microseconds -&gt; Int)
 -&gt; (DiffTime -&gt; Microseconds) -&gt; DiffTime -&gt; Int
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">DiffTime -&gt; Microseconds
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">DiffTime -&gt; Microseconds
 </span><a href="Data.Time.Clock.Units.html#Microseconds"><span class="hs-identifier hs-var">Microseconds</span></a></span><span>
 </span><span id="line-47"></span><span>
 </span><span id="line-48"></span><span class="hs-pragma">{-# DEPRECATED</span><span> </span><span class="hs-pragma">threadDelay</span><span> </span><span class="hs-pragma">&quot;Please use `sleep` instead (and read the docs!)&quot;</span><span> </span><span class="hs-pragma">#-}</span><span>
-</span><span id="line-49"></span><span class="annot"><a href="Control.Concurrent.Extended.html#threadDelay"><span class="hs-identifier hs-type">threadDelay</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/ghc-prim-0.6.1/src"><span class="hs-identifier hs-type">Int</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/ghc-prim-0.6.1/src"><span class="hs-identifier hs-type">IO</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-49"></span><span class="annot"><a href="Control.Concurrent.Extended.html#threadDelay"><span class="hs-identifier hs-type">threadDelay</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
 </span><span id="line-50"></span><span id="threadDelay"><span class="annot"><span class="annottext">threadDelay :: Int -&gt; IO ()
 </span><a href="Control.Concurrent.Extended.html#threadDelay"><span class="hs-identifier hs-var hs-var">threadDelay</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int -&gt; IO ()
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var">Base.threadDelay</span></a></span><span>
+</span><span class="hs-identifier hs-var">Base.threadDelay</span></span><span>
 </span><span id="line-51"></span><span>
 </span><span id="line-52"></span><span class="hs-pragma">{-# DEPRECATED</span><span>
 </span><span id="line-53"></span><span>  </span><span class="hs-pragma">forkIO</span><span>
 </span><span id="line-54"></span><span>  </span><span class="hs-pragma">&quot;Please use 'Control.Control.Concurrent.Async.Lifted.Safe.withAsync'\
   \ or our 'forkImmortal' instead formore robust threading.&quot;</span><span>
 </span><span id="line-56"></span><span>  </span><span class="hs-pragma">#-}</span><span>
-</span><span id="line-57"></span><span class="annot"><a href="Control.Concurrent.Extended.html#forkIO"><span class="hs-identifier hs-type">forkIO</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/ghc-prim-0.6.1/src"><span class="hs-identifier hs-type">IO</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/ghc-prim-0.6.1/src"><span class="hs-identifier hs-type">IO</span></a></span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-type">ThreadId</span></a></span><span>
+</span><span id="line-57"></span><span class="annot"><a href="Control.Concurrent.Extended.html#forkIO"><span class="hs-identifier hs-type">forkIO</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">ThreadId</span></span><span>
 </span><span id="line-58"></span><span id="forkIO"><span class="annot"><span class="annottext">forkIO :: IO () -&gt; IO ThreadId
 </span><a href="Control.Concurrent.Extended.html#forkIO"><span class="hs-identifier hs-var hs-var">forkIO</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">IO () -&gt; IO ThreadId
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var">Base.forkIO</span></a></span><span>
+</span><span class="hs-identifier hs-var">Base.forkIO</span></span><span>
 </span><span id="line-59"></span><span>
 </span><span id="line-60"></span><span class="hs-comment">-- | Note: Please consider using 'forkManagedT' instead to ensure reliable</span><span>
 </span><span id="line-61"></span><span class="hs-comment">-- resource cleanup.</span><span>
-</span><span id="line-62"></span><span id="local-6989586621690129882"><span class="annot"><a href="Control.Concurrent.Extended.html#forkImmortal"><span class="hs-identifier hs-type">forkImmortal</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-63"></span><span>  </span><span class="annot"><a href="Control.Concurrent.Extended.html#ForkableMonadIO"><span class="hs-identifier hs-type">ForkableMonadIO</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690129882"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-62"></span><span id="local-6989586621687910268"><span class="annot"><a href="Control.Concurrent.Extended.html#forkImmortal"><span class="hs-identifier hs-type">forkImmortal</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-63"></span><span>  </span><span class="annot"><a href="Control.Concurrent.Extended.html#ForkableMonadIO"><span class="hs-identifier hs-type">ForkableMonadIO</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687910268"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
 </span><span id="line-64"></span><span>  </span><span class="hs-comment">-- | A label describing this thread's function (see 'labelThread').</span><span>
-</span><span id="line-65"></span><span>  </span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-type">String</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-65"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-66"></span><span>  </span><span class="annot"><a href="Hasura.Logging.html#Logger"><span class="hs-identifier hs-type">Logger</span></a></span><span> </span><span class="annot"><a href="Hasura.Logging.html#Hasura"><span class="hs-identifier hs-type">Hasura</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-67"></span><span>  </span><span class="hs-comment">-- | An IO action we expect never to return normally. This will have the type</span><span>
 </span><span id="line-68"></span><span>  </span><span class="hs-comment">-- signature ':: m a' (see e.g. the type of 'forever').</span><span>
-</span><span id="line-69"></span><span>  </span><span class="annot"><a href="#local-6989586621690129882"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-type">Void</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-69"></span><span>  </span><span class="annot"><a href="#local-6989586621687910268"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Void</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-70"></span><span>  </span><span class="hs-comment">-- | A handle for the forked thread. See &quot;Control.Immortal&quot;.</span><span>
-</span><span id="line-71"></span><span>  </span><span class="annot"><a href="#local-6989586621690129882"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/immortal-0.2.2.1-43132e6fb91a4ebc2dbfee266833fe0c27ee89aed59dffd8b840482dd2103a87/share/doc/html/src"><span class="hs-identifier hs-type">Immortal.Thread</span></a></span></span><span>
+</span><span id="line-71"></span><span>  </span><span class="annot"><a href="#local-6989586621687910268"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Immortal.Thread</span></span></span><span>
 </span><span id="line-72"></span><span id="forkImmortal"><span class="annot"><span class="annottext">forkImmortal :: String -&gt; Logger Hasura -&gt; m Void -&gt; m Thread
-</span><a href="Control.Concurrent.Extended.html#forkImmortal"><span class="hs-identifier hs-var hs-var">forkImmortal</span></a></span></span><span> </span><span id="local-6989586621690129821"><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621690129821"><span class="hs-keyword hs-var">label</span></a></span></span><span> </span><span id="local-6989586621690129820"><span class="annot"><span class="annottext">Logger Hasura
-</span><a href="#local-6989586621690129820"><span class="hs-identifier hs-var">logger</span></a></span></span><span> </span><span id="local-6989586621690129819"><span class="annot"><span class="annottext">m Void
-</span><a href="#local-6989586621690129819"><span class="hs-identifier hs-var">m</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="Control.Concurrent.Extended.html#forkImmortal"><span class="hs-identifier hs-var hs-var">forkImmortal</span></a></span></span><span> </span><span id="local-6989586621687910207"><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621687910207"><span class="hs-keyword hs-var">label</span></a></span></span><span> </span><span id="local-6989586621687910206"><span class="annot"><span class="annottext">Logger Hasura
+</span><a href="#local-6989586621687910206"><span class="hs-identifier hs-var">logger</span></a></span></span><span> </span><span id="local-6989586621687910205"><span class="annot"><span class="annottext">m Void
+</span><a href="#local-6989586621687910205"><span class="hs-identifier hs-var">m</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-73"></span><span>  </span><span class="annot"><span class="annottext">String -&gt; (Thread -&gt; m ()) -&gt; m Thread
 forall (m :: * -&gt; *).
 MonadBaseControl IO m =&gt;
 String -&gt; (Thread -&gt; m ()) -&gt; m Thread
-</span><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/immortal-0.2.2.1-43132e6fb91a4ebc2dbfee266833fe0c27ee89aed59dffd8b840482dd2103a87/share/doc/html/src"><span class="hs-identifier hs-var">Immortal.createWithLabel</span></a></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621690129821"><span class="hs-keyword hs-var">label</span></a></span><span> </span><span class="annot"><span class="annottext">((Thread -&gt; m ()) -&gt; m Thread) -&gt; (Thread -&gt; m ()) -&gt; m Thread
+</span><span class="hs-identifier hs-var">Immortal.createWithLabel</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621687910207"><span class="hs-keyword hs-var">label</span></a></span><span> </span><span class="annot"><span class="annottext">((Thread -&gt; m ()) -&gt; m Thread) -&gt; (Thread -&gt; m ()) -&gt; m Thread
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621690129817"><span class="annot"><span class="annottext">Thread
-</span><a href="#local-6989586621690129817"><span class="hs-identifier hs-var">this</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621687910203"><span class="annot"><span class="annottext">Thread
+</span><a href="#local-6989586621687910203"><span class="hs-identifier hs-var">this</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-74"></span><span>    </span><span class="hs-comment">-- Log that the thread has started</span><span>
 </span><span id="line-75"></span><span>    </span><span class="annot"><span class="annottext">IO () -&gt; m ()
 forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var">liftIO</span></a></span><span> </span><span class="annot"><span class="annottext">(IO () -&gt; m ()) -&gt; IO () -&gt; m ()
+</span><span class="hs-identifier hs-var">liftIO</span></span><span> </span><span class="annot"><span class="annottext">(IO () -&gt; m ()) -&gt; IO () -&gt; m ()
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Logger Hasura -&gt; ImmortalThreadLog -&gt; IO ()
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Logger Hasura -&gt; ImmortalThreadLog -&gt; IO ()
 forall impl.
 Logger impl
 -&gt; forall a (m :: * -&gt; *).
    (ToEngineLog a impl, MonadIO m) =&gt;
    a -&gt; m ()
 </span><a href="Hasura.Logging.html#unLogger"><span class="hs-identifier hs-var hs-var">unLogger</span></a></span><span> </span><span class="annot"><span class="annottext">Logger Hasura
-</span><a href="#local-6989586621690129820"><span class="hs-identifier hs-var">logger</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String -&gt; ImmortalThreadLog
+</span><a href="#local-6989586621687910206"><span class="hs-identifier hs-var">logger</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String -&gt; ImmortalThreadLog
 </span><a href="Control.Concurrent.Extended.html#ImmortalThreadRestarted"><span class="hs-identifier hs-var">ImmortalThreadRestarted</span></a></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621690129821"><span class="hs-keyword hs-var">label</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621687910207"><span class="hs-keyword hs-var">label</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-76"></span><span>    </span><span class="hs-comment">-- In this case, we are handling unexpected exceptions.</span><span>
 </span><span id="line-77"></span><span>    </span><span class="hs-comment">-- i.e This does not catch the asynchronous exception which stops the thread.</span><span>
 </span><span id="line-78"></span><span>    </span><span class="annot"><span class="annottext">Thread -&gt; (Either SomeException () -&gt; m ()) -&gt; m () -&gt; m ()
 forall (m :: * -&gt; *).
 MonadBaseControl IO m =&gt;
 Thread -&gt; (Either SomeException () -&gt; m ()) -&gt; m () -&gt; m ()
-</span><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/immortal-0.2.2.1-43132e6fb91a4ebc2dbfee266833fe0c27ee89aed59dffd8b840482dd2103a87/share/doc/html/src"><span class="hs-identifier hs-var">Immortal.onUnexpectedFinish</span></a></span><span> </span><span class="annot"><span class="annottext">Thread
-</span><a href="#local-6989586621690129817"><span class="hs-identifier hs-var">this</span></a></span><span> </span><span class="annot"><span class="annottext">Either SomeException () -&gt; m ()
-</span><a href="#local-6989586621690129812"><span class="hs-identifier hs-var">logAndPause</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">m Void -&gt; m ()
+</span><span class="hs-identifier hs-var">Immortal.onUnexpectedFinish</span></span><span> </span><span class="annot"><span class="annottext">Thread
+</span><a href="#local-6989586621687910203"><span class="hs-identifier hs-var">this</span></a></span><span> </span><span class="annot"><span class="annottext">Either SomeException () -&gt; m ()
+</span><a href="#local-6989586621687910198"><span class="hs-identifier hs-var">logAndPause</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">m Void -&gt; m ()
 forall (f :: * -&gt; *) a. Functor f =&gt; f a -&gt; f ()
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var">void</span></a></span><span> </span><span class="annot"><span class="annottext">m Void
-</span><a href="#local-6989586621690129819"><span class="hs-identifier hs-var">m</span></a></span><span class="hs-special">)</span><span>
+</span><span class="hs-identifier hs-var">void</span></span><span> </span><span class="annot"><span class="annottext">m Void
+</span><a href="#local-6989586621687910205"><span class="hs-identifier hs-var">m</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-79"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-80"></span><span>    </span><span id="local-6989586621690129812"><span class="annot"><span class="annottext">logAndPause :: Either SomeException () -&gt; m ()
-</span><a href="#local-6989586621690129812"><span class="hs-identifier hs-var hs-var">logAndPause</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
-</span><span id="line-81"></span><span>      </span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-type">Right</span></a></span><span> </span><span id="local-6989586621690129810"><span class="annot"><span class="annottext">()
-</span><a href="#local-6989586621690129810"><span class="hs-identifier hs-var">_void</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">() -&gt; m ()
+</span><span id="line-80"></span><span>    </span><span id="local-6989586621687910198"><span class="annot"><span class="annottext">logAndPause :: Either SomeException () -&gt; m ()
+</span><a href="#local-6989586621687910198"><span class="hs-identifier hs-var hs-var">logAndPause</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-81"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">Right</span></span><span> </span><span id="local-6989586621687910196"><span class="annot"><span class="annottext">()
+</span><a href="#local-6989586621687910196"><span class="hs-identifier hs-var">_void</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">() -&gt; m ()
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span> </span><span class="hs-comment">-- absurd _void (i.e. unreachable)</span><span>
-</span><span id="line-82"></span><span>      </span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-type">Left</span></a></span><span> </span><span id="local-6989586621690129809"><span class="annot"><span class="annottext">SomeException
-</span><a href="#local-6989586621690129809"><span class="hs-identifier hs-var">e</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">IO () -&gt; m ()
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span> </span><span class="hs-comment">-- absurd _void (i.e. unreachable)</span><span>
+</span><span id="line-82"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">Left</span></span><span> </span><span id="local-6989586621687910195"><span class="annot"><span class="annottext">SomeException
+</span><a href="#local-6989586621687910195"><span class="hs-identifier hs-var">e</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">IO () -&gt; m ()
 forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var">liftIO</span></a></span><span> </span><span class="annot"><span class="annottext">(IO () -&gt; m ()) -&gt; IO () -&gt; m ()
+</span><span class="hs-identifier hs-var">liftIO</span></span><span> </span><span class="annot"><span class="annottext">(IO () -&gt; m ()) -&gt; IO () -&gt; m ()
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-keyword">do</span><span>
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-83"></span><span>        </span><span class="annot"><span class="annottext">IO () -&gt; IO ()
 forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var">liftIO</span></a></span><span> </span><span class="annot"><span class="annottext">(IO () -&gt; IO ()) -&gt; IO () -&gt; IO ()
+</span><span class="hs-identifier hs-var">liftIO</span></span><span> </span><span class="annot"><span class="annottext">(IO () -&gt; IO ()) -&gt; IO () -&gt; IO ()
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Logger Hasura -&gt; ImmortalThreadLog -&gt; IO ()
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Logger Hasura -&gt; ImmortalThreadLog -&gt; IO ()
 forall impl.
 Logger impl
 -&gt; forall a (m :: * -&gt; *).
    (ToEngineLog a impl, MonadIO m) =&gt;
    a -&gt; m ()
 </span><a href="Hasura.Logging.html#unLogger"><span class="hs-identifier hs-var hs-var">unLogger</span></a></span><span> </span><span class="annot"><span class="annottext">Logger Hasura
-</span><a href="#local-6989586621690129820"><span class="hs-identifier hs-var">logger</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String -&gt; SomeException -&gt; ImmortalThreadLog
+</span><a href="#local-6989586621687910206"><span class="hs-identifier hs-var">logger</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String -&gt; SomeException -&gt; ImmortalThreadLog
 </span><a href="Control.Concurrent.Extended.html#ImmortalThreadUnexpectedException"><span class="hs-identifier hs-var">ImmortalThreadUnexpectedException</span></a></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621690129821"><span class="hs-keyword hs-var">label</span></a></span><span> </span><span class="annot"><span class="annottext">SomeException
-</span><a href="#local-6989586621690129809"><span class="hs-identifier hs-var">e</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621687910207"><span class="hs-keyword hs-var">label</span></a></span><span> </span><span class="annot"><span class="annottext">SomeException
+</span><a href="#local-6989586621687910195"><span class="hs-identifier hs-var">e</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-84"></span><span>        </span><span class="hs-comment">-- pause before restarting some arbitrary amount of time. The idea is not to flood</span><span>
 </span><span id="line-85"></span><span>        </span><span class="hs-comment">-- logs or cause other cascading failures.</span><span>
 </span><span id="line-86"></span><span>        </span><span class="annot"><span class="annottext">DiffTime -&gt; IO ()
@@ -160,7 +160,7 @@ Logger impl
 </span><span class="hs-number">1</span></span><span class="hs-special">)</span><span>
 </span><span id="line-87"></span><span>
 </span><span id="line-88"></span><span class="hs-keyword">data</span><span> </span><span id="ThreadState"><span class="annot"><a href="Control.Concurrent.Extended.html#ThreadState"><span class="hs-identifier hs-var">ThreadState</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ThreadForked"><span class="annot"><a href="Control.Concurrent.Extended.html#ThreadForked"><span class="hs-identifier hs-var">ThreadForked</span></a></span></span><span> </span><span class="hs-glyph">|</span><span> </span><span id="ThreadBlocking"><span class="annot"><a href="Control.Concurrent.Extended.html#ThreadBlocking"><span class="hs-identifier hs-var">ThreadBlocking</span></a></span></span><span> </span><span class="hs-glyph">|</span><span> </span><span id="ThreadShutdownInitiated"><span class="annot"><a href="Control.Concurrent.Extended.html#ThreadShutdownInitiated"><span class="hs-identifier hs-var">ThreadShutdownInitiated</span></a></span></span><span>
-</span><span id="line-89"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690129799"><span id="local-6989586621690129801"><span id="local-6989586621690129803"><span class="annot"><span class="annottext">Int -&gt; ThreadState -&gt; ShowS
+</span><span id="line-89"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687910185"><span id="local-6989586621687910187"><span id="local-6989586621687910189"><span class="annot"><span class="annottext">Int -&gt; ThreadState -&gt; ShowS
 [ThreadState] -&gt; ShowS
 ThreadState -&gt; String
 (Int -&gt; ThreadState -&gt; ShowS)
@@ -175,7 +175,7 @@ show :: ThreadState -&gt; String
 $cshow :: ThreadState -&gt; String
 showsPrec :: Int -&gt; ThreadState -&gt; ShowS
 $cshowsPrec :: Int -&gt; ThreadState -&gt; ShowS
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690129794"><span id="local-6989586621690129796"><span class="annot"><span class="annottext">ThreadState -&gt; ThreadState -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687910180"><span id="local-6989586621687910182"><span class="annot"><span class="annottext">ThreadState -&gt; ThreadState -&gt; Bool
 (ThreadState -&gt; ThreadState -&gt; Bool)
 -&gt; (ThreadState -&gt; ThreadState -&gt; Bool) -&gt; Eq ThreadState
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -183,12 +183,12 @@ forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 $c/= :: ThreadState -&gt; ThreadState -&gt; Bool
 == :: ThreadState -&gt; ThreadState -&gt; Bool
 $c== :: ThreadState -&gt; ThreadState -&gt; Bool
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/ghc-prim-0.6.1/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">)</span><span>
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-90"></span><span>
 </span><span id="line-91"></span><span class="hs-comment">-- | @ThreadShutdown@ is a newtype wrapper over an action which is intended</span><span>
 </span><span id="line-92"></span><span class="hs-comment">--   to execute when a thread's shutdown is initiated before killing the thread</span><span>
-</span><span id="line-93"></span><span class="hs-keyword">newtype</span><span> </span><span id="ThreadShutdown"><span class="annot"><a href="Control.Concurrent.Extended.html#ThreadShutdown"><span class="hs-identifier hs-var">ThreadShutdown</span></a></span></span><span> </span><span id="local-6989586621690129792"><span class="annot"><a href="#local-6989586621690129792"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ThreadShutdown"><span class="annot"><a href="Control.Concurrent.Extended.html#ThreadShutdown"><span class="hs-identifier hs-var">ThreadShutdown</span></a></span></span><span> </span><span class="hs-special">{</span><span id="tsThreadShutdown"><span class="annot"><span class="annottext">ThreadShutdown m -&gt; m ()
-</span><a href="Control.Concurrent.Extended.html#tsThreadShutdown"><span class="hs-identifier hs-var hs-var">tsThreadShutdown</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="#local-6989586621690129792"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span class="hs-special">}</span><span>
+</span><span id="line-93"></span><span class="hs-keyword">newtype</span><span> </span><span id="ThreadShutdown"><span class="annot"><a href="Control.Concurrent.Extended.html#ThreadShutdown"><span class="hs-identifier hs-var">ThreadShutdown</span></a></span></span><span> </span><span id="local-6989586621687910178"><span class="annot"><a href="#local-6989586621687910178"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ThreadShutdown"><span class="annot"><a href="Control.Concurrent.Extended.html#ThreadShutdown"><span class="hs-identifier hs-var">ThreadShutdown</span></a></span></span><span> </span><span class="hs-special">{</span><span id="tsThreadShutdown"><span class="annot"><span class="annottext">ThreadShutdown m -&gt; m ()
+</span><a href="Control.Concurrent.Extended.html#tsThreadShutdown"><span class="hs-identifier hs-var hs-var">tsThreadShutdown</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="#local-6989586621687910178"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span class="hs-special">}</span><span>
 </span><span id="line-94"></span><span>
 </span><span id="line-95"></span><span class="hs-comment">-- | This function pairs a call to 'forkImmortal' with a finalizer which stops</span><span>
 </span><span id="line-96"></span><span class="hs-comment">-- the immortal thread.</span><span>
@@ -196,17 +196,17 @@ $c== :: ThreadState -&gt; ThreadState -&gt; Bool
 </span><span id="line-98"></span><span class="hs-comment">-- Note, the thread object can leave its scope if this function is incorrectly</span><span>
 </span><span id="line-99"></span><span class="hs-comment">-- used. Generally, the result should only be used later in the same ManagedT</span><span>
 </span><span id="line-100"></span><span class="hs-comment">-- scope.</span><span>
-</span><span id="line-101"></span><span id="local-6989586621690129789"><span class="annot"><a href="Control.Concurrent.Extended.html#forkManagedT"><span class="hs-identifier hs-type">forkManagedT</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-102"></span><span>  </span><span class="annot"><a href="Control.Concurrent.Extended.html#ForkableMonadIO"><span class="hs-identifier hs-type">ForkableMonadIO</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690129789"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
-</span><span id="line-103"></span><span>  </span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-type">String</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-101"></span><span id="local-6989586621687910175"><span class="annot"><a href="Control.Concurrent.Extended.html#forkManagedT"><span class="hs-identifier hs-type">forkManagedT</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-102"></span><span>  </span><span class="annot"><a href="Control.Concurrent.Extended.html#ForkableMonadIO"><span class="hs-identifier hs-type">ForkableMonadIO</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687910175"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-103"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-104"></span><span>  </span><span class="annot"><a href="Hasura.Logging.html#Logger"><span class="hs-identifier hs-type">Logger</span></a></span><span> </span><span class="annot"><a href="Hasura.Logging.html#Hasura"><span class="hs-identifier hs-type">Hasura</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-105"></span><span>  </span><span class="annot"><a href="#local-6989586621690129789"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-type">Void</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-106"></span><span>  </span><span class="annot"><a href="Control.Monad.Trans.Managed.html#ManagedT"><span class="hs-identifier hs-type">ManagedT</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690129789"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/immortal-0.2.2.1-43132e6fb91a4ebc2dbfee266833fe0c27ee89aed59dffd8b840482dd2103a87/share/doc/html/src"><span class="hs-identifier hs-type">Immortal.Thread</span></a></span></span><span>
+</span><span id="line-105"></span><span>  </span><span class="annot"><a href="#local-6989586621687910175"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Void</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-106"></span><span>  </span><span class="annot"><a href="Control.Monad.Trans.Managed.html#ManagedT"><span class="hs-identifier hs-type">ManagedT</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687910175"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Immortal.Thread</span></span></span><span>
 </span><span id="line-107"></span><span id="forkManagedT"><span class="annot"><span class="annottext">forkManagedT :: String -&gt; Logger Hasura -&gt; m Void -&gt; ManagedT m Thread
-</span><a href="Control.Concurrent.Extended.html#forkManagedT"><span class="hs-identifier hs-var hs-var">forkManagedT</span></a></span></span><span> </span><span id="local-6989586621690129788"><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621690129788"><span class="hs-keyword hs-var">label</span></a></span></span><span> </span><span id="local-6989586621690129787"><span class="annot"><span class="annottext">Logger Hasura
-</span><a href="#local-6989586621690129787"><span class="hs-identifier hs-var">logger</span></a></span></span><span> </span><span id="local-6989586621690129786"><span class="annot"><span class="annottext">m Void
-</span><a href="#local-6989586621690129786"><span class="hs-identifier hs-var">m</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="Control.Concurrent.Extended.html#forkManagedT"><span class="hs-identifier hs-var hs-var">forkManagedT</span></a></span></span><span> </span><span id="local-6989586621687910174"><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621687910174"><span class="hs-keyword hs-var">label</span></a></span></span><span> </span><span id="local-6989586621687910173"><span class="annot"><span class="annottext">Logger Hasura
+</span><a href="#local-6989586621687910173"><span class="hs-identifier hs-var">logger</span></a></span></span><span> </span><span id="local-6989586621687910172"><span class="annot"><span class="annottext">m Void
+</span><a href="#local-6989586621687910172"><span class="hs-identifier hs-var">m</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-108"></span><span>  </span><span class="annot"><span class="annottext">m Thread -&gt; (Thread -&gt; m ()) -&gt; ManagedT m Thread
 forall (m :: * -&gt; *) a b.
 MonadBaseControl IO m =&gt;
@@ -217,11 +217,11 @@ forall (m :: * -&gt; *).
 ForkableMonadIO m =&gt;
 String -&gt; Logger Hasura -&gt; m Void -&gt; m Thread
 </span><a href="Control.Concurrent.Extended.html#forkImmortal"><span class="hs-identifier hs-var">forkImmortal</span></a></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621690129788"><span class="hs-keyword hs-var">label</span></a></span><span> </span><span class="annot"><span class="annottext">Logger Hasura
-</span><a href="#local-6989586621690129787"><span class="hs-identifier hs-var">logger</span></a></span><span> </span><span class="annot"><span class="annottext">m Void
-</span><a href="#local-6989586621690129786"><span class="hs-identifier hs-var">m</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-110"></span><span>    </span><span class="hs-special">(</span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621690129785"><span class="annot"><span class="annottext">Thread
-</span><a href="#local-6989586621690129785"><span class="hs-identifier hs-var">thread</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><a href="#local-6989586621687910174"><span class="hs-keyword hs-var">label</span></a></span><span> </span><span class="annot"><span class="annottext">Logger Hasura
+</span><a href="#local-6989586621687910173"><span class="hs-identifier hs-var">logger</span></a></span><span> </span><span class="annot"><span class="annottext">m Void
+</span><a href="#local-6989586621687910172"><span class="hs-identifier hs-var">m</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-110"></span><span>    </span><span class="hs-special">(</span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621687910171"><span class="annot"><span class="annottext">Thread
+</span><a href="#local-6989586621687910171"><span class="hs-identifier hs-var">thread</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-111"></span><span>        </span><span class="annot"><span class="annottext">Logger Hasura -&gt; ImmortalThreadLog -&gt; m ()
 forall impl.
 Logger impl
@@ -229,23 +229,23 @@ Logger impl
    (ToEngineLog a impl, MonadIO m) =&gt;
    a -&gt; m ()
 </span><a href="Hasura.Logging.html#unLogger"><span class="hs-identifier hs-var hs-var">unLogger</span></a></span><span> </span><span class="annot"><span class="annottext">Logger Hasura
-</span><a href="#local-6989586621690129787"><span class="hs-identifier hs-var">logger</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String -&gt; ImmortalThreadLog
+</span><a href="#local-6989586621687910173"><span class="hs-identifier hs-var">logger</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String -&gt; ImmortalThreadLog
 </span><a href="Control.Concurrent.Extended.html#ImmortalThreadStopping"><span class="hs-identifier hs-var">ImmortalThreadStopping</span></a></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621690129788"><span class="hs-keyword hs-var">label</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621687910174"><span class="hs-keyword hs-var">label</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-112"></span><span>        </span><span class="annot"><span class="annottext">IO () -&gt; m ()
 forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var">liftIO</span></a></span><span> </span><span class="annot"><span class="annottext">(IO () -&gt; m ()) -&gt; IO () -&gt; m ()
+</span><span class="hs-identifier hs-var">liftIO</span></span><span> </span><span class="annot"><span class="annottext">(IO () -&gt; m ()) -&gt; IO () -&gt; m ()
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Thread -&gt; IO ()
-</span><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/immortal-0.2.2.1-43132e6fb91a4ebc2dbfee266833fe0c27ee89aed59dffd8b840482dd2103a87/share/doc/html/src"><span class="hs-identifier hs-var">Immortal.stop</span></a></span><span> </span><span class="annot"><span class="annottext">Thread
-</span><a href="#local-6989586621690129785"><span class="hs-identifier hs-var">thread</span></a></span><span>
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Thread -&gt; IO ()
+</span><span class="hs-identifier hs-var">Immortal.stop</span></span><span> </span><span class="annot"><span class="annottext">Thread
+</span><a href="#local-6989586621687910171"><span class="hs-identifier hs-var">thread</span></a></span><span>
 </span><span id="line-113"></span><span>    </span><span class="hs-special">)</span><span>
 </span><span id="line-114"></span><span>
 </span><span id="line-115"></span><span class="hs-comment">-- | The @Forever@ type defines an infinite looping monadic action (like @m void@), but allows the</span><span>
 </span><span id="line-116"></span><span class="hs-comment">-- caller to control the recursion or insert code before each iteration. The @a@ is the initial argument,</span><span>
 </span><span id="line-117"></span><span class="hs-comment">-- and subsequent iterations will be fed the argument returned by the previous one.  See</span><span>
 </span><span id="line-118"></span><span class="hs-comment">-- @forkManagedTWithGracefulShutdown@ to see how it's used</span><span>
-</span><span id="line-119"></span><span class="hs-keyword">data</span><span> </span><span id="Forever"><span class="annot"><a href="Control.Concurrent.Extended.html#Forever"><span class="hs-identifier hs-var">Forever</span></a></span></span><span> </span><span id="local-6989586621690129782"><span class="annot"><a href="#local-6989586621690129782"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621690129781"><span class="annot"><a href="#local-6989586621690129781"><span class="hs-identifier hs-type">a</span></a></span></span><span class="hs-operator">.</span><span> </span><span id="Forever"><span class="annot"><a href="Control.Concurrent.Extended.html#Forever"><span class="hs-identifier hs-var">Forever</span></a></span></span><span> </span><span class="annot"><a href="#local-6989586621690129781"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621690129781"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621690129782"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690129781"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-119"></span><span class="hs-keyword">data</span><span> </span><span id="Forever"><span class="annot"><a href="Control.Concurrent.Extended.html#Forever"><span class="hs-identifier hs-var">Forever</span></a></span></span><span> </span><span id="local-6989586621687910168"><span class="annot"><a href="#local-6989586621687910168"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621687910167"><span class="annot"><a href="#local-6989586621687910167"><span class="hs-identifier hs-type">a</span></a></span></span><span class="hs-operator">.</span><span> </span><span id="Forever"><span class="annot"><a href="Control.Concurrent.Extended.html#Forever"><span class="hs-identifier hs-var">Forever</span></a></span></span><span> </span><span class="annot"><a href="#local-6989586621687910167"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621687910167"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621687910168"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687910167"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-120"></span><span>
 </span><span id="line-121"></span><span class="hs-comment">-- | @forkManagedTWithGracefulShutdown@ is an extension of the @forkManagedT@</span><span>
 </span><span id="line-122"></span><span class="hs-comment">--   function this function also attempts to gracefully shutdown the thread. This function</span><span>
@@ -255,32 +255,32 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span id="line-126"></span><span class="hs-comment">--</span><span>
 </span><span id="line-127"></span><span class="hs-comment">--   For reference, this function is used to run the async actions processor. Check</span><span>
 </span><span id="line-128"></span><span class="hs-comment">--   `asyncActionsProcessor`</span><span>
-</span><span id="line-129"></span><span id="local-6989586621690129779"><span class="annot"><a href="Control.Concurrent.Extended.html#forkManagedTWithGracefulShutdown"><span class="hs-identifier hs-type">forkManagedTWithGracefulShutdown</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-130"></span><span>  </span><span class="annot"><a href="Control.Concurrent.Extended.html#ForkableMonadIO"><span class="hs-identifier hs-type">ForkableMonadIO</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690129779"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
-</span><span id="line-131"></span><span>  </span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-type">String</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-129"></span><span id="local-6989586621687910165"><span class="annot"><a href="Control.Concurrent.Extended.html#forkManagedTWithGracefulShutdown"><span class="hs-identifier hs-type">forkManagedTWithGracefulShutdown</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-130"></span><span>  </span><span class="annot"><a href="Control.Concurrent.Extended.html#ForkableMonadIO"><span class="hs-identifier hs-type">ForkableMonadIO</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687910165"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-131"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-132"></span><span>  </span><span class="annot"><a href="Hasura.Logging.html#Logger"><span class="hs-identifier hs-type">Logger</span></a></span><span> </span><span class="annot"><a href="Hasura.Logging.html#Hasura"><span class="hs-identifier hs-type">Hasura</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-133"></span><span>  </span><span class="annot"><a href="Control.Concurrent.Extended.html#ThreadShutdown"><span class="hs-identifier hs-type">ThreadShutdown</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690129779"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-134"></span><span>  </span><span class="annot"><a href="#local-6989586621690129779"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Control.Concurrent.Extended.html#Forever"><span class="hs-identifier hs-type">Forever</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690129779"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-135"></span><span>  </span><span class="annot"><a href="Control.Monad.Trans.Managed.html#ManagedT"><span class="hs-identifier hs-type">ManagedT</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690129779"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/immortal-0.2.2.1-43132e6fb91a4ebc2dbfee266833fe0c27ee89aed59dffd8b840482dd2103a87/share/doc/html/src"><span class="hs-identifier hs-type">Immortal.Thread</span></a></span></span><span>
+</span><span id="line-133"></span><span>  </span><span class="annot"><a href="Control.Concurrent.Extended.html#ThreadShutdown"><span class="hs-identifier hs-type">ThreadShutdown</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687910165"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-134"></span><span>  </span><span class="annot"><a href="#local-6989586621687910165"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Control.Concurrent.Extended.html#Forever"><span class="hs-identifier hs-type">Forever</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687910165"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-135"></span><span>  </span><span class="annot"><a href="Control.Monad.Trans.Managed.html#ManagedT"><span class="hs-identifier hs-type">ManagedT</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687910165"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Immortal.Thread</span></span></span><span>
 </span><span id="line-136"></span><span id="forkManagedTWithGracefulShutdown"><span class="annot"><span class="annottext">forkManagedTWithGracefulShutdown :: String
 -&gt; Logger Hasura
 -&gt; ThreadShutdown m
 -&gt; m (Forever m)
 -&gt; ManagedT m Thread
-</span><a href="Control.Concurrent.Extended.html#forkManagedTWithGracefulShutdown"><span class="hs-identifier hs-var hs-var">forkManagedTWithGracefulShutdown</span></a></span></span><span> </span><span id="local-6989586621690129778"><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621690129778"><span class="hs-keyword hs-var">label</span></a></span></span><span> </span><span id="local-6989586621690129777"><span class="annot"><span class="annottext">Logger Hasura
-</span><a href="#local-6989586621690129777"><span class="hs-identifier hs-var">logger</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Control.Concurrent.Extended.html#ThreadShutdown"><span class="hs-identifier hs-type">ThreadShutdown</span></a></span><span> </span><span id="local-6989586621690129776"><span class="annot"><span class="annottext">m ()
-</span><a href="#local-6989586621690129776"><span class="hs-identifier hs-var">threadShutdownHandler</span></a></span></span><span class="hs-special">)</span><span> </span><span id="local-6989586621690129775"><span class="annot"><span class="annottext">m (Forever m)
-</span><a href="#local-6989586621690129775"><span class="hs-identifier hs-var">loopIteration</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-137"></span><span>  </span><span id="local-6989586621690129774"><span class="annot"><span class="annottext">TVar ThreadState
-</span><a href="#local-6989586621690129774"><span class="hs-identifier hs-var">threadStateTVar</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO (TVar ThreadState) -&gt; ManagedT m (TVar ThreadState)
+</span><a href="Control.Concurrent.Extended.html#forkManagedTWithGracefulShutdown"><span class="hs-identifier hs-var hs-var">forkManagedTWithGracefulShutdown</span></a></span></span><span> </span><span id="local-6989586621687910164"><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621687910164"><span class="hs-keyword hs-var">label</span></a></span></span><span> </span><span id="local-6989586621687910163"><span class="annot"><span class="annottext">Logger Hasura
+</span><a href="#local-6989586621687910163"><span class="hs-identifier hs-var">logger</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Control.Concurrent.Extended.html#ThreadShutdown"><span class="hs-identifier hs-type">ThreadShutdown</span></a></span><span> </span><span id="local-6989586621687910162"><span class="annot"><span class="annottext">m ()
+</span><a href="#local-6989586621687910162"><span class="hs-identifier hs-var">threadShutdownHandler</span></a></span></span><span class="hs-special">)</span><span> </span><span id="local-6989586621687910161"><span class="annot"><span class="annottext">m (Forever m)
+</span><a href="#local-6989586621687910161"><span class="hs-identifier hs-var">loopIteration</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-137"></span><span>  </span><span id="local-6989586621687910160"><span class="annot"><span class="annottext">TVar ThreadState
+</span><a href="#local-6989586621687910160"><span class="hs-identifier hs-var">threadStateTVar</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO (TVar ThreadState) -&gt; ManagedT m (TVar ThreadState)
 forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var">liftIO</span></a></span><span> </span><span class="annot"><span class="annottext">(IO (TVar ThreadState) -&gt; ManagedT m (TVar ThreadState))
+</span><span class="hs-identifier hs-var">liftIO</span></span><span> </span><span class="annot"><span class="annottext">(IO (TVar ThreadState) -&gt; ManagedT m (TVar ThreadState))
 -&gt; IO (TVar ThreadState) -&gt; ManagedT m (TVar ThreadState)
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">ThreadState -&gt; IO (TVar ThreadState)
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">ThreadState -&gt; IO (TVar ThreadState)
 forall a. a -&gt; IO (TVar a)
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var">STM.newTVarIO</span></a></span><span> </span><span class="annot"><span class="annottext">ThreadState
+</span><span class="hs-identifier hs-var">STM.newTVarIO</span></span><span> </span><span class="annot"><span class="annottext">ThreadState
 </span><a href="Control.Concurrent.Extended.html#ThreadForked"><span class="hs-identifier hs-var">ThreadForked</span></a></span><span>
 </span><span id="line-138"></span><span>  </span><span class="annot"><span class="annottext">m Thread -&gt; (Thread -&gt; m ()) -&gt; ManagedT m Thread
 forall (m :: * -&gt; *) a b.
@@ -291,67 +291,67 @@ m a -&gt; (a -&gt; m b) -&gt; ManagedT m a
 forall (m :: * -&gt; *).
 MonadBaseControl IO m =&gt;
 String -&gt; (Thread -&gt; m ()) -&gt; m Thread
-</span><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/immortal-0.2.2.1-43132e6fb91a4ebc2dbfee266833fe0c27ee89aed59dffd8b840482dd2103a87/share/doc/html/src"><span class="hs-identifier hs-var">Immortal.createWithLabel</span></a></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621690129778"><span class="hs-keyword hs-var">label</span></a></span><span> </span><span class="annot"><span class="annottext">((Thread -&gt; m ()) -&gt; m Thread) -&gt; (Thread -&gt; m ()) -&gt; m Thread
+</span><span class="hs-identifier hs-var">Immortal.createWithLabel</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621687910164"><span class="hs-keyword hs-var">label</span></a></span><span> </span><span class="annot"><span class="annottext">((Thread -&gt; m ()) -&gt; m Thread) -&gt; (Thread -&gt; m ()) -&gt; m Thread
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621690129772"><span class="annot"><span class="annottext">Thread
-</span><a href="#local-6989586621690129772"><span class="hs-identifier hs-var">this</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621687910158"><span class="annot"><span class="annottext">Thread
+</span><a href="#local-6989586621687910158"><span class="hs-identifier hs-var">this</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-140"></span><span>        </span><span class="hs-comment">-- Log that the thread has started</span><span>
 </span><span id="line-141"></span><span>        </span><span class="annot"><span class="annottext">IO () -&gt; m ()
 forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var">liftIO</span></a></span><span> </span><span class="annot"><span class="annottext">(IO () -&gt; m ()) -&gt; IO () -&gt; m ()
+</span><span class="hs-identifier hs-var">liftIO</span></span><span> </span><span class="annot"><span class="annottext">(IO () -&gt; m ()) -&gt; IO () -&gt; m ()
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Logger Hasura -&gt; ImmortalThreadLog -&gt; IO ()
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Logger Hasura -&gt; ImmortalThreadLog -&gt; IO ()
 forall impl.
 Logger impl
 -&gt; forall a (m :: * -&gt; *).
    (ToEngineLog a impl, MonadIO m) =&gt;
    a -&gt; m ()
 </span><a href="Hasura.Logging.html#unLogger"><span class="hs-identifier hs-var hs-var">unLogger</span></a></span><span> </span><span class="annot"><span class="annottext">Logger Hasura
-</span><a href="#local-6989586621690129777"><span class="hs-identifier hs-var">logger</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String -&gt; ImmortalThreadLog
+</span><a href="#local-6989586621687910163"><span class="hs-identifier hs-var">logger</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String -&gt; ImmortalThreadLog
 </span><a href="Control.Concurrent.Extended.html#ImmortalThreadRestarted"><span class="hs-identifier hs-var">ImmortalThreadRestarted</span></a></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621690129778"><span class="hs-keyword hs-var">label</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621687910164"><span class="hs-keyword hs-var">label</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-142"></span><span>        </span><span class="hs-comment">-- In this case, we are handling unexpected exceptions.</span><span>
 </span><span id="line-143"></span><span>        </span><span class="hs-comment">-- i.e This does not catch the asynchronous exception which stops the thread.</span><span>
 </span><span id="line-144"></span><span>        </span><span class="annot"><span class="annottext">Thread -&gt; (Either SomeException () -&gt; m ()) -&gt; m () -&gt; m ()
 forall (m :: * -&gt; *).
 MonadBaseControl IO m =&gt;
 Thread -&gt; (Either SomeException () -&gt; m ()) -&gt; m () -&gt; m ()
-</span><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/immortal-0.2.2.1-43132e6fb91a4ebc2dbfee266833fe0c27ee89aed59dffd8b840482dd2103a87/share/doc/html/src"><span class="hs-identifier hs-var">Immortal.onUnexpectedFinish</span></a></span><span> </span><span class="annot"><span class="annottext">Thread
-</span><a href="#local-6989586621690129772"><span class="hs-identifier hs-var">this</span></a></span><span> </span><span class="annot"><span class="annottext">Either SomeException () -&gt; m ()
-</span><a href="#local-6989586621690129771"><span class="hs-identifier hs-var">logAndPause</span></a></span><span> </span><span class="annot"><span class="annottext">(m () -&gt; m ()) -&gt; m () -&gt; m ()
+</span><span class="hs-identifier hs-var">Immortal.onUnexpectedFinish</span></span><span> </span><span class="annot"><span class="annottext">Thread
+</span><a href="#local-6989586621687910158"><span class="hs-identifier hs-var">this</span></a></span><span> </span><span class="annot"><span class="annottext">Either SomeException () -&gt; m ()
+</span><a href="#local-6989586621687910157"><span class="hs-identifier hs-var">logAndPause</span></a></span><span> </span><span class="annot"><span class="annottext">(m () -&gt; m ()) -&gt; m () -&gt; m ()
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
+</span><span class="hs-operator hs-var">$</span></span><span>
 </span><span id="line-145"></span><span>          </span><span class="hs-special">(</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-146"></span><span>              </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621690129770"><span class="annot"><span class="annottext">mLoop :: Forever m -&gt; m Any
-</span><a href="#local-6989586621690129770"><span class="hs-identifier hs-var hs-var">mLoop</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Control.Concurrent.Extended.html#Forever"><span class="hs-identifier hs-type">Forever</span></a></span><span> </span><span id="local-6989586621690129769"><span class="annot"><span class="annottext">a
-</span><a href="#local-6989586621690129769"><span class="hs-identifier hs-var">loopFunctionInitArg</span></a></span></span><span> </span><span id="local-6989586621690129768"><span class="annot"><span class="annottext">a -&gt; m a
-</span><a href="#local-6989586621690129768"><span class="hs-identifier hs-var">loopFunction</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-146"></span><span>              </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621687910156"><span class="annot"><span class="annottext">mLoop :: Forever m -&gt; m Any
+</span><a href="#local-6989586621687910156"><span class="hs-identifier hs-var hs-var">mLoop</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Control.Concurrent.Extended.html#Forever"><span class="hs-identifier hs-type">Forever</span></a></span><span> </span><span id="local-6989586621687910155"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621687910155"><span class="hs-identifier hs-var">loopFunctionInitArg</span></a></span></span><span> </span><span id="local-6989586621687910154"><span class="annot"><span class="annottext">a -&gt; m a
+</span><a href="#local-6989586621687910154"><span class="hs-identifier hs-var">loopFunction</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-147"></span><span>                    </span><span class="annot"><span class="annottext">((a -&gt; m a) -&gt; a -&gt; m Any) -&gt; a -&gt; (a -&gt; m a) -&gt; m Any
 forall a b c. (a -&gt; b -&gt; c) -&gt; b -&gt; a -&gt; c
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var">flip</span></a></span><span> </span><span class="annot"><span class="annottext">(a -&gt; m a) -&gt; a -&gt; m Any
+</span><span class="hs-identifier hs-var">flip</span></span><span> </span><span class="annot"><span class="annottext">(a -&gt; m a) -&gt; a -&gt; m Any
 forall (m :: * -&gt; *) a b. Monad m =&gt; (a -&gt; m a) -&gt; a -&gt; m b
-</span><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/monad-loops-0.4.3-2a83c29f0688678414755c1f44115159428867e9fc7514f4fd0b6d2f38f4711f/share/doc/html/src"><span class="hs-identifier hs-var">iterateM_</span></a></span><span> </span><span class="annot"><span class="annottext">a
-</span><a href="#local-6989586621690129769"><span class="hs-identifier hs-var">loopFunctionInitArg</span></a></span><span> </span><span class="annot"><span class="annottext">((a -&gt; m a) -&gt; m Any) -&gt; (a -&gt; m a) -&gt; m Any
+</span><span class="hs-identifier hs-var">iterateM_</span></span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621687910155"><span class="hs-identifier hs-var">loopFunctionInitArg</span></a></span><span> </span><span class="annot"><span class="annottext">((a -&gt; m a) -&gt; m Any) -&gt; (a -&gt; m a) -&gt; m Any
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621690129766"><span class="annot"><span class="annottext">a
-</span><a href="#local-6989586621690129766"><span class="hs-identifier hs-var">args</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621687910152"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621687910152"><span class="hs-identifier hs-var">args</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-148"></span><span>                      </span><span class="annot"><span class="annottext">IO () -&gt; m ()
 forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var">liftIO</span></a></span><span> </span><span class="annot"><span class="annottext">(IO () -&gt; m ()) -&gt; IO () -&gt; m ()
+</span><span class="hs-identifier hs-var">liftIO</span></span><span> </span><span class="annot"><span class="annottext">(IO () -&gt; m ()) -&gt; IO () -&gt; m ()
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
+</span><span class="hs-operator hs-var">$</span></span><span>
 </span><span id="line-149"></span><span>                        </span><span class="annot"><span class="annottext">STM () -&gt; IO ()
 forall a. STM a -&gt; IO a
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var">STM.atomically</span></a></span><span> </span><span class="annot"><span class="annottext">(STM () -&gt; IO ()) -&gt; STM () -&gt; IO ()
+</span><span class="hs-identifier hs-var">STM.atomically</span></span><span> </span><span class="annot"><span class="annottext">(STM () -&gt; IO ()) -&gt; STM () -&gt; IO ()
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-keyword">do</span><span>
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-150"></span><span>                          </span><span class="annot"><span class="annottext">TVar ThreadState -&gt; STM ThreadState
 forall a. TVar a -&gt; STM a
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var">STM.readTVar</span></a></span><span> </span><span class="annot"><span class="annottext">TVar ThreadState
-</span><a href="#local-6989586621690129774"><span class="hs-identifier hs-var">threadStateTVar</span></a></span><span> </span><span class="annot"><span class="annottext">STM ThreadState -&gt; (ThreadState -&gt; STM ()) -&gt; STM ()
+</span><span class="hs-identifier hs-var">STM.readTVar</span></span><span> </span><span class="annot"><span class="annottext">TVar ThreadState
+</span><a href="#local-6989586621687910160"><span class="hs-identifier hs-var">threadStateTVar</span></a></span><span> </span><span class="annot"><span class="annottext">STM ThreadState -&gt; (ThreadState -&gt; STM ()) -&gt; STM ()
 forall (m :: * -&gt; *) a b. Monad m =&gt; m a -&gt; (a -&gt; m b) -&gt; m b
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var">&gt;&gt;=</span></a></span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span class="hs-operator hs-var">&gt;&gt;=</span></span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
 </span><span id="line-151"></span><span>                            </span><span class="annot"><span class="annottext">ThreadState
 </span><a href="Control.Concurrent.Extended.html#ThreadShutdownInitiated"><span class="hs-identifier hs-var">ThreadShutdownInitiated</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-152"></span><span>                              </span><span class="hs-comment">-- signal to the finalizer that we are now blocking</span><span>
@@ -359,66 +359,66 @@ forall (m :: * -&gt; *) a b. Monad m =&gt; m a -&gt; (a -&gt; m b) -&gt; m b
 </span><span id="line-154"></span><span>                              </span><span class="hs-comment">-- var moves monotonically from forked -&gt; shutdown -&gt; blocking</span><span>
 </span><span id="line-155"></span><span>                              </span><span class="annot"><span class="annottext">TVar ThreadState -&gt; ThreadState -&gt; STM ()
 forall a. TVar a -&gt; a -&gt; STM ()
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var">STM.writeTVar</span></a></span><span> </span><span class="annot"><span class="annottext">TVar ThreadState
-</span><a href="#local-6989586621690129774"><span class="hs-identifier hs-var">threadStateTVar</span></a></span><span> </span><span class="annot"><span class="annottext">ThreadState
+</span><span class="hs-identifier hs-var">STM.writeTVar</span></span><span> </span><span class="annot"><span class="annottext">TVar ThreadState
+</span><a href="#local-6989586621687910160"><span class="hs-identifier hs-var">threadStateTVar</span></a></span><span> </span><span class="annot"><span class="annottext">ThreadState
 </span><a href="Control.Concurrent.Extended.html#ThreadBlocking"><span class="hs-identifier hs-var">ThreadBlocking</span></a></span><span>
 </span><span id="line-156"></span><span>                            </span><span class="annot"><span class="annottext">ThreadState
 </span><a href="Control.Concurrent.Extended.html#ThreadBlocking"><span class="hs-identifier hs-var">ThreadBlocking</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">STM ()
 forall a. STM a
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var">STM.retry</span></a></span><span>
+</span><span class="hs-identifier hs-var">STM.retry</span></span><span>
 </span><span id="line-157"></span><span>                            </span><span class="annot"><span class="annottext">ThreadState
 </span><a href="Control.Concurrent.Extended.html#ThreadForked"><span class="hs-identifier hs-var">ThreadForked</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">() -&gt; STM ()
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
 </span><span id="line-158"></span><span>                      </span><span class="annot"><span class="annottext">a -&gt; m a
-</span><a href="#local-6989586621690129768"><span class="hs-identifier hs-var">loopFunction</span></a></span><span> </span><span class="annot"><span class="annottext">a
-</span><a href="#local-6989586621690129766"><span class="hs-identifier hs-var">args</span></a></span><span>
-</span><span id="line-159"></span><span>              </span><span id="local-6989586621690129761"><span class="annot"><span class="annottext">Async Any
-</span><a href="#local-6989586621690129761"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">m Any -&gt; m (Async Any)
+</span><a href="#local-6989586621687910154"><span class="hs-identifier hs-var">loopFunction</span></a></span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621687910152"><span class="hs-identifier hs-var">args</span></a></span><span>
+</span><span id="line-159"></span><span>              </span><span id="local-6989586621687910147"><span class="annot"><span class="annottext">Async Any
+</span><a href="#local-6989586621687910147"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">m Any -&gt; m (Async Any)
 forall (m :: * -&gt; *) a.
 (MonadBaseControl IO m, Forall (Pure m)) =&gt;
 m a -&gt; m (Async a)
-</span><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/lifted-async-0.10.1.2-70a9df6008ea58467d7c683ae746761f1165de5ec8787caa425cc1d9a98e79cc/share/doc/html/src"><span class="hs-identifier hs-var">LA.async</span></a></span><span> </span><span class="annot"><span class="annottext">(m Any -&gt; m (Async Any)) -&gt; m Any -&gt; m (Async Any)
+</span><span class="hs-identifier hs-var">LA.async</span></span><span> </span><span class="annot"><span class="annottext">(m Any -&gt; m (Async Any)) -&gt; m Any -&gt; m (Async Any)
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Forever m -&gt; m Any
-</span><a href="#local-6989586621690129770"><span class="hs-identifier hs-var">mLoop</span></a></span><span> </span><span class="annot"><span class="annottext">(Forever m -&gt; m Any) -&gt; m (Forever m) -&gt; m Any
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Forever m -&gt; m Any
+</span><a href="#local-6989586621687910156"><span class="hs-identifier hs-var">mLoop</span></a></span><span> </span><span class="annot"><span class="annottext">(Forever m -&gt; m Any) -&gt; m (Forever m) -&gt; m Any
 forall (m :: * -&gt; *) a b. Monad m =&gt; (a -&gt; m b) -&gt; m a -&gt; m b
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var">=&lt;&lt;</span></a></span><span> </span><span class="annot"><span class="annottext">m (Forever m)
-</span><a href="#local-6989586621690129775"><span class="hs-identifier hs-var">loopIteration</span></a></span><span>
+</span><span class="hs-operator hs-var">=&lt;&lt;</span></span><span> </span><span class="annot"><span class="annottext">m (Forever m)
+</span><a href="#local-6989586621687910161"><span class="hs-identifier hs-var">loopIteration</span></a></span><span>
 </span><span id="line-160"></span><span>              </span><span class="annot"><span class="annottext">Async Any -&gt; m ()
 forall (m :: * -&gt; *) a. MonadBase IO m =&gt; Async a -&gt; m ()
-</span><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/lifted-async-0.10.1.2-70a9df6008ea58467d7c683ae746761f1165de5ec8787caa425cc1d9a98e79cc/share/doc/html/src"><span class="hs-identifier hs-var">LA.link</span></a></span><span> </span><span class="annot"><span class="annottext">Async Any
-</span><a href="#local-6989586621690129761"><span class="hs-identifier hs-var">t</span></a></span><span>
+</span><span class="hs-identifier hs-var">LA.link</span></span><span> </span><span class="annot"><span class="annottext">Async Any
+</span><a href="#local-6989586621687910147"><span class="hs-identifier hs-var">t</span></a></span><span>
 </span><span id="line-161"></span><span>              </span><span class="annot"><span class="annottext">m Any -&gt; m ()
 forall (f :: * -&gt; *) a. Functor f =&gt; f a -&gt; f ()
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var">void</span></a></span><span> </span><span class="annot"><span class="annottext">(m Any -&gt; m ()) -&gt; m Any -&gt; m ()
+</span><span class="hs-identifier hs-var">void</span></span><span> </span><span class="annot"><span class="annottext">(m Any -&gt; m ()) -&gt; m Any -&gt; m ()
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Async Any -&gt; m Any
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Async Any -&gt; m Any
 forall (m :: * -&gt; *) a.
 (MonadBase IO m, Forall (Pure m)) =&gt;
 Async a -&gt; m a
-</span><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/lifted-async-0.10.1.2-70a9df6008ea58467d7c683ae746761f1165de5ec8787caa425cc1d9a98e79cc/share/doc/html/src"><span class="hs-identifier hs-var">LA.wait</span></a></span><span> </span><span class="annot"><span class="annottext">Async Any
-</span><a href="#local-6989586621690129761"><span class="hs-identifier hs-var">t</span></a></span><span>
+</span><span class="hs-identifier hs-var">LA.wait</span></span><span> </span><span class="annot"><span class="annottext">Async Any
+</span><a href="#local-6989586621687910147"><span class="hs-identifier hs-var">t</span></a></span><span>
 </span><span id="line-162"></span><span>          </span><span class="hs-special">)</span><span>
 </span><span id="line-163"></span><span>    </span><span class="hs-special">)</span><span>
-</span><span id="line-164"></span><span>    </span><span class="hs-special">(</span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621690129756"><span class="annot"><span class="annottext">Thread
-</span><a href="#local-6989586621690129756"><span class="hs-identifier hs-var">thread</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-164"></span><span>    </span><span class="hs-special">(</span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621687910142"><span class="annot"><span class="annottext">Thread
+</span><a href="#local-6989586621687910142"><span class="hs-identifier hs-var">thread</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-165"></span><span>        </span><span class="annot"><span class="annottext">IO () -&gt; m ()
 forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var">liftIO</span></a></span><span> </span><span class="annot"><span class="annottext">(IO () -&gt; m ()) -&gt; IO () -&gt; m ()
+</span><span class="hs-identifier hs-var">liftIO</span></span><span> </span><span class="annot"><span class="annottext">(IO () -&gt; m ()) -&gt; IO () -&gt; m ()
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
+</span><span class="hs-operator hs-var">$</span></span><span>
 </span><span id="line-166"></span><span>          </span><span class="annot"><span class="annottext">STM () -&gt; IO ()
 forall a. STM a -&gt; IO a
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var">STM.atomically</span></a></span><span> </span><span class="annot"><span class="annottext">(STM () -&gt; IO ()) -&gt; STM () -&gt; IO ()
+</span><span class="hs-identifier hs-var">STM.atomically</span></span><span> </span><span class="annot"><span class="annottext">(STM () -&gt; IO ()) -&gt; STM () -&gt; IO ()
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
+</span><span class="hs-operator hs-var">$</span></span><span>
 </span><span id="line-167"></span><span>            </span><span class="annot"><span class="annottext">TVar ThreadState -&gt; (ThreadState -&gt; ThreadState) -&gt; STM ()
 forall a. TVar a -&gt; (a -&gt; a) -&gt; STM ()
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/stm-2.5.0.1/src"><span class="hs-identifier hs-var">STM.modifyTVar'</span></a></span><span> </span><span class="annot"><span class="annottext">TVar ThreadState
-</span><a href="#local-6989586621690129774"><span class="hs-identifier hs-var">threadStateTVar</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ThreadState -&gt; ThreadState -&gt; ThreadState
+</span><span class="hs-identifier hs-var">STM.modifyTVar'</span></span><span> </span><span class="annot"><span class="annottext">TVar ThreadState
+</span><a href="#local-6989586621687910160"><span class="hs-identifier hs-var">threadStateTVar</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ThreadState -&gt; ThreadState -&gt; ThreadState
 forall a b. a -&gt; b -&gt; a
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var">const</span></a></span><span> </span><span class="annot"><span class="annottext">ThreadState
+</span><span class="hs-identifier hs-var">const</span></span><span> </span><span class="annot"><span class="annottext">ThreadState
 </span><a href="Control.Concurrent.Extended.html#ThreadShutdownInitiated"><span class="hs-identifier hs-var">ThreadShutdownInitiated</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-168"></span><span>        </span><span class="hs-comment">-- the threadShutdownHandler here will wait for any in-flight events</span><span>
 </span><span id="line-169"></span><span>        </span><span class="hs-comment">-- to finish processing</span><span>
@@ -459,28 +459,28 @@ forall a b. a -&gt; b -&gt; a
             processing events without the graceful shutdown timeout.
         -}</span><span>
 </span><span id="line-206"></span><span>        </span><span class="annot"><span class="annottext">m ()
-</span><a href="#local-6989586621690129776"><span class="hs-identifier hs-var">threadShutdownHandler</span></a></span><span>
+</span><a href="#local-6989586621687910162"><span class="hs-identifier hs-var">threadShutdownHandler</span></a></span><span>
 </span><span id="line-207"></span><span>        </span><span class="annot"><span class="annottext">IO () -&gt; m ()
 forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var">liftIO</span></a></span><span> </span><span class="annot"><span class="annottext">(IO () -&gt; m ()) -&gt; IO () -&gt; m ()
+</span><span class="hs-identifier hs-var">liftIO</span></span><span> </span><span class="annot"><span class="annottext">(IO () -&gt; m ()) -&gt; IO () -&gt; m ()
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
+</span><span class="hs-operator hs-var">$</span></span><span>
 </span><span id="line-208"></span><span>          </span><span class="annot"><span class="annottext">STM () -&gt; IO ()
 forall a. STM a -&gt; IO a
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var">STM.atomically</span></a></span><span> </span><span class="annot"><span class="annottext">(STM () -&gt; IO ()) -&gt; STM () -&gt; IO ()
+</span><span class="hs-identifier hs-var">STM.atomically</span></span><span> </span><span class="annot"><span class="annottext">(STM () -&gt; IO ()) -&gt; STM () -&gt; IO ()
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-keyword">do</span><span>
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-209"></span><span>            </span><span class="annot"><span class="annottext">TVar ThreadState -&gt; STM ThreadState
 forall a. TVar a -&gt; STM a
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var">STM.readTVar</span></a></span><span> </span><span class="annot"><span class="annottext">TVar ThreadState
-</span><a href="#local-6989586621690129774"><span class="hs-identifier hs-var">threadStateTVar</span></a></span><span> </span><span class="annot"><span class="annottext">STM ThreadState -&gt; (ThreadState -&gt; STM ()) -&gt; STM ()
+</span><span class="hs-identifier hs-var">STM.readTVar</span></span><span> </span><span class="annot"><span class="annottext">TVar ThreadState
+</span><a href="#local-6989586621687910160"><span class="hs-identifier hs-var">threadStateTVar</span></a></span><span> </span><span class="annot"><span class="annottext">STM ThreadState -&gt; (ThreadState -&gt; STM ()) -&gt; STM ()
 forall (m :: * -&gt; *) a b. Monad m =&gt; m a -&gt; (a -&gt; m b) -&gt; m b
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var">&gt;&gt;=</span></a></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; STM ()
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/stm-2.5.0.1/src"><span class="hs-identifier hs-var">STM.check</span></a></span><span> </span><span class="annot"><span class="annottext">(Bool -&gt; STM ()) -&gt; (ThreadState -&gt; Bool) -&gt; ThreadState -&gt; STM ()
+</span><span class="hs-operator hs-var">&gt;&gt;=</span></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; STM ()
+</span><span class="hs-identifier hs-var">STM.check</span></span><span> </span><span class="annot"><span class="annottext">(Bool -&gt; STM ()) -&gt; (ThreadState -&gt; Bool) -&gt; ThreadState -&gt; STM ()
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ThreadState -&gt; ThreadState -&gt; Bool
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ThreadState -&gt; ThreadState -&gt; Bool
 forall a. Eq a =&gt; a -&gt; a -&gt; Bool
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/ghc-prim-0.6.1/src"><span class="hs-operator hs-var">==</span></a></span><span> </span><span class="annot"><span class="annottext">ThreadState
+</span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="annottext">ThreadState
 </span><a href="Control.Concurrent.Extended.html#ThreadBlocking"><span class="hs-identifier hs-var">ThreadBlocking</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-210"></span><span>        </span><span class="annot"><span class="annottext">Logger Hasura -&gt; ImmortalThreadLog -&gt; m ()
 forall impl.
@@ -489,44 +489,44 @@ Logger impl
    (ToEngineLog a impl, MonadIO m) =&gt;
    a -&gt; m ()
 </span><a href="Hasura.Logging.html#unLogger"><span class="hs-identifier hs-var hs-var">unLogger</span></a></span><span> </span><span class="annot"><span class="annottext">Logger Hasura
-</span><a href="#local-6989586621690129777"><span class="hs-identifier hs-var">logger</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String -&gt; ImmortalThreadLog
+</span><a href="#local-6989586621687910163"><span class="hs-identifier hs-var">logger</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String -&gt; ImmortalThreadLog
 </span><a href="Control.Concurrent.Extended.html#ImmortalThreadStopping"><span class="hs-identifier hs-var">ImmortalThreadStopping</span></a></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621690129778"><span class="hs-keyword hs-var">label</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621687910164"><span class="hs-keyword hs-var">label</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-211"></span><span>        </span><span class="annot"><span class="annottext">IO () -&gt; m ()
 forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var">liftIO</span></a></span><span> </span><span class="annot"><span class="annottext">(IO () -&gt; m ()) -&gt; IO () -&gt; m ()
+</span><span class="hs-identifier hs-var">liftIO</span></span><span> </span><span class="annot"><span class="annottext">(IO () -&gt; m ()) -&gt; IO () -&gt; m ()
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Thread -&gt; IO ()
-</span><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/immortal-0.2.2.1-43132e6fb91a4ebc2dbfee266833fe0c27ee89aed59dffd8b840482dd2103a87/share/doc/html/src"><span class="hs-identifier hs-var">Immortal.stop</span></a></span><span> </span><span class="annot"><span class="annottext">Thread
-</span><a href="#local-6989586621690129756"><span class="hs-identifier hs-var">thread</span></a></span><span>
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Thread -&gt; IO ()
+</span><span class="hs-identifier hs-var">Immortal.stop</span></span><span> </span><span class="annot"><span class="annottext">Thread
+</span><a href="#local-6989586621687910142"><span class="hs-identifier hs-var">thread</span></a></span><span>
 </span><span id="line-212"></span><span>    </span><span class="hs-special">)</span><span>
 </span><span id="line-213"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-214"></span><span>    </span><span id="local-6989586621690129771"><span class="annot"><span class="annottext">logAndPause :: Either SomeException () -&gt; m ()
-</span><a href="#local-6989586621690129771"><span class="hs-identifier hs-var hs-var">logAndPause</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
-</span><span id="line-215"></span><span>      </span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-type">Right</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">() -&gt; m ()
+</span><span id="line-214"></span><span>    </span><span id="local-6989586621687910157"><span class="annot"><span class="annottext">logAndPause :: Either SomeException () -&gt; m ()
+</span><a href="#local-6989586621687910157"><span class="hs-identifier hs-var hs-var">logAndPause</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-215"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">Right</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">() -&gt; m ()
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
-</span><span id="line-216"></span><span>      </span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-type">Left</span></a></span><span> </span><span id="local-6989586621690129752"><span class="annot"><span class="annottext">SomeException
-</span><a href="#local-6989586621690129752"><span class="hs-identifier hs-var">e</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">IO () -&gt; m ()
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-216"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">Left</span></span><span> </span><span id="local-6989586621687910138"><span class="annot"><span class="annottext">SomeException
+</span><a href="#local-6989586621687910138"><span class="hs-identifier hs-var">e</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">IO () -&gt; m ()
 forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var">liftIO</span></a></span><span> </span><span class="annot"><span class="annottext">(IO () -&gt; m ()) -&gt; IO () -&gt; m ()
+</span><span class="hs-identifier hs-var">liftIO</span></span><span> </span><span class="annot"><span class="annottext">(IO () -&gt; m ()) -&gt; IO () -&gt; m ()
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-keyword">do</span><span>
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-217"></span><span>        </span><span class="annot"><span class="annottext">IO () -&gt; IO ()
 forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var">liftIO</span></a></span><span> </span><span class="annot"><span class="annottext">(IO () -&gt; IO ()) -&gt; IO () -&gt; IO ()
+</span><span class="hs-identifier hs-var">liftIO</span></span><span> </span><span class="annot"><span class="annottext">(IO () -&gt; IO ()) -&gt; IO () -&gt; IO ()
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Logger Hasura -&gt; ImmortalThreadLog -&gt; IO ()
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Logger Hasura -&gt; ImmortalThreadLog -&gt; IO ()
 forall impl.
 Logger impl
 -&gt; forall a (m :: * -&gt; *).
    (ToEngineLog a impl, MonadIO m) =&gt;
    a -&gt; m ()
 </span><a href="Hasura.Logging.html#unLogger"><span class="hs-identifier hs-var hs-var">unLogger</span></a></span><span> </span><span class="annot"><span class="annottext">Logger Hasura
-</span><a href="#local-6989586621690129777"><span class="hs-identifier hs-var">logger</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String -&gt; SomeException -&gt; ImmortalThreadLog
+</span><a href="#local-6989586621687910163"><span class="hs-identifier hs-var">logger</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String -&gt; SomeException -&gt; ImmortalThreadLog
 </span><a href="Control.Concurrent.Extended.html#ImmortalThreadUnexpectedException"><span class="hs-identifier hs-var">ImmortalThreadUnexpectedException</span></a></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621690129778"><span class="hs-keyword hs-var">label</span></a></span><span> </span><span class="annot"><span class="annottext">SomeException
-</span><a href="#local-6989586621690129752"><span class="hs-identifier hs-var">e</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621687910164"><span class="hs-keyword hs-var">label</span></a></span><span> </span><span class="annot"><span class="annottext">SomeException
+</span><a href="#local-6989586621687910138"><span class="hs-identifier hs-var">e</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-218"></span><span>        </span><span class="hs-comment">-- pause before restarting some arbitrary amount of time. The idea is not to flood</span><span>
 </span><span id="line-219"></span><span>        </span><span class="hs-comment">-- logs or cause other cascading failures.</span><span>
 </span><span id="line-220"></span><span>        </span><span class="annot"><span class="annottext">DiffTime -&gt; IO ()
@@ -536,77 +536,77 @@ Logger impl
 </span><span id="line-221"></span><span>
 </span><span id="line-222"></span><span class="hs-keyword">data</span><span> </span><span id="ImmortalThreadLog"><span class="annot"><a href="Control.Concurrent.Extended.html#ImmortalThreadLog"><span class="hs-identifier hs-var">ImmortalThreadLog</span></a></span></span><span>
 </span><span id="line-223"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span class="hs-comment">-- | Synchronous Exception</span><span>
-</span><span id="line-224"></span><span>    </span><span id="ImmortalThreadUnexpectedException"><span class="annot"><a href="Control.Concurrent.Extended.html#ImmortalThreadUnexpectedException"><span class="hs-identifier hs-var">ImmortalThreadUnexpectedException</span></a></span></span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-type">String</span></a></span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-type">SomeException</span></a></span><span>
+</span><span id="line-224"></span><span>    </span><span id="ImmortalThreadUnexpectedException"><span class="annot"><a href="Control.Concurrent.Extended.html#ImmortalThreadUnexpectedException"><span class="hs-identifier hs-var">ImmortalThreadUnexpectedException</span></a></span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">SomeException</span></span><span>
 </span><span id="line-225"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="hs-comment">-- | Asynchronous Exception about to be sent</span><span>
-</span><span id="line-226"></span><span>    </span><span id="ImmortalThreadStopping"><span class="annot"><a href="Control.Concurrent.Extended.html#ImmortalThreadStopping"><span class="hs-identifier hs-var">ImmortalThreadStopping</span></a></span></span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-type">String</span></a></span><span>
-</span><span id="line-227"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="ImmortalThreadRestarted"><span class="annot"><a href="Control.Concurrent.Extended.html#ImmortalThreadRestarted"><span class="hs-identifier hs-var">ImmortalThreadRestarted</span></a></span></span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-type">String</span></a></span><span>
+</span><span id="line-226"></span><span>    </span><span id="ImmortalThreadStopping"><span class="annot"><a href="Control.Concurrent.Extended.html#ImmortalThreadStopping"><span class="hs-identifier hs-var">ImmortalThreadStopping</span></a></span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span>
+</span><span id="line-227"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="ImmortalThreadRestarted"><span class="annot"><a href="Control.Concurrent.Extended.html#ImmortalThreadRestarted"><span class="hs-identifier hs-var">ImmortalThreadRestarted</span></a></span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span>
 </span><span id="line-228"></span><span>
 </span><span id="line-229"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.Logging.html#ToEngineLog"><span class="hs-identifier hs-type">ToEngineLog</span></a></span><span> </span><span class="annot"><a href="Control.Concurrent.Extended.html#ImmortalThreadLog"><span class="hs-identifier hs-type">ImmortalThreadLog</span></a></span><span> </span><span class="annot"><a href="Hasura.Logging.html#Hasura"><span class="hs-identifier hs-type">Hasura</span></a></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-230"></span><span>  </span><span id="local-6989586621690129748"><span class="annot"><span class="annottext">toEngineLog :: ImmortalThreadLog -&gt; (LogLevel, EngineLogType Hasura, Value)
-</span><a href="Hasura.Logging.html#toEngineLog"><span class="hs-identifier hs-var hs-var hs-var hs-var">toEngineLog</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Control.Concurrent.Extended.html#ImmortalThreadStopping"><span class="hs-identifier hs-type">ImmortalThreadStopping</span></a></span><span> </span><span id="local-6989586621690129746"><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621690129746"><span class="hs-keyword hs-var">label</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-230"></span><span>  </span><span id="local-6989586621687910134"><span class="annot"><span class="annottext">toEngineLog :: ImmortalThreadLog -&gt; (LogLevel, EngineLogType Hasura, Value)
+</span><a href="Hasura.Logging.html#toEngineLog"><span class="hs-identifier hs-var hs-var hs-var hs-var">toEngineLog</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Control.Concurrent.Extended.html#ImmortalThreadStopping"><span class="hs-identifier hs-type">ImmortalThreadStopping</span></a></span><span> </span><span id="local-6989586621687910132"><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621687910132"><span class="hs-keyword hs-var">label</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-231"></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="annottext">LogLevel
 </span><a href="Hasura.Logging.html#LevelInfo"><span class="hs-identifier hs-var">LevelInfo</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">InternalLogTypes -&gt; EngineLogType Hasura
 </span><a href="Hasura.Logging.html#ELTInternal"><span class="hs-identifier hs-var">ELTInternal</span></a></span><span> </span><span class="annot"><span class="annottext">InternalLogTypes
 </span><a href="Hasura.Logging.html#ILTUnstructured"><span class="hs-identifier hs-var">ILTUnstructured</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">String -&gt; Value
 forall a. ToJSON a =&gt; a -&gt; Value
-</span><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/aeson-1.5.5.1-d565b322355c9794eb059b7477592fe0d20db50e9f4ac0ae0328e907dd753173/share/doc/html/src"><span class="hs-identifier hs-var">toJSON</span></a></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621690129741"><span class="hs-identifier hs-var">msg</span></a></span><span class="hs-special">)</span><span>
+</span><span class="hs-identifier hs-var">toJSON</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621687910127"><span class="hs-identifier hs-var">msg</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-232"></span><span>    </span><span class="hs-keyword">where</span><span>
-</span><span id="line-233"></span><span>      </span><span id="local-6989586621690129741"><span class="annot"><span class="annottext">msg :: String
-</span><a href="#local-6989586621690129741"><span class="hs-identifier hs-var hs-var">msg</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
+</span><span id="line-233"></span><span>      </span><span id="local-6989586621687910127"><span class="annot"><span class="annottext">msg :: String
+</span><a href="#local-6989586621687910127"><span class="hs-identifier hs-var hs-var">msg</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;Stopping immortal &quot;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; ShowS
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621690129746"><span class="hs-keyword hs-var">label</span></a></span><span> </span><span class="annot"><span class="annottext">String -&gt; ShowS
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621687910132"><span class="hs-keyword hs-var">label</span></a></span><span> </span><span class="annot"><span class="annottext">String -&gt; ShowS
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot; thread&quot;</span></span><span>
-</span><span id="line-234"></span><span>  </span><span class="annot"><a href="Hasura.Logging.html#toEngineLog"><span class="hs-identifier hs-var">toEngineLog</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Control.Concurrent.Extended.html#ImmortalThreadUnexpectedException"><span class="hs-identifier hs-type">ImmortalThreadUnexpectedException</span></a></span><span> </span><span id="local-6989586621690129740"><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621690129740"><span class="hs-keyword hs-var">label</span></a></span></span><span> </span><span id="local-6989586621690129739"><span class="annot"><span class="annottext">SomeException
-</span><a href="#local-6989586621690129739"><span class="hs-identifier hs-var">e</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-234"></span><span>  </span><span class="annot"><a href="Hasura.Logging.html#toEngineLog"><span class="hs-identifier hs-var">toEngineLog</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Control.Concurrent.Extended.html#ImmortalThreadUnexpectedException"><span class="hs-identifier hs-type">ImmortalThreadUnexpectedException</span></a></span><span> </span><span id="local-6989586621687910126"><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621687910126"><span class="hs-keyword hs-var">label</span></a></span></span><span> </span><span id="local-6989586621687910125"><span class="annot"><span class="annottext">SomeException
+</span><a href="#local-6989586621687910125"><span class="hs-identifier hs-var">e</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-235"></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="annottext">LogLevel
 </span><a href="Hasura.Logging.html#LevelError"><span class="hs-identifier hs-var">LevelError</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">InternalLogTypes -&gt; EngineLogType Hasura
 </span><a href="Hasura.Logging.html#ELTInternal"><span class="hs-identifier hs-var">ELTInternal</span></a></span><span> </span><span class="annot"><span class="annottext">InternalLogTypes
 </span><a href="Hasura.Logging.html#ILTUnstructured"><span class="hs-identifier hs-var">ILTUnstructured</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">String -&gt; Value
 forall a. ToJSON a =&gt; a -&gt; Value
-</span><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/aeson-1.5.5.1-d565b322355c9794eb059b7477592fe0d20db50e9f4ac0ae0328e907dd753173/share/doc/html/src"><span class="hs-identifier hs-var">toJSON</span></a></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621690129737"><span class="hs-identifier hs-var">msg</span></a></span><span class="hs-special">)</span><span>
+</span><span class="hs-identifier hs-var">toJSON</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621687910123"><span class="hs-identifier hs-var">msg</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-236"></span><span>    </span><span class="hs-keyword">where</span><span>
-</span><span id="line-237"></span><span>      </span><span id="local-6989586621690129737"><span class="annot"><span class="annottext">msg :: String
-</span><a href="#local-6989586621690129737"><span class="hs-identifier hs-var hs-var">msg</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-237"></span><span>      </span><span id="local-6989586621687910123"><span class="annot"><span class="annottext">msg :: String
+</span><a href="#local-6989586621687910123"><span class="hs-identifier hs-var hs-var">msg</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-238"></span><span>        </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;Unexpected exception in immortal thread &quot;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; ShowS
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621690129740"><span class="hs-keyword hs-var">label</span></a></span><span> </span><span class="annot"><span class="annottext">String -&gt; ShowS
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621687910126"><span class="hs-keyword hs-var">label</span></a></span><span> </span><span class="annot"><span class="annottext">String -&gt; ShowS
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot; (it will be restarted):\n&quot;</span></span><span>
 </span><span id="line-239"></span><span>          </span><span class="annot"><span class="annottext">String -&gt; ShowS
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">SomeException -&gt; String
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">SomeException -&gt; String
 forall a. Show a =&gt; a -&gt; String
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var">show</span></a></span><span> </span><span class="annot"><span class="annottext">SomeException
-</span><a href="#local-6989586621690129739"><span class="hs-identifier hs-var">e</span></a></span><span>
-</span><span id="line-240"></span><span>  </span><span class="annot"><a href="Hasura.Logging.html#toEngineLog"><span class="hs-identifier hs-var">toEngineLog</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Control.Concurrent.Extended.html#ImmortalThreadRestarted"><span class="hs-identifier hs-type">ImmortalThreadRestarted</span></a></span><span> </span><span id="local-6989586621690129735"><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621690129735"><span class="hs-keyword hs-var">label</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span class="hs-identifier hs-var">show</span></span><span> </span><span class="annot"><span class="annottext">SomeException
+</span><a href="#local-6989586621687910125"><span class="hs-identifier hs-var">e</span></a></span><span>
+</span><span id="line-240"></span><span>  </span><span class="annot"><a href="Hasura.Logging.html#toEngineLog"><span class="hs-identifier hs-var">toEngineLog</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Control.Concurrent.Extended.html#ImmortalThreadRestarted"><span class="hs-identifier hs-type">ImmortalThreadRestarted</span></a></span><span> </span><span id="local-6989586621687910121"><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621687910121"><span class="hs-keyword hs-var">label</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-241"></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="annottext">LogLevel
 </span><a href="Hasura.Logging.html#LevelInfo"><span class="hs-identifier hs-var">LevelInfo</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">InternalLogTypes -&gt; EngineLogType Hasura
 </span><a href="Hasura.Logging.html#ELTInternal"><span class="hs-identifier hs-var">ELTInternal</span></a></span><span> </span><span class="annot"><span class="annottext">InternalLogTypes
 </span><a href="Hasura.Logging.html#ILTUnstructured"><span class="hs-identifier hs-var">ILTUnstructured</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">String -&gt; Value
 forall a. ToJSON a =&gt; a -&gt; Value
-</span><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/aeson-1.5.5.1-d565b322355c9794eb059b7477592fe0d20db50e9f4ac0ae0328e907dd753173/share/doc/html/src"><span class="hs-identifier hs-var">toJSON</span></a></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621690129734"><span class="hs-identifier hs-var">msg</span></a></span><span class="hs-special">)</span><span>
+</span><span class="hs-identifier hs-var">toJSON</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621687910120"><span class="hs-identifier hs-var">msg</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-242"></span><span>    </span><span class="hs-keyword">where</span><span>
-</span><span id="line-243"></span><span>      </span><span id="local-6989586621690129734"><span class="annot"><span class="annottext">msg :: String
-</span><a href="#local-6989586621690129734"><span class="hs-identifier hs-var hs-var">msg</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
+</span><span id="line-243"></span><span>      </span><span id="local-6989586621687910120"><span class="annot"><span class="annottext">msg :: String
+</span><a href="#local-6989586621687910120"><span class="hs-identifier hs-var hs-var">msg</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;Thread &quot;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; ShowS
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621690129735"><span class="hs-keyword hs-var">label</span></a></span><span> </span><span class="annot"><span class="annottext">String -&gt; ShowS
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621687910121"><span class="hs-keyword hs-var">label</span></a></span><span> </span><span class="annot"><span class="annottext">String -&gt; ShowS
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot; (re)started&quot;</span></span><span>
 </span><span id="line-244"></span><span>
 </span><span id="line-245"></span><span class="hs-comment">-- TODO</span><span>
@@ -619,7 +619,7 @@ forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span id="line-252"></span><span class="hs-comment">-- In particular 'StateT' causes problems.</span><span>
 </span><span id="line-253"></span><span class="hs-comment">--</span><span>
 </span><span id="line-254"></span><span class="hs-comment">-- This is the constraint you can use for functions that call 'LA.async', or 'immortal'.</span><span>
-</span><span id="line-255"></span><span class="hs-keyword">type</span><span> </span><span id="ForkableMonadIO"><span class="annot"><a href="Control.Concurrent.Extended.html#ForkableMonadIO"><span class="hs-identifier hs-var">ForkableMonadIO</span></a></span></span><span> </span><span id="local-6989586621690129733"><span class="annot"><a href="#local-6989586621690129733"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-type">MonadIO</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690129733"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/monad-control-1.0.2.3-db642c66d41630a40c34679ab5150dcca77dac61d0ab3814ba3733e421b240c4/share/doc/html/src"><span class="hs-identifier hs-type">MC.MonadBaseControl</span></a></span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/ghc-prim-0.6.1/src"><span class="hs-identifier hs-type">IO</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690129733"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/constraints-0.12-d55d18091a43a5df989c1b0e149c0bd4e7d6243fa134591a9ebd7c36729960c1/share/doc/html/src"><span class="hs-identifier hs-type">LA.Forall</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/lifted-async-0.10.1.2-70a9df6008ea58467d7c683ae746761f1165de5ec8787caa425cc1d9a98e79cc/share/doc/html/src"><span class="hs-identifier hs-type">LA.Pure</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690129733"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-255"></span><span class="hs-keyword">type</span><span> </span><span id="ForkableMonadIO"><span class="annot"><a href="Control.Concurrent.Extended.html#ForkableMonadIO"><span class="hs-identifier hs-var">ForkableMonadIO</span></a></span></span><span> </span><span id="local-6989586621687910119"><span class="annot"><a href="#local-6989586621687910119"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621687910119"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MC.MonadBaseControl</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="annot"><a href="#local-6989586621687910119"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">LA.Forall</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">LA.Pure</span></span><span> </span><span class="annot"><a href="#local-6989586621687910119"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-256"></span><span>
 </span><span id="line-257"></span><span class="hs-comment">-- TODO consider deprecating async.</span><span>
 </span><span id="line-258"></span><span class="hs-comment">--        export something with polymorphic return type, which makes &quot;fork and forget&quot; difficult</span><span>

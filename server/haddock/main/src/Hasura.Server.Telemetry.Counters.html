@@ -25,17 +25,17 @@
 </span><span id="line-25"></span><span>  </span><span class="hs-special">)</span><span>
 </span><span id="line-26"></span><span class="hs-keyword">where</span><span>
 </span><span id="line-27"></span><span>
-</span><span id="line-28"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/aeson-1.5.5.1-d565b322355c9794eb059b7477592fe0d20db50e9f4ac0ae0328e907dd753173/share/doc/html/src"><span class="hs-identifier">Data.Aeson</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">A</span></span><span>
-</span><span id="line-29"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/aeson-1.5.5.1-d565b322355c9794eb059b7477592fe0d20db50e9f4ac0ae0328e907dd753173/share/doc/html/src"><span class="hs-identifier">Data.Aeson.TH</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">A</span></span><span>
-</span><span id="line-30"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/unordered-containers-0.2.13.0-3905cc0dd583bf2295f4fffefb94c9b368aca205fb5d2fe8619d64b3bfba7af9/share/doc/html/src"><span class="hs-identifier">Data.HashMap.Strict</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">HM</span></span><span>
-</span><span id="line-31"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier">Data.IORef</span></a></span><span>
-</span><span id="line-32"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/time-1.9.3/src"><span class="hs-identifier">Data.Time.Clock.POSIX</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/time-1.9.3/src"><span class="hs-identifier">POSIXTime</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/time-1.9.3/src"><span class="hs-identifier">getPOSIXTime</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-33"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier">GHC.IO.Unsafe</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier">unsafePerformIO</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-28"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">A</span></span><span>
+</span><span id="line-29"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson.TH</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">A</span></span><span>
+</span><span id="line-30"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashMap.Strict</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">HM</span></span><span>
+</span><span id="line-31"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.IORef</span></span><span>
+</span><span id="line-32"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Time.Clock.POSIX</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">POSIXTime</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">getPOSIXTime</span></span><span class="hs-special">)</span><span>
+</span><span id="line-33"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">GHC.IO.Unsafe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">unsafePerformIO</span></span><span class="hs-special">)</span><span>
 </span><span id="line-34"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
 </span><span id="line-35"></span><span>
 </span><span id="line-36"></span><span class="hs-comment">-- | The properties that characterize this request. The dimensions over which</span><span>
 </span><span id="line-37"></span><span class="hs-comment">-- we collect metrics for each serviced request.</span><span>
-</span><span id="line-38"></span><span id="local-6989586621690135824"><span id="local-6989586621690135825"></span></span><span class="hs-keyword">data</span><span> </span><span id="RequestDimensions"><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#RequestDimensions"><span class="hs-identifier hs-var">RequestDimensions</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="RequestDimensions"><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#RequestDimensions"><span class="hs-identifier hs-var">RequestDimensions</span></a></span></span><span>
+</span><span id="line-38"></span><span id="local-6989586621687916211"><span id="local-6989586621687916212"></span></span><span class="hs-keyword">data</span><span> </span><span id="RequestDimensions"><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#RequestDimensions"><span class="hs-identifier hs-var">RequestDimensions</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="RequestDimensions"><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#RequestDimensions"><span class="hs-identifier hs-var">RequestDimensions</span></a></span></span><span>
 </span><span id="line-39"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="%24sel%3AtelemQueryType%3ARequestDimensions"><span class="annot"><span class="annottext">RequestDimensions -&gt; QueryType
 </span><a href="Hasura.Server.Telemetry.Counters.html#%24sel%3AtelemQueryType%3ARequestDimensions"><span class="hs-identifier hs-var hs-var">telemQueryType</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#QueryType"><span class="hs-identifier hs-type">QueryType</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-40"></span><span>    </span><span id="%24sel%3AtelemLocality%3ARequestDimensions"><span class="annot"><span class="annottext">RequestDimensions -&gt; Locality
@@ -43,7 +43,7 @@
 </span><span id="line-41"></span><span>    </span><span id="%24sel%3AtelemTransport%3ARequestDimensions"><span class="annot"><span class="annottext">RequestDimensions -&gt; Transport
 </span><a href="Hasura.Server.Telemetry.Counters.html#%24sel%3AtelemTransport%3ARequestDimensions"><span class="hs-identifier hs-var hs-var">telemTransport</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#Transport"><span class="hs-identifier hs-type">Transport</span></a></span><span>
 </span><span id="line-42"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-43"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690135814"><span id="local-6989586621690135816"><span id="local-6989586621690135818"><span class="annot"><span class="annottext">Int -&gt; RequestDimensions -&gt; ShowS
+</span><span id="line-43"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687916201"><span id="local-6989586621687916203"><span id="local-6989586621687916205"><span class="annot"><span class="annottext">Int -&gt; RequestDimensions -&gt; ShowS
 [RequestDimensions] -&gt; ShowS
 RequestDimensions -&gt; String
 (Int -&gt; RequestDimensions -&gt; ShowS)
@@ -58,7 +58,7 @@ show :: RequestDimensions -&gt; String
 $cshow :: RequestDimensions -&gt; String
 showsPrec :: Int -&gt; RequestDimensions -&gt; ShowS
 $cshowsPrec :: Int -&gt; RequestDimensions -&gt; ShowS
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">(forall x. RequestDimensions -&gt; Rep RequestDimensions x)
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">(forall x. RequestDimensions -&gt; Rep RequestDimensions x)
 -&gt; (forall x. Rep RequestDimensions x -&gt; RequestDimensions)
 -&gt; Generic RequestDimensions
 forall x. Rep RequestDimensions x -&gt; RequestDimensions
@@ -67,7 +67,7 @@ forall a.
 (forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
 $cto :: forall x. Rep RequestDimensions x -&gt; RequestDimensions
 $cfrom :: forall x. RequestDimensions -&gt; Rep RequestDimensions x
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></a></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690135806"><span id="local-6989586621690135808"><span class="annot"><span class="annottext">RequestDimensions -&gt; RequestDimensions -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687916193"><span id="local-6989586621687916195"><span class="annot"><span class="annottext">RequestDimensions -&gt; RequestDimensions -&gt; Bool
 (RequestDimensions -&gt; RequestDimensions -&gt; Bool)
 -&gt; (RequestDimensions -&gt; RequestDimensions -&gt; Bool)
 -&gt; Eq RequestDimensions
@@ -76,7 +76,7 @@ forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 $c/= :: RequestDimensions -&gt; RequestDimensions -&gt; Bool
 == :: RequestDimensions -&gt; RequestDimensions -&gt; Bool
 $c== :: RequestDimensions -&gt; RequestDimensions -&gt; Bool
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/ghc-prim-0.6.1/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690135790"><span id="local-6989586621690135792"><span id="local-6989586621690135794"><span id="local-6989586621690135796"><span id="local-6989586621690135798"><span id="local-6989586621690135800"><span id="local-6989586621690135802"><span class="annot"><span class="annottext">Eq RequestDimensions
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687916177"><span id="local-6989586621687916179"><span id="local-6989586621687916181"><span id="local-6989586621687916183"><span id="local-6989586621687916185"><span id="local-6989586621687916187"><span id="local-6989586621687916189"><span class="annot"><span class="annottext">Eq RequestDimensions
 Eq RequestDimensions
 -&gt; (RequestDimensions -&gt; RequestDimensions -&gt; Ordering)
 -&gt; (RequestDimensions -&gt; RequestDimensions -&gt; Bool)
@@ -114,9 +114,9 @@ $c&lt; :: RequestDimensions -&gt; RequestDimensions -&gt; Bool
 compare :: RequestDimensions -&gt; RequestDimensions -&gt; Ordering
 $ccompare :: RequestDimensions -&gt; RequestDimensions -&gt; Ordering
 $cp1Ord :: Eq RequestDimensions
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/ghc-prim-0.6.1/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></a></span></span></span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-44"></span><span>
-</span><span id="line-45"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690135785"><span id="local-6989586621690135787"><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/hashable-1.3.0.0-788b52f2a84e4f56df08780d211980a9db35c8fd0786c16a6d78251880c45f3d/share/doc/html/src"><span class="hs-identifier hs-type">Hashable</span></a></span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#RequestDimensions"><span class="hs-identifier hs-type">RequestDimensions</span></a></span></span></span><span>
+</span><span id="line-45"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687916172"><span id="local-6989586621687916174"><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#RequestDimensions"><span class="hs-identifier hs-type">RequestDimensions</span></a></span></span></span><span>
 </span><span id="line-46"></span><span>
 </span><span id="line-47"></span><span class="hs-comment">-- | Accumulated time metrics.</span><span>
 </span><span id="line-48"></span><span class="hs-keyword">data</span><span> </span><span id="RequestTimings"><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#RequestTimings"><span class="hs-identifier hs-var">RequestTimings</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="RequestTimings"><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#RequestTimings"><span class="hs-identifier hs-var">RequestTimings</span></a></span></span><span>
@@ -129,25 +129,25 @@ $cp1Ord :: Eq RequestDimensions
 </span><span id="line-53"></span><span>  </span><span class="hs-special">}</span><span>
 </span><span id="line-54"></span><span>
 </span><span id="line-55"></span><span class="hs-comment">-- | Sum</span><span>
-</span><span id="line-56"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690135776"><span id="local-6989586621690135778"><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-type">Semigroup</span></a></span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#RequestTimings"><span class="hs-identifier hs-type">RequestTimings</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-57"></span><span>  </span><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#RequestTimings"><span class="hs-identifier hs-type">RequestTimings</span></a></span><span> </span><span id="local-6989586621690135774"><span class="annot"><span class="annottext">Seconds
-</span><a href="#local-6989586621690135774"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span id="local-6989586621690135773"><span class="annot"><span class="annottext">Seconds
-</span><a href="#local-6989586621690135773"><span class="hs-identifier hs-var">b</span></a></span></span><span> </span><span id="local-6989586621690135772"><span class="annot"><span class="annottext">&lt;&gt; :: RequestTimings -&gt; RequestTimings -&gt; RequestTimings
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var hs-var hs-var hs-var">&lt;&gt;</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#RequestTimings"><span class="hs-identifier hs-type">RequestTimings</span></a></span><span> </span><span id="local-6989586621690135771"><span class="annot"><span class="annottext">Seconds
-</span><a href="#local-6989586621690135771"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span id="local-6989586621690135770"><span class="annot"><span class="annottext">Seconds
-</span><a href="#local-6989586621690135770"><span class="hs-identifier hs-var">y</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Seconds -&gt; Seconds -&gt; RequestTimings
+</span><span id="line-56"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687916163"><span id="local-6989586621687916165"><span class="annot"><span class="hs-identifier hs-type">Semigroup</span></span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#RequestTimings"><span class="hs-identifier hs-type">RequestTimings</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-57"></span><span>  </span><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#RequestTimings"><span class="hs-identifier hs-type">RequestTimings</span></a></span><span> </span><span id="local-6989586621687916161"><span class="annot"><span class="annottext">Seconds
+</span><a href="#local-6989586621687916161"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span id="local-6989586621687916160"><span class="annot"><span class="annottext">Seconds
+</span><a href="#local-6989586621687916160"><span class="hs-identifier hs-var">b</span></a></span></span><span> </span><span id="local-6989586621687916159"><span class="annot"><span class="annottext">&lt;&gt; :: RequestTimings -&gt; RequestTimings -&gt; RequestTimings
+</span><span class="hs-operator hs-var hs-var hs-var hs-var">&lt;&gt;</span></span></span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#RequestTimings"><span class="hs-identifier hs-type">RequestTimings</span></a></span><span> </span><span id="local-6989586621687916158"><span class="annot"><span class="annottext">Seconds
+</span><a href="#local-6989586621687916158"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span id="local-6989586621687916157"><span class="annot"><span class="annottext">Seconds
+</span><a href="#local-6989586621687916157"><span class="hs-identifier hs-var">y</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Seconds -&gt; Seconds -&gt; RequestTimings
 </span><a href="Hasura.Server.Telemetry.Counters.html#RequestTimings"><span class="hs-identifier hs-var">RequestTimings</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Seconds
-</span><a href="#local-6989586621690135774"><span class="hs-identifier hs-var">a</span></a></span><span> </span><span class="annot"><span class="annottext">Seconds -&gt; Seconds -&gt; Seconds
+</span><a href="#local-6989586621687916161"><span class="hs-identifier hs-var">a</span></a></span><span> </span><span class="annot"><span class="annottext">Seconds -&gt; Seconds -&gt; Seconds
 forall a. Num a =&gt; a -&gt; a -&gt; a
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var">+</span></a></span><span> </span><span class="annot"><span class="annottext">Seconds
-</span><a href="#local-6989586621690135771"><span class="hs-identifier hs-var">x</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Seconds
-</span><a href="#local-6989586621690135773"><span class="hs-identifier hs-var">b</span></a></span><span> </span><span class="annot"><span class="annottext">Seconds -&gt; Seconds -&gt; Seconds
+</span><span class="hs-operator hs-var">+</span></span><span> </span><span class="annot"><span class="annottext">Seconds
+</span><a href="#local-6989586621687916158"><span class="hs-identifier hs-var">x</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Seconds
+</span><a href="#local-6989586621687916160"><span class="hs-identifier hs-var">b</span></a></span><span> </span><span class="annot"><span class="annottext">Seconds -&gt; Seconds -&gt; Seconds
 forall a. Num a =&gt; a -&gt; a -&gt; a
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var">+</span></a></span><span> </span><span class="annot"><span class="annottext">Seconds
-</span><a href="#local-6989586621690135770"><span class="hs-identifier hs-var">y</span></a></span><span class="hs-special">)</span><span>
+</span><span class="hs-operator hs-var">+</span></span><span> </span><span class="annot"><span class="annottext">Seconds
+</span><a href="#local-6989586621687916157"><span class="hs-identifier hs-var">y</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-58"></span><span>
 </span><span id="line-59"></span><span class="hs-comment">-- | 'RequestTimings' along with the count</span><span>
-</span><span id="line-60"></span><span id="local-6989586621690135767"><span id="local-6989586621690135768"></span></span><span class="hs-keyword">data</span><span> </span><span id="RequestTimingsCount"><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#RequestTimingsCount"><span class="hs-identifier hs-var">RequestTimingsCount</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="RequestTimingsCount"><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#RequestTimingsCount"><span class="hs-identifier hs-var">RequestTimingsCount</span></a></span></span><span>
+</span><span id="line-60"></span><span id="local-6989586621687916154"><span id="local-6989586621687916155"></span></span><span class="hs-keyword">data</span><span> </span><span id="RequestTimingsCount"><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#RequestTimingsCount"><span class="hs-identifier hs-var">RequestTimingsCount</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="RequestTimingsCount"><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#RequestTimingsCount"><span class="hs-identifier hs-var">RequestTimingsCount</span></a></span></span><span>
 </span><span id="line-61"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="%24sel%3AtelemTimeIO%3ARequestTimingsCount"><span class="annot"><span class="annottext">RequestTimingsCount -&gt; Seconds
 </span><a href="Hasura.Server.Telemetry.Counters.html#%24sel%3AtelemTimeIO%3ARequestTimingsCount"><span class="hs-identifier hs-var hs-var">telemTimeIO</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Data.Time.Clock.Units.html#Seconds"><span class="hs-identifier hs-type">Seconds</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-62"></span><span>    </span><span id="%24sel%3AtelemTimeTot%3ARequestTimingsCount"><span class="annot"><span class="annottext">RequestTimingsCount -&gt; Seconds
@@ -155,9 +155,9 @@ forall a. Num a =&gt; a -&gt; a -&gt; a
 </span><span id="line-63"></span><span>    </span><span class="hs-comment">-- | The number of requests that have contributed to the accumulated timings above.</span><span>
 </span><span id="line-64"></span><span>    </span><span class="hs-comment">-- So e.g. @telemTimeTot / count@ would give the mean service time.</span><span>
 </span><span id="line-65"></span><span>    </span><span id="%24sel%3AtelemCount%3ARequestTimingsCount"><span class="annot"><span class="annottext">RequestTimingsCount -&gt; Word
-</span><a href="Hasura.Server.Telemetry.Counters.html#%24sel%3AtelemCount%3ARequestTimingsCount"><span class="hs-identifier hs-var hs-var">telemCount</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/ghc-prim-0.6.1/src"><span class="hs-identifier hs-type">Word</span></a></span><span>
+</span><a href="Hasura.Server.Telemetry.Counters.html#%24sel%3AtelemCount%3ARequestTimingsCount"><span class="hs-identifier hs-var hs-var">telemCount</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><span class="hs-identifier hs-type">Word</span></span><span>
 </span><span id="line-66"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-67"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690135757"><span id="local-6989586621690135759"><span id="local-6989586621690135761"><span class="annot"><span class="annottext">Int -&gt; RequestTimingsCount -&gt; ShowS
+</span><span id="line-67"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687916144"><span id="local-6989586621687916146"><span id="local-6989586621687916148"><span class="annot"><span class="annottext">Int -&gt; RequestTimingsCount -&gt; ShowS
 [RequestTimingsCount] -&gt; ShowS
 RequestTimingsCount -&gt; String
 (Int -&gt; RequestTimingsCount -&gt; ShowS)
@@ -172,7 +172,7 @@ show :: RequestTimingsCount -&gt; String
 $cshow :: RequestTimingsCount -&gt; String
 showsPrec :: Int -&gt; RequestTimingsCount -&gt; ShowS
 $cshowsPrec :: Int -&gt; RequestTimingsCount -&gt; ShowS
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">(forall x. RequestTimingsCount -&gt; Rep RequestTimingsCount x)
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">(forall x. RequestTimingsCount -&gt; Rep RequestTimingsCount x)
 -&gt; (forall x. Rep RequestTimingsCount x -&gt; RequestTimingsCount)
 -&gt; Generic RequestTimingsCount
 forall x. Rep RequestTimingsCount x -&gt; RequestTimingsCount
@@ -181,7 +181,7 @@ forall a.
 (forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
 $cto :: forall x. Rep RequestTimingsCount x -&gt; RequestTimingsCount
 $cfrom :: forall x. RequestTimingsCount -&gt; Rep RequestTimingsCount x
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></a></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690135751"><span id="local-6989586621690135753"><span class="annot"><span class="annottext">RequestTimingsCount -&gt; RequestTimingsCount -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687916138"><span id="local-6989586621687916140"><span class="annot"><span class="annottext">RequestTimingsCount -&gt; RequestTimingsCount -&gt; Bool
 (RequestTimingsCount -&gt; RequestTimingsCount -&gt; Bool)
 -&gt; (RequestTimingsCount -&gt; RequestTimingsCount -&gt; Bool)
 -&gt; Eq RequestTimingsCount
@@ -190,7 +190,7 @@ forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 $c/= :: RequestTimingsCount -&gt; RequestTimingsCount -&gt; Bool
 == :: RequestTimingsCount -&gt; RequestTimingsCount -&gt; Bool
 $c== :: RequestTimingsCount -&gt; RequestTimingsCount -&gt; Bool
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/ghc-prim-0.6.1/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690135736"><span id="local-6989586621690135738"><span id="local-6989586621690135740"><span id="local-6989586621690135742"><span id="local-6989586621690135744"><span id="local-6989586621690135746"><span id="local-6989586621690135748"><span class="annot"><span class="annottext">Eq RequestTimingsCount
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687916123"><span id="local-6989586621687916125"><span id="local-6989586621687916127"><span id="local-6989586621687916129"><span id="local-6989586621687916131"><span id="local-6989586621687916133"><span id="local-6989586621687916135"><span class="annot"><span class="annottext">Eq RequestTimingsCount
 Eq RequestTimingsCount
 -&gt; (RequestTimingsCount -&gt; RequestTimingsCount -&gt; Ordering)
 -&gt; (RequestTimingsCount -&gt; RequestTimingsCount -&gt; Bool)
@@ -230,39 +230,39 @@ $c&lt; :: RequestTimingsCount -&gt; RequestTimingsCount -&gt; Bool
 compare :: RequestTimingsCount -&gt; RequestTimingsCount -&gt; Ordering
 $ccompare :: RequestTimingsCount -&gt; RequestTimingsCount -&gt; Ordering
 $cp1Ord :: Eq RequestTimingsCount
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/ghc-prim-0.6.1/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></a></span></span></span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-68"></span><span>
 </span><span id="line-69"></span><span class="hs-comment">-- | Sum</span><span>
-</span><span id="line-70"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690135731"><span id="local-6989586621690135733"><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-type">Semigroup</span></a></span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#RequestTimingsCount"><span class="hs-identifier hs-type">RequestTimingsCount</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-71"></span><span>  </span><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#RequestTimingsCount"><span class="hs-identifier hs-type">RequestTimingsCount</span></a></span><span> </span><span id="local-6989586621690135730"><span class="annot"><span class="annottext">Seconds
-</span><a href="#local-6989586621690135730"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span id="local-6989586621690135729"><span class="annot"><span class="annottext">Seconds
-</span><a href="#local-6989586621690135729"><span class="hs-identifier hs-var">b</span></a></span></span><span> </span><span id="local-6989586621690135728"><span class="annot"><span class="annottext">Word
-</span><a href="#local-6989586621690135728"><span class="hs-identifier hs-var">c</span></a></span></span><span> </span><span id="local-6989586621690135727"><span class="annot"><span class="annottext">&lt;&gt; :: RequestTimingsCount -&gt; RequestTimingsCount -&gt; RequestTimingsCount
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var hs-var hs-var hs-var">&lt;&gt;</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#RequestTimingsCount"><span class="hs-identifier hs-type">RequestTimingsCount</span></a></span><span> </span><span id="local-6989586621690135726"><span class="annot"><span class="annottext">Seconds
-</span><a href="#local-6989586621690135726"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span id="local-6989586621690135725"><span class="annot"><span class="annottext">Seconds
-</span><a href="#local-6989586621690135725"><span class="hs-identifier hs-var">y</span></a></span></span><span> </span><span id="local-6989586621690135724"><span class="annot"><span class="annottext">Word
-</span><a href="#local-6989586621690135724"><span class="hs-identifier hs-var">z</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-70"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687916118"><span id="local-6989586621687916120"><span class="annot"><span class="hs-identifier hs-type">Semigroup</span></span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#RequestTimingsCount"><span class="hs-identifier hs-type">RequestTimingsCount</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-71"></span><span>  </span><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#RequestTimingsCount"><span class="hs-identifier hs-type">RequestTimingsCount</span></a></span><span> </span><span id="local-6989586621687916117"><span class="annot"><span class="annottext">Seconds
+</span><a href="#local-6989586621687916117"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span id="local-6989586621687916116"><span class="annot"><span class="annottext">Seconds
+</span><a href="#local-6989586621687916116"><span class="hs-identifier hs-var">b</span></a></span></span><span> </span><span id="local-6989586621687916115"><span class="annot"><span class="annottext">Word
+</span><a href="#local-6989586621687916115"><span class="hs-identifier hs-var">c</span></a></span></span><span> </span><span id="local-6989586621687916114"><span class="annot"><span class="annottext">&lt;&gt; :: RequestTimingsCount -&gt; RequestTimingsCount -&gt; RequestTimingsCount
+</span><span class="hs-operator hs-var hs-var hs-var hs-var">&lt;&gt;</span></span></span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#RequestTimingsCount"><span class="hs-identifier hs-type">RequestTimingsCount</span></a></span><span> </span><span id="local-6989586621687916113"><span class="annot"><span class="annottext">Seconds
+</span><a href="#local-6989586621687916113"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span id="local-6989586621687916112"><span class="annot"><span class="annottext">Seconds
+</span><a href="#local-6989586621687916112"><span class="hs-identifier hs-var">y</span></a></span></span><span> </span><span id="local-6989586621687916111"><span class="annot"><span class="annottext">Word
+</span><a href="#local-6989586621687916111"><span class="hs-identifier hs-var">z</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-72"></span><span>    </span><span class="annot"><span class="annottext">Seconds -&gt; Seconds -&gt; Word -&gt; RequestTimingsCount
 </span><a href="Hasura.Server.Telemetry.Counters.html#RequestTimingsCount"><span class="hs-identifier hs-var">RequestTimingsCount</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Seconds
-</span><a href="#local-6989586621690135730"><span class="hs-identifier hs-var">a</span></a></span><span> </span><span class="annot"><span class="annottext">Seconds -&gt; Seconds -&gt; Seconds
+</span><a href="#local-6989586621687916117"><span class="hs-identifier hs-var">a</span></a></span><span> </span><span class="annot"><span class="annottext">Seconds -&gt; Seconds -&gt; Seconds
 forall a. Num a =&gt; a -&gt; a -&gt; a
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var">+</span></a></span><span> </span><span class="annot"><span class="annottext">Seconds
-</span><a href="#local-6989586621690135726"><span class="hs-identifier hs-var">x</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Seconds
-</span><a href="#local-6989586621690135729"><span class="hs-identifier hs-var">b</span></a></span><span> </span><span class="annot"><span class="annottext">Seconds -&gt; Seconds -&gt; Seconds
+</span><span class="hs-operator hs-var">+</span></span><span> </span><span class="annot"><span class="annottext">Seconds
+</span><a href="#local-6989586621687916113"><span class="hs-identifier hs-var">x</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Seconds
+</span><a href="#local-6989586621687916116"><span class="hs-identifier hs-var">b</span></a></span><span> </span><span class="annot"><span class="annottext">Seconds -&gt; Seconds -&gt; Seconds
 forall a. Num a =&gt; a -&gt; a -&gt; a
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var">+</span></a></span><span> </span><span class="annot"><span class="annottext">Seconds
-</span><a href="#local-6989586621690135725"><span class="hs-identifier hs-var">y</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Word
-</span><a href="#local-6989586621690135728"><span class="hs-identifier hs-var">c</span></a></span><span> </span><span class="annot"><span class="annottext">Word -&gt; Word -&gt; Word
+</span><span class="hs-operator hs-var">+</span></span><span> </span><span class="annot"><span class="annottext">Seconds
+</span><a href="#local-6989586621687916112"><span class="hs-identifier hs-var">y</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Word
+</span><a href="#local-6989586621687916115"><span class="hs-identifier hs-var">c</span></a></span><span> </span><span class="annot"><span class="annottext">Word -&gt; Word -&gt; Word
 forall a. Num a =&gt; a -&gt; a -&gt; a
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var">+</span></a></span><span> </span><span class="annot"><span class="annottext">Word
-</span><a href="#local-6989586621690135724"><span class="hs-identifier hs-var">z</span></a></span><span class="hs-special">)</span><span>
+</span><span class="hs-operator hs-var">+</span></span><span> </span><span class="annot"><span class="annottext">Word
+</span><a href="#local-6989586621687916111"><span class="hs-identifier hs-var">z</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-73"></span><span>
 </span><span id="line-74"></span><span class="hs-comment">-- | Internal. Counts and durations across many 'RequestDimensions'.</span><span>
 </span><span id="line-75"></span><span class="hs-comment">--</span><span>
 </span><span id="line-76"></span><span class="hs-comment">-- NOTE: We use the global mutable variable pattern for metric collection</span><span>
 </span><span id="line-77"></span><span class="hs-comment">-- counters for convenience at collection site (don't wear hairshirts that</span><span>
 </span><span id="line-78"></span><span class="hs-comment">-- discourage useful reporting).</span><span>
-</span><span id="line-79"></span><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#requestCounters"><span class="hs-identifier hs-type">requestCounters</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-type">IORef</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/unordered-containers-0.2.13.0-3905cc0dd583bf2295f4fffefb94c9b368aca205fb5d2fe8619d64b3bfba7af9/share/doc/html/src"><span class="hs-identifier hs-type">HM.HashMap</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#RequestDimensions"><span class="hs-identifier hs-type">RequestDimensions</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#RunningTimeBucket"><span class="hs-identifier hs-type">RunningTimeBucket</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#RequestTimingsCount"><span class="hs-identifier hs-type">RequestTimingsCount</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-79"></span><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#requestCounters"><span class="hs-identifier hs-type">requestCounters</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">IORef</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">HM.HashMap</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#RequestDimensions"><span class="hs-identifier hs-type">RequestDimensions</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#RunningTimeBucket"><span class="hs-identifier hs-type">RunningTimeBucket</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#RequestTimingsCount"><span class="hs-identifier hs-type">RequestTimingsCount</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-80"></span><span class="hs-pragma">{-# NOINLINE</span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#requestCounters"><span class="hs-pragma hs-type">requestCounters</span></a></span><span> </span><span class="hs-pragma">#-}</span><span>
 </span><span id="line-81"></span><span id="requestCounters"><span class="annot"><span class="annottext">requestCounters :: IORef
   (HashMap
@@ -275,7 +275,7 @@ forall a. Num a =&gt; a -&gt; a -&gt; a
      (HashMap
         (RequestDimensions, RunningTimeBucket) RequestTimingsCount)
 forall a. IO a -&gt; a
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var">unsafePerformIO</span></a></span><span> </span><span class="annot"><span class="annottext">(IO
+</span><span class="hs-identifier hs-var">unsafePerformIO</span></span><span> </span><span class="annot"><span class="annottext">(IO
    (IORef
       (HashMap
          (RequestDimensions, RunningTimeBucket) RequestTimingsCount))
@@ -290,15 +290,15 @@ forall a. IO a -&gt; a
      (HashMap
         (RequestDimensions, RunningTimeBucket) RequestTimingsCount)
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap (RequestDimensions, RunningTimeBucket) RequestTimingsCount
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">HashMap (RequestDimensions, RunningTimeBucket) RequestTimingsCount
 -&gt; IO
      (IORef
         (HashMap
            (RequestDimensions, RunningTimeBucket) RequestTimingsCount))
 forall a. a -&gt; IO (IORef a)
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var">newIORef</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap (RequestDimensions, RunningTimeBucket) RequestTimingsCount
+</span><span class="hs-identifier hs-var">newIORef</span></span><span> </span><span class="annot"><span class="annottext">HashMap (RequestDimensions, RunningTimeBucket) RequestTimingsCount
 forall k v. HashMap k v
-</span><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/unordered-containers-0.2.13.0-3905cc0dd583bf2295f4fffefb94c9b368aca205fb5d2fe8619d64b3bfba7af9/share/doc/html/src"><span class="hs-identifier hs-var">HM.empty</span></a></span><span>
+</span><span class="hs-identifier hs-var">HM.empty</span></span><span>
 </span><span id="line-82"></span><span>
 </span><span id="line-83"></span><span class="hs-comment">-- | Internal. Since these metrics are accumulated while graphql-engine is</span><span>
 </span><span id="line-84"></span><span class="hs-comment">-- running and sent periodically, we need to include a tag that is unique for</span><span>
@@ -307,17 +307,17 @@ forall k v. HashMap k v
 </span><span id="line-87"></span><span class="hs-comment">--</span><span>
 </span><span id="line-88"></span><span class="hs-comment">-- We use time rather than a UUID since having this be monotonic increasing is</span><span>
 </span><span id="line-89"></span><span class="hs-comment">-- convenient.</span><span>
-</span><span id="line-90"></span><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#approxStartTime"><span class="hs-identifier hs-type">approxStartTime</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/time-1.9.3/src"><span class="hs-identifier hs-type">POSIXTime</span></a></span><span>
+</span><span id="line-90"></span><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#approxStartTime"><span class="hs-identifier hs-type">approxStartTime</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">POSIXTime</span></span><span>
 </span><span id="line-91"></span><span class="hs-pragma">{-# NOINLINE</span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#approxStartTime"><span class="hs-pragma hs-type">approxStartTime</span></a></span><span> </span><span class="hs-pragma">#-}</span><span>
 </span><span id="line-92"></span><span id="approxStartTime"><span class="annot"><span class="annottext">approxStartTime :: POSIXTime
 </span><a href="Hasura.Server.Telemetry.Counters.html#approxStartTime"><span class="hs-identifier hs-var hs-var">approxStartTime</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">IO POSIXTime -&gt; POSIXTime
 forall a. IO a -&gt; a
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var">unsafePerformIO</span></a></span><span> </span><span class="annot"><span class="annottext">IO POSIXTime
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/time-1.9.3/src"><span class="hs-identifier hs-var">getPOSIXTime</span></a></span><span>
+</span><span class="hs-identifier hs-var">unsafePerformIO</span></span><span> </span><span class="annot"><span class="annottext">IO POSIXTime
+</span><span class="hs-identifier hs-var">getPOSIXTime</span></span><span>
 </span><span id="line-93"></span><span>
 </span><span id="line-94"></span><span class="hs-comment">-- | Was this request a mutation (involved DB writes)?</span><span>
-</span><span id="line-95"></span><span id="local-6989586621690135718"><span id="local-6989586621690135719"></span></span><span class="hs-keyword">data</span><span> </span><span id="QueryType"><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#QueryType"><span class="hs-identifier hs-var">QueryType</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Mutation"><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#Mutation"><span class="hs-identifier hs-var">Mutation</span></a></span></span><span> </span><span class="hs-glyph">|</span><span> </span><span id="Query"><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#Query"><span class="hs-identifier hs-var">Query</span></a></span></span><span>
-</span><span id="line-96"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690135700"><span id="local-6989586621690135702"><span id="local-6989586621690135704"><span id="local-6989586621690135706"><span id="local-6989586621690135708"><span id="local-6989586621690135710"><span id="local-6989586621690135712"><span id="local-6989586621690135714"><span class="annot"><span class="annottext">Int -&gt; QueryType
+</span><span id="line-95"></span><span id="local-6989586621687916105"><span id="local-6989586621687916106"></span></span><span class="hs-keyword">data</span><span> </span><span id="QueryType"><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#QueryType"><span class="hs-identifier hs-var">QueryType</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Mutation"><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#Mutation"><span class="hs-identifier hs-var">Mutation</span></a></span></span><span> </span><span class="hs-glyph">|</span><span> </span><span id="Query"><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#Query"><span class="hs-identifier hs-var">Query</span></a></span></span><span>
+</span><span id="line-96"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687916087"><span id="local-6989586621687916089"><span id="local-6989586621687916091"><span id="local-6989586621687916093"><span id="local-6989586621687916095"><span id="local-6989586621687916097"><span id="local-6989586621687916099"><span id="local-6989586621687916101"><span class="annot"><span class="annottext">Int -&gt; QueryType
 QueryType -&gt; Int
 QueryType -&gt; [QueryType]
 QueryType -&gt; QueryType
@@ -358,7 +358,7 @@ pred :: QueryType -&gt; QueryType
 $cpred :: QueryType -&gt; QueryType
 succ :: QueryType -&gt; QueryType
 $csucc :: QueryType -&gt; QueryType
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Enum</span></a></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690135693"><span id="local-6989586621690135695"><span id="local-6989586621690135697"><span class="annot"><span class="annottext">Int -&gt; QueryType -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Enum</span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687916080"><span id="local-6989586621687916082"><span id="local-6989586621687916084"><span class="annot"><span class="annottext">Int -&gt; QueryType -&gt; ShowS
 [QueryType] -&gt; ShowS
 QueryType -&gt; String
 (Int -&gt; QueryType -&gt; ShowS)
@@ -373,7 +373,7 @@ show :: QueryType -&gt; String
 $cshow :: QueryType -&gt; String
 showsPrec :: Int -&gt; QueryType -&gt; ShowS
 $cshowsPrec :: Int -&gt; QueryType -&gt; ShowS
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690135689"><span id="local-6989586621690135691"><span class="annot"><span class="annottext">QueryType -&gt; QueryType -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687916076"><span id="local-6989586621687916078"><span class="annot"><span class="annottext">QueryType -&gt; QueryType -&gt; Bool
 (QueryType -&gt; QueryType -&gt; Bool)
 -&gt; (QueryType -&gt; QueryType -&gt; Bool) -&gt; Eq QueryType
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -381,7 +381,7 @@ forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 $c/= :: QueryType -&gt; QueryType -&gt; Bool
 == :: QueryType -&gt; QueryType -&gt; Bool
 $c== :: QueryType -&gt; QueryType -&gt; Bool
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/ghc-prim-0.6.1/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690135674"><span id="local-6989586621690135676"><span id="local-6989586621690135678"><span id="local-6989586621690135680"><span id="local-6989586621690135682"><span id="local-6989586621690135684"><span id="local-6989586621690135686"><span class="annot"><span class="annottext">Eq QueryType
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687916061"><span id="local-6989586621687916063"><span id="local-6989586621687916065"><span id="local-6989586621687916067"><span id="local-6989586621687916069"><span id="local-6989586621687916071"><span id="local-6989586621687916073"><span class="annot"><span class="annottext">Eq QueryType
 Eq QueryType
 -&gt; (QueryType -&gt; QueryType -&gt; Ordering)
 -&gt; (QueryType -&gt; QueryType -&gt; Bool)
@@ -419,7 +419,7 @@ $c&lt; :: QueryType -&gt; QueryType -&gt; Bool
 compare :: QueryType -&gt; QueryType -&gt; Ordering
 $ccompare :: QueryType -&gt; QueryType -&gt; Ordering
 $cp1Ord :: Eq QueryType
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/ghc-prim-0.6.1/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></a></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">(forall x. QueryType -&gt; Rep QueryType x)
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">(forall x. QueryType -&gt; Rep QueryType x)
 -&gt; (forall x. Rep QueryType x -&gt; QueryType) -&gt; Generic QueryType
 forall x. Rep QueryType x -&gt; QueryType
 forall x. QueryType -&gt; Rep QueryType x
@@ -427,16 +427,16 @@ forall a.
 (forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
 $cto :: forall x. Rep QueryType x -&gt; QueryType
 $cfrom :: forall x. QueryType -&gt; Rep QueryType x
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></a></span><span class="hs-special">)</span><span>
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">)</span><span>
 </span><span id="line-97"></span><span>
-</span><span id="line-98"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690135668"><span id="local-6989586621690135670"><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/hashable-1.3.0.0-788b52f2a84e4f56df08780d211980a9db35c8fd0786c16a6d78251880c45f3d/share/doc/html/src"><span class="hs-identifier hs-type">Hashable</span></a></span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#QueryType"><span class="hs-identifier hs-type">QueryType</span></a></span></span></span><span>
+</span><span id="line-98"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687916055"><span id="local-6989586621687916057"><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#QueryType"><span class="hs-identifier hs-type">QueryType</span></a></span></span></span><span>
 </span><span id="line-99"></span><span>
-</span><span id="line-100"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690135660"><span id="local-6989586621690135662"><span id="local-6989586621690135664"><span id="local-6989586621690135666"><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/aeson-1.5.5.1-d565b322355c9794eb059b7477592fe0d20db50e9f4ac0ae0328e907dd753173/share/doc/html/src"><span class="hs-identifier hs-type">A.ToJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#QueryType"><span class="hs-identifier hs-type">QueryType</span></a></span></span></span></span></span><span>
+</span><span id="line-100"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687916047"><span id="local-6989586621687916049"><span id="local-6989586621687916051"><span id="local-6989586621687916053"><span class="annot"><span class="hs-identifier hs-type">A.ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#QueryType"><span class="hs-identifier hs-type">QueryType</span></a></span></span></span></span></span><span>
 </span><span id="line-101"></span><span>
-</span><span id="line-102"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690135655"><span id="local-6989586621690135657"><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/aeson-1.5.5.1-d565b322355c9794eb059b7477592fe0d20db50e9f4ac0ae0328e907dd753173/share/doc/html/src"><span class="hs-identifier hs-type">A.FromJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#QueryType"><span class="hs-identifier hs-type">QueryType</span></a></span></span></span><span>
+</span><span id="line-102"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687916042"><span id="local-6989586621687916044"><span class="annot"><span class="hs-identifier hs-type">A.FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#QueryType"><span class="hs-identifier hs-type">QueryType</span></a></span></span></span><span>
 </span><span id="line-103"></span><span>
 </span><span id="line-104"></span><span class="hs-comment">-- | Was this a PG local query, or did it involve remote execution?</span><span>
-</span><span id="line-105"></span><span id="local-6989586621690135652"><span id="local-6989586621690135653"></span></span><span class="hs-keyword">data</span><span> </span><span id="Locality"><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#Locality"><span class="hs-identifier hs-var">Locality</span></a></span></span><span>
+</span><span id="line-105"></span><span id="local-6989586621687916039"><span id="local-6989586621687916040"></span></span><span class="hs-keyword">data</span><span> </span><span id="Locality"><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#Locality"><span class="hs-identifier hs-var">Locality</span></a></span></span><span>
 </span><span id="line-106"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span class="hs-comment">-- | No data was fetched</span><span>
 </span><span id="line-107"></span><span>    </span><span id="Empty"><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#Empty"><span class="hs-identifier hs-var">Empty</span></a></span></span><span>
 </span><span id="line-108"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="hs-comment">-- | local DB data</span><span>
@@ -445,7 +445,7 @@ $cfrom :: forall x. QueryType -&gt; Rep QueryType x
 </span><span id="line-111"></span><span>    </span><span id="Remote"><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#Remote"><span class="hs-identifier hs-var">Remote</span></a></span></span><span>
 </span><span id="line-112"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="hs-comment">-- | mixed</span><span>
 </span><span id="line-113"></span><span>    </span><span id="Heterogeneous"><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#Heterogeneous"><span class="hs-identifier hs-var">Heterogeneous</span></a></span></span><span>
-</span><span id="line-114"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690135632"><span id="local-6989586621690135634"><span id="local-6989586621690135636"><span id="local-6989586621690135638"><span id="local-6989586621690135640"><span id="local-6989586621690135642"><span id="local-6989586621690135644"><span id="local-6989586621690135646"><span class="annot"><span class="annottext">Int -&gt; Locality
+</span><span id="line-114"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687916019"><span id="local-6989586621687916021"><span id="local-6989586621687916023"><span id="local-6989586621687916025"><span id="local-6989586621687916027"><span id="local-6989586621687916029"><span id="local-6989586621687916031"><span id="local-6989586621687916033"><span class="annot"><span class="annottext">Int -&gt; Locality
 Locality -&gt; Int
 Locality -&gt; [Locality]
 Locality -&gt; Locality
@@ -486,7 +486,7 @@ pred :: Locality -&gt; Locality
 $cpred :: Locality -&gt; Locality
 succ :: Locality -&gt; Locality
 $csucc :: Locality -&gt; Locality
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Enum</span></a></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690135626"><span id="local-6989586621690135628"><span id="local-6989586621690135630"><span class="annot"><span class="annottext">Int -&gt; Locality -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Enum</span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687916013"><span id="local-6989586621687916015"><span id="local-6989586621687916017"><span class="annot"><span class="annottext">Int -&gt; Locality -&gt; ShowS
 [Locality] -&gt; ShowS
 Locality -&gt; String
 (Int -&gt; Locality -&gt; ShowS)
@@ -499,7 +499,7 @@ show :: Locality -&gt; String
 $cshow :: Locality -&gt; String
 showsPrec :: Int -&gt; Locality -&gt; ShowS
 $cshowsPrec :: Int -&gt; Locality -&gt; ShowS
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690135622"><span id="local-6989586621690135624"><span class="annot"><span class="annottext">Locality -&gt; Locality -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687916009"><span id="local-6989586621687916011"><span class="annot"><span class="annottext">Locality -&gt; Locality -&gt; Bool
 (Locality -&gt; Locality -&gt; Bool)
 -&gt; (Locality -&gt; Locality -&gt; Bool) -&gt; Eq Locality
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -507,7 +507,7 @@ forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 $c/= :: Locality -&gt; Locality -&gt; Bool
 == :: Locality -&gt; Locality -&gt; Bool
 $c== :: Locality -&gt; Locality -&gt; Bool
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/ghc-prim-0.6.1/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690135607"><span id="local-6989586621690135609"><span id="local-6989586621690135611"><span id="local-6989586621690135613"><span id="local-6989586621690135615"><span id="local-6989586621690135617"><span id="local-6989586621690135619"><span class="annot"><span class="annottext">Eq Locality
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687915994"><span id="local-6989586621687915996"><span id="local-6989586621687915998"><span id="local-6989586621687916000"><span id="local-6989586621687916002"><span id="local-6989586621687916004"><span id="local-6989586621687916006"><span class="annot"><span class="annottext">Eq Locality
 Eq Locality
 -&gt; (Locality -&gt; Locality -&gt; Ordering)
 -&gt; (Locality -&gt; Locality -&gt; Bool)
@@ -545,7 +545,7 @@ $c&lt; :: Locality -&gt; Locality -&gt; Bool
 compare :: Locality -&gt; Locality -&gt; Ordering
 $ccompare :: Locality -&gt; Locality -&gt; Ordering
 $cp1Ord :: Eq Locality
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/ghc-prim-0.6.1/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></a></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">(forall x. Locality -&gt; Rep Locality x)
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">(forall x. Locality -&gt; Rep Locality x)
 -&gt; (forall x. Rep Locality x -&gt; Locality) -&gt; Generic Locality
 forall x. Rep Locality x -&gt; Locality
 forall x. Locality -&gt; Rep Locality x
@@ -553,45 +553,45 @@ forall a.
 (forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
 $cto :: forall x. Rep Locality x -&gt; Locality
 $cfrom :: forall x. Locality -&gt; Rep Locality x
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></a></span><span class="hs-special">)</span><span>
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">)</span><span>
 </span><span id="line-115"></span><span>
-</span><span id="line-116"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690135601"><span id="local-6989586621690135603"><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/hashable-1.3.0.0-788b52f2a84e4f56df08780d211980a9db35c8fd0786c16a6d78251880c45f3d/share/doc/html/src"><span class="hs-identifier hs-type">Hashable</span></a></span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#Locality"><span class="hs-identifier hs-type">Locality</span></a></span></span></span><span>
+</span><span id="line-116"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687915988"><span id="local-6989586621687915990"><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#Locality"><span class="hs-identifier hs-type">Locality</span></a></span></span></span><span>
 </span><span id="line-117"></span><span>
-</span><span id="line-118"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690135593"><span id="local-6989586621690135595"><span id="local-6989586621690135597"><span id="local-6989586621690135599"><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/aeson-1.5.5.1-d565b322355c9794eb059b7477592fe0d20db50e9f4ac0ae0328e907dd753173/share/doc/html/src"><span class="hs-identifier hs-type">A.ToJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#Locality"><span class="hs-identifier hs-type">Locality</span></a></span></span></span></span></span><span>
+</span><span id="line-118"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687915980"><span id="local-6989586621687915982"><span id="local-6989586621687915984"><span id="local-6989586621687915986"><span class="annot"><span class="hs-identifier hs-type">A.ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#Locality"><span class="hs-identifier hs-type">Locality</span></a></span></span></span></span></span><span>
 </span><span id="line-119"></span><span>
-</span><span id="line-120"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690135589"><span id="local-6989586621690135591"><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/aeson-1.5.5.1-d565b322355c9794eb059b7477592fe0d20db50e9f4ac0ae0328e907dd753173/share/doc/html/src"><span class="hs-identifier hs-type">A.FromJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#Locality"><span class="hs-identifier hs-type">Locality</span></a></span></span></span><span>
+</span><span id="line-120"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687915976"><span id="local-6989586621687915978"><span class="annot"><span class="hs-identifier hs-type">A.FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#Locality"><span class="hs-identifier hs-type">Locality</span></a></span></span></span><span>
 </span><span id="line-121"></span><span>
-</span><span id="line-122"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690135584"><span id="local-6989586621690135586"><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-type">Semigroup</span></a></span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#Locality"><span class="hs-identifier hs-type">Locality</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-122"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687915971"><span id="local-6989586621687915973"><span class="annot"><span class="hs-identifier hs-type">Semigroup</span></span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#Locality"><span class="hs-identifier hs-type">Locality</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
 </span><span id="line-123"></span><span>  </span><span class="annot"><span class="annottext">Locality
-</span><a href="Hasura.Server.Telemetry.Counters.html#Empty"><span class="hs-identifier hs-var">Empty</span></a></span><span> </span><span id="local-6989586621690135583"><span class="annot"><span class="annottext">&lt;&gt; :: Locality -&gt; Locality -&gt; Locality
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var hs-var hs-var hs-var">&lt;&gt;</span></a></span></span><span> </span><span id="local-6989586621690135582"><span class="annot"><span class="annottext">Locality
-</span><a href="#local-6989586621690135582"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Locality
-</span><a href="#local-6989586621690135582"><span class="hs-identifier hs-var">x</span></a></span><span>
-</span><span id="line-124"></span><span>  </span><span id="local-6989586621690135581"><span class="annot"><span class="annottext">Locality
-</span><a href="#local-6989586621690135581"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Locality
+</span><a href="Hasura.Server.Telemetry.Counters.html#Empty"><span class="hs-identifier hs-var">Empty</span></a></span><span> </span><span id="local-6989586621687915970"><span class="annot"><span class="annottext">&lt;&gt; :: Locality -&gt; Locality -&gt; Locality
+</span><span class="hs-operator hs-var hs-var hs-var hs-var">&lt;&gt;</span></span></span><span> </span><span id="local-6989586621687915969"><span class="annot"><span class="annottext">Locality
+</span><a href="#local-6989586621687915969"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Locality
+</span><a href="#local-6989586621687915969"><span class="hs-identifier hs-var">x</span></a></span><span>
+</span><span id="line-124"></span><span>  </span><span id="local-6989586621687915968"><span class="annot"><span class="annottext">Locality
+</span><a href="#local-6989586621687915968"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="annot"><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Locality
 </span><a href="Hasura.Server.Telemetry.Counters.html#Empty"><span class="hs-identifier hs-var">Empty</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Locality
-</span><a href="#local-6989586621690135581"><span class="hs-identifier hs-var">x</span></a></span><span>
-</span><span id="line-125"></span><span>  </span><span id="local-6989586621690135580"><span class="annot"><span class="annottext">Locality
-</span><a href="#local-6989586621690135580"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span id="local-6989586621690135579"><span class="annot"><span class="annottext">Locality
-</span><a href="#local-6989586621690135579"><span class="hs-identifier hs-var">y</span></a></span></span><span> </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Locality
-</span><a href="#local-6989586621690135580"><span class="hs-identifier hs-var">x</span></a></span><span> </span><span class="annot"><span class="annottext">Locality -&gt; Locality -&gt; Bool
+</span><a href="#local-6989586621687915968"><span class="hs-identifier hs-var">x</span></a></span><span>
+</span><span id="line-125"></span><span>  </span><span id="local-6989586621687915967"><span class="annot"><span class="annottext">Locality
+</span><a href="#local-6989586621687915967"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="annot"><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span id="local-6989586621687915966"><span class="annot"><span class="annottext">Locality
+</span><a href="#local-6989586621687915966"><span class="hs-identifier hs-var">y</span></a></span></span><span> </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Locality
+</span><a href="#local-6989586621687915967"><span class="hs-identifier hs-var">x</span></a></span><span> </span><span class="annot"><span class="annottext">Locality -&gt; Locality -&gt; Bool
 forall a. Eq a =&gt; a -&gt; a -&gt; Bool
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/ghc-prim-0.6.1/src"><span class="hs-operator hs-var">==</span></a></span><span> </span><span class="annot"><span class="annottext">Locality
-</span><a href="#local-6989586621690135579"><span class="hs-identifier hs-var">y</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Locality
-</span><a href="#local-6989586621690135580"><span class="hs-identifier hs-var">x</span></a></span><span>
+</span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="annottext">Locality
+</span><a href="#local-6989586621687915966"><span class="hs-identifier hs-var">y</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Locality
+</span><a href="#local-6989586621687915967"><span class="hs-identifier hs-var">x</span></a></span><span>
 </span><span id="line-126"></span><span>  </span><span class="annot"><span class="annottext">Locality
-</span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Locality
+</span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Locality
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Locality
 </span><a href="Hasura.Server.Telemetry.Counters.html#Heterogeneous"><span class="hs-identifier hs-var">Heterogeneous</span></a></span><span>
 </span><span id="line-127"></span><span>
-</span><span id="line-128"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690135573"><span id="local-6989586621690135575"><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-type">Monoid</span></a></span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#Locality"><span class="hs-identifier hs-type">Locality</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-129"></span><span>  </span><span id="local-6989586621690135571"><span class="annot"><span class="annottext">mempty :: Locality
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">mempty</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Locality
+</span><span id="line-128"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687915960"><span id="local-6989586621687915962"><span class="annot"><span class="hs-identifier hs-type">Monoid</span></span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#Locality"><span class="hs-identifier hs-type">Locality</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-129"></span><span>  </span><span id="local-6989586621687915958"><span class="annot"><span class="annottext">mempty :: Locality
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">mempty</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Locality
 </span><a href="Hasura.Server.Telemetry.Counters.html#Empty"><span class="hs-identifier hs-var">Empty</span></a></span><span>
 </span><span id="line-130"></span><span>
 </span><span id="line-131"></span><span class="hs-comment">-- | Was this a query over http or websockets?</span><span>
-</span><span id="line-132"></span><span id="local-6989586621690135569"><span id="local-6989586621690135570"></span></span><span class="hs-keyword">data</span><span> </span><span id="Transport"><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#Transport"><span class="hs-identifier hs-var">Transport</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="HTTP"><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#HTTP"><span class="hs-identifier hs-var">HTTP</span></a></span></span><span> </span><span class="hs-glyph">|</span><span> </span><span id="WebSocket"><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#WebSocket"><span class="hs-identifier hs-var">WebSocket</span></a></span></span><span>
-</span><span id="line-133"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690135551"><span id="local-6989586621690135553"><span id="local-6989586621690135555"><span id="local-6989586621690135557"><span id="local-6989586621690135559"><span id="local-6989586621690135561"><span id="local-6989586621690135563"><span id="local-6989586621690135565"><span class="annot"><span class="annottext">Int -&gt; Transport
+</span><span id="line-132"></span><span id="local-6989586621687915956"><span id="local-6989586621687915957"></span></span><span class="hs-keyword">data</span><span> </span><span id="Transport"><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#Transport"><span class="hs-identifier hs-var">Transport</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="HTTP"><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#HTTP"><span class="hs-identifier hs-var">HTTP</span></a></span></span><span> </span><span class="hs-glyph">|</span><span> </span><span id="WebSocket"><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#WebSocket"><span class="hs-identifier hs-var">WebSocket</span></a></span></span><span>
+</span><span id="line-133"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687915938"><span id="local-6989586621687915940"><span id="local-6989586621687915942"><span id="local-6989586621687915944"><span id="local-6989586621687915946"><span id="local-6989586621687915948"><span id="local-6989586621687915950"><span id="local-6989586621687915952"><span class="annot"><span class="annottext">Int -&gt; Transport
 Transport -&gt; Int
 Transport -&gt; [Transport]
 Transport -&gt; Transport
@@ -632,7 +632,7 @@ pred :: Transport -&gt; Transport
 $cpred :: Transport -&gt; Transport
 succ :: Transport -&gt; Transport
 $csucc :: Transport -&gt; Transport
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Enum</span></a></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690135545"><span id="local-6989586621690135547"><span id="local-6989586621690135549"><span class="annot"><span class="annottext">Int -&gt; Transport -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Enum</span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687915932"><span id="local-6989586621687915934"><span id="local-6989586621687915936"><span class="annot"><span class="annottext">Int -&gt; Transport -&gt; ShowS
 [Transport] -&gt; ShowS
 Transport -&gt; String
 (Int -&gt; Transport -&gt; ShowS)
@@ -647,7 +647,7 @@ show :: Transport -&gt; String
 $cshow :: Transport -&gt; String
 showsPrec :: Int -&gt; Transport -&gt; ShowS
 $cshowsPrec :: Int -&gt; Transport -&gt; ShowS
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690135541"><span id="local-6989586621690135543"><span class="annot"><span class="annottext">Transport -&gt; Transport -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687915928"><span id="local-6989586621687915930"><span class="annot"><span class="annottext">Transport -&gt; Transport -&gt; Bool
 (Transport -&gt; Transport -&gt; Bool)
 -&gt; (Transport -&gt; Transport -&gt; Bool) -&gt; Eq Transport
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -655,7 +655,7 @@ forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 $c/= :: Transport -&gt; Transport -&gt; Bool
 == :: Transport -&gt; Transport -&gt; Bool
 $c== :: Transport -&gt; Transport -&gt; Bool
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/ghc-prim-0.6.1/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690135526"><span id="local-6989586621690135528"><span id="local-6989586621690135530"><span id="local-6989586621690135532"><span id="local-6989586621690135534"><span id="local-6989586621690135536"><span id="local-6989586621690135538"><span class="annot"><span class="annottext">Eq Transport
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687915913"><span id="local-6989586621687915915"><span id="local-6989586621687915917"><span id="local-6989586621687915919"><span id="local-6989586621687915921"><span id="local-6989586621687915923"><span id="local-6989586621687915925"><span class="annot"><span class="annottext">Eq Transport
 Eq Transport
 -&gt; (Transport -&gt; Transport -&gt; Ordering)
 -&gt; (Transport -&gt; Transport -&gt; Bool)
@@ -693,7 +693,7 @@ $c&lt; :: Transport -&gt; Transport -&gt; Bool
 compare :: Transport -&gt; Transport -&gt; Ordering
 $ccompare :: Transport -&gt; Transport -&gt; Ordering
 $cp1Ord :: Eq Transport
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/ghc-prim-0.6.1/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></a></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">(forall x. Transport -&gt; Rep Transport x)
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">(forall x. Transport -&gt; Rep Transport x)
 -&gt; (forall x. Rep Transport x -&gt; Transport) -&gt; Generic Transport
 forall x. Rep Transport x -&gt; Transport
 forall x. Transport -&gt; Rep Transport x
@@ -701,19 +701,19 @@ forall a.
 (forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
 $cto :: forall x. Rep Transport x -&gt; Transport
 $cfrom :: forall x. Transport -&gt; Rep Transport x
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></a></span><span class="hs-special">)</span><span>
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">)</span><span>
 </span><span id="line-134"></span><span>
-</span><span id="line-135"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690135520"><span id="local-6989586621690135522"><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/hashable-1.3.0.0-788b52f2a84e4f56df08780d211980a9db35c8fd0786c16a6d78251880c45f3d/share/doc/html/src"><span class="hs-identifier hs-type">Hashable</span></a></span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#Transport"><span class="hs-identifier hs-type">Transport</span></a></span></span></span><span>
+</span><span id="line-135"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687915907"><span id="local-6989586621687915909"><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#Transport"><span class="hs-identifier hs-type">Transport</span></a></span></span></span><span>
 </span><span id="line-136"></span><span>
-</span><span id="line-137"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690135512"><span id="local-6989586621690135514"><span id="local-6989586621690135516"><span id="local-6989586621690135518"><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/aeson-1.5.5.1-d565b322355c9794eb059b7477592fe0d20db50e9f4ac0ae0328e907dd753173/share/doc/html/src"><span class="hs-identifier hs-type">A.ToJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#Transport"><span class="hs-identifier hs-type">Transport</span></a></span></span></span></span></span><span>
+</span><span id="line-137"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687915899"><span id="local-6989586621687915901"><span id="local-6989586621687915903"><span id="local-6989586621687915905"><span class="annot"><span class="hs-identifier hs-type">A.ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#Transport"><span class="hs-identifier hs-type">Transport</span></a></span></span></span></span></span><span>
 </span><span id="line-138"></span><span>
-</span><span id="line-139"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690135508"><span id="local-6989586621690135510"><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/aeson-1.5.5.1-d565b322355c9794eb059b7477592fe0d20db50e9f4ac0ae0328e907dd753173/share/doc/html/src"><span class="hs-identifier hs-type">A.FromJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#Transport"><span class="hs-identifier hs-type">Transport</span></a></span></span></span><span>
+</span><span id="line-139"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687915895"><span id="local-6989586621687915897"><span class="annot"><span class="hs-identifier hs-type">A.FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#Transport"><span class="hs-identifier hs-type">Transport</span></a></span></span></span><span>
 </span><span id="line-140"></span><span>
 </span><span id="line-141"></span><span class="hs-comment">-- | The timings and counts here were from requests with total time longer than</span><span>
 </span><span id="line-142"></span><span class="hs-comment">-- 'bucketGreaterThan' (but less than any larger bucket cutoff times).</span><span>
-</span><span id="line-143"></span><span id="local-6989586621690135506"><span id="local-6989586621690135507"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="RunningTimeBucket"><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#RunningTimeBucket"><span class="hs-identifier hs-var">RunningTimeBucket</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="RunningTimeBucket"><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#RunningTimeBucket"><span class="hs-identifier hs-var">RunningTimeBucket</span></a></span></span><span> </span><span class="hs-special">{</span><span id="%24sel%3AbucketGreaterThan%3ARunningTimeBucket"><span class="annot"><span class="annottext">RunningTimeBucket -&gt; Seconds
+</span><span id="line-143"></span><span id="local-6989586621687915893"><span id="local-6989586621687915894"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="RunningTimeBucket"><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#RunningTimeBucket"><span class="hs-identifier hs-var">RunningTimeBucket</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="RunningTimeBucket"><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#RunningTimeBucket"><span class="hs-identifier hs-var">RunningTimeBucket</span></a></span></span><span> </span><span class="hs-special">{</span><span id="%24sel%3AbucketGreaterThan%3ARunningTimeBucket"><span class="annot"><span class="annottext">RunningTimeBucket -&gt; Seconds
 </span><a href="Hasura.Server.Telemetry.Counters.html#%24sel%3AbucketGreaterThan%3ARunningTimeBucket"><span class="hs-identifier hs-var hs-var">bucketGreaterThan</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Data.Time.Clock.Units.html#Seconds"><span class="hs-identifier hs-type">Seconds</span></a></span><span class="hs-special">}</span><span>
-</span><span id="line-144"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690135489"><span id="local-6989586621690135491"><span id="local-6989586621690135493"><span id="local-6989586621690135495"><span id="local-6989586621690135497"><span id="local-6989586621690135499"><span id="local-6989586621690135501"><span class="annot"><span class="annottext">Eq RunningTimeBucket
+</span><span id="line-144"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687915876"><span id="local-6989586621687915878"><span id="local-6989586621687915880"><span id="local-6989586621687915882"><span id="local-6989586621687915884"><span id="local-6989586621687915886"><span id="local-6989586621687915888"><span class="annot"><span class="annottext">Eq RunningTimeBucket
 Eq RunningTimeBucket
 -&gt; (RunningTimeBucket -&gt; RunningTimeBucket -&gt; Ordering)
 -&gt; (RunningTimeBucket -&gt; RunningTimeBucket -&gt; Bool)
@@ -751,7 +751,7 @@ $c&lt; :: RunningTimeBucket -&gt; RunningTimeBucket -&gt; Bool
 compare :: RunningTimeBucket -&gt; RunningTimeBucket -&gt; Ordering
 $ccompare :: RunningTimeBucket -&gt; RunningTimeBucket -&gt; Ordering
 $cp1Ord :: Eq RunningTimeBucket
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/ghc-prim-0.6.1/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></a></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690135485"><span id="local-6989586621690135487"><span class="annot"><span class="annottext">RunningTimeBucket -&gt; RunningTimeBucket -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687915872"><span id="local-6989586621687915874"><span class="annot"><span class="annottext">RunningTimeBucket -&gt; RunningTimeBucket -&gt; Bool
 (RunningTimeBucket -&gt; RunningTimeBucket -&gt; Bool)
 -&gt; (RunningTimeBucket -&gt; RunningTimeBucket -&gt; Bool)
 -&gt; Eq RunningTimeBucket
@@ -760,7 +760,7 @@ forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 $c/= :: RunningTimeBucket -&gt; RunningTimeBucket -&gt; Bool
 == :: RunningTimeBucket -&gt; RunningTimeBucket -&gt; Bool
 $c== :: RunningTimeBucket -&gt; RunningTimeBucket -&gt; Bool
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/ghc-prim-0.6.1/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690135479"><span id="local-6989586621690135481"><span id="local-6989586621690135483"><span class="annot"><span class="annottext">Int -&gt; RunningTimeBucket -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687915866"><span id="local-6989586621687915868"><span id="local-6989586621687915870"><span class="annot"><span class="annottext">Int -&gt; RunningTimeBucket -&gt; ShowS
 [RunningTimeBucket] -&gt; ShowS
 RunningTimeBucket -&gt; String
 (Int -&gt; RunningTimeBucket -&gt; ShowS)
@@ -775,7 +775,7 @@ show :: RunningTimeBucket -&gt; String
 $cshow :: RunningTimeBucket -&gt; String
 showsPrec :: Int -&gt; RunningTimeBucket -&gt; ShowS
 $cshowsPrec :: Int -&gt; RunningTimeBucket -&gt; ShowS
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">(forall x. RunningTimeBucket -&gt; Rep RunningTimeBucket x)
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">(forall x. RunningTimeBucket -&gt; Rep RunningTimeBucket x)
 -&gt; (forall x. Rep RunningTimeBucket x -&gt; RunningTimeBucket)
 -&gt; Generic RunningTimeBucket
 forall x. Rep RunningTimeBucket x -&gt; RunningTimeBucket
@@ -784,7 +784,7 @@ forall a.
 (forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
 $cto :: forall x. Rep RunningTimeBucket x -&gt; RunningTimeBucket
 $cfrom :: forall x. RunningTimeBucket -&gt; Rep RunningTimeBucket x
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></a></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690135469"><span id="local-6989586621690135471"><span id="local-6989586621690135473"><span id="local-6989586621690135475"><span class="annot"><span class="annottext">[RunningTimeBucket] -&gt; Value
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687915856"><span id="local-6989586621687915858"><span id="local-6989586621687915860"><span id="local-6989586621687915862"><span class="annot"><span class="annottext">[RunningTimeBucket] -&gt; Value
 [RunningTimeBucket] -&gt; Encoding
 RunningTimeBucket -&gt; Value
 RunningTimeBucket -&gt; Encoding
@@ -807,7 +807,7 @@ toEncoding :: RunningTimeBucket -&gt; Encoding
 $ctoEncoding :: RunningTimeBucket -&gt; Encoding
 toJSON :: RunningTimeBucket -&gt; Value
 $ctoJSON :: RunningTimeBucket -&gt; Value
-</span><a href="#local-6989586621690135469"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">A.ToJSON</span></a></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690135465"><span id="local-6989586621690135467"><span class="annot"><span class="annottext">Value -&gt; Parser [RunningTimeBucket]
+</span><a href="#local-6989586621687915856"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">A.ToJSON</span></a></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687915852"><span id="local-6989586621687915854"><span class="annot"><span class="annottext">Value -&gt; Parser [RunningTimeBucket]
 Value -&gt; Parser RunningTimeBucket
 (Value -&gt; Parser RunningTimeBucket)
 -&gt; (Value -&gt; Parser [RunningTimeBucket])
@@ -818,7 +818,7 @@ parseJSONList :: Value -&gt; Parser [RunningTimeBucket]
 $cparseJSONList :: Value -&gt; Parser [RunningTimeBucket]
 parseJSON :: Value -&gt; Parser RunningTimeBucket
 $cparseJSON :: Value -&gt; Parser RunningTimeBucket
-</span><a href="#local-6989586621690135465"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">A.FromJSON</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690135461"><span id="local-6989586621690135463"><span class="annot"><span class="annottext">Int -&gt; RunningTimeBucket -&gt; Int
+</span><a href="#local-6989586621687915852"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">A.FromJSON</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687915848"><span id="local-6989586621687915850"><span class="annot"><span class="annottext">Int -&gt; RunningTimeBucket -&gt; Int
 RunningTimeBucket -&gt; Int
 (Int -&gt; RunningTimeBucket -&gt; Int)
 -&gt; (RunningTimeBucket -&gt; Int) -&gt; Hashable RunningTimeBucket
@@ -827,7 +827,7 @@ hash :: RunningTimeBucket -&gt; Int
 $chash :: RunningTimeBucket -&gt; Int
 hashWithSalt :: Int -&gt; RunningTimeBucket -&gt; Int
 $chashWithSalt :: Int -&gt; RunningTimeBucket -&gt; Int
-</span><a href="#local-6989586621690135461"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621687915848"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-145"></span><span>
 </span><span id="line-146"></span><span class="hs-comment">-- NOTE: an HDR histogram is a nice way to collect metrics when you don't know</span><span>
 </span><span id="line-147"></span><span class="hs-comment">-- a priori what the most useful binning is. It's not clear how we'd make use</span><span>
@@ -836,7 +836,7 @@ $chashWithSalt :: Int -&gt; RunningTimeBucket -&gt; Int
 </span><span id="line-150"></span><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#totalTimeBuckets"><span class="hs-identifier hs-type">totalTimeBuckets</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#RunningTimeBucket"><span class="hs-identifier hs-type">RunningTimeBucket</span></a></span><span class="hs-special">]</span><span>
 </span><span id="line-151"></span><span id="totalTimeBuckets"><span class="annot"><span class="annottext">totalTimeBuckets :: [RunningTimeBucket]
 </span><a href="Hasura.Server.Telemetry.Counters.html#totalTimeBuckets"><span class="hs-identifier hs-var hs-var">totalTimeBuckets</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Seconds] -&gt; [RunningTimeBucket]
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/ghc-prim-0.6.1/src"><span class="hs-identifier hs-var">coerce</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Seconds
+</span><span class="hs-identifier hs-var">coerce</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Seconds
 </span><span class="hs-number">0.000</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Seconds
 </span><span class="hs-number">0.001</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Seconds
 </span><span class="hs-number">0.050</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Seconds
@@ -845,54 +845,54 @@ $chashWithSalt :: Int -&gt; RunningTimeBucket -&gt; Int
 </span><span id="line-152"></span><span>
 </span><span id="line-153"></span><span class="hs-comment">-- | Save a timing metric sample in our in-memory store. These will be</span><span>
 </span><span id="line-154"></span><span class="hs-comment">-- accumulated and uploaded periodically in &quot;Hasura.Server.Telemetry&quot;.</span><span>
-</span><span id="line-155"></span><span id="local-6989586621690135459"><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#recordTimingMetric"><span class="hs-identifier hs-type">recordTimingMetric</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-type">MonadIO</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690135459"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#RequestDimensions"><span class="hs-identifier hs-type">RequestDimensions</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#RequestTimings"><span class="hs-identifier hs-type">RequestTimings</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621690135459"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span></span><span>
+</span><span id="line-155"></span><span id="local-6989586621687915846"><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#recordTimingMetric"><span class="hs-identifier hs-type">recordTimingMetric</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621687915846"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#RequestDimensions"><span class="hs-identifier hs-type">RequestDimensions</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#RequestTimings"><span class="hs-identifier hs-type">RequestTimings</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621687915846"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span></span><span>
 </span><span id="line-156"></span><span id="recordTimingMetric"><span class="annot"><span class="annottext">recordTimingMetric :: RequestDimensions -&gt; RequestTimings -&gt; m ()
-</span><a href="Hasura.Server.Telemetry.Counters.html#recordTimingMetric"><span class="hs-identifier hs-var hs-var">recordTimingMetric</span></a></span></span><span> </span><span id="local-6989586621690135458"><span class="annot"><span class="annottext">RequestDimensions
-</span><a href="#local-6989586621690135458"><span class="hs-identifier hs-var">reqDimensions</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#RequestTimings"><span class="hs-identifier hs-type">RequestTimings</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621690135456"><span id="local-6989586621690135457"><span class="annot"><span class="annottext">Seconds
+</span><a href="Hasura.Server.Telemetry.Counters.html#recordTimingMetric"><span class="hs-identifier hs-var hs-var">recordTimingMetric</span></a></span></span><span> </span><span id="local-6989586621687915845"><span class="annot"><span class="annottext">RequestDimensions
+</span><a href="#local-6989586621687915845"><span class="hs-identifier hs-var">reqDimensions</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#RequestTimings"><span class="hs-identifier hs-type">RequestTimings</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621687915843"><span id="local-6989586621687915844"><span class="annot"><span class="annottext">Seconds
 telemTimeTot :: Seconds
 telemTimeIO :: Seconds
 $sel:telemTimeTot:RequestTimings :: RequestTimings -&gt; Seconds
 $sel:telemTimeIO:RequestTimings :: RequestTimings -&gt; Seconds
-</span><a href="#local-6989586621690135456"><span class="hs-glyph hs-var hs-var hs-var hs-var">..</span></a></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">IO () -&gt; m ()
+</span><a href="#local-6989586621687915843"><span class="hs-glyph hs-var hs-var hs-var hs-var">..</span></a></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">IO () -&gt; m ()
 forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var">liftIO</span></a></span><span> </span><span class="annot"><span class="annottext">(IO () -&gt; m ()) -&gt; IO () -&gt; m ()
+</span><span class="hs-identifier hs-var">liftIO</span></span><span> </span><span class="annot"><span class="annottext">(IO () -&gt; m ()) -&gt; IO () -&gt; m ()
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-157"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621690135454"><span class="annot"><span class="annottext">ourBucket :: RunningTimeBucket
-</span><a href="#local-6989586621690135454"><span class="hs-identifier hs-var hs-var">ourBucket</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-157"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621687915841"><span class="annot"><span class="annottext">ourBucket :: RunningTimeBucket
+</span><a href="#local-6989586621687915841"><span class="hs-identifier hs-var hs-var">ourBucket</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-158"></span><span>        </span><span class="annot"><span class="annottext">RunningTimeBucket -&gt; Maybe RunningTimeBucket -&gt; RunningTimeBucket
 forall a. a -&gt; Maybe a -&gt; a
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var">fromMaybe</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Seconds -&gt; RunningTimeBucket
+</span><span class="hs-identifier hs-var">fromMaybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Seconds -&gt; RunningTimeBucket
 </span><a href="Hasura.Server.Telemetry.Counters.html#RunningTimeBucket"><span class="hs-identifier hs-var">RunningTimeBucket</span></a></span><span> </span><span class="annot"><span class="annottext">Seconds
 </span><span class="hs-number">0</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(Maybe RunningTimeBucket -&gt; RunningTimeBucket)
 -&gt; Maybe RunningTimeBucket -&gt; RunningTimeBucket
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-comment">-- although we expect 'head' would be safe here</span><span>
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-comment">-- although we expect 'head' would be safe here</span><span>
 </span><span id="line-159"></span><span>          </span><span class="annot"><span class="annottext">[RunningTimeBucket] -&gt; Maybe RunningTimeBucket
 forall a. [a] -&gt; Maybe a
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var">listToMaybe</span></a></span><span> </span><span class="annot"><span class="annottext">([RunningTimeBucket] -&gt; Maybe RunningTimeBucket)
+</span><span class="hs-identifier hs-var">listToMaybe</span></span><span> </span><span class="annot"><span class="annottext">([RunningTimeBucket] -&gt; Maybe RunningTimeBucket)
 -&gt; [RunningTimeBucket] -&gt; Maybe RunningTimeBucket
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
+</span><span class="hs-operator hs-var">$</span></span><span>
 </span><span id="line-160"></span><span>            </span><span class="annot"><span class="annottext">(RunningTimeBucket -&gt; Bool)
 -&gt; [RunningTimeBucket] -&gt; [RunningTimeBucket]
 forall a. (a -&gt; Bool) -&gt; [a] -&gt; [a]
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var">dropWhile</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">RunningTimeBucket -&gt; RunningTimeBucket -&gt; Bool
+</span><span class="hs-identifier hs-var">dropWhile</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">RunningTimeBucket -&gt; RunningTimeBucket -&gt; Bool
 forall a. Ord a =&gt; a -&gt; a -&gt; Bool
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/ghc-prim-0.6.1/src"><span class="hs-operator hs-var">&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Seconds -&gt; RunningTimeBucket
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/ghc-prim-0.6.1/src"><span class="hs-identifier hs-var">coerce</span></a></span><span> </span><span class="annot"><span class="annottext">Seconds
-</span><a href="#local-6989586621690135456"><span class="hs-identifier hs-var">telemTimeTot</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">([RunningTimeBucket] -&gt; [RunningTimeBucket])
+</span><span class="hs-operator hs-var">&gt;</span></span><span> </span><span class="annot"><span class="annottext">Seconds -&gt; RunningTimeBucket
+</span><span class="hs-identifier hs-var">coerce</span></span><span> </span><span class="annot"><span class="annottext">Seconds
+</span><a href="#local-6989586621687915843"><span class="hs-identifier hs-var">telemTimeTot</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">([RunningTimeBucket] -&gt; [RunningTimeBucket])
 -&gt; [RunningTimeBucket] -&gt; [RunningTimeBucket]
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
+</span><span class="hs-operator hs-var">$</span></span><span>
 </span><span id="line-161"></span><span>              </span><span class="annot"><span class="annottext">[RunningTimeBucket] -&gt; [RunningTimeBucket]
 forall a. [a] -&gt; [a]
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var">reverse</span></a></span><span> </span><span class="annot"><span class="annottext">([RunningTimeBucket] -&gt; [RunningTimeBucket])
+</span><span class="hs-identifier hs-var">reverse</span></span><span> </span><span class="annot"><span class="annottext">([RunningTimeBucket] -&gt; [RunningTimeBucket])
 -&gt; [RunningTimeBucket] -&gt; [RunningTimeBucket]
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">[RunningTimeBucket] -&gt; [RunningTimeBucket]
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">[RunningTimeBucket] -&gt; [RunningTimeBucket]
 forall a. Ord a =&gt; [a] -&gt; [a]
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var">sort</span></a></span><span> </span><span class="annot"><span class="annottext">[RunningTimeBucket]
+</span><span class="hs-identifier hs-var">sort</span></span><span> </span><span class="annot"><span class="annottext">[RunningTimeBucket]
 </span><a href="Hasura.Server.Telemetry.Counters.html#totalTimeBuckets"><span class="hs-identifier hs-var">totalTimeBuckets</span></a></span><span>
 </span><span id="line-162"></span><span>  </span><span class="annot"><span class="annottext">IORef
   (HashMap
@@ -904,7 +904,7 @@ forall a. Ord a =&gt; [a] -&gt; [a]
         ()))
 -&gt; IO ()
 forall a b. IORef a -&gt; (a -&gt; (a, b)) -&gt; IO b
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var">atomicModifyIORef'</span></a></span><span> </span><span class="annot"><span class="annottext">IORef
+</span><span class="hs-identifier hs-var">atomicModifyIORef'</span></span><span> </span><span class="annot"><span class="annottext">IORef
   (HashMap
      (RequestDimensions, RunningTimeBucket) RequestTimingsCount)
 </span><a href="Hasura.Server.Telemetry.Counters.html#requestCounters"><span class="hs-identifier hs-var">requestCounters</span></a></span><span> </span><span class="annot"><span class="annottext">((HashMap
@@ -920,7 +920,7 @@ forall a b. IORef a -&gt; (a -&gt; (a, b)) -&gt; IO b
         ()))
 -&gt; IO ()
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
+</span><span class="hs-operator hs-var">$</span></span><span>
 </span><span id="line-163"></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="hs-special">,</span></span><span class="hs-special">(</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-164"></span><span>      </span><span class="annot"><span class="annottext">(HashMap (RequestDimensions, RunningTimeBucket) RequestTimingsCount
  -&gt; (HashMap
@@ -936,7 +936,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
       (RequestDimensions, RunningTimeBucket) RequestTimingsCount,
     ())
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">(RequestTimingsCount -&gt; RequestTimingsCount -&gt; RequestTimingsCount)
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">(RequestTimingsCount -&gt; RequestTimingsCount -&gt; RequestTimingsCount)
 -&gt; (RequestDimensions, RunningTimeBucket)
 -&gt; RequestTimingsCount
 -&gt; HashMap
@@ -946,11 +946,11 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 forall k v.
 (Eq k, Hashable k) =&gt;
 (v -&gt; v -&gt; v) -&gt; k -&gt; v -&gt; HashMap k v -&gt; HashMap k v
-</span><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/unordered-containers-0.2.13.0-3905cc0dd583bf2295f4fffefb94c9b368aca205fb5d2fe8619d64b3bfba7af9/share/doc/html/src"><span class="hs-identifier hs-var">HM.insertWith</span></a></span><span> </span><span class="annot"><span class="annottext">RequestTimingsCount -&gt; RequestTimingsCount -&gt; RequestTimingsCount
+</span><span class="hs-identifier hs-var">HM.insertWith</span></span><span> </span><span class="annot"><span class="annottext">RequestTimingsCount -&gt; RequestTimingsCount -&gt; RequestTimingsCount
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var">(&lt;&gt;)</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">RequestDimensions
-</span><a href="#local-6989586621690135458"><span class="hs-identifier hs-var">reqDimensions</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">RunningTimeBucket
-</span><a href="#local-6989586621690135454"><span class="hs-identifier hs-var">ourBucket</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">RequestTimingsCount :: Seconds -&gt; Seconds -&gt; Word -&gt; RequestTimingsCount
+</span><span class="hs-operator hs-var">(&lt;&gt;)</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">RequestDimensions
+</span><a href="#local-6989586621687915845"><span class="hs-identifier hs-var">reqDimensions</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">RunningTimeBucket
+</span><a href="#local-6989586621687915841"><span class="hs-identifier hs-var">ourBucket</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">RequestTimingsCount :: Seconds -&gt; Seconds -&gt; Word -&gt; RequestTimingsCount
 </span><a href="Hasura.Server.Telemetry.Counters.html#RequestTimingsCount"><span class="hs-identifier hs-type">RequestTimingsCount</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">$sel:telemCount:RequestTimingsCount :: Word
 </span><a href="Hasura.Server.Telemetry.Counters.html#%24sel%3AtelemCount%3ARequestTimingsCount"><span class="hs-identifier hs-var">telemCount</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Word
 </span><span class="hs-number">1</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Seconds
@@ -958,19 +958,19 @@ telemTimeTot :: Seconds
 telemTimeIO :: Seconds
 $sel:telemTimeTot:RequestTimingsCount :: Seconds
 $sel:telemTimeIO:RequestTimingsCount :: Seconds
-</span><a href="#local-6989586621690135456"><span class="hs-glyph hs-var hs-var hs-var hs-var">..</span></a></span><span class="hs-special">}</span><span>
+</span><a href="#local-6989586621687915843"><span class="hs-glyph hs-var hs-var hs-var hs-var">..</span></a></span><span class="hs-special">}</span><span>
 </span><span id="line-165"></span><span>
 </span><span id="line-166"></span><span class="hs-comment">-- | The final shape of this part of our metrics data JSON. This should allow</span><span>
 </span><span id="line-167"></span><span class="hs-comment">-- reasonably efficient querying using GIN indexes and JSONB containment</span><span>
 </span><span id="line-168"></span><span class="hs-comment">-- operations (which treat arrays as sets).</span><span>
-</span><span id="line-169"></span><span id="local-6989586621690135443"><span id="local-6989586621690135444"></span></span><span class="hs-keyword">data</span><span> </span><span id="ServiceTimingMetrics"><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#ServiceTimingMetrics"><span class="hs-identifier hs-var">ServiceTimingMetrics</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ServiceTimingMetrics"><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#ServiceTimingMetrics"><span class="hs-identifier hs-var">ServiceTimingMetrics</span></a></span></span><span>
+</span><span id="line-169"></span><span id="local-6989586621687915830"><span id="local-6989586621687915831"></span></span><span class="hs-keyword">data</span><span> </span><span id="ServiceTimingMetrics"><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#ServiceTimingMetrics"><span class="hs-identifier hs-var">ServiceTimingMetrics</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ServiceTimingMetrics"><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#ServiceTimingMetrics"><span class="hs-identifier hs-var">ServiceTimingMetrics</span></a></span></span><span>
 </span><span id="line-170"></span><span>  </span><span class="hs-special">{</span><span> </span><span class="hs-comment">-- | This is set to a new unique value when the counters reset (e.g. because of a restart)</span><span>
 </span><span id="line-171"></span><span>    </span><span id="%24sel%3AcollectionTag%3AServiceTimingMetrics"><span class="annot"><span class="annottext">ServiceTimingMetrics -&gt; Int
-</span><a href="Hasura.Server.Telemetry.Counters.html#%24sel%3AcollectionTag%3AServiceTimingMetrics"><span class="hs-identifier hs-var hs-var">collectionTag</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/ghc-prim-0.6.1/src"><span class="hs-identifier hs-type">Int</span></a></span><span class="hs-special">,</span><span>
+</span><a href="Hasura.Server.Telemetry.Counters.html#%24sel%3AcollectionTag%3AServiceTimingMetrics"><span class="hs-identifier hs-var hs-var">collectionTag</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span class="hs-special">,</span><span>
 </span><span id="line-172"></span><span>    </span><span id="%24sel%3AserviceTimingMetrics%3AServiceTimingMetrics"><span class="annot"><span class="annottext">ServiceTimingMetrics -&gt; [ServiceTimingMetric]
 </span><a href="Hasura.Server.Telemetry.Counters.html#%24sel%3AserviceTimingMetrics%3AServiceTimingMetrics"><span class="hs-identifier hs-var hs-var">serviceTimingMetrics</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#ServiceTimingMetric"><span class="hs-identifier hs-type">ServiceTimingMetric</span></a></span><span class="hs-special">]</span><span>
 </span><span id="line-173"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-174"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690135434"><span id="local-6989586621690135436"><span id="local-6989586621690135438"><span class="annot"><span class="annottext">Int -&gt; ServiceTimingMetrics -&gt; ShowS
+</span><span id="line-174"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687915821"><span id="local-6989586621687915823"><span id="local-6989586621687915825"><span class="annot"><span class="annottext">Int -&gt; ServiceTimingMetrics -&gt; ShowS
 [ServiceTimingMetrics] -&gt; ShowS
 ServiceTimingMetrics -&gt; String
 (Int -&gt; ServiceTimingMetrics -&gt; ShowS)
@@ -985,7 +985,7 @@ show :: ServiceTimingMetrics -&gt; String
 $cshow :: ServiceTimingMetrics -&gt; String
 showsPrec :: Int -&gt; ServiceTimingMetrics -&gt; ShowS
 $cshowsPrec :: Int -&gt; ServiceTimingMetrics -&gt; ShowS
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">(forall x. ServiceTimingMetrics -&gt; Rep ServiceTimingMetrics x)
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">(forall x. ServiceTimingMetrics -&gt; Rep ServiceTimingMetrics x)
 -&gt; (forall x. Rep ServiceTimingMetrics x -&gt; ServiceTimingMetrics)
 -&gt; Generic ServiceTimingMetrics
 forall x. Rep ServiceTimingMetrics x -&gt; ServiceTimingMetrics
@@ -994,7 +994,7 @@ forall a.
 (forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
 $cto :: forall x. Rep ServiceTimingMetrics x -&gt; ServiceTimingMetrics
 $cfrom :: forall x. ServiceTimingMetrics -&gt; Rep ServiceTimingMetrics x
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></a></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690135428"><span id="local-6989586621690135430"><span class="annot"><span class="annottext">ServiceTimingMetrics -&gt; ServiceTimingMetrics -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687915815"><span id="local-6989586621687915817"><span class="annot"><span class="annottext">ServiceTimingMetrics -&gt; ServiceTimingMetrics -&gt; Bool
 (ServiceTimingMetrics -&gt; ServiceTimingMetrics -&gt; Bool)
 -&gt; (ServiceTimingMetrics -&gt; ServiceTimingMetrics -&gt; Bool)
 -&gt; Eq ServiceTimingMetrics
@@ -1003,7 +1003,7 @@ forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 $c/= :: ServiceTimingMetrics -&gt; ServiceTimingMetrics -&gt; Bool
 == :: ServiceTimingMetrics -&gt; ServiceTimingMetrics -&gt; Bool
 $c== :: ServiceTimingMetrics -&gt; ServiceTimingMetrics -&gt; Bool
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/ghc-prim-0.6.1/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690135413"><span id="local-6989586621690135415"><span id="local-6989586621690135417"><span id="local-6989586621690135419"><span id="local-6989586621690135421"><span id="local-6989586621690135423"><span id="local-6989586621690135425"><span class="annot"><span class="annottext">Eq ServiceTimingMetrics
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687915800"><span id="local-6989586621687915802"><span id="local-6989586621687915804"><span id="local-6989586621687915806"><span id="local-6989586621687915808"><span id="local-6989586621687915810"><span id="local-6989586621687915812"><span class="annot"><span class="annottext">Eq ServiceTimingMetrics
 Eq ServiceTimingMetrics
 -&gt; (ServiceTimingMetrics -&gt; ServiceTimingMetrics -&gt; Ordering)
 -&gt; (ServiceTimingMetrics -&gt; ServiceTimingMetrics -&gt; Bool)
@@ -1048,9 +1048,9 @@ $c&lt; :: ServiceTimingMetrics -&gt; ServiceTimingMetrics -&gt; Bool
 compare :: ServiceTimingMetrics -&gt; ServiceTimingMetrics -&gt; Ordering
 $ccompare :: ServiceTimingMetrics -&gt; ServiceTimingMetrics -&gt; Ordering
 $cp1Ord :: Eq ServiceTimingMetrics
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/ghc-prim-0.6.1/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></a></span></span></span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-175"></span><span>
-</span><span id="line-176"></span><span id="local-6989586621690135411"><span id="local-6989586621690135412"></span></span><span class="hs-keyword">data</span><span> </span><span id="ServiceTimingMetric"><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#ServiceTimingMetric"><span class="hs-identifier hs-var">ServiceTimingMetric</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ServiceTimingMetric"><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#ServiceTimingMetric"><span class="hs-identifier hs-var">ServiceTimingMetric</span></a></span></span><span>
+</span><span id="line-176"></span><span id="local-6989586621687915798"><span id="local-6989586621687915799"></span></span><span class="hs-keyword">data</span><span> </span><span id="ServiceTimingMetric"><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#ServiceTimingMetric"><span class="hs-identifier hs-var">ServiceTimingMetric</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ServiceTimingMetric"><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#ServiceTimingMetric"><span class="hs-identifier hs-var">ServiceTimingMetric</span></a></span></span><span>
 </span><span id="line-177"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="%24sel%3Adimensions%3AServiceTimingMetric"><span class="annot"><span class="annottext">ServiceTimingMetric -&gt; RequestDimensions
 </span><a href="Hasura.Server.Telemetry.Counters.html#%24sel%3Adimensions%3AServiceTimingMetric"><span class="hs-identifier hs-var hs-var">dimensions</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#RequestDimensions"><span class="hs-identifier hs-type">RequestDimensions</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-178"></span><span>    </span><span id="%24sel%3Abucket%3AServiceTimingMetric"><span class="annot"><span class="annottext">ServiceTimingMetric -&gt; RunningTimeBucket
@@ -1058,7 +1058,7 @@ $cp1Ord :: Eq ServiceTimingMetrics
 </span><span id="line-179"></span><span>    </span><span id="%24sel%3Ametrics%3AServiceTimingMetric"><span class="annot"><span class="annottext">ServiceTimingMetric -&gt; RequestTimingsCount
 </span><a href="Hasura.Server.Telemetry.Counters.html#%24sel%3Ametrics%3AServiceTimingMetric"><span class="hs-identifier hs-var hs-var">metrics</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#RequestTimingsCount"><span class="hs-identifier hs-type">RequestTimingsCount</span></a></span><span>
 </span><span id="line-180"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-181"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690135401"><span id="local-6989586621690135403"><span id="local-6989586621690135405"><span class="annot"><span class="annottext">Int -&gt; ServiceTimingMetric -&gt; ShowS
+</span><span id="line-181"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687915788"><span id="local-6989586621687915790"><span id="local-6989586621687915792"><span class="annot"><span class="annottext">Int -&gt; ServiceTimingMetric -&gt; ShowS
 [ServiceTimingMetric] -&gt; ShowS
 ServiceTimingMetric -&gt; String
 (Int -&gt; ServiceTimingMetric -&gt; ShowS)
@@ -1073,7 +1073,7 @@ show :: ServiceTimingMetric -&gt; String
 $cshow :: ServiceTimingMetric -&gt; String
 showsPrec :: Int -&gt; ServiceTimingMetric -&gt; ShowS
 $cshowsPrec :: Int -&gt; ServiceTimingMetric -&gt; ShowS
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">(forall x. ServiceTimingMetric -&gt; Rep ServiceTimingMetric x)
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">(forall x. ServiceTimingMetric -&gt; Rep ServiceTimingMetric x)
 -&gt; (forall x. Rep ServiceTimingMetric x -&gt; ServiceTimingMetric)
 -&gt; Generic ServiceTimingMetric
 forall x. Rep ServiceTimingMetric x -&gt; ServiceTimingMetric
@@ -1082,7 +1082,7 @@ forall a.
 (forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
 $cto :: forall x. Rep ServiceTimingMetric x -&gt; ServiceTimingMetric
 $cfrom :: forall x. ServiceTimingMetric -&gt; Rep ServiceTimingMetric x
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></a></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690135395"><span id="local-6989586621690135397"><span class="annot"><span class="annottext">ServiceTimingMetric -&gt; ServiceTimingMetric -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687915782"><span id="local-6989586621687915784"><span class="annot"><span class="annottext">ServiceTimingMetric -&gt; ServiceTimingMetric -&gt; Bool
 (ServiceTimingMetric -&gt; ServiceTimingMetric -&gt; Bool)
 -&gt; (ServiceTimingMetric -&gt; ServiceTimingMetric -&gt; Bool)
 -&gt; Eq ServiceTimingMetric
@@ -1091,7 +1091,7 @@ forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 $c/= :: ServiceTimingMetric -&gt; ServiceTimingMetric -&gt; Bool
 == :: ServiceTimingMetric -&gt; ServiceTimingMetric -&gt; Bool
 $c== :: ServiceTimingMetric -&gt; ServiceTimingMetric -&gt; Bool
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/ghc-prim-0.6.1/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690135380"><span id="local-6989586621690135382"><span id="local-6989586621690135384"><span id="local-6989586621690135386"><span id="local-6989586621690135388"><span id="local-6989586621690135390"><span id="local-6989586621690135392"><span class="annot"><span class="annottext">Eq ServiceTimingMetric
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687915767"><span id="local-6989586621687915769"><span id="local-6989586621687915771"><span id="local-6989586621687915773"><span id="local-6989586621687915775"><span id="local-6989586621687915777"><span id="local-6989586621687915779"><span class="annot"><span class="annottext">Eq ServiceTimingMetric
 Eq ServiceTimingMetric
 -&gt; (ServiceTimingMetric -&gt; ServiceTimingMetric -&gt; Ordering)
 -&gt; (ServiceTimingMetric -&gt; ServiceTimingMetric -&gt; Bool)
@@ -1131,41 +1131,41 @@ $c&lt; :: ServiceTimingMetric -&gt; ServiceTimingMetric -&gt; Bool
 compare :: ServiceTimingMetric -&gt; ServiceTimingMetric -&gt; Ordering
 $ccompare :: ServiceTimingMetric -&gt; ServiceTimingMetric -&gt; Ordering
 $cp1Ord :: Eq ServiceTimingMetric
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/ghc-prim-0.6.1/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></a></span></span></span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-182"></span><span>
-</span><span id="line-183"></span><span class="hs-special">$(</span><span id="local-6989586621690135368"><span id="local-6989586621690135370"><span id="local-6989586621690135372"><span id="local-6989586621690135374"><span id="local-6989586621690135376"><span id="local-6989586621690135378"><span class="hs-identifier">A.deriveJSON</span><span> </span><span class="hs-identifier">hasuraJSON</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">RequestTimingsCount</span></span></span></span></span></span></span><span class="hs-special">)</span><span>
-</span><span id="line-184"></span><span class="hs-special">$(</span><span id="local-6989586621690135353"><span id="local-6989586621690135355"><span id="local-6989586621690135357"><span id="local-6989586621690135359"><span id="local-6989586621690135361"><span id="local-6989586621690135363"><span class="hs-identifier">A.deriveJSON</span><span> </span><span class="hs-identifier">hasuraJSON</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">RequestDimensions</span></span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-183"></span><span class="hs-special">$(</span><span id="local-6989586621687915755"><span id="local-6989586621687915757"><span id="local-6989586621687915759"><span id="local-6989586621687915761"><span id="local-6989586621687915763"><span id="local-6989586621687915765"><span class="hs-identifier">A.deriveJSON</span><span> </span><span class="hs-identifier">hasuraJSON</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">RequestTimingsCount</span></span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-184"></span><span class="hs-special">$(</span><span id="local-6989586621687915740"><span id="local-6989586621687915742"><span id="local-6989586621687915744"><span id="local-6989586621687915746"><span id="local-6989586621687915748"><span id="local-6989586621687915750"><span class="hs-identifier">A.deriveJSON</span><span> </span><span class="hs-identifier">hasuraJSON</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">RequestDimensions</span></span></span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-185"></span><span>
-</span><span id="line-186"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690135345"><span id="local-6989586621690135347"><span id="local-6989586621690135349"><span id="local-6989586621690135351"><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/aeson-1.5.5.1-d565b322355c9794eb059b7477592fe0d20db50e9f4ac0ae0328e907dd753173/share/doc/html/src"><span class="hs-identifier hs-type">A.ToJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#ServiceTimingMetric"><span class="hs-identifier hs-type">ServiceTimingMetric</span></a></span></span></span></span></span><span>
+</span><span id="line-186"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687915732"><span id="local-6989586621687915734"><span id="local-6989586621687915736"><span id="local-6989586621687915738"><span class="annot"><span class="hs-identifier hs-type">A.ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#ServiceTimingMetric"><span class="hs-identifier hs-type">ServiceTimingMetric</span></a></span></span></span></span></span><span>
 </span><span id="line-187"></span><span>
-</span><span id="line-188"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690135341"><span id="local-6989586621690135343"><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/aeson-1.5.5.1-d565b322355c9794eb059b7477592fe0d20db50e9f4ac0ae0328e907dd753173/share/doc/html/src"><span class="hs-identifier hs-type">A.FromJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#ServiceTimingMetric"><span class="hs-identifier hs-type">ServiceTimingMetric</span></a></span></span></span><span>
+</span><span id="line-188"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687915728"><span id="local-6989586621687915730"><span class="annot"><span class="hs-identifier hs-type">A.FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#ServiceTimingMetric"><span class="hs-identifier hs-type">ServiceTimingMetric</span></a></span></span></span><span>
 </span><span id="line-189"></span><span>
-</span><span id="line-190"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690135333"><span id="local-6989586621690135335"><span id="local-6989586621690135337"><span id="local-6989586621690135339"><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/aeson-1.5.5.1-d565b322355c9794eb059b7477592fe0d20db50e9f4ac0ae0328e907dd753173/share/doc/html/src"><span class="hs-identifier hs-type">A.ToJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#ServiceTimingMetrics"><span class="hs-identifier hs-type">ServiceTimingMetrics</span></a></span></span></span></span></span><span>
+</span><span id="line-190"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687915720"><span id="local-6989586621687915722"><span id="local-6989586621687915724"><span id="local-6989586621687915726"><span class="annot"><span class="hs-identifier hs-type">A.ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#ServiceTimingMetrics"><span class="hs-identifier hs-type">ServiceTimingMetrics</span></a></span></span></span></span></span><span>
 </span><span id="line-191"></span><span>
-</span><span id="line-192"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690135329"><span id="local-6989586621690135331"><span class="annot"><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/aeson-1.5.5.1-d565b322355c9794eb059b7477592fe0d20db50e9f4ac0ae0328e907dd753173/share/doc/html/src"><span class="hs-identifier hs-type">A.FromJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#ServiceTimingMetrics"><span class="hs-identifier hs-type">ServiceTimingMetrics</span></a></span></span></span><span>
+</span><span id="line-192"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687915716"><span id="local-6989586621687915718"><span class="annot"><span class="hs-identifier hs-type">A.FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#ServiceTimingMetrics"><span class="hs-identifier hs-type">ServiceTimingMetrics</span></a></span></span></span><span>
 </span><span id="line-193"></span><span>
-</span><span id="line-194"></span><span id="local-6989586621690135328"><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#dumpServiceTimingMetrics"><span class="hs-identifier hs-type">dumpServiceTimingMetrics</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-type">MonadIO</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690135328"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="#local-6989586621690135328"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#ServiceTimingMetrics"><span class="hs-identifier hs-type">ServiceTimingMetrics</span></a></span></span><span>
+</span><span id="line-194"></span><span id="local-6989586621687915715"><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#dumpServiceTimingMetrics"><span class="hs-identifier hs-type">dumpServiceTimingMetrics</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621687915715"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="#local-6989586621687915715"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#ServiceTimingMetrics"><span class="hs-identifier hs-type">ServiceTimingMetrics</span></a></span></span><span>
 </span><span id="line-195"></span><span id="dumpServiceTimingMetrics"><span class="annot"><span class="annottext">dumpServiceTimingMetrics :: m ServiceTimingMetrics
 </span><a href="Hasura.Server.Telemetry.Counters.html#dumpServiceTimingMetrics"><span class="hs-identifier hs-var hs-var">dumpServiceTimingMetrics</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">IO ServiceTimingMetrics -&gt; m ServiceTimingMetrics
 forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var">liftIO</span></a></span><span> </span><span class="annot"><span class="annottext">(IO ServiceTimingMetrics -&gt; m ServiceTimingMetrics)
+</span><span class="hs-identifier hs-var">liftIO</span></span><span> </span><span class="annot"><span class="annottext">(IO ServiceTimingMetrics -&gt; m ServiceTimingMetrics)
 -&gt; IO ServiceTimingMetrics -&gt; m ServiceTimingMetrics
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-196"></span><span>  </span><span id="local-6989586621690135327"><span class="annot"><span class="annottext">HashMap (RequestDimensions, RunningTimeBucket) RequestTimingsCount
-</span><a href="#local-6989586621690135327"><span class="hs-identifier hs-var">cs</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IORef
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-196"></span><span>  </span><span id="local-6989586621687915714"><span class="annot"><span class="annottext">HashMap (RequestDimensions, RunningTimeBucket) RequestTimingsCount
+</span><a href="#local-6989586621687915714"><span class="hs-identifier hs-var">cs</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IORef
   (HashMap
      (RequestDimensions, RunningTimeBucket) RequestTimingsCount)
 -&gt; IO
      (HashMap
         (RequestDimensions, RunningTimeBucket) RequestTimingsCount)
 forall a. IORef a -&gt; IO a
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var">readIORef</span></a></span><span> </span><span class="annot"><span class="annottext">IORef
+</span><span class="hs-identifier hs-var">readIORef</span></span><span> </span><span class="annot"><span class="annottext">IORef
   (HashMap
      (RequestDimensions, RunningTimeBucket) RequestTimingsCount)
 </span><a href="Hasura.Server.Telemetry.Counters.html#requestCounters"><span class="hs-identifier hs-var">requestCounters</span></a></span><span>
-</span><span id="line-197"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621690135325"><span class="annot"><span class="annottext">serviceTimingMetrics :: [ServiceTimingMetric]
-</span><a href="#local-6989586621690135325"><span class="hs-identifier hs-var hs-var">serviceTimingMetrics</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">((((RequestDimensions, RunningTimeBucket), RequestTimingsCount)
+</span><span id="line-197"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621687915712"><span class="annot"><span class="annottext">serviceTimingMetrics :: [ServiceTimingMetric]
+</span><a href="#local-6989586621687915712"><span class="hs-identifier hs-var hs-var">serviceTimingMetrics</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">((((RequestDimensions, RunningTimeBucket), RequestTimingsCount)
   -&gt; ServiceTimingMetric)
  -&gt; [((RequestDimensions, RunningTimeBucket), RequestTimingsCount)]
  -&gt; [ServiceTimingMetric])
@@ -1174,27 +1174,27 @@ forall a. IORef a -&gt; IO a
     -&gt; ServiceTimingMetric)
 -&gt; [ServiceTimingMetric]
 forall a b c. (a -&gt; b -&gt; c) -&gt; b -&gt; a -&gt; c
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var">flip</span></a></span><span> </span><span class="annot"><span class="annottext">(((RequestDimensions, RunningTimeBucket), RequestTimingsCount)
+</span><span class="hs-identifier hs-var">flip</span></span><span> </span><span class="annot"><span class="annottext">(((RequestDimensions, RunningTimeBucket), RequestTimingsCount)
  -&gt; ServiceTimingMetric)
 -&gt; [((RequestDimensions, RunningTimeBucket), RequestTimingsCount)]
 -&gt; [ServiceTimingMetric]
 forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var">map</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">HashMap (RequestDimensions, RunningTimeBucket) RequestTimingsCount
+</span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">HashMap (RequestDimensions, RunningTimeBucket) RequestTimingsCount
 -&gt; [((RequestDimensions, RunningTimeBucket), RequestTimingsCount)]
 forall k v. HashMap k v -&gt; [(k, v)]
-</span><a href="../file:///home/nicuveo/.cabal/store/ghc-8.10.7/unordered-containers-0.2.13.0-3905cc0dd583bf2295f4fffefb94c9b368aca205fb5d2fe8619d64b3bfba7af9/share/doc/html/src"><span class="hs-identifier hs-var">HM.toList</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap (RequestDimensions, RunningTimeBucket) RequestTimingsCount
-</span><a href="#local-6989586621690135327"><span class="hs-identifier hs-var">cs</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">((((RequestDimensions, RunningTimeBucket), RequestTimingsCount)
+</span><span class="hs-identifier hs-var">HM.toList</span></span><span> </span><span class="annot"><span class="annottext">HashMap (RequestDimensions, RunningTimeBucket) RequestTimingsCount
+</span><a href="#local-6989586621687915714"><span class="hs-identifier hs-var">cs</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">((((RequestDimensions, RunningTimeBucket), RequestTimingsCount)
   -&gt; ServiceTimingMetric)
  -&gt; [ServiceTimingMetric])
 -&gt; (((RequestDimensions, RunningTimeBucket), RequestTimingsCount)
     -&gt; ServiceTimingMetric)
 -&gt; [ServiceTimingMetric]
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-198"></span><span>        </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span class="hs-special">(</span><span id="local-6989586621690135322"><span class="annot"><span class="annottext">RequestDimensions
-</span><a href="#local-6989586621690135322"><span class="hs-identifier hs-var">dimensions</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690135321"><span class="annot"><span class="annottext">RunningTimeBucket
-</span><a href="#local-6989586621690135321"><span class="hs-identifier hs-var">bucket</span></a></span></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span id="local-6989586621690135320"><span class="annot"><span class="annottext">RequestTimingsCount
-</span><a href="#local-6989586621690135320"><span class="hs-identifier hs-var">metrics</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ServiceTimingMetric :: RequestDimensions
+</span><span class="hs-operator hs-var">$</span></span><span>
+</span><span id="line-198"></span><span>        </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span class="hs-special">(</span><span id="local-6989586621687915709"><span class="annot"><span class="annottext">RequestDimensions
+</span><a href="#local-6989586621687915709"><span class="hs-identifier hs-var">dimensions</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687915708"><span class="annot"><span class="annottext">RunningTimeBucket
+</span><a href="#local-6989586621687915708"><span class="hs-identifier hs-var">bucket</span></a></span></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span id="local-6989586621687915707"><span class="annot"><span class="annottext">RequestTimingsCount
+</span><a href="#local-6989586621687915707"><span class="hs-identifier hs-var">metrics</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ServiceTimingMetric :: RequestDimensions
 -&gt; RunningTimeBucket -&gt; RequestTimingsCount -&gt; ServiceTimingMetric
 </span><a href="Hasura.Server.Telemetry.Counters.html#ServiceTimingMetric"><span class="hs-identifier hs-type">ServiceTimingMetric</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">RunningTimeBucket
 RequestTimingsCount
@@ -1205,20 +1205,20 @@ dimensions :: RequestDimensions
 $sel:metrics:ServiceTimingMetric :: RequestTimingsCount
 $sel:bucket:ServiceTimingMetric :: RunningTimeBucket
 $sel:dimensions:ServiceTimingMetric :: RequestDimensions
-</span><a href="#local-6989586621690135320"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span><span class="hs-special">}</span><span>
-</span><span id="line-199"></span><span>      </span><span id="local-6989586621690135319"><span class="annot"><span class="annottext">collectionTag :: Int
-</span><a href="#local-6989586621690135319"><span class="hs-identifier hs-var hs-var">collectionTag</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">POSIXTime -&gt; Int
+</span><a href="#local-6989586621687915707"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span><span class="hs-special">}</span><span>
+</span><span id="line-199"></span><span>      </span><span id="local-6989586621687915706"><span class="annot"><span class="annottext">collectionTag :: Int
+</span><a href="#local-6989586621687915706"><span class="hs-identifier hs-var hs-var">collectionTag</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">POSIXTime -&gt; Int
 forall a b. (RealFrac a, Integral b) =&gt; a -&gt; b
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var">round</span></a></span><span> </span><span class="annot"><span class="annottext">POSIXTime
+</span><span class="hs-identifier hs-var">round</span></span><span> </span><span class="annot"><span class="annottext">POSIXTime
 </span><a href="Hasura.Server.Telemetry.Counters.html#approxStartTime"><span class="hs-identifier hs-var">approxStartTime</span></a></span><span>
 </span><span id="line-200"></span><span>  </span><span class="annot"><span class="annottext">ServiceTimingMetrics -&gt; IO ServiceTimingMetrics
 forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var">return</span></a></span><span> </span><span class="annot"><span class="annottext">ServiceTimingMetrics :: Int -&gt; [ServiceTimingMetric] -&gt; ServiceTimingMetrics
+</span><span class="hs-identifier hs-var">return</span></span><span> </span><span class="annot"><span class="annottext">ServiceTimingMetrics :: Int -&gt; [ServiceTimingMetric] -&gt; ServiceTimingMetrics
 </span><a href="Hasura.Server.Telemetry.Counters.html#ServiceTimingMetrics"><span class="hs-identifier hs-type">ServiceTimingMetrics</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">Int
 [ServiceTimingMetric]
 collectionTag :: Int
 serviceTimingMetrics :: [ServiceTimingMetric]
 $sel:serviceTimingMetrics:ServiceTimingMetrics :: [ServiceTimingMetric]
 $sel:collectionTag:ServiceTimingMetrics :: Int
-</span><a href="#local-6989586621690135319"><span class="hs-glyph hs-var hs-var hs-var hs-var">..</span></a></span><span class="hs-special">}</span><span>
+</span><a href="#local-6989586621687915706"><span class="hs-glyph hs-var hs-var hs-var hs-var">..</span></a></span><span class="hs-special">}</span><span>
 </span><span id="line-201"></span></pre></body></html>

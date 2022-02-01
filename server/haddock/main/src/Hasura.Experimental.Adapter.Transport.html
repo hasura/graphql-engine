@@ -4,7 +4,7 @@
 </span><span id="line-4"></span><span>
 </span><span id="line-5"></span><span class="hs-comment">--------------------------------------------------------------------------------</span><span>
 </span><span id="line-6"></span><span>
-</span><span id="line-7"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier">Control.Exception</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier">throwIO</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-7"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Control.Exception</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">throwIO</span></span><span class="hs-special">)</span><span>
 </span><span id="line-8"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Base.Error.html"><span class="hs-identifier">Hasura.Base.Error</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Base.Error.html#Code"><span class="hs-identifier">Code</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Base.Error.html#NotSupported"><span class="hs-identifier">NotSupported</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#throw400"><span class="hs-identifier">throw400</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-9"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Experimental.Adapter.Execute.html"><span class="hs-identifier">Hasura.Experimental.Adapter.Execute</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
 </span><span id="line-10"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Transport.Backend.html"><span class="hs-identifier">Hasura.GraphQL.Transport.Backend</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Transport.Backend.html#BackendTransport"><span class="hs-identifier">BackendTransport</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
@@ -14,7 +14,7 @@
 </span><span id="line-14"></span><span class="hs-comment">--------------------------------------------------------------------------------</span><span>
 </span><span id="line-15"></span><span>
 </span><span id="line-16"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Transport.Backend.html#BackendTransport"><span class="hs-identifier hs-type">BackendTransport</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Experimental"><span class="hs-identifier hs-type">Experimental</span></a></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-17"></span><span>  </span><span id="local-6989586621690269661"><span class="annot"><span class="annottext">runDBQuery :: RequestId
+</span><span id="line-17"></span><span>  </span><span id="local-6989586621688050169"><span class="annot"><span class="annottext">runDBQuery :: RequestId
 -&gt; GQLReqUnparsed
 -&gt; RootFieldAlias
 -&gt; UserInfo
@@ -37,7 +37,7 @@ forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
 </span><a href="Hasura.Base.Error.html#throw400"><span class="hs-identifier hs-var">throw400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
 </span><a href="Hasura.Base.Error.html#NotSupported"><span class="hs-identifier hs-var">NotSupported</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;runDBQuery: not implemented for Experimental&quot;</span></span><span>
-</span><span id="line-19"></span><span>  </span><span id="local-6989586621690269659"><span class="annot"><span class="annottext">runDBQueryExplain :: DBStepInfo 'Experimental -&gt; m EncJSON
+</span><span id="line-19"></span><span>  </span><span id="local-6989586621688050167"><span class="annot"><span class="annottext">runDBQueryExplain :: DBStepInfo 'Experimental -&gt; m EncJSON
 </span><a href="Hasura.GraphQL.Transport.Backend.html#runDBQueryExplain"><span class="hs-identifier hs-var hs-var hs-var hs-var">runDBQueryExplain</span></a></span></span><span> </span><span class="annot"><span class="annottext">DBStepInfo 'Experimental
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-20"></span><span>    </span><span class="annot"><span class="annottext">Code -&gt; Text -&gt; m EncJSON
@@ -45,7 +45,7 @@ forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
 </span><a href="Hasura.Base.Error.html#throw400"><span class="hs-identifier hs-var">throw400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
 </span><a href="Hasura.Base.Error.html#NotSupported"><span class="hs-identifier hs-var">NotSupported</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;runDBQueryExplain: not implemented for Experimental&quot;</span></span><span>
-</span><span id="line-21"></span><span>  </span><span id="local-6989586621690269657"><span class="annot"><span class="annottext">runDBMutation :: RequestId
+</span><span id="line-21"></span><span>  </span><span id="local-6989586621688050165"><span class="annot"><span class="annottext">runDBMutation :: RequestId
 -&gt; GQLReqUnparsed
 -&gt; RootFieldAlias
 -&gt; UserInfo
@@ -68,7 +68,7 @@ forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
 </span><a href="Hasura.Base.Error.html#throw400"><span class="hs-identifier hs-var">throw400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
 </span><a href="Hasura.Base.Error.html#NotSupported"><span class="hs-identifier hs-var">NotSupported</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;runDBMutation: not implemented for Experimental&quot;</span></span><span>
-</span><span id="line-23"></span><span>  </span><span id="local-6989586621690269655"><span class="annot"><span class="annottext">runDBSubscription :: SourceConfig 'Experimental
+</span><span id="line-23"></span><span>  </span><span id="local-6989586621688050163"><span class="annot"><span class="annottext">runDBSubscription :: SourceConfig 'Experimental
 -&gt; MultiplexedQuery 'Experimental
 -&gt; [(CohortId, CohortVariables)]
 -&gt; m (DiffTime, Either QErr [(CohortId, ByteString)])
@@ -79,17 +79,17 @@ forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
 </span><span id="line-24"></span><span>    </span><span class="annot"><span class="annottext">IO (DiffTime, Either QErr [(CohortId, ByteString)])
 -&gt; m (DiffTime, Either QErr [(CohortId, ByteString)])
 forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var">liftIO</span></a></span><span> </span><span class="annot"><span class="annottext">(IO (DiffTime, Either QErr [(CohortId, ByteString)])
+</span><span class="hs-identifier hs-var">liftIO</span></span><span> </span><span class="annot"><span class="annottext">(IO (DiffTime, Either QErr [(CohortId, ByteString)])
  -&gt; m (DiffTime, Either QErr [(CohortId, ByteString)]))
 -&gt; IO (DiffTime, Either QErr [(CohortId, ByteString)])
 -&gt; m (DiffTime, Either QErr [(CohortId, ByteString)])
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">IOError -&gt; IO (DiffTime, Either QErr [(CohortId, ByteString)])
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">IOError -&gt; IO (DiffTime, Either QErr [(CohortId, ByteString)])
 forall e a. Exception e =&gt; e -&gt; IO a
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var">throwIO</span></a></span><span> </span><span class="annot"><span class="annottext">(IOError -&gt; IO (DiffTime, Either QErr [(CohortId, ByteString)]))
+</span><span class="hs-identifier hs-var">throwIO</span></span><span> </span><span class="annot"><span class="annottext">(IOError -&gt; IO (DiffTime, Either QErr [(CohortId, ByteString)]))
 -&gt; IOError -&gt; IO (DiffTime, Either QErr [(CohortId, ByteString)])
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">String -&gt; IOError
-</span><a href="../file:///home/nicuveo/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/src"><span class="hs-identifier hs-var">userError</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; IOError
+</span><span class="hs-identifier hs-var">userError</span></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;runDBSubscription: not implemented for Experimental&quot;</span></span><span>
 </span><span id="line-25"></span></pre></body></html>
