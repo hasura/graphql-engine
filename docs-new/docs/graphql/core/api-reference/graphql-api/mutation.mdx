@@ -169,7 +169,7 @@ mutation [<mutation-name>] {
 |-------------------------|----------|-------------------------------------------|--------------------------------------------------------------------------|
 | mutation-name           | false    | Value                                     | Name of mutation for observability                                       |
 | mutation-field-name     | true     | Value                                     | Name of the auto-generated update mutation field, e.g. *update_author*   |
-| where-argument          | true     | [whereArgExp](#whereArgExp)               | Selection criteria for rows to be updated                                |
+| where-argument          | true     | [whereArgExp](#whereargexp)               | Selection criteria for rows to be updated                                |
 | set-argument            | false    | [setArgExp](#setargexp)                   | Data to be updated in the table                                          |
 | inc-argument            | false    | [incArgExp](#incargexp)                   | Integer value to be incremented to Int columns in the table              |
 | append-argument         | false    | [appendArgExp](#appendargexp)             | JSON value to be appended to JSONB columns in the table                  |
@@ -257,7 +257,7 @@ mutation delete_articles {
 
 :::info Note
 
-For more examples and details of usage, please see [this](/graphql/core/databases/postgres/mutations/index.mdx#pg-mutations).
+For more examples and details of usage, please see [this](/graphql/core/databases/postgres/mutations/index.mdx).
 
 :::
 
