@@ -29,9 +29,9 @@ mutation [<mutation-name>] {
 |---------------------|----------|---------------------------------------|-----------------------------------------------------------------|
 | mutation-name       | false    | Value                                 | Name of mutation for observability                              |
 | mutation-field-name | true     | Value                                 | Name of the auto-generated mutation field, e.g. *insert_author* |
-| input-object        | true     | [InputObjects](#InputObjects)         | Name of the auto-generated mutation field                       |
-| mutation-response   | true     | [MutationResponse](#MutationResponse) | Object to be returned after mutation succeeds                   |
-| on-conflict         | false    | [ConflictClause](#ConflictClause)     | Converts *insert* to *upsert* by handling conflict              |
+| input-object        | true     | [InputObjects](#inputobjects)         | Name of the auto-generated mutation field                       |
+| mutation-response   | true     | [MutationResponse](#mutationresponse) | Object to be returned after mutation succeeds                   |
+| on-conflict         | false    | [ConflictClause](#conflictclause)     | Converts *insert* to *upsert* by handling conflict              |
 
 **Example: Insert**
 
@@ -87,13 +87,13 @@ mutation [<mutation-name>] {
 }
 ```
 
-| Key                 | Required | Schema                            | Description                                                         |
-|---------------------|----------|-----------------------------------|---------------------------------------------------------------------|
-| mutation-name       | false    | Value                             | Name of mutation for observability                                  |
-| mutation-field-name | true     | Value                             | Name of the auto-generated mutation field, e.g. *insert_author_one* |
-| input-object        | true     | [InputObject](#InputObject)       | Name of the auto-generated mutation field                           |
-| mutation-response   | true     | `SimpleObject`                    | Object to be returned after mutation succeeds                       |
-| on-conflict         | false    | [ConflictClause](#ConflictClause) | Converts *insert* to *upsert* by handling conflict                  |
+| Key                 | Required | Schema                                                                                 | Description                                                         |
+|---------------------|----------|----------------------------------------------------------------------------------------|---------------------------------------------------------------------|
+| mutation-name       | false    | Value                                                                                  | Name of mutation for observability                                  |
+| mutation-field-name | true     | Value                                                                                  | Name of the auto-generated mutation field, e.g. *insert_author_one* |
+| input-object        | true     | [InputObject](#inputobject)                                                            | Name of the auto-generated mutation field                           |
+| mutation-response   | true     | [SimpleObject](/graphql/core/api-reference/graphql-api/query.mdx#simpleobject)         | Object to be returned after mutation succeeds                       |
+| on-conflict         | false    | [ConflictClause](#conflictclause)                                                      | Converts *insert* to *upsert* by handling conflict                  |
 
 **Example: Insert One**
 
@@ -128,14 +128,14 @@ mutation [<mutation-name>] {
 |-------------------------|----------|-------------------------------------------|----------------------------------------------------------------------------------------------------------|
 | mutation-name           | false    | Value                                     | Name of mutation for observability                                                                       |
 | mutation-field-name     | true     | Value                                     | Name of the auto-generated update mutation field, e.g. *update_author_by_pk*                             |
-| pk-columns-argument     | true     | [pkColumnsArgExp](#pkColumnsArgExp)       | Primary key(s) for row(s) to be updated                                                                  |
-| set-argument            | false    | [setArgExp](#setArgExp)                   | Data to be updated in the table                                                                          |
-| inc-argument            | false    | [incArgExp](#incArgExp)                   | Integer value to be incremented to Int columns in the table (Negative integers can be used to decrement) |
-| append-argument         | false    | [appendArgExp](#appendArgExp)             | JSON value to be appended to JSONB columns in the table                                                  |
-| prepend-argument        | false    | [prependArgExp](#prependArgExp)           | JSON value to be prepended to JSONB columns in the table                                                 |
-| delete-key-argument     | false    | [deleteKeyArgExp](#deleteKeyArgExp)       | Key to be deleted in the value of JSONB columns in the table                                             |
-| delete-elem-argument    | false    | [deleteElemArgExp](#deleteElemArgExp)     | Array element to be deleted in the value of JSONB columns in the table                                   |
-| delete-at-path-argument | false    | [deleteAtPathArgExp](#deleteAtPathArgExp) | Element at path to be deleted in the value of JSONB columns in the table                                 |
+| pk-columns-argument     | true     | [pkColumnsArgExp](#pkcolumnsargexp)       | Primary key(s) for row(s) to be updated                                                                  |
+| set-argument            | false    | [setArgExp](#setargexp)                   | Data to be updated in the table                                                                          |
+| inc-argument            | false    | [incArgExp](#incargexp)                   | Integer value to be incremented to Int columns in the table (Negative integers can be used to decrement) |
+| append-argument         | false    | [appendArgExp](#appendargexp)             | JSON value to be appended to JSONB columns in the table                                                  |
+| prepend-argument        | false    | [prependArgExp](#prependargexp)           | JSON value to be prepended to JSONB columns in the table                                                 |
+| delete-key-argument     | false    | [deleteKeyArgExp](#deletekeyargexp)       | Key to be deleted in the value of JSONB columns in the table                                             |
+| delete-elem-argument    | false    | [deleteElemArgExp](#deleteelemargexp)     | Array element to be deleted in the value of JSONB columns in the table                                   |
+| delete-at-path-argument | false    | [deleteAtPathArgExp](#deleteatpathargexp) | Element at path to be deleted in the value of JSONB columns in the table                                 |
 
 **Example: Update by PK**
 
@@ -170,14 +170,14 @@ mutation [<mutation-name>] {
 | mutation-name           | false    | Value                                     | Name of mutation for observability                                       |
 | mutation-field-name     | true     | Value                                     | Name of the auto-generated update mutation field, e.g. *update_author*   |
 | where-argument          | true     | [whereArgExp](#whereArgExp)               | Selection criteria for rows to be updated                                |
-| set-argument            | false    | [setArgExp](#setArgExp)                   | Data to be updated in the table                                          |
-| inc-argument            | false    | [incArgExp](#incArgExp)                   | Integer value to be incremented to Int columns in the table              |
-| append-argument         | false    | [appendArgExp](#appendArgExp)             | JSON value to be appended to JSONB columns in the table                  |
-| prepend-argument        | false    | [prependArgExp](#prependArgExp)           | JSON value to be prepended to JSONB columns in the table                 |
-| delete-key-argument     | false    | [deleteKeyArgExp](#deleteKeyArgExp)       | Key to be deleted in the value of JSONB columns in the table             |
-| delete-elem-argument    | false    | [deleteElemArgExp](#deleteElemArgExp)     | Array element to be deleted in the value of JSONB columns in the table   |
-| delete-at-path-argument | false    | [deleteAtPathArgExp](#deleteAtPathArgExp) | Element at path to be deleted in the value of JSONB columns in the table |
-| mutation-response       | true     | [MutationResponse](#MutationResponse)     | Object to be returned after mutation succeeds                            |
+| set-argument            | false    | [setArgExp](#setargexp)                   | Data to be updated in the table                                          |
+| inc-argument            | false    | [incArgExp](#incargexp)                   | Integer value to be incremented to Int columns in the table              |
+| append-argument         | false    | [appendArgExp](#appendargexp)             | JSON value to be appended to JSONB columns in the table                  |
+| prepend-argument        | false    | [prependArgExp](#prependargexp)           | JSON value to be prepended to JSONB columns in the table                 |
+| delete-key-argument     | false    | [deleteKeyArgExp](#deletekeyargexp)       | Key to be deleted in the value of JSONB columns in the table             |
+| delete-elem-argument    | false    | [deleteElemArgExp](#deleteelemargexp)     | Array element to be deleted in the value of JSONB columns in the table   |
+| delete-at-path-argument | false    | [deleteAtPathArgExp](#deleteatpathargexp) | Element at path to be deleted in the value of JSONB columns in the table |
+| mutation-response       | true     | [MutationResponse](#mutationresponse)     | Object to be returned after mutation succeeds                            |
 
 **Example: Update**
 
@@ -237,8 +237,8 @@ mutation [<mutation-name>] {
 |---------------------|----------|---------------------------------------|------------------------------------------------------------------------|
 | mutation-name       | false    | Value                                 | Name of mutation for observability                                     |
 | mutation-field-name | true     | Value                                 | Name of the auto-generated delete mutation field, e.g. *delete_author* |
-| where-argument      | true     | [whereArgExp](#whereArgExp)           | Selection criteria for rows to delete                                  |
-| mutation-response   | true     | [MutationResponse](#MutationResponse) | Object to be returned after mutation succeeds                          |
+| where-argument      | true     | [whereArgExp](#whereargexp)           | Selection criteria for rows to delete                                  |
+| mutation-response   | true     | [MutationResponse](#mutationresponse) | Object to be returned after mutation succeeds                          |
 
 **Example: Delete**
 
