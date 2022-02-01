@@ -109,6 +109,45 @@ related table. In this case, let's say there is an `article` table and a
   width="1300px"
 />
 
+<!--
+
+.. Role-based schemas
+  ------------------
+
+  For every role that you create, Hasura automatically publishes a different GraphQL schema that represents the
+  right queries, fields, and mutations that are available to that role.
+
+  Case 1: Logged-in users and anonymous users can access the same GraphQL fields
+  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+  In simple use-cases, logged-in users and anonymous users might be able to fetch different rows (let's say because
+  of a ``is_public`` flag), but have access to the same fields.
+
+  - ``anonymous`` role has a ``{is_public: {_eq: true}}`` select condition.
+
+    - This reads: Allow anyone to access rows that are marked public.
+
+  - ``user`` role has a ``_or: [{is_public: {_eq: true}}, {owner_id: {_eq: "X-Hasura-User-Id"}}]``.
+
+    - This reads: Allow users to access any rows that are public, or that are owned by them.
+
+  Case 2: Logged-in users and anonymous users have access to different fields
+  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+  In this case, anonymous users might have access only to a subset of fields while logged-in users can access all the
+  fields for data that they own.
+
+  - ``anonymous`` role has a ``{is_public: {_eq: true}}`` select condition, and only the right columns are allowed to
+    be selected.
+
+    - This reads: Allow anyone to access rows that are marked public.
+
+  - ``user`` role has a ``{owner_id: {_eq: "X-Hasura-User-Id"}}`` and all the columns are marked as selected.
+
+    - This reads: Allow users to that are owned by them.
+
+-->
+
 ## Multiple roles per user {#nested-object-permissions-example}
 
 Sometimes your data/user model requires that:
