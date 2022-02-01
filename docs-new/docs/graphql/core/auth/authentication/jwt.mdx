@@ -36,7 +36,7 @@ request, then the default role is applied. If the authorization passes,
 then all of the `x-hasura-*` values in the claim are used for the
 permissions system.
 
-:::note Prerequisite
+:::info Prerequisite
 
 It is mandatory to first
 [secure your GraphQL endpoint](/graphql/core/deployment/securing-graphql-endpoint.mdx) for the JWT
@@ -110,7 +110,7 @@ while starting the server.
 **Note**: `x-hasura-default-role` and `x-hasura-allowed-roles` are
 mandatory, while the rest of them are optional.
 
-:::note Note
+:::info Note
 
 All `x-hasura-*` values should be of type `String`, they will be
 converted to the right type automatically.
@@ -270,7 +270,7 @@ set to `$.hasura.claims`:
 }
 ```
 
-:::note Note
+:::info Note
 
 The JWT config can only have one of `claims_namespace` or
 `claims_namespace_path` values set. If neither keys are set, then the
@@ -391,7 +391,7 @@ Examples:
 }
 ```
 
-:::note Note
+:::info Note
 
 Certain providers require you to verify the `iss` claim on the JWT. To
 do that you can set this field to the appropriate value.
@@ -778,7 +778,7 @@ instructions in the READMEs of the repositories to get started.
     Barebones example to show how to have Firebase Auth integrated with
     Hasura JWT mode
 
-:::note Additional Resources
+:::info Additional Resources
 
 Enterprise Grade Authorization - [Watch Webinar](https://hasura.io/events/webinar/authorization-modeling-hasura/?pg=docs&plcmt=body&cta=watch-webinar&tech=).
 

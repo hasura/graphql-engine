@@ -368,7 +368,7 @@ X-Hasura-Role: admin
 </TabItem>
 </Tabs>
 
-:::note Array session variables in permission rules
+:::info Array session variables in permission rules
 
 Support for using session variables for array operators like `_in`,
 `_nin`, `_has_any_keys`, `_has_all_keys` is available in versions
@@ -469,7 +469,7 @@ This permission rule reads as "*if the author's agent's* `id` *is the
 same as the requesting user's* `id` *, allow access to the author's
 details*."
 
-:::note Array and object relationships work similarly
+:::info Array and object relationships work similarly
 
 - The above example would have worked even if the relationship were an
     array relationship. In our example, the corresponding rule for an
@@ -856,7 +856,7 @@ Setting `backend-only` is currently available for insert mutations only.
 
 :::
 
-:::note Additional Resources
+:::info Additional Resources
 
 Enterprise Grade Authorization - [Watch Webinar](https://hasura.io/events/webinar/authorization-modeling-hasura/?pg=docs&plcmt=body&cta=watch-webinar&tech=).
 
