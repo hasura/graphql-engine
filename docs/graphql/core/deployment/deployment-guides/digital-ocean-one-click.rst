@@ -220,9 +220,7 @@ Step 4: Edit the ``Caddyfile`` and change ``:80`` to your domain
 
    ...
    add_your-domain-here {
-      proxy / graphql-engine:8080 {
-         websocket
-      }
+      reverse_proxy graphql-engine:8080
    }
    ...
 
