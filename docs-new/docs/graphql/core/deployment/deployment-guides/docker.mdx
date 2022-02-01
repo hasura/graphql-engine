@@ -56,7 +56,7 @@ CONTAINER ID IMAGE                 ... CREATED STATUS PORTS          ...
 b0b1aac0508d postgres              ... 1m ago  Up 1m  5432/tcp       ...
 ```
 
-## Securing the GraphQL endpoint {#docker_secure}
+## Securing the GraphQL endpoint {#docker-secure}
 
 To make sure that your GraphQL endpoint and the Hasura console are not
 publicly accessible, you need to configure an admin secret key.
@@ -81,7 +81,16 @@ authentication.
 
 :::
 
-## Hasura GraphQL engine server logs {#docker_logs}
+<!--
+.. hiding this as it mixes auth for the data plane with auth for the control plane and might be confusing
+
+  .. admonition:: Using collaborators as an alternative to Hasura Admin Secret sharing with Hasura Cloud
+    :class: dhc
+
+    Hasura Cloud offers console collaborators which avoids sharing the `HASURA-ADMIN-SECRET` with those that shouldn't have unrestricted access to your project. For more information about collaborator management, see :ref:`Collaborators in Hasura Cloud <manage_project_collaborators>`.
+-->
+
+## Hasura GraphQL engine server logs {#docker-logs}
 
 You can check the logs of the Hasura GraphQL engine deployed using
 Docker by checking the logs of the GraphQL engine container:
@@ -106,7 +115,7 @@ $ docker logs 097f58433a2b
     on logging in Docker.
 -   [Hasura GraphQL engine logs](/graphql/core/deployment/logging.mdx) for more details on Hasura logs.
 
-## Updating Hasura GraphQL engine {#docker_update}
+## Updating Hasura GraphQL engine {#docker-update}
 
 This guide will help you update the Hasura GraphQL engine running with
 Docker. This guide assumes that you already have Hasura GraphQL engine
@@ -128,17 +137,18 @@ tag to this latest version.
 
 For example, if you had:
 
-<code>
+```yaml
   graphql-engine:
     image: hasura/graphql-engine:v1.2.0
-</code>
+```
 
 you should change it to:
 
-<code>
+```yaml
   graphql-engine:
     image: hasura/graphql-engine:v1.3.3
-</code>
+```
+
 
 :::info Note
 

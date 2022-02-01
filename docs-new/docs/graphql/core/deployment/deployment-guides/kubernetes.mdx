@@ -53,7 +53,7 @@ Examples of `HASURA_GRAPHQL_DATABASE_URL`:
     etc.), you need to URL encode them in the
     `HASURA_GRAPHQL_DATABASE_URL` env var (e.g. %40 for @).
 
-    You can check the [logs](/graphql/core/deployment/deployment-guides/kubernetes.mdx/) to see if the database
+    You can check the [logs](#kubernetes-logs) to see if the database
     credentials are proper and if Hasura is able to connect to the
     database.
 
@@ -88,9 +88,9 @@ Head to: `http://localhost` and the console should load!
 
 ### Step 5: Track existing tables and relationships
 
-See [Setting up a GraphQL schema using an existing Postgres database](/graphql/core/databases/postgres/schema/using-existing-database.mdx#pg-schema-existing-db) to enable GraphQL over the database.
+See [Setting up a GraphQL schema using an existing Postgres database](/graphql/core/databases/postgres/schema/using-existing-database.mdx) to enable GraphQL over the database.
 
-## Securing the GraphQL endpoint {#kubernetes_secure}
+## Securing the GraphQL endpoint {#kubernetes-secure}
 
 To make sure that your GraphQL endpoint and the Hasura console are not
 publicly accessible, you need to configure an admin secret key.
@@ -136,7 +136,7 @@ In case you're using the CLI to open the Hasura console, use the
 hasura console --admin-secret=<myadminsecretkey>
 ```
 
-## Hasura GraphQL engine server logs {#kubernetes_logs}
+## Hasura GraphQL engine server logs {#kubernetes-logs}
 
 You can check the logs of the Hasura GraphQL engine deployed on
 Kubernetes by checking the logs of the GraphQL engine service, i.e.
@@ -155,7 +155,7 @@ $ kubectl logs -f svc/hasura
     for more details on logging in Kubernetes.
 -   [Hasura GraphQL engine logs](/graphql/core/deployment/logging.mdx) for more details on Hasura logs
 
-## Updating Hasura GraphQL engine {#kubernetes_update}
+## Updating Hasura GraphQL engine {#kubernetes-update}
 
 This guide will help you update the Hasura GraphQL engine running on
 Kubernetes. This guide assumes that you already have the Hasura GraphQL

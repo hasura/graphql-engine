@@ -251,7 +251,7 @@ hasura metadata apply
 <TabItem value="api" label="API">
 
 You can define permissions using the `_and` operator when using the
-[permissions metadata API](/graphql/core/api-reference/metadata-api/permission.mdx#metadata-api-permission):
+[permissions metadata API](/graphql/core/api-reference/metadata-api/permission.mdx):
 
 ```http {13-26}
 POST /v1/metadata HTTP/1.1
@@ -306,8 +306,8 @@ value in the `id` column is equal to the value in the session variable
 You can define session variables in permissions on the Hasura console:
 
 <Thumbnail
-  src="/img/graphql/core/remote-schemas/remote-schema-arch.png"
-  alt="Hasura scheduled trigger architecture"
+  src="/img/graphql/core/auth/session-variables-in-permissions-simple-example.png"
+  alt="Using session variables to build rules"
   width="600px"
 />
 
@@ -342,7 +342,7 @@ hasura metadata apply
 <TabItem value="api" label="API">
 
 You can define session variables in permissions tables when using the
-[permissions metadata API](/graphql/core/api-reference/metadata-api/permission.mdx#metadata-api-permission):
+[permissions metadata API](/graphql/core/api-reference/metadata-api/permission.mdx):
 
 ```http {13-15}
 POST /v1/metadata HTTP/1.1
@@ -384,7 +384,7 @@ session variable in its place.
 
 #### Using relationships or nested objects {#relationships-in-permissions}
 
-You can leverage [table relationships](/graphql/core/databases/postgres/schema/table-relationships/index.mdx#pg-table-relationships) to
+You can leverage [table relationships](/graphql/core/databases/postgres/schema/table-relationships/index.mdx) to
 define permission rules with fields from a nested object.
 
 **For example**, let's say you have an object relationship called
@@ -435,7 +435,7 @@ hasura metadata apply
 <TabItem value="api" label="API">
 
 You add permissions using relationships or nested objects when using the
-[permissions metadata API](/graphql/core/api-reference/metadata-api/permission.mdx#metadata-api-permission):
+[permissions metadata API](/graphql/core/api-reference/metadata-api/permission.mdx):
 
 ```http {13-19}
 POST /v1/metadata HTTP/1.1

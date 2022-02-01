@@ -140,7 +140,7 @@ query {
   alt="Hasura console - GraphiQL"
 />
 
-## Securing the GraphQL endpoint {#digital_ocean_secure}
+## Securing the GraphQL endpoint {#digital-ocean-secure}
 
 By default Hasura is exposed without any admin secret. Anyone can read
 and write to your database using GraphQL. When deploying to production,
@@ -239,7 +239,7 @@ docker-compose restart caddy
 
 Go to `https://<your_domain>/console` to visit the Hasura console.
 
-## Updating to the latest version {#do_updating}
+## Updating to the latest version {#do-updating}
 
 When a new version of the GraphQL engine is released, you can upgrade to
 it by just changing the version tag in `docker-compose.yaml`. You can
@@ -344,7 +344,7 @@ on DigitalOcean, you should do so in the `session` mode.
 
 :::
 
-## Access database via psql {#digital_ocean_connect_psql}
+## Access database via psql {#digital-ocean-connect-psql}
 
 To access the Postgres database via `psql`, you can use the following
 command via the terminal:
@@ -354,7 +354,7 @@ docker exec -it hasura_postgres_1 psql -U postgres
 ```
 
 If you are using a hosted database
-[as outlined above](/graphql/core/deployment/deployment-guides/digital-ocean-one-click.mdx#do-managed-pg-db), it's a little different:
+[as outlined above](#do-managed-pg-db), it's a little different:
 
 ```bash
 docker exec -it hasura_postgres_1 psql -h <your database url> -p <your port> -d <your database> -U <your database user>
@@ -368,7 +368,7 @@ documentation for generating the proper `psql` command flags.
 
 :::
 
-## Logs {#do_logs}
+## Logs {#do-logs}
 
 ### Step 1: Connect to the Droplet via SSH
 
