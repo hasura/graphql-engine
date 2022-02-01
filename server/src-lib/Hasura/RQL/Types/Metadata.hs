@@ -62,7 +62,6 @@ module Hasura.RQL.Types.Metadata
     mkSourceMetadata,
     mkTableMeta,
     noMetadataModify,
-    parseListAsMap,
     parseNonSourcesMetadata,
     rsmComment,
     rsmDefinition,
@@ -138,21 +137,22 @@ import Hasura.SQL.Tag
 import Hasura.Session
 import Language.GraphQL.Draft.Syntax qualified as G
 
--- | Raise exception if parsed list has multiple declarations
+-- | Parse a list of objects into a map from a derived key,
+-- failing if the list has duplicates.
 parseListAsMap ::
-  (Hashable k, Eq k, Show k) =>
+  (Hashable k, Eq k, T.ToTxt k) =>
   Text ->
   (a -> k) ->
   Parser [a] ->
   Parser (InsOrdHashMap k a)
-parseListAsMap t mapFn listP = do
+parseListAsMap things mapFn listP = do
   list <- listP
   let duplicates = toList $ L.duplicates $ map mapFn list
   unless (null duplicates) $
     fail $
       T.unpack $
-        "multiple declarations exist for the following " <> t <> " : "
-          <> tshow duplicates
+        "multiple declarations exist for the following " <> things <> ": "
+          <> T.commaSeparated duplicates
   pure $ oMapFromL mapFn list
 
 -- | Versioning the @'Metadata' JSON structure to track backwards incompatible changes.
