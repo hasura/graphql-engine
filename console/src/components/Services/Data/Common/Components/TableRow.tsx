@@ -100,7 +100,7 @@ export const TableRow: React.FC<TableRowProps> = ({
     e: React.ChangeEvent<HTMLInputElement>,
     val: string
   ) => {
-    if (isDisabled || isNullable || hasDefault) return;
+    if (isDisabled) return;
 
     if (onChange) {
       onChange(e, val);
@@ -108,7 +108,7 @@ export const TableRow: React.FC<TableRowProps> = ({
   };
 
   const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
-    if (isDisabled || isNullable || hasDefault) return;
+    if (isDisabled) return;
 
     if (onFocus) {
       onFocus(e);

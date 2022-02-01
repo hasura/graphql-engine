@@ -17,6 +17,7 @@ import MigrationCheckbox from './MigrationCheckbox';
 import globals from '../../../../Globals';
 import { CLI_CONSOLE_MODE } from '../../../../constants';
 import FeatureDisabled from '../FeatureDisabled';
+import { isEmpty } from '@/components/Common/utils/jsUtils';
 
 class InsertItem extends Component {
   constructor() {
@@ -119,11 +120,7 @@ class InsertItem extends Component {
       };
       const onFocus = e => {
         const textValue = e.target.value;
-        if (
-          textValue === undefined ||
-          textValue === null ||
-          textValue.length === 0
-        ) {
+        if (isEmpty(textValue)) {
           const radioToSelectWhenEmpty = hasDefault
             ? refs[colName].defaultNode
             : refs[colName].nullNode;
