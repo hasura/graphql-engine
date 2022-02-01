@@ -121,17 +121,14 @@ todos, we need to add the following permission rule to ensure this:
 Now the role `user` can only access non-deleted `todos`:
 
 <GraphiQLIDE
-  query={`{
-    query {
+  query={`query {
       todos {
         id
         name
         deleted_at
       }
-    }
   }`}
   response={`{
-  {
     "data": {
       "todos": [
         {
@@ -141,6 +138,5 @@ Now the role `user` can only access non-deleted `todos`:
         }
       ]
     }
-  }
   }`}
 />

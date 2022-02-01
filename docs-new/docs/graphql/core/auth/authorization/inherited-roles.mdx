@@ -212,14 +212,12 @@ X-Hasura-User-Id: 1
 ```
 
 <GraphiQLIDE
-  query={`{
-    query {
+  query={`query {
         users {
             id
             name
             email
         }
-    }
   }`}
   response={`{
   "data": {
@@ -243,13 +241,11 @@ X-Hasura-Role: anonymous
 ```
 
 <GraphiQLIDE
-  query={`{
-    query {
+  query={`query {
         users {
             id
             name
         }
-    }
   }`}
   response={`{
   "data": {
@@ -281,14 +277,12 @@ X-Hasura-User-Id: 1
 ```
 
 <GraphiQLIDE
-  query={`{
-    query {
+  query={`query {
         users {
             id
             name
             email
         }
-    }
   }`}
   response={`{
   "data": {
@@ -342,8 +336,7 @@ X-Hasura-User-Id: 1
 ```
 
 <GraphiQLIDE
-  query={`{
-    query {
+  query={`query {
         users {
             id
             name
@@ -354,7 +347,6 @@ X-Hasura-User-Id: 1
             name
             followers
         }
-    }
   }`}
   response={`{
   "data": {

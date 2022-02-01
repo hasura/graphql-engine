@@ -69,7 +69,7 @@ We can now:
 - fetch a list of `authors` with their `articles`:
 
 <GraphiQLIDE
-  query={`{
+  query={`query {
     authors {
       id
       name
@@ -80,7 +80,6 @@ We can now:
     }
   }`}
   response={`{
-  {
     "data": {
       "authors": [
         {
@@ -113,14 +112,13 @@ We can now:
         }
       ]
     }
-  }
 }`}
 />
 
 - fetch a list of `articles` with their `author`:
 
 <GraphiQLIDE
-  query={`{
+  query={`query {
     articles {
       id
       title
@@ -131,7 +129,6 @@ We can now:
     }
   }`}
   response={`{
-  {
     "data": {
       "articles": [
         {
@@ -152,8 +149,7 @@ We can now:
         }
       ]
     }
-  }
-}`}
+  }`}
 />
 
 ## Insert using one-to-many relationships
@@ -164,8 +160,7 @@ We can now:
   already exist (assume unique `name` for `author`):
 
 <GraphiQLIDE
-  query={`{
-    mutation UpsertAuthorWithArticles {
+  query={`mutation UpsertAuthorWithArticles {
       insert_author(objects: {
         name: "Felix",
         articles: {
@@ -194,10 +189,8 @@ We can now:
           }
         }
       }
-    }
   }`}
   response={`{
-  {
     "data": {
       "insert_author": {
         "returning": [
@@ -217,7 +210,6 @@ We can now:
         ]
       }
     }
-  }
 }`}
 />
 
@@ -225,8 +217,7 @@ We can now:
   already exist (assume unique `name` for `author`):
 
 <GraphiQLIDE
-  query={`{
-    mutation upsertArticleWithAuthors {
+  query={`mutation upsertArticleWithAuthors {
       insert_article(objects: [
         {
           title: "Article 1",
@@ -263,10 +254,8 @@ We can now:
           }
         }
       }
-    }
   }`}
   response={`{
-  {
     "data": {
       "insert_article": {
         "returning": [
@@ -287,7 +276,6 @@ We can now:
         ]
       }
     }
-  }
 }`}
 />
 

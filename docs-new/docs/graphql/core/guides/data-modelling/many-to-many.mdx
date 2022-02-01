@@ -105,8 +105,7 @@ We can now:
 -   fetch a list of `articles` with their `tags`:
 
 <GraphiQLIDE
-  query={`{
-    query {
+  query={`query {
       articles {
         id
         title
@@ -117,10 +116,8 @@ We can now:
           }
         }
       }
-    }
   }`}
   response={`{
-  {
     "data": {
       "articles": [
         {
@@ -161,15 +158,13 @@ We can now:
         }
       ]
     }
-  }
   }`}
 />
 
 -   fetch a list of `tags` with their `articles`:
 
 <GraphiQLIDE
-  query={`{
-    query {
+  query={`query {
       tags {
         id
         tag_value
@@ -180,10 +175,8 @@ We can now:
           }
         }
       }
-    }
   }`}
   response={`{
-  {
     "data": {
       "tags": [
         {
@@ -218,7 +211,6 @@ We can now:
         }
       ]
     }
-  }
   }`}
 />
 
@@ -230,8 +222,7 @@ We can now:
     (assume unique `value` for `tag`):
 
 <GraphiQLIDE
-  query={`{
-    mutation insertArticleWithTags {
+  query={`mutation insertArticleWithTags {
       insert_article(objects: [
         {
           title: "Article 1",
@@ -274,10 +265,8 @@ We can now:
           }
         }
       }
-    }
   }`}
   response={`{
-  {
     "data": {
       "insert_article": {
         "returning": [
@@ -299,7 +288,6 @@ We can now:
         ]
       }
     }
-  }
   }`}
 />
 
@@ -307,8 +295,7 @@ We can now:
     (assume unique `value` for `tag`):
 
 <GraphiQLIDE
-  query={`{
-    mutation insertTagWithArticles {
+  query={`mutation insertTagWithArticles {
       insert_tag(objects: [
         {
           value: "Recipes",
@@ -350,10 +337,8 @@ We can now:
           }
         }
       }
-    }
   }`}
   response={`{
-  {
     "data": {
       "insert_tag": {
         "returning": [
@@ -375,7 +360,6 @@ We can now:
         ]
       }
     }
-  }
   }`}
 />
 
@@ -393,8 +377,7 @@ have a column like `tagged_at` in the `article_tag` table which you can
 fetch as follows:
 
 <GraphiQLIDE
-  query={`{
-    query {
+  query={`query {
       articles {
         id
         title
@@ -406,10 +389,8 @@ fetch as follows:
           }
         }
       }
-    }
   }`}
   response={`{
-  {
       "data": {
         "articles": [
           {
@@ -454,7 +435,6 @@ fetch as follows:
           }
         ]
       }
-    }
   }`}
 />
 
@@ -489,8 +469,7 @@ We can now:
 -   fetch articles with their tags without an intermediate field:
 
 <GraphiQLIDE
-  query={`{
-    query {
+  query={`query {
       articles {
         id
         title
@@ -499,10 +478,8 @@ We can now:
           tag_value
         }
       }
-    }
   }`}
   response={`{
-  {
     "data": {
       "articles": [
         {
@@ -535,15 +512,13 @@ We can now:
         }
       ]
     }
-  }
   }`}
 />
 
 - fetch tags with their articles without an intermediate field:
 
 <GraphiQLIDE
-  query={`{
-    query {
+  query={`query {
       tags {
         id
         tag_value
@@ -552,10 +527,8 @@ We can now:
           title
         }
       }
-    }
   }`}
   response={`{
-  {
     "data": {
       "tags": [
         {
@@ -584,7 +557,6 @@ We can now:
         }
       ]
     }
-  }
   }`}
 />
 

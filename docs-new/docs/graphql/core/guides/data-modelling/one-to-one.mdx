@@ -72,8 +72,7 @@ We can now:
 -   fetch a list of `authors` with their `passport_info`:
 
 <GraphiQLIDE
-  query={`{
-    query {
+  query={`query {
       authors {
         id
         name
@@ -82,10 +81,8 @@ We can now:
           passport_number
         }
       }
-    }
   }`}
   response={`{
-  {
     "data": {
       "authors": [
         {
@@ -106,15 +103,13 @@ We can now:
         }
       ]
     }
-  }
   }`}
 />
 
 -   fetch a list of `passport_infos` with their `owner`:
 
 <GraphiQLIDE
-  query={`{
-    query {
+  query={`query {
       passport_info {
         id
         passport_number
@@ -123,10 +118,8 @@ We can now:
           name
         }
       }
-    }
   }`}
   response={`{
-  {
     "data": {
       "passport_info": [
         {
@@ -147,7 +140,6 @@ We can now:
         }
       ]
     }
-  }
   }`}
 />
 
@@ -159,8 +151,7 @@ We can now:
     already exist (assume unique `name` for `owner`):
 
 <GraphiQLIDE
-  query={`{
-    mutation upsertPassportInfoWithOwner {
+  query={`mutation upsertPassportInfoWithOwner {
       insert_passport_info(objects: [
         {
           passport_number: "X98973765",
@@ -182,10 +173,8 @@ We can now:
           }
         }
       }
-    }
   }`}
   response={`{
-  {
     "data": {
       "insert_passport_info": {
         "returning": [
@@ -198,7 +187,6 @@ We can now:
         ]
       }
     }
-  }
   }`}
 />
 

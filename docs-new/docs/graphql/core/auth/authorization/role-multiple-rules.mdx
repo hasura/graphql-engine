@@ -93,8 +93,7 @@ If the `X-Hasura-Role` and the `X-Hasura-User-Id` session variables are
 set to `user` and `2` respectively, we'll get the following result:
 
 <GraphiQLIDE
-  query={`{
-    query {
+  query={`query {
       user_info {
         id
         name
@@ -103,7 +102,6 @@ set to `user` and `2` respectively, we'll get the following result:
         phone
         address
       }
-    }
   }`}
   response={`{
   "data": {
