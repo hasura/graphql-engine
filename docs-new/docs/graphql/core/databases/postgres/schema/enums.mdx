@@ -127,7 +127,7 @@ INSERT INTO user_role (value, comment) VALUES
   ('administrator', 'Users with the privilege to set users’ roles');
 ```
 
-<div id="pg_create_enum_table_from_pg_enum">
+<div id="pg-create-enum-table-from-pg-enum"/>
 
 :::info Creating an enum table from a native PG enum
 
@@ -140,8 +140,6 @@ INSERT INTO "<my_enum_table>" (value) (SELECT unnest(enum_range(NULL::"<my_enum>
 ```
 
 :::
-
-</div>
 
 Next, we need to tell Hasura that this table represents an enum.
 

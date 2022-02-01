@@ -37,7 +37,7 @@ Custom SQL functions can also be queried as
 
 :::
 
-### Supported SQL functions
+### Supported SQL functions {#pg-supported-sql-functions}
 
 Currently, only functions which satisfy the following constraints can be
 exposed as top level fields in the GraphQL API (*terminology from*
@@ -50,7 +50,7 @@ exposed as top level fields in the GraphQL API (*terminology from*
     where `<table-name>` is already tracked
 -   **Argument modes**: ONLY `IN`
 
-## Creating SQL functions
+## Creating SQL functions {#pg-create-sql-functions}
 
 SQL functions can be created using SQL statements which can be executed
 as follows:
@@ -98,7 +98,7 @@ X-Hasura-Role: admin
 </TabItem>
 </Tabs>
 
-## Track SQL functions
+## Track SQL functions {#pg-track-custom-sql-functions}
 
 Functions can be present in the underlying Postgres database without
 being exposed over the GraphQL API. In order to expose a function over
@@ -312,7 +312,7 @@ response={`{
 }`}
 />
 
-### Example: PostGIS functions
+### Example: PostGIS functions {#pg-custom-functions-postgis}
 
 Let's take a look at an example where the `SETOF` table is not part of
 the existing schema.

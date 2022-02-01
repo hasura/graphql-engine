@@ -36,7 +36,7 @@ the validation logic and the layer where you would like to add it.
 
 These solutions are explained in some more detail below.
 
-## Using Postgres check constraints
+## Using Postgres check constraints {#pg-data-validations-check-constraints}
 
 If the validation logic can be expressed by using only static values and
 the columns of the table, you can use [Postgres check constraints](https://www.postgresql.org/docs/current/ddl-constraints.html).
@@ -136,7 +136,7 @@ response={`{
 
 Learn more about [Postgres check constraints](https://www.postgresql.org/docs/current/ddl-constraints.html).
 
-## Using Postgres triggers
+## Using Postgres triggers {#pg-data-validations-pg-triggers}
 
 If the validation logic is more complex and requires the use of data
 from other tables and/or functions, then you can use [Postgres triggers](https://www.postgresql.org/docs/current/sql-createtrigger.html).
