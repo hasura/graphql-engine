@@ -133,7 +133,7 @@ The various types of queries are listed in the following table:
      - Add a Postgres SQL function with configuration
 
    * - :ref:`metadata_pg_untrack_function`
-     - :ref:`FunctionName <FunctionName>`
+     - :ref:`pg_untrack_function_args <metadata_pg_untrack_function_syntax>`
      - 1
      - Remove a Postgres SQL function
 

@@ -155,6 +155,8 @@ Remove an SQL function ``search_articles``:
        }
    }
 
+.. _metadata_pg_untrack_function_syntax:
+
 Args syntax
 ^^^^^^^^^^^
 
