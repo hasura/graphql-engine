@@ -3,6 +3,11 @@
 ## Next release
 (Add highlights/major features below)
 
+### Bug fixes and improvements
+(Add entries below in the order of server, console, cli, docs, others)
+
+## v2.2.0
+
 ### Breaking Changes
 - For any **MSSQL** backend, count aggregate query on multiple columns is restricted with a GraphQL
   schema change as follows
