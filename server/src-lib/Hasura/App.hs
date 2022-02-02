@@ -313,17 +313,20 @@ newtype PGMetadataStorageAppT m a = PGMetadataStorageAppT {runPGMetadataStorageA
     )
     via (ReaderT (Q.PGPool, Q.PGLogger) m)
 
-instance MonadTrans PGMetadataStorageAppT where
-  lift = PGMetadataStorageAppT . const
+deriving via
+  (ReaderT (Q.PGPool, Q.PGLogger) m)
+  instance
+    MonadBase IO m => MonadBase IO (PGMetadataStorageAppT m)
 
-instance (MonadBase IO m) => MonadBase IO (PGMetadataStorageAppT m) where
-  liftBase io = PGMetadataStorageAppT $ \_ -> liftBase io
+deriving via
+  (ReaderT (Q.PGPool, Q.PGLogger) m)
+  instance
+    MonadBaseControl IO m => MonadBaseControl IO (PGMetadataStorageAppT m)
 
-instance (MonadBaseControl IO m) => MonadBaseControl IO (PGMetadataStorageAppT m) where
-  type StM (PGMetadataStorageAppT m) a = StM m a
-  liftBaseWith f = PGMetadataStorageAppT $
-    \r -> liftBaseWith \run -> f (run . flip runPGMetadataStorageAppT r)
-  restoreM stma = PGMetadataStorageAppT $ \_ -> restoreM stma
+deriving via
+  (ReaderT (Q.PGPool, Q.PGLogger))
+  instance
+    MonadTrans PGMetadataStorageAppT
 
 resolvePostgresConnInfo ::
   (MonadIO m) => Env.Environment -> UrlConf -> Maybe Int -> m Q.ConnInfo
