@@ -11,6 +11,7 @@ keywords:
 ---
 
 import GraphiQLIDE from '@site/src/components/GraphiQLIDE/GraphiQLIDE';
+import TOCInline from '@theme/TOCInline';
 
 # Postgres: Update mutation
 
@@ -392,8 +393,8 @@ The currently available `jsonb` operators are:
 
 | Operator          | Postgres equivalent | Function                                     |
 |-------------------|---------------------|----------------------------------------------|
-| `_append`         | \| \|                | append json value to a `jsonb` column        |
-| `_prepend`        | \| \|                | prepend json value to a `jsonb` column       |
+| `_append`         | `||`                | append json value to a `jsonb` column        |
+| `_prepend`        | `||`                | prepend json value to a `jsonb` column       |
 | `_delete_key`     | `-`                 | delete top-level key from `jsonb` column     |
 | `_delete_elem`    | `-`                 | delete array element from `jsonb` column     |
 | `_delete_at_path` | `#-`                | delete element at a path from `jsonb` column |
@@ -407,14 +408,9 @@ You can learn more about Postgres jsonb operators
 
 Examples
 
-- [Append a json to a jsonb column](#append-a-json-to-a-jsonb-column)
-- [Prepend a json to a jsonb column](#prepend-a-json-to-a-jsonb-column)
-- [Delete a top-level key from a jsonb column](#delete-a-top-level-key-from-a-jsonb-column)
-- [Delete an element from a jsonb column storing a json array](#delete-an-element-from-a-jsonb-column-storing-a-json-array)
-- [Delete an element at a specific path in a jsonb column](#delete-an-element-at-a-specific-path-in-a-jsonb-column)
+<TOCInline toc={toc[6].children} />
 
-
-### Append a json to a jsonb column {#append-a-json-to-a-jsonb-column}
+### Append a json to a jsonb column
 
 You can append any `jsonb` column with another json value by using the
 `_append` operator.
@@ -457,7 +453,7 @@ variables={`{
 }`}
 />
 
-### Prepend a json to a jsonb column {#prepend-a-json-to-a-jsonb-column}
+### Prepend a json to a jsonb column
 
 You can prepend any `jsonb` column with another json value by using the
 `_prepend` operator.
@@ -501,7 +497,7 @@ variables={`{
 }`}
 />
 
-### Delete a top-level key from a jsonb column {#delete-a-top-level-key-from-a-jsonb-column}
+### Delete a top-level key from a jsonb column
 
 You can delete a top-level key of a `jsonb` column by using the
 `_delete_key` operator.
@@ -540,7 +536,7 @@ response={`{
 }`}
 />
 
-### Delete an element from a jsonb column storing a json array {#delete-an-element-from-a-jsonb-column-storing-a-json-array}
+### Delete an element from a jsonb column storing a json array
 
 If a `jsonb` column is storing a json array, you can delete an element
 from the array using the `_delete_elem` operator.
@@ -576,7 +572,7 @@ response={`{
 }`}
 />
 
-### Delete an element at a specific path in a jsonb column {#delete-an-element-at-a-specific-path-in-a-jsonb-column}
+### Delete an element at a specific path in a jsonb column
 
 You can delete a field or element of a `jsonb` column at a specified
 path by using the `_delete_at_path` operator.

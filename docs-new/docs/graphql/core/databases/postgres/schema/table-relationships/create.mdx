@@ -29,7 +29,7 @@ in some cases, it might not be possible to use foreign-key constraints
 to create the relation. For example, while trying to create a
 relationship involving a view as foreign-keys can't be created on views.
 
-## Using foreign keys
+## Using foreign keys {#pg-relationships-using-fkey}
 
 Say we created two tables, `authors(id, name)` and
 `articles(id, title, content, rating, author_id)`.
@@ -375,10 +375,10 @@ response={`{
 }`}
 />
 
-## Using manual relationships
+## Using manual relationships {#pg-create-manual-relationships}
 
 Let's say you have a table `authors (id, name)` and a
-[view](/graphql/core/databases/postgres/schema/views.mdx#pg-custom-views) `author_avg_rating (id, avg)` which has the
+[view](/graphql/core/databases/postgres/schema/views.mdx) `author_avg_rating (id, avg)` which has the
 average rating of articles for each author.
 
 Let us now create an `object relationship` called `avg_rating` from the

@@ -2100,7 +2100,7 @@ an error.
 
 In **versions v1.3.3 and below**, if in any comparison expression a
 `null` value is passed, the expression gets reduced to `{}`, the
-[TRUE expression](/graphql/core/databases/postgres/queries/query-filters.mdx#pg-true-expression).
+[TRUE expression](#pg-true-expression).
 
 For example, the expression `{ where: { id: {_eq: null }}}` will be
 reduced to `{ where: {id: {}} }` which will return all objects for which

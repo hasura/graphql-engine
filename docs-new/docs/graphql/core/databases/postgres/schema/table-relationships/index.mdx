@@ -26,9 +26,9 @@ each other via one of the following types of table relationships:
 
 |Type           | Example                        | Meaning                                                                              |
 |---------------|--------------------------------|--------------------------------------------------------------------------------------|
-|`one-to-one`   | `authors` and `passport_infos` | an `author` can have one `passport_info` \| a `passport_info` can have one `owner`   |
-|`one-to-many`  | `authors` and `articles`       | an `author` can have many `articles` \| an `article` can have one `author`           |	
-|`many-to-many` | `articles` and `tags`          | an `article` can have many `tags` \| a `tag` can have many `articles`                |
+|`one-to-one`   | `authors` and `passport_infos` | <ul><li> an `author` can have one `passport_info` </li><li> a `passport_info` can have one `owner` </li></ul>   |
+|`one-to-many`  | `authors` and `articles`       | <ul><li> an `author` can have many `articles` </li><li> an `article` can have one `author` </li></ul>           |	
+|`many-to-many` | `articles` and `tags`          | <ul><li> an `article` can have many `tags` </li><li> a `tag` can have many `articles` </li></ul>               |
 
 ## GraphQL schema relationships {#pg-graphql-relationships}
 

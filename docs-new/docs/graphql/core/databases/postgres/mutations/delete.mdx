@@ -69,12 +69,13 @@ deleted row object or `null` if the row does not exist.
 
 <GraphiQLIDE
   query={`mutation delete_an_object {
-  delete_article_by_pk (
-    id: 1
-  ) {
-    id
-    title
-    user_id
+    delete_article_by_pk (
+      id: 1
+    ) {
+      id
+      title
+      user_id
+    }
   }`}
   response={`{
   "data": {
@@ -91,13 +92,13 @@ deleted row object or `null` if the row does not exist.
 
 <GraphiQLIDE
 query={`mutation delete_an_object {
-delete_article_by_pk (
-  id: 100
-) {
-  id
-  title
-  user_id
-}
+  delete_article_by_pk (
+    id: 100
+  ) {
+    id
+    title
+    user_id
+  }
 }`}
 response={`{
   "data": {

@@ -107,7 +107,7 @@ response={`{
 }`}
 />
 
-### 2. Table computed fields {#table-computed-fields}
+### 2. Table computed fields
 
 Computed fields whose associated SQL function returns
 `SETOF <table-name>` are table computed fields. The return table must be
@@ -204,6 +204,7 @@ in the `Computed fields` section:
 
 </TabItem>
 <TabItem value="cli" label="CLI">
+
 You can add a computed field in the `tables.yaml` file inside the
 `metadata` directory:
 
@@ -229,6 +230,7 @@ hasura metadata apply
 
 </TabItem>
 <TabItem value="api" label="API">
+
 A computed field can be added to a table/view using the
 [pg_add_computed_field](/graphql/core/api-reference/metadata-api/computed-field.mdx#metadata-pg-add-computed-field) metadata API:
 
