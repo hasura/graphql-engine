@@ -212,24 +212,26 @@ X-Hasura-User-Id: 1
 ```
 
 <GraphiQLIDE
-  query={`query {
-        users {
-            id
-            name
-            email
-        }
-  }`}
-  response={`{
+  query={
+`query {
+	users {
+		id
+		name
+		email
+	}
+ }`}
+  response={
+ `{
   "data": {
     "users": [
-        {
-            "id": 1,
-            "name": "alice",
-            "email": "alice@xyz.com"
-        }
+			{
+				"id": 1,
+				"name": "alice",
+				"email": "alice@xyz.com"
+			}
     ]
     }
-  }`}
+ }`}
 />
 
 2.  Executing the query as `anonymous` role
@@ -241,30 +243,32 @@ X-Hasura-Role: anonymous
 ```
 
 <GraphiQLIDE
-  query={`query {
-        users {
-            id
-            name
-        }
-  }`}
-  response={`{
+  query={
+ `query {
+	users {
+		id
+		name
+	}
+ }`}
+  response={
+ `{
   "data": {
-        "users": [
-            {
-            "id": 1,
-            "name": "Alice"
-            },
-            {
-            "id": 2,
-            "name": "Bob"
-            },
-            {
-            "id": 3,
-            "name": "Sam"
-            }
-        ]
+    "users": [
+    {
+			"id": 1,
+			"name": "Alice"
+    },
+    {
+			"id": 2,
+			"name": "Bob"
+    },
+    {
+			"id": 3,
+			"name": "Sam"
     }
-  }`}
+    ]
+  }
+ }`}
 />
 
 3.  Executing the query as `user_anonymous_inherited_role` role
@@ -277,34 +281,36 @@ X-Hasura-User-Id: 1
 ```
 
 <GraphiQLIDE
-  query={`query {
-        users {
-            id
-            name
-            email
-        }
-  }`}
-  response={`{
+  query={
+ `query {
+	users {
+		id
+		name
+		email
+	}
+ }`}
+  response={
+ `{
   "data": {
-        "users": [
-        {
-            "id": 1,
-            "name": "Alice",
-            "email": "alice@xyz.com"
-        },
-        {
-            "id": 2,
-            "name": "Bob",
-            "email": null
-        },
-        {
-            "id": 3,
-            "name": "Sam",
-            "email": null
-        }
-        ]
+    "users": [
+    {
+			"id": 1,
+			"name": "Alice",
+			"email": "alice@xyz.com"
+    },
+    {
+			"id": 2,
+			"name": "Bob",
+			"email": null
+    },
+    {
+			"id": 3,
+			"name": "Sam",
+			"email": null
     }
-  }`}
+    ]
+  }
+ }`}
 />
 
 In the response of the query being executed with the
@@ -336,36 +342,38 @@ X-Hasura-User-Id: 1
 ```
 
 <GraphiQLIDE
-  query={`query {
-        users {
-            id
-            name
-            email
-        }
-        authors {
-            id
-            name
-            followers
-        }
-  }`}
-  response={`{
+  query={
+ `query {
+	users {
+		id
+		name
+		email
+	}
+	authors {
+		id
+		name
+		followers
+	}
+ }`}
+  response={
+ `{
   "data": {
-        "users": [
-        {
-            "id": 1,
-            "name": "Alice",
-            "email": "alice@xyz.com"
-        }
-        ],
-        "authors": [
-        {
-            "id": 1,
-            "name": "Paulo Coelho",
-            "followers": 10382193
-        }
-        ]
+    "users": [
+    {
+			"id": 1,
+			"name": "Alice",
+			"email": "alice@xyz.com"
     }
-  }`}
+    ],
+    "authors": [
+    {
+			"id": 1,
+			"name": "Paulo Coelho",
+			"followers": 10382193
+    }
+    ]
+  }
+ }`}
 />
 
 

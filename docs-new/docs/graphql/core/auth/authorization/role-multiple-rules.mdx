@@ -93,17 +93,19 @@ If the `X-Hasura-Role` and the `X-Hasura-User-Id` session variables are
 set to `user` and `2` respectively, we'll get the following result:
 
 <GraphiQLIDE
-  query={`query {
-      user_info {
-        id
-        name
-        city
-        email
-        phone
-        address
-      }
-  }`}
-  response={`{
+  query={
+ `query {
+  user_info {
+    id
+    name
+    city
+    email
+    phone
+    address
+  }
+ }`}
+  response={
+ `{
   "data": {
     "user_info": [
       {
@@ -130,7 +132,7 @@ set to `user` and `2` respectively, we'll get the following result:
       }
     ]
   }
-  }`}
+ }`}
 />
 
 Observe that the `private_info` field is returned as `null` for all rows

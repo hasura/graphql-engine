@@ -69,7 +69,8 @@ We can now:
 - fetch a list of `authors` with their `articles`:
 
 <GraphiQLIDE
-  query={`query {
+  query={
+ `query {
     authors {
       id
       name
@@ -78,47 +79,49 @@ We can now:
         title
       }
     }
-  }`}
-  response={`{
-    "data": {
-      "authors": [
-        {
-          "id": 1,
-          "name": "Justin",
-          "articles": [
-            {
-              "id": 15,
-              "title": "vel dapibus at"
-            },
-            {
-              "id": 16,
-              "title": "sem duis aliquam"
-            }
-          ]
-        },
-        {
-          "id": 2,
-          "name": "Beltran",
-          "articles": [
-            {
-              "id": 2,
-              "title": "a nibh"
-            },
-            {
-              "id": 9,
-              "title": "sit amet"
-            }
-          ]
-        }
-      ]
-    }
-}`}
+ }`}
+  response={
+ `{
+  "data": {
+    "authors": [
+      {
+        "id": 1,
+        "name": "Justin",
+        "articles": [
+          {
+            "id": 15,
+            "title": "vel dapibus at"
+          },
+          {
+            "id": 16,
+            "title": "sem duis aliquam"
+          }
+        ]
+      },
+      {
+        "id": 2,
+        "name": "Beltran",
+        "articles": [
+          {
+            "id": 2,
+            "title": "a nibh"
+          },
+          {
+            "id": 9,
+            "title": "sit amet"
+          }
+        ]
+      }
+    ]
+  }
+ }`}
 />
 
 - fetch a list of `articles` with their `author`:
 
 <GraphiQLIDE
-  query={`query {
+  query={
+ `query {
     articles {
       id
       title
@@ -127,29 +130,30 @@ We can now:
         name
       }
     }
-  }`}
-  response={`{
-    "data": {
-      "articles": [
-        {
-          "id": 1,
-          "title": "sit amet",
-          "author": {
-            "id": 4,
-            "name": "Anjela"
-          }
-        },
-        {
-          "id": 2,
-          "title": "a nibh",
-          "author": {
-            "id": 2,
-            "name": "Beltran"
-          }
+ }`}
+  response={
+ `{
+  "data": {
+    "articles": [
+      {
+        "id": 1,
+        "title": "sit amet",
+        "author": {
+          "id": 4,
+          "name": "Anjela"
         }
-      ]
-    }
-  }`}
+      },
+      {
+        "id": 2,
+        "title": "a nibh",
+        "author": {
+          "id": 2,
+          "name": "Beltran"
+        }
+      }
+    ]
+  }
+ }`}
 />
 
 ## Insert using one-to-many relationships
@@ -160,123 +164,127 @@ We can now:
   already exist (assume unique `name` for `author`):
 
 <GraphiQLIDE
-  query={`mutation UpsertAuthorWithArticles {
-      insert_author(objects: {
-        name: "Felix",
-        articles: {
-          data: [
+  query={
+ `mutation UpsertAuthorWithArticles {
+  insert_author(objects: {
+    name: "Felix",
+    articles: {
+      data: [
+        {
+          title: "Article 1",
+          content: "Article 1 content"
+        },
+        {
+          title: "Article 2",
+          content: "Article 2 content"
+        }
+      ]
+    }
+  },
+    on_conflict: {
+      constraint: author_name_key,
+      update_columns: [name]
+    }
+  ) {
+    returning {
+      name
+      articles {
+        title
+        content
+      }
+    }
+  }
+ }`}
+  response={
+ `{
+  "data": {
+    "insert_author": {
+      "returning": [
+        {
+          "name": "Felix",
+          "articles": [
             {
-              title: "Article 1",
-              content: "Article 1 content"
+              "title": "Article 1",
+              "content": "Article 1 content"
             },
             {
-              title: "Article 2",
-              content: "Article 2 content"
+              "title": "Article 2",
+              "content": "Article 2 content"
             }
           ]
         }
-      },
-        on_conflict: {
-          constraint: author_name_key,
-          update_columns: [name]
-        }
-      ) {
-        returning {
-          name
-          articles {
-            title
-            content
-          }
-        }
-      }
-  }`}
-  response={`{
-    "data": {
-      "insert_author": {
-        "returning": [
-          {
-            "name": "Felix",
-            "articles": [
-              {
-                "title": "Article 1",
-                "content": "Article 1 content"
-              },
-              {
-                "title": "Article 2",
-                "content": "Article 2 content"
-              }
-            ]
-          }
-        ]
-      }
+      ]
     }
-}`}
+  }
+ }`}
 />
 
 - insert `articles` with their `author` where the `author` might
   already exist (assume unique `name` for `author`):
 
 <GraphiQLIDE
-  query={`mutation upsertArticleWithAuthors {
-      insert_article(objects: [
+  query={
+ `mutation upsertArticleWithAuthors {
+  insert_article(objects: [
+    {
+      title: "Article 1",
+      content: "Article 1 content",
+      author: {
+        data: {
+          name: "Alice"
+        },
+        on_conflict: {
+          constraint: author_name_key,
+          update_columns: [name]
+        }
+      }
+    },
+    {
+      title: "Article 2",
+      content: "Article 2 content",
+      author: {
+        data: {
+          name: "Alice"
+        },
+        on_conflict: {
+          constraint: author_name_key,
+          update_columns: [name]
+        }
+      }
+    }
+  ]) {
+    returning {
+      title
+      content
+      author {
+        name
+      }
+    }
+  }
+ }`}
+  response={
+ `{
+  "data": {
+    "insert_article": {
+      "returning": [
         {
-          title: "Article 1",
-          content: "Article 1 content",
-          author: {
-            data: {
-              name: "Alice"
-            },
-            on_conflict: {
-              constraint: author_name_key,
-              update_columns: [name]
-            }
+          "title": "Article 1",
+          "content": "Article 1 content",
+          "author": {
+            "name": "Alice"
           }
         },
         {
-          title: "Article 2",
-          content: "Article 2 content",
-          author: {
-            data: {
-              name: "Alice"
-            },
-            on_conflict: {
-              constraint: author_name_key,
-              update_columns: [name]
-            }
+          "title": "Article 2",
+          "content": "Article 2 content",
+          "author": {
+            "name": "Alice"
           }
         }
-      ]) {
-        returning {
-          title
-          content
-          author {
-            name
-          }
-        }
-      }
-  }`}
-  response={`{
-    "data": {
-      "insert_article": {
-        "returning": [
-          {
-            "title": "Article 1",
-            "content": "Article 1 content",
-            "author": {
-              "name": "Alice"
-            }
-          },
-          {
-            "title": "Article 2",
-            "content": "Article 2 content",
-            "author": {
-              "name": "Alice"
-            }
-          }
-        ]
-      }
+      ]
     }
-}`}
+  }
+ }`}
 />
 
 :::info Note
