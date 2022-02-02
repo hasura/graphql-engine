@@ -36,6 +36,7 @@ Here is a sample ``nginx.conf`` to proxy requests to Hasura:
 
    server {
      listen 80;
+     listen 443 ssl;
      server_name hasura.<my-domain.com>;
 
      location / {
