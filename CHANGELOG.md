@@ -8,6 +8,54 @@
 
 ## v2.2.0
 
+### Nested Action Types
+Actions now support nested responses as described by associated action types.Example:
+```graphql
+type Product {
+ id: bigint!
+ name: String
+}
+type ElasticOutput {
+ products: [Product!]!
+ aggregations: jsonb
+}
+```
+Previously, nested responses could be encapsulated in a generic "jsonb" output type but this loses precise type information for the API. The current support now allows specifying complex return types for the output.
+
+Currently limits action relationships to top-level fields in the output types.
+
+### GraphQL REST Endpoints OpenAPI Body Specifications
+
+GraphQL REST endpoints are documented via Swagger (OpenAPI) under the `/api/swagger/json` endpoint. We now document the request and response bodies of the endpoints in addition to previous information.
+
+### MS SQL Server Update for Hasura Server
+
+##### Expand Transactions to GraphQL Queries and mssql_run-sql API
+
+Extend transactions to GraphQL queries and mssql_run_sql API
+
+##### Rollback a Transaction Based in the Transaction State
+
+We can query the transaction state using XACT_STATE() scalar function. If the transaction is not active, don't rollback the transaction.
+
+##### Upsert - SQL Generation and Execution
+
+We are translating the if_matched section from the graphql, which is represented by the if_matched  type, to a MERGE SQL statement. Example:
+
+```
+mutation {
+  insert_author(
+    objects: { id: 1, name: "aaa" }
+    if_matched: { match_columns: author_pkey, update_columns: name }
+  ) {
+    returning {
+      id
+      name
+    }
+  }
+}
+```
+
 ### Breaking Changes
 - For any **MSSQL** backend, count aggregate query on multiple columns is restricted with a GraphQL
   schema change as follows
@@ -20,9 +68,8 @@ count (
 ): Int!
 ```
   MSSQL doesn't support applying `COUNT()` on multiple columns.
-
+  
 ### Bug fixes and improvements
-(Add entries below in the order of server, console, cli, docs, others)
 
 - server: add a placeholder field to the schema when the `query_root` would be empty
 - server: fix invalid GraphQL name in the schema arising from a remote relationship from a table in a custom schema
