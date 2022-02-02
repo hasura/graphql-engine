@@ -1,16 +1,18 @@
-<div class="meta"
-description="Use upsert mutations on MS SQL Server with Hasura"
-keywords="hasura, docs, ms sql server, mutation, upsert">
+---
+sidebar_label: Upsert
+sidebar_position: 2
+description: Use upsert mutations on MS SQL Server with Hasura
+keywords:
+  - hasura
+  - docs
+  - ms sql server
+  - mutation
+  - upsert
+---
 
-</div>
+import GraphiQLIDE from "@site/src/components/GraphiQLIDE/GraphiQLIDE";
 
 # MS SQL Server: Upsert mutation
-
-<div class="contents" backlinks="none" depth="1" local="">
-
-Table of contents
-
-</div>
 
 ## Introduction
 
@@ -20,28 +22,22 @@ subject to certain criteria.
 
 ## Convert insert mutation to upsert
 
-<div class="note">
-
-<div class="title">
-
-Note
-
-</div>
+:::info Note
 
 Only tables with **update** permissions are **upsertable**. i.e. a
 table's update permissions are respected before updating an existing row
 in case of a match.
 
-</div>
+:::
 
-To convert an `insert mutation <ms_sql_server_insert>` into an upsert,
+To convert an [insert mutation](/graphql/core/databases/ms-sql-server/mutations/insert.mdx#ms-sql-server-insert) into an upsert,
 you need to use the `if_matched` argument to specify:
 
--   the **columns to be matched** for each row using the `match_columns`
-    field.
--   the **columns to be updated** in the case of a match using the
-    `update_columns` field.
--   a **condition** for updating the column using the `where` field, and
+- the **columns to be matched** for each row using the `match_columns`
+  field.
+- the **columns to be updated** in the case of a match using the
+  `update_columns` field.
+- a **condition** for updating the column using the `where` field, and
 
 The value of the `update_columns` field determines the behaviour of the
 upsert request as shown via the use cases below.
@@ -76,13 +72,14 @@ update in case a match occurs.
 of the `title` column matches a a `title` value in an existing row,
 update the `content` column of the existing article:
 
-<div class="graphiql" view_only="" query="mutation upsert_article {
+<GraphiQLIDE
+  query={`mutation upsert_article {
   insert_article (
     objects: [
       {
-        title: &quot;Article 1&quot;,
-        content: &quot;Updated article 1 content&quot;,
-        published_on: &quot;2018-10-12&quot;
+        title: "Article 1",
+        content: "Updated article 1 content",
+        published_on: "2018-10-12"
       }
     ],
     if_matched: {
@@ -97,35 +94,27 @@ update the `content` column of the existing article:
       published_on
     }
   }
-}
-:response:
-{
-  &quot;data&quot;: {
-    &quot;insert_article&quot;: {
-      &quot;returning&quot;: [
+}`}
+  response={`{
+  "data": {
+    "insert_article": {
+      "returning": [
         {
-          &quot;id&quot;: 1,
-          &quot;title&quot;: &quot;Article 1&quot;,
-          &quot;content&quot;: &quot;Updated article 1 content&quot;,
-          &quot;published_on&quot;: &quot;2018-06-15&quot;
+          "id": 1,
+          "title": "Article 1",
+          "content": "Updated article 1 content",
+          "published_on": "2018-06-15"
         }
       ]
     }
   }
-}">
-
-</div>
+}`}
+/>
 
 Note that the `published_on` column is left unchanged as it wasn't
 present in `update_columns`.
 
-<div class="note">
-
-<div class="title">
-
-Note
-
-</div>
+:::info Note
 
 If `match_columns` is an **empty array** there is no basis for comparing
 new rows to existing rows. Thus the mutation will always **insert** the
@@ -134,13 +123,14 @@ values and will never update any rows.
 **Example**: Insert a new object into the article table, will not match
 on columns because none are specified.
 
-<div class="graphiql" view_only="" query="mutation upsert_article {
+<GraphiQLIDE
+  query={`mutation upsert_article {
   insert_article (
     objects: [
       {
-        title: &quot;Article 1&quot;,
-        content: &quot;Article 1 content&quot;,
-        published_on: &quot;2018-10-12&quot;
+        title: "Article 1",
+        content: "Article 1 content",
+        published_on: "2018-10-12"
       }
     ],
     if_matched: {
@@ -155,29 +145,27 @@ on columns because none are specified.
       published_on
     }
   }
-}
-:response:
-{
-  &quot;data&quot;: {
-    &quot;insert_article&quot;: {
-      &quot;returning&quot;: [
+}`}
+  response={`{
+  "data": {
+    "insert_article": {
+      "returning": [
         {
-          &quot;id&quot;: 3,
-          &quot;title&quot;: &quot;Article 1&quot;,
-          &quot;content&quot;: &quot;Article 1 content&quot;,
-          &quot;published_on&quot;: &quot;2018-06-15&quot;
+          "id": 3,
+          "title": "Article 1",
+          "content": "Article 1 content",
+          "published_on": "2018-06-15"
         }
       ]
     }
   }
-}">
-
-</div>
+}`}
+/>
 
 This query is equivalent to a simple insert without an `if_matched`
 clause.
 
-</div>
+:::
 
 ## Update selected columns on match subject to a filter
 
@@ -189,19 +177,20 @@ of the `title` column matches a a `title` value in an existing row,
 update the `published_on` column specified in `update_columns` only if
 the previous `published_on` value is lesser than the new value:
 
-<div class="graphiql" view_only="" query="mutation upsert_article {
+<GraphiQLIDE
+  query={`mutation upsert_article {
   insert_article (
     objects: [
       {
-        title: &quot;Article 2&quot;,
-        published_on: &quot;2018-10-12&quot;
+        title: "Article 2",
+        published_on: "2018-10-12"
       }
     ],
     if_matched: {
       match_columns: title,
       update_columns: published_on,
       where: {
-        published_on: {_lt: &quot;2018-10-12&quot;}
+        published_on: {_lt: "2018-10-12"}
       }
     }
   ) {
@@ -211,23 +200,21 @@ the previous `published_on` value is lesser than the new value:
       published_on
     }
   }
-}
-:response:
-{
-  &quot;data&quot;: {
-    &quot;insert_article&quot;: {
-      &quot;returning&quot;: [
+}`}
+  response={`{
+  "data": {
+    "insert_article": {
+      "returning": [
         {
-          &quot;id&quot;: 2,
-          &quot;title&quot;: &quot;Article 2&quot;,
-          &quot;published_on&quot;: &quot;2018-10-12&quot;
+          "id": 2,
+          "title": "Article 2",
+          "published_on": "2018-10-12"
         }
       ]
     }
   }
-}">
-
-</div>
+}`}
+/>
 
 ## Ignore request on match
 
@@ -237,10 +224,11 @@ ignored.
 **Example**: Insert a new author object into the author table, unless
 there already exists an author with the same name.
 
-<div class="graphiql" view_only="" query="mutation upsert_author {
+<GraphiQLIDE
+  query={`mutation upsert_author {
   insert_author(
     objects: [
-      { name: &quot;John&quot; }
+      { name: "John" }
     ],
     if_matched: {
       match_columns: name,
@@ -249,17 +237,15 @@ there already exists an author with the same name.
   ) {
     affected_rows
   }
-}
-:response:
-{
-  &quot;data&quot;: {
-    &quot;insert_author&quot;: {
-      &quot;affected_rows&quot;: 0
+}`}
+  response={`
+  "data": {
+    "insert_author": {
+      "affected_rows": 0
     }
   }
-}">
-
-</div>
+}`}
+/>
 
 In this case, the insert mutation is ignored because there is a match
 and `update_columns` is empty.

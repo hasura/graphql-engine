@@ -1,0 +1,56 @@
+---
+sidebar_label: Simple object queries
+sidebar_position: 1
+description: Make simple object queries on MS SQL Server in Hasura
+keywords:
+  - hasura
+  - docs
+  - ms sql server
+  - object query
+---
+
+import GraphiQLIDE from "@site/src/components/GraphiQLIDE/GraphiQLIDE";
+
+# MS SQL Server: Simple object queries
+
+## Introduction
+
+You can fetch a single node or multiple nodes of the same type using a
+simple object query.
+
+## Fetch list of objects
+
+**Example:** Fetch a list of authors:
+
+<GraphiQLIDE
+  query={`query {
+  authors {
+    id
+    name
+  }
+}`}
+  response={`{
+  "data": {
+    "authors": [
+      {
+        "id": 1,
+        "name": "Justin"
+      },
+      {
+        "id": 2,
+        "name": "Beltran"
+      },
+      {
+        "id": 3,
+        "name": "Sidney"
+      },
+      {
+        "id": 4,
+        "name": "Anjela"
+      }
+    ]
+  }
+}`}
+/>
+
+See the [API reference](/graphql/core/api-reference/graphql-api/query.mdx#simpleobject) for more details.

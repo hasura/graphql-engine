@@ -1,16 +1,18 @@
-<div class="meta"
-description="Make aggregation queries on MS SQL Server with Hasura"
-keywords="hasura, docs, ms sql server, query, aggregation query">
+---
+sidebar_label: Aggregation queries
+sidebar_position: 3
+description: Make aggregation queries on MS SQL Server with Hasura
+keywords:
+  - hasura
+  - docs
+  - ms sql server
+  - query
+  - aggregation query
+---
 
-</div>
+import GraphiQLIDE from "@site/src/components/GraphiQLIDE/GraphiQLIDE";
 
 # MS SQL Server: Aggregation queries
-
-<div class="contents" backlinks="none" depth="2" local="">
-
-Table of contents
-
-</div>
 
 ## **Aggregate** fields
 
@@ -22,27 +24,22 @@ The **name of the aggregate field** is of the form
 
 Common aggregation functions are `count`, `sum`, `avg`, `max`, `min`,
 etc. You can see the complete specification of the aggregate field in
-the `API reference <AggregateObject>`.
+the [API reference](/graphql/core/api-reference/graphql-api/query.mdx#aggregateobject).
 
-<div class="note">
-
-<div class="title">
-
-Note
-
-</div>
+:::info Note
 
 For more advanced use cases, you can use
-`views <ms_sql_server_custom_views>`.
+[views](/graphql/core/databases/ms-sql-server/schema/views.mdx#ms-sql-server-custom-views).
 
-</div>
+:::
 
 ## Fetch aggregated data of an object
 
 **Example:** Fetch a list of articles with aggregated data of their
 rating:
 
-<div class="graphiql" view_only="" query="query {
+<GraphiQLIDE
+  query={`query {
   articles_aggregate {
     aggregate {
       count
@@ -57,30 +54,28 @@ rating:
       }
     }
   }
-}
-:response:
-{
-  &quot;data&quot;: {
-    &quot;articles_aggregate&quot;: {
-      &quot;aggregate&quot;: {
-        &quot;count&quot;: 10,
-        &quot;sum&quot;: {
-          &quot;rating&quot;: 26
+}`}
+  response={`{
+  "data": {
+    "articles_aggregate": {
+      "aggregate": {
+        "count": 10,
+        "sum": {
+          "rating": 26
         },
-        &quot;avg&quot;: {
-          &quot;rating&quot;: 2.6
+        "avg": {
+          "rating": 2.6
         },
-        &quot;max&quot;: {
-          &quot;rating&quot;: 4
+        "max": {
+          "rating": 4
         }
       }
     }
   }
-}">
+}`}
+/>
 
-</div>
-
-## Fetch aggregated data on nested objects
+## Fetch aggregated data on nested objects {#ms-sql-server-nested-aggregate}
 
 The following is an example of a nested object query with aggregations
 on the **array relationship** between an author and articles.
@@ -88,7 +83,8 @@ on the **array relationship** between an author and articles.
 **Example:** Fetch author with id "1" and a nested list of articles with
 aggregated data of their rating:
 
-<div class="graphiql" view_only="" query="query {
+<GraphiQLIDE
+  query={`query {
   authors (where: {id: {_eq: 1}}) {
     id
     name
@@ -104,28 +100,26 @@ aggregated data of their rating:
       }
     }
   }
-}
-:response:
-{
-  &quot;data&quot;: {
-    &quot;authors&quot;: [
+}`}
+  response={`{
+  "data": {
+    "authors": [
       {
-        &quot;id&quot;: 1,
-        &quot;name&quot;: &quot;Justin&quot;,
-        &quot;articles_aggregate&quot;: {
-          &quot;aggregate&quot;: {
-            &quot;count&quot;: 2,
-            &quot;avg&quot;: {
-              &quot;rating&quot;: 2.5
+        "id": 1,
+        "name": "Justin",
+        "articles_aggregate": {
+          "aggregate": {
+            "count": 2,
+            "avg": {
+              "rating": 2.5
             },
-            &quot;max&quot;: {
-              &quot;rating&quot;: 4
+            "max": {
+              "rating": 4
             }
           },
         }
       }
     ]
   }
-}">
-
-</div>
+}`}
+/>

@@ -1,15 +1,19 @@
-<div class="meta" description="Connect a database to Hasura"
-keywords="hasura, docs, databases, connect">
+---
+sidebar_label: Connecting databases
+sidebar_position: 5
+description: Connect a database to Hasura
+keywords:
+  - hasura
+  - docs
+  - databases
+  - connect
+---
 
-</div>
+import Tabs from "@theme/Tabs";
+import TabItem from "@theme/TabItem";
+import Thumbnail from "@site/src/components/Thumbnail/Thumbnail";
 
 # Connecting databases to Hasura GraphQL engine
-
-<div class="contents" backlinks="none" depth="1" local="">
-
-Table of contents
-
-</div>
 
 ## Introduction
 
@@ -23,31 +27,19 @@ In versions `v2.0.0` and above, databases can be connected and removed
 dynamically without having to restart the GraphQL engine instance via
 the console / metadata APIs / CLI:
 
-<div class="rst-class">
-
-api_tabs
-
-</div>
-
-<div class="tabs">
-
-<div class="tab">
-
-Console
+<Tabs className="api-tabs">
+<TabItem value="console" label="Console">
 
 Head to `Data -> Manage -> Connect database`
 
-<div class="thumbnail" alt="Connect default database" width="1000px">
+<Thumbnail
+  src="/img/graphql/core/databases/connect-default-db.png"
+  alt="Connect default database"
+  width="1000px"
+/>
 
-/img/graphql/core/databases/connect-default-db.png
-
-</div>
-
-</div>
-
-<div class="tab">
-
-CLI
+</TabItem>
+<TabItem value="cli" label="CLI">
 
 In your `config v3` project, head to the
 `/metadata/databases/databases.yaml` file and add the database
@@ -73,14 +65,11 @@ Apply the metadata by running:
 hasura metadata apply
 ```
 
-</div>
-
-<div class="tab">
-
-API
+</TabItem>
+<TabItem value="api" label="API">
 
 Depending on the type of database, you can add a database using the
-`sources metadata API <metadata_api_sources>`.
+[sources metadata API](/graphql/core/api-reference/metadata-api/source.mdx#metadata-api-sources).
 
 For example:
 
@@ -109,35 +98,26 @@ X-Hasura-Role: admin
 }
 ```
 
-</div>
+</TabItem>
+</Tabs>
 
-</div>
+:::info Note
 
-<div class="note">
+- You can connect to databases either using env vars or by using their
+  raw connection string/parameters. It is recommended to use env vars
+  for better security _(as connection details are part of Hasura
+  metadata)_ as well as to allow configuring different databases in
+  different environments _(like staging/production)_ easily.
+- A Postgres database can be connected using the
+  `HASURA_GRAPHQL_DATABASE_URL` env var as well in which case it gets
+  added automatically as a database named `default`
 
-<div class="title">
+:::
 
-Note
-
-</div>
-
--   You can connect to databases either using env vars or by using their
-    raw connection string/parameters. It is recommended to use env vars
-    for better security *(as connection details are part of Hasura
-    metadata)* as well as to allow configuring different databases in
-    different environments *(like staging/production)* easily.
--   A Postgres database can be connected using the
-    `HASURA_GRAPHQL_DATABASE_URL` env var as well in which case it gets
-    added automatically as a database named `default`
-
-</div>
-
-<div class="admonition dhc">
-
-Create a new Postgres DB inside Hasura Cloud
+:::info Create a new Postgres DB inside Hasura Cloud
 
 For a quick start with Hasura, you can also create a Postgres database
 with Heroku from inside of Hasura Cloud. For more information, see
-`Connect new/existing database on Hasura Cloud <create_new_db_with_cloud>`.
+[Connect new/existing database on Hasura Cloud](/graphql/cloud/getting-started/index.mdx#create-new-db-with-cloud).
 
-</div>
+:::
