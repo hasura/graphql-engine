@@ -99,6 +99,14 @@ Args syntax
      - Bool
      - When replace is set to ``true``, the cron trigger will be updated(if exists) and when it's ``false`` or the
        field is omitted, then a new cron trigger will be created.
+   * - request_transform
+     - false
+     - :ref:`RequestTransformation`
+     - Attaches a Request Transformation to the Scheduled Trigger.
+   * - response_transform
+     - false
+     - :ref:`ResponseTransformation`
+     - Attaches a Request Transformation to the Scheduled Trigger.
 
 .. admonition:: Supported from
 
