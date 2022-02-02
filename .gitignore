@@ -10,6 +10,8 @@ test-server-flags-output
 .vscode
 .idea
 .now
+package-lock.json
+yarn.lock
 
 # Standardize on 'venv' as the name for python venv directories
 venv
