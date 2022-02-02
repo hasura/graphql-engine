@@ -25853,9 +25853,9 @@ instance Control.Monad.IO.Class.MonadIO m => Control.Monad.IO.Class.MonadIO (Has
 instance GHC.Base.Monad m => GHC.Base.Monad (Hasura.App.PGMetadataStorageAppT m)
 instance GHC.Base.Applicative m => GHC.Base.Applicative (Hasura.App.PGMetadataStorageAppT m)
 instance GHC.Base.Functor m => GHC.Base.Functor (Hasura.App.PGMetadataStorageAppT m)
-instance Control.Monad.Trans.Class.MonadTrans Hasura.App.PGMetadataStorageAppT
 instance Control.Monad.Base.MonadBase GHC.Types.IO m => Control.Monad.Base.MonadBase GHC.Types.IO (Hasura.App.PGMetadataStorageAppT m)
 instance Control.Monad.Trans.Control.MonadBaseControl GHC.Types.IO m => Control.Monad.Trans.Control.MonadBaseControl GHC.Types.IO (Hasura.App.PGMetadataStorageAppT m)
+instance Control.Monad.Trans.Class.MonadTrans Hasura.App.PGMetadataStorageAppT
 instance GHC.Base.Monad m => Hasura.Tracing.HasReporter (Hasura.App.PGMetadataStorageAppT m)
 instance GHC.Base.Monad m => Hasura.Server.Limits.HasResourceLimits (Hasura.App.PGMetadataStorageAppT m)
 instance Control.Monad.IO.Class.MonadIO m => Hasura.Server.Logging.HttpLog (Hasura.App.PGMetadataStorageAppT m)
