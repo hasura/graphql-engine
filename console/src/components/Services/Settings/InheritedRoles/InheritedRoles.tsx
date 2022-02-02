@@ -13,7 +13,7 @@ import InheritedRolesTable, {
 import { RoleActionsInterface } from './types';
 import InheritedRolesEditor, { EditorProps } from './InheritedRolesEditor';
 import { InheritedRole } from '../../../../metadata/types';
-import { Badge, Heading } from '../../../UIKit/atoms';
+import { Heading } from '../../../UIKit/atoms';
 import { getConfirmation } from '../../../Common/utils/jsUtils';
 import {
   deleteInheritedRoleAction,
@@ -26,7 +26,7 @@ export const ActionContext = React.createContext<RoleActionsInterface | null>(
 );
 
 const InheritedRoles: React.FC<Props> = props => {
-  const { allRoles, inheritedRoles, experimentalFeatures, dispatch } = props;
+  const { allRoles, inheritedRoles, dispatch } = props;
   const [inheritedRoleName, setInheritedRoleName] = useState('');
   const [inheritedRole, setInheritedRole] = useState<InheritedRole | null>(
     null
@@ -80,41 +80,25 @@ const InheritedRoles: React.FC<Props> = props => {
     <div
       className={`${styles.clear_fix} ${styles.padd_left} ${styles.padd_top} ${styles.metadata_wrapper} container-fluid`}
     >
-      {experimentalFeatures &&
-      experimentalFeatures.includes('inherited_roles') ? (
-        <>
-          <div className={styles.header}>
-            <Heading fontSize="24px">Inherited Roles</Heading>
-            <span className={styles.headerBadge}>
-              <Badge type="experimental" />
-            </span>
-          </div>
-          <div className={styles.add_mar_top}>
-            Inherited roles will combine the permissions of 2 or more roles.
-          </div>
-          <ActionContext.Provider
-            value={{ onEdit, onAdd, onDelete, onRoleNameChange }}
-          >
-            <InheritedRolesTable inheritedRoles={inheritedRoles} />
-          </ActionContext.Provider>
-          <InheritedRolesEditor
-            allRoles={allRoles}
-            cancelCb={resetState}
-            isCollapsed={isCollapsed}
-            onSave={onSave}
-            inheritedRoleName={inheritedRoleName}
-            inheritedRole={inheritedRole}
-          />
-        </>
-      ) : (
-        <div>
-          Inherited roles is currently an experimental feature. To enable
-          inherited roles, start the Hasura server with environment variable
-          <code>
-            HASURA_GRAPHQL_EXPERIMENTAL_FEATURES: &quot;inherited_roles&quot;
-          </code>
-        </div>
-      )}
+      <div className={styles.header}>
+        <Heading fontSize="24px">Inherited Roles</Heading>
+      </div>
+      <div className={styles.add_mar_top}>
+        Inherited roles will combine the permissions of 2 or more roles.
+      </div>
+      <ActionContext.Provider
+        value={{ onEdit, onAdd, onDelete, onRoleNameChange }}
+      >
+        <InheritedRolesTable inheritedRoles={inheritedRoles} />
+      </ActionContext.Provider>
+      <InheritedRolesEditor
+        allRoles={allRoles}
+        cancelCb={resetState}
+        isCollapsed={isCollapsed}
+        onSave={onSave}
+        inheritedRoleName={inheritedRoleName}
+        inheritedRole={inheritedRole}
+      />
     </div>
   );
 };

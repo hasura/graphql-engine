@@ -44,6 +44,7 @@ count (
 - console: fix list of tables (and schemas) being unsorted when creating a new trigger event (fix #6391)
 - console: fix custom field names breaking browse table sorting and the pre-populating of the edit row form
 - console: enable support for insert & delete permissions for mssql tables
+- console: enable inherited role on settings page
 - cli: migrate and seed subcommands has an option in prompt to choose and apply operation on all available databases
 - cli: fix `metadata diff --type json | unified-json` behaving incorrectly and showing diff in YAML format.
 - cli: fix regression in `migrate create` command (#7971)
