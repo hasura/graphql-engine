@@ -66,7 +66,7 @@ exports.handler = (event, context, callback) => {
   alt="Cognito Lambda function to add claims to the JWT"
 />
 
-## Configure Cognito to trigger the lambda function {#test-cognito}
+## Configure Cognito to trigger the lambda function
 
 In cognito, select `Triggers` -> `Pre Token Generation` and choose the
 lambda function created above:
@@ -101,11 +101,13 @@ follow the steps below:
   alt="Cognito Login Page"
 />
 
+
+<div id="test-cognito" />
+
 3. After successfully logging in, you will be redirected to
 `https://localhost:3000/cognito-callback#id_token=xxxxxx&yyyyyy`. This
 page may be a 404 if you don't have a UI running on localhost:3000.
 Extract the `id_token` value from this URL.
-<div id="test-cognito" />
 
 <Thumbnail
   src="/img/graphql/core/guides/cognito-redirect.png"
@@ -153,7 +155,7 @@ Refer to [Access control basics](/graphql/core/auth/authorization/basics.mdx) fo
 To test this out, add an access control rule that uses
 `x-hasura-user-id` for the role `user`. Then make a GraphQL query or a
 mutation, with the authorization token from the
-[previous step](/graphql/core/guides/integrations/aws-cognito.mdx#test-cognito) where we generated an Cognito token.
+[previous step](#test-cognito) where we generated an Cognito token.
 
 <img src="https://graphql-engine-cdn.hasura.io/img/jwt-header-auth-hasura.png" class="no-shadow no-shadow" alt="JWT token used as bearer token on hasura console" />
 

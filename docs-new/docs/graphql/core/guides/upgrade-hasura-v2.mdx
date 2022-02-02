@@ -47,9 +47,11 @@ is available on the [releases page](https://github.com/hasura/graphql-engine/rel
 
 ### Breaking behaviour changes {#hasura-v2-behaviour-changes}
 
-- **Semantics of explicit "null" values in "where" filters have
-    changed**
-<div id="hasura_v2_null_where_change" />
+
+<div id="hasura-v2-null-where-change" />
+
+
+- **Semantics of explicit "null" values in "where" filters have changed**
 
     According to the discussion in [this GitHub issue](https://github.com/hasura/graphql-engine/issues/704#issuecomment-635571407),
     an explicit `null` value in a comparison input object will be
@@ -135,8 +137,11 @@ is available on the [releases page](https://github.com/hasura/graphql-engine/rel
     successfully executed migrations up till that point will not be
     rolled back.
 
--   **Deprecation of database specific env vars**
+
 <div id="hasura-v2-env-changes" />
+
+
+-   **Deprecation of database specific env vars**
 
     In v2.0, the values of the following env vars are used to define the
     connection parameters of the `default` database while updating an
@@ -195,7 +200,7 @@ is available on the [releases page](https://github.com/hasura/graphql-engine/rel
     runtime.
 
 -   With support for multiple databases, older database specific env
-    vars have been deprecated. [See details](/graphql/core/guides/upgrade-hasura-v2.mdx#hasura-v2-env-changes)
+    vars have been deprecated. [See details](#hasura-v2-env-changes)
 
 ## Moving from Hasura v1 to Hasura v2 {#moving-from-hasura-v1-to-v2}
 
@@ -245,7 +250,7 @@ post the update.
 
 With support for multiple databases, database connection related config
 is now stored in Hasura metadata and the older database specific env
-vars have been deprecated. [See details](/graphql/core/guides/upgrade-hasura-v2.mdx#hasura-v2-env-changes).
+vars have been deprecated. [See details](#hasura-v2-env-changes).
 
 Post update to Hasura v2 these env vars can be removed as they will now
 be ignored.

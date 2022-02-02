@@ -54,7 +54,7 @@ Now in our application logic, instead of `delete_todos` mutations, use
 `update_todos` mutations to set the `deleted_at` field to the current
 timestamp:
 
-```graphql
+```graphql {7}
 # Replace the delete mutations with this update mutation
 mutation {
   update_todos(

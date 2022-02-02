@@ -59,19 +59,13 @@ This `many-to-many` relationship can be established in the database by:
     )
     ```
 
-    <div class="note">
+:::info Note
 
-    <div class="title">
+If you can have multiple rows linking the same `article` and `tag`
+in your model, you can skip the unique constraint on
+`(article_id, tag_id)`
 
-    Note
-
-    </div>
-
-    If you can have multiple rows linking the same `article` and `tag`
-    in your model, you can skip the unique constraint on
-    `(article_id, tag_id)`
-
-    </div>
+:::
 
 2.  Adding **foreign key constraints** in the `article_tag` table for:
 
@@ -560,7 +554,7 @@ We can now:
   }`}
 />
 
-:::info Note
+:::caution Note
 
 **We do not recommend this** flattening pattern of modelling as this
 introduces an additional overhead of managing permissions and

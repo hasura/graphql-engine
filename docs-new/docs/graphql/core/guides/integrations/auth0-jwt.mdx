@@ -39,10 +39,9 @@ Hasura GraphQL engine.
 
 ## Configure Auth0 Rules & Callback URLs
 
-In the settings of the application, add appropriate (e.g:
-[http://localhost:3000/callback](http://localhost:3000/callback)) URLs as `Allowed Callback URLs` and
+In the settings of the application, add appropriate (e.g: `http://localhost:3000/callback`) URLs as `Allowed Callback URLs` and
 `Allowed Web Origins`. Add domain specific URLs as well for production
-apps (e.g: [https://myapp.com/callback](https://myapp.com/callback)).
+apps (e.g: `https://myapp.com/callback`).
 
 Auth0 has multiple versions of its SDK available and unfortunately they
 have different semantics when it comes to JWT handling. If you're using
@@ -236,7 +235,7 @@ Refer to [Access control basics](/graphql/core/auth/authorization/basics.mdx) fo
 To test this out, add an access control rule that uses
 `x-hasura-user-id` for the role `user`. Then make a GraphQL query or a
 mutation, with the authorization token from the
-[previous step](/graphql/core/guides/integrations/auth0-jwt.mdx#test-auth0) where we generated an Auth0 token.
+[previous step](#test-auth0) where we generated an Auth0 token.
 
 <img src="https://graphql-engine-cdn.hasura.io/img/jwt-header-auth-hasura.png" class="no-shadow no-shadow" alt="JWT token used as bearer token on hasura console" />
 
