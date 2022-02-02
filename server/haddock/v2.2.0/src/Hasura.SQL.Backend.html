@@ -1,0 +1,284 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span id="%24con2tag_5WjF3ATcSzF2B8xs03qEIo"><span id="%24con2tag_LEw9OYE97owHczA1s5zxI9"></span></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Hasura.SQL.Backend</span><span>
+</span><span id="line-2"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.SQL.Backend.html#PostgresKind"><span class="hs-identifier">PostgresKind</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-3"></span><span>    </span><span class="annot"><a href="Hasura.SQL.Backend.html#BackendType"><span class="hs-identifier">BackendType</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-4"></span><span>    </span><span class="annot"><a href="Hasura.SQL.Backend.html#backendShortName"><span class="hs-identifier">backendShortName</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-5"></span><span>    </span><span class="annot"><a href="Hasura.SQL.Backend.html#supportedBackends"><span class="hs-identifier">supportedBackends</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-6"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-7"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-8"></span><span>
+</span><span id="line-9"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson</span></span><span>
+</span><span id="line-10"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Data.List.Extended.html"><span class="hs-identifier">Data.List.Extended</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.List.Extended.html#uniques"><span class="hs-identifier">uniques</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-11"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Proxy</span></span><span>
+</span><span id="line-12"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Text</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">unpack</span></span><span class="hs-special">)</span><span>
+</span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Data.Text.Extended.html"><span class="hs-identifier">Data.Text.Extended</span></a></span><span>
+</span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Incremental.html"><span class="hs-identifier">Hasura.Incremental</span></a></span><span>
+</span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-16"></span><span>
+</span><span id="line-17"></span><span class="hs-comment">-- | Argument to Postgres; we represent backends which are variations on Postgres as sub-types of</span><span>
+</span><span id="line-18"></span><span class="hs-comment">-- Postgres. This value indicates which &quot;flavour&quot; of Postgres a backend is.</span><span>
+</span><span id="line-19"></span><span class="hs-keyword">data</span><span> </span><span id="PostgresKind"><span class="annot"><a href="Hasura.SQL.Backend.html#PostgresKind"><span class="hs-identifier hs-var">PostgresKind</span></a></span></span><span>
+</span><span id="line-20"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="Vanilla"><span class="annot"><a href="Hasura.SQL.Backend.html#Vanilla"><span class="hs-identifier hs-var">Vanilla</span></a></span></span><span>
+</span><span id="line-21"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="Citus"><span class="annot"><a href="Hasura.SQL.Backend.html#Citus"><span class="hs-identifier hs-var">Citus</span></a></span></span><span>
+</span><span id="line-22"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687925153"><span id="local-6989586621687925155"><span id="local-6989586621687925157"><span class="annot"><span class="annottext">Int -&gt; PostgresKind -&gt; ShowS
+[PostgresKind] -&gt; ShowS
+PostgresKind -&gt; String
+(Int -&gt; PostgresKind -&gt; ShowS)
+-&gt; (PostgresKind -&gt; String)
+-&gt; ([PostgresKind] -&gt; ShowS)
+-&gt; Show PostgresKind
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [PostgresKind] -&gt; ShowS
+$cshowList :: [PostgresKind] -&gt; ShowS
+show :: PostgresKind -&gt; String
+$cshow :: PostgresKind -&gt; String
+showsPrec :: Int -&gt; PostgresKind -&gt; ShowS
+$cshowsPrec :: Int -&gt; PostgresKind -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687925148"><span id="local-6989586621687925150"><span class="annot"><span class="annottext">PostgresKind -&gt; PostgresKind -&gt; Bool
+(PostgresKind -&gt; PostgresKind -&gt; Bool)
+-&gt; (PostgresKind -&gt; PostgresKind -&gt; Bool) -&gt; Eq PostgresKind
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: PostgresKind -&gt; PostgresKind -&gt; Bool
+$c/= :: PostgresKind -&gt; PostgresKind -&gt; Bool
+== :: PostgresKind -&gt; PostgresKind -&gt; Bool
+$c== :: PostgresKind -&gt; PostgresKind -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687925132"><span id="local-6989586621687925134"><span id="local-6989586621687925136"><span id="local-6989586621687925138"><span id="local-6989586621687925140"><span id="local-6989586621687925142"><span id="local-6989586621687925144"><span class="annot"><span class="annottext">Eq PostgresKind
+Eq PostgresKind
+-&gt; (PostgresKind -&gt; PostgresKind -&gt; Ordering)
+-&gt; (PostgresKind -&gt; PostgresKind -&gt; Bool)
+-&gt; (PostgresKind -&gt; PostgresKind -&gt; Bool)
+-&gt; (PostgresKind -&gt; PostgresKind -&gt; Bool)
+-&gt; (PostgresKind -&gt; PostgresKind -&gt; Bool)
+-&gt; (PostgresKind -&gt; PostgresKind -&gt; PostgresKind)
+-&gt; (PostgresKind -&gt; PostgresKind -&gt; PostgresKind)
+-&gt; Ord PostgresKind
+PostgresKind -&gt; PostgresKind -&gt; Bool
+PostgresKind -&gt; PostgresKind -&gt; Ordering
+PostgresKind -&gt; PostgresKind -&gt; PostgresKind
+forall a.
+Eq a
+-&gt; (a -&gt; a -&gt; Ordering)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; Ord a
+min :: PostgresKind -&gt; PostgresKind -&gt; PostgresKind
+$cmin :: PostgresKind -&gt; PostgresKind -&gt; PostgresKind
+max :: PostgresKind -&gt; PostgresKind -&gt; PostgresKind
+$cmax :: PostgresKind -&gt; PostgresKind -&gt; PostgresKind
+&gt;= :: PostgresKind -&gt; PostgresKind -&gt; Bool
+$c&gt;= :: PostgresKind -&gt; PostgresKind -&gt; Bool
+&gt; :: PostgresKind -&gt; PostgresKind -&gt; Bool
+$c&gt; :: PostgresKind -&gt; PostgresKind -&gt; Bool
+&lt;= :: PostgresKind -&gt; PostgresKind -&gt; Bool
+$c&lt;= :: PostgresKind -&gt; PostgresKind -&gt; Bool
+&lt; :: PostgresKind -&gt; PostgresKind -&gt; Bool
+$c&lt; :: PostgresKind -&gt; PostgresKind -&gt; Bool
+compare :: PostgresKind -&gt; PostgresKind -&gt; Ordering
+$ccompare :: PostgresKind -&gt; PostgresKind -&gt; Ordering
+$cp1Ord :: Eq PostgresKind
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-23"></span><span>
+</span><span id="line-24"></span><span class="hs-comment">-- | An enum that represents each backend we support.</span><span>
+</span><span id="line-25"></span><span class="hs-keyword">data</span><span> </span><span id="BackendType"><span class="annot"><a href="Hasura.SQL.Backend.html#BackendType"><span class="hs-identifier hs-var">BackendType</span></a></span></span><span>
+</span><span id="line-26"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="Postgres"><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-var">Postgres</span></a></span></span><span> </span><span class="annot"><a href="Hasura.SQL.Backend.html#PostgresKind"><span class="hs-identifier hs-type">PostgresKind</span></a></span><span>
+</span><span id="line-27"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="MSSQL"><span class="annot"><a href="Hasura.SQL.Backend.html#MSSQL"><span class="hs-identifier hs-var">MSSQL</span></a></span></span><span>
+</span><span id="line-28"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="BigQuery"><span class="annot"><a href="Hasura.SQL.Backend.html#BigQuery"><span class="hs-identifier hs-var">BigQuery</span></a></span></span><span>
+</span><span id="line-29"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="MySQL"><span class="annot"><a href="Hasura.SQL.Backend.html#MySQL"><span class="hs-identifier hs-var">MySQL</span></a></span></span><span>
+</span><span id="line-30"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="Experimental"><span class="annot"><a href="Hasura.SQL.Backend.html#Experimental"><span class="hs-identifier hs-var">Experimental</span></a></span></span><span>
+</span><span id="line-31"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687925120"><span id="local-6989586621687925122"><span id="local-6989586621687925124"><span class="annot"><span class="annottext">Int -&gt; BackendType -&gt; ShowS
+[BackendType] -&gt; ShowS
+BackendType -&gt; String
+(Int -&gt; BackendType -&gt; ShowS)
+-&gt; (BackendType -&gt; String)
+-&gt; ([BackendType] -&gt; ShowS)
+-&gt; Show BackendType
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [BackendType] -&gt; ShowS
+$cshowList :: [BackendType] -&gt; ShowS
+show :: BackendType -&gt; String
+$cshow :: BackendType -&gt; String
+showsPrec :: Int -&gt; BackendType -&gt; ShowS
+$cshowsPrec :: Int -&gt; BackendType -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687925116"><span id="local-6989586621687925118"><span class="annot"><span class="annottext">BackendType -&gt; BackendType -&gt; Bool
+(BackendType -&gt; BackendType -&gt; Bool)
+-&gt; (BackendType -&gt; BackendType -&gt; Bool) -&gt; Eq BackendType
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: BackendType -&gt; BackendType -&gt; Bool
+$c/= :: BackendType -&gt; BackendType -&gt; Bool
+== :: BackendType -&gt; BackendType -&gt; Bool
+$c== :: BackendType -&gt; BackendType -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687925101"><span id="local-6989586621687925103"><span id="local-6989586621687925105"><span id="local-6989586621687925107"><span id="local-6989586621687925109"><span id="local-6989586621687925111"><span id="local-6989586621687925113"><span class="annot"><span class="annottext">Eq BackendType
+Eq BackendType
+-&gt; (BackendType -&gt; BackendType -&gt; Ordering)
+-&gt; (BackendType -&gt; BackendType -&gt; Bool)
+-&gt; (BackendType -&gt; BackendType -&gt; Bool)
+-&gt; (BackendType -&gt; BackendType -&gt; Bool)
+-&gt; (BackendType -&gt; BackendType -&gt; Bool)
+-&gt; (BackendType -&gt; BackendType -&gt; BackendType)
+-&gt; (BackendType -&gt; BackendType -&gt; BackendType)
+-&gt; Ord BackendType
+BackendType -&gt; BackendType -&gt; Bool
+BackendType -&gt; BackendType -&gt; Ordering
+BackendType -&gt; BackendType -&gt; BackendType
+forall a.
+Eq a
+-&gt; (a -&gt; a -&gt; Ordering)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; Ord a
+min :: BackendType -&gt; BackendType -&gt; BackendType
+$cmin :: BackendType -&gt; BackendType -&gt; BackendType
+max :: BackendType -&gt; BackendType -&gt; BackendType
+$cmax :: BackendType -&gt; BackendType -&gt; BackendType
+&gt;= :: BackendType -&gt; BackendType -&gt; Bool
+$c&gt;= :: BackendType -&gt; BackendType -&gt; Bool
+&gt; :: BackendType -&gt; BackendType -&gt; Bool
+$c&gt; :: BackendType -&gt; BackendType -&gt; Bool
+&lt;= :: BackendType -&gt; BackendType -&gt; Bool
+$c&lt;= :: BackendType -&gt; BackendType -&gt; Bool
+&lt; :: BackendType -&gt; BackendType -&gt; Bool
+$c&lt; :: BackendType -&gt; BackendType -&gt; Bool
+compare :: BackendType -&gt; BackendType -&gt; Ordering
+$ccompare :: BackendType -&gt; BackendType -&gt; Ordering
+$cp1Ord :: Eq BackendType
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-32"></span><span>
+</span><span id="line-33"></span><span class="hs-comment">-- | The name of the backend, as we expect it to appear in our metadata and API.</span><span>
+</span><span id="line-34"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Data.Text.Extended.html#ToTxt"><span class="hs-identifier hs-type">ToTxt</span></a></span><span> </span><span class="annot"><a href="Hasura.SQL.Backend.html#BackendType"><span class="hs-identifier hs-type">BackendType</span></a></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-35"></span><span>  </span><span id="local-6989586621687925098"><span class="annot"><span class="annottext">toTxt :: BackendType -&gt; Text
+</span><a href="Data.Text.Extended.html#toTxt"><span class="hs-identifier hs-var hs-var hs-var hs-var">toTxt</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><span class="annottext">PostgresKind
+</span><a href="Hasura.SQL.Backend.html#Vanilla"><span class="hs-identifier hs-var">Vanilla</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;postgres&quot;</span></span><span>
+</span><span id="line-36"></span><span>  </span><span class="annot"><a href="Data.Text.Extended.html#toTxt"><span class="hs-identifier hs-var">toTxt</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><span class="annottext">PostgresKind
+</span><a href="Hasura.SQL.Backend.html#Citus"><span class="hs-identifier hs-var">Citus</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;citus&quot;</span></span><span>
+</span><span id="line-37"></span><span>  </span><span class="annot"><a href="Data.Text.Extended.html#toTxt"><span class="hs-identifier hs-var">toTxt</span></a></span><span> </span><span class="annot"><span class="annottext">BackendType
+</span><a href="Hasura.SQL.Backend.html#MSSQL"><span class="hs-identifier hs-var">MSSQL</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;mssql&quot;</span></span><span>
+</span><span id="line-38"></span><span>  </span><span class="annot"><a href="Data.Text.Extended.html#toTxt"><span class="hs-identifier hs-var">toTxt</span></a></span><span> </span><span class="annot"><span class="annottext">BackendType
+</span><a href="Hasura.SQL.Backend.html#BigQuery"><span class="hs-identifier hs-var">BigQuery</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;bigquery&quot;</span></span><span>
+</span><span id="line-39"></span><span>  </span><span class="annot"><a href="Data.Text.Extended.html#toTxt"><span class="hs-identifier hs-var">toTxt</span></a></span><span> </span><span class="annot"><span class="annottext">BackendType
+</span><a href="Hasura.SQL.Backend.html#MySQL"><span class="hs-identifier hs-var">MySQL</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;mysql&quot;</span></span><span>
+</span><span id="line-40"></span><span>  </span><span class="annot"><a href="Data.Text.Extended.html#toTxt"><span class="hs-identifier hs-var">toTxt</span></a></span><span> </span><span class="annot"><span class="annottext">BackendType
+</span><a href="Hasura.SQL.Backend.html#Experimental"><span class="hs-identifier hs-var">Experimental</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;experimental&quot;</span></span><span>
+</span><span id="line-41"></span><span>
+</span><span id="line-42"></span><span class="hs-comment">-- | The FromJSON instance uses this lookup mechanism to avoid having to duplicate and hardcode the</span><span>
+</span><span id="line-43"></span><span class="hs-comment">-- backend string. We accept both the short form and the long form of the backend's name.</span><span>
+</span><span id="line-44"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687925094"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.SQL.Backend.html#BackendType"><span class="hs-identifier hs-type">BackendType</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-45"></span><span>  </span><span id="local-6989586621687925092"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser BackendType
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
+-&gt; (Text -&gt; Parser BackendType) -&gt; Value -&gt; Parser BackendType
+forall a. String -&gt; (Text -&gt; Parser a) -&gt; Value -&gt; Parser a
+</span><span class="hs-identifier hs-var">withText</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;backend type&quot;</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621687925089"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687925089"><span class="hs-identifier hs-var">name</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-46"></span><span>    </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621687925088"><span class="annot"><span class="annottext">knownBackends :: [(Text, BackendType)]
+</span><a href="#local-6989586621687925088"><span class="hs-identifier hs-var hs-var">knownBackends</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-47"></span><span>          </span><span class="annot"><span class="annottext">[BackendType]
+</span><a href="Hasura.SQL.Backend.html#supportedBackends"><span class="hs-identifier hs-var">supportedBackends</span></a></span><span> </span><span class="annot"><span class="annottext">[BackendType]
+-&gt; (BackendType -&gt; [(Text, BackendType)]) -&gt; [(Text, BackendType)]
+forall (m :: * -&gt; *) a b. Monad m =&gt; m a -&gt; (a -&gt; m b) -&gt; m b
+</span><span class="hs-operator hs-var">&gt;&gt;=</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621687925087"><span class="annot"><span class="annottext">BackendType
+</span><a href="#local-6989586621687925087"><span class="hs-identifier hs-var">b</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-48"></span><span>            </span><span class="hs-special">[</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">BackendType -&gt; Text
+forall a. ToTxt a =&gt; a -&gt; Text
+</span><a href="Data.Text.Extended.html#toTxt"><span class="hs-identifier hs-var">toTxt</span></a></span><span> </span><span class="annot"><span class="annottext">BackendType
+</span><a href="#local-6989586621687925087"><span class="hs-identifier hs-var">b</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">BackendType
+</span><a href="#local-6989586621687925087"><span class="hs-identifier hs-var">b</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="hs-comment">-- long form</span><span>
+</span><span id="line-49"></span><span>              </span><span class="hs-special">(</span><span class="annot"><span class="annottext">BackendType -&gt; Text
+</span><a href="Hasura.SQL.Backend.html#backendShortName"><span class="hs-identifier hs-var">backendShortName</span></a></span><span> </span><span class="annot"><span class="annottext">BackendType
+</span><a href="#local-6989586621687925087"><span class="hs-identifier hs-var">b</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">BackendType
+</span><a href="#local-6989586621687925087"><span class="hs-identifier hs-var">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-comment">-- short form</span><span>
+</span><span id="line-50"></span><span>            </span><span class="hs-special">]</span><span>
+</span><span id="line-51"></span><span>        </span><span id="local-6989586621687925086"><span class="annot"><span class="annottext">uniqueBackends :: Text
+</span><a href="#local-6989586621687925086"><span class="hs-identifier hs-var hs-var">uniqueBackends</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Text] -&gt; Text
+forall t (f :: * -&gt; *). (ToTxt t, Foldable f) =&gt; f t -&gt; Text
+</span><a href="Data.Text.Extended.html#commaSeparated"><span class="hs-identifier hs-var">commaSeparated</span></a></span><span> </span><span class="annot"><span class="annottext">([Text] -&gt; Text) -&gt; [Text] -&gt; Text
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">(Text, BackendType) -&gt; Text
+forall a b. (a, b) -&gt; a
+</span><span class="hs-identifier hs-var">fst</span></span><span> </span><span class="annot"><span class="annottext">((Text, BackendType) -&gt; Text) -&gt; [(Text, BackendType)] -&gt; [Text]
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">[(Text, BackendType)] -&gt; [(Text, BackendType)]
+forall a. Eq a =&gt; [a] -&gt; [a]
+</span><a href="Data.List.Extended.html#uniques"><span class="hs-identifier hs-var">uniques</span></a></span><span> </span><span class="annot"><span class="annottext">[(Text, BackendType)]
+</span><a href="#local-6989586621687925088"><span class="hs-identifier hs-var">knownBackends</span></a></span><span>
+</span><span id="line-52"></span><span>    </span><span class="annot"><span class="annottext">Text -&gt; [(Text, BackendType)] -&gt; Maybe BackendType
+forall a b. Eq a =&gt; a -&gt; [(a, b)] -&gt; Maybe b
+</span><span class="hs-identifier hs-var">lookup</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687925089"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="annot"><span class="annottext">[(Text, BackendType)]
+</span><a href="#local-6989586621687925088"><span class="hs-identifier hs-var">knownBackends</span></a></span><span>
+</span><span id="line-53"></span><span>      </span><span class="annot"><span class="annottext">Maybe BackendType -&gt; Parser BackendType -&gt; Parser BackendType
+forall (m :: * -&gt; *) a. Applicative m =&gt; Maybe a -&gt; m a -&gt; m a
+</span><a href="Hasura.Prelude.html#onNothing"><span class="hs-operator hs-var">`onNothing`</span></a></span><span> </span><span class="annot"><span class="annottext">String -&gt; Parser BackendType
+forall (m :: * -&gt; *) a. MonadFail m =&gt; String -&gt; m a
+</span><span class="hs-identifier hs-var">fail</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;got: &quot;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; ShowS
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; String
+</span><span class="hs-identifier hs-var">unpack</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687925089"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="annot"><span class="annottext">String -&gt; ShowS
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;, expected one of: &quot;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; ShowS
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; String
+</span><span class="hs-identifier hs-var">unpack</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687925086"><span class="hs-identifier hs-var">uniqueBackends</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-54"></span><span>
+</span><span id="line-55"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687925075"><span id="local-6989586621687925077"><span id="local-6989586621687925079"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.SQL.Backend.html#BackendType"><span class="hs-identifier hs-type">BackendType</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-56"></span><span>  </span><span id="local-6989586621687925073"><span class="annot"><span class="annottext">toJSON :: BackendType -&gt; Value
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Value
+</span><span class="hs-identifier hs-var">String</span></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Value) -&gt; (BackendType -&gt; Text) -&gt; BackendType -&gt; Value
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">BackendType -&gt; Text
+forall a. ToTxt a =&gt; a -&gt; Text
+</span><a href="Data.Text.Extended.html#toTxt"><span class="hs-identifier hs-var">toTxt</span></a></span><span>
+</span><span id="line-57"></span><span>
+</span><span id="line-58"></span><span id="local-6989586621687925069"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687925066"><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier hs-type">Cacheable</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Proxy</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621687925069"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.SQL.Backend.html#BackendType"><span class="hs-identifier hs-type">BackendType</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-59"></span><span>
+</span><span id="line-60"></span><span class="hs-comment">-- | Some generated APIs use a shortened version of the backend's name rather than its full</span><span>
+</span><span id="line-61"></span><span class="hs-comment">-- name. This function returns the &quot;short form&quot; of a backend, if any.</span><span>
+</span><span id="line-62"></span><span class="annot"><a href="Hasura.SQL.Backend.html#backendShortName"><span class="hs-identifier hs-type">backendShortName</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.SQL.Backend.html#BackendType"><span class="hs-identifier hs-type">BackendType</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
+</span><span id="line-63"></span><span id="backendShortName"><span class="annot"><span class="annottext">backendShortName :: BackendType -&gt; Text
+</span><a href="Hasura.SQL.Backend.html#backendShortName"><span class="hs-identifier hs-var hs-var">backendShortName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-64"></span><span>  </span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><span class="annottext">PostgresKind
+</span><a href="Hasura.SQL.Backend.html#Vanilla"><span class="hs-identifier hs-var">Vanilla</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;pg&quot;</span></span><span>
+</span><span id="line-65"></span><span>  </span><span id="local-6989586621687925064"><span class="annot"><span class="annottext">BackendType
+</span><a href="#local-6989586621687925064"><span class="hs-identifier hs-var">b</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">BackendType -&gt; Text
+forall a. ToTxt a =&gt; a -&gt; Text
+</span><a href="Data.Text.Extended.html#toTxt"><span class="hs-identifier hs-var">toTxt</span></a></span><span> </span><span class="annot"><span class="annottext">BackendType
+</span><a href="#local-6989586621687925064"><span class="hs-identifier hs-var">b</span></a></span><span>
+</span><span id="line-66"></span><span>
+</span><span id="line-67"></span><span class="annot"><a href="Hasura.SQL.Backend.html#supportedBackends"><span class="hs-identifier hs-type">supportedBackends</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.SQL.Backend.html#BackendType"><span class="hs-identifier hs-type">BackendType</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-68"></span><span id="supportedBackends"><span class="annot"><span class="annottext">supportedBackends :: [BackendType]
+</span><a href="Hasura.SQL.Backend.html#supportedBackends"><span class="hs-identifier hs-var hs-var">supportedBackends</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-69"></span><span>  </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">PostgresKind -&gt; BackendType
+</span><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-var">Postgres</span></a></span><span> </span><span class="annot"><span class="annottext">PostgresKind
+</span><a href="Hasura.SQL.Backend.html#Vanilla"><span class="hs-identifier hs-var">Vanilla</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-70"></span><span>    </span><span class="annot"><span class="annottext">PostgresKind -&gt; BackendType
+</span><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-var">Postgres</span></a></span><span> </span><span class="annot"><span class="annottext">PostgresKind
+</span><a href="Hasura.SQL.Backend.html#Citus"><span class="hs-identifier hs-var">Citus</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-71"></span><span>    </span><span class="annot"><span class="annottext">BackendType
+</span><a href="Hasura.SQL.Backend.html#MSSQL"><span class="hs-identifier hs-var">MSSQL</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-72"></span><span>    </span><span class="annot"><span class="annottext">BackendType
+</span><a href="Hasura.SQL.Backend.html#BigQuery"><span class="hs-identifier hs-var">BigQuery</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-73"></span><span>    </span><span class="annot"><span class="annottext">BackendType
+</span><a href="Hasura.SQL.Backend.html#MySQL"><span class="hs-identifier hs-var">MySQL</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-74"></span><span>    </span><span class="annot"><span class="annottext">BackendType
+</span><a href="Hasura.SQL.Backend.html#Experimental"><span class="hs-identifier hs-var">Experimental</span></a></span><span>
+</span><span id="line-75"></span><span>  </span><span class="hs-special">]</span><span>
+</span><span id="line-76"></span></pre></body></html>

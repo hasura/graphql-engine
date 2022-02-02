@@ -1,0 +1,97 @@
+body {
+	background-color: #fdf6e3;
+}
+
+.hs-identifier {
+	color: #073642;
+}
+
+.hs-identifier.hs-var {
+}
+
+.hs-identifier.hs-type {
+	color: #5f5faf;
+}
+
+.hs-keyword {
+	color: #af005f;
+}
+
+.hs-string, .hs-char {
+	color: #cb4b16;
+}
+
+.hs-number {
+	color: #268bd2;
+}
+
+.hs-operator {
+	color: #d33682;
+}
+
+.hs-glyph, .hs-special {
+	color: #dc322f;
+}
+
+.hs-comment {
+	color: #8a8a8a;
+}
+
+.hs-pragma {
+	color: #2aa198;
+}
+
+.hs-cpp {
+	color: #859900;
+}
+
+a:link, a:visited {
+	text-decoration: none;
+	border-bottom: 1px solid #eee8d5;
+}
+
+a:hover, a.hover-highlight {
+	background-color: #eee8d5;
+}
+
+span.annot{
+    position:relative;
+    color:#000;
+    text-decoration:none
+  }
+
+span.annot:hover{z-index:25; background-color:#ff0}
+
+span.annot span.annottext{
+  display: none;
+  border-radius: 5px 5px;
+
+  -moz-border-radius: 5px;
+  -webkit-border-radius: 5px;
+
+  box-shadow: 5px 5px 5px rgba(0, 0, 0, 0.1);
+  -webkit-box-shadow: 5px 5px rgba(0, 0, 0, 0.1);
+  -moz-box-shadow: 5px 5px rgba(0, 0, 0, 0.1);
+
+  position: absolute;
+  left: 1em; top: 2em;
+  z-index: 99;
+  margin-left: 5;
+  background: #FFFFAA;
+  border: 2px solid #FFAD33;
+  padding: 0.8em 1em;
+}
+
+span.annot:hover span.annottext{
+  display:block;
+}
+
+/* This bridges the gap so you can mouse into the tooltip without it disappearing */
+span.annot span.annottext:before{
+  content: "";
+  position: absolute;
+  left: -1em; top: -1em;
+  background: #FFFFFF00;
+  z-index:-1;
+  padding: 2em 2em;
+}

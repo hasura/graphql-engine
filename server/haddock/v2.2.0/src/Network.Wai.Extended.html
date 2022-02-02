@@ -1,0 +1,360 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Network.Wai.Extended</span><span>
+</span><span id="line-2"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="hs-keyword">module</span><span> </span><span class="annot"><span class="hs-identifier">Wai</span></span><span class="hs-special">,</span><span>
+</span><span id="line-3"></span><span>    </span><span class="annot"><a href="Network.Wai.Extended.html#getSourceFromFallback"><span class="hs-identifier">getSourceFromFallback</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-4"></span><span>    </span><span class="annot"><a href="Network.Wai.Extended.html#IpAddress"><span class="hs-identifier">IpAddress</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-5"></span><span>    </span><span class="annot"><a href="Network.Wai.Extended.html#showIPAddress"><span class="hs-identifier">showIPAddress</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-6"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-7"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-8"></span><span>
+</span><span id="line-9"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Bits</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">shift</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-operator">(.&amp;.)</span></span><span class="hs-special">)</span><span>
+</span><span id="line-10"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.ByteString.Char8</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">ByteString</span></span><span class="hs-special">)</span><span>
+</span><span id="line-11"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.ByteString.Char8</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">BS</span></span><span>
+</span><span id="line-12"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.List</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">find</span></span><span class="hs-special">)</span><span>
+</span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">fromMaybe</span></span><span class="hs-special">)</span><span>
+</span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Text</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Text</span></span><span class="hs-special">)</span><span>
+</span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Text.Encoding</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">TE</span></span><span>
+</span><span id="line-16"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Text.Encoding.Error</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">TE</span></span><span>
+</span><span id="line-17"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Word</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Word32</span></span><span class="hs-special">)</span><span>
+</span><span id="line-18"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Network.Socket</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">SockAddr</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-19"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Network.Wai</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Wai</span></span><span>
+</span><span id="line-20"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">System.ByteOrder</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">ByteOrder</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">byteOrder</span></span><span class="hs-special">)</span><span>
+</span><span id="line-21"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Text.Printf</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">printf</span></span><span class="hs-special">)</span><span>
+</span><span id="line-22"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Prelude</span></span><span>
+</span><span id="line-23"></span><span>
+</span><span id="line-24"></span><span class="hs-comment">-- | IP Address related code</span><span>
+</span><span id="line-25"></span><span class="hs-keyword">newtype</span><span> </span><span id="IpAddress"><span class="annot"><a href="Network.Wai.Extended.html#IpAddress"><span class="hs-identifier hs-var">IpAddress</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="IpAddress"><span class="annot"><a href="Network.Wai.Extended.html#IpAddress"><span class="hs-identifier hs-var">IpAddress</span></a></span></span><span> </span><span class="hs-special">{</span><span id="unIpAddress"><span class="annot"><span class="annottext">IpAddress -&gt; ByteString
+</span><a href="Network.Wai.Extended.html#unIpAddress"><span class="hs-identifier hs-var hs-var">unIpAddress</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ByteString</span></span><span class="hs-special">}</span><span>
+</span><span id="line-26"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688055067"><span id="local-6989586621688055069"><span id="local-6989586621688055071"><span class="annot"><span class="annottext">Int -&gt; IpAddress -&gt; ShowS
+[IpAddress] -&gt; ShowS
+IpAddress -&gt; String
+(Int -&gt; IpAddress -&gt; ShowS)
+-&gt; (IpAddress -&gt; String)
+-&gt; ([IpAddress] -&gt; ShowS)
+-&gt; Show IpAddress
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [IpAddress] -&gt; ShowS
+$cshowList :: [IpAddress] -&gt; ShowS
+show :: IpAddress -&gt; String
+$cshow :: IpAddress -&gt; String
+showsPrec :: Int -&gt; IpAddress -&gt; ShowS
+$cshowsPrec :: Int -&gt; IpAddress -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688055062"><span id="local-6989586621688055064"><span class="annot"><span class="annottext">IpAddress -&gt; IpAddress -&gt; Bool
+(IpAddress -&gt; IpAddress -&gt; Bool)
+-&gt; (IpAddress -&gt; IpAddress -&gt; Bool) -&gt; Eq IpAddress
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: IpAddress -&gt; IpAddress -&gt; Bool
+$c/= :: IpAddress -&gt; IpAddress -&gt; Bool
+== :: IpAddress -&gt; IpAddress -&gt; Bool
+$c== :: IpAddress -&gt; IpAddress -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-27"></span><span>
+</span><span id="line-28"></span><span class="annot"><a href="Network.Wai.Extended.html#showIPAddress"><span class="hs-identifier hs-type">showIPAddress</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Network.Wai.Extended.html#IpAddress"><span class="hs-identifier hs-type">IpAddress</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
+</span><span id="line-29"></span><span id="showIPAddress"><span class="annot"><span class="annottext">showIPAddress :: IpAddress -&gt; Text
+</span><a href="Network.Wai.Extended.html#showIPAddress"><span class="hs-identifier hs-var hs-var">showIPAddress</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">OnDecodeError -&gt; ByteString -&gt; Text
+</span><span class="hs-identifier hs-var">TE.decodeUtf8With</span></span><span> </span><span class="annot"><span class="annottext">OnDecodeError
+</span><span class="hs-identifier hs-var">TE.lenientDecode</span></span><span> </span><span class="annot"><span class="annottext">(ByteString -&gt; Text)
+-&gt; (IpAddress -&gt; ByteString) -&gt; IpAddress -&gt; Text
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">IpAddress -&gt; ByteString
+</span><a href="Network.Wai.Extended.html#unIpAddress"><span class="hs-identifier hs-var hs-var">unIpAddress</span></a></span><span>
+</span><span id="line-30"></span><span>
+</span><span id="line-31"></span><span class="annot"><a href="Network.Wai.Extended.html#getSourceFromSocket"><span class="hs-identifier hs-type">getSourceFromSocket</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Wai.Request</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Network.Wai.Extended.html#IpAddress"><span class="hs-identifier hs-type">IpAddress</span></a></span><span>
+</span><span id="line-32"></span><span id="getSourceFromSocket"><span class="annot"><span class="annottext">getSourceFromSocket :: Request -&gt; IpAddress
+</span><a href="Network.Wai.Extended.html#getSourceFromSocket"><span class="hs-identifier hs-var hs-var">getSourceFromSocket</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; IpAddress
+</span><a href="Network.Wai.Extended.html#IpAddress"><span class="hs-identifier hs-var">IpAddress</span></a></span><span> </span><span class="annot"><span class="annottext">(ByteString -&gt; IpAddress)
+-&gt; (Request -&gt; ByteString) -&gt; Request -&gt; IpAddress
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; ByteString
+</span><span class="hs-identifier hs-var">BS.pack</span></span><span> </span><span class="annot"><span class="annottext">(String -&gt; ByteString)
+-&gt; (Request -&gt; String) -&gt; Request -&gt; ByteString
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">SockAddr -&gt; String
+</span><a href="Network.Wai.Extended.html#showSockAddr"><span class="hs-identifier hs-var">showSockAddr</span></a></span><span> </span><span class="annot"><span class="annottext">(SockAddr -&gt; String) -&gt; (Request -&gt; SockAddr) -&gt; Request -&gt; String
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Request -&gt; SockAddr
+</span><span class="hs-identifier hs-var hs-var">Wai.remoteHost</span></span><span>
+</span><span id="line-33"></span><span>
+</span><span id="line-34"></span><span class="annot"><a href="Network.Wai.Extended.html#getSourceFromFallback"><span class="hs-identifier hs-type">getSourceFromFallback</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Wai.Request</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Network.Wai.Extended.html#IpAddress"><span class="hs-identifier hs-type">IpAddress</span></a></span><span>
+</span><span id="line-35"></span><span id="getSourceFromFallback"><span class="annot"><span class="annottext">getSourceFromFallback :: Request -&gt; IpAddress
+</span><a href="Network.Wai.Extended.html#getSourceFromFallback"><span class="hs-identifier hs-var hs-var">getSourceFromFallback</span></a></span></span><span> </span><span id="local-6989586621688055053"><span class="annot"><span class="annottext">Request
+</span><a href="#local-6989586621688055053"><span class="hs-identifier hs-var">req</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">IpAddress -&gt; Maybe IpAddress -&gt; IpAddress
+forall a. a -&gt; Maybe a -&gt; a
+</span><span class="hs-identifier hs-var">fromMaybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Request -&gt; IpAddress
+</span><a href="Network.Wai.Extended.html#getSourceFromSocket"><span class="hs-identifier hs-var">getSourceFromSocket</span></a></span><span> </span><span class="annot"><span class="annottext">Request
+</span><a href="#local-6989586621688055053"><span class="hs-identifier hs-var">req</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(Maybe IpAddress -&gt; IpAddress) -&gt; Maybe IpAddress -&gt; IpAddress
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Request -&gt; Maybe IpAddress
+</span><a href="Network.Wai.Extended.html#getSource"><span class="hs-identifier hs-var">getSource</span></a></span><span> </span><span class="annot"><span class="annottext">Request
+</span><a href="#local-6989586621688055053"><span class="hs-identifier hs-var">req</span></a></span><span>
+</span><span id="line-36"></span><span>
+</span><span id="line-37"></span><span class="annot"><a href="Network.Wai.Extended.html#getSource"><span class="hs-identifier hs-type">getSource</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Wai.Request</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Network.Wai.Extended.html#IpAddress"><span class="hs-identifier hs-type">IpAddress</span></a></span><span>
+</span><span id="line-38"></span><span id="getSource"><span class="annot"><span class="annottext">getSource :: Request -&gt; Maybe IpAddress
+</span><a href="Network.Wai.Extended.html#getSource"><span class="hs-identifier hs-var hs-var">getSource</span></a></span></span><span> </span><span id="local-6989586621688055051"><span class="annot"><span class="annottext">Request
+</span><a href="#local-6989586621688055051"><span class="hs-identifier hs-var">req</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; IpAddress
+</span><a href="Network.Wai.Extended.html#IpAddress"><span class="hs-identifier hs-var">IpAddress</span></a></span><span> </span><span class="annot"><span class="annottext">(ByteString -&gt; IpAddress) -&gt; Maybe ByteString -&gt; Maybe IpAddress
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Maybe ByteString
+</span><a href="#local-6989586621688055049"><span class="hs-identifier hs-var">addr</span></a></span><span>
+</span><span id="line-39"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-40"></span><span>    </span><span id="local-6989586621688055048"><span class="annot"><span class="annottext">maddr :: Maybe (HeaderName, ByteString)
+</span><a href="#local-6989586621688055048"><span class="hs-identifier hs-var hs-var">maddr</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">((HeaderName, ByteString) -&gt; Bool)
+-&gt; [(HeaderName, ByteString)] -&gt; Maybe (HeaderName, ByteString)
+forall (t :: * -&gt; *) a. Foldable t =&gt; (a -&gt; Bool) -&gt; t a -&gt; Maybe a
+</span><span class="hs-identifier hs-var">find</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621688055047"><span class="annot"><span class="annottext">(HeaderName, ByteString)
+</span><a href="#local-6989586621688055047"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">(HeaderName, ByteString) -&gt; HeaderName
+forall a b. (a, b) -&gt; a
+</span><span class="hs-identifier hs-var">fst</span></span><span> </span><span class="annot"><span class="annottext">(HeaderName, ByteString)
+</span><a href="#local-6989586621688055047"><span class="hs-identifier hs-var">x</span></a></span><span> </span><span class="annot"><span class="annottext">HeaderName -&gt; [HeaderName] -&gt; Bool
+forall (t :: * -&gt; *) a. (Foldable t, Eq a) =&gt; a -&gt; t a -&gt; Bool
+</span><span class="hs-operator hs-var">`elem`</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">HeaderName
+</span><span class="hs-string">&quot;x-real-ip&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">HeaderName
+</span><span class="hs-string">&quot;x-forwarded-for&quot;</span></span><span class="hs-special">]</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[(HeaderName, ByteString)]
+</span><a href="#local-6989586621688055045"><span class="hs-identifier hs-var">hdrs</span></a></span><span>
+</span><span id="line-41"></span><span>    </span><span id="local-6989586621688055049"><span class="annot"><span class="annottext">addr :: Maybe ByteString
+</span><a href="#local-6989586621688055049"><span class="hs-identifier hs-var hs-var">addr</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">((HeaderName, ByteString) -&gt; ByteString)
+-&gt; Maybe (HeaderName, ByteString) -&gt; Maybe ByteString
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-identifier hs-var">fmap</span></span><span> </span><span class="annot"><span class="annottext">(HeaderName, ByteString) -&gt; ByteString
+forall a b. (a, b) -&gt; b
+</span><span class="hs-identifier hs-var">snd</span></span><span> </span><span class="annot"><span class="annottext">Maybe (HeaderName, ByteString)
+</span><a href="#local-6989586621688055048"><span class="hs-identifier hs-var">maddr</span></a></span><span>
+</span><span id="line-42"></span><span>    </span><span id="local-6989586621688055045"><span class="annot"><span class="annottext">hdrs :: [(HeaderName, ByteString)]
+</span><a href="#local-6989586621688055045"><span class="hs-identifier hs-var hs-var">hdrs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Request -&gt; [(HeaderName, ByteString)]
+</span><span class="hs-identifier hs-var hs-var">Wai.requestHeaders</span></span><span> </span><span class="annot"><span class="annottext">Request
+</span><a href="#local-6989586621688055051"><span class="hs-identifier hs-var">req</span></a></span><span>
+</span><span id="line-43"></span><span>
+</span><span id="line-44"></span><span class="hs-comment">-- |  A type for IP address in numeric string representation.</span><span>
+</span><span id="line-45"></span><span class="hs-keyword">type</span><span> </span><span id="NumericAddress"><span class="annot"><a href="Network.Wai.Extended.html#NumericAddress"><span class="hs-identifier hs-var">NumericAddress</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span>
+</span><span id="line-46"></span><span>
+</span><span id="line-47"></span><span class="annot"><a href="Network.Wai.Extended.html#showIPv4"><span class="hs-identifier hs-type">showIPv4</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Word32</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Network.Wai.Extended.html#NumericAddress"><span class="hs-identifier hs-type">NumericAddress</span></a></span><span>
+</span><span id="line-48"></span><span id="showIPv4"><span class="annot"><span class="annottext">showIPv4 :: Word32 -&gt; Bool -&gt; String
+</span><a href="Network.Wai.Extended.html#showIPv4"><span class="hs-identifier hs-var hs-var">showIPv4</span></a></span></span><span> </span><span id="local-6989586621688055041"><span class="annot"><span class="annottext">Word32
+</span><a href="#local-6989586621688055041"><span class="hs-identifier hs-var">w32</span></a></span></span><span> </span><span id="local-6989586621688055040"><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621688055040"><span class="hs-identifier hs-var">little</span></a></span></span><span>
+</span><span id="line-49"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621688055040"><span class="hs-identifier hs-var">little</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Word32 -&gt; String
+forall a. Show a =&gt; a -&gt; String
+</span><span class="hs-identifier hs-var">show</span></span><span> </span><span class="annot"><span class="annottext">Word32
+</span><a href="#local-6989586621688055038"><span class="hs-identifier hs-var">b1</span></a></span><span> </span><span class="annot"><span class="annottext">String -&gt; ShowS
+forall a. [a] -&gt; [a] -&gt; [a]
+</span><span class="hs-operator hs-var">++</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;.&quot;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; ShowS
+forall a. [a] -&gt; [a] -&gt; [a]
+</span><span class="hs-operator hs-var">++</span></span><span> </span><span class="annot"><span class="annottext">Word32 -&gt; String
+forall a. Show a =&gt; a -&gt; String
+</span><span class="hs-identifier hs-var">show</span></span><span> </span><span class="annot"><span class="annottext">Word32
+</span><a href="#local-6989586621688055037"><span class="hs-identifier hs-var">b2</span></a></span><span> </span><span class="annot"><span class="annottext">String -&gt; ShowS
+forall a. [a] -&gt; [a] -&gt; [a]
+</span><span class="hs-operator hs-var">++</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;.&quot;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; ShowS
+forall a. [a] -&gt; [a] -&gt; [a]
+</span><span class="hs-operator hs-var">++</span></span><span> </span><span class="annot"><span class="annottext">Word32 -&gt; String
+forall a. Show a =&gt; a -&gt; String
+</span><span class="hs-identifier hs-var">show</span></span><span> </span><span class="annot"><span class="annottext">Word32
+</span><a href="#local-6989586621688055036"><span class="hs-identifier hs-var">b3</span></a></span><span> </span><span class="annot"><span class="annottext">String -&gt; ShowS
+forall a. [a] -&gt; [a] -&gt; [a]
+</span><span class="hs-operator hs-var">++</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;.&quot;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; ShowS
+forall a. [a] -&gt; [a] -&gt; [a]
+</span><span class="hs-operator hs-var">++</span></span><span> </span><span class="annot"><span class="annottext">Word32 -&gt; String
+forall a. Show a =&gt; a -&gt; String
+</span><span class="hs-identifier hs-var">show</span></span><span> </span><span class="annot"><span class="annottext">Word32
+</span><a href="#local-6989586621688055035"><span class="hs-identifier hs-var">b4</span></a></span><span>
+</span><span id="line-50"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">otherwise</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Word32 -&gt; String
+forall a. Show a =&gt; a -&gt; String
+</span><span class="hs-identifier hs-var">show</span></span><span> </span><span class="annot"><span class="annottext">Word32
+</span><a href="#local-6989586621688055035"><span class="hs-identifier hs-var">b4</span></a></span><span> </span><span class="annot"><span class="annottext">String -&gt; ShowS
+forall a. [a] -&gt; [a] -&gt; [a]
+</span><span class="hs-operator hs-var">++</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;.&quot;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; ShowS
+forall a. [a] -&gt; [a] -&gt; [a]
+</span><span class="hs-operator hs-var">++</span></span><span> </span><span class="annot"><span class="annottext">Word32 -&gt; String
+forall a. Show a =&gt; a -&gt; String
+</span><span class="hs-identifier hs-var">show</span></span><span> </span><span class="annot"><span class="annottext">Word32
+</span><a href="#local-6989586621688055036"><span class="hs-identifier hs-var">b3</span></a></span><span> </span><span class="annot"><span class="annottext">String -&gt; ShowS
+forall a. [a] -&gt; [a] -&gt; [a]
+</span><span class="hs-operator hs-var">++</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;.&quot;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; ShowS
+forall a. [a] -&gt; [a] -&gt; [a]
+</span><span class="hs-operator hs-var">++</span></span><span> </span><span class="annot"><span class="annottext">Word32 -&gt; String
+forall a. Show a =&gt; a -&gt; String
+</span><span class="hs-identifier hs-var">show</span></span><span> </span><span class="annot"><span class="annottext">Word32
+</span><a href="#local-6989586621688055037"><span class="hs-identifier hs-var">b2</span></a></span><span> </span><span class="annot"><span class="annottext">String -&gt; ShowS
+forall a. [a] -&gt; [a] -&gt; [a]
+</span><span class="hs-operator hs-var">++</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;.&quot;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; ShowS
+forall a. [a] -&gt; [a] -&gt; [a]
+</span><span class="hs-operator hs-var">++</span></span><span> </span><span class="annot"><span class="annottext">Word32 -&gt; String
+forall a. Show a =&gt; a -&gt; String
+</span><span class="hs-identifier hs-var">show</span></span><span> </span><span class="annot"><span class="annottext">Word32
+</span><a href="#local-6989586621688055038"><span class="hs-identifier hs-var">b1</span></a></span><span>
+</span><span id="line-51"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-52"></span><span>    </span><span id="local-6989586621688055034"><span class="annot"><span class="annottext">t1 :: Word32
+</span><a href="#local-6989586621688055034"><span class="hs-identifier hs-var hs-var">t1</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Word32
+</span><a href="#local-6989586621688055041"><span class="hs-identifier hs-var">w32</span></a></span><span>
+</span><span id="line-53"></span><span>    </span><span id="local-6989586621688055033"><span class="annot"><span class="annottext">t2 :: Word32
+</span><a href="#local-6989586621688055033"><span class="hs-identifier hs-var hs-var">t2</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Word32 -&gt; Int -&gt; Word32
+forall a. Bits a =&gt; a -&gt; Int -&gt; a
+</span><span class="hs-identifier hs-var">shift</span></span><span> </span><span class="annot"><span class="annottext">Word32
+</span><a href="#local-6989586621688055034"><span class="hs-identifier hs-var">t1</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">-</span><span class="annot"><span class="annottext">Int
+</span><span class="hs-number">8</span></span><span class="hs-special">)</span><span>
+</span><span id="line-54"></span><span>    </span><span id="local-6989586621688055032"><span class="annot"><span class="annottext">t3 :: Word32
+</span><a href="#local-6989586621688055032"><span class="hs-identifier hs-var hs-var">t3</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Word32 -&gt; Int -&gt; Word32
+forall a. Bits a =&gt; a -&gt; Int -&gt; a
+</span><span class="hs-identifier hs-var">shift</span></span><span> </span><span class="annot"><span class="annottext">Word32
+</span><a href="#local-6989586621688055033"><span class="hs-identifier hs-var">t2</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">-</span><span class="annot"><span class="annottext">Int
+</span><span class="hs-number">8</span></span><span class="hs-special">)</span><span>
+</span><span id="line-55"></span><span>    </span><span id="local-6989586621688055031"><span class="annot"><span class="annottext">t4 :: Word32
+</span><a href="#local-6989586621688055031"><span class="hs-identifier hs-var hs-var">t4</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Word32 -&gt; Int -&gt; Word32
+forall a. Bits a =&gt; a -&gt; Int -&gt; a
+</span><span class="hs-identifier hs-var">shift</span></span><span> </span><span class="annot"><span class="annottext">Word32
+</span><a href="#local-6989586621688055032"><span class="hs-identifier hs-var">t3</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">-</span><span class="annot"><span class="annottext">Int
+</span><span class="hs-number">8</span></span><span class="hs-special">)</span><span>
+</span><span id="line-56"></span><span>    </span><span id="local-6989586621688055038"><span class="annot"><span class="annottext">b1 :: Word32
+</span><a href="#local-6989586621688055038"><span class="hs-identifier hs-var hs-var">b1</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Word32
+</span><a href="#local-6989586621688055034"><span class="hs-identifier hs-var">t1</span></a></span><span> </span><span class="annot"><span class="annottext">Word32 -&gt; Word32 -&gt; Word32
+forall a. Bits a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">.&amp;.</span></span><span> </span><span class="annot"><span class="annottext">Word32
+</span><span class="hs-number">0x000000ff</span></span><span>
+</span><span id="line-57"></span><span>    </span><span id="local-6989586621688055037"><span class="annot"><span class="annottext">b2 :: Word32
+</span><a href="#local-6989586621688055037"><span class="hs-identifier hs-var hs-var">b2</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Word32
+</span><a href="#local-6989586621688055033"><span class="hs-identifier hs-var">t2</span></a></span><span> </span><span class="annot"><span class="annottext">Word32 -&gt; Word32 -&gt; Word32
+forall a. Bits a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">.&amp;.</span></span><span> </span><span class="annot"><span class="annottext">Word32
+</span><span class="hs-number">0x000000ff</span></span><span>
+</span><span id="line-58"></span><span>    </span><span id="local-6989586621688055036"><span class="annot"><span class="annottext">b3 :: Word32
+</span><a href="#local-6989586621688055036"><span class="hs-identifier hs-var hs-var">b3</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Word32
+</span><a href="#local-6989586621688055032"><span class="hs-identifier hs-var">t3</span></a></span><span> </span><span class="annot"><span class="annottext">Word32 -&gt; Word32 -&gt; Word32
+forall a. Bits a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">.&amp;.</span></span><span> </span><span class="annot"><span class="annottext">Word32
+</span><span class="hs-number">0x000000ff</span></span><span>
+</span><span id="line-59"></span><span>    </span><span id="local-6989586621688055035"><span class="annot"><span class="annottext">b4 :: Word32
+</span><a href="#local-6989586621688055035"><span class="hs-identifier hs-var hs-var">b4</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Word32
+</span><a href="#local-6989586621688055031"><span class="hs-identifier hs-var">t4</span></a></span><span> </span><span class="annot"><span class="annottext">Word32 -&gt; Word32 -&gt; Word32
+forall a. Bits a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">.&amp;.</span></span><span> </span><span class="annot"><span class="annottext">Word32
+</span><span class="hs-number">0x000000ff</span></span><span>
+</span><span id="line-60"></span><span>
+</span><span id="line-61"></span><span class="annot"><a href="Network.Wai.Extended.html#showIPv6"><span class="hs-identifier hs-type">showIPv6</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Word32</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Word32</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Word32</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Word32</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span>
+</span><span id="line-62"></span><span id="showIPv6"><span class="annot"><span class="annottext">showIPv6 :: (Word32, Word32, Word32, Word32) -&gt; String
+</span><a href="Network.Wai.Extended.html#showIPv6"><span class="hs-identifier hs-var hs-var">showIPv6</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688055029"><span class="annot"><span class="annottext">Word32
+</span><a href="#local-6989586621688055029"><span class="hs-identifier hs-var">w1</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688055028"><span class="annot"><span class="annottext">Word32
+</span><a href="#local-6989586621688055028"><span class="hs-identifier hs-var">w2</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688055027"><span class="annot"><span class="annottext">Word32
+</span><a href="#local-6989586621688055027"><span class="hs-identifier hs-var">w3</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688055026"><span class="annot"><span class="annottext">Word32
+</span><a href="#local-6989586621688055026"><span class="hs-identifier hs-var">w4</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-63"></span><span>  </span><span class="annot"><span class="annottext">String
+-&gt; Word32
+-&gt; Word32
+-&gt; Word32
+-&gt; Word32
+-&gt; Word32
+-&gt; Word32
+-&gt; Word32
+-&gt; Word32
+-&gt; String
+forall r. PrintfType r =&gt; String -&gt; r
+</span><span class="hs-identifier hs-var">printf</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;%x:%x:%x:%x:%x:%x:%x:%x&quot;</span></span><span> </span><span class="annot"><span class="annottext">Word32
+</span><a href="#local-6989586621688055025"><span class="hs-identifier hs-var">s1</span></a></span><span> </span><span class="annot"><span class="annottext">Word32
+</span><a href="#local-6989586621688055024"><span class="hs-identifier hs-var">s2</span></a></span><span> </span><span class="annot"><span class="annottext">Word32
+</span><a href="#local-6989586621688055023"><span class="hs-identifier hs-var">s3</span></a></span><span> </span><span class="annot"><span class="annottext">Word32
+</span><a href="#local-6989586621688055022"><span class="hs-identifier hs-var">s4</span></a></span><span> </span><span class="annot"><span class="annottext">Word32
+</span><a href="#local-6989586621688055021"><span class="hs-identifier hs-var">s5</span></a></span><span> </span><span class="annot"><span class="annottext">Word32
+</span><a href="#local-6989586621688055020"><span class="hs-identifier hs-var">s6</span></a></span><span> </span><span class="annot"><span class="annottext">Word32
+</span><a href="#local-6989586621688055019"><span class="hs-identifier hs-var">s7</span></a></span><span> </span><span class="annot"><span class="annottext">Word32
+</span><a href="#local-6989586621688055018"><span class="hs-identifier hs-var">s8</span></a></span><span>
+</span><span id="line-64"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-65"></span><span>    </span><span class="hs-special">(</span><span id="local-6989586621688055025"><span class="annot"><span class="annottext">Word32
+</span><a href="#local-6989586621688055025"><span class="hs-identifier hs-var">s1</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688055024"><span class="annot"><span class="annottext">Word32
+</span><a href="#local-6989586621688055024"><span class="hs-identifier hs-var">s2</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Word32 -&gt; (Word32, Word32)
+forall b. (Bits b, Num b) =&gt; b -&gt; (b, b)
+</span><a href="#local-6989586621688055017"><span class="hs-identifier hs-var">split16</span></a></span><span> </span><span class="annot"><span class="annottext">Word32
+</span><a href="#local-6989586621688055029"><span class="hs-identifier hs-var">w1</span></a></span><span>
+</span><span id="line-66"></span><span>    </span><span class="hs-special">(</span><span id="local-6989586621688055023"><span class="annot"><span class="annottext">Word32
+</span><a href="#local-6989586621688055023"><span class="hs-identifier hs-var">s3</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688055022"><span class="annot"><span class="annottext">Word32
+</span><a href="#local-6989586621688055022"><span class="hs-identifier hs-var">s4</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Word32 -&gt; (Word32, Word32)
+forall b. (Bits b, Num b) =&gt; b -&gt; (b, b)
+</span><a href="#local-6989586621688055017"><span class="hs-identifier hs-var">split16</span></a></span><span> </span><span class="annot"><span class="annottext">Word32
+</span><a href="#local-6989586621688055028"><span class="hs-identifier hs-var">w2</span></a></span><span>
+</span><span id="line-67"></span><span>    </span><span class="hs-special">(</span><span id="local-6989586621688055021"><span class="annot"><span class="annottext">Word32
+</span><a href="#local-6989586621688055021"><span class="hs-identifier hs-var">s5</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688055020"><span class="annot"><span class="annottext">Word32
+</span><a href="#local-6989586621688055020"><span class="hs-identifier hs-var">s6</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Word32 -&gt; (Word32, Word32)
+forall b. (Bits b, Num b) =&gt; b -&gt; (b, b)
+</span><a href="#local-6989586621688055017"><span class="hs-identifier hs-var">split16</span></a></span><span> </span><span class="annot"><span class="annottext">Word32
+</span><a href="#local-6989586621688055027"><span class="hs-identifier hs-var">w3</span></a></span><span>
+</span><span id="line-68"></span><span>    </span><span class="hs-special">(</span><span id="local-6989586621688055019"><span class="annot"><span class="annottext">Word32
+</span><a href="#local-6989586621688055019"><span class="hs-identifier hs-var">s7</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688055018"><span class="annot"><span class="annottext">Word32
+</span><a href="#local-6989586621688055018"><span class="hs-identifier hs-var">s8</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Word32 -&gt; (Word32, Word32)
+forall b. (Bits b, Num b) =&gt; b -&gt; (b, b)
+</span><a href="#local-6989586621688055017"><span class="hs-identifier hs-var">split16</span></a></span><span> </span><span class="annot"><span class="annottext">Word32
+</span><a href="#local-6989586621688055026"><span class="hs-identifier hs-var">w4</span></a></span><span>
+</span><span id="line-69"></span><span>    </span><span id="local-6989586621688055017"><span class="annot"><span class="annottext">split16 :: b -&gt; (b, b)
+</span><a href="#local-6989586621688055017"><span class="hs-identifier hs-var hs-var">split16</span></a></span></span><span> </span><span id="local-6989586621688055016"><span class="annot"><span class="annottext">b
+</span><a href="#local-6989586621688055016"><span class="hs-identifier hs-var">w</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">b
+</span><a href="#local-6989586621688055015"><span class="hs-identifier hs-var">h1</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">b
+</span><a href="#local-6989586621688055014"><span class="hs-identifier hs-var">h2</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-70"></span><span>      </span><span class="hs-keyword">where</span><span>
+</span><span id="line-71"></span><span>        </span><span id="local-6989586621688055015"><span class="annot"><span class="annottext">h1 :: b
+</span><a href="#local-6989586621688055015"><span class="hs-identifier hs-var hs-var">h1</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">b -&gt; Int -&gt; b
+forall a. Bits a =&gt; a -&gt; Int -&gt; a
+</span><span class="hs-identifier hs-var">shift</span></span><span> </span><span class="annot"><span class="annottext">b
+</span><a href="#local-6989586621688055016"><span class="hs-identifier hs-var">w</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">-</span><span class="annot"><span class="annottext">Int
+</span><span class="hs-number">16</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">b -&gt; b -&gt; b
+forall a. Bits a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">.&amp;.</span></span><span> </span><span class="annot"><span class="annottext">b
+</span><span class="hs-number">0x0000ffff</span></span><span>
+</span><span id="line-72"></span><span>        </span><span id="local-6989586621688055014"><span class="annot"><span class="annottext">h2 :: b
+</span><a href="#local-6989586621688055014"><span class="hs-identifier hs-var hs-var">h2</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">b
+</span><a href="#local-6989586621688055016"><span class="hs-identifier hs-var">w</span></a></span><span> </span><span class="annot"><span class="annottext">b -&gt; b -&gt; b
+forall a. Bits a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">.&amp;.</span></span><span> </span><span class="annot"><span class="annottext">b
+</span><span class="hs-number">0x0000ffff</span></span><span>
+</span><span id="line-73"></span><span>
+</span><span id="line-74"></span><span class="hs-comment">-- | Convert 'SockAddr' to 'NumericAddress'. If the address is</span><span>
+</span><span id="line-75"></span><span class="hs-comment">--   IPv4-embedded IPv6 address, the IPv4 is extracted.</span><span>
+</span><span id="line-76"></span><span class="annot"><a href="Network.Wai.Extended.html#showSockAddr"><span class="hs-identifier hs-type">showSockAddr</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">SockAddr</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Network.Wai.Extended.html#NumericAddress"><span class="hs-identifier hs-type">NumericAddress</span></a></span><span>
+</span><span id="line-77"></span><span class="hs-comment">-- HostAddr is network byte order.</span><span>
+</span><span id="line-78"></span><span id="showSockAddr"><span class="annot"><span class="annottext">showSockAddr :: SockAddr -&gt; String
+</span><a href="Network.Wai.Extended.html#showSockAddr"><span class="hs-identifier hs-var hs-var">showSockAddr</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">SockAddrInet</span></span><span> </span><span class="annot"><span class="annottext">PortNumber
+</span><span class="hs-identifier">_</span></span><span> </span><span id="local-6989586621688055012"><span class="annot"><span class="annottext">Word32
+</span><a href="#local-6989586621688055012"><span class="hs-identifier hs-var">addr4</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Word32 -&gt; Bool -&gt; String
+</span><a href="Network.Wai.Extended.html#showIPv4"><span class="hs-identifier hs-var">showIPv4</span></a></span><span> </span><span class="annot"><span class="annottext">Word32
+</span><a href="#local-6989586621688055012"><span class="hs-identifier hs-var">addr4</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ByteOrder
+</span><span class="hs-identifier hs-var">byteOrder</span></span><span> </span><span class="annot"><span class="annottext">ByteOrder -&gt; ByteOrder -&gt; Bool
+forall a. Eq a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="annottext">ByteOrder
+</span><span class="hs-identifier hs-var">LittleEndian</span></span><span class="hs-special">)</span><span>
+</span><span id="line-79"></span><span class="hs-comment">-- HostAddr6 is host byte order.</span><span>
+</span><span id="line-80"></span><span class="annot"><a href="Network.Wai.Extended.html#showSockAddr"><span class="hs-identifier hs-var">showSockAddr</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">SockAddrInet6</span></span><span> </span><span class="annot"><span class="annottext">PortNumber
+</span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">Word32
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Word32
+</span><span class="hs-number">0</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Word32
+</span><span class="hs-number">0</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Word32
+</span><span class="hs-number">0x0000ffff</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688055009"><span class="annot"><span class="annottext">Word32
+</span><a href="#local-6989586621688055009"><span class="hs-identifier hs-var">addr4</span></a></span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Word32
+</span><span class="hs-identifier">_</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Word32 -&gt; Bool -&gt; String
+</span><a href="Network.Wai.Extended.html#showIPv4"><span class="hs-identifier hs-var">showIPv4</span></a></span><span> </span><span class="annot"><span class="annottext">Word32
+</span><a href="#local-6989586621688055009"><span class="hs-identifier hs-var">addr4</span></a></span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">False</span></span><span>
+</span><span id="line-81"></span><span class="annot"><a href="Network.Wai.Extended.html#showSockAddr"><span class="hs-identifier hs-var">showSockAddr</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">SockAddrInet6</span></span><span> </span><span class="annot"><span class="annottext">PortNumber
+</span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">Word32
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Word32
+</span><span class="hs-number">0</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Word32
+</span><span class="hs-number">0</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Word32
+</span><span class="hs-number">0</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Word32
+</span><span class="hs-number">1</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Word32
+</span><span class="hs-identifier">_</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;::1&quot;</span></span><span>
+</span><span id="line-82"></span><span class="annot"><a href="Network.Wai.Extended.html#showSockAddr"><span class="hs-identifier hs-var">showSockAddr</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">SockAddrInet6</span></span><span> </span><span class="annot"><span class="annottext">PortNumber
+</span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">Word32
+</span><span class="hs-identifier">_</span></span><span> </span><span id="local-6989586621688055008"><span class="annot"><span class="annottext">(Word32, Word32, Word32, Word32)
+</span><a href="#local-6989586621688055008"><span class="hs-identifier hs-var">addr6</span></a></span></span><span> </span><span class="annot"><span class="annottext">Word32
+</span><span class="hs-identifier">_</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(Word32, Word32, Word32, Word32) -&gt; String
+</span><a href="Network.Wai.Extended.html#showIPv6"><span class="hs-identifier hs-var">showIPv6</span></a></span><span> </span><span class="annot"><span class="annottext">(Word32, Word32, Word32, Word32)
+</span><a href="#local-6989586621688055008"><span class="hs-identifier hs-var">addr6</span></a></span><span>
+</span><span id="line-83"></span><span class="annot"><a href="Network.Wai.Extended.html#showSockAddr"><span class="hs-identifier hs-var">showSockAddr</span></a></span><span> </span><span class="annot"><span class="annottext">SockAddr
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;unknownSocket&quot;</span></span><span>
+</span><span id="line-84"></span></pre></body></html>
