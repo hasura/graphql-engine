@@ -8,7 +8,7 @@ module Hasura.GraphQL.Schema.Common
     AnnotatedActionField,
     AnnotatedActionFields,
     EdgeFields,
-    QueryContext (QueryContext, qcDangerousBooleanCollapse, qcFunctionPermsContext, qcQueryType, qcRemoteRelationshipContext, qcStringifyNum),
+    QueryContext (QueryContext, qcDangerousBooleanCollapse, qcFunctionPermsContext, qcQueryType, qcRemoteRelationshipContext, qcStringifyNum, qcOptimizePermissionFilters),
     RemoteRelationshipQueryContext (RemoteRelationshipQueryContext, _rrscParsedIntrospection),
     SelectArgs,
     SelectExp,
@@ -87,12 +87,14 @@ data RemoteRelationshipQueryContext = RemoteRelationshipQueryContext
   }
 
 data QueryContext = QueryContext
-  { qcStringifyNum :: !Bool,
+  { qcStringifyNum :: Bool,
     -- | should boolean fields be collapsed to True when null is given?
-    qcDangerousBooleanCollapse :: !Bool,
-    qcQueryType :: !ET.GraphQLQueryType,
-    qcRemoteRelationshipContext :: !(HashMap RemoteSchemaName RemoteRelationshipQueryContext),
-    qcFunctionPermsContext :: !FunctionPermissionsCtx
+    qcDangerousBooleanCollapse :: Bool,
+    qcQueryType :: ET.GraphQLQueryType,
+    qcRemoteRelationshipContext :: HashMap RemoteSchemaName RemoteRelationshipQueryContext,
+    qcFunctionPermsContext :: FunctionPermissionsCtx,
+    -- | 'True' when we should attempt to use experimental SQL optimization passes
+    qcOptimizePermissionFilters :: Bool
   }
 
 textToName :: MonadError QErr m => Text -> m G.Name

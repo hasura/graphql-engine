@@ -90,6 +90,7 @@ buildGQLContext queryType sources allRemoteSchemas allActions customTypes = do
           queryType
           adminRemoteRelationshipQueryCtx
           FunctionPermissionsInferred
+          optimizePermissionFilters
 
   -- build the admin DB-only context so that we can check against name clashes with remotes
   -- TODO: Is there a better way to check for conflicts without actually building the admin schema?
@@ -167,7 +168,7 @@ buildRoleContext ::
   RemoteSchemaPermsCtx ->
   m (RoleContext GQLContext)
 buildRoleContext
-  (SQLGenCtx stringifyNum boolCollapse, queryType, functionPermsCtx)
+  (SQLGenCtx stringifyNum dangerousBooleanCollapse optimizePermissionFilters, queryType, functionPermsCtx)
   sources
   allRemoteSchemas
   allActionInfos
@@ -190,10 +191,11 @@ buildRoleContext
           roleQueryContext =
             QueryContext
               stringifyNum
-              boolCollapse
+              dangerousBooleanCollapse
               queryType
               remoteRelationshipQueryContext
               functionPermsCtx
+              optimizePermissionFilters
       runMonadSchema role roleQueryContext sources $ do
         fieldsList <- traverse (buildBackendSource buildSource) $ toList sources
         let (queryFields, mutationFrontendFields, mutationBackendFields) = mconcat fieldsList
@@ -265,7 +267,7 @@ buildRelayRoleContext ::
   RoleName ->
   m (RoleContext GQLContext)
 buildRelayRoleContext
-  (SQLGenCtx stringifyNum boolCollapse, queryType, functionPermsCtx)
+  (SQLGenCtx stringifyNum dangerousBooleanCollapse optimizePermissionFilters, queryType, functionPermsCtx)
   sources
   allActionInfos
   customTypes
@@ -276,10 +278,11 @@ buildRelayRoleContext
     let roleQueryContext =
           QueryContext
             stringifyNum
-            boolCollapse
+            dangerousBooleanCollapse
             queryType
             mempty
             functionPermsCtx
+            optimizePermissionFilters
     runMonadSchema role roleQueryContext sources do
       fieldsList <- traverse (buildBackendSource buildSource) $ toList sources
 

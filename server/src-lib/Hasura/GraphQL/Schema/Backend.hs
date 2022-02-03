@@ -78,7 +78,12 @@ type MonadBuildSchema b r m n =
 -- tandem.
 --
 -- See <#modelling Note BackendSchema modelling principles>.
-class Backend b => BackendSchema (b :: BackendType) where
+class
+  ( Backend b,
+    Eq (BooleanOperators b (UnpreparedValue b))
+  ) =>
+  BackendSchema (b :: BackendType)
+  where
   -- top level parsers
   buildTableQueryFields ::
     MonadBuildSchema b r m n =>

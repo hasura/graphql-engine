@@ -266,6 +266,9 @@ mkServeOptions rso = do
     WSConnectionInitTimeout . fromIntegral . fromMaybe 3
       <$> withEnv (rsoWebSocketConnectionInitTimeout rso) (fst webSocketConnectionInitTimeoutEnv)
 
+  optimizePermissionFilters <-
+    fromMaybe False <$> withEnv (rsoOptimizePermissionFilters rso) (fst optimizePermissionFiltersEnv)
+
   pure $
     ServeOptions
       port
@@ -305,6 +308,7 @@ mkServeOptions rso = do
       webSocketConnectionInitTimeout
       EventingEnabled
       ReadOnlyModeDisabled
+      optimizePermissionFilters
   where
     defaultAsyncActionsFetchInterval = Interval 1000 -- 1000 Milliseconds or 1 Second
     defaultSchemaPollInterval = Interval 1000 -- 1000 Milliseconds or 1 Second
@@ -1343,7 +1347,7 @@ serveOptsToLog so =
         [ "port" J..= soPort so,
           "server_host" J..= show (soHost so),
           "transaction_isolation" J..= show (soTxIso so),
-          "admin_secret_set" J..= (not $ Set.null (soAdminSecret so)),
+          "admin_secret_set" J..= not (Set.null (soAdminSecret so)),
           "auth_hook" J..= (ahUrl <$> soAuthHook so),
           "auth_hook_mode" J..= (show . ahType <$> soAuthHook so),
           "jwt_secret" J..= (J.toJSON <$> soJwtSecret so),
@@ -1426,6 +1430,7 @@ serveOptionsParser =
     <*> parseEventsFetchBatchSize
     <*> parseGracefulShutdownTimeout
     <*> parseWebSocketConnectionInitTimeout
+    <*> parseOptimizePermissionFilters
 
 -- | This implements the mapping between application versions
 -- and catalog schema versions.
@@ -1507,4 +1512,19 @@ parseWebSocketConnectionInitTimeout =
       (eitherReader readEither)
       ( long "websocket-connection-init-timeout"
           <> help (snd webSocketConnectionInitTimeoutEnv)
+      )
+
+optimizePermissionFiltersEnv :: (String, String)
+optimizePermissionFiltersEnv =
+  ( "HASURA_GRAPHQL_OPTIMIZE_PERMISSION_FILTERS",
+    "Use experimental SQL optimization transformations for permission filters"
+  )
+
+parseOptimizePermissionFilters :: Parser (Maybe Bool)
+parseOptimizePermissionFilters =
+  optional $
+    option
+      (eitherReader parseStrAsBool)
+      ( long "optimize-permission-filters"
+          <> help (snd optimizePermissionFiltersEnv)
       )

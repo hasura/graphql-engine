@@ -8,6 +8,7 @@ import Data.Aeson qualified as A
 import Data.ByteString.Lazy.Char8 qualified as BL
 import Data.ByteString.Lazy.UTF8 qualified as LBS
 import Data.Environment qualified as Env
+import Data.HashMap.Strict.ExtendedSpec qualified as HashMapExtendedSpec
 import Data.NonNegativeIntSpec qualified as NonNegetiveIntSpec
 import Data.Parser.CacheControlSpec qualified as CacheControlParser
 import Data.Parser.JSONPathSpec qualified as JsonPath
@@ -82,6 +83,7 @@ main =
 
 unitSpecs :: Spec
 unitSpecs = do
+  describe "Data.HashMap.Strict.ExtendedSpec" HashMapExtendedSpec.spec
   describe "Data.NonNegativeInt" NonNegetiveIntSpec.spec
   describe "Data.Parser.CacheControl" CacheControlParser.spec
   describe "Data.Parser.JSONPath" JsonPath.spec
@@ -149,7 +151,7 @@ buildPostgresSpecs = do
 
       setupCacheRef = do
         httpManager <- HTTP.newManager HTTP.tlsManagerSettings
-        let sqlGenCtx = SQLGenCtx False False
+        let sqlGenCtx = SQLGenCtx False False False
             maintenanceMode = MaintenanceModeDisabled
             readOnlyMode = ReadOnlyModeDisabled
             serverConfigCtx =

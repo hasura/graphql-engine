@@ -347,5 +347,6 @@ defaultRawServeOptions =
       rsoExperimentalFeatures = Nothing,
       rsoEventsFetchBatchSize = Nothing,
       rsoGracefulShutdownTimeout = Nothing,
-      rsoWebSocketConnectionInitTimeout = Nothing
+      rsoWebSocketConnectionInitTimeout = Nothing,
+      rsoOptimizePermissionFilters = Nothing
     }
