@@ -235,7 +235,8 @@ isSystemDefined = unSystemDefined
 
 data SQLGenCtx = SQLGenCtx
   { stringifyNum :: Bool,
-    dangerousBooleanCollapse :: Bool
+    dangerousBooleanCollapse :: Bool,
+    optimizePermissionFilters :: Bool
   }
   deriving (Show, Eq)
 

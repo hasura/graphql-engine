@@ -99,6 +99,8 @@ class
     -- Type constraints.
     Eq (CountType b),
     Show (CountType b),
+    Eq (ScalarValue b),
+    Show (ScalarValue b),
     -- Extension constraints.
     Eq (XNodesAgg b),
     Show (XNodesAgg b),

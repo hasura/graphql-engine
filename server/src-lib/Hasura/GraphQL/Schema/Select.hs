@@ -1110,6 +1110,86 @@ fieldSelection sourceName table maybePkeyColumns fieldInfo selectPermissions = d
       let lhsFields = _rfiLHS remoteFieldInfo
       pure $ map (fmap (IR.AFRemote . IR.RemoteRelationshipSelect lhsFields)) relationshipFields
 
+{- Note [Permission filter deduplication]
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+1. `T` and `U` are tables.
+
+1. `r` is a relationship on `T` to table `U` with the join condition, `T.c =
+   U.d` where `c` and `d` are columns on tables `T` and `U` respectively.
+
+1. `s` is a relationship on `U` to table `T` with the join condition, `U.d =
+   T.c`.
+
+1. `p(T)` and `p(U)` denote the permission filters on table `T` and `U`
+   respectively for some role `R`.
+
+Consider the SQL that we generate for this query:
+
+```
+query {
+  T {
+    c
+    r {
+      d
+    }
+  }
+}
+```
+
+It would be along these lines:
+
+```sql
+SELECT
+  *
+FROM
+  (
+    SELECT * FROM T WHERE p(T)
+  ) AS T
+  LEFT OUTER JOIN LATERAL
+  (
+    SELECT * FROM U WHERE T.c = U.d AND p(U)
+  ) AS U
+  ON TRUE
+```
+
+The expression `T.c = U.d` is the join condition for relationship `r`. Note
+that we use lateral joins, so the join condition is not expressed using `ON`
+but on the where clause of `U`.
+
+Now, let's say `p(U)` is of the form `{ s : p(T) }`.
+
+```sql
+SELECT
+  *
+FROM
+  (
+    SELECT * FROM T WHERE p(T)
+  ) AS T
+  LEFT OUTER JOIN LATERAL
+  (
+    SELECT * FROM U WHERE T.c = U.d
+    AND EXISTS (
+      SELECT 1 FROM T WHERE U.d = T.c AND p(T)
+    )
+  ) AS U
+  ON TRUE
+```
+
+`p(U)`, i.e, `{ s : p(T) }` got expanded to
+
+```sql
+EXISTS (
+  SELECT 1 FROM T WHERE U.d = T.c AND p(T)
+)
+```
+
+Now, assuming, in the `WHERE` clause for `U`, that `T.c = U.d` holds, then the
+`EXISTS` clause must evaluate to true. The `EXISTS` clause must evaluate to true
+because the row from `T` we are joining against is exactly such a row satisfying
+`p(T)`. In other words, the row obtained from `T` (as the left-hand side of the
+join) satisfies `p(T)`.
+-}
+
 -- | Field parsers for a table relationship
 relationshipField ::
   forall b r m n.
@@ -1118,11 +1198,37 @@ relationshipField ::
   TableName b ->
   RelInfo b ->
   m (Maybe [FieldParser n (AnnotatedField b)])
-relationshipField sourceName table RelInfo {..} = runMaybeT do
-  otherTableInfo <- lift $ askTableInfo sourceName riRTable
+relationshipField sourceName table ri = runMaybeT do
+  optimizePermissionFilters <- asks $ qcOptimizePermissionFilters . getter
+  otherTableInfo <- lift $ askTableInfo sourceName $ riRTable ri
   remotePerms <- MaybeT $ tableSelectPermissions otherTableInfo
-  relFieldName <- lift $ textToName $ relNameToTxt riName
-  case riType of
+  relFieldName <- lift $ textToName $ relNameToTxt $ riName ri
+  -- START black magic to deduplicate permission checks
+  thisTablePerm <-
+    IR._tpFilter . tablePermissionsInfo
+      <$> MaybeT (tableSelectPermissions =<< askTableInfo @b sourceName table)
+  let deduplicatePermissions :: AnnBoolExp b (UnpreparedValue b) -> AnnBoolExp b (UnpreparedValue b)
+      deduplicatePermissions x =
+        case (optimizePermissionFilters, x) of
+          (True, BoolAnd [BoolFld (AVRelationship remoteRI remoteTablePerm)]) ->
+            -- Here we try to figure out if the "forwards" joining condition
+            -- from `table` to the related table `riRTable ri` is equal to the
+            -- "backwards" joining condition from the related table back to
+            -- `table`.  If it is, then we can optimize the row-level permission
+            -- filters by dropping them here.
+            if riRTable remoteRI == table
+              && riMapping remoteRI `Map.isInverseOf` riMapping ri
+              && thisTablePerm == remoteTablePerm
+              then BoolAnd []
+              else x
+          _ -> x
+      deduplicatePermissions' :: SelectExp b -> SelectExp b
+      deduplicatePermissions' expr =
+        let newFilter = deduplicatePermissions (IR._tpFilter (IR._asnPerm expr))
+         in expr {IR._asnPerm = (IR._asnPerm expr) {IR._tpFilter = newFilter}}
+  -- END black magic to deduplicate permission checks
+
+  case riType ri of
     ObjRel -> do
       let desc = Just $ G.Description "An object relationship"
       selectionSetParser <- lift $ tableSelectionSet sourceName otherTableInfo remotePerms
@@ -1158,11 +1264,11 @@ relationshipField sourceName table RelInfo {..} = runMaybeT do
       -- probably not a very widely used mode of use.  The impact of this
       -- suboptimality is merely that in introspection some fields might get
       -- marked nullable which are in fact known to always be non-null.
-      nullable <- case (riIsManual, riInsertOrder) of
+      nullable <- case (riIsManual ri, riInsertOrder ri) of
         -- Automatically generated forward relationship
         (False, BeforeParent) -> do
           tableInfo <- askTableInfo @b sourceName table
-          let columns = Map.keys riMapping
+          let columns = Map.keys $ riMapping ri
               fieldInfoMap = _tciFieldInfoMap $ _tiCoreInfo tableInfo
               findColumn col = Map.lookup (fromCol @b col) fieldInfoMap ^? _Just . _FIColumn
           -- Fetch information about the referencing columns of the foreign key
@@ -1179,16 +1285,19 @@ relationshipField sourceName table RelInfo {..} = runMaybeT do
             P.subselection_ relFieldName desc selectionSetParser
               <&> \fields ->
                 IR.AFObjectRelation $
-                  IR.AnnRelationSelectG riName riMapping $
-                    IR.AnnObjectSelectG fields riRTable $
-                      IR._tpFilter $ tablePermissionsInfo remotePerms
+                  IR.AnnRelationSelectG (riName ri) (riMapping ri) $
+                    IR.AnnObjectSelectG fields (riRTable ri) $
+                      deduplicatePermissions $
+                        IR._tpFilter $ tablePermissionsInfo remotePerms
     ArrRel -> do
       let arrayRelDesc = Just $ G.Description "An array relationship"
       otherTableParser <- lift $ selectTable sourceName otherTableInfo relFieldName arrayRelDesc remotePerms
       let arrayRelField =
             otherTableParser <&> \selectExp ->
               IR.AFArrayRelation $
-                IR.ASSimple $ IR.AnnRelationSelectG riName riMapping selectExp
+                IR.ASSimple $
+                  IR.AnnRelationSelectG (riName ri) (riMapping ri) $
+                    deduplicatePermissions' selectExp
           relAggFieldName = relFieldName <> $$(G.litName "_aggregate")
           relAggDesc = Just $ G.Description "An aggregate relationship"
       remoteAggField <- lift $ selectTableAggregate sourceName otherTableInfo relAggFieldName relAggDesc remotePerms
@@ -1207,8 +1316,8 @@ relationshipField sourceName table RelInfo {..} = runMaybeT do
       pure $
         catMaybes
           [ Just arrayRelField,
-            fmap (IR.AFArrayRelation . IR.ASAggregate . IR.AnnRelationSelectG riName riMapping) <$> remoteAggField,
-            fmap (IR.AFArrayRelation . IR.ASConnection . IR.AnnRelationSelectG riName riMapping) <$> remoteConnectionField
+            fmap (IR.AFArrayRelation . IR.ASAggregate . IR.AnnRelationSelectG (riName ri) (riMapping ri)) <$> remoteAggField,
+            fmap (IR.AFArrayRelation . IR.ASConnection . IR.AnnRelationSelectG (riName ri) (riMapping ri)) <$> remoteConnectionField
           ]
 
 -- | Computed field parser

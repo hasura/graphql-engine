@@ -369,7 +369,7 @@ initialiseServeCtx env GlobalCtx {..} so@ServeOptions {..} = do
                   }
               sourceConnInfo = PostgresSourceConnInfo dbUrlConf (Just connSettings) (Q.cpAllowPrepare soConnParams) soTxIso Nothing
            in PostgresConnConfiguration sourceConnInfo Nothing
-      sqlGenCtx = SQLGenCtx soStringifyNum soDangerousBooleanCollapse
+      sqlGenCtx = SQLGenCtx soStringifyNum soDangerousBooleanCollapse soOptimizePermissionFilters
 
   let serverConfigCtx =
         ServerConfigCtx
@@ -657,7 +657,7 @@ mkHGEServer setupHook env ServeOptions {..} ServeCtx {..} initTime postPollHook 
   -- NOTE: be sure to compile WITHOUT code coverage, for this to work properly.
   liftIO disableAssertNF
 
-  let sqlGenCtx = SQLGenCtx soStringifyNum soDangerousBooleanCollapse
+  let sqlGenCtx = SQLGenCtx soStringifyNum soDangerousBooleanCollapse soOptimizePermissionFilters
       Loggers loggerCtx logger _ = _scLoggers
   --SchemaSyncCtx{..} = _scSchemaSyncCtx
 
