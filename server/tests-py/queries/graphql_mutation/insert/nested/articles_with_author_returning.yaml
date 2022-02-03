@@ -7,18 +7,18 @@ response:
       affected_rows: 2
       returning:
       - id: 5
-        title: Article by Author 5
+        title: Article by Author 3
         content: Content for Article 5
         tags: '[]'
         author:
-          id: 5
-          name: Author 5
+          id: 3
+          name: Author 3
           articles_aggregate:
             aggregate:
               count: 1
           articles:
           - id: 5
-            title: Article by Author 5
+            title: Article by Author 3
             content: Content for Article 5
 query:
   query: |
@@ -26,13 +26,12 @@ query:
       insert_article(
         objects: [{
           id: 5
-          title: "Article by Author 5"
+          title: "Article by Author 3"
           content: "Content for Article 5"
           tags: "[]"
           author: {
             data: {
-              id: 5
-              name: "Author 5"
+              name: "Author 3"
             }
           }
         }]

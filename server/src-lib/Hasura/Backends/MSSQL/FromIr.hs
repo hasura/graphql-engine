@@ -1,4 +1,5 @@
 {-# LANGUAGE ViewPatterns #-}
+{-# OPTIONS_HADDOCK ignore-exports #-}
 
 -- | Translate from the DML to the TSql dialect.
 --
@@ -37,6 +38,7 @@ module Hasura.Backends.MSSQL.FromIr
 where
 
 import Control.Monad.Validate
+import Data.Containers.ListUtils (nubOrd)
 import Data.HashMap.Strict qualified as HM
 import Data.Map.Strict (Map)
 import Data.Map.Strict qualified as M
@@ -44,7 +46,7 @@ import Data.Proxy
 import Data.Text qualified as T
 import Database.ODBC.SQLServer qualified as ODBC
 import Hasura.Backends.MSSQL.Instances.Types ()
-import Hasura.Backends.MSSQL.Types.Insert as TSQL (BackendInsert (..), IfMatched (..))
+import Hasura.Backends.MSSQL.Types.Insert as TSQL (IfMatched (..))
 import Hasura.Backends.MSSQL.Types.Internal as TSQL
 import Hasura.Backends.MSSQL.Types.Update as TSQL (BackendUpdate (..), Update (..))
 import Hasura.Prelude
@@ -1072,7 +1074,7 @@ fromGBoolExp =
 fromInsert :: IR.AnnInsert 'MSSQL Void Expression -> Insert
 fromInsert IR.AnnInsert {..} =
   let IR.AnnIns {..} = _aiData
-      insertRows = normalizeInsertRows (_biIdentityColumns _aiBackendInsert) _aiTableCols $ map (IR.getInsertColumns) _aiInsObj
+      insertRows = normalizeInsertRows $ map (IR.getInsertColumns) _aiInsObj
       insertColumnNames = maybe [] (map fst) $ listToMaybe insertRows
       insertValues = map (Values . map snd) insertRows
       allColumnNames = map (ColumnName . unName . IR.ciName) _aiTableCols
@@ -1080,36 +1082,37 @@ fromInsert IR.AnnInsert {..} =
       tempTable = TempTable tempTableNameInserted allColumnNames
    in Insert _aiTableName insertColumnNames insertOutput tempTable insertValues
 
--- | Normalize a row by adding missing columns with 'DEFAULT' value and sort by column name to make sure
--- all rows are consistent in column values and order.
+-- | Normalize a row by adding missing columns with @DEFAULT@ value and sort by
+-- column name to make sure all rows are consistent in column values and order.
 --
--- Example: A table "author" is defined as
+-- Example: A table "author" is defined as:
 --
---   CREATE TABLE author ([id] INTEGER NOT NULL PRIMARY KEY, name TEXT NOT NULL, age INTEGER)
+-- > CREATE TABLE author ([id] INTEGER NOT NULL PRIMARY KEY, name TEXT NOT NULL, age INTEGER)
 --
---  Consider the following mutation;
+-- Consider the following mutation:
 --
---   mutation {
---     insert_author(
---       objects: [{id: 1, name: "Foo", age: 21}, {id: 2, name: "Bar"}]
---     ){
---       affected_rows
---     }
---   }
+-- > mutation {
+-- >   insert_author(
+-- >     objects: [{id: 1, name: "Foo", age: 21}, {id: 2, name: "Bar"}]
+-- >   ){
+-- >     affected_rows
+-- >   }
+-- > }
 --
--- We consider 'DEFAULT' value for "age" column which is missing in second insert row. The INSERT statement look like
+-- We consider @DEFAULT@ value for @age@ column which is missing in second
+-- insert row.
 --
--- INSERT INTO author (id, name, age) OUTPUT INSERTED.id VALUES (1, 'Foo', 21), (2, 'Bar', DEFAULT)
+-- The corresponding @INSERT@ statement looks like:
+--
+-- > INSERT INTO author (id, name, age)
+-- >   OUTPUT INSERTED.id
+-- >   VALUES (1, 'Foo', 21), (2, 'Bar', DEFAULT)
 normalizeInsertRows ::
-  [ColumnName] ->
-  [IR.ColumnInfo 'MSSQL] ->
   [[(Column 'MSSQL, Expression)]] ->
   [[(Column 'MSSQL, Expression)]]
-normalizeInsertRows identityColumnNames tableColumns insertRows =
-  let isIdentityColumn column = IR.ciColumn column `elem` identityColumnNames
-      allColumnsWithDefaultValue =
-        -- DEFAULT or NULL are not allowed as explicit identity values.
-        map ((,DefaultExpression) . IR.ciColumn) $ filter (not . isIdentityColumn) tableColumns
+normalizeInsertRows insertRows =
+  let insertColumns = nubOrd (concatMap (map fst) insertRows)
+      allColumnsWithDefaultValue = map (,DefaultExpression) $ insertColumns
       addMissingColumns insertRow =
         HM.toList $ HM.fromList insertRow `HM.union` HM.fromList allColumnsWithDefaultValue
       sortByColumn = sortBy (\l r -> compare (fst l) (fst r))
@@ -1121,16 +1124,13 @@ normalizeInsertRows identityColumnNames tableColumns insertRows =
 toMerge ::
   TableName ->
   [IR.AnnotatedInsertRow 'MSSQL Expression] ->
-  [ColumnName] ->
   [IR.ColumnInfo 'MSSQL] ->
   IfMatched Expression ->
   FromIr Merge
-toMerge tableName insertRows identityColumnNames tableColumns IfMatched {..} = do
-  let normalizedInsertRows =
-        normalizeInsertRows identityColumnNames tableColumns $
-          map (IR.getInsertColumns) insertRows
+toMerge tableName insertRows allColumns IfMatched {..} = do
+  let normalizedInsertRows = normalizeInsertRows $ map (IR.getInsertColumns) insertRows
       insertColumnNames = maybe [] (map fst) $ listToMaybe normalizedInsertRows
-      allColumnNames = map (ColumnName . unName . IR.ciName) tableColumns
+      allColumnNames = map (ColumnName . unName . IR.ciName) allColumns
 
   matchConditions <-
     flip runReaderT (EntityAlias "target") $ -- the table is aliased as "target" in MERGE sql
@@ -1139,7 +1139,7 @@ toMerge tableName insertRows identityColumnNames tableColumns IfMatched {..} = d
   pure $
     Merge
       { mergeTargetTable = tableName,
-        mergeUsing = MergeUsing tempTableNameValues allColumnNames,
+        mergeUsing = MergeUsing tempTableNameValues insertColumnNames,
         mergeOn = MergeOn _imMatchColumns,
         mergeWhenMatched = MergeWhenMatched _imUpdateColumns matchConditions _imColumnPresets,
         mergeWhenNotMatched = MergeWhenNotMatched insertColumnNames,
@@ -1157,7 +1157,7 @@ toMerge tableName insertRows identityColumnNames tableColumns IfMatched {..} = d
 toInsertValuesIntoTempTable :: TempTableName -> IR.AnnInsert 'MSSQL Void Expression -> InsertValuesIntoTempTable
 toInsertValuesIntoTempTable tempTable IR.AnnInsert {..} =
   let IR.AnnIns {..} = _aiData
-      insertRows = normalizeInsertRows (_biIdentityColumns _aiBackendInsert) _aiTableCols $ map IR.getInsertColumns _aiInsObj
+      insertRows = normalizeInsertRows $ map IR.getInsertColumns _aiInsObj
       insertColumnNames = maybe [] (map fst) $ listToMaybe insertRows
       insertValues = map (Values . map snd) insertRows
    in InsertValuesIntoTempTable

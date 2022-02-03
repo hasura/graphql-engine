@@ -6,11 +6,9 @@ query:
     mutation{
       insert_test_types(
         objects: [
-          { c_pkey: 1
-          , c13_text: "one"
+          { c13_text: "one"
           },
-          { c_pkey: 2
-          , c13_text: "two"
+          { c13_text: "two"
           }
         ]
       ){

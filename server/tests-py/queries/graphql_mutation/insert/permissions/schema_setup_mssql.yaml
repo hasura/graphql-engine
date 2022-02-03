@@ -13,7 +13,7 @@ args:
 
       CREATE TABLE article (
           id int identity NOT NULL PRIMARY KEY,
-          title TEXT,
+          title varchar(100),
           content TEXT,
           author_id INTEGER REFERENCES author(id),
           is_published bit,

@@ -6,8 +6,7 @@ query:
     mutation {
       insert_test_types(
         objects: [
-          { c_pkey: 1
-          , c1_smallint: 3277
+          { c1_smallint: 3277
           , c2_integer: 2147483647
           , c4_decimal: 123.45
           , c5_numeric: 1.234

@@ -230,8 +230,8 @@ buildInsPermInfo source tn fieldInfoMap (PermDef _rn (InsPerm checkCond set mCol
     return (InsPermInfo (HS.fromList insColsWithoutPresets) be setColsSQL backendOnly reqHdrs, deps)
   where
     backendOnly = Just True == mBackendOnly
-    allCols = map ciColumn $ getCols fieldInfoMap
-    insCols = maybe allCols (convColSpec fieldInfoMap) mCols
+    allInsCols = map ciColumn $ filter (_cmIsInsertable . ciMutability) $ getCols fieldInfoMap
+    insCols = interpColSpec allInsCols (fromMaybe PCStar mCols)
     relInInsErr = "Only table columns can have insert permissions defined, not relationships or other field types"
 
 instance IsPerm InsPerm where
@@ -251,7 +251,7 @@ buildSelPermInfo ::
   SelPerm b ->
   m (WithDeps (SelPermInfo b))
 buildSelPermInfo source tn fieldInfoMap sp = withPathK "permission" $ do
-  let pgCols = convColSpec fieldInfoMap $ spColumns sp
+  let pgCols = interpColSpec (map ciColumn $ (getCols fieldInfoMap)) $ spColumns sp
 
   (boolExp, boolExpDeps) <-
     withPathK "filter" $
@@ -338,7 +338,7 @@ buildUpdPermInfo source tn fieldInfoMap (UpdPerm colSpec set fltr check) = do
                 <<> " is not updatable and so cannot have update permissions defined"
             )
 
-  let updColDeps = map (mkColDep @b DRUntyped source tn) updCols
+  let updColDeps = map (mkColDep @b DRUntyped source tn) allUpdCols
       deps = mkParentDep @b source tn : beDeps ++ maybe [] snd checkExpr ++ updColDeps ++ setColDeps
       depHeaders = getDependentHeaders fltr
       reqHeaders = depHeaders `HS.union` (HS.fromList setHeaders)
@@ -346,7 +346,8 @@ buildUpdPermInfo source tn fieldInfoMap (UpdPerm colSpec set fltr check) = do
 
   return (UpdPermInfo (HS.fromList updColsWithoutPreSets) tn be (fst <$> checkExpr) setColsSQL reqHeaders, deps)
   where
-    updCols = convColSpec fieldInfoMap colSpec
+    allUpdCols = map ciColumn $ filter (_cmIsUpdatable . ciMutability) $ getCols fieldInfoMap
+    updCols = interpColSpec allUpdCols colSpec
     relInUpdErr = "Only table columns can have update permissions defined, not relationships or other field types"
 
 instance IsPerm UpdPerm where

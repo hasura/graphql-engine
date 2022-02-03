@@ -91,6 +91,7 @@ data SysColumn = SysColumn
     scUserTypeId :: Int,
     scIsNullable :: Bool,
     scIsIdentity :: Bool,
+    scIsComputed :: Bool,
     scJoinedSysType :: SysType,
     scJoinedForeignKeyColumns :: [SysForeignKeyColumn]
   }
@@ -171,7 +172,8 @@ transformColumn columnInfo =
               _fkColumnMapping = HM.singleton rciName $ ColumnName $ sfkcJoinedReferencedColumnName foreignKeyColumn
            in ForeignKey {..}
 
-      rciMutability = ColumnMutability {_cmIsInsertable = True, _cmIsUpdatable = True}
+      colIsImmutable = scIsComputed columnInfo || scIsIdentity columnInfo
+      rciMutability = ColumnMutability {_cmIsInsertable = not colIsImmutable, _cmIsUpdatable = not colIsImmutable}
    in (RawColumnInfo {..}, foreignKeys)
 
 transformPrimaryKey :: SysPrimaryKey -> PrimaryKey 'MSSQL (Column 'MSSQL)

@@ -68,32 +68,20 @@ executeInsert userInfo stringifyNum sourceConfig annInsert = do
 -- a. Create an empty temporary table with name #inserted to store affected rows (for the response)
 --
 --    > SELECT column1, column2 INTO #inserted FROM some_table WHERE (1 <> 1)
---    > UNION ALL SELECT column1, column2 FROM some_table;
+--    > UNION ALL SELECT column1, column2 FROM some_table WHERE (1 <> 1);
 --
--- c. If 'if_matched' is found: Use MERGE statment to perform upsert
---       c.1 Use #values temporary table to store input object values
+-- b. If 'if_matched' is found: Use MERGE statment to perform upsert
 --
---       > SELECT column1, column2 INTO #values FROM some_table WHERE (1 <> 1)
+--       b.1 Use #values temporary table to store input object values
 --
---       c.2 Before and after the insert, Set IDENTITY_INSERT to ON/OFF if any insert row contains
---           at least one identity column.
+--          > SELECT column1, column2 INTO #values FROM some_table WHERE (1 <> 1)
 --
---          > SET IDENTITY_INSERT #values ON;
---          > <INSERT>
---          > SET IDENTITY_INSERT #values OFF;
---
---       c.3 Insert input object values into the temporary table
+--       b.2 Insert input object values into the temporary table
 --
 --          > INSERT INTO #values (column1, column2) VALUES (value1, value2), (value3, value4)
 --
---       c.4 Before and after the MERGE, Set IDENTITY_INSERT to ON/OFF if any insert row contains
---           at least one identity column.
 --
---          > SET IDENTITY_INSERT some_table ON;
---          > <INSERT>
---          > SET IDENTITY_INSERT some_table OFF;
---
---       c.5 Generate an SQL Merge statement to perform either update or insert (upsert) to the table
+--       b.3 Generate an SQL Merge statement to perform either update or insert (upsert) to the table
 --
 --           > MERGE some_table AS [target]
 --           > USING (SELECT column1, column2 from #values) AS [source](column1, column2) ON ([target].column1 = [source].column1)
@@ -156,7 +144,10 @@ buildInsertTx tableName withAlias stringifyNum insert = do
   --
   -- Affected rows will be inserted into the #inserted temporary table regardless.
   case ifMatchedField of
-    Nothing -> buildRegularInsertTx tableName insert
+    Nothing -> do
+      -- Insert values into the table using INSERT query
+      let insertQuery = toQueryFlat $ TQ.fromInsert $ TSQL.fromInsert insert
+      Tx.unitQueryE fromMSSQLTxError insertQuery
     Just ifMatched -> buildUpsertTx tableName insert ifMatched
 
   -- Build a response to the user using the values in the temporary table named #inserted
@@ -170,21 +161,6 @@ buildInsertTx tableName withAlias stringifyNum insert = do
     throw400 PermissionError "check constraint of an insert permission has failed"
 
   pure $ encJFromText responseText
-
--- | Translate an IR Insert mutation into a simple insert SQL statement,
---   which is surrounded by @SET IDENTITY_INSERT <table> ON/OFF@ if needed.
---
---   Should be used as part of a bigger transaction in 'buildInsertTx'.
-buildRegularInsertTx :: TSQL.TableName -> AnnInsert 'MSSQL Void Expression -> Tx.TxET QErr IO ()
-buildRegularInsertTx tableName insert = do
-  let identityColumns = _biIdentityColumns $ _aiBackendInsert $ _aiData insert
-      insertColumns = concatMap (map fst . getInsertColumns) $ _aiInsObj $ _aiData insert
-  -- Set identity insert to ON/OFF before/after inserting into the table
-  -- if insert object contains identity columns
-  withIdentityInsert identityColumns insertColumns (RegularTableName tableName) $ do
-    -- Insert values into the table using INSERT query
-    let insertQuery = toQueryFlat $ TQ.fromInsert $ TSQL.fromInsert insert
-    Tx.unitQueryE fromMSSQLTxError insertQuery
 
 -- | Translates an IR IfMatched clause to SQL and
 --   builds a corresponding transaction to run against MS SQL Server.
@@ -200,64 +176,34 @@ buildRegularInsertTx tableName insert = do
 --   Should be used as part of a bigger transaction in 'buildInsertTx'.
 buildUpsertTx :: TSQL.TableName -> AnnInsert 'MSSQL Void Expression -> IfMatched Expression -> Tx.TxET QErr IO ()
 buildUpsertTx tableName insert ifMatched = do
-  let identityColumns = _biIdentityColumns $ _aiBackendInsert $ _aiData insert
-      insertColumns = concatMap (map fst . getInsertColumns) $ _aiInsObj $ _aiData insert
-      tableColumns = _aiTableCols $ _aiData insert
+  let insertColumnNames = concatMap (map fst . getInsertColumns) $ _aiInsObj $ _aiData insert
+      allTableColumns = _aiTableCols $ _aiData insert
+      insertColumns = filter (\c -> ciColumn c `elem` insertColumnNames) allTableColumns
       createValuesTempTableQuery =
         toQueryFlat $
           TQ.fromSelectIntoTempTable $
             -- We want to KeepConstraints here so the user can omit values for identity columns such as `id`
-            TSQL.toSelectIntoTempTable tempTableNameValues tableName tableColumns KeepConstraints
+            TSQL.toSelectIntoTempTable tempTableNameValues tableName insertColumns KeepConstraints
   -- Create #values temporary table
   Tx.unitQueryE fromMSSQLTxError createValuesTempTableQuery
 
-  -- Set identity insert to ON if insert object contains identity columns for temporary #values table
-  withIdentityInsert identityColumns insertColumns (TemporaryTableName tempTableNameValues) $ do
-    -- Store values in #values temporary table
-    let insertValuesIntoTempTableQuery =
-          toQueryFlat $
-            TQ.fromInsertValuesIntoTempTable $
-              TSQL.toInsertValuesIntoTempTable tempTableNameValues insert
-    Tx.unitQueryE fromMSSQLTxError insertValuesIntoTempTableQuery
+  -- Store values in #values temporary table
+  let insertValuesIntoTempTableQuery =
+        toQueryFlat $
+          TQ.fromInsertValuesIntoTempTable $
+            TSQL.toInsertValuesIntoTempTable tempTableNameValues insert
+  Tx.unitQueryE fromMSSQLTxError insertValuesIntoTempTableQuery
 
-  -- Set identity insert to ON if insert object contains identity columns
-  -- before inserting into the original table
-  withIdentityInsert identityColumns insertColumns (RegularTableName tableName) $ do
-    -- Run the MERGE query and store the mutated rows in #inserted temporary table
-    merge <-
-      (V.runValidate . runFromIr)
-        (toMerge tableName (_aiInsObj $ _aiData insert) identityColumns tableColumns ifMatched)
-        `onLeft` (throw500 . tshow)
-    let mergeQuery = toQueryFlat $ TQ.fromMerge merge
-    Tx.unitQueryE fromMSSQLTxError mergeQuery
+  -- Run the MERGE query and store the mutated rows in #inserted temporary table
+  merge <-
+    (V.runValidate . runFromIr)
+      (toMerge tableName (_aiInsObj $ _aiData insert) allTableColumns ifMatched)
+      `onLeft` (throw500 . tshow)
+  let mergeQuery = toQueryFlat $ TQ.fromMerge merge
+  Tx.unitQueryE fromMSSQLTxError mergeQuery
 
   -- After @MERGE@ we no longer need this temporary table
   Tx.unitQueryE fromMSSQLTxError $ toQueryFlat $ dropTempTableQuery tempTableNameValues
-
--- | Sets @IDENTITY_INSERT@ to ON before running some statements and afterwards OFF
---   if there are identity columns in the table.
---
---   This is done so we can insert identity columns explicitly.
-withIdentityInsert :: [ColumnName] -> [ColumnName] -> SomeTableName -> Tx.TxET QErr IO a -> Tx.TxET QErr IO a
-withIdentityInsert identityColumns insertColumns table statements = do
-  let setIdentityInsertIf mode =
-        when (any (`elem` identityColumns) insertColumns) $
-          Tx.unitQueryE fromMSSQLTxError $
-            toQueryFlat $
-              TQ.fromSetIdentityInsert $ SetIdentityInsert table mode
-
-  -- Set identity insert to ON if insert object contains identity columns
-  setIdentityInsertIf SetON
-
-  -- Run the statements that should run while @IDENTITY_INSERT@ is set to ON
-  result <- statements
-
-  -- Set identity insert to OFF if insert object contains identity columns,
-  -- because only one table can have @IDENTITY_INSERT@ set to ON in a session :(
-  -- See https://stackoverflow.com/questions/23832598/identity-insert-is-already-on-for-table-x-cannot-perform-set-operation-for-ta
-  setIdentityInsertIf SetOFF
-
-  pure result
 
 -- | Builds a response to the user using the values in the temporary table named #inserted.
 buildInsertResponseTx :: Bool -> Text -> AnnInsert 'MSSQL Void Expression -> Tx.TxET QErr IO (Text, Int)

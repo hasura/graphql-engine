@@ -102,6 +102,11 @@ count (
 - cli: fix regression in `migrate create` command (#7971)
 - cli: stop using `/healthz` endpoint to determine server health
 - cli: fix regression with `--address` flag of `hasura console` command (#8005)
+- server: (Postgres, Citus, and MSSQL backends) Identity columns and computed
+  columns are now marked immutable, removing them from the schema of insert and
+  update mutations.
+- server: Fix graphql-engine/issues/4633: We can now insert multiple objects
+  that have generated columns in Postgres.
 
 ## v2.1.1
 

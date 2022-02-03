@@ -33,7 +33,7 @@ args:
         )
       ;
 
-      INSERT INTO orders (placed)
+      INSERT INTO orders (id, placed)
         VALUES
-        ('2017-08-19 14:22:11')
+        (1, '2017-08-19 14:22:11')
       ;

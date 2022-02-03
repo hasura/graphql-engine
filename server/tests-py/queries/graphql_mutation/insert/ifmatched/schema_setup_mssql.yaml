@@ -20,11 +20,11 @@ args:
         published_on DATETIME
       );
       CREATE TABLE person (
-        id INT IDENTITY PRIMARY KEY,
+        id INT PRIMARY KEY,
         details TEXT NOT NULL
       );
       CREATE TABLE orders (
-        id INT IDENTITY PRIMARY KEY,
+        id INT PRIMARY KEY,
         placed DATETIME NOT NULL,
         shipped DATETIME
       );

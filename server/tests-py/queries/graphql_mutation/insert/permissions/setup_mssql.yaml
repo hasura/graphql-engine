@@ -42,7 +42,7 @@ args:
     args:
       source: mssql
       table: article
-      role: user_with_select_and_inesrt
+      role: user_with_select_and_insert
       permission:
         columns: '*'
         filter:

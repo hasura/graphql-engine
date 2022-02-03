@@ -6,3 +6,4 @@ args:
     source: mssql
     sql: |
       delete from test_types;
+      DBCC CHECKIDENT ('test_types', RESEED, 0);

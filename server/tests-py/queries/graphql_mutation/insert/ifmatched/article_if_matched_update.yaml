@@ -16,15 +16,15 @@ query:
         objects: [
           {
             content: "Updated Article 1 content",
-            id: 1
+            title: "Article 1"
           },
           {
             content: "Updated Article 2 content",
-            id: 2
+            title: "Article 2"
           }
           ],
         if_matched: {
-          match_columns: id,
+          match_columns: title,
           update_columns: content
         }
       ) {

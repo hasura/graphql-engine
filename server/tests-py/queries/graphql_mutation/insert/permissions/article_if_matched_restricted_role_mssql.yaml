@@ -15,13 +15,13 @@
         insert_article (
           objects: [
             {
-              id: 1
+              title: "Article 1"
               content: "Updated Article 1 content"
               author_id: 1
             }
             ],
           if_matched: {
-            match_columns: id
+            match_columns: title
             update_columns: []
           }
         ) {

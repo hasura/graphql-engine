@@ -172,7 +172,12 @@ convInsertQuery objsParser sessVarBldr prepFn (InsertQuery tableName _ val oC mR
 
   let mutOutput = mkDefaultMutFlds mAnnRetCols
 
-  let defInsVals = HM.fromList [(column, S.columnDefaultValue) | column <- ciColumn <$> getCols fieldInfoMap]
+  let defInsVals =
+        HM.fromList
+          [ (ciColumn column, S.columnDefaultValue)
+            | column <- getCols fieldInfoMap,
+              _cmIsInsertable (ciMutability column)
+          ]
       allCols = getCols fieldInfoMap
       insCols = HM.keys defInsVals
 
