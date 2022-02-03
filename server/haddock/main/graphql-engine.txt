@@ -22875,6 +22875,8 @@ UrlInterpError :: RenderedError -> TestTransformError
 RequestInitializationError :: HttpException -> TestTransformError
 RequestTransformationError :: Request -> TransformErrorBundle -> TestTransformError
 runTestWebhookTransform :: QErrM m => TestWebhookTransform -> m EncJSON
+parseEnvTemplate :: Parser [Either Text Text]
+indistinct :: Either a a -> a
 packTransformResult :: Request -> Value -> EncJSON
 
 module Hasura.Backends.Postgres.DDL.RunSQL
