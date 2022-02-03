@@ -17,7 +17,7 @@ Introduction
 
 Hasura Cloud can load balance queries and subscriptions across *read replicas* while sending all mutations and metadata API calls to the primary.
 
-Adding read replica urls
+Adding read replica URLs
 ------------------------
 
 Postgres
