@@ -87,6 +87,7 @@ For postgres tests, you will want to run `setup.yaml` and maybe `values_setup.ya
 We will setup an api call to graphql-engine per setup file:
 
 ```sh
+cat server/tests-py/queries/graphql_query/basic/schema_setup.yaml | yaml2json | curl -d @- localhost:8181/v1/query
 cat server/tests-py/queries/graphql_query/basic/schema_setup_mssql.yaml | yaml2json | curl -d @- localhost:8181/v2/query
 cat server/tests-py/queries/graphql_query/basic/setup_mssql.yaml | yaml2json | curl -d @- localhost:8181/v1/metadata
 ```
@@ -125,6 +126,7 @@ But it is also possible to run the teardown files against graphql-engine. Like t
 ```sh
 cat server/tests-py/queries/graphql_query/basic/teardown_mssql.yaml | yaml2json | curl -d @- localhost:8181/v1/metadata
 cat server/tests-py/queries/graphql_query/basic/schema_teardown_mssql.yaml | yaml2json | curl -d @- localhost:8181/v2/query
+cat server/tests-py/queries/graphql_query/basic/schema_teardown.yaml | yaml2json | curl -d @- localhost:8181/v1/query
 ```
 
 ## Run a remote MSSQL instance with dev.sh
