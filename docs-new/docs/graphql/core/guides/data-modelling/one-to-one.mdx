@@ -204,7 +204,7 @@ You can avoid the `on_conflict` clause if you will never have conflicts.
 
 ### Caveat for nested inserts
 
-Due to the way nested inserts are typically handled (described [here](/graphql/core/databases/postgres/mutations/insert.mdx/#pg-nested-inserts)), the order of object insertion needs to be
+Due to the way nested inserts are typically handled (described [here](/graphql/core/databases/postgres/mutations/insert.mdx#pg-nested-inserts)), the order of object insertion needs to be
 specified using the [insertion_order](/graphql/core/api-reference/syntax-defs.mdx#objrelusingmanualmapping) option
 while creating one-to-one relationships via the API. This is necessary
 to ensure nested inserts are possible using either side as the parent
