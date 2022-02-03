@@ -9,8 +9,8 @@ keywords:
 sidebar_position: 4
 ---
 
-import Tabs from '@theme/Tabs';
-import TabItem from '@theme/TabItem';
+import Tabs from "@theme/Tabs"
+import TabItem from "@theme/TabItem"
 import GraphiQLIDE from "@site/src/components/GraphiQLIDE/GraphiQLIDE"
 
 # Inherited roles
@@ -163,25 +163,25 @@ The other parameters of the select permission will be combined in the
 following manner:
 
 1. Limit - Maximum of the limits will be the limit of the inherited
-    role
+   role
 2. Allow aggregations - If any of the role allows aggregation, then the
-    inherited role will allow aggregation
+   inherited role will allow aggregation
 3. Scalar computed fields - same as table column fields, as in the
-    above example
+   above example
 
 #### Accessibility of a field for an inherited role
 
 Accessibility of a field for an inherited role is defined as follows:
 
 1. When all the roles give access to a column `C`, then `C` will always
-    be accessible.
+   be accessible.
 2. When not all, but some of the roles give access to the column `C`
-    then the value of the column `C` will be outputed when the OR of
-    `P1,P2....P(n)` is `true` and when it evaluates to `false`, the
-    value of the column `C` will be `null`, where `P` is the row filter
-    of the select permissions in which column `C` is given access to.
+   then the value of the column `C` will be outputed when the OR of
+   `P1,P2....P(n)` is `true` and when it evaluates to `false`, the
+   value of the column `C` will be `null`, where `P` is the row filter
+   of the select permissions in which column `C` is given access to.
 3. When none of the roles give access to column `C`, it won't be
-    accessible to the inherited role.
+   accessible to the inherited role.
 
 #### Examples
 
@@ -194,10 +194,10 @@ Let's take the example of an `users` table with the following columns:
 There are two roles defined namely `employee` and `manager`.
 
 1. User role - The user role will be able to access all columns of
-    their row when the session variable `X-Hasura-User-Id` is equal to
-    the `id`.
+   their row when the session variable `X-Hasura-User-Id` is equal to
+   the `id`.
 2. Anonymous role - The anonymous role will be able to access only the
-    `id` and `name` columns of all the users.
+   `id` and `name` columns of all the users.
 
 Let's create a new inherited role called `user_anonymous_inherited_role`
 which inherits from the `user` and the `anonymous` roles.
@@ -212,23 +212,21 @@ X-Hasura-User-Id: 1
 ```
 
 <GraphiQLIDE
-  query={
-`query {
-	users {
-		id
-		name
-		email
-	}
+  query={`query {
+  users {
+    id
+    name
+    email
+  }
  }`}
-  response={
- `{
+  response={`{
   "data": {
     "users": [
-			{
-				"id": 1,
-				"name": "alice",
-				"email": "alice@xyz.com"
-			}
+      {
+        "id": 1,
+        "name": "alice",
+        "email": "alice@xyz.com"
+      }
     ]
     }
  }`}
@@ -243,28 +241,26 @@ X-Hasura-Role: anonymous
 ```
 
 <GraphiQLIDE
-  query={
- `query {
-	users {
-		id
-		name
-	}
+  query={`query {
+  users {
+    id
+    name
+  }
  }`}
-  response={
- `{
+  response={`{
   "data": {
     "users": [
     {
-			"id": 1,
-			"name": "Alice"
+      "id": 1,
+      "name": "Alice"
     },
     {
-			"id": 2,
-			"name": "Bob"
+      "id": 2,
+      "name": "Bob"
     },
     {
-			"id": 3,
-			"name": "Sam"
+      "id": 3,
+      "name": "Sam"
     }
     ]
   }
@@ -281,32 +277,30 @@ X-Hasura-User-Id: 1
 ```
 
 <GraphiQLIDE
-  query={
- `query {
-	users {
-		id
-		name
-		email
-	}
+  query={`query {
+  users {
+    id
+    name
+    email
+  }
  }`}
-  response={
- `{
+  response={`{
   "data": {
     "users": [
     {
-			"id": 1,
-			"name": "Alice",
-			"email": "alice@xyz.com"
+      "id": 1,
+      "name": "Alice",
+      "email": "alice@xyz.com"
     },
     {
-			"id": 2,
-			"name": "Bob",
-			"email": null
+      "id": 2,
+      "name": "Bob",
+      "email": null
     },
     {
-			"id": 3,
-			"name": "Sam",
-			"email": null
+      "id": 3,
+      "name": "Sam",
+      "email": null
     }
     ]
   }
@@ -326,13 +320,13 @@ executed as the `user` role and the other rows are executed as the
 `anonymous` role which is why the value is `null`.
 
 4. Suppose we have two tables `users` and `authors` and similarly two
-    roles `user` and `author` are defined. The `user` role doesn't have
-    permission to query the `authors` table and the `author` role
-    doesn't have permission to query the `users` table. With only the
-    `user` and the `author` role, we won't be able to construct a query
-    which fetches data from both the tables. This can be solved by
-    creating an inherited role out of `user` and `author` which can
-    query both the tables in a single query.
+   roles `user` and `author` are defined. The `user` role doesn't have
+   permission to query the `authors` table and the `author` role
+   doesn't have permission to query the `users` table. With only the
+   `user` and the `author` role, we won't be able to construct a query
+   which fetches data from both the tables. This can be solved by
+   creating an inherited role out of `user` and `author` which can
+   query both the tables in a single query.
 
 ```http
 POST /v1/graphql HTTP/1.1
@@ -342,40 +336,37 @@ X-Hasura-User-Id: 1
 ```
 
 <GraphiQLIDE
-  query={
- `query {
-	users {
-		id
-		name
-		email
-	}
-	authors {
-		id
-		name
-		followers
-	}
+  query={`query {
+  users {
+    id
+    name
+    email
+  }
+  authors {
+    id
+    name
+    followers
+  }
  }`}
-  response={
- `{
+  response={`{
   "data": {
     "users": [
     {
-			"id": 1,
-			"name": "Alice",
-			"email": "alice@xyz.com"
+      "id": 1,
+      "name": "Alice",
+      "email": "alice@xyz.com"
     }
     ],
     "authors": [
     {
-			"id": 1,
-			"name": "Paulo Coelho",
-			"followers": 10382193
+      "id": 1,
+      "name": "Paulo Coelho",
+      "followers": 10382193
     }
     ]
   }
  }`}
 />
-
 
 ### 2. Mutation and Remote Schema permissions
 
@@ -392,39 +383,39 @@ way:
 
 1. insert permission of role `pr1`
 
-    ```json
-    {
-        "type" : "pg_create_insert_permission",
-        "args" : {
-            "table" : "article",
-            "source": "default",
-            "role" : "pr1",
-            "permission" : {
-                "check" : {
-                    "author_id" : "X-HASURA-AUTHOR-ID"
-                }
-            }
-        }
-    }
-    ```
+   ```json
+   {
+     "type": "pg_create_insert_permission",
+     "args": {
+       "table": "article",
+       "source": "default",
+       "role": "pr1",
+       "permission": {
+         "check": {
+           "author_id": "X-HASURA-AUTHOR-ID"
+         }
+       }
+     }
+   }
+   ```
 
-2.  insert permission of the role `pr2`
+2. insert permission of the role `pr2`
 
-    ```json
-    {
-        "type" : "pg_create_insert_permission",
-        "args" : {
-            "table" : "article",
-            "source": "default",
-            "role" : "pr2",
-            "permission" : {
-                "check" : {
-                    "author_id" : "X-HASURA-USER-ID"
-                }
-            }
-        }
-    }
-    ```
+   ```json
+   {
+     "type": "pg_create_insert_permission",
+     "args": {
+       "table": "article",
+       "source": "default",
+       "role": "pr2",
+       "permission": {
+         "check": {
+           "author_id": "X-HASURA-USER-ID"
+         }
+       }
+     }
+   }
+   ```
 
 The `check` constraint is different in both the permissions and there's
 no way to resolve this conflict.
