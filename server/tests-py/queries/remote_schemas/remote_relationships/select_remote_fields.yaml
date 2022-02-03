@@ -4,7 +4,7 @@ status: 200
 response:
   data:
     __type:
-      name: profiles
+      name: custom_profiles
       fields:
       - name: id
         args: []
@@ -17,13 +17,13 @@ response:
             name: IncludeInpObj
         - name: where
           type:
-            name: MessageWhereInpObj_remote_rel_profilesmessagesNestedArgs
+            name: MessageWhereInpObj_remote_rel_custom_profilesmessagesNestedArgs
       - name: name
         args: []
 query:
   query: |
     query {
-      __type(name: "profiles") {
+      __type(name: "custom_profiles") {
         name
         fields {
           name

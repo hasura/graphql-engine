@@ -134,6 +134,8 @@ resolveDatabaseMetadata ::
   SourceTypeCustomization ->
   m (Either QErr (ResolvedSource ('Postgres pgKind)))
 resolveDatabaseMetadata sourceConfig sourceCustomization = runExceptT do
+  runTx (_pscExecCtx sourceConfig) Q.ReadWrite ensureMetadataSupportingDefinitions
+
   (tablesMeta, functionsMeta, pgScalars) <- runTx (_pscExecCtx sourceConfig) Q.ReadOnly $ do
     tablesMeta <- fetchTableMetadata
     functionsMeta <- fetchFunctionMetadata
@@ -291,6 +293,11 @@ upMigrationsUntil43 =
              ++ [|(3, from3To4)|] :
            (migrationsFromFile [5 .. 40]) ++ migrationsFromFile [42 .. 43]
    )
+
+-- | Ensure that the supporting definitions used in metadata fetching have been
+-- loaded.
+ensureMetadataSupportingDefinitions :: forall m. MonadTx m => m ()
+ensureMetadataSupportingDefinitions = liftTx $ Q.multiQE defaultTxErrorHandler $(makeRelativeToProject "src-rsr/pg_metadata_lib.sql" >>= Q.sqlFromFile)
 
 -- | Fetch Postgres metadata of all user tables
 fetchTableMetadata ::

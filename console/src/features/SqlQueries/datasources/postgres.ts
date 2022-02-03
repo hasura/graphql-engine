@@ -1,4 +1,5 @@
 import type { TableORSchemaArg } from '@/dataSources/types';
+import { QualifiedTable } from '@/metadata/types';
 import type { DatasourceSqlQueries } from '.';
 import { getSchemasWhereClause, getTablesWhereClause } from './common';
 
@@ -36,6 +37,12 @@ const getKeysSql = (
           tc.constraint_schema,
           tc.constraint_name) AS info;
   `;
+
+const getTableColumnsSql = ({ name, schema }: QualifiedTable) => {
+  if (!name || !schema) throw Error('empty parameters are not allowed!');
+
+  return `SELECT table_catalog as database, table_schema, table_name, column_name, data_type FROM information_schema.columns WHERE table_schema = '${schema}' AND table_name  = '${name}';`;
+};
 
 export const postgresSqlQueries: DatasourceSqlQueries = {
   getFetchTablesListQuery(options: TableORSchemaArg): string {
@@ -269,4 +276,5 @@ GROUP BY
   q.constraint_name
   ) AS info;`;
   },
+  getTableColumnsSql,
 };

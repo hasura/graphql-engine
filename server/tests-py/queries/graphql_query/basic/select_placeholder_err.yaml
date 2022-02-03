@@ -1,0 +1,15 @@
+description: In schemas with at least one available query, the placeholder query should not be present.
+url: /v1/graphql
+status: 200
+response:
+  errors:
+  - extensions:
+      code: validation-failed
+      path: $.selectionSet.no_queries_available
+    message: |-
+      field "no_queries_available" not found in type: 'query_root'
+query:
+  query: |
+    query {
+      no_queries_available
+    }

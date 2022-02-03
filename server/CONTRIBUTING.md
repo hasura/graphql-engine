@@ -5,9 +5,9 @@ own machine and how to contribute.
 
 ## Pre-requisites
 
-- [GHC](https://www.haskell.org/ghc/) 8.10.2 and [cabal-install](https://cabal.readthedocs.io/en/latest/)
+- [GHC](https://www.haskell.org/ghc/) 8.10.7 and [cabal-install](https://cabal.readthedocs.io/en/latest/)
   - There are various ways these can be installed, but [ghcup](https://www.haskell.org/ghcup/) is a good choice if you’re not sure.
-- There are few system packages required like `libpq-dev`, `libssl-dev`, etc. The best place to get the entire list is from the packager [Dockerfile](https://github.com/hasura/graphql-engine/blob/master/.circleci/server-builder.dockerfile)
+- There are few system packages required like `libpq-dev`, `libssl-dev`, etc. The best place to get the entire list is from the packager [Dockerfile](../.buildkite/dockerfiles/ci-builders/server-builder.dockerfile)
 
 For building console and running test suite:
 
@@ -140,6 +140,29 @@ scripts/dev.sh test --integration
 For more details please check out the `README` at `server/tests-py/README`.
 
 ##### Running the Haskell test suite
+
+There are three categories of unit tests:
+- true unit tests
+- Postgres unit tests (require a postgres instance)
+- MSSQL unit tests (require a MSSQL instance)
+
+The easiest way to run these tests is through `dev.sh`:
+
+```
+./scripts/dev.sh test --unit
+```
+
+If you want to limit to a specific set of tests:
+
+```
+./scripts/dev.sh test --unit --match "some pattern" mssql
+```
+
+Note that you have to use one of 'unit', 'postgres' or 'mssql' when
+using '--match'. There is no way to match without specifying the subset
+of tests to run.
+
+Alternatively, you can run unit tests directly through cabal:
 
 ```
 cabal new-run -- test:graphql-engine-tests unit

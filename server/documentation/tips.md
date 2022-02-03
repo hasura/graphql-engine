@@ -1,11 +1,17 @@
-<!-- markdown-toc start - Don't edit this section. Run M-x markdown-toc-refresh-toc -->
+<!--
+Please make sure you update the table of contents when modifying this file. If
+you're using emacs, you can generate a default version of it with `M-x
+markdown-toc-refresh-toc` (provided by the package markdown-toc), and then edit
+it for readability.
+-->
+
+<!-- markdown-toc start -->
 **Table of Contents**
 
-- [Tips and tricks](#tips-and-tricks)
-    - [Use curl and yaml2json to test the graphql-engine API directly](#use-curl-and-yaml2json-to-test-the-graphql-engine-api-directly)
-    - [Convert a test case to a live example](#convert-a-test-case-to-a-live-example)
-    - [Run a remote MSSQL instance with dev.sh](#run-a-remote-mssql-instance-with-devsh)
-    - [Add a unit test for SQL generation](#add-a-unit-test-for-sql-generation)
+- [Use curl and yaml2json to test the graphql-engine API directly](#use-curl-and-yaml2json-to-test-the-graphql-engine-api-directly)
+- [Convert a test case to a live example](#convert-a-test-case-to-a-live-example)
+- [Run a remote MSSQL instance with dev.sh](#run-a-remote-mssql-instance-with-devsh)
+- [Add a unit test for SQL generation](#add-a-unit-test-for-sql-generation)
 
 <!-- markdown-toc end -->
 
@@ -81,6 +87,7 @@ For postgres tests, you will want to run `setup.yaml` and maybe `values_setup.ya
 We will setup an api call to graphql-engine per setup file:
 
 ```sh
+cat server/tests-py/queries/graphql_query/basic/schema_setup.yaml | yaml2json | curl -d @- localhost:8181/v1/query
 cat server/tests-py/queries/graphql_query/basic/schema_setup_mssql.yaml | yaml2json | curl -d @- localhost:8181/v2/query
 cat server/tests-py/queries/graphql_query/basic/setup_mssql.yaml | yaml2json | curl -d @- localhost:8181/v1/metadata
 ```
@@ -119,6 +126,7 @@ But it is also possible to run the teardown files against graphql-engine. Like t
 ```sh
 cat server/tests-py/queries/graphql_query/basic/teardown_mssql.yaml | yaml2json | curl -d @- localhost:8181/v1/metadata
 cat server/tests-py/queries/graphql_query/basic/schema_teardown_mssql.yaml | yaml2json | curl -d @- localhost:8181/v2/query
+cat server/tests-py/queries/graphql_query/basic/schema_teardown.yaml | yaml2json | curl -d @- localhost:8181/v1/query
 ```
 
 ## Run a remote MSSQL instance with dev.sh

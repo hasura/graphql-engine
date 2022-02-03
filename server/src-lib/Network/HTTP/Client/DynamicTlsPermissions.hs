@@ -1,5 +1,5 @@
 module Network.HTTP.Client.DynamicTlsPermissions
-  ( mkMgr,
+  ( mkHttpManager,
   )
 where
 
@@ -30,10 +30,10 @@ instance Exception TlsServiceDefinitionError where
 errorE :: String -> c
 errorE = impureThrow . TlsServiceDefinitionError
 
--- | This mkMgr function takes a mechanism for finding the current allowlist,
+-- | This mkHttpManager function takes a mechanism for finding the current allowlist,
 -- Thus allowing it to be coupled from any ref type such as SchemaCacheRef.
-mkMgr :: IO [TlsAllow] -> IO HTTP.Manager
-mkMgr currentAllow = do
+mkHttpManager :: IO [TlsAllow] -> IO HTTP.Manager
+mkHttpManager currentAllow = do
   systemStore <- HTTP.getSystemCertificateStore
   let settings = HTTP.mkManagerSettings (tlsSettingsComplex systemStore) Nothing
   HTTP.newManager settings

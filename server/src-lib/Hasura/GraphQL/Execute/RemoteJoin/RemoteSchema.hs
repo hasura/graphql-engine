@@ -90,8 +90,12 @@ buildRemoteSchemaCall userInfo RemoteSchemaJoin {..} arguments = do
       for (Map.toList argument) $
         \(FieldName columnName, value) ->
           (,) <$> parseGraphQLName columnName <*> ordJSONValueToGValue value
-    let alias = G.unsafeMkName $ T.pack $ "f" <> show argumentId
-        responsePath = alias NE.:| map fcName (toList $ NE.tail _rsjFieldCall)
+    -- Creating the alias should never fail.
+    let aliasText = T.pack $ "f" <> show argumentId
+    alias <-
+      G.mkName aliasText
+        `onNothing` throw500 ("'" <> aliasText <> "' is not a valid GraphQL name!")
+    let responsePath = alias NE.:| map fcName (toList $ NE.tail _rsjFieldCall)
         rootField = fcName $ NE.head _rsjFieldCall
         resultCustomizer = applyAliasMapping (singletonAliasMapping rootField alias) _rsjResultCustomizer
     gqlField <- fieldCallsToField _rsjArgs graphqlArgs _rsjSelSet alias _rsjFieldCall

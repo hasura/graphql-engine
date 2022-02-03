@@ -3,6 +3,7 @@ module Hasura.HTTP
     HttpException (..),
     hdrsToText,
     addDefaultHeaders,
+    defaultHeaders,
     HttpResponse (..),
     addHttpResponseHeaders,
     getHTTPExceptionStatus,

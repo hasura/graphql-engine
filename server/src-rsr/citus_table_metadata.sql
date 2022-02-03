@@ -48,9 +48,25 @@ LEFT JOIN LATERAL
       'type', coalesce(base_type.typname, "type".typname),
       'is_nullable', NOT "column".attnotnull,
       'description', pg_catalog.col_description("table".oid, "column".attnum),
-      'mutability', jsonb_build_object('is_insertable', true, 'is_updatable', true)
+      'mutability', jsonb_build_object(
+        'is_insertable', NOT (identitypolyfill.attidentity = 'a' OR generatedpolyfill.attgenerated = 's'),
+        'is_updatable', NOT (identitypolyfill.attidentity = 'a' OR generatedpolyfill.attgenerated = 's'))
     )) AS info
     FROM pg_catalog.pg_attribute "column"
+    -- The columns 'pg_attribute.attidentity' and 'pg_attribute.attgenerated' are
+    -- not available in older versions of Postgres, because those versions do not
+    -- implement the concepts the catalog columns represent.
+    -- Therefore we define and use the polyfill functions
+    -- 'hdb_lib.pg_attidentity' and 'hdb_lib.pg_attgenerated', which ensure the
+    -- presence of these columns in this script.
+    INNER JOIN hdb_lib.pg_attidentity() identitypolyfill
+      ON identitypolyfill.attrelid = "column".attrelid
+      AND identitypolyfill.attnum = "column".attnum
+      AND identitypolyfill.attname = "column".attname
+    INNER JOIN hdb_lib.pg_attgenerated() generatedpolyfill
+      ON generatedpolyfill.attrelid = "column".attrelid
+      AND generatedpolyfill.attnum = "column".attnum
+      AND generatedpolyfill.attname = "column".attname
     LEFT JOIN pg_catalog.pg_type "type"
       ON "type".oid = "column".atttypid
     LEFT JOIN pg_catalog.pg_type base_type

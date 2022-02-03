@@ -88,11 +88,12 @@ const Permissions = ({
           if (role !== 'admin' && !readOnlyMode) {
             editIcon = getEditIcon();
 
+            className += styles.clickableCell;
+
             if (isCurrEdit) {
               onClick = dispatchCloseEdit;
               className += ` ${styles.currEdit}`;
             } else {
-              className += styles.clickableCell;
               onClick = dispatchOpenEdit(queryType);
             }
           }

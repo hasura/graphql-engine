@@ -3,7 +3,7 @@ url: /v1/graphql
 status: 200
 response:
   data:
-    profiles:
+    custom_profiles:
       - id: 1
         myAddresses:
           - address_line: "address-1"
@@ -33,7 +33,7 @@ response:
 query:
   query: |
     query {
-      profiles {
+      custom_profiles {
         id
         myAddresses {
           address_line

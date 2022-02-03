@@ -631,7 +631,16 @@ queryWithIntrospectionHelper ::
   Maybe (Parser 'Output n (RootFieldMap (QueryRootField UnpreparedValue))) ->
   m (Parser 'Output n (RootFieldMap (QueryRootField UnpreparedValue)))
 queryWithIntrospectionHelper basicQueryFP mutationP subscriptionP = do
-  basicQueryP <- queryRootFromFields basicQueryFP
+  let -- Per the GraphQL spec:
+      --  * "The query root operation type must be provided and must be an Object type." (§3.2.1)
+      --  * "An Object type must define one or more fields." (§3.6, type validation)
+      -- Those two requirements cannot both be met when a service is mutations-only, and does not
+      -- provide any query. In such a case, to meet both of those, we introduce a placeholder query
+      -- in the schema.
+      placeholderText = "There are no queries available to the current role. Either there are no sources or remote schemas configured, or the current role doesn't have the required permissions."
+      placeholderField = NotNamespaced (RFRaw $ JO.String placeholderText) <$ P.selection_ $$(G.litName "no_queries_available") (Just $ G.Description placeholderText) P.string
+      fixedQueryFP = if null basicQueryFP then [placeholderField] else basicQueryFP
+  basicQueryP <- queryRootFromFields fixedQueryFP
   let directives = directivesInfo @n
   -- We extract the types from the ordinary GraphQL schema (excluding introspection)
   allBasicTypes <-
@@ -668,7 +677,7 @@ queryWithIntrospectionHelper basicQueryFP mutationP subscriptionP = do
           }
   let buildIntrospectionResponse fromSchema = NotNamespaced $ RFRaw $ fromSchema partialSchema
       partialQueryFields =
-        basicQueryFP ++ (fmap buildIntrospectionResponse <$> introspection)
+        fixedQueryFP ++ (fmap buildIntrospectionResponse <$> introspection)
   P.safeSelectionSet queryRoot Nothing partialQueryFields <&> fmap (flattenNamespaces . fmap typenameToNamespacedRawRF)
 
 queryRootFromFields ::
