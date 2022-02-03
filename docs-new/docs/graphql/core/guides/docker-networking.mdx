@@ -1,0 +1,108 @@
+---
+description: Docker networking with Hasura
+keywords:
+  - hasura
+  - docs
+  - deployment
+  - network
+  - docker
+sidebar_position: 4
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+# Docker networking
+
+## Introduction
+
+Sometimes you might want to connect Hasura running in Docker with APIs
+(e.g. auth webhooks, event triggers, remote schemas) that are either
+running outside of Docker or in a different Docker container. Depending
+on the setting, the network config is different. This section shows how
+to connect in each of these use cases.
+
+## Network config
+
+<Tabs className="api-tabs">
+<TabItem value="linux" label="Linux">
+
+<table>
+<thead>
+<tr>
+<th>Connection</th>
+<th>Config</th>
+<th>Comment</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Hasura to API (outside Docker)</strong></td>
+<td><ol type="1">
+<li>With <code>--net=host</code>, <code>localhost:3000</code></li>
+<li>Otherwise, <code>&lt;docker-bridge-ip&gt;:3000</code>, e.g. <code>172.17.0.1:3000</code></li>
+</ol></td>
+<td><ol type="1">
+<li>Assuming the API is running on port <code>3000</code></li>
+<li>The Docker bridge IP can be found via <code>ifconfig</code></li>
+</ol></td>
+</tr>
+<tr>
+<td><strong>API (outside Docker) to Hasura</strong></td>
+<td><code>localhost:8080</code></td>
+<td>Hasura runs on port <code>8080</code> by default</td>
+</tr>
+<tr>
+<td><strong>Hasura to API (both in docker-compose)</strong></td>
+<td>service name, e.g.: <code>api:3000</code></td>
+<td>Assuming the API is running on port <code>3000</code></td>
+</tr>
+<tr>
+<td><strong>API to Hasura (both in docker-compose)</strong></td>
+<td>service name, e.g.: <code>hasura:8080</code></td>
+<td>Hasura runs on port <code>8080</code> by default</td>
+</tr>
+<tr>
+<td><strong>Hasura to API (both running with separate docker run)</strong></td>
+<td>Docker internal IP address</td>
+<td>Can be obtained with <code>docker inspect</code></td>
+</tr>
+<tr>
+<td><strong>API to Hasura (both running with separate docker run)</strong></td>
+<td>Docker internal IP address</td>
+<td>Can be obtained with <code>docker inspect</code></td>
+</tr>
+</tbody>
+</table>
+
+</TabItem>
+<TabItem value="mac" label="Mac">
+
+| Connection                                                | Config                            | Comment                                    |
+|-----------------------------------------------------------|-----------------------------------|--------------------------------------------|
+| **Hasura to API (outside Docker)**                        | `host.docker.internal:3000`       | Assuming the API is running on port `3000` |
+| **API (outside Docker) to Hasura**                        | `localhost:8080`                  | Hasura runs on port `8080` by default      |
+| **Hasura to API (both in docker-compose)**                | service name, e.g.: `api:3000`    | Assuming the API is running on port `3000` |
+| **API to Hasura (both in docker-compose)**                | service name, e.g.: `hasura:8080` | Hasura runs on port `8080` by default      |
+| **Hasura to API (both running with separate docker run)** | Docker internal IP address        | Can be obtained with `docker inspect`      |
+| **API to Hasura (both running with separate docker run)** | Docker internal IP address        | Can be obtained with `docker inspect`      |
+
+</TabItem>
+<TabItem value="windows" label="Windows">
+
+
+| Connection                                                | Config                            | Comment                                    |
+|-----------------------------------------------------------|-----------------------------------|--------------------------------------------|
+| **Hasura to API (outside Docker)**                        | `host.docker.internal:3000`       | Assuming the API is running on port `3000` |
+| **API (outside Docker) to Hasura**                        | `localhost:8080`                  | Hasura runs on port `8080` by default      |
+| **Hasura to API (both in docker-compose)**                | service name, e.g.: `api:3000`    | Assuming the API is running on port `3000` |
+| **API to Hasura (both in docker-compose)**                | service name, e.g.: `hasura:8080` | Hasura runs on port `8080` by default      |
+| **Hasura to API (both running with separate docker run)** | Docker internal IP address        | Can be obtained with `docker inspect`      |
+| **API to Hasura (both running with separate docker run)** | Docker internal IP address        | Can be obtained with `docker inspect`      |
+
+</TabItem>
+</Tabs>
+
+## Advanced
+
+Learn more about Docker specific networking in the [Docker documentation](https://docs.docker.com/network/).
