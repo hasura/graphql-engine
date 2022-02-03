@@ -41,7 +41,11 @@ function generateHeader() {
   # Find all places that mention the note. This will match the note itself, and
   # we will therefore only consider mentions is there's more than one. We filter
   # the "erroneous" mention when generating the list.
-  mentions=$(grep -inR "note \[$title\]" src-lib/ | cut -d ':' -f 1,2 || true)
+  # The sort expression is here to make sure the cross-references are always in
+  # the same order. We cut along the ':', and then sort first by filename, the
+  # first key, key "1,1", then by line number, the second key, "2n,2", using a
+  # numerical sort "n".
+  mentions=$(grep -inR "note \[$title\]" src-lib/ | cut -d : -f 1,2 | sort -t : -k 1,1 -k 2n,2 || true)
 
   echo "This note is in [$(filenameToModule "$filename")]($(toGithubLink "$filename" "$line"))."
   if [[ $(echo "$mentions" | wc -l) -gt 1 ]]; then
@@ -76,7 +80,7 @@ cat > "documentation/notes/README.md" <<EOF
 EOF
 
 # Iterate over files that contain a Note.
-grep -ERl "^{- Note \[" src-lib | while read -r file; do
+grep -ERl "^{- Note \[" src-lib | sort -u | while read -r file; do
   lc=0
   skip=0
   note=""
