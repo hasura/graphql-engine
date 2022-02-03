@@ -201,8 +201,8 @@ We can now:
 Caveat for nested inserts
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Due to the way nested inserts are typically handled (described [here](/graphql/core/databases/postgres/mutations/insert.mdx)),
-the order of object insertion needs to be specified using the [insertion_order](/graphql/core/api-reference/syntax-defs.mdx#objrelusingmanualmapping) option while
+Due to the way nested inserts are typically handled (described :ref:`here <pg_nested_inserts>`),
+the order of object insertion needs to be specified using the :ref:`insertion_order <ObjRelUsingManualMapping>` option while
 creating one-to-one relationships via the API. This is necessary to ensure nested inserts are possible
 using either side as the parent which would otherwise error out with a ``Not-NULL violation`` error in one of the cases.
 
