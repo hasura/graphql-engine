@@ -7,6 +7,7 @@ import Control.Arrow.Extended
 import Control.Lens hiding ((.=))
 import Data.Aeson
 import Data.HashMap.Strict.Extended qualified as M
+import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.HashSet qualified as HS
 import Data.List (nub)
 import Data.Monoid (First)
@@ -17,6 +18,7 @@ import Hasura.RQL.DDL.Network
 import Hasura.RQL.DDL.Schema.Cache.Common
 import Hasura.RQL.Types
 import Hasura.SQL.AnyBackend qualified as AB
+import Language.GraphQL.Draft.Syntax qualified as G
 
 -- | Processes collected 'CIDependency' values into a 'DepMap', performing integrity checking to
 -- ensure the dependencies actually exist. If a dependency is missing, its transitive dependents are
@@ -111,6 +113,18 @@ pruneDanglingDependents cache =
           Left $
             "no permission defined on remote schema " <> remoteSchemaName
               <<> " for role " <>> roleName
+      SORemoteSchemaRemoteRelationship remoteSchemaName typeName relationshipName -> do
+        remoteSchema <-
+          fmap fst $
+            onNothing (M.lookup remoteSchemaName $ _boRemoteSchemas cache) $
+              Left $ "remote schema " <> remoteSchemaName <<> " is not found"
+        void $
+          onNothing
+            (OMap.lookup typeName (_rscRemoteRelationships remoteSchema) >>= OMap.lookup relationshipName)
+            $ Left $
+              "remote relationship " <> relationshipName
+                <<> " on type " <> G.unName typeName <> " on " <> remoteSchemaName
+                <<> " is not found"
       SOSourceObj source exists -> do
         AB.dispatchAnyBackend @Backend exists $ \sourceObjId -> do
           sourceInfo <- castSourceInfo source sourceObjId
@@ -193,6 +207,8 @@ deleteMetadataObject = \case
   MOSourceObjId source exists -> AB.dispatchAnyBackend @Backend exists (\sourceObjId -> boSources %~ M.adjust (deleteObjId sourceObjId) source)
   MORemoteSchema name -> boRemoteSchemas %~ M.delete name
   MORemoteSchemaPermissions name role -> boRemoteSchemas . ix name . _1 . rscPermissions %~ M.delete role
+  MORemoteSchemaRemoteRelationship remoteSchema typeName relationshipName ->
+    boRemoteSchemas . ix remoteSchema . _1 . rscRemoteRelationships . ix typeName %~ OMap.delete relationshipName
   MOCronTrigger name -> boCronTriggers %~ M.delete name
   MOCustomTypes -> boCustomTypes %~ const emptyAnnotatedCustomTypes
   MOAction name -> boActions %~ M.delete name

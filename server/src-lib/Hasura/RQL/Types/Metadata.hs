@@ -22,6 +22,10 @@ module Hasura.RQL.Types.Metadata
     Permissions,
     QueryCollections,
     Relationships,
+    SchemaRemoteRelationships,
+    RemoteSchemaTypeRelationships (..),
+    rstrsName,
+    rstrsRelationships,
     RemoteSchemaMetadata (..),
     RemoteSchemaPermissionMetadata (..),
     RemoteSchemas,
@@ -90,7 +94,7 @@ module Hasura.RQL.Types.Metadata
     tmTable,
     tmUpdatePermissions,
     toSourceMetadata,
-    rsmRelationships,
+    rsmRemoteRelationships,
   )
 where
 
@@ -256,7 +260,7 @@ data RemoteSchemaMetadata = RemoteSchemaMetadata
     _rsmDefinition :: RemoteSchemaDef,
     _rsmComment :: Maybe Text,
     _rsmPermissions :: [RemoteSchemaPermissionMetadata],
-    _rsmRelationships :: SchemaRemoteRelationships
+    _rsmRemoteRelationships :: SchemaRemoteRelationships
   }
   deriving (Show, Eq, Generic)
 
@@ -278,9 +282,10 @@ instance ToJSON RemoteSchemaMetadata where
         "definition" .= _rsmDefinition,
         "comment" .= _rsmComment,
         "permissions" .= _rsmPermissions,
-        "remote_relationships" .= OM.elems _rsmRelationships
+        "remote_relationships" .= OM.elems _rsmRemoteRelationships
       ]
 
+$(makeLenses ''RemoteSchemaTypeRelationships)
 $(makeLenses ''RemoteSchemaMetadata)
 
 data TableMetadata b = TableMetadata
@@ -1038,7 +1043,7 @@ metadataToOrdJSON
                   permsToMaybeOrdJSON
                   permissions,
                 listToMaybeOrdPair
-                  "relationships"
+                  "remote_relationships"
                   AO.toOrdered
                   relationships
               ]

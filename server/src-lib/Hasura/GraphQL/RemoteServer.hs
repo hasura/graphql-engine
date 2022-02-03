@@ -166,6 +166,10 @@ fetchRemoteSchema env manager _rscName rsDef@ValidatedRemoteSchemaDef {..} = do
   validateSchemaCustomizations rsCustomizer (irDoc _rscIntroOriginal)
 
   let _rscInfo = RemoteSchemaInfo {..}
+
+  -- At this point, we can't resolve remote relationships; we store an empty map.
+  let _rscRemoteRelationships = mempty
+
   -- Check that the parsed GraphQL type info is valid by running the schema generation
   _rscParsed <- buildRemoteParser _rscIntroOriginal _rscInfo
 

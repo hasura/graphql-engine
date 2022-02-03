@@ -422,6 +422,8 @@ purgeMetadataObj = \case
   MOSourceObjId source exists -> AB.dispatchAnyBackend @BackendMetadata exists $ handleSourceObj source
   MORemoteSchema rsn -> dropRemoteSchemaInMetadata rsn
   MORemoteSchemaPermissions rsName role -> dropRemoteSchemaPermissionInMetadata rsName role
+  MORemoteSchemaRemoteRelationship rsName typeName relName ->
+    dropRemoteSchemaRemoteRelationshipInMetadata rsName typeName relName
   MOCustomTypes -> clearCustomTypesInMetadata
   MOAction action -> dropActionInMetadata action -- Nothing
   MOActionPermission action role -> dropActionPermissionInMetadata action role
