@@ -1,9 +1,9 @@
 This note is in [Control.Arrow.Extended](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Control/Arrow/Extended.hs#L282).
 It is referenced at:
-  - line 63 of [Hasura.Incremental.Internal.Rule](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/Incremental/Internal/Rule.hs#L63)
   - line 4 of [Control.Arrow.Extended](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Control/Arrow/Extended.hs#L4)
   - line 135 of [Control.Arrow.Extended](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Control/Arrow/Extended.hs#L135)
   - line 159 of [Control.Arrow.Extended](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Control/Arrow/Extended.hs#L159)
+  - line 63 of [Hasura.Incremental.Internal.Rule](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/Incremental/Internal/Rule.hs#L63)
 
 # Arrow rewrite rules
 
