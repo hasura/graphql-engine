@@ -7,6 +7,7 @@ module Hasura.RQL.DDL.RemoteSchema
     addRemoteSchemaP2Setup,
     runIntrospectRemoteSchema,
     dropRemoteSchemaPermissionInMetadata,
+    dropRemoteSchemaRemoteRelationshipInMetadata,
     runAddRemoteSchemaPermissions,
     runDropRemoteSchemaPermissions,
     runUpdateRemoteSchema,
@@ -27,6 +28,7 @@ import Hasura.RQL.DDL.RemoteSchema.Permission
 import Hasura.RQL.Types
 import Hasura.Session
 import Hasura.Tracing qualified as Tracing
+import Language.GraphQL.Draft.Syntax qualified as G
 import Network.HTTP.Client.Manager (HasHttpManagerM (..))
 
 runAddRemoteSchema ::
@@ -198,6 +200,16 @@ dropRemoteSchemaInMetadata name =
 dropRemoteSchemaPermissionInMetadata :: RemoteSchemaName -> RoleName -> MetadataModifier
 dropRemoteSchemaPermissionInMetadata remoteSchemaName roleName =
   MetadataModifier $ metaRemoteSchemas . ix remoteSchemaName . rsmPermissions %~ filter ((/=) roleName . _rspmRole)
+
+dropRemoteSchemaRemoteRelationshipInMetadata :: RemoteSchemaName -> G.Name -> RelName -> MetadataModifier
+dropRemoteSchemaRemoteRelationshipInMetadata remoteSchemaName typeName relationshipName =
+  MetadataModifier $
+    metaRemoteSchemas
+      . ix remoteSchemaName
+      . rsmRemoteRelationships
+      . ix typeName
+      . rstrsRelationships
+      %~ OMap.delete relationshipName
 
 runIntrospectRemoteSchema ::
   (CacheRM m, QErrM m) => RemoteSchemaNameQuery -> m EncJSON

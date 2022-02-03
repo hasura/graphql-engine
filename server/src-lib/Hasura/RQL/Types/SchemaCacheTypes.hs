@@ -31,6 +31,7 @@ import Hasura.RQL.Types.RemoteSchema
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.Backend
 import Hasura.Session
+import Language.GraphQL.Draft.Syntax qualified as G
 
 data TableObjId (b :: BackendType)
   = TOCol !(Column b)
@@ -59,6 +60,11 @@ data SchemaObjId
   | SOSourceObj !SourceName !(AB.AnyBackend SourceObjId)
   | SORemoteSchema !RemoteSchemaName
   | SORemoteSchemaPermission !RemoteSchemaName !RoleName
+  | -- | A remote relationship on a remote schema type, identified by
+    -- 1. remote schema name
+    -- 2. remote schema type on which the relationship is defined
+    -- 3. name of the relationship
+    SORemoteSchemaRemoteRelationship !RemoteSchemaName !G.Name !RelName
   | SORole !RoleName
   deriving (Eq, Generic)
 
@@ -93,6 +99,10 @@ reportSchemaObj = \case
     "remote schema permission "
       <> unNonEmptyText (unRemoteSchemaName remoteSchemaName)
       <> "." <>> roleName
+  SORemoteSchemaRemoteRelationship remoteSchemaName typeName relationshipName ->
+    "remote_relationship " <> toTxt relationshipName <> " on type " <> G.unName typeName
+      <> " in remote schema "
+      <> toTxt remoteSchemaName
   SORole roleName -> "role " <> roleNameToTxt roleName
   where
     inSource s t = t <> " in source " <>> s

@@ -10,6 +10,7 @@ module Hasura.RQL.Types.Relationships.ToSchema
     graphQLValueToJSON,
     LHSIdentifier (..),
     tableNameToLHSIdentifier,
+    remoteSchemaToLHSIdentifier,
     lhsIdentifierToGraphQLName,
   )
 where
@@ -184,6 +185,9 @@ instance Cacheable LHSIdentifier
 
 tableNameToLHSIdentifier :: (Backend b) => TableName b -> LHSIdentifier
 tableNameToLHSIdentifier = LHSIdentifier . toTxt
+
+remoteSchemaToLHSIdentifier :: RemoteSchemaName -> LHSIdentifier
+remoteSchemaToLHSIdentifier = LHSIdentifier . toTxt
 
 -- | Generates a valid graphql name from an arbitrary LHS identifier.
 -- This is done by replacing all unrecognized characters by '_'. This
