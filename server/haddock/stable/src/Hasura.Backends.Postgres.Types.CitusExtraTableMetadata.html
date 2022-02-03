@@ -1,0 +1,59 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Hasura.Backends.Postgres.Types.CitusExtraTableMetadata</span><span>
+</span><span id="line-2"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.CitusExtraTableMetadata.html#ExtraTableMetadata"><span class="hs-identifier">ExtraTableMetadata</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-3"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-4"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-5"></span><span>
+</span><span id="line-6"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson.Casing</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">JC</span></span><span>
+</span><span id="line-7"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson.TH</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">J</span></span><span>
+</span><span id="line-8"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Typeable</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Typeable</span></span><span class="hs-special">)</span><span>
+</span><span id="line-9"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Incremental.html"><span class="hs-identifier">Hasura.Incremental</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier">Cacheable</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-10"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-11"></span><span>
+</span><span id="line-12"></span><span id="local-6989586621687937507"><span id="local-6989586621687937508"></span></span><span class="hs-keyword">data</span><span> </span><span id="ExtraTableMetadata"><span class="annot"><a href="Hasura.Backends.Postgres.Types.CitusExtraTableMetadata.html#ExtraTableMetadata"><span class="hs-identifier hs-var">ExtraTableMetadata</span></a></span></span><span>
+</span><span id="line-13"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="Local"><span class="annot"><a href="Hasura.Backends.Postgres.Types.CitusExtraTableMetadata.html#Local"><span class="hs-identifier hs-var">Local</span></a></span></span><span>
+</span><span id="line-14"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="Reference"><span class="annot"><a href="Hasura.Backends.Postgres.Types.CitusExtraTableMetadata.html#Reference"><span class="hs-identifier hs-var">Reference</span></a></span></span><span>
+</span><span id="line-15"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="Distributed"><span class="annot"><a href="Hasura.Backends.Postgres.Types.CitusExtraTableMetadata.html#Distributed"><span class="hs-identifier hs-var">Distributed</span></a></span></span><span> </span><span class="hs-special">{</span><span id="distributionColumn"><span class="annot"><span class="annottext">ExtraTableMetadata -&gt; Text
+</span><a href="Hasura.Backends.Postgres.Types.CitusExtraTableMetadata.html#distributionColumn"><span class="hs-identifier hs-var hs-var">distributionColumn</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">}</span><span>
+</span><span id="line-16"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621687937497"><span id="local-6989586621687937499"><span id="local-6989586621687937501"><span class="annot"><span class="annottext">Int -&gt; ExtraTableMetadata -&gt; ShowS
+[ExtraTableMetadata] -&gt; ShowS
+ExtraTableMetadata -&gt; String
+(Int -&gt; ExtraTableMetadata -&gt; ShowS)
+-&gt; (ExtraTableMetadata -&gt; String)
+-&gt; ([ExtraTableMetadata] -&gt; ShowS)
+-&gt; Show ExtraTableMetadata
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [ExtraTableMetadata] -&gt; ShowS
+$cshowList :: [ExtraTableMetadata] -&gt; ShowS
+show :: ExtraTableMetadata -&gt; String
+$cshow :: ExtraTableMetadata -&gt; String
+showsPrec :: Int -&gt; ExtraTableMetadata -&gt; ShowS
+$cshowsPrec :: Int -&gt; ExtraTableMetadata -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687937492"><span id="local-6989586621687937494"><span class="annot"><span class="annottext">ExtraTableMetadata -&gt; ExtraTableMetadata -&gt; Bool
+(ExtraTableMetadata -&gt; ExtraTableMetadata -&gt; Bool)
+-&gt; (ExtraTableMetadata -&gt; ExtraTableMetadata -&gt; Bool)
+-&gt; Eq ExtraTableMetadata
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: ExtraTableMetadata -&gt; ExtraTableMetadata -&gt; Bool
+$c/= :: ExtraTableMetadata -&gt; ExtraTableMetadata -&gt; Bool
+== :: ExtraTableMetadata -&gt; ExtraTableMetadata -&gt; Bool
+$c== :: ExtraTableMetadata -&gt; ExtraTableMetadata -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">(forall x. ExtraTableMetadata -&gt; Rep ExtraTableMetadata x)
+-&gt; (forall x. Rep ExtraTableMetadata x -&gt; ExtraTableMetadata)
+-&gt; Generic ExtraTableMetadata
+forall x. Rep ExtraTableMetadata x -&gt; ExtraTableMetadata
+forall x. ExtraTableMetadata -&gt; Rep ExtraTableMetadata x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+$cto :: forall x. Rep ExtraTableMetadata x -&gt; ExtraTableMetadata
+$cfrom :: forall x. ExtraTableMetadata -&gt; Rep ExtraTableMetadata x
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Typeable</span></span><span class="hs-special">)</span><span>
+</span><span id="line-17"></span><span>
+</span><span id="line-18"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687937484"><span id="local-6989586621687937486"><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.CitusExtraTableMetadata.html#ExtraTableMetadata"><span class="hs-identifier hs-type">ExtraTableMetadata</span></a></span></span></span><span>
+</span><span id="line-19"></span><span>
+</span><span id="line-20"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687937480"><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier hs-type">Cacheable</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.CitusExtraTableMetadata.html#ExtraTableMetadata"><span class="hs-identifier hs-type">ExtraTableMetadata</span></a></span></span><span>
+</span><span id="line-21"></span><span>
+</span><span id="line-22"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687937477"><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.CitusExtraTableMetadata.html#ExtraTableMetadata"><span class="hs-identifier hs-type">ExtraTableMetadata</span></a></span></span><span>
+</span><span id="line-23"></span><span>
+</span><span id="line-24"></span><span class="hs-special">$(</span><span id="local-6989586621687937464"><span id="local-6989586621687937466"><span id="local-6989586621687937468"><span id="local-6989586621687937470"><span id="local-6989586621687937472"><span id="local-6989586621687937474"><span class="hs-identifier">J.deriveJSON</span><span> </span><span class="hs-identifier">J.defaultOptions</span><span> </span><span class="hs-special">{</span><span class="hs-identifier">J.constructorTagModifier</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-identifier">JC.snakeCase</span><span class="hs-special">,</span><span> </span><span class="hs-identifier">J.fieldLabelModifier</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-identifier">JC.snakeCase</span><span class="hs-special">}</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">ExtraTableMetadata</span></span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-25"></span></pre></body></html>
