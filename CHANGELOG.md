@@ -71,6 +71,7 @@ count (
   
 ### Bug fixes and improvements
 
+- server: improved error reporting for env vars in `test_webhook_transform` metadata API endpoint
 - server: add a placeholder field to the schema when the `query_root` would be empty
 - server: fix invalid GraphQL name in the schema arising from a remote relationship from a table in a custom schema
 - server: add a new metadata API `get_cron_triggers` to fetch all the cron triggers
