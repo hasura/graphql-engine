@@ -20,7 +20,7 @@
 </span><span id="line-20"></span><span class="hs-comment">-- | A JSON-serializable type for either text or raw binary data, encoded with base-64.</span><span>
 </span><span id="line-21"></span><span class="hs-keyword">newtype</span><span> </span><span id="TByteString"><span class="annot"><a href="Data.TByteString.html#TByteString"><span class="hs-identifier hs-var">TByteString</span></a></span></span><span>
 </span><span id="line-22"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="TByteString"><span class="annot"><a href="Data.TByteString.html#TByteString"><span class="hs-identifier hs-var">TByteString</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">T.Text</span></span><span class="hs-special">)</span><span>
-</span><span id="line-23"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687909324"><span id="local-6989586621687909326"><span id="local-6989586621687909328"><span class="annot"><span class="annottext">Int -&gt; TByteString -&gt; ShowS
+</span><span id="line-23"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687931064"><span id="local-6989586621687931066"><span id="local-6989586621687931068"><span class="annot"><span class="annottext">Int -&gt; TByteString -&gt; ShowS
 [TByteString] -&gt; ShowS
 TByteString -&gt; String
 (Int -&gt; TByteString -&gt; ShowS)
@@ -35,7 +35,7 @@ show :: TByteString -&gt; String
 $cshow :: TByteString -&gt; String
 showsPrec :: Int -&gt; TByteString -&gt; ShowS
 $cshowsPrec :: Int -&gt; TByteString -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687909319"><span id="local-6989586621687909321"><span class="annot"><span class="annottext">TByteString -&gt; TByteString -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687931059"><span id="local-6989586621687931061"><span class="annot"><span class="annottext">TByteString -&gt; TByteString -&gt; Bool
 (TByteString -&gt; TByteString -&gt; Bool)
 -&gt; (TByteString -&gt; TByteString -&gt; Bool) -&gt; Eq TByteString
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -45,25 +45,25 @@ $c/= :: TByteString -&gt; TByteString -&gt; Bool
 $c== :: TByteString -&gt; TByteString -&gt; Bool
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-24"></span><span>
-</span><span id="line-25"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687909311"><span id="local-6989586621687909313"><span id="local-6989586621687909315"><span class="annot"><span class="hs-identifier hs-type">J.ToJSON</span></span><span> </span><span class="annot"><a href="Data.TByteString.html#TByteString"><span class="hs-identifier hs-type">TByteString</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-26"></span><span>  </span><span id="local-6989586621687909309"><span class="annot"><span class="annottext">toJSON :: TByteString -&gt; Value
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.TByteString.html#TByteString"><span class="hs-identifier hs-type">TByteString</span></a></span><span> </span><span class="hs-special">(</span><span id="local-6989586621687909307"><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621687909307"><span class="hs-identifier hs-var">isBase64</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687909306"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621687909306"><span class="hs-identifier hs-var">t</span></a></span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-25"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687931051"><span id="local-6989586621687931053"><span id="local-6989586621687931055"><span class="annot"><span class="hs-identifier hs-type">J.ToJSON</span></span><span> </span><span class="annot"><a href="Data.TByteString.html#TByteString"><span class="hs-identifier hs-type">TByteString</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-26"></span><span>  </span><span id="local-6989586621687931049"><span class="annot"><span class="annottext">toJSON :: TByteString -&gt; Value
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.TByteString.html#TByteString"><span class="hs-identifier hs-type">TByteString</span></a></span><span> </span><span class="hs-special">(</span><span id="local-6989586621687931047"><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621687931047"><span class="hs-identifier hs-var">isBase64</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687931046"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687931046"><span class="hs-identifier hs-var">t</span></a></span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-27"></span><span>    </span><span class="annot"><span class="annottext">Value -&gt; Value -&gt; Bool -&gt; Value
 forall a. a -&gt; a -&gt; Bool -&gt; a
 </span><span class="hs-identifier hs-var">bool</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; Value
 forall a. ToJSON a =&gt; a -&gt; Value
 </span><span class="hs-identifier hs-var">J.toJSON</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621687909306"><span class="hs-identifier hs-var">t</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[Text] -&gt; Value
+</span><a href="#local-6989586621687931046"><span class="hs-identifier hs-var">t</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[Text] -&gt; Value
 forall a. ToJSON a =&gt; a -&gt; Value
 </span><span class="hs-identifier hs-var">J.toJSON</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;Base64&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621687909306"><span class="hs-identifier hs-var">t</span></a></span><span class="hs-special">]</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621687909307"><span class="hs-identifier hs-var">isBase64</span></a></span><span>
+</span><a href="#local-6989586621687931046"><span class="hs-identifier hs-var">t</span></a></span><span class="hs-special">]</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621687931047"><span class="hs-identifier hs-var">isBase64</span></a></span><span>
 </span><span id="line-28"></span><span>
 </span><span id="line-29"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">IsString</span></span><span> </span><span class="annot"><a href="Data.TByteString.html#TByteString"><span class="hs-identifier hs-type">TByteString</span></a></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-30"></span><span>  </span><span id="local-6989586621687909303"><span class="annot"><span class="annottext">fromString :: String -&gt; TByteString
+</span><span id="line-30"></span><span>  </span><span id="local-6989586621687931043"><span class="annot"><span class="annottext">fromString :: String -&gt; TByteString
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">fromString</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; TByteString
 </span><a href="Data.TByteString.html#fromText"><span class="hs-identifier hs-var">fromText</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; TByteString) -&gt; (String -&gt; Text) -&gt; String -&gt; TByteString
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
@@ -72,16 +72,16 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span id="line-31"></span><span>
 </span><span id="line-32"></span><span class="annot"><a href="Data.TByteString.html#fromText"><span class="hs-identifier hs-type">fromText</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">T.Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Data.TByteString.html#TByteString"><span class="hs-identifier hs-type">TByteString</span></a></span><span>
 </span><span id="line-33"></span><span id="fromText"><span class="annot"><span class="annottext">fromText :: Text -&gt; TByteString
-</span><a href="Data.TByteString.html#fromText"><span class="hs-identifier hs-var hs-var">fromText</span></a></span></span><span> </span><span id="local-6989586621687909300"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621687909300"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(Bool, Text) -&gt; TByteString
+</span><a href="Data.TByteString.html#fromText"><span class="hs-identifier hs-var hs-var">fromText</span></a></span></span><span> </span><span id="local-6989586621687931040"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687931040"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(Bool, Text) -&gt; TByteString
 </span><a href="Data.TByteString.html#TByteString"><span class="hs-identifier hs-var">TByteString</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">False</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621687909300"><span class="hs-identifier hs-var">t</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621687931040"><span class="hs-identifier hs-var">t</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-34"></span><span>
 </span><span id="line-35"></span><span class="annot"><a href="Data.TByteString.html#fromBS"><span class="hs-identifier hs-type">fromBS</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">B.ByteString</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Data.TByteString.html#TByteString"><span class="hs-identifier hs-type">TByteString</span></a></span><span>
 </span><span id="line-36"></span><span id="fromBS"><span class="annot"><span class="annottext">fromBS :: ByteString -&gt; TByteString
-</span><a href="Data.TByteString.html#fromBS"><span class="hs-identifier hs-var hs-var">fromBS</span></a></span></span><span> </span><span id="local-6989586621687909299"><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621687909299"><span class="hs-identifier hs-var">bs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="Data.TByteString.html#fromBS"><span class="hs-identifier hs-var hs-var">fromBS</span></a></span></span><span> </span><span id="local-6989586621687931039"><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621687931039"><span class="hs-identifier hs-var">bs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-37"></span><span>  </span><span class="annot"><span class="annottext">(Bool, Text) -&gt; TByteString
 </span><a href="Data.TByteString.html#TByteString"><span class="hs-identifier hs-var">TByteString</span></a></span><span> </span><span class="annot"><span class="annottext">((Bool, Text) -&gt; TByteString) -&gt; (Bool, Text) -&gt; TByteString
 forall a b. (a -&gt; b) -&gt; a -&gt; b
@@ -89,7 +89,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span id="line-38"></span><span>    </span><span class="hs-comment">-- if the bs in not utf-8 encoded, encode it to Base64</span><span>
 </span><span id="line-39"></span><span>    </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; Either UnicodeException Text
 </span><span class="hs-identifier hs-var">TE.decodeUtf8'</span></span><span> </span><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621687909299"><span class="hs-identifier hs-var">bs</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621687931039"><span class="hs-identifier hs-var">bs</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-40"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">Left</span></span><span> </span><span class="annot"><span class="annottext">UnicodeException
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">True</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; Text
@@ -97,11 +97,11 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; ByteString
 </span><span class="hs-identifier hs-var">B64.encode</span></span><span> </span><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621687909299"><span class="hs-identifier hs-var">bs</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-41"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">Right</span></span><span> </span><span id="local-6989586621687909295"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621687909295"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621687931039"><span class="hs-identifier hs-var">bs</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-41"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">Right</span></span><span> </span><span id="local-6989586621687931035"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687931035"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">False</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621687909295"><span class="hs-identifier hs-var">t</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621687931035"><span class="hs-identifier hs-var">t</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-42"></span><span>
 </span><span id="line-43"></span><span class="annot"><a href="Data.TByteString.html#fromLBS"><span class="hs-identifier hs-type">fromLBS</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">BL.ByteString</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Data.TByteString.html#TByteString"><span class="hs-identifier hs-type">TByteString</span></a></span><span>
 </span><span id="line-44"></span><span id="fromLBS"><span class="annot"><span class="annottext">fromLBS :: ByteString -&gt; TByteString
@@ -115,11 +115,11 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span id="line-46"></span><span>
 </span><span id="line-47"></span><span class="annot"><a href="Data.TByteString.html#toBS"><span class="hs-identifier hs-type">toBS</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Data.TByteString.html#TByteString"><span class="hs-identifier hs-type">TByteString</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">B.ByteString</span></span><span>
 </span><span id="line-48"></span><span id="toBS"><span class="annot"><span class="annottext">toBS :: TByteString -&gt; Maybe ByteString
-</span><a href="Data.TByteString.html#toBS"><span class="hs-identifier hs-var hs-var">toBS</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.TByteString.html#TByteString"><span class="hs-identifier hs-type">TByteString</span></a></span><span> </span><span class="hs-special">(</span><span id="local-6989586621687909292"><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621687909292"><span class="hs-identifier hs-var">p</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687909291"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621687909291"><span class="hs-identifier hs-var">txt</span></a></span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="Data.TByteString.html#toBS"><span class="hs-identifier hs-var hs-var">toBS</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.TByteString.html#TByteString"><span class="hs-identifier hs-type">TByteString</span></a></span><span> </span><span class="hs-special">(</span><span id="local-6989586621687931032"><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621687931032"><span class="hs-identifier hs-var">p</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687931031"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687931031"><span class="hs-identifier hs-var">txt</span></a></span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-49"></span><span>  </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621687909292"><span class="hs-identifier hs-var">p</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621687931032"><span class="hs-identifier hs-var">p</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-50"></span><span>    </span><span class="hs-comment">-- Text is encoded in Base64</span><span>
 </span><span id="line-51"></span><span>    </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">True</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; Either String ByteString
@@ -128,16 +128,16 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; ByteString
 </span><span class="hs-identifier hs-var">TE.encodeUtf8</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621687909291"><span class="hs-identifier hs-var">txt</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621687931031"><span class="hs-identifier hs-var">txt</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-52"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">Left</span></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Maybe ByteString
 forall a. Maybe a
 </span><span class="hs-identifier hs-var">Nothing</span></span><span>
-</span><span id="line-53"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">Right</span></span><span> </span><span id="local-6989586621687909288"><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621687909288"><span class="hs-identifier hs-var">bs</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; Maybe ByteString
+</span><span id="line-53"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">Right</span></span><span> </span><span id="local-6989586621687931028"><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621687931028"><span class="hs-identifier hs-var">bs</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; Maybe ByteString
 forall a. a -&gt; Maybe a
 </span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621687909288"><span class="hs-identifier hs-var">bs</span></a></span><span>
+</span><a href="#local-6989586621687931028"><span class="hs-identifier hs-var">bs</span></a></span><span>
 </span><span id="line-54"></span><span>    </span><span class="hs-comment">-- Text is not encoded in Base64</span><span>
 </span><span id="line-55"></span><span>    </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">False</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; Maybe ByteString
@@ -146,7 +146,7 @@ forall a. a -&gt; Maybe a
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; ByteString
 </span><span class="hs-identifier hs-var">TE.encodeUtf8</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621687909291"><span class="hs-identifier hs-var">txt</span></a></span><span>
+</span><a href="#local-6989586621687931031"><span class="hs-identifier hs-var">txt</span></a></span><span>
 </span><span id="line-56"></span><span>
 </span><span id="line-57"></span><span class="annot"><a href="Data.TByteString.html#toLBS"><span class="hs-identifier hs-type">toLBS</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Data.TByteString.html#TByteString"><span class="hs-identifier hs-type">TByteString</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">BL.ByteString</span></span><span>
 </span><span id="line-58"></span><span id="toLBS"><span class="annot"><span class="annottext">toLBS :: TByteString -&gt; Maybe ByteString

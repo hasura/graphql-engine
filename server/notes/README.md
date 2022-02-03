@@ -26,6 +26,7 @@
   - [Variable expansion in remote schema input parsers](variable-expansion-in-remote-schema-input-parsers.md)
   - [Querying remote schema interfaces](querying-remote-schema-interfaces.md)
   - [Selectability of tables](selectability-of-tables.md)
+  - [Permission filter deduplication](permission-filter-deduplication.md)
   - [Relay Node Id](relay-node-id.md)
   - [Rule rewrite rules](rule-rewrite-rules.md)
   - [Desugaring derived operations](desugaring-derived-operations.md)

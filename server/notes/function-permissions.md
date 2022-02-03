@@ -1,7 +1,7 @@
 This note is in [Hasura.RQL.DDL.Schema.Function](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/RQL/DDL/Schema/Function.hs#L190).
 It is referenced at:
-  - line 588 of [Hasura.GraphQL.Schema](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Schema.hs#L588)
   - line 591 of [Hasura.GraphQL.Schema](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Schema.hs#L591)
+  - line 594 of [Hasura.GraphQL.Schema](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Schema.hs#L594)
 
 # Function Permissions
 

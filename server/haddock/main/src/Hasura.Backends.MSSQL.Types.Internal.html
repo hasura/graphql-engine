@@ -114,9 +114,9 @@
 </span><span id="line-114"></span><span class="hs-comment">--------------------------------------------------------------------------------</span><span>
 </span><span id="line-115"></span><span class="hs-comment">-- Phantom pretend-generic types that are actually specific</span><span>
 </span><span id="line-116"></span><span>
-</span><span id="line-117"></span><span class="hs-keyword">type</span><span> </span><span id="Column"><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#Column"><span class="hs-identifier hs-var">Column</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621687934041"><span class="annot"><a href="#local-6989586621687934041"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.SQL.Backend.html#BackendType"><span class="hs-identifier hs-type">BackendType</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#ColumnName"><span class="hs-identifier hs-type">ColumnName</span></a></span><span>
+</span><span id="line-117"></span><span class="hs-keyword">type</span><span> </span><span id="Column"><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#Column"><span class="hs-identifier hs-var">Column</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621687955782"><span class="annot"><a href="#local-6989586621687955782"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.SQL.Backend.html#BackendType"><span class="hs-identifier hs-type">BackendType</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#ColumnName"><span class="hs-identifier hs-type">ColumnName</span></a></span><span>
 </span><span id="line-118"></span><span>
-</span><span id="line-119"></span><span class="hs-keyword">type</span><span> </span><span id="ColumnType"><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#ColumnType"><span class="hs-identifier hs-var">ColumnType</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621687934039"><span class="annot"><a href="#local-6989586621687934039"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.SQL.Backend.html#BackendType"><span class="hs-identifier hs-type">BackendType</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#ScalarType"><span class="hs-identifier hs-type">ScalarType</span></a></span><span>
+</span><span id="line-119"></span><span class="hs-keyword">type</span><span> </span><span id="ColumnType"><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#ColumnType"><span class="hs-identifier hs-var">ColumnType</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621687955780"><span class="annot"><a href="#local-6989586621687955780"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.SQL.Backend.html#BackendType"><span class="hs-identifier hs-type">BackendType</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#ScalarType"><span class="hs-identifier hs-type">ScalarType</span></a></span><span>
 </span><span id="line-120"></span><span>
 </span><span id="line-121"></span><span class="hs-keyword">type</span><span> </span><span id="Value"><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#Value"><span class="hs-identifier hs-var">Value</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ODBC.Value</span></span><span>
 </span><span id="line-122"></span><span>
@@ -165,14 +165,14 @@
 </span><span id="line-154"></span><span class="hs-comment">-------------------------------------------------------------------------------</span><span>
 </span><span id="line-155"></span><span class="hs-comment">-- AST types</span><span>
 </span><span id="line-156"></span><span>
-</span><span id="line-157"></span><span class="hs-keyword">data</span><span> </span><span id="BooleanOperators"><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#BooleanOperators"><span class="hs-identifier hs-var">BooleanOperators</span></a></span></span><span> </span><span id="local-6989586621687934020"><span class="annot"><a href="#local-6989586621687934020"><span class="hs-identifier hs-type">a</span></a></span></span><span>
-</span><span id="line-158"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="ASTContains"><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#ASTContains"><span class="hs-identifier hs-var">ASTContains</span></a></span></span><span> </span><span class="annot"><a href="#local-6989586621687934020"><span class="hs-identifier hs-type">a</span></a></span><span>
-</span><span id="line-159"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="ASTCrosses"><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#ASTCrosses"><span class="hs-identifier hs-var">ASTCrosses</span></a></span></span><span> </span><span class="annot"><a href="#local-6989586621687934020"><span class="hs-identifier hs-type">a</span></a></span><span>
-</span><span id="line-160"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="ASTEquals"><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#ASTEquals"><span class="hs-identifier hs-var">ASTEquals</span></a></span></span><span> </span><span class="annot"><a href="#local-6989586621687934020"><span class="hs-identifier hs-type">a</span></a></span><span>
-</span><span id="line-161"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="ASTIntersects"><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#ASTIntersects"><span class="hs-identifier hs-var">ASTIntersects</span></a></span></span><span> </span><span class="annot"><a href="#local-6989586621687934020"><span class="hs-identifier hs-type">a</span></a></span><span>
-</span><span id="line-162"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="ASTOverlaps"><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#ASTOverlaps"><span class="hs-identifier hs-var">ASTOverlaps</span></a></span></span><span> </span><span class="annot"><a href="#local-6989586621687934020"><span class="hs-identifier hs-type">a</span></a></span><span>
-</span><span id="line-163"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="ASTTouches"><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#ASTTouches"><span class="hs-identifier hs-var">ASTTouches</span></a></span></span><span> </span><span class="annot"><a href="#local-6989586621687934020"><span class="hs-identifier hs-type">a</span></a></span><span>
-</span><span id="line-164"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="ASTWithin"><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#ASTWithin"><span class="hs-identifier hs-var">ASTWithin</span></a></span></span><span> </span><span class="annot"><a href="#local-6989586621687934020"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-157"></span><span class="hs-keyword">data</span><span> </span><span id="BooleanOperators"><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#BooleanOperators"><span class="hs-identifier hs-var">BooleanOperators</span></a></span></span><span> </span><span id="local-6989586621687955761"><span class="annot"><a href="#local-6989586621687955761"><span class="hs-identifier hs-type">a</span></a></span></span><span>
+</span><span id="line-158"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="ASTContains"><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#ASTContains"><span class="hs-identifier hs-var">ASTContains</span></a></span></span><span> </span><span class="annot"><a href="#local-6989586621687955761"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-159"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="ASTCrosses"><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#ASTCrosses"><span class="hs-identifier hs-var">ASTCrosses</span></a></span></span><span> </span><span class="annot"><a href="#local-6989586621687955761"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-160"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="ASTEquals"><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#ASTEquals"><span class="hs-identifier hs-var">ASTEquals</span></a></span></span><span> </span><span class="annot"><a href="#local-6989586621687955761"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-161"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="ASTIntersects"><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#ASTIntersects"><span class="hs-identifier hs-var">ASTIntersects</span></a></span></span><span> </span><span class="annot"><a href="#local-6989586621687955761"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-162"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="ASTOverlaps"><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#ASTOverlaps"><span class="hs-identifier hs-var">ASTOverlaps</span></a></span></span><span> </span><span class="annot"><a href="#local-6989586621687955761"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-163"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="ASTTouches"><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#ASTTouches"><span class="hs-identifier hs-var">ASTTouches</span></a></span></span><span> </span><span class="annot"><a href="#local-6989586621687955761"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-164"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="ASTWithin"><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#ASTWithin"><span class="hs-identifier hs-var">ASTWithin</span></a></span></span><span> </span><span class="annot"><a href="#local-6989586621687955761"><span class="hs-identifier hs-type">a</span></a></span><span>
 </span><span id="line-165"></span><span>
 </span><span id="line-166"></span><span class="hs-keyword">data</span><span> </span><span id="Select"><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#Select"><span class="hs-identifier hs-var">Select</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Select"><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#Select"><span class="hs-identifier hs-var">Select</span></a></span></span><span>
 </span><span id="line-167"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="%24sel%3AselectWith%3ASelect"><span class="annot"><span class="annottext">Select -&gt; Maybe With
@@ -247,9 +247,9 @@ forall a. Maybe a
 </span><span id="line-195"></span><span>
 </span><span id="line-196"></span><span class="hs-keyword">data</span><span> </span><span id="Deleted"><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#Deleted"><span class="hs-identifier hs-var">Deleted</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Deleted"><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#Deleted"><span class="hs-identifier hs-var">Deleted</span></a></span></span><span>
 </span><span id="line-197"></span><span>
-</span><span id="line-198"></span><span class="hs-keyword">data</span><span> </span><span id="Output"><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#Output"><span class="hs-identifier hs-var">Output</span></a></span></span><span> </span><span id="local-6989586621687933995"><span class="annot"><a href="#local-6989586621687933995"><span class="hs-identifier hs-type">t</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Output"><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#Output"><span class="hs-identifier hs-var">Output</span></a></span></span><span>
+</span><span id="line-198"></span><span class="hs-keyword">data</span><span> </span><span id="Output"><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#Output"><span class="hs-identifier hs-var">Output</span></a></span></span><span> </span><span id="local-6989586621687955736"><span class="annot"><a href="#local-6989586621687955736"><span class="hs-identifier hs-type">t</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Output"><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#Output"><span class="hs-identifier hs-var">Output</span></a></span></span><span>
 </span><span id="line-199"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="%24sel%3AoutputType%3AOutput"><span class="annot"><span class="annottext">Output t -&gt; t
-</span><a href="Hasura.Backends.MSSQL.Types.Internal.html#%24sel%3AoutputType%3AOutput"><span class="hs-identifier hs-var hs-var">outputType</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="#local-6989586621687933995"><span class="hs-identifier hs-type">t</span></a></span><span class="hs-special">,</span><span>
+</span><a href="Hasura.Backends.MSSQL.Types.Internal.html#%24sel%3AoutputType%3AOutput"><span class="hs-identifier hs-var hs-var">outputType</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="#local-6989586621687955736"><span class="hs-identifier hs-type">t</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-200"></span><span>    </span><span id="%24sel%3AoutputColumns%3AOutput"><span class="annot"><span class="annottext">Output t -&gt; [OutputColumn]
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#%24sel%3AoutputColumns%3AOutput"><span class="hs-identifier hs-var hs-var">outputColumns</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#OutputColumn"><span class="hs-identifier hs-type">OutputColumn</span></a></span><span class="hs-special">]</span><span>
 </span><span id="line-201"></span><span>  </span><span class="hs-special">}</span><span>
@@ -549,12 +549,12 @@ forall a. Maybe a
 </span><span id="line-436"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="OpAggregate"><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#OpAggregate"><span class="hs-identifier hs-var">OpAggregate</span></a></span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#Expression"><span class="hs-identifier hs-type">Expression</span></a></span><span class="hs-special">]</span><span>
 </span><span id="line-437"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="TextAggregate"><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#TextAggregate"><span class="hs-identifier hs-var">TextAggregate</span></a></span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
 </span><span id="line-438"></span><span>
-</span><span id="line-439"></span><span class="hs-keyword">data</span><span> </span><span id="Countable"><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#Countable"><span class="hs-identifier hs-var">Countable</span></a></span></span><span> </span><span id="local-6989586621687933871"><span class="annot"><a href="#local-6989586621687933871"><span class="hs-identifier hs-type">name</span></a></span></span><span>
+</span><span id="line-439"></span><span class="hs-keyword">data</span><span> </span><span id="Countable"><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#Countable"><span class="hs-identifier hs-var">Countable</span></a></span></span><span> </span><span id="local-6989586621687955612"><span class="annot"><a href="#local-6989586621687955612"><span class="hs-identifier hs-type">name</span></a></span></span><span>
 </span><span id="line-440"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="StarCountable"><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#StarCountable"><span class="hs-identifier hs-var">StarCountable</span></a></span></span><span>
-</span><span id="line-441"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="NonNullFieldCountable"><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#NonNullFieldCountable"><span class="hs-identifier hs-var">NonNullFieldCountable</span></a></span></span><span> </span><span class="annot"><a href="#local-6989586621687933871"><span class="hs-identifier hs-type">name</span></a></span><span>
-</span><span id="line-442"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="DistinctCountable"><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#DistinctCountable"><span class="hs-identifier hs-var">DistinctCountable</span></a></span></span><span> </span><span class="annot"><a href="#local-6989586621687933871"><span class="hs-identifier hs-type">name</span></a></span><span>
+</span><span id="line-441"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="NonNullFieldCountable"><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#NonNullFieldCountable"><span class="hs-identifier hs-var">NonNullFieldCountable</span></a></span></span><span> </span><span class="annot"><a href="#local-6989586621687955612"><span class="hs-identifier hs-type">name</span></a></span><span>
+</span><span id="line-442"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="DistinctCountable"><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#DistinctCountable"><span class="hs-identifier hs-var">DistinctCountable</span></a></span></span><span> </span><span class="annot"><a href="#local-6989586621687955612"><span class="hs-identifier hs-type">name</span></a></span><span>
 </span><span id="line-443"></span><span>
-</span><span id="line-444"></span><span id="local-6989586621687933864"><span id="local-6989586621687933866"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Functor</span></span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#Countable"><span class="hs-identifier hs-type">Countable</span></a></span></span></span><span>
+</span><span id="line-444"></span><span id="local-6989586621687955605"><span id="local-6989586621687955607"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Functor</span></span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#Countable"><span class="hs-identifier hs-type">Countable</span></a></span></span></span><span>
 </span><span id="line-445"></span><span>
 </span><span id="line-446"></span><span class="hs-keyword">data</span><span> </span><span id="From"><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#From"><span class="hs-identifier hs-var">From</span></a></span></span><span>
 </span><span id="line-447"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="FromQualifiedTable"><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#FromQualifiedTable"><span class="hs-identifier hs-var">FromQualifiedTable</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#Aliased"><span class="hs-identifier hs-type">Aliased</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#TableName"><span class="hs-identifier hs-type">TableName</span></a></span><span class="hs-special">)</span><span>
@@ -576,9 +576,9 @@ forall a. Maybe a
 </span><span id="line-461"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="StringField"><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#StringField"><span class="hs-identifier hs-var">StringField</span></a></span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#JsonPath"><span class="hs-identifier hs-type">JsonPath</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-462"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="UuidField"><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#UuidField"><span class="hs-identifier hs-var">UuidField</span></a></span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#JsonPath"><span class="hs-identifier hs-type">JsonPath</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-463"></span><span>
-</span><span id="line-464"></span><span class="hs-keyword">data</span><span> </span><span id="Aliased"><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#Aliased"><span class="hs-identifier hs-var">Aliased</span></a></span></span><span> </span><span id="local-6989586621687933850"><span class="annot"><a href="#local-6989586621687933850"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Aliased"><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#Aliased"><span class="hs-identifier hs-var">Aliased</span></a></span></span><span>
+</span><span id="line-464"></span><span class="hs-keyword">data</span><span> </span><span id="Aliased"><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#Aliased"><span class="hs-identifier hs-var">Aliased</span></a></span></span><span> </span><span id="local-6989586621687955591"><span class="annot"><a href="#local-6989586621687955591"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Aliased"><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#Aliased"><span class="hs-identifier hs-var">Aliased</span></a></span></span><span>
 </span><span id="line-465"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="%24sel%3AaliasedThing%3AAliased"><span class="annot"><span class="annottext">Aliased a -&gt; a
-</span><a href="Hasura.Backends.MSSQL.Types.Internal.html#%24sel%3AaliasedThing%3AAliased"><span class="hs-identifier hs-var hs-var">aliasedThing</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="#local-6989586621687933850"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span>
+</span><a href="Hasura.Backends.MSSQL.Types.Internal.html#%24sel%3AaliasedThing%3AAliased"><span class="hs-identifier hs-var hs-var">aliasedThing</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="#local-6989586621687955591"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-466"></span><span>    </span><span id="%24sel%3AaliasedAlias%3AAliased"><span class="annot"><span class="annottext">Aliased a -&gt; Text
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#%24sel%3AaliasedAlias%3AAliased"><span class="hs-identifier hs-var hs-var">aliasedAlias</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
 </span><span id="line-467"></span><span>  </span><span class="hs-special">}</span><span>
@@ -736,11 +736,11 @@ forall a. Maybe a
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#GeometryType"><span class="hs-identifier hs-var">GeometryType</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;geometry&quot;</span></span><span>
 </span><span id="line-567"></span><span>  </span><span class="hs-comment">-- the input form for types that aren't explicitly supported is a string</span><span>
-</span><span id="line-568"></span><span>  </span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#UnknownType"><span class="hs-identifier hs-type">UnknownType</span></a></span><span> </span><span id="local-6989586621687933791"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621687933791"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621687933791"><span class="hs-identifier hs-var">t</span></a></span><span>
+</span><span id="line-568"></span><span>  </span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#UnknownType"><span class="hs-identifier hs-type">UnknownType</span></a></span><span> </span><span id="local-6989586621687955532"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687955532"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687955532"><span class="hs-identifier hs-var">t</span></a></span><span>
 </span><span id="line-569"></span><span>
-</span><span id="line-570"></span><span id="local-6989586621687933790"><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#mkMSSQLScalarTypeName"><span class="hs-identifier hs-type">mkMSSQLScalarTypeName</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687933790"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#ScalarType"><span class="hs-identifier hs-type">ScalarType</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621687933790"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span></span><span>
+</span><span id="line-570"></span><span id="local-6989586621687955531"><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#mkMSSQLScalarTypeName"><span class="hs-identifier hs-type">mkMSSQLScalarTypeName</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687955531"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#ScalarType"><span class="hs-identifier hs-type">ScalarType</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621687955531"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span></span><span>
 </span><span id="line-571"></span><span id="mkMSSQLScalarTypeName"><span class="annot"><span class="annottext">mkMSSQLScalarTypeName :: ScalarType -&gt; m Name
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#mkMSSQLScalarTypeName"><span class="hs-identifier hs-var hs-var">mkMSSQLScalarTypeName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
 </span><span id="line-572"></span><span>  </span><span class="annot"><span class="annottext">ScalarType
@@ -790,12 +790,12 @@ forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">Name
 </span><a href="Hasura.RQL.Types.Common.html#boolScalar"><span class="hs-identifier hs-var">RQL.boolScalar</span></a></span><span>
-</span><span id="line-583"></span><span>  </span><span id="local-6989586621687933784"><span class="annot"><span class="annottext">ScalarType
-</span><a href="#local-6989586621687933784"><span class="hs-identifier hs-var">scalarType</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-583"></span><span>  </span><span id="local-6989586621687955525"><span class="annot"><span class="annottext">ScalarType
+</span><a href="#local-6989586621687955525"><span class="hs-identifier hs-var">scalarType</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-584"></span><span>    </span><span class="annot"><span class="annottext">Text -&gt; Maybe Name
 </span><span class="hs-identifier hs-var">G.mkName</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ScalarType -&gt; Text
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#scalarTypeDBName"><span class="hs-identifier hs-var">scalarTypeDBName</span></a></span><span> </span><span class="annot"><span class="annottext">ScalarType
-</span><a href="#local-6989586621687933784"><span class="hs-identifier hs-var">scalarType</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621687955525"><span class="hs-identifier hs-var">scalarType</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-585"></span><span>      </span><span class="annot"><span class="annottext">Maybe Name -&gt; m Name -&gt; m Name
 forall (m :: * -&gt; *) a. Applicative m =&gt; Maybe a -&gt; m a -&gt; m a
 </span><a href="Hasura.Prelude.html#onNothing"><span class="hs-operator hs-var">`onNothing`</span></a></span><span> </span><span class="annot"><span class="annottext">Code -&gt; Text -&gt; m Name
@@ -808,7 +808,7 @@ forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">ScalarType -&gt; Text
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#scalarTypeDBName"><span class="hs-identifier hs-var">scalarTypeDBName</span></a></span><span> </span><span class="annot"><span class="annottext">ScalarType
-</span><a href="#local-6989586621687933784"><span class="hs-identifier hs-var">scalarType</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+</span><a href="#local-6989586621687955525"><span class="hs-identifier hs-var">scalarType</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot; in the GraphQL schema because its name is not a &quot;</span></span><span>
@@ -820,10 +820,10 @@ forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span id="line-590"></span><span>
 </span><span id="line-591"></span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#parseScalarValue"><span class="hs-identifier hs-type">parseScalarValue</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#ScalarType"><span class="hs-identifier hs-type">ScalarType</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">J.Value</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#Value"><span class="hs-identifier hs-type">Value</span></a></span><span>
 </span><span id="line-592"></span><span id="parseScalarValue"><span class="annot"><span class="annottext">parseScalarValue :: ScalarType -&gt; Value -&gt; Either QErr Value
-</span><a href="Hasura.Backends.MSSQL.Types.Internal.html#parseScalarValue"><span class="hs-identifier hs-var hs-var">parseScalarValue</span></a></span></span><span> </span><span id="local-6989586621687933779"><span class="annot"><span class="annottext">ScalarType
-</span><a href="#local-6989586621687933779"><span class="hs-identifier hs-var">scalarType</span></a></span></span><span> </span><span id="local-6989586621687933778"><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621687933778"><span class="hs-identifier hs-var">jValue</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">ScalarType
-</span><a href="#local-6989586621687933779"><span class="hs-identifier hs-var">scalarType</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="Hasura.Backends.MSSQL.Types.Internal.html#parseScalarValue"><span class="hs-identifier hs-var hs-var">parseScalarValue</span></a></span></span><span> </span><span id="local-6989586621687955520"><span class="annot"><span class="annottext">ScalarType
+</span><a href="#local-6989586621687955520"><span class="hs-identifier hs-var">scalarType</span></a></span></span><span> </span><span id="local-6989586621687955519"><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621687955519"><span class="hs-identifier hs-var">jValue</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">ScalarType
+</span><a href="#local-6989586621687955520"><span class="hs-identifier hs-var">scalarType</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-593"></span><span>  </span><span class="hs-comment">-- bytestring</span><span>
 </span><span id="line-594"></span><span>  </span><span class="annot"><span class="annottext">ScalarType
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#CharType"><span class="hs-identifier hs-var">CharType</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; Value
@@ -834,8 +834,8 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Value -&gt; Either QErr Text
 forall a. FromJSON a =&gt; Value -&gt; Either QErr a
-</span><a href="#local-6989586621687933774"><span class="hs-identifier hs-var">parseJValue</span></a></span><span> </span><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621687933778"><span class="hs-identifier hs-var">jValue</span></a></span><span>
+</span><a href="#local-6989586621687955515"><span class="hs-identifier hs-var">parseJValue</span></a></span><span> </span><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621687955519"><span class="hs-identifier hs-var">jValue</span></a></span><span>
 </span><span id="line-595"></span><span>  </span><span class="annot"><span class="annottext">ScalarType
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#VarcharType"><span class="hs-identifier hs-var">VarcharType</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; Value
 </span><span class="hs-identifier hs-var">ODBC.ByteStringValue</span></span><span> </span><span class="annot"><span class="annottext">(ByteString -&gt; Value) -&gt; (Text -&gt; ByteString) -&gt; Text -&gt; Value
@@ -845,8 +845,8 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Value -&gt; Either QErr Text
 forall a. FromJSON a =&gt; Value -&gt; Either QErr a
-</span><a href="#local-6989586621687933774"><span class="hs-identifier hs-var">parseJValue</span></a></span><span> </span><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621687933778"><span class="hs-identifier hs-var">jValue</span></a></span><span>
+</span><a href="#local-6989586621687955515"><span class="hs-identifier hs-var">parseJValue</span></a></span><span> </span><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621687955519"><span class="hs-identifier hs-var">jValue</span></a></span><span>
 </span><span id="line-596"></span><span>  </span><span class="hs-comment">-- text</span><span>
 </span><span id="line-597"></span><span>  </span><span class="annot"><span class="annottext">ScalarType
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#TextType"><span class="hs-identifier hs-var">TextType</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Value
@@ -854,32 +854,32 @@ forall a. FromJSON a =&gt; Value -&gt; Either QErr a
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Value -&gt; Either QErr Text
 forall a. FromJSON a =&gt; Value -&gt; Either QErr a
-</span><a href="#local-6989586621687933774"><span class="hs-identifier hs-var">parseJValue</span></a></span><span> </span><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621687933778"><span class="hs-identifier hs-var">jValue</span></a></span><span>
+</span><a href="#local-6989586621687955515"><span class="hs-identifier hs-var">parseJValue</span></a></span><span> </span><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621687955519"><span class="hs-identifier hs-var">jValue</span></a></span><span>
 </span><span id="line-598"></span><span>  </span><span class="annot"><span class="annottext">ScalarType
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#WcharType"><span class="hs-identifier hs-var">WcharType</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Value
 </span><span class="hs-identifier hs-var">ODBC.TextValue</span></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Value) -&gt; Either QErr Text -&gt; Either QErr Value
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Value -&gt; Either QErr Text
 forall a. FromJSON a =&gt; Value -&gt; Either QErr a
-</span><a href="#local-6989586621687933774"><span class="hs-identifier hs-var">parseJValue</span></a></span><span> </span><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621687933778"><span class="hs-identifier hs-var">jValue</span></a></span><span>
+</span><a href="#local-6989586621687955515"><span class="hs-identifier hs-var">parseJValue</span></a></span><span> </span><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621687955519"><span class="hs-identifier hs-var">jValue</span></a></span><span>
 </span><span id="line-599"></span><span>  </span><span class="annot"><span class="annottext">ScalarType
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#WvarcharType"><span class="hs-identifier hs-var">WvarcharType</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Value
 </span><span class="hs-identifier hs-var">ODBC.TextValue</span></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Value) -&gt; Either QErr Text -&gt; Either QErr Value
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Value -&gt; Either QErr Text
 forall a. FromJSON a =&gt; Value -&gt; Either QErr a
-</span><a href="#local-6989586621687933774"><span class="hs-identifier hs-var">parseJValue</span></a></span><span> </span><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621687933778"><span class="hs-identifier hs-var">jValue</span></a></span><span>
+</span><a href="#local-6989586621687955515"><span class="hs-identifier hs-var">parseJValue</span></a></span><span> </span><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621687955519"><span class="hs-identifier hs-var">jValue</span></a></span><span>
 </span><span id="line-600"></span><span>  </span><span class="annot"><span class="annottext">ScalarType
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#WtextType"><span class="hs-identifier hs-var">WtextType</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Value
 </span><span class="hs-identifier hs-var">ODBC.TextValue</span></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Value) -&gt; Either QErr Text -&gt; Either QErr Value
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Value -&gt; Either QErr Text
 forall a. FromJSON a =&gt; Value -&gt; Either QErr a
-</span><a href="#local-6989586621687933774"><span class="hs-identifier hs-var">parseJValue</span></a></span><span> </span><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621687933778"><span class="hs-identifier hs-var">jValue</span></a></span><span>
+</span><a href="#local-6989586621687955515"><span class="hs-identifier hs-var">parseJValue</span></a></span><span> </span><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621687955519"><span class="hs-identifier hs-var">jValue</span></a></span><span>
 </span><span id="line-601"></span><span>  </span><span class="hs-comment">-- integer</span><span>
 </span><span id="line-602"></span><span>  </span><span class="annot"><span class="annottext">ScalarType
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#IntegerType"><span class="hs-identifier hs-var">IntegerType</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Int -&gt; Value
@@ -887,32 +887,32 @@ forall a. FromJSON a =&gt; Value -&gt; Either QErr a
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Value -&gt; Either QErr Int
 forall a. FromJSON a =&gt; Value -&gt; Either QErr a
-</span><a href="#local-6989586621687933774"><span class="hs-identifier hs-var">parseJValue</span></a></span><span> </span><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621687933778"><span class="hs-identifier hs-var">jValue</span></a></span><span>
+</span><a href="#local-6989586621687955515"><span class="hs-identifier hs-var">parseJValue</span></a></span><span> </span><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621687955519"><span class="hs-identifier hs-var">jValue</span></a></span><span>
 </span><span id="line-603"></span><span>  </span><span class="annot"><span class="annottext">ScalarType
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#SmallintType"><span class="hs-identifier hs-var">SmallintType</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Int -&gt; Value
 </span><span class="hs-identifier hs-var">ODBC.IntValue</span></span><span> </span><span class="annot"><span class="annottext">(Int -&gt; Value) -&gt; Either QErr Int -&gt; Either QErr Value
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Value -&gt; Either QErr Int
 forall a. FromJSON a =&gt; Value -&gt; Either QErr a
-</span><a href="#local-6989586621687933774"><span class="hs-identifier hs-var">parseJValue</span></a></span><span> </span><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621687933778"><span class="hs-identifier hs-var">jValue</span></a></span><span>
+</span><a href="#local-6989586621687955515"><span class="hs-identifier hs-var">parseJValue</span></a></span><span> </span><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621687955519"><span class="hs-identifier hs-var">jValue</span></a></span><span>
 </span><span id="line-604"></span><span>  </span><span class="annot"><span class="annottext">ScalarType
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#BigintType"><span class="hs-identifier hs-var">BigintType</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Int -&gt; Value
 </span><span class="hs-identifier hs-var">ODBC.IntValue</span></span><span> </span><span class="annot"><span class="annottext">(Int -&gt; Value) -&gt; Either QErr Int -&gt; Either QErr Value
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Value -&gt; Either QErr Int
 forall a. FromJSON a =&gt; Value -&gt; Either QErr a
-</span><a href="#local-6989586621687933774"><span class="hs-identifier hs-var">parseJValue</span></a></span><span> </span><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621687933778"><span class="hs-identifier hs-var">jValue</span></a></span><span>
+</span><a href="#local-6989586621687955515"><span class="hs-identifier hs-var">parseJValue</span></a></span><span> </span><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621687955519"><span class="hs-identifier hs-var">jValue</span></a></span><span>
 </span><span id="line-605"></span><span>  </span><span class="annot"><span class="annottext">ScalarType
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#TinyintType"><span class="hs-identifier hs-var">TinyintType</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Int -&gt; Value
 </span><span class="hs-identifier hs-var">ODBC.IntValue</span></span><span> </span><span class="annot"><span class="annottext">(Int -&gt; Value) -&gt; Either QErr Int -&gt; Either QErr Value
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Value -&gt; Either QErr Int
 forall a. FromJSON a =&gt; Value -&gt; Either QErr a
-</span><a href="#local-6989586621687933774"><span class="hs-identifier hs-var">parseJValue</span></a></span><span> </span><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621687933778"><span class="hs-identifier hs-var">jValue</span></a></span><span>
+</span><a href="#local-6989586621687955515"><span class="hs-identifier hs-var">parseJValue</span></a></span><span> </span><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621687955519"><span class="hs-identifier hs-var">jValue</span></a></span><span>
 </span><span id="line-606"></span><span>  </span><span class="hs-comment">-- float</span><span>
 </span><span id="line-607"></span><span>  </span><span class="annot"><span class="annottext">ScalarType
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#NumericType"><span class="hs-identifier hs-var">NumericType</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Float -&gt; Value
@@ -920,32 +920,32 @@ forall a. FromJSON a =&gt; Value -&gt; Either QErr a
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Value -&gt; Either QErr Float
 forall a. FromJSON a =&gt; Value -&gt; Either QErr a
-</span><a href="#local-6989586621687933774"><span class="hs-identifier hs-var">parseJValue</span></a></span><span> </span><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621687933778"><span class="hs-identifier hs-var">jValue</span></a></span><span>
+</span><a href="#local-6989586621687955515"><span class="hs-identifier hs-var">parseJValue</span></a></span><span> </span><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621687955519"><span class="hs-identifier hs-var">jValue</span></a></span><span>
 </span><span id="line-608"></span><span>  </span><span class="annot"><span class="annottext">ScalarType
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#DecimalType"><span class="hs-identifier hs-var">DecimalType</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Float -&gt; Value
 </span><span class="hs-identifier hs-var">ODBC.FloatValue</span></span><span> </span><span class="annot"><span class="annottext">(Float -&gt; Value) -&gt; Either QErr Float -&gt; Either QErr Value
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Value -&gt; Either QErr Float
 forall a. FromJSON a =&gt; Value -&gt; Either QErr a
-</span><a href="#local-6989586621687933774"><span class="hs-identifier hs-var">parseJValue</span></a></span><span> </span><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621687933778"><span class="hs-identifier hs-var">jValue</span></a></span><span>
+</span><a href="#local-6989586621687955515"><span class="hs-identifier hs-var">parseJValue</span></a></span><span> </span><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621687955519"><span class="hs-identifier hs-var">jValue</span></a></span><span>
 </span><span id="line-609"></span><span>  </span><span class="annot"><span class="annottext">ScalarType
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#FloatType"><span class="hs-identifier hs-var">FloatType</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Float -&gt; Value
 </span><span class="hs-identifier hs-var">ODBC.FloatValue</span></span><span> </span><span class="annot"><span class="annottext">(Float -&gt; Value) -&gt; Either QErr Float -&gt; Either QErr Value
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Value -&gt; Either QErr Float
 forall a. FromJSON a =&gt; Value -&gt; Either QErr a
-</span><a href="#local-6989586621687933774"><span class="hs-identifier hs-var">parseJValue</span></a></span><span> </span><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621687933778"><span class="hs-identifier hs-var">jValue</span></a></span><span>
+</span><a href="#local-6989586621687955515"><span class="hs-identifier hs-var">parseJValue</span></a></span><span> </span><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621687955519"><span class="hs-identifier hs-var">jValue</span></a></span><span>
 </span><span id="line-610"></span><span>  </span><span class="annot"><span class="annottext">ScalarType
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#RealType"><span class="hs-identifier hs-var">RealType</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Float -&gt; Value
 </span><span class="hs-identifier hs-var">ODBC.FloatValue</span></span><span> </span><span class="annot"><span class="annottext">(Float -&gt; Value) -&gt; Either QErr Float -&gt; Either QErr Value
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Value -&gt; Either QErr Float
 forall a. FromJSON a =&gt; Value -&gt; Either QErr a
-</span><a href="#local-6989586621687933774"><span class="hs-identifier hs-var">parseJValue</span></a></span><span> </span><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621687933778"><span class="hs-identifier hs-var">jValue</span></a></span><span>
+</span><a href="#local-6989586621687955515"><span class="hs-identifier hs-var">parseJValue</span></a></span><span> </span><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621687955519"><span class="hs-identifier hs-var">jValue</span></a></span><span>
 </span><span id="line-611"></span><span>  </span><span class="hs-comment">-- boolean</span><span>
 </span><span id="line-612"></span><span>  </span><span class="annot"><span class="annottext">ScalarType
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#BitType"><span class="hs-identifier hs-var">BitType</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Word8 -&gt; Value
@@ -953,23 +953,23 @@ forall a. FromJSON a =&gt; Value -&gt; Either QErr a
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Value -&gt; Either QErr Word8
 forall a. FromJSON a =&gt; Value -&gt; Either QErr a
-</span><a href="#local-6989586621687933774"><span class="hs-identifier hs-var">parseJValue</span></a></span><span> </span><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621687933778"><span class="hs-identifier hs-var">jValue</span></a></span><span>
+</span><a href="#local-6989586621687955515"><span class="hs-identifier hs-var">parseJValue</span></a></span><span> </span><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621687955519"><span class="hs-identifier hs-var">jValue</span></a></span><span>
 </span><span id="line-613"></span><span>  </span><span class="hs-comment">-- geo</span><span>
 </span><span id="line-614"></span><span>  </span><span class="annot"><span class="annottext">ScalarType
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#GeographyType"><span class="hs-identifier hs-var">GeographyType</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Value
 </span><span class="hs-identifier hs-var">ODBC.TextValue</span></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Value) -&gt; Either QErr Text -&gt; Either QErr Value
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Value -&gt; Either QErr Text
-</span><a href="#local-6989586621687933769"><span class="hs-identifier hs-var">parseGeoTypes</span></a></span><span> </span><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621687933778"><span class="hs-identifier hs-var">jValue</span></a></span><span>
+</span><a href="#local-6989586621687955510"><span class="hs-identifier hs-var">parseGeoTypes</span></a></span><span> </span><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621687955519"><span class="hs-identifier hs-var">jValue</span></a></span><span>
 </span><span id="line-615"></span><span>  </span><span class="annot"><span class="annottext">ScalarType
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#GeometryType"><span class="hs-identifier hs-var">GeometryType</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Value
 </span><span class="hs-identifier hs-var">ODBC.TextValue</span></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Value) -&gt; Either QErr Text -&gt; Either QErr Value
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Value -&gt; Either QErr Text
-</span><a href="#local-6989586621687933769"><span class="hs-identifier hs-var">parseGeoTypes</span></a></span><span> </span><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621687933778"><span class="hs-identifier hs-var">jValue</span></a></span><span>
+</span><a href="#local-6989586621687955510"><span class="hs-identifier hs-var">parseGeoTypes</span></a></span><span> </span><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621687955519"><span class="hs-identifier hs-var">jValue</span></a></span><span>
 </span><span id="line-616"></span><span>  </span><span class="hs-comment">-- misc</span><span>
 </span><span id="line-617"></span><span>  </span><span class="annot"><span class="annottext">ScalarType
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#BinaryType"><span class="hs-identifier hs-var">BinaryType</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Binary -&gt; Value
@@ -983,8 +983,8 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Value -&gt; Either QErr Text
 forall a. FromJSON a =&gt; Value -&gt; Either QErr a
-</span><a href="#local-6989586621687933774"><span class="hs-identifier hs-var">parseJValue</span></a></span><span> </span><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621687933778"><span class="hs-identifier hs-var">jValue</span></a></span><span>
+</span><a href="#local-6989586621687955515"><span class="hs-identifier hs-var">parseJValue</span></a></span><span> </span><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621687955519"><span class="hs-identifier hs-var">jValue</span></a></span><span>
 </span><span id="line-618"></span><span>  </span><span class="annot"><span class="annottext">ScalarType
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#VarbinaryType"><span class="hs-identifier hs-var">VarbinaryType</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Binary -&gt; Value
 </span><span class="hs-identifier hs-var">ODBC.BinaryValue</span></span><span> </span><span class="annot"><span class="annottext">(Binary -&gt; Value) -&gt; (Text -&gt; Binary) -&gt; Text -&gt; Value
@@ -997,40 +997,40 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Value -&gt; Either QErr Text
 forall a. FromJSON a =&gt; Value -&gt; Either QErr a
-</span><a href="#local-6989586621687933774"><span class="hs-identifier hs-var">parseJValue</span></a></span><span> </span><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621687933778"><span class="hs-identifier hs-var">jValue</span></a></span><span>
+</span><a href="#local-6989586621687955515"><span class="hs-identifier hs-var">parseJValue</span></a></span><span> </span><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621687955519"><span class="hs-identifier hs-var">jValue</span></a></span><span>
 </span><span id="line-619"></span><span>  </span><span class="annot"><span class="annottext">ScalarType
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#Ss_time2Type"><span class="hs-identifier hs-var">Ss_time2Type</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">TimeOfDay -&gt; Value
 </span><span class="hs-identifier hs-var">ODBC.TimeOfDayValue</span></span><span> </span><span class="annot"><span class="annottext">(TimeOfDay -&gt; Value) -&gt; Either QErr TimeOfDay -&gt; Either QErr Value
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Value -&gt; Either QErr TimeOfDay
 forall a. FromJSON a =&gt; Value -&gt; Either QErr a
-</span><a href="#local-6989586621687933774"><span class="hs-identifier hs-var">parseJValue</span></a></span><span> </span><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621687933778"><span class="hs-identifier hs-var">jValue</span></a></span><span>
+</span><a href="#local-6989586621687955515"><span class="hs-identifier hs-var">parseJValue</span></a></span><span> </span><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621687955519"><span class="hs-identifier hs-var">jValue</span></a></span><span>
 </span><span id="line-620"></span><span>  </span><span class="annot"><span class="annottext">ScalarType
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#TimestampType"><span class="hs-identifier hs-var">TimestampType</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">LocalTime -&gt; Value
 </span><span class="hs-identifier hs-var">ODBC.LocalTimeValue</span></span><span> </span><span class="annot"><span class="annottext">(LocalTime -&gt; Value) -&gt; Either QErr LocalTime -&gt; Either QErr Value
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Value -&gt; Either QErr LocalTime
 forall a. FromJSON a =&gt; Value -&gt; Either QErr a
-</span><a href="#local-6989586621687933774"><span class="hs-identifier hs-var">parseJValue</span></a></span><span> </span><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621687933778"><span class="hs-identifier hs-var">jValue</span></a></span><span>
+</span><a href="#local-6989586621687955515"><span class="hs-identifier hs-var">parseJValue</span></a></span><span> </span><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621687955519"><span class="hs-identifier hs-var">jValue</span></a></span><span>
 </span><span id="line-621"></span><span>  </span><span class="annot"><span class="annottext">ScalarType
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#DateType"><span class="hs-identifier hs-var">DateType</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Day -&gt; Value
 </span><span class="hs-identifier hs-var">ODBC.DayValue</span></span><span> </span><span class="annot"><span class="annottext">(Day -&gt; Value) -&gt; Either QErr Day -&gt; Either QErr Value
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Value -&gt; Either QErr Day
 forall a. FromJSON a =&gt; Value -&gt; Either QErr a
-</span><a href="#local-6989586621687933774"><span class="hs-identifier hs-var">parseJValue</span></a></span><span> </span><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621687933778"><span class="hs-identifier hs-var">jValue</span></a></span><span>
+</span><a href="#local-6989586621687955515"><span class="hs-identifier hs-var">parseJValue</span></a></span><span> </span><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621687955519"><span class="hs-identifier hs-var">jValue</span></a></span><span>
 </span><span id="line-622"></span><span>  </span><span class="annot"><span class="annottext">ScalarType
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#GuidType"><span class="hs-identifier hs-var">GuidType</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Value
 </span><span class="hs-identifier hs-var">ODBC.TextValue</span></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Value) -&gt; Either QErr Text -&gt; Either QErr Value
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Value -&gt; Either QErr Text
 forall a. FromJSON a =&gt; Value -&gt; Either QErr a
-</span><a href="#local-6989586621687933774"><span class="hs-identifier hs-var">parseJValue</span></a></span><span> </span><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621687933778"><span class="hs-identifier hs-var">jValue</span></a></span><span>
+</span><a href="#local-6989586621687955515"><span class="hs-identifier hs-var">parseJValue</span></a></span><span> </span><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621687955519"><span class="hs-identifier hs-var">jValue</span></a></span><span>
 </span><span id="line-623"></span><span>  </span><span class="hs-comment">-- the input format for types that aren't explicitly supported is a string</span><span>
 </span><span id="line-624"></span><span>  </span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#UnknownType"><span class="hs-identifier hs-type">UnknownType</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Value
@@ -1038,43 +1038,43 @@ forall a. FromJSON a =&gt; Value -&gt; Either QErr a
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Value -&gt; Either QErr Text
 forall a. FromJSON a =&gt; Value -&gt; Either QErr a
-</span><a href="#local-6989586621687933774"><span class="hs-identifier hs-var">parseJValue</span></a></span><span> </span><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621687933778"><span class="hs-identifier hs-var">jValue</span></a></span><span>
+</span><a href="#local-6989586621687955515"><span class="hs-identifier hs-var">parseJValue</span></a></span><span> </span><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621687955519"><span class="hs-identifier hs-var">jValue</span></a></span><span>
 </span><span id="line-625"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-626"></span><span>    </span><span id="local-6989586621687934092"><span class="annot"><a href="#local-6989586621687933774"><span class="hs-identifier hs-type">parseJValue</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">J.FromJSON</span></span><span> </span><span class="annot"><a href="#local-6989586621687934092"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">J.Value</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687934092"><span class="hs-identifier hs-type">a</span></a></span></span><span>
-</span><span id="line-627"></span><span>    </span><span id="local-6989586621687933774"><span class="annot"><span class="annottext">parseJValue :: Value -&gt; Either QErr a
-</span><a href="#local-6989586621687933774"><span class="hs-identifier hs-var hs-var">parseJValue</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(Value -&gt; Parser a) -&gt; Value -&gt; Either QErr a
+</span><span id="line-626"></span><span>    </span><span id="local-6989586621687955833"><span class="annot"><a href="#local-6989586621687955515"><span class="hs-identifier hs-type">parseJValue</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">J.FromJSON</span></span><span> </span><span class="annot"><a href="#local-6989586621687955833"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">J.Value</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687955833"><span class="hs-identifier hs-type">a</span></a></span></span><span>
+</span><span id="line-627"></span><span>    </span><span id="local-6989586621687955515"><span class="annot"><span class="annottext">parseJValue :: Value -&gt; Either QErr a
+</span><a href="#local-6989586621687955515"><span class="hs-identifier hs-var hs-var">parseJValue</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(Value -&gt; Parser a) -&gt; Value -&gt; Either QErr a
 forall (m :: * -&gt; *) v a. QErrM m =&gt; (v -&gt; Parser a) -&gt; v -&gt; m a
 </span><a href="Hasura.Base.Error.html#runAesonParser"><span class="hs-identifier hs-var">runAesonParser</span></a></span><span> </span><span class="annot"><span class="annottext">Value -&gt; Parser a
 forall a. FromJSON a =&gt; Value -&gt; Parser a
 </span><span class="hs-identifier hs-var">J.parseJSON</span></span><span>
 </span><span id="line-628"></span><span>
-</span><span id="line-629"></span><span>    </span><span class="annot"><a href="#local-6989586621687933769"><span class="hs-identifier hs-type">parseGeoTypes</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">J.Value</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
-</span><span id="line-630"></span><span>    </span><span id="local-6989586621687933769"><span class="annot"><span class="annottext">parseGeoTypes :: Value -&gt; Either QErr Text
-</span><a href="#local-6989586621687933769"><span class="hs-identifier hs-var hs-var">parseGeoTypes</span></a></span></span><span> </span><span id="local-6989586621687933760"><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621687933760"><span class="hs-identifier hs-var">jv</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-629"></span><span>    </span><span class="annot"><a href="#local-6989586621687955510"><span class="hs-identifier hs-type">parseGeoTypes</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">J.Value</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
+</span><span id="line-630"></span><span>    </span><span id="local-6989586621687955510"><span class="annot"><span class="annottext">parseGeoTypes :: Value -&gt; Either QErr Text
+</span><a href="#local-6989586621687955510"><span class="hs-identifier hs-var hs-var">parseGeoTypes</span></a></span></span><span> </span><span id="local-6989586621687955501"><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621687955501"><span class="hs-identifier hs-var">jv</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-631"></span><span>      </span><span class="annot"><span class="annottext">(Value -&gt; Parser Text) -&gt; Value -&gt; Either QErr Text
 forall (m :: * -&gt; *) v a. QErrM m =&gt; (v -&gt; Parser a) -&gt; v -&gt; m a
 </span><a href="Hasura.Base.Error.html#runAesonParser"><span class="hs-identifier hs-var">runAesonParser</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">FromJSON Text =&gt; Value -&gt; Parser Text
 forall a. FromJSON a =&gt; Value -&gt; Parser a
 </span><span class="hs-identifier hs-var">J.parseJSON</span></span><span> </span><span class="hs-glyph">@</span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621687933760"><span class="hs-identifier hs-var">jv</span></a></span><span> </span><span class="annot"><span class="annottext">Either QErr Text -&gt; Either QErr Text -&gt; Either QErr Text
+</span><a href="#local-6989586621687955501"><span class="hs-identifier hs-var">jv</span></a></span><span> </span><span class="annot"><span class="annottext">Either QErr Text -&gt; Either QErr Text -&gt; Either QErr Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Value -&gt; Either QErr Text
-</span><a href="#local-6989586621687933759"><span class="hs-identifier hs-var">parseGeoJSONAsWKT</span></a></span><span> </span><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621687933778"><span class="hs-identifier hs-var">jValue</span></a></span><span>
+</span><a href="#local-6989586621687955500"><span class="hs-identifier hs-var">parseGeoJSONAsWKT</span></a></span><span> </span><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621687955519"><span class="hs-identifier hs-var">jValue</span></a></span><span>
 </span><span id="line-632"></span><span>
-</span><span id="line-633"></span><span>    </span><span class="annot"><a href="#local-6989586621687933759"><span class="hs-identifier hs-type">parseGeoJSONAsWKT</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">J.Value</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
-</span><span id="line-634"></span><span>    </span><span id="local-6989586621687933759"><span class="annot"><span class="annottext">parseGeoJSONAsWKT :: Value -&gt; Either QErr Text
-</span><a href="#local-6989586621687933759"><span class="hs-identifier hs-var hs-var">parseGeoJSONAsWKT</span></a></span></span><span> </span><span id="local-6989586621687933758"><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621687933758"><span class="hs-identifier hs-var">jv</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-633"></span><span>    </span><span class="annot"><a href="#local-6989586621687955500"><span class="hs-identifier hs-type">parseGeoJSONAsWKT</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">J.Value</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
+</span><span id="line-634"></span><span>    </span><span id="local-6989586621687955500"><span class="annot"><span class="annottext">parseGeoJSONAsWKT :: Value -&gt; Either QErr Text
+</span><a href="#local-6989586621687955500"><span class="hs-identifier hs-var hs-var">parseGeoJSONAsWKT</span></a></span></span><span> </span><span id="local-6989586621687955499"><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621687955499"><span class="hs-identifier hs-var">jv</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-635"></span><span>      </span><span class="annot"><span class="annottext">(Value -&gt; Parser GeometryWithCRS)
 -&gt; Value -&gt; Either QErr GeometryWithCRS
 forall (m :: * -&gt; *) v a. QErrM m =&gt; (v -&gt; Parser a) -&gt; v -&gt; m a
 </span><a href="Hasura.Base.Error.html#runAesonParser"><span class="hs-identifier hs-var">runAesonParser</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">FromJSON GeometryWithCRS =&gt; Value -&gt; Parser GeometryWithCRS
 forall a. FromJSON a =&gt; Value -&gt; Parser a
 </span><span class="hs-identifier hs-var">J.parseJSON</span></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="Hasura.SQL.GeoJSON.html#GeometryWithCRS"><span class="hs-identifier hs-type">Geo.GeometryWithCRS</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621687933758"><span class="hs-identifier hs-var">jv</span></a></span><span>
+</span><a href="#local-6989586621687955499"><span class="hs-identifier hs-var">jv</span></a></span><span>
 </span><span id="line-636"></span><span>        </span><span class="annot"><span class="annottext">Either QErr GeometryWithCRS
 -&gt; (GeometryWithCRS -&gt; Either QErr Text) -&gt; Either QErr Text
 forall (m :: * -&gt; *) a b. Monad m =&gt; m a -&gt; (a -&gt; m b) -&gt; m b
@@ -1140,12 +1140,12 @@ forall a. ToWKT a =&gt; a -&gt; Either QErr WKT
 </span><span id="line-655"></span><span>
 </span><span id="line-656"></span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#getGQLTableName"><span class="hs-identifier hs-type">getGQLTableName</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#TableName"><span class="hs-identifier hs-type">TableName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span>
 </span><span id="line-657"></span><span id="getGQLTableName"><span class="annot"><span class="annottext">getGQLTableName :: TableName -&gt; Either QErr Name
-</span><a href="Hasura.Backends.MSSQL.Types.Internal.html#getGQLTableName"><span class="hs-identifier hs-var hs-var">getGQLTableName</span></a></span></span><span> </span><span id="local-6989586621687933755"><span class="annot"><span class="annottext">TableName
-</span><a href="#local-6989586621687933755"><span class="hs-identifier hs-var">tn</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-658"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621687933754"><span class="annot"><span class="annottext">textName :: Text
-</span><a href="#local-6989586621687933754"><span class="hs-identifier hs-var hs-var">textName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">TableName -&gt; Text
+</span><a href="Hasura.Backends.MSSQL.Types.Internal.html#getGQLTableName"><span class="hs-identifier hs-var hs-var">getGQLTableName</span></a></span></span><span> </span><span id="local-6989586621687955496"><span class="annot"><span class="annottext">TableName
+</span><a href="#local-6989586621687955496"><span class="hs-identifier hs-var">tn</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-658"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621687955495"><span class="annot"><span class="annottext">textName :: Text
+</span><a href="#local-6989586621687955495"><span class="hs-identifier hs-var hs-var">textName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">TableName -&gt; Text
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#snakeCaseTableName"><span class="hs-identifier hs-var">snakeCaseTableName</span></a></span><span> </span><span class="annot"><span class="annottext">TableName
-</span><a href="#local-6989586621687933755"><span class="hs-identifier hs-var">tn</span></a></span><span>
+</span><a href="#local-6989586621687955496"><span class="hs-identifier hs-var">tn</span></a></span><span>
 </span><span id="line-659"></span><span>  </span><span class="annot"><span class="annottext">Maybe Name -&gt; Either QErr Name -&gt; Either QErr Name
 forall (m :: * -&gt; *) a. Applicative m =&gt; Maybe a -&gt; m a -&gt; m a
 </span><a href="Hasura.Prelude.html#onNothing"><span class="hs-identifier hs-var">onNothing</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; Maybe Name
@@ -1153,7 +1153,7 @@ forall (m :: * -&gt; *) a. Applicative m =&gt; Maybe a -&gt; m a -&gt; m a
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">TableName -&gt; Text
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#snakeCaseTableName"><span class="hs-identifier hs-var">snakeCaseTableName</span></a></span><span> </span><span class="annot"><span class="annottext">TableName
-</span><a href="#local-6989586621687933755"><span class="hs-identifier hs-var">tn</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(Either QErr Name -&gt; Either QErr Name)
+</span><a href="#local-6989586621687955496"><span class="hs-identifier hs-var">tn</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(Either QErr Name -&gt; Either QErr Name)
 -&gt; Either QErr Name -&gt; Either QErr Name
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span>
@@ -1167,35 +1167,35 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-string">&quot;cannot include &quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621687933754"><span class="hs-identifier hs-var">textName</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+</span><a href="#local-6989586621687955495"><span class="hs-identifier hs-var">textName</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot; in the GraphQL schema because it is not a valid GraphQL identifier&quot;</span></span><span>
 </span><span id="line-662"></span><span>
 </span><span id="line-663"></span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#snakeCaseTableName"><span class="hs-identifier hs-type">snakeCaseTableName</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#TableName"><span class="hs-identifier hs-type">TableName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
 </span><span id="line-664"></span><span id="snakeCaseTableName"><span class="annot"><span class="annottext">snakeCaseTableName :: TableName -&gt; Text
-</span><a href="Hasura.Backends.MSSQL.Types.Internal.html#snakeCaseTableName"><span class="hs-identifier hs-var hs-var">snakeCaseTableName</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#TableName"><span class="hs-identifier hs-type">TableName</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621687933753"><span class="annot"><span class="annottext">Text
+</span><a href="Hasura.Backends.MSSQL.Types.Internal.html#snakeCaseTableName"><span class="hs-identifier hs-var hs-var">snakeCaseTableName</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#TableName"><span class="hs-identifier hs-type">TableName</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621687955494"><span class="annot"><span class="annottext">Text
 tableName :: Text
 $sel:tableName:TableName :: TableName -&gt; Text
-</span><a href="#local-6989586621687933753"><span class="hs-identifier hs-var hs-var">tableName</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687933752"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687955494"><span class="hs-identifier hs-var hs-var">tableName</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687955493"><span class="annot"><span class="annottext">Text
 tableSchema :: Text
 $sel:tableSchema:TableName :: TableName -&gt; Text
-</span><a href="#local-6989586621687933752"><span class="hs-identifier hs-var hs-var">tableSchema</span></a></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="#local-6989586621687955493"><span class="hs-identifier hs-var hs-var">tableSchema</span></a></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-665"></span><span>  </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621687933752"><span class="hs-identifier hs-var">tableSchema</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Bool
+</span><a href="#local-6989586621687955493"><span class="hs-identifier hs-var">tableSchema</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Bool
 forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;dbo&quot;</span></span><span>
 </span><span id="line-666"></span><span>    </span><span class="hs-keyword">then</span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621687933753"><span class="hs-identifier hs-var">tableName</span></a></span><span>
+</span><a href="#local-6989586621687955494"><span class="hs-identifier hs-var">tableName</span></a></span><span>
 </span><span id="line-667"></span><span>    </span><span class="hs-keyword">else</span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621687933752"><span class="hs-identifier hs-var">tableSchema</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+</span><a href="#local-6989586621687955493"><span class="hs-identifier hs-var">tableSchema</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;_&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621687933753"><span class="hs-identifier hs-var">tableName</span></a></span><span>
+</span><a href="#local-6989586621687955494"><span class="hs-identifier hs-var">tableName</span></a></span><span>
 </span><span id="line-668"></span><span>
 </span><span id="line-669"></span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#stringTypes"><span class="hs-identifier hs-type">stringTypes</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#ScalarType"><span class="hs-identifier hs-type">ScalarType</span></a></span><span class="hs-special">]</span><span>
 </span><span id="line-670"></span><span id="stringTypes"><span class="annot"><span class="annottext">stringTypes :: [ScalarType]
