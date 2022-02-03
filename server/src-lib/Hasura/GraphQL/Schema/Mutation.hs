@@ -320,7 +320,12 @@ mkInsertObject objects tableInfo backendInsert insertPerms updatePerms =
     updateCheck = (fmap . fmap . fmap) partialSQLExpToUnpreparedValue $ upiCheck =<< updatePerms
     defaultValues =
       Map.union (partialSQLExpToUnpreparedValue <$> ipiSet insertPerms) $
-        Map.fromList [(column, UVLiteral $ columnDefaultValue @b column) | column <- ciColumn <$> columns]
+        Map.fromList
+          [ (column, UVLiteral $ columnDefaultValue @b column)
+            | ci <- columns,
+              _cmIsInsertable (ciMutability ci),
+              let column = ciColumn ci
+          ]
 
 -- delete
 

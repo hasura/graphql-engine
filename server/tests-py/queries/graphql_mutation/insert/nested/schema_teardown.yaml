@@ -28,4 +28,5 @@ args:
       drop table author_detail cascade;
       drop table article cascade;
       drop table author;
+      drop function create_author();
     cascade: true

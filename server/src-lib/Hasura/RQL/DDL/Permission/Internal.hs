@@ -2,7 +2,7 @@ module Hasura.RQL.DDL.Permission.Internal
   ( CreatePerm (..),
     DropPerm (..),
     assertPermDefined,
-    convColSpec,
+    interpColSpec,
     getDepHeadersFromVal,
     getDependentHeaders,
     procBoolExp,
@@ -23,9 +23,11 @@ import Hasura.RQL.Types
 import Hasura.Server.Utils
 import Hasura.Session
 
-convColSpec :: FieldInfoMap (FieldInfo b) -> PermColSpec b -> [Column b]
-convColSpec _ (PCCols cols) = cols
-convColSpec cim PCStar = map ciColumn $ getCols cim
+-- | Intrepet a 'PermColSpec' column specification, which can either refer to a
+-- list of named columns or all columns.
+interpColSpec :: [Column b] -> PermColSpec b -> [Column b]
+interpColSpec _ (PCCols cols) = cols
+interpColSpec allColumns PCStar = allColumns
 
 permissionIsDefined ::
   Maybe (RolePermInfo backend) -> PermAccessor backend a -> Bool

@@ -8,14 +8,12 @@ query:
     mutation($float_value: Float) {
       insert_test_types(
         objects: [
-          { c_pkey: 1
-          , c50_float: $float_value
+          { c50_float: $float_value
           }
         ]
       ){
         affected_rows
         returning{
-          c_pkey
           c50_float
         }
       }
@@ -25,5 +23,4 @@ response:
     insert_test_types:
       affected_rows: 1
       returning:
-      - c_pkey: 1
-        c50_float: 2.23e-308
+      - c50_float: 2.23e-308
