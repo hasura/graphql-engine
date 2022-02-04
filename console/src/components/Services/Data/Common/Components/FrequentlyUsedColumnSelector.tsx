@@ -70,9 +70,11 @@ const FrequentlyUsedColumnSelector: React.VFC<FrequentlyUsedColumnSelectorProps>
       key="frequently-used-columns"
       keyPrefix="frequently-used-columns"
     >
-      <Button color="white" size="xs">
-        + Frequently used columns
-      </Button>
+      {({ onClick }) => (
+        <Button color="white" size="xs" onClick={onClick}>
+          + Frequently used columns
+        </Button>
+      )}
     </Dropdown>
   );
 };

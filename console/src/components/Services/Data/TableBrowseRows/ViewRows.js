@@ -430,13 +430,6 @@ const ViewRows = props => {
           const triggerIcon = <i className="fa fa-caret-square-o-right" />;
           const triggerTitle = 'Invoke event trigger';
 
-          const triggerBtn = getActionButton(
-            'trigger',
-            triggerIcon,
-            triggerTitle,
-            () => {}
-          );
-
           return (
             <div className={styles.display_inline}>
               <Dropdown
@@ -445,7 +438,9 @@ const ViewRows = props => {
                 position="right"
                 keyPrefix={`invoke_data_dropdown_${rowIndex}`}
               >
-                {triggerBtn}
+                {({ onClick }) =>
+                  getActionButton('trigger', triggerIcon, triggerTitle, onClick)
+                }
               </Dropdown>
               {invokedRow === rowIndex && (
                 <InvokeManualTrigger
@@ -968,7 +963,7 @@ const ViewRows = props => {
         <div className={`row flex justify-around`}>
           <div>
             <button
-              className="btn bg-gray-100"
+              className="bg-gray-100 btn"
               onClick={() => handlePageChange(newPage - 1)}
               disabled={curFilter.offset === 0}
               data-test="custom-pagination-prev"
@@ -999,7 +994,7 @@ const ViewRows = props => {
           </div>
           <div>
             <button
-              className="btn bg-gray-100"
+              className="bg-gray-100 btn"
               onClick={() => handlePageChange(newPage + 1)}
               disabled={curRows.length === 0}
               data-test="custom-pagination-next"
