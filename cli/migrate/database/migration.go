@@ -114,6 +114,7 @@ type HasuraOpts struct {
 	MetadataOps         hasura.CommonMetadataOperations
 	V2MetadataOps       hasura.V2CommonMetadataOperations
 	GenericQueryRequest hasura.GenericSend
+	PGDumpClient        hasura.PGDump
 
 	MigrationsStateStore statestore.MigrationsStateStore
 	SettingsStateStore   statestore.SettingsStateStore

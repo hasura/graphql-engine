@@ -3,11 +3,15 @@ package httpc
 import (
 	"bytes"
 	"context"
+	"crypto/tls"
+	"crypto/x509"
 	"encoding/json"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"path/filepath"
 	"strings"
 	"sync"
 
@@ -38,6 +42,10 @@ func New(httpClient *http.Client, baseUrl string, headers map[string]string) (*C
 		headers:   headers,
 	}
 	return client, nil
+}
+
+func (c *Client) SetHeaders(headers map[string]string) {
+	c.headers = headers
 }
 
 func (c *Client) NewRequest(method, urlStr string, body interface{}) (*http.Request, error) {
@@ -148,4 +156,33 @@ func (c *Client) Do(ctx context.Context, req *http.Request, v interface{}) (*Res
 		}
 	}
 	return resp, err
+}
+
+func GenerateTLSConfig(caPath string, insecureSkipTLSVerify bool) (*tls.Config, error) {
+	tlsConfig := &tls.Config{InsecureSkipVerify: insecureSkipTLSVerify}
+	if caPath != "" {
+		// Get the SystemCertPool, continue with an empty pool on error
+		rootCAs, _ := x509.SystemCertPool()
+		if rootCAs == nil {
+			rootCAs = x509.NewCertPool()
+		}
+		// read cert
+		certPath, _ := filepath.Abs(caPath)
+		cert, err := ioutil.ReadFile(certPath)
+		if err != nil {
+			return nil, fmt.Errorf("error reading CA %s: %w", caPath, err)
+		}
+		if ok := rootCAs.AppendCertsFromPEM(cert); !ok {
+			return nil, fmt.Errorf("unable to append given CA cert")
+		}
+		tlsConfig.RootCAs = rootCAs
+	}
+	return tlsConfig, nil
+}
+
+func NewHttpClientWithTLSConfig(tlsConfig *tls.Config) (*http.Client, error) {
+	tr := &http.Transport{TLSClientConfig: tlsConfig}
+	tr.Proxy = http.ProxyFromEnvironment
+	httpClient := &http.Client{Transport: tr}
+	return httpClient, nil
 }

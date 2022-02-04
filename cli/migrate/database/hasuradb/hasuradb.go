@@ -1,7 +1,6 @@
 package hasuradb
 
 import (
-	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -22,7 +21,6 @@ import (
 	"github.com/mitchellh/mapstructure"
 
 	"github.com/hasura/graphql-engine/cli/v2/migrate/database"
-	"github.com/parnurzeal/gorequest"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -65,7 +63,6 @@ type Config struct {
 	Headers                        map[string]string
 	isCMD                          bool
 	enableCheckMetadataConsistency bool
-	Req                            *gorequest.SuperAgent
 }
 
 type HasuraDB struct {
@@ -80,6 +77,7 @@ type HasuraDB struct {
 
 	metadataops          hasura.CommonMetadataOperations
 	v2metadataops        hasura.V2CommonMetadataOperations
+	pgDumpClient         hasura.PGDump
 	pgSourceOps          hasura.PGSourceOps
 	mssqlSourceOps       hasura.MSSQLSourceOps
 	citusSourceOps       hasura.CitusSourceOps
@@ -108,6 +106,7 @@ func WithInstance(config *Config, logger *log.Logger, hasuraOpts *database.Hasur
 		mssqlSourceOps:      hasuraOpts.MSSQLSourceOps,
 		citusSourceOps:      hasuraOpts.CitusSourceOps,
 		genericQueryRequest: hasuraOpts.GenericQueryRequest,
+		pgDumpClient:        hasuraOpts.PGDumpClient,
 
 		hasuraClient: hasuraOpts.Client,
 
@@ -127,7 +126,7 @@ func WithInstance(config *Config, logger *log.Logger, hasuraOpts *database.Hasur
 	return hx, nil
 }
 
-func (h *HasuraDB) Open(url string, isCMD bool, tlsConfig *tls.Config, logger *log.Logger, hasuraOpts *database.HasuraOpts) (database.Driver, error) {
+func (h *HasuraDB) Open(url string, isCMD bool, logger *log.Logger, hasuraOpts *database.HasuraOpts) (database.Driver, error) {
 	if logger == nil {
 		logger = log.New()
 	}
@@ -156,11 +155,6 @@ func (h *HasuraDB) Open(url string, isCMD bool, tlsConfig *tls.Config, logger *l
 		}
 	}
 
-	req := gorequest.New()
-	if tlsConfig != nil {
-		req.TLSClientConfig(tlsConfig)
-	}
-
 	config := &Config{
 		queryURL: &nurl.URL{
 			Scheme: scheme,
@@ -184,7 +178,6 @@ func (h *HasuraDB) Open(url string, isCMD bool, tlsConfig *tls.Config, logger *l
 		},
 		isCMD:   isCMD,
 		Headers: headers,
-		Req:     req,
 	}
 	hx, err := WithInstance(config, logger, hasuraOpts)
 	if err != nil {
@@ -407,25 +400,6 @@ func (h *HasuraDB) Version() (version int64, dirty bool, err error) {
 
 func (h *HasuraDB) Drop() error {
 	return nil
-}
-
-func (h *HasuraDB) sendSchemaDumpQuery(m interface{}) (resp *http.Response, body []byte, err error) {
-	request := h.config.Req.Clone()
-	request = request.Post(h.config.pgDumpURL.String()).Send(m)
-
-	for headerName, headerValue := range h.config.Headers {
-		request.Set(headerName, headerValue)
-	}
-
-	resp, body, errs := request.EndBytes()
-
-	if len(errs) == 0 {
-		err = nil
-	} else {
-		err = errs[0]
-	}
-
-	return resp, body, err
 }
 
 func (h *HasuraDB) First() (migrationVersion *database.MigrationVersion, ok bool) {

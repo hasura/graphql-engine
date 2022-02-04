@@ -8,7 +8,6 @@ package migrate
 import (
 	"bytes"
 	"container/list"
-	"crypto/tls"
 	"fmt"
 	"io"
 	"os"
@@ -20,7 +19,6 @@ import (
 	"golang.org/x/term"
 
 	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
-
 	"github.com/hasura/graphql-engine/cli/v2/util"
 
 	"github.com/hasura/graphql-engine/cli/v2/migrate/database"
@@ -170,7 +168,6 @@ type NewMigrateOpts struct {
 	sourceUrl, databaseUrl string
 	cmd                    bool
 	configVersion          int
-	tlsConfig              *tls.Config
 	logger                 *log.Logger
 	Stdout                 io.Writer
 	Stderr                 io.Writer
@@ -215,7 +212,7 @@ func New(opts NewMigrateOpts) (*Migrate, error) {
 		m.sourceDrv.DefaultParser(source.DefaultParsev2)
 	}
 
-	databaseDrv, err := database.Open(opts.databaseUrl, opts.cmd, opts.tlsConfig, opts.logger, opts.hasuraOpts)
+	databaseDrv, err := database.Open(opts.databaseUrl, opts.cmd, opts.logger, opts.hasuraOpts)
 	if err != nil {
 		log.Debug(err)
 		return nil, err

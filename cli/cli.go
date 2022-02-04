@@ -8,8 +8,7 @@
 package cli
 
 import (
-	"crypto/tls"
-	"crypto/x509"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -191,26 +190,21 @@ type ServerConfig struct {
 
 	ParsedEndpoint *url.URL `yaml:"-"`
 
-	TLSConfig *tls.Config `yaml:"-"`
-
-	HTTPClient                 *http.Client               `yaml:"-"`
+	HTTPClient                 *httpc.Client              `yaml:"-"`
 	HasuraServerInternalConfig HasuraServerInternalConfig `yaml:"-"`
 }
 
-func (c *ServerConfig) GetHasuraInternalServerConfig() error {
+func (c *ServerConfig) GetHasuraInternalServerConfig(client *httpc.Client) error {
 	// Determine from where assets should be served
 	url := c.getConfigEndpoint()
-	client := http.Client{Timeout: 30 * time.Second}
+	ctx, cancelFunc := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancelFunc()
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return fmt.Errorf("error fetching config from server: %w", err)
 	}
 
-	if c.AdminSecret != "" {
-		req.Header.Set(XHasuraAdminSecret, c.AdminSecret)
-	}
-
-	r, err := client.Do(req)
+	r, err := client.Do(ctx, req, &c.HasuraServerInternalConfig)
 	if err != nil {
 		return err
 	}
@@ -220,13 +214,11 @@ func (c *ServerConfig) GetHasuraInternalServerConfig() error {
 		var horror hasuradb.HasuraError
 		err := json.NewDecoder(r.Body).Decode(&horror)
 		if err != nil {
-			return fmt.Errorf("error fetching server config")
+			return fmt.Errorf("error unmarshalling fetching server config")
 		}
-
 		return fmt.Errorf("error fetching server config: %v", horror.Error())
 	}
-
-	return json.NewDecoder(r.Body).Decode(&c.HasuraServerInternalConfig)
+	return nil
 }
 
 // HasuraServerConfig is the type returned by the v1alpha1/config API
@@ -236,97 +228,58 @@ type HasuraServerInternalConfig struct {
 }
 
 // GetVersionEndpoint provides the url to contact the version API
-func (s *ServerConfig) GetVersionEndpoint() string {
-	nurl := *s.ParsedEndpoint
-	nurl.Path = path.Join(nurl.Path, s.APIPaths.Version)
+func (c *ServerConfig) GetVersionEndpoint() string {
+	nurl := *c.ParsedEndpoint
+	nurl.Path = path.Join(nurl.Path, c.APIPaths.Version)
 	return nurl.String()
 }
 
 // GetQueryEndpoint provides the url to contact the query API
-func (s *ServerConfig) GetV1QueryEndpoint() string {
-	nurl := *s.ParsedEndpoint
-	nurl.Path = path.Join(nurl.Path, s.APIPaths.V1Query)
+func (c *ServerConfig) GetV1QueryEndpoint() string {
+	nurl := *c.ParsedEndpoint
+	nurl.Path = path.Join(nurl.Path, c.APIPaths.V1Query)
 	return nurl.String()
 }
 
-func (s *ServerConfig) GetV2QueryEndpoint() string {
-	nurl := *s.ParsedEndpoint
-	nurl.Path = path.Join(nurl.Path, s.APIPaths.V2Query)
+func (c *ServerConfig) GetV2QueryEndpoint() string {
+	nurl := *c.ParsedEndpoint
+	nurl.Path = path.Join(nurl.Path, c.APIPaths.V2Query)
 	return nurl.String()
 }
 
-func (s *ServerConfig) GetPGDumpEndpoint() string {
-	nurl := *s.ParsedEndpoint
-	nurl.Path = path.Join(nurl.Path, s.APIPaths.PGDump)
+func (c *ServerConfig) GetPGDumpEndpoint() string {
+	nurl := *c.ParsedEndpoint
+	nurl.Path = path.Join(nurl.Path, c.APIPaths.PGDump)
 	return nurl.String()
 }
 
-func (s *ServerConfig) GetV1GraphqlEndpoint() string {
-	nurl := *s.ParsedEndpoint
-	nurl.Path = path.Join(nurl.Path, s.APIPaths.GraphQL)
+func (c *ServerConfig) GetV1GraphqlEndpoint() string {
+	nurl := *c.ParsedEndpoint
+	nurl.Path = path.Join(nurl.Path, c.APIPaths.GraphQL)
 	return nurl.String()
 }
 
 // GetQueryEndpoint provides the url to contact the query API
-func (s *ServerConfig) GetV1MetadataEndpoint() string {
-	nurl := *s.ParsedEndpoint
-	nurl.Path = path.Join(nurl.Path, s.APIPaths.V1Metadata)
+func (c *ServerConfig) GetV1MetadataEndpoint() string {
+	nurl := *c.ParsedEndpoint
+	nurl.Path = path.Join(nurl.Path, c.APIPaths.V1Metadata)
 	return nurl.String()
 }
 
 // GetVersionEndpoint provides the url to contact the config API
-func (s *ServerConfig) getConfigEndpoint() string {
-	nurl := *s.ParsedEndpoint
-	nurl.Path = path.Join(nurl.Path, s.APIPaths.Config)
+func (c *ServerConfig) getConfigEndpoint() string {
+	nurl := *c.ParsedEndpoint
+	nurl.Path = path.Join(nurl.Path, c.APIPaths.Config)
 	return nurl.String()
 }
 
 // ParseEndpoint ensures the endpoint is valid.
-func (s *ServerConfig) ParseEndpoint() error {
-	nurl, err := url.ParseRequestURI(s.Endpoint)
+func (c *ServerConfig) ParseEndpoint() error {
+	nurl, err := url.ParseRequestURI(c.Endpoint)
 	if err != nil {
 		return err
 	}
-	s.ParsedEndpoint = nurl
-	return nil
-}
-
-// SetTLSConfig - sets the TLS config
-func (s *ServerConfig) SetTLSConfig() error {
-	if s.InsecureSkipTLSVerify {
-		s.TLSConfig = &tls.Config{InsecureSkipVerify: true}
-	}
-	if s.CAPath != "" {
-		// Get the SystemCertPool, continue with an empty pool on error
-		rootCAs, _ := x509.SystemCertPool()
-		if rootCAs == nil {
-			rootCAs = x509.NewCertPool()
-		}
-		// read cert
-		certPath, _ := filepath.Abs(s.CAPath)
-		cert, err := ioutil.ReadFile(certPath)
-		if err != nil {
-			return fmt.Errorf("error reading CA %s: %w", s.CAPath, err)
-		}
-		if ok := rootCAs.AppendCertsFromPEM(cert); !ok {
-			return fmt.Errorf("unable to append given CA cert")
-		}
-		s.TLSConfig = &tls.Config{
-			RootCAs:            rootCAs,
-			InsecureSkipVerify: s.InsecureSkipTLSVerify,
-		}
-	}
-	return nil
-}
-
-// SetHTTPClient - sets the http client
-func (s *ServerConfig) SetHTTPClient() error {
-	s.HTTPClient = &http.Client{Transport: http.DefaultTransport}
-	if s.TLSConfig != nil {
-		tr := &http.Transport{TLSClientConfig: s.TLSConfig}
-		tr.Proxy = http.ProxyFromEnvironment
-		s.HTTPClient.Transport = tr
-	}
+	c.ParsedEndpoint = nurl
 	return nil
 }
 
@@ -474,6 +427,18 @@ type ExecutionContext struct {
 	proPluginVersionValidated bool
 
 	MetadataMode MetadataMode
+
+	// Any request headers that has to be sent with every HTTP request that CLI sends to HGE
+	requestHeaders map[string]string
+}
+
+func (ec *ExecutionContext) AddRequestHeaders(headers map[string]string) {
+	if ec.requestHeaders == nil {
+		ec.requestHeaders = map[string]string{}
+	}
+	for k, v := range headers {
+		ec.requestHeaders[k] = v
+	}
 }
 
 type Source struct {
@@ -606,10 +571,6 @@ func (ec *ExecutionContext) SetupCodegenAssetsRepo() error {
 	return nil
 }
 
-func (ec *ExecutionContext) SetHGEHeaders(headers map[string]string) {
-	ec.HGEHeaders = headers
-}
-
 // Validate prepares the ExecutionContext ec and then validates the
 // ExecutionDirectory to see if all the required files and directories are in
 // place.
@@ -633,6 +594,65 @@ func (ec *ExecutionContext) Validate() error {
 	err = ec.readConfig()
 	if err != nil {
 		return fmt.Errorf("cannot read config: %w", err)
+	}
+
+	// initialize HTTP client
+	// CLI uses a common http client defined in internal/httpc.Client
+	// get TLS Config
+	tlsConfig, err := httpc.GenerateTLSConfig(ec.Config.CAPath, ec.Config.InsecureSkipTLSVerify)
+	if err != nil || tlsConfig == nil {
+		return fmt.Errorf("error while getting TLS config")
+	}
+
+	// create a net/http.Client with TLS Config
+	standardHttpClient, err := httpc.NewHttpClientWithTLSConfig(tlsConfig)
+	if err != nil || standardHttpClient == nil {
+		return fmt.Errorf("error while creating http client with TLS configuration %w", err)
+	}
+
+	// create httpc.Client
+	httpClient, err := httpc.New(standardHttpClient, ec.Config.Endpoint, ec.HGEHeaders)
+	if err != nil || httpClient == nil {
+		return err
+	}
+	ec.Config.HTTPClient = httpClient
+
+	err = util.GetServerStatus(ec.Config.GetVersionEndpoint(), ec.Config.HTTPClient)
+	if err != nil {
+		ec.Logger.Error("connecting to graphql-engine server failed")
+		ec.Logger.Info("possible reasons:")
+		ec.Logger.Info("1) Provided root endpoint of graphql-engine server is wrong. Verify endpoint key in config.yaml or/and value of --endpoint flag")
+		ec.Logger.Info("2) Endpoint should NOT be your GraphQL API, ie endpoint is NOT https://hasura-cloud-app.io/v1/graphql it should be: https://hasura-cloud-app.io")
+		ec.Logger.Info("3) Server might be unhealthy and is not running/accepting API requests")
+		ec.Logger.Info("4) Admin secret is not correct/set")
+		ec.Logger.Infoln()
+		return err
+	}
+
+	// get version from the server and match with the cli version
+	err = ec.checkServerVersion()
+	if err != nil {
+		return fmt.Errorf("version check: %w", err)
+	}
+
+	// get the server feature flags
+	err = ec.Version.GetServerFeatureFlags()
+	if err != nil {
+		return fmt.Errorf("error in getting server feature flags %w", err)
+	}
+
+	// Set Headers
+	if ec.Config.AdminSecret != "" {
+		ec.AddRequestHeaders(map[string]string{GetAdminSecretHeaderName(ec.Version): ec.Config.AdminSecret})
+	}
+
+	ec.Config.HTTPClient.SetHeaders(ec.requestHeaders)
+
+	// this populates the ec.Config.ServerConfig.HasuraServerInternalConfig
+	err = ec.Config.ServerConfig.GetHasuraInternalServerConfig(httpClient)
+	if err != nil {
+		// If config API is not enabled log it and don't fail
+		ec.Logger.Debugf("cannot get config information from server, this might be because config API is not enabled: %v", err)
 	}
 
 	// set name of migration directory
@@ -687,50 +707,6 @@ func (ec *ExecutionContext) Validate() error {
 		return fmt.Errorf("error while parsing the endpoint :%w", err)
 	}
 
-	err = util.GetServerStatus(ec.Config.GetVersionEndpoint())
-	if err != nil {
-		ec.Logger.Error("connecting to graphql-engine server failed")
-		ec.Logger.Info("possible reasons:")
-		ec.Logger.Info("1) Provided root endpoint of graphql-engine server is wrong. Verify endpoint key in config.yaml or/and value of --endpoint flag")
-		ec.Logger.Info("2) Endpoint should NOT be your GraphQL API, ie endpoint is NOT https://hasura-cloud-app.io/v1/graphql it should be: https://hasura-cloud-app.io")
-		ec.Logger.Info("3) Server might be unhealthy and is not running/accepting API requests")
-		ec.Logger.Info("4) Admin secret is not correct/set")
-		ec.Logger.Infoln()
-		return err
-	}
-
-	// get version from the server and match with the cli version
-	err = ec.checkServerVersion()
-	if err != nil {
-		return fmt.Errorf("version check: %w", err)
-	}
-
-	// get the server feature flags
-	err = ec.Version.GetServerFeatureFlags()
-	if err != nil {
-		return fmt.Errorf("error in getting server feature flags %w", err)
-	}
-	var headers map[string]string
-	if ec.Config.AdminSecret != "" {
-		headers = map[string]string{
-			GetAdminSecretHeaderName(ec.Version): ec.Config.AdminSecret,
-		}
-		ec.SetHGEHeaders(headers)
-	}
-
-	httpClient, err := httpc.New(
-		&http.Client{
-			Transport: &http.Transport{
-				TLSClientConfig: ec.Config.TLSConfig,
-				Proxy:           http.ProxyFromEnvironment,
-			},
-		},
-		ec.Config.Endpoint,
-		headers,
-	)
-	if err != nil {
-		return err
-	}
 	// check if server is using metadata v3
 	if ec.Config.APIPaths.V1Query != "" {
 		uri.Path = path.Join(uri.Path, ec.Config.APIPaths.V1Query)
@@ -776,7 +752,7 @@ func (ec *ExecutionContext) Validate() error {
 }
 
 func (ec *ExecutionContext) checkServerVersion() error {
-	v, err := version.FetchServerVersion(ec.Config.ServerConfig.GetVersionEndpoint(), ec.Config.ServerConfig.HTTPClient)
+	v, err := version.FetchServerVersion(ec.Config.ServerConfig.GetVersionEndpoint(), ec.Config.HTTPClient)
 	if err != nil {
 		return fmt.Errorf("failed to get version from server: %w", err)
 	}
@@ -886,18 +862,7 @@ func (ec *ExecutionContext) readConfig() error {
 		return fmt.Errorf("unable to parse server endpoint: %w", err)
 	}
 
-	// this populates the ec.Config.ServerConfig.HasuraServerInternalConfig
-	err = ec.Config.ServerConfig.GetHasuraInternalServerConfig()
-	if err != nil {
-		// If config API is not enabled log it and don't fail
-		ec.Logger.Debugf("cannot get config information from server, this might be because config API is not enabled: %v", err)
-	}
-
-	err = ec.Config.ServerConfig.SetTLSConfig()
-	if err != nil {
-		return fmt.Errorf("setting up TLS config failed: %w", err)
-	}
-	return ec.Config.ServerConfig.SetHTTPClient()
+	return nil
 }
 
 // setupSpinner creates a default spinner if the context does not already have

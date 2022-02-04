@@ -1,10 +1,11 @@
 package version
 
 import (
-	"encoding/json"
+	"context"
 	"fmt"
-	"io/ioutil"
 	"net/http"
+
+	"github.com/hasura/graphql-engine/cli/v2/internal/httpc"
 )
 
 type serverVersionResponse struct {
@@ -12,8 +13,13 @@ type serverVersionResponse struct {
 }
 
 // FetchServerVersion reads the version from server.
-func FetchServerVersion(endpoint string, client *http.Client) (version string, err error) {
-	response, err := client.Get(endpoint)
+func FetchServerVersion(endpoint string, client *httpc.Client) (version string, err error) {
+	req, err := http.NewRequest("GET", endpoint, nil)
+	if err != nil {
+		return "", fmt.Errorf("error while making http request to %s", endpoint)
+	}
+	var v serverVersionResponse
+	response, err := client.Do(context.Background(), req, &v)
 	if err != nil {
 		return "", fmt.Errorf("failed making version api call: %w", err)
 	}
@@ -24,17 +30,6 @@ func FetchServerVersion(endpoint string, client *http.Client) (version string, e
 		default:
 			return "", fmt.Errorf("GET %s failed - [%d]", endpoint, response.StatusCode)
 		}
-	} else {
-		defer response.Body.Close()
-		data, err := ioutil.ReadAll(response.Body)
-		if err != nil {
-			return "", fmt.Errorf("cannot read version api response: %w", err)
-		}
-		var v serverVersionResponse
-		err = json.Unmarshal(data, &v)
-		if err != nil {
-			return "", fmt.Errorf("failed to parse version api response: %w", err)
-		}
-		return v.Version, nil
 	}
+	return v.Version, nil
 }

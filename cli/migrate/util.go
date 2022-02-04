@@ -133,7 +133,6 @@ func NewMigrate(ec *cli.ExecutionContext, isCmd bool, sourceName string, sourceK
 		fileURL.String(),
 		dbURL.String(),
 		isCmd, int(ec.Config.Version),
-		ec.Config.ServerConfig.TLSConfig,
 		ec.Logger,
 		ec.Stdout,
 		ec.Stderr,
@@ -153,6 +152,7 @@ func NewMigrate(ec *cli.ExecutionContext, isCmd bool, sourceName string, sourceK
 			SettingsStateStore:   cli.GetSettingsStateStore(ec, sourceName),
 		},
 	}
+	opts.hasuraOpts.PGDumpClient = ec.APIClient.PGDump
 	if ec.HasMetadataV3 {
 		opts.hasuraOpts.PGSourceOps = ec.APIClient.V2Query
 		opts.hasuraOpts.MSSQLSourceOps = ec.APIClient.V2Query

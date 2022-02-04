@@ -2,7 +2,7 @@ package hasuradb
 
 import (
 	"fmt"
-	"net/http"
+	"io/ioutil"
 
 	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
 )
@@ -14,24 +14,22 @@ func (h *HasuraDB) ExportSchemaDump(schemaNames []string, sourceName string, sou
 		for _, s := range schemaNames {
 			opts = append(opts, "--schema", s)
 		}
-		query := SchemaDump{
+		query := hasura.PGDumpRequest{
 			Opts:        opts,
 			CleanOutput: true,
-			Database:    sourceName,
+			SourceName:  sourceName,
 		}
 
-		resp, body, err := h.sendSchemaDumpQuery(query)
+		resp, err := h.pgDumpClient.Send(query)
 		if err != nil {
 			h.logger.Debug(err)
 			return nil, err
 		}
-		h.logger.Debug("response: ", string(body))
-
-		if resp.StatusCode != http.StatusOK {
-			return nil, NewHasuraError(body, h.config.isCMD)
+		bs, err := ioutil.ReadAll(resp)
+		if err != nil {
+			return nil, fmt.Errorf("reading response from schema dump api: %w", err)
 		}
-
-		return body, nil
+		return bs, nil
 	}
 	return nil, fmt.Errorf("schema dump for source %s of kind %v is not supported", sourceName, sourceKind)
 }
