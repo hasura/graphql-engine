@@ -1,36 +1,39 @@
-<div class="meta"
-description="Set field values for MS SQL Server using role-based column presets"
-keywords="hasura, docs, ms sql server, schema, role-based, column preset">
+---
+description: Set field values for MS SQL Server using role-based column presets
+keywords:
+  - hasura
+  - docs
+  - ms sql server
+  - schema
+  - role-based
+  - column preset
+sidebar_label: Role based column presets
+sidebar_position: 3
+---
 
-</div>
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import Thumbnail from "@site/src/components/Thumbnail/Thumbnail";
 
 # MS SQL Server: Setting values for fields using role-based column presets
-
-<div class="contents" backlinks="none" depth="1" local="">
-
-Table of contents
-
-</div>
 
 ## Introduction
 
 Let's say you want certain fields to have their values set automatically
 using session variables or fixed values when a row is created/updated
-with a particular `user role <roles_variables>`.
+with a particular [user role](/graphql/core/auth/authorization/roles-variables.mdx).
 
 Hasura GraphQL engine's column presets let you define role-based values
 for any field/column. These values can either be a session variable
 value or a static value.
 
-<div class="admonition">
-
-Column preset restricts mutation access for configured role
+:::info Column preset restricts mutation access for configured role
 
 Column preset values are not overridable by the user. ie. If a column
 has a preset defined for a given role, access to the column for the
 mutation will be restricted for users with that role.
 
-</div>
+:::
 
 **Example:** Say we have a field `user_id` in a table `article` which is
 to be set to the id of the user, from the value of the user's session
@@ -38,30 +41,18 @@ variable whenever a new row is added to the `article` table.
 
 ## Step 1: Configure a column preset
 
-<div class="rst-class">
-
-api_tabs
-
-</div>
-
-<div class="tabs">
-
-<div class="tab">
-
-Console
+<Tabs className="api-tabs">
+<TabItem value="console" label="Console">
 
 Support will be added soon.
 
-</div>
-
-<div class="tab">
-
-CLI
+</TabItem>
+<TabItem value="cli" label="CLI">
 
 You can set column presets in the `tables.yaml` file inside the
 `metadata` directory:
 
-``` yaml
+``` yaml {8-9}
 - table:
     schema: public
     name: article
@@ -84,16 +75,13 @@ Apply the metadata by running:
 hasura metadata apply
 ```
 
-</div>
+</TabItem>
+<TabItem value="api" label="API">
 
-<div class="tab">
-
-API
-
-You can add column presets by using the `mssql_create_insert_permission`
+You can add column presets by using the [mssql_create_insert_permission](/graphql/core/api-reference/metadata-api/permission.mdx#mssql-create-insert-permission)
 metadata API:
 
-``` http
+``` http {13-15}
 POST /v1/metadata HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
@@ -115,22 +103,15 @@ X-Hasura-Role: admin
 }
 ```
 
-</div>
+</TabItem>
+</Tabs>
 
-</div>
-
-<div class="note">
-
-<div class="title">
-
-Note
-
-</div>
+:::info Note
 
 To set a column preset for a nested object's column, simply set the
 corresponding column preset in the remote table.
 
-</div>
+:::
 
 ## Step 2: Run an insert mutation
 
@@ -148,29 +129,21 @@ As mentioned earlier, you'll notice when you add the `X-Hasura-Role`
 header that the field, `user_id`, is no longer available as the mutation
 type's field:
 
-<div class="thumbnail" alt="Write an insert mutation">
-
-/img/graphql/core/schema/column-preset-schema-change-for-role.png
-
-</div>
+<Thumbnail
+  src="/img/graphql/core/schema/column-preset-schema-change-for-role.png"
+  alt="Write an insert mutation"
+/>
 
 Now, if we run the following insert mutation, we'll see that the
 `user_id` field is indeed being set with the value passed in the
 `X-Hasura-User-Id` variable:
 
-<div class="thumbnail" alt="Run the insert mutation">
+<Thumbnail
+  src="/img/graphql/core/schema/column-preset-mutation-result.png"
+  alt="Run the insert mutation"
+/>
 
-/img/graphql/core/schema/column-preset-mutation-result.png
-
-</div>
-
-<div class="note">
-
-<div class="title">
-
-Note
-
-</div>
+:::info Note
 
 Not passing the configured header will result in a run-time error:
 
@@ -185,9 +158,8 @@ Not passing the configured header will result in a run-time error:
     ]
 }
 ```
-
-</div>
+:::
 
 ## Also see
 
--   `mssql_defaults`
+- [MS SQL Server: Setting default values for fields using MS SQL Server defaults](/graphql/core/databases/ms-sql-server/schema/default-values/mssql-defaults.mdx)
