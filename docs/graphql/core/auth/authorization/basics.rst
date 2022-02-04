@@ -24,12 +24,12 @@ To understand the basics of access control in Hasura, let's take a look at this 
 
 This query returns the right set of results by defining the requirements for columns and rows in a given
 table. Hasura's rule-based access control works similarly - you define the following permissions for a
-combination of **role**, **table** and **action** (*insert, update, select and delete*):
+combination of **role**, **table**, and **action** (*insert, update, select and delete*):
 
 **Row-level permissions**
 
 Limit access to a subset of the rows in the table based on this permission. Row-level permissions are
-essentially boolean expressions that, when evaluated against any row, determine access to it. These
+essentially boolean expressions that; when evaluated against any row determine access to it. These
 permissions are constructed from the values in columns, :ref:`session variables <roles_variables>` and
 static values to build this boolean expression.
 
@@ -77,8 +77,7 @@ Head to the ``GraphiQL`` tab in your console and try out the below query:
     }
   }
 
-You'll see that this results in a response that contains all the authors because by default the GraphQL
-query is accepted with **admin** permissions.
+The response of the above query contains all the authors as, by default, the GraphQL query runs with **admin** permissions.
 
 .. thumbnail:: /img/graphql/core/auth/fetch-authors.png
   :alt: Run a query without access control
@@ -156,34 +155,24 @@ Now let's define an access control rule for the ``authors`` table for a role ``u
           }
       }
 
-This permission rule reads as: "*For the role* ``user`` *, table* ``authors`` *and operation* ``select``/``query``,
-allow access to those rows where the value in the ``id`` *column is the same as the value in the*
-``X-Hasura-User-ID`` *session variable*".
+This permission rule reads as: "*For the role* ``user`` *, table* ``authors`` *and operation* ``select``/``query``, allow access to those rows where the value in the ``id`` *column is the same as the value in the* ``X-Hasura-User-ID`` *session variable*".
 
 Run a query **with** access control
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Let's run the same query as above but now with the ``X-Hasura-Role`` and ``X-Hasura-User-ID`` session
-variables also included to indicate role and user information. These session variables are passed in
-the ``Request Headers`` section of ``GraphiQL`` as highlighted below:
+Let's run the same query as above but now with the ``X-Hasura-Role`` and ``X-Hasura-User-ID`` session variables also included to indicate role and user information. These session variables are passed in the ``Request Headers`` section of ``GraphiQL`` as highlighted below:
 
 .. thumbnail:: /img/graphql/core/auth/permission-basics-query-with-access-control.png
   :alt: Run a query with access control
   :width: 1200px
 
-As you can see, the results are now filtered based on the access control rule for the role ``user``
-(*since that is the role indicated by the* ``X-Hasura-Role`` *session variable*) and the results are
-restricted to only those rows where the value in the ``id`` column is equal to ``3`` (*as indicated by
-the* ``X-Hasura-User-ID`` *session variable*).
+As you can see, the results are now filtered based on the access control rule for the role ``user`` (*since that is the role indicated by the* ``X-Hasura-Role`` *session variable*) and the results are restricted to only those rows where the value in the ``id`` column is equal to ``3`` (*as indicated by the* ``X-Hasura-User-ID`` *session variable*).
 
-As described in the :ref:`Introduction to Authentication and Authorization <authorization>` section of the docs,
-your auth service is required to resolve authentication tokens into these session variables. See
-:ref:`Reference - Session Variables<authorization>` for more details.
+As described in the :ref:`Introduction to Authentication and Authorization <authorization>` section of the docs, your auth service is required to resolve authentication tokens into these session variables.
 
 Next steps
 ----------
 
-Read about roles and session variables at: :ref:`roles_variables`
-
+Read about roles and session variables at: :ref:`roles_variables`.
 See more detailed examples at: :ref:`Common access control examples<auth_examples>`
 
 .. admonition:: Additional Resources
