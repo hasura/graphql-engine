@@ -65,11 +65,14 @@ String \| [QualifiedFunction](#qualifiedfunction)
 | connection_info | true     | [PGSourceConnectionInfo](#pgsourceconnectioninfo)     | Connection parameters for the source                                                        |
 | read_replicas   | false    | \[[PGSourceConnectionInfo](#pgsourceconnectioninfo)\] | Optional list of read replica configuration *(supported only in cloud/enterprise versions)* |
 
+
 ## MsSQLConfiguration {#mssqlconfiguration}
 
-| Key             | Required | Schema                                                  | Description                          |
-|-----------------|----------|---------------------------------------------------------|--------------------------------------|
-| connection_info | true     | [MsSQLSourceConnectionInfo](#mssqlsourceconnectioninfo) | Connection parameters for the source |
+| Key             | Required | Schema                                                    | Description                                                                                 |
+|-----------------|----------|-----------------------------------------------------------|---------------------------------------------------------------------------------------------|
+| connection_info | true     | [MsSQLSourceConnectionInfo](#mssqlsourceconnectioninfo)   | Connection parameters for the source                                                        |
+| read_replicas   | true     | [[MsSQLSourceConnectionInfo](#mssqlsourceconnectioninfo)] | Optional list of read replica configuration *(supported only in cloud/enterprise versions)* |
+
 
 ## BigQueryConfiguration {#bigqueryconfiguration}
 
@@ -78,6 +81,7 @@ String \| [QualifiedFunction](#qualifiedfunction)
 | service_account | true     | `JSON String` \| `JSON` \| [FromEnv](#fromenv) | Service account for BigQuery database |
 | project_id      | true     | `String` \| [FromEnv](#fromenv)                | Project Id for BigQuery database      |
 | datasets        | true     | `[String]` \| [FromEnv](#fromenv)              | List of BigQuery datasets             |
+
 
 ## PGSourceConnectionInfo {#pgsourceconnectioninfo}
 
