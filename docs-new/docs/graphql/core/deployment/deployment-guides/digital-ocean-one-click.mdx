@@ -221,10 +221,15 @@ cd /etc/hasura
 vim Caddyfile
 
 ...
-add_your-domain-here {
-   proxy / graphql-engine:8080 {
-      websocket
-   }
+
+ https://you.domain.example.com {
+  reverse_proxy * graphql-engine:8080 {
+      header_up Host {http.request.host}
+      header_up X-Real-IP {http.request.remote}
+      header_up X-Forwarded-For {http.request.remote}
+      header_up X-Forwarded-Port {http.request.port}
+      header_up X-Forwarded-Proto {http.request.scheme}
+  }
 }
 ...
 
@@ -395,5 +400,4 @@ Where `<container_name>` is one of `graphql-engine`, `postgres` or
 
 ## Troubleshooting
 
-Logs should be able to help you in most scenarios. If it doesn't, feel
-free to talk to us on [Discord](https://discord.gg/hasura).
+Logs should be able to help you in most scenarios. If it doesn't, feel free to talk to us on [Discord](https://discord.gg/hasura).

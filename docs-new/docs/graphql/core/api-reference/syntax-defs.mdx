@@ -65,11 +65,14 @@ String \| [QualifiedFunction](#qualifiedfunction)
 | connection_info | true     | [PGSourceConnectionInfo](#pgsourceconnectioninfo)     | Connection parameters for the source                                                        |
 | read_replicas   | false    | \[[PGSourceConnectionInfo](#pgsourceconnectioninfo)\] | Optional list of read replica configuration *(supported only in cloud/enterprise versions)* |
 
+
 ## MsSQLConfiguration {#mssqlconfiguration}
 
-| Key             | Required | Schema                                                  | Description                          |
-|-----------------|----------|---------------------------------------------------------|--------------------------------------|
-| connection_info | true     | [MsSQLSourceConnectionInfo](#mssqlsourceconnectioninfo) | Connection parameters for the source |
+| Key             | Required | Schema                                                    | Description                                                                                 |
+|-----------------|----------|-----------------------------------------------------------|---------------------------------------------------------------------------------------------|
+| connection_info | true     | [MsSQLSourceConnectionInfo](#mssqlsourceconnectioninfo)   | Connection parameters for the source                                                        |
+| read_replicas   | true     | [[MsSQLSourceConnectionInfo](#mssqlsourceconnectioninfo)] | Optional list of read replica configuration *(supported only in cloud/enterprise versions)* |
+
 
 ## BigQueryConfiguration {#bigqueryconfiguration}
 
@@ -78,6 +81,7 @@ String \| [QualifiedFunction](#qualifiedfunction)
 | service_account | true     | `JSON String` \| `JSON` \| [FromEnv](#fromenv) | Service account for BigQuery database |
 | project_id      | true     | `String` \| [FromEnv](#fromenv)                | Project Id for BigQuery database      |
 | datasets        | true     | `[String]` \| [FromEnv](#fromenv)              | List of BigQuery datasets             |
+
 
 ## PGSourceConnectionInfo {#pgsourceconnectioninfo}
 
@@ -836,12 +840,13 @@ spec](https://spec.graphql.org/June2018/#Name).
 | arguments              | false    | Array of [InputArgument](#inputargument)                                     | Input arguments                                                                                                                         |
 | output_type            | true     | [GraphQLType](#graphqltype)                                                  | The output type of the action. Only object and list of objects are allowed.                                                             |
 | kind                   | false    | \[ `synchronous` \| `asynchronous` \]                                        | The kind of the mutation action (default: `synchronous`). If the type of the action is `query` then the `kind` field should be omitted. |
-| headers                | false    | \[[HeaderFromValue](#headerfromvalue) \| [HeaderFromEnv](#headerfromenv) \]   | List of defined headers to be sent to the handler                                                                                       |
+| headers                | false    | \[[HeaderFromValue](#headerfromvalue) \| [HeaderFromEnv](#headerfromenv) \]  | List of defined headers to be sent to the handler                                                                                       |
 | forward_client_headers | false    | boolean                                                                      | If set to `true` the client headers are forwarded to the webhook handler (default: `false`)                                             |
 | handler                | true     | [WebhookURL](#webhookurl)                                                    | The action's webhook URL                                                                                                                |
 | type                   | false    | \[ `mutation` \| `query` \]                                                  | The type of the action (default: `mutation`)                                                                                            |
 | timeout                | false    | Integer                                                                      | Number of seconds to wait for response before timing out. Default: 30                                                                   |
-| request_transform      | false    | [RequestTransformation](#requesttransformation)                                                      | Request Transformation to be applied to this Action's request                                                                           |
+| request_transform      | false    | [RequestTransformation](#requesttransformation)                              | Request Transformation to be applied to this Action's request                                                                           |
+| response_transform     | false    | [ResponseTransformation](#responsetransformation)                            | Response Transformation to be applied to this Action's response                                                                         |
 
 ## InputArgument {#inputargument}
 
@@ -1022,6 +1027,14 @@ The JSON templating language to be used for this JSON transformation.
 "Kriti"
 ```
 
+## ResponseTransformation {#responsetransformation}
+
+| Key             | required | Schema                              | Description                                                            |
+|-----------------|----------|-------------------------------------|------------------------------------------------------------------------|
+| body            | false    | `String`                            | A template script for transforming the response body.                  |
+| template_engine | false    | [TemplateEngine](#templateengine)   | Template language to be used for this transformation. Default: "Kriti" |
+
+
 ## RetryConf {#retryconf}
 
 | Key          | required | Schema  | Description                                                           |
@@ -1097,7 +1110,7 @@ Table columns can be referred by prefixing `$` e.g `$id`.
 
 | Key      | required | Schema | Description                                        |
 |----------|----------|--------|----------------------------------------------------|
-| from_env | true     | String | Name of the environment variable which has the URL |
+| from_env | true     | `String` | Name of the environment variable which has the URL |
 
 ## RetryConfST {#retryconfst}
 
