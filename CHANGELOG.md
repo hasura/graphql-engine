@@ -19,6 +19,7 @@ or the `HASURA_GRAPHQL_OPTIMIZE_PERMISSION_FILTERS` environment variable.
 
 ### Bug fixes and improvements
 (Add entries below in the order of server, console, cli, docs, others)
+- cli: skip tls verfication for all API requests when `insecure-skip-tls-verify` flag is set (#4926)
 
 ## v2.2.0
 
