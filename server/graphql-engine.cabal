@@ -843,6 +843,7 @@ test-suite graphql-engine-tests
   hs-source-dirs: src-test
   main-is: Main.hs
   other-modules:
+    Data.HashMap.Strict.ExtendedSpec
     Data.NonNegativeIntSpec
     Data.Parser.CacheControlSpec
     Data.Parser.JSONPathSpec
