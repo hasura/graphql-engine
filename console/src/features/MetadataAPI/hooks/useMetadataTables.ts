@@ -10,6 +10,10 @@ export const useMetadataTables = () => {
   return useMetadata(MetadataSelector.getTables(source));
 };
 
+export const useTables = (database: string) => {
+  return useMetadata(MetadataSelector.getTables(database));
+};
+
 export const useRemoteDatabaseRelationships = (
   database: string,
   table: QualifiedTable

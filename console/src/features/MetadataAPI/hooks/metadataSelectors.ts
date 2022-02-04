@@ -122,4 +122,7 @@ export namespace MetadataSelector {
     ).filter(field => 'to_remote_schema' in field.definition);
     return remote_schema_relationships;
   };
+
+  export const getAllDriversList = (m: MetadataResponse) =>
+    m.metadata?.sources.map(s => ({ source: s.name, kind: s.kind }));
 }
