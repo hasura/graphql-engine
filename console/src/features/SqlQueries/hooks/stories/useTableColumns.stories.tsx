@@ -3,6 +3,7 @@ import { ReactQueryDecorator } from '@/storybook/decorators/react-query';
 import { ReduxDecorator } from '@/storybook/decorators/redux-decorator';
 import { ComponentMeta, ComponentStory } from '@storybook/react';
 import React from 'react';
+import ReactJson from 'react-json-view';
 import { useTableColumns } from '../useTableColumns';
 
 function FetchTableColumnsComponent({
@@ -15,9 +16,9 @@ function FetchTableColumnsComponent({
   const query = useTableColumns(database, table);
   return (
     <div>
-      {query.isSuccess ? JSON.stringify(query.data, null, 2) : 'no response'}
+      {query.isSuccess ? <ReactJson src={query.data} /> : 'no response'}
 
-      {query.isError ? JSON.stringify(query.error, null, 2) : null}
+      {query.isError ? <ReactJson src={query.error} /> : null}
     </div>
   );
 }

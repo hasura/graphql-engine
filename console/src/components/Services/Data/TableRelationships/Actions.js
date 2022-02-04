@@ -17,6 +17,8 @@ import {
   getCreateArrayRelationshipQuery,
   getDropRelationshipQuery,
   getAddRelationshipQuery,
+  getSaveRemoteDbRelationshipQuery,
+  getDropRemoteDbRelationshipQuery,
 } from '../../../../metadata/queryUtils';
 import Migration from '../../../../utils/migration/Migration';
 import { currentDriver, getQualifiedTableDef } from '../../../../dataSources';
@@ -595,6 +597,179 @@ const addRelViewMigrate = (tableSchema, toggleEditor) => (
       errorMsg
     );
   }
+};
+
+export const addDbToDbRelationship = (
+  state,
+  tableSchema,
+  toggleEditor,
+  isNew,
+  onSuccess
+) => (dispatch, getState) => {
+  const {
+    relType,
+    relName,
+    relSource,
+    relTable,
+    relColumns,
+    relDriver,
+  } = state;
+  const currentTableName = tableSchema.table_name;
+  const currentTableSchema = tableSchema.table_schema;
+  const isObjRel = relType === 'object';
+  const { currentDataSource } = getState().tables;
+
+  const columnMapping = relColumns.reduce((acc, { column, refColumn }) => {
+    if (column === '') return acc;
+    return { ...acc, [column]: refColumn };
+  }, {});
+
+  const tableInfo = getQualifiedTableDef(
+    {
+      name: currentTableName,
+      schema: currentTableSchema,
+    },
+    currentDriver
+  );
+
+  const relChangesUp = [
+    getSaveRemoteDbRelationshipQuery(
+      isObjRel,
+      currentTableName,
+      relName,
+      relTable,
+      columnMapping,
+      currentDataSource,
+      relSource,
+      isNew,
+      relDriver,
+      currentTableSchema
+    ),
+  ];
+
+  const relChangesDown = [
+    getDropRemoteRelQuery(relName, tableInfo, currentDataSource),
+  ];
+
+  // Apply migrations
+  const migrationName = `create_relationship_${relName}_${currentTableSchema}_table_${currentTableName}`;
+
+  const requestMsg = 'Adding Relationship...';
+  const successMsg = 'Relationship created';
+  const errorMsg = 'Creating relationship failed';
+
+  const customOnSuccess = () => {
+    onSuccess();
+    toggleEditor();
+  };
+  const customOnError = () => {};
+
+  // perform validations and make call
+  if (!relName.trim()) {
+    dispatch(
+      showErrorNotification(
+        'Error adding relationship!',
+        'Relationship name cannot be empty'
+      )
+    );
+  } else if (!gqlPattern.test(relName)) {
+    dispatch(
+      showErrorNotification(
+        gqlRelErrorNotif[0],
+        gqlRelErrorNotif[1],
+        gqlRelErrorNotif[2]
+      )
+    );
+  } else {
+    makeMigrationCall(
+      dispatch,
+      getState,
+      relChangesUp,
+      relChangesDown,
+      migrationName,
+      customOnSuccess,
+      customOnError,
+      requestMsg,
+      successMsg,
+      errorMsg
+    );
+  }
+};
+
+export const dropDbToDbRelationship = (state, tableSchema, toggleEditor) => (
+  dispatch,
+  getState
+) => {
+  if (
+    !getConfirmation('This will permanently delete the remote db relationship')
+  ) {
+    return;
+  }
+
+  const {
+    relType,
+    relName,
+    relSource,
+    relTable,
+    relColumns,
+    relDriver,
+  } = state;
+  const currentTableName = tableSchema.table_name;
+  const currentTableSchema = tableSchema.table_schema;
+  const isObjRel = relType === 'object' ? true : false;
+  const currentDataSource = getState().tables.currentDataSource;
+  const columnMapping = relColumns.reduce((acc, { column, refColumn }) => {
+    if (column === '') return acc;
+    return { ...acc, [column]: refColumn };
+  }, {});
+
+  const relChangesUp = [
+    getDropRemoteDbRelationshipQuery(
+      relName,
+      currentTableName,
+      currentDataSource,
+      currentTableSchema
+    ),
+  ];
+
+  const relChangesDown = [
+    getSaveRemoteDbRelationshipQuery(
+      isObjRel,
+      currentTableName,
+      relName,
+      relTable,
+      columnMapping,
+      currentDataSource,
+      relSource,
+      false,
+      relDriver,
+      currentTableSchema
+    ),
+  ];
+
+  const migrationName = `table_${currentTableName}_drop_remote_relationship_${relName}`;
+
+  const requestMsg = 'Deleting remote relationship...';
+  const successMsg = 'Successfully deleted remote relationship';
+  const errorMsg = 'Deleting remote relationship failed';
+
+  const customOnSuccess = () => {
+    toggleEditor();
+  };
+  const customOnError = () => {};
+
+  makeMigrationCall(
+    dispatch,
+    getState,
+    relChangesUp,
+    relChangesDown,
+    migrationName,
+    customOnSuccess,
+    customOnError,
+    requestMsg,
+    successMsg,
+    errorMsg
+  );
 };
 
 const sanitizeRelName = arg => arg.trim();

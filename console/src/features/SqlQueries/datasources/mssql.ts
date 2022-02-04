@@ -194,6 +194,6 @@ FROM sys.objects as obj
   getTableColumnsSql: ({ name, schema }: QualifiedTable) => {
     if (!name || !schema) throw Error('empty parameters are not allowed!');
 
-    return `not implemented`;
+    return `SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = N'${name}' AND TABLE_SCHEMA= N'${schema}'`;
   },
 };

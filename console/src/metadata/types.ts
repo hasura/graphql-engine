@@ -589,6 +589,20 @@ export interface RemoteSchemaDef {
 /**
  * https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/remote-relationships.html#args-syntax
  */
+export interface RemoteDBRelationship {
+  /** Name of the remote relationship */
+  name: string;
+  /** Definition object */
+  definition: {
+    to_source: {
+      relationship_type: string;
+      source: string;
+      table: { schema: string; name: string };
+      field_mapping: Record<string, string>;
+    };
+  };
+}
+
 export interface RemoteRelationship {
   /** Name of the remote relationship */
   name: RemoteRelationshipName;
@@ -606,6 +620,13 @@ export interface RemoteRelationshipDef {
   remote_schema: RemoteSchemaName;
   /** The schema tree ending at the field in remote schema which needs to be joined with. */
   remote_field: RemoteField;
+
+  to_source: {
+    relationship_type: string;
+    source: string;
+    table: QualifiedTable;
+    field_mapping: Record<string, string>;
+  };
 }
 
 /**
