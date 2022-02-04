@@ -1,16 +1,23 @@
-<div class="meta"
-description="Set default field values in Postgres using SQL functions in Hasura"
-keywords="hasura, docs, postgres, schema, default value, sql function, stored procedure">
+---
+sidebar_label: Custom SQL functions
+sidebar_position: 2
+description: Set default field values in Postgres using SQL functions in Hasura
+keywords:
+  - hasura
+  - docs
+  - postgres
+  - schema
+  - default value
+  - sql function
+  - stored procedure
+---
 
-</div>
+import Tabs from "@theme/Tabs";
+import TabItem from "@theme/TabItem";
+import Thumbnail from "@site/src/components/Thumbnail/Thumbnail";
+import GraphiQLIDE from "@site/src/components/GraphiQLIDE/GraphiQLIDE";
 
 # Postgres: Setting values of fields using SQL functions
-
-<div class="contents" backlinks="none" depth="1" local="">
-
-Table of contents
-
-</div>
 
 ## Introduction
 
@@ -31,19 +38,13 @@ This can be achieved by:
 3.  Making your mutation requests without setting the SQL function
     output columns.
 
-<div class="note">
-
-<div class="title">
-
-Note
-
-</div>
+:::info Note
 
 This approach enforces the value set in the field to always be the
 result of the defined SQL function even if a value is explicitly passed
 in the insert object.
 
-</div>
+:::
 
 **For example**, say we have a table `sql_function_table` with columns
 `input` and `output` and we would like to set the value of the `output`
@@ -55,33 +56,20 @@ field.
 Modify the table `sql_function_table` and make its `output` column
 nullable.
 
-<div class="rst-class">
-
-api_tabs
-
-</div>
-
-<div class="tabs">
-
-<div class="tab">
-
-Console
+<Tabs className="api-tabs">
+<TabItem value="console" label="Console">
 
 Open the console and head to `Data -> [sql_function_table] -> Modify`:
 
-<div class="thumbnail" alt="Modify the table">
+<Thumbnail
+  src="/img/graphql/core/schema/modify-sql-fn-table.png"
+  alt="Modify the table"
+/>
 
-/img/graphql/core/schema/modify-sql-fn-table.png
+</TabItem>
+<TabItem value="cli" label="CLI">
 
-</div>
-
-</div>
-
-<div class="tab">
-
-CLI
-
-`Create a migration manually <manual_migrations>` and add the following
+[Create a migration manually](/graphql/core/migrations/advanced/writing-migrations-manually.mdx) and add the following
 SQL statement to the `up.sql` file:
 
 ```SQL
@@ -89,10 +77,10 @@ ALTER TABLE "public"."sql_function_table" ALTER COLUMN "output" DROP NOT NULL;
 ```
 
 Add the following statement to the `down.sql` file in case you need to
-`roll back <roll_back_migrations>` the above statement:
+[roll back](/graphql/core/migrations/advanced/rolling-back-migrations.mdx) the above statement:
 
 ```sql
-ALTER TABLE "public"."sql_function_table" ALTER COLUMN "output" SET NOT NULL;    
+ALTER TABLE "public"."sql_function_table" ALTER COLUMN "output" SET NOT NULL;
 ```
 
 Apply the migration by running:
@@ -101,13 +89,10 @@ Apply the migration by running:
 hasura migrate apply
 ```
 
-</div>
+</TabItem>
+<TabItem value="api" label="API">
 
-<div class="tab">
-
-API
-
-You can modify a table column by using the `schema_run_sql` schema API:
+You can modify a table column by using the [run_sql](/graphql/core/api-reference/schema-api/run-sql.mdx) schema API:
 
 ```http
 POST /v2/query HTTP/1.1
@@ -123,9 +108,8 @@ X-Hasura-Role: admin
 }
 ```
 
-</div>
-
-</div>
+</TabItem>
+</Tabs>
 
 ## Step 2: Create a trigger
 
@@ -145,33 +129,20 @@ CREATE FUNCTION test_func() RETURNS trigger AS $emp_stamp$
       FOR EACH ROW EXECUTE PROCEDURE test_func();
 ```
 
-<div class="rst-class">
-
-api_tabs
-
-</div>
-
-<div class="tabs">
-
-<div class="tab">
-
-Console
+<Tabs className="api-tabs">
+<TabItem value="console" label="Console">
 
 Head to `Data -> SQL` and run the above SQL:
 
-<div class="thumbnail" alt="Create a trigger with SQL">
+<Thumbnail
+  src="/img/graphql/core/schema/create-trigger.png"
+  alt="Create a trigger with SQL"
+/>
 
-/img/graphql/core/schema/create-trigger.png
+</TabItem>
+<TabItem value="cli" label="CLI">
 
-</div>
-
-</div>
-
-<div class="tab">
-
-CLI
-
-`Create a migration manually <manual_migrations>` and add the above SQL
+[Create a migration manually](/graphql/core/migrations/advanced/writing-migrations-manually.mdx) and add the above SQL
 to the `up.sql` file. Also, add a statement to revert the previous
 statement to the `down.sql`.
 
@@ -181,13 +152,10 @@ Apply the migration by running:
 hasura migrate apply
 ```
 
-</div>
+</TabItem>
+<TabItem value="api" label="API">
 
-<div class="tab">
-
-API
-
-You can create a trigger by using the `schema_run_sql` schema API:
+You can create a trigger by using the [run_sql](/graphql/core/api-reference/schema-api/run-sql.mdx) schema API:
 
 ```http
 POST /v2/query HTTP/1.1
@@ -203,9 +171,8 @@ X-Hasura-Role: admin
 }
 ```
 
-</div>
-
-</div>
+</TabItem>
+</Tabs>
 
 ## Step 3: Run an insert mutation
 
@@ -213,10 +180,11 @@ Run a mutation to insert an object with (input = "yabba dabba doo!",
 output=null) and you'll see the output value (output="YABBA DABBA DOO!")
 will be set automatically.
 
-<div class="graphiql" view_only="" query="mutation {
+<GraphiQLIDE
+  query={`mutation {
   insert_sql_function_table (
     objects: [
-      {input: &quot;yabba dabba doo!&quot;}
+      {input: "yabba dabba doo!"}
     ]
   ) {
     returning {
@@ -224,24 +192,22 @@ will be set automatically.
       output
     }
   }
-}
-:response:
-{
-  &quot;data&quot;: {
-    &quot;insert_sql_function_table&quot;: {
-      &quot;returning&quot;: [
+}`}
+  response={`{
+  "data": {
+    "insert_sql_function_table": {
+      "returning": [
         {
-          &quot;input&quot;: &quot;yabba dabba doo!&quot;,
-          &quot;output&quot;: &quot;YABBA DABBA DOO!&quot;
+          "input": "yabba dabba doo!",
+          "output": "YABBA DABBA DOO!"
         }
       ]
     }
   }
-}">
-
-</div>
+}`}
+/>
 
 ## Also see
 
--   `pg_postgres_defaults`
--   `pg_column_presets`
+- [Postgres: Setting default values for fields using Postgres defaults](/graphql/core/databases/postgres/schema/default-values/postgres-defaults.mdx)
+- [Postgres: Setting values for fields using role-based column presets](/graphql/core/databases/postgres/schema/default-values/column-presets.mdx)

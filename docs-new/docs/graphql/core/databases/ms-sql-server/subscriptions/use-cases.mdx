@@ -1,21 +1,23 @@
-<div class="meta" description="Use cases for Hasura subscriptions"
-keywords="hasura, docs, subscription, use case">
+---
+sidebar_label: Sample use cases
+sidebar_position: 1
+description: Use cases for Hasura subscriptions
+keywords:
+  - hasura
+  - docs
+  - subscription
+  - use case
+---
 
-</div>
+import GraphiQLIDE from "@site/src/components/GraphiQLIDE/GraphiQLIDE";
 
 # Subscriptions sample use cases
-
-<div class="contents" backlinks="none" depth="1" local="">
-
-Table of contents
-
-</div>
 
 ## Introduction
 
 The following are a few use cases for using subscriptions:
 
-## Subscribe to the latest value of a particular field
+## Subscribe to the latest value of a particular field {#ms-sql-server-subscribe-field}
 
 In case you are interested only in the latest value of a particular
 field, you can use subscriptions to fetch the field and get updated with
@@ -45,7 +47,8 @@ vehicle_location (
 Now we can use the following subscription to fetch the latest location
 of a vehicle to display it on a map:
 
-<div class="graphiql" view_only="" query="# $vehicleId = 3
+<GraphiQLIDE
+  query={`# $vehicleId = 3
 subscription getLocation($vehicleId: Int!) {
   vehicle(where: {id: {_eq: $vehicleId}}) {
     id
@@ -55,28 +58,26 @@ subscription getLocation($vehicleId: Int!) {
       timestamp
     }
   }
-}
-:response:
-{
-  &quot;data&quot;: {
-    &quot;vehicle&quot;: [
+}`}
+  response={`{
+  "data": {
+    "vehicle": [
       {
-        &quot;id&quot;: 3,
-        &quot;vehicle_number&quot;: &quot;KA04AD4583&quot;,
-        &quot;locations&quot;: [
+        "id": 3,
+        "vehicle_number": "KA04AD4583",
+        "locations": [
           {
-            &quot;location&quot;: &quot;(12.93623,77.61701)&quot;,
-            &quot;timestamp&quot;: &quot;2018-09-05T06:52:44.383588+00:00&quot;
+            "location": "(12.93623,77.61701)",
+            "timestamp": "2018-09-05T06:52:44.383588+00:00"
           }
         ]
       }
     ]
   }
-}">
+}`}
+/>
 
-</div>
-
-## Subscribe to changes to a table's entries
+## Subscribe to changes to a table's entries {#ms-sql-server-subscribe-table}
 
 In case you are interested in all the additions/changes to a table's
 entries, you can use subscriptions to fetch the table rows and get
@@ -106,7 +107,8 @@ message (
 Now we can use the following subscription to display the latest messages
 in a chatroom:
 
-<div class="graphiql" view_only="" query="subscription getMessages {
+<GraphiQLIDE
+  query={`subscription getMessages {
   message(order_by: {timestamp: desc}) {
     text
     timestamp
@@ -114,43 +116,40 @@ in a chatroom:
       username
     }
   }
-}
-:response:
-{
-  &quot;data&quot;: {
-    &quot;message&quot;: [
+}`}
+  response={`{
+  "data": {
+    "message": [
       {
-        &quot;text&quot;: &quot;I am fine.&quot;,
-        &quot;timestamp&quot;: &quot;2018-09-05T10:52:23.522223+00:00&quot;,
-        &quot;author&quot;: {
-          &quot;username&quot;: &quot;Jane&quot;
+        "text": "I am fine.",
+        "timestamp": "2018-09-05T10:52:23.522223+00:00",
+        "author": {
+          "username": "Jane"
         }
       },
       {
-        &quot;text&quot;: &quot;Hi! How are you?&quot;,
-        &quot;timestamp&quot;: &quot;2018-09-05T10:52:04.75283+00:00&quot;,
-        &quot;author&quot;: {
-          &quot;username&quot;: &quot;Jose&quot;
+        "text": "Hi! How are you?",
+        "timestamp": "2018-09-05T10:52:04.75283+00:00",
+        "author": {
+          "username": "Jose"
         },
       },
       {
-        &quot;text&quot;: &quot;Hi!&quot;,
-        &quot;timestamp&quot;: &quot;2018-09-05T10:51:43.622839+00:00&quot;,
-        &quot;author&quot;: {
-          &quot;username&quot;: &quot;Jane&quot;
+        "text": "Hi!",
+        "timestamp": "2018-09-05T10:51:43.622839+00:00",
+        "author": {
+          "username": "Jane"
         }
       }
     ]
   }
-}">
+}`}
+/>
 
-</div>
-
-## Subscribe to the latest value of some derived data
+## Subscribe to the latest value of some derived data {#ms-sql-server-subscribe-derived}
 
 In case you are interested in the latest value of some derived data, you
-can `create a view to query the derived
-data <ms_sql_server_custom_views>` and then use subscriptions to fetch
+can [create a view to query the derived data](/graphql/core/databases/ms-sql-server/schema/views.mdx) and then use subscriptions to fetch
 the derived value and get its latest value whenever it updates.
 
 ### Example: A poll dashboard
@@ -210,14 +209,15 @@ This view will have the following fields: `poll_id`, `option_id` and
 `votes`, i.e. it gives the number of votes received by each option for a
 poll.
 
-Next, `set up relationships <ms_sql_server_table_relationships>` `poll`
+Next, [set up relationships](/graphql/core/databases/ms-sql-server/schema/table-relationships/index.mdx) `poll`
 and `option` between the `poll_results` view and the `poll` and `option`
 tables using the `poll_id` and `option_id` fields respectively.
 
 Now we can use the following subscription to display the latest poll
 result:
 
-<div class="graphiql" view_only="" query="# $pollId = 1
+<GraphiQLIDE
+  query={`# $pollId = 1
 subscription getResult($pollId: Int!) {
   poll_results (
     where: { poll_id: {_eq: $pollId} }
@@ -228,48 +228,46 @@ subscription getResult($pollId: Int!) {
     }
     votes
   }
-}
-:response:
-{
-  &quot;data&quot;: {
-    &quot;poll_results&quot;: [
+}`}
+  response={`{
+  "data": {
+    "poll_results": [
       {
-        &quot;poll_id&quot;: 1,
-        &quot;votes&quot;: 1,
-        &quot;option&quot;: {
-          &quot;text&quot;: &quot;Pizza&quot;
+        "poll_id": 1,
+        "votes": 1,
+        "option": {
+          "text": "Pizza"
         }
       },
       {
-        &quot;poll_id&quot;: 1,
-        &quot;votes&quot;: 1,
-        &quot;option&quot;: {
-          &quot;text&quot;: &quot;Salad&quot;
+        "poll_id": 1,
+        "votes": 1,
+        "option": {
+          "text": "Salad"
         }
       },
       {
-        &quot;poll_id&quot;: 1,
-        &quot;votes&quot;: 2,
-        &quot;option&quot;: {
-          &quot;text&quot;: &quot;Sandwich&quot;
+        "poll_id": 1,
+        "votes": 2,
+        "option": {
+          "text": "Sandwich"
         }
       },
       {
-        &quot;poll_id&quot;: 1,
-        &quot;votes&quot;: 3,
-        &quot;option&quot;: {
-          &quot;text&quot;: &quot;Burger&quot;
+        "poll_id": 1,
+        "votes": 3,
+        "option": {
+          "text": "Burger"
         }
       },
       {
-        &quot;poll_id&quot;: 1,
-        &quot;votes&quot;: 1,
-        &quot;option&quot;: {
-          &quot;text&quot;: &quot;Lasagna&quot;
+        "poll_id": 1,
+        "votes": 1,
+        "option": {
+          "text": "Lasagna"
         }
       }
     ]
   }
-}">
-
-</div>
+}`}
+/>

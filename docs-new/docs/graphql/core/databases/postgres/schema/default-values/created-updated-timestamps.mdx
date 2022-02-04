@@ -1,16 +1,21 @@
-<div class="meta"
-description="Add created at / updated at timestamps for Postgres in Hasura"
-keywords="hasura, docs, postgres, schema, default value, timestamps">
+---
+sidebar_label: Created_at / updated_at timestamps
+sidebar_position: 4
+description: Add created at / updated at timestamps for Postgres in Hasura
+keywords:
+  - hasura
+  - docs
+  - postgres
+  - schema
+  - default value
+  - timestamps
+---
 
-</div>
+import Tabs from "@theme/Tabs";
+import TabItem from "@theme/TabItem";
+import Thumbnail from "@site/src/components/Thumbnail/Thumbnail";
 
 # Postgres: Adding created_at / updated_at timestamps
-
-<div class="contents" backlinks="none" depth="1" local="">
-
-Table of contents
-
-</div>
 
 ## Introduction
 
@@ -20,37 +25,24 @@ This page explains how to add these.
 
 ## Add a created_at timestamp
 
-<div class="rst-class">
-
-api_tabs
-
-</div>
-
-<div class="tabs">
-
-<div class="tab">
-
-Console
+<Tabs className="api-tabs">
+<TabItem value="console" label="Console">
 
 On the Hasura console, click on the `Modify` tab of a table. When
 clicking on the `+Frequently used columns` button, choose `created_at`:
 
-<div class="thumbnail" alt="Add a created_at time on the Hasura console"
-width="1000px">
-
-/img/graphql/core/schema/created-at.png
-
-</div>
+<Thumbnail
+  src="/img/graphql/core/schema/created-at.png"
+  alt="Add a created_at time on the Hasura console"
+  width="1000px"
+/>
 
 Click the `Add column` button.
 
-</div>
+</TabItem>
+<TabItem value="cli" label="CLI">
 
-<div class="tab">
-
-CLI
-
-`Create a migration manually <manual_migrations>` and add the following
+[Create a migration manually](/graphql/core/migrations/advanced/writing-migrations-manually.mdx) and add the following
 SQL statement to the `up.sql` file:
 
 ```plpgsql
@@ -58,7 +50,7 @@ ALTER TABLE ONLY "public"."article" ADD COLUMN "created_at" TIMESTAMP DEFAULT NO
 ```
 
 Add the following statement to the `down.sql` file in case you need to
-`roll back <roll_back_migrations>` the above statement:
+[roll back](/graphql/core/migrations/advanced/rolling-back-migrations.mdx) the above statement:
 
 ```plpgsql
 ALTER TABLE article DROP COLUMN created_at;
@@ -71,13 +63,10 @@ hasura migrate apply
 hasura metadata reload
 ```
 
-</div>
+</TabItem>
+<TabItem value="api" label="API">
 
-<div class="tab">
-
-API
-
-You can add a `created_at` timestamp by using the `schema_run_sql`
+You can add a `created_at` timestamp by using the [run_sql](/graphql/core/api-reference/schema-api/run-sql.mdx)
 schema API:
 
 ```http
@@ -94,43 +83,29 @@ X-Hasura-Role: admin
 }
 ```
 
-</div>
-
-</div>
+</TabItem>
+</Tabs>
 
 ## Add an updated_at timestamp
 
-<div class="rst-class">
-
-api_tabs
-
-</div>
-
-<div class="tabs">
-
-<div class="tab">
-
-Console
+<Tabs className="api-tabs">
+<TabItem value="console" label="Console">
 
 On the Hasura console, click on the `Modify` tab of a table. When
 clicking on the `+Frequently used columns` button, choose `updated_at`:
 
-<div class="thumbnail"
-alt="Add an updated_at time on the Hasura console" width="1000px">
-
-/img/graphql/core/schema/updated-at.png
-
-</div>
+<Thumbnail
+  src="/img/graphql/core/schema/updated-at.png"
+  alt="Add an updated_at time on the Hasura console"
+  width="1000px"
+/>
 
 Click the `Add column` button.
 
-</div>
+</TabItem>
+<TabItem value="cli" label="CLI">
 
-<div class="tab">
-
-CLI
-
-`Create a migration manually <manual_migrations>` and add the below SQL
+[Create a migration manually](/graphql/core/migrations/advanced/writing-migrations-manually.mdx) and add the below SQL
 statement to the `up.sql` file:
 
 1.  Add an `updated_at` timestamp field to the `article` table.
@@ -161,7 +136,7 @@ EXECUTE PROCEDURE trigger_set_timestamp();
 ```
 
 Add the following statement to the `down.sql` file in case you need to
-`roll back <roll_back_migrations>` the above statement:
+[roll back](/graphql/core/migrations/advanced/rolling-back-migrations.mdx) the above statement:
 
 ```plpgsql
 DROP trigger set_timestamp on article;
@@ -176,13 +151,10 @@ hasura migrate apply
 hasura metadata reload
 ```
 
-</div>
+</TabItem>
+<TabItem value="api" label="API">
 
-<div class="tab">
-
-API
-
-You can add an `updated_at` timestamp by using the `schema_run_sql`
+You can add an `updated_at` timestamp by using the [run_sql](/graphql/core/api-reference/schema-api/run-sql.mdx)
 schema API.
 
 The below SQL statement will achieve the following:
@@ -204,7 +176,7 @@ X-Hasura-Role: admin
   "type": "run_sql",
   "args": {
       "source": "<db_name>",
-      "sql": 
+      "sql":
         "ALTER TABLE ONLY \"public\".\"article\"
         ADD COLUMN \"updated_at\" TIMESTAMP DEFAULT NOW();
 
@@ -225,6 +197,5 @@ X-Hasura-Role: admin
 }
 ```
 
-</div>
-
-</div>
+</TabItem>
+</Tabs>

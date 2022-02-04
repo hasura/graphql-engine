@@ -1,16 +1,21 @@
-<div class="meta"
-description="Performance of Hasura GraphQL queries on MS SQL Server"
-keywords="hasura, docs, ms sql server, schema, queries, performance">
+---
+sidebar_label: Query performance
+sidebar_position: 10
+description: Performance of Hasura GraphQL queries on MS SQL Server
+keywords:
+  - hasura
+  - docs
+  - ms sql server
+  - schema
+  - queries
+  - performance
+---
 
-</div>
+import Thumbnail from "@site/src/components/Thumbnail/Thumbnail";
+import Tabs from "@theme/Tabs";
+import TabItem from "@theme/TabItem";
 
 # MS SQL Server: Query performance
-
-<div class="contents" backlinks="none" depth="2" local="">
-
-Table of contents
-
-</div>
 
 ## Introduction
 
@@ -18,36 +23,34 @@ Sometimes queries can become slow due to large data volumes or levels of
 nesting. This page explains how to identify the query performance, and
 how queries can be optimized.
 
-## Analysing query performance
+## Analysing query performance {#ms-sql-server-analysing-query-performance}
 
 Let's say we want to analyse the following query:
 
 ```graphql
 query {
-   authors(where: {name: {_eq: "Mario"}}) {
-      rating
-   }
+  authors(where: { name: { _eq: "Mario" } }) {
+    rating
+  }
 }
 ```
 
 In order to analyse the performance of a query, you can click on the
 `Analyze` button on the Hasura console:
 
-<div class="thumbnail" width="800px"
-alt="Query analyze button on Hasura console">
-
-/img/graphql/core/queries/analyze-query.png
-
-</div>
+<Thumbnail
+  src="/img/graphql/core/queries/analyze-query.png"
+  alt="Query analyze button on Hasura console"
+  width="800px"
+/>
 
 The following query execution plan is generated:
 
-<div class="thumbnail" width="800px"
-alt="Execution plan for Hasura GraphQL query">
-
-/img/graphql/core/queries/query-analysis-before-index.png
-
-</div>
+<Thumbnail
+  src="/img/graphql/core/queries/query-analysis-before-index.png"
+  alt="Execution plan for Hasura GraphQL query"
+  width="800px"
+/>
 
 We can see that a sequential scan is conducted on the `authors` table.
 This means that MS SQL Server goes through every row of the `authors`
@@ -62,7 +65,7 @@ docs](https://docs.microsoft.com/en-us/sql/t-sql/queries/explain-transact-sql?vi
 
 ## Query optimization
 
-### Using MS SQL indexes
+### Using MS SQL indexes {#ms-sql-server-data-validation-mssql-indexes}
 
 [MS SQL Server
 indexes](https://docs.microsoft.com/en-us/sql/relational-databases/indexes/indexes?view=sql-server-ver15)
@@ -76,14 +79,14 @@ Let's say we know that `authors` table is frequently queried by `name`:
 
 ```graphql
 query {
-   authors(where: {name: {_eq: "Mario"}}) {
-      rating
-   }
+  authors(where: { name: { _eq: "Mario" } }) {
+    rating
+  }
 }
 ```
 
 We've seen in the
-`above example <ms_sql_server_analysing_query_performance>` that by
+[above example](/graphql/core/databases/ms-sql-server/queries/performance.mdx#ms-sql-server-analysing-query-performance) that by
 default MS SQL Server conducts a sequential scan i.e. going through all
 the rows. Whenever there is a sequential scan, it can be optimized by
 adding an index.
@@ -94,30 +97,18 @@ The following statement sets an index on `name` in the `authors` table.
 CREATE INDEX ON authors (name);
 ```
 
-<div class="rst-class">
-
-api_tabs
-
-</div>
-
-<div class="tabs">
-
-<div class="tab">
-
-Console
+<Tabs className="api-tabs">
+<TabItem value="console" label="Console">
 
 An index can be added in the `Data -> SQL` tab in the Hasura console.
 
-</div>
+</TabItem>
+<TabItem value="cli" label="CLI">
 
-<div class="tab">
-
-CLI
-
-`Create a migration manually <manual_migrations>` and add your create
+[Create a migration manually](/graphql/core/migrations/advanced/writing-migrations-manually.mdx#manual-migrations) and add your create
 index statement to the `up.sql` file. Also, add an SQL statement to
 revert that statement to the `down.sql` file in case you need to
-`roll back <roll_back_migrations>` the migration.
+[roll back](/graphql/core/migrations/advanced/rolling-back-migrations.mdx#roll-back-migrations) the migration.
 
 Apply the migration by running:
 
@@ -125,14 +116,11 @@ Apply the migration by running:
 hasura migrate apply
 ```
 
-</div>
-
-<div class="tab">
-
-API
+</TabItem>
+<TabItem value="api" label="API">
 
 You can add an index by making an API call to the
-`schema_run_sql metadata API <schema_run_sql>`:
+[schema_run_sql metadata API](/graphql/core/api-reference/schema-api/run-sql.mdx#schema-run-sql):
 
 ```http
 POST /v2/query HTTP/1.1
@@ -148,35 +136,27 @@ X-Hasura-Role: admin
 }
 ```
 
-</div>
-
-</div>
+</TabItem>
+</Tabs>
 
 Let's compare the performance analysis to
-`the one before adding the index <ms_sql_server_analysing_query_performance>`.
+[the one before adding the index](/graphql/core/databases/ms-sql-server/queries/performance.mdx#ms-sql-server-analysing-query-performance).
 What was a `sequential scan` in the example earlier is now an
 `index scan`. `Index scans` are usually more performant than
 `sequential scans`. We can also see that the `cost` of the query is now
 lower than the one before we added the index.
 
-<div class="thumbnail" width="800px"
-alt="Execution plan for Hasura GraphQL query">
+<Thumbnail
+  src="/img/graphql/core/queries/query-analysis-after-index.png"
+  alt="Execution plan for Hasura GraphQL query"
+  width="800px"
+/>
 
-/img/graphql/core/queries/query-analysis-after-index.png
-
-</div>
-
-<div class="note">
-
-<div class="title">
-
-Note
-
-</div>
+:::info Note
 
 In some cases sequential scans can still be faster than index scans,
 e.g. if the result returns a high percentage of the rows in the table.
 MS SQL Server comes up with multiple query plans and takes the call on
 what kind of scan would be faster.
 
-</div>
+:::

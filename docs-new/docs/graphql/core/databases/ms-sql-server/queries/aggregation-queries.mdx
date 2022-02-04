@@ -75,6 +75,90 @@ rating:
 }`}
 />
 
+<!--
+
+TODO: DBCOMPATIBILITY unsupported now
+        nodes {
+          id
+          title
+          rating
+        }
+      }
+    }
+  :response:
+    {
+      "data": {
+        "articles_aggregate": {
+          "aggregate": {
+            "count": 10,
+            "sum": {
+              "rating": 26
+            },
+            "avg": {
+              "rating": 2.6
+            },
+            "max": {
+              "rating": 4
+            }
+          },
+          "nodes": [
+            {
+              "id": 1,
+              "title": "sit amet",
+              "rating": 1
+            },
+            {
+              "id": 2,
+              "title": "a nibh",
+              "rating": 3
+            },
+            {
+              "id": 3,
+              "title": "amet justo morbi",
+              "rating": 4
+            },
+            {
+              "id": 4,
+              "title": "vestibulum ac est",
+              "rating": 2
+            },
+            {
+              "id": 5,
+              "title": "ut blandit",
+              "rating": 2
+            },
+            {
+              "id": 6,
+              "title": "sapien ut",
+              "rating": 1
+            },
+            {
+              "id": 7,
+              "title": "nisl duis ac",
+              "rating": 4
+            },
+            {
+              "id": 8,
+              "title": "donec semper sapien",
+              "rating": 3
+            },
+            {
+              "id": 9,
+              "title": "sit amet",
+              "rating": 3
+            },
+            {
+              "id": 10,
+              "title": "dui proin leo",
+              "rating": 3
+            }
+          ]
+        }
+      }
+    }
+
+ -->
+
 ## Fetch aggregated data on nested objects {#ms-sql-server-nested-aggregate}
 
 The following is an example of a nested object query with aggregations

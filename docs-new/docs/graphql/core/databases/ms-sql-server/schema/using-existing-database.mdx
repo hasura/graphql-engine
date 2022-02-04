@@ -1,16 +1,18 @@
-<div class="meta"
-description="Set up a Hasura GraphQL schema with an existing database"
-keywords="hasura, docs, schema, existing database">
+---
+sidebar_label: Using an existing database
+sidebar_position: 6
+description: Set up a Hasura GraphQL schema with an existing database
+keywords:
+  - hasura
+  - docs
+  - schema
+  - existing database
+---
 
-</div>
+import Tabs from "@theme/Tabs";
+import TabItem from "@theme/TabItem";
 
 # Setting up a GraphQL schema using an existing MS SQL Server database
-
-<div class="contents" backlinks="none" depth="2" local="">
-
-Table of contents
-
-</div>
 
 ## Introduction
 
@@ -29,35 +31,23 @@ want to expose that table/view over GraphQL.
 
 ### To track a table or a view
 
-<div class="rst-class">
-
-api_tabs
-
-</div>
-
-<div class="tabs">
-
-<div class="tab">
-
-Console
+<Tabs className="api-tabs">
+<TabItem value="console" label="Console">
 
 1.  Head to the `Data -> Schema` section of the console.
 2.  Under the heading `Untracked Tables/Views`, click on the `Track`
     button next to the table/view name.
 
-</div>
-
-<div class="tab">
-
-CLI
+</TabItem>
+<TabItem value="cli" label="CLI">
 
 To track the table and expose it over the GraphQL API, add it to the
 `tables.yaml` file in the `metadata` directory as follows:
 
-```yaml
+```yaml {1-3}
 - table:
-   schema: dbo
-   name: <table name>
+    schema: dbo
+    name: <table name>
 ```
 
 Apply the metadata by running:
@@ -66,14 +56,11 @@ Apply the metadata by running:
 hasura metadata apply
 ```
 
-</div>
-
-<div class="tab">
-
-API
+</TabItem>
+<TabItem value="api" label="API">
 
 To track a table and expose it over the GraphQL API, use the
-`mssql_track_table metadata API <mssql_track_table>`:
+[mssql_track_table metadata API](/graphql/core/api-reference/metadata-api/table-view.mdx#mssql-track-table):
 
 ```http
 POST /v1/metadata HTTP/1.1
@@ -90,44 +77,31 @@ X-Hasura-Role: admin
 }
 ```
 
-</div>
-
-</div>
+</TabItem>
+</Tabs>
 
 ### To track all tables and views present in the database
 
-<div class="rst-class">
-
-api_tabs
-
-</div>
-
-<div class="tabs">
-
-<div class="tab">
-
-Console
+<Tabs className="api-tabs">
+<TabItem value="console" label="Console">
 
 1.  Head to the `Data -> Schema` section of the console.
 2.  Under the heading `Untracked Tables/Views`, click the `Track All`
     button.
 
-</div>
-
-<div class="tab">
-
-CLI
+</TabItem>
+<TabItem value="cli" label="CLI">
 
 To track all tables and expose them over the GraphQL API, add them to
 the `tables.yaml` file in the `metadata` directory as follows:
 
-```yaml
+```yaml {1-6}
 - table:
-   schema: dbo
-   name: <table-name-1>
+    schema: dbo
+    name: <table-name-1>
 - table:
-   schema: dbo
-   name: <table-name-2>
+    schema: dbo
+    name: <table-name-2>
 ```
 
 To automate this, you could add the tables in a loop through a script.
@@ -138,14 +112,11 @@ Apply the metadata by running:
 hasura metadata apply
 ```
 
-</div>
-
-<div class="tab">
-
-API
+</TabItem>
+<TabItem value="api" label="API">
 
 To track all tables and expose them over the GraphQL API, use the
-`mssql_track_table metadata API <mssql_track_table>`:
+[mssql_track_table metadata API](/graphql/core/api-reference/metadata-api/table-view.mdx#mssql-track-table):
 
 ```http
 POST /v1/metadata HTTP/1.1
@@ -178,63 +149,50 @@ X-Hasura-Role: admin
 To automate this, you could add the `mssql_track_table` requests to the
 `bulk` request in a loop through a script.
 
-</div>
-
-</div>
+</TabItem>
+</Tabs>
 
 ## Step 2: Track foreign-keys
 
 Tracking a foreign-key means creating a
-`relationship <ms_sql_server_table_relationships>` between the tables
+[relationship](/graphql/core/databases/ms-sql-server/schema/table-relationships/index.mdx) between the tables
 involved in the foreign-key.
 
 ### To track a foreign-key between two tables in the database
 
-<div class="rst-class">
-
-api_tabs
-
-</div>
-
-<div class="tabs">
-
-<div class="tab">
-
-Console
+<Tabs className="api-tabs">
+<TabItem value="console" label="Console">
 
 1.  Head to the `Data -> Schema` section of the console.
 2.  Click on a table involved in the foreign-key and head to the
     `Relationships` tab.
 3.  You should see a suggested relationship based on the foreign-key.
     Click `Add`, give a name to your relationship (this will be the name
-    of the `nested object <ms_sql_server_nested_object_queries>` in the
+    of the [nested object](/graphql/core/databases/ms-sql-server/queries/nested-object-queries.mdx) in the
     GraphQL query), and hit `Save` to create the relationship.
 4.  Repeat with the other table involved in the foreign-key.
 
-</div>
-
-<div class="tab">
-
-CLI
+</TabItem>
+<TabItem value="cli" label="CLI">
 
 To track a relationship and expose it over the GraphQL API, add it to
 the `tables.yaml` file in the `metadata` directory as follows:
 
 **Object relationship**
 
-```yaml
+```yaml {4-7}
 - table:
     schema: dbo
     name: <table name>
   object_relationships:
-  - name: <relationship name>
-    using:
-      foreign_key_constraint_on: <reference column>
+    - name: <relationship name>
+      using:
+        foreign_key_constraint_on: <reference column>
 ```
 
 **Array relationship**
 
-```yaml
+```yaml {4-11}
 - table:
       schema: dbo
       name: <table name>
@@ -254,16 +212,13 @@ Apply the metadata by running:
 hasura metadata apply
 ```
 
-</div>
-
-<div class="tab">
-
-API
+</TabItem>
+<TabItem value="api" label="API">
 
 **Object relationship**
 
 You can create an object relationship by using the
-`mssql_create_object_relationship` metadata API:
+[mssql_create_object_relationship](/graphql/core/api-reference/metadata-api/relationship.mdx#mssql-create-object-relationship) metadata API:
 
 ```http
 POST /v1/metadata HTTP/1.1
@@ -286,7 +241,7 @@ X-Hasura-Role: admin
 **Array relationship**
 
 You can create an array relationship by using the
-`mssql_create_array_relationship` metadata API:
+[mssql_create_array_relationship](/graphql/core/api-reference/metadata-api/relationship.mdx#mssql-create-array-relationship) metadata API:
 
 ```http
 POST /v1/metadata HTTP/1.1
@@ -309,64 +264,51 @@ X-Hasura-Role: admin
 }
 ```
 
-</div>
-
-</div>
+</TabItem>
+</Tabs>
 
 ### To track all the foreign-keys of all tables in the database
 
-<div class="rst-class">
-
-api_tabs
-
-</div>
-
-<div class="tabs">
-
-<div class="tab">
-
-Console
+<Tabs className="api-tabs">
+<TabItem value="console" label="Console">
 
 1.  Head to the `Data -> Schema` section of the console.
 2.  Under the heading `Untracked foreign-key relations`, click the
     `Track All` button to automatically create relationships based on
     the foreign-keys.
 
-</div>
-
-<div class="tab">
-
-CLI
+</TabItem>
+<TabItem value="cli" label="CLI">
 
 To track all relationships and expose them over the GraphQL API, add
 them to the `tables.yaml` file in the `metadata` directory as follows:
 
 **Object relationship**
 
-```yaml
+```yaml {4-7}
 - table:
     schema: dbo
     name: <table name>
   object_relationships:
-  - name: <relationship name>
-    using:
-      foreign_key_constraint_on: <reference column>
+    - name: <relationship name>
+      using:
+        foreign_key_constraint_on: <reference column>
 ```
 
 **Array relationship**
 
-```yaml
+```yaml {4-11}
 - table:
     schema: dbo
     name: <table name>
   array_relationships:
-  - name: <relationship name>
-    using:
-      foreign_key_constraint_on:
-        column: <reference column>
-        table:
-          schema: dbo
-          name: <reference table name>
+    - name: <relationship name>
+      using:
+        foreign_key_constraint_on:
+          column: <reference column>
+          table:
+            schema: dbo
+            name: <reference table name>
 ```
 
 To automate this, you could add the relationships in a loop through a
@@ -378,15 +320,12 @@ Apply the metadata by running:
 hasura metadata apply
 ```
 
-</div>
-
-<div class="tab">
-
-API
+</TabItem>
+<TabItem value="api" label="API">
 
 You can create multiple relationships by using the
-`mssql_create_object_relationship` and the
-`mssql_create_array_relationship` metadata APIs:
+[mssql_create_object_relationship](/graphql/core/api-reference/metadata-api/relationship.mdx#mssql-create-object-relationship) and the
+[mssql_create_array_relationship](/graphql/core/api-reference/metadata-api/relationship.mdx#mssql-create-array-relationship) metadata APIs:
 
 ```http
 POST /v1/metadata HTTP/1.1
@@ -428,23 +367,20 @@ X-Hasura-Role: admin
 To automate this, you could add the create relationships requests to the
 `bulk` request in a loop through a script.
 
-</div>
+</TabItem>
+</Tabs>
 
-</div>
-
-<div class="admonition">
-
-Relationship nomenclature
+:::info Relationship nomenclature
 
 In this case, Hasura GraphQL engine will **automatically generate
 relationship names** (the names of the
-`nested objects <ms_sql_server_nested_object_queries>` in the GraphQL
+[nested objects](/graphql/core/databases/ms-sql-server/queries/nested-object-queries.mdx) in the GraphQL
 query) based on the table names and the foreign-key names.
 
 The name is generated in the following format:
 
--   For object relationships: `singular of foreignTableName`
--   For array relationships: `plural of foreignTableName`
+- For object relationships: `singular of foreignTableName`
+- For array relationships: `plural of foreignTableName`
 
 For example, for the foreign-key `article.author_id -> author.id`, the
 relationship names will be `author` for `article` table and `articles`
@@ -458,6 +394,6 @@ Note that, **this is just an arbitrary naming convention** chosen by
 Hasura to ensure the generation of unique relationship names. You can
 choose to rename your relationships to anything you wish. You can
 **change the relationship names** with a name of your choice as shown in
-`ms_sql_server_rename_relationships`.
+[MS SQL Server: Renaming relationships](/graphql/core/databases/ms-sql-server/schema/table-relationships/rename.mdx).
 
-</div>
+:::

@@ -1,16 +1,14 @@
-<div class="meta"
-description="Manage subscriptions on MS SQL Server with Hasura"
-keywords="hasura, docs, ms sql server, subscription">
-
-</div>
+---
+slug: index
+description: Manage subscriptions on MS SQL Server with Hasura
+keywords:
+  - hasura
+  - docs
+  - ms sql server
+  - subscription
+---
 
 # MS SQL Server: Subscriptions
-
-<div class="contents" backlinks="none" depth="1" local="">
-
-Table of contents
-
-</div>
 
 ## Introduction
 
@@ -18,7 +16,7 @@ A GraphQL subscription is essentially a query where the client receives
 an update whenever the value of any field changes upstream.
 
 Subscriptions are supported for all kinds of queries. All the concepts
-of `queries <ms_sql_server_queries>` hold true for subscriptions as
+of [queries](/graphql/core/databases/ms-sql-server/queries/index.mdx) hold true for subscriptions as
 well.
 
 ## Implementation
@@ -33,21 +31,19 @@ result. By default, updates are delivered to clients every **1 sec**.
 You can turn any query into a subscription by simply replacing `query`
 with `subscription` as the operation type.
 
-<div class="admonition">
-
-Caveat
+:::info Caveat
 
 Hasura follows the [GraphQL
 spec](https://graphql.github.io/graphql-spec/June2018/#sec-Single-root-field)
 which allows for only one root field in a subscription.
 
-</div>
+:::
 
 ## Use cases
 
--   `ms_sql_server_subscribe_field`
--   `ms_sql_server_subscribe_table`
--   `ms_sql_server_subscribe_derived`
+- [Subscribe to the latest value of a particular field](/graphql/core/databases/ms-sql-server/subscriptions/use-cases.mdx#ms-sql-server-subscribe-field)
+- [Subscribe to changes to a table’s entries](/graphql/core/databases/ms-sql-server/subscriptions/use-cases.mdx#ms-sql-server-subscribe-table)
+- [Subscribe to the latest value of some derived data](t/graphql/core/databases/ms-sql-server/subscriptions/use-cases.mdx#ms-sql-server-subscribe-derived)
 
 ## Communication protocol
 
@@ -64,9 +60,7 @@ considered as `BETA`. The GraphQL engine uses the
 that'll be used. By default, the GraphQL engine will use the
 `apollographql/subscriptions-transport-ws` protocol.
 
-<div class="admonition">
-
-Setting headers for subscriptions with Apollo client
+:::info Setting headers for subscriptions with Apollo client
 
 If you are using Apollo Client, headers can be passed to a subscription
 by setting `connectionParams` while [creating the
@@ -89,7 +83,7 @@ See
 [this](https://www.apollographql.com/docs/react/data/subscriptions/#authentication-over-websocket)
 for more info on using `connectionParams`.
 
-</div>
+:::
 
 ## Cookies and WebSockets
 
@@ -107,7 +101,7 @@ As browsers don't enforce Same Origin Policy (SOP) for websockets, the
 Hasura server enforces the CORS rules when accepting the websocket
 connection.
 
-It uses the provided CORS configuration (as per `configure-cors`).
+It uses the provided CORS configuration (as per [Configure Cors](/graphql/core/deployment/graphql-engine-flags/config-examples.mdx#configure-cors)).
 
 1.  When it is `*`, the cookie is read and the CORS check is not
     enforced.
@@ -117,10 +111,4 @@ It uses the provided CORS configuration (as per `configure-cors`).
     be read (because of potential security issues). To override the
     behaviour, you can use the flag `--ws-read-cookie` or the
     environment variable `HASURA_GRAPHQL_WS_READ_COOKIE`. See
-    `server_flag_reference` for the setting.
-
-<div class="toctree" maxdepth="1" hidden="">
-
-Sample use cases \<use-cases>
-
-</div>
+    [GraphQL Engine server config reference](/graphql/core/deployment/graphql-engine-flags/reference.mdx) for the setting.

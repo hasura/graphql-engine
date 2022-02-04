@@ -1,16 +1,19 @@
-<div class="meta"
-description="Adding remote source relationships with Postgres tables in Hasura"
-keywords="hasura, docs, remote source relationship, remote join, remote source, data federation">
+---
+sidebar_label: Remote source relationships
+sidebar_position: 2
+description: Adding remote source relationships with Postgres tables in Hasura
+keywords:
+  - hasura
+  - docs
+  - remote source relationship
+  - remote join
+  - remote schema
+  - data federation
+---
 
-</div>
+import GraphiQLIDE from "@site/src/components/GraphiQLIDE/GraphiQLIDE";
 
 # Postgres: Remote source relationships
-
-<div class="contents" backlinks="none" depth="2" local="">
-
-Table of contents
-
-</div>
 
 ## Introduction
 
@@ -20,20 +23,18 @@ separate databases. Once you create relationships between types from
 your source database to types from your target database, you can then
 "join" them by running GraphQL queries.
 
-<div class="admonition">
-
-Supported from
+:::info Supported from
 
 Remote source relationships are supported from versions `v2.1.0` and
 above.
 
-</div>
+:::
 
 ## Create remote source relationships
 
 ### Step 0: Add two database sources
 
-Add a database source as described `here <connect_database>` and track
+Add a database source as described [here](/graphql/core/databases/connect-db.mdx) and track
 the required tables. Then, repeat the process to add your target
 database source.
 
@@ -43,18 +44,18 @@ A remote source relationship is defined alongside the source database
 table (that is, the source side of the join). The following data is
 required to define a remote source relationship:
 
--   **Name**: A name for the relationship.
--   **Remote Source**: The name of the target database source (that is,
-    the target side of the join)
--   **Remote Table**: The table in the target database source that
-    should be joined with the source table
--   **Relationship type**: Either `object` or `array` - just as for
-    normal relationships, Hasura supports both many-to-one (object) and
-    one-to-many (array) relationships.
--   **Field Mapping**: A mapping between fields in the source table and
-    their corresponding fields in the target table, just as a foreign
-    key relationship would be defined by such a mapping within a single
-    database.
+- **Name**: A name for the relationship.
+- **Remote Source**: The name of the target database source (that is,
+  the target side of the join)
+- **Remote Table**: The table in the target database source that
+  should be joined with the source table
+- **Relationship type**: Either `object` or `array` - just as for
+  normal relationships, Hasura supports both many-to-one (object) and
+  one-to-many (array) relationships.
+- **Field Mapping**: A mapping between fields in the source table and
+  their corresponding fields in the target table, just as a foreign
+  key relationship would be defined by such a mapping within a single
+  database.
 
 For this example, we assume that our source `orders_db` database has an
 `orders` table with the fields `id` and `ordered_by_user_id`, and that
@@ -98,7 +99,8 @@ database.
 
 In the GraphiQL tab, test out your remote source relationship.
 
-<div class="graphiql" view_only="" query="query {
+<GraphiQLIDE
+  query={`query {
   orders {
     id
     ordered_by_user {
@@ -106,20 +108,18 @@ In the GraphiQL tab, test out your remote source relationship.
       name
     }
   }
-}
-:response:
-{
-  &quot;data&quot;: {
-    &quot;orders&quot;: [
+}`}
+  response={`{
+  "data": {
+    "orders": [
       {
-        &quot;id&quot;: &quot;2a34eda4&quot;,
-        &quot;ordered_by_user&quot;: {
-          &quot;id&quot;: &quot;1d794fc7&quot;,
-          &quot;name&quot;: &quot;Daenerys Targaryen&quot;
+        "id": "2a34eda4",
+        "ordered_by_user": {
+          "id": "1d794fc7",
+          "name": "Daenerys Targaryen"
         }
       }
     ]
   }
-}">
-
-</div>
+}`}
+/>

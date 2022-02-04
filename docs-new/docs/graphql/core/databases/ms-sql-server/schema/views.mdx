@@ -1,16 +1,19 @@
-<div class="meta"
-description="Customise the Hasura GraphQL schema with views"
-keywords="hasura, docs, schema, view">
+---
+sidebar_label: Extend with views
+sidebar_position: 3
+description: Customise the Hasura GraphQL schema with views
+keywords:
+  - hasura
+  - docs
+  - schema
+  - view
+---
 
-</div>
+import Tabs from "@theme/Tabs";
+import TabItem from "@theme/TabItem";
+import Thumbnail from "@site/src/components/Thumbnail/Thumbnail";
 
 # MS SQL Server: Extend schema with views
-
-<div class="contents" backlinks="none" depth="2" local="">
-
-Table of contents
-
-</div>
 
 ## What are views?
 
@@ -23,34 +26,22 @@ Hasura GraphQL engine lets you expose views over the GraphQL API to
 allow querying them using both `queries` and `subscriptions` just like
 regular tables.
 
-## Creating views
+## Creating views {#ms-sql-server-create-views}
 
-<div class="rst-class">
-
-api_tabs
-
-</div>
-
-<div class="tabs">
-
-<div class="tab">
-
-Console
+<Tabs className="api-tabs">
+<TabItem value="console" label="Console">
 
 Views can be created using SQL which can be run in the Hasura console:
 
--   Head to the `Data -> SQL` section of the Hasura console
--   Enter your [create view SQL
-    statement](https://docs.microsoft.com/en-us/sql/relational-databases/views/create-views?view=sql-server-ver15)
--   Hit the `Run` button
+- Head to the `Data -> SQL` section of the Hasura console
+- Enter your [create view SQL
+  statement](https://docs.microsoft.com/en-us/sql/relational-databases/views/create-views?view=sql-server-ver15)
+- Hit the `Run` button
 
-</div>
+</TabItem>
+<TabItem value="cli" label="CLI">
 
-<div class="tab">
-
-CLI
-
-1.  `Create a migration manually <manual_migrations>` and add your
+1.  [Create a migration manually](/graphql/core/migrations/advanced/writing-migrations-manually.mdx) and add your
     [create view SQL
     statement](https://docs.microsoft.com/en-us/sql/relational-databases/views/create-views?view=sql-server-ver15)
     to the `up.sql` file. Also, add an SQL statement to the `down.sql`
@@ -62,14 +53,11 @@ CLI
     hasura migrate apply
     ```
 
-</div>
-
-<div class="tab">
-
-API
+</TabItem>
+<TabItem value="api" label="API">
 
 You can add a view by using the
-`schema_run_sql metadata API <schema_run_sql>`:
+[schema_run_sql metadata API](/graphql/core/api-reference/schema-api/run-sql.mdx#schema-run-sql):
 
 ```http
 POST /v2/query HTTP/1.1
@@ -85,9 +73,8 @@ X-Hasura-Role: admin
 }
 ```
 
-</div>
-
-</div>
+</TabItem>
+</Tabs>
 
 ## Tracking views
 
@@ -95,17 +82,8 @@ Views can be present in the underlying MS SQL Server database without
 being exposed over the GraphQL API. In order to expose a view over the
 GraphQL API, it needs to be **tracked**.
 
-<div class="rst-class">
-
-api_tabs
-
-</div>
-
-<div class="tabs">
-
-<div class="tab">
-
-Console
+<Tabs className="api-tabs">
+<TabItem value="console" label="Console">
 
 While creating views from the `Data -> SQL` page, selecting the
 `Track this` checkbox will expose the new view over the GraphQL API
@@ -114,22 +92,18 @@ right after creation.
 You can track any existing views in your database from the
 `Data -> Schema` page:
 
-<div class="thumbnail" alt="Track views">
+<Thumbnail
+  src="/img/graphql/core/schema/schema-track-views.png"
+  alt="Track views"
+/>
 
-/img/graphql/core/schema/schema-track-views.png
-
-</div>
-
-</div>
-
-<div class="tab">
-
-CLI
+</TabItem>
+<TabItem value="cli" label="CLI">
 
 1.  To track the view and expose it over the GraphQL API, edit the
     `tables.yaml` file in the `metadata` directory as follows:
 
-    ```yaml
+    ```yaml {7,9}
     - table:
         schema: dbo
         name: authors
@@ -147,14 +121,11 @@ CLI
     hasura metadata apply
     ```
 
-</div>
-
-<div class="tab">
-
-API
+</TabItem>
+<TabItem value="api" label="API">
 
 To track the view and expose it over the GraphQL API, make the following
-API call to the `mssql_track_table metadata API <mssql_track_table>`:
+API call to the [mssql_track_table metadata API](/graphql/core/api-reference/metadata-api/table-view.mdx#mssql-track-table):
 
 ```http
 POST /v1/metadata HTTP/1.1
@@ -172,9 +143,8 @@ X-Hasura-Role: admin
 }
 ```
 
-</div>
-
-</div>
+</TabItem>
+</Tabs>
 
 ## Use cases
 

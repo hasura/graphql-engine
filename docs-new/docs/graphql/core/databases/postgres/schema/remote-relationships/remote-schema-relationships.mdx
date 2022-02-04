@@ -1,16 +1,22 @@
-<div class="meta"
-description="Adding remote schema relationships with Postgres tables in Hasura"
-keywords="hasura, docs, remote schema relationship, remote join, remote schema, data federation">
+---
+sidebar_label: Remote schema relationships
+sidebar_position: 1
+description: Adding remote schema relationships with Postgres tables in Hasura
+keywords:
+  - hasura
+  - docs
+  - remote schema relationship
+  - remote join
+  - remote schema
+  - data federation
+---
 
-</div>
+import Tabs from "@theme/Tabs";
+import TabItem from "@theme/TabItem";
+import Thumbnail from "@site/src/components/Thumbnail/Thumbnail";
+import GraphiQLIDE from "@site/src/components/GraphiQLIDE/GraphiQLIDE";
 
 # Postgres: Remote schema relationships
-
-<div class="contents" backlinks="none" depth="2" local="">
-
-Table of contents
-
-</div>
 
 ## Introduction
 
@@ -26,104 +32,83 @@ Because Hasura is meant to be a GraphQL server that you can expose
 directly to your apps, Hasura also handles security and authorization
 while providing remote joins.
 
-<div class="note">
-
-<div class="title">
-
-Note
-
-</div>
+:::info Note
 
 To see example use cases, check out this [blog
 post](https://hasura.io/blog/remote-joins-a-graphql-api-to-join-database-and-other-data-sources/).
 
-</div>
+:::
 
-<div class="admonition">
-
-Supported from
+:::info Supported from
 
 Remote schema relationships are supported from versions `v1.3.0` and
 above.
 
-</div>
+:::
 
 ## Create remote schema relationships
 
 ### Step 0: Add a remote schema
 
-Add a remote schema as described `here <adding_schema>`, if the schema
+Add a remote schema as described [here](/graphql/core/remote-schemas/adding-schema.mdx), if the schema
 isn't already added.
 
 ### Step 1: Define and create the relationship
 
 The following fields can be defined for a remote schema relationship:
 
--   **Name**: Define a name for the relationship.
--   **Remote Schema**: Select a remote schema among all the ones you've
-    created.
--   **Configuration**: Set up the join configuration, to inject values
-    as input arguments of the remote schema field.
-    -   **From column**: Input injected from table column values.
-    -   **From static value**: Input injected from a static value of
-        your choice.
+- **Name**: Define a name for the relationship.
+- **Remote Schema**: Select a remote schema among all the ones you've
+  created.
+- **Configuration**: Set up the join configuration, to inject values
+  as input arguments of the remote schema field.
+  - **From column**: Input injected from table column values.
+  - **From static value**: Input injected from a static value of
+    your choice.
 
 For this example, we assume that our schema has a `users` table with the
 fields `name` and `auth0_id`.
 
-<div class="rst-class">
+<Tabs className="api-tabs">
+<TabItem value="console" label="Console">
 
-api_tabs
+- Head to the `Data -> [table-name] -> Relationships` tab.
+- Click the `Add a remote relationship` button.
 
-</div>
+<Thumbnail
+  src="/img/graphql/core/schema/add-remote-schema-relationship.png"
+  alt="Opening the remote relationship section"
+  width="1000px"
+/>
 
-<div class="tabs">
+- Define the relationship and hit `Save`.
 
-<div class="tab">
+<Thumbnail
+  src="/img/graphql/core/schema/define-remote-schema-relationship.png"
+  alt="Defining the relationship"
+  width="800px"
+/>
 
-Console
-
--   Head to the `Data -> [table-name] -> Relationships` tab.
--   Click the `Add a remote relationship` button.
-
-<div class="thumbnail" alt="Opening the remote relationship section"
-width="1000px">
-
-/img/graphql/core/schema/add-remote-schema-relationship.png
-
-</div>
-
--   Define the relationship and hit `Save`.
-
-<div class="thumbnail" alt="Defining the relationship" width="800px">
-
-/img/graphql/core/schema/define-remote-schema-relationship.png
-
-</div>
-
-</div>
-
-<div class="tab">
-
-CLI
+</TabItem>
+<TabItem value="cli" label="CLI">
 
 You can add a remote schema relationship by adding it to the
 `tables.yaml` in the `metadata` directory:
 
-```yaml
+```yaml {4-13}
 - table:
     schema: public
     name: users
   remote_relationships:
-  - definition:
-      remote_field:
-        auth0profile:
-          arguments:
-            id: $auth0_id
-      hasura_fields:
-      - auth0_id
-      remote_schema: auth0
-    name: auth0
+    - definition:
+        remote_field:
+          auth0profile:
+            arguments:
+              id: $auth0_id
+        hasura_fields:
+          - auth0_id
+        remote_schema: auth0
+      name: auth0
 ```
 
 Apply the metadata by running:
@@ -132,14 +117,11 @@ Apply the metadata by running:
 hasura metadata apply
 ```
 
-</div>
-
-<div class="tab">
-
-API
+</TabItem>
+<TabItem value="api" label="API">
 
 You can add a remote schema relationship by using the
-`metadata_pg_create_remote_relationship` metadata API:
+[pg_create_remote_relationship](/graphql/core/api-reference/metadata-api/remote-relationships.mdx#metadata-pg-create-remote-relationship) metadata API:
 
 ```http
 POST /v1/metadata HTTP/1.1
@@ -167,9 +149,8 @@ X-Hasura-Role: admin
 }
 ```
 
-</div>
-
-</div>
+</TabItem>
+</Tabs>
 
 In this example, we've added a remote schema which is a wrapper around
 [Auth0](https://auth0.com/)'s REST API (see example
@@ -185,7 +166,8 @@ In this example, we've added a remote schema which is a wrapper around
 
 In the GraphiQL tab, test out your remote schema relationship.
 
-<div class="graphiql" view_only="" query="query {
+<GraphiQLIDE
+  query={`query {
   users {
     name
     auth0_profile {
@@ -194,29 +176,27 @@ In the GraphiQL tab, test out your remote schema relationship.
       last_login
     }
   }
-}
-:response:
-{
-  &quot;data&quot;: {
-    &quot;users&quot;: [
+}`}
+  response={`{
+  "data": {
+    "users": [
       {
-        &quot;name&quot;: &quot;Daenerys Targaryen&quot;,
-        &quot;auth0_profile&quot;: {
-          &quot;nickname&quot;: &quot;Stormborn&quot;,
-          &quot;email&quot;: &quot;mother.of.dragons@unburnt.com&quot;,
-          &quot;last_login&quot;: &quot;2019-05-19T01:35:48.863Z&quot;
+        "name": "Daenerys Targaryen",
+        "auth0_profile": {
+          "nickname": "Stormborn",
+          "email": "mother.of.dragons@unburnt.com",
+          "last_login": "2019-05-19T01:35:48.863Z"
         }
       }
     ]
   }
-}">
+}`}
+/>
 
-</div>
-
-## Remote schema relationship permissions
+## Remote schema relationship permissions {#pg-remote-schema-relationship-permissions}
 
 Remote schema relationship permissions are derived from the
-`remote schema permissions <remote_schema_permissions>` defined for the
+[remote schema permissions](/graphql/core/remote-schemas/auth/remote-schema-permissions.mdx) defined for the
 role. When a remote relationship cannot be derived, the remote
 relationship field will not be added to the schema for the role.
 
@@ -226,15 +206,9 @@ Some of the cases in which a remote relationship cannot be derived are:
 2.  The role doesn't have access to the field or types that are used by
     the remote relationship.
 
-<div class="note">
-
-<div class="title">
-
-Note
-
-</div>
+:::info Note
 
 Remote relationship permissions apply only if remote schema permissions
 are enabled in graphql-engine.
 
-</div>
+:::

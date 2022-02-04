@@ -1,52 +1,44 @@
-<div class="meta"
-description="Rename MS SQL Server relationships in Hasura"
-keywords="hasura, docs, ms sql server, schema, relationship, rename">
+---
+sidebar_label: Renaming relationships
+sidebar_position: 2
+description: Rename MS SQL Server relationships in Hasura
+keywords:
+  - hasura
+  - docs
+  - ms sql server
+  - schema
+  - relationship
+  - rename
+---
 
-</div>
+import Tabs from "@theme/Tabs";
+import TabItem from "@theme/TabItem";
 
 # MS SQL Server: Renaming relationships
 
-<div class="contents" backlinks="none" depth="1" local="">
-
-Table of contents
-
-</div>
-
 An existing relationship can be renamed as follows:
 
-<div class="rst-class">
+<Tabs className="api-tabs">
+<TabItem value="console" label="Console">
 
-api_tabs
+- Head to `Data -> [table-name] -> Relationships` in the console
+- Drop the existing relationship
+- Recreate the relationship with the new name
 
-</div>
-
-<div class="tabs">
-
-<div class="tab">
-
-Console
-
--   Head to `Data -> [table-name] -> Relationships` in the console
--   Drop the existing relationship
--   Recreate the relationship with the new name
-
-</div>
-
-<div class="tab">
-
-CLI
+</TabItem>
+<TabItem value="cli" label="CLI">
 
 You can rename a relationship by changing the relationship name in the
 `tables.yaml` file inside the `metadata` directory:
 
-```yaml
+```yaml {5}
 - table:
     schema: public
     name: articles
   object_relationships:
-  - name: author
-    using:
-      foreign_key_constraint_on: author_id
+    - name: author
+      using:
+        foreign_key_constraint_on: author_id
 - table:
     schema: public
     name: authors
@@ -58,14 +50,11 @@ Apply the metadata by running:
 hasura metadata apply
 ```
 
-</div>
-
-<div class="tab">
-
-API
+</TabItem>
+<TabItem value="api" label="API">
 
 You can rename a relationship by using the
-`mssql_rename_relationship metadata API <mssql_rename_relationship>`:
+[mssql_rename_relationship metadata API](/graphql/core/api-reference/metadata-api/relationship.mdx#mssql-rename-relationship):
 
 ```http
 POST /v1/metadata HTTP/1.1
@@ -83,17 +72,10 @@ X-Hasura-Role: admin
 }
 ```
 
-</div>
+</TabItem>
+</Tabs>
 
-</div>
-
-<div class="note">
-
-<div class="title">
-
-Note
-
-</div>
+:::info Note
 
 You might not be allowed to drop a relationship if it has been
 referenced elsewhere (e.g. in a permissions rule).
@@ -101,4 +83,4 @@ referenced elsewhere (e.g. in a permissions rule).
 In this case you will have to delete the references first, rename the
 relationship, and then re-add the references.
 
-</div>
+:::
