@@ -870,6 +870,15 @@ class TestGraphQLInsertMSSQL:
     def test_insert_table_no_pk(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/insert_table_no_pk_mssql.yaml")
 
+    def test_constraint_violation(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/constraint_violation_mssql.yaml")
+
+    def test_insert_numeric_value_fail(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/insert_numeric_value_fail_mssql.yaml")
+
+    def test_insert_invalid_datetime(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/insert_invalid_datetime_mssql.yaml")
+
 @pytest.mark.parametrize("backend", ['mssql'])
 @use_mutation_fixtures
 class TestGraphqlInsertPermissionMSSQL:

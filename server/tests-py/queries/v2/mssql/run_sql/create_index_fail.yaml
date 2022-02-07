@@ -1,0 +1,16 @@
+url: /v2/query
+status: 400
+response:
+  internal:
+    query: "CREATE INDEX author_idx ON author (id);\n"
+  path: $
+  error: Syntax error or access violation. Index already exists. [Microsoft][ODBC
+    Driver 17 for SQL Server][SQL Server]The operation failed because an index or
+    statistics with name 'author_idx' already exists on table 'author'.
+  code: already-exists
+query:
+  type: mssql_run_sql
+  args:
+    source: mssql
+    sql: |
+      CREATE INDEX author_idx ON author (id);

@@ -395,6 +395,7 @@ library
                      , Hasura.Backends.MSSQL.Plan
                      , Hasura.Backends.MSSQL.Schema.IfMatched
                      , Hasura.Backends.MSSQL.SQL.Value
+                     , Hasura.Backends.MSSQL.SQL.Error
                      , Hasura.Backends.MSSQL.ToQuery
                      , Hasura.Backends.MSSQL.Types
                      , Hasura.Backends.MSSQL.Types.Insert
@@ -852,6 +853,7 @@ test-suite graphql-engine-tests
     Data.TimeSpec
     Database.MSSQL.TransactionSpec
     Hasura.Backends.MySQL.DataLoader.ExecuteTests
+    Hasura.Backends.MSSQL.ErrorSpec
     Hasura.EventingSpec
     Hasura.Generator
     Hasura.Generator.Common

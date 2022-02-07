@@ -9,14 +9,8 @@ query:
       SOME RANDOM INVALID QUERY;
 response:
   internal:
-    exception:
-      tag: unsuccessful_return_code
-      contents:
-      - odbc_SQLExecDirectW
-      - -1
-      - "[Microsoft][ODBC Driver 17 for SQL Server][SQL Server]Incorrect syntax near\
-        \ the keyword 'SOME'."
     query: "SOME RANDOM INVALID QUERY;\n"
   path: $
-  error: sql query exception
-  code: mssql-error
+  error: Syntax error or access violation. [Microsoft][ODBC Driver 17 for SQL Server][SQL
+    Server]Incorrect syntax near the keyword 'SOME'.
+  code: bad-request

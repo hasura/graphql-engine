@@ -10,9 +10,7 @@ module Hasura.Backends.MSSQL.Connection
     MSSQLSourceConfig (MSSQLSourceConfig, _mscExecCtx),
     MSSQLExecCtx (..),
     createMSSQLPool,
-    fromMSSQLTxError,
     getEnv,
-    odbcExceptionToJSONValue,
     odbcValueToJValue,
     mkMSSQLExecCtx,
   )
@@ -21,13 +19,13 @@ where
 import Control.Monad.Trans.Control
 import Data.Aeson
 import Data.Aeson qualified as J
-import Data.Aeson.Casing
 import Data.Aeson.TH
 import Data.Environment qualified as Env
 import Data.Text (pack, unpack)
 import Database.MSSQL.Pool qualified as MSPool
 import Database.MSSQL.Transaction qualified as MSTx
 import Database.ODBC.SQLServer qualified as ODBC
+import Hasura.Backends.MSSQL.SQL.Error
 import Hasura.Base.Error
 import Hasura.Incremental (Cacheable (..))
 import Hasura.Prelude
@@ -159,10 +157,6 @@ getEnv env k = do
     Nothing -> throw400 NotFound $ "environment variable '" <> k <> "' not set"
     Just envVal -> return (pack envVal)
 
-odbcExceptionToJSONValue :: ODBC.ODBCException -> Value
-odbcExceptionToJSONValue =
-  $(mkToJSON defaultOptions {constructorTagModifier = snakeCase} ''ODBC.ODBCException)
-
 type MSSQLRunTx =
   forall m a. (MonadIO m, MonadBaseControl IO m) => MSTx.TxET QErr m a -> ExceptT QErr m a
 
@@ -180,8 +174,8 @@ data MSSQLExecCtx = MSSQLExecCtx
 mkMSSQLExecCtx :: MSPool.MSSQLPool -> MSSQLExecCtx
 mkMSSQLExecCtx pool =
   MSSQLExecCtx
-    { mssqlRunReadOnly = \tx -> MSTx.runTxE fromMSSQLTxError tx pool,
-      mssqlRunReadWrite = \tx -> MSTx.runTxE fromMSSQLTxError tx pool,
+    { mssqlRunReadOnly = \tx -> MSTx.runTxE defaultMSSQLTxErrorHandler tx pool,
+      mssqlRunReadWrite = \tx -> MSTx.runTxE defaultMSSQLTxErrorHandler tx pool,
       mssqlDestroyConn = MSPool.drainMSSQLPool pool
     }
 
@@ -218,27 +212,3 @@ odbcValueToJValue = \case
   ODBC.TimeOfDayValue td -> J.toJSON td
   ODBC.LocalTimeValue l -> J.toJSON l
   ODBC.NullValue -> J.Null
-
-fromMSSQLTxError :: MSTx.MSSQLTxError -> QErr
-fromMSSQLTxError = \case
-  MSTx.MSSQLQueryError query exception ->
-    (internalError "database query error")
-      { qeInternal =
-          Just $
-            ExtraInternal $
-              object
-                [ "query" .= ODBC.renderQuery query,
-                  "exception" .= odbcExceptionToJSONValue exception
-                ]
-      }
-  MSTx.MSSQLConnError exception ->
-    (internalError "mssql connection error")
-      { qeInternal =
-          Just $
-            ExtraInternal $
-              object ["exception" .= odbcExceptionToJSONValue exception]
-      }
-  MSTx.MSSQLInternal err ->
-    (internalError "mssql internal error")
-      { qeInternal = Just $ ExtraInternal $ object ["error" .= err]
-      }

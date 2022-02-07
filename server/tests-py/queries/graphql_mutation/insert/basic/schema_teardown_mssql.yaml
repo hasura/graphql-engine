@@ -7,3 +7,5 @@ args:
     sql: |
       drop table test_types;
       drop table table_no_pk;
+      drop table article;
+      drop table author;

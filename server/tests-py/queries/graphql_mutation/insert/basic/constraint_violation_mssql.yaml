@@ -1,0 +1,31 @@
+description: Insert article which results in foreign key violation
+url: /v1/graphql
+status: 200
+query:
+  query: |
+    mutation {
+      insert_article(objects: {title: "some title", content: "some content", author_id: 1}){
+        affected_rows
+        returning{
+          title
+          content
+          author{
+            id
+            name
+          }
+        }
+      }
+    }
+response:
+  errors:
+  - extensions:
+      internal:
+        query: "INSERT INTO [dbo].[article] ([author_id], [content], [title]) OUTPUT\
+          \ INSERTED.[author_id], INSERTED.[content], INSERTED.[id], INSERTED.[title]\
+          \ INTO #inserted([author_id], [content], [id], [title]) VALUES ( 1, (N'some\
+          \ content'), (N'some title') )"
+      path: $
+      code: constraint-violation
+    message: Integrity constraint violation. [Microsoft][ODBC Driver 17 for SQL Server][SQL
+      Server]The INSERT statement conflicted with the FOREIGN KEY constraint "article_author_fk".
+      The conflict occurred in database "master", table "dbo.author", column 'id'.

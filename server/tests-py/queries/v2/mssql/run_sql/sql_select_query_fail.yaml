@@ -1,0 +1,15 @@
+url: /v2/query
+status: 400
+response:
+  internal:
+    query: "SELECT * FROM non_exist_table;\n"
+  path: $
+  error: Syntax error or access violation. Table or view not found. [Microsoft][ODBC
+    Driver 17 for SQL Server][SQL Server]Invalid object name 'non_exist_table'.
+  code: not-found
+query:
+  type: mssql_run_sql
+  args:
+    source: mssql
+    sql: |
+      SELECT * FROM non_exist_table;

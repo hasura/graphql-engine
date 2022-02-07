@@ -22,6 +22,8 @@ or the `HASURA_GRAPHQL_OPTIMIZE_PERMISSION_FILTERS` environment variable.
 - console: add support for remote database relationships
 - cli: skip tls verfication for all API requests when `insecure-skip-tls-verify` flag is set (#4926)
 
+- server: classify MSSQL exceptions and improve API error responses
+
 ## v2.2.0
 
 ### Nested Action Types
