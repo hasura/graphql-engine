@@ -7,7 +7,6 @@ query:
       insert_author(
         objects: [
           {
-            id: 4
             name: "Author 4"
             articles: null
           }
@@ -15,7 +14,6 @@ query:
       ){
         affected_rows
         returning{
-          id
           name
           articles{
             id
@@ -30,6 +28,5 @@ response:
     insert_author:
       affected_rows: 1
       returning:
-      - id: 4
-        name: Author 4
+      - name: Author 4
         articles: []

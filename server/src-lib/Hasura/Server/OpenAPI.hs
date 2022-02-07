@@ -1,3 +1,4 @@
+{-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE OverloadedStrings #-}
 
 -- |
@@ -28,6 +29,7 @@ import Data.Set qualified as Set
 import Data.Text qualified as T
 import Data.Text.Extended (commaSeparated)
 import Data.Text.NonEmpty
+import Hasura.GraphQL.Analyse (Analysis (Analysis, _aFields, _aVars), FieldAnalysis (FieldAnalysis, _fFields), FieldDef (FieldInfo, FieldList), analyzeGraphqlQuery)
 import Hasura.GraphQL.Context
 import Hasura.GraphQL.Namespace (mkUnNamespacedRootFieldAlias)
 import Hasura.GraphQL.Parser.Schema (Variable)
@@ -130,56 +132,24 @@ Example stepthrough initiated by call to getSelectionSchema:
 
 -}
 
-mdSelectionFields :: EndpointMetadata GQLQueryWithText -> [(G.OperationType, G.Selection G.FragmentSpread G.Name)]
-mdSelectionFields = definitionSelections <=< mdDefinitions -- Workaround for safety, just take 1.
-  where
-    -- FIXME: There should only be one definition associated. Find a way to signal an error here otherwise.
-    mdDefinitions :: EndpointMetadata GQLQueryWithText -> [G.ExecutableDefinition G.Name]
-    mdDefinitions = G.getExecutableDefinitions . unGQLQuery . getGQLQuery . _edQuery . _ceDefinition
+-- FIXME: There should only be one definition associated. Find a way to signal an error here otherwise.
+mdDefinitions :: EndpointMetadata GQLQueryWithText -> [G.ExecutableDefinition G.Name]
+mdDefinitions = G.getExecutableDefinitions . unGQLQuery . getGQLQuery . _edQuery . _ceDefinition
 
-    -- definitionSelections :: G.ExecutableDefinition x -> G.SelectionSet G.FragmentSpread x
-    definitionSelections :: G.ExecutableDefinition G.Name -> [(G.OperationType, G.Selection G.FragmentSpread G.Name)]
-    definitionSelections (G.ExecutableDefinitionOperation (G.OperationDefinitionTyped td)) = (G._todType td,) <$> G._todSelectionSet td
-    definitionSelections _ = []
-
-mkResponse :: [Text] -> String -> Maybe RemoteSchemaIntrospection -> EndpointMetadata GQLQueryWithText -> Declare (Definitions Schema) (Maybe Response)
+mkResponse :: [Text] -> String -> Maybe RemoteSchemaIntrospection -> Analysis G.Name -> Declare (Definitions Schema) (Maybe Response)
 mkResponse _ _ Nothing _ = pure Nothing
-mkResponse epMethods epUrl (Just rs) md = do
-  fs <- getSelectionSchema rs (mdSelectionFields md)
+mkResponse epMethods epUrl (Just rs) Analysis {..} = do
+  fs <- getSelectionSchema rs (OMap.toList _aFields)
   pure $
     Just $
       mempty
         & content .~ OMap.singleton ("application" // "json") (mempty & schema ?~ Inline fs)
         & description .~ "Responses for " <> commaSeparated epMethods <> " " <> T.pack epUrl
 
-getSelectionSchema :: RemoteSchemaIntrospection -> [(G.OperationType, G.Selection a b)] -> Declare (Definitions Schema) Schema
-getSelectionSchema rs ss = do
-  let fields = mapMaybe (\(o, s) -> (o,) <$> field s) ss
-  ps <- traverse (pure . G.unName . G._fName . snd &&&& lookupRoot rs) fields
-  pure $ mempty & properties .~ OMap.fromList ps
-
-lookupRoot :: RemoteSchemaIntrospection -> (G.OperationType, G.Field a b) -> Declare (Definitions Schema) (Referenced Schema)
-lookupRoot rs (ot, f) = do
-  let rootFieldName = getRootFieldNameFromOpType ot
-      fieldName = G._fName f
-      fieldTypeM = do
-        operationDefinitionSum <- lookupRS rs rootFieldName
-        operationDefinitionObject <- asObjectTypeDefinition operationDefinitionSum
-        fieldDefinition <- find ((== fieldName) . G._fldName) $ G._otdFieldsDefinition operationDefinitionObject
-        pure $ G._fldType fieldDefinition
-
-  case fieldTypeM of
-    Nothing -> pure $ Inline $ mempty & description ?~ "Couldn't find field " <> G.unName fieldName <> " in root field " <> G.unName rootFieldName
-    Just fieldType -> lookupDefinition rs fieldType f
-
-lookupDefinition :: RemoteSchemaIntrospection -> G.GType -> G.Field a b -> Declare (Definitions Schema) (Referenced Schema)
-lookupDefinition rs t f = do
-  result <- typeToSchemaM t \n -> do
-    case lookupRS rs n of
-      Nothing -> pure $ mempty & description ?~ "Couldn't find definition for type " <> G.unName n <> " in field " <> G.unName (G._fName f)
-      Just tDef -> getDefinitionSchema rs n tDef (G._fSelectionSet f)
-
-  pure $ Inline result
+getSelectionSchema :: RemoteSchemaIntrospection -> [(G.Name, (FieldDef, Maybe (FieldAnalysis var)))] -> Declare (Definitions Schema) Schema
+getSelectionSchema rs fields = do
+  ps <- traverse (pure . G.unName . fst &&&& (\(fN, (td, fA)) -> getDefinitionSchema rs fN td fA {- (\(fN,(td,fA)) -> pure $ (G.unName fN,) $ getDefinitionSchema rs td fA) -})) fields
+  pure $ mempty & properties .~ OMap.fromList (map (second Inline) ps)
 
 -- | A helper function to set the pattern field in Schema
 --   Why not lens `pattern`? hlint doesn't like the name `pattern`
@@ -190,57 +160,39 @@ setPattern p s = s {_schemaPattern = p}
 getDefinitionSchema ::
   RemoteSchemaIntrospection ->
   G.Name ->
-  G.TypeDefinition [G.Name] RemoteSchemaInputValueDefinition ->
-  [G.Selection frag0 var0] ->
+  FieldDef ->
+  Maybe (FieldAnalysis var) ->
   Declare (Definitions Schema) Schema
-getDefinitionSchema rs tn td sels =
-  case td of
-    (G.TypeDefinitionInterface _) -> pure $ mempty & description ?~ "Unsupported field type TypeDefinitionInterface: " <> G.unName tn
-    (G.TypeDefinitionUnion _) -> pure $ mempty & description ?~ "Unsupported field type TypeDefinitionUnion: " <> G.unName tn
-    (G.TypeDefinitionEnum _) -> pure $ mempty & description ?~ "Unsupported field type TypeDefinitionEnum: " <> G.unName tn
-    (G.TypeDefinitionInputObject _) -> pure $ mempty & description ?~ "Unsupported field type TypeDefinitionInputObject: " <> G.unName tn
-    (G.TypeDefinitionObject otd) -> do
-      ps <- traverse (\sel -> getDefinitionSchemaObject rs (lookupFieldBySelection sel (G._otdFieldsDefinition otd)) sel) sels
-      pure $
-        mempty
-          & properties .~ OMap.fromList (catMaybes ps)
-          & type_ ?~ OpenApiObject
-    (G.TypeDefinitionScalar std) -> do
-      let (refType, patt) = referenceType True (T.toLower $ G.unName $ G._stdName std)
-      pure $
-        mempty
-          & title ?~ G.unName (G._stdName std)
-          & description .~ (G.unDescription <$> G._stdDescription std)
-          & type_ .~ refType
-          & setPattern patt
+getDefinitionSchema rs tn fd fA =
+  typeToSchemaM
+    fd
+    ( \case
+        (G.TypeDefinitionInterface _) -> pure $ mempty & description ?~ "Unsupported field type TypeDefinitionInterface: " <> G.unName tn
+        (G.TypeDefinitionUnion _) -> pure $ mempty & description ?~ "Unsupported field type TypeDefinitionUnion: " <> G.unName tn
+        (G.TypeDefinitionEnum _) -> pure $ mempty & description ?~ "Unsupported field type TypeDefinitionEnum: " <> G.unName tn
+        (G.TypeDefinitionInputObject _) -> pure $ mempty & description ?~ "Unsupported field type TypeDefinitionInputObject: " <> G.unName tn
+        (G.TypeDefinitionObject _) ->
+          case fA of
+            Nothing -> pure $ mempty & description ?~ "Field analysis not found"
+            Just FieldAnalysis {..} -> do
+              ps <- traverse (pure . G.unName . fst &&&& (\(fN, (td', fA')) -> getDefinitionSchema rs fN td' fA')) (OMap.toList _fFields)
+              pure $
+                mempty
+                  & properties .~ OMap.fromList (map (second Inline) ps)
+                  & type_ ?~ OpenApiObject
+        (G.TypeDefinitionScalar std) -> do
+          let (refType, patt) = referenceType True (T.toLower $ G.unName $ G._stdName std)
+          pure $
+            mempty
+              & title ?~ G.unName (G._stdName std)
+              & description .~ (G.unDescription <$> G._stdDescription std)
+              & type_ .~ refType
+              & setPattern patt
+    )
 
-lookupFieldBySelection :: G.Selection frag0 var0 -> [G.FieldDefinition RemoteSchemaInputValueDefinition] -> Maybe (G.FieldDefinition RemoteSchemaInputValueDefinition)
-lookupFieldBySelection (G.SelectionField f) = find \d -> G._fName f == G._fldName d
-lookupFieldBySelection _ = const Nothing
-
-getDefinitionSchemaObject ::
-  RemoteSchemaIntrospection ->
-  Maybe (G.FieldDefinition RemoteSchemaInputValueDefinition) ->
-  G.Selection frag0 var0 ->
-  Declare (Definitions Schema) (Maybe (Text, Referenced Schema))
-getDefinitionSchemaObject _ Nothing _ = pure Nothing
-getDefinitionSchemaObject _ _ (G.SelectionFragmentSpread _) = pure Nothing
-getDefinitionSchemaObject _ _ (G.SelectionInlineFragment _) = pure Nothing
-getDefinitionSchemaObject rs (Just fd) (G.SelectionField sel) = do
-  let sn = G._fName sel
-      ft = G._fldType fd
-
-  result <- typeToSchemaM ft \n -> do
-    let fn = G._fldName fd
-    case lookupRS rs n of
-      Nothing -> pure $ mempty & description ?~ "Couldn't find definition for type " <> G.unName n <> " in field " <> G.unName fn <> " selected by " <> G.unName sn
-      Just tDef -> getDefinitionSchema rs n tDef (G._fSelectionSet sel)
-
-  pure $ Just (G.unName sn, Inline result)
-
-typeToSchemaM :: Monad m => G.GType -> (G.Name -> m Schema) -> m Schema
-typeToSchemaM (G.TypeNamed _nullability tName) k = k tName
-typeToSchemaM (G.TypeList n t) k = do
+typeToSchemaM :: Monad m => FieldDef -> (G.TypeDefinition [G.Name] RemoteSchemaInputValueDefinition -> m Schema) -> m Schema
+typeToSchemaM (FieldInfo _nullability tName) k = k tName
+typeToSchemaM (FieldList n t) k = do
   t' <- typeToSchemaM t k
   pure $
     mempty
@@ -248,44 +200,19 @@ typeToSchemaM (G.TypeList n t) k = do
       & type_ ?~ OpenApiArray
       & items ?~ OpenApiItemsObject (Inline t') -- TODO: Why do we assume objects here?
 
-lookupRS :: RemoteSchemaIntrospection -> G.Name -> Maybe (G.TypeDefinition [G.Name] RemoteSchemaInputValueDefinition)
-lookupRS (RemoteSchemaIntrospection rsDefs) n = Map.lookup n rsDefs
-
-field :: G.Selection frag var -> Maybe (G.Field frag var)
-field (G.SelectionField f) = Just f
-field _ = Nothing
-
 infixl 7 &&&&
 
 (&&&&) :: Applicative f => (t -> f a1) -> (t -> f a2) -> t -> f (a1, a2)
 f &&&& g = \a -> (,) <$> f a <*> g a
 
--- TODO: Move these literals somewhere else
-getRootFieldNameFromOpType :: G.OperationType -> G.Name
-getRootFieldNameFromOpType G.OperationTypeQuery = $$(G.litName "query_root")
-getRootFieldNameFromOpType G.OperationTypeMutation = $$(G.litName "mutation_root")
-getRootFieldNameFromOpType G.OperationTypeSubscription = $$(G.litName "subscription_root")
-
-asObjectTypeDefinition :: G.TypeDefinition possibleTypes inputType -> Maybe (G.ObjectTypeDefinition inputType)
-asObjectTypeDefinition (G.TypeDefinitionObject o) = Just o
-asObjectTypeDefinition _ = Nothing
-
 -- * URL / Query Params and Request Body Functions
 
-getVarList :: EndpointMetadata GQLQueryWithText -> [G.VariableDefinition]
-getVarList e = vars =<< varLists
-  where
-    varLists = G.getExecutableDefinitions . unGQLQuery . getGQLQuery . _edQuery . _ceDefinition $ e
-    vars x = case x of
-      G.ExecutableDefinitionOperation (G.OperationDefinitionTyped (G.TypedOperationDefinition _ _ vds _ _)) -> vds
-      _ -> []
-
 -- There could be an additional partitioning scheme besides referentiality to support more types in Params
-getParams :: EndpointMetadata GQLQueryWithText -> [Referenced Param]
-getParams d = varDetails =<< getVarList d
+getParams :: Analysis G.Name -> EndpointUrl -> [Referenced Param]
+getParams Analysis {..} eURL = varDetails =<< Map.toList _aVars
   where
-    pathVars = map T.tail $ concat $ splitPath pure (const []) (_ceUrl d) -- NOTE: URL Variable name ':' prefix is removed for `elem` lookup.
-    varDetails G.VariableDefinition {..} =
+    pathVars = map T.tail $ concat $ splitPath pure (const []) eURL -- NOTE: URL Variable name ':' prefix is removed for `elem` lookup.
+    varDetails (_vdName, (_vdType, _vdDefaultValue)) =
       let vName = G.unName _vdName
           isRequired = not $ G.isNullable _vdType
        in case getType _vdType of
@@ -311,15 +238,16 @@ getType gt@(G.TypeNamed _ na) = case referenceType True t of
     t = T.toLower $ G.unName na
 getType t = Left t -- Non scalar types are deferred to reference types for processing using introspection
 
-mkProperties :: Maybe RemoteSchemaIntrospection -> [G.VariableDefinition] -> Declare (Definitions Schema) (InsOrdHashMap Text (Referenced Schema))
-mkProperties sd ds = OMap.fromList <$> traverse (mkProperty sdMap) ds
+mkProperties :: Maybe RemoteSchemaIntrospection -> Analysis G.Name -> Declare (Definitions Schema) (InsOrdHashMap Text (Referenced Schema))
+mkProperties sd Analysis {..} = OMap.fromList <$> traverse (mkProperty sdMap) ds
   where
+    ds = Map.toList _aVars
     sdMap = case sd of
       Nothing -> OMap.empty
       Just (RemoteSchemaIntrospection sd') -> OMap.fromList $ map (first G.unName) $ Map.toList sd'
 
-mkProperty :: OMap.InsOrdHashMap Text (G.TypeDefinition a RemoteSchemaInputValueDefinition) -> G.VariableDefinition -> Declare (Definitions Schema) (Text, Referenced Schema)
-mkProperty sd G.VariableDefinition {..} = do
+mkProperty :: InsOrdHashMap Text (G.TypeDefinition [G.Name] RemoteSchemaInputValueDefinition) -> (G.Name, (G.GType, Maybe (G.Value Void))) -> Declare (Definitions Schema) (Text, Referenced Schema)
+mkProperty sd (_vdName, (_vdType, _vdDefaultValue)) = do
   d <- case getType _vdType of
     Left t -> handleRefType sd t
     Right (vdType, patt) ->
@@ -349,7 +277,7 @@ handleRefType sd = \case
           & items ?~ OpenApiItemsObject st
 
 -- TODO: No reference types should be nullable and only references to reference types
---
+
 declareReference :: G.Nullability -> Text -> OMap.InsOrdHashMap Text (G.TypeDefinition a RemoteSchemaInputValueDefinition) -> Declare (Definitions Schema) ()
 declareReference nullability n ts = do
   isAvailable <- referenceAvailable n
@@ -497,24 +425,23 @@ getComment d = comment
 
 getURL :: EndpointMetadata GQLQueryWithText -> Text
 getURL d =
-  "/api/rest/"
-    -- The url will be of the format <Endpoint>/:<Var1>/:<Var2> ... always, so we can
-    -- split and take the first element (it should never fail)
-    <> fst (T.breakOn "/" (unNonEmptyText . unEndpointUrl . _ceUrl $ d))
-    <> foldl
-      ( \b a -> b <> "/{" <> a <> "}"
-      )
-      ""
-      (map T.tail $ lefts $ splitPath Left Right (_ceUrl d))
+  "/api/rest/" <> T.intercalate "/" pathComponents
+  where
+    pathComponents = splitPath formatVariable id . _ceUrl $ d
+    formatVariable variable = "{" <> dropColonPrefix variable <> "}"
+    dropColonPrefix = T.drop 1
 
 extractEndpointInfo :: Maybe RemoteSchemaIntrospection -> EndpointMethod -> EndpointMetadata GQLQueryWithText -> Declare (Definitions Schema) EndpointData
 extractEndpointInfo sd method d = do
-  _edProperties <- mkProperties sd (getVarList d)
-  _edResponse <- mkResponse _edMethod _edUrl sd d
+  _edProperties <- mkProperties sd _analysis
+  _edResponse <- mkResponse _edMethod _edUrl sd _analysis
   pure EndpointData {..}
   where
+    _eDef = mdDefinitions d
+    -- mdDefinition returns a list, but there should only be one definition associated, so it is safe to fold
+    _analysis = fromMaybe mempty (fold $ mapMaybe (\e -> fmap (analyzeGraphqlQuery e) sd) _eDef)
     _edUrl = T.unpack . getURL $ d
-    _edVarList = getParams d
+    _edVarList = getParams _analysis (_ceUrl d)
     _edDescription = getComment d
     _edName = unNonEmptyText $ unEndpointName $ _ceName d
     _edMethod = [unEndpointMethod method] -- NOTE: Methods are grouped with into matching endpoints - Name used for grouping.

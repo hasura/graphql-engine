@@ -46,6 +46,8 @@ import Hasura.Server.Init
 import Hasura.Server.Types
 import Network.WebSockets qualified as WS
 
+-- * Postgres
+
 postgresPassword :: String
 postgresPassword = "hasura"
 
@@ -74,6 +76,8 @@ postgresqlConnectionString =
     ++ "/"
     ++ postgresDb
 
+-- * Citus
+
 citusPassword :: String
 citusPassword = "hasura"
 
@@ -101,6 +105,8 @@ citusConnectionString =
     ++ show citusPort
     ++ "/"
     ++ citusDb
+
+-- * Liveness
 
 postgresLivenessCheckAttempts :: Int
 postgresLivenessCheckAttempts = 5
@@ -134,6 +140,8 @@ mysqlLivenessCheckIntervalSeconds = 1
 mysqlLivenessCheckIntervalMicroseconds :: Int
 mysqlLivenessCheckIntervalMicroseconds = 1000 * 1000 * mysqlLivenessCheckIntervalSeconds
 
+-- * MySQL
+
 mysqlPassword :: String
 mysqlPassword = "hasura"
 
@@ -159,6 +167,8 @@ mysqlConnectInfo =
       Mysql.connectPort = mysqlPort
     }
 
+-- * HTTP health checks
+
 httpHealthCheckAttempts :: Int
 httpHealthCheckAttempts = 5
 
@@ -167,6 +177,8 @@ httpHealthCheckIntervalSeconds = 1
 
 httpHealthCheckIntervalMicroseconds :: Int
 httpHealthCheckIntervalMicroseconds = 1000 * 1000 * httpHealthCheckIntervalSeconds
+
+-- * Server configuration
 
 serveOptions :: ServeOptions impl
 serveOptions =
@@ -213,7 +225,8 @@ serveOptions =
       soGracefulShutdownTimeout = 0, -- Don't wait to shutdown.
       soWebsocketConnectionInitTimeout = defaultWSConnectionInitTimeout,
       soEventingMode = EventingEnabled,
-      soReadOnlyMode = ReadOnlyModeDisabled
+      soReadOnlyMode = ReadOnlyModeDisabled,
+      soOptimizePermissionFilters = False
     }
 
 -- | Use the below to show messages.

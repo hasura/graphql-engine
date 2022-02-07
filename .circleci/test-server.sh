@@ -13,9 +13,14 @@ fi
 ### Functions
 
 stop_services() {
-	kill -s INT $HGE_PIDS || true
-	kill $WH_PID || true
-	kill -s INT $WHC_PID || true
+	echo "killing and waiting for spawned services"
+
+	[ -n "$HGE_PIDS" ] && kill -s INT $HGE_PIDS || true
+	[ -n "$WH_PID" ] && kill $WH_PID || true
+	[ -n "$WHC_PID" ] && kill $WHC_PID || true
+	[ -n "$GQL_SERVER_PID" ] && kill $GQL_SERVER_PID || true
+
+	wait $HGE_PIDS $WH_PID $WHC_PID $GQL_SERVER_PID || true
 }
 
 time_elapsed() {
@@ -176,7 +181,7 @@ export EVENT_WEBHOOK_HEADER="MyEnvValue"
 
 export HGE_URL="http://localhost:8080"
 export HGE_URL_2=""
-if [ -n ${HASURA_GRAPHQL_DATABASE_URL_2:-} ]; then
+if [ -n "${HASURA_GRAPHQL_DATABASE_URL_2:-}" ]; then
 	HGE_URL_2="http://localhost:8081"
 fi
 export WEBHOOK_FROM_ENV="http://127.0.0.1:5592"
@@ -191,6 +196,7 @@ GQL_SERVER_PID=""
 
 trap stop_services ERR
 trap stop_services INT
+trap stop_services EXIT
 
 run_pytest_parallel() {
 	trap stop_services ERR
@@ -206,18 +212,6 @@ run_pytest_parallel() {
 }
 
 case "$SERVER_TEST_TO_RUN" in
-test-server-flags)
-	if ! $CIRCLECI_FOLDER/test-server-flags.sh; then
-		echo "Testing GraphQL server flags failed"
-		exit 1
-	fi
-
-	if ! $CIRCLECI_FOLDER/test-deprecated-server-flags.sh; then
-		echo "Testing GraphQL deprecated server flags failed"
-		exit 1
-	fi
-	;;
-
 haskell-tests)
 	echo -e "\n$(time_elapsed): <########## RUN GRAPHQL-ENGINE HASKELL TESTS ###########################################>\n"
 	"${GRAPHQL_ENGINE_TESTS:?}" postgres
@@ -616,14 +610,6 @@ ws-init-cookie-read-cors-disabled)
 	pytest -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --test-ws-init-cookie=read test_websocket_init_cookie.py
 
 	kill_hge_servers
-
-	kill $WHC_PID
-	# unset HASURA_GRAPHQL_WS_READ_COOKIE
-	# unset HASURA_GRAPHQL_AUTH_HOOK
-	# unset HASURA_GRAPHQL_AUTH_HOOK_MODE
-
-	# required?
-	# sleep 4
 	;;
 
 ws-graphql-api-disabled)
@@ -959,61 +945,52 @@ jwk-url)
 	JWKS_PID=$!
 	wait_for_port 5001
 
-	cache_control_jwk_url='{"jwk_url": "http://localhost:5001/jwk-cache-control"}'
-	expires_jwk_url='{"jwk_url": "http://localhost:5001/jwk-expires"}'
-	cc_nomaxage_jwk_url='{"jwk_url": "http://localhost:5001/jwk-cache-control?nomaxage"}'
-	cc_nocache_jwk_url='{"jwk_url": "http://localhost:5001/jwk-cache-control?nocache"}'
-
-	# start HGE with cache control JWK URL
-	export HASURA_GRAPHQL_JWT_SECRET=$cache_control_jwk_url
+	echo "Test: Cache-Control with max-age=3"
+	export HASURA_GRAPHQL_JWT_SECRET='{"jwk_url": "http://localhost:5001/jwk-cache-control?max-age=3"}'
 	run_hge_with_args serve
 	wait_for_port 8080
 
-	pytest -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --test-jwk-url test_jwk.py -k 'test_cache_control_header'
+	pytest -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --test-jwk-url -k 'test_cache_control_header_max_age'
 
 	kill_hge_servers
 	unset HASURA_GRAPHQL_JWT_SECRET
 
-	run_hge_with_args serve --jwt-secret "$cache_control_jwk_url"
-	wait_for_port 8080
-
-	pytest -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --test-jwk-url test_jwk.py -k 'test_cache_control_header'
-
-	kill_hge_servers
-
-	# start HGE with expires JWK URL
-	export HASURA_GRAPHQL_JWT_SECRET=$expires_jwk_url
+	echo "Test: Cache-Control with must-revalidate"
+	export HASURA_GRAPHQL_JWT_SECRET='{"jwk_url": "http://localhost:5001/jwk-cache-control?must-revalidate=true"}'
 	run_hge_with_args serve
 	wait_for_port 8080
 
-	pytest -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --test-jwk-url test_jwk.py -k 'test_expires_header'
+	pytest -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --test-jwk-url -k 'test_cache_control_header_no_caching'
 
 	kill_hge_servers
 	unset HASURA_GRAPHQL_JWT_SECRET
 
-	run_hge_with_args serve --jwt-secret "$expires_jwk_url"
-	wait_for_port 8080
-
-	pytest -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --test-jwk-url test_jwk.py -k 'test_expires_header'
-
-	kill_hge_servers
-
-	# start HGE with nomaxage JWK URL
-	export HASURA_GRAPHQL_JWT_SECRET=$cc_nomaxage_jwk_url
+	echo "Test: Cache-Control with no-cache, public"
+	export HASURA_GRAPHQL_JWT_SECRET='{"jwk_url": "http://localhost:5001/jwk-cache-control?no-cache=true&public=true"}'
 	run_hge_with_args serve
 	wait_for_port 8080
 
-	pytest -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --test-jwk-url test_jwk.py -k 'test_cache_control_header'
+	pytest -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --test-jwk-url -k 'test_cache_control_header_no_caching'
 
 	kill_hge_servers
 	unset HASURA_GRAPHQL_JWT_SECRET
 
-	# start HGE with nocache JWK URL
-	export HASURA_GRAPHQL_JWT_SECRET=$cc_nocache_jwk_url
+	echo "Test: Cache-Control with no-store, max-age=3"
+	export HASURA_GRAPHQL_JWT_SECRET='{"jwk_url": "http://localhost:5001/jwk-cache-control?no-store=true&max-age=3"}'
 	run_hge_with_args serve
 	wait_for_port 8080
 
-	pytest -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --test-jwk-url test_jwk.py -k 'test_cache_control_header'
+	pytest -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --test-jwk-url -k 'test_cache_control_header_no_caching'
+
+	kill_hge_servers
+	unset HASURA_GRAPHQL_JWT_SECRET
+
+	echo "Test: Expires with three second expiry"
+	export HASURA_GRAPHQL_JWT_SECRET='{"jwk_url": "http://localhost:5001/jwk-expires?seconds=3"}'
+	run_hge_with_args serve
+	wait_for_port 8080
+
+	pytest -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --test-jwk-url -k 'test_expires_header'
 
 	kill_hge_servers
 	unset HASURA_GRAPHQL_JWT_SECRET
@@ -1165,14 +1142,15 @@ backend-citus)
 backend-bigquery)
 	echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH BIGQUERY BACKEND ###########################################>\n"
 
-	source_data_sources_utils
-	verify_bigquery_pytest_env
+	source "$CIRCLECI_FOLDER/../scripts/bigquery.sh" && verify_bigquery_pytest_env
 
-	export HASURA_BIGQUERY_SERVICE_ACCOUNT=$(cat "$HASURA_BIGQUERY_SERVICE_ACCOUNT_FILE")
+	HASURA_BIGQUERY_SERVICE_ACCOUNT=$(cat "$HASURA_BIGQUERY_SERVICE_ACCOUNT_FILE")
+	export HASURA_BIGQUERY_SERVICE_ACCOUNT
 
 	run_hge_with_args serve
 	wait_for_port 8080
 
+	source_data_sources_utils
 	add_bigquery_source 8080
 
 	# See note [Specifying Pytests with -k flag]

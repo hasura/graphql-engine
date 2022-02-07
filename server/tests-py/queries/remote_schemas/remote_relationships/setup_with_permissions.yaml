@@ -17,25 +17,26 @@ args:
 - type: run_sql
   args:
     sql: |
-      create table profiles (
+      create schema custom;
+      create table custom.profiles (
           id serial primary key,
           name text
       );
 - type: run_sql
   args:
     sql: |
-      insert into profiles (name) values
+      insert into custom.profiles (name) values
       ( 'alice' ),
       ( 'bob' ),
       ( 'alice')
 - type: track_table
   args:
-    schema: public
+    schema: custom
     name: profiles
 
 - type: set_table_customization
   args:
-    table: profiles
+    table: {schema: custom, name: profiles}
     configuration:
       custom_column_names:
         name: profile_name
@@ -43,7 +44,7 @@ args:
 - type: create_select_permission
   args:
     table:
-      schema: public
+      schema: custom
       name: profiles
     role: user
     permission:

@@ -256,6 +256,11 @@ The various types of queries are listed in the following table:
      - 1
      - Delete an existing cron trigger
 
+   * - :ref:`metadata_get_cron_triggers`
+     - :ref:`Empty Object`
+     - 1
+     - Fetch all the cron triggers
+
    * - :ref:`schema_metadata_create_scheduled_event`
      - :ref:`create_scheduled_event_args <schema_metadata_create_scheduled_event_syntax>`
      - 1

@@ -1,11 +1,13 @@
 #!/bin/bash
 
 echo 'Attempting to run script (10 times max)'
+PORT="${1:-1433}"
+SLEEP="3"
 
-sleep 5
+sleep "${SLEEP}"
 for i in 1 2 3 4 5 6 7 8 9 10; do
-  echo Will wait 5 seconds if this fails ...
-  /opt/mssql-tools/bin/sqlcmd -S localhost,1433 -U SA -P "DockerComposePassword!" -i init.sql && break || sleep 5;
+  echo Attempt "#$i" - will wait "${SLEEP}" seconds if this fails ...
+  sqlcmd -S localhost,"${PORT}" -U SA -P "DockerComposePassword!" -i init.sql && break || sleep "${SLEEP}";
 done
 
 echo Finished attempts.

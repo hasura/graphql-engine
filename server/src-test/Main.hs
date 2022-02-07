@@ -8,6 +8,7 @@ import Data.Aeson qualified as A
 import Data.ByteString.Lazy.Char8 qualified as BL
 import Data.ByteString.Lazy.UTF8 qualified as LBS
 import Data.Environment qualified as Env
+import Data.HashMap.Strict.ExtendedSpec qualified as HashMapExtendedSpec
 import Data.NonNegativeIntSpec qualified as NonNegetiveIntSpec
 import Data.Parser.CacheControlSpec qualified as CacheControlParser
 import Data.Parser.JSONPathSpec qualified as JsonPath
@@ -39,6 +40,7 @@ import Hasura.RQL.Types.CommonSpec qualified as CommonTypesSpec
 import Hasura.RQL.Types.EndpointSpec qualified as EndpointSpec
 import Hasura.RQL.WebhookTransformsSpec qualified as WebhookTransformsSpec
 import Hasura.SQL.WKTSpec qualified as WKTSpec
+import Hasura.Server.Auth.JWTSpec qualified as JWTSpec
 import Hasura.Server.AuthSpec qualified as AuthSpec
 import Hasura.Server.Init
 import Hasura.Server.Migrate
@@ -81,6 +83,7 @@ main =
 
 unitSpecs :: Spec
 unitSpecs = do
+  describe "Data.HashMap.Strict.ExtendedSpec" HashMapExtendedSpec.spec
   describe "Data.NonNegativeInt" NonNegetiveIntSpec.spec
   describe "Data.Parser.CacheControl" CacheControlParser.spec
   describe "Data.Parser.JSONPath" JsonPath.spec
@@ -94,6 +97,7 @@ unitSpecs = do
   describe "Hasura.RQL.Types.Endpoint" EndpointSpec.spec
   describe "Hasura.GraphQL.Namespace" NamespaceSpec.spec
   describe "Hasura.SQL.WKT" WKTSpec.spec
+  describe "Hasura.Server.Auth.JWT" JWTSpec.spec
   describe "Hasura.Server.Auth" AuthSpec.spec
   describe "Hasura.Server.Telemetry" TelemetrySpec.spec
   describe "Hasura.RQL.PermissionSpec" PermSpec.spec
@@ -147,7 +151,7 @@ buildPostgresSpecs = do
 
       setupCacheRef = do
         httpManager <- HTTP.newManager HTTP.tlsManagerSettings
-        let sqlGenCtx = SQLGenCtx False False
+        let sqlGenCtx = SQLGenCtx False False False
             maintenanceMode = MaintenanceModeDisabled
             readOnlyMode = ReadOnlyModeDisabled
             serverConfigCtx =

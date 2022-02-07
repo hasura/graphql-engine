@@ -17,7 +17,7 @@
         name: alice
         remoteUser:
           user_id: 1
-      profiles:
+      custom_profiles:
         - some_constant_text: constant text
           some_more_constant_text: more constant text
           messagesNestedArr:
@@ -46,7 +46,7 @@
           name: alice
           r_user:
             user_id: 3
-      profiles_by_pk:
+      custom_profiles_by_pk:
         id: 2
         name: bob
         remoteUser:
@@ -55,7 +55,7 @@
     query: |
       query {
         # A top-level object
-        p_1: profiles_by_pk(id: 1) {
+        p_1: custom_profiles_by_pk(id: 1) {
           id
           name: profile_name
           remoteUser {
@@ -63,7 +63,7 @@
           }
         }
         # NOTE: ordering is somewhat important and intentional here (e.g. placement of some_more_constant_text)
-        profiles {
+        custom_profiles {
           # no `id`, so becomes rrPhantomFields
           some_constant_text
           some_more_constant_text
@@ -78,7 +78,7 @@
           }
         }
         # A top-level object
-        profiles_by_pk(id: 2) {
+        custom_profiles_by_pk(id: 2) {
           id
           name: profile_name
           remoteUser {
@@ -99,7 +99,7 @@
         name: alice
         remoteUser:
           user_id: 1
-      profiles:
+      custom_profiles:
         - some_constant_text: constant text
           messagesNestedArr:
             - name: alice
@@ -110,19 +110,19 @@
           r_user:
             user_id: 1
       # Not permitted:
-      profiles_by_pk: null
+      custom_profiles_by_pk: null
   query:
     query: |
       query {
         # A top-level object
-        p_1: profiles_by_pk(id: 1) {
+        p_1: custom_profiles_by_pk(id: 1) {
           id
           name: profile_name
           remoteUser {
             user_id
           }
         }
-        profiles {
+        custom_profiles {
           # no `id`, so becomes rrPhantomFields
           some_constant_text
           messagesNestedArr {
@@ -136,7 +136,7 @@
           }
         }
         # A top-level object (not permitted)
-        profiles_by_pk(id: 2) {
+        custom_profiles_by_pk(id: 2) {
           id
           name: profile_name
           remoteUser {
@@ -153,7 +153,7 @@
   response:
     data:
       p_1: null
-      profiles:
+      custom_profiles:
         - some_constant_text: constant text
           messagesNestedArr:
             - name: bob
@@ -161,7 +161,7 @@
           name: bob
           r_user:
             user_id: 2
-      profiles_by_pk:
+      custom_profiles_by_pk:
         id: 2
         name: bob
         remoteUser:
@@ -170,14 +170,14 @@
     query: |
       query {
         # A top-level object
-        p_1: profiles_by_pk(id: 1) {
+        p_1: custom_profiles_by_pk(id: 1) {
           id
           name: profile_name
           remoteUser {
             user_id
           }
         }
-        profiles {
+        custom_profiles {
           # no `id`, so becomes rrPhantomFields
           some_constant_text
           messagesNestedArr {
@@ -191,7 +191,7 @@
           }
         }
         # A top-level object
-        profiles_by_pk(id: 2) {
+        custom_profiles_by_pk(id: 2) {
           id
           name: profile_name
           remoteUser {
@@ -204,7 +204,7 @@
   status: 200
   response:
     data:
-      profiles:
+      custom_profiles:
         - some_constant_text: constant text
           some_more_constant_text: more constant text
           id: 1
@@ -220,12 +220,12 @@
   query:
     query: |
       query {
-        profiles {
+        custom_profiles {
           some_constant_text
           some_more_constant_text
           id
         }
-        p_1: profiles_by_pk(id: 1) {
+        p_1: custom_profiles_by_pk(id: 1) {
           # some_constant_text
           some_more_constant_text
         }

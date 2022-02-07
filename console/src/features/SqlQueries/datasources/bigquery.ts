@@ -47,4 +47,7 @@ export const bigquerySqlQueries: DatasourceSqlQueries = {
   getFKRelations(): string {
     return 'select []';
   },
+  getTableColumnsSql(): string {
+    return 'not implemented';
+  },
 };

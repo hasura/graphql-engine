@@ -336,7 +336,8 @@ resolveAsyncActionQuery userInfo annAction =
     mkAnnFldFromPGCol (column', columnType) =
       RS.mkAnnColumnField column' (ColumnScalar columnType) Nothing Nothing
 
-    -- TODO (from master):- Avoid using ColumnInfo
+    -- TODO: avoid using ColumnInfo
+    -- TODO(#3478): avoid using `unsafeMkName`
     mkPGColumnInfo (column', columnType) =
       ColumnInfo
         { ciColumn = column',
@@ -497,7 +498,7 @@ callWebhook
     let clientHeaders = if forwardClientHeaders then mkClientHeadersForward reqHeaders else mempty
         -- Using HashMap to avoid duplicate headers between configuration headers
         -- and client headers where configuration headers are preferred
-        hdrs = ("Content-Type", "application/json") : (Map.toList . Map.fromList) (resolvedConfHeaders <> clientHeaders)
+        hdrs = (Map.toList . Map.fromList) (resolvedConfHeaders <> defaultHeaders <> clientHeaders)
         postPayload = J.toJSON actionWebhookPayload
         requestBody = J.encode postPayload
         requestBodySize = BL.length requestBody

@@ -180,8 +180,9 @@ Rotating JWKs
 
 Some providers rotate their JWKs (e.g. Firebase). If the provider sends
 
-1. ``max-age`` or ``s-maxage`` in ``Cache-Control`` header
-2. or ``Expires`` header
+1. ``no-cache``, ``no-store`` or ``must-revalidate`` in ``Cache-Control`` header
+2. ``max-age`` or ``s-maxage`` in ``Cache-Control`` header
+3. or ``Expires`` header
 
 with the response of JWK, then the GraphQL engine will refresh the JWKs automatically. If the
 provider does not send the above, the JWKs are not refreshed.
@@ -192,13 +193,17 @@ Following is the behaviour in detail:
 
 1. GraphQL engine will fetch the JWK and will -
 
-   1. first, try to parse ``max-age`` or ``s-maxage`` directive in ``Cache-Control`` header.
-   2. second, check if ``Expires`` header is present (if ``Cache-Control`` is not present), and try
+   1. first, try to parse ``no-cache``, ``no-store`` or ``must-revalidate`` in ``Cache-Control`` header.
+   2. second, try to parse ``max-age`` or ``s-maxage`` directive in ``Cache-Control`` header.
+   3. third, check if ``Expires`` header is present (if ``Cache-Control`` is not present), and try
       to parse the value as a timestamp.
 
-2. If it is able to parse any of the above successfully, then it will use that parsed time to
-   refresh/refetch the JWKs again. If it is unable to parse, then it will not refresh the JWKs (it
-   assumes that if the above headers are not present, the provider doesn't rotate their JWKs).
+2. If ``no-cache``, ``no-store`` or ``must-revalidate`` are parsed successfully, then it will refresh
+   the JWKs once a second. If it is able to parse ``max-age``, ``s-maxage`` or ``Expires`` successfully,
+   then it will use that parsed time to refresh/refetch the JWKs again. If it is unable to parse,
+   then it will not refresh the JWKs (it assumes that if the above headers are not present, the provider
+   doesn't rotate their JWKs). If the parsed time is less than a second, the JWKs will at most be 
+   fetched once per second regardless.
 
 **While running**:
 
@@ -595,7 +600,7 @@ the JWT config only needs to have the public key.
 .. code-block:: json
 
     {
-      "type":"Ed25519", 
+      "type":"Ed25519",
       "key": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAG9I+toAAJicilbPt36tiC4wi7E1Dp9rMmfnwdKyVXi0=\n-----END PUBLIC KEY-----"
     }
 
@@ -609,7 +614,7 @@ the JWT config only needs to have the public key.
       "
     }
 
-    
+
 Running with JWT
 ^^^^^^^^^^^^^^^^
 Using the flag:

@@ -10,58 +10,55 @@ from webserver import RequestHandler, WebServer, MkHandlers, Response
 def mkJSONResp(json_result):
     return Response(HTTPStatus.OK, json_result, {'Content-Type': 'application/json'})
 
+# fetch a valid JWK from google servers - this seemed easier than
+# generating key pairs and then constructing a JWK JSON response        
+jwk_url = 'https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com'
 state = {
     'cache-control': 0,
     'expires': 0
 }
 
 class JwkExpiresHandler(RequestHandler):
-    expires_in_secs = 3
-    jwk_url = 'https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com'
     def post(self, request):
         return Response(HTTPStatus.METHOD_NOT_ALLOWED)
 
     def get(self, request):
-        # fetch a valid JWK from google servers - this seemed easier than
-        # generating key pairs and then constructing a JWK JSON response
-        jwk_resp = requests.get(self.jwk_url)
+        jwk_resp = requests.get(jwk_url)
         res = jwk_resp.json()
-        expiry = datetime.datetime.utcnow() + datetime.timedelta(seconds=self.expires_in_secs)
+        
         resp = mkJSONResp(res)
         if request.qs and 'error' in request.qs and 'true' in request.qs['error']:
             resp.headers['Expires'] = 'invalid-value'
         else:
+            if request.qs and 'seconds' in request.qs and len(request.qs['seconds']) > 0:
+                expires_in_secs = int(request.qs['seconds'][0])
+            else:
+                expires_in_secs = 3
+            expiry = datetime.datetime.utcnow() + datetime.timedelta(seconds=expires_in_secs)
             resp.headers['Expires'] = datetime.datetime.strftime(expiry, "%a, %d %b %Y %T GMT")
+            
         state['expires'] += 1
         return resp
 
 class JwkCacheControlHandler(RequestHandler):
-    expires_in_secs = str(3)
-    jwk_url = 'https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com'
     def post(self, request):
         return Response(HTTPStatus.METHOD_NOT_ALLOWED)
 
     def get(self, request):
-        # fetch a valid JWK from google servers - this seemed easier than
-        # generating key pairs and then constructing a JWK JSON response
-        jwk_resp = requests.get(self.jwk_url)
+        jwk_resp = requests.get(jwk_url)
         res = jwk_resp.json()
-        header_val = 'max-age=' + self.expires_in_secs
-        # see if query string contains 'smaxage', then we return `s-maxage` else `maxage`
-        # https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control
+        header_vals = []
         if request.qs:
-            if 'error' in request.qs and 'true' in request.qs['error']:
-                header_val = 'invalid-header-value=42'
-            elif 'nocache' in request.qs:
-                header_val = 'no-cache'
-            elif 'nomaxage' in request.qs:
-                header_val = 'public, must-revalidate=123, no-transform'
-            elif 'field' in request.qs and 'smaxage' in request.qs['field']:
-                header_val = 's-maxage=' + self.expires_in_secs
-            if 'field' in request.qs and 'smaxage' in request.qs['field']:
-                header_val = 's-maxage=' + self.expires_in_secs
+            for param in request.qs:
+                if len(request.qs[param]) > 0:
+                    val = request.qs[param][0]
+                    if val == 'true':
+                        header_vals.append(param)
+                    elif val.isnumeric():
+                        header_vals.append(param + "=" + val)
+            
         resp = mkJSONResp(res)
-        resp.headers['Cache-Control'] = header_val
+        resp.headers['Cache-Control'] = ", ".join(header_vals)
         # HGE should always prefer Cache-Control over Expires header
         expiry = datetime.datetime.utcnow() + datetime.timedelta(seconds=600)
         resp.headers['Expires'] = datetime.datetime.strftime(expiry, "%a, %d %b %Y %T GMT")
@@ -76,6 +73,15 @@ class StateHandler(RequestHandler):
         resp = mkJSONResp(state)
         return resp
 
+class ResetStateHandler(RequestHandler):
+    def post(self, request):
+        state['cache-control'] = 0
+        state['expires'] = 0
+        return Response(HTTPStatus.OK)
+        
+    def get(self, request):
+        return Response(HTTPStatus.METHOD_NOT_ALLOWED)
+
 handlers = MkHandlers({
     # sending query string: `?field=smaxage`, will return Cache-Control with s-maxage, else with max-age
     # sending query string: `error=true` will respond with invalid header value
@@ -83,7 +89,9 @@ handlers = MkHandlers({
     # sending query string: `error=true` will respond with invalid header value
     '/jwk-expires': JwkExpiresHandler,
     # API so that testing can be done
-    '/state': StateHandler
+    '/state': StateHandler,
+    # Resets the state back to zeros
+    '/reset-state': ResetStateHandler
 })
 
 def create_server(host='127.0.0.1', port=5001):

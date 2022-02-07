@@ -1,0 +1,10 @@
+type: bulk
+args:
+- type: run_sql
+  args:
+    sql: |
+      drop schema custom cascade;
+
+- type: remove_remote_schema
+  args:
+    name: my-remote-schema

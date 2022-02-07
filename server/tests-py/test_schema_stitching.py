@@ -785,7 +785,7 @@ class TestValidateRemoteSchemaTypePrefixQuery:
     def transact(self, request, hge_ctx):
         config = request.config
         if not config.getoption('--skip-schema-setup'):
-            q = mk_add_remote_q('character-foo', 'http://localhost:5000/character-iface-graphql', customization=type_prefix_customization("Foo", {"Int": "MyInt"}))
+            q = mk_add_remote_q('character-foo', 'http://localhost:5000/character-iface-graphql', customization=type_prefix_customization("Foo"))
             st_code, resp = hge_ctx.v1q(q)
             assert st_code == 200, resp
         yield

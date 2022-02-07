@@ -173,7 +173,7 @@ const ViewRows = props => {
       let sortIcon = 'fa-sort';
       if (curQuery.order_by && curQuery.order_by.length) {
         curQuery.order_by.forEach(orderBy => {
-          if (orderBy.column === columnName) {
+          if (orderBy.column === col.id) {
             sortIcon = orderBy.type === 'asc' ? 'fa-caret-up' : 'fa-caret-down';
           }
         });
@@ -188,9 +188,9 @@ const ViewRows = props => {
           </div>
         ),
         accessor: columnName,
-        id: columnName,
+        id: col.id,
         foldable: true,
-        width: getColWidth(columnName, curRows),
+        width: getColWidth(col.id, curRows),
       });
     });
 
@@ -430,13 +430,6 @@ const ViewRows = props => {
           const triggerIcon = <i className="fa fa-caret-square-o-right" />;
           const triggerTitle = 'Invoke event trigger';
 
-          const triggerBtn = getActionButton(
-            'trigger',
-            triggerIcon,
-            triggerTitle,
-            () => {}
-          );
-
           return (
             <div className={styles.display_inline}>
               <Dropdown
@@ -445,7 +438,9 @@ const ViewRows = props => {
                 position="right"
                 keyPrefix={`invoke_data_dropdown_${rowIndex}`}
               >
-                {triggerBtn}
+                {({ onClick }) =>
+                  getActionButton('trigger', triggerIcon, triggerTitle, onClick)
+                }
               </Dropdown>
               {invokedRow === rowIndex && (
                 <InvokeManualTrigger
@@ -516,10 +511,13 @@ const ViewRows = props => {
             return {
               ...col,
               column_name:
-                _tableSchema.configuration.custom_column_names[col.column_name],
+                _tableSchema.configuration?.custom_column_names[
+                  col?.column_name
+                ],
+              id: col?.column_name,
             };
           }
-          return col;
+          return { ...col, id: col.column_name };
         })
         .forEach(col => {
           const columnName = col.column_name;
@@ -539,7 +537,7 @@ const ViewRows = props => {
            * */
 
           const getColCellContent = () => {
-            const rowColumnValue = row[columnName];
+            const rowColumnValue = row[col.id];
 
             let cellValue = '';
             let cellTitle = '';
@@ -659,12 +657,13 @@ const ViewRows = props => {
           ...col,
           column_name:
             tableSchema.configuration.custom_column_names[col.column_name],
+          id: col.column_name,
         };
       }
-      return col;
+      return { ...col, id: col.column_name };
     })
     .sort(ordinalColSort);
-  // const tableColumnsSorted = tableSchema.columns.sort(ordinalColSort)
+
   const tableRelationships = tableSchema.relationships;
 
   const hasPrimaryKey = isTableWithPK(tableSchema);
@@ -858,7 +857,7 @@ const ViewRows = props => {
     let disableSortColumn = false;
 
     const sortByColumn = (col, clearExisting = true) => {
-      const columnNames = tableColumnsSorted.map(column => column.column_name);
+      const columnNames = tableColumnsSorted.map(column => column.id);
       if (!columnNames.includes(col)) {
         return;
       }
@@ -964,7 +963,7 @@ const ViewRows = props => {
         <div className={`row flex justify-around`}>
           <div>
             <button
-              className="btn bg-gray-100"
+              className="bg-gray-100 btn"
               onClick={() => handlePageChange(newPage - 1)}
               disabled={curFilter.offset === 0}
               data-test="custom-pagination-prev"
@@ -995,7 +994,7 @@ const ViewRows = props => {
           </div>
           <div>
             <button
-              className="btn bg-gray-100"
+              className="bg-gray-100 btn"
               onClick={() => handlePageChange(newPage + 1)}
               disabled={curRows.length === 0}
               data-test="custom-pagination-next"

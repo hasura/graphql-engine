@@ -77,22 +77,24 @@ runCreateAction createAction = do
   where
     actionName = _caName createAction
 
--- | Note [Postgres scalars in action input arguments]
--- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
--- It's very comfortable to be able to reference Postgres scalars in actions
--- input arguments. For example, see the following action mutation:
---
---    extend type mutation_root {
---      create_user (
---        name: String!
---        created_at: timestamptz
---      ): User
---    }
---
--- The timestamptz is a Postgres scalar. We need to validate the presence of
--- timestamptz type in the Postgres database. So, the 'resolveAction' function
--- takes all Postgres scalar types as one of the inputs and returns the set of
--- referred scalars.
+{- Note [Postgres scalars in action input arguments]
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+It's very comfortable to be able to reference Postgres scalars in actions
+input arguments. For example, see the following action mutation:
+
+    extend type mutation_root {
+      create_user (
+        name: String!
+        created_at: timestamptz
+      ): User
+    }
+
+The timestamptz is a Postgres scalar. We need to validate the presence of
+timestamptz type in the Postgres database. So, the 'resolveAction' function
+takes all Postgres scalar types as one of the inputs and returns the set of
+referred scalars.
+-}
+
 resolveAction ::
   QErrM m =>
   Env.Environment ->

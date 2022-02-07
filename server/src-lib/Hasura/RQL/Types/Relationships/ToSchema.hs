@@ -10,6 +10,8 @@ module Hasura.RQL.Types.Relationships.ToSchema
     graphQLValueToJSON,
     LHSIdentifier (..),
     tableNameToLHSIdentifier,
+    remoteSchemaToLHSIdentifier,
+    lhsIdentifierToGraphQLName,
   )
 where
 
@@ -18,6 +20,7 @@ import Data.Aeson
 import Data.Aeson.TH
 import Data.Aeson.Types (prependFailure)
 import Data.Bifunctor (bimap)
+import Data.Char qualified as C
 import Data.HashMap.Strict qualified as HM
 import Data.Scientific
 import Data.Text qualified as T
@@ -175,13 +178,28 @@ instance ToJSON RemoteArguments where
 -- defined. This is used in error messages and type name generation for
 -- arguments in remote relationship fields to remote schemas (See
 -- RemoteRelationship.Validate)
-newtype LHSIdentifier = LHSIdentifier Text
+newtype LHSIdentifier = LHSIdentifier {getLHSIdentifier :: Text}
   deriving (Show, Eq, Generic)
 
 instance Cacheable LHSIdentifier
 
 tableNameToLHSIdentifier :: (Backend b) => TableName b -> LHSIdentifier
 tableNameToLHSIdentifier = LHSIdentifier . toTxt
+
+remoteSchemaToLHSIdentifier :: RemoteSchemaName -> LHSIdentifier
+remoteSchemaToLHSIdentifier = LHSIdentifier . toTxt
+
+-- | Generates a valid graphql name from an arbitrary LHS identifier.
+-- This is done by replacing all unrecognized characters by '_'. This
+-- function still returns a @Maybe@ value, in cases we can't adjust
+-- the raw text (such as the case of empty identifiers).
+lhsIdentifierToGraphQLName :: LHSIdentifier -> Maybe G.Name
+lhsIdentifierToGraphQLName (LHSIdentifier rawText) = G.mkName $ T.map adjust rawText
+  where
+    adjust c =
+      if C.isAsciiUpper c || C.isAsciiLower c || C.isDigit c
+        then c
+        else '_'
 
 -- | Schema cache information for a table field targeting a remote schema.
 data RemoteSchemaFieldInfo = RemoteSchemaFieldInfo

@@ -130,9 +130,13 @@ Args syntax
      - false
      - Boolean
      - If set to true, the event trigger can be invoked manually
-   * - transform
+   * - request_transform
      - false
      - :ref:`RequestTransformation`
+     - Attaches a Request Transformation to the Event Trigger.
+   * - response_transform
+     - false
+     - :ref:`ResponseTransformation`
      - Attaches a Request Transformation to the Event Trigger.
 
 (*) Either ``webhook`` or ``webhook_from_env`` are required.

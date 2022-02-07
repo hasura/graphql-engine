@@ -121,6 +121,10 @@ MsSQLConfiguration
      - true
      - MsSQLSourceConnectionInfo_
      - Connection parameters for the source
+   * - read_replicas
+     - false
+     - [MsSQLSourceConnectionInfo_]
+     - Optional list of read replica configuration *(supported only in cloud/enterprise versions)*
 
 
 .. _BigQueryConfiguration:
@@ -2063,8 +2067,8 @@ HeaderKey
 
 .. _HeaderValue:
 
-HeaderKey
-^^^^^^^^^
+HeaderValue
+^^^^^^^^^^^
 
 .. parsed-literal::
    :class: haskell-pre
@@ -2083,8 +2087,10 @@ The JSON templating language to be used for this JSON transformation.
 
    "Kriti"
 
+.. _ResponseTransformation:
+
 ResponseTransformation
-^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^
 
 .. list-table::
    :header-rows: 1

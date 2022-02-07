@@ -1,12 +1,11 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
+import { isEmpty } from '@/components/Common/utils/jsUtils';
+import { replace } from 'react-router-redux';
 import TableHeader from '../TableCommon/TableHeader';
 import Button from '../../../Common/Button/Button';
 import ReloadEnumValuesButton from '../Common/Components/ReloadEnumValuesButton';
 import { ordinalColSort } from '../utils';
-
-// import RichTextEditor from 'react-rte';
-import { replace } from 'react-router-redux';
 import globals from '../../../../Globals';
 import { E_ONGOING_REQ, editItem } from './EditActions';
 import { findTable, generateTableDef } from '../../../../dataSources';
@@ -79,6 +78,28 @@ class EditItem extends Component {
         defaultNode: null,
       };
 
+      const onChange = (e, val) => {
+        const textValue = typeof val === 'string' ? val : e.target.value;
+
+        const radioToSelectWhenEmpty = prevValue
+          ? refs[colName].defaultNode
+          : refs[colName].nullNode;
+
+        refs[colName].insertRadioNode.checked = !!textValue.length;
+        radioToSelectWhenEmpty.checked = !textValue.length;
+      };
+      const onFocus = e => {
+        const textValue = e.target.value;
+        if (isEmpty(textValue)) {
+          const radioToSelectWhenEmpty = prevValue
+            ? refs[colName].defaultNode
+            : refs[colName].nullNode;
+
+          refs[colName].insertRadioNode.checked = false;
+          radioToSelectWhenEmpty.checked = true;
+        }
+      };
+
       return (
         <TableRow
           key={i}
@@ -87,6 +108,8 @@ class EditItem extends Component {
           enumOptions={enumOptions}
           index={i}
           prevValue={prevValue}
+          onFocus={onFocus}
+          onChange={onChange}
         />
       );
     });

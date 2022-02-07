@@ -209,4 +209,3 @@ using either side as the parent which would otherwise error out with a ``Not-NUL
 In our example, inserting a ``passport_info`` with their nested ``owner`` will work seamlessly but trying to
 insert an ``author`` with their nested ``passport_info`` will throw a constraint violation error in case the insertion order is
 not specified for the ``owner`` object relationship.
-
