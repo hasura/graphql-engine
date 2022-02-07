@@ -7,6 +7,9 @@ const getKeysSql = (
   type: 'PRIMARY KEY' | 'UNIQUE',
   options: TableORSchemaArg
 ) => `
+-- test_id = ${'schemas' in options ? 'multi' : 'single'}_${
+  type === 'UNIQUE' ? 'unique' : 'primary'
+}_key
   SELECT
       COALESCE(JSON_ARRAYAGG(info), '[]')
   FROM (
@@ -42,6 +45,7 @@ const getKeysSql = (
 export const mySqlQueries: DatasourceSqlQueries = {
   getFetchTablesListQuery(options: TableORSchemaArg): string {
     return `
+-- test_id = ${'schemas' in options ? 'multi' : 'single'}_table
 SELECT
 	COALESCE(JSON_ARRAYAGG(info.tables), '[]')
 FROM (
@@ -85,11 +89,14 @@ FROM (
   uniqueKeysSql(options: TableORSchemaArg): string {
     return getKeysSql('UNIQUE', options);
   },
-  checkConstraintsSql(): string {
-    return 'select "[]"';
+  checkConstraintsSql(options): string {
+    return `
+    -- test_id = ${'schemas' in options ? 'multi' : 'single'}_check_constraint
+    select "[]"`;
   },
   getFKRelations(options: TableORSchemaArg): string {
     return `
+  -- test_id = ${'schemas' in options ? 'multi' : 'single'}_foreign_key
   SELECT
   rc.CONSTRAINT_SCHEMA AS table_schema,
   rc.table_name AS table_name,

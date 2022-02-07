@@ -6,9 +6,8 @@ import { useMetadataTables, useMetadataVersion } from '@/features/MetadataAPI';
 import { dataSourceSqlQueries } from '@/features/SqlQueries';
 import { ForeignKeyConstraint } from './../dataSources/types';
 import { QualifiedTable, TableEntry } from './../metadata/types';
-import { useAppSelector } from './../store';
-import { Driver, currentDriver } from '../dataSources';
-import { RunSQLResponse } from './types';
+import { Driver } from '../dataSources';
+import { QualifiedDataSource, RunSQLResponse } from './types';
 import { RunSQLQueryOptions, useRunSQL } from './common';
 
 type PartialFKConstraint = Omit<
@@ -21,6 +20,7 @@ type FKQueryOptions<T, N> = RunSQLQueryOptions<
     name: N,
     currentDataSource: string,
     schemasOrTable: T,
+    driver: string,
     version: number | undefined
   ],
   ForeignKeyConstraint[]
@@ -65,42 +65,50 @@ const transformData = (driver: Driver, metadataTables: TableEntry[] = []) => (
 function useFKRelationshipsBase<T extends string[] | QualifiedTable, N>(
   schemasOrTable: T,
   name: N,
+  dataSource: QualifiedDataSource,
   queryOptions?: FKQueryOptions<T, N>
 ) {
-  const source: string = useAppSelector(
-    state => state.tables.currentDataSource
-  );
-  const dataSource = dataSourceSqlQueries[currentDriver];
+  const { source, driver } = dataSource;
+  const targetDataSource = dataSourceSqlQueries[driver];
   const sql = () =>
     Array.isArray(schemasOrTable)
-      ? dataSource.getFKRelations({ schemas: schemasOrTable })
-      : dataSource.getFKRelations({ tables: [schemasOrTable] });
+      ? targetDataSource.getFKRelations({ schemas: schemasOrTable })
+      : targetDataSource.getFKRelations({ tables: [schemasOrTable] });
 
   const { data: version } = useMetadataVersion();
-  const { data: metadataTables } = useMetadataTables();
+  const { data: metadataTables } = useMetadataTables(source);
 
   return useRunSQL({
     sql,
-    queryKey: [name, source, schemasOrTable, version],
-    transformFn: transformData(currentDriver, metadataTables),
+    queryKey: [name, source, schemasOrTable, driver, version],
+    transformFn: transformData(driver, metadataTables),
     queryOptions,
+    dataSource,
   });
 }
 
 export function useDataSourceFKRelationships(
-  schemas: string[],
+  args: { schemas: string[] } & QualifiedDataSource,
   queryOptions?: FKQueryOptions<string[], 'dataSourceFKRelationships'>
 ) {
+  const { schemas, ...dataSource } = args;
   return useFKRelationshipsBase(
     schemas,
     'dataSourceFKRelationships',
+    dataSource,
     queryOptions
   );
 }
 
 export function useTableFKRelationships(
-  table: QualifiedTable,
+  args: { table: QualifiedTable } & QualifiedDataSource,
   queryOptions?: FKQueryOptions<QualifiedTable, 'tableFKRelationships'>
 ) {
-  return useFKRelationshipsBase(table, 'tableFKRelationships', queryOptions);
+  const { table, ...dataSource } = args;
+  return useFKRelationshipsBase(
+    table,
+    'tableFKRelationships',
+    dataSource,
+    queryOptions
+  );
 }

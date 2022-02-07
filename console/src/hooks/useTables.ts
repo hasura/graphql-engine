@@ -2,10 +2,9 @@ import { useMetadataVersion, useMetadataTables } from '@/features/MetadataAPI';
 import { trimDefaultValue } from '@/components/Services/Data/mergeData';
 import { dataSourceSqlQueries } from '@/features/SqlQueries';
 import type { QualifiedTable, TableEntry } from './../metadata/types';
-import { useAppSelector } from './../store';
 import type { NormalizedTable, TableType } from '../dataSources/types';
-import type { RunSQLResponse } from './types';
-import { currentDriver, Driver } from '../dataSources';
+import type { QualifiedDataSource, RunSQLResponse } from './types';
+import { Driver } from '../dataSources';
 import { RunSQLQueryOptions, useRunSQL } from './common';
 
 type TableQueryOptions<T, N, Data> = RunSQLQueryOptions<
@@ -13,6 +12,7 @@ type TableQueryOptions<T, N, Data> = RunSQLQueryOptions<
     name: N,
     currentDataSource: string,
     schemasOrTable: T,
+    driver: string,
     metadataVersion: number | undefined
   ],
   Data
@@ -28,27 +28,27 @@ function useTableBase<T extends string[] | QualifiedTable, N, D>(
   transformFn: (
     driver: Driver
   ) => (mt?: TableEntry[]) => (d: RunSQLResponse) => D,
+  dataSource: QualifiedDataSource,
   queryOptions?: TableQueryOptions<T, N, D>
 ) {
-  const dataSource = dataSourceSqlQueries[currentDriver];
+  const { driver, source } = dataSource;
+  const targetDataSource = dataSourceSqlQueries[driver];
   const sql = () => {
     return Array.isArray(schemasOrTable)
-      ? dataSource.getFetchTablesListQuery({ schemas: schemasOrTable })
-      : dataSource.getFetchTablesListQuery({ tables: [schemasOrTable] });
+      ? targetDataSource.getFetchTablesListQuery({ schemas: schemasOrTable })
+      : targetDataSource.getFetchTablesListQuery({ tables: [schemasOrTable] });
   };
-  const source: string = useAppSelector(
-    state => state.tables.currentDataSource
-  );
-  const { data: metadataTables, isSuccess } = useMetadataTables();
+  const { data: metadataTables, isSuccess } = useMetadataTables(source);
   const { data: version } = useMetadataVersion();
   return useRunSQL({
     sql,
-    queryKey: [name, source, schemasOrTable, version],
-    transformFn: transformFn(currentDriver)(metadataTables),
+    queryKey: [name, source, schemasOrTable, driver, version],
+    transformFn: transformFn(driver)(metadataTables),
     queryOptions: {
       ...queryOptions,
       enabled: isSuccess && queryOptions?.enabled,
     },
+    dataSource,
   });
 }
 
@@ -124,33 +124,37 @@ const transformFindTables = (table: QualifiedTable) => (driver: Driver) => (
 };
 
 export function useDataSourceTables(
-  schemas: string[],
+  args: { schemas: string[] } & QualifiedDataSource,
   queryOptions?: TableQueryOptions<
     string[],
     'dataSourceTables',
     NormalizedTable[]
   >
 ) {
+  const { schemas, ...dataSource } = args;
   return useTableBase(
     schemas,
     'dataSourceTables',
     transformTables,
+    dataSource,
     queryOptions
   );
 }
 
 export function useSingleTable(
-  table: QualifiedTable,
+  args: { table: QualifiedTable } & QualifiedDataSource,
   queryOptions?: TableQueryOptions<
     QualifiedTable,
     'singleTable',
     NormalizedTable | null
   >
 ) {
+  const { table, ...dataSource } = args;
   return useTableBase(
     table,
     'singleTable',
     transformFindTables(table),
+    dataSource,
     queryOptions
   );
 }

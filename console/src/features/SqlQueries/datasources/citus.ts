@@ -7,6 +7,7 @@ export const citusSqlQueries: DatasourceSqlQueries = {
   ...postgresSqlQueries,
   getFetchTablesListQuery(options: TableORSchemaArg): string {
     return `
+  -- test_id = ${'schemas' in options ? 'multi' : 'single'}_table
   SELECT
     COALESCE(Json_agg(Row_to_json(info)), '[]' :: json) AS tables
   FROM (

@@ -1,11 +1,12 @@
 import { QualifiedTable } from '@/metadata/types';
-import { useAppSelector } from '@/store';
 import { MetadataSelector } from './metadataSelectors';
 import { useMetadata } from './useMetadata';
 
-export const useMetadataTableComputedFields = (table: QualifiedTable) => {
-  const source: string = useAppSelector(
-    state => state.tables.currentDataSource
+export const useMetadataTableComputedFields = (
+  table: QualifiedTable,
+  dataSource: string
+) => {
+  return useMetadata(
+    MetadataSelector.getTableComputedFields(dataSource, table)
   );
-  return useMetadata(MetadataSelector.getTableComputedFields(source, table));
 };

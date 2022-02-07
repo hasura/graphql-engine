@@ -1,57 +1,65 @@
-import { currentDriver } from '@/dataSources';
 import type { QualifiedTable } from '@/metadata/types';
-import { useAppSelector } from '@/store';
 import { dataSourceSqlQueries } from '@/features/SqlQueries';
+import { Driver } from '@/dataSources';
+import { MSSqlConstraint } from '@/components/Services/Data/mergeData';
 import type { UniqueKey } from './../dataSources/types';
-import type { RunSQLResponse } from './types';
-import { RunSQLQueryOptions, useRunSQL } from './common';
+import type { QualifiedDataSource, RunSQLResponse } from './types';
+import {
+  RunSQLQueryOptions,
+  transformMssqlConstraint,
+  useRunSQL,
+} from './common';
 
 type UniqueQueryOptions<T, N> = RunSQLQueryOptions<
-  [name: N, currentDataSource: string, schemasOrTable: T],
+  [name: N, currentDataSource: string, schemasOrTable: T, driver: string],
   UniqueKey[]
 >;
 
-const transformUniqueKeys = (data: RunSQLResponse): UniqueKey[] => {
-  return JSON.parse(data.result?.[1]?.[0] ?? '[]');
-};
-const transformFilterUniqueKeys = (table: QualifiedTable) => (
+const transformUniqueKeys = (driver: Driver) => (
   data: RunSQLResponse
 ): UniqueKey[] => {
-  return transformUniqueKeys(data).filter(
+  const parsedPKs: MSSqlConstraint[] | UniqueKey[] = JSON.parse(
+    data.result?.[1]?.[0] ?? '[]'
+  );
+  if (driver === 'mssql') return transformMssqlConstraint(data);
+  return parsedPKs as UniqueKey[];
+};
+const transformFilterUniqueKeys = (table: QualifiedTable, driver: Driver) => (
+  data: RunSQLResponse
+): UniqueKey[] => {
+  return transformUniqueKeys(driver)(data).filter(
     key => key.table_name === table.name && key.table_schema === table.schema
   );
 };
 
 export function useDataSourceUniqueKeys(
-  schemas: string[],
+  args: { schemas: string[] } & QualifiedDataSource,
   queryOptions?: UniqueQueryOptions<string[], 'dataSourceUniqueKeys'>
 ) {
-  const dataSource = dataSourceSqlQueries[currentDriver];
-  const sql = () => dataSource.uniqueKeysSql({ schemas });
-  const source: string = useAppSelector(
-    state => state.tables.currentDataSource
-  );
+  const { schemas, driver, source } = args;
+  const targetDataSource = dataSourceSqlQueries[driver];
+  const sql = () => targetDataSource.uniqueKeysSql({ schemas });
   return useRunSQL({
     sql,
-    queryKey: ['dataSourceUniqueKeys', source, schemas],
-    transformFn: transformUniqueKeys,
+    queryKey: ['dataSourceUniqueKeys', source, schemas, driver],
+    transformFn: transformUniqueKeys(driver),
     queryOptions,
+    dataSource: { driver, source },
   });
 }
 
 export function useTableUniqueKeys(
-  table: QualifiedTable,
+  args: { table: QualifiedTable } & QualifiedDataSource,
   queryOptions?: UniqueQueryOptions<QualifiedTable, 'tableUniqueKeys'>
 ) {
-  const dataSource = dataSourceSqlQueries[currentDriver];
+  const { table, driver, source } = args;
+  const dataSource = dataSourceSqlQueries[driver];
   const sql = () => dataSource.uniqueKeysSql({ tables: [table] });
-  const source: string = useAppSelector(
-    state => state.tables.currentDataSource
-  );
   return useRunSQL({
     sql,
-    queryKey: ['tableUniqueKeys', source, table],
-    transformFn: transformFilterUniqueKeys(table),
+    queryKey: ['tableUniqueKeys', source, table, driver],
+    transformFn: transformFilterUniqueKeys(table, driver),
     queryOptions,
+    dataSource: { driver, source },
   });
 }

@@ -1,8 +1,8 @@
 import { Table, TableRow, TableHeader } from '@/components/Common/Table';
-import { Driver, setDriver } from '@/dataSources';
+import { currentDriver, Driver, setDriver } from '@/dataSources';
 import { QualifiedTable } from '@/metadata/types';
 
-import { useAppDispatch } from '@/store';
+import { useAppDispatch, useAppSelector } from '@/store';
 import React from 'react';
 import { useTablePrimaryKey } from '..';
 
@@ -16,6 +16,8 @@ export const PrimaryKeys = ({
   table: QualifiedTable;
 }) => {
   const dispatch = useAppDispatch();
+  const source = useAppSelector(s => s.tables.currentDataSource);
+
   React.useEffect(() => {
     if (currentDatasource) {
       dispatch({
@@ -35,7 +37,12 @@ export const PrimaryKeys = ({
     isError,
     isIdle,
     error,
-  } = useTablePrimaryKey(table, { retry: 0 });
+  } = useTablePrimaryKey(
+    { table, source, driver: currentDriver },
+    {
+      retry: 0,
+    }
+  );
   const keys = React.useMemo(() => Object.keys(primaryKey ?? {}), [primaryKey]);
   const entries = React.useMemo(() => Object.values(primaryKey ?? {}), [
     primaryKey,

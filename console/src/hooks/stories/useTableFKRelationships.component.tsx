@@ -1,7 +1,7 @@
 import { Table, TableRow, TableHeader } from '@/components/Common/Table';
-import { Driver, setDriver } from '@/dataSources';
+import { currentDriver, Driver, setDriver } from '@/dataSources';
 import { QualifiedTable } from '@/metadata/types';
-import { useAppDispatch } from '@/store';
+import { useAppDispatch, useAppSelector } from '@/store';
 import React from 'react';
 import { useTableFKRelationships } from '..';
 
@@ -15,6 +15,8 @@ export const FKRelationships = ({
   table: QualifiedTable;
 }) => {
   const dispatch = useAppDispatch();
+  const source = useAppSelector(s => s.tables.currentDataSource);
+
   React.useEffect(() => {
     if (currentDatasource) {
       dispatch({
@@ -33,7 +35,7 @@ export const FKRelationships = ({
     isSuccess,
     isError,
     error,
-  } = useTableFKRelationships(table);
+  } = useTableFKRelationships({ table, source, driver: currentDriver });
   const keys = React.useMemo(() => Object.keys(foreignKeys?.[0] ?? {}), [
     foreignKeys,
   ]);

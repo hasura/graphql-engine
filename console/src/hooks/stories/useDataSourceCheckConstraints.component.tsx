@@ -1,7 +1,7 @@
 import { Table, TableRow, TableHeader } from '@/components/Common/Table';
-import { Driver, setDriver } from '@/dataSources';
+import { currentDriver, Driver, setDriver } from '@/dataSources';
 
-import { useAppDispatch } from '@/store';
+import { useAppDispatch, useAppSelector } from '@/store';
 import React from 'react';
 import { useDataSourceCheckConstraints, useSchemaList } from '..';
 
@@ -24,8 +24,14 @@ export const AllCheckConstraints = ({
       setDriver(driver);
     }
   }, [currentDatasource, dispatch, driver]);
-
-  const { data: schemas, isError, error } = useSchemaList({ retry: 0 });
+  const source: string = useAppSelector(s => s.tables.currentDataSource);
+  const { data: schemas, isError, error } = useSchemaList(
+    {
+      source,
+      driver: currentDriver,
+    },
+    { retry: 0 }
+  );
   const {
     data: checkConstraints,
     isLoading,
@@ -33,7 +39,17 @@ export const AllCheckConstraints = ({
     isError: isError2,
     isIdle,
     error: fkError,
-  } = useDataSourceCheckConstraints(schemas!, { enabled: !!schemas, retry: 0 });
+  } = useDataSourceCheckConstraints(
+    {
+      schemas: schemas!,
+      source,
+      driver: currentDriver,
+    },
+    {
+      enabled: !!schemas,
+      retry: 0,
+    }
+  );
   const keys = React.useMemo(() => Object.keys(checkConstraints?.[0] ?? {}), [
     checkConstraints,
   ]);
