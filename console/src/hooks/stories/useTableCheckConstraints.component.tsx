@@ -1,7 +1,7 @@
 import { Table, TableRow, TableHeader } from '@/components/Common/Table';
-import { Driver, setDriver } from '@/dataSources';
+import { currentDriver, Driver, setDriver } from '@/dataSources';
 import { QualifiedTable } from '@/metadata/types';
-import { useAppDispatch } from '@/store';
+import { useAppDispatch, useAppSelector } from '@/store';
 import React from 'react';
 import { useTableCheckConstraints } from '..';
 
@@ -15,6 +15,8 @@ export const CheckConstaints = ({
   table: QualifiedTable;
 }) => {
   const dispatch = useAppDispatch();
+  const source = useAppSelector(s => s.tables.currentDataSource);
+
   React.useEffect(() => {
     if (currentDatasource) {
       dispatch({
@@ -33,7 +35,7 @@ export const CheckConstaints = ({
     isSuccess,
     isError,
     error,
-  } = useTableCheckConstraints(table);
+  } = useTableCheckConstraints({ table, source, driver: currentDriver });
   const keys = React.useMemo(() => Object.keys(checkConstraints?.[0] ?? {}), [
     checkConstraints,
   ]);

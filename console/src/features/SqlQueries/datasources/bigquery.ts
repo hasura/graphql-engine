@@ -12,6 +12,7 @@ export const bigquerySqlQueries: DatasourceSqlQueries = {
     }
 
     const query = (dataset: string) => `
+    -- test_id = ${'schemas' in options ? 'multi' : 'single'}_table
     select
     t.table_schema as table_schema,
     t.table_name as table_name,
@@ -36,17 +37,25 @@ export const bigquerySqlQueries: DatasourceSqlQueries = {
       })
       .join('union all');
   },
-  primaryKeysInfoSql(): string {
-    return 'select []';
+  primaryKeysInfoSql(options): string {
+    return `
+    -- test_id = ${'schemas' in options ? 'multi' : 'single'}_primary_key
+    select []`;
   },
-  uniqueKeysSql(): string {
-    return 'select []';
+  uniqueKeysSql(options): string {
+    return `
+    -- test_id = ${'schemas' in options ? 'multi' : 'single'}_primary_key
+    select []`;
   },
-  checkConstraintsSql(): string {
-    return 'select []';
+  checkConstraintsSql(options): string {
+    return `
+    -- test_id = ${'schemas' in options ? 'multi' : 'single'}_check_constraint
+    select []`;
   },
-  getFKRelations(): string {
-    return 'select []';
+  getFKRelations(options): string {
+    return `
+    -- test_id = ${'schemas' in options ? 'multi' : 'single'}_foreign_key
+    select []`;
   },
   getTableColumnsSql({ name, schema }: QualifiedTable): string {
     if (!schema || !name) throw Error('empty parameters are not allowed!');

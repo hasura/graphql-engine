@@ -7,6 +7,9 @@ const getKeysSql = (
   type: 'PRIMARY KEY' | 'UNIQUE',
   options: TableORSchemaArg
 ) => `
+  -- test_id = ${'schemas' in options ? 'multi' : 'single'}_${
+  type === 'UNIQUE' ? 'unique' : 'primary'
+}_key
   SELECT
   COALESCE(
     json_agg(
@@ -47,6 +50,7 @@ const getTableColumnsSql = ({ name, schema }: QualifiedTable) => {
 export const postgresSqlQueries: DatasourceSqlQueries = {
   getFetchTablesListQuery(options: TableORSchemaArg): string {
     return `
+  -- test_id = ${'schemas' in options ? 'multi' : 'single'}_table
   SELECT
     COALESCE(Json_agg(Row_to_json(info)), '[]' :: json) AS tables
   FROM (
@@ -187,6 +191,7 @@ export const postgresSqlQueries: DatasourceSqlQueries = {
   },
   checkConstraintsSql(options: TableORSchemaArg): string {
     return `
+-- test_id = ${'schemas' in options ? 'multi' : 'single'}_check_constraint
 SELECT
 COALESCE(
   json_agg(
@@ -220,8 +225,9 @@ SELECT n.nspname::text AS table_schema,
   },
   getFKRelations(options: TableORSchemaArg): string {
     return `
-    SELECT
-	COALESCE(json_agg(row_to_json(info)), '[]'::JSON)
+-- test_id = ${'schemas' in options ? 'multi' : 'single'}_foreign_key
+SELECT
+COALESCE(json_agg(row_to_json(info)), '[]'::JSON)
 FROM (
 SELECT
 q.table_schema :: text AS table_schema,

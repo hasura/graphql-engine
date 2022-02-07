@@ -1,4 +1,4 @@
-import { dataSource, Operations } from '@/dataSources';
+import { currentDriver, dataSource, Operations } from '@/dataSources';
 import { ComputedField, TableColumn } from '@/dataSources/types';
 import {
   useMetadataTableComputedFields,
@@ -7,6 +7,7 @@ import {
 } from '@/features/MetadataAPI';
 import { useAllFunctions, useSchemaList, useSingleTable } from '@/hooks';
 import { QualifiedTable } from '@/metadata/types';
+import { useAppSelector } from '@/store';
 
 export type RolePermissions = {
   [role: string]: {
@@ -96,13 +97,29 @@ interface RolePermission {
 }
 
 export const useRolePermissions = (table: QualifiedTable) => {
-  const { data: schemaList } = useSchemaList();
-  const { data: currentTableSchema } = useSingleTable(table);
-  const { data: permissions } = useMetadataTablePermissions(table);
-  const { data: computedFields } = useMetadataTableComputedFields(table);
-  const { data: allFunctions } = useAllFunctions(schemaList!, {
-    enabled: !!schemaList,
+  const source: string = useAppSelector(s => s.tables.currentDataSource);
+  const { data: schemas } = useSchemaList({
+    source,
+    driver: currentDriver,
   });
+  const { data: currentTableSchema } = useSingleTable({
+    table,
+    source,
+    driver: currentDriver,
+  });
+  const { data: permissions } = useMetadataTablePermissions(table, source);
+  const { data: computedFields } = useMetadataTableComputedFields(
+    table,
+    source
+  );
+  const { data: allFunctions } = useAllFunctions(
+    {
+      schemas: schemas!,
+      driver: currentDriver,
+      source,
+    },
+    { enabled: !!schemas }
+  );
   const { data: roles } = useRoles();
 
   if (!permissions || !allFunctions) {

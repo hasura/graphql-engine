@@ -2,50 +2,13 @@
 /* eslint-disable no-inner-declarations */
 import globals from '@/Globals';
 import { browserHistory } from 'react-router';
+import { APIError } from './error';
 
 interface IApiArgs {
   headers: Record<string, string>;
   url: string;
   method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
   body?: Record<any, any>;
-}
-
-// Adapted from https://github.com/hasura/graphql-engine-mono/blob/88257687a2c989369b62115c238aa318ea9780ca/console/src/components/Services/Common/Notification.tsx#L80-L129
-// FIXME: use unknown here
-function processError(error: any): string {
-  if (typeof error === 'string') {
-    return error;
-  } else if (
-    error?.message?.error === 'postgres query error' ||
-    error.message?.error === 'query execution failed'
-  ) {
-    if (error.message.internal) {
-      return `${error.message.code}: ${error.message.internal.error?.message}`;
-    }
-    return `${error.code}: ${error.message.error}`;
-  } else if ('info' in error) {
-    return error.info;
-  } else if ('message' in error) {
-    if (error.code) {
-      if (error.message.error) {
-        return error.message.error.message;
-      }
-      return error.message;
-    } else if (typeof error?.message === 'string') {
-      return error.message;
-    } else if ('code' in error?.message) {
-      return error.message.code;
-    }
-    return error.code;
-  } else if (error.internal?.error) {
-    return `${error.internal.error.message}.
-      ${error.internal.error.description}`;
-  } else if ('custom' in error) {
-    return error.custom;
-  } else if ('code' in error && 'error' in error && 'path' in error) {
-    return error.error;
-  }
-  return JSON.stringify(error ?? 'request failed');
 }
 
 async function fetchApi<T = unknown, V = T>(
@@ -85,7 +48,7 @@ async function fetchApi<T = unknown, V = T>(
     const unknownError = await response.text();
     throw unknownError;
   } catch (error) {
-    throw new Error(processError(error));
+    throw APIError.fromUnknown(error);
   }
 }
 
@@ -108,7 +71,6 @@ export namespace Api {
   ) {
     return fetchApi<T, V>({ ...args, method: 'PUT' }, dataTransform);
   }
-  // Http request with method set to DELETE
   export function del<T = unknown, V = T>(
     args: Omit<IApiArgs, 'method'>,
     dataTransform?: (data: T) => V

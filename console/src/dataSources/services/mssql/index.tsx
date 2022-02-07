@@ -926,6 +926,7 @@ WHERE
   generateRowsCountRequest,
   // TODO(iyekings): this is a duplicate of schemaList
   schemaListQuery: `
+  -- test_id = schema_list
   SELECT
     s.name AS schema_name
   FROM

@@ -1,9 +1,9 @@
 import { Table, TableRow, TableHeader } from '@/components/Common/Table';
-import { Driver, setDriver } from '@/dataSources';
+import { currentDriver, Driver, setDriver } from '@/dataSources';
 import { TableColumn } from '@/dataSources/types';
 import { QualifiedTable } from '@/metadata/types';
 
-import { useAppDispatch } from '@/store';
+import { useAppDispatch, useAppSelector } from '@/store';
 import React from 'react';
 import { useSingleTable } from '..';
 
@@ -29,6 +29,8 @@ export const SingleTable = ({
     }
   }, [currentDatasource, dispatch, driver]);
 
+  const source = useAppSelector(s => s.tables.currentDataSource);
+
   const {
     data: primaryKey,
     isLoading,
@@ -36,7 +38,7 @@ export const SingleTable = ({
     isError,
     isIdle,
     error,
-  } = useSingleTable(table, { retry: 0 });
+  } = useSingleTable({ table, source, driver: currentDriver }, { retry: 0 });
   const keys = React.useMemo(() => Object.keys(primaryKey ?? {}), [primaryKey]);
   const entries = React.useMemo(() => Object.values(primaryKey ?? {}), [
     primaryKey,

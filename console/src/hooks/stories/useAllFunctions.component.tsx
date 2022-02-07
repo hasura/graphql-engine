@@ -3,9 +3,9 @@ import { currentDriver, Driver, setDriver } from '@/dataSources';
 
 import { useAppDispatch, useAppSelector } from '@/store';
 import React from 'react';
-import { useDataSourceFKRelationships, useSchemaList } from '..';
+import { useSchemaList, useAllFunctions } from '..';
 
-export const AllFKRelationships = ({
+export const AllFunctions = ({
   driver,
   currentDatasource,
 }: {
@@ -24,7 +24,6 @@ export const AllFKRelationships = ({
       setDriver(driver);
     }
   }, [currentDatasource, dispatch, driver]);
-
   const source: string = useAppSelector(s => s.tables.currentDataSource);
 
   const { data: schemas, isError, error } = useSchemaList(
@@ -34,23 +33,27 @@ export const AllFKRelationships = ({
     },
     { retry: 0 }
   );
+
   const {
-    data: foreignKeys,
+    data: functions,
     isLoading,
     isSuccess,
     isError: isError2,
     isIdle,
     error: fkError,
-  } = useDataSourceFKRelationships(
+  } = useAllFunctions(
     {
       schemas: schemas!,
       source,
       driver: currentDriver,
     },
-    { enabled: !!schemas, retry: 0 }
+    {
+      enabled: !!schemas,
+      retry: 0,
+    }
   );
-  const keys = React.useMemo(() => Object.keys(foreignKeys?.[0] ?? {}), [
-    foreignKeys,
+  const keys = React.useMemo(() => Object.keys(functions?.[0] ?? {}), [
+    functions,
   ]);
 
   if (isError || isError2) {
@@ -67,17 +70,17 @@ export const AllFKRelationships = ({
 
   return (
     <div>
-      <h1 className="prose-xl">useDataSourceFKRelationships</h1>
+      <h1 className="prose-xl">useTrackableFunctions</h1>
       <p className="prose-lg mb-8">
-        Foreign Key Constraints on <b>{schemas?.join(', ')}</b> schemas
+        Trackable functions on <b>{schemas?.join(', ')}</b> schemas
       </p>
-      {isSuccess && (
+      {isSuccess && !!functions?.length && (
         <Table
-          rowCount={foreignKeys?.length ?? 0}
+          rowCount={functions?.length ?? 0}
           columnCount={keys?.length ?? 0}
         >
           <TableHeader headers={keys} />
-          {foreignKeys?.map((fk, i) => {
+          {functions?.map((fk, i) => {
             return (
               <TableRow
                 entries={Object.values(fk)}
@@ -91,6 +94,9 @@ export const AllFKRelationships = ({
             );
           })}
         </Table>
+      )}
+      {isSuccess && !functions?.length && (
+        <h3>No functions defined for data source</h3>
       )}
     </div>
   );

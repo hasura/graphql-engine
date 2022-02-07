@@ -1,16 +1,19 @@
 import { Table, TableRow, TableHeader } from '@/components/Common/Table';
 import { currentDriver, Driver, setDriver } from '@/dataSources';
+import { QualifiedFunction } from '@/metadata/types';
 
 import { useAppDispatch, useAppSelector } from '@/store';
 import React from 'react';
-import { useDataSourceFKRelationships, useSchemaList } from '..';
+import { useSchemaList, useSingleFunction } from '..';
 
-export const AllFKRelationships = ({
+export const SingleFunction = ({
   driver,
   currentDatasource,
+  myFunction,
 }: {
   driver: Driver;
   currentDatasource: string;
+  myFunction: QualifiedFunction;
 }) => {
   const dispatch = useAppDispatch();
   React.useEffect(() => {
@@ -24,7 +27,6 @@ export const AllFKRelationships = ({
       setDriver(driver);
     }
   }, [currentDatasource, dispatch, driver]);
-
   const source: string = useAppSelector(s => s.tables.currentDataSource);
 
   const { data: schemas, isError, error } = useSchemaList(
@@ -34,23 +36,28 @@ export const AllFKRelationships = ({
     },
     { retry: 0 }
   );
+
   const {
-    data: foreignKeys,
+    data: singleFn,
     isLoading,
     isSuccess,
     isError: isError2,
     isIdle,
     error: fkError,
-  } = useDataSourceFKRelationships(
+  } = useSingleFunction(
     {
-      schemas: schemas!,
+      fn: myFunction,
       source,
       driver: currentDriver,
     },
-    { enabled: !!schemas, retry: 0 }
+    {
+      enabled: !!schemas,
+      retry: 0,
+    }
   );
-  const keys = React.useMemo(() => Object.keys(foreignKeys?.[0] ?? {}), [
-    foreignKeys,
+  const keys = React.useMemo(() => Object.keys(singleFn ?? {}), [singleFn]);
+  const entries = React.useMemo(() => Object.values(singleFn ?? {}), [
+    singleFn,
   ]);
 
   if (isError || isError2) {
@@ -67,29 +74,24 @@ export const AllFKRelationships = ({
 
   return (
     <div>
-      <h1 className="prose-xl">useDataSourceFKRelationships</h1>
+      <h1 className="prose-xl">useSingleFunction</h1>
       <p className="prose-lg mb-8">
-        Foreign Key Constraints on <b>{schemas?.join(', ')}</b> schemas
+        <b>
+          {myFunction.schema}.{myFunction.name}
+        </b>{' '}
+        function
       </p>
       {isSuccess && (
-        <Table
-          rowCount={foreignKeys?.length ?? 0}
-          columnCount={keys?.length ?? 0}
-        >
-          <TableHeader headers={keys} />
-          {foreignKeys?.map((fk, i) => {
-            return (
-              <TableRow
-                entries={Object.values(fk)}
-                index=""
-                key={i}
-                readonly
-                renderCol={({ data }) =>
-                  typeof data === 'string' ? data : JSON.stringify(data)
-                }
-              />
-            );
-          })}
+        <Table rowCount={1} columnCount={keys?.length ?? 0}>
+          <TableHeader headers={keys.length ? keys : ['EmptyValue']} />
+          <TableRow
+            entries={entries.length ? entries : ['null']}
+            index=""
+            readonly
+            renderCol={({ data }) =>
+              typeof data === 'string' ? data : JSON.stringify(data)
+            }
+          />
         </Table>
       )}
     </div>

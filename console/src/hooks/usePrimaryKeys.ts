@@ -1,14 +1,17 @@
 import type { MSSqlConstraint } from '@/components/Services/Data/mergeData';
-import { currentDriver, Driver } from '@/dataSources';
+import { Driver } from '@/dataSources';
 import type { PrimaryKey } from '@/dataSources/types';
 import { dataSourceSqlQueries } from '@/features/SqlQueries';
 import type { QualifiedTable } from '@/metadata/types';
-import { useAppSelector } from '@/store';
-import { RunSQLQueryOptions, useRunSQL } from './common';
-import type { RunSQLResponse } from './types';
+import {
+  RunSQLQueryOptions,
+  transformMssqlConstraint,
+  useRunSQL,
+} from './common';
+import type { QualifiedDataSource, RunSQLResponse } from './types';
 
 type PKQueryOptions<T, N, D> = RunSQLQueryOptions<
-  [name: N, currentDataSource: string, schemasOrTable: T],
+  [name: N, currentDataSource: string, schemasOrTable: T, driver: string],
   D
 >;
 
@@ -18,34 +21,8 @@ const transformPK = (driver: Driver) => (
   const parsedPKs: MSSqlConstraint[] | PrimaryKey[] = JSON.parse(
     data.result?.[1]?.[0] ?? '[]'
   );
-  let primaryKeys = parsedPKs as PrimaryKey[];
-  if (driver === 'mssql') {
-    primaryKeys = (parsedPKs as MSSqlConstraint[]).reduce(
-      (acc: PrimaryKey[], pk: MSSqlConstraint) => {
-        const { table_name, table_schema, constraints } = pk;
-
-        const columnsByConstraintName: { [name: string]: string[] } = {};
-        constraints.forEach(c => {
-          columnsByConstraintName[c.constraint_name] = [
-            ...(columnsByConstraintName[c.constraint_name] || []),
-            c.name,
-          ];
-        });
-
-        const constraintInfo = Object.keys(columnsByConstraintName).map(
-          pkName => ({
-            table_schema,
-            table_name,
-            constraint_name: pkName,
-            columns: columnsByConstraintName[pkName],
-          })
-        );
-        return [...acc, ...constraintInfo];
-      },
-      []
-    );
-  }
-  return primaryKeys;
+  if (driver === 'mssql') return transformMssqlConstraint(data);
+  return parsedPKs as PrimaryKey[];
 };
 
 const transformSinglePK = (table: QualifiedTable) => (driver: Driver) => (
@@ -62,48 +39,52 @@ function usePrimaryKeysBase<T extends string[] | QualifiedTable, N, D>(
   schemasOrTable: T,
   name: N,
   transformFn: (d: Driver) => (r: RunSQLResponse) => D,
+  dataSource: QualifiedDataSource,
   queryOptions?: PKQueryOptions<T, N, D>
 ) {
-  const dataSource = dataSourceSqlQueries[currentDriver];
+  const { source, driver } = dataSource;
+  const targetDataSource = dataSourceSqlQueries[driver];
   const sql = () =>
     Array.isArray(schemasOrTable)
-      ? dataSource.primaryKeysInfoSql({ schemas: schemasOrTable })
-      : dataSource.primaryKeysInfoSql({ tables: [schemasOrTable] });
-  const source: string = useAppSelector(
-    state => state.tables.currentDataSource
-  );
+      ? targetDataSource.primaryKeysInfoSql({ schemas: schemasOrTable })
+      : targetDataSource.primaryKeysInfoSql({ tables: [schemasOrTable] });
   return useRunSQL({
     sql,
-    queryKey: [name, source, schemasOrTable],
-    transformFn: transformFn(currentDriver),
+    queryKey: [name, source, schemasOrTable, driver],
+    transformFn: transformFn(driver),
     queryOptions,
+    dataSource,
   });
 }
 
 export function useDataSourcePrimaryKeys(
-  schemas: string[],
+  args: { schemas: string[] } & QualifiedDataSource,
   queryOptions?: PKQueryOptions<string[], 'dataSourcePrimaryKeys', PrimaryKey[]>
 ) {
+  const { schemas, ...dataSource } = args;
   return usePrimaryKeysBase(
     schemas,
     'dataSourcePrimaryKeys',
     transformPK,
+    dataSource,
     queryOptions
   );
 }
 
 export function useTablePrimaryKey(
-  table: QualifiedTable,
+  args: { table: QualifiedTable } & QualifiedDataSource,
   queryOptions?: PKQueryOptions<
     QualifiedTable,
     'tablePrimaryKey',
     PrimaryKey | null
   >
 ) {
+  const { table, ...dataSource } = args;
   return usePrimaryKeysBase(
     table,
     'tablePrimaryKey',
     transformSinglePK(table),
+    dataSource,
     queryOptions
   );
 }
