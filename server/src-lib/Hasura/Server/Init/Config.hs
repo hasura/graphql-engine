@@ -151,8 +151,7 @@ data RawServeOptions impl = RawServeOptions
     rsoExperimentalFeatures :: Maybe [ExperimentalFeature],
     rsoEventsFetchBatchSize :: Maybe NonNegativeInt,
     rsoGracefulShutdownTimeout :: Maybe Seconds,
-    rsoWebSocketConnectionInitTimeout :: Maybe Int,
-    rsoOptimizePermissionFilters :: Maybe Bool
+    rsoWebSocketConnectionInitTimeout :: Maybe Int
   }
 
 -- | @'ResponseInternalErrorsConfig' represents the encoding of the internal
@@ -223,8 +222,7 @@ data ServeOptions impl = ServeOptions
     soGracefulShutdownTimeout :: Seconds,
     soWebsocketConnectionInitTimeout :: WSConnectionInitTimeout,
     soEventingMode :: EventingMode,
-    soReadOnlyMode :: ReadOnlyMode,
-    soOptimizePermissionFilters :: Bool
+    soReadOnlyMode :: ReadOnlyMode
   }
 
 data DowngradeOptions = DowngradeOptions

@@ -46,22 +46,21 @@ newtype InstanceId = InstanceId {getInstanceId :: Text}
 
 data ExperimentalFeature
   = EFInheritedRoles
+  | EFOptimizePermissionFilters
   deriving (Show, Eq, Generic)
 
 instance Hashable ExperimentalFeature
 
--- TODO: when there are more than one constuctors in `ExperimentalFeature`, we should
--- auto derive the JSON instances. Doing it with a single data constructor messes
--- up the JSON instances which is why it's manually implemented here
-
 instance FromJSON ExperimentalFeature where
   parseJSON = withText "ExperimentalFeature" $ \case
     "inherited_roles" -> pure EFInheritedRoles
-    _ -> fail "ExperimentalFeature can only be one of these value: inherited_roles "
+    "optimize_permission_filters" -> pure EFOptimizePermissionFilters
+    _ -> fail "ExperimentalFeature can only be one of these value: inherited_roles, optimize_permission_filters"
 
 instance ToJSON ExperimentalFeature where
   toJSON = \case
     EFInheritedRoles -> "inherited_roles"
+    EFOptimizePermissionFilters -> "optimize_permission_filters"
 
 data MaintenanceMode = MaintenanceModeEnabled | MaintenanceModeDisabled
   deriving (Show, Eq)
