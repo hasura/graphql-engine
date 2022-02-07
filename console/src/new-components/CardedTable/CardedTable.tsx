@@ -26,7 +26,7 @@ const TableHeadCell = ({ children }: ChildrenProps) => {
   return (
     <th
       scope="col"
-      className="bg-gray-50 px-sm py-sm text-sm font-semibold text-muted uppercase tracking-wider"
+      className="bg-gray-50 px-sm py-xs text-sm font-semibold text-muted uppercase tracking-wider"
     >
       {children}
     </th>
@@ -59,12 +59,14 @@ const TableBodyRow = ({ children }: ChildrenProps) => {
 };
 
 const TableBodyCell = ({ children }: ChildrenProps) => {
-  return <td className="p-sm whitespace-nowrap text-muted">{children}</td>;
+  return (
+    <td className="px-sm py-xs whitespace-nowrap text-muted">{children}</td>
+  );
 };
 
 const TableBodyActionCell = ({ children }: ChildrenProps) => {
   return (
-    <td className="p-sm whitespace-nowrap text-right font-semibold opacity-0 group-hover:opacity-100">
+    <td className="px-sm py-xs whitespace-nowrap text-right font-semibold opacity-0 group-hover:opacity-100">
       {children}
     </td>
   );

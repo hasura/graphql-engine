@@ -72,7 +72,7 @@ export type RemoteRelationship = {
 };
 
 // Server Type
-type RemoteRelationshipFieldServer = {
+export type RemoteRelationshipFieldServer = {
   field?: Record<string, RemoteRelationshipFieldServer>;
   arguments: Record<string, any>;
 };
