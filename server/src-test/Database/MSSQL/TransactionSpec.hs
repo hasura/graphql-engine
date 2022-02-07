@@ -111,7 +111,7 @@ runBasicChecks connString =
             ],
           expectation =
             matchQueryError
-              (UnsuccessfulReturnCode "odbc_SQLExecDirectW" (-1) invalidSyntaxError),
+              (UnsuccessfulReturnCode "odbc_SQLExecDirectW" (-1) invalidSyntaxError (Just "42000")),
           runWith = unitQuery,
           description = "Bad syntax error/transaction rollback"
         }
@@ -179,7 +179,7 @@ transactionStateTests connString =
           -- NoActive -> Commit test.
           expectation =
             matchQueryError
-              (UnsuccessfulReturnCode "odbc_SQLExecDirectW" (-1) invalidSyntaxError),
+              (UnsuccessfulReturnCode "odbc_SQLExecDirectW" (-1) invalidSyntaxError (Just "42000")),
           runWith = unitQuery,
           description = "NoActive -> ROLLBACK"
         }

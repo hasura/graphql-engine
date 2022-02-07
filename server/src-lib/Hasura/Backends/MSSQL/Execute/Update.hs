@@ -15,6 +15,7 @@ import Hasura.Backends.MSSQL.Connection
 import Hasura.Backends.MSSQL.Execute.MutationResponse
 import Hasura.Backends.MSSQL.FromIr as TSQL
 import Hasura.Backends.MSSQL.Plan
+import Hasura.Backends.MSSQL.SQL.Error
 import Hasura.Backends.MSSQL.ToQuery as TQ
 import Hasura.Backends.MSSQL.Types.Internal as TSQL
 import Hasura.Backends.MSSQL.Types.Update
@@ -69,11 +70,11 @@ buildUpdateTx updateOperation stringifyNum = do
           TQ.fromSelectIntoTempTable $
             TSQL.toSelectIntoTempTable tempTableNameUpdated (_auTable updateOperation) (_auAllCols updateOperation) RemoveConstraints
   -- Create a temp table
-  Tx.unitQueryE fromMSSQLTxError createInsertedTempTableQuery
+  Tx.unitQueryE defaultMSSQLTxErrorHandler createInsertedTempTableQuery
   let updateQuery = TQ.fromUpdate <$> TSQL.fromUpdate updateOperation
   updateQueryValidated <- toQueryFlat <$> V.runValidate (runFromIr updateQuery) `onLeft` (throw500 . tshow)
   -- Execute UPDATE statement
-  Tx.unitQueryE fromMSSQLTxError updateQueryValidated
+  Tx.unitQueryE mutationMSSQLTxErrorHandler updateQueryValidated
   mutationOutputSelect <- mkMutationOutputSelect stringifyNum withAlias $ _auOutput updateOperation
   let checkCondition = _auCheck updateOperation
   -- The check constraint is translated to boolean expression
@@ -90,9 +91,9 @@ buildUpdateTx updateOperation stringifyNum = do
       finalSelect = mutationOutputCheckConstraintSelect {selectWith = Just $ With $ pure $ Aliased withSelect withAlias}
 
   -- Execute SELECT query to fetch mutation response and check constraint result
-  (responseText, checkConditionInt) <- Tx.singleRowQueryE fromMSSQLTxError (toQueryFlat $ TQ.fromSelect finalSelect)
+  (responseText, checkConditionInt) <- Tx.singleRowQueryE defaultMSSQLTxErrorHandler (toQueryFlat $ TQ.fromSelect finalSelect)
   -- Drop the temp table
-  Tx.unitQueryE fromMSSQLTxError $ toQueryFlat $ dropTempTableQuery tempTableNameUpdated
+  Tx.unitQueryE defaultMSSQLTxErrorHandler $ toQueryFlat $ dropTempTableQuery tempTableNameUpdated
   -- Raise an exception if the check condition is not met
   unless (checkConditionInt == (0 :: Int)) $
     throw400 PermissionError "check constraint of an update permission has failed"

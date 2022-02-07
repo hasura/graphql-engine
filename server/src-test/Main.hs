@@ -22,6 +22,7 @@ import Hasura.App
     mkMSSQLSourceResolver,
     mkPgSourceResolver,
   )
+import Hasura.Backends.MSSQL.ErrorSpec qualified as MSSQLErrorSpec
 import Hasura.Backends.MySQL.DataLoader.ExecuteTests qualified as MySQLDataLoader
 import Hasura.EventingSpec qualified as EventingSpec
 import Hasura.GraphQL.NamespaceSpec qualified as NamespaceSpec
@@ -89,6 +90,7 @@ unitSpecs = do
   describe "Data.Parser.JSONPath" JsonPath.spec
   describe "Data.Time" TimeSpec.spec
   describe "Hasura.Backends.MySQL.DataLoader.ExecuteTests" MySQLDataLoader.spec
+  describe "Hasura.Backends.MSSQL.ErrorSpec" MSSQLErrorSpec.spec
   describe "Hasura.Eventing" EventingSpec.spec
   describe "Hasura.GraphQL.Parser.Directives" GraphQLDirectivesSpec.spec
   describe "Hasura.GraphQL.Schema.Remote" GraphRemoteSchemaSpec.spec

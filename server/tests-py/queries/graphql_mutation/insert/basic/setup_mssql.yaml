@@ -12,3 +12,20 @@ args:
     source: mssql
     table:
       name: table_no_pk
+- type: mssql_track_table
+  args:
+    source: mssql
+    table:
+      name: article
+- type: mssql_track_table
+  args:
+    source: mssql
+    table:
+      name: author
+- type: mssql_create_object_relationship
+  args:
+    source: mssql
+    table: article
+    name: author
+    using:
+      foreign_key_constraint_on: author_id

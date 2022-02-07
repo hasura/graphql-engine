@@ -15,6 +15,7 @@ import Hasura.Backends.MSSQL.Connection
 import Hasura.Backends.MSSQL.Execute.MutationResponse
 import Hasura.Backends.MSSQL.FromIr as TSQL
 import Hasura.Backends.MSSQL.Plan
+import Hasura.Backends.MSSQL.SQL.Error
 import Hasura.Backends.MSSQL.ToQuery as TQ
 import Hasura.Backends.MSSQL.Types.Insert (BackendInsert (..), IfMatched)
 import Hasura.Backends.MSSQL.Types.Internal as TSQL
@@ -137,7 +138,7 @@ buildInsertTx tableName withAlias stringifyNum insert = do
           TQ.fromSelectIntoTempTable $
             TSQL.toSelectIntoTempTable tempTableNameInserted tableName tableColumns RemoveConstraints
 
-  Tx.unitQueryE fromMSSQLTxError createInsertedTempTableQuery
+  Tx.unitQueryE defaultMSSQLTxErrorHandler createInsertedTempTableQuery
 
   -- Choose between running a regular @INSERT INTO@ statement or a @MERGE@ statement
   -- depending on the @if_matched@ field.
@@ -147,14 +148,14 @@ buildInsertTx tableName withAlias stringifyNum insert = do
     Nothing -> do
       -- Insert values into the table using INSERT query
       let insertQuery = toQueryFlat $ TQ.fromInsert $ TSQL.fromInsert insert
-      Tx.unitQueryE fromMSSQLTxError insertQuery
+      Tx.unitQueryE mutationMSSQLTxErrorHandler insertQuery
     Just ifMatched -> buildUpsertTx tableName insert ifMatched
 
   -- Build a response to the user using the values in the temporary table named #inserted
   (responseText, checkConditionInt) <- buildInsertResponseTx stringifyNum withAlias insert
 
   -- Drop the #inserted temp table
-  Tx.unitQueryE fromMSSQLTxError $ toQueryFlat $ dropTempTableQuery tempTableNameInserted
+  Tx.unitQueryE defaultMSSQLTxErrorHandler $ toQueryFlat $ dropTempTableQuery tempTableNameInserted
 
   -- Raise an exception if the check condition is not met
   unless (checkConditionInt == 0) $
@@ -185,14 +186,14 @@ buildUpsertTx tableName insert ifMatched = do
             -- We want to KeepConstraints here so the user can omit values for identity columns such as `id`
             TSQL.toSelectIntoTempTable tempTableNameValues tableName insertColumns KeepConstraints
   -- Create #values temporary table
-  Tx.unitQueryE fromMSSQLTxError createValuesTempTableQuery
+  Tx.unitQueryE defaultMSSQLTxErrorHandler createValuesTempTableQuery
 
   -- Store values in #values temporary table
   let insertValuesIntoTempTableQuery =
         toQueryFlat $
           TQ.fromInsertValuesIntoTempTable $
             TSQL.toInsertValuesIntoTempTable tempTableNameValues insert
-  Tx.unitQueryE fromMSSQLTxError insertValuesIntoTempTableQuery
+  Tx.unitQueryE mutationMSSQLTxErrorHandler insertValuesIntoTempTableQuery
 
   -- Run the MERGE query and store the mutated rows in #inserted temporary table
   merge <-
@@ -200,10 +201,10 @@ buildUpsertTx tableName insert ifMatched = do
       (toMerge tableName (_aiInsObj $ _aiData insert) allTableColumns ifMatched)
       `onLeft` (throw500 . tshow)
   let mergeQuery = toQueryFlat $ TQ.fromMerge merge
-  Tx.unitQueryE fromMSSQLTxError mergeQuery
+  Tx.unitQueryE mutationMSSQLTxErrorHandler mergeQuery
 
   -- After @MERGE@ we no longer need this temporary table
-  Tx.unitQueryE fromMSSQLTxError $ toQueryFlat $ dropTempTableQuery tempTableNameValues
+  Tx.unitQueryE defaultMSSQLTxErrorHandler $ toQueryFlat $ dropTempTableQuery tempTableNameValues
 
 -- | Builds a response to the user using the values in the temporary table named #inserted.
 buildInsertResponseTx :: Bool -> Text -> AnnInsert 'MSSQL Void Expression -> Tx.TxET QErr IO (Text, Int)
@@ -229,4 +230,4 @@ buildInsertResponseTx stringifyNum withAlias insert = do
       finalSelect = mutationOutputCheckConstraintSelect {selectWith = Just $ With $ pure $ Aliased withSelect withAlias}
 
   -- Execute SELECT query to fetch mutation response and check constraint result
-  Tx.singleRowQueryE fromMSSQLTxError (toQueryFlat $ TQ.fromSelect finalSelect)
+  Tx.singleRowQueryE defaultMSSQLTxErrorHandler (toQueryFlat $ TQ.fromSelect finalSelect)

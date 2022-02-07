@@ -69,8 +69,9 @@ source-repository-package
 
 source-repository-package
   type: git
-  location: https://github.com/fpco/odbc.git
-  tag: f4f04ea15d14e9a3ed455f7c728dc08734eef8ae
+  -- TODO: https://github.com/hasura/graphql-engine-mono/issues/3507
+  location: https://github.com/hasura/odbc.git
+  tag: 272d48317611c1e209e5160c53c205ffa97f2b13
 
 package odbc
   ghc-options: -Wwarn

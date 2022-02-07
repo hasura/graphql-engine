@@ -22,6 +22,7 @@ import Database.ODBC.Internal qualified as ODBC
 import Database.ODBC.SQLServer qualified as ODBC hiding (query)
 import Hasura.Backends.MSSQL.Connection
 import Hasura.Backends.MSSQL.Meta
+import Hasura.Backends.MSSQL.SQL.Error
 import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.Prelude
@@ -30,7 +31,6 @@ import Hasura.RQL.DDL.Schema.Diff
 import Hasura.RQL.Types hiding (TableName, runTx, tmTable)
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.Server.Utils (quoteRegex)
-import Network.HTTP.Types qualified as N
 import Text.Regex.TDFA qualified as TDFA
 
 data MSSQLRunSQL = MSSQLRunSQL
@@ -83,19 +83,15 @@ runSQL mssqlRunSQL@MSSQLRunSQL {..} = do
 
     sqlQueryTx :: Tx.TxET QErr m [[(ODBC.Column, ODBC.Value)]]
     sqlQueryTx =
-      Tx.buildGenericQueryTxE fromMSSQLTxErrorRunSQL _mrsSql textToODBCQuery ODBC.query
+      Tx.buildGenericQueryTxE runSqlMSSQLTxErrorHandler _mrsSql textToODBCQuery ODBC.query
       where
         textToODBCQuery :: Text -> ODBC.Query
         textToODBCQuery = fromString . T.unpack
 
-        fromMSSQLTxErrorRunSQL :: Tx.MSSQLTxError -> QErr
-        fromMSSQLTxErrorRunSQL = \case
-          err@Tx.MSSQLQueryError {} ->
-            -- The SQL query is user provided. Make error status to 400, bad request in case of MSSQL query error
-            -- and message as 'sql query exception'
-            let qErr = fromMSSQLTxError err
-             in qErr {qeStatus = N.status400, qeError = "sql query exception", qeCode = MSSQLError}
-          err -> fromMSSQLTxError err
+        runSqlMSSQLTxErrorHandler :: Tx.MSSQLTxError -> QErr
+        runSqlMSSQLTxErrorHandler =
+          -- The SQL query is user provided. Capture all error classes as expected exceptions.
+          mkMSSQLTxErrorHandler (const True)
 
     withMetadataCheck ::
       TableCache 'MSSQL ->
