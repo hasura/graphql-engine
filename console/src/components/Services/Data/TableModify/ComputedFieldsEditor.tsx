@@ -408,7 +408,7 @@ const ComputedFieldsEditor: React.FC<ComputedFieldsEditorProps> = ({
             <div className="flex items-center mb-formlabel">
               <div className="flex items-center">
                 <h4 className="text-gray-600 font-semibold">
-                  Session Arguement:
+                  Session Argument:
                 </h4>
                 <Tooltip message="The function argument into which Hasura session variables will be passed" />
               </div>
