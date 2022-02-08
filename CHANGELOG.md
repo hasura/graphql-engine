@@ -1,7 +1,6 @@
 # Hasura GraphQL Engine Changelog
 
 ## Next release
-(Add highlights/major features below)
 
 ### Experimental SQL optimizations
 Row-level permissions are applied by a translation into SQL `WHERE` clauses. If
@@ -21,6 +20,7 @@ The optimization can be enabled using the
 ### Bug fixes and improvements
 (Add entries below in the order of server, console, cli, docs, others)
 - console: add support for remote database relationships
+- console: enable support for update permissions for mssql #3591
 - cli: skip tls verfication for all API requests when `insecure-skip-tls-verify` flag is set (#4926)
 
 - server: classify MSSQL exceptions and improve API error responses
