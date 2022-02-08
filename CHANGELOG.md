@@ -45,6 +45,7 @@ count (
 - server: implement update mutations for MS SQL Server (closes #7834)
 - server: support nested output object types in actions (#4796)
 - server: action webhook requests now include a User-Agent header (fix #8070)
+- server: postgres: return a single entry per row (selected randomly) when an object relationship is misconfigured one-to-many (fix #7936).
 - console: action/event trigger transforms are now called REST connectors
 - console: fix list of tables (and schemas) being unsorted when creating a new trigger event (fix #6391)
 - console: fix custom field names breaking browse table sorting and the pre-populating of the edit row form
