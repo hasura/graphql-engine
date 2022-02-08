@@ -1249,7 +1249,7 @@ class TestFallbackUnauthorizedRoleCookie:
     @classmethod
     def dir(cls):
         return 'queries/unauthorized_role'
-    
+
     def test_fallback_unauth_role_jwt_cookie_not_set(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/cookie_header_absent_unauth_role_set.yaml', transport, add_auth=False)
 
@@ -1263,7 +1263,7 @@ class TestMissingUnauthorizedRoleAndCookie:
     @classmethod
     def dir(cls):
         return 'queries/unauthorized_role'
-    
+
     def test_error_unauth_role_not_set_jwt_cookie_not_set(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/cookie_header_absent_unauth_role_not_set.yaml', transport, add_auth=False)
 
@@ -1297,9 +1297,13 @@ class TestGraphQLExplainCommon:
     def test_limit_orderby_column_query(self, hge_ctx):
         self.with_admin_secret("query", hge_ctx, self.dir() + '/limit_orderby_column_query.yaml')
 
+    @pytest.mark.skip_server_upgrade_test
+    # skipping due to https://github.com/hasura/graphql-engine/issues/7936
     def test_limit_orderby_relationship_query(self, hge_ctx):
         self.with_admin_secret("query", hge_ctx, self.dir() + '/limit_orderby_relationship_query.yaml')
 
+    @pytest.mark.skip_server_upgrade_test
+    # skipping due to https://github.com/hasura/graphql-engine/issues/7936
     def test_limit_offset_orderby_relationship_query(self, hge_ctx):
         self.with_admin_secret("query", hge_ctx, self.dir() + '/limit_offset_orderby_relationship_query.yaml')
 

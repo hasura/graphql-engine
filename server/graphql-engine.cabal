@@ -995,6 +995,7 @@ test-suite tests-hspec
       Test.HelloWorldSpec
       Test.LimitOffsetSpec
       Test.ObjectRelationshipsSpec
+      Test.ObjectRelationshipsLimitSpec
       Test.OrderingSpec
       Test.ServiceLivenessSpec
       Test.ViewsSpec
