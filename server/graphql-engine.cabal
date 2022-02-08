@@ -406,8 +406,8 @@ library
                      , Hasura.Backends.Postgres.Connection
                      , Hasura.Backends.Postgres.DDL
                      , Hasura.Backends.Postgres.DDL.BoolExp
+                     , Hasura.Backends.Postgres.DDL.ComputedField
                      , Hasura.Backends.Postgres.DDL.EventTrigger
-                     , Hasura.Backends.Postgres.DDL.Field
                      , Hasura.Backends.Postgres.DDL.Function
                      , Hasura.Backends.Postgres.DDL.RunSQL
                      , Hasura.Backends.Postgres.DDL.Source
@@ -427,7 +427,7 @@ library
                      , Hasura.Backends.Postgres.Schema.OnConflict
                      , Hasura.Backends.Postgres.SQL.DML
                      , Hasura.Backends.Postgres.SQL.Error
-                     , Hasura.Backends.Postgres.SQL.Rewrite
+                     , Hasura.Backends.Postgres.SQL.IdentifierUniqueness
                      , Hasura.Backends.Postgres.SQL.Types
                      , Hasura.Backends.Postgres.SQL.Value
                      , Hasura.Backends.Postgres.Translate.BoolExp

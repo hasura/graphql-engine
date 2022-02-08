@@ -1,5 +1,8 @@
 {-# LANGUAGE PartialTypeSignatures #-}
 
+-- | Postgres Translate BoolExp
+--
+-- Convert IR boolean expressions to Postgres-specific SQL expressions.
 module Hasura.Backends.Postgres.Translate.BoolExp
   ( toSQLBoolExp,
     annBoolExp,

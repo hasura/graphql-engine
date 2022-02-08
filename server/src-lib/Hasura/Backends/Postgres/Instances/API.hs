@@ -1,5 +1,8 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
+-- | Postgres Instances API
+--
+-- Defines a 'Hasura.Server.API.Backend.BackendAPI' type class instance for Postgres.
 module Hasura.Backends.Postgres.Instances.API () where
 
 import Hasura.Prelude

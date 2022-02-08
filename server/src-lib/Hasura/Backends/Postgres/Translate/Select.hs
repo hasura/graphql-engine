@@ -1,4 +1,6 @@
--- | This module is a translation layer between IR and postgres-specific select queries.
+-- | Postgres Translate Select
+--
+-- This module is a translation layer between IR and postgres-specific select queries.
 --
 -- There are three main types of selects (as distinguished from the IR):
 --
@@ -47,7 +49,7 @@ import Data.Text qualified as T
 import Data.Text.Extended
 import Database.PG.Query qualified as Q
 import Hasura.Backends.Postgres.SQL.DML qualified as S
-import Hasura.Backends.Postgres.SQL.Rewrite
+import Hasura.Backends.Postgres.SQL.IdentifierUniqueness
 import Hasura.Backends.Postgres.SQL.Types
 import Hasura.Backends.Postgres.Translate.BoolExp
 import Hasura.Backends.Postgres.Translate.Column (toJSONableExp)

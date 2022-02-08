@@ -1,4 +1,10 @@
-module Hasura.Backends.Postgres.SQL.Rewrite
+-- | Postgres SQL IdentifierUniqueness
+--
+-- Bypass the Postgres limitation of truncating identifiers to 63 characters long
+-- by prepending unique numbers.
+--
+-- See Note [Postgres identifier length limitations]
+module Hasura.Backends.Postgres.SQL.IdentifierUniqueness
   ( prefixNumToAliases,
     prefixNumToAliasesSelectWith,
   )
