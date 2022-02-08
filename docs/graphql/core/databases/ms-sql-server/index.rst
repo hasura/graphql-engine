@@ -35,12 +35,11 @@ Here are 2 ways you can get started with Hasura and SQL Server:
 Supported features
 ------------------
 
-Hasura currently supports queries, subscriptions, inserts, deletes, relationships and permissions on MS SQL Server.
+Hasura currently supports queries, subscriptions, mutations, relationships and permissions on MS SQL Server.
 
 Next up on our roadmap for Hasura + SQL Server:
 
 - Support for stored procedures & functions (`#7073 <https://github.com/hasura/graphql-engine/issues/7073>`__)
-- Mutations: Run updates, stored procedures and transactions securely on SQL Server over a GraphQL API (`#7074 <https://github.com/hasura/graphql-engine/issues/7074>`__)
 - Event triggers: Trigger HTTP webhooks with atomic capture and atleast once guarantee whenever data changes inside the database (`#7075 <https://github.com/hasura/graphql-engine/issues/7075>`__)
 - Remote Joins: Join models in SQL Server to models from other API services (GraphQL or REST) (`#7076 <https://github.com/hasura/graphql-engine/issues/7076>`__)
 
