@@ -20,5 +20,5 @@ response:
     AS "_3_e"      ) ) AS "root" FROM  (SELECT  *  FROM "public"."article"  WHERE
     (''true'')     ) AS "_0_root.base" LEFT OUTER JOIN LATERAL (SELECT  "_1_root.or.author.base"."id"
     AS "root.or.author.pg.id" FROM  (SELECT  *  FROM "public"."author"  WHERE (("_0_root.base"."author_id")
-    = ("id"))     ) AS "_1_root.or.author.base"      ) AS "_2_root.or.author" ON (''true'')    ORDER
+    = ("id"))    LIMIT 1 ) AS "_1_root.or.author.base"      ) AS "_2_root.or.author" ON (''true'')    ORDER
     BY "root.or.author.pg.id" DESC NULLS FIRST LIMIT 3 OFFSET 2) AS "_4_root"      '

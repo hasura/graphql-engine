@@ -198,6 +198,8 @@ get_server_upgrade_tests() {
 		--deselect test_schema_stitching.py::TestAddRemoteSchemaTbls::test_add_conflicting_table \
 		--deselect test_events.py \
 		--deselect test_graphql_queries.py::TestGraphQLQueryFunctions \
+		--deselect test_graphql_queries.py::TestGraphQLExplainCommon::test_limit_orderby_relationship_query \
+		--deselect test_graphql_queries.py::TestGraphQLExplainCommon::test_limit_offset_orderby_relationship_query \
 		  1>/dev/null 2>/dev/null
 	set +x
 	# Choose the subset of jobs to run based on possible parallelism in this buildkite job
@@ -235,6 +237,8 @@ run_server_upgrade_pytest() {
 			--deselect test_graphql_mutations.py::TestGraphqlInsertPermission::test_user_with_no_backend_privilege \
 			--deselect test_graphql_mutations.py::TestGraphqlMutationCustomSchema::test_update_article \
 			--deselect test_graphql_queries.py::TestGraphQLQueryEnums::test_introspect_user_role \
+			--deselect test_graphql_queries.py::TestGraphQLExplainCommon::test_limit_orderby_relationship_query \
+			--deselect test_graphql_queries.py::TestGraphQLExplainCommon::test_limit_offset_orderby_relationship_query \
 			-v $tests_to_run
 		set +x
 		cd -
