@@ -19,7 +19,6 @@ module Hasura.Server.OpenAPI (serveJSON) where
 
 import Control.Lens
 import Data.Aeson qualified as J
-import Data.Aeson.Ordered qualified as JO
 import Data.HashMap.Strict qualified as Map
 import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.List.NonEmpty qualified as NE
@@ -30,18 +29,12 @@ import Data.Text qualified as T
 import Data.Text.Extended (commaSeparated)
 import Data.Text.NonEmpty
 import Hasura.GraphQL.Analyse (Analysis (Analysis, _aFields, _aVars), FieldAnalysis (FieldAnalysis, _fFields), FieldDef (FieldInfo, FieldList), analyzeGraphqlQuery)
-import Hasura.GraphQL.Context
-import Hasura.GraphQL.Namespace (mkUnNamespacedRootFieldAlias)
-import Hasura.GraphQL.Parser.Schema (Variable)
-import Hasura.GraphQL.RemoteServer (introspectionQuery, parseIntrospectionResult)
-import Hasura.GraphQL.Transport.HTTP.Protocol
+import Hasura.GraphQL.RemoteServer (getSchemaIntrospection)
 import Hasura.Prelude hiding (get, put)
-import Hasura.RQL.IR.Root
 import Hasura.RQL.Types.Endpoint
 import Hasura.RQL.Types.QueryCollection
 import Hasura.RQL.Types.RemoteSchema
 import Hasura.RQL.Types.SchemaCache
-import Hasura.Session (adminRoleName)
 import Language.GraphQL.Draft.Syntax qualified as G
 import Network.HTTP.Media.MediaType ((//))
 
@@ -336,15 +329,6 @@ typeDescription = \case
   (G.TypeDefinitionEnum o) -> G.unDescription <$> G._etdDescription o
   (G.TypeDefinitionInputObject o) -> G.unDescription <$> G._iotdDescription o
 
-typeName :: G.TypeDefinition possibleTypes inputType -> Text
-typeName = \case
-  (G.TypeDefinitionScalar o) -> G.unName (G._stdName o)
-  (G.TypeDefinitionObject o) -> G.unName (G._otdName o)
-  (G.TypeDefinitionInterface o) -> G.unName (G._itdName o)
-  (G.TypeDefinitionUnion o) -> G.unName (G._utdName o)
-  (G.TypeDefinitionEnum o) -> G.unName (G._etdName o)
-  (G.TypeDefinitionInputObject o) -> G.unName (G._iotdName o)
-
 typeProperties :: G.TypeDefinition possibleTypes RemoteSchemaInputValueDefinition -> Maybe [RemoteSchemaInputValueDefinition]
 typeProperties = \case
   (G.TypeDefinitionScalar _) -> Nothing
@@ -461,17 +445,6 @@ getEndpointsData sd sc = do
 squashEndpointGroup :: NonEmpty EndpointData -> EndpointData
 squashEndpointGroup g = (NE.head g) {_edMethod = concatMap _edMethod g}
 
-getSchemaIntrospection :: SchemaCache -> Maybe RemoteSchemaIntrospection
-getSchemaIntrospection SchemaCache {..} = do
-  RoleContext {..} <- Map.lookup adminRoleName scGQLContext
-  fieldMap <- either (const Nothing) Just $ gqlQueryParser _rctxDefault $ fmap (fmap nameToVariable) $ G._todSelectionSet $ _grQuery introspectionQuery
-  RFRaw v <- OMap.lookup (mkUnNamespacedRootFieldAlias $$(G.litName "__schema")) fieldMap
-  fmap irDoc $ parseIntrospectionResult $ J.object [("data", J.object [("__schema", JO.fromOrdered v)])]
-  where
-    -- This value isn't used but we give it a type to be more clear about what is being ignored
-    nameToVariable :: G.Name -> Variable
-    nameToVariable = undefined
-
 serveJSON :: SchemaCache -> OpenApi
 serveJSON sc = spec & components . schemas .~ defs
   where
@@ -499,7 +472,7 @@ isRequestBodyRequired ed = not $ all isNotRequired (_edProperties ed)
 
 declareOpenApiSpec :: SchemaCache -> Declare (Definitions Schema) OpenApi
 declareOpenApiSpec sc = do
-  let _schemaIntrospection = getSchemaIntrospection sc
+  let _schemaIntrospection = getSchemaIntrospection (scGQLContext sc)
       warnings = case _schemaIntrospection of
         Nothing -> "\n\n⚠️ Schema introspection failed"
         _ -> ""

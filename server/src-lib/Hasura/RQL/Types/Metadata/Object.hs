@@ -115,7 +115,7 @@ moiTypeName = \case
   MOAction _ -> "action"
   MOActionPermission _ _ -> "action_permission"
   MOInheritedRole _ -> "inherited_role"
-  MOEndpoint _ -> "endpoint"
+  MOEndpoint _ -> "rest_endpoint"
   MOHostTlsAllowlist _ -> "host_network_tls_allowlist"
   where
     handleSourceObj :: forall b. SourceMetadataObjId b -> Text

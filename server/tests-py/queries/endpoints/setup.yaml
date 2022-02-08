@@ -20,6 +20,29 @@ args:
       - name: simple_subscription
         query: "subscription { test_table { first_name last_name } }"
 
+- type: run_sql
+  args:
+    sql: |
+      create table test_table(
+          first_name text,
+          last_name text,
+          id UUID NOT NULL DEFAULT gen_random_uuid()
+      );
+
+- type: track_table
+  args:
+    schema: public
+    name: test_table
+
+- type: run_sql
+  args:
+    sql: |
+      insert into test_table (first_name, last_name)
+      values
+      ('Foo', 'Bar'),
+      ('Baz', 'Qux'),
+      ('X%20Y', 'Test');
+
 - type: create_rest_endpoint
   args:
     url: simple
@@ -113,26 +136,3 @@ args:
 - type: drop_rest_endpoint
   args:
     name: to_be_dropped
-
-- type: run_sql
-  args:
-    sql: |
-      create table test_table(
-          first_name text,
-          last_name text,
-          id UUID NOT NULL DEFAULT gen_random_uuid()
-      );
-
-- type: track_table
-  args:
-    schema: public
-    name: test_table
-
-- type: run_sql
-  args:
-    sql: |
-      insert into test_table (first_name, last_name)
-      values
-      ('Foo', 'Bar'),
-      ('Baz', 'Qux'),
-      ('X%20Y', 'Test');
