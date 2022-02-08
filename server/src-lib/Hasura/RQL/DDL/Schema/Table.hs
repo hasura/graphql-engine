@@ -349,7 +349,7 @@ unTrackExistingTableOrViewP2 (UntrackTable source qtn cascade) = withNewInconsis
     mapM_ (purgeDependentObject source >=> tell) indirectDeps
     tell $ dropTableInMetadata @b source qtn
   -- delete the table and its direct dependencies
-  buildSchemaCache metadataModifier
+  withNewInconsistentObjsCheck $ buildSchemaCache metadataModifier
   pure successMsg
   where
     getIndirectDep :: SchemaObjId -> Maybe (SourceObjId b)

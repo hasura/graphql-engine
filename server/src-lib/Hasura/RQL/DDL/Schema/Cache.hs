@@ -44,6 +44,7 @@ import Hasura.Backends.Postgres.Connection
 import Hasura.Backends.Postgres.DDL.Source (initCatalogForSource, logPGSourceCatalogMigrationLockedQueries)
 import Hasura.Base.Error
 import Hasura.GraphQL.Execute.Types
+import Hasura.GraphQL.RemoteServer (getSchemaIntrospection)
 import Hasura.GraphQL.Schema (buildGQLContext)
 import Hasura.Incremental qualified as Inc
 import Hasura.Logging
@@ -297,6 +298,8 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
       ambiguousF' ep = MetadataObject (endpointObjId ep) (toJSON ep)
       ambiguousF mds = AmbiguousRestEndpoints (commaSeparated $ map _ceUrl mds) (map ambiguousF' mds)
       ambiguousRestEndpoints = map (ambiguousF . S.elems . snd) $ ambiguousPathsGrouped endpoints
+      maybeRS = getSchemaIntrospection gqlContext
+      inconsistentRestQueries = getInconsistentRestQueries maybeRS endpoints endpointObject
 
   returnA
     -<
@@ -323,7 +326,8 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
               <> toList inconsistentRemoteSchemas
               <> duplicateRestVariables
               <> invalidRestSegments
-              <> ambiguousRestEndpoints,
+              <> ambiguousRestEndpoints
+              <> inconsistentRestQueries,
           scApiLimits = _boApiLimits resolvedOutputs,
           scMetricsConfig = _boMetricsConfig resolvedOutputs,
           scMetadataResourceVersion = Nothing,
