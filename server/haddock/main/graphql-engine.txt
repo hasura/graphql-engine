@@ -16702,6 +16702,11 @@ buildSchemaCacheStrict :: (QErrM m, CacheRWM m, MetadataM m) => m ()
 --   are added to the schema cache as a result of its execution, raises an
 --   error.
 withNewInconsistentObjsCheck :: (QErrM m, CacheRM m) => m a -> m a
+
+-- | getInconsistentRestQueries is a helper function that runs the static
+--   analysis over the saved queries for each endpoints and reports any
+--   inconsistenties with the current schema.
+getInconsistentRestQueries :: Maybe RemoteSchemaIntrospection -> EndpointTrie GQLQueryWithText -> (EndpointMetadata GQLQueryWithText -> MetadataObject) -> [InconsistentMetadata]
 instance Hasura.Tracing.MonadTrace m => Hasura.Tracing.MonadTrace (Hasura.RQL.Types.SchemaCache.Build.MetadataT m)
 instance Control.Monad.Morph.MFunctor Hasura.RQL.Types.SchemaCache.Build.MetadataT
 instance Hasura.RQL.Types.SchemaCache.Build.CacheRWM m => Hasura.RQL.Types.SchemaCache.Build.CacheRWM (Hasura.RQL.Types.SchemaCache.Build.MetadataT m)
@@ -19504,10 +19509,17 @@ getCustomizer :: IntrospectionResult -> Maybe RemoteSchemaCustomization -> Remot
 throwRemoteSchema :: QErrM m => Text -> m a
 throwRemoteSchemaWithInternal :: (QErrM m, ToJSON a) => Text -> a -> m b
 throwRemoteSchemaHttp :: QErrM m => URI -> HttpException -> m a
+newtype RemoteSchemaIntrospectionErr
+RemoteSchemaIntrospectionErr :: String -> RemoteSchemaIntrospectionErr
+[remoteSchemaIntrospectionErr] :: RemoteSchemaIntrospectionErr -> String
+errorE :: String -> c
+getSchemaIntrospection :: HashMap RoleName (RoleContext GQLContext) -> Maybe RemoteSchemaIntrospection
 instance GHC.Base.Functor Hasura.GraphQL.RemoteServer.FromIntrospection
 instance GHC.Generics.Generic (Hasura.GraphQL.RemoteServer.FromIntrospection a)
 instance GHC.Classes.Eq a => GHC.Classes.Eq (Hasura.GraphQL.RemoteServer.FromIntrospection a)
 instance GHC.Show.Show a => GHC.Show.Show (Hasura.GraphQL.RemoteServer.FromIntrospection a)
+instance GHC.Show.Show Hasura.GraphQL.RemoteServer.RemoteSchemaIntrospectionErr
+instance GHC.Exception.Type.Exception Hasura.GraphQL.RemoteServer.RemoteSchemaIntrospectionErr
 instance Data.Aeson.Types.FromJSON.FromJSON (Hasura.GraphQL.RemoteServer.FromIntrospection Language.GraphQL.Draft.Syntax.Description)
 instance Data.Aeson.Types.FromJSON.FromJSON (Hasura.GraphQL.RemoteServer.FromIntrospection Language.GraphQL.Draft.Syntax.ScalarTypeDefinition)
 instance Data.Aeson.Types.FromJSON.FromJSON (Hasura.GraphQL.RemoteServer.FromIntrospection (Language.GraphQL.Draft.Syntax.ObjectTypeDefinition Language.GraphQL.Draft.Syntax.InputValueDefinition))
@@ -19572,7 +19584,6 @@ getPropertyReferences :: InsOrdHashMap Text (TypeDefinition a RemoteSchemaInputV
 processProperty' :: InsOrdHashMap Text (TypeDefinition a RemoteSchemaInputValueDefinition) -> RemoteSchemaInputValueDefinition -> (Text, Referenced Schema)
 handleRefType' :: InsOrdHashMap Text (TypeDefinition a RemoteSchemaInputValueDefinition) -> GType -> Referenced Schema
 typeDescription :: TypeDefinition possibleTypes inputType -> Maybe Text
-typeName :: TypeDefinition possibleTypes inputType -> Text
 typeProperties :: TypeDefinition possibleTypes RemoteSchemaInputValueDefinition -> Maybe [RemoteSchemaInputValueDefinition]
 referenceType :: Bool -> Text -> (Maybe OpenApiType, Maybe Pattern)
 processProperties :: InsOrdHashMap Text (TypeDefinition a RemoteSchemaInputValueDefinition) -> Maybe [RemoteSchemaInputValueDefinition] -> DeclareT (Definitions Schema) Identity (InsOrdHashMap Text (Referenced Schema))
@@ -19585,7 +19596,6 @@ getURL :: EndpointMetadata GQLQueryWithText -> Text
 extractEndpointInfo :: Maybe RemoteSchemaIntrospection -> EndpointMethod -> EndpointMetadata GQLQueryWithText -> Declare (Definitions Schema) EndpointData
 getEndpointsData :: Maybe RemoteSchemaIntrospection -> SchemaCache -> Declare (Definitions Schema) [EndpointData]
 squashEndpointGroup :: NonEmpty EndpointData -> EndpointData
-getSchemaIntrospection :: SchemaCache -> Maybe RemoteSchemaIntrospection
 serveJSON :: SchemaCache -> OpenApi
 
 -- | If all variables are scalar or optional then the entire request body
@@ -22380,9 +22390,9 @@ QueryParametersInfo :: !HashMap Name (ColumnValue b) -> !Seq (ColumnValue b) -> 
 --   This information is used to determine a cohort's required session
 --   variables
 [_qpiReferencedSessionVariables] :: QueryParametersInfo (b :: BackendType) -> !HashSet SessionVariable
-qpiSyntheticVariableValues :: forall b_avYSD. Lens' (QueryParametersInfo b_avYSD) (Seq (ColumnValue b_avYSD))
-qpiReusableVariableValues :: forall b_avYSD. Lens' (QueryParametersInfo b_avYSD) (HashMap Name (ColumnValue b_avYSD))
-qpiReferencedSessionVariables :: forall b_avYSD. Lens' (QueryParametersInfo b_avYSD) (HashSet SessionVariable)
+qpiSyntheticVariableValues :: forall b_avZGk. Lens' (QueryParametersInfo b_avZGk) (Seq (ColumnValue b_avZGk))
+qpiReusableVariableValues :: forall b_avZGk. Lens' (QueryParametersInfo b_avZGk) (HashMap Name (ColumnValue b_avZGk))
+qpiReferencedSessionVariables :: forall b_avZGk. Lens' (QueryParametersInfo b_avZGk) (HashSet SessionVariable)
 
 -- | Checks if the provided arguments are valid values for their
 --   corresponding types. | Generates SQL of the format "select
