@@ -74,6 +74,18 @@ You can add or remove a operation in the allow-list in two ways:
 
   * You can modify the allow-list without actually enabling it on your instance.
 
+Role based allow-list
+---------------------
+
+A role based allow-list is useful when you would like a query collection to be
+accessible to only certain roles.
+
+.. admonition:
+
+   Role based allow-lists are supported in cloud/enterprise products,
+   from version ``v2.3.0``. In OSS, role based allow-lists entries are ignored.
+
+   On older versions (which do not support role based allow-lists), any role based allow-list metadata entry will get treated as global. Hence, caution is advised when using role based allow-list metadata with older versions.
 
 Enable allow-list
 -----------------

@@ -2,7 +2,6 @@
 
 module Hasura.RQL.Types.Metadata
   ( Actions,
-    Allowlist,
     BackendSourceMetadata,
     CatalogState (..),
     CatalogStateType (..),
@@ -107,13 +106,13 @@ import Data.Aeson.Types
 import Data.HashMap.Strict.Extended qualified as M
 import Data.HashMap.Strict.InsOrd.Extended qualified as OM
 import Data.HashSet qualified as HS
-import Data.HashSet.InsOrd qualified as HSIns
 import Data.List.Extended qualified as L
 import Data.Text qualified as T
 import Data.Text.Extended qualified as T
 import Hasura.Incremental (Cacheable)
 import Hasura.Prelude
 import Hasura.RQL.Types.Action
+import Hasura.RQL.Types.Allowlist
 import Hasura.RQL.Types.ApiLimit
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Column
@@ -418,10 +417,6 @@ type Functions b = InsOrdHashMap (FunctionName b) (FunctionMetadata b)
 
 type RemoteSchemas = InsOrdHashMap RemoteSchemaName RemoteSchemaMetadata
 
-type QueryCollections = InsOrdHashMap CollectionName CreateCollection
-
-type Allowlist = HSIns.InsOrdHashSet CollectionReq
-
 type Endpoints = InsOrdHashMap EndpointName CreateEndpoint
 
 type Actions = InsOrdHashMap ActionName ActionMetadata
@@ -483,7 +478,7 @@ parseNonSourcesMetadata ::
   Parser
     ( RemoteSchemas,
       QueryCollections,
-      Allowlist,
+      MetadataAllowlist,
       CustomTypes,
       Actions,
       CronTriggers,
@@ -499,7 +494,7 @@ parseNonSourcesMetadata o = do
   queryCollections <-
     parseListAsMap "query collections" _ccName $
       o .:? "query_collections" .!= []
-  allowlist <- o .:? "allowlist" .!= HSIns.empty
+  allowlist <- parseListAsMap "allowlist entries" aeCollection $ o .:? "allowlist" .!= []
   customTypes <- o .:? "custom_types" .!= emptyCustomTypes
   actions <- parseListAsMap "actions" _amName $ o .:? "actions" .!= []
   cronTriggers <-
@@ -531,7 +526,7 @@ data Metadata = Metadata
   { _metaSources :: !Sources,
     _metaRemoteSchemas :: !RemoteSchemas,
     _metaQueryCollections :: !QueryCollections,
-    _metaAllowlist :: !Allowlist,
+    _metaAllowlist :: !MetadataAllowlist,
     _metaCustomTypes :: !CustomTypes,
     _metaActions :: !Actions,
     _metaCronTriggers :: !CronTriggers,
@@ -629,7 +624,7 @@ data MetadataNoSources = MetadataNoSources
     _mnsFunctions :: !(Functions ('Postgres 'Vanilla)),
     _mnsRemoteSchemas :: !RemoteSchemas,
     _mnsQueryCollections :: !QueryCollections,
-    _mnsAllowlist :: !Allowlist,
+    _mnsAllowlist :: !MetadataAllowlist,
     _mnsCustomTypes :: !CustomTypes,
     _mnsActions :: !Actions,
     _mnsCronTriggers :: !CronTriggers
@@ -783,7 +778,7 @@ metadataToOrdJSON
         ("sources", AO.array $ map sourceMetaToOrdJSON $ sortOn getSourceName $ OM.elems sources)
       remoteSchemasPair = listToMaybeOrdPairSort "remote_schemas" remoteSchemaQToOrdJSON _rsmName remoteSchemas
       queryCollectionsPair = listToMaybeOrdPairSort "query_collections" createCollectionToOrdJSON _ccName queryCollections
-      allowlistPair = listToMaybeOrdPairSort "allowlist" AO.toOrdered _crCollection allowlist
+      allowlistPair = listToMaybeOrdPairSort "allowlist" (AO.toOrdered . toJSON @AllowlistEntry) aeCollection allowlist
       customTypesPair =
         if customTypes == emptyCustomTypes
           then Nothing

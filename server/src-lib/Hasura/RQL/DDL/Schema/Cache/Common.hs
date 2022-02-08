@@ -45,7 +45,6 @@ import Control.Monad.Trans.Control (MonadBaseControl)
 import Control.Monad.Unique
 import Data.HashMap.Strict.Extended qualified as M
 import Data.HashMap.Strict.InsOrd qualified as OMap
-import Data.HashSet qualified as HS
 import Data.Sequence qualified as Seq
 import Data.Text.Extended
 import Hasura.Base.Error
@@ -150,7 +149,7 @@ data BuildOutputs = BuildOutputs
     -- reuse it later if we need to mark the remote schema inconsistent during GraphQL schema
     -- generation (because of field conflicts).
     _boRemoteSchemas :: !(HashMap RemoteSchemaName (RemoteSchemaCtx, MetadataObject)),
-    _boAllowlist :: !(HS.HashSet GQLQuery),
+    _boAllowlist :: !InlinedAllowlist,
     _boCustomTypes :: !AnnotatedCustomTypes,
     _boCronTriggers :: !(M.HashMap TriggerName CronTriggerInfo),
     _boEndpoints :: !(M.HashMap EndpointName (EndpointMetadata GQLQueryWithText)),

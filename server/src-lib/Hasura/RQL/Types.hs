@@ -38,6 +38,7 @@ import Hasura.Base.Error
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp as R
 import Hasura.RQL.Types.Action as R
+import Hasura.RQL.Types.Allowlist as R
 import Hasura.RQL.Types.ApiLimit as R
 import Hasura.RQL.Types.Backend as R
 import Hasura.RQL.Types.Column as R

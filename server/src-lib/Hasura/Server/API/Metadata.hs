@@ -128,8 +128,9 @@ data RQLMetadataV1
   | RMDropQueryCollection !DropCollection
   | RMAddQueryToCollection !AddQueryToCollection
   | RMDropQueryFromCollection !DropQueryFromCollection
-  | RMAddCollectionToAllowlist !CollectionReq
-  | RMDropCollectionFromAllowlist !CollectionReq
+  | RMAddCollectionToAllowlist !AllowlistEntry
+  | RMDropCollectionFromAllowlist !DropCollectionFromAllowlist
+  | RMUpdateScopeOfCollectionInAllowlist !UpdateScopeOfCollectionInAllowlist
   | -- Rest endpoints
     RMCreateRestEndpoint !CreateEndpoint
   | RMDropRestEndpoint !DropEndpoint
@@ -199,6 +200,7 @@ instance FromJSON RQLMetadataV1 where
       "drop_query_from_collection" -> RMDropQueryFromCollection <$> args
       "add_collection_to_allowlist" -> RMAddCollectionToAllowlist <$> args
       "drop_collection_from_allowlist" -> RMDropCollectionFromAllowlist <$> args
+      "update_scope_of_collection_in_allowlist" -> RMUpdateScopeOfCollectionInAllowlist <$> args
       "create_rest_endpoint" -> RMCreateRestEndpoint <$> args
       "drop_rest_endpoint" -> RMDropRestEndpoint <$> args
       "set_custom_types" -> RMSetCustomTypes <$> args
@@ -456,6 +458,7 @@ runMetadataQueryV1M env currentResourceVersion = \case
   RMDropQueryFromCollection q -> runDropQueryFromCollection q
   RMAddCollectionToAllowlist q -> runAddCollectionToAllowlist q
   RMDropCollectionFromAllowlist q -> runDropCollectionFromAllowlist q
+  RMUpdateScopeOfCollectionInAllowlist q -> runUpdateScopeOfCollectionInAllowlist q
   RMCreateRestEndpoint q -> runCreateEndpoint q
   RMDropRestEndpoint q -> runDropEndpoint q
   RMSetCustomTypes q -> runSetCustomTypes q

@@ -1,0 +1,12 @@
+type: bulk
+args:
+- type: drop_query_collection
+  args:
+    collection: collection_1
+    cascade: True
+
+- type: run_sql
+  args:
+    sql: |
+      DROP TABLE author;
+    cascade: true

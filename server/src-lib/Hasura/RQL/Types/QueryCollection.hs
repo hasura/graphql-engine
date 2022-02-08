@@ -1,5 +1,5 @@
 module Hasura.RQL.Types.QueryCollection
-  ( CollectionName,
+  ( CollectionName (..),
     CollectionDef (..),
     cdQueries,
     CreateCollection (..),
@@ -9,15 +9,14 @@ module Hasura.RQL.Types.QueryCollection
     AddQueryToCollection (..),
     DropQueryFromCollection (..),
     DropCollection (..),
-    CollectionReq (..),
     GQLQuery (..),
     GQLQueryWithText (..),
     QueryName (..),
     ListedQuery (..),
     getGQLQuery,
     getGQLQueryText,
-    queryWithoutTypeNames,
-    stripTypenames,
+    QueryCollections,
+    collectionQueries,
   )
 where
 
@@ -69,44 +68,6 @@ getGQLQuery (GQLQueryWithText v) = snd v
 getGQLQueryText :: GQLQueryWithText -> Text
 getGQLQueryText (GQLQueryWithText v) = fst v
 
-queryWithoutTypeNames :: GQLQuery -> GQLQuery
-queryWithoutTypeNames =
-  GQLQuery . G.ExecutableDocument . stripTypenames
-    . G.getExecutableDefinitions
-    . unGQLQuery
-
--- WIP NOTE
--- this was lifted from Validate. Should this be here?
-stripTypenames :: forall var. [G.ExecutableDefinition var] -> [G.ExecutableDefinition var]
-stripTypenames = map filterExecDef
-  where
-    filterExecDef :: G.ExecutableDefinition var -> G.ExecutableDefinition var
-    filterExecDef = \case
-      G.ExecutableDefinitionOperation opDef ->
-        G.ExecutableDefinitionOperation $ filterOpDef opDef
-      G.ExecutableDefinitionFragment fragDef ->
-        let newSelset = filterSelSet $ G._fdSelectionSet fragDef
-         in G.ExecutableDefinitionFragment fragDef {G._fdSelectionSet = newSelset}
-
-    filterOpDef = \case
-      G.OperationDefinitionTyped typeOpDef ->
-        let newSelset = filterSelSet $ G._todSelectionSet typeOpDef
-         in G.OperationDefinitionTyped typeOpDef {G._todSelectionSet = newSelset}
-      G.OperationDefinitionUnTyped selset ->
-        G.OperationDefinitionUnTyped $ filterSelSet selset
-
-    filterSelSet :: [G.Selection frag var'] -> [G.Selection frag var']
-    filterSelSet = mapMaybe filterSel
-    filterSel :: G.Selection frag var' -> Maybe (G.Selection frag var')
-    filterSel s = case s of
-      G.SelectionField f ->
-        if G._fName f == $$(G.litName "__typename")
-          then Nothing
-          else
-            let newSelset = filterSelSet $ G._fSelectionSet f
-             in Just $ G.SelectionField f {G._fSelectionSet = newSelset}
-      _ -> Just s
-
 data ListedQuery = ListedQuery
   { _lqName :: !QueryName,
     _lqQuery :: !GQLQueryWithText
@@ -119,10 +80,8 @@ instance Cacheable ListedQuery
 
 $(deriveJSON hasuraJSON ''ListedQuery)
 
-type QueryList = [ListedQuery]
-
 newtype CollectionDef = CollectionDef
-  {_cdQueries :: QueryList}
+  {_cdQueries :: [ListedQuery]}
   deriving (Show, Eq, Generic, NFData, Cacheable)
 
 $(deriveJSON hasuraJSON ''CollectionDef)
@@ -137,6 +96,9 @@ data CreateCollection = CreateCollection
 
 $(deriveJSON hasuraJSON ''CreateCollection)
 $(makeLenses ''CreateCollection)
+
+collectionQueries :: CreateCollection -> [G.ExecutableDocument G.Name]
+collectionQueries = map (unGQLQuery . getGQLQuery . _lqQuery) . _cdQueries . _ccDefinition
 
 data DropCollection = DropCollection
   { _dcCollection :: !CollectionName,
@@ -163,8 +125,4 @@ data DropQueryFromCollection = DropQueryFromCollection
 
 $(deriveJSON hasuraJSON ''DropQueryFromCollection)
 
-newtype CollectionReq = CollectionReq
-  {_crCollection :: CollectionName}
-  deriving (Show, Eq, Generic, Hashable)
-
-$(deriveJSON hasuraJSON ''CollectionReq)
+type QueryCollections = InsOrdHashMap CollectionName CreateCollection

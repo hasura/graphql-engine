@@ -1047,7 +1047,7 @@ instance (Monad m) => ConsoleRenderer (PGMetadataStorageAppT m) where
 instance (Monad m) => MonadGQLExecutionCheck (PGMetadataStorageAppT m) where
   checkGQLExecution userInfo _ enableAL sc query = runExceptT $ do
     req <- toParsed query
-    checkQueryInAllowlist enableAL userInfo req sc
+    checkQueryInAllowlist enableAL AllowlistModeGlobalOnly userInfo req sc
     return req
 
   executeIntrospection _ introspectionQuery _ =

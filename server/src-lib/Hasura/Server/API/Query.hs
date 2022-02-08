@@ -104,8 +104,8 @@ data RQLQueryV1
   | RQDropQueryCollection !DropCollection
   | RQAddQueryToCollection !AddQueryToCollection
   | RQDropQueryFromCollection !DropQueryFromCollection
-  | RQAddCollectionToAllowlist !CollectionReq
-  | RQDropCollectionFromAllowlist !CollectionReq
+  | RQAddCollectionToAllowlist !AllowlistEntry
+  | RQDropCollectionFromAllowlist !DropCollectionFromAllowlist
   | RQRunSql !RunSQL
   | RQReplaceMetadata !ReplaceMetadata
   | RQExportMetadata !ExportMetadata

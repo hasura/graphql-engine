@@ -230,26 +230,27 @@ buildSubscriptionPlan userInfo rootFields parameterizedQueryHash = do
         Just (IR.SourceConfigWith _ _ (IR.QDBR qdb)) -> pure qdb
 
 checkQueryInAllowlist ::
-  (MonadError QErr m) => Bool -> UserInfo -> GQLReqParsed -> SchemaCache -> m ()
-checkQueryInAllowlist enableAL userInfo req sc =
+  (MonadError QErr m) =>
+  Bool ->
+  AllowlistMode ->
+  UserInfo ->
+  GQLReqParsed ->
+  SchemaCache ->
+  m ()
+checkQueryInAllowlist allowlistEnabled allowlistMode userInfo req schemaCache =
   -- only for non-admin roles
   -- check if query is in allowlist
-  when (enableAL && (_uiRole userInfo /= adminRoleName)) $ do
-    let notInAllowlist =
-          not $ isQueryInAllowlist (_grQuery req) (scAllowlist sc)
-    when notInAllowlist $ modifyQErr modErr $ throw400 ValidationFailed "query is not allowed"
+  when (allowlistEnabled && role /= adminRoleName) do
+    let query = G.ExecutableDocument . unGQLExecDoc $ _grQuery req
+        allowlist = scAllowlist schemaCache
+        allowed = allowlistAllowsQuery allowlist allowlistMode role query
+    unless allowed $
+      modifyQErr modErr $ throw400 ValidationFailed "query is not allowed"
   where
+    role = _uiRole userInfo
     modErr e =
       let msg = "query is not in any of the allowlists"
        in e {qeInternal = Just $ ExtraInternal $ J.object ["message" J..= J.String msg]}
-
-    isQueryInAllowlist q = HS.member gqlQuery
-      where
-        gqlQuery =
-          GQLQuery $
-            G.ExecutableDocument $
-              stripTypenames $
-                unGQLExecDoc q
 
 getResolvedExecPlan ::
   forall m.
