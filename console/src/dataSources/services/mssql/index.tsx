@@ -265,7 +265,7 @@ export const mssql: DataSourcesAPI = {
   getTableSupportedQueries: (table: NormalizedTable) => {
     // all query types are supported for tables
     if (isTable(table)) {
-      return ['select', 'insert', 'delete'];
+      return ['select', 'insert', 'update', 'delete'];
     }
 
     // only select permissions for views, until server can verify the other ones
