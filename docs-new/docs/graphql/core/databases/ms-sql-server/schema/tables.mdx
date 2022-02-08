@@ -68,7 +68,7 @@ interface:
     ```
 
 2.  Add the following statement to the `down.sql` file in case you need
-    to [roll back](/latest/graphql/core/migrations/advanced/rolling-back-migrations.mdx) the above statement:
+    to [roll back](/graphql/core/migrations/advanced/rolling-back-migrations.mdx) the above statement:
 
     ```sql
     DROP TABLE articles;
@@ -130,7 +130,7 @@ You can track any existing tables in your database from the
 1.  To track the table and expose it over the GraphQL API, edit the
     `tables.yaml` file in the `metadata` directory as follows:
 
-    ```yaml {4,6}
+    ```yaml {4-6}
     - table:
         schema: dbo
         name: authors
@@ -230,8 +230,7 @@ articles (
 
 These auto-generated fields will allow you to query data in our table.
 
-See the `query <graphql_api_query>` API reference for the full
-specifications.
+See the [query](/graphql/core/api-reference/graphql-api/query.mdx) API reference for the full specifications.
 
 ## Try out basic GraphQL requests
 

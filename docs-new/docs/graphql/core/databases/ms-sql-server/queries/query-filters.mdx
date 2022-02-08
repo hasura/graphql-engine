@@ -24,14 +24,19 @@ multiple filters in the same `where` clause using the `_and` or the
 
 For example, to fetch data for an author whose name is "Sidney":
 
+<!-- prettier-ignore-start -->
+
 ```graphql {3}
 query {
-  authors(where: { name: { _eq: "Sidney" } }) {
+  authors(
+    where: { name: { _eq: "Sidney" } }
+    ) {
     id
     name
   }
 }
 ```
+<!-- prettier-ignore-end -->
 
 You can also use nested objects' fields to filter rows from a table and
 also filter the nested objects as well.
@@ -57,7 +62,7 @@ Here `_eq` and `_gt` are examples of comparison operators that can be
 used in the `where` argument to filter on equality.
 
 You can see the complete specification of the `where` argument in the
-`API reference <WhereExp>`.
+[API reference](/graphql/core/api-reference/graphql-api/query.mdx).
 
 ## Comparison operators
 
@@ -69,6 +74,11 @@ filter results.
 The `_eq` (equal to) or the `_neq` (not equal to) operators are
 compatible with any MS SQL Server type (like `Integer`, `Float`,
 `Double`, `Text`, `Boolean`, `Date`/`Time`/`Timestamp`, etc.).
+
+<!--
+TODO: DBCOMPATIBILITY (add mssql operators)
+  For more details on equality operators and MS SQL Server equivalents, refer to the :ref:`API reference <generic_operators>`.
+-->
 
 The following are examples of using the equality operators on different
 types.
@@ -202,6 +212,11 @@ equal to), `_lte` (less than or equal to) operators are compatible with
 any MS SQL Server type (like `Integer`, `Float`, `Double`, `Text`,
 `Boolean`, `Date`/`Time`/`Timestamp`, etc.).
 
+<!--
+TODO: DBCOMPATIBILITY (add mssql operators)
+  For more details on greater than or less than operators and MS SQL Server equivalents, refer to the :ref:`API reference <generic_operators>`.
+-->
+
 The following are examples of using these operators on different types:
 
 **Example: Integer (works with Double, Float, etc.)**
@@ -321,6 +336,11 @@ compare field values to a list of values. They are compatible with any
 MS SQL Server type (like `Integer`, `Float`, `Double`, `Text`,
 `Boolean`, `Date`/`Time`/`Timestamp`, etc.).
 
+<!--
+TODO: DBCOMPATIBILITY (add mssql operators)
+  For more details on list based search operators and MS SQL Server equivalents, refer to the :ref:`API reference <generic_operators>`.
+-->
+
 The following are examples of using these operators on different types:
 
 **Example: Integer (works with Double, Float, etc.)**
@@ -407,6 +427,17 @@ Fetch a list of those authors whose names are NOT part of a list:
 The `_like`, `_nlike` operators are used for pattern matching on
 string/text fields.
 
+<!--
+
+  TODO: DBCOMPATIBILITY (add mssql operators)
+  The ``_like``, ``_nlike``, ``_ilike``, ``_nilike``, ``_similar``, ``_nsimilar``, ``_regex``, ``_nregex``, ``_iregex``, ``_niregex`` operators are used for
+  pattern matching on string/text fields.
+
+  TODO: DBCOMPATIBILITY (add mssql operators)
+  For more details on text search operators and MS SQL Server equivalents, refer to the :ref:`API reference <text_operators>`.
+
+ -->
+
 **Example: \_like**
 
 Fetch a list of articles whose titles contain the word “amet”:
@@ -438,13 +469,171 @@ Fetch a list of articles whose titles contain the word “amet”:
   ]`}
 />
 
+<!--
+
+
+.. TODO: DBCOMPATIBILITY (add mssql operators)
+  .. note::
+
+    ``_like`` is case-sensitive. Use ``_ilike`` for case-insensitive search.
+
+.. TODO: DBCOMPATIBILITY (not valid in MSSQL)
+  **Example: _similar**
+
+  Fetch a list of authors whose names begin with A or C:
+
+  .. graphiql::
+    :view_only:
+    :query:
+      query {
+        authors(
+          where: {name: {_similar: "(A|C)%"}}
+        ) {
+          id
+          name
+        }
+      }
+    :response:
+      {
+        "data": {
+          "authors": [
+            {
+              "id": 4,
+              "name": "Anjela"
+            },
+            {
+              "id": 5,
+              "name": "Amii"
+            },
+            {
+              "id": 6,
+              "name": "Corny"
+            },
+            {
+              "id": 8,
+              "name": "April"
+            }
+          ]
+        }
+      }
+
+  .. note::
+
+    ``_similar`` is case-sensitive
+
+
+.. TODO: DBCOMPATIBILITY (not valid in mssql)
+  JSONB operators (_contains, _has_key, etc.)
+  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+  The ``_contains``, ``_contained_in``, ``_has_key``, ``_has_keys_any`` and ``_has_keys_all`` operators are used to filter
+  based on ``JSONB`` columns.
+
+  For more details on JSONB operators and MS SQL Server equivalents, refer to the :ref:`API reference <jsonb_operators>`.
+
+  **Example: _contains**
+
+  Fetch all authors living within a particular pincode (present in ``address`` JSONB column):
+
+  .. graphiql::
+    :view_only:
+    :query:
+      query get_authors_in_pincode ($jsonFilter: jsonb){
+        authors(
+          where: {
+            address: {_contains: $jsonFilter }
+          }
+        ) {
+          id
+          name
+          address
+        }
+      }
+    :response:
+      {
+        "data": {
+          "authors": [
+            {
+              "id": 1,
+              "name": "Ash",
+              "address": {
+                "street_address": "161, 19th Main Road, Koramangala 6th Block",
+                "city": "Bengaluru",
+                "state": "Karnataka",
+                "pincode": 560095,
+                "phone": "9090909090",
+              }
+            }
+          ]
+        }
+      }
+    :variables:
+      {
+        "jsonFilter": {
+          "pincode": 560095
+        }
+      }
+
+  **Example: _has_key**
+
+  Fetch authors if the ``phone`` key is present in their JSONB ``address`` column:
+
+  .. graphiql::
+    :view_only:
+    :query:
+      query get_authors_if_phone {
+        authors(
+          where: {
+            address: {_has_key: "phone" }
+          }
+        ) {
+          id
+          name
+          address
+        }
+      }
+    :response:
+      {
+        "data": {
+          "authors": [
+            {
+              "id": 1,
+              "name": "Ash",
+              "address": {
+                "street_address": "161, 19th Main Road, Koramangala 6th Block",
+                "city": "Bengaluru",
+                "state": "Karnataka",
+                "pincode": 560095,
+                "phone": "9090909090"
+              }
+            }
+          ]
+        }
+      }
+
+
+
+-->
+
 ### Spatial relationship operators (\_st_contains, \_st_crosses, etc.)
+
+<!-- .. TODO: DBCOMPATIBILITY  3D geometry objects not supported in mssql -->
 
 The `_st_contains`, `_st_crosses`, `_st_equals`, `_st_intersects`,
 `_st_overlaps`, `_st_touches`, `_st_within` operators are used to filter
 based on `geometry` like columns.
 
 `_st_intersects` can be used on `geography` columns also.
+
+<!--
+
+.. TODO: DBCOMPATIBILITY (add mssql operators)
+  For more details on spatial relationship operators and MS SQL Server equivalents, refer to the :ref:`API reference <geometry_operators>`.
+
+.. TODO: DBCOMPATIBILITY (verify with geometry & geography DBs)
+
+
+ -->
 
 Use JSON representation (see
 [GeoJSON](https://tools.ietf.org/html/rfc7946)) of `geometry` and
@@ -464,6 +653,20 @@ value:
     geom_col
   }
 }`}
+  variables={`{
+  "polygon": {
+    "type": "Polygon",
+    "coordinates": [
+      [
+        [ 0, 0 ],
+        [ 0, 2 ],
+        [ 2, 2 ],
+        [ 2, 0 ],
+        [ 0, 0 ]
+      ]
+    ]
+  }
+}`}
   response={`{
   "data": {
     "geom_table": [
@@ -480,26 +683,17 @@ value:
     ]
   }
 }
-:variables:
-{
-  "polygon": {
-    "type": "Polygon",
-    "coordinates": [
-      [
-        [ 0, 0 ],
-        [ 0, 2 ],
-        [ 2, 2 ],
-        [ 2, 0 ],
-        [ 0, 0 ]
-      ]
-    ]
-  }
-}`}
+`}
 />
 
 ### Filter or check for null values (\_is_null)
 
 Checking for null values can be achieved using the `_is_null` operator.
+
+<!--
+.. TODO: DBCOMPATIBILITY (add mssql operators)
+  For more details on the ``_is_null`` operator and MS SQL Server equivalent, refer to the :ref:`API reference <null_expression>`.
+ -->
 
 **Example: Filter null values in a field**
 
@@ -795,7 +989,7 @@ results.
 
 For example:
 
-```graphql
+```graphql {2}
 query {
   articles(where: { author: { name: { _eq: "Sidney" } } }) {
     id
@@ -884,8 +1078,7 @@ Fetch all articles whose author's name starts with "A":
 
 **Example:**
 
-Fetch all authors which have written at least one article which is rated
-1:
+Fetch all authors which have written at least one article which is rated 1:
 
 <GraphiQLIDE
   query={`{

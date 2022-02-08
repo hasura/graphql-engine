@@ -17,7 +17,7 @@ import GraphiQLIDE from "@site/src/components/GraphiQLIDE/GraphiQLIDE";
 ## Introduction
 
 You can use the object (one-to-one) or array (one-to-many)
-[relationships](/graphql/core/databases/ms-sql-server/schema/table-relationships/index.mdx#ms-sql-server-table-relationships) defined in your
+[relationships](/graphql/core/databases/ms-sql-server/schema/table-relationships/index.mdx) defined in your
 schema to make a nested query i.e. fetch data for a type along with data
 from a nested or related type.
 
@@ -38,11 +38,14 @@ author:
 
 <GraphiQLIDE
   query={`query {
-  authors {
-    id
-    name
-  }
-}`}
+      articles {
+        id
+        title
+        author {
+          name
+        }
+      }
+    }`}
   response={`{
   "data": {
     "articles": [

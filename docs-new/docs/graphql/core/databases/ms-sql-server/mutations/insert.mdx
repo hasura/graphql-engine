@@ -45,11 +45,15 @@ As you can see from the schema:
 - `objects` argument is mandatory and you can pass multiple `objects`
   to the mutation.
 - You can pass an `if_matched` argument to convert the mutation to an
-  [upsert mutation](/graphql/core/databases/ms-sql-server/mutations/upsert.mdx#ms-sql-server-upsert).
+  [upsert mutation](/graphql/core/databases/ms-sql-server/mutations/upsert.mdx).
 - You can return the number of affected rows and the affected objects
   (with nested objects) in the response.
 - You can use the single object insert to get the inserted object
   directly as the mutation response.
+
+<!--
+See the :ref:`insert mutation API reference <insert_upsert_syntax>` for the full specifications.
+-->
 
 :::info Note
 
@@ -258,7 +262,7 @@ article object with its author in the response:
 
 To set a field to its `default` value, just omit it from the input
 object, irrespective of the default value configuration i.e. via MS SQL
-Server defaults or using column presets.
+Server [defaults](/graphql/core/databases/ms-sql-server/schema/default-values/mssql-defaults.mdx) or using [column presets](/graphql/core/databases/ms-sql-server/schema/default-values/mssql-column-presets.mdx).
 
 **Example:** If the default value of `id` is set to auto-incrementing
 integer, there's no need to pass the `id` field to the input object:

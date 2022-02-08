@@ -27,7 +27,7 @@ Hasura GraphQL engine's column presets let you define role-based values
 for any field/column. These values can either be a session variable
 value or a static value.
 
-:::info Column preset restricts mutation access for configured role
+:::caution Column preset restricts mutation access for configured role
 
 Column preset values are not overridable by the user. ie. If a column
 has a preset defined for a given role, access to the column for the
@@ -71,7 +71,7 @@ the value of the `X-Hasura-User-Id` session variable.
 You can set column presets in the `tables.yaml` file inside the
 `metadata` directory:
 
-```yaml
+```yaml {8-9}
 - table:
     schema: public
     name: article
@@ -97,8 +97,7 @@ hasura metadata apply
 </TabItem>
 <TabItem value="api" label="API">
 
-You can add column presets by using the
-`metadata_pg_create_insert_permission` metadata API:
+You can add column presets by using the [pg_create_insert_permission](/graphql/core/api-reference/metadata-api/permission.mdx#metadata-pg-create-insert-permission) metadata API:
 
 ```http {13-15}
 POST /v1/metadata HTTP/1.1

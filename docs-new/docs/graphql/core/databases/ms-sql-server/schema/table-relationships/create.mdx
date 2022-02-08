@@ -379,7 +379,7 @@ Fetch a list of authors and a nested list of each author's articles:
 ## Using manual relationships {#ms-sql-server-create-manual-relationships}
 
 Let's say you have a table `authors (id, name)` and a
-`view <ms_sql_server_custom_views>` `author_avg_rating (id, avg)` which
+[view](graphql/core/databases/ms-sql-server/schema/views.mdx) `author_avg_rating (id, avg)` which
 has the average rating of articles for each author.
 
 Let us now create an `object relationship` called `avg_rating` from the

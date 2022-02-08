@@ -36,6 +36,13 @@ This feature is supported in versions `v2.0.8` and later.
 
 Console support coming soon
 
+<!--
+ Head to the `Data -> [table-name] -> Modify`. On the relevant field, click `Edit` and change the GraphQL field name to a name of your choice.
+
+.. thumbnail:: /img/graphql/core/schema/custom-field-name-column.png
+:alt: Customise GraphQL field name
+-->
+
 </TabItem>
 <TabItem value="cli" label="CLI">
 
@@ -62,7 +69,7 @@ hasura metadata apply
 
 A custom field name can be set for a column via the following 2 methods:
 
-1.  Passing a [Table config](/graphql/core/api-reference/syntax-defs.mdx#table-config) with the [CustomColumnNames](/graphql/core/api-reference/syntax-defs.mdx#customcolumnnames) to the
+1.  Passing a [Table Config](/graphql/core/api-reference/syntax-defs.mdx#table-config) with the [CustomColumnNames](/graphql/core/api-reference/syntax-defs.mdx#customcolumnnames) to the
     [bigquery_set_table_customization](/graphql/core/api-reference/metadata-api/table-view.mdx#metadata-bigquery-set-table-customization) API while tracking a
     table:
 
@@ -98,6 +105,13 @@ A custom field name can be set for a column via the following 2 methods:
 
 Console support coming soon
 
+<!--
+Head to the ``Data -> [table-name] -> Modify``. Click the ``Edit`` button in the ``Custom GraphQL Root Fields`` section and define names over which you'd like to expose the table root fields.
+
+ .. thumbnail:: /img/graphql/core/schema/custom-field-name-root-fields.png
+    :alt: Customise GraphQL root field
+-->
+
 </TabItem>
 <TabItem value="cli" label="CLI">
 
@@ -125,7 +139,7 @@ hasura metadata apply
 A custom field name can be set for a table root field via the following
 2 methods:
 
-1.  Passing a [Table config](/graphql/core/api-reference/syntax-defs.mdx#table-config) with the [Custom Root Fields](/graphql/core/api-reference/syntax-defs.mdx#custom-root-fields) to the
+1.  Passing a [Table Config](/graphql/core/api-reference/syntax-defs.mdx#table-config) with the [Custom Root Fields](/graphql/core/api-reference/syntax-defs.mdx#custom-root-fields) to the
     [bigquery_set_table_customization](/graphql/core/api-reference/metadata-api/table-view.mdx#metadata-bigquery-set-table-customization) API while tracking a
     table:
 

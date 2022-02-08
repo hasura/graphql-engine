@@ -34,16 +34,14 @@ regular tables.
 Views can be created using SQL which can be run in the Hasura console:
 
 - Head to the `Data -> SQL` section of the Hasura console
-- Enter your [create view SQL
-  statement](https://docs.microsoft.com/en-us/sql/relational-databases/views/create-views?view=sql-server-ver15)
+- Enter your [create view SQL statement](https://docs.microsoft.com/en-us/sql/relational-databases/views/create-views?view=sql-server-ver15)
 - Hit the `Run` button
 
 </TabItem>
 <TabItem value="cli" label="CLI">
 
 1.  [Create a migration manually](/graphql/core/migrations/advanced/writing-migrations-manually.mdx) and add your
-    [create view SQL
-    statement](https://docs.microsoft.com/en-us/sql/relational-databases/views/create-views?view=sql-server-ver15)
+    [create view SQL statement](https://docs.microsoft.com/en-us/sql/relational-databases/views/create-views?view=sql-server-ver15)
     to the `up.sql` file. Also, add an SQL statement to the `down.sql`
     file that reverts the previous statement.
 
@@ -103,7 +101,7 @@ You can track any existing views in your database from the
 1.  To track the view and expose it over the GraphQL API, edit the
     `tables.yaml` file in the `metadata` directory as follows:
 
-    ```yaml {7,9}
+    ```yaml {7-9}
     - table:
         schema: dbo
         name: authors
