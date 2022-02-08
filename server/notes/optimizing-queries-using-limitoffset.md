@@ -1,6 +1,6 @@
-This note is in [Hasura.Backends.Postgres.Translate.Select](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/Backends/Postgres/Translate/Select.hs#L747).
+This note is in [Hasura.Backends.Postgres.Translate.Select](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/Backends/Postgres/Translate/Select.hs#L749).
 It is referenced at:
-  - line 64 of [Hasura.Backends.Postgres.Translate.Types](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/Backends/Postgres/Translate/Types.hs#L64)
+  - line 67 of [Hasura.Backends.Postgres.Translate.Types](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/Backends/Postgres/Translate/Types.hs#L67)
 
 # Optimizing queries using limit/offset
 

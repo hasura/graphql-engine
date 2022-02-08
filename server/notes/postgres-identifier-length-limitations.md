@@ -1,6 +1,7 @@
-This note is in [Hasura.Backends.Postgres.SQL.Rewrite](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/Backends/Postgres/SQL/Rewrite.hs#L12).
+This note is in [Hasura.Backends.Postgres.SQL.IdentifierUniqueness](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/Backends/Postgres/SQL/IdentifierUniqueness.hs#L18).
 It is referenced at:
-  - line 19 of [Hasura.Backends.Postgres.SQL.Rewrite](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/Backends/Postgres/SQL/Rewrite.hs#L19)
+  - line 6 of [Hasura.Backends.Postgres.SQL.IdentifierUniqueness](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/Backends/Postgres/SQL/IdentifierUniqueness.hs#L6)
+  - line 25 of [Hasura.Backends.Postgres.SQL.IdentifierUniqueness](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/Backends/Postgres/SQL/IdentifierUniqueness.hs#L25)
 
 # Postgres identifier length limitations
 

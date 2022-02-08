@@ -993,7 +993,9 @@ parseErrorWith :: MonadParse m => Code -> Text -> m a
 parseError :: MonadParse m => Text -> m a
 
 
--- | Functions and datatypes for interpreting Postgres errors.
+-- | Postgres SQL Error
+--   
+--   Functions and datatypes for interpreting Postgres errors.
 module Hasura.Backends.Postgres.SQL.Error
 
 -- | The top-level error code type. Errors in Postgres are divided into
@@ -7088,6 +7090,14 @@ module Hasura.Experimental.Adapter.Backend
 type Unimplemented = ()
 instance Hasura.RQL.Types.Backend.Backend 'Hasura.SQL.Backend.Experimental
 
+
+-- | Postgres Types CitusExtraTableMetadata
+--   
+--   Additional metadata information for Citus tables.
+--   
+--   See
+--   <a>https://www.citusdata.com/blog/2017/07/27/database-table-types-with-citus-and-postgres/</a>
+--   for more details on the Citus table types.
 module Hasura.Backends.Postgres.Types.CitusExtraTableMetadata
 data ExtraTableMetadata
 Local :: ExtraTableMetadata
@@ -7103,6 +7113,11 @@ instance Data.Hashable.Class.Hashable Hasura.Backends.Postgres.Types.CitusExtraT
 instance Hasura.Incremental.Internal.Dependency.Cacheable Hasura.Backends.Postgres.Types.CitusExtraTableMetadata.ExtraTableMetadata
 instance Control.DeepSeq.NFData Hasura.Backends.Postgres.Types.CitusExtraTableMetadata.ExtraTableMetadata
 
+
+-- | Postgres SQL Types
+--   
+--   Combinators and helpers for dealing with Postgres types such as
+--   strings, numerals, geography and geometry, etc.
 module Hasura.Backends.Postgres.SQL.Types
 newtype Identifier
 Identifier :: Text -> Identifier
@@ -8162,7 +8177,9 @@ instance Hasura.RQL.Types.Backend.Backend b => GHC.Show.Show (Hasura.RQL.IR.Conf
 instance Hasura.RQL.Types.Backend.Backend b => GHC.Classes.Eq (Hasura.RQL.IR.Conflict.ConflictTarget b)
 
 
--- | This module defines the Insert-related IR types specific to Postgres.
+-- | Postgres Types Insert
+--   
+--   This module defines the Insert-related IR types specific to Postgres.
 module Hasura.Backends.Postgres.Types.Insert
 
 -- | The PostgreSQL-specific data of an Insert expression.
@@ -8177,6 +8194,10 @@ instance Hasura.RQL.Types.Backend.Backend ('Hasura.SQL.Backend.Postgres pgKind) 
 instance Hasura.RQL.Types.Backend.Backend ('Hasura.SQL.Backend.Postgres pgKind) => Data.Foldable.Foldable (Hasura.Backends.Postgres.Types.Insert.BackendInsert pgKind)
 instance Hasura.RQL.Types.Backend.Backend ('Hasura.SQL.Backend.Postgres pgKind) => Data.Traversable.Traversable (Hasura.Backends.Postgres.Types.Insert.BackendInsert pgKind)
 
+
+-- | Postgres Types BoolExp
+--   
+--   Postgres-specific <tt>BooleanOperator</tt> extensions.
 module Hasura.Backends.Postgres.Types.BoolExp
 data BooleanOperators a
 AILIKE :: !a -> BooleanOperators a
@@ -8225,7 +8246,9 @@ instance Hasura.Incremental.Internal.Dependency.Cacheable a => Hasura.Incrementa
 instance Data.Aeson.Types.ToJSON.ToJSON a => Data.Aeson.Extended.ToJSONKeyValue (Hasura.Backends.Postgres.Types.BoolExp.BooleanOperators a)
 
 
--- | This module defines the Update-related IR types specific to Postgres.
+-- | Postgres Types Update
+--   
+--   This module defines the Update-related IR types specific to Postgres.
 module Hasura.Backends.Postgres.Types.Update
 
 -- | The PostgreSQL-specific data of an Update expression.
@@ -8262,6 +8285,11 @@ instance Data.Traversable.Traversable Hasura.Backends.Postgres.Types.Update.Back
 instance Data.Foldable.Foldable Hasura.Backends.Postgres.Types.Update.BackendUpdate
 instance GHC.Base.Functor Hasura.Backends.Postgres.Types.Update.BackendUpdate
 
+
+-- | Postgres SQL DML
+--   
+--   Provide types and combinators for defining Postgres SQL queries and
+--   mutations.
 module Hasura.Backends.Postgres.SQL.DML
 data Select
 Select :: ![(Alias, Select)] -> !Maybe DistinctExpr -> ![Extractor] -> !Maybe FromExp -> !Maybe WhereFrag -> !Maybe GroupByExp -> !Maybe HavingExp -> !Maybe OrderByExp -> !Maybe LimitExp -> !Maybe OffsetExp -> Select
@@ -8838,6 +8866,11 @@ instance Hasura.SQL.Types.ToSQL Hasura.Backends.Postgres.SQL.DML.OrderType
 instance Data.Aeson.Types.FromJSON.FromJSON Hasura.Backends.Postgres.SQL.DML.OrderType
 instance Data.Aeson.Types.ToJSON.ToJSON Hasura.Backends.Postgres.SQL.DML.OrderType
 
+
+-- | Postgres SQL Value
+--   
+--   Deals with Postgres scalar values, converting them to and from
+--   <a>Text</a>, and to JSON <a>Value</a>.
 module Hasura.Backends.Postgres.SQL.Value
 newtype RasterWKB
 RasterWKB :: Base16 ByteString -> RasterWKB
@@ -8893,7 +8926,14 @@ instance Data.Aeson.Types.FromJSON.FromJSON Hasura.Backends.Postgres.SQL.Value.L
 instance Data.Aeson.Types.FromJSON.FromJSON Hasura.Backends.Postgres.SQL.Value.RasterWKB
 instance Data.Aeson.Types.ToJSON.ToJSON Hasura.Backends.Postgres.SQL.Value.RasterWKB
 
-module Hasura.Backends.Postgres.SQL.Rewrite
+
+-- | Postgres SQL IdentifierUniqueness
+--   
+--   Bypass the Postgres limitation of truncating identifiers to 63
+--   characters long by prepending unique numbers.
+--   
+--   See Note [Postgres identifier length limitations]
+module Hasura.Backends.Postgres.SQL.IdentifierUniqueness
 prefixNumToAliases :: Select -> Select
 prefixNumToAliasesSelectWith :: SelectWithG Select -> SelectWithG Select
 type Rewrite a = State a
@@ -8918,9 +8958,15 @@ uJoinCond :: JoinCond -> Uniq JoinCond
 uBoolExp :: BoolExp -> Uniq BoolExp
 uOrderBy :: OrderByExp -> Uniq OrderByExp
 uSqlExp :: SQLExp -> Uniq SQLExp
-instance GHC.Classes.Eq Hasura.Backends.Postgres.SQL.Rewrite.UniqSt
-instance GHC.Show.Show Hasura.Backends.Postgres.SQL.Rewrite.UniqSt
+instance GHC.Classes.Eq Hasura.Backends.Postgres.SQL.IdentifierUniqueness.UniqSt
+instance GHC.Show.Show Hasura.Backends.Postgres.SQL.IdentifierUniqueness.UniqSt
 
+
+-- | Postgres Execute Types
+--   
+--   Execution context and source configuration for Postgres databases.
+--   Provides support for things such as read-only transactions and read
+--   replicas.
 module Hasura.Backends.Postgres.Execute.Types
 type RunTx = forall m a. (MonadIO m, MonadBaseControl IO m) => TxET QErr m a -> ExceptT QErr m a
 data PGExecCtx
@@ -8959,6 +9005,26 @@ instance GHC.Classes.Eq Hasura.Backends.Postgres.Execute.Types.PGSourceConfig
 instance Hasura.Incremental.Internal.Dependency.Cacheable Hasura.Backends.Postgres.Execute.Types.PGSourceConfig
 instance Data.Aeson.Types.ToJSON.ToJSON Hasura.Backends.Postgres.Execute.Types.PGSourceConfig
 
+
+-- | Postgres Connetion
+--   
+--   This module handles the connection against a Postgres server. It
+--   provides an assortment of features, such as:
+--   
+--   <ul>
+--   <li><a>MonadTx</a>, a class which abstracts the <a>QErr</a> in
+--   <a>TxE</a> via <a>MonadError</a></li>
+--   <li>various run combinators for executing <a>TxE</a> into
+--   <a>ExceptT</a> or <a>MonadIO</a></li>
+--   <li>dealing with trace contexts (<a>withTraceContext</a> and an orphan
+--   <tt>MonadTrace</tt> instance for <a>TxET</a>)</li>
+--   <li>connection pool settings (<a>PostgresPoolSettings</a>,
+--   <a>setPostgresPoolSettings</a>, etc)</li>
+--   <li>other settings, including source connection info and read
+--   replicas, etc. (<a>PostgresConnConfiguration</a>)</li>
+--   <li>setting or getting miscellaneous properties (<a>setHeadersTx</a>,
+--   <tt>sessionInfoExp</tt>, <a>doesTableExist</a>)</li>
+--   </ul>
 module Hasura.Backends.Postgres.Connection
 class (MonadError QErr m) => MonadTx m
 liftTx :: MonadTx m => TxE QErr a -> m a
@@ -9126,6 +9192,10 @@ getCatalogVersion :: TxE QErr Float
 from3To4 :: forall m. (Backend ('Postgres 'Vanilla), MonadTx m) => m ()
 setCatalogVersion :: MonadTx m => Text -> UTCTime -> m ()
 
+
+-- | Postgres Instances Types
+--   
+--   Defines a <a>Backend</a> type class instance for Postgres.
 module Hasura.Backends.Postgres.Instances.Types
 
 -- | This class is an implementation detail of <a>Backend</a>. Some types
@@ -9257,6 +9327,11 @@ instance (GHC.Show.Show a, GHC.Show.Show b, GHC.Show.Show c) => GHC.Show.Show (H
 instance Data.Aeson.Types.FromJSON.FromJSON a => Data.Aeson.Types.FromJSON.FromJSON (Hasura.RQL.DML.Types.DMLQuery a)
 instance Data.Aeson.Types.FromJSON.FromJSON Hasura.RQL.DML.Types.OrderByExp
 
+
+-- | Postgres Types Column
+--   
+--   Gets the Postgres type used to represent a column, defaulting to Text
+--   when unsure.
 module Hasura.Backends.Postgres.Types.Column
 
 -- | Gets the representation type associated with a <a>ColumnType</a>.
@@ -9264,12 +9339,20 @@ module Hasura.Backends.Postgres.Types.Column
 --   <tt>parsePGScalarValues</tt>, or <a>mkTypedSessionVar</a>.
 unsafePGColumnToBackend :: ColumnType ('Postgres pgKind) -> PGScalarType
 
+
+-- | Postgres Translate Column
+--   
+--   Translate column values to Postgres-specific SQL expressions.
 module Hasura.Backends.Postgres.Translate.Column
 toTxtValue :: ColumnValue ('Postgres pgKind) -> SQLExp
 
 -- | Formats each columns to appropriate SQL expression
 toJSONableExp :: Bool -> ColumnType ('Postgres pgKind) -> Bool -> SQLExp -> SQLExp
 
+
+-- | Postgres DDL Source Version
+--   
+--   Deals with catalog version - used by <a>Source</a>.
 module Hasura.Backends.Postgres.DDL.Source.Version
 latestSourceCatalogVersion :: Integer
 latestSourceCatalogVersionText :: Text
@@ -14127,9 +14210,20 @@ sqlCommenterStandard :: QueryTagsAttributes -> QueryTagsComment
 --   Note [Ambiguous SQLCommenterGoogle Specification]
 generateCommentTags :: NonEmpty Attribute -> Text
 
+
+-- | Postgres Types Table
+--   
+--   Defines a single combinator to throw an error if the view is not
+--   mutable.
 module Hasura.Backends.Postgres.Types.Table
 mutableView :: MonadError QErr m => QualifiedTable -> (ViewInfo -> Bool) -> Maybe ViewInfo -> Text -> m ()
 
+
+-- | Postgres DDL Table
+--   
+--   Used to fill up the enum values field of <a>TableCoreInfoG</a>.
+--   
+--   See <a>Backend</a>.
 module Hasura.Backends.Postgres.DDL.Table
 data EnumTableIntegrityError (b :: BackendType)
 EnumTablePostgresError :: !Text -> EnumTableIntegrityError (b :: BackendType)
@@ -14144,11 +14238,17 @@ fetchAndValidateEnumValues :: forall pgKind m. (Backend ('Postgres pgKind), Mona
 fetchEnumValuesFromDb :: forall pgKind m. (MonadTx m, MonadValidate [EnumTableIntegrityError ('Postgres pgKind)] m) => QualifiedTable -> RawColumnInfo ('Postgres pgKind) -> Maybe (RawColumnInfo ('Postgres pgKind)) -> m EnumValues
 
 
--- | Migrations for postgres source catalog
+-- | Postgres DDL Source
+--   
+--   A Source is a connected database. One can have multiple sources of the
+--   same kind (e.g. Postgres).
+--   
+--   This module provides ways to fetch, update, and deal with table and
+--   function metadata and hdb_catalog migrations for a Postgres Source.
 --   
 --   NOTE: Please have a look at the
 --   `server<i>documentation</i>migration-guidelines.md` before adding any
---   new migration if you haven't already looked at it
+--   new migration if you haven't already looked at it.
 module Hasura.Backends.Postgres.DDL.Source
 
 -- | We differentiate the handling of metadata between Citus and Vanilla
@@ -14223,6 +14323,12 @@ instance Hasura.Logging.ToEngineLog [Hasura.Backends.Postgres.DDL.Source.PGSourc
 instance Hasura.Backends.Postgres.DDL.Source.ToMetadataFetchQuery 'Hasura.SQL.Backend.Vanilla
 instance Hasura.Backends.Postgres.DDL.Source.ToMetadataFetchQuery 'Hasura.SQL.Backend.Citus
 
+
+-- | Postgres DDL EventTrigger
+--   
+--   Used for creating event triggers for metadata changes.
+--   
+--   See <a>Cache</a> and <a>Backend</a>.
 module Hasura.Backends.Postgres.DDL.EventTrigger
 data OpVar
 OLD :: OpVar
@@ -14927,27 +15033,27 @@ type ActionFields b = ActionFieldsG b Void (SQLExpression b)
 data CountDistinct
 SelectCountDistinct :: CountDistinct
 SelectCountNonDistinct :: CountDistinct
-asnStrfyNum :: forall b_ajeXm r_ajeXn f_ajeXo v_ajeXp r_ajR2K. Lens (AnnSelectG b_ajeXm r_ajeXn f_ajeXo v_ajeXp) (AnnSelectG b_ajeXm r_ajR2K f_ajeXo v_ajeXp) Bool Bool
-asnPerm :: forall b_ajeXm r_ajeXn f_ajeXo v_ajeXp r_ajR2J. Lens (AnnSelectG b_ajeXm r_ajeXn f_ajeXo v_ajeXp) (AnnSelectG b_ajeXm r_ajR2J f_ajeXo v_ajeXp) (TablePermG b_ajeXm v_ajeXp) (TablePermG b_ajeXm v_ajeXp)
-asnFrom :: forall b_ajeXm r_ajeXn f_ajeXo v_ajeXp r_ajR2I. Lens (AnnSelectG b_ajeXm r_ajeXn f_ajeXo v_ajeXp) (AnnSelectG b_ajeXm r_ajR2I f_ajeXo v_ajeXp) (SelectFromG b_ajeXm v_ajeXp) (SelectFromG b_ajeXm v_ajeXp)
-asnFields :: forall b_ajeXm r_ajeXn f_ajeXo v_ajeXp r_ajR2G f_ajR2H. Lens (AnnSelectG b_ajeXm r_ajeXn f_ajeXo v_ajeXp) (AnnSelectG b_ajeXm r_ajR2G f_ajR2H v_ajeXp) (Fields (f_ajeXo v_ajeXp)) (Fields (f_ajR2H v_ajeXp))
-asnArgs :: forall b_ajeXm r_ajeXn f_ajeXo v_ajeXp r_ajR2F. Lens (AnnSelectG b_ajeXm r_ajeXn f_ajeXo v_ajeXp) (AnnSelectG b_ajeXm r_ajR2F f_ajeXo v_ajeXp) (SelectArgsG b_ajeXm v_ajeXp) (SelectArgsG b_ajeXm v_ajeXp)
-saWhere :: forall b_ajeX4 v_ajeX5. Lens' (SelectArgsG b_ajeX4 v_ajeX5) (Maybe (AnnBoolExp b_ajeX4 v_ajeX5))
-saOrderBy :: forall b_ajeX4 v_ajeX5. Lens' (SelectArgsG b_ajeX4 v_ajeX5) (Maybe (NonEmpty (AnnotatedOrderByItemG b_ajeX4 v_ajeX5)))
-saOffset :: forall b_ajeX4 v_ajeX5. Lens' (SelectArgsG b_ajeX4 v_ajeX5) (Maybe Int64)
-saLimit :: forall b_ajeX4 v_ajeX5. Lens' (SelectArgsG b_ajeX4 v_ajeX5) (Maybe Int)
-saDistinct :: forall b_ajeX4 v_ajeX5. Lens' (SelectArgsG b_ajeX4 v_ajeX5) (Maybe (NonEmpty (Column b_ajeX4)))
-_AFExpression :: forall b_ajeWN r_ajeWO v_ajeWP. Prism' (AnnFieldG b_ajeWN r_ajeWO v_ajeWP) Text
-_AFNodeId :: forall b_ajeWN r_ajeWO v_ajeWP. Prism' (AnnFieldG b_ajeWN r_ajeWO v_ajeWP) (XRelay b_ajeWN, TableName b_ajeWN, PrimaryKeyColumns b_ajeWN)
-_AFRemote :: forall b_ajeWN r_ajeWO v_ajeWP. Prism' (AnnFieldG b_ajeWN r_ajeWO v_ajeWP) (RemoteRelationshipSelect b_ajeWN r_ajeWO)
-_AFComputedField :: forall b_ajeWN r_ajeWO v_ajeWP. Prism' (AnnFieldG b_ajeWN r_ajeWO v_ajeWP) (XComputedField b_ajeWN, ComputedFieldName, ComputedFieldSelect b_ajeWN r_ajeWO v_ajeWP)
-_AFArrayRelation :: forall b_ajeWN r_ajeWO v_ajeWP. Prism' (AnnFieldG b_ajeWN r_ajeWO v_ajeWP) (ArraySelectG b_ajeWN r_ajeWO v_ajeWP)
-_AFObjectRelation :: forall b_ajeWN r_ajeWO v_ajeWP. Prism' (AnnFieldG b_ajeWN r_ajeWO v_ajeWP) (ObjectRelationSelectG b_ajeWN r_ajeWO v_ajeWP)
-_AFColumn :: forall b_ajeWN r_ajeWO v_ajeWP. Prism' (AnnFieldG b_ajeWN r_ajeWO v_ajeWP) (AnnColumnField b_ajeWN v_ajeWP)
-_AOCComputedField :: forall b_ajeWX v_ajeWY. Prism' (AnnotatedOrderByElement b_ajeWX v_ajeWY) (ComputedFieldOrderBy b_ajeWX v_ajeWY)
-_AOCArrayAggregation :: forall b_ajeWX v_ajeWY. Prism' (AnnotatedOrderByElement b_ajeWX v_ajeWY) (RelInfo b_ajeWX, AnnBoolExp b_ajeWX v_ajeWY, AnnotatedAggregateOrderBy b_ajeWX)
-_AOCObjectRelation :: forall b_ajeWX v_ajeWY. Prism' (AnnotatedOrderByElement b_ajeWX v_ajeWY) (RelInfo b_ajeWX, AnnBoolExp b_ajeWX v_ajeWY, AnnotatedOrderByElement b_ajeWX v_ajeWY)
-_AOCColumn :: forall b_ajeWX v_ajeWY. Prism' (AnnotatedOrderByElement b_ajeWX v_ajeWY) (ColumnInfo b_ajeWX)
+asnStrfyNum :: forall b_ajeX4 r_ajeX5 f_ajeX6 v_ajeX7 r_ajR2s. Lens (AnnSelectG b_ajeX4 r_ajeX5 f_ajeX6 v_ajeX7) (AnnSelectG b_ajeX4 r_ajR2s f_ajeX6 v_ajeX7) Bool Bool
+asnPerm :: forall b_ajeX4 r_ajeX5 f_ajeX6 v_ajeX7 r_ajR2r. Lens (AnnSelectG b_ajeX4 r_ajeX5 f_ajeX6 v_ajeX7) (AnnSelectG b_ajeX4 r_ajR2r f_ajeX6 v_ajeX7) (TablePermG b_ajeX4 v_ajeX7) (TablePermG b_ajeX4 v_ajeX7)
+asnFrom :: forall b_ajeX4 r_ajeX5 f_ajeX6 v_ajeX7 r_ajR2q. Lens (AnnSelectG b_ajeX4 r_ajeX5 f_ajeX6 v_ajeX7) (AnnSelectG b_ajeX4 r_ajR2q f_ajeX6 v_ajeX7) (SelectFromG b_ajeX4 v_ajeX7) (SelectFromG b_ajeX4 v_ajeX7)
+asnFields :: forall b_ajeX4 r_ajeX5 f_ajeX6 v_ajeX7 r_ajR2o f_ajR2p. Lens (AnnSelectG b_ajeX4 r_ajeX5 f_ajeX6 v_ajeX7) (AnnSelectG b_ajeX4 r_ajR2o f_ajR2p v_ajeX7) (Fields (f_ajeX6 v_ajeX7)) (Fields (f_ajR2p v_ajeX7))
+asnArgs :: forall b_ajeX4 r_ajeX5 f_ajeX6 v_ajeX7 r_ajR2n. Lens (AnnSelectG b_ajeX4 r_ajeX5 f_ajeX6 v_ajeX7) (AnnSelectG b_ajeX4 r_ajR2n f_ajeX6 v_ajeX7) (SelectArgsG b_ajeX4 v_ajeX7) (SelectArgsG b_ajeX4 v_ajeX7)
+saWhere :: forall b_ajeWM v_ajeWN. Lens' (SelectArgsG b_ajeWM v_ajeWN) (Maybe (AnnBoolExp b_ajeWM v_ajeWN))
+saOrderBy :: forall b_ajeWM v_ajeWN. Lens' (SelectArgsG b_ajeWM v_ajeWN) (Maybe (NonEmpty (AnnotatedOrderByItemG b_ajeWM v_ajeWN)))
+saOffset :: forall b_ajeWM v_ajeWN. Lens' (SelectArgsG b_ajeWM v_ajeWN) (Maybe Int64)
+saLimit :: forall b_ajeWM v_ajeWN. Lens' (SelectArgsG b_ajeWM v_ajeWN) (Maybe Int)
+saDistinct :: forall b_ajeWM v_ajeWN. Lens' (SelectArgsG b_ajeWM v_ajeWN) (Maybe (NonEmpty (Column b_ajeWM)))
+_AFExpression :: forall b_ajeWv r_ajeWw v_ajeWx. Prism' (AnnFieldG b_ajeWv r_ajeWw v_ajeWx) Text
+_AFNodeId :: forall b_ajeWv r_ajeWw v_ajeWx. Prism' (AnnFieldG b_ajeWv r_ajeWw v_ajeWx) (XRelay b_ajeWv, TableName b_ajeWv, PrimaryKeyColumns b_ajeWv)
+_AFRemote :: forall b_ajeWv r_ajeWw v_ajeWx. Prism' (AnnFieldG b_ajeWv r_ajeWw v_ajeWx) (RemoteRelationshipSelect b_ajeWv r_ajeWw)
+_AFComputedField :: forall b_ajeWv r_ajeWw v_ajeWx. Prism' (AnnFieldG b_ajeWv r_ajeWw v_ajeWx) (XComputedField b_ajeWv, ComputedFieldName, ComputedFieldSelect b_ajeWv r_ajeWw v_ajeWx)
+_AFArrayRelation :: forall b_ajeWv r_ajeWw v_ajeWx. Prism' (AnnFieldG b_ajeWv r_ajeWw v_ajeWx) (ArraySelectG b_ajeWv r_ajeWw v_ajeWx)
+_AFObjectRelation :: forall b_ajeWv r_ajeWw v_ajeWx. Prism' (AnnFieldG b_ajeWv r_ajeWw v_ajeWx) (ObjectRelationSelectG b_ajeWv r_ajeWw v_ajeWx)
+_AFColumn :: forall b_ajeWv r_ajeWw v_ajeWx. Prism' (AnnFieldG b_ajeWv r_ajeWw v_ajeWx) (AnnColumnField b_ajeWv v_ajeWx)
+_AOCComputedField :: forall b_ajeWF v_ajeWG. Prism' (AnnotatedOrderByElement b_ajeWF v_ajeWG) (ComputedFieldOrderBy b_ajeWF v_ajeWG)
+_AOCArrayAggregation :: forall b_ajeWF v_ajeWG. Prism' (AnnotatedOrderByElement b_ajeWF v_ajeWG) (RelInfo b_ajeWF, AnnBoolExp b_ajeWF v_ajeWG, AnnotatedAggregateOrderBy b_ajeWF)
+_AOCObjectRelation :: forall b_ajeWF v_ajeWG. Prism' (AnnotatedOrderByElement b_ajeWF v_ajeWG) (RelInfo b_ajeWF, AnnBoolExp b_ajeWF v_ajeWG, AnnotatedOrderByElement b_ajeWF v_ajeWG)
+_AOCColumn :: forall b_ajeWF v_ajeWG. Prism' (AnnotatedOrderByElement b_ajeWF v_ajeWG) (ColumnInfo b_ajeWF)
 instance Data.Hashable.Class.Hashable Hasura.RQL.IR.Select.ConnectionSlice
 instance GHC.Generics.Generic Hasura.RQL.IR.Select.ConnectionSlice
 instance GHC.Classes.Eq Hasura.RQL.IR.Select.ConnectionSlice
@@ -15151,15 +15257,15 @@ ActionDefinition :: ![a] -> !GraphQLType -> !ActionType -> ![HeaderConf] -> !Boo
 [_adHandler] :: ActionDefinition a b -> !b
 [_adRequestTransform] :: ActionDefinition a b -> !Maybe MetadataRequestTransform
 [_adResponseTransform] :: ActionDefinition a b -> !Maybe MetadataResponseTransform
-adType :: forall a_akFIh b_akFIi. Lens' (ActionDefinition a_akFIh b_akFIi) ActionType
-adTimeout :: forall a_akFIh b_akFIi. Lens' (ActionDefinition a_akFIh b_akFIi) Timeout
-adResponseTransform :: forall a_akFIh b_akFIi. Lens' (ActionDefinition a_akFIh b_akFIi) (Maybe MetadataResponseTransform)
-adRequestTransform :: forall a_akFIh b_akFIi. Lens' (ActionDefinition a_akFIh b_akFIi) (Maybe MetadataRequestTransform)
-adOutputType :: forall a_akFIh b_akFIi. Lens' (ActionDefinition a_akFIh b_akFIi) GraphQLType
-adHeaders :: forall a_akFIh b_akFIi. Lens' (ActionDefinition a_akFIh b_akFIi) [HeaderConf]
-adHandler :: forall a_akFIh b_akFIi b_akG3B. Lens (ActionDefinition a_akFIh b_akFIi) (ActionDefinition a_akFIh b_akG3B) b_akFIi b_akG3B
-adForwardClientHeaders :: forall a_akFIh b_akFIi. Lens' (ActionDefinition a_akFIh b_akFIi) Bool
-adArguments :: forall a_akFIh b_akFIi a_akG3A. Lens (ActionDefinition a_akFIh b_akFIi) (ActionDefinition a_akG3A b_akFIi) [a_akFIh] [a_akG3A]
+adType :: forall a_akFHZ b_akFI0. Lens' (ActionDefinition a_akFHZ b_akFI0) ActionType
+adTimeout :: forall a_akFHZ b_akFI0. Lens' (ActionDefinition a_akFHZ b_akFI0) Timeout
+adResponseTransform :: forall a_akFHZ b_akFI0. Lens' (ActionDefinition a_akFHZ b_akFI0) (Maybe MetadataResponseTransform)
+adRequestTransform :: forall a_akFHZ b_akFI0. Lens' (ActionDefinition a_akFHZ b_akFI0) (Maybe MetadataRequestTransform)
+adOutputType :: forall a_akFHZ b_akFI0. Lens' (ActionDefinition a_akFHZ b_akFI0) GraphQLType
+adHeaders :: forall a_akFHZ b_akFI0. Lens' (ActionDefinition a_akFHZ b_akFI0) [HeaderConf]
+adHandler :: forall a_akFHZ b_akFI0 b_akG3j. Lens (ActionDefinition a_akFHZ b_akFI0) (ActionDefinition a_akFHZ b_akG3j) b_akFI0 b_akG3j
+adForwardClientHeaders :: forall a_akFHZ b_akFI0. Lens' (ActionDefinition a_akFHZ b_akFI0) Bool
+adArguments :: forall a_akFHZ b_akFI0 a_akG3i. Lens (ActionDefinition a_akFHZ b_akFI0) (ActionDefinition a_akG3i b_akFI0) [a_akFHZ] [a_akG3i]
 type ResolvedActionDefinition = ActionDefinition (ArgumentDefinition (GType, NonObjectCustomType)) ResolvedWebhook
 data ActionPermissionInfo
 ActionPermissionInfo :: !RoleName -> ActionPermissionInfo
@@ -15836,18 +15942,18 @@ TableMetadata :: !TableName b -> !Bool -> !TableConfig b -> !Relationships (ObjR
 [_tmUpdatePermissions] :: TableMetadata b -> !Permissions (UpdPermDef b)
 [_tmDeletePermissions] :: TableMetadata b -> !Permissions (DelPermDef b)
 [_tmEventTriggers] :: TableMetadata b -> !EventTriggers b
-tmUpdatePermissions :: forall b_alDNA. Lens' (TableMetadata b_alDNA) (Permissions (UpdPermDef b_alDNA))
-tmTable :: forall b_alDNA. Lens' (TableMetadata b_alDNA) (TableName b_alDNA)
-tmSelectPermissions :: forall b_alDNA. Lens' (TableMetadata b_alDNA) (Permissions (SelPermDef b_alDNA))
-tmRemoteRelationships :: forall b_alDNA. Lens' (TableMetadata b_alDNA) RemoteRelationships
-tmObjectRelationships :: forall b_alDNA. Lens' (TableMetadata b_alDNA) (Relationships (ObjRelDef b_alDNA))
-tmIsEnum :: forall b_alDNA. Lens' (TableMetadata b_alDNA) Bool
-tmInsertPermissions :: forall b_alDNA. Lens' (TableMetadata b_alDNA) (Permissions (InsPermDef b_alDNA))
-tmEventTriggers :: forall b_alDNA. Lens' (TableMetadata b_alDNA) (EventTriggers b_alDNA)
-tmDeletePermissions :: forall b_alDNA. Lens' (TableMetadata b_alDNA) (Permissions (DelPermDef b_alDNA))
-tmConfiguration :: forall b_alDNA. Lens' (TableMetadata b_alDNA) (TableConfig b_alDNA)
-tmComputedFields :: forall b_alDNA. Lens' (TableMetadata b_alDNA) (ComputedFields b_alDNA)
-tmArrayRelationships :: forall b_alDNA. Lens' (TableMetadata b_alDNA) (Relationships (ArrRelDef b_alDNA))
+tmUpdatePermissions :: forall b_alDNi. Lens' (TableMetadata b_alDNi) (Permissions (UpdPermDef b_alDNi))
+tmTable :: forall b_alDNi. Lens' (TableMetadata b_alDNi) (TableName b_alDNi)
+tmSelectPermissions :: forall b_alDNi. Lens' (TableMetadata b_alDNi) (Permissions (SelPermDef b_alDNi))
+tmRemoteRelationships :: forall b_alDNi. Lens' (TableMetadata b_alDNi) RemoteRelationships
+tmObjectRelationships :: forall b_alDNi. Lens' (TableMetadata b_alDNi) (Relationships (ObjRelDef b_alDNi))
+tmIsEnum :: forall b_alDNi. Lens' (TableMetadata b_alDNi) Bool
+tmInsertPermissions :: forall b_alDNi. Lens' (TableMetadata b_alDNi) (Permissions (InsPermDef b_alDNi))
+tmEventTriggers :: forall b_alDNi. Lens' (TableMetadata b_alDNi) (EventTriggers b_alDNi)
+tmDeletePermissions :: forall b_alDNi. Lens' (TableMetadata b_alDNi) (Permissions (DelPermDef b_alDNi))
+tmConfiguration :: forall b_alDNi. Lens' (TableMetadata b_alDNi) (TableConfig b_alDNi)
+tmComputedFields :: forall b_alDNi. Lens' (TableMetadata b_alDNi) (ComputedFields b_alDNi)
+tmArrayRelationships :: forall b_alDNi. Lens' (TableMetadata b_alDNi) (Relationships (ArrRelDef b_alDNi))
 mkTableMeta :: TableName b -> Bool -> TableConfig b -> TableMetadata b
 data FunctionMetadata b
 FunctionMetadata :: !FunctionName b -> !FunctionConfig -> ![FunctionPermissionInfo] -> !Maybe Text -> FunctionMetadata b
@@ -15855,10 +15961,10 @@ FunctionMetadata :: !FunctionName b -> !FunctionConfig -> ![FunctionPermissionIn
 [_fmConfiguration] :: FunctionMetadata b -> !FunctionConfig
 [_fmPermissions] :: FunctionMetadata b -> ![FunctionPermissionInfo]
 [_fmComment] :: FunctionMetadata b -> !Maybe Text
-fmPermissions :: forall b_alEpJ. Lens' (FunctionMetadata b_alEpJ) [FunctionPermissionInfo]
-fmFunction :: forall b_alEpJ b_alF9m. Lens (FunctionMetadata b_alEpJ) (FunctionMetadata b_alF9m) (FunctionName b_alEpJ) (FunctionName b_alF9m)
-fmConfiguration :: forall b_alEpJ. Lens' (FunctionMetadata b_alEpJ) FunctionConfig
-fmComment :: forall b_alEpJ. Lens' (FunctionMetadata b_alEpJ) (Maybe Text)
+fmPermissions :: forall b_alEpr. Lens' (FunctionMetadata b_alEpr) [FunctionPermissionInfo]
+fmFunction :: forall b_alEpr b_alF94. Lens (FunctionMetadata b_alEpr) (FunctionMetadata b_alF94) (FunctionName b_alEpr) (FunctionName b_alF94)
+fmConfiguration :: forall b_alEpr. Lens' (FunctionMetadata b_alEpr) FunctionConfig
+fmComment :: forall b_alEpr. Lens' (FunctionMetadata b_alEpr) (Maybe Text)
 type Tables b = InsOrdHashMap (TableName b) (TableMetadata b)
 type Functions b = InsOrdHashMap (FunctionName b) (FunctionMetadata b)
 type RemoteSchemas = InsOrdHashMap RemoteSchemaName RemoteSchemaMetadata
@@ -15876,12 +15982,12 @@ SourceMetadata :: !SourceName -> !Tables b -> !Functions b -> !SourceConnConfigu
 [_smConfiguration] :: SourceMetadata b -> !SourceConnConfiguration b
 [_smQueryTags] :: SourceMetadata b -> !Maybe QueryTagsConfig
 [_smCustomization] :: SourceMetadata b -> !SourceCustomization
-smTables :: forall b_alFa6. Lens' (SourceMetadata b_alFa6) (Tables b_alFa6)
-smQueryTags :: forall b_alFa6. Lens' (SourceMetadata b_alFa6) (Maybe QueryTagsConfig)
-smName :: forall b_alFa6. Lens' (SourceMetadata b_alFa6) SourceName
-smFunctions :: forall b_alFa6. Lens' (SourceMetadata b_alFa6) (Functions b_alFa6)
-smCustomization :: forall b_alFa6. Lens' (SourceMetadata b_alFa6) SourceCustomization
-smConfiguration :: forall b_alFa6. Lens' (SourceMetadata b_alFa6) (SourceConnConfiguration b_alFa6)
+smTables :: forall b_alF9O. Lens' (SourceMetadata b_alF9O) (Tables b_alF9O)
+smQueryTags :: forall b_alF9O. Lens' (SourceMetadata b_alF9O) (Maybe QueryTagsConfig)
+smName :: forall b_alF9O. Lens' (SourceMetadata b_alF9O) SourceName
+smFunctions :: forall b_alF9O. Lens' (SourceMetadata b_alF9O) (Functions b_alF9O)
+smCustomization :: forall b_alF9O. Lens' (SourceMetadata b_alF9O) SourceCustomization
+smConfiguration :: forall b_alF9O. Lens' (SourceMetadata b_alF9O) (SourceConnConfiguration b_alF9O)
 mkSourceMetadata :: forall (b :: BackendType). Backend b => SourceName -> SourceConnConfiguration b -> SourceCustomization -> BackendSourceMetadata
 type BackendSourceMetadata = AnyBackend SourceMetadata
 toSourceMetadata :: forall b. Backend b => Prism' BackendSourceMetadata (SourceMetadata b)
@@ -16279,9 +16385,9 @@ InsertQueryP1 :: TableName b -> [Column b] -> [[SQLExpression b]] -> Maybe (OnCo
 [iqp1CheckCond] :: InsertQueryP1 (b :: BackendType) -> (AnnBoolExpSQL b, Maybe (AnnBoolExpSQL b))
 [iqp1Output] :: InsertQueryP1 (b :: BackendType) -> MutationOutput b
 [iqp1AllCols] :: InsertQueryP1 (b :: BackendType) -> [ColumnInfo b]
-_AIArrayRelationship :: forall b_amvmt v_amvmu. Prism' (AnnotatedInsert b_amvmt v_amvmu) (XNestedInserts b_amvmt, ArrRelIns b_amvmt v_amvmu)
-_AIObjectRelationship :: forall b_amvmt v_amvmu. Prism' (AnnotatedInsert b_amvmt v_amvmu) (XNestedInserts b_amvmt, ObjRelIns b_amvmt v_amvmu)
-_AIColumn :: forall b_amvmt v_amvmu. Prism' (AnnotatedInsert b_amvmt v_amvmu) (Column b_amvmt, v_amvmu)
+_AIArrayRelationship :: forall b_amvmb v_amvmc. Prism' (AnnotatedInsert b_amvmb v_amvmc) (XNestedInserts b_amvmb, ArrRelIns b_amvmb v_amvmc)
+_AIObjectRelationship :: forall b_amvmb v_amvmc. Prism' (AnnotatedInsert b_amvmb v_amvmc) (XNestedInserts b_amvmb, ObjRelIns b_amvmb v_amvmc)
+_AIColumn :: forall b_amvmb v_amvmc. Prism' (AnnotatedInsert b_amvmb v_amvmc) (Column b_amvmb, v_amvmc)
 getInsertColumns :: AnnotatedInsertRow b v -> [(Column b, v)]
 getInsertObjectRelationships :: AnnotatedInsertRow b v -> [ObjRelIns b v]
 getInsertArrayRelationships :: AnnotatedInsertRow b v -> [ArrRelIns b v]
@@ -17105,6 +17211,13 @@ instance GHC.Base.Monoid Hasura.GraphQL.Schema.Remote.Altered
 instance GHC.Base.Semigroup Hasura.GraphQL.Schema.Remote.Altered
 instance GHC.Show.Show Hasura.GraphQL.Schema.Remote.Altered
 
+
+-- | Postgres DDL Function
+--   
+--   This module describes building information about Postgres functions by
+--   validating the passed raw information.
+--   
+--   See <a>Backend</a>.
 module Hasura.Backends.Postgres.DDL.Function
 mkFunctionArgs :: Int -> [QualifiedPGType] -> [FunctionArgName] -> [FunctionArg ('Postgres pgKind)]
 data FunctionIntegrityError
@@ -17120,7 +17233,13 @@ buildFunctionInfo :: forall pgKind m. (Backend ('Postgres pgKind), QErrM m) => S
 instance GHC.Classes.Eq Hasura.Backends.Postgres.DDL.Function.FunctionIntegrityError
 instance GHC.Show.Show Hasura.Backends.Postgres.DDL.Function.FunctionIntegrityError
 
-module Hasura.Backends.Postgres.DDL.Field
+
+-- | Postgres DDL ComputedField
+--   
+--   How to build the <a>ComputedFieldInfo</a> for a field.
+--   
+--   See <a>Backend</a>.
+module Hasura.Backends.Postgres.DDL.ComputedField
 data ComputedFieldValidateError
 CFVENotValidGraphQLName :: !ComputedFieldName -> ComputedFieldValidateError
 CFVEInvalidTableArgument :: !InvalidTableArgument -> ComputedFieldValidateError
@@ -17138,20 +17257,37 @@ ISANotFound :: !FunctionArgName -> InvalidSessionArgument
 ISANotJSON :: !FunctionSessionArgument -> InvalidSessionArgument
 showError :: QualifiedFunction -> ComputedFieldValidateError -> Text
 buildComputedFieldInfo :: forall pgKind m. QErrM m => HashSet QualifiedTable -> QualifiedTable -> ComputedFieldName -> ComputedFieldDefinition ('Postgres pgKind) -> PGRawFunctionInfo -> Maybe Text -> m (ComputedFieldInfo ('Postgres pgKind))
-instance GHC.Classes.Eq Hasura.Backends.Postgres.DDL.Field.InvalidTableArgument
-instance GHC.Show.Show Hasura.Backends.Postgres.DDL.Field.InvalidTableArgument
-instance GHC.Classes.Eq Hasura.Backends.Postgres.DDL.Field.InvalidSessionArgument
-instance GHC.Show.Show Hasura.Backends.Postgres.DDL.Field.InvalidSessionArgument
-instance GHC.Classes.Eq Hasura.Backends.Postgres.DDL.Field.ComputedFieldValidateError
-instance GHC.Show.Show Hasura.Backends.Postgres.DDL.Field.ComputedFieldValidateError
+instance GHC.Classes.Eq Hasura.Backends.Postgres.DDL.ComputedField.InvalidTableArgument
+instance GHC.Show.Show Hasura.Backends.Postgres.DDL.ComputedField.InvalidTableArgument
+instance GHC.Classes.Eq Hasura.Backends.Postgres.DDL.ComputedField.InvalidSessionArgument
+instance GHC.Show.Show Hasura.Backends.Postgres.DDL.ComputedField.InvalidSessionArgument
+instance GHC.Classes.Eq Hasura.Backends.Postgres.DDL.ComputedField.ComputedFieldValidateError
+instance GHC.Show.Show Hasura.Backends.Postgres.DDL.ComputedField.ComputedFieldValidateError
 
+
+-- | Postgres DDL BoolExp
+--   
+--   How to parse the boolean expressions, specifically for Postgres.
+--   
+--   See <a>Cache</a> and <a>Backend</a>.
 module Hasura.Backends.Postgres.DDL.BoolExp
 parseBoolExpOperations :: forall pgKind m v. (Backend ('Postgres pgKind), MonadError QErr m, TableCoreInfoRM ('Postgres pgKind) m) => ValueParser ('Postgres pgKind) m v -> QualifiedTable -> FieldInfoMap (FieldInfo ('Postgres pgKind)) -> ColumnReference ('Postgres pgKind) -> Value -> m [OpExpG ('Postgres pgKind) v]
 
+
+-- | Postgres DDL
+--   
+--   Implements the DDL related methods of the <a>BackendMetadata</a> type
+--   class for the Postgres backend, which provides an interface for
+--   fetching information about the objects in the database, such as
+--   tables, relationships, etc.
 module Hasura.Backends.Postgres.DDL
 parseCollectableType :: forall pgKind m. (Backend ('Postgres pgKind), MonadError QErr m) => CollectableType (ColumnType ('Postgres pgKind)) -> Value -> m (PartialSQLExp ('Postgres pgKind))
 mkTypedSessionVar :: CollectableType (ColumnType ('Postgres pgKind)) -> SessionVariable -> PartialSQLExp ('Postgres pgKind)
 
+
+-- | Postgres Instances Metadata
+--   
+--   Defines a <a>BackendMetadata</a> type class instance for Postgres.
 module Hasura.Backends.Postgres.Instances.Metadata
 
 -- | We differentiate the handling of metadata between Citus and Vanilla
@@ -17640,6 +17776,10 @@ resultVarsAlias :: Text
 resultAlias :: Text
 rowAlias :: Text
 
+
+-- | Postgres Translate Types
+--   
+--   Intermediary / helper types used for translating IR to Postgres SQL.
 module Hasura.Backends.Postgres.Translate.Types
 data SourcePrefixes
 SourcePrefixes :: !Identifier -> !Identifier -> SourcePrefixes
@@ -20779,6 +20919,13 @@ instance GHC.Classes.Eq Hasura.Eventing.EventTrigger.DeliveryInfo
 instance GHC.Show.Show Hasura.Eventing.EventTrigger.DeliveryInfo
 instance Hasura.Logging.ToEngineLog Hasura.Eventing.EventTrigger.EventInternalErr Hasura.Logging.Hasura
 
+
+-- | Postgres Translate Mutation
+--   
+--   Provide a combinator for generating a Postgres SQL SELECT statement
+--   for the selected columns in mutation queries.
+--   
+--   See <a>Mutation</a> and note [Prepared statements in Mutations]
 module Hasura.Backends.Postgres.Translate.Mutation
 
 -- | Note:- Using sorted columns is necessary to enable casting the rows
@@ -20789,6 +20936,10 @@ module Hasura.Backends.Postgres.Translate.Mutation
 --   23) AS "row"`.
 mkSelectExpFromColumnValues :: forall pgKind m. MonadError QErr m => QualifiedTable -> [ColumnInfo ('Postgres pgKind)] -> [ColumnValues ('Postgres pgKind) TxtEncodedVal] -> m Select
 
+
+-- | Postgres Translate BoolExp
+--   
+--   Convert IR boolean expressions to Postgres-specific SQL expressions.
 module Hasura.Backends.Postgres.Translate.BoolExp
 
 -- | Context to parse a RHS value in a boolean expression
@@ -21962,7 +22113,9 @@ mkRemoteRelationshipMetadataObject :: forall b. Backend b => (SourceName, TableN
 buildRemoteRelationship :: forall b arr m. (ArrowChoice arr, ArrowWriter (Seq CollectedInfo) arr, ArrowKleisli m arr, MonadError QErr m, BackendMetadata b) => ((HashMap SourceName (AnyBackend PartiallyResolvedSource), HashMap FieldName (DBJoinField b), RemoteSchemaMap), (SourceName, TableName b, RemoteRelationship)) `arr` Maybe (RemoteFieldInfo (DBJoinField b))
 
 
--- | This module is a translation layer between IR and postgres-specific
+-- | Postgres Translate Select
+--   
+--   This module is a translation layer between IR and postgres-specific
 --   select queries.
 --   
 --   There are three main types of selects (as distinguished from the IR):
@@ -22141,6 +22294,10 @@ phaseOne :: (QErrM m, UserInfoM m, CacheRM m, HasServerConfigCtx m) => SelectQue
 phaseTwo :: MonadTx m => (AnnSimpleSelect ('Postgres 'Vanilla), Seq PrepArg) -> m EncJSON
 runSelect :: (QErrM m, UserInfoM m, CacheRM m, HasServerConfigCtx m, MonadIO m, MonadBaseControl IO m, MonadTrace m, MetadataM m) => SelectQuery -> m EncJSON
 
+
+-- | Postgres Translate Returning
+--   
+--   Combinators and helpers for dealing with GraphQL returning statements.
 module Hasura.Backends.Postgres.Translate.Returning
 
 -- | The postgres common table expression (CTE) for mutation queries. This
@@ -22173,6 +22330,10 @@ checkRetCols :: (Backend ('Postgres pgKind), UserInfoM m, QErrM m) => FieldInfoM
 instance GHC.Classes.Eq Hasura.Backends.Postgres.Translate.Returning.MutationCTE
 instance GHC.Show.Show Hasura.Backends.Postgres.Translate.Returning.MutationCTE
 
+
+-- | Postgres Translate Insert
+--   
+--   Translates IR inserts to Postgres-specific SQL INSERT statements.
 module Hasura.Backends.Postgres.Translate.Insert
 mkInsertCTE :: Backend ('Postgres pgKind) => InsertQueryP1 ('Postgres pgKind) -> CTE
 toSQLConflict :: Backend ('Postgres pgKind) => QualifiedTable -> OnConflictClause ('Postgres pgKind) SQLExp -> SQLConflict
@@ -22205,15 +22366,27 @@ insertCheckConstraint :: BoolExp -> SQLExp
 --   information on the use of the <tt>xmax</tt> system column.
 insertOrUpdateCheckExpr :: QualifiedTable -> Maybe (OnConflictClause ('Postgres pgKind) SQLExp) -> BoolExp -> Maybe BoolExp -> Extractor
 
+
+-- | Postgres Translate Update
+--   
+--   Translates IR update to Postgres-specific SQL UPDATE statements.
 module Hasura.Backends.Postgres.Translate.Update
 mkUpdateCTE :: Backend ('Postgres pgKind) => AnnotatedUpdate ('Postgres pgKind) -> CTE
 expandOperator :: [ColumnInfo ('Postgres pgKind)] -> (PGCol, UpdateOpExpression SQLExp) -> SetExpItem
 
+
+-- | Postgres Translate Delete
+--   
+--   Tranlates an IR delete term to a Postgres SQL DELETE statement.
+--   
+--   See <a>execDeleteQuery</a>.
 module Hasura.Backends.Postgres.Translate.Delete
 mkDelete :: Backend ('Postgres pgKind) => AnnDel ('Postgres pgKind) -> SQLDelete
 
 
--- | This module contains the building blocks for parsing
+-- | Postgres Schema OnConflict
+--   
+--   This module contains the building blocks for parsing
 --   <tt>on_conflict</tt> clauses, which in the Postgres backend are used
 --   to implement upsert functionality. These are used by
 --   <a>backendInsertParser</a> to construct a postgres-specific schema
@@ -22253,6 +22426,10 @@ conflictObjectParser :: forall pgKind r m n. MonadBuildSchema ('Postgres pgKind)
 --   translated to a GraphQL name (see hasura/graphql-engine-mono#1748).
 conflictConstraint :: forall pgKind r m n. MonadBuildSchema ('Postgres pgKind) r m n => NonEmpty (Constraint ('Postgres pgKind)) -> SourceName -> TableInfo ('Postgres pgKind) -> m (Parser 'Both n (ConstraintName ('Postgres pgKind)))
 
+
+-- | Postgres Instances Schema
+--   
+--   Defines a <a>BackendSchema</a> type class instance for Postgres.
 module Hasura.Backends.Postgres.Instances.Schema
 
 -- | This class is an implementation detail of <a>BackendSchema</a>. Some
@@ -22324,6 +22501,13 @@ instance Hasura.Backends.Postgres.Instances.Schema.PostgresSchema 'Hasura.SQL.Ba
 instance Hasura.Backends.Postgres.Instances.Schema.PostgresSchema 'Hasura.SQL.Backend.Citus
 instance (Hasura.RQL.Types.Backend.Backend ('Hasura.SQL.Backend.Postgres pgKind), Hasura.Backends.Postgres.Instances.Schema.PostgresSchema pgKind) => Hasura.GraphQL.Schema.Backend.BackendSchema ('Hasura.SQL.Backend.Postgres pgKind)
 
+
+-- | Postgres Execute Mutation
+--   
+--   Generic combinators for translating and excecuting IR mutation
+--   statements. Used by the specific mutation modules, e.g. <a>Insert</a>.
+--   
+--   See <a>Execute</a>.
 module Hasura.Backends.Postgres.Execute.Mutation
 data MutateResp (b :: BackendType) a
 MutateResp :: !Int -> ![ColumnValues b a] -> MutateResp (b :: BackendType) a
@@ -22377,6 +22561,15 @@ validateDeleteQWith :: (UserInfoM m, QErrM m, TableInfoRM ('Postgres 'Vanilla) m
 validateDeleteQ :: (QErrM m, UserInfoM m, CacheRM m) => DeleteQuery -> m (AnnDel ('Postgres 'Vanilla), Seq PrepArg)
 runDelete :: forall m. (QErrM m, UserInfoM m, CacheRM m, HasServerConfigCtx m, MonadIO m, MonadTrace m, MonadBaseControl IO m, MetadataM m) => DeleteQuery -> m EncJSON
 
+
+-- | Postgres Execute LiveQuery
+--   
+--   Multiplex is an optimization which allows us to group similar queries
+--   into a single query, and routing the response rows afterwards. See
+--   <a>https://hasura.io/docs/latest/graphql/core/databases/postgres/subscriptions/execution-and-performance.html</a>
+--   for more details
+--   
+--   See <a>Execute</a>.
 module Hasura.Backends.Postgres.Execute.LiveQuery
 
 -- | Internal: Used to collect information about various parameters of a
@@ -22390,9 +22583,9 @@ QueryParametersInfo :: !HashMap Name (ColumnValue b) -> !Seq (ColumnValue b) -> 
 --   This information is used to determine a cohort's required session
 --   variables
 [_qpiReferencedSessionVariables] :: QueryParametersInfo (b :: BackendType) -> !HashSet SessionVariable
-qpiSyntheticVariableValues :: forall b_avZGk. Lens' (QueryParametersInfo b_avZGk) (Seq (ColumnValue b_avZGk))
-qpiReusableVariableValues :: forall b_avZGk. Lens' (QueryParametersInfo b_avZGk) (HashMap Name (ColumnValue b_avZGk))
-qpiReferencedSessionVariables :: forall b_avZGk. Lens' (QueryParametersInfo b_avZGk) (HashSet SessionVariable)
+qpiSyntheticVariableValues :: forall b_avZG2. Lens' (QueryParametersInfo b_avZG2) (Seq (ColumnValue b_avZG2))
+qpiReusableVariableValues :: forall b_avZG2. Lens' (QueryParametersInfo b_avZG2) (HashMap Name (ColumnValue b_avZG2))
+qpiReferencedSessionVariables :: forall b_avZG2. Lens' (QueryParametersInfo b_avZG2) (HashSet SessionVariable)
 
 -- | Checks if the provided arguments are valid values for their
 --   corresponding types. | Generates SQL of the format "select
@@ -22421,6 +22614,12 @@ instance GHC.Base.Monoid (Hasura.Backends.Postgres.Execute.LiveQuery.QueryParame
 instance GHC.Base.Semigroup (Hasura.Backends.Postgres.Execute.LiveQuery.QueryParametersInfo b)
 instance GHC.Generics.Generic (Hasura.Backends.Postgres.Execute.LiveQuery.QueryParametersInfo b)
 
+
+-- | Postgres Execute Insert
+--   
+--   Translates and executes IR to Postgres-specific SQL.
+--   
+--   See <a>Execute</a>.
 module Hasura.Backends.Postgres.Execute.Insert
 convertToSQLTransaction :: forall pgKind m. (MonadTx m, MonadIO m, MonadTrace m, Backend ('Postgres pgKind), PostgresAnnotatedFieldJSON pgKind, MonadReader QueryTagsComment m) => AnnInsert ('Postgres pgKind) Void SQLExp -> UserInfo -> Seq PrepArg -> Bool -> m EncJSON
 insertMultipleObjects :: forall pgKind m. (MonadTx m, MonadIO m, MonadTrace m, Backend ('Postgres pgKind), PostgresAnnotatedFieldJSON pgKind, MonadReader QueryTagsComment m) => MultiObjIns ('Postgres pgKind) SQLExp -> [(PGCol, SQLExp)] -> UserInfo -> MutationOutput ('Postgres pgKind) -> Seq PrepArg -> Bool -> m EncJSON
@@ -23026,6 +23225,17 @@ parseEnvTemplate :: Parser [Either Text Text]
 indistinct :: Either a a -> a
 packTransformResult :: Request -> Value -> EncJSON
 
+
+-- | Postgres DDL RunSQL
+--   
+--   Escape hatch for running raw SQL against a postgres database.
+--   
+--   <a>runRunSQL</a> executes the provided raw SQL.
+--   
+--   <a>isSchemaCacheBuildRequiredRunSQL</a> checks for known
+--   schema-mutating keywords in the raw SQL text.
+--   
+--   See <a>V2Query</a> and <a>Query</a>.
 module Hasura.Backends.Postgres.DDL.RunSQL
 data RunSQL
 RunSQL :: Text -> !SourceName -> !Bool -> !Maybe Bool -> !TxAccess -> RunSQL
@@ -23035,9 +23245,13 @@ RunSQL :: Text -> !SourceName -> !Bool -> !Maybe Bool -> !TxAccess -> RunSQL
 [rCheckMetadataConsistency] :: RunSQL -> !Maybe Bool
 [rTxAccessMode] :: RunSQL -> !TxAccess
 
--- | see Note [Checking metadata consistency in run_sql]
+-- | Check for known schema-mutating keywords in the raw SQL text.
+--   
+--   See Note [Checking metadata consistency in run_sql].
 isSchemaCacheBuildRequiredRunSQL :: RunSQL -> Bool
 fetchMeta :: (ToMetadataFetchQuery pgKind, BackendMetadata ('Postgres pgKind), MonadTx m) => TableCache ('Postgres pgKind) -> FunctionCache ('Postgres pgKind) -> m ([TableMeta ('Postgres pgKind)], [FunctionMeta ('Postgres pgKind)])
+
+-- | Used as an escape hatch to run raw SQL against a database.
 runRunSQL :: forall (pgKind :: PostgresKind) m. (BackendMetadata ('Postgres pgKind), ToMetadataFetchQuery pgKind, CacheRWM m, HasServerConfigCtx m, MetadataM m, MonadBaseControl IO m, MonadError QErr m, MonadIO m, MonadTrace m, UserInfoM m) => RunSQL -> m EncJSON
 
 -- | <tt><a>withMetadataCheck</a> cascade action</tt> runs <tt>action</tt>
@@ -23436,6 +23650,14 @@ instance Hasura.GraphQL.Execute.Backend.BackendExecute 'Hasura.SQL.Backend.Exper
 module Hasura.Experimental.Adapter.Transport
 instance Hasura.GraphQL.Transport.Backend.BackendTransport 'Hasura.SQL.Backend.Experimental
 
+
+-- | Postgres Execute Prepare
+--   
+--   Deals with translating (session) variables to SQL expressions. Uses a
+--   state monad to keep track of things like variables and generating
+--   fresh variable names.
+--   
+--   See <a>Execute</a>.
 module Hasura.Backends.Postgres.Execute.Prepare
 type PlanVariables = HashMap Name Int
 
@@ -23457,6 +23679,16 @@ getVarArgNum :: MonadState PlanningSt m => Name -> m Int
 addPrepArg :: MonadState PlanningSt m => Int -> (PrepArg, PGScalarValue) -> m ()
 getNextArgNum :: MonadState PlanningSt m => m Int
 
+
+-- | Postgres Instances Execute
+--   
+--   This module implements the needed functionality for implementing a
+--   <a>BackendExecute</a> instance for Postgres, which defines an
+--   interface for translating a root field into an execution plan and
+--   interacting with a database.
+--   
+--   This module includes the Postgres implementation of queries,
+--   mutations, and more.
 module Hasura.Backends.Postgres.Instances.Execute
 data PreparedSql
 PreparedSql :: !Query -> !PrepArgMap -> PreparedSql
@@ -23486,6 +23718,12 @@ appendSQLWithQueryTags :: Query -> QueryTagsComment -> Query
 pgDBRemoteRelationshipPlan :: forall pgKind m. (MonadError QErr m, Backend ('Postgres pgKind), PostgresAnnotatedFieldJSON pgKind) => UserInfo -> SourceName -> SourceConfig ('Postgres pgKind) -> NonEmpty Object -> HashMap FieldName (Column ('Postgres pgKind), ScalarType ('Postgres pgKind)) -> FieldName -> (FieldName, SourceRelationshipSelection ('Postgres pgKind) Void UnpreparedValue) -> m (DBStepInfo ('Postgres pgKind))
 instance (Hasura.RQL.Types.Backend.Backend ('Hasura.SQL.Backend.Postgres pgKind), Hasura.Backends.Postgres.Translate.Select.PostgresAnnotatedFieldJSON pgKind) => Hasura.GraphQL.Execute.Backend.BackendExecute ('Hasura.SQL.Backend.Postgres pgKind)
 
+
+-- | Postgres Instances Transport
+--   
+--   Defines the MSSQL instance of <a>BackendTransport</a> and how to
+--   interact with the database for running queries, mutations,
+--   subscriptions, and so on.
 module Hasura.Backends.Postgres.Instances.Transport
 runPGQuery :: (MonadIO m, MonadError QErr m, MonadQueryLog m, MonadTrace m) => RequestId -> GQLReqUnparsed -> RootFieldAlias -> UserInfo -> Logger Hasura -> SourceConfig ('Postgres pgKind) -> TraceT (TxET QErr IO) EncJSON -> Maybe PreparedSql -> m (DiffTime, EncJSON)
 runPGMutation :: (MonadIO m, MonadError QErr m, MonadQueryLog m, MonadTrace m) => RequestId -> GQLReqUnparsed -> RootFieldAlias -> UserInfo -> Logger Hasura -> SourceConfig ('Postgres pgKind) -> TraceT (TxET QErr IO) EncJSON -> Maybe PreparedSql -> m (DiffTime, EncJSON)
@@ -24601,6 +24839,10 @@ instance Hasura.Server.API.Backend.BackendAPI 'Hasura.SQL.Backend.MSSQL
 module Hasura.Backends.BigQuery.Instances.API
 instance Hasura.Server.API.Backend.BackendAPI 'Hasura.SQL.Backend.BigQuery
 
+
+-- | Postgres Instances API
+--   
+--   Defines a <a>BackendAPI</a> type class instance for Postgres.
 module Hasura.Backends.Postgres.Instances.API
 instance Hasura.Server.API.Backend.BackendAPI ('Hasura.SQL.Backend.Postgres 'Hasura.SQL.Backend.Vanilla)
 instance Hasura.Server.API.Backend.BackendAPI ('Hasura.SQL.Backend.Postgres 'Hasura.SQL.Backend.Citus)
