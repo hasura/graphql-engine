@@ -1,6 +1,10 @@
 {-# LANGUAGE UndecidableInstances #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
+-- | Postgres Instances Transport
+--
+-- Defines the MSSQL instance of 'BackendTransport' and how to interact with the
+-- database for running queries, mutations, subscriptions, and so on.
 module Hasura.Backends.Postgres.Instances.Transport
   ( runPGMutationTransaction,
   )

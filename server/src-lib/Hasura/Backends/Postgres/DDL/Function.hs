@@ -1,3 +1,9 @@
+-- | Postgres DDL Function
+--
+-- This module describes building information about Postgres functions by
+-- validating the passed raw information.
+--
+-- See 'Hasura.RQL.Types.Metadata.Backend'.
 module Hasura.Backends.Postgres.DDL.Function
   ( buildFunctionInfo,
     mkFunctionArgs,

@@ -1,3 +1,8 @@
+-- | Postgres DDL
+--
+-- Implements the DDL related methods of the 'Hasura.RQL.Types.Metadata.Backend.BackendMetadata'
+-- type class for the Postgres backend, which provides an interface for fetching information about
+-- the objects in the database, such as tables, relationships, etc.
 module Hasura.Backends.Postgres.DDL
   ( parseCollectableType,
     module M,
@@ -6,8 +11,8 @@ where
 
 import Data.Aeson
 import Hasura.Backends.Postgres.DDL.BoolExp as M
+import Hasura.Backends.Postgres.DDL.ComputedField as M
 import Hasura.Backends.Postgres.DDL.EventTrigger as M
-import Hasura.Backends.Postgres.DDL.Field as M
 import Hasura.Backends.Postgres.DDL.Function as M
 import Hasura.Backends.Postgres.DDL.Source as M
 import Hasura.Backends.Postgres.DDL.Table as M

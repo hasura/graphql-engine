@@ -1,3 +1,10 @@
+-- | Postgres Translate Mutation
+--
+-- Provide a combinator for generating a Postgres SQL SELECT statement for the
+-- selected columns in mutation queries.
+--
+-- See 'Hasura.Backends.Postgres.Execute.Mutation' and note
+-- [Prepared statements in Mutations]
 module Hasura.Backends.Postgres.Translate.Mutation
   ( mkSelectExpFromColumnValues,
   )

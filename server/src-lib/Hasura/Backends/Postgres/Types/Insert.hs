@@ -1,7 +1,9 @@
 {-# LANGUAGE StandaloneKindSignatures #-}
 {-# LANGUAGE UndecidableInstances #-}
 
--- | This module defines the Insert-related IR types specific to Postgres.
+-- | Postgres Types Insert
+--
+-- This module defines the Insert-related IR types specific to Postgres.
 module Hasura.Backends.Postgres.Types.Insert
   ( BackendInsert (..),
   )

@@ -1,3 +1,11 @@
+-- | Postgres Execute LiveQuery
+--
+-- Multiplex is an optimization which allows us to group similar queries into a
+-- single query, and routing the response rows afterwards. See
+-- https://hasura.io/docs/latest/graphql/core/databases/postgres/subscriptions/execution-and-performance.html
+-- for more details
+--
+-- See 'Hasura.Backends.Postgres.Instances.Execute'.
 module Hasura.Backends.Postgres.Execute.LiveQuery
   ( MultiplexedQuery (..),
     QueryParametersInfo (..),

@@ -1,3 +1,7 @@
+-- | Postgres Types Column
+--
+-- Gets the Postgres type used to represent a column, defaulting to Text when
+-- unsure.
 module Hasura.Backends.Postgres.Types.Column
   ( unsafePGColumnToBackend,
   )

@@ -1,3 +1,6 @@
+-- | Postgres SQL DML
+--
+-- Provide types and combinators for defining Postgres SQL queries and mutations.
 module Hasura.Backends.Postgres.SQL.DML
   ( Alias (..),
     BinOp (AndOp, OrOp),

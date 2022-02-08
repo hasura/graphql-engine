@@ -1,3 +1,10 @@
+-- | Postgres Execute Prepare
+--
+-- Deals with translating (session) variables to SQL expressions. Uses a state
+-- monad to keep track of things like variables and generating fresh variable
+-- names.
+--
+-- See 'Hasura.Backends.Postgres.Instances.Execute'.
 module Hasura.Backends.Postgres.Execute.Prepare
   ( PlanVariables,
     PrepArgMap,

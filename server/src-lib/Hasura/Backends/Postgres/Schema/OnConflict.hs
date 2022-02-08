@@ -1,6 +1,8 @@
 {-# LANGUAGE ApplicativeDo #-}
 
--- | This module contains the building blocks for parsing @on_conflict@ clauses,
+-- | Postgres Schema OnConflict
+--
+-- This module contains the building blocks for parsing @on_conflict@ clauses,
 -- which in the Postgres backend are used to implement upsert functionality.
 -- These are used by 'Hasura.Backends.Postgres.Instances.Schema.backendInsertParser' to
 -- construct a postgres-specific schema parser for insert (and upsert) mutations.

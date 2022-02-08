@@ -1,3 +1,6 @@
+-- | Postgres Translate Returning
+--
+-- Combinators and helpers for dealing with GraphQL returning statements.
 module Hasura.Backends.Postgres.Translate.Returning
   ( MutationCTE (..),
     getMutationCTE,

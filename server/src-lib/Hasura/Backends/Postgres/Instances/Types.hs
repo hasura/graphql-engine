@@ -1,6 +1,9 @@
 {-# LANGUAGE UndecidableInstances #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
+-- | Postgres Instances Types
+--
+-- Defines a 'Hasura.RQL.Types.Backend.Backend' type class instance for Postgres.
 module Hasura.Backends.Postgres.Instances.Types
   (
   )

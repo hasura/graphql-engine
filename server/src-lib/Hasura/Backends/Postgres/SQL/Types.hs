@@ -1,3 +1,7 @@
+-- | Postgres SQL Types
+--
+-- Combinators and helpers for dealing with Postgres types such as strings, numerals,
+-- geography and geometry, etc.
 module Hasura.Backends.Postgres.SQL.Types
   ( pgFmtLit,
     pgFmtIdentifier,

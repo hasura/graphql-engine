@@ -1,8 +1,17 @@
 {-# LANGUAGE UndecidableInstances #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
--- A module for postgres execution related types and operations
-
+-- | Postgres Connetion
+--
+-- This module handles the connection against a Postgres server. It provides
+-- an assortment of features, such as:
+--
+-- * 'MonadTx', a class which abstracts the 'QErr' in 'Q.TxE' via 'MonadError'
+-- * various run combinators for executing 'Q.TxE' into 'ExceptT' or 'MonadIO'
+-- * dealing with trace contexts ('withTraceContext' and an orphan 'MonadTrace' instance for 'Q.TxET')
+-- * connection pool settings ('PostgresPoolSettings', 'setPostgresPoolSettings', etc)
+-- * other settings, including source connection info and read replicas, etc. ('PostgresConnConfiguration')
+-- * setting or getting miscellaneous properties ('setHeadersTx', 'sessionInfoExp', 'doesTableExist')
 module Hasura.Backends.Postgres.Connection
   ( MonadTx (..),
     runTx,

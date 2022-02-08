@@ -1,3 +1,6 @@
+-- | Postgres Translate Insert
+--
+-- Translates IR inserts to Postgres-specific SQL INSERT statements.
 module Hasura.Backends.Postgres.Translate.Insert
   ( mkInsertCTE,
     toSQLConflict,

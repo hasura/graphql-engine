@@ -1,3 +1,8 @@
+-- | Postgres Translate Delete
+--
+-- Tranlates an IR delete term to a Postgres SQL DELETE statement.
+--
+-- See 'Hasura.Backends.Postgres.Execute.Mutation.execDeleteQuery'.
 module Hasura.Backends.Postgres.Translate.Delete
   ( mkDelete,
   )

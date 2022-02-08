@@ -1,3 +1,9 @@
+-- | Postgres Types CitusExtraTableMetadata
+--
+-- Additional metadata information for Citus tables.
+--
+-- See https://www.citusdata.com/blog/2017/07/27/database-table-types-with-citus-and-postgres/
+-- for more details on the Citus table types.
 module Hasura.Backends.Postgres.Types.CitusExtraTableMetadata
   ( ExtraTableMetadata (..),
   )

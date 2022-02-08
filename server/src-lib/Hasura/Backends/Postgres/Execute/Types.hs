@@ -1,5 +1,7 @@
--- A module for postgres execution related types
-
+-- | Postgres Execute Types
+--
+-- Execution context and source configuration for Postgres databases.
+-- Provides support for things such as read-only transactions and read replicas.
 module Hasura.Backends.Postgres.Execute.Types
   ( PGExecCtx (..),
     mkPGExecCtx,

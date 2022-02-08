@@ -1,3 +1,6 @@
+-- | Postgres Translate Update
+--
+-- Translates IR update to Postgres-specific SQL UPDATE statements.
 module Hasura.Backends.Postgres.Translate.Update
   ( mkUpdateCTE,
   )
