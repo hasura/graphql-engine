@@ -189,7 +189,7 @@ def check_query(hge_ctx, conf, transport='http', add_auth=True, claims_namespace
         headers['X-Hasura-Role'] = 'admin'
 
     if add_auth:
-        #Use the hasura role specified in the test case, and create a JWT token
+        # Use the hasura role specified in the test case, and create a JWT token
         if hge_ctx.hge_jwt_key is not None and len(headers) > 0 and 'X-Hasura-Role' in headers:
             hClaims = dict()
             hClaims['X-Hasura-Allowed-Roles'] = [headers['X-Hasura-Role']]
@@ -201,13 +201,13 @@ def check_query(hge_ctx, conf, transport='http', add_auth=True, claims_namespace
                 "sub": "foo",
                 "name": "bar",
             }
-            claim = mk_claims_with_namespace_path(claim,hClaims,claims_namespace_path)
+            claim = mk_claims_with_namespace_path(claim, hClaims, claims_namespace_path)
             headers['Authorization'] = 'Bearer ' + jwt.encode(claim, hge_ctx.hge_jwt_key, algorithm=hge_ctx.hge_jwt_algo)
 
-        #Use the hasura role specified in the test case, and create an authorization token which will be verified by webhook
+        # Use the hasura role specified in the test case, and create an authorization token which will be verified by webhook
         if hge_ctx.hge_webhook is not None and len(headers) > 0:
             if not hge_ctx.webhook_insecure:
-            #Check whether the output is also forbidden when webhook returns forbidden
+            # Check whether the output is also forbidden when webhook returns forbidden
                 test_forbidden_webhook(hge_ctx, conf)
             headers['X-Hasura-Auth-Mode'] = 'webhook'
             headers_new = dict()
@@ -215,15 +215,15 @@ def check_query(hge_ctx, conf, transport='http', add_auth=True, claims_namespace
                 'utf-8')
             headers = headers_new
 
-        #The case as admin with admin-secret and jwt/webhook
+        # The case as admin with admin-secret and jwt/webhook
         elif (
                 hge_ctx.hge_webhook is not None or hge_ctx.hge_jwt_key is not None) and hge_ctx.hge_key is not None and len(
                 headers) == 0:
             headers['X-Hasura-Admin-Secret'] = hge_ctx.hge_key
 
-        #The case as admin with only admin-secret
+        # The case as admin with only admin-secret
         elif hge_ctx.hge_key is not None and hge_ctx.hge_webhook is None and hge_ctx.hge_jwt_key is None:
-            #Test whether it is forbidden when incorrect/no admin_secret is specified
+            # Test whether it is forbidden when incorrect/no admin_secret is specified
             test_forbidden_when_admin_secret_reqd(hge_ctx, conf)
             headers['X-Hasura-Admin-Secret'] = hge_ctx.hge_key
 
@@ -351,7 +351,7 @@ def validate_http_anyq_with_allowed_responses(hge_ctx, url, query, headers, exp_
         for response in allowed_responses:
             dict_resp = json.loads(json.dumps(response))
             exp_resp = dict_resp['response']
-            exp_resp_hdrs = dict_resp.get('resp_headers') # TODO: Should this be optional?
+            exp_resp_hdrs = dict_resp.get('resp_headers')
             resp_result, pass_test = assert_graphql_resp_expected(resp, exp_resp, query, resp_hdrs, hge_ctx.avoid_err_msg_checks, True, exp_resp_hdrs)
             if pass_test == True:
                 test_passed = True
@@ -488,10 +488,6 @@ def check_query_f(hge_ctx, f, transport='http', add_auth=True, gqlws = False):
                 conf['response'] = actual_resp
                 should_write_back = True
 
-        # TODO only write back when this test is not xfail. I'm stumped on how
-        # best to do this. Where the 'request' fixture comes into scope we can
-        # do : `request.node.get_closest_marker("xfail")` but don't want to
-        # require that everywhere...
         if should_write_back:
             warnings.warn(
                 "\nRecording formerly failing case as correct in: " + f +
@@ -522,7 +518,7 @@ def collapse_order_not_selset(result_inp, query):
             fname = field.name.value
 
             # If field has no subfields then all its values can be recursively stripped of ordering.
-            # Also if it's an array for some reason (like in 'returning') TODO make this better
+            # Also if it's an array for some reason (like in 'returning')
             if field.selection_set is None or not isinstance(result_node[fname], (dict, list)):
               result_node[fname] = collapse(result_node[fname])
             elif isinstance(result_node[fname], list):
@@ -533,16 +529,15 @@ def collapse_order_not_selset(result_inp, query):
 
       if 'data' in result:
           go(result['data'], selset0)
-      # errors is unordered I guess
+      # errors is unordered
       if 'errors' in result:
         result['errors'] = collapse(result['errors'])
-      # and finally remove ordering at just the topmost level:
+      # and finally remove ordering at just the topmost level
       return dict(result)
     else:
-      # this isn't a graphql query, collapse ordering, I guess:
+      # this isn't a graphql query, collapse ordering
       return collapse(result_inp)
 
-  # Bail out here for any number of reasons. TODO improve me
   except Exception as e:
     print("Bailing out and collapsing all ordering, due to: ", e)
     return collapse(result)

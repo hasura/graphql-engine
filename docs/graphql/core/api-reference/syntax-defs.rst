@@ -1442,6 +1442,38 @@ CollectionQuery
        "query": String
    }
 
+.. _AllowlistScope:
+
+AllowlistScope
+^^^^^^^^^^^^^^
+
+.. parsed-literal::
+
+   {
+       "global": Boolean,
+       "roles" : [RoleName]
+   }
+
+.. list-table::
+   :header-rows: 1
+
+   * - Key
+     - Required
+     - Schema
+     - Description
+   * - global
+     - false
+     - Boolean
+     - When set to ``false`` a non empty array of role names is expected in
+       the ``roles`` key.
+       When set to ``true``, the ``roles`` key must be omitted.
+       (default: ``true``)
+   * - roles
+     - when ``global`` is set to ``false``
+     - [ :ref:`RoleName` ]
+     - Roles to which the a query collection's queries should be accessible.
+       *(supported only in cloud/enterprise versions)*
+
 .. _EndpointUrl:
 
 EndpointUrl

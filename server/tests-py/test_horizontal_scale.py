@@ -11,7 +11,7 @@ if not PytestConf.config.getoption("--test-hge-scale-url"):
     pytest.skip("--test-hge-scale-url flag is missing, skipping tests", allow_module_level=True)
 
 
-class TestHorizantalScaleBasic():
+class TestHorizontalScaleBasic():
     servers = {}
 
     @pytest.fixture(autouse=True, scope='class')

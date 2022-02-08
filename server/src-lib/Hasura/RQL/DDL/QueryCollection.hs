@@ -5,14 +5,13 @@ module Hasura.RQL.DDL.QueryCollection
     runDropQueryFromCollection,
     runAddCollectionToAllowlist,
     runDropCollectionFromAllowlist,
-    fetchAllCollections,
-    fetchAllowlist,
-    module Hasura.RQL.Types.QueryCollection,
+    runUpdateScopeOfCollectionInAllowlist,
   )
 where
 
+import Control.Lens ((.~))
+import Data.Aeson qualified as Aeson
 import Data.HashMap.Strict.InsOrd qualified as OMap
-import Data.HashSet.InsOrd qualified as HSIns
 import Data.List.Extended (duplicates)
 import Data.Text.Extended
 import Data.Text.NonEmpty
@@ -20,8 +19,6 @@ import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.Prelude
 import Hasura.RQL.Types
-import Hasura.RQL.Types.QueryCollection
-import Hasura.Session
 
 addCollectionP2 ::
   (QErrM m) =>
@@ -83,20 +80,23 @@ runDropCollection ::
   DropCollection ->
   m EncJSON
 runDropCollection (DropCollection collName cascade) = do
-  allowlistModifier <- withPathK "collection" $ do
-    void $ getCollectionDef collName
-    allowlist <- fetchAllowlist
-    if collName `elem` allowlist && not cascade
+  cascadeModifier <- withPathK "collection" $ do
+    assertCollectionDefined collName
+    allowlist <- fetchAllAllowlistCollections
+    if (collName `elem` allowlist)
       then
-        throw400 DependencyError $
-          "query collection with name "
-            <> collName <<> " is present in allowlist; cannot proceed to drop"
-      else pure $ metaAllowlist %~ HSIns.delete (CollectionReq collName)
+        if not cascade
+          then
+            throw400 DependencyError $
+              "query collection with name "
+                <> collName <<> " is present in the allowlist; cannot proceed to drop. "
+                <> "please use cascade to confirm you wish to drop it from the allowlist as well"
+          else dropCollectionFromAllowlist collName
+      else pure mempty
 
   withNewInconsistentObjsCheck $
     buildSchemaCache $
-      MetadataModifier $
-        allowlistModifier . (metaQueryCollections %~ OMap.delete collName)
+      cascadeModifier <> MetadataModifier (metaQueryCollections %~ OMap.delete collName)
 
   pure successMsg
 
@@ -121,27 +121,59 @@ runDropQueryFromCollection (DropQueryFromCollection collName queryName) = do
 
 runAddCollectionToAllowlist ::
   (MonadError QErr m, MetadataM m, CacheRWM m) =>
-  CollectionReq ->
+  AllowlistEntry ->
   m EncJSON
-runAddCollectionToAllowlist req@(CollectionReq collName) = do
-  void $ withPathK "collection" $ getCollectionDef collName
-  withNewInconsistentObjsCheck $
-    buildSchemaCache $
-      MetadataModifier $
-        metaAllowlist %~ HSIns.insert req
-  pure successMsg
+runAddCollectionToAllowlist entry = do
+  withPathK "collection" $ assertCollectionDefined (aeCollection entry)
+  allowlist <- withPathK "allowlist" fetchAllowlist
+  case metadataAllowlistInsert entry allowlist of
+    Left msg ->
+      pure . encJFromJValue . Aeson.object $
+        ["message" Aeson..= msg]
+    Right allowlist' -> do
+      withNewInconsistentObjsCheck . buildSchemaCache $ MetadataModifier (metaAllowlist .~ allowlist')
+      pure successMsg
+
+-- Create a metadata modifier that drops a collection from the allowlist.
+-- This is factored out for use in 'runDropCollection'.
+dropCollectionFromAllowlist ::
+  (MonadError QErr m, MetadataM m) =>
+  CollectionName ->
+  m MetadataModifier
+dropCollectionFromAllowlist collName = do
+  withPathK "collection" $ assertCollectionDefined collName
+  allowList <- withPathK "allowlist" fetchAllowlist
+  case OMap.lookup collName allowList of
+    Nothing -> throw400 NotFound $ "collection " <> collName <<> " doesn't exist in the allowlist"
+    Just _ -> pure $ MetadataModifier $ metaAllowlist .~ OMap.delete collName allowList
 
 runDropCollectionFromAllowlist ::
-  (UserInfoM m, MonadError QErr m, MetadataM m, CacheRWM m) =>
-  CollectionReq ->
+  (MonadError QErr m, MetadataM m, CacheRWM m) =>
+  DropCollectionFromAllowlist ->
   m EncJSON
-runDropCollectionFromAllowlist req@(CollectionReq collName) = do
-  void $ withPathK "collection" $ getCollectionDef collName
-  withNewInconsistentObjsCheck $
-    buildSchemaCache $
-      MetadataModifier $
-        metaAllowlist %~ HSIns.delete req
+runDropCollectionFromAllowlist (DropCollectionFromAllowlist collName) = do
+  withNewInconsistentObjsCheck . buildSchemaCache =<< dropCollectionFromAllowlist collName
   return successMsg
+
+runUpdateScopeOfCollectionInAllowlist ::
+  (MonadError QErr m, MetadataM m, CacheRWM m) =>
+  UpdateScopeOfCollectionInAllowlist ->
+  m EncJSON
+runUpdateScopeOfCollectionInAllowlist (UpdateScopeOfCollectionInAllowlist entry) = do
+  withPathK "collection" $ assertCollectionDefined (aeCollection entry)
+  al <- withPathK "allowlist" fetchAllowlist
+  modifier <- case metadataAllowlistUpdateScope entry al of
+    Left err -> throw400 NotFound err
+    Right al' ->
+      pure . MetadataModifier $
+        metaAllowlist .~ al'
+  withNewInconsistentObjsCheck $ buildSchemaCache modifier
+  return successMsg
+
+-- helpers
+
+assertCollectionDefined :: (QErrM m, MetadataM m) => CollectionName -> m ()
+assertCollectionDefined = void . getCollectionDef
 
 getCollectionDef ::
   (QErrM m, MetadataM m) =>
@@ -164,6 +196,8 @@ fetchAllCollections :: MetadataM m => m QueryCollections
 fetchAllCollections =
   _metaQueryCollections <$> getMetadata
 
-fetchAllowlist :: MetadataM m => m [CollectionName]
-fetchAllowlist =
-  (map _crCollection . toList . _metaAllowlist) <$> getMetadata
+fetchAllowlist :: MetadataM m => m MetadataAllowlist
+fetchAllowlist = _metaAllowlist <$> getMetadata
+
+fetchAllAllowlistCollections :: MetadataM m => m [CollectionName]
+fetchAllAllowlistCollections = metadataAllowlistAllCollections <$> fetchAllowlist

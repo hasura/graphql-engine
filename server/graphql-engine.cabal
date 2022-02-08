@@ -538,6 +538,7 @@ library
                      , Hasura.Server.Auth.JWT.Logging
                      , Hasura.RQL.Types
                      , Hasura.RQL.Types.Action
+                     , Hasura.RQL.Types.Allowlist
                      , Hasura.RQL.Types.ApiLimit
                      , Hasura.RQL.Types.Backend
                      , Hasura.RQL.Types.Column
@@ -867,7 +868,7 @@ test-suite graphql-engine-tests
     Hasura.RQL.IR.Postgres
     Hasura.RQL.PermissionSpec
     Hasura.RQL.WebhookTransformsSpec
-    Hasura.RQL.Types.EndpointSpec
+    Hasura.RQL.Types.AllowlistSpec
     Hasura.RQL.Types.CommonSpec
     Hasura.RQL.Types.EndpointSpec
     Hasura.Server.Auth.JWTSpec

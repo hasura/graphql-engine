@@ -12,7 +12,7 @@ import Data.Aeson
 import Data.FileEmbed (makeRelativeToProject)
 import Data.HashMap.Strict qualified as HM
 import Data.HashMap.Strict.InsOrd qualified as OMap
-import Data.HashSet.InsOrd qualified as HSIns
+import Data.Text.Extended ((<<>))
 import Data.Text.NonEmpty
 import Data.Time.Clock qualified as C
 import Database.PG.Query qualified as Q
@@ -89,8 +89,13 @@ saveMetadataToHdbTables
 
     -- allow list
     withPathK "allowlist" $ do
-      indexedForM_ allowlist $ \(CollectionReq name) ->
-        liftTx $ addCollectionToAllowlistCatalog name
+      indexedForM_ allowlist $ \(AllowlistEntry collectionName scope) -> do
+        unless (scope == AllowlistScopeGlobal) $
+          throw400 NotSupported $
+            "cannot downgrade to v1 because the "
+              <> collectionName
+                <<> " added to the allowlist is a role based allowlist"
+        liftTx $ addCollectionToAllowlistCatalog collectionName
 
     -- remote schemas
     withPathK "remote_schemas" $
@@ -408,32 +413,24 @@ fetchMetadataFromHdbTables = liftTx do
         modMetaMap tmComputedFields _cfmName computedFields
         modMetaMap tmRemoteRelationships _rrName remoteRelationships
 
-  -- fetch all functions
   functions <- Q.catchE defaultTxErrorHandler fetchFunctions
-
-  -- fetch all remote schemas
   remoteSchemas <- oMapFromL _rsmName <$> fetchRemoteSchemas
-
-  -- fetch all collections
   collections <- oMapFromL _ccName <$> fetchCollections
-
-  -- fetch allow list
-  allowlist <- HSIns.fromList . map CollectionReq <$> fetchAllowlists
-
+  allowlist <- oMapFromL aeCollection <$> fetchAllowlist
   customTypes <- fetchCustomTypes
-
-  -- fetch actions
   actions <- oMapFromL _amName <$> fetchActions
+  cronTriggers <- fetchCronTriggers
 
-  MetadataNoSources
-    fullTableMetaMap
-    functions
-    remoteSchemas
-    collections
-    allowlist
-    customTypes
-    actions
-    <$> fetchCronTriggers
+  pure $
+    MetadataNoSources
+      fullTableMetaMap
+      functions
+      remoteSchemas
+      collections
+      allowlist
+      customTypes
+      actions
+      cronTriggers
   where
     modMetaMap l f xs = do
       st <- get
@@ -550,8 +547,8 @@ fetchMetadataFromHdbTables = liftTx do
         fromRow (name, Q.AltJ defn, mComment) =
           CreateCollection name defn mComment
 
-    fetchAllowlists =
-      map runIdentity
+    fetchAllowlist =
+      map fromRow
         <$> Q.listQE
           defaultTxErrorHandler
           [Q.sql|
@@ -561,6 +558,8 @@ fetchMetadataFromHdbTables = liftTx do
          |]
           ()
           False
+      where
+        fromRow (Identity name) = AllowlistEntry name AllowlistScopeGlobal
 
     fetchComputedFields = do
       r <-

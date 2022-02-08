@@ -33,7 +33,6 @@ import Data.Environment qualified as Env
 import Data.HashMap.Strict.Extended qualified as M
 import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.HashSet qualified as HS
-import Data.HashSet.InsOrd qualified as HSIns
 import Data.Proxy
 import Data.Set qualified as S
 import Data.Text.Extended
@@ -575,7 +574,7 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
             sources
             remoteSchemas
             collections
-            allowlists
+            metadataAllowlist
             customTypes
             actions
             cronTriggers
@@ -769,15 +768,8 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
                   )
               |)
 
-      -- allow list
-      let allowList =
-            allowlists
-              & HSIns.toList
-              & map _crCollection
-              & map (\cn -> maybe [] (_cdQueries . _ccDefinition) $ OMap.lookup cn collections)
-              & concat
-              & map (queryWithoutTypeNames . getGQLQuery . _lqQuery)
-              & HS.fromList
+      -- allowlist
+      let inlinedAllowlist = inlineAllowlist collections metadataAllowlist
 
       resolvedEndpoints <- buildInfoMap fst mkEndpointMetadataObject buildEndpoint -< (collections, OMap.toList endpoints)
 
@@ -816,7 +808,7 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
             { _boSources = M.map fst sourcesOutput,
               _boActions = actionCache,
               _boRemoteSchemas = remoteSchemaCache,
-              _boAllowlist = allowList,
+              _boAllowlist = inlinedAllowlist,
               _boCustomTypes = annotatedCustomTypes,
               _boCronTriggers = cronTriggersMap,
               _boEndpoints = resolvedEndpoints,

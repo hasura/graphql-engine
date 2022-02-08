@@ -37,6 +37,7 @@ import Hasura.RQL.DDL.Schema.Cache.Common
 import Hasura.RQL.MetadataSpec qualified as MetadataSpec
 import Hasura.RQL.PermissionSpec qualified as PermSpec
 import Hasura.RQL.Types
+import Hasura.RQL.Types.AllowlistSpec qualified as AllowlistSpec
 import Hasura.RQL.Types.CommonSpec qualified as CommonTypesSpec
 import Hasura.RQL.Types.EndpointSpec qualified as EndpointSpec
 import Hasura.RQL.WebhookTransformsSpec qualified as WebhookTransformsSpec
@@ -96,6 +97,7 @@ unitSpecs = do
   describe "Hasura.GraphQL.Schema.Remote" GraphRemoteSchemaSpec.spec
   describe "Hasura.Incremental" IncrementalSpec.spec
   describe "Hasura.RQL.Types.Common" CommonTypesSpec.spec
+  describe "Hasura.RQL.Types.Allowlist" AllowlistSpec.spec
   describe "Hasura.RQL.Types.Endpoint" EndpointSpec.spec
   describe "Hasura.GraphQL.Namespace" NamespaceSpec.spec
   describe "Hasura.SQL.WKT" WKTSpec.spec

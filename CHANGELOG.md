@@ -107,6 +107,7 @@ count (
 - server: fix parsing FLOAT64s in scientific notation and non-finite ones in BigQuery
 - server: extend support for the `min`/`max` aggregates to all comparable types in BigQuery
 - server: fix support for joins in aggregates nodes in BigQuery
+- server: extend allowlist metadata with scope information, new command `update_scope_of_allowlist_in_metadata`
 - server: fix for passing input objects in query variables to remote schemas with type name customization (#7977)
 - server: fix REST endpoints with path segments not showing correctly in the OpenAPI spec
 - server: fix aliases used in GraphQL queries in REST endpoints not being reflected in the OpenAPI spec
