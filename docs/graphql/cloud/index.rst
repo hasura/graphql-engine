@@ -68,7 +68,6 @@ realtime monitoring, caching, tracing, and rate-limiting. It supports both new a
       - :ref:`cloud_api_reference`
       - :ref:`glossary`
       - :ref:`hasurapro_cli`
-      - :ref:`cloud_changelog`
 
 .. toctree::
   :maxdepth: 1
@@ -87,7 +86,7 @@ realtime monitoring, caching, tracing, and rate-limiting. It supports both new a
   Preview Apps <preview-apps>
   dedicated-vpc
   Billing <billing/index>
+  Account Management <account-management/index>
   hasurapro-cli/index
   api-reference
   glossary
-  Changelog <changelog>

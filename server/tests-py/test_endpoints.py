@@ -84,3 +84,6 @@ class TestCustomEndpoints:
 
     def test_endpoint_subscription(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/endpoint_subscription.yaml', transport)
+
+    def test_query_validation(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/endpoint_query_validation.yaml', transport)

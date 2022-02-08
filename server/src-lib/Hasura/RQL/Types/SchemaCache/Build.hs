@@ -1,4 +1,5 @@
 {-# LANGUAGE Arrows #-}
+{-# LANGUAGE TupleSections #-}
 {-# LANGUAGE UndecidableInstances #-}
 
 -- | Types and functions used in the process of building the schema cache from metadata information
@@ -21,6 +22,7 @@ module Hasura.RQL.Types.SchemaCache.Build
     buildSchemaCacheFor,
     buildSchemaCacheStrict,
     withNewInconsistentObjsCheck,
+    getInconsistentRestQueries,
   )
 where
 
@@ -31,22 +33,29 @@ import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Aeson (Value, toJSON)
 import Data.Aeson.TH
 import Data.HashMap.Strict.Extended qualified as M
-import Data.List (nub)
+import Data.HashMap.Strict.InsOrd qualified as OMap
+import Data.List qualified as L
 import Data.Sequence qualified as Seq
+import Data.Set qualified as S
 import Data.Text.Extended
+import Data.Text.NonEmpty (unNonEmptyText)
 import Database.MSSQL.Transaction qualified as MSSQL
 import Database.PG.Query qualified as Q
 import Hasura.Backends.Postgres.Connection
 import Hasura.Base.Error
+import Hasura.GraphQL.Analyse (Analysis (Analysis, _aErrs, _aFields), FieldAnalysis (FieldAnalysis, _fErrs, _fFields), FieldDef, analyzeGraphqlQuery)
 import Hasura.Prelude
 import Hasura.RQL.Types.Common
+import Hasura.RQL.Types.Endpoint
 import Hasura.RQL.Types.Metadata
 import Hasura.RQL.Types.Metadata.Object
-import Hasura.RQL.Types.RemoteSchema (RemoteSchemaName)
+import Hasura.RQL.Types.QueryCollection
+import Hasura.RQL.Types.RemoteSchema (RemoteSchemaIntrospection, RemoteSchemaName)
 import Hasura.RQL.Types.SchemaCache
 import Hasura.Session
 import Hasura.Tracing (TraceT)
 import Hasura.Tracing qualified as Tracing
+import Language.GraphQL.Draft.Syntax qualified as G
 import Network.HTTP.Client.Manager (HasHttpManagerM (..))
 
 -- ----------------------------------------------------------------------------
@@ -270,7 +279,7 @@ buildSchemaCacheFor objectId metadataModifier = do
   unless (null newInconsistentObjects) $
     throwError
       (err400 Unexpected "cannot continue due to new inconsistent metadata")
-        { qeInternal = Just $ ExtraInternal $ toJSON (nub . concatMap toList $ M.elems newInconsistentObjects)
+        { qeInternal = Just $ ExtraInternal $ toJSON (L.nub . concatMap toList $ M.elems newInconsistentObjects)
         }
 
 -- | Like 'buildSchemaCache', but fails if there is any inconsistent metadata.
@@ -293,7 +302,7 @@ withNewInconsistentObjsCheck action = do
 
   let diffInconsistentObjects = M.difference `on` groupInconsistentMetadataById
       newInconsistentObjects =
-        nub $ concatMap toList $ M.elems (currentObjects `diffInconsistentObjects` originalObjects)
+        L.nub $ concatMap toList $ M.elems (currentObjects `diffInconsistentObjects` originalObjects)
   unless (null newInconsistentObjects) $
     throwError
       (err500 Unexpected "cannot continue due to newly found inconsistent metadata")
@@ -301,3 +310,37 @@ withNewInconsistentObjsCheck action = do
         }
 
   pure result
+
+-- | getInconsistentRestQueries is a helper function that runs the
+-- static analysis over the saved queries for each endpoints and
+-- reports any inconsistenties with the current schema.
+getInconsistentRestQueries :: Maybe RemoteSchemaIntrospection -> EndpointTrie GQLQueryWithText -> (EndpointMetadata GQLQueryWithText -> MetadataObject) -> [InconsistentMetadata]
+getInconsistentRestQueries Nothing _ _ = []
+getInconsistentRestQueries (Just rs) tMap getMetaObj = map (\(o, t) -> InconsistentObject t Nothing o) fE
+  where
+    methodList = concatMap (\(_, s) -> (S.toList s)) $ concatMap (M.toList . _unMultiMap) $ leaves tMap
+    endpoints = concatMap (\x -> map (x,) (mdDefinitions x)) methodList
+    mdDefinitions :: EndpointMetadata GQLQueryWithText -> [G.ExecutableDefinition G.Name]
+    mdDefinitions = G.getExecutableDefinitions . unGQLQuery . getGQLQuery . _edQuery . _ceDefinition
+    fE = lefts $ map (validateQuery rs) endpoints
+
+    showErrLst = dquoteList . reverse
+    formatError (endpointName, analysisErrs) = endpointName <> " (" <> showErrLst analysisErrs <> ")"
+    validateQuery ::
+      RemoteSchemaIntrospection ->
+      (EndpointMetadata GQLQueryWithText, G.ExecutableDefinition G.Name) ->
+      Either (MetadataObject, Text) ()
+    validateQuery rSchema (eMeta, eDef) = do
+      let analysis = analyzeGraphqlQuery eDef rSchema
+          endpointName = unNonEmptyText $ unEndpointName (_ceName eMeta)
+      case analysis of
+        Nothing -> Left (getMetaObj eMeta, "Cannot analyse the GraphQL query for the REST endpoint: " <> endpointName)
+        Just Analysis {..} ->
+          let getFieldErrs :: [(G.Name, (FieldDef, Maybe (FieldAnalysis G.Name)))] -> [Text] -> [Text]
+              getFieldErrs [] lst = lst
+              getFieldErrs ((_, (_, Just FieldAnalysis {..})) : xs) lst = _fErrs <> (getFieldErrs (OMap.toList _fFields) []) <> (getFieldErrs xs lst)
+              getFieldErrs ((_, (_, Nothing)) : xs) lst = getFieldErrs xs lst
+              allErrs = _aErrs <> getFieldErrs (OMap.toList _aFields) []
+           in if (null allErrs)
+                then Right ()
+                else Left (getMetaObj eMeta, formatError (endpointName, allErrs))

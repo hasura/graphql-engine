@@ -34,7 +34,7 @@ The following files will be generated in the ``metadata/`` directory of your pro
 
 .. note::
 
-  The output of the :ref:`export_metadata <export_metadata>` API is a JSON version of the metadata files.
+  The output of the :ref:`metadata_export_metadata` metadata API is a JSON version of the metadata files.
 
 actions.graphql
 ^^^^^^^^^^^^^^^
@@ -143,7 +143,7 @@ The ``webhook`` can be an HTTP endpoint or an environment variable containing th
 functions.yaml
 ^^^^^^^^^^^^^^
 
-Contains the metadata related to :ref:`custom functions<custom_sql_functions>`.
+Contains the metadata related to :ref:`custom functions<pg_custom_sql_functions>`.
 
 **Example**: A custom SQL function called ``search_books``.
 
@@ -156,7 +156,7 @@ Contains the metadata related to :ref:`custom functions<custom_sql_functions>`.
 query_collections.yaml
 ^^^^^^^^^^^^^^^^^^^^^^
 
-The ``query_collections.yaml`` file conatins metadata information about :ref:`query collections<api_query_collections>`.
+The ``query_collections.yaml`` file conatins metadata information about :ref:`query collections<metadata_api_query_collections>`.
 
 **Example**: A query collection called ``sample-collection`` which contains two queries ``test`` and ``test2``.
 
@@ -209,7 +209,7 @@ The ``remote_schemas.yaml`` file contains the metadata related to :ref:`remote s
 tables.yaml
 ^^^^^^^^^^^
 
-The ``tables.yaml`` file contains metadata related to :ref:`tables<schema_tables>`.
+The ``tables.yaml`` file contains metadata related to :ref:`tables <pg_schema_tables>`.
 
 **Example**: Two tables called ``authors`` and ``books`` including relationships and an event trigger defined on the ``authors`` table.
 

@@ -1,0 +1,138 @@
+- description: Check that object relation in agg nodes work correctly
+  url: /v1/graphql
+  status: 200
+  response:
+    data:
+      hasura_test_article:
+      - id: '1'
+        title: Title 1
+        author:
+          id: '1'
+          name: Author 1
+          articles_aggregate:
+            nodes:
+            - id: '1'
+              title: Title 1
+              author:
+                id: '1'
+                name: Author 1
+            - id: '2'
+              title: Title 2
+              author:
+                id: '1'
+                name: Author 1
+      - id: '2'
+        title: Title 2
+        author:
+          id: '1'
+          name: Author 1
+          articles_aggregate:
+            nodes:
+            - id: '1'
+              title: Title 1
+              author:
+                id: '1'
+                name: Author 1
+            - id: '2'
+              title: Title 2
+              author:
+                id: '1'
+                name: Author 1
+      - id: '3'
+        title: Title 3
+        author:
+          id: '2'
+          name: Author 2
+          articles_aggregate:
+            nodes:
+            - id: '3'
+              title: Title 3
+              author:
+                id: '2'
+                name: Author 2
+            - id: '4'
+              title: Title 4
+              author:
+                id: '2'
+                name: Author 2
+      - id: '4'
+        title: Title 4
+        author:
+          id: '2'
+          name: Author 2
+          articles_aggregate:
+            nodes:
+            - id: '3'
+              title: Title 3
+              author:
+                id: '2'
+                name: Author 2
+            - id: '4'
+              title: Title 4
+              author:
+                id: '2'
+                name: Author 2
+  query:
+    query: |
+      query {
+          hasura_test_article(order_by: {id: asc}) {
+            id
+            title
+            author {
+              id
+              name
+              articles_aggregate(order_by: {id: asc}) {
+                nodes {
+                  id
+                  title
+                  author {
+                    id
+                    name
+                  }
+                }
+              }
+            }
+          }
+        }
+
+- description: Check that array relation in agg nodes work correctly
+  url: /v1/graphql
+  status: 200
+  response:
+    data:
+      hasura_test_author:
+      - id: '1'
+        name: Author 1
+        articles_aggregate:
+          nodes:
+          - title: Title 1
+            article_citations:
+            - description: citing the 2nd
+            - description: citing the third as well
+          - title: Title 2
+            article_citations:
+            - description: the second also cites the third
+      - id: '2'
+        name: Author 2
+        articles_aggregate:
+          nodes:
+          - title: Title 3
+            article_citations: []
+          - title: Title 4
+            article_citations: []
+  query:
+    query: |
+      query {
+        hasura_test_author(order_by: {id: asc}) {
+          id
+          name
+          articles_aggregate(order_by: {id: asc}) {
+            nodes {
+              title
+              article_citations(order_by: {cited_article_id: asc}) {
+                description
+              }
+            }
+          }
+        }
+      }

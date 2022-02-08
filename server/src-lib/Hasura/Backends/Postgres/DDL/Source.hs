@@ -1,10 +1,15 @@
--- | Migrations for postgres source catalog
+-- | Postgres DDL Source
 --
---    NOTE: Please have a look at the `server/documentation/migration-guidelines.md` before adding any new migration
---       if you haven't already looked at it
+-- A Source is a connected database. One can have multiple sources of the same
+-- kind (e.g. Postgres).
+--
+-- This module provides ways to fetch, update, and deal with table and function
+-- metadata and hdb_catalog migrations for a Postgres Source.
+--
+--    NOTE: Please have a look at the `server/documentation/migration-guidelines.md`
+--       before adding any new migration if you haven't already looked at it.
 module Hasura.Backends.Postgres.DDL.Source
   ( ToMetadataFetchQuery,
-    fetchPgScalars,
     fetchTableMetadata,
     fetchFunctionMetadata,
     initCatalogForSource,
@@ -63,7 +68,7 @@ resolveSourceConfig ::
   Env.Environment ->
   m (Either QErr (SourceConfig ('Postgres pgKind)))
 resolveSourceConfig name config _env = runExceptT do
-  sourceResolver <- getSourceResolver
+  sourceResolver <- getPGSourceResolver
   liftEitherM $ liftIO $ sourceResolver name config
 
 -- | 'PGSourceLockQuery' is a data type which represents the contents of a single object of the
@@ -134,6 +139,8 @@ resolveDatabaseMetadata ::
   SourceTypeCustomization ->
   m (Either QErr (ResolvedSource ('Postgres pgKind)))
 resolveDatabaseMetadata sourceConfig sourceCustomization = runExceptT do
+  runTx (_pscExecCtx sourceConfig) Q.ReadWrite ensureMetadataSupportingDefinitions
+
   (tablesMeta, functionsMeta, pgScalars) <- runTx (_pscExecCtx sourceConfig) Q.ReadOnly $ do
     tablesMeta <- fetchTableMetadata
     functionsMeta <- fetchFunctionMetadata
@@ -291,6 +298,11 @@ upMigrationsUntil43 =
              ++ [|(3, from3To4)|] :
            (migrationsFromFile [5 .. 40]) ++ migrationsFromFile [42 .. 43]
    )
+
+-- | Ensure that the supporting definitions used in metadata fetching have been
+-- loaded.
+ensureMetadataSupportingDefinitions :: forall m. MonadTx m => m ()
+ensureMetadataSupportingDefinitions = liftTx $ Q.multiQE defaultTxErrorHandler $(makeRelativeToProject "src-rsr/pg_metadata_lib.sql" >>= Q.sqlFromFile)
 
 -- | Fetch Postgres metadata of all user tables
 fetchTableMetadata ::

@@ -42,7 +42,6 @@ module Hasura.RQL.Types.Table
     getRels,
     getRemoteFieldInfoName,
     isMutable,
-    isPGColInfo,
     permAccToLens,
     permAccToType,
     permDel,
@@ -213,14 +212,14 @@ type FieldInfoMap = M.HashMap FieldName
 
 fieldInfoName :: forall b. Backend b => FieldInfo b -> FieldName
 fieldInfoName = \case
-  FIColumn info -> fromCol @b $ pgiColumn info
+  FIColumn info -> fromCol @b $ ciColumn info
   FIRelationship info -> fromRel $ riName info
   FIComputedField info -> fromComputedField $ _cfiName info
   FIRemoteRelationship info -> fromRemoteRelationship $ getRemoteFieldInfoName info
 
 fieldInfoGraphQLName :: FieldInfo b -> Maybe G.Name
 fieldInfoGraphQLName = \case
-  FIColumn info -> Just $ pgiName info
+  FIColumn info -> Just $ ciName info
   FIRelationship info -> G.mkName $ relNameToTxt $ riName info
   FIComputedField info -> G.mkName $ computedFieldNameToText $ _cfiName info
   FIRemoteRelationship info -> G.mkName $ relNameToTxt $ getRemoteFieldInfoName info
@@ -249,17 +248,13 @@ getCols = mapMaybe (^? _FIColumn) . M.elems
 
 -- | Sort columns based on their ordinal position
 sortCols :: [ColumnInfo backend] -> [ColumnInfo backend]
-sortCols = sortBy (\l r -> compare (pgiPosition l) (pgiPosition r))
+sortCols = sortBy (\l r -> compare (ciPosition l) (ciPosition r))
 
 getRels :: FieldInfoMap (FieldInfo backend) -> [RelInfo backend]
 getRels = mapMaybe (^? _FIRelationship) . M.elems
 
 getComputedFieldInfos :: FieldInfoMap (FieldInfo backend) -> [ComputedFieldInfo backend]
 getComputedFieldInfos = mapMaybe (^? _FIComputedField) . M.elems
-
-isPGColInfo :: FieldInfo backend -> Bool
-isPGColInfo (FIColumn _) = True
-isPGColInfo _ = False
 
 data InsPermInfo (b :: BackendType) = InsPermInfo
   { ipiCols :: !(HS.HashSet (Column b)),
@@ -275,6 +270,12 @@ deriving instance
     Eq (BooleanOperators b (PartialSQLExp b))
   ) =>
   Eq (InsPermInfo b)
+
+deriving instance
+  ( Backend b,
+    Show (BooleanOperators b (PartialSQLExp b))
+  ) =>
+  Show (InsPermInfo b)
 
 instance
   ( Backend b,
@@ -383,6 +384,12 @@ deriving instance
   ) =>
   Eq (SelPermInfo b)
 
+deriving instance
+  ( Backend b,
+    Show (BooleanOperators b (PartialSQLExp b))
+  ) =>
+  Show (SelPermInfo b)
+
 instance
   ( Backend b,
     NFData (BooleanOperators b (PartialSQLExp b))
@@ -420,6 +427,12 @@ deriving instance
   ) =>
   Eq (UpdPermInfo b)
 
+deriving instance
+  ( Backend b,
+    Show (BooleanOperators b (PartialSQLExp b))
+  ) =>
+  Show (UpdPermInfo b)
+
 instance
   ( Backend b,
     NFData (BooleanOperators b (PartialSQLExp b))
@@ -453,6 +466,12 @@ deriving instance
     Eq (BooleanOperators b (PartialSQLExp b))
   ) =>
   Eq (DelPermInfo b)
+
+deriving instance
+  ( Backend b,
+    Show (BooleanOperators b (PartialSQLExp b))
+  ) =>
+  Show (DelPermInfo b)
 
 instance
   ( Backend b,
@@ -818,7 +837,7 @@ askColumnType ::
   Text ->
   m (ColumnType backend)
 askColumnType m c msg =
-  pgiType <$> askColInfo m c msg
+  ciType <$> askColInfo m c msg
 
 askColInfo ::
   forall m backend.

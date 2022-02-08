@@ -2,7 +2,7 @@
    :description: Manage GraphQL schema over Postgres with Hasura
    :keywords: hasura, docs, postgres, schema
 
-.. _schema:
+.. _pg_schema:
 
 Postgres: Schema
 ================

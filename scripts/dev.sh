@@ -63,6 +63,9 @@ Available COMMANDs:
     passed to the pytest invocation. Run the hlint code linter individually
     using '--hlint'.
 
+    For unit tests, you can limit the number of tests by using
+    'test --unit --match "runTx" mssql'
+
 EOL
 exit 1
 }
@@ -78,7 +81,7 @@ try_jq() {
 
 # Bump this to:
 #  - force a reinstall of python dependencies, etc.
-DEVSH_VERSION=1.5
+DEVSH_VERSION=1.7
 
 case "${1-}" in
   graphql-engine)
@@ -105,6 +108,7 @@ case "${1-}" in
   test)
     case "${2-}" in
       --unit)
+      UNIT_TEST_ARGS=( "${@:3}" )
       RUN_INTEGRATION_TESTS=false
       RUN_UNIT_TESTS=true
       RUN_HLINT=false
@@ -250,7 +254,7 @@ function start_dbs() {
       mysql_start
     ;;
     # bigquery deliberately omitted as its test setup is atypical. See:
-    # https://github.com/hasura/graphql-engine/blob/master/server/CONTRIBUTING.md#running-the-python-test-suite-on-bigquery
+    # https://github.com/hasura/graphql-engine/blob/master/server/py-tests/README.md#running-bigquery-tests
   esac
 }
 
@@ -479,14 +483,15 @@ elif [ "$MODE" = "test" ]; then
     mssql_start
     pg_start
 
+    echo "${UNIT_TEST_ARGS[@]}"
     HASURA_GRAPHQL_DATABASE_URL="$PG_DB_URL" \
       HASURA_MSSQL_CONN_STR="$MSSQL_CONN_STR" \
-      cabal new-run --project-file=cabal.project.dev-sh -- test:graphql-engine-tests
+      cabal new-run --project-file=cabal.project.dev-sh test:graphql-engine-tests -- "${UNIT_TEST_ARGS[@]}"
   fi
 
   if [ "$RUN_HLINT" = true ]; then
     if command -v hlint >/dev/null; then
-      (cd "$PROJECT_ROOT/server" && hlint src-*)
+      hlint "${PROJECT_ROOT}/server/src-"*
     else
       echo_warn "hlint is not installed: skipping"
     fi
@@ -502,6 +507,7 @@ elif [ "$MODE" = "test" ]; then
     export HASURA_GRAPHQL_PG_SOURCE_URL_1=${HASURA_GRAPHQL_PG_SOURCE_URL_1-$PG_DB_URL}
     export HASURA_GRAPHQL_PG_SOURCE_URL_2=${HASURA_GRAPHQL_PG_SOURCE_URL_2-$PG_DB_URL}
     export HASURA_GRAPHQL_EXPERIMENTAL_FEATURES="inherited_roles"
+    export HASURA_GRAPHQL_MSSQL_SOURCE_URL=$MSSQL_CONN_STR
 
     # Using --metadata-database-url flag to test multiple backends
     #       HASURA_GRAPHQL_PG_SOURCE_URL_* For a couple multi-source pytests:

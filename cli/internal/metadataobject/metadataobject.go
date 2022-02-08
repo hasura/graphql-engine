@@ -213,14 +213,14 @@ func DefaultWriteDiff(opts DefaultWriteDiffOpts) error {
 				if err != nil {
 					return err
 				}
-				toFile, err := ioutil.ReadFile(toFileDetails.fullFilePath)
+				toFileBytes, err := ioutil.ReadFile(toFileDetails.fullFilePath)
 				if err != nil {
 					return err
 				}
 				toFileDetails.processed = true
 				toFilesMap[fromFileRelativeFilepath] = toFileDetails
 				var buf bytes.Buffer
-				diffCount, err := diff.MyersDiff(string(fromFileBytes), string(toFile), fromFileRelativeFilepath, fromFileRelativeFilepath, &buf, opts.DisableColor)
+				diffCount, err := diff.MyersDiff(string(fromFileBytes), string(toFileBytes), fromFileRelativeFilepath, fromFileRelativeFilepath, &buf, opts.DisableColor)
 				if err != nil {
 					return err
 				}

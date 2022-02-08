@@ -138,6 +138,7 @@ import Hasura.Metadata.Class
 import Hasura.Prelude
 import Hasura.RQL.DDL.EventTrigger (getHeaderInfosFromConf)
 import Hasura.RQL.DDL.Headers
+import Hasura.RQL.DDL.WebhookTransforms
 import Hasura.RQL.Types
 import Hasura.SQL.Types
 import Hasura.Tracing qualified as Tracing
@@ -249,6 +250,8 @@ processCronEvents logger logBehavior httpMgr cronEvents getSC lockedCronEvents =
                 (fromMaybe J.Null ctiPayload)
                 ctiComment
                 Nothing
+                ctiRequestTransform
+                ctiResponseTransform
             retryCtx = RetryContext tries ctiRetryConf
         finally <-
           runMetadataStorageT $
@@ -301,6 +304,8 @@ processOneOffScheduledEvents
                 (fromMaybe J.Null _oosePayload)
                 _ooseComment
                 (Just _ooseCreatedAt)
+                _ooseRequestTransform
+                _ooseResponseTransform
             retryCtx = RetryContext _ooseTries _ooseRetryConf
 
         flip runReaderT (logger, httpMgr) $
@@ -373,12 +378,15 @@ processScheduledEvent logBehavior eventId eventHeaders retryCtx payload webhookU
             extraLogCtx = ExtraLogContext eventId (sewpName payload)
             webhookReqBodyJson = J.toJSON payload
             webhookReqBody = J.encode webhookReqBodyJson
+            requestTransform = mkRequestTransform <$> sewpRequestTransform payload
+            responseTransform = mkResponseTransform <$> sewpResponseTransform payload
+
         eitherReqRes <-
           runExceptT $
-            mkRequest headers httpTimeout webhookReqBody Nothing webhookUrl >>= \reqDetails -> do
+            mkRequest headers httpTimeout webhookReqBody requestTransform webhookUrl >>= \reqDetails -> do
               let request = extractRequest reqDetails
                   logger e d = logHTTPForST e extraLogCtx d logBehavior
-              resp <- invokeRequest reqDetails logger
+              resp <- invokeRequest reqDetails responseTransform logger
               pure (request, resp)
         case eitherReqRes of
           Right (req, resp) ->
@@ -454,29 +462,30 @@ retryOrMarkError eventId retryCtx err type' = do
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Scheduled events move between six different states over the course of their
 lifetime, as represented by the following flowchart:
-  ┌───────────┐      ┌────────┐      ┌───────────┐
-  │ scheduled │─(a)─→│ locked │─(b)─→│ delivered │
-  └───────────┘      └────────┘      └───────────┘
-          ↑              │           ┌───────┐
-          └────(c)───────┼─────(d)──→│ error │
-                         │           └───────┘
-                         │           ┌──────┐
-                         └─────(e)──→│ dead │
-                                     └──────┘
+
+    ┌───────────┐      ┌────────┐      ┌───────────┐
+    │ scheduled │─(1)─→│ locked │─(2)─→│ delivered │
+    └───────────┘      └────────┘      └───────────┘
+            ↑              │           ┌───────┐
+            └────(3)───────┼─────(4)──→│ error │
+                           │           └───────┘
+                           │           ┌──────┐
+                           └─────(5)──→│ dead │
+                                       └──────┘
 
 When a scheduled event is first created, it starts in the 'scheduled' state,
 and it can transition to other states in the following ways:
-  a. When graphql-engine fetches a scheduled event from the database to process
+  1. When graphql-engine fetches a scheduled event from the database to process
      it, it sets its state to 'locked'. This prevents multiple graphql-engine
      instances running on the same database from processing the same
      scheduled event concurrently.
-  b. When a scheduled event is processed successfully, it is marked 'delivered'.
-  c. If a scheduled event fails to be processed, but it hasn’t yet reached
+  2. When a scheduled event is processed successfully, it is marked 'delivered'.
+  3. If a scheduled event fails to be processed, but it hasn’t yet reached
      its maximum retry limit, its retry counter is incremented and
      it is returned to the 'scheduled' state.
-  d. If a scheduled event fails to be processed and *has* reached its
+  4. If a scheduled event fails to be processed and *has* reached its
      retry limit, its state is set to 'error'.
-  e. If for whatever reason the difference between the current time and the
+  5. If for whatever reason the difference between the current time and the
      scheduled time is greater than the tolerance of the scheduled event, it
      will not be processed and its state will be set to 'dead'.
 -}

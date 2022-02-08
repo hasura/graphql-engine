@@ -68,7 +68,7 @@ convWildcard fieldInfoMap selPermInfo wildcard =
     (StarDot wc) -> (simpleCols ++) <$> (catMaybes <$> relExtCols wc)
   where
     cols = spiCols selPermInfo
-    pgCols = map pgiColumn $ getCols fieldInfoMap
+    pgCols = map ciColumn $ getCols fieldInfoMap
     relColInfos = getRels fieldInfoMap
 
     simpleCols = map ECSimple $ filter (`HM.member` cols) pgCols
@@ -125,8 +125,8 @@ convOrderByElem sessVarBldr (flds, spi) = \case
     fldInfo <- askFieldInfo flds fldName
     case fldInfo of
       FIColumn colInfo -> do
-        checkSelOnCol spi (pgiColumn colInfo)
-        let ty = pgiType colInfo
+        checkSelOnCol spi (ciColumn colInfo)
+        let ty = ciType colInfo
         if isScalarColumnWhere isGeoType ty
           then
             throw400 UnexpectedPayload $
@@ -203,7 +203,7 @@ convSelectQ table fieldInfoMap selPermInfo selQ sessVarBldr prepValBldr = do
         (colInfo, caseBoolExpMaybe) <- convExtSimple fieldInfoMap selPermInfo pgCol
         resolvedCaseBoolExp <-
           traverse (convAnnColumnCaseBoolExpPartialSQL sessVarBldr) caseBoolExpMaybe
-        pure (fromCol @('Postgres 'Vanilla) pgCol, mkAnnColumnField (pgiColumn colInfo) (pgiType colInfo) resolvedCaseBoolExp Nothing)
+        pure (fromCol @('Postgres 'Vanilla) pgCol, mkAnnColumnField (ciColumn colInfo) (ciType colInfo) resolvedCaseBoolExp Nothing)
       (ECRel relName mAlias relSelQ) -> do
         annRel <-
           convExtRel

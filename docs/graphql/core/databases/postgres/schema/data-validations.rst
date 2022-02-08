@@ -2,7 +2,7 @@
    :description: Data validations in Hasura over Postgres
    :keywords: hasura, docs, postgres, schema, data validation
 
-.. _data_validations:
+.. _pg_data_validations:
 
 Postgres: Data validations
 ==========================
@@ -34,7 +34,7 @@ validation logic and the layer where you would like to add it.
 
 These solutions are explained in some more detail below.
 
-.. _data_validations_check_constraints:
+.. _pg_data_validations_check_constraints:
 
 Using Postgres check constraints
 --------------------------------
@@ -86,17 +86,18 @@ We can now add a check constraint to limit the ``rating`` values as follows:
 
   .. tab:: API
 
-    You can add a check constraint by using the :ref:`run_sql metadata API <run_sql>`:
+    You can add a check constraint by using the :ref:`schema_run_sql` schema API:
 
     .. code-block:: http
 
-      POST /v1/query HTTP/1.1
+      POST /v2/query HTTP/1.1
       Content-Type: application/json
       X-Hasura-Role: admin
 
       {
         "type": "run_sql",
         "args": {
+          "source": "<db_name>",
           "sql": "ALTER TABLE author ADD CONSTRAINT authors_rating_check CHECK (rating > 0 AND rating <= 10);"
         }
       }
@@ -132,7 +133,7 @@ error is thrown:
 
 Learn more about `Postgres check constraints <https://www.postgresql.org/docs/current/ddl-constraints.html>`__.
 
-.. _data_validations_pg_triggers:
+.. _pg_data_validations_pg_triggers:
 
 Using Postgres triggers
 -----------------------
@@ -175,17 +176,18 @@ that will call this function every time before an article is inserted or updated
 
   .. tab:: API
 
-    You can add a Postgres function and trigger by using the :ref:`run_sql metadata API <run_sql>`:
+    You can add a Postgres function and trigger by using the :ref:`schema_run_sql` schema API:
 
     .. code-block:: http
 
-      POST /v1/query HTTP/1.1
+      POST /v2/query HTTP/1.1
       Content-Type: application/json
       X-Hasura-Role: admin
 
       {
         "type": "run_sql",
         "args": {
+          "source": "<db_name>",
           "sql": "<SQL statement below>"
         }
       }
@@ -303,17 +305,18 @@ Now, we can create a role ``user`` and add an insert validation rule as follows:
 
   .. tab:: API
 
-    You can add an insert permission rule by using the :ref:`create_insert_permission metadata API <create_insert_permission>`:
+    You can add an insert permission rule by using the :ref:`metadata_pg_create_insert_permission` metadata API:
 
     .. code-block:: http
 
-      POST /v1/query HTTP/1.1
+      POST /v1/metadata HTTP/1.1
       Content-Type: application/json
       X-Hasura-Role: admin
 
       {
-        "type": "create_insert_permission",
+        "type": "pg_create_insert_permission",
         "args": {
+          "source": "<db_name>",
           "table": "article",
           "role": "user",
           "permission": {
@@ -363,7 +366,7 @@ Suppose, we have 2 tables:
   author (id uuid, name text, is_active boolean)
   article (id uuid, author_id uuid, content text)
 
-Also, suppose there is an :ref:`object relationship <graphql_relationships>` ``article.author`` defined as:
+Also, suppose there is an :ref:`object relationship <pg_graphql_relationships>` ``article.author`` defined as:
 
 .. code-block:: sql
 
@@ -405,17 +408,18 @@ Now, we can create a role ``user`` and add an insert validation rule as follows:
 
   .. tab:: API
 
-    You can add an insert permission rule by using the :ref:`create_insert_permission metadata API <create_insert_permission>`:
+    You can add an insert permission rule by using the :ref:`metadata_pg_create_insert_permission` metadata API:
 
     .. code-block:: http
 
-      POST /v1/query HTTP/1.1
+      POST /v1/metadata HTTP/1.1
       Content-Type: application/json
       X-Hasura-Role: admin
 
       {
-        "type": "create_insert_permission",
+        "type": "pg_create_insert_permission",
         "args": {
+          "source": "<db_name>",
           "table": "article",
           "role": "user",
           "permission": {

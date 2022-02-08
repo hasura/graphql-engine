@@ -1,6 +1,8 @@
 {-# LANGUAGE DuplicateRecordFields #-}
 
--- | Types for Transact-SQL aka T-SQL; the language of SQL Server.
+-- | MSSQL Types Internal
+--
+-- Types for Transact-SQL aka T-SQL; the language of SQL Server.
 --
 -- In this module we define various MS SQL Server specific data types used for T-SQL generation.
 --
@@ -21,6 +23,7 @@ module Hasura.Backends.MSSQL.Types.Internal
     ColumnType,
     Comment (..),
     Countable (..),
+    DataLength (..),
     Delete (..),
     DeleteOutput,
     EntityAlias (..),
@@ -29,7 +32,7 @@ module Hasura.Backends.MSSQL.Types.Internal
     For (..),
     ForJson (..),
     From (..),
-    FunctionName,
+    FunctionApplicationExpression (..),
     MergeUsing (..),
     MergeOn (..),
     MergeWhenMatched (..),
@@ -43,6 +46,7 @@ module Hasura.Backends.MSSQL.Types.Internal
     JsonCardinality (..),
     JsonFieldSpec (..),
     JsonPath (..),
+    MethodApplicationExpression (..),
     NullsOrder (..),
     Op (..),
     OpenJson (..),
@@ -119,56 +123,56 @@ type Value = ODBC.Value
 --------------------------------------------------------------------------------
 
 data UnifiedColumn = UnifiedColumn
-  { name :: !Text,
-    type' :: !ScalarType
+  { name :: Text,
+    type' :: ScalarType
   }
 
 data UnifiedTableName = UnifiedTableName
-  { schema :: !Text,
-    name :: !Text
+  { schema :: Text,
+    name :: Text
   }
 
 data UnifiedObjectRelationship = UnifiedObjectRelationship
-  { using :: !UnifiedUsing,
-    name :: !Text
+  { using :: UnifiedUsing,
+    name :: Text
   }
 
 data UnifiedArrayRelationship = UnifiedArrayRelationship
-  { using :: !UnifiedUsing,
-    name :: !Text
+  { using :: UnifiedUsing,
+    name :: Text
   }
 
-data UnifiedUsing = UnifiedUsing
-  { foreign_key_constraint_on :: !UnifiedOn
+newtype UnifiedUsing = UnifiedUsing
+  { foreign_key_constraint_on :: UnifiedOn
   }
 
 data UnifiedOn = UnifiedOn
-  { table :: !UnifiedTableName,
-    column :: !Text
+  { table :: UnifiedTableName,
+    column :: Text
   }
 
 -------------------------------------------------------------------------------
 -- AST types
 
 data BooleanOperators a
-  = ASTContains !a
-  | ASTCrosses !a
-  | ASTEquals !a
-  | ASTIntersects !a
-  | ASTOverlaps !a
-  | ASTTouches !a
-  | ASTWithin !a
+  = ASTContains a
+  | ASTCrosses a
+  | ASTEquals a
+  | ASTIntersects a
+  | ASTOverlaps a
+  | ASTTouches a
+  | ASTWithin a
 
 data Select = Select
-  { selectWith :: !(Maybe With),
-    selectTop :: !Top,
-    selectProjections :: ![Projection],
-    selectFrom :: !(Maybe From),
-    selectJoins :: ![Join],
-    selectWhere :: !Where,
-    selectFor :: !For,
-    selectOrderBy :: !(Maybe (NonEmpty OrderBy)),
-    selectOffset :: !(Maybe Expression)
+  { selectWith :: (Maybe With),
+    selectTop :: Top,
+    selectProjections :: [Projection],
+    selectFrom :: (Maybe From),
+    selectJoins :: [Join],
+    selectWhere :: Where,
+    selectFor :: For,
+    selectOrderBy :: (Maybe (NonEmpty OrderBy)),
+    selectOffset :: (Maybe Expression)
   }
 
 emptySelect :: Select
@@ -192,8 +196,8 @@ data Inserted = Inserted
 data Deleted = Deleted
 
 data Output t = Output
-  { outputType :: !t,
-    outputColumns :: ![OutputColumn]
+  { outputType :: t,
+    outputColumns :: [OutputColumn]
   }
 
 type InsertOutput = Output Inserted
@@ -220,10 +224,10 @@ data SetIdentityInsert = SetIdentityInsert
 type DeleteOutput = Output Deleted
 
 data Delete = Delete
-  { deleteTable :: !(Aliased TableName),
-    deleteOutput :: !DeleteOutput,
-    deleteTempTable :: !TempTable,
-    deleteWhere :: !Where
+  { deleteTable :: (Aliased TableName),
+    deleteOutput :: DeleteOutput,
+    deleteTempTable :: TempTable,
+    deleteWhere :: Where
   }
 
 -- | MERGE statement.
@@ -309,14 +313,14 @@ data SomeTableName
   | TemporaryTableName TempTableName
 
 data TempTable = TempTable
-  { ttName :: !TempTableName,
-    ttColumns :: ![ColumnName]
+  { ttName :: TempTableName,
+    ttColumns :: [ColumnName]
   }
 
 data Reselect = Reselect
-  { reselectProjections :: ![Projection],
-    reselectFor :: !For,
-    reselectWhere :: !Where
+  { reselectProjections :: [Projection],
+    reselectFor :: For,
+    reselectWhere :: Where
   }
 
 data OrderBy = OrderBy
@@ -359,8 +363,8 @@ data Projection
   | StarProjection
 
 data Join = Join
-  { joinSource :: !JoinSource,
-    joinJoinAlias :: !JoinAlias
+  { joinSource :: JoinSource,
+    joinJoinAlias :: JoinAlias
   }
 
 data JoinSource
@@ -397,21 +401,30 @@ data Expression
     -- it.
     JsonQueryExpression Expression
   | ToStringExpression Expression
-  | -- expression.text(e1, e2, ..)
-    MethodExpression !Expression !Text ![Expression]
+  | MethodApplicationExpression Expression MethodApplicationExpression
+  | FunctionApplicationExpression FunctionApplicationExpression
   | -- | This is for getting actual atomic values out of a JSON
     -- string.
     JsonValueExpression Expression JsonPath
-  | -- | This is for evaluating SQL functions, text(e1, e2, ..).
-    FunctionExpression Text [Expression]
   | OpExpression Op Expression Expression
   | ListExpression [Expression]
   | STOpExpression SpatialOp Expression Expression
-  | CastExpression Expression Text
+  | CastExpression Expression ScalarType DataLength
   | -- | "CASE WHEN (expression) THEN (expression) ELSE (expression) END"
     ConditionalExpression Expression Expression Expression
   | -- | The 'DEFAULT' value. TODO: Make this as a part of @'ODBC.Value'.
     DefaultExpression
+
+-- | Data type describing the length of a datatype. Used in 'CastExpression's.
+data DataLength = DataLengthUnspecified | DataLengthInt Int | DataLengthMax
+
+-- | SQL functions application: @some_function(e1, e2, ..)@.
+data FunctionApplicationExpression
+  = FunExpISNULL Expression Expression -- ISNULL
+
+-- | Object expression method application: @(expression).text(e1, e2, ..)@
+data MethodApplicationExpression
+  = MethExpSTAsText -- STAsText
 
 data JsonPath
   = RootPath
@@ -420,13 +433,13 @@ data JsonPath
 
 data Aggregate
   = CountAggregate (Countable FieldName)
-  | OpAggregate !Text [Expression]
-  | TextAggregate !Text
+  | OpAggregate Text [Expression]
+  | TextAggregate Text
 
 data Countable name
   = StarCountable
-  | NonNullFieldCountable (NonEmpty name)
-  | DistinctCountable (NonEmpty name)
+  | NonNullFieldCountable name
+  | DistinctCountable name
 
 deriving instance Functor Countable
 
@@ -449,8 +462,8 @@ data JsonFieldSpec
   | UuidField Text (Maybe JsonPath)
 
 data Aliased a = Aliased
-  { aliasedThing :: !a,
-    aliasedAlias :: !Text
+  { aliasedThing :: a,
+    aliasedAlias :: Text
   }
 
 newtype SchemaName = SchemaName
@@ -458,15 +471,13 @@ newtype SchemaName = SchemaName
   }
 
 data TableName = TableName
-  { tableName :: !Text,
-    tableSchema :: !Text
+  { tableName :: Text,
+    tableSchema :: Text
   }
-
-type FunctionName = Text -- TODO: Improve this type when SQL function support added to MSSQL
 
 data FieldName = FieldName
   { fieldName :: Text,
-    fieldNameEntity :: !Text
+    fieldNameEntity :: Text
   }
 
 data Comment = DueToPermission | RequestedSingleObject
@@ -526,7 +537,7 @@ data ScalarType
   | GuidType
   | GeographyType
   | GeometryType
-  | UnknownType !Text
+  | UnknownType Text
 
 scalarTypeDBName :: ScalarType -> Text
 scalarTypeDBName = \case

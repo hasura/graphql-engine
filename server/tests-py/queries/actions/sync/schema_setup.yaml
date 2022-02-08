@@ -90,6 +90,25 @@ args:
       - name: name
         type: String
 
+    - name: Headers
+      fields:
+      - name: name
+        type: String!
+      - name: value
+        type: String!
+
+    - name: OutHeaders
+      fields:
+      - name: headers
+        type: '[Headers]'
+
+    - name: OutObjectTransformed
+      fields:
+      - name: foo
+        type: ID!
+      - name: bar
+        type: String
+
     - name: Address
       fields:
       - name: city
@@ -106,6 +125,17 @@ args:
       - name: address
         type: Address
       - name: addresses
+        type: '[Address]'
+
+    - name: NestedOutObjectTransformed
+      fields:
+      - name: uid
+        type: ID!
+      - name: city0
+        type: String
+      - name: country0
+        type: String
+      - name: other_addresses
         type: '[Address]'
 
     - name: DirectRecursiveType
@@ -149,6 +179,16 @@ args:
       fields:
       - name: id
         type: Int
+
+    - name: ResultIdList
+      fields:
+      - name: result_ids
+        type: '[Int!]!'
+
+    - name: Result
+      fields:
+      - name: id
+        type: Int!
 
 - type: create_action
   args:
@@ -220,6 +260,43 @@ args:
 
 - type: create_action
   args:
+    name: mirror_transformed_output
+    definition:
+      kind: synchronous
+      arguments:
+      - name: arg
+        type: InObject!
+      output_type: OutObjectTransformed
+      handler: http://127.0.0.1:5593/mirror-action
+
+- type: update_action
+  args:
+    name: mirror_transformed_output
+    definition:
+      kind: synchronous
+      arguments:
+      - name: arg
+        type: InObject!
+      output_type: OutObjectTransformed
+      handler: http://127.0.0.1:5593/mirror-action
+      response_transform:
+        template_engine: Kriti
+        body: |
+          {
+            "foo": {{ $body.id }},
+            "bar": {{ $body.name }}
+          }
+
+- type: create_action
+  args:
+    name: mirror_headers
+    definition:
+      type: query
+      output_type: OutHeaders
+      handler: http://127.0.0.1:5593/mirror-headers
+
+- type: create_action
+  args:
     name: get_user_by_email
     definition:
       type: query
@@ -239,6 +316,36 @@ args:
         type: String!
       output_type: NestedOutObject!
       handler: http://127.0.0.1:5593/get-user-by-email-nested
+
+- type: create_action
+  args:
+    name: get_user_by_email_nested_transformed
+    definition:
+      type: query
+      arguments:
+      - name: email
+        type: String!
+      output_type: NestedOutObjectTransformed!
+      handler: http://127.0.0.1:5593/get-user-by-email-nested
+      response_transform:
+        template_engine: Kriti
+        body: |
+          {
+            "uid": {{ $body.user_id.id }},
+            "city0": {{ $body.addresses[0].city }},
+            "country0": {{ $body.addresses[0].country }},
+            "other_addresses":
+              {{ range i, x := $body.addresses }}
+                {{ if i > 0 }}
+                  {
+                    "city": {{ x.city }},
+                    "country": {{ x.country }}
+                  }
+                {{ else }}
+                  null
+                {{ end }}
+              {{ end }}
+          }
 
 - type: create_action
   args:
@@ -307,3 +414,27 @@ args:
       type: query
       output_type: Recursive
       handler: http://127.0.0.1:5593/recursive-output
+
+- type: create_action
+  args:
+    name: result_list
+    definition:
+      type: query
+      output_type: 'ResultIdList'
+      handler: http://127.0.0.1:5593/get-results
+
+- type: create_action
+  args:
+    name: results
+    definition:
+      type: query
+      output_type: '[Result]'
+      handler: http://127.0.0.1:5593/get-results
+      response_transform:
+        template_engine: Kriti
+        body: |
+          {{ range i, x := $body.result_ids }}
+            {
+              "id": {{ x }}
+            }
+          {{ end }}

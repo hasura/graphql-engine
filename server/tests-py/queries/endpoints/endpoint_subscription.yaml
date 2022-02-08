@@ -16,8 +16,8 @@ response:
       reason:
         "Inconsistent object: in endpoint foo: query with name simple_subscription
         is a subscription"
-      name: endpoint foo
-      type: endpoint
+      name: rest_endpoint foo
+      type: rest_endpoint
   path: $.args
   error: 'Inconsistent object: in endpoint foo: query with name simple_subscription
     is a subscription'

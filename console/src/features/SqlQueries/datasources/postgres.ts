@@ -1,4 +1,5 @@
 import type { TableORSchemaArg } from '@/dataSources/types';
+import { QualifiedTable } from '@/metadata/types';
 import type { DatasourceSqlQueries } from '.';
 import { getSchemasWhereClause, getTablesWhereClause } from './common';
 
@@ -6,6 +7,9 @@ const getKeysSql = (
   type: 'PRIMARY KEY' | 'UNIQUE',
   options: TableORSchemaArg
 ) => `
+  -- test_id = ${'schemas' in options ? 'multi' : 'single'}_${
+  type === 'UNIQUE' ? 'unique' : 'primary'
+}_key
   SELECT
   COALESCE(
     json_agg(
@@ -37,9 +41,16 @@ const getKeysSql = (
           tc.constraint_name) AS info;
   `;
 
+const getTableColumnsSql = ({ name, schema }: QualifiedTable) => {
+  if (!name || !schema) throw Error('empty parameters are not allowed!');
+
+  return `SELECT table_catalog as database, table_schema, table_name, column_name, data_type FROM information_schema.columns WHERE table_schema = '${schema}' AND table_name  = '${name}';`;
+};
+
 export const postgresSqlQueries: DatasourceSqlQueries = {
   getFetchTablesListQuery(options: TableORSchemaArg): string {
     return `
+  -- test_id = ${'schemas' in options ? 'multi' : 'single'}_table
   SELECT
     COALESCE(Json_agg(Row_to_json(info)), '[]' :: json) AS tables
   FROM (
@@ -180,6 +191,7 @@ export const postgresSqlQueries: DatasourceSqlQueries = {
   },
   checkConstraintsSql(options: TableORSchemaArg): string {
     return `
+-- test_id = ${'schemas' in options ? 'multi' : 'single'}_check_constraint
 SELECT
 COALESCE(
   json_agg(
@@ -213,8 +225,9 @@ SELECT n.nspname::text AS table_schema,
   },
   getFKRelations(options: TableORSchemaArg): string {
     return `
-    SELECT
-	COALESCE(json_agg(row_to_json(info)), '[]'::JSON)
+-- test_id = ${'schemas' in options ? 'multi' : 'single'}_foreign_key
+SELECT
+COALESCE(json_agg(row_to_json(info)), '[]'::JSON)
 FROM (
 SELECT
 q.table_schema :: text AS table_schema,
@@ -269,4 +282,5 @@ GROUP BY
   q.constraint_name
   ) AS info;`;
   },
+  getTableColumnsSql,
 };

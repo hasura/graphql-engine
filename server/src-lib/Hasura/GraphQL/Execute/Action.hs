@@ -55,9 +55,8 @@ import Hasura.Logging qualified as L
 import Hasura.Metadata.Class
 import Hasura.Prelude
 import Hasura.RQL.DDL.Headers
-import Hasura.RQL.DDL.RequestTransform
 import Hasura.RQL.DDL.Schema.Cache
-import Hasura.RQL.IR.Select qualified as RQL
+import Hasura.RQL.DDL.WebhookTransforms
 import Hasura.RQL.IR.Select qualified as RS
 import Hasura.RQL.Types
 import Hasura.SQL.Types
@@ -196,6 +195,7 @@ resolveActionExecution env logger userInfo AnnActionExecution {..} ActionExecCon
           handlerPayload
           _aaeTimeOut
           _aaeRequestTransform
+          _aaeResponseTransform
 
 -- | Build action response from the Webhook JSON response when there are no relationships defined
 makeActionResponseNoRelations :: forall b r v. RS.ActionFieldsG b r v -> ActionWebhookResponse -> AO.Value
@@ -336,28 +336,29 @@ resolveAsyncActionQuery userInfo annAction =
     mkAnnFldFromPGCol (column', columnType) =
       RS.mkAnnColumnField column' (ColumnScalar columnType) Nothing Nothing
 
-    -- TODO (from master):- Avoid using ColumnInfo
+    -- TODO: avoid using ColumnInfo
+    -- TODO(#3478): avoid using `unsafeMkName`
     mkPGColumnInfo (column', columnType) =
       ColumnInfo
-        { pgiColumn = column',
-          pgiName = G.unsafeMkName $ getPGColTxt column',
-          pgiPosition = 0,
-          pgiType = ColumnScalar columnType,
-          pgiIsNullable = True,
-          pgiDescription = Nothing,
-          pgiMutability = ColumnMutability False False
+        { ciColumn = column',
+          ciName = G.unsafeMkName $ getPGColTxt column',
+          ciPosition = 0,
+          ciType = ColumnScalar columnType,
+          ciIsNullable = True,
+          ciDescription = Nothing,
+          ciMutability = ColumnMutability False False
         }
 
     tableBoolExpression =
       let actionIdColumnInfo =
             ColumnInfo
-              { pgiColumn = unsafePGCol "id",
-                pgiName = $$(G.litName "id"),
-                pgiPosition = 0,
-                pgiType = ColumnScalar PGUUID,
-                pgiIsNullable = False,
-                pgiDescription = Nothing,
-                pgiMutability = ColumnMutability False False
+              { ciColumn = unsafePGCol "id",
+                ciName = $$(G.litName "id"),
+                ciPosition = 0,
+                ciType = ColumnScalar PGUUID,
+                ciIsNullable = False,
+                ciDescription = Nothing,
+                ciMutability = ColumnMutability False False
               }
           actionIdColumnEq = BoolFld $ AVColumn actionIdColumnInfo [AEQ True $ UVLiteral $ S.SELit $ actionIdToText actionId]
           sessionVarsColumnInfo = mkPGColumnInfo sessionVarsColumn
@@ -434,7 +435,8 @@ asyncActionsProcessor env logger cacheRef lockedActionEvents httpManager sleepTi
               timeout = _adTimeout definition
               outputType = _adOutputType definition
               actionContext = ActionContext actionName
-              metadataTransform = _adRequestTransform definition
+              metadataRequestTransform = _adRequestTransform definition
+              metadataResponseTransform = _adResponseTransform definition
           eitherRes <-
             runExceptT $
               flip runReaderT logger $
@@ -449,7 +451,8 @@ asyncActionsProcessor env logger cacheRef lockedActionEvents httpManager sleepTi
                   webhookUrl
                   (ActionWebhookPayload actionContext sessionVariables inputPayload gqlQueryText)
                   timeout
-                  metadataTransform
+                  metadataRequestTransform
+                  metadataResponseTransform
           resE <- runMetadataStorageT $
             setActionStatus actionId $ case eitherRes of
               Left e -> AASError e
@@ -475,7 +478,8 @@ callWebhook ::
   ResolvedWebhook ->
   ActionWebhookPayload ->
   Timeout ->
-  Maybe MetadataTransform ->
+  Maybe MetadataRequestTransform ->
+  Maybe MetadataResponseTransform ->
   m (ActionWebhookResponse, HTTP.ResponseHeaders)
 callWebhook
   env
@@ -488,19 +492,20 @@ callWebhook
   resolvedWebhook
   actionWebhookPayload
   timeoutSeconds
-  metadataTransform = do
+  metadataRequestTransform
+  metadataResponseTransform = do
     resolvedConfHeaders <- makeHeadersFromConf env confHeaders
     let clientHeaders = if forwardClientHeaders then mkClientHeadersForward reqHeaders else mempty
         -- Using HashMap to avoid duplicate headers between configuration headers
         -- and client headers where configuration headers are preferred
-        hdrs = ("Content-Type", "application/json") : (Map.toList . Map.fromList) (resolvedConfHeaders <> clientHeaders)
+        hdrs = (Map.toList . Map.fromList) (resolvedConfHeaders <> defaultHeaders <> clientHeaders)
         postPayload = J.toJSON actionWebhookPayload
         requestBody = J.encode postPayload
         requestBodySize = BL.length requestBody
         responseTimeout = HTTP.responseTimeoutMicro $ (unTimeout timeoutSeconds) * 1000000
         url = unResolvedWebhook resolvedWebhook
         sessionVars = Just $ _awpSessionVariables actionWebhookPayload
-
+        reqTransformCtx = buildReqTransformCtx url sessionVars
     initReq <- liftIO $ HTTP.mkRequestThrow url
 
     let req =
@@ -510,20 +515,21 @@ callWebhook
             & set HTTP.body (Just requestBody)
             & set HTTP.timeout responseTimeout
 
-    (transformedReq, transformedReqSize) <- case metadataTransform of
+    (transformedReq, transformedReqSize) <- case metadataRequestTransform of
       Nothing -> pure (Nothing, Nothing)
       Just transform' ->
-        case applyRequestTransform url (mkRequestTransform transform') req sessionVars of
-          Left err -> do
-            -- Log The Transformation Error
-            logger :: L.Logger L.Hasura <- asks getter
-            L.unLogger logger $ L.UnstructuredLog L.LevelError (TBS.fromLBS $ J.encode err)
+        let reqTransform = mkRequestTransform transform'
+         in case applyRequestTransform reqTransformCtx reqTransform req of
+              Left err -> do
+                -- Log The Transformation Error
+                logger :: L.Logger L.Hasura <- asks getter
+                L.unLogger logger $ L.UnstructuredLog L.LevelError (TBS.fromLBS $ J.encode err)
 
-            -- Throw an exception with the Transformation Error
-            throw500WithDetail "Request Transformation Failed" $ J.toJSON err
-          Right transformedReq ->
-            let transformedPayloadSize = HTTP.getReqSize transformedReq
-             in pure (Just transformedReq, Just transformedPayloadSize)
+                -- Throw an exception with the Transformation Error
+                throw500WithDetail "Request Transformation Failed" $ J.toJSON err
+              Right transformedReq ->
+                let transformedPayloadSize = HTTP.getReqSize transformedReq
+                 in pure (Just transformedReq, Just transformedPayloadSize)
 
     let actualReq = fromMaybe req transformedReq
 
@@ -538,6 +544,7 @@ callWebhook
         throw500WithDetail "http exception when calling webhook" $
           J.toJSON $ ActionInternalError (J.toJSON $ HttpException e) requestInfo Nothing
       Right responseWreq -> do
+        -- TODO(SOLOMON): Remove 'wreq'
         let responseBody = responseWreq ^. Wreq.responseBody
             responseBodySize = BL.length responseBody
             actionName = _acName $ _awpAction actionWebhookPayload
@@ -546,11 +553,24 @@ callWebhook
               ActionResponseInfo (HTTP.statusCode responseStatus) respBody $
                 toHeadersConf $ responseWreq ^. Wreq.responseHeaders
 
+        transformedResponseBody <- case metadataResponseTransform of
+          Nothing -> pure responseBody
+          Just metadataResponseTransform' ->
+            let responseTransform = mkResponseTransform metadataResponseTransform'
+                responseTransformCtx = buildRespTransformCtx (reqTransformCtx actualReq) (HTTP.responseBody responseWreq)
+             in applyResponseTransform responseTransform responseTransformCtx `onLeft` \err -> do
+                  -- Log The Response Transformation Error
+                  logger :: L.Logger L.Hasura <- asks getter
+                  L.unLogger logger $ L.UnstructuredLog L.LevelError (TBS.fromLBS $ J.encode err)
+
+                  -- Throw an exception with the Transformation Error
+                  throw500WithDetail "Response Transformation Failed" $ J.toJSON err
+
         -- log the request and response to/from the action handler
         logger :: (L.Logger L.Hasura) <- asks getter
         L.unLogger logger $ ActionHandlerLog req transformedReq requestBodySize transformedReqSize responseBodySize actionName
 
-        case J.eitherDecode responseBody of
+        case J.eitherDecode transformedResponseBody of
           Left e -> do
             let responseInfo = mkResponseInfo $ J.String $ bsToTxt $ BL.toStrict responseBody
             throw500WithDetail "not a valid json response from webhook" $
@@ -641,11 +661,11 @@ processOutputSelectionSet tableRowInput actionOutputType definitionList actionFi
 
 actionFieldToAnnField :: RS.ActionFieldG ('Postgres 'Vanilla) r v -> RS.AnnFieldG ('Postgres 'Vanilla) r v
 actionFieldToAnnField = \case
-  RS.ACFScalar asf -> RQL.mkAnnColumnField (unsafePGCol $ toTxt asf) (ColumnScalar PGJSON) Nothing Nothing
+  RS.ACFScalar asf -> RS.mkAnnColumnField (unsafePGCol $ toTxt asf) (ColumnScalar PGJSON) Nothing Nothing
   RS.ACFObjectRelation ors -> RS.AFObjectRelation ors
   RS.ACFArrayRelation as -> RS.AFArrayRelation as
   RS.ACFExpression txt -> RS.AFExpression txt
-  RS.ACFNestedObject fieldName _ -> RQL.mkAnnColumnField (unsafePGCol $ toTxt fieldName) (ColumnScalar PGJSON) Nothing Nothing
+  RS.ACFNestedObject fieldName _ -> RS.mkAnnColumnField (unsafePGCol $ toTxt fieldName) (ColumnScalar PGJSON) Nothing Nothing
 
 mkJsonAggSelect :: GraphQLType -> JsonAggSelect
 mkJsonAggSelect =

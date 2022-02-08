@@ -153,9 +153,9 @@ Request
 Responses
 ^^^^^^^^^
 
-Version 2 with inconsistencies and allow_inconsistent_metadata=false, or omitted corresponds with the response document in :ref:`replace_metadata`.
+Version 2 with inconsistencies and allow_inconsistent_metadata=false, or omitted corresponds with the response document in :ref:`metadata_replace_metadata`.
 
-Version 2 example with inconsistencies and allow_inconsistent_metadata=true includes an ``is_consistent`` and ``inconsistent_objects`` corresponding to :ref:`get_inconsistent_metadata`.
+Version 2 example with inconsistencies and allow_inconsistent_metadata=true includes an ``is_consistent`` and ``inconsistent_objects`` corresponding to :ref:`metadata_get_inconsistent_metadata`.
 
 .. code-block:: none
 

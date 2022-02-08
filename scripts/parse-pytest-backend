@@ -35,7 +35,7 @@ case "$BACKEND" in
   postgres)
   ;;
   bigquery)
-    source "scripts/data-sources-util.sh"
+    source "scripts/bigquery.sh"
 
     verify_bigquery_pytest_env
     export HASURA_BIGQUERY_SERVICE_ACCOUNT=$(cat "$HASURA_BIGQUERY_SERVICE_ACCOUNT_FILE")

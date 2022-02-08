@@ -8,31 +8,39 @@ module Hasura.GraphQL.RemoteServer
     -- The following exports are needed for unit tests
     getCustomizer,
     validateSchemaCustomizationsDistinct,
+    getSchemaIntrospection,
   )
 where
 
 import Control.Arrow.Extended (left)
 import Control.Exception (try)
+import Control.Exception.Safe (Exception (displayException), Typeable, impureThrow)
 import Control.Lens (set, (^.))
 import Data.Aeson ((.:), (.:?))
 import Data.Aeson qualified as J
+import Data.Aeson.Ordered qualified as JO
 import Data.Aeson.Types qualified as J
 import Data.ByteString.Lazy qualified as BL
 import Data.Environment qualified as Env
 import Data.FileEmbed (makeRelativeToProject)
 import Data.HashMap.Strict.Extended qualified as Map
+import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.HashSet qualified as Set
 import Data.List.Extended (duplicates)
 import Data.Text qualified as T
 import Data.Text.Extended (dquoteList, (<<>))
 import Hasura.Base.Error
+import Hasura.GraphQL.Context
+import Hasura.GraphQL.Namespace (mkUnNamespacedRootFieldAlias)
 import Hasura.GraphQL.Parser.Collect ()
+import Hasura.GraphQL.Parser.Schema (Variable)
 -- Needed for GHCi and HLS due to TH in cyclically dependent modules (see https://gitlab.haskell.org/ghc/ghc/-/issues/1012)
 import Hasura.GraphQL.Schema.Remote (buildRemoteParser)
 import Hasura.GraphQL.Transport.HTTP.Protocol
 import Hasura.HTTP
 import Hasura.Prelude
 import Hasura.RQL.DDL.Headers (makeHeadersFromConf)
+import Hasura.RQL.IR (RootField (RFRaw))
 import Hasura.RQL.Types
 import Hasura.Server.Utils
 import Hasura.Session
@@ -166,6 +174,10 @@ fetchRemoteSchema env manager _rscName rsDef@ValidatedRemoteSchemaDef {..} = do
   validateSchemaCustomizations rsCustomizer (irDoc _rscIntroOriginal)
 
   let _rscInfo = RemoteSchemaInfo {..}
+
+  -- At this point, we can't resolve remote relationships; we store an empty map.
+  let _rscRemoteRelationships = mempty
+
   -- Check that the parsed GraphQL type info is valid by running the schema generation
   _rscParsed <- buildRemoteParser _rscIntroOriginal _rscInfo
 
@@ -537,3 +549,29 @@ throwRemoteSchemaHttp url =
   where
     httpExceptMsg =
       "HTTP exception occurred while sending the request to " <> show url
+
+-- Utility function for generating RemoteScemaIntrospection
+
+newtype RemoteSchemaIntrospectionErr = RemoteSchemaIntrospectionErr
+  { remoteSchemaIntrospectionErr :: String
+  }
+  deriving (Show, Typeable)
+
+instance Exception RemoteSchemaIntrospectionErr where
+  displayException (RemoteSchemaIntrospectionErr msg) = "RemoteSchemaIntrospectionErr: " <> show msg
+
+errorE :: String -> c
+errorE = impureThrow . RemoteSchemaIntrospectionErr
+
+getSchemaIntrospection :: HashMap RoleName (RoleContext GQLContext) -> Maybe RemoteSchemaIntrospection
+getSchemaIntrospection gqlContext = do
+  RoleContext {..} <- Map.lookup adminRoleName gqlContext
+  fieldMap <- either (const Nothing) Just $ gqlQueryParser _rctxDefault $ fmap (fmap nameToVariable) $ G._todSelectionSet $ _grQuery introspectionQuery
+  RFRaw v <- OMap.lookup (mkUnNamespacedRootFieldAlias $$(G.litName "__schema")) fieldMap
+  fmap irDoc $ parseIntrospectionResult $ J.object [("data", J.object [("__schema", JO.fromOrdered v)])]
+  where
+    -- TODO: Look for a way to convert Name to Variable (using some default types) or make the
+    --       ParserFn general (i.e. type ParserFn a b =  G.SelectionSet G.NoFragments b -> ...)
+    -- This value isn't used but we give it a type to be more clear about what is being ignored
+    nameToVariable :: G.Name -> Variable
+    nameToVariable n = errorE . T.unpack $ G.unName n <> " cannot be converted to Variable"

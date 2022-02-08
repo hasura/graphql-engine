@@ -345,6 +345,10 @@ class ActionsWebhookHandler(http.server.BaseHTTPRequestHandler):
             resp, status = self.mirror_action()
             self._send_response(status, resp)
 
+        elif req_path == "/mirror-headers":
+            resp, status = self.mirror_headers()
+            self._send_response(status, resp)
+
         elif req_path == "/get-user-by-email":
             resp, status = self.get_users_by_email(True)
             self._send_response(status, resp)
@@ -371,6 +375,10 @@ class ActionsWebhookHandler(http.server.BaseHTTPRequestHandler):
 
         elif req_path == "/recursive-output":
             resp, status = self.recursive_output()
+            self._send_response(status, resp)
+
+        elif req_path == "/get-results":
+            resp, status = self.get_results()
             self._send_response(status, resp)
 
         else:
@@ -497,6 +505,12 @@ class ActionsWebhookHandler(http.server.BaseHTTPRequestHandler):
         response = self.req_json['input']['arg']
         return response, HTTPStatus.OK
 
+    def mirror_headers(self):
+        response = {
+            'headers': list(map(lambda header: { 'name': header[0], 'value': header[1] }, self.headers.items()))
+        }
+        return response, HTTPStatus.OK
+
     def get_users_by_email(self, singleUser = False):
         email = self.req_json['input']['email']
         if not self.check_email(email):
@@ -556,6 +570,11 @@ class ActionsWebhookHandler(http.server.BaseHTTPRequestHandler):
             'direct': {'id': 1, 'this': {'id': 2, 'this': {'id': 3 }}},
             'list': {'id': 1, 'these': [{'id': 2, 'these': [{'id': 3}]}, {'id': 4}]},
             'mutual': {'id': 1, 'that': {'id': 2, 'other': {'id': 3, 'that': {'id': 4}}}}
+        }, HTTPStatus.OK
+
+    def get_results(self):
+        return {
+            'result_ids': [1,2,3,4]
         }, HTTPStatus.OK
 
     def check_email(self, email):

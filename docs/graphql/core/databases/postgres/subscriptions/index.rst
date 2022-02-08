@@ -2,7 +2,7 @@
    :description: Manage subscriptions on Postgres with Hasura
    :keywords: hasura, docs, postgres, subscription
 
-.. _subscriptions:
+.. _pg_subscriptions:
 
 Postgres: Subscriptions
 =======================
@@ -19,7 +19,7 @@ A GraphQL subscription is essentially a query where the client receives an updat
 changes upstream.
 
 Subscriptions are supported for all kinds of queries. All the concepts of
-:ref:`queries <queries>` hold true for subscriptions as well.
+:ref:`queries <pg_queries>` hold true for subscriptions as well.
 
 Implementation
 --------------
@@ -28,7 +28,7 @@ The Hasura GraphQL engine subscriptions are actually **live queries**, i.e. a su
 latest result of the query being made and not necessarily all the individual events leading up to the result.
 By default, updates are delivered to clients every **1 sec**.
 
-See more details on :ref:`subscriptions execution and performance <subscriptions_execution_and_performance>`.
+See more details on :ref:`subscriptions execution and performance <pg_subscriptions_execution_and_performance>`.
 
 Convert a query to a subscription
 ---------------------------------
@@ -43,9 +43,9 @@ You can turn any query into a subscription by simply replacing ``query`` with ``
 Use cases
 ---------
 
-- :ref:`subscribe_field`
-- :ref:`subscribe_table`
-- :ref:`subscribe_derived`
+- :ref:`pg_subscribe_field`
+- :ref:`pg_subscribe_table`
+- :ref:`pg_subscribe_derived`
 
 Communication protocol
 ----------------------
@@ -55,8 +55,8 @@ Hasura GraphQL engine uses the `GraphQL over WebSocket Protocol
 `apollographql/subscriptions-transport-ws <https://github.com/apollographql/subscriptions-transport-ws>`__ library and the 
 `GraphQL over WebSocket Protocol <https://github.com/enisdenjo/graphql-ws/blob/master/PROTOCOL.md>`__
 by the `graphql-ws <https://github.com/enisdenjo/graphql-ws>`__ library for sending and receiving events. The support for 
-``graphql-ws`` is currently considered as ``BETA``. The graphql-engine uses the ``Sec-WebSocket-Protocol`` header to determine
-the server Implementation that'll be used. By default, the graphql-engine will use the ``apollographql/subscriptions-transport-ws`` implementation.
+``graphql-ws`` is currently considered as ``BETA``. The GraphQL engine uses the ``Sec-WebSocket-Protocol`` header to determine
+the server Implementation that'll be used. By default, the GraphQL engine will use the ``apollographql/subscriptions-transport-ws`` implementation.
 
 .. admonition:: Setting headers for subscriptions with Apollo client
 

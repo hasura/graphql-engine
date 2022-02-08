@@ -1,4 +1,6 @@
--- | This module defines the Update-related IR types specific to Postgres.
+-- | Postgres Types Update
+--
+-- This module defines the Update-related IR types specific to Postgres.
 module Hasura.Backends.Postgres.Types.Update
   ( BackendUpdate (..),
     UpdateOpExpression (..),

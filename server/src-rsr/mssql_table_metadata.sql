@@ -5,7 +5,7 @@ SELECT ISNULL(
            JSON_QUERY([column].json) AS [joined_sys_column],
            JSON_QUERY([primary_key].json) AS [joined_sys_primary_key]
     FROM sys.objects object
-           CROSS APPLY (SELECT [column].name, [column].column_id, [column].is_nullable, [column].is_identity, [column].user_type_id,
+           CROSS APPLY (SELECT [column].name, [column].column_id, [column].is_nullable, [column].is_identity, [column].is_computed, [column].user_type_id,
                                JSON_QUERY([types].json) AS [joined_sys_type],
                                JSON_QUERY(ISNULL([relationships].json,'[]')) AS [joined_foreign_key_columns]
                         FROM sys.columns [column]

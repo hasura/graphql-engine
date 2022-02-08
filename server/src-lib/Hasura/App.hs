@@ -32,6 +32,7 @@ module Hasura.App
     -- * Exported for testing
     mkHGEServer,
     mkPgSourceResolver,
+    mkMSSQLSourceResolver,
   )
 where
 
@@ -65,6 +66,7 @@ import Data.Time.Clock qualified as Clock
 import Data.Yaml qualified as Y
 import Database.PG.Query qualified as Q
 import GHC.AssertNF.CPP
+import Hasura.Backends.MSSQL.Connection
 import Hasura.Backends.Postgres.Connection
 import Hasura.Base.Error
 import Hasura.Eventing.Common
@@ -111,7 +113,7 @@ import Hasura.Server.Types
 import Hasura.Server.Version
 import Hasura.Session
 import Hasura.Tracing qualified as Tracing
-import Network.HTTP.Client.DynamicTlsPermissions (mkMgr)
+import Network.HTTP.Client.DynamicTlsPermissions (mkHttpManager)
 import Network.HTTP.Client.Manager (HasHttpManagerM (..))
 import Network.HTTP.Client.Transformable qualified as HTTP
 import Network.Wai (Application)
@@ -311,17 +313,20 @@ newtype PGMetadataStorageAppT m a = PGMetadataStorageAppT {runPGMetadataStorageA
     )
     via (ReaderT (Q.PGPool, Q.PGLogger) m)
 
-instance MonadTrans PGMetadataStorageAppT where
-  lift = PGMetadataStorageAppT . const
+deriving via
+  (ReaderT (Q.PGPool, Q.PGLogger) m)
+  instance
+    MonadBase IO m => MonadBase IO (PGMetadataStorageAppT m)
 
-instance (MonadBase IO m) => MonadBase IO (PGMetadataStorageAppT m) where
-  liftBase io = PGMetadataStorageAppT $ \_ -> liftBase io
+deriving via
+  (ReaderT (Q.PGPool, Q.PGLogger) m)
+  instance
+    MonadBaseControl IO m => MonadBaseControl IO (PGMetadataStorageAppT m)
 
-instance (MonadBaseControl IO m) => MonadBaseControl IO (PGMetadataStorageAppT m) where
-  type StM (PGMetadataStorageAppT m) a = StM m a
-  liftBaseWith f = PGMetadataStorageAppT $
-    \r -> liftBaseWith \run -> f (run . flip runPGMetadataStorageAppT r)
-  restoreM stma = PGMetadataStorageAppT $ \_ -> restoreM stma
+deriving via
+  (ReaderT (Q.PGPool, Q.PGLogger))
+  instance
+    MonadTrans PGMetadataStorageAppT
 
 resolvePostgresConnInfo ::
   (MonadIO m) => Env.Environment -> UrlConf -> Maybe Int -> m Q.ConnInfo
@@ -364,7 +369,8 @@ initialiseServeCtx env GlobalCtx {..} so@ServeOptions {..} = do
                   }
               sourceConnInfo = PostgresSourceConnInfo dbUrlConf (Just connSettings) (Q.cpAllowPrepare soConnParams) soTxIso Nothing
            in PostgresConnConfiguration sourceConnInfo Nothing
-      sqlGenCtx = SQLGenCtx soStringifyNum soDangerousBooleanCollapse
+      optimizePermissionFilters = EFOptimizePermissionFilters `elem` soExperimentalFeatures
+      sqlGenCtx = SQLGenCtx soStringifyNum soDangerousBooleanCollapse optimizePermissionFilters
 
   let serverConfigCtx =
         ServerConfigCtx
@@ -386,6 +392,7 @@ initialiseServeCtx env GlobalCtx {..} so@ServeOptions {..} = do
         _gcHttpManager
         serverConfigCtx
         (mkPgSourceResolver pgLogger)
+        mkMSSQLSourceResolver
 
   -- Start a background thread for listening schema sync events from other server instances,
   metaVersionRef <- liftIO $ STM.newEmptyTMVarIO
@@ -399,7 +406,7 @@ initialiseServeCtx env GlobalCtx {..} so@ServeOptions {..} = do
 
   schemaCacheRef <- initialiseCache rebuildableSchemaCache
 
-  srvMgr <- liftIO $ mkMgr (readTlsAllowlist schemaCacheRef)
+  srvMgr <- liftIO $ mkHttpManager (readTlsAllowlist schemaCacheRef)
 
   pure $
     ServeCtx
@@ -433,7 +440,8 @@ migrateCatalogSchema ::
   Maybe (SourceConnConfiguration ('Postgres 'Vanilla)) ->
   HTTP.Manager ->
   ServerConfigCtx ->
-  SourceResolver ->
+  SourceResolver ('Postgres 'Vanilla) ->
+  SourceResolver ('MSSQL) ->
   m (RebuildableSchemaCache, UTCTime)
 migrateCatalogSchema
   env
@@ -442,7 +450,8 @@ migrateCatalogSchema
   defaultSourceConfig
   httpManager
   serverConfigCtx
-  sourceResolver = do
+  pgSourceResolver
+  mssqlSourceResolver = do
     currentTime <- liftIO Clock.getCurrentTime
     initialiseResult <- runExceptT $ do
       -- TODO: should we allow the migration to happen during maintenance mode?
@@ -455,7 +464,7 @@ migrateCatalogSchema
             (_sccMaintenanceMode serverConfigCtx)
             currentTime
       let cacheBuildParams =
-            CacheBuildParams httpManager sourceResolver serverConfigCtx
+            CacheBuildParams httpManager pgSourceResolver mssqlSourceResolver serverConfigCtx
           buildReason = CatalogSync
       schemaCache <-
         runCacheBuild cacheBuildParams $
@@ -649,7 +658,8 @@ mkHGEServer setupHook env ServeOptions {..} ServeCtx {..} initTime postPollHook 
   -- NOTE: be sure to compile WITHOUT code coverage, for this to work properly.
   liftIO disableAssertNF
 
-  let sqlGenCtx = SQLGenCtx soStringifyNum soDangerousBooleanCollapse
+  let optimizePermissionFilters = EFOptimizePermissionFilters `elem` soExperimentalFeatures
+      sqlGenCtx = SQLGenCtx soStringifyNum soDangerousBooleanCollapse optimizePermissionFilters
       Loggers loggerCtx logger _ = _scLoggers
   --SchemaSyncCtx{..} = _scSchemaSyncCtx
 
@@ -1053,7 +1063,8 @@ instance (MonadIO m) => WS.MonadWSLog (PGMetadataStorageAppT m) where
   logWSLog = unLogger
 
 instance (Monad m) => MonadResolveSource (PGMetadataStorageAppT m) where
-  getSourceResolver = mkPgSourceResolver <$> asks snd
+  getPGSourceResolver = mkPgSourceResolver <$> asks snd
+  getMSSQLSourceResolver = return mkMSSQLSourceResolver
 
 instance (Monad m) => EB.MonadQueryTags (PGMetadataStorageAppT m) where
   createQueryTags _attributes _qtSourceConfig = return $ emptyQueryTagsComment
@@ -1185,7 +1196,7 @@ telemetryNotice =
     <> "usage stats which allows us to keep improving Hasura at warp speed. "
     <> "To read more or opt-out, visit https://hasura.io/docs/latest/graphql/core/guides/telemetry.html"
 
-mkPgSourceResolver :: Q.PGLogger -> SourceResolver
+mkPgSourceResolver :: Q.PGLogger -> SourceResolver ('Postgres 'Vanilla)
 mkPgSourceResolver pgLogger _ config = runExceptT do
   env <- lift Env.getEnvironment
   let PostgresSourceConnInfo urlConf poolSettings allowPrepare isoLevel _ = _pccConnectionInfo config
@@ -1204,3 +1215,10 @@ mkPgSourceResolver pgLogger _ config = runExceptT do
   pgPool <- liftIO $ Q.initPGPool connInfo connParams pgLogger
   let pgExecCtx = mkPGExecCtx isoLevel pgPool
   pure $ PGSourceConfig pgExecCtx connInfo Nothing mempty
+
+mkMSSQLSourceResolver :: SourceResolver ('MSSQL)
+mkMSSQLSourceResolver _name (MSSQLConnConfiguration connInfo _) = runExceptT do
+  env <- lift Env.getEnvironment
+  (connString, mssqlPool) <- createMSSQLPool connInfo env
+  let mssqlExecCtx = mkMSSQLExecCtx mssqlPool
+  pure $ MSSQLSourceConfig connString mssqlExecCtx

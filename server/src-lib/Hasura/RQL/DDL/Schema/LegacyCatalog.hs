@@ -177,7 +177,7 @@ addEventTriggerToCatalog qt etc = liftTx do
     False
   where
     QualifiedObject sn tn = qt
-    (EventTriggerConf name _ _ _ _ _ _) = etc
+    (EventTriggerConf name _ _ _ _ _ _ _) = etc
 
 addComputedFieldToCatalog ::
   MonadTx m =>
@@ -602,7 +602,9 @@ fetchMetadataFromHdbTables = liftTx do
                 ctRetryConf = Q.getAltJ retryConfig,
                 ctHeaders = Q.getAltJ headerConfig,
                 ctIncludeInMetadata = includeMetadata,
-                ctComment = comment
+                ctComment = comment,
+                ctRequestTransform = Nothing,
+                ctResponseTransform = Nothing
               }
 
     fetchCustomTypes :: Q.TxE QErr CustomTypes

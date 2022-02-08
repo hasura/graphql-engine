@@ -46,3 +46,6 @@ response:
     - title: Title 3
       author:
         name: Author 2
+    - title: Title 4
+      author:
+        name: Author 2

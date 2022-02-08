@@ -1,3 +1,8 @@
+-- | Postgres DDL BoolExp
+--
+-- How to parse the boolean expressions, specifically for Postgres.
+--
+-- See 'Hasura.RQL.DDL.Schema.Cache' and 'Hasura.RQL.Types.Eventing.Backend'.
 module Hasura.Backends.Postgres.DDL.BoolExp
   ( parseBoolExpOperations,
   )

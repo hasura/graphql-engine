@@ -1,6 +1,8 @@
 {-# LANGUAGE UndecidableInstances #-}
 
--- | Types for MSSQL Insert IR.
+-- | MSSQL Types Insert
+--
+-- Types for MSSQL Insert IR.
 module Hasura.Backends.MSSQL.Types.Insert
   ( BackendInsert (..),
     IfMatched (..),
@@ -18,12 +20,7 @@ import Hasura.SQL.Backend (BackendType (MSSQL))
 data BackendInsert v = BackendInsert
   { -- | @if_matched@ can be omitted (and in that case will be @Nothing@).
     --   If omitted, we only insert new rows (without upserting).
-    _biIfMatched :: Maybe (IfMatched v),
-    -- | identity columns are needed for the sql generation and are not part
-    --   of the user input. If the table has identity columns we need to add
-    --   the SQL statements @SET IDENTITY_INSERT ...@ to be able to insert
-    --   into that table.
-    _biIdentityColumns :: [ColumnName]
+    _biIfMatched :: Maybe (IfMatched v)
   }
 
 deriving instance (Backend 'MSSQL, Show (IfMatched v), Show v) => Show (BackendInsert v)

@@ -99,6 +99,8 @@ class TestGraphQLQueryBasicMySQL:
 
 @pytest.mark.parametrize("transport", ['http', 'websocket'])
 class TestGraphQLEmpty:
+    def test_select_placeholder(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_placeholder.yaml', transport)
 
     def test_no_empty_roots(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/check_no_empty_roots.yaml', transport)
@@ -213,10 +215,30 @@ class TestGraphQLQueryBasicBigquery:
     def test_nested_array_relationships(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + "/nested_array_relationships.yaml", transport)
 
+    def test_agg_nodes(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + "/agg_nodes.yaml", transport)
+
+    def test_distinct_on(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + "/distinct_on.yaml", transport)
+
     @classmethod
     def dir(cls):
         return 'queries/graphql_query/bigquery'
 
+@pytest.mark.parametrize("transport", ['http', 'websocket'])
+@pytest.mark.parametrize("backend", ['bigquery'])
+@usefixtures('per_class_tests_db_state')
+class TestGraphQLQueryBoolExpSearchBigquery:
+
+    def test_city_where_like(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_city_where_like_bigquery.yaml', transport)
+
+    def test_city_where_not_like(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_city_where_nlike_bigquery.yaml', transport)
+
+    @classmethod
+    def dir(cls):
+        return 'queries/graphql_query/boolexp/search'
 
 @pytest.mark.parametrize("transport", ['http', 'websocket'])
 @pytest.mark.parametrize("backend", ['citus', 'mssql', 'postgres'])
@@ -276,6 +298,9 @@ class TestGraphQLQueryBasicCommon:
 
     def test_select_query_author_pk_null(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/select_query_author_by_pkey_null.yaml', transport)
+
+    def test_select_placeholder_err(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_placeholder_err.yaml', transport)
 
     @classmethod
     def dir(cls):
@@ -1527,6 +1552,35 @@ class TestGraphQLQueryBoolExpSpatialMSSQL:
 
     def test_select_spatial_mssql_types_where_st_within_geojson(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/select_query_spatial_types_where_st_within_geojson_mssql.yaml', transport)
+
+    @classmethod
+    def dir(cls):
+        return 'queries/graphql_query/boolexp/spatial'
+
+@pytest.mark.parametrize("transport", ['http', 'websocket'])
+@pytest.mark.parametrize("backend", ['bigquery'])
+@usefixtures('per_class_tests_db_state')
+class TestGraphQLQueryBoolExpSpatialBigquery:
+    def test_select_spatial_bigquery_types(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_query_spatial_types_bigquery.yaml', transport)
+
+    def test_select_spatial_bigquery_types_where_st_equals(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_query_spatial_types_where_st_equals_bigquery.yaml', transport)
+
+    def test_select_spatial_bigquery_types_where_st_contains(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_query_spatial_types_where_st_contains_bigquery.yaml', transport)
+
+    def test_select_spatial_bigquery_types_where_st_intersects(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_query_spatial_types_where_st_intersects_bigquery.yaml', transport)
+
+    def test_select_spatial_bigquery_types_where_st_within(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_query_spatial_types_where_st_within_bigquery.yaml', transport)
+
+    def test_select_spatial_bigquery_types_where_st_d_within(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_query_spatial_types_where_st_d_within_bigquery.yaml', transport)
+
+    def test_select_spatial_bigquery_types_where_st_touches(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_query_spatial_types_where_st_touches_bigquery.yaml', transport)
 
     @classmethod
     def dir(cls):

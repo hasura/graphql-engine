@@ -121,6 +121,10 @@ MsSQLConfiguration
      - true
      - MsSQLSourceConnectionInfo_
      - Connection parameters for the source
+   * - read_replicas
+     - false
+     - [MsSQLSourceConnectionInfo_]
+     - Optional list of read replica configuration *(supported only in cloud/enterprise versions)*
 
 
 .. _BigQueryConfiguration:
@@ -1631,6 +1635,10 @@ ActionDefinition
      - false
      - :ref:`RequestTransformation`
      - Request Transformation to be applied to this Action's request
+   * - response_transform
+     - false
+     - :ref:`ResponseTransformation`
+     - Response Transformation to be applied to this Action's response
 
 
 .. _InputArgument:
@@ -1656,7 +1664,7 @@ InputArgument
 
 .. note::
 
-   The ``GraphQL Types`` used in creating an action must be defined before via :ref:`Custom Types <api_custom_types>`
+   The ``GraphQL Types`` used in creating an action must be defined before via :ref:`Custom Types <metadata_api_custom_types>`
 
 .. _ComputedFieldDefinition:
 
@@ -2059,8 +2067,8 @@ HeaderKey
 
 .. _HeaderValue:
 
-HeaderKey
-^^^^^^^^^
+HeaderValue
+^^^^^^^^^^^
 
 .. parsed-literal::
    :class: haskell-pre
@@ -2079,6 +2087,26 @@ The JSON templating language to be used for this JSON transformation.
 
    "Kriti"
 
+.. _ResponseTransformation:
+
+ResponseTransformation
+^^^^^^^^^^^^^^^^^^^^^^
+
+.. list-table::
+   :header-rows: 1
+
+   * - Key
+     - required
+     - Schema
+     - Description
+   * - body
+     - false
+     - String
+     - A template script for transforming the response body.
+   * - template_engine
+     - false
+     - :ref:`TemplateEngine`
+     - Template language to be used for this transformation. Default: "Kriti"
 
 .. _RetryConf:
 
@@ -2134,11 +2162,8 @@ RemoteField
 
 Examples:
 
-.. code-block:: http
-
-   POST /v1/query HTTP/1.1
-   Content-Type: application/json
-   X-Hasura-Role: admin
+.. parsed-literal::
+   :class: haskell-pre
 
    {
       "message": {
@@ -2148,11 +2173,8 @@ Examples:
       }
    }
 
-.. code-block:: http
-
-   POST /v1/query HTTP/1.1
-   Content-Type: application/json
-   X-Hasura-Role: admin
+.. parsed-literal::
+   :class: haskell-pre
 
    {
       "messages": {

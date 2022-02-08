@@ -4,7 +4,7 @@
   query:
     type: run_sql
     args:
-      sql: ALTER TABLE profiles add column profile_id int
+      sql: ALTER TABLE custom.profiles add column profile_id int
 
 - description: Create a remote relationship with the new column
   url: /v1/query
@@ -13,7 +13,7 @@
     type: create_remote_relationship
     args:
       name: messagesNestedArgs
-      table: profiles
+      table: {schema: custom, name: profiles}
       hasura_fields:
         - profile_id
       remote_schema: my-remote-schema
@@ -30,5 +30,5 @@
   query:
     type: run_sql
     args:
-      sql: ALTER TABLE profiles drop column profile_id
+      sql: ALTER TABLE custom.profiles drop column profile_id
       cascade: true

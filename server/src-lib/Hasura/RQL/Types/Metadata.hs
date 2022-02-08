@@ -22,6 +22,10 @@ module Hasura.RQL.Types.Metadata
     Permissions,
     QueryCollections,
     Relationships,
+    SchemaRemoteRelationships,
+    RemoteSchemaTypeRelationships (..),
+    rstrsName,
+    rstrsRelationships,
     RemoteSchemaMetadata (..),
     RemoteSchemaPermissionMetadata (..),
     RemoteSchemas,
@@ -62,7 +66,6 @@ module Hasura.RQL.Types.Metadata
     mkSourceMetadata,
     mkTableMeta,
     noMetadataModify,
-    parseListAsMap,
     parseNonSourcesMetadata,
     rsmComment,
     rsmDefinition,
@@ -91,7 +94,7 @@ module Hasura.RQL.Types.Metadata
     tmTable,
     tmUpdatePermissions,
     toSourceMetadata,
-    rsmRelationships,
+    rsmRemoteRelationships,
   )
 where
 
@@ -138,21 +141,22 @@ import Hasura.SQL.Tag
 import Hasura.Session
 import Language.GraphQL.Draft.Syntax qualified as G
 
--- | Raise exception if parsed list has multiple declarations
+-- | Parse a list of objects into a map from a derived key,
+-- failing if the list has duplicates.
 parseListAsMap ::
-  (Hashable k, Eq k, Show k) =>
+  (Hashable k, Eq k, T.ToTxt k) =>
   Text ->
   (a -> k) ->
   Parser [a] ->
   Parser (InsOrdHashMap k a)
-parseListAsMap t mapFn listP = do
+parseListAsMap things mapFn listP = do
   list <- listP
   let duplicates = toList $ L.duplicates $ map mapFn list
   unless (null duplicates) $
     fail $
       T.unpack $
-        "multiple declarations exist for the following " <> t <> " : "
-          <> tshow duplicates
+        "multiple declarations exist for the following " <> things <> ": "
+          <> T.commaSeparated duplicates
   pure $ oMapFromL mapFn list
 
 -- | Versioning the @'Metadata' JSON structure to track backwards incompatible changes.
@@ -256,7 +260,7 @@ data RemoteSchemaMetadata = RemoteSchemaMetadata
     _rsmDefinition :: RemoteSchemaDef,
     _rsmComment :: Maybe Text,
     _rsmPermissions :: [RemoteSchemaPermissionMetadata],
-    _rsmRelationships :: SchemaRemoteRelationships
+    _rsmRemoteRelationships :: SchemaRemoteRelationships
   }
   deriving (Show, Eq, Generic)
 
@@ -278,9 +282,10 @@ instance ToJSON RemoteSchemaMetadata where
         "definition" .= _rsmDefinition,
         "comment" .= _rsmComment,
         "permissions" .= _rsmPermissions,
-        "remote_relationships" .= OM.elems _rsmRelationships
+        "remote_relationships" .= OM.elems _rsmRemoteRelationships
       ]
 
+$(makeLenses ''RemoteSchemaTypeRelationships)
 $(makeLenses ''RemoteSchemaMetadata)
 
 data TableMetadata b = TableMetadata
@@ -988,7 +993,7 @@ metadataToOrdJSON
                   <> catMaybes [maybeCommentToMaybeOrdPair comment]
 
             eventTriggerConfToOrdJSON :: Backend b => EventTriggerConf b -> AO.Value
-            eventTriggerConfToOrdJSON (EventTriggerConf name definition webhook webhookFromEnv retryConf headers metadataTransform) =
+            eventTriggerConfToOrdJSON (EventTriggerConf name definition webhook webhookFromEnv retryConf headers reqTransform respTransform) =
               AO.object $
                 [ ("name", AO.toOrdered name),
                   ("definition", AO.toOrdered definition),
@@ -998,7 +1003,8 @@ metadataToOrdJSON
                     [ maybeAnyToMaybeOrdPair "webhook" AO.toOrdered webhook,
                       maybeAnyToMaybeOrdPair "webhook_from_env" AO.toOrdered webhookFromEnv,
                       headers >>= listToMaybeOrdPair "headers" AO.toOrdered,
-                      fmap (("request_transform",) . AO.toOrdered) metadataTransform
+                      fmap (("request_transform",) . AO.toOrdered) reqTransform,
+                      fmap (("response_transform",) . AO.toOrdered) respTransform
                     ]
 
       functionMetadataToOrdJSON :: Backend b => FunctionMetadata b -> AO.Value
@@ -1037,7 +1043,7 @@ metadataToOrdJSON
                   permsToMaybeOrdJSON
                   permissions,
                 listToMaybeOrdPair
-                  "relationships"
+                  "remote_relationships"
                   AO.toOrdered
                   relationships
               ]
@@ -1074,7 +1080,7 @@ metadataToOrdJSON
 
       crontriggerQToOrdJSON :: CronTriggerMetadata -> AO.Value
       crontriggerQToOrdJSON
-        (CronTriggerMetadata name webhook schedule payload retryConf headers includeInMetadata comment) =
+        (CronTriggerMetadata name webhook schedule payload retryConf headers includeInMetadata comment reqTransform respTransform) =
           AO.object $
             [ ("name", AO.toOrdered name),
               ("webhook", AO.toOrdered webhook),
@@ -1085,7 +1091,9 @@ metadataToOrdJSON
                 [ maybeAnyToMaybeOrdPair "payload" AO.toOrdered payload,
                   maybeAnyToMaybeOrdPair "retry_conf" AO.toOrdered (maybeRetryConfiguration retryConf),
                   maybeAnyToMaybeOrdPair "headers" AO.toOrdered (maybeHeader headers),
-                  maybeAnyToMaybeOrdPair "comment" AO.toOrdered comment
+                  maybeAnyToMaybeOrdPair "comment" AO.toOrdered comment,
+                  fmap (("request_transform",) . AO.toOrdered) reqTransform,
+                  fmap (("response_transform",) . AO.toOrdered) respTransform
                 ]
           where
             maybeRetryConfiguration retryConfig
@@ -1187,6 +1195,7 @@ metadataToOrdJSON
                 timeout
                 handler
                 requestTransform
+                responseTransform
               ) =
               let typeAndKind = case actionType of
                     ActionQuery -> [("type", AO.toOrdered ("query" :: String))]
@@ -1202,7 +1211,8 @@ metadataToOrdJSON
                       <> catMaybes
                         [ listToMaybeOrdPair "headers" AO.toOrdered headers,
                           listToMaybeOrdPair "arguments" argDefinitionToOrdJSON args,
-                          fmap (("request_transform",) . AO.toOrdered) requestTransform
+                          fmap (("request_transform",) . AO.toOrdered) requestTransform,
+                          fmap (("response_transform",) . AO.toOrdered) responseTransform
                         ]
                       <> typeAndKind
                       <> bool [("timeout", AO.toOrdered timeout)] mempty (timeout == defaultActionTimeoutSecs)

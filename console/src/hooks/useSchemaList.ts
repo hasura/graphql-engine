@@ -1,44 +1,22 @@
-import { getRunSqlQuery } from '@/components/Common/utils/v1QueryUtils';
-import { useDataSource } from '@/dataSources';
-import Endpoints from '@/Endpoints';
-import { useQuery, UseQueryOptions } from 'react-query';
-import { useAppSelector } from '../store';
-import { Api } from './apiUtils';
+import { services } from './../dataSources/services/index';
+import { RunSQLQueryOptions, useRunSQL } from './common';
+import { QualifiedDataSource } from './types';
 
 export function useSchemaList(
-  queryOptions?: UseQueryOptions<
-    string[],
-    Error,
-    string[],
-    ['schemaList', string, string]
+  args: QualifiedDataSource,
+  queryOptions?: RunSQLQueryOptions<
+    Readonly<[key: 'schemaList', dataSource: string, driver: string]>,
+    string[]
   >
 ) {
-  const url = Endpoints.query;
-  const { dataSource, driver } = useDataSource();
+  const { source, driver } = args;
+  const dataSource = services[driver];
 
-  const currentDataSource: string = useAppSelector(
-    state => state.tables.currentDataSource
-  );
-  const headers = useAppSelector(state => state.tables.dataHeaders);
-
-  const body = getRunSqlQuery(
-    dataSource.schemaListQuery,
-    currentDataSource,
-    false,
-    true,
-    driver
-  );
-
-  const fetchSchemaList = () => {
-    return Api.post<{ result: string[][] }, string[]>(
-      { headers, body, url },
-      data => data.result.slice(1).map(d => d[0])
-    );
-  };
-
-  return useQuery(
-    ['schemaList', currentDataSource, driver],
-    fetchSchemaList,
-    queryOptions
-  );
+  return useRunSQL({
+    sql: () => dataSource.schemaListQuery,
+    queryKey: ['schemaList', source, driver],
+    transformFn: data => data.result?.slice(1).map(d => d[0]) ?? [],
+    queryOptions,
+    dataSource: args,
+  });
 }

@@ -129,12 +129,12 @@ You can create relationships for custom output types by:
 
   .. tab:: API
 
-    Action relationships can be added while defining custom types via the :ref:`set_custom_types metadata API <metadata_set_custom_types>`:
+    Action relationships can be added while defining custom types via the :ref:`metadata_set_custom_types` metadata API:
 
     .. code-block:: http
       :emphasize-lines: 20-29
 
-      POST /v1/query HTTP/1.1
+      POST /v1/metadata HTTP/1.1
       Content-Type: application/json
       X-Hasura-Role: admin
 

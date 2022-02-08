@@ -1,5 +1,8 @@
 {-# LANGUAGE UndecidableInstances #-}
 
+-- | Postgres Translate Types
+--
+-- Intermediary / helper types used for translating IR to Postgres SQL.
 module Hasura.Backends.Postgres.Translate.Types
   ( ApplySortingAndSlicing (ApplySortingAndSlicing),
     ArrayConnectionSource (ArrayConnectionSource, _acsSource),

@@ -716,7 +716,7 @@ class HeaderTest(graphene.ObjectType):
                 headers.get_all('Authorization') == ['Bearer abcdef'] and
                 len(headers.get_all('x-forwarded-host')) == 1 and
                 all(host in headers.get_all('x-forwarded-host') for host in hosts) and
-                headers.get_all('x-forwarded-user-agent') == ['python-requests/2.22.0']):
+                headers.get_all('x-forwarded-user-agent')[0].startswith('python-requests')):
             raise Exception('headers dont match. Received: ' + str(headers))
 
         return "Hello " + arg

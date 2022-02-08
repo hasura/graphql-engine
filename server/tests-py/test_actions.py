@@ -95,6 +95,39 @@ class TestActionsSync:
     def test_mirror_action_transformed_success(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/mirror_action_transformed_success.yaml')
 
+    def test_mirror_action_transformed_output_success(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/mirror_action_transformed_output_success.yaml')
+
+    def test_mirror_headers(self, hge_ctx):
+        query = """
+          query {
+            mirror_headers {
+              headers {
+                name
+                value
+              }
+            }
+          }
+        """
+        query_obj = {
+            "query": query
+        }
+        headers = {}
+        admin_secret = hge_ctx.hge_key
+        if admin_secret is not None:
+            headers['X-Hasura-Admin-Secret'] = admin_secret
+        code, resp, _ = hge_ctx.anyq('/v1/graphql', query_obj, headers)
+        assert code == 200, resp
+
+        resp_headers = resp['data']['mirror_headers']['headers']
+
+        user_agent_header = next((h['value'] for h in resp_headers if h['name'] == 'User-Agent'), None)
+        assert user_agent_header is not None
+        assert user_agent_header.startswith("hasura-graphql-engine/")
+
+    def test_results_list_transformed_output_success(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/results_list_transformed_output_success.yaml')
+
     #https://github.com/hasura/graphql-engine/issues/6631
     def test_create_users_output_type(self, hge_ctx):
         gql_query = '''
@@ -645,11 +678,11 @@ class TestCreateActionNestedTypeWithRelation:
     @classmethod
     def dir(cls):
         return 'queries/actions/nested-relation'
-    
+
     # no toplevel, extensions with no error
     def test_create_async_action_with_nested_output_and_relation_fail(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/create_async_action_with_nested_output_and_relation.yaml')
-    
+
     # no toplevel, extensions with no error
     def test_create_sync_action_with_nested_output_and_nested_relation_fail(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/create_sync_action_with_nested_output_and_nested_relation.yaml')

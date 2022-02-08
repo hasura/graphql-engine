@@ -53,6 +53,8 @@ args:
       queries:
       - name: simple_query
         query: "query { test_table { first_name last_name } }"
+      - name: simple_query_with_aliases
+        query: "query { test: test_table { firstName: first_name lastName: last_name surname: last_name } }"
       - name: query_with_arg
         query: "query ($first_name:String!) { test_table(where: {first_name: { _eq: $first_name } }) { first_name last_name } }"
       - name: query_with_args
@@ -69,3 +71,5 @@ args:
         query: "mutation QQ($new_object: test_table_set_input!, $first_name: String!) { update_test_table(where: {first_name: {_eq: $first_name}}, _set: $new_object) { affected_rows } }"
       - name: mutation_recursive_arg
         query: "mutation MyMutation($object: test_table_recurse_insert_input!) { insert_test_table_recurse_one(object: $object) { id } }"
+      - name: query_with_duplicate_field_name
+        query: "query { test_table { first_name } test_table { last_name } }"

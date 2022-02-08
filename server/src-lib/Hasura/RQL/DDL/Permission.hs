@@ -215,7 +215,7 @@ buildInsPermInfo source tn fieldInfoMap (PermDef _rn (InsPerm checkCond set mCol
           _ <- askColumnType fieldInfoMap col relInInsErr
           -- Check that the column is insertable
           ci <- askColInfo fieldInfoMap col ""
-          unless (_cmIsInsertable $ pgiMutability ci) $
+          unless (_cmIsInsertable $ ciMutability ci) $
             throw500
               ( "Column " <> col
                   <<> " is not insertable and so cannot have insert permissions defined"
@@ -230,8 +230,8 @@ buildInsPermInfo source tn fieldInfoMap (PermDef _rn (InsPerm checkCond set mCol
     return (InsPermInfo (HS.fromList insColsWithoutPresets) be setColsSQL backendOnly reqHdrs, deps)
   where
     backendOnly = Just True == mBackendOnly
-    allCols = map pgiColumn $ getCols fieldInfoMap
-    insCols = maybe allCols (convColSpec fieldInfoMap) mCols
+    allInsCols = map ciColumn $ filter (_cmIsInsertable . ciMutability) $ getCols fieldInfoMap
+    insCols = interpColSpec allInsCols (fromMaybe PCStar mCols)
     relInInsErr = "Only table columns can have insert permissions defined, not relationships or other field types"
 
 instance IsPerm InsPerm where
@@ -251,7 +251,7 @@ buildSelPermInfo ::
   SelPerm b ->
   m (WithDeps (SelPermInfo b))
 buildSelPermInfo source tn fieldInfoMap sp = withPathK "permission" $ do
-  let pgCols = convColSpec fieldInfoMap $ spColumns sp
+  let pgCols = interpColSpec (map ciColumn $ (getCols fieldInfoMap)) $ spColumns sp
 
   (boolExp, boolExpDeps) <-
     withPathK "filter" $
@@ -332,13 +332,13 @@ buildUpdPermInfo source tn fieldInfoMap (UpdPerm colSpec set fltr check) = do
         _ <- askColumnType fieldInfoMap updCol relInUpdErr
         -- Check that the column is updatable
         ci <- askColInfo fieldInfoMap updCol ""
-        unless (_cmIsUpdatable $ pgiMutability ci) $
+        unless (_cmIsUpdatable $ ciMutability ci) $
           throw500
             ( "Column " <> updCol
                 <<> " is not updatable and so cannot have update permissions defined"
             )
 
-  let updColDeps = map (mkColDep @b DRUntyped source tn) updCols
+  let updColDeps = map (mkColDep @b DRUntyped source tn) allUpdCols
       deps = mkParentDep @b source tn : beDeps ++ maybe [] snd checkExpr ++ updColDeps ++ setColDeps
       depHeaders = getDependentHeaders fltr
       reqHeaders = depHeaders `HS.union` (HS.fromList setHeaders)
@@ -346,7 +346,8 @@ buildUpdPermInfo source tn fieldInfoMap (UpdPerm colSpec set fltr check) = do
 
   return (UpdPermInfo (HS.fromList updColsWithoutPreSets) tn be (fst <$> checkExpr) setColsSQL reqHeaders, deps)
   where
-    updCols = convColSpec fieldInfoMap colSpec
+    allUpdCols = map ciColumn $ filter (_cmIsUpdatable . ciMutability) $ getCols fieldInfoMap
+    updCols = interpColSpec allUpdCols colSpec
     relInUpdErr = "Only table columns can have update permissions defined, not relationships or other field types"
 
 instance IsPerm UpdPerm where

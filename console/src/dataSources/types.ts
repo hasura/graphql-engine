@@ -69,7 +69,7 @@ export interface NormalizedTable {
   table_schema: string;
   table_name: string;
   table_type: TableType;
-  comment: string | null;
+  comment?: string | null;
   columns: TableColumn[];
   view_info?: ViewInfo | null;
   is_table_tracked: boolean;
@@ -163,7 +163,7 @@ export interface BaseTable {
   is_enum?: boolean;
 }
 
-type Constraint = {
+export type Constraint = {
   table_name: string;
   table_schema: string;
   constraint_name: string;
@@ -235,6 +235,12 @@ export type Partition = {
 
 export type ColumnAction = 'add' | 'modify';
 
+export type DependentSQLGenerator = (
+  schemaName: string,
+  tableName: string,
+  columnName: string
+) => { upSql: string; downSql: string };
+
 export interface FrequentlyUsedColumn {
   name: string;
   validFor: ColumnAction[];
@@ -243,11 +249,7 @@ export interface FrequentlyUsedColumn {
   primary?: boolean;
   default?: string;
   defaultText?: string;
-  dependentSQLGenerator?: (
-    schemaName: string,
-    tableName: string,
-    columnName: string
-  ) => { upSql: string; downSql: string };
+  dependentSQLGenerator?: DependentSQLGenerator;
   minPGVersion?: number;
 }
 
@@ -336,6 +338,10 @@ export type SupportedFeaturesType = {
     };
     relationships: {
       enabled: boolean;
+      remoteDbRelationships?: {
+        hostSource: boolean;
+        referenceSource: boolean;
+      };
       remoteRelationships?: boolean;
       track: boolean;
     };

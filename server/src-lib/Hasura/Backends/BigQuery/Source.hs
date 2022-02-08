@@ -22,6 +22,7 @@ import Data.Aeson.Casing qualified as J
 import Data.Aeson.TH qualified as J
 import Data.ByteString.Lazy qualified as BL
 import Data.HashMap.Strict qualified as HM
+import Data.Int qualified as Int
 import Data.Text.Encoding qualified as TE
 import Data.X509 qualified as X509
 import Data.X509.Memory qualified as X509
@@ -160,7 +161,7 @@ data BigQuerySourceConfig = BigQuerySourceConfig
     _scDatasets :: ![Text],
     _scProjectId :: !Text, -- this is part of service-account.json, but we put it here on purpose
     _scAccessTokenMVar :: !(MVar (Maybe TokenResp)),
-    _scGlobalSelectLimit :: !Int
+    _scGlobalSelectLimit :: !Int.Int64
   }
   deriving (Eq)
 

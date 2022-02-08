@@ -1,5 +1,8 @@
 module Database.MSSQL.Transaction
-  ( runTx,
+  ( TxET (..),
+    MSSQLTxError (..),
+    TxT,
+    runTx,
     runTxE,
     unitQuery,
     unitQueryE,
@@ -7,100 +10,105 @@ module Database.MSSQL.Transaction
     singleRowQueryE,
     multiRowQuery,
     multiRowQueryE,
-    rawQuery,
-    rawQueryE,
-    buildGenericTxE,
-    TxT,
-    TxET (..),
-    MSSQLTxError (..),
+    buildGenericQueryTxE,
+    withTxET,
   )
 where
 
 import Control.Exception (try)
-import Control.Monad.Except
-  ( ExceptT (..),
-    MonadError,
-    catchError,
-    throwError,
-    withExceptT,
-  )
-import Control.Monad.IO.Class (MonadIO (..))
-import Control.Monad.Morph (MFunctor (hoist), MonadTrans (..))
-import Control.Monad.Reader (MonadFix, MonadReader, ReaderT (..))
+import Control.Monad.Morph (hoist)
+import Control.Monad.Trans.Control (MonadBaseControl)
+import Database.MSSQL.Pool
 import Database.ODBC.SQLServer (FromRow)
 import Database.ODBC.SQLServer qualified as ODBC
-import Hasura.Prelude (hoistEither, liftEither, mapLeft)
-import Prelude
-
-data MSSQLTxError
-  = MSSQLTxError !ODBC.Query !ODBC.ODBCException
-  deriving (Eq, Show)
-
--- | A successful result from a query is a list of rows where each row contains list of column values
-newtype MSSQLResult = MSSQLResult [[ODBC.Value]]
-  deriving (Eq, Show)
+import Hasura.Prelude
 
 -- | The transaction command to run, parameterised over:
--- e - the exception type
--- m - some Monad
+-- e - the exception type (usually 'MSSQLTxError')
+-- m - some Monad, (usually some 'MonadIO')
 -- a - the successful result type
-newtype TxET e m a = TxET {txHandler :: ReaderT ODBC.Connection (ExceptT e m) a}
-  deriving (Functor, Applicative, Monad, MonadError e, MonadIO, MonadReader ODBC.Connection, MonadFix)
+newtype TxET e m a = TxET
+  { txHandler :: ReaderT ODBC.Connection (ExceptT e m) a
+  }
+  deriving
+    ( Functor,
+      Applicative,
+      Monad,
+      MonadError e,
+      MonadIO,
+      MonadReader ODBC.Connection,
+      MonadFix
+    )
 
 instance MonadTrans (TxET e) where
   lift = TxET . lift . lift
 
--- | The transaction command to run,
--- returning an MSSQLTxError or the result
+-- | Error type generally used in 'TxET'.
+data MSSQLTxError
+  = MSSQLQueryError !ODBC.Query !ODBC.ODBCException
+  | MSSQLConnError !ODBC.ODBCException
+  | MSSQLInternal !Text
+  deriving (Eq, Show)
+
+-- | The transaction command to run, returning an MSSQLTxError or the result.
 type TxT m a = TxET MSSQLTxError m a
 
-beginTx :: MonadIO m => TxT m ()
-beginTx =
-  unitQuery "BEGIN TRANSACTION"
-
-commitTx :: MonadIO m => TxT m ()
-commitTx =
-  unitQuery "COMMIT TRANSACTION"
-
-rollbackTx :: MonadIO m => TxT m ()
-rollbackTx =
-  unitQuery "ROLLBACK TRANSACTION"
-
--- | Useful for building transactions which returns no data
+-- | Run a command on the given connection wrapped in a transaction.
 --
+-- See 'runTxE' if you need to map the error type as well.
+runTx ::
+  (MonadIO m, MonadBaseControl IO m) =>
+  TxT m a ->
+  MSSQLPool ->
+  ExceptT MSSQLTxError m a
+runTx = runTxE id
+
+-- | Run a command on the given connection wrapped in a transaction.
+runTxE ::
+  (MonadIO m, MonadBaseControl IO m) =>
+  (MSSQLTxError -> e) ->
+  TxET e m a ->
+  MSSQLPool ->
+  ExceptT e m a
+runTxE ef tx pool = do
+  withMSSQLPool pool (asTransaction ef (`execTx` tx))
+    >>= hoistEither . mapLeft (ef . MSSQLConnError)
+
+-- | Useful for building transactions which return no data.
+--
+-- @
 -- insertId :: TxT m ()
 -- insertId = unitQuery "INSERT INTO some_table VALUES (1, \"hello\")"
+-- @
+--
+-- See 'unitQueryE' if you need to map the error type as well.
 unitQuery :: (MonadIO m) => ODBC.Query -> TxT m ()
 unitQuery = unitQueryE id
 
--- | Similar to @'unitQuery' but with an error modifier
-unitQueryE ::
-  (MonadIO m) =>
-  -- | Error modifier
-  (MSSQLTxError -> e) ->
-  -- | Query to run
-  ODBC.Query ->
-  TxET e m ()
+-- | Useful for building transactions which return no data.
+unitQueryE :: (MonadIO m) => (MSSQLTxError -> e) -> ODBC.Query -> TxET e m ()
 unitQueryE ef = rawQueryE ef emptyResult
   where
     emptyResult :: MSSQLResult -> Either String ()
     emptyResult (MSSQLResult []) = Right ()
     emptyResult (MSSQLResult _) = Left "expecting no data for ()"
 
--- | Useful for building query transactions which returns only one row.
+-- | Useful for building query transactions which return a single one row.
 --
+-- @
 -- returnOne :: TxT m Int
 -- returnOne = singleRowQuery "SELECT 1"
-singleRowQuery :: (MonadIO m, FromRow a) => ODBC.Query -> TxT m a
+-- @
+--
+-- See 'singleRowQueryE' if you need to map the error type as well.
+singleRowQuery :: forall a m. (MonadIO m, FromRow a) => ODBC.Query -> TxT m a
 singleRowQuery = singleRowQueryE id
 
--- | Similar to @'multiRowQuery' but with an error modifier
+-- | Useful for building query transactions which return a single one row.
 singleRowQueryE ::
   forall m a e.
   (MonadIO m, FromRow a) =>
-  -- | Error modifier
   (MSSQLTxError -> e) ->
-  -- | Query to run
   ODBC.Query ->
   TxET e m a
 singleRowQueryE ef = rawQueryE ef singleRowResult
@@ -109,32 +117,56 @@ singleRowQueryE ef = rawQueryE ef singleRowResult
     singleRowResult (MSSQLResult [row]) = ODBC.fromRow row
     singleRowResult (MSSQLResult _) = Left "expecting single row"
 
--- | Useful for building query transactions which returns multiple rows.
+-- | Useful for building query transactions which return multiple rows.
 --
+-- @
 -- selectIds :: TxT m [Int]
 -- selectIds = multiRowQuery "SELECT id FROM author"
-multiRowQuery :: (MonadIO m, FromRow a) => ODBC.Query -> TxT m [a]
+-- @
+--
+-- See 'multiRowQueryE' if you need to map the error type as well.
+multiRowQuery :: forall a m. (MonadIO m, FromRow a) => ODBC.Query -> TxT m [a]
 multiRowQuery = multiRowQueryE id
 
--- | Similar to @'multiRowQuery' but with an error modifier
+-- | Useful for building query transactions which return multiple rows.
 multiRowQueryE ::
   forall m a e.
   (MonadIO m, FromRow a) =>
-  -- | Error modifier
   (MSSQLTxError -> e) ->
-  -- | Query to run
   ODBC.Query ->
   TxET e m [a]
 multiRowQueryE ef = rawQueryE ef multiRowResult
   where
     multiRowResult :: MSSQLResult -> Either String [a]
-    multiRowResult (MSSQLResult rows) = mapM ODBC.fromRow rows
+    multiRowResult (MSSQLResult rows) = traverse ODBC.fromRow rows
 
--- | Build a raw query transaction which on successful execution returns @'MSSQLResult'
-rawQuery :: (MonadIO m) => ODBC.Query -> TxT m MSSQLResult
-rawQuery = rawQueryE id pure
+-- | Build a generic transaction out of an IO action.
+buildGenericQueryTxE ::
+  (MonadIO m) =>
+  -- | map 'MSSQLTxError' to some other type
+  (MSSQLTxError -> e) ->
+  -- | query to run
+  query ->
+  -- | how to map a query to a 'ODBC.Query'
+  (query -> ODBC.Query) ->
+  -- | run the query on a provided 'ODBC.Connection'
+  (ODBC.Connection -> query -> IO a) ->
+  TxET e m a
+buildGenericQueryTxE errorF query convertQ runQuery =
+  TxET $ ReaderT $ withExceptT errorF . execQuery query convertQ . runQuery
 
--- | Similar to @'rawQuery' but with error modifier and @'MSSQLResult' modifier
+-- | Map the error type for a 'TxET'.
+withTxET :: Monad m => (e1 -> e2) -> TxET e1 m a -> TxET e2 m a
+withTxET f (TxET m) = TxET $ hoist (withExceptT f) m
+
+-- | A successful result from a query is a list of rows where each row contains
+-- list of column values
+newtype MSSQLResult = MSSQLResult [[ODBC.Value]]
+  deriving (Eq, Show)
+
+-- | Packs a query, along with result and error converters into a 'TxET'.
+--
+-- Used by 'unitQueryE', 'singleRowQueryE', and 'multiRowQueryE'.
 rawQueryE ::
   (MonadIO m) =>
   -- | Error modifier
@@ -144,72 +176,103 @@ rawQueryE ::
   -- | Query to run
   ODBC.Query ->
   TxET e m a
-rawQueryE ef rf q = TxET $
-  ReaderT $ \conn ->
-    hoist liftIO $
-      withExceptT ef $
-        execQuery conn q
-          >>= liftEither . mapLeft (MSSQLTxError q . ODBC.DataRetrievalError) . rf
+rawQueryE ef rf q = do
+  rows <- buildGenericQueryTxE ef q id ODBC.query
+  liftEither $
+    mapLeft (ef . MSSQLQueryError q . ODBC.DataRetrievalError) $
+      rf (MSSQLResult rows)
 
--- | Build a generic transaction out of an IO action
-buildGenericTxE ::
-  (MonadIO m) =>
-  -- | Exception modifier
-  (ODBC.ODBCException -> e) ->
-  -- | IO action
-  (ODBC.Connection -> IO a) ->
-  TxET e m a
-buildGenericTxE ef f = TxET $
-  ReaderT $ \conn -> do
-    result <- liftIO $ try $ f conn
-    withExceptT ef $ hoistEither result
-
+-- | Combinator for abstracting over the query type and ensuring we catch exceptions.
+--
+-- Used by 'buildGenericQueryTxE'.
 execQuery ::
+  forall m a query.
   (MonadIO m) =>
-  ODBC.Connection ->
-  ODBC.Query ->
-  ExceptT MSSQLTxError m MSSQLResult
-execQuery conn query = do
-  result :: Either ODBC.ODBCException [[ODBC.Value]] <- liftIO $ try $ ODBC.query conn query
-  withExceptT (MSSQLTxError query) $ hoistEither $ MSSQLResult <$> result
-
--- | Run a command on the given connection wrapped in a transaction.
-runTx ::
-  MonadIO m =>
-  TxT m a ->
-  ODBC.Connection ->
+  query ->
+  (query -> ODBC.Query) ->
+  (query -> IO a) ->
   ExceptT MSSQLTxError m a
-runTx = runTxE id
+execQuery query toODBCQuery runQuery = do
+  result :: Either ODBC.ODBCException a <- liftIO $ try $ runQuery query
+  withExceptT (MSSQLQueryError $ toODBCQuery query) $ hoistEither result
 
--- | Run a command on the given connection wrapped in a transaction.
-runTxE ::
-  MonadIO m =>
-  (MSSQLTxError -> e) ->
-  TxET e m a ->
-  ODBC.Connection ->
-  ExceptT e m a
-runTxE ef tx =
-  asTransaction ef (`execTx` tx)
-
-{-# INLINE execTx #-}
+-- | Run a 'TxET' with the given connection.
+--
+-- Used by 'runTxE' and 'asTransaction'.
 execTx :: ODBC.Connection -> TxET e m a -> ExceptT e m a
 execTx conn tx = runReaderT (txHandler tx) conn
+{-# INLINE execTx #-}
 
+-- | The transaction state of the current connection
+data TransactionState
+  = -- | Has an active transaction.
+    TSActive
+  | -- | Has no active transaction.
+    TSNoActive
+  | -- | An error occurred that caused the transaction to be uncommittable.
+    -- We cannot commit or rollback to a savepoint; we can only do a full
+    -- rollback of the transaction.
+    TSUncommittable
+
+-- | Wraps an action in a transaction. Rolls back on errors.
 asTransaction ::
+  forall e a m.
   MonadIO m =>
   (MSSQLTxError -> e) ->
   (ODBC.Connection -> ExceptT e m a) ->
   ODBC.Connection ->
   ExceptT e m a
-asTransaction ef f conn = do
-  -- Begin the transaction. If there is an err, do not rollback
+asTransaction ef action conn = do
+  -- Begin the transaction. If there is an error, do not rollback.
   withExceptT ef $ execTx conn beginTx
-  -- Run the transaction and commit. If there is an err, rollback
-  flip catchError rollback $ do
-    result <- f conn
+  -- Run the transaction and commit. If there is an error, rollback.
+  flip catchError rollbackAndThrow do
+    result <- action conn
     withExceptT ef $ execTx conn commitTx
     pure result
   where
-    rollback err = do
+    -- Rollback and throw error.
+    rollbackAndThrow :: e -> ExceptT e m b
+    rollbackAndThrow err = do
       withExceptT ef $ execTx conn rollbackTx
       throwError err
+
+beginTx :: MonadIO m => TxT m ()
+beginTx = unitQuery "BEGIN TRANSACTION"
+
+commitTx :: MonadIO m => TxT m ()
+commitTx =
+  getTransactionState >>= \case
+    TSActive ->
+      unitQuery "COMMIT TRANSACTION"
+    TSUncommittable ->
+      throwError $ MSSQLInternal "Transaction is uncommittable"
+    TSNoActive ->
+      throwError $ MSSQLInternal "No active transaction exist; cannot commit"
+
+rollbackTx :: MonadIO m => TxT m ()
+rollbackTx =
+  let rollback = unitQuery "ROLLBACK TRANSACTION"
+   in getTransactionState >>= \case
+        TSActive -> rollback
+        TSUncommittable -> rollback
+        TSNoActive ->
+          -- Some query exceptions result in an auto-rollback of the transaction.
+          -- For eg. Creating a table with already existing table name (See https://github.com/hasura/graphql-engine-mono/issues/3046)
+          -- In such cases, we shouldn't rollback the transaction again.
+          pure ()
+
+-- | Get the @'TransactionState' of current connection
+-- For more details, refer to https://docs.microsoft.com/en-us/sql/t-sql/functions/xact-state-transact-sql?view=sql-server-ver15
+getTransactionState :: (MonadIO m) => TxT m TransactionState
+getTransactionState =
+  let query = "SELECT XACT_STATE()"
+   in singleRowQuery @Int query
+        >>= \case
+          1 -> pure TSActive
+          0 -> pure TSNoActive
+          -1 -> pure TSUncommittable
+          _ ->
+            throwError $
+              MSSQLQueryError query $
+                ODBC.DataRetrievalError "Unexpected value for XACT_STATE"

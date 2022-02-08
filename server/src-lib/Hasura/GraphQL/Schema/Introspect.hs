@@ -150,19 +150,19 @@ typeIntrospection ::
   FieldParser n (Schema -> J.Value)
 {-# INLINE typeIntrospection #-}
 typeIntrospection = do
-  let nameArg :: P.InputFieldsParser n G.Name
-      nameArg = G.unsafeMkName <$> P.field $$(G.litName "name") Nothing P.string
-  ~(name, printer) <- P.subselection $$(G.litName "__type") Nothing nameArg typeField
+  let nameArg :: P.InputFieldsParser n Text
+      nameArg = P.field $$(G.litName "name") Nothing P.string
+  ~(nameText, printer) <- P.subselection $$(G.litName "__type") Nothing nameArg typeField
   -- We pass around the GraphQL schema information under the name `fakeSchema`,
   -- because the GraphQL spec forces us to expose a hybrid between the
   -- specification of valid queries (including introspection) and an
   -- introspection-free GraphQL schema.  The introspection fields __type and
   -- __schema are not exposed as part of query_root, but the types of those
   -- fields must be.  Hasura.GraphQL.Schema is responsible for organising this.
-  return $ \fakeSchema -> case Map.lookup name (sTypes fakeSchema) of
-    Nothing -> J.Null
-    Just (P.Definition n d (P.SomeTypeInfo i)) ->
-      printer (SomeType (P.TNamed P.Nullable (P.Definition n d i)))
+  pure $ \fakeSchema -> fromMaybe J.Null $ do
+    name <- G.mkName nameText
+    P.Definition n d (P.SomeTypeInfo i) <- Map.lookup name $ sTypes fakeSchema
+    Just $ printer $ SomeType $ P.TNamed P.Nullable $ P.Definition n d i
 
 -- | Generate a __schema introspection parser.
 schema ::

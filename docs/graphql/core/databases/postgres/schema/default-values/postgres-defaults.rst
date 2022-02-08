@@ -2,7 +2,7 @@
    :description: Set default field values for Postgres using Postgres defaults in Hasura
    :keywords: hasura, docs, postgres, schema, default value, Postgres default
 
-.. _postgres_defaults:
+.. _pg_postgres_defaults:
 
 Postgres: Setting default values for fields using Postgres defaults
 ===================================================================
@@ -42,6 +42,7 @@ Edit the ``created_at`` field and set its default value as the SQL function ``no
 
     .. thumbnail:: /img/graphql/core/schema/add-default-value.png
       :alt: Modify the table in the console
+      :width: 1000px
 
   .. tab:: CLI
 
@@ -65,17 +66,18 @@ Edit the ``created_at`` field and set its default value as the SQL function ``no
 
   .. tab:: API
 
-    You can add a default value by using the :ref:`run_sql metadata API <run_sql>`:
+    You can add a default value by using the :ref:`schema_run_sql` schema API:
 
     .. code-block:: http
 
-      POST /v1/query HTTP/1.1
+      POST /v2/query HTTP/1.1
       Content-Type: application/json
       X-Hasura-Role: admin
 
       {
         "type": "run_sql",
         "args": {
+          "source": "<db_name>",
           "sql": "ALTER TABLE article ALTER COLUMN created_at SET DEFAULT now();"
         }
       }
@@ -138,5 +140,5 @@ value will be set automatically by Postgres.
 Also see
 --------
 
-- :ref:`sql_functions_as_default`
-- :ref:`column_presets`
+- :ref:`pg_sql_functions_as_default`
+- :ref:`pg_column_presets`

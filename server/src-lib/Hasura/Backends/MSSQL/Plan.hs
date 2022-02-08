@@ -1,4 +1,7 @@
--- | Planning T-SQL queries and subscriptions.
+-- | MSSQL Plan
+--
+-- Planning T-SQL queries and subscription by translating IR to MSSQL-specific
+-- SQL query types.
 module Hasura.Backends.MSSQL.Plan
   ( PrepareState (..),
     planQuery,
@@ -73,12 +76,13 @@ prepareValueQuery sessionVariables =
           `onNothing` throw400 NotFound ("missing session variable: " <>> sessionVariable)
       -- See https://github.com/fpco/odbc/pull/34#issuecomment-812223147
       -- We first cast to nvarchar(max) because casting from ntext is not supported
-      CastExpression (CastExpression (ValueExpression $ ODBC.TextValue value) "nvarchar(max)")
+      CastExpression (CastExpression (ValueExpression $ ODBC.TextValue value) WvarcharType DataLengthMax)
         <$> case typ of
           CollectableTypeScalar baseTy ->
-            pure (scalarTypeDBName baseTy)
+            pure baseTy
           CollectableTypeArray {} ->
             throw400 NotSupported "Array types are currently not supported in MS SQL Server"
+        <*> pure DataLengthUnspecified
 
 planSubscription ::
   MonadError QErr m =>

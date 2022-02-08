@@ -195,6 +195,8 @@ data PartialSQLExp (b :: BackendType)
 
 deriving instance (Backend b) => Eq (PartialSQLExp b)
 
+deriving instance (Backend b) => Show (PartialSQLExp b)
+
 instance (Backend b, NFData (BooleanOperators b (PartialSQLExp b))) => NFData (PartialSQLExp b)
 
 instance (Backend b, Hashable (BooleanOperators b (PartialSQLExp b))) => Hashable (PartialSQLExp b)
@@ -427,7 +429,7 @@ instance (Backend b, Hashable (BooleanOperators b a), Hashable a) => Hashable (A
 instance (Backend b, ToJSONKeyValue (BooleanOperators b a), ToJSON a) => ToJSONKeyValue (AnnBoolExpFld b a) where
   toJSONKeyValue = \case
     AVColumn pci opExps ->
-      ( toTxt $ pgiColumn pci,
+      ( toTxt $ ciColumn pci,
         toJSON (pci, object . pure . toJSONKeyValue <$> opExps)
       )
     AVRelationship ri relBoolExp ->

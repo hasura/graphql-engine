@@ -37,15 +37,13 @@ Let's say we want to analyse the following query:
 In order to analyse the performance of a query, you can click on the ``Analyze`` button on the Hasura console:
 
 .. thumbnail:: /img/graphql/core/queries/analyze-query.png
-   :class: no-shadow
-   :width: 75%
+   :width: 800px
    :alt: Query analyze button on Hasura console
 
 The following query execution plan is generated:
 
 .. thumbnail:: /img/graphql/core/queries/query-analysis-before-index.png
-   :class: no-shadow
-   :width: 75%
+   :width: 800px
    :alt: Execution plan for Hasura GraphQL query
 
 We can see that a sequential scan is conducted on the ``authors`` table. This means that MS SQL Server goes through every row of the ``authors`` table in order to check if the author's name equals "Mario".
@@ -125,8 +123,7 @@ What was a ``sequential scan`` in the example earlier is now an ``index scan``. 
 We can also see that the ``cost`` of the query is now lower than the one before we added the index.
 
 .. thumbnail:: /img/graphql/core/queries/query-analysis-after-index.png
-   :class: no-shadow
-   :width: 75%
+   :width: 800px
    :alt: Execution plan for Hasura GraphQL query
 
 .. note::

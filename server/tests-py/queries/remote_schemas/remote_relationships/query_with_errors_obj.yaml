@@ -49,7 +49,7 @@ response:
 query:
   query: |
     query {
-      profiles {
+      custom_profiles {
         id
         messageBasic {
           msg

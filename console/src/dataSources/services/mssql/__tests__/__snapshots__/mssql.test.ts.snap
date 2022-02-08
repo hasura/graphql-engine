@@ -12,6 +12,20 @@ exports[`mssql datasource tests getAddUniqueConstraintSql should generate SQL qu
     UNIQUE (column1)"
 `;
 
+exports[`mssql datasource tests getAlterColumnCommentSql should generate SQL for modifying column comment 1`] = `
+"IF EXISTS (SELECT NULL FROM SYS.EXTENDED_PROPERTIES WHERE [major_id] = OBJECT_ID('users') AND [name] = N'column_comment_public_users_id' AND [minor_id] = (SELECT [column_id] FROM SYS.COLUMNS WHERE [name] = 'id' AND [object_id] = OBJECT_ID('users')))    
+        EXECUTE sp_dropextendedproperty   
+        @name = N'column_comment_public_users_id',   
+        @level0type = N'SCHEMA', @level0name = 'public'
+    ,@level1type = N'TABLE',  @level1name = 'users',@level2type = N'COLUMN', @level2name = 'id';
+    
+        exec sys.sp_addextendedproperty   
+        @name = N'column_comment_public_users_id',   
+        @value = N'user''s comment',   
+        @level0type = N'SCHEMA', @level0name = 'public'
+    ,@level1type = N'TABLE',  @level1name = 'users',@level2type = N'COLUMN', @level2name = 'id'"
+`;
+
 exports[`mssql datasource tests getAlterColumnTypeSql should generate SQL query for renaming a column with nullable as false 1`] = `"ALTER TABLE \\"schemaName\\".\\"tableName\\" ALTER COLUMN \\"columnName\\" columnType NOT NULL"`;
 
 exports[`mssql datasource tests getAlterFKSql should generate SQL query for altering foreign keys with multiple columns 1`] = `

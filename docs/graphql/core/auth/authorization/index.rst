@@ -24,7 +24,7 @@ session variables. Other session variables can be passed by your auth service as
 **For example:**
 
 .. thumbnail:: /img/graphql/core/auth/hasura-perms.png
-   :width: 80 %
+   :width: 800px
    :alt: Create a permission rule
 
 .. note::

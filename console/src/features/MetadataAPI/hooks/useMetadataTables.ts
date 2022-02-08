@@ -1,10 +1,29 @@
-import { useAppSelector } from '@/store';
+import { QualifiedTable } from '@/metadata/types';
 import { MetadataSelector } from './metadataSelectors';
 import { useMetadata } from './useMetadata';
 
-export const useMetadataTables = () => {
-  const source: string = useAppSelector(
-    state => state.tables.currentDataSource
+export const useMetadataTables = (dataSource: string) => {
+  return useMetadata(MetadataSelector.getTables(dataSource));
+};
+
+export const useTables = (database: string) => {
+  return useMetadata(MetadataSelector.getTables(database));
+};
+
+export const useRemoteDatabaseRelationships = (
+  database: string,
+  table: QualifiedTable
+) => {
+  return useMetadata(
+    MetadataSelector.getRemoteDatabaseRelationships(database, table)
   );
-  return useMetadata(MetadataSelector.getTables(source));
+};
+
+export const useRemoteSchemaRelationships = (
+  database: string,
+  table: QualifiedTable
+) => {
+  return useMetadata(
+    MetadataSelector.getRemoteSchemaRelationships(database, table)
+  );
 };

@@ -78,7 +78,12 @@ type MonadBuildSchema b r m n =
 -- tandem.
 --
 -- See <#modelling Note BackendSchema modelling principles>.
-class Backend b => BackendSchema (b :: BackendType) where
+class
+  ( Backend b,
+    Eq (BooleanOperators b (UnpreparedValue b))
+  ) =>
+  BackendSchema (b :: BackendType)
+  where
   -- top level parsers
   buildTableQueryFields ::
     MonadBuildSchema b r m n =>
@@ -211,7 +216,12 @@ class Backend b => BackendSchema (b :: BackendType) where
     ColumnType b ->
     m (Parser 'Input n [ComparisonExp b])
 
-  mkCountType :: Maybe Bool -> Maybe [Column b] -> CountType b
+  -- | The input fields parser, for "count" aggregate field, yielding a function
+  -- which generates @'CountType b' from optional "distinct" field value
+  countTypeInput ::
+    MonadParse n =>
+    Maybe (Parser 'Both n (Column b)) ->
+    InputFieldsParser n (CountDistinct -> CountType b)
 
   aggregateOrderByCountType :: ScalarType b
 

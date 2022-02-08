@@ -1,4 +1,3 @@
-test-server-flags
 haskell-tests
 no-auth
 admin-secret

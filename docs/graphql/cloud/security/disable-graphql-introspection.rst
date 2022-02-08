@@ -15,7 +15,8 @@ Disable GraphQL introspection
 Introduction
 ------------
 
-The graphql-engine by default enables `GraphQL Schema Introspection <http://spec.graphql.org/June2018/#sec-Schema-Introspection>`__ which gives full information about the schema and may not be desired in production.
+The GraphQL engine by default enables `GraphQL Schema Introspection <http://spec.graphql.org/June2018/#sec-Schema-Introspection>`__
+which gives full information about the schema and may not be desired in production.
 
 To avoid this, you can disable GraphQL introspection on a per-role basis.
 

@@ -1,8 +1,11 @@
 {-# LANGUAGE ApplicativeDo #-}
 
--- | This module contains the building blocks for parsing @if_matched@ clauses
--- (represented as 'IfMatched'),
--- which in the MSSQL backend are used to implement upsert functionality.
+-- | MSSQL Schema IfMatched
+--
+-- This module contains the building blocks for parsing @if_matched@ clauses
+-- (represented as 'IfMatched'), which in the MSSQL backend are used to
+-- implement upsert functionality.
+--
 -- These are used by 'Hasura.Backends.MSSQL.Instances.Schema.backendInsertParser' to
 -- construct a mssql-specific schema parser for insert (and upsert) mutations.
 module Hasura.Backends.MSSQL.Schema.IfMatched
@@ -69,7 +72,7 @@ ifMatchedObjectParser sourceName tableInfo maybeSelectPerms maybeUpdatePerms = r
   selectPerms <- hoistMaybe maybeSelectPerms
   updatePerms <- hoistMaybe maybeUpdatePerms
   matchColumnsEnum <- MaybeT $ tableInsertMatchColumnsEnum sourceName tableInfo selectPerms
-  updateColumnsEnum <- MaybeT $ tableUpdateColumnsEnum tableInfo updatePerms
+  updateColumnsEnum <- lift $ updateColumnsPlaceholderParser tableInfo updatePerms
 
   -- The style of the above code gives me some cognitive dissonance: We could
   -- push the @hoistMaybe@ checks further away to callers, but not the enum
@@ -95,7 +98,10 @@ ifMatchedObjectParser sourceName tableInfo maybeSelectPerms maybeUpdatePerms = r
       _imMatchColumns <-
         P.fieldWithDefault matchColumnsName Nothing (G.VList []) (P.list matchColumnsEnum)
       _imUpdateColumns <-
-        P.fieldWithDefault updateColumnsName Nothing (G.VList []) (P.list updateColumnsEnum)
+        P.fieldWithDefault updateColumnsName Nothing (G.VList []) (P.list updateColumnsEnum) `P.bindFields` \cs ->
+          -- this can only happen if the placeholder was used
+          sequenceA cs `onNothing` parseError "erroneous column name"
+
       pure $ IfMatched {..}
 
 -- | Table insert_match_columns enum
@@ -124,8 +130,8 @@ tableInsertMatchColumnsEnum sourceName tableInfo selectPermissions = do
   pure $
     P.enum enumName description
       <$> nonEmpty
-        [ ( define $ pgiName column,
-            pgiColumn column
+        [ ( define $ ciName column,
+            ciColumn column
           )
           | column <- columns,
             isMatchColumnValid column
@@ -138,5 +144,5 @@ tableInsertMatchColumnsEnum sourceName tableInfo selectPermissions = do
 isMatchColumnValid :: ColumnInfo 'MSSQL -> Bool
 isMatchColumnValid = \case
   -- Unfortunately MSSQL does not support comparison for TEXT types.
-  ColumnInfo {pgiType = ColumnScalar TextType} -> False
+  ColumnInfo {ciType = ColumnScalar TextType} -> False
   _ -> True

@@ -1,3 +1,9 @@
+-- | Postgres Execute Mutation
+--
+-- Generic combinators for translating and excecuting IR mutation statements.
+-- Used by the specific mutation modules, e.g. 'Hasura.Backends.Postgres.Execute.Insert'.
+--
+-- See 'Hasura.Backends.Postgres.Instances.Execute'.
 module Hasura.Backends.Postgres.Execute.Mutation
   ( MutationRemoteJoinCtx,
     MutateResp (..),
@@ -248,7 +254,7 @@ mutateAndFetchCols qt cols (cte, p) strfyNum = do
     tabFrom = FromIdentifier $ FIIdentifier rawAliasIdentifier
     tabPerm = TablePerm annBoolExpTrue Nothing
     selFlds = flip map cols $
-      \ci -> (fromCol @('Postgres pgKind) $ pgiColumn ci, mkAnnColumnFieldAsText ci)
+      \ci -> (fromCol @('Postgres pgKind) $ ciColumn ci, mkAnnColumnFieldAsText ci)
 
     sqlText = Q.fromBuilder $ toSQL selectWith
     selectWith = S.SelectWith [(S.Alias aliasIdentifier, getMutationCTE cte)] select

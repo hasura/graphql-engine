@@ -114,44 +114,72 @@ $( J.deriveJSON
 
 instance Hashable API
 
+{- Note: [Experimental features]
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The graphql-engine accepts a list of experimental features that can be
+enabled at the startup. Experimental features are a way to introduce
+new, but not stable features to our users in a manner in which they have
+the choice to enable or disable a certain feature(s).
+
+The objective of an experimental feature should be that when the feature is disabled,
+the graphql-engine should work the same way as it worked before adding the said feature.
+
+The experimental feature's flag is `--experimental-features` and the corresponding
+environment variable is `HASURA_GRAPHQL_EXPERIMENTAL_FEATURES` which expects a comma-seperated
+value.
+
+When an experimental feature is stable enough i.e. it's stable through multiple non-beta releases
+then we make the feature not experimental i.e. it will always be enabled. Note that when we do this
+we still have to support parsing of the experimental feature because users of the previous version
+will have it enabled and when they upgrade an error should not be thrown at the startup. For example:
+
+The inherited roles was an experimental feature when introduced and it was enabled by
+setting `--experimental-features` to `inherited_roles` and then it was decided to make the inherited roles
+a stable feature, so it was removed as an experimental feature but the code was modified such that
+`--experimental-features inherited_roles` to not throw an error.
+
+-}
+
 data RawServeOptions impl = RawServeOptions
-  { rsoPort :: !(Maybe Int),
-    rsoHost :: !(Maybe HostPreference),
-    rsoConnParams :: !RawConnParams,
-    rsoTxIso :: !(Maybe Q.TxIsolation),
-    rsoAdminSecret :: !(Maybe AdminSecretHash),
-    rsoAuthHook :: !RawAuthHook,
-    rsoJwtSecret :: !(Maybe JWTConfig),
-    rsoUnAuthRole :: !(Maybe RoleName),
-    rsoCorsConfig :: !(Maybe CorsConfig),
-    rsoEnableConsole :: !Bool,
-    rsoConsoleAssetsDir :: !(Maybe Text),
-    rsoEnableTelemetry :: !(Maybe Bool),
-    rsoWsReadCookie :: !Bool,
-    rsoStringifyNum :: !Bool,
-    rsoDangerousBooleanCollapse :: !(Maybe Bool),
-    rsoEnabledAPIs :: !(Maybe [API]),
-    rsoMxRefetchInt :: !(Maybe LQ.RefetchInterval),
-    rsoMxBatchSize :: !(Maybe LQ.BatchSize),
-    rsoEnableAllowlist :: !Bool,
-    rsoEnabledLogTypes :: !(Maybe [L.EngineLogType impl]),
-    rsoLogLevel :: !(Maybe L.LogLevel),
-    rsoDevMode :: !Bool,
-    rsoAdminInternalErrors :: !(Maybe Bool),
-    rsoEventsHttpPoolSize :: !(Maybe Int),
-    rsoEventsFetchInterval :: !(Maybe Milliseconds),
-    rsoAsyncActionsFetchInterval :: !(Maybe Milliseconds),
-    rsoLogHeadersFromEnv :: !Bool,
-    rsoEnableRemoteSchemaPermissions :: !Bool,
-    rsoWebSocketCompression :: !Bool,
-    rsoWebSocketKeepAlive :: !(Maybe Int),
-    rsoInferFunctionPermissions :: !(Maybe Bool),
-    rsoEnableMaintenanceMode :: !Bool,
-    rsoSchemaPollInterval :: !(Maybe Milliseconds),
-    rsoExperimentalFeatures :: !(Maybe [ExperimentalFeature]),
-    rsoEventsFetchBatchSize :: !(Maybe NonNegativeInt),
-    rsoGracefulShutdownTimeout :: !(Maybe Seconds),
-    rsoWebSocketConnectionInitTimeout :: !(Maybe Int)
+  { rsoPort :: Maybe Int,
+    rsoHost :: Maybe HostPreference,
+    rsoConnParams :: RawConnParams,
+    rsoTxIso :: Maybe Q.TxIsolation,
+    rsoAdminSecret :: Maybe AdminSecretHash,
+    rsoAuthHook :: RawAuthHook,
+    rsoJwtSecret :: Maybe JWTConfig,
+    rsoUnAuthRole :: Maybe RoleName,
+    rsoCorsConfig :: Maybe CorsConfig,
+    rsoEnableConsole :: Bool,
+    rsoConsoleAssetsDir :: Maybe Text,
+    rsoEnableTelemetry :: Maybe Bool,
+    rsoWsReadCookie :: Bool,
+    rsoStringifyNum :: Bool,
+    rsoDangerousBooleanCollapse :: Maybe Bool,
+    rsoEnabledAPIs :: Maybe [API],
+    rsoMxRefetchInt :: Maybe LQ.RefetchInterval,
+    rsoMxBatchSize :: Maybe LQ.BatchSize,
+    rsoEnableAllowlist :: Bool,
+    rsoEnabledLogTypes :: Maybe [L.EngineLogType impl],
+    rsoLogLevel :: Maybe L.LogLevel,
+    rsoDevMode :: Bool,
+    rsoAdminInternalErrors :: Maybe Bool,
+    rsoEventsHttpPoolSize :: Maybe Int,
+    rsoEventsFetchInterval :: Maybe Milliseconds,
+    rsoAsyncActionsFetchInterval :: Maybe Milliseconds,
+    rsoLogHeadersFromEnv :: Bool,
+    rsoEnableRemoteSchemaPermissions :: Bool,
+    rsoWebSocketCompression :: Bool,
+    rsoWebSocketKeepAlive :: Maybe Int,
+    rsoInferFunctionPermissions :: Maybe Bool,
+    rsoEnableMaintenanceMode :: Bool,
+    rsoSchemaPollInterval :: Maybe Milliseconds,
+    rsoExperimentalFeatures :: Maybe [ExperimentalFeature],
+    rsoEventsFetchBatchSize :: Maybe NonNegativeInt,
+    rsoGracefulShutdownTimeout :: Maybe Seconds,
+    rsoWebSocketConnectionInitTimeout :: Maybe Int
+    -- see Note [Experimental features]
   }
 
 -- | @'ResponseInternalErrorsConfig' represents the encoding of the internal
@@ -186,43 +214,43 @@ defaultWSConnectionInitTimeout :: WSConnectionInitTimeout
 defaultWSConnectionInitTimeout = WSConnectionInitTimeout $ fromIntegral (3 :: Int)
 
 data ServeOptions impl = ServeOptions
-  { soPort :: !Int,
-    soHost :: !HostPreference,
-    soConnParams :: !Q.ConnParams,
-    soTxIso :: !Q.TxIsolation,
-    soAdminSecret :: !(Set.HashSet AdminSecretHash),
-    soAuthHook :: !(Maybe AuthHook),
-    soJwtSecret :: !(Maybe JWTConfig),
-    soUnAuthRole :: !(Maybe RoleName),
-    soCorsConfig :: !CorsConfig,
-    soEnableConsole :: !Bool,
-    soConsoleAssetsDir :: !(Maybe Text),
-    soEnableTelemetry :: !Bool,
-    soStringifyNum :: !Bool,
-    soDangerousBooleanCollapse :: !Bool,
-    soEnabledAPIs :: !(Set.HashSet API),
-    soLiveQueryOpts :: !LQ.LiveQueriesOptions,
-    soEnableAllowlist :: !Bool,
-    soEnabledLogTypes :: !(Set.HashSet (L.EngineLogType impl)),
-    soLogLevel :: !L.LogLevel,
-    soResponseInternalErrorsConfig :: !ResponseInternalErrorsConfig,
-    soEventsHttpPoolSize :: !(Maybe Int),
-    soEventsFetchInterval :: !(Maybe Milliseconds),
-    soAsyncActionsFetchInterval :: !OptionalInterval,
-    soLogHeadersFromEnv :: !Bool,
-    soEnableRemoteSchemaPermissions :: !RemoteSchemaPermsCtx,
-    soConnectionOptions :: !WS.ConnectionOptions,
-    soWebsocketKeepAlive :: !KeepAliveDelay,
-    soInferFunctionPermissions :: !FunctionPermissionsCtx,
-    soEnableMaintenanceMode :: !MaintenanceMode,
-    soSchemaPollInterval :: !OptionalInterval,
-    soExperimentalFeatures :: !(Set.HashSet ExperimentalFeature),
-    soEventsFetchBatchSize :: !NonNegativeInt,
-    soDevMode :: !Bool,
-    soGracefulShutdownTimeout :: !Seconds,
-    soWebsocketConnectionInitTimeout :: !WSConnectionInitTimeout,
-    soEventingMode :: !EventingMode,
-    soReadOnlyMode :: !ReadOnlyMode
+  { soPort :: Int,
+    soHost :: HostPreference,
+    soConnParams :: Q.ConnParams,
+    soTxIso :: Q.TxIsolation,
+    soAdminSecret :: Set.HashSet AdminSecretHash,
+    soAuthHook :: Maybe AuthHook,
+    soJwtSecret :: Maybe JWTConfig,
+    soUnAuthRole :: Maybe RoleName,
+    soCorsConfig :: CorsConfig,
+    soEnableConsole :: Bool,
+    soConsoleAssetsDir :: Maybe Text,
+    soEnableTelemetry :: Bool,
+    soStringifyNum :: Bool,
+    soDangerousBooleanCollapse :: Bool,
+    soEnabledAPIs :: Set.HashSet API,
+    soLiveQueryOpts :: LQ.LiveQueriesOptions,
+    soEnableAllowlist :: Bool,
+    soEnabledLogTypes :: Set.HashSet (L.EngineLogType impl),
+    soLogLevel :: L.LogLevel,
+    soResponseInternalErrorsConfig :: ResponseInternalErrorsConfig,
+    soEventsHttpPoolSize :: Maybe Int,
+    soEventsFetchInterval :: Maybe Milliseconds,
+    soAsyncActionsFetchInterval :: OptionalInterval,
+    soLogHeadersFromEnv :: Bool,
+    soEnableRemoteSchemaPermissions :: RemoteSchemaPermsCtx,
+    soConnectionOptions :: WS.ConnectionOptions,
+    soWebsocketKeepAlive :: KeepAliveDelay,
+    soInferFunctionPermissions :: FunctionPermissionsCtx,
+    soEnableMaintenanceMode :: MaintenanceMode,
+    soSchemaPollInterval :: OptionalInterval,
+    soExperimentalFeatures :: Set.HashSet ExperimentalFeature,
+    soEventsFetchBatchSize :: NonNegativeInt,
+    soDevMode :: Bool,
+    soGracefulShutdownTimeout :: Seconds,
+    soWebsocketConnectionInitTimeout :: WSConnectionInitTimeout,
+    soEventingMode :: EventingMode,
+    soReadOnlyMode :: ReadOnlyMode
   }
 
 data DowngradeOptions = DowngradeOptions

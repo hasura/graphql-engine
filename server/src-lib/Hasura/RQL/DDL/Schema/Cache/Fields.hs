@@ -82,7 +82,7 @@ addNonColumnFields =
     -- 1. all columns
     -- 2. computed fields which don't expect arguments other than the table row and user session
     let lhsJoinFields =
-          let columnFields = columns <&> \columnInfo -> JoinColumn (pgiColumn columnInfo) (pgiType columnInfo)
+          let columnFields = columns <&> \columnInfo -> JoinColumn (ciColumn columnInfo) (ciType columnInfo)
               computedFields = M.fromList $
                 flip mapMaybe (M.toList computedFieldInfos) $
                   \(cfName, (ComputedFieldInfo {..}, _)) -> do
@@ -146,7 +146,7 @@ addNonColumnFields =
         returnA -< Nothing
 
     noCustomFieldConflicts = proc (columns, nonColumnFields) -> do
-      let columnsByGQLName = mapFromL pgiName $ M.elems columns
+      let columnsByGQLName = mapFromL ciName $ M.elems columns
       (|
         Inc.keyed
           ( \_ (fieldInfo, metadata) ->
@@ -160,12 +160,12 @@ addNonColumnFields =
                               -- If they are the same, `noColumnConflicts` will catch it, and it will produce a
                               -- more useful error message.
                               Just columnInfo
-                                | toTxt (pgiColumn columnInfo) /= G.unName fieldGQLName ->
+                                | toTxt (ciColumn columnInfo) /= G.unName fieldGQLName ->
                                   throwA
                                     -<
                                       err400 AlreadyExists $
                                         "field definition conflicts with custom field name for postgres column "
-                                          <>> pgiColumn columnInfo
+                                          <>> ciColumn columnInfo
                               _ -> returnA -< ()
                           )
                         |) (fieldInfoGraphQLNames fieldInfo)

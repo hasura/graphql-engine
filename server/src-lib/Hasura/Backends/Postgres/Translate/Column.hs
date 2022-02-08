@@ -1,3 +1,6 @@
+-- | Postgres Translate Column
+--
+-- Translate column values to Postgres-specific SQL expressions.
 module Hasura.Backends.Postgres.Translate.Column
   ( toTxtValue,
     toJSONableExp,

@@ -1241,14 +1241,13 @@ const deleteColumnSql = (column, tableSchema) => {
       migration.UNSAFE_add(
         null,
         getRunSqlQuery(
-          dataSource.getSetCommentSql(
-            'column',
+          dataSource.getAlterColumnCommentSql({
             tableName,
-            currentSchema,
+            schemaName: currentSchema,
             comment,
-            name,
-            col_type
-          ),
+            columnName: name,
+            columnType: col_type,
+          }),
           source
         )
       );
@@ -1420,7 +1419,7 @@ const deleteConstraintSql = (tableName, cName) => {
   };
 };
 
-const saveTableCommentSql = tableType => {
+const saveTableCommentSql = () => {
   return (dispatch, getState) => {
     const source = getState().tables.currentDataSource;
     const updatedComment = getState().tables.modify.tableCommentEdit
@@ -1429,19 +1428,17 @@ const saveTableCommentSql = tableType => {
     const currentSchema = getState().tables.currentSchema;
     const tableName = getState().tables.currentTable;
 
-    const commentQueryUp = dataSource.getSetCommentSql(
-      tableType,
+    const commentQueryUp = dataSource.getAlterTableCommentSql({
       tableName,
-      currentSchema,
-      updatedComment || null
-    );
+      schemaName: currentSchema,
+      comment: updatedComment ?? null,
+    });
+    const commentDownQuery = dataSource.getAlterTableCommentSql({
+      tableName,
+      schemaName: currentSchema,
+      comment: null,
+    });
 
-    const commentDownQuery = dataSource.getSetCommentSql(
-      tableType,
-      tableName,
-      currentSchema,
-      'NULL'
-    );
     const migration = new Migration();
     migration.add(
       getRunSqlQuery(commentQueryUp, source),

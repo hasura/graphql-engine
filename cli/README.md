@@ -19,7 +19,7 @@
     
     You can also install a specific version of the CLI by providing the `VERSION` variable:
     ```bash
-    curl -L https://github.com/hasura/graphql-engine/raw/stable/cli/get.sh | VERSION=v2.1.1 bash
+    curl -L https://github.com/hasura/graphql-engine/raw/stable/cli/get.sh | VERSION=v2.2.0 bash
     ```
 
 - Windows
@@ -38,6 +38,7 @@ go get github.com/hasura/graphql-engine/cli/cmd/hasura
 git clone https://github.com/hasura/graphql-engine
 cd graphql-engine/cli
 make deps
+make build-cli-ext copy-cli-ext
 make build
 # binaries will be in _output directory
 ```

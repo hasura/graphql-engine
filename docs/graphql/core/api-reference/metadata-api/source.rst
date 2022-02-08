@@ -22,7 +22,7 @@ Add/remove databases in Hasura GraphQL engine.
   The metadata API is supported for versions ``v2.0.0`` and above and replaces the older
   :ref:`schema/metadata API <schema_metadata_apis>`.
 
-.. _pg_add_source:
+.. _metadata_pg_add_source:
 
 pg_add_source
 -------------
@@ -72,7 +72,7 @@ Add a database with name ``pg1``:
     }
   }
 
-.. _pg_add_source_syntax:
+.. _metadata_pg_add_source_syntax:
 
 Args syntax
 ^^^^^^^^^^^
@@ -102,7 +102,7 @@ Args syntax
      - :ref:`SourceCustomization`
      - Customize root fields and type names for the source
 
-.. _pg_drop_source:
+.. _metadata_pg_drop_source:
 
 pg_drop_source
 --------------
@@ -125,7 +125,7 @@ Remove a database with name ``pg1``:
     }
   }
 
-.. _pg_drop_source_syntax:
+.. _metadata_pg_drop_source_syntax:
 
 Args syntax
 ^^^^^^^^^^^
@@ -146,7 +146,7 @@ Args syntax
      - Boolean
      - When set to ``true``, the effect (if possible) is cascaded to any metadata dependent objects (relationships, permissions etc.) from other sources (default: ``false``)
 
-.. _rename_source:
+.. _metadata_rename_source:
 
 rename_source
 -------------
@@ -171,7 +171,7 @@ Given there already exists a database with name ``pg1``, we can rename it to ``p
 
 Note that all settings are kept, only the name is changed.
 
-.. _rename_source_syntax:
+.. _metadata_rename_source_syntax:
 
 Args syntax
 ^^^^^^^^^^^
@@ -310,7 +310,7 @@ Args syntax
      - When set to ``true``, the effect (if possible) is cascaded to any metadata dependent objects (relationships, permissions etc.) from other sources (default: ``false``)
 
 
-.. _bigquery_add_source:
+.. _metadata_bigquery_add_source:
 
 bigquery_add_source
 -------------------
@@ -348,7 +348,7 @@ Add a database with name ``bigquery1``:
     }
   }
 
-.. _bigquery_add_source_syntax:
+.. _metadata_bigquery_add_source_syntax:
 
 Args syntax
 ^^^^^^^^^^^
@@ -378,7 +378,7 @@ Args syntax
      - :ref:`SourceCustomization`
      - Customize root fields and type names for the source
 
-.. _bigquery_drop_source:
+.. _metadata_bigquery_drop_source:
 
 bigquery_drop_source
 --------------------
@@ -400,7 +400,7 @@ Remove a database with name ``bigquery1``:
     }
   }
 
-.. _bigquery_drop_source_syntax:
+.. _metadata_bigquery_drop_source_syntax:
 
 Args syntax
 ^^^^^^^^^^^

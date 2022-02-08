@@ -2,7 +2,7 @@
    :description: Execute SQL with the Hasura schema/metadata API
    :keywords: hasura, docs, schema/metadata API, API reference, run_sql
 
-.. _api_run_sql:
+.. _schema_metadata_api_run_sql:
 
 Schema/Metadata API Reference: Run SQL (Deprecated)
 ===================================================
@@ -12,7 +12,7 @@ Schema/Metadata API Reference: Run SQL (Deprecated)
   :depth: 2
   :local:
 
-.. _run_sql:
+.. _schema_metadata_run_sql:
 
 run_sql
 -------
@@ -193,7 +193,7 @@ Overloading tracked SQL functions is not allowed.
 
 Set ``check_metadata_consistency`` field to ``false`` to force the server to not consider metadata dependencies.
 
-.. _run_sql_syntax:
+.. _schema_metadata_run_sql_syntax:
 
 Args syntax
 ^^^^^^^^^^^

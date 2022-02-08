@@ -1,8 +1,10 @@
 import pytest
-import ruamel.yaml as yaml
 import time
 import jsondiff
 from context import PytestConf
+from ruamel.yaml import YAML
+
+yaml=YAML(typ='safe', pure=True)
 
 
 if not PytestConf.config.getoption("--test-hge-scale-url"):
@@ -23,7 +25,7 @@ class TestHorizantalScaleBasic():
 
     def test_horizontal_scale_basic(self, hge_ctx):
         with open(self.dir() + "/steps.yaml") as c:
-            conf = yaml.safe_load(c)
+            conf = yaml.load(c)
 
         assert isinstance(conf, list) == True, 'Not a list'
         for _, step in enumerate(conf):

@@ -1,7 +1,9 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
--- | Convert the simple T-SQL AST to an SQL query, ready to be passed
--- to the odbc package's query/exec functions.
+-- | MSSQL ToQuery
+--
+-- Convert the simple T-SQL AST to an SQL query, ready to be passed to the odbc
+-- package's query/exec functions.
 --
 -- We define a custom prettyprinter with the type 'Printer'.
 --
@@ -78,11 +80,17 @@ instance ToJSON Expression where
 fromExpression :: Expression -> Printer
 fromExpression =
   \case
-    CastExpression e t ->
+    CastExpression e t dataLength ->
       "CAST(" <+> fromExpression e
         <+> " AS "
-        <+> fromString (T.unpack t)
+        <+> fromString (T.unpack $ scalarTypeDBName t)
+        <+> fromDataLength
         <+> ")"
+      where
+        fromDataLength = case dataLength of
+          DataLengthUnspecified -> fromString ""
+          DataLengthInt len -> "(" <+> fromString (show len) <+> ")"
+          DataLengthMax -> "(max)"
     JsonQueryExpression e -> "JSON_QUERY(" <+> fromExpression e <+> ")"
     JsonValueExpression e path ->
       "JSON_VALUE(" <+> fromExpression e <+> fromPath path <+> ")"
@@ -110,12 +118,6 @@ fromExpression =
     ColumnExpression fieldName -> fromFieldName fieldName
     ToStringExpression e -> "CONCAT(" <+> fromExpression e <+> ", '')"
     SelectExpression s -> "(" <+> IndentPrinter 1 (fromSelect s) <+> ")"
-    MethodExpression field method args ->
-      fromExpression field <+> "."
-        <+> fromString (T.unpack method)
-        <+> "("
-        <+> SeqPrinter (map fromExpression args)
-        <+> ")"
     OpExpression op x y ->
       "("
         <+> fromExpression x
@@ -124,11 +126,8 @@ fromExpression =
         <+> " ("
         <+> fromExpression y
         <+> ")"
-    FunctionExpression function args ->
-      fromString (T.unpack function)
-        <+> "("
-        <+> SepByPrinter ", " (map fromExpression args)
-        <+> ")"
+    MethodApplicationExpression ex methodAppExp -> fromMethodApplicationExpression ex methodAppExp
+    FunctionApplicationExpression funAppExp -> fromFunctionApplicationExpression funAppExp
     ListExpression xs -> SepByPrinter ", " $ fromExpression <$> xs
     STOpExpression op e str ->
       "(" <+> fromExpression e <+> ")."
@@ -145,6 +144,30 @@ fromExpression =
         <+> fromExpression falseExpression
         <+> " END)"
     DefaultExpression -> "DEFAULT"
+
+fromMethodApplicationExpression :: Expression -> MethodApplicationExpression -> Printer
+fromMethodApplicationExpression ex methodAppExp =
+  case methodAppExp of
+    MethExpSTAsText -> fromApp "STAsText" []
+  where
+    fromApp :: Text -> [Expression] -> Printer
+    fromApp method args =
+      fromExpression ex <+> "."
+        <+> fromString (T.unpack method)
+        <+> "("
+        <+> SeqPrinter (map fromExpression args)
+        <+> ")"
+
+fromFunctionApplicationExpression :: FunctionApplicationExpression -> Printer
+fromFunctionApplicationExpression funAppExp = case funAppExp of
+  (FunExpISNULL x y) -> fromApp "ISNULL" [x, y]
+  where
+    fromApp :: Text -> [Expression] -> Printer
+    fromApp function args =
+      fromString (T.unpack function)
+        <+> "("
+        <+> SepByPrinter ", " (map fromExpression args)
+        <+> ")"
 
 fromOp :: Op -> Printer
 fromOp =
@@ -652,11 +675,8 @@ fromCountable :: Countable FieldName -> Printer
 fromCountable =
   \case
     StarCountable -> "*"
-    NonNullFieldCountable fields ->
-      SepByPrinter ", " (map fromFieldName (toList fields))
-    DistinctCountable fields ->
-      "DISTINCT "
-        <+> SepByPrinter ", " (map fromFieldName (toList fields))
+    NonNullFieldCountable field -> fromFieldName field
+    DistinctCountable field -> "DISTINCT " <+> fromFieldName field
 
 fromWhere :: Where -> Printer
 fromWhere =

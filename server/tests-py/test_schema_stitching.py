@@ -2,7 +2,7 @@
 
 import string
 import random
-import ruamel.yaml as yaml
+from ruamel.yaml import YAML
 import json
 import graphql
 import queue
@@ -10,6 +10,8 @@ import requests
 import time
 
 import pytest
+
+yaml=YAML(typ='safe', pure=True)
 
 from validate import check_query_f, check_query
 from graphql import GraphQLError
@@ -144,7 +146,7 @@ class TestRemoteSchemaBasic:
         assert resp['remote_schemas'][0]['definition']['customization'] == customization
 
         with open('queries/graphql_introspection/introspection.yaml') as f:
-            query = yaml.safe_load(f)
+            query = yaml.load(f)
         resp, _ = check_query(hge_ctx, query)
         assert check_introspection_result(resp, ['MyString'], ['my_hello'])
 
@@ -176,7 +178,7 @@ class TestRemoteSchemaBasic:
     def test_introspection(self, hge_ctx):
         #check_query_f(hge_ctx, 'queries/graphql_introspection/introspection.yaml')
         with open('queries/graphql_introspection/introspection.yaml') as f:
-            query = yaml.safe_load(f)
+            query = yaml.load(f)
         resp, _ = check_query(hge_ctx, query)
         assert check_introspection_result(resp, ['String'], ['hello'])
 
@@ -373,7 +375,7 @@ class TestAddRemoteSchemaTbls:
 
     def test_introspection(self, hge_ctx):
         with open('queries/graphql_introspection/introspection.yaml') as f:
-            query = yaml.safe_load(f)
+            query = yaml.load(f)
         resp, _ = check_query(hge_ctx, query)
         assert check_introspection_result(resp, ['User', 'hello'], ['user', 'hello'])
 
@@ -563,7 +565,7 @@ class TestAddRemoteSchemaCompareRootQueryFields:
     @pytest.mark.allow_server_upgrade_test
     def test_schema_check_arg_default_values_and_field_and_arg_types(self, hge_ctx):
         with open('queries/graphql_introspection/introspection.yaml') as f:
-            query = yaml.safe_load(f)
+            query = yaml.load(f)
         introspect_hasura, _ = check_query(hge_ctx, query)
         resp = requests.post(
             self.remote,
@@ -771,7 +773,7 @@ class TestRemoteSchemaTypePrefix:
     def test_introspection(self, hge_ctx):
         #check_query_f(hge_ctx, 'queries/graphql_introspection/introspection.yaml')
         with open('queries/graphql_introspection/introspection.yaml') as f:
-            query = yaml.safe_load(f)
+            query = yaml.load(f)
         resp, _ = check_query(hge_ctx, query)
         assert check_introspection_result(resp, ['FooUser', 'FooCreateUser', 'FooCreateUserInputObject', 'FooUserDetailsInput'], ['user', 'allUsers'])
 
@@ -783,7 +785,7 @@ class TestValidateRemoteSchemaTypePrefixQuery:
     def transact(self, request, hge_ctx):
         config = request.config
         if not config.getoption('--skip-schema-setup'):
-            q = mk_add_remote_q('character-foo', 'http://localhost:5000/character-iface-graphql', customization=type_prefix_customization("Foo", {"Int": "MyInt"}))
+            q = mk_add_remote_q('character-foo', 'http://localhost:5000/character-iface-graphql', customization=type_prefix_customization("Foo"))
             st_code, resp = hge_ctx.v1q(q)
             assert st_code == 200, resp
         yield

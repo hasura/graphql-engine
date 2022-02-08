@@ -2,7 +2,7 @@
    :description: Manage permissions with the Hasura schema/metadata API
    :keywords: hasura, docs, schema/metadata API, API reference, permission
 
-.. _api_permission:
+.. _schema_metadata_api_permission:
 
 Schema/Metadata API Reference: Permissions (Deprecated)
 =======================================================
@@ -33,7 +33,7 @@ role has unrestricted access to all operations.
 
   Though for backwards compatibility, the schema/metadata APIs will continue to function.
 
-.. _create_insert_permission:
+.. _schema_metadata_create_insert_permission:
 
 create_insert_permission
 ------------------------
@@ -113,7 +113,7 @@ In the above definition, the row is allowed to be inserted if the ``author_id``
 is the same as the request's user id and ``is_reviewed`` is ``false`` when the
 ``category`` is "editorial".
 
-.. _create_insert_permission_syntax:
+.. _schema_metadata_create_insert_permission_syntax:
 
 Args syntax
 ^^^^^^^^^^^
@@ -142,7 +142,7 @@ Args syntax
      - text
      - Comment
 
-.. _drop_insert_permission:
+.. _schema_metadata_drop_insert_permission:
 
 drop_insert_permission
 ----------------------
@@ -165,7 +165,7 @@ An example:
        }
    }
 
-.. _drop_insert_permission_syntax:
+.. _schema_metadata_drop_insert_permission_syntax:
 
 Args syntax
 ^^^^^^^^^^^
@@ -186,7 +186,7 @@ Args syntax
      - :ref:`RoleName`
      - Role
 
-.. _create_select_permission:
+.. _schema_metadata_create_select_permission:
 
 create_select_permission
 ------------------------
@@ -232,7 +232,7 @@ This reads as follows - For the ``user`` role:
 
 * Allow aggregate queries.
 
-.. _create_select_permission_syntax:
+.. _schema_metadata_create_select_permission_syntax:
 
 Args syntax
 ^^^^^^^^^^^
@@ -261,7 +261,7 @@ Args syntax
      - text
      - Comment
 
-.. _drop_select_permission:
+.. _schema_metadata_drop_select_permission:
 
 drop_select_permission
 ----------------------
@@ -284,7 +284,7 @@ An example:
        }
    }
 
-.. _drop_select_permission_syntax:
+.. _schema_metadata_drop_select_permission_syntax:
 
 Args syntax
 ^^^^^^^^^^^
@@ -305,7 +305,7 @@ Args syntax
      - :ref:`RoleName`
      - Role
 
-.. _create_update_permission:
+.. _schema_metadata_create_update_permission:
 
 
 create_update_permission
@@ -361,7 +361,7 @@ This reads as follows - for the ``user`` role:
    ownership of a row in the ``article`` table. Columns such as this should
    never be allowed to be updated.
 
-.. _create_update_permission_syntax:
+.. _schema_metadata_create_update_permission_syntax:
 
 Args syntax
 ^^^^^^^^^^^
@@ -390,7 +390,7 @@ Args syntax
      - text
      - Comment
 
-.. _drop_update_permission:
+.. _schema_metadata_drop_update_permission:
 
 drop_update_permission
 ----------------------
@@ -413,7 +413,7 @@ An example:
        }
    }
 
-.. _drop_update_permission_syntax:
+.. _schema_metadata_drop_update_permission_syntax:
 
 Args syntax
 ^^^^^^^^^^^
@@ -434,7 +434,7 @@ Args syntax
      - :ref:`RoleName`
      - Role
 
-.. _create_delete_permission:
+.. _schema_metadata_create_delete_permission:
 
 create_delete_permission
 ------------------------
@@ -467,7 +467,7 @@ This reads as follows:
 "``delete`` for the ``user`` role on the ``article`` table is allowed on rows where
 ``author_id`` is the same as the request header ``X-HASURA-USER-ID`` value."
 
-.. _create_delete_permission_syntax:
+.. _schema_metadata_create_delete_permission_syntax:
 
 Args syntax
 ^^^^^^^^^^^
@@ -496,7 +496,7 @@ Args syntax
      - text
      - Comment
 
-.. _drop_delete_permission:
+.. _schema_metadata_drop_delete_permission:
 
 drop_delete_permission
 ----------------------
@@ -519,7 +519,7 @@ An example:
        }
    }
 
-.. _drop_delete_permission_syntax:
+.. _schema_metadata_drop_delete_permission_syntax:
 
 Args syntax
 ^^^^^^^^^^^
@@ -540,7 +540,7 @@ Args syntax
      - :ref:`RoleName`
      - Role
 
-.. _set_permission_comment:
+.. _schema_metadata_set_permission_comment:
 
 set_permission_comment
 ----------------------
@@ -567,7 +567,7 @@ An example:
        }
    }
 
-.. _set_permission_comment_syntax:
+.. _schema_metadata_set_permission_comment_syntax:
 
 Args syntax
 ^^^^^^^^^^^

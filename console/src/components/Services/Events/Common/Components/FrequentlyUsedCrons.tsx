@@ -49,9 +49,11 @@ const FrequentlyUsedCrons: React.FC<Props> = ({ setCron }) => {
       key="frequently-used-crons"
       keyPrefix="frequently-used-crons"
     >
-      <Button color="white" size="xs">
-        Frequently used crons
-      </Button>
+      {({ onClick }) => (
+        <Button color="white" size="xs" onClick={onClick}>
+          Frequently used crons
+        </Button>
+      )}
     </Dropdown>
   );
 };

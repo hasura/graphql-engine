@@ -1,3 +1,6 @@
+-- | Postgres DDL Source Version
+--
+-- Deals with catalog version - used by 'Hasura.Backends.Postgres.DDL.Source'.
 module Hasura.Backends.Postgres.DDL.Source.Version
   ( getSourceCatalogVersion,
     latestSourceCatalogVersion,

@@ -1,3 +1,6 @@
+-- | Postgres Translate Returning
+--
+-- Combinators and helpers for dealing with GraphQL returning statements.
 module Hasura.Backends.Postgres.Translate.Returning
   ( MutationCTE (..),
     getMutationCTE,
@@ -56,8 +59,8 @@ pgColsToSelFlds ::
 pgColsToSelFlds cols =
   flip map cols $
     \pgColInfo ->
-      ( fromCol @('Postgres pgKind) $ pgiColumn pgColInfo,
-        mkAnnColumnField (pgiColumn pgColInfo) (pgiType pgColInfo) Nothing Nothing
+      ( fromCol @('Postgres pgKind) $ ciColumn pgColInfo,
+        mkAnnColumnField (ciColumn pgColInfo) (ciType pgColInfo) Nothing Nothing
         --  ^^ Nothing because mutations aren't supported
         --  with inherited role
       )
@@ -151,7 +154,7 @@ mkMutationOutputExp qt allCols preCalAffRows cte mutOutput strfyNum =
     allColumnsSelect =
       S.CTESelect $
         S.mkSelect
-          { S.selExtr = map (S.mkExtr . pgiColumn) (sortCols allCols),
+          { S.selExtr = map (S.mkExtr . ciColumn) (sortCols allCols),
             S.selFrom = Just $ S.mkIdenFromExp mutationResultAlias
           }
 

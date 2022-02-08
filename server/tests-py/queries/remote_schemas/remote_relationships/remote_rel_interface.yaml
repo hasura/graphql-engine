@@ -3,7 +3,7 @@ url: /v1/graphql
 status: 200
 response:
   data:
-    profiles:
+    custom_profiles:
       - id: 1
         communicationsInterface:
           - msg: You win!
@@ -16,7 +16,7 @@ response:
 query:
   query: |
     query {
-      profiles {
+      custom_profiles {
         id
         communicationsInterface {
           msg
