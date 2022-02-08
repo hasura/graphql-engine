@@ -12,6 +12,7 @@ it for readability.
 - [Convert a test case to a live example](#convert-a-test-case-to-a-live-example)
 - [Run a remote MSSQL instance with dev.sh](#run-a-remote-mssql-instance-with-devsh)
 - [Add a unit test for SQL generation](#add-a-unit-test-for-sql-generation)
+- [Benchmark a query on postgres](#benchmark-a-query-on-postgres)
 
 <!-- markdown-toc end -->
 
@@ -215,3 +216,150 @@ result =
 
 See as a commit: https://github.com/hasura/graphql-engine-mono/commit/6fe03938d4255fbba3ec700a8f99527f60d795da
 (please completely ignore the `Show` related changes)
+
+## Benchmark a query on postgres
+
+We can measure the performance of a postgres query using the [pgbench](https://www.postgresql.org/docs/current/pgbench.html) tool.
+`pgbench` lets us run a query on postgres repeatedly and reports information such as the number of transactions completed in a given time.
+We can also compare multiple queries by running each of them using pgbench and compare the results.
+
+### Process
+
+To measure, we need to:
+
+1. Define the schema
+2. Generate and insert data
+3. Run the query/queries with `pgbench`
+4. Compare the results (When comparing multiple queries)
+
+#### Define the schema
+
+This can be done by creating a sql file with the relevant tables for the benchmark. For example:
+
+```sql
+-- tables.ddl
+
+drop table if exists author;
+drop table if exists article;
+CREATE TABLE author(
+  id SERIAL PRIMARY KEY,
+  name TEXT NOT NULL
+);
+CREATE TABLE article(
+  id SERIAL PRIMARY KEY,
+  title TEXT NOT NULL,
+  author_id INTEGER
+);
+```
+
+#### Generate data
+
+__Note__: When deciding on the data we want to generate, it is important to remember that the shape of the data, such as its
+size and distribution of values, can affect the benchmark results. So make sure you have this in mind when generating the data.
+
+Data for the benchmark can be generated using your favorite programming language. For example, using Haskell:
+
+```hs
+-- data-gen.hs
+
+import System.Environment
+import Data.Maybe
+
+main = do
+  args <- getArgs
+  let
+    numOfRows = maybe 500 read $ listToMaybe args
+    divEveryRows = maybe 80 read $ listToMaybe $ drop 1 args
+
+  putStrLn $ "Number of rows: " <> show numOfRows
+  putStrLn $ "Number of unique authors used: " <> show divEveryRows
+
+  let
+    sql i = "insert into author(name) values ('Title " <> show i <> "');"
+  writeFile "insert_author.sql" $ unlines $ map sql [1..numOfRows]
+
+  let
+    sql i = "insert into article(title, author_id) values ('Title " <> show i <> "', " <> show (i `mod` divEveryRows) <> ");"
+  writeFile "insert_article.sql" $ unlines $ map sql [1..numOfRows]
+```
+
+This snippet above generates sql insert statements for our tables which can be later inserted into postgres.
+
+#### Pgbench
+
+We can measure our query with pgbench with the following (or similar) invocation, which limits the benchmark time (`-T`) to 20 seconds,
+and uses a single client (`-c`).
+
+```sh
+pgbench -c 1 -T 20 -n -U <username> -d <database> -p 5432 -h 127.0.0.1 -f <queryfile.sql> 2> /dev/null
+```
+
+#### One script to rule them all
+
+All of the above steps can be glued together by a simple bash script:
+
+```sh
+#!/bin/bash
+
+echo "* Generating data..."
+runghc data-gen.hs 1000 200
+
+echo "* Creating schema and inserting data..."
+PGPASSWORD=postgres psql -h 127.0.0.1 -p 25432 postgres -U postgres -f tables.ddl > /dev/null
+PGPASSWORD=postgres psql -h 127.0.0.1 -p 25432 postgres -U postgres -f insert_author.sql > /dev/null
+PGPASSWORD=postgres psql -h 127.0.0.1 -p 25432 postgres -U postgres -f insert_article.sql > /dev/null
+
+echo "* Benchmarking..."
+echo ""
+echo "-------------------------"
+echo "** Query 1: <description>"
+echo "-------------------------"
+PGPASSWORD=postgres pgbench -c 1 -T 20 -n -U postgres -d postgres -p 25432 -h 127.0.0.1 -f <query_1>.sql 2> /dev/null
+echo "-------------------------"
+echo "** Query 2: <description>"
+echo "-------------------------"
+PGPASSWORD=postgres pgbench -c 1 -T 20 -n -U postgres -d postgres -p 25432 -h 127.0.0.1 -f <query_2>.sql 2> /dev/null
+```
+
+Which can be run by starting a postgres database with `scripts/dev.sh postgres` and running `bash script.sh`.
+
+#### Compare the results
+
+One simple metric we can use to compare the results of two queries is to look at the transactions rate.
+The benchmark which managed to complete more transactions in a specific time frame is often faster.
+
+__Note__: Benchmark results can vary for many reasons, such as the state of the machine and the processes running in parallel. It is important to take that into account when measuring, and considering benchmarking multiple times.
+
+```
+---------------------------
+** Query 1: Without LIMIT 1
+---------------------------
+pgbench (14.1, server 12.6)
+transaction type: no_limit.sql
+scaling factor: 1
+query mode: simple
+number of clients: 1
+number of threads: 1
+duration: 20 s
+number of transactions actually processed: 6624
+latency average = 3.019 ms
+initial connection time = 2.930 ms
+tps = 331.190445 (without initial connection time)
+------------------------
+** Query 2: With LIMIT 1
+------------------------
+pgbench (14.1, server 12.6)
+transaction type: with_limit.sql
+scaling factor: 1
+query mode: simple
+number of clients: 1
+number of threads: 1
+duration: 20 s
+number of transactions actually processed: 5822
+latency average = 3.435 ms
+initial connection time = 3.523 ms
+tps = 291.082637 (without initial connection time)
+```
+
+From looking at the transactions rate, we can see that `6624` manage to complete for the first query, but only `5822` transactions coleted for the second query.
+This makes the first query faster by `6624 / 5822 * 100 - 100 = roughly 13%`. For the usecase and data we measured.
