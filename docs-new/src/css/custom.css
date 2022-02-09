@@ -123,8 +123,8 @@
     /* --ifm-pre-color: inherit; */
     /* --ifm-heading-color: inherit; */
 
-    --ifm-font-family-base: "IBM Plex Sans";
-    --ifm-font-family-monospace: "IBM Plex Mono";
+    --ifm-font-family-base: "IBM Plex Sans",system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,sans-serif,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol";
+    --ifm-font-family-monospace: "IBM Plex Mono",SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;
     --ifm-font-size-base: 16px;
     --ifm-line-height-base: 1.5; /* 150% */
     --ifm-font-weight-light: 300;
