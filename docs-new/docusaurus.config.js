@@ -68,6 +68,12 @@ const config = {
             type: 'docsVersionDropdown',
             position: 'right',
             dropdownActiveClassDisabled: true,
+            dropdownItemsAfter: [
+              {
+                href: 'https://hasura.io/docs/1.0/graphql/core/index.html',
+                label: 'v1.x',
+              },
+            ],
           },
           {
             href: 'https://github.com/hasura/graphql-engine',
