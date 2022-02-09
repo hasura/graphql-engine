@@ -73,9 +73,9 @@
 </span><span id="line-73"></span><span>
 </span><span id="line-74"></span><span class="hs-comment">-- | A JSON \&quot;object\&quot; (key\/value map). This is where this type</span><span>
 </span><span id="line-75"></span><span class="hs-comment">-- differs to the 'aeson' package.</span><span>
-</span><span id="line-76"></span><span id="local-6989586621687987388"><span id="local-6989586621687987389"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="Object"><span class="annot"><a href="Data.Aeson.Ordered.html#Object"><span class="hs-identifier hs-var">Object</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Object_"><span class="annot"><a href="Data.Aeson.Ordered.html#Object_"><span class="hs-identifier hs-var">Object_</span></a></span></span><span> </span><span class="hs-special">{</span><span id="unObject_"><span class="annot"><span class="annottext">Object -&gt; InsOrdHashMap Text Value
+</span><span id="line-76"></span><span id="local-6989586621687988576"><span id="local-6989586621687988577"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="Object"><span class="annot"><a href="Data.Aeson.Ordered.html#Object"><span class="hs-identifier hs-var">Object</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Object_"><span class="annot"><a href="Data.Aeson.Ordered.html#Object_"><span class="hs-identifier hs-var">Object_</span></a></span></span><span> </span><span class="hs-special">{</span><span id="unObject_"><span class="annot"><span class="annottext">Object -&gt; InsOrdHashMap Text Value
 </span><a href="Data.Aeson.Ordered.html#unObject_"><span class="hs-identifier hs-var hs-var">unObject_</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">InsOrdHashMap</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="annot"><a href="Data.Aeson.Ordered.html#Value"><span class="hs-identifier hs-type">Value</span></a></span><span class="hs-special">}</span><span>
-</span><span id="line-77"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="%24cObject_"><span id="%24tObject"><span id="local-6989586621687987357"><span id="local-6989586621687987359"><span id="local-6989586621687987361"><span id="local-6989586621687987363"><span id="local-6989586621687987365"><span id="local-6989586621687987367"><span id="local-6989586621687987369"><span id="local-6989586621687987371"><span id="local-6989586621687987373"><span id="local-6989586621687987375"><span id="local-6989586621687987377"><span id="local-6989586621687987379"><span id="local-6989586621687987381"><span id="local-6989586621687987383"><span class="annot"><span class="annottext">Typeable Object
+</span><span id="line-77"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="%24cObject_"><span id="%24tObject"><span id="local-6989586621687988545"><span id="local-6989586621687988547"><span id="local-6989586621687988549"><span id="local-6989586621687988551"><span id="local-6989586621687988553"><span id="local-6989586621687988555"><span id="local-6989586621687988557"><span id="local-6989586621687988559"><span id="local-6989586621687988561"><span id="local-6989586621687988563"><span id="local-6989586621687988565"><span id="local-6989586621687988567"><span id="local-6989586621687988569"><span id="local-6989586621687988571"><span class="annot"><span class="annottext">Typeable Object
 DataType
 Constr
 Typeable Object
@@ -225,7 +225,7 @@ $cgfoldl :: forall (c :: * -&gt; *).
 (forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
 -&gt; (forall g. g -&gt; c g) -&gt; Object -&gt; c Object
 $cp1Data :: Typeable Object
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Data</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687987350"><span id="local-6989586621687987352"><span class="annot"><span class="annottext">Object -&gt; Object -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Data</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687988538"><span id="local-6989586621687988540"><span class="annot"><span class="annottext">Object -&gt; Object -&gt; Bool
 (Object -&gt; Object -&gt; Bool)
 -&gt; (Object -&gt; Object -&gt; Bool) -&gt; Eq Object
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -241,7 +241,7 @@ forall a.
 (forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
 $cto :: forall x. Rep Object x -&gt; Object
 $cfrom :: forall x. Object -&gt; Rep Object x
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687987338"><span id="local-6989586621687987340"><span id="local-6989586621687987342"><span id="local-6989586621687987344"><span class="annot"><span class="annottext">ReadPrec [Object]
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687988526"><span id="local-6989586621687988528"><span id="local-6989586621687988530"><span id="local-6989586621687988532"><span class="annot"><span class="annottext">ReadPrec [Object]
 ReadPrec Object
 Int -&gt; ReadS Object
 ReadS [Object]
@@ -261,7 +261,7 @@ readList :: ReadS [Object]
 $creadList :: ReadS [Object]
 readsPrec :: Int -&gt; ReadS Object
 $creadsPrec :: Int -&gt; ReadS Object
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Read</span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687987331"><span id="local-6989586621687987333"><span id="local-6989586621687987335"><span class="annot"><span class="annottext">Int -&gt; Object -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Read</span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687988519"><span id="local-6989586621687988521"><span id="local-6989586621687988523"><span class="annot"><span class="annottext">Int -&gt; Object -&gt; ShowS
 [Object] -&gt; ShowS
 Object -&gt; String
 (Int -&gt; Object -&gt; ShowS)
@@ -275,7 +275,7 @@ $cshow :: Object -&gt; String
 showsPrec :: Int -&gt; Object -&gt; ShowS
 $cshowsPrec :: Int -&gt; Object -&gt; ShowS
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Typeable</span></span><span class="hs-special">)</span><span>
-</span><span id="line-78"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">newtype</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621687987326"><span id="local-6989586621687987328"><span class="annot"><span class="annottext">Int -&gt; Object -&gt; Int
+</span><span id="line-78"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">newtype</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621687988514"><span id="local-6989586621687988516"><span class="annot"><span class="annottext">Int -&gt; Object -&gt; Int
 Object -&gt; Int
 (Int -&gt; Object -&gt; Int) -&gt; (Object -&gt; Int) -&gt; Hashable Object
 forall a. (Int -&gt; a -&gt; Int) -&gt; (a -&gt; Int) -&gt; Hashable a
@@ -288,9 +288,9 @@ $chashWithSalt :: Int -&gt; Object -&gt; Int
 </span><span id="line-80"></span><span class="hs-comment">-- | Union the keys, ordered, in two maps, erroring on duplicates.</span><span>
 </span><span id="line-81"></span><span class="annot"><a href="Data.Aeson.Ordered.html#safeUnion"><span class="hs-identifier hs-type">safeUnion</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Data.Aeson.Ordered.html#Object"><span class="hs-identifier hs-type">Object</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Data.Aeson.Ordered.html#Object"><span class="hs-identifier hs-type">Object</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span> </span><span class="annot"><a href="Data.Aeson.Ordered.html#Object"><span class="hs-identifier hs-type">Object</span></a></span><span>
 </span><span id="line-82"></span><span id="safeUnion"><span class="annot"><span class="annottext">safeUnion :: Object -&gt; Object -&gt; Either String Object
-</span><a href="Data.Aeson.Ordered.html#safeUnion"><span class="hs-identifier hs-var hs-var">safeUnion</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.Aeson.Ordered.html#Object_"><span class="hs-identifier hs-type">Object_</span></a></span><span> </span><span id="local-6989586621687987324"><span class="annot"><span class="annottext">InsOrdHashMap Text Value
-</span><a href="#local-6989586621687987324"><span class="hs-identifier hs-var">x</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.Aeson.Ordered.html#Object_"><span class="hs-identifier hs-type">Object_</span></a></span><span> </span><span id="local-6989586621687987323"><span class="annot"><span class="annottext">InsOrdHashMap Text Value
-</span><a href="#local-6989586621687987323"><span class="hs-identifier hs-var">y</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="Data.Aeson.Ordered.html#safeUnion"><span class="hs-identifier hs-var hs-var">safeUnion</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.Aeson.Ordered.html#Object_"><span class="hs-identifier hs-type">Object_</span></a></span><span> </span><span id="local-6989586621687988512"><span class="annot"><span class="annottext">InsOrdHashMap Text Value
+</span><a href="#local-6989586621687988512"><span class="hs-identifier hs-var">x</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.Aeson.Ordered.html#Object_"><span class="hs-identifier hs-type">Object_</span></a></span><span> </span><span id="local-6989586621687988511"><span class="annot"><span class="annottext">InsOrdHashMap Text Value
+</span><a href="#local-6989586621687988511"><span class="hs-identifier hs-var">y</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-83"></span><span>  </span><span class="annot"><span class="annottext">(InsOrdHashMap Text Value -&gt; Object)
 -&gt; Either String (InsOrdHashMap Text Value) -&gt; Either String Object
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
@@ -319,17 +319,17 @@ forall k v.
 (k -&gt; v -&gt; v -&gt; v)
 -&gt; InsOrdHashMap k v -&gt; InsOrdHashMap k v -&gt; InsOrdHashMap k v
 </span><span class="hs-identifier hs-var">OMap.unionWithKey</span></span><span>
-</span><span id="line-88"></span><span>            </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621687987319"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621687987319"><span class="hs-identifier hs-var">k</span></a></span></span><span> </span><span id="local-6989586621687987318"><span class="annot"><span class="annottext">Either String Value
-</span><a href="#local-6989586621687987318"><span class="hs-identifier hs-var">_a</span></a></span></span><span> </span><span id="local-6989586621687987317"><span class="annot"><span class="annottext">Either String Value
-</span><a href="#local-6989586621687987317"><span class="hs-identifier hs-var">_b</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">String -&gt; Either String Value
+</span><span id="line-88"></span><span>            </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621687988507"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687988507"><span class="hs-identifier hs-var">k</span></a></span></span><span> </span><span id="local-6989586621687988506"><span class="annot"><span class="annottext">Either String Value
+</span><a href="#local-6989586621687988506"><span class="hs-identifier hs-var">_a</span></a></span></span><span> </span><span id="local-6989586621687988505"><span class="annot"><span class="annottext">Either String Value
+</span><a href="#local-6989586621687988505"><span class="hs-identifier hs-var">_b</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">String -&gt; Either String Value
 forall a b. a -&gt; Either a b
 </span><span class="hs-identifier hs-var">Left</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;Duplicate key: &quot;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; ShowS
 forall a. [a] -&gt; [a] -&gt; [a]
 </span><span class="hs-operator hs-var">++</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; String
 </span><span class="hs-identifier hs-var">T.unpack</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621687987319"><span class="hs-identifier hs-var">k</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621687988507"><span class="hs-identifier hs-var">k</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-89"></span><span>            </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(Value -&gt; Either String Value)
 -&gt; InsOrdHashMap Text Value
 -&gt; InsOrdHashMap Text (Either String Value)
@@ -337,7 +337,7 @@ forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-identifier hs-var">fmap</span></span><span> </span><span class="annot"><span class="annottext">Value -&gt; Either String Value
 forall a b. b -&gt; Either a b
 </span><span class="hs-identifier hs-var">Right</span></span><span> </span><span class="annot"><span class="annottext">InsOrdHashMap Text Value
-</span><a href="#local-6989586621687987324"><span class="hs-identifier hs-var">x</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621687988512"><span class="hs-identifier hs-var">x</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-90"></span><span>            </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(Value -&gt; Either String Value)
 -&gt; InsOrdHashMap Text Value
 -&gt; InsOrdHashMap Text (Either String Value)
@@ -345,7 +345,7 @@ forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-identifier hs-var">fmap</span></span><span> </span><span class="annot"><span class="annottext">Value -&gt; Either String Value
 forall a b. b -&gt; Either a b
 </span><span class="hs-identifier hs-var">Right</span></span><span> </span><span class="annot"><span class="annottext">InsOrdHashMap Text Value
-</span><a href="#local-6989586621687987323"><span class="hs-identifier hs-var">y</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621687988511"><span class="hs-identifier hs-var">y</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-91"></span><span>        </span><span class="hs-special">)</span><span>
 </span><span id="line-92"></span><span>    </span><span class="hs-special">)</span><span>
 </span><span id="line-93"></span><span>
@@ -361,10 +361,10 @@ forall a. Monoid a =&gt; a
 </span><span id="line-99"></span><span class="hs-comment">-- 'splitAt', which is (take k, drop k). Deletes existing key, if any.</span><span>
 </span><span id="line-100"></span><span class="annot"><a href="Data.Aeson.Ordered.html#insert"><span class="hs-identifier hs-type">insert</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Data.Aeson.Ordered.html#Value"><span class="hs-identifier hs-type">Value</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Data.Aeson.Ordered.html#Object"><span class="hs-identifier hs-type">Object</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Data.Aeson.Ordered.html#Object"><span class="hs-identifier hs-type">Object</span></a></span><span>
 </span><span id="line-101"></span><span id="insert"><span class="annot"><span class="annottext">insert :: (Int, Text) -&gt; Value -&gt; Object -&gt; Object
-</span><a href="Data.Aeson.Ordered.html#insert"><span class="hs-identifier hs-var hs-var">insert</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621687987315"><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621687987315"><span class="hs-identifier hs-var">idx</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687987314"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621687987314"><span class="hs-identifier hs-var">key</span></a></span></span><span class="hs-special">)</span><span> </span><span id="local-6989586621687987313"><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621687987313"><span class="hs-identifier hs-var">val</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="Data.Aeson.Ordered.html#insert"><span class="hs-identifier hs-var hs-var">insert</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621687988503"><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621687988503"><span class="hs-identifier hs-var">idx</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687988502"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687988502"><span class="hs-identifier hs-var">key</span></a></span></span><span class="hs-special">)</span><span> </span><span id="local-6989586621687988501"><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621687988501"><span class="hs-identifier hs-var">val</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-102"></span><span>  </span><span class="annot"><span class="annottext">InsOrdHashMap Text Value -&gt; Object
 </span><a href="Data.Aeson.Ordered.html#Object_"><span class="hs-identifier hs-var">Object_</span></a></span><span>
 </span><span id="line-103"></span><span>    </span><span class="annot"><span class="annottext">(InsOrdHashMap Text Value -&gt; Object)
@@ -396,8 +396,8 @@ forall (p :: * -&gt; * -&gt; *) b c a.
 Bifunctor p =&gt;
 (b -&gt; c) -&gt; p a b -&gt; p a c
 </span><span class="hs-identifier hs-var">second</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621687987314"><span class="hs-identifier hs-var">key</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621687987313"><span class="hs-identifier hs-var">val</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(Text, Value) -&gt; [(Text, Value)] -&gt; [(Text, Value)]
+</span><a href="#local-6989586621687988502"><span class="hs-identifier hs-var">key</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621687988501"><span class="hs-identifier hs-var">val</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(Text, Value) -&gt; [(Text, Value)] -&gt; [(Text, Value)]
 forall a. a -&gt; [a] -&gt; [a]
 </span><span class="hs-glyph hs-var">:</span></span><span class="hs-special">)</span><span>
 </span><span id="line-106"></span><span>    </span><span class="annot"><span class="annottext">(([(Text, Value)], [(Text, Value)])
@@ -409,7 +409,7 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Int -&gt; [(Text, Value)] -&gt; ([(Text, Value)], [(Text, Value)])
 forall a. Int -&gt; [a] -&gt; ([a], [a])
 </span><span class="hs-identifier hs-var">splitAt</span></span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621687987315"><span class="hs-identifier hs-var">idx</span></a></span><span>
+</span><a href="#local-6989586621687988503"><span class="hs-identifier hs-var">idx</span></a></span><span>
 </span><span id="line-107"></span><span>    </span><span class="annot"><span class="annottext">([(Text, Value)] -&gt; ([(Text, Value)], [(Text, Value)]))
 -&gt; (Object -&gt; [(Text, Value)])
 -&gt; Object
@@ -428,7 +428,7 @@ forall k v.
 (Eq k, Hashable k) =&gt;
 k -&gt; InsOrdHashMap k v -&gt; InsOrdHashMap k v
 </span><span class="hs-identifier hs-var">OMap.delete</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621687987314"><span class="hs-identifier hs-var">key</span></a></span><span>
+</span><a href="#local-6989586621687988502"><span class="hs-identifier hs-var">key</span></a></span><span>
 </span><span id="line-109"></span><span>    </span><span class="annot"><span class="annottext">(InsOrdHashMap Text Value -&gt; InsOrdHashMap Text Value)
 -&gt; (Object -&gt; InsOrdHashMap Text Value)
 -&gt; Object
@@ -440,52 +440,52 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span id="line-111"></span><span class="hs-comment">-- | Lookup a key.</span><span>
 </span><span id="line-112"></span><span class="annot"><a href="Data.Aeson.Ordered.html#lookup"><span class="hs-identifier hs-type">lookup</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Data.Aeson.Ordered.html#Object"><span class="hs-identifier hs-type">Object</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Data.Aeson.Ordered.html#Value"><span class="hs-identifier hs-type">Value</span></a></span><span>
 </span><span id="line-113"></span><span id="lookup"><span class="annot"><span class="annottext">lookup :: Text -&gt; Object -&gt; Maybe Value
-</span><a href="Data.Aeson.Ordered.html#lookup"><span class="hs-identifier hs-var hs-var">lookup</span></a></span></span><span> </span><span id="local-6989586621687987306"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621687987306"><span class="hs-identifier hs-var">key</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.Aeson.Ordered.html#Object_"><span class="hs-identifier hs-type">Object_</span></a></span><span> </span><span id="local-6989586621687987305"><span class="annot"><span class="annottext">InsOrdHashMap Text Value
-</span><a href="#local-6989586621687987305"><span class="hs-identifier hs-var">omap</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; InsOrdHashMap Text Value -&gt; Maybe Value
+</span><a href="Data.Aeson.Ordered.html#lookup"><span class="hs-identifier hs-var hs-var">lookup</span></a></span></span><span> </span><span id="local-6989586621687988494"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687988494"><span class="hs-identifier hs-var">key</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.Aeson.Ordered.html#Object_"><span class="hs-identifier hs-type">Object_</span></a></span><span> </span><span id="local-6989586621687988493"><span class="annot"><span class="annottext">InsOrdHashMap Text Value
+</span><a href="#local-6989586621687988493"><span class="hs-identifier hs-var">omap</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; InsOrdHashMap Text Value -&gt; Maybe Value
 forall k v. (Eq k, Hashable k) =&gt; k -&gt; InsOrdHashMap k v -&gt; Maybe v
 </span><span class="hs-identifier hs-var">OMap.lookup</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621687987306"><span class="hs-identifier hs-var">key</span></a></span><span> </span><span class="annot"><span class="annottext">InsOrdHashMap Text Value
-</span><a href="#local-6989586621687987305"><span class="hs-identifier hs-var">omap</span></a></span><span>
+</span><a href="#local-6989586621687988494"><span class="hs-identifier hs-var">key</span></a></span><span> </span><span class="annot"><span class="annottext">InsOrdHashMap Text Value
+</span><a href="#local-6989586621687988493"><span class="hs-identifier hs-var">omap</span></a></span><span>
 </span><span id="line-114"></span><span>
 </span><span id="line-115"></span><span class="hs-comment">-- | Delete a key.</span><span>
 </span><span id="line-116"></span><span class="annot"><a href="Data.Aeson.Ordered.html#delete"><span class="hs-identifier hs-type">delete</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Data.Aeson.Ordered.html#Object"><span class="hs-identifier hs-type">Object</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Data.Aeson.Ordered.html#Object"><span class="hs-identifier hs-type">Object</span></a></span><span>
 </span><span id="line-117"></span><span id="delete"><span class="annot"><span class="annottext">delete :: Text -&gt; Object -&gt; Object
-</span><a href="Data.Aeson.Ordered.html#delete"><span class="hs-identifier hs-var hs-var">delete</span></a></span></span><span> </span><span id="local-6989586621687987303"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621687987303"><span class="hs-identifier hs-var">key</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.Aeson.Ordered.html#Object_"><span class="hs-identifier hs-type">Object_</span></a></span><span> </span><span id="local-6989586621687987302"><span class="annot"><span class="annottext">InsOrdHashMap Text Value
-</span><a href="#local-6989586621687987302"><span class="hs-identifier hs-var">omap</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">InsOrdHashMap Text Value -&gt; Object
+</span><a href="Data.Aeson.Ordered.html#delete"><span class="hs-identifier hs-var hs-var">delete</span></a></span></span><span> </span><span id="local-6989586621687988491"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687988491"><span class="hs-identifier hs-var">key</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.Aeson.Ordered.html#Object_"><span class="hs-identifier hs-type">Object_</span></a></span><span> </span><span id="local-6989586621687988490"><span class="annot"><span class="annottext">InsOrdHashMap Text Value
+</span><a href="#local-6989586621687988490"><span class="hs-identifier hs-var">omap</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">InsOrdHashMap Text Value -&gt; Object
 </span><a href="Data.Aeson.Ordered.html#Object_"><span class="hs-identifier hs-var">Object_</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; InsOrdHashMap Text Value -&gt; InsOrdHashMap Text Value
 forall k v.
 (Eq k, Hashable k) =&gt;
 k -&gt; InsOrdHashMap k v -&gt; InsOrdHashMap k v
 </span><span class="hs-identifier hs-var">OMap.delete</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621687987303"><span class="hs-identifier hs-var">key</span></a></span><span> </span><span class="annot"><span class="annottext">InsOrdHashMap Text Value
-</span><a href="#local-6989586621687987302"><span class="hs-identifier hs-var">omap</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621687988491"><span class="hs-identifier hs-var">key</span></a></span><span> </span><span class="annot"><span class="annottext">InsOrdHashMap Text Value
+</span><a href="#local-6989586621687988490"><span class="hs-identifier hs-var">omap</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-118"></span><span>
 </span><span id="line-119"></span><span class="annot"><a href="Data.Aeson.Ordered.html#adjust"><span class="hs-identifier hs-type">adjust</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.Aeson.Ordered.html#Value"><span class="hs-identifier hs-type">Value</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Data.Aeson.Ordered.html#Value"><span class="hs-identifier hs-type">Value</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Data.Aeson.Ordered.html#Object"><span class="hs-identifier hs-type">Object</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Data.Aeson.Ordered.html#Object"><span class="hs-identifier hs-type">Object</span></a></span><span>
 </span><span id="line-120"></span><span id="adjust"><span class="annot"><span class="annottext">adjust :: (Value -&gt; Value) -&gt; Text -&gt; Object -&gt; Object
-</span><a href="Data.Aeson.Ordered.html#adjust"><span class="hs-identifier hs-var hs-var">adjust</span></a></span></span><span> </span><span id="local-6989586621687987301"><span class="annot"><span class="annottext">Value -&gt; Value
-</span><a href="#local-6989586621687987301"><span class="hs-identifier hs-var">f</span></a></span></span><span> </span><span id="local-6989586621687987300"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621687987300"><span class="hs-identifier hs-var">key</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.Aeson.Ordered.html#Object_"><span class="hs-identifier hs-type">Object_</span></a></span><span> </span><span id="local-6989586621687987299"><span class="annot"><span class="annottext">InsOrdHashMap Text Value
-</span><a href="#local-6989586621687987299"><span class="hs-identifier hs-var">omap</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">InsOrdHashMap Text Value -&gt; Object
+</span><a href="Data.Aeson.Ordered.html#adjust"><span class="hs-identifier hs-var hs-var">adjust</span></a></span></span><span> </span><span id="local-6989586621687988489"><span class="annot"><span class="annottext">Value -&gt; Value
+</span><a href="#local-6989586621687988489"><span class="hs-identifier hs-var">f</span></a></span></span><span> </span><span id="local-6989586621687988488"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687988488"><span class="hs-identifier hs-var">key</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.Aeson.Ordered.html#Object_"><span class="hs-identifier hs-type">Object_</span></a></span><span> </span><span id="local-6989586621687988487"><span class="annot"><span class="annottext">InsOrdHashMap Text Value
+</span><a href="#local-6989586621687988487"><span class="hs-identifier hs-var">omap</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">InsOrdHashMap Text Value -&gt; Object
 </span><a href="Data.Aeson.Ordered.html#Object_"><span class="hs-identifier hs-var">Object_</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(Value -&gt; Value)
 -&gt; Text -&gt; InsOrdHashMap Text Value -&gt; InsOrdHashMap Text Value
 forall k v.
 (Eq k, Hashable k) =&gt;
 (v -&gt; v) -&gt; k -&gt; InsOrdHashMap k v -&gt; InsOrdHashMap k v
 </span><span class="hs-identifier hs-var">OMap.adjust</span></span><span> </span><span class="annot"><span class="annottext">Value -&gt; Value
-</span><a href="#local-6989586621687987301"><span class="hs-identifier hs-var">f</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621687987300"><span class="hs-identifier hs-var">key</span></a></span><span> </span><span class="annot"><span class="annottext">InsOrdHashMap Text Value
-</span><a href="#local-6989586621687987299"><span class="hs-identifier hs-var">omap</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621687988489"><span class="hs-identifier hs-var">f</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687988488"><span class="hs-identifier hs-var">key</span></a></span><span> </span><span class="annot"><span class="annottext">InsOrdHashMap Text Value
+</span><a href="#local-6989586621687988487"><span class="hs-identifier hs-var">omap</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-121"></span><span>
 </span><span id="line-122"></span><span class="hs-comment">-- | ToList a key.</span><span>
 </span><span id="line-123"></span><span class="annot"><a href="Data.Aeson.Ordered.html#toList"><span class="hs-identifier hs-type">toList</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Data.Aeson.Ordered.html#Object"><span class="hs-identifier hs-type">Object</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Data.Aeson.Ordered.html#Value"><span class="hs-identifier hs-type">Value</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span><span>
 </span><span id="line-124"></span><span id="toList"><span class="annot"><span class="annottext">toList :: Object -&gt; [(Text, Value)]
-</span><a href="Data.Aeson.Ordered.html#toList"><span class="hs-identifier hs-var hs-var">toList</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.Aeson.Ordered.html#Object_"><span class="hs-identifier hs-type">Object_</span></a></span><span> </span><span id="local-6989586621687987297"><span class="annot"><span class="annottext">InsOrdHashMap Text Value
-</span><a href="#local-6989586621687987297"><span class="hs-identifier hs-var">omap</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">InsOrdHashMap Text Value -&gt; [(Text, Value)]
+</span><a href="Data.Aeson.Ordered.html#toList"><span class="hs-identifier hs-var hs-var">toList</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.Aeson.Ordered.html#Object_"><span class="hs-identifier hs-type">Object_</span></a></span><span> </span><span id="local-6989586621687988485"><span class="annot"><span class="annottext">InsOrdHashMap Text Value
+</span><a href="#local-6989586621687988485"><span class="hs-identifier hs-var">omap</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">InsOrdHashMap Text Value -&gt; [(Text, Value)]
 forall k v. InsOrdHashMap k v -&gt; [(k, v)]
 </span><span class="hs-identifier hs-var">OMap.toList</span></span><span> </span><span class="annot"><span class="annottext">InsOrdHashMap Text Value
-</span><a href="#local-6989586621687987297"><span class="hs-identifier hs-var">omap</span></a></span><span>
+</span><a href="#local-6989586621687988485"><span class="hs-identifier hs-var">omap</span></a></span><span>
 </span><span id="line-125"></span><span>
 </span><span id="line-126"></span><span class="hs-comment">-- | FromList a key.</span><span>
 </span><span id="line-127"></span><span class="annot"><a href="Data.Aeson.Ordered.html#fromList"><span class="hs-identifier hs-type">fromList</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Data.Aeson.Ordered.html#Value"><span class="hs-identifier hs-type">Value</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Data.Aeson.Ordered.html#Object"><span class="hs-identifier hs-type">Object</span></a></span><span>
@@ -505,14 +505,14 @@ forall k v. (Eq k, Hashable k) =&gt; [(k, v)] -&gt; InsOrdHashMap k v
 </span><span id="line-132"></span><span>
 </span><span id="line-133"></span><span class="hs-comment">-- | A JSON value represented as a Haskell value. Intentionally</span><span>
 </span><span id="line-134"></span><span class="hs-comment">-- shadowing the 'Value' from the aeson package.</span><span>
-</span><span id="line-135"></span><span id="local-6989586621687987295"><span id="local-6989586621687987296"></span></span><span class="hs-keyword">data</span><span> </span><span id="Value"><span class="annot"><a href="Data.Aeson.Ordered.html#Value"><span class="hs-identifier hs-var">Value</span></a></span></span><span>
+</span><span id="line-135"></span><span id="local-6989586621687988483"><span id="local-6989586621687988484"></span></span><span class="hs-keyword">data</span><span> </span><span id="Value"><span class="annot"><a href="Data.Aeson.Ordered.html#Value"><span class="hs-identifier hs-var">Value</span></a></span></span><span>
 </span><span id="line-136"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="Object"><span class="annot"><a href="Data.Aeson.Ordered.html#Object"><span class="hs-identifier hs-var">Object</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Data.Aeson.Ordered.html#Object"><span class="hs-identifier hs-type">Object</span></a></span><span>
 </span><span id="line-137"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="Array"><span class="annot"><a href="Data.Aeson.Ordered.html#Array"><span class="hs-identifier hs-var">Array</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Data.Aeson.Ordered.html#Array"><span class="hs-identifier hs-type">Array</span></a></span><span>
 </span><span id="line-138"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="String"><span class="annot"><a href="Data.Aeson.Ordered.html#String"><span class="hs-identifier hs-var">String</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
 </span><span id="line-139"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="Number"><span class="annot"><a href="Data.Aeson.Ordered.html#Number"><span class="hs-identifier hs-var">Number</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><span class="hs-identifier hs-type">Scientific</span></span><span>
 </span><span id="line-140"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="Bool"><span class="annot"><a href="Data.Aeson.Ordered.html#Bool"><span class="hs-identifier hs-var">Bool</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span>
 </span><span id="line-141"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="Null"><span class="annot"><a href="Data.Aeson.Ordered.html#Null"><span class="hs-identifier hs-var">Null</span></a></span></span><span>
-</span><span id="line-142"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="%24cNull"><span id="%24cBool"><span id="%24cNumber"><span id="%24cString"><span id="%24cArray"><span id="%24cObject"><span id="%24tValue"><span id="local-6989586621687987260"><span id="local-6989586621687987262"><span id="local-6989586621687987264"><span id="local-6989586621687987266"><span id="local-6989586621687987268"><span id="local-6989586621687987270"><span id="local-6989586621687987272"><span id="local-6989586621687987274"><span id="local-6989586621687987276"><span id="local-6989586621687987278"><span id="local-6989586621687987280"><span id="local-6989586621687987282"><span id="local-6989586621687987284"><span id="local-6989586621687987286"><span class="annot"><span class="annottext">Typeable Value
+</span><span id="line-142"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="%24cNull"><span id="%24cBool"><span id="%24cNumber"><span id="%24cString"><span id="%24cArray"><span id="%24cObject"><span id="%24tValue"><span id="local-6989586621687988448"><span id="local-6989586621687988450"><span id="local-6989586621687988452"><span id="local-6989586621687988454"><span id="local-6989586621687988456"><span id="local-6989586621687988458"><span id="local-6989586621687988460"><span id="local-6989586621687988462"><span id="local-6989586621687988464"><span id="local-6989586621687988466"><span id="local-6989586621687988468"><span id="local-6989586621687988470"><span id="local-6989586621687988472"><span id="local-6989586621687988474"><span class="annot"><span class="annottext">Typeable Value
 DataType
 Constr
 Typeable Value
@@ -665,7 +665,7 @@ $cgfoldl :: forall (c :: * -&gt; *).
 (forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
 -&gt; (forall g. g -&gt; c g) -&gt; Value -&gt; c Value
 $cp1Data :: Typeable Value
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Data</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687987249"><span id="local-6989586621687987251"><span class="annot"><span class="annottext">Value -&gt; Value -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Data</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687988437"><span id="local-6989586621687988439"><span class="annot"><span class="annottext">Value -&gt; Value -&gt; Bool
 (Value -&gt; Value -&gt; Bool) -&gt; (Value -&gt; Value -&gt; Bool) -&gt; Eq Value
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 /= :: Value -&gt; Value -&gt; Bool
@@ -680,7 +680,7 @@ forall a.
 (forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
 $cto :: forall x. Rep Value x -&gt; Value
 $cfrom :: forall x. Value -&gt; Rep Value x
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687987239"><span id="local-6989586621687987241"><span id="local-6989586621687987243"><span id="local-6989586621687987245"><span class="annot"><span class="annottext">ReadPrec [Value]
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687988427"><span id="local-6989586621687988429"><span id="local-6989586621687988431"><span id="local-6989586621687988433"><span class="annot"><span class="annottext">ReadPrec [Value]
 ReadPrec Value
 Int -&gt; ReadS Value
 ReadS [Value]
@@ -700,7 +700,7 @@ readList :: ReadS [Value]
 $creadList :: ReadS [Value]
 readsPrec :: Int -&gt; ReadS Value
 $creadsPrec :: Int -&gt; ReadS Value
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Read</span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687987233"><span id="local-6989586621687987235"><span id="local-6989586621687987237"><span class="annot"><span class="annottext">Int -&gt; Value -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Read</span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687988421"><span id="local-6989586621687988423"><span id="local-6989586621687988425"><span class="annot"><span class="annottext">Int -&gt; Value -&gt; ShowS
 [Value] -&gt; ShowS
 Value -&gt; String
 (Int -&gt; Value -&gt; ShowS)
@@ -715,95 +715,95 @@ showsPrec :: Int -&gt; Value -&gt; ShowS
 $cshowsPrec :: Int -&gt; Value -&gt; ShowS
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Typeable</span></span><span class="hs-special">)</span><span>
 </span><span id="line-143"></span><span>
-</span><span id="line-144"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687987230"><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="Data.Aeson.Ordered.html#Value"><span class="hs-identifier hs-type">Value</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-144"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687988418"><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="Data.Aeson.Ordered.html#Value"><span class="hs-identifier hs-type">Value</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
 </span><span id="line-145"></span><span>  </span><span class="hs-comment">-- Lifted from Aeson's implementation for 'Value'.</span><span>
-</span><span id="line-146"></span><span>  </span><span id="local-6989586621687987229"><span class="annot"><span class="annottext">hashWithSalt :: Int -&gt; Value -&gt; Int
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">hashWithSalt</span></span></span><span> </span><span id="local-6989586621687987227"><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621687987227"><span class="hs-identifier hs-var">s</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
-</span><span id="line-147"></span><span>    </span><span class="hs-special">(</span><span class="annot"><a href="Data.Aeson.Ordered.html#Object"><span class="hs-identifier hs-type">Object</span></a></span><span> </span><span id="local-6989586621687987226"><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621687987226"><span class="hs-identifier hs-var">o</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621687987227"><span class="hs-identifier hs-var">s</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Int
+</span><span id="line-146"></span><span>  </span><span id="local-6989586621687988417"><span class="annot"><span class="annottext">hashWithSalt :: Int -&gt; Value -&gt; Int
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">hashWithSalt</span></span></span><span> </span><span id="local-6989586621687988415"><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621687988415"><span class="hs-identifier hs-var">s</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-147"></span><span>    </span><span class="hs-special">(</span><span class="annot"><a href="Data.Aeson.Ordered.html#Object"><span class="hs-identifier hs-type">Object</span></a></span><span> </span><span id="local-6989586621687988414"><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621687988414"><span class="hs-identifier hs-var">o</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621687988415"><span class="hs-identifier hs-var">s</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Int
 forall a. Hashable a =&gt; Int -&gt; a -&gt; Int
 </span><span class="hs-operator hs-var">`hashWithSalt`</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Int
 </span><span class="hs-number">0</span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Int -&gt; Object -&gt; Int
 forall a. Hashable a =&gt; Int -&gt; a -&gt; Int
 </span><span class="hs-operator hs-var">`hashWithSalt`</span></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621687987226"><span class="hs-identifier hs-var">o</span></a></span><span>
-</span><span id="line-148"></span><span>    </span><span class="hs-special">(</span><span class="annot"><a href="Data.Aeson.Ordered.html#Array"><span class="hs-identifier hs-type">Array</span></a></span><span> </span><span id="local-6989586621687987225"><span class="annot"><span class="annottext">Array
-</span><a href="#local-6989586621687987225"><span class="hs-identifier hs-var">a</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">(Int -&gt; Value -&gt; Int) -&gt; Int -&gt; Array -&gt; Int
+</span><a href="#local-6989586621687988414"><span class="hs-identifier hs-var">o</span></a></span><span>
+</span><span id="line-148"></span><span>    </span><span class="hs-special">(</span><span class="annot"><a href="Data.Aeson.Ordered.html#Array"><span class="hs-identifier hs-type">Array</span></a></span><span> </span><span id="local-6989586621687988413"><span class="annot"><span class="annottext">Array
+</span><a href="#local-6989586621687988413"><span class="hs-identifier hs-var">a</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">(Int -&gt; Value -&gt; Int) -&gt; Int -&gt; Array -&gt; Int
 forall (t :: * -&gt; *) b a.
 Foldable t =&gt;
 (b -&gt; a -&gt; b) -&gt; b -&gt; t a -&gt; b
 </span><span class="hs-identifier hs-var">foldl'</span></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Value -&gt; Int
 forall a. Hashable a =&gt; Int -&gt; a -&gt; Int
 </span><span class="hs-identifier hs-var">hashWithSalt</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621687987227"><span class="hs-identifier hs-var">s</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Int
+</span><a href="#local-6989586621687988415"><span class="hs-identifier hs-var">s</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Int
 forall a. Hashable a =&gt; Int -&gt; a -&gt; Int
 </span><span class="hs-operator hs-var">`hashWithSalt`</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Int
 </span><span class="hs-number">1</span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Array
-</span><a href="#local-6989586621687987225"><span class="hs-identifier hs-var">a</span></a></span><span>
-</span><span id="line-149"></span><span>    </span><span class="hs-special">(</span><span class="annot"><a href="Data.Aeson.Ordered.html#String"><span class="hs-identifier hs-type">String</span></a></span><span> </span><span id="local-6989586621687987223"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621687987223"><span class="hs-identifier hs-var">str</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621687987227"><span class="hs-identifier hs-var">s</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Int
+</span><a href="#local-6989586621687988413"><span class="hs-identifier hs-var">a</span></a></span><span>
+</span><span id="line-149"></span><span>    </span><span class="hs-special">(</span><span class="annot"><a href="Data.Aeson.Ordered.html#String"><span class="hs-identifier hs-type">String</span></a></span><span> </span><span id="local-6989586621687988411"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687988411"><span class="hs-identifier hs-var">str</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621687988415"><span class="hs-identifier hs-var">s</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Int
 forall a. Hashable a =&gt; Int -&gt; a -&gt; Int
 </span><span class="hs-operator hs-var">`hashWithSalt`</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Int
 </span><span class="hs-number">2</span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Int -&gt; Text -&gt; Int
 forall a. Hashable a =&gt; Int -&gt; a -&gt; Int
 </span><span class="hs-operator hs-var">`hashWithSalt`</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621687987223"><span class="hs-identifier hs-var">str</span></a></span><span>
-</span><span id="line-150"></span><span>    </span><span class="hs-special">(</span><span class="annot"><a href="Data.Aeson.Ordered.html#Number"><span class="hs-identifier hs-type">Number</span></a></span><span> </span><span id="local-6989586621687987222"><span class="annot"><span class="annottext">Scientific
-</span><a href="#local-6989586621687987222"><span class="hs-identifier hs-var">n</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621687987227"><span class="hs-identifier hs-var">s</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Int
+</span><a href="#local-6989586621687988411"><span class="hs-identifier hs-var">str</span></a></span><span>
+</span><span id="line-150"></span><span>    </span><span class="hs-special">(</span><span class="annot"><a href="Data.Aeson.Ordered.html#Number"><span class="hs-identifier hs-type">Number</span></a></span><span> </span><span id="local-6989586621687988410"><span class="annot"><span class="annottext">Scientific
+</span><a href="#local-6989586621687988410"><span class="hs-identifier hs-var">n</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621687988415"><span class="hs-identifier hs-var">s</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Int
 forall a. Hashable a =&gt; Int -&gt; a -&gt; Int
 </span><span class="hs-operator hs-var">`hashWithSalt`</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Int
 </span><span class="hs-number">3</span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Int -&gt; Scientific -&gt; Int
 forall a. Hashable a =&gt; Int -&gt; a -&gt; Int
 </span><span class="hs-operator hs-var">`hashWithSalt`</span></span><span> </span><span class="annot"><span class="annottext">Scientific
-</span><a href="#local-6989586621687987222"><span class="hs-identifier hs-var">n</span></a></span><span>
-</span><span id="line-151"></span><span>    </span><span class="hs-special">(</span><span class="annot"><a href="Data.Aeson.Ordered.html#Bool"><span class="hs-identifier hs-type">Bool</span></a></span><span> </span><span id="local-6989586621687987221"><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621687987221"><span class="hs-identifier hs-var">b</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621687987227"><span class="hs-identifier hs-var">s</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Int
+</span><a href="#local-6989586621687988410"><span class="hs-identifier hs-var">n</span></a></span><span>
+</span><span id="line-151"></span><span>    </span><span class="hs-special">(</span><span class="annot"><a href="Data.Aeson.Ordered.html#Bool"><span class="hs-identifier hs-type">Bool</span></a></span><span> </span><span id="local-6989586621687988409"><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621687988409"><span class="hs-identifier hs-var">b</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621687988415"><span class="hs-identifier hs-var">s</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Int
 forall a. Hashable a =&gt; Int -&gt; a -&gt; Int
 </span><span class="hs-operator hs-var">`hashWithSalt`</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Int
 </span><span class="hs-number">4</span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Int -&gt; Bool -&gt; Int
 forall a. Hashable a =&gt; Int -&gt; a -&gt; Int
 </span><span class="hs-operator hs-var">`hashWithSalt`</span></span><span> </span><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621687987221"><span class="hs-identifier hs-var">b</span></a></span><span>
+</span><a href="#local-6989586621687988409"><span class="hs-identifier hs-var">b</span></a></span><span>
 </span><span id="line-152"></span><span>    </span><span class="annot"><span class="annottext">Value
 </span><a href="Data.Aeson.Ordered.html#Null"><span class="hs-identifier hs-var">Null</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621687987227"><span class="hs-identifier hs-var">s</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Int
+</span><a href="#local-6989586621687988415"><span class="hs-identifier hs-var">s</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Int
 forall a. Hashable a =&gt; Int -&gt; a -&gt; Int
 </span><span class="hs-operator hs-var">`hashWithSalt`</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Int
 </span><span class="hs-number">5</span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span class="hs-special">)</span><span>
 </span><span id="line-153"></span><span>
 </span><span id="line-154"></span><span class="hs-comment">-- Adapter instance for 'lens-aeson' which lets us write optics over the numeric</span><span>
 </span><span id="line-155"></span><span class="hs-comment">-- values in ordered JSON collections as if they were plain 'Scientific' types.</span><span>
-</span><span id="line-156"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687987216"><span id="local-6989586621687987218"><span class="annot"><span class="hs-identifier hs-type">AsNumber</span></span><span> </span><span class="annot"><a href="Data.Aeson.Ordered.html#Value"><span class="hs-identifier hs-type">Value</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-157"></span><span>  </span><span id="local-6989586621687987214"><span class="annot"><span class="annottext">_Number :: p Scientific (f Scientific) -&gt; p Value (f Value)
+</span><span id="line-156"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687988404"><span id="local-6989586621687988406"><span class="annot"><span class="hs-identifier hs-type">AsNumber</span></span><span> </span><span class="annot"><a href="Data.Aeson.Ordered.html#Value"><span class="hs-identifier hs-type">Value</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-157"></span><span>  </span><span id="local-6989586621687988402"><span class="annot"><span class="annottext">_Number :: p Scientific (f Scientific) -&gt; p Value (f Value)
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">_Number</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(Scientific -&gt; Value)
 -&gt; (Value -&gt; Either Value Scientific) -&gt; Prism' Value Scientific
 forall b t s a. (b -&gt; t) -&gt; (s -&gt; Either t a) -&gt; Prism s t a b
 </span><span class="hs-identifier hs-var">prism</span></span><span> </span><span class="annot"><span class="annottext">Scientific -&gt; Value
-</span><a href="#local-6989586621687987212"><span class="hs-identifier hs-var">upcast</span></a></span><span> </span><span class="annot"><span class="annottext">Value -&gt; Either Value Scientific
-</span><a href="#local-6989586621687987211"><span class="hs-identifier hs-var">downcast</span></a></span><span>
+</span><a href="#local-6989586621687988400"><span class="hs-identifier hs-var">upcast</span></a></span><span> </span><span class="annot"><span class="annottext">Value -&gt; Either Value Scientific
+</span><a href="#local-6989586621687988399"><span class="hs-identifier hs-var">downcast</span></a></span><span>
 </span><span id="line-158"></span><span>    </span><span class="hs-keyword">where</span><span>
-</span><span id="line-159"></span><span>      </span><span id="local-6989586621687987212"><span class="annot"><span class="annottext">upcast :: Scientific -&gt; Value
-</span><a href="#local-6989586621687987212"><span class="hs-identifier hs-var hs-var">upcast</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Scientific -&gt; Value
+</span><span id="line-159"></span><span>      </span><span id="local-6989586621687988400"><span class="annot"><span class="annottext">upcast :: Scientific -&gt; Value
+</span><a href="#local-6989586621687988400"><span class="hs-identifier hs-var hs-var">upcast</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Scientific -&gt; Value
 </span><a href="Data.Aeson.Ordered.html#Number"><span class="hs-identifier hs-var">Number</span></a></span><span>
-</span><span id="line-160"></span><span>      </span><span id="local-6989586621687987211"><span class="annot"><span class="annottext">downcast :: Value -&gt; Either Value Scientific
-</span><a href="#local-6989586621687987211"><span class="hs-identifier hs-var hs-var">downcast</span></a></span></span><span> </span><span id="local-6989586621687987210"><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621687987210"><span class="hs-identifier hs-var">v</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621687987210"><span class="hs-identifier hs-var">v</span></a></span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-161"></span><span>        </span><span class="annot"><a href="Data.Aeson.Ordered.html#Number"><span class="hs-identifier hs-type">Number</span></a></span><span> </span><span id="local-6989586621687987209"><span class="annot"><span class="annottext">Scientific
-</span><a href="#local-6989586621687987209"><span class="hs-identifier hs-var">n</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Scientific -&gt; Either Value Scientific
+</span><span id="line-160"></span><span>      </span><span id="local-6989586621687988399"><span class="annot"><span class="annottext">downcast :: Value -&gt; Either Value Scientific
+</span><a href="#local-6989586621687988399"><span class="hs-identifier hs-var hs-var">downcast</span></a></span></span><span> </span><span id="local-6989586621687988398"><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621687988398"><span class="hs-identifier hs-var">v</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621687988398"><span class="hs-identifier hs-var">v</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-161"></span><span>        </span><span class="annot"><a href="Data.Aeson.Ordered.html#Number"><span class="hs-identifier hs-type">Number</span></a></span><span> </span><span id="local-6989586621687988397"><span class="annot"><span class="annottext">Scientific
+</span><a href="#local-6989586621687988397"><span class="hs-identifier hs-var">n</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Scientific -&gt; Either Value Scientific
 forall a b. b -&gt; Either a b
 </span><span class="hs-identifier hs-var">Right</span></span><span> </span><span class="annot"><span class="annottext">Scientific
-</span><a href="#local-6989586621687987209"><span class="hs-identifier hs-var">n</span></a></span><span>
+</span><a href="#local-6989586621687988397"><span class="hs-identifier hs-var">n</span></a></span><span>
 </span><span id="line-162"></span><span>        </span><span class="annot"><span class="annottext">Value
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Value -&gt; Either Value Scientific
 forall a b. a -&gt; Either a b
 </span><span class="hs-identifier hs-var">Left</span></span><span> </span><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621687987210"><span class="hs-identifier hs-var">v</span></a></span><span>
+</span><a href="#local-6989586621687988398"><span class="hs-identifier hs-var">v</span></a></span><span>
 </span><span id="line-163"></span><span>
 </span><span id="line-164"></span><span class="hs-comment">-- | Value pairs to Value</span><span>
 </span><span id="line-165"></span><span class="annot"><a href="Data.Aeson.Ordered.html#object"><span class="hs-identifier hs-type">object</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Data.Aeson.Ordered.html#Value"><span class="hs-identifier hs-type">Value</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Data.Aeson.Ordered.html#Value"><span class="hs-identifier hs-type">Value</span></a></span><span>
@@ -826,15 +826,15 @@ forall a. [a] -&gt; Vector a
 </span><span class="hs-identifier hs-var">V.fromList</span></span><span>
 </span><span id="line-171"></span><span>
 </span><span id="line-172"></span><span class="hs-comment">-- | Convert Aeson Value to Ordered Value</span><span>
-</span><span id="line-173"></span><span id="local-6989586621687987458"><span class="annot"><a href="Data.Aeson.Ordered.html#toOrdered"><span class="hs-identifier hs-type">toOrdered</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">J.ToJSON</span></span><span> </span><span class="annot"><a href="#local-6989586621687987458"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="#local-6989586621687987458"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Data.Aeson.Ordered.html#Value"><span class="hs-identifier hs-type">Value</span></a></span></span><span>
+</span><span id="line-173"></span><span id="local-6989586621687988646"><span class="annot"><a href="Data.Aeson.Ordered.html#toOrdered"><span class="hs-identifier hs-type">toOrdered</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">J.ToJSON</span></span><span> </span><span class="annot"><a href="#local-6989586621687988646"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="#local-6989586621687988646"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Data.Aeson.Ordered.html#Value"><span class="hs-identifier hs-type">Value</span></a></span></span><span>
 </span><span id="line-174"></span><span id="toOrdered"><span class="annot"><span class="annottext">toOrdered :: a -&gt; Value
-</span><a href="Data.Aeson.Ordered.html#toOrdered"><span class="hs-identifier hs-var hs-var">toOrdered</span></a></span></span><span> </span><span id="local-6989586621687987207"><span class="annot"><span class="annottext">a
-</span><a href="#local-6989586621687987207"><span class="hs-identifier hs-var">v</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">a -&gt; Value
+</span><a href="Data.Aeson.Ordered.html#toOrdered"><span class="hs-identifier hs-var hs-var">toOrdered</span></a></span></span><span> </span><span id="local-6989586621687988395"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621687988395"><span class="hs-identifier hs-var">v</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">a -&gt; Value
 forall a. ToJSON a =&gt; a -&gt; Value
 </span><span class="hs-identifier hs-var">J.toJSON</span></span><span> </span><span class="annot"><span class="annottext">a
-</span><a href="#local-6989586621687987207"><span class="hs-identifier hs-var">v</span></a></span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-175"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">J.Object</span></span><span> </span><span id="local-6989586621687987204"><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621687987204"><span class="hs-identifier hs-var">obj</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Object -&gt; Value
+</span><a href="#local-6989586621687988395"><span class="hs-identifier hs-var">v</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-175"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">J.Object</span></span><span> </span><span id="local-6989586621687988392"><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621687988392"><span class="hs-identifier hs-var">obj</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Object -&gt; Value
 </span><a href="Data.Aeson.Ordered.html#Object"><span class="hs-identifier hs-var">Object</span></a></span><span> </span><span class="annot"><span class="annottext">(Object -&gt; Value) -&gt; Object -&gt; Value
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">[(Text, Value)] -&gt; Object
@@ -855,9 +855,9 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Object -&gt; [(Text, Value)]
 forall k v. HashMap k v -&gt; [(k, v)]
 </span><span class="hs-identifier hs-var">Map.toList</span></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621687987204"><span class="hs-identifier hs-var">obj</span></a></span><span>
-</span><span id="line-176"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">J.Array</span></span><span> </span><span id="local-6989586621687987201"><span class="annot"><span class="annottext">Array
-</span><a href="#local-6989586621687987201"><span class="hs-identifier hs-var">arr</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Array -&gt; Value
+</span><a href="#local-6989586621687988392"><span class="hs-identifier hs-var">obj</span></a></span><span>
+</span><span id="line-176"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">J.Array</span></span><span> </span><span id="local-6989586621687988389"><span class="annot"><span class="annottext">Array
+</span><a href="#local-6989586621687988389"><span class="hs-identifier hs-var">arr</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Array -&gt; Value
 </span><a href="Data.Aeson.Ordered.html#Array"><span class="hs-identifier hs-var">Array</span></a></span><span> </span><span class="annot"><span class="annottext">(Array -&gt; Value) -&gt; Array -&gt; Value
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">[Value] -&gt; Array
@@ -873,19 +873,19 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Array -&gt; [Value]
 forall a. Vector a -&gt; [a]
 </span><span class="hs-identifier hs-var">V.toList</span></span><span> </span><span class="annot"><span class="annottext">Array
-</span><a href="#local-6989586621687987201"><span class="hs-identifier hs-var">arr</span></a></span><span>
-</span><span id="line-177"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">J.String</span></span><span> </span><span id="local-6989586621687987198"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621687987198"><span class="hs-identifier hs-var">text</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Value
+</span><a href="#local-6989586621687988389"><span class="hs-identifier hs-var">arr</span></a></span><span>
+</span><span id="line-177"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">J.String</span></span><span> </span><span id="local-6989586621687988386"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687988386"><span class="hs-identifier hs-var">text</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Value
 </span><a href="Data.Aeson.Ordered.html#String"><span class="hs-identifier hs-var">String</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621687987198"><span class="hs-identifier hs-var">text</span></a></span><span>
-</span><span id="line-178"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">J.Number</span></span><span> </span><span id="local-6989586621687987196"><span class="annot"><span class="annottext">Scientific
-</span><a href="#local-6989586621687987196"><span class="hs-identifier hs-var">number</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Scientific -&gt; Value
+</span><a href="#local-6989586621687988386"><span class="hs-identifier hs-var">text</span></a></span><span>
+</span><span id="line-178"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">J.Number</span></span><span> </span><span id="local-6989586621687988384"><span class="annot"><span class="annottext">Scientific
+</span><a href="#local-6989586621687988384"><span class="hs-identifier hs-var">number</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Scientific -&gt; Value
 </span><a href="Data.Aeson.Ordered.html#Number"><span class="hs-identifier hs-var">Number</span></a></span><span> </span><span class="annot"><span class="annottext">Scientific
-</span><a href="#local-6989586621687987196"><span class="hs-identifier hs-var">number</span></a></span><span>
-</span><span id="line-179"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">J.Bool</span></span><span> </span><span id="local-6989586621687987194"><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621687987194"><span class="hs-identifier hs-var">boolean</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Value
+</span><a href="#local-6989586621687988384"><span class="hs-identifier hs-var">number</span></a></span><span>
+</span><span id="line-179"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">J.Bool</span></span><span> </span><span id="local-6989586621687988382"><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621687988382"><span class="hs-identifier hs-var">boolean</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Value
 </span><a href="Data.Aeson.Ordered.html#Bool"><span class="hs-identifier hs-var">Bool</span></a></span><span> </span><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621687987194"><span class="hs-identifier hs-var">boolean</span></a></span><span>
+</span><a href="#local-6989586621687988382"><span class="hs-identifier hs-var">boolean</span></a></span><span>
 </span><span id="line-180"></span><span>  </span><span class="annot"><span class="annottext">Value
 </span><span class="hs-identifier hs-var">J.Null</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Value
 </span><a href="Data.Aeson.Ordered.html#Null"><span class="hs-identifier hs-var">Null</span></a></span><span>
@@ -893,11 +893,11 @@ forall a. Vector a -&gt; [a]
 </span><span id="line-182"></span><span class="hs-comment">-- | Convert Ordered Value to Aeson Value</span><span>
 </span><span id="line-183"></span><span class="annot"><a href="Data.Aeson.Ordered.html#fromOrdered"><span class="hs-identifier hs-type">fromOrdered</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Data.Aeson.Ordered.html#Value"><span class="hs-identifier hs-type">Value</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">J.Value</span></span><span>
 </span><span id="line-184"></span><span id="fromOrdered"><span class="annot"><span class="annottext">fromOrdered :: Value -&gt; Value
-</span><a href="Data.Aeson.Ordered.html#fromOrdered"><span class="hs-identifier hs-var hs-var">fromOrdered</span></a></span></span><span> </span><span id="local-6989586621687987192"><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621687987192"><span class="hs-identifier hs-var">v</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621687987192"><span class="hs-identifier hs-var">v</span></a></span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-185"></span><span>  </span><span class="annot"><a href="Data.Aeson.Ordered.html#Object"><span class="hs-identifier hs-type">Object</span></a></span><span> </span><span id="local-6989586621687987191"><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621687987191"><span class="hs-identifier hs-var">obj</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><a href="Data.Aeson.Ordered.html#fromOrdered"><span class="hs-identifier hs-var hs-var">fromOrdered</span></a></span></span><span> </span><span id="local-6989586621687988380"><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621687988380"><span class="hs-identifier hs-var">v</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621687988380"><span class="hs-identifier hs-var">v</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-185"></span><span>  </span><span class="annot"><a href="Data.Aeson.Ordered.html#Object"><span class="hs-identifier hs-type">Object</span></a></span><span> </span><span id="local-6989586621687988379"><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621687988379"><span class="hs-identifier hs-var">obj</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-186"></span><span>    </span><span class="annot"><span class="annottext">Object -&gt; Value
 </span><span class="hs-identifier hs-var">J.Object</span></span><span> </span><span class="annot"><span class="annottext">(Object -&gt; Value) -&gt; Object -&gt; Value
 forall a b. (a -&gt; b) -&gt; a -&gt; b
@@ -921,9 +921,9 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span>
 </span><span id="line-189"></span><span>          </span><span class="annot"><span class="annottext">Object -&gt; [(Text, Value)]
 </span><a href="Data.Aeson.Ordered.html#toList"><span class="hs-identifier hs-var">Data.Aeson.Ordered.toList</span></a></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621687987191"><span class="hs-identifier hs-var">obj</span></a></span><span>
-</span><span id="line-190"></span><span>  </span><span class="annot"><a href="Data.Aeson.Ordered.html#Array"><span class="hs-identifier hs-type">Array</span></a></span><span> </span><span id="local-6989586621687987189"><span class="annot"><span class="annottext">Array
-</span><a href="#local-6989586621687987189"><span class="hs-identifier hs-var">arr</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Array -&gt; Value
+</span><a href="#local-6989586621687988379"><span class="hs-identifier hs-var">obj</span></a></span><span>
+</span><span id="line-190"></span><span>  </span><span class="annot"><a href="Data.Aeson.Ordered.html#Array"><span class="hs-identifier hs-type">Array</span></a></span><span> </span><span id="local-6989586621687988377"><span class="annot"><span class="annottext">Array
+</span><a href="#local-6989586621687988377"><span class="hs-identifier hs-var">arr</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Array -&gt; Value
 </span><span class="hs-identifier hs-var">J.Array</span></span><span> </span><span class="annot"><span class="annottext">(Array -&gt; Value) -&gt; Array -&gt; Value
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">[Value] -&gt; Array
@@ -938,31 +938,31 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Array -&gt; [Value]
 forall a. Vector a -&gt; [a]
 </span><span class="hs-identifier hs-var">V.toList</span></span><span> </span><span class="annot"><span class="annottext">Array
-</span><a href="#local-6989586621687987189"><span class="hs-identifier hs-var">arr</span></a></span><span>
-</span><span id="line-191"></span><span>  </span><span class="annot"><a href="Data.Aeson.Ordered.html#String"><span class="hs-identifier hs-type">String</span></a></span><span> </span><span id="local-6989586621687987188"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621687987188"><span class="hs-identifier hs-var">text</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Value
+</span><a href="#local-6989586621687988377"><span class="hs-identifier hs-var">arr</span></a></span><span>
+</span><span id="line-191"></span><span>  </span><span class="annot"><a href="Data.Aeson.Ordered.html#String"><span class="hs-identifier hs-type">String</span></a></span><span> </span><span id="local-6989586621687988376"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687988376"><span class="hs-identifier hs-var">text</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Value
 </span><span class="hs-identifier hs-var">J.String</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621687987188"><span class="hs-identifier hs-var">text</span></a></span><span>
-</span><span id="line-192"></span><span>  </span><span class="annot"><a href="Data.Aeson.Ordered.html#Number"><span class="hs-identifier hs-type">Number</span></a></span><span> </span><span id="local-6989586621687987187"><span class="annot"><span class="annottext">Scientific
-</span><a href="#local-6989586621687987187"><span class="hs-identifier hs-var">number</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Scientific -&gt; Value
+</span><a href="#local-6989586621687988376"><span class="hs-identifier hs-var">text</span></a></span><span>
+</span><span id="line-192"></span><span>  </span><span class="annot"><a href="Data.Aeson.Ordered.html#Number"><span class="hs-identifier hs-type">Number</span></a></span><span> </span><span id="local-6989586621687988375"><span class="annot"><span class="annottext">Scientific
+</span><a href="#local-6989586621687988375"><span class="hs-identifier hs-var">number</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Scientific -&gt; Value
 </span><span class="hs-identifier hs-var">J.Number</span></span><span> </span><span class="annot"><span class="annottext">Scientific
-</span><a href="#local-6989586621687987187"><span class="hs-identifier hs-var">number</span></a></span><span>
-</span><span id="line-193"></span><span>  </span><span class="annot"><a href="Data.Aeson.Ordered.html#Bool"><span class="hs-identifier hs-type">Bool</span></a></span><span> </span><span id="local-6989586621687987186"><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621687987186"><span class="hs-identifier hs-var">boolean</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Value
+</span><a href="#local-6989586621687988375"><span class="hs-identifier hs-var">number</span></a></span><span>
+</span><span id="line-193"></span><span>  </span><span class="annot"><a href="Data.Aeson.Ordered.html#Bool"><span class="hs-identifier hs-type">Bool</span></a></span><span> </span><span id="local-6989586621687988374"><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621687988374"><span class="hs-identifier hs-var">boolean</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Value
 </span><span class="hs-identifier hs-var">J.Bool</span></span><span> </span><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621687987186"><span class="hs-identifier hs-var">boolean</span></a></span><span>
+</span><a href="#local-6989586621687988374"><span class="hs-identifier hs-var">boolean</span></a></span><span>
 </span><span id="line-194"></span><span>  </span><span class="annot"><span class="annottext">Value
 </span><a href="Data.Aeson.Ordered.html#Null"><span class="hs-identifier hs-var">Null</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Value
 </span><span class="hs-identifier hs-var">J.Null</span></span><span>
 </span><span id="line-195"></span><span>
-</span><span id="line-196"></span><span id="local-6989586621687987185"><span class="annot"><a href="Data.Aeson.Ordered.html#asObject"><span class="hs-identifier hs-type">asObject</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">IsString</span></span><span> </span><span class="annot"><a href="#local-6989586621687987185"><span class="hs-identifier hs-type">s</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Data.Aeson.Ordered.html#Value"><span class="hs-identifier hs-type">Value</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><a href="#local-6989586621687987185"><span class="hs-identifier hs-type">s</span></a></span><span> </span><span class="annot"><a href="Data.Aeson.Ordered.html#Object"><span class="hs-identifier hs-type">Object</span></a></span></span><span>
+</span><span id="line-196"></span><span id="local-6989586621687988373"><span class="annot"><a href="Data.Aeson.Ordered.html#asObject"><span class="hs-identifier hs-type">asObject</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">IsString</span></span><span> </span><span class="annot"><a href="#local-6989586621687988373"><span class="hs-identifier hs-type">s</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Data.Aeson.Ordered.html#Value"><span class="hs-identifier hs-type">Value</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><a href="#local-6989586621687988373"><span class="hs-identifier hs-type">s</span></a></span><span> </span><span class="annot"><a href="Data.Aeson.Ordered.html#Object"><span class="hs-identifier hs-type">Object</span></a></span></span><span>
 </span><span id="line-197"></span><span id="asObject"><span class="annot"><span class="annottext">asObject :: Value -&gt; Either s Object
 </span><a href="Data.Aeson.Ordered.html#asObject"><span class="hs-identifier hs-var hs-var">asObject</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
-</span><span id="line-198"></span><span>  </span><span class="annot"><a href="Data.Aeson.Ordered.html#Object"><span class="hs-identifier hs-type">Object</span></a></span><span> </span><span id="local-6989586621687987184"><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621687987184"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Object -&gt; Either s Object
+</span><span id="line-198"></span><span>  </span><span class="annot"><a href="Data.Aeson.Ordered.html#Object"><span class="hs-identifier hs-type">Object</span></a></span><span> </span><span id="local-6989586621687988372"><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621687988372"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Object -&gt; Either s Object
 forall a b. b -&gt; Either a b
 </span><span class="hs-identifier hs-var">Right</span></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621687987184"><span class="hs-identifier hs-var">o</span></a></span><span>
+</span><a href="#local-6989586621687988372"><span class="hs-identifier hs-var">o</span></a></span><span>
 </span><span id="line-199"></span><span>  </span><span class="annot"><span class="annottext">Value
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">s -&gt; Either s Object
 forall a b. a -&gt; Either a b
@@ -1011,11 +1011,11 @@ forall a. Parser a -&gt; ByteString -&gt; Either String a
 </span><a href="Data.Aeson.Ordered.html#arrayValues"><span class="hs-identifier hs-var hs-var">arrayValues</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-216"></span><span>  </span><span class="annot"><span class="annottext">Parser ()
 </span><a href="Data.Aeson.Ordered.html#skipSpace"><span class="hs-identifier hs-var">skipSpace</span></a></span><span>
-</span><span id="line-217"></span><span>  </span><span id="local-6989586621687987177"><span class="annot"><span class="annottext">Word8
-</span><a href="#local-6989586621687987177"><span class="hs-identifier hs-var">w</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser Word8
+</span><span id="line-217"></span><span>  </span><span id="local-6989586621687988365"><span class="annot"><span class="annottext">Word8
+</span><a href="#local-6989586621687988365"><span class="hs-identifier hs-var">w</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser Word8
 </span><span class="hs-identifier hs-var">A.peekWord8'</span></span><span>
 </span><span id="line-218"></span><span>  </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">Word8
-</span><a href="#local-6989586621687987177"><span class="hs-identifier hs-var">w</span></a></span><span> </span><span class="annot"><span class="annottext">Word8 -&gt; Word8 -&gt; Bool
+</span><a href="#local-6989586621687988365"><span class="hs-identifier hs-var">w</span></a></span><span> </span><span class="annot"><span class="annottext">Word8 -&gt; Word8 -&gt; Bool
 forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">==</span></span><span> </span><span class="hs-identifier">CLOSE_SQUARE</span><span>
 </span><span id="line-219"></span><span>    </span><span class="hs-keyword">then</span><span> </span><span class="annot"><span class="annottext">Parser Word8
@@ -1027,15 +1027,15 @@ forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
 forall a. Vector a
 </span><span class="hs-identifier hs-var">V.empty</span></span><span>
 </span><span id="line-220"></span><span>    </span><span class="hs-keyword">else</span><span> </span><span class="annot"><span class="annottext">[Value] -&gt; Int -&gt; Parser Array
-</span><a href="#local-6989586621687987173"><span class="hs-identifier hs-var">loop</span></a></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621687988361"><span class="hs-identifier hs-var">loop</span></a></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span> </span><span class="annot"><span class="annottext">Int
 </span><span class="hs-number">1</span></span><span>
 </span><span id="line-221"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-222"></span><span>    </span><span id="local-6989586621687987173"><span class="annot"><span class="annottext">loop :: [Value] -&gt; Int -&gt; Parser Array
-</span><a href="#local-6989586621687987173"><span class="hs-identifier hs-var hs-var">loop</span></a></span></span><span> </span><span id="local-6989586621687987172"><span class="annot"><span class="annottext">[Value]
-</span><a href="#local-6989586621687987172"><span class="hs-identifier hs-var">acc</span></a></span></span><span> </span><span class="hs-glyph">!</span><span id="local-6989586621687987171"><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621687987171"><span class="hs-identifier hs-var">len</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-223"></span><span>      </span><span id="local-6989586621687987170"><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621687987170"><span class="hs-identifier hs-var">v</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Parser Value
+</span><span id="line-222"></span><span>    </span><span id="local-6989586621687988361"><span class="annot"><span class="annottext">loop :: [Value] -&gt; Int -&gt; Parser Array
+</span><a href="#local-6989586621687988361"><span class="hs-identifier hs-var hs-var">loop</span></a></span></span><span> </span><span id="local-6989586621687988360"><span class="annot"><span class="annottext">[Value]
+</span><a href="#local-6989586621687988360"><span class="hs-identifier hs-var">acc</span></a></span></span><span> </span><span class="hs-glyph">!</span><span id="local-6989586621687988359"><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621687988359"><span class="hs-identifier hs-var">len</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-223"></span><span>      </span><span id="local-6989586621687988358"><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621687988358"><span class="hs-identifier hs-var">v</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Parser Value
 </span><a href="Data.Aeson.Ordered.html#value"><span class="hs-identifier hs-var">value</span></a></span><span> </span><span class="annot"><span class="annottext">Parser Value -&gt; String -&gt; Parser Value
 forall i a. Parser i a -&gt; String -&gt; Parser i a
 </span><span class="hs-operator hs-var">A.&lt;?&gt;</span></span><span> </span><span class="annot"><span class="annottext">String
@@ -1043,28 +1043,28 @@ forall i a. Parser i a -&gt; String -&gt; Parser i a
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f a -&gt; f b -&gt; f a
 </span><span class="hs-operator hs-var">&lt;*</span></span><span> </span><span class="annot"><span class="annottext">Parser ()
 </span><a href="Data.Aeson.Ordered.html#skipSpace"><span class="hs-identifier hs-var">skipSpace</span></a></span><span>
-</span><span id="line-224"></span><span>      </span><span id="local-6989586621687987167"><span class="annot"><span class="annottext">Word8
-</span><a href="#local-6989586621687987167"><span class="hs-identifier hs-var">ch</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(Word8 -&gt; Bool) -&gt; Parser Word8
-</span><span class="hs-identifier hs-var">A.satisfy</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621687987165"><span class="annot"><span class="annottext">Word8
-</span><a href="#local-6989586621687987165"><span class="hs-identifier hs-var">w</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Word8
-</span><a href="#local-6989586621687987165"><span class="hs-identifier hs-var">w</span></a></span><span> </span><span class="annot"><span class="annottext">Word8 -&gt; Word8 -&gt; Bool
+</span><span id="line-224"></span><span>      </span><span id="local-6989586621687988355"><span class="annot"><span class="annottext">Word8
+</span><a href="#local-6989586621687988355"><span class="hs-identifier hs-var">ch</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(Word8 -&gt; Bool) -&gt; Parser Word8
+</span><span class="hs-identifier hs-var">A.satisfy</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621687988353"><span class="annot"><span class="annottext">Word8
+</span><a href="#local-6989586621687988353"><span class="hs-identifier hs-var">w</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Word8
+</span><a href="#local-6989586621687988353"><span class="hs-identifier hs-var">w</span></a></span><span> </span><span class="annot"><span class="annottext">Word8 -&gt; Word8 -&gt; Bool
 forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">==</span></span><span> </span><span class="hs-identifier">COMMA</span><span> </span><span class="hs-operator">||</span><span> </span><span class="hs-identifier">w</span><span> </span><span class="annot"><span class="annottext">Word8
 </span><span class="hs-operator">==</span></span><span> </span><span class="hs-identifier">CLOSE_SQUARE</span><span class="hs-special">)</span><span> </span><span class="hs-operator">A.&lt;?&gt;</span><span> </span><span class="hs-string">&quot;',' or ']'&quot;</span><span>
 </span><span id="line-225"></span><span>      </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">Word8
-</span><a href="#local-6989586621687987167"><span class="hs-identifier hs-var">ch</span></a></span><span> </span><span class="annot"><span class="annottext">Word8 -&gt; Word8 -&gt; Bool
+</span><a href="#local-6989586621687988355"><span class="hs-identifier hs-var">ch</span></a></span><span> </span><span class="annot"><span class="annottext">Word8 -&gt; Word8 -&gt; Bool
 forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">==</span></span><span> </span><span class="hs-identifier">COMMA</span><span>
 </span><span id="line-226"></span><span>        </span><span class="hs-keyword">then</span><span> </span><span class="annot"><span class="annottext">Parser ()
 </span><a href="Data.Aeson.Ordered.html#skipSpace"><span class="hs-identifier hs-var">skipSpace</span></a></span><span> </span><span class="annot"><span class="annottext">Parser () -&gt; Parser Array -&gt; Parser Array
 forall (m :: * -&gt; *) a b. Monad m =&gt; m a -&gt; m b -&gt; m b
 </span><span class="hs-operator hs-var">&gt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">[Value] -&gt; Int -&gt; Parser Array
-</span><a href="#local-6989586621687987173"><span class="hs-identifier hs-var">loop</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621687987170"><span class="hs-identifier hs-var">v</span></a></span><span> </span><span class="annot"><span class="annottext">Value -&gt; [Value] -&gt; [Value]
+</span><a href="#local-6989586621687988361"><span class="hs-identifier hs-var">loop</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621687988358"><span class="hs-identifier hs-var">v</span></a></span><span> </span><span class="annot"><span class="annottext">Value -&gt; [Value] -&gt; [Value]
 forall a. a -&gt; [a] -&gt; [a]
 </span><span class="hs-glyph hs-var">:</span></span><span> </span><span class="annot"><span class="annottext">[Value]
-</span><a href="#local-6989586621687987172"><span class="hs-identifier hs-var">acc</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621687987171"><span class="hs-identifier hs-var">len</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Int
+</span><a href="#local-6989586621687988360"><span class="hs-identifier hs-var">acc</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621687988359"><span class="hs-identifier hs-var">len</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Int
 forall a. Num a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">+</span></span><span> </span><span class="annot"><span class="annottext">Int
 </span><span class="hs-number">1</span></span><span class="hs-special">)</span><span>
@@ -1075,11 +1075,11 @@ forall a. Vector a -&gt; Vector a
 </span><span class="hs-identifier hs-var">V.reverse</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Int -&gt; [Value] -&gt; Array
 forall a. Int -&gt; [a] -&gt; Vector a
 </span><span class="hs-identifier hs-var">V.fromListN</span></span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621687987171"><span class="hs-identifier hs-var">len</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621687987170"><span class="hs-identifier hs-var">v</span></a></span><span> </span><span class="annot"><span class="annottext">Value -&gt; [Value] -&gt; [Value]
+</span><a href="#local-6989586621687988359"><span class="hs-identifier hs-var">len</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621687988358"><span class="hs-identifier hs-var">v</span></a></span><span> </span><span class="annot"><span class="annottext">Value -&gt; [Value] -&gt; [Value]
 forall a. a -&gt; [a] -&gt; [a]
 </span><span class="hs-glyph hs-var">:</span></span><span> </span><span class="annot"><span class="annottext">[Value]
-</span><a href="#local-6989586621687987172"><span class="hs-identifier hs-var">acc</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621687988360"><span class="hs-identifier hs-var">acc</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-228"></span><span class="hs-pragma">{-# INLINE</span><span> </span><span class="annot"><a href="Data.Aeson.Ordered.html#arrayValues"><span class="hs-pragma hs-type">arrayValues</span></a></span><span> </span><span class="hs-pragma">#-}</span><span>
 </span><span id="line-229"></span><span>
 </span><span id="line-230"></span><span class="hs-comment">-- Copied from aeson package.</span><span>
@@ -1088,11 +1088,11 @@ forall a. a -&gt; [a] -&gt; [a]
 </span><a href="Data.Aeson.Ordered.html#objectValues"><span class="hs-identifier hs-var hs-var">objectValues</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-233"></span><span>  </span><span class="annot"><span class="annottext">Parser ()
 </span><a href="Data.Aeson.Ordered.html#skipSpace"><span class="hs-identifier hs-var">skipSpace</span></a></span><span>
-</span><span id="line-234"></span><span>  </span><span id="local-6989586621687987159"><span class="annot"><span class="annottext">Word8
-</span><a href="#local-6989586621687987159"><span class="hs-identifier hs-var">w</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser Word8
+</span><span id="line-234"></span><span>  </span><span id="local-6989586621687988347"><span class="annot"><span class="annottext">Word8
+</span><a href="#local-6989586621687988347"><span class="hs-identifier hs-var">w</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser Word8
 </span><span class="hs-identifier hs-var">A.peekWord8'</span></span><span>
 </span><span id="line-235"></span><span>  </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">Word8
-</span><a href="#local-6989586621687987159"><span class="hs-identifier hs-var">w</span></a></span><span> </span><span class="annot"><span class="annottext">Word8 -&gt; Word8 -&gt; Bool
+</span><a href="#local-6989586621687988347"><span class="hs-identifier hs-var">w</span></a></span><span> </span><span class="annot"><span class="annottext">Word8 -&gt; Word8 -&gt; Bool
 forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">==</span></span><span> </span><span class="hs-identifier">CLOSE_CURLY</span><span>
 </span><span id="line-236"></span><span>    </span><span class="hs-keyword">then</span><span> </span><span class="annot"><span class="annottext">Parser Word8
@@ -1106,17 +1106,17 @@ forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
 forall k v. InsOrdHashMap k v
 </span><span class="hs-identifier hs-var">OMap.empty</span></span><span>
 </span><span id="line-237"></span><span>    </span><span class="hs-keyword">else</span><span> </span><span class="annot"><span class="annottext">InsOrdHashMap Text Value -&gt; Parser (InsOrdHashMap Text Value)
-</span><a href="#local-6989586621687987157"><span class="hs-identifier hs-var">loop</span></a></span><span> </span><span class="annot"><span class="annottext">InsOrdHashMap Text Value
+</span><a href="#local-6989586621687988345"><span class="hs-identifier hs-var">loop</span></a></span><span> </span><span class="annot"><span class="annottext">InsOrdHashMap Text Value
 forall k v. InsOrdHashMap k v
 </span><span class="hs-identifier hs-var">OMap.empty</span></span><span>
 </span><span id="line-238"></span><span>  </span><span class="hs-keyword">where</span><span>
 </span><span id="line-239"></span><span>    </span><span class="hs-comment">-- Why use acc pattern here, you may ask? because 'H.fromList' use 'unsafeInsert'</span><span>
 </span><span id="line-240"></span><span>    </span><span class="hs-comment">-- and it's much faster because it's doing in place update to the 'HashMap'!</span><span>
-</span><span id="line-241"></span><span>    </span><span id="local-6989586621687987157"><span class="annot"><span class="annottext">loop :: InsOrdHashMap Text Value -&gt; Parser (InsOrdHashMap Text Value)
-</span><a href="#local-6989586621687987157"><span class="hs-identifier hs-var hs-var">loop</span></a></span></span><span> </span><span id="local-6989586621687987156"><span class="annot"><span class="annottext">InsOrdHashMap Text Value
-</span><a href="#local-6989586621687987156"><span class="hs-identifier hs-var">acc</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-242"></span><span>      </span><span id="local-6989586621687987155"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621687987155"><span class="hs-identifier hs-var">k</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Parser Text
+</span><span id="line-241"></span><span>    </span><span id="local-6989586621687988345"><span class="annot"><span class="annottext">loop :: InsOrdHashMap Text Value -&gt; Parser (InsOrdHashMap Text Value)
+</span><a href="#local-6989586621687988345"><span class="hs-identifier hs-var hs-var">loop</span></a></span></span><span> </span><span id="local-6989586621687988344"><span class="annot"><span class="annottext">InsOrdHashMap Text Value
+</span><a href="#local-6989586621687988344"><span class="hs-identifier hs-var">acc</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-242"></span><span>      </span><span id="local-6989586621687988343"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687988343"><span class="hs-identifier hs-var">k</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Parser Text
 </span><span class="hs-identifier hs-var">jstring</span></span><span> </span><span class="annot"><span class="annottext">Parser Text -&gt; String -&gt; Parser Text
 forall i a. Parser i a -&gt; String -&gt; Parser i a
 </span><span class="hs-operator hs-var">A.&lt;?&gt;</span></span><span> </span><span class="annot"><span class="annottext">String
@@ -1131,8 +1131,8 @@ forall (f :: * -&gt; *) a b. Applicative f =&gt; f a -&gt; f b -&gt; f a
 forall i a. Parser i a -&gt; String -&gt; Parser i a
 </span><span class="hs-operator hs-var">A.&lt;?&gt;</span></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;':'&quot;</span></span><span class="hs-special">)</span><span>
-</span><span id="line-243"></span><span>      </span><span id="local-6989586621687987153"><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621687987153"><span class="hs-identifier hs-var">v</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Parser Value
+</span><span id="line-243"></span><span>      </span><span id="local-6989586621687988341"><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621687988341"><span class="hs-identifier hs-var">v</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Parser Value
 </span><a href="Data.Aeson.Ordered.html#value"><span class="hs-identifier hs-var">value</span></a></span><span> </span><span class="annot"><span class="annottext">Parser Value -&gt; String -&gt; Parser Value
 forall i a. Parser i a -&gt; String -&gt; Parser i a
 </span><span class="hs-operator hs-var">A.&lt;?&gt;</span></span><span> </span><span class="annot"><span class="annottext">String
@@ -1140,25 +1140,25 @@ forall i a. Parser i a -&gt; String -&gt; Parser i a
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f a -&gt; f b -&gt; f a
 </span><span class="hs-operator hs-var">&lt;*</span></span><span> </span><span class="annot"><span class="annottext">Parser ()
 </span><a href="Data.Aeson.Ordered.html#skipSpace"><span class="hs-identifier hs-var">skipSpace</span></a></span><span>
-</span><span id="line-244"></span><span>      </span><span id="local-6989586621687987152"><span class="annot"><span class="annottext">Word8
-</span><a href="#local-6989586621687987152"><span class="hs-identifier hs-var">ch</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(Word8 -&gt; Bool) -&gt; Parser Word8
-</span><span class="hs-identifier hs-var">A.satisfy</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621687987151"><span class="annot"><span class="annottext">Word8
-</span><a href="#local-6989586621687987151"><span class="hs-identifier hs-var">w</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Word8
-</span><a href="#local-6989586621687987151"><span class="hs-identifier hs-var">w</span></a></span><span> </span><span class="annot"><span class="annottext">Word8 -&gt; Word8 -&gt; Bool
+</span><span id="line-244"></span><span>      </span><span id="local-6989586621687988340"><span class="annot"><span class="annottext">Word8
+</span><a href="#local-6989586621687988340"><span class="hs-identifier hs-var">ch</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(Word8 -&gt; Bool) -&gt; Parser Word8
+</span><span class="hs-identifier hs-var">A.satisfy</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621687988339"><span class="annot"><span class="annottext">Word8
+</span><a href="#local-6989586621687988339"><span class="hs-identifier hs-var">w</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Word8
+</span><a href="#local-6989586621687988339"><span class="hs-identifier hs-var">w</span></a></span><span> </span><span class="annot"><span class="annottext">Word8 -&gt; Word8 -&gt; Bool
 forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">==</span></span><span> </span><span class="hs-identifier">COMMA</span><span> </span><span class="hs-operator">||</span><span> </span><span class="hs-identifier">w</span><span> </span><span class="hs-operator">==</span><span> </span><span class="hs-identifier">CLOSE_CURLY</span><span class="hs-special">)</span><span> </span><span class="hs-operator">A.&lt;?&gt;</span><span> </span><span class="hs-string">&quot;',' or '}'&quot;</span><span>
-</span><span id="line-245"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621687987150"><span class="annot"><span class="annottext">acc' :: InsOrdHashMap Text Value
-</span><a href="#local-6989586621687987150"><span class="hs-identifier hs-var hs-var">acc'</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
+</span><span id="line-245"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621687988338"><span class="annot"><span class="annottext">acc' :: InsOrdHashMap Text Value
+</span><a href="#local-6989586621687988338"><span class="hs-identifier hs-var hs-var">acc'</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
 -&gt; Value -&gt; InsOrdHashMap Text Value -&gt; InsOrdHashMap Text Value
 forall k v.
 (Eq k, Hashable k) =&gt;
 k -&gt; v -&gt; InsOrdHashMap k v -&gt; InsOrdHashMap k v
 </span><span class="hs-identifier hs-var">OMap.insert</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621687987155"><span class="hs-identifier hs-var">k</span></a></span><span> </span><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621687987153"><span class="hs-identifier hs-var">v</span></a></span><span> </span><span class="annot"><span class="annottext">InsOrdHashMap Text Value
-</span><a href="#local-6989586621687987156"><span class="hs-identifier hs-var">acc</span></a></span><span>
+</span><a href="#local-6989586621687988343"><span class="hs-identifier hs-var">k</span></a></span><span> </span><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621687988341"><span class="hs-identifier hs-var">v</span></a></span><span> </span><span class="annot"><span class="annottext">InsOrdHashMap Text Value
+</span><a href="#local-6989586621687988344"><span class="hs-identifier hs-var">acc</span></a></span><span>
 </span><span id="line-246"></span><span>      </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">Word8
-</span><a href="#local-6989586621687987152"><span class="hs-identifier hs-var">ch</span></a></span><span> </span><span class="annot"><span class="annottext">Word8 -&gt; Word8 -&gt; Bool
+</span><a href="#local-6989586621687988340"><span class="hs-identifier hs-var">ch</span></a></span><span> </span><span class="annot"><span class="annottext">Word8 -&gt; Word8 -&gt; Bool
 forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">==</span></span><span> </span><span class="hs-identifier">COMMA</span><span>
 </span><span id="line-247"></span><span>        </span><span class="hs-keyword">then</span><span> </span><span class="annot"><span class="annottext">Parser ()
@@ -1167,12 +1167,12 @@ forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 -&gt; Parser (InsOrdHashMap Text Value)
 forall (m :: * -&gt; *) a b. Monad m =&gt; m a -&gt; m b -&gt; m b
 </span><span class="hs-operator hs-var">&gt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">InsOrdHashMap Text Value -&gt; Parser (InsOrdHashMap Text Value)
-</span><a href="#local-6989586621687987157"><span class="hs-identifier hs-var">loop</span></a></span><span> </span><span class="annot"><span class="annottext">InsOrdHashMap Text Value
-</span><a href="#local-6989586621687987150"><span class="hs-identifier hs-var">acc'</span></a></span><span>
+</span><a href="#local-6989586621687988345"><span class="hs-identifier hs-var">loop</span></a></span><span> </span><span class="annot"><span class="annottext">InsOrdHashMap Text Value
+</span><a href="#local-6989586621687988338"><span class="hs-identifier hs-var">acc'</span></a></span><span>
 </span><span id="line-248"></span><span>        </span><span class="hs-keyword">else</span><span> </span><span class="annot"><span class="annottext">InsOrdHashMap Text Value -&gt; Parser (InsOrdHashMap Text Value)
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">InsOrdHashMap Text Value
-</span><a href="#local-6989586621687987150"><span class="hs-identifier hs-var">acc'</span></a></span><span>
+</span><a href="#local-6989586621687988338"><span class="hs-identifier hs-var">acc'</span></a></span><span>
 </span><span id="line-249"></span><span class="hs-pragma">{-# INLINE</span><span> </span><span class="annot"><a href="Data.Aeson.Ordered.html#objectValues"><span class="hs-pragma hs-type">objectValues</span></a></span><span> </span><span class="hs-pragma">#-}</span><span>
 </span><span id="line-250"></span><span>
 </span><span id="line-251"></span><span class="hs-comment">-- Copied from aeson package.</span><span>
@@ -1181,11 +1181,11 @@ forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><a href="Data.Aeson.Ordered.html#value"><span class="hs-identifier hs-var hs-var">value</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-254"></span><span>  </span><span class="annot"><span class="annottext">Parser ()
 </span><a href="Data.Aeson.Ordered.html#skipSpace"><span class="hs-identifier hs-var">skipSpace</span></a></span><span>
-</span><span id="line-255"></span><span>  </span><span id="local-6989586621687987148"><span class="annot"><span class="annottext">Word8
-</span><a href="#local-6989586621687987148"><span class="hs-identifier hs-var">w</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser Word8
+</span><span id="line-255"></span><span>  </span><span id="local-6989586621687988336"><span class="annot"><span class="annottext">Word8
+</span><a href="#local-6989586621687988336"><span class="hs-identifier hs-var">w</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser Word8
 </span><span class="hs-identifier hs-var">A.peekWord8'</span></span><span>
 </span><span id="line-256"></span><span>  </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Word8
-</span><a href="#local-6989586621687987148"><span class="hs-identifier hs-var">w</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621687988336"><span class="hs-identifier hs-var">w</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-257"></span><span>    </span><span class="hs-identifier">DOUBLE_QUOTE</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-identifier">String</span><span> </span><span class="hs-operator">&lt;$&gt;</span><span> </span><span class="hs-identifier">jstring</span><span>
 </span><span id="line-258"></span><span>    </span><span class="hs-identifier">OPEN_CURLY</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-identifier">A.anyWord8</span><span> </span><span class="hs-operator">*&gt;</span><span> </span><span class="hs-special">(</span><span class="hs-identifier">Object</span><span> </span><span class="hs-operator">.</span><span> </span><span class="hs-identifier">Object_</span><span> </span><span class="hs-operator">&lt;$&gt;</span><span> </span><span class="hs-identifier">objectValues</span><span class="hs-special">)</span><span>
 </span><span id="line-259"></span><span>    </span><span class="hs-identifier">OPEN_SQUARE</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-identifier">A.anyWord8</span><span> </span><span class="hs-operator">*&gt;</span><span> </span><span class="hs-special">(</span><span class="hs-identifier">Array</span><span> </span><span class="hs-operator">&lt;$&gt;</span><span> </span><span class="hs-identifier">arrayValues</span><span class="hs-special">)</span><span>
@@ -1215,17 +1215,17 @@ forall (f :: * -&gt; *) a b. Functor f =&gt; f a -&gt; b -&gt; f b
 </span><span id="line-263"></span><span>    </span><span class="annot"><span class="annottext">Word8
 </span><span class="hs-identifier">_</span></span><span>
 </span><span id="line-264"></span><span>      </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Word8
-</span><a href="#local-6989586621687987148"><span class="hs-identifier hs-var">w</span></a></span><span> </span><span class="annot"><span class="annottext">Word8 -&gt; Word8 -&gt; Bool
+</span><a href="#local-6989586621687988336"><span class="hs-identifier hs-var">w</span></a></span><span> </span><span class="annot"><span class="annottext">Word8 -&gt; Word8 -&gt; Bool
 forall a. Ord a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">&gt;=</span></span><span> </span><span class="annot"><span class="annottext">Word8
 </span><span class="hs-number">48</span></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
 </span><span class="hs-operator hs-var">&amp;&amp;</span></span><span> </span><span class="annot"><span class="annottext">Word8
-</span><a href="#local-6989586621687987148"><span class="hs-identifier hs-var">w</span></a></span><span> </span><span class="annot"><span class="annottext">Word8 -&gt; Word8 -&gt; Bool
+</span><a href="#local-6989586621687988336"><span class="hs-identifier hs-var">w</span></a></span><span> </span><span class="annot"><span class="annottext">Word8 -&gt; Word8 -&gt; Bool
 forall a. Ord a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">&lt;=</span></span><span> </span><span class="annot"><span class="annottext">Word8
 </span><span class="hs-number">57</span></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
 </span><span class="hs-operator hs-var">||</span></span><span> </span><span class="annot"><span class="annottext">Word8
-</span><a href="#local-6989586621687987148"><span class="hs-identifier hs-var">w</span></a></span><span> </span><span class="annot"><span class="annottext">Word8 -&gt; Word8 -&gt; Bool
+</span><a href="#local-6989586621687988336"><span class="hs-identifier hs-var">w</span></a></span><span> </span><span class="annot"><span class="annottext">Word8 -&gt; Word8 -&gt; Bool
 forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="annottext">Word8
 </span><span class="hs-number">45</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
@@ -1251,24 +1251,24 @@ forall (m :: * -&gt; *) a. MonadFail m =&gt; String -&gt; m a
 </span><a href="Data.Aeson.Ordered.html#skipSpace"><span class="hs-identifier hs-var hs-var">skipSpace</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(Word8 -&gt; Bool) -&gt; Parser ()
 </span><span class="hs-identifier hs-var">A.skipWhile</span></span><span> </span><span class="annot"><span class="annottext">((Word8 -&gt; Bool) -&gt; Parser ()) -&gt; (Word8 -&gt; Bool) -&gt; Parser ()
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621687987140"><span class="annot"><span class="annottext">Word8
-</span><a href="#local-6989586621687987140"><span class="hs-identifier hs-var">w</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Word8
-</span><a href="#local-6989586621687987140"><span class="hs-identifier hs-var">w</span></a></span><span> </span><span class="annot"><span class="annottext">Word8 -&gt; Word8 -&gt; Bool
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621687988328"><span class="annot"><span class="annottext">Word8
+</span><a href="#local-6989586621687988328"><span class="hs-identifier hs-var">w</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Word8
+</span><a href="#local-6989586621687988328"><span class="hs-identifier hs-var">w</span></a></span><span> </span><span class="annot"><span class="annottext">Word8 -&gt; Word8 -&gt; Bool
 forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="annottext">Word8
 </span><span class="hs-number">0x20</span></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
 </span><span class="hs-operator hs-var">||</span></span><span> </span><span class="annot"><span class="annottext">Word8
-</span><a href="#local-6989586621687987140"><span class="hs-identifier hs-var">w</span></a></span><span> </span><span class="annot"><span class="annottext">Word8 -&gt; Word8 -&gt; Bool
+</span><a href="#local-6989586621687988328"><span class="hs-identifier hs-var">w</span></a></span><span> </span><span class="annot"><span class="annottext">Word8 -&gt; Word8 -&gt; Bool
 forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="annottext">Word8
 </span><span class="hs-number">0x0a</span></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
 </span><span class="hs-operator hs-var">||</span></span><span> </span><span class="annot"><span class="annottext">Word8
-</span><a href="#local-6989586621687987140"><span class="hs-identifier hs-var">w</span></a></span><span> </span><span class="annot"><span class="annottext">Word8 -&gt; Word8 -&gt; Bool
+</span><a href="#local-6989586621687988328"><span class="hs-identifier hs-var">w</span></a></span><span> </span><span class="annot"><span class="annottext">Word8 -&gt; Word8 -&gt; Bool
 forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="annottext">Word8
 </span><span class="hs-number">0x0d</span></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
 </span><span class="hs-operator hs-var">||</span></span><span> </span><span class="annot"><span class="annottext">Word8
-</span><a href="#local-6989586621687987140"><span class="hs-identifier hs-var">w</span></a></span><span> </span><span class="annot"><span class="annottext">Word8 -&gt; Word8 -&gt; Bool
+</span><a href="#local-6989586621687988328"><span class="hs-identifier hs-var">w</span></a></span><span> </span><span class="annot"><span class="annottext">Word8 -&gt; Word8 -&gt; Bool
 forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="annottext">Word8
 </span><span class="hs-number">0x09</span></span><span>
