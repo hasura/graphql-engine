@@ -27,6 +27,7 @@ roles-inheritance
 remote-schema-https
 query-caching
 query-logs
+startup-db-calls
 webhook-request-context
 post-webhook
 get-webhook
