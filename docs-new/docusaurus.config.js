@@ -83,6 +83,14 @@ const config = {
             title: 'Docs',
             items: [
               {
+                label: 'Hasura GraphQL Engine',
+                to: '/graphql/core/index',
+              },
+              {
+                label: 'Hasura Cloud',
+                to: '/graphql/cloud/index',
+              },
+              {
                 label: 'Migration Guide',
                 to: '/category/migration-guide',
               },
