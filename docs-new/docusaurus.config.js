@@ -30,6 +30,7 @@ const config = {
           versions: {
             current: {
               label: "v2.x",
+              badge: true,
             },
           }
         },
