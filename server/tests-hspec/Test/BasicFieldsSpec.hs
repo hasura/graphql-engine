@@ -4,6 +4,7 @@
 -- | Test querying an entity for a couple fields.
 module Test.BasicFieldsSpec (spec) where
 
+import Harness.Backend.BigQuery as BigQuery
 import Harness.Backend.Citus as Citus
 import Harness.Backend.Mysql as Mysql
 import Harness.Backend.Postgres as Postgres
@@ -28,22 +29,35 @@ spec =
           [ Feature.Backend
               { name = "MySQL",
                 setup = mysqlSetup,
-                teardown = mysqlTeardown
+                teardown = mysqlTeardown,
+                backendOptions = Feature.defaultBackendOptions
               },
             Feature.Backend
               { name = "PostgreSQL",
                 setup = postgresSetup,
-                teardown = postgresTeardown
+                teardown = postgresTeardown,
+                backendOptions = Feature.defaultBackendOptions
               },
             Feature.Backend
               { name = "Citus",
                 setup = citusSetup,
-                teardown = citusTeardown
+                teardown = citusTeardown,
+                backendOptions = Feature.defaultBackendOptions
               },
             Feature.Backend
               { name = "SQLServer",
                 setup = sqlserverSetup,
-                teardown = sqlserverTeardown
+                teardown = sqlserverTeardown,
+                backendOptions = Feature.defaultBackendOptions
+              },
+            Feature.Backend
+              { name = "BigQuery",
+                setup = bigquerySetup,
+                teardown = bigqueryTeardown,
+                backendOptions =
+                  Feature.BackendOptions
+                    { stringifyNumbers = True
+                    }
               }
           ],
         Feature.tests = tests
@@ -234,17 +248,89 @@ DROP TABLE hasura.author;
 |]
 
 --------------------------------------------------------------------------------
+-- BigQuery backend
+
+bigquerySetup :: State -> IO ()
+bigquerySetup state = do
+  -- Clear and reconfigure the metadata
+  serviceAccount <- BigQuery.getServiceAccount
+  projectId <- BigQuery.getProjectId
+  GraphqlEngine.post_
+    state
+    "/v1/metadata"
+    [yaml|
+type: replace_metadata
+args:
+  version: 3
+  sources:
+  - name: bigquery
+    kind: bigquery
+    tables: []
+    configuration:
+      service_account: *serviceAccount
+      project_id: *projectId
+      datasets: [hasura]
+|]
+
+  -- Setup tables
+  BigQuery.run_
+    serviceAccount
+    projectId
+    [sql|
+CREATE TABLE hasura.author
+(
+    id INT64,
+    name STRING
+);
+|]
+  BigQuery.run_
+    serviceAccount
+    projectId
+    [sql|
+INSERT INTO hasura.author
+    (id, name)
+VALUES
+    (1, 'Author 1'),
+    (2, 'Author 2');
+|]
+
+  -- Track the tables
+  GraphqlEngine.post_
+    state
+    "/v1/metadata"
+    [yaml|
+type: bigquery_track_table
+args:
+  source: bigquery
+  table:
+    dataset: hasura
+    name: author
+|]
+
+bigqueryTeardown :: State -> IO ()
+bigqueryTeardown _ = do
+  serviceAccount <- BigQuery.getServiceAccount
+  projectId <- BigQuery.getProjectId
+  BigQuery.run_
+    serviceAccount
+    projectId
+    [sql|
+DROP TABLE hasura.author;
+|]
+
+--------------------------------------------------------------------------------
 -- Tests
 
-tests :: SpecWith State
-tests = do
+tests :: Feature.BackendOptions -> SpecWith State
+tests opts = do
   it "Author fields" $ \state ->
     shouldReturnYaml
+      opts
       ( GraphqlEngine.postGraphql
           state
           [graphql|
 query {
-  hasura_author {
+  hasura_author(order_by:[{id:asc}]) {
     name
     id
   }
@@ -261,6 +347,7 @@ data:
 |]
   it "Use operationName" $ \state ->
     shouldReturnYaml
+      opts
       ( GraphqlEngine.postGraphqlYaml
           state
           [yaml|
@@ -272,7 +359,7 @@ query: |
     }
   }
   query chooseThisOne {
-    hasura_author {
+    hasura_author(order_by:[{id:asc}]) {
       id
       name
     }
@@ -289,6 +376,7 @@ data:
 |]
   it "Missing field" $ \state -> do
     shouldReturnYaml
+      opts
       ( GraphqlEngine.postGraphql
           state
           [graphql|
@@ -311,6 +399,7 @@ errors:
 |]
   it "Missing table" $ \state ->
     shouldReturnYaml
+      opts
       ( GraphqlEngine.postGraphql
           state
           [graphql|

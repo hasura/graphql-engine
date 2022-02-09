@@ -7,7 +7,6 @@ module Hasura.Backends.BigQuery.DDL.Source
   )
 where
 
-import Control.Concurrent.MVar (newMVar)
 import Data.Aeson qualified as J
 import Data.ByteString.Lazy qualified as L
 import Data.Environment qualified as Env
@@ -42,9 +41,10 @@ resolveSourceConfig _name BigQueryConnSourceConfig {..} env = runExceptT $ do
   eSA <- resolveConfigurationJson env _cscServiceAccount
   case eSA of
     Left e -> throw400 Unexpected $ T.pack e
-    Right _scServiceAccount -> do
+    Right serviceAccount -> do
+      projectId <- resolveConfigurationInput env _cscProjectId
+      _scConnection <- initConnection serviceAccount projectId
       _scDatasets <- resolveConfigurationInputs env _cscDatasets
-      _scProjectId <- resolveConfigurationInput env _cscProjectId
       _scGlobalSelectLimit <-
         resolveConfigurationInput env `mapM` _cscGlobalSelectLimit >>= \case
           Nothing -> pure defaultGlobalSelectLimit
@@ -57,12 +57,7 @@ resolveSourceConfig _name BigQueryConnSourceConfig {..} env = runExceptT $ do
               Just i' -> do
                 when (i' < 0) $ throw400 Unexpected "Need the integer for the global select limit to be non-negative"
                 pure i'
-      trMVar <- liftIO $ newMVar Nothing -- `runBigQuery` initializes the token
-      pure
-        BigQuerySourceConfig
-          { _scAccessTokenMVar = trMVar,
-            ..
-          }
+      pure BigQuerySourceConfig {..}
 
 resolveSource ::
   (MonadIO m) =>

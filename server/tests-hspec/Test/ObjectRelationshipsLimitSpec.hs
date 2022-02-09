@@ -28,7 +28,8 @@ spec =
           [ Feature.Backend
               { name = "Postgres",
                 setup = postgresSetup,
-                teardown = postgresTeardown
+                teardown = postgresTeardown,
+                backendOptions = Feature.defaultBackendOptions
               }
           ],
         Feature.tests = tests
@@ -44,10 +45,11 @@ spec =
 --
 --   Because of that, we use 'shouldReturnOneOfYaml' and list all of the possible (valid)
 --   expected results.
-tests :: SpecWith State
-tests = do
+tests :: Feature.BackendOptions -> SpecWith State
+tests opts = do
   it "Query by id" $ \state ->
     shouldReturnOneOfYaml
+      opts
       ( GraphqlEngine.postGraphql
           state
           [graphql|
@@ -79,6 +81,7 @@ data:
 
   it "Query limit 2" $ \state ->
     shouldReturnOneOfYaml
+      opts
       ( GraphqlEngine.postGraphql
           state
           [graphql|
@@ -116,6 +119,7 @@ data:
 
   it "where author name" $ \state ->
     shouldReturnOneOfYaml
+      opts
       ( GraphqlEngine.postGraphql
           state
           [graphql|
@@ -147,6 +151,7 @@ data:
 
   it "order by author id" $ \state ->
     shouldReturnOneOfYaml
+      opts
       ( GraphqlEngine.postGraphql
           state
           [graphql|
@@ -184,6 +189,7 @@ data:
 
   it "count articles" $ \state ->
     shouldReturnYaml
+      opts
       ( GraphqlEngine.postGraphql
           state
           [graphql|

@@ -16,12 +16,17 @@ import Control.Monad.Reader
 import Control.Monad.Trans.Resource
 import Data.Aeson
 import Data.Aeson qualified as Aeson
+import Data.Aeson.Text (encodeToLazyText)
 import Data.ByteString.Char8 qualified as BS8
 import Data.Conduit
 import Data.Conduit.List qualified as CL
+import Data.HashMap.Strict qualified as Map
 import Data.Text.Encoding.Error qualified as T
+import Data.Text.Lazy qualified as LT
+import Data.Vector qualified as V
 import Data.Yaml qualified
 import Data.Yaml.Internal qualified
+import Harness.Test.Feature (BackendOptions (..))
 import Instances.TH.Lift ()
 import Language.Haskell.TH
 import Language.Haskell.TH.Lift as TH
@@ -40,20 +45,35 @@ import Prelude
 --
 -- We use 'Visual' internally to easily display the 'Value' as YAML
 -- when the test suite uses its 'Show' instance.
-shouldReturnYaml :: IO Value -> Value -> IO ()
-shouldReturnYaml actualIO expected = do
+shouldReturnYaml :: BackendOptions -> IO Value -> Value -> IO ()
+shouldReturnYaml BackendOptions {stringifyNumbers} actualIO expected = do
   actual <- actualIO
-  shouldBe (Visual actual) (Visual expected)
+  let expected' =
+        if stringifyNumbers then stringifyExpectedToActual expected actual else expected
+  shouldBe (Visual actual) (Visual expected')
+
+stringifyExpectedToActual :: Value -> Value -> Value
+stringifyExpectedToActual (Number n) (String _) = String (LT.toStrict $ encodeToLazyText n)
+stringifyExpectedToActual (Object hm) (Object hm') =
+  let stringifyKV k v =
+        case Map.lookup k hm' of
+          Just v' -> stringifyExpectedToActual v v'
+          Nothing -> v
+   in Object (Map.mapWithKey stringifyKV hm)
+stringifyExpectedToActual (Array as) (Array bs) = Array (V.zipWith stringifyExpectedToActual as bs)
+stringifyExpectedToActual expected _ = expected
 
 -- | The action @actualIO@ should produce the @expected@ YAML,
 -- represented (by the yaml package) as an aeson 'Value'.
 --
 -- We use 'Visual' internally to easily display the 'Value' as YAML
 -- when the test suite uses its 'Show' instance.
-shouldReturnOneOfYaml :: IO Value -> [Value] -> IO ()
-shouldReturnOneOfYaml actualIO expected = do
+shouldReturnOneOfYaml :: BackendOptions -> IO Value -> [Value] -> IO ()
+shouldReturnOneOfYaml BackendOptions {stringifyNumbers} actualIO expecteds = do
   actual <- actualIO
-  shouldContain (map Visual expected) [Visual actual]
+  let fixNumbers expected =
+        if stringifyNumbers then stringifyExpectedToActual expected actual else expected
+  shouldContain (map (Visual . fixNumbers) expecteds) [Visual actual]
 
 -------------------------------------------------------------------
 

@@ -14,7 +14,7 @@ spec =
   Feature.feature
     Feature.Feature
       { Feature.backends = [],
-        Feature.tests = tests
+        Feature.tests = \_ -> tests
       }
 
 --------------------------------------------------------------------------------
