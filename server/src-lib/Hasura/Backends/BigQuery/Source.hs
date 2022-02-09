@@ -4,6 +4,7 @@
 
 module Hasura.Backends.BigQuery.Source
   ( BigQueryConnSourceConfig (..),
+    BigQueryConnection (..),
     BigQuerySourceConfig (..),
     ConfigurationInput (..),
     ConfigurationInputs (..),
@@ -156,11 +157,16 @@ deriving instance Hashable BigQueryConnSourceConfig
 instance Cacheable BigQueryConnSourceConfig where
   unchanged _ = (==)
 
+data BigQueryConnection = BigQueryConnection
+  { _bqServiceAccount :: !ServiceAccount,
+    _bqProjectId :: !Text, -- this is part of service-account.json, but we put it here on purpose
+    _bqAccessTokenMVar :: !(MVar (Maybe TokenResp))
+  }
+  deriving (Eq)
+
 data BigQuerySourceConfig = BigQuerySourceConfig
-  { _scServiceAccount :: !ServiceAccount,
+  { _scConnection :: !BigQueryConnection,
     _scDatasets :: ![Text],
-    _scProjectId :: !Text, -- this is part of service-account.json, but we put it here on purpose
-    _scAccessTokenMVar :: !(MVar (Maybe TokenResp)),
     _scGlobalSelectLimit :: !Int.Int64
   }
   deriving (Eq)
@@ -171,8 +177,8 @@ instance Cacheable BigQuerySourceConfig where
 instance J.ToJSON BigQuerySourceConfig where
   toJSON BigQuerySourceConfig {..} =
     J.object
-      [ "service_account" J..= _scServiceAccount,
+      [ "service_account" J..= _bqServiceAccount _scConnection,
         "datasets" J..= _scDatasets,
-        "project_id" J..= _scProjectId,
+        "project_id" J..= _bqProjectId _scConnection,
         "global_select_limit" J..= _scGlobalSelectLimit
       ]

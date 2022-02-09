@@ -5,6 +5,7 @@ module Hasura.Backends.BigQuery.Connection
     resolveConfigurationInput,
     resolveConfigurationInputs,
     resolveConfigurationJson,
+    initConnection,
     runBigQuery,
   )
 where
@@ -94,6 +95,11 @@ resolveConfigurationInputs env = \case
   FromYamls a -> pure a
   FromEnvs v -> filter (not . T.null) . T.splitOn "," <$> MSSQLConn.getEnv env v
 
+initConnection :: MonadIO m => ServiceAccount -> Text -> m BigQueryConnection
+initConnection _bqServiceAccount _bqProjectId = do
+  _bqAccessTokenMVar <- liftIO $ newMVar Nothing -- `runBigQuery` initializes the token
+  pure BigQueryConnection {..}
+
 getAccessToken :: MonadIO m => ServiceAccount -> m (Either TokenProblem TokenResp)
 getAccessToken sa = do
   eJwt <- encodeBearerJWT sa ["https://www.googleapis.com/auth/cloud-platform"]
@@ -163,13 +169,13 @@ getAccessToken sa = do
                   ]
 
 -- | Get a usable token. If the token has expired refresh it.
-getUsableToken :: MonadIO m => BigQuerySourceConfig -> m (Either TokenProblem TokenResp)
-getUsableToken BigQuerySourceConfig {_scServiceAccount, _scAccessTokenMVar} =
+getUsableToken :: MonadIO m => BigQueryConnection -> m (Either TokenProblem TokenResp)
+getUsableToken BigQueryConnection {_bqServiceAccount, _bqAccessTokenMVar} =
   liftIO $
-    modifyMVar _scAccessTokenMVar $ \mTokenResp -> do
+    modifyMVar _bqAccessTokenMVar $ \mTokenResp -> do
       case mTokenResp of
         Nothing -> do
-          refreshedToken <- getAccessToken _scServiceAccount
+          refreshedToken <- getAccessToken _bqServiceAccount
           case refreshedToken of
             Left e -> pure (Nothing, Left e)
             Right t -> pure (Just t, Right t)
@@ -177,7 +183,7 @@ getUsableToken BigQuerySourceConfig {_scServiceAccount, _scAccessTokenMVar} =
           pt <- liftIO $ getPOSIXTime
           if (pt >= fromIntegral _trExpiresAt - (10 :: NominalDiffTime)) -- when posix-time is greater than expires-at-minus-threshold
             then do
-              refreshedToken' <- getAccessToken _scServiceAccount
+              refreshedToken' <- getAccessToken _bqServiceAccount
               case refreshedToken' of
                 Left e -> pure (Just t, Left e)
                 Right t' -> pure (Just t', Right t')
@@ -189,11 +195,11 @@ data BigQueryProblem
 
 runBigQuery ::
   (MonadIO m) =>
-  BigQuerySourceConfig ->
+  BigQueryConnection ->
   Request ->
   m (Either BigQueryProblem (Response BL.ByteString))
-runBigQuery sc req = do
-  eToken <- getUsableToken sc
+runBigQuery conn req = do
+  eToken <- getUsableToken conn
   case eToken of
     Left e -> pure . Left . TokenProblem $ e
     Right TokenResp {_trAccessToken, _trExpiresAt} -> do

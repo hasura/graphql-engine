@@ -3,6 +3,8 @@ module Harness.Test.Feature
   ( feature,
     Feature (..),
     Backend (..),
+    BackendOptions (..),
+    defaultBackendOptions,
   )
 where
 
@@ -15,7 +17,7 @@ import Prelude
 -- | Use this record to put together a test against a set of backends.
 data Feature = Feature
   { backends :: [Backend],
-    tests :: SpecWith State
+    tests :: BackendOptions -> SpecWith State
   }
 
 -- | A backend specification.
@@ -27,8 +29,18 @@ data Backend = Backend
     -- tables calls.
     setup :: State -> IO (),
     -- | Clean up any resources you created in 'setup'.
-    teardown :: State -> IO ()
+    teardown :: State -> IO (),
+    -- | Backend-specific details which should be taken into account in tests
+    backendOptions :: BackendOptions
   }
+
+data BackendOptions = BackendOptions
+  { -- | Defines whether numeric values for the particular backend output as strings
+    stringifyNumbers :: Bool
+  }
+
+defaultBackendOptions :: BackendOptions
+defaultBackendOptions = BackendOptions {stringifyNumbers = False}
 
 -- | Test the feature, running the setup before any tests are run, and
 -- and ensuring teardown happens after all tests are run.
@@ -36,7 +48,7 @@ feature :: Feature -> SpecWith State
 feature Feature {backends, tests} =
   for_
     backends
-    ( \Backend {name, setup, teardown} ->
+    ( \Backend {name, setup, teardown, backendOptions} ->
         describe
           name
           ( aroundAllWith
@@ -48,7 +60,7 @@ feature Feature {backends, tests} =
                     )
                     (teardown state)
               )
-              tests
+              (tests backendOptions)
           )
     )
 

@@ -26,7 +26,8 @@ spec =
           [ Feature.Backend
               { name = "MySQL",
                 setup = mysqlSetup,
-                teardown = mysqlTeardown
+                teardown = mysqlTeardown,
+                backendOptions = Feature.defaultBackendOptions
               }
           ],
         Feature.tests = tests
@@ -97,10 +98,11 @@ query QueryParams {includeId, skipId} =
   }
 |]
 
-tests :: SpecWith State
-tests = do
+tests :: Feature.BackendOptions -> SpecWith State
+tests opts = do
   it "Skip id field conditionally" \state ->
     shouldReturnYaml
+      opts
       ( GraphqlEngine.postGraphql
           state
           (query QueryParams {includeId = False, skipId = False})
@@ -114,6 +116,7 @@ data:
 
   it "Skip id field conditionally, includeId=true" \state ->
     shouldReturnYaml
+      opts
       ( GraphqlEngine.postGraphql
           state
           (query QueryParams {includeId = True, skipId = False})
@@ -129,6 +132,7 @@ data:
 
   it "Skip id field conditionally, skipId=true" \state ->
     shouldReturnYaml
+      opts
       ( GraphqlEngine.postGraphql
           state
           (query QueryParams {includeId = False, skipId = True})
@@ -142,6 +146,7 @@ data:
 
   it "Skip id field conditionally, skipId=true, includeId=true" \state ->
     shouldReturnYaml
+      opts
       ( GraphqlEngine.postGraphql
           state
           (query QueryParams {includeId = True, skipId = True})
@@ -157,6 +162,7 @@ data:
 
   it "Author with skip id" \state ->
     shouldReturnYaml
+      opts
       ( GraphqlEngine.postGraphqlYaml
           state
           [yaml|
@@ -180,6 +186,7 @@ data:
 |]
   it "Author with skip name" \state ->
     shouldReturnYaml
+      opts
       ( GraphqlEngine.postGraphqlYaml
           state
           [yaml|
@@ -205,6 +212,7 @@ data:
   -- These three come from <https://github.com/hasura/graphql-engine-mono/blob/5f6f862e5f6b67d82cfa59568edfc4f08b920375/server/tests-py/queries/graphql_query/mysql/select_query_author_with_wrong_directive_err.yaml#L1>
   it "Rejects unknown directives" \state ->
     shouldReturnYaml
+      opts
       ( GraphqlEngine.postGraphqlYaml
           state
           [yaml|
@@ -226,6 +234,7 @@ errors:
 |]
   it "Rejects duplicate directives" \state ->
     shouldReturnYaml
+      opts
       ( GraphqlEngine.postGraphqlYaml
           state
           [yaml|
@@ -247,6 +256,7 @@ errors:
 |]
   it "Rejects directives on wrong element" \state ->
     shouldReturnYaml
+      opts
       ( GraphqlEngine.postGraphqlYaml
           state
           [yaml|

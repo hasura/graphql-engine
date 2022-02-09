@@ -25,7 +25,8 @@ spec =
           [ Feature.Backend
               { name = "MySQL",
                 setup = mysqlSetup,
-                teardown = mysqlTeardown
+                teardown = mysqlTeardown,
+                backendOptions = Feature.defaultBackendOptions
               }
           ],
         Feature.tests = tests
@@ -84,10 +85,11 @@ DROP TABLE author;
 -- That includes order by {text,id} {desc,asc}
 --
 
-tests :: SpecWith State
-tests = do
+tests :: Feature.BackendOptions -> SpecWith State
+tests opts = do
   it "Order by id ascending" $ \state ->
     shouldReturnYaml
+      opts
       ( GraphqlEngine.postGraphql
           state
           [graphql|
@@ -110,6 +112,7 @@ data:
 
   it "Order by id descending" $ \state ->
     shouldReturnYaml
+      opts
       ( GraphqlEngine.postGraphql
           state
           [graphql|
@@ -132,6 +135,7 @@ data:
 
   it "Order by name ascending" $ \state ->
     shouldReturnYaml
+      opts
       ( GraphqlEngine.postGraphql
           state
           [graphql|
@@ -154,6 +158,7 @@ data:
 
   it "Order by name descending" $ \state ->
     shouldReturnYaml
+      opts
       ( GraphqlEngine.postGraphql
           state
           [graphql|

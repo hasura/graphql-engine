@@ -25,7 +25,8 @@ spec =
           [ Feature.Backend
               { name = "MySQL",
                 setup = mysqlSetup,
-                teardown = mysqlTeardown
+                teardown = mysqlTeardown,
+                backendOptions = Feature.defaultBackendOptions
               }
           ],
         Feature.tests = tests
@@ -131,10 +132,11 @@ DROP TABLE author;
 --------------------------------------------------------------------------------
 -- Tests
 
-tests :: SpecWith State
-tests = do
+tests :: Feature.BackendOptions -> SpecWith State
+tests opts = do
   it "Author of article where id=1" $ \state ->
     shouldReturnYaml
+      opts
       ( GraphqlEngine.postGraphql
           state
           [graphql|
@@ -159,6 +161,7 @@ data:
   -- originally from <https://github.com/hasura/graphql-engine-mono/blob/cf64da26e818ca0e4ec39667296c67021bc03c2a/server/tests-py/queries/graphql_query/mysql/select_query_author_quoted_col.yaml>
   it "Simple GraphQL object query on author" $ \state ->
     shouldReturnYaml
+      opts
       ( GraphqlEngine.postGraphql
           state
           [graphql|

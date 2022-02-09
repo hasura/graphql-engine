@@ -24,6 +24,8 @@ module Harness.Constants
     sqlserverLivenessCheckIntervalSeconds,
     sqlserverLivenessCheckIntervalMicroseconds,
     sqlserverConnectInfo,
+    bigqueryServiceAccountVar,
+    bigqueryProjectIdVar,
     httpHealthCheckAttempts,
     httpHealthCheckIntervalSeconds,
     httpHealthCheckIntervalMicroseconds,
@@ -166,6 +168,12 @@ mysqlConnectInfo =
       Mysql.connectHost = mysqlHost,
       Mysql.connectPort = mysqlPort
     }
+
+bigqueryServiceAccountVar :: String
+bigqueryServiceAccountVar = "HASURA_BIGQUERY_SERVICE_ACCOUNT"
+
+bigqueryProjectIdVar :: String
+bigqueryProjectIdVar = "HASURA_BIGQUERY_PROJECT_ID"
 
 -- * HTTP health checks
 

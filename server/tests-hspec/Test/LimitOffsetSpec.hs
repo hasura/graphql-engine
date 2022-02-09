@@ -25,7 +25,8 @@ spec =
           [ Feature.Backend
               { name = "MySQL",
                 setup = mysqlSetup,
-                teardown = mysqlTeardown
+                teardown = mysqlTeardown,
+                backendOptions = Feature.defaultBackendOptions
               }
           ],
         Feature.tests = tests
@@ -82,10 +83,11 @@ DROP TABLE author;
 --------------------------------------------------------------------------------
 -- Tests
 
-tests :: SpecWith State
-tests = do
+tests :: Feature.BackendOptions -> SpecWith State
+tests opts = do
   it "limit 1" $ \state ->
     shouldReturnYaml
+      opts
       ( GraphqlEngine.postGraphql
           state
           [graphql|
@@ -110,6 +112,7 @@ data:
   -- on ordering with tests like this.
   it "Basic offset query" $ \state ->
     shouldReturnYaml
+      opts
       ( GraphqlEngine.postGraphql
           state
           [graphql|
@@ -137,6 +140,7 @@ data:
   -- We use ordering here, which yields a stable result.
   it "order descending, offset 2, limit 1" $ \state ->
     shouldReturnYaml
+      opts
       ( GraphqlEngine.postGraphql
           state
           [graphql|

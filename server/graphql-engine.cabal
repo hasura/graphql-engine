@@ -974,7 +974,9 @@ test-suite tests-hspec
         Harness.Backend.Sqlserver
         Harness.Backend.Postgres
         Harness.Backend.Citus
+        Harness.Backend.BigQuery
 
+      Harness.Env
       Harness.GraphqlEngine
       Harness.Http
       Harness.State

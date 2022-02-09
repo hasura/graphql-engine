@@ -27,7 +27,6 @@ import Data.Text.Lazy qualified as LT
 import Data.Vector qualified as V
 import Hasura.Backends.BigQuery.Execute qualified as Execute
 import Hasura.Backends.BigQuery.Source (BigQuerySourceConfig (..))
-import Hasura.Backends.BigQuery.Types qualified as BigQuery
 import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.Prelude
@@ -76,8 +75,8 @@ runSQL_ f (BigQueryRunSQL query source) = do
   sourceConfig <- askSourceConfig @'BigQuery source
   result <-
     Execute.streamBigQuery
-      sourceConfig
-      Execute.BigQuery {query = LT.fromStrict query, parameters = mempty, cardinality = BigQuery.Many}
+      (_scConnection sourceConfig)
+      Execute.BigQuery {query = LT.fromStrict query, parameters = mempty}
   case result of
     Left queryError -> throw400 BigQueryError (tshow queryError) -- TODO: Pretty print the error type.
     Right recordSet ->
@@ -95,7 +94,7 @@ recordSetAsHeaderAndRows Execute.RecordSet {rows} = J.toJSON (thead : tbody)
         Just row ->
           map (J.toJSON . (coerce :: Execute.FieldNameText -> Text)) (OMap.keys row)
     tbody :: [[J.Value]]
-    tbody = map (\row -> map J.toJSON (OMap.elems row)) (toList rows)
+    tbody = map (map J.toJSON . OMap.elems) (toList rows)
 
 recordSetAsSchema :: Execute.RecordSet -> J.Value
 recordSetAsSchema rs@(Execute.RecordSet {rows}) =
