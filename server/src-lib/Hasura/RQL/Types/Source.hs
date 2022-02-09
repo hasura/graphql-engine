@@ -24,11 +24,12 @@ module Hasura.RQL.Types.Source
   )
 where
 
-import Control.Lens
+import Control.Lens hiding ((.=))
 import Data.Aeson.Extended
 import Data.HashMap.Strict qualified as M
 import Database.PG.Query qualified as Q
 import Hasura.Base.Error
+import Hasura.Logging qualified as L
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.Types.Backend
@@ -101,6 +102,15 @@ data ResolvedSource b = ResolvedSource
     _rsFunctions :: !(DBFunctionsMetadata b),
     _rsPgScalars :: !(HashSet (ScalarType b))
   }
+
+instance (L.ToEngineLog (ResolvedSource b) L.Hasura) where
+  toEngineLog _ = (L.LevelDebug, L.ELTStartup, toJSON rsLog)
+    where
+      rsLog =
+        object
+          [ "kind" .= ("resolve_source" :: Text),
+            "info" .= ("Successfully resolved source" :: Text)
+          ]
 
 type SourceTables b = HashMap SourceName (TableCache b)
 

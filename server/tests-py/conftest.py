@@ -89,6 +89,14 @@ def pytest_addoption(parser):
     )
 
     parser.addoption(
+        "--test-startup-db-calls",
+        action="store_true",
+        default=False,
+        required=False,
+        help="Run testcases for startup database calls"
+    )
+
+    parser.addoption(
         "--test-function-permissions",
         action="store_true",
         required=False,

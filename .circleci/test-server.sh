@@ -756,6 +756,32 @@ query-logs)
 	# end verbose logging tests
 	;;
 
+startup-db-calls)
+	# verbose logging tests
+	echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE STARTUP DB CALLS ########>\n"
+	export HASURA_GRAPHQL_ADMIN_SECRET="HGE$RANDOM$RANDOM"
+
+	export HASURA_GRAPHQL_ENABLED_LOG_TYPES=" startup,http-log,webhook-log,websocket-log,query-log"
+	export HASURA_GRAPHQL_LOG_LEVEL="debug"
+
+	#run_hge_with_args serve
+	# we are doing this instead of calling run_hge_with_args, because we want to save in a custom log file
+	set -x
+	export LOGGING_TEST_LOGFILE_PATH="$OUTPUT_FOLDER/graphql-engine-verbose-logging-db.log"
+	"$GRAPHQL_ENGINE" serve 2>&1 >"$LOGGING_TEST_LOGFILE_PATH" &
+	HGE_PIDS="$HGE_PIDS $!"
+	set +x
+
+	wait_for_port 8080
+
+	pytest -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --test-startup-db-calls test_startup_db_calls.py
+
+	unset HASURA_GRAPHQL_ENABLED_LOG_TYPES
+	kill_hge_servers
+
+	# end verbose logging tests
+	;;
+
 remote-schema-https)
 	echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH SECURE REMOTE SCHEMA #########################>\n"
 
