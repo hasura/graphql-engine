@@ -161,3 +161,7 @@ html[data-theme='dark'] .docusaurus-highlight-code-line {
 .no-shadow {
   box-shadow: none !important;
 }
+
+html[data-theme='dark'] .no-shadow {
+  background-color: #fff;
+}
