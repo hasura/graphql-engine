@@ -179,7 +179,7 @@ data:
   - Compares the response to an expected result which can be specified using the `yaml` quasi-quoter.
 
 __Note__: these quasi-quoter can also perform string interpolation. See the relevant modules
-under the [Harness.Quoter](Harness/Quouter) namespace.
+under the [Harness.Quoter](Harness/Quoter) namespace.
 
 ### Style guide
 
