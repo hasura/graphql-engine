@@ -139,3 +139,24 @@ class TestDisableGraphQLIntrospection:
 
     def test_disable_introspection(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/disable_introspection.yaml")
+
+@pytest.mark.usefixtures('per_class_tests_db_state')
+class TestGraphQlIntrospectionDescriptions:
+
+    setup_metadata_api_version = "v2"
+
+    @classmethod
+    def dir(cls):
+        return "queries/graphql_introspection/descriptions"
+
+    def test_automatic_comment_in_db(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/automatic_comment_in_db.yaml")
+
+    def test_automatic_no_comment_in_db(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/automatic_no_comment_in_db.yaml")
+
+    def test_explicit_comment_in_metadata(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/explicit_comment_in_metadata.yaml")
+
+    def test_explicit_no_comment_in_metadata(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/explicit_no_comment_in_metadata.yaml")
