@@ -1623,35 +1623,96 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span id="line-700"></span><span class="hs-comment">-- | This type contains all the information needed to efficiently serve GraphQL</span><span>
 </span><span id="line-701"></span><span class="hs-comment">-- introspection queries. It corresponds to the GraphQL @__Schema@ type defined</span><span>
 </span><span id="line-702"></span><span class="hs-comment">-- in &lt;&#167; 4.5 Schema Introspection http://spec.graphql.org/June2018/#sec-Introspection&gt;.</span><span>
-</span><span id="line-703"></span><span class="hs-keyword">data</span><span> </span><span id="Schema"><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#Schema"><span class="hs-identifier hs-var">Schema</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Schema"><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#Schema"><span class="hs-identifier hs-var">Schema</span></a></span></span><span>
-</span><span id="line-704"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="sDescription"><span class="annot"><span class="annottext">Schema -&gt; Maybe Description
+</span><span id="line-703"></span><span class="hs-comment">-- See also Note [Basics of introspection schema generation].</span><span>
+</span><span id="line-704"></span><span class="hs-keyword">data</span><span> </span><span id="Schema"><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#Schema"><span class="hs-identifier hs-var">Schema</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Schema"><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#Schema"><span class="hs-identifier hs-var">Schema</span></a></span></span><span>
+</span><span id="line-705"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="sDescription"><span class="annot"><span class="annottext">Schema -&gt; Maybe Description
 </span><a href="Hasura.GraphQL.Parser.Schema.html#sDescription"><span class="hs-identifier hs-var hs-var">sDescription</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Description</span></span><span class="hs-special">,</span><span>
-</span><span id="line-705"></span><span>    </span><span id="sTypes"><span class="annot"><span class="annottext">Schema -&gt; HashMap Name (Definition SomeTypeInfo)
+</span><span id="line-706"></span><span>    </span><span id="sTypes"><span class="annot"><span class="annottext">Schema -&gt; HashMap Name (Definition SomeTypeInfo)
 </span><a href="Hasura.GraphQL.Parser.Schema.html#sTypes"><span class="hs-identifier hs-var hs-var">sTypes</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HashMap</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Name</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#Definition"><span class="hs-identifier hs-type">Definition</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#SomeTypeInfo"><span class="hs-identifier hs-type">SomeTypeInfo</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
-</span><span id="line-706"></span><span>    </span><span id="sQueryType"><span class="annot"><span class="annottext">Schema -&gt; Type 'Output
+</span><span id="line-707"></span><span>    </span><span id="sQueryType"><span class="annot"><span class="annottext">Schema -&gt; Type 'Output
 </span><a href="Hasura.GraphQL.Parser.Schema.html#sQueryType"><span class="hs-identifier hs-var hs-var">sQueryType</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#Type"><span class="hs-identifier hs-type">Type</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#Output"><span class="hs-identifier hs-type">Output</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-707"></span><span>    </span><span id="sMutationType"><span class="annot"><span class="annottext">Schema -&gt; Maybe (Type 'Output)
+</span><span id="line-708"></span><span>    </span><span id="sMutationType"><span class="annot"><span class="annottext">Schema -&gt; Maybe (Type 'Output)
 </span><a href="Hasura.GraphQL.Parser.Schema.html#sMutationType"><span class="hs-identifier hs-var hs-var">sMutationType</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#Type"><span class="hs-identifier hs-type">Type</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#Output"><span class="hs-identifier hs-type">Output</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
-</span><span id="line-708"></span><span>    </span><span id="sSubscriptionType"><span class="annot"><span class="annottext">Schema -&gt; Maybe (Type 'Output)
+</span><span id="line-709"></span><span>    </span><span id="sSubscriptionType"><span class="annot"><span class="annottext">Schema -&gt; Maybe (Type 'Output)
 </span><a href="Hasura.GraphQL.Parser.Schema.html#sSubscriptionType"><span class="hs-identifier hs-var hs-var">sSubscriptionType</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#Type"><span class="hs-identifier hs-type">Type</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#Output"><span class="hs-identifier hs-type">Output</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
-</span><span id="line-709"></span><span>    </span><span id="sDirectives"><span class="annot"><span class="annottext">Schema -&gt; [DirectiveInfo]
+</span><span id="line-710"></span><span>    </span><span id="sDirectives"><span class="annot"><span class="annottext">Schema -&gt; [DirectiveInfo]
 </span><a href="Hasura.GraphQL.Parser.Schema.html#sDirectives"><span class="hs-identifier hs-var hs-var">sDirectives</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#DirectiveInfo"><span class="hs-identifier hs-type">DirectiveInfo</span></a></span><span class="hs-special">]</span><span>
-</span><span id="line-710"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-711"></span><span>
-</span><span id="line-712"></span><span class="hs-keyword">data</span><span> </span><span id="TypeDefinitionsWrapper"><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#TypeDefinitionsWrapper"><span class="hs-identifier hs-var">TypeDefinitionsWrapper</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-713"></span><span>  </span><span id="local-6989586621688013486"><span id="TypeDefinitionsWrapper"><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#TypeDefinitionsWrapper"><span class="hs-identifier hs-var">TypeDefinitionsWrapper</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#HasTypeDefinitions"><span class="hs-identifier hs-type">HasTypeDefinitions</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688013486"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="#local-6989586621688013486"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#TypeDefinitionsWrapper"><span class="hs-identifier hs-type">TypeDefinitionsWrapper</span></a></span></span><span>
-</span><span id="line-714"></span><span>
-</span><span id="line-715"></span><span class="hs-comment">-- | Recursively collects all type definitions accessible from the given value.</span><span>
-</span><span id="line-716"></span><span id="local-6989586621688013484"><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#collectTypeDefinitions"><span class="hs-identifier hs-type">collectTypeDefinitions</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-717"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#HasTypeDefinitions"><span class="hs-identifier hs-type">HasTypeDefinitions</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688013484"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
-</span><span id="line-718"></span><span>  </span><span class="annot"><a href="#local-6989586621688013484"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-719"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#ConflictingDefinitions"><span class="hs-identifier hs-type">ConflictingDefinitions</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">HashMap</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Name</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#Definition"><span class="hs-identifier hs-type">Definition</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#SomeTypeInfo"><span class="hs-identifier hs-type">SomeTypeInfo</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span></span><span>
-</span><span id="line-720"></span><span id="collectTypeDefinitions"><span class="annot"><span class="annottext">collectTypeDefinitions :: a
+</span><span id="line-711"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-712"></span><span>
+</span><span id="line-713"></span><span class="hs-keyword">data</span><span> </span><span id="TypeDefinitionsWrapper"><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#TypeDefinitionsWrapper"><span class="hs-identifier hs-var">TypeDefinitionsWrapper</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-714"></span><span>  </span><span id="local-6989586621688013486"><span id="TypeDefinitionsWrapper"><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#TypeDefinitionsWrapper"><span class="hs-identifier hs-var">TypeDefinitionsWrapper</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#HasTypeDefinitions"><span class="hs-identifier hs-type">HasTypeDefinitions</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688013486"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="#local-6989586621688013486"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#TypeDefinitionsWrapper"><span class="hs-identifier hs-type">TypeDefinitionsWrapper</span></a></span></span><span>
+</span><span id="line-715"></span><span>
+</span><span id="line-716"></span><span class="hs-comment">{-
+Note [Collecting types from the GraphQL schema]
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+A `Parser` object consists of two things:
+
+- a function that is used to process (part of) an incoming query, and
+- a piece of GraphQL type information.
+
+The main reason that the GraphQL type information is included is so that we can
+generate responses for the introspection fields `__type` and `__schema`.  In
+particular, this requires us to have a complete list of all types being used in
+our schema.
+
+When we build our schema, we therefore finish by making a full walk over the
+entirety of the schema, collecting the GraphQL types encountered in a `HashMap`,
+allowing us to look up GraphQL types by name.  At this point we might figure out
+that a single name is used to represent two GraphQL types that are materially
+distinct.  For instance, the name `author` might be used as both a GraphQL
+object, representing a database table, and as a scalar, e.g. as a string name.
+It also prevents us from having both
+
+```
+type author {
+  id : int
+  name : string
+}
+```
+
+and
+
+```
+type author {
+  id : int
+  name : string
+  email : string
+}
+```
+
+in the schema, as the latter has an additional field and is thus distinct from
+the former, even though it has the same name.
+
+In fact, for HGE internally, such name clashes are not problematic.  We would
+merely end up exposing illegal introspection results.  But in order to produce
+introspection results, we have to explore the GraphQL schema anyway, to collect
+all types.  We use this opportunity to help our users figure out whether there
+are any name clashes, and if so what caused them.  So we do some work to track
+where in the schema various GraphQL type names were encountered.  This type
+collision information is stored in `ConflictingDefinitions`.
+
+A typical way in which conflicting type definitions occur in practice is if one
+version of HGE adds a different version of HGE as a remote schema, particularly
+when support for database features was added in the meantime.  For instance, if
+we'd add a new operator to boolean expressions, e.g. `XOR`, then this would end
+up adding an additional field to every `&lt;column&gt;_bool_exp` object in our schema,
+which clashes with the old `&lt;column&gt;_bool_exp` that's part of the remote schema.
+This is not a bug of the &quot;conflicting type definitions&quot; logic but a limitation
+of the design of HGE, which would be resolved by e.g. having namespaces for
+different data sources.
+-}</span><span>
+</span><span id="line-775"></span><span>
+</span><span id="line-776"></span><span class="hs-comment">-- | Recursively collects all type definitions accessible from the given value.</span><span>
+</span><span id="line-777"></span><span id="local-6989586621688013484"><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#collectTypeDefinitions"><span class="hs-identifier hs-type">collectTypeDefinitions</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-778"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#HasTypeDefinitions"><span class="hs-identifier hs-type">HasTypeDefinitions</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688013484"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-779"></span><span>  </span><span class="annot"><a href="#local-6989586621688013484"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-780"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#ConflictingDefinitions"><span class="hs-identifier hs-type">ConflictingDefinitions</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">HashMap</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Name</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#Definition"><span class="hs-identifier hs-type">Definition</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#SomeTypeInfo"><span class="hs-identifier hs-type">SomeTypeInfo</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span></span><span>
+</span><span id="line-781"></span><span id="collectTypeDefinitions"><span class="annot"><span class="annottext">collectTypeDefinitions :: a
 -&gt; Either
      ConflictingDefinitions (HashMap Name (Definition SomeTypeInfo))
 </span><a href="Hasura.GraphQL.Parser.Schema.html#collectTypeDefinitions"><span class="hs-identifier hs-var hs-var">collectTypeDefinitions</span></a></span></span><span> </span><span id="local-6989586621688013483"><span class="annot"><span class="annottext">a
 </span><a href="#local-6989586621688013483"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-721"></span><span>  </span><span class="annot"><span class="annottext">(HashMap Name (Definition SomeTypeInfo, NonEmpty TypeOriginStack)
+</span><span id="line-782"></span><span>  </span><span class="annot"><span class="annottext">(HashMap Name (Definition SomeTypeInfo, NonEmpty TypeOriginStack)
  -&gt; HashMap Name (Definition SomeTypeInfo))
 -&gt; Either
      ConflictingDefinitions
@@ -1679,7 +1740,7 @@ forall a b. (a, b) -&gt; a
      ConflictingDefinitions (HashMap Name (Definition SomeTypeInfo))
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span>
-</span><span id="line-722"></span><span>    </span><span class="annot"><span class="annottext">Except
+</span><span id="line-783"></span><span>    </span><span class="annot"><span class="annottext">Except
   ConflictingDefinitions
   (HashMap Name (Definition SomeTypeInfo, NonEmpty TypeOriginStack))
 -&gt; Either
@@ -1700,7 +1761,7 @@ forall e a. Except e a -&gt; Either e a
      (HashMap Name (Definition SomeTypeInfo, NonEmpty TypeOriginStack))
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span>
-</span><span id="line-723"></span><span>      </span><span class="annot"><span class="annottext">(StateT
+</span><span id="line-784"></span><span>      </span><span class="annot"><span class="annottext">(StateT
    (HashMap Name (Definition SomeTypeInfo, NonEmpty TypeOriginStack))
    (ExceptT ConflictingDefinitions Identity)
    ()
@@ -1744,7 +1805,7 @@ forall k v. HashMap k v
      (HashMap Name (Definition SomeTypeInfo, NonEmpty TypeOriginStack))
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span>
-</span><span id="line-724"></span><span>        </span><span class="annot"><span class="annottext">(ReaderT
+</span><span id="line-785"></span><span>        </span><span class="annot"><span class="annottext">(ReaderT
    TypeOriginStack
    (StateT
       (HashMap Name (Definition SomeTypeInfo, NonEmpty TypeOriginStack))
@@ -1802,7 +1863,7 @@ forall r (m :: * -&gt; *) a. ReaderT r m a -&gt; r -&gt; m a
      ()
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span>
-</span><span id="line-725"></span><span>          </span><span class="annot"><span class="annottext">TypeAccumulation ()
+</span><span id="line-786"></span><span>          </span><span class="annot"><span class="annottext">TypeAccumulation ()
 -&gt; ReaderT
      TypeOriginStack
      (StateT
@@ -1833,16 +1894,16 @@ TypeAccumulation a
      ()
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span>
-</span><span id="line-726"></span><span>            </span><span class="annot"><span class="annottext">a -&gt; TypeAccumulation ()
+</span><span id="line-787"></span><span>            </span><span class="annot"><span class="annottext">a -&gt; TypeAccumulation ()
 forall a. HasTypeDefinitions a =&gt; a -&gt; TypeAccumulation ()
 </span><a href="Hasura.GraphQL.Parser.Schema.html#accumulateTypeDefinitions"><span class="hs-identifier hs-var">accumulateTypeDefinitions</span></a></span><span> </span><span class="annot"><span class="annottext">a
 </span><a href="#local-6989586621688013483"><span class="hs-identifier hs-var">x</span></a></span><span>
-</span><span id="line-727"></span><span>
-</span><span id="line-728"></span><span class="hs-keyword">newtype</span><span> </span><span id="TypeOriginStack"><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#TypeOriginStack"><span class="hs-identifier hs-var">TypeOriginStack</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="TypeOriginStack"><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#TypeOriginStack"><span class="hs-identifier hs-var">TypeOriginStack</span></a></span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">Name</span></span><span class="hs-special">]</span><span>
-</span><span id="line-729"></span><span>
-</span><span id="line-730"></span><span class="hs-comment">-- Add the current field name to the origin stack</span><span>
-</span><span id="line-731"></span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#typeOriginRecurse"><span class="hs-identifier hs-type">typeOriginRecurse</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Name</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#TypeOriginStack"><span class="hs-identifier hs-type">TypeOriginStack</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#TypeOriginStack"><span class="hs-identifier hs-type">TypeOriginStack</span></a></span><span>
-</span><span id="line-732"></span><span id="typeOriginRecurse"><span class="annot"><span class="annottext">typeOriginRecurse :: Name -&gt; TypeOriginStack -&gt; TypeOriginStack
+</span><span id="line-788"></span><span>
+</span><span id="line-789"></span><span class="hs-keyword">newtype</span><span> </span><span id="TypeOriginStack"><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#TypeOriginStack"><span class="hs-identifier hs-var">TypeOriginStack</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="TypeOriginStack"><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#TypeOriginStack"><span class="hs-identifier hs-var">TypeOriginStack</span></a></span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">Name</span></span><span class="hs-special">]</span><span>
+</span><span id="line-790"></span><span>
+</span><span id="line-791"></span><span class="hs-comment">-- Add the current field name to the origin stack</span><span>
+</span><span id="line-792"></span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#typeOriginRecurse"><span class="hs-identifier hs-type">typeOriginRecurse</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Name</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#TypeOriginStack"><span class="hs-identifier hs-type">TypeOriginStack</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#TypeOriginStack"><span class="hs-identifier hs-type">TypeOriginStack</span></a></span><span>
+</span><span id="line-793"></span><span id="typeOriginRecurse"><span class="annot"><span class="annottext">typeOriginRecurse :: Name -&gt; TypeOriginStack -&gt; TypeOriginStack
 </span><a href="Hasura.GraphQL.Parser.Schema.html#typeOriginRecurse"><span class="hs-identifier hs-var hs-var">typeOriginRecurse</span></a></span></span><span> </span><span id="local-6989586621688013473"><span class="annot"><span class="annottext">Name
 </span><a href="#local-6989586621688013473"><span class="hs-identifier hs-var">field</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#TypeOriginStack"><span class="hs-identifier hs-type">TypeOriginStack</span></a></span><span> </span><span id="local-6989586621688013472"><span class="annot"><span class="annottext">[Name]
 </span><a href="#local-6989586621688013472"><span class="hs-identifier hs-var">origins</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Name] -&gt; TypeOriginStack
@@ -1851,21 +1912,21 @@ forall a. HasTypeDefinitions a =&gt; a -&gt; TypeAccumulation ()
 forall a. a -&gt; [a] -&gt; [a]
 </span><span class="hs-glyph hs-var">:</span></span><span> </span><span class="annot"><span class="annottext">[Name]
 </span><a href="#local-6989586621688013472"><span class="hs-identifier hs-var">origins</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-733"></span><span>
-</span><span id="line-734"></span><span class="hs-comment">-- This is kind of a hack to make sure that the query root name is part of the origin stack</span><span>
-</span><span id="line-735"></span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#typeRootRecurse"><span class="hs-identifier hs-type">typeRootRecurse</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Name</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#TypeOriginStack"><span class="hs-identifier hs-type">TypeOriginStack</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#TypeOriginStack"><span class="hs-identifier hs-type">TypeOriginStack</span></a></span><span>
-</span><span id="line-736"></span><span id="typeRootRecurse"><span class="annot"><span class="annottext">typeRootRecurse :: Name -&gt; TypeOriginStack -&gt; TypeOriginStack
+</span><span id="line-794"></span><span>
+</span><span id="line-795"></span><span class="hs-comment">-- This is kind of a hack to make sure that the query root name is part of the origin stack</span><span>
+</span><span id="line-796"></span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#typeRootRecurse"><span class="hs-identifier hs-type">typeRootRecurse</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Name</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#TypeOriginStack"><span class="hs-identifier hs-type">TypeOriginStack</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#TypeOriginStack"><span class="hs-identifier hs-type">TypeOriginStack</span></a></span><span>
+</span><span id="line-797"></span><span id="typeRootRecurse"><span class="annot"><span class="annottext">typeRootRecurse :: Name -&gt; TypeOriginStack -&gt; TypeOriginStack
 </span><a href="Hasura.GraphQL.Parser.Schema.html#typeRootRecurse"><span class="hs-identifier hs-var hs-var">typeRootRecurse</span></a></span></span><span> </span><span id="local-6989586621688013470"><span class="annot"><span class="annottext">Name
 </span><a href="#local-6989586621688013470"><span class="hs-identifier hs-var">rootName</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#TypeOriginStack"><span class="hs-identifier hs-type">TypeOriginStack</span></a></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[Name] -&gt; TypeOriginStack
 </span><a href="Hasura.GraphQL.Parser.Schema.html#TypeOriginStack"><span class="hs-identifier hs-var">TypeOriginStack</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Name
 </span><a href="#local-6989586621688013470"><span class="hs-identifier hs-var">rootName</span></a></span><span class="hs-special">]</span><span class="hs-special">)</span><span>
-</span><span id="line-737"></span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#typeRootRecurse"><span class="hs-identifier hs-var">typeRootRecurse</span></a></span><span> </span><span class="annot"><span class="annottext">Name
+</span><span id="line-798"></span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#typeRootRecurse"><span class="hs-identifier hs-var">typeRootRecurse</span></a></span><span> </span><span class="annot"><span class="annottext">Name
 </span><span class="hs-identifier">_</span></span><span> </span><span id="local-6989586621688013469"><span class="annot"><span class="annottext">TypeOriginStack
 </span><a href="#local-6989586621688013469"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">TypeOriginStack
 </span><a href="#local-6989586621688013469"><span class="hs-identifier hs-var">x</span></a></span><span>
-</span><span id="line-738"></span><span>
-</span><span id="line-739"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Data.Text.Extended.html#ToTxt"><span class="hs-identifier hs-type">ToTxt</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#TypeOriginStack"><span class="hs-identifier hs-type">TypeOriginStack</span></a></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-740"></span><span>  </span><span id="local-6989586621688013466"><span class="annot"><span class="annottext">toTxt :: TypeOriginStack -&gt; Text
+</span><span id="line-799"></span><span>
+</span><span id="line-800"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Data.Text.Extended.html#ToTxt"><span class="hs-identifier hs-type">ToTxt</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#TypeOriginStack"><span class="hs-identifier hs-type">TypeOriginStack</span></a></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-801"></span><span>  </span><span id="local-6989586621688013466"><span class="annot"><span class="annottext">toTxt :: TypeOriginStack -&gt; Text
 </span><a href="Data.Text.Extended.html#toTxt"><span class="hs-identifier hs-var hs-var hs-var hs-var">toTxt</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#TypeOriginStack"><span class="hs-identifier hs-type">TypeOriginStack</span></a></span><span> </span><span id="local-6989586621688013464"><span class="annot"><span class="annottext">[Name]
 </span><a href="#local-6989586621688013464"><span class="hs-identifier hs-var">fields</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; [Text] -&gt; Text
 </span><span class="hs-identifier hs-var">T.intercalate</span></span><span> </span><span class="annot"><span class="annottext">Text
@@ -1879,21 +1940,22 @@ forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 forall a. [a] -&gt; [a]
 </span><span class="hs-identifier hs-var">reverse</span></span><span> </span><span class="annot"><span class="annottext">[Name]
 </span><a href="#local-6989586621688013464"><span class="hs-identifier hs-var">fields</span></a></span><span>
-</span><span id="line-741"></span><span>
-</span><span id="line-742"></span><span class="hs-keyword">data</span><span> </span><span id="ConflictingDefinitions"><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#ConflictingDefinitions"><span class="hs-identifier hs-var">ConflictingDefinitions</span></a></span></span><span>
-</span><span id="line-743"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span class="hs-comment">-- | Type collection has found at least two types with the same name.</span><span>
-</span><span id="line-744"></span><span>    </span><span id="ConflictingDefinitions"><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#ConflictingDefinitions"><span class="hs-identifier hs-var">ConflictingDefinitions</span></a></span></span><span>
-</span><span id="line-745"></span><span>      </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#Definition"><span class="hs-identifier hs-type">Definition</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#SomeTypeInfo"><span class="hs-identifier hs-type">SomeTypeInfo</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#TypeOriginStack"><span class="hs-identifier hs-type">TypeOriginStack</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-746"></span><span>      </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#Definition"><span class="hs-identifier hs-type">Definition</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#SomeTypeInfo"><span class="hs-identifier hs-type">SomeTypeInfo</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">NonEmpty</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#TypeOriginStack"><span class="hs-identifier hs-type">TypeOriginStack</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-747"></span><span>
-</span><span id="line-748"></span><span class="hs-comment">-- | Although the majority of graphql-engine is written in terms of abstract</span><span>
-</span><span id="line-749"></span><span class="hs-comment">-- mtl-style effect monads, we figured out that this particular codepath is</span><span>
-</span><span id="line-750"></span><span class="hs-comment">-- quite hot, and that mtl has a measurable negative effect for accumulating</span><span>
-</span><span id="line-751"></span><span class="hs-comment">-- types from the schema, both in profiling and in benchmarking.  Using an</span><span>
-</span><span id="line-752"></span><span class="hs-comment">-- explicit transformers-style effect stack seems to overall memory usage by</span><span>
-</span><span id="line-753"></span><span class="hs-comment">-- about 3-7%.</span><span>
-</span><span id="line-754"></span><span class="hs-keyword">newtype</span><span> </span><span id="TypeAccumulation"><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#TypeAccumulation"><span class="hs-identifier hs-var">TypeAccumulation</span></a></span></span><span> </span><span id="local-6989586621688014014"><span class="annot"><a href="#local-6989586621688014014"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="TypeAccumulation"><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#TypeAccumulation"><span class="hs-identifier hs-var">TypeAccumulation</span></a></span></span><span>
-</span><span id="line-755"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="runTypeAccumulation"><span class="annot"><span class="annottext">TypeAccumulation a
+</span><span id="line-802"></span><span>
+</span><span id="line-803"></span><span class="hs-comment">-- See Note [Collecting types from the GraphQL schema]</span><span>
+</span><span id="line-804"></span><span class="hs-keyword">data</span><span> </span><span id="ConflictingDefinitions"><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#ConflictingDefinitions"><span class="hs-identifier hs-var">ConflictingDefinitions</span></a></span></span><span>
+</span><span id="line-805"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span class="hs-comment">-- | Type collection has found at least two types with the same name.</span><span>
+</span><span id="line-806"></span><span>    </span><span id="ConflictingDefinitions"><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#ConflictingDefinitions"><span class="hs-identifier hs-var">ConflictingDefinitions</span></a></span></span><span>
+</span><span id="line-807"></span><span>      </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#Definition"><span class="hs-identifier hs-type">Definition</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#SomeTypeInfo"><span class="hs-identifier hs-type">SomeTypeInfo</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#TypeOriginStack"><span class="hs-identifier hs-type">TypeOriginStack</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-808"></span><span>      </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#Definition"><span class="hs-identifier hs-type">Definition</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#SomeTypeInfo"><span class="hs-identifier hs-type">SomeTypeInfo</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">NonEmpty</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#TypeOriginStack"><span class="hs-identifier hs-type">TypeOriginStack</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-809"></span><span>
+</span><span id="line-810"></span><span class="hs-comment">-- | Although the majority of graphql-engine is written in terms of abstract</span><span>
+</span><span id="line-811"></span><span class="hs-comment">-- mtl-style effect monads, we figured out that this particular codepath is</span><span>
+</span><span id="line-812"></span><span class="hs-comment">-- quite hot, and that mtl has a measurable negative effect for accumulating</span><span>
+</span><span id="line-813"></span><span class="hs-comment">-- types from the schema, both in profiling and in benchmarking.  Using an</span><span>
+</span><span id="line-814"></span><span class="hs-comment">-- explicit transformers-style effect stack seems to overall memory usage by</span><span>
+</span><span id="line-815"></span><span class="hs-comment">-- about 3-7%.</span><span>
+</span><span id="line-816"></span><span class="hs-keyword">newtype</span><span> </span><span id="TypeAccumulation"><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#TypeAccumulation"><span class="hs-identifier hs-var">TypeAccumulation</span></a></span></span><span> </span><span id="local-6989586621688014014"><span class="annot"><a href="#local-6989586621688014014"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="TypeAccumulation"><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#TypeAccumulation"><span class="hs-identifier hs-var">TypeAccumulation</span></a></span></span><span>
+</span><span id="line-817"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="runTypeAccumulation"><span class="annot"><span class="annottext">TypeAccumulation a
 -&gt; ReaderT
      TypeOriginStack
      (StateT
@@ -1901,15 +1963,15 @@ forall a. [a] -&gt; [a]
         (ExceptT ConflictingDefinitions Identity))
      a
 </span><a href="Hasura.GraphQL.Parser.Schema.html#runTypeAccumulation"><span class="hs-identifier hs-var hs-var">runTypeAccumulation</span></a></span></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-756"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">ReaderT</span></span><span>
-</span><span id="line-757"></span><span>        </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#TypeOriginStack"><span class="hs-identifier hs-type">TypeOriginStack</span></a></span><span>
-</span><span id="line-758"></span><span>        </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-identifier hs-type">StateT</span></span><span>
-</span><span id="line-759"></span><span>            </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">HashMap</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Name</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#Definition"><span class="hs-identifier hs-type">Definition</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#SomeTypeInfo"><span class="hs-identifier hs-type">SomeTypeInfo</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">NonEmpty</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#TypeOriginStack"><span class="hs-identifier hs-type">TypeOriginStack</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
-</span><span id="line-760"></span><span>            </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">ExceptT</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#ConflictingDefinitions"><span class="hs-identifier hs-type">ConflictingDefinitions</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Identity</span></span><span class="hs-special">)</span><span>
-</span><span id="line-761"></span><span>        </span><span class="hs-special">)</span><span>
-</span><span id="line-762"></span><span>        </span><span class="annot"><a href="#local-6989586621688014014"><span class="hs-identifier hs-type">a</span></a></span><span>
-</span><span id="line-763"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-764"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688013456"><span id="local-6989586621688013458"><span class="annot"><span class="annottext">a -&gt; TypeAccumulation b -&gt; TypeAccumulation a
+</span><span id="line-818"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">ReaderT</span></span><span>
+</span><span id="line-819"></span><span>        </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#TypeOriginStack"><span class="hs-identifier hs-type">TypeOriginStack</span></a></span><span>
+</span><span id="line-820"></span><span>        </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-identifier hs-type">StateT</span></span><span>
+</span><span id="line-821"></span><span>            </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">HashMap</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Name</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#Definition"><span class="hs-identifier hs-type">Definition</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#SomeTypeInfo"><span class="hs-identifier hs-type">SomeTypeInfo</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">NonEmpty</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#TypeOriginStack"><span class="hs-identifier hs-type">TypeOriginStack</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-822"></span><span>            </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">ExceptT</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#ConflictingDefinitions"><span class="hs-identifier hs-type">ConflictingDefinitions</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Identity</span></span><span class="hs-special">)</span><span>
+</span><span id="line-823"></span><span>        </span><span class="hs-special">)</span><span>
+</span><span id="line-824"></span><span>        </span><span class="annot"><a href="#local-6989586621688014014"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-825"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-826"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688013456"><span id="local-6989586621688013458"><span class="annot"><span class="annottext">a -&gt; TypeAccumulation b -&gt; TypeAccumulation a
 (a -&gt; b) -&gt; TypeAccumulation a -&gt; TypeAccumulation b
 (forall a b. (a -&gt; b) -&gt; TypeAccumulation a -&gt; TypeAccumulation b)
 -&gt; (forall a b. a -&gt; TypeAccumulation b -&gt; TypeAccumulation a)
@@ -2019,33 +2081,33 @@ TypeAccumulation a
 -&gt; (a -&gt; TypeAccumulation b) -&gt; TypeAccumulation b
 $cp1Monad :: Applicative TypeAccumulation
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Monad</span></span></span></span></span><span class="hs-special">)</span><span>
-</span><span id="line-765"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688013429"><span id="local-6989586621688013431"><span id="local-6989586621688013433"><span class="annot"><span class="hs-identifier hs-type">MonadReader</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#TypeOriginStack"><span class="hs-identifier hs-type">TypeOriginStack</span></a></span></span></span></span><span class="hs-special">)</span><span>
-</span><span id="line-766"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688013421"><span id="local-6989586621688013423"><span id="local-6989586621688013425"><span class="annot"><span class="hs-identifier hs-type">MonadState</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">HashMap</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Name</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#Definition"><span class="hs-identifier hs-type">Definition</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#SomeTypeInfo"><span class="hs-identifier hs-type">SomeTypeInfo</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">NonEmpty</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#TypeOriginStack"><span class="hs-identifier hs-type">TypeOriginStack</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span></span></span></span><span class="hs-special">)</span><span>
-</span><span id="line-767"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688013415"><span id="local-6989586621688013417"><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#ConflictingDefinitions"><span class="hs-identifier hs-type">ConflictingDefinitions</span></a></span></span></span><span class="hs-special">)</span><span>
-</span><span id="line-768"></span><span>
-</span><span id="line-769"></span><span class="hs-keyword">class</span><span> </span><span id="HasTypeDefinitions"><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#HasTypeDefinitions"><span class="hs-identifier hs-var">HasTypeDefinitions</span></a></span></span><span> </span><span id="local-6989586621688014013"><span class="annot"><a href="#local-6989586621688014013"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-770"></span><span>  </span><span class="hs-comment">-- | Recursively accumulates all type definitions accessible from the given</span><span>
-</span><span id="line-771"></span><span>  </span><span class="hs-comment">-- value. This is done statefully to avoid infinite loops arising from</span><span>
-</span><span id="line-772"></span><span>  </span><span class="hs-comment">-- recursive type definitions; see Note [Tying the knot] in Hasura.GraphQL.Parser.Class.</span><span>
-</span><span id="line-773"></span><span>  </span><span id="accumulateTypeDefinitions"><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#accumulateTypeDefinitions"><span class="hs-identifier hs-type">accumulateTypeDefinitions</span></a></span></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-774"></span><span>    </span><span class="annot"><a href="#local-6989586621688014013"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#TypeAccumulation"><span class="hs-identifier hs-type">TypeAccumulation</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
-</span><span id="line-775"></span><span>
-</span><span id="line-776"></span><span id="local-6989586621688013413"><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#HasTypeDefinitions"><span class="hs-identifier hs-type">HasTypeDefinitions</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#Definition"><span class="hs-identifier hs-type">Definition</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#TypeInfo"><span class="hs-identifier hs-type">TypeInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688013413"><span class="hs-identifier hs-type">k</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-777"></span><span>  </span><span id="local-6989586621688013410"><span class="annot"><span class="annottext">accumulateTypeDefinitions :: Definition (TypeInfo k) -&gt; TypeAccumulation ()
+</span><span id="line-827"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688013429"><span id="local-6989586621688013431"><span id="local-6989586621688013433"><span class="annot"><span class="hs-identifier hs-type">MonadReader</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#TypeOriginStack"><span class="hs-identifier hs-type">TypeOriginStack</span></a></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-828"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688013421"><span id="local-6989586621688013423"><span id="local-6989586621688013425"><span class="annot"><span class="hs-identifier hs-type">MonadState</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">HashMap</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Name</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#Definition"><span class="hs-identifier hs-type">Definition</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#SomeTypeInfo"><span class="hs-identifier hs-type">SomeTypeInfo</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">NonEmpty</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#TypeOriginStack"><span class="hs-identifier hs-type">TypeOriginStack</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-829"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688013415"><span id="local-6989586621688013417"><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#ConflictingDefinitions"><span class="hs-identifier hs-type">ConflictingDefinitions</span></a></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-830"></span><span>
+</span><span id="line-831"></span><span class="hs-keyword">class</span><span> </span><span id="HasTypeDefinitions"><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#HasTypeDefinitions"><span class="hs-identifier hs-var">HasTypeDefinitions</span></a></span></span><span> </span><span id="local-6989586621688014013"><span class="annot"><a href="#local-6989586621688014013"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-832"></span><span>  </span><span class="hs-comment">-- | Recursively accumulates all type definitions accessible from the given</span><span>
+</span><span id="line-833"></span><span>  </span><span class="hs-comment">-- value. This is done statefully to avoid infinite loops arising from</span><span>
+</span><span id="line-834"></span><span>  </span><span class="hs-comment">-- recursive type definitions; see Note [Tying the knot] in Hasura.GraphQL.Parser.Class.</span><span>
+</span><span id="line-835"></span><span>  </span><span id="accumulateTypeDefinitions"><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#accumulateTypeDefinitions"><span class="hs-identifier hs-type">accumulateTypeDefinitions</span></a></span></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-836"></span><span>    </span><span class="annot"><a href="#local-6989586621688014013"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#TypeAccumulation"><span class="hs-identifier hs-type">TypeAccumulation</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-837"></span><span>
+</span><span id="line-838"></span><span id="local-6989586621688013413"><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#HasTypeDefinitions"><span class="hs-identifier hs-type">HasTypeDefinitions</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#Definition"><span class="hs-identifier hs-type">Definition</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#TypeInfo"><span class="hs-identifier hs-type">TypeInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688013413"><span class="hs-identifier hs-type">k</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-839"></span><span>  </span><span id="local-6989586621688013410"><span class="annot"><span class="annottext">accumulateTypeDefinitions :: Definition (TypeInfo k) -&gt; TypeAccumulation ()
 </span><a href="#local-6989586621688013410"><span class="hs-identifier hs-var hs-var hs-var hs-var">accumulateTypeDefinitions</span></a></span></span><span> </span><span id="local-6989586621688013409"><span class="annot"><span class="annottext">Definition (TypeInfo k)
 </span><a href="#local-6989586621688013409"><span class="hs-identifier hs-var">definition</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-778"></span><span>    </span><span class="hs-comment">-- This is the important case! We actually have a type definition, so we</span><span>
-</span><span id="line-779"></span><span>    </span><span class="hs-comment">-- need to add it to the state.</span><span>
-</span><span id="line-780"></span><span>    </span><span id="local-6989586621688013408"><span class="annot"><span class="annottext">HashMap Name (Definition SomeTypeInfo, NonEmpty TypeOriginStack)
+</span><span id="line-840"></span><span>    </span><span class="hs-comment">-- This is the important case! We actually have a type definition, so we</span><span>
+</span><span id="line-841"></span><span>    </span><span class="hs-comment">-- need to add it to the state.</span><span>
+</span><span id="line-842"></span><span>    </span><span id="local-6989586621688013408"><span class="annot"><span class="annottext">HashMap Name (Definition SomeTypeInfo, NonEmpty TypeOriginStack)
 </span><a href="#local-6989586621688013408"><span class="hs-identifier hs-var">definitions</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">TypeAccumulation
   (HashMap Name (Definition SomeTypeInfo, NonEmpty TypeOriginStack))
 forall s (m :: * -&gt; *). MonadState s m =&gt; m s
 </span><span class="hs-identifier hs-var">get</span></span><span>
-</span><span id="line-781"></span><span>    </span><span id="local-6989586621688013406"><span class="annot"><span class="annottext">TypeOriginStack
+</span><span id="line-843"></span><span>    </span><span id="local-6989586621688013406"><span class="annot"><span class="annottext">TypeOriginStack
 </span><a href="#local-6989586621688013406"><span class="hs-identifier hs-var">stack</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">TypeAccumulation TypeOriginStack
 forall r (m :: * -&gt; *). MonadReader r m =&gt; m r
 </span><span class="hs-identifier hs-var">ask</span></span><span>
-</span><span id="line-782"></span><span>    </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688013404"><span class="annot"><span class="annottext">new :: Definition SomeTypeInfo
+</span><span id="line-844"></span><span>    </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688013404"><span class="annot"><span class="annottext">new :: Definition SomeTypeInfo
 </span><a href="#local-6989586621688013404"><span class="hs-identifier hs-var hs-var">new</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">TypeInfo k -&gt; SomeTypeInfo
 forall (k :: Kind). TypeInfo k -&gt; SomeTypeInfo
 </span><a href="Hasura.GraphQL.Parser.Schema.html#SomeTypeInfo"><span class="hs-identifier hs-var">SomeTypeInfo</span></a></span><span> </span><span class="annot"><span class="annottext">(TypeInfo k -&gt; SomeTypeInfo)
@@ -2053,7 +2115,7 @@ forall (k :: Kind). TypeInfo k -&gt; SomeTypeInfo
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Definition (TypeInfo k)
 </span><a href="#local-6989586621688013409"><span class="hs-identifier hs-var">definition</span></a></span><span>
-</span><span id="line-783"></span><span>    </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Name
+</span><span id="line-845"></span><span>    </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Name
 -&gt; HashMap Name (Definition SomeTypeInfo, NonEmpty TypeOriginStack)
 -&gt; Maybe (Definition SomeTypeInfo, NonEmpty TypeOriginStack)
 forall k v. (Eq k, Hashable k) =&gt; k -&gt; HashMap k v -&gt; Maybe v
@@ -2062,9 +2124,9 @@ forall a. Definition a -&gt; Name
 </span><a href="Hasura.GraphQL.Parser.Schema.html#dName"><span class="hs-identifier hs-var hs-var">dName</span></a></span><span> </span><span class="annot"><span class="annottext">Definition SomeTypeInfo
 </span><a href="#local-6989586621688013404"><span class="hs-identifier hs-var">new</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">HashMap Name (Definition SomeTypeInfo, NonEmpty TypeOriginStack)
 </span><a href="#local-6989586621688013408"><span class="hs-identifier hs-var">definitions</span></a></span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-784"></span><span>      </span><span class="annot"><span class="annottext">Maybe (Definition SomeTypeInfo, NonEmpty TypeOriginStack)
+</span><span id="line-846"></span><span>      </span><span class="annot"><span class="annottext">Maybe (Definition SomeTypeInfo, NonEmpty TypeOriginStack)
 </span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-785"></span><span>        </span><span class="annot"><span class="annottext">HashMap Name (Definition SomeTypeInfo, NonEmpty TypeOriginStack)
+</span><span id="line-847"></span><span>        </span><span class="annot"><span class="annottext">HashMap Name (Definition SomeTypeInfo, NonEmpty TypeOriginStack)
 -&gt; TypeAccumulation ()
 forall s (m :: * -&gt; *). MonadState s m =&gt; s -&gt; m ()
 </span><span class="hs-identifier hs-var">put</span></span><span> </span><span class="annot"><span class="annottext">(HashMap Name (Definition SomeTypeInfo, NonEmpty TypeOriginStack)
@@ -2088,9 +2150,9 @@ forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">TypeOriginStack
 </span><a href="#local-6989586621688013406"><span class="hs-identifier hs-var">stack</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">HashMap Name (Definition SomeTypeInfo, NonEmpty TypeOriginStack)
 </span><a href="#local-6989586621688013408"><span class="hs-identifier hs-var">definitions</span></a></span><span>
-</span><span id="line-786"></span><span>        </span><span class="hs-comment">-- This type definition might reference other type definitions, so we</span><span>
-</span><span id="line-787"></span><span>        </span><span class="hs-comment">-- still need to recur.</span><span>
-</span><span id="line-788"></span><span>        </span><span class="annot"><span class="annottext">(TypeOriginStack -&gt; TypeOriginStack)
+</span><span id="line-848"></span><span>        </span><span class="hs-comment">-- This type definition might reference other type definitions, so we</span><span>
+</span><span id="line-849"></span><span>        </span><span class="hs-comment">-- still need to recur.</span><span>
+</span><span id="line-850"></span><span>        </span><span class="annot"><span class="annottext">(TypeOriginStack -&gt; TypeOriginStack)
 -&gt; TypeAccumulation () -&gt; TypeAccumulation ()
 forall r (m :: * -&gt; *) a. MonadReader r m =&gt; (r -&gt; r) -&gt; m a -&gt; m a
 </span><span class="hs-identifier hs-var">local</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name -&gt; TypeOriginStack -&gt; TypeOriginStack
@@ -2106,12 +2168,12 @@ forall a. HasTypeDefinitions a =&gt; a -&gt; TypeAccumulation ()
 forall a. Definition a -&gt; a
 </span><a href="Hasura.GraphQL.Parser.Schema.html#dInfo"><span class="hs-identifier hs-var hs-var">dInfo</span></a></span><span> </span><span class="annot"><span class="annottext">Definition (TypeInfo k)
 </span><a href="#local-6989586621688013409"><span class="hs-identifier hs-var">definition</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-789"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688013399"><span class="annot"><span class="annottext">Definition SomeTypeInfo
+</span><span id="line-851"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688013399"><span class="annot"><span class="annottext">Definition SomeTypeInfo
 </span><a href="#local-6989586621688013399"><span class="hs-identifier hs-var">old</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688013398"><span class="annot"><span class="annottext">NonEmpty TypeOriginStack
 </span><a href="#local-6989586621688013398"><span class="hs-identifier hs-var">origins</span></a></span></span><span class="hs-special">)</span><span>
-</span><span id="line-790"></span><span>        </span><span class="hs-comment">-- It&#8217;s important we /don&#8217;t/ recur if we&#8217;ve already seen this definition</span><span>
-</span><span id="line-791"></span><span>        </span><span class="hs-comment">-- before to avoid infinite loops; see Note [Tying the knot] in Hasura.GraphQL.Parser.Class.</span><span>
-</span><span id="line-792"></span><span>        </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Definition SomeTypeInfo
+</span><span id="line-852"></span><span>        </span><span class="hs-comment">-- It&#8217;s important we /don&#8217;t/ recur if we&#8217;ve already seen this definition</span><span>
+</span><span id="line-853"></span><span>        </span><span class="hs-comment">-- before to avoid infinite loops; see Note [Tying the knot] in Hasura.GraphQL.Parser.Class.</span><span>
+</span><span id="line-854"></span><span>        </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Definition SomeTypeInfo
 </span><a href="#local-6989586621688013399"><span class="hs-identifier hs-var">old</span></a></span><span> </span><span class="annot"><span class="annottext">Definition SomeTypeInfo -&gt; Definition SomeTypeInfo -&gt; Bool
 forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="annottext">Definition SomeTypeInfo
@@ -2141,7 +2203,7 @@ forall a. a -&gt; NonEmpty a -&gt; NonEmpty a
 </span><span class="hs-operator hs-var">`NE.cons`</span></span><span> </span><span class="annot"><span class="annottext">NonEmpty TypeOriginStack
 </span><a href="#local-6989586621688013398"><span class="hs-identifier hs-var">origins</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">HashMap Name (Definition SomeTypeInfo, NonEmpty TypeOriginStack)
 </span><a href="#local-6989586621688013408"><span class="hs-identifier hs-var">definitions</span></a></span><span>
-</span><span id="line-793"></span><span>        </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span id="line-855"></span><span>        </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">otherwise</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ConflictingDefinitions -&gt; TypeAccumulation ()
 forall e (m :: * -&gt; *) a. MonadError e m =&gt; e -&gt; m a
 </span><span class="hs-identifier hs-var">throwError</span></span><span> </span><span class="annot"><span class="annottext">(ConflictingDefinitions -&gt; TypeAccumulation ())
@@ -2155,9 +2217,9 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="#local-6989586621688013406"><span class="hs-identifier hs-var">stack</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Definition SomeTypeInfo
 </span><a href="#local-6989586621688013399"><span class="hs-identifier hs-var">old</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">NonEmpty TypeOriginStack
 </span><a href="#local-6989586621688013398"><span class="hs-identifier hs-var">origins</span></a></span><span class="hs-special">)</span></span><span>
-</span><span id="line-794"></span><span>
-</span><span id="line-795"></span><span id="local-6989586621688013395"><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#HasTypeDefinitions"><span class="hs-identifier hs-type">HasTypeDefinitions</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688013395"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#HasTypeDefinitions"><span class="hs-identifier hs-type">HasTypeDefinitions</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="#local-6989586621688013395"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-796"></span><span>  </span><span id="local-6989586621688013393"><span class="annot"><span class="annottext">accumulateTypeDefinitions :: [a] -&gt; TypeAccumulation ()
+</span><span id="line-856"></span><span>
+</span><span id="line-857"></span><span id="local-6989586621688013395"><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#HasTypeDefinitions"><span class="hs-identifier hs-type">HasTypeDefinitions</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688013395"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#HasTypeDefinitions"><span class="hs-identifier hs-type">HasTypeDefinitions</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="#local-6989586621688013395"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-858"></span><span>  </span><span id="local-6989586621688013393"><span class="annot"><span class="annottext">accumulateTypeDefinitions :: [a] -&gt; TypeAccumulation ()
 </span><a href="#local-6989586621688013393"><span class="hs-identifier hs-var hs-var hs-var hs-var">accumulateTypeDefinitions</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(a -&gt; TypeAccumulation ()) -&gt; [a] -&gt; TypeAccumulation ()
 forall (t :: * -&gt; *) (f :: * -&gt; *) a b.
 (Foldable t, Applicative f) =&gt;
@@ -2165,51 +2227,51 @@ forall (t :: * -&gt; *) (f :: * -&gt; *) a b.
 </span><span class="hs-identifier hs-var">traverse_</span></span><span> </span><span class="annot"><span class="annottext">a -&gt; TypeAccumulation ()
 forall a. HasTypeDefinitions a =&gt; a -&gt; TypeAccumulation ()
 </span><a href="Hasura.GraphQL.Parser.Schema.html#accumulateTypeDefinitions"><span class="hs-identifier hs-var">accumulateTypeDefinitions</span></a></span></span><span>
-</span><span id="line-797"></span><span>
-</span><span id="line-798"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#HasTypeDefinitions"><span class="hs-identifier hs-type">HasTypeDefinitions</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#TypeDefinitionsWrapper"><span class="hs-identifier hs-type">TypeDefinitionsWrapper</span></a></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-799"></span><span>  </span><span id="local-6989586621688013390"><span class="annot"><span class="annottext">accumulateTypeDefinitions :: TypeDefinitionsWrapper -&gt; TypeAccumulation ()
+</span><span id="line-859"></span><span>
+</span><span id="line-860"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#HasTypeDefinitions"><span class="hs-identifier hs-type">HasTypeDefinitions</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#TypeDefinitionsWrapper"><span class="hs-identifier hs-type">TypeDefinitionsWrapper</span></a></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-861"></span><span>  </span><span id="local-6989586621688013390"><span class="annot"><span class="annottext">accumulateTypeDefinitions :: TypeDefinitionsWrapper -&gt; TypeAccumulation ()
 </span><a href="#local-6989586621688013390"><span class="hs-identifier hs-var hs-var hs-var hs-var">accumulateTypeDefinitions</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#TypeDefinitionsWrapper"><span class="hs-identifier hs-type">TypeDefinitionsWrapper</span></a></span><span> </span><span id="local-6989586621688013389"><span class="annot"><span class="annottext">a
 </span><a href="#local-6989586621688013389"><span class="hs-identifier hs-var">x</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">a -&gt; TypeAccumulation ()
 forall a. HasTypeDefinitions a =&gt; a -&gt; TypeAccumulation ()
 </span><a href="Hasura.GraphQL.Parser.Schema.html#accumulateTypeDefinitions"><span class="hs-identifier hs-var">accumulateTypeDefinitions</span></a></span><span> </span><span class="annot"><span class="annottext">a
 </span><a href="#local-6989586621688013389"><span class="hs-identifier hs-var">x</span></a></span><span>
-</span><span id="line-800"></span><span>
-</span><span id="line-801"></span><span id="local-6989586621688013388"><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#HasTypeDefinitions"><span class="hs-identifier hs-type">HasTypeDefinitions</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#Type"><span class="hs-identifier hs-type">Type</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688013388"><span class="hs-identifier hs-type">k</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-802"></span><span>  </span><span id="local-6989586621688013386"><span class="annot"><span class="annottext">accumulateTypeDefinitions :: Type k -&gt; TypeAccumulation ()
+</span><span id="line-862"></span><span>
+</span><span id="line-863"></span><span id="local-6989586621688013388"><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#HasTypeDefinitions"><span class="hs-identifier hs-type">HasTypeDefinitions</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#Type"><span class="hs-identifier hs-type">Type</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688013388"><span class="hs-identifier hs-type">k</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-864"></span><span>  </span><span id="local-6989586621688013386"><span class="annot"><span class="annottext">accumulateTypeDefinitions :: Type k -&gt; TypeAccumulation ()
 </span><a href="#local-6989586621688013386"><span class="hs-identifier hs-var hs-var hs-var hs-var">accumulateTypeDefinitions</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
-</span><span id="line-803"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#TNamed"><span class="hs-identifier hs-type">TNamed</span></a></span><span> </span><span class="annot"><span class="annottext">Nullability
+</span><span id="line-865"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#TNamed"><span class="hs-identifier hs-type">TNamed</span></a></span><span> </span><span class="annot"><span class="annottext">Nullability
 </span><span class="hs-identifier">_</span></span><span> </span><span id="local-6989586621688013385"><span class="annot"><span class="annottext">Definition (TypeInfo k)
 </span><a href="#local-6989586621688013385"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Definition (TypeInfo k) -&gt; TypeAccumulation ()
 forall a. HasTypeDefinitions a =&gt; a -&gt; TypeAccumulation ()
 </span><a href="Hasura.GraphQL.Parser.Schema.html#accumulateTypeDefinitions"><span class="hs-identifier hs-var">accumulateTypeDefinitions</span></a></span><span> </span><span class="annot"><span class="annottext">Definition (TypeInfo k)
 </span><a href="#local-6989586621688013385"><span class="hs-identifier hs-var">t</span></a></span><span>
-</span><span id="line-804"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#TList"><span class="hs-identifier hs-type">TList</span></a></span><span> </span><span class="annot"><span class="annottext">Nullability
+</span><span id="line-866"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#TList"><span class="hs-identifier hs-type">TList</span></a></span><span> </span><span class="annot"><span class="annottext">Nullability
 </span><span class="hs-identifier">_</span></span><span> </span><span id="local-6989586621688013384"><span class="annot"><span class="annottext">Type k
 </span><a href="#local-6989586621688013384"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Type k -&gt; TypeAccumulation ()
 forall a. HasTypeDefinitions a =&gt; a -&gt; TypeAccumulation ()
 </span><a href="Hasura.GraphQL.Parser.Schema.html#accumulateTypeDefinitions"><span class="hs-identifier hs-var">accumulateTypeDefinitions</span></a></span><span> </span><span class="annot"><span class="annottext">Type k
 </span><a href="#local-6989586621688013384"><span class="hs-identifier hs-var">t</span></a></span></span><span>
-</span><span id="line-805"></span><span>
-</span><span id="line-806"></span><span id="local-6989586621688013383"><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#HasTypeDefinitions"><span class="hs-identifier hs-type">HasTypeDefinitions</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#TypeInfo"><span class="hs-identifier hs-type">TypeInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688013383"><span class="hs-identifier hs-type">k</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-807"></span><span>  </span><span id="local-6989586621688013381"><span class="annot"><span class="annottext">accumulateTypeDefinitions :: TypeInfo k -&gt; TypeAccumulation ()
+</span><span id="line-867"></span><span>
+</span><span id="line-868"></span><span id="local-6989586621688013383"><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#HasTypeDefinitions"><span class="hs-identifier hs-type">HasTypeDefinitions</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#TypeInfo"><span class="hs-identifier hs-type">TypeInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688013383"><span class="hs-identifier hs-type">k</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-869"></span><span>  </span><span id="local-6989586621688013381"><span class="annot"><span class="annottext">accumulateTypeDefinitions :: TypeInfo k -&gt; TypeAccumulation ()
 </span><a href="#local-6989586621688013381"><span class="hs-identifier hs-var hs-var hs-var hs-var">accumulateTypeDefinitions</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
-</span><span id="line-808"></span><span>    </span><span class="annot"><span class="annottext">TypeInfo k
+</span><span id="line-870"></span><span>    </span><span class="annot"><span class="annottext">TypeInfo k
 </span><a href="Hasura.GraphQL.Parser.Schema.html#TIScalar"><span class="hs-identifier hs-var">TIScalar</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">() -&gt; TypeAccumulation ()
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
-</span><span id="line-809"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#TIEnum"><span class="hs-identifier hs-type">TIEnum</span></a></span><span> </span><span class="annot"><span class="annottext">NonEmpty (Definition EnumValueInfo)
+</span><span id="line-871"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#TIEnum"><span class="hs-identifier hs-type">TIEnum</span></a></span><span> </span><span class="annot"><span class="annottext">NonEmpty (Definition EnumValueInfo)
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">() -&gt; TypeAccumulation ()
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
-</span><span id="line-810"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#TIInputObject"><span class="hs-identifier hs-type">TIInputObject</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#InputObjectInfo"><span class="hs-identifier hs-type">InputObjectInfo</span></a></span><span> </span><span id="local-6989586621688013380"><span class="annot"><span class="annottext">[Definition InputFieldInfo]
+</span><span id="line-872"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#TIInputObject"><span class="hs-identifier hs-type">TIInputObject</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#InputObjectInfo"><span class="hs-identifier hs-type">InputObjectInfo</span></a></span><span> </span><span id="local-6989586621688013380"><span class="annot"><span class="annottext">[Definition InputFieldInfo]
 </span><a href="#local-6989586621688013380"><span class="hs-identifier hs-var">fields</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">[Definition InputFieldInfo] -&gt; TypeAccumulation ()
 forall a. HasTypeDefinitions a =&gt; a -&gt; TypeAccumulation ()
 </span><a href="Hasura.GraphQL.Parser.Schema.html#accumulateTypeDefinitions"><span class="hs-identifier hs-var">accumulateTypeDefinitions</span></a></span><span> </span><span class="annot"><span class="annottext">[Definition InputFieldInfo]
 </span><a href="#local-6989586621688013380"><span class="hs-identifier hs-var">fields</span></a></span><span>
-</span><span id="line-811"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#TIObject"><span class="hs-identifier hs-type">TIObject</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#ObjectInfo"><span class="hs-identifier hs-type">ObjectInfo</span></a></span><span> </span><span id="local-6989586621688013379"><span class="annot"><span class="annottext">[Definition FieldInfo]
+</span><span id="line-873"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#TIObject"><span class="hs-identifier hs-type">TIObject</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#ObjectInfo"><span class="hs-identifier hs-type">ObjectInfo</span></a></span><span> </span><span id="local-6989586621688013379"><span class="annot"><span class="annottext">[Definition FieldInfo]
 </span><a href="#local-6989586621688013379"><span class="hs-identifier hs-var">fields</span></a></span></span><span> </span><span id="local-6989586621688013378"><span class="annot"><span class="annottext">[Definition InterfaceInfo]
 </span><a href="#local-6989586621688013378"><span class="hs-identifier hs-var">interfaces</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-812"></span><span>      </span><span class="annot"><span class="annottext">[Definition FieldInfo] -&gt; TypeAccumulation ()
+</span><span id="line-874"></span><span>      </span><span class="annot"><span class="annottext">[Definition FieldInfo] -&gt; TypeAccumulation ()
 forall a. HasTypeDefinitions a =&gt; a -&gt; TypeAccumulation ()
 </span><a href="Hasura.GraphQL.Parser.Schema.html#accumulateTypeDefinitions"><span class="hs-identifier hs-var">accumulateTypeDefinitions</span></a></span><span> </span><span class="annot"><span class="annottext">[Definition FieldInfo]
 </span><a href="#local-6989586621688013379"><span class="hs-identifier hs-var">fields</span></a></span><span> </span><span class="annot"><span class="annottext">TypeAccumulation () -&gt; TypeAccumulation () -&gt; TypeAccumulation ()
@@ -2218,27 +2280,27 @@ forall (m :: * -&gt; *) a b. Monad m =&gt; m a -&gt; m b -&gt; m b
 forall a. HasTypeDefinitions a =&gt; a -&gt; TypeAccumulation ()
 </span><a href="Hasura.GraphQL.Parser.Schema.html#accumulateTypeDefinitions"><span class="hs-identifier hs-var">accumulateTypeDefinitions</span></a></span><span> </span><span class="annot"><span class="annottext">[Definition InterfaceInfo]
 </span><a href="#local-6989586621688013378"><span class="hs-identifier hs-var">interfaces</span></a></span><span>
-</span><span id="line-813"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#TIInterface"><span class="hs-identifier hs-type">TIInterface</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#InterfaceInfo"><span class="hs-identifier hs-type">InterfaceInfo</span></a></span><span> </span><span id="local-6989586621688013377"><span class="annot"><span class="annottext">[Definition FieldInfo]
+</span><span id="line-875"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#TIInterface"><span class="hs-identifier hs-type">TIInterface</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#InterfaceInfo"><span class="hs-identifier hs-type">InterfaceInfo</span></a></span><span> </span><span id="local-6989586621688013377"><span class="annot"><span class="annottext">[Definition FieldInfo]
 </span><a href="#local-6989586621688013377"><span class="hs-identifier hs-var">fields</span></a></span></span><span> </span><span id="local-6989586621688013376"><span class="annot"><span class="annottext">[Definition ObjectInfo]
 </span><a href="#local-6989586621688013376"><span class="hs-identifier hs-var">objects</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-814"></span><span>      </span><span class="annot"><span class="annottext">[Definition FieldInfo] -&gt; TypeAccumulation ()
+</span><span id="line-876"></span><span>      </span><span class="annot"><span class="annottext">[Definition FieldInfo] -&gt; TypeAccumulation ()
 forall a. HasTypeDefinitions a =&gt; a -&gt; TypeAccumulation ()
 </span><a href="Hasura.GraphQL.Parser.Schema.html#accumulateTypeDefinitions"><span class="hs-identifier hs-var">accumulateTypeDefinitions</span></a></span><span> </span><span class="annot"><span class="annottext">[Definition FieldInfo]
 </span><a href="#local-6989586621688013377"><span class="hs-identifier hs-var">fields</span></a></span><span>
-</span><span id="line-815"></span><span>        </span><span class="annot"><span class="annottext">TypeAccumulation () -&gt; TypeAccumulation () -&gt; TypeAccumulation ()
+</span><span id="line-877"></span><span>        </span><span class="annot"><span class="annottext">TypeAccumulation () -&gt; TypeAccumulation () -&gt; TypeAccumulation ()
 forall (m :: * -&gt; *) a b. Monad m =&gt; m a -&gt; m b -&gt; m b
 </span><span class="hs-operator hs-var">&gt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">[Definition ObjectInfo] -&gt; TypeAccumulation ()
 forall a. HasTypeDefinitions a =&gt; a -&gt; TypeAccumulation ()
 </span><a href="Hasura.GraphQL.Parser.Schema.html#accumulateTypeDefinitions"><span class="hs-identifier hs-var">accumulateTypeDefinitions</span></a></span><span> </span><span class="annot"><span class="annottext">[Definition ObjectInfo]
 </span><a href="#local-6989586621688013376"><span class="hs-identifier hs-var">objects</span></a></span><span>
-</span><span id="line-816"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#TIUnion"><span class="hs-identifier hs-type">TIUnion</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#UnionInfo"><span class="hs-identifier hs-type">UnionInfo</span></a></span><span> </span><span id="local-6989586621688013375"><span class="annot"><span class="annottext">[Definition ObjectInfo]
+</span><span id="line-878"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#TIUnion"><span class="hs-identifier hs-type">TIUnion</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#UnionInfo"><span class="hs-identifier hs-type">UnionInfo</span></a></span><span> </span><span id="local-6989586621688013375"><span class="annot"><span class="annottext">[Definition ObjectInfo]
 </span><a href="#local-6989586621688013375"><span class="hs-identifier hs-var">objects</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">[Definition ObjectInfo] -&gt; TypeAccumulation ()
 forall a. HasTypeDefinitions a =&gt; a -&gt; TypeAccumulation ()
 </span><a href="Hasura.GraphQL.Parser.Schema.html#accumulateTypeDefinitions"><span class="hs-identifier hs-var">accumulateTypeDefinitions</span></a></span><span> </span><span class="annot"><span class="annottext">[Definition ObjectInfo]
 </span><a href="#local-6989586621688013375"><span class="hs-identifier hs-var">objects</span></a></span></span><span>
-</span><span id="line-817"></span><span>
-</span><span id="line-818"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#HasTypeDefinitions"><span class="hs-identifier hs-type">HasTypeDefinitions</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#Definition"><span class="hs-identifier hs-type">Definition</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#InputObjectInfo"><span class="hs-identifier hs-type">InputObjectInfo</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-819"></span><span>  </span><span id="local-6989586621688013373"><span class="annot"><span class="annottext">accumulateTypeDefinitions :: Definition InputObjectInfo -&gt; TypeAccumulation ()
+</span><span id="line-879"></span><span>
+</span><span id="line-880"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#HasTypeDefinitions"><span class="hs-identifier hs-type">HasTypeDefinitions</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#Definition"><span class="hs-identifier hs-type">Definition</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#InputObjectInfo"><span class="hs-identifier hs-type">InputObjectInfo</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-881"></span><span>  </span><span id="local-6989586621688013373"><span class="annot"><span class="annottext">accumulateTypeDefinitions :: Definition InputObjectInfo -&gt; TypeAccumulation ()
 </span><a href="#local-6989586621688013373"><span class="hs-identifier hs-var hs-var hs-var hs-var">accumulateTypeDefinitions</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Definition (TypeInfo 'Input) -&gt; TypeAccumulation ()
 forall a. HasTypeDefinitions a =&gt; a -&gt; TypeAccumulation ()
 </span><a href="Hasura.GraphQL.Parser.Schema.html#accumulateTypeDefinitions"><span class="hs-identifier hs-var">accumulateTypeDefinitions</span></a></span><span> </span><span class="annot"><span class="annottext">(Definition (TypeInfo 'Input) -&gt; TypeAccumulation ())
@@ -2251,9 +2313,9 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-identifier hs-var">fmap</span></span><span> </span><span class="annot"><span class="annottext">InputObjectInfo -&gt; TypeInfo 'Input
 </span><a href="Hasura.GraphQL.Parser.Schema.html#TIInputObject"><span class="hs-identifier hs-var">TIInputObject</span></a></span><span>
-</span><span id="line-820"></span><span>
-</span><span id="line-821"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#HasTypeDefinitions"><span class="hs-identifier hs-type">HasTypeDefinitions</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#Definition"><span class="hs-identifier hs-type">Definition</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#InputFieldInfo"><span class="hs-identifier hs-type">InputFieldInfo</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-822"></span><span>  </span><span id="local-6989586621688013371"><span class="annot"><span class="annottext">accumulateTypeDefinitions :: Definition InputFieldInfo -&gt; TypeAccumulation ()
+</span><span id="line-882"></span><span>
+</span><span id="line-883"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#HasTypeDefinitions"><span class="hs-identifier hs-type">HasTypeDefinitions</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#Definition"><span class="hs-identifier hs-type">Definition</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#InputFieldInfo"><span class="hs-identifier hs-type">InputFieldInfo</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-884"></span><span>  </span><span id="local-6989586621688013371"><span class="annot"><span class="annottext">accumulateTypeDefinitions :: Definition InputFieldInfo -&gt; TypeAccumulation ()
 </span><a href="#local-6989586621688013371"><span class="hs-identifier hs-var hs-var hs-var hs-var">accumulateTypeDefinitions</span></a></span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#Definition"><span class="hs-identifier hs-type">Definition</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621688013368"><span id="local-6989586621688013369"><span id="local-6989586621688013370"><span class="annot"><span class="annottext">Maybe Description
 Name
 InputFieldInfo
@@ -2264,7 +2326,7 @@ dDescription :: forall a. Definition a -&gt; Maybe Description
 dInfo :: forall a. Definition a -&gt; a
 dName :: forall a. Definition a -&gt; Name
 </span><a href="#local-6989586621688013368"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-823"></span><span>    </span><span class="annot"><span class="annottext">(TypeOriginStack -&gt; TypeOriginStack)
+</span><span id="line-885"></span><span>    </span><span class="annot"><span class="annottext">(TypeOriginStack -&gt; TypeOriginStack)
 -&gt; TypeAccumulation () -&gt; TypeAccumulation ()
 forall r (m :: * -&gt; *) a. MonadReader r m =&gt; (r -&gt; r) -&gt; m a -&gt; m a
 </span><span class="hs-identifier hs-var">local</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name -&gt; TypeOriginStack -&gt; TypeOriginStack
@@ -2276,19 +2338,19 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 forall a. HasTypeDefinitions a =&gt; a -&gt; TypeAccumulation ()
 </span><a href="Hasura.GraphQL.Parser.Schema.html#accumulateTypeDefinitions"><span class="hs-identifier hs-var">accumulateTypeDefinitions</span></a></span><span> </span><span class="annot"><span class="annottext">InputFieldInfo
 </span><a href="#local-6989586621688013368"><span class="hs-identifier hs-var">dInfo</span></a></span><span>
-</span><span id="line-824"></span><span>
-</span><span id="line-825"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#HasTypeDefinitions"><span class="hs-identifier hs-type">HasTypeDefinitions</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#InputFieldInfo"><span class="hs-identifier hs-type">InputFieldInfo</span></a></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-826"></span><span>  </span><span id="local-6989586621688013366"><span class="annot"><span class="annottext">accumulateTypeDefinitions :: InputFieldInfo -&gt; TypeAccumulation ()
+</span><span id="line-886"></span><span>
+</span><span id="line-887"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#HasTypeDefinitions"><span class="hs-identifier hs-type">HasTypeDefinitions</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#InputFieldInfo"><span class="hs-identifier hs-type">InputFieldInfo</span></a></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-888"></span><span>  </span><span id="local-6989586621688013366"><span class="annot"><span class="annottext">accumulateTypeDefinitions :: InputFieldInfo -&gt; TypeAccumulation ()
 </span><a href="#local-6989586621688013366"><span class="hs-identifier hs-var hs-var hs-var hs-var">accumulateTypeDefinitions</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#InputFieldInfo"><span class="hs-identifier hs-type">InputFieldInfo</span></a></span><span> </span><span id="local-6989586621688013365"><span class="annot"><span class="annottext">Type k
 </span><a href="#local-6989586621688013365"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span class="annot"><span class="annottext">Maybe (Value Void)
 </span><span class="hs-identifier">_</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-827"></span><span>    </span><span class="annot"><span class="annottext">Type k -&gt; TypeAccumulation ()
+</span><span id="line-889"></span><span>    </span><span class="annot"><span class="annottext">Type k -&gt; TypeAccumulation ()
 forall a. HasTypeDefinitions a =&gt; a -&gt; TypeAccumulation ()
 </span><a href="Hasura.GraphQL.Parser.Schema.html#accumulateTypeDefinitions"><span class="hs-identifier hs-var">accumulateTypeDefinitions</span></a></span><span> </span><span class="annot"><span class="annottext">Type k
 </span><a href="#local-6989586621688013365"><span class="hs-identifier hs-var">t</span></a></span><span>
-</span><span id="line-828"></span><span>
-</span><span id="line-829"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#HasTypeDefinitions"><span class="hs-identifier hs-type">HasTypeDefinitions</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#Definition"><span class="hs-identifier hs-type">Definition</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#FieldInfo"><span class="hs-identifier hs-type">FieldInfo</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-830"></span><span>  </span><span id="local-6989586621688013363"><span class="annot"><span class="annottext">accumulateTypeDefinitions :: Definition FieldInfo -&gt; TypeAccumulation ()
+</span><span id="line-890"></span><span>
+</span><span id="line-891"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#HasTypeDefinitions"><span class="hs-identifier hs-type">HasTypeDefinitions</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#Definition"><span class="hs-identifier hs-type">Definition</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#FieldInfo"><span class="hs-identifier hs-type">FieldInfo</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-892"></span><span>  </span><span id="local-6989586621688013363"><span class="annot"><span class="annottext">accumulateTypeDefinitions :: Definition FieldInfo -&gt; TypeAccumulation ()
 </span><a href="#local-6989586621688013363"><span class="hs-identifier hs-var hs-var hs-var hs-var">accumulateTypeDefinitions</span></a></span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#Definition"><span class="hs-identifier hs-type">Definition</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621688013360"><span id="local-6989586621688013361"><span id="local-6989586621688013362"><span class="annot"><span class="annottext">Maybe Description
 Name
 FieldInfo
@@ -2299,7 +2361,7 @@ dDescription :: forall a. Definition a -&gt; Maybe Description
 dInfo :: forall a. Definition a -&gt; a
 dName :: forall a. Definition a -&gt; Name
 </span><a href="#local-6989586621688013360"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-831"></span><span>    </span><span class="annot"><span class="annottext">(TypeOriginStack -&gt; TypeOriginStack)
+</span><span id="line-893"></span><span>    </span><span class="annot"><span class="annottext">(TypeOriginStack -&gt; TypeOriginStack)
 -&gt; TypeAccumulation () -&gt; TypeAccumulation ()
 forall r (m :: * -&gt; *) a. MonadReader r m =&gt; (r -&gt; r) -&gt; m a -&gt; m a
 </span><span class="hs-identifier hs-var">local</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name -&gt; TypeOriginStack -&gt; TypeOriginStack
@@ -2311,23 +2373,23 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 forall a. HasTypeDefinitions a =&gt; a -&gt; TypeAccumulation ()
 </span><a href="Hasura.GraphQL.Parser.Schema.html#accumulateTypeDefinitions"><span class="hs-identifier hs-var">accumulateTypeDefinitions</span></a></span><span> </span><span class="annot"><span class="annottext">FieldInfo
 </span><a href="#local-6989586621688013360"><span class="hs-identifier hs-var">dInfo</span></a></span><span>
-</span><span id="line-832"></span><span>
-</span><span id="line-833"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#HasTypeDefinitions"><span class="hs-identifier hs-type">HasTypeDefinitions</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#FieldInfo"><span class="hs-identifier hs-type">FieldInfo</span></a></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-834"></span><span>  </span><span id="local-6989586621688013358"><span class="annot"><span class="annottext">accumulateTypeDefinitions :: FieldInfo -&gt; TypeAccumulation ()
+</span><span id="line-894"></span><span>
+</span><span id="line-895"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#HasTypeDefinitions"><span class="hs-identifier hs-type">HasTypeDefinitions</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#FieldInfo"><span class="hs-identifier hs-type">FieldInfo</span></a></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-896"></span><span>  </span><span id="local-6989586621688013358"><span class="annot"><span class="annottext">accumulateTypeDefinitions :: FieldInfo -&gt; TypeAccumulation ()
 </span><a href="#local-6989586621688013358"><span class="hs-identifier hs-var hs-var hs-var hs-var">accumulateTypeDefinitions</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#FieldInfo"><span class="hs-identifier hs-type">FieldInfo</span></a></span><span> </span><span id="local-6989586621688013357"><span class="annot"><span class="annottext">[Definition InputFieldInfo]
 </span><a href="#local-6989586621688013357"><span class="hs-identifier hs-var">args</span></a></span></span><span> </span><span id="local-6989586621688013356"><span class="annot"><span class="annottext">Type k
 </span><a href="#local-6989586621688013356"><span class="hs-identifier hs-var">t</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-835"></span><span>    </span><span class="annot"><span class="annottext">[Definition InputFieldInfo] -&gt; TypeAccumulation ()
+</span><span id="line-897"></span><span>    </span><span class="annot"><span class="annottext">[Definition InputFieldInfo] -&gt; TypeAccumulation ()
 forall a. HasTypeDefinitions a =&gt; a -&gt; TypeAccumulation ()
 </span><a href="Hasura.GraphQL.Parser.Schema.html#accumulateTypeDefinitions"><span class="hs-identifier hs-var">accumulateTypeDefinitions</span></a></span><span> </span><span class="annot"><span class="annottext">[Definition InputFieldInfo]
 </span><a href="#local-6989586621688013357"><span class="hs-identifier hs-var">args</span></a></span><span>
-</span><span id="line-836"></span><span>    </span><span class="annot"><span class="annottext">Type k -&gt; TypeAccumulation ()
+</span><span id="line-898"></span><span>    </span><span class="annot"><span class="annottext">Type k -&gt; TypeAccumulation ()
 forall a. HasTypeDefinitions a =&gt; a -&gt; TypeAccumulation ()
 </span><a href="Hasura.GraphQL.Parser.Schema.html#accumulateTypeDefinitions"><span class="hs-identifier hs-var">accumulateTypeDefinitions</span></a></span><span> </span><span class="annot"><span class="annottext">Type k
 </span><a href="#local-6989586621688013356"><span class="hs-identifier hs-var">t</span></a></span><span>
-</span><span id="line-837"></span><span>
-</span><span id="line-838"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#HasTypeDefinitions"><span class="hs-identifier hs-type">HasTypeDefinitions</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#Definition"><span class="hs-identifier hs-type">Definition</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#ObjectInfo"><span class="hs-identifier hs-type">ObjectInfo</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-839"></span><span>  </span><span id="local-6989586621688013354"><span class="annot"><span class="annottext">accumulateTypeDefinitions :: Definition ObjectInfo -&gt; TypeAccumulation ()
+</span><span id="line-899"></span><span>
+</span><span id="line-900"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#HasTypeDefinitions"><span class="hs-identifier hs-type">HasTypeDefinitions</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#Definition"><span class="hs-identifier hs-type">Definition</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#ObjectInfo"><span class="hs-identifier hs-type">ObjectInfo</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-901"></span><span>  </span><span id="local-6989586621688013354"><span class="annot"><span class="annottext">accumulateTypeDefinitions :: Definition ObjectInfo -&gt; TypeAccumulation ()
 </span><a href="#local-6989586621688013354"><span class="hs-identifier hs-var hs-var hs-var hs-var">accumulateTypeDefinitions</span></a></span></span><span> </span><span id="local-6989586621688013353"><span class="annot"><span class="annottext">d :: Definition ObjectInfo
 </span><a href="#local-6989586621688013353"><span class="hs-identifier hs-var">d</span></a></span></span><span class="hs-glyph">@</span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#Definition"><span class="hs-identifier hs-type">Definition</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621688013350"><span id="local-6989586621688013351"><span id="local-6989586621688013352"><span class="annot"><span class="annottext">Maybe Description
 Name
@@ -2339,7 +2401,7 @@ dDescription :: forall a. Definition a -&gt; Maybe Description
 dInfo :: forall a. Definition a -&gt; a
 dName :: forall a. Definition a -&gt; Name
 </span><a href="#local-6989586621688013350"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-840"></span><span>    </span><span class="annot"><span class="annottext">(TypeOriginStack -&gt; TypeOriginStack)
+</span><span id="line-902"></span><span>    </span><span class="annot"><span class="annottext">(TypeOriginStack -&gt; TypeOriginStack)
 -&gt; TypeAccumulation () -&gt; TypeAccumulation ()
 forall r (m :: * -&gt; *) a. MonadReader r m =&gt; (r -&gt; r) -&gt; m a -&gt; m a
 </span><span class="hs-identifier hs-var">local</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name -&gt; TypeOriginStack -&gt; TypeOriginStack
@@ -2355,9 +2417,9 @@ forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-identifier hs-var">fmap</span></span><span> </span><span class="annot"><span class="annottext">ObjectInfo -&gt; TypeInfo 'Output
 </span><a href="Hasura.GraphQL.Parser.Schema.html#TIObject"><span class="hs-identifier hs-var">TIObject</span></a></span><span> </span><span class="annot"><span class="annottext">Definition ObjectInfo
 </span><a href="#local-6989586621688013353"><span class="hs-identifier hs-var">d</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-841"></span><span>
-</span><span id="line-842"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#HasTypeDefinitions"><span class="hs-identifier hs-type">HasTypeDefinitions</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#Definition"><span class="hs-identifier hs-type">Definition</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#InterfaceInfo"><span class="hs-identifier hs-type">InterfaceInfo</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-843"></span><span>  </span><span id="local-6989586621688013348"><span class="annot"><span class="annottext">accumulateTypeDefinitions :: Definition InterfaceInfo -&gt; TypeAccumulation ()
+</span><span id="line-903"></span><span>
+</span><span id="line-904"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#HasTypeDefinitions"><span class="hs-identifier hs-type">HasTypeDefinitions</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#Definition"><span class="hs-identifier hs-type">Definition</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#InterfaceInfo"><span class="hs-identifier hs-type">InterfaceInfo</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-905"></span><span>  </span><span id="local-6989586621688013348"><span class="annot"><span class="annottext">accumulateTypeDefinitions :: Definition InterfaceInfo -&gt; TypeAccumulation ()
 </span><a href="#local-6989586621688013348"><span class="hs-identifier hs-var hs-var hs-var hs-var">accumulateTypeDefinitions</span></a></span></span><span> </span><span id="local-6989586621688013347"><span class="annot"><span class="annottext">d :: Definition InterfaceInfo
 </span><a href="#local-6989586621688013347"><span class="hs-identifier hs-var">d</span></a></span></span><span class="hs-glyph">@</span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#Definition"><span class="hs-identifier hs-type">Definition</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621688013344"><span id="local-6989586621688013345"><span id="local-6989586621688013346"><span class="annot"><span class="annottext">Maybe Description
 Name
@@ -2369,7 +2431,7 @@ dDescription :: forall a. Definition a -&gt; Maybe Description
 dInfo :: forall a. Definition a -&gt; a
 dName :: forall a. Definition a -&gt; Name
 </span><a href="#local-6989586621688013344"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-844"></span><span>    </span><span class="annot"><span class="annottext">(TypeOriginStack -&gt; TypeOriginStack)
+</span><span id="line-906"></span><span>    </span><span class="annot"><span class="annottext">(TypeOriginStack -&gt; TypeOriginStack)
 -&gt; TypeAccumulation () -&gt; TypeAccumulation ()
 forall r (m :: * -&gt; *) a. MonadReader r m =&gt; (r -&gt; r) -&gt; m a -&gt; m a
 </span><span class="hs-identifier hs-var">local</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name -&gt; TypeOriginStack -&gt; TypeOriginStack
@@ -2385,9 +2447,9 @@ forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-identifier hs-var">fmap</span></span><span> </span><span class="annot"><span class="annottext">InterfaceInfo -&gt; TypeInfo 'Output
 </span><a href="Hasura.GraphQL.Parser.Schema.html#TIInterface"><span class="hs-identifier hs-var">TIInterface</span></a></span><span> </span><span class="annot"><span class="annottext">Definition InterfaceInfo
 </span><a href="#local-6989586621688013347"><span class="hs-identifier hs-var">d</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-845"></span><span>
-</span><span id="line-846"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#HasTypeDefinitions"><span class="hs-identifier hs-type">HasTypeDefinitions</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#Definition"><span class="hs-identifier hs-type">Definition</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#UnionInfo"><span class="hs-identifier hs-type">UnionInfo</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-847"></span><span>  </span><span id="local-6989586621688013342"><span class="annot"><span class="annottext">accumulateTypeDefinitions :: Definition UnionInfo -&gt; TypeAccumulation ()
+</span><span id="line-907"></span><span>
+</span><span id="line-908"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#HasTypeDefinitions"><span class="hs-identifier hs-type">HasTypeDefinitions</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#Definition"><span class="hs-identifier hs-type">Definition</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#UnionInfo"><span class="hs-identifier hs-type">UnionInfo</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-909"></span><span>  </span><span id="local-6989586621688013342"><span class="annot"><span class="annottext">accumulateTypeDefinitions :: Definition UnionInfo -&gt; TypeAccumulation ()
 </span><a href="#local-6989586621688013342"><span class="hs-identifier hs-var hs-var hs-var hs-var">accumulateTypeDefinitions</span></a></span></span><span> </span><span id="local-6989586621688013341"><span class="annot"><span class="annottext">d :: Definition UnionInfo
 </span><a href="#local-6989586621688013341"><span class="hs-identifier hs-var">d</span></a></span></span><span class="hs-glyph">@</span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#Definition"><span class="hs-identifier hs-type">Definition</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621688013338"><span id="local-6989586621688013339"><span id="local-6989586621688013340"><span class="annot"><span class="annottext">Maybe Description
 Name
@@ -2399,7 +2461,7 @@ dDescription :: forall a. Definition a -&gt; Maybe Description
 dInfo :: forall a. Definition a -&gt; a
 dName :: forall a. Definition a -&gt; Name
 </span><a href="#local-6989586621688013338"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-848"></span><span>    </span><span class="annot"><span class="annottext">(TypeOriginStack -&gt; TypeOriginStack)
+</span><span id="line-910"></span><span>    </span><span class="annot"><span class="annottext">(TypeOriginStack -&gt; TypeOriginStack)
 -&gt; TypeAccumulation () -&gt; TypeAccumulation ()
 forall r (m :: * -&gt; *) a. MonadReader r m =&gt; (r -&gt; r) -&gt; m a -&gt; m a
 </span><span class="hs-identifier hs-var">local</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name -&gt; TypeOriginStack -&gt; TypeOriginStack
@@ -2415,4 +2477,4 @@ forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-identifier hs-var">fmap</span></span><span> </span><span class="annot"><span class="annottext">UnionInfo -&gt; TypeInfo 'Output
 </span><a href="Hasura.GraphQL.Parser.Schema.html#TIUnion"><span class="hs-identifier hs-var">TIUnion</span></a></span><span> </span><span class="annot"><span class="annottext">Definition UnionInfo
 </span><a href="#local-6989586621688013341"><span class="hs-identifier hs-var">d</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-849"></span></pre></body></html>
+</span><span id="line-911"></span></pre></body></html>

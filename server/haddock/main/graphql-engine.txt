@@ -6417,7 +6417,8 @@ DirectiveInfo :: !Name -> !Maybe Description -> ![Definition InputFieldInfo] -> 
 -- | This type contains all the information needed to efficiently serve
 --   GraphQL introspection queries. It corresponds to the GraphQL
 --   <tt>__Schema</tt> type defined in <a>4.5 Schema Introspection
---   http://spec.graphql.org/June2018/#sec-Introspection</a>.
+--   http://spec.graphql.org/June2018/#sec-Introspection</a>. See also Note
+--   [Basics of introspection schema generation].
 data Schema
 Schema :: Maybe Description -> HashMap Name (Definition SomeTypeInfo) -> Type 'Output -> Maybe (Type 'Output) -> Maybe (Type 'Output) -> [DirectiveInfo] -> Schema
 [sDescription] :: Schema -> Maybe Description
