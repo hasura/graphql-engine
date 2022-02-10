@@ -21,6 +21,7 @@ The optimization can be enabled using the
 (Add entries below in the order of server, console, cli, docs, others)
 - console: add support for remote database relationships
 - console: enable support for update permissions for mssql #3591
+- server: add support for customization of table GraphQL schema descriptions (#7496)
 - cli: skip tls verfication for all API requests when `insecure-skip-tls-verify` flag is set (#4926)
 
 - server: classify MSSQL exceptions and improve API error responses

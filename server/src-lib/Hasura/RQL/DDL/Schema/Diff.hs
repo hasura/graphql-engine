@@ -404,11 +404,11 @@ alterCustomColumnNamesInMetadata ::
   TableCoreInfo b ->
   m ()
 alterCustomColumnNamesInMetadata source droppedCols ti = do
-  let TableConfig customFields customColumnNames customName = _tciCustomConfig ti
-      tn = _tciName ti
-      modifiedCustomColumnNames = foldl' (flip M.delete) customColumnNames droppedCols
-  when (modifiedCustomColumnNames /= customColumnNames) $
+  let tableConfig@TableConfig {..} = _tciCustomConfig ti
+      tableName = _tciName ti
+      modifiedCustomColumnNames = foldl' (flip M.delete) _tcCustomColumnNames droppedCols
+  when (modifiedCustomColumnNames /= _tcCustomColumnNames) $
     tell $
       MetadataModifier $
-        tableMetadataSetter @b source tn . tmConfiguration
-          .~ TableConfig @b customFields modifiedCustomColumnNames customName
+        tableMetadataSetter @b source tableName . tmConfiguration
+          .~ tableConfig {_tcCustomColumnNames = modifiedCustomColumnNames}

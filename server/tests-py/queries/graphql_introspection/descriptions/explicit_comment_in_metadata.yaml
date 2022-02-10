@@ -1,0 +1,18 @@
+description: GraphQL introspection query
+url: /v1/graphql
+status: 200
+query:
+  query: |
+    query IntrospectionQuery {
+      __type(name: "explicit_comment_in_metadata") {
+        name
+        description
+        kind
+      }
+    }
+  response:
+    data:
+      __type:
+        name: explicit_comment_in_metadata
+        description: Such an explicit comment, wow
+        kind: OBJECT
