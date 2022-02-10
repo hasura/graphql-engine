@@ -18,7 +18,7 @@ Introduction
 This page helps you to set up Auth0 to work with the Hasura GraphQL engine.
 
 Create an Auth0 Application
------------------------------------
+---------------------------
 
 - Navigate to the `Auth0 dashboard <https://manage.auth0.com>`__.
 - Click on the ``Applications`` menu option on the left, then click the ``+ Create Application`` button.
