@@ -699,6 +699,7 @@ collectTypes ::
 collectTypes x =
   P.collectTypeDefinitions x
     `onLeft` \(P.ConflictingDefinitions (type1, origin1) (_type2, origins)) ->
+      -- See Note [Collecting types from the GraphQL schema]
       throw500 $
         "Found conflicting definitions for " <> P.getName type1 <<> ".  The definition at " <> origin1
           <<> " differs from the the definition at " <> commaSeparated origins
