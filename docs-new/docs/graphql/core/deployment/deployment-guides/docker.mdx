@@ -9,6 +9,8 @@ sidebar_position: 3
 sidebar_label: Using Docker
 ---
 
+import LatestRelease from "@site/src/components/LatestRelease";
+
 # Run Hasura GraphQL engine using Docker
 
 ## Introduction
@@ -125,7 +127,7 @@ running with Docker.
 
 The current latest version is:
 
-<code>hasura/graphql-engine:<span class="latest-release-tag">latest</span></code>
+<code>hasura/graphql-engine:<LatestRelease /></code>
 
 All the versions can be found at:
 [https://github.com/hasura/graphql-engine/releases](https://github.com/hasura/graphql-engine/releases)
@@ -138,16 +140,18 @@ tag to this latest version.
 For example, if you had:
 
 ```yaml
-  graphql-engine:
-    image: hasura/graphql-engine:v1.2.0
+graphql-engine:
+  image: hasura/graphql-engine:v1.2.0
 ```
 
 you should change it to:
 
-```yaml
-  graphql-engine:
-    image: hasura/graphql-engine:v1.3.3
-```
+<pre>
+<code>
+graphql-engine:<br/>
+{"  "}image: hasura/graphql-engine:<LatestRelease />
+</code>
+</pre>
 
 
 :::info Note
