@@ -700,6 +700,7 @@ data DirectiveInfo = DirectiveInfo
 -- | This type contains all the information needed to efficiently serve GraphQL
 -- introspection queries. It corresponds to the GraphQL @__Schema@ type defined
 -- in <§ 4.5 Schema Introspection http://spec.graphql.org/June2018/#sec-Introspection>.
+-- See also Note [Basics of introspection schema generation].
 data Schema = Schema
   { sDescription :: Maybe Description,
     sTypes :: HashMap Name (Definition SomeTypeInfo),
@@ -711,6 +712,66 @@ data Schema = Schema
 
 data TypeDefinitionsWrapper where
   TypeDefinitionsWrapper :: HasTypeDefinitions a => a -> TypeDefinitionsWrapper
+
+{-
+Note [Collecting types from the GraphQL schema]
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+A `Parser` object consists of two things:
+
+- a function that is used to process (part of) an incoming query, and
+- a piece of GraphQL type information.
+
+The main reason that the GraphQL type information is included is so that we can
+generate responses for the introspection fields `__type` and `__schema`.  In
+particular, this requires us to have a complete list of all types being used in
+our schema.
+
+When we build our schema, we therefore finish by making a full walk over the
+entirety of the schema, collecting the GraphQL types encountered in a `HashMap`,
+allowing us to look up GraphQL types by name.  At this point we might figure out
+that a single name is used to represent two GraphQL types that are materially
+distinct.  For instance, the name `author` might be used as both a GraphQL
+object, representing a database table, and as a scalar, e.g. as a string name.
+It also prevents us from having both
+
+```
+type author {
+  id : int
+  name : string
+}
+```
+
+and
+
+```
+type author {
+  id : int
+  name : string
+  email : string
+}
+```
+
+in the schema, as the latter has an additional field and is thus distinct from
+the former, even though it has the same name.
+
+In fact, for HGE internally, such name clashes are not problematic.  We would
+merely end up exposing illegal introspection results.  But in order to produce
+introspection results, we have to explore the GraphQL schema anyway, to collect
+all types.  We use this opportunity to help our users figure out whether there
+are any name clashes, and if so what caused them.  So we do some work to track
+where in the schema various GraphQL type names were encountered.  This type
+collision information is stored in `ConflictingDefinitions`.
+
+A typical way in which conflicting type definitions occur in practice is if one
+version of HGE adds a different version of HGE as a remote schema, particularly
+when support for database features was added in the meantime.  For instance, if
+we'd add a new operator to boolean expressions, e.g. `XOR`, then this would end
+up adding an additional field to every `<column>_bool_exp` object in our schema,
+which clashes with the old `<column>_bool_exp` that's part of the remote schema.
+This is not a bug of the "conflicting type definitions" logic but a limitation
+of the design of HGE, which would be resolved by e.g. having namespaces for
+different data sources.
+-}
 
 -- | Recursively collects all type definitions accessible from the given value.
 collectTypeDefinitions ::
@@ -739,6 +800,7 @@ typeRootRecurse _ x = x
 instance ToTxt TypeOriginStack where
   toTxt (TypeOriginStack fields) = T.intercalate "." $ toTxt <$> reverse fields
 
+-- See Note [Collecting types from the GraphQL schema]
 data ConflictingDefinitions
   = -- | Type collection has found at least two types with the same name.
     ConflictingDefinitions
