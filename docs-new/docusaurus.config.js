@@ -26,6 +26,7 @@ const config = {
           sidebarPath: require.resolve('./sidebars.js'),
           editUrl: 'https://github.com/hasura/graphql-engine/edit/main/docs-new/',
           docItemComponent: require.resolve('./src/components/CustomDocLayout/CustomDocLayout.tsx'),
+          exclude: ['**/*.wip'],
           lastVersion: "current",
           versions: {
             current: {
