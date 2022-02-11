@@ -27,11 +27,14 @@ const config = {
           editUrl: 'https://github.com/hasura/graphql-engine/edit/main/docs-new/',
           docItemComponent: require.resolve('./src/components/CustomDocLayout/CustomDocLayout.tsx'),
           exclude: ['**/*.wip'],
+          // showLastUpdateAuthor: true,
+          // showLastUpdateTime: true,
           lastVersion: "current",
           versions: {
             current: {
               label: "v2.x",
               badge: true,
+              // path: 'latest'
             },
           }
         },
