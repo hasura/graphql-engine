@@ -9,6 +9,8 @@ sidebar_position: 4
 sidebar_label: Using Kubernetes
 ---
 
+import LatestRelease from "@site/src/components/LatestRelease";
+
 # Run Hasura GraphQL engine on Kubernetes
 
 ## Introduction
@@ -165,7 +167,7 @@ engine running on Kubernetes.
 
 The current latest version is:
 
-<code>hasura/graphql-engine:v1.3.3</code>
+<code>hasura/graphql-engine:<LatestRelease /></code>
 
 All the versions can be found at: [https://github.com/hasura/graphql-engine/releases](https://github.com/hasura/graphql-engine/releases).
 
@@ -176,21 +178,21 @@ version.
 
 For example, if you had:
 
-```
-
-  containers:
-    - image: hasura/graphql-engine:v1.0.0-alpha01
-
+```yaml
+containers:
+  - image: hasura/graphql-engine:v1.0.0-alpha01
 ```
 
 you should change it to:
 
-```
 
-  containers:
-    - image: hasura/graphql-engine:v1.3.3
-    
-```
+<pre>
+<code>
+containers:<br />
+{"  "}- image: hasura/graphql-engine:<LatestRelease />
+</code>
+</pre>
+
 ### Step 3: Rollout the change
 
 ```bash

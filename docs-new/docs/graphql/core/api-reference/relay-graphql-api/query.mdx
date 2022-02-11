@@ -167,8 +167,19 @@ For more details on the Relay `cursor`, refer to the [Relay docs](https://relay.
 
 <div class="parsed-literal">
 
+<!--
 [DistinctOnExp](#relaydistinctonexp) | [WhereExp](#relaywhereexp) |
 [OrderByExp](#relayorderbyexp) | [PaginationExp](#relaypaginationexp)
+-->
+
+<pre>
+<code>
+<a href="#relaydistinctonexp">DistinctOnExp</a>{` | `}
+<a href="#relaywhereexp">WhereExp</a>{` | `}
+<a href="#relayorderbyexp">OrderByExp</a>{` | `}
+<a href="#relaypaginationexp">PaginationExp</a>
+</code>
+</pre>
 
 </div>
 
@@ -190,7 +201,14 @@ Same as the generic [OrderByExp](/graphql/core/api-reference/graphql-api/query.m
 
 <div class="parsed-literal">
 
-first: Integer \[after: [Cursor](#cursor)\]
+<!-- first: Integer \[after: [Cursor](#cursor)\] -->
+
+<pre>
+<code>
+{`first: Integer
+[after: `}<a href="#cursor">Cursor</a>{`]`}
+</code>
+</pre>
 
 </div>
 
@@ -222,7 +240,14 @@ query {
 
 <div class="parsed-literal">
 
-\[last: Integer\] \[before: [Cursor](#cursor)\]
+<!-- \[last: Integer\] \[before: [Cursor](#cursor)\] -->
+
+<pre>
+<code>
+{`[last: Integer]
+[before: `}<a href="#cursor">Cursor</a>{`]`}
+</code>
+</pre>
 
 </div>
 

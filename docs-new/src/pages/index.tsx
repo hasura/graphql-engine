@@ -4,21 +4,28 @@ import Layout from '@theme/Layout';
 import Link from '@docusaurus/Link';
 import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
 import styles from './index.module.css';
+import hasuras from '../../static/img/hasuras.png';
 
 function HomepageHeader() {
   const {siteConfig} = useDocusaurusContext();
   return (
-    <header className={clsx('hero hero--primary', styles.heroBanner)}>
+    <header className={clsx('hero', styles.heroBanner)}>
       <div className="container">
         <h1 className="hero__title">{siteConfig.title}</h1>
         <p className="hero__subtitle">{siteConfig.tagline}</p>
-        <div className={styles.buttons}>
+        <div className={styles.links}>
           <Link
-            className="button button--secondary button--lg"
-            to="/category/migration-guide">
-            Migration Guide
+            className="button button--primary button--lg"
+            to="/graphql/core/index">
+            Hasura Core Docs
+          </Link>
+          <Link
+            className="button button--success button--lg"
+            to="/graphql/cloud/index">
+            Hasura Cloud Docs
           </Link>
         </div>
+        <img src={hasuras} alt="Hasuras Image" />
       </div>
     </header>
   );

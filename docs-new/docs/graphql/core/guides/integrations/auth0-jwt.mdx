@@ -157,13 +157,13 @@ are using `auth0-spa-js` with a custom API created.
 
 4.  Extract the `id_token` value from this URL. This is the JWT.
 
-<img src="https://graphql-engine-cdn.hasura.io/img/id_token-jwt-url.png" class="no-shadow no-shadow" alt="JWT from id_token query param" />
+<img src="https://graphql-engine-cdn.hasura.io/img/id_token-jwt-url.png" class="no-shadow" alt="JWT from id_token query param" />
 
 5.  To test this JWT, and to see if all the Hasura claims are added as
     per the sections above, let's test this out with
     [jwt.io](https://jwt.io)!
 
-<img src="https://graphql-engine-cdn.hasura.io/img/jwt-io-debug.png" class="no-shadow no-shadow" alt="JWT debug on jwt.io" />
+<img src="https://graphql-engine-cdn.hasura.io/img/jwt-io-debug.png" class="no-shadow" alt="JWT debug on jwt.io" />
 
 **Save this JWT token value so that we can use it later to test
 authorization using the Hasura console.**
@@ -237,7 +237,7 @@ To test this out, add an access control rule that uses
 mutation, with the authorization token from the
 [previous step](#test-auth0) where we generated an Auth0 token.
 
-<img src="https://graphql-engine-cdn.hasura.io/img/jwt-header-auth-hasura.png" class="no-shadow no-shadow" alt="JWT token used as bearer token on hasura console" />
+<img src="https://graphql-engine-cdn.hasura.io/img/jwt-header-auth-hasura.png" class="no-shadow" alt="JWT token used as bearer token on hasura console" />
 
 You can also use the env variable `HASURA_GRAPHQL_UNAUTHORIZED_ROLE` or
 `--unauthorized-role` flag to set a role for **unauthorized users**

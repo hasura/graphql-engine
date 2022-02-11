@@ -101,7 +101,13 @@ subscription {
 
 <div class="parsed-literal">
 
-[SimpleObject](#simpleobject) \| [AggregateObject](#aggregateobject)
+<!-- [SimpleObject](#simpleobject) \| [AggregateObject](#aggregateobject) -->
+
+<pre>
+<code>
+<a href="#simpleobject">SimpleObject</a>{' | '}<a href="#aggregateobject">AggregateObject</a>
+</code>
+</pre>
 
 </div>
 
@@ -278,8 +284,19 @@ author_aggregate {
 
 <div class="parsed-literal">
 
+<!--
 [DistinctOnExp](#distinctonexp) \| [WhereExp](#whereexp) \|
 [OrderByExp](#orderbyexp) \| [PaginationExp](#paginationexp)
+-->
+
+<pre>
+<code>
+<a href="#distinctonexp">DistinctOnExp</a>{` | `}
+<a href="#whereexp">WhereExp</a>{` | `}
+<a href="#orderbyexp">OrderByExp</a>{` | `}
+<a href="#paginationexp">PaginationExp</a>
+</code>
+</pre>
 
 </div>
 
@@ -287,7 +304,13 @@ author_aggregate {
 
 <div class="parsed-literal">
 
-distinct_on: \[ [TableSelectColumnEnum](#tableselectcolumnenum) \]
+<!-- distinct_on: \[ [TableSelectColumnEnum](#tableselectcolumnenum) \] -->
+
+<pre>
+<code>
+{`distinct_on: [`}<a href="#tableselectcolumnenum">TableSelectColumnEnum</a>{`]`}
+</code>
+</pre>
 
 </div>
 
@@ -302,7 +325,7 @@ query {
 }
 ```
 
-##### TableSelectColumnEnum
+##### TableSelectColumnEnum {#tableselectcolumnenum}
 
 ```graphql
 #example table_select_column enum for "article" table
@@ -319,7 +342,13 @@ enum article_select_column {
 
 <div class="parsed-literal">
 
-where: [BoolExp](#boolexp)
+<!-- where: [BoolExp](#boolexp) -->
+
+<pre>
+<code>
+{`where: `}<a href="#boolexp">BoolExp</a>
+</code>
+</pre>
 
 </div>
 
@@ -340,8 +369,20 @@ query {
 
 <div class="parsed-literal">
 
+<!--
 [AndExp](#andexp) \| [OrExp](#orexp) \| [NotExp](#notexp) \|
 [TrueExp](#trueexp) \| [ColumnExp](#columnexp)
+-->
+
+<pre>
+<code>
+<a href="#andexp">AndExp</a>{` | `}
+<a href="#orexp">OrExp</a>{` | `}
+<a href="#notexp">NotExp</a>{` | `}
+<a href="#trueexp">TrueExp</a>{` | `}
+<a href="#columnexp">ColumnExp</a>
+</code>
+</pre>
 
 </div>
 
@@ -349,9 +390,20 @@ query {
 
 <div class="parsed-literal">
 
+<!--
 {  
   \_and: \[[BoolExp](#boolexp)\]
 }
+-->
+
+<pre>
+<code>
+{`{
+  _and: [`}<a href="#boolexp">BoolExp</a>{`]
+}`}
+</code>
+</pre>
+
 
 </div>
 
@@ -419,9 +471,19 @@ rating: {
 
 <div class="parsed-literal">
 
+<!--
 {  
   \_or: \[[BoolExp](#boolexp)\]
 }
+-->
+
+<pre>
+<code>
+{`{
+  _or: [`}<a href="#boolexp">BoolExp</a>{`]
+}`}
+</code>
+</pre>
 
 </div>
 
@@ -483,9 +545,19 @@ behaves.
 
 <div class="parsed-literal">
 
+<!--
 {  
   \_not: [BoolExp](#boolexp)
 }
+-->
+
+<pre>
+<code>
+{`{
+  _not: `}<a href="#boolexp">BoolExp</a>{`
+}`}
+</code>
+</pre>
 
 </div>
 
@@ -502,7 +574,11 @@ query {
 
 ###### TrueExp
 
-`{}`
+<pre>
+<code>
+{`{}`}
+</code>
+</pre>
 
 *Example*
 
@@ -524,9 +600,19 @@ query {
 
 <div class="parsed-literal">
 
+<!--
 {  
   field-name : {[Operator](#operator): Value }
 }
+-->
+
+<pre>
+<code>
+{`{
+  field-name: { `}<a href="#operator">Operator</a>{`: Value }
+}`}
+</code>
+</pre>
 
 </div>
 
@@ -685,7 +771,18 @@ docs](https://www.postgresql.org/docs/current/ltree.html).)
 
 ###### CastExp {#castexp}
 
-> {type-name: {[Operator](#operator): Value}}
+
+<div class="parsed-literal">
+
+<!-- {type-name: {[Operator](#operator): Value}} -->
+
+<pre>
+<code>
+{`{ type-name: {`}<a href="#operator">Operator</a>{`: Value} }`}
+</code>
+</pre>
+
+</div>
 
 *Example*
 
@@ -723,8 +820,20 @@ Currently, only casting between `geometry` and `geography` types is allowed.
 
 <div class="parsed-literal">
 
+<!--
 order_by: ([TableOrderBy](#tableorderby) \| \[
 [TableOrderBy](#tableorderby) \])
+-->
+
+<pre>
+<code>
+{`order_by: (`}
+<a href="#tableorderby">TableOrderBy</a>
+{` | [`}
+<a href="#tableorderby">TableOrderBy</a>
+{`])`}
+</code>
+</pre>
 
 </div>
 
@@ -767,7 +876,13 @@ query {
 
 <div class="parsed-literal">
 
-{column: [OrderByEnum](#orderbyenum)}
+<!-- {column: [OrderByEnum](#orderbyenum)} -->
+
+<pre>
+<code>
+{`{ column: `}<a href="#orderbyenum">OrderByEnum</a>{` }`}
+</code>
+</pre>
 
 </div>
 
@@ -786,7 +901,13 @@ query {
 
 <div class="parsed-literal">
 
-{relation-name: [TableOrderBy](#tableorderby)}
+<!-- {relation-name: [TableOrderBy](#tableorderby)} -->
+
+<pre>
+<code>
+{`{ relation-name: `}<a href="#tableorderby">TableOrderBy</a>{` }`}
+</code>
+</pre>
 
 </div>
 
@@ -805,7 +926,14 @@ query {
 
 <div class="parsed-literal">
 
-{relation-name_aggregate: [AggregateOrderBy](#aggregateorderby)}
+<!-- {relation-name_aggregate: [AggregateOrderBy](#aggregateorderby)} -->
+
+<pre>
+<code>
+{`{ relation-name_aggregate: `}<a href="#aggregateorderby">AggregateOrderBy</a>{` }`}
+</code>
+</pre>
+
 
 </div>
 
@@ -825,7 +953,13 @@ Returning scalar values:
 
 <div class="parsed-literal">
 
-{computed-field-name: [OrderByEnum](#orderbyenum)}
+<!-- {computed-field-name: [OrderByEnum](#orderbyenum)} -->
+
+<pre>
+<code>
+{`{ computed-field-name: `}<a href="#orderbyenum">OrderByEnum</a>{` }`}
+</code>
+</pre>
 
 </div>
 
@@ -833,13 +967,25 @@ Returning set of table rows:
 
 <div class="parsed-literal">
 
-{computed-field-name: [TableOrderBy](#tableorderby)}
+<!-- {computed-field-name: [TableOrderBy](#tableorderby)} -->
+
+<pre>
+<code>
+{`{ computed-field-name: `}<a href="#tableorderby">TableOrderBy</a>{` }`}
+</code>
+</pre>
 
 </div>
 
 <div class="parsed-literal">
 
-{computed-field-name_aggregate: [AggregateOrderBy](#aggregateorderby)}
+<!-- {computed-field-name_aggregate: [AggregateOrderBy](#aggregateorderby)} -->
+
+<pre>
+<code>
+{`{ computed-field-name_aggregate: `}<a href="#aggregateorderby">AggregateOrderBy</a>{` }`}
+</code>
+</pre>
 
 </div>
 
@@ -862,7 +1008,13 @@ input article_order_by {
 
 <div class="parsed-literal">
 
-{computed-field-name: [OrderByEnum](#orderbyenum)}
+<!-- {computed-field-name: [OrderByEnum](#orderbyenum)} -->
+
+<pre>
+<code>
+{`{ computed-field-name: `}<a href="#orderbyenum">OrderByEnum</a>{` }`}
+</code>
+</pre>
 
 </div>
 
@@ -890,7 +1042,13 @@ query by their aggregate fields.
 
 <div class="parsed-literal">
 
-{computed-field-name_aggregate: [AggregateOrderBy](#aggregateorderby)}
+<!-- {computed-field-name_aggregate: [AggregateOrderBy](#aggregateorderby)} -->
+
+<pre>
+<code>
+{`{ computed-field-name_aggregate: `}<a href="#aggregateorderby">AggregateOrderBy</a>{` }`}
+</code>
+</pre>
 
 </div>
 
@@ -940,7 +1098,13 @@ enum order_by {
 
 <div class="parsed-literal">
 
-{count: [OrderByEnum](#orderbyenum)}
+<!-- {count: [OrderByEnum](#orderbyenum)} -->
+
+<pre>
+<code>
+{`{ count: `}<a href="#orderbyenum">OrderByEnum</a>{` }`}
+</code>
+</pre>
 
 </div>
 
@@ -958,7 +1122,13 @@ query {
 
 <div class="parsed-literal">
 
-{op_name: [TableAggOpOrderBy](#tableaggoporderby)}
+<!-- {op_name: [TableAggOpOrderBy](#tableaggoporderby)} -->
+
+<pre>
+<code>
+{`{ op_name: `}<a href="#tableaggoporderby">TableAggOpOrderBy</a>{` }`}
+</code>
+</pre>
 
 </div>
 
@@ -979,13 +1149,28 @@ Available operations are `sum`, `avg`, `max`, `min`, `stddev`,
 
 <div class="parsed-literal">
 
-{column: [OrderByEnum](#orderbyenum)}
+<!-- {column: [OrderByEnum](#orderbyenum)} -->
+
+<pre>
+<code>
+{`{ column: `}<a href="#orderbyenum">OrderByEnum</a>{` }`}
+</code>
+</pre>
 
 </div>
 
 #### PaginationExp {#paginationexp}
 
-`limit: Integer [offset: Integer]`
+<div class="parsed-literal">
+
+<pre>
+<code>
+{`limit: Integer
+[offset: Integer]`}
+</code>
+</pre>
+
+</div>
 
 *Example*
 

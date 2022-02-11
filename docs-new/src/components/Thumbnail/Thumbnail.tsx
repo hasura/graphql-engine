@@ -49,11 +49,11 @@ const Thumbnail = ({src, ...restProps}) => {
   const resolvedImage = require(`@site/static${src}`).default;
   return (
     <div className={styles["thumbnail"]}>
-      <img src={resolvedImage} {...restProps} className={styles["main-img"]} onClick={() => setOpenModal(true)} />
+      <img src={resolvedImage} {...restProps} className={`${styles["main-img"]} ${restProps.className || ""}`} onClick={() => setOpenModal(true)} />
       <BrowserOnly>
         {() => (
           <Modal onClose={() => setOpenModal(false)} show={openModal}>
-            <img src={resolvedImage} {...restProps} className={styles["modal-img"]} />
+            <img src={resolvedImage} {...restProps} className={`${styles["modal-img"]} ${restProps.className || ""}`} />
           </Modal>
         )}
       </BrowserOnly>
