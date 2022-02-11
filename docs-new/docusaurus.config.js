@@ -45,6 +45,17 @@ const config = {
   themeConfig:
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
     ({
+      hideableSidebar: true,
+      autoCollapseSidebarCategories: true,
+      colorMode: {
+        defaultMode: 'light',
+        disableSwitch: false,
+        respectPrefersColorScheme: true,
+      },
+      // announcementBar: {
+      //   id: 'announcementBar-2', // Increment on change
+      //   content: `⭐️ If you like Docusaurus, give it a star on <a target="_blank" rel="noopener noreferrer" href="https://github.com/facebook/docusaurus">GitHub</a> and follow us on <a target="_blank" rel="noopener noreferrer" href="https://twitter.com/docusaurus" >Twitter</a> ${TwitterSvg}`,
+      // },
       navbar: {
         title: '',
         logo: {
@@ -55,15 +66,15 @@ const config = {
         items: [
           {
             type: 'doc',
-            docId: 'graphql/cloud/index',
+            docId: 'graphql/core/index',
             position: 'left',
-            label: 'Cloud',
+            label: 'Hasura Core',
           },
           {
             type: 'doc',
-            docId: 'graphql/core/index',
+            docId: 'graphql/cloud/index',
             position: 'left',
-            label: 'Core',
+            label: 'Hasura Cloud',
           },
           {
             type: 'docsVersionDropdown',
