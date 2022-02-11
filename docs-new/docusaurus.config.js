@@ -25,8 +25,8 @@ const config = {
           routeBasePath: "/",
           sidebarPath: require.resolve('./sidebars.js'),
           editUrl: 'https://github.com/hasura/graphql-engine/edit/main/docs-new/',
-          docItemComponent: require.resolve('./src/components/CustomDocLayout/CustomDocLayout.tsx'),
-          exclude: ['**/*.wip'],
+          // docItemComponent: require.resolve('./src/components/CustomDocLayout/CustomDocLayout.tsx'),
+          exclude: ['**/*.wip', 'migration-guide'],
           // showLastUpdateAuthor: true,
           // showLastUpdateTime: true,
           lastVersion: "current",
@@ -60,6 +60,7 @@ const config = {
       //   content: `⭐️ If you like Docusaurus, give it a star on <a target="_blank" rel="noopener noreferrer" href="https://github.com/facebook/docusaurus">GitHub</a> and follow us on <a target="_blank" rel="noopener noreferrer" href="https://twitter.com/docusaurus" >Twitter</a> ${TwitterSvg}`,
       // },
       navbar: {
+        hideOnScroll: true,
         title: '',
         logo: {
           alt: 'Hasura Logo',
@@ -69,15 +70,15 @@ const config = {
         items: [
           {
             type: 'doc',
-            docId: 'graphql/core/index',
             position: 'left',
+            docId: 'graphql/core/index',
             label: 'Hasura Core',
           },
           {
-            type: 'doc',
-            docId: 'graphql/cloud/index',
-            position: 'left',
-            label: 'Hasura Cloud',
+             type: 'docSidebar',
+             position: 'left',
+             sidebarId: 'cloudDocsSidebar',
+             label: 'Hasura Cloud',
           },
           {
             type: 'docsVersionDropdown',
