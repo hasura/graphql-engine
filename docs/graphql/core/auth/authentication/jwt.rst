@@ -614,6 +614,7 @@ the JWT config only needs to have the public key.
       "
     }
 
+.. _running_with_jwt: 
 
 Running with JWT
 ^^^^^^^^^^^^^^^^
@@ -725,6 +726,7 @@ And use it in the ``key`` field:
     -----END CERTIFICATE-----
     "
         }
+.. _generating_jwt_config:
 
 Generating JWT Config
 ---------------------

@@ -15,6 +15,7 @@ import Hasura.Backends.MSSQL.Connection
 import Hasura.Backends.MSSQL.Execute.MutationResponse
 import Hasura.Backends.MSSQL.FromIr as TSQL
 import Hasura.Backends.MSSQL.Plan
+import Hasura.Backends.MSSQL.SQL.Error
 import Hasura.Backends.MSSQL.ToQuery as TQ
 import Hasura.Backends.MSSQL.Types.Internal as TSQL
 import Hasura.Base.Error
@@ -64,11 +65,11 @@ buildDeleteTx deleteOperation stringifyNum = do
           TQ.fromSelectIntoTempTable $
             TSQL.toSelectIntoTempTable tempTableNameDeleted (dqp1Table deleteOperation) (dqp1AllCols deleteOperation) RemoveConstraints
   -- Create a temp table
-  Tx.unitQueryE fromMSSQLTxError createInsertedTempTableQuery
+  Tx.unitQueryE defaultMSSQLTxErrorHandler createInsertedTempTableQuery
   let deleteQuery = TQ.fromDelete <$> TSQL.fromDelete deleteOperation
   deleteQueryValidated <- toQueryFlat <$> V.runValidate (runFromIr deleteQuery) `onLeft` (throw500 . tshow)
   -- Execute DELETE statement
-  Tx.unitQueryE fromMSSQLTxError deleteQueryValidated
+  Tx.unitQueryE mutationMSSQLTxErrorHandler deleteQueryValidated
   mutationOutputSelect <- mkMutationOutputSelect stringifyNum withAlias $ dqp1Output deleteOperation
   let withSelect =
         emptySelect
@@ -78,4 +79,4 @@ buildDeleteTx deleteOperation stringifyNum = do
       finalMutationOutputSelect = mutationOutputSelect {selectWith = Just $ With $ pure $ Aliased withSelect withAlias}
       mutationOutputSelectQuery = toQueryFlat $ TQ.fromSelect finalMutationOutputSelect
   -- Execute SELECT query and fetch mutation response
-  encJFromText <$> Tx.singleRowQueryE fromMSSQLTxError mutationOutputSelectQuery
+  encJFromText <$> Tx.singleRowQueryE defaultMSSQLTxErrorHandler mutationOutputSelectQuery

@@ -14,8 +14,8 @@ response:
         name: duplicate
         comment:
       reason: "Duplicate variables found in endpoint path: foo/:id/bar/:id"
-      name: endpoint duplicate
-      type: endpoint
+      name: rest_endpoint duplicate
+      type: rest_endpoint
   path: $.args
   error: 'Duplicate variables found in endpoint path: foo/:id/bar/:id'
   code: invalid-configuration

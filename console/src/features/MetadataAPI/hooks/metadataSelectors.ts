@@ -28,37 +28,32 @@ export namespace MetadataSelector {
     return { api_limits, graphql_schema_introspection };
   };
 
-  export const getDataSourceMetadata = (currentDataSource: string) => (
+  export const getDataSourceMetadata = (dataSource: string) => (
     m: MetadataResponse
   ) => {
-    if (!currentDataSource) return;
-    return m.metadata?.sources.find(
-      source => source.name === currentDataSource
-    );
+    if (!dataSource) return;
+    return m.metadata?.sources.find(source => source.name === dataSource);
   };
 
-  export const getTables = (currentDataSource: string) => (
-    m: MetadataResponse
-  ) => {
-    const sources = getDataSourceMetadata(currentDataSource)(m);
+  export const getTables = (dataSource: string) => (m: MetadataResponse) => {
+    const sources = getDataSourceMetadata(dataSource)(m);
     return sources?.tables ?? [];
   };
 
-  export const getTable = (
-    currentDataSource: string,
-    table: QualifiedTable
-  ) => (m: MetadataResponse) => {
-    const tables = getTables(currentDataSource)(m);
+  export const getTable = (dataSource: string, table: QualifiedTable) => (
+    m: MetadataResponse
+  ) => {
+    const tables = getTables(dataSource)(m);
     return tables.find(
       t => t.table.name === table.name && t.table.schema === table.schema
     );
   };
 
   export const getTablePermissions = (
-    currentDataSource: string,
+    dataSource: string,
     table: QualifiedTable
   ) => (m: MetadataResponse) => {
-    const metadataTable = getTable(currentDataSource, table)(m);
+    const metadataTable = getTable(dataSource, table)(m);
     const rolePermMap = permKeys.reduce((rpm: Record<string, any>, key) => {
       if (metadataTable) {
         metadataTable[key]?.forEach(
@@ -84,10 +79,10 @@ export namespace MetadataSelector {
   };
 
   export const getTableComputedFields = (
-    currentDataSource: string,
+    dataSource: string,
     table: QualifiedTable
   ) => (m: MetadataResponse) => {
-    const metadataTable = getTable(currentDataSource, table)(m);
+    const metadataTable = getTable(dataSource, table)(m);
     const computed_fields: ComputedField[] = (
       metadataTable?.computed_fields || []
     ).map(field => ({
@@ -122,4 +117,7 @@ export namespace MetadataSelector {
     ).filter(field => 'to_remote_schema' in field.definition);
     return remote_schema_relationships;
   };
+
+  export const getAllDriversList = (m: MetadataResponse) =>
+    m.metadata?.sources.map(s => ({ source: s.name, kind: s.kind }));
 }

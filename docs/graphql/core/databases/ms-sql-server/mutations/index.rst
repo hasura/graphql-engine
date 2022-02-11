@@ -33,12 +33,8 @@ The following types of mutation requests are possible:
 
   Insert <insert>
   Upsert <upsert>
+  Update <update>
   Delete <delete>
-
-
-.. note::
-
-  Support for the update mutation will be added soon.
 
 
 .. TODO: DBCOMPATIBILITY
@@ -46,5 +42,4 @@ The following types of mutation requests are possible:
   .. toctree::
     :maxdepth: 1
 
-    Update <update>
     multiple-mutations

@@ -25,7 +25,8 @@ spec =
           [ Feature.Backend
               { name = "MySQL",
                 setup = mysqlSetup,
-                teardown = mysqlTeardown
+                teardown = mysqlTeardown,
+                backendOptions = Feature.defaultBackendOptions
               }
           ],
         Feature.tests = tests
@@ -80,10 +81,11 @@ DROP TABLE author;
 --------------------------------------------------------------------------------
 -- Tests
 
-tests :: SpecWith State
-tests = do
+tests :: Feature.BackendOptions -> SpecWith State
+tests opts = do
   it "Where id=1" \state ->
     shouldReturnYaml
+      opts
       ( GraphqlEngine.postGraphql
           state
           [graphql|

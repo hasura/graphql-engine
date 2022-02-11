@@ -1,5 +1,8 @@
 {-# LANGUAGE UndecidableInstances #-}
 
+-- | Postgres Translate Types
+--
+-- Intermediary / helper types used for translating IR to Postgres SQL.
 module Hasura.Backends.Postgres.Translate.Types
   ( ApplySortingAndSlicing (ApplySortingAndSlicing),
     ArrayConnectionSource (ArrayConnectionSource, _acsSource),
@@ -146,7 +149,18 @@ instance Hashable ObjectSelectSource
 
 objectSelectSourceToSelectSource :: ObjectSelectSource -> SelectSource
 objectSelectSourceToSelectSource ObjectSelectSource {..} =
-  SelectSource _ossPrefix _ossFrom _ossWhere noSortingAndSlicing
+  SelectSource _ossPrefix _ossFrom _ossWhere sortingAndSlicing
+  where
+    sortingAndSlicing = SortingAndSlicing noSorting limit1
+    noSorting = NoSorting Nothing
+    -- We specify 'LIMIT 1' here to mitigate misconfigured object relationships with an
+    -- unexpected one-to-many/many-to-many relationship, instead of the expected one-to-one/many-to-one relationship.
+    -- Because we can't detect this misconfiguration statically (it depends on the data),
+    -- we force a single (or null) result instead by adding 'LIMIT 1'.
+    -- Which result is returned might be non-deterministic (though only in misconfigured cases).
+    -- Proper one-to-one/many-to-one object relationships should not be semantically affected by this.
+    -- See: https://github.com/hasura/graphql-engine/issues/7936
+    limit1 = SelectSlicing (Just 1) Nothing
 
 data ObjectRelationSource = ObjectRelationSource
   { _orsRelationshipName :: !RelName,

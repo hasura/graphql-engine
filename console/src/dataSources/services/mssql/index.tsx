@@ -171,6 +171,10 @@ export const supportedFeatures: DeepRequired<SupportedFeaturesType> = {
     relationships: {
       enabled: true,
       track: true,
+      remoteDbRelationships: {
+        hostSource: false,
+        referenceSource: false,
+      },
       remoteRelationships: false,
     },
     permissions: {
@@ -261,7 +265,7 @@ export const mssql: DataSourcesAPI = {
   getTableSupportedQueries: (table: NormalizedTable) => {
     // all query types are supported for tables
     if (isTable(table)) {
-      return ['select', 'insert', 'delete'];
+      return ['select', 'insert', 'update', 'delete'];
     }
 
     // only select permissions for views, until server can verify the other ones
@@ -922,6 +926,7 @@ WHERE
   generateRowsCountRequest,
   // TODO(iyekings): this is a duplicate of schemaList
   schemaListQuery: `
+  -- test_id = schema_list
   SELECT
     s.name AS schema_name
   FROM

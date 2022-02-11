@@ -365,10 +365,7 @@ tableSelectionSet sourceName tableInfo selectPermissions = memoizeOn 'tableSelec
   let xRelay = relayExtension @b
       tableFields = Map.elems $ _tciFieldInfoMap tableCoreInfo
       tablePkeyColumns = _pkColumns <$> _tciPrimaryKey tableCoreInfo
-      description =
-        Just $
-          mkDescriptionWith (_tciDescription tableCoreInfo) $
-            "columns and relationships of " <>> tableName
+      description = G.Description . PG.getPGDescription <$> _tciDescription tableCoreInfo
   fieldParsers <-
     concat <$> for tableFields \fieldInfo ->
       fieldSelection sourceName tableName tablePkeyColumns fieldInfo selectPermissions

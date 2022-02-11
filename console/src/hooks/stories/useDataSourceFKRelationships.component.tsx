@@ -1,7 +1,7 @@
 import { Table, TableRow, TableHeader } from '@/components/Common/Table';
-import { Driver, setDriver } from '@/dataSources';
+import { currentDriver, Driver, setDriver } from '@/dataSources';
 
-import { useAppDispatch } from '@/store';
+import { useAppDispatch, useAppSelector } from '@/store';
 import React from 'react';
 import { useDataSourceFKRelationships, useSchemaList } from '..';
 
@@ -25,7 +25,15 @@ export const AllFKRelationships = ({
     }
   }, [currentDatasource, dispatch, driver]);
 
-  const { data: schemas, isError, error } = useSchemaList({ retry: 0 });
+  const source: string = useAppSelector(s => s.tables.currentDataSource);
+
+  const { data: schemas, isError, error } = useSchemaList(
+    {
+      source,
+      driver: currentDriver,
+    },
+    { retry: 0 }
+  );
   const {
     data: foreignKeys,
     isLoading,
@@ -33,7 +41,14 @@ export const AllFKRelationships = ({
     isError: isError2,
     isIdle,
     error: fkError,
-  } = useDataSourceFKRelationships(schemas!, { enabled: !!schemas, retry: 0 });
+  } = useDataSourceFKRelationships(
+    {
+      schemas: schemas!,
+      source,
+      driver: currentDriver,
+    },
+    { enabled: !!schemas, retry: 0 }
+  );
   const keys = React.useMemo(() => Object.keys(foreignKeys?.[0] ?? {}), [
     foreignKeys,
   ]);

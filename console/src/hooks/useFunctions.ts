@@ -1,147 +1,103 @@
-import { getRunSqlQuery } from '@/components/Common/utils/v1QueryUtils';
-import { DataSourcesAPI, Driver, useDataSource } from '@/dataSources';
+import { services } from '@/dataSources/services';
 import { PGFunction } from '@/dataSources/services/postgresql/types';
-import Endpoints from '@/Endpoints';
 import { QualifiedFunction } from '@/metadata/types';
-import { useAppSelector } from '@/store';
-import { useQuery, UseQueryOptions, UseQueryResult } from 'react-query';
-import { Api } from './apiUtils';
-import { RunSQLResponse } from './types';
+import { UseQueryResult } from 'react-query';
+import { APIError } from './error';
+import { QualifiedDataSource, RunSQLResponse } from './types';
+import { RunSQLQueryOptions, useRunSQL } from './common';
 
-interface FetchFunctionsArgs {
-  dataSource: DataSourcesAPI;
-  headers: Record<string, string>;
-  trackable: boolean;
-  schemaList: string[];
-  currentDataSource: string;
-  driver: Driver;
-}
+type FnQueryOptions<T, D> = RunSQLQueryOptions<
+  [name: string, source: string, schemasOrFunction: T, driver: string],
+  D
+>;
 
-interface FetchSingleFunctionArg
-  extends Omit<FetchFunctionsArgs, 'trackable' | 'schemaList'> {
-  name: string;
-  schema: string;
-}
+const transFormFns = (data: RunSQLResponse) => {
+  return JSON.parse(data.result?.[1]?.[0] ?? '[]') as PGFunction[];
+};
 
-const fetchFunctions = (args: FetchFunctionsArgs) => () => {
-  const {
+const transFormSingleFn = (data: RunSQLResponse) => {
+  return transFormFns(data)?.[0] ?? null;
+};
+
+function useFunctionBase<T extends string[] | QualifiedFunction, D>(
+  fnOrSchemas: T,
+  name: string,
+  transformFn: (r: RunSQLResponse) => D,
+  dataSource: QualifiedDataSource,
+  fallBackData: D,
+  queryOptions?: FnQueryOptions<T, D>,
+  fnType?: 'trackable' | 'non-trackable'
+) {
+  const { source, driver } = dataSource;
+  const targetDataSource = services[driver];
+
+  const fnSqlString = Array.isArray(fnOrSchemas)
+    ? targetDataSource.getFunctionDefinitionSql?.(fnOrSchemas, null, fnType)
+    : targetDataSource.getFunctionDefinitionSql?.(
+        fnOrSchemas?.schema,
+        fnOrSchemas?.name
+      );
+
+  const sql = () => {
+    return fnSqlString ?? '';
+  };
+
+  return useRunSQL({
+    sql,
+    queryKey: [name, source, fnOrSchemas, driver],
+    transformFn,
+    queryOptions,
     dataSource,
-    headers,
-    schemaList,
-    driver,
-    currentDataSource,
-    trackable,
-  } = args;
-  if (!dataSource.getFunctionDefinitionSql)
-    return Promise.resolve([] as PGFunction[]);
-  const fnType = trackable ? 'trackable' : 'non-trackable';
-  const body = getRunSqlQuery(
-    dataSource.getFunctionDefinitionSql(schemaList, null, fnType),
-    currentDataSource,
-    false,
-    true,
-    driver
-  );
-  return Api.post<RunSQLResponse, PGFunction[]>(
-    {
-      url: Endpoints.query,
-      headers,
-      body,
-    },
-    data => JSON.parse(data.result?.[1]?.[0] ?? '[]') as PGFunction[]
-  );
-};
-
-const fetchSingleFunction = (
-  args: FetchSingleFunctionArg
-) => (): Promise<PGFunction | null> => {
-  const { dataSource, headers, driver, currentDataSource, schema, name } = args;
-  if (!dataSource.getFunctionDefinitionSql) return Promise.resolve(null);
-  const body = getRunSqlQuery(
-    dataSource.getFunctionDefinitionSql(schema, name),
-    currentDataSource,
-    false,
-    true,
-    driver
-  );
-  return Api.post<RunSQLResponse, PGFunction>(
-    {
-      url: Endpoints.query,
-      headers,
-      body,
-    },
-    data => JSON.parse(data.result?.[1]?.[0] ?? '[]')?.[0]
-  );
-};
+    fallBack: { shouldFallback: !fnSqlString, default: fallBackData },
+  });
+}
 
 export function useTrackableFunctions(
-  schemaList: string[],
-  queryOptions?: Omit<
-    UseQueryOptions<PGFunction[], Error>,
-    'queryKey' | 'queryFn'
-  >
+  args: { schemas: string[] } & QualifiedDataSource,
+  queryOptions?: FnQueryOptions<string[], PGFunction[]>
 ) {
-  const { dataSource, driver } = useDataSource();
-  const currentDataSource: string = useAppSelector(
-    state => state.tables.currentDataSource
-  );
-  const headers = useAppSelector(state => state.tables.dataHeaders);
-  return useQuery(
-    ['trackableFunctions', schemaList, currentDataSource],
-    fetchFunctions({
-      dataSource,
-      driver,
-      headers,
-      currentDataSource,
-      trackable: true,
-      schemaList,
-    }),
-    queryOptions
+  const { schemas, ...dataSource } = args;
+  return useFunctionBase(
+    schemas,
+    'trackableFunctions',
+    transFormFns,
+    dataSource,
+    [],
+    queryOptions,
+    'trackable'
   );
 }
 
 export function useNonTrackableFunctions(
-  schemaList: string[],
-  queryOptions?: Omit<
-    UseQueryOptions<PGFunction[], Error>,
-    'queryKey' | 'queryFn'
-  >
+  args: { schemas: string[] } & QualifiedDataSource,
+  queryOptions?: FnQueryOptions<string[], PGFunction[]>
 ) {
-  const { dataSource, driver } = useDataSource();
-  const currentDataSource: string = useAppSelector(
-    state => state.tables.currentDataSource
-  );
-  const headers = useAppSelector(state => state.tables.dataHeaders);
-  return useQuery(
-    ['nonTrackableFunctions', schemaList, currentDataSource],
-    fetchFunctions({
-      dataSource,
-      driver,
-      headers,
-      currentDataSource,
-      schemaList,
-      trackable: false,
-    }),
-    queryOptions
+  const { schemas, ...dataSource } = args;
+  return useFunctionBase(
+    schemas,
+    'nonTrackableFunctions',
+    transFormFns,
+    dataSource,
+    [],
+    queryOptions,
+    'non-trackable'
   );
 }
 
+//! Prefer using useTrackableFunctions and useNonTrackableFunctions in combination to using this
 export function useAllFunctions(
-  schemaList: string[],
-  queryOptions?: Omit<
-    UseQueryOptions<PGFunction[], Error>,
-    'queryKey' | 'queryFn'
-  >
+  args: { schemas: string[] } & QualifiedDataSource,
+  queryOptions?: FnQueryOptions<string[], PGFunction[]>
 ): Pick<
-  UseQueryResult<PGFunction[], Error>,
-  'data' | 'isLoading' | 'isSuccess' | 'isError' | 'isIdle'
+  UseQueryResult<PGFunction[], APIError>,
+  'data' | 'isLoading' | 'isSuccess' | 'isError' | 'isIdle' | 'error'
 > {
   const { data: trackableFns, ...rest } = useTrackableFunctions(
-    schemaList,
+    args,
     queryOptions
   );
   const { data: nonTrackableFns, ...rem } = useNonTrackableFunctions(
-    schemaList,
+    args,
     queryOptions
   );
   return {
@@ -150,30 +106,21 @@ export function useAllFunctions(
     isSuccess: rest.isSuccess && rem.isSuccess,
     isIdle: rest.isIdle || rem.isIdle,
     isError: rest.isError || rem.isError,
+    error: rest.error || rem.error,
   };
 }
 
 export function useSingleFunction(
-  args: QualifiedFunction,
-  queryOptions?: Omit<
-    UseQueryOptions<PGFunction | null, Error>,
-    'queryKey' | 'queryFn' | 'refetchInterval'
-  >
+  args: { fn: QualifiedFunction } & QualifiedDataSource,
+  queryOptions?: FnQueryOptions<QualifiedFunction, PGFunction | null>
 ) {
-  const { dataSource, driver } = useDataSource();
-  const currentDataSource: string = useAppSelector(
-    state => state.tables.currentDataSource
-  );
-  const headers = useAppSelector(state => state.tables.dataHeaders);
-  return useQuery(
-    ['function', args, currentDataSource],
-    fetchSingleFunction({
-      dataSource,
-      headers,
-      currentDataSource,
-      driver,
-      ...args,
-    }),
+  const { fn, ...dataSource } = args;
+  return useFunctionBase(
+    fn,
+    'function',
+    transFormSingleFn,
+    dataSource,
+    null,
     queryOptions
   );
 }

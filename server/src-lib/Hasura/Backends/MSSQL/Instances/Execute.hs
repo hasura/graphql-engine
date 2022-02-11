@@ -30,6 +30,7 @@ import Hasura.Backends.MSSQL.Execute.Insert
 import Hasura.Backends.MSSQL.Execute.Update
 import Hasura.Backends.MSSQL.FromIr as TSQL
 import Hasura.Backends.MSSQL.Plan
+import Hasura.Backends.MSSQL.SQL.Error
 import Hasura.Backends.MSSQL.SQL.Value (txtEncodedColVal)
 import Hasura.Backends.MSSQL.ToQuery as TQ
 import Hasura.Backends.MSSQL.Types.Internal as TSQL
@@ -94,14 +95,14 @@ msDBQueryPlan userInfo sourceName sourceConfig qrf = do
   where
     runSelectQuery :: Printer -> ExceptT QErr IO EncJSON
     runSelectQuery queryPrinter = do
-      let queryTx = encJFromText <$> Tx.singleRowQueryE fromMSSQLTxError (toQueryFlat queryPrinter)
+      let queryTx = encJFromText <$> Tx.singleRowQueryE defaultMSSQLTxErrorHandler (toQueryFlat queryPrinter)
       mssqlRunReadOnly (_mscExecCtx sourceConfig) queryTx
 
 runShowplan ::
   MonadIO m =>
   ODBC.Query ->
   Tx.TxET QErr m [Text]
-runShowplan query = Tx.withTxET fromMSSQLTxError do
+runShowplan query = Tx.withTxET defaultMSSQLTxErrorHandler do
   Tx.unitQuery "SET SHOWPLAN_TEXT ON"
   texts <- Tx.multiRowQuery query
   Tx.unitQuery "SET SHOWPLAN_TEXT OFF"
@@ -344,7 +345,7 @@ validateVariables sourceConfig sessionVariableValues prepState = do
   onJust
     canaryQuery
     ( \q -> do
-        _ :: [[ODBC.Value]] <- liftEitherM $ runExceptT $ mssqlRunReadOnly (_mscExecCtx sourceConfig) (Tx.multiRowQueryE fromMSSQLTxError q)
+        _ :: [[ODBC.Value]] <- liftEitherM $ runExceptT $ mssqlRunReadOnly (_mscExecCtx sourceConfig) (Tx.multiRowQueryE defaultMSSQLTxErrorHandler q)
         pure ()
     )
 

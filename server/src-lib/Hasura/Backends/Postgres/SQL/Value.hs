@@ -1,3 +1,7 @@
+-- | Postgres SQL Value
+--
+-- Deals with Postgres scalar values, converting them to and from 'Text', and to
+-- JSON 'Value'.
 module Hasura.Backends.Postgres.SQL.Value
   ( PGScalarValue (..),
     pgScalarValueToJson,

@@ -109,6 +109,7 @@ module Hasura.RQL.Types.SchemaCache
     MetadataResourceVersion (..),
     initialResourceVersion,
     getBoolExpDeps,
+    InlinedAllowlist,
     ParsedIntrospectionG (..),
     ParsedIntrospection,
   )
@@ -138,6 +139,7 @@ import Hasura.Prelude
 import Hasura.RQL.DDL.WebhookTransforms
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.Types.Action
+import Hasura.RQL.Types.Allowlist
 import Hasura.RQL.Types.ApiLimit
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Column
@@ -315,7 +317,7 @@ data SchemaCache = SchemaCache
   { scSources :: !SourceCache,
     scActions :: !ActionCache,
     scRemoteSchemas :: !RemoteSchemaMap,
-    scAllowlist :: !(HS.HashSet GQLQuery),
+    scAllowlist :: !InlinedAllowlist,
     scGQLContext :: !(HashMap RoleName (RoleContext GQLContext)),
     scUnauthenticatedGQLContext :: !GQLContext,
     scRelayContext :: !(HashMap RoleName (RoleContext GQLContext)),

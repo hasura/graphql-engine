@@ -54,6 +54,7 @@ import Hasura.Metadata.Class
 import Hasura.Prelude
 import Hasura.QueryTags (emptyQueryTagsComment)
 import Hasura.RQL.DDL.Schema.Catalog
+import Hasura.RQL.Types.Allowlist (AllowlistMode (AllowlistModeGlobalOnly))
 import Hasura.RQL.Types.Source (MonadResolveSource (..))
 import Hasura.Server.API.Query (requiresAdmin)
 import Hasura.Server.App
@@ -198,7 +199,7 @@ instance MonadMetadataApiAuthorization TestM where
 instance MonadGQLExecutionCheck TestM where
   checkGQLExecution userInfo _ enableAL sc query = runExceptT $ do
     req <- toParsed query
-    checkQueryInAllowlist enableAL userInfo req sc
+    checkQueryInAllowlist enableAL AllowlistModeGlobalOnly userInfo req sc
     return req
   executeIntrospection _ introspectionQuery _ =
     pure $ Right $ ExecStepRaw introspectionQuery
@@ -347,6 +348,5 @@ defaultRawServeOptions =
       rsoExperimentalFeatures = Nothing,
       rsoEventsFetchBatchSize = Nothing,
       rsoGracefulShutdownTimeout = Nothing,
-      rsoWebSocketConnectionInitTimeout = Nothing,
-      rsoOptimizePermissionFilters = Nothing
+      rsoWebSocketConnectionInitTimeout = Nothing
     }

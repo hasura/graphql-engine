@@ -114,6 +114,33 @@ $( J.deriveJSON
 
 instance Hashable API
 
+{- Note: [Experimental features]
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The graphql-engine accepts a list of experimental features that can be
+enabled at the startup. Experimental features are a way to introduce
+new, but not stable features to our users in a manner in which they have
+the choice to enable or disable a certain feature(s).
+
+The objective of an experimental feature should be that when the feature is disabled,
+the graphql-engine should work the same way as it worked before adding the said feature.
+
+The experimental feature's flag is `--experimental-features` and the corresponding
+environment variable is `HASURA_GRAPHQL_EXPERIMENTAL_FEATURES` which expects a comma-seperated
+value.
+
+When an experimental feature is stable enough i.e. it's stable through multiple non-beta releases
+then we make the feature not experimental i.e. it will always be enabled. Note that when we do this
+we still have to support parsing of the experimental feature because users of the previous version
+will have it enabled and when they upgrade an error should not be thrown at the startup. For example:
+
+The inherited roles was an experimental feature when introduced and it was enabled by
+setting `--experimental-features` to `inherited_roles` and then it was decided to make the inherited roles
+a stable feature, so it was removed as an experimental feature but the code was modified such that
+`--experimental-features inherited_roles` to not throw an error.
+
+-}
+
 data RawServeOptions impl = RawServeOptions
   { rsoPort :: Maybe Int,
     rsoHost :: Maybe HostPreference,
@@ -151,8 +178,8 @@ data RawServeOptions impl = RawServeOptions
     rsoExperimentalFeatures :: Maybe [ExperimentalFeature],
     rsoEventsFetchBatchSize :: Maybe NonNegativeInt,
     rsoGracefulShutdownTimeout :: Maybe Seconds,
-    rsoWebSocketConnectionInitTimeout :: Maybe Int,
-    rsoOptimizePermissionFilters :: Maybe Bool
+    rsoWebSocketConnectionInitTimeout :: Maybe Int
+    -- see Note [Experimental features]
   }
 
 -- | @'ResponseInternalErrorsConfig' represents the encoding of the internal
@@ -223,8 +250,7 @@ data ServeOptions impl = ServeOptions
     soGracefulShutdownTimeout :: Seconds,
     soWebsocketConnectionInitTimeout :: WSConnectionInitTimeout,
     soEventingMode :: EventingMode,
-    soReadOnlyMode :: ReadOnlyMode,
-    soOptimizePermissionFilters :: Bool
+    soReadOnlyMode :: ReadOnlyMode
   }
 
 data DowngradeOptions = DowngradeOptions

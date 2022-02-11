@@ -1,4 +1,9 @@
-module Hasura.Backends.Postgres.DDL.Field
+-- | Postgres DDL ComputedField
+--
+-- How to build the 'ComputedFieldInfo' for a field.
+--
+-- See 'Hasura.RQL.Types.Metadata.Backend'.
+module Hasura.Backends.Postgres.DDL.ComputedField
   ( buildComputedFieldInfo,
   )
 where

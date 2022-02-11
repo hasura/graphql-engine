@@ -1,7 +1,7 @@
 import { Table, TableRow, TableHeader } from '@/components/Common/Table';
-import { Driver, setDriver } from '@/dataSources';
+import { currentDriver, Driver, setDriver } from '@/dataSources';
 
-import { useAppDispatch } from '@/store';
+import { useAppDispatch, useAppSelector } from '@/store';
 import React from 'react';
 import { useDataSourceUniqueKeys, useSchemaList } from '..';
 
@@ -24,8 +24,15 @@ export const AllUniqueKeys = ({
       setDriver(driver);
     }
   }, [currentDatasource, dispatch, driver]);
+  const source: string = useAppSelector(s => s.tables.currentDataSource);
 
-  const { data: schemas, isError, error } = useSchemaList({ retry: 0 });
+  const { data: schemas, isError, error } = useSchemaList(
+    {
+      source,
+      driver: currentDriver,
+    },
+    { retry: 0 }
+  );
   const {
     data: uniqueKeys,
     isLoading,
@@ -33,7 +40,13 @@ export const AllUniqueKeys = ({
     isError: isError2,
     isIdle,
     error: fkError,
-  } = useDataSourceUniqueKeys(schemas!, { enabled: !!schemas, retry: 0 });
+  } = useDataSourceUniqueKeys(
+    { schemas: schemas!, source, driver: currentDriver },
+    {
+      enabled: !!schemas,
+      retry: 0,
+    }
+  );
   const keys = React.useMemo(() => Object.keys(uniqueKeys?.[0] ?? {}), [
     uniqueKeys,
   ]);

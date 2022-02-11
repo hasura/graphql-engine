@@ -1,4 +1,4 @@
-from time import sleep
+from time import sleep, perf_counter
 import requests
 import pytest
 from context import PytestConf
@@ -8,29 +8,36 @@ if not PytestConf.config.getoption("--test-jwk-url"):
 
 # assumes the JWK server is running on 127.0.0.1:5001
 
-def test_cache_control_header_max_age(hge_ctx):
+def wait_until_request_count_reaches(num_requests, state_key, max_wait_secs):
+    start_time = perf_counter()
     requests.post('http://localhost:5001/reset-state')
-    sleep(3)
-    resp = requests.get('http://localhost:5001/state')
-    state = resp.json()
-    print(state)
-    # The test uses max-age=3 so we should only see one refresh
-    assert(state['cache-control'] == 1)
+    request_count = 0
+    time_elapsed = 0
+
+    while request_count < num_requests:
+        time_elapsed = perf_counter() - start_time
+        if time_elapsed > max_wait_secs:
+            raise Exception(f'Waited {time_elapsed} seconds for {state_key} JWK requests to reach {num_requests}. Only received {request_count}.')
+
+        sleep(0.2)
+        state = requests.get('http://localhost:5001/state').json()
+        request_count = state[state_key]
+
+    return time_elapsed
+
+def test_cache_control_header_max_age(hge_ctx):
+    # The test uses max-age=3, so we are expecting one request (timing out after 6 seconds)
+    time_elapsed = wait_until_request_count_reaches(1, 'cache-control', 6)
+    print(f"time_elapsed: {time_elapsed}")
 
 def test_cache_control_header_no_caching(hge_ctx):
-    requests.post('http://localhost:5001/reset-state')
-    sleep(3)
-    resp = requests.get('http://localhost:5001/state')
-    state = resp.json()
-    print(state)
-    # HGE should refresh the JWK once a second, so, depending on timing we might get 2-3 refreshes performed
-    assert(state['cache-control'] >= 2 and state['cache-control'] <= 3)
+    # HGE should refresh the JWK once a second, so we are expecting three requests in at least two seconds
+    # (timing out after 10 seconds)
+    time_elapsed = wait_until_request_count_reaches(3, 'cache-control', 10)
+    print(f"time_elapsed: {time_elapsed}")
+    assert(time_elapsed >= 2)
 
 def test_expires_header(hge_ctx):
-    requests.post('http://localhost:5001/reset-state')
-    sleep(3)
-    resp = requests.get('http://localhost:5001/state')
-    state = resp.json()
-    print(state)
-    # The test uses a three second expiry so we should only see one refresh
-    assert(state['expires'] == 1)
+    # The test uses a three second jwk expiry so we are expecting one request (timing out after 6 seconds)
+    time_elapsed = wait_until_request_count_reaches(1, 'expires', 6)
+    print(f"time_elapsed: {time_elapsed}")

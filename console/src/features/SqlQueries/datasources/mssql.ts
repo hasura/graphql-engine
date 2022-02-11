@@ -8,6 +8,9 @@ const getSqlKey = (
   check: 'is_unique_constraint' | 'is_primary_key'
 ) => {
   return `
+  -- test_id = ${'schemas' in opts ? 'multi' : 'single'}_${
+    check !== 'is_primary_key' ? 'unique' : 'primary'
+  }_key
   SELECT
     schema_name (tab.schema_id) AS table_schema,
     tab.name AS table_name,
@@ -57,6 +60,7 @@ export const msSqlQueries: DatasourceSqlQueries = {
             schema: 'sch.name',
           });
     return `
+  -- test_id = ${'schemas' in options ? 'multi' : 'single'}_table
   SELECT sch.name as table_schema,
     obj.name as table_name,
     case
@@ -117,7 +121,9 @@ FROM sys.objects as obj
             LEFT JOIN sys.extended_properties ep ON (ep.major_id = a.object_id AND ep.minor_id = a.column_id)
         WHERE a.column_id > 0 and a.object_id = obj.object_id
         FOR JSON path
-) AS [isc](json) where obj.type_desc in ('USER_TABLE', 'VIEW') ${whereClause};`;
+) AS [isc](json) where obj.type_desc in ('USER_TABLE', 'VIEW') 
+AND (obj.name not in ('spt_fallback_db', 'spt_fallback_dev', 'spt_fallback_usg', 'spt_values', 'spt_monitor', 'MSreplication_options'))
+${whereClause};`;
   },
   primaryKeysInfoSql(options: TableORSchemaArg): string {
     return getSqlKey(options, 'is_primary_key');
@@ -127,6 +133,7 @@ FROM sys.objects as obj
   },
   checkConstraintsSql(options: TableORSchemaArg): string {
     return `
+    -- test_id = ${'schemas' in options ? 'multi' : 'single'}_check_constraint
     SELECT
       con.name AS constraint_name,
       schema_name (t.schema_id) AS table_schema,
@@ -152,6 +159,7 @@ FROM sys.objects as obj
   },
   getFKRelations(options: TableORSchemaArg): string {
     return `
+    -- test_id = ${'schemas' in options ? 'multi' : 'single'}_foreign_key
     SELECT
     fk.name AS constraint_name,
     sch1.name AS [table_schema],
@@ -194,6 +202,6 @@ FROM sys.objects as obj
   getTableColumnsSql: ({ name, schema }: QualifiedTable) => {
     if (!name || !schema) throw Error('empty parameters are not allowed!');
 
-    return `not implemented`;
+    return `SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = N'${name}' AND TABLE_SCHEMA= N'${schema}'`;
   },
 };

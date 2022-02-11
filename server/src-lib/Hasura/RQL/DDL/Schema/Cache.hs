@@ -33,7 +33,6 @@ import Data.Environment qualified as Env
 import Data.HashMap.Strict.Extended qualified as M
 import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.HashSet qualified as HS
-import Data.HashSet.InsOrd qualified as HSIns
 import Data.Proxy
 import Data.Set qualified as S
 import Data.Text.Extended
@@ -44,6 +43,7 @@ import Hasura.Backends.Postgres.Connection
 import Hasura.Backends.Postgres.DDL.Source (initCatalogForSource, logPGSourceCatalogMigrationLockedQueries)
 import Hasura.Base.Error
 import Hasura.GraphQL.Execute.Types
+import Hasura.GraphQL.RemoteServer (getSchemaIntrospection)
 import Hasura.GraphQL.Schema (buildGQLContext)
 import Hasura.Incremental qualified as Inc
 import Hasura.Logging
@@ -297,6 +297,8 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
       ambiguousF' ep = MetadataObject (endpointObjId ep) (toJSON ep)
       ambiguousF mds = AmbiguousRestEndpoints (commaSeparated $ map _ceUrl mds) (map ambiguousF' mds)
       ambiguousRestEndpoints = map (ambiguousF . S.elems . snd) $ ambiguousPathsGrouped endpoints
+      maybeRS = getSchemaIntrospection gqlContext
+      inconsistentRestQueries = getInconsistentRestQueries maybeRS endpoints endpointObject
 
   returnA
     -<
@@ -323,7 +325,8 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
               <> toList inconsistentRemoteSchemas
               <> duplicateRestVariables
               <> invalidRestSegments
-              <> ambiguousRestEndpoints,
+              <> ambiguousRestEndpoints
+              <> inconsistentRestQueries,
           scApiLimits = _boApiLimits resolvedOutputs,
           scMetricsConfig = _boMetricsConfig resolvedOutputs,
           scMetadataResourceVersion = Nothing,
@@ -371,13 +374,19 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
     resolveSourceIfNeeded = Inc.cache proc (invalidationKeys, sourceMetadata) -> do
       let sourceName = _smName sourceMetadata
           metadataObj = MetadataObject (MOSource sourceName) $ toJSON sourceName
+          logAndResolveDatabaseMetadata :: SourceConfig b -> SourceTypeCustomization -> m (Either QErr (ResolvedSource b))
+          logAndResolveDatabaseMetadata scConfig sType = do
+            resSource <- resolveDatabaseMetadata scConfig sType
+            for_ resSource $ liftIO . unLogger logger
+            pure resSource
+
       maybeSourceConfig <- getSourceConfigIfNeeded @b -< (invalidationKeys, sourceName, _smConfiguration sourceMetadata)
       case maybeSourceConfig of
         Nothing -> returnA -< Nothing
         Just sourceConfig ->
           (|
             withRecordInconsistency
-              ( liftEitherA <<< bindA -< resolveDatabaseMetadata sourceConfig (getSourceTypeCustomization $ _smCustomization sourceMetadata)
+              ( liftEitherA <<< bindA -< logAndResolveDatabaseMetadata sourceConfig (getSourceTypeCustomization $ _smCustomization sourceMetadata)
               )
           |) metadataObj
 
@@ -571,7 +580,7 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
             sources
             remoteSchemas
             collections
-            allowlists
+            metadataAllowlist
             customTypes
             actions
             cronTriggers
@@ -765,15 +774,8 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
                   )
               |)
 
-      -- allow list
-      let allowList =
-            allowlists
-              & HSIns.toList
-              & map _crCollection
-              & map (\cn -> maybe [] (_cdQueries . _ccDefinition) $ OMap.lookup cn collections)
-              & concat
-              & map (queryWithoutTypeNames . getGQLQuery . _lqQuery)
-              & HS.fromList
+      -- allowlist
+      let inlinedAllowlist = inlineAllowlist collections metadataAllowlist
 
       resolvedEndpoints <- buildInfoMap fst mkEndpointMetadataObject buildEndpoint -< (collections, OMap.toList endpoints)
 
@@ -812,7 +814,7 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
             { _boSources = M.map fst sourcesOutput,
               _boActions = actionCache,
               _boRemoteSchemas = remoteSchemaCache,
-              _boAllowlist = allowList,
+              _boAllowlist = inlinedAllowlist,
               _boCustomTypes = annotatedCustomTypes,
               _boCronTriggers = cronTriggersMap,
               _boEndpoints = resolvedEndpoints,

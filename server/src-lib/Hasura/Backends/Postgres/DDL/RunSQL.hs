@@ -1,3 +1,13 @@
+-- | Postgres DDL RunSQL
+--
+-- Escape hatch for running raw SQL against a postgres database.
+--
+-- 'runRunSQL' executes the provided raw SQL.
+--
+-- 'isSchemaCacheBuildRequiredRunSQL' checks for known schema-mutating keywords
+-- in the raw SQL text.
+--
+-- See 'Hasura.Server.API.V2Query' and 'Hasura.Server.API.Query'.
 module Hasura.Backends.Postgres.DDL.RunSQL
   ( runRunSQL,
     RunSQL (..),
@@ -67,7 +77,9 @@ instance ToJSON RunSQL where
             Q.ReadWrite -> False
       ]
 
--- | see Note [Checking metadata consistency in run_sql]
+-- | Check for known schema-mutating keywords in the raw SQL text.
+--
+-- See Note [Checking metadata consistency in run_sql].
 isSchemaCacheBuildRequiredRunSQL :: RunSQL -> Bool
 isSchemaCacheBuildRequiredRunSQL RunSQL {..} =
   case rTxAccessMode of
@@ -138,6 +150,7 @@ fetchMeta tables functions = do
 
   pure (tableMetas, functionMetas)
 
+-- | Used as an escape hatch to run raw SQL against a database.
 runRunSQL ::
   forall (pgKind :: PostgresKind) m.
   ( BackendMetadata ('Postgres pgKind),

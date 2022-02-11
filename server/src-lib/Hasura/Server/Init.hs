@@ -266,9 +266,6 @@ mkServeOptions rso = do
     WSConnectionInitTimeout . fromIntegral . fromMaybe 3
       <$> withEnv (rsoWebSocketConnectionInitTimeout rso) (fst webSocketConnectionInitTimeoutEnv)
 
-  optimizePermissionFilters <-
-    fromMaybe False <$> withEnv (rsoOptimizePermissionFilters rso) (fst optimizePermissionFiltersEnv)
-
   pure $
     ServeOptions
       port
@@ -308,7 +305,6 @@ mkServeOptions rso = do
       webSocketConnectionInitTimeout
       EventingEnabled
       ReadOnlyModeDisabled
-      optimizePermissionFilters
   where
     defaultAsyncActionsFetchInterval = Interval 1000 -- 1000 Milliseconds or 1 Second
     defaultSchemaPollInterval = Interval 1000 -- 1000 Milliseconds or 1 Second
@@ -657,7 +653,7 @@ wsReadCookieEnv =
     "Read cookie on WebSocket initial handshake, even when CORS is disabled."
       ++ " This can be a potential security flaw! Please make sure you know "
       ++ "what you're doing."
-      ++ "This configuration is only applicable when CORS is disabled."
+      ++ " This configuration is only applicable when CORS is disabled."
   )
 
 stringifyNumEnv :: (String, String)
@@ -690,7 +686,10 @@ enabledAPIsEnv =
 experimentalFeaturesEnv :: (String, String)
 experimentalFeaturesEnv =
   ( "HASURA_GRAPHQL_EXPERIMENTAL_FEATURES",
-    "Comma separated list of experimental features. (all: inherited_roles)"
+    "Comma separated list of experimental features. (all: inherited_roles,optimize_permission_filters). "
+      <> "optimize_permission_filters: Use experimental SQL optimization"
+      <> "transformations for permission filters. "
+      <> "inherited_roles: ignored; inherited roles cannot be switched off"
   )
 
 gracefulShutdownEnv :: (String, String)
@@ -1430,7 +1429,6 @@ serveOptionsParser =
     <*> parseEventsFetchBatchSize
     <*> parseGracefulShutdownTimeout
     <*> parseWebSocketConnectionInitTimeout
-    <*> parseOptimizePermissionFilters
 
 -- | This implements the mapping between application versions
 -- and catalog schema versions.
@@ -1512,19 +1510,4 @@ parseWebSocketConnectionInitTimeout =
       (eitherReader readEither)
       ( long "websocket-connection-init-timeout"
           <> help (snd webSocketConnectionInitTimeoutEnv)
-      )
-
-optimizePermissionFiltersEnv :: (String, String)
-optimizePermissionFiltersEnv =
-  ( "HASURA_GRAPHQL_OPTIMIZE_PERMISSION_FILTERS",
-    "Use experimental SQL optimization transformations for permission filters"
-  )
-
-parseOptimizePermissionFilters :: Parser (Maybe Bool)
-parseOptimizePermissionFilters =
-  optional $
-    option
-      (eitherReader parseStrAsBool)
-      ( long "optimize-permission-filters"
-          <> help (snd optimizePermissionFiltersEnv)
       )

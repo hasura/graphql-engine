@@ -1,3 +1,9 @@
+-- | Postgres Execute Mutation
+--
+-- Generic combinators for translating and excecuting IR mutation statements.
+-- Used by the specific mutation modules, e.g. 'Hasura.Backends.Postgres.Execute.Insert'.
+--
+-- See 'Hasura.Backends.Postgres.Instances.Execute'.
 module Hasura.Backends.Postgres.Execute.Mutation
   ( MutationRemoteJoinCtx,
     MutateResp (..),

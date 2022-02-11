@@ -181,17 +181,17 @@ getTables ::
   MonadIO m =>
   BigQuerySourceConfig ->
   m (Either RestProblem [RestTable])
-getTables sc@BigQuerySourceConfig {..} =
+getTables BigQuerySourceConfig {..} =
   runExceptT
-    (fmap concat (traverse (ExceptT . getTablesForDataSet sc) _scDatasets))
+    (fmap concat (traverse (ExceptT . getTablesForDataSet _scConnection) _scDatasets))
 
 -- | Get tables in the dataset.
 getTablesForDataSet ::
   MonadIO m =>
-  BigQuerySourceConfig ->
+  BigQueryConnection ->
   Text ->
   m (Either RestProblem [RestTable])
-getTablesForDataSet sc@BigQuerySourceConfig {..} dataSet = do
+getTablesForDataSet conn dataSet = do
   result <-
     liftIO (catchAny (run Nothing mempty) (pure . Left . GetTablesProblem))
   case result of
@@ -201,7 +201,7 @@ getTablesForDataSet sc@BigQuerySourceConfig {..} dataSet = do
         sequence
         ( traverse
             ( \RestTableBrief {tableReference = RestTableReference {tableId}} ->
-                getTable sc dataSet tableId
+                getTable conn dataSet tableId
             )
             briefs
         )
@@ -210,7 +210,7 @@ getTablesForDataSet sc@BigQuerySourceConfig {..} dataSet = do
       let req =
             setRequestHeader "Content-Type" ["application/json"] $
               parseRequest_ url
-      eResp <- runBigQuery sc req
+      eResp <- runBigQuery conn req
       case eResp of
         Left e -> pure (Left (GetTablesBigQueryProblem e))
         Right resp ->
@@ -226,7 +226,7 @@ getTablesForDataSet sc@BigQuerySourceConfig {..} dataSet = do
       where
         url =
           "GET https://bigquery.googleapis.com/bigquery/v2/projects/"
-            <> T.unpack _scProjectId
+            <> T.unpack (_bqProjectId conn)
             <> "/datasets/"
             <> T.unpack dataSet
             <> "/tables?alt=json&"
@@ -241,18 +241,18 @@ getTablesForDataSet sc@BigQuerySourceConfig {..} dataSet = do
 -- | Get tables in the schema.
 getTable ::
   MonadIO m =>
-  BigQuerySourceConfig ->
+  BigQueryConnection ->
   Text ->
   Text ->
   m (Either RestProblem RestTable)
-getTable sc@BigQuerySourceConfig {..} dataSet tableId = do
+getTable conn dataSet tableId = do
   liftIO (catchAny run (pure . Left . GetTableProblem))
   where
     run = do
       let req =
             setRequestHeader "Content-Type" ["application/json"] $
               parseRequest_ url
-      eResp <- runBigQuery sc req
+      eResp <- runBigQuery conn req
       case eResp of
         Left e -> pure (Left (GetTablesBigQueryProblem e))
         Right resp ->
@@ -265,7 +265,7 @@ getTable sc@BigQuerySourceConfig {..} dataSet tableId = do
       where
         url =
           "GET https://bigquery.googleapis.com/bigquery/v2/projects/"
-            <> T.unpack _scProjectId
+            <> T.unpack (_bqProjectId conn)
             <> "/datasets/"
             <> T.unpack dataSet
             <> "/tables/"

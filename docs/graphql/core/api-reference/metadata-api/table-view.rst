@@ -59,7 +59,8 @@ Add a table/view ``author``:
            },
            "custom_column_names": {
               "id": "authorId"
-           }
+           },
+           "comment": "Authors of books"
         }
       }
    }

@@ -1,10 +1,15 @@
--- | Migrations for postgres source catalog
+-- | Postgres DDL Source
 --
---    NOTE: Please have a look at the `server/documentation/migration-guidelines.md` before adding any new migration
---       if you haven't already looked at it
+-- A Source is a connected database. One can have multiple sources of the same
+-- kind (e.g. Postgres).
+--
+-- This module provides ways to fetch, update, and deal with table and function
+-- metadata and hdb_catalog migrations for a Postgres Source.
+--
+--    NOTE: Please have a look at the `server/documentation/migration-guidelines.md`
+--       before adding any new migration if you haven't already looked at it.
 module Hasura.Backends.Postgres.DDL.Source
   ( ToMetadataFetchQuery,
-    fetchPgScalars,
     fetchTableMetadata,
     fetchFunctionMetadata,
     initCatalogForSource,

@@ -846,6 +846,7 @@ export const getFunctionDefinitionSql = (
   functionName?: string | null,
   type?: keyof typeof functionWhereStatement
 ) => `
+-- test_id = ${Array.isArray(schemaName) ? type ?? 'all' : 'single'}_functions
 SELECT
 COALESCE(
   json_agg(
@@ -1328,6 +1329,7 @@ FROM (
 export const getDatabaseVersionSql = 'SELECT version();';
 
 export const schemaListQuery = `
+-- test_id = schema_list
 SELECT schema_name FROM information_schema.schemata
 WHERE
 	schema_name NOT in('information_schema', 'pg_catalog', 'hdb_catalog')

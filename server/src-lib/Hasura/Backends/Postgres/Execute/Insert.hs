@@ -1,3 +1,8 @@
+-- | Postgres Execute Insert
+--
+-- Translates and executes IR to Postgres-specific SQL.
+--
+-- See 'Hasura.Backends.Postgres.Instances.Execute'.
 module Hasura.Backends.Postgres.Execute.Insert
   ( convertToSQLTransaction,
   )

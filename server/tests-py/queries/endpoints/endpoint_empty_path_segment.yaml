@@ -14,8 +14,8 @@ response:
         name: foo
         comment:
       reason: "Empty segments or unnamed variables are not allowed: foo//bar"
-      name: endpoint foo
-      type: endpoint
+      name: rest_endpoint foo
+      type: rest_endpoint
   path: $.args
   error: 'Empty segments or unnamed variables are not allowed: foo//bar'
   code: invalid-configuration

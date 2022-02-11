@@ -1,6 +1,13 @@
 {-# LANGUAGE UndecidableInstances #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
+-- | Postgres Instances Execute
+--
+-- This module implements the needed functionality for implementing a 'BackendExecute'
+-- instance for Postgres, which defines an interface for translating a root field into
+-- an execution plan and interacting with a database.
+--
+-- This module includes the Postgres implementation of queries, mutations, and more.
 module Hasura.Backends.Postgres.Instances.Execute
   ( PreparedSql (..),
   )

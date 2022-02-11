@@ -1,5 +1,43 @@
+-- | Postgres Types BoolExp
+--
+-- Postgres-specific 'BooleanOperator' extensions.
 module Hasura.Backends.Postgres.Types.BoolExp
-  ( BooleanOperators (AAncestor, AAncestorAny, AContainedIn, AContains, ADescendant, ADescendantAny, AHasKey, AHasKeysAll, AHasKeysAny, AILIKE, AIREGEX, AMatches, AMatchesAny, AMatchesFulltext, ANILIKE, ANIREGEX, ANREGEX, ANSIMILAR, AREGEX, ASIMILAR, AST3DDWithinGeom, AST3DIntersects, ASTContains, ASTCrosses, ASTDWithinGeog, ASTDWithinGeom, ASTEquals, ASTIntersects, ASTIntersectsGeomNband, ASTIntersectsNbandGeom, ASTIntersectsRast, ASTOverlaps, ASTTouches, ASTWithin),
+  ( BooleanOperators
+      ( AAncestor,
+        AAncestorAny,
+        AContainedIn,
+        AContains,
+        ADescendant,
+        ADescendantAny,
+        AHasKey,
+        AHasKeysAll,
+        AHasKeysAny,
+        AILIKE,
+        AIREGEX,
+        AMatches,
+        AMatchesAny,
+        AMatchesFulltext,
+        ANILIKE,
+        ANIREGEX,
+        ANREGEX,
+        ANSIMILAR,
+        AREGEX,
+        ASIMILAR,
+        AST3DDWithinGeom,
+        AST3DIntersects,
+        ASTContains,
+        ASTCrosses,
+        ASTDWithinGeog,
+        ASTDWithinGeom,
+        ASTEquals,
+        ASTIntersects,
+        ASTIntersectsGeomNband,
+        ASTIntersectsNbandGeom,
+        ASTIntersectsRast,
+        ASTOverlaps,
+        ASTTouches,
+        ASTWithin
+      ),
   )
 where
 

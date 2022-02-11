@@ -1,3 +1,6 @@
+-- | Postgres Types Table
+--
+-- Defines a single combinator to throw an error if the view is not mutable.
 module Hasura.Backends.Postgres.Types.Table
   ( mutableView,
   )

@@ -4,8 +4,6 @@ args:
   args:
     source: bigquery
     sql: |
-      DROP SCHEMA IF EXISTS `regency-polecat-beehive.hasura_test` CASCADE;
-      CREATE SCHEMA `regency-polecat-beehive.hasura_test`;
       CREATE TABLE `hasura_test.all_types` (
         `string` STRING,
         `bytes` BYTES,

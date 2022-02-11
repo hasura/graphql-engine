@@ -1,0 +1,86 @@
+type: bulk
+args:
+- type: clear_metadata
+  args: {}
+
+- type: run_sql
+  args:
+    sql: |
+      DROP TABLE IF EXISTS author CASCADE;
+      CREATE TABLE author (
+        id SERIAL PRIMARY KEY,
+        first_name TEXT NOT NULL,
+        last_name TEXT,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+
+      INSERT INTO author (first_name, last_name)
+      VALUES
+        ('George', 'Martin'),
+        ('Paulo', 'Coelho');
+
+- type: track_table
+  args:
+    schema: public
+    name: author
+
+- type: create_select_permission
+  args:
+    table: author
+    role: user
+    permission:
+      filter: {}
+      columns: '*'
+
+- type: create_select_permission
+  args:
+    table: author
+    role: editor
+    permission:
+      filter: {}
+      columns: '*'
+
+- type: create_select_permission
+  args:
+    table: author
+    role: guest
+    permission:
+      filter: {}
+      columns: '*'
+
+- type: create_query_collection
+  args:
+    name: collection_1
+    comment: A query collection, not added by default
+    definition:
+      queries:
+        - name: query_1
+          query: |
+            query {
+              author {
+                first_name
+                last_name
+              }
+            }
+        - name: query_2
+          query: |
+            query {
+              author {
+                __typename
+                last_name
+              }
+            }
+
+- type: create_query_collection
+  args:
+    name: collection_2
+    comment: A second query collection, also not added by default
+    definition:
+      queries:
+        - name: query_3
+          query: |
+            query {
+              author {
+                id
+              }
+            }

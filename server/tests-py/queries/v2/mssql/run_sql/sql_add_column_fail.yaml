@@ -1,0 +1,16 @@
+url: /v2/query
+status: 400
+response:
+  internal:
+    query: "ALTER TABLE author ADD name TEXT;\n"
+  path: $
+  error: Syntax error or access violation. Column already exists. [Microsoft][ODBC
+    Driver 17 for SQL Server][SQL Server]Column names in each table must be unique.
+    Column name 'name' in table 'author' is specified more than once.
+  code: already-exists
+query:
+  type: mssql_run_sql
+  args:
+    source: mssql
+    sql: |
+      ALTER TABLE author ADD name TEXT;
