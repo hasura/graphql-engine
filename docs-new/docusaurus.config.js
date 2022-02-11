@@ -112,10 +112,10 @@ const config = {
                 label: 'Hasura Cloud',
                 to: '/graphql/cloud/index',
               },
-              {
-                label: 'Migration Guide',
-                to: '/category/migration-guide',
-              },
+              // {
+              //   label: 'Migration Guide',
+              //   to: '/category/migration-guide',
+              // },
             ],
           },
           {

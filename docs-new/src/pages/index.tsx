@@ -14,9 +14,14 @@ function HomepageHeader() {
         <p className="hero__subtitle">{siteConfig.tagline}</p>
         <div className={styles.buttons}>
           <Link
+            className="button button--primary button--lg"
+            to="/graphql/core/index">
+            Hasura Core Docs
+          </Link>
+          <Link
             className="button button--secondary button--lg"
-            to="/category/migration-guide">
-            Migration Guide
+            to="/graphql/cloud/index">
+            Hasura Cloud Docs
           </Link>
         </div>
       </div>
