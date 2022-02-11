@@ -1,7 +1,6 @@
 import React from 'react';
 import clsx from 'clsx';
 import Layout from '@theme/Layout';
-import Image from '@theme/IdealImage';
 import Link from '@docusaurus/Link';
 import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
 import styles from './index.module.css';
@@ -26,7 +25,7 @@ function HomepageHeader() {
             Hasura Cloud Docs
           </Link>
         </div>
-        <Image img={hasuras} alt="Hasuras Image" />
+        <img src={hasuras} alt="Hasuras Image" />
       </div>
     </header>
   );
