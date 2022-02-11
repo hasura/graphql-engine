@@ -6,7 +6,7 @@ const darkCodeTheme = require('prism-react-renderer/themes/dracula');
 
 /** @type {import('@docusaurus/types').Config} */
 const config = {
-  title: 'Hasura GraphQL Engine Documentation | Hasura GraphQL Docs',
+  title: 'Hasura GraphQL Docs',
   tagline: 'Instant GraphQL on all your data',
   url: 'https://hasura.io/',
   baseUrl: '/',
@@ -99,13 +99,13 @@ const config = {
         ],
       },
       footer: {
-        style: 'dark',
+        style: 'light',
         links: [
           {
             title: 'Docs',
             items: [
               {
-                label: 'Hasura GraphQL Engine',
+                label: 'Hasura Core',
                 to: '/graphql/core/index',
               },
               {
@@ -145,7 +145,7 @@ const config = {
             ],
           },
         ],
-        copyright: `Copyright © ${new Date().getFullYear()} Hasura, Inc. Built with Docusaurus.`,
+        copyright: `Copyright © ${new Date().getFullYear()} Hasura Inc. All rights reserved`,
       },
       prism: {
         theme: lightCodeTheme,

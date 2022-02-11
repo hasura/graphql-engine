@@ -8,22 +8,23 @@ import styles from './index.module.css';
 function HomepageHeader() {
   const {siteConfig} = useDocusaurusContext();
   return (
-    <header className={clsx('hero hero--primary', styles.heroBanner)}>
+    <header className={clsx('hero', styles.heroBanner)}>
       <div className="container">
         <h1 className="hero__title">{siteConfig.title}</h1>
         <p className="hero__subtitle">{siteConfig.tagline}</p>
-        <div className={styles.buttons}>
+        <div className={styles.links}>
           <Link
             className="button button--primary button--lg"
             to="/graphql/core/index">
             Hasura Core Docs
           </Link>
           <Link
-            className="button button--secondary button--lg"
+            className="button button--success button--lg"
             to="/graphql/cloud/index">
             Hasura Cloud Docs
           </Link>
         </div>
+        <img src="/img/hasuras.png" alt="Hasuras Image" />
       </div>
     </header>
   );
