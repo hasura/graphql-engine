@@ -410,7 +410,13 @@ pk_columns: {
 
 <div class="parsed-literal">
 
-where: [BoolExp](#boolexp)
+<!-- where: [BoolExp](#boolexp) -->
+
+<pre>
+<code>
+{`where: `}<a href="#boolexp">BoolExp</a>
+</code>
+</pre>
 
 </div>
 
@@ -426,8 +432,20 @@ where: {
 
 <div class="parsed-literal">
 
+<!--
 [AndExp](#andexp) \| [OrExp](#orexp) \| [NotExp](#notexp) \|
 [TrueExp](#trueexp) \| [ColumnExp](#columnexp)
+-->
+
+<pre>
+<code>
+<a href="#andexp">AndExp</a>{` | `}
+<a href="#orexp">OrExp</a>{` | `}
+<a href="#notexp">NotExp</a>{` | `}
+<a href="#trueexp">TrueExp</a>{` | `}
+<a href="#columnexp">ColumnExp</a>
+</code>
+</pre>
 
 </div>
 
@@ -435,10 +453,20 @@ where: {
 
 <div class="parsed-literal">
 
+<!--
 {  
 \_and: \[[BoolExp](#boolexp)\]
 
 }
+-->
+
+<pre>
+<code>
+{`{
+  _and: [`}<a href="#boolexp">BoolExp</a>{`]
+}`}
+</code>
+</pre>
 
 </div>
 
@@ -455,9 +483,19 @@ _and: [
 
 <div class="parsed-literal">
 
+<!--
 {  
   \_or: \[[BoolExp](#boolexp)\]
 }
+-->
+
+<pre>
+<code>
+{`{
+  _or: [`}<a href="#boolexp">BoolExp</a>{`]
+}`}
+</code>
+</pre>
 
 </div>
 
@@ -474,9 +512,19 @@ _or: [
 
 <div class="parsed-literal">
 
+<!--
 {  
   \_not: [BoolExp](#boolexp)
 }
+-->
+
+<pre>
+<code>
+{`{
+  _not: `}<a href="#boolexp">BoolExp</a>{`
+}`}
+</code>
+</pre>
 
 </div>
 
@@ -490,7 +538,11 @@ _not: {
 
 ##### TrueExp {#trueexp}
 
-`{}`
+<pre>
+<code>
+{`{}`}
+</code>
+</pre>
 
 **Example**
 
@@ -508,9 +560,19 @@ author(where: {articles: {}})
 
 <div class="parsed-literal">
 
+<!--
 {  
   field-name: {[Operator](#operator): Value }
 }
+-->
+
+<pre>
+<code>
+{`{
+  field-name: { `}<a href="#operator">Operator</a>{`: Value }
+}`}
+</code>
+</pre>
 
 </div>
 

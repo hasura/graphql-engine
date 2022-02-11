@@ -16,7 +16,13 @@ keywords:
 
 <div class="parsed-literal haskell-pre">
 
-String \| [QualifiedTable](#qualifiedtable)
+<!-- String \| [QualifiedTable](#qualifiedtable) -->
+
+<pre>
+<code>
+{`String | `}<a href="#qualifiedtable">QualifiedTable</a>
+</code>
+</pre>
 
 </div>
 
@@ -37,7 +43,13 @@ String \| [QualifiedTable](#qualifiedtable)
 
 <div class="parsed-literal haskell-pre">
 
-String \| [QualifiedFunction](#qualifiedfunction)
+<!-- String \| [QualifiedFunction](#qualifiedfunction) -->
+
+<pre>
+<code>
+{`String | `}<a href="#qualifiedfunction">QualifiedFunction</a>
+</code>
+</pre>
 
 </div>
 
@@ -145,7 +157,15 @@ String \| [QualifiedFunction](#qualifiedfunction)
 
 ## PGColumnType {#pgcolumntype}
 
-`String`
+<div class="parsed-literal">
+
+<pre>
+<code>
+String
+</code>
+</pre>
+
+</div>
 
 1.  Numeric types
 
@@ -189,11 +209,27 @@ String \| [QualifiedFunction](#qualifiedfunction)
 
 ## PGColumn {#pgcolumn}
 
-`String`
+<div class="parsed-literal">
+
+<pre>
+<code>
+String
+</code>
+</pre>
+
+</div>
 
 ## RelationshipName {#relationshipname}
 
-`String`
+<div class="parsed-literal">
+
+<pre>
+<code>
+String
+</code>
+</pre>
+
+</div>
 
 ## Table Config {#table-config}
 
@@ -276,7 +312,14 @@ and `manual_configuration`.
 
 <div class="parsed-literal haskell-pre">
 
-[SameTable](#sametable) \| [RemoteTable](#remotetable)
+<!-- [SameTable](#sametable) \| [RemoteTable](#remotetable) -->
+
+<pre>
+<code>
+<a href="#sametable">SameTable</a>{` | `}
+<a href="#remotetable">RemoteTable</a>
+</code>
+</pre>
 
 </div>
 
@@ -284,7 +327,17 @@ and `manual_configuration`.
 
 <div class="parsed-literal">
 
-[PGColumn](#pgcolumn)
+<!-- [PGColumn](#pgcolumn) -->
+
+<div class="parsed-literal">
+
+<pre>
+<code>
+<a href="#pgcolumn">PGColumn</a>
+</code>
+</pre>
+
+</div>
 
 </div>
 
@@ -292,10 +345,21 @@ and `manual_configuration`.
 
 <div class="parsed-literal haskell-pre">
 
+<!--
 {  
   "table" : [TableName](#tablename), "column" : [PGColumn](#pgcolumn)
 
 }
+-->
+
+<pre>
+<code>
+{`{
+  "table"  : `}<a href="#tablename">TableName</a>{`
+  "column" : `}<a href="#pgcolumn">PGColumn</a>{`
+}`}
+</code>
+</pre>
 
 </div>
 
@@ -319,7 +383,9 @@ Describes when should the referenced table row be inserted in relation
 to the current table row in case of a nested insert. Defaults to
 "before_parent".
 
-`"before_parent" | "after_parent"`
+```
+"before_parent" | "after_parent"
+```
 
 :::tip Supported from
 
@@ -352,9 +418,23 @@ Supported in `v2.0.0-alpha.3` and above.
 
 <div class="parsed-literal haskell-pre">
 
+<!--
 [AndExp](#andexp) \| [OrExp](#orexp) \| [NotExp](#notexp) \|
 [ExistsExp](#existsexp) \| [TrueExp](#trueexp) \|
 ColumnExp](#columnexp)
+-->
+
+<pre>
+<code>
+<a href="#andexp">AndExp</a>{` | `}
+<a href="#orexp">OrExp</a>{` | `}
+<a href="#notexp">NotExp</a>{` | `}
+<a href="#existsexp">ExistsExp</a>{` | `}
+<a href="#trueexp">TrueExp</a>{` | `}
+<a href="#columnexp">ColumnExp</a>
+</code>
+</pre>
+
 
 </div>
 
@@ -362,9 +442,19 @@ ColumnExp](#columnexp)
 
 <div class="parsed-literal haskell-pre">
 
+<!--
 {  
     "$and" : \[[BoolExp](#boolexp)\],
 }
+-->
+
+<pre>
+<code>
+{`{
+  "$and" : [`}<a href="#boolexp">BoolExp</a>{`]
+}`}
+</code>
+</pre>
 
 </div>
 
@@ -372,9 +462,19 @@ ColumnExp](#columnexp)
 
 <div class="parsed-literal haskell-pre">
 
+<!--
 {  
     "$or" : \[[BoolExp](#boolexp)\],
 }
+-->
+
+<pre>
+<code>
+{`{
+  "$or" : [`}<a href="#boolexp">BoolExp</a>{`]
+}`}
+</code>
+</pre>
 
 </div>
 
@@ -382,9 +482,19 @@ ColumnExp](#columnexp)
 
 <div class="parsed-literal haskell-pre">
 
+<!--
 {  
     "$not" : [BoolExp](#boolexp)
 }
+-->
+
+<pre>
+<code>
+{`{
+  "$not" : `}<a href="#boolexp">BoolExp</a>{`
+}`}
+</code>
+</pre>
 
 </div>
 
@@ -392,25 +502,55 @@ ColumnExp](#columnexp)
 
 <div class="parsed-literal haskell-pre">
 
+<!--
 {  
     "$exists" : {  
         "\_table": [TableName](#tablename), "\_where": [BoolExp](#boolexp)
     }
 }
+-->
+
+<pre>
+<code>
+{`{
+  "$exists" : {
+    "_table" : `}<a href="#tablename">TableName</a>{`,
+    "_where" : `}<a href="#taboolexpblename">BoolExp</a>{`
+  }
+}`}
+</code>
+</pre>
 
 </div>
 
 ## TrueExp {#trueexp}
 
-`{}`
+<pre>
+<code>
+{`{}`}
+</code>
+</pre>
+
 
 ## ColumnExp {#columnexp}
 
 <div class="parsed-literal haskell-pre">
 
+<!--
 {  
 [PGColumn](#pgcolumn) \| scalar [ComputedFieldName](#computedfieldname)
 : { [Operator](#metadataoperator) : Value }
+-->
+
+<pre>
+<code>
+{`{
+  `}<a href="#pgcolumn">PGColumn</a>{` | `}
+{`scalar `}<a href="#computedfieldname">ComputedFieldName</a>{`: { `}
+<a href="#metadataoperator">Operator</a>{`: Value }
+}`}
+</code>
+</pre>
 
 </div>
 
@@ -459,6 +599,7 @@ jsonb):**
 
 <div class="parsed-literal haskell-pre">
 
+<!--
 {  
     [PGColumn](#pgcolumn): {  
         [Operator](#metadataoperator): {  
@@ -466,6 +607,20 @@ jsonb):**
         }
     }
 }
+-->
+
+
+<pre>
+<code>
+{`{
+  `}<a href="#pgcolumn">PGColumn</a>{`: {
+    `}<a href="#metadataoperator">Operator</a>{`: {
+      `}<a href="#pgcolumn">PGColumn</a>{` | ["$", `}<a href="#pgcolumn">PGColumn</a>{`]
+    }
+  }
+}`}
+</code>
+</pre>
 
 </div>
 
@@ -477,6 +632,7 @@ column of :
 
 <div class="parsed-literal haskell-pre">
 
+<!--
 {  
 [PGColumn](#pgcolumn): {  
 [Operator](#metadataoperator): {  
@@ -487,6 +643,20 @@ column of :
 }
 
 }
+-->
+
+
+<pre>
+<code>
+{`{
+  `}<a href="#pgcolumn">PGColumn</a>{`: {
+    `}<a href="#metadataoperator">Operator</a>{`: {
+      `}<a href="#pgcolumn">PGColumn</a>{`
+    }
+  }
+}`}
+</code>
+</pre>
 
 </div>
 
@@ -494,6 +664,7 @@ column of :
 
 <div class="parsed-literal haskell-pre">
 
+<!--
 {
 [PGColumn](#pgcolumn): {  
 [Operator](#metadataoperator): {  
@@ -504,6 +675,19 @@ column of :
 }
 
 }
+-->
+
+<pre>
+<code>
+{`{
+  `}<a href="#pgcolumn">PGColumn</a>{`: {
+    `}<a href="#metadataoperator">Operator</a>{`: {
+      ["$", `}<a href="#pgcolumn">PGColumn</a>{`]
+    }
+  }
+}`}
+</code>
+</pre>
 
 </div>
 
@@ -569,7 +753,7 @@ docs](http://postgis.net/workshops/postgis-intro/spatial_relationships.html).)
 
     ```
     {  
-        field-name : {\_st_d\_within: {distance: Float, from: Value} }
+      field-name : {_st_d_within: {distance: Float, from: Value} }
     }
     ```
 
@@ -629,12 +813,19 @@ session variable of the same name.
 
 ## RemoteSchemaName {#remoteschemaname}
 
-`String`
+<div class="parsed-literal">
+
+<pre>
+<code>String</code>
+</pre>
+
+</div>
 
 ## RemoteSchemaDef {#remoteschemadef}
 
 <div class="parsed-literal haskell-pre">
 
+<!--
 {  
 "url" : url-string, "url_from_env" : env-var-string, "headers": \[ {
 "name": header-name-string, "value": header-value-string,
@@ -643,6 +834,26 @@ boolean, "timeout_seconds": integer, "customization":
 [RemoteSchemaCustomization](#remoteschemacustomization)
 
 }
+-->
+
+<pre>
+<code>
+{`{
+  "url" : url-string,
+  "url_from_env" : env-var-string,
+  "headers": [
+    {
+      "name": header-name-string,
+      "value": header-value-string,
+      "value_from_env": env-var-string
+    }
+  ],
+  "forward_client_headers": boolean,
+  "timeout_seconds": integer,
+  "customization": `}<a href="#remoteschemacustomization">RemoteSchemaCustomization</a>{`\n
+}`}
+</code>
+</pre>
 
 </div>
 
@@ -742,28 +953,54 @@ boolean, "timeout_seconds": integer, "customization":
 
 ## CollectionName {#collectionname}
 
-`String`
+<div class="parsed-literal">
+
+<pre>
+<code>String</code>
+</pre>
+
+</div>
 
 ## QueryName {#queryname}
 
-`String`
+<div class="parsed-literal">
+
+<pre>
+<code>String</code>
+</pre>
+
+</div>
 
 ## CollectionQuery {#collectionquery}
 
 ```
 {  
-    "name": String, 
-    "query": String
+  "name": String,
+  "query": String
 }
 ```
 
 ## EndpointUrl {#endpointurl}
 
-`String`
+<div class="parsed-literal">
+
+<pre>
+<code>String</code>
+</pre>
+
+</div>
+
 
 ## EndpointMethods {#endpointmethods}
 
-`[String]`
+<div class="parsed-literal">
+
+<pre>
+<code>{`[String]`}</code>
+</pre>
+
+</div>
+
 
 ## EndpointDefinition {#endpointdef}
 
@@ -790,16 +1027,29 @@ name to GraphQL name mapping
 
 ## ActionName {#actionname}
 
-`String`
+<div class="parsed-literal">
+
+<pre>
+<code>String</code>
+</pre>
+
+</div>
 
 ## WebhookURL {#webhookurl}
 
 A String value which supports templating environment variables enclosed
 in `{{` and `}}`.
 
-`String`
+<div class="parsed-literal">
+
+<pre>
+<code>String</code>
+</pre>
+
+</div>
 
 Template example: `https://{{ACTION_API_DOMAIN}}/create-user`
+
 
 ## HeaderFromValue {#headerfromvalue}
 
@@ -808,6 +1058,7 @@ Template example: `https://{{ACTION_API_DOMAIN}}/create-user`
 | name  | true     | String | Name of the header  |
 | value | true     | String | Value of the header |
 
+
 ## HeaderFromEnv {#headerfromenv}
 
 | Key            | required | Schema | Description                                                          |
@@ -815,13 +1066,20 @@ Template example: `https://{{ACTION_API_DOMAIN}}/create-user`
 | name           | true     | String | Name of the header                                                   |
 | value_from_env | true     | String | Name of the environment variable which holds the value of the header |
 
+
 ## GraphQLType {#graphqltype}
 
 A GraphQL [Type
 Reference](https://spec.graphql.org/June2018/#sec-Type-References)
 string.
 
-`String`
+<div class="parsed-literal">
+
+<pre>
+<code>String</code>
+</pre>
+
+</div>
 
 Example: `String!` for non-nullable String type and `[String]` for array
 of String types
@@ -831,7 +1089,13 @@ of String types
 A string literal that conform to [GraphQL
 spec](https://spec.graphql.org/June2018/#Name).
 
-`String`
+<div class="parsed-literal">
+
+<pre>
+<code>String</code>
+</pre>
+
+</div>
 
 ## ActionDefinition {#actiondefinition}
 
@@ -975,7 +1239,13 @@ Enum](https://spec.graphql.org/June2018/#sec-Enums)
 
 ## TriggerName {#triggername}
 
-`String`
+<div class="parsed-literal">
+
+<pre>
+<code>String</code>
+</pre>
+
+</div>
 
 ## OperationSpec {#operationspec}
 
@@ -988,7 +1258,13 @@ Enum](https://spec.graphql.org/June2018/#sec-Enums)
 
 <div class="parsed-literal haskell-pre">
 
-"\*" \| \[[PGColumn](#pgcolumn)\]
+<!-- "\*" \| \[[PGColumn](#pgcolumn)\] -->
+
+<pre>
+<code>
+{`"*" | [`}<a href="#pgcolumn">PGColumn</a>{`]`}
+</code>
+</pre>
 
 </div>
 
@@ -1013,11 +1289,23 @@ Enum](https://spec.graphql.org/June2018/#sec-Enums)
 
 ## HeaderKey {#headerkey}
 
-`String`
+<div class="parsed-literal">
+
+<pre>
+<code>String</code>
+</pre>
+
+</div>
 
 ## HeaderValue {#headervalue}
 
-`String`
+<div class="parsed-literal">
+
+<pre>
+<code>String</code>
+</pre>
+
+</div>
 
 ## TemplateEngine {#templateengine}
 
@@ -1045,7 +1333,13 @@ The JSON templating language to be used for this JSON transformation.
 
 ## RemoteRelationshipName {#remoterelationshipname}
 
-`String`
+<div class="parsed-literal">
+
+<pre>
+<code>String</code>
+</pre>
+
+</div>
 
 ## RemoteField {#remotefield}
 ```
@@ -1094,7 +1388,7 @@ Examples:
 
 ```
 {  
-InputField : $PGColumn | Scalar
+  InputField : $PGColumn | Scalar
 }
 ```
 
