@@ -1,11 +1,11 @@
 .. meta::
-   :description: Filter query results and search queries in Hasura
-   :keywords: hasura, docs, query, filter, search
+   :description: Filter query results and search queries on Postgres in Hasura
+   :keywords: hasura, docs, postgres, query, filter, search
 
-.. _filter_queries:
+.. _pg_filter_queries:
 
-Filter query results / search queries
-=====================================
+Postgres: Filter query results/search queries
+===============================================
 
 .. contents:: Table of contents
   :backlinks: none
@@ -16,16 +16,15 @@ The **where** argument
 ----------------------
 
 You can use the ``where`` argument in your queries to filter results based on some field’s values (even
-nested objects' fields). You can even use multiple filters in the same ``where`` clause using the ``_and`` or the
-``_or`` operators.
+nested objects' fields). You can even use multiple filters in the same ``where`` clause using the ``_and`` or the ``_or`` operators.
 
-For example, to fetch data for an author whose name is "Sidney":
+For example, to fetch data for an author named "Sidney":
 
 .. code-block:: graphql
    :emphasize-lines: 3
 
     query {
-      author(
+      authors(
         where: {name: {_eq: "Sidney"}}
       ) {
         id
@@ -35,13 +34,13 @@ For example, to fetch data for an author whose name is "Sidney":
 
 You can also use nested objects` fields to filter rows from a table and also filter the nested objects as well.
 
-For example, to fetch a list of authors who have articles with a rating greater than 4 along with those articles:
+Get a list of the author's articles with a rating of more than 4, for example:
 
 .. code-block:: graphql
    :emphasize-lines: 2,5
 
     query {
-      author (where: {articles: {rating: {_gt: 4}}}) {
+      authors (where: {articles: {rating: {_gt: 4}}}) {
         id
         name
         articles (where: {rating: {_gt: 4}}) {
@@ -52,21 +51,19 @@ For example, to fetch a list of authors who have articles with a rating greater 
       }
     }
 
-Here ``_eq`` and ``_gt`` are examples of comparison operators that can be used in the ``where``
-argument to filter on equality.
+Here ``_eq`` and ``_gt`` are examples of comparison operators that can be used in the ``where`` the argument to filter on equality.
 
-You can see the complete specification of the ``where`` argument in the :ref:`API reference <WhereExp>`.
+Visit the :ref:`API reference <WhereExp>` page to get the complete specification of the ``where`` argument.
 
-Comparision operators
----------------------
+Comparison operators
+--------------------
 
-Let’s take a look at different comparision operators that can be used to filter results.
+Let’s take a look at different comparison operators that can be used to filter results.
 
 Equality operators (_eq, _neq)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The ``_eq`` (equal to) or the ``_neq`` (not equal to) operators are compatible with any Postgres type other than
-``json`` or ``jsonB`` (like ``Integer``, ``Float``, ``Double``, ``Text``, ``Boolean``,
+The ``_eq`` (equal to) or the ``_neq`` (not equal to) operators are compatible with any Postgres type other than ``json`` or ``jsonB`` (like ``Integer``, ``Float``, ``Double``, ``Text``, ``Boolean``,
 ``Date``/``Time``/``Timestamp``, etc.).
 
 For more details on equality operators and Postgres equivalents, refer to the :ref:`API reference <generic_operators>`.
@@ -75,13 +72,13 @@ The following are examples of using the equality operators on different types.
 
 **Example: Integer (works with Double, Float, Numeric, etc.)**
 
-Fetch data about author whose ``id`` *(an integer field)* is equal to 3:
+Fetch data about an author whose ``id`` *(an integer field)* is equal to 3:
 
 .. graphiql::
   :view_only:
   :query:
     query {
-      author(
+      authors(
         where: {id: {_eq: 3}}
       ) {
         id
@@ -91,7 +88,7 @@ Fetch data about author whose ``id`` *(an integer field)* is equal to 3:
   :response:
     {
       "data": {
-        "author": [
+        "authors": [
           {
             "id": 3,
             "name": "Sidney"
@@ -108,7 +105,7 @@ Fetch a list of authors with ``name`` *(a text field)* as "Sidney":
   :view_only:
   :query:
     query {
-      author(
+      authors(
         where: {name: {_eq: "Sidney"}}
       ) {
         id
@@ -118,7 +115,7 @@ Fetch a list of authors with ``name`` *(a text field)* as "Sidney":
   :response:
     {
       "data": {
-        "author": [
+        "authors": [
           {
             "id": 3,
             "name": "Sidney"
@@ -135,7 +132,7 @@ Fetch a list of articles that have not been published (``is_published`` is a boo
   :view_only:
   :query:
     query {
-      article(
+      articles(
         where: {is_published: {_eq: false}}
       ) {
         id
@@ -146,7 +143,7 @@ Fetch a list of articles that have not been published (``is_published`` is a boo
   :response:
     {
       "data": {
-        "article": [
+        "articles": [
           {
             "id": 5,
             "title": "ut blandit",
@@ -180,7 +177,7 @@ Fetch a list of articles that were published on a certain date (``published_on``
   :view_only:
   :query:
     query {
-      article(
+      articles(
         where: {published_on: {_eq: "2017-05-26"}}
       ) {
         id
@@ -191,7 +188,7 @@ Fetch a list of articles that were published on a certain date (``published_on``
   :response:
     {
       "data": {
-        "article": [
+        "articles": [
           {
             "id": 3,
             "title": "amet justo morbi",
@@ -201,17 +198,63 @@ Fetch a list of articles that were published on a certain date (``published_on``
       }
     }
 
+.. admonition:: Caveat for "null" values
+
+  By design, the ``_eq`` or ``_neq`` operators will not return rows with ``null`` values.
+
+  To also return rows with ``null`` values, the ``_is_null`` operator needs to be used along with these joined by the ``_or`` operator.
+
+  For example, to fetch a list of articles where the ``is_published`` column is either ``false`` or ``null``:
+
+  .. graphiql::
+    :view_only:
+    :query:
+      query {
+        articles (
+          where: {
+            _or: [
+              {is_published: {_eq: false}},
+              {is_published: {_is_null: true}}
+            ]
+          }
+        )
+        {
+          id
+          title
+          is_published
+        }
+      }
+    :response:
+      {
+        "data": {
+          "articles": [
+            {
+              "id": 1,
+              "title": "Robben Island",
+              "is_published": false
+            },
+            {
+              "id": 2,
+              "title": "The Life of Matthias",
+              "is_published": false
+            },
+            {
+              "id": 3,
+              "title": "All about Hasura",
+              "is_published": null
+            },
+          ]
+        }
+      }
+
 Greater than or less than operators (_gt, _lt, _gte, _lte)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The ``_gt`` (greater than), ``_lt`` (less than), ``_gte`` (greater than or equal to),
-``_lte`` (less than or equal to) operators are compatible with any Postgres type other than ``json`` or ``jsonB``
-(like ``Integer``, ``Float``, ``Double``, ``Text``, ``Boolean``, ``Date``/``Time``/``Timestamp``, etc.).
+The ``_gt`` (greater than), ``_lt`` (less than), ``_gte`` (greater than or equal to), ``_lte`` (less than or equal to) operators are compatible with any Postgres type other than ``json`` or ``jsonB`` (like ``Integer``, ``Float``, ``Double``, ``Text``, ``Boolean``, ``Date``/``Time``/``Timestamp``, etc.).
 
 For more details on greater than or less than operators and Postgres equivalents, refer to the :ref:`API reference <generic_operators>`.
 
 The following are examples of using these operators on different types:
-
 
 **Example: Integer (works with Double, Float, etc.)**
 
@@ -221,7 +264,7 @@ Fetch a list of articles rated 4 or more (``rating`` is an integer field):
   :view_only:
   :query:
     query {
-      article(
+      articles(
         where: {rating: {_gte: 4}}
       ) {
         id
@@ -232,7 +275,7 @@ Fetch a list of articles rated 4 or more (``rating`` is an integer field):
   :response:
     {
       "data": {
-        "article": [
+        "articles": [
           {
             "id": 3,
             "title": "amet justo morbi",
@@ -254,14 +297,13 @@ Fetch a list of articles rated 4 or more (``rating`` is an integer field):
 
 **Example: String or Text**
 
-Fetch a list of authors whose names begin with M or any letter that follows M *(essentially, a filter based on a
-dictionary sort)*:
+Fetch a list of authors whose names begin with M or any letter that follows M *(essentially, a filter based on a dictionary sort)*:
 
 .. graphiql::
   :view_only:
   :query:
     query {
-      author(
+      authors(
         where: {name: {_gt: "M"}}
       ) {
         id
@@ -271,7 +313,7 @@ dictionary sort)*:
   :response:
     {
       "data": {
-        "author": [
+        "authors": [
           {
             "id": 3,
             "name": "Sidney"
@@ -292,7 +334,7 @@ Fetch a list of articles that were published on or after date "01/01/2018":
   :view_only:
   :query:
     query {
-      article(
+      articles(
         where: {published_on: {_gte: "2018-01-01"}}
       ) {
         id
@@ -303,7 +345,7 @@ Fetch a list of articles that were published on or after date "01/01/2018":
   :response:
     {
       "data": {
-        "article": [
+        "articles": [
           {
             "id": 2,
             "title": "a nibh",
@@ -331,9 +373,8 @@ Fetch a list of articles that were published on or after date "01/01/2018":
 List based search operators (_in, _nin)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The ``_in`` (in a list) and ``_nin`` (not in list) operators are used to compare field values to a list of values.
-They are compatible with any Postgres type other than ``json`` or ``jsonB`` (like ``Integer``, ``Float``, ``Double``,
-``Text``, ``Boolean``, ``Date``/``Time``/``Timestamp``, etc.).
+The ``_in`` (in a list) and ``_nin`` (not in the list) operators are used to compare field values to a list of values.
+They are compatible with any Postgres type other than ``json`` or ``jsonB`` (like ``Integer``, ``Float``, ``Double``, ``Text``, ``Boolean``, ``Date``/``Time``/``Timestamp``, etc.).
 
 For more details on list based search operators and Postgres equivalents, refer to the :ref:`API reference <generic_operators>`.
 
@@ -341,13 +382,13 @@ The following are examples of using these operators on different types:
 
 **Example: Integer (works with Double, Float, etc.)**
 
-Fetch a list of articles rated 1, 3 or 5:
+Fetch a list of articles rated 1, 3, or 5:
 
 .. graphiql::
   :view_only:
   :query:
     query {
-      article(
+      articles(
         where: {rating: {_in: [1,3,5]}}
       ) {
         id
@@ -358,7 +399,7 @@ Fetch a list of articles rated 1, 3 or 5:
   :response:
     {
       "data": {
-        "article": [
+        "articles": [
           {
             "id": 1,
             "title": "sit amet",
@@ -391,7 +432,7 @@ Fetch a list of those authors whose names are NOT part of a list:
   :view_only:
   :query:
     query {
-      author(
+      authors(
         where: {name: {_nin: ["Justin","Sidney","April"]}}
       ) {
         id
@@ -401,7 +442,7 @@ Fetch a list of those authors whose names are NOT part of a list:
   :response:
     {
       "data": {
-        "author": [
+        "authors": [
           {
             "id": 2,
             "name": "Beltran"
@@ -422,11 +463,10 @@ Fetch a list of those authors whose names are NOT part of a list:
       }
     }
 
-Text search or pattern matching operators (_like, _similar, etc.)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Text search or pattern matching operators (_like, _similar, _regex, etc.)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The ``_like``, ``_nlike``, ``_ilike``, ``_nilike``, ``_similar``, ``_nsimilar`` operators are used for
-pattern matching on string/text fields.
+The ``_like``, ``_nlike``, ``_ilike``, ``_nilike``, ``_similar``, ``_nsimilar``, ``_regex``, ``_nregex``, ``_iregex``, ``_niregex`` operators are used for pattern matching on string/text fields.
 
 For more details on text search operators and Postgres equivalents, refer to the :ref:`API reference <text_operators>`.
 
@@ -438,7 +478,7 @@ Fetch a list of articles whose titles contain the word “amet”:
   :view_only:
   :query:
     query {
-      article(
+      articles(
         where: {title: {_like: "%amet%"}}
       ) {
         id
@@ -447,21 +487,23 @@ Fetch a list of articles whose titles contain the word “amet”:
     }
   :response:
     {
-    "data": {
-      "article": [
-        {
-          "id": 1,
-          "title": "sit amet"
-        },
-        {
-          "id": 3,
-          "title": "amet justo morbi"
-        },
-        {
-          "id": 9,
-          "title": "sit amet"
-        }
-      ]
+      "data": {
+        "articles": [
+          {
+            "id": 1,
+            "title": "sit amet"
+          },
+          {
+            "id": 3,
+            "title": "amet justo morbi"
+          },
+          {
+            "id": 9,
+            "title": "sit amet"
+          }
+        ]
+      }
+    }
 
 .. note::
 
@@ -476,7 +518,7 @@ Fetch a list of authors whose names begin with A or C:
   :view_only:
   :query:
     query {
-      author(
+      authors(
         where: {name: {_similar: "(A|C)%"}}
       ) {
         id
@@ -486,7 +528,7 @@ Fetch a list of authors whose names begin with A or C:
   :response:
     {
       "data": {
-        "author": [
+        "authors": [
           {
             "id": 4,
             "name": "Anjela"
@@ -511,23 +553,65 @@ Fetch a list of authors whose names begin with A or C:
 
   ``_similar`` is case-sensitive
 
+**Example: _regex**
+
+Fetch a list of articles whose titles match the regex “[ae]met”:
+
+.. graphiql::
+  :view_only:
+  :query:
+    query {
+      articles(
+        where: {title: {_regex: "[ae]met"}}
+      ) {
+        id
+        title
+      }
+    }
+  :response:
+    {
+      "data": {
+        "articles": [
+          {
+            "id": 1,
+            "title": "sit amet"
+          },
+          {
+            "id": 3,
+            "title": "cremet justo morbi"
+          },
+          {
+            "id": 9,
+            "title": "sit ametist"
+          }
+        ]
+      }
+    }  
+
+.. note::
+
+  ``_regex`` is case-sensitive. Use ``_iregex`` for case-insensitive search.
+
+.. note::
+
+  ``regex`` operators are supported in ``v2.0.0`` and above
+
 JSONB operators (_contains, _has_key, etc.)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The ``_contains``, ``_contained_in``, ``_has_key``, ``_has_keys_any`` and ``_has_keys_all`` operators are used to filter
-based on ``JSONB`` columns.
+The ``_contains``, ``_contained_in``, ``_has_key``, ``_has_keys_any`` and ``_has_keys_all`` operators are used to filter based on ``JSONB`` columns.
 
 For more details on JSONB operators and Postgres equivalents, refer to the :ref:`API reference <jsonb_operators>`.
 
 **Example: _contains**
 
-Fetch all authors living within a particular pincode (present in ``address`` JSONB column):
+Fetch all authors living within a particular Pincode (present in ``address`` JSONB column):
 
 .. graphiql::
   :view_only:
   :query:
     query get_authors_in_pincode ($jsonFilter: jsonb){
-      author(
+      authors(
         where: {
           address: {_contains: $jsonFilter }
         }
@@ -540,7 +624,7 @@ Fetch all authors living within a particular pincode (present in ``address`` JSO
   :response:
     {
       "data": {
-        "author": [
+        "authors": [
           {
             "id": 1,
             "name": "Ash",
@@ -570,7 +654,7 @@ Fetch authors if the ``phone`` key is present in their JSONB ``address`` column:
   :view_only:
   :query:
     query get_authors_if_phone {
-      author(
+      authors(
         where: {
           address: {_has_key: "phone" }
         }
@@ -583,7 +667,7 @@ Fetch authors if the ``phone`` key is present in their JSONB ``address`` column:
   :response:
     {
       "data": {
-        "author": [
+        "authors": [
           {
             "id": 1,
             "name": "Ash",
@@ -599,14 +683,13 @@ Fetch authors if the ``phone`` key is present in their JSONB ``address`` column:
       }
     }
 
-
 PostGIS spatial relationship operators (_st_contains, _st_crosses, etc.)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The ``_st_contains``, ``_st_crosses``, ``_st_equals``, ``_st_intersects``, ``_st_overlaps``, ``_st_touches``,
-``_st_within`` and ``_st_d_within`` operators are used to filter based on ``geometry`` like columns.
+The ``_st_contains``, ``_st_crosses``, ``_st_equals``, ``_st_intersects``, ``_st_3d_intersects``, ``_st_overlaps``, ``_st_touches``,
+``_st_within``, ``_st_d_within``, and ``_st_3d_d_within`` operators are used to filter based on ``geometry`` like columns.
 
-``_st_d_within`` and ``_st_intersects`` can be used on ``geography`` columns also.
+``_st_d_within`` and ``_st_intersects`` can be used on ``geography`` columns also (but their 3D variations are for ``geometry`` only).
 
 For more details on spatial relationship operators and Postgres equivalents, refer to the :ref:`API reference <geometry_operators>`.
 
@@ -616,7 +699,7 @@ Use JSON representation (see `GeoJSON <https://tools.ietf.org/html/rfc7946>`_) o
 
 **Example: _st_within**
 
-Fetch a list of geometry values which are within the given ``polygon`` value:
+Fetch a list of geometry values that are within the given ``polygon`` value:
 
 .. graphiql::
   :view_only:
@@ -664,7 +747,7 @@ Fetch a list of geometry values which are within the given ``polygon`` value:
 
 **Example: _st_d_within**
 
-Fetch a list of ``geometry`` values which are 3 units from given ``point`` value:
+Fetch a list of ``geometry`` values that are 3 units from a given ``point`` value:
 
 .. graphiql::
   :view_only:
@@ -712,6 +795,107 @@ Fetch a list of ``geometry`` values which are 3 units from given ``point`` value
       }
     }
 
+**Example: _st_3d_d_within**
+
+This is completely analogous to the ``_st_d_within`` example above, the only difference is that our coordinates now have three components instead of two.
+
+.. graphiql::
+  :view_only:
+  :query:
+    query geom_table($point: geometry){
+      geom_table(
+        where: {geom_col: {_st_3d_d_within: {distance: 3, from: $point}}}
+      ){
+        id
+        geom_col
+      }
+    }
+  :response:
+    {
+      "data": {
+        "geom_table": [
+          {
+            "id": 1,
+            "geom_col": {
+              "type": "Point",
+              "coordinates": [
+                1,
+                2,
+                1
+              ]
+            }
+          },
+          {
+            "id": 2,
+            "geom_col": {
+              "type": "Point",
+              "coordinates": [
+                3,
+                0,
+                0
+              ]
+            }
+          }
+        ]
+      }
+    }
+  :variables:
+    {
+      "point": {
+        "type": "Point",
+        "coordinates": [ 0, 0, 0 ]
+      }
+    }
+
+**Example: _st_3d_intersects**
+
+Fetch a list of (3D) ``geometry`` values that intersect a given ``polygon`` value:
+
+.. graphiql::
+  :view_only:
+  :query:
+    query geom_table($point: geometry){
+      geom_table(
+        where: {geom_col: {_st_3d_intersects: $polygon}}
+      ){
+        id
+        geom_col
+      }
+    }
+  :response:
+    {
+      "data": {
+        "geom_table": [
+          {
+            "id": 1,
+            "geom_col": {
+              "type": "LineString",
+              "coordinates":
+                [
+                  [ -1, -2, -2 ],
+                  [ 3, 3, 2 ]
+                ]
+            }
+          }
+        ]
+      }
+    }
+  :variables:
+    {
+      "polygon": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [0, 0, 0],
+            [2, 0, 0],
+            [1, 2, 0],
+            [1, 1, 2],
+            [0, 0, 0]
+          ]
+        ]
+      }
+    }
+
 Filter or check for null values (_is_null)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -727,7 +911,7 @@ Fetch a list of articles that have a value in the ``published_on`` field:
   :view_only:
   :query:
     query {
-      article(
+      articles(
         where: {published_on: {_is_null: false}}
       ) {
         id
@@ -738,7 +922,7 @@ Fetch a list of articles that have a value in the ``published_on`` field:
   :response:
     {
       "data": {
-        "article": [
+        "articles": [
           {
             "id": 1,
             "title": "sit amet",
@@ -916,11 +1100,99 @@ Executes the following SQL function:
      }
    }
 
-Filter based on failure of some criteria (_not)
------------------------------------------------
+ltree operators (_ancestor, _matches, etc.)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The ``_not`` operator can be used to fetch results for which some condition does not hold true. i.e. to invert the
-filter set for a condition.
+Comparison operators on columns with ``ltree``, ``lquery``, or ``ltxtquery`` types are supported.
+
+Please submit a feature request via `GitHub <https://github.com/hasura/graphql-engine>`__ if you want support for more functions.
+
+For more details on ``ltree`` operators and Postgres equivalents, refer to the :ref:`API reference <ltree_operators>`.
+
+**Example: _ancestor**
+
+Select ancestors of a `ltree` argument
+
+.. graphiql::
+  :view_only:
+  :query:
+    query {
+      tree (
+        where: {path: {_ancestor: "Tree.Collections.Pictures.Astronomy.Astronauts"}}
+      ) {
+        path
+      }
+    }
+  :response:
+    {
+      "data": {
+        "tree": [
+          {
+            "path": "Tree"
+          },
+          {
+            "path": "Tree.Collections"
+          },
+          {
+            "path": "Tree.Collections.Pictures"
+          },
+          {
+            "path": "Tree.Collections.Pictures.Astronomy"
+          },
+          {
+            "path": "Tree.Collections.Pictures.Astronomy.Astronauts"
+          }
+        ]
+      }
+    }
+
+**Example: _matches_any**
+
+Select `ltree` paths matching any `lquery` regex in an array
+
+.. graphiql::
+  :view_only:
+  :query:
+    query {
+      tree (
+        where: {path: {_matches_any: ["*.Pictures.*", "*.Hobbies.*"]}}
+      ) {
+        path
+      }
+    }
+  :response:
+    {
+      "data": {
+        "tree": [
+          {
+            "path": "Tree.Hobbies"
+          },
+          {
+            "path": "Tree.Hobbies.Amateurs_Astronomy"
+          },
+          {
+            "path": "Tree.Collections.Pictures"
+          },
+          {
+            "path": "Tree.Collections.Pictures.Astronomy"
+          },
+          {
+            "path": "Tree.Collections.Pictures.Astronomy.Stars"
+          },
+          {
+            "path": "Tree.Collections.Pictures.Astronomy.Galaxies"
+          },
+          {
+            "path": "Tree.Collections.Pictures.Astronomy.Astronauts"
+          }
+        ]
+      }
+    }
+
+Filter based on the failure of some criteria (_not)
+---------------------------------------------------
+
+The ``_not`` operator can be used to fetch results for which some condition does not hold true. i.e. to invert the filter set for a condition.
 
 **Example: _not**
 
@@ -930,7 +1202,7 @@ Fetch all authors who don't have any published articles:
   :view_only:
   :query:
     {
-      author(
+      authors(
         where: {
           _not: {
             articles: { is_published: {_eq: true} }
@@ -947,7 +1219,7 @@ Fetch all authors who don't have any published articles:
   :response:
     {
       "data": {
-        "author": [
+        "authors": [
           {
             "id": 7,
             "name": "Berti",
@@ -984,18 +1256,17 @@ You can group multiple parameters in the same ``where`` argument using the ``_an
 results based on more than one criteria.
 
 .. note::
-  You can use the ``_or`` and ``_and`` operators along with the ``_not`` operator to create arbitrarily complex boolean
-  expressions involving multiple filtering criteria.
+  You can use the ``_or`` and ``_and`` operators along with the ``_not`` operator to create arbitrarily complex boolean expressions involving multiple filtering criteria.
 
 **Example:  _and**
 
-Fetch a list of articles published in a specific time-frame (for example: in year 2017):
+Fetch a list of articles published in a specific time-frame (for example: in year the 2017):
 
 .. graphiql::
   :view_only:
   :query:
     query {
-      article (
+      articles (
         where: {
           _and: [
             { published_on: {_gte: "2017-01-01"}},
@@ -1012,7 +1283,7 @@ Fetch a list of articles published in a specific time-frame (for example: in yea
   :response:
     {
       "data": {
-        "article": [
+        "articles": [
           {
             "id": 1,
             "title": "sit amet",
@@ -1050,7 +1321,7 @@ Fetch a list of articles rated more than 4 or published after "01/01/2018":
   :view_only:
   :query:
     query {
-      article (
+      articles (
         where: {
           _or: [
             {rating: {_gte: 4}},
@@ -1068,7 +1339,7 @@ Fetch a list of articles rated more than 4 or published after "01/01/2018":
   :response:
     {
       "data": {
-        "article": [
+        "articles": [
           {
             "id": 2,
             "title": "a nibh",
@@ -1099,10 +1370,9 @@ Fetch a list of articles rated more than 4 or published after "01/01/2018":
 
 .. note::
 
-  The ``_or`` operator expects an array of expressions as input. If an object is passed as input it will behave like
-  the ``_and`` operator as explained in the :ref:`API reference <OrExp>`
+  The ``_or`` operator expects an array of expressions as input. If an object is passed as input it will behave like the ``_and`` operator as explained in the :ref:`API reference <OrExp>`.
 
-.. _nested_filter:
+.. _pg_nested_filter:
 
 Filter nested objects
 ---------------------
@@ -1118,7 +1388,7 @@ Fetch all authors with only their 5 rated articles:
   :view_only:
   :query:
     {
-      author {
+      authors {
         id
         name
         articles(where: {rating: {_eq: 5}}) {
@@ -1130,7 +1400,7 @@ Fetch all authors with only their 5 rated articles:
   :response:
     {
       "data": {
-        "author": [
+        "authors": [
           {
             "id": 1,
             "name": "Justin",
@@ -1172,19 +1442,16 @@ For example:
    :emphasize-lines: 2
 
       query {
-        article (where: {author: {name: {_eq: "Sidney"}}}) {
+        articles (where: {author: {name: {_eq: "Sidney"}}}) {
           id
           title
         }
       }
 
-The behaviour of the comparision operators depends on whether the nested objects are a single object related via an
-object relationship or an array of objects related via an array relationship.
+The behavior of the comparison operators depends on whether the nested objects are a single object related via an object relationship or an array of objects related via an array relationship.
 
-- In case of an **object relationship**, a row will be returned if the single nested object satisfies the defined
-  condition.
-- In case of an **array relationship**, a row will be returned if **any of the nested objects** satisfy the defined
-  condition.
+- In the case of an **object relationship**, a row will be returned if the single nested object satisfies the defined condition.
+- In the case of an **array relationship**, a row will be returned if **any of the nested objects** satisfy the defined condition.
 
 Let's look at a few use cases based on the above:
 
@@ -1199,7 +1466,7 @@ Fetch all articles whose author's name starts with "A":
   :view_only:
   :query:
     {
-      article (
+      articles (
         where: {
           author: {
             name: { _similar: "A%"}
@@ -1216,7 +1483,7 @@ Fetch all articles whose author's name starts with "A":
   :response:
     {
       "data": {
-        "article": [
+        "articles": [
           {
             "id": 1,
             "title": "sit amet",
@@ -1268,7 +1535,7 @@ Fetch all authors which have written at least one article which is rated 1:
   :view_only:
   :query:
     {
-      author(
+      authors(
         where: {
           articles: {rating: {_eq: 1}}
         }
@@ -1284,7 +1551,7 @@ Fetch all authors which have written at least one article which is rated 1:
   :response:
     {
       "data": {
-        "author": [
+        "authors": [
           {
             "id": 1,
             "name": "Justin",
@@ -1338,9 +1605,7 @@ Fetch all authors which have written at least one article which is rated 1:
 Fetch if **all** of the nested objects defined via an array relationship satisfy a condition
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-By default a row is returned if any of the nested objects satisfy a condition. To achieve the above, we need to frame
-the ``where`` expression as ``{_not: {inverse-of-condition}}``. This reads as: fetch if not (any of the nested objects
-satisfy the inverted condition) i.e. all of the nested objects satisfy the condition.
+A row is returned by default if any of the nested items satisfy a condition. To achieve the above, we need to frame the ``where`` expression as ``{_not: {inverse-of-condition}}``. This reads as: fetch if not (any of the nested objects satisfy the inverted condition) i.e. all of the nested objects satisfy the condition.
 
 For example:
 
@@ -1354,13 +1619,13 @@ For example:
 
 **Example:**
 
-Fetch all authors which have all of their articles published i.e. have ``{is_published {_eq: true}``.
+Obtain a list of all authors who have had all of their articles published, i.e, have ``{is_published {_eq: true}``.
 
 .. graphiql::
   :view_only:
   :query:
     {
-      author (
+      authors (
         where: {
           _not: {
             articles: {is_published: {_neq: true}}
@@ -1378,7 +1643,7 @@ Fetch all authors which have all of their articles published i.e. have ``{is_pub
   :response:
     {
       "data": {
-        "author": [
+        "authors": [
           {
             "id": 1,
             "name": "Justin",
@@ -1435,13 +1700,10 @@ Fetch all authors which have all of their articles published i.e. have ``{is_pub
       }
     }
 
-
 Fetch if **none** of the nested objects defined via an array relationship satisfy a condition
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-By default a row is returned if any of the nested objects satisfy a condition. To achieve the above, we need to frame
-the ``where`` expression as ``{_not: {condition}}``. This reads as: fetch if not (any of the nested objects
-satisfy the condition) i.e. none of the nested objects satisy the condition.
+By default, a row is returned if any of the nested objects satisfy a condition. To achieve the above, we need to frame the ``where`` expression as ``{_not: {condition}}``. This reads as: fetch if not (any of the nested objects satisfy the condition) i.e. none of the nested objects satisfy the condition.
 
 For example,
 
@@ -1461,7 +1723,7 @@ Fetch all authors which have none of their articles published i.e. have ``{is_pu
   :view_only:
   :query:
     {
-      author (
+      authors(
         where: {
           _not: {
             articles: {is_published: {_eq: true}}
@@ -1479,7 +1741,7 @@ Fetch all authors which have none of their articles published i.e. have ``{is_pu
   :response:
     {
       "data": {
-        "author": [
+        "authors": [
           {
             "id": 7,
             "name": "Berti",
@@ -1507,11 +1769,9 @@ Fetch all authors which have none of their articles published i.e. have ``{is_pu
 Fetch if nested object(s) exist/do not exist
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-You can filter results based on if they have nested objects by checking if any nested objects exist. This can be
-achieved by using the expression ``{}`` which evaluates to ``true`` if any object exists.
+You can filter results based on if they have nested objects by checking if any nested objects exist. This can be achieved by using the expression ``{}`` which evaluates to ``true`` if any object exists.
 
-
-**Example where nested object(s) exist:**
+**Example where a nested object(s) exist:**
 
 Fetch all authors which have at least one article written by them:
 
@@ -1519,7 +1779,7 @@ Fetch all authors which have at least one article written by them:
   :view_only:
   :query:
     {
-      author (
+      authors (
         where: {
           articles: {}
         }
@@ -1536,7 +1796,7 @@ Fetch all authors which have at least one article written by them:
   :response:
     {
       "data": {
-        "author": [
+        "authors": [
           {
             "id": 1,
             "name": "Justin",
@@ -1561,13 +1821,13 @@ Fetch all authors which have at least one article written by them:
 
 **Example where nested object(s) do not exist:**
 
-Fetch all authors which have not written any articles:
+Fetch all authors who haven't written any articles yet:
 
 .. graphiql::
   :view_only:
   :query:
     {
-      author (
+      authors (
         where: {
           _not: {
             articles: {}
@@ -1586,7 +1846,7 @@ Fetch all authors which have not written any articles:
   :response:
     {
       "data": {
-        "author": [
+        "authors": [
           {
             "id": 2,
             "name": "Beltran",
@@ -1609,31 +1869,156 @@ Fetch all authors which have not written any articles:
       }
     }
 
+Filter based on computed fields
+-------------------------------
+You can use computed fields to filter your query results.
+
+For example:
+
+.. code-block:: graphql
+   :emphasize-lines: 2
+
+      query {
+        author (where: {full_name: {_ilike: "%bob%"}}){
+          id
+          first_name
+          last_name
+        }
+      }
+
+The behavior of the comparison operators depends on whether the computed fields return scalar type values or
+set of table rows.
+
+- In the case of scalar type, a row will be returned if the computed field returned scalar value satisfied the defined condition.
+- In the case of table row type, a row will be returned if **any of the returned rows** satisfy the defined condition.
+
+Let's look at a few use cases based on the above:
+
+Fetch if the scalar value returned by the computed field satisfies a condition
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+**Example:**
+
+A computed field ``total_marks`` is defined to a ``student`` table which computes the total sum
+of marks obtained from each subject. Fetch all students whose total marks is above "80":
+
+.. graphiql::
+   :view_only:
+   :query:
+      query {
+        student(where: {total_marks: {_gte: 80}}){
+          roll_no
+          name
+        }
+      }
+   :response:
+       {
+         "data": {
+           "student": [
+             {
+               "roll_no": 34,
+               "name": "Alice"
+             },
+             {
+               "roll_no": 31,
+               "name": "Bob"
+             }
+           ]
+         }
+       }
+
+Fetch if **any** of the returned table rows by the computed field satisfy a condition
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+**Example:**
+
+A computed field ``get_published_articles`` defined to a ``author`` table which returns a set of
+``article`` rows published. Fetch all authors who have at least a published article in the medicine
+field:  
+
+.. graphiql::
+   :view_only:
+   :query:
+      query {
+        author(where: {get_published_articles: {type: {_eq: "medicine"}}}){
+          id
+          name
+        }
+      }
+   :response:
+     {
+       "data": {
+         "author": [
+           {
+             "id": 3,
+             "name": "Alice"
+           },
+           {
+             "id": 5,
+             "name": "Bob"
+           }
+         ]
+       }
+     }
+
+fetch if the computed field's returning rows' aggregate value meets the condition
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+**Example:**
+
+A computed field ``get_published_articles`` defined to a ``author`` table which returns set of
+``article`` rows published. Fetch all authors with more than 10 published articles:
+
+.. graphiql::
+   :view_only:
+   :query:
+      query {
+        author(where: {get_published_articles_aggregate: {count: {_gte: 10}}}){
+          id
+          name
+        }
+      }
+   :response:
+     {
+       "data": {
+         "author": [
+           {
+             "id": 5,
+             "name": "Bob"
+           },
+           {
+             "id": 7,
+             "name": "Clarke"
+           }
+         ]
+       }
+     }
+
 Filter many-to-many relationships
 ----------------------------------
 
-The following examples use the schema defined in :ref:`the many-to-many guide <many_to_many_modelling>`.
+The schema defined in Hasura Data Hub's `Relationships: Many-to-many <https://hasura.io/data-hub/data-models-and-authorization/schema-share-relationships-many-to-many/>`_ integration is used in the following examples.
 
 
-Fetch if all conditions are true
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Fetch the rows matching all the filtered conditions
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 **Example:**
 
-Fetch all articles which have at least the selected tags:
+Only return articles that contain all of the tags specified in the ``where`` clause:
 
 .. graphiql::
   :view_only:
   :query:
     {
-      article (
+      _manytomany_article (
         where: {
           _and: [
             {
               article_tags: {
                 tag: {
-                  tag_value: {
-                    _eq: "mystery"
+                  name: {
+                    _eq: "Electronics"
                   }
                 }
               }
@@ -1641,8 +2026,8 @@ Fetch all articles which have at least the selected tags:
             {
               article_tags: {
                 tag: {
-                  tag_value: {
-                    _eq: "biography"
+                  name: {
+                    _eq: "Games"
                   }
                 }
               }
@@ -1653,7 +2038,7 @@ Fetch all articles which have at least the selected tags:
         title
         article_tags {
           tag {
-            tag_value
+            name
           }
         }
       }
@@ -1661,18 +2046,108 @@ Fetch all articles which have at least the selected tags:
   :response:
     {
       "data": {
-        "article": [
+        "_manytomany_article": [
           {
-            "title": "sit amet",
+            "title": "So tell me, future boy, who's president of the United States in 1985?",
             "article_tags": [
               {
                 "tag": {
-                  "tag_value": "mystery"
+                  "name": "Games"
                 }
               },
               {
                 "tag": {
-                  "tag_value": "biography"
+                  "name": "Electronics"
+                }
+              },
+              {
+                "tag": {
+                  "name": "Toys"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    }    
+        
+Fetch the rows that do not satisfy the conditions
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+**Example:**
+
+Only retrieve articles that do not contain the filtered tags:
+
+.. graphiql::
+  :view_only:
+  :query:
+    {
+        _manytomany_article (
+          where: {
+            _and: [
+              {
+                _not: {
+                  article_tags: {
+                    tag: {
+                      name: {
+                        _eq: "Electronics"
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                _not: {
+                  article_tags: {
+                    tag: {
+                      name: {
+                        _eq: "Games"
+                      }
+                    }
+                  }
+                }
+              },
+            ]
+          }
+        ) {
+          title
+          article_tags {
+            tag {
+              name
+            }
+          }
+        }
+      }    
+  :response:
+    {
+      "data": {
+        "_manytomany_article": [
+          {
+            "title": "Yeah, you got my homework finished, McFly?",
+            "article_tags": [
+              {
+                "tag": {
+                  "name": "Jewelry"
+                }
+              },
+              {
+                "tag": {
+                  "name": "Sports"
+                }
+              }
+            ]
+          },
+          {
+            "title": "Good, there's somebody I'd like you to meet. Lorraine.",
+            "article_tags": [
+              {
+                "tag": {
+                  "name": "Toys"
+                }
+              },
+              {
+                "tag": {
+                  "name": "Sports"
                 }
               }
             ]
@@ -1681,69 +2156,101 @@ Fetch all articles which have at least the selected tags:
       }
     }
 
-
-Fetch if all conditions are false
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Fetch rows with filtered conditions that are mixed
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 **Example:**
 
-Fetch all articles which haven't the selected tags:
+Fetch all articles that contain one of the tags but not the other:
 
 .. graphiql::
   :view_only:
   :query:
     {
-      article (
-        where: {
-          _and: [
-            {
-              _not: {
+        _manytomany_article (
+          where: {
+            _and: [
+              {
                 article_tags: {
                   tag: {
-                    tag_value: {
-                      _eq: "mystery"
+                    name: {
+                      _eq: "Electronics"
                     }
                   }
                 }
-              }
-            },
-            {
-              _not: {
-                article_tags: {
-                  tag: {
-                    tag_value: {
-                      _eq: "drama"
+              },
+              {
+                _not: {
+                  article_tags: {
+                    tag: {
+                      name: {
+                        _eq: "Games"
+                      }
                     }
                   }
                 }
-              }
-            },
-          ]
-        }
-      ) {
-        title
-        article_tags {
-          tag {
-            tag_value
+              },
+            ]
+          }
+        ) {
+          title
+          article_tags {
+            tag {
+              name
+            }
           }
         }
-      }
-    }
+      }    
   :response:
     {
       "data": {
-        "article": [
+        "_manytomany_article": [
           {
-            "title": "a nibh",
+            "title": "Marty, you interacted with anybody else today, besides me?",
             "article_tags": [
               {
                 "tag": {
-                  "tag_value": "biography"
+                  "name": "Jewelry"
                 }
               },
               {
                 "tag": {
-                  "tag_value": "technology"
+                  "name": "Electronics"
+                }
+              },
+              {
+                "tag": {
+                  "name": "Sports"
+                }
+              },
+              {
+                "tag": {
+                  "name": "Sports"
+                }
+              }
+            ]
+          },
+          {
+            "title": "What's with the life preserver?",
+            "article_tags": [
+              {
+                "tag": {
+                  "name": "Jewelry"
+                }
+              },
+              {
+                "tag": {
+                  "name": "Sports"
+                }
+              },
+              {
+                "tag": {
+                  "name": "Toys"
+                }
+              },
+              {
+                "tag": {
+                  "name": "Electronics"
                 }
               }
             ]
@@ -1752,161 +2259,91 @@ Fetch all articles which haven't the selected tags:
       }
     }
 
-Fetch with mixed conditions
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Fetch rows that are an exact match
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 **Example:**
 
-Fetch all articles which have some tags but haven't others:
+Limit the articles with specific tags:
 
 .. graphiql::
   :view_only:
   :query:
-    {
-      article (
-        where: {
-          _and: [
-            {
-              article_tags: {
-                tag: {
-                  tag_value: {
-                    _eq: "mystery"
+        {
+          _manytomany_article (
+            where: {
+              _and: [
+                {
+                  article_tags: {
+                    tag: {
+                      name: {
+                        _eq: "Games"
+                      }
+                    }
                   }
-                }
-              }
-            },
-            {
-              _not: {
-                article_tags: {
-                  tag: {
-                    tag_value: {
-                      _eq: "drama"
+                },
+                {
+                  article_tags: {
+                    tag: {
+                      name: {
+                        _eq: "Sports"
+                      }
+                    }
+                  }
+                },
+                {
+                  _not: {
+                    article_tags: {
+                      tag: {
+                        name: {
+                          _nin: ["Games", "Sports"]
+                        }
+                      }
                     }
                   }
                 }
-              }
-            },
-          ]
-        }
-      ) {
-        title
-        article_tags {
-          tag {
-            tag_value
-          }
-        }
-      }
-    }
-  :response:
-    {
-      "data": {
-        "article": [
-          {
-            "title": "sit amet",
-            "article_tags": [
-              {
-                "tag": {
-                  "tag_value": "mystery"
-                }
-              },
-              {
-                "tag": {
-                  "tag_value": "biography"
-                }
-              }
-            ]
-          }
-        ]
-      }
-    }
-
-Fetch exact result
-^^^^^^^^^^^^^^^^^^
-
-**Example:**
-
-Fetch all articles which have exactly the selected tags, no more, no less:
-
-.. graphiql::
-  :view_only:
-  :query:
-    {
-      article (
-        where: {
-          _and: [
-            {
-              article_tags: {
-                tag: {
-                  tag_value: {
-                    _eq: "mystery"
-                  }
-                }
-              }
-            },
-            {
-              article_tags: {
-                tag: {
-                  tag_value: {
-                    _eq: "biography"
-                  }
-                }
-              }
-            },
-            {
-              _not: {
-                article_tags: {
-                  tag: {
-                    tag_value: {
-                      _nin: ["mystery", "biography"]
-                    }
-                  }
-                }
+              ]
+            }
+          ) {
+            title
+            article_tags {
+              tag {
+                name
               }
             }
-          ]
-        }
-      ) {
-        title
-        article_tags {
-          tag {
-            tag_value
           }
         }
-      }
-    }
   :response:
     {
       "data": {
-        "article": [
+        "_manytomany_article": [
           {
-            "title": "sit amet",
+            "title": "Just say anything, George, say whatever's natural, the first thing that comes to your mind.",
             "article_tags": [
               {
                 "tag": {
-                  "tag_value": "mystery"
+                  "name": "Games"
                 }
               },
               {
                 "tag": {
-                  "tag_value": "biography"
+                  "name": "Sports"
                 }
               }
             ]
           }
         ]
       }
-    }
-
+    }  
 
 Cast a field to a different type before filtering (_cast)
 ---------------------------------------------------------
 
 The ``_cast`` operator can be used to cast a field to a different type, which allows type-specific
 operators to be used on fields that otherwise would not support them. Currently, only casting
-between PostGIS ``geometry`` and ``geography`` types is supported.
+between PostGIS ``geometry`` and ``geography`` types are supported.
 
-Casting using ``_cast`` corresponds directly to
-`SQL type casts <https://www.postgresql.org/docs/current/sql-expressions.html#SQL-SYNTAX-TYPE-CASTS>`__.
+Casting using ``_cast`` corresponds directly to `SQL type casts <https://www.postgresql.org/docs/current/sql-expressions.html#SQL-SYNTAX-TYPE-CASTS>`__.
 
 **Example: cast ``geometry`` to ``geography``**
 
@@ -2000,16 +2437,13 @@ Columns of type ``geography`` are more accurate, but they don’t support as man
 
 .. note::
 
-  For performant queries that filter on casted fields, create an
-  `expression index <https://www.postgresql.org/docs/current/indexes-expressional.html>`__
-  on the casted column. For example, if you frequently perform queries on a field ``location`` of
-  type ``geometry`` casted to type ``geography``, you should create an index like the following:
+  For performant queries that filter on casted fields, create an `expression index <https://www.postgresql.org/docs/current/indexes-expressional.html>`__ on the casted column. For example, if you frequently perform queries on a field ``location`` of type ``geometry`` casted to type ``geography``, you should create an index like the following:
 
   .. code-block:: sql
 
     CREATE INDEX cities_location_geography ON cities USING GIST ((location::geography));
 
-.. _true_expression:
+.. _pg_true_expression:
 
 The TRUE expression ( **{ }** )
 -------------------------------
@@ -2018,18 +2452,23 @@ The expression ``{}`` evaluates to ``true`` if an object exists (even if it's ``
 
 **For example**:
 
-- any query with the condition ``{ where: {} }`` will return all objects without
-  applying any filter.
+- any query with the condition ``{ where: {} }`` will return all objects without applying any filter.
+- any query with the condition ``{ where: { nested_object: {} } }`` will return all objects for which atleast one ``nested_object`` exists.
 
-- any query with the condition ``{ where: { nested_object: {} } }`` will return all
-  objects for which atleast one ``nested_object`` exists.
+.. _pg_null_value_evaluation:
 
-.. _null_value_evaluation:
+Evaluation of **null** values in comparison expressions
+-------------------------------------------------------
 
-Evaluation of **null** values in comparision expressions
---------------------------------------------------------
+A type mismatch error will be thrown in **versions v2.0.0 and higher** if a ``null`` value is given in any comparison expression.
 
-If in any comparision expression a ``null`` (or ``undefined``) value is passed, the expression currently gets
-reduced to ``{}`` (:ref:`TRUE expression <true_expression>`)
+For example, the expression ``{ where: {id: { _eq: null }}}`` will throw an error.
 
-**For example**, the expression ``{ where: { _eq: null } }`` will be reduced to ``{ where: {} }``
+
+In **versions v1.3.3 and below**, if in any comparison expression a ``null`` value is passed, the expression gets
+reduced to ``{}``, the :ref:`TRUE expression <pg_true_expression>`.
+
+For example, the expression ``{ where: { id: {_eq: null }}}`` will be reduced to ``{ where: {id: {}} }`` which
+will return all objects for which an ``id`` is set, i.e. all objects will be returned.
+
+This behavior can be preserved in versions v2.0.0 and above by setting the ``HASURA_GRAPHQL_V1_BOOLEAN_NULL_COLLAPSE`` env var to ``true``.
