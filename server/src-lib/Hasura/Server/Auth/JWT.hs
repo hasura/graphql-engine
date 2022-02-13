@@ -1,6 +1,28 @@
+-- |
+-- Module      : Hasura.Server.Auth.JWT
+-- Description : Implements JWT Configuration and Validation Logic.
+-- Copyright   : Hasura
+--
+-- This module implements the bulk of Hasura's JWT capabilities and interactions.
+-- Its main point of non-testing invocation is `Hasura.Server.Auth`.
+--
+-- It exports both `processJwt` and `processJwt_` with `processJwt_` being the
+-- majority of the implementation with the JWT Token processing function
+-- passed in as an argument in order to enable mocking in test-code.
+--
+-- In `processJwt_`, prior to validation of the token, first the token locations
+-- and issuers are reconciled. Locations are either specified as auth or
+-- cookie (with cookie name) or assumed to be auth. Issuers can be omitted or
+-- specified, where an omitted configured issuer can match any issuer specified by
+-- a request.
+--
+-- If none match, then this is considered an no-auth request, if one matches,
+-- then normal token auth is performed, and if multiple match, then this is
+-- considered an ambiguity error.
 module Hasura.Server.Auth.JWT
   ( processJwt,
     RawJWT,
+    StringOrURI (..),
     JWTConfig (..),
     JWTCtx (..),
     Jose.JWKSet (..),
@@ -20,6 +42,7 @@ module Hasura.Server.Auth.JWT
 
     -- * Exposed for testing
     processJwt_,
+    tokenIssuer,
     allowedRolesClaim,
     defaultRoleClaim,
     parseClaimsMap,
@@ -38,10 +61,14 @@ import Data.Aeson qualified as J
 import Data.Aeson.Casing qualified as J
 import Data.Aeson.Internal (JSONPath)
 import Data.Aeson.TH qualified as J
+import Data.ByteArray.Encoding qualified as BAE
+import Data.ByteString.Char8 qualified as BC
+import Data.ByteString.Internal qualified as B
 import Data.ByteString.Lazy qualified as BL
 import Data.ByteString.Lazy.Char8 qualified as BLC
 import Data.CaseInsensitive qualified as CI
 import Data.HashMap.Strict qualified as Map
+import Data.Hashable
 import Data.IORef (IORef, readIORef, writeIORef)
 import Data.Parser.CacheControl
 import Data.Parser.Expires
@@ -93,7 +120,9 @@ $( J.deriveJSON
 data JWTHeader
   = JHAuthorization
   | JHCookie Text -- cookie name
-  deriving (Show, Eq)
+  deriving (Show, Eq, Generic)
+
+instance Hashable JWTHeader
 
 instance J.FromJSON JWTHeader where
   parseJSON = J.withObject "JWTHeader" $ \o -> do
@@ -216,6 +245,21 @@ data JWTClaims
   = JCNamespace !JWTNamespace !JWTClaimsFormat
   | JCMap !JWTCustomClaimsMap
   deriving (Show, Eq)
+
+-- | Hashable Wrapper for constructing a HashMap of JWTConfigs
+newtype StringOrURI = StringOrURI {unStringOrURI :: Jose.StringOrURI}
+  deriving newtype (Show, Eq, J.ToJSON, J.FromJSON)
+
+instance J.ToJSONKey StringOrURI
+
+instance J.FromJSONKey StringOrURI
+
+instance J.ToJSONKey (Maybe StringOrURI)
+
+instance J.FromJSONKey (Maybe StringOrURI)
+
+instance Hashable StringOrURI where
+  hashWithSalt i = hashWithSalt i . J.encode
 
 -- | The JWT configuration we got from the user.
 data JWTConfig = JWTConfig
@@ -377,6 +421,21 @@ determineJwkExpiryLifetime getCurrentTime' (Logger logger) responseHeaders =
 
 type ClaimsMap = Map.HashMap SessionVariable J.Value
 
+-- | Decode a Jose ClaimsSet without verifying the signature
+decodeClaimsSet :: RawJWT -> Maybe Jose.ClaimsSet
+decodeClaimsSet (RawJWT jwt) = do
+  (_, c, _) <- extractElems $ BL.splitWith (== B.c2w '.') jwt
+  case BAE.convertFromBase BAE.Base64URLUnpadded $ BL.toStrict c of
+    Left _ -> Nothing
+    Right s -> J.decode $ BL.fromStrict s
+  where
+    extractElems (h : c : s : _) = Just (h, c, s)
+    extractElems _ = Nothing
+
+-- | Extract the issuer from a bearer tokena _without_ verifying it.
+tokenIssuer :: RawJWT -> Maybe StringOrURI
+tokenIssuer = coerce <$> (decodeClaimsSet >=> view Jose.claimIss)
+
 -- | Process the request headers to verify the JWT and extract UserInfo from it
 -- From the JWT config, we check which header to expect, it can be the "Authorization"
 -- or "Cookie" header
@@ -393,69 +452,115 @@ processJwt ::
   ( MonadIO m,
     MonadError QErr m
   ) =>
-  JWTCtx ->
+  [JWTCtx] ->
   HTTP.RequestHeaders ->
   Maybe RoleName ->
   m (UserInfo, Maybe UTCTime, [N.Header])
-processJwt = processJwt_ processAuthZOrCookieHeader jcxHeader
+processJwt = processJwt_ processHeaderSimple tokenIssuer jcxHeader
+
+type AuthTokenLocation = JWTHeader
 
 -- Broken out for testing with mocks:
 processJwt_ ::
   (MonadError QErr m) =>
   -- | mock 'processAuthZOrCookieHeader'
-  (_JWTCtx -> BLC.ByteString -> m (Maybe (ClaimsMap, Maybe UTCTime))) ->
-  (_JWTCtx -> JWTHeader) ->
-  _JWTCtx ->
+  (JWTCtx -> BLC.ByteString -> m (ClaimsMap, Maybe UTCTime)) ->
+  (RawJWT -> Maybe StringOrURI) ->
+  (JWTCtx -> JWTHeader) ->
+  [JWTCtx] ->
   HTTP.RequestHeaders ->
   Maybe RoleName ->
   m (UserInfo, Maybe UTCTime, [N.Header])
-processJwt_ processAuthZOrCookieHeader_ fGetHeaderType jwtCtx headers mUnAuthRole =
-  maybe withoutAuthZHeader withAuthZHeader mAuthZHeader
+processJwt_ processJwtBytes decodeIssuer fGetHeaderType jwtCtxs headers mUnAuthRole = do
+  -- Here we use `intersectKeys` to match up the correct locations of JWTs to those specified in JWTCtxs
+  -- Then we match up issuers, where no-issuer specified in a JWTCtx can match any issuer in a JWT
+  -- Then there should either be zero matches - Perform no auth
+  -- Or one match - Perform normal auth
+  -- Otherwise there is an ambiguous situation which we currently treat as an error.
+  issuerMatches <- traverse issuerMatch $ intersectKeys (keyCtxOnAuthTypes jwtCtxs) (keyTokensOnAuthTypes headers)
+
+  -- ltraceM "issuerMatches" issuerMatches
+
+  case (lefts issuerMatches, rights issuerMatches) of
+    ([], []) -> withoutAuthZ
+    (_ : _, []) -> jwtNotIssuerError
+    (_, [(ctx, val)]) -> withAuthZ val ctx
+    _ -> throw400 InvalidHeaders "Could not verify JWT: Multiple JWTs found"
   where
-    expectedHeader =
+    intersectKeys :: (Hashable a, Eq a) => Map.HashMap a [b] -> Map.HashMap a [c] -> [(b, c)]
+    intersectKeys m n = concatMap (uncurry cartesianProduct) $ Map.elems $ Map.intersectionWith (,) m n
+
+    issuerMatch (j, b) = do
+      b'' <- case b of
+        (JHCookie _, b') -> pure b'
+        (JHAuthorization, b') ->
+          case BC.words b' of
+            ["Bearer", jwt] -> pure jwt
+            _ -> throw400 InvalidHeaders "Malformed Authorization header"
+
+      case (StringOrURI <$> jcxIssuer j, decodeIssuer $ RawJWT $ BLC.fromStrict b'') of
+        (Nothing, _) -> pure $ Right (j, b'')
+        (_, Nothing) -> pure $ Right (j, b'')
+        (ci, ji)
+          | ci == ji -> pure $ Right (j, b'')
+          | otherwise -> pure $ Left (ci, ji, j, b'')
+
+    cartesianProduct :: [a] -> [b] -> [(a, b)]
+    cartesianProduct as bs = [(a, b) | a <- as, b <- bs]
+
+    keyCtxOnAuthTypes :: [JWTCtx] -> Map.HashMap AuthTokenLocation [JWTCtx]
+    keyCtxOnAuthTypes = Map.fromListWith (++) . fmap (expectedHeader &&& pure)
+
+    keyTokensOnAuthTypes :: [HTTP.Header] -> Map.HashMap AuthTokenLocation [(AuthTokenLocation, B.ByteString)]
+    keyTokensOnAuthTypes = Map.fromListWith (++) . map (fst &&& pure) . concatMap findTokensInHeader
+
+    findTokensInHeader :: Header -> [(AuthTokenLocation, B.ByteString)]
+    findTokensInHeader (key, val)
+      | key == CI.mk "Authorization" = [(JHAuthorization, val)]
+      | key == CI.mk "Cookie" = bimap JHCookie T.encodeUtf8 <$> Spock.parseCookies val
+      | otherwise = []
+
+    expectedHeader :: JWTCtx -> AuthTokenLocation
+    expectedHeader jwtCtx =
       case fGetHeaderType jwtCtx of
-        JHAuthorization -> "Authorization"
-        JHCookie _ -> "Cookie"
+        JHAuthorization -> JHAuthorization
+        JHCookie name -> JHCookie name
 
-    mAuthZHeader =
-      find (\(headerName, _) -> headerName == CI.mk expectedHeader) headers
+    withAuthZ authzHeader jwtCtx = do
+      authMode <- processJwtBytes jwtCtx $ BL.fromStrict authzHeader
 
-    withAuthZHeader (_, authzHeader) = do
-      claimsMapTuple <- processAuthZOrCookieHeader_ jwtCtx (BL.fromStrict authzHeader)
+      let (claimsMap, expTimeM) = authMode
+       in do
+            HasuraClaims allowedRoles defaultRole <- parseHasuraClaims claimsMap
+            -- see if there is a x-hasura-role header, or else pick the default role.
+            -- The role returned is unauthenticated at this point:
+            let requestedRole =
+                  fromMaybe defaultRole $
+                    getRequestHeader userRoleHeader headers >>= mkRoleName . bsToTxt
 
-      case claimsMapTuple of
-        Nothing -> withoutAuthZHeader
-        Just (claimsMap, expTimeM) -> do
-          HasuraClaims allowedRoles defaultRole <- parseHasuraClaims claimsMap
-          let requestedRole = fromMaybe defaultRole $ getRequestHeader userRoleHeader headers >>= mkRoleName . bsToTxt
+            when (requestedRole `notElem` allowedRoles) $
+              throw400 AccessDenied "Your requested role is not in allowed roles"
+            let finalClaims =
+                  Map.delete defaultRoleClaim . Map.delete allowedRolesClaim $ claimsMap
 
-          when (requestedRole `notElem` allowedRoles) $
-            throw400 AccessDenied "Your requested role is not in allowed roles"
-          let finalClaims =
-                Map.delete defaultRoleClaim . Map.delete allowedRolesClaim $ claimsMap
+            let finalClaimsObject = mapKeys sessionVariableToText finalClaims
+            metadata <- parseJwtClaim (J.Object finalClaimsObject) "x-hasura-* claims"
+            userInfo <-
+              mkUserInfo (URBPreDetermined requestedRole) UAdminSecretNotSent $
+                mkSessionVariablesText metadata
+            pure (userInfo, expTimeM, [])
 
-          let finalClaimsObject = mapKeys sessionVariableToText finalClaims
-          metadata <- parseJwtClaim (J.Object $ finalClaimsObject) "x-hasura-* claims"
-          userInfo <-
-            mkUserInfo (URBPreDetermined requestedRole) UAdminSecretNotSent $
-              mkSessionVariablesText metadata
-          pure (userInfo, expTimeM, [])
-
-    withoutAuthZHeader = do
-      unAuthRole <- onNothing mUnAuthRole missingAuthzHeader
+    withoutAuthZ = do
+      unAuthRole <- onNothing mUnAuthRole (throw400 InvalidHeaders "Missing 'Authorization' or 'Cookie' header in JWT authentication mode")
       userInfo <-
         mkUserInfo (URBPreDetermined unAuthRole) UAdminSecretNotSent $
           mkSessionVariablesHeaders headers
       pure (userInfo, Nothing, [])
-      where
-        missingAuthzHeader =
-          throw400 InvalidHeaders $
-            "Missing " <> bsToTxt expectedHeader <> " header in JWT authentication mode"
 
--- | Parse and verify the 'Authorization' or 'Cookie' header (depending upon
--- the `jcHeader` value of the `JWTConfig`), returning either Nothing or the raw claims
--- object, and the expiration, if any.
-processAuthZOrCookieHeader ::
+    jwtNotIssuerError = throw400 JWTInvalid "Could not verify JWT: JWTNotInIssuer"
+
+-- | Processes a token payload (excluding the `Bearer ` prefix in the context of a JWTCtx)
+processHeaderSimple ::
   ( MonadIO m,
     MonadError QErr m
   ) =>
@@ -463,48 +568,29 @@ processAuthZOrCookieHeader ::
   BLC.ByteString ->
   -- The "Maybe" in "m (Maybe (...))" covers the case where the
   -- requested Cookie name is not present (returns "m Nothing")
-  m (Maybe (ClaimsMap, Maybe UTCTime))
-processAuthZOrCookieHeader jwtCtx authzHeader = do
+  m (ClaimsMap, Maybe UTCTime)
+processHeaderSimple jwtCtx jwt = do
+  --iss <- _ <$> Jose.decodeCompact (BL.fromStrict token)
+  --let ctx = M.lookup iss jwtCtx
+
   -- try to parse JWT token from Authorization or Cookie header
-  jwt <-
-    case jcxHeader jwtCtx of
-      JHAuthorization -> Just <$> parseAuthzHeader
-      JHCookie cName -> parseCookieHeader cName
-
   -- verify the JWT
-  case jwt of
-    Nothing -> pure Nothing
-    Just jwt' -> do
-      claims <- liftJWTError invalidJWTError $ verifyJwt jwtCtx $ RawJWT jwt'
+  claims <- liftJWTError invalidJWTError $ verifyJwt jwtCtx $ RawJWT jwt
 
-      let expTimeM = fmap (\(Jose.NumericDate t) -> t) $ claims ^. Jose.claimExp
+  let expTimeM = fmap (\(Jose.NumericDate t) -> t) $ claims ^. Jose.claimExp
 
-      claimsObject <- parseClaimsMap claims claimsConfig
+  claimsObject <- parseClaimsMap claims claimsConfig
 
-      pure $ Just (claimsObject, expTimeM)
+  pure (claimsObject, expTimeM)
   where
     claimsConfig = jcxClaims jwtCtx
-    parseAuthzHeader = do
-      let tokenParts = BLC.words authzHeader
-      case tokenParts of
-        ["Bearer", jwt] -> return jwt
-        _ -> malformedAuthzHeader
-
-    parseCookieHeader cName = do
-      let cookies = Spock.parseCookies $ BL.toStrict authzHeader
-          jwtCookie = snd <$> find (\(hn, _) -> hn == cName) cookies
-      pure $ BL.fromStrict . txtToBs <$> jwtCookie
 
     liftJWTError :: (MonadError e' m) => (e -> e') -> ExceptT e m a -> m a
     liftJWTError ef action = do
       res <- runExceptT action
       onLeft res (throwError . ef)
 
-    invalidJWTError e =
-      err400 JWTInvalid $ "Could not verify JWT: " <> tshow e
-
-    malformedAuthzHeader =
-      throw400 InvalidHeaders "Malformed Authorization header"
+    invalidJWTError e = err400 JWTInvalid $ "Could not verify JWT: " <> tshow e
 
 -- | parse the claims map from the JWT token or custom claims from the JWT config
 parseClaimsMap ::

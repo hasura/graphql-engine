@@ -378,6 +378,16 @@ Examples:
    Certain providers require you to verify the ``iss`` claim on the JWT. To do
    that you can set this field to the appropriate value.
 
+.. note::
+
+   A JWT configuration without an issuer will match any issuer field present in
+   an incoming JWT. 
+
+.. note::
+
+   An incoming JWT without an issuer specified will match a configuration
+   even if it specifies an issuer.
+
 
 ``claims_map``
 ^^^^^^^^^^^^^^
