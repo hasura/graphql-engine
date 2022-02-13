@@ -25,20 +25,20 @@
 </span><span id="line-25"></span><span class="hs-comment">--   interact with the source database to perform event trigger related</span><span>
 </span><span id="line-26"></span><span class="hs-comment">--   operations like fetching pending events from the database or</span><span>
 </span><span id="line-27"></span><span class="hs-comment">--   inserting a new invocation log after processing an event.</span><span>
-</span><span id="line-28"></span><span class="hs-keyword">class</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688059698"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span id="BackendEventTrigger"><span class="annot"><a href="Hasura.RQL.Types.Eventing.Backend.html#BackendEventTrigger"><span class="hs-identifier hs-var">BackendEventTrigger</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688059698"><span class="annot"><a href="#local-6989586621688059698"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.SQL.Backend.html#BackendType"><span class="hs-identifier hs-type">BackendType</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-28"></span><span class="hs-keyword">class</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688064810"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span id="BackendEventTrigger"><span class="annot"><a href="Hasura.RQL.Types.Eventing.Backend.html#BackendEventTrigger"><span class="hs-identifier hs-var">BackendEventTrigger</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688064810"><span class="annot"><a href="#local-6989586621688064810"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.SQL.Backend.html#BackendType"><span class="hs-identifier hs-type">BackendType</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
 </span><span id="line-29"></span><span>  </span><span class="hs-comment">-- | insertManualEvent inserts the specified event</span><span>
 </span><span id="line-30"></span><span>  </span><span class="hs-comment">--   in the event log table, note that this method should</span><span>
 </span><span id="line-31"></span><span>  </span><span class="hs-comment">--   also set the trace context and session variables in the</span><span>
 </span><span id="line-32"></span><span>  </span><span class="hs-comment">--   source database context (if available)</span><span>
-</span><span id="line-33"></span><span>  </span><span id="local-6989586621688059735"><span id="insertManualEvent"><span class="annot"><a href="Hasura.RQL.Types.Eventing.Backend.html#insertManualEvent"><span class="hs-identifier hs-type">insertManualEvent</span></a></span></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-34"></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621688059735"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688059735"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
-</span><span id="line-35"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#SourceConfig"><span class="hs-identifier hs-type">SourceConfig</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688059698"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-36"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#TableName"><span class="hs-identifier hs-type">TableName</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688059698"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-33"></span><span>  </span><span id="local-6989586621688064847"><span id="insertManualEvent"><span class="annot"><a href="Hasura.RQL.Types.Eventing.Backend.html#insertManualEvent"><span class="hs-identifier hs-type">insertManualEvent</span></a></span></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-34"></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621688064847"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688064847"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-35"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#SourceConfig"><span class="hs-identifier hs-type">SourceConfig</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688064810"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-36"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#TableName"><span class="hs-identifier hs-type">TableName</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688064810"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-37"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#TriggerName"><span class="hs-identifier hs-type">TriggerName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-38"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Value</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-39"></span><span>    </span><span class="annot"><a href="Hasura.Session.html#UserInfo"><span class="hs-identifier hs-type">UserInfo</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-40"></span><span>    </span><span class="annot"><a href="Hasura.Tracing.html#TraceContext"><span class="hs-identifier hs-type">Tracing.TraceContext</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-41"></span><span>    </span><span class="annot"><a href="#local-6989586621688059735"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#EventId"><span class="hs-identifier hs-type">EventId</span></a></span></span><span>
+</span><span id="line-41"></span><span>    </span><span class="annot"><a href="#local-6989586621688064847"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#EventId"><span class="hs-identifier hs-type">EventId</span></a></span></span><span>
 </span><span id="line-42"></span><span>
 </span><span id="line-43"></span><span>  </span><span class="hs-comment">-- | @fetchUndeliveredEvents@ fetches the undelivered events</span><span>
 </span><span id="line-44"></span><span>  </span><span class="hs-comment">--   from the source and locks the events which are fetched for</span><span>
@@ -57,46 +57,46 @@
 </span><span id="line-57"></span><span>  </span><span class="hs-comment">--   remain locked. Now with a timestamp based lock, when the graphql-engine is started again it will also fetch</span><span>
 </span><span id="line-58"></span><span>  </span><span class="hs-comment">--   events which have a `locked` value of older than 30 mins along with the undelivered events. So, this way</span><span>
 </span><span id="line-59"></span><span>  </span><span class="hs-comment">--   no events remain in a `locked` state.</span><span>
-</span><span id="line-60"></span><span>  </span><span id="local-6989586621688059724"><span id="fetchUndeliveredEvents"><span class="annot"><a href="Hasura.RQL.Types.Eventing.Backend.html#fetchUndeliveredEvents"><span class="hs-identifier hs-type">fetchUndeliveredEvents</span></a></span></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-61"></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621688059724"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688059724"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
-</span><span id="line-62"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#SourceConfig"><span class="hs-identifier hs-type">SourceConfig</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688059698"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-60"></span><span>  </span><span id="local-6989586621688064836"><span id="fetchUndeliveredEvents"><span class="annot"><a href="Hasura.RQL.Types.Eventing.Backend.html#fetchUndeliveredEvents"><span class="hs-identifier hs-type">fetchUndeliveredEvents</span></a></span></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-61"></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621688064836"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688064836"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-62"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#SourceConfig"><span class="hs-identifier hs-type">SourceConfig</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688064810"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-63"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#SourceName"><span class="hs-identifier hs-type">SourceName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-64"></span><span>    </span><span class="annot"><a href="Hasura.Server.Types.html#MaintenanceMode"><span class="hs-identifier hs-type">MaintenanceMode</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-65"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#FetchBatchSize"><span class="hs-identifier hs-type">FetchBatchSize</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-66"></span><span>    </span><span class="annot"><a href="#local-6989586621688059724"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#Event"><span class="hs-identifier hs-type">Event</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688059698"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">]</span></span><span>
+</span><span id="line-66"></span><span>    </span><span class="annot"><a href="#local-6989586621688064836"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#Event"><span class="hs-identifier hs-type">Event</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688064810"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">]</span></span><span>
 </span><span id="line-67"></span><span>
 </span><span id="line-68"></span><span>  </span><span class="hs-comment">-- | Ad-hoc function to set a retry for an undelivered event</span><span>
-</span><span id="line-69"></span><span>  </span><span id="local-6989586621688059719"><span id="setRetry"><span class="annot"><a href="Hasura.RQL.Types.Eventing.Backend.html#setRetry"><span class="hs-identifier hs-type">setRetry</span></a></span></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-70"></span><span>    </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621688059719"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-71"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688059719"><span class="hs-identifier hs-type">m</span></a></span><span>
+</span><span id="line-69"></span><span>  </span><span id="local-6989586621688064831"><span id="setRetry"><span class="annot"><a href="Hasura.RQL.Types.Eventing.Backend.html#setRetry"><span class="hs-identifier hs-type">setRetry</span></a></span></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-70"></span><span>    </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621688064831"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-71"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688064831"><span class="hs-identifier hs-type">m</span></a></span><span>
 </span><span id="line-72"></span><span>    </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
-</span><span id="line-73"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#SourceConfig"><span class="hs-identifier hs-type">SourceConfig</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688059698"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-74"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#Event"><span class="hs-identifier hs-type">Event</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688059698"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-73"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#SourceConfig"><span class="hs-identifier hs-type">SourceConfig</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688064810"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-74"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#Event"><span class="hs-identifier hs-type">Event</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688064810"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-75"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Time.UTCTime</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-76"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Source.html#MaintenanceModeVersion"><span class="hs-identifier hs-type">MaintenanceModeVersion</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-77"></span><span>    </span><span class="annot"><a href="#local-6989586621688059719"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span></span><span>
+</span><span id="line-77"></span><span>    </span><span class="annot"><a href="#local-6989586621688064831"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span></span><span>
 </span><span id="line-78"></span><span>
 </span><span id="line-79"></span><span>  </span><span class="hs-comment">-- | @getMaintenanceModeVersion@ gets the source catalog version from the</span><span>
 </span><span id="line-80"></span><span>  </span><span class="hs-comment">--   source</span><span>
-</span><span id="line-81"></span><span>  </span><span id="local-6989586621688059716"><span id="getMaintenanceModeVersion"><span class="annot"><a href="Hasura.RQL.Types.Eventing.Backend.html#getMaintenanceModeVersion"><span class="hs-identifier hs-type">getMaintenanceModeVersion</span></a></span></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-82"></span><span>    </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621688059716"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-83"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688059716"><span class="hs-identifier hs-type">m</span></a></span><span>
+</span><span id="line-81"></span><span>  </span><span id="local-6989586621688064828"><span id="getMaintenanceModeVersion"><span class="annot"><a href="Hasura.RQL.Types.Eventing.Backend.html#getMaintenanceModeVersion"><span class="hs-identifier hs-type">getMaintenanceModeVersion</span></a></span></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-82"></span><span>    </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621688064828"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-83"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688064828"><span class="hs-identifier hs-type">m</span></a></span><span>
 </span><span id="line-84"></span><span>    </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
-</span><span id="line-85"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#SourceConfig"><span class="hs-identifier hs-type">SourceConfig</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688059698"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-86"></span><span>    </span><span class="annot"><a href="#local-6989586621688059716"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Source.html#MaintenanceModeVersion"><span class="hs-identifier hs-type">MaintenanceModeVersion</span></a></span></span><span>
+</span><span id="line-85"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#SourceConfig"><span class="hs-identifier hs-type">SourceConfig</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688064810"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-86"></span><span>    </span><span class="annot"><a href="#local-6989586621688064828"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Source.html#MaintenanceModeVersion"><span class="hs-identifier hs-type">MaintenanceModeVersion</span></a></span></span><span>
 </span><span id="line-87"></span><span>
 </span><span id="line-88"></span><span>  </span><span class="hs-comment">-- | @recordSuccess@ records a successful event invocation, it does a couple</span><span>
 </span><span id="line-89"></span><span>  </span><span class="hs-comment">--   of things,</span><span>
 </span><span id="line-90"></span><span>  </span><span class="hs-comment">--</span><span>
 </span><span id="line-91"></span><span>  </span><span class="hs-comment">--   1. Insert the invocation in the invocation logs table</span><span>
 </span><span id="line-92"></span><span>  </span><span class="hs-comment">--   2. Mark the event as 'delivered' in the event_log table</span><span>
-</span><span id="line-93"></span><span>  </span><span id="local-6989586621688059715"><span id="recordSuccess"><span class="annot"><a href="Hasura.RQL.Types.Eventing.Backend.html#recordSuccess"><span class="hs-identifier hs-type">recordSuccess</span></a></span></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-94"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621688059715"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
-</span><span id="line-95"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#SourceConfig"><span class="hs-identifier hs-type">SourceConfig</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688059698"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-96"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#Event"><span class="hs-identifier hs-type">Event</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688059698"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-93"></span><span>  </span><span id="local-6989586621688064827"><span id="recordSuccess"><span class="annot"><a href="Hasura.RQL.Types.Eventing.Backend.html#recordSuccess"><span class="hs-identifier hs-type">recordSuccess</span></a></span></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-94"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621688064827"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-95"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#SourceConfig"><span class="hs-identifier hs-type">SourceConfig</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688064810"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-96"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#Event"><span class="hs-identifier hs-type">Event</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688064810"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-97"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#Invocation"><span class="hs-identifier hs-type">Invocation</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#EventType"><span class="hs-identifier hs-type">EventType</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-98"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Source.html#MaintenanceModeVersion"><span class="hs-identifier hs-type">MaintenanceModeVersion</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-99"></span><span>    </span><span class="annot"><a href="#local-6989586621688059715"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span class="hs-special">)</span></span><span>
+</span><span id="line-99"></span><span>    </span><span class="annot"><a href="#local-6989586621688064827"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span class="hs-special">)</span></span><span>
 </span><span id="line-100"></span><span>
 </span><span id="line-101"></span><span>  </span><span class="hs-comment">-- | @recordError@ records an erronous event invocation, it does a couple</span><span>
 </span><span id="line-102"></span><span>  </span><span class="hs-comment">--   of things,</span><span>
@@ -105,14 +105,14 @@
 </span><span id="line-105"></span><span>  </span><span class="hs-comment">--   2. Depending on the value of `ProcessEventError`, it will either,</span><span>
 </span><span id="line-106"></span><span>  </span><span class="hs-comment">--        - Set a retry for the given event</span><span>
 </span><span id="line-107"></span><span>  </span><span class="hs-comment">--        - Mark the event as 'error'</span><span>
-</span><span id="line-108"></span><span>  </span><span id="local-6989586621688059712"><span id="recordError"><span class="annot"><a href="Hasura.RQL.Types.Eventing.Backend.html#recordError"><span class="hs-identifier hs-type">recordError</span></a></span></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-109"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621688059712"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
-</span><span id="line-110"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#SourceConfig"><span class="hs-identifier hs-type">SourceConfig</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688059698"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-111"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#Event"><span class="hs-identifier hs-type">Event</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688059698"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-108"></span><span>  </span><span id="local-6989586621688064824"><span id="recordError"><span class="annot"><a href="Hasura.RQL.Types.Eventing.Backend.html#recordError"><span class="hs-identifier hs-type">recordError</span></a></span></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-109"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621688064824"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-110"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#SourceConfig"><span class="hs-identifier hs-type">SourceConfig</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688064810"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-111"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#Event"><span class="hs-identifier hs-type">Event</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688064810"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-112"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#Invocation"><span class="hs-identifier hs-type">Invocation</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#EventType"><span class="hs-identifier hs-type">EventType</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-113"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#ProcessEventError"><span class="hs-identifier hs-type">ProcessEventError</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-114"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Source.html#MaintenanceModeVersion"><span class="hs-identifier hs-type">MaintenanceModeVersion</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-115"></span><span>    </span><span class="annot"><a href="#local-6989586621688059712"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span class="hs-special">)</span></span><span>
+</span><span id="line-115"></span><span>    </span><span class="annot"><a href="#local-6989586621688064824"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span class="hs-special">)</span></span><span>
 </span><span id="line-116"></span><span>
 </span><span id="line-117"></span><span>  </span><span class="hs-comment">-- | @recordError'@ records an erronous event invocation, it does a couple</span><span>
 </span><span id="line-118"></span><span>  </span><span class="hs-comment">--   of things,</span><span>
@@ -121,61 +121,61 @@
 </span><span id="line-121"></span><span>  </span><span class="hs-comment">--   2. Depending on the value of `ProcessEventError`, it will either,</span><span>
 </span><span id="line-122"></span><span>  </span><span class="hs-comment">--        - Set a retry for the given event</span><span>
 </span><span id="line-123"></span><span>  </span><span class="hs-comment">--        - Mark the event as 'error'</span><span>
-</span><span id="line-124"></span><span>  </span><span id="local-6989586621688059710"><span id="recordError%27"><span class="annot"><a href="Hasura.RQL.Types.Eventing.Backend.html#recordError%27"><span class="hs-identifier hs-type">recordError'</span></a></span></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-125"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621688059710"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
-</span><span id="line-126"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#SourceConfig"><span class="hs-identifier hs-type">SourceConfig</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688059698"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-127"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#Event"><span class="hs-identifier hs-type">Event</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688059698"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-124"></span><span>  </span><span id="local-6989586621688064822"><span id="recordError%27"><span class="annot"><a href="Hasura.RQL.Types.Eventing.Backend.html#recordError%27"><span class="hs-identifier hs-type">recordError'</span></a></span></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-125"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621688064822"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-126"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#SourceConfig"><span class="hs-identifier hs-type">SourceConfig</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688064810"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-127"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#Event"><span class="hs-identifier hs-type">Event</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688064810"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-128"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#Invocation"><span class="hs-identifier hs-type">Invocation</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#EventType"><span class="hs-identifier hs-type">EventType</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-129"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#ProcessEventError"><span class="hs-identifier hs-type">ProcessEventError</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-130"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Source.html#MaintenanceModeVersion"><span class="hs-identifier hs-type">MaintenanceModeVersion</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-131"></span><span>    </span><span class="annot"><a href="#local-6989586621688059710"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span class="hs-special">)</span></span><span>
+</span><span id="line-131"></span><span>    </span><span class="annot"><a href="#local-6989586621688064822"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span class="hs-special">)</span></span><span>
 </span><span id="line-132"></span><span>
 </span><span id="line-133"></span><span>  </span><span class="hs-comment">-- | @dropTriggerAndArchiveEvents@ drops the database trigger and</span><span>
 </span><span id="line-134"></span><span>  </span><span class="hs-comment">--   marks all the events related to the event trigger as archived.</span><span>
 </span><span id="line-135"></span><span>  </span><span class="hs-comment">--   See Note [Cleanup for dropped triggers]</span><span>
-</span><span id="line-136"></span><span>  </span><span id="local-6989586621688059709"><span id="dropTriggerAndArchiveEvents"><span class="annot"><a href="Hasura.RQL.Types.Eventing.Backend.html#dropTriggerAndArchiveEvents"><span class="hs-identifier hs-type">dropTriggerAndArchiveEvents</span></a></span></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-137"></span><span>    </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621688059709"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-138"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688059709"><span class="hs-identifier hs-type">m</span></a></span><span>
+</span><span id="line-136"></span><span>  </span><span id="local-6989586621688064821"><span id="dropTriggerAndArchiveEvents"><span class="annot"><a href="Hasura.RQL.Types.Eventing.Backend.html#dropTriggerAndArchiveEvents"><span class="hs-identifier hs-type">dropTriggerAndArchiveEvents</span></a></span></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-137"></span><span>    </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621688064821"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-138"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688064821"><span class="hs-identifier hs-type">m</span></a></span><span>
 </span><span id="line-139"></span><span>    </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
-</span><span id="line-140"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#SourceConfig"><span class="hs-identifier hs-type">SourceConfig</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688059698"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-140"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#SourceConfig"><span class="hs-identifier hs-type">SourceConfig</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688064810"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-141"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#TriggerName"><span class="hs-identifier hs-type">TriggerName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-142"></span><span>    </span><span class="annot"><a href="#local-6989586621688059709"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span></span><span>
+</span><span id="line-142"></span><span>    </span><span class="annot"><a href="#local-6989586621688064821"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span></span><span>
 </span><span id="line-143"></span><span>
-</span><span id="line-144"></span><span>  </span><span id="local-6989586621688059708"><span id="redeliverEvent"><span class="annot"><a href="Hasura.RQL.Types.Eventing.Backend.html#redeliverEvent"><span class="hs-identifier hs-type">redeliverEvent</span></a></span></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-145"></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621688059708"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688059708"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
-</span><span id="line-146"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#SourceConfig"><span class="hs-identifier hs-type">SourceConfig</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688059698"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-144"></span><span>  </span><span id="local-6989586621688064820"><span id="redeliverEvent"><span class="annot"><a href="Hasura.RQL.Types.Eventing.Backend.html#redeliverEvent"><span class="hs-identifier hs-type">redeliverEvent</span></a></span></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-145"></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621688064820"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688064820"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-146"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#SourceConfig"><span class="hs-identifier hs-type">SourceConfig</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688064810"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-147"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#EventId"><span class="hs-identifier hs-type">EventId</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-148"></span><span>    </span><span class="annot"><a href="#local-6989586621688059708"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span></span><span>
+</span><span id="line-148"></span><span>    </span><span class="annot"><a href="#local-6989586621688064820"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span></span><span>
 </span><span id="line-149"></span><span>
 </span><span id="line-150"></span><span>  </span><span class="hs-comment">-- | @unlockEventsInSource@ unlocks the cached locked events captured</span><span>
 </span><span id="line-151"></span><span>  </span><span class="hs-comment">--   by the events when a graceful shutdown is initiated, so that when</span><span>
 </span><span id="line-152"></span><span>  </span><span class="hs-comment">--   the graphql-engine is started up again these events can be fetched</span><span>
 </span><span id="line-153"></span><span>  </span><span class="hs-comment">--   to process them immediately.</span><span>
-</span><span id="line-154"></span><span>  </span><span id="local-6989586621688059707"><span id="unlockEventsInSource"><span class="annot"><a href="Hasura.RQL.Types.Eventing.Backend.html#unlockEventsInSource"><span class="hs-identifier hs-type">unlockEventsInSource</span></a></span></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-155"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621688059707"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
-</span><span id="line-156"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#SourceConfig"><span class="hs-identifier hs-type">SourceConfig</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688059698"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-154"></span><span>  </span><span id="local-6989586621688064819"><span id="unlockEventsInSource"><span class="annot"><a href="Hasura.RQL.Types.Eventing.Backend.html#unlockEventsInSource"><span class="hs-identifier hs-type">unlockEventsInSource</span></a></span></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-155"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621688064819"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-156"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#SourceConfig"><span class="hs-identifier hs-type">SourceConfig</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688064810"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-157"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Set.Set</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#EventId"><span class="hs-identifier hs-type">EventId</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-158"></span><span>    </span><span class="annot"><a href="#local-6989586621688059707"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span class="hs-special">)</span></span><span>
+</span><span id="line-158"></span><span>    </span><span class="annot"><a href="#local-6989586621688064819"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span class="hs-special">)</span></span><span>
 </span><span id="line-159"></span><span>
-</span><span id="line-160"></span><span>  </span><span id="local-6989586621688059705"><span id="createTableEventTrigger"><span class="annot"><a href="Hasura.RQL.Types.Eventing.Backend.html#createTableEventTrigger"><span class="hs-identifier hs-type">createTableEventTrigger</span></a></span></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-161"></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadBaseControl</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="annot"><a href="#local-6989586621688059705"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621688059705"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-160"></span><span>  </span><span id="local-6989586621688064817"><span id="createTableEventTrigger"><span class="annot"><a href="Hasura.RQL.Types.Eventing.Backend.html#createTableEventTrigger"><span class="hs-identifier hs-type">createTableEventTrigger</span></a></span></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-161"></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadBaseControl</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="annot"><a href="#local-6989586621688064817"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621688064817"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
 </span><span id="line-162"></span><span>    </span><span class="annot"><a href="Hasura.Server.Types.html#ServerConfigCtx"><span class="hs-identifier hs-type">ServerConfigCtx</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-163"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#SourceConfig"><span class="hs-identifier hs-type">SourceConfig</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688059698"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-164"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#TableName"><span class="hs-identifier hs-type">TableName</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688059698"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-165"></span><span>    </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnInfo"><span class="hs-identifier hs-type">ColumnInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688059698"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-163"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#SourceConfig"><span class="hs-identifier hs-type">SourceConfig</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688064810"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-164"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#TableName"><span class="hs-identifier hs-type">TableName</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688064810"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-165"></span><span>    </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnInfo"><span class="hs-identifier hs-type">ColumnInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688064810"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-166"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#TriggerName"><span class="hs-identifier hs-type">TriggerName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-167"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#TriggerOpsDef"><span class="hs-identifier hs-type">TriggerOpsDef</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688059698"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-168"></span><span>    </span><span class="annot"><a href="#local-6989586621688059705"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span class="hs-special">)</span></span><span>
+</span><span id="line-167"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#TriggerOpsDef"><span class="hs-identifier hs-type">TriggerOpsDef</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688064810"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-168"></span><span>    </span><span class="annot"><a href="#local-6989586621688064817"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span class="hs-special">)</span></span><span>
 </span><span id="line-169"></span><span>
 </span><span id="line-170"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Eventing.Backend.html#BackendEventTrigger"><span class="hs-identifier hs-type">BackendEventTrigger</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Vanilla"><span class="hs-identifier hs-type">Vanilla</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-171"></span><span>  </span><span id="local-6989586621688059565"><span class="annot"><span class="annottext">insertManualEvent :: SourceConfig ('Postgres 'Vanilla)
+</span><span id="line-171"></span><span>  </span><span id="local-6989586621688064677"><span class="annot"><span class="annottext">insertManualEvent :: SourceConfig ('Postgres 'Vanilla)
 -&gt; TableName ('Postgres 'Vanilla)
 -&gt; TriggerName
 -&gt; Value
 -&gt; UserInfo
 -&gt; TraceContext
 -&gt; m EventId
-</span><a href="#local-6989586621688059565"><span class="hs-identifier hs-var hs-var hs-var hs-var">insertManualEvent</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SourceConfig ('Postgres 'Vanilla)
+</span><a href="#local-6989586621688064677"><span class="hs-identifier hs-var hs-var hs-var hs-var">insertManualEvent</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SourceConfig ('Postgres 'Vanilla)
 -&gt; TableName ('Postgres 'Vanilla)
 -&gt; TriggerName
 -&gt; Value
@@ -192,12 +192,12 @@ SourceConfig ('Postgres pgKind)
 -&gt; TraceContext
 -&gt; m EventId
 </span><a href="Hasura.Backends.Postgres.DDL.EventTrigger.html#insertManualEvent"><span class="hs-identifier hs-var">PG.insertManualEvent</span></a></span><span>
-</span><span id="line-172"></span><span>  </span><span id="local-6989586621688059563"><span class="annot"><span class="annottext">fetchUndeliveredEvents :: SourceConfig ('Postgres 'Vanilla)
+</span><span id="line-172"></span><span>  </span><span id="local-6989586621688064675"><span class="annot"><span class="annottext">fetchUndeliveredEvents :: SourceConfig ('Postgres 'Vanilla)
 -&gt; SourceName
 -&gt; MaintenanceMode
 -&gt; FetchBatchSize
 -&gt; m [Event ('Postgres 'Vanilla)]
-</span><a href="#local-6989586621688059563"><span class="hs-identifier hs-var hs-var hs-var hs-var">fetchUndeliveredEvents</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SourceConfig ('Postgres 'Vanilla)
+</span><a href="#local-6989586621688064675"><span class="hs-identifier hs-var hs-var hs-var hs-var">fetchUndeliveredEvents</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SourceConfig ('Postgres 'Vanilla)
 -&gt; SourceName
 -&gt; MaintenanceMode
 -&gt; FetchBatchSize
@@ -210,12 +210,12 @@ SourceConfig ('Postgres pgKind)
 -&gt; FetchBatchSize
 -&gt; m [Event ('Postgres pgKind)]
 </span><a href="Hasura.Backends.Postgres.DDL.EventTrigger.html#fetchUndeliveredEvents"><span class="hs-identifier hs-var">PG.fetchUndeliveredEvents</span></a></span><span>
-</span><span id="line-173"></span><span>  </span><span id="local-6989586621688059561"><span class="annot"><span class="annottext">setRetry :: SourceConfig ('Postgres 'Vanilla)
+</span><span id="line-173"></span><span>  </span><span id="local-6989586621688064673"><span class="annot"><span class="annottext">setRetry :: SourceConfig ('Postgres 'Vanilla)
 -&gt; Event ('Postgres 'Vanilla)
 -&gt; UTCTime
 -&gt; Maybe MaintenanceModeVersion
 -&gt; m ()
-</span><a href="#local-6989586621688059561"><span class="hs-identifier hs-var hs-var hs-var hs-var">setRetry</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SourceConfig ('Postgres 'Vanilla)
+</span><a href="#local-6989586621688064673"><span class="hs-identifier hs-var hs-var hs-var hs-var">setRetry</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SourceConfig ('Postgres 'Vanilla)
 -&gt; Event ('Postgres 'Vanilla)
 -&gt; UTCTime
 -&gt; Maybe MaintenanceModeVersion
@@ -228,18 +228,18 @@ SourceConfig ('Postgres pgKind)
 -&gt; Maybe MaintenanceModeVersion
 -&gt; m ()
 </span><a href="Hasura.Backends.Postgres.DDL.EventTrigger.html#setRetry"><span class="hs-identifier hs-var">PG.setRetry</span></a></span><span>
-</span><span id="line-174"></span><span>  </span><span id="local-6989586621688059559"><span class="annot"><span class="annottext">getMaintenanceModeVersion :: SourceConfig ('Postgres 'Vanilla) -&gt; m MaintenanceModeVersion
-</span><a href="#local-6989586621688059559"><span class="hs-identifier hs-var hs-var hs-var hs-var">getMaintenanceModeVersion</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SourceConfig ('Postgres 'Vanilla) -&gt; m MaintenanceModeVersion
+</span><span id="line-174"></span><span>  </span><span id="local-6989586621688064671"><span class="annot"><span class="annottext">getMaintenanceModeVersion :: SourceConfig ('Postgres 'Vanilla) -&gt; m MaintenanceModeVersion
+</span><a href="#local-6989586621688064671"><span class="hs-identifier hs-var hs-var hs-var hs-var">getMaintenanceModeVersion</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SourceConfig ('Postgres 'Vanilla) -&gt; m MaintenanceModeVersion
 forall (m :: * -&gt; *) (pgKind :: PostgresKind).
 (MonadIO m, MonadError QErr m) =&gt;
 SourceConfig ('Postgres pgKind) -&gt; m MaintenanceModeVersion
 </span><a href="Hasura.Backends.Postgres.DDL.EventTrigger.html#getMaintenanceModeVersion"><span class="hs-identifier hs-var">PG.getMaintenanceModeVersion</span></a></span><span>
-</span><span id="line-175"></span><span>  </span><span id="local-6989586621688059557"><span class="annot"><span class="annottext">recordSuccess :: SourceConfig ('Postgres 'Vanilla)
+</span><span id="line-175"></span><span>  </span><span id="local-6989586621688064669"><span class="annot"><span class="annottext">recordSuccess :: SourceConfig ('Postgres 'Vanilla)
 -&gt; Event ('Postgres 'Vanilla)
 -&gt; Invocation 'EventType
 -&gt; Maybe MaintenanceModeVersion
 -&gt; m (Either QErr ())
-</span><a href="#local-6989586621688059557"><span class="hs-identifier hs-var hs-var hs-var hs-var">recordSuccess</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SourceConfig ('Postgres 'Vanilla)
+</span><a href="#local-6989586621688064669"><span class="hs-identifier hs-var hs-var hs-var hs-var">recordSuccess</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SourceConfig ('Postgres 'Vanilla)
 -&gt; Event ('Postgres 'Vanilla)
 -&gt; Invocation 'EventType
 -&gt; Maybe MaintenanceModeVersion
@@ -252,13 +252,13 @@ SourceConfig ('Postgres pgKind)
 -&gt; Maybe MaintenanceModeVersion
 -&gt; m (Either QErr ())
 </span><a href="Hasura.Backends.Postgres.DDL.EventTrigger.html#recordSuccess"><span class="hs-identifier hs-var">PG.recordSuccess</span></a></span><span>
-</span><span id="line-176"></span><span>  </span><span id="local-6989586621688059555"><span class="annot"><span class="annottext">recordError :: SourceConfig ('Postgres 'Vanilla)
+</span><span id="line-176"></span><span>  </span><span id="local-6989586621688064667"><span class="annot"><span class="annottext">recordError :: SourceConfig ('Postgres 'Vanilla)
 -&gt; Event ('Postgres 'Vanilla)
 -&gt; Invocation 'EventType
 -&gt; ProcessEventError
 -&gt; Maybe MaintenanceModeVersion
 -&gt; m (Either QErr ())
-</span><a href="#local-6989586621688059555"><span class="hs-identifier hs-var hs-var hs-var hs-var">recordError</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SourceConfig ('Postgres 'Vanilla)
+</span><a href="#local-6989586621688064667"><span class="hs-identifier hs-var hs-var hs-var hs-var">recordError</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SourceConfig ('Postgres 'Vanilla)
 -&gt; Event ('Postgres 'Vanilla)
 -&gt; Invocation 'EventType
 -&gt; ProcessEventError
@@ -273,13 +273,13 @@ SourceConfig ('Postgres pgKind)
 -&gt; Maybe MaintenanceModeVersion
 -&gt; m (Either QErr ())
 </span><a href="Hasura.Backends.Postgres.DDL.EventTrigger.html#recordError"><span class="hs-identifier hs-var">PG.recordError</span></a></span><span>
-</span><span id="line-177"></span><span>  </span><span id="local-6989586621688059553"><span class="annot"><span class="annottext">recordError' :: SourceConfig ('Postgres 'Vanilla)
+</span><span id="line-177"></span><span>  </span><span id="local-6989586621688064665"><span class="annot"><span class="annottext">recordError' :: SourceConfig ('Postgres 'Vanilla)
 -&gt; Event ('Postgres 'Vanilla)
 -&gt; Maybe (Invocation 'EventType)
 -&gt; ProcessEventError
 -&gt; Maybe MaintenanceModeVersion
 -&gt; m (Either QErr ())
-</span><a href="#local-6989586621688059553"><span class="hs-identifier hs-var hs-var hs-var hs-var">recordError'</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SourceConfig ('Postgres 'Vanilla)
+</span><a href="#local-6989586621688064665"><span class="hs-identifier hs-var hs-var hs-var hs-var">recordError'</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SourceConfig ('Postgres 'Vanilla)
 -&gt; Event ('Postgres 'Vanilla)
 -&gt; Maybe (Invocation 'EventType)
 -&gt; ProcessEventError
@@ -294,35 +294,35 @@ SourceConfig ('Postgres pgKind)
 -&gt; Maybe MaintenanceModeVersion
 -&gt; m (Either QErr ())
 </span><a href="Hasura.Backends.Postgres.DDL.EventTrigger.html#recordError%27"><span class="hs-identifier hs-var">PG.recordError'</span></a></span><span>
-</span><span id="line-178"></span><span>  </span><span id="local-6989586621688059551"><span class="annot"><span class="annottext">dropTriggerAndArchiveEvents :: SourceConfig ('Postgres 'Vanilla) -&gt; TriggerName -&gt; m ()
-</span><a href="#local-6989586621688059551"><span class="hs-identifier hs-var hs-var hs-var hs-var">dropTriggerAndArchiveEvents</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SourceConfig ('Postgres 'Vanilla) -&gt; TriggerName -&gt; m ()
+</span><span id="line-178"></span><span>  </span><span id="local-6989586621688064663"><span class="annot"><span class="annottext">dropTriggerAndArchiveEvents :: SourceConfig ('Postgres 'Vanilla) -&gt; TriggerName -&gt; m ()
+</span><a href="#local-6989586621688064663"><span class="hs-identifier hs-var hs-var hs-var hs-var">dropTriggerAndArchiveEvents</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SourceConfig ('Postgres 'Vanilla) -&gt; TriggerName -&gt; m ()
 forall (m :: * -&gt; *) (pgKind :: PostgresKind).
 (MonadIO m, MonadError QErr m) =&gt;
 SourceConfig ('Postgres pgKind) -&gt; TriggerName -&gt; m ()
 </span><a href="Hasura.Backends.Postgres.DDL.EventTrigger.html#dropTriggerAndArchiveEvents"><span class="hs-identifier hs-var">PG.dropTriggerAndArchiveEvents</span></a></span><span>
-</span><span id="line-179"></span><span>  </span><span id="local-6989586621688059549"><span class="annot"><span class="annottext">redeliverEvent :: SourceConfig ('Postgres 'Vanilla) -&gt; EventId -&gt; m ()
-</span><a href="#local-6989586621688059549"><span class="hs-identifier hs-var hs-var hs-var hs-var">redeliverEvent</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SourceConfig ('Postgres 'Vanilla) -&gt; EventId -&gt; m ()
+</span><span id="line-179"></span><span>  </span><span id="local-6989586621688064661"><span class="annot"><span class="annottext">redeliverEvent :: SourceConfig ('Postgres 'Vanilla) -&gt; EventId -&gt; m ()
+</span><a href="#local-6989586621688064661"><span class="hs-identifier hs-var hs-var hs-var hs-var">redeliverEvent</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SourceConfig ('Postgres 'Vanilla) -&gt; EventId -&gt; m ()
 forall (m :: * -&gt; *) (pgKind :: PostgresKind).
 (MonadIO m, MonadError QErr m) =&gt;
 SourceConfig ('Postgres pgKind) -&gt; EventId -&gt; m ()
 </span><a href="Hasura.Backends.Postgres.DDL.EventTrigger.html#redeliverEvent"><span class="hs-identifier hs-var">PG.redeliverEvent</span></a></span><span>
-</span><span id="line-180"></span><span>  </span><span id="local-6989586621688059547"><span class="annot"><span class="annottext">unlockEventsInSource :: SourceConfig ('Postgres 'Vanilla)
+</span><span id="line-180"></span><span>  </span><span id="local-6989586621688064659"><span class="annot"><span class="annottext">unlockEventsInSource :: SourceConfig ('Postgres 'Vanilla)
 -&gt; Set EventId -&gt; m (Either QErr Int)
-</span><a href="#local-6989586621688059547"><span class="hs-identifier hs-var hs-var hs-var hs-var">unlockEventsInSource</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SourceConfig ('Postgres 'Vanilla)
+</span><a href="#local-6989586621688064659"><span class="hs-identifier hs-var hs-var hs-var hs-var">unlockEventsInSource</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SourceConfig ('Postgres 'Vanilla)
 -&gt; Set EventId -&gt; m (Either QErr Int)
 forall (m :: * -&gt; *) (pgKind :: PostgresKind).
 MonadIO m =&gt;
 SourceConfig ('Postgres pgKind)
 -&gt; Set EventId -&gt; m (Either QErr Int)
 </span><a href="Hasura.Backends.Postgres.DDL.EventTrigger.html#unlockEventsInSource"><span class="hs-identifier hs-var">PG.unlockEventsInSource</span></a></span><span>
-</span><span id="line-181"></span><span>  </span><span id="local-6989586621688059545"><span class="annot"><span class="annottext">createTableEventTrigger :: ServerConfigCtx
+</span><span id="line-181"></span><span>  </span><span id="local-6989586621688064657"><span class="annot"><span class="annottext">createTableEventTrigger :: ServerConfigCtx
 -&gt; SourceConfig ('Postgres 'Vanilla)
 -&gt; TableName ('Postgres 'Vanilla)
 -&gt; [ColumnInfo ('Postgres 'Vanilla)]
 -&gt; TriggerName
 -&gt; TriggerOpsDef ('Postgres 'Vanilla)
 -&gt; m (Either QErr ())
-</span><a href="#local-6989586621688059545"><span class="hs-identifier hs-var hs-var hs-var hs-var">createTableEventTrigger</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ServerConfigCtx
+</span><a href="#local-6989586621688064657"><span class="hs-identifier hs-var hs-var hs-var hs-var">createTableEventTrigger</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ServerConfigCtx
 -&gt; SourceConfig ('Postgres 'Vanilla)
 -&gt; TableName ('Postgres 'Vanilla)
 -&gt; [ColumnInfo ('Postgres 'Vanilla)]
@@ -341,14 +341,14 @@ ServerConfigCtx
 </span><a href="Hasura.Backends.Postgres.DDL.EventTrigger.html#createTableEventTrigger"><span class="hs-identifier hs-var">PG.createTableEventTrigger</span></a></span><span>
 </span><span id="line-182"></span><span>
 </span><span id="line-183"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Eventing.Backend.html#BackendEventTrigger"><span class="hs-identifier hs-type">BackendEventTrigger</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Citus"><span class="hs-identifier hs-type">Citus</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-184"></span><span>  </span><span id="local-6989586621688059531"><span class="annot"><span class="annottext">insertManualEvent :: SourceConfig ('Postgres 'Citus)
+</span><span id="line-184"></span><span>  </span><span id="local-6989586621688064643"><span class="annot"><span class="annottext">insertManualEvent :: SourceConfig ('Postgres 'Citus)
 -&gt; TableName ('Postgres 'Citus)
 -&gt; TriggerName
 -&gt; Value
 -&gt; UserInfo
 -&gt; TraceContext
 -&gt; m EventId
-</span><a href="#local-6989586621688059531"><span class="hs-identifier hs-var hs-var hs-var hs-var">insertManualEvent</span></a></span></span><span> </span><span class="annot"><span class="annottext">SourceConfig ('Postgres 'Citus)
+</span><a href="#local-6989586621688064643"><span class="hs-identifier hs-var hs-var hs-var hs-var">insertManualEvent</span></a></span></span><span> </span><span class="annot"><span class="annottext">SourceConfig ('Postgres 'Citus)
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">TableName ('Postgres 'Citus)
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">TriggerName
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">Value
@@ -361,12 +361,12 @@ forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;Event triggers are not supported for Citus sources&quot;</span></span><span>
-</span><span id="line-185"></span><span>  </span><span id="local-6989586621688059528"><span class="annot"><span class="annottext">fetchUndeliveredEvents :: SourceConfig ('Postgres 'Citus)
+</span><span id="line-185"></span><span>  </span><span id="local-6989586621688064640"><span class="annot"><span class="annottext">fetchUndeliveredEvents :: SourceConfig ('Postgres 'Citus)
 -&gt; SourceName
 -&gt; MaintenanceMode
 -&gt; FetchBatchSize
 -&gt; m [Event ('Postgres 'Citus)]
-</span><a href="#local-6989586621688059528"><span class="hs-identifier hs-var hs-var hs-var hs-var">fetchUndeliveredEvents</span></a></span></span><span> </span><span class="annot"><span class="annottext">SourceConfig ('Postgres 'Citus)
+</span><a href="#local-6989586621688064640"><span class="hs-identifier hs-var hs-var hs-var hs-var">fetchUndeliveredEvents</span></a></span></span><span> </span><span class="annot"><span class="annottext">SourceConfig ('Postgres 'Citus)
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">SourceName
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">MaintenanceMode
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">FetchBatchSize
@@ -375,12 +375,12 @@ forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
 </span><a href="Hasura.Base.Error.html#throw400"><span class="hs-identifier hs-var">throw400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
 </span><a href="Hasura.Base.Error.html#NotSupported"><span class="hs-identifier hs-var">NotSupported</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;Event triggers are not supported for Citus sources&quot;</span></span><span>
-</span><span id="line-186"></span><span>  </span><span id="local-6989586621688059527"><span class="annot"><span class="annottext">setRetry :: SourceConfig ('Postgres 'Citus)
+</span><span id="line-186"></span><span>  </span><span id="local-6989586621688064639"><span class="annot"><span class="annottext">setRetry :: SourceConfig ('Postgres 'Citus)
 -&gt; Event ('Postgres 'Citus)
 -&gt; UTCTime
 -&gt; Maybe MaintenanceModeVersion
 -&gt; m ()
-</span><a href="#local-6989586621688059527"><span class="hs-identifier hs-var hs-var hs-var hs-var">setRetry</span></a></span></span><span> </span><span class="annot"><span class="annottext">SourceConfig ('Postgres 'Citus)
+</span><a href="#local-6989586621688064639"><span class="hs-identifier hs-var hs-var hs-var hs-var">setRetry</span></a></span></span><span> </span><span class="annot"><span class="annottext">SourceConfig ('Postgres 'Citus)
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">Event ('Postgres 'Citus)
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">UTCTime
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">Maybe MaintenanceModeVersion
@@ -389,12 +389,12 @@ forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
 </span><a href="Hasura.Base.Error.html#throw400"><span class="hs-identifier hs-var">throw400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
 </span><a href="Hasura.Base.Error.html#NotSupported"><span class="hs-identifier hs-var">NotSupported</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;Event triggers are not supported for Citus sources&quot;</span></span><span>
-</span><span id="line-187"></span><span>  </span><span id="local-6989586621688059526"><span class="annot"><span class="annottext">recordSuccess :: SourceConfig ('Postgres 'Citus)
+</span><span id="line-187"></span><span>  </span><span id="local-6989586621688064638"><span class="annot"><span class="annottext">recordSuccess :: SourceConfig ('Postgres 'Citus)
 -&gt; Event ('Postgres 'Citus)
 -&gt; Invocation 'EventType
 -&gt; Maybe MaintenanceModeVersion
 -&gt; m (Either QErr ())
-</span><a href="#local-6989586621688059526"><span class="hs-identifier hs-var hs-var hs-var hs-var">recordSuccess</span></a></span></span><span> </span><span class="annot"><span class="annottext">SourceConfig ('Postgres 'Citus)
+</span><a href="#local-6989586621688064638"><span class="hs-identifier hs-var hs-var hs-var hs-var">recordSuccess</span></a></span></span><span> </span><span class="annot"><span class="annottext">SourceConfig ('Postgres 'Citus)
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">Event ('Postgres 'Citus)
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">Invocation 'EventType
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">Maybe MaintenanceModeVersion
@@ -408,20 +408,20 @@ forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
 </span><a href="Hasura.Base.Error.html#throw400"><span class="hs-identifier hs-var">throw400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
 </span><a href="Hasura.Base.Error.html#NotSupported"><span class="hs-identifier hs-var">NotSupported</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;Event triggers are not supported for Citus sources&quot;</span></span><span>
-</span><span id="line-188"></span><span>  </span><span id="local-6989586621688059524"><span class="annot"><span class="annottext">getMaintenanceModeVersion :: SourceConfig ('Postgres 'Citus) -&gt; m MaintenanceModeVersion
-</span><a href="#local-6989586621688059524"><span class="hs-identifier hs-var hs-var hs-var hs-var">getMaintenanceModeVersion</span></a></span></span><span> </span><span class="annot"><span class="annottext">SourceConfig ('Postgres 'Citus)
+</span><span id="line-188"></span><span>  </span><span id="local-6989586621688064636"><span class="annot"><span class="annottext">getMaintenanceModeVersion :: SourceConfig ('Postgres 'Citus) -&gt; m MaintenanceModeVersion
+</span><a href="#local-6989586621688064636"><span class="hs-identifier hs-var hs-var hs-var hs-var">getMaintenanceModeVersion</span></a></span></span><span> </span><span class="annot"><span class="annottext">SourceConfig ('Postgres 'Citus)
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Code -&gt; Text -&gt; m MaintenanceModeVersion
 forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
 </span><a href="Hasura.Base.Error.html#throw400"><span class="hs-identifier hs-var">throw400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
 </span><a href="Hasura.Base.Error.html#NotSupported"><span class="hs-identifier hs-var">NotSupported</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;Event triggers are not supported for Citus sources&quot;</span></span><span>
-</span><span id="line-189"></span><span>  </span><span id="local-6989586621688059523"><span class="annot"><span class="annottext">recordError :: SourceConfig ('Postgres 'Citus)
+</span><span id="line-189"></span><span>  </span><span id="local-6989586621688064635"><span class="annot"><span class="annottext">recordError :: SourceConfig ('Postgres 'Citus)
 -&gt; Event ('Postgres 'Citus)
 -&gt; Invocation 'EventType
 -&gt; ProcessEventError
 -&gt; Maybe MaintenanceModeVersion
 -&gt; m (Either QErr ())
-</span><a href="#local-6989586621688059523"><span class="hs-identifier hs-var hs-var hs-var hs-var">recordError</span></a></span></span><span> </span><span class="annot"><span class="annottext">SourceConfig ('Postgres 'Citus)
+</span><a href="#local-6989586621688064635"><span class="hs-identifier hs-var hs-var hs-var hs-var">recordError</span></a></span></span><span> </span><span class="annot"><span class="annottext">SourceConfig ('Postgres 'Citus)
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">Event ('Postgres 'Citus)
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">Invocation 'EventType
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">ProcessEventError
@@ -436,13 +436,13 @@ forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
 </span><a href="Hasura.Base.Error.html#throw400"><span class="hs-identifier hs-var">throw400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
 </span><a href="Hasura.Base.Error.html#NotSupported"><span class="hs-identifier hs-var">NotSupported</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;Event triggers are not supported for Citus sources&quot;</span></span><span>
-</span><span id="line-190"></span><span>  </span><span id="local-6989586621688059522"><span class="annot"><span class="annottext">recordError' :: SourceConfig ('Postgres 'Citus)
+</span><span id="line-190"></span><span>  </span><span id="local-6989586621688064634"><span class="annot"><span class="annottext">recordError' :: SourceConfig ('Postgres 'Citus)
 -&gt; Event ('Postgres 'Citus)
 -&gt; Maybe (Invocation 'EventType)
 -&gt; ProcessEventError
 -&gt; Maybe MaintenanceModeVersion
 -&gt; m (Either QErr ())
-</span><a href="#local-6989586621688059522"><span class="hs-identifier hs-var hs-var hs-var hs-var">recordError'</span></a></span></span><span> </span><span class="annot"><span class="annottext">SourceConfig ('Postgres 'Citus)
+</span><a href="#local-6989586621688064634"><span class="hs-identifier hs-var hs-var hs-var hs-var">recordError'</span></a></span></span><span> </span><span class="annot"><span class="annottext">SourceConfig ('Postgres 'Citus)
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">Event ('Postgres 'Citus)
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">Maybe (Invocation 'EventType)
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">ProcessEventError
@@ -457,25 +457,25 @@ forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
 </span><a href="Hasura.Base.Error.html#throw400"><span class="hs-identifier hs-var">throw400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
 </span><a href="Hasura.Base.Error.html#NotSupported"><span class="hs-identifier hs-var">NotSupported</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;Event triggers are not supported for Citus sources&quot;</span></span><span>
-</span><span id="line-191"></span><span>  </span><span id="local-6989586621688059521"><span class="annot"><span class="annottext">dropTriggerAndArchiveEvents :: SourceConfig ('Postgres 'Citus) -&gt; TriggerName -&gt; m ()
-</span><a href="#local-6989586621688059521"><span class="hs-identifier hs-var hs-var hs-var hs-var">dropTriggerAndArchiveEvents</span></a></span></span><span> </span><span class="annot"><span class="annottext">SourceConfig ('Postgres 'Citus)
+</span><span id="line-191"></span><span>  </span><span id="local-6989586621688064633"><span class="annot"><span class="annottext">dropTriggerAndArchiveEvents :: SourceConfig ('Postgres 'Citus) -&gt; TriggerName -&gt; m ()
+</span><a href="#local-6989586621688064633"><span class="hs-identifier hs-var hs-var hs-var hs-var">dropTriggerAndArchiveEvents</span></a></span></span><span> </span><span class="annot"><span class="annottext">SourceConfig ('Postgres 'Citus)
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">TriggerName
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Code -&gt; Text -&gt; m ()
 forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
 </span><a href="Hasura.Base.Error.html#throw400"><span class="hs-identifier hs-var">throw400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
 </span><a href="Hasura.Base.Error.html#NotSupported"><span class="hs-identifier hs-var">NotSupported</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;Event triggers are not supported for Citus sources&quot;</span></span><span>
-</span><span id="line-192"></span><span>  </span><span id="local-6989586621688059520"><span class="annot"><span class="annottext">redeliverEvent :: SourceConfig ('Postgres 'Citus) -&gt; EventId -&gt; m ()
-</span><a href="#local-6989586621688059520"><span class="hs-identifier hs-var hs-var hs-var hs-var">redeliverEvent</span></a></span></span><span> </span><span class="annot"><span class="annottext">SourceConfig ('Postgres 'Citus)
+</span><span id="line-192"></span><span>  </span><span id="local-6989586621688064632"><span class="annot"><span class="annottext">redeliverEvent :: SourceConfig ('Postgres 'Citus) -&gt; EventId -&gt; m ()
+</span><a href="#local-6989586621688064632"><span class="hs-identifier hs-var hs-var hs-var hs-var">redeliverEvent</span></a></span></span><span> </span><span class="annot"><span class="annottext">SourceConfig ('Postgres 'Citus)
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">EventId
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Code -&gt; Text -&gt; m ()
 forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
 </span><a href="Hasura.Base.Error.html#throw400"><span class="hs-identifier hs-var">throw400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
 </span><a href="Hasura.Base.Error.html#NotSupported"><span class="hs-identifier hs-var">NotSupported</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;Event triggers are not supported for Citus sources&quot;</span></span><span>
-</span><span id="line-193"></span><span>  </span><span id="local-6989586621688059519"><span class="annot"><span class="annottext">unlockEventsInSource :: SourceConfig ('Postgres 'Citus)
+</span><span id="line-193"></span><span>  </span><span id="local-6989586621688064631"><span class="annot"><span class="annottext">unlockEventsInSource :: SourceConfig ('Postgres 'Citus)
 -&gt; Set EventId -&gt; m (Either QErr Int)
-</span><a href="#local-6989586621688059519"><span class="hs-identifier hs-var hs-var hs-var hs-var">unlockEventsInSource</span></a></span></span><span> </span><span class="annot"><span class="annottext">SourceConfig ('Postgres 'Citus)
+</span><a href="#local-6989586621688064631"><span class="hs-identifier hs-var hs-var hs-var hs-var">unlockEventsInSource</span></a></span></span><span> </span><span class="annot"><span class="annottext">SourceConfig ('Postgres 'Citus)
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">Set EventId
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ExceptT QErr m Int -&gt; m (Either QErr Int)
 forall e (m :: * -&gt; *) a. ExceptT e m a -&gt; m (Either e a)
@@ -487,14 +487,14 @@ forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
 </span><a href="Hasura.Base.Error.html#throw400"><span class="hs-identifier hs-var">throw400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
 </span><a href="Hasura.Base.Error.html#NotSupported"><span class="hs-identifier hs-var">NotSupported</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;Event triggers are not supported for Citus sources&quot;</span></span><span>
-</span><span id="line-194"></span><span>  </span><span id="local-6989586621688059518"><span class="annot"><span class="annottext">createTableEventTrigger :: ServerConfigCtx
+</span><span id="line-194"></span><span>  </span><span id="local-6989586621688064630"><span class="annot"><span class="annottext">createTableEventTrigger :: ServerConfigCtx
 -&gt; SourceConfig ('Postgres 'Citus)
 -&gt; TableName ('Postgres 'Citus)
 -&gt; [ColumnInfo ('Postgres 'Citus)]
 -&gt; TriggerName
 -&gt; TriggerOpsDef ('Postgres 'Citus)
 -&gt; m (Either QErr ())
-</span><a href="#local-6989586621688059518"><span class="hs-identifier hs-var hs-var hs-var hs-var">createTableEventTrigger</span></a></span></span><span> </span><span class="annot"><span class="annottext">ServerConfigCtx
+</span><a href="#local-6989586621688064630"><span class="hs-identifier hs-var hs-var hs-var hs-var">createTableEventTrigger</span></a></span></span><span> </span><span class="annot"><span class="annottext">ServerConfigCtx
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">SourceConfig ('Postgres 'Citus)
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">TableName ('Postgres 'Citus)
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">[ColumnInfo ('Postgres 'Citus)]
@@ -512,14 +512,14 @@ forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
 </span><span class="hs-string">&quot;Event triggers are not supported for Citus sources&quot;</span></span><span>
 </span><span id="line-195"></span><span>
 </span><span id="line-196"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Eventing.Backend.html#BackendEventTrigger"><span class="hs-identifier hs-type">BackendEventTrigger</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MSSQL"><span class="hs-identifier hs-type">MSSQL</span></a></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-197"></span><span>  </span><span id="local-6989586621688059505"><span class="annot"><span class="annottext">insertManualEvent :: SourceConfig 'MSSQL
+</span><span id="line-197"></span><span>  </span><span id="local-6989586621688064617"><span class="annot"><span class="annottext">insertManualEvent :: SourceConfig 'MSSQL
 -&gt; TableName 'MSSQL
 -&gt; TriggerName
 -&gt; Value
 -&gt; UserInfo
 -&gt; TraceContext
 -&gt; m EventId
-</span><a href="#local-6989586621688059505"><span class="hs-identifier hs-var hs-var hs-var hs-var">insertManualEvent</span></a></span></span><span> </span><span class="annot"><span class="annottext">SourceConfig 'MSSQL
+</span><a href="#local-6989586621688064617"><span class="hs-identifier hs-var hs-var hs-var hs-var">insertManualEvent</span></a></span></span><span> </span><span class="annot"><span class="annottext">SourceConfig 'MSSQL
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">TableName 'MSSQL
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">TriggerName
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">Value
@@ -532,12 +532,12 @@ forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;Event triggers are not supported for MS-SQL sources&quot;</span></span><span>
-</span><span id="line-198"></span><span>  </span><span id="local-6989586621688059504"><span class="annot"><span class="annottext">fetchUndeliveredEvents :: SourceConfig 'MSSQL
+</span><span id="line-198"></span><span>  </span><span id="local-6989586621688064616"><span class="annot"><span class="annottext">fetchUndeliveredEvents :: SourceConfig 'MSSQL
 -&gt; SourceName
 -&gt; MaintenanceMode
 -&gt; FetchBatchSize
 -&gt; m [Event 'MSSQL]
-</span><a href="#local-6989586621688059504"><span class="hs-identifier hs-var hs-var hs-var hs-var">fetchUndeliveredEvents</span></a></span></span><span> </span><span class="annot"><span class="annottext">SourceConfig 'MSSQL
+</span><a href="#local-6989586621688064616"><span class="hs-identifier hs-var hs-var hs-var hs-var">fetchUndeliveredEvents</span></a></span></span><span> </span><span class="annot"><span class="annottext">SourceConfig 'MSSQL
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">SourceName
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">MaintenanceMode
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">FetchBatchSize
@@ -546,9 +546,9 @@ forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
 </span><a href="Hasura.Base.Error.html#throw400"><span class="hs-identifier hs-var">throw400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
 </span><a href="Hasura.Base.Error.html#NotSupported"><span class="hs-identifier hs-var">NotSupported</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;Event triggers are not supported for MS-SQL sources&quot;</span></span><span>
-</span><span id="line-199"></span><span>  </span><span id="local-6989586621688059503"><span class="annot"><span class="annottext">setRetry :: SourceConfig 'MSSQL
+</span><span id="line-199"></span><span>  </span><span id="local-6989586621688064615"><span class="annot"><span class="annottext">setRetry :: SourceConfig 'MSSQL
 -&gt; Event 'MSSQL -&gt; UTCTime -&gt; Maybe MaintenanceModeVersion -&gt; m ()
-</span><a href="#local-6989586621688059503"><span class="hs-identifier hs-var hs-var hs-var hs-var">setRetry</span></a></span></span><span> </span><span class="annot"><span class="annottext">SourceConfig 'MSSQL
+</span><a href="#local-6989586621688064615"><span class="hs-identifier hs-var hs-var hs-var hs-var">setRetry</span></a></span></span><span> </span><span class="annot"><span class="annottext">SourceConfig 'MSSQL
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">Event 'MSSQL
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">UTCTime
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">Maybe MaintenanceModeVersion
@@ -557,12 +557,12 @@ forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
 </span><a href="Hasura.Base.Error.html#throw400"><span class="hs-identifier hs-var">throw400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
 </span><a href="Hasura.Base.Error.html#NotSupported"><span class="hs-identifier hs-var">NotSupported</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;Event triggers are not supported for MS-SQL sources&quot;</span></span><span>
-</span><span id="line-200"></span><span>  </span><span id="local-6989586621688059502"><span class="annot"><span class="annottext">recordSuccess :: SourceConfig 'MSSQL
+</span><span id="line-200"></span><span>  </span><span id="local-6989586621688064614"><span class="annot"><span class="annottext">recordSuccess :: SourceConfig 'MSSQL
 -&gt; Event 'MSSQL
 -&gt; Invocation 'EventType
 -&gt; Maybe MaintenanceModeVersion
 -&gt; m (Either QErr ())
-</span><a href="#local-6989586621688059502"><span class="hs-identifier hs-var hs-var hs-var hs-var">recordSuccess</span></a></span></span><span> </span><span class="annot"><span class="annottext">SourceConfig 'MSSQL
+</span><a href="#local-6989586621688064614"><span class="hs-identifier hs-var hs-var hs-var hs-var">recordSuccess</span></a></span></span><span> </span><span class="annot"><span class="annottext">SourceConfig 'MSSQL
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">Event 'MSSQL
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">Invocation 'EventType
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">Maybe MaintenanceModeVersion
@@ -576,20 +576,20 @@ forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
 </span><a href="Hasura.Base.Error.html#throw400"><span class="hs-identifier hs-var">throw400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
 </span><a href="Hasura.Base.Error.html#NotSupported"><span class="hs-identifier hs-var">NotSupported</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;Event triggers are not supported for MS-SQL sources&quot;</span></span><span>
-</span><span id="line-201"></span><span>  </span><span id="local-6989586621688059501"><span class="annot"><span class="annottext">getMaintenanceModeVersion :: SourceConfig 'MSSQL -&gt; m MaintenanceModeVersion
-</span><a href="#local-6989586621688059501"><span class="hs-identifier hs-var hs-var hs-var hs-var">getMaintenanceModeVersion</span></a></span></span><span> </span><span class="annot"><span class="annottext">SourceConfig 'MSSQL
+</span><span id="line-201"></span><span>  </span><span id="local-6989586621688064613"><span class="annot"><span class="annottext">getMaintenanceModeVersion :: SourceConfig 'MSSQL -&gt; m MaintenanceModeVersion
+</span><a href="#local-6989586621688064613"><span class="hs-identifier hs-var hs-var hs-var hs-var">getMaintenanceModeVersion</span></a></span></span><span> </span><span class="annot"><span class="annottext">SourceConfig 'MSSQL
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Code -&gt; Text -&gt; m MaintenanceModeVersion
 forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
 </span><a href="Hasura.Base.Error.html#throw400"><span class="hs-identifier hs-var">throw400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
 </span><a href="Hasura.Base.Error.html#NotSupported"><span class="hs-identifier hs-var">NotSupported</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;Event triggers are not supported for MS-SQL sources&quot;</span></span><span>
-</span><span id="line-202"></span><span>  </span><span id="local-6989586621688059500"><span class="annot"><span class="annottext">recordError :: SourceConfig 'MSSQL
+</span><span id="line-202"></span><span>  </span><span id="local-6989586621688064612"><span class="annot"><span class="annottext">recordError :: SourceConfig 'MSSQL
 -&gt; Event 'MSSQL
 -&gt; Invocation 'EventType
 -&gt; ProcessEventError
 -&gt; Maybe MaintenanceModeVersion
 -&gt; m (Either QErr ())
-</span><a href="#local-6989586621688059500"><span class="hs-identifier hs-var hs-var hs-var hs-var">recordError</span></a></span></span><span> </span><span class="annot"><span class="annottext">SourceConfig 'MSSQL
+</span><a href="#local-6989586621688064612"><span class="hs-identifier hs-var hs-var hs-var hs-var">recordError</span></a></span></span><span> </span><span class="annot"><span class="annottext">SourceConfig 'MSSQL
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">Event 'MSSQL
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">Invocation 'EventType
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">ProcessEventError
@@ -604,13 +604,13 @@ forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
 </span><a href="Hasura.Base.Error.html#throw400"><span class="hs-identifier hs-var">throw400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
 </span><a href="Hasura.Base.Error.html#NotSupported"><span class="hs-identifier hs-var">NotSupported</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;Event triggers are not supported for MS-SQL sources&quot;</span></span><span>
-</span><span id="line-203"></span><span>  </span><span id="local-6989586621688059499"><span class="annot"><span class="annottext">recordError' :: SourceConfig 'MSSQL
+</span><span id="line-203"></span><span>  </span><span id="local-6989586621688064611"><span class="annot"><span class="annottext">recordError' :: SourceConfig 'MSSQL
 -&gt; Event 'MSSQL
 -&gt; Maybe (Invocation 'EventType)
 -&gt; ProcessEventError
 -&gt; Maybe MaintenanceModeVersion
 -&gt; m (Either QErr ())
-</span><a href="#local-6989586621688059499"><span class="hs-identifier hs-var hs-var hs-var hs-var">recordError'</span></a></span></span><span> </span><span class="annot"><span class="annottext">SourceConfig 'MSSQL
+</span><a href="#local-6989586621688064611"><span class="hs-identifier hs-var hs-var hs-var hs-var">recordError'</span></a></span></span><span> </span><span class="annot"><span class="annottext">SourceConfig 'MSSQL
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">Event 'MSSQL
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">Maybe (Invocation 'EventType)
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">ProcessEventError
@@ -625,24 +625,24 @@ forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
 </span><a href="Hasura.Base.Error.html#throw400"><span class="hs-identifier hs-var">throw400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
 </span><a href="Hasura.Base.Error.html#NotSupported"><span class="hs-identifier hs-var">NotSupported</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;Event triggers are not supported for MS-SQL sources&quot;</span></span><span>
-</span><span id="line-204"></span><span>  </span><span id="local-6989586621688059498"><span class="annot"><span class="annottext">dropTriggerAndArchiveEvents :: SourceConfig 'MSSQL -&gt; TriggerName -&gt; m ()
-</span><a href="#local-6989586621688059498"><span class="hs-identifier hs-var hs-var hs-var hs-var">dropTriggerAndArchiveEvents</span></a></span></span><span> </span><span class="annot"><span class="annottext">SourceConfig 'MSSQL
+</span><span id="line-204"></span><span>  </span><span id="local-6989586621688064610"><span class="annot"><span class="annottext">dropTriggerAndArchiveEvents :: SourceConfig 'MSSQL -&gt; TriggerName -&gt; m ()
+</span><a href="#local-6989586621688064610"><span class="hs-identifier hs-var hs-var hs-var hs-var">dropTriggerAndArchiveEvents</span></a></span></span><span> </span><span class="annot"><span class="annottext">SourceConfig 'MSSQL
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">TriggerName
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Code -&gt; Text -&gt; m ()
 forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
 </span><a href="Hasura.Base.Error.html#throw400"><span class="hs-identifier hs-var">throw400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
 </span><a href="Hasura.Base.Error.html#NotSupported"><span class="hs-identifier hs-var">NotSupported</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;Event triggers are not supported for MS-SQL sources&quot;</span></span><span>
-</span><span id="line-205"></span><span>  </span><span id="local-6989586621688059497"><span class="annot"><span class="annottext">redeliverEvent :: SourceConfig 'MSSQL -&gt; EventId -&gt; m ()
-</span><a href="#local-6989586621688059497"><span class="hs-identifier hs-var hs-var hs-var hs-var">redeliverEvent</span></a></span></span><span> </span><span class="annot"><span class="annottext">SourceConfig 'MSSQL
+</span><span id="line-205"></span><span>  </span><span id="local-6989586621688064609"><span class="annot"><span class="annottext">redeliverEvent :: SourceConfig 'MSSQL -&gt; EventId -&gt; m ()
+</span><a href="#local-6989586621688064609"><span class="hs-identifier hs-var hs-var hs-var hs-var">redeliverEvent</span></a></span></span><span> </span><span class="annot"><span class="annottext">SourceConfig 'MSSQL
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">EventId
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Code -&gt; Text -&gt; m ()
 forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
 </span><a href="Hasura.Base.Error.html#throw400"><span class="hs-identifier hs-var">throw400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
 </span><a href="Hasura.Base.Error.html#NotSupported"><span class="hs-identifier hs-var">NotSupported</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;Event triggers are not supported for MS-SQL sources&quot;</span></span><span>
-</span><span id="line-206"></span><span>  </span><span id="local-6989586621688059496"><span class="annot"><span class="annottext">unlockEventsInSource :: SourceConfig 'MSSQL -&gt; Set EventId -&gt; m (Either QErr Int)
-</span><a href="#local-6989586621688059496"><span class="hs-identifier hs-var hs-var hs-var hs-var">unlockEventsInSource</span></a></span></span><span> </span><span class="annot"><span class="annottext">SourceConfig 'MSSQL
+</span><span id="line-206"></span><span>  </span><span id="local-6989586621688064608"><span class="annot"><span class="annottext">unlockEventsInSource :: SourceConfig 'MSSQL -&gt; Set EventId -&gt; m (Either QErr Int)
+</span><a href="#local-6989586621688064608"><span class="hs-identifier hs-var hs-var hs-var hs-var">unlockEventsInSource</span></a></span></span><span> </span><span class="annot"><span class="annottext">SourceConfig 'MSSQL
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">Set EventId
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ExceptT QErr m Int -&gt; m (Either QErr Int)
 forall e (m :: * -&gt; *) a. ExceptT e m a -&gt; m (Either e a)
@@ -654,14 +654,14 @@ forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
 </span><a href="Hasura.Base.Error.html#throw400"><span class="hs-identifier hs-var">throw400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
 </span><a href="Hasura.Base.Error.html#NotSupported"><span class="hs-identifier hs-var">NotSupported</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;Event triggers are not supported for MS-SQL sources&quot;</span></span><span>
-</span><span id="line-207"></span><span>  </span><span id="local-6989586621688059495"><span class="annot"><span class="annottext">createTableEventTrigger :: ServerConfigCtx
+</span><span id="line-207"></span><span>  </span><span id="local-6989586621688064607"><span class="annot"><span class="annottext">createTableEventTrigger :: ServerConfigCtx
 -&gt; SourceConfig 'MSSQL
 -&gt; TableName 'MSSQL
 -&gt; [ColumnInfo 'MSSQL]
 -&gt; TriggerName
 -&gt; TriggerOpsDef 'MSSQL
 -&gt; m (Either QErr ())
-</span><a href="#local-6989586621688059495"><span class="hs-identifier hs-var hs-var hs-var hs-var">createTableEventTrigger</span></a></span></span><span> </span><span class="annot"><span class="annottext">ServerConfigCtx
+</span><a href="#local-6989586621688064607"><span class="hs-identifier hs-var hs-var hs-var hs-var">createTableEventTrigger</span></a></span></span><span> </span><span class="annot"><span class="annottext">ServerConfigCtx
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">SourceConfig 'MSSQL
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">TableName 'MSSQL
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">[ColumnInfo 'MSSQL]
@@ -679,14 +679,14 @@ forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
 </span><span class="hs-string">&quot;Event triggers are not supported for MS-SQL sources&quot;</span></span><span>
 </span><span id="line-208"></span><span>
 </span><span id="line-209"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Eventing.Backend.html#BackendEventTrigger"><span class="hs-identifier hs-type">BackendEventTrigger</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#BigQuery"><span class="hs-identifier hs-type">BigQuery</span></a></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-210"></span><span>  </span><span id="local-6989586621688059482"><span class="annot"><span class="annottext">insertManualEvent :: SourceConfig 'BigQuery
+</span><span id="line-210"></span><span>  </span><span id="local-6989586621688064594"><span class="annot"><span class="annottext">insertManualEvent :: SourceConfig 'BigQuery
 -&gt; TableName 'BigQuery
 -&gt; TriggerName
 -&gt; Value
 -&gt; UserInfo
 -&gt; TraceContext
 -&gt; m EventId
-</span><a href="#local-6989586621688059482"><span class="hs-identifier hs-var hs-var hs-var hs-var">insertManualEvent</span></a></span></span><span> </span><span class="annot"><span class="annottext">SourceConfig 'BigQuery
+</span><a href="#local-6989586621688064594"><span class="hs-identifier hs-var hs-var hs-var hs-var">insertManualEvent</span></a></span></span><span> </span><span class="annot"><span class="annottext">SourceConfig 'BigQuery
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">TableName 'BigQuery
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">TriggerName
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">Value
@@ -699,12 +699,12 @@ forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;Event triggers are not supported for BigQuery sources&quot;</span></span><span>
-</span><span id="line-211"></span><span>  </span><span id="local-6989586621688059481"><span class="annot"><span class="annottext">fetchUndeliveredEvents :: SourceConfig 'BigQuery
+</span><span id="line-211"></span><span>  </span><span id="local-6989586621688064593"><span class="annot"><span class="annottext">fetchUndeliveredEvents :: SourceConfig 'BigQuery
 -&gt; SourceName
 -&gt; MaintenanceMode
 -&gt; FetchBatchSize
 -&gt; m [Event 'BigQuery]
-</span><a href="#local-6989586621688059481"><span class="hs-identifier hs-var hs-var hs-var hs-var">fetchUndeliveredEvents</span></a></span></span><span> </span><span class="annot"><span class="annottext">SourceConfig 'BigQuery
+</span><a href="#local-6989586621688064593"><span class="hs-identifier hs-var hs-var hs-var hs-var">fetchUndeliveredEvents</span></a></span></span><span> </span><span class="annot"><span class="annottext">SourceConfig 'BigQuery
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">SourceName
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">MaintenanceMode
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">FetchBatchSize
@@ -713,12 +713,12 @@ forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
 </span><a href="Hasura.Base.Error.html#throw400"><span class="hs-identifier hs-var">throw400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
 </span><a href="Hasura.Base.Error.html#NotSupported"><span class="hs-identifier hs-var">NotSupported</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;Event triggers are not supported for BigQuery sources&quot;</span></span><span>
-</span><span id="line-212"></span><span>  </span><span id="local-6989586621688059480"><span class="annot"><span class="annottext">setRetry :: SourceConfig 'BigQuery
+</span><span id="line-212"></span><span>  </span><span id="local-6989586621688064592"><span class="annot"><span class="annottext">setRetry :: SourceConfig 'BigQuery
 -&gt; Event 'BigQuery
 -&gt; UTCTime
 -&gt; Maybe MaintenanceModeVersion
 -&gt; m ()
-</span><a href="#local-6989586621688059480"><span class="hs-identifier hs-var hs-var hs-var hs-var">setRetry</span></a></span></span><span> </span><span class="annot"><span class="annottext">SourceConfig 'BigQuery
+</span><a href="#local-6989586621688064592"><span class="hs-identifier hs-var hs-var hs-var hs-var">setRetry</span></a></span></span><span> </span><span class="annot"><span class="annottext">SourceConfig 'BigQuery
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">Event 'BigQuery
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">UTCTime
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">Maybe MaintenanceModeVersion
@@ -727,12 +727,12 @@ forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
 </span><a href="Hasura.Base.Error.html#throw400"><span class="hs-identifier hs-var">throw400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
 </span><a href="Hasura.Base.Error.html#NotSupported"><span class="hs-identifier hs-var">NotSupported</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;Event triggers are not supported for BigQuery sources&quot;</span></span><span>
-</span><span id="line-213"></span><span>  </span><span id="local-6989586621688059479"><span class="annot"><span class="annottext">recordSuccess :: SourceConfig 'BigQuery
+</span><span id="line-213"></span><span>  </span><span id="local-6989586621688064591"><span class="annot"><span class="annottext">recordSuccess :: SourceConfig 'BigQuery
 -&gt; Event 'BigQuery
 -&gt; Invocation 'EventType
 -&gt; Maybe MaintenanceModeVersion
 -&gt; m (Either QErr ())
-</span><a href="#local-6989586621688059479"><span class="hs-identifier hs-var hs-var hs-var hs-var">recordSuccess</span></a></span></span><span> </span><span class="annot"><span class="annottext">SourceConfig 'BigQuery
+</span><a href="#local-6989586621688064591"><span class="hs-identifier hs-var hs-var hs-var hs-var">recordSuccess</span></a></span></span><span> </span><span class="annot"><span class="annottext">SourceConfig 'BigQuery
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">Event 'BigQuery
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">Invocation 'EventType
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">Maybe MaintenanceModeVersion
@@ -746,20 +746,20 @@ forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
 </span><a href="Hasura.Base.Error.html#throw400"><span class="hs-identifier hs-var">throw400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
 </span><a href="Hasura.Base.Error.html#NotSupported"><span class="hs-identifier hs-var">NotSupported</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;Event triggers are not supported for BigQuery sources&quot;</span></span><span>
-</span><span id="line-214"></span><span>  </span><span id="local-6989586621688059478"><span class="annot"><span class="annottext">getMaintenanceModeVersion :: SourceConfig 'BigQuery -&gt; m MaintenanceModeVersion
-</span><a href="#local-6989586621688059478"><span class="hs-identifier hs-var hs-var hs-var hs-var">getMaintenanceModeVersion</span></a></span></span><span> </span><span class="annot"><span class="annottext">SourceConfig 'BigQuery
+</span><span id="line-214"></span><span>  </span><span id="local-6989586621688064590"><span class="annot"><span class="annottext">getMaintenanceModeVersion :: SourceConfig 'BigQuery -&gt; m MaintenanceModeVersion
+</span><a href="#local-6989586621688064590"><span class="hs-identifier hs-var hs-var hs-var hs-var">getMaintenanceModeVersion</span></a></span></span><span> </span><span class="annot"><span class="annottext">SourceConfig 'BigQuery
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Code -&gt; Text -&gt; m MaintenanceModeVersion
 forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
 </span><a href="Hasura.Base.Error.html#throw400"><span class="hs-identifier hs-var">throw400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
 </span><a href="Hasura.Base.Error.html#NotSupported"><span class="hs-identifier hs-var">NotSupported</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;Event triggers are not supported for BigQuery sources&quot;</span></span><span>
-</span><span id="line-215"></span><span>  </span><span id="local-6989586621688059477"><span class="annot"><span class="annottext">recordError :: SourceConfig 'BigQuery
+</span><span id="line-215"></span><span>  </span><span id="local-6989586621688064589"><span class="annot"><span class="annottext">recordError :: SourceConfig 'BigQuery
 -&gt; Event 'BigQuery
 -&gt; Invocation 'EventType
 -&gt; ProcessEventError
 -&gt; Maybe MaintenanceModeVersion
 -&gt; m (Either QErr ())
-</span><a href="#local-6989586621688059477"><span class="hs-identifier hs-var hs-var hs-var hs-var">recordError</span></a></span></span><span> </span><span class="annot"><span class="annottext">SourceConfig 'BigQuery
+</span><a href="#local-6989586621688064589"><span class="hs-identifier hs-var hs-var hs-var hs-var">recordError</span></a></span></span><span> </span><span class="annot"><span class="annottext">SourceConfig 'BigQuery
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">Event 'BigQuery
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">Invocation 'EventType
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">ProcessEventError
@@ -774,13 +774,13 @@ forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
 </span><a href="Hasura.Base.Error.html#throw400"><span class="hs-identifier hs-var">throw400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
 </span><a href="Hasura.Base.Error.html#NotSupported"><span class="hs-identifier hs-var">NotSupported</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;Event triggers are not supported for BigQuery sources&quot;</span></span><span>
-</span><span id="line-216"></span><span>  </span><span id="local-6989586621688059476"><span class="annot"><span class="annottext">recordError' :: SourceConfig 'BigQuery
+</span><span id="line-216"></span><span>  </span><span id="local-6989586621688064588"><span class="annot"><span class="annottext">recordError' :: SourceConfig 'BigQuery
 -&gt; Event 'BigQuery
 -&gt; Maybe (Invocation 'EventType)
 -&gt; ProcessEventError
 -&gt; Maybe MaintenanceModeVersion
 -&gt; m (Either QErr ())
-</span><a href="#local-6989586621688059476"><span class="hs-identifier hs-var hs-var hs-var hs-var">recordError'</span></a></span></span><span> </span><span class="annot"><span class="annottext">SourceConfig 'BigQuery
+</span><a href="#local-6989586621688064588"><span class="hs-identifier hs-var hs-var hs-var hs-var">recordError'</span></a></span></span><span> </span><span class="annot"><span class="annottext">SourceConfig 'BigQuery
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">Event 'BigQuery
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">Maybe (Invocation 'EventType)
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">ProcessEventError
@@ -795,24 +795,24 @@ forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
 </span><a href="Hasura.Base.Error.html#throw400"><span class="hs-identifier hs-var">throw400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
 </span><a href="Hasura.Base.Error.html#NotSupported"><span class="hs-identifier hs-var">NotSupported</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;Event triggers are not supported for BigQuery sources&quot;</span></span><span>
-</span><span id="line-217"></span><span>  </span><span id="local-6989586621688059475"><span class="annot"><span class="annottext">dropTriggerAndArchiveEvents :: SourceConfig 'BigQuery -&gt; TriggerName -&gt; m ()
-</span><a href="#local-6989586621688059475"><span class="hs-identifier hs-var hs-var hs-var hs-var">dropTriggerAndArchiveEvents</span></a></span></span><span> </span><span class="annot"><span class="annottext">SourceConfig 'BigQuery
+</span><span id="line-217"></span><span>  </span><span id="local-6989586621688064587"><span class="annot"><span class="annottext">dropTriggerAndArchiveEvents :: SourceConfig 'BigQuery -&gt; TriggerName -&gt; m ()
+</span><a href="#local-6989586621688064587"><span class="hs-identifier hs-var hs-var hs-var hs-var">dropTriggerAndArchiveEvents</span></a></span></span><span> </span><span class="annot"><span class="annottext">SourceConfig 'BigQuery
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">TriggerName
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Code -&gt; Text -&gt; m ()
 forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
 </span><a href="Hasura.Base.Error.html#throw400"><span class="hs-identifier hs-var">throw400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
 </span><a href="Hasura.Base.Error.html#NotSupported"><span class="hs-identifier hs-var">NotSupported</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;Event triggers are not supported for BigQuery sources&quot;</span></span><span>
-</span><span id="line-218"></span><span>  </span><span id="local-6989586621688059474"><span class="annot"><span class="annottext">redeliverEvent :: SourceConfig 'BigQuery -&gt; EventId -&gt; m ()
-</span><a href="#local-6989586621688059474"><span class="hs-identifier hs-var hs-var hs-var hs-var">redeliverEvent</span></a></span></span><span> </span><span class="annot"><span class="annottext">SourceConfig 'BigQuery
+</span><span id="line-218"></span><span>  </span><span id="local-6989586621688064586"><span class="annot"><span class="annottext">redeliverEvent :: SourceConfig 'BigQuery -&gt; EventId -&gt; m ()
+</span><a href="#local-6989586621688064586"><span class="hs-identifier hs-var hs-var hs-var hs-var">redeliverEvent</span></a></span></span><span> </span><span class="annot"><span class="annottext">SourceConfig 'BigQuery
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">EventId
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Code -&gt; Text -&gt; m ()
 forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
 </span><a href="Hasura.Base.Error.html#throw400"><span class="hs-identifier hs-var">throw400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
 </span><a href="Hasura.Base.Error.html#NotSupported"><span class="hs-identifier hs-var">NotSupported</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;Event triggers are not supported for BigQuery sources&quot;</span></span><span>
-</span><span id="line-219"></span><span>  </span><span id="local-6989586621688059473"><span class="annot"><span class="annottext">unlockEventsInSource :: SourceConfig 'BigQuery -&gt; Set EventId -&gt; m (Either QErr Int)
-</span><a href="#local-6989586621688059473"><span class="hs-identifier hs-var hs-var hs-var hs-var">unlockEventsInSource</span></a></span></span><span> </span><span class="annot"><span class="annottext">SourceConfig 'BigQuery
+</span><span id="line-219"></span><span>  </span><span id="local-6989586621688064585"><span class="annot"><span class="annottext">unlockEventsInSource :: SourceConfig 'BigQuery -&gt; Set EventId -&gt; m (Either QErr Int)
+</span><a href="#local-6989586621688064585"><span class="hs-identifier hs-var hs-var hs-var hs-var">unlockEventsInSource</span></a></span></span><span> </span><span class="annot"><span class="annottext">SourceConfig 'BigQuery
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">Set EventId
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ExceptT QErr m Int -&gt; m (Either QErr Int)
 forall e (m :: * -&gt; *) a. ExceptT e m a -&gt; m (Either e a)
@@ -824,14 +824,14 @@ forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
 </span><a href="Hasura.Base.Error.html#throw400"><span class="hs-identifier hs-var">throw400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
 </span><a href="Hasura.Base.Error.html#NotSupported"><span class="hs-identifier hs-var">NotSupported</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;Event triggers are not supported for BigQuery sources&quot;</span></span><span>
-</span><span id="line-220"></span><span>  </span><span id="local-6989586621688059472"><span class="annot"><span class="annottext">createTableEventTrigger :: ServerConfigCtx
+</span><span id="line-220"></span><span>  </span><span id="local-6989586621688064584"><span class="annot"><span class="annottext">createTableEventTrigger :: ServerConfigCtx
 -&gt; SourceConfig 'BigQuery
 -&gt; TableName 'BigQuery
 -&gt; [ColumnInfo 'BigQuery]
 -&gt; TriggerName
 -&gt; TriggerOpsDef 'BigQuery
 -&gt; m (Either QErr ())
-</span><a href="#local-6989586621688059472"><span class="hs-identifier hs-var hs-var hs-var hs-var">createTableEventTrigger</span></a></span></span><span> </span><span class="annot"><span class="annottext">ServerConfigCtx
+</span><a href="#local-6989586621688064584"><span class="hs-identifier hs-var hs-var hs-var hs-var">createTableEventTrigger</span></a></span></span><span> </span><span class="annot"><span class="annottext">ServerConfigCtx
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">SourceConfig 'BigQuery
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">TableName 'BigQuery
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">[ColumnInfo 'BigQuery]
@@ -849,14 +849,14 @@ forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
 </span><span class="hs-string">&quot;Event triggers are not supported for BigQuery sources&quot;</span></span><span>
 </span><span id="line-221"></span><span>
 </span><span id="line-222"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Eventing.Backend.html#BackendEventTrigger"><span class="hs-identifier hs-type">BackendEventTrigger</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MySQL"><span class="hs-identifier hs-type">MySQL</span></a></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-223"></span><span>  </span><span id="local-6989586621688059459"><span class="annot"><span class="annottext">insertManualEvent :: SourceConfig 'MySQL
+</span><span id="line-223"></span><span>  </span><span id="local-6989586621688064571"><span class="annot"><span class="annottext">insertManualEvent :: SourceConfig 'MySQL
 -&gt; TableName 'MySQL
 -&gt; TriggerName
 -&gt; Value
 -&gt; UserInfo
 -&gt; TraceContext
 -&gt; m EventId
-</span><a href="#local-6989586621688059459"><span class="hs-identifier hs-var hs-var hs-var hs-var">insertManualEvent</span></a></span></span><span> </span><span class="annot"><span class="annottext">SourceConfig 'MySQL
+</span><a href="#local-6989586621688064571"><span class="hs-identifier hs-var hs-var hs-var hs-var">insertManualEvent</span></a></span></span><span> </span><span class="annot"><span class="annottext">SourceConfig 'MySQL
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">TableName 'MySQL
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">TriggerName
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">Value
@@ -869,12 +869,12 @@ forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;Event triggers are not supported for MySQL sources&quot;</span></span><span>
-</span><span id="line-224"></span><span>  </span><span id="local-6989586621688059458"><span class="annot"><span class="annottext">fetchUndeliveredEvents :: SourceConfig 'MySQL
+</span><span id="line-224"></span><span>  </span><span id="local-6989586621688064570"><span class="annot"><span class="annottext">fetchUndeliveredEvents :: SourceConfig 'MySQL
 -&gt; SourceName
 -&gt; MaintenanceMode
 -&gt; FetchBatchSize
 -&gt; m [Event 'MySQL]
-</span><a href="#local-6989586621688059458"><span class="hs-identifier hs-var hs-var hs-var hs-var">fetchUndeliveredEvents</span></a></span></span><span> </span><span class="annot"><span class="annottext">SourceConfig 'MySQL
+</span><a href="#local-6989586621688064570"><span class="hs-identifier hs-var hs-var hs-var hs-var">fetchUndeliveredEvents</span></a></span></span><span> </span><span class="annot"><span class="annottext">SourceConfig 'MySQL
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">SourceName
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">MaintenanceMode
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">FetchBatchSize
@@ -883,9 +883,9 @@ forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
 </span><a href="Hasura.Base.Error.html#throw400"><span class="hs-identifier hs-var">throw400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
 </span><a href="Hasura.Base.Error.html#NotSupported"><span class="hs-identifier hs-var">NotSupported</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;Event triggers are not supported for MySQL sources&quot;</span></span><span>
-</span><span id="line-225"></span><span>  </span><span id="local-6989586621688059457"><span class="annot"><span class="annottext">setRetry :: SourceConfig 'MySQL
+</span><span id="line-225"></span><span>  </span><span id="local-6989586621688064569"><span class="annot"><span class="annottext">setRetry :: SourceConfig 'MySQL
 -&gt; Event 'MySQL -&gt; UTCTime -&gt; Maybe MaintenanceModeVersion -&gt; m ()
-</span><a href="#local-6989586621688059457"><span class="hs-identifier hs-var hs-var hs-var hs-var">setRetry</span></a></span></span><span> </span><span class="annot"><span class="annottext">SourceConfig 'MySQL
+</span><a href="#local-6989586621688064569"><span class="hs-identifier hs-var hs-var hs-var hs-var">setRetry</span></a></span></span><span> </span><span class="annot"><span class="annottext">SourceConfig 'MySQL
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">Event 'MySQL
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">UTCTime
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">Maybe MaintenanceModeVersion
@@ -894,12 +894,12 @@ forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
 </span><a href="Hasura.Base.Error.html#throw400"><span class="hs-identifier hs-var">throw400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
 </span><a href="Hasura.Base.Error.html#NotSupported"><span class="hs-identifier hs-var">NotSupported</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;Event triggers are not supported for MySQL sources&quot;</span></span><span>
-</span><span id="line-226"></span><span>  </span><span id="local-6989586621688059456"><span class="annot"><span class="annottext">recordSuccess :: SourceConfig 'MySQL
+</span><span id="line-226"></span><span>  </span><span id="local-6989586621688064568"><span class="annot"><span class="annottext">recordSuccess :: SourceConfig 'MySQL
 -&gt; Event 'MySQL
 -&gt; Invocation 'EventType
 -&gt; Maybe MaintenanceModeVersion
 -&gt; m (Either QErr ())
-</span><a href="#local-6989586621688059456"><span class="hs-identifier hs-var hs-var hs-var hs-var">recordSuccess</span></a></span></span><span> </span><span class="annot"><span class="annottext">SourceConfig 'MySQL
+</span><a href="#local-6989586621688064568"><span class="hs-identifier hs-var hs-var hs-var hs-var">recordSuccess</span></a></span></span><span> </span><span class="annot"><span class="annottext">SourceConfig 'MySQL
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">Event 'MySQL
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">Invocation 'EventType
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">Maybe MaintenanceModeVersion
@@ -913,20 +913,20 @@ forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
 </span><a href="Hasura.Base.Error.html#throw400"><span class="hs-identifier hs-var">throw400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
 </span><a href="Hasura.Base.Error.html#NotSupported"><span class="hs-identifier hs-var">NotSupported</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;Event triggers are not supported for MySQL sources&quot;</span></span><span>
-</span><span id="line-227"></span><span>  </span><span id="local-6989586621688059455"><span class="annot"><span class="annottext">getMaintenanceModeVersion :: SourceConfig 'MySQL -&gt; m MaintenanceModeVersion
-</span><a href="#local-6989586621688059455"><span class="hs-identifier hs-var hs-var hs-var hs-var">getMaintenanceModeVersion</span></a></span></span><span> </span><span class="annot"><span class="annottext">SourceConfig 'MySQL
+</span><span id="line-227"></span><span>  </span><span id="local-6989586621688064567"><span class="annot"><span class="annottext">getMaintenanceModeVersion :: SourceConfig 'MySQL -&gt; m MaintenanceModeVersion
+</span><a href="#local-6989586621688064567"><span class="hs-identifier hs-var hs-var hs-var hs-var">getMaintenanceModeVersion</span></a></span></span><span> </span><span class="annot"><span class="annottext">SourceConfig 'MySQL
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Code -&gt; Text -&gt; m MaintenanceModeVersion
 forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
 </span><a href="Hasura.Base.Error.html#throw400"><span class="hs-identifier hs-var">throw400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
 </span><a href="Hasura.Base.Error.html#NotSupported"><span class="hs-identifier hs-var">NotSupported</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;Event triggers are not supported for MySQL sources&quot;</span></span><span>
-</span><span id="line-228"></span><span>  </span><span id="local-6989586621688059454"><span class="annot"><span class="annottext">recordError :: SourceConfig 'MySQL
+</span><span id="line-228"></span><span>  </span><span id="local-6989586621688064566"><span class="annot"><span class="annottext">recordError :: SourceConfig 'MySQL
 -&gt; Event 'MySQL
 -&gt; Invocation 'EventType
 -&gt; ProcessEventError
 -&gt; Maybe MaintenanceModeVersion
 -&gt; m (Either QErr ())
-</span><a href="#local-6989586621688059454"><span class="hs-identifier hs-var hs-var hs-var hs-var">recordError</span></a></span></span><span> </span><span class="annot"><span class="annottext">SourceConfig 'MySQL
+</span><a href="#local-6989586621688064566"><span class="hs-identifier hs-var hs-var hs-var hs-var">recordError</span></a></span></span><span> </span><span class="annot"><span class="annottext">SourceConfig 'MySQL
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">Event 'MySQL
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">Invocation 'EventType
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">ProcessEventError
@@ -941,13 +941,13 @@ forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
 </span><a href="Hasura.Base.Error.html#throw400"><span class="hs-identifier hs-var">throw400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
 </span><a href="Hasura.Base.Error.html#NotSupported"><span class="hs-identifier hs-var">NotSupported</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;Event triggers are not supported for MySQL sources&quot;</span></span><span>
-</span><span id="line-229"></span><span>  </span><span id="local-6989586621688059453"><span class="annot"><span class="annottext">recordError' :: SourceConfig 'MySQL
+</span><span id="line-229"></span><span>  </span><span id="local-6989586621688064565"><span class="annot"><span class="annottext">recordError' :: SourceConfig 'MySQL
 -&gt; Event 'MySQL
 -&gt; Maybe (Invocation 'EventType)
 -&gt; ProcessEventError
 -&gt; Maybe MaintenanceModeVersion
 -&gt; m (Either QErr ())
-</span><a href="#local-6989586621688059453"><span class="hs-identifier hs-var hs-var hs-var hs-var">recordError'</span></a></span></span><span> </span><span class="annot"><span class="annottext">SourceConfig 'MySQL
+</span><a href="#local-6989586621688064565"><span class="hs-identifier hs-var hs-var hs-var hs-var">recordError'</span></a></span></span><span> </span><span class="annot"><span class="annottext">SourceConfig 'MySQL
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">Event 'MySQL
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">Maybe (Invocation 'EventType)
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">ProcessEventError
@@ -962,24 +962,24 @@ forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
 </span><a href="Hasura.Base.Error.html#throw400"><span class="hs-identifier hs-var">throw400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
 </span><a href="Hasura.Base.Error.html#NotSupported"><span class="hs-identifier hs-var">NotSupported</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;Event triggers are not supported for MySQL sources&quot;</span></span><span>
-</span><span id="line-230"></span><span>  </span><span id="local-6989586621688059452"><span class="annot"><span class="annottext">dropTriggerAndArchiveEvents :: SourceConfig 'MySQL -&gt; TriggerName -&gt; m ()
-</span><a href="#local-6989586621688059452"><span class="hs-identifier hs-var hs-var hs-var hs-var">dropTriggerAndArchiveEvents</span></a></span></span><span> </span><span class="annot"><span class="annottext">SourceConfig 'MySQL
+</span><span id="line-230"></span><span>  </span><span id="local-6989586621688064564"><span class="annot"><span class="annottext">dropTriggerAndArchiveEvents :: SourceConfig 'MySQL -&gt; TriggerName -&gt; m ()
+</span><a href="#local-6989586621688064564"><span class="hs-identifier hs-var hs-var hs-var hs-var">dropTriggerAndArchiveEvents</span></a></span></span><span> </span><span class="annot"><span class="annottext">SourceConfig 'MySQL
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">TriggerName
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Code -&gt; Text -&gt; m ()
 forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
 </span><a href="Hasura.Base.Error.html#throw400"><span class="hs-identifier hs-var">throw400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
 </span><a href="Hasura.Base.Error.html#NotSupported"><span class="hs-identifier hs-var">NotSupported</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;Event triggers are not supported for MySQL sources&quot;</span></span><span>
-</span><span id="line-231"></span><span>  </span><span id="local-6989586621688059451"><span class="annot"><span class="annottext">redeliverEvent :: SourceConfig 'MySQL -&gt; EventId -&gt; m ()
-</span><a href="#local-6989586621688059451"><span class="hs-identifier hs-var hs-var hs-var hs-var">redeliverEvent</span></a></span></span><span> </span><span class="annot"><span class="annottext">SourceConfig 'MySQL
+</span><span id="line-231"></span><span>  </span><span id="local-6989586621688064563"><span class="annot"><span class="annottext">redeliverEvent :: SourceConfig 'MySQL -&gt; EventId -&gt; m ()
+</span><a href="#local-6989586621688064563"><span class="hs-identifier hs-var hs-var hs-var hs-var">redeliverEvent</span></a></span></span><span> </span><span class="annot"><span class="annottext">SourceConfig 'MySQL
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">EventId
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Code -&gt; Text -&gt; m ()
 forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
 </span><a href="Hasura.Base.Error.html#throw400"><span class="hs-identifier hs-var">throw400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
 </span><a href="Hasura.Base.Error.html#NotSupported"><span class="hs-identifier hs-var">NotSupported</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;Event triggers are not supported for MySQL sources&quot;</span></span><span>
-</span><span id="line-232"></span><span>  </span><span id="local-6989586621688059450"><span class="annot"><span class="annottext">unlockEventsInSource :: SourceConfig 'MySQL -&gt; Set EventId -&gt; m (Either QErr Int)
-</span><a href="#local-6989586621688059450"><span class="hs-identifier hs-var hs-var hs-var hs-var">unlockEventsInSource</span></a></span></span><span> </span><span class="annot"><span class="annottext">SourceConfig 'MySQL
+</span><span id="line-232"></span><span>  </span><span id="local-6989586621688064562"><span class="annot"><span class="annottext">unlockEventsInSource :: SourceConfig 'MySQL -&gt; Set EventId -&gt; m (Either QErr Int)
+</span><a href="#local-6989586621688064562"><span class="hs-identifier hs-var hs-var hs-var hs-var">unlockEventsInSource</span></a></span></span><span> </span><span class="annot"><span class="annottext">SourceConfig 'MySQL
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">Set EventId
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ExceptT QErr m Int -&gt; m (Either QErr Int)
 forall e (m :: * -&gt; *) a. ExceptT e m a -&gt; m (Either e a)
@@ -991,14 +991,14 @@ forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
 </span><a href="Hasura.Base.Error.html#throw400"><span class="hs-identifier hs-var">throw400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
 </span><a href="Hasura.Base.Error.html#NotSupported"><span class="hs-identifier hs-var">NotSupported</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;Event triggers are not supported for MySQL sources&quot;</span></span><span>
-</span><span id="line-233"></span><span>  </span><span id="local-6989586621688059449"><span class="annot"><span class="annottext">createTableEventTrigger :: ServerConfigCtx
+</span><span id="line-233"></span><span>  </span><span id="local-6989586621688064561"><span class="annot"><span class="annottext">createTableEventTrigger :: ServerConfigCtx
 -&gt; SourceConfig 'MySQL
 -&gt; TableName 'MySQL
 -&gt; [ColumnInfo 'MySQL]
 -&gt; TriggerName
 -&gt; TriggerOpsDef 'MySQL
 -&gt; m (Either QErr ())
-</span><a href="#local-6989586621688059449"><span class="hs-identifier hs-var hs-var hs-var hs-var">createTableEventTrigger</span></a></span></span><span> </span><span class="annot"><span class="annottext">ServerConfigCtx
+</span><a href="#local-6989586621688064561"><span class="hs-identifier hs-var hs-var hs-var hs-var">createTableEventTrigger</span></a></span></span><span> </span><span class="annot"><span class="annottext">ServerConfigCtx
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">SourceConfig 'MySQL
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">TableName 'MySQL
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">[ColumnInfo 'MySQL]
@@ -1022,14 +1022,14 @@ forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
 </span><span id="line-239"></span><span class="hs-comment">-- hierarchy just to keep everything as tidy as possible for that section of</span><span>
 </span><span id="line-240"></span><span class="hs-comment">-- code.</span><span>
 </span><span id="line-241"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Eventing.Backend.html#BackendEventTrigger"><span class="hs-identifier hs-type">BackendEventTrigger</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Experimental"><span class="hs-identifier hs-type">Experimental</span></a></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-242"></span><span>  </span><span id="local-6989586621688059436"><span class="annot"><span class="annottext">insertManualEvent :: SourceConfig 'Experimental
+</span><span id="line-242"></span><span>  </span><span id="local-6989586621688064548"><span class="annot"><span class="annottext">insertManualEvent :: SourceConfig 'Experimental
 -&gt; TableName 'Experimental
 -&gt; TriggerName
 -&gt; Value
 -&gt; UserInfo
 -&gt; TraceContext
 -&gt; m EventId
-</span><a href="#local-6989586621688059436"><span class="hs-identifier hs-var hs-var hs-var hs-var">insertManualEvent</span></a></span></span><span> </span><span class="annot"><span class="annottext">SourceConfig 'Experimental
+</span><a href="#local-6989586621688064548"><span class="hs-identifier hs-var hs-var hs-var hs-var">insertManualEvent</span></a></span></span><span> </span><span class="annot"><span class="annottext">SourceConfig 'Experimental
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">TableName 'Experimental
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">TriggerName
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">Value
@@ -1041,12 +1041,12 @@ forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
 </span><a href="Hasura.Base.Error.html#throw400"><span class="hs-identifier hs-var">throw400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
 </span><a href="Hasura.Base.Error.html#NotSupported"><span class="hs-identifier hs-var">NotSupported</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;Event triggers are not supported for Experimental sources&quot;</span></span><span>
-</span><span id="line-244"></span><span>  </span><span id="local-6989586621688059435"><span class="annot"><span class="annottext">fetchUndeliveredEvents :: SourceConfig 'Experimental
+</span><span id="line-244"></span><span>  </span><span id="local-6989586621688064547"><span class="annot"><span class="annottext">fetchUndeliveredEvents :: SourceConfig 'Experimental
 -&gt; SourceName
 -&gt; MaintenanceMode
 -&gt; FetchBatchSize
 -&gt; m [Event 'Experimental]
-</span><a href="#local-6989586621688059435"><span class="hs-identifier hs-var hs-var hs-var hs-var">fetchUndeliveredEvents</span></a></span></span><span> </span><span class="annot"><span class="annottext">SourceConfig 'Experimental
+</span><a href="#local-6989586621688064547"><span class="hs-identifier hs-var hs-var hs-var hs-var">fetchUndeliveredEvents</span></a></span></span><span> </span><span class="annot"><span class="annottext">SourceConfig 'Experimental
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">SourceName
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">MaintenanceMode
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">FetchBatchSize
@@ -1056,12 +1056,12 @@ forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
 </span><a href="Hasura.Base.Error.html#throw400"><span class="hs-identifier hs-var">throw400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
 </span><a href="Hasura.Base.Error.html#NotSupported"><span class="hs-identifier hs-var">NotSupported</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;Event triggers are not supported for Experimental sources&quot;</span></span><span>
-</span><span id="line-246"></span><span>  </span><span id="local-6989586621688059434"><span class="annot"><span class="annottext">setRetry :: SourceConfig 'Experimental
+</span><span id="line-246"></span><span>  </span><span id="local-6989586621688064546"><span class="annot"><span class="annottext">setRetry :: SourceConfig 'Experimental
 -&gt; Event 'Experimental
 -&gt; UTCTime
 -&gt; Maybe MaintenanceModeVersion
 -&gt; m ()
-</span><a href="#local-6989586621688059434"><span class="hs-identifier hs-var hs-var hs-var hs-var">setRetry</span></a></span></span><span> </span><span class="annot"><span class="annottext">SourceConfig 'Experimental
+</span><a href="#local-6989586621688064546"><span class="hs-identifier hs-var hs-var hs-var hs-var">setRetry</span></a></span></span><span> </span><span class="annot"><span class="annottext">SourceConfig 'Experimental
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">Event 'Experimental
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">UTCTime
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">Maybe MaintenanceModeVersion
@@ -1071,12 +1071,12 @@ forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
 </span><a href="Hasura.Base.Error.html#throw400"><span class="hs-identifier hs-var">throw400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
 </span><a href="Hasura.Base.Error.html#NotSupported"><span class="hs-identifier hs-var">NotSupported</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;Event triggers are not supported for Experimental sources&quot;</span></span><span>
-</span><span id="line-248"></span><span>  </span><span id="local-6989586621688059433"><span class="annot"><span class="annottext">recordSuccess :: SourceConfig 'Experimental
+</span><span id="line-248"></span><span>  </span><span id="local-6989586621688064545"><span class="annot"><span class="annottext">recordSuccess :: SourceConfig 'Experimental
 -&gt; Event 'Experimental
 -&gt; Invocation 'EventType
 -&gt; Maybe MaintenanceModeVersion
 -&gt; m (Either QErr ())
-</span><a href="#local-6989586621688059433"><span class="hs-identifier hs-var hs-var hs-var hs-var">recordSuccess</span></a></span></span><span> </span><span class="annot"><span class="annottext">SourceConfig 'Experimental
+</span><a href="#local-6989586621688064545"><span class="hs-identifier hs-var hs-var hs-var hs-var">recordSuccess</span></a></span></span><span> </span><span class="annot"><span class="annottext">SourceConfig 'Experimental
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">Event 'Experimental
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">Invocation 'EventType
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">Maybe MaintenanceModeVersion
@@ -1091,21 +1091,21 @@ forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
 </span><a href="Hasura.Base.Error.html#throw400"><span class="hs-identifier hs-var">throw400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
 </span><a href="Hasura.Base.Error.html#NotSupported"><span class="hs-identifier hs-var">NotSupported</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;Event triggers are not supported for Experimental sources&quot;</span></span><span>
-</span><span id="line-250"></span><span>  </span><span id="local-6989586621688059432"><span class="annot"><span class="annottext">getMaintenanceModeVersion :: SourceConfig 'Experimental -&gt; m MaintenanceModeVersion
-</span><a href="#local-6989586621688059432"><span class="hs-identifier hs-var hs-var hs-var hs-var">getMaintenanceModeVersion</span></a></span></span><span> </span><span class="annot"><span class="annottext">SourceConfig 'Experimental
+</span><span id="line-250"></span><span>  </span><span id="local-6989586621688064544"><span class="annot"><span class="annottext">getMaintenanceModeVersion :: SourceConfig 'Experimental -&gt; m MaintenanceModeVersion
+</span><a href="#local-6989586621688064544"><span class="hs-identifier hs-var hs-var hs-var hs-var">getMaintenanceModeVersion</span></a></span></span><span> </span><span class="annot"><span class="annottext">SourceConfig 'Experimental
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-251"></span><span>    </span><span class="annot"><span class="annottext">Code -&gt; Text -&gt; m MaintenanceModeVersion
 forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
 </span><a href="Hasura.Base.Error.html#throw400"><span class="hs-identifier hs-var">throw400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
 </span><a href="Hasura.Base.Error.html#NotSupported"><span class="hs-identifier hs-var">NotSupported</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;Event triggers are not supported for Experimental sources&quot;</span></span><span>
-</span><span id="line-252"></span><span>  </span><span id="local-6989586621688059431"><span class="annot"><span class="annottext">recordError :: SourceConfig 'Experimental
+</span><span id="line-252"></span><span>  </span><span id="local-6989586621688064543"><span class="annot"><span class="annottext">recordError :: SourceConfig 'Experimental
 -&gt; Event 'Experimental
 -&gt; Invocation 'EventType
 -&gt; ProcessEventError
 -&gt; Maybe MaintenanceModeVersion
 -&gt; m (Either QErr ())
-</span><a href="#local-6989586621688059431"><span class="hs-identifier hs-var hs-var hs-var hs-var">recordError</span></a></span></span><span> </span><span class="annot"><span class="annottext">SourceConfig 'Experimental
+</span><a href="#local-6989586621688064543"><span class="hs-identifier hs-var hs-var hs-var hs-var">recordError</span></a></span></span><span> </span><span class="annot"><span class="annottext">SourceConfig 'Experimental
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">Event 'Experimental
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">Invocation 'EventType
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">ProcessEventError
@@ -1121,13 +1121,13 @@ forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
 </span><a href="Hasura.Base.Error.html#throw400"><span class="hs-identifier hs-var">throw400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
 </span><a href="Hasura.Base.Error.html#NotSupported"><span class="hs-identifier hs-var">NotSupported</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;Event triggers are not supported for Experimental sources&quot;</span></span><span>
-</span><span id="line-254"></span><span>  </span><span id="local-6989586621688059430"><span class="annot"><span class="annottext">recordError' :: SourceConfig 'Experimental
+</span><span id="line-254"></span><span>  </span><span id="local-6989586621688064542"><span class="annot"><span class="annottext">recordError' :: SourceConfig 'Experimental
 -&gt; Event 'Experimental
 -&gt; Maybe (Invocation 'EventType)
 -&gt; ProcessEventError
 -&gt; Maybe MaintenanceModeVersion
 -&gt; m (Either QErr ())
-</span><a href="#local-6989586621688059430"><span class="hs-identifier hs-var hs-var hs-var hs-var">recordError'</span></a></span></span><span> </span><span class="annot"><span class="annottext">SourceConfig 'Experimental
+</span><a href="#local-6989586621688064542"><span class="hs-identifier hs-var hs-var hs-var hs-var">recordError'</span></a></span></span><span> </span><span class="annot"><span class="annottext">SourceConfig 'Experimental
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">Event 'Experimental
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">Maybe (Invocation 'EventType)
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">ProcessEventError
@@ -1143,8 +1143,8 @@ forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
 </span><a href="Hasura.Base.Error.html#throw400"><span class="hs-identifier hs-var">throw400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
 </span><a href="Hasura.Base.Error.html#NotSupported"><span class="hs-identifier hs-var">NotSupported</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;Event triggers are not supported for Experimental sources&quot;</span></span><span>
-</span><span id="line-256"></span><span>  </span><span id="local-6989586621688059429"><span class="annot"><span class="annottext">dropTriggerAndArchiveEvents :: SourceConfig 'Experimental -&gt; TriggerName -&gt; m ()
-</span><a href="#local-6989586621688059429"><span class="hs-identifier hs-var hs-var hs-var hs-var">dropTriggerAndArchiveEvents</span></a></span></span><span> </span><span class="annot"><span class="annottext">SourceConfig 'Experimental
+</span><span id="line-256"></span><span>  </span><span id="local-6989586621688064541"><span class="annot"><span class="annottext">dropTriggerAndArchiveEvents :: SourceConfig 'Experimental -&gt; TriggerName -&gt; m ()
+</span><a href="#local-6989586621688064541"><span class="hs-identifier hs-var hs-var hs-var hs-var">dropTriggerAndArchiveEvents</span></a></span></span><span> </span><span class="annot"><span class="annottext">SourceConfig 'Experimental
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">TriggerName
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-257"></span><span>    </span><span class="annot"><span class="annottext">Code -&gt; Text -&gt; m ()
@@ -1152,8 +1152,8 @@ forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
 </span><a href="Hasura.Base.Error.html#throw400"><span class="hs-identifier hs-var">throw400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
 </span><a href="Hasura.Base.Error.html#NotSupported"><span class="hs-identifier hs-var">NotSupported</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;Event triggers are not supported for Experimental sources&quot;</span></span><span>
-</span><span id="line-258"></span><span>  </span><span id="local-6989586621688059428"><span class="annot"><span class="annottext">redeliverEvent :: SourceConfig 'Experimental -&gt; EventId -&gt; m ()
-</span><a href="#local-6989586621688059428"><span class="hs-identifier hs-var hs-var hs-var hs-var">redeliverEvent</span></a></span></span><span> </span><span class="annot"><span class="annottext">SourceConfig 'Experimental
+</span><span id="line-258"></span><span>  </span><span id="local-6989586621688064540"><span class="annot"><span class="annottext">redeliverEvent :: SourceConfig 'Experimental -&gt; EventId -&gt; m ()
+</span><a href="#local-6989586621688064540"><span class="hs-identifier hs-var hs-var hs-var hs-var">redeliverEvent</span></a></span></span><span> </span><span class="annot"><span class="annottext">SourceConfig 'Experimental
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">EventId
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-259"></span><span>    </span><span class="annot"><span class="annottext">Code -&gt; Text -&gt; m ()
@@ -1161,8 +1161,8 @@ forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
 </span><a href="Hasura.Base.Error.html#throw400"><span class="hs-identifier hs-var">throw400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
 </span><a href="Hasura.Base.Error.html#NotSupported"><span class="hs-identifier hs-var">NotSupported</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;Event triggers are not supported for Experimental sources&quot;</span></span><span>
-</span><span id="line-260"></span><span>  </span><span id="local-6989586621688059427"><span class="annot"><span class="annottext">unlockEventsInSource :: SourceConfig 'Experimental -&gt; Set EventId -&gt; m (Either QErr Int)
-</span><a href="#local-6989586621688059427"><span class="hs-identifier hs-var hs-var hs-var hs-var">unlockEventsInSource</span></a></span></span><span> </span><span class="annot"><span class="annottext">SourceConfig 'Experimental
+</span><span id="line-260"></span><span>  </span><span id="local-6989586621688064539"><span class="annot"><span class="annottext">unlockEventsInSource :: SourceConfig 'Experimental -&gt; Set EventId -&gt; m (Either QErr Int)
+</span><a href="#local-6989586621688064539"><span class="hs-identifier hs-var hs-var hs-var hs-var">unlockEventsInSource</span></a></span></span><span> </span><span class="annot"><span class="annottext">SourceConfig 'Experimental
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">Set EventId
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-261"></span><span>    </span><span class="annot"><span class="annottext">ExceptT QErr m Int -&gt; m (Either QErr Int)
@@ -1175,14 +1175,14 @@ forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
 </span><a href="Hasura.Base.Error.html#throw400"><span class="hs-identifier hs-var">throw400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
 </span><a href="Hasura.Base.Error.html#NotSupported"><span class="hs-identifier hs-var">NotSupported</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;Event triggers are not supported for Experimental sources&quot;</span></span><span>
-</span><span id="line-262"></span><span>  </span><span id="local-6989586621688059426"><span class="annot"><span class="annottext">createTableEventTrigger :: ServerConfigCtx
+</span><span id="line-262"></span><span>  </span><span id="local-6989586621688064538"><span class="annot"><span class="annottext">createTableEventTrigger :: ServerConfigCtx
 -&gt; SourceConfig 'Experimental
 -&gt; TableName 'Experimental
 -&gt; [ColumnInfo 'Experimental]
 -&gt; TriggerName
 -&gt; TriggerOpsDef 'Experimental
 -&gt; m (Either QErr ())
-</span><a href="#local-6989586621688059426"><span class="hs-identifier hs-var hs-var hs-var hs-var">createTableEventTrigger</span></a></span></span><span> </span><span class="annot"><span class="annottext">ServerConfigCtx
+</span><a href="#local-6989586621688064538"><span class="hs-identifier hs-var hs-var hs-var hs-var">createTableEventTrigger</span></a></span></span><span> </span><span class="annot"><span class="annottext">ServerConfigCtx
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">SourceConfig 'Experimental
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">TableName 'Experimental
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">[ColumnInfo 'Experimental]
