@@ -23,7 +23,6 @@ The optimization can be enabled using the
 - console: enable support for update permissions for mssql #3591
 - server: add support for customization of table GraphQL schema descriptions (#7496)
 - cli: skip tls verfication for all API requests when `insecure-skip-tls-verify` flag is set (#4926)
-
 - server: classify MSSQL exceptions and improve API error responses
 
 ## v2.2.0

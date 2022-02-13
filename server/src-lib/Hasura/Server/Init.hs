@@ -187,7 +187,8 @@ mkServeOptions rso = do
   txIso <- fromMaybe Q.ReadCommitted <$> withEnv (rsoTxIso rso) (fst txIsoEnv)
   adminScrt <- fmap (maybe mempty Set.singleton) $ withEnvs (rsoAdminSecret rso) $ map fst [adminSecretEnv, accessKeyEnv]
   authHook <- mkAuthHook $ rsoAuthHook rso
-  jwtSecret <- withEnvJwtConf (rsoJwtSecret rso) $ fst jwtSecretEnv
+  jwtSecret <- (`onNothing` mempty) <$> withEnvJwtConf (rsoJwtSecret rso) (fst jwtSecretEnv)
+
   unAuthRole <- withEnv (rsoUnAuthRole rso) $ fst unAuthRoleEnv
   corsCfg <- mkCorsConfig $ rsoCorsConfig rso
   enableConsole <-

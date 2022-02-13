@@ -220,7 +220,7 @@ data ServeOptions impl = ServeOptions
     soTxIso :: Q.TxIsolation,
     soAdminSecret :: Set.HashSet AdminSecretHash,
     soAuthHook :: Maybe AuthHook,
-    soJwtSecret :: Maybe JWTConfig,
+    soJwtSecret :: [JWTConfig],
     soUnAuthRole :: Maybe RoleName,
     soCorsConfig :: CorsConfig,
     soEnableConsole :: Bool,
@@ -378,9 +378,6 @@ readLogLevel s = case T.toLower $ T.strip $ T.pack s of
   "error" -> Right L.LevelError
   _ -> Left "Valid log levels: debug, info, warn or error"
 
-readJson :: (J.FromJSON a) => String -> Either String a
-readJson = J.eitherDecodeStrict . txtToBs . T.pack
-
 class FromEnv a where
   fromEnv :: String -> Either String a
 
@@ -445,6 +442,9 @@ instance FromEnv Seconds where
   fromEnv = fmap fromInteger . readEither
 
 instance FromEnv JWTConfig where
+  fromEnv = readJson
+
+instance FromEnv [JWTConfig] where
   fromEnv = readJson
 
 instance L.EnabledLogTypes impl => FromEnv [L.EngineLogType impl] where
