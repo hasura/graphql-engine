@@ -19,8 +19,8 @@
 </span><span class="hs-string">&quot;$&quot;</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">JSONPath -&gt; Either String JSONPath
 forall a b. b -&gt; Either a b
 </span><span class="hs-identifier hs-var">Right</span></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span>
-</span><span id="line-18"></span><span class="annot"><a href="Data.Parser.JSONPath.html#parseJSONPath"><span class="hs-identifier hs-var">parseJSONPath</span></a></span><span> </span><span id="local-6989586621687991784"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621687991784"><span class="hs-identifier hs-var">txt</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-18"></span><span class="annot"><a href="Data.Parser.JSONPath.html#parseJSONPath"><span class="hs-identifier hs-var">parseJSONPath</span></a></span><span> </span><span id="local-6989586621687992037"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687992037"><span class="hs-identifier hs-var">txt</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-19"></span><span>  </span><span class="annot"><span class="annottext">(String -&gt; String)
 -&gt; Either String JSONPath -&gt; Either String JSONPath
 forall (p :: * -&gt; * -&gt; *) a b c.
@@ -29,7 +29,7 @@ Bifunctor p =&gt;
 </span><span class="hs-identifier hs-var">first</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String -&gt; String -&gt; String
 forall a b. a -&gt; b -&gt; a
 </span><span class="hs-identifier hs-var">const</span></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621687991781"><span class="hs-identifier hs-var">invalidMessage</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(Either String JSONPath -&gt; Either String JSONPath)
+</span><a href="#local-6989586621687992034"><span class="hs-identifier hs-var">invalidMessage</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(Either String JSONPath -&gt; Either String JSONPath)
 -&gt; Either String JSONPath -&gt; Either String JSONPath
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span>
@@ -49,13 +49,13 @@ forall (f :: * -&gt; *) a b. Applicative f =&gt; f a -&gt; f b -&gt; f a
 </span><span class="hs-operator hs-var">&lt;*</span></span><span> </span><span class="annot"><span class="annottext">Parser Text ()
 forall t. Chunk t =&gt; Parser t ()
 </span><span class="hs-identifier hs-var">endOfInput</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621687991784"><span class="hs-identifier hs-var">txt</span></a></span><span>
+</span><a href="#local-6989586621687992037"><span class="hs-identifier hs-var">txt</span></a></span><span>
 </span><span id="line-21"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-22"></span><span>    </span><span id="local-6989586621687991781"><span class="annot"><span class="annottext">invalidMessage :: String
-</span><a href="#local-6989586621687991781"><span class="hs-identifier hs-var hs-var">invalidMessage</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-22"></span><span>    </span><span id="local-6989586621687992034"><span class="annot"><span class="annottext">invalidMessage :: String
+</span><a href="#local-6989586621687992034"><span class="hs-identifier hs-var hs-var">invalidMessage</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-23"></span><span>      </span><span class="annot"><span class="annottext">Text -&gt; String
 </span><span class="hs-identifier hs-var">T.unpack</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621687991784"><span class="hs-identifier hs-var">txt</span></a></span><span>
+</span><a href="#local-6989586621687992037"><span class="hs-identifier hs-var">txt</span></a></span><span>
 </span><span id="line-24"></span><span>        </span><span class="annot"><span class="annottext">String -&gt; String -&gt; String
 forall a. [a] -&gt; [a] -&gt; [a]
 </span><span class="hs-operator hs-var">++</span></span><span> </span><span class="annot"><span class="annottext">String
@@ -89,15 +89,15 @@ forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f a -&gt; f a
 </span><span id="line-32"></span><span class="annot"><a href="Data.Parser.JSONPath.html#name"><span class="hs-identifier hs-type">name</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Parser</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">T.Text</span></span><span>
 </span><span id="line-33"></span><span id="name"><span class="annot"><span class="annottext">name :: Parser Text Text
 </span><a href="Data.Parser.JSONPath.html#name"><span class="hs-identifier hs-var hs-var">name</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Parser Text Text
-</span><a href="#local-6989586621687991767"><span class="hs-identifier hs-var">go</span></a></span><span> </span><span class="annot"><span class="annottext">Parser Text Text -&gt; String -&gt; Parser Text Text
+</span><a href="#local-6989586621687992020"><span class="hs-identifier hs-var">go</span></a></span><span> </span><span class="annot"><span class="annottext">Parser Text Text -&gt; String -&gt; Parser Text Text
 forall i a. Parser i a -&gt; String -&gt; Parser i a
 </span><span class="hs-operator hs-var">&lt;?&gt;</span></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;property name&quot;</span></span><span>
 </span><span id="line-34"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-35"></span><span>    </span><span id="local-6989586621687991767"><span class="annot"><span class="annottext">go :: Parser Text Text
-</span><a href="#local-6989586621687991767"><span class="hs-identifier hs-var hs-var">go</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-36"></span><span>      </span><span id="local-6989586621687991765"><span class="annot"><span class="annottext">Char
-</span><a href="#local-6989586621687991765"><span class="hs-identifier hs-var">firstChar</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
+</span><span id="line-35"></span><span>    </span><span id="local-6989586621687992020"><span class="annot"><span class="annottext">go :: Parser Text Text
+</span><a href="#local-6989586621687992020"><span class="hs-identifier hs-var hs-var">go</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-36"></span><span>      </span><span id="local-6989586621687992018"><span class="annot"><span class="annottext">Char
+</span><a href="#local-6989586621687992018"><span class="hs-identifier hs-var">firstChar</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
 </span><span id="line-37"></span><span>        </span><span class="annot"><span class="annottext">Parser Text Char
 </span><span class="hs-identifier hs-var">letter</span></span><span>
 </span><span id="line-38"></span><span>          </span><span class="annot"><span class="annottext">Parser Text Char -&gt; Parser Text Char -&gt; Parser Text Char
@@ -109,8 +109,8 @@ forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f a -&gt; f a
 forall i a. Parser i a -&gt; String -&gt; Parser i a
 </span><span class="hs-operator hs-var">&lt;?&gt;</span></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;first character of property name must be a letter or underscore&quot;</span></span><span>
-</span><span id="line-40"></span><span>      </span><span id="local-6989586621687991763"><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621687991763"><span class="hs-identifier hs-var">otherChars</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser Text Char -&gt; Parser Text String
+</span><span id="line-40"></span><span>      </span><span id="local-6989586621687992016"><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621687992016"><span class="hs-identifier hs-var">otherChars</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser Text Char -&gt; Parser Text String
 forall (m :: * -&gt; *) a. MonadPlus m =&gt; m a -&gt; m [a]
 </span><span class="hs-identifier hs-var">many'</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Parser Text Char
 </span><span class="hs-identifier hs-var">letter</span></span><span> </span><span class="annot"><span class="annottext">Parser Text Char -&gt; Parser Text Char -&gt; Parser Text Char
@@ -128,10 +128,10 @@ forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; Text
 </span><span class="hs-identifier hs-var">T.pack</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Char
-</span><a href="#local-6989586621687991765"><span class="hs-identifier hs-var">firstChar</span></a></span><span> </span><span class="annot"><span class="annottext">Char -&gt; String -&gt; String
+</span><a href="#local-6989586621687992018"><span class="hs-identifier hs-var">firstChar</span></a></span><span> </span><span class="annot"><span class="annottext">Char -&gt; String -&gt; String
 forall a. a -&gt; [a] -&gt; [a]
 </span><span class="hs-glyph hs-var">:</span></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621687991763"><span class="hs-identifier hs-var">otherChars</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621687992016"><span class="hs-identifier hs-var">otherChars</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-42"></span><span>
 </span><span id="line-43"></span><span class="hs-comment">-- | Parses a JSON property key or index in square bracket format, e.g.</span><span>
 </span><span id="line-44"></span><span class="hs-comment">-- &gt; [42]</span><span>
@@ -154,8 +154,8 @@ forall (f :: * -&gt; *) a b. Applicative f =&gt; f a -&gt; f b -&gt; f b
 </span><span class="hs-operator hs-var">*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Char -&gt; Parser Text Char
 </span><span class="hs-identifier hs-var">char</span></span><span> </span><span class="annot"><span class="annottext">Char
 </span><span class="hs-char">'['</span></span><span>
-</span><span id="line-50"></span><span>  </span><span id="local-6989586621687991757"><span class="annot"><span class="annottext">JSONPathElement
-</span><a href="#local-6989586621687991757"><span class="hs-identifier hs-var">result</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
+</span><span id="line-50"></span><span>  </span><span id="local-6989586621687992010"><span class="annot"><span class="annottext">JSONPathElement
+</span><a href="#local-6989586621687992010"><span class="hs-identifier hs-var">result</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
 </span><span id="line-51"></span><span>    </span><span class="annot"><span class="annottext">Int -&gt; JSONPathElement
 </span><span class="hs-identifier hs-var">Index</span></span><span> </span><span class="annot"><span class="annottext">(Int -&gt; JSONPathElement)
 -&gt; Parser Text Int -&gt; Parser Text JSONPathElement
@@ -171,7 +171,7 @@ forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f a -&gt; f a
 -&gt; Parser Text Text -&gt; Parser Text JSONPathElement
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Char -&gt; Parser Text Text
-</span><a href="#local-6989586621687991754"><span class="hs-identifier hs-var">quotedString</span></a></span><span> </span><span class="annot"><span class="annottext">Char
+</span><a href="#local-6989586621687992007"><span class="hs-identifier hs-var">quotedString</span></a></span><span> </span><span class="annot"><span class="annottext">Char
 </span><span class="hs-char">'&quot;'</span></span><span>
 </span><span id="line-53"></span><span>      </span><span class="annot"><span class="annottext">Parser Text JSONPathElement
 -&gt; Parser Text JSONPathElement -&gt; Parser Text JSONPathElement
@@ -181,7 +181,7 @@ forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f a -&gt; f a
 -&gt; Parser Text Text -&gt; Parser Text JSONPathElement
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Char -&gt; Parser Text Text
-</span><a href="#local-6989586621687991754"><span class="hs-identifier hs-var">quotedString</span></a></span><span> </span><span class="annot"><span class="annottext">Char
+</span><a href="#local-6989586621687992007"><span class="hs-identifier hs-var">quotedString</span></a></span><span> </span><span class="annot"><span class="annottext">Char
 </span><span class="hs-char">'\''</span></span><span>
 </span><span id="line-54"></span><span>  </span><span class="annot"><span class="annottext">Parser Text Char -&gt; Parser Text ()
 forall (f :: * -&gt; *) a. Functor f =&gt; f a -&gt; f ()
@@ -194,11 +194,11 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span id="line-55"></span><span>  </span><span class="annot"><span class="annottext">JSONPathElement -&gt; Parser Text JSONPathElement
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">JSONPathElement
-</span><a href="#local-6989586621687991757"><span class="hs-identifier hs-var">result</span></a></span><span>
+</span><a href="#local-6989586621687992010"><span class="hs-identifier hs-var">result</span></a></span><span>
 </span><span id="line-56"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-57"></span><span>    </span><span id="local-6989586621687991754"><span class="annot"><span class="annottext">quotedString :: Char -&gt; Parser Text Text
-</span><a href="#local-6989586621687991754"><span class="hs-identifier hs-var hs-var">quotedString</span></a></span></span><span> </span><span id="local-6989586621687991753"><span class="annot"><span class="annottext">Char
-</span><a href="#local-6989586621687991753"><span class="hs-identifier hs-var">delimiter</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-57"></span><span>    </span><span id="local-6989586621687992007"><span class="annot"><span class="annottext">quotedString :: Char -&gt; Parser Text Text
+</span><a href="#local-6989586621687992007"><span class="hs-identifier hs-var hs-var">quotedString</span></a></span></span><span> </span><span id="local-6989586621687992006"><span class="annot"><span class="annottext">Char
+</span><a href="#local-6989586621687992006"><span class="hs-identifier hs-var">delimiter</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-58"></span><span>      </span><span class="annot"><span class="annottext">Parser Text Char -&gt; Parser Text ()
 forall (f :: * -&gt; *) a. Functor f =&gt; f a -&gt; f ()
 </span><span class="hs-identifier hs-var">void</span></span><span> </span><span class="annot"><span class="annottext">(Parser Text Char -&gt; Parser Text ())
@@ -206,16 +206,16 @@ forall (f :: * -&gt; *) a. Functor f =&gt; f a -&gt; f ()
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Char -&gt; Parser Text Char
 </span><span class="hs-identifier hs-var">char</span></span><span> </span><span class="annot"><span class="annottext">Char
-</span><a href="#local-6989586621687991753"><span class="hs-identifier hs-var">delimiter</span></a></span><span>
-</span><span id="line-59"></span><span>      </span><span id="local-6989586621687991752"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621687991752"><span class="hs-identifier hs-var">result</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">String -&gt; Text
+</span><a href="#local-6989586621687992006"><span class="hs-identifier hs-var">delimiter</span></a></span><span>
+</span><span id="line-59"></span><span>      </span><span id="local-6989586621687992005"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687992005"><span class="hs-identifier hs-var">result</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">String -&gt; Text
 </span><span class="hs-identifier hs-var">T.pack</span></span><span> </span><span class="annot"><span class="annottext">(String -&gt; Text) -&gt; Parser Text String -&gt; Parser Text Text
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser Text Char -&gt; Parser Text String
 forall (m :: * -&gt; *) a. MonadPlus m =&gt; m a -&gt; m [a]
 </span><span class="hs-identifier hs-var">many'</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Char -&gt; Parser Text Char
-</span><a href="#local-6989586621687991751"><span class="hs-identifier hs-var">charOrEscape</span></a></span><span> </span><span class="annot"><span class="annottext">Char
-</span><a href="#local-6989586621687991753"><span class="hs-identifier hs-var">delimiter</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621687992004"><span class="hs-identifier hs-var">charOrEscape</span></a></span><span> </span><span class="annot"><span class="annottext">Char
+</span><a href="#local-6989586621687992006"><span class="hs-identifier hs-var">delimiter</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-60"></span><span>      </span><span class="annot"><span class="annottext">Parser Text Char -&gt; Parser Text ()
 forall (f :: * -&gt; *) a. Functor f =&gt; f a -&gt; f ()
 </span><span class="hs-identifier hs-var">void</span></span><span> </span><span class="annot"><span class="annottext">(Parser Text Char -&gt; Parser Text ())
@@ -223,15 +223,15 @@ forall (f :: * -&gt; *) a. Functor f =&gt; f a -&gt; f ()
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Char -&gt; Parser Text Char
 </span><span class="hs-identifier hs-var">char</span></span><span> </span><span class="annot"><span class="annottext">Char
-</span><a href="#local-6989586621687991753"><span class="hs-identifier hs-var">delimiter</span></a></span><span>
+</span><a href="#local-6989586621687992006"><span class="hs-identifier hs-var">delimiter</span></a></span><span>
 </span><span id="line-61"></span><span>      </span><span class="annot"><span class="annottext">Text -&gt; Parser Text Text
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621687991752"><span class="hs-identifier hs-var">result</span></a></span><span>
+</span><a href="#local-6989586621687992005"><span class="hs-identifier hs-var">result</span></a></span><span>
 </span><span id="line-62"></span><span>
-</span><span id="line-63"></span><span>    </span><span id="local-6989586621687991751"><span class="annot"><span class="annottext">charOrEscape :: Char -&gt; Parser Text Char
-</span><a href="#local-6989586621687991751"><span class="hs-identifier hs-var hs-var">charOrEscape</span></a></span></span><span> </span><span id="local-6989586621687991750"><span class="annot"><span class="annottext">Char
-</span><a href="#local-6989586621687991750"><span class="hs-identifier hs-var">delimiter</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Char -&gt; Parser Text Char
+</span><span id="line-63"></span><span>    </span><span id="local-6989586621687992004"><span class="annot"><span class="annottext">charOrEscape :: Char -&gt; Parser Text Char
+</span><a href="#local-6989586621687992004"><span class="hs-identifier hs-var hs-var">charOrEscape</span></a></span></span><span> </span><span id="local-6989586621687992003"><span class="annot"><span class="annottext">Char
+</span><a href="#local-6989586621687992003"><span class="hs-identifier hs-var">delimiter</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Char -&gt; Parser Text Char
 </span><span class="hs-identifier hs-var">char</span></span><span> </span><span class="annot"><span class="annottext">Char
 </span><span class="hs-char">'\\'</span></span><span> </span><span class="annot"><span class="annottext">Parser Text Char -&gt; Parser Text Char -&gt; Parser Text Char
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f a -&gt; f b -&gt; f b
@@ -240,5 +240,5 @@ forall (f :: * -&gt; *) a b. Applicative f =&gt; f a -&gt; f b -&gt; f b
 forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f a -&gt; f a
 </span><span class="hs-operator hs-var">&lt;|&gt;</span></span><span> </span><span class="annot"><span class="annottext">Char -&gt; Parser Text Char
 </span><span class="hs-identifier hs-var">notChar</span></span><span> </span><span class="annot"><span class="annottext">Char
-</span><a href="#local-6989586621687991750"><span class="hs-identifier hs-var">delimiter</span></a></span><span>
+</span><a href="#local-6989586621687992003"><span class="hs-identifier hs-var">delimiter</span></a></span><span>
 </span><span id="line-64"></span></pre></body></html>

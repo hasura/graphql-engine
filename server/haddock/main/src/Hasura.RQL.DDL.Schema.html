@@ -43,7 +43,7 @@
 </span><span id="line-42"></span><span>    </span><span id="rrResult"><span class="annot"><span class="annottext">RunSQLRes -&gt; Value
 </span><a href="Hasura.RQL.DDL.Schema.html#rrResult"><span class="hs-identifier hs-var hs-var">rrResult</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><span class="hs-identifier hs-type">Value</span></span><span>
 </span><span id="line-43"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-44"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688131976"><span id="local-6989586621688131978"><span id="local-6989586621688131980"><span class="annot"><span class="annottext">Int -&gt; RunSQLRes -&gt; ShowS
+</span><span id="line-44"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688132240"><span id="local-6989586621688132242"><span id="local-6989586621688132244"><span class="annot"><span class="annottext">Int -&gt; RunSQLRes -&gt; ShowS
 [RunSQLRes] -&gt; ShowS
 RunSQLRes -&gt; String
 (Int -&gt; RunSQLRes -&gt; ShowS)
@@ -58,7 +58,7 @@ show :: RunSQLRes -&gt; String
 $cshow :: RunSQLRes -&gt; String
 showsPrec :: Int -&gt; RunSQLRes -&gt; ShowS
 $cshowsPrec :: Int -&gt; RunSQLRes -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688131971"><span id="local-6989586621688131973"><span class="annot"><span class="annottext">RunSQLRes -&gt; RunSQLRes -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688132235"><span id="local-6989586621688132237"><span class="annot"><span class="annottext">RunSQLRes -&gt; RunSQLRes -&gt; Bool
 (RunSQLRes -&gt; RunSQLRes -&gt; Bool)
 -&gt; (RunSQLRes -&gt; RunSQLRes -&gt; Bool) -&gt; Eq RunSQLRes
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -68,10 +68,10 @@ $c/= :: RunSQLRes -&gt; RunSQLRes -&gt; Bool
 $c== :: RunSQLRes -&gt; RunSQLRes -&gt; Bool
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-45"></span><span>
-</span><span id="line-46"></span><span class="hs-special">$(</span><span id="local-6989586621688131958"><span id="local-6989586621688131960"><span id="local-6989586621688131962"><span id="local-6989586621688131964"><span id="local-6989586621688131966"><span id="local-6989586621688131968"><span class="hs-identifier">deriveJSON</span><span> </span><span class="hs-identifier">hasuraJSON</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">RunSQLRes</span></span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-46"></span><span class="hs-special">$(</span><span id="local-6989586621688132222"><span id="local-6989586621688132224"><span id="local-6989586621688132226"><span id="local-6989586621688132228"><span id="local-6989586621688132230"><span id="local-6989586621688132232"><span class="hs-identifier">deriveJSON</span><span> </span><span class="hs-identifier">hasuraJSON</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">RunSQLRes</span></span></span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-47"></span><span>
 </span><span id="line-48"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Q.FromRes</span></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Schema.html#RunSQLRes"><span class="hs-identifier hs-type">RunSQLRes</span></a></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-49"></span><span>  </span><span id="local-6989586621688131950"><span class="annot"><span class="annottext">fromRes :: ResultOk -&gt; ExceptT Text IO RunSQLRes
+</span><span id="line-49"></span><span>  </span><span id="local-6989586621688132214"><span class="annot"><span class="annottext">fromRes :: ResultOk -&gt; ExceptT Text IO RunSQLRes
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">fromRes</span></span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Q.ResultOkEmpty</span></span><span> </span><span class="annot"><span class="annottext">Result
 </span><span class="hs-identifier">_</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-50"></span><span>    </span><span class="annot"><span class="annottext">RunSQLRes -&gt; ExceptT Text IO RunSQLRes
@@ -83,12 +83,12 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="Hasura.RQL.DDL.Schema.html#RunSQLRes"><span class="hs-identifier hs-var">RunSQLRes</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;CommandOk&quot;</span></span><span> </span><span class="annot"><span class="annottext">Value
 </span><span class="hs-identifier hs-var">Null</span></span><span>
-</span><span id="line-51"></span><span>  </span><span class="annot"><span class="hs-identifier hs-var">fromRes</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Q.ResultOkData</span></span><span> </span><span id="local-6989586621688131945"><span class="annot"><span class="annottext">Result
-</span><a href="#local-6989586621688131945"><span class="hs-identifier hs-var">res</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-52"></span><span>    </span><span id="local-6989586621688131944"><span class="annot"><span class="annottext">[[Text]]
-</span><a href="#local-6989586621688131944"><span class="hs-identifier hs-var">csvRows</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Result -&gt; ExceptT Text IO [[Text]]
-</span><a href="#local-6989586621688131943"><span class="hs-identifier hs-var">resToCSV</span></a></span><span> </span><span class="annot"><span class="annottext">Result
-</span><a href="#local-6989586621688131945"><span class="hs-identifier hs-var">res</span></a></span><span>
+</span><span id="line-51"></span><span>  </span><span class="annot"><span class="hs-identifier hs-var">fromRes</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Q.ResultOkData</span></span><span> </span><span id="local-6989586621688132209"><span class="annot"><span class="annottext">Result
+</span><a href="#local-6989586621688132209"><span class="hs-identifier hs-var">res</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-52"></span><span>    </span><span id="local-6989586621688132208"><span class="annot"><span class="annottext">[[Text]]
+</span><a href="#local-6989586621688132208"><span class="hs-identifier hs-var">csvRows</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Result -&gt; ExceptT Text IO [[Text]]
+</span><a href="#local-6989586621688132207"><span class="hs-identifier hs-var">resToCSV</span></a></span><span> </span><span class="annot"><span class="annottext">Result
+</span><a href="#local-6989586621688132209"><span class="hs-identifier hs-var">res</span></a></span><span>
 </span><span id="line-53"></span><span>    </span><span class="annot"><span class="annottext">RunSQLRes -&gt; ExceptT Text IO RunSQLRes
 forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
 </span><span class="hs-identifier hs-var">return</span></span><span> </span><span class="annot"><span class="annottext">(RunSQLRes -&gt; ExceptT Text IO RunSQLRes)
@@ -101,32 +101,32 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">[[Text]] -&gt; Value
 forall a. ToJSON a =&gt; a -&gt; Value
 </span><span class="hs-identifier hs-var">toJSON</span></span><span> </span><span class="annot"><span class="annottext">[[Text]]
-</span><a href="#local-6989586621688131944"><span class="hs-identifier hs-var">csvRows</span></a></span><span>
+</span><a href="#local-6989586621688132208"><span class="hs-identifier hs-var">csvRows</span></a></span><span>
 </span><span id="line-54"></span><span>    </span><span class="hs-keyword">where</span><span>
-</span><span id="line-55"></span><span>      </span><span class="annot"><a href="#local-6989586621688131943"><span class="hs-identifier hs-type">resToCSV</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">PQ.Result</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ExceptT</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="hs-special">[</span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">]</span><span class="hs-special">]</span><span>
-</span><span id="line-56"></span><span>      </span><span id="local-6989586621688131943"><span class="annot"><span class="annottext">resToCSV :: Result -&gt; ExceptT Text IO [[Text]]
-</span><a href="#local-6989586621688131943"><span class="hs-identifier hs-var hs-var">resToCSV</span></a></span></span><span> </span><span id="local-6989586621688131942"><span class="annot"><span class="annottext">Result
-</span><a href="#local-6989586621688131942"><span class="hs-identifier hs-var">r</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-57"></span><span>        </span><span id="local-6989586621688131941"><span class="annot"><span class="annottext">Row
-</span><a href="#local-6989586621688131941"><span class="hs-identifier hs-var">nr</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO Row -&gt; ExceptT Text IO Row
+</span><span id="line-55"></span><span>      </span><span class="annot"><a href="#local-6989586621688132207"><span class="hs-identifier hs-type">resToCSV</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">PQ.Result</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ExceptT</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="hs-special">[</span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">]</span><span class="hs-special">]</span><span>
+</span><span id="line-56"></span><span>      </span><span id="local-6989586621688132207"><span class="annot"><span class="annottext">resToCSV :: Result -&gt; ExceptT Text IO [[Text]]
+</span><a href="#local-6989586621688132207"><span class="hs-identifier hs-var hs-var">resToCSV</span></a></span></span><span> </span><span id="local-6989586621688132206"><span class="annot"><span class="annottext">Result
+</span><a href="#local-6989586621688132206"><span class="hs-identifier hs-var">r</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-57"></span><span>        </span><span id="local-6989586621688132205"><span class="annot"><span class="annottext">Row
+</span><a href="#local-6989586621688132205"><span class="hs-identifier hs-var">nr</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO Row -&gt; ExceptT Text IO Row
 forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
 </span><span class="hs-identifier hs-var">liftIO</span></span><span> </span><span class="annot"><span class="annottext">(IO Row -&gt; ExceptT Text IO Row) -&gt; IO Row -&gt; ExceptT Text IO Row
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Result -&gt; IO Row
 </span><span class="hs-identifier hs-var">PQ.ntuples</span></span><span> </span><span class="annot"><span class="annottext">Result
-</span><a href="#local-6989586621688131942"><span class="hs-identifier hs-var">r</span></a></span><span>
-</span><span id="line-58"></span><span>        </span><span id="local-6989586621688131938"><span class="annot"><span class="annottext">Column
-</span><a href="#local-6989586621688131938"><span class="hs-identifier hs-var">nc</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO Column -&gt; ExceptT Text IO Column
+</span><a href="#local-6989586621688132206"><span class="hs-identifier hs-var">r</span></a></span><span>
+</span><span id="line-58"></span><span>        </span><span id="local-6989586621688132202"><span class="annot"><span class="annottext">Column
+</span><a href="#local-6989586621688132202"><span class="hs-identifier hs-var">nc</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO Column -&gt; ExceptT Text IO Column
 forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
 </span><span class="hs-identifier hs-var">liftIO</span></span><span> </span><span class="annot"><span class="annottext">(IO Column -&gt; ExceptT Text IO Column)
 -&gt; IO Column -&gt; ExceptT Text IO Column
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Result -&gt; IO Column
 </span><span class="hs-identifier hs-var">PQ.nfields</span></span><span> </span><span class="annot"><span class="annottext">Result
-</span><a href="#local-6989586621688131942"><span class="hs-identifier hs-var">r</span></a></span><span>
+</span><a href="#local-6989586621688132206"><span class="hs-identifier hs-var">r</span></a></span><span>
 </span><span id="line-59"></span><span>
-</span><span id="line-60"></span><span>        </span><span id="local-6989586621688131936"><span class="annot"><span class="annottext">[Text]
-</span><a href="#local-6989586621688131936"><span class="hs-identifier hs-var">hdr</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">[Column]
+</span><span id="line-60"></span><span>        </span><span id="local-6989586621688132200"><span class="annot"><span class="annottext">[Text]
+</span><a href="#local-6989586621688132200"><span class="hs-identifier hs-var">hdr</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">[Column]
 -&gt; (Column -&gt; ExceptT Text IO Text) -&gt; ExceptT Text IO [Text]
 forall (t :: * -&gt; *) (m :: * -&gt; *) a b.
 (Traversable t, Monad m) =&gt;
@@ -135,21 +135,21 @@ t a -&gt; (a -&gt; m b) -&gt; m (t b)
 </span><span class="hs-number">0</span></span><span> </span><span class="hs-glyph">..</span><span> </span><span class="annot"><span class="annottext">Column -&gt; Column
 forall a. Enum a =&gt; a -&gt; a
 </span><span class="hs-identifier hs-var">pred</span></span><span> </span><span class="annot"><span class="annottext">Column
-</span><a href="#local-6989586621688131938"><span class="hs-identifier hs-var">nc</span></a></span><span class="hs-special">]</span><span> </span><span class="annot"><span class="annottext">((Column -&gt; ExceptT Text IO Text) -&gt; ExceptT Text IO [Text])
+</span><a href="#local-6989586621688132202"><span class="hs-identifier hs-var">nc</span></a></span><span class="hs-special">]</span><span> </span><span class="annot"><span class="annottext">((Column -&gt; ExceptT Text IO Text) -&gt; ExceptT Text IO [Text])
 -&gt; (Column -&gt; ExceptT Text IO Text) -&gt; ExceptT Text IO [Text]
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621688131933"><span class="annot"><span class="annottext">Column
-</span><a href="#local-6989586621688131933"><span class="hs-identifier hs-var">ic</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-61"></span><span>          </span><span id="local-6989586621688131932"><span class="annot"><span class="annottext">Maybe ByteString
-</span><a href="#local-6989586621688131932"><span class="hs-identifier hs-var">colNameBS</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO (Maybe ByteString) -&gt; ExceptT Text IO (Maybe ByteString)
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621688132197"><span class="annot"><span class="annottext">Column
+</span><a href="#local-6989586621688132197"><span class="hs-identifier hs-var">ic</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-61"></span><span>          </span><span id="local-6989586621688132196"><span class="annot"><span class="annottext">Maybe ByteString
+</span><a href="#local-6989586621688132196"><span class="hs-identifier hs-var">colNameBS</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO (Maybe ByteString) -&gt; ExceptT Text IO (Maybe ByteString)
 forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
 </span><span class="hs-identifier hs-var">liftIO</span></span><span> </span><span class="annot"><span class="annottext">(IO (Maybe ByteString) -&gt; ExceptT Text IO (Maybe ByteString))
 -&gt; IO (Maybe ByteString) -&gt; ExceptT Text IO (Maybe ByteString)
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Result -&gt; Column -&gt; IO (Maybe ByteString)
 </span><span class="hs-identifier hs-var">PQ.fname</span></span><span> </span><span class="annot"><span class="annottext">Result
-</span><a href="#local-6989586621688131942"><span class="hs-identifier hs-var">r</span></a></span><span> </span><span class="annot"><span class="annottext">Column
-</span><a href="#local-6989586621688131933"><span class="hs-identifier hs-var">ic</span></a></span><span>
+</span><a href="#local-6989586621688132206"><span class="hs-identifier hs-var">r</span></a></span><span> </span><span class="annot"><span class="annottext">Column
+</span><a href="#local-6989586621688132197"><span class="hs-identifier hs-var">ic</span></a></span><span>
 </span><span id="line-62"></span><span>          </span><span class="annot"><span class="annottext">ExceptT Text IO Text
 -&gt; (ByteString -&gt; ExceptT Text IO Text)
 -&gt; Maybe ByteString
@@ -159,11 +159,11 @@ forall b a. b -&gt; (a -&gt; b) -&gt; Maybe a -&gt; b
 forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
 </span><span class="hs-identifier hs-var">return</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;unknown&quot;</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; ExceptT Text IO Text
-</span><a href="#local-6989586621688131929"><span class="hs-identifier hs-var">decodeBS</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe ByteString
-</span><a href="#local-6989586621688131932"><span class="hs-identifier hs-var">colNameBS</span></a></span><span>
+</span><a href="#local-6989586621688132193"><span class="hs-identifier hs-var">decodeBS</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe ByteString
+</span><a href="#local-6989586621688132196"><span class="hs-identifier hs-var">colNameBS</span></a></span><span>
 </span><span id="line-63"></span><span>
-</span><span id="line-64"></span><span>        </span><span id="local-6989586621688131928"><span class="annot"><span class="annottext">[[Text]]
-</span><a href="#local-6989586621688131928"><span class="hs-identifier hs-var">rows</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">[Row]
+</span><span id="line-64"></span><span>        </span><span id="local-6989586621688132192"><span class="annot"><span class="annottext">[[Text]]
+</span><a href="#local-6989586621688132192"><span class="hs-identifier hs-var">rows</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">[Row]
 -&gt; (Row -&gt; ExceptT Text IO [Text]) -&gt; ExceptT Text IO [[Text]]
 forall (t :: * -&gt; *) (m :: * -&gt; *) a b.
 (Traversable t, Monad m) =&gt;
@@ -172,11 +172,11 @@ t a -&gt; (a -&gt; m b) -&gt; m (t b)
 </span><span class="hs-number">0</span></span><span> </span><span class="hs-glyph">..</span><span> </span><span class="annot"><span class="annottext">Row -&gt; Row
 forall a. Enum a =&gt; a -&gt; a
 </span><span class="hs-identifier hs-var">pred</span></span><span> </span><span class="annot"><span class="annottext">Row
-</span><a href="#local-6989586621688131941"><span class="hs-identifier hs-var">nr</span></a></span><span class="hs-special">]</span><span> </span><span class="annot"><span class="annottext">((Row -&gt; ExceptT Text IO [Text]) -&gt; ExceptT Text IO [[Text]])
+</span><a href="#local-6989586621688132205"><span class="hs-identifier hs-var">nr</span></a></span><span class="hs-special">]</span><span> </span><span class="annot"><span class="annottext">((Row -&gt; ExceptT Text IO [Text]) -&gt; ExceptT Text IO [[Text]])
 -&gt; (Row -&gt; ExceptT Text IO [Text]) -&gt; ExceptT Text IO [[Text]]
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621688131927"><span class="annot"><span class="annottext">Row
-</span><a href="#local-6989586621688131927"><span class="hs-identifier hs-var">ir</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621688132191"><span class="annot"><span class="annottext">Row
+</span><a href="#local-6989586621688132191"><span class="hs-identifier hs-var">ir</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-65"></span><span>          </span><span class="annot"><span class="annottext">[Column]
 -&gt; (Column -&gt; ExceptT Text IO Text) -&gt; ExceptT Text IO [Text]
 forall (t :: * -&gt; *) (m :: * -&gt; *) a b.
@@ -186,22 +186,22 @@ t a -&gt; (a -&gt; m b) -&gt; m (t b)
 </span><span class="hs-number">0</span></span><span> </span><span class="hs-glyph">..</span><span> </span><span class="annot"><span class="annottext">Column -&gt; Column
 forall a. Enum a =&gt; a -&gt; a
 </span><span class="hs-identifier hs-var">pred</span></span><span> </span><span class="annot"><span class="annottext">Column
-</span><a href="#local-6989586621688131938"><span class="hs-identifier hs-var">nc</span></a></span><span class="hs-special">]</span><span> </span><span class="annot"><span class="annottext">((Column -&gt; ExceptT Text IO Text) -&gt; ExceptT Text IO [Text])
+</span><a href="#local-6989586621688132202"><span class="hs-identifier hs-var">nc</span></a></span><span class="hs-special">]</span><span> </span><span class="annot"><span class="annottext">((Column -&gt; ExceptT Text IO Text) -&gt; ExceptT Text IO [Text])
 -&gt; (Column -&gt; ExceptT Text IO Text) -&gt; ExceptT Text IO [Text]
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621688131926"><span class="annot"><span class="annottext">Column
-</span><a href="#local-6989586621688131926"><span class="hs-identifier hs-var">ic</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-66"></span><span>            </span><span id="local-6989586621688131925"><span class="annot"><span class="annottext">Maybe ByteString
-</span><a href="#local-6989586621688131925"><span class="hs-identifier hs-var">cellValBS</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO (Maybe ByteString) -&gt; ExceptT Text IO (Maybe ByteString)
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621688132190"><span class="annot"><span class="annottext">Column
+</span><a href="#local-6989586621688132190"><span class="hs-identifier hs-var">ic</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-66"></span><span>            </span><span id="local-6989586621688132189"><span class="annot"><span class="annottext">Maybe ByteString
+</span><a href="#local-6989586621688132189"><span class="hs-identifier hs-var">cellValBS</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO (Maybe ByteString) -&gt; ExceptT Text IO (Maybe ByteString)
 forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
 </span><span class="hs-identifier hs-var">liftIO</span></span><span> </span><span class="annot"><span class="annottext">(IO (Maybe ByteString) -&gt; ExceptT Text IO (Maybe ByteString))
 -&gt; IO (Maybe ByteString) -&gt; ExceptT Text IO (Maybe ByteString)
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Result -&gt; Row -&gt; Column -&gt; IO (Maybe ByteString)
 </span><span class="hs-identifier hs-var">PQ.getvalue</span></span><span> </span><span class="annot"><span class="annottext">Result
-</span><a href="#local-6989586621688131942"><span class="hs-identifier hs-var">r</span></a></span><span> </span><span class="annot"><span class="annottext">Row
-</span><a href="#local-6989586621688131927"><span class="hs-identifier hs-var">ir</span></a></span><span> </span><span class="annot"><span class="annottext">Column
-</span><a href="#local-6989586621688131926"><span class="hs-identifier hs-var">ic</span></a></span><span>
+</span><a href="#local-6989586621688132206"><span class="hs-identifier hs-var">r</span></a></span><span> </span><span class="annot"><span class="annottext">Row
+</span><a href="#local-6989586621688132191"><span class="hs-identifier hs-var">ir</span></a></span><span> </span><span class="annot"><span class="annottext">Column
+</span><a href="#local-6989586621688132190"><span class="hs-identifier hs-var">ic</span></a></span><span>
 </span><span id="line-67"></span><span>            </span><span class="annot"><span class="annottext">ExceptT Text IO Text
 -&gt; (ByteString -&gt; ExceptT Text IO Text)
 -&gt; Maybe ByteString
@@ -211,8 +211,8 @@ forall b a. b -&gt; (a -&gt; b) -&gt; Maybe a -&gt; b
 forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
 </span><span class="hs-identifier hs-var">return</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;NULL&quot;</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; ExceptT Text IO Text
-</span><a href="#local-6989586621688131929"><span class="hs-identifier hs-var">decodeBS</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe ByteString
-</span><a href="#local-6989586621688131925"><span class="hs-identifier hs-var">cellValBS</span></a></span><span>
+</span><a href="#local-6989586621688132193"><span class="hs-identifier hs-var">decodeBS</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe ByteString
+</span><a href="#local-6989586621688132189"><span class="hs-identifier hs-var">cellValBS</span></a></span><span>
 </span><span id="line-68"></span><span>
 </span><span id="line-69"></span><span>        </span><span class="annot"><span class="annottext">[[Text]] -&gt; ExceptT Text IO [[Text]]
 forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
@@ -220,13 +220,13 @@ forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
 -&gt; [[Text]] -&gt; ExceptT Text IO [[Text]]
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">[Text]
-</span><a href="#local-6989586621688131936"><span class="hs-identifier hs-var">hdr</span></a></span><span> </span><span class="annot"><span class="annottext">[Text] -&gt; [[Text]] -&gt; [[Text]]
+</span><a href="#local-6989586621688132200"><span class="hs-identifier hs-var">hdr</span></a></span><span> </span><span class="annot"><span class="annottext">[Text] -&gt; [[Text]] -&gt; [[Text]]
 forall a. a -&gt; [a] -&gt; [a]
 </span><span class="hs-glyph hs-var">:</span></span><span> </span><span class="annot"><span class="annottext">[[Text]]
-</span><a href="#local-6989586621688131928"><span class="hs-identifier hs-var">rows</span></a></span><span>
+</span><a href="#local-6989586621688132192"><span class="hs-identifier hs-var">rows</span></a></span><span>
 </span><span id="line-70"></span><span>
-</span><span id="line-71"></span><span>      </span><span id="local-6989586621688131929"><span class="annot"><span class="annottext">decodeBS :: ByteString -&gt; ExceptT Text IO Text
-</span><a href="#local-6989586621688131929"><span class="hs-identifier hs-var hs-var">decodeBS</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(UnicodeException -&gt; ExceptT Text IO Text)
+</span><span id="line-71"></span><span>      </span><span id="local-6989586621688132193"><span class="annot"><span class="annottext">decodeBS :: ByteString -&gt; ExceptT Text IO Text
+</span><a href="#local-6989586621688132193"><span class="hs-identifier hs-var hs-var">decodeBS</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(UnicodeException -&gt; ExceptT Text IO Text)
 -&gt; (Text -&gt; ExceptT Text IO Text)
 -&gt; Either UnicodeException Text
 -&gt; ExceptT Text IO Text
