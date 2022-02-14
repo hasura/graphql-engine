@@ -37,15 +37,18 @@ X-Hasura-Role: admin
 
 {
     "type" : "create_query_collection",
-    "args": {
-         "name": "my_collection",
-         "comment": "an optional comment",
-         "definition": {
-             "queries": [
-                 {"name": "query_1", "query": "query { test {id name}}"}
+      "args": {
+          "name": "my_collection",
+          "comment": "an optional comment",
+          "definition": {
+              "queries": [
+                  {
+                      "name": "query_1",
+                      "query": "query { test { id name } }"
+                  }
               ]
-         }
-     }
+          }
+      }
 }
 ```
 
@@ -69,9 +72,9 @@ X-Hasura-Role: admin
 {
     "type" : "drop_query_collection",
     "args": {
-         "collection": "my_collection",
-         "cascade": false
-     }
+        "collection": "my_collection",
+        "cascade": false
+    }
 }
 ```
 
@@ -94,10 +97,10 @@ X-Hasura-Role: admin
 {
     "type" : "add_query_to_collection",
     "args": {
-         "collection_name": "my_collection",
-         "query_name": "query_2",
-         "query": "query {test {name}}"
-     }
+        "collection_name": "my_collection",
+        "query_name": "query_2",
+        "query": "query {test {name}}"
+    }
 }
 ```
 
@@ -121,9 +124,9 @@ X-Hasura-Role: admin
 {
     "type" : "drop_query_from_collection",
     "args": {
-         "collection_name": "my_collection",
-         "query_name": "query_2"
-     }
+        "collection_name": "my_collection",
+        "query_name": "query_2"
+    }
 }
 ```
 
@@ -136,7 +139,31 @@ X-Hasura-Role: admin
 
 ## add_collection_to_allowlist {#metadata-add-collection-to-allowlist}
 
-`add_collection_to_allowlist` is used to add a collection to the allow-list.
+``add_collection_to_allowlist`` is used to add a collection to the allow-list. It is possible to specify a scope, defaulting to global.
+
+If the given collection already exists in the allowlist regardless of scope, ``add_collection_to_allowlist`` is a no-op.
+To change the scope, use [update_scope_of_collection_in_allowlist](#metadata-update-scope-of-collection-in-allowlist).
+
+If the scope is global, all roles will be able to access the queries present in the query collection:
+
+```http
+ POST /v1/metadata HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: admin
+
+{
+    "type" : "add_collection_to_allowlist",
+    "args": {
+        "collection": "my_collection",
+        "scope": {
+            "global": true
+        }
+    }
+}
+```
+
+If the scope is not global, only the listed roles are allowed to
+to access the queries:
 
 ```http
 POST /v1/metadata HTTP/1.1
@@ -146,16 +173,63 @@ X-Hasura-Role: admin
 {
     "type" : "add_collection_to_allowlist",
     "args": {
-         "collection": "my_collection"
-     }
+        "collection": "role_based_query_collection",
+        "scope": {
+            "global": false,
+            "roles": [
+              "user",
+              "editor"
+            ]
+        }
+    }
 }
 ```
+
+If a query occurs in multiple collections, a role will be allowed to access the query if it is listed for any of the collections.
 
 ### Args Syntax {#metadata-add-collection-to-allowlist-syntax}
 
 | Key        | Required | Schema           | Description                                              |
 |------------|----------|------------------|----------------------------------------------------------|
 | collection | true     | [CollectionName](/graphql/core/api-reference/syntax-defs.mdx#collectionname)  | Name of a query collection to be added to the allow-list |
+| scope      | false    | [AllowlistScope](/graphql/core/api-reference/syntax-defs.mdx#allowlistscope)  | Scope of the collection in the allowlist. (default: `{global: true}`) When the scope is global, the query collection's queries will be accessible to all roles. When the scope is non-global, the query collection's queries will be accessible to all of the roles listed in the scope. *(non-global scope supported only in cloud/enterprise versions)* |
+
+
+## update_scope_of_collection_in_allowlist {#metadata-update-scope-of-collection-in-allowlist}
+
+`update_scope_of_collection_in_allowlist` is used to add change the
+scope of a collection in the allowlist. Its effect is the same as first
+dropping the collection from the allowlist using
+`drop_collection_from_allowlist`, and then adding it with the given
+scope using `add_collection_to_allowlist`.
+
+``` http
+POST /v1/metadata HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: admin
+
+{
+    "type" : "update_scope_of_collection_in_allowlist",
+    "args": {
+        "collection": "previously_global_query_collection",
+        "scope": {
+            "global": false,
+            "roles": [
+               "user",
+               "editor"
+            ]
+        }
+    }
+}
+```
+
+### Args Syntax {#metadata-update-scope-of-collection-in-allowlist-syntax}
+
+| Key        | Required | Schema           | Description                                                                                                                                                                                                                                                                                                                   |
+|------------|----------|------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| collection | true     | [CollectionName](/graphql/core/api-reference/syntax-defs.mdx#collectionname) | Name of a query collection to be added to the allow-list                                                                                                                                                                                                                                                                      |
+| scope      | true     | [AllowlistScope](/graphql/core/api-reference/syntax-defs.mdx#allowlistscope) | Scope of the collection in the allowlist. When the scope is global, the query collection's queries will be accessible to all roles. When the scope is non-global, the query collection's queries will be accessible to all of the roles listed in the scope. *(non-global scope supported only in cloud/enterprise versions)* |
+
 
 ## drop_collection_from_allowlist {#metadata-drop-collection-from-allowlist}
 
@@ -169,8 +243,8 @@ X-Hasura-Role: admin
 {
     "type" : "drop_collection_from_allowlist",
     "args": {
-         "collection": "my_collection_1"
-     }
+        "collection": "my_collection_1"
+    }
 }
 ```
 
