@@ -3,7 +3,7 @@ url: /v1/graphql
 status: 200
 response:
   data:
-    hasura_test_city:
+    hasura_city:
     - name: Durham
       country: USA
     - name: Framlingham
@@ -11,7 +11,7 @@ response:
 query:
   query: |
     query {
-      hasura_test_city (
+      hasura_city (
       where: {name: {_like: "%ham" }},
       order_by: {name: asc}
       ) {

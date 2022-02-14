@@ -23,7 +23,7 @@ export const AggregationSection: React.FC<AggregationProps> = ({
   // if no row permissions are selected selection should be disabled
   const disabled = useIsDisabled(queryType);
 
-  const enabled = watch('enableAggregation');
+  const enabled = watch('aggregationEnabled');
 
   if (!isFeatureSupported('tables.permissions.aggregation')) {
     return null;
@@ -46,7 +46,7 @@ export const AggregationSection: React.FC<AggregationProps> = ({
               type="checkbox"
               title={disabled ? 'Set row permissions first' : ''}
               disabled={disabled}
-              {...register('enableAggregation')}
+              {...register('aggregationEnabled')}
             />
             <p>
               Allow role <strong>{roleName}</strong> to make aggregation queries

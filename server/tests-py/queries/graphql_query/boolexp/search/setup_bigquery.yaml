@@ -6,5 +6,5 @@ args:
   args:
     source: bigquery
     table:
-      dataset: hasura_test
+      dataset: hasura
       name: city

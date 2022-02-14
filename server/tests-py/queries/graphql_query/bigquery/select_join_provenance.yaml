@@ -4,7 +4,7 @@
   query:
     query: |
       query {
-        hasura_test_author(order_by: {id: asc}) {
+        hasura_author(order_by: {id: asc}) {
           id
           articles_aggregate(offset: 10) {
             aggregate {
@@ -25,7 +25,7 @@
       }
   response:
     data:
-      hasura_test_author:
+      hasura_author:
       - id: '1'
         articles_aggregate:
           aggregate:
@@ -55,7 +55,7 @@
   query:
     query: |
       query {
-        hasura_test_article(offset: 10) {
+        hasura_article(offset: 10) {
           id
           author {
             id
@@ -68,4 +68,4 @@
       }
   response:
     data:
-      hasura_test_article: []
+      hasura_article: []

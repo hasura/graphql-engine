@@ -8,7 +8,7 @@
     args:
       source: bigquery
       table:
-        dataset: hasura_test
+        dataset: hasura
         name: table_to_customize
       configuration:
         custom_name: customized_table

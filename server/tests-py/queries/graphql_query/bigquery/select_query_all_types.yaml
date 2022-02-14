@@ -3,7 +3,7 @@
   status: 200
   response:
     data:
-      hasura_test_all_types:
+      hasura_all_types:
       - string: STRING
         bytes: AAECAwQF
         integer: '1'
@@ -23,7 +23,7 @@
   query:
     query: |
       query {
-        hasura_test_all_types {
+        hasura_all_types {
           string
           bytes
           integer
@@ -45,7 +45,7 @@
   status: 200
   response:
     data:
-      hasura_test_all_types_aggregate:
+      hasura_all_types_aggregate:
         aggregate:
           max:
             string: STRING
@@ -74,7 +74,7 @@
   query:
     query: |
       query {
-        hasura_test_all_types_aggregate {
+        hasura_all_types_aggregate {
           aggregate {
             max {
               string
