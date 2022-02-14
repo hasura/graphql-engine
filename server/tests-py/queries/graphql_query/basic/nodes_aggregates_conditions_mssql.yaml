@@ -1,0 +1,106 @@
+- description: Simple GraphQL object query on author, exercising multiple operations
+  url: /v1/graphql
+  status: 200
+  response:
+    data:
+      person_aggregate:
+        bar:
+        - id: 3
+          name: ' clarke '
+        - id: 2
+          name: ' Clarke '
+        foo:
+          count: 2
+          sum:
+            id: 7
+  query:
+    query: |
+      query {
+        person_aggregate(offset: 1, order_by: {id: desc}, where: {id: {_gte: 2}}) {
+          bar:nodes {
+            id
+            name
+          }
+          foo:aggregate {
+            count
+            sum {
+              id
+            }
+          }
+        }
+      }
+
+
+- description: test that count aggregate works as expected
+  url: /v1/graphql
+  status: 200
+  response:
+    data:
+      author:
+      - articles_aggregate:
+          aggregate:
+            count: 2
+            max:
+              id: 2
+      - articles_aggregate:
+          aggregate:
+            count: 1
+            max:
+              id: 3
+  query:
+    query: |
+      query {
+        author {
+          articles_aggregate {
+            aggregate {
+              count(column: author_id)
+              max {
+                id
+              }
+            }
+          }
+        }
+      }
+
+- description: test that __typename aggregates work as expected. Bug reported at https://github.com/hasura/graphql-engine/issues/7130
+  url: /v1/graphql
+  status: 200
+  response:
+    data:
+      author:
+      - articles_aggregate:
+          aggregate:
+            count: 2
+            max:
+              id: 2
+              author_id: 1
+              __typename: article_max_fields
+            __typename: article_aggregate_fields
+          __typename: article_aggregate
+      - articles_aggregate:
+          aggregate:
+            count: 1
+            max:
+              id: 3
+              author_id: 2
+              __typename: article_max_fields
+            __typename: article_aggregate_fields
+          __typename: article_aggregate
+  query:
+    query: |
+      query {
+        author {
+          articles_aggregate {
+            aggregate {
+              count(column: author_id)
+              max {
+                id
+                author_id
+                __typename
+              }
+              __typename
+            }
+            __typename
+          }
+        }
+      }

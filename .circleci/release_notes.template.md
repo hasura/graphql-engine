@@ -1,3 +1,0 @@
-## Changelog
-
-${CHANGELOG_TEXT}

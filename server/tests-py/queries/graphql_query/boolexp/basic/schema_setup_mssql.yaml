@@ -1,0 +1,180 @@
+type: bulk
+args:
+
+#Author table
+
+- type: mssql_run_sql
+  args:
+    source: mssql
+    sql: |
+      CREATE TABLE author(
+          id int identity NOT NULL PRIMARY KEY,
+          [name] varchar(450) UNIQUE,
+          [is_registered] bit NOT NULL DEFAULT 0
+      );
+
+      INSERT INTO
+          author([name], [is_registered])
+      VALUES
+          ('Author 1', 1),
+          ('Author 2', 1),
+          ('Author 3', 0);
+
+      CREATE TABLE article (
+          id int identity NOT NULL PRIMARY KEY,
+          title TEXT,
+          content TEXT,
+          author_id INTEGER REFERENCES author(id),
+          is_published bit,
+          published_on DATETIME
+      );
+
+      CREATE TABLE city (
+          id int identity NOT NULL PRIMARY KEY,
+          [name] TEXT NOT NULL,
+          country TEXT NOT NULL
+      );
+
+      INSERT INTO
+          city ([name], country)
+      VALUES
+          ('Durham', 'USA'),
+          ('New York', 'USA'),
+          ('Framlingham', 'UK'),
+          ('New Orleans', 'USA');
+
+      CREATE TABLE orders (
+          id int identity NOT NULL PRIMARY KEY,
+          received_at DATETIME NOT NULL,
+          delivered_at DATETIME
+      );
+
+      INSERT INTO
+          orders (received_at, delivered_at)
+      VALUES
+          ('2018-09-21T09:39:44', NULL),
+          ('2018-09-21T09:40:44', '2018-09-21T09:50:44');
+
+      CREATE TABLE message (
+          id int PRIMARY KEY,
+          content TEXT NOT NULL,
+          parent_id INT NULL
+      );
+
+      INSERT INTO
+          message (id, content, parent_id)
+      VALUES
+          (
+              1,
+              'hello world',
+              DEFAULT
+          ),
+          (
+              2,
+              'content 2',
+              1
+          ),
+          (
+              3,
+              'content 3',
+              1
+          ),
+          (
+              4,
+              'ahoy',
+              DEFAULT
+          ),
+          (
+              5,
+              'content 5',
+              4
+          ),
+          (
+              6,
+              'hello three',
+              4
+          );
+
+      ALTER TABLE
+          message
+      ADD
+          CONSTRAINT parent_fk FOREIGN KEY (parent_id) REFERENCES message(id);
+
+      INSERT INTO
+          article (title, content, author_id, is_published)
+      VALUES
+          (
+              'Article 1',
+              'Sample article content 1',
+              1,
+              0
+          ),
+          (
+              'Article 2',
+              'Sample article content 2',
+              1,
+              1
+          ),
+          (
+              'Article 3',
+              'Sample article content 3',
+              2,
+              0
+          ),
+          (
+              'Article 4',
+              'Sample article content 4',
+              3,
+              1
+          );
+
+      CREATE TABLE [uuid_test] (
+          id int identity NOT NULL PRIMARY KEY,
+          uuid_col uniqueidentifier NOT NULL
+      );
+
+      INSERT INTO
+          [uuid_test] ([uuid_col])
+      VALUES
+          ('28D6D683-1317-49F7-B1CF-7D195242E4E5'),
+          ('28D6D683-1317-49F7-B1CF-7D195242E4E6'),
+          ('28D6D683-1317-49F7-B1CF-7D195242E4E7')
+
+      CREATE TABLE [user] (
+          id int identity NOT NULL PRIMARY KEY,
+          [name] varchar(450) NOT NULL UNIQUE,
+          is_admin bit DEFAULT 0
+      );
+
+      INSERT INTO
+          [user] ([name], is_admin)
+      VALUES
+          ('user_1', 0),
+          ('user_2', 1);
+
+      CREATE TABLE account (
+          id int identity NOT NULL PRIMARY KEY,
+          account_no integer NOT NULL UNIQUE
+      );
+
+      INSERT INTO
+          account (account_no)
+      VALUES
+          (1),
+          (2);
+
+      CREATE TABLE table_with_sql_identifier (
+          id int identity NOT NULL PRIMARY KEY,
+          sql_id text
+      );
+
+      INSERT INTO
+          table_with_sql_identifier (sql_id)
+      VALUES
+          ('one'),
+          ('one'),
+          ('two'),
+          ('three'),
+          ('four'),
+          ('one'),
+          ('two');

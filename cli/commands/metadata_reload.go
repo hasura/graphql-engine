@@ -1,21 +1,22 @@
 package commands
 
 import (
-	"github.com/hasura/graphql-engine/cli"
-	"github.com/hasura/graphql-engine/cli/migrate"
-	"github.com/pkg/errors"
+	"fmt"
+
+	"github.com/hasura/graphql-engine/cli/v2"
+	"github.com/hasura/graphql-engine/cli/v2/internal/projectmetadata"
+
 	"github.com/spf13/cobra"
 )
 
 func newMetadataReloadCmd(ec *cli.ExecutionContext) *cobra.Command {
-	opts := &metadataReloadOptions{
-		EC:         ec,
-		actionType: "reload",
+	opts := &MetadataReloadOptions{
+		EC: ec,
 	}
 
 	metadataReloadCmd := &cobra.Command{
 		Use:   "reload",
-		Short: "Reload Hasura GraphQL Engine metadata on the database",
+		Short: "Reload Hasura GraphQL engine metadata on the database",
 		Example: `  # Reload all the metadata information from database:
   hasura metadata reload
 
@@ -26,34 +27,46 @@ func newMetadataReloadCmd(ec *cli.ExecutionContext) *cobra.Command {
   hasura metadata export --endpoint "<endpoint>"`,
 		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			opts.EC.Spin("Reloading metadata...")
-			err := opts.run()
-			opts.EC.Spinner.Stop()
-			if err != nil {
-				return errors.Wrap(err, "failed to reload metadata")
-			}
-			opts.EC.Logger.Info("Metadata reloaded")
-			return nil
+			return opts.runWithInfo()
 		},
 	}
 
 	return metadataReloadCmd
 }
 
-type metadataReloadOptions struct {
+type MetadataReloadOptions struct {
 	EC *cli.ExecutionContext
-
-	actionType string
 }
 
-func (o *metadataReloadOptions) run() error {
-	migrateDrv, err := migrate.NewMigrate(o.EC, true)
+func (o *MetadataReloadOptions) runWithInfo() error {
+	o.EC.Spin("Reloading metadata...")
+	err := o.run()
+	o.EC.Spinner.Stop()
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to reload metadata: %w", err)
 	}
-	err = executeMetadata(o.actionType, migrateDrv, o.EC)
+	o.EC.Logger.Info("Metadata reloaded")
+	icListOpts := &metadataInconsistencyListOptions{
+		EC: o.EC,
+	}
+	err = icListOpts.read(projectmetadata.NewHandlerFromEC(icListOpts.EC))
 	if err != nil {
-		return errors.Wrap(err, "Cannot reload metadata")
+		return fmt.Errorf("failed to read metadata status: %w", err)
+	}
+	if icListOpts.isConsistent {
+		icListOpts.EC.Logger.Infoln("Metadata is consistent")
+	} else {
+		icListOpts.EC.Logger.Warnln("Metadata is inconsistent, use 'hasura metadata ic list' command to see the inconsistent objects")
+	}
+	return nil
+}
+
+func (o *MetadataReloadOptions) run() error {
+	var err error
+	metadataHandler := projectmetadata.NewHandlerFromEC(o.EC)
+	_, err = metadataHandler.ReloadMetadata()
+	if err != nil {
+		return fmt.Errorf("cannot reload metadata: %w", err)
 	}
 	return nil
 }

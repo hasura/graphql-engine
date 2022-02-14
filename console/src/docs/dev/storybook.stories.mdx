@@ -1,0 +1,17 @@
+import { Meta } from '@storybook/addon-docs';
+
+<Meta title="Dev/Storybook" />
+
+<div class="prose">
+
+# Storybook
+
+Here are the current limitation when porting component to storybook :
+
+- There is no bootstrap setup inside of storybook, this is because of 2 main reasons :
+  - The current boostrap version (3) has some incompatibility and is imported in the codebase through webpack as an entry point
+  - We want to move all the component to tailwindcss
+
+This is still an in progress effort.
+
+</div>

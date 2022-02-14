@@ -23,8 +23,13 @@ import {
   Configuration as ConfigTooltip,
 } from '../Tooltips';
 import Explorer from './Explorer';
-import { Table } from '../../../../../Common/utils/pgUtils';
 import { ReduxState, ReduxAction } from '../../../../../../types';
+import { Table } from '../../../../../../dataSources/types';
+import { PGFunction } from '../../../../../../dataSources/services/postgresql/types';
+import {
+  getComputedFieldFunction,
+  getGroupedTableComputedFields,
+} from '../../../../../../dataSources/services/postgresql';
 
 type Props = {
   table: Table;
@@ -32,6 +37,7 @@ type Props = {
   isLast: boolean;
   state: RemoteRelationship;
   dispatch: React.Dispatch<RemoteRelAction>;
+  allFunctions: PGFunction[];
   reduxDispatch: ThunkAction<void, ReduxState, unknown, ReduxAction>;
 };
 
@@ -40,6 +46,7 @@ const RemoteRelEditor: React.FC<Props> = ({
   isLast,
   remoteSchemas,
   state,
+  allFunctions,
   dispatch,
   reduxDispatch,
 }) => {
@@ -77,6 +84,21 @@ const RemoteRelEditor: React.FC<Props> = ({
     }
   );
 
+  const computedFields = getGroupedTableComputedFields(
+    table.computed_fields,
+    allFunctions
+  );
+  const scalarComputedFields = computedFields.scalar.filter(sc => {
+    const cFn = getComputedFieldFunction(sc, allFunctions)?.input_arg_types;
+    // Only the computed fields that do not require extra arguments other than the table row
+    // are currenlty supported by the server https://github.com/hasura/graphql-engine/issues/7336
+    return cFn?.length === 1 && cFn[0].name === table.table_name;
+  });
+
+  const computedFieldsNames = scalarComputedFields.map(
+    f => f.computed_field_name
+  );
+
   return (
     <React.Fragment>
       <div>
@@ -100,6 +122,7 @@ const RemoteRelEditor: React.FC<Props> = ({
               onChange={handleNameChange}
               disabled={!isLast}
               title={!isLast ? 'Name cannot be changed' : undefined}
+              data-test="remote-rel-name-input"
             />
           </div>
         </div>
@@ -119,6 +142,7 @@ const RemoteRelEditor: React.FC<Props> = ({
               className={`form-control ${styles.wd300Px}`}
               value={state.remoteSchema}
               onChange={handleRemoteSchemaChange}
+              data-test="remote-rel-schema-input"
             >
               <option key="placeholder" value="">
                 {' '}
@@ -152,7 +176,10 @@ const RemoteRelEditor: React.FC<Props> = ({
             handleArgValueKindChange={handleArgValueKindChange}
             handleArgValueChange={handleArgValueChange}
             remoteSchemaName={state.remoteSchema}
-            columns={tableColumns}
+            columns={{
+              columns: tableColumns,
+              computedFields: computedFieldsNames,
+            }}
             reduxDispatch={reduxDispatch}
           />
         </div>

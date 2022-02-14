@@ -1,0 +1,4 @@
+type: pg_drop_function_permission
+args:
+  function: add_to_score_by_user_id
+  role: anonymous

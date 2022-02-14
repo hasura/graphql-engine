@@ -11,12 +11,14 @@ interface LeftSidebarSectionProps extends React.ComponentProps<'div'> {
   currentItem?: LeftSidebarItem;
   getServiceEntityLink: (s: string) => string;
   service: string;
+  sidebarIcon?: string;
 }
 
 const LeftSidebarSection = ({
   items = [],
   currentItem,
   service,
+  sidebarIcon,
   getServiceEntityLink,
 }: LeftSidebarSectionProps) => {
   // TODO needs refactor to accomodate other services
@@ -37,7 +39,6 @@ const LeftSidebarSection = ({
     );
   };
 
-  // TODO test search
   let itemList: LeftSidebarItem[] = [];
   if (searchText) {
     const secondaryResults: LeftSidebarItem[] = [];
@@ -76,7 +77,9 @@ const LeftSidebarSection = ({
           >
             <Link to={getServiceEntityLink(a.name)} data-test={a.name}>
               <i
-                className={`${styles.tableIcon} fa fa-wrench`}
+                className={`${styles.tableIcon} fa ${
+                  sidebarIcon || 'fa-wrench'
+                }`}
                 aria-hidden="true"
               />
               {a.name}
@@ -93,6 +96,7 @@ const LeftSidebarSection = ({
     getChildList,
     getSearchInput,
     count: itemList.length,
+    items: itemList,
   };
 };
 

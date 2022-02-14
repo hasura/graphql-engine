@@ -2,10 +2,9 @@ package commands
 
 import (
 	"fmt"
-	"os"
 	"text/tabwriter"
 
-	"github.com/hasura/graphql-engine/cli"
+	"github.com/hasura/graphql-engine/cli/v2"
 	"github.com/spf13/cobra"
 )
 
@@ -50,6 +49,7 @@ func (o *helpOptions) run() {
 				NewConsoleCmd(o.EC),
 				NewActionsCmd(o.EC),
 				NewSeedCmd(o.EC),
+				NewDeployCmd(o.EC),
 			},
 		},
 		{
@@ -68,12 +68,15 @@ func (o *helpOptions) run() {
 	cmd, _, e := c.Root().Find(args)
 	if cmd == nil || e != nil {
 		c.Printf("Unknown help topic %#q\n", args)
-		c.Root().Usage()
+		err := c.Root().Usage()
+		if err != nil {
+			ec.Logger.WithError(err).Errorf("error while using a dependency library")
+		}
 	} else {
 		if cmd.Name() == "hasura" {
 			// root command
 			fmt.Println(cmd.Long)
-			w := tabwriter.NewWriter(os.Stdout, 0, 0, 3, ' ', 0)
+			w := tabwriter.NewWriter(o.EC.Stdout, 0, 0, 3, ' ', 0)
 			for _, g := range topLevelCommands {
 				fmt.Println(g.Title + ":")
 				for _, gc := range g.Commands {
@@ -85,7 +88,10 @@ func (o *helpOptions) run() {
 			fmt.Println(`Use "hasura [command] --help" for more information about a command.`)
 		} else {
 			cmd.InitDefaultHelpFlag() // make possible 'help' flag to be shown
-			cmd.Help()
+			err := cmd.Help()
+			if err != nil {
+				ec.Logger.WithError(err).Errorf("error while using a dependency library")
+			}
 		}
 	}
 

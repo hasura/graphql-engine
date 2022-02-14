@@ -26,36 +26,36 @@ response:
       internal:
         errors:
         - path:
-          - messagesNestedArgs__0
+          - f0
           - 0
           - errorMsg
           message: intentional-error
           locations:
           - line: 1
-            column: 74
+            column: 52
         - path:
-          - messagesNestedArgs__1
+          - f1
+          - 0
+          - errorMsg
+          message: intentional-error
+          locations:
+          - line: 1
+            column: 106
+        - path:
+          - f2
           - 0
           - errorMsg
           message: intentional-error
           locations:
           - line: 1
             column: 160
-        - path:
-          - messagesNestedArgs__2
-          - 0
-          - errorMsg
-          message: intentional-error
-          locations:
-          - line: 1
-            column: 246
       path: $
       code: unexpected
     message: Errors from remote server
 query:
   query: |
     query {
-      profiles {
+      custom_profiles {
         id
         name
         messagesNestedArgs {

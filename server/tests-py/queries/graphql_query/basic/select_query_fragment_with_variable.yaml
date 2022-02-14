@@ -1,0 +1,21 @@
+description: select query on author with id = 1, passed through a fragment with variables
+url: /v1/graphql
+status: 200
+response:
+  data:
+    author_by_pk:
+      id: 2
+      name: Author 2
+query:
+  variables:
+    authorId: 2
+  query: |
+    fragment MyFragment on query_root {
+      author_by_pk(id: $authorId){
+        id
+        name
+      }
+    }
+    query ($authorId : Int!) {
+      ...MyFragment
+    }

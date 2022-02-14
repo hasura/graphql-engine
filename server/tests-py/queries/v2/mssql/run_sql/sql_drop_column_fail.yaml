@@ -1,0 +1,16 @@
+url: /v2/query
+status: 400
+response:
+  internal:
+    query: "ALTER TABLE author DROP COLUMN non_exist_column;\n"
+  path: $
+  error: Syntax error or access violation. Column not found. [Microsoft][ODBC Driver
+    17 for SQL Server][SQL Server]ALTER TABLE DROP COLUMN failed because column 'non_exist_column'
+    does not exist in table 'author'.
+  code: not-found
+query:
+  type: mssql_run_sql
+  args:
+    source: mssql
+    sql: |
+      ALTER TABLE author DROP COLUMN non_exist_column;

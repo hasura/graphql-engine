@@ -1,0 +1,12 @@
+type: bulk
+args:
+
+- type: mssql_run_sql
+  args:
+    source: mssql
+    sql: |
+      CREATE TABLE [user](
+        id int identity NOT NULL PRIMARY KEY,
+        name TEXT NOT NULL,
+        age INTEGER
+      );

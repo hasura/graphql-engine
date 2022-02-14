@@ -1,145 +1,306 @@
-{-# LANGUAGE Arrows          #-}
-{-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE Arrows #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 -- | Types/functions shared between modules that implement "Hasura.RQL.DDL.Schema.Cache". Other
 -- modules should not import this module directly.
-module Hasura.RQL.DDL.Schema.Cache.Common where
+module Hasura.RQL.DDL.Schema.Cache.Common
+  ( BuildOutputs (..),
+    CacheBuild,
+    CacheBuildParams (CacheBuildParams),
+    InvalidationKeys (..),
+    ikMetadata,
+    ikRemoteSchemas,
+    ikSources,
+    NonColumnTableInputs (..),
+    RebuildableSchemaCache (RebuildableSchemaCache, lastBuiltSchemaCache),
+    TableBuildInput (TableBuildInput, _tbiName),
+    TablePermissionInputs (..),
+    addTableContext,
+    bindErrorA,
+    boAllowlist,
+    boApiLimits,
+    boMetricsConfig,
+    boTlsAllowlist,
+    boActions,
+    boCronTriggers,
+    boCustomTypes,
+    boEndpoints,
+    boRemoteSchemas,
+    boRoles,
+    boSources,
+    buildInfoMap,
+    buildInfoMapPreservingMetadata,
+    initialInvalidationKeys,
+    invalidateKeys,
+    mkTableInputs,
+    runCacheBuild,
+    runCacheBuildM,
+    withRecordDependencies,
+  )
+where
 
-import           Hasura.Prelude
-
-import qualified Data.HashMap.Strict.Extended     as M
-import qualified Data.HashSet                     as HS
-import qualified Data.Sequence                    as Seq
-
-import           Control.Arrow.Extended
-import           Control.Lens
-
-import qualified Hasura.Incremental               as Inc
-import qualified Hasura.GraphQL.Validate.Types     as VT
-
-import           Hasura.RQL.Types
-import           Hasura.RQL.Types.Catalog
-import           Hasura.RQL.Types.Run
-import           Hasura.SQL.Types
+import Control.Arrow.Extended
+import Control.Lens
+import Control.Monad.Trans.Control (MonadBaseControl)
+import Control.Monad.Unique
+import Data.HashMap.Strict.Extended qualified as M
+import Data.HashMap.Strict.InsOrd qualified as OMap
+import Data.Sequence qualified as Seq
+import Data.Text.Extended
+import Hasura.Base.Error
+import Hasura.Incremental qualified as Inc
+import Hasura.Prelude
+import Hasura.RQL.Types
+import Hasura.Session
+import Network.HTTP.Client.Manager (HasHttpManagerM (..))
+import Network.HTTP.Client.Transformable qualified as HTTP
 
 -- | 'InvalidationKeys' used to apply requested 'CacheInvalidations'.
 data InvalidationKeys = InvalidationKeys
-  { _ikMetadata      :: !Inc.InvalidationKey
-  , _ikRemoteSchemas :: !(HashMap RemoteSchemaName Inc.InvalidationKey)
-  } deriving (Show, Eq, Generic)
+  { _ikMetadata :: !Inc.InvalidationKey,
+    _ikRemoteSchemas :: !(HashMap RemoteSchemaName Inc.InvalidationKey),
+    _ikSources :: !(HashMap SourceName Inc.InvalidationKey)
+  }
+  deriving (Show, Eq, Generic)
+
 instance Inc.Cacheable InvalidationKeys
+
 instance Inc.Select InvalidationKeys
+
 $(makeLenses ''InvalidationKeys)
 
 initialInvalidationKeys :: InvalidationKeys
-initialInvalidationKeys = InvalidationKeys Inc.initialInvalidationKey mempty
+initialInvalidationKeys = InvalidationKeys Inc.initialInvalidationKey mempty mempty
 
 invalidateKeys :: CacheInvalidations -> InvalidationKeys -> InvalidationKeys
-invalidateKeys CacheInvalidations{..} InvalidationKeys{..} = InvalidationKeys
-  { _ikMetadata = if ciMetadata then Inc.invalidate _ikMetadata else _ikMetadata
-  , _ikRemoteSchemas = foldl' (flip invalidateRemoteSchema) _ikRemoteSchemas ciRemoteSchemas }
+invalidateKeys CacheInvalidations {..} InvalidationKeys {..} =
+  InvalidationKeys
+    { _ikMetadata = if ciMetadata then Inc.invalidate _ikMetadata else _ikMetadata,
+      _ikRemoteSchemas = foldl' (flip invalidate) _ikRemoteSchemas ciRemoteSchemas,
+      _ikSources = foldl' (flip invalidate) _ikSources ciSources
+    }
   where
-    invalidateRemoteSchema = M.alter $ Just . maybe Inc.initialInvalidationKey Inc.invalidate
+    invalidate ::
+      (Eq a, Hashable a) =>
+      a ->
+      HashMap a Inc.InvalidationKey ->
+      HashMap a Inc.InvalidationKey
+    invalidate = M.alter $ Just . maybe Inc.initialInvalidationKey Inc.invalidate
 
-data BuildInputs
-  = BuildInputs
-  { _biReason          :: !BuildReason
-  , _biCatalogMetadata :: !CatalogMetadata
-  , _biInvalidationMap :: !InvalidationKeys
-  } deriving (Eq)
+data TableBuildInput b = TableBuildInput
+  { _tbiName :: !(TableName b),
+    _tbiIsEnum :: !Bool,
+    _tbiConfiguration :: !(TableConfig b)
+  }
+  deriving (Show, Eq, Generic)
+
+instance (Backend b) => NFData (TableBuildInput b)
+
+instance (Backend b) => Inc.Cacheable (TableBuildInput b)
+
+data NonColumnTableInputs b = NonColumnTableInputs
+  { _nctiTable :: !(TableName b),
+    _nctiObjectRelationships :: ![ObjRelDef b],
+    _nctiArrayRelationships :: ![ArrRelDef b],
+    _nctiComputedFields :: ![ComputedFieldMetadata b],
+    _nctiRemoteRelationships :: ![RemoteRelationship]
+  }
+  deriving (Show, Eq, Generic)
+
+data TablePermissionInputs b = TablePermissionInputs
+  { _tpiTable :: !(TableName b),
+    _tpiInsert :: ![InsPermDef b],
+    _tpiSelect :: ![SelPermDef b],
+    _tpiUpdate :: ![UpdPermDef b],
+    _tpiDelete :: ![DelPermDef b]
+  }
+  deriving (Show, Eq, Generic)
+
+instance (Backend b) => Inc.Cacheable (TablePermissionInputs b)
+
+mkTableInputs ::
+  TableMetadata b -> (TableBuildInput b, NonColumnTableInputs b, TablePermissionInputs b)
+mkTableInputs TableMetadata {..} =
+  (buildInput, nonColumns, permissions)
+  where
+    buildInput = TableBuildInput _tmTable _tmIsEnum _tmConfiguration
+    nonColumns =
+      NonColumnTableInputs
+        _tmTable
+        (OMap.elems _tmObjectRelationships)
+        (OMap.elems _tmArrayRelationships)
+        (OMap.elems _tmComputedFields)
+        (OMap.elems _tmRemoteRelationships)
+    permissions =
+      TablePermissionInputs
+        _tmTable
+        (OMap.elems _tmInsertPermissions)
+        (OMap.elems _tmSelectPermissions)
+        (OMap.elems _tmUpdatePermissions)
+        (OMap.elems _tmDeletePermissions)
 
 -- | The direct output of 'buildSchemaCacheRule'. Contains most of the things necessary to build a
 -- schema cache, but dependencies and inconsistent metadata objects are collected via a separate
 -- 'MonadWriter' side channel.
-data BuildOutputs
-  = BuildOutputs
-  { _boTables                  :: !TableCache
-  , _boActions                 :: !ActionCache
-  , _boFunctions               :: !FunctionCache
-  , _boRemoteSchemas           :: !(HashMap RemoteSchemaName (RemoteSchemaCtx, MetadataObject))
-  -- ^ We preserve the 'MetadataObject' from the original catalog metadata in the output so we can
-  -- reuse it later if we need to mark the remote schema inconsistent during GraphQL schema
-  -- generation (because of field conflicts).
-  , _boAllowlist               :: !(HS.HashSet GQLQuery)
-  , _boCustomTypes             :: !(NonObjectTypeMap, AnnotatedObjects)
-  , _boRemoteRelationshipTypes :: !VT.TypeMap
-  , _boCronTriggers            :: !(M.HashMap TriggerName CronTriggerInfo)
-  } deriving (Show, Eq)
+data BuildOutputs = BuildOutputs
+  { _boSources :: SourceCache,
+    _boActions :: !ActionCache,
+    -- | We preserve the 'MetadataObject' from the original catalog metadata in the output so we can
+    -- reuse it later if we need to mark the remote schema inconsistent during GraphQL schema
+    -- generation (because of field conflicts).
+    _boRemoteSchemas :: !(HashMap RemoteSchemaName (RemoteSchemaCtx, MetadataObject)),
+    _boAllowlist :: !InlinedAllowlist,
+    _boCustomTypes :: !AnnotatedCustomTypes,
+    _boCronTriggers :: !(M.HashMap TriggerName CronTriggerInfo),
+    _boEndpoints :: !(M.HashMap EndpointName (EndpointMetadata GQLQueryWithText)),
+    _boApiLimits :: !ApiLimit,
+    _boMetricsConfig :: !MetricsConfig,
+    _boRoles :: !(HashMap RoleName Role),
+    _boTlsAllowlist :: ![TlsAllow]
+  }
+
 $(makeLenses ''BuildOutputs)
 
-data RebuildableSchemaCache m
-  = RebuildableSchemaCache
-  { lastBuiltSchemaCache :: !SchemaCache
-  , _rscInvalidationMap :: !InvalidationKeys
-  , _rscRebuild :: !(Inc.Rule (ReaderT BuildReason m) (CatalogMetadata, InvalidationKeys) SchemaCache)
+-- | Parameters required for schema cache build
+data CacheBuildParams = CacheBuildParams
+  { _cbpManager :: !HTTP.Manager,
+    _cbpPGSourceResolver :: !(SourceResolver ('Postgres 'Vanilla)),
+    _cbpMSSQLSourceResolver :: !(SourceResolver 'MSSQL),
+    _cbpServerConfigCtx :: !ServerConfigCtx
   }
-$(makeLenses ''RebuildableSchemaCache)
 
-type CacheBuildM = ReaderT BuildReason Run
-type CacheBuildA = WriterA (Seq CollectedInfo) (Inc.Rule CacheBuildM)
+-- | The monad in which @'RebuildableSchemaCache' is being run
+newtype CacheBuild a = CacheBuild (ReaderT CacheBuildParams (ExceptT QErr IO) a)
+  deriving
+    ( Functor,
+      Applicative,
+      Monad,
+      MonadError QErr,
+      MonadReader CacheBuildParams,
+      MonadIO,
+      MonadBase IO,
+      MonadBaseControl IO,
+      MonadUnique
+    )
 
-bindErrorA
-  :: (ArrowChoice arr, ArrowKleisli m arr, ArrowError e arr, MonadError e m)
-  => arr (m a) a
+instance HasHttpManagerM CacheBuild where
+  askHttpManager = asks _cbpManager
+
+instance HasServerConfigCtx CacheBuild where
+  askServerConfigCtx = asks _cbpServerConfigCtx
+
+instance MonadResolveSource CacheBuild where
+  getPGSourceResolver = asks _cbpPGSourceResolver
+  getMSSQLSourceResolver = asks _cbpMSSQLSourceResolver
+
+runCacheBuild ::
+  ( MonadIO m,
+    MonadError QErr m
+  ) =>
+  CacheBuildParams ->
+  CacheBuild a ->
+  m a
+runCacheBuild params (CacheBuild m) = do
+  liftEitherM $ liftIO $ runExceptT (runReaderT m params)
+
+runCacheBuildM ::
+  ( MonadIO m,
+    MonadError QErr m,
+    HasHttpManagerM m,
+    HasServerConfigCtx m,
+    MonadResolveSource m
+  ) =>
+  CacheBuild a ->
+  m a
+runCacheBuildM m = do
+  params <-
+    CacheBuildParams
+      <$> askHttpManager
+      <*> getPGSourceResolver
+      <*> getMSSQLSourceResolver
+      <*> askServerConfigCtx
+  runCacheBuild params m
+
+data RebuildableSchemaCache = RebuildableSchemaCache
+  { lastBuiltSchemaCache :: !SchemaCache,
+    _rscInvalidationMap :: !InvalidationKeys,
+    _rscRebuild :: !(Inc.Rule (ReaderT BuildReason CacheBuild) (Metadata, InvalidationKeys) SchemaCache)
+  }
+
+bindErrorA ::
+  (ArrowChoice arr, ArrowKleisli m arr, ArrowError e arr, MonadError e m) =>
+  arr (m a) a
 bindErrorA = liftEitherA <<< arrM \m -> (Right <$> m) `catchError` (pure . Left)
 {-# INLINE bindErrorA #-}
 
-withRecordDependencies
-  :: (ArrowWriter (Seq CollectedInfo) arr)
-  => WriterA (Seq SchemaDependency) arr (e, s) a
-  -> arr (e, (MetadataObject, (SchemaObjId, s))) a
+withRecordDependencies ::
+  (ArrowWriter (Seq CollectedInfo) arr) =>
+  WriterA (Seq SchemaDependency) arr (e, s) a ->
+  arr (e, (MetadataObject, (SchemaObjId, s))) a
 withRecordDependencies f = proc (e, (metadataObject, (schemaObjectId, s))) -> do
   (result, dependencies) <- runWriterA f -< (e, s)
   recordDependencies -< (metadataObject, schemaObjectId, toList dependencies)
   returnA -< result
-{-# INLINABLE withRecordDependencies #-}
+{-# INLINEABLE withRecordDependencies #-}
 
-noDuplicates
-  :: (ArrowChoice arr, ArrowWriter (Seq CollectedInfo) arr)
-  => (a -> MetadataObject)
-  -> [a] `arr` Maybe a
+noDuplicates ::
+  (ArrowChoice arr, ArrowWriter (Seq CollectedInfo) arr) =>
+  (a -> MetadataObject) ->
+  [a] `arr` Maybe a
 noDuplicates mkMetadataObject = proc values -> case values of
-  []      -> returnA -< Nothing
+  [] -> returnA -< Nothing
   [value] -> returnA -< Just value
-  value:_ -> do
+  value : _ -> do
     let objectId = _moId $ mkMetadataObject value
         definitions = map (_moDefinition . mkMetadataObject) values
     tellA -< Seq.singleton $ CIInconsistency (DuplicateObjects objectId definitions)
     returnA -< Nothing
-{-# INLINABLE noDuplicates #-}
+{-# INLINEABLE noDuplicates #-}
 
 -- | Processes a list of catalog metadata into a map of processed information, marking any duplicate
 -- entries inconsistent.
-buildInfoMap
-  :: ( ArrowChoice arr, Inc.ArrowDistribute arr, ArrowWriter (Seq CollectedInfo) arr
-     , Eq k, Hashable k )
-  => (a -> k)
-  -> (a -> MetadataObject)
-  -> (e, a) `arr` Maybe b
-  -> (e, [a]) `arr` HashMap k b
+buildInfoMap ::
+  ( ArrowChoice arr,
+    Inc.ArrowDistribute arr,
+    ArrowWriter (Seq CollectedInfo) arr,
+    Eq k,
+    Hashable k
+  ) =>
+  (a -> k) ->
+  (a -> MetadataObject) ->
+  (e, a) `arr` Maybe b ->
+  (e, [a]) `arr` HashMap k b
 buildInfoMap extractKey mkMetadataObject buildInfo = proc (e, infos) ->
-      (M.groupOn extractKey infos >- returnA)
-  >-> (| Inc.keyed (\_ duplicateInfos ->
-               (duplicateInfos >- noDuplicates mkMetadataObject)
-           >-> (| traverseA (\info -> (e, info) >- buildInfo) |)
-           >-> (\info -> join info >- returnA)) |)
-  >-> (\infoMap -> M.catMaybes infoMap >- returnA)
-{-# INLINABLE buildInfoMap #-}
+  (M.groupOn extractKey infos >- returnA)
+    >-> (|
+          Inc.keyed
+            ( \_ duplicateInfos ->
+                (duplicateInfos >- noDuplicates mkMetadataObject)
+                  >-> (| traverseA (\info -> (e, info) >- buildInfo) |)
+                  >-> (\info -> join info >- returnA)
+            )
+        |)
+    >-> (\infoMap -> M.catMaybes infoMap >- returnA)
+{-# INLINEABLE buildInfoMap #-}
 
 -- | Like 'buildInfo', but includes each processed info’s associated 'MetadataObject' in the result.
 -- This is useful if the results will be further processed, and the 'MetadataObject' is still needed
 -- to mark the object inconsistent.
-buildInfoMapPreservingMetadata
-  :: ( ArrowChoice arr, Inc.ArrowDistribute arr, ArrowWriter (Seq CollectedInfo) arr
-     , Eq k, Hashable k )
-  => (a -> k)
-  -> (a -> MetadataObject)
-  -> (e, a) `arr` Maybe b
-  -> (e, [a]) `arr` HashMap k (b, MetadataObject)
+buildInfoMapPreservingMetadata ::
+  ( ArrowChoice arr,
+    Inc.ArrowDistribute arr,
+    ArrowWriter (Seq CollectedInfo) arr,
+    Eq k,
+    Hashable k
+  ) =>
+  (a -> k) ->
+  (a -> MetadataObject) ->
+  (e, a) `arr` Maybe b ->
+  (e, [a]) `arr` HashMap k (b, MetadataObject)
 buildInfoMapPreservingMetadata extractKey mkMetadataObject buildInfo =
   buildInfoMap extractKey mkMetadataObject proc (e, info) ->
-    ((e, info) >- buildInfo) >-> \result -> result <&> (, mkMetadataObject info) >- returnA
-{-# INLINABLE buildInfoMapPreservingMetadata #-}
+    ((e, info) >- buildInfo) >-> \result -> result <&> (,mkMetadataObject info) >- returnA
+{-# INLINEABLE buildInfoMapPreservingMetadata #-}
 
-addTableContext :: QualifiedTable -> Text -> Text
+addTableContext :: (Backend b) => TableName b -> Text -> Text
 addTableContext tableName e = "in table " <> tableName <<> ": " <> e

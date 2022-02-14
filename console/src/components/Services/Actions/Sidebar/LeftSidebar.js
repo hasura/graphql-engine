@@ -6,7 +6,8 @@ import styles from '../../../Common/Layout/LeftSubSidebar/LeftSubSidebar.scss';
 
 const LeftSidebar = ({
   appPrefix,
-  common: { actions, currentAction },
+  common: { currentAction },
+  actions,
   readOnlyMode,
 }) => {
   const [searchText, setSearchText] = React.useState('');
@@ -30,9 +31,9 @@ const LeftSidebar = ({
   if (searchText) {
     const secondaryResults = [];
     actions.forEach(a => {
-      if (a.action_name.startsWith(searchText)) {
+      if (a.name.startsWith(searchText)) {
         actionsList.push(a);
-      } else if (a.action_name.includes(searchText)) {
+      } else if (a.name.includes(searchText)) {
         secondaryResults.push(a);
       }
     });
@@ -40,6 +41,17 @@ const LeftSidebar = ({
   } else {
     actionsList = [...actions];
   }
+
+  const getActionIcon = action => {
+    switch (action.definition.type) {
+      case 'mutation':
+        return 'fa-pencil-square-o';
+      case 'query':
+        return 'fa-book';
+      default:
+        return 'fa-wrench';
+    }
+  };
 
   const getChildList = () => {
     let childList;
@@ -55,9 +67,11 @@ const LeftSidebar = ({
     } else {
       childList = actionsList.map((a, i) => {
         let activeTableClass = '';
-        if (a.action_name === currentAction) {
+        if (a.name === currentAction) {
           activeTableClass = styles.activeLink;
         }
+
+        const actionIcon = getActionIcon(a);
 
         return (
           <li
@@ -66,14 +80,14 @@ const LeftSidebar = ({
             data-test={`action-sidebar-links-${i + 1}`}
           >
             <Link
-              to={appPrefix + '/manage/' + a.action_name + '/modify'}
-              data-test={a.action_name}
+              to={appPrefix + '/manage/' + a.name + '/modify'}
+              data-test={a.name}
             >
               <i
-                className={styles.tableIcon + ' fa fa-wrench'}
+                className={styles.tableIcon + ' fa ' + actionIcon}
                 aria-hidden="true"
               />
-              {a.action_name}
+              {a.name}
             </Link>
           </li>
         );

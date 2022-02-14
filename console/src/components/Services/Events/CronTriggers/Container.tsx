@@ -73,13 +73,24 @@ const STContainer: React.FC<Props> = ({
     throw new NotFoundError();
   }
 
+  let activeTab = tabName as string;
+  if (tabName === 'processed') {
+    activeTab = 'Processed';
+  } else if (tabName === 'pending') {
+    activeTab = 'Pending';
+  } else if (tabName === 'modify') {
+    activeTab = 'Modify';
+  } else if (tabName === 'logs') {
+    activeTab = 'Invocation Logs';
+  }
+
   const breadCrumbs = [
     {
       title: 'Events',
       url: getDataEventsLandingRoute(),
     },
     {
-      title: 'Scheduled',
+      title: 'Cron Triggers',
       url: getScheduledEventsLandingRoute(),
     },
     {
@@ -87,7 +98,7 @@ const STContainer: React.FC<Props> = ({
       url: tabInfo[tabName].getRoute(triggerName),
     },
     {
-      title: tabName,
+      title: activeTab,
       url: '',
     },
   ];

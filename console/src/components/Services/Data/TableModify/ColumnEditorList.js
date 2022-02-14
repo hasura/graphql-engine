@@ -10,7 +10,7 @@ import {
   editColumn,
   isColumnUnique,
 } from '../TableModify/ModifyActions';
-import { ordinalColSort, ARRAY } from '../utils';
+import { ordinalColSort } from '../utils';
 import { defaultDataTypeToCast } from '../constants';
 
 import {
@@ -22,12 +22,14 @@ import GqlCompatibilityWarning from '../../../Common/GqlCompatibilityWarning/Gql
 
 import styles from './ModifyTable.scss';
 import { getConfirmation } from '../../../Common/utils/jsUtils';
+import { dataSource } from '../../../../dataSources';
 
 const ColumnEditorList = ({
   tableSchema,
   currentSchema,
   columnEdit,
   dispatch,
+  readOnlyMode,
   validTypeCasts,
   dataTypeIndexMap,
   columnDefaultFunctions,
@@ -55,24 +57,22 @@ const ColumnEditorList = ({
   const columns = tableSchema.columns.sort(ordinalColSort);
 
   /*
-   * col.udt_name contains internal representation of the data type
+   * col.data_type_name contains internal representation of the data type
    * */
   return columns.map((col, i) => {
     const colName = col.column_name;
-    const isArrayDataType = col.data_type === ARRAY;
-
+    const isArrayDataType = col.data_type === dataSource.columnDataTypes.ARRAY;
+    // todo -- create getColumnProperties utility
     const getDisplayName = () => {
       if (isArrayDataType) {
-        return col.udt_name.replace('_', '') + '[]';
+        return col.data_type_name.replace('_', '') + '[]';
       }
-      if (col.data_type === 'USER-DEFINED') {
-        return col.udt_name;
-      }
-      return col.data_type;
+      return dataSource.getColumnType(col);
     };
-
     const getType = () =>
-      isArrayDataType ? col.udt_name.replace('_', '') + '[]' : col.udt_name;
+      isArrayDataType
+        ? col.data_type_name.replace('_', '') + '[]'
+        : col.data_type_name;
 
     const columnProperties = {
       name: colName,
@@ -82,10 +82,9 @@ const ColumnEditorList = ({
       type: getType(),
       isArrayDataType,
       isNullable: col.is_nullable === 'YES',
-      isIdentity: col.is_identity === 'YES',
+      isIdentity: col.is_identity,
       pkConstraint: columnPKConstraints[colName],
       isUnique: isColumnUnique(tableSchema, colName),
-      // uniqueConstraint: columnUniqueConstraints[colName],
       default: col.column_default || '',
       comment: col.comment || '',
       customFieldName: customColumnNames[colName] || '',
@@ -107,12 +106,12 @@ const ColumnEditorList = ({
         dispatch(deleteColumnSql(col, tableSchema));
       }
     };
-
     const gqlCompatibilityWarning = () => {
       return (
         <GqlCompatibilityWarning
           identifier={colName}
           className={styles.add_mar_left_small}
+          ifWarningCanBeFixed
         />
       );
     };
@@ -121,7 +120,6 @@ const ColumnEditorList = ({
       const propertiesDisplay = [];
 
       const propertiesList = [];
-
       propertiesList.push(columnProperties.display_type_name);
 
       if (columnProperties.pkConstraint) {
@@ -146,9 +144,11 @@ const ColumnEditorList = ({
 
       const keyPropertiesString = propertiesList.join(', ');
 
-      propertiesDisplay.push(<i key={'props'}>{keyPropertiesString}</i>);
-
-      propertiesDisplay.push(<br key={'br1'} />);
+      propertiesDisplay.push(
+        <span className="ml-xs mr-2 font-normal" key={'props'}>
+          {keyPropertiesString}
+        </span>
+      );
 
       propertiesDisplay.push(
         <span key={'comment'} className={styles.text_gray}>
@@ -161,14 +161,14 @@ const ColumnEditorList = ({
 
     const collapsedLabel = () => {
       return (
-        <div key={colName}>
-          <b>
-            {colName}
-            <i>
+        <div className="flex items-center" key={colName}>
+          <div>
+            <span className="font-semibold">{colName}</span>
+            <span className="ml-xs font-semibold">
               {columnProperties.customFieldName &&
                 ` → ${columnProperties.customFieldName}`}
-            </i>
-          </b>{' '}
+            </span>
+          </div>{' '}
           {gqlCompatibilityWarning()} - {keyProperties()}
         </div>
       );
@@ -232,8 +232,11 @@ const ColumnEditorList = ({
     const colEditorExpanded = () => {
       return (
         <ColumnEditor
-          alterTypeOptions={getValidTypeCasts(col.udt_name, isArrayDataType)}
-          defaultOptions={getValidDefaultTypes(col.udt_name)}
+          alterTypeOptions={getValidTypeCasts(
+            col.data_type_name,
+            isArrayDataType
+          )}
+          defaultOptions={getValidDefaultTypes(col.data_type_name)}
           column={col}
           onSubmit={onSubmit}
           tableName={tableName}
@@ -261,6 +264,7 @@ const ColumnEditorList = ({
           property={`column-${i}`}
           service="modify-table"
           saveFunc={onSubmit}
+          readOnlyMode={readOnlyMode}
           removeFunc={columnProperties.pkConstraint ? null : onDelete}
           collapsedClass={styles.display_flex}
           expandedLabel={expandedLabel}

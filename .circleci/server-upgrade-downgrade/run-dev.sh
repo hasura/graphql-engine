@@ -6,7 +6,9 @@
 # and sets some of the required variables that run.sh needs,
 # before executing run.sh
 set -euo pipefail
-ROOT="${BASH_SOURCE[0]%/*}"
+cd "${BASH_SOURCE[0]%/*}"
+ROOT="${PWD}"
+cd - > /dev/null
 
 SERVER_DIR="$ROOT/../../server"
 
@@ -18,8 +20,8 @@ echo "server binary: $SERVER_BINARY"
 cd -
 set +x
 
-export SERVER_OUTPUT_DIR="server-output"
-export LATEST_SERVER_BINARY="./graphql-engine-latest"
+export SERVER_OUTPUT_DIR="$ROOT/server-output"
+export LATEST_SERVER_BINARY="$ROOT/graphql-engine-latest"
 
 # Create Python virtualenv
 if ! [ -f ".venv/bin/activate" ] ; then
@@ -40,7 +42,8 @@ log_duration=on
 port=$PG_PORT
 EOF
 )
-export HASURA_GRAPHQL_DATABASE_URL="postgres://postgres:$PGPASSWORD@127.0.0.1:$PG_PORT/postgres"
+# Pytest is giving out deprecated warnings when postgres:// is used
+export HASURA_GRAPHQL_DATABASE_URL="postgresql://postgres:$PGPASSWORD@127.0.0.1:$PG_PORT/postgres"
 
 DOCKER_PSQL="docker exec -u postgres -it $PG_CONTAINER_NAME psql -p $PG_PORT"
 

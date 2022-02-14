@@ -53,7 +53,7 @@ const Form: React.FC<Props> = props => {
       </FormSection>
       <FormSection
         heading="Webhook"
-        tooltip="The HTTP endpoint that must be triggered"
+        tooltip="The HTTP URL that should be triggered. You can also provide the URL from environment variables, e.g. {{MY_WEBHOOK_URL}}"
         id="trigger-webhook"
       >
         <input
@@ -66,7 +66,7 @@ const Form: React.FC<Props> = props => {
       </FormSection>
       <FormSection
         id="trigger-schedule"
-        tooltip="Schedule for your cron"
+        tooltip="Schedule for your cron (events are created based on the UTC timezone)"
         heading="Cron Schedule"
       >
         <div className={`${styles.add_mar_bottom_mid} ${styles.display_flex}`}>

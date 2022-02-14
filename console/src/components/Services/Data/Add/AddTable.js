@@ -36,7 +36,7 @@ import { resetValidation } from './AddActions';
 import gqlPattern, {
   gqlTableErrorNotif,
   gqlColumnErrorNotif,
-} from '../Common/GraphQLValidation'; // TODO add the others
+} from '../Common/GraphQLValidation';
 
 import {
   tableNameNullNotif,
@@ -45,9 +45,10 @@ import {
   tableColumnTypesNotif,
   tableColumnDefaultsNotif,
   tableMinPrimaryKeyNotif,
+  tableNameMaxLengthNotif,
+  tableColumnMaxLengthNotif,
 } from './AddWarning';
 
-import styles from '../../../Common/TableCommon/Table.scss';
 import ToolTip from '../../../Common/Tooltip/Tooltip';
 import {
   foreignKeyDescription,
@@ -55,6 +56,8 @@ import {
   uniqueKeyDescription,
   checkConstraintsDescription,
 } from '../Common/TooltipMessages';
+import { dataSource, isFeatureSupported } from '../../../../dataSources';
+import { maxAllowedColumnLength } from '../constants';
 
 /* AddTable is a wrapper which wraps
  *  1) Table Name input
@@ -97,6 +100,22 @@ class AddTable extends Component {
 
   componentDidMount() {
     this.props.dispatch(fetchColumnTypeInfo());
+    this.props.dispatch(
+      setForeignKeys([
+        {
+          refSchemaName: '',
+          refTableName: '',
+          colMappings: [
+            {
+              column: '',
+              refColumn: '',
+            },
+          ],
+          onUpdate: dataSource.violationActions[0],
+          onDelete: dataSource.violationActions[0],
+        },
+      ])
+    );
   }
 
   componentWillUnmount() {
@@ -204,6 +223,14 @@ class AddTable extends Component {
     }
   }
 
+  isValidLength(s) {
+    return s.length < maxAllowedColumnLength;
+  }
+
+  validateTableNameLength(name) {
+    return this.isValidLength(name);
+  }
+
   tableNameEmptyCheck(name) {
     return name !== null;
   }
@@ -290,6 +317,16 @@ class AddTable extends Component {
           cols[i].name.toString() +
           ')'
         );
+      }
+    }
+    return '';
+  }
+
+  validateColumnNameLengths(cols) {
+    const l = cols.length;
+    for (let i = 0; i < l; i++) {
+      if (!this.isValidLength(cols[i].name)) {
+        return false;
       }
     }
     return '';
@@ -397,12 +434,20 @@ class AddTable extends Component {
         gqlTableErrorNotif
       ) &&
       this.checkAndNotify(
+        this.validateTableNameLength(tableNameTrimmed),
+        tableNameMaxLengthNotif
+      ) &&
+      this.checkAndNotify(
         this.validateEnoughColumns(trimmedColumns),
         tableEnufColumnsNotif
       ) &&
       this.checkAndNotify(
         this.validateColumnNames(trimmedColumns),
         gqlColumnErrorNotif
+      ) &&
+      this.checkAndNotify(
+        this.validateColumnNameLengths(trimmedColumns),
+        tableColumnMaxLengthNotif
       ) &&
       this.checkAndNotify(
         this.validateNoDupNames(trimmedColumns),
@@ -443,8 +488,8 @@ class AddTable extends Component {
       columnDefaultFunctions,
       columnTypeCasts,
       checkConstraints,
+      postgresVersion,
     } = this.props;
-
     const getCreateBtnText = () => {
       let createBtnText = 'Add Table';
       if (ongoingRequest) {
@@ -460,21 +505,35 @@ class AddTable extends Component {
     };
 
     return (
-      <div
-        className={`${styles.addTablesBody} ${styles.clear_fix} ${styles.padd_left}`}
-      >
+      <div className="p-lg">
         <Helmet title={`Add Table - Data | Hasura`} />
-        <div className={styles.subHeader}>
-          <h2 className={styles.heading_text}>Add a new table</h2>
-          <div className="clearfix" />
+        <div>
+          <h2 className="text-xl font-semibold mb-lg">Add a New Table</h2>
         </div>
-        <br />
-        <div className={`container-fluid ${styles.padd_left_remove}`}>
-          <div
-            className={`${styles.addCol} col-xs-12 ${styles.padd_left_remove}`}
-          >
+
+        <div className="max-w-6xl">
+          <div className="w-full sm:w-6/12 mb-md">
+            <h4 className="flex items-center text-gray-600 font-semibold mb-formlabel">
+              Table Name
+            </h4>
             <TableName onChange={this.onTableNameChange.bind(this)} />
-            <hr />
+          </div>
+
+          <div className="w-full sm:w-6/12 mb-lg">
+            <h4 className="flex items-center text-gray-600 font-semibold mb-formlabel">
+              Table Comment
+            </h4>
+            <TableComment onChange={this.onTableCommentChange} />
+          </div>
+
+          <h3 className="text-sm tracking-widest text-gray-400 uppercase font-semibold mb-sm">
+            Configure Fields
+          </h3>
+
+          <div className="w-full mb-lg">
+            <h4 className="flex items-center text-gray-600 font-semibold mb-formlabel">
+              Columns
+            </h4>
             <TableColumns
               uniqueKeys={uniqueKeys}
               dataTypes={dataTypes}
@@ -488,16 +547,23 @@ class AddTable extends Component {
               onColUniqueChange={this.onColUniqueChange}
               setColDefaultValue={this.setColDefaultValue}
             />
-            <div>
+            {isFeatureSupported('tables.create.frequentlyUsedColumns') ? (
               <FrequentlyUsedColumnSelector
                 onSelect={setFreqUsedColumn}
                 action={'add'}
                 dispatch={dispatch}
+                postgresVersion={postgresVersion}
               />
-            </div>
-            <hr />
-            <h4 className={styles.subheading_text}>
-              Primary Key &nbsp; &nbsp;
+            ) : null}
+          </div>
+
+          <h3 className="text-sm tracking-widest text-gray-400 uppercase font-semibold mb-sm">
+            Table Properties
+          </h3>
+
+          <div className="w-full sm:w-6/12 mb-md">
+            <h4 className="flex items-center text-gray-600 font-semibold mb-formlabel">
+              Primary Key
               <ToolTip message={primaryKeyDescription} />
             </h4>
             <PrimaryKeySelector
@@ -506,9 +572,11 @@ class AddTable extends Component {
               setPk={setPk}
               dispatch={dispatch}
             />
-            <hr />
-            <h4 className={styles.subheading_text}>
-              Foreign Keys &nbsp; &nbsp;
+          </div>
+
+          <div className="w-full sm:w-8/12 mb-md">
+            <h4 className="flex items-center text-gray-600 font-semibold mb-formlabel">
+              Foreign Keys
               <ToolTip message={foreignKeyDescription} />
             </h4>
             <ForeignKeyWrapper
@@ -522,9 +590,11 @@ class AddTable extends Component {
               fkToggled={fkToggled}
               schemaList={schemaList}
             />
-            <hr />
-            <h4 className={styles.subheading_text}>
-              Unique Keys &nbsp; &nbsp;
+          </div>
+
+          <div className="w-full sm:w-6/12 mb-md">
+            <h4 className="flex items-center text-gray-600 font-semibold mb-formlabel">
+              Unique Keys
               <ToolTip message={uniqueKeyDescription} />
             </h4>
             <UniqueKeyWrapper
@@ -536,18 +606,20 @@ class AddTable extends Component {
               dispatch={dispatch}
               setUniqueKeys={setUniqueKeys}
             />
-            <hr />
-            <h4 className={styles.subheading_text}>
-              Check Constraints &nbsp; &nbsp;
+          </div>
+
+          <div className="w-full sm:w-6/12 mb-lg">
+            <h4 className="flex items-center text-gray-600 font-semibold mb-formlabel">
+              Check Constraints
               <ToolTip message={checkConstraintsDescription} />
             </h4>
             <CheckConstraints
               constraints={checkConstraints}
               dispatch={dispatch}
             />
-            <hr />
-            <TableComment onChange={this.onTableCommentChange} />
-            <hr />
+          </div>
+
+          <div>
             <Button
               type="submit"
               onClick={this.validateAndSubmit}
@@ -586,6 +658,7 @@ const mapStateToProps = state => ({
   columnTypeCasts: state.tables.columnTypeCasts,
   columnDataTypeFetchErr: state.tables.columnDataTypeFetchErr,
   schemaList: state.tables.schemaList,
+  postgresVersion: state.main.postgresVersion,
 });
 
 const addTableConnector = connect => connect(mapStateToProps)(AddTable);

@@ -1,0 +1,11 @@
+url: /v2/query
+status: 200
+response:
+- name: Author 1
+- name: Author 2
+query:
+  type: select
+  args:
+    table: author
+    columns:
+      - name

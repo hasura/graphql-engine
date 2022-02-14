@@ -1,0 +1,130 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Testing API limits node limit and depth limits 1`] = `
+Object {
+  "args": Object {
+    "depth_limit": Object {
+      "global": 10,
+      "per_role": Object {
+        "role1": 2,
+      },
+    },
+    "disabled": false,
+    "node_limit": Object {
+      "global": 10,
+      "per_role": Object {
+        "role1": 3,
+      },
+    },
+  },
+  "type": "set_api_limits",
+}
+`;
+
+exports[`Testing API limits only depth limit 1`] = `
+Object {
+  "args": Object {
+    "depth_limit": Object {
+      "global": 10,
+    },
+    "disabled": false,
+  },
+  "type": "set_api_limits",
+}
+`;
+
+exports[`Testing API limits only depth limit with per role 1`] = `
+Object {
+  "args": Object {
+    "depth_limit": Object {
+      "global": 10,
+      "per_role": Object {
+        "role1": 3,
+      },
+    },
+    "disabled": false,
+  },
+  "type": "set_api_limits",
+}
+`;
+
+exports[`Testing API limits only node limit 1`] = `
+Object {
+  "args": Object {
+    "disabled": false,
+    "node_limit": Object {
+      "global": 10,
+    },
+  },
+  "type": "set_api_limits",
+}
+`;
+
+exports[`Testing API limits only node limit with per role 1`] = `
+Object {
+  "args": Object {
+    "disabled": false,
+    "node_limit": Object {
+      "global": 10,
+      "per_role": Object {
+        "role1": 3,
+      },
+    },
+  },
+  "type": "set_api_limits",
+}
+`;
+
+exports[`Testing Remove API Settings remains the same when role doesn't exist 1`] = `
+Object {
+  "args": Object {
+    "depth_limit": Object {
+      "global": 10,
+      "state": "enabled",
+    },
+    "disabled": false,
+    "node_limit": Object {
+      "global": 10,
+      "state": "disabled",
+    },
+    "rate_limit": Object {
+      "global": Object {
+        "max_reqs_per_min": 100,
+        "unique_params": Array [
+          "x-hasura-id",
+        ],
+      },
+      "state": "disabled",
+    },
+  },
+  "type": "set_api_limits",
+}
+`;
+
+exports[`Testing Remove API Settings removes settings for a role 1`] = `
+Object {
+  "args": Object {
+    "depth_limit": Object {
+      "global": 10,
+      "per_role": Object {},
+      "state": "enabled",
+    },
+    "disabled": false,
+    "node_limit": Object {
+      "global": 10,
+      "per_role": Object {},
+      "state": "enabled",
+    },
+    "rate_limit": Object {
+      "global": Object {
+        "max_reqs_per_min": 100,
+        "unique_params": Array [
+          "x-hasura-id",
+        ],
+      },
+      "state": "disabled",
+    },
+  },
+  "type": "set_api_limits",
+}
+`;

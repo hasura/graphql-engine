@@ -1,0 +1,4 @@
+- role_name: userandmanager
+  role_set:
+  - manager
+  - user

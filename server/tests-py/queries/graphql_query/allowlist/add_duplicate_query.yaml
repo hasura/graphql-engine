@@ -1,0 +1,18 @@
+description: Adding query with duplicate query_name should fail
+url: /v1/query
+status: 400
+query:
+  type: add_query_to_collection
+  args:
+    collection_name: collection_1
+    query_name: query_1
+    query: |
+      query {
+        user{
+          name
+        }
+      }
+response:
+  path: $.args
+  error: query with name "query_1" already exists in collection "collection_1"
+  code: already-exists

@@ -1,0 +1,17 @@
+CREATE DATABASE hasura;
+GO
+
+USE hasura;
+GO
+
+CREATE SCHEMA hasura;
+GO
+
+CREATE LOGIN hasura WITH PASSWORD='Hasura1!', DEFAULT_DATABASE=hasura;
+GO
+
+CREATE USER hasura FOR LOGIN hasura WITH DEFAULT_SCHEMA=hasura;
+GO
+
+ALTER ROLE db_owner ADD MEMBER hasura;
+GO

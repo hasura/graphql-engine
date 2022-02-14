@@ -35,6 +35,13 @@ args:
           ) AND author_id = author_row.id
       $$ LANGUAGE sql STABLE;
 
+      CREATE FUNCTION fetch_articles_plain(author_row author)
+      RETURNS SETOF article AS $$
+        SELECT *
+        FROM article
+        WHERE author_id = author_row.id
+      $$ LANGUAGE sql STABLE;
+
       CREATE FUNCTION full_name(author)
       RETURNS TEXT AS $$
         DECLARE
@@ -92,6 +99,10 @@ args:
       SELECT table_row.first_int::float8 + table_row.second_int::float8
       $$ LANGUAGE SQL STABLE;
 
+      CREATE FUNCTION get_sum_offset(table_row float_test, hasura_session json) returns int AS $$
+      SELECT table_row.first_int + table_row.second_int + (hasura_session ->> 'x-hasura-offset-int')::int
+      $$ LANGUAGE SQL STABLE;
+
 - type: track_table
   args:
     name: author
@@ -108,6 +119,14 @@ args:
     name: get_articles
     definition:
       function: fetch_articles
+      table_argument: author_row
+
+- type: add_computed_field
+  args:
+    table: author
+    name: get_articles_plain
+    definition:
+      function: fetch_articles_plain
       table_argument: author_row
 
 - type: add_computed_field
@@ -136,6 +155,27 @@ args:
       computed_fields:
       - full_name
 
+- type: create_select_permission
+  args:
+    table: author
+    role: public_role
+    permission:
+      columns:
+        - first_name
+        - last_name
+      filter: {}
+      computed_fields: []
+
+- type: create_select_permission
+  args:
+    table: article
+    role: public_role
+    permission:
+      columns:
+        - title
+        - content
+      filter: {}
+
 - type: track_table
   args:
     name: locations
@@ -159,3 +199,16 @@ args:
     name: sum_float
     definition:
       function: get_sum
+
+- type: add_computed_field
+  args:
+    table: float_test
+    name: sum_float_offset
+    definition:
+      function: get_sum_offset
+      session_argument: hasura_session
+
+- type: track_function
+  args:
+    name: fetch_articles
+    schema: public

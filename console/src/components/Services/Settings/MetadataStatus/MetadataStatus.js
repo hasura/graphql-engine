@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import Button from '../../../Common/Button/Button';
-import { dropInconsistentObjects } from '../Actions';
 import { permissionTypes, getTableNameFromDef } from '../utils';
 import metaDataStyles from '../Settings.scss';
 import styles from '../../../Common/TableCommon/Table.scss';
@@ -8,6 +7,15 @@ import CheckIcon from '../../../Common/Icons/Check';
 import CrossIcon from '../../../Common/Icons/Cross';
 import { getConfirmation } from '../../../Common/utils/jsUtils';
 import ReloadMetadata from '../MetadataOptions/ReloadMetadata';
+import { dropInconsistentObjects } from '../../../../metadata/actions';
+import {
+  fetchDataInit,
+  SET_INCONSISTENT_INHERITED_ROLE,
+  updateCurrentSchema,
+  UPDATE_CURRENT_DATA_SOURCE,
+} from '../../Data/DataActions';
+import { setDriver } from '../../../../dataSources';
+import _push from '../../Data/push';
 
 const MetadataStatus = ({ dispatch, metadata }) => {
   const [shouldShowErrorBanner, toggleErrorBanner] = useState(true);
@@ -15,6 +23,50 @@ const MetadataStatus = ({ dispatch, metadata }) => {
   const dismissErrorBanner = () => {
     toggleErrorBanner(false);
   };
+
+  const resolveInconsistentInheritedRole = inconsistentInheritedRoleObj => {
+    const {
+      table,
+      source,
+      permission_type,
+    } = inconsistentInheritedRoleObj.entity;
+    const role = inconsistentInheritedRoleObj.name;
+    const schema = metadata.metadataObject.sources
+      .find(s => s.name === source)
+      .tables.find(t => t.table.name === table).table.schema;
+
+    const driver = metadata.metadataObject.sources.find(s => s.name === source)
+      .kind;
+
+    /* 
+      Load up the database details and schema details
+    */
+
+    dispatch({
+      type: UPDATE_CURRENT_DATA_SOURCE,
+      source: source,
+    });
+    setDriver(driver);
+
+    dispatch(fetchDataInit(source, driver)).finally(() => {
+      dispatch(updateCurrentSchema(schema, source)).then(() => {
+        dispatch({
+          type: SET_INCONSISTENT_INHERITED_ROLE,
+          inconsistent_inherited_role: {
+            role: role,
+            permission_type: permission_type,
+            table: table,
+            schema: schema,
+            source: source,
+          },
+        });
+        dispatch(
+          _push(`/data/${source}/schema/${schema}/tables/${table}/permissions`)
+        );
+      });
+    });
+  };
+
   const inconsistentObjectsTable = () => {
     return (
       <table
@@ -27,58 +79,98 @@ const MetadataStatus = ({ dispatch, metadata }) => {
             <th>Type</th>
             <th>Description</th>
             <th>Reason</th>
+            <th>Action</th>
           </tr>
         </thead>
         <tbody>
-          {metadata.inconsistentObjects.map((ico, _i) => {
+          {[
+            ...metadata.inconsistentObjects,
+            ...metadata.inconsistentInheritedRoles,
+          ].map((inconsistentObject, _i) => {
             let name;
             let definition;
+            if (inconsistentObject.type === 'source') {
+              name = inconsistentObject.definition;
+            }
             if (
-              ico.type === 'object_relation' ||
-              ico.type === 'array_relation'
+              inconsistentObject.type === 'object_relation' ||
+              inconsistentObject.type === 'array_relation'
             ) {
-              name = ico.definition.name;
+              name = inconsistentObject.definition.name;
               definition = `relationship of table "${getTableNameFromDef(
-                ico.definition.table
+                inconsistentObject.definition.table
               )}"`;
-            } else if (ico.type === 'remote_relationship') {
-              name = ico.definition.name;
+            } else if (inconsistentObject.type === 'remote_relationship') {
+              name = inconsistentObject.definition.name;
               definition = `relationship between table "${getTableNameFromDef(
-                ico.definition.table
-              )}" and remote schema "${ico.definition.remote_schema}"`;
-            } else if (permissionTypes.includes(ico.type)) {
-              name = `${ico.definition.role}-permission`;
-              definition = `${ico.type} on table "${getTableNameFromDef(
-                ico.definition.table
-              )}"`;
-            } else if (ico.type === 'table') {
-              name = getTableNameFromDef(ico.definition);
-              definition = name;
-            } else if (ico.type === 'function') {
-              name = getTableNameFromDef(ico.definition);
-              definition = name;
-            } else if (ico.type === 'event_trigger') {
-              name = ico.definition.configuration.name;
-              definition = `event trigger on table "${getTableNameFromDef(
-                ico.definition.table
-              )}"`;
-            } else if (ico.type === 'remote_schema') {
-              name = ico.definition.name;
-              let url = `"${
-                ico.definition.definition.url ||
-                ico.definition.definition.url_from_env
+                inconsistentObject.definition.table
+              )}" and remote schema "${
+                inconsistentObject.definition.remote_schema
               }"`;
-              if (ico.definition.definition.url_from_env) {
+            } else if (permissionTypes.includes(inconsistentObject.type)) {
+              name = `${inconsistentObject.definition.role}-permission`;
+              definition = `${
+                inconsistentObject.type
+              } on table "${getTableNameFromDef(
+                inconsistentObject.definition.table
+              )}"`;
+            } else if (inconsistentObject.type === 'table') {
+              name = getTableNameFromDef(inconsistentObject.definition);
+              definition = name;
+            } else if (inconsistentObject.type === 'function') {
+              name = getTableNameFromDef(inconsistentObject.definition);
+              definition = name;
+            } else if (inconsistentObject.type === 'event_trigger') {
+              name = inconsistentObject.definition.configuration.name;
+              definition = `event trigger on table "${getTableNameFromDef(
+                inconsistentObject.definition.table
+              )}"`;
+            } else if (inconsistentObject.type === 'remote_schema') {
+              name = inconsistentObject.definition.name;
+              let url = `"${
+                inconsistentObject.definition.definition.url ||
+                inconsistentObject.definition.definition.url_from_env
+              }"`;
+              if (inconsistentObject.definition.definition.url_from_env) {
                 url = `the url from the value of env var ${url}`;
               }
               definition = `remote schema named "${name}" at ${url}`;
             }
+            const message = inconsistentObject.message;
             return (
               <tr key={_i}>
-                <td>{name}</td>
-                <td>{ico.type}</td>
-                <td>{definition}</td>
-                <td>{ico.reason}</td>
+                <td data-test={`inconsistent_name_${_i}`}>{name}</td>
+                <td data-test={`inconsistent_type_${_i}`}>
+                  {`${inconsistentObject.type} `}
+                </td>
+                <td data-test={`inconsistent_description_${_i}`}>
+                  {definition}
+                </td>
+                <td data-test={`inconsistent_reason_${_i}`}>
+                  <div>
+                    <b>{inconsistentObject.reason}</b>
+                    <br />
+                    {typeof message === 'string' ? (
+                      message
+                    ) : message ? (
+                      <pre className="text-base">
+                        <code>{JSON.stringify(message, null, 2)}</code>
+                      </pre>
+                    ) : null}
+                  </div>
+                </td>
+                <td data-test={`inconsistent_action_${_i}`}>
+                  {inconsistentObject.type ===
+                  'inherited role permission inconsistency' ? (
+                    <Button
+                      onClick={() =>
+                        resolveInconsistentInheritedRole(inconsistentObject)
+                      }
+                    >
+                      Resolve
+                    </Button>
+                  ) : null}
+                </td>
               </tr>
             );
           })}
@@ -102,7 +194,10 @@ const MetadataStatus = ({ dispatch, metadata }) => {
     const isInconsistentRemoteSchemaPresent = metadata.inconsistentObjects.some(
       i => i.type === 'remote_schema'
     );
-    if (metadata.inconsistentObjects.length === 0) {
+    if (
+      metadata.inconsistentObjects.length === 0 &&
+      metadata.inconsistentInheritedRoles.length === 0
+    ) {
       return (
         <div className={styles.add_mar_top}>
           <div className={metaDataStyles.content_width}>
@@ -133,7 +228,7 @@ const MetadataStatus = ({ dispatch, metadata }) => {
               of the metadata
             </div>
             <div className={styles.add_mar_top_small}>
-              The console will also not be able to display these inconsistent
+              The console might also not be able to display these inconsistent
               objects
             </div>
           </div>
@@ -178,14 +273,20 @@ const MetadataStatus = ({ dispatch, metadata }) => {
   };
 
   const banner = () => {
-    if (metadata.inconsistentObjects.length === 0) {
+    if (
+      metadata.inconsistentObjects.length === 0 &&
+      metadata.inconsistentInheritedRoles.length === 0
+    ) {
       return null;
     }
     if (!shouldShowErrorBanner) {
       return null;
     }
     const urlSearchParams = new URLSearchParams(window.location.search);
-    if (urlSearchParams.get('is_redirected') !== 'true') {
+    if (
+      urlSearchParams.get('is_redirected') !== 'true' &&
+      metadata.inconsistentObjects.length !== 0
+    ) {
       return null;
     }
     return (

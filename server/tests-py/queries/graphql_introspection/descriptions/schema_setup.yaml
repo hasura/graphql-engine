@@ -1,0 +1,33 @@
+type: bulk
+args:
+
+- type: run_sql
+  args:
+    sql: |
+      CREATE TABLE "automatic_comment_in_db" (
+        id serial primary key
+      );
+      COMMENT ON TABLE "automatic_comment_in_db" IS 'What a great comment in the DB';
+
+- type: run_sql
+  args:
+    sql: |
+      CREATE TABLE "automatic_no_comment_in_db" (
+        id serial primary key
+      );
+
+- type: run_sql
+  args:
+    sql: |
+      CREATE TABLE "explicit_comment_in_metadata" (
+        id serial primary key
+      );
+      COMMENT ON TABLE "explicit_comment_in_metadata" IS 'Fantastic comment, so good, so hidden';
+
+- type: run_sql
+  args:
+    sql: |
+      CREATE TABLE "explicit_no_comment_in_metadata" (
+        id serial primary key
+      );
+      COMMENT ON TABLE "explicit_no_comment_in_metadata" IS 'This would be a great comment, but you can''t see it';

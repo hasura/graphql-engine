@@ -1,0 +1,53 @@
+- description: Insert a value into the table.
+  url: /v1/graphql
+  status: 200
+  response:
+    data:
+      insert_author_one:
+        name: "Rick Astley"
+  query:
+   query: |
+     mutation {
+       insert_author_one(object: {id: 1, name: "Rick Astley"}) {
+         name
+       }
+     }
+
+- description: Send one valid mutation followed by an erroneous one.
+  url: /v1/graphql
+  status: 200
+  response:
+    data:
+    errors:
+      - extensions:
+          path: $.selectionSet.insert_author_one.args.object
+          code: constraint-violation
+        message: Uniqueness violation. duplicate key value violates unique constraint
+          "author_pkey"
+  query:
+   query: |
+     mutation {
+       insert_author(objects: {id: 2, name: "Eduard Anatolyevich Khil"}) {
+         returning {
+           name
+         }
+       }
+       insert_author_one(object: {id: 1, name: "Rick Astley"}) {
+         name
+       }
+     }
+
+- description: Check that the first mutation was reverted.
+  url: /v1/graphql
+  status: 200
+  response:
+    data:
+      author:
+        - name: "Rick Astley"
+  query:
+   query: |
+     query {
+       author {
+         name
+       }
+     }

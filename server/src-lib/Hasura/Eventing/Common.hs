@@ -1,40 +1,43 @@
-module Hasura.Eventing.Common where
+module Hasura.Eventing.Common
+  ( LockedEventsCtx (..),
+    saveLockedEvents,
+    removeEventFromLockedEvents,
+  )
+where
 
-import           Control.Concurrent.STM.TVar
-import           Control.Monad.STM
-import           Hasura.Prelude
-import           Hasura.RQL.Types.EventTrigger     (EventId)
-import           Hasura.RQL.Types.ScheduledTrigger (CronEventId, StandAloneScheduledEventId)
+import Control.Concurrent.STM.TVar
+import Control.Monad.STM
+import Data.Set qualified as Set
+import Hasura.Prelude
+import Hasura.RQL.Types.Action (LockedActionEventId)
+import Hasura.RQL.Types.Common
+import Hasura.RQL.Types.Eventing (EventId)
+import Hasura.RQL.Types.ScheduledTrigger (CronEventId, OneOffScheduledEventId)
 
-import qualified Data.Set                          as Set
-
-data LockedEventsCtx
-  = LockedEventsCtx
-  { leCronEvents       :: TVar (Set.Set CronEventId)
-  , leStandAloneEvents :: TVar (Set.Set StandAloneScheduledEventId)
-  , leEvents           :: TVar (Set.Set EventId)
+data LockedEventsCtx = LockedEventsCtx
+  { leCronEvents :: TVar (Set.Set CronEventId),
+    leOneOffEvents :: TVar (Set.Set OneOffScheduledEventId),
+    leEvents :: TVar (HashMap SourceName (Set.Set EventId)),
+    leActionEvents :: TVar (Set.Set LockedActionEventId)
   }
-
-initLockedEventsCtx :: STM LockedEventsCtx
-initLockedEventsCtx = do
-  leCronEvents <- newTVar Set.empty
-  leStandAloneEvents <- newTVar Set.empty
-  leEvents <- newTVar Set.empty
-  return $ LockedEventsCtx{..}
 
 -- | After the events are fetched from the DB, we store the locked events
 --   in a hash set(order doesn't matter and look ups are faster) in the
 --   event engine context
-saveLockedEvents :: (MonadIO m) => [Text] -> TVar (Set.Set Text) -> m ()
+saveLockedEvents :: (MonadIO m) => [EventId] -> TVar (Set.Set EventId) -> m ()
 saveLockedEvents eventIds lockedEvents =
-  liftIO $ atomically $ do
-    lockedEventsVals <- readTVar lockedEvents
-    writeTVar lockedEvents $!
-      Set.union lockedEventsVals $ Set.fromList eventIds
+  liftIO $
+    atomically $ do
+      lockedEventsVals <- readTVar lockedEvents
+      writeTVar lockedEvents
+        $! Set.union lockedEventsVals
+        $ Set.fromList eventIds
 
 -- | Remove an event from the 'LockedEventsCtx' after it has been processed
-removeEventFromLockedEvents :: MonadIO m => Text -> TVar (Set.Set Text) -> m ()
+removeEventFromLockedEvents ::
+  MonadIO m => EventId -> TVar (Set.Set EventId) -> m ()
 removeEventFromLockedEvents eventId lockedEvents =
-  liftIO $ atomically $ do
-  lockedEventsVals <- readTVar lockedEvents
-  writeTVar lockedEvents $! Set.delete eventId lockedEventsVals
+  liftIO $
+    atomically $ do
+      lockedEventsVals <- readTVar lockedEvents
+      writeTVar lockedEvents $! Set.delete eventId lockedEventsVals

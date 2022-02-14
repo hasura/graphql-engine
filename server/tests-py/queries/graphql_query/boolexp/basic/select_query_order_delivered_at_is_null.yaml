@@ -5,7 +5,7 @@ response:
   data:
     orders:
     - id: 1
-      received_at: '2018-09-21T09:39:44+00:00'
+      received_at: '2018-09-21T09:39:44'
 query:
   query: |
     query {

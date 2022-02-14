@@ -47,6 +47,7 @@
           c42_range_timestamp: '["2010-01-01 14:30:00","2010-01-01 15:30:02")'
           c43_range_timestamptz: '("2011-02-05 12:03:00+00","2012-03-04 16:40:04+00"]'
           c44_xml: '<foo>bar</foo>'
+          c45_char: '@'
   status: 200
   query:
     variables:
@@ -99,6 +100,7 @@
             , c42_range_timestamp: "[\"2010-01-01 14:30:00\",\"2010-01-01 15:30:02\")"
             , c43_range_timestamptz: "(\"2011-02-05 12:03:00+00\",\"2012-03-04 16:40:04+00\"]"
             , c44_xml: "<foo>bar</foo>"
+            , c45_char: "@"
             }
           ]
         ) {
@@ -143,6 +145,51 @@
             c42_range_timestamp
             c43_range_timestamptz
             c44_xml
+            c45_char
+          }
+        }
+      }
+
+- description: Inserts data into test_types table with various postgres types using strings
+  url: /v1/graphql
+  response:
+    data:
+      insert_test_types:
+        returning:
+        - c1_smallint: 32767
+          c2_integer: 2147483647
+          c3_bigint: '9223372036854775807'
+          c4_decimal: '123.45'
+          c5_numeric: '1.234'
+          c6_real: 0.00390625
+          c7_double_precision: '16.0001220703125'
+          c20_boolean: true
+  status: 200
+  query:
+    query: |
+      mutation insert_test_types {
+        insert_test_types(
+          objects: [
+            { c1_smallint: "32767"
+            , c2_integer: "2147483647"
+            , c3_bigint: "9223372036854775807"
+            , c4_decimal: "123.45"
+            , c5_numeric: "1.234"
+            , c6_real: "0.00390625"
+            , c7_double_precision: "16.0001220703125"
+            , c20_boolean: "true"
+            }
+          ]
+        ) {
+          returning {
+            c1_smallint
+            c2_integer
+            c3_bigint
+            c4_decimal
+            c5_numeric
+            c6_real
+            c7_double_precision
+            c20_boolean
           }
         }
       }

@@ -1,0 +1,48 @@
+# https://github.com/hasura/graphql-engine/issues/5200
+
+# NOTE:-
+# The GraphQL schema generation refactor (https://github.com/hasura/graphql-engine/pull/4111) auto fixes the
+# aforementioned issue, but in different way, by restricting the generation of *_by_pk root fields
+# when all primary key columns are not marked for selection in permission. The actual fix
+# (https://github.com/hasura/graphql-engine/pull/5522) is to generate the typeinfos for all primary key columns
+# irrespective of select permissions. So, the test case is modified accordingly to check
+# the absence of zones_by_pk query root field.
+description: Test introspecting enum types as user role
+url: /v1/graphql
+status: 200
+headers:
+  X-Hasura-Role: user
+response:
+  data:
+    query_root_fields:
+      fields:
+      - name: zones
+    zones:
+      fields:
+      - name: code
+        type:
+          ofType:
+            name: String
+      - name: id
+        type:
+          ofType:
+            name: Int
+query:
+  query: |
+    {
+      query_root_fields: __type(name: "query_root") {
+        fields {
+          name
+        }
+      }
+      zones: __type(name: "zones") {
+        fields {
+          name
+          type {
+            ofType {
+              name
+            }
+          }
+        }
+      }
+    }

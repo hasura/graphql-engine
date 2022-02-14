@@ -43,7 +43,7 @@ const ForeignKeyWrapper = ({
       }
     });
 
-    const orderedSchemaList = schemaList.map(s => s.schema_name).sort();
+    const orderedSchemaList = schemaList.sort();
 
     // The content when the editor is expanded
     const expandedContent = () => (
@@ -79,7 +79,11 @@ const ForeignKeyWrapper = ({
     if (fkConfig) {
       collapsedLabelText = <b>{fkConfig}</b>;
     } else if (isLast && numFks === 1) {
-      collapsedLabelText = <i>(You can add foreign keys later as well)</i>;
+      collapsedLabelText = (
+        <span className="italic text-sm text-gray-600">
+          (You can add foreign keys later as well)
+        </span>
+      );
     }
 
     const collapsedLabel = () => <div>{collapsedLabelText}</div>;

@@ -3,7 +3,7 @@ url: /v1/graphql
 status: 200
 response:
   data:
-    profiles:
+    custom_profiles:
       - id: 1
         messagesNestedArgs:
           - id: 1
@@ -17,7 +17,7 @@ response:
 query:
   query: |
     query ($name: String!) {
-      profiles {
+      custom_profiles {
         id
         messagesNestedArgs(includes: { name:  [$name] }) {
           id

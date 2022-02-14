@@ -1,0 +1,81 @@
+type: bulk
+args:
+
+- type: pg_track_table
+  args:
+    table: user
+
+- type: pg_create_select_permission
+  args:
+    table: user
+    role: role1
+    permission:
+      columns:
+        - name
+        - score
+        - role_echo
+      filter: {}
+
+- type: pg_create_select_permission
+  args:
+    table: user
+    role: role2
+    permission:
+      columns:
+        - name
+        - score
+        - role_echo
+      filter: {}
+
+- type: pg_create_select_permission
+  args:
+    table: user
+    role: role3
+    permission:
+      columns:
+        - name
+        - score
+        - role_echo
+      filter: {}
+
+- type: pg_create_select_permission
+  args:
+    table: user
+    role: role4
+    permission:
+      columns:
+        - name
+        - score
+      filter:
+        id: X-Hasura-User-Id
+
+- type: pg_track_function
+  args:
+    function: add_to_score
+    configuration:
+      exposed_as: mutation
+      session_argument: hasura_session
+
+- type: pg_create_function_permission
+  args:
+    function: add_to_score
+    role: role1
+
+- type: pg_create_function_permission
+  args:
+    function: add_to_score
+    role: role2
+
+- type: add_inherited_role
+  args:
+    role_name: inherited_role1
+    role_set:
+      - role1
+      - role2
+
+- type: add_inherited_role
+  args:
+    role_name: inherited_role2
+    role_set:
+      - role3
+      - role4

@@ -31,7 +31,7 @@ from sphinx.util import compat
 compat.make_admonition = BaseAdmonition
 
 # from sphinx.util.osutil import relative_uri
-StandaloneHTMLBuilder.script_files = ["_static/vendor.js"]
+StandaloneHTMLBuilder.script_files = ["_static/scripts/vendor.js"]
 # StandaloneHTMLBuilder.imgpath = relative_uri("v0.13", '_images')
 
 # Defaults to development
@@ -45,17 +45,17 @@ GRAPHIQL_DEFAULT_ENDPOINT = "http://localhost:8080/v1/graphql"
 if os.getenv("GRAPHIQL_DEFAULT_ENDPOINT"):
     GRAPHIQL_DEFAULT_ENDPOINT = os.getenv("GRAPHIQL_DEFAULT_ENDPOINT")
 
-sitemap_domain = "https://hasura-stg.hasura-app.io/docs/"
+BASE_DOMAIN = "hasura.io" if RELEASE_MODE == "production" else "hasura-stg.hasura-app.io"
 
-if(RELEASE_MODE == "production"):
-    sitemap_domain = "https://hasura.io/docs/"
+SITEMAP_DOMAIN = BASE_DOMAIN + '/docs'
 
 # set context
 html_context = {
-    "SITEMAP_DOMAIN": sitemap_domain,
-    "BASE_DOMAIN": "hasura.io" if RELEASE_MODE == "production" else "hasura-stg.hasura-app.io",
+    "BASE_DOMAIN": BASE_DOMAIN,
     "RELEASE_MODE": RELEASE_MODE,
+    "SITEMAP_DOMAIN": SITEMAP_DOMAIN,
     "GRAPHIQL_DEFAULT_ENDPOINT": GRAPHIQL_DEFAULT_ENDPOINT,
+    "CURRENT_ENV": CURRENT_ENV,
 }
 
 # End of it
@@ -85,7 +85,6 @@ extensions = [
     "sphinxcontrib.httpdomain",
     "sphinxcontrib.images",
     "sphinx.ext.todo",
-    "global_tabs",
     "sphinx_tabs.tabs",
     "graphiql",
     "lexer_jsx",
@@ -221,7 +220,7 @@ html_title = 'Hasura GraphQL Docs'
 # the docs.  This file should be a Windows icon file (.ico) being 16x16 or 32x32
 # pixels large.
 #
-html_favicon = "img/layout/favicon_yellow.png"
+html_favicon = "img/layout/favicon_dark_yellow.png"
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,

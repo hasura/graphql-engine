@@ -22,6 +22,14 @@ const tableNameNullNotif = [
   },
 ];
 
+const tableNameMaxLengthNotif = [
+  'Error creating table!',
+  'Table name should be less than 64 characters',
+  {
+    custom: 'Table name should be less than 64 characters',
+  },
+];
+
 const tableEnufColumnsNotif = [
   'Error creating table!',
   'Table must have at least one column',
@@ -35,6 +43,14 @@ const tableColumnDefaultsNotif = [
   'Default value is invalid',
   {
     custom: 'Default value is invalid',
+  },
+];
+
+const tableColumnMaxLengthNotif = [
+  'Error creating table!',
+  'Column names should be less than 64 characters',
+  {
+    custom: 'Column names should be less than 64 characters',
   },
 ];
 
@@ -53,4 +69,6 @@ export {
   tableMinPrimaryKeyNotif,
   tableColumnDefaultsNotif,
   tableColumnTypesNotif,
+  tableColumnMaxLengthNotif,
+  tableNameMaxLengthNotif,
 };

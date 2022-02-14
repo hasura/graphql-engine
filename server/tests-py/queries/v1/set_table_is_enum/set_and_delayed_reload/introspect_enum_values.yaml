@@ -1,0 +1,44 @@
+- description: Insert a new enum value without reloading
+  url: /v1/query
+  status: 200
+  query:
+    type: run_sql
+    args:
+      sql: |
+        INSERT INTO crust VALUES ('thick');
+
+- description: Check that the previous enum values are cached
+  url: /v1/graphql
+  status: 200
+  response:
+    data:
+      crust:
+        enumValues:
+        - name: thin
+  query: &crust_query
+    query: |
+      {
+        crust: __type(name: "crust_enum") {
+          enumValues {
+            name
+          }
+        }
+      }
+
+- description: Reload the metadata
+  url: /v1/query
+  status: 200
+  query:
+    type: reload_metadata
+    args: {}
+
+- description: Check that the enum values are updated
+  url: /v1/graphql
+  status: 200
+  response:
+    data:
+      crust:
+        enumValues:
+        - name: thick
+        - name: thin
+  query: *crust_query

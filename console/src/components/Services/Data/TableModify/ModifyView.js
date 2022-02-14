@@ -16,18 +16,19 @@ import Button from '../../../Common/Button/Button';
 import { NotFoundError } from '../../../Error/PageNotFound';
 
 import { getConfirmation } from '../../../Common/utils/jsUtils';
+import Tooltip from '../../../Common/Tooltip/Tooltip';
+import styles from './ModifyTable.scss';
 import {
+  getTableCustomColumnNames,
   findTable,
   generateTableDef,
-  getColumnName,
-  getTableCustomRootFields,
-  getTableCustomColumnNames,
-} from '../../../Common/utils/pgUtils';
-import RootFields from './RootFields';
-import Tooltip from '../../../Common/Tooltip/Tooltip';
-import { changeViewRootFields } from '../Common/TooltipMessages';
-import styles from './ModifyTable.scss';
+  isFeatureSupported,
+} from '../../../../dataSources';
 import ViewDefinitions from './ViewDefinitions';
+import { RightContainer } from '../../../Common/Layout/RightContainer';
+import ComputedFields from './ComputedFields';
+import RootFields from './RootFields';
+import FeatureDisabled from '../FeatureDisabled';
 
 const ModifyView = props => {
   const {
@@ -41,16 +42,16 @@ const ModifyView = props => {
     dispatch,
     currentSchema,
     tableCommentEdit,
-    rootFieldsEdit,
     migrationMode,
     readOnlyMode,
+    currentSource,
   } = props;
 
   React.useEffect(() => {
     dispatch({ type: RESET });
     dispatch(setTable(tableName));
     dispatch(fetchViewDefinition(tableName, false));
-  }, []);
+  }, [dispatch, tableName]);
 
   const tableSchema = findTable(
     allSchemas,
@@ -64,8 +65,10 @@ const ModifyView = props => {
   };
 
   React.useEffect(() => {
-    initCustomColumnNames();
-  }, [existingCustomColumnNames]);
+    if (tableSchema.configuration) {
+      setCustomColumnNames(tableSchema.configuration.custom_column_names);
+    }
+  }, [tableSchema.configuration]);
 
   if (!tableSchema) {
     // throw a 404 exception
@@ -101,8 +104,8 @@ const ModifyView = props => {
   const getViewColumnsSection = () => {
     const columns = tableSchema.columns.sort(ordinalColSort);
 
-    return columns.map((c, i) => {
-      const columnName = getColumnName(c);
+    const columnList = columns.map((c, i) => {
+      const columnName = c.column_name;
 
       const setCustomColumnName = e => {
         const value = e.target.value;
@@ -114,16 +117,16 @@ const ModifyView = props => {
 
       const columnExpanded = () => {
         return (
-          <div className={`${styles.display_flex}`}>
-            <label className={'col-xs-4'}>
-              GraphQL field name
+          <div className="flex items-center">
+            <label className="flex items-center text-gray-600 font-semibold">
+              GraphQL Field Name
               <Tooltip
                 message={
                   'Expose the column with a different name in the GraphQL API'
                 }
               />
             </label>
-            <div className={'col-xs-6'}>
+            <div className="ml-auto w-6/12">
               <input
                 type="text"
                 className={'form-control'}
@@ -173,24 +176,14 @@ const ModifyView = props => {
         </div>
       );
     });
-  };
 
-  const getViewRootFieldsSection = () => {
-    const existingRootFields = getTableCustomRootFields(tableSchema);
     return (
-      <React.Fragment>
-        <h4 className={styles.subheading_text}>
-          Custom GraphQL Root Fields
-          <Tooltip message={changeViewRootFields} />
+      <>
+        <h4 className="flex items-center text-gray-600 font-semibold mb-formlabel">
+          Columns
         </h4>
-        <RootFields
-          existingRootFields={existingRootFields}
-          rootFieldsEdit={rootFieldsEdit}
-          dispatch={dispatch}
-          tableName={tableName}
-        />
-        <hr />
-      </React.Fragment>
+        <div className="w-full sm:w-6/12 mb-md">{columnList}</div>
+      </>
     );
   };
 
@@ -234,39 +227,79 @@ const ModifyView = props => {
     </Button>
   );
 
-  return (
-    <div className={styles.container + ' container-fluid'}>
-      <TableHeader
-        dispatch={dispatch}
-        table={tableSchema}
-        tabName="modify"
-        migrationMode={migrationMode}
-        readOnlyMode={readOnlyMode}
+  if (
+    !isFeatureSupported('tables.modify.enabled') ||
+    isFeatureSupported('tables.modify.readOnly')
+  ) {
+    return (
+      <FeatureDisabled
+        tab="modify"
+        tableName={tableName}
+        schemaName={currentSchema}
+        tableType={tableType}
       />
-      <br />
-      <div className={'container-fluid ' + styles.padd_left_remove}>
-        <div className={'col-xs-8 ' + styles.padd_left_remove}>
+    );
+  }
+
+  return (
+    <RightContainer>
+      <div>
+        <TableHeader
+          dispatch={dispatch}
+          table={tableSchema}
+          tabName="modify"
+          migrationMode={migrationMode}
+          readOnlyMode={readOnlyMode}
+          source={currentSource}
+        />
+        <br />
+        <div className="w-full sm:w-6/12 mb-lg">
+          <h4 className="flex items-center text-gray-600 font-semibold mb-formlabel">
+            View Comments
+          </h4>
           <TableCommentEditor
             tableComment={tableComment}
             tableCommentEdit={tableCommentEdit}
             tableType={tableType}
             dispatch={dispatch}
           />
-          <h4 className={styles.subheading_text}>Columns</h4>
-          {getViewColumnsSection()}
-          <br />
-          <ViewDefinitions dispatch={dispatch} sql={viewDefSql} />
-
-          <hr />
-          {getViewRootFieldsSection()}
-          {untrackBtn}
-          {deleteBtn}
-          <br />
-          <br />
         </div>
+
+        <h3 className="text-sm tracking-widest text-gray-400 uppercase font-semibold mb-sm">
+          View Properties
+        </h3>
+
+        <ViewDefinitions
+          dispatch={dispatch}
+          sql={viewDefSql}
+          source={currentSource}
+        />
+
+        {getViewColumnsSection()}
+
+        {isFeatureSupported('tables.modify.computedFields') && (
+          <>
+            <div className="w-full sm:w-6/12 mb-md">
+              <ComputedFields tableSchema={tableSchema} />
+            </div>
+          </>
+        )}
+
+        {isFeatureSupported('tables.modify.customGqlRoot') && (
+          <>
+            <div className="w-full sm:w-6/12 mb-md">
+              <RootFields tableSchema={tableSchema} />
+            </div>
+          </>
+        )}
+
+        {untrackBtn}
+        {deleteBtn}
+        <br />
+        <br />
         <div className={styles.fixed + ' col-xs-3 hidden'}>{alert}</div>
       </div>
-    </div>
+    </RightContainer>
   );
 };
 
@@ -307,6 +340,7 @@ const mapStateToProps = (state, ownProps) => {
     tableName,
     tableType,
     currentSchema: schemaName,
+    currentSource: state.tables.currentDataSource,
     allSchemas: state.tables.allSchemas,
     migrationMode: state.main.migrationMode,
     readOnlyMode: state.main.readOnlyMode,

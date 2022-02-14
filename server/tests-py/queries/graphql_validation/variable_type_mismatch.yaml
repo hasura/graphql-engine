@@ -1,0 +1,223 @@
+- description: Variable type mismatch in column parser
+  url: /v1/graphql
+  status: 200
+  response:
+    errors:
+    - extensions:
+        path: "$.selectionSet.update_author.args._set.name"
+        code: "validation-failed"
+      message: variable "name" is declared as Int!, but used where String is expected
+  query:
+    query: |
+      mutation update_author($name: Int!) {
+        update_author(where: {id: {_eq: 0}}, _set: {name: $name}) {
+          returning {
+            id
+            name
+          }
+        }
+      }
+    variables:
+      name: "foo"
+
+- description: Variable type mismatch in scalar parser
+  url: /v1/graphql
+  status: 200
+  response:
+    errors:
+    - extensions:
+        path: "$.selectionSet.author.args.limit"
+        code: "validation-failed"
+      message: variable "limit" is declared as String, but used where Int is expected
+  query:
+    query: |
+      query get_author($limit: String) {
+        author(limit: $limit) {
+          id
+          name
+        }
+      }
+    variables:
+      limit: 42
+
+- description: Input type coercion is not variable coercion
+  url: /v1/graphql
+  status: 200
+  response:
+    errors:
+    - extensions:
+        path: "$.selectionSet.insert_misgivings_one.args.object.f"
+        code: "validation-failed"
+      message: variable "i" is declared as Int, but used where Float is expected
+  query:
+    query: |
+      mutation have_misgivings($i: Int) {
+        insert_misgivings_one(object: {f: $i}) {
+          i
+        }
+      }
+    variables:
+      i: 42
+
+- description: Variable type mismatch with custom scalar
+  url: /v1/graphql
+  status: 200
+  response:
+    errors:
+    - extensions:
+       path: "$.selectionSet.insert_author.args.objects[0].location"
+       code: "validation-failed"
+      message: variable "location" is declared as geometry, but used where geography is expected
+  query:
+    query: |
+      mutation insert_author($location: geometry) {
+        insert_author(objects: {name: "bar" location: $location}) {
+          affected_rows
+        }
+      }
+    variables:
+      location:
+      - 42
+      - 101
+
+- description: "Variable type mismatch: nullable variable at non-nullable location"
+  url: /v1/graphql
+  status: 200
+  response:
+    errors:
+    - extensions:
+       path: "$.selectionSet.insert_author_one.args.object"
+       code: "validation-failed"
+      message: variable "author" is declared as author_insert_input, but used where author_insert_input! is expected
+  query:
+    query: |
+      mutation insert_author($author: author_insert_input) {
+        insert_author_one(object: $author) {
+          id
+        }
+      }
+    variables:
+      author:
+        name: "baz"
+        location: null
+
+- description: "Variable type match: nullable variable with non-null default at non-nullable location"
+  url: /v1/graphql
+  status: 200
+  response:
+    data:
+      insert_author_one:
+        id: 1
+  query:
+    query: |
+      mutation insert_author($author: author_insert_input = {name: "default"}) {
+        insert_author_one(object: $author) {
+          id
+        }
+      }
+    variables:
+      author:
+        name: "baz"
+        location: null
+
+- description: "Variable type mismatch: nullable variable with null default at non-nullable location"
+  url: /v1/graphql
+  status: 200
+  response:
+    errors:
+    - extensions:
+       path: "$.selectionSet.insert_author_one.args.object"
+       code: "validation-failed"
+      message: variable "author" is declared as author_insert_input, but used where author_insert_input! is expected
+  query:
+    query: |
+      mutation insert_author($author: author_insert_input = null) {
+        insert_author_one(object: $author) {
+          id
+        }
+      }
+    variables:
+      author:
+        name: "baz"
+        location: null
+
+- description: "Variable type match: nullable variable at location with default"
+  url: /v1/graphql
+  status: 200
+  response:
+    data:
+      __type:
+        fields:
+        - name: id
+        - name: location
+        - name: name
+
+  query:
+    query: |
+      query author_type($includeDeprecated: Boolean) {
+        __type(name: "author") {
+          fields(includeDeprecated: $includeDeprecated) {
+            name
+          }
+        }
+      }
+    variables:
+      includeDeprecated: False
+
+
+- description: Variable type match nullability
+  url: /v1/graphql
+  status: 200
+  response:
+    data:
+      insert_author_one:
+        id: 2
+  query:
+    query: |
+      mutation insert_author($name: String!) {
+        insert_author_one(object: {name: $name}) {
+          id
+        }
+      }
+    variables:
+      name: "ct"
+
+- description: Variable type match optional
+  url: /v1/graphql
+  status: 200
+  response:
+    data:
+      insert_author_one:
+        id: 3
+  query:
+    query: |
+      mutation insert_author($name: String) {
+        insert_author_one(object: {name: $name}) {
+          id
+        }
+      }
+    variables:
+      name: "asdfdsfllhjh"
+
+- description: Variable type match default
+  url: /v1/graphql
+  status: 200
+  response:
+    data:
+      __type:
+        fields:
+        - name: id
+        - name: location
+        - name: name
+
+  query:
+    query: |
+      query author_type($includeDeprecated: Boolean) {
+        __type(name: "author") {
+          fields(includeDeprecated: $includeDeprecated) {
+            name
+          }
+        }
+      }
+    variables:
+      includeDeprecated: False

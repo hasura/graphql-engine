@@ -1,4 +1,5 @@
 import { parse as sdlParse } from 'graphql/language/parser';
+import { print as sdlPrint } from 'graphql/language/printer';
 import { getAstTypeMetadata, wrapTypename } from './wrappingTypeUtils';
 import {
   reformCustomTypes,
@@ -174,6 +175,7 @@ export const getActionDefinitionFromSdl = sdl => {
     outputType: '',
     comment: '',
     error: null,
+    type: '',
   };
   let schemaAst;
   try {
@@ -207,11 +209,15 @@ export const getActionDefinitionFromSdl = sdl => {
     return definition;
   }
 
-  return {
-    ...definition,
-    type: actionType,
-    ...getActionFromOperationAstDef(sdlDef.fields[0]),
-  };
+  const defObj = sdlDef.fields.length
+    ? {
+        ...definition,
+        type: actionType,
+        ...getActionFromOperationAstDef(sdlDef.fields[0]),
+      }
+    : { ...definition, type: actionType };
+
+  return defObj;
 };
 
 const getArgumentsSdl = args => {
@@ -227,7 +233,7 @@ const getArgumentsSdl = args => {
 const getFieldsSdl = fields => {
   const fieldsSdl = fields.map(f => {
     const argSdl = f.arguments ? getArgumentsSdl(f.arguments) : '';
-    return `  ${getEntityDescriptionSdl(f)}${f.name} ${argSdl}: ${f.type}`;
+    return `  ${getEntityDescriptionSdl(f)}${f.name}${argSdl}: ${f.type}`;
   });
   return fieldsSdl.join('\n');
 };
@@ -352,14 +358,57 @@ export const getSdlComplete = (allActions, allTypes) => {
   let sdl = '';
   allActions.forEach(a => {
     sdl += `extend ${getActionDefinitionSdl(
-      a.action_name,
-      a.action_defn.type,
-      a.action_defn.arguments,
-      a.action_defn.output_type,
+      a.name,
+      a.definition.type,
+      a.definition.arguments,
+      a.definition.output_type,
       a.comment
     )}`;
   });
 
   sdl += getTypesSdl(allTypes);
   return sdl;
+};
+
+export const toggleCacheDirective = operationString => {
+  let operationAst;
+  try {
+    operationAst = sdlParse(operationString);
+  } catch (e) {
+    console.error(e);
+    return;
+  }
+
+  const shouldAddCacheDirective = !operationAst.definitions.some(def => {
+    return def.directives.some(dir => dir.name.value === 'cached');
+  });
+
+  const newOperationAst = JSON.parse(JSON.stringify(operationAst));
+
+  newOperationAst.definitions = operationAst.definitions.map(def => {
+    if (def.kind === 'OperationDefinition' && def.operation === 'query') {
+      const newDef = {
+        ...def,
+        directives: def.directives.filter(dir => dir.name.value !== 'cached'),
+      };
+      if (shouldAddCacheDirective) {
+        newDef.directives.push({
+          kind: 'Directive',
+          name: {
+            kind: 'Name',
+            value: 'cached',
+          },
+        });
+      }
+      return newDef;
+    }
+    return def;
+  });
+
+  try {
+    const newString = sdlPrint(newOperationAst);
+    return newString;
+  } catch {
+    throw new Error('cannot build the operation string');
+  }
 };

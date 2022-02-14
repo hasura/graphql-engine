@@ -17,7 +17,7 @@ const Info: React.FC = () => {
       <p>
         You can schedule an event from your backend using the{' '}
         <a
-          href="https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/scheduled-triggers.html#create-scheduled-event"
+          href="https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/scheduled-triggers.html#create-scheduled-event"
           target="_blank"
           rel="noopener noreferrer"
         >
@@ -37,11 +37,11 @@ const Info: React.FC = () => {
       <div className={styles.padd_left}>
         <TopicDescription
           title="What are Scheduled events?"
-          imgUrl={`${globals.assetsPath}/common/img/event-trigger.png`}
+          imgUrl={`${globals.assetsPath}/common/img/scheduled-event.png`}
           imgAlt={ADHOC_EVENTS_HEADING}
           description={topicDescription}
         />
-        <hr className={styles.clear_fix} />
+        <hr className={`${styles.clear_fix} my-lg`} />
       </div>
     </div>
   );

@@ -7,12 +7,14 @@ export interface JSONEditorProps {
   initData: string;
   onChange: (v: string) => void;
   data: string;
+  minLines?: number;
 }
 
 const JSONEditor: React.FC<JSONEditorProps> = ({
   initData,
   onChange,
   data,
+  minLines,
 }) => {
   const [value, setValue] = useState(initData || data || '');
   const [annotations, setAnnotations] = useState<IAnnotation[]>([]);
@@ -56,6 +58,7 @@ const JSONEditor: React.FC<JSONEditorProps> = ({
       onChange={onEditorValueChange}
       theme="github"
       height="5em"
+      minLines={minLines || 1}
       maxLines={15}
       width="100%"
       showPrintMargin={false}

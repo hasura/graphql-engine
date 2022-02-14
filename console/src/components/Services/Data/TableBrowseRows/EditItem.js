@@ -1,18 +1,19 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
+import { isEmpty } from '@/components/Common/utils/jsUtils';
+import { replace } from 'react-router-redux';
 import TableHeader from '../TableCommon/TableHeader';
 import Button from '../../../Common/Button/Button';
 import ReloadEnumValuesButton from '../Common/Components/ReloadEnumValuesButton';
 import { ordinalColSort } from '../utils';
-
-// import RichTextEditor from 'react-rte';
-import { replace } from 'react-router-redux';
 import globals from '../../../../Globals';
 import { E_ONGOING_REQ, editItem } from './EditActions';
-import { findTable, generateTableDef } from '../../../Common/utils/pgUtils';
+import { findTable, generateTableDef } from '../../../../dataSources';
 import { getTableBrowseRoute } from '../../../Common/utils/routesUtils';
 import { fetchEnumOptions } from './EditActions';
 import { TableRow } from '../Common/Components/TableRow';
+import { RightContainer } from '../../../Common/Layout/RightContainer';
+import styles from '../../../Common/TableCommon/Table.scss';
 
 class EditItem extends Component {
   constructor() {
@@ -38,6 +39,7 @@ class EditItem extends Component {
       count,
       dispatch,
       enumOptions,
+      currentSource,
     } = this.props;
 
     // check if item exists
@@ -46,6 +48,7 @@ class EditItem extends Component {
         replace(
           `${globals.urlPrefix || ''}${getTableBrowseRoute(
             currentSchema,
+            currentSource,
             tableName,
             true
           )}`
@@ -53,8 +56,6 @@ class EditItem extends Component {
       );
       return null;
     }
-
-    const styles = require('../../../Common/TableCommon/Table.scss');
 
     const currentTable = findTable(
       schemas,
@@ -77,6 +78,28 @@ class EditItem extends Component {
         defaultNode: null,
       };
 
+      const onChange = (e, val) => {
+        const textValue = typeof val === 'string' ? val : e.target.value;
+
+        const radioToSelectWhenEmpty = prevValue
+          ? refs[colName].defaultNode
+          : refs[colName].nullNode;
+
+        refs[colName].insertRadioNode.checked = !!textValue.length;
+        radioToSelectWhenEmpty.checked = !textValue.length;
+      };
+      const onFocus = e => {
+        const textValue = e.target.value;
+        if (isEmpty(textValue)) {
+          const radioToSelectWhenEmpty = prevValue
+            ? refs[colName].defaultNode
+            : refs[colName].nullNode;
+
+          refs[colName].insertRadioNode.checked = false;
+          radioToSelectWhenEmpty.checked = true;
+        }
+      };
+
       return (
         <TableRow
           key={i}
@@ -85,6 +108,8 @@ class EditItem extends Component {
           enumOptions={enumOptions}
           index={i}
           prevValue={prevValue}
+          onFocus={onFocus}
+          onChange={onChange}
         />
       );
     });
@@ -137,40 +162,42 @@ class EditItem extends Component {
     };
 
     return (
-      <div className={styles.container + ' container-fluid'}>
-        <TableHeader
-          count={count}
-          dispatch={dispatch}
-          table={currentTable}
-          tabName="edit"
-          migrationMode={migrationMode}
-          readOnlyMode={readOnlyMode}
-        />
-        <br />
-        <div className={styles.insertContainer + ' container-fluid'}>
-          <div className="col-xs-9">
-            <form id="updateForm" className="form-horizontal">
-              {elements}
-              <Button
-                type="submit"
-                color="yellow"
-                size="sm"
-                onClick={handleSaveClick}
-                data-test="edit-save-button"
-              >
-                {buttonText}
-              </Button>
-              <ReloadEnumValuesButton
-                dispatch={dispatch}
-                isEnum={currentTable.is_enum}
-              />
-            </form>
+      <RightContainer>
+        <div className={styles.container + ' container-fluid'}>
+          <TableHeader
+            count={count}
+            dispatch={dispatch}
+            table={currentTable}
+            source={currentSource}
+            tabName="edit"
+            migrationMode={migrationMode}
+            readOnlyMode={readOnlyMode}
+          />
+          <br />
+          <div className={styles.insertContainer + ' container-fluid'}>
+            <div className="col-xs-9">
+              <form id="updateForm" className="form-horizontal">
+                {elements}
+                <Button
+                  type="submit"
+                  color="yellow"
+                  size="sm"
+                  onClick={handleSaveClick}
+                  data-test="edit-save-button"
+                >
+                  {buttonText}
+                </Button>
+                {currentTable.is_enum ? (
+                  <ReloadEnumValuesButton dispatch={dispatch} />
+                ) : null}
+              </form>
+            </div>
+            <div className="col-xs-3">{alert}</div>
           </div>
-          <div className="col-xs-3">{alert}</div>
+          <br />
+          <br />
         </div>
-        <br />
-        <br />
-      </div>
+      </RightContainer>
     );
   }
 }
@@ -198,6 +225,7 @@ const mapStateToProps = (state, ownProps) => {
     migrationMode: state.main.migrationMode,
     readOnlyMode: state.main.readOnlyMode,
     currentSchema: state.tables.currentSchema,
+    currentSource: state.tables.currentDataSource,
   };
 };
 

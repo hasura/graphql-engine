@@ -1,0 +1,49 @@
+description: Get last page of articles with 3 items
+url: /v1beta1/relay
+status: 200
+query:
+  query: |
+    query {
+      article_connection(
+        last: 3
+      ){
+        pageInfo{
+          startCursor
+          endCursor
+          hasPreviousPage
+          hasNextPage
+        }
+        edges{
+          cursor
+          node{
+            title
+            content
+            author_id
+          }
+        }
+      }
+    }
+response:
+  data:
+    article_connection:
+      pageInfo:
+        startCursor: eyJpZCIgOiA0fQ==
+        endCursor: eyJpZCIgOiA2fQ==
+        hasPreviousPage: true
+        hasNextPage: false
+      edges:
+      - cursor: eyJpZCIgOiA0fQ==
+        node:
+          title: Article 4
+          content: Sample article content 4
+          author_id: 2
+      - cursor: eyJpZCIgOiA1fQ==
+        node:
+          title: Article 5
+          content: Sample article content 5
+          author_id: 2
+      - cursor: eyJpZCIgOiA2fQ==
+        node:
+          title: Article 6
+          content: Sample article content 6
+          author_id: 3

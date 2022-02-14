@@ -5,19 +5,15 @@ own machine and how to contribute.
 
 ## Pre-requisites
 
-- [GHC](https://www.haskell.org/ghc/) 8.10.1 and [cabal-install](https://cabal.readthedocs.io/en/latest/)
+- [GHC](https://www.haskell.org/ghc/) 8.10.7 and [cabal-install](https://cabal.readthedocs.io/en/latest/)
   - There are various ways these can be installed, but [ghcup](https://www.haskell.org/ghcup/) is a good choice if you’re not sure.
-- [Node.js](https://nodejs.org/en/) (>= v8.9)
+- There are few system packages required like `libpq-dev`, `libssl-dev`, etc. The best place to get the entire list is from the packager [Dockerfile](../.buildkite/dockerfiles/ci-builders/server-builder.dockerfile)
+
+For building console and running test suite:
+
+- [Node.js](https://nodejs.org/en/) (v12+, it is recommended that you use `node` with version `v12.x.x` A.K.A `erbium` or version `14.x.x` A.K.A `Fermium`)
 - npm >= 5.7
-- [gsutil](https://cloud.google.com/storage/docs/gsutil)
-- libpq-dev
-- libkrb5-dev
-- openssl and libssl-dev
 - python >= 3.5 with pip3 and virtualenv
-
-The last few prerequisites can be installed on Debian or Ubuntu with:
-
-    $ sudo apt install libpq-dev libkrb5-dev python3 python3-pip python3-venv openssl libssl-dev
 
 Additionally, you will need a way to run a Postgres database server. The `dev.sh` script (described below) can set up a Postgres instance for you via [Docker](https://www.docker.com), but if you want to run it yourself, you’ll need:
 
@@ -49,14 +45,27 @@ After making your changes
 
 ...and the server:
 
-    $ cd server
     $ ln -s cabal.project.dev cabal.project.local
     $ cabal new-update
-    $ cabal new-build
+    $ cabal new-build graphql-engine
 
 To set up the project configuration to coincide with the testing scripts below, thus avoiding recompilation when testing locally, rather use `cabal.project.dev-sh.local` instead of `cabal.project.dev`:
 
     $ ln -s cabal.project.dev-sh.local cabal.project.local
+
+### IDE Support
+
+You may want to use [hls](https://github.com/haskell/haskell-language-server)/[ghcide](https://github.com/haskell/ghcide) if your editor has LSP support. A sample configuration has been provided which can be used as follows:
+
+```
+ln -s sample.hie.yaml hie.yaml
+```
+
+If you have to customise any of the options for ghcide/hls, you should instead copy the sample file and make necessary changes in `hie.yaml` file. Note that `hie.yaml` is gitignored so the changes will be specific to your machine.
+
+```
+cp sample.hie.yaml hie.yaml
+```
 
 ### Run and test via `dev.sh`
 
@@ -81,9 +90,17 @@ You can run the test suite with:
 
 This should run in isolation.  The output format is described in the [pytest documentation](https://docs.pytest.org/en/latest/usage.html#detailed-summary-report).  Errors and failures are indicated by `F`s and `E`s.
 
+Optionally, launch a new container for alternative (MSSQL) backend with:
+
+    $ scripts/dev.sh mssql
+
+Tests can be run against a specific backend (defaulting to Postgres) with the `backend` flag, for example:
+
+    $ scripts/dev.sh test --integration -k TestGraphQLQueryBasicCommon --backend (bigquery|citus|mssql|postgres)
+
 ### Run and test manually
 
-If you want, you can also run the server and test suite manually against a Postgres instance of your choosing.
+If you want, you can also run the server and test suite manually against an instance of your choosing.
 
 #### Run
 
@@ -92,82 +109,89 @@ The following command can be used to build and launch a local `graphql-engine` i
 ```
 cabal new-run -- exe:graphql-engine \
   --database-url='postgres://<user>:<password>@<host>:<port>/<dbname>' \
-  serve --enable-console --console-assets-dir=../console/static/dist
+  serve --enable-console --console-assets-dir=console/static/dist
 ```
 
 This will launch a server on port 8080, and it will serve the console assets if they were built with `npm run server-build` as mentioned above.
 
 #### Test
 
-`graphql-engine` has two test suites:
+`graphql-engine` has several test suites, among them:
 
-  1. A small set of unit tests and integration tests written in Haskell.
+  1. A small set of unit tests and integration tests written in Haskell, in `server/src-test`.
 
-  2. An extensive set of end-to-end tests written in Python.
+  2. A new integration test suite written in Haskell, in `server/tests-hspec`.
 
-Both sets of tests require a running Postgres database.
+  3. An extensive set of end-to-end tests written in Python, in `server/tests-py`.
+
+All sets of tests require running databases:
+
+- some unit tests hit the database, and running the unit test suite requires passing in a postgres connection string,
+- the Haskell integration test suite requires databases to run (they can be started via the docker command listed below),
+- the Python integration test suite also requires databases AND the engine to be running, which can be started via either the `dev.sh` script, or manually.
+
+##### Running py tests
+
+The easiest way to run the Python integration test suite is by running:
+```sh
+scripts/dev.sh test --integration
+```
+
+For more details please check out the `README` at `server/tests-py/README`.
 
 ##### Running the Haskell test suite
 
+There are three categories of unit tests:
+- true unit tests
+- Postgres unit tests (require a postgres instance)
+- MSSQL unit tests (require a MSSQL instance)
+
+The easiest way to run these tests is through `dev.sh`:
+
 ```
-cabal new-run -- test:graphql-engine-tests \
-  --database-url='postgres://<user>:<password>@<host>:<port>/<dbname>'
+./scripts/dev.sh test --unit
 ```
 
-##### Running the Python test suite
+If you want to limit to a specific set of tests:
 
-1. To run the Python tests, you’ll need to install the necessary Python dependencies first. It is
-   recommended that you do this in a self-contained Python venv, which is supported by Python 3.3+
-   out of the box. To create one, run:
+```
+./scripts/dev.sh test --unit --match "some pattern" mssql
+```
 
-   ```
-   python3 -m venv .python-venv
-   ```
+Note that you have to use one of 'unit', 'postgres' or 'mssql' when
+using '--match'. There is no way to match without specifying the subset
+of tests to run.
 
-   (The second argument names a directory where the venv sandbox will be created; it can be anything
-   you like, but `.python-venv` is `.gitignore`d.)
+Alternatively, you can run unit tests directly through cabal:
 
-   With the venv created, you can enter into it in your current shell session by running:
+```
+cabal new-run -- test:graphql-engine-tests unit
+HASURA_GRAPHQL_DATABASE_URL='postgres://<user>:<password>@<host>:<port>/<dbname>' \
+    cabal new-run -- test:graphql-engine-tests postgres
+```
 
-   ```
-   source .python-venv/bin/activate
-   ```
+##### Running the Haskell integration test suite
 
-   (Source `.python-venv/bin/activate.fish` instead if you are using `fish` as your shell.)
+1. To run the Haskell integration test suite, you'll first need to bring up the database containers:
 
-2. Install the necessary Python dependencies into the sandbox:
+```sh
+docker-compose up
+```
 
-   ```
-   pip3 install -r tests-py/requirements.txt
-   ```
+2. Once the containers are up, you can run the test suite via
 
-3. Start an instance of `graphql-engine` for the test suite to use:
+```sh
+cabal test tests-hspec --test-show-details=direct
+```
 
-   ```
-   env EVENT_WEBHOOK_HEADER=MyEnvValue \
-       WEBHOOK_FROM_ENV=http://localhost:5592/ \
-     cabal new-run -- exe:graphql-engine \
-       --database-url='postgres://<user>:<password>@<host>:<port>/<dbname>' \
-       serve --stringify-numeric-types
-   ```
+#### Building with profiling
 
-   The environment variables are needed for a couple tests, and the `--stringify-numeric-types` option is used to avoid the need to do floating-point comparisons.
+To build with profiling support, you need to both enable profiling via `cabal`
+and set the `profiling` flag. E.g.
 
-4. With the server running, run the test suite:
-
-   ```
-   cd tests-py
-   pytest --hge-urls http://localhost:8080 \
-          --pg-urls 'postgres://<user>:<password>@<host>:<port>/<dbname>'
-   ```
-
-This will run all the tests, which can take a couple minutes (especially since some of the tests are slow). You can configure `pytest` to run only a subset of the tests; see [the `pytest` documentation](https://doc.pytest.org/en/latest/usage.html) for more details.
-
-Some other useful points of note:
-
-  - It is recommended to use a separate Postgres database for testing, since the tests will drop and recreate the `hdb_catalog` schema, and they may fail if certain tables already exist. (It’s also useful to be able to just drop and recreate the entire test database if it somehow gets into a bad state.)
-
-  - You can pass the `-v` or `-vv` options to `pytest` to enable more verbose output while running the tests and in test failures. You can also pass the `-l` option to display the current values of Python local variables in test failures.
+```
+cabal build exe:graphql-engine -f profiling --enable-profiling
+```
 
 ### Create Pull Request
 
@@ -178,8 +202,18 @@ Some other useful points of note:
 
 ## Code conventions
 
-This helps enforce a uniform style for all committers.
+The following conventions help us maintain a uniform style for all committers:
+make sure your contributions are in line with them.
 
-- Compiler warnings are turned on, make sure your code has no warnings.
-- Use [hlint](https://github.com/ndmitchell/hlint) to make sure your code has no warnings.
-- Use [stylish-haskell](https://github.com/jaspervdj/stylish-haskell) to format your code.
+We enforce these by means of CI hooks which will fail the build if any of these
+are not met.
+
+- No compiler warnings: Make sure your code builds with no warnings (adding
+  `-Werror` to `ghc-options` in your `cabal.project` is a good way of checking
+  this.)
+- No lint failures: Use [hlint](https://github.com/ndmitchell/hlint) with our
+  custom config to validate your code, using `hlint --hint=../.hlint.yaml`.
+- Consistent formatting: Use [ormolu](https://github.com/tweag/ormolu) to
+  format your code. `ormolu -ei '*.hs'` will format all files with a `.hs`
+  extension in the current directory.
+- Consistent style: Consider the [style guide](./STYLE.md) when writing new code.

@@ -1,6 +1,5 @@
 import {
   passRTCreateTables,
-  passRTMoveToTable,
   passRTDeleteTables,
   passRTAddManualObjRel,
   passRTAddManualArrayRel,
@@ -8,16 +7,20 @@ import {
   passRTAddSuggestedRel,
   failRTAddSuggestedRel,
   passRTRenameRelationship,
+  passRSTAddRSRel,
+  passRSTDeleteRSRel,
+  passRSTSetup,
+  passRSTReset,
 } from './spec';
 import { testMode } from '../../../helpers/common';
 import { setMetaData } from '../../validators/validators';
+import { getIndexRoute } from '../../../helpers/dataHelpers';
+import { postgres } from '../manage-database/postgres.spec';
 
 const setup = () => {
   describe('Check Data Tab', () => {
     it('Clicking on Data tab opens the correct route', () => {
-      // Visit the index route
-      cy.visit('/data/schema/public');
-      cy.wait(7000);
+      cy.visit(getIndexRoute());
       // Get and set validation metadata
       setMetaData();
     });
@@ -25,21 +28,46 @@ const setup = () => {
 };
 
 export const runRelationshipsTests = () => {
-  describe('Relationships', () => {
-    it('Creating testing tables', passRTCreateTables);
-    it('Moving to the table', passRTMoveToTable);
-    it('Adding Manual Relationship Object', passRTAddManualObjRel);
-    it('Adding Manual Relationship Array', passRTAddManualArrayRel);
-    it('Deleting the relationships', passRTDeleteRelationships);
-    it('Adding Suggested Relationships Error', failRTAddSuggestedRel);
-    it('Adding Suggested Relationships', passRTAddSuggestedRel);
+  describe('Relationships Tests', () => {
+    it('Create testing tables', passRTCreateTables);
+    it('Add Manual Relationship Object', passRTAddManualObjRel);
+    it('Add Manual Relationship Array', passRTAddManualArrayRel);
+    it('Delete the relationships', passRTDeleteRelationships);
+    it('Add Suggested Relationships Error', failRTAddSuggestedRel);
+    it('Add Suggested Relationships', passRTAddSuggestedRel);
     it('Rename relationships', passRTRenameRelationship);
-    it('Deleting the relationships', passRTDeleteRelationships);
-    it('Deleting testing tables', passRTDeleteTables);
+    it('Delete the relationships', passRTDeleteRelationships);
+    it('Delete test tables', passRTDeleteTables);
+  });
+};
+
+export const remoteRelationshipTests = () => {
+  const drivers = [postgres];
+
+  describe('Remote schema relationships tests', () => {
+    drivers.forEach(driver => {
+      describe(`for ${driver.name}`, () => {
+        // test setup
+        before(() => {
+          driver.helpers.createRemoteSchema('remote_rel_test_rs');
+        });
+
+        it('Create testing tables', passRSTSetup);
+        it('Adds a relationship', passRSTAddRSRel);
+        it('Deletes a relationship', passRSTDeleteRSRel);
+        it('Delete testing tables', passRSTReset);
+
+        // clean up
+        after(() => {
+          driver.helpers.deleteRemoteSchema('remote_rel_test_rs');
+        });
+      });
+    });
   });
 };
 
 if (testMode !== 'cli') {
   setup();
   runRelationshipsTests();
+  remoteRelationshipTests();
 }

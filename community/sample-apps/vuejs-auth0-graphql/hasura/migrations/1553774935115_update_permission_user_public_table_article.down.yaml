@@ -1,6 +1,0 @@
-- args:
-    role: user
-    table:
-      name: article
-      schema: public
-  type: drop_select_permission

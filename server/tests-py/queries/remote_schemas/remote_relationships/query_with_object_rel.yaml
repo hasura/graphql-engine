@@ -3,7 +3,7 @@ url: /v1/graphql
 status: 200
 response:
   data:
-    profiles_by_pk:
+    custom_profiles_by_pk:
       id: 1
       name: alice
       messageBasic:
@@ -11,7 +11,7 @@ response:
 query:
   query: |
     query {
-      profiles_by_pk(id: 1) {
+      custom_profiles_by_pk(id: 1) {
         id
         name
         messageBasic {

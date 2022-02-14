@@ -23,7 +23,7 @@ const PendingEvents: React.FC<Props> = props => {
 
   const onCancelOneOffScheduledEvent = (
     id: string,
-    scheduledAt: string,
+    scheduledAt: string | Date | number,
     onSuccess: () => void
   ) => {
     const localeTime = convertDateTimeToLocale(scheduledAt);
@@ -31,9 +31,7 @@ const PendingEvents: React.FC<Props> = props => {
       `This will delete the one-off event "${id}" scheduled for "${localeTime}"`
     );
     if (shouldCancelEvent) {
-      dispatch(
-        cancelEvent('one-off scheduled', 'hdb_scheduled_events', id, onSuccess)
-      );
+      dispatch(cancelEvent('one_off', id, onSuccess));
     }
   };
 
@@ -60,6 +58,7 @@ const PendingEvents: React.FC<Props> = props => {
       ]}
       identifier="adhoc-events-processed"
       onCancelEvent={onCancelOneOffScheduledEvent}
+      triggerType="one_off"
     />
   );
 
@@ -73,6 +72,8 @@ const PendingEvents: React.FC<Props> = props => {
         sorts: [makeOrderBy('scheduled_time', 'asc')],
       }}
       relationships={['scheduled_event_logs']}
+      triggerOp="pending"
+      triggerType="scheduled"
     />
   );
 };

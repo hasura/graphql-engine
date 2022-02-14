@@ -1,0 +1,36 @@
+description: Update a row of author by primary key
+url: /v1/graphql
+status: 200
+query:
+  query: |
+    mutation {
+      update_author_by_pk(
+        _set: {name: "Author 2 updated"}
+        pk_columns: {id: 2}
+      ){
+        id
+        name
+        articles_aggregate{
+          aggregate{
+            count
+          }
+          nodes{
+            id
+            title
+            content
+          }
+        }
+      }
+    }
+response:
+  data:
+    update_author_by_pk:
+      id: 2
+      name: Author 2 updated
+      articles_aggregate:
+        aggregate:
+          count: 1
+        nodes:
+        - id: 3
+          title: Article 3
+          content: Sample article content 3

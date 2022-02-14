@@ -50,7 +50,6 @@
   width: 15px;
 }
 .invocationsSection {
-
   li {
     display: block;
     padding: 5px 10px;
@@ -144,6 +143,7 @@
 
 .redeliverModal {
   width: 75%;
+  margin-bottom: 0;
 }
 
 .redeliverEventSection {
@@ -197,10 +197,6 @@
   width: 100%;
   float: left;
   clear: both;
-}
-
-.redeliverModal {
-  width: 75%;
 }
 
 .redeliverEventSection {

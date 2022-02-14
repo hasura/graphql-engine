@@ -1,0 +1,76 @@
+@import '../../../../Common/Common.scss';
+
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 50%;
+}
+
+.herokuButtonBox {
+  background: #fff;
+  border: 1px solid #d7d7d7;
+  width: 100%;
+  padding: 16px;
+  border-radius: 4px;
+  text-align: center;
+
+  cursor: pointer;
+  &:hover {
+    transition: all 0.25s ease-in-out;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08), 0 1px 4px rgba(0, 0, 0, 0.08);
+  }
+}
+
+.progressCircle {
+  color: #fff;
+  min-width: 30px;
+  width: 30px;
+  min-height: 30px;
+  height: 30px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #fff;
+  border: 4px solid #d7d7d7;
+  border-radius: 50%;
+}
+
+.progressComplete {
+  border: 4px solid #00a023;
+  background: #00a023;
+}
+
+.progressError {
+  border: 4px solid #d9534f;
+  background: #d9534f;
+}
+
+.spinnerColor {
+  color: #d7d7d7;
+}
+
+.progressBar {
+  width: 150px;
+  height: 4px;
+  background: #d7d7d7;
+}
+
+.progressBarComplete {
+  background-color: #00a023;
+}
+
+.noWrap {
+  white-space: nowrap;
+}
+
+.herokuButtonBoxDisabled {
+  cursor: progress;
+  background: #fff;
+  border: 1px solid #d7d7d7;
+  width: 100%;
+  padding: 16px;
+  border-radius: 4px;
+  text-align: center;
+  opacity: 0.5;
+}

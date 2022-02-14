@@ -11,60 +11,48 @@ const filterEventsBlockList = [
 ];
 
 const DATA_PATH = '/data';
-const API_EXPLORER_PATH = '/api-explorer';
 const REMOTE_SCHEMAS_PATH = '/remote-schemas';
 const EVENTS_PATH = '/events';
+const ACTIONS_PATH = '/actions';
 
 const dataHandler = (path: string) => {
-  return (
-    DATA_PATH +
-    path
-      .replace(/\/schema\/([^/]*)(\/)?/, '/schema/SCHEMA_NAME$2')
-      .replace(
-        /(\/schema\/.*)\/tables\/([^/]*)(\/.*)?/,
-        '$1/tables/TABLE_NAME$3'
-      )
-      .replace(/(\/schema\/.*)\/views\/([^/]*)(\/.*)?/, '$1/views/VIEW_NAME$3')
-      .replace(
-        /(\/schema\/.*)\/functions\/([^/]*)(\/.*)?/,
-        '$1/functions/FUNCTION_NAME$3'
-      )
-  );
-};
-
-const apiExplorerHandler = () => {
-  return API_EXPLORER_PATH;
+  return path
+    .replace(/(\/schema\/)[^/]*(\/)?/, '$1SCHEMA_NAME$2')
+    .replace(/(\/schema\/.*\/tables\/)[^/]*(\/.*)?/, '$1TABLE_NAME$2')
+    .replace(/(\/schema\/.*\/views\/)[^/]*(\/.*)?/, '$1VIEW_NAME$2')
+    .replace(/(\/schema\/.*\/functions\/)[^/]*(\/.*)?/, '$1FUNCTION_NAME$2');
 };
 
 const remoteSchemasHandler = (path: string) => {
-  return (
-    REMOTE_SCHEMAS_PATH +
-    path.replace(/(\/manage\/)[^/]*(\/\w+.*)$/, '$1REMOTE_SCHEMA_NAME$2')
-  );
+  return path.replace(/(\/manage\/)[^/]*(\/\w+.*)$/, '$1REMOTE_SCHEMA_NAME$2');
 };
 
 const eventsHandler = (path: string) => {
-  return (
-    EVENTS_PATH +
-    path.replace(/(\/manage\/triggers\/)[^/]*(\/\w+.*)$/, '$1TRIGGER_NAME$2')
-  );
+  return path
+    .replace(/(\/manage\/triggers\/)[^/]*(\/\w+.*)$/, '$1TRIGGER_NAME$2')
+    .replace(/(\/data\/)[^/]*\/(.*)+$/, '$1DATA_TRIGGER_NAME/$2')
+    .replace(/(\/cron\/)[^/]*\/(.*)+$/, '$1CRON_TRIGGER_NAME/$2');
+};
+
+const actionsHandler = (path: string) => {
+  return path.replace(/(\/manage\/)[^/]*\/(.*)+$/, '$ACTION_NAME/$2');
 };
 
 const sanitiseUrl = (rawPath: string) => {
   const path = rawPath.replace(new RegExp(globals.urlPrefix, 'g'), '');
-  if (path.indexOf(DATA_PATH) === 0) {
-    return dataHandler(path.slice(DATA_PATH.length));
+  if (path.startsWith(DATA_PATH)) {
+    return dataHandler(path);
   }
-  if (path.indexOf(API_EXPLORER_PATH) === 0) {
-    return apiExplorerHandler();
+  if (path.startsWith(REMOTE_SCHEMAS_PATH)) {
+    return remoteSchemasHandler(path);
   }
-  if (path.indexOf(REMOTE_SCHEMAS_PATH) === 0) {
-    return remoteSchemasHandler(path.slice(REMOTE_SCHEMAS_PATH.length));
+  if (path.startsWith(EVENTS_PATH)) {
+    return eventsHandler(path);
   }
-  if (path.indexOf(EVENTS_PATH) === 0) {
-    return eventsHandler(path.slice(EVENTS_PATH.length));
+  if (path.startsWith(ACTIONS_PATH)) {
+    return actionsHandler(path);
   }
-  return '/';
+  return path;
 };
 
 export { filterEventsBlockList, sanitiseUrl };

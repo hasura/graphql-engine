@@ -1,0 +1,17 @@
+type: bulk
+args:
+- type: bigquery_run_sql
+  args:
+    source: bigquery
+    sql: |
+      CREATE TABLE `hasura.city` (
+        `name` STRING,
+        `country` STRING
+      );
+
+      INSERT INTO `hasura.city` (`name`, `country`)
+      VALUES
+      ('Durham', 'USA'),
+      ('New York', 'USA'),
+      ('Framlingham', 'UK'),
+      ('New Orleans', 'USA');

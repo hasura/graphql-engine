@@ -14,6 +14,7 @@ import ForeignKeySelector from '../Common/Components/ForeignKeySelector';
 import { updateSchemaInfo } from '../DataActions';
 
 import { getConfirmation } from '../../../Common/utils/jsUtils';
+import { dataSource } from '../../../../dataSources';
 
 const ForeignKeyEditor = ({
   tableSchema,
@@ -21,6 +22,7 @@ const ForeignKeyEditor = ({
   dispatch,
   fkModify,
   schemaList,
+  readOnlyMode,
 }) => {
   const columns = tableSchema.columns.sort(ordinalColSort);
 
@@ -42,8 +44,8 @@ const ForeignKeyEditor = ({
   existingForeignKeys.push({
     refSchemaName: '',
     refTableName: '',
-    onUpdate: 'restrict',
-    onDelete: 'restrict',
+    onUpdate: dataSource?.violationActions?.[0],
+    onDelete: dataSource?.violationActions?.[0],
     colMappings: [{ column: '', refColumn: '' }],
   });
   useEffect(() => {
@@ -68,7 +70,7 @@ const ForeignKeyEditor = ({
       }
     });
 
-    const orderedSchemaList = schemaList.map(s => s.schema_name).sort();
+    const orderedSchemaList = schemaList.sort();
 
     const getFkConfigLabel = config => {
       let fkConfigLabel;
@@ -86,10 +88,8 @@ const ForeignKeyEditor = ({
 
     // Label to show next to the 'Edit' button (the FK configuration)
     const collapsedLabel = () => {
-      const collapsedLabelText =
-        isLast && numFks === 1 ? 'No foreign keys' : getFkConfigLabel(fkConfig);
-
-      return <div>{collapsedLabelText}</div>;
+      const collapsedLabelText = getFkConfigLabel(fkConfig);
+      return <div className="text-gray-600">{collapsedLabelText}</div>;
     };
 
     // The content when the editor is expanded
@@ -110,7 +110,8 @@ const ForeignKeyEditor = ({
     // The collapse button text when the editor is collapsed
     let expandButtonText = 'Edit';
     if (isLast) {
-      expandButtonText = numFks === 1 ? 'Add' : 'Add a new foreign key';
+      expandButtonText =
+        numFks === 1 ? 'Add a foreign key' : 'Add a new foreign key';
     }
 
     // label next to the button when the editor is expanded
@@ -165,6 +166,7 @@ const ForeignKeyEditor = ({
           service="modify-table"
           removeFunc={removeFk}
           saveFunc={saveFk}
+          readOnlyMode={readOnlyMode}
           collapsedLabel={collapsedLabel}
           collapseCallback={resetFk}
           collapseButtonText={collapseButtonText}

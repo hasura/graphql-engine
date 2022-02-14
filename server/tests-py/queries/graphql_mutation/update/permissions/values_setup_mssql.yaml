@@ -1,0 +1,34 @@
+type: bulk
+args:
+
+- type: mssql_run_sql
+  args:
+    source: mssql
+    sql: |
+      -- insert data
+      INSERT INTO author (name)
+        VALUES
+        ('Author 1'),
+        ('Author 2')
+      ;
+      INSERT INTO article (title,content,author_id,is_published)
+        VALUES
+        (
+          'Article 1',
+          'Sample article content 1',
+          1,
+          0
+        ),
+        (
+          'Article 2',
+          'Sample article content 2',
+          1,
+          1
+        ),
+        (
+          'Article 3',
+          'Sample article content 3',
+          2,
+          1
+        )
+      ;

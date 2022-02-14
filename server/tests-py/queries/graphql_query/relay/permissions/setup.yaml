@@ -1,5 +1,6 @@
 type: bulk
 args:
+
 - type: run_sql
   args:
     sql: |
@@ -58,7 +59,6 @@ args:
         true
       );
 
-# Track tables and define relationships
 - type: track_table
   args:
     name: author

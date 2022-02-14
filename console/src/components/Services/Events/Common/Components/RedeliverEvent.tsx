@@ -11,27 +11,29 @@ import { Dispatch } from '../../../../../types';
 type Props = {
   eventId: string;
   dispatch: Dispatch;
+  eventDataSource: string;
 };
 
-const RedeliverEvent: React.FC<Props> = ({ dispatch, eventId }) => {
-  // const [loading, setLoading] = React.useState(false);
-  const [error, setError] = React.useState<any>(null);
+const RedeliverEvent: React.FC<Props> = ({
+  dispatch,
+  eventId,
+  eventDataSource,
+}) => {
+  const [error, setError] = React.useState<null | Error>(null);
   const [logs, setLogs] = React.useState<InvocationLog[]>([]);
 
   React.useEffect(() => {
     const intervalId = setInterval(() => {
-      // setLoading(true);
       dispatch(
         getEventLogs(
           eventId,
           'data',
+          eventDataSource,
           l => {
             setLogs(l);
-            //    setLoading(false);
           },
           e => {
             setError(e);
-            //    setLoading(false);
           }
         )
       );
@@ -50,8 +52,14 @@ const RedeliverEvent: React.FC<Props> = ({ dispatch, eventId }) => {
 
   const latestLog = logs[0];
 
-  if (!logs.length) {
+  if (!logs.length && !error) {
     return <Spinner />;
+  }
+
+  if (error) {
+    return (
+      <>There was an error in fetching the details of the recent invocations.</>
+    );
   }
 
   return (
@@ -66,9 +74,9 @@ const RedeliverEvent: React.FC<Props> = ({ dispatch, eventId }) => {
               mode="json"
               theme="github"
               name="event_payload"
-              value={JSON.stringify(latestLog.request, null, 4)}
+              value={JSON.stringify(JSON.parse(latestLog.request), null, 4)}
               minLines={10}
-              maxLines={10}
+              maxLines={30}
               width="100%"
               showPrintMargin={false}
               showGutter={false}
@@ -81,39 +89,25 @@ const RedeliverEvent: React.FC<Props> = ({ dispatch, eventId }) => {
                 Latest Invocation Response
               </div>
             </div>
-            {error === null ? (
-              <AceEditor
-                mode="json"
-                theme="github"
-                name="event_payload"
-                value={JSON.stringify(latestLog.response, null, 4)}
-                minLines={10}
-                maxLines={10}
-                width="100%"
-                showPrintMargin={false}
-                showGutter={false}
-                style={{
-                  backgroundColor: '#fdf9ed',
-                  marginTop: '10px',
-                }}
-              />
-            ) : (
-              <AceEditor
-                mode="json"
-                theme="github"
-                name="event_payload"
-                value={JSON.stringify(error, null, 4)}
-                minLines={8}
-                maxLines={10}
-                width="100%"
-                showPrintMargin={false}
-                showGutter={false}
-                style={{
-                  backgroundColor: '#fdf9ed',
-                  marginTop: '10px',
-                }}
-              />
-            )}
+            <AceEditor
+              mode="json"
+              theme="github"
+              name="event_payload"
+              value={JSON.stringify(
+                error === null ? JSON.parse(latestLog.response) : error,
+                null,
+                4
+              )}
+              minLines={8}
+              maxLines={30}
+              width="100%"
+              showPrintMargin={false}
+              showGutter={false}
+              style={{
+                backgroundColor: '#fdf9ed',
+                marginTop: '10px',
+              }}
+            />
           </div>
         </div>
         <div
@@ -129,11 +123,20 @@ const RedeliverEvent: React.FC<Props> = ({ dispatch, eventId }) => {
             resizable
             manual
             showPagination={false}
+            freezeWhenExpanded
             SubComponent={(logRow: any) => {
               const finalIndex = logRow.index;
               const finalRow = logs[finalIndex];
-              const currentPayload = JSON.stringify(finalRow.request, null, 4);
-              const finalResponse = JSON.stringify(finalRow.response, null, 4);
+              const currentPayload = JSON.stringify(
+                JSON.parse(finalRow.request),
+                null,
+                4
+              );
+              const finalResponse = JSON.stringify(
+                JSON.parse(finalRow.response),
+                null,
+                4
+              );
               return (
                 <InvocationLogDetails
                   requestPayload={currentPayload}

@@ -1,198 +1,203 @@
 module Hasura.RQL.DDL.QueryCollection
-  ( runCreateCollection
-  , runDropCollection
-  , addCollectionToCatalog
-  , delCollectionFromCatalog
-  , runAddQueryToCollection
-  , runDropQueryFromCollection
-  , runAddCollectionToAllowlist
-  , runDropCollectionFromAllowlist
-  , addCollectionToAllowlistCatalog
-  , delCollectionFromAllowlistCatalog
-  , fetchAllCollections
-  , fetchAllowlist
-  , module Hasura.RQL.Types.QueryCollection
-  ) where
+  ( runCreateCollection,
+    runDropCollection,
+    runAddQueryToCollection,
+    runDropQueryFromCollection,
+    runAddCollectionToAllowlist,
+    runDropCollectionFromAllowlist,
+    runUpdateScopeOfCollectionInAllowlist,
+  )
+where
 
-import           Hasura.EncJSON
-import           Hasura.Prelude
+import Control.Lens ((.~))
+import Data.Aeson qualified as Aeson
+import Data.HashMap.Strict.InsOrd qualified as OMap
+import Data.List.Extended (duplicates)
+import Data.Text.Extended
+import Data.Text.NonEmpty
+import Hasura.Base.Error
+import Hasura.EncJSON
+import Hasura.Prelude
+import Hasura.RQL.Types
 
-import           Hasura.RQL.Types
-import           Hasura.RQL.Types.QueryCollection
-import           Hasura.SQL.Types
-
-import           Data.List.Extended               (duplicates)
-
-import qualified Data.Text                        as T
-import qualified Data.Text.Extended               as T
-import qualified Database.PG.Query                as Q
-
-addCollectionP2
-  :: (QErrM m)
-  => CollectionDef -> m ()
+addCollectionP2 ::
+  (QErrM m) =>
+  CollectionDef ->
+  m ()
 addCollectionP2 (CollectionDef queryList) =
   withPathK "queries" $
-    unless (null duplicateNames) $ throw400 NotSupported $
-      "found duplicate query names "
-      <> T.intercalate ", " (map (T.dquote . unNonEmptyText . unQueryName) $ toList duplicateNames)
+    unless (null duplicateNames) $
+      throw400 NotSupported $
+        "found duplicate query names "
+          <> dquoteList (unNonEmptyText . unQueryName <$> toList duplicateNames)
   where
     duplicateNames = duplicates $ map _lqName queryList
 
-runCreateCollection
-  :: (QErrM m, MonadTx m, HasSystemDefined m)
-  => CreateCollection -> m EncJSON
+runCreateCollection ::
+  (QErrM m, CacheRWM m, MetadataM m) =>
+  CreateCollection ->
+  m EncJSON
 runCreateCollection cc = do
   collDetM <- getCollectionDefM collName
   withPathK "name" $
-    onJust collDetM $ const $ throw400 AlreadyExists $
-      "query collection with name " <> collName <<> " already exists"
+    onJust collDetM $
+      const $
+        throw400 AlreadyExists $
+          "query collection with name " <> collName <<> " already exists"
   withPathK "definition" $ addCollectionP2 def
-  systemDefined <- askSystemDefined
-  liftTx $ addCollectionToCatalog cc systemDefined
+  withNewInconsistentObjsCheck $
+    buildSchemaCache $
+      MetadataModifier $
+        metaQueryCollections %~ OMap.insert collName cc
   return successMsg
   where
     CreateCollection collName def _ = cc
 
-runAddQueryToCollection
-  :: (CacheRWM m, MonadTx m)
-  => AddQueryToCollection -> m EncJSON
+runAddQueryToCollection ::
+  (CacheRWM m, MonadError QErr m, MetadataM m) =>
+  AddQueryToCollection ->
+  m EncJSON
 runAddQueryToCollection (AddQueryToCollection collName queryName query) = do
-  CollectionDef qList <- getCollectionDef collName
+  (CreateCollection _ (CollectionDef qList) comment) <- getCollectionDef collName
   let queryExists = flip any qList $ \q -> _lqName q == queryName
 
-  when queryExists $ throw400 AlreadyExists $ "query with name "
-    <> queryName <<> " already exists in collection " <>> collName
-
+  when queryExists $
+    throw400 AlreadyExists $
+      "query with name "
+        <> queryName <<> " already exists in collection " <>> collName
   let collDef = CollectionDef $ qList <> pure listQ
-  liftTx $ updateCollectionDefCatalog collName collDef
-  withNewInconsistentObjsCheck buildSchemaCache
+  withNewInconsistentObjsCheck $
+    buildSchemaCache $
+      MetadataModifier $
+        metaQueryCollections
+          %~ OMap.insert collName (CreateCollection collName collDef comment)
   return successMsg
   where
     listQ = ListedQuery queryName query
 
-runDropCollection
-  :: (MonadTx m, CacheRWM m)
-  => DropCollection -> m EncJSON
+runDropCollection ::
+  (MonadError QErr m, MetadataM m, CacheRWM m) =>
+  DropCollection ->
+  m EncJSON
 runDropCollection (DropCollection collName cascade) = do
-  withPathK "collection" $ do
-    -- check for query collection
-    void $ getCollectionDef collName
+  cascadeModifier <- withPathK "collection" $ do
+    assertCollectionDefined collName
+    allowlist <- fetchAllAllowlistCollections
+    if (collName `elem` allowlist)
+      then
+        if not cascade
+          then
+            throw400 DependencyError $
+              "query collection with name "
+                <> collName <<> " is present in the allowlist; cannot proceed to drop. "
+                <> "please use cascade to confirm you wish to drop it from the allowlist as well"
+          else dropCollectionFromAllowlist collName
+      else pure mempty
 
-    allowlist <- liftTx fetchAllowlist
-    when (collName `elem` allowlist) $
-      if cascade then do
-        -- drop collection in allowlist
-        liftTx $ delCollectionFromAllowlistCatalog collName
-        withNewInconsistentObjsCheck buildSchemaCache
-      else throw400 DependencyError $ "query collection with name "
-           <> collName <<> " is present in allowlist; cannot proceed to drop"
-  liftTx $ delCollectionFromCatalog collName
-  return successMsg
+  withNewInconsistentObjsCheck $
+    buildSchemaCache $
+      cascadeModifier <> MetadataModifier (metaQueryCollections %~ OMap.delete collName)
 
-runDropQueryFromCollection
-  :: (CacheRWM m, MonadTx m)
-  => DropQueryFromCollection -> m EncJSON
+  pure successMsg
+
+runDropQueryFromCollection ::
+  (CacheRWM m, MonadError QErr m, MetadataM m) =>
+  DropQueryFromCollection ->
+  m EncJSON
 runDropQueryFromCollection (DropQueryFromCollection collName queryName) = do
-  CollectionDef qList <- getCollectionDef collName
+  CreateCollection _ (CollectionDef qList) _ <- getCollectionDef collName
   let queryExists = flip any qList $ \q -> _lqName q == queryName
-  when (not queryExists) $ throw400 NotFound $ "query with name "
-    <> queryName <<> " not found in collection " <>> collName
-  let collDef = CollectionDef $ flip filter qList $
-                                \q -> _lqName q /= queryName
-  liftTx $ updateCollectionDefCatalog collName collDef
-  withNewInconsistentObjsCheck buildSchemaCache
+  unless queryExists $
+    throw400 NotFound $
+      "query with name "
+        <> queryName <<> " not found in collection " <>> collName
+
+  withNewInconsistentObjsCheck $
+    buildSchemaCache $
+      MetadataModifier $
+        metaQueryCollections . ix collName . ccDefinition . cdQueries
+          %~ filter ((/=) queryName . _lqName)
+  pure successMsg
+
+runAddCollectionToAllowlist ::
+  (MonadError QErr m, MetadataM m, CacheRWM m) =>
+  AllowlistEntry ->
+  m EncJSON
+runAddCollectionToAllowlist entry = do
+  withPathK "collection" $ assertCollectionDefined (aeCollection entry)
+  allowlist <- withPathK "allowlist" fetchAllowlist
+  case metadataAllowlistInsert entry allowlist of
+    Left msg ->
+      pure . encJFromJValue . Aeson.object $
+        ["message" Aeson..= msg]
+    Right allowlist' -> do
+      withNewInconsistentObjsCheck . buildSchemaCache $ MetadataModifier (metaAllowlist .~ allowlist')
+      pure successMsg
+
+-- Create a metadata modifier that drops a collection from the allowlist.
+-- This is factored out for use in 'runDropCollection'.
+dropCollectionFromAllowlist ::
+  (MonadError QErr m, MetadataM m) =>
+  CollectionName ->
+  m MetadataModifier
+dropCollectionFromAllowlist collName = do
+  withPathK "collection" $ assertCollectionDefined collName
+  allowList <- withPathK "allowlist" fetchAllowlist
+  case OMap.lookup collName allowList of
+    Nothing -> throw400 NotFound $ "collection " <> collName <<> " doesn't exist in the allowlist"
+    Just _ -> pure $ MetadataModifier $ metaAllowlist .~ OMap.delete collName allowList
+
+runDropCollectionFromAllowlist ::
+  (MonadError QErr m, MetadataM m, CacheRWM m) =>
+  DropCollectionFromAllowlist ->
+  m EncJSON
+runDropCollectionFromAllowlist (DropCollectionFromAllowlist collName) = do
+  withNewInconsistentObjsCheck . buildSchemaCache =<< dropCollectionFromAllowlist collName
   return successMsg
 
-runAddCollectionToAllowlist
-  :: (MonadTx m, CacheRWM m)
-  => CollectionReq -> m EncJSON
-runAddCollectionToAllowlist (CollectionReq collName) = do
-  void $ withPathK "collection" $ getCollectionDef collName
-  liftTx $ addCollectionToAllowlistCatalog collName
-  withNewInconsistentObjsCheck buildSchemaCache
+runUpdateScopeOfCollectionInAllowlist ::
+  (MonadError QErr m, MetadataM m, CacheRWM m) =>
+  UpdateScopeOfCollectionInAllowlist ->
+  m EncJSON
+runUpdateScopeOfCollectionInAllowlist (UpdateScopeOfCollectionInAllowlist entry) = do
+  withPathK "collection" $ assertCollectionDefined (aeCollection entry)
+  al <- withPathK "allowlist" fetchAllowlist
+  modifier <- case metadataAllowlistUpdateScope entry al of
+    Left err -> throw400 NotFound err
+    Right al' ->
+      pure . MetadataModifier $
+        metaAllowlist .~ al'
+  withNewInconsistentObjsCheck $ buildSchemaCache modifier
   return successMsg
 
-runDropCollectionFromAllowlist
-  :: (UserInfoM m, MonadTx m, CacheRWM m)
-  => CollectionReq -> m EncJSON
-runDropCollectionFromAllowlist (CollectionReq collName) = do
-  void $ withPathK "collection" $ getCollectionDef collName
-  liftTx $ delCollectionFromAllowlistCatalog collName
-  withNewInconsistentObjsCheck buildSchemaCache
-  return successMsg
+-- helpers
 
-getCollectionDef
-  :: (QErrM m, MonadTx m)
-  => CollectionName -> m CollectionDef
+assertCollectionDefined :: (QErrM m, MetadataM m) => CollectionName -> m ()
+assertCollectionDefined = void . getCollectionDef
+
+getCollectionDef ::
+  (QErrM m, MetadataM m) =>
+  CollectionName ->
+  m CreateCollection
 getCollectionDef collName = do
   detM <- getCollectionDefM collName
-  onNothing detM $ throw400 NotExists $
-    "query collection with name " <> collName <<> " does not exists"
+  onNothing detM $
+    throw400 NotExists $
+      "query collection with name " <> collName <<> " does not exist"
 
-getCollectionDefM
-  :: (QErrM m, MonadTx m)
-  => CollectionName -> m (Maybe CollectionDef)
-getCollectionDefM collName = do
-  allCollections <- liftTx fetchAllCollections
-  let filteredList = flip filter allCollections $ \c -> collName == _ccName c
-  case filteredList of
-    []  -> return Nothing
-    [a] -> return $ Just $ _ccDefinition a
-    _   -> throw500 "more than one row returned for query collections"
+getCollectionDefM ::
+  (QErrM m, MetadataM m) =>
+  CollectionName ->
+  m (Maybe CreateCollection)
+getCollectionDefM collName =
+  OMap.lookup collName <$> fetchAllCollections
 
--- Database functions
-fetchAllCollections :: Q.TxE QErr [CreateCollection]
-fetchAllCollections = do
-  r <- Q.listQE defaultTxErrorHandler [Q.sql|
-           SELECT collection_name, collection_defn::json, comment
-             FROM hdb_catalog.hdb_query_collection
-          |] () False
-  return $ flip map r $ \(name, Q.AltJ defn, mComment)
-                        -> CreateCollection name defn mComment
+fetchAllCollections :: MetadataM m => m QueryCollections
+fetchAllCollections =
+  _metaQueryCollections <$> getMetadata
 
-fetchAllowlist :: Q.TxE QErr [CollectionName]
-fetchAllowlist = map runIdentity <$>
-  Q.listQE defaultTxErrorHandler [Q.sql|
-      SELECT collection_name
-        FROM hdb_catalog.hdb_allowlist
-     |] () True
+fetchAllowlist :: MetadataM m => m MetadataAllowlist
+fetchAllowlist = _metaAllowlist <$> getMetadata
 
-addCollectionToCatalog :: CreateCollection -> SystemDefined -> Q.TxE QErr ()
-addCollectionToCatalog (CreateCollection name defn mComment) systemDefined =
-  Q.unitQE defaultTxErrorHandler [Q.sql|
-    INSERT INTO hdb_catalog.hdb_query_collection
-      (collection_name, collection_defn, comment, is_system_defined)
-    VALUES ($1, $2, $3, $4)
-  |] (name, Q.AltJ defn, mComment, systemDefined) True
-
-delCollectionFromCatalog :: CollectionName -> Q.TxE QErr ()
-delCollectionFromCatalog name =
-  Q.unitQE defaultTxErrorHandler [Q.sql|
-     DELETE FROM hdb_catalog.hdb_query_collection
-     WHERE collection_name = $1
-  |] (Identity name) True
-
-updateCollectionDefCatalog
-  :: CollectionName -> CollectionDef -> Q.TxE QErr ()
-updateCollectionDefCatalog collName def = do
-  -- Update definition
-  Q.unitQE defaultTxErrorHandler [Q.sql|
-    UPDATE hdb_catalog.hdb_query_collection
-       SET collection_defn = $1
-     WHERE collection_name = $2
-  |] (Q.AltJ def, collName) True
-
-addCollectionToAllowlistCatalog :: CollectionName -> Q.TxE QErr ()
-addCollectionToAllowlistCatalog collName =
-  Q.unitQE defaultTxErrorHandler [Q.sql|
-      INSERT INTO hdb_catalog.hdb_allowlist
-                   (collection_name)
-            VALUES ($1)
-      |] (Identity collName) True
-
-delCollectionFromAllowlistCatalog :: CollectionName -> Q.TxE QErr ()
-delCollectionFromAllowlistCatalog collName =
-  Q.unitQE defaultTxErrorHandler [Q.sql|
-      DELETE FROM hdb_catalog.hdb_allowlist
-         WHERE collection_name = $1
-      |] (Identity collName) True
+fetchAllAllowlistCollections :: MetadataM m => m [CollectionName]
+fetchAllAllowlistCollections = metadataAllowlistAllCollections <$> fetchAllowlist

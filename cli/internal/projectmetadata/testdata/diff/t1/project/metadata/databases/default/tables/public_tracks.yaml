@@ -1,0 +1,21 @@
+table:
+  name: tracks
+  schema: public
+object_relationships:
+- name: album
+  using:
+    foreign_key_constraint_on: album_id
+- name: genre
+  using:
+    foreign_key_constraint_on: genre_id
+- name: media_type
+  using:
+    foreign_key_constraint_on: media_type_id
+array_relationships:
+- name: playlist_tracks
+  using:
+    foreign_key_constraint_on:
+      column: track_id
+      table:
+        name: playlist_track
+        schema: public

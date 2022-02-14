@@ -1,0 +1,6 @@
+query: |
+  mutation {
+    delete_author(where: {id: {_eq: 2}}){
+      affected_rows
+    }
+  }

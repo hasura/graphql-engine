@@ -10,6 +10,11 @@
   padding-right: 5px; // removes scrollbar if width is enough
 }
 
+.form_flex {
+  display: flex;
+  flex-direction: column;
+}
+
 .schemaWrapper {
   width: 100%;
 
@@ -17,13 +22,14 @@
     display: inline-block;
     width: 100%;
 
-    a {
+    a,
+    label {
       display: inline-block !important;
       font-weight: bold;
     }
 
     .changeSchema {
-      width: 50%;
+      width: 70%;
       margin-left: 10px;
       display: inline-block;
       font-weight: bold;
@@ -35,11 +41,14 @@
   border-left: 1px solid #ddd;
 }
 
-.tableHeaderCell i {
-  font-size: 12px;
-  position: absolute;
-  top: calc(50% - 5px);
-  right: 8px;
+.tableHeaderCell {
+  text-align: left;
+  i {
+    font-size: 12px;
+    position: absolute;
+    top: calc(50% - 5px);
+    right: 8px;
+  }
 }
 
 .insertContainer {
@@ -150,9 +159,6 @@ a.expanded {
   text-overflow: ellipsis;
 }
 
-.sqlBody {
-}
-
 .tablesBody {
   padding-top: 20px;
 }
@@ -168,11 +174,12 @@ a.expanded {
 
 .dataBreadCrumb {
   padding-bottom: 10px;
+  font-size: 12px;
+  color: #6b7280;
 }
 
-.tableCellCenterAligned {
-  text-align: center;
-  overflow: unset !important;
+.dataBreadCrumb a {
+  color: #6b7280 !important;
 }
 
 .tableCellCenterAlignedOverflow {
@@ -186,8 +193,13 @@ a.expanded {
 
 .tableCenterContent {
   display: flex;
+  width: 100%;
   justify-content: center;
   align-items: center;
+}
+
+.overflowUnset {
+  overflow: unset !important;
 }
 
 .bulkDeleteButton {
@@ -199,4 +211,15 @@ a.expanded {
 .headerInputCheckbox {
   height: 16px;
   margin-bottom: 2px;
+  margin-right: 3px !important;
+}
+
+.labelText {
+  display: inline-block;
+  font-size: 14px;
+}
+
+input[type='checkbox'].migrationCheckbox {
+  margin: 0;
+  margin-right: 10px;
 }

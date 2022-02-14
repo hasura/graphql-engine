@@ -3,7 +3,7 @@ args:
   - type: create_remote_relationship
     args:
       name: messageBasic
-      table: profiles
+      table: {schema: custom, name: profiles}
       hasura_fields:
         - id
       remote_schema: my-remote-schema
@@ -15,7 +15,7 @@ args:
   - type: create_remote_relationship
     args:
       name: messagesNestedArgs
-      table: profiles
+      table: {schema: custom, name: profiles}
       hasura_fields:
         - id
       remote_schema: my-remote-schema
@@ -29,7 +29,7 @@ args:
   - type: create_remote_relationship
     args:
       name: messagesNestedArr
-      table: profiles
+      table: {schema: custom, name: profiles}
       hasura_fields:
         - id
       remote_schema: my-remote-schema
@@ -42,7 +42,7 @@ args:
   - type: create_remote_relationship
     args:
       name: messagesMultiFields
-      table: profiles
+      table: {schema: custom, name: profiles}
       hasura_fields:
         - id
         - name
@@ -59,7 +59,7 @@ args:
   - type: create_remote_relationship
     args:
       name: communicationsInterface
-      table: profiles
+      table: {schema: custom, name: profiles}
       hasura_fields:
         - id
       remote_schema: my-remote-schema

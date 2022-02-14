@@ -1,0 +1,9 @@
+type: bulk
+args:
+
+- type: mssql_run_sql
+  args:
+    source: mssql
+    sql: |
+      drop table article;
+      drop table author;

@@ -1,0 +1,22 @@
+type: bulk
+args:
+- type: mssql_untrack_table
+  args:
+    source: mssql
+    table:
+      name: author
+    cascade: true
+
+- type: mssql_untrack_table
+  args:
+    source: mssql
+    table:
+      name: article
+    cascade: true
+
+- type: mssql_untrack_table
+  args:
+    source: mssql
+    table:
+      name: city
+    cascade: true

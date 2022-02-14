@@ -17,7 +17,12 @@ import { getHeadersAsJSON } from '../utils';
 
 import '../GraphiQLWrapper/GraphiQL.css';
 import './OneGraphExplorer.css';
-import { showErrorNotification } from '../../Common/Notification';
+import styles from '../ApiExplorer.scss';
+import Spinner from '../../../Common/Spinner/Spinner';
+import {
+  showErrorNotification,
+  showWarningNotification,
+} from '../../Common/Notification';
 import requestAction from '../../../../utils/requestAction';
 
 class OneGraphExplorer extends React.Component {
@@ -123,12 +128,44 @@ class OneGraphExplorer extends React.Component {
           });
           return;
         }
+        let clientSchema = null;
+        try {
+          clientSchema = buildClientSchema(result.data);
+        } catch (err) {
+          console.error(err);
+          dispatch(
+            showWarningNotification(
+              `Failed to parse the schema`,
+              `We are not able to render GraphiQL Explorer and Docs.
+              You should still be able to try out your API from the GraphiQL Editor.`,
+              null,
+              <p style={{ paddingTop: '10px', margin: '0' }}>
+                Please report an issue on our{' '}
+                <a
+                  target="_blank"
+                  href="https://github.com/hasura/graphql-engine/issues/new"
+                  rel="noopener noreferrer"
+                >
+                  GitHub
+                </a>
+                , so we can triage this and improve your experience.
+              </p>
+            )
+          );
+        }
         this.setState({
-          schema: buildClientSchema(result.data),
+          schema: clientSchema,
           previousIntrospectionHeaders: headers,
         });
       })
-      .catch(() => {
+      .catch(err => {
+        dispatch(
+          showErrorNotification(
+            'Schema introspection query failed',
+            err.message,
+            err
+          )
+        );
         this.setState({
           schema: null,
           previousIntrospectionHeaders: headers,
@@ -221,16 +258,27 @@ class OneGraphExplorer extends React.Component {
         onMouseUp={this.handleExplorerResizeStop}
       >
         <div className="gqlexplorer">
-          <GraphiQLExplorer
-            schema={schema}
-            query={query}
-            onEdit={this.editQuery}
-            explorerIsOpen={explorerOpen}
-            onToggleExplorer={this.handleToggle}
-            getDefaultScalarArgValue={getDefaultScalarArgValue}
-            makeDefaultArg={makeDefaultArg}
-            width={explorerWidth}
-          />
+          {this.props.loading ? (
+            <div
+              className={`${styles.height100} ${styles.display_flex}`}
+              style={{
+                width: explorerWidth,
+              }}
+            >
+              <Spinner />
+            </div>
+          ) : (
+            <GraphiQLExplorer
+              schema={schema}
+              query={query}
+              onEdit={this.editQuery}
+              explorerIsOpen={explorerOpen}
+              onToggleExplorer={this.handleToggle}
+              getDefaultScalarArgValue={getDefaultScalarArgValue}
+              makeDefaultArg={makeDefaultArg}
+              width={explorerWidth}
+            />
+          )}
           {explorerSeparator}
         </div>
         {graphiql}

@@ -7,6 +7,10 @@ args:
 - type: run_sql
   args:
     sql: |
+      DROP TABLE geom_3d_table;
+- type: run_sql
+  args:
+    sql: |
       DROP TABLE geog_table;
 - type: run_sql
   args:

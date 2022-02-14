@@ -1,0 +1,17 @@
+description: Explain query with order by and array relationship's column
+url: /v1/graphql/explain
+status: 200
+query:
+  query:
+    query: |
+      query {
+        author {
+          name
+          articles(order_by: {id: desc}){
+            title
+          }
+        }
+      }
+response:
+- field: author
+  sql: 'SELECT  coalesce(json_agg("root" ), ''[]'' ) AS "root" FROM  (SELECT  row_to_json((SELECT  "_5_e"  FROM  (SELECT  "_0_root.base"."name" AS "name", "_4_root.ar.root.articles"."articles" AS "articles"       ) AS "_5_e"      ) ) AS "root" FROM  (SELECT  *  FROM "public"."author"  WHERE (''true'')     ) AS "_0_root.base" LEFT OUTER JOIN LATERAL (SELECT  coalesce(json_agg("articles" ORDER BY "root.ar.root.articles.pg.id" DESC NULLS FIRST), ''[]'' ) AS "articles" FROM  (SELECT  "_1_root.ar.root.articles.base"."id" AS "root.ar.root.articles.pg.id", row_to_json((SELECT  "_2_e"  FROM  (SELECT  "_1_root.ar.root.articles.base"."title" AS "title"       ) AS "_2_e"      ) ) AS "articles" FROM  (SELECT  *  FROM "public"."article"  WHERE (("_0_root.base"."id") = ("author_id"))   ORDER BY "id" DESC NULLS FIRST  ) AS "_1_root.ar.root.articles.base"    ORDER BY "root.ar.root.articles.pg.id" DESC NULLS FIRST  ) AS "_3_root.ar.root.articles"      ) AS "_4_root.ar.root.articles" ON (''true'')      ) AS "_6_root"      '

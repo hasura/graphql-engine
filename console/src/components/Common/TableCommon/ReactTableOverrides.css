@@ -48,6 +48,7 @@
 .ReactTable .-pagination {
   box-shadow: none;
   border: none;
+  font-family: 'Gudea', sans-serif;
 }
 
 .ReactTable .-pagination .-center {
@@ -122,6 +123,10 @@
   overflow: unset;
 }
 
+.result-table .rt-table {
+  overflow: auto;
+}
+
 .ReactTable .rt-table .rt-tbody {
   margin-bottom: 10px;
   border: solid 1px rgba(0, 0, 0, 0.05);
@@ -151,18 +156,23 @@
   outline: 0;
 }
 
-/* Event Trigger */
-
 .ReactTable .rt-table .rt-thead .rt-tr .rt-th:first-child,
 .ReactTable .rt-table .rt-tbody .rt-tr-group .rt-tr.-odd .rt-td:first-child,
 .ReactTable .rt-table .rt-tbody .rt-tr-group .rt-tr.-even .rt-td:first-child {
   min-width: 75px !important;
 }
 
+.dataTable.ReactTable .rt-tbody .rt-th,
+.dataTable.ReactTable .rt-tbody .rt-td,
+.dataTable.ReactTable .rt-thead .rt-resizable-header-content {
+  justify-content: left;
+}
+
 .ReactTable .rt-tbody .rt-th,
 .ReactTable .rt-tbody .rt-td {
   display: flex;
   justify-content: center;
+  align-items: center;
 }
 
 .ReactTable .rt-thead .rt-resizable-header-content {

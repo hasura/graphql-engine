@@ -1,0 +1,8 @@
+type: bulk
+args:
+
+- type: citus_track_table
+  args:
+    source: citus
+    table:
+      name: table_to_customize

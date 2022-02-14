@@ -25,7 +25,11 @@ const TableRow = ({
       </th>
     );
   } else {
-    rowCells.push(<th key={'role-textbox'}>{roleName}</th>);
+    rowCells.push(
+      <th data-test={`role-${roleName}`} key={'role-textbox'}>
+        {roleName}
+      </th>
+    );
   }
 
   permTypes.forEach(p => {
@@ -39,6 +43,7 @@ const TableRow = ({
       >
         {p.access}
         {p.editIcon}
+        {p.tooltip}
       </td>
     );
   });
@@ -49,7 +54,7 @@ const TableRow = ({
         <td key={-1} className={styles.bulkSelectCell}>
           <input
             onChange={bulkSection.onChange}
-            className={styles.cursorPointer}
+            className={`${styles.cursorPointer} legacy-input-fix`}
             checked={bulkSection.checked}
             data-role={bulkSection.role}
             disabled={bulkSection.disableCheckbox}

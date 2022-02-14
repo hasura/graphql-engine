@@ -1,0 +1,119 @@
+- description: Add a temp table
+  url: /v1/query
+  status: 200
+  query:
+    type: bulk
+    args:
+      - type: run_sql
+        args:
+          sql: |
+            create table temp_table(
+                col1 text,
+                col2 text,
+                id UUID NOT NULL DEFAULT gen_random_uuid()
+            );
+  
+      - type: track_table
+        args:
+          schema: public
+          name: temp_table
+
+      - type: run_sql
+        args:
+          sql: |
+            insert into temp_table (col1, col2)
+            values
+            ('temp1', 'temp2'),
+            ('temp3', 'temp4'),
+            ('temp5', 'temp6');
+  response:
+    - result_type: CommandOk
+      result:
+    - message: success
+    - result_type: CommandOk
+      result:
+
+- description: Create a rest endpoint
+  url: /v1/query
+  status: 200
+  query:
+    type: bulk
+    args:
+      - type: create_query_collection
+        args:
+          name: temp_collection
+          definition:
+            queries:
+            - name: temp_query
+              query: query { temp_table { col1 col2 } }
+      - type: create_rest_endpoint
+        args:
+          url: temp_rest_API
+          name: temp_rest_API
+          methods:
+            - GET
+          definition:
+            query:
+              collection_name: temp_collection
+              query_name: temp_query
+  response:
+    - message: success
+    - message: success
+
+- description: untrack the table
+  url: /v1/query
+  status: 500
+  query:
+    type: untrack_table
+    args:
+      table:
+        schema: public
+        name: temp_table
+  response:
+    internal:
+    - definition:
+        definition:
+          query:
+            collection_name: temp_collection
+            query_name: temp_query
+        url: temp_rest_API
+        methods:
+        - GET
+        name: temp_rest_API
+        comment:
+      reason: "Inconsistent object: temp_rest_API (\"Couldn't find field temp_table\
+        \ in root field query_root\")"
+      name: rest_endpoint temp_rest_API
+      type: rest_endpoint
+    path: "$.args"
+    error: cannot continue due to newly found inconsistent metadata
+    code: unexpected
+
+- description: cleanup 1 (drop the endpoint)
+  url: /v1/query
+  status: 200
+  query:
+    type: bulk
+    args:
+      - type: drop_rest_endpoint
+        args:
+          name: temp_rest_API
+      - type: drop_query_collection
+        args:
+          collection: temp_collection
+          cascade: false
+  response:
+    - message: success
+    - message: success
+
+- description: cleanup 2 (drop the table)
+  url: /v1/query
+  status: 200
+  query:
+    type: run_sql
+    args:
+      sql: |
+        drop table temp_table
+    response:
+      result_type: CommandOk
+      result:

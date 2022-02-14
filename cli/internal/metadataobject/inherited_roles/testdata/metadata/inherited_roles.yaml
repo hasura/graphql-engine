@@ -1,0 +1,5 @@
+inherited_roles:
+  - role_name: combined_user
+    role_set:
+      - user
+      - user1
