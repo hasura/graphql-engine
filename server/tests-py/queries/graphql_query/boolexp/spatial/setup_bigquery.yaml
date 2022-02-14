@@ -5,5 +5,5 @@ args:
   args:
     source: bigquery
     table:
-      dataset: hasura_test
+      dataset: hasura
       name: spatial_types_geog

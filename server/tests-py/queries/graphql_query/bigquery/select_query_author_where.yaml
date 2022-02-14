@@ -3,13 +3,13 @@
   status: 200
   response:
     data:
-      hasura_test_author:
+      hasura_author:
       - id: '2'
         name: Author 2
   query:
     query: |
       query {
-        hasura_test_author (order_by: {id: asc}, where: {name: {_eq: "Author 2"}}) {
+        hasura_author (order_by: {id: asc}, where: {name: {_eq: "Author 2"}}) {
           id
           name
         }
@@ -20,13 +20,13 @@
   status: 200
   response:
     data:
-      hasura_test_author:
+      hasura_author:
       - id: '2'
         name: Author 2
   query:
     query: |
       query {
-        hasura_test_author (order_by: {id: asc}, where: {id: {_nin: [1]}}) {
+        hasura_author (order_by: {id: asc}, where: {id: {_nin: [1]}}) {
           id
           name
         }

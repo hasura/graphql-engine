@@ -3,7 +3,7 @@ url: /v1/graphql
 status: 200
 response:
   data:
-    hasura_test_article:
+    hasura_article:
     - id: '1'
       author:
         id: '1'
@@ -18,7 +18,7 @@ response:
 query:
   query: |
     query {
-      hasura_test_article(where: {id: {_eq: 1}}) {
+      hasura_article(where: {id: {_eq: 1}}) {
         id
         author {
           id

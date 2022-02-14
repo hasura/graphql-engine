@@ -3,12 +3,12 @@ url: /v1/graphql
 status: 200
 response:
   data:
-    hasura_test_spatial_types_geog:
+    hasura_spatial_types_geog:
       - point: POINT(3 4)
 query:
   query: |
     query {
-      hasura_test_spatial_types_geog(
+      hasura_spatial_types_geog(
         where: {
           point: {
             _st_touches: "POLYGON ((3 4, 2 5, 5 5, 5 2, 3 4))"

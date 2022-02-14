@@ -4,13 +4,12 @@ args:
   args:
     source: bigquery
     sql: |
-      DROP TABLE IF EXISTS `hasura_test.city`;
-      CREATE TABLE `hasura_test.city` (
+      CREATE TABLE `hasura.city` (
         `name` STRING,
         `country` STRING
       );
 
-      INSERT INTO `hasura_test.city` (`name`, `country`)
+      INSERT INTO `hasura.city` (`name`, `country`)
       VALUES
       ('Durham', 'USA'),
       ('New York', 'USA'),

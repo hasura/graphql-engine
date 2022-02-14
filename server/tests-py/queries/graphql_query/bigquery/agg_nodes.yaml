@@ -3,7 +3,7 @@
   status: 200
   response:
     data:
-      hasura_test_article:
+      hasura_article:
       - id: '1'
         title: Title 1
         author:
@@ -75,7 +75,7 @@
   query:
     query: |
       query {
-          hasura_test_article(order_by: {id: asc}) {
+          hasura_article(order_by: {id: asc}) {
             id
             title
             author {
@@ -100,7 +100,7 @@
   status: 200
   response:
     data:
-      hasura_test_author:
+      hasura_author:
       - id: '1'
         name: Author 1
         articles_aggregate:
@@ -123,7 +123,7 @@
   query:
     query: |
       query {
-        hasura_test_author(order_by: {id: asc}) {
+        hasura_author(order_by: {id: asc}) {
           id
           name
           articles_aggregate(order_by: {id: asc}) {

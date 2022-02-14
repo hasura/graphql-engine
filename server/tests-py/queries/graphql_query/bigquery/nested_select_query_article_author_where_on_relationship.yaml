@@ -3,7 +3,7 @@
   status: 200
   response:
     data:
-      hasura_test_article:
+      hasura_article:
       - id: '1'
         title: Title 1
         content: Content 1
@@ -19,7 +19,7 @@
   query:
     query: |
       query {
-        hasura_test_article (order_by: {id: asc}, where: {author: {name: {_eq: "Author 1"}}}) {
+        hasura_article (order_by: {id: asc}, where: {author: {name: {_eq: "Author 1"}}}) {
           id
           title
           content
@@ -35,7 +35,7 @@
   status: 200
   response:
     data:
-      hasura_test_article:
+      hasura_article:
       - id: '1'
         title: Title 1
         content: Content 1
@@ -51,7 +51,7 @@
   query:
     query: |
       query {
-        hasura_test_article (order_by: {id: asc}, where: {author: {name: {_eq: "Author 1"}, id: {_in: [1]}}}) {
+        hasura_article (order_by: {id: asc}, where: {author: {name: {_eq: "Author 1"}, id: {_in: [1]}}}) {
           id
           title
           content

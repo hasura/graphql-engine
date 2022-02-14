@@ -3,7 +3,7 @@ url: /v1/graphql
 status: 200
 response:
   data:
-    hasura_test_author:
+    hasura_author:
     - id: '1'
       name: Author 1
     - id: '2'
@@ -13,12 +13,12 @@ query:
   operationName: chooseThisOne
   query: |
     query ignoreThisOne {
-      hasura_test_author (order_by: {id: asc}) {
+      hasura_author (order_by: {id: asc}) {
         name
       }
     }
     query chooseThisOne {
-      hasura_test_author (order_by: {id: asc}) {
+      hasura_author (order_by: {id: asc}) {
         id
         name
       }

@@ -3,7 +3,7 @@
   query:
     query: |
       query hasura_author_with_skip($skipId: Boolean!, $skipName: Boolean!) {
-        hasura_test_author (order_by: {id: asc}) {
+        hasura_author (order_by: {id: asc}) {
           id @skip(if: $skipId)
           name @skip(if: $skipName)
         }
@@ -13,7 +13,7 @@
       skipName: false
   response:
     data:
-      hasura_test_author:
+      hasura_author:
       - name: Author 1
       - name: Author 2
 - url: /v1/graphql
@@ -21,7 +21,7 @@
   query:
     query: |
       query hasura_author_with_skip($skipId: Boolean!, $skipName: Boolean!) {
-        hasura_test_author (order_by: {id: asc}) {
+        hasura_author (order_by: {id: asc}) {
           id @skip(if: $skipId)
           name @skip(if: $skipName)
         }
@@ -31,6 +31,6 @@
       skipName: true
   response:
     data:
-      hasura_test_author:
+      hasura_author:
       - id: '1'
       - id: '2'

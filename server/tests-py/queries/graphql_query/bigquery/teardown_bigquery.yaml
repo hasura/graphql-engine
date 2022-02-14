@@ -10,7 +10,7 @@ args:
       service_account: {from_env: HASURA_BIGQUERY_SERVICE_ACCOUNT}
       project_id: {from_env: HASURA_BIGQUERY_PROJECT_ID}
       datasets:
-      - hasura_test
+      - hasura
       global_select_limit: 1
     tables: []
 
@@ -20,7 +20,7 @@ args:
       service_account: {from_env: HASURA_BIGQUERY_SERVICE_ACCOUNT}
       project_id: {from_env: HASURA_BIGQUERY_PROJECT_ID}
       datasets:
-      - hasura_test
+      - hasura
       global_select_limit: 10
     tables: []
 
@@ -30,6 +30,6 @@ args:
       service_account: {from_env: HASURA_BIGQUERY_SERVICE_ACCOUNT}
       project_id: {from_env: HASURA_BIGQUERY_PROJECT_ID}
       datasets:
-      - hasura_test
+      - hasura
       global_select_limit: 10
     tables: []
