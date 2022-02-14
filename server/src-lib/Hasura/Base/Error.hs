@@ -13,6 +13,7 @@ module Hasura.Base.Error
     err405,
     err401,
     err409,
+    err429,
     err500,
     internalError,
     QErrM,
@@ -20,6 +21,7 @@ module Hasura.Base.Error
     throw404,
     throw405,
     throw409,
+    throw429,
     throw500,
     throw500WithDetail,
     throw401,
@@ -269,6 +271,9 @@ err401 c t = QErr [] N.status401 t c Nothing
 err409 :: Code -> Text -> QErr
 err409 c t = QErr [] N.status409 t c Nothing
 
+err429 :: Code -> Text -> QErr
+err429 c t = QErr [] N.status429 t c Nothing
+
 err500 :: Code -> Text -> QErr
 err500 c t = QErr [] N.status500 t c Nothing
 
@@ -291,6 +296,9 @@ throw401 t = throwError $ err401 AccessDenied t
 -- | Conflict
 throw409 :: (QErrM m) => Text -> m a
 throw409 t = throwError $ err409 Conflict t
+
+throw429 :: (QErrM m) => Code -> Text -> m a
+throw429 c t = throwError $ err429 c t
 
 throw500 :: (QErrM m) => Text -> m a
 throw500 t = throwError $ internalError t
