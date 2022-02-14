@@ -16,7 +16,7 @@ setupState = do
   murlPrefix <- lookupEnv "HASURA_TEST_URLPREFIX"
   mport <- fmap (>>= readMaybe) (lookupEnv "HASURA_TEST_PORT")
   server <- startServerThread ((,) <$> murlPrefix <*> mport)
-  pure State {server}
+  pure $ State server
 
 teardownState :: State -> IO ()
 teardownState State {server} =

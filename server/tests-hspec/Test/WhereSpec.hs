@@ -19,18 +19,15 @@ import Prelude
 
 spec :: SpecWith State
 spec =
-  Feature.feature
-    Feature.Feature
-      { Feature.backends =
-          [ Feature.Backend
-              { name = "MySQL",
-                setup = mysqlSetup,
-                teardown = mysqlTeardown,
-                backendOptions = Feature.defaultBackendOptions
-              }
-          ],
-        Feature.tests = tests
-      }
+  Feature.run
+    [ Feature.Context
+        { name = "MySQL",
+          setup = mysqlSetup,
+          teardown = mysqlTeardown,
+          options = Feature.defaultOptions
+        }
+    ]
+    tests
 
 --------------------------------------------------------------------------------
 -- MySQL backend
@@ -59,9 +56,8 @@ VALUES
 |]
 
   -- Track the tables
-  GraphqlEngine.post_
+  GraphqlEngine.postMetadata_
     state
-    "/v1/metadata"
     [yaml|
 type: mysql_track_table
 args:
@@ -71,7 +67,7 @@ args:
     name: author
 |]
 
-mysqlTeardown :: State -> IO ()
+mysqlTeardown :: (State, ()) -> IO ()
 mysqlTeardown _ = do
   Mysql.run_
     [sql|
@@ -81,7 +77,7 @@ DROP TABLE author;
 --------------------------------------------------------------------------------
 -- Tests
 
-tests :: Feature.BackendOptions -> SpecWith State
+tests :: Feature.Options -> SpecWith State
 tests opts = do
   it "Where id=1" \state ->
     shouldReturnYaml

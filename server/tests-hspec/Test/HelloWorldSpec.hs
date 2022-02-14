@@ -3,22 +3,17 @@ module Test.HelloWorldSpec (spec) where
 
 import Harness.State (State)
 import Harness.Test.Feature qualified as Feature
-import Test.Hspec
-import Prelude
+import Test.Hspec (SpecWith, it, shouldBe)
 
 --------------------------------------------------------------------------------
 -- Preamble
 
 spec :: SpecWith State
-spec =
-  Feature.feature
-    Feature.Feature
-      { Feature.backends = [],
-        Feature.tests = \_ -> tests
-      }
+spec = Feature.run [] tests
 
 --------------------------------------------------------------------------------
 -- Tests
 
-tests :: SpecWith State
-tests = it "No-op" (const (shouldBe () ()))
+tests :: Feature.Options -> SpecWith State
+tests _opts = it "No-op" \_ -> do
+  () `shouldBe` ()

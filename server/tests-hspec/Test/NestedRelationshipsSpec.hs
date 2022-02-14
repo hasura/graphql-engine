@@ -21,18 +21,15 @@ import Prelude
 
 spec :: SpecWith State
 spec =
-  Feature.feature
-    Feature.Feature
-      { Feature.backends =
-          [ Feature.Backend
-              { name = "MySQL",
-                setup = mysqlSetup,
-                teardown = mysqlTeardown,
-                backendOptions = Feature.defaultBackendOptions
-              }
-          ],
-        Feature.tests = tests
-      }
+  Feature.run
+    [ Feature.Context
+        { name = "MySQL",
+          setup = mysqlSetup,
+          teardown = mysqlTeardown,
+          options = Feature.defaultOptions
+        }
+    ]
+    tests
 
 --------------------------------------------------------------------------------
 -- MySQL backend
@@ -87,64 +84,56 @@ VALUES
 |]
 
   -- Track the tables
-  GraphqlEngine.post_
+  GraphqlEngine.postMetadata_
     state
-    "/v1/metadata"
     [yaml|
-type: mysql_track_table
+type: bulk
 args:
-  source: mysql
-  table:
-    schema: hasura
-    name: author
-|]
-  GraphqlEngine.post_
-    state
-    "/v1/metadata"
-    [yaml|
-type: mysql_track_table
-args:
-  source: mysql
-  table:
-    schema: hasura
-    name: article
+- type: mysql_track_table
+  args:
+    source: mysql
+    table:
+      schema: hasura
+      name: author
+- type: mysql_track_table
+  args:
+    source: mysql
+    table:
+      schema: hasura
+      name: article
 |]
 
   -- Setup relationships
-  GraphqlEngine.post_
+  GraphqlEngine.postMetadata_
     state
-    "/v1/metadata"
     [yaml|
-type: mysql_create_object_relationship
+type: bulk
 args:
-  source: mysql
-  table:
-    name: article
-    schema: hasura
-  name: author
-  using:
-    foreign_key_constraint_on: author_id
-|]
-  GraphqlEngine.post_
-    state
-    "/v1/metadata"
-    [yaml|
-type: mysql_create_array_relationship
-args:
-  source: mysql
-  table:
+- type: mysql_create_object_relationship
+  args:
+    source: mysql
+    table:
+      name: article
+      schema: hasura
     name: author
-    schema: hasura
-  name: articles
-  using:
-    foreign_key_constraint_on:
-      table:
-        name: article
-        schema: hasura
-      column: author_id
+    using:
+      foreign_key_constraint_on: author_id
+- type: mysql_create_array_relationship
+  args:
+    source: mysql
+    table:
+      name: author
+      schema: hasura
+    name: articles
+    using:
+      foreign_key_constraint_on:
+        table:
+          name: article
+          schema: hasura
+        column: author_id
 |]
 
-mysqlTeardown :: State -> IO ()
+mysqlTeardown :: (State, ()) -> IO ()
 mysqlTeardown _ = do
   Mysql.run_
     [sql|
@@ -158,7 +147,7 @@ DROP TABLE author;
 --------------------------------------------------------------------------------
 -- Tests
 
-tests :: Feature.BackendOptions -> SpecWith State
+tests :: Feature.Options -> SpecWith State
 tests opts = do
   it "Nested select on article" $ \state ->
     shouldReturnYaml

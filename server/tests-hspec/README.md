@@ -100,7 +100,7 @@ which can be built upon.
 To create a new test:
 
 1. Create a new module based on `Test.HelloWorldSpec`
-2. Specify the relevant backends on which the tests will run in `spec`
+2. Specify each relevant context on which the tests will run in `spec`
 3. Specify the tests and expectations in `tests`
 
 When creating a new test, make sure that:
@@ -111,15 +111,42 @@ When creating a new test, make sure that:
 
 (1) and (2) are required for `hspec-discover` to find and run the test.
 
-### Specifying backends
+### Specifying contexts
 
-To specify a new backend, create a value of the type `Backend` which is defined in
-[Harness.Test.Feature](Harness/Test/Feature.hs). A `Backend` requires a `name`,
-a `setup action` and a `teardown action`.
+We often want to run the same tests several times with slightly different
+configuration. Most commonly, we want to assert that a given behaviour works
+consistently across different backends.
+
+[Harness.Test.Feature](Harness/Test/Feature.hs) defines two functions for
+running test trees in terms of a list of `Context a`s.
+
+Each `Context a` requires:
+- a unique `name`, of type `String`
+- a `setup` action, of type `State -> IO a`
+- a `teardown` action, of type `(State, a) -> IO ()`
+- an `options` parameter, which will be threaded through the tests themselves
+to modify behavior for a particular `Context`
+
+Of these two functions, whether one wishes to use `Harness.Test.Feature.run` or
+`Harness.Test.Feature.runWithLocalState` will depend on if their test can be
+written in terms of information provided by the global `State` type or if it
+depends on some additional "local" state.
+
+More often than not, test authors should use `Harness.Test.Feature.run`, which
+is written in terms of `Context ()`. This uses `()` for the local test which
+does not carry any "useful" state information, and is therefore omitted from
+the body of the tests themselves.
+
+In the rare cases where some local state is necessary (either for the test
+itself, or as an argument to the `teardown` action for some `Context`), test
+authors should use `Harness.Test.Feature.runWithLocalState`. This function
+takes a type parameter for its local state, which will be provided to both
+the `teardown` action specified in `Context` as well as the body of tests
+themselves.
 
 #### Setup action
 
-A setup action is a function of type `State -> IO ()` which is responsible with
+A setup action is a function of type `State -> IO a` which is responsible with
 creating the environment for the test. It needs to:
 
 1. Clear and reconfigure the metadata
@@ -132,13 +159,22 @@ These actions can be created by running POST requests against graphql-engine
 using `Harness.GraphqlEngine.post_`, or by running SQL requests against the
 backend using `Backend.<backend>.run_`.
 
+Its return value, `IO a`, matches the `a` of `Context a`: it is the additional
+local state that is required throughout the tests, in addition to the global
+`State`. Most tests do not need additional state, and use a `State -> IO ()`
+function.
+
 #### Teardown action
 
-The teardown action is another function of type `State -> IO ()` which is responsible
-for removing the environment created by the test or setup, so that other tests can have
-a "clean slate" with no artifacts.
+The teardown action is another function of type `(State, a) -> IO ()` which is
+responsible for removing the environment created by the test or setup, so that
+other tests can have a "clean slate" with no artifacts. The `(State, a)`
+parameter is constructed from the `a` parameter of the `Context a`: it is the
+local state that is passed throughout the tests.
 
-For example, this test should drop tables, delete custom functions and sequences, and so on.
+This action is responsible for freeing acquired resources, and reverting all
+local modifications: dropping newly created tables, deleting custom functions,
+removing the changes made to the metadata, and so on.
 
 These actions can be created by running POST requests against graphql-engine
 using `Harness.GraphqlEngine.post_`, or by running SQL requests against the
@@ -146,7 +182,8 @@ backend using `Backend.<backend>.run_`.
 
 ### Writing tests
 
-Test should be written (or reachable from) `tests :: SpecWith State`.
+Test should be written (or reachable from) `tests :: SpecWith State`, or `tests
+:: SpecWith (State, Foo)` for tests that use an additional local state.
 
 A typical test will look similar to this:
 
