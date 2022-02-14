@@ -108,11 +108,11 @@ export const getTableColumn = (table: Table, columnName: string) => {
 };
 
 export const getTableRelationshipNames = (table: Table) => {
-  return table.relationships.map(r => r.rel_name);
+  return table?.relationships?.map(r => r.rel_name);
 };
 
 export function getTableRelationship(table: Table, relationshipName: string) {
-  return table.relationships.find(
+  return table?.relationships?.find(
     relationship => relationship.rel_name === relationshipName
   );
 }

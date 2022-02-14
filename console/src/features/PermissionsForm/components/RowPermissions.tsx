@@ -4,7 +4,7 @@ import { useFormContext, Controller } from 'react-hook-form';
 import 'brace/mode/json';
 import 'brace/theme/github';
 
-import { Table } from '@/dataSources/types';
+import { NormalizedTable, Table } from '@/dataSources/types';
 import { PGFunction } from '@/dataSources/services/postgresql/types';
 import { generateTableDef } from '@/dataSources';
 import { InputField } from '@/new-components/Form';
@@ -40,9 +40,9 @@ export interface RowPermissionsProps {
   subQueryType?: string;
   schemaName: string;
   tableName: string;
-  allRowChecks: Array<{ queryType: QueryType; filter: string }>;
-  allSchemas: Table[];
-  allFunctions: PGFunction[];
+  allRowChecks: Array<{ queryType: QueryType; value: string }>;
+  allSchemas?: NormalizedTable[];
+  allFunctions?: PGFunction[];
 }
 
 enum SelectedSection {
@@ -51,7 +51,7 @@ enum SelectedSection {
   NoneSelected = 'none',
 }
 
-const getRowPermission = (queryType: string, subQueryType?: string) => {
+const getRowPermission = (queryType: QueryType, subQueryType?: string) => {
   if (queryType === 'insert') {
     return 'check';
   }
@@ -68,7 +68,7 @@ const getRowPermission = (queryType: string, subQueryType?: string) => {
 };
 
 const getRowPermissionCheckType = (
-  queryType: string,
+  queryType: QueryType,
   subQueryType?: string
 ) => {
   if (queryType === 'insert') {
@@ -96,7 +96,6 @@ export const RowPermissionsSection: React.FC<RowPermissionsProps> = ({
   allFunctions,
 }) => {
   const { control, register, watch, setValue } = useFormContext();
-
   // determines whether the inputs should be pointed at `check` or `filter`
   const rowPermissions = getRowPermission(queryType, subQueryType);
   // determines whether the check type should be pointer at `checkType` or `filterType`
@@ -110,7 +109,7 @@ export const RowPermissionsSection: React.FC<RowPermissionsProps> = ({
     queryType === 'update' && subQueryType === 'post' && !watch('check');
 
   const schemaList = React.useMemo(
-    () => allSchemas.map(({ table_schema }) => table_schema),
+    () => allSchemas?.map(({ table_schema }) => table_schema),
     [allSchemas]
   );
 
@@ -147,7 +146,7 @@ export const RowPermissionsSection: React.FC<RowPermissionsProps> = ({
         )}
       </div>
 
-      {allRowChecks.map(({ queryType: query, filter }) => (
+      {allRowChecks?.map(({ queryType: query, value }) => (
         <div key={query}>
           <label className="flex items-center gap-2">
             <input
@@ -157,7 +156,7 @@ export const RowPermissionsSection: React.FC<RowPermissionsProps> = ({
               disabled={disabled}
               onClick={() => {
                 setValue(rowPermissionsCheckType, query);
-                setValue(rowPermissions, filter);
+                setValue(rowPermissions, value);
               }}
               {...register(rowPermissionsCheckType)}
             />
@@ -169,7 +168,7 @@ export const RowPermissionsSection: React.FC<RowPermissionsProps> = ({
           {selectedSection === query && (
             <div className="pt-4">
               <JSONEditor
-                data={filter}
+                data={value}
                 onChange={output => {
                   setValue(rowPermissionsCheckType, SelectedSection.Custom);
                   setValue(rowPermissions, output);
@@ -208,18 +207,20 @@ export const RowPermissionsSection: React.FC<RowPermissionsProps> = ({
                     initData="{}"
                   />
 
-                  <PermissionBuilder
-                    dispatchFuncSetFilter={output => {
-                      onChange(output);
-                    }}
-                    loadSchemasFunc={() => {}}
-                    tableDef={generateTableDef(tableName, schemaName)}
-                    allTableSchemas={allSchemas}
-                    allFunctions={allFunctions}
-                    schemaList={schemaList}
-                    filter={value || '{}'}
-                    dispatch={() => console.log('output')}
-                  />
+                  {allSchemas && allFunctions && schemaList && (
+                    <PermissionBuilder
+                      dispatchFuncSetFilter={output => {
+                        onChange(output);
+                      }}
+                      loadSchemasFunc={() => {}}
+                      tableDef={generateTableDef(tableName, schemaName)}
+                      allTableSchemas={allSchemas as Table[]}
+                      allFunctions={allFunctions}
+                      schemaList={schemaList}
+                      filter={value || '{}'}
+                      dispatch={() => console.log('output')}
+                    />
+                  )}
                 </>
               )}
             />

@@ -187,7 +187,8 @@
               "**/*.spec.tsx",
               "**/*.stories.tsx",
               "**/*.stories.mdx",
-              "**/*.mock.tsx"
+              "**/*.mock.tsx",
+              "**/*.mock.ts"
             ]
           }
         ],

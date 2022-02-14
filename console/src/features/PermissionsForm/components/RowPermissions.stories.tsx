@@ -10,7 +10,7 @@ import {
   RowPermissionsWrapperProps,
 } from './RowPermissions';
 
-import { currentSchema, allSchemas, allFunctions } from '../mocks/mockData';
+import { allSchemas, allFunctions } from '../mocks/mockData';
 import { QueryType } from '../types';
 
 export default {
@@ -29,23 +29,16 @@ export default {
 const roleName = 'two';
 
 // this will be moved into a utils folder
-const allRowChecks = ({ role, query }: { role: string; query: string }) => {
-  const currentRole = currentSchema.permissions.find(
-    ({ role_name }) => role === role_name
-  );
-
-  if (currentRole) {
-    const { permissions } = currentRole;
-    return Object.entries(permissions)
-      .filter(([name, info]) => name !== query && info.filter)
-      .map(([name, info]) => ({
-        queryType: name as QueryType,
-        filter: JSON.stringify(info.filter),
-      }));
-  }
-
-  return [];
-};
+const allRowChecks = [
+  {
+    queryType: 'insert' as QueryType,
+    value: '{"id":{"_eq":1}}',
+  },
+  {
+    queryType: 'select' as QueryType,
+    value: '{"id":{"_eq":1}}',
+  },
+];
 
 interface Props {
   wrapper: RowPermissionsWrapperProps;
@@ -63,7 +56,7 @@ Insert.args = {
     schemaName: 'public',
     tableName: 'users',
     queryType: 'delete',
-    allRowChecks: allRowChecks({ role: roleName, query: 'insert' }),
+    allRowChecks,
     allSchemas,
     allFunctions,
   },
@@ -77,9 +70,9 @@ export const Select: Story<Props> = args => (
 Select.args = {
   wrapper: { roleName, queryType: 'select', defaultOpen: true },
   section: {
-    ...Insert.args.section!,
+    ...Insert!.args!.section!,
     queryType: 'select',
-    allRowChecks: allRowChecks({ role: roleName, query: 'select' }),
+    allRowChecks,
   },
 };
 
@@ -93,7 +86,7 @@ Update.args = {
   section: {
     ...Insert.args.section!,
     queryType: 'update',
-    allRowChecks: allRowChecks({ role: roleName, query: 'update' }),
+    allRowChecks,
   },
 };
 
@@ -107,7 +100,7 @@ Delete.args = {
   section: {
     ...Insert.args.section!,
     queryType: 'delete',
-    allRowChecks: allRowChecks({ role: roleName, query: 'delete' }),
+    allRowChecks,
   },
 };
 

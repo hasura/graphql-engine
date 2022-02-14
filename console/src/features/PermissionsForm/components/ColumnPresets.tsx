@@ -83,7 +83,7 @@ const PresetsRow: React.FC<PresetsRowProps> = ({
           className={className}
           placeholder="Column value"
           disabled={disabled}
-          {...register(`presets.${id}.columnValue`)}
+          {...register(`presets.${id}.value`)}
         />
       </div>
 
@@ -131,7 +131,7 @@ const useStatus = (disabled: boolean) => {
     .map(({ columnName }) => columnName)
     .filter(columnName => columnName !== 'default');
 
-  if (!columnNames.length) {
+  if (!columnNames?.length) {
     return 'No Presets';
   }
 
@@ -164,8 +164,8 @@ export const ColumnPresetsSection: React.FC<ColumnPresetsSectionProps> = ({
 
   React.useEffect(() => {
     const finalRowIsNotDefault =
-      controlledFields[controlledFields.length - 1]?.columnName !== 'default';
-    const allColumnsSet = controlledFields.length === columns.length;
+      controlledFields[controlledFields?.length - 1]?.columnName !== 'default';
+    const allColumnsSet = controlledFields?.length === columns?.length;
 
     if (finalRowIsNotDefault && !allColumnsSet) {
       append({
@@ -174,7 +174,7 @@ export const ColumnPresetsSection: React.FC<ColumnPresetsSectionProps> = ({
         columnValue: '',
       });
     }
-  }, [controlledFields, columns.length, append]);
+  }, [controlledFields, columns?.length, append]);
 
   return (
     <Collapse defaultOpen={defaultOpen}>
