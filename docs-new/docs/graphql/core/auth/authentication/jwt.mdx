@@ -381,8 +381,7 @@ When this field is set, during the verification process of JWT, the
 `iss` claim in the JWT will be checked if it is equal to the `issuer`
 field given in the configuration.
 
-See [RFC](https://tools.ietf.org/html/rfc7519#section-4.1.1) for more
-details.
+See [RFC](https://tools.ietf.org/html/rfc7519#section-4.1.1) for more details.
 
 Examples:
 
@@ -399,6 +398,19 @@ Certain providers require you to verify the `iss` claim on the JWT. To
 do that you can set this field to the appropriate value.
 
 :::
+
+:::info Note
+
+A JWT configuration without an issuer will match any issuer field present in an incoming JWT.
+
+:::
+
+:::info Note
+
+An incoming JWT without an issuer specified will match a configuration even if it specifies an issuer.
+
+:::
+
 
 ### `claims_map`
 
