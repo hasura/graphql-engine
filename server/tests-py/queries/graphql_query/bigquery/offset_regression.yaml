@@ -3,7 +3,7 @@
   status: 200
   response:
     data:
-      hasura_test_Artist:
+      hasura_Artist:
       - artist_self_id: '1000'
         albums_aggregate:
           nodes:
@@ -25,7 +25,7 @@
   query:
     query: |
       query {
-        hasura_test_Artist(order_by: {artist_self_id: asc}) {
+        hasura_Artist(order_by: {artist_self_id: asc}) {
           artist_self_id
           albums_aggregate(order_by: {album_self_id: asc}, limit: 1) {
             nodes {
@@ -43,7 +43,7 @@
   status: 200
   response:
     data:
-      hasura_test_Artist:
+      hasura_Artist:
       - artist_self_id: '1000'
         albums_aggregate:
           nodes:
@@ -74,7 +74,7 @@
   query:
     query: |
       query {
-        hasura_test_Artist(order_by: {artist_self_id: asc}) {
+        hasura_Artist(order_by: {artist_self_id: asc}) {
           artist_self_id
           albums_aggregate(order_by: {album_self_id: asc}) {
             nodes {
@@ -95,7 +95,7 @@
   status: 200
   response:
     data:
-        hasura_test_Artist:
+        hasura_Artist:
         - artist_self_id: '1000'
           albums_aggregate:
             nodes:
@@ -123,7 +123,7 @@
   query:
     query: |
       query {
-        hasura_test_Artist(order_by: {artist_self_id: asc}) {
+        hasura_Artist(order_by: {artist_self_id: asc}) {
           artist_self_id
           albums_aggregate(order_by: {album_self_id: asc}, limit: 1) {
             nodes {
@@ -144,7 +144,7 @@
   status: 200
   response:
     data:
-        hasura_test_Artist:
+        hasura_Artist:
         - artist_self_id: '1000'
           albums_aggregate:
             nodes:
@@ -172,7 +172,7 @@
   query:
     query: |
       query {
-        hasura_test_Artist(order_by: {artist_self_id: asc}) {
+        hasura_Artist(order_by: {artist_self_id: asc}) {
           artist_self_id
           albums_aggregate(order_by: {album_self_id: asc}, offset: 1) {
             nodes {

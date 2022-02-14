@@ -8,7 +8,7 @@
     args:
       source: bigquery
       table:
-        dataset: hasura_test
+        dataset: hasura
         name: article
       configuration:
         custom_root_fields:

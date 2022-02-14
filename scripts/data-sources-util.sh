@@ -92,7 +92,7 @@ function add_bigquery_source() {
                   "from_env": "HASURA_BIGQUERY_SERVICE_ACCOUNT"
                 },
                 "project_id": { "from_env": "HASURA_BIGQUERY_PROJECT_ID" },
-                "datasets": ["hasura_test"]
+                "datasets": ["hasura"]
               }
             },
             {
@@ -104,7 +104,7 @@ function add_bigquery_source() {
                   "from_env": "HASURA_BIGQUERY_SERVICE_ACCOUNT"
                 },
                 "project_id": { "from_env": "HASURA_BIGQUERY_PROJECT_ID" },
-                "datasets": ["hasura_test"]
+                "datasets": ["hasura"]
               }
             },
             {
@@ -117,7 +117,7 @@ function add_bigquery_source() {
                   "from_env": "HASURA_BIGQUERY_SERVICE_ACCOUNT"
                 },
                 "project_id": { "from_env": "HASURA_BIGQUERY_PROJECT_ID" },
-                "datasets": ["hasura_test"]
+                "datasets": ["hasura"]
               }
             }
           ]

@@ -4,8 +4,7 @@ args:
   args:
     source: bigquery
     sql: |
-      DROP TABLE IF EXISTS `hasura_test.spatial_types_geog`;
-      CREATE TABLE `hasura_test.spatial_types_geog` (
+      CREATE TABLE `hasura.spatial_types_geog` (
         `point` GEOGRAPHY,
         `linestring` GEOGRAPHY,
         `polygon` GEOGRAPHY,
@@ -14,7 +13,7 @@ args:
         `multipolygon` GEOGRAPHY,
         `geometrycollection` GEOGRAPHY
       );
-      INSERT INTO `hasura_test.spatial_types_geog` (
+      INSERT INTO `hasura.spatial_types_geog` (
         `point`,
         `linestring`,
         `polygon`,

@@ -3,7 +3,7 @@ url: /v1/graphql
 status: 200
 response:
   data:
-    hasura_test_city:
+    hasura_city:
     - name: New Orleans
       country: USA
     - name:  New York
@@ -11,7 +11,7 @@ response:
 query:
   query: |
     query {
-      hasura_test_city (
+      hasura_city (
       where: {name: {_nlike: "%ham" }},
       order_by: {name: asc}
       ) {

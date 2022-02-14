@@ -3,27 +3,27 @@ status: 200
 query:
   query: |
     query topLevelFragmentQuery {
-      hasura_test_author (order_by: {id: asc}) {
+      hasura_author (order_by: {id: asc}) {
         name
       }
       ...topLevelAuthorFieldFragment
-      hasura_test_article (order_by: {id: asc}) {
+      hasura_article (order_by: {id: asc}) {
         title
       }
       ...topLevelTitleFieldFragment
     }
 
     fragment topLevelAuthorFieldFragment on query_root {
-      hasura_test_author (order_by: {id: asc}) {
+      hasura_author (order_by: {id: asc}) {
         id
       }
     }
 
     fragment topLevelTitleFieldFragment on query_root {
-      hasura_test_author (order_by: {id: asc}) {
+      hasura_author (order_by: {id: asc}) {
         name
       }
-      hasura_test_article (order_by: {id: asc}) {
+      hasura_article (order_by: {id: asc}) {
         author {
           name
         }
@@ -31,12 +31,12 @@ query:
     }
 response:
   data:
-    hasura_test_author:
+    hasura_author:
     - name: Author 1
       id: '1'
     - name: Author 2
       id: '2'
-    hasura_test_article:
+    hasura_article:
     - title: Title 1
       author:
         name: Author 1
