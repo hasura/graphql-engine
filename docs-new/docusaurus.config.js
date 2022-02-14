@@ -78,6 +78,7 @@ const config = {
           alt: 'Hasura Logo',
           src: '/img/logo-lightbg.svg',
           srcDark: '/img/logo.svg',
+          href: 'https://hasura.io'
         },
         items: [
           {
