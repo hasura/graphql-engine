@@ -29,7 +29,7 @@ getProjectId = getEnvString Constants.bigqueryProjectIdVar
 run_ :: (HasCallStack) => ServiceAccount -> Text -> String -> IO ()
 run_ serviceAccount projectId query =
   handle (\(e :: SomeException) -> bigQueryError e query) $ do
-    conn <- initConnection serviceAccount projectId
+    conn <- initConnection serviceAccount projectId Nothing
     res <- executeBigQuery conn BigQuery {query = fromString query, parameters = mempty}
     case res of
       Left err -> bigQueryError err query
