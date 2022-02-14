@@ -8,7 +8,7 @@ import Harness.Backend.Postgres qualified as Postgres
 import Harness.Backend.Sqlserver qualified as Sqlserver
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Http qualified as Http
-import Harness.State (State, getServer)
+import Harness.State (State (State, server))
 import Test.Hspec
 import Prelude
 
@@ -21,7 +21,7 @@ spec = do
     it "Citus liveness" $ shouldReturn Citus.livenessCheck ()
   it
     "graphql-engine liveness"
-    \state ->
+    \State {server} ->
       shouldReturn
-        (Http.healthCheck (GraphqlEngine.serverUrl (getServer state)))
+        (Http.healthCheck (GraphqlEngine.serverUrl server))
         ()

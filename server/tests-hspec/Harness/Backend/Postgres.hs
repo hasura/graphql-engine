@@ -5,6 +5,7 @@ module Harness.Backend.Postgres
   ( livenessCheck,
     run_,
     defaultSourceMetadata,
+    defaultSourceConfiguration,
   )
 where
 
@@ -71,8 +72,13 @@ defaultSourceMetadata =
 name: postgres
 kind: postgres
 tables: []
-configuration:
-  connection_info:
-    database_url: *postgresqlConnectionString
-    pool_settings: {}
-  |]
+configuration: *defaultSourceConfiguration
+|]
+
+defaultSourceConfiguration :: Value
+defaultSourceConfiguration =
+  [yaml|
+connection_info:
+  database_url: *postgresqlConnectionString
+  pool_settings: {}
+|]

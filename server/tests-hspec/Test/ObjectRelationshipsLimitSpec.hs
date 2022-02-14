@@ -22,18 +22,15 @@ import Prelude
 
 spec :: SpecWith State
 spec =
-  Feature.feature
-    Feature.Feature
-      { Feature.backends =
-          [ Feature.Backend
-              { name = "Postgres",
-                setup = postgresSetup,
-                teardown = postgresTeardown,
-                backendOptions = Feature.defaultBackendOptions
-              }
-          ],
-        Feature.tests = tests
-      }
+  Feature.run
+    [ Feature.Context
+        { name = "Postgres",
+          setup = postgresSetup,
+          teardown = postgresTeardown,
+          options = Feature.defaultOptions
+        }
+    ]
+    tests
 
 --------------------------------------------------------------------------------
 
@@ -45,7 +42,7 @@ spec =
 --
 --   Because of that, we use 'shouldReturnOneOfYaml' and list all of the possible (valid)
 --   expected results.
-tests :: Feature.BackendOptions -> SpecWith State
+tests :: Feature.Options -> SpecWith State
 tests opts = do
   it "Query by id" $ \state ->
     shouldReturnOneOfYaml
@@ -270,9 +267,8 @@ VALUES
 
 postgresTrackTables :: State -> IO ()
 postgresTrackTables state = do
-  GraphqlEngine.post_
+  GraphqlEngine.postMetadata_
     state
-    "/v1/metadata"
     [yaml|
 type: pg_track_table
 args:
@@ -281,9 +277,8 @@ args:
     schema: hasura
     name: author
 |]
-  GraphqlEngine.post_
+  GraphqlEngine.postMetadata_
     state
-    "/v1/metadata"
     [yaml|
 type: pg_track_table
 args:
@@ -295,9 +290,8 @@ args:
 
 postgresCreateRelationships :: State -> IO ()
 postgresCreateRelationships state = do
-  GraphqlEngine.post_
+  GraphqlEngine.postMetadata_
     state
-    "/v1/metadata"
     [yaml|
 type: pg_create_object_relationship
 args:
@@ -319,7 +313,7 @@ args:
 
 -- ** Teardown
 
-postgresTeardown :: State -> IO ()
+postgresTeardown :: (State, ()) -> IO ()
 postgresTeardown _ = do
   Postgres.run_
     [sql|
