@@ -3,14 +3,15 @@
 import pytest
 import re
 
-
 class TestServerVersion(object):
 
     def test_version(self, hge_ctx):
         resp = hge_ctx.http.get(
             hge_ctx.hge_url + '/v1/version'
         )
+        assert resp.status_code == 200, resp
         my_json = resp.json()
+        assert isinstance(my_json, dict), my_json
         # The tree may be dirty because we're developing tests locally while
         # graphql-engine was built previously when tree was clean. If we're
         # modifying graphql-engine too then both of these will be tagged dirty,

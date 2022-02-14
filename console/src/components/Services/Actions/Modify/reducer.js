@@ -6,6 +6,12 @@ export const setModifyState = state => ({
   state,
 });
 
+const SET_ACTION_TIMEOUT = 'Actions/Add/SET_ACTION_TIMEOUT';
+export const setActionTimeout = timeout => ({
+  type: SET_ACTION_TIMEOUT,
+  timeout,
+});
+
 const SET_ACTION_HANDLER = 'Actions/Modify/SET_ACTION_HANDLER';
 export const setActionHandler = handler => ({
   type: SET_ACTION_HANDLER,
@@ -16,6 +22,12 @@ const SET_ACTION_KIND = 'Actions/Modify/SET_ACTION_KIND';
 export const setActionKind = kind => ({
   type: SET_ACTION_KIND,
   kind,
+});
+
+const SET_ACTION_COMMENT = 'Actions/Modify/SET_ACTION_COMMENT';
+export const setActionComment = comment => ({
+  type: SET_ACTION_COMMENT,
+  comment,
 });
 
 const SET_ACTION_DEFINITION = 'Actions/Modify/SET_ACTION_DEFINITION';
@@ -53,6 +65,11 @@ const reducer = (state = defaultState, action) => {
       return {
         ...action.state,
       };
+    case SET_ACTION_TIMEOUT:
+      return {
+        ...state,
+        timeout: action.timeout,
+      };
     case SET_ACTION_HANDLER:
       return {
         ...state,
@@ -62,6 +79,11 @@ const reducer = (state = defaultState, action) => {
       return {
         ...state,
         kind: action.kind,
+      };
+    case SET_ACTION_COMMENT:
+      return {
+        ...state,
+        comment: action.comment,
       };
     case SET_FETCHING:
       return {

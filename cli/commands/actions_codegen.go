@@ -4,11 +4,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/hasura/graphql-engine/cli/migrate"
-
-	"github.com/hasura/graphql-engine/cli"
-	"github.com/hasura/graphql-engine/cli/metadata/actions"
-	"github.com/hasura/graphql-engine/cli/metadata/actions/types"
+	"github.com/hasura/graphql-engine/cli/v2"
+	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/actions"
+	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/actions/types"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
@@ -32,6 +30,16 @@ func newActionsCodegenCmd(ec *cli.ExecutionContext) *cobra.Command {
   # Derive an action from a hasura operation
   hasura actions codegen [action-name] --derive-from ""`,
 		SilenceUsage: true,
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			if err := ec.SetupCodegenAssetsRepo(); err != nil {
+				return fmt.Errorf("setting up codegen-assets repo failed (this is required for automatically generating actions code): %w", err)
+			}
+			// ensure codegen-assets repo exists
+			if err := ec.CodegenAssetsRepo.EnsureCloned(); err != nil {
+				return fmt.Errorf("pulling latest actions codegen files from internet failed: %w", err)
+			}
+			return nil
+		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			opts.actions = args
 			return opts.run()
@@ -50,16 +58,11 @@ type actionsCodegenOptions struct {
 }
 
 func (o *actionsCodegenOptions) run() (err error) {
-	migrateDrv, err := migrate.NewMigrate(o.EC, true)
-	if err != nil {
-		return err
-	}
-
 	var derivePayload types.DerivePayload
 	if o.deriveFrom != "" {
 		derivePayload.Operation = strings.TrimSpace(o.deriveFrom)
 		o.EC.Spin("Deriving a Hasura operation...")
-		introSchema, err := migrateDrv.GetIntroSpectionSchema()
+		introSchema, err := o.EC.APIClient.V1Graphql.GetIntrospectionSchema()
 		if err != nil {
 			return errors.Wrap(err, "unable to fetch introspection schema")
 		}
@@ -68,7 +71,7 @@ func (o *actionsCodegenOptions) run() (err error) {
 	}
 
 	if o.EC.Config.ActionConfig.Codegen.Framework == "" {
-		return fmt.Errorf(`Could not find codegen config. For adding codegen config, run:
+		return fmt.Errorf(`could not find codegen config. For adding codegen config, run:
 
   hasura actions use-codegen`)
 	}

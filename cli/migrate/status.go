@@ -16,6 +16,8 @@ type MigrationStatus struct {
 
 	// Check if the migration is present on the local.
 	IsPresent bool `json:"source_status"`
+
+	IsDirty bool `json:"-"`
 }
 
 type Status struct {
@@ -59,16 +61,6 @@ func (i *Status) Read(version uint64) (m *MigrationStatus, ok bool) {
 		return mx, true
 	}
 	return nil, false
-}
-
-func (i *Status) findPos(version uint64) int {
-	if len(i.Index) > 0 {
-		ix := i.Index.Search(version)
-		if ix < len(i.Index) && i.Index[ix] == version {
-			return ix
-		}
-	}
-	return -1
 }
 
 type uint64Slice []uint64

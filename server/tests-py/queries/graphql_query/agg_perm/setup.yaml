@@ -1,6 +1,7 @@
 type: bulk
 args:
 
+
 - type: run_sql
   args:
     sql: |
@@ -161,6 +162,17 @@ args:
 - type: create_select_permission
   args:
     table: article
+    role: user_with_filter
+    permission:
+      columns: '*'
+      filter:
+        author_id:
+          _eq: X-Hasura-User-Id
+      allow_aggregations: true
+
+- type: create_select_permission
+  args:
+    table: article
     role: role_without_access_to_cols
     permission:
       columns: []
@@ -173,7 +185,7 @@ args:
     table: article
     role: role_with_access_to_cols
     permission:
-      columns: "*"
+      columns: '*'
       filter: {}
       allow_aggregations: true
       limit: 1

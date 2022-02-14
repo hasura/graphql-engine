@@ -3,7 +3,7 @@ url: /v1/graphql
 status: 200
 response:
   data:
-    profiles:
+    custom_profiles:
       - id: 1
         name: alice
         userScalar: alice
@@ -16,7 +16,7 @@ response:
 query:
   query: |
     query {
-      profiles {
+      custom_profiles {
         id
         name
         userScalar

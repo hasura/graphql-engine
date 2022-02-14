@@ -2,12 +2,17 @@ const { ApolloServer, ApolloError } = require('apollo-server');
 const gql = require('graphql-tag');
 const { print } = require('graphql');
 
-
 const allMessages = [
     { id: 1, name: "alice", msg: "You win!"},
     { id: 2, name: "bob", msg: "You lose!"},
     { id: 3, name: "alice", msg: "Another alice"},
 ];
+
+const data = {
+    1: { title: 'Harry Porter and the prisoner of Azkaban' },
+    2: { name: 'J.K. Rowling' },
+    3: { title: "Harry Porter and the philoshoper's stone"}
+}
 
 const typeDefs = gql`
 
@@ -27,6 +32,16 @@ const typeDefs = gql`
     name: String!
     msg: String!
     errorMsg: String
+  }
+
+  union SearchResult = Book | Author
+
+  type Book {
+    title: String
+  }
+
+  type Author {
+    name: String
   }
 
   input MessageWhereInpObj {
@@ -49,13 +64,22 @@ const typeDefs = gql`
     name: [String]
   }
 
+  enum Occupation {
+    SINGER
+    COMEDIAN
+    ARTIST
+  }
+
   type Query {
     hello: String
     messages(where: MessageWhereInpObj, includes: IncludeInpObj): [Message]
-    user(user_id: Int!): User
-    users(user_ids: [Int]!): [User]
+    user(user_id: ID!): User
+    users(user_ids: [ID]!): [User]
     message(id: Int!) : Message
     communications(id: Int): [Communication]
+    search(id: Int!): SearchResult
+    getOccupation(name: ID!): Occupation!
+    getGrade(marks: Int!): String
   }
 `;
 
@@ -116,7 +140,6 @@ const resolvers = {
             }
         }
     },
-
     Message: {
         errorMsg : () => {
             throw new ApolloError("intentional-error", "you asked for it");
@@ -190,12 +213,49 @@ const resolvers = {
             }
             return result;
         },
+        search: (_, { id }) => {
+            return data[id]
+        },
+        getOccupation: (_, { name }) => {
+            switch (name) {
+            case "alice":
+                return 'SINGER'
+            case "bob":
+                return 'ARTIST'
+            default:
+                throw new ApolloError("invalid argument - " + name, "invalid ");
+            }
+        },
+        getGrade: (_, { marks }) => {
+            if(marks > 90) {
+                return 'S'
+            }
+            else if (marks > 80) {
+                return 'A'
+            }
+            else {
+                return 'B'
+            }
+        }
     },
     Communication: {
         __resolveType(communication, context, info){
             if(communication.name) {
                 return "Message";
             }
+            return null;
+        }
+    },
+    SearchResult: {
+        __resolveType(obj, context, info) {
+            if(obj.name) {
+                return "Author";
+            }
+
+            if(obj.title) {
+                return "Book";
+            }
+
             return null;
         }
     }

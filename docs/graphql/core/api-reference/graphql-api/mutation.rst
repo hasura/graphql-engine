@@ -198,7 +198,7 @@ API Reference - Mutation
    * - inc-argument
      - false
      - incArgExp_
-     - Integer value to be incremented to Int columns in the table
+     - Integer value to be incremented to Int columns in the table (Negative integers can be used to decrement)
    * - append-argument
      - false
      - appendArgExp_
@@ -416,7 +416,7 @@ API Reference - Mutation
 
 .. note::
 
-    For more examples and details of usage, please see :ref:`this <mutations>`.
+    For more examples and details of usage, please see :ref:`this <pg_mutations>`.
 
 Syntax definitions
 ------------------
@@ -700,15 +700,6 @@ Operator
 - ``_gte``
 - ``_lte``
 
-**Operators for comparing columns (all column types except json, jsonb)**:
-
-- ``_ceq``
-- ``_cneq``
-- ``_cgt``
-- ``_clt``
-- ``_cgte``
-- ``_cnlte``
-
 **Text related operators:**
 
 - ``_like``
@@ -717,6 +708,10 @@ Operator
 - ``_nilike``
 - ``_similar``
 - ``_nsimilar``
+- ``_iregex``
+- ``_niregex``
+- ``_regex``
+- ``_nregex``
 
 **Checking for NULL values:**
 

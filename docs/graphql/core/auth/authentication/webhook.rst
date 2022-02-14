@@ -19,6 +19,7 @@ You can configure the GraphQL engine to use a webhook to authenticate all incomi
 
 .. thumbnail:: /img/graphql/core/auth/webhook-auth.png
    :alt: Authentication using webhooks
+   :width: 1000px
 
 .. admonition:: Prerequisite
    
@@ -78,19 +79,41 @@ If you configure your webhook to use ``GET``, then Hasura **will forward all cli
 POST request
 ++++++++++++
 
+POST requests will receive the contents of the request body in addition to client headers. Given a request like
+
+.. code-block:: graphql
+
+  query UserQuery($a: Int) {
+    users(where: {id: {_eq: $a}}){
+      id
+    }
+  }
+
+with variables `{"a": 1}`, the webhook will receive a request of the following form:
+
 .. code-block:: http
 
    POST https://<your-custom-webhook>/ HTTP/1.1
    Content-Type: application/json
 
    {
-    "headers": {
-        "header-key1": "header-value1",
-        "header-key2": "header-value2"
-      }
+     "headers": {
+       "header-key1": "header-value1",
+       "header-key2": "header-value2"
+     },
+     "request": {
+       "variables": {
+         "a": 1
+       },
+       "operationName": "UserQuery",
+       "query": "query UserQuery($a:  Int) {\n  users(where:  {id:  {_eq:  $a}}){\n    id\n  }\n}\n"
+     }
    }
 
 If you configure your webhook to use ``POST``, then Hasura **will send all client headers in payload**.
+
+.. note::
+   If an invalid JSON request is sent, then the request body is not forwarded to the webhook
 
 .. _webhook_response:
 
@@ -148,8 +171,9 @@ There is no default timeout on the resulting connection. You can optionally add 
        "Expires": "Mon, 30 Mar 2020 13:25:18 GMT"
    }
 
+.. note::
 
-
+  If the `Set-Cookie` headers are set by the auth webhook, they are forwarded by the GraphQL Engine as response headers for both GET/POST request methods.
 
 Failure
 +++++++
@@ -185,3 +209,7 @@ Once deployed, you can use any of the following endpoints as your auth webhook i
 .. note::
 
    If you are using ``Firebase``, you will have to set the associated environment variables.
+
+.. admonition:: Additional Resources
+
+  Enterprise Grade Authorization - `Watch Webinar <https://hasura.io/events/webinar/authorization-modeling-hasura/?pg=docs&plcmt=body&cta=watch-webinar&tech=>`__.

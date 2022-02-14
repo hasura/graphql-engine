@@ -1,17 +1,15 @@
 package console
 
 import (
+	"embed"
 	"fmt"
 	"html/template"
-	"io/ioutil"
 	"regexp"
 
 	"github.com/pkg/errors"
 
 	"github.com/gin-gonic/contrib/renders/multitemplate"
-	_ "github.com/hasura/graphql-engine/cli/pkg/console/templates/packed"
-	"github.com/hasura/graphql-engine/cli/version"
-	"github.com/markbates/pkger"
+	"github.com/hasura/graphql-engine/cli/v2/version"
 )
 
 const (
@@ -43,18 +41,21 @@ type TemplateProvider interface {
 	// > v1.2.1-rc.03    -> rc/v1.2
 	// > v1.1.0          -> stable/v1.1
 	GetAssetsVersion(v *version.Version) string
+	GetAssetsCDN() string
 }
 
 // DefaultTemplateProvider implements the github.com/hasura/graphl-engine/cli/pkg/templates.DefaultTemplateProvider interface
 type DefaultTemplateProvider struct {
 	basePath         string
 	templateFileName string
+	consoleFS        embed.FS
 }
 
-func NewDefaultTemplateProvider(basePath, templateFilename string) *DefaultTemplateProvider {
+func NewDefaultTemplateProvider(basePath, templateFilename string, consoleFS embed.FS) *DefaultTemplateProvider {
 	return &DefaultTemplateProvider{
 		basePath:         basePath,
 		templateFileName: templateFilename,
+		consoleFS:        consoleFS,
 	}
 }
 
@@ -68,7 +69,7 @@ func (p *DefaultTemplateProvider) TemplateFilename() string {
 
 // DoTemplateExist returns true if an asset exists at pathk
 func (p *DefaultTemplateProvider) DoTemplateExist(path string) bool {
-	_, err := pkger.Stat(path)
+	_, err := p.consoleFS.ReadFile(path)
 	return err == nil
 }
 
@@ -76,24 +77,15 @@ func (p *DefaultTemplateProvider) LoadTemplates(path string, templateNames ...st
 	r := multitemplate.New()
 
 	for _, templateName := range templateNames {
-		templateFile, err := pkger.Open(path + templateName)
+		templatePath := path + templateName
+		templateBytes, err := p.consoleFS.ReadFile(templatePath)
 		if err != nil {
-			return nil, errors.Wrap(err, "error opening file "+path+templateName)
+			return nil, errors.Wrap(err, "error reading from file "+templatePath)
 		}
-		templateBytes, err := ioutil.ReadAll(templateFile)
-		if err != nil {
-			return nil, errors.Wrap(err, "error reading from file "+path+templateName)
-		}
-
 		theTemplate, err := template.New(templateName).Parse(string(templateBytes))
 		if err != nil {
 			return nil, errors.Wrap(err, "error creating template"+path+templateName)
 		}
-		err = templateFile.Close()
-		if err != nil {
-			return nil, err
-		}
-
 		r.Add(templateName, theTemplate)
 	}
 
@@ -134,10 +126,12 @@ func (p *DefaultTemplateProvider) GetAssetsVersion(v *version.Version) string {
 			preRelease := v.ServerSemver.Prerelease()
 			channel := "stable"
 			if preRelease != "" {
-				// Get the correct channel from the prerelease tag
 				var re = regexp.MustCompile(`^[a-z]+`)
 				tag := re.FindString(preRelease)
-				if tag != "" {
+				// cloud and pro will be tagged like v2.0.0-cloud.9
+				// so, tag will be set as cloud/pro
+				// then assets should be loaded from stable channel
+				if tag != "" && tag != "cloud" && tag != "pro" {
 					channel = tag
 				}
 			}
@@ -148,4 +142,8 @@ func (p *DefaultTemplateProvider) GetAssetsVersion(v *version.Version) string {
 	}
 	// server doesn't have a version - very old server :(
 	return preReleaseVersion
+}
+
+func (p *DefaultTemplateProvider) GetAssetsCDN() string {
+	return "https://graphql-engine-cdn.hasura.io/console/assets"
 }

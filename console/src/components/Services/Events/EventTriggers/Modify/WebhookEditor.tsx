@@ -1,9 +1,8 @@
 import React from 'react';
 import Editor from '../../../../Common/Layout/ExpandableEditor/Editor';
-import DropdownButton from '../../../../Common/DropdownButton/DropdownButton';
 import { EventTrigger, URLConf, VoidCallback } from '../../types';
-import Tooltip from '../../../../Common/Tooltip/Tooltip';
 import { parseServerWebhook } from '../../utils';
+import DebouncedDropdownInput from '../Common/DropdownWrapper';
 
 type WebhookEditorProps = {
   currentTrigger: EventTrigger;
@@ -33,8 +32,7 @@ const WebhookEditor = (props: WebhookEditorProps) => {
     });
   };
 
-  const handleWebhookValueChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
+  const handleWebhookValueChange = (value: string) => {
     setWebhook({
       type: webhook.type,
       value,
@@ -42,18 +40,18 @@ const WebhookEditor = (props: WebhookEditorProps) => {
   };
 
   const collapsed = () => (
-    <div className={styles.modifyProperty}>
+    <>
       <p>
         {existingWebhook.value}
         &nbsp;
       </p>
       <i>{existingWebhook.type === 'env' && '- from env'}</i>
-    </div>
+    </>
   );
 
   const expanded = () => (
     <div className={styles.modifyWhDropdownWrapper}>
-      <DropdownButton
+      <DebouncedDropdownInput
         dropdownOptions={[
           { display_text: 'URL', value: 'static' },
           { display_text: 'From env var', value: 'env' },
@@ -61,10 +59,10 @@ const WebhookEditor = (props: WebhookEditorProps) => {
         title={webhook.type === 'env' ? 'From env var' : 'URL'}
         dataKey={webhook.type === 'env' ? 'env' : 'static'}
         onButtonChange={handleWebhookTypeChange}
-        onInputChange={handleWebhookValueChange}
+        onHandlerValChange={handleWebhookValueChange}
         required
         bsClass={styles.dropdown_button}
-        inputVal={webhook.value}
+        handlerVal={webhook.value}
         id="webhook-url"
         inputPlaceHolder={
           webhook.type === 'env' ? 'MY_WEBHOOK_URL' : 'http://httpbin.org/post'
@@ -83,7 +81,7 @@ const WebhookEditor = (props: WebhookEditorProps) => {
     <div className={`${styles.container} ${styles.borderBottom}`}>
       <div className={styles.modifySection}>
         <h4 className={styles.modifySectionHeading}>
-          Webhook URL <Tooltip message="Edit your webhook URL" />
+          Webhook (HTTP/S) Handler
         </h4>
         <Editor
           editorCollapsed={collapsed}

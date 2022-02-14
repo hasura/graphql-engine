@@ -2,10 +2,10 @@
    :description: Manage event triggers with the Hasura schema/metadata API
    :keywords: hasura, docs, schema/metadata API, API reference, event trigger
 
-.. _api_event_triggers:
+.. _schema_metadata_api_event_triggers:
 
-Schema/Metadata API Reference: Event Triggers
-=============================================
+Schema/Metadata API Reference: Event Triggers (Deprecated)
+==========================================================
 
 .. contents:: Table of contents
   :backlinks: none
@@ -17,7 +17,14 @@ Introduction
 
 Event triggers are used to capture database changes and send them to a configured webhook.
 
-.. _create_event_trigger:
+.. admonition:: Deprecation
+
+  In versions ``v2.0.0`` and above, the schema/metadata API is deprecated in favour of the :ref:`schema API <schema_apis>` and the
+  :ref:`metadata API <metadata_apis>`.
+
+  Though for backwards compatibility, the schema/metadata APIs will continue to function.
+
+.. _schema_metadata_create_event_trigger:
 
 create_event_trigger
 --------------------
@@ -64,7 +71,7 @@ create_event_trigger
        }
    }
 
-.. _create_event_trigger_syntax:
+.. _schema_metadata_create_event_trigger_syntax:
 
 Args syntax
 ^^^^^^^^^^^
@@ -94,15 +101,15 @@ Args syntax
      - Environment variable name of webhook (must exist at boot time) (*)
    * - insert
      - false
-     - OperationSpec_
+     - :ref:`OperationSpec`
      - Specification for insert operation
    * - update
      - false
-     - OperationSpec_
+     - :ref:`OperationSpec`
      - Specification for update operation
    * - delete
      - false
-     - OperationSpec_
+     - :ref:`OperationSpec`
      - Specification for delete operation
    * - headers
      - false
@@ -110,7 +117,7 @@ Args syntax
      - List of headers to be sent with the webhook
    * - retry_conf
      - false
-     - RetryConf_
+     - :ref:`RetryConf`
      - Retry configuration if event delivery fails
    * - replace
      - false
@@ -123,7 +130,7 @@ Args syntax
 
 (*) Either ``webhook`` or ``webhook_from_env`` are required.
 
-.. _delete_event_trigger:
+.. _schema_metadata_delete_event_trigger:
 
 delete_event_trigger
 --------------------
@@ -143,7 +150,7 @@ delete_event_trigger
        }
    }
 
-.. _delete_event_trigger_syntax:
+.. _schema_metadata_delete_event_trigger_syntax:
 
 Args syntax
 ^^^^^^^^^^^
@@ -161,7 +168,7 @@ Args syntax
      - Name of the event trigger
 
 
-.. _redeliver_event:
+.. _schema_metadata_redeliver_event:
 
 redeliver_event
 ---------------
@@ -183,7 +190,7 @@ If the event fails to deliver, it will be retried automatically according to its
        }
    }
 
-.. _redeliver_event_syntax:
+.. _schema_metadata_redeliver_event_syntax:
 
 Args syntax
 ^^^^^^^^^^^
@@ -201,7 +208,7 @@ Args syntax
      - UUID of the event
 
 
-.. _invoke_event_trigger:
+.. _schema_metadata_invoke_event_trigger:
 
 invoke_event_trigger
 --------------------
@@ -222,7 +229,7 @@ invoke_event_trigger
        }
    }
 
-.. _invoke_event_trigger_syntax:
+.. _schema_metadata_invoke_event_trigger_syntax:
 
 Args syntax
 ^^^^^^^^^^^
@@ -242,68 +249,3 @@ Args syntax
      - true
      - JSON
      - Some JSON payload to send to trigger
-
-.. _TriggerName:
-
-TriggerName
-&&&&&&&&&&&
-
-.. parsed-literal::
-
-  String
-
-.. _OperationSpec:
-
-OperationSpec
-&&&&&&&&&&&&&
-
-.. list-table::
-   :header-rows: 1
-
-   * - Key
-     - Required
-     - Schema
-     - Description
-   * - columns
-     - true
-     - EventTriggerColumns_
-     - List of columns or "*" to listen to changes
-   * - payload
-     - false
-     - EventTriggerColumns_
-     - List of columns or "*" to send as part of webhook payload
-
-.. _EventTriggerColumns:
-
-EventTriggerColumns
-&&&&&&&&&&&&&&&&&&&
-
-.. parsed-literal::
-   :class: haskell-pre
-
-   "*" | [:ref:`PGColumn`]
-
-.. _RetryConf:
-
-RetryConf
-&&&&&&&&&
-
-.. list-table::
-   :header-rows: 1
-
-   * - Key
-     - required
-     - Schema
-     - Description
-   * - num_retries
-     - false
-     - Integer
-     - Number of times to retry delivery. Default: 0
-   * - interval_sec
-     - false
-     - Integer
-     - Number of seconds to wait between each retry. Default: 10
-   * - timeout_sec
-     - false
-     - Integer
-     - Number of seconds to wait for response before timing out. Default: 60

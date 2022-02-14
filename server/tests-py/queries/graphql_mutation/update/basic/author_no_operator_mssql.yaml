@@ -1,0 +1,14 @@
+description: Update author mutation without any update operators should result in empty mutation response
+url: /v1/graphql
+status: 200
+query:
+  query: |
+    mutation {
+      update_author(where: {id: {_eq: 1}}){
+        affected_rows
+      }
+    }
+response:
+  data:
+    update_author:
+      affected_rows: 0

@@ -1,0 +1,138 @@
+type: bulk
+args:
+  # Track tables
+  - type: mssql_track_table
+    args:
+      source: mssql
+      table:
+        name: author
+  - type: mssql_track_table
+    args:
+      source: mssql
+      table:
+        name: article
+
+  # Permissions for user on article
+  - type: mssql_create_insert_permission
+    args:
+      source: mssql
+      table:
+        name: article
+      role: user
+      permission:
+        check:
+          author_id: X-Hasura-User-Id
+        columns:
+        - title
+        - content
+        - author_id
+
+  # Permissions for user_with_select_and_insert on article
+  - type: mssql_create_insert_permission
+    args:
+      source: mssql
+      table:
+        name: article
+      role: user_with_select_and_insert
+      permission:
+        check:
+          author_id: X-Hasura-User-Id
+        columns: '*'
+  - type: mssql_create_select_permission
+    args:
+      source: mssql
+      table: article
+      role: user_with_select_and_insert
+      permission:
+        columns: '*'
+        filter:
+          $or:
+            - author_id: X-Hasura-User-Id
+            - is_published: 1
+
+  # Permissions for user_with_update_and_insert on article
+  - type: mssql_create_insert_permission
+    args:
+      source: mssql
+      table:
+        name: article
+      role: user_with_update_and_insert
+      permission:
+        check:
+          author_id: X-Hasura-User-Id
+        columns: '*'
+  - type: mssql_create_update_permission
+    args:
+      source: mssql
+      table:
+        name: article
+      role: user_with_update_and_insert
+      permission:
+        filter:
+          author_id: X-Hasura-User-Id
+        columns: '*'
+
+  # Permissions for user_with_all_perms on article
+  - type: mssql_create_select_permission
+    args:
+      source: mssql
+      table: article
+      role: user_with_all_perms
+      permission:
+        columns: '*'
+        filter:
+          $or:
+            - author_id: X-Hasura-User-Id
+            - is_published: 1
+  - type: mssql_create_insert_permission
+    args:
+      source: mssql
+      table:
+        name: article
+      role: user_with_all_perms
+      permission:
+        check:
+          author_id: X-Hasura-User-Id
+        columns: '*'
+  - type: mssql_create_update_permission
+    args:
+      source: mssql
+      table:
+        name: article
+      role: user_with_all_perms
+      permission:
+        filter:
+          author_id: X-Hasura-User-Id
+        columns: '*'
+
+  # Permissions for restricted on article
+  - type: mssql_create_select_permission
+    args:
+      source: mssql
+      table: article
+      role: restricted
+      permission:
+        columns: '*'
+        filter:
+          $or:
+            - author_id: X-Hasura-User-Id
+            - is_published: 1
+  - type: mssql_create_insert_permission
+    args:
+      source: mssql
+      table:
+        name: article
+      role: restricted
+      permission:
+        check:
+          author_id: X-Hasura-User-Id
+  - type: mssql_create_update_permission
+    args:
+      source: mssql
+      table:
+        name: article
+      role: restricted
+      permission:
+        filter:
+          author_id: X-Hasura-User-Id
+        columns: []

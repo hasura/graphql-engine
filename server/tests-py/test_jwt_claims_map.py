@@ -1,12 +1,14 @@
 import pytest
 import jwt
 import math
-import ruamel.yaml as yaml
 import json
 
 from validate import check_query
 from datetime import datetime, timedelta
 from context import PytestConf
+from ruamel.yaml import YAML
+
+yaml=YAML(typ='safe', pure=True)
 
 if not PytestConf.config.getoption('--hge-jwt-key-file'):
     pytest.skip('--hge-jwt-key-file is missing, skipping JWT tests', allow_module_level=True)
@@ -59,7 +61,7 @@ class TestJWTClaimsMapBasic():
 
     def test_jwt_claims_map_valid_claims_success(self, hge_ctx, endpoint):
         self.mk_claims('1', ['user', 'editor'], 'user')
-        token = jwt.encode(self.claims, hge_ctx.hge_jwt_key, algorithm='RS512').decode('utf-8')
+        token = jwt.encode(self.claims, hge_ctx.hge_jwt_key, algorithm=hge_ctx.hge_jwt_algo)
         self.conf['headers']['Authorization'] = 'Bearer ' + token
         self.conf['url'] = endpoint
         self.conf['status'] = 200
@@ -67,7 +69,7 @@ class TestJWTClaimsMapBasic():
 
     def test_jwt_claims_map_invalid_role_in_request_header(self, hge_ctx, endpoint):
         self.mk_claims('1', ['contractor', 'editor'], 'contractor')
-        token = jwt.encode(self.claims, hge_ctx.hge_jwt_key, algorithm='RS512').decode('utf-8')
+        token = jwt.encode(self.claims, hge_ctx.hge_jwt_key, algorithm=hge_ctx.hge_jwt_algo)
         self.conf['headers']['Authorization'] = 'Bearer ' + token
         self.conf['response'] = {
             'errors': [{
@@ -88,7 +90,7 @@ class TestJWTClaimsMapBasic():
     def test_jwt_claims_map_no_allowed_roles_in_claim(self, hge_ctx, endpoint):
         self.mk_claims('1', None, 'user')
         default_allowed_roles = hge_ctx.hge_jwt_conf_dict['claims_map']['x-hasura-allowed-roles'].get('default')
-        token = jwt.encode(self.claims, hge_ctx.hge_jwt_key, algorithm='RS512').decode('utf-8')
+        token = jwt.encode(self.claims, hge_ctx.hge_jwt_key, algorithm=hge_ctx.hge_jwt_algo)
         self.conf['headers']['Authorization'] = 'Bearer ' + token
         if default_allowed_roles is None:
             self.conf['response'] = {
@@ -112,7 +114,7 @@ class TestJWTClaimsMapBasic():
 
     def test_jwt_claims_map_invalid_allowed_roles_in_claim(self, hge_ctx, endpoint):
         self.mk_claims('1', 'user', 'user')
-        token = jwt.encode(self.claims, hge_ctx.hge_jwt_key, algorithm='RS512').decode('utf-8')
+        token = jwt.encode(self.claims, hge_ctx.hge_jwt_key, algorithm=hge_ctx.hge_jwt_algo)
         self.conf['headers']['Authorization'] = 'Bearer ' + token
         self.conf['response'] = {
             'errors': [{
@@ -136,7 +138,7 @@ class TestJWTClaimsMapBasic():
         # be used for the `x-hasura-default-role` claim
         default_default_role = hge_ctx.hge_jwt_conf_dict['claims_map']['x-hasura-default-role'].get('default')
         self.mk_claims('1', ['user'])
-        token = jwt.encode(self.claims, hge_ctx.hge_jwt_key, algorithm='RS512').decode('utf-8')
+        token = jwt.encode(self.claims, hge_ctx.hge_jwt_key, algorithm=hge_ctx.hge_jwt_algo)
         self.conf['headers']['Authorization'] = 'Bearer ' + token
         if default_default_role is None:
             self.conf['response'] = {
@@ -160,7 +162,7 @@ class TestJWTClaimsMapBasic():
     def test_jwt_claims_map_claim_not_found(self, hge_ctx, endpoint):
         default_user_id = hge_ctx.hge_jwt_conf_dict['claims_map']['x-hasura-user-id'].get('default')
         self.mk_claims(None, ['user', 'editor'], 'user')
-        token = jwt.encode(self.claims, hge_ctx.hge_jwt_key, algorithm='RS512').decode('utf-8')
+        token = jwt.encode(self.claims, hge_ctx.hge_jwt_key, algorithm=hge_ctx.hge_jwt_algo)
         self.conf['headers']['Authorization'] = 'Bearer ' + token
         if default_user_id is None:
             self.conf['response'] = {
@@ -185,7 +187,7 @@ class TestJWTClaimsMapBasic():
     def transact(self, setup):
         self.dir = 'queries/graphql_query/permissions'
         with open(self.dir + '/user_select_query_unpublished_articles.yaml') as c:
-            self.conf = yaml.safe_load(c)
+            self.conf = yaml.load(c)
         curr_time = datetime.now()
         exp_time = curr_time + timedelta(hours=1)
         self.claims = {
@@ -217,7 +219,7 @@ class TestJWTClaimsMapWithStaticHasuraClaimsMapValues():
 
     def test_jwt_claims_map_valid_claims_success(self, hge_ctx, endpoint):
         self.mk_claims('1')
-        token = jwt.encode(self.claims, hge_ctx.hge_jwt_key, algorithm='RS512').decode('utf-8')
+        token = jwt.encode(self.claims, hge_ctx.hge_jwt_key, algorithm=hge_ctx.hge_jwt_algo)
         self.conf['headers']['Authorization'] = 'Bearer ' + token
         self.conf['headers']['x-hasura-custom-header'] = 'custom-value'
         self.conf['url'] = endpoint
@@ -226,7 +228,7 @@ class TestJWTClaimsMapWithStaticHasuraClaimsMapValues():
 
     def test_jwt_claims_map_invalid_role_in_request_header(self, hge_ctx, endpoint):
         self.mk_claims('1')
-        token = jwt.encode(self.claims, hge_ctx.hge_jwt_key, algorithm='RS512').decode('utf-8')
+        token = jwt.encode(self.claims, hge_ctx.hge_jwt_key, algorithm=hge_ctx.hge_jwt_algo)
         self.conf['headers']['Authorization'] = 'Bearer ' + token
         self.conf['headers']['X-Hasura-Role'] = 'random_string'
         self.conf['response'] = {
@@ -247,7 +249,7 @@ class TestJWTClaimsMapWithStaticHasuraClaimsMapValues():
 
     def test_jwt_claims_map_claim_not_found(self, hge_ctx, endpoint):
         self.mk_claims(None)
-        token = jwt.encode(self.claims, hge_ctx.hge_jwt_key, algorithm='RS512').decode('utf-8')
+        token = jwt.encode(self.claims, hge_ctx.hge_jwt_key, algorithm=hge_ctx.hge_jwt_algo)
         self.conf['headers']['Authorization'] = 'Bearer ' + token
         self.conf['response'] = {
             'errors': [{
@@ -269,7 +271,7 @@ class TestJWTClaimsMapWithStaticHasuraClaimsMapValues():
     def transact(self, setup):
         self.dir = 'queries/graphql_query/permissions'
         with open(self.dir + '/user_select_query_unpublished_articles.yaml') as c:
-            self.conf = yaml.safe_load(c)
+            self.conf = yaml.load(c)
         curr_time = datetime.now()
         exp_time = curr_time + timedelta(hours=1)
         self.claims = {

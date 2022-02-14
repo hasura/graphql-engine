@@ -14,7 +14,9 @@ Hasura GraphQL Engine Documentation
   :depth: 1
   :local:
 
-The Hasura GraphQL engine makes your data instantly accessible over a real-time GraphQL API, so you can build and ship modern apps and APIs faster. Hasura connects to your databases, REST servers, GraphQL servers, and third party APIs to provide a unified realtime GraphQL API across all your data sources.
+The Hasura GraphQL engine makes your data instantly accessible over a real-time GraphQL API, so you can build and
+ship modern apps and APIs faster. Hasura connects to your databases, REST servers, GraphQL servers, and third party
+APIs to provide a unified real-time GraphQL API across all your data sources.
 
 .. container:: toc-list
   
@@ -27,10 +29,10 @@ The Hasura GraphQL engine makes your data instantly accessible over a real-time 
     .. container:: toc-list-content
 
       - :ref:`getting_started`
-      - :ref:`schema`
-      - :ref:`queries`
-      - :ref:`mutations`
-      - :ref:`subscriptions`
+      - :ref:`pg_schema`
+      - :ref:`pg_queries`
+      - :ref:`pg_mutations`
+      - :ref:`pg_subscriptions`
 
   .. container:: toc-list-section
 
@@ -63,13 +65,14 @@ The Hasura GraphQL engine makes your data instantly accessible over a real-time 
 
     .. container:: toc-list-head
 
-      Migrate & Deploy
+      CI/CD & Deployments
 
     .. container:: toc-list-content
 
       - :ref:`Migrations basics <migrations>`
       - :ref:`Setting Up Migrations <migrations_setup>`
       - :ref:`Managing Metadata <manage_hasura_metadata>`
+      - :ref:`Server configuration <hge_flags>`
       - :ref:`Deploy Using Hasura Cloud <cloud_docs>`
       - :ref:`Deploy Using Docker <deployment_docker>`
       - :ref:`Deploy Using Kubernetes <deploy_kubernetes>`
@@ -86,6 +89,7 @@ The Hasura GraphQL engine makes your data instantly accessible over a real-time 
       - :ref:`api_reference`
       - :ref:`How It Works <how_it_works>`
       - :ref:`Troubleshooting <troubleshooting>`
+      - :ref:`FAQs <faq>`
       - :ref:`security_protocol`
 
   .. container:: toc-list-section
@@ -99,6 +103,7 @@ The Hasura GraphQL engine makes your data instantly accessible over a real-time 
       - `30-Minute Hasura Basics Course <https://hasura.io/learn/graphql/hasura/introduction/>`__
       - `GraphQL & Hasura Courses <https://hasura.io/learn/>`__
       - :ref:`Guides & Resources <guides>`
+      - :ref:`Updating to Hasura v2 <upgrade_hasura_v2>`
 
 
 .. toctree::
@@ -107,10 +112,7 @@ The Hasura GraphQL engine makes your data instantly accessible over a real-time 
   :hidden:
 
   getting-started/index
-  schema/index
-  queries/index
-  mutations/index
-  subscriptions/index
+  databases/index
   actions/index
   remote-schemas/index
   event-triggers/index
@@ -122,5 +124,6 @@ The Hasura GraphQL engine makes your data instantly accessible over a real-time 
   API Reference <api-reference/index>
   How It Works <how-it-works/index>
   Troubleshooting <troubleshooting/index>
+  FAQs <faq/index>
   guides/index
-  security-disclosure/index
+  security-disclosure/index 

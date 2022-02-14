@@ -1,5 +1,4 @@
 import React from 'react';
-import styles from './CollapsibleToggle.scss';
 /**
  *  Accepts following props
  *    `title, string || react-element `: Title of the collapsible toggle
@@ -13,7 +12,7 @@ interface CollapsibleToggleProps {
   title: React.ReactNode;
   isOpen?: boolean;
   toggleHandler?: () => void;
-  testId: string;
+  testId?: string;
   useDefaultTitleStyle?: boolean;
 }
 
@@ -57,9 +56,7 @@ class CollapsibleToggle extends React.Component<
       let resultTitle;
 
       if (useDefaultTitleStyle) {
-        resultTitle = (
-          <div className={styles.defaultCollapsibleTitle}>{title}</div>
-        );
+        resultTitle = <div className="font-semibold">{title}</div>;
       } else {
         resultTitle = title;
       }
@@ -67,33 +64,28 @@ class CollapsibleToggle extends React.Component<
       return resultTitle;
     };
 
-    const getChildren = () => {
-      return <div className={styles.collapsibleContent}>{children}</div>;
-    };
-
     return (
-      <div className={styles.collapsibleWrapper}>
-        <div
-          className={styles.collapsibleToggle}
+      <details
+        onToggle={(event: React.ChangeEvent<HTMLDetailsElement>) => {
+          // it gets called on mount if open=true, so we check if we really need to call handler
+          if (event.target.open !== isOpen) {
+            toggleHandler();
+          }
+        }}
+        open={isOpen}
+      >
+        <summary
+          className="cursor-pointer inline-block items-center"
           data-test={testId}
-          onClick={toggleHandler}
-          onKeyDown={toggleHandler}
-          role="button"
-          tabIndex={0}
         >
-          <span className={styles.collapsibleIndicatorWrapper}>
-            <i
-              className={`fa fa-chevron-right ${styles.collapsibleIndicator} ${
-                isOpen && styles.collapsibleIndicatorOpen
-              }`}
-            />
+          <span className="inline-block text-xs mr-sm">
+            <i className={`fa fa-chevron-right ${isOpen && 'rotate-90'}`} />
           </span>
 
-          <span className={styles.titleWrapper}>{getTitle()}</span>
-        </div>
-
-        {isOpen && getChildren()}
-      </div>
+          <span className="inline-block">{getTitle()}</span>
+        </summary>
+        <div className="mt-sm">{children}</div>
+      </details>
     );
   }
 }

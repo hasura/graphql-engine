@@ -1,0 +1,9 @@
+type: run_sql
+args:
+  sql: |
+    CREATE TABLE authors (
+      id SERIAL PRIMARY KEY,
+      name text
+    );
+
+    INSERT INTO AUTHORS (name) VALUES ('J.K.Rowling'), ('Paulo Coelho');

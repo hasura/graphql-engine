@@ -1,4 +1,4 @@
-import { ADMIN_SECRET_HEADER_KEY } from '../../src/constants';
+import { ADMIN_SECRET_HEADER_KEY } from './constants';
 
 export const baseUrl = Cypress.config('baseUrl');
 export const queryTypes = ['insert', 'update', 'delete'];

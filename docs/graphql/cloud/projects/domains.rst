@@ -49,7 +49,14 @@ After adding a custom domain, the following window will show up:
    :alt: DNS settings
    :width: 727px
 
-If you haven't already done so, add the default Hasura domain as a ``CNAME`` record to your DNS.
+Add the default Hasura domain as a ``CNAME`` record to your DNS.
+
+.. note::
+
+   If you're using `Cloudflare <https://www.cloudflare.com>`_ as your DNS provider,
+   do not enable the proxy (orange cloud) until the certificate is generated.
+   i.e. ``Proxy status`` should be ``DNS only``. You can enable the proxy after 
+   SSL certificate is generated.
 
 Until this is done, the dashboard will show a notice that the DNS validation is pending. 
 

@@ -1,0 +1,11 @@
+- description: call the new custom endpoint with the wrong role
+  url: /api/rest/simple
+  headers:
+    X-Hasura-Role: user
+  method: GET
+  status: 400
+  query:
+  response:
+    path: $.selectionSet.test_table
+    error: "field \"test_table\" not found in type: 'query_root'"
+    code: validation-failed

@@ -15,55 +15,50 @@ Hasura GraphQL engine on Azure with Container Instances and Postgres
 Introduction
 ------------
 
-This guide talks about how to deploy the Hasura GraphQL engine on `Azure
-<https://azure.microsoft.com>`__ using `Container Instances
-<https://azure.microsoft.com/en-us/services/container-instances/>`__ with `Azure
-Database for PostgreSQL server <https://azure.microsoft.com/en-us/services/postgresql/>`__.
+This guide walks you through deploying the Hasura GraphQL engine on `Azure    <https://azure.microsoft.com>`__ using `Container Instances
+<https://azure.microsoft.com/en-us/services/container-instances/>`__ with `Azure Database for PostgreSQL server <https://azure.microsoft.com/en-us/services/postgresql/>`__.
 
-One-click deploy using ARM Template
------------------------------------
+One-click deployment using ARM Template
+---------------------------------------
 
-All resources mentioned in this guide can be deployed using the one-click button below.
-
+You can deploy all the resources mentioned in this guide with the one-click button below.
 
 .. rst-class:: api_tabs
 .. tabs::
 
   .. tab:: With a new Postgres Server
 
-     .. image:: https://azuredeploy.net/deploybutton.png
+     .. image:: /img/graphql/core/deployment/deploybutton.png
        :width: 200px
        :alt: azure_deploy_button_new_pg
        :class: no-shadow
        :target: https://portal.azure.com/#create/Microsoft.Template/uri/https%3a%2f%2fraw.githubusercontent.com%2fhasura%2fgraphql-engine%2fstable%2finstall-manifests%2fazure-container-with-pg%2fazuredeploy.json
      
-     (This button takes you to the Azure Portal, you might want to :kbd:`Ctrl+Click` to
+     (This button takes you to the Azure Portal. You might want to :kbd:`Ctrl+Click` to
      open it in a new tab. Read more about this Resource Manager Template `here <https://github.com/hasura/graphql-engine/tree/stable/install-manifests/azure-container-with-pg>`__).
 
   .. tab:: With an existing Postgres Server
 
-     .. image:: https://azuredeploy.net/deploybutton.png
+     .. image:: /img/graphql/core/deployment/deploybutton.png
        :width: 200px
        :alt: azure_deploy_button_existing_pg
        :class: no-shadow
        :target: https://portal.azure.com/#create/Microsoft.Template/uri/https%3a%2f%2fraw.githubusercontent.com%2fhasura%2fgraphql-engine%2fstable%2finstall-manifests%2fazure-container%2fazuredeploy.json
      
-     (This button takes you to the Azure Portal, you might want to :kbd:`Ctrl+Click` to
+     (This button takes you to the Azure Portal. You might want to :kbd:`Ctrl+Click` to
      open it in a new tab. Read more about this Resource Manager Template `here <https://github.com/hasura/graphql-engine/tree/stable/install-manifests/azure-container>`__).
 
 
 Pre-requisites
 --------------
 
-- Valid Azure Subscription with billing enabled or credits (`click
+- Valid Azure subscription with billing enabled or credits (`click
   here <https://azure.microsoft.com/en-us/free/>`__ for a free trial).
 - `Azure CLI <https://docs.microsoft.com/en-us/cli/azure/install-azure-cli>`__.
 
-The actions mentioned below can be executed using the Azure Portal and the Azure CLI. But,
-for the sake of simplicity in documentation, we are going to use Azure CLI, so
-that commands can be easily copy-pasted and executed.
+The actions mentioned below can be executed using the Azure Portal and the Azure CLI. But for the sake of simplicity in documentation, we are using Azure CLI; so that commands can be easily copy-pasted and executed.
 
-Once the CLI is installed, login to your Azure account:
+Once you install the ``CLI``, login to your Azure account:
 
 .. code-block:: bash
 
@@ -72,9 +67,7 @@ Once the CLI is installed, login to your Azure account:
 Create a new Resource Group
 ---------------------------
 
-As the name suggestes, Resource Groups are used to group together various
-resources on Azure. We'll create a resource group called ``hasura`` at the
-``westus`` location.
+The Resource Groups are used to group various resources on Azure. Create a resource group called ``hasura`` at the ``westus`` location.
 
 .. code-block:: bash
 
@@ -85,10 +78,9 @@ Provision a PostgreSQL server
 
 .. note::
 
-   If you already have a database setup, you can skip these steps and jump
-   directly to :ref:`azure_allow_access`.
+   If you already have a database setup, you can skip these steps and jump directly to :ref:`azure_allow_access`.
 
-Once the resource group is created, we create a Postgres server instance:
+After you create the resource group, create a Postgres server instance:
 
 .. code-block:: bash
 
@@ -102,12 +94,10 @@ Once the resource group is created, we create a Postgres server instance:
 
 .. note::
 
-   Choose a unique name for ``<server_name>``. Also choose a strong password for
-   ``<server_admin_password>``, including uppercase, lowercase and numeric characters.
-   This will be required later to connect to the database
-   (make sure you escape the special characters depending on your shell).
+   - Choose a unique name for ``<server_name>`` variable.
+   - Select a strong password for the ``<server_admin_password>`` variable, that must include  uppercase, lowercase, and numeric characters. You will need the password later to connect to the database. (make sure you escape the special characters depending on your shell).
 
-Note down the hostname. It will be shown as below in the output:
+Note the hostname in the output, as indicated below:
 
 .. code-block:: bash
 
@@ -115,12 +105,11 @@ Note down the hostname. It will be shown as below in the output:
      "fullyQualifiedDomainName": "<server_name>.postgres.database.azure.com",
      ...
 
-``<server_name>.postgres.database.azure.com`` is the hostname here.
+where; ``<server_name>.postgres.database.azure.com`` is the hostname.
 
 .. note::
 
-   If you get an error saying ``Specified server name is already used``, change
-   the value of ``--name`` (``<server_name>``) to something else.
+   If you get an error saying ``Specified server name is already used``, change the value of ``--name`` (``<server_name>``) to something else.
 
 Create a new database
 ---------------------
@@ -138,7 +127,7 @@ Create a new database on the server:
 Allow access to Azure Services
 ------------------------------
 
-Create a firewall rule allowing acess from Azure internal services:
+Create a firewall rule allowing access from Azure internal services:
 
 .. code-block:: bash
 
@@ -160,8 +149,8 @@ Launch Hasura using a container instance:
       --image hasura/graphql-engine \
       --dns-name-label "<dns-name-label>" \
       --ports 80 \
-      --environment-variables "HASURA_GRAPHQL_SERVER_PORT"="80" "HASURA_GRAPHQL_ENABLE_CONSOLE"="true" \
-      --secure-environment-variables "HASURA_GRAPHQL_DATABASE_URL"="<database-url>"
+      --environment-variables "HASURA_GRAPHQL_SERVER_PORT"="80" "HASURA_GRAPHQL_ENABLE_CONSOLE"="true" "HASURA_GRAPHQL_ADMIN_SECRET"="<admin-secret>"\
+      --secure-environment-variables "HASURA_GRAPHQL_DATABASE_URL"="<database-url>" 
 
 ``<database-url>`` should be replaced by the following format:
 
@@ -178,14 +167,42 @@ If you'd like to connect to an existing database, use that server's database url
    username-password from hostname, we need to url-escape it in the username.
    Any other special character should be url-encoded.
 
-If the ``<dns-name-label>`` is not available, choose another unique name and
-execute the command again.
+If the ``<dns-name-label>`` is unavailable, choose another unique name and re-execute the command.
+
+Setting up JWT
+--------------
+
+Use the ``HASURA_GRAPHQL_JWT_SECRET`` env variable to setup JWT. To generate a new JWT config refer :ref:`here <generating_jwt_config>`.
+
+.. note::
+   
+   The ``HASURA_GRAPHQL_JWT_SECRET`` env variable requires JSON format.
+   To create a container group with  ``az container create --environment-variables`` flag you need to pass the variable as a key-value pair.
+
+In order to use the env variable with the ``az container create`` command, pass the `JSON` value for the env variable as a string by escaping the characters like so:
+
+.. code-block:: bash
+   :emphasize-lines: 9
+
+   az container create --resource-group hasura \
+         --name hasura-graphql-engine \
+         --image hasura/graphql-engine \
+         --dns-name-label "<dns-name-label>" \
+         --ports 80 \
+         --environment-variables "HASURA_GRAPHQL_SERVER_PORT"="80" \ 
+         "HASURA_GRAPHQL_ENABLE_CONSOLE"="true" \ 
+         "HASURA_GRAPHQL_ADMIN_SECRET"="<admin-secret>" \
+         "HASURA_GRAPHQL_JWT_SECRET"= \ "{\"type\": \"RS512\",\"key\": \"-----BEGIN CERTIFICATE-----\\nMIIDBzCCAe+gAwIBAgIJTpEEoUJ/bOElMA0GCSqGSIb3DQEBCwUAMCExHzAdBgNV\\nBAMTFnRyYWNrLWZyOC51cy5hdXRoMC5jb20wHhcNMjAwNzE3MDYxMjE4WhcNMzQw\\nMzI2MDYxMjE4WjAhMR8wHQYDVQQDExZ0cmFjay1mcjgudXMuYXV0aDAuY29tMIIB\\nIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAuK9N9FWK1hEPtwQ8ltYjlcjF\\nX03jhGgUKkLCLxe8q4x84eGJPmeHpyK+iZZ8TWaPpyD3fk+s8BC3Dqa/Sd9QeOBh\\nZH/YnzoB3yKqF/FruFNAY+F3LUt2P2t72tcnuFg4Vr8N9u8f4ESz7OHazn+XJ7u+\\ncuqKulaxMI4mVT/fGinCiT4uGVr0VVaF8KeWsF/EJYeZTiWZyubMwJsaZ2uW2U52\\n+VDE0RE0kz0fzYiCCMfuNNPg5V94lY3ImcmSI1qSjUpJsodqACqk4srmnwMZhICO\\n14F/WUknqmIBgFdHacluC6pqgHdKLMuPnp37bf7ACnQ/L2Pw77ZwrKRymUrzlQID\\nAQABo0IwQDAPBgNVHRMBAf8EBTADAQH/MB0GA1UdDgQWBBSOG3E+4lHiI+l0i91u\\nxG2Rca2NATAOBgNVHQ8BAf8EBAMCAoQwDQYJKoZIhvcNAQELBQADggEBAKgmxr6c\\nYmSNJOTPtjMFFDZHHX/7iwr+vqzC3nalr6ku8E3Zs0/IpwAtzqXp0eVVdPCWUY3A\\nQCUTt63GrqshBHYAxTbT0rlXFkqL8UkJvdZQ3XoQuNsqcp22zlQWGHxsk3YP97rn\\nltPI56smyHqPj+SBqyN/Vs7Vga9G8fHCfltJOdeisbmVHaC9WquZ9S5eyT7JzPAC\\n5dI5ZUunm0cgKFVbLfPr7ykClTPy36WdHS1VWhiCyS+rKeN7KYUvoaQN2U3hXesL\\nr2M+8qaPOSQdcNmg1eMNgxZ9Dh7SXtLQB2DAOuHe/BesJj8eRyENJCSdZsUOgeZl\\nMinkSy2d927Vts8=\\n-----END CERTIFICATE-----\"}"
+         --secure-environment-variables "HASURA_GRAPHQL_DATABASE_URL"="<database-url>" 
+
+.. note::
+   
+   Check out the :ref:`Running with JWT <running_with_jwt>` section for the usage of ``HASURA_GRAPHQL_JWT_SECRET`` env variable.
 
 Open the Hasura Console
 -----------------------
 
-That's it! Once the deployment is complete, navigate to the container instance's
-IP or hostname to open the Hasura console:
+That's it! Once the deployment is complete, navigate to the container instance's IP or hostname to open the Hasura console:
 
 .. code-block:: bash
 
@@ -194,8 +211,7 @@ IP or hostname to open the Hasura console:
       --query "{FQDN:ipAddress.fqdn,ProvisioningState:provisioningState}" \
       --out table
 
-The output will contain the FQDN in the format
-``<dns-name-label>.westus.azurecontainer.io``.
+The output contains the FQDN in the format ``<dns-name-label>.westus.azurecontainer.io``.
 
 Visit the following URL for the Hasura console:
 
@@ -208,30 +224,24 @@ Replace ``<dns-name-label>`` with the label given earlier.
 .. image:: https://storage.googleapis.com/graphql-engine-cdn.hasura.io/main-repo/img/azure_arm_aci_console_graphiql.png
    :class: no-shadow
    :alt: Hasura console
-
-You can create tables and test your GraphQL queries here. Check out :ref:`Making
-your first GraphQL Query <first_graphql_query>` for a detailed guide.
+   
+You can create tables and test your GraphQL queries here.   
 
 Troubleshooting
 ---------------
 
-If your password contains special characters, check if they were URL encoded
-and given as environment variables. Also check for proper escaping of
-these characters based on your shell.
+If your password contains special characters, check if the password is URL encoded and given as env variables. Also, check for proper escaping of these characters based on your shell.
 
-You can check the logs to see if the database credentials are proper and if
-Hasura is able to connect to the database.
+You can check the logs to see if the database credentials are proper and if Hasura is able to connect to the database.
 
-If you're using an existing/external database, make sure the firewall rules for
-the database allow connection for Azure services.
+If you're using an existing/external database, make sure the firewall rules for the database allows connection for Azure services.
 
 .. _azure_logs:
 
 Checking logs
 ^^^^^^^^^^^^^
 
-If the console is not loading, you might want to check the logs and see if something
-is wrong:
+If the console doesn't load, check the logs:
 
 .. code-block:: bash
 
@@ -243,7 +253,7 @@ is wrong:
 Tearing down
 ------------
 
-To clean-up, just delete the resource group:
+To clean up the deployment, delete the resource group:
 
 .. code-block:: bash
 

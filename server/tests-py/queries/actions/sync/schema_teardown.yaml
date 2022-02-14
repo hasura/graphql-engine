@@ -14,11 +14,55 @@ args:
     clear_data: true
 - type: drop_action
   args:
+    name: mirror_transformed
+    clear_data: true
+- type: drop_action
+  args:
+    name: mirror_transformed_output
+    clear_data: true
+- type: drop_action
+  args:
+    name: mirror_headers
+    clear_data: true
+- type: drop_action
+  args:
     name: get_user_by_email
     clear_data: true
 - type: drop_action
   args:
+    name: get_user_by_email_nested
+    clear_data: true
+- type: drop_action
+  args:
+    name: get_user_by_email_nested_transformed
+    clear_data: true
+- type: drop_action
+  args:
     name: get_users_by_email
+    clear_data: true
+- type: drop_action
+  args:
+    name: get_users_by_email_nested
+    clear_data: true
+- type: drop_action
+  args:
+    name: intentional_error
+    clear_data: true
+- type: drop_action
+  args:
+    name: null_response
+    clear_data: true
+- type: drop_action
+  args:
+    name: recursive_output
+    clear_data: true
+- type: drop_action
+  args:
+    name: result_list
+    clear_data: true
+- type: drop_action
+  args:
+    name: results
     clear_data: true
 # clear custom types
 - type: set_custom_types
@@ -29,3 +73,4 @@ args:
     cascade: true
     sql: |
       DROP TABLE "user";
+      DROP TABLE "article";

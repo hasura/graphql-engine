@@ -2,10 +2,10 @@
    :description: Manage actions with the Hasura schema/metadata API
    :keywords: hasura, docs, schema/metadata API, API reference, actions
 
-.. _api_actions:
+.. _schema_metadata_api_actions:
 
-Schema/Metadata API Reference: Actions
-======================================
+Schema/Metadata API Reference: Actions (Deprecated)
+===================================================
 
 .. contents:: Table of contents
   :backlinks: none
@@ -17,7 +17,14 @@ Introduction
 
 **actions** are user defined mutations with custom business logic.
 
-.. _create_action:
+.. admonition:: Deprecation
+
+  In versions ``v2.0.0`` and above, the schema/metadata API is deprecated in favour of the :ref:`schema API <schema_apis>` and the
+  :ref:`metadata API <metadata_apis>`.
+
+  Though for backwards compatibility, the schema/metadata APIs will continue to function.
+
+.. _schema_metadata_create_action:
 
 create_action
 -------------
@@ -57,7 +64,7 @@ Create a synchronous action with name ``create_user``:
    }
 
 
-.. _create_action_syntax:
+.. _schema_metadata_create_action_syntax:
 
 Args syntax
 ^^^^^^^^^^^
@@ -75,86 +82,14 @@ Args syntax
      - Name of the action
    * - definition
      - true
-     - ActionDefinition_
+     - :ref:`ActionDefinition`
      - Definition of the action
    * - comment
      - false
      - text
      - comment
 
-.. _ActionDefinition:
-
-ActionDefinition
-&&&&&&&&&&&&&&&&
-
-.. list-table::
-   :header-rows: 1
-
-   * - Key
-     - Required
-     - Schema
-     - Description
-   * - arguments
-     - false
-     - Array of InputArgument_
-     - Input arguments
-   * - output_type
-     - true
-     - :ref:`GraphQLType <GraphQLType>`
-     - The output type of the action. Only object and list of objects are allowed.
-   * - kind
-     - false
-     - [ ``synchronous`` | ``asynchronous`` ]
-     - The kind of the mutation action (default: ``synchronous``). If the type of
-       the action is ``query`` then the ``kind`` field should be omitted.
-   * - headers
-     - false
-     - [ :ref:`HeaderFromValue <HeaderFromValue>` | :ref:`HeaderFromEnv <HeaderFromEnv>` ]
-     - List of defined headers to be sent to the handler
-   * - forward_client_headers
-     - false
-     - boolean
-     - If set to ``true`` the client headers are forwarded to the webhook handler (default: ``false``)
-   * - handler
-     - true
-     - :ref:`WebhookURL <WebhookURL>`
-     - The action's webhook URL
-   * - type
-     - false
-     - [ ``mutation`` | ``query`` ]
-     - The type of the action (default: ``mutation``)
-   * - timeout
-     - false
-     - Integer
-     - Number of seconds to wait for response before timing out. Default: 30
-
-
-.. _InputArgument:
-
-InputArgument
-&&&&&&&&&&&&&
-
-.. list-table::
-   :header-rows: 1
-
-   * - Key
-     - Required
-     - Schema
-     - Description
-   * - name
-     - true
-     - text
-     - Name of the argument
-   * - type
-     - true
-     - :ref:`GraphQLType <GraphQLType>`
-     - Type of the argument
-
-.. note::
-
-   The ``GraphQL Types`` used in creating an action must be defined before via :ref:`Custom Types <api_custom_types>`
-
-.. _drop_action:
+.. _schema_metadata_drop_action:
 
 drop_action
 -----------
@@ -177,7 +112,7 @@ Drop an action ``create_user``:
       }
    }
 
-.. _drop_action_syntax:
+.. _schema_metadata_drop_action_syntax:
 
 Args syntax
 ^^^^^^^^^^^
@@ -198,7 +133,7 @@ Args syntax
      - boolean
      - If set to ``true`` and action kind is ``asynchronous``, related data is deleted from catalog. (default: ``true``)
 
-.. _update_action:
+.. _schema_metadata_update_action:
 
 update_action
 -------------
@@ -232,12 +167,13 @@ Update an action ``create_user`` by making it's kind to ``asynchronous``:
             ],
             "output_type":"User",
             "handler":"https://action.my_app.com/create-user"
-         }
+         },
+         "comment": "Custom action to create user",
       }
    }
 
 
-.. _update_action_syntax:
+.. _schema_metadata_update_action_syntax:
 
 Args syntax
 ^^^^^^^^^^^
@@ -255,10 +191,14 @@ Args syntax
      - Name of the action
    * - definition
      - true
-     - ActionDefinition_
+     - :ref:`ActionDefinition`
      - Definition of the action to be replaced
+   * - comment
+     - false
+     - text
+     - comment
 
-.. _create_action_permission:
+.. _schema_metadata_create_action_permission:
 
 create_action_permission
 ------------------------
@@ -279,7 +219,7 @@ create_action_permission
      }
    }
 
-.. _create_action_permission_syntax:
+.. _schema_metadata_create_action_permission_syntax:
 
 Args syntax
 ^^^^^^^^^^^
@@ -304,7 +244,7 @@ Args syntax
      - text
      - comment
 
-.. _drop_action_permission:
+.. _schema_metadata_drop_action_permission:
 
 drop_action_permission
 ----------------------
@@ -325,7 +265,7 @@ drop_action_permission
      }
    }
 
-.. _drop_action_permission_syntax:
+.. _schema_metadata_drop_action_permission_syntax:
 
 Args syntax
 ^^^^^^^^^^^

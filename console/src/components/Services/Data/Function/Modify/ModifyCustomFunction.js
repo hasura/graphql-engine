@@ -1,28 +1,22 @@
 import React from 'react';
+import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 
 import Helmet from 'react-helmet';
 import { push } from 'react-router-redux';
 import CommonTabLayout from '../../../../Common/Layout/CommonTabLayout/CommonTabLayout';
-
-import { pageTitle, appPrefix } from './constants';
-
 import tabInfo from './tabInfo';
 import globals from '../../../../../Globals';
 import Button from '../../../../Common/Button/Button';
 import styles from './ModifyCustomFunction.scss';
-
-const prefixUrl = globals.urlPrefix + appPrefix;
-
 import TextAreaWithCopy from '../../../../Common/TextAreaWithCopy/TextAreaWithCopy';
-
+import FunctionCommentEditor from './FunctionCommentEditor';
 import {
   fetchCustomFunction,
-  deleteFunctionSql,
   unTrackCustomFunction,
   updateSessVar,
+  deleteFunction,
 } from '../customFunctionReducer';
-
 import { NotFoundError } from '../../../../Error/PageNotFound';
 import { getConfirmation } from '../../../../Common/utils/jsUtils';
 import {
@@ -32,9 +26,13 @@ import {
 import SessionVarSection from './SessionVarSection';
 import RawSqlButton from '../../Common/Components/RawSqlButton';
 
+import { isFeatureSupported } from '@/dataSources';
+
+export const pageTitle = 'Custom Function';
+
 class ModifyCustomFunction extends React.Component {
-  constructor() {
-    super();
+  constructor(props) {
+    super(props);
 
     this.state = {
       deleteConfirmationError: null,
@@ -47,35 +45,37 @@ class ModifyCustomFunction extends React.Component {
     this.handleDeleteCustomFunction = this.handleDeleteCustomFunction.bind(
       this
     );
+    this.urlWithSource = `/data/${props.currentSource}`;
+    this.prefixUrl = globals.urlPrefix + this.urlWithSource;
+    this.urlWithSchema = `/data/${props.currentSource}/schema/${props.currentSchema}`;
   }
 
   componentDidMount() {
     const { functionName, schema } = this.props.params;
     if (!functionName || !schema) {
-      this.props.dispatch(push(prefixUrl));
+      this.props.dispatch(push(this.prefixUrl));
     }
     Promise.all([
       this.props
-        .dispatch(fetchCustomFunction(functionName, schema))
+        .dispatch(
+          fetchCustomFunction(functionName, schema, this.props.currentSource)
+        )
         .then(() => {
           this.setState({ funcFetchCompleted: true });
         }),
     ]);
   }
 
-  UNSAFE_componentWillReceiveProps(nextProps) {
+  componentDidUpdate(prevProps) {
     const { functionName, schema } = this.props.params;
     if (
-      functionName !== nextProps.params.functionName ||
-      schema !== nextProps.params.schema
+      functionName !== prevProps.params.functionName ||
+      schema !== prevProps.params.schema
     ) {
       Promise.all([
         this.props
           .dispatch(
-            fetchCustomFunction(
-              nextProps.params.functionName,
-              nextProps.params.schema
-            )
+            fetchCustomFunction(functionName, schema, this.props.currentSource)
           )
           .then(() => {
             this.setState({ funcFetchCompleted: true });
@@ -113,7 +113,7 @@ class ModifyCustomFunction extends React.Component {
     if (isOk) {
       try {
         this.updateDeleteConfirmationError(null);
-        this.props.dispatch(deleteFunctionSql());
+        this.props.dispatch(deleteFunction());
       } catch (err) {
         console.error('Delete custom function error: ', err);
       }
@@ -125,6 +125,8 @@ class ModifyCustomFunction extends React.Component {
       functionSchema: schema,
       functionName,
       functionDefinition,
+      functionComment,
+      isEditingComment,
       isRequesting,
       isDeleting,
       isUntracking,
@@ -141,9 +143,13 @@ class ModifyCustomFunction extends React.Component {
         ? { isRequesting, isDeleting, isUntracking, isFetching }
         : null;
 
-    const { migrationMode, dispatch } = this.props;
+    const { migrationMode, dispatch, currentSource } = this.props;
 
-    const functionBaseUrl = getFunctionBaseRoute(schema, functionName);
+    const functionBaseUrl = getFunctionBaseRoute(
+      schema,
+      currentSource,
+      functionName
+    );
 
     const generateMigrateBtns = () => {
       return (
@@ -181,11 +187,11 @@ class ModifyCustomFunction extends React.Component {
     const breadCrumbs = [
       {
         title: 'Data',
-        url: appPrefix,
+        url: this.urlWithSource,
       },
       {
         title: 'Schema',
-        url: appPrefix + '/schema',
+        url: this.urlWithSchema,
       },
       {
         title: schema,
@@ -205,12 +211,12 @@ class ModifyCustomFunction extends React.Component {
     }
 
     return (
-      <div className={'col-xs-8' + ' ' + styles.modifyWrapper}>
+      <div>
         <Helmet
           title={`Edit ${pageTitle} - ${functionName} - ${pageTitle}s | Hasura`}
         />
         <CommonTabLayout
-          appPrefix={appPrefix}
+          appPrefix={this.urlWithSource}
           currentTab="modify"
           heading={functionName}
           tabsInfo={tabInfo}
@@ -219,40 +225,58 @@ class ModifyCustomFunction extends React.Component {
           showLoader={isFetching}
           testPrefix={'functions'}
         />
+
         <br />
-        <div className={`${styles.display_flex}`}>
-          <h4 className={styles.subheading_text}>
+        {isFeatureSupported('functions.modify.comments.view') && (
+          <div className="w-full sm:w-6/12 mb-lg">
+            <h4 className="flex items-center text-gray-600 font-semibold mb-formlabel">
+              Function Comments
+            </h4>
+
+            <FunctionCommentEditor
+              isEditing={isEditingComment}
+              defaultValue={functionComment}
+              dispatch={dispatch}
+              readOnly={!isFeatureSupported('functions.modify.comments.edit')}
+              dispatch={dispatch}
+            />
+          </div>
+        )}
+
+        <div className="w-full sm:w-6/12 mb-md">
+          <h4 className="flex items-center text-gray-600 font-semibold mb-formlabel">
             Function Definition:
-            <span className={styles.add_mar_left}>
+            <span className="ml-xs">
               <RawSqlButton
-                className={styles.add_mar_right}
                 sql={functionDefinition}
                 dispatch={dispatch}
                 data-test="modify-view"
+                source={currentSource}
               >
                 Modify
               </RawSqlButton>
             </span>
           </h4>
+
+          <div className={styles.sqlBlock}>
+            <TextAreaWithCopy
+              copyText={functionDefinition}
+              textLanguage={'sql'}
+              id="copyCustomFunctionSQL"
+            />
+          </div>
         </div>
 
-        <div className={styles.sqlBlock}>
-          <TextAreaWithCopy
-            copyText={functionDefinition}
-            textLanguage={'sql'}
-            id="copyCustomFunctionSQL"
+        <div className="w-full sm:w-6/12 mb-md">
+          <SessionVarSection
+            key={functionName}
+            functionName={functionName}
+            configuration={configuration}
+            loading={loading}
+            onSessVarUpdate={this.onSessVarUpdate}
           />
+          {migrationMode ? [generateMigrateBtns()] : null}
         </div>
-        <SessionVarSection
-          key={functionName}
-          functionName={functionName}
-          configuration={configuration}
-          loading={loading}
-          onSessVarUpdate={this.onSessVarUpdate}
-        />
-        {migrationMode
-          ? [<hr key="modify-custom-function-divider" />, generateMigrateBtns()]
-          : null}
       </div>
     );
   }
@@ -262,4 +286,14 @@ ModifyCustomFunction.propTypes = {
   functions: PropTypes.array.isRequired,
 };
 
-export default ModifyCustomFunction;
+const mapStateToProps = state => ({
+  currentSource: state.tables.currentDataSource,
+  currentSchema: state.tables.currentSchema,
+});
+
+const modifyCustomFnConnector = connect(mapStateToProps);
+const ConnectedModifyCustomFunction = modifyCustomFnConnector(
+  ModifyCustomFunction
+);
+
+export default ConnectedModifyCustomFunction;

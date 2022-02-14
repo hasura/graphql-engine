@@ -28,7 +28,7 @@ You can add or remove a operation in the allow-list in two ways:
   add a new operation to the allow-list or upload a list of new operations from a file that will be added to the
   allow-list. You can also see a list of existing operations in the allow-list and delete them individually.
 
-  * You can add an individual operation, like the one below, manually to the allow-list with a unique name.
+  * You can add an individual operation, like the one below, manually to the allow-list with a unique name. Note that this unique name is just an identifier for the query in the collection, it is not related to the operation name of the query.
 
     .. code-block:: graphql
 
@@ -45,7 +45,7 @@ You can add or remove a operation in the allow-list in two ways:
     to add multiple operations to the allow-list (each operation needs to have a name).
 
 * **Using metadata APIs:** Queries can be stored in collections and a collection can be added to or removed
-  from the allow-list. See :ref:`Collections & Allow-list APIs <api_query_collections>`
+  from the allow-list. See :ref:`Collections & Allow-list APIs <metadata_api_query_collections>`
   for API reference.
 
 .. note::
@@ -74,6 +74,18 @@ You can add or remove a operation in the allow-list in two ways:
 
   * You can modify the allow-list without actually enabling it on your instance.
 
+Role based allow-list
+---------------------
+
+A role based allow-list is useful when you would like a query collection to be
+accessible to only certain roles.
+
+.. admonition:
+
+   Role based allow-lists are supported in cloud/enterprise products,
+   from version ``v2.3.0``. In OSS, role based allow-lists entries are ignored.
+
+   On older versions (which do not support role based allow-lists), any role based allow-list metadata entry will get treated as global. Hence, caution is advised when using role based allow-list metadata with older versions.
 
 Enable allow-list
 -----------------
@@ -95,9 +107,11 @@ The following are the recommended best practices for enabling/disabling allow-li
   to allow complete access to the GraphQL schema. Add/remove operations in the allow-list and then export the
   metadata for version-control (*so you can apply it to other instances*).
 
-* **In CI/CD instances**: Enable the allow-list for testing. 
+* **In CI/CD instances**: Enable the allow-list for testing.
 
-* **In production instances**: Enabling the allow-list is highly recommended when running the GraphQL engine in production. 
+* **In production instances**: Enabling the allow-list is highly recommended when running the GraphQL engine in production.
 
+.. admonition:: Allow Lists in Hasura Cloud
+  :class: dhc
 
-
+  Hasura Cloud lets you generate allowed queries from real usage in your application. For more, information, see :ref:`Allow Lists in Hasura Cloud <allow_lists>`.

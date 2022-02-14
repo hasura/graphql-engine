@@ -1,19 +1,18 @@
 import React from 'react';
 import Editor from '../../../../Common/Layout/ExpandableEditor/Editor';
-import Tooltip from '../../../../Common/Tooltip/Tooltip';
 import {
   EventTrigger,
   EventTriggerOperation,
   ETOperationColumn,
   VoidCallback,
 } from '../../types';
-import { TableColumn } from '../../../../Common/utils/pgUtils';
 import {
   parseEventTriggerOperations,
   getETOperationColumns,
 } from '../../utils';
-
-import Operations from '../Common/Operations';
+import { Operations } from '../Common/Operations';
+import { TableColumn } from '../../../../../dataSources/types';
+import { ColumnSelectionRadioButton } from '../Common/ColumnSelectionRadioButton';
 
 type OperationEditorProps = {
   currentTrigger: EventTrigger;
@@ -24,9 +23,11 @@ type OperationEditorProps = {
   setOperationColumns: (operationColumns: ETOperationColumn[]) => void;
   styles: Record<string, string>;
   save: (success: VoidCallback, error: VoidCallback) => void;
+  isAllColumnChecked: boolean;
+  handleColumnRadioButton: () => void;
 };
 
-const OperationEditor = (props: OperationEditorProps) => {
+export const OperationEditor: React.FC<OperationEditorProps> = props => {
   const {
     allTableColumns,
     styles,
@@ -36,8 +37,9 @@ const OperationEditor = (props: OperationEditorProps) => {
     operationColumns,
     setOperations,
     setOperationColumns,
+    isAllColumnChecked,
+    handleColumnRadioButton,
   } = props;
-
   const etDef = currentTrigger.configuration.definition;
   const existingOps = parseEventTriggerOperations(etDef);
   const existingOpColumns = getETOperationColumns(
@@ -56,61 +58,85 @@ const OperationEditor = (props: OperationEditorProps) => {
     readOnly: boolean
   ) => (
     <div className={styles.modifyOps}>
+      <label className="block text-gray-600 font-medium mb-sm">
+        Trigger Method
+      </label>
       <div
-        className={`${styles.modifyOpsCollapsedContent} ${styles.add_mar_bottom_mid}`}
+        className={`${styles.modifyOpsCollapsedContent} ${styles.add_mar_bottom_mid} col-md-12 ${styles.padd_remove}`}
       >
-        <div className={`col-md-12 ${styles.padd_remove}`}>
-          <Operations
-            selectedOperations={ops}
-            setOperations={setOperations}
-            readOnly={readOnly}
-          />
-        </div>
+        <Operations
+          selectedOperations={ops}
+          setOperations={setOperations}
+          readOnly={readOnly}
+          tableName={currentTrigger.table_name}
+        />
+      </div>
+      <div>
+        <label className="block text-gray-600 font-medium mb-xs">
+          Trigger Columns
+        </label>
+        <p className="text-sm text-gray-600 mb-sm">
+          Trigger columns to listen to for updates.
+        </p>
       </div>
       <div className={styles.modifyOpsCollapsedContent}>
-        <div className={`col-md-12 ${styles.padd_remove}`}>
-          Listen columns for update:&nbsp;
-        </div>
-        <div className={`col-md-12 ${styles.padd_remove}`}>
-          {ops.update ? (
-            opCols.map(col => {
-              const toggle = () => {
-                if (!readOnly) {
-                  const newCols = opCols.map(oc => {
-                    return {
-                      ...oc,
-                      enabled: col.name === oc.name ? !oc.enabled : oc.enabled,
-                    };
-                  });
-                  setOperationColumns(newCols);
-                }
-              };
-              return (
-                <label
-                  className={`${styles.opsCheckboxWrapper} ${styles.columnListElement} ${styles.padd_remove} ${styles.cursorPointer}`}
-                  key={col.name}
-                  onChange={toggle}
-                >
-                  <input
-                    type="checkbox"
-                    className={`${styles.opsCheckboxDisabled} ${styles.cursorPointer}`}
-                    checked={col.enabled}
-                    disabled={readOnly}
-                    readOnly
-                  />
-                  {col.name}
-                  <small className={styles.addPaddSmall}> ({col.type})</small>
-                </label>
-              );
-            })
-          ) : (
-            <div
-              className={`col-md-12 ${styles.padd_remove} ${styles.modifyOpsCollapsedtitle}`}
-            >
-              <i>Applicable only if update operation is selected.</i>
+        {ops.update ? (
+          <>
+            <div className={`col-md-12 ${styles.padd_remove} checkbox`}>
+              <ColumnSelectionRadioButton
+                isAllColumnChecked={isAllColumnChecked}
+                handleColumnRadioButton={handleColumnRadioButton}
+                readOnly={readOnly}
+              />
             </div>
-          )}
-        </div>
+            <>
+              {!isAllColumnChecked ? (
+                <div className={`col-md-12 ${styles.padd_remove}`}>
+                  {opCols.map(col => {
+                    const toggle = () => {
+                      if (!readOnly) {
+                        const newCols = opCols.map(oc => {
+                          return {
+                            ...oc,
+                            enabled:
+                              col.name === oc.name ? !oc.enabled : oc.enabled,
+                          };
+                        });
+                        setOperationColumns(newCols);
+                      }
+                    };
+                    return (
+                      <label
+                        className={`${styles.opsCheckboxWrapper} ${styles.columnListElement} ${styles.padd_remove} ${styles.cursorPointer}`}
+                        key={col.name}
+                        onChange={toggle}
+                      >
+                        <input
+                          type="checkbox"
+                          className={`${styles.opsCheckboxDisabled} ${styles.cursorPointer} legacy-input-fix`}
+                          checked={col.enabled}
+                          disabled={readOnly}
+                          readOnly
+                        />
+                        {col.name}
+                        <small className={styles.addPaddSmall}>
+                          {' '}
+                          ({col.type})
+                        </small>
+                      </label>
+                    );
+                  })}
+                </div>
+              ) : null}
+            </>
+          </>
+        ) : (
+          <div
+            className={`col-md-12 ${styles.padd_remove} ${styles.modifyOpsCollapsedtitle}`}
+          >
+            <i>Applicable only if update operation is selected.</i>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -122,10 +148,7 @@ const OperationEditor = (props: OperationEditorProps) => {
   return (
     <div className={`${styles.container} ${styles.borderBottom}`}>
       <div className={styles.modifySection}>
-        <h4 className={styles.modifySectionHeading}>
-          Trigger Operations{' '}
-          <Tooltip message="Edit operations and related columns" />
-        </h4>
+        <h4 className={styles.modifySectionHeading}>Trigger Operations</h4>
         <Editor
           editorCollapsed={collapsed}
           editorExpanded={expanded}
@@ -139,5 +162,3 @@ const OperationEditor = (props: OperationEditorProps) => {
     </div>
   );
 };
-
-export default OperationEditor;

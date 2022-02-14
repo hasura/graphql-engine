@@ -28,6 +28,12 @@ not be rejected and instead the request will be made with the configured role.
 This role can then be used to define the permissions for unauthenticated users as described in :ref:`authorization`.
 A guide on setting up unauthenticated user permissions can be found :ref:`here <anonymous_users_example>`.
 
+.. admonition:: Risk of using session variables
+
+  It is recommended to not use :ref:`session variables <dynamic_session_variables>` in the permissions of an unauthenticated role because
+  the source of the session variables cannot be trusted. As session variables can be passed using request headers, a user can choose to send any
+  values for them and it needs to be ensured that they can't get access to sensitive data just by setting different values for their session variables.
+
 Configuring unauthenticated / public access
 -------------------------------------------
 
@@ -58,3 +64,7 @@ For :ref:`JWT authentication <auth_jwt>`, any request which does not contain a J
 You can use the env variable ``HASURA_GRAPHQL_UNAUTHORIZED_ROLE`` or the ``--unauthorized-role`` flag to set a role
 for unauthenticated (non-logged in) users. See :ref:`server_flag_reference` for more details
 on setting this flag/env var.
+
+.. admonition:: Additional Resources
+
+  Enterprise Grade Authorization - `Watch Webinar <https://hasura.io/events/webinar/authorization-modeling-hasura/?pg=docs&plcmt=body&cta=watch-webinar&tech=>`__.

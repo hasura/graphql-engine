@@ -19,8 +19,7 @@ We are in the process of launching support for MySQL, and we have a preview avai
 
 .. admonition:: Supported MySQL versions
 
-  Hasura GraphQL engine currently supports **MySQL 8.0.14 and above**. Support for earlier
-  versions will be added soon.
+  Hasura GraphQL engine currently supports **MySQL 8.0.14 and above**.
 
 Try it out
 ----------
@@ -138,4 +137,4 @@ If you'd like to stay informed about the status of MySQL support, subscribe here
 Give us feedback
 ----------------
 
-We appreciate any feedback. Please open a new `Github discussion <https://github.com/hasura/graphql-engine/discussions>`__, and we can discuss there.
+We appreciate any feedback. Please open a new `GitHub discussion <https://github.com/hasura/graphql-engine/discussions>`__, and we can discuss there.

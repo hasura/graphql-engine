@@ -3,6 +3,7 @@ args:
 - type: run_sql
   args:
     sql: |
+      DROP FUNCTION get_articles(author);
       DROP TABLE article;
       DROP TABLE author;
       DROP TABLE "Track" cascade;
@@ -12,4 +13,7 @@ args:
       DROP TABLE jsonb_table;
       DROP TABLE gpa cascade;
       DROP TABLE auction;
+      DROP FUNCTION student_total_marks(student_marks);
+      DROP FUNCTION student_total_marks_offset(json, student_marks);
+      DROP TABLE student_marks;
     cascade: true

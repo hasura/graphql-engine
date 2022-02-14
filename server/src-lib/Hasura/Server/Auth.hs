@@ -1,62 +1,66 @@
-{-# LANGUAGE DerivingStrategies         #-}
+{-# LANGUAGE DerivingStrategies #-}
 
 module Hasura.Server.Auth
-  ( getUserInfo
-  , getUserInfoWithExpTime
-  , AuthMode (..)
-  , setupAuthMode
-  , AdminSecretHash
-  , hashAdminSecret
-  -- * WebHook related
-  , AuthHookType (..)
-  , AuthHookG (..)
-  , AuthHook
-  -- * JWT related
-  , RawJWT
-  , JWTConfig (..)
-  , JWTCtx (..)
-  , JWKSet (..)
-  , processJwt
-  , updateJwkRef
-  , UserAuthentication (..)
+  ( getUserInfoWithExpTime,
+    AuthMode (..),
+    setupAuthMode,
+    AdminSecretHash,
+    hashAdminSecret,
 
-  -- * Exposed for testing
-  , getUserInfoWithExpTime_
-  ) where
+    -- * WebHook related
+    AuthHookType (..),
+    AuthHookG (..),
+    AuthHook,
 
-import qualified Control.Concurrent.Async.Lifted.Safe as LA
-import           Control.Concurrent.Extended          (forkImmortal)
-import           Control.Monad.Trans.Control          (MonadBaseControl)
-import           Data.IORef                           (newIORef)
-import           Data.Time.Clock                      (UTCTime)
-import           Hasura.Server.Version                (HasVersion)
+    -- * JWT related
+    RawJWT,
+    JWTConfig (..),
+    JWTCtx (..),
+    JWKSet (..),
+    processJwt,
+    updateJwkRef,
+    UserAuthentication (..),
 
-import qualified Crypto.Hash                          as Crypto
-import qualified Data.Text                            as T
-import qualified Data.Text.Encoding                   as T
-import qualified Network.HTTP.Client                  as H
-import qualified Network.HTTP.Types                   as N
+    -- * Exposed for testing
+    getUserInfoWithExpTime_,
+  )
+where
 
-import           Hasura.Logging
-import           Hasura.Prelude
-import           Hasura.RQL.Types
-
-import           Hasura.Server.Auth.JWT               hiding (processJwt_)
-import           Hasura.Server.Auth.WebHook
-import           Hasura.Server.Utils
-import           Hasura.Session
-import qualified Hasura.Tracing                       as Tracing
+import Control.Concurrent.Extended (ForkableMonadIO, forkManagedT)
+import Control.Monad.Morph (hoist)
+import Control.Monad.Trans.Control (MonadBaseControl)
+import Control.Monad.Trans.Managed (ManagedT)
+import Crypto.Hash qualified as Crypto
+import Data.ByteArray qualified as BA
+import Data.ByteString (ByteString)
+import Data.HashSet qualified as Set
+import Data.Hashable qualified as Hash
+import Data.IORef (newIORef)
+import Data.List qualified as L
+import Data.Text.Encoding qualified as T
+import Data.Time.Clock (UTCTime)
+import Hasura.Base.Error
+import Hasura.GraphQL.Transport.HTTP.Protocol (ReqsText)
+import Hasura.Logging
+import Hasura.Prelude
+import Hasura.Server.Auth.JWT hiding (processJwt_)
+import Hasura.Server.Auth.WebHook
+import Hasura.Server.Utils
+import Hasura.Session
+import Hasura.Tracing qualified as Tracing
+import Network.HTTP.Client qualified as H
+import Network.HTTP.Types qualified as N
 
 -- | Typeclass representing the @UserInfo@ authorization and resolving effect
 class (Monad m) => UserAuthentication m where
-  resolveUserInfo
-    :: HasVersion
-    => Logger Hasura
-    -> H.Manager
-    -> [N.Header]
-    -- ^ request headers
-    -> AuthMode
-    -> m (Either QErr (UserInfo, Maybe UTCTime))
+  resolveUserInfo ::
+    Logger Hasura ->
+    H.Manager ->
+    -- | request headers
+    [N.Header] ->
+    AuthMode ->
+    Maybe ReqsText ->
+    m (Either QErr (UserInfo, Maybe UTCTime, [N.Header]))
 
 -- | The hashed admin password. 'hashAdminSecret' is our public interface for
 -- constructing the secret.
@@ -69,16 +73,18 @@ class (Monad m) => UserAuthentication m where
 --
 --     - prevent theoretical timing attacks from a naive `==` check
 --     - prevent misuse or inadvertent leaking of the secret
---
 newtype AdminSecretHash = AdminSecretHash (Crypto.Digest Crypto.SHA512)
   deriving (Ord, Eq)
+
+instance Hash.Hashable AdminSecretHash where
+  hashWithSalt salt (AdminSecretHash h) = Hash.hashWithSalt @ByteString salt $ BA.convert h
 
 -- We don't want to be able to leak the secret hash. This is a dummy instance
 -- to support 'Show AuthMode' which we want for testing.
 instance Show AdminSecretHash where
   show _ = "(error \"AdminSecretHash hidden\")"
 
-hashAdminSecret :: T.Text -> AdminSecretHash
+hashAdminSecret :: Text -> AdminSecretHash
 hashAdminSecret = AdminSecretHash . Crypto.hash . T.encodeUtf8
 
 -- | The methods we'll use to derive roles for authenticating requests.
@@ -86,178 +92,175 @@ hashAdminSecret = AdminSecretHash . Crypto.hash . T.encodeUtf8
 -- @Maybe RoleName@ below is the optionally-defined role for the
 -- unauthenticated (anonymous) user.
 --
--- See: https://hasura.io/docs/1.0/graphql/manual/auth/authentication/unauthenticated-access.html
-
+-- See: https://hasura.io/docs/latest/graphql/core/auth/authentication/unauthenticated-access.html
 data AuthMode
   = AMNoAuth
-  | AMAdminSecret !AdminSecretHash !(Maybe RoleName)
-  | AMAdminSecretAndHook !AdminSecretHash !AuthHook
-  | AMAdminSecretAndJWT !AdminSecretHash !JWTCtx !(Maybe RoleName)
+  | AMAdminSecret !(Set.HashSet AdminSecretHash) !(Maybe RoleName)
+  | AMAdminSecretAndHook !(Set.HashSet AdminSecretHash) !AuthHook
+  | AMAdminSecretAndJWT !(Set.HashSet AdminSecretHash) ![JWTCtx] !(Maybe RoleName)
   deriving (Show, Eq)
 
 -- | Validate the user's requested authentication configuration, launching any
 -- required maintenance threads for JWT etc.
 --
 -- This must only be run once, on launch.
-setupAuthMode
-  :: ( HasVersion
-     , MonadIO m
-     , MonadBaseControl IO m
-     , LA.Forall (LA.Pure m)
-     , Tracing.HasReporter m
-     )
-  => Maybe AdminSecretHash
-  -> Maybe AuthHook
-  -> Maybe JWTConfig
-  -> Maybe RoleName
-  -> H.Manager
-  -> Logger Hasura
-  -> ExceptT Text m AuthMode
-setupAuthMode mAdminSecretHash mWebHook mJwtSecret mUnAuthRole httpManager logger =
-  case (mAdminSecretHash, mWebHook, mJwtSecret) of
-    (Just hash, Nothing,   Nothing)      -> return $ AMAdminSecret hash mUnAuthRole
-    (Just hash, Nothing,   Just jwtConf) -> do
-      jwtCtx <- mkJwtCtx jwtConf
-      return $ AMAdminSecretAndJWT hash jwtCtx mUnAuthRole
+setupAuthMode ::
+  ( ForkableMonadIO m,
+    Tracing.HasReporter m
+  ) =>
+  Set.HashSet AdminSecretHash ->
+  Maybe AuthHook ->
+  [JWTConfig] ->
+  Maybe RoleName ->
+  H.Manager ->
+  Logger Hasura ->
+  ExceptT Text (ManagedT m) AuthMode
+setupAuthMode adminSecretHashSet mWebHook mJwtSecrets mUnAuthRole httpManager logger =
+  case (not (Set.null adminSecretHashSet), mWebHook, not (null mJwtSecrets)) of
+    (True, Nothing, False) -> return $ AMAdminSecret adminSecretHashSet mUnAuthRole
+    (True, Nothing, True) -> do
+      jwtCtxs <- traverse mkJwtCtx (L.nub mJwtSecrets)
+      pure $ AMAdminSecretAndJWT adminSecretHashSet jwtCtxs mUnAuthRole
     -- Nothing below this case uses unauth role. Throw a fatal error if we would otherwise ignore
     -- that parameter, lest users misunderstand their auth configuration:
-    _ | isJust mUnAuthRole -> throwError $
-        "Fatal Error: --unauthorized-role (HASURA_GRAPHQL_UNAUTHORIZED_ROLE)"
-          <> requiresAdminScrtMsg
-          <> " and is not allowed when --auth-hook (HASURA_GRAPHQL_AUTH_HOOK) is set"
-
-    (Nothing,  Nothing,   Nothing)  -> return AMNoAuth
-    (Just hash, Just hook, Nothing) -> return $ AMAdminSecretAndHook hash hook
-
-    (Nothing, Just _,  Nothing) -> throwError $
-      "Fatal Error : --auth-hook (HASURA_GRAPHQL_AUTH_HOOK)" <> requiresAdminScrtMsg
-    (Nothing, Nothing, Just _)  -> throwError $
-      "Fatal Error : --jwt-secret (HASURA_GRAPHQL_JWT_SECRET)" <> requiresAdminScrtMsg
-    (Nothing, Just _,  Just _)  -> throwError
-      "Fatal Error: Both webhook and JWT mode cannot be enabled at the same time"
-    (Just _,  Just _,  Just _)  -> throwError
-      "Fatal Error: Both webhook and JWT mode cannot be enabled at the same time"
+    _
+      | isJust mUnAuthRole ->
+        throwError $
+          "Fatal Error: --unauthorized-role (HASURA_GRAPHQL_UNAUTHORIZED_ROLE)"
+            <> requiresAdminScrtMsg
+            <> " and is not allowed when --auth-hook (HASURA_GRAPHQL_AUTH_HOOK) is set"
+    (False, Nothing, False) -> return AMNoAuth
+    (True, Just hook, False) -> return $ AMAdminSecretAndHook adminSecretHashSet hook
+    (False, Just _, False) ->
+      throwError $
+        "Fatal Error : --auth-hook (HASURA_GRAPHQL_AUTH_HOOK)" <> requiresAdminScrtMsg
+    (False, Nothing, True) ->
+      throwError $
+        "Fatal Error : --jwt-secret (HASURA_GRAPHQL_JWT_SECRET)" <> requiresAdminScrtMsg
+    (_, Just _, True) ->
+      throwError
+        "Fatal Error: Both webhook and JWT mode cannot be enabled at the same time"
   where
     requiresAdminScrtMsg =
       " requires --admin-secret (HASURA_GRAPHQL_ADMIN_SECRET) or "
-      <> " --access-key (HASURA_GRAPHQL_ACCESS_KEY) to be set"
+        <> " --access-key (HASURA_GRAPHQL_ACCESS_KEY) to be set"
 
-    -- | Given the 'JWTConfig' (the user input of JWT configuration), create
-    -- the 'JWTCtx' (the runtime JWT config used)
-    -- mkJwtCtx :: HasVersion => JWTConfig -> m JWTCtx
-    mkJwtCtx
-      :: ( HasVersion
-         , MonadIO m
-         , MonadBaseControl IO m
-         , LA.Forall (LA.Pure m)
-         , Tracing.HasReporter m
-         )
-      => JWTConfig
-      -> ExceptT T.Text m JWTCtx
-    mkJwtCtx JWTConfig{..} = do
+    mkJwtCtx ::
+      ( ForkableMonadIO m,
+        Tracing.HasReporter m
+      ) =>
+      JWTConfig ->
+      ExceptT Text (ManagedT m) JWTCtx
+    mkJwtCtx JWTConfig {..} = do
       jwkRef <- case jcKeyOrUrl of
-        Left jwk  -> liftIO $ newIORef (JWKSet [jwk])
+        Left jwk -> liftIO $ newIORef (JWKSet [jwk])
         Right url -> getJwkFromUrl url
-      return $ JWTCtx jwkRef jcAudience jcIssuer jcClaims
+      let jwtHeader = fromMaybe JHAuthorization jcHeader
+      return $ JWTCtx jwkRef jcAudience jcIssuer jcClaims jcAllowedSkew jwtHeader
       where
         -- if we can't find any expiry time for the JWK (either in @Expires@ header or @Cache-Control@
         -- header), do not start a background thread for refreshing the JWK
         getJwkFromUrl url = do
           ref <- liftIO $ newIORef $ JWKSet []
-          maybeExpiry <- withJwkError $ Tracing.runTraceT "jwk init" $ updateJwkRef logger httpManager url ref
+          maybeExpiry <- hoist lift $ withJwkError $ Tracing.runTraceT "jwk init" $ updateJwkRef logger httpManager url ref
           case maybeExpiry of
-            Nothing   -> return ref
+            Nothing -> return ref
             Just time -> do
-              void . lift $ forkImmortal "jwkRefreshCtrl" logger $
-                jwkRefreshCtrl logger httpManager url ref (convertDuration time)
+              void . lift $
+                forkManagedT "jwkRefreshCtrl" logger $
+                  jwkRefreshCtrl logger httpManager url ref (convertDuration time)
               return ref
 
         withJwkError act = do
           res <- runExceptT act
-          case res of
-            Right r -> return r
-            Left err  -> case err of
-              -- when fetching JWK initially, except expiry parsing error, all errors are critical
-              JFEHttpException _ msg  -> throwError msg
-              JFEHttpError _ _ _ e    -> throwError e
-              JFEJwkParseError _ e    -> throwError e
-              JFEExpiryParseError _ _ -> return Nothing
-
-getUserInfo
-  :: (HasVersion, MonadIO m, MonadBaseControl IO m, MonadError QErr m, Tracing.MonadTrace m)
-  => Logger Hasura
-  -> H.Manager
-  -> [N.Header]
-  -> AuthMode
-  -> m UserInfo
-getUserInfo l m r a = fst <$> getUserInfoWithExpTime l m r a
+          onLeft res $ \case
+            -- when fetching JWK initially, except expiry parsing error, all errors are critical
+            JFEHttpException _ msg -> throwError msg
+            JFEHttpError _ _ _ e -> throwError e
+            JFEJwkParseError _ e -> throwError e
+            JFEExpiryParseError _ _ -> return Nothing
 
 -- | Authenticate the request using the headers and the configured 'AuthMode'.
-getUserInfoWithExpTime
-  :: forall m. (HasVersion, MonadIO m, MonadBaseControl IO m, MonadError QErr m, Tracing.MonadTrace m)
-  => Logger Hasura
-  -> H.Manager
-  -> [N.Header]
-  -> AuthMode
-  -> m (UserInfo, Maybe UTCTime)
+getUserInfoWithExpTime ::
+  forall m.
+  (MonadIO m, MonadBaseControl IO m, MonadError QErr m, Tracing.MonadTrace m) =>
+  Logger Hasura ->
+  H.Manager ->
+  [N.Header] ->
+  AuthMode ->
+  Maybe ReqsText ->
+  m (UserInfo, Maybe UTCTime, [N.Header])
 getUserInfoWithExpTime = getUserInfoWithExpTime_ userInfoFromAuthHook processJwt
 
 -- Broken out for testing with mocks:
-getUserInfoWithExpTime_
-  :: forall m _Manager _Logger_Hasura. (MonadIO m, MonadError QErr m)
-  => (_Logger_Hasura -> _Manager -> AuthHook -> [N.Header] -> m (UserInfo, Maybe UTCTime))
-  -- ^ mock 'userInfoFromAuthHook'
-  -> (JWTCtx -> [N.Header] -> Maybe RoleName -> m (UserInfo, Maybe UTCTime))
-  -- ^ mock 'processJwt'
-  -> _Logger_Hasura
-  -> _Manager
-  -> [N.Header]
-  -> AuthMode
-  -> m (UserInfo, Maybe UTCTime)
-getUserInfoWithExpTime_ userInfoFromAuthHook_ processJwt_ logger manager rawHeaders = \case
-
+getUserInfoWithExpTime_ ::
+  forall m _Manager _Logger_Hasura.
+  (MonadIO m, MonadError QErr m) =>
+  -- | mock 'userInfoFromAuthHook'
+  ( _Logger_Hasura ->
+    _Manager ->
+    AuthHook ->
+    [N.Header] ->
+    Maybe ReqsText ->
+    m (UserInfo, Maybe UTCTime, [N.Header])
+  ) ->
+  -- | mock 'processJwt'
+  ([JWTCtx] -> [N.Header] -> Maybe RoleName -> m (UserInfo, Maybe UTCTime, [N.Header])) ->
+  _Logger_Hasura ->
+  _Manager ->
+  [N.Header] ->
+  AuthMode ->
+  Maybe ReqsText ->
+  m (UserInfo, Maybe UTCTime, [N.Header])
+getUserInfoWithExpTime_ userInfoFromAuthHook_ processJwt_ logger manager rawHeaders authMode reqs = case authMode of
   AMNoAuth -> withNoExpTime $ mkUserInfoFallbackAdminRole UAuthNotSet
-
   -- If hasura was started with an admin secret we:
   --   - check if a secret was sent in the request
   --     - if so, check it and authorize as admin else fail
   --   - if not proceed with either webhook or JWT auth if configured
-  AMAdminSecret realAdminSecretHash maybeUnauthRole ->
-    checkingSecretIfSent realAdminSecretHash $ withNoExpTime $
-      -- Consider unauthorized role, if not found raise admin secret header required exception
-      case maybeUnauthRole of
-        Nothing -> throw401 $ adminSecretHeader <> "/"
-                   <> deprecatedAccessKeyHeader <> " required, but not found"
-        Just unAuthRole ->
-          mkUserInfo (URBPreDetermined unAuthRole) UAdminSecretNotSent sessionVariables
-
-  AMAdminSecretAndHook realAdminSecretHash hook ->
-    checkingSecretIfSent realAdminSecretHash $ userInfoFromAuthHook_ logger manager hook rawHeaders
-
-  AMAdminSecretAndJWT realAdminSecretHash jwtSecret unAuthRole ->
-    checkingSecretIfSent realAdminSecretHash $ processJwt_ jwtSecret rawHeaders unAuthRole
-
+  AMAdminSecret adminSecretHashSet maybeUnauthRole ->
+    checkingSecretIfSent adminSecretHashSet $
+      withNoExpTime
+        -- Consider unauthorized role, if not found raise admin secret header required exception
+        case maybeUnauthRole of
+          Nothing ->
+            throw401 $
+              adminSecretHeader <> "/"
+                <> deprecatedAccessKeyHeader
+                <> " required, but not found"
+          Just unAuthRole ->
+            mkUserInfo (URBPreDetermined unAuthRole) UAdminSecretNotSent sessionVariables
+  -- this is the case that actually ends up consuming the request AST
+  AMAdminSecretAndHook adminSecretHashSet hook ->
+    checkingSecretIfSent adminSecretHashSet $ userInfoFromAuthHook_ logger manager hook rawHeaders reqs
+  AMAdminSecretAndJWT adminSecretHashSet jwtSecrets unAuthRole ->
+    checkingSecretIfSent adminSecretHashSet $ processJwt_ jwtSecrets rawHeaders unAuthRole
   where
     -- CAREFUL!:
     mkUserInfoFallbackAdminRole adminSecretState =
-      mkUserInfo (URBFromSessionVariablesFallback adminRoleName)
-      adminSecretState sessionVariables
+      mkUserInfo
+        (URBFromSessionVariablesFallback adminRoleName)
+        adminSecretState
+        sessionVariables
 
     sessionVariables = mkSessionVariablesHeaders rawHeaders
 
-    checkingSecretIfSent
-      :: AdminSecretHash -> m (UserInfo, Maybe UTCTime) -> m (UserInfo, Maybe UTCTime)
-    checkingSecretIfSent realAdminSecretHash actionIfNoAdminSecret = do
+    checkingSecretIfSent ::
+      Set.HashSet AdminSecretHash -> m (UserInfo, Maybe UTCTime, [N.Header]) -> m (UserInfo, Maybe UTCTime, [N.Header])
+    checkingSecretIfSent adminSecretHashSet actionIfNoAdminSecret = do
       let maybeRequestAdminSecret =
-            foldl1 (<|>) $ map (`getSessionVariableValue` sessionVariables)
-            [adminSecretHeader, deprecatedAccessKeyHeader]
+            foldl1 (<|>) $
+              map
+                (`getSessionVariableValue` sessionVariables)
+                [adminSecretHeader, deprecatedAccessKeyHeader]
 
       -- when admin secret is absent, run the action to retrieve UserInfo
       case maybeRequestAdminSecret of
-        Nothing                 -> actionIfNoAdminSecret
+        Nothing -> actionIfNoAdminSecret
         Just requestAdminSecret -> do
-          when (hashAdminSecret requestAdminSecret /= realAdminSecretHash) $ throw401 $
-            "invalid " <> adminSecretHeader <> "/" <> deprecatedAccessKeyHeader
+          unless (Set.member (hashAdminSecret requestAdminSecret) adminSecretHashSet) $
+            throw401 $
+              "invalid " <> adminSecretHeader <> "/" <> deprecatedAccessKeyHeader
           withNoExpTime $ mkUserInfoFallbackAdminRole UAdminSecretSent
 
-    withNoExpTime a = (, Nothing) <$> a
+    withNoExpTime a = (,Nothing,[]) <$> a

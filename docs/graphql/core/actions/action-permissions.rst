@@ -57,11 +57,11 @@ Set action permissions
 
   .. tab:: API
 
-    Action permissions can be set by using the :ref:`create_action_permission metadata API <create_action_permission>`:
+    Action permissions can be set by using the :ref:`metadata_create_action_permission` metadata API:
 
     .. code-block:: http
 
-      POST /v1/query HTTP/1.1
+      POST /v1/metadata HTTP/1.1
       Content-Type: application/json
       X-Hasura-Role: admin
 
@@ -72,3 +72,7 @@ Set action permissions
           "role": "user"
         }
       }
+
+.. admonition:: Additional Resources
+
+  Introduction to Hasura Actions - `View Recording <https://hasura.io/events/webinar/hasura-actions/?pg=docs&plcmt=body&cta=view-recording&tech=>`__.

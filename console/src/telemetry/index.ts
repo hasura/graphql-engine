@@ -1,3 +1,4 @@
+import { Middleware } from 'redux';
 import endpoints from '../Endpoints';
 import globals from '../Globals';
 import { filterEventsBlockList, sanitiseUrl } from './filters';
@@ -126,4 +127,19 @@ export const trackRuntimeError = (
     data: { message: error.message, stack: error.stack },
   };
   sendEvent(reqBody);
+};
+
+export const telemetryMiddleware: Middleware = ({
+  getState,
+}) => next => action => {
+  // Call the next dispatch method in the middleware chain.
+  const returnValue = next(action);
+
+  // check if analytics tracking is enabled
+  if (globals.enableTelemetry) {
+    trackReduxAction(action, getState);
+  }
+  // This will likely be the action itself, unless
+  // a middleware further in chain changed it.
+  return returnValue;
 };

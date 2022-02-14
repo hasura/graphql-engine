@@ -6,8 +6,8 @@ import (
 	"sort"
 	"strconv"
 
-	"github.com/hasura/graphql-engine/cli"
-	"github.com/hasura/graphql-engine/cli/util"
+	"github.com/hasura/graphql-engine/cli/v2"
+	"github.com/hasura/graphql-engine/cli/v2/util"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
@@ -23,7 +23,7 @@ func newActionsUseCodegenCmd(ec *cli.ExecutionContext) *cobra.Command {
 	}
 	actionsUseCodegenCmd := &cobra.Command{
 		Use:   "use-codegen",
-		Short: "Configure the codegen module",
+		Short: "Use the codegen to generate code for Hasura actions",
 		Example: `  # Use codegen by providing framework
   hasura actions use-codegen --framework nodejs-express
 
@@ -36,6 +36,20 @@ func newActionsUseCodegenCmd(ec *cli.ExecutionContext) *cobra.Command {
   # Use a codegen with a starter kit
   hasura actions use-codegen --with-starter-kit true`,
 		SilenceUsage: true,
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			if err := ec.SetupCodegenAssetsRepo(); err != nil {
+				return fmt.Errorf("setting up codegen-assets repo failed (this is required for automatically generating actions code): %w", err)
+			}
+
+			if err := ec.SetupCodegenAssetsRepo(); err != nil {
+				return fmt.Errorf("setting up codengen assets repo failed")
+			}
+			// ensure codegen-assets repo exists
+			if err := ec.CodegenAssetsRepo.EnsureCloned(); err != nil {
+				return fmt.Errorf("pulling latest actions codegen files from internet failed: %w", err)
+			}
+			return nil
+		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return opts.run()
 		},
@@ -117,7 +131,7 @@ func (o *actionsUseCodegenOptions) run() error {
 		if err != nil {
 			return errors.Wrap(err, "error in getting input from user")
 		}
-		o.withStarterKit = shouldCloneStarterKit == "y"
+		o.withStarterKit = shouldCloneStarterKit
 	}
 
 	// clone the starter kit
@@ -134,7 +148,6 @@ func (o *actionsUseCodegenOptions) run() error {
 			suffix++
 			err = util.FSCheckIfDirPathExists(starterKitDirname)
 		}
-		err = nil
 
 		// copy the starter kit
 		destinationDir := filepath.Join(o.EC.ExecutionDirectory, starterKitDirname)

@@ -1,0 +1,9 @@
+- description: call the new custom endpoint with the wrong method
+  url: /api/rest/simple
+  method: DELETE
+  status: 405
+  query:
+  response:
+    path: $
+    error: 'Allowed methods: GET'
+    code: method-not-allowed

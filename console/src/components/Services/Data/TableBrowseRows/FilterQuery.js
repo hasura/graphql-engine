@@ -8,7 +8,6 @@ import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { createHistory } from 'history';
 
-import { Operators } from '../constants';
 import {
   setFilterCol,
   setFilterOp,
@@ -22,12 +21,19 @@ import {
   addOrder,
   removeOrder,
 } from './FilterActions.js';
-import { setDefaultQuery, runQuery, setOffset } from './FilterActions';
+import {
+  setDefaultQuery,
+  runQuery,
+  exportDataQuery,
+  setOffset,
+} from './FilterActions';
 import Button from '../../../Common/Button/Button';
 import ReloadEnumValuesButton from '../Common/Components/ReloadEnumValuesButton';
 import styles from '../../../Common/FilterQuery/FilterQuery.scss';
 import { getPersistedPageSize } from './tableUtils';
 import { isEmpty } from '../../../Common/utils/jsUtils';
+import ExportData from './ExportData';
+import { dataSource } from '../../../../dataSources';
 
 const history = createHistory();
 
@@ -58,11 +64,15 @@ const renderCols = (
           -- column --
         </option>
       ) : null}
-      {columns.map((c, i) => (
-        <option key={i} value={c}>
-          {c}
-        </option>
-      ))}
+      {columns.map((c, i) => {
+        const col_name =
+          tableSchema.configuration?.custom_column_names?.[c] ?? c;
+        return (
+          <option key={i} value={c}>
+            {col_name}
+          </option>
+        );
+      })}
     </select>
   );
 };
@@ -79,7 +89,7 @@ const renderOps = (opName, onChange, key) => (
         -- op --
       </option>
     ) : null}
-    {Operators.map((o, i) => (
+    {dataSource.operators.map((o, i) => (
       <option key={i} value={o.value}>
         {`[${o.graphqlOp}] ${o.name}`}
       </option>
@@ -93,7 +103,7 @@ const getDefaultValue = (possibleValue, opName) => {
     return possibleValue;
   }
 
-  const operator = Operators.find(op => op.value === opName);
+  const operator = dataSource.operators.find(op => op.value === opName);
   return operator && operator.defaultValue ? operator.defaultValue : '';
 };
 
@@ -276,6 +286,9 @@ class FilterQuery extends Component {
 
   render() {
     const { dispatch, whereAnd, tableSchema, orderBy } = this.props; // eslint-disable-line no-unused-vars
+    const exportData = type => {
+      dispatch(exportDataQuery(tableSchema, type));
+    };
 
     return (
       <div className={styles.add_mar_top}>
@@ -311,6 +324,7 @@ class FilterQuery extends Component {
             >
               Run query
             </Button>
+            <ExportData onExport={exportData} />
             {tableSchema.is_enum ? (
               <ReloadEnumValuesButton
                 dispatch={dispatch}

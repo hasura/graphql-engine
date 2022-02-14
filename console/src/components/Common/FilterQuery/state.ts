@@ -1,10 +1,5 @@
 import React from 'react';
-import {
-  TableDefinition,
-  getSelectQuery,
-  OrderBy,
-  makeOrderBy,
-} from '../utils/v1QueryUtils';
+import { OrderBy, makeOrderBy } from '../utils/v1QueryUtils';
 import requestAction from '../../../utils/requestAction';
 import { Dispatch } from '../../../types';
 import endpoints from '../../../Endpoints';
@@ -18,22 +13,37 @@ import {
 } from './types';
 
 import { Nullable } from '../utils/tsUtils';
+import { QualifiedTable } from '../../../metadata/types';
+import {
+  getScheduledEvents,
+  getEventInvocations,
+} from '../../../metadata/queryUtils';
+import { EventKind } from '../../Services/Events/types';
 import { isNotDefined } from '../utils/jsUtils';
-import { parseFilter } from './utils';
+import {
+  getDataTriggerLogsCountQuery,
+  getDataTriggerLogsQuery,
+} from '../../../metadata/metadataTableUtils';
+import { parseEventsSQLResp } from '../../Services/Events/utils';
 
 const defaultFilter = makeValueFilter('', null, '');
 const defaultSort = makeOrderBy('', 'asc');
-
 const defaultState = makeFilterState([defaultFilter], [defaultSort], 10, 0);
 
+export type TriggerOperation = 'pending' | 'processed' | 'invocation';
+
 export const useFilterQuery = (
-  table: TableDefinition,
+  table: QualifiedTable,
   dispatch: Dispatch,
   presets: {
     filters: Filter[];
     sorts: OrderBy[];
   },
-  relationships: Nullable<string[]>
+  relationships: Nullable<string[]>,
+  triggerOp: TriggerOperation,
+  triggerType: EventKind,
+  triggerName?: string,
+  currentSource?: string
 ) => {
   const [state, setState] = React.useState(defaultState);
   const [rows, setRows] = React.useState<any[]>([]);
@@ -47,35 +57,65 @@ export const useFilterQuery = (
 
     const { offset, limit, sorts: newSorts } = runQueryOpts;
 
-    const where = {
-      $and: [...state.filters, ...presets.filters]
-        .filter(f => !!f.key && !!f.value)
-        .map(f => parseFilter(f)),
-    };
+    const offsetValue = isNotDefined(offset) ? state.offset : offset;
+    const limitValue = isNotDefined(limit) ? state.limit : limit;
 
-    const orderBy = newSorts || [
-      ...state.sorts.filter(f => !!f.column),
-      ...presets.sorts,
-    ];
+    let query = {};
+    let endpoint = endpoints.metadata;
 
-    const query = getSelectQuery(
-      'select',
-      table,
-      ['*', ...(relationships || []).map(r => ({ name: r, columns: ['*'] }))],
-      where,
-      isNotDefined(offset) ? state.offset : offset,
-      isNotDefined(limit) ? state.limit : limit,
-      orderBy
-    );
-    const countQuery = getSelectQuery(
-      'count',
-      table,
-      ['*', ...(relationships || []).map(r => ({ name: r, columns: ['*'] }))],
-      where,
-      undefined,
-      undefined,
-      orderBy
-    );
+    if (triggerType === 'scheduled') {
+      if (triggerOp !== 'invocation') {
+        query = getScheduledEvents(
+          'one_off',
+          limitValue ?? 10,
+          offsetValue ?? 0,
+          triggerOp
+        );
+      } else {
+        query = getEventInvocations(
+          'one_off',
+          limitValue ?? 10,
+          offsetValue ?? 0
+        );
+      }
+    } else if (triggerType === 'cron') {
+      if (triggerOp !== 'invocation') {
+        query = getScheduledEvents(
+          'cron',
+          limitValue ?? 10,
+          offsetValue ?? 0,
+          triggerOp,
+          triggerName
+        );
+      } else {
+        query = getEventInvocations(
+          'cron',
+          limitValue ?? 10,
+          offsetValue ?? 0,
+          triggerName
+        );
+      }
+    } else if (triggerType === 'data') {
+      endpoint = endpoints.query;
+      if (triggerName) {
+        query = {
+          args: [
+            getDataTriggerLogsCountQuery(triggerName, triggerOp, currentSource),
+            getDataTriggerLogsQuery(
+              triggerOp,
+              currentSource ?? 'default',
+              triggerName,
+              limitValue,
+              offsetValue
+            ),
+          ],
+          source: currentSource ?? 'default',
+          type: 'bulk',
+        };
+      } else {
+        return; // fixme: this should just be an error saying that there's no trigger name provided
+      }
+    }
 
     const options = {
       method: 'POST',
@@ -83,10 +123,22 @@ export const useFilterQuery = (
     };
 
     dispatch(
-      requestAction(endpoints.query, options, undefined, undefined, true, true)
+      requestAction(endpoint, options, undefined, undefined, true, true)
     ).then(
-      (data: any[]) => {
-        setRows(data);
+      (data: any) => {
+        if (triggerType === 'data') {
+          setCount(Number(data?.[0].result?.[1]?.[0]));
+          // formatting of the data
+          const formattedData: Record<string, any>[] = parseEventsSQLResp(
+            data?.[1]?.result ?? []
+          );
+          setRows(formattedData);
+        } else if (triggerOp !== 'invocation') {
+          setRows(data?.events ?? []);
+        } else {
+          setRows(data?.invocations ?? []);
+        }
+
         setLoading(false);
         if (offset !== undefined) {
           setState(s => ({ ...s, offset }));
@@ -100,21 +152,9 @@ export const useFilterQuery = (
             sorts: newSorts,
           }));
         }
-        dispatch(
-          requestAction(
-            endpoints.query,
-            {
-              method: 'POST',
-              body: JSON.stringify(countQuery),
-            },
-            undefined,
-            undefined,
-            true,
-            true
-          )
-        ).then((countData: { count: number }) => {
-          setCount(countData.count);
-        });
+        if (triggerType !== 'data') {
+          setCount(data?.count ?? 10);
+        }
       },
       () => {
         setError(true);

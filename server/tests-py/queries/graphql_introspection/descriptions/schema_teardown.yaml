@@ -1,0 +1,7 @@
+type: run_sql
+args:
+  sql: |
+    DROP TABLE "automatic_comment_in_db" cascade;
+    DROP TABLE "automatic_no_comment_in_db" cascade;
+    DROP TABLE "explicit_comment_in_metadata" cascade;
+    DROP TABLE "explicit_no_comment_in_metadata" cascade;

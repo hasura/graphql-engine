@@ -2,8 +2,8 @@
    :description: Manage scheduled triggers with the Hasura schema/metadata API
    :keywords: hasura, docs, schema/metadata API, API reference, scheduled trigger
 
-Schema/Metadata API Reference: Scheduled Triggers
-=================================================
+Schema/Metadata API Reference: Scheduled Triggers (Deprecated)
+==============================================================
 
 .. contents:: Table of contents
   :backlinks: none
@@ -15,7 +15,18 @@ Introduction
 
 Scheduled triggers are used to invoke webhooks based on a timestamp or cron.
 
-.. _create_cron_trigger:
+.. admonition:: Supported from
+
+  Scheduled triggers are supported from versions ``v1.3.0`` and above.
+
+.. admonition:: Deprecation
+
+  In versions ``v2.0.0`` and above, the schema/metadata API is deprecated in favour of the :ref:`schema API <schema_apis>` and the
+  :ref:`metadata API <metadata_apis>`.
+
+  Though for backwards compatibility, the schema/metadata APIs will continue to function.
+
+.. _schema_metadata_create_cron_trigger:
 
 create_cron_trigger
 -------------------
@@ -43,7 +54,7 @@ create_cron_trigger
        }
    }
 
-.. _create_cron_trigger_syntax:
+.. _schema_metadata_create_cron_trigger_syntax:
 
 Args syntax
 ^^^^^^^^^^^
@@ -77,7 +88,7 @@ Args syntax
      - List of headers to be sent with the webhook
    * - retry_conf
      - false
-     - RetryConfST_
+     - :ref:`RetryConfST`
      - Retry configuration if scheduled invocation delivery fails
    * - include_in_metadata
      - true
@@ -95,7 +106,12 @@ Args syntax
      - When replace is set to ``true``, the cron trigger will be updated(if exists) and when it's ``false`` or the
        field is omitted, then a new cron trigger will be created.
 
-.. _delete_cron_trigger:
+
+.. admonition:: Supported from
+
+  Scheduled triggers are supported from versions ``v1.3.0`` and above.
+
+.. _schema_metadata_delete_cron_trigger:
 
 delete_cron_trigger
 -------------------
@@ -116,7 +132,7 @@ delete_cron_trigger
        }
    }
 
-.. _delete_cron_trigger_syntax:
+.. _schema_metadata_delete_cron_trigger_syntax:
 
 Args syntax
 ^^^^^^^^^^^
@@ -133,7 +149,11 @@ Args syntax
      - :ref:`TriggerName <TriggerName>`
      - Name of the cron trigger
 
-.. _create_scheduled_event:
+.. admonition:: Supported from
+
+  Scheduled triggers are supported from versions ``v1.3.0`` and above.
+
+.. _schema_metadata_create_scheduled_event:
 
 create_scheduled_event
 ----------------------
@@ -163,7 +183,7 @@ create_scheduled_event
        }
    }
 
-.. _create_scheduled_event_syntax:
+.. _schema_metadata_create_scheduled_event_syntax:
 
 Args syntax
 ^^^^^^^^^^^
@@ -193,53 +213,14 @@ Args syntax
      - List of headers to be sent with the webhook
    * - retry_conf
      - false
-     - RetryConfST_
+     - :ref:`RetryConfST`
      - Retry configuration if scheduled event delivery fails
    * - comment
      - false
      - Text
      - Custom comment.
 
-UrlFromEnv
-&&&&&&&&&&
 
-.. list-table::
-   :header-rows: 1
+.. admonition:: Supported from
 
-   * - Key
-     - required
-     - Schema
-     - Description
-   * - from_env
-     - true
-     - String
-     - Name of the environment variable which has the URL
-
-.. _RetryConfST:
-
-RetryConfST
-&&&&&&&&&&&
-
-.. list-table::
-   :header-rows: 1
-
-   * - Key
-     - required
-     - Schema
-     - Description
-   * - num_retries
-     - false
-     - Integer
-     - Number of times to retry delivery. Default: 0
-   * - retry_interval_seconds
-     - false
-     - Integer
-     - Number of seconds to wait between each retry. Default: 10
-   * - timeout_seconds
-     - false
-     - Integer
-     - Number of seconds to wait for response before timing out. Default: 60
-   * - tolerance_seconds
-     - false
-     - Integer
-     - Number of seconds between scheduled time and actual delivery time that is acceptable. If the time difference is more than this, then the event is dropped. Default: 21600 (6 hours)
+  Scheduled triggers are supported from versions ``v1.3.0`` and above.

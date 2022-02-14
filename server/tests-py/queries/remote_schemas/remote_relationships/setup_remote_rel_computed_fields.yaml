@@ -1,0 +1,25 @@
+type: bulk
+args:
+- type: create_remote_relationship
+  args:
+    name: grade
+    table: students
+    hasura_fields:
+    - total_marks
+    remote_schema: my-remote-schema
+    remote_field:
+      getGrade:
+        arguments:
+          marks: "$total_marks"
+
+- type: create_remote_relationship
+  args:
+    name: grade_session
+    table: students
+    hasura_fields:
+    - total_marks_session
+    remote_schema: my-remote-schema
+    remote_field:
+      getGrade:
+        arguments:
+          marks: "$total_marks_session"

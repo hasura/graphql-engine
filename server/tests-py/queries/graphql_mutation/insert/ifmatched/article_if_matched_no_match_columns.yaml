@@ -1,0 +1,79 @@
+# The inserts are ignored on conflict
+- description: Upserts article data via GraphQL mutation with empty match columns (omitted columns)
+  url: /v1/graphql
+  status: 200
+  response:
+    data:
+      insert_article:
+        affected_rows: 2
+        returning:
+        - id: 4
+          title:
+          content: Updated Article 1 content
+        - id: 5
+          title:
+          content: Updated Article 2 content
+  query:
+    query: |
+      mutation insert_article {
+        insert_article (
+          objects: [
+            {
+              content: "Updated Article 1 content"
+            },
+            {
+              content: "Updated Article 2 content"
+            }
+            ],
+          if_matched: {
+            match_columns: [],
+            update_columns: content
+          }
+        ) {
+          affected_rows
+          returning {
+            id
+            title
+            content
+            }
+          }
+        }
+
+
+- description: Upserts article data via GraphQL mutation with empty match columns and update columns (omitted columns)
+  url: /v1/graphql
+  status: 200
+  response:
+    data:
+      insert_article:
+        affected_rows: 2
+        returning:
+        - id: 6
+          title:
+          content: Updated Article 1 content
+        - id: 7
+          title:
+          content: Updated Article 2 content
+  query:
+    query: |
+      mutation insert_article {
+        insert_article (
+          objects: [
+            {
+              content: "Updated Article 1 content"
+            },
+            {
+              content: "Updated Article 2 content"
+            }
+            ],
+          if_matched: {
+          }
+        ) {
+          affected_rows
+          returning {
+            id
+            title
+            content
+            }
+          }
+        }

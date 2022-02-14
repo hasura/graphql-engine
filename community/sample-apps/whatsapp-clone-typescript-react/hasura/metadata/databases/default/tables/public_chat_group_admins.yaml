@@ -1,0 +1,29 @@
+delete_permissions:
+- permission:
+    filter: {}
+  role: user
+insert_permissions:
+- permission:
+    check: {}
+    columns:
+    - chat_id
+    - user_id
+  role: user
+select_permissions:
+- permission:
+    columns:
+    - chat_id
+    - user_id
+    filter: {}
+  role: user
+table:
+  name: chat_group_admins
+  schema: public
+update_permissions:
+- permission:
+    check: null
+    columns:
+    - chat_id
+    - user_id
+    filter: {}
+  role: user

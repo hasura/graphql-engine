@@ -2,11 +2,9 @@ import React from 'react';
 import sanitize from 'sanitize-filename';
 
 import { getSchemaBaseRoute } from '../../Common/utils/routesUtils';
-import { getRunSqlQuery } from '../../Common/utils/v1QueryUtils';
 import Endpoints, { globalCookiePolicy } from '../../../Endpoints';
 import requestAction from '../../../utils/requestAction';
 import defaultState from './DataState';
-import insertReducer from './TableInsertItem/InsertActions';
 import viewReducer from './TableBrowseRows/ViewActions';
 import editReducer from './TableBrowseRows/EditActions';
 import modifyReducer from './TableCommon/TableReducer';
@@ -20,44 +18,51 @@ import {
 import dataHeaders from './Common/Headers';
 import { loadMigrationStatus } from '../../Main/Actions';
 import returnMigrateUrl from './Common/getMigrateUrl';
-import { loadInconsistentObjects } from '../Settings/Actions';
 import { filterInconsistentMetadataObjects } from '../Settings/utils';
 import globals from '../../../Globals';
-
 import {
-  fetchTrackedTableReferencedFkQuery,
   fetchTrackedTableFkQuery,
   fetchTableListQuery,
-  fetchTrackedTableListQuery,
-  fetchTrackedTableRemoteRelationshipQuery,
-  mergeLoadSchemaData,
   cascadeUpQueries,
   getDependencyError,
 } from './utils';
-
+import {
+  mergeDataMssql,
+  mergeLoadSchemaDataPostgres,
+  mergeDataBigQuery,
+  mergeDataCitus,
+} from './mergeData';
 import _push from './push';
-import { getFetchAllRolesQuery } from '../../Common/utils/v1QueryUtils';
-
-import { fetchColumnTypesQuery, fetchColumnDefaultFunctions } from './utils';
-
-import { fetchColumnCastsQuery, convertArrayToJson } from './TableModify/utils';
-
+import { convertArrayToJson } from './TableModify/utils';
 import { CLI_CONSOLE_MODE, SERVER_CONSOLE_MODE } from '../../../constants';
+import { maxAllowedMigrationLength } from './constants';
 import { getDownQueryComments } from '../../../utils/migration/utils';
 import { isEmpty } from '../../Common/utils/jsUtils';
+import { currentDriver, dataSource } from '../../../dataSources';
+import { exportMetadata } from '../../../metadata/actions';
+import {
+  getTablesFromAllSources,
+  getTablesInfoSelector,
+} from '../../../metadata/selector';
+import { getRunSqlQuery } from '../../Common/utils/v1QueryUtils';
+import { services } from '../../../dataSources/services';
+import insertReducer from './TableInsertItem/InsertActions';
+import {
+  checkFeatureSupport,
+  READ_ONLY_RUN_SQL_QUERIES,
+} from '../../../helpers/versionUtils';
 
 const SET_TABLE = 'Data/SET_TABLE';
 const LOAD_FUNCTIONS = 'Data/LOAD_FUNCTIONS';
 const LOAD_NON_TRACKABLE_FUNCTIONS = 'Data/LOAD_NON_TRACKABLE_FUNCTIONS';
-const LOAD_TRACKED_FUNCTIONS = 'Data/LOAD_TRACKED_FUNCTIONS';
 const LOAD_SCHEMA = 'Data/LOAD_SCHEMA';
 const LOAD_UNTRACKED_RELATIONS = 'Data/LOAD_UNTRACKED_RELATIONS';
 const FETCH_SCHEMA_LIST = 'Data/FETCH_SCHEMA_LIST';
 const UPDATE_CURRENT_SCHEMA = 'Data/UPDATE_CURRENT_SCHEMA';
+const UPDATE_CURRENT_DATA_SOURCE = 'Data/UPDATE_CURRENT_DATA_SOURCE';
 const ADMIN_SECRET_ERROR = 'Data/ADMIN_SECRET_ERROR';
 const UPDATE_REMOTE_SCHEMA_MANUAL_REL = 'Data/UPDATE_SCHEMA_MANUAL_REL';
 const SET_CONSISTENT_SCHEMA = 'Data/SET_CONSISTENT_SCHEMA';
-const SET_CONSISTENT_FUNCTIONS = 'Data/SET_CONSISTENT_FUNCTIONS';
 
 const UPDATE_DATA_HEADERS = 'Data/UPDATE_DATA_HEADERS';
 
@@ -69,6 +74,9 @@ const MAKE_REQUEST = 'ModifyTable/MAKE_REQUEST';
 const REQUEST_SUCCESS = 'ModifyTable/REQUEST_SUCCESS';
 const REQUEST_ERROR = 'ModifyTable/REQUEST_ERROR';
 
+const SET_FILTER_SCHEMA = 'Data/SET_FILTER_SCHEMA';
+const SET_FILTER_TABLES = 'Data/SET_FILTER_TABLES';
+
 const SET_ADDITIONAL_COLUMNS_INFO = 'Data/SET_ADDITIONAL_COLUMNS_INFO';
 
 export const SET_ALL_ROLES = 'Data/SET_ALL_ROLES';
@@ -77,133 +85,11 @@ export const setAllRoles = roles => ({
   roles,
 });
 
-const initQueries = {
-  schemaList: {
-    type: 'select',
-    args: {
-      table: {
-        name: 'schemata',
-        schema: 'information_schema',
-      },
-      columns: ['schema_name'],
-      order_by: [{ column: 'schema_name', type: 'asc', nulls: 'last' }],
-      where: {
-        schema_name: {
-          $nin: [
-            'information_schema',
-            'pg_catalog',
-            'hdb_catalog',
-            'hdb_views',
-          ],
-        },
-      },
-    },
-  },
-  loadTrackedFunctions: {
-    type: 'select',
-    args: {
-      table: {
-        name: 'hdb_function',
-        schema: 'hdb_catalog',
-      },
-      columns: ['function_name', 'function_schema', 'is_system_defined'],
-      order_by: [{ column: 'function_name', type: 'asc', nulls: 'last' }],
-      where: {
-        function_schema: '', // needs to be set later
-      },
-    },
-  },
-  loadTrackableFunctions: {
-    type: 'select',
-    args: {
-      table: {
-        name: 'hdb_function_agg',
-        schema: 'hdb_catalog',
-      },
-      columns: [
-        'function_name',
-        'function_schema',
-        'has_variadic',
-        'function_type',
-        'function_definition',
-        'return_type_schema',
-        'return_type_name',
-        'return_type_type',
-        'returns_set',
-        {
-          name: 'return_table_info',
-          columns: ['table_schema', 'table_name'],
-        },
-      ],
-      order_by: [{ column: 'function_name', type: 'asc', nulls: 'last' }],
-      where: {
-        function_schema: '', // needs to be set later
-        has_variadic: false,
-        returns_set: true,
-        return_type_type: 'c', // COMPOSITE type
-        return_table_info: {},
-        $or: [
-          {
-            function_type: {
-              $ilike: '%stable%',
-            },
-          },
-          {
-            function_type: {
-              $ilike: '%immutable%',
-            },
-          },
-        ],
-      },
-    },
-  },
-  loadNonTrackableFunctions: {
-    type: 'select',
-    args: {
-      table: {
-        name: 'hdb_function_agg',
-        schema: 'hdb_catalog',
-      },
-      columns: [
-        'function_name',
-        'function_schema',
-        'has_variadic',
-        'function_type',
-        'function_definition',
-        'return_type_schema',
-        'return_type_name',
-        'return_type_type',
-        'returns_set',
-        {
-          name: 'return_table_info',
-          columns: ['table_schema', 'table_name'],
-        },
-      ],
-      order_by: [{ column: 'function_name', type: 'asc', nulls: 'last' }],
-      where: {
-        function_schema: '', // needs to be set later
-        $not: {
-          has_variadic: false,
-          returns_set: true,
-          return_type_type: 'c', // COMPOSITE type
-          return_table_info: {},
-          $or: [
-            {
-              function_type: {
-                $ilike: '%stable%',
-              },
-            },
-            {
-              function_type: {
-                $ilike: '%immutable%',
-              },
-            },
-          ],
-        },
-      },
-    },
-  },
-};
+const SET_DB_CONNECTION_ENV_VAR = 'Data/SET_DB_CONNECTION_ENV_VAR';
+const RESET_DB_CONNECTION_ENV_VAR = 'Data/RESET_DB_CONNECTION_ENV_VAR';
+
+const SET_ALL_SOURCES_SCHEMAS = 'Data/SET_ALL_SOURCES_SCHEMAS';
+const SET_INCONSISTENT_INHERITED_ROLE = 'Data/SET_INCONSISTENT_INHERITED_ROLE';
 
 export const mergeRemoteRelationshipsWithSchema = (
   remoteRelationships,
@@ -229,48 +115,24 @@ export const mergeRemoteRelationshipsWithSchema = (
   };
 };
 
-const fetchTrackedFunctions = () => {
-  return (dispatch, getState) => {
-    const url = Endpoints.getSchema;
+export const setDBConnectionDetails = details => {
+  return {
+    type: SET_DB_CONNECTION_ENV_VAR,
+    data: details,
+  };
+};
 
-    const currentSchema = getState().tables.currentSchema;
-
-    const body = initQueries.loadTrackedFunctions;
-    body.args.where.function_schema = currentSchema;
-
-    const options = {
-      credentials: globalCookiePolicy,
-      method: 'POST',
-      headers: dataHeaders(getState),
-      body: JSON.stringify(body),
-    };
-
-    return dispatch(requestAction(url, options)).then(
-      data => {
-        let consistentFunctions = data;
-        const { inconsistentObjects } = getState().metadata;
-
-        if (inconsistentObjects.length > 0) {
-          consistentFunctions = filterInconsistentMetadataObjects(
-            data,
-            inconsistentObjects,
-            'functions'
-          );
-        }
-
-        dispatch({ type: LOAD_TRACKED_FUNCTIONS, data: consistentFunctions });
-      },
-      error => {
-        console.error('Failed to load schema ' + JSON.stringify(error));
-      }
-    );
+export const resetDBConnectionEnvVar = () => {
+  return {
+    type: RESET_DB_CONNECTION_ENV_VAR,
   };
 };
 
 const setUntrackedRelations = () => (dispatch, getState) => {
   const untrackedRelations = getAllUnTrackedRelations(
     getState().tables.allSchemas,
-    getState().tables.currentSchema
+    getState().tables.currentSchema,
+    getState().tables.currentDataSource
   ).bulkRelTrack;
 
   dispatch({
@@ -279,54 +141,74 @@ const setUntrackedRelations = () => (dispatch, getState) => {
   });
 };
 
-const loadSchema = configOptions => {
+/**
+ * @param {{schemas: string[], tables: import('@/metadata/types').QualifiedTable[]}} [configOptions={}]
+ */
+// todo: it's called 4 times on start
+//! This has been solved by the hooks in src/hooks.
+//! They should be used to phase this out
+const loadSchema = (configOptions = {}) => {
   return (dispatch, getState) => {
-    const url = Endpoints.getSchema;
+    const url = Endpoints.query;
 
+    /** @type {import('@/dataSources/types').Table[]} */
     let allSchemas = getState().tables.allSchemas;
+    const source = getState().tables.currentDataSource;
+    const { currentSchema, schemaList } = getState().tables;
 
-    if (
-      !configOptions ||
-      ((!configOptions.schemas || configOptions.schemas.length === 0) &&
-        (!configOptions.tables || configOptions.tables.length === 0))
-    ) {
-      configOptions = {
-        schemas: [getState().tables.currentSchema],
-      };
+    if (!configOptions?.schemas?.length && !configOptions?.tables?.length) {
+      configOptions.schemas = [currentSchema || schemaList[0]];
     }
 
-    if (configOptions) {
-      if (configOptions.schemas) {
-        allSchemas = allSchemas.filter(
-          schemaInfo =>
-            !configOptions.schemas.some(
-              item => item === schemaInfo.table_schema
-            )
-        );
-      }
-
-      if (configOptions.tables) {
-        allSchemas = allSchemas.filter(
-          schemaInfo =>
-            !configOptions.tables.some(
-              item =>
-                item.table_schema === schemaInfo.table_schema &&
-                item.table_name === schemaInfo.table_name
-            )
-        );
-      }
+    if (configOptions?.schemas) {
+      allSchemas = allSchemas.filter(
+        schemaInfo =>
+          !configOptions.schemas.some(item => item === schemaInfo.table_schema)
+      );
     }
 
+    if (configOptions?.tables) {
+      allSchemas = allSchemas.filter(
+        schemaInfo =>
+          !configOptions.tables.some(
+            item =>
+              item.schema === schemaInfo.table_schema &&
+              item.name === schemaInfo.table_name
+          )
+      );
+    }
     const body = {
       type: 'bulk',
+      source,
       args: [
-        fetchTableListQuery(configOptions),
-        fetchTrackedTableListQuery(configOptions), // v1/query
-        fetchTrackedTableFkQuery(configOptions),
-        fetchTrackedTableReferencedFkQuery(configOptions),
-        fetchTrackedTableRemoteRelationshipQuery(configOptions),
+        fetchTableListQuery(configOptions, source),
+        fetchTrackedTableFkQuery(configOptions, source),
+        // todo: queries below could be done only when user visits `Data` page
+        getRunSqlQuery(
+          dataSource?.primaryKeysInfoSql(configOptions) || '',
+          source,
+          false,
+          true
+        ),
+        getRunSqlQuery(
+          dataSource?.uniqueKeysSql(configOptions) || '',
+          source,
+          false,
+          true
+        ),
       ],
     };
+
+    if (dataSource?.checkConstraintsSql) {
+      body.args.push(
+        getRunSqlQuery(
+          dataSource?.checkConstraintsSql(configOptions) || '',
+          source,
+          false,
+          true
+        )
+      );
+    }
 
     const options = {
       credentials: globalCookiePolicy,
@@ -335,74 +217,68 @@ const loadSchema = configOptions => {
       body: JSON.stringify(body),
     };
 
-    return dispatch(requestAction(url, options)).then(
-      data => {
-        const tableList = JSON.parse(data[0].result[1]);
-        const fkList = JSON.parse(data[2].result[1]);
-        const refFkList = JSON.parse(data[3].result[1]);
-        const remoteRelationships = data[4];
+    return dispatch(exportMetadata()).then(state => {
+      const metadataTables = getTablesInfoSelector(state)({});
+      return dispatch(requestAction(url, options)).then(
+        data => {
+          if (!data || !data[0] || !data[0].result) return;
 
-        const mergedData = mergeLoadSchemaData(
-          tableList,
-          data[1],
-          fkList,
-          refFkList,
-          remoteRelationships
-        );
+          let mergedData = [];
+          switch (currentDriver) {
+            case 'postgres':
+              mergedData = mergeLoadSchemaDataPostgres(data, metadataTables);
+              break;
+            case 'citus':
+              mergedData = mergeDataCitus(data, metadataTables);
+              break;
+            case 'mssql':
+              mergedData = mergeDataMssql(data, metadataTables);
+              break;
+            case 'bigquery':
+              mergedData = mergeDataBigQuery(data, metadataTables);
+              break;
+            default:
+          }
 
-        const { inconsistentObjects } = getState().metadata;
+          const { inconsistentObjects } = state.metadata;
+          const maybeInconsistentSchemas = allSchemas.concat(mergedData);
 
-        const maybeInconsistentSchemas = allSchemas.concat(mergedData);
+          let consistentSchemas;
+          if (inconsistentObjects.length > 0) {
+            consistentSchemas = filterInconsistentMetadataObjects(
+              maybeInconsistentSchemas,
+              inconsistentObjects,
+              'tables'
+            );
+          }
 
-        let consistentSchemas;
-        if (inconsistentObjects.length > 0) {
-          consistentSchemas = filterInconsistentMetadataObjects(
-            maybeInconsistentSchemas,
-            inconsistentObjects,
-            'tables'
+          dispatch({
+            type: LOAD_SCHEMA,
+            allSchemas: consistentSchemas || maybeInconsistentSchemas,
+          });
+        },
+        error => {
+          console.error('loadSchema error: ' + JSON.stringify(error));
+          dispatch(
+            showErrorNotification('DB schema loading failed', null, error)
           );
         }
-
-        dispatch({
-          type: LOAD_SCHEMA,
-          allSchemas: consistentSchemas || maybeInconsistentSchemas,
-        });
-
-        dispatch(loadInconsistentObjects({ shouldReloadMetadata: false }));
-      },
-      error => {
-        console.error('loadSchema error: ' + JSON.stringify(error));
-        dispatch(
-          showErrorNotification('DB schema loading failed', null, error)
-        );
-      }
-    );
+      );
+    });
   };
 };
 
 const fetchAdditionalColumnsInfo = () => (dispatch, getState) => {
   const schemaName = getState().tables.currentSchema;
-  const query = {
-    type: 'select',
-    args: {
-      table: {
-        name: 'columns',
-        schema: 'information_schema',
-      },
-      columns: [
-        'column_name',
-        'table_name',
-        'is_generated',
-        'is_identity',
-        'identity_generation',
-      ],
-      where: {
-        table_schema: {
-          $eq: schemaName,
-        },
-      },
-    },
-  };
+  const currentSource = getState().tables.currentDataSource;
+
+  if (!dataSource.getAdditionalColumnsInfoQuerySql) {
+    // unavailable for a data source
+    return;
+  }
+  const sql = dataSource.getAdditionalColumnsInfoQuerySql(schemaName);
+  const query = getRunSqlQuery(sql, currentSource, false, true);
+
   const options = {
     credentials: globalCookiePolicy,
     method: 'POST',
@@ -411,37 +287,11 @@ const fetchAdditionalColumnsInfo = () => (dispatch, getState) => {
   };
 
   return dispatch(requestAction(Endpoints.query, options)).then(
-    result => {
-      if (result) {
-        let columnsInfo = {};
-        result
-          .filter(
-            info => info.is_generated !== 'NEVER' || info.is_identity !== 'NO'
-          )
-          .forEach(
-            ({
-              column_name,
-              table_name,
-              is_generated,
-              is_identity,
-              identity_generation,
-            }) => {
-              columnsInfo = {
-                ...columnsInfo,
-                [table_name]: {
-                  ...columnsInfo[table_name],
-                  [column_name]: {
-                    is_generated,
-                    is_identity,
-                    identity_generation,
-                  },
-                },
-              };
-            }
-          );
+    data => {
+      if (data.result) {
         dispatch({
           type: SET_ADDITIONAL_COLUMNS_INFO,
-          data: columnsInfo,
+          data: dataSource?.parseColumnsInfoResult(data.result),
         });
       }
     },
@@ -453,10 +303,15 @@ const fetchAdditionalColumnsInfo = () => (dispatch, getState) => {
   );
 };
 
-const updateSchemaInfo = options => dispatch => {
-  return dispatch(loadSchema(options)).then(() => {
+/**
+ * @param {{schemas: string[], tables?: import('@/metadata/types').QualifiedTable[]}} [options=undefined]
+ */
+const updateSchemaInfo = options => (dispatch, getState) => {
+  if (!getState().tables.currentDataSource) return;
+  return dispatch(loadSchema(options)).then(data => {
     dispatch(fetchAdditionalColumnsInfo());
     dispatch(setUntrackedRelations());
+    return data;
   });
 };
 
@@ -465,54 +320,109 @@ const setConsistentSchema = data => ({
   data,
 });
 
-const setConsistentFunctions = data => ({
-  type: SET_CONSISTENT_FUNCTIONS,
-  data,
-});
+const updateSchemaList = (dispatch, getState, schemaList) => {
+  dispatch({
+    type: FETCH_SCHEMA_LIST,
+    schemaList,
+  });
+  let newSchema = '';
+  const { locationBeforeTransitions } = getState().routing;
+  if (schemaList.length) {
+    newSchema =
+      dataSource.defaultRedirectSchema &&
+      schemaList.includes(dataSource.defaultRedirectSchema)
+        ? dataSource.defaultRedirectSchema
+        : schemaList.sort(Intl.Collator().compare)[0];
+  }
+  if (
+    locationBeforeTransitions &&
+    !locationBeforeTransitions.pathname.includes('tables')
+  )
+    dispatch({ type: UPDATE_CURRENT_SCHEMA, currentSchema: newSchema });
+  return dispatch(updateSchemaInfo());
+};
 
-const fetchDataInit = () => (dispatch, getState) => {
-  const url = Endpoints.getSchema;
+const fetchDataInit = (source, driver) => (dispatch, getState) => {
+  const url = Endpoints.query;
 
-  const body = {
-    type: 'bulk',
-    args: [initQueries.schemaList],
-  };
+  const { schemaFilter } = getState().tables;
+
+  if (driver === 'bigquery') {
+    const schemaList = getState().metadata.metadataObject.sources.find(
+      x => x.name === source
+    ).configuration.datasets;
+    return updateSchemaList(dispatch, getState, schemaList);
+  }
+
+  const currentSource = source || getState().tables.currentDataSource;
+  const query = getRunSqlQuery(
+    dataSource.schemaListSql(schemaFilter),
+    currentSource,
+    false,
+    true,
+    driver
+  );
+
+  if (!getState().tables.currentDataSource) return;
 
   const options = {
     credentials: globalCookiePolicy,
     method: 'POST',
     headers: dataHeaders(getState),
-    body: JSON.stringify(body),
+    body: JSON.stringify(query),
   };
 
   return dispatch(requestAction(url, options)).then(
     data => {
-      dispatch({ type: FETCH_SCHEMA_LIST, schemaList: data[0] });
-      dispatch(updateSchemaInfo());
+      const schemaList = data.result.reduce((acc, schema) => {
+        if (schema[0] === 'schema_name') {
+          return acc;
+        }
+        return [schema[0], ...acc];
+      }, []);
+
+      return updateSchemaList(dispatch, getState, schemaList);
     },
     error => {
       console.error('Failed to fetch schema ' + JSON.stringify(error));
+      return error;
     }
   );
 };
 
+/**
+ * @param {string| string[]} [schema=null]
+ */
 const fetchFunctionInit = (schema = null) => (dispatch, getState) => {
-  const url = Endpoints.getSchema;
+  const url = Endpoints.query;
+  const source = getState().tables.currentDataSource;
+
+  const { schemaFilter } = getState().tables;
+  let fnSchema = schema || getState().tables.currentSchema;
+  if (schemaFilter && schemaFilter.length) {
+    fnSchema = schemaFilter[0]; // todo: fix me
+  }
+
+  if (!source || !dataSource.getFunctionDefinitionSql) return;
   const body = {
     type: 'bulk',
+    source,
     args: [
-      initQueries.loadTrackableFunctions,
-      initQueries.loadNonTrackableFunctions,
-      initQueries.loadTrackedFunctions,
+      getRunSqlQuery(
+        dataSource.getFunctionDefinitionSql(fnSchema, null, 'trackable'),
+        source,
+        false,
+        true
+      ),
+      getRunSqlQuery(
+        dataSource.getFunctionDefinitionSql(fnSchema, null, 'non-trackable'),
+        source,
+        false,
+        true
+      ),
     ],
   };
 
-  // set schema in queries
-  const fnSchema = schema || getState().tables.currentSchema;
-  body.args[0].args.where.function_schema = fnSchema;
-  body.args[1].args.where.function_schema = fnSchema;
-  body.args[2].args.where.function_schema = fnSchema;
-
   const options = {
     credentials: globalCookiePolicy,
     method: 'POST',
@@ -522,19 +432,16 @@ const fetchFunctionInit = (schema = null) => (dispatch, getState) => {
 
   return dispatch(requestAction(url, options)).then(
     data => {
-      dispatch({ type: LOAD_FUNCTIONS, data: data[0] });
-      dispatch({ type: LOAD_NON_TRACKABLE_FUNCTIONS, data: data[1] });
-
-      let consistentFunctions = data[2];
-      const { inconsistentObjects } = getState().metadata;
-      if (inconsistentObjects.length > 0) {
-        consistentFunctions = filterInconsistentMetadataObjects(
-          consistentFunctions,
-          inconsistentObjects,
-          'functions'
-        );
+      let trackable = [];
+      let nonTrackable = [];
+      try {
+        trackable = JSON.parse(data[0].result[1]);
+        nonTrackable = JSON.parse(data[1].result[1]);
+      } catch (err) {
+        console.error('Failed to fetch schema ' + JSON.stringify(err));
       }
-      dispatch({ type: LOAD_TRACKED_FUNCTIONS, data: consistentFunctions });
+      dispatch({ type: LOAD_FUNCTIONS, data: trackable });
+      dispatch({ type: LOAD_NON_TRACKABLE_FUNCTIONS, data: nonTrackable });
     },
     error => {
       console.error('Failed to fetch schema ' + JSON.stringify(error));
@@ -542,12 +449,21 @@ const fetchFunctionInit = (schema = null) => (dispatch, getState) => {
   );
 };
 
-const updateCurrentSchema = (schemaName, redirect = true) => dispatch => {
-  if (redirect) {
-    dispatch(_push(getSchemaBaseRoute(schemaName)));
+const updateCurrentSchema = (
+  schemaName,
+  sourceName,
+  redirect = true,
+  schemaList = []
+) => dispatch => {
+  if (schemaList.length && !schemaList.find(s => s === schemaName)) {
+    schemaName = schemaList[0];
   }
 
-  Promise.all([
+  if (redirect) {
+    dispatch(_push(getSchemaBaseRoute(schemaName, sourceName)));
+  }
+
+  return Promise.all([
     dispatch({ type: UPDATE_CURRENT_SCHEMA, currentSchema: schemaName }),
     dispatch(setUntrackedRelations()),
     dispatch(fetchFunctionInit()),
@@ -557,19 +473,207 @@ const updateCurrentSchema = (schemaName, redirect = true) => dispatch => {
 
 /* ************ action creators *********************** */
 const fetchSchemaList = () => (dispatch, getState) => {
-  const url = Endpoints.getSchema;
+  const url = Endpoints.query;
+  const currentSource = getState().tables.currentDataSource;
+  const { schemaFilter } = getState().tables;
+  const query = getRunSqlQuery(
+    dataSource.schemaListSql(schemaFilter),
+    currentSource,
+    false,
+    true
+  );
+
   const options = {
     credentials: globalCookiePolicy,
     method: 'POST',
     headers: dataHeaders(getState),
-    body: JSON.stringify(initQueries.schemaList),
+    body: JSON.stringify(query),
   };
   return dispatch(requestAction(url, options)).then(
     data => {
-      dispatch({ type: FETCH_SCHEMA_LIST, schemaList: data });
+      const schemaList = data.result.reduce((acc, schema) => {
+        if (schema[0] === 'schema_name') {
+          return acc;
+        }
+        return [schema[0], ...acc];
+      }, []);
+      dispatch({
+        type: FETCH_SCHEMA_LIST,
+        schemaList,
+      });
+      return data;
     },
     error => {
       console.error('Failed to fetch schema ' + JSON.stringify(error));
+      return error;
+    }
+  );
+};
+
+export const getSchemaList = (sourceType, sourceName) => (
+  dispatch,
+  getState
+) => {
+  const url = Endpoints.query;
+  const sql = services[sourceType].schemaListSql();
+  const query = getRunSqlQuery(sql, sourceName, false, true);
+  const options = {
+    credentials: globalCookiePolicy,
+    method: 'POST',
+    headers: dataHeaders(getState),
+    body: JSON.stringify(query),
+  };
+  return dispatch(requestAction(url, options)).then(
+    data => data,
+    error => {
+      console.error('Failed to fetch schema ' + JSON.stringify(error));
+      return error;
+    }
+  );
+};
+
+export const getDatabaseSchemasInfo = (sourceType = 'postgres', sourceName) => (
+  dispatch,
+  getState
+) => {
+  const url = Endpoints.query;
+  const sql = services[sourceType].getDatabaseInfo;
+  const query = getRunSqlQuery(sql, sourceName, false, true);
+  const options = {
+    credentials: globalCookiePolicy,
+    method: 'POST',
+    headers: dataHeaders(getState),
+    body: JSON.stringify(query),
+  };
+  return dispatch(requestAction(url, options)).then(
+    ({ result }) => {
+      if (!result.length > 1) {
+        return {};
+      }
+
+      const trackedTables = getTablesFromAllSources(getState()).filter(
+        ({ source }) => source === sourceName
+      );
+      const schemasInfo = {};
+
+      JSON.parse(result[1]).forEach(i => {
+        if (
+          !trackedTables.some(
+            t =>
+              t.table.name === i.table_name && t.table.schema === i.table_schema
+          )
+        ) {
+          return;
+        }
+        schemasInfo[i.table_schema] = {
+          ...schemasInfo[i.table_schema],
+          [i.table_name]: i.columns,
+        };
+      });
+
+      return schemasInfo;
+    },
+    error => {
+      console.error('Failed to fetch schemas info ' + JSON.stringify(error));
+      return error;
+    }
+  );
+};
+
+export const getDatabaseTableTypeInfoForAllSources = schemaRequests => (
+  dispatch,
+  getState
+) => {
+  if (!schemaRequests.length) {
+    return new Promise(resolve => {
+      resolve([]);
+    });
+  }
+  const url = Endpoints.query;
+
+  const bulkQueries = [];
+  schemaRequests.forEach(({ sourceType = 'postgres', sourceName, tables }) => {
+    if (!tables.length) return;
+    const sql = services[sourceType].getTableInfo(tables);
+    bulkQueries.push(getRunSqlQuery(sql, sourceName, false, true, sourceType));
+  });
+  const query = { type: 'bulk', version: 1, args: bulkQueries };
+  const options = {
+    credentials: globalCookiePolicy,
+    method: 'POST',
+    headers: dataHeaders(getState),
+    body: JSON.stringify(query),
+  };
+  return dispatch(requestAction(url, options)).then(
+    results => {
+      const schemas = results.map(({ result }, index) => {
+        if (!result.length > 1) {
+          return {};
+        }
+        const trackedTables = getTablesFromAllSources(getState()).filter(
+          ({ source }) => source === bulkQueries[index]?.args?.source
+        );
+        const schemasInfo = {};
+
+        let res;
+        try {
+          if (currentDriver === 'mssql') {
+            res = JSON.parse(result.slice(1).join(''));
+          } else if (currentDriver === 'bigquery') {
+            res = result.slice(1).map(t => ({
+              table_name: t[0],
+              table_schema: t[1],
+              table_type: t[2],
+            }));
+          } else {
+            res = JSON.parse(result[1]);
+          }
+        } catch {
+          res = [];
+        }
+
+        res.forEach(i => {
+          if (
+            !trackedTables.some(
+              t =>
+                t.table.name === i.table_name &&
+                t.table.schema === i.table_schema
+            )
+          ) {
+            return;
+          }
+          schemasInfo[i.table_schema] = {
+            ...schemasInfo[i.table_schema],
+            [i.table_name]: { table_type: i.table_type },
+          };
+        });
+        return {
+          source: bulkQueries[index]?.args?.source,
+          schemaInfo: schemasInfo,
+        };
+      });
+      let allSourceSchemas = {};
+      if (schemas?.length > 0) {
+        schemas.forEach(item => {
+          allSourceSchemas[item.source] = item.schemaInfo;
+        });
+        const {
+          tables: { allSourcesSchemas: existingSourcesSchemas = {} } = {},
+        } = getState();
+        allSourceSchemas = {
+          ...existingSourcesSchemas,
+          ...allSourceSchemas,
+        };
+        dispatch({
+          type: SET_ALL_SOURCES_SCHEMAS,
+          data: allSourceSchemas,
+        });
+      }
+      return allSourceSchemas;
+    },
+    error => {
+      console.error('Failed to fetch schemas info ' + JSON.stringify(error));
+      return error;
     }
   );
 };
@@ -598,6 +702,39 @@ const handleMigrationErrors = (title, errorMsg) => dispatch => {
   }
 };
 
+export const handleOutOfDateMetadata = dispatch => {
+  return dispatch(
+    showNotification(
+      {
+        title: 'Metadata is Out-of-Date',
+        level: 'error',
+        message: (
+          <p>
+            The operation failed as the metadata on the server is newer than
+            what is currently loaded on the console. The metadata has to be
+            re-fetched to continue editing it.
+            <br />
+            <br />
+            Do you want fetch the latest metadata?
+          </p>
+        ),
+        autoDismiss: 0,
+        action: {
+          label: (
+            <>
+              <i className="fa fa-refresh" aria-hidden="true" /> Fetch metadata
+            </>
+          ),
+          callback: () => {
+            dispatch(exportMetadata());
+          },
+        },
+      },
+      'error'
+    )
+  );
+};
+
 const makeMigrationCall = (
   dispatch,
   getState,
@@ -611,29 +748,42 @@ const makeMigrationCall = (
   errorMsg,
   shouldSkipSchemaReload,
   skipExecution = false,
-  isRetry
+  isRetry = false,
+  source = getState().tables.currentDataSource
 ) => {
+  const { resourceVersion } = getState().metadata;
   const upQuery = {
     type: 'bulk',
+    source,
+    resource_version: resourceVersion,
     args: upQueries,
   };
 
-  const downQuery = {
-    type: 'bulk',
-    args:
-      downQueries.length > 0 ? downQueries : getDownQueryComments(upQueries),
-  };
+  const isRunSqlType =
+    Array.isArray(upQueries) &&
+    upQueries.length >= 0 &&
+    upQueries.some(query => query?.type?.includes('run_sql') ?? false);
+
+  if (downQueries && downQueries.length === 0 && isRunSqlType) {
+    downQueries = getDownQueryComments(upQueries);
+  }
+
+  const trimmedMigrationName = migrationName.substring(
+    0,
+    maxAllowedMigrationLength
+  );
 
   const migrationBody = {
-    name: sanitize(migrationName),
+    name: sanitize(trimmedMigrationName),
     up: upQuery.args,
-    down: downQuery.args,
+    down: downQueries || [],
+    datasource: source,
     skip_execution: skipExecution,
   };
 
   const currMigrationMode = getState().main.migrationMode;
 
-  const migrateUrl = returnMigrateUrl(currMigrationMode);
+  const migrateUrl = returnMigrateUrl(currMigrationMode, upQueries);
 
   let finalReqBody;
   if (globals.consoleMode === SERVER_CONSOLE_MODE) {
@@ -652,7 +802,7 @@ const makeMigrationCall = (
   const onSuccess = data => {
     if (!shouldSkipSchemaReload) {
       if (globals.consoleMode === CLI_CONSOLE_MODE) {
-        dispatch(loadMigrationStatus()); // don't call for server mode
+        dispatch(loadMigrationStatus());
       }
       dispatch(updateSchemaInfo());
     }
@@ -707,49 +857,64 @@ const makeMigrationCall = (
 
   const onError = err => {
     if (!isRetry) {
-      const { dependencyError, pgDependencyError } = getDependencyError(err);
+      const { dependencyError, sqlDependencyError } = getDependencyError(err);
       if (dependencyError) return retryMigration(dependencyError, errorMsg);
-      if (pgDependencyError)
-        return retryMigration(pgDependencyError, errorMsg, true);
+      if (sqlDependencyError)
+        return retryMigration(sqlDependencyError, errorMsg, true);
     }
 
-    dispatch(handleMigrationErrors(errorMsg, err));
+    if (err?.code === 'conflict') {
+      dispatch(handleOutOfDateMetadata);
+    } else {
+      dispatch(handleMigrationErrors(errorMsg, err));
+    }
+
     customOnError(err);
   };
 
   dispatch({ type: MAKE_REQUEST });
   dispatch(showSuccessNotification(requestMsg));
-  dispatch(requestAction(url, options, REQUEST_SUCCESS, REQUEST_ERROR)).then(
-    onSuccess,
-    onError
-  );
+  return dispatch(
+    requestAction(url, options, REQUEST_SUCCESS, REQUEST_ERROR)
+  ).then(onSuccess, onError);
 };
 
-const getBulkColumnInfoFetchQuery = schema => {
-  const fetchColumnTypes = getRunSqlQuery(fetchColumnTypesQuery, false, true);
+const getBulkColumnInfoFetchQuery = (schema, source) => {
+  const fetchColumnTypes = getRunSqlQuery(
+    dataSource.fetchColumnTypesQuery,
+    source,
+    false,
+    true
+  );
   const fetchTypeDefaultValues = getRunSqlQuery(
-    fetchColumnDefaultFunctions(schema),
+    dataSource.fetchColumnDefaultFunctions(schema),
+    source,
     false,
     true
   );
   const fetchValidTypeCasts = getRunSqlQuery(
-    fetchColumnCastsQuery,
+    dataSource.fetchColumnCastsQuery,
+    source,
     false,
     true
   );
 
   return {
     type: 'bulk',
+    source,
     args: [fetchColumnTypes, fetchTypeDefaultValues, fetchValidTypeCasts],
   };
 };
 
 const fetchColumnTypeInfo = () => {
   return (dispatch, getState) => {
-    const url = Endpoints.getSchema;
+    const url = Endpoints.query;
     const currState = getState();
-    const { currentSchema } = currState.tables;
-    const reqQuery = getBulkColumnInfoFetchQuery(currentSchema);
+    const { currentSchema, currentDataSource } = currState.tables;
+    const reqQuery = getBulkColumnInfoFetchQuery(
+      currentSchema,
+      currentDataSource
+    );
     const options = {
       credentials: globalCookiePolicy,
       method: 'POST',
@@ -758,6 +923,17 @@ const fetchColumnTypeInfo = () => {
     };
     return dispatch(requestAction(url, options)).then(
       data => {
+        if (currentDriver === 'mssql') {
+          return dispatch({
+            type: FETCH_COLUMN_TYPE_INFO,
+            data: {
+              columnDataTypes: [],
+              columnTypeDefaultValues: {},
+              columnTypeCasts: {},
+            },
+          });
+        }
+
         const resultData = data[1].result.slice(1);
         const typeFuncsMap = {};
 
@@ -787,36 +963,90 @@ const fetchColumnTypeInfo = () => {
   };
 };
 
-export const fetchRoleList = () => (dispatch, getState) => {
-  const query = getFetchAllRolesQuery();
-  const options = {
-    credentials: globalCookiePolicy,
-    method: 'POST',
-    headers: dataHeaders(getState),
-    body: JSON.stringify(query),
-  };
-
-  return dispatch(requestAction(Endpoints.query, options)).then(
-    data => {
-      const allRoles = [...new Set(data.map(r => r.role_name))];
-      const { inconsistentObjects } = getState().metadata;
-
-      let consistentRoles = [...allRoles];
-
-      if (inconsistentObjects.length > 0) {
-        consistentRoles = filterInconsistentMetadataObjects(
-          allRoles,
-          inconsistentObjects,
-          'roles'
+const fetchPartitionDetails = table => {
+  return (dispatch, getState) => {
+    const url = Endpoints.query;
+    const currState = getState();
+    const { currentDataSource } = currState.tables;
+    const query = getRunSqlQuery(
+      dataSource.getPartitionDetailsSql(table.table_name, table.table_schema),
+      currentDataSource,
+      false,
+      true
+    );
+    const options = {
+      credentials: globalCookiePolicy,
+      method: 'POST',
+      headers: dataHeaders(getState),
+      body: JSON.stringify(query),
+    };
+    return dispatch(requestAction(url, options)).then(
+      data => {
+        try {
+          const partitions = data.result.slice(1).map(row => ({
+            parent_schema: row[0],
+            parent_table: row[1],
+            partition_name: row[2],
+            partition_schema: row[3],
+            partition_def: row[4],
+            partition_key: row[5],
+          }));
+          return partitions;
+        } catch (err) {
+          console.log(err);
+        }
+      },
+      error => {
+        dispatch(
+          showErrorNotification(
+            'Error fetching partition information',
+            null,
+            error
+          )
         );
       }
+    );
+  };
+};
 
-      dispatch(setAllRoles(consistentRoles));
-    },
-    error => {
-      console.error('Failed to load roles ' + JSON.stringify(error));
-    }
-  );
+export const fetchTableIndexDetails = tableInfo => {
+  return (dispatch, getState) => {
+    const url = Endpoints.query;
+    const currState = getState();
+    const { currentDataSource } = currState.tables;
+    const { table_name: table, table_schema: schema } = tableInfo;
+    const query = getRunSqlQuery(
+      dataSource.tableIndexSql({ table, schema }),
+      currentDataSource,
+      false,
+      checkFeatureSupport(READ_ONLY_RUN_SQL_QUERIES) || false
+    );
+    const options = {
+      credentials: globalCookiePolicy,
+      method: 'POST',
+      headers: dataHeaders(getState),
+      body: JSON.stringify(query),
+    };
+    return dispatch(requestAction(url, options)).then(
+      data => {
+        try {
+          return JSON.parse(data?.result?.[1]?.[0] ?? '[]');
+        } catch (err) {
+          console.error(err);
+          return [];
+        }
+      },
+      error => {
+        dispatch(
+          showErrorNotification(
+            'Error fetching indexes information',
+            null,
+            error
+          )
+        );
+      }
+    );
+  };
 };
 
 /* ******************************************************* */
@@ -868,11 +1098,6 @@ const dataReducer = (state = defaultState, action) => {
         ...state,
         nonTrackablePostgresFunctions: action.data,
       };
-    case LOAD_TRACKED_FUNCTIONS:
-      return {
-        ...state,
-        trackedFunctions: action.data,
-      };
     case LOAD_SCHEMA:
       // remove duplicates
       const result = action.allSchemas.reduce((unique, o) => {
@@ -902,13 +1127,10 @@ const dataReducer = (state = defaultState, action) => {
       return { ...state, schemaList: action.schemaList };
     case SET_CONSISTENT_SCHEMA:
       return { ...state, allSchemas: action.data, listingSchemas: action.data };
-    case SET_CONSISTENT_FUNCTIONS:
-      return {
-        ...state,
-        trackedFunctions: action.data,
-      };
     case UPDATE_CURRENT_SCHEMA:
       return { ...state, currentSchema: action.currentSchema };
+    case UPDATE_CURRENT_DATA_SOURCE:
+      return { ...state, currentDataSource: action.source };
     case ADMIN_SECRET_ERROR:
       return { ...state, adminSecretError: action.data };
     case UPDATE_DATA_HEADERS:
@@ -949,11 +1171,6 @@ const dataReducer = (state = defaultState, action) => {
         columnTypeCasts: { ...defaultState.columnTypeCasts },
         columnDataTypeInfoErr: defaultState.columnDataTypeInfoErr,
       };
-    case SET_ALL_ROLES:
-      return {
-        ...state,
-        allRoles: action.roles,
-      };
     case SET_ADDITIONAL_COLUMNS_INFO:
       if (isEmpty(action.data)) return state;
       return {
@@ -968,6 +1185,45 @@ const dataReducer = (state = defaultState, action) => {
             })),
           };
         }),
+      };
+    case SET_FILTER_SCHEMA:
+      return {
+        ...state,
+        schemaFilter: action.data,
+      };
+    case SET_FILTER_TABLES:
+      return {
+        ...state,
+        tableFilter: action.data,
+      };
+    case SET_DB_CONNECTION_ENV_VAR:
+      return {
+        ...state,
+        dbConnection: action.data,
+      };
+    case SET_ALL_SOURCES_SCHEMAS:
+      return {
+        ...state,
+        allSourcesSchemas: action.data,
+      };
+    case RESET_DB_CONNECTION_ENV_VAR:
+      return {
+        ...state,
+        dbConnection: {
+          envVar: '',
+          dbURL: '',
+        },
+      };
+    case SET_INCONSISTENT_INHERITED_ROLE:
+      return {
+        ...state,
+        modify: {
+          ...state.modify,
+          permissionsState: {
+            ...state.modify.permissionsState,
+            inconsistentInhertiedRole: action.inconsistent_inherited_role,
+          },
+        },
       };
     default:
       return state;
@@ -985,6 +1241,7 @@ export {
   makeMigrationCall,
   LOAD_UNTRACKED_RELATIONS,
   UPDATE_CURRENT_SCHEMA,
+  UPDATE_CURRENT_DATA_SOURCE,
   fetchSchemaList,
   fetchDataInit,
   fetchFunctionInit,
@@ -992,14 +1249,15 @@ export {
   ADMIN_SECRET_ERROR,
   UPDATE_DATA_HEADERS,
   UPDATE_REMOTE_SCHEMA_MANUAL_REL,
-  fetchTrackedFunctions,
-  initQueries,
   LOAD_SCHEMA,
   setConsistentSchema,
-  setConsistentFunctions,
   fetchColumnTypeInfo,
   RESET_COLUMN_TYPE_INFO,
   setUntrackedRelations,
   SET_ADDITIONAL_COLUMNS_INFO,
   fetchAdditionalColumnsInfo,
+  SET_FILTER_SCHEMA,
+  SET_FILTER_TABLES,
+  fetchPartitionDetails,
+  SET_INCONSISTENT_INHERITED_ROLE,
 };

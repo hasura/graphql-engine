@@ -1,39 +1,22 @@
 type: bulk
 args:
 
-- type: run_sql
-  args:
-    sql: |
-      CREATE TYPE complex AS (
-          r       double precision,
-          i       double precision
-      );
 
 - type: run_sql
   args:
     sql: |
+      CREATE EXTENSION IF NOT EXISTS ltree;
+      CREATE TYPE complex AS (
+          r       double precision,
+          i       double precision
+      );
       CREATE TYPE inventory_item AS (
           name            text,
           supplier_id     integer,
           price           numeric
       );
-
-#Set timezone
-- type: run_sql
-  args:
-    sql: |
       SET TIME ZONE 'UTC';
-
-#Set money locale
-- type: run_sql
-  args:
-    sql: |
       SET lc_monetary TO "en_US.utf-8";
-
-#Test table with different types
-- type: run_sql
-  args:
-    sql: |
       create table test_types (
           c1_smallint smallint,
           c2_integer integer,
@@ -79,32 +62,14 @@ args:
           c42_range_timestamp tsrange,
           c43_range_timestamptz tstzrange,
           c44_xml xml,
-          c45_money money
+          c45_money money,
+          c46_ltree ltree
       );
-- type: track_table
-  args:
-    schema: public
-    name: test_types
-
-
-#Author table
-- type: run_sql
-  args:
-    sql: |
       create table author(
           id serial primary key,
           name text unique,
-          "createdAt" timestamptz
+          "createdAt" timestamp
       );
-- type: track_table
-  args:
-    schema: public
-    name: author
-
-#Article table
-- type: run_sql
-  args:
-    sql: |
       CREATE TABLE article (
         id SERIAL PRIMARY KEY,
         title TEXT,
@@ -112,36 +77,24 @@ args:
         author_id INTEGER REFERENCES author(id),
         is_published BOOLEAN,
         published_on TIMESTAMP
-      )
-- type: track_table
-  args:
-    schema: public
-    name: article
-
-
-
-#Object relationship
-- type: create_object_relationship
-  args:
-    table: article
-    name: author
-    using:
-      foreign_key_constraint_on: author_id
-
-#Array relationship
-- type: create_array_relationship
-  args:
-    table: author
-    name: articles
-    using:
-      foreign_key_constraint_on:
-        table: article
-        column: author_id
-
-#Insert values
-- type: run_sql
-  args:
-    sql: |
+      );
+      create table author_multi(
+          id1 serial,
+          id2 serial,
+          name text unique,
+          "createdAt" timestamp,
+          PRIMARY KEY (id1, id2)
+      );
+      CREATE TABLE article_multi (
+        id SERIAL PRIMARY KEY,
+        title TEXT,
+        content TEXT,
+        author_id1 INTEGER,
+        author_id2 INTEGER,
+        is_published BOOLEAN,
+        published_on TIMESTAMP,
+        FOREIGN KEY (author_id1, author_id2) REFERENCES author_multi(id1, id2)
+      );
       insert into test_types
       ( c1_smallint
       , c2_integer
@@ -185,6 +138,7 @@ args:
       , c43_range_timestamptz
       , c44_xml
       , c45_money
+      , c46_ltree
       )
       values
       ( 32767                                       -- c1_smallint
@@ -229,20 +183,12 @@ args:
       , '(2011-02-05T12:03:00+00:00, 2012-03-04T16:40:04+00:00]' -- c43_range_timestamptz
       , '<foo>bar</foo>'                            -- c44_xml
       ,  123.45                                     -- c45_money
-      )
-
-#Insert values
-- type: run_sql
-  args:
-    sql: |
+      , 'A.B.C'                                     -- c46_ltree
+      );
       insert into author (name, "createdAt")
       values
-      ('Author 1', '2017-09-21T09:39:44Z'),
-      ('Author 2', '2017-09-21T09:50:44Z')
-
-- type: run_sql
-  args:
-    sql: |
+      ('Author 1', '2017-09-21T09:39:44'),
+      ('Author 2', '2017-09-21T09:50:44');
       insert into article (title,content,author_id,is_published)
       values
       (
@@ -262,17 +208,115 @@ args:
         'Sample article content 3',
         2,
         true
-      )
+      );
+      insert into author_multi (name, "createdAt")
+      values
+      ('Author 1', '2017-09-21T09:39:44'),
+      ('Author 2', '2017-09-21T09:50:44');
+      insert into article_multi (title,content,author_id1, author_id2,is_published)
+      values
+      (
+        'Article 1',
+        'Sample article content 1',
+        1,
+        1,
+        false
+      ),
+      (
+        'Article 2',
+        'Sample article content 2',
+        1,
+        1,
+        true
+      ),
+      (
+        'Article 3',
+        'Sample article content 3',
+        2,
+        2,
+        true
+      );
 
-#User table with bigserial and bigint columns
-- type: run_sql
-  args:
-    sql: |
       CREATE TABLE "user" (
         id BIGSERIAL PRIMARY KEY,
         name TEXT NOT NULL,
         number BIGINT
       );
+      create extension if not exists citext;
+      create table person (
+          id serial primary key,
+          name citext
+      );
+
+- type: track_table
+  args:
+    schema: public
+    name: test_types
+
+
+#Author table
+- type: track_table
+  args:
+    schema: public
+    name: author
+
+#Article table
+- type: track_table
+  args:
+    schema: public
+    name: article
+
+#Object relationship
+- type: create_object_relationship
+  args:
+    table: article
+    name: author
+    using:
+      foreign_key_constraint_on: author_id
+
+#Array relationship
+- type: create_array_relationship
+  args:
+    table: author
+    name: articles
+    using:
+      foreign_key_constraint_on:
+        table: article
+        columns: author_id
+
+#Author table
+- type: track_table
+  args:
+    schema: public
+    name: author_multi
+
+#Article table
+- type: track_table
+  args:
+    schema: public
+    name: article_multi
+
+
+
+#Object relationship
+- type: create_object_relationship
+  args:
+    table: article_multi
+    name: author
+    using:
+      foreign_key_constraint_on: ["author_id1", "author_id2"]
+
+#Array relationship
+- type: create_array_relationship
+  args:
+    table: author_multi
+    name: articles
+    using:
+      foreign_key_constraint_on:
+        table: article_multi
+        columns: ["author_id1", "author_id2"]
+
+#Insert values
 - type: track_table
   args:
     schema: public
@@ -286,14 +330,6 @@ args:
     - name: User 2
       number: '123456780'
 
-- type: run_sql
-  args:
-    sql: |
-      create extension if not exists citext;
-      create table person (
-          id serial primary key,
-          name citext
-      );
 - type: track_table
   args:
     schema: public
@@ -302,6 +338,6 @@ args:
   args:
     table: person
     objects:
-    - name: "John\\"
-    - name: "Clarke"
-    - name: "clarke"
+    - name: John\
+    - name: Clarke
+    - name: clarke

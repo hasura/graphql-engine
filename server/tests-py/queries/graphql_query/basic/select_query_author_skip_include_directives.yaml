@@ -1,0 +1,74 @@
+- url: /v1/graphql
+  status: 200
+  query:
+    query: |
+      query author_with_both($includeId: Boolean!, $skipId: Boolean!) {
+        author {
+          id @include(if: $includeId) @skip(if: $skipId)
+          name
+        }
+      }
+    variables:
+      includeId: false
+      skipId: false
+  response:
+    data:
+      author:
+      - name: Author 1
+      - name: Author 2
+- url: /v1/graphql
+  status: 200
+  query:
+    query: |
+      query author_with_both($includeId: Boolean!, $skipId: Boolean!) {
+        author {
+          id @include(if: $includeId) @skip(if: $skipId)
+          name
+        }
+      }
+    variables:
+      includeId: true
+      skipId: false
+  response:
+    data:
+      author:
+      - id: 1
+        name: Author 1
+      - id: 2
+        name: Author 2
+- url: /v1/graphql
+  status: 200
+  query:
+    query: |
+      query author_with_both($includeId: Boolean!, $skipId: Boolean!) {
+        author {
+          id @include(if: $includeId) @skip(if: $skipId)
+          name
+        }
+      }
+    variables:
+      includeId: false
+      skipId: true
+  response:
+    data:
+      author:
+      - name: Author 1
+      - name: Author 2
+- url: /v1/graphql
+  status: 200
+  query:
+    query: |
+      query author_with_both($includeId: Boolean!, $skipId: Boolean!) {
+        author {
+          id @include(if: $includeId) @skip(if: $skipId)
+          name
+        }
+      }
+    variables:
+      includeId: true
+      skipId: true
+  response:
+    data:
+      author:
+      - name: Author 1
+      - name: Author 2

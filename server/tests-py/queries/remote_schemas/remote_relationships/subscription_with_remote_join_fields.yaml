@@ -10,7 +10,7 @@ response:
 query:
   query: |
     subscription {
-      profiles {
+      custom_profiles {
         name
         messageBasic {
           id

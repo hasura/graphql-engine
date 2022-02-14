@@ -1,7 +1,6 @@
 import React from 'react';
 import { getActionPermissions, findActionPermission } from '../utils';
 import Helmet from 'react-helmet';
-import { fetchRoleList } from '../../Data/DataActions';
 import PermTableHeader from '../../../Common/Permissions/TableHeader';
 import PermTableBody from '../../../Common/Permissions/TableBody';
 import { permissionsSymbols } from '../../../Common/Permissions/PermissionSymbols';
@@ -22,11 +21,10 @@ const Permissions = ({
   readOnlyMode = false,
 }) => {
   React.useEffect(() => {
-    dispatch(fetchRoleList());
     return () => {
       dispatch(setDefaults());
     };
-  }, []);
+  }, [dispatch]);
 
   const allPermissions = getActionPermissions(currentAction);
 
@@ -90,11 +88,12 @@ const Permissions = ({
           if (role !== 'admin' && !readOnlyMode) {
             editIcon = getEditIcon();
 
+            className += styles.clickableCell;
+
             if (isCurrEdit) {
               onClick = dispatchCloseEdit;
               className += ` ${styles.currEdit}`;
             } else {
-              className += styles.clickableCell;
               onClick = dispatchOpenEdit(queryType);
             }
           }
@@ -166,7 +165,7 @@ const Permissions = ({
   return (
     <div>
       <Helmet
-        title={`Permissions - ${currentAction.action_name} - Actions | Hasura`}
+        title={`Permissions - ${currentAction.name} - Actions | Hasura`}
       />
       {getPermissionsTable()}
       <div className={`${styles.add_mar_bottom}`}>

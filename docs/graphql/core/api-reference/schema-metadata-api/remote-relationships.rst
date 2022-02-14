@@ -2,8 +2,8 @@
    :description: Manage remote relationships with the Hasura schema/metadata API
    :keywords: hasura, docs, schema/metadata API, API reference, remote joins, remote relationships
 
-Schema/Metadata API Reference: Remote Relationships
-===================================================
+Schema/Metadata API Reference: Remote Relationships (Deprecated)
+================================================================
 
 .. contents:: Table of contents
   :backlinks: none
@@ -15,7 +15,14 @@ Introduction
 
 Remote Relationships allow you to join tables with remote schemas.
 
-.. _create_remote_relationship:
+.. admonition:: Deprecation
+
+  In versions ``v2.0.0`` and above, the schema/metadata API is deprecated in favour of the :ref:`schema API <schema_apis>` and the
+  :ref:`metadata API <metadata_apis>`.
+
+  Though for backwards compatibility, the schema/metadata APIs will continue to function.
+
+.. _schema_metadata_create_remote_relationship:
 
 create_remote_relationship
 --------------------------
@@ -45,7 +52,7 @@ create_remote_relationship
       }
    }
 
-.. _create_remote_relationship_syntax:
+.. _schema_metadata_create_remote_relationship_syntax:
 
 Args syntax
 ^^^^^^^^^^^
@@ -59,7 +66,7 @@ Args syntax
      - Description
    * - name
      - true
-     - RemoteRelationshipName_
+     - :ref:`RemoteRelationshipName`
      - Name of the remote relationship
    * - table
      - true
@@ -67,18 +74,18 @@ Args syntax
      - Object with table name and schema
    * - hasura_fields
      - true
-     - [:ref:`PGColumn <PGColumn>`]
-     - Column(s) in the table that is used for joining with remote schema field. All join keys in ``remote_field`` must appear here.
+     - [:ref:`PGColumn <PGColumn>` | :ref:`ComputedFieldName <ComputedFieldName>`]
+     - Column/Computed field(s) in the table that is used for joining with remote schema field. All join keys in ``remote_field`` must appear here.
    * - remote_schema
      - true
      - :ref:`RemoteSchemaName <RemoteSchemaName>`
      - Name of the remote schema to join with
    * - remote_field
      - true
-     - RemoteField_
+     - :ref:`RemoteField`
      - The schema tree ending at the field in remote schema which needs to be joined with.
 
-.. _update_remote_relationship:
+.. _schema_metadata_update_remote_relationship:
 
 update_remote_relationship
 --------------------------
@@ -111,7 +118,7 @@ update_remote_relationship
      }
    }
 
-.. _update_remote_relationship_syntax:
+.. _schema_metadata_update_remote_relationship_syntax:
 
 Args syntax
 ^^^^^^^^^^^
@@ -125,7 +132,7 @@ Args syntax
      - Description
    * - name
      - true
-     - RemoteRelationshipName_
+     - :ref:`RemoteRelationshipName`
      - Name of the remote relationship
    * - table
      - true
@@ -141,10 +148,10 @@ Args syntax
      - Name of the remote schema to join with
    * - remote_field
      - true
-     - RemoteField_
+     - :ref:`RemoteField`
      - The schema tree ending at the field in remote schema which needs to be joined with.
 
-.. _delete_remote_relationship:
+.. _schema_metadata_delete_remote_relationship:
 
 delete_remote_relationship
 --------------------------
@@ -168,7 +175,7 @@ delete_remote_relationship
        }
    }
 
-.. _delete_remote_relationship_syntax:
+.. _schema_metadata_delete_remote_relationship_syntax:
 
 Args syntax
 ^^^^^^^^^^^
@@ -186,80 +193,5 @@ Args syntax
      - Object with table name and schema
    * - name
      - true
-     - RemoteRelationshipName_
+     - :ref:`RemoteRelationshipName`
      - Name of the remote relationship
-
-.. _RemoteRelationshipName:
-
-RemoteRelationshipName
-&&&&&&&&&&&&&&&&&&&&&&
-
-.. parsed-literal::
-
-  String
-
-
-RemoteField
-&&&&&&&&&&&
-
-.. parsed-literal::
-   :class: haskell-pre
-
-   {
-      FieldName: {
-        "arguments": InputArguments
-        "field": RemoteField  # optional
-      }
-   }
-
-
-``RemoteField`` is a recursive tree structure that points to the field in the remote schema that needs to be joined with. It is recursive because the remote field maybe nested deeply in the remote schema.
-
-Examples:
-
-.. code-block:: http
-
-   POST /v1/query HTTP/1.1
-   Content-Type: application/json
-   X-Hasura-Role: admin
-
-   {
-      "message": {
-         "arguments":{
-            "message_id":"$id"
-          }
-      }
-   }
-
-.. code-block:: http
-
-   POST /v1/query HTTP/1.1
-   Content-Type: application/json
-   X-Hasura-Role: admin
-
-   {
-      "messages": {
-         "arguments": {
-            "limit": 100
-         },
-         "field": {
-           "private": {
-             "arguments": {
-                "id" : "$id"
-             }
-           }
-         }
-      }
-   }
-
-InputArguments
-&&&&&&&&&&&&&&
-
-.. parsed-literal::
-   :class: haskell-pre
-
-   {
-     InputField : $PGColumn | Scalar
-   }
-
-Table columns can be referred by prefixing ``$`` e.g ``$id``.

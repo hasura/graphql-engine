@@ -23,6 +23,7 @@ verified by the GraphQL engine, to authorize and get metadata about the request
 
 .. thumbnail:: /img/graphql/core/auth/jwt-auth.png
    :alt: Authentication using JWT
+   :width: 1000px
 
 The JWT is decoded, the signature is verified, then it is asserted that the
 requested role of the user (if specified in the request) is in the list of allowed roles.
@@ -134,7 +135,9 @@ JSON object:
      "claims_format": "json|stringified_json",
      "audience": <optional-string-or-list-of-strings-to-verify-audience>,
      "issuer": "<optional-string-to-verify-issuer>",
-     "claims_map": "<optional-object-of-session-variable-to-claim-jsonpath-or-literal-value>"
+     "claims_map": "<optional-object-of-session-variable-to-claim-jsonpath-or-literal-value>",
+     "allowed_skew": "<optional-number-of-seconds-in-integer>",
+     "header": "<optional-key-to-indicate-cookie-or-authorization-header>"
    }
 
 (``type``, ``key``) pair or ``jwk_url``, **one of them has to be present**.
@@ -142,12 +145,13 @@ JSON object:
 ``type``
 ^^^^^^^^
 Valid values are : ``HS256``, ``HS384``, ``HS512``, ``RS256``,
-``RS384``, ``RS512``. (see https://jwt.io).
+``RS384``, ``RS512``, ``Ed25519``. (see https://jwt.io).
 
-``HS*`` is for HMAC-SHA based algorithms. ``RS*`` is for RSA based signing. For
+``HS*`` is for HMAC-SHA based algorithms. ``RS*`` is for RSA based signing. ``Ed*`` is
+for Edwards-curve Digital Signature algorithms. For
 example, if your auth server is using HMAC-SHA256 for signing the JWTs, then
-use ``HS256``. If it is using RSA with SHA-512, then use ``RS512``. EC
-public keys are not yet supported.
+use ``HS256``. If it is using RSA with SHA-512, then use ``RS512``. If it is using EdDSA instance of
+Edwards25519, then use ``Ed25519``. EC public keys are not yet supported.
 
 This is an optional field. This is required only if you are using ``key`` in the config.
 
@@ -156,7 +160,7 @@ This is an optional field. This is required only if you are using ``key`` in the
 - In case of symmetric key (i.e. HMAC based key), the key as it is. (e.g. -
   "abcdef..."). The key must be long enough for the algorithm chosen,
   (e.g. for HS256 it must be at least 32 characters long).
-- In case of asymmetric keys (RSA etc.), only the public key, in a PEM encoded
+- In case of asymmetric keys (RSA, EdDSA etc.), only the public key, in a PEM encoded
   string or as a X509 certificate.
 
 This is an optional field. You can also provide a URL to fetch JWKs from using
@@ -176,8 +180,9 @@ Rotating JWKs
 
 Some providers rotate their JWKs (e.g. Firebase). If the provider sends
 
-1. ``max-age`` or ``s-maxage`` in ``Cache-Control`` header
-2. or ``Expires`` header
+1. ``no-cache``, ``no-store`` or ``must-revalidate`` in ``Cache-Control`` header
+2. ``max-age`` or ``s-maxage`` in ``Cache-Control`` header
+3. or ``Expires`` header
 
 with the response of JWK, then the GraphQL engine will refresh the JWKs automatically. If the
 provider does not send the above, the JWKs are not refreshed.
@@ -188,13 +193,17 @@ Following is the behaviour in detail:
 
 1. GraphQL engine will fetch the JWK and will -
 
-   1. first, try to parse ``max-age`` or ``s-maxage`` directive in ``Cache-Control`` header.
-   2. second, check if ``Expires`` header is present (if ``Cache-Control`` is not present), and try
+   1. first, try to parse ``no-cache``, ``no-store`` or ``must-revalidate`` in ``Cache-Control`` header.
+   2. second, try to parse ``max-age`` or ``s-maxage`` directive in ``Cache-Control`` header.
+   3. third, check if ``Expires`` header is present (if ``Cache-Control`` is not present), and try
       to parse the value as a timestamp.
 
-2. If it is able to parse any of the above successfully, then it will use that parsed time to
-   refresh/refetch the JWKs again. If it is unable to parse, then it will not refresh the JWKs (it
-   assumes that if the above headers are not present, the provider doesn't rotate their JWKs).
+2. If ``no-cache``, ``no-store`` or ``must-revalidate`` are parsed successfully, then it will refresh
+   the JWKs once a second. If it is able to parse ``max-age``, ``s-maxage`` or ``Expires`` successfully,
+   then it will use that parsed time to refresh/refetch the JWKs again. If it is unable to parse,
+   then it will not refresh the JWKs (it assumes that if the above headers are not present, the provider
+   doesn't rotate their JWKs). If the parsed time is less than a second, the JWKs will at most be 
+   fetched once per second regardless.
 
 **While running**:
 
@@ -369,6 +378,16 @@ Examples:
    Certain providers require you to verify the ``iss`` claim on the JWT. To do
    that you can set this field to the appropriate value.
 
+.. note::
+
+   A JWT configuration without an issuer will match any issuer field present in
+   an incoming JWT. 
+
+.. note::
+
+   An incoming JWT without an issuer specified will match a configuration
+   even if it specifies an issuer.
+
 
 ``claims_map``
 ^^^^^^^^^^^^^^
@@ -494,6 +513,44 @@ The corresponding JWT config should be:
 In the above example, the ``x-hasura-allowed-roles`` and ``x-hasura-default-role`` values are set in the JWT
 config and the value of the ``x-hasura-user-id`` is a JSON path to the value in the JWT token.
 
+``allowed_skew``
+^^^^^^^^^^^^^^^^
+
+``allowed_skew`` is an optional field to provide some leeway (to account for clock skews) while comparing the JWT expiry time. This field
+expects an integer value which will be the number of seconds of the skew value.
+
+``header``
+^^^^^^^^^^
+This is an optional field, which indicates which request header to read the JWT
+from. This field is an object.
+
+Following are the possible values:
+
+- ``{"type": "Authorization"}``
+- ``{"type": "Cookie", "name": "cookie_name" }``
+
+Default is ``{"type": "Authorization"}``.
+
+In the default mode, Hasura expects an ``Authorization`` header with a ``Bearer`` token.
+
+In the cookie mode, Hasura will try to parse the cookie header with the given
+cookie name. The value of the cookie should be the exact JWT.
+
+Example:-
+
+If ``header`` is ``{"type": "Authorization"}`` then JWT header should look like:
+
+.. code-block:: none
+
+   Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWI...
+
+If ``header`` is ``{"type": "Cookie", "name": "cookie_name" }`` then JWT header should look like:
+
+
+.. code-block:: none
+
+   Cookie: cookie_name=eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWI...
+
 
 Examples
 ^^^^^^^^
@@ -543,6 +600,31 @@ the JWT config only needs to have the public key.
       "jwk_url": "https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com"
     }
 
+EdDSA based
++++++++++++
+If your auth server is using EdDSA to sign JWTs, and is using the Ed25519 variant key,
+the JWT config only needs to have the public key.
+
+**Example 1**: public key in PEM format (not OpenSSH format):
+
+.. code-block:: json
+
+    {
+      "type":"Ed25519",
+      "key": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAG9I+toAAJicilbPt36tiC4wi7E1Dp9rMmfnwdKyVXi0=\n-----END PUBLIC KEY-----"
+    }
+
+**Example 2**: public key as X509 certificate:
+
+.. code-block:: json
+
+    {
+      "type":"Ed25519",
+      "key": "-----BEGIN CERTIFICATE REQUEST-----\nMIIBAzCBtgIBADAnMQswCQYDVQQGEwJERTEYMBYGA1UEAwwPd3d3LmV4YW1wbGUu\nY29tMCowBQYDK2VwAyEA/9DV/InajW02Q0tC/tyr9mCSbSnNP1txICXVJrTGKDSg\nXDBaBgkqhkiG9w0BCQ4xTTBLMAsGA1UdDwQEAwIEMDATBgNVHSUEDDAKBggrBgEF\nBQcDATAnBgNVHREEIDAegg93d3cuZXhhbXBsZS5jb22CC2V4YW1wbGUuY29tMAUG\nAytlcANBAKbTqnTyPcf4ZkVuq2tC108pBGY19VgyoI+PP2wD2KaRz4QAO7Bjd+7S\nljyJoN83UDdtdtgb7aFgb611gx9W4go=\n-----END CERTIFICATE REQUEST-----
+      "
+    }
+
+.. _running_with_jwt: 
 
 Running with JWT
 ^^^^^^^^^^^^^^^^
@@ -553,9 +635,9 @@ Using the flag:
   $ docker run -p 8080:8080 \
       hasura/graphql-engine:latest \
       graphql-engine \
-      --database-url postgres://username:password@hostname:port/dbname \
+      --database-url postgres://<username>:<password>@<hostname>:<port>/<dbname> \
       serve \
-      --admin-secret myadminsecretkey \
+      --admin-secret <myadminsecretkey> \
       --jwt-secret '{"type":"HS256", "key": "3EK6FD+o0+c7tzBNVfjpMkNDi2yARAAKzQlk8O2IKoxQu4nF7EdAh8s3TwpHwrdWT6R"}'
 
 Using env vars:
@@ -563,11 +645,11 @@ Using env vars:
 .. code-block:: shell
 
   $ docker run -p 8080:8080 \
-      -e HASURA_GRAPHQL_ADMIN_SECRET="myadminsecretkey" \
+      -e HASURA_GRAPHQL_ADMIN_SECRET="<myadminsecretkey>" \
       -e HASURA_GRAPHQL_JWT_SECRET='{"type":"RS512", "key": "-----BEGIN PUBLIC KEY-----\nMIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDdlatRjRjogo3WojgGHFHYLugd\nUWAY9iR3fy4arWNA1KoS8kVw33cJibXr8bvwUAUparCwlvdbH6dvEOfou0/gCFQs\nHUfQrSDv+MuSUMAe8jzKE4qW+jK+xQU9a03GUnKHkkle+Q0pX/g6jXZ7r1/xAK5D\no2kQ+X5xK9cipRgEKwIDAQAB\n-----END PUBLIC KEY-----\n"}' \
       hasura/graphql-engine:latest \
       graphql-engine \
-      --database-url postgres://username:password@hostname:port/dbname \
+      --database-url postgres://<username>:<password>@<hostname>:<port>/<dbname> \
       serve
 
 
@@ -654,6 +736,7 @@ And use it in the ``key`` field:
     -----END CERTIFICATE-----
     "
         }
+.. _generating_jwt_config:
 
 Generating JWT Config
 ---------------------
@@ -676,8 +759,15 @@ Auth JWT Examples
 Here are some sample apps that use JWT authorization. You can follow the instructions in the READMEs of the
 repositories to get started.
 
+- :ref:`Custom JWT server with Hasura actions<actions_codegen_python_flask>`:
+  A simple Python / Flask API that implements ``Signup`` and ``Login`` methods as actions returning JWTs
+
 - `Auth0 JWT example <https://github.com/hasura/graphql-engine/tree/master/community/sample-apps/todo-auth0-jwt>`__:
   A todo app that uses Hasura GraphQL engine and Auth0 JWT
 
 - `Firebase JWT example <https://github.com/hasura/graphql-engine/tree/master/community/sample-apps/firebase-jwt>`__:
   Barebones example to show how to have Firebase Auth integrated with Hasura JWT mode
+
+.. admonition:: Additional Resources
+
+  Enterprise Grade Authorization - `Watch Webinar <https://hasura.io/events/webinar/authorization-modeling-hasura/?pg=docs&plcmt=body&cta=watch-webinar&tech=>`__.

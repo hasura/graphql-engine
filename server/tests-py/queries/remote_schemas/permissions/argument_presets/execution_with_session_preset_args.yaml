@@ -1,0 +1,56 @@
+- description: "query with field having session argument preset"
+  url: /v1/graphql
+  status: 200
+  headers:
+    X-Hasura-Role: user
+    X-Hasura-User-Id: "1"
+  query:
+    query: |
+      {
+        user {
+          user_id
+        }
+      }
+  response:
+    data:
+      user:
+        user_id: 1
+
+- description: "throw error when an expected session variable is not provided"
+  url: /v1/graphql
+  status: 200
+  headers:
+    X-Hasura-Role: user
+  query:
+    query: |
+      {
+        user {
+          user_id
+        }
+      }
+  response:
+    errors:
+    - extensions:
+        code: not-found
+        path: $
+      message: '"x-hasura-user-id" session variable expected, but not found'
+
+- description: "throw error when the session variable cannot be coerced into the appropriate type"
+  url: /v1/graphql
+  status: 200
+  headers:
+    X-Hasura-Role: user
+    X-Hasura-User-Id: randomid123
+  query:
+    query: |
+      {
+        user {
+          user_id
+        }
+      }
+  response:
+    errors:
+    - extensions:
+        code: coercion-error
+        path: $
+      message: '"randomid123" cannot be coerced into an Int value'

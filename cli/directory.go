@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -18,12 +19,18 @@ import (
 // If the current directory or any parent directory (upto filesystem root) is
 // found to have these files, ExecutionDirectory is set as that directory.
 func (ec *ExecutionContext) validateDirectory() error {
+	var err error
 	if len(ec.ExecutionDirectory) == 0 {
 		cwd, err := os.Getwd()
 		if err != nil {
 			return errors.Wrap(err, "error getting current working directory")
 		}
 		ec.ExecutionDirectory = cwd
+	} else {
+		ec.ExecutionDirectory, err = filepath.Abs(ec.ExecutionDirectory)
+		if err != nil {
+			return fmt.Errorf("error finding absolute path for project directory: %w", err)
+		}
 	}
 
 	ed, err := os.Stat(ec.ExecutionDirectory)
@@ -62,6 +69,10 @@ func recursivelyValidateDirectory(startFrom string) (validDir string, err error)
 	err = ValidateDirectory(startFrom)
 	if err != nil {
 		nextDir := filepath.Dir(startFrom)
+		// to catch error gracefully in loop situation
+		if nextDir == startFrom {
+			return "", fmt.Errorf("failed recursively find config.yaml: search stopped due to a possible infinite filesystem traversal at %s", nextDir)
+		}
 		if err := CheckFilesystemBoundary(nextDir); err != nil {
 			return nextDir, errors.Wrapf(err, "cannot find [%s] | search stopped", strings.Join(filesRequired, ", "))
 		}
@@ -91,10 +102,10 @@ func ValidateDirectory(dir string) error {
 
 // CheckFilesystemBiundary returns an error if dir is filesystem root
 func CheckFilesystemBoundary(dir string) error {
-	cleaned := filepath.Clean(dir)
-	isWindowsRoot, _ := regexp.MatchString(`^[a-zA-Z]:\\$`, cleaned)
+	// since filepath.Abs calls filepath.Clean the path is expected to be in "clean" state
+	isWindowsRoot, _ := regexp.MatchString(`^[a-zA-Z]:\\$`, dir)
 	// return error if filesystem boundary is hit
-	if cleaned == "/" || isWindowsRoot {
+	if dir == "/" || isWindowsRoot {
 		return errors.Errorf("filesystem boundary hit")
 
 	}

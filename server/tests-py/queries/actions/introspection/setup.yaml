@@ -8,7 +8,7 @@ args:
     - name: actionName
       definition:
         handler: http://localhost:3000
-        output_type: SampleOutput
+        output_type: "[SampleOutput!]"
         arguments:
         - name: text
           type: jsonb!
@@ -39,7 +39,7 @@ args:
       - name: SampleOutput
         fields:
         - name: id
-          type: String!
+          type: "[String!]"
       - name: SampleOutput2
         fields:
         - name: id

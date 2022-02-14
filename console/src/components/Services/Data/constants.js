@@ -28,6 +28,27 @@ export const Operators = [
   },
   { name: 'similar', value: '$similar', graphqlOp: '_similar' },
   { name: 'not similar', value: '$nsimilar', graphqlOp: '_nsimilar' },
+
+  {
+    name: '~',
+    value: '$regex',
+    graphqlOp: '_regex',
+  },
+  {
+    name: '~*',
+    value: '$iregex',
+    graphqlOp: '_iregex',
+  },
+  {
+    name: '!~',
+    value: '$nregex',
+    graphqlOp: '_nregex',
+  },
+  {
+    name: '!~*',
+    value: '$niregex',
+    graphqlOp: '_niregex',
+  },
 ];
 
 export const Integers = [
@@ -40,13 +61,19 @@ export const Integers = [
 
 export const COUNT_LIMIT = 100000;
 
+export const maxAllowedColumnLength = 64;
+
+const maxAllowedLength = 255;
+const unixEpochLength = 14;
+export const maxAllowedMigrationLength = maxAllowedLength - unixEpochLength;
+
 export const Reals = ['float4', 'float8', 'numeric'];
 
 export const Numerics = [...Integers, ...Reals];
 
 export const defaultDataTypeToCast = 'text';
 
-// https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/index.html#error-codes
+// https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/index.html#error-codes
 export const ERROR_CODES = {
   postgresError: {
     code: 'postgres-error',
@@ -130,7 +157,6 @@ export const ERROR_CODES = {
     ERRORS: ['No such resource exists'],
     httpCode: '404',
   },
-  // todo update this, this happens on bulk request failed
   dataApiError: {
     code: 'data_api_error',
   },

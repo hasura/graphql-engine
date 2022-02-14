@@ -2,10 +2,10 @@
    :description: Manage permissions with the Hasura schema/metadata API
    :keywords: hasura, docs, schema/metadata API, API reference, permission
 
-.. _api_permission:
+.. _schema_metadata_api_permission:
 
-Schema/Metadata API Reference: Permissions
-==========================================
+Schema/Metadata API Reference: Permissions (Deprecated)
+=======================================================
 
 .. contents:: Table of contents
   :backlinks: none
@@ -26,7 +26,14 @@ role has unrestricted access to all operations.
    values can come with the request and can be validated using webhook or can be
    sent with the JWT token.
 
-.. _create_insert_permission:
+.. admonition:: Deprecation
+
+  In versions ``v2.0.0`` and above, the schema/metadata API is deprecated in favour of the :ref:`schema API <schema_apis>` and the
+  :ref:`metadata API <metadata_apis>`.
+
+  Though for backwards compatibility, the schema/metadata APIs will continue to function.
+
+.. _schema_metadata_create_insert_permission:
 
 create_insert_permission
 ------------------------
@@ -106,7 +113,7 @@ In the above definition, the row is allowed to be inserted if the ``author_id``
 is the same as the request's user id and ``is_reviewed`` is ``false`` when the
 ``category`` is "editorial".
 
-.. _create_insert_permission_syntax:
+.. _schema_metadata_create_insert_permission_syntax:
 
 Args syntax
 ^^^^^^^^^^^
@@ -128,45 +135,14 @@ Args syntax
      - Role
    * - permission
      - true
-     - InsertPermission_
+     - :ref:`InsertPermission`
      - The permission definition
    * - comment
      - false
      - text
      - Comment
 
-.. _InsertPermission:
-
-InsertPermission
-&&&&&&&&&&&&&&&&
-
-.. list-table::
-   :header-rows: 1
-
-   * - Key
-     - Required
-     - Schema
-     - Description
-   * - check
-     - true
-     - :ref:`BoolExp`
-     - This expression has to hold true for every new row that is inserted
-   * - set
-     - false
-     - :ref:`ColumnPresetExp`
-     - Preset values for columns that can be sourced from session variables or static values
-   * - columns
-     - false
-     - :ref:`PGColumn` array (or) ``'*'``
-     - Can insert into only these columns (or all when ``'*'`` is specified)
-   * - backend_only
-     - false
-     - Boolean
-     - When set to ``true`` the mutation is accessible only if ``x-hasura-use-backend-only-permissions``
-       session variable exists and is set to ``true`` and request is made with ``x-hasura-admin-secret``
-       set if any auth is configured
-
-.. _drop_insert_permission:
+.. _schema_metadata_drop_insert_permission:
 
 drop_insert_permission
 ----------------------
@@ -189,7 +165,7 @@ An example:
        }
    }
 
-.. _drop_insert_permission_syntax:
+.. _schema_metadata_drop_insert_permission_syntax:
 
 Args syntax
 ^^^^^^^^^^^
@@ -210,7 +186,7 @@ Args syntax
      - :ref:`RoleName`
      - Role
 
-.. _create_select_permission:
+.. _schema_metadata_create_select_permission:
 
 create_select_permission
 ------------------------
@@ -256,7 +232,7 @@ This reads as follows - For the ``user`` role:
 
 * Allow aggregate queries.
 
-.. _create_select_permission_syntax:
+.. _schema_metadata_create_select_permission_syntax:
 
 Args syntax
 ^^^^^^^^^^^
@@ -278,47 +254,14 @@ Args syntax
      - Role
    * - permission
      - true
-     - SelectPermission_
+     - :ref:`SelectPermission`
      - The permission definition
    * - comment
      - false
      - text
      - Comment
 
-.. _SelectPermission:
-
-SelectPermission
-&&&&&&&&&&&&&&&&
-
-.. list-table::
-   :header-rows: 1
-
-   * - Key
-     - Required
-     - Schema
-     - Description
-   * - columns
-     - true
-     - :ref:`PGColumn` array (or) ``'*'``
-     - Only these columns are selectable (or all when ``'*'`` is specified)
-   * - computed_fields
-     - false
-     - :ref:`ComputedFieldName` array
-     - Only these computed fields are selectable
-   * - filter
-     - true
-     - :ref:`BoolExp`
-     - Only the rows where this expression holds true are selectable
-   * - limit
-     - false
-     - ``Integer``
-     - The maximum number of rows that can be returned
-   * - allow_aggregations
-     - false
-     - ``Boolean``
-     - Toggle allowing aggregate queries
-
-.. _drop_select_permission:
+.. _schema_metadata_drop_select_permission:
 
 drop_select_permission
 ----------------------
@@ -341,7 +284,7 @@ An example:
        }
    }
 
-.. _drop_select_permission_syntax:
+.. _schema_metadata_drop_select_permission_syntax:
 
 Args syntax
 ^^^^^^^^^^^
@@ -362,7 +305,7 @@ Args syntax
      - :ref:`RoleName`
      - Role
 
-.. _create_update_permission:
+.. _schema_metadata_create_update_permission:
 
 
 create_update_permission
@@ -418,7 +361,7 @@ This reads as follows - for the ``user`` role:
    ownership of a row in the ``article`` table. Columns such as this should
    never be allowed to be updated.
 
-.. _create_update_permission_syntax:
+.. _schema_metadata_create_update_permission_syntax:
 
 Args syntax
 ^^^^^^^^^^^
@@ -440,44 +383,14 @@ Args syntax
      - Role
    * - permission
      - true
-     - UpdatePermission_
+     - :ref:`UpdatePermission`
      - The permission definition
    * - comment
      - false
      - text
      - Comment
 
-.. _UpdatePermission:
-
-UpdatePermission
-&&&&&&&&&&&&&&&&
-
-.. list-table::
-   :header-rows: 1
-
-   * - Key
-     - Required
-     - Schema
-     - Description
-   * - columns
-     - true
-     - :ref:`PGColumn` array (or) ``'*'``
-     - Only these columns are selectable (or all when ``'*'`` is specified)
-   * - filter
-     - true
-     - :ref:`BoolExp`
-     - Only the rows where this precondition holds true are updatable
-   * - check
-     - false
-     - :ref:`BoolExp`
-     - Postcondition which must be satisfied by rows which have been updated
-   * - set
-     - false
-     - :ref:`ColumnPresetExp`
-     - Preset values for columns that can be sourced from session variables or static values.
-
-
-.. _drop_update_permission:
+.. _schema_metadata_drop_update_permission:
 
 drop_update_permission
 ----------------------
@@ -500,7 +413,7 @@ An example:
        }
    }
 
-.. _drop_update_permission_syntax:
+.. _schema_metadata_drop_update_permission_syntax:
 
 Args syntax
 ^^^^^^^^^^^
@@ -521,7 +434,7 @@ Args syntax
      - :ref:`RoleName`
      - Role
 
-.. _create_delete_permission:
+.. _schema_metadata_create_delete_permission:
 
 create_delete_permission
 ------------------------
@@ -554,7 +467,7 @@ This reads as follows:
 "``delete`` for the ``user`` role on the ``article`` table is allowed on rows where
 ``author_id`` is the same as the request header ``X-HASURA-USER-ID`` value."
 
-.. _create_delete_permission_syntax:
+.. _schema_metadata_create_delete_permission_syntax:
 
 Args syntax
 ^^^^^^^^^^^
@@ -576,31 +489,14 @@ Args syntax
      - Role
    * - permission
      - true
-     - DeletePermission_
+     - :ref:`DeletePermission`
      - The permission definition
    * - comment
      - false
      - text
      - Comment
 
-.. _DeletePermission:
-
-DeletePermission
-&&&&&&&&&&&&&&&&
-
-.. list-table::
-   :header-rows: 1
-
-   * - Key
-     - Required
-     - Schema
-     - Description
-   * - filter
-     - true
-     - :ref:`BoolExp`
-     - Only the rows where this expression holds true are deletable
-
-.. _drop_delete_permission:
+.. _schema_metadata_drop_delete_permission:
 
 drop_delete_permission
 ----------------------
@@ -623,7 +519,7 @@ An example:
        }
    }
 
-.. _drop_delete_permission_syntax:
+.. _schema_metadata_drop_delete_permission_syntax:
 
 Args syntax
 ^^^^^^^^^^^
@@ -644,7 +540,7 @@ Args syntax
      - :ref:`RoleName`
      - Role
 
-.. _set_permission_comment:
+.. _schema_metadata_set_permission_comment:
 
 set_permission_comment
 ----------------------
@@ -667,11 +563,11 @@ An example:
            "table": "article",
            "role": "user",
            "type" : "update",
-           "comment" : "can only modify his/her own rows"
+           "comment" : "can only modify their own rows"
        }
    }
 
-.. _set_permission_comment_syntax:
+.. _schema_metadata_set_permission_comment_syntax:
 
 Args syntax
 ^^^^^^^^^^^

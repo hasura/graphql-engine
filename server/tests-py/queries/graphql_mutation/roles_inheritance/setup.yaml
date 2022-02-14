@@ -1,0 +1,145 @@
+type: bulk
+args:
+
+- type: pg_track_table
+  args:
+    table: authors
+
+- type: pg_track_table
+  args:
+    table: articles
+
+- type: pg_create_select_permission
+  args:
+    table: authors
+    role: author
+    permission:
+      columns: "*"
+      filter:
+        id: X-Hasura-Author-Id
+
+- type: pg_create_insert_permission
+  args:
+    table: authors
+    role: author
+    permission:
+      check:
+        id: X-Hasura-Author-Id
+      set:
+        id: X-Hasura-Author-Id
+      columns:
+        - first_name
+        - last_name
+        - phone
+        - age
+        - editor_id
+
+- type: pg_create_update_permission
+  args:
+    table: authors
+    role: author
+    permission:
+      columns:
+        - first_name
+        - last_name
+        - phone
+        - age
+        - editor_id
+      filter:
+        id: X-Hasura-Author-Id
+      set:
+        updated_at: "NOW()"
+
+- type: pg_create_update_permission
+  args:
+    table: authors
+    role: editor
+    permission:
+      columns:
+        - phone
+        - age
+      filter:
+        editor_id: X-Hasura-Editor-Id
+      set:
+        updated_at: "NOW()"
+
+- type: pg_create_select_permission
+  args:
+    table: articles
+    role: guest
+    permission:
+      columns:
+        - title
+        - content
+        - author_id
+      allow_aggregations: true
+      filter:
+        is_published: true
+
+- type: pg_create_select_permission
+  args:
+    table: articles
+    role: author
+    permission:
+      columns: "*"
+      allow_aggregations: true
+      filter:
+        author_id: X-Hasura-Author-Id
+
+- type: pg_create_select_permission
+  args:
+    table: articles
+    role: editor
+    permission:
+      columns: "*"
+      filter:
+        editor_id: X-Hasura-Editor-Id
+
+- type: pg_create_select_permission
+  args:
+    table: articles
+    role: free_user
+    permission:
+      columns:
+        - title
+        - content
+      filter:
+        is_published:
+          _eq: true
+      limit: 2
+
+- type: pg_create_delete_permission
+  args:
+    table: articles
+    role: publisher
+    permission:
+      filter:
+        is_published:
+          _eq: true
+
+- type: pg_create_update_permission
+  args:
+    table: articles
+    role: editor
+    permission:
+      columns:
+        - title
+        - content
+      filter:
+        editor_id: X-Hasura-Editor-Id
+      set:
+        updated_at: "NOW()"
+
+- type: add_inherited_role
+  args:
+    role_name: author_editor
+    role_set:
+      - author
+      - editor
+
+- type: add_inherited_role
+  args:
+    role_name: author_editor_publisher
+    role_set:
+      - author_editor
+      - publisher

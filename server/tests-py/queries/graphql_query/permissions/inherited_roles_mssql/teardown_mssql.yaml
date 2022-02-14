@@ -1,0 +1,32 @@
+type: bulk
+args:
+
+  - type: drop_inherited_role
+    args:
+      role_name: author_editor_guest_inherited_role
+
+  - type: drop_inherited_role
+    args:
+      role_name: author_and_editor
+
+  - type: mssql_drop_relationship
+    args:
+      source: mssql
+      table: article
+      relationship: author
+
+  - type: mssql_drop_relationship
+    args:
+      source: mssql
+      table: author
+      relationship: articles
+
+  - type: mssql_untrack_table
+    args:
+      source: mssql
+      table: article
+
+  - type: mssql_untrack_table
+    args:
+      source: mssql
+      table: author

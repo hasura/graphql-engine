@@ -1,0 +1,36 @@
+# This is a fork of tests-py/queries/event_triggers/basic
+# but using the /block endpoint as webhook
+type: bulk
+args:
+
+- type: run_sql
+  args:
+    sql: |
+      create table hge_tests.test_flood(
+          c1 int,
+          c2 text
+      );
+
+- type: track_table
+  args:
+    schema: hge_tests
+    name: test_flood
+
+- type: create_event_trigger
+  args:
+    name: flood_all
+    table:
+      schema: hge_tests
+      name: test_flood
+    insert:
+      columns: '*'
+    update:
+      columns: '*'
+    delete:
+      columns: '*'
+    webhook: http://127.0.0.1:5592/block
+    retry_conf:
+      # We will manuallally unblock() before this is reached:
+      timeout_sec: 60
+      num_retries: 0
+      interval_sec: 1

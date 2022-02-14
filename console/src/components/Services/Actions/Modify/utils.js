@@ -13,9 +13,9 @@ import {
 import { getActionTypes } from '../Common/utils';
 
 export const getModifyState = (currentAction, allTypes) => {
-  const { action_defn: actionDef } = currentAction;
+  const { definition: actionDef } = currentAction;
   const modifyState = {
-    name: currentAction.action_name,
+    name: currentAction.name,
     actionDefinition: {
       sdl: getActionDefinitionSdl(
         getActionName(currentAction),
@@ -34,6 +34,8 @@ export const getModifyState = (currentAction, allTypes) => {
     kind: actionDef.kind,
     headers: parseServerHeaders(actionDef.headers),
     forwardClientHeaders: actionDef.forward_client_headers,
+    timeout: actionDef?.timeout ?? '',
+    comment: currentAction.comment,
   };
   return modifyState;
 };

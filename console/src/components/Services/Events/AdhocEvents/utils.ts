@@ -5,7 +5,7 @@ import {
   isValidTemplateLiteral,
   isValidDate,
 } from '../../../Common/utils/jsUtils';
-import { makeBaseTable } from '../../../Common/utils/pgUtils';
+import { BaseTable } from '../../../../dataSources/types';
 
 export const validateAddState = (state: LocalAdhocEventState) => {
   if (!isValidURL(state.webhook) && !isValidTemplateLiteral(state.webhook)) {
@@ -28,10 +28,10 @@ export const validateAddState = (state: LocalAdhocEventState) => {
   return '';
 };
 
-export const adhocEventsTable = makeBaseTable(
-  'hdb_scheduled_events',
-  'hdb_catalog',
-  [
+export const adhocEventsTable: BaseTable = {
+  table_name: 'hdb_scheduled_events',
+  table_schema: 'hdb_catalog',
+  columns: [
     { column_name: 'id', data_type: 'uuid' },
     { column_name: 'webhook_conf', data_type: 'text' },
     { column_name: 'scheduled_time', data_type: 'timestamptz' },
@@ -43,18 +43,18 @@ export const adhocEventsTable = makeBaseTable(
     { column_name: 'created_at', data_type: 'timestamptz' },
     { column_name: 'next_retry_at', data_type: 'timestamptz' },
     { column_name: 'comment', data_type: 'text' },
-  ]
-);
+  ],
+};
 
-export const stInvocationLogsTable = makeBaseTable(
-  'hdb_scheduled_event_invocation_logs',
-  'hdb_catalog',
-  [
+export const stInvocationLogsTable: BaseTable = {
+  table_name: 'hdb_scheduled_event_invocation_logs',
+  table_schema: 'hdb_catalog',
+  columns: [
     { column_name: 'id', data_type: 'uuid' },
     { column_name: 'event_id', data_type: 'uuid' },
     { column_name: 'status', data_type: 'int' },
     { column_name: 'request', data_type: 'text' },
     { column_name: 'response', data_type: 'text' },
     { column_name: 'created_at', data_type: 'timestamptz' },
-  ]
-);
+  ],
+};

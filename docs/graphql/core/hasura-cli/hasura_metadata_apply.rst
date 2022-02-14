@@ -1,5 +1,5 @@
 .. meta::
-   :description: Use hasura metadata apply to apply Hasura metadata on a database with the Hasura CLI
+   :description: Apply Hasura metadata on a database using the Hasura CLI
    :keywords: hasura, docs, CLI, hasura metadata apply
 
 .. _hasura_metadata_apply:
@@ -38,24 +38,24 @@ Options
 
 ::
 
-      --dry-run     show a diff instead of applying the metadata
-      --from-file   apply metadata from migrations/metadata.[yaml|json]
-  -h, --help        help for apply
+      --dry-run         show metadata generated from project directory without applying to server.  generated metadata will be printed as JSON by default, use -o flag for other display formats
+  -h, --help            help for apply
+  -o, --output string   specify an output format to show applied metadata. Allowed values: json, yaml (default "json")
 
 Options inherited from parent commands
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ::
 
-      --admin-secret string            admin secret for Hasura GraphQL engine 
-      --certificate-authority string   path to a cert file for the certificate authority 
-      --endpoint string                http(s) endpoint for Hasura GraphQL engine 
+      --admin-secret string            admin secret for Hasura GraphQL engine (env "HASURA_GRAPHQL_ADMIN_SECRET")
+      --certificate-authority string   path to a cert file for the certificate authority (env "HASURA_GRAPHQL_CERTIFICATE_AUTHORITY")
+      --endpoint string                http(s) endpoint for Hasura GraphQL engine (env "HASURA_GRAPHQL_ENDPOINT")
       --envfile string                 .env filename to load ENV vars from (default ".env")
-      --insecure-skip-tls-verify       skip TLS verification and disable cert checking (default: false) 
+      --insecure-skip-tls-verify       skip TLS verification and disable cert checking (default: false) (env "HASURA_GRAPHQL_INSECURE_SKIP_TLS_VERIFY")
       --log-level string               log level (DEBUG, INFO, WARN, ERROR, FATAL) (default "INFO")
       --no-color                       do not colorize output (default: false)
       --project string                 directory where commands are executed (default: current dir)
-      --skip-update-check              Skip automatic update check on command execution
+      --skip-update-check              skip automatic update check on command execution
 
 SEE ALSO
 ~~~~~~~~

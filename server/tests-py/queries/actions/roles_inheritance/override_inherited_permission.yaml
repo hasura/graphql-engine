@@ -1,0 +1,53 @@
+- description: Query the action with the inherited role
+  url: /v1/graphql
+  headers:
+    X-Hasura-Role: inherited_role2
+  status: 200
+  query:
+    query: |
+      mutation {
+        create_user (name: "bob", email: "bob@hasura.io") {
+          id
+        }
+      }
+  response:
+    errors:
+      - extensions:
+          path: $
+          code: validation-failed
+        message: no mutations exist
+
+- description: Add permission to role which will override the inherited permission
+  url: /v1/metadata
+  status: 200
+  query:
+    type: create_action_permission
+    args:
+      role: inherited_role2
+      action: create_user
+
+- description: Query the action with the inherited role
+  url: /v1/graphql
+  headers:
+    X-Hasura-Role: inherited_role2
+  status: 200
+  query:
+    query: |
+      mutation {
+        create_user (name: "bob", email: "bob@hasura.io") {
+          id
+        }
+      }
+  response:
+    data:
+      create_user:
+        id: 1
+
+- description: Drop the overridden permission which was added
+  url: /v1/metadata
+  status: 200
+  query:
+    type: drop_action_permission
+    args:
+      role: inherited_role2
+      action: create_user

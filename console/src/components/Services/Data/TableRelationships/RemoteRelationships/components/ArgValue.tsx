@@ -1,12 +1,13 @@
 import React from 'react';
 import { ArgValue } from '../utils';
 import styles from '../SchemaExplorer.scss';
+import { HasuraColumn } from './Explorer';
 
 type Props = {
   value: ArgValue;
   handleArgValueKindChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
   handleArgValueChange: (e: React.BaseSyntheticEvent) => void;
-  columns: string[];
+  columns: HasuraColumn;
 };
 
 const ArgValueElement: React.FC<Props> = ({
@@ -41,13 +42,26 @@ const ArgValueElement: React.FC<Props> = ({
               -- column-name --
             </option>
           )}
-          {columns.map(o => {
-            return (
-              <option key={o} value={o}>
-                {o}
-              </option>
-            );
-          })}
+          <optgroup label="Columns">
+            {columns.columns.map(o => {
+              return (
+                <option key={o} value={o}>
+                  {o}
+                </option>
+              );
+            })}
+          </optgroup>
+          {columns.computedFields.length ? (
+            <optgroup label="Computed Fields">
+              {columns.computedFields.map(o => {
+                return (
+                  <option key={o} value={o}>
+                    {o}
+                  </option>
+                );
+              })}
+            </optgroup>
+          ) : null}
         </select>
       ) : (
         <input

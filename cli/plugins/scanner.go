@@ -12,23 +12,34 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/ghodss/yaml"
-	"github.com/hasura/graphql-engine/cli/plugins/paths"
+	"github.com/goccy/go-yaml"
+	"github.com/hasura/graphql-engine/cli/v2/plugins/paths"
 	"github.com/pkg/errors"
 	"github.com/spf13/afero"
 )
 
 func (c *Config) findPluginManifestFiles(indexDir string) ([]string, error) {
+	c.Logger.Debugf("finding plugin manifest files in directory %v", indexDir)
 	var out []string
 	fs := afero.Afero{
 		Fs: afero.NewOsFs(),
 	}
-	fs.Walk(indexDir, func(path string, info os.FileInfo, err error) error {
+	err := fs.Walk(indexDir, func(path string, info os.FileInfo, err error) error {
+		if info == nil {
+			if err != nil {
+				return err
+			}
+			return nil
+		}
 		if info.Mode().IsRegular() && filepath.Ext(info.Name()) == paths.ManifestExtension {
 			out = append(out, path)
 		}
 		return nil
 	})
+	if err != nil {
+		return nil, err
+	}
+
 	return out, nil
 }
 
@@ -50,6 +61,7 @@ func (c *Config) LoadPluginListFromFS(indexDir string) (Plugins, error) {
 // LoadPluginByName loads a plugins index file by its name. When plugin
 // file not found, it returns an error that can be checked with os.IsNotExist.
 func (c *Config) LoadPluginByName(pluginName string) (*PluginVersions, error) {
+	c.Logger.Debugf("loading plugin %s", pluginName)
 	if !IsSafePluginName(pluginName) {
 		return nil, errors.Errorf("plugin name %q not allowed", pluginName)
 	}
@@ -68,6 +80,7 @@ func (c *Config) LoadPluginByName(pluginName string) (*PluginVersions, error) {
 }
 
 func (c *Config) LoadPlugins(files []string, pluginName ...string) Plugins {
+	c.Logger.Debugf("loading plugins")
 	ps := Plugins{}
 	for _, file := range files {
 		p, err := c.ReadPluginFromFile(file)

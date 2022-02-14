@@ -1,0 +1,14 @@
+description: Successful call of an endpoint with a uuid list arg
+url: /api/rest/with_uuids
+method: POSTJSON
+body:
+  ids:
+    - "81F1BFEA-C169-44B5-B4C8-37E9A071ABD0"
+    - "80F1BFEA-C169-44B5-B4C8-37E9A071ABD0"
+status: 200
+headers:
+  X-Hasura-Role: admin
+  content-type: application/json
+query:
+response:
+  test_table: []

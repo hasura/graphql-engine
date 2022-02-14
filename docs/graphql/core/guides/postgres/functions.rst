@@ -54,4 +54,4 @@ Postgres functions & Hasura
 
 Postgres functions can be exposed in Hasura's GraphQL schema as a top-level field or as a computed field for a table. They are typically used for performing custom business logic in the database.
 
-Refer to :ref:`Custom SQL functions <custom_sql_functions>` and :ref:`Computed fields <computed_fields>` for more use cases and for instructions on how to create and expose Postgres functions in Hasura.
+Refer to :ref:`Custom SQL functions <pg_custom_sql_functions>` and :ref:`Computed fields <pg_computed_fields>` for more use cases and for instructions on how to create and expose Postgres functions in Hasura.

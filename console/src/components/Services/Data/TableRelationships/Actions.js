@@ -3,17 +3,25 @@ import inflection from 'inflection';
 import { makeMigrationCall, updateSchemaInfo } from '../DataActions';
 import gqlPattern, { gqlRelErrorNotif } from '../Common/GraphQLValidation';
 import { showErrorNotification } from '../../Common/Notification';
-import {
-  getSaveRemoteRelQuery,
-  getDropRemoteRelQuery,
-} from '../../../Common/utils/v1QueryUtils';
 import { getConfirmation } from '../../../Common/utils/jsUtils';
 import suggestedRelationshipsRaw from './autoRelations';
 import {
   getRemoteRelPayload,
   parseRemoteRelationship,
 } from './RemoteRelationships/utils';
+import {
+  getSaveRemoteRelQuery,
+  getDropRemoteRelQuery,
+  getRenameRelationshipQuery,
+  getCreateObjectRelationshipQuery,
+  getCreateArrayRelationshipQuery,
+  getDropRelationshipQuery,
+  getAddRelationshipQuery,
+  getSaveRemoteDbRelationshipQuery,
+  getDropRemoteDbRelationshipQuery,
+} from '../../../../metadata/queryUtils';
 import Migration from '../../../../utils/migration/Migration';
+import { currentDriver, getQualifiedTableDef } from '../../../../dataSources';
 
 export const SET_MANUAL_REL_ADD = 'ModifyTable/SET_MANUAL_REL_ADD';
 export const MANUAL_REL_SET_TYPE = 'ModifyTable/MANUAL_REL_SET_TYPE';
@@ -59,6 +67,8 @@ export const saveRemoteRelationship = (
       name: getState().tables.currentTable,
     };
 
+    const source = getState().tables.currentDataSource;
+
     const errorMsg = `${
       isNew ? 'Creating' : 'Updating'
     } remote relationship failed`;
@@ -72,20 +82,22 @@ export const saveRemoteRelationship = (
       }
       return dispatch(showErrorNotification(errorMsg, e.message));
     }
-    const migration = new Migration();
-    let downQry;
+
+    const upQuery = [
+      getSaveRemoteRelQuery(remoteRelQueryArgs, !existingRel, source),
+    ];
+    let downQuery = [];
     if (isNew) {
-      downQry = getDropRemoteRelQuery(state.name, state.table);
+      downQuery = [getDropRemoteRelQuery(state.name, state.table)];
     } else {
-      downQry = getSaveRemoteRelQuery(
-        getRemoteRelPayload(parseRemoteRelationship(existingRel)),
-        isNew
-      );
+      downQuery = [
+        getSaveRemoteRelQuery(
+          getRemoteRelPayload(parseRemoteRelationship(existingRel)),
+          isNew,
+          source
+        ),
+      ];
     }
-    migration.add(
-      getSaveRemoteRelQuery(remoteRelQueryArgs, !existingRel),
-      downQry
-    );
 
     // Apply migrations
     const migrationName = `table_${table.name}_${
@@ -114,8 +126,8 @@ export const saveRemoteRelationship = (
     makeMigrationCall(
       dispatch,
       getState,
-      migration.upMigration,
-      migration.downMigration,
+      upQuery,
+      downQuery,
       migrationName,
       customOnSuccess,
       customOnError,
@@ -142,14 +154,20 @@ export const dropRemoteRelationship = (
       return;
     }
 
+    const source = getState().tables.currentDataSource;
     const table = state.table;
     const migration = new Migration();
 
     migration.add(
-      getDropRemoteRelQuery(existingRel.remote_relationship_name, table),
+      getDropRemoteRelQuery(
+        existingRel.remote_relationship_name,
+        table,
+        source
+      ),
       getSaveRemoteRelQuery(
         getRemoteRelPayload(parseRemoteRelationship(existingRel)),
-        true
+        true,
+        source
       )
     );
     // Apply migrations
@@ -218,32 +236,22 @@ const manualRelRSchemaChanged = rSchema => ({
 const saveRenameRelationship = (oldName, newName, tableName, callback) => {
   return (dispatch, getState) => {
     const currentSchema = getState().tables.currentSchema;
-    const migrateUp = {
-      type: 'rename_relationship',
-      args: {
-        table: {
-          name: tableName,
-          schema: currentSchema,
-        },
-        name: oldName,
-        new_name: newName,
-      },
-    };
+    const currentSource = getState().tables.currentDataSource;
 
-    const migrateDown = {
-      type: 'rename_relationship',
-      args: {
-        table: {
-          name: tableName,
-          schema: currentSchema,
-        },
-        name: newName,
-        new_name: oldName,
+    const tableDef = getQualifiedTableDef(
+      {
+        name: tableName,
+        schema: currentSchema,
       },
-    };
+      currentDriver
+    );
 
-    const migration = new Migration();
-    migration.add(migrateUp, migrateDown);
+    const migrateUp = [
+      getRenameRelationshipQuery(tableDef, oldName, newName, currentSource),
+    ];
+    const migrateDown = [
+      getRenameRelationshipQuery(tableDef, newName, oldName, currentSource),
+    ];
     // Apply migrations
     const migrationName = `rename_relationship_${oldName}_to_${newName}_schema_${currentSchema}_table_${tableName}`;
 
@@ -260,8 +268,8 @@ const saveRenameRelationship = (oldName, newName, tableName, callback) => {
     makeMigrationCall(
       dispatch,
       getState,
-      migration.upMigration,
-      migration.downMigration,
+      migrateUp,
+      migrateDown,
       migrationName,
       customOnSuccess,
       customOnError,
@@ -272,30 +280,36 @@ const saveRenameRelationship = (oldName, newName, tableName, callback) => {
   };
 };
 
-const generateRelationshipsQuery = relMeta => {
+const generateRelationshipsQuery = (relMeta, currentDataSource) => {
   let _upQuery;
   let _downQuery;
 
   if (relMeta.isObjRel) {
-    _upQuery = {
-      type: 'create_object_relationship',
-      args: {
-        name: relMeta.relName,
-        table: {
-          name: relMeta.lTable,
-          schema: relMeta.lSchema,
-        },
-        using: {},
+    _upQuery = getCreateObjectRelationshipQuery(
+      {
+        name: relMeta.lTable,
+        schema: relMeta.lSchema,
       },
-    };
+      relMeta.relName,
+      currentDataSource
+    );
     const columnMaps = relMeta.lcol.map((column, index) => ({
       lcol: column,
       rcol: relMeta.rcol[index],
     }));
-    if (columnMaps.length === 1 && !relMeta.isUnique) {
-      _upQuery.args.using = {
-        foreign_key_constraint_on: relMeta.lcol[0],
-      };
+
+    if (columnMaps.length === 1) {
+      _upQuery.args.using =
+        relMeta.isPrimary || relMeta.isUnique
+          ? {
+              foreign_key_constraint_on: {
+                table: { name: relMeta.rTable, schema: relMeta.rSchema },
+                column: relMeta.rcol[0],
+              },
+            }
+          : {
+              foreign_key_constraint_on: relMeta.lcol[0],
+            };
     } else {
       const columnReducer = (accumulator, val) => ({
         ...accumulator,
@@ -307,30 +321,32 @@ const generateRelationshipsQuery = relMeta => {
             name: relMeta.rTable,
             schema: relMeta.rSchema,
           },
+          source: relMeta.source,
           column_mapping: columnMaps.reduce(columnReducer, {}),
         },
       };
     }
 
-    _downQuery = {
-      type: 'drop_relationship',
-      args: {
-        table: { name: relMeta.lTable, schema: relMeta.lSchema },
-        relationship: relMeta.relName,
-      },
-    };
-  } else {
-    _upQuery = {
-      type: 'create_array_relationship',
-      args: {
-        name: relMeta.relName,
-        table: {
+    _downQuery = getDropRelationshipQuery(
+      getQualifiedTableDef(
+        {
           name: relMeta.lTable,
           schema: relMeta.lSchema,
         },
-        using: {},
+        currentDriver
+      ),
+      relMeta.relName,
+      currentDataSource
+    );
+  } else {
+    _upQuery = getCreateArrayRelationshipQuery(
+      {
+        name: relMeta.lTable,
+        schema: relMeta.lSchema,
       },
-    };
+      relMeta.relName,
+      currentDataSource
+    );
     const columnMaps = relMeta.rcol.map((column, index) => ({
       rcol: column,
       lcol: relMeta.lcol[index],
@@ -356,25 +372,31 @@ const generateRelationshipsQuery = relMeta => {
             name: relMeta.rTable,
             schema: relMeta.rSchema,
           },
+          source: currentDataSource,
           column_mapping: columnMaps.reduce(columnReducer, {}),
         },
       };
     }
 
-    _downQuery = {
-      type: 'drop_relationship',
-      args: {
-        table: { name: relMeta.lTable, schema: relMeta.lSchema },
-        relationship: relMeta.relName,
-      },
-    };
+    _downQuery = getDropRelationshipQuery(
+      getQualifiedTableDef(
+        {
+          name: relMeta.lTable,
+          schema: relMeta.lSchema,
+        },
+        currentDriver
+      ),
+      relMeta.relName,
+      currentDataSource
+    );
   }
 
   return { upQuery: _upQuery, downQuery: _downQuery };
 };
 
 const deleteRelMigrate = relMeta => (dispatch, getState) => {
-  const { upQuery, downQuery } = generateRelationshipsQuery(relMeta);
+  const source = getState().tables.currentDataSource;
+  const { upQuery, downQuery } = generateRelationshipsQuery(relMeta, source);
 
   const migration = new Migration();
   migration.add(downQuery, upQuery); // upquery from generateRelationshipsQuery used as downMigratio and vice versa
@@ -407,21 +429,23 @@ const deleteRelMigrate = relMeta => (dispatch, getState) => {
 };
 
 const addRelNewFromStateMigrate = () => (dispatch, getState) => {
+  const source = getState().tables.currentDataSource;
   const state = getState().tables.modify.relAdd;
-  const { upQuery, downQuery } = generateRelationshipsQuery({
-    lTable: state.lTable,
-    lSchema: state.lSchema,
-    isObjRel: state.isObjRel,
-    relName: state.relName,
-    lcol: state.lcol,
-    rcol: state.rcol,
-    rTable: state.rTable,
-    rSchema: state.rSchema,
-    isUnique: state.isUnique,
-  });
-  const migration = new Migration();
-
-  migration.add(upQuery, downQuery);
+  const { upQuery, downQuery } = generateRelationshipsQuery(
+    {
+      lTable: state.lTable,
+      lSchema: state.lSchema,
+      isObjRel: state.isObjRel,
+      relName: state.relName,
+      lcol: state.lcol,
+      rcol: state.rcol,
+      rTable: state.rTable,
+      rSchema: state.rSchema,
+      isUnique: state.isUnique,
+      isPrimary: state.isPrimary,
+    },
+    source
+  );
 
   // Apply migrations
   const migrationName = `add_relationship_${state.name}_table_${state.lSchema}_${state.lTable}`;
@@ -433,12 +457,7 @@ const addRelNewFromStateMigrate = () => (dispatch, getState) => {
   const customOnSuccess = () => {
     dispatch(
       updateSchemaInfo({
-        tables: [
-          {
-            table_schema: state.lSchema,
-            table_name: state.lTable,
-          },
-        ],
+        schemas: [state.lSchema, state.rSchema],
       })
     ).then(() => {
       dispatch(resetRelationshipForm());
@@ -450,8 +469,8 @@ const addRelNewFromStateMigrate = () => (dispatch, getState) => {
   makeMigrationCall(
     dispatch,
     getState,
-    migration.upMigration,
-    migration.downMigration,
+    [upQuery],
+    [downQuery],
     migrationName,
     customOnSuccess,
     customOnError,
@@ -486,6 +505,7 @@ const addRelViewMigrate = (tableSchema, toggleEditor) => (
   const currentTableSchema = tableSchema.table_schema;
   const isObjRel = relType === 'object' ? true : false;
   const columnMapping = {};
+  const { currentDataSource } = getState().tables;
 
   colMappings.forEach(colMap => {
     if (colMap.column === '') {
@@ -494,29 +514,35 @@ const addRelViewMigrate = (tableSchema, toggleEditor) => (
     columnMapping[colMap.column] = colMap.refColumn;
   });
 
-  //Migration
-  const migration = new Migration();
-  const relChangesUp = {
-    type: isObjRel ? 'create_object_relationship' : 'create_array_relationship',
-    args: {
-      name: relName,
-      table: { name: currentTableName, schema: currentTableSchema },
-      using: {
-        manual_configuration: {
-          remote_table: { name: rTable, schema: rSchema },
-          column_mapping: columnMapping,
-        },
-      },
+  const tableInfo = getQualifiedTableDef(
+    {
+      name: currentTableName,
+      schema: currentTableSchema,
     },
-  };
-  const relChangesDown = {
-    type: 'drop_relationship',
-    args: {
-      table: { name: currentTableName, schema: currentTableSchema },
-      relationship: relName,
+    currentDriver
+  );
+
+  const remoteTableInfo = getQualifiedTableDef(
+    {
+      name: rTable,
+      schema: rSchema,
     },
-  };
-  migration.add(relChangesUp, relChangesDown);
+    currentDriver
+  );
+
+  const relChangesUp = [
+    getAddRelationshipQuery(
+      isObjRel,
+      tableInfo,
+      relName,
+      remoteTableInfo,
+      columnMapping,
+      currentDataSource
+    ),
+  ];
+  const relChangesDown = [
+    getDropRelationshipQuery(tableInfo, relName, currentDataSource),
+  ];
 
   // Apply migrations
   const migrationName = `create_relationship_${relName}_${currentTableSchema}_table_${currentTableName}`;
@@ -530,8 +556,8 @@ const addRelViewMigrate = (tableSchema, toggleEditor) => (
       updateSchemaInfo({
         tables: [
           {
-            table_schema: currentTableSchema,
-            table_name: currentTableName,
+            schema: currentTableSchema,
+            name: currentTableName,
           },
         ],
       })
@@ -561,8 +587,8 @@ const addRelViewMigrate = (tableSchema, toggleEditor) => (
     makeMigrationCall(
       dispatch,
       getState,
-      migration.upMigration,
-      migration.downMigration,
+      relChangesUp,
+      relChangesDown,
       migrationName,
       customOnSuccess,
       customOnError,
@@ -571,6 +597,179 @@ const addRelViewMigrate = (tableSchema, toggleEditor) => (
       errorMsg
     );
   }
+};
+
+export const addDbToDbRelationship = (
+  state,
+  tableSchema,
+  toggleEditor,
+  isNew,
+  onSuccess
+) => (dispatch, getState) => {
+  const {
+    relType,
+    relName,
+    relSource,
+    relTable,
+    relColumns,
+    relDriver,
+  } = state;
+  const currentTableName = tableSchema.table_name;
+  const currentTableSchema = tableSchema.table_schema;
+  const isObjRel = relType === 'object';
+  const { currentDataSource } = getState().tables;
+
+  const columnMapping = relColumns.reduce((acc, { column, refColumn }) => {
+    if (column === '') return acc;
+    return { ...acc, [column]: refColumn };
+  }, {});
+
+  const tableInfo = getQualifiedTableDef(
+    {
+      name: currentTableName,
+      schema: currentTableSchema,
+    },
+    currentDriver
+  );
+
+  const relChangesUp = [
+    getSaveRemoteDbRelationshipQuery(
+      isObjRel,
+      currentTableName,
+      relName,
+      relTable,
+      columnMapping,
+      currentDataSource,
+      relSource,
+      isNew,
+      relDriver,
+      currentTableSchema
+    ),
+  ];
+
+  const relChangesDown = [
+    getDropRemoteRelQuery(relName, tableInfo, currentDataSource),
+  ];
+
+  // Apply migrations
+  const migrationName = `create_relationship_${relName}_${currentTableSchema}_table_${currentTableName}`;
+
+  const requestMsg = 'Adding Relationship...';
+  const successMsg = 'Relationship created';
+  const errorMsg = 'Creating relationship failed';
+
+  const customOnSuccess = () => {
+    onSuccess();
+    toggleEditor();
+  };
+  const customOnError = () => {};
+
+  // perform validations and make call
+  if (!relName.trim()) {
+    dispatch(
+      showErrorNotification(
+        'Error adding relationship!',
+        'Relationship name cannot be empty'
+      )
+    );
+  } else if (!gqlPattern.test(relName)) {
+    dispatch(
+      showErrorNotification(
+        gqlRelErrorNotif[0],
+        gqlRelErrorNotif[1],
+        gqlRelErrorNotif[2]
+      )
+    );
+  } else {
+    makeMigrationCall(
+      dispatch,
+      getState,
+      relChangesUp,
+      relChangesDown,
+      migrationName,
+      customOnSuccess,
+      customOnError,
+      requestMsg,
+      successMsg,
+      errorMsg
+    );
+  }
+};
+
+export const dropDbToDbRelationship = (state, tableSchema, toggleEditor) => (
+  dispatch,
+  getState
+) => {
+  if (
+    !getConfirmation('This will permanently delete the remote db relationship')
+  ) {
+    return;
+  }
+
+  const {
+    relType,
+    relName,
+    relSource,
+    relTable,
+    relColumns,
+    relDriver,
+  } = state;
+  const currentTableName = tableSchema.table_name;
+  const currentTableSchema = tableSchema.table_schema;
+  const isObjRel = relType === 'object' ? true : false;
+  const currentDataSource = getState().tables.currentDataSource;
+  const columnMapping = relColumns.reduce((acc, { column, refColumn }) => {
+    if (column === '') return acc;
+    return { ...acc, [column]: refColumn };
+  }, {});
+
+  const relChangesUp = [
+    getDropRemoteDbRelationshipQuery(
+      relName,
+      currentTableName,
+      currentDataSource,
+      currentTableSchema
+    ),
+  ];
+
+  const relChangesDown = [
+    getSaveRemoteDbRelationshipQuery(
+      isObjRel,
+      currentTableName,
+      relName,
+      relTable,
+      columnMapping,
+      currentDataSource,
+      relSource,
+      false,
+      relDriver,
+      currentTableSchema
+    ),
+  ];
+
+  const migrationName = `table_${currentTableName}_drop_remote_relationship_${relName}`;
+
+  const requestMsg = 'Deleting remote relationship...';
+  const successMsg = 'Successfully deleted remote relationship';
+  const errorMsg = 'Deleting remote relationship failed';
+
+  const customOnSuccess = () => {
+    toggleEditor();
+  };
+  const customOnError = () => {};
+
+  makeMigrationCall(
+    dispatch,
+    getState,
+    relChangesUp,
+    relChangesDown,
+    migrationName,
+    customOnSuccess,
+    customOnError,
+    requestMsg,
+    successMsg,
+    errorMsg
+  );
 };
 
 const sanitizeRelName = arg => arg.trim();
@@ -633,7 +832,7 @@ const getExistingFieldsMap = tableSchema => {
   return fieldMap;
 };
 
-const getAllUnTrackedRelations = (allSchemas, currentSchema) => {
+const getAllUnTrackedRelations = (allSchemas, currentSchema, currentSource) => {
   const trackedTables = allSchemas.filter(
     table => table.is_table_tracked && table.table_schema === currentSchema
   );
@@ -661,7 +860,8 @@ const getAllUnTrackedRelations = (allSchemas, currentSchema) => {
         /* Added to ensure that fallback relationship name is created in case of tracking all relationship at once */
         table.existingFields[indivObjectRel.relName] = true;
         const { upQuery, downQuery } = generateRelationshipsQuery(
-          indivObjectRel
+          indivObjectRel,
+          currentSource
         );
 
         const objTrack = {
@@ -683,7 +883,8 @@ const getAllUnTrackedRelations = (allSchemas, currentSchema) => {
         /* Added to ensure that fallback relationship name is created in case of tracking all relationship at once */
         table.existingFields[indivArrayRel.relName] = true;
         const { upQuery, downQuery } = generateRelationshipsQuery(
-          indivArrayRel
+          indivArrayRel,
+          currentSource
         );
 
         const arrTrack = {
@@ -732,15 +933,15 @@ const autoTrackRelations = autoTrackData => (dispatch, getState) => {
   );
 };
 
-const autoAddRelName = obj => (dispatch, getState) => {
+const autoAddRelName = ({ upQuery, downQuery }) => (dispatch, getState) => {
   const currentSchema = getState().tables.currentSchema;
-  const relName = obj.upQuery.args.name;
+  const relName = upQuery.args.name;
 
   const migration = new Migration();
-  migration.add(obj.upQuery, obj.downQuery);
+  migration.add(upQuery, downQuery);
 
   // Apply migrations
-  const migrationName = `add_relationship_${relName}_table_${currentSchema}_${obj.data.tableName}`;
+  const migrationName = `add_relationship_${relName}_table_${currentSchema}_${upQuery.args.table}`;
 
   const requestMsg = 'Adding Relationship...';
   const successMsg = 'Relationship created';

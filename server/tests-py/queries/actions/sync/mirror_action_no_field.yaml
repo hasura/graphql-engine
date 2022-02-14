@@ -24,8 +24,11 @@ response:
                 name: Alice
             action:
               name: mirror
+            request_query: "mutation ($name: String) {\n  mirror(arg: {name: $name}){\n  \
+              \  id\n    name\n  }\n}\n"
           url: http://127.0.0.1:5593/mirror-action
           headers: []
+          transformed_request:
       path: $
       code: unexpected
     message: field "id" expected in webhook response, but not found

@@ -1,58 +1,60 @@
 {-# LANGUAGE UndecidableInstances #-}
 
 module Hasura.RQL.Types.Run
-  ( Run(..)
-  , RunCtx(..)
-  , peelRun
-  ) where
+  ( RunT (..),
+    RunCtx (..),
+    peelRun,
+  )
+where
 
-import           Hasura.Prelude
-import           Hasura.Session
+import Control.Monad.Trans.Control (MonadBaseControl)
+import Hasura.Base.Error
+import Hasura.Metadata.Class
+import Hasura.Prelude
+import Hasura.RQL.Types
+import Hasura.Session
+import Hasura.Tracing qualified as Tracing
+import Network.HTTP.Client.Manager qualified as HTTP
 
-import qualified Database.PG.Query           as Q
-import qualified Network.HTTP.Client         as HTTP
-
-import           Control.Monad.Trans.Control (MonadBaseControl)
-import           Control.Monad.Unique
-
-import           Hasura.RQL.Types
-import qualified Hasura.Tracing              as Tracing
-
-data RunCtx
-  = RunCtx
-  { _rcUserInfo  :: !UserInfo
-  , _rcHttpMgr   :: !HTTP.Manager
-  , _rcSqlGenCtx :: !SQLGenCtx
+data RunCtx = RunCtx
+  { _rcUserInfo :: !UserInfo,
+    _rcHttpMgr :: !HTTP.Manager,
+    _rcServerConfigCtx :: !ServerConfigCtx
   }
 
-newtype Run a
-  = Run { unRun :: ReaderT RunCtx (LazyTx QErr) a }
-  deriving ( Functor, Applicative, Monad
-           , MonadError QErr
-           , MonadReader RunCtx
-           , MonadTx
-           , MonadIO
-           , MonadBase IO
-           , MonadBaseControl IO
-           , MonadUnique
-           )
+newtype RunT m a = RunT {unRunT :: ReaderT RunCtx (ExceptT QErr m) a}
+  deriving
+    ( Functor,
+      Applicative,
+      Monad,
+      MonadError QErr,
+      MonadReader RunCtx,
+      MonadIO,
+      MonadMetadataStorage,
+      Tracing.MonadTrace
+    )
 
-instance UserInfoM Run where
+instance (MonadMetadataStorage m) => MonadMetadataStorageQueryAPI (RunT m)
+
+deriving instance (MonadIO m, MonadBase IO m) => MonadBase IO (RunT m)
+
+deriving instance (MonadIO m, MonadBaseControl IO m) => MonadBaseControl IO (RunT m)
+
+instance (Monad m) => UserInfoM (RunT m) where
   askUserInfo = asks _rcUserInfo
 
-instance HasHttpManager Run where
+instance (Monad m) => HTTP.HasHttpManagerM (RunT m) where
   askHttpManager = asks _rcHttpMgr
 
-instance HasSQLGenCtx Run where
-  askSQLGenCtx = asks _rcSqlGenCtx
+instance (Monad m) => HasServerConfigCtx (RunT m) where
+  askServerConfigCtx = asks _rcServerConfigCtx
 
-peelRun
-  :: (MonadIO m)
-  => RunCtx
-  -> PGExecCtx
-  -> Q.TxAccess
-  -> Maybe Tracing.TraceContext
-  -> Run a
-  -> ExceptT QErr m a
-peelRun runCtx@(RunCtx userInfo _ _) pgExecCtx txAccess ctx (Run m) =
-  runLazyTx pgExecCtx txAccess $ maybe id withTraceContext ctx $ withUserInfo userInfo $ runReaderT m runCtx
+instance (MonadResolveSource m) => MonadResolveSource (RunT m) where
+  getPGSourceResolver = RunT . lift . lift $ getPGSourceResolver
+  getMSSQLSourceResolver = RunT . lift . lift $ getMSSQLSourceResolver
+
+peelRun ::
+  RunCtx ->
+  RunT m a ->
+  ExceptT QErr m a
+peelRun runCtx (RunT m) = runReaderT m runCtx

@@ -22,6 +22,11 @@ Logs
 
 In order to find out about the origins of an error, it can be helpful to check the logs.
 
+.. admonition:: Metrics and distributed tracing in Hasura Cloud
+  :class: dhc
+
+  Hasura Cloud includes metrics and distributed tracing which makes troubleshooting faster. For more information, see :ref:`Metrics <metrics>` and :ref:`Tracing <tracing>` in Hasura Cloud.
+
 Server logs
 ^^^^^^^^^^^
 
@@ -55,10 +60,12 @@ You can use the search functionality to find what you're looking for.
 
   If you prefer to watch tutorials in the form of videos, check out the `Hasura Youtube channel <https://www.youtube.com/channel/UCZo1ciR8pZvdD3Wxp9aSNhQ>`__.
 
-Postgres docs
+Database docs
 -------------
 
-If you come across a Postgres error, it will be helpful to check the `Postgres documentation <https://www.postgresql.org/docs/current/index.html>`__.
+If you come across a database error, it will be helpful to check their logs:
+
+- `Postgres documentation <https://www.postgresql.org/docs/current/index.html>`__.
 
 Discord
 -------
@@ -66,4 +73,3 @@ Discord
 If you didn't find a solution in any of the above mentioned sections or if you prefer to troubleshoot with the community,
 feel free to join our `Discord server <https://hasura.io/discord>`__. Other users might have come across the same issues, 
 and the Hasura community on Discord is very active and helpful. 
-

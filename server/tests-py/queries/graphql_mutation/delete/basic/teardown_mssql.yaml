@@ -1,0 +1,24 @@
+type: bulk
+args:
+
+# untrack tables
+- type: mssql_untrack_table
+  args:
+    source: mssql
+    table:
+      name: test_types
+    cascade: true
+
+- type: mssql_untrack_table
+  args:
+    source: mssql
+    table:
+      name: article
+    cascade: true
+
+- type: mssql_untrack_table
+  args:
+    source: mssql
+    table:
+      name: author
+    cascade: true

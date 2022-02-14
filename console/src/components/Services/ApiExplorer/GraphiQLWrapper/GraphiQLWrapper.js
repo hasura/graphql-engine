@@ -1,5 +1,4 @@
 import React, { Component } from 'react';
-import { push } from 'react-router-redux';
 import GraphiQL from 'graphiql';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
@@ -12,19 +11,18 @@ import {
   persistCodeExporterOpen,
 } from '../OneGraphExplorer/utils';
 
-import {
-  clearCodeMirrorHints,
-  setQueryVariableSectionHeight,
-  copyToClipboard,
-} from './utils';
+import { clearCodeMirrorHints, setQueryVariableSectionHeight } from './utils';
+import { generateRandomString } from '../../../Services/Data/DataSources/CreateDataSource/Heroku/utils';
 import { analyzeFetcher, graphQLFetcherFinal } from '../Actions';
 import { parse as sdlParse, print } from 'graphql';
 import deriveAction from '../../../../shared/utils/deriveAction';
 import {
   getActionDefinitionSdl,
   getTypesSdl,
+  toggleCacheDirective,
 } from '../../../../shared/utils/sdlUtils';
 import { showErrorNotification } from '../../Common/Notification';
+import ToolTip from '../../../Common/Tooltip/Tooltip';
 import { getActionsCreateRoute } from '../../../Common/utils/routesUtils';
 import { getConfirmation } from '../../../Common/utils/jsUtils';
 import {
@@ -34,10 +32,13 @@ import {
 } from '../../Actions/Add/reducer';
 import { getGraphQLEndpoint } from '../utils';
 import snippets from './snippets';
+import globals from '../../../../Globals';
 
 import 'graphiql/graphiql.css';
 import './GraphiQL.css';
 import 'graphiql-code-exporter/CodeExporter.css';
+import _push from '../../Data/push';
+import { isQueryValid } from '../Rest/utils';
 
 class GraphiQLWrapper extends Component {
   constructor(props) {
@@ -48,6 +49,7 @@ class GraphiQLWrapper extends Component {
       onBoardingEnabled: false,
       copyButtonText: 'Copy',
       codeExporterOpen: false,
+      requestTrackingId: null,
     };
   }
 
@@ -73,8 +75,6 @@ class GraphiQLWrapper extends Component {
   };
 
   render() {
-    const styles = require('../../../Common/Common.scss');
-
     const {
       numberOfTables,
       urlParams,
@@ -83,18 +83,29 @@ class GraphiQLWrapper extends Component {
       mode,
       loading,
     } = this.props;
-    const { codeExporterOpen } = this.state;
+    const { codeExporterOpen, requestTrackingId } = this.state;
     const graphqlNetworkData = this.props.data;
+    const {
+      responseTime,
+      responseSize,
+      isResponseCached,
+      responseTrackingId,
+    } = this.props.response;
+
     const graphQLFetcher = graphQLParams => {
       if (headerFocus) {
         return null;
       }
 
+      const trackingId = generateRandomString();
+      this.setState({ requestTrackingId: trackingId });
+
       return graphQLFetcherFinal(
         graphQLParams,
         getGraphQLEndpoint(mode),
         graphqlNetworkData.headers,
-        dispatch
+        dispatch,
+        trackingId
       );
     };
 
@@ -110,20 +121,6 @@ class GraphiQLWrapper extends Component {
       const currentText = editor.getValue();
       const prettyText = print(sdlParse(currentText));
       editor.setValue(prettyText);
-    };
-
-    const handleCopyQuery = () => {
-      const editor = graphiqlContext.getQueryEditor();
-      const query = editor.getValue();
-
-      if (!query) {
-        return;
-      }
-      copyToClipboard(query);
-      this.setState({ copyButtonText: 'Copied' });
-      setTimeout(() => {
-        this.setState({ copyButtonText: 'Copy' });
-      }, 1500);
     };
 
     const handleToggleHistory = () => {
@@ -163,8 +160,58 @@ class GraphiQLWrapper extends Component {
       );
       dispatch(setTypeDefinition(typesSdl, null, null, sdlParse(typesSdl)));
       dispatch(setDerivedActionParentOperation(query.trim()));
-      dispatch(push(getActionsCreateRoute()));
+      dispatch(_push(getActionsCreateRoute()));
     };
+
+    const routeToREST = gqlProps => () => {
+      const { query, schema } = graphiqlContext.state;
+      if (!query || !schema || !gqlProps.query || !isQueryValid(query)) {
+        dispatch(
+          showErrorNotification(
+            'Unable to create a REST endpoint',
+            'Please enter a valid named GraphQL query or mutation'
+          )
+        );
+        return;
+      }
+      dispatch(_push('/api/rest/create'));
+    };
+
+    const _toggleCacheDirective = () => {
+      const editor = graphiqlContext.getQueryEditor();
+      const operationString = editor.getValue();
+      const cacheToggledOperationString = toggleCacheDirective(operationString);
+      editor.setValue(cacheToggledOperationString);
+    };
+
+    const renderGraphiqlFooter = responseTime &&
+      responseTrackingId === requestTrackingId && (
+        <GraphiQL.Footer>
+          <div className="graphiql_footer">
+            <span className="graphiql_footer_label">Response Time</span>
+            <span className="graphiql_footer_value">{responseTime} ms</span>
+            {responseSize && (
+              <>
+                <span className="graphiql_footer_label">Response Size</span>
+                <span className="graphiql_footer_value">
+                  {responseSize} bytes
+                </span>
+              </>
+            )}
+            {isResponseCached && (
+              <>
+                <span className="graphiql_footer_label">Cached</span>
+                <ToolTip
+                  message="This query response was cached using the @cached directive"
+                  placement="top"
+                  tooltipStyle="graphiql_footer_icon"
+                />
+                <i className="fa fa-check-circle color_green" />
+              </>
+            )}
+          </div>
+        </GraphiQL.Footer>
+      );
 
     const renderGraphiql = graphiqlProps => {
       const voyagerUrl = graphqlNetworkData.consoleUrl + '/voyager-view';
@@ -187,14 +234,15 @@ class GraphiQLWrapper extends Component {
             onClick: handleToggleHistory,
           },
           {
-            label: this.state.copyButtonText,
-            title: 'Copy Query',
-            onClick: handleCopyQuery,
-          },
-          {
             label: 'Explorer',
             title: 'Toggle Explorer',
             onClick: graphiqlProps.toggleExplorer,
+          },
+          {
+            label: 'Cache',
+            title: 'Cache the response of this query',
+            onClick: _toggleCacheDirective,
+            hide: globals.consoleType !== 'cloud',
           },
           {
             label: 'Code Exporter',
@@ -202,10 +250,9 @@ class GraphiQLWrapper extends Component {
             onClick: this._handleToggleCodeExporter,
           },
           {
-            label: 'Voyager',
-            title: 'GraphQL Voyager',
-            onClick: () => window.open(voyagerUrl, '_blank'),
-            icon: <i className="fa fa-external-link" aria-hidden="true" />,
+            label: 'REST',
+            title: 'REST Endpoints',
+            onClick: routeToREST(graphiqlProps),
           },
         ];
         if (mode === 'graphql') {
@@ -215,9 +262,11 @@ class GraphiQLWrapper extends Component {
             onClick: deriveActionFromOperation,
           });
         }
-        return buttons.map(b => {
-          return <GraphiQL.Button key={b.label} {...b} />;
-        });
+        return buttons
+          .filter(b => !b.hide)
+          .map(b => {
+            return <GraphiQL.Button key={b.label} {...b} />;
+          });
       };
 
       return (
@@ -240,6 +289,7 @@ class GraphiQLWrapper extends Component {
                 {...analyzerProps}
               />
             </GraphiQL.Toolbar>
+            {renderGraphiqlFooter}
           </GraphiQL>
           {codeExporterOpen ? (
             <CodeExporter
@@ -256,7 +306,7 @@ class GraphiQLWrapper extends Component {
     return (
       <GraphiQLErrorBoundary>
         <div
-          className={`react-container-graphql ${styles.wd100} ${styles.height100} ${styles.box_shadow}`}
+          className={`react-container-graphql w-full h-full border mt-md overflow-hidden rounded border-gray-300`}
         >
           <OneGraphExplorer
             renderGraphiql={renderGraphiql}
@@ -283,6 +333,7 @@ GraphiQLWrapper.propTypes = {
   numberOfTables: PropTypes.number.isRequired,
   headerFocus: PropTypes.bool.isRequired,
   urlParams: PropTypes.object.isRequired,
+  response: PropTypes.object,
 };
 
 const mapStateToProps = state => ({
