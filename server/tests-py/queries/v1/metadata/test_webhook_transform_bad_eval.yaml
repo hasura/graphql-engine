@@ -5,13 +5,13 @@
   status: 200
   response:
     body:
-      - error_code: InvalidPathCode
+      - error_code: Invalid Path
         source_position:
           end_column: 15
           start_line: 0
           end_line: 0
-          start_column: 9
-        message: 'Path Lookup Error: "$body.world"'
+          start_column: 4
+        message: '"$body.world"'
     headers: []
     method: GET
     webhook_url: http://localhost:1234/

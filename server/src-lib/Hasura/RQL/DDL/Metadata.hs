@@ -59,6 +59,7 @@ import Hasura.RQL.Types
 import Hasura.RQL.Types.Eventing.Backend (BackendEventTrigger (..))
 import Hasura.SQL.AnyBackend qualified as AB
 import Kriti qualified as K
+import Kriti.Error qualified as K
 import Network.HTTP.Client.Transformable qualified as HTTP
 
 runClearMetadata ::
@@ -479,7 +480,7 @@ runRemoveMetricsConfig = do
   pure successMsg
 
 data TestTransformError
-  = UrlInterpError K.RenderedError
+  = UrlInterpError K.SerializedError
   | RequestInitializationError HTTP.HttpException
   | RequestTransformationError HTTP.Request TransformErrorBundle
 
@@ -505,7 +506,7 @@ runTestWebhookTransform (TestWebhookTransform env urlE payload mt _ sv) = do
     let env' = bimap T.pack (J.String . T.pack) <$> Env.toList env
         decodeKritiResult = TE.decodeUtf8 . BL.toStrict . J.encode
 
-    kritiUrlResult <- hoistEither $ first UrlInterpError $ decodeKritiResult <$> K.runKriti (TE.encodeUtf8 $ "\"" <> url <> "\"") env'
+    kritiUrlResult <- hoistEither $ first (UrlInterpError . K.serialize) $ decodeKritiResult <$> K.runKriti ("\"" <> url <> "\"") env'
 
     let unwrappedUrl = T.drop 1 $ T.dropEnd 1 kritiUrlResult
     initReq <- hoistEither $ first RequestInitializationError $ HTTP.mkRequestEither unwrappedUrl

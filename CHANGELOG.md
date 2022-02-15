@@ -2,6 +2,8 @@
 
 ## Next release
 
+- server: Updates Kriti to v0.3.0
+
 ### Experimental SQL optimizations
 Row-level permissions are applied by a translation into SQL `WHERE` clauses. If
 some tables have similar row-level permission filters, then the generated SQL

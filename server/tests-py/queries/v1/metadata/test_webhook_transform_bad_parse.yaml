@@ -5,7 +5,7 @@
   status: 400
   response:
     path: "$.args.request_transform.body"
-    error: "ParseError: Unexpected token '$body'."
+    error: "Unexpected token '$body'."
     code: "parse-failed"
   query:
     type: test_webhook_transform
