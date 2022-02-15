@@ -6,8 +6,8 @@
 </span><span id="line-6"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Backend.html"><span class="hs-identifier">Hasura.RQL.Types.Metadata.Backend</span></a></span><span>
 </span><span id="line-7"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.SQL.Backend.html"><span class="hs-identifier">Hasura.SQL.Backend</span></a></span><span>
 </span><span id="line-8"></span><span>
-</span><span id="line-9"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688093843"><span class="annot"><a href="Hasura.RQL.Types.Metadata.Backend.html#BackendMetadata"><span class="hs-identifier hs-type">BackendMetadata</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#BigQuery"><span class="hs-identifier hs-type">BigQuery</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-10"></span><span>  </span><span id="local-6989586621688093841"><span class="annot"><span class="annottext">buildComputedFieldInfo :: HashSet (TableName 'BigQuery)
+</span><span id="line-9"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688100159"><span class="annot"><a href="Hasura.RQL.Types.Metadata.Backend.html#BackendMetadata"><span class="hs-identifier hs-type">BackendMetadata</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#BigQuery"><span class="hs-identifier hs-type">BigQuery</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-10"></span><span>  </span><span id="local-6989586621688100157"><span class="annot"><span class="annottext">buildComputedFieldInfo :: HashSet (TableName 'BigQuery)
 -&gt; TableName 'BigQuery
 -&gt; ComputedFieldName
 -&gt; ComputedFieldDefinition 'BigQuery
@@ -31,7 +31,7 @@ HashSet (TableName 'BigQuery)
 -&gt; Maybe Text
 -&gt; m (ComputedFieldInfo 'BigQuery)
 </span><a href="Hasura.Backends.BigQuery.DDL.html#buildComputedFieldInfo"><span class="hs-identifier hs-var">BigQuery.buildComputedFieldInfo</span></a></span><span>
-</span><span id="line-11"></span><span>  </span><span id="local-6989586621688093838"><span class="annot"><span class="annottext">fetchAndValidateEnumValues :: SourceConfig 'BigQuery
+</span><span id="line-11"></span><span>  </span><span id="local-6989586621688100154"><span class="annot"><span class="annottext">fetchAndValidateEnumValues :: SourceConfig 'BigQuery
 -&gt; TableName 'BigQuery
 -&gt; Maybe (PrimaryKey 'BigQuery (RawColumnInfo 'BigQuery))
 -&gt; [RawColumnInfo 'BigQuery]
@@ -49,7 +49,7 @@ SourceConfig 'BigQuery
 -&gt; [RawColumnInfo 'BigQuery]
 -&gt; m (Either QErr EnumValues)
 </span><a href="Hasura.Backends.BigQuery.DDL.html#fetchAndValidateEnumValues"><span class="hs-identifier hs-var">BigQuery.fetchAndValidateEnumValues</span></a></span><span>
-</span><span id="line-12"></span><span>  </span><span id="local-6989586621688093835"><span class="annot"><span class="annottext">resolveSourceConfig :: SourceName
+</span><span id="line-12"></span><span>  </span><span id="local-6989586621688100151"><span class="annot"><span class="annottext">resolveSourceConfig :: SourceName
 -&gt; SourceConnConfiguration 'BigQuery
 -&gt; Environment
 -&gt; m (Either QErr (SourceConfig 'BigQuery))
@@ -64,7 +64,7 @@ SourceName
 -&gt; Environment
 -&gt; m (Either QErr BigQuerySourceConfig)
 </span><a href="Hasura.Backends.BigQuery.DDL.Source.html#resolveSourceConfig"><span class="hs-identifier hs-var">BigQuery.resolveSourceConfig</span></a></span><span>
-</span><span id="line-13"></span><span>  </span><span id="local-6989586621688093832"><span class="annot"><span class="annottext">resolveDatabaseMetadata :: SourceConfig 'BigQuery
+</span><span id="line-13"></span><span>  </span><span id="local-6989586621688100148"><span class="annot"><span class="annottext">resolveDatabaseMetadata :: SourceConfig 'BigQuery
 -&gt; SourceTypeCustomization
 -&gt; m (Either QErr (ResolvedSource 'BigQuery))
 </span><a href="Hasura.RQL.Types.Metadata.Backend.html#resolveDatabaseMetadata"><span class="hs-identifier hs-var hs-var hs-var hs-var">resolveDatabaseMetadata</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SourceConfig 'BigQuery
@@ -76,7 +76,7 @@ BigQuerySourceConfig
 -&gt; SourceTypeCustomization
 -&gt; m (Either QErr (ResolvedSource 'BigQuery))
 </span><a href="Hasura.Backends.BigQuery.DDL.Source.html#resolveSource"><span class="hs-identifier hs-var">BigQuery.resolveSource</span></a></span><span>
-</span><span id="line-14"></span><span>  </span><span id="local-6989586621688093829"><span class="annot"><span class="annottext">parseBoolExpOperations :: ValueParser 'BigQuery m v
+</span><span id="line-14"></span><span>  </span><span id="local-6989586621688100145"><span class="annot"><span class="annottext">parseBoolExpOperations :: ValueParser 'BigQuery m v
 -&gt; TableName 'BigQuery
 -&gt; FieldInfoMap (FieldInfo 'BigQuery)
 -&gt; ColumnReference 'BigQuery
@@ -97,7 +97,7 @@ ValueParser 'BigQuery m v
 -&gt; Value
 -&gt; m [OpExpG 'BigQuery v]
 </span><a href="Hasura.Backends.BigQuery.DDL.BoolExp.html#parseBoolExpOperations"><span class="hs-identifier hs-var">BigQuery.parseBoolExpOperations</span></a></span><span>
-</span><span id="line-15"></span><span>  </span><span id="local-6989586621688093826"><span class="annot"><span class="annottext">buildFunctionInfo :: SourceName
+</span><span id="line-15"></span><span>  </span><span id="local-6989586621688100142"><span class="annot"><span class="annottext">buildFunctionInfo :: SourceName
 -&gt; FunctionName 'BigQuery
 -&gt; SystemDefined
 -&gt; FunctionConfig
@@ -124,7 +124,7 @@ SourceName
 -&gt; Maybe Text
 -&gt; m (FunctionInfo 'BigQuery, SchemaDependency)
 </span><a href="Hasura.Backends.BigQuery.DDL.html#buildFunctionInfo"><span class="hs-identifier hs-var">BigQuery.buildFunctionInfo</span></a></span><span>
-</span><span id="line-16"></span><span>  </span><span id="local-6989586621688093823"><span class="annot"><span class="annottext">updateColumnInEventTrigger :: TableName 'BigQuery
+</span><span id="line-16"></span><span>  </span><span id="local-6989586621688100139"><span class="annot"><span class="annottext">updateColumnInEventTrigger :: TableName 'BigQuery
 -&gt; Column 'BigQuery
 -&gt; Column 'BigQuery
 -&gt; TableName 'BigQuery
@@ -137,7 +137,7 @@ SourceName
 -&gt; EventTriggerConf 'BigQuery
 -&gt; EventTriggerConf 'BigQuery
 </span><a href="Hasura.Backends.BigQuery.DDL.html#updateColumnInEventTrigger"><span class="hs-identifier hs-var">BigQuery.updateColumnInEventTrigger</span></a></span><span>
-</span><span id="line-17"></span><span>  </span><span id="local-6989586621688093820"><span class="annot"><span class="annottext">parseCollectableType :: CollectableType (ColumnType 'BigQuery)
+</span><span id="line-17"></span><span>  </span><span id="local-6989586621688100136"><span class="annot"><span class="annottext">parseCollectableType :: CollectableType (ColumnType 'BigQuery)
 -&gt; Value -&gt; m (PartialSQLExp 'BigQuery)
 </span><a href="Hasura.RQL.Types.Metadata.Backend.html#parseCollectableType"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseCollectableType</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">CollectableType (ColumnType 'BigQuery)
 -&gt; Value -&gt; m (PartialSQLExp 'BigQuery)
@@ -146,7 +146,7 @@ MonadError QErr m =&gt;
 CollectableType (ColumnType 'BigQuery)
 -&gt; Value -&gt; m (PartialSQLExp 'BigQuery)
 </span><a href="Hasura.Backends.BigQuery.DDL.html#parseCollectableType"><span class="hs-identifier hs-var">BigQuery.parseCollectableType</span></a></span><span>
-</span><span id="line-18"></span><span>  </span><span id="local-6989586621688093817"><span class="annot"><span class="annottext">postDropSourceHook :: SourceConfig 'BigQuery -&gt; m ()
+</span><span id="line-18"></span><span>  </span><span id="local-6989586621688100133"><span class="annot"><span class="annottext">postDropSourceHook :: SourceConfig 'BigQuery -&gt; m ()
 </span><a href="Hasura.RQL.Types.Metadata.Backend.html#postDropSourceHook"><span class="hs-identifier hs-var hs-var hs-var hs-var">postDropSourceHook</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SourceConfig 'BigQuery -&gt; m ()
 forall (m :: * -&gt; *). MonadIO m =&gt; BigQuerySourceConfig -&gt; m ()
 </span><a href="Hasura.Backends.BigQuery.DDL.Source.html#postDropSourceHook"><span class="hs-identifier hs-var">BigQuery.postDropSourceHook</span></a></span><span>
