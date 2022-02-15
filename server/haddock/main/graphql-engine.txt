@@ -22685,7 +22685,6 @@ data MutateResp (b :: BackendType) a
 MutateResp :: !Int -> ![ColumnValues b a] -> MutateResp (b :: BackendType) a
 [_mrAffectedRows] :: MutateResp (b :: BackendType) a -> !Int
 [_mrReturningColumns] :: MutateResp (b :: BackendType) a -> ![ColumnValues b a]
-type MutationRemoteJoinCtx = (Manager, [Header], UserInfo)
 data Mutation (b :: BackendType)
 Mutation :: !QualifiedTable -> !(MutationCTE, Seq PrepArg) -> !MutationOutput b -> ![ColumnInfo b] -> !Bool -> Mutation (b :: BackendType)
 [_mTable] :: Mutation (b :: BackendType) -> !QualifiedTable
@@ -22755,9 +22754,9 @@ QueryParametersInfo :: !HashMap Name (ColumnValue b) -> !Seq (ColumnValue b) -> 
 --   This information is used to determine a cohort's required session
 --   variables
 [_qpiReferencedSessionVariables] :: QueryParametersInfo (b :: BackendType) -> !HashSet SessionVariable
-qpiSyntheticVariableValues :: forall b_aw9jt. Lens' (QueryParametersInfo b_aw9jt) (Seq (ColumnValue b_aw9jt))
-qpiReusableVariableValues :: forall b_aw9jt. Lens' (QueryParametersInfo b_aw9jt) (HashMap Name (ColumnValue b_aw9jt))
-qpiReferencedSessionVariables :: forall b_aw9jt. Lens' (QueryParametersInfo b_aw9jt) (HashSet SessionVariable)
+qpiSyntheticVariableValues :: forall b_aw9jm. Lens' (QueryParametersInfo b_aw9jm) (Seq (ColumnValue b_aw9jm))
+qpiReusableVariableValues :: forall b_aw9jm. Lens' (QueryParametersInfo b_aw9jm) (HashMap Name (ColumnValue b_aw9jm))
+qpiReferencedSessionVariables :: forall b_aw9jm. Lens' (QueryParametersInfo b_aw9jm) (HashSet SessionVariable)
 
 -- | Checks if the provided arguments are valid values for their
 --   corresponding types. | Generates SQL of the format "select
