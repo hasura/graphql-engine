@@ -37,7 +37,7 @@ class
     ComputedFieldName ->
     ComputedFieldDefinition b ->
     RawFunctionInfo b ->
-    Maybe Text ->
+    Comment ->
     m (ComputedFieldInfo b)
 
   fetchAndValidateEnumValues ::

@@ -25,7 +25,7 @@ data AddComputedField b = AddComputedField
     _afcTable :: !(TableName b),
     _afcName :: !ComputedFieldName,
     _afcDefinition :: !(ComputedFieldDefinition b),
-    _afcComment :: !(Maybe Text)
+    _afcComment :: !Comment
   }
   deriving stock (Generic)
 
@@ -39,7 +39,7 @@ instance (Backend b) => FromJSON (AddComputedField b) where
       <*> o .: "table"
       <*> o .: "name"
       <*> o .: "definition"
-      <*> o .:? "comment"
+      <*> o .:? "comment" .!= Automatic
 
 runAddComputedField ::
   forall b m.

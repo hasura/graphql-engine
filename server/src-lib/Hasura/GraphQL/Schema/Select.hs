@@ -1356,7 +1356,7 @@ computedFieldPG sourceName ComputedFieldInfo {..} parentTable selectPermissions 
                     caseBoolExpUnpreparedValue
                 )
       dummyParser <- lift $ columnParser @('Postgres pgKind) (ColumnScalar scalarReturnType) (G.Nullability True)
-      pure $ P.selection fieldName (Just fieldDescription) fieldArgsParser dummyParser
+      pure $ P.selection fieldName fieldDescription fieldArgsParser dummyParser
     CFRSetofTable tableName -> do
       tableInfo <- lift $ askTableInfo sourceName tableName
       remotePerms <- MaybeT $ tableSelectPermissions tableInfo
@@ -1364,7 +1364,7 @@ computedFieldPG sourceName ComputedFieldInfo {..} parentTable selectPermissions 
       selectionSetParser <- lift $ P.multiple . P.nonNullableParser <$> tableSelectionSet sourceName tableInfo remotePerms
       let fieldArgsParser = liftA2 (,) functionArgsParser selectArgsParser
       pure $
-        P.subselection fieldName (Just fieldDescription) fieldArgsParser selectionSetParser
+        P.subselection fieldName fieldDescription fieldArgsParser selectionSetParser
           <&> \((functionArgs', args), fields) ->
             IR.AFComputedField _cfiXComputedFieldInfo _cfiName $
               IR.CFSTable JASMultipleRows $
@@ -1376,9 +1376,8 @@ computedFieldPG sourceName ComputedFieldInfo {..} parentTable selectPermissions 
                     IR._asnStrfyNum = stringifyNum
                   }
   where
-    fieldDescription =
-      let defaultDescription = "A computed field, executes function " <>> _cffName _cfiFunction
-       in mkDescriptionWith (_cffDescription _cfiFunction) defaultDescription
+    fieldDescription :: Maybe G.Description
+    fieldDescription = G.Description <$> _cfiDescription
 
     computedFieldFunctionArgs ::
       ComputedFieldFunction ('Postgres pgKind) ->

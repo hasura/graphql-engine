@@ -19,6 +19,9 @@ The optimization can be enabled using the
 `--experimental-features=optimize_permission_filters` flag or the
 `HASURA_GRAPHQL_EXPERIMENTAL_FEATURES` environment variable.
 
+### Breaking changes
+* Computed field comments are now used as the description for the field in the GraphQL schema. This means that computed fields where the comment has been set to empty string will cause the description of the field in the GraphQL schema to also be blank. Setting the computed field comment to null will restore the previous auto-generated description. The previous version of the Console would set the comment to empty string if the comment textbox was left blank, so some existing computed fields may unintentionally have empty string set as their comment.
+
 ### Bug fixes and improvements
 (Add entries below in the order of server, console, cli, docs, others)
 
@@ -26,7 +29,7 @@ The optimization can be enabled using the
 - server: fix nullable action response (issue #4405)
 - console: add support for remote database relationships
 - console: enable support for update permissions for mssql #3591
-- server: add support for customization of table GraphQL schema descriptions (#7496)
+- server: add support for customization of table & computed field GraphQL schema descriptions (#7496)
 - cli: skip tls verfication for all API requests when `insecure-skip-tls-verify` flag is set (#4926)
 - server: classify MSSQL exceptions and improve API error responses
 
