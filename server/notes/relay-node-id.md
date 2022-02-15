@@ -1,7 +1,7 @@
-This note is in [Hasura.GraphQL.Schema.Select](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Schema/Select.hs#L1570).
+This note is in [Hasura.GraphQL.Schema.Select](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Schema/Select.hs#L1569).
 It is referenced at:
   - line 1215 of [Hasura.Backends.Postgres.Translate.Select](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/Backends/Postgres/Translate/Select.hs#L1215)
-  - line 1602 of [Hasura.GraphQL.Schema.Select](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Schema/Select.hs#L1602)
+  - line 1601 of [Hasura.GraphQL.Schema.Select](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Schema/Select.hs#L1601)
 
 # Relay Node Id
 

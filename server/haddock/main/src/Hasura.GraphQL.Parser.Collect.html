@@ -21,19 +21,19 @@
 </span><span id="line-21"></span><span>
 </span><span id="line-22"></span><span class="hs-comment">-- | Collects the effective set of fields queried by a selection set by</span><span>
 </span><span id="line-23"></span><span class="hs-comment">-- flattening fragments and merging duplicate fields.</span><span>
-</span><span id="line-24"></span><span id="local-6989586621688074351"><span id="local-6989586621688074352"><span class="annot"><a href="Hasura.GraphQL.Parser.Collect.html#collectFields"><span class="hs-identifier hs-type">collectFields</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-25"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Class.Parse.html#MonadParse"><span class="hs-identifier hs-type">MonadParse</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688074352"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Foldable</span></span><span> </span><span class="annot"><a href="#local-6989586621688074351"><span class="hs-identifier hs-type">t</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-24"></span><span id="local-6989586621688073305"><span id="local-6989586621688073306"><span class="annot"><a href="Hasura.GraphQL.Parser.Collect.html#collectFields"><span class="hs-identifier hs-type">collectFields</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-25"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Class.Parse.html#MonadParse"><span class="hs-identifier hs-type">MonadParse</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688073306"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Foldable</span></span><span> </span><span class="annot"><a href="#local-6989586621688073305"><span class="hs-identifier hs-type">t</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
 </span><span id="line-26"></span><span>  </span><span class="hs-comment">-- | The names of the object types and interface types the 'SelectionSet' is</span><span>
 </span><span id="line-27"></span><span>  </span><span class="hs-comment">-- selecting against.</span><span>
-</span><span id="line-28"></span><span>  </span><span class="annot"><a href="#local-6989586621688074351"><span class="hs-identifier hs-type">t</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Name</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-28"></span><span>  </span><span class="annot"><a href="#local-6989586621688073305"><span class="hs-identifier hs-type">t</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Name</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-29"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">SelectionSet</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">NoFragments</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#Variable"><span class="hs-identifier hs-type">Variable</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-30"></span><span>  </span><span class="annot"><a href="#local-6989586621688074352"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">InsOrdHashMap</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Name</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Field</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">NoFragments</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#Variable"><span class="hs-identifier hs-type">Variable</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-30"></span><span>  </span><span class="annot"><a href="#local-6989586621688073306"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">InsOrdHashMap</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Name</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Field</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">NoFragments</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#Variable"><span class="hs-identifier hs-type">Variable</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span></span></span><span>
 </span><span id="line-31"></span><span id="collectFields"><span class="annot"><span class="annottext">collectFields :: t Name
 -&gt; SelectionSet NoFragments Variable
 -&gt; m (InsOrdHashMap Name (Field NoFragments Variable))
-</span><a href="Hasura.GraphQL.Parser.Collect.html#collectFields"><span class="hs-identifier hs-var hs-var">collectFields</span></a></span></span><span> </span><span id="local-6989586621688074350"><span class="annot"><span class="annottext">t Name
-</span><a href="#local-6989586621688074350"><span class="hs-identifier hs-var">objectTypeNames</span></a></span></span><span> </span><span id="local-6989586621688074349"><span class="annot"><span class="annottext">SelectionSet NoFragments Variable
-</span><a href="#local-6989586621688074349"><span class="hs-identifier hs-var">selectionSet</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="Hasura.GraphQL.Parser.Collect.html#collectFields"><span class="hs-identifier hs-var hs-var">collectFields</span></a></span></span><span> </span><span id="local-6989586621688073304"><span class="annot"><span class="annottext">t Name
+</span><a href="#local-6989586621688073304"><span class="hs-identifier hs-var">objectTypeNames</span></a></span></span><span> </span><span id="local-6989586621688073303"><span class="annot"><span class="annottext">SelectionSet NoFragments Variable
+</span><a href="#local-6989586621688073303"><span class="hs-identifier hs-var">selectionSet</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-32"></span><span>  </span><span class="annot"><span class="annottext">[Field NoFragments Variable]
 -&gt; m (InsOrdHashMap Name (Field NoFragments Variable))
 forall (m :: * -&gt; *) var.
@@ -54,8 +54,8 @@ t Name
 -&gt; SelectionSet NoFragments Variable
 -&gt; m [Field NoFragments Variable]
 </span><a href="Hasura.GraphQL.Parser.Collect.html#flattenSelectionSet"><span class="hs-identifier hs-var">flattenSelectionSet</span></a></span><span> </span><span class="annot"><span class="annottext">t Name
-</span><a href="#local-6989586621688074350"><span class="hs-identifier hs-var">objectTypeNames</span></a></span><span> </span><span class="annot"><span class="annottext">SelectionSet NoFragments Variable
-</span><a href="#local-6989586621688074349"><span class="hs-identifier hs-var">selectionSet</span></a></span><span>
+</span><a href="#local-6989586621688073304"><span class="hs-identifier hs-var">objectTypeNames</span></a></span><span> </span><span class="annot"><span class="annottext">SelectionSet NoFragments Variable
+</span><a href="#local-6989586621688073303"><span class="hs-identifier hs-var">selectionSet</span></a></span><span>
 </span><span id="line-33"></span><span>
 </span><span id="line-34"></span><span class="hs-comment">-- | Flattens inline fragments in a selection set. For example,</span><span>
 </span><span id="line-35"></span><span class="hs-comment">--</span><span>
@@ -107,17 +107,17 @@ t Name
 </span><span id="line-81"></span><span class="hs-comment">--</span><span>
 </span><span id="line-82"></span><span class="hs-comment">-- This function also applies @\@include@ and @\@skip@ directives, since they</span><span>
 </span><span id="line-83"></span><span class="hs-comment">-- should be applied before fragments are flattened.</span><span>
-</span><span id="line-84"></span><span id="local-6989586621688074443"><span id="local-6989586621688074444"><span class="annot"><a href="Hasura.GraphQL.Parser.Collect.html#flattenSelectionSet"><span class="hs-identifier hs-type">flattenSelectionSet</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-85"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Class.Parse.html#MonadParse"><span class="hs-identifier hs-type">MonadParse</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688074444"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Foldable</span></span><span> </span><span class="annot"><a href="#local-6989586621688074443"><span class="hs-identifier hs-type">t</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-84"></span><span id="local-6989586621688073397"><span id="local-6989586621688073398"><span class="annot"><a href="Hasura.GraphQL.Parser.Collect.html#flattenSelectionSet"><span class="hs-identifier hs-type">flattenSelectionSet</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-85"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Class.Parse.html#MonadParse"><span class="hs-identifier hs-type">MonadParse</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688073398"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Foldable</span></span><span> </span><span class="annot"><a href="#local-6989586621688073397"><span class="hs-identifier hs-type">t</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
 </span><span id="line-86"></span><span>  </span><span class="hs-comment">-- | The name of the object type the 'SelectionSet' is selecting against.</span><span>
-</span><span id="line-87"></span><span>  </span><span class="annot"><a href="#local-6989586621688074443"><span class="hs-identifier hs-type">t</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Name</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-87"></span><span>  </span><span class="annot"><a href="#local-6989586621688073397"><span class="hs-identifier hs-type">t</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Name</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-88"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">SelectionSet</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">NoFragments</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#Variable"><span class="hs-identifier hs-type">Variable</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-89"></span><span>  </span><span class="annot"><a href="#local-6989586621688074444"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">Field</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">NoFragments</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#Variable"><span class="hs-identifier hs-type">Variable</span></a></span><span class="hs-special">]</span></span></span><span>
+</span><span id="line-89"></span><span>  </span><span class="annot"><a href="#local-6989586621688073398"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">Field</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">NoFragments</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#Variable"><span class="hs-identifier hs-type">Variable</span></a></span><span class="hs-special">]</span></span></span><span>
 </span><span id="line-90"></span><span id="flattenSelectionSet"><span class="annot"><span class="annottext">flattenSelectionSet :: t Name
 -&gt; SelectionSet NoFragments Variable
 -&gt; m [Field NoFragments Variable]
-</span><a href="Hasura.GraphQL.Parser.Collect.html#flattenSelectionSet"><span class="hs-identifier hs-var hs-var">flattenSelectionSet</span></a></span></span><span> </span><span id="local-6989586621688074345"><span class="annot"><span class="annottext">t Name
-</span><a href="#local-6989586621688074345"><span class="hs-identifier hs-var">objectTypeNames</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">([[Field NoFragments Variable]] -&gt; [Field NoFragments Variable])
+</span><a href="Hasura.GraphQL.Parser.Collect.html#flattenSelectionSet"><span class="hs-identifier hs-var hs-var">flattenSelectionSet</span></a></span></span><span> </span><span id="local-6989586621688073299"><span class="annot"><span class="annottext">t Name
+</span><a href="#local-6989586621688073299"><span class="hs-identifier hs-var">objectTypeNames</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">([[Field NoFragments Variable]] -&gt; [Field NoFragments Variable])
 -&gt; m [[Field NoFragments Variable]]
 -&gt; m [Field NoFragments Variable]
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
@@ -137,12 +137,12 @@ forall (t :: * -&gt; *) (f :: * -&gt; *) a b.
 (Traversable t, Applicative f) =&gt;
 (a -&gt; f b) -&gt; t a -&gt; f (t b)
 </span><span class="hs-identifier hs-var">traverse</span></span><span> </span><span class="annot"><span class="annottext">Selection NoFragments Variable -&gt; m [Field NoFragments Variable]
-</span><a href="#local-6989586621688074341"><span class="hs-identifier hs-var">flattenSelection</span></a></span><span>
+</span><a href="#local-6989586621688073295"><span class="hs-identifier hs-var">flattenSelection</span></a></span><span>
 </span><span id="line-91"></span><span>  </span><span class="hs-keyword">where</span><span>
 </span><span id="line-92"></span><span>    </span><span class="hs-comment">-- The easy case: just a single field.</span><span>
-</span><span id="line-93"></span><span>    </span><span id="local-6989586621688074341"><span class="annot"><span class="annottext">flattenSelection :: Selection NoFragments Variable -&gt; m [Field NoFragments Variable]
-</span><a href="#local-6989586621688074341"><span class="hs-identifier hs-var hs-var">flattenSelection</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">SelectionField</span></span><span> </span><span id="local-6989586621688074339"><span class="annot"><span class="annottext">Field NoFragments Variable
-</span><a href="#local-6989586621688074339"><span class="hs-identifier hs-var">field</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-93"></span><span>    </span><span id="local-6989586621688073295"><span class="annot"><span class="annottext">flattenSelection :: Selection NoFragments Variable -&gt; m [Field NoFragments Variable]
+</span><a href="#local-6989586621688073295"><span class="hs-identifier hs-var hs-var">flattenSelection</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">SelectionField</span></span><span> </span><span id="local-6989586621688073293"><span class="annot"><span class="annottext">Field NoFragments Variable
+</span><a href="#local-6989586621688073293"><span class="hs-identifier hs-var">field</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-94"></span><span>      </span><span class="annot"><span class="annottext">ExecutableDirectiveLocation
 -&gt; [Directive Variable]
 -&gt; m [Field NoFragments Variable]
@@ -151,25 +151,25 @@ forall (m :: * -&gt; *) a.
 MonadParse m =&gt;
 ExecutableDirectiveLocation
 -&gt; [Directive Variable] -&gt; m [a] -&gt; m [a]
-</span><a href="#local-6989586621688074338"><span class="hs-identifier hs-var">applyInclusionDirectives</span></a></span><span> </span><span class="annot"><span class="annottext">ExecutableDirectiveLocation
+</span><a href="#local-6989586621688073292"><span class="hs-identifier hs-var">applyInclusionDirectives</span></a></span><span> </span><span class="annot"><span class="annottext">ExecutableDirectiveLocation
 </span><span class="hs-identifier hs-var">EDLFIELD</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Field NoFragments Variable -&gt; [Directive Variable]
 forall (frag :: * -&gt; *) var. Field frag var -&gt; [Directive var]
 </span><span class="hs-identifier hs-var hs-var">_fDirectives</span></span><span> </span><span class="annot"><span class="annottext">Field NoFragments Variable
-</span><a href="#local-6989586621688074339"><span class="hs-identifier hs-var">field</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(m [Field NoFragments Variable] -&gt; m [Field NoFragments Variable])
+</span><a href="#local-6989586621688073293"><span class="hs-identifier hs-var">field</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(m [Field NoFragments Variable] -&gt; m [Field NoFragments Variable])
 -&gt; m [Field NoFragments Variable] -&gt; m [Field NoFragments Variable]
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">[Field NoFragments Variable] -&gt; m [Field NoFragments Variable]
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Field NoFragments Variable
-</span><a href="#local-6989586621688074339"><span class="hs-identifier hs-var">field</span></a></span><span class="hs-special">]</span><span>
+</span><a href="#local-6989586621688073293"><span class="hs-identifier hs-var">field</span></a></span><span class="hs-special">]</span><span>
 </span><span id="line-95"></span><span>
 </span><span id="line-96"></span><span>    </span><span class="hs-comment">-- Note: The 'SelectionFragmentSpread' case has already been eliminated by</span><span>
 </span><span id="line-97"></span><span>    </span><span class="hs-comment">-- the fragment inliner.</span><span>
 </span><span id="line-98"></span><span>    </span><span class="hs-comment">-- TODO: handle directives on fragment spread.</span><span>
 </span><span id="line-99"></span><span>
 </span><span id="line-100"></span><span>    </span><span class="hs-comment">-- The involved case: we have an inline fragment to process.</span><span>
-</span><span id="line-101"></span><span>    </span><span class="annot"><a href="#local-6989586621688074341"><span class="hs-identifier hs-var">flattenSelection</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">SelectionInlineFragment</span></span><span> </span><span id="local-6989586621688074334"><span class="annot"><span class="annottext">InlineFragment NoFragments Variable
-</span><a href="#local-6989586621688074334"><span class="hs-identifier hs-var">fragment</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-101"></span><span>    </span><span class="annot"><a href="#local-6989586621688073295"><span class="hs-identifier hs-var">flattenSelection</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">SelectionInlineFragment</span></span><span> </span><span id="local-6989586621688073288"><span class="annot"><span class="annottext">InlineFragment NoFragments Variable
+</span><a href="#local-6989586621688073288"><span class="hs-identifier hs-var">fragment</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-102"></span><span>      </span><span class="annot"><span class="annottext">ExecutableDirectiveLocation
 -&gt; [Directive Variable]
 -&gt; m [Field NoFragments Variable]
@@ -178,37 +178,37 @@ forall (m :: * -&gt; *) a.
 MonadParse m =&gt;
 ExecutableDirectiveLocation
 -&gt; [Directive Variable] -&gt; m [a] -&gt; m [a]
-</span><a href="#local-6989586621688074338"><span class="hs-identifier hs-var">applyInclusionDirectives</span></a></span><span> </span><span class="annot"><span class="annottext">ExecutableDirectiveLocation
+</span><a href="#local-6989586621688073292"><span class="hs-identifier hs-var">applyInclusionDirectives</span></a></span><span> </span><span class="annot"><span class="annottext">ExecutableDirectiveLocation
 </span><span class="hs-identifier hs-var">EDLINLINE_FRAGMENT</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">InlineFragment NoFragments Variable -&gt; [Directive Variable]
 forall (frag :: * -&gt; *) var.
 InlineFragment frag var -&gt; [Directive var]
 </span><span class="hs-identifier hs-var hs-var">_ifDirectives</span></span><span> </span><span class="annot"><span class="annottext">InlineFragment NoFragments Variable
-</span><a href="#local-6989586621688074334"><span class="hs-identifier hs-var">fragment</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(m [Field NoFragments Variable] -&gt; m [Field NoFragments Variable])
+</span><a href="#local-6989586621688073288"><span class="hs-identifier hs-var">fragment</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(m [Field NoFragments Variable] -&gt; m [Field NoFragments Variable])
 -&gt; m [Field NoFragments Variable] -&gt; m [Field NoFragments Variable]
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span>
 </span><span id="line-103"></span><span>        </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">InlineFragment NoFragments Variable -&gt; Maybe Name
 forall (frag :: * -&gt; *) var. InlineFragment frag var -&gt; Maybe Name
 </span><span class="hs-identifier hs-var hs-var">_ifTypeCondition</span></span><span> </span><span class="annot"><span class="annottext">InlineFragment NoFragments Variable
-</span><a href="#local-6989586621688074334"><span class="hs-identifier hs-var">fragment</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621688073288"><span class="hs-identifier hs-var">fragment</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-104"></span><span>          </span><span class="hs-comment">-- No type condition, so the fragment unconditionally applies.</span><span>
 </span><span id="line-105"></span><span>          </span><span class="annot"><span class="annottext">Maybe Name
 </span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">InlineFragment NoFragments Variable
 -&gt; m [Field NoFragments Variable]
-</span><a href="#local-6989586621688074330"><span class="hs-identifier hs-var">flattenInlineFragment</span></a></span><span> </span><span class="annot"><span class="annottext">InlineFragment NoFragments Variable
-</span><a href="#local-6989586621688074334"><span class="hs-identifier hs-var">fragment</span></a></span><span>
-</span><span id="line-106"></span><span>          </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621688074329"><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621688074329"><span class="hs-identifier hs-var">typeName</span></a></span></span><span>
+</span><a href="#local-6989586621688073284"><span class="hs-identifier hs-var">flattenInlineFragment</span></a></span><span> </span><span class="annot"><span class="annottext">InlineFragment NoFragments Variable
+</span><a href="#local-6989586621688073288"><span class="hs-identifier hs-var">fragment</span></a></span><span>
+</span><span id="line-106"></span><span>          </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621688073283"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621688073283"><span class="hs-identifier hs-var">typeName</span></a></span></span><span>
 </span><span id="line-107"></span><span>            </span><span class="hs-comment">-- There is a type condition, but it is just the type of the</span><span>
 </span><span id="line-108"></span><span>            </span><span class="hs-comment">-- selection set; the fragment trivially applies.</span><span>
 </span><span id="line-109"></span><span>            </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621688074329"><span class="hs-identifier hs-var">typeName</span></a></span><span> </span><span class="annot"><span class="annottext">Name -&gt; t Name -&gt; Bool
+</span><a href="#local-6989586621688073283"><span class="hs-identifier hs-var">typeName</span></a></span><span> </span><span class="annot"><span class="annottext">Name -&gt; t Name -&gt; Bool
 forall (t :: * -&gt; *) a. (Foldable t, Eq a) =&gt; a -&gt; t a -&gt; Bool
 </span><span class="hs-operator hs-var">`elem`</span></span><span> </span><span class="annot"><span class="annottext">t Name
-</span><a href="#local-6989586621688074345"><span class="hs-identifier hs-var">objectTypeNames</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">InlineFragment NoFragments Variable
+</span><a href="#local-6989586621688073299"><span class="hs-identifier hs-var">objectTypeNames</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">InlineFragment NoFragments Variable
 -&gt; m [Field NoFragments Variable]
-</span><a href="#local-6989586621688074330"><span class="hs-identifier hs-var">flattenInlineFragment</span></a></span><span> </span><span class="annot"><span class="annottext">InlineFragment NoFragments Variable
-</span><a href="#local-6989586621688074334"><span class="hs-identifier hs-var">fragment</span></a></span><span>
+</span><a href="#local-6989586621688073284"><span class="hs-identifier hs-var">flattenInlineFragment</span></a></span><span> </span><span class="annot"><span class="annottext">InlineFragment NoFragments Variable
+</span><a href="#local-6989586621688073288"><span class="hs-identifier hs-var">fragment</span></a></span><span>
 </span><span id="line-110"></span><span>            </span><span class="hs-comment">-- Otherwise, the fragment must not apply, because we do not currently</span><span>
 </span><span id="line-111"></span><span>            </span><span class="hs-comment">-- support interfaces or unions. According to the GraphQL spec, it is</span><span>
 </span><span id="line-112"></span><span>            </span><span class="hs-comment">-- an *error* to select a fragment that cannot possibly apply to the</span><span>
@@ -224,9 +224,9 @@ forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
       Text.intercalate &quot;, &quot; (fmap dquoteTxt (toList objectTypeNames))
     -}</span><span>
 </span><span id="line-121"></span><span>
-</span><span id="line-122"></span><span>    </span><span id="local-6989586621688074330"><span class="annot"><span class="annottext">flattenInlineFragment :: InlineFragment NoFragments Variable
+</span><span id="line-122"></span><span>    </span><span id="local-6989586621688073284"><span class="annot"><span class="annottext">flattenInlineFragment :: InlineFragment NoFragments Variable
 -&gt; m [Field NoFragments Variable]
-</span><a href="#local-6989586621688074330"><span class="hs-identifier hs-var hs-var">flattenInlineFragment</span></a></span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">InlineFragment</span></span><span> </span><span class="hs-special">{</span><span id="local-6989586621688074326"><span class="annot"><span class="annottext">SelectionSet NoFragments Variable
+</span><a href="#local-6989586621688073284"><span class="hs-identifier hs-var hs-var">flattenInlineFragment</span></a></span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">InlineFragment</span></span><span> </span><span class="hs-special">{</span><span id="local-6989586621688073280"><span class="annot"><span class="annottext">SelectionSet NoFragments Variable
 _ifSelectionSet :: forall (frag :: * -&gt; *) var.
 InlineFragment frag var -&gt; SelectionSet frag var
 _ifSelectionSet :: SelectionSet NoFragments Variable
@@ -240,17 +240,17 @@ t Name
 -&gt; SelectionSet NoFragments Variable
 -&gt; m [Field NoFragments Variable]
 </span><a href="Hasura.GraphQL.Parser.Collect.html#flattenSelectionSet"><span class="hs-identifier hs-var">flattenSelectionSet</span></a></span><span> </span><span class="annot"><span class="annottext">t Name
-</span><a href="#local-6989586621688074345"><span class="hs-identifier hs-var">objectTypeNames</span></a></span><span> </span><span class="annot"><span class="annottext">SelectionSet NoFragments Variable
-</span><a href="#local-6989586621688074326"><span class="hs-identifier hs-var">_ifSelectionSet</span></a></span><span>
+</span><a href="#local-6989586621688073299"><span class="hs-identifier hs-var">objectTypeNames</span></a></span><span> </span><span class="annot"><span class="annottext">SelectionSet NoFragments Variable
+</span><a href="#local-6989586621688073280"><span class="hs-identifier hs-var">_ifSelectionSet</span></a></span><span>
 </span><span id="line-124"></span><span>
-</span><span id="line-125"></span><span>    </span><span id="local-6989586621688074338"><span class="annot"><span class="annottext">applyInclusionDirectives :: ExecutableDirectiveLocation
+</span><span id="line-125"></span><span>    </span><span id="local-6989586621688073292"><span class="annot"><span class="annottext">applyInclusionDirectives :: ExecutableDirectiveLocation
 -&gt; [Directive Variable] -&gt; m [a] -&gt; m [a]
-</span><a href="#local-6989586621688074338"><span class="hs-identifier hs-var hs-var">applyInclusionDirectives</span></a></span></span><span> </span><span id="local-6989586621688074324"><span class="annot"><span class="annottext">ExecutableDirectiveLocation
-</span><a href="#local-6989586621688074324"><span class="hs-identifier hs-var">location</span></a></span></span><span> </span><span id="local-6989586621688074323"><span class="annot"><span class="annottext">[Directive Variable]
-</span><a href="#local-6989586621688074323"><span class="hs-identifier hs-var">directives</span></a></span></span><span> </span><span id="local-6989586621688074322"><span class="annot"><span class="annottext">m [a]
-</span><a href="#local-6989586621688074322"><span class="hs-identifier hs-var">continue</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-126"></span><span>      </span><span id="local-6989586621688074321"><span class="annot"><span class="annottext">DirectiveMap
-</span><a href="#local-6989586621688074321"><span class="hs-identifier hs-var">dirMap</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">[Directive m]
+</span><a href="#local-6989586621688073292"><span class="hs-identifier hs-var hs-var">applyInclusionDirectives</span></a></span></span><span> </span><span id="local-6989586621688073278"><span class="annot"><span class="annottext">ExecutableDirectiveLocation
+</span><a href="#local-6989586621688073278"><span class="hs-identifier hs-var">location</span></a></span></span><span> </span><span id="local-6989586621688073277"><span class="annot"><span class="annottext">[Directive Variable]
+</span><a href="#local-6989586621688073277"><span class="hs-identifier hs-var">directives</span></a></span></span><span> </span><span id="local-6989586621688073276"><span class="annot"><span class="annottext">m [a]
+</span><a href="#local-6989586621688073276"><span class="hs-identifier hs-var">continue</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-126"></span><span>      </span><span id="local-6989586621688073275"><span class="annot"><span class="annottext">DirectiveMap
+</span><a href="#local-6989586621688073275"><span class="hs-identifier hs-var">dirMap</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">[Directive m]
 -&gt; DirectiveLocation -&gt; [Directive Variable] -&gt; m DirectiveMap
 forall (m :: * -&gt; *).
 MonadParse m =&gt;
@@ -260,15 +260,15 @@ MonadParse m =&gt;
 forall (m :: * -&gt; *). MonadParse m =&gt; [Directive m]
 </span><a href="Hasura.GraphQL.Parser.Directives.html#inclusionDirectives"><span class="hs-identifier hs-var">inclusionDirectives</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ExecutableDirectiveLocation -&gt; DirectiveLocation
 </span><span class="hs-identifier hs-var">DLExecutable</span></span><span> </span><span class="annot"><span class="annottext">ExecutableDirectiveLocation
-</span><a href="#local-6989586621688074324"><span class="hs-identifier hs-var">location</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[Directive Variable]
-</span><a href="#local-6989586621688074323"><span class="hs-identifier hs-var">directives</span></a></span><span>
-</span><span id="line-127"></span><span>      </span><span id="local-6989586621688074317"><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621688074317"><span class="hs-identifier hs-var">shouldSkip</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">DirectiveMap
+</span><a href="#local-6989586621688073278"><span class="hs-identifier hs-var">location</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[Directive Variable]
+</span><a href="#local-6989586621688073277"><span class="hs-identifier hs-var">directives</span></a></span><span>
+</span><span id="line-127"></span><span>      </span><span id="local-6989586621688073271"><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621688073271"><span class="hs-identifier hs-var">shouldSkip</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">DirectiveMap
 -&gt; DirectiveKey Bool -&gt; (Maybe Bool -&gt; m Bool) -&gt; m Bool
 forall a (m :: * -&gt; *) b.
 DirectiveMap -&gt; DirectiveKey a -&gt; (Maybe a -&gt; m b) -&gt; m b
 </span><a href="Hasura.GraphQL.Parser.Directives.html#withDirective"><span class="hs-identifier hs-var">withDirective</span></a></span><span> </span><span class="annot"><span class="annottext">DirectiveMap
-</span><a href="#local-6989586621688074321"><span class="hs-identifier hs-var">dirMap</span></a></span><span> </span><span class="annot"><span class="annottext">DirectiveKey Bool
+</span><a href="#local-6989586621688073275"><span class="hs-identifier hs-var">dirMap</span></a></span><span> </span><span class="annot"><span class="annottext">DirectiveKey Bool
 </span><a href="Hasura.GraphQL.Parser.Directives.html#skip"><span class="hs-identifier hs-var">skip</span></a></span><span> </span><span class="annot"><span class="annottext">((Maybe Bool -&gt; m Bool) -&gt; m Bool)
 -&gt; (Maybe Bool -&gt; m Bool) -&gt; m Bool
 forall a b. (a -&gt; b) -&gt; a -&gt; b
@@ -280,13 +280,13 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 forall a. a -&gt; Maybe a -&gt; a
 </span><span class="hs-identifier hs-var">fromMaybe</span></span><span> </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">False</span></span><span>
-</span><span id="line-128"></span><span>      </span><span id="local-6989586621688074313"><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621688074313"><span class="hs-identifier hs-var">shouldInclude</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">DirectiveMap
+</span><span id="line-128"></span><span>      </span><span id="local-6989586621688073267"><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621688073267"><span class="hs-identifier hs-var">shouldInclude</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">DirectiveMap
 -&gt; DirectiveKey Bool -&gt; (Maybe Bool -&gt; m Bool) -&gt; m Bool
 forall a (m :: * -&gt; *) b.
 DirectiveMap -&gt; DirectiveKey a -&gt; (Maybe a -&gt; m b) -&gt; m b
 </span><a href="Hasura.GraphQL.Parser.Directives.html#withDirective"><span class="hs-identifier hs-var">withDirective</span></a></span><span> </span><span class="annot"><span class="annottext">DirectiveMap
-</span><a href="#local-6989586621688074321"><span class="hs-identifier hs-var">dirMap</span></a></span><span> </span><span class="annot"><span class="annottext">DirectiveKey Bool
+</span><a href="#local-6989586621688073275"><span class="hs-identifier hs-var">dirMap</span></a></span><span> </span><span class="annot"><span class="annottext">DirectiveKey Bool
 </span><a href="Hasura.GraphQL.Parser.Directives.html#include"><span class="hs-identifier hs-var">include</span></a></span><span> </span><span class="annot"><span class="annottext">((Maybe Bool -&gt; m Bool) -&gt; m Bool)
 -&gt; (Maybe Bool -&gt; m Bool) -&gt; m Bool
 forall a b. (a -&gt; b) -&gt; a -&gt; b
@@ -299,22 +299,22 @@ forall a. a -&gt; Maybe a -&gt; a
 </span><span class="hs-identifier hs-var">fromMaybe</span></span><span> </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">True</span></span><span>
 </span><span id="line-129"></span><span>      </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621688074313"><span class="hs-identifier hs-var">shouldInclude</span></a></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
+</span><a href="#local-6989586621688073267"><span class="hs-identifier hs-var">shouldInclude</span></a></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
 </span><span class="hs-operator hs-var">&amp;&amp;</span></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool
 </span><span class="hs-identifier hs-var">not</span></span><span> </span><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621688074317"><span class="hs-identifier hs-var">shouldSkip</span></a></span><span>
+</span><a href="#local-6989586621688073271"><span class="hs-identifier hs-var">shouldSkip</span></a></span><span>
 </span><span id="line-130"></span><span>        </span><span class="hs-keyword">then</span><span> </span><span class="annot"><span class="annottext">m [a]
-</span><a href="#local-6989586621688074322"><span class="hs-identifier hs-var">continue</span></a></span><span>
+</span><a href="#local-6989586621688073276"><span class="hs-identifier hs-var">continue</span></a></span><span>
 </span><span id="line-131"></span><span>        </span><span class="hs-keyword">else</span><span> </span><span class="annot"><span class="annottext">[a] -&gt; m [a]
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span>
 </span><span id="line-132"></span><span>
 </span><span id="line-133"></span><span class="hs-comment">-- | Merges fields according to the rules in the GraphQL specification, specifically</span><span>
 </span><span id="line-134"></span><span class="hs-comment">-- &lt;&#167; 5.3.2 Field Selection Merging http://spec.graphql.org/June2018/#sec-Field-Selection-Merging&gt;.</span><span>
-</span><span id="line-135"></span><span id="local-6989586621688074448"><span id="local-6989586621688074450"><span class="annot"><a href="Hasura.GraphQL.Parser.Collect.html#mergeFields"><span class="hs-identifier hs-type">mergeFields</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-136"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Class.Parse.html#MonadParse"><span class="hs-identifier hs-type">MonadParse</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688074450"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Eq</span></span><span> </span><span class="annot"><a href="#local-6989586621688074448"><span class="hs-identifier hs-type">var</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
-</span><span id="line-137"></span><span>  </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">Field</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">NoFragments</span></span><span> </span><span class="annot"><a href="#local-6989586621688074448"><span class="hs-identifier hs-type">var</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-138"></span><span>  </span><span class="annot"><a href="#local-6989586621688074450"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">InsOrdHashMap</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Name</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Field</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">NoFragments</span></span><span> </span><span class="annot"><a href="#local-6989586621688074448"><span class="hs-identifier hs-type">var</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-135"></span><span id="local-6989586621688073402"><span id="local-6989586621688073404"><span class="annot"><a href="Hasura.GraphQL.Parser.Collect.html#mergeFields"><span class="hs-identifier hs-type">mergeFields</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-136"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Class.Parse.html#MonadParse"><span class="hs-identifier hs-type">MonadParse</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688073404"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Eq</span></span><span> </span><span class="annot"><a href="#local-6989586621688073402"><span class="hs-identifier hs-type">var</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-137"></span><span>  </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">Field</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">NoFragments</span></span><span> </span><span class="annot"><a href="#local-6989586621688073402"><span class="hs-identifier hs-type">var</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-138"></span><span>  </span><span class="annot"><a href="#local-6989586621688073404"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">InsOrdHashMap</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Name</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Field</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">NoFragments</span></span><span> </span><span class="annot"><a href="#local-6989586621688073402"><span class="hs-identifier hs-type">var</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span></span></span><span>
 </span><span id="line-139"></span><span id="mergeFields"><span class="annot"><span class="annottext">mergeFields :: [Field NoFragments var]
 -&gt; m (InsOrdHashMap Name (Field NoFragments var))
 </span><a href="Hasura.GraphQL.Parser.Collect.html#mergeFields"><span class="hs-identifier hs-var hs-var">mergeFields</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(InsOrdHashMap Name (Field NoFragments var)
@@ -333,20 +333,20 @@ forall (f :: * -&gt; *) var (frag :: * -&gt; *).
 (MonadParse f, Eq var) =&gt;
 InsOrdHashMap Name (Field frag var)
 -&gt; Field frag var -&gt; f (InsOrdHashMap Name (Field frag var))
-</span><a href="#local-6989586621688074308"><span class="hs-identifier hs-var">addField</span></a></span><span> </span><span class="annot"><span class="annottext">InsOrdHashMap Name (Field NoFragments var)
+</span><a href="#local-6989586621688073262"><span class="hs-identifier hs-var">addField</span></a></span><span> </span><span class="annot"><span class="annottext">InsOrdHashMap Name (Field NoFragments var)
 forall k v. InsOrdHashMap k v
 </span><span class="hs-identifier hs-var">OMap.empty</span></span><span>
 </span><span id="line-140"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-141"></span><span>    </span><span id="local-6989586621688074308"><span class="annot"><span class="annottext">addField :: InsOrdHashMap Name (Field frag var)
+</span><span id="line-141"></span><span>    </span><span id="local-6989586621688073262"><span class="annot"><span class="annottext">addField :: InsOrdHashMap Name (Field frag var)
 -&gt; Field frag var -&gt; f (InsOrdHashMap Name (Field frag var))
-</span><a href="#local-6989586621688074308"><span class="hs-identifier hs-var hs-var">addField</span></a></span></span><span> </span><span id="local-6989586621688074306"><span class="annot"><span class="annottext">InsOrdHashMap Name (Field frag var)
-</span><a href="#local-6989586621688074306"><span class="hs-identifier hs-var">fields</span></a></span></span><span> </span><span id="local-6989586621688074305"><span class="annot"><span class="annottext">Field frag var
-</span><a href="#local-6989586621688074305"><span class="hs-identifier hs-var">newField</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621688073262"><span class="hs-identifier hs-var hs-var">addField</span></a></span></span><span> </span><span id="local-6989586621688073260"><span class="annot"><span class="annottext">InsOrdHashMap Name (Field frag var)
+</span><a href="#local-6989586621688073260"><span class="hs-identifier hs-var">fields</span></a></span></span><span> </span><span id="local-6989586621688073259"><span class="annot"><span class="annottext">Field frag var
+</span><a href="#local-6989586621688073259"><span class="hs-identifier hs-var">newField</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Name
 -&gt; InsOrdHashMap Name (Field frag var) -&gt; Maybe (Field frag var)
 forall k v. (Eq k, Hashable k) =&gt; k -&gt; InsOrdHashMap k v -&gt; Maybe v
 </span><span class="hs-identifier hs-var">OMap.lookup</span></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621688074303"><span class="hs-identifier hs-var">alias</span></a></span><span> </span><span class="annot"><span class="annottext">InsOrdHashMap Name (Field frag var)
-</span><a href="#local-6989586621688074306"><span class="hs-identifier hs-var">fields</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621688073257"><span class="hs-identifier hs-var">alias</span></a></span><span> </span><span class="annot"><span class="annottext">InsOrdHashMap Name (Field frag var)
+</span><a href="#local-6989586621688073260"><span class="hs-identifier hs-var">fields</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-142"></span><span>      </span><span class="annot"><span class="annottext">Maybe (Field frag var)
 </span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-143"></span><span>        </span><span class="annot"><span class="annottext">InsOrdHashMap Name (Field frag var)
@@ -365,20 +365,20 @@ forall k v.
 (Eq k, Hashable k) =&gt;
 k -&gt; v -&gt; InsOrdHashMap k v -&gt; InsOrdHashMap k v
 </span><span class="hs-identifier hs-var">OMap.insert</span></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621688074303"><span class="hs-identifier hs-var">alias</span></a></span><span> </span><span class="annot"><span class="annottext">Field frag var
-</span><a href="#local-6989586621688074305"><span class="hs-identifier hs-var">newField</span></a></span><span> </span><span class="annot"><span class="annottext">InsOrdHashMap Name (Field frag var)
-</span><a href="#local-6989586621688074306"><span class="hs-identifier hs-var">fields</span></a></span><span>
-</span><span id="line-144"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621688074300"><span class="annot"><span class="annottext">Field frag var
-</span><a href="#local-6989586621688074300"><span class="hs-identifier hs-var">oldField</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-145"></span><span>        </span><span id="local-6989586621688074299"><span class="annot"><span class="annottext">Field frag var
-</span><a href="#local-6989586621688074299"><span class="hs-identifier hs-var">mergedField</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Name -&gt; Field frag var -&gt; Field frag var -&gt; f (Field frag var)
+</span><a href="#local-6989586621688073257"><span class="hs-identifier hs-var">alias</span></a></span><span> </span><span class="annot"><span class="annottext">Field frag var
+</span><a href="#local-6989586621688073259"><span class="hs-identifier hs-var">newField</span></a></span><span> </span><span class="annot"><span class="annottext">InsOrdHashMap Name (Field frag var)
+</span><a href="#local-6989586621688073260"><span class="hs-identifier hs-var">fields</span></a></span><span>
+</span><span id="line-144"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621688073254"><span class="annot"><span class="annottext">Field frag var
+</span><a href="#local-6989586621688073254"><span class="hs-identifier hs-var">oldField</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-145"></span><span>        </span><span id="local-6989586621688073253"><span class="annot"><span class="annottext">Field frag var
+</span><a href="#local-6989586621688073253"><span class="hs-identifier hs-var">mergedField</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Name -&gt; Field frag var -&gt; Field frag var -&gt; f (Field frag var)
 forall (m :: * -&gt; *) var (frag :: * -&gt; *).
 (MonadParse m, Eq var) =&gt;
 Name -&gt; Field frag var -&gt; Field frag var -&gt; m (Field frag var)
-</span><a href="#local-6989586621688074298"><span class="hs-identifier hs-var">mergeField</span></a></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621688074303"><span class="hs-identifier hs-var">alias</span></a></span><span> </span><span class="annot"><span class="annottext">Field frag var
-</span><a href="#local-6989586621688074300"><span class="hs-identifier hs-var">oldField</span></a></span><span> </span><span class="annot"><span class="annottext">Field frag var
-</span><a href="#local-6989586621688074305"><span class="hs-identifier hs-var">newField</span></a></span><span>
+</span><a href="#local-6989586621688073252"><span class="hs-identifier hs-var">mergeField</span></a></span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621688073257"><span class="hs-identifier hs-var">alias</span></a></span><span> </span><span class="annot"><span class="annottext">Field frag var
+</span><a href="#local-6989586621688073254"><span class="hs-identifier hs-var">oldField</span></a></span><span> </span><span class="annot"><span class="annottext">Field frag var
+</span><a href="#local-6989586621688073259"><span class="hs-identifier hs-var">newField</span></a></span><span>
 </span><span id="line-146"></span><span>        </span><span class="annot"><span class="annottext">InsOrdHashMap Name (Field frag var)
 -&gt; f (InsOrdHashMap Name (Field frag var))
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
@@ -395,37 +395,37 @@ forall k v.
 (Eq k, Hashable k) =&gt;
 k -&gt; v -&gt; InsOrdHashMap k v -&gt; InsOrdHashMap k v
 </span><span class="hs-identifier hs-var">OMap.insert</span></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621688074303"><span class="hs-identifier hs-var">alias</span></a></span><span> </span><span class="annot"><span class="annottext">Field frag var
-</span><a href="#local-6989586621688074299"><span class="hs-identifier hs-var">mergedField</span></a></span><span> </span><span class="annot"><span class="annottext">InsOrdHashMap Name (Field frag var)
-</span><a href="#local-6989586621688074306"><span class="hs-identifier hs-var">fields</span></a></span><span>
+</span><a href="#local-6989586621688073257"><span class="hs-identifier hs-var">alias</span></a></span><span> </span><span class="annot"><span class="annottext">Field frag var
+</span><a href="#local-6989586621688073253"><span class="hs-identifier hs-var">mergedField</span></a></span><span> </span><span class="annot"><span class="annottext">InsOrdHashMap Name (Field frag var)
+</span><a href="#local-6989586621688073260"><span class="hs-identifier hs-var">fields</span></a></span><span>
 </span><span id="line-147"></span><span>      </span><span class="hs-keyword">where</span><span>
-</span><span id="line-148"></span><span>        </span><span id="local-6989586621688074303"><span class="annot"><span class="annottext">alias :: Name
-</span><a href="#local-6989586621688074303"><span class="hs-identifier hs-var hs-var">alias</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Name -&gt; Maybe Name -&gt; Name
+</span><span id="line-148"></span><span>        </span><span id="local-6989586621688073257"><span class="annot"><span class="annottext">alias :: Name
+</span><a href="#local-6989586621688073257"><span class="hs-identifier hs-var hs-var">alias</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Name -&gt; Maybe Name -&gt; Name
 forall a. a -&gt; Maybe a -&gt; a
 </span><span class="hs-identifier hs-var">fromMaybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Field frag var -&gt; Name
 forall (frag :: * -&gt; *) var. Field frag var -&gt; Name
 </span><span class="hs-identifier hs-var hs-var">_fName</span></span><span> </span><span class="annot"><span class="annottext">Field frag var
-</span><a href="#local-6989586621688074305"><span class="hs-identifier hs-var">newField</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Field frag var -&gt; Maybe Name
+</span><a href="#local-6989586621688073259"><span class="hs-identifier hs-var">newField</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Field frag var -&gt; Maybe Name
 forall (frag :: * -&gt; *) var. Field frag var -&gt; Maybe Name
 </span><span class="hs-identifier hs-var hs-var">_fAlias</span></span><span> </span><span class="annot"><span class="annottext">Field frag var
-</span><a href="#local-6989586621688074305"><span class="hs-identifier hs-var">newField</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621688073259"><span class="hs-identifier hs-var">newField</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-149"></span><span>
-</span><span id="line-150"></span><span>    </span><span id="local-6989586621688074298"><span class="annot"><span class="annottext">mergeField :: Name -&gt; Field frag var -&gt; Field frag var -&gt; m (Field frag var)
-</span><a href="#local-6989586621688074298"><span class="hs-identifier hs-var hs-var">mergeField</span></a></span></span><span> </span><span id="local-6989586621688074295"><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621688074295"><span class="hs-identifier hs-var">alias</span></a></span></span><span> </span><span id="local-6989586621688074294"><span class="annot"><span class="annottext">Field frag var
-</span><a href="#local-6989586621688074294"><span class="hs-identifier hs-var">oldField</span></a></span></span><span> </span><span id="local-6989586621688074293"><span class="annot"><span class="annottext">Field frag var
-</span><a href="#local-6989586621688074293"><span class="hs-identifier hs-var">newField</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-150"></span><span>    </span><span id="local-6989586621688073252"><span class="annot"><span class="annottext">mergeField :: Name -&gt; Field frag var -&gt; Field frag var -&gt; m (Field frag var)
+</span><a href="#local-6989586621688073252"><span class="hs-identifier hs-var hs-var">mergeField</span></a></span></span><span> </span><span id="local-6989586621688073249"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621688073249"><span class="hs-identifier hs-var">alias</span></a></span></span><span> </span><span id="local-6989586621688073248"><span class="annot"><span class="annottext">Field frag var
+</span><a href="#local-6989586621688073248"><span class="hs-identifier hs-var">oldField</span></a></span></span><span> </span><span id="local-6989586621688073247"><span class="annot"><span class="annottext">Field frag var
+</span><a href="#local-6989586621688073247"><span class="hs-identifier hs-var">newField</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-151"></span><span>      </span><span class="annot"><span class="annottext">Bool -&gt; m () -&gt; m ()
 forall (f :: * -&gt; *). Applicative f =&gt; Bool -&gt; f () -&gt; f ()
 </span><span class="hs-identifier hs-var">unless</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Field frag var -&gt; Name
 forall (frag :: * -&gt; *) var. Field frag var -&gt; Name
 </span><span class="hs-identifier hs-var hs-var">_fName</span></span><span> </span><span class="annot"><span class="annottext">Field frag var
-</span><a href="#local-6989586621688074294"><span class="hs-identifier hs-var">oldField</span></a></span><span> </span><span class="annot"><span class="annottext">Name -&gt; Name -&gt; Bool
+</span><a href="#local-6989586621688073248"><span class="hs-identifier hs-var">oldField</span></a></span><span> </span><span class="annot"><span class="annottext">Name -&gt; Name -&gt; Bool
 forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="annottext">Field frag var -&gt; Name
 forall (frag :: * -&gt; *) var. Field frag var -&gt; Name
 </span><span class="hs-identifier hs-var hs-var">_fName</span></span><span> </span><span class="annot"><span class="annottext">Field frag var
-</span><a href="#local-6989586621688074293"><span class="hs-identifier hs-var">newField</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(m () -&gt; m ()) -&gt; m () -&gt; m ()
+</span><a href="#local-6989586621688073247"><span class="hs-identifier hs-var">newField</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(m () -&gt; m ()) -&gt; m () -&gt; m ()
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span>
 </span><span id="line-152"></span><span>        </span><span class="annot"><span class="annottext">Text -&gt; m ()
@@ -439,7 +439,7 @@ forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Field frag var -&gt; Name
 forall (frag :: * -&gt; *) var. Field frag var -&gt; Name
 </span><span class="hs-identifier hs-var hs-var">_fName</span></span><span> </span><span class="annot"><span class="annottext">Field frag var
-</span><a href="#local-6989586621688074294"><span class="hs-identifier hs-var">oldField</span></a></span><span> </span><span class="annot"><span class="annottext">Name -&gt; Text -&gt; Text
+</span><a href="#local-6989586621688073248"><span class="hs-identifier hs-var">oldField</span></a></span><span> </span><span class="annot"><span class="annottext">Name -&gt; Text -&gt; Text
 forall t. ToTxt t =&gt; t -&gt; Text -&gt; Text
 </span><a href="Data.Text.Extended.html#%3C%3C%3E"><span class="hs-operator hs-var">&lt;&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot; and &quot;</span></span><span>
@@ -448,13 +448,13 @@ forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Field frag var -&gt; Name
 forall (frag :: * -&gt; *) var. Field frag var -&gt; Name
 </span><span class="hs-identifier hs-var hs-var">_fName</span></span><span> </span><span class="annot"><span class="annottext">Field frag var
-</span><a href="#local-6989586621688074293"><span class="hs-identifier hs-var">newField</span></a></span><span> </span><span class="annot"><span class="annottext">Name -&gt; Text -&gt; Text
+</span><a href="#local-6989586621688073247"><span class="hs-identifier hs-var">newField</span></a></span><span> </span><span class="annot"><span class="annottext">Name -&gt; Text -&gt; Text
 forall t. ToTxt t =&gt; t -&gt; Text -&gt; Text
 </span><a href="Data.Text.Extended.html#%3C%3C%3E"><span class="hs-operator hs-var">&lt;&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot; specify the same response name, &quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Name -&gt; Text
 forall t. ToTxt t =&gt; Text -&gt; t -&gt; Text
 </span><a href="Data.Text.Extended.html#%3C%3E%3E"><span class="hs-operator hs-var">&lt;&gt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621688074295"><span class="hs-identifier hs-var">alias</span></a></span><span>
+</span><a href="#local-6989586621688073249"><span class="hs-identifier hs-var">alias</span></a></span><span>
 </span><span id="line-155"></span><span>
 </span><span id="line-156"></span><span>      </span><span class="annot"><span class="annottext">Bool -&gt; m () -&gt; m ()
 forall (f :: * -&gt; *). Applicative f =&gt; Bool -&gt; f () -&gt; f ()
@@ -462,13 +462,13 @@ forall (f :: * -&gt; *). Applicative f =&gt; Bool -&gt; f () -&gt; f ()
 forall (frag :: * -&gt; *) var.
 Field frag var -&gt; HashMap Name (Value var)
 </span><span class="hs-identifier hs-var hs-var">_fArguments</span></span><span> </span><span class="annot"><span class="annottext">Field frag var
-</span><a href="#local-6989586621688074294"><span class="hs-identifier hs-var">oldField</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap Name (Value var) -&gt; HashMap Name (Value var) -&gt; Bool
+</span><a href="#local-6989586621688073248"><span class="hs-identifier hs-var">oldField</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap Name (Value var) -&gt; HashMap Name (Value var) -&gt; Bool
 forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="annottext">Field frag var -&gt; HashMap Name (Value var)
 forall (frag :: * -&gt; *) var.
 Field frag var -&gt; HashMap Name (Value var)
 </span><span class="hs-identifier hs-var hs-var">_fArguments</span></span><span> </span><span class="annot"><span class="annottext">Field frag var
-</span><a href="#local-6989586621688074293"><span class="hs-identifier hs-var">newField</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(m () -&gt; m ()) -&gt; m () -&gt; m ()
+</span><a href="#local-6989586621688073247"><span class="hs-identifier hs-var">newField</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(m () -&gt; m ()) -&gt; m () -&gt; m ()
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span>
 </span><span id="line-157"></span><span>        </span><span class="annot"><span class="annottext">Text -&gt; m ()
@@ -486,7 +486,7 @@ forall t. ToTxt t =&gt; Text -&gt; t -&gt; Text
 </span><a href="Data.Text.Extended.html#%3C%3E%3E"><span class="hs-operator hs-var">&lt;&gt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Field frag var -&gt; Name
 forall (frag :: * -&gt; *) var. Field frag var -&gt; Name
 </span><span class="hs-identifier hs-var hs-var">_fName</span></span><span> </span><span class="annot"><span class="annottext">Field frag var
-</span><a href="#local-6989586621688074294"><span class="hs-identifier hs-var">oldField</span></a></span><span>
+</span><a href="#local-6989586621688073248"><span class="hs-identifier hs-var">oldField</span></a></span><span>
 </span><span id="line-160"></span><span>
 </span><span id="line-161"></span><span>      </span><span class="annot"><span class="annottext">Field frag var -&gt; m (Field frag var)
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
@@ -506,42 +506,42 @@ Maybe Name
 </span><span class="hs-identifier hs-var">_fAlias</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Name -&gt; Maybe Name
 forall a. a -&gt; Maybe a
 </span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621688074295"><span class="hs-identifier hs-var">alias</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621688073249"><span class="hs-identifier hs-var">alias</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-164"></span><span>            </span><span class="annot"><span class="annottext">_fName :: Name
 </span><span class="hs-identifier hs-var">_fName</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Field frag var -&gt; Name
 forall (frag :: * -&gt; *) var. Field frag var -&gt; Name
 </span><span class="hs-identifier hs-var hs-var">_fName</span></span><span> </span><span class="annot"><span class="annottext">Field frag var
-</span><a href="#local-6989586621688074294"><span class="hs-identifier hs-var">oldField</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621688073248"><span class="hs-identifier hs-var">oldField</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-165"></span><span>            </span><span class="annot"><span class="annottext">_fArguments :: HashMap Name (Value var)
 </span><span class="hs-identifier hs-var">_fArguments</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Field frag var -&gt; HashMap Name (Value var)
 forall (frag :: * -&gt; *) var.
 Field frag var -&gt; HashMap Name (Value var)
 </span><span class="hs-identifier hs-var hs-var">_fArguments</span></span><span> </span><span class="annot"><span class="annottext">Field frag var
-</span><a href="#local-6989586621688074294"><span class="hs-identifier hs-var">oldField</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621688073248"><span class="hs-identifier hs-var">oldField</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-166"></span><span>            </span><span class="annot"><span class="annottext">_fDirectives :: [Directive var]
 </span><span class="hs-identifier hs-var">_fDirectives</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Field frag var -&gt; [Directive var]
 forall (frag :: * -&gt; *) var. Field frag var -&gt; [Directive var]
 </span><span class="hs-identifier hs-var hs-var">_fDirectives</span></span><span> </span><span class="annot"><span class="annottext">Field frag var
-</span><a href="#local-6989586621688074294"><span class="hs-identifier hs-var">oldField</span></a></span><span> </span><span class="annot"><span class="annottext">[Directive var] -&gt; [Directive var] -&gt; [Directive var]
+</span><a href="#local-6989586621688073248"><span class="hs-identifier hs-var">oldField</span></a></span><span> </span><span class="annot"><span class="annottext">[Directive var] -&gt; [Directive var] -&gt; [Directive var]
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Field frag var -&gt; [Directive var]
 forall (frag :: * -&gt; *) var. Field frag var -&gt; [Directive var]
 </span><span class="hs-identifier hs-var hs-var">_fDirectives</span></span><span> </span><span class="annot"><span class="annottext">Field frag var
-</span><a href="#local-6989586621688074293"><span class="hs-identifier hs-var">newField</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621688073247"><span class="hs-identifier hs-var">newField</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-167"></span><span>            </span><span class="hs-comment">-- see Note [Lazily merge selection sets]</span><span>
 </span><span id="line-168"></span><span>            </span><span class="annot"><span class="annottext">_fSelectionSet :: SelectionSet frag var
 </span><span class="hs-identifier hs-var">_fSelectionSet</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Field frag var -&gt; SelectionSet frag var
 forall (frag :: * -&gt; *) var.
 Field frag var -&gt; SelectionSet frag var
 </span><span class="hs-identifier hs-var hs-var">_fSelectionSet</span></span><span> </span><span class="annot"><span class="annottext">Field frag var
-</span><a href="#local-6989586621688074294"><span class="hs-identifier hs-var">oldField</span></a></span><span> </span><span class="annot"><span class="annottext">SelectionSet frag var
+</span><a href="#local-6989586621688073248"><span class="hs-identifier hs-var">oldField</span></a></span><span> </span><span class="annot"><span class="annottext">SelectionSet frag var
 -&gt; SelectionSet frag var -&gt; SelectionSet frag var
 forall a. [a] -&gt; [a] -&gt; [a]
 </span><span class="hs-operator hs-var">++</span></span><span> </span><span class="annot"><span class="annottext">Field frag var -&gt; SelectionSet frag var
 forall (frag :: * -&gt; *) var.
 Field frag var -&gt; SelectionSet frag var
 </span><span class="hs-identifier hs-var hs-var">_fSelectionSet</span></span><span> </span><span class="annot"><span class="annottext">Field frag var
-</span><a href="#local-6989586621688074293"><span class="hs-identifier hs-var">newField</span></a></span><span>
+</span><a href="#local-6989586621688073247"><span class="hs-identifier hs-var">newField</span></a></span><span>
 </span><span id="line-169"></span><span>          </span><span class="hs-special">}</span><span>
 </span><span id="line-170"></span><span>
 </span><span id="line-171"></span><span class="hs-comment">{- Note [Lazily merge selection sets]
