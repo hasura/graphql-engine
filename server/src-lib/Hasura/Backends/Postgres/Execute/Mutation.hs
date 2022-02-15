@@ -5,8 +5,7 @@
 --
 -- See 'Hasura.Backends.Postgres.Instances.Execute'.
 module Hasura.Backends.Postgres.Execute.Mutation
-  ( MutationRemoteJoinCtx,
-    MutateResp (..),
+  ( MutateResp (..),
     --
     execDeleteQuery,
     execInsertQuery,
@@ -43,8 +42,6 @@ import Hasura.RQL.IR.Update
 import Hasura.RQL.Types
 import Hasura.SQL.Types
 import Hasura.Session
-import Network.HTTP.Client qualified as HTTP
-import Network.HTTP.Types qualified as N
 
 data MutateResp (b :: BackendType) a = MutateResp
   { _mrAffectedRows :: !Int,
@@ -61,8 +58,6 @@ instance (Backend b, ToJSON a) => ToJSON (MutateResp b a) where
 
 instance (Backend b, FromJSON a) => FromJSON (MutateResp b a) where
   parseJSON = genericParseJSON hasuraJSON
-
-type MutationRemoteJoinCtx = (HTTP.Manager, [N.Header], UserInfo)
 
 data Mutation (b :: BackendType) = Mutation
   { _mTable :: !QualifiedTable,
