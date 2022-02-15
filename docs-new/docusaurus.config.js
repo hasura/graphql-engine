@@ -115,45 +115,172 @@ const config = {
         style: 'light',
         links: [
           {
-            title: 'Docs',
+            title: 'Hasura',
             items: [
               {
-                label: 'Hasura Core',
-                to: '/graphql/core/index',
+                label: 'About Us',
+                to: 'https://hasura.io/about/',
+              },
+              {
+                label: 'Press',
+                to: 'https://hasura.io/press/',
+              },
+              {
+                label: 'Careers',
+                to: 'https://hasura.io/careers/',
+              },
+              {
+                label: 'Contact Us',
+                to: 'https://hasura.io/contact-us/',
+              },
+              {
+                label: 'Legal Stuff',
+                to: 'https://hasura.io/legal/',
+              },
+            ],
+          },
+          {
+            title: 'Support',
+            items: [
+              {
+                label: 'Documentation',
+                href: '/graphql/core/index',
+              },
+              {
+                label: 'Community Forum',
+                href: 'https://discordapp.com/invite/hasura',
+              },
+              {
+                label: 'Help',
+                href: 'https://hasura.io/help/',
+              },
+              {
+                label: 'Github',
+                href: 'https://github.com/hasura',
+              },
+              {
+                label: 'Hasura Cloud Status',
+                href: 'https://status.hasura.io/',
+              },
+            ],
+          },
+          {
+            title: 'Tools',
+            items: [
+              {
+                label: 'Graphqurl',
+                href: 'https://github.com/hasura/graphqurl',
+              },
+              {
+                label: 'Firebase2GraphQL',
+                href: 'https://github.com/hasura/firebase2graphql',
+              },
+              {
+                label: 'JSON2GraphQL',
+                href: 'https://github.com/hasura/json2graphql',
+              },
+              {
+                label: 'GraphQL2ChartJS',
+                href: 'https://github.com/hasura/graphql2chartjs',
+              },
+            ],
+          },
+          {
+            title: 'Product',
+            items: [
+              {
+                label: 'Hasura Open Source',
+                href: 'https://hasura.io/opensource/',
               },
               {
                 label: 'Hasura Cloud',
-                to: '/graphql/cloud/index',
+                href: 'https://hasura.io/cloud/',
               },
-              // {
-              //   label: 'Migration Guide',
-              //   to: '/category/migration-guide',
-              // },
+              {
+                label: 'Hasura Enterprise',
+                href: 'https://hasura.io/enterprise/',
+              },
+              {
+                label: 'Pricing',
+                href: 'https://hasura.io/pricing/',
+              },
+              {
+                label: 'Changelog',
+                href: 'https://github.com/hasura/graphql-engine/releases',
+              },
+            ],
+          },
+          {
+            title: 'Resources',
+            items: [
+              {
+                label: 'Blog',
+                href: 'https://hasura.io/blog/',
+              },
+              {
+                label: 'Case Studies',
+                href: 'https://hasura.io/case-studies/',
+              },
+              {
+                label: '3Factor Apps',
+                href: 'https://3factor.app/',
+              },
+              {
+                label: 'Event Driven Programming',
+                href: 'https://hasura.io/event-driven-programming/',
+              },
+              {
+                label: 'React GraphQL',
+                href: 'https://hasura.io/react-graphql/',
+              },
+              {
+                label: 'Vue GraphQL',
+                href: 'https://hasura.io/vue-graphql/',
+              },
+              {
+                label: 'DIY GraphQL BaaS',
+                href: 'https://hasura.io/diy-graphql-baas/',
+              },
+              {
+                label: 'GraphQL & Hasura',
+                href: 'https://hasura.io/graphql/',
+              },
+              {
+                label: 'Hasura Cloud Security',
+                href: 'https://hasura.io/security/',
+              },
             ],
           },
           {
             title: 'Community',
             items: [
               {
-                label: 'Stack Overflow',
-                href: 'https://stackoverflow.com/questions/tagged/hasura',
+                label: 'Community Resources',
+                href: 'https://hasura.io/community/',
               },
               {
-                label: 'Discord',
-                href: 'https://discordapp.com/invite/hasura',
+                label: 'GraphQL Tutorials',
+                href: 'https://hasura.io/learn/',
               },
               {
-                label: 'Twitter',
-                href: 'https://twitter.com/HasuraHQ',
+                label: 'Community Wiki',
+                href: 'https://github.com/hasura/graphql-engine/wiki',
               },
-            ],
-          },
-          {
-            title: 'More',
-            items: [
               {
-                label: 'GitHub',
-                href: 'https://github.com/hasura/graphql-engine',
+                label: 'Sample Apps',
+                href: 'https://hasura.io/sample-apps/',
+              },
+              {
+                label: 'Partnership Program',
+                href: 'https://hasura.io/partner-agencies/',
+              },
+              {
+                label: 'HasuraCon 2021',
+                href: 'https://hasura.io/events/hasura-con-2021/',
+              },
+              {
+                label: 'GraphQL Asia',
+                href: 'https://graphql.asia/',
               },
             ],
           },
