@@ -141,6 +141,10 @@ export const isArrayString = (str: string) => {
   return false;
 };
 
+export function emptyStringToNull(val?: string): string | null {
+  return val && val !== '' ? val : null;
+}
+
 /* ARRAY utils */
 export const deleteArrayElementAtIndex = (array: unknown[], index: number) => {
   return array.splice(index, 1);

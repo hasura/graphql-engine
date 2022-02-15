@@ -197,17 +197,26 @@ currentMetadataVersion = MVVersion3
 data ComputedFieldMetadata b = ComputedFieldMetadata
   { _cfmName :: !ComputedFieldName,
     _cfmDefinition :: !(ComputedFieldDefinition b),
-    _cfmComment :: !(Maybe Text)
+    _cfmComment :: !Comment
   }
   deriving (Show, Eq, Generic)
 
 instance (Backend b) => Cacheable (ComputedFieldMetadata b)
 
 instance (Backend b) => ToJSON (ComputedFieldMetadata b) where
-  toJSON = genericToJSON hasuraJSON
+  toJSON ComputedFieldMetadata {..} =
+    object
+      [ "name" .= _cfmName,
+        "definition" .= _cfmDefinition,
+        "comment" .= _cfmComment
+      ]
 
 instance (Backend b) => FromJSON (ComputedFieldMetadata b) where
-  parseJSON = genericParseJSON hasuraJSON
+  parseJSON = withObject "ComputedFieldMetadata" $ \obj ->
+    ComputedFieldMetadata
+      <$> obj .: "name"
+      <*> obj .: "definition"
+      <*> obj .:? "comment" .!= Automatic
 
 data RemoteSchemaPermissionMetadata = RemoteSchemaPermissionMetadata
   { _rspmRole :: !RoleName,
@@ -931,7 +940,7 @@ metadataToOrdJSON
                 [ ("name", AO.toOrdered name),
                   ("definition", AO.toOrdered definition)
                 ]
-                  <> catMaybes [maybeCommentToMaybeOrdPair comment]
+                  <> catMaybes [commentToMaybeOrdPair comment]
 
             insPermDefToOrdJSON :: forall b. (Backend b) => InsPermDef b -> AO.Value
             insPermDefToOrdJSON = permDefToOrdJSON insPermToOrdJSON
@@ -1255,6 +1264,9 @@ metadataToOrdJSON
 
       maybeAnyToMaybeOrdPair :: Text -> (a -> AO.Value) -> Maybe a -> Maybe (Text, AO.Value)
       maybeAnyToMaybeOrdPair name f = fmap ((name,) . f)
+
+      commentToMaybeOrdPair :: Comment -> Maybe (Text, AO.Value)
+      commentToMaybeOrdPair comment = (\val -> ("comment", AO.toOrdered val)) <$> commentToMaybeText comment
 
 instance ToJSON Metadata where
   toJSON = AO.fromOrdered . metadataToOrdJSON

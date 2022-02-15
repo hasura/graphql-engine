@@ -43,7 +43,7 @@ buildComputedFieldInfo ::
   ComputedFieldName ->
   ComputedFieldDefinition 'MSSQL ->
   RawFunctionInfo 'MSSQL ->
-  Maybe Text ->
+  Comment ->
   m (ComputedFieldInfo 'MSSQL)
 buildComputedFieldInfo _ _ _ _ _ _ =
   throw400 NotSupported "Computed fields aren't supported for MSSQL sources"

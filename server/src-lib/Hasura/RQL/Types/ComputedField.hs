@@ -10,7 +10,7 @@ module Hasura.RQL.Types.ComputedField
     FunctionSessionArgument (..),
     FunctionTableArgument (..),
     FunctionTrackedAs (..),
-    cfiComment,
+    cfiDescription,
     cfiFunction,
     cfiName,
     cfiReturnType,
@@ -28,7 +28,7 @@ import Data.Aeson
 import Data.Aeson.Casing
 import Data.Sequence qualified as Seq
 import Data.Text.Extended
-import Data.Text.NonEmpty
+import Data.Text.NonEmpty (NonEmptyText (..))
 import Database.PG.Query qualified as Q
 import Hasura.Backends.Postgres.SQL.Types hiding (FunctionName, TableName)
 import Hasura.Incremental (Cacheable)
@@ -177,7 +177,7 @@ data ComputedFieldInfo (b :: BackendType) = ComputedFieldInfo
     _cfiName :: !ComputedFieldName,
     _cfiFunction :: !(ComputedFieldFunction b),
     _cfiReturnType :: !(ComputedFieldReturn b),
-    _cfiComment :: !(Maybe Text)
+    _cfiDescription :: !(Maybe Text)
   }
   deriving (Generic)
 
@@ -193,8 +193,8 @@ instance (Backend b) => Hashable (ComputedFieldInfo b)
 
 instance (Backend b) => ToJSON (ComputedFieldInfo b) where
   -- spelling out the JSON instance in order to skip the Trees That Grow field
-  toJSON (ComputedFieldInfo _ name func tp comment) =
-    object ["name" .= name, "function" .= func, "return_type" .= tp, "comment" .= comment]
+  toJSON (ComputedFieldInfo _ name func tp description) =
+    object ["name" .= name, "function" .= func, "return_type" .= tp, "description" .= description]
 
 $(makeLenses ''ComputedFieldInfo)
 

@@ -194,12 +194,13 @@ addComputedFieldToCatalog q =
       defaultTxErrorHandler
       [Q.sql|
      INSERT INTO hdb_catalog.hdb_computed_field
-       (table_schema, table_name, computed_field_name, definition, comment)
+       (table_schema, table_name, computed_field_name, definition, commentText)
      VALUES ($1, $2, $3, $4, $5)
     |]
-      (schemaName, tableName, computedField, Q.AltJ definition, comment)
+      (schemaName, tableName, computedField, Q.AltJ definition, commentText)
       True
   where
+    commentText = commentToMaybeText comment
     QualifiedObject schemaName tableName = table
     AddComputedField _ table computedField definition comment = q
 
@@ -575,7 +576,7 @@ fetchMetadataFromHdbTables = liftTx do
       pure $
         flip map r $ \(schema, table, name, Q.AltJ definition, comment) ->
           ( QualifiedObject schema table,
-            ComputedFieldMetadata name definition comment
+            ComputedFieldMetadata name definition (commentFromMaybeText comment)
           )
 
     fetchCronTriggers =
