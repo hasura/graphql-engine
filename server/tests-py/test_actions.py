@@ -60,9 +60,6 @@ class TestActionsSync:
     def dir(cls):
         return 'queries/actions/sync'
 
-    def test_invalid_webhook_response(self, hge_ctx):
-        check_query_secret(hge_ctx, self.dir() + '/invalid_webhook_response.yaml')
-
     def test_null_response(self, hge_ctx):
         check_query_secret(hge_ctx, self.dir() + '/null_response.yaml')
 
@@ -77,6 +74,21 @@ class TestActionsSync:
 
     def test_expecting_array_response_got_object(self, hge_ctx):
         check_query_secret(hge_ctx, self.dir() + '/expecting_array_response.yaml')
+    
+    def test_expecting_scalar_output_type_success(self, hge_ctx):
+        check_query_secret(hge_ctx, self.dir() + '/get_scalar_action_output_type_success.yaml')
+    
+    def test_expecting_scalar_string_output_type_got_object(self, hge_ctx):
+        check_query_secret(hge_ctx, self.dir() + '/expecting_scalar_response_got_object.yaml')
+    
+    def test_expecting_object_output_type_success_got_scalar_string(self, hge_ctx):
+        check_query_secret(hge_ctx, self.dir() + '/expecting_object_response_got_scalar.yaml')
+    
+    def test_scalar_response_action_transformed_output(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/scalar_response_action_transformed_output.yaml')
+    
+    def test_object_response_action_transformed_output(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/object_response_action_transformed_output.yaml')
 
 
     # Webhook response validation tests. See https://github.com/hasura/graphql-engine/issues/3977

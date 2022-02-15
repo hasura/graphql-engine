@@ -108,6 +108,11 @@ args:
         type: ID!
       - name: bar
         type: String
+    
+    - name: OutObjectScalarTransformed
+      fields:
+      - name: foo
+        type: String!
 
     - name: Address
       fields:
@@ -178,7 +183,7 @@ args:
     - name: NullableResp
       fields:
       - name: id
-        type: Int
+        type: Int!
 
     - name: ResultIdList
       fields:
@@ -389,6 +394,15 @@ args:
       arguments:
       output_type: NullableResp
       handler: http://127.0.0.1:5593/null-response
+
+- type: create_action
+  args:
+    name: scalar_response
+    definition:
+      kind: synchronous
+      arguments:
+      output_type: String!
+      handler: http://127.0.0.1:5593/scalar-response
 
 - type: create_select_permission
   args:
