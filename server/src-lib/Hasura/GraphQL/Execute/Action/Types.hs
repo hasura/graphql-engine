@@ -21,6 +21,7 @@ import Data.Aeson.Casing qualified as J
 import Data.Aeson.TH qualified as J
 import Data.HashMap.Strict qualified as Map
 import Data.Int (Int64)
+import Data.Scientific (Scientific)
 import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.GraphQL.Parser
@@ -95,6 +96,9 @@ $(J.deriveJSON (J.aesonDrop 5 J.snakeCase) ''ActionWebhookErrorResponse)
 data ActionWebhookResponse
   = AWRArray ![Map.HashMap G.Name J.Value]
   | AWRObject !(Map.HashMap G.Name J.Value)
+  | AWRNum !Scientific
+  | AWRBool !Bool
+  | AWRString !Text
   | AWRNull
   deriving (Show, Eq)
 
@@ -102,12 +106,17 @@ instance J.FromJSON ActionWebhookResponse where
   parseJSON v = case v of
     J.Array {} -> AWRArray <$> J.parseJSON v
     J.Object {} -> AWRObject <$> J.parseJSON v
+    J.Number {} -> AWRNum <$> J.parseJSON v
+    J.Bool {} -> AWRBool <$> J.parseJSON v
+    J.String {} -> AWRString <$> J.parseJSON v
     J.Null {} -> pure AWRNull
-    _ -> fail "expecting null, object or array of objects for action webhook response"
 
 instance J.ToJSON ActionWebhookResponse where
   toJSON (AWRArray objects) = J.toJSON objects
   toJSON (AWRObject obj) = J.toJSON obj
+  toJSON (AWRNum n) = J.toJSON n
+  toJSON (AWRBool b) = J.toJSON b
+  toJSON (AWRString s) = J.toJSON s
   toJSON (AWRNull) = J.Null
 
 data ActionRequestInfo = ActionRequestInfo

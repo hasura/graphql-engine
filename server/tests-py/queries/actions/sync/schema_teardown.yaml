@@ -54,6 +54,10 @@ args:
     clear_data: true
 - type: drop_action
   args:
+    name: scalar_response
+    clear_data: true
+- type: drop_action
+  args:
     name: recursive_output
     clear_data: true
 - type: drop_action

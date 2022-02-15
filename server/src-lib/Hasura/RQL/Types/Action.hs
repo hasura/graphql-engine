@@ -26,7 +26,7 @@ module Hasura.RQL.Types.Action
     getActionOutputFields,
     ActionInfo (..),
     aiName,
-    aiOutputObject,
+    aiOutputType,
     aiDefinition,
     aiPermissions,
     aiForwardedClientHeaders,
@@ -243,13 +243,14 @@ type ActionPermissionMap = Map.HashMap RoleName ActionPermissionInfo
 
 type ActionOutputFields = Map.HashMap G.Name G.GType
 
-getActionOutputFields :: AnnotatedObjectType -> ActionOutputFields
-getActionOutputFields =
-  Map.fromList . map ((unObjectFieldName . _ofdName) &&& (fst . _ofdType)) . toList . _otdFields . _aotDefinition
+getActionOutputFields :: AnnotatedOutputType -> ActionOutputFields
+getActionOutputFields inp = case inp of
+  AOTObject aot -> Map.fromList . map ((unObjectFieldName . _ofdName) &&& (fst . _ofdType)) . toList . _otdFields . _aotDefinition $ aot
+  AOTScalar _ -> Map.empty
 
 data ActionInfo = ActionInfo
   { _aiName :: !ActionName,
-    _aiOutputObject :: !(G.GType, AnnotatedObjectType),
+    _aiOutputType :: !(G.GType, AnnotatedOutputType),
     _aiDefinition :: !ResolvedActionDefinition,
     _aiPermissions :: !ActionPermissionMap,
     _aiForwardedClientHeaders :: !Bool,
@@ -313,8 +314,9 @@ data ActionSourceInfo b
   | -- | All relationships refer to tables in one source
     ASISource !SourceName !(SourceConfig b)
 
-getActionSourceInfo :: AnnotatedObjectType -> ActionSourceInfo ('Postgres 'Vanilla)
-getActionSourceInfo = maybe ASINoSource (uncurry ASISource) . _aotSource
+getActionSourceInfo :: AnnotatedOutputType -> ActionSourceInfo ('Postgres 'Vanilla)
+getActionSourceInfo (AOTObject aot) = maybe ASINoSource (uncurry ASISource) . _aotSource $ aot
+getActionSourceInfo (AOTScalar _) = ASINoSource
 
 data AnnActionExecution (b :: BackendType) (r :: Type) v = AnnActionExecution
   { _aaeName :: !ActionName,

@@ -222,6 +222,9 @@ makeActionResponseNoRelations annFields webhookResponse =
       case webhookResponse of
         AWRArray objs -> AO.array $ map (mkResponseObject annFields) (mapKeys G.unName <$> objs)
         AWRObject obj -> mkResponseObject annFields (mapKeys G.unName obj)
+        AWRNum n -> AO.toOrdered n
+        AWRBool b -> AO.toOrdered b
+        AWRString s -> AO.toOrdered s
         AWRNull -> AO.Null
 
 {- Note: [Async action architecture]
@@ -428,7 +431,7 @@ asyncActionsProcessor env logger cacheRef lockedActionEvents httpManager sleepTi
         Nothing -> return ()
         Just actionInfo -> do
           let definition = _aiDefinition actionInfo
-              outputFields = getActionOutputFields $ snd $ _aiOutputObject actionInfo
+              outputFields = getActionOutputFields $ snd $ _aiOutputType actionInfo
               webhookUrl = _adHandler definition
               forwardClientHeaders = _adForwardClientHeaders definition
               confHeaders = _adHeaders definition
@@ -586,24 +589,29 @@ callWebhook
 
             if
                 | HTTP.statusIsSuccessful responseStatus -> do
-                  let expectingArray = isListType outputType
+                  let expectedResponse = showGT' $ unGraphQLType outputType
+                      expectingArray = isListType outputType
                       expectingNull = isNullableType outputType
                   modifyQErr addInternalToErr $ do
                     webhookResponse <- decodeValue responseValue
                     case webhookResponse of
-                      AWRNull -> do
-                        unless expectingNull $
-                          if expectingArray
-                            then throwUnexpected "expecting array for action webhook response but got null"
-                            else throwUnexpected "expecting object for action webhook response but got null"
-                        validateResponseObject Map.empty
+                      AWRNull -> unless expectingNull $ throwUnexpected "got null for the action webhook response"
+                      AWRNum _ -> do
+                        unless (expectedResponse == "Int" || expectedResponse == "Float") $
+                          throwUnexpected $ "got scalar Number for the action webhook response, expecting " <> expectedResponse
+                      AWRBool _ ->
+                        unless (expectedResponse == "Boolean") $
+                          throwUnexpected $ "got scalar Boolean for the action webhook response, expecting " <> expectedResponse
+                      AWRString _ ->
+                        unless (expectedResponse == "String") $
+                          throwUnexpected $ "got scalar String for the action webhook response, expecting " <> expectedResponse
                       AWRArray objs -> do
                         unless expectingArray $
-                          throwUnexpected "expecting object for action webhook response but got array"
+                          throwUnexpected "got array for the action webhook response, might want to check the action return type defined!"
                         mapM_ validateResponseObject objs
                       AWRObject obj -> do
-                        when expectingArray $
-                          throwUnexpected "expecting array for action webhook response but got object"
+                        when (isScalar expectedResponse || expectingArray) $
+                          throwUnexpected "got object for the action webhook response, might want to check the action return type defined!"
                         validateResponseObject obj
                     pure (webhookResponse, mkSetCookieHeaders responseWreq)
                 | HTTP.statusIsClientError responseStatus -> do
@@ -626,7 +634,6 @@ callWebhook
       -- Webhook response object should conform to action output fields
       validateResponseObject obj = do
         -- Note: Fields not specified in the output are ignored
-
         void $
           flip Map.traverseWithKey outputFields $ \fieldName fieldTy ->
             -- When field is non-nullable, it has to present in the response with no null value
@@ -638,6 +645,19 @@ callWebhook
                 when (v == J.Null) $
                   throwUnexpected $
                     "expecting not null value for field " <>> fieldName
+
+      showGT' :: G.GType -> Text
+      showGT' = \case
+        G.TypeNamed _ nt -> G.unName nt
+        G.TypeList _ lt -> G.showLT lt
+
+      isScalar :: Text -> Bool
+      isScalar s
+        | s == "Int" = True
+        | s == "Float" = True
+        | s == "String" = True
+        | s == "Boolean" = True
+        | otherwise = False
 
 processOutputSelectionSet ::
   RS.ArgumentExp v ->

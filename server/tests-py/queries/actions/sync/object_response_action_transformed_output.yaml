@@ -1,0 +1,55 @@
+- description: Update actions webhook to transform object output into an scalar number
+    response
+  url: /v1/query
+  status: 200
+  response:
+    message: success
+  query:
+    type: update_action
+    args:
+      name: create_user
+      definition:
+        kind: synchronous
+        arguments:
+        - name: email
+          type: String!
+        - name: name
+          type: String!
+        output_type: Int!
+        handler: http://127.0.0.1:5593/create-user
+        response_transform:
+          template_engine: Kriti
+          body: |
+              {{ $body.id }}
+
+- description: Run create_user sync action
+  url: /v1/graphql
+  status: 200
+  query:
+    query: |
+      mutation {
+        create_user(email: "clarke@gmail.com", name: "Clarke")
+      }
+
+  response:
+    data:
+      create_user: 1
+
+- description: Revert action wehbook
+  url: /v1/query
+  status: 200
+  response:
+    message: success
+  query:
+    type: update_action
+    args:
+      name: create_user
+      definition:
+        kind: synchronous
+        arguments:
+        - name: email
+          type: String!
+        - name: name
+          type: String!
+        output_type: UserId
+        handler: http://127.0.0.1:5593/create-user

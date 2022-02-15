@@ -65,7 +65,7 @@ The action definition consists of the following:
 - ``Arguments``: Arguments are used to pass dynamic values along with the
   query/mutation.
 - ``Response type``: The GraphQL type of the response that the query or mutation will
-  return. Actions can only return object types.
+  return. Actions can only return object types or scalar types currently.
 
 For instance, consider this action definition:
 
@@ -73,6 +73,14 @@ For instance, consider this action definition:
 
     extend type Mutation {
       userLogin(username: String!, password: String!): UserInfo
+    }
+
+In case the action response is a scalar (eg. Int), the action can also be defined as:
+
+.. code-block:: graphql
+
+    type Mutation {
+      userLogin(username: String!, password: String!): Int!
     }
 
 In this definition, we are extending the mutation root with an action called
@@ -83,9 +91,10 @@ In this definition, we are extending the mutation root with an action called
   string values.
 - ``UserInfo`` is the response type of the action
 
+
 **Custom Types**
 
-An action must return an object type. This means, you will have to define your
+In case the action returns an object type, you will have to define your
 custom types like so:
 
 .. code-block:: graphql

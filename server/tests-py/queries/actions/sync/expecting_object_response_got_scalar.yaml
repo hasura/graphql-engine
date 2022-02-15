@@ -1,4 +1,5 @@
-- description: Update actions webhook to another route which returns null response (also, output_type is non-nullable)
+- description: Update actions webhook to another route which returns scalar string
+    response
   url: /v1/query
   status: 200
   response:
@@ -6,20 +7,20 @@
   query:
     type: update_action
     args:
-      name: create_users
+      name: create_user
       definition:
         kind: synchronous
         arguments:
-        output_type: '[UserId]!'
-        handler: http://127.0.0.1:5593/null-response
+        output_type: UserId
+        handler: http://127.0.0.1:5593/scalar-response
 
-- description: Run create_users sync action (with null_response handler)
+- description: Run create_user sync action
   url: /v1/graphql
   status: 200
   query:
     query: |
       mutation {
-        create_users {
+        create_user{
           id
         }
       }
@@ -31,7 +32,7 @@
           error: unexpected response
           response:
             status: 200
-            body:
+            body: some-string
             headers:
             - value: application/json
               name: Content-Type
@@ -43,16 +44,15 @@
                 x-hasura-role: admin
               input: {}
               action:
-                name: create_users
-              request_query: "mutation {\n  create_users {\n\
-                \    id\n  }\n}\n"
-            url: http://127.0.0.1:5593/null-response
+                name: create_user
+              request_query: "mutation {\n  create_user{\n    id\n  }\n}\n"
+            url: http://127.0.0.1:5593/scalar-response
             headers: []
             transformed_request:
         path: $
         code: unexpected
-      message: got null for the action webhook response
-- description: Revert action definition
+      message: got scalar String for the action webhook response, expecting UserId
+- description: Revert action wehbook
   url: /v1/query
   status: 200
   response:
@@ -60,11 +60,13 @@
   query:
     type: update_action
     args:
-      name: create_users
+      name: create_user
       definition:
         kind: synchronous
         arguments:
-        - name: users
-          type: '[UserInput!]!'
-        output_type: '[UserId]'
-        handler: http://127.0.0.1:5593/create-users
+        - name: email
+          type: String!
+        - name: name
+          type: String!
+        output_type: UserId
+        handler: http://127.0.0.1:5593/create-user

@@ -1,4 +1,4 @@
-- description: Update actions webhook to another route which retuns non-object/array
+- description: Update actions webhook to another route which returns object
     response
   url: /v1/query
   status: 200
@@ -7,7 +7,7 @@
   query:
     type: update_action
     args:
-      name: create_user
+      name: scalar_response
       definition:
         kind: synchronous
         arguments:
@@ -15,23 +15,16 @@
           type: String!
         - name: name
           type: String!
-        output_type: UserId
-        handler: http://127.0.0.1:5593/invalid-response
+        output_type: String!
+        handler: http://127.0.0.1:5593/create-user
 
-- description: Run create_user sync action
+- description: Run scalar-response sync action
   url: /v1/graphql
   status: 200
   query:
     query: |
       mutation {
-        create_user(email: "clarke@gmail.com", name: "Clarke"){
-          id
-          user {
-            name
-            email
-            is_admin
-          }
-        }
+        scalar_response(email: "clarke@gmail.com", name: "Clarke")
       }
 
   response:
@@ -41,7 +34,8 @@
           error: unexpected response
           response:
             status: 200
-            body: some-string
+            body: 
+              id: 1
             headers:
             - value: application/json
               name: Content-Type
@@ -55,16 +49,15 @@
                 email: clarke@gmail.com
                 name: Clarke
               action:
-                name: create_user
-              request_query: "mutation {\n  create_user(email: \"clarke@gmail.com\", name: \"\
-                Clarke\"){\n    id\n    user {\n      name\n      email\n      is_admin\n\
-                \    }\n  }\n}\n"
-            url: http://127.0.0.1:5593/invalid-response
+                name: scalar_response
+              request_query: "mutation {\n  scalar_response(email: \"clarke@gmail.com\", name: \"\
+                Clarke\")\n}\n"
+            url: http://127.0.0.1:5593/create-user
             headers: []
             transformed_request:
         path: $
-        code: parse-failed
-      message: expecting null, object or array of objects for action webhook response
+        code: unexpected
+      message: got object for the action webhook response, might want to check the action return type defined!
 - description: Revert action wehbook
   url: /v1/query
   status: 200
@@ -73,13 +66,9 @@
   query:
     type: update_action
     args:
-      name: create_user
+      name: scalar_response
       definition:
         kind: synchronous
         arguments:
-        - name: email
-          type: String!
-        - name: name
-          type: String!
-        output_type: UserId
-        handler: http://127.0.0.1:5593/create-user
+        output_type: String!
+        handler: http://127.0.0.1:5593/scalar-response

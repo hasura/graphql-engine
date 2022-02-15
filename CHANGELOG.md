@@ -19,6 +19,9 @@ The optimization can be enabled using the
 
 ### Bug fixes and improvements
 (Add entries below in the order of server, console, cli, docs, others)
+
+- server: add support for scalar response types for actions (issue #7805)
+- server: fix nullable action response (issue #4405)
 - console: add support for remote database relationships
 - console: enable support for update permissions for mssql #3591
 - server: add support for customization of table GraphQL schema descriptions (#7496)

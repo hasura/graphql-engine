@@ -56,10 +56,16 @@ actionExecute customTypes actionInfo = runMaybeT do
   let fieldName = unActionName actionName
       description = G.Description <$> comment
   inputArguments <- lift $ actionInputArguments (_actNonObjects customTypes) $ _adArguments definition
-  selectionSet <- lift $ actionOutputFields outputType outputObject (_actObjects customTypes)
+  parserOutput <- case outputObject of
+    AOTObject aot -> do
+      selectionSet <- lift $ actionOutputFields outputType aot (_actObjects customTypes)
+      pure $ P.subselection fieldName description inputArguments selectionSet
+    AOTScalar ast -> do
+      let selectionSet = customScalarParser ast
+      pure $ P.selection fieldName description inputArguments selectionSet <&> (,[])
   stringifyNum <- asks $ qcStringifyNum . getter
   pure $
-    P.subselection fieldName description inputArguments selectionSet
+    parserOutput
       <&> \(argsJson, fields) ->
         AnnActionExecution
           { _aaeName = actionName,
@@ -126,7 +132,6 @@ actionAsyncQuery ::
 actionAsyncQuery objectTypes actionInfo = runMaybeT do
   roleName <- askRoleName
   guard $ roleName == adminRoleName || roleName `Map.member` permissions
-  actionOutputParser <- lift $ actionOutputFields outputType outputObject objectTypes
   createdAtFieldParser <-
     lift $ columnParser @('Postgres 'Vanilla) (ColumnScalar PGTimeStampTZ) (G.Nullability False)
   errorsFieldParser <-
@@ -137,7 +142,7 @@ actionAsyncQuery objectTypes actionInfo = runMaybeT do
       description = G.Description <$> comment
       actionIdInputField =
         P.field idFieldName (Just idFieldDescription) actionIdParser
-      allFieldParsers =
+      allFieldParsers actionOutputParser =
         let idField = P.selection_ idFieldName (Just idFieldDescription) actionIdParser $> AsyncId
             createdAtField =
               P.selection_
@@ -158,14 +163,21 @@ actionAsyncQuery objectTypes actionInfo = runMaybeT do
                 actionOutputParser
                 <&> AsyncOutput
          in [idField, createdAtField, errorsField, outputField]
-      selectionSet =
-        let desc = G.Description $ "fields of action: " <>> actionName
-         in P.selectionSet outputTypeName (Just desc) allFieldParsers
+  parserOutput <- case outputObject of
+    AOTObject aot -> do
+      actionOutputParser <- lift $ actionOutputFields outputType aot objectTypes
+      let desc = G.Description $ "fields of action: " <>> actionName
+          selectionSet =
+            P.selectionSet outputTypeName (Just desc) (allFieldParsers actionOutputParser)
               <&> parsedSelectionsToFields AsyncTypename
+      pure $ P.subselection fieldName description actionIdInputField selectionSet
+    AOTScalar ast -> do
+      let selectionSet = customScalarParser ast
+      pure $ P.selection fieldName description actionIdInputField selectionSet <&> (,[])
 
   stringifyNum <- asks $ qcStringifyNum . getter
   pure $
-    P.subselection fieldName description actionIdInputField selectionSet
+    parserOutput
       <&> \(idArg, fields) ->
         AnnActionAsyncQuery
           { _aaaqName = actionName,
@@ -276,8 +288,9 @@ actionOutputFields outputType annotatedObject objectTypes = do
                 fmap (RQL.ACFArrayRelation . RQL.ASAggregate . RQL.AnnRelationSelectG tableRelName columnMapping) <$> tableAggField
               ]
 
-mkDefinitionList :: AnnotatedObjectType -> [(PGCol, ScalarType ('Postgres 'Vanilla))]
-mkDefinitionList AnnotatedObjectType {..} =
+mkDefinitionList :: AnnotatedOutputType -> [(PGCol, ScalarType ('Postgres 'Vanilla))]
+mkDefinitionList (AOTScalar _) = []
+mkDefinitionList (AOTObject AnnotatedObjectType {..}) =
   flip map (toList _otdFields) $ \ObjectFieldDefinition {..} ->
     (unsafePGCol . G.unName . unObjectFieldName $ _ofdName,) $
       case Map.lookup _ofdName fieldReferences of

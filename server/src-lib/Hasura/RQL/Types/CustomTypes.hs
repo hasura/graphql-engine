@@ -37,6 +37,7 @@ module Hasura.RQL.Types.CustomTypes
     AnnotatedObjectFieldType (..),
     fieldTypeToScalarType,
     AnnotatedObjectType (..),
+    AnnotatedOutputType (..),
     AnnotatedObjects,
     AnnotatedCustomTypes (..),
     emptyAnnotatedCustomTypes,
@@ -351,6 +352,14 @@ fieldTypeToScalarType = \case
             | _stdName == stringScalar -> PGText
             | _stdName == boolScalar -> PGBoolean
             | otherwise -> PGJSON
+
+data AnnotatedOutputType
+  = AOTObject AnnotatedObjectType
+  | AOTScalar AnnotatedScalarType
+  deriving (Generic)
+
+instance J.ToJSON AnnotatedOutputType where
+  toJSON = J.genericToJSON $ J.defaultOptions
 
 data AnnotatedObjectType = AnnotatedObjectType
   { _aotDefinition :: !(ObjectTypeDefinition (G.GType, AnnotatedObjectFieldType) (TableInfo ('Postgres 'Vanilla)) (ColumnInfo ('Postgres 'Vanilla))),
