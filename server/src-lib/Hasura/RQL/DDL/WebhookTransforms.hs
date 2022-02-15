@@ -34,8 +34,8 @@ import Data.Text.Encoding qualified as TE
 import Hasura.Incremental (Cacheable)
 import Hasura.Prelude hiding (first)
 import Hasura.Session (SessionVariables)
-import Kriti (RenderedError (..), runKriti)
-import Kriti.Error (render)
+import Kriti (SerializedError (..), runKriti)
+import Kriti.Error (serialize)
 import Kriti.Parser (parser)
 import Network.HTTP.Client.Transformable qualified as HTTP
 import Network.URI qualified as URI
@@ -260,7 +260,7 @@ instance J.FromJSON TemplateText where
           -- don't have to parse at every request.
           Right _ -> pure $ TemplateText t
           Left err ->
-            let RenderedError {_message} = render err
+            let SerializedError {_message} = serialize err
              in fail $ T.unpack _message
 
 instance J.ToJSON TemplateText where
@@ -291,7 +291,7 @@ instance J.FromJSON StringTemplateText where
           -- explicitly down the call stack.
           Right _ -> pure $ StringTemplateText t
           Left err ->
-            let RenderedError {_message} = render err
+            let SerializedError {_message} = serialize err
              in fail $ T.unpack _message
 
 instance J.ToJSON StringTemplateText where
@@ -487,14 +487,14 @@ mkReqTemplateTransform :: TemplatingEngine -> TemplateText -> ReqTransformCtx ->
 mkReqTemplateTransform engine (TemplateText template) ReqTransformCtx {..} =
   let context = [("$body", tcBody), ("$session_variables", tcSessionVars)] <> catMaybes [("$query_params",) <$> tcQueryParams, ("$base_url",) <$> tcUrl]
    in case engine of
-        Kriti -> first (TransformErrorBundle . pure . J.toJSON) $ runKriti (TE.encodeUtf8 template) context
+        Kriti -> first (TransformErrorBundle . pure . J.toJSON . serialize) $ runKriti template context
 
 -- | Construct a Template Transformation function for Responses
 mkRespTemplateTransform :: TemplatingEngine -> TemplateText -> RespTransformCtx -> Either TransformErrorBundle J.Value
 mkRespTemplateTransform engine (TemplateText template) RespTransformCtx {..} =
   let context = [("$body", rtcBody), ("$request", rtcReqCtx)]
    in case engine of
-        Kriti -> first (TransformErrorBundle . pure . J.toJSON) $ runKriti (TE.encodeUtf8 template) context
+        Kriti -> first (TransformErrorBundle . pure . J.toJSON . serialize) $ runKriti template context
 
 buildReqTransformCtx :: T.Text -> Maybe SessionVariables -> HTTP.Request -> ReqTransformCtx
 buildReqTransformCtx url sessionVars reqData =
