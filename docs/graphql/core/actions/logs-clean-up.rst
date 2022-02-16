@@ -15,9 +15,10 @@ Cleaning up async action logs
 Introduction
 ------------
 
-Hasura stores action logs of :ref:`async actions <async_actions>` in a table in the metadata schema. As the table gets larger, you may want to prune it.
+Hasura stores action logs of :ref:`async actions <async_actions>` in a table in **the "hdb_catalog" schema of the Hasura metadata
+database**.
 
-You can use any of the following options to prune your logs depending on your need.
+As the table gets larger, you may want to prune it. You can use any of the following options to prune your logs depending on your need.
 
 .. admonition:: Warning
 
@@ -44,17 +45,32 @@ Option 2: Delete all logs of a specific action
 
    DELETE FROM hdb_catalog.hdb_action_log WHERE action_name = '<action-name>';
 
-Option 3: Delete all logs older than a time period
---------------------------------------------------
-.. code-block:: SQL
-
-   DELETE FROM hdb_catalog.hdb_action_log WHERE created_at < NOW() - INTERVAL '3 months';
-
-Option 4: Delete all logs
+Option 3: Delete all logs
 -------------------------
 .. code-block:: SQL
 
    DELETE FROM hdb_catalog.hdb_action_log;
+
+Clearing data before a particular time period
+---------------------------------------------
+
+If you wish to keep recent data and only clear data before a particular time period
+you can add the following time clause to your query's where clause:
+
+.. code-block:: SQL
+
+   -- units can be 'minutes', 'hours', 'days', 'months', 'years'
+   created_at < now() - interval '<x> <units>'
+
+For example: to delete all logs older than 3 months:
+
+.. code-block:: SQL
+
+   DELETE FROM hdb_catalog.hdb_action_log WHERE created_at < NOW() - INTERVAL '3 months';
+
+See the `Postgres date/time functions <https://www.postgresql.org/docs/current/functions-datetime.html>`__
+for more details.
+
 
 .. admonition:: Additional Resources
 

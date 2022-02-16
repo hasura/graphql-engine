@@ -7,6 +7,13 @@
 Schema/Metadata API Reference: Run SQL (Deprecated)
 ===================================================
 
+.. admonition:: Deprecation
+
+  In versions ``v2.0.0`` and above, the schema/metadata API is deprecated in favour of the :ref:`schema API <schema_apis>` and the
+  :ref:`metadata API <metadata_apis>`.
+
+  Though for backwards compatibility, the schema/metadata APIs will continue to function.
+
 .. contents:: Table of contents
   :backlinks: none
   :depth: 2
@@ -32,13 +39,6 @@ returned.
   you find yourself in the need of using ``run_sql`` to run custom DML requests,
   consider creating a view. You can now define permissions on that particular view
   for various roles.
-
-.. admonition:: Deprecation
-
-  In versions ``v2.0.0`` and above, the schema/metadata API is deprecated in favour of the :ref:`schema API <schema_apis>` and the
-  :ref:`metadata API <metadata_apis>`.
-
-  Though for backwards compatibility, the schema/metadata APIs will continue to function.
 
 Use cases
 ^^^^^^^^^

@@ -60,12 +60,12 @@ that the target ``users_db`` database has a ``users`` table with the fields ``id
       "name": "ordered_by_user",
       "source": "orders_db",
       "table": "orders",
-      "remote_source": {
+      "to_source": {
         "relationship_type": "object",
         "field_mapping": {
           "ordered_by_user_id": "id"
         },
-        "source": "users_db",
+        "source": "target",
         "table": "users"
       }
     }

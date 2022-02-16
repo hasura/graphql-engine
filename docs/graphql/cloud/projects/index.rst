@@ -52,16 +52,16 @@ Dig deeper
    :titlesonly:
 
    Creating projects <create>
-   Project Details <details>
-   Project Collaborators <collaborators>
-   Transfer Ownership <ownership>
+   Project details <details>
+   Project collaborators <collaborators>
+   Transfer ownership <ownership>
    Project Env vars <env-vars>
    Project Domains <domains>
    Securing projects <secure>
    Switching pricing plans <pricing>
    Deployment regions <regions>
    Managing development environments <environments>
-   GitHub Deployment <github-integration>
+   GitHub deployment <github-integration>
    Heroku database URL Sync <heroku-url-sync>
    Vercel Integration <vercel-integration>
    Maintenance mode <maintenance-mode>

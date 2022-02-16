@@ -43,7 +43,9 @@ This is an object type called ``UserInfo`` that has two fields:
 * ``accessToken``: This field is of type ``String!`` (non-nullable ``String``)
 * ``userId``: This field is of type ``Int!`` (non-nullable ``Int``)
 
-Hasura supports nested objects. For example, you can define a type like the following:
+From version ``v2.2.0`` onwards, Hasura GraphQL engine supports nested objects.
+
+For example, you can define a type like the following:
 
 .. code-block:: graphql
 
@@ -59,7 +61,9 @@ Hasura supports nested objects. For example, you can define a type like the foll
       isAdmin: Boolean!
     }
 
-Recursive nested objects are also supported. For example, you can use the following type:
+Recursive nested objects are also supported.
+
+For example, you can use the following type:
 
 .. code-block:: graphql
 

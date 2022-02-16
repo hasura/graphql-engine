@@ -5,6 +5,13 @@
 Schema/Metadata API Reference: Scheduled Triggers (Deprecated)
 ==============================================================
 
+.. admonition:: Deprecation
+
+  In versions ``v2.0.0`` and above, the schema/metadata API is deprecated in favour of the :ref:`schema API <schema_apis>` and the
+  :ref:`metadata API <metadata_apis>`.
+
+  Though for backwards compatibility, the schema/metadata APIs will continue to function.
+
 .. contents:: Table of contents
   :backlinks: none
   :depth: 1
@@ -14,17 +21,6 @@ Introduction
 ------------
 
 Scheduled triggers are used to invoke webhooks based on a timestamp or cron.
-
-.. admonition:: Supported from
-
-  Scheduled triggers are supported from versions ``v1.3.0`` and above.
-
-.. admonition:: Deprecation
-
-  In versions ``v2.0.0`` and above, the schema/metadata API is deprecated in favour of the :ref:`schema API <schema_apis>` and the
-  :ref:`metadata API <metadata_apis>`.
-
-  Though for backwards compatibility, the schema/metadata APIs will continue to function.
 
 .. _schema_metadata_create_cron_trigger:
 

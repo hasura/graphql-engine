@@ -7,6 +7,13 @@
 Schema/Metadata API Reference: Custom Types (Deprecated)
 ========================================================
 
+.. admonition:: Deprecation
+
+  In versions ``v2.0.0`` and above, the schema/metadata API is deprecated in favour of the :ref:`schema API <schema_apis>` and the
+  :ref:`metadata API <metadata_apis>`.
+
+  Though for backwards compatibility, the schema/metadata APIs will continue to function.
+
 .. contents:: Table of contents
   :backlinks: none
   :depth: 1
@@ -16,13 +23,6 @@ Introduction
 ------------
 
 **Custom Types** are user-defined GraphQL types which help to define :ref:`Actions <schema_metadata_api_actions>`.
-
-.. admonition:: Deprecation
-
-  In versions ``v2.0.0`` and above, the schema/metadata API is deprecated in favour of the :ref:`schema API <schema_apis>` and the
-  :ref:`metadata API <metadata_apis>`.
-
-  Though for backwards compatibility, the schema/metadata APIs will continue to function.
 
 .. _schema_metadata_set_custom_types:
 
