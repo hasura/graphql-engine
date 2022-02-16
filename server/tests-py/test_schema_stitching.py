@@ -884,3 +884,24 @@ class TestValidateRemoteSchemaCustomizeAllTheThings:
 
     def test_remote_schema_customize_all_the_things(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/customize_all_the_things.yaml')
+
+class TestRemoteSchemaRequestPayload:
+    dir = 'queries/remote_schemas'
+    teardown = {"type": "clear_metadata", "args": {}}
+
+    @pytest.fixture(autouse=True)
+    def transact(self, hge_ctx):
+        q = mk_add_remote_q('echo request', 'http://localhost:5000/hello-echo-request-graphql')
+        st_code, resp = hge_ctx.v1q(q)
+        assert st_code == 200, resp
+        yield
+        hge_ctx.v1q(self.teardown)
+
+    @pytest.mark.allow_server_upgrade_test
+    def test_remote_schema_operation_name_in_response(self, hge_ctx):
+
+        with open('queries/remote_schemas/basic_query_with_op_name.yaml') as f:
+            query = yaml.load(f)
+        resp, _ = check_query(hge_ctx, query)
+
+        assert resp['data']['hello']['operationName'] == "HelloMe"

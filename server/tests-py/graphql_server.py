@@ -48,6 +48,26 @@ class HelloGraphQL(RequestHandler):
         res = hello_schema.execute(request.json['query'])
         return mkJSONResp(res)
 
+class HelloGraphQLEchoRequest(RequestHandler):
+    def get(self, request):
+        return Response(HTTPStatus.METHOD_NOT_ALLOWED)
+
+    def post(self, request):
+        if not request.json:
+            return Response(HTTPStatus.BAD_REQUEST)
+        res = hello_schema.execute(request.json['query'])
+        respDict = res.to_dict()
+
+        # Return the result as it is, when we send an introspection query
+        if respDict.get('data',{}).get('__schema',{}):
+            return mkJSONResp(res)
+        # Edit the result to contain, the 'request payload' as part of the response.
+        # We can then use this to assert the request payload with the expected response.
+        else:
+            respDict.get('data', {})['hello'] = request.json
+            return Response(HTTPStatus.OK, res.to_dict(),
+                    {'Content-Type': 'application/json'})
+
 class HelloGraphQLExtensions(RequestHandler):
     def get(self, request):
         return Response(HTTPStatus.METHOD_NOT_ALLOWED)
@@ -808,6 +828,7 @@ class MessagesGraphQL(RequestHandler):
 handlers = MkHandlers({
     '/hello': HelloWorldHandler,
     '/hello-graphql': HelloGraphQL,
+    '/hello-echo-request-graphql': HelloGraphQLEchoRequest,
     '/hello-graphql-extensions': HelloGraphQLExtensions,
     '/user-graphql': UserGraphQL,
     '/country-graphql': CountryGraphQL,

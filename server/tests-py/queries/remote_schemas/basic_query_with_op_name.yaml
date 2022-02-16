@@ -1,0 +1,9 @@
+description: Simple GraphQL query with Operation Name
+url: /v1/graphql
+status: 200
+query:
+  query: |
+    query HelloMe {
+      hello
+    }
+  operationName: HelloMe
