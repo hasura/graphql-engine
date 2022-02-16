@@ -4,8 +4,8 @@
 
 .. _clean_up_scheduled_triggers_data:
 
-Clean up scheduled triggers data
-================================
+Cleaning up scheduled triggers data
+===================================
 
 .. contents:: Table of contents
    :backlinks: none
@@ -15,7 +15,7 @@ Clean up scheduled triggers data
 Introduction
 ------------
 
-Hasura stores event data associated with scheduled triggers in **the `hdb_catalog` schema of the Hasura metadata
+Hasura stores event data associated with scheduled triggers in **the "hdb_catalog" schema of the Hasura metadata
 database**.
 
 If there are lots of events, the events tables can get huge and you may want to prune them.

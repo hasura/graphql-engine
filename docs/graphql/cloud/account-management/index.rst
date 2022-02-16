@@ -21,4 +21,4 @@ On your Hasura Cloud ``My Account`` page, you can manage account-related setting
    :maxdepth: 1
    :titlesonly:
 
-   email-change
+   Change email <email-change>
