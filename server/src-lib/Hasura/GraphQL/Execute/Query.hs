@@ -114,7 +114,7 @@ convertQuerySelSet
               pure $ ExecStepDB [] (AB.mkAnyBackend dbStepInfo) remoteJoins
         RFRemote rf -> do
           RemoteFieldG remoteSchemaInfo resultCustomizer remoteField <- runVariableCache $ for rf $ resolveRemoteVariable userInfo
-          pure $ buildExecStepRemote remoteSchemaInfo resultCustomizer G.OperationTypeQuery [G.SelectionField remoteField]
+          pure $ buildExecStepRemote remoteSchemaInfo resultCustomizer G.OperationTypeQuery [G.SelectionField remoteField] (GH._grOperationName gqlUnparsed)
         RFAction action -> do
           let (noRelsDBAST, remoteJoins) = RJ.getRemoteJoinsActionQuery action
           (actionExecution, actionName, fch) <- pure $ case noRelsDBAST of

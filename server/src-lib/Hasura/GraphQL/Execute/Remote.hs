@@ -70,16 +70,18 @@ buildExecStepRemote ::
   ResultCustomizer ->
   G.OperationType ->
   G.SelectionSet G.NoFragments Variable ->
+  Maybe OperationName ->
   ExecutionStep
-buildExecStepRemote remoteSchemaInfo resultCustomizer tp selSet =
+buildExecStepRemote remoteSchemaInfo resultCustomizer tp selSet operationName =
   let unresolvedSelSet = unresolveVariables selSet
       allVars = map mkVariableDefinitionAndValue $ Set.toList $ collectVariables selSet
       varValues = Map.fromList $ map snd allVars
       varValsM = bool (Just varValues) Nothing $ Map.null varValues
       varDefs = map fst allVars
-      _grQuery = G.TypedOperationDefinition tp Nothing varDefs [] unresolvedSelSet
+      _grQuery = G.TypedOperationDefinition tp (_unOperationName <$> operationName) varDefs [] unresolvedSelSet
       _grVariables = varValsM
-   in ExecStepRemote remoteSchemaInfo resultCustomizer GH.GQLReq {_grOperationName = Nothing, ..}
+      _grOperationName = operationName
+   in ExecStepRemote remoteSchemaInfo resultCustomizer GH.GQLReq {..}
 
 -- | Association between keys uniquely identifying some remote JSON variable and
 -- an 'Int' identifier that will be used to construct a valid variable name to

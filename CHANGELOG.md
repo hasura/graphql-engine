@@ -24,7 +24,7 @@ The optimization can be enabled using the
 
 ### Bug fixes and improvements
 (Add entries below in the order of server, console, cli, docs, others)
-
+- server: add operation name in the request sent to remote schemas
 - server: add support for scalar response types for actions (issue #7805)
 - server: fix nullable action response (issue #4405)
 - console: add support for remote database relationships
