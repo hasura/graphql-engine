@@ -24466,7 +24466,7 @@ setupAuthMode :: (ForkableMonadIO m, HasReporter m) => HashSet AdminSecretHash -
 -- | Authenticate the request using the headers and the configured
 --   <a>AuthMode</a>.
 getUserInfoWithExpTime :: forall m. (MonadIO m, MonadBaseControl IO m, MonadError QErr m, MonadTrace m) => Logger Hasura -> Manager -> [Header] -> AuthMode -> Maybe ReqsText -> m (UserInfo, Maybe UTCTime, [Header])
-getUserInfoWithExpTime_ :: forall m _Manager _Logger_Hasura. (MonadIO m, MonadError QErr m) => (_Logger_Hasura -> _Manager -> AuthHook -> [Header] -> Maybe ReqsText -> m (UserInfo, Maybe UTCTime, [Header])) -> ([JWTCtx] -> [Header] -> Maybe RoleName -> m (UserInfo, Maybe UTCTime, [Header])) -> _Logger_Hasura -> _Manager -> [Header] -> AuthMode -> Maybe ReqsText -> m (UserInfo, Maybe UTCTime, [Header])
+getUserInfoWithExpTime_ :: forall m mgr logger. (MonadIO m, MonadError QErr m) => (logger -> mgr -> AuthHook -> [Header] -> Maybe ReqsText -> m (UserInfo, Maybe UTCTime, [Header])) -> ([JWTCtx] -> [Header] -> Maybe RoleName -> m (UserInfo, Maybe UTCTime, [Header])) -> logger -> mgr -> [Header] -> AuthMode -> Maybe ReqsText -> m (UserInfo, Maybe UTCTime, [Header])
 instance GHC.Classes.Eq Hasura.Server.Auth.AdminSecretHash
 instance GHC.Classes.Ord Hasura.Server.Auth.AdminSecretHash
 instance GHC.Classes.Eq Hasura.Server.Auth.AuthMode

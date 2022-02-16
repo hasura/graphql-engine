@@ -57,7 +57,7 @@
 </span><span id="line-57"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Text</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">T</span></span><span>
 </span><span id="line-58"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Database.PG.Query</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Q</span></span><span>
 </span><span id="line-59"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
-</span><span id="line-60"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Network.HTTP.Types</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">N</span></span><span>
+</span><span id="line-60"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Network.HTTP.Types</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">HTTP</span></span><span>
 </span><span id="line-61"></span><span>
 </span><span id="line-62"></span><span class="hs-keyword">data</span><span> </span><span id="Code"><span class="annot"><a href="Hasura.Base.Error.html#Code"><span class="hs-identifier hs-var">Code</span></a></span></span><span>
 </span><span id="line-63"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="AccessDenied"><span class="annot"><a href="Hasura.Base.Error.html#AccessDenied"><span class="hs-identifier hs-var">AccessDenied</span></a></span></span><span>
@@ -253,7 +253,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span id="line-149"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="qePath"><span class="annot"><span class="annottext">QErr -&gt; JSONPath
 </span><a href="Hasura.Base.Error.html#qePath"><span class="hs-identifier hs-var hs-var">qePath</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><span class="hs-identifier hs-type">JSONPath</span></span><span class="hs-special">,</span><span>
 </span><span id="line-150"></span><span>    </span><span id="qeStatus"><span class="annot"><span class="annottext">QErr -&gt; Status
-</span><a href="Hasura.Base.Error.html#qeStatus"><span class="hs-identifier hs-var hs-var">qeStatus</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><span class="hs-identifier hs-type">N.Status</span></span><span class="hs-special">,</span><span>
+</span><a href="Hasura.Base.Error.html#qeStatus"><span class="hs-identifier hs-var hs-var">qeStatus</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><span class="hs-identifier hs-type">HTTP.Status</span></span><span class="hs-special">,</span><span>
 </span><span id="line-151"></span><span>    </span><span id="qeError"><span class="annot"><span class="annottext">QErr -&gt; Text
 </span><a href="Hasura.Base.Error.html#qeError"><span class="hs-identifier hs-var hs-var">qeError</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">,</span><span>
 </span><span id="line-152"></span><span>    </span><span id="qeCode"><span class="annot"><span class="annottext">QErr -&gt; Code
@@ -682,7 +682,7 @@ forall a. ToJSON a =&gt; a -&gt; Value
 </span><a href="#local-6989586621688006862"><span class="hs-identifier hs-var">c</span></a></span></span><span> </span><span id="local-6989586621688006861"><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621688006861"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">JSONPath -&gt; Status -&gt; Text -&gt; Code -&gt; Maybe QErrExtra -&gt; QErr
 </span><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-var">QErr</span></a></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span> </span><span class="annot"><span class="annottext">Status
-</span><span class="hs-identifier hs-var">N.status400</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-identifier hs-var">HTTP.status400</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621688006861"><span class="hs-identifier hs-var">t</span></a></span><span> </span><span class="annot"><span class="annottext">Code
 </span><a href="#local-6989586621688006862"><span class="hs-identifier hs-var">c</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe QErrExtra
 forall a. Maybe a
@@ -694,7 +694,7 @@ forall a. Maybe a
 </span><a href="#local-6989586621688006859"><span class="hs-identifier hs-var">c</span></a></span></span><span> </span><span id="local-6989586621688006858"><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621688006858"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">JSONPath -&gt; Status -&gt; Text -&gt; Code -&gt; Maybe QErrExtra -&gt; QErr
 </span><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-var">QErr</span></a></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span> </span><span class="annot"><span class="annottext">Status
-</span><span class="hs-identifier hs-var">N.status404</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-identifier hs-var">HTTP.status404</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621688006858"><span class="hs-identifier hs-var">t</span></a></span><span> </span><span class="annot"><span class="annottext">Code
 </span><a href="#local-6989586621688006859"><span class="hs-identifier hs-var">c</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe QErrExtra
 forall a. Maybe a
@@ -706,7 +706,7 @@ forall a. Maybe a
 </span><a href="#local-6989586621688006856"><span class="hs-identifier hs-var">c</span></a></span></span><span> </span><span id="local-6989586621688006855"><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621688006855"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">JSONPath -&gt; Status -&gt; Text -&gt; Code -&gt; Maybe QErrExtra -&gt; QErr
 </span><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-var">QErr</span></a></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span> </span><span class="annot"><span class="annottext">Status
-</span><span class="hs-identifier hs-var">N.status405</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-identifier hs-var">HTTP.status405</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621688006855"><span class="hs-identifier hs-var">t</span></a></span><span> </span><span class="annot"><span class="annottext">Code
 </span><a href="#local-6989586621688006856"><span class="hs-identifier hs-var">c</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe QErrExtra
 forall a. Maybe a
@@ -718,7 +718,7 @@ forall a. Maybe a
 </span><a href="#local-6989586621688006853"><span class="hs-identifier hs-var">c</span></a></span></span><span> </span><span id="local-6989586621688006852"><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621688006852"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">JSONPath -&gt; Status -&gt; Text -&gt; Code -&gt; Maybe QErrExtra -&gt; QErr
 </span><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-var">QErr</span></a></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span> </span><span class="annot"><span class="annottext">Status
-</span><span class="hs-identifier hs-var">N.status401</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-identifier hs-var">HTTP.status401</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621688006852"><span class="hs-identifier hs-var">t</span></a></span><span> </span><span class="annot"><span class="annottext">Code
 </span><a href="#local-6989586621688006853"><span class="hs-identifier hs-var">c</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe QErrExtra
 forall a. Maybe a
@@ -730,7 +730,7 @@ forall a. Maybe a
 </span><a href="#local-6989586621688006850"><span class="hs-identifier hs-var">c</span></a></span></span><span> </span><span id="local-6989586621688006849"><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621688006849"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">JSONPath -&gt; Status -&gt; Text -&gt; Code -&gt; Maybe QErrExtra -&gt; QErr
 </span><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-var">QErr</span></a></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span> </span><span class="annot"><span class="annottext">Status
-</span><span class="hs-identifier hs-var">N.status409</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-identifier hs-var">HTTP.status409</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621688006849"><span class="hs-identifier hs-var">t</span></a></span><span> </span><span class="annot"><span class="annottext">Code
 </span><a href="#local-6989586621688006850"><span class="hs-identifier hs-var">c</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe QErrExtra
 forall a. Maybe a
@@ -742,7 +742,7 @@ forall a. Maybe a
 </span><a href="#local-6989586621688006847"><span class="hs-identifier hs-var">c</span></a></span></span><span> </span><span id="local-6989586621688006846"><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621688006846"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">JSONPath -&gt; Status -&gt; Text -&gt; Code -&gt; Maybe QErrExtra -&gt; QErr
 </span><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-var">QErr</span></a></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span> </span><span class="annot"><span class="annottext">Status
-</span><span class="hs-identifier hs-var">N.status429</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-identifier hs-var">HTTP.status429</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621688006846"><span class="hs-identifier hs-var">t</span></a></span><span> </span><span class="annot"><span class="annottext">Code
 </span><a href="#local-6989586621688006847"><span class="hs-identifier hs-var">c</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe QErrExtra
 forall a. Maybe a
@@ -754,7 +754,7 @@ forall a. Maybe a
 </span><a href="#local-6989586621688006844"><span class="hs-identifier hs-var">c</span></a></span></span><span> </span><span id="local-6989586621688006843"><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621688006843"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">JSONPath -&gt; Status -&gt; Text -&gt; Code -&gt; Maybe QErrExtra -&gt; QErr
 </span><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-var">QErr</span></a></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span> </span><span class="annot"><span class="annottext">Status
-</span><span class="hs-identifier hs-var">N.status500</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-identifier hs-var">HTTP.status500</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621688006843"><span class="hs-identifier hs-var">t</span></a></span><span> </span><span class="annot"><span class="annottext">Code
 </span><a href="#local-6989586621688006844"><span class="hs-identifier hs-var">c</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe QErrExtra
 forall a. Maybe a
@@ -968,7 +968,7 @@ forall (m :: * -&gt; *) a. QErrM m =&gt; (QErr -&gt; QErr) -&gt; m a -&gt; m a
 </span><a href="#local-6989586621688006781"><span class="hs-identifier hs-var">i</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">JSONPath -&gt; Status -&gt; Text -&gt; Code -&gt; Maybe QErrExtra -&gt; QErr
 </span><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-var">QErr</span></a></span><span> </span><span class="annot"><span class="annottext">JSONPath
 </span><a href="#local-6989586621688006784"><span class="hs-identifier hs-var">path</span></a></span><span> </span><span class="annot"><span class="annottext">Status
-</span><span class="hs-identifier hs-var">N.status500</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; Text
+</span><span class="hs-identifier hs-var">HTTP.status500</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; Text
 </span><a href="#local-6989586621688006785"><span class="hs-identifier hs-var">f</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621688006783"><span class="hs-identifier hs-var">s</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Code
 </span><a href="#local-6989586621688006782"><span class="hs-identifier hs-var">c</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe QErrExtra
@@ -1304,7 +1304,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">JSONPath -&gt; Status -&gt; Text -&gt; Code -&gt; Maybe QErrExtra -&gt; QErr
 </span><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-var">QErr</span></a></span><span> </span><span class="annot"><span class="annottext">JSONPath
 </span><a href="#local-6989586621688006702"><span class="hs-identifier hs-var">path</span></a></span><span> </span><span class="annot"><span class="annottext">Status
-</span><span class="hs-identifier hs-var">N.status400</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String -&gt; Text
+</span><span class="hs-identifier hs-var">HTTP.status400</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String -&gt; Text
 </span><span class="hs-identifier hs-var">T.pack</span></span><span> </span><span class="annot"><span class="annottext">(String -&gt; Text) -&gt; String -&gt; Text
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">ShowS
