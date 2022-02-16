@@ -48,19 +48,19 @@ import Hasura.Server.Auth.WebHook
 import Hasura.Server.Utils
 import Hasura.Session
 import Hasura.Tracing qualified as Tracing
-import Network.HTTP.Client qualified as H
-import Network.HTTP.Types qualified as N
+import Network.HTTP.Client qualified as HTTP
+import Network.HTTP.Types qualified as HTTP
 
 -- | Typeclass representing the @UserInfo@ authorization and resolving effect
 class (Monad m) => UserAuthentication m where
   resolveUserInfo ::
     Logger Hasura ->
-    H.Manager ->
+    HTTP.Manager ->
     -- | request headers
-    [N.Header] ->
+    [HTTP.Header] ->
     AuthMode ->
     Maybe ReqsText ->
-    m (Either QErr (UserInfo, Maybe UTCTime, [N.Header]))
+    m (Either QErr (UserInfo, Maybe UTCTime, [HTTP.Header]))
 
 -- | The hashed admin password. 'hashAdminSecret' is our public interface for
 -- constructing the secret.
@@ -112,7 +112,7 @@ setupAuthMode ::
   Maybe AuthHook ->
   [JWTConfig] ->
   Maybe RoleName ->
-  H.Manager ->
+  HTTP.Manager ->
   Logger Hasura ->
   ExceptT Text (ManagedT m) AuthMode
 setupAuthMode adminSecretHashSet mWebHook mJwtSecrets mUnAuthRole httpManager logger =
@@ -185,33 +185,37 @@ getUserInfoWithExpTime ::
   forall m.
   (MonadIO m, MonadBaseControl IO m, MonadError QErr m, Tracing.MonadTrace m) =>
   Logger Hasura ->
-  H.Manager ->
-  [N.Header] ->
+  HTTP.Manager ->
+  [HTTP.Header] ->
   AuthMode ->
   Maybe ReqsText ->
-  m (UserInfo, Maybe UTCTime, [N.Header])
+  m (UserInfo, Maybe UTCTime, [HTTP.Header])
 getUserInfoWithExpTime = getUserInfoWithExpTime_ userInfoFromAuthHook processJwt
 
 -- Broken out for testing with mocks:
 getUserInfoWithExpTime_ ::
-  forall m _Manager _Logger_Hasura.
+  forall m mgr logger.
   (MonadIO m, MonadError QErr m) =>
   -- | mock 'userInfoFromAuthHook'
-  ( _Logger_Hasura ->
-    _Manager ->
+  ( logger ->
+    mgr ->
     AuthHook ->
-    [N.Header] ->
+    [HTTP.Header] ->
     Maybe ReqsText ->
-    m (UserInfo, Maybe UTCTime, [N.Header])
+    m (UserInfo, Maybe UTCTime, [HTTP.Header])
   ) ->
   -- | mock 'processJwt'
-  ([JWTCtx] -> [N.Header] -> Maybe RoleName -> m (UserInfo, Maybe UTCTime, [N.Header])) ->
-  _Logger_Hasura ->
-  _Manager ->
-  [N.Header] ->
+  ( [JWTCtx] ->
+    [HTTP.Header] ->
+    Maybe RoleName ->
+    m (UserInfo, Maybe UTCTime, [HTTP.Header])
+  ) ->
+  logger ->
+  mgr ->
+  [HTTP.Header] ->
   AuthMode ->
   Maybe ReqsText ->
-  m (UserInfo, Maybe UTCTime, [N.Header])
+  m (UserInfo, Maybe UTCTime, [HTTP.Header])
 getUserInfoWithExpTime_ userInfoFromAuthHook_ processJwt_ logger manager rawHeaders authMode reqs = case authMode of
   AMNoAuth -> withNoExpTime $ mkUserInfoFallbackAdminRole UAuthNotSet
   -- If hasura was started with an admin secret we:
@@ -246,7 +250,7 @@ getUserInfoWithExpTime_ userInfoFromAuthHook_ processJwt_ logger manager rawHead
     sessionVariables = mkSessionVariablesHeaders rawHeaders
 
     checkingSecretIfSent ::
-      Set.HashSet AdminSecretHash -> m (UserInfo, Maybe UTCTime, [N.Header]) -> m (UserInfo, Maybe UTCTime, [N.Header])
+      Set.HashSet AdminSecretHash -> m (UserInfo, Maybe UTCTime, [HTTP.Header]) -> m (UserInfo, Maybe UTCTime, [HTTP.Header])
     checkingSecretIfSent adminSecretHashSet actionIfNoAdminSecret = do
       let maybeRequestAdminSecret =
             foldl1 (<|>) $

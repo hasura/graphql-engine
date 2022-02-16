@@ -17,7 +17,7 @@ import Hasura.HTTP
 import Hasura.Logging (LoggerCtx (..))
 import Hasura.Prelude
 import Hasura.Server.Version (Version, currentVersion)
-import Network.HTTP.Client qualified as H
+import Network.HTTP.Client qualified as HTTP
 import Network.URI.Encode qualified as URI
 import Network.Wreq qualified as Wreq
 import System.Log.FastLogger qualified as FL
@@ -31,7 +31,7 @@ newtype UpdateInfo = UpdateInfo
 -- aesonPrefix, but needs to remain like this for backwards compatibility
 $(A.deriveJSON (A.aesonDrop 2 A.snakeCase) ''UpdateInfo)
 
-checkForUpdates :: LoggerCtx a -> H.Manager -> IO void
+checkForUpdates :: LoggerCtx a -> HTTP.Manager -> IO void
 checkForUpdates (LoggerCtx loggerSet _ _ _) manager = do
   let options = wreqOptions manager []
   url <- getUrl
@@ -61,5 +61,5 @@ checkForUpdates (LoggerCtx loggerSet _ _ _) manager = do
     -- ignoring if there is any error in response and returning the current version
     decodeResp = pure . fromRight (UpdateInfo currentVersion) . A.eitherDecode
 
-    ignoreHttpErr :: H.HttpException -> IO ()
+    ignoreHttpErr :: HTTP.HttpException -> IO ()
     ignoreHttpErr _ = return ()

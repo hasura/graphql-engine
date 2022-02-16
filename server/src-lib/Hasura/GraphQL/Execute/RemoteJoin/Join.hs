@@ -36,7 +36,7 @@ import Hasura.Session
 import Hasura.Tracing qualified as Tracing
 import Language.GraphQL.Draft.Syntax qualified as G
 import Network.HTTP.Client qualified as HTTP
-import Network.HTTP.Types qualified as N
+import Network.HTTP.Types qualified as HTTP
 
 forRemoteJoins ::
   (Applicative f) =>
@@ -58,7 +58,7 @@ processRemoteJoins ::
   L.Logger L.Hasura ->
   Env.Environment ->
   HTTP.Manager ->
-  [N.Header] ->
+  [HTTP.Header] ->
   UserInfo ->
   EncJSON ->
   Maybe RemoteJoins ->
@@ -91,7 +91,7 @@ processRemoteJoins_ ::
   L.Logger L.Hasura ->
   Env.Environment ->
   HTTP.Manager ->
-  [N.Header] ->
+  [HTTP.Header] ->
   UserInfo ->
   f JO.Value ->
   RemoteJoins ->

@@ -25,12 +25,12 @@ import Hasura.Server.Init.Config (KeepAliveDelay (..))
 import Hasura.Server.Metrics (ServerMetrics (..))
 import Hasura.Server.Types (ReadOnlyMode (..))
 import Hasura.Session
-import Network.HTTP.Client qualified as H
-import Network.HTTP.Types qualified as H
+import Network.HTTP.Client qualified as HTTP
+import Network.HTTP.Types qualified as HTTP
 import Network.Wai.Extended qualified as Wai
 import StmContainers.Map qualified as STMMap
 
-newtype WsHeaders = WsHeaders {unWsHeaders :: [H.Header]}
+newtype WsHeaders = WsHeaders {unWsHeaders :: [HTTP.Header]}
   deriving (Show, Eq)
 
 data ErrRespType
@@ -51,7 +51,7 @@ data WsClientState = WsClientState
     -- | the JWT/token expiry time, if any
     wscsTokenExpTime :: !(Maybe TC.UTCTime),
     -- | headers from the client (in conn params) to forward to the remote schema
-    wscsReqHeaders :: ![H.Header],
+    wscsReqHeaders :: ![HTTP.Header],
     -- | IP address required for 'MonadGQLAuthorization'
     wscsIpAddress :: !Wai.IpAddress
   }
@@ -73,7 +73,7 @@ data WSServerEnv = WSServerEnv
     _wseLiveQMap :: !LQ.LiveQueriesState,
     -- | an action that always returns the latest version of the schema cache. See 'SchemaCacheRef'.
     _wseGCtxMap :: !(IO (SchemaCache, SchemaCacheVer)),
-    _wseHManager :: !H.Manager,
+    _wseHManager :: !HTTP.Manager,
     _wseCorsPolicy :: !CorsPolicy,
     _wseSQLCtx :: !SQLGenCtx,
     _wseReadOnlyMode :: ReadOnlyMode,

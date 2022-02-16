@@ -10,7 +10,7 @@ import Data.Text.Encoding qualified as TE
 import Hasura.Prelude
 import Hasura.Server.Cors
 import Hasura.Server.Utils
-import Network.HTTP.Types qualified as H
+import Network.HTTP.Types qualified as HTTP
 import Network.Wai
 
 corsMiddleware :: CorsPolicy -> Middleware
@@ -40,7 +40,7 @@ corsMiddleware policy app req sendResp = do
       setHeaders (mkPreFlightHeaders requestedHeaders) $
         injectCorsHeaders origin emptyResponse
 
-    emptyResponse = responseLBS H.status204 [] ""
+    emptyResponse = responseLBS HTTP.status204 [] ""
     requestedHeaders =
       fromMaybe "" $
         getRequestHeader "Access-Control-Request-Headers" $
