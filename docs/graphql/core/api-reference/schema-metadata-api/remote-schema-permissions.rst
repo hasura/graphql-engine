@@ -7,6 +7,13 @@
 Schema/Metadata API Reference: Remote Schema Permissions (Deprecated)
 =====================================================================
 
+.. admonition:: Deprecation
+
+  In versions ``v2.0.0`` and above, the schema/metadata API is deprecated in favour of the :ref:`schema API <schema_apis>` and the
+  :ref:`metadata API <metadata_apis>`.
+
+  Though for backwards compatibility, the schema/metadata APIs will continue to function.
+
 .. contents:: Table of contents
    :backlinks: none
    :depth: 1
@@ -22,13 +29,6 @@ Remote schema permissions can be defined to:
 
 By default, the ``admin`` role has unrestricted access to
 the  remote schema.
-
-.. admonition:: Deprecation
-
-  In versions ``v2.0.0`` and above, the schema/metadata API is deprecated in favour of the :ref:`schema API <schema_apis>` and the
-  :ref:`metadata API <metadata_apis>`.
-
-  Though for backwards compatibility, the schema/metadata APIs will continue to function.
 
 .. _schema_metadata_add_remote_schema_permissions:
 

@@ -33,18 +33,18 @@ The optimization can be enabled using the
 - server: (Postgres, Citus, and MSSQL backends) Identity columns and computed
   columns are now marked immutable, removing them from the schema of insert and
   update mutations.
-- server: Fix graphql-engine/issues/4633: We can now insert multiple objects
+- server: allow inserting more than 1 row simultaneously into table with generated columns (fix #4633)
   that have generated columns in Postgres.
 - server: postgres: return a single entry per row (selected randomly) when an object relationship is misconfigured one-to-many
 - server: Updates Kriti to v0.3.0
 - server: add operation name in the request sent to remote schemas
-- server: add support for scalar response types for actions (issue #7805)
-- server: fix nullable action response (issue #4405)
-- server: add support for customization of table & computed field GraphQL schema descriptions (#7496)
+- server: add support for scalar response types for actions (fix #7805)
+- server: fix nullable action response (fix #4405)
+- server: add support for customization of table & computed field GraphQL schema descriptions (fix #7496)
 - server: classify MSSQL exceptions and improve API error responses
 - console: add support for remote database relationships
-- console: enable support for update permissions for mssql #3591
-- cli: skip tls verfication for all API requests when `insecure-skip-tls-verify` flag is set (#4926)
+- console: enable support for update permissions for mssql
+- cli: skip tls verfication for all API requests when `insecure-skip-tls-verify` flag is set (fix #4926)
 
 ## v2.2.0
 
