@@ -23667,7 +23667,7 @@ mkVariableDefinitionAndValue :: Variable -> (VariableDefinition, (Name, Value))
 unresolveVariables :: forall fragments. Functor fragments => SelectionSet fragments Variable -> SelectionSet fragments Name
 collectVariables :: forall fragments var. (Foldable fragments, Hashable var, Eq var) => SelectionSet fragments var -> HashSet var
 collectVariablesFromSelectionSet :: SelectionSet NoFragments Variable -> [(VariableDefinition, (Name, Value))]
-buildExecStepRemote :: RemoteSchemaInfo -> ResultCustomizer -> OperationType -> SelectionSet NoFragments Variable -> ExecutionStep
+buildExecStepRemote :: RemoteSchemaInfo -> ResultCustomizer -> OperationType -> SelectionSet NoFragments Variable -> Maybe OperationName -> ExecutionStep
 
 -- | Association between keys uniquely identifying some remote JSON
 --   variable and an <a>Int</a> identifier that will be used to construct a
