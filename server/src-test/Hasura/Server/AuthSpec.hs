@@ -21,7 +21,7 @@ import Hasura.Server.Auth.JWT hiding (processJwt)
 import Hasura.Server.Utils
 import Hasura.Session
 import Hasura.Tracing qualified as Tracing
-import Network.HTTP.Types qualified as N
+import Network.HTTP.Types qualified as HTTP
 import Test.Hspec
 
 spec :: Spec
@@ -44,7 +44,7 @@ getUserInfoWithExpTimeTests = describe "getUserInfo" $ do
   ---- FUNCTION UNDER TEST:
   let gqlUserInfoWithExpTime ::
         J.Object ->
-        [N.Header] ->
+        [HTTP.Header] ->
         AuthMode ->
         Maybe ReqsText ->
         IO (Either Code RoleName)
@@ -73,7 +73,7 @@ getUserInfoWithExpTimeTests = describe "getUserInfo" $ do
 
   let getUserInfoWithExpTime ::
         J.Object ->
-        [N.Header] ->
+        [HTTP.Header] ->
         AuthMode ->
         IO (Either Code RoleName)
       getUserInfoWithExpTime o claims authMode = gqlUserInfoWithExpTime o claims authMode Nothing

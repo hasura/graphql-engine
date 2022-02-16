@@ -26,8 +26,7 @@ import Hasura.Server.Logging
 import Hasura.Server.Utils
 import Hasura.Session
 import Hasura.Tracing qualified as Tracing
-import Network.HTTP.Client.Transformable qualified as H
-import Network.HTTP.Types qualified as N
+import Network.HTTP.Client.Transformable qualified as HTTP
 import Network.Wreq qualified as Wreq
 
 data AuthHookType
@@ -47,10 +46,10 @@ data AuthHookG a b = AuthHookG
 
 type AuthHook = AuthHookG Text AuthHookType
 
-hookMethod :: AuthHook -> N.StdMethod
+hookMethod :: AuthHook -> HTTP.StdMethod
 hookMethod authHook = case ahType authHook of
-  AHTGet -> N.GET
-  AHTPost -> N.POST
+  AHTGet -> HTTP.GET
+  AHTPost -> HTTP.POST
 
 -- | Makes an authentication request to the given AuthHook and returns
 --   UserInfo parsed from the response, plus an expiration time if one
@@ -60,11 +59,11 @@ userInfoFromAuthHook ::
   forall m.
   (MonadIO m, MonadBaseControl IO m, MonadError QErr m, Tracing.MonadTrace m) =>
   Logger Hasura ->
-  H.Manager ->
+  HTTP.Manager ->
   AuthHook ->
-  [N.Header] ->
+  [HTTP.Header] ->
   Maybe GH.ReqsText ->
-  m (UserInfo, Maybe UTCTime, [N.Header])
+  m (UserInfo, Maybe UTCTime, [HTTP.Header])
 userInfoFromAuthHook logger manager hook reqHeaders reqs = do
   resp <- (`onLeft` logAndThrow) =<< try performHTTPRequest
   let status = resp ^. Wreq.responseStatus
@@ -76,24 +75,24 @@ userInfoFromAuthHook logger manager hook reqHeaders reqs = do
     performHTTPRequest :: m (Wreq.Response BL.ByteString)
     performHTTPRequest = do
       let url = T.unpack $ ahUrl hook
-      req <- liftIO $ H.mkRequestThrow $ T.pack url
+      req <- liftIO $ HTTP.mkRequestThrow $ T.pack url
       Tracing.tracedHttpRequest req \req' -> liftIO do
         case ahType hook of
           AHTGet -> do
             let isCommonHeader = (`elem` commonClientHeadersIgnored)
                 filteredHeaders = filter (not . isCommonHeader . fst) reqHeaders
-                req'' = req' & set H.headers (addDefaultHeaders filteredHeaders)
-            H.performRequest req'' manager
+                req'' = req' & set HTTP.headers (addDefaultHeaders filteredHeaders)
+            HTTP.performRequest req'' manager
           AHTPost -> do
             let contentType = ("Content-Type", "application/json")
                 headersPayload = J.toJSON $ Map.fromList $ hdrsToText reqHeaders
                 req'' =
-                  req & set H.method "POST"
-                    & set H.headers (addDefaultHeaders [contentType])
-                    & set H.body (Just $ J.encode $ object ["headers" J..= headersPayload, "request" J..= reqs])
-            H.performRequest req'' manager
+                  req & set HTTP.method "POST"
+                    & set HTTP.headers (addDefaultHeaders [contentType])
+                    & set HTTP.body (Just $ J.encode $ object ["headers" J..= headersPayload, "request" J..= reqs])
+            HTTP.performRequest req'' manager
 
-    logAndThrow :: H.HttpException -> m a
+    logAndThrow :: HTTP.HttpException -> m a
     logAndThrow err = do
       unLogger logger $
         WebHookLog
@@ -110,19 +109,19 @@ mkUserInfoFromResp ::
   (MonadIO m, MonadError QErr m) =>
   Logger Hasura ->
   Text ->
-  N.StdMethod ->
-  N.Status ->
+  HTTP.StdMethod ->
+  HTTP.Status ->
   BL.ByteString ->
-  [N.Header] ->
-  m (UserInfo, Maybe UTCTime, [N.Header])
+  [HTTP.Header] ->
+  m (UserInfo, Maybe UTCTime, [HTTP.Header])
 mkUserInfoFromResp (Logger logger) url method statusCode respBody respHdrs
-  | statusCode == N.status200 =
+  | statusCode == HTTP.status200 =
     case eitherDecode respBody of
       Left e -> do
         logError
         throw500 $ "Invalid response from authorization hook: " <> T.pack e
       Right rawHeaders -> getUserInfoFromHdrs rawHeaders respHdrs
-  | statusCode == N.status401 = do
+  | statusCode == HTTP.status401 = do
     logError
     throw401 "Authentication hook unauthorized this request"
   | otherwise = do
