@@ -83,14 +83,8 @@ fromExpression =
     CastExpression e t dataLength ->
       "CAST(" <+> fromExpression e
         <+> " AS "
-        <+> fromString (T.unpack $ scalarTypeDBName t)
-        <+> fromDataLength
+        <+> fromString (T.unpack $ scalarTypeDBName dataLength t)
         <+> ")"
-      where
-        fromDataLength = case dataLength of
-          DataLengthUnspecified -> fromString ""
-          DataLengthInt len -> "(" <+> fromString (show len) <+> ")"
-          DataLengthMax -> "(max)"
     JsonQueryExpression e -> "JSON_QUERY(" <+> fromExpression e <+> ")"
     JsonValueExpression e path ->
       "JSON_VALUE(" <+> fromExpression e <+> fromPath path <+> ")"

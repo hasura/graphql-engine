@@ -82,7 +82,7 @@ prepareValueQuery sessionVariables =
             pure baseTy
           CollectableTypeArray {} ->
             throw400 NotSupported "Array types are currently not supported in MS SQL Server"
-        <*> pure DataLengthUnspecified
+        <*> pure DataLengthMax
 
 planSubscription ::
   MonadError QErr m =>

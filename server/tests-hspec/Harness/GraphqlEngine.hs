@@ -10,8 +10,10 @@ module Harness.GraphqlEngine
     postWithHeaders,
     postWithHeaders_,
     postMetadata_,
-    postGraphql,
     postGraphqlYaml,
+    postGraphqlYamlWithHeaders,
+    postGraphql,
+    postGraphqlWithHeaders,
 
     -- ** Misc.
     setSource,
@@ -92,13 +94,27 @@ postWithHeaders_ ::
 postWithHeaders_ state path headers =
   void . postWithHeaders state path headers
 
+-- | Same as 'post', but defaults to the graphql end-point.
+postGraphqlYaml ::
+  HasCallStack => State -> Value -> IO Value
+postGraphqlYaml state = postGraphqlYamlWithHeaders state mempty
+
 -- | Same as 'postWithHeaders', but defaults to the graphql end-point.
-postGraphqlYaml :: HasCallStack => State -> Value -> IO Value
-postGraphqlYaml state = post state "/v1/graphql"
+postGraphqlYamlWithHeaders ::
+  HasCallStack => State -> Http.RequestHeaders -> Value -> IO Value
+postGraphqlYamlWithHeaders state headers =
+  postWithHeaders state "/v1/graphql" headers
 
 -- | Same as 'postGraphqlYaml', but adds the @{query:..}@ wrapper.
 postGraphql :: HasCallStack => State -> Value -> IO Value
-postGraphql state value = postGraphqlYaml state (object ["query" .= value])
+postGraphql state value =
+  postGraphqlYaml state (object ["query" .= value])
+
+-- | Same as 'postGraphqlYamlWithHeaders', but adds the @{query:..}@ wrapper.
+postGraphqlWithHeaders ::
+  HasCallStack => State -> Http.RequestHeaders -> Value -> IO Value
+postGraphqlWithHeaders state headers value =
+  postGraphqlYamlWithHeaders state headers (object ["query" .= value])
 
 -- | Same as 'post_', but defaults to the @"v1/metadata"@ endpoint.
 --
