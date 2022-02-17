@@ -68,22 +68,19 @@ bqBuildTableRelayQueryFields ::
   TableInfo 'BigQuery ->
   G.Name ->
   NESeq (ColumnInfo 'BigQuery) ->
-  SelPermInfo 'BigQuery ->
   m [a]
-bqBuildTableRelayQueryFields _sourceName _tableName _tableInfo _gqlName _pkeyColumns _selPerms =
+bqBuildTableRelayQueryFields _sourceName _tableName _tableInfo _gqlName _pkeyColumns =
   pure []
 
 bqBuildTableInsertMutationFields ::
   MonadBuildSchema 'BigQuery r m n =>
+  Scenario ->
   SourceName ->
   TableName 'BigQuery ->
   TableInfo 'BigQuery ->
   G.Name ->
-  InsPermInfo 'BigQuery ->
-  Maybe (SelPermInfo 'BigQuery) ->
-  Maybe (UpdPermInfo 'BigQuery) ->
   m [a]
-bqBuildTableInsertMutationFields _sourceName _tableName _tableInfo _gqlName _insPerms _selPerms _updPerms =
+bqBuildTableInsertMutationFields _scenario _sourceName _tableName _tableInfo _gqlName =
   pure []
 
 bqBuildTableUpdateMutationFields ::
@@ -92,10 +89,8 @@ bqBuildTableUpdateMutationFields ::
   TableName 'BigQuery ->
   TableInfo 'BigQuery ->
   G.Name ->
-  UpdPermInfo 'BigQuery ->
-  Maybe (SelPermInfo 'BigQuery) ->
   m [a]
-bqBuildTableUpdateMutationFields _sourceName _tableName _tableInfo _gqlName _updPerns _selPerms =
+bqBuildTableUpdateMutationFields _sourceName _tableName _tableInfo _gqlName =
   pure []
 
 bqBuildTableDeleteMutationFields ::
@@ -104,10 +99,8 @@ bqBuildTableDeleteMutationFields ::
   TableName 'BigQuery ->
   TableInfo 'BigQuery ->
   G.Name ->
-  DelPermInfo 'BigQuery ->
-  Maybe (SelPermInfo 'BigQuery) ->
   m [a]
-bqBuildTableDeleteMutationFields _sourceName _tableName _tableInfo _gqlName _delPerns _selPerms =
+bqBuildTableDeleteMutationFields _sourceName _tableName _tableInfo _gqlName =
   pure []
 
 bqBuildFunctionQueryFields ::
@@ -116,9 +109,8 @@ bqBuildFunctionQueryFields ::
   FunctionName 'BigQuery ->
   FunctionInfo 'BigQuery ->
   TableName 'BigQuery ->
-  SelPermInfo 'BigQuery ->
   m [a]
-bqBuildFunctionQueryFields _ _ _ _ _ =
+bqBuildFunctionQueryFields _ _ _ _ =
   pure []
 
 bqBuildFunctionRelayQueryFields ::
@@ -128,9 +120,8 @@ bqBuildFunctionRelayQueryFields ::
   FunctionInfo 'BigQuery ->
   TableName 'BigQuery ->
   NESeq (ColumnInfo 'BigQuery) ->
-  SelPermInfo 'BigQuery ->
   m [a]
-bqBuildFunctionRelayQueryFields _sourceName _functionName _functionInfo _tableName _pkeyColumns _selPerms =
+bqBuildFunctionRelayQueryFields _sourceName _functionName _functionInfo _tableName _pkeyColumns =
   pure []
 
 bqBuildFunctionMutationFields ::
@@ -139,9 +130,8 @@ bqBuildFunctionMutationFields ::
   FunctionName 'BigQuery ->
   FunctionInfo 'BigQuery ->
   TableName 'BigQuery ->
-  SelPermInfo 'BigQuery ->
   m [a]
-bqBuildFunctionMutationFields _ _ _ _ _ =
+bqBuildFunctionMutationFields _ _ _ _ =
   pure []
 
 ----------------------------------------------------------------
@@ -391,9 +381,9 @@ bqComputedField ::
   SourceName ->
   ComputedFieldInfo 'BigQuery ->
   TableName 'BigQuery ->
-  SelPermInfo 'BigQuery ->
+  TableInfo 'BigQuery ->
   m (Maybe (FieldParser n (AnnotatedField 'BigQuery)))
-bqComputedField _sourceName _fieldInfo _table _selectPemissions = pure Nothing
+bqComputedField _sourceName _fieldInfo _table _tableInfo = pure Nothing
 
 -- | Remote join field parser.
 -- Currently unsupported: returns Nothing for now.

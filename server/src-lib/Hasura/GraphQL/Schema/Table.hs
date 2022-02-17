@@ -61,11 +61,10 @@ tableSelectColumnsEnum ::
   (BackendSchema b, MonadSchema n m, MonadRole r m, MonadTableInfo r m, Has P.MkTypename r) =>
   SourceName ->
   TableInfo b ->
-  SelPermInfo b ->
   m (Maybe (Parser 'Both n (Column b)))
-tableSelectColumnsEnum sourceName tableInfo selectPermissions = do
+tableSelectColumnsEnum sourceName tableInfo = do
   tableGQLName <- getTableGQLName @b tableInfo
-  columns <- tableSelectColumns sourceName tableInfo selectPermissions
+  columns <- tableSelectColumns sourceName tableInfo
   enumName <- P.mkTypename $ tableGQLName <> $$(G.litName "_select_column")
   let description =
         Just $
@@ -90,13 +89,12 @@ tableSelectColumnsEnum sourceName tableInfo selectPermissions = do
 -- others. Maps to the table_update_column object.
 tableUpdateColumnsEnum ::
   forall m n r b.
-  (BackendSchema b, MonadSchema n m, MonadError QErr m, MonadReader r m, Has P.MkTypename r) =>
+  (BackendSchema b, MonadSchema n m, MonadTableInfo r m, MonadRole r m, Has P.MkTypename r) =>
   TableInfo b ->
-  UpdPermInfo b ->
   m (Maybe (Parser 'Both n (Column b)))
-tableUpdateColumnsEnum tableInfo updatePermissions = do
+tableUpdateColumnsEnum tableInfo = do
   tableGQLName <- getTableGQLName tableInfo
-  columns <- tableUpdateColumns tableInfo updatePermissions
+  columns <- tableUpdateColumns tableInfo
   enumName <- P.mkTypename $ tableGQLName <> $$(G.litName "_update_column")
   let tableName = tableInfoName tableInfo
       enumDesc = Just $ G.Description $ "update columns of table " <>> tableName
@@ -113,10 +111,9 @@ tableUpdateColumnsEnum tableInfo updatePermissions = do
 updateColumnsPlaceholderParser ::
   MonadBuildSchema backend r m n =>
   TableInfo backend ->
-  UpdPermInfo backend ->
   m (Parser 'Both n (Maybe (Column backend)))
-updateColumnsPlaceholderParser tableInfo updatePerms = do
-  maybeEnum <- tableUpdateColumnsEnum tableInfo updatePerms
+updateColumnsPlaceholderParser tableInfo = do
+  maybeEnum <- tableUpdateColumnsEnum tableInfo
   case maybeEnum of
     Just e -> pure $ Just <$> e
     Nothing -> do
@@ -131,7 +128,7 @@ updateColumnsPlaceholderParser tableInfo updatePerms = do
 
 tablePermissions ::
   forall m n r b.
-  (Backend b, MonadSchema n m, MonadRole r m) =>
+  (MonadSchema n m, MonadRole r m) =>
   TableInfo b ->
   m (Maybe (RolePermInfo b))
 tablePermissions tableInfo = do
@@ -140,7 +137,7 @@ tablePermissions tableInfo = do
 
 tableSelectPermissions ::
   forall b r m n.
-  (Backend b, MonadSchema n m, MonadRole r m) =>
+  (MonadSchema n m, MonadRole r m) =>
   TableInfo b ->
   m (Maybe (SelPermInfo b))
 tableSelectPermissions tableInfo = (_permSel =<<) <$> tablePermissions tableInfo
@@ -150,25 +147,26 @@ tableSelectFields ::
   (Backend b, MonadSchema n m, MonadTableInfo r m, MonadRole r m) =>
   SourceName ->
   TableInfo b ->
-  SelPermInfo b ->
   m [FieldInfo b]
-tableSelectFields sourceName tableInfo permissions = do
+tableSelectFields sourceName tableInfo = do
   let tableFields = _tciFieldInfoMap . _tiCoreInfo $ tableInfo
-  filterM canBeSelected $ Map.elems tableFields
+  permissions <- tableSelectPermissions tableInfo
+  filterM (canBeSelected permissions) $ Map.elems tableFields
   where
-    canBeSelected (FIColumn columnInfo) =
+    canBeSelected Nothing _ = pure False
+    canBeSelected (Just permissions) (FIColumn columnInfo) =
       pure $ Map.member (ciColumn columnInfo) (spiCols permissions)
-    canBeSelected (FIRelationship relationshipInfo) = do
+    canBeSelected _ (FIRelationship relationshipInfo) = do
       tableInfo' <- askTableInfo sourceName $ riRTable relationshipInfo
       isJust <$> tableSelectPermissions @b tableInfo'
-    canBeSelected (FIComputedField computedFieldInfo) =
+    canBeSelected (Just permissions) (FIComputedField computedFieldInfo) =
       case _cfiReturnType computedFieldInfo of
         CFRScalar _ ->
           pure $ Map.member (_cfiName computedFieldInfo) $ spiScalarComputedFields permissions
         CFRSetofTable tableName -> do
           tableInfo' <- askTableInfo sourceName tableName
           isJust <$> tableSelectPermissions @b tableInfo'
-    canBeSelected (FIRemoteRelationship _) = pure True
+    canBeSelected _ (FIRemoteRelationship _) = pure True
 
 tableColumns ::
   forall b. TableInfo b -> [ColumnInfo b]
@@ -185,10 +183,9 @@ tableSelectColumns ::
   (Backend b, MonadSchema n m, MonadTableInfo r m, MonadRole r m) =>
   SourceName ->
   TableInfo b ->
-  SelPermInfo b ->
   m [ColumnInfo b]
-tableSelectColumns sourceName tableInfo permissions =
-  mapMaybe columnInfo <$> tableSelectFields sourceName tableInfo permissions
+tableSelectColumns sourceName tableInfo =
+  mapMaybe columnInfo <$> tableSelectFields sourceName tableInfo
   where
     columnInfo (FIColumn ci) = Just ci
     columnInfo _ = Nothing
@@ -196,16 +193,18 @@ tableSelectColumns sourceName tableInfo permissions =
 -- | Get the columns of a table that my be updated under the given update
 -- permissions.
 tableUpdateColumns ::
-  forall m n b.
-  (Backend b, MonadSchema n m) =>
+  forall m n r b.
+  (Backend b, MonadSchema n m, MonadTableInfo r m, MonadRole r m) =>
   TableInfo b ->
-  UpdPermInfo b ->
   m [ColumnInfo b]
-tableUpdateColumns tableInfo permissions = pure $ filter isUpdatable $ tableColumns tableInfo
+tableUpdateColumns tableInfo = do
+  permissions <- (_permUpd =<<) <$> tablePermissions tableInfo
+  pure $ filter (isUpdatable permissions) $ tableColumns tableInfo
   where
-    isUpdatable :: ColumnInfo b -> Bool
-    isUpdatable columnInfo = columnIsUpdatable && columnIsPermitted && columnHasNoPreset
+    isUpdatable :: Maybe (UpdPermInfo b) -> ColumnInfo b -> Bool
+    isUpdatable (Just permissions) columnInfo = columnIsUpdatable && columnIsPermitted && columnHasNoPreset
       where
         columnIsUpdatable = _cmIsUpdatable (ciMutability columnInfo)
         columnIsPermitted = Set.member (ciColumn columnInfo) (upiCols permissions)
         columnHasNoPreset = not (Map.member (ciColumn columnInfo) (upiSet permissions))
+    isUpdatable Nothing _ = False

@@ -25,6 +25,7 @@ import Hasura.GraphQL.Schema.BoolExp
 import Hasura.GraphQL.Schema.Build qualified as GSB
 import Hasura.GraphQL.Schema.Common
 import Hasura.GraphQL.Schema.Select
+import Hasura.GraphQL.Schema.Table
 import Hasura.GraphQL.Schema.Update qualified as SU
 import Hasura.Prelude
 import Hasura.RQL.IR
@@ -82,9 +83,8 @@ msBuildTableRelayQueryFields ::
   TableInfo 'MSSQL ->
   G.Name ->
   NESeq (ColumnInfo 'MSSQL) ->
-  SelPermInfo 'MSSQL ->
   m [a]
-msBuildTableRelayQueryFields _sourceName _tableName _tableInfo _gqlName _pkeyColumns _selPerms =
+msBuildTableRelayQueryFields _sourceName _tableName _tableInfo _gqlName _pkeyColumns =
   pure []
 
 backendInsertParser ::
@@ -92,11 +92,9 @@ backendInsertParser ::
   MonadBuildSchema 'MSSQL r m n =>
   SourceName ->
   TableInfo 'MSSQL ->
-  Maybe (SelPermInfo 'MSSQL) ->
-  Maybe (UpdPermInfo 'MSSQL) ->
   m (InputFieldsParser n (BackendInsert (UnpreparedValue 'MSSQL)))
-backendInsertParser sourceName tableInfo selectPerms updatePerms = do
-  ifMatched <- ifMatchedFieldParser sourceName tableInfo selectPerms updatePerms
+backendInsertParser sourceName tableInfo = do
+  ifMatched <- ifMatchedFieldParser sourceName tableInfo
   let _biIdentityColumns = _tciExtraTableMetadata $ _tiCoreInfo tableInfo
   pure $ do
     _biIfMatched <- ifMatched
@@ -108,21 +106,27 @@ msBuildTableUpdateMutationFields ::
   TableName 'MSSQL ->
   TableInfo 'MSSQL ->
   G.Name ->
-  UpdPermInfo 'MSSQL ->
-  Maybe (SelPermInfo 'MSSQL) ->
   m [FieldParser n (AnnotatedUpdateG 'MSSQL (RemoteRelationshipField UnpreparedValue) (UnpreparedValue 'MSSQL))]
-msBuildTableUpdateMutationFields =
-  GSB.buildTableUpdateMutationFields
-    ( \ti updPerms ->
-        fmap BackendUpdate
-          <$> SU.buildUpdateOperators
-            (UpdateSet <$> SU.presetColumns updPerms)
-            [ UpdateSet <$> SU.setOp,
-              UpdateInc <$> SU.incOp
-            ]
-            ti
-            updPerms
-    )
+msBuildTableUpdateMutationFields sourceName tableName tableInfo gqlName = do
+  fieldParsers <- runMaybeT do
+    tablePerms <- MaybeT $ tablePermissions tableInfo
+    updatePerms <- hoistMaybe $ _permUpd tablePerms
+    let mkBackendUpdate backendUpdateTableInfo =
+          (fmap . fmap) BackendUpdate $
+            SU.buildUpdateOperators
+              (UpdateSet <$> SU.presetColumns updatePerms)
+              [ UpdateSet <$> SU.setOp,
+                UpdateInc <$> SU.incOp
+              ]
+              backendUpdateTableInfo
+    lift $
+      GSB.buildTableUpdateMutationFields
+        mkBackendUpdate
+        sourceName
+        tableName
+        tableInfo
+        gqlName
+  pure . fold @Maybe @[_] $ fieldParsers
 
 msBuildTableDeleteMutationFields ::
   MonadBuildSchema 'MSSQL r m n =>
@@ -142,9 +146,8 @@ msBuildFunctionQueryFields ::
   FunctionName 'MSSQL ->
   FunctionInfo 'MSSQL ->
   TableName 'MSSQL ->
-  SelPermInfo 'MSSQL ->
   m [a]
-msBuildFunctionQueryFields _ _ _ _ _ =
+msBuildFunctionQueryFields _ _ _ _ =
   pure []
 
 msBuildFunctionRelayQueryFields ::
@@ -154,9 +157,8 @@ msBuildFunctionRelayQueryFields ::
   FunctionInfo 'MSSQL ->
   TableName 'MSSQL ->
   NESeq (ColumnInfo 'MSSQL) ->
-  SelPermInfo 'MSSQL ->
   m [a]
-msBuildFunctionRelayQueryFields _sourceName _functionName _functionInfo _tableName _pkeyColumns _selPerms =
+msBuildFunctionRelayQueryFields _sourceName _functionName _functionInfo _tableName _pkeyColumns =
   pure []
 
 msBuildFunctionMutationFields ::
@@ -165,9 +167,8 @@ msBuildFunctionMutationFields ::
   FunctionName 'MSSQL ->
   FunctionInfo 'MSSQL ->
   TableName 'MSSQL ->
-  SelPermInfo 'MSSQL ->
   m [a]
-msBuildFunctionMutationFields _ _ _ _ _ =
+msBuildFunctionMutationFields _ _ _ _ =
   pure []
 
 ----------------------------------------------------------------
@@ -179,11 +180,10 @@ msTableArgs ::
   MonadBuildSchema 'MSSQL r m n =>
   SourceName ->
   TableInfo 'MSSQL ->
-  SelPermInfo 'MSSQL ->
   m (InputFieldsParser n (IR.SelectArgsG 'MSSQL (UnpreparedValue 'MSSQL)))
-msTableArgs sourceName tableInfo selectPermissions = do
-  whereParser <- tableWhereArg sourceName tableInfo selectPermissions
-  orderByParser <- tableOrderByArg sourceName tableInfo selectPermissions
+msTableArgs sourceName tableInfo = do
+  whereParser <- tableWhereArg sourceName tableInfo
+  orderByParser <- tableOrderByArg sourceName tableInfo
   pure do
     whereArg <- whereParser
     orderByArg <- orderByParser
@@ -432,9 +432,9 @@ msComputedField ::
   SourceName ->
   ComputedFieldInfo 'MSSQL ->
   TableName 'MSSQL ->
-  SelPermInfo 'MSSQL ->
+  TableInfo 'MSSQL ->
   m (Maybe (FieldParser n (AnnotatedField 'MSSQL)))
-msComputedField _sourceName _fieldInfo _table _selectPemissions = pure Nothing
+msComputedField _sourceName _fieldInfo _table _tableInfo = pure Nothing
 
 -- | Remote join field parser.
 -- Currently unsupported: returns Nothing for now.

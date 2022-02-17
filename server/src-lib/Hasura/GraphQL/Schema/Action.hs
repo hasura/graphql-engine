@@ -262,7 +262,7 @@ actionOutputFields outputType annotatedObject objectTypes = do
       case relType of
         ObjRel -> do
           let desc = Just $ G.Description "An object relationship"
-          selectionSetParser <- lift $ tableSelectionSet sourceName tableInfo tablePerms
+          selectionSetParser <- MaybeT $ tableSelectionSet sourceName tableInfo
           pure $
             pure $
               P.nonNullableField $
@@ -274,14 +274,14 @@ actionOutputFields outputType annotatedObject objectTypes = do
                           (fmap partialSQLExpToUnpreparedValue <$> spiFilter tablePerms)
         ArrRel -> do
           let desc = Just $ G.Description "An array relationship"
-          otherTableParser <- lift $ selectTable sourceName tableInfo fieldName desc tablePerms
+          otherTableParser <- MaybeT $ selectTable sourceName tableInfo fieldName desc
           let arrayRelField =
                 otherTableParser <&> \selectExp ->
                   RQL.ACFArrayRelation $
                     RQL.ASSimple $ RQL.AnnRelationSelectG tableRelName columnMapping selectExp
               relAggFieldName = fieldName <> $$(G.litName "_aggregate")
               relAggDesc = Just $ G.Description "An aggregate relationship"
-          tableAggField <- lift $ selectTableAggregate sourceName tableInfo relAggFieldName relAggDesc tablePerms
+          tableAggField <- lift $ selectTableAggregate sourceName tableInfo relAggFieldName relAggDesc
           pure $
             catMaybes
               [ Just arrayRelField,

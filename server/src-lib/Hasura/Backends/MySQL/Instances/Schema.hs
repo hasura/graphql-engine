@@ -18,6 +18,7 @@ import Hasura.GraphQL.Parser qualified as P
 import Hasura.GraphQL.Parser.Internal.Parser hiding (field)
 import Hasura.GraphQL.Schema.Backend
 import Hasura.GraphQL.Schema.Build qualified as GSB
+import Hasura.GraphQL.Schema.Common
 import Hasura.GraphQL.Schema.Select
 import Hasura.Prelude
 import Hasura.RQL.IR
@@ -52,11 +53,10 @@ mysqlTableArgs ::
   MonadBuildSchema 'MySQL r m n =>
   SourceName ->
   TableInfo 'MySQL ->
-  SelPermInfo 'MySQL ->
   m (InputFieldsParser n (IR.SelectArgsG 'MySQL (UnpreparedValue 'MySQL)))
-mysqlTableArgs sourceName tableInfo selectPermissions = do
-  whereParser <- tableWhereArg sourceName tableInfo selectPermissions
-  orderByParser <- tableOrderByArg sourceName tableInfo selectPermissions
+mysqlTableArgs sourceName tableInfo = do
+  whereParser <- tableWhereArg sourceName tableInfo
+  orderByParser <- tableOrderByArg sourceName tableInfo
   pure do
     whereArg <- whereParser
     orderByArg <- orderByParser
@@ -78,22 +78,19 @@ buildTableRelayQueryFields' ::
   TableInfo 'MySQL ->
   G.Name ->
   NESeq (ColumnInfo 'MySQL) ->
-  SelPermInfo 'MySQL ->
   m [a]
-buildTableRelayQueryFields' _sourceName _tableName _tableInfo _gqlName _pkeyColumns _selPerms =
+buildTableRelayQueryFields' _sourceName _tableName _tableInfo _gqlName _pkeyColumns =
   pure []
 
 buildTableInsertMutationFields' ::
   MonadBuildSchema 'MySQL r m n =>
+  Scenario ->
   SourceName ->
   RQL.TableName 'MySQL ->
   TableInfo 'MySQL ->
   G.Name ->
-  InsPermInfo 'MySQL ->
-  Maybe (SelPermInfo 'MySQL) ->
-  Maybe (UpdPermInfo 'MySQL) ->
   m [a]
-buildTableInsertMutationFields' _sourceName _tableName _tableInfo _gqlName _insPerms _selPerms _updPerms =
+buildTableInsertMutationFields' _scenario _sourceName _tableName _tableInfo _gqlName =
   pure []
 
 buildTableUpdateMutationFields' ::
@@ -102,10 +99,8 @@ buildTableUpdateMutationFields' ::
   RQL.TableName 'MySQL ->
   TableInfo 'MySQL ->
   G.Name ->
-  UpdPermInfo 'MySQL ->
-  Maybe (SelPermInfo 'MySQL) ->
   m [a]
-buildTableUpdateMutationFields' _sourceName _tableName _tableInfo _gqlName _updPerns _selPerms =
+buildTableUpdateMutationFields' _sourceName _tableName _tableInfo _gqlName =
   pure []
 
 buildTableDeleteMutationFields' ::
@@ -114,10 +109,8 @@ buildTableDeleteMutationFields' ::
   RQL.TableName 'MySQL ->
   TableInfo 'MySQL ->
   G.Name ->
-  DelPermInfo 'MySQL ->
-  Maybe (SelPermInfo 'MySQL) ->
   m [a]
-buildTableDeleteMutationFields' _sourceName _tableName _tableInfo _gqlName _delPerns _selPerms =
+buildTableDeleteMutationFields' _sourceName _tableName _tableInfo _gqlName =
   pure []
 
 buildFunctionQueryFields' ::
@@ -126,9 +119,8 @@ buildFunctionQueryFields' ::
   FunctionName 'MySQL ->
   FunctionInfo 'MySQL ->
   RQL.TableName 'MySQL ->
-  SelPermInfo 'MySQL ->
   m [a]
-buildFunctionQueryFields' _ _ _ _ _ =
+buildFunctionQueryFields' _ _ _ _ =
   pure []
 
 buildFunctionRelayQueryFields' ::
@@ -138,9 +130,8 @@ buildFunctionRelayQueryFields' ::
   FunctionInfo 'MySQL ->
   RQL.TableName 'MySQL ->
   NESeq (ColumnInfo 'MySQL) ->
-  SelPermInfo 'MySQL ->
   m [a]
-buildFunctionRelayQueryFields' _sourceName _functionName _functionInfo _tableName _pkeyColumns _selPerms =
+buildFunctionRelayQueryFields' _sourceName _functionName _functionInfo _tableName _pkeyColumns =
   pure []
 
 buildFunctionMutationFields' ::
@@ -149,9 +140,8 @@ buildFunctionMutationFields' ::
   FunctionName 'MySQL ->
   FunctionInfo 'MySQL ->
   RQL.TableName 'MySQL ->
-  SelPermInfo 'MySQL ->
   m [a]
-buildFunctionMutationFields' _ _ _ _ _ =
+buildFunctionMutationFields' _ _ _ _ =
   pure []
 
 bsParser :: MonadParse m => Parser 'Both m ByteString

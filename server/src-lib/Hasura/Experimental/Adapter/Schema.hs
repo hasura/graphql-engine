@@ -69,7 +69,6 @@ experimentalBuildTableRelayQueryFields ::
   RQL.TableInfo 'Experimental ->
   GraphQL.Name ->
   NESeq (RQL.ColumnInfo 'Experimental) ->
-  RQL.SelPermInfo 'Experimental ->
   m [a]
-experimentalBuildTableRelayQueryFields _sourceName _tableName _tableInfo _gqlName _pkeyColumns _selPerms =
+experimentalBuildTableRelayQueryFields _sourceName _tableName _tableInfo _gqlName _pkeyColumns =
   pure []

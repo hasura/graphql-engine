@@ -51,11 +51,9 @@ ifMatchedFieldParser ::
   MonadBuildSchema 'MSSQL r m n =>
   SourceName ->
   TableInfo 'MSSQL ->
-  Maybe (SelPermInfo 'MSSQL) ->
-  Maybe (UpdPermInfo 'MSSQL) ->
   m (InputFieldsParser n (Maybe (IfMatched (UnpreparedValue 'MSSQL))))
-ifMatchedFieldParser sourceName tableInfo selectPerms updatePerms = do
-  maybeObject <- ifMatchedObjectParser sourceName tableInfo selectPerms updatePerms
+ifMatchedFieldParser sourceName tableInfo = do
+  maybeObject <- ifMatchedObjectParser sourceName tableInfo
   return $ withJust maybeObject $ P.fieldOptional $$(G.litName "if_matched") (Just "upsert condition")
 
 -- | Parse a @tablename_if_matched@ object.
@@ -64,45 +62,35 @@ ifMatchedObjectParser ::
   (MonadBuildSchema 'MSSQL r m n) =>
   SourceName ->
   TableInfo 'MSSQL ->
-  Maybe (SelPermInfo 'MSSQL) ->
-  Maybe (UpdPermInfo 'MSSQL) ->
   m (Maybe (Parser 'Input n (IfMatched (UnpreparedValue 'MSSQL))))
-ifMatchedObjectParser sourceName tableInfo maybeSelectPerms maybeUpdatePerms = runMaybeT do
+ifMatchedObjectParser sourceName tableInfo = runMaybeT do
   -- Short-circuit if we don't have sufficient permissions.
-  selectPerms <- hoistMaybe maybeSelectPerms
-  updatePerms <- hoistMaybe maybeUpdatePerms
-  matchColumnsEnum <- MaybeT $ tableInsertMatchColumnsEnum sourceName tableInfo selectPerms
-  updateColumnsEnum <- lift $ updateColumnsPlaceholderParser tableInfo updatePerms
+  updatePerms <- MaybeT $ (_permUpd =<<) <$> tablePermissions tableInfo
+  matchColumnsEnum <- MaybeT $ tableInsertMatchColumnsEnum sourceName tableInfo
+  lift do
+    updateColumnsEnum <- updateColumnsPlaceholderParser tableInfo
+    tableGQLName <- getTableGQLName tableInfo
+    objectName <- P.mkTypename $ tableGQLName <> $$(G.litName "_if_matched")
+    let _imColumnPresets = partialSQLExpToUnpreparedValue <$> upiSet updatePerms
+        updateFilter = fmap partialSQLExpToUnpreparedValue <$> upiFilter updatePerms
+        objectDesc = G.Description $ "upsert condition type for table " <>> tableInfoName tableInfo
+        matchColumnsName = $$(G.litName "match_columns")
+        updateColumnsName = $$(G.litName "update_columns")
+        whereName = $$(G.litName "where")
+    whereExpParser <- boolExp sourceName tableInfo
+    pure $
+      P.object objectName (Just objectDesc) do
+        _imConditions <-
+          (\whereExp -> BoolAnd $ updateFilter : maybeToList whereExp)
+            <$> P.fieldOptional whereName Nothing whereExpParser
+        _imMatchColumns <-
+          P.fieldWithDefault matchColumnsName Nothing (G.VList []) (P.list matchColumnsEnum)
+        _imUpdateColumns <-
+          P.fieldWithDefault updateColumnsName Nothing (G.VList []) (P.list updateColumnsEnum) `P.bindFields` \cs ->
+            -- this can only happen if the placeholder was used
+            sequenceA cs `onNothing` parseError "erroneous column name"
 
-  -- The style of the above code gives me some cognitive dissonance: We could
-  -- push the @hoistMaybe@ checks further away to callers, but not the enum
-  -- parsers, and as a result we end up with @MaybeT@ is a sort of local maximum
-  -- of legible expression.
-  -- See https://github.com/hasura/graphql-engine-mono/issues/3125.
-
-  tableGQLName <- getTableGQLName tableInfo
-  objectName <- P.mkTypename $ tableGQLName <> $$(G.litName "_if_matched")
-  let _imColumnPresets = partialSQLExpToUnpreparedValue <$> upiSet updatePerms
-      updateFilter = fmap partialSQLExpToUnpreparedValue <$> upiFilter updatePerms
-      objectDesc = G.Description $ "upsert condition type for table " <>> tableInfoName tableInfo
-      matchColumnsName = $$(G.litName "match_columns")
-      updateColumnsName = $$(G.litName "update_columns")
-      whereName = $$(G.litName "where")
-
-  whereExpParser <- lift $ boolExp sourceName tableInfo (Just selectPerms)
-  pure $
-    P.object objectName (Just objectDesc) $ do
-      _imConditions <-
-        (\whereExp -> BoolAnd $ updateFilter : maybeToList whereExp)
-          <$> P.fieldOptional whereName Nothing whereExpParser
-      _imMatchColumns <-
-        P.fieldWithDefault matchColumnsName Nothing (G.VList []) (P.list matchColumnsEnum)
-      _imUpdateColumns <-
-        P.fieldWithDefault updateColumnsName Nothing (G.VList []) (P.list updateColumnsEnum) `P.bindFields` \cs ->
-          -- this can only happen if the placeholder was used
-          sequenceA cs `onNothing` parseError "erroneous column name"
-
-      pure $ IfMatched {..}
+        pure $ IfMatched {..}
 
 -- | Table insert_match_columns enum
 --
@@ -117,11 +105,10 @@ tableInsertMatchColumnsEnum ::
   (MonadSchema n m, MonadRole r m, MonadTableInfo r m, Has P.MkTypename r) =>
   SourceName ->
   TableInfo 'MSSQL ->
-  SelPermInfo 'MSSQL ->
   m (Maybe (Parser 'Both n (Column 'MSSQL)))
-tableInsertMatchColumnsEnum sourceName tableInfo selectPermissions = do
+tableInsertMatchColumnsEnum sourceName tableInfo = do
   tableGQLName <- getTableGQLName @'MSSQL tableInfo
-  columns <- tableSelectColumns sourceName tableInfo selectPermissions
+  columns <- tableSelectColumns sourceName tableInfo
   enumName <- P.mkTypename $ tableGQLName <> $$(G.litName "_insert_match_column")
   let description =
         Just $

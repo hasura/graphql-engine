@@ -46,12 +46,11 @@ onConflictFieldParser ::
   MonadBuildSchema ('Postgres pgKind) r m n =>
   SourceName ->
   TableInfo ('Postgres pgKind) ->
-  Maybe (SelPermInfo ('Postgres pgKind)) ->
-  Maybe (UpdPermInfo ('Postgres pgKind)) ->
   m (InputFieldsParser n (Maybe (IR.OnConflictClause ('Postgres pgKind) (UnpreparedValue ('Postgres pgKind)))))
-onConflictFieldParser sourceName tableInfo selectPerms updatePerms = do
+onConflictFieldParser sourceName tableInfo = do
+  updatePerms <- (_permUpd =<<) <$> tablePermissions tableInfo
   let maybeConstraints = tciUniqueOrPrimaryKeyConstraints . _tiCoreInfo $ tableInfo
-  let maybeConflictObject = conflictObjectParser sourceName tableInfo <$> maybeConstraints <*> pure selectPerms <*> updatePerms
+  let maybeConflictObject = conflictObjectParser sourceName tableInfo <$> maybeConstraints <*> updatePerms
   case maybeConflictObject of
     Just conflictObject -> conflictObject <&> P.fieldOptional $$(G.litName "on_conflict") (Just "upsert condition")
     Nothing -> return $ pure Nothing
@@ -63,13 +62,12 @@ conflictObjectParser ::
   SourceName ->
   TableInfo ('Postgres pgKind) ->
   NonEmpty (Constraint ('Postgres pgKind)) ->
-  Maybe (SelPermInfo ('Postgres pgKind)) ->
   UpdPermInfo ('Postgres pgKind) ->
   m (Parser 'Input n (IR.OnConflictClause ('Postgres pgKind) (UnpreparedValue ('Postgres pgKind))))
-conflictObjectParser sourceName tableInfo constraints selectPerms updatePerms = do
-  updateColumnsEnum <- updateColumnsPlaceholderParser tableInfo updatePerms
+conflictObjectParser sourceName tableInfo constraints updatePerms = do
+  updateColumnsEnum <- updateColumnsPlaceholderParser tableInfo
   constraintParser <- conflictConstraint constraints sourceName tableInfo
-  whereExpParser <- boolExp sourceName tableInfo selectPerms
+  whereExpParser <- boolExp sourceName tableInfo
   tableGQLName <- getTableGQLName tableInfo
   objectName <- P.mkTypename $ tableGQLName <> $$(G.litName "_on_conflict")
 

@@ -41,6 +41,7 @@ import Hasura.GraphQL.Schema.Build qualified as GSB
 import Hasura.GraphQL.Schema.Common
 import Hasura.GraphQL.Schema.Mutation qualified as GSB
 import Hasura.GraphQL.Schema.Select
+import Hasura.GraphQL.Schema.Table
 import Hasura.GraphQL.Schema.Update qualified as SU
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
@@ -49,12 +50,13 @@ import Hasura.RQL.IR.Select
   ( QueryDB (QDBConnection),
   )
 import Hasura.RQL.IR.Select qualified as IR
+import Hasura.RQL.IR.Update qualified as IR
 import Hasura.RQL.Types.Backend (Backend (..))
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Function (FunctionInfo)
 import Hasura.RQL.Types.SourceCustomization (mkRootFieldName)
-import Hasura.RQL.Types.Table (SelPermInfo, TableInfo, UpdPermInfo)
+import Hasura.RQL.Types.Table (RolePermInfo (..), SelPermInfo, TableInfo, UpdPermInfo)
 import Hasura.SQL.Backend (BackendType (Postgres), PostgresKind (Citus, Vanilla))
 import Hasura.SQL.Types
 import Language.GraphQL.Draft.Syntax qualified as G
@@ -79,7 +81,6 @@ class PostgresSchema (pgKind :: PostgresKind) where
     TableInfo ('Postgres pgKind) ->
     G.Name ->
     NESeq (ColumnInfo ('Postgres pgKind)) ->
-    SelPermInfo ('Postgres pgKind) ->
     m [FieldParser n (QueryDB ('Postgres pgKind) (RemoteRelationshipField UnpreparedValue) (UnpreparedValue ('Postgres pgKind)))]
   pgkBuildFunctionRelayQueryFields ::
     BS.MonadBuildSchema ('Postgres pgKind) r m n =>
@@ -88,7 +89,6 @@ class PostgresSchema (pgKind :: PostgresKind) where
     FunctionInfo ('Postgres pgKind) ->
     TableName ('Postgres pgKind) ->
     NESeq (ColumnInfo ('Postgres pgKind)) ->
-    SelPermInfo ('Postgres pgKind) ->
     m [FieldParser n (QueryDB ('Postgres pgKind) (RemoteRelationshipField UnpreparedValue) (UnpreparedValue ('Postgres pgKind)))]
   pgkRelayExtension ::
     Maybe (XRelay ('Postgres pgKind))
@@ -117,8 +117,8 @@ instance PostgresSchema 'Vanilla where
   pgkNode = nodePG
 
 instance PostgresSchema 'Citus where
-  pgkBuildTableRelayQueryFields _ _ _ _ _ _ = pure []
-  pgkBuildFunctionRelayQueryFields _ _ _ _ _ _ = pure []
+  pgkBuildTableRelayQueryFields _ _ _ _ _ = pure []
+  pgkBuildFunctionRelayQueryFields _ _ _ _ _ = pure []
   pgkRelayExtension = Nothing
   pgkNode = undefined
 
@@ -134,7 +134,7 @@ instance
   buildTableQueryFields = GSB.buildTableQueryFields
   buildTableRelayQueryFields = pgkBuildTableRelayQueryFields
   buildTableInsertMutationFields = GSB.buildTableInsertMutationFields backendInsertParser
-  buildTableUpdateMutationFields = GSB.buildTableUpdateMutationFields (\ti updP -> fmap BackendUpdate <$> updateOperators ti updP) -- TODO: https://github.com/hasura/graphql-engine-mono/issues/2955
+  buildTableUpdateMutationFields = pgkBuildTableUpdateMutationFields
   buildTableDeleteMutationFields = GSB.buildTableDeleteMutationFields
   buildFunctionQueryFields = GSB.buildFunctionQueryFields
   buildFunctionRelayQueryFields = pgkBuildFunctionRelayQueryFields
@@ -166,11 +166,9 @@ backendInsertParser ::
   MonadBuildSchema ('Postgres pgKind) r m n =>
   SourceName ->
   TableInfo ('Postgres pgKind) ->
-  Maybe (SelPermInfo ('Postgres pgKind)) ->
-  Maybe (UpdPermInfo ('Postgres pgKind)) ->
   m (InputFieldsParser n (PGIR.BackendInsert pgKind (UnpreparedValue ('Postgres pgKind))))
-backendInsertParser sourceName tableInfo selectPerms updatePerms =
-  fmap BackendInsert <$> onConflictFieldParser sourceName tableInfo selectPerms updatePerms
+backendInsertParser sourceName tableInfo =
+  fmap BackendInsert <$> onConflictFieldParser sourceName tableInfo
 
 ----------------------------------------------------------------
 -- Top level parsers
@@ -183,14 +181,36 @@ buildTableRelayQueryFields ::
   TableInfo ('Postgres pgKind) ->
   G.Name ->
   NESeq (ColumnInfo ('Postgres pgKind)) ->
-  SelPermInfo ('Postgres pgKind) ->
   m [FieldParser n (QueryDB ('Postgres pgKind) (RemoteRelationshipField UnpreparedValue) (UnpreparedValue ('Postgres pgKind)))]
-buildTableRelayQueryFields sourceName tableName tableInfo gqlName pkeyColumns selPerms = do
+buildTableRelayQueryFields sourceName tableName tableInfo gqlName pkeyColumns = do
   let fieldDesc = Just $ G.Description $ "fetch data from the table: " <>> tableName
   fieldName <- mkRootFieldName $ gqlName <> $$(G.litName "_connection")
   fmap afold $
     optionalFieldParser QDBConnection $
-      selectTableConnection sourceName tableInfo fieldName fieldDesc pkeyColumns selPerms
+      selectTableConnection sourceName tableInfo fieldName fieldDesc pkeyColumns
+
+pgkBuildTableUpdateMutationFields ::
+  MonadBuildSchema ('Postgres pgKind) r m n =>
+  -- | The source that the table lives in
+  SourceName ->
+  -- | The name of the table being acted on
+  TableName ('Postgres pgKind) ->
+  -- | table info
+  TableInfo ('Postgres pgKind) ->
+  -- | field display name
+  G.Name ->
+  m [FieldParser n (IR.AnnotatedUpdateG ('Postgres pgKind) (RemoteRelationshipField UnpreparedValue) (UnpreparedValue ('Postgres pgKind)))]
+pgkBuildTableUpdateMutationFields sourceName tableName tableInfo gqlName =
+  concat . maybeToList <$> runMaybeT do
+    updatePerms <- MaybeT $ (_permUpd =<<) <$> tablePermissions tableInfo
+    lift $
+      GSB.buildTableUpdateMutationFields
+        -- TODO: https://github.com/hasura/graphql-engine-mono/issues/2955
+        (\ti -> fmap BackendUpdate <$> updateOperators ti updatePerms)
+        sourceName
+        tableName
+        tableInfo
+        gqlName
 
 buildFunctionRelayQueryFields ::
   forall pgKind m n r.
@@ -200,13 +220,12 @@ buildFunctionRelayQueryFields ::
   FunctionInfo ('Postgres pgKind) ->
   TableName ('Postgres pgKind) ->
   NESeq (ColumnInfo ('Postgres pgKind)) ->
-  SelPermInfo ('Postgres pgKind) ->
   m [FieldParser n (QueryDB ('Postgres pgKind) (RemoteRelationshipField UnpreparedValue) (UnpreparedValue ('Postgres pgKind)))]
-buildFunctionRelayQueryFields sourceName functionName functionInfo tableName pkeyColumns selPerms = do
+buildFunctionRelayQueryFields sourceName functionName functionInfo tableName pkeyColumns = do
   let fieldDesc = Just $ G.Description $ "execute function " <> functionName <<> " which returns " <>> tableName
   fmap afold $
     optionalFieldParser QDBConnection $
-      selectFunctionConnection sourceName functionInfo fieldDesc pkeyColumns selPerms
+      selectFunctionConnection sourceName functionInfo fieldDesc pkeyColumns
 
 ----------------------------------------------------------------
 -- Individual components
@@ -823,17 +842,11 @@ deleteAtPathOp = SU.UpdateOperator {..}
 -- | The update operators that we support on Postgres.
 updateOperators ::
   forall pgKind m n r.
-  ( MonadParse n,
-    MonadReader r m,
-    Has MkTypename r,
-    MonadError QErr m,
-    MonadSchema n m,
-    BackendSchema ('Postgres pgKind)
-  ) =>
+  MonadBuildSchema ('Postgres pgKind) r m n =>
   TableInfo ('Postgres pgKind) ->
   UpdPermInfo ('Postgres pgKind) ->
   m (InputFieldsParser n (HashMap (Column ('Postgres pgKind)) (UpdateOpExpression (UnpreparedValue ('Postgres pgKind)))))
-updateOperators tableInfo updatePermissions =
+updateOperators tableInfo updatePermissions = do
   SU.buildUpdateOperators
     (PGIR.UpdateSet <$> SU.presetColumns updatePermissions)
     [ PGIR.UpdateSet <$> SU.setOp,
@@ -845,4 +858,3 @@ updateOperators tableInfo updatePermissions =
       PGIR.UpdateDeleteAtPath <$> deleteAtPathOp
     ]
     tableInfo
-    updatePermissions

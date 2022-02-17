@@ -37,9 +37,8 @@ boolExp ::
   MonadBuildSchema b r m n =>
   SourceName ->
   TableInfo b ->
-  Maybe (SelPermInfo b) ->
   m (Parser 'Input n (AnnBoolExp b (UnpreparedValue b)))
-boolExp sourceName tableInfo selectPermissions = memoizeOn 'boolExp (sourceName, tableName) $ do
+boolExp sourceName tableInfo = memoizeOn 'boolExp (sourceName, tableName) $ do
   tableGQLName <- getTableGQLName tableInfo
   name <- P.mkTypename $ tableGQLName <> $$(G.litName "_bool_exp")
   let description =
@@ -47,13 +46,9 @@ boolExp sourceName tableInfo selectPermissions = memoizeOn 'boolExp (sourceName,
           "Boolean expression to filter rows from the table " <> tableName
             <<> ". All fields are combined with a logical 'AND'."
 
-  tableFieldParsers <-
-    catMaybes
-      <$> maybe
-        (pure [])
-        (traverse mkField <=< tableSelectFields sourceName tableInfo)
-        selectPermissions
-  recur <- boolExp sourceName tableInfo selectPermissions
+  fieldInfos <- tableSelectFields sourceName tableInfo
+  tableFieldParsers <- catMaybes <$> traverse mkField fieldInfos
+  recur <- boolExp sourceName tableInfo
   -- Bafflingly, ApplicativeDo doesn’t work if we inline this definition (I
   -- think the TH splices throw it off), so we have to define it separately.
   let specialFieldParsers =
@@ -86,7 +81,7 @@ boolExp sourceName tableInfo selectPermissions = memoizeOn 'boolExp (sourceName,
           let remoteTableFilter =
                 fmap partialSQLExpToUnpreparedValue
                   <$> maybe annBoolExpTrue spiFilter remotePermissions
-          remoteBoolExp <- lift $ boolExp sourceName remoteTableInfo remotePermissions
+          remoteBoolExp <- lift $ boolExp sourceName remoteTableInfo
           pure $ fmap (AVRelationship relationshipInfo . andAnnBoolExps remoteTableFilter) remoteBoolExp
         FIComputedField ComputedFieldInfo {..} -> do
           let ComputedFieldFunction {..} = _cfiFunction
@@ -100,8 +95,7 @@ boolExp sourceName tableInfo selectPermissions = memoizeOn 'boolExp (sourceName,
                   CFRScalar scalarType -> lift $ fmap CFBEScalar <$> comparisonExps @b (ColumnScalar scalarType)
                   CFRSetofTable table -> do
                     info <- askTableInfo sourceName table
-                    permissions <- lift $ tableSelectPermissions info
-                    lift $ fmap (CFBETable table) <$> boolExp sourceName info permissions
+                    lift $ fmap (CFBETable table) <$> boolExp sourceName info
             _ -> hoistMaybe Nothing
 
         -- Using remote relationship fields in boolean expressions is not supported.

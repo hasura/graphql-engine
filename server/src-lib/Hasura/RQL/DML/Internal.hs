@@ -69,25 +69,8 @@ newtype DMLP1T m a = DMLP1T {unDMLP1T :: StateT (DS.Seq Q.PrepArg) m a}
 runDMLP1T :: DMLP1T m a -> m (a, DS.Seq Q.PrepArg)
 runDMLP1T = flip runStateT DS.empty . unDMLP1T
 
-mkAdminRolePermInfo :: Backend b => TableCoreInfo b -> RolePermInfo b
-mkAdminRolePermInfo ti =
-  RolePermInfo (Just i) (Just s) (Just u) (Just d)
-  where
-    fields = _tciFieldInfoMap ti
-    pgCols = map ciColumn $ getCols fields
-    pgColsWithFilter = M.fromList $ map (,Nothing) pgCols
-    scalarComputedFields =
-      HS.fromList $ map _cfiName $ onlyScalarComputedFields $ getComputedFieldInfos fields
-    scalarComputedFields' = HS.toMap scalarComputedFields $> Nothing
-
-    tn = _tciName ti
-    i = InsPermInfo (HS.fromList pgCols) annBoolExpTrue M.empty False mempty
-    s = SelPermInfo pgColsWithFilter scalarComputedFields' annBoolExpTrue Nothing True mempty
-    u = UpdPermInfo (HS.fromList pgCols) tn annBoolExpTrue Nothing M.empty mempty
-    d = DelPermInfo tn annBoolExpTrue mempty
-
 askPermInfo' ::
-  (UserInfoM m, Backend b) =>
+  UserInfoM m =>
   PermAccessor b c ->
   TableInfo b ->
   m (Maybe c)
@@ -96,15 +79,15 @@ askPermInfo' pa tableInfo = do
   return $ getPermInfoMaybe role pa tableInfo
 
 getPermInfoMaybe ::
-  (Backend b) => RoleName -> PermAccessor b c -> TableInfo b -> Maybe c
+  RoleName -> PermAccessor b c -> TableInfo b -> Maybe c
 getPermInfoMaybe role pa tableInfo =
   getRolePermInfo role tableInfo >>= (^. permAccToLens pa)
 
 getRolePermInfo ::
-  Backend b => RoleName -> TableInfo b -> Maybe (RolePermInfo b)
+  RoleName -> TableInfo b -> Maybe (RolePermInfo b)
 getRolePermInfo role tableInfo
   | role == adminRoleName =
-    Just $ mkAdminRolePermInfo (_tiCoreInfo tableInfo)
+    Just $ _tiAdminRolePermInfo tableInfo
   | otherwise =
     M.lookup role (_tiRolePermInfoMap tableInfo)
 

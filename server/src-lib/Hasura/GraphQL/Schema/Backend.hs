@@ -91,7 +91,6 @@ class
     TableName b ->
     TableInfo b ->
     G.Name ->
-    SelPermInfo b ->
     m [FieldParser n (QueryDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
 
   buildTableRelayQueryFields ::
@@ -101,18 +100,15 @@ class
     TableInfo b ->
     G.Name ->
     NESeq (ColumnInfo b) ->
-    SelPermInfo b ->
     m [FieldParser n (QueryDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
 
   buildTableInsertMutationFields ::
     MonadBuildSchema b r m n =>
+    Scenario ->
     SourceName ->
     TableName b ->
     TableInfo b ->
     G.Name ->
-    InsPermInfo b ->
-    Maybe (SelPermInfo b) ->
-    Maybe (UpdPermInfo b) ->
     m [FieldParser n (AnnInsert b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
 
   -- | This method is responsible for building the GraphQL Schema for mutations
@@ -131,10 +127,6 @@ class
     TableInfo b ->
     -- | field display name
     G.Name ->
-    -- | update permissions of the table
-    UpdPermInfo b ->
-    -- | select permissions of the table (if any)
-    Maybe (SelPermInfo b) ->
     m [FieldParser n (AnnotatedUpdateG b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
 
   buildTableDeleteMutationFields ::
@@ -143,8 +135,6 @@ class
     TableName b ->
     TableInfo b ->
     G.Name ->
-    DelPermInfo b ->
-    Maybe (SelPermInfo b) ->
     m [FieldParser n (AnnDelG b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
 
   buildFunctionQueryFields ::
@@ -153,7 +143,6 @@ class
     FunctionName b ->
     FunctionInfo b ->
     TableName b ->
-    SelPermInfo b ->
     m [FieldParser n (QueryDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
 
   buildFunctionRelayQueryFields ::
@@ -163,7 +152,6 @@ class
     FunctionInfo b ->
     TableName b ->
     NESeq (ColumnInfo b) ->
-    SelPermInfo b ->
     m [FieldParser n (QueryDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
 
   buildFunctionMutationFields ::
@@ -172,7 +160,6 @@ class
     FunctionName b ->
     FunctionInfo b ->
     TableName b ->
-    SelPermInfo b ->
     m [FieldParser n (MutationDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
 
   -- table components
@@ -180,7 +167,6 @@ class
     MonadBuildSchema b r m n =>
     SourceName ->
     TableInfo b ->
-    SelPermInfo b ->
     m (InputFieldsParser n (IR.SelectArgsG b (UnpreparedValue b)))
 
   -- | Make a parser for relationships. Default implementaton elides
@@ -231,7 +217,7 @@ class
     SourceName ->
     ComputedFieldInfo b ->
     TableName b ->
-    SelPermInfo b ->
+    TableInfo b ->
     m (Maybe (FieldParser n (AnnotatedField b)))
 
   -- | The 'node' root field of a Relay request.
