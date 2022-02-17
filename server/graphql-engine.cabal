@@ -1002,6 +1002,7 @@ test-suite tests-hspec
     Test.ObjectRelationshipsLimitSpec
     Test.ObjectRelationshipsSpec
     Test.OrderingSpec
+    Test.RequestHeadersSpec
     Test.ServiceLivenessSpec
     Test.ViewsSpec
     Test.WhereSpec

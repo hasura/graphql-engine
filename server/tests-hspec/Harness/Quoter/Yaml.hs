@@ -35,7 +35,7 @@ import Language.Haskell.TH.Lift (Lift)
 import Language.Haskell.TH.Lift qualified as TH
 import Language.Haskell.TH.Quote (QuasiQuoter (..))
 import System.IO.Unsafe (unsafePerformIO)
-import Test.Hspec (shouldBe, shouldContain)
+import Test.Hspec (HasCallStack, shouldBe, shouldContain)
 import Text.Libyaml qualified as Libyaml
 import Prelude
 
@@ -48,7 +48,7 @@ import Prelude
 --
 -- We use 'Visual' internally to easily display the 'Value' as YAML
 -- when the test suite uses its 'Show' instance.
-shouldReturnYaml :: Feature.Options -> IO Value -> Value -> IO ()
+shouldReturnYaml :: HasCallStack => Feature.Options -> IO Value -> Value -> IO ()
 shouldReturnYaml options actualIO rawExpected = do
   actual <- actualIO
 
@@ -79,7 +79,7 @@ stringifyExpectedToActual expected _ = expected
 --
 -- We use 'Visual' internally to easily display the 'Value' as YAML
 -- when the test suite uses its 'Show' instance.
-shouldReturnOneOfYaml :: Feature.Options -> IO Value -> [Value] -> IO ()
+shouldReturnOneOfYaml :: HasCallStack => Feature.Options -> IO Value -> [Value] -> IO ()
 shouldReturnOneOfYaml options actualIO expecteds = do
   actual <- actualIO
 
@@ -100,7 +100,7 @@ shouldReturnOneOfYaml options actualIO expecteds = do
 -- Since @Data.Yaml@ uses the same underlying 'Value' type as
 -- @Data.Aeson@, we could pull that in as a dependency and alias
 -- some of these functions accordingly.
-shouldBeYaml :: Value -> Value -> IO ()
+shouldBeYaml :: HasCallStack => Value -> Value -> IO ()
 shouldBeYaml actual expected = do
   shouldBe (Visual actual) (Visual expected)
 
