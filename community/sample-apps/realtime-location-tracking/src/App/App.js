@@ -1,9 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { ApolloProvider, ApolloConsumer } from '@apollo/client';
+import { ApolloProvider, ApolloConsumer, gql } from '@apollo/client';
 import { Subscription } from '@apollo/client/react/components';
 import PropTypes from 'prop-types';
 import GoogleApiWrapper from "./MapContainer";
-import gql from 'graphql-tag';
 import client from '../apollo'
 import './App.css';
 

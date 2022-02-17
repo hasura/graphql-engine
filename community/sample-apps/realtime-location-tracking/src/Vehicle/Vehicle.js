@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
-import { ApolloProvider, ApolloConsumer } from '@apollo/client';
+import { ApolloProvider, ApolloConsumer, gql } from '@apollo/client';
 import { Subscription } from '@apollo/client/react/components';
-import gql from 'graphql-tag';
 import client from '../apollo'
 import uuidv4 from 'uuid/v4';
 import App from '../App/App';
