@@ -16,12 +16,12 @@ function HomepageHeader() {
         <div className={styles.links}>
           <Link
             className="button button--primary button--lg"
-            to="/graphql/core/index">
+            to="/latest/graphql/core/index">
             Hasura Core Docs
           </Link>
           <Link
             className="button button--success button--lg"
-            to="/graphql/cloud/index">
+            to="/latest/graphql/cloud/index">
             Hasura Cloud Docs
           </Link>
         </div>

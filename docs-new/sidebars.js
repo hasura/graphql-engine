@@ -17,7 +17,7 @@ const sidebars = {
   docsSidebar: [
     {
       type: 'link',
-      href: '/graphql/cloud/index',
+      href: '/latest/graphql/cloud/index',
       label: 'Hasura Cloud',
     },
     {
@@ -36,7 +36,7 @@ const sidebars = {
   cloudDocsSidebar: [
     {
       type: 'link',
-      href: '/graphql/core/index',
+      href: '/latest/graphql/core/index',
       label: 'Hasura Core',
     },
     {

@@ -8,8 +8,9 @@ const darkCodeTheme = require('prism-react-renderer/themes/dracula');
 const config = {
   title: 'Hasura GraphQL Docs',
   tagline: 'Instant GraphQL on all your data',
-  url: 'https://hasura.io/',
-  baseUrl: '/',
+  url: 'https://hasura.io',
+  baseUrl: '/docs/',
+  trailingSlash: true,
   onBrokenLinks: 'throw',
   onBrokenMarkdownLinks: 'throw',
   favicon: '/img/favicon.png',
@@ -32,9 +33,9 @@ const config = {
           lastVersion: "current",
           versions: {
             current: {
-              label: "v2.x",
+              label: "latest (v2.x)",
               badge: true,
-              // path: 'latest'
+              path: 'latest'
             },
           }
         },
@@ -144,7 +145,7 @@ const config = {
             items: [
               {
                 label: 'Documentation',
-                href: '/graphql/core/index',
+                to: '/latest/graphql/core/index',
               },
               {
                 label: 'Community Forum',
