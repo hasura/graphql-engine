@@ -20,15 +20,15 @@
 </span><span id="line-20"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.html"><span class="hs-identifier">Hasura.RQL.Types</span></a></span><span>
 </span><span id="line-21"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.SQL.AnyBackend.html"><span class="hs-identifier">Hasura.SQL.AnyBackend</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">AB</span></span><span>
 </span><span id="line-22"></span><span>
-</span><span id="line-23"></span><span id="local-6989586621688128074"><span id="local-6989586621688128075"></span></span><span class="hs-keyword">data</span><span> </span><span id="AddComputedField"><span class="annot"><a href="Hasura.RQL.DDL.ComputedField.html#AddComputedField"><span class="hs-identifier hs-var">AddComputedField</span></a></span></span><span> </span><span id="local-6989586621688128192"><span class="annot"><a href="#local-6989586621688128192"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="AddComputedField"><span class="annot"><a href="Hasura.RQL.DDL.ComputedField.html#AddComputedField"><span class="hs-identifier hs-var">AddComputedField</span></a></span></span><span>
+</span><span id="line-23"></span><span id="local-6989586621688137285"><span id="local-6989586621688137286"></span></span><span class="hs-keyword">data</span><span> </span><span id="AddComputedField"><span class="annot"><a href="Hasura.RQL.DDL.ComputedField.html#AddComputedField"><span class="hs-identifier hs-var">AddComputedField</span></a></span></span><span> </span><span id="local-6989586621688137403"><span class="annot"><a href="#local-6989586621688137403"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="AddComputedField"><span class="annot"><a href="Hasura.RQL.DDL.ComputedField.html#AddComputedField"><span class="hs-identifier hs-var">AddComputedField</span></a></span></span><span>
 </span><span id="line-24"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_afcSource"><span class="annot"><span class="annottext">AddComputedField b -&gt; SourceName
 </span><a href="Hasura.RQL.DDL.ComputedField.html#_afcSource"><span class="hs-identifier hs-var hs-var">_afcSource</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.RQL.Types.Common.html#SourceName"><span class="hs-identifier hs-type">SourceName</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-25"></span><span>    </span><span id="_afcTable"><span class="annot"><span class="annottext">AddComputedField b -&gt; TableName b
-</span><a href="Hasura.RQL.DDL.ComputedField.html#_afcTable"><span class="hs-identifier hs-var hs-var">_afcTable</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#TableName"><span class="hs-identifier hs-type">TableName</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688128192"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><a href="Hasura.RQL.DDL.ComputedField.html#_afcTable"><span class="hs-identifier hs-var hs-var">_afcTable</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#TableName"><span class="hs-identifier hs-type">TableName</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688137403"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
 </span><span id="line-26"></span><span>    </span><span id="_afcName"><span class="annot"><span class="annottext">AddComputedField b -&gt; ComputedFieldName
 </span><a href="Hasura.RQL.DDL.ComputedField.html#_afcName"><span class="hs-identifier hs-var hs-var">_afcName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.RQL.Types.ComputedField.html#ComputedFieldName"><span class="hs-identifier hs-type">ComputedFieldName</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-27"></span><span>    </span><span id="_afcDefinition"><span class="annot"><span class="annottext">AddComputedField b -&gt; ComputedFieldDefinition b
-</span><a href="Hasura.RQL.DDL.ComputedField.html#_afcDefinition"><span class="hs-identifier hs-var hs-var">_afcDefinition</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.ComputedField.html#ComputedFieldDefinition"><span class="hs-identifier hs-type">ComputedFieldDefinition</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688128192"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><a href="Hasura.RQL.DDL.ComputedField.html#_afcDefinition"><span class="hs-identifier hs-var hs-var">_afcDefinition</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.ComputedField.html#ComputedFieldDefinition"><span class="hs-identifier hs-type">ComputedFieldDefinition</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688137403"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
 </span><span id="line-28"></span><span>    </span><span id="_afcComment"><span class="annot"><span class="annottext">AddComputedField b -&gt; Comment
 </span><a href="Hasura.RQL.DDL.ComputedField.html#_afcComment"><span class="hs-identifier hs-var hs-var">_afcComment</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.RQL.Types.Common.html#Comment"><span class="hs-identifier hs-type">Comment</span></a></span><span>
 </span><span id="line-29"></span><span>  </span><span class="hs-special">}</span><span>
@@ -49,8 +49,8 @@ $cfrom :: forall (b :: BackendType) x.
 AddComputedField b -&gt; Rep (AddComputedField b) x
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">)</span><span>
 </span><span id="line-31"></span><span>
-</span><span id="line-32"></span><span id="local-6989586621688128064"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688128057"><span id="local-6989586621688128059"><span id="local-6989586621688128061"><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688128064"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.DDL.ComputedField.html#AddComputedField"><span class="hs-identifier hs-type">AddComputedField</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688128064"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-33"></span><span>  </span><span id="local-6989586621688128055"><span class="annot"><span class="annottext">toJSON :: AddComputedField b -&gt; Value
+</span><span id="line-32"></span><span id="local-6989586621688137275"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688137268"><span id="local-6989586621688137270"><span id="local-6989586621688137272"><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688137275"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.DDL.ComputedField.html#AddComputedField"><span class="hs-identifier hs-type">AddComputedField</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688137275"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-33"></span><span>  </span><span id="local-6989586621688137266"><span class="annot"><span class="annottext">toJSON :: AddComputedField b -&gt; Value
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Options -&gt; AddComputedField b -&gt; Value
 forall a.
 (Generic a, GToJSON' Value Zero (Rep a)) =&gt;
@@ -58,8 +58,8 @@ Options -&gt; a -&gt; Value
 </span><span class="hs-identifier hs-var">genericToJSON</span></span><span> </span><span class="annot"><span class="annottext">Options
 </span><a href="Hasura.Prelude.html#hasuraJSON"><span class="hs-identifier hs-var">hasuraJSON</span></a></span></span><span>
 </span><span id="line-34"></span><span>
-</span><span id="line-35"></span><span id="local-6989586621688128051"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688128048"><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688128051"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.DDL.ComputedField.html#AddComputedField"><span class="hs-identifier hs-type">AddComputedField</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688128051"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-36"></span><span>  </span><span id="local-6989586621688128046"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser (AddComputedField b)
+</span><span id="line-35"></span><span id="local-6989586621688137262"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688137259"><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688137262"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.DDL.ComputedField.html#AddComputedField"><span class="hs-identifier hs-type">AddComputedField</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688137262"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-36"></span><span>  </span><span id="local-6989586621688137257"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser (AddComputedField b)
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
 -&gt; (Object -&gt; Parser (AddComputedField b))
 -&gt; Value
@@ -72,8 +72,8 @@ forall a. String -&gt; (Object -&gt; Parser a) -&gt; Value -&gt; Parser a
 -&gt; Value
 -&gt; Parser (AddComputedField b)
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621688128043"><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621688128043"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621688137254"><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621688137254"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-37"></span><span>    </span><span class="annot"><span class="annottext">SourceName
 -&gt; TableName b
 -&gt; ComputedFieldName
@@ -103,7 +103,7 @@ SourceName
       -&gt; AddComputedField b)
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621688128043"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Text -&gt; Parser (Maybe SourceName)
+</span><a href="#local-6989586621688137254"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Text -&gt; Parser (Maybe SourceName)
 forall a. FromJSON a =&gt; Object -&gt; Text -&gt; Parser (Maybe a)
 </span><span class="hs-operator hs-var">.:?</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;source&quot;</span></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe SourceName) -&gt; SourceName -&gt; Parser SourceName
@@ -122,7 +122,7 @@ forall a. Parser (Maybe a) -&gt; a -&gt; Parser a
       -&gt; ComputedFieldDefinition b -&gt; Comment -&gt; AddComputedField b)
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621688128043"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Text -&gt; Parser (TableName b)
+</span><a href="#local-6989586621688137254"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Text -&gt; Parser (TableName b)
 forall a. FromJSON a =&gt; Object -&gt; Text -&gt; Parser a
 </span><span class="hs-operator hs-var">.:</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;table&quot;</span></span><span>
@@ -134,7 +134,7 @@ forall a. FromJSON a =&gt; Object -&gt; Text -&gt; Parser a
      (ComputedFieldDefinition b -&gt; Comment -&gt; AddComputedField b)
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621688128043"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Text -&gt; Parser ComputedFieldName
+</span><a href="#local-6989586621688137254"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Text -&gt; Parser ComputedFieldName
 forall a. FromJSON a =&gt; Object -&gt; Text -&gt; Parser a
 </span><span class="hs-operator hs-var">.:</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;name&quot;</span></span><span>
@@ -143,7 +143,7 @@ forall a. FromJSON a =&gt; Object -&gt; Text -&gt; Parser a
 -&gt; Parser (Comment -&gt; AddComputedField b)
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621688128043"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Text -&gt; Parser (ComputedFieldDefinition b)
+</span><a href="#local-6989586621688137254"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Text -&gt; Parser (ComputedFieldDefinition b)
 forall a. FromJSON a =&gt; Object -&gt; Text -&gt; Parser a
 </span><span class="hs-operator hs-var">.:</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;definition&quot;</span></span><span>
@@ -151,7 +151,7 @@ forall a. FromJSON a =&gt; Object -&gt; Text -&gt; Parser a
 -&gt; Parser Comment -&gt; Parser (AddComputedField b)
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621688128043"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Text -&gt; Parser (Maybe Comment)
+</span><a href="#local-6989586621688137254"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Text -&gt; Parser (Maybe Comment)
 forall a. FromJSON a =&gt; Object -&gt; Text -&gt; Parser (Maybe a)
 </span><span class="hs-operator hs-var">.:?</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;comment&quot;</span></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe Comment) -&gt; Comment -&gt; Parser Comment
@@ -160,13 +160,13 @@ forall a. Parser (Maybe a) -&gt; a -&gt; Parser a
 </span><a href="Hasura.RQL.Types.Common.html#Automatic"><span class="hs-identifier hs-var">Automatic</span></a></span></span><span>
 </span><span id="line-43"></span><span>
 </span><span id="line-44"></span><span class="annot"><a href="Hasura.RQL.DDL.ComputedField.html#runAddComputedField"><span class="hs-identifier hs-type">runAddComputedField</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-45"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621688128036"><span class="annot"><a href="#local-6989586621688128036"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span id="local-6989586621688128035"><span class="annot"><a href="#local-6989586621688128035"><span class="hs-identifier hs-type">m</span></a></span></span><span class="hs-operator">.</span><span>
-</span><span id="line-46"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Backend.html#BackendMetadata"><span class="hs-identifier hs-type">BackendMetadata</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688128036"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688128035"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.Build.html#CacheRWM"><span class="hs-identifier hs-type">CacheRWM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688128035"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.Build.html#MetadataM"><span class="hs-identifier hs-type">MetadataM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688128035"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
-</span><span id="line-47"></span><span>  </span><span class="annot"><a href="Hasura.RQL.DDL.ComputedField.html#AddComputedField"><span class="hs-identifier hs-type">AddComputedField</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688128036"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-48"></span><span>  </span><span class="annot"><a href="#local-6989586621688128035"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.EncJSON.html#EncJSON"><span class="hs-identifier hs-type">EncJSON</span></a></span><span>
+</span><span id="line-45"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621688137247"><span class="annot"><a href="#local-6989586621688137247"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span id="local-6989586621688137246"><span class="annot"><a href="#local-6989586621688137246"><span class="hs-identifier hs-type">m</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-46"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Backend.html#BackendMetadata"><span class="hs-identifier hs-type">BackendMetadata</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688137247"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688137246"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.Build.html#CacheRWM"><span class="hs-identifier hs-type">CacheRWM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688137246"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.Build.html#MetadataM"><span class="hs-identifier hs-type">MetadataM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688137246"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-47"></span><span>  </span><span class="annot"><a href="Hasura.RQL.DDL.ComputedField.html#AddComputedField"><span class="hs-identifier hs-type">AddComputedField</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688137247"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-48"></span><span>  </span><span class="annot"><a href="#local-6989586621688137246"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.EncJSON.html#EncJSON"><span class="hs-identifier hs-type">EncJSON</span></a></span><span>
 </span><span id="line-49"></span><span id="runAddComputedField"><span class="annot"><span class="annottext">runAddComputedField :: AddComputedField b -&gt; m EncJSON
-</span><a href="Hasura.RQL.DDL.ComputedField.html#runAddComputedField"><span class="hs-identifier hs-var hs-var">runAddComputedField</span></a></span></span><span> </span><span id="local-6989586621688128033"><span class="annot"><span class="annottext">AddComputedField b
-</span><a href="#local-6989586621688128033"><span class="hs-identifier hs-var">q</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><a href="Hasura.RQL.DDL.ComputedField.html#runAddComputedField"><span class="hs-identifier hs-var hs-var">runAddComputedField</span></a></span></span><span> </span><span id="local-6989586621688137244"><span class="annot"><span class="annottext">AddComputedField b
+</span><a href="#local-6989586621688137244"><span class="hs-identifier hs-var">q</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-50"></span><span>  </span><span class="annot"><span class="annottext">m (TableInfo b) -&gt; m ()
 forall (f :: * -&gt; *) a. Functor f =&gt; f a -&gt; f ()
 </span><span class="hs-identifier hs-var">void</span></span><span> </span><span class="annot"><span class="annottext">(m (TableInfo b) -&gt; m ()) -&gt; m (TableInfo b) -&gt; m ()
@@ -181,14 +181,14 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 forall (b :: BackendType) (m :: * -&gt; *).
 (QErrM m, CacheRM m, Backend b) =&gt;
 SourceName -&gt; TableName b -&gt; m (TableInfo b)
-</span><a href="Hasura.RQL.Types.html#askTabInfo"><span class="hs-identifier hs-var">askTabInfo</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621688128036"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName
-</span><a href="#local-6989586621688128029"><span class="hs-identifier hs-var">source</span></a></span><span> </span><span class="annot"><span class="annottext">TableName b
-</span><a href="#local-6989586621688128028"><span class="hs-identifier hs-var">table</span></a></span><span>
-</span><span id="line-51"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688128027"><span class="annot"><span class="annottext">metadataObj :: MetadataObjId
-</span><a href="#local-6989586621688128027"><span class="hs-identifier hs-var hs-var">metadataObj</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="Hasura.RQL.Types.html#askTabInfo"><span class="hs-identifier hs-var">askTabInfo</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621688137247"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName
+</span><a href="#local-6989586621688137240"><span class="hs-identifier hs-var">source</span></a></span><span> </span><span class="annot"><span class="annottext">TableName b
+</span><a href="#local-6989586621688137239"><span class="hs-identifier hs-var">table</span></a></span><span>
+</span><span id="line-51"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688137238"><span class="annot"><span class="annottext">metadataObj :: MetadataObjId
+</span><a href="#local-6989586621688137238"><span class="hs-identifier hs-var hs-var">metadataObj</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-52"></span><span>        </span><span class="annot"><span class="annottext">SourceName -&gt; AnyBackend SourceMetadataObjId -&gt; MetadataObjId
 </span><a href="Hasura.RQL.Types.Metadata.Object.html#MOSourceObjId"><span class="hs-identifier hs-var">MOSourceObjId</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName
-</span><a href="#local-6989586621688128029"><span class="hs-identifier hs-var">source</span></a></span><span> </span><span class="annot"><span class="annottext">(AnyBackend SourceMetadataObjId -&gt; MetadataObjId)
+</span><a href="#local-6989586621688137240"><span class="hs-identifier hs-var">source</span></a></span><span> </span><span class="annot"><span class="annottext">(AnyBackend SourceMetadataObjId -&gt; MetadataObjId)
 -&gt; AnyBackend SourceMetadataObjId -&gt; MetadataObjId
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span>
@@ -203,35 +203,35 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span id="line-54"></span><span>            </span><span class="annot"><span class="annottext">TableName b -&gt; TableMetadataObjId -&gt; SourceMetadataObjId b
 forall (b :: BackendType).
 TableName b -&gt; TableMetadataObjId -&gt; SourceMetadataObjId b
-</span><a href="Hasura.RQL.Types.Metadata.Object.html#SMOTableObj"><span class="hs-identifier hs-var">SMOTableObj</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621688128036"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><span class="annottext">TableName b
-</span><a href="#local-6989586621688128028"><span class="hs-identifier hs-var">table</span></a></span><span> </span><span class="annot"><span class="annottext">(TableMetadataObjId -&gt; SourceMetadataObjId b)
+</span><a href="Hasura.RQL.Types.Metadata.Object.html#SMOTableObj"><span class="hs-identifier hs-var">SMOTableObj</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621688137247"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><span class="annottext">TableName b
+</span><a href="#local-6989586621688137239"><span class="hs-identifier hs-var">table</span></a></span><span> </span><span class="annot"><span class="annottext">(TableMetadataObjId -&gt; SourceMetadataObjId b)
 -&gt; TableMetadataObjId -&gt; SourceMetadataObjId b
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span>
 </span><span id="line-55"></span><span>              </span><span class="annot"><span class="annottext">ComputedFieldName -&gt; TableMetadataObjId
 </span><a href="Hasura.RQL.Types.Metadata.Object.html#MTOComputedField"><span class="hs-identifier hs-var">MTOComputedField</span></a></span><span> </span><span class="annot"><span class="annottext">ComputedFieldName
-</span><a href="#local-6989586621688128022"><span class="hs-identifier hs-var">computedFieldName</span></a></span><span>
-</span><span id="line-56"></span><span>      </span><span id="local-6989586621688128021"><span class="annot"><span class="annottext">metadata :: ComputedFieldMetadata b
-</span><a href="#local-6989586621688128021"><span class="hs-identifier hs-var hs-var">metadata</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ComputedFieldName
+</span><a href="#local-6989586621688137233"><span class="hs-identifier hs-var">computedFieldName</span></a></span><span>
+</span><span id="line-56"></span><span>      </span><span id="local-6989586621688137232"><span class="annot"><span class="annottext">metadata :: ComputedFieldMetadata b
+</span><a href="#local-6989586621688137232"><span class="hs-identifier hs-var hs-var">metadata</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ComputedFieldName
 -&gt; ComputedFieldDefinition b -&gt; Comment -&gt; ComputedFieldMetadata b
 forall (b :: BackendType).
 ComputedFieldName
 -&gt; ComputedFieldDefinition b -&gt; Comment -&gt; ComputedFieldMetadata b
 </span><a href="Hasura.RQL.Types.Metadata.html#ComputedFieldMetadata"><span class="hs-identifier hs-var">ComputedFieldMetadata</span></a></span><span> </span><span class="annot"><span class="annottext">ComputedFieldName
-</span><a href="#local-6989586621688128022"><span class="hs-identifier hs-var">computedFieldName</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">AddComputedField b -&gt; ComputedFieldDefinition b
+</span><a href="#local-6989586621688137233"><span class="hs-identifier hs-var">computedFieldName</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">AddComputedField b -&gt; ComputedFieldDefinition b
 forall (b :: BackendType).
 AddComputedField b -&gt; ComputedFieldDefinition b
 </span><a href="Hasura.RQL.DDL.ComputedField.html#_afcDefinition"><span class="hs-identifier hs-var hs-var">_afcDefinition</span></a></span><span> </span><span class="annot"><span class="annottext">AddComputedField b
-</span><a href="#local-6989586621688128033"><span class="hs-identifier hs-var">q</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">AddComputedField b -&gt; Comment
+</span><a href="#local-6989586621688137244"><span class="hs-identifier hs-var">q</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">AddComputedField b -&gt; Comment
 forall (b :: BackendType). AddComputedField b -&gt; Comment
 </span><a href="Hasura.RQL.DDL.ComputedField.html#_afcComment"><span class="hs-identifier hs-var hs-var">_afcComment</span></a></span><span> </span><span class="annot"><span class="annottext">AddComputedField b
-</span><a href="#local-6989586621688128033"><span class="hs-identifier hs-var">q</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621688137244"><span class="hs-identifier hs-var">q</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-57"></span><span>  </span><span class="annot"><span class="annottext">MetadataObjId -&gt; MetadataModifier -&gt; m ()
 forall (m :: * -&gt; *).
 (QErrM m, CacheRWM m, MetadataM m) =&gt;
 MetadataObjId -&gt; MetadataModifier -&gt; m ()
 </span><a href="Hasura.RQL.Types.SchemaCache.Build.html#buildSchemaCacheFor"><span class="hs-identifier hs-var">buildSchemaCacheFor</span></a></span><span> </span><span class="annot"><span class="annottext">MetadataObjId
-</span><a href="#local-6989586621688128027"><span class="hs-identifier hs-var">metadataObj</span></a></span><span> </span><span class="annot"><span class="annottext">(MetadataModifier -&gt; m ()) -&gt; MetadataModifier -&gt; m ()
+</span><a href="#local-6989586621688137238"><span class="hs-identifier hs-var">metadataObj</span></a></span><span> </span><span class="annot"><span class="annottext">(MetadataModifier -&gt; m ()) -&gt; MetadataModifier -&gt; m ()
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span>
 </span><span id="line-58"></span><span>    </span><span class="annot"><span class="annottext">(Metadata -&gt; Metadata) -&gt; MetadataModifier
@@ -244,8 +244,8 @@ forall (b :: BackendType).
 Backend b =&gt;
 SourceName -&gt; TableName b -&gt; ASetter' Metadata (TableMetadata b)
 </span><a href="Hasura.RQL.Types.Metadata.html#tableMetadataSetter"><span class="hs-identifier hs-var">tableMetadataSetter</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName
-</span><a href="#local-6989586621688128029"><span class="hs-identifier hs-var">source</span></a></span><span> </span><span class="annot"><span class="annottext">TableName b
-</span><a href="#local-6989586621688128028"><span class="hs-identifier hs-var">table</span></a></span><span> </span><span class="annot"><span class="annottext">ASetter' Metadata (TableMetadata b)
+</span><a href="#local-6989586621688137240"><span class="hs-identifier hs-var">source</span></a></span><span> </span><span class="annot"><span class="annottext">TableName b
+</span><a href="#local-6989586621688137239"><span class="hs-identifier hs-var">table</span></a></span><span> </span><span class="annot"><span class="annottext">ASetter' Metadata (TableMetadata b)
 -&gt; ((ComputedFields b -&gt; Identity (ComputedFields b))
     -&gt; TableMetadata b -&gt; Identity (TableMetadata b))
 -&gt; (ComputedFields b -&gt; Identity (ComputedFields b))
@@ -267,43 +267,43 @@ forall k v.
 (Eq k, Hashable k) =&gt;
 k -&gt; v -&gt; InsOrdHashMap k v -&gt; InsOrdHashMap k v
 </span><span class="hs-identifier hs-var">OMap.insert</span></span><span> </span><span class="annot"><span class="annottext">ComputedFieldName
-</span><a href="#local-6989586621688128022"><span class="hs-identifier hs-var">computedFieldName</span></a></span><span> </span><span class="annot"><span class="annottext">ComputedFieldMetadata b
-</span><a href="#local-6989586621688128021"><span class="hs-identifier hs-var">metadata</span></a></span><span>
+</span><a href="#local-6989586621688137233"><span class="hs-identifier hs-var">computedFieldName</span></a></span><span> </span><span class="annot"><span class="annottext">ComputedFieldMetadata b
+</span><a href="#local-6989586621688137232"><span class="hs-identifier hs-var">metadata</span></a></span><span>
 </span><span id="line-61"></span><span>  </span><span class="annot"><span class="annottext">EncJSON -&gt; m EncJSON
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">EncJSON
 </span><a href="Hasura.RQL.Types.Common.html#successMsg"><span class="hs-identifier hs-var">successMsg</span></a></span><span>
 </span><span id="line-62"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-63"></span><span>    </span><span id="local-6989586621688128029"><span class="annot"><span class="annottext">source :: SourceName
-</span><a href="#local-6989586621688128029"><span class="hs-identifier hs-var hs-var">source</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">AddComputedField b -&gt; SourceName
+</span><span id="line-63"></span><span>    </span><span id="local-6989586621688137240"><span class="annot"><span class="annottext">source :: SourceName
+</span><a href="#local-6989586621688137240"><span class="hs-identifier hs-var hs-var">source</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">AddComputedField b -&gt; SourceName
 forall (b :: BackendType). AddComputedField b -&gt; SourceName
 </span><a href="Hasura.RQL.DDL.ComputedField.html#_afcSource"><span class="hs-identifier hs-var hs-var">_afcSource</span></a></span><span> </span><span class="annot"><span class="annottext">AddComputedField b
-</span><a href="#local-6989586621688128033"><span class="hs-identifier hs-var">q</span></a></span><span>
-</span><span id="line-64"></span><span>    </span><span id="local-6989586621688128028"><span class="annot"><span class="annottext">table :: TableName b
-</span><a href="#local-6989586621688128028"><span class="hs-identifier hs-var hs-var">table</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">AddComputedField b -&gt; TableName b
+</span><a href="#local-6989586621688137244"><span class="hs-identifier hs-var">q</span></a></span><span>
+</span><span id="line-64"></span><span>    </span><span id="local-6989586621688137239"><span class="annot"><span class="annottext">table :: TableName b
+</span><a href="#local-6989586621688137239"><span class="hs-identifier hs-var hs-var">table</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">AddComputedField b -&gt; TableName b
 forall (b :: BackendType). AddComputedField b -&gt; TableName b
 </span><a href="Hasura.RQL.DDL.ComputedField.html#_afcTable"><span class="hs-identifier hs-var hs-var">_afcTable</span></a></span><span> </span><span class="annot"><span class="annottext">AddComputedField b
-</span><a href="#local-6989586621688128033"><span class="hs-identifier hs-var">q</span></a></span><span>
-</span><span id="line-65"></span><span>    </span><span id="local-6989586621688128022"><span class="annot"><span class="annottext">computedFieldName :: ComputedFieldName
-</span><a href="#local-6989586621688128022"><span class="hs-identifier hs-var hs-var">computedFieldName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">AddComputedField b -&gt; ComputedFieldName
+</span><a href="#local-6989586621688137244"><span class="hs-identifier hs-var">q</span></a></span><span>
+</span><span id="line-65"></span><span>    </span><span id="local-6989586621688137233"><span class="annot"><span class="annottext">computedFieldName :: ComputedFieldName
+</span><a href="#local-6989586621688137233"><span class="hs-identifier hs-var hs-var">computedFieldName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">AddComputedField b -&gt; ComputedFieldName
 forall (b :: BackendType). AddComputedField b -&gt; ComputedFieldName
 </span><a href="Hasura.RQL.DDL.ComputedField.html#_afcName"><span class="hs-identifier hs-var hs-var">_afcName</span></a></span><span> </span><span class="annot"><span class="annottext">AddComputedField b
-</span><a href="#local-6989586621688128033"><span class="hs-identifier hs-var">q</span></a></span><span>
+</span><a href="#local-6989586621688137244"><span class="hs-identifier hs-var">q</span></a></span><span>
 </span><span id="line-66"></span><span>
-</span><span id="line-67"></span><span class="hs-keyword">data</span><span> </span><span id="DropComputedField"><span class="annot"><a href="Hasura.RQL.DDL.ComputedField.html#DropComputedField"><span class="hs-identifier hs-var">DropComputedField</span></a></span></span><span> </span><span id="local-6989586621688128128"><span class="annot"><a href="#local-6989586621688128128"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="DropComputedField"><span class="annot"><a href="Hasura.RQL.DDL.ComputedField.html#DropComputedField"><span class="hs-identifier hs-var">DropComputedField</span></a></span></span><span>
+</span><span id="line-67"></span><span class="hs-keyword">data</span><span> </span><span id="DropComputedField"><span class="annot"><a href="Hasura.RQL.DDL.ComputedField.html#DropComputedField"><span class="hs-identifier hs-var">DropComputedField</span></a></span></span><span> </span><span id="local-6989586621688137339"><span class="annot"><a href="#local-6989586621688137339"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="DropComputedField"><span class="annot"><a href="Hasura.RQL.DDL.ComputedField.html#DropComputedField"><span class="hs-identifier hs-var">DropComputedField</span></a></span></span><span>
 </span><span id="line-68"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_dccSource"><span class="annot"><span class="annottext">DropComputedField b -&gt; SourceName
 </span><a href="Hasura.RQL.DDL.ComputedField.html#_dccSource"><span class="hs-identifier hs-var hs-var">_dccSource</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.RQL.Types.Common.html#SourceName"><span class="hs-identifier hs-type">SourceName</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-69"></span><span>    </span><span id="_dccTable"><span class="annot"><span class="annottext">DropComputedField b -&gt; TableName b
-</span><a href="Hasura.RQL.DDL.ComputedField.html#_dccTable"><span class="hs-identifier hs-var hs-var">_dccTable</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#TableName"><span class="hs-identifier hs-type">TableName</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688128128"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><a href="Hasura.RQL.DDL.ComputedField.html#_dccTable"><span class="hs-identifier hs-var hs-var">_dccTable</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#TableName"><span class="hs-identifier hs-type">TableName</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688137339"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
 </span><span id="line-70"></span><span>    </span><span id="_dccName"><span class="annot"><span class="annottext">DropComputedField b -&gt; ComputedFieldName
 </span><a href="Hasura.RQL.DDL.ComputedField.html#_dccName"><span class="hs-identifier hs-var hs-var">_dccName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.RQL.Types.ComputedField.html#ComputedFieldName"><span class="hs-identifier hs-type">ComputedFieldName</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-71"></span><span>    </span><span id="_dccCascade"><span class="annot"><span class="annottext">DropComputedField b -&gt; Bool
 </span><a href="Hasura.RQL.DDL.ComputedField.html#_dccCascade"><span class="hs-identifier hs-var hs-var">_dccCascade</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span>
 </span><span id="line-72"></span><span>  </span><span class="hs-special">}</span><span>
 </span><span id="line-73"></span><span>
-</span><span id="line-74"></span><span id="local-6989586621688128006"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688128003"><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688128006"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.DDL.ComputedField.html#DropComputedField"><span class="hs-identifier hs-type">DropComputedField</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688128006"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-75"></span><span>  </span><span id="local-6989586621688128002"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser (DropComputedField b)
-</span><a href="#local-6989586621688128002"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
+</span><span id="line-74"></span><span id="local-6989586621688137217"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688137214"><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688137217"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.DDL.ComputedField.html#DropComputedField"><span class="hs-identifier hs-type">DropComputedField</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688137217"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-75"></span><span>  </span><span id="local-6989586621688137213"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser (DropComputedField b)
+</span><a href="#local-6989586621688137213"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
 -&gt; (Object -&gt; Parser (DropComputedField b))
 -&gt; Value
 -&gt; Parser (DropComputedField b)
@@ -315,8 +315,8 @@ forall a. String -&gt; (Object -&gt; Parser a) -&gt; Value -&gt; Parser a
 -&gt; Value
 -&gt; Parser (DropComputedField b)
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621688128001"><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621688128001"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621688137212"><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621688137212"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-76"></span><span>    </span><span class="annot"><span class="annottext">SourceName
 -&gt; TableName b -&gt; ComputedFieldName -&gt; Bool -&gt; DropComputedField b
 forall (b :: BackendType).
@@ -330,7 +330,7 @@ SourceName
      (TableName b -&gt; ComputedFieldName -&gt; Bool -&gt; DropComputedField b)
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621688128001"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Text -&gt; Parser (Maybe SourceName)
+</span><a href="#local-6989586621688137212"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Text -&gt; Parser (Maybe SourceName)
 forall a. FromJSON a =&gt; Object -&gt; Text -&gt; Parser (Maybe a)
 </span><span class="hs-operator hs-var">.:?</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;source&quot;</span></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe SourceName) -&gt; SourceName -&gt; Parser SourceName
@@ -343,7 +343,7 @@ forall a. Parser (Maybe a) -&gt; a -&gt; Parser a
 -&gt; Parser (ComputedFieldName -&gt; Bool -&gt; DropComputedField b)
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621688128001"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Text -&gt; Parser (TableName b)
+</span><a href="#local-6989586621688137212"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Text -&gt; Parser (TableName b)
 forall a. FromJSON a =&gt; Object -&gt; Text -&gt; Parser a
 </span><span class="hs-operator hs-var">.:</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;table&quot;</span></span><span>
@@ -351,7 +351,7 @@ forall a. FromJSON a =&gt; Object -&gt; Text -&gt; Parser a
 -&gt; Parser ComputedFieldName -&gt; Parser (Bool -&gt; DropComputedField b)
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621688128001"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Text -&gt; Parser ComputedFieldName
+</span><a href="#local-6989586621688137212"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Text -&gt; Parser ComputedFieldName
 forall a. FromJSON a =&gt; Object -&gt; Text -&gt; Parser a
 </span><span class="hs-operator hs-var">.:</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;name&quot;</span></span><span>
@@ -359,7 +359,7 @@ forall a. FromJSON a =&gt; Object -&gt; Text -&gt; Parser a
 -&gt; Parser Bool -&gt; Parser (DropComputedField b)
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621688128001"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Text -&gt; Parser (Maybe Bool)
+</span><a href="#local-6989586621688137212"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Text -&gt; Parser (Maybe Bool)
 forall a. FromJSON a =&gt; Object -&gt; Text -&gt; Parser (Maybe a)
 </span><span class="hs-operator hs-var">.:?</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;cascade&quot;</span></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe Bool) -&gt; Bool -&gt; Parser Bool
@@ -368,19 +368,19 @@ forall a. Parser (Maybe a) -&gt; a -&gt; Parser a
 </span><span class="hs-identifier hs-var">False</span></span></span><span>
 </span><span id="line-81"></span><span>
 </span><span id="line-82"></span><span class="annot"><a href="Hasura.RQL.DDL.ComputedField.html#runDropComputedField"><span class="hs-identifier hs-type">runDropComputedField</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-83"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621688128000"><span class="annot"><a href="#local-6989586621688128000"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span id="local-6989586621688127999"><span class="annot"><a href="#local-6989586621688127999"><span class="hs-identifier hs-type">m</span></a></span></span><span class="hs-operator">.</span><span>
-</span><span id="line-84"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Base.Error.html#QErrM"><span class="hs-identifier hs-type">QErrM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688127999"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.Build.html#CacheRWM"><span class="hs-identifier hs-type">CacheRWM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688127999"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.Build.html#MetadataM"><span class="hs-identifier hs-type">MetadataM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688127999"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Backend.html#BackendMetadata"><span class="hs-identifier hs-type">BackendMetadata</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688128000"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
-</span><span id="line-85"></span><span>  </span><span class="annot"><a href="Hasura.RQL.DDL.ComputedField.html#DropComputedField"><span class="hs-identifier hs-type">DropComputedField</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688128000"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-86"></span><span>  </span><span class="annot"><a href="#local-6989586621688127999"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.EncJSON.html#EncJSON"><span class="hs-identifier hs-type">EncJSON</span></a></span><span>
+</span><span id="line-83"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621688137211"><span class="annot"><a href="#local-6989586621688137211"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span id="local-6989586621688137210"><span class="annot"><a href="#local-6989586621688137210"><span class="hs-identifier hs-type">m</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-84"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Base.Error.html#QErrM"><span class="hs-identifier hs-type">QErrM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688137210"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.Build.html#CacheRWM"><span class="hs-identifier hs-type">CacheRWM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688137210"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.Build.html#MetadataM"><span class="hs-identifier hs-type">MetadataM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688137210"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Backend.html#BackendMetadata"><span class="hs-identifier hs-type">BackendMetadata</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688137211"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-85"></span><span>  </span><span class="annot"><a href="Hasura.RQL.DDL.ComputedField.html#DropComputedField"><span class="hs-identifier hs-type">DropComputedField</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688137211"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-86"></span><span>  </span><span class="annot"><a href="#local-6989586621688137210"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.EncJSON.html#EncJSON"><span class="hs-identifier hs-type">EncJSON</span></a></span><span>
 </span><span id="line-87"></span><span id="runDropComputedField"><span class="annot"><span class="annottext">runDropComputedField :: DropComputedField b -&gt; m EncJSON
-</span><a href="Hasura.RQL.DDL.ComputedField.html#runDropComputedField"><span class="hs-identifier hs-var hs-var">runDropComputedField</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.DDL.ComputedField.html#DropComputedField"><span class="hs-identifier hs-type">DropComputedField</span></a></span><span> </span><span id="local-6989586621688127998"><span class="annot"><span class="annottext">SourceName
-</span><a href="#local-6989586621688127998"><span class="hs-identifier hs-var">source</span></a></span></span><span> </span><span id="local-6989586621688127997"><span class="annot"><span class="annottext">TableName b
-</span><a href="#local-6989586621688127997"><span class="hs-identifier hs-var">table</span></a></span></span><span> </span><span id="local-6989586621688127996"><span class="annot"><span class="annottext">ComputedFieldName
-</span><a href="#local-6989586621688127996"><span class="hs-identifier hs-var">computedField</span></a></span></span><span> </span><span id="local-6989586621688127995"><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621688127995"><span class="hs-identifier hs-var">cascade</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><a href="Hasura.RQL.DDL.ComputedField.html#runDropComputedField"><span class="hs-identifier hs-var hs-var">runDropComputedField</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.DDL.ComputedField.html#DropComputedField"><span class="hs-identifier hs-type">DropComputedField</span></a></span><span> </span><span id="local-6989586621688137209"><span class="annot"><span class="annottext">SourceName
+</span><a href="#local-6989586621688137209"><span class="hs-identifier hs-var">source</span></a></span></span><span> </span><span id="local-6989586621688137208"><span class="annot"><span class="annottext">TableName b
+</span><a href="#local-6989586621688137208"><span class="hs-identifier hs-var">table</span></a></span></span><span> </span><span id="local-6989586621688137207"><span class="annot"><span class="annottext">ComputedFieldName
+</span><a href="#local-6989586621688137207"><span class="hs-identifier hs-var">computedField</span></a></span></span><span> </span><span id="local-6989586621688137206"><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621688137206"><span class="hs-identifier hs-var">cascade</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-88"></span><span>  </span><span class="hs-comment">-- Validation</span><span>
-</span><span id="line-89"></span><span>  </span><span id="local-6989586621688127994"><span class="annot"><span class="annottext">FieldInfoMap (FieldInfo b)
-</span><a href="#local-6989586621688127994"><span class="hs-identifier hs-var">fields</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Text
+</span><span id="line-89"></span><span>  </span><span id="local-6989586621688137205"><span class="annot"><span class="annottext">FieldInfoMap (FieldInfo b)
+</span><a href="#local-6989586621688137205"><span class="hs-identifier hs-var">fields</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Text
 -&gt; m (FieldInfoMap (FieldInfo b)) -&gt; m (FieldInfoMap (FieldInfo b))
 forall (m :: * -&gt; *) a. QErrM m =&gt; Text -&gt; m a -&gt; m a
 </span><a href="Hasura.Base.Error.html#withPathK"><span class="hs-identifier hs-var">withPathK</span></a></span><span> </span><span class="annot"><span class="annottext">Text
@@ -401,9 +401,9 @@ forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 forall (b :: BackendType) (m :: * -&gt; *).
 (QErrM m, CacheRM m, Backend b) =&gt;
 SourceName -&gt; TableName b -&gt; m (TableCoreInfo b)
-</span><a href="Hasura.RQL.Types.html#askTableCoreInfo"><span class="hs-identifier hs-var">askTableCoreInfo</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621688128000"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName
-</span><a href="#local-6989586621688127998"><span class="hs-identifier hs-var">source</span></a></span><span> </span><span class="annot"><span class="annottext">TableName b
-</span><a href="#local-6989586621688127997"><span class="hs-identifier hs-var">table</span></a></span><span>
+</span><a href="Hasura.RQL.Types.html#askTableCoreInfo"><span class="hs-identifier hs-var">askTableCoreInfo</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621688137211"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName
+</span><a href="#local-6989586621688137209"><span class="hs-identifier hs-var">source</span></a></span><span> </span><span class="annot"><span class="annottext">TableName b
+</span><a href="#local-6989586621688137208"><span class="hs-identifier hs-var">table</span></a></span><span>
 </span><span id="line-90"></span><span>  </span><span class="annot"><span class="annottext">m (ComputedFieldInfo b) -&gt; m ()
 forall (f :: * -&gt; *) a. Functor f =&gt; f a -&gt; f ()
 </span><span class="hs-identifier hs-var">void</span></span><span> </span><span class="annot"><span class="annottext">(m (ComputedFieldInfo b) -&gt; m ())
@@ -422,24 +422,24 @@ MonadError QErr m =&gt;
 FieldInfoMap (FieldInfo backend)
 -&gt; ComputedFieldName -&gt; m (ComputedFieldInfo backend)
 </span><a href="Hasura.RQL.Types.html#askComputedFieldInfo"><span class="hs-identifier hs-var">askComputedFieldInfo</span></a></span><span> </span><span class="annot"><span class="annottext">FieldInfoMap (FieldInfo b)
-</span><a href="#local-6989586621688127994"><span class="hs-identifier hs-var">fields</span></a></span><span> </span><span class="annot"><span class="annottext">ComputedFieldName
-</span><a href="#local-6989586621688127996"><span class="hs-identifier hs-var">computedField</span></a></span><span>
+</span><a href="#local-6989586621688137205"><span class="hs-identifier hs-var">fields</span></a></span><span> </span><span class="annot"><span class="annottext">ComputedFieldName
+</span><a href="#local-6989586621688137207"><span class="hs-identifier hs-var">computedField</span></a></span><span>
 </span><span id="line-91"></span><span>
 </span><span id="line-92"></span><span>  </span><span class="hs-comment">-- Dependencies check</span><span>
-</span><span id="line-93"></span><span>  </span><span id="local-6989586621688127990"><span class="annot"><span class="annottext">SchemaCache
-</span><a href="#local-6989586621688127990"><span class="hs-identifier hs-var">sc</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">m SchemaCache
+</span><span id="line-93"></span><span>  </span><span id="local-6989586621688137201"><span class="annot"><span class="annottext">SchemaCache
+</span><a href="#local-6989586621688137201"><span class="hs-identifier hs-var">sc</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">m SchemaCache
 forall (m :: * -&gt; *). CacheRM m =&gt; m SchemaCache
 </span><a href="Hasura.RQL.Types.SchemaCache.html#askSchemaCache"><span class="hs-identifier hs-var">askSchemaCache</span></a></span><span>
-</span><span id="line-94"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688127988"><span class="annot"><span class="annottext">deps :: [SchemaObjId]
-</span><a href="#local-6989586621688127988"><span class="hs-identifier hs-var hs-var">deps</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-94"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688137199"><span class="annot"><span class="annottext">deps :: [SchemaObjId]
+</span><a href="#local-6989586621688137199"><span class="hs-identifier hs-var hs-var">deps</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-95"></span><span>        </span><span class="annot"><span class="annottext">SchemaCache -&gt; SchemaObjId -&gt; [SchemaObjId]
 </span><a href="Hasura.RQL.Types.SchemaCache.html#getDependentObjs"><span class="hs-identifier hs-var">getDependentObjs</span></a></span><span> </span><span class="annot"><span class="annottext">SchemaCache
-</span><a href="#local-6989586621688127990"><span class="hs-identifier hs-var">sc</span></a></span><span> </span><span class="annot"><span class="annottext">(SchemaObjId -&gt; [SchemaObjId]) -&gt; SchemaObjId -&gt; [SchemaObjId]
+</span><a href="#local-6989586621688137201"><span class="hs-identifier hs-var">sc</span></a></span><span> </span><span class="annot"><span class="annottext">(SchemaObjId -&gt; [SchemaObjId]) -&gt; SchemaObjId -&gt; [SchemaObjId]
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span>
 </span><span id="line-96"></span><span>          </span><span class="annot"><span class="annottext">SourceName -&gt; AnyBackend SourceObjId -&gt; SchemaObjId
 </span><a href="Hasura.RQL.Types.SchemaCacheTypes.html#SOSourceObj"><span class="hs-identifier hs-var">SOSourceObj</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName
-</span><a href="#local-6989586621688127998"><span class="hs-identifier hs-var">source</span></a></span><span> </span><span class="annot"><span class="annottext">(AnyBackend SourceObjId -&gt; SchemaObjId)
+</span><a href="#local-6989586621688137209"><span class="hs-identifier hs-var">source</span></a></span><span> </span><span class="annot"><span class="annottext">(AnyBackend SourceObjId -&gt; SchemaObjId)
 -&gt; AnyBackend SourceObjId -&gt; SchemaObjId
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span>
@@ -454,42 +454,42 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span id="line-98"></span><span>              </span><span class="annot"><span class="annottext">TableName b -&gt; TableObjId b -&gt; SourceObjId b
 forall (b :: BackendType).
 TableName b -&gt; TableObjId b -&gt; SourceObjId b
-</span><a href="Hasura.RQL.Types.SchemaCacheTypes.html#SOITableObj"><span class="hs-identifier hs-var">SOITableObj</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621688128000"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><span class="annottext">TableName b
-</span><a href="#local-6989586621688127997"><span class="hs-identifier hs-var">table</span></a></span><span> </span><span class="annot"><span class="annottext">(TableObjId b -&gt; SourceObjId b) -&gt; TableObjId b -&gt; SourceObjId b
+</span><a href="Hasura.RQL.Types.SchemaCacheTypes.html#SOITableObj"><span class="hs-identifier hs-var">SOITableObj</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621688137211"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><span class="annottext">TableName b
+</span><a href="#local-6989586621688137208"><span class="hs-identifier hs-var">table</span></a></span><span> </span><span class="annot"><span class="annottext">(TableObjId b -&gt; SourceObjId b) -&gt; TableObjId b -&gt; SourceObjId b
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span>
 </span><span id="line-99"></span><span>                </span><span class="annot"><span class="annottext">ComputedFieldName -&gt; TableObjId b
 forall (b :: BackendType). ComputedFieldName -&gt; TableObjId b
 </span><a href="Hasura.RQL.Types.SchemaCacheTypes.html#TOComputedField"><span class="hs-identifier hs-var">TOComputedField</span></a></span><span> </span><span class="annot"><span class="annottext">ComputedFieldName
-</span><a href="#local-6989586621688127996"><span class="hs-identifier hs-var">computedField</span></a></span><span>
+</span><a href="#local-6989586621688137207"><span class="hs-identifier hs-var">computedField</span></a></span><span>
 </span><span id="line-100"></span><span>  </span><span class="annot"><span class="annottext">Bool -&gt; m () -&gt; m ()
 forall (f :: * -&gt; *). Applicative f =&gt; Bool -&gt; f () -&gt; f ()
 </span><span class="hs-identifier hs-var">when</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Bool -&gt; Bool
 </span><span class="hs-identifier hs-var">not</span></span><span> </span><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621688127995"><span class="hs-identifier hs-var">cascade</span></a></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
+</span><a href="#local-6989586621688137206"><span class="hs-identifier hs-var">cascade</span></a></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
 </span><span class="hs-operator hs-var">&amp;&amp;</span></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool
 </span><span class="hs-identifier hs-var">not</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[SchemaObjId] -&gt; Bool
 forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; Bool
 </span><span class="hs-identifier hs-var">null</span></span><span> </span><span class="annot"><span class="annottext">[SchemaObjId]
-</span><a href="#local-6989586621688127988"><span class="hs-identifier hs-var">deps</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(m () -&gt; m ()) -&gt; m () -&gt; m ()
+</span><a href="#local-6989586621688137199"><span class="hs-identifier hs-var">deps</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(m () -&gt; m ()) -&gt; m () -&gt; m ()
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">[SchemaObjId] -&gt; m ()
 forall (m :: * -&gt; *). MonadError QErr m =&gt; [SchemaObjId] -&gt; m ()
 </span><a href="Hasura.RQL.Types.SchemaCacheTypes.html#reportDependentObjectsExist"><span class="hs-identifier hs-var">reportDependentObjectsExist</span></a></span><span> </span><span class="annot"><span class="annottext">[SchemaObjId]
-</span><a href="#local-6989586621688127988"><span class="hs-identifier hs-var">deps</span></a></span><span>
+</span><a href="#local-6989586621688137199"><span class="hs-identifier hs-var">deps</span></a></span><span>
 </span><span id="line-101"></span><span>
 </span><span id="line-102"></span><span>  </span><span class="annot"><span class="annottext">m () -&gt; m ()
 forall (m :: * -&gt; *) a. (QErrM m, CacheRM m) =&gt; m a -&gt; m a
 </span><a href="Hasura.RQL.Types.SchemaCache.Build.html#withNewInconsistentObjsCheck"><span class="hs-identifier hs-var">withNewInconsistentObjsCheck</span></a></span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-103"></span><span>    </span><span id="local-6989586621688127977"><span class="annot"><span class="annottext">[TableMetadata b -&gt; TableMetadata b]
-</span><a href="#local-6989586621688127977"><span class="hs-identifier hs-var">metadataModifiers</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(SchemaObjId -&gt; m (TableMetadata b -&gt; TableMetadata b))
+</span><span id="line-103"></span><span>    </span><span id="local-6989586621688137188"><span class="annot"><span class="annottext">[TableMetadata b -&gt; TableMetadata b]
+</span><a href="#local-6989586621688137188"><span class="hs-identifier hs-var">metadataModifiers</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(SchemaObjId -&gt; m (TableMetadata b -&gt; TableMetadata b))
 -&gt; [SchemaObjId] -&gt; m [TableMetadata b -&gt; TableMetadata b]
 forall (t :: * -&gt; *) (m :: * -&gt; *) a b.
 (Traversable t, Monad m) =&gt;
 (a -&gt; m b) -&gt; t a -&gt; m (t b)
 </span><span class="hs-identifier hs-var">mapM</span></span><span> </span><span class="annot"><span class="annottext">SchemaObjId -&gt; m (TableMetadata b -&gt; TableMetadata b)
-</span><a href="#local-6989586621688127975"><span class="hs-identifier hs-var">purgeComputedFieldDependency</span></a></span><span> </span><span class="annot"><span class="annottext">[SchemaObjId]
-</span><a href="#local-6989586621688127988"><span class="hs-identifier hs-var">deps</span></a></span><span>
+</span><a href="#local-6989586621688137186"><span class="hs-identifier hs-var">purgeComputedFieldDependency</span></a></span><span> </span><span class="annot"><span class="annottext">[SchemaObjId]
+</span><a href="#local-6989586621688137199"><span class="hs-identifier hs-var">deps</span></a></span><span>
 </span><span id="line-104"></span><span>    </span><span class="annot"><span class="annottext">MetadataModifier -&gt; m ()
 forall (m :: * -&gt; *).
 (MetadataM m, CacheRWM m) =&gt;
@@ -506,9 +506,9 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 forall (b :: BackendType).
 Backend b =&gt;
 SourceName -&gt; TableName b -&gt; ASetter' Metadata (TableMetadata b)
-</span><a href="Hasura.RQL.Types.Metadata.html#tableMetadataSetter"><span class="hs-identifier hs-var">tableMetadataSetter</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621688128000"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName
-</span><a href="#local-6989586621688127998"><span class="hs-identifier hs-var">source</span></a></span><span> </span><span class="annot"><span class="annottext">TableName b
-</span><a href="#local-6989586621688127997"><span class="hs-identifier hs-var">table</span></a></span><span>
+</span><a href="Hasura.RQL.Types.Metadata.html#tableMetadataSetter"><span class="hs-identifier hs-var">tableMetadataSetter</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621688137211"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName
+</span><a href="#local-6989586621688137209"><span class="hs-identifier hs-var">source</span></a></span><span> </span><span class="annot"><span class="annottext">TableName b
+</span><a href="#local-6989586621688137208"><span class="hs-identifier hs-var">table</span></a></span><span>
 </span><span id="line-107"></span><span>          </span><span class="annot"><span class="annottext">ASetter' Metadata (TableMetadata b)
 -&gt; (TableMetadata b -&gt; TableMetadata b) -&gt; Metadata -&gt; Metadata
 forall s t a b. ASetter s t a b -&gt; (a -&gt; b) -&gt; s -&gt; t
@@ -516,7 +516,7 @@ forall s t a b. ASetter s t a b -&gt; (a -&gt; b) -&gt; s -&gt; t
 forall (b :: BackendType).
 ComputedFieldName -&gt; TableMetadata b -&gt; TableMetadata b
 </span><a href="Hasura.RQL.Types.Metadata.html#dropComputedFieldInMetadata"><span class="hs-identifier hs-var">dropComputedFieldInMetadata</span></a></span><span> </span><span class="annot"><span class="annottext">ComputedFieldName
-</span><a href="#local-6989586621688127996"><span class="hs-identifier hs-var">computedField</span></a></span><span> </span><span class="annot"><span class="annottext">(TableMetadata b -&gt; TableMetadata b)
+</span><a href="#local-6989586621688137207"><span class="hs-identifier hs-var">computedField</span></a></span><span> </span><span class="annot"><span class="annottext">(TableMetadata b -&gt; TableMetadata b)
 -&gt; (TableMetadata b -&gt; TableMetadata b)
 -&gt; TableMetadata b
 -&gt; TableMetadata b
@@ -540,30 +540,30 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">(.)</span></span><span> </span><span class="annot"><span class="annottext">TableMetadata b -&gt; TableMetadata b
 forall a. a -&gt; a
 </span><span class="hs-identifier hs-var">id</span></span><span> </span><span class="annot"><span class="annottext">[TableMetadata b -&gt; TableMetadata b]
-</span><a href="#local-6989586621688127977"><span class="hs-identifier hs-var">metadataModifiers</span></a></span><span>
+</span><a href="#local-6989586621688137188"><span class="hs-identifier hs-var">metadataModifiers</span></a></span><span>
 </span><span id="line-108"></span><span>  </span><span class="annot"><span class="annottext">EncJSON -&gt; m EncJSON
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">EncJSON
 </span><a href="Hasura.RQL.Types.Common.html#successMsg"><span class="hs-identifier hs-var">successMsg</span></a></span><span>
 </span><span id="line-109"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-110"></span><span>    </span><span id="local-6989586621688127975"><span class="annot"><span class="annottext">purgeComputedFieldDependency :: SchemaObjId -&gt; m (TableMetadata b -&gt; TableMetadata b)
-</span><a href="#local-6989586621688127975"><span class="hs-identifier hs-var hs-var">purgeComputedFieldDependency</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-110"></span><span>    </span><span id="local-6989586621688137186"><span class="annot"><span class="annottext">purgeComputedFieldDependency :: SchemaObjId -&gt; m (TableMetadata b -&gt; TableMetadata b)
+</span><a href="#local-6989586621688137186"><span class="hs-identifier hs-var hs-var">purgeComputedFieldDependency</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
 </span><span id="line-111"></span><span>      </span><span class="hs-comment">-- TODO: do a better check of ensuring that the dependency is as expected.</span><span>
 </span><span id="line-112"></span><span>      </span><span class="hs-comment">-- i.e, the only allowed dependent objects on a computed fields are permissions</span><span>
 </span><span id="line-113"></span><span>      </span><span class="hs-comment">-- on the same table</span><span>
 </span><span id="line-114"></span><span>      </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCacheTypes.html#SOSourceObj"><span class="hs-identifier hs-type">SOSourceObj</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName
-</span><span class="hs-identifier">_</span></span><span> </span><span id="local-6989586621688127971"><span class="annot"><span class="annottext">AnyBackend SourceObjId
-</span><a href="#local-6989586621688127971"><span class="hs-identifier hs-var">exists</span></a></span></span><span>
+</span><span class="hs-identifier">_</span></span><span> </span><span id="local-6989586621688137182"><span class="annot"><span class="annottext">AnyBackend SourceObjId
+</span><a href="#local-6989586621688137182"><span class="hs-identifier hs-var">exists</span></a></span></span><span>
 </span><span id="line-115"></span><span>        </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.SchemaCacheTypes.html#SOITableObj"><span class="hs-identifier hs-type">SOITableObj</span></a></span><span> </span><span class="annot"><span class="annottext">TableName b
-</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.SchemaCacheTypes.html#TOPerm"><span class="hs-identifier hs-type">TOPerm</span></a></span><span> </span><span id="local-6989586621688127969"><span class="annot"><span class="annottext">RoleName
-</span><a href="#local-6989586621688127969"><span class="hs-identifier hs-var">roleName</span></a></span></span><span> </span><span id="local-6989586621688127968"><span class="annot"><span class="annottext">PermType
-</span><a href="#local-6989586621688127968"><span class="hs-identifier hs-var">permType</span></a></span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">&lt;-</span><span>
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.SchemaCacheTypes.html#TOPerm"><span class="hs-identifier hs-type">TOPerm</span></a></span><span> </span><span id="local-6989586621688137180"><span class="annot"><span class="annottext">RoleName
+</span><a href="#local-6989586621688137180"><span class="hs-identifier hs-var">roleName</span></a></span></span><span> </span><span id="local-6989586621688137179"><span class="annot"><span class="annottext">PermType
+</span><a href="#local-6989586621688137179"><span class="hs-identifier hs-var">permType</span></a></span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">&lt;-</span><span>
 </span><span id="line-116"></span><span>            </span><span class="annot"><span class="annottext">AnyBackend SourceObjId -&gt; Maybe (SourceObjId b)
 forall (b :: BackendType) (i :: BackendType -&gt; *).
 HasTag b =&gt;
 AnyBackend i -&gt; Maybe (i b)
-</span><a href="Hasura.SQL.AnyBackend.html#unpackAnyBackend"><span class="hs-identifier hs-var">AB.unpackAnyBackend</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621688128000"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><span class="annottext">AnyBackend SourceObjId
-</span><a href="#local-6989586621688127971"><span class="hs-identifier hs-var">exists</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><a href="Hasura.SQL.AnyBackend.html#unpackAnyBackend"><span class="hs-identifier hs-var">AB.unpackAnyBackend</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621688137211"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><span class="annottext">AnyBackend SourceObjId
+</span><a href="#local-6989586621688137182"><span class="hs-identifier hs-var">exists</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-117"></span><span>          </span><span class="annot"><span class="annottext">(TableMetadata b -&gt; TableMetadata b)
 -&gt; m (TableMetadata b -&gt; TableMetadata b)
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
@@ -576,10 +576,10 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 forall (b :: BackendType).
 RoleName -&gt; PermType -&gt; TableMetadata b -&gt; TableMetadata b
 </span><a href="Hasura.RQL.Types.Metadata.html#dropPermissionInMetadata"><span class="hs-identifier hs-var">dropPermissionInMetadata</span></a></span><span> </span><span class="annot"><span class="annottext">RoleName
-</span><a href="#local-6989586621688127969"><span class="hs-identifier hs-var">roleName</span></a></span><span> </span><span class="annot"><span class="annottext">PermType
-</span><a href="#local-6989586621688127968"><span class="hs-identifier hs-var">permType</span></a></span><span>
-</span><span id="line-118"></span><span>      </span><span id="local-6989586621688127965"><span class="annot"><span class="annottext">SchemaObjId
-</span><a href="#local-6989586621688127965"><span class="hs-identifier hs-var">d</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><a href="#local-6989586621688137180"><span class="hs-identifier hs-var">roleName</span></a></span><span> </span><span class="annot"><span class="annottext">PermType
+</span><a href="#local-6989586621688137179"><span class="hs-identifier hs-var">permType</span></a></span><span>
+</span><span id="line-118"></span><span>      </span><span id="local-6989586621688137176"><span class="annot"><span class="annottext">SchemaObjId
+</span><a href="#local-6989586621688137176"><span class="hs-identifier hs-var">d</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-119"></span><span>        </span><span class="annot"><span class="annottext">Text -&gt; m (TableMetadata b -&gt; TableMetadata b)
 forall (m :: * -&gt; *) a. QErrM m =&gt; Text -&gt; m a
 </span><a href="Hasura.Base.Error.html#throw500"><span class="hs-identifier hs-var">throw500</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; m (TableMetadata b -&gt; TableMetadata b))
@@ -591,7 +591,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span id="line-121"></span><span>            </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">ComputedFieldName
-</span><a href="#local-6989586621688127996"><span class="hs-identifier hs-var">computedField</span></a></span><span> </span><span class="annot"><span class="annottext">ComputedFieldName -&gt; Text -&gt; Text
+</span><a href="#local-6989586621688137207"><span class="hs-identifier hs-var">computedField</span></a></span><span> </span><span class="annot"><span class="annottext">ComputedFieldName -&gt; Text -&gt; Text
 forall t. ToTxt t =&gt; t -&gt; Text -&gt; Text
 </span><a href="Data.Text.Extended.html#%3C%3C%3E"><span class="hs-operator hs-var">&lt;&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;; &quot;</span></span><span>
@@ -599,5 +599,5 @@ forall t. ToTxt t =&gt; t -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">SchemaObjId -&gt; Text
 </span><a href="Hasura.RQL.Types.SchemaCacheTypes.html#reportSchemaObj"><span class="hs-identifier hs-var">reportSchemaObj</span></a></span><span> </span><span class="annot"><span class="annottext">SchemaObjId
-</span><a href="#local-6989586621688127965"><span class="hs-identifier hs-var">d</span></a></span><span>
+</span><a href="#local-6989586621688137176"><span class="hs-identifier hs-var">d</span></a></span><span>
 </span><span id="line-123"></span></pre></body></html>
