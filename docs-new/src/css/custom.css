@@ -137,6 +137,8 @@
     --ifm-global-shadow-md: 0px 4px 14px rgba(0, 0, 0, 0.16);
     --ifm-global-shadow-tl: 0px 10px 30px rgba(0, 0, 0, 0.16);
 
+    --doc-sidebar-width: 320px !important;
+
     --ifm-heading-line-height: 1.25;
     --ifm-h1-font-size: 2.5rem; /* 40px */
     --ifm-h2-font-size: 2rem; /* 32px */
@@ -144,6 +146,8 @@
     --ifm-h4-font-size: 1.25rem; /* 20px */
     --ifm-h5-font-size: 1rem; /* 16px */
     --ifm-h6-font-size: 0.875rem; /* 14px */
+
+    --ifm-footer-padding-vertical: 3rem;
 }
 
 
@@ -164,4 +168,28 @@ html[data-theme='dark'] .docusaurus-highlight-code-line {
 
 html[data-theme='dark'] .no-shadow {
   background-color: #fff;
+}
+
+.footer__links {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+.footer__links .footer__title {
+  font-size: 0.75rem;
+}
+
+.footer__links .footer__item {
+  padding: 0.625rem 0;
+}
+
+/* .footer__links .footer__link-item svg {
+  display: none;
+} */
+
+
+/* Custom Components Styles */
+.custom_doc_layout_wrapper {
+  padding-left: 1.5rem;
 }

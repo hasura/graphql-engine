@@ -25,7 +25,7 @@ const config = {
           routeBasePath: "/",
           sidebarPath: require.resolve('./sidebars.js'),
           editUrl: 'https://github.com/hasura/graphql-engine/edit/main/docs-new/',
-          // docItemComponent: require.resolve('./src/components/CustomDocLayout/CustomDocLayout.tsx'),
+          docItemComponent: require.resolve('./src/components/CustomDocLayout/CustomDocLayout.tsx'),
           exclude: ['**/*.wip', 'migration-guide'],
           // showLastUpdateAuthor: true,
           // showLastUpdateTime: true,
@@ -148,19 +148,19 @@ const config = {
               },
               {
                 label: 'Community Forum',
-                href: 'https://discordapp.com/invite/hasura',
+                to: 'https://discordapp.com/invite/hasura',
               },
               {
                 label: 'Help',
-                href: 'https://hasura.io/help/',
+                to: 'https://hasura.io/help/',
               },
               {
                 label: 'Github',
-                href: 'https://github.com/hasura',
+                to: 'https://github.com/hasura',
               },
               {
                 label: 'Hasura Cloud Status',
-                href: 'https://status.hasura.io/',
+                to: 'https://status.hasura.io/',
               },
             ],
           },
@@ -169,19 +169,19 @@ const config = {
             items: [
               {
                 label: 'Graphqurl',
-                href: 'https://github.com/hasura/graphqurl',
+                to: 'https://github.com/hasura/graphqurl',
               },
               {
                 label: 'Firebase2GraphQL',
-                href: 'https://github.com/hasura/firebase2graphql',
+                to: 'https://github.com/hasura/firebase2graphql',
               },
               {
                 label: 'JSON2GraphQL',
-                href: 'https://github.com/hasura/json2graphql',
+                to: 'https://github.com/hasura/json2graphql',
               },
               {
                 label: 'GraphQL2ChartJS',
-                href: 'https://github.com/hasura/graphql2chartjs',
+                to: 'https://github.com/hasura/graphql2chartjs',
               },
             ],
           },
@@ -190,23 +190,23 @@ const config = {
             items: [
               {
                 label: 'Hasura Open Source',
-                href: 'https://hasura.io/opensource/',
+                to: 'https://hasura.io/opensource/',
               },
               {
                 label: 'Hasura Cloud',
-                href: 'https://hasura.io/cloud/',
+                to: 'https://hasura.io/cloud/',
               },
               {
                 label: 'Hasura Enterprise',
-                href: 'https://hasura.io/enterprise/',
+                to: 'https://hasura.io/enterprise/',
               },
               {
                 label: 'Pricing',
-                href: 'https://hasura.io/pricing/',
+                to: 'https://hasura.io/pricing/',
               },
               {
                 label: 'Changelog',
-                href: 'https://github.com/hasura/graphql-engine/releases',
+                to: 'https://github.com/hasura/graphql-engine/releases',
               },
             ],
           },
@@ -215,39 +215,39 @@ const config = {
             items: [
               {
                 label: 'Blog',
-                href: 'https://hasura.io/blog/',
+                to: 'https://hasura.io/blog/',
               },
               {
                 label: 'Case Studies',
-                href: 'https://hasura.io/case-studies/',
+                to: 'https://hasura.io/case-studies/',
               },
               {
                 label: '3Factor Apps',
-                href: 'https://3factor.app/',
+                to: 'https://3factor.app/',
               },
               {
                 label: 'Event Driven Programming',
-                href: 'https://hasura.io/event-driven-programming/',
+                to: 'https://hasura.io/event-driven-programming/',
               },
               {
                 label: 'React GraphQL',
-                href: 'https://hasura.io/react-graphql/',
+                to: 'https://hasura.io/react-graphql/',
               },
               {
                 label: 'Vue GraphQL',
-                href: 'https://hasura.io/vue-graphql/',
+                to: 'https://hasura.io/vue-graphql/',
               },
               {
                 label: 'DIY GraphQL BaaS',
-                href: 'https://hasura.io/diy-graphql-baas/',
+                to: 'https://hasura.io/diy-graphql-baas/',
               },
               {
                 label: 'GraphQL & Hasura',
-                href: 'https://hasura.io/graphql/',
+                to: 'https://hasura.io/graphql/',
               },
               {
                 label: 'Hasura Cloud Security',
-                href: 'https://hasura.io/security/',
+                to: 'https://hasura.io/security/',
               },
             ],
           },
@@ -256,31 +256,31 @@ const config = {
             items: [
               {
                 label: 'Community Resources',
-                href: 'https://hasura.io/community/',
+                to: 'https://hasura.io/community/',
               },
               {
                 label: 'GraphQL Tutorials',
-                href: 'https://hasura.io/learn/',
+                to: 'https://hasura.io/learn/',
               },
               {
                 label: 'Community Wiki',
-                href: 'https://github.com/hasura/graphql-engine/wiki',
+                to: 'https://github.com/hasura/graphql-engine/wiki',
               },
               {
                 label: 'Sample Apps',
-                href: 'https://hasura.io/sample-apps/',
+                to: 'https://hasura.io/sample-apps/',
               },
               {
                 label: 'Partnership Program',
-                href: 'https://hasura.io/partner-agencies/',
+                to: 'https://hasura.io/partner-agencies/',
               },
               {
                 label: 'HasuraCon 2021',
-                href: 'https://hasura.io/events/hasura-con-2021/',
+                to: 'https://hasura.io/events/hasura-con-2021/',
               },
               {
                 label: 'GraphQL Asia',
-                href: 'https://graphql.asia/',
+                to: 'https://graphql.asia/',
               },
             ],
           },

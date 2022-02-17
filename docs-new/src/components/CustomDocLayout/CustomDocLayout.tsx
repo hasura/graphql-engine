@@ -2,10 +2,10 @@ import React, { Fragment } from 'react';
 import ActualDocPage from '@theme/DocItem';
 
 const CustomDocLayout = (props) => (
-  <Fragment>
+  <div className='custom_doc_layout_wrapper'>
     <ActualDocPage {...props} />
     Custom Doc Item Layout FOOTER - ideally "do u like this page?" kind of stuff.
-  </Fragment>
+  </div>
 )
 
 export default CustomDocLayout;
