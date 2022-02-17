@@ -10,6 +10,7 @@ module Hasura.GraphQL.Schema.Common
     EdgeFields,
     QueryContext (QueryContext, qcDangerousBooleanCollapse, qcFunctionPermsContext, qcQueryType, qcRemoteRelationshipContext, qcStringifyNum, qcOptimizePermissionFilters),
     RemoteRelationshipQueryContext (RemoteRelationshipQueryContext, _rrscParsedIntrospection),
+    Scenario (..),
     SelectArgs,
     SelectExp,
     TablePerms,
@@ -96,6 +97,9 @@ data QueryContext = QueryContext
     -- | 'True' when we should attempt to use experimental SQL optimization passes
     qcOptimizePermissionFilters :: Bool
   }
+
+-- | Whether the request is sent with `x-hasura-use-backend-only-permissions` set to `true`.
+data Scenario = Backend | Frontend deriving (Enum, Show, Eq)
 
 textToName :: MonadError QErr m => Text -> m G.Name
 textToName textName =
