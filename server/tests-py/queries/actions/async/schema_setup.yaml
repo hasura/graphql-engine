@@ -72,14 +72,17 @@ args:
       output_type: UserId
       handler: http://127.0.0.1:5593/create-user
       request_transform:
+        version: 2
         template_engine: Kriti
-        body: |
-          {
-            "input": {
-              "email": "foo@bar.com",
-              "name": "notClarke"
+        body:
+          action: transform
+          template: |
+            {
+              "input": {
+                "email": "foo@bar.com",
+                "name": "notClarke"
+              }
             }
-          }
 
 - type: create_action
   args:

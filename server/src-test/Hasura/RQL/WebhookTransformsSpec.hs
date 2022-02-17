@@ -13,17 +13,14 @@ import Test.Hspec.Hedgehog
 
 spec :: Spec
 spec = do
-  it "RequstMethod RoundTrip" $
-    hedgehog $ forAll genRequestMethod >>= trippingJSON
+  it "StringTemplateText RoundTrip" $
+    hedgehog $ forAll genStringTemplateText >>= trippingJSON
 
   it "TemplateEngine RoundTrip" $
     hedgehog $ forAll genTemplatingEngine >>= trippingJSON
 
   it "TemplateText RoundTrip" $
     hedgehog $ forAll genTemplateText >>= trippingJSON
-
-  it "ContentType RoundTrip" $
-    hedgehog $ forAll genContentType >>= trippingJSON
 
   it "TransformHeaders" $
     hedgehog $ do
@@ -36,15 +33,12 @@ spec = do
     hedgehog $ do
       transform <- forAll genMetadataRequestTransform
       let sortH TransformHeaders {..} = TransformHeaders (sort addHeaders) (sort removeHeaders)
-          sortMT mt@MetadataRequestTransform {mtRequestHeaders, mtQueryParams} = mt {mtRequestHeaders = sortH <$> mtRequestHeaders, mtQueryParams = sort <$> mtQueryParams}
+      let sortMT mt@MetadataRequestTransform {mtRequestHeaders, mtQueryParams} = mt {mtRequestHeaders = sortH <$> mtRequestHeaders, mtQueryParams = sort <$> mtQueryParams}
           transformMaybe = eitherDecode $ encode transform
       Right (sortMT transform) === fmap sortMT transformMaybe
 
 trippingJSON :: (Show a, Eq a, ToJSON a, FromJSON a, MonadTest m) => a -> m ()
 trippingJSON val = tripping val (toJSON) (fromJSON)
-
-genRequestMethod :: Gen RequestMethod
-genRequestMethod = Gen.enumBounded @_ @RequestMethod
 
 genTemplatingEngine :: Gen TemplatingEngine
 genTemplatingEngine = Gen.enumBounded @_ @TemplatingEngine
@@ -58,9 +52,6 @@ genTemplateText = TemplateText . wrap <$> Gen.text (Range.constant 3 20) Gen.alp
 
 genStringTemplateText :: Gen StringTemplateText
 genStringTemplateText = StringTemplateText <$> Gen.text (Range.constant 3 20) Gen.alphaNum
-
-genContentType :: Gen ContentType
-genContentType = Gen.enumBounded @_ @ContentType
 
 genTransformHeaders :: Gen TransformHeaders
 genTransformHeaders = do
@@ -93,19 +84,18 @@ genUrl = do
 
 genMetadataRequestTransform :: Gen MetadataRequestTransform
 genMetadataRequestTransform = do
-  method <- Gen.maybe genRequestMethod
+  method <- Gen.maybe genStringTemplateText
   -- NOTE: At the moment no need to generate valid urls or templates
   -- but such instances maybe useful in the future.
   url <- Gen.maybe $ genUrl
-  bodyTransform <- Gen.maybe $ genTemplateText
-  contentType <- Gen.maybe $ genContentType
+  bodyTransform <- Gen.maybe $ fmap Transform $ genTemplateText
   queryParams <- Gen.maybe $ genQueryParams
   reqHeaders <- Gen.maybe $ genTransformHeaders
   MetadataRequestTransform
+    V2
     method
     url
     bodyTransform
-    contentType
     queryParams
     reqHeaders
     <$> genTemplatingEngine

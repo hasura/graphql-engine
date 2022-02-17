@@ -22,5 +22,8 @@
       body:
         hello: world
       request_transform:
-        body: "{{ $body.world }}"
+        version: 2
+        body:
+          action: transform
+          template: "{{ $body.world }}"
         template_engine: Kriti

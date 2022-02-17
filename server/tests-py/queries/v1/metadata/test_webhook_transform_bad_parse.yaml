@@ -4,7 +4,7 @@
     X-Hasura-Role: admin
   status: 400
   response:
-    path: "$.args.request_transform.body"
+    path: "$.args.request_transform.body.template"
     error: "Unexpected token '$body'."
     code: "parse-failed"
   query:
@@ -14,5 +14,8 @@
       body:
         hello: world
       request_transform:
-        body: "$body.hello }}"
+        version: 2
+        body:
+          action: transform
+          template: "$body.hello }}"
         template_engine: Kriti

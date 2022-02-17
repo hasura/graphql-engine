@@ -3,7 +3,7 @@
 ## Next release
 
 ### Bug fixes and improvements
-(Add entries below in the order of server, console, cli, docs, others)
+- server: Webhook Transforms can now delete request/response bodies explicitly.
 
 ## v2.3.0-beta.1
 

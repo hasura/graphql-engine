@@ -1,3 +1,5 @@
+{-# LANGUAGE DeriveAnyClass #-}
+
 module Hasura.RQL.DDL.WebhookTransforms
   ( applyRequestTransform,
     applyResponseTransform,
@@ -6,17 +8,18 @@ module Hasura.RQL.DDL.WebhookTransforms
     mkRequestTransform,
     mkResponseTransform,
     RequestMethod (..),
+    RemoveOrTransform (..),
     StringTemplateText (..),
     TemplatingEngine (..),
     TemplateText (..),
-    ContentType (..),
     ReqTransformCtx (..),
-    TransformHeaders (..),
     TransformErrorBundle (..),
+    TransformHeaders (..),
     MetadataRequestTransform (..),
     MetadataResponseTransform (..),
     RequestTransform (..),
     ResponseTransform (..),
+    Version (..),
   )
 where
 
@@ -24,13 +27,14 @@ import Control.Lens (traverseOf, view)
 import Data.Aeson qualified as J
 import Data.Bifunctor (bimap, first)
 import Data.Bitraversable
+import Data.ByteString qualified as B
 import Data.ByteString.Lazy qualified as BL
 import Data.CaseInsensitive qualified as CI
 import Data.Either.Validation
 import Data.HashMap.Strict qualified as M
-import Data.List (nubBy)
 import Data.Text qualified as T
 import Data.Text.Encoding qualified as TE
+import Data.Validation qualified as V
 import Hasura.Incremental (Cacheable)
 import Hasura.Prelude hiding (first)
 import Hasura.Session (SessionVariables)
@@ -86,13 +90,11 @@ data RespTransformCtx = RespTransformCtx
 -- use the original request value, unless otherwise indicated.
 data RequestTransform = RequestTransform
   { -- | Change the request method to one provided here. Nothing means POST.
-    reqTransformRequestMethod :: Maybe RequestMethod,
+    reqTransformRequestMethod :: Maybe (ReqTransformCtx -> Either TransformErrorBundle RequestMethod),
     -- | A function which contructs a new URL given the request context.
     reqTransformRequestURL :: Maybe (ReqTransformCtx -> Either TransformErrorBundle Text),
     -- | A function for transforming the request body.
-    reqTransformBody :: Maybe (ReqTransformCtx -> Either TransformErrorBundle J.Value),
-    -- | Change content type to one provided here.
-    reqTransformContentType :: Maybe ContentType,
+    reqTransformBody :: Maybe (RemoveOrTransform (ReqTransformCtx -> Either TransformErrorBundle J.Value)),
     -- | A function which contructs new query parameters given the request context.
     reqTransformQueryParams :: Maybe (ReqTransformCtx -> Either TransformErrorBundle HTTP.Query),
     -- | A function which contructs new Headers given the request context.
@@ -102,7 +104,7 @@ data RequestTransform = RequestTransform
 -- | A set of data transformation functions generated from a
 -- 'MetadataResponseTransform'. 'Nothing' means use the original
 -- response value.
-newtype ResponseTransform = ResponseTransform {respTransformBody :: Maybe (RespTransformCtx -> Either TransformErrorBundle J.Value)}
+newtype ResponseTransform = ResponseTransform {respTransformBody :: Maybe (RemoveOrTransform (RespTransformCtx -> Either TransformErrorBundle J.Value))}
 
 -- | A de/serializable request transformation template which can be stored in
 -- the metadata associated with an action/event trigger/etc. and used to produce
@@ -119,114 +121,133 @@ newtype ResponseTransform = ResponseTransform {respTransformBody :: Maybe (RespT
 -- Nothing values mean use the original request value, unless
 -- otherwise indicated.
 data MetadataRequestTransform = MetadataRequestTransform
-  { -- | Change the request method to one provided here. Nothing means POST.
-    mtRequestMethod :: Maybe RequestMethod,
+  { -- | The Schema Version
+    mtVersion :: Version,
+    -- | Change the request method to one provided here. Nothing means POST.
+    mtRequestMethod :: Maybe StringTemplateText,
     -- | Template script for transforming the URL.
     mtRequestURL :: Maybe StringTemplateText,
     -- | Template script for transforming the request body.
-    mtBodyTransform :: Maybe TemplateText,
-    -- | Replace the Content-Type with this value. Only
-    -- "application/json" and "application/x-www-form-urlencoded" are
-    -- allowed.
-    mtContentType :: Maybe ContentType,
+    mtBodyTransform :: Maybe (RemoveOrTransform TemplateText),
     -- | A list of template scripts for constructing new Query Params.
     mtQueryParams :: Maybe [(StringTemplateText, Maybe StringTemplateText)],
-    -- | Transform headers as defined here.
+    -- | A list of template scripts for constructing headers.
     mtRequestHeaders :: Maybe TransformHeaders,
     -- | The template engine to use for transformations. Default: Kriti
     mtTemplatingEngine :: TemplatingEngine
   }
-  deriving (Show, Eq, Generic)
-
-instance NFData MetadataRequestTransform
-
-instance Cacheable MetadataRequestTransform
-
-infixr 8 .=?
-
-(.=?) :: J.ToJSON v => k -> Maybe v -> Maybe (k, J.Value)
-(.=?) _ Nothing = Nothing
-(.=?) k (Just v) = Just (k, J.toJSON v)
+  deriving stock (Show, Eq, Generic)
+  deriving anyclass (NFData, Cacheable)
 
 instance J.ToJSON MetadataRequestTransform where
   toJSON MetadataRequestTransform {..} =
-    J.object $
-      ["template_engine" J..= mtTemplatingEngine]
-        <> catMaybes
-          [ "method" .=? mtRequestMethod,
-            "url" .=? mtRequestURL,
-            "body" .=? mtBodyTransform,
-            "content_type" .=? mtContentType,
-            "query_params" .=? fmap M.fromList mtQueryParams,
-            "request_headers" .=? mtRequestHeaders
+    let body = case mtVersion of
+          V1 -> case mtBodyTransform of
+            Just (Transform template) -> Just ("body", J.toJSON template)
+            _ -> Nothing
+          V2 -> "body" .=? mtBodyTransform
+     in J.object $
+          [ "template_engine" J..= mtTemplatingEngine,
+            "version" J..= mtVersion
           ]
+            <> catMaybes
+              [ "method" .=? mtRequestMethod,
+                "url" .=? mtRequestURL,
+                "query_params" .=? fmap M.fromList mtQueryParams,
+                "request_headers" .=? mtRequestHeaders,
+                body
+              ]
 
 instance J.FromJSON MetadataRequestTransform where
   parseJSON = J.withObject "Object" $ \o -> do
+    version <- o J..:? "version" J..!= V1
     method <- o J..:? "method"
     url <- o J..:? "url"
-    body <- o J..:? "body"
-    contentType <- o J..:? "content_type"
+    body <- case version of
+      V1 -> do
+        template :: (Maybe TemplateText) <- o J..:? "body"
+        pure $ fmap Transform template
+      V2 -> o J..:? "body"
     queryParams' <- o J..:? "query_params"
     let queryParams = fmap M.toList queryParams'
     headers <- o J..:? "request_headers"
-    templateEngine <- o J..:? "template_engine"
-    let templateEngine' = fromMaybe Kriti templateEngine
-    pure $ MetadataRequestTransform method url body contentType queryParams headers templateEngine'
+    templateEngine <- o J..:? "template_engine" J..!= Kriti
+    pure $ MetadataRequestTransform version method url body queryParams headers templateEngine
 
 data MetadataResponseTransform = MetadataResponseTransform
-  { mrtBodyTransform :: Maybe TemplateText,
+  { -- | The Schema Version
+    mrtVersion :: Version,
+    -- | Template script for transforming the response body.
+    mrtBodyTransform :: Maybe (RemoveOrTransform TemplateText),
+    -- | The template engine to use for transformations. Default: Kriti
     mrtTemplatingEngine :: TemplatingEngine
   }
-  deriving (Show, Eq, Generic)
-
-instance NFData MetadataResponseTransform
-
-instance Cacheable MetadataResponseTransform
+  deriving stock (Show, Eq, Generic)
+  deriving anyclass (NFData, Cacheable)
 
 instance J.ToJSON MetadataResponseTransform where
   toJSON MetadataResponseTransform {..} =
-    J.object $
-      ["template_engine" J..= mrtTemplatingEngine]
-        <> catMaybes ["body" .=? mrtBodyTransform]
+    let body = case mrtVersion of
+          V1 -> case mrtBodyTransform of
+            Just (Transform template) -> Just ("body", J.toJSON template)
+            _ -> Nothing
+          V2 -> "body" .=? mrtBodyTransform
+     in J.object $
+          [ "template_engine" J..= mrtTemplatingEngine,
+            "version" J..= mrtVersion
+          ]
+            <> catMaybes [body]
 
 instance J.FromJSON MetadataResponseTransform where
   parseJSON = J.withObject "Object" $ \o -> do
-    body <- o J..:? "body"
+    version <- o J..:? "version" J..!= V1
+    body <- case version of
+      V1 -> do
+        template :: (Maybe TemplateText) <- o J..:? "body"
+        pure $ fmap Transform template
+      V2 -> o J..:? "body"
     templateEngine <- o J..:? "template_engine"
     let templateEngine' = fromMaybe Kriti templateEngine
-    pure $ MetadataResponseTransform body templateEngine'
+    pure $ MetadataResponseTransform version body templateEngine'
 
-data RequestMethod = GET | POST | PUT | PATCH | DELETE
-  deriving (Show, Eq, Enum, Bounded, Generic)
+data RemoveOrTransform a = Remove | Transform a
+  deriving stock (Show, Eq, Functor, Generic)
+  deriving anyclass (NFData, Cacheable)
 
-renderRequestMethod :: RequestMethod -> Text
-renderRequestMethod = \case
-  GET -> "GET"
-  POST -> "POST"
-  PUT -> "PUT"
-  PATCH -> "PATCH"
-  DELETE -> "DELETE"
+instance J.ToJSON a => J.ToJSON (RemoveOrTransform a) where
+  toJSON = \case
+    Remove -> J.object ["action" J..= ("remove" :: T.Text)]
+    Transform a ->
+      J.object
+        [ "action" J..= ("transform" :: T.Text),
+          "template" J..= J.toJSON a
+        ]
+
+instance J.FromJSON a => J.FromJSON (RemoveOrTransform a) where
+  parseJSON = J.withObject "RemoveOrTransform" $ \o -> do
+    action :: T.Text <- o J..: "action"
+    if action == "remove"
+      then pure Remove
+      else do
+        "transform" :: T.Text <- o J..: "action"
+        template <- o J..: "template"
+        pure $ Transform template
+
+newtype RequestMethod = RequestMethod (CI.CI T.Text)
+  deriving stock (Generic)
+  deriving newtype (Show, Eq)
+  deriving anyclass (NFData, Cacheable)
 
 instance J.ToJSON RequestMethod where
-  toJSON = J.String . renderRequestMethod
+  toJSON = J.String . CI.original . coerce
 
 instance J.FromJSON RequestMethod where
-  parseJSON = J.withText "RequestMethod" \case
-    "GET" -> pure GET
-    "POST" -> pure POST
-    "PUT" -> pure PUT
-    "PATCH" -> pure PATCH
-    "DELETE" -> pure DELETE
-    _ -> fail "Invalid Request Method"
-
-instance NFData RequestMethod
-
-instance Cacheable RequestMethod
+  parseJSON = J.withText "RequestMethod" (pure . coerce . CI.mk)
 
 -- | Available Template Languages
 data TemplatingEngine = Kriti
-  deriving (Show, Eq, Enum, Bounded, Generic)
+  deriving stock (Show, Eq, Enum, Bounded, Generic)
+  deriving anyclass (NFData, Cacheable)
 
 renderTemplatingEngine :: TemplatingEngine -> Text
 renderTemplatingEngine _ = "Kriti"
@@ -239,18 +260,28 @@ instance J.FromJSON TemplatingEngine where
 instance J.ToJSON TemplatingEngine where
   toJSON = J.String . renderTemplatingEngine
 
-instance NFData TemplatingEngine
+data Version = V1 | V2
+  deriving stock (Show, Eq, Generic)
+  deriving anyclass (NFData, Cacheable, Hashable)
 
-instance Cacheable TemplatingEngine
+instance J.FromJSON Version where
+  parseJSON v = do
+    version :: Int <- J.parseJSON v
+    case version of
+      1 -> pure V1
+      2 -> pure V2
+      i -> fail $ "expected 1 or 3, encountered " ++ show i
+
+instance J.ToJSON Version where
+  toJSON = \case
+    V1 -> J.toJSON @Int 1
+    V2 -> J.toJSON @Int 2
 
 -- | Unparsed Kriti templating code
 newtype TemplateText = TemplateText {unTemplateText :: T.Text}
   deriving stock (Show, Eq, Ord, Generic)
   deriving newtype (Hashable, J.ToJSONKey, J.FromJSONKey)
-
-instance NFData TemplateText
-
-instance Cacheable TemplateText
+  deriving anyclass (NFData, Cacheable)
 
 instance J.FromJSON TemplateText where
   parseJSON = J.withText "TemplateText" \t ->
@@ -297,54 +328,22 @@ instance J.FromJSON StringTemplateText where
 instance J.ToJSON StringTemplateText where
   toJSON = J.String . coerce
 
--- | Wrap a template with escaped double quotes.
-wrapTemplate :: StringTemplateText -> StringTemplateText
-wrapTemplate (StringTemplateText t) = StringTemplateText $ "\"" <> t <> "\""
-
-data ContentType = JSON | XWWWFORM
-  deriving (Show, Eq, Enum, Bounded, Generic)
-
-renderContentType :: ContentType -> Text
-renderContentType = \case
-  JSON -> "application/json"
-  XWWWFORM -> "application/x-www-form-urlencoded"
-
-instance J.ToJSON ContentType where
-  toJSON = J.String . renderContentType
-
-instance J.FromJSON ContentType where
-  parseJSON = J.withText "ContentType" \case
-    "application/json" -> pure JSON
-    "application/x-www-form-urlencoded" -> pure XWWWFORM
-    _ -> fail "Invalid ContentType"
-
-instance NFData ContentType
-
-instance Cacheable ContentType
-
 -- | This newtype exists solely to anchor a `FromJSON` instance and is
 -- eliminated in the `TransformHeaders` `FromJSON` instance.
 newtype HeaderKey = HeaderKey {unHeaderKey :: CI.CI Text}
-  deriving (Show, Eq, Ord, Generic)
-
-instance NFData HeaderKey
-
-instance Cacheable HeaderKey
+  deriving stock (Show, Eq, Ord, Generic)
+  deriving anyclass (NFData, Cacheable)
 
 instance J.FromJSON HeaderKey where
   parseJSON = J.withText "HeaderKey" \txt -> case CI.mk txt of
-    "Content-Type" -> fail "Restricted Header: Content-Type"
     key -> pure $ HeaderKey key
 
 data TransformHeaders = TransformHeaders
   { addHeaders :: [(CI.CI Text, StringTemplateText)],
     removeHeaders :: [CI.CI Text]
   }
-  deriving (Show, Eq, Ord, Generic)
-
-instance NFData TransformHeaders
-
-instance Cacheable TransformHeaders
+  deriving stock (Show, Eq, Ord, Generic)
+  deriving anyclass (NFData, Cacheable)
 
 instance J.ToJSON TransformHeaders where
   toJSON TransformHeaders {..} =
@@ -364,10 +363,7 @@ instance J.FromJSON TransformHeaders where
 newtype TransformErrorBundle = TransformErrorBundle {teMessages :: [J.Value]}
   deriving stock (Show, Eq, Generic)
   deriving newtype (Semigroup, Monoid, J.ToJSON)
-
-instance NFData TransformErrorBundle
-
-instance Cacheable TransformErrorBundle
+  deriving anyclass (NFData, Cacheable)
 
 -------------------------------
 --- Constructing Transforms ---
@@ -376,84 +372,42 @@ instance Cacheable TransformErrorBundle
 -- | Construct a `RequestTransform` from its metadata representation.
 mkRequestTransform :: MetadataRequestTransform -> RequestTransform
 mkRequestTransform MetadataRequestTransform {..} =
-  let urlTransform = mkUrlTransform mtTemplatingEngine <$> mtRequestURL
+  let methodTransform = mkMethodTransform mtTemplatingEngine <$> mtRequestMethod
+      urlTransform = mkUrlTransform mtTemplatingEngine <$> mtRequestURL
       queryTransform = mkQueryParamsTransform mtTemplatingEngine <$> mtQueryParams
       headerTransform = mkHeaderTransform mtTemplatingEngine <$> mtRequestHeaders
-      bodyTransform = mkReqTemplateTransform mtTemplatingEngine <$> mtBodyTransform
-   in RequestTransform mtRequestMethod urlTransform bodyTransform mtContentType queryTransform headerTransform
+      bodyTransform = fmap (mkReqTemplateTransform mtTemplatingEngine) <$> mtBodyTransform
+   in RequestTransform methodTransform urlTransform bodyTransform queryTransform headerTransform
 
 mkResponseTransform :: MetadataResponseTransform -> ResponseTransform
 mkResponseTransform MetadataResponseTransform {..} =
-  let bodyTransform = mkRespTemplateTransform mrtTemplatingEngine <$> mrtBodyTransform
+  let bodyTransform = fmap (mkRespTemplateTransform mrtTemplatingEngine) <$> mrtBodyTransform
    in ResponseTransform bodyTransform
+
+-- | Transform a String Template
+transformST :: TemplatingEngine -> ReqTransformCtx -> StringTemplateText -> Either TransformErrorBundle B.ByteString
+transformST engine transformCtx t =
+  valueToString =<< mkReqTemplateTransform engine (coerce wrapTemplate t) transformCtx
+
+mkMethodTransform :: TemplatingEngine -> StringTemplateText -> ReqTransformCtx -> Either TransformErrorBundle RequestMethod
+mkMethodTransform engine template transformCtx =
+  fmap (coerce . CI.mk . TE.decodeUtf8) $ transformST engine transformCtx template
 
 mkQueryParamsTransform :: TemplatingEngine -> [(StringTemplateText, Maybe StringTemplateText)] -> ReqTransformCtx -> Either TransformErrorBundle HTTP.Query
 mkQueryParamsTransform engine templates transformCtx =
-  let transform t =
-        case mkReqTemplateTransform engine (coerce wrapTemplate t) transformCtx of
-          Left err -> Left err
-          Right (J.String str) -> Right $ str
-          Right (J.Number num) -> Right $ tshow num
-          Right (J.Bool True) -> Right $ "true"
-          Right (J.Bool False) -> Right $ "false"
-          Right val ->
-            Left $
-              TransformErrorBundle $
-                pure $
-                  J.object
-                    [ "error_code" J..= J.String "TransformationError",
-                      "message" J..= J.String "Query Param Transforms must produce a String, Number, or Boolean value",
-                      "value" J..= val
-                    ]
-      toValidation :: [(Either TransformErrorBundle T.Text, Maybe (Either TransformErrorBundle T.Text))] -> [(Validation TransformErrorBundle T.Text, Maybe (Validation TransformErrorBundle T.Text))]
-      toValidation = fmap (bimap eitherToValidation (fmap eitherToValidation))
+  let transform = eitherToValidation . transformST engine transformCtx
 
-      collectErrors :: [(Either TransformErrorBundle T.Text, Maybe (Either TransformErrorBundle T.Text))] -> Validation TransformErrorBundle [(T.Text, Maybe T.Text)]
-      collectErrors xs = traverse (bitraverse id sequenceA) (toValidation xs)
-
-      results = fmap (bimap transform (fmap transform)) templates
-      collectedResults = validationToEither $ collectErrors results
-   in (fmap . fmap) (bimap TE.encodeUtf8 (fmap TE.encodeUtf8)) collectedResults
+      transformationResults :: [(Validation TransformErrorBundle B.ByteString, Maybe (Validation TransformErrorBundle B.ByteString))]
+      transformationResults = fmap (bimap transform (fmap transform)) templates
+   in validationToEither $ traverse (bitraverse id sequenceA) transformationResults
 
 -- | Given a `TransformHeaders` and the `ReqTransformCtx`, Construct a
 -- function to transform the existing headers.
 mkHeaderTransform :: TemplatingEngine -> TransformHeaders -> ReqTransformCtx -> Either TransformErrorBundle ([HTTP.Header] -> [HTTP.Header])
-mkHeaderTransform engine TransformHeaders {..} transformCtx =
-  let transform t =
-        case mkReqTemplateTransform engine (coerce $ wrapTemplate t) transformCtx of
-          Left err -> Failure err
-          Right (J.String str) -> Success $ TE.encodeUtf8 str
-          Right (J.Number num) -> Success $ TE.encodeUtf8 $ tshow num
-          Right (J.Bool True) -> Success "true"
-          Right (J.Bool False) -> Success "false"
-          Right val ->
-            Failure $
-              TransformErrorBundle $
-                pure $
-                  J.object
-                    [ "error_code" J..= J.String "TransformationError",
-                      "message" J..= J.String ("Header Transforms must produce a String, Number, or Boolean value: " <> tshow val)
-                    ]
-
-      failIfCT key =
-        if CI.foldedCase key == "content-type"
-          then
-            Failure $
-              TransformErrorBundle $
-                pure $
-                  J.object
-                    [ "error_code" J..= J.String "TransformationError",
-                      "message" J..= J.String ("Header Transforms cannot add Content-Type" <> CI.original key)
-                    ]
-          else Success $ CI.map TE.encodeUtf8 key
-
-      toBeAdded = traverse (bitraverse failIfCT transform) addHeaders
-      toBeRemoved = (fmap . CI.map) TE.encodeUtf8 removeHeaders
-
-      filterHeaders h = filter ((`notElem` toBeRemoved) . fst) h
-   in case toBeAdded of
-        Failure err -> throwError err
-        Success toBeAdded' -> pure (filterHeaders . (toBeAdded' <>))
+mkHeaderTransform engine TransformHeaders {..} ctx = do
+  add <- V.toEither $ fmap mappend $ traverse (bitraverse (pure . CI.map TE.encodeUtf8) (V.fromEither . transformST engine ctx)) addHeaders
+  let filter' xs = filter (flip elem (fmap (CI.map TE.encodeUtf8) removeHeaders) . fst) xs
+  pure $ add . filter'
 
 mkUrlTransform :: TemplatingEngine -> StringTemplateText -> ReqTransformCtx -> Either TransformErrorBundle Text
 mkUrlTransform engine template transformCtx =
@@ -532,13 +486,18 @@ buildRespTransformCtx reqCtx respBody =
 applyRequestTransform :: (HTTP.Request -> ReqTransformCtx) -> RequestTransform -> HTTP.Request -> Either TransformErrorBundle HTTP.Request
 applyRequestTransform transformCtx' RequestTransform {..} reqData =
   let transformCtx = transformCtx' reqData
-      method = fmap (TE.encodeUtf8 . renderRequestMethod) reqTransformRequestMethod
+      methodFunc :: B.ByteString -> Either TransformErrorBundle B.ByteString
+      methodFunc method =
+        case reqTransformRequestMethod of
+          Nothing -> pure method
+          Just f -> TE.encodeUtf8 . CI.original . coerce <$> f transformCtx
 
       bodyFunc :: Maybe BL.ByteString -> Either TransformErrorBundle (Maybe BL.ByteString)
       bodyFunc body =
         case reqTransformBody of
           Nothing -> pure body
-          Just f -> pure . J.encode <$> f transformCtx
+          Just Remove -> pure Nothing
+          Just (Transform f) -> pure . J.encode <$> f transformCtx
 
       urlFunc :: Text -> Either TransformErrorBundle Text
       urlFunc url =
@@ -556,18 +515,12 @@ applyRequestTransform transformCtx' RequestTransform {..} reqData =
       headerFunc headers =
         case reqTransformRequestHeaders of
           Nothing -> pure headers
-          Just f -> f transformCtx >>= \g -> pure $ g headers
-
-      contentTypeFunc :: [HTTP.Header] -> Either TransformErrorBundle [HTTP.Header]
-      contentTypeFunc = pure . nubBy (\a b -> fst a == fst b) . (:) ("Content-Type", contentType)
-        where
-          contentType = maybe "application/json" (TE.encodeUtf8 . renderContentType) reqTransformContentType
+          Just f -> f transformCtx <*> pure headers
    in reqData & traverseOf HTTP.url urlFunc
         >>= traverseOf HTTP.body bodyFunc
         >>= traverseOf HTTP.queryParams queryFunc
-        >>= traverseOf HTTP.method (pure . (`fromMaybe` method))
+        >>= traverseOf HTTP.method methodFunc
         >>= traverseOf HTTP.headers headerFunc
-        >>= traverseOf HTTP.headers contentTypeFunc
 
 -- | At the moment we only transform the body of
 -- Responses. 'http-client' does not export the constructors for
@@ -579,5 +532,39 @@ applyResponseTransform ResponseTransform {..} ctx@RespTransformCtx {..} =
       bodyFunc body =
         case respTransformBody of
           Nothing -> pure body
-          Just f -> J.encode <$> f ctx
+          Just Remove -> pure mempty
+          Just (Transform f) -> J.encode <$> f ctx
    in bodyFunc (J.encode rtcBody)
+
+-----------------
+--- Utilities ---
+-----------------
+
+valueToString :: MonadError TransformErrorBundle m => J.Value -> m B.ByteString
+valueToString = \case
+  J.String str -> pure $ TE.encodeUtf8 str
+  J.Number num -> pure $ TE.encodeUtf8 (tshow num)
+  J.Bool True -> pure "true"
+  J.Bool False -> pure "false"
+  val -> throwErrorBundle "Template must produce a String, Number, or Boolean value" (Just val)
+
+throwErrorBundle :: MonadError TransformErrorBundle m => T.Text -> Maybe J.Value -> m a
+throwErrorBundle msg val =
+  throwError $
+    TransformErrorBundle $
+      pure $
+        J.object $
+          [ "error_code" J..= J.String "TransformationError",
+            "message" J..= J.String msg
+          ]
+            <> catMaybes [("value" J..=) <$> val]
+
+infixr 8 .=?
+
+(.=?) :: J.ToJSON v => k -> Maybe v -> Maybe (k, J.Value)
+(.=?) _ Nothing = Nothing
+(.=?) k (Just v) = Just (k, J.toJSON v)
+
+-- | Wrap a template with escaped double quotes.
+wrapTemplate :: StringTemplateText -> StringTemplateText
+wrapTemplate (StringTemplateText t) = StringTemplateText $ "\"" <> t <> "\""

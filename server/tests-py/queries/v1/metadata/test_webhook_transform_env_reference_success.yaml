@@ -22,12 +22,16 @@
       body:
         hello: world
       request_transform:
+        version: 2
         url: "http://www.google.com"
         template_engine: Kriti
-        body: "\"hello_{{ $body.hello }}\""
+        body:
+          action: transform
+          template: "\"hello_{{ $body.hello }}\""
         method: POST
         query_params:
           "foo": "bar"
         request_headers:
           add_headers:
             foo: "bar"
+            content-type: "application/json"

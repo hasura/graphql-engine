@@ -223,6 +223,12 @@ class TestMetadata:
     def test_webhook_transform_success(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/test_webhook_transform_success.yaml')
 
+    def test_webhook_transform_success_remove_body(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/test_webhook_transform_success_remove_body.yaml')
+
+    def test_webhook_transform_success_old_body_schema(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/test_webhook_transform_success_old_body_schema.yaml')
+
     def test_webhook_transform_with_url_env_reference_success(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/test_webhook_transform_env_reference_success.yaml')
 

@@ -2042,6 +2042,10 @@ RequestTransformation
      - required
      - Schema
      - Description
+   * - version
+     - false
+     - "1" | "2"
+     - Sets the `RequestTransformation` schema version. Version `1` uses a `String` for the `body` field and Version `2` takes a :ref:`BodyTransform`. `Defaults to version `1`.
    * - method
      - false
      - String
@@ -2052,7 +2056,7 @@ RequestTransformation
      - Change the request URL to this value.
    * - body
      - false
-     - String
+     - :ref:`BodyTransform` | String
      - A template script for transforming the request body.
    * - content_type
      - false
@@ -2092,7 +2096,6 @@ TransformHeaders
      - Array of (:ref:`HeaderKey`)
      - Headers to be removed from the request. Content-Type cannot be removed.
 
-
 .. _HeaderKey:
 
 HeaderKey
@@ -2112,6 +2115,29 @@ HeaderValue
    :class: haskell-pre
 
    String
+
+
+.. _BodyTransform:
+
+BodyTransform
+^^^^^^^^^^^^^^^^
+
+.. list-table::
+   :header-rows: 1
+
+   * - Key
+     - required
+     - Schema
+     - Description
+   * - action
+     - true
+     - remove | transform
+     - The action to perform on the request body.
+   * - template
+     - false
+     - String
+     - The transformation template to be applied to the body. This is
+       required if the action is `transform`.
 
 .. _TemplateEngine:
 
@@ -2137,9 +2163,13 @@ ResponseTransformation
      - required
      - Schema
      - Description
+   * - version
+     - false
+     - "1" | "2"
+     - Sets the `RequestTransformation` schema version. Version `1` uses a `String` for the `body` field and Version `2` takes a :ref:`BodyTransform`. `Defaults to version `1`.
    * - body
      - false
-     - String
+     - :ref:`BodyTransform` | String
      - A template script for transforming the response body.
    * - template_engine
      - false

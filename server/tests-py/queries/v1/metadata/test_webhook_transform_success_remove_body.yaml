@@ -4,13 +4,11 @@
     X-Hasura-Role: admin
   status: 200
   response:
-    body: hello_world
     headers:
-      - - content-type
-        - application/json
       - - foo
         - bar
-    method: POST
+    body:
+    method: GET
     webhook_url: http://www.google.com?foo=bar
   query:
     type: test_webhook_transform
@@ -23,12 +21,10 @@
         url: "http://www.google.com"
         template_engine: Kriti
         body:
-          action: transform
-          template: "\"hello_{{ $body.hello }}\""
-        method: POST
+          action: remove
+        method: GET
         query_params:
           "foo": "bar"
         request_headers:
           add_headers:
             foo: "bar"
-            content-type: "application/json"
