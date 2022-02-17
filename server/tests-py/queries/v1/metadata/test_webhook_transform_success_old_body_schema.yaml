@@ -1,4 +1,4 @@
-- description: Test Webhook Transform
+- description: Test Webhook Transform Old Body Schema
   url: /v1/metadata
   headers:
     X-Hasura-Role: admin
@@ -19,12 +19,9 @@
       body:
         hello: world
       request_transform:
-        version: 2
         url: "http://www.google.com"
         template_engine: Kriti
-        body:
-          action: transform
-          template: "\"hello_{{ $body.hello }}\""
+        body: "\"hello_{{ $body.hello }}\""
         method: POST
         query_params:
           "foo": "bar"

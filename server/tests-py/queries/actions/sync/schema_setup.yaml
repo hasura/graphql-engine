@@ -252,16 +252,19 @@ args:
       output_type: OutObject
       handler: http://127.0.0.1:5593/mirror-action
       request_transform:
+        version: 2
         template_engine: Kriti
-        body: |
-          {
-            "input": {
-              "arg": {
-                "id": {{ $body.input.arg.name }},
-                "name": {{ $body.input.arg.id }}
+        body:
+          action: transform
+          template: |
+            {
+              "input": {
+                "arg": {
+                  "id": {{ $body.input.arg.name }},
+                  "name": {{ $body.input.arg.id }}
+                }
               }
             }
-          }
 
 - type: create_action
   args:
@@ -285,12 +288,15 @@ args:
       output_type: OutObjectTransformed
       handler: http://127.0.0.1:5593/mirror-action
       response_transform:
+        version: 2
         template_engine: Kriti
-        body: |
-          {
-            "foo": {{ $body.id }},
-            "bar": {{ $body.name }}
-          }
+        body:
+          action: transform
+          template: |
+            {
+              "foo": {{ $body.id }},
+              "bar": {{ $body.name }}
+            }
 
 - type: create_action
   args:
@@ -333,24 +339,27 @@ args:
       output_type: NestedOutObjectTransformed!
       handler: http://127.0.0.1:5593/get-user-by-email-nested
       response_transform:
+        version: 2
         template_engine: Kriti
-        body: |
-          {
-            "uid": {{ $body.user_id.id }},
-            "city0": {{ $body.addresses[0].city }},
-            "country0": {{ $body.addresses[0].country }},
-            "other_addresses":
-              {{ range i, x := $body.addresses }}
-                {{ if i > 0 }}
-                  {
-                    "city": {{ x.city }},
-                    "country": {{ x.country }}
-                  }
-                {{ else }}
-                  null
+        body:
+          action: transform
+          template: |
+            {
+              "uid": {{ $body.user_id.id }},
+              "city0": {{ $body.addresses[0].city }},
+              "country0": {{ $body.addresses[0].country }},
+              "other_addresses":
+                {{ range i, x := $body.addresses }}
+                  {{ if i > 0 }}
+                    {
+                      "city": {{ x.city }},
+                      "country": {{ x.country }}
+                    }
+                  {{ else }}
+                    null
+                  {{ end }}
                 {{ end }}
-              {{ end }}
-          }
+            }
 
 - type: create_action
   args:
@@ -445,10 +454,13 @@ args:
       output_type: '[Result]'
       handler: http://127.0.0.1:5593/get-results
       response_transform:
+        version: 2
         template_engine: Kriti
-        body: |
-          {{ range i, x := $body.result_ids }}
-            {
-              "id": {{ x }}
-            }
-          {{ end }}
+        body:
+          action: transform
+          template: |
+            {{ range i, x := $body.result_ids }}
+              {
+                "id": {{ x }}
+              }
+            {{ end }}
