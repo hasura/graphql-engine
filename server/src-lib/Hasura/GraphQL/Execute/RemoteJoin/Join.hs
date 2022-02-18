@@ -6,7 +6,6 @@ where
 import Data.Aeson qualified as J
 import Data.Aeson.Ordered qualified as JO
 import Data.Environment qualified as Env
-import Data.HashMap.Strict qualified as Map
 import Data.HashMap.Strict.Extended qualified as Map
 import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.HashSet qualified as HS

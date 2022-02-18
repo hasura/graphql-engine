@@ -7,7 +7,6 @@ module Data.HashMap.Strict.Extended
     groupOnNE,
     differenceOn,
     lpadZip,
-    mapKeys,
     unionsWith,
     isInverseOf,
   )
@@ -15,11 +14,11 @@ where
 
 import Data.Align qualified as A
 import Data.Foldable qualified as F
-import Data.Function
+import Data.Function (on)
 import Data.HashMap.Strict as M
-import Data.Hashable
+import Data.Hashable (Hashable)
 import Data.List.NonEmpty (NonEmpty (..))
-import Data.These
+import Data.These (These (That, These, This))
 import Prelude
 
 catMaybes :: HashMap k (Maybe v) -> HashMap k v
@@ -64,20 +63,6 @@ lpadZip left =
       This _ -> Nothing
       That b -> Just (Nothing, b)
       These a b -> Just (Just a, b)
-
--- | @'mapKeys' f s@ is the map obtained by applying @f@ to each key of @s@.
---
--- The size of the result may be smaller if @f@ maps two or more distinct
--- keys to the same new key.  In this case the value at the greatest of the
--- original keys is retained.
---
--- > mapKeys (+ 1) (fromList [(5,"a"), (3,"b")])                        == fromList [(4, "b"), (6, "a")]
--- > mapKeys (\ _ -> 1) (fromList [(1,"b"), (2,"a"), (3,"d"), (4,"c")]) == singleton 1 "c"
--- > mapKeys (\ _ -> 3) (fromList [(1,"b"), (2,"a"), (3,"d"), (4,"c")]) == singleton 3 "c"
---
--- copied from https://hackage.haskell.org/package/containers-0.6.4.1/docs/src/Data.Map.Internal.html#mapKeys
-mapKeys :: (Ord k2, Hashable k2) => (k1 -> k2) -> HashMap k1 a -> HashMap k2 a
-mapKeys f = fromList . foldrWithKey (\k x xs -> (f k, x) : xs) []
 
 -- | The union of a list of maps, with a combining operation:
 --   (@'unionsWith' f == 'Prelude.foldl' ('unionWith' f) 'empty'@).

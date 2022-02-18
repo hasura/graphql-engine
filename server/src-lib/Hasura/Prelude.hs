@@ -34,7 +34,6 @@ module Hasura.Prelude
 
     -- * Map-related utilities
     mapFromL,
-    mapKeys,
     oMapFromL,
 
     -- * Measuring and working with moments and durations
@@ -88,13 +87,13 @@ import Data.Foldable as M
 import Data.Function as M (on, (&))
 import Data.Functor as M (($>), (<&>))
 import Data.Functor.Const as M (Const)
-import Data.HashMap.Strict as M (HashMap)
+import Data.HashMap.Strict as M (HashMap, mapKeys)
 import Data.HashMap.Strict qualified as Map
 import Data.HashMap.Strict.InsOrd as M (InsOrdHashMap)
 import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.HashSet as M (HashSet)
+import Data.Hashable (hashWithSalt)
 import Data.Hashable as M (Hashable)
-import Data.Hashable qualified as H
 import Data.List as M
   ( find,
     findIndex,
@@ -215,13 +214,6 @@ findWithIndex p l = do
 mapFromL :: (Eq k, Hashable k) => (a -> k) -> [a] -> Map.HashMap k a
 mapFromL f = Map.fromList . map (\v -> (f v, v))
 
--- | re-key a map. In the case that @f@ is not injective you may end up with a
--- smaller map than what you started with.
---
--- This may be a code smell.
-mapKeys :: (Eq k2, Hashable k2) => (k1 -> k2) -> Map.HashMap k1 a -> Map.HashMap k2 a
-mapKeys f = Map.fromList . map (first f) . Map.toList
-
 oMapFromL :: (Eq k, Hashable k) => (a -> k) -> [a] -> InsOrdHashMap k a
 oMapFromL f = OMap.fromList . map (\v -> (f v, v))
 
@@ -280,7 +272,7 @@ hasuraJSON :: J.Options
 hasuraJSON = J.aesonPrefix J.snakeCase
 
 instance (Hashable a) => Hashable (Seq a) where
-  hashWithSalt i = H.hashWithSalt i . toList
+  hashWithSalt i = hashWithSalt i . toList
 
 -- | Given a structure with elements whose type is a 'Monoid', combine them via
 -- the monoid's @('<>')@ operator.

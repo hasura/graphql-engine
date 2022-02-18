@@ -5,15 +5,11 @@
 module Hasura.Base.Instances () where
 
 import Data.Aeson qualified as J
-import Data.Functor.Product
-import Data.GADT.Compare
+import Data.Functor.Product (Product (Pair))
+import Data.GADT.Compare (GCompare (gcompare), GOrdering (GEQ, GGT, GLT))
 import Data.HashMap.Strict qualified as M
 import Data.HashSet qualified as S
-import Data.Hashable
-import Data.Text
-import Data.Time.Calendar
-import Data.Time.Clock
-import Data.Time.LocalTime
+import Data.Text qualified as T
 import Data.URL.Template qualified as UT
 import Database.PG.Query qualified as Q
 import Hasura.Prelude
@@ -22,18 +18,6 @@ import System.Cron.Parser qualified as C
 import System.Cron.Types qualified as C
 import Text.Regex.TDFA qualified as TDFA
 import Text.Regex.TDFA.Pattern qualified as TDFA
-
---------------------------------------------------------------------------------
--- Hashable
-
-instance Hashable UTCTime where
-  hashWithSalt i = hashWithSalt i . show
-
-instance Hashable Day where
-  hashWithSalt i = hashWithSalt i . show
-
-instance Hashable TimeOfDay where
-  hashWithSalt i = hashWithSalt i . show
 
 --------------------------------------------------------------------------------
 -- Deepseq
@@ -129,5 +113,5 @@ instance Q.FromCol C.CronSchedule where
       Left err -> Left err
       Right dbCron ->
         case C.parseCronSchedule dbCron of
-          Left err' -> Left $ "invalid cron schedule " <> pack err'
+          Left err' -> Left $ "invalid cron schedule " <> T.pack err'
           Right cron -> Right cron
