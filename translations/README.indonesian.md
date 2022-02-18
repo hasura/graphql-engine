@@ -41,6 +41,7 @@ Baca lebih lanjut di [hasura.io](https://hasura.io) dan [dokumentasinya](https:/
 ## Daftar isi
 <!-- markdown-toc **start** - Don't edit this section. Run M-x markdown-toc-refresh-toc -->
 **Daftar isi**
+
 - [Mulai dengan cepat:](#mulai-dengan-cepat)
   - [Jalankan dengan satu klik di Heroku](#jalankan-dengan-satu-klik-di-heroku)
   - [Pilihan menjalankan aplikasi dengan satu klik lainnya](#pilihan-menjalankan-aplikasi-dengan-satu-klik-lainnya)
@@ -128,19 +129,19 @@ Coba lihat seluruh contoh aplikasi pada direktori [_community/sample-apps_](../c
 ### Aplikasi _realtime_
 
 - Aplikasi _chat_ untuk grup yang dibuat menggunakan React. Termasuk indikator pengetikan, pengguna _online_ & notifikasi pesan baru.
-  - [Coba aplikasinya](https://realtime-chat.demo.hasura.app/)
+  - [Coba aplikasinya](https://realtime-chat.demo.hasura.io/)
   - [Tutorial](../community/sample-apps/realtime-chat)
-  - [Lihat-lihat API](https://realtime-chat.demo.hasura.app/console)
+  - [Lihat-lihat API](https://realtime-chat.demo.hasura.io/console)
 
 - Aplikasi pelacak yang menyiarkan lokasi secara langsung dengan memperlihatkan kendaraan berjalan dengan posisi koordinat GPS yang berubah-ubah pada peta.
-  - [Coba aplikasinya](https://realtime-location-tracking.demo.hasura.app/)
+  - [Coba aplikasinya](https://realtime-location-tracking.demo.hasura.io/)
   - [Tutorial](../community/sample-apps/realtime-location-tracking)
-  - [Lihat-lihat API](https://realtime-location-tracking.demo.hasura.app/console)
+  - [Lihat-lihat API](https://realtime-location-tracking.demo.hasura.io/console)
 
 - Sebuah dasbor _realtime_ untuk meng-agregasi data yang berubah secara terus menerus.
-  - [Coba aplikasinya](https://realtime-poll.demo.hasura.app/)
+  - [Coba aplikasinya](https://realtime-poll.demo.hasura.io/)
   - [Tutorial](../community/sample-apps/realtime-poll)
-  - [Lihat-lihat API](https://realtime-poll.demo.hasura.app/console)
+  - [Lihat-lihat API](https://realtime-poll.demo.hasura.io/console)
 
 ### Video
 
