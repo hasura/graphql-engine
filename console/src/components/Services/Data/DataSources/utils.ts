@@ -120,23 +120,66 @@ export const dataSourceIsEqual = (
   return isEqual(filterFields(sourceFromMetaData), filterFields(data));
 };
 
-export const getReadReplicaDBUrlInfo = (replica: SourceConnectionInfo) => {
-  if (!replica.database_url) return null;
-  if (typeof replica.database_url === 'string')
+type TGetReadReplicaDBUrlInfoResponse = {
+  connectionType: string;
+  envVarState?: {
+    envVar: string;
+  };
+  databaseURLState?: {
+    dbURL: string;
+    serviceAccount: string;
+    global_select_limit: number;
+    projectId: string;
+    datasets: string;
+  };
+};
+
+export const getReadReplicaDBUrlInfo = (
+  replica: SourceConnectionInfo,
+  dbType: MetadataDataSource['kind']
+): TGetReadReplicaDBUrlInfoResponse | null => {
+  const dbUrlConfig = {
+    dbURL: '',
+    serviceAccount: '',
+    global_select_limit: 1000,
+    projectId: '',
+    datasets: '',
+  };
+
+  if (!replica?.database_url && !replica?.connection_string) return null;
+  if (dbType === 'postgres') {
+    if (typeof replica?.database_url === 'string') {
+      return {
+        connectionType: connectionTypes.DATABASE_URL,
+        databaseURLState: {
+          ...dbUrlConfig,
+          dbURL: replica?.database_url,
+        },
+      };
+    }
     return {
-      connectionType: connectionTypes.DATABASE_URL,
-      databaseURLState: {
-        dbURL: replica.database_url,
-        serviceAccount: '',
-        global_select_limit: 1000,
-        projectId: '',
-        datasets: '',
+      connectionType: connectionTypes.ENV_VAR,
+      envVarState: {
+        envVar: replica?.database_url?.from_env ?? '',
       },
     };
-  return {
-    connectionType: connectionTypes.ENV_VAR,
-    envVarState: {
-      envVar: replica.database_url.from_env,
-    },
-  };
+  }
+  if (dbType === 'mssql') {
+    if (typeof replica?.connection_string === 'string') {
+      return {
+        connectionType: connectionTypes.DATABASE_URL,
+        databaseURLState: {
+          ...dbUrlConfig,
+          dbURL: replica?.connection_string,
+        },
+      };
+    }
+    return {
+      connectionType: connectionTypes.ENV_VAR,
+      envVarState: {
+        envVar: replica?.connection_string?.from_env ?? '',
+      },
+    };
+  }
+  return null;
 };

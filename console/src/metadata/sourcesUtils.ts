@@ -42,6 +42,7 @@ export const addSource = (
             connection_string: payload.dbUrl,
             pool_settings: payload.connection_pool_settings,
           },
+          read_replicas: replicas?.length ? replicas : null,
         },
         replace_configuration,
       },

@@ -96,12 +96,13 @@ const ConnectDatabase: React.FC<ConnectDatabaseProps> = props => {
       const existingReadReplicas: ExtendedConnectDBState[] | [] = (
         currentSourceInfo.configuration?.read_replicas ?? []
       ).map(replica => {
-        const replicaDBUrlInfo = getReadReplicaDBUrlInfo(replica);
+        const dbType = currentSourceInfo.kind ?? 'postgres';
+        const replicaDBUrlInfo = getReadReplicaDBUrlInfo(replica, dbType);
         return {
           chosenConnectionType:
             replicaDBUrlInfo?.connectionType || connectionTypes.DATABASE_URL,
           displayName: '',
-          dbType: currentSourceInfo.kind ?? 'postgres',
+          dbType,
           connectionParamState: {
             host: '',
             port: '',
@@ -347,6 +348,10 @@ const ConnectDatabase: React.FC<ConnectDatabaseProps> = props => {
       type: 'UPDATE_DISPLAY_NAME',
       data: `read-replica-${indexForName}`,
     });
+    connectDBReadReplicaDispatch({
+      type: 'UPDATE_DB_DRIVER',
+      data: connectDBInputState.dbType,
+    });
   };
 
   const onClickCancelOnReadReplicaForm = () =>
@@ -382,7 +387,7 @@ const ConnectDatabase: React.FC<ConnectDatabaseProps> = props => {
           title="Edit Data Source"
         >
           {/* Should be rendered only on Pro and Cloud Console */}
-          {getSupportedDrivers('connectDbForm.read_replicas').includes(
+          {getSupportedDrivers('connectDbForm.read_replicas.edit').includes(
             connectDBInputState.dbType
           ) &&
             (window.__env.consoleId || window.__env.userRole) && (
@@ -416,7 +421,7 @@ const ConnectDatabase: React.FC<ConnectDatabaseProps> = props => {
         onSubmit={onSubmit}
       >
         {/* Should be rendered only on Pro and Cloud Console */}
-        {getSupportedDrivers('connectDbForm.read_replicas').includes(
+        {getSupportedDrivers('connectDbForm.read_replicas.create').includes(
           connectDBInputState.dbType
         ) &&
           (window.__env.consoleId || window.__env.userRole) && (
