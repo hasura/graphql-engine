@@ -128,19 +128,19 @@ GraphQL Engine提供了易用，可伸缩，高性能的往后端插入自定义
 ### 实时应用
 
 - 使用React构建的群聊应用程序，包括正在输入指示器，在线用户和新消息通知
-  - [试试看](https://realtime-chat.demo.hasura.app/)
+  - [试试看](https://realtime-chat.demo.hasura.io/)
   - [讲解](../community/sample-apps/realtime-chat)
-  - [浏览API](https://realtime-chat.demo.hasura.app/console)
+  - [浏览API](https://realtime-chat.demo.hasura.io/console)
 
 - 实时位置跟踪应用程序，显示行驶中的车辆正在更改当前GPS坐标在地图上移动
-  - [试试看](https://realtime-location-tracking.demo.hasura.app/)
+  - [试试看](https://realtime-location-tracking.demo.hasura.io/)
   - [讲解](../community/sample-apps/realtime-location-tracking)
-  - [浏览API](https://realtime-location-tracking.demo.hasura.app/console)
+  - [浏览API](https://realtime-location-tracking.demo.hasura.io/console)
 
 - 实时仪表板，用于聚合不断变化的数据
-  - [试试看](https://realtime-poll.demo.hasura.app/)
+  - [试试看](https://realtime-poll.demo.hasura.io/)
   - [讲解](../community/sample-apps/realtime-poll)
-  - [浏览API](https://realtime-poll.demo.hasura.app/console)
+  - [浏览API](https://realtime-poll.demo.hasura.io/console)
 
 ### 视频
 

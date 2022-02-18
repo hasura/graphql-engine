@@ -129,19 +129,19 @@ Revisa todos los ejemplos de aplicaciones en la carpeta de [community/sample-app
 ### Aplicaciones en tiempo real
 
 - Aplicación de Chat Grupal creada con React, incluye un indicador de escribiendo, usuarios en línea y notificaciones       para nuevos mensajes.
-  - [Pruébala](https://realtime-chat.demo.hasura.app/)
+  - [Pruébala](https://realtime-chat.demo.hasura.io/)
   - [Tutorial](../community/sample-apps/realtime-chat)
-  - [Buscar APIs](https://realtime-chat.demo.hasura.app/console)
+  - [Buscar APIs](https://realtime-chat.demo.hasura.io/console)
  
 - Aplicación de rastreo de ubicación en tiempo real, que muestra a un vehículo en movimiento cambiando sus coordenadas en   el GPS mientras se mueve en un mapa. 
-  - [Pruébala](https://realtime-location-tracking.demo.hasura.app/)
+  - [Pruébala](https://realtime-location-tracking.demo.hasura.io/)
   - [Tutorial](../community/sample-apps/realtime-location-tracking)
-  - [Buscar APIs](https://realtime-location-tracking.demo.hasura.app/console)
+  - [Buscar APIs](https://realtime-location-tracking.demo.hasura.io/console)
 
 - Un panel en tiempo real para agregar datos que estan cambio constante. 
-  - [Pruébala](https://realtime-poll.demo.hasura.app/)
+  - [Pruébala](https://realtime-poll.demo.hasura.io/)
   - [Tutorial](../community/sample-apps/realtime-poll)
-  - [Buscar APIs](https://realtime-poll.demo.hasura.app/console)
+  - [Buscar APIs](https://realtime-poll.demo.hasura.io/console)
 
 ### Videos
 

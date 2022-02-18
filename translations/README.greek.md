@@ -126,19 +126,19 @@
 ### Εφαρμογές σε πραγματικό χρόνο
 
 - Μια ομαδική εφαρμογή ανταλλαγής μηνυμάτων που αναπτύχθηκε με το React, συμπεριλαμβανομένων χαρακτηριστικών όπως δείκτη πληκτρολόγησης, ένδειξη ενεργών χρηστών και ειδοποιήσεις νέων μηνυμάτων.
-  - [Δοκιμάστε το](https://realtime-chat.demo.hasura.app/)
+  - [Δοκιμάστε το](https://realtime-chat.demo.hasura.io/)
   - [Tutorial](https://github.com/hasura/graphql-engine/tree/stable/community/sample-apps/realtime-chat)
-  - [Εξερευνήστε APIs](https://realtime-chat.demo.hasura.app/console)
+  - [Εξερευνήστε APIs](https://realtime-chat.demo.hasura.io/console)
 
 - Εφαρμογή εντοπισμού θέσης σε πραγματικό χρόνο που δείχνει όχημα του οποίου οι συντεταγμένες GPS μετακινούνται συνεχώς σε χάρτη.
-  - [Δοκιμάστε το](https://realtime-location-tracking.demo.hasura.app/)
+  - [Δοκιμάστε το](https://realtime-location-tracking.demo.hasura.io/)
   - [Tutorial](https://github.com/hasura/graphql-engine/tree/stable/community/sample-apps/realtime-location-tracking)
-  - [Εξερευνήστε APIs](https://realtime-location-tracking.demo.hasura.app/console)
+  - [Εξερευνήστε APIs](https://realtime-location-tracking.demo.hasura.io/console)
 
 - Πίνακας ελέγχου σε πραγματικό χρόνο για συνεχώς μεταβαλλόμενη συνάθροιση δεδομένων.
-  - [Δοκιμάστε το](https://realtime-poll.demo.hasura.app/)
+  - [Δοκιμάστε το](https://realtime-poll.demo.hasura.io/)
   - [Tutorial](https://github.com/hasura/graphql-engine/tree/stable/community/sample-apps/realtime-poll)
-  - [Εξερευνήστε APIs](https://realtime-poll.demo.hasura.app/console)
+  - [Εξερευνήστε APIs](https://realtime-poll.demo.hasura.io/console)
 
 ### Videos
 

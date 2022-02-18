@@ -127,19 +127,19 @@ PostgreSQLのデータを変換するか、あるいはその上でビジネス�
 ### リアルタイムアプリケーション
 
 - Reactを使用して構築されたグループチャットアプリケーション。タイピングインジケーター、オンラインユーザー、新しいメッセージ通知が含まれます。
-  - [試してみよう](https://realtime-chat.demo.hasura.app/)
+  - [試してみよう](https://realtime-chat.demo.hasura.io/)
   - [チュートリアル](../community/sample-apps/realtime-chat)
-  - [APIの参照](https://realtime-chat.demo.hasura.app/console)
+  - [APIの参照](https://realtime-chat.demo.hasura.io/console)
 
 - 現在の場所を追跡できるアプリ。地図上を移動する乗り物の現在のGPS座標を表示します。
-  - [試してみよう](https://realtime-location-tracking.demo.hasura.app/)
+  - [試してみよう](https://realtime-location-tracking.demo.hasura.io/)
   - [チュートリアル](../community/sample-apps/realtime-location-tracking)
-  - [APIの参照](https://realtime-location-tracking.demo.hasura.app/console)
+  - [APIの参照](https://realtime-location-tracking.demo.hasura.io/console)
 
 - 常にに変化するデータを集約するリアルタイムダッシュボード。
-  - [試してみよう](https://realtime-poll.demo.hasura.app/)
+  - [試してみよう](https://realtime-poll.demo.hasura.io/)
   - [チュートリアル](../community/sample-apps/realtime-poll)
-  - [APIの参照](https://realtime-poll.demo.hasura.app/console)
+  - [APIの参照](https://realtime-poll.demo.hasura.io/console)
 
 ### 動画
 

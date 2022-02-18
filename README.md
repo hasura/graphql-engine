@@ -58,7 +58,7 @@ Read more at [hasura.io](https://hasura.io) and the [docs](https://hasura.io/doc
 - [Brand assets](#brand-assets)
 - [License](#license)
 - [Translations](#translations)
-
+ 
 <!-- markdown-toc end -->
 
 ## Quickstart:
@@ -138,16 +138,16 @@ Check out all the example applications in the [community/sample-apps](community/
 
 - Group Chat application built with React, includes a typing indicator, online users & new
   message notifications.
-  - [Try it out](https://realtime-chat.demo.hasura.app/)
+  - [Try it out](https://realtime-chat.demo.hasura.io/)
   - [Tutorial](community/sample-apps/realtime-chat)
 
 - Live location tracking app that shows a running vehicle changing current GPS
   coordinates moving on a map.
-  - [Try it out](https://realtime-location-tracking.demo.hasura.app/)
+  - [Try it out](https://realtime-location-tracking.demo.hasura.io/)
   - [Tutorial](community/sample-apps/realtime-location-tracking)
 
 - A realtime dashboard for data aggregations on continuously changing data.
-  - [Try it out](https://realtime-poll.demo.hasura.app/)
+  - [Try it out](https://realtime-poll.demo.hasura.io/)
   - [Tutorial](community/sample-apps/realtime-poll)
 
 ### Videos

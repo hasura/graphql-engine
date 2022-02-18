@@ -129,19 +129,19 @@ GraphQL Engine предоставляет простые в обосновани
 ### Приложения в режиме реального времени
 
 - Приложение группового чата, построенное с помощью React, включает в себя индикатор набора текста, онлайн пользователей и уведомления о сообщениях.
-  - [Попробуйте это](https://realtime-chat.demo.hasura.app/)
+  - [Попробуйте это](https://realtime-chat.demo.hasura.io/)
   - [Руководство](../community/sample-apps/realtime-chat)
-  - [Просмотреть API](https://realtime-chat.demo.hasura.app/console)
+  - [Просмотреть API](https://realtime-chat.demo.hasura.io/console)
 
 - Приложение для отслеживания местоположения в реальном времени, показывающее движущееся транспортное средство, изменяющее текущие GPS-координаты, движущееся по карте.
-  - [Попробуйте это](https://realtime-location-tracking.demo.hasura.app/)
+  - [Попробуйте это](https://realtime-location-tracking.demo.hasura.io/)
   - [Руководство](../community/sample-apps/realtime-location-tracking)
-  - [Просмотреть API](https://realtime-location-tracking.demo.hasura.app/console)
+  - [Просмотреть API](https://realtime-location-tracking.demo.hasura.io/console)
 
 - Информационная панель в режиме реального времени для агрегирования данных по постоянно меняющимся данным.
-  - [Попробуйте это](https://realtime-poll.demo.hasura.app/)
+  - [Попробуйте это](https://realtime-poll.demo.hasura.io/)
   - [Руководство](../community/sample-apps/realtime-poll)
-  - [Просмотреть API](https://realtime-poll.demo.hasura.app/console)
+  - [Просмотреть API](https://realtime-poll.demo.hasura.io/console)
 
 ### Видео
 

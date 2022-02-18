@@ -68,7 +68,7 @@ Serverless/cloud-function platforms covered by boilerplates:
 Trigger push notifications and emails based on database events. Try the demo and tutorial below to see how browser push notifications are triggered when the user inserts some data:
 
 * [Watch demo](https://www.youtube.com/watch?v=nuSHkzE2-zo)
-* [Try it out](https://serverless-push.demo.hasura.app/)
+* [Try it out](https://serverless-push.demo.hasura.io/)
 * [Tutorial](community/sample-apps/serverless-push)
 
 
@@ -88,7 +88,7 @@ Convert complex, long-running business logic to be event-driven, asynchronous an
 Transform and load data into external data-stores. Check out this demo and tutorial below to see how Postgres data is transformed to build and populate an Algolia index:
 
 * [Watch demo](https://youtu.be/kWVEBWdEVAA)
-* [Try it out](https://serverless-etl.demo.hasura.app/)
+* [Try it out](https://serverless-etl.demo.hasura.io/)
 * [Tutorial](community/sample-apps/serverless-etl)
 
 ### Building reactive UX for your async backend with realtime GraphQL
