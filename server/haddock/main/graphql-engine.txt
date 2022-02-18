@@ -16193,8 +16193,7 @@ MetadataNoSources :: !Tables ('Postgres 'Vanilla) -> !Functions ('Postgres 'Vani
 [_mnsCronTriggers] :: MetadataNoSources -> !CronTriggers
 newtype MetadataModifier
 MetadataModifier :: (Metadata -> Metadata) -> MetadataModifier
-[unMetadataModifier] :: MetadataModifier -> Metadata -> Metadata
-noMetadataModify :: MetadataModifier
+[runMetadataModifier] :: MetadataModifier -> Metadata -> Metadata
 dropTableInMetadata :: forall b. Backend b => SourceName -> TableName b -> MetadataModifier
 dropRelationshipInMetadata :: RelName -> TableMetadata b -> TableMetadata b
 dropPermissionInMetadata :: RoleName -> PermType -> TableMetadata b -> TableMetadata b
@@ -16248,10 +16247,10 @@ instance GHC.Classes.Eq Hasura.RQL.Types.Metadata.SetCatalogState
 instance GHC.Show.Show Hasura.RQL.Types.Metadata.SetCatalogState
 instance Data.Aeson.Types.ToJSON.ToJSON Hasura.RQL.Types.Metadata.CatalogStateType
 instance Data.Aeson.Types.FromJSON.FromJSON Hasura.RQL.Types.Metadata.CatalogStateType
+instance GHC.Base.Monoid Hasura.RQL.Types.Metadata.MetadataModifier
+instance GHC.Base.Semigroup Hasura.RQL.Types.Metadata.MetadataModifier
 instance GHC.Classes.Eq Hasura.RQL.Types.Metadata.CatalogStateType
 instance GHC.Show.Show Hasura.RQL.Types.Metadata.CatalogStateType
-instance GHC.Base.Semigroup Hasura.RQL.Types.Metadata.MetadataModifier
-instance GHC.Base.Monoid Hasura.RQL.Types.Metadata.MetadataModifier
 instance Data.Aeson.Types.ToJSON.ToJSON Hasura.RQL.Types.Metadata.MetadataNoSources
 instance Data.Aeson.Types.FromJSON.FromJSON Hasura.RQL.Types.Metadata.MetadataNoSources
 instance Data.Aeson.Types.ToJSON.ToJSON Hasura.RQL.Types.Metadata.Metadata
@@ -16535,9 +16534,9 @@ InsertQueryP1 :: TableName b -> [Column b] -> [[SQLExpression b]] -> Maybe (OnCo
 [iqp1CheckCond] :: InsertQueryP1 (b :: BackendType) -> (AnnBoolExpSQL b, Maybe (AnnBoolExpSQL b))
 [iqp1Output] :: InsertQueryP1 (b :: BackendType) -> MutationOutput b
 [iqp1AllCols] :: InsertQueryP1 (b :: BackendType) -> [ColumnInfo b]
-_AIArrayRelationship :: forall b_amDLi v_amDLj. Prism' (AnnotatedInsert b_amDLi v_amDLj) (XNestedInserts b_amDLi, ArrRelIns b_amDLi v_amDLj)
-_AIObjectRelationship :: forall b_amDLi v_amDLj. Prism' (AnnotatedInsert b_amDLi v_amDLj) (XNestedInserts b_amDLi, ObjRelIns b_amDLi v_amDLj)
-_AIColumn :: forall b_amDLi v_amDLj. Prism' (AnnotatedInsert b_amDLi v_amDLj) (Column b_amDLi, v_amDLj)
+_AIArrayRelationship :: forall b_amDRd v_amDRe. Prism' (AnnotatedInsert b_amDRd v_amDRe) (XNestedInserts b_amDRd, ArrRelIns b_amDRd v_amDRe)
+_AIObjectRelationship :: forall b_amDRd v_amDRe. Prism' (AnnotatedInsert b_amDRd v_amDRe) (XNestedInserts b_amDRd, ObjRelIns b_amDRd v_amDRe)
+_AIColumn :: forall b_amDRd v_amDRe. Prism' (AnnotatedInsert b_amDRd v_amDRe) (Column b_amDRd, v_amDRe)
 getInsertColumns :: AnnotatedInsertRow b v -> [(Column b, v)]
 getInsertObjectRelationships :: AnnotatedInsertRow b v -> [ObjRelIns b v]
 getInsertArrayRelationships :: AnnotatedInsertRow b v -> [ArrRelIns b v]
@@ -17112,7 +17111,15 @@ fetchMetadataResourceVersionFromCatalog :: TxE QErr MetadataResourceVersion
 fetchMetadataNotificationsFromCatalog :: MetadataResourceVersion -> InstanceId -> TxE QErr [(MetadataResourceVersion, CacheInvalidations)]
 bumpMetadataVersionInCatalog :: TxE QErr ()
 insertMetadataInCatalog :: Metadata -> TxE QErr ()
-setMetadataInCatalog :: Maybe MetadataResourceVersion -> Metadata -> TxE QErr MetadataResourceVersion
+
+-- | Check that the specified resource version matches the currently stored
+--   one, and...
+--   
+--   <ul>
+--   <li>If so: Update the metadata and bump the version</li>
+--   <li>If not: Throw a 409 error</li>
+--   </ul>
+setMetadataInCatalog :: MetadataResourceVersion -> Metadata -> TxE QErr MetadataResourceVersion
 
 
 -- | Validate input queries against remote schemas.
@@ -22754,9 +22761,9 @@ QueryParametersInfo :: !HashMap Name (ColumnValue b) -> !Seq (ColumnValue b) -> 
 --   This information is used to determine a cohort's required session
 --   variables
 [_qpiReferencedSessionVariables] :: QueryParametersInfo (b :: BackendType) -> !HashSet SessionVariable
-qpiSyntheticVariableValues :: forall b_awcLn. Lens' (QueryParametersInfo b_awcLn) (Seq (ColumnValue b_awcLn))
-qpiReusableVariableValues :: forall b_awcLn. Lens' (QueryParametersInfo b_awcLn) (HashMap Name (ColumnValue b_awcLn))
-qpiReferencedSessionVariables :: forall b_awcLn. Lens' (QueryParametersInfo b_awcLn) (HashSet SessionVariable)
+qpiSyntheticVariableValues :: forall b_awcJG. Lens' (QueryParametersInfo b_awcJG) (Seq (ColumnValue b_awcJG))
+qpiReusableVariableValues :: forall b_awcJG. Lens' (QueryParametersInfo b_awcJG) (HashMap Name (ColumnValue b_awcJG))
+qpiReferencedSessionVariables :: forall b_awcJG. Lens' (QueryParametersInfo b_awcJG) (HashSet SessionVariable)
 
 -- | Checks if the provided arguments are valid values for their
 --   corresponding types. | Generates SQL of the format "select
