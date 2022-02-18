@@ -32,16 +32,16 @@
 </span><span id="line-32"></span><span>
 </span><span id="line-33"></span><span class="hs-comment">-- * Orphan instances</span><span>
 </span><span id="line-34"></span><span>
-</span><span id="line-35"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688055768"><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier hs-type">Cacheable</span></a></span><span> </span><span class="annot"><a href="Database.MSSQL.Pool.html#ConnectionString"><span class="hs-identifier hs-type">MSPool.ConnectionString</span></a></span></span><span>
+</span><span id="line-35"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688055594"><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier hs-type">Cacheable</span></a></span><span> </span><span class="annot"><a href="Database.MSSQL.Pool.html#ConnectionString"><span class="hs-identifier hs-type">MSPool.ConnectionString</span></a></span></span><span>
 </span><span id="line-36"></span><span>
-</span><span id="line-37"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688055763"><span id="local-6989586621688055765"><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="Database.MSSQL.Pool.html#ConnectionString"><span class="hs-identifier hs-type">MSPool.ConnectionString</span></a></span></span></span><span>
+</span><span id="line-37"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688055589"><span id="local-6989586621688055591"><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="Database.MSSQL.Pool.html#ConnectionString"><span class="hs-identifier hs-type">MSPool.ConnectionString</span></a></span></span></span><span>
 </span><span id="line-38"></span><span>
-</span><span id="line-39"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688055760"><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="annot"><a href="Database.MSSQL.Pool.html#ConnectionString"><span class="hs-identifier hs-type">MSPool.ConnectionString</span></a></span></span><span>
+</span><span id="line-39"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688055586"><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="annot"><a href="Database.MSSQL.Pool.html#ConnectionString"><span class="hs-identifier hs-type">MSPool.ConnectionString</span></a></span></span><span>
 </span><span id="line-40"></span><span>
-</span><span id="line-41"></span><span id="local-6989586621688055757"><span id="local-6989586621688055758"></span></span><span class="hs-keyword">data</span><span> </span><span id="InputConnectionString"><span class="annot"><a href="Hasura.Backends.MSSQL.Connection.html#InputConnectionString"><span class="hs-identifier hs-var">InputConnectionString</span></a></span></span><span>
+</span><span id="line-41"></span><span id="local-6989586621688055583"><span id="local-6989586621688055584"></span></span><span class="hs-keyword">data</span><span> </span><span id="InputConnectionString"><span class="annot"><a href="Hasura.Backends.MSSQL.Connection.html#InputConnectionString"><span class="hs-identifier hs-var">InputConnectionString</span></a></span></span><span>
 </span><span id="line-42"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="RawString"><span class="annot"><a href="Hasura.Backends.MSSQL.Connection.html#RawString"><span class="hs-identifier hs-var">RawString</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Database.MSSQL.Pool.html#ConnectionString"><span class="hs-identifier hs-type">MSPool.ConnectionString</span></a></span><span>
 </span><span id="line-43"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="FromEnvironment"><span class="annot"><a href="Hasura.Backends.MSSQL.Connection.html#FromEnvironment"><span class="hs-identifier hs-var">FromEnvironment</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
-</span><span id="line-44"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688055749"><span id="local-6989586621688055751"><span id="local-6989586621688055753"><span class="annot"><span class="annottext">Int -&gt; InputConnectionString -&gt; ShowS
+</span><span id="line-44"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688055575"><span id="local-6989586621688055577"><span id="local-6989586621688055579"><span class="annot"><span class="annottext">Int -&gt; InputConnectionString -&gt; ShowS
 [InputConnectionString] -&gt; ShowS
 InputConnectionString -&gt; String
 (Int -&gt; InputConnectionString -&gt; ShowS)
@@ -56,7 +56,7 @@ show :: InputConnectionString -&gt; String
 $cshow :: InputConnectionString -&gt; String
 showsPrec :: Int -&gt; InputConnectionString -&gt; ShowS
 $cshowsPrec :: Int -&gt; InputConnectionString -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688055744"><span id="local-6989586621688055746"><span class="annot"><span class="annottext">InputConnectionString -&gt; InputConnectionString -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688055570"><span id="local-6989586621688055572"><span class="annot"><span class="annottext">InputConnectionString -&gt; InputConnectionString -&gt; Bool
 (InputConnectionString -&gt; InputConnectionString -&gt; Bool)
 -&gt; (InputConnectionString -&gt; InputConnectionString -&gt; Bool)
 -&gt; Eq InputConnectionString
@@ -76,45 +76,45 @@ $cto :: forall x. Rep InputConnectionString x -&gt; InputConnectionString
 $cfrom :: forall x. InputConnectionString -&gt; Rep InputConnectionString x
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">)</span><span>
 </span><span id="line-45"></span><span>
-</span><span id="line-46"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688055737"><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier hs-type">Cacheable</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Connection.html#InputConnectionString"><span class="hs-identifier hs-type">InputConnectionString</span></a></span></span><span>
+</span><span id="line-46"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688055563"><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier hs-type">Cacheable</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Connection.html#InputConnectionString"><span class="hs-identifier hs-type">InputConnectionString</span></a></span></span><span>
 </span><span id="line-47"></span><span>
-</span><span id="line-48"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688055733"><span id="local-6989586621688055735"><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Connection.html#InputConnectionString"><span class="hs-identifier hs-type">InputConnectionString</span></a></span></span></span><span>
+</span><span id="line-48"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688055559"><span id="local-6989586621688055561"><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Connection.html#InputConnectionString"><span class="hs-identifier hs-type">InputConnectionString</span></a></span></span></span><span>
 </span><span id="line-49"></span><span>
-</span><span id="line-50"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688055731"><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Connection.html#InputConnectionString"><span class="hs-identifier hs-type">InputConnectionString</span></a></span></span><span>
+</span><span id="line-50"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688055557"><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Connection.html#InputConnectionString"><span class="hs-identifier hs-type">InputConnectionString</span></a></span></span><span>
 </span><span id="line-51"></span><span>
-</span><span id="line-52"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688055724"><span id="local-6989586621688055726"><span id="local-6989586621688055728"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Connection.html#InputConnectionString"><span class="hs-identifier hs-type">InputConnectionString</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-53"></span><span>  </span><span id="local-6989586621688055722"><span class="annot"><span class="annottext">toJSON :: InputConnectionString -&gt; Value
+</span><span id="line-52"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688055550"><span id="local-6989586621688055552"><span id="local-6989586621688055554"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Connection.html#InputConnectionString"><span class="hs-identifier hs-type">InputConnectionString</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-53"></span><span>  </span><span id="local-6989586621688055548"><span class="annot"><span class="annottext">toJSON :: InputConnectionString -&gt; Value
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-54"></span><span>    </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
-</span><span id="line-55"></span><span>      </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.MSSQL.Connection.html#RawString"><span class="hs-identifier hs-type">RawString</span></a></span><span> </span><span id="local-6989586621688055720"><span class="annot"><span class="annottext">ConnectionString
-</span><a href="#local-6989586621688055720"><span class="hs-identifier hs-var">m</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ConnectionString -&gt; Value
+</span><span id="line-55"></span><span>      </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.MSSQL.Connection.html#RawString"><span class="hs-identifier hs-type">RawString</span></a></span><span> </span><span id="local-6989586621688055546"><span class="annot"><span class="annottext">ConnectionString
+</span><a href="#local-6989586621688055546"><span class="hs-identifier hs-var">m</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ConnectionString -&gt; Value
 forall a. ToJSON a =&gt; a -&gt; Value
 </span><span class="hs-identifier hs-var">toJSON</span></span><span> </span><span class="annot"><span class="annottext">ConnectionString
-</span><a href="#local-6989586621688055720"><span class="hs-identifier hs-var">m</span></a></span><span>
-</span><span id="line-56"></span><span>      </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.MSSQL.Connection.html#FromEnvironment"><span class="hs-identifier hs-type">FromEnvironment</span></a></span><span> </span><span id="local-6989586621688055719"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621688055719"><span class="hs-identifier hs-var">wEnv</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
+</span><a href="#local-6989586621688055546"><span class="hs-identifier hs-var">m</span></a></span><span>
+</span><span id="line-56"></span><span>      </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.MSSQL.Connection.html#FromEnvironment"><span class="hs-identifier hs-type">FromEnvironment</span></a></span><span> </span><span id="local-6989586621688055545"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621688055545"><span class="hs-identifier hs-var">wEnv</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
 </span><span class="hs-identifier hs-var">object</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;from_env&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Pair
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Text -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621688055719"><span class="hs-identifier hs-var">wEnv</span></a></span><span class="hs-special">]</span><span>
+</span><a href="#local-6989586621688055545"><span class="hs-identifier hs-var">wEnv</span></a></span><span class="hs-special">]</span><span>
 </span><span id="line-57"></span><span>
-</span><span id="line-58"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688055714"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Connection.html#InputConnectionString"><span class="hs-identifier hs-type">InputConnectionString</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-59"></span><span>  </span><span id="local-6989586621688055712"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser InputConnectionString
+</span><span id="line-58"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688055540"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Connection.html#InputConnectionString"><span class="hs-identifier hs-type">InputConnectionString</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-59"></span><span>  </span><span id="local-6989586621688055538"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser InputConnectionString
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-60"></span><span>    </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
-</span><span id="line-61"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Object</span></span><span> </span><span id="local-6989586621688055709"><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621688055709"><span class="hs-identifier hs-var">o</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; InputConnectionString
+</span><span id="line-61"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Object</span></span><span> </span><span id="local-6989586621688055535"><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621688055535"><span class="hs-identifier hs-var">o</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; InputConnectionString
 </span><a href="Hasura.Backends.MSSQL.Connection.html#FromEnvironment"><span class="hs-identifier hs-var">FromEnvironment</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; InputConnectionString)
 -&gt; Parser Text -&gt; Parser InputConnectionString
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621688055709"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Text -&gt; Parser Text
+</span><a href="#local-6989586621688055535"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Text -&gt; Parser Text
 forall a. FromJSON a =&gt; Object -&gt; Text -&gt; Parser a
 </span><span class="hs-operator hs-var">.:</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;from_env&quot;</span></span><span>
-</span><span id="line-62"></span><span>      </span><span id="local-6989586621688055706"><span class="annot"><span class="annottext">s :: Value
-</span><a href="#local-6989586621688055706"><span class="hs-identifier hs-var">s</span></a></span></span><span class="hs-glyph">@</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span id="line-62"></span><span>      </span><span id="local-6989586621688055532"><span class="annot"><span class="annottext">s :: Value
+</span><a href="#local-6989586621688055532"><span class="hs-identifier hs-var">s</span></a></span></span><span class="hs-glyph">@</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-identifier">_</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ConnectionString -&gt; InputConnectionString
 </span><a href="Hasura.Backends.MSSQL.Connection.html#RawString"><span class="hs-identifier hs-var">RawString</span></a></span><span> </span><span class="annot"><span class="annottext">(ConnectionString -&gt; InputConnectionString)
 -&gt; Parser ConnectionString -&gt; Parser InputConnectionString
@@ -122,20 +122,20 @@ forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Value -&gt; Parser ConnectionString
 forall a. FromJSON a =&gt; Value -&gt; Parser a
 </span><span class="hs-identifier hs-var">parseJSON</span></span><span> </span><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621688055706"><span class="hs-identifier hs-var">s</span></a></span><span>
+</span><a href="#local-6989586621688055532"><span class="hs-identifier hs-var">s</span></a></span><span>
 </span><span id="line-63"></span><span>      </span><span class="annot"><span class="annottext">Value
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">String -&gt; Parser InputConnectionString
 forall (m :: * -&gt; *) a. MonadFail m =&gt; String -&gt; m a
 </span><span class="hs-identifier hs-var">fail</span></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;one of string or object must be provided&quot;</span></span><span>
 </span><span id="line-64"></span><span>
-</span><span id="line-65"></span><span id="local-6989586621688055703"><span id="local-6989586621688055704"></span></span><span class="hs-keyword">data</span><span> </span><span id="MSSQLPoolSettings"><span class="annot"><a href="Hasura.Backends.MSSQL.Connection.html#MSSQLPoolSettings"><span class="hs-identifier hs-var">MSSQLPoolSettings</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="MSSQLPoolSettings"><span class="annot"><a href="Hasura.Backends.MSSQL.Connection.html#MSSQLPoolSettings"><span class="hs-identifier hs-var">MSSQLPoolSettings</span></a></span></span><span>
+</span><span id="line-65"></span><span id="local-6989586621688055529"><span id="local-6989586621688055530"></span></span><span class="hs-keyword">data</span><span> </span><span id="MSSQLPoolSettings"><span class="annot"><a href="Hasura.Backends.MSSQL.Connection.html#MSSQLPoolSettings"><span class="hs-identifier hs-var">MSSQLPoolSettings</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="MSSQLPoolSettings"><span class="annot"><a href="Hasura.Backends.MSSQL.Connection.html#MSSQLPoolSettings"><span class="hs-identifier hs-var">MSSQLPoolSettings</span></a></span></span><span>
 </span><span id="line-66"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_mpsMaxConnections"><span class="annot"><span class="annottext">MSSQLPoolSettings -&gt; Int
 </span><a href="Hasura.Backends.MSSQL.Connection.html#_mpsMaxConnections"><span class="hs-identifier hs-var hs-var">_mpsMaxConnections</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span class="hs-special">,</span><span>
 </span><span id="line-67"></span><span>    </span><span id="_mpsIdleTimeout"><span class="annot"><span class="annottext">MSSQLPoolSettings -&gt; Int
 </span><a href="Hasura.Backends.MSSQL.Connection.html#_mpsIdleTimeout"><span class="hs-identifier hs-var hs-var">_mpsIdleTimeout</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span>
 </span><span id="line-68"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-69"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688055694"><span id="local-6989586621688055696"><span id="local-6989586621688055698"><span class="annot"><span class="annottext">Int -&gt; MSSQLPoolSettings -&gt; ShowS
+</span><span id="line-69"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688055520"><span id="local-6989586621688055522"><span id="local-6989586621688055524"><span class="annot"><span class="annottext">Int -&gt; MSSQLPoolSettings -&gt; ShowS
 [MSSQLPoolSettings] -&gt; ShowS
 MSSQLPoolSettings -&gt; String
 (Int -&gt; MSSQLPoolSettings -&gt; ShowS)
@@ -150,7 +150,7 @@ show :: MSSQLPoolSettings -&gt; String
 $cshow :: MSSQLPoolSettings -&gt; String
 showsPrec :: Int -&gt; MSSQLPoolSettings -&gt; ShowS
 $cshowsPrec :: Int -&gt; MSSQLPoolSettings -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688055690"><span id="local-6989586621688055692"><span class="annot"><span class="annottext">MSSQLPoolSettings -&gt; MSSQLPoolSettings -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688055516"><span id="local-6989586621688055518"><span class="annot"><span class="annottext">MSSQLPoolSettings -&gt; MSSQLPoolSettings -&gt; Bool
 (MSSQLPoolSettings -&gt; MSSQLPoolSettings -&gt; Bool)
 -&gt; (MSSQLPoolSettings -&gt; MSSQLPoolSettings -&gt; Bool)
 -&gt; Eq MSSQLPoolSettings
@@ -170,17 +170,17 @@ $cto :: forall x. Rep MSSQLPoolSettings x -&gt; MSSQLPoolSettings
 $cfrom :: forall x. MSSQLPoolSettings -&gt; Rep MSSQLPoolSettings x
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">)</span><span>
 </span><span id="line-70"></span><span>
-</span><span id="line-71"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688055685"><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier hs-type">Cacheable</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Connection.html#MSSQLPoolSettings"><span class="hs-identifier hs-type">MSSQLPoolSettings</span></a></span></span><span>
+</span><span id="line-71"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688055511"><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier hs-type">Cacheable</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Connection.html#MSSQLPoolSettings"><span class="hs-identifier hs-type">MSSQLPoolSettings</span></a></span></span><span>
 </span><span id="line-72"></span><span>
-</span><span id="line-73"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688055681"><span id="local-6989586621688055683"><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Connection.html#MSSQLPoolSettings"><span class="hs-identifier hs-type">MSSQLPoolSettings</span></a></span></span></span><span>
+</span><span id="line-73"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688055507"><span id="local-6989586621688055509"><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Connection.html#MSSQLPoolSettings"><span class="hs-identifier hs-type">MSSQLPoolSettings</span></a></span></span></span><span>
 </span><span id="line-74"></span><span>
-</span><span id="line-75"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688055679"><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Connection.html#MSSQLPoolSettings"><span class="hs-identifier hs-type">MSSQLPoolSettings</span></a></span></span><span>
+</span><span id="line-75"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688055505"><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Connection.html#MSSQLPoolSettings"><span class="hs-identifier hs-type">MSSQLPoolSettings</span></a></span></span><span>
 </span><span id="line-76"></span><span>
-</span><span id="line-77"></span><span class="hs-special">$(</span><span id="local-6989586621688055671"><span id="local-6989586621688055673"><span id="local-6989586621688055675"><span id="local-6989586621688055677"><span class="hs-identifier">deriveToJSON</span><span> </span><span class="hs-identifier">hasuraJSON</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">MSSQLPoolSettings</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-77"></span><span class="hs-special">$(</span><span id="local-6989586621688055497"><span id="local-6989586621688055499"><span id="local-6989586621688055501"><span id="local-6989586621688055503"><span class="hs-identifier">deriveToJSON</span><span> </span><span class="hs-identifier">hasuraJSON</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">MSSQLPoolSettings</span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-78"></span><span>
-</span><span id="line-79"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688055667"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Connection.html#MSSQLPoolSettings"><span class="hs-identifier hs-type">MSSQLPoolSettings</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-80"></span><span>  </span><span id="local-6989586621688055666"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser MSSQLPoolSettings
-</span><a href="#local-6989586621688055666"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
+</span><span id="line-79"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688055493"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Connection.html#MSSQLPoolSettings"><span class="hs-identifier hs-type">MSSQLPoolSettings</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-80"></span><span>  </span><span id="local-6989586621688055492"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser MSSQLPoolSettings
+</span><a href="#local-6989586621688055492"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
 -&gt; (Object -&gt; Parser MSSQLPoolSettings)
 -&gt; Value
 -&gt; Parser MSSQLPoolSettings
@@ -192,15 +192,15 @@ forall a. String -&gt; (Object -&gt; Parser a) -&gt; Value -&gt; Parser a
 -&gt; Value
 -&gt; Parser MSSQLPoolSettings
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621688055664"><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621688055664"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621688055490"><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621688055490"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-81"></span><span>    </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; MSSQLPoolSettings
 </span><a href="Hasura.Backends.MSSQL.Connection.html#MSSQLPoolSettings"><span class="hs-identifier hs-var">MSSQLPoolSettings</span></a></span><span>
 </span><span id="line-82"></span><span>      </span><span class="annot"><span class="annottext">(Int -&gt; Int -&gt; MSSQLPoolSettings)
 -&gt; Parser Int -&gt; Parser (Int -&gt; MSSQLPoolSettings)
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621688055664"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Text -&gt; Parser (Maybe Int)
+</span><a href="#local-6989586621688055490"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Text -&gt; Parser (Maybe Int)
 forall a. FromJSON a =&gt; Object -&gt; Text -&gt; Parser (Maybe a)
 </span><span class="hs-operator hs-var">.:?</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;max_connections&quot;</span></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe Int) -&gt; Int -&gt; Parser Int
@@ -212,7 +212,7 @@ forall a. Parser (Maybe a) -&gt; a -&gt; Parser a
 -&gt; Parser Int -&gt; Parser MSSQLPoolSettings
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621688055664"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Text -&gt; Parser (Maybe Int)
+</span><a href="#local-6989586621688055490"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Text -&gt; Parser (Maybe Int)
 forall a. FromJSON a =&gt; Object -&gt; Text -&gt; Parser (Maybe a)
 </span><span class="hs-operator hs-var">.:?</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;idle_timeout&quot;</span></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe Int) -&gt; Int -&gt; Parser Int
@@ -234,13 +234,13 @@ forall a. Parser (Maybe a) -&gt; a -&gt; Parser a
 </span><span class="hs-number">5</span></span><span>
 </span><span id="line-90"></span><span>    </span><span class="hs-special">}</span><span>
 </span><span id="line-91"></span><span>
-</span><span id="line-92"></span><span id="local-6989586621688055659"><span id="local-6989586621688055660"></span></span><span class="hs-keyword">data</span><span> </span><span id="MSSQLConnectionInfo"><span class="annot"><a href="Hasura.Backends.MSSQL.Connection.html#MSSQLConnectionInfo"><span class="hs-identifier hs-var">MSSQLConnectionInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="MSSQLConnectionInfo"><span class="annot"><a href="Hasura.Backends.MSSQL.Connection.html#MSSQLConnectionInfo"><span class="hs-identifier hs-var">MSSQLConnectionInfo</span></a></span></span><span>
+</span><span id="line-92"></span><span id="local-6989586621688055485"><span id="local-6989586621688055486"></span></span><span class="hs-keyword">data</span><span> </span><span id="MSSQLConnectionInfo"><span class="annot"><a href="Hasura.Backends.MSSQL.Connection.html#MSSQLConnectionInfo"><span class="hs-identifier hs-var">MSSQLConnectionInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="MSSQLConnectionInfo"><span class="annot"><a href="Hasura.Backends.MSSQL.Connection.html#MSSQLConnectionInfo"><span class="hs-identifier hs-var">MSSQLConnectionInfo</span></a></span></span><span>
 </span><span id="line-93"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_mciConnectionString"><span class="annot"><span class="annottext">MSSQLConnectionInfo -&gt; InputConnectionString
 </span><a href="Hasura.Backends.MSSQL.Connection.html#_mciConnectionString"><span class="hs-identifier hs-var hs-var">_mciConnectionString</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.Backends.MSSQL.Connection.html#InputConnectionString"><span class="hs-identifier hs-type">InputConnectionString</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-94"></span><span>    </span><span id="_mciPoolSettings"><span class="annot"><span class="annottext">MSSQLConnectionInfo -&gt; MSSQLPoolSettings
 </span><a href="Hasura.Backends.MSSQL.Connection.html#_mciPoolSettings"><span class="hs-identifier hs-var hs-var">_mciPoolSettings</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.Backends.MSSQL.Connection.html#MSSQLPoolSettings"><span class="hs-identifier hs-type">MSSQLPoolSettings</span></a></span><span>
 </span><span id="line-95"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-96"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688055650"><span id="local-6989586621688055652"><span id="local-6989586621688055654"><span class="annot"><span class="annottext">Int -&gt; MSSQLConnectionInfo -&gt; ShowS
+</span><span id="line-96"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688055476"><span id="local-6989586621688055478"><span id="local-6989586621688055480"><span class="annot"><span class="annottext">Int -&gt; MSSQLConnectionInfo -&gt; ShowS
 [MSSQLConnectionInfo] -&gt; ShowS
 MSSQLConnectionInfo -&gt; String
 (Int -&gt; MSSQLConnectionInfo -&gt; ShowS)
@@ -255,7 +255,7 @@ show :: MSSQLConnectionInfo -&gt; String
 $cshow :: MSSQLConnectionInfo -&gt; String
 showsPrec :: Int -&gt; MSSQLConnectionInfo -&gt; ShowS
 $cshowsPrec :: Int -&gt; MSSQLConnectionInfo -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688055646"><span id="local-6989586621688055648"><span class="annot"><span class="annottext">MSSQLConnectionInfo -&gt; MSSQLConnectionInfo -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688055472"><span id="local-6989586621688055474"><span class="annot"><span class="annottext">MSSQLConnectionInfo -&gt; MSSQLConnectionInfo -&gt; Bool
 (MSSQLConnectionInfo -&gt; MSSQLConnectionInfo -&gt; Bool)
 -&gt; (MSSQLConnectionInfo -&gt; MSSQLConnectionInfo -&gt; Bool)
 -&gt; Eq MSSQLConnectionInfo
@@ -275,17 +275,17 @@ $cto :: forall x. Rep MSSQLConnectionInfo x -&gt; MSSQLConnectionInfo
 $cfrom :: forall x. MSSQLConnectionInfo -&gt; Rep MSSQLConnectionInfo x
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">)</span><span>
 </span><span id="line-97"></span><span>
-</span><span id="line-98"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688055641"><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier hs-type">Cacheable</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Connection.html#MSSQLConnectionInfo"><span class="hs-identifier hs-type">MSSQLConnectionInfo</span></a></span></span><span>
+</span><span id="line-98"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688055467"><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier hs-type">Cacheable</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Connection.html#MSSQLConnectionInfo"><span class="hs-identifier hs-type">MSSQLConnectionInfo</span></a></span></span><span>
 </span><span id="line-99"></span><span>
-</span><span id="line-100"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688055637"><span id="local-6989586621688055639"><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Connection.html#MSSQLConnectionInfo"><span class="hs-identifier hs-type">MSSQLConnectionInfo</span></a></span></span></span><span>
+</span><span id="line-100"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688055463"><span id="local-6989586621688055465"><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Connection.html#MSSQLConnectionInfo"><span class="hs-identifier hs-type">MSSQLConnectionInfo</span></a></span></span></span><span>
 </span><span id="line-101"></span><span>
-</span><span id="line-102"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688055635"><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Connection.html#MSSQLConnectionInfo"><span class="hs-identifier hs-type">MSSQLConnectionInfo</span></a></span></span><span>
+</span><span id="line-102"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688055461"><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Connection.html#MSSQLConnectionInfo"><span class="hs-identifier hs-type">MSSQLConnectionInfo</span></a></span></span><span>
 </span><span id="line-103"></span><span>
-</span><span id="line-104"></span><span class="hs-special">$(</span><span id="local-6989586621688055627"><span id="local-6989586621688055629"><span id="local-6989586621688055631"><span id="local-6989586621688055633"><span class="hs-identifier">deriveToJSON</span><span> </span><span class="hs-identifier">hasuraJSON</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">MSSQLConnectionInfo</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-104"></span><span class="hs-special">$(</span><span id="local-6989586621688055453"><span id="local-6989586621688055455"><span id="local-6989586621688055457"><span id="local-6989586621688055459"><span class="hs-identifier">deriveToJSON</span><span> </span><span class="hs-identifier">hasuraJSON</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">MSSQLConnectionInfo</span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-105"></span><span>
-</span><span id="line-106"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688055624"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Connection.html#MSSQLConnectionInfo"><span class="hs-identifier hs-type">MSSQLConnectionInfo</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-107"></span><span>  </span><span id="local-6989586621688055623"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser MSSQLConnectionInfo
-</span><a href="#local-6989586621688055623"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
+</span><span id="line-106"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688055450"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Connection.html#MSSQLConnectionInfo"><span class="hs-identifier hs-type">MSSQLConnectionInfo</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-107"></span><span>  </span><span id="local-6989586621688055449"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser MSSQLConnectionInfo
+</span><a href="#local-6989586621688055449"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
 -&gt; (Object -&gt; Parser MSSQLConnectionInfo)
 -&gt; Value
 -&gt; Parser MSSQLConnectionInfo
@@ -297,8 +297,8 @@ forall a. String -&gt; (Object -&gt; Parser a) -&gt; Value -&gt; Parser a
 -&gt; Value
 -&gt; Parser MSSQLConnectionInfo
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621688055622"><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621688055622"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621688055448"><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621688055448"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-108"></span><span>    </span><span class="annot"><span class="annottext">InputConnectionString -&gt; MSSQLPoolSettings -&gt; MSSQLConnectionInfo
 </span><a href="Hasura.Backends.MSSQL.Connection.html#MSSQLConnectionInfo"><span class="hs-identifier hs-var">MSSQLConnectionInfo</span></a></span><span>
 </span><span id="line-109"></span><span>      </span><span class="annot"><span class="annottext">(InputConnectionString -&gt; MSSQLPoolSettings -&gt; MSSQLConnectionInfo)
@@ -306,14 +306,14 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 -&gt; Parser (MSSQLPoolSettings -&gt; MSSQLConnectionInfo)
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">(</span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621688055622"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Text -&gt; Parser InputConnectionString
+</span><a href="#local-6989586621688055448"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Text -&gt; Parser InputConnectionString
 forall a. FromJSON a =&gt; Object -&gt; Text -&gt; Parser a
 </span><span class="hs-operator hs-var">.:</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;database_url&quot;</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Parser InputConnectionString
 -&gt; Parser InputConnectionString -&gt; Parser InputConnectionString
 forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f a -&gt; f a
 </span><span class="hs-operator hs-var">&lt;|&gt;</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621688055622"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Text -&gt; Parser InputConnectionString
+</span><a href="#local-6989586621688055448"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Text -&gt; Parser InputConnectionString
 forall a. FromJSON a =&gt; Object -&gt; Text -&gt; Parser a
 </span><span class="hs-operator hs-var">.:</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;connection_string&quot;</span></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
@@ -321,7 +321,7 @@ forall a. FromJSON a =&gt; Object -&gt; Text -&gt; Parser a
 -&gt; Parser MSSQLPoolSettings -&gt; Parser MSSQLConnectionInfo
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621688055622"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Text -&gt; Parser (Maybe MSSQLPoolSettings)
+</span><a href="#local-6989586621688055448"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Text -&gt; Parser (Maybe MSSQLPoolSettings)
 forall a. FromJSON a =&gt; Object -&gt; Text -&gt; Parser (Maybe a)
 </span><span class="hs-operator hs-var">.:?</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;pool_settings&quot;</span></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe MSSQLPoolSettings)
@@ -330,13 +330,13 @@ forall a. Parser (Maybe a) -&gt; a -&gt; Parser a
 </span><span class="hs-operator hs-var">.!=</span></span><span> </span><span class="annot"><span class="annottext">MSSQLPoolSettings
 </span><a href="Hasura.Backends.MSSQL.Connection.html#defaultMSSQLPoolSettings"><span class="hs-identifier hs-var">defaultMSSQLPoolSettings</span></a></span><span>
 </span><span id="line-111"></span><span>
-</span><span id="line-112"></span><span id="local-6989586621688055619"><span id="local-6989586621688055620"></span></span><span class="hs-keyword">data</span><span> </span><span id="MSSQLConnConfiguration"><span class="annot"><a href="Hasura.Backends.MSSQL.Connection.html#MSSQLConnConfiguration"><span class="hs-identifier hs-var">MSSQLConnConfiguration</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="MSSQLConnConfiguration"><span class="annot"><a href="Hasura.Backends.MSSQL.Connection.html#MSSQLConnConfiguration"><span class="hs-identifier hs-var">MSSQLConnConfiguration</span></a></span></span><span>
+</span><span id="line-112"></span><span id="local-6989586621688055445"><span id="local-6989586621688055446"></span></span><span class="hs-keyword">data</span><span> </span><span id="MSSQLConnConfiguration"><span class="annot"><a href="Hasura.Backends.MSSQL.Connection.html#MSSQLConnConfiguration"><span class="hs-identifier hs-var">MSSQLConnConfiguration</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="MSSQLConnConfiguration"><span class="annot"><a href="Hasura.Backends.MSSQL.Connection.html#MSSQLConnConfiguration"><span class="hs-identifier hs-var">MSSQLConnConfiguration</span></a></span></span><span>
 </span><span id="line-113"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_mccConnectionInfo"><span class="annot"><span class="annottext">MSSQLConnConfiguration -&gt; MSSQLConnectionInfo
 </span><a href="Hasura.Backends.MSSQL.Connection.html#_mccConnectionInfo"><span class="hs-identifier hs-var hs-var">_mccConnectionInfo</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.Backends.MSSQL.Connection.html#MSSQLConnectionInfo"><span class="hs-identifier hs-type">MSSQLConnectionInfo</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-114"></span><span>    </span><span id="_mccReadReplicas"><span class="annot"><span class="annottext">MSSQLConnConfiguration -&gt; Maybe (NonEmpty MSSQLConnectionInfo)
 </span><a href="Hasura.Backends.MSSQL.Connection.html#_mccReadReplicas"><span class="hs-identifier hs-var hs-var">_mccReadReplicas</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">NonEmpty</span></span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Connection.html#MSSQLConnectionInfo"><span class="hs-identifier hs-type">MSSQLConnectionInfo</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-115"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-116"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688055611"><span id="local-6989586621688055613"><span id="local-6989586621688055615"><span class="annot"><span class="annottext">Int -&gt; MSSQLConnConfiguration -&gt; ShowS
+</span><span id="line-116"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688055437"><span id="local-6989586621688055439"><span id="local-6989586621688055441"><span class="annot"><span class="annottext">Int -&gt; MSSQLConnConfiguration -&gt; ShowS
 [MSSQLConnConfiguration] -&gt; ShowS
 MSSQLConnConfiguration -&gt; String
 (Int -&gt; MSSQLConnConfiguration -&gt; ShowS)
@@ -351,7 +351,7 @@ show :: MSSQLConnConfiguration -&gt; String
 $cshow :: MSSQLConnConfiguration -&gt; String
 showsPrec :: Int -&gt; MSSQLConnConfiguration -&gt; ShowS
 $cshowsPrec :: Int -&gt; MSSQLConnConfiguration -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688055607"><span id="local-6989586621688055609"><span class="annot"><span class="annottext">MSSQLConnConfiguration -&gt; MSSQLConnConfiguration -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688055433"><span id="local-6989586621688055435"><span class="annot"><span class="annottext">MSSQLConnConfiguration -&gt; MSSQLConnConfiguration -&gt; Bool
 (MSSQLConnConfiguration -&gt; MSSQLConnConfiguration -&gt; Bool)
 -&gt; (MSSQLConnConfiguration -&gt; MSSQLConnConfiguration -&gt; Bool)
 -&gt; Eq MSSQLConnConfiguration
@@ -372,45 +372,45 @@ $cto :: forall x. Rep MSSQLConnConfiguration x -&gt; MSSQLConnConfiguration
 $cfrom :: forall x. MSSQLConnConfiguration -&gt; Rep MSSQLConnConfiguration x
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">)</span><span>
 </span><span id="line-117"></span><span>
-</span><span id="line-118"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688055602"><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier hs-type">Cacheable</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Connection.html#MSSQLConnConfiguration"><span class="hs-identifier hs-type">MSSQLConnConfiguration</span></a></span></span><span>
+</span><span id="line-118"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688055428"><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier hs-type">Cacheable</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Connection.html#MSSQLConnConfiguration"><span class="hs-identifier hs-type">MSSQLConnConfiguration</span></a></span></span><span>
 </span><span id="line-119"></span><span>
-</span><span id="line-120"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688055598"><span id="local-6989586621688055600"><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Connection.html#MSSQLConnConfiguration"><span class="hs-identifier hs-type">MSSQLConnConfiguration</span></a></span></span></span><span>
+</span><span id="line-120"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688055424"><span id="local-6989586621688055426"><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Connection.html#MSSQLConnConfiguration"><span class="hs-identifier hs-type">MSSQLConnConfiguration</span></a></span></span></span><span>
 </span><span id="line-121"></span><span>
-</span><span id="line-122"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688055596"><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Connection.html#MSSQLConnConfiguration"><span class="hs-identifier hs-type">MSSQLConnConfiguration</span></a></span></span><span>
+</span><span id="line-122"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688055422"><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Connection.html#MSSQLConnConfiguration"><span class="hs-identifier hs-type">MSSQLConnConfiguration</span></a></span></span><span>
 </span><span id="line-123"></span><span>
-</span><span id="line-124"></span><span class="hs-special">$(</span><span id="local-6989586621688055584"><span id="local-6989586621688055586"><span id="local-6989586621688055588"><span id="local-6989586621688055590"><span id="local-6989586621688055592"><span id="local-6989586621688055594"><span class="hs-identifier">deriveJSON</span><span> </span><span class="hs-identifier">hasuraJSON</span><span> </span><span class="hs-special">{</span><span class="hs-identifier">omitNothingFields</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-identifier">True</span><span class="hs-special">}</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">MSSQLConnConfiguration</span></span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-124"></span><span class="hs-special">$(</span><span id="local-6989586621688055410"><span id="local-6989586621688055412"><span id="local-6989586621688055414"><span id="local-6989586621688055416"><span id="local-6989586621688055418"><span id="local-6989586621688055420"><span class="hs-identifier">deriveJSON</span><span> </span><span class="hs-identifier">hasuraJSON</span><span> </span><span class="hs-special">{</span><span class="hs-identifier">omitNothingFields</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-identifier">True</span><span class="hs-special">}</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">MSSQLConnConfiguration</span></span></span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-125"></span><span>
-</span><span id="line-126"></span><span id="local-6989586621688055583"><span class="annot"><a href="Hasura.Backends.MSSQL.Connection.html#createMSSQLPool"><span class="hs-identifier hs-type">createMSSQLPool</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-127"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621688055583"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
-</span><span id="line-128"></span><span>  </span><span class="annot"><a href="Hasura.Base.Error.html#QErrM"><span class="hs-identifier hs-type">QErrM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688055583"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-126"></span><span id="local-6989586621688055409"><span class="annot"><a href="Hasura.Backends.MSSQL.Connection.html#createMSSQLPool"><span class="hs-identifier hs-type">createMSSQLPool</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-127"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621688055409"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-128"></span><span>  </span><span class="annot"><a href="Hasura.Base.Error.html#QErrM"><span class="hs-identifier hs-type">QErrM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688055409"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
 </span><span id="line-129"></span><span>  </span><span class="annot"><a href="Hasura.Backends.MSSQL.Connection.html#MSSQLConnectionInfo"><span class="hs-identifier hs-type">MSSQLConnectionInfo</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-130"></span><span>  </span><span class="annot"><a href="Data.Environment.html#Environment"><span class="hs-identifier hs-type">Env.Environment</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-131"></span><span>  </span><span class="annot"><a href="#local-6989586621688055583"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Database.MSSQL.Pool.html#ConnectionString"><span class="hs-identifier hs-type">MSPool.ConnectionString</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Database.MSSQL.Pool.html#MSSQLPool"><span class="hs-identifier hs-type">MSPool.MSSQLPool</span></a></span><span class="hs-special">)</span></span><span>
+</span><span id="line-131"></span><span>  </span><span class="annot"><a href="#local-6989586621688055409"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Database.MSSQL.Pool.html#ConnectionString"><span class="hs-identifier hs-type">MSPool.ConnectionString</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Database.MSSQL.Pool.html#MSSQLPool"><span class="hs-identifier hs-type">MSPool.MSSQLPool</span></a></span><span class="hs-special">)</span></span><span>
 </span><span id="line-132"></span><span id="createMSSQLPool"><span class="annot"><span class="annottext">createMSSQLPool :: MSSQLConnectionInfo
 -&gt; Environment -&gt; m (ConnectionString, MSSQLPool)
-</span><a href="Hasura.Backends.MSSQL.Connection.html#createMSSQLPool"><span class="hs-identifier hs-var hs-var">createMSSQLPool</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.MSSQL.Connection.html#MSSQLConnectionInfo"><span class="hs-identifier hs-type">MSSQLConnectionInfo</span></a></span><span> </span><span id="local-6989586621688055582"><span class="annot"><span class="annottext">InputConnectionString
-</span><a href="#local-6989586621688055582"><span class="hs-identifier hs-var">iConnString</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Connection.html#MSSQLPoolSettings"><span class="hs-identifier hs-type">MSSQLPoolSettings</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621688055580"><span id="local-6989586621688055581"><span class="annot"><span class="annottext">Int
+</span><a href="Hasura.Backends.MSSQL.Connection.html#createMSSQLPool"><span class="hs-identifier hs-var hs-var">createMSSQLPool</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.MSSQL.Connection.html#MSSQLConnectionInfo"><span class="hs-identifier hs-type">MSSQLConnectionInfo</span></a></span><span> </span><span id="local-6989586621688055408"><span class="annot"><span class="annottext">InputConnectionString
+</span><a href="#local-6989586621688055408"><span class="hs-identifier hs-var">iConnString</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Connection.html#MSSQLPoolSettings"><span class="hs-identifier hs-type">MSSQLPoolSettings</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621688055406"><span id="local-6989586621688055407"><span class="annot"><span class="annottext">Int
 _mpsIdleTimeout :: Int
 _mpsMaxConnections :: Int
 _mpsIdleTimeout :: MSSQLPoolSettings -&gt; Int
 _mpsMaxConnections :: MSSQLPoolSettings -&gt; Int
-</span><a href="#local-6989586621688055580"><span class="hs-glyph hs-var hs-var hs-var hs-var">..</span></a></span></span></span><span class="hs-special">}</span><span class="hs-special">)</span><span> </span><span id="local-6989586621688055579"><span class="annot"><span class="annottext">Environment
-</span><a href="#local-6989586621688055579"><span class="hs-identifier hs-var">env</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-133"></span><span>  </span><span id="local-6989586621688055578"><span class="annot"><span class="annottext">ConnectionString
-</span><a href="#local-6989586621688055578"><span class="hs-identifier hs-var">connString</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Environment -&gt; InputConnectionString -&gt; m ConnectionString
+</span><a href="#local-6989586621688055406"><span class="hs-glyph hs-var hs-var hs-var hs-var">..</span></a></span></span></span><span class="hs-special">}</span><span class="hs-special">)</span><span> </span><span id="local-6989586621688055405"><span class="annot"><span class="annottext">Environment
+</span><a href="#local-6989586621688055405"><span class="hs-identifier hs-var">env</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-133"></span><span>  </span><span id="local-6989586621688055404"><span class="annot"><span class="annottext">ConnectionString
+</span><a href="#local-6989586621688055404"><span class="hs-identifier hs-var">connString</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Environment -&gt; InputConnectionString -&gt; m ConnectionString
 forall (m :: * -&gt; *).
 QErrM m =&gt;
 Environment -&gt; InputConnectionString -&gt; m ConnectionString
 </span><a href="Hasura.Backends.MSSQL.Connection.html#resolveInputConnectionString"><span class="hs-identifier hs-var">resolveInputConnectionString</span></a></span><span> </span><span class="annot"><span class="annottext">Environment
-</span><a href="#local-6989586621688055579"><span class="hs-identifier hs-var">env</span></a></span><span> </span><span class="annot"><span class="annottext">InputConnectionString
-</span><a href="#local-6989586621688055582"><span class="hs-identifier hs-var">iConnString</span></a></span><span>
-</span><span id="line-134"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688055576"><span class="annot"><span class="annottext">connOptions :: ConnectionOptions
-</span><a href="#local-6989586621688055576"><span class="hs-identifier hs-var hs-var">connOptions</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="#local-6989586621688055405"><span class="hs-identifier hs-var">env</span></a></span><span> </span><span class="annot"><span class="annottext">InputConnectionString
+</span><a href="#local-6989586621688055408"><span class="hs-identifier hs-var">iConnString</span></a></span><span>
+</span><span id="line-134"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688055402"><span class="annot"><span class="annottext">connOptions :: ConnectionOptions
+</span><a href="#local-6989586621688055402"><span class="hs-identifier hs-var hs-var">connOptions</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-135"></span><span>        </span><span class="annot"><span class="annottext">ConnectionOptions :: Int -&gt; Int -&gt; Int -&gt; ConnectionOptions
 </span><a href="Database.MSSQL.Pool.html#ConnectionOptions"><span class="hs-identifier hs-type">MSPool.ConnectionOptions</span></a></span><span>
 </span><span id="line-136"></span><span>          </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">_coConnections :: Int
 </span><a href="Database.MSSQL.Pool.html#_coConnections"><span class="hs-identifier hs-var">_coConnections</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621688055581"><span class="hs-identifier hs-var">_mpsMaxConnections</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621688055407"><span class="hs-identifier hs-var">_mpsMaxConnections</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-137"></span><span>            </span><span class="annot"><span class="annottext">_coStripes :: Int
 </span><a href="Database.MSSQL.Pool.html#_coStripes"><span class="hs-identifier hs-var">_coStripes</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int
 </span><span class="hs-number">1</span></span><span class="hs-special">,</span><span>
@@ -418,60 +418,60 @@ Environment -&gt; InputConnectionString -&gt; m ConnectionString
 </span><a href="Database.MSSQL.Pool.html#_coIdleTime"><span class="hs-identifier hs-var">_coIdleTime</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int
 forall a b. (Integral a, Num b) =&gt; a -&gt; b
 </span><span class="hs-identifier hs-var">fromIntegral</span></span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621688055580"><span class="hs-identifier hs-var">_mpsIdleTimeout</span></a></span><span>
+</span><a href="#local-6989586621688055406"><span class="hs-identifier hs-var">_mpsIdleTimeout</span></a></span><span>
 </span><span id="line-139"></span><span>          </span><span class="hs-special">}</span><span>
-</span><span id="line-140"></span><span>  </span><span id="local-6989586621688055571"><span class="annot"><span class="annottext">MSSQLPool
-</span><a href="#local-6989586621688055571"><span class="hs-identifier hs-var">pool</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO MSSQLPool -&gt; m MSSQLPool
+</span><span id="line-140"></span><span>  </span><span id="local-6989586621688055397"><span class="annot"><span class="annottext">MSSQLPool
+</span><a href="#local-6989586621688055397"><span class="hs-identifier hs-var">pool</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO MSSQLPool -&gt; m MSSQLPool
 forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
 </span><span class="hs-identifier hs-var">liftIO</span></span><span> </span><span class="annot"><span class="annottext">(IO MSSQLPool -&gt; m MSSQLPool) -&gt; IO MSSQLPool -&gt; m MSSQLPool
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">ConnectionString -&gt; ConnectionOptions -&gt; IO MSSQLPool
 </span><a href="Database.MSSQL.Pool.html#initMSSQLPool"><span class="hs-identifier hs-var">MSPool.initMSSQLPool</span></a></span><span> </span><span class="annot"><span class="annottext">ConnectionString
-</span><a href="#local-6989586621688055578"><span class="hs-identifier hs-var">connString</span></a></span><span> </span><span class="annot"><span class="annottext">ConnectionOptions
-</span><a href="#local-6989586621688055576"><span class="hs-identifier hs-var">connOptions</span></a></span><span>
+</span><a href="#local-6989586621688055404"><span class="hs-identifier hs-var">connString</span></a></span><span> </span><span class="annot"><span class="annottext">ConnectionOptions
+</span><a href="#local-6989586621688055402"><span class="hs-identifier hs-var">connOptions</span></a></span><span>
 </span><span id="line-141"></span><span>  </span><span class="annot"><span class="annottext">(ConnectionString, MSSQLPool) -&gt; m (ConnectionString, MSSQLPool)
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ConnectionString
-</span><a href="#local-6989586621688055578"><span class="hs-identifier hs-var">connString</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">MSSQLPool
-</span><a href="#local-6989586621688055571"><span class="hs-identifier hs-var">pool</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621688055404"><span class="hs-identifier hs-var">connString</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">MSSQLPool
+</span><a href="#local-6989586621688055397"><span class="hs-identifier hs-var">pool</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-142"></span><span>
-</span><span id="line-143"></span><span id="local-6989586621688055824"><span class="annot"><a href="Hasura.Backends.MSSQL.Connection.html#resolveInputConnectionString"><span class="hs-identifier hs-type">resolveInputConnectionString</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-144"></span><span>  </span><span class="annot"><a href="Hasura.Base.Error.html#QErrM"><span class="hs-identifier hs-type">QErrM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688055824"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-143"></span><span id="local-6989586621688055650"><span class="annot"><a href="Hasura.Backends.MSSQL.Connection.html#resolveInputConnectionString"><span class="hs-identifier hs-type">resolveInputConnectionString</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-144"></span><span>  </span><span class="annot"><a href="Hasura.Base.Error.html#QErrM"><span class="hs-identifier hs-type">QErrM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688055650"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
 </span><span id="line-145"></span><span>  </span><span class="annot"><a href="Data.Environment.html#Environment"><span class="hs-identifier hs-type">Env.Environment</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-146"></span><span>  </span><span class="annot"><a href="Hasura.Backends.MSSQL.Connection.html#InputConnectionString"><span class="hs-identifier hs-type">InputConnectionString</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-147"></span><span>  </span><span class="annot"><a href="#local-6989586621688055824"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Database.MSSQL.Pool.html#ConnectionString"><span class="hs-identifier hs-type">MSPool.ConnectionString</span></a></span></span><span>
+</span><span id="line-147"></span><span>  </span><span class="annot"><a href="#local-6989586621688055650"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Database.MSSQL.Pool.html#ConnectionString"><span class="hs-identifier hs-type">MSPool.ConnectionString</span></a></span></span><span>
 </span><span id="line-148"></span><span id="resolveInputConnectionString"><span class="annot"><span class="annottext">resolveInputConnectionString :: Environment -&gt; InputConnectionString -&gt; m ConnectionString
-</span><a href="Hasura.Backends.MSSQL.Connection.html#resolveInputConnectionString"><span class="hs-identifier hs-var hs-var">resolveInputConnectionString</span></a></span></span><span> </span><span id="local-6989586621688055568"><span class="annot"><span class="annottext">Environment
-</span><a href="#local-6989586621688055568"><span class="hs-identifier hs-var">env</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="Hasura.Backends.MSSQL.Connection.html#resolveInputConnectionString"><span class="hs-identifier hs-var hs-var">resolveInputConnectionString</span></a></span></span><span> </span><span id="local-6989586621688055394"><span class="annot"><span class="annottext">Environment
+</span><a href="#local-6989586621688055394"><span class="hs-identifier hs-var">env</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-149"></span><span>  </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
-</span><span id="line-150"></span><span>    </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.MSSQL.Connection.html#RawString"><span class="hs-identifier hs-type">RawString</span></a></span><span> </span><span id="local-6989586621688055567"><span class="annot"><span class="annottext">ConnectionString
-</span><a href="#local-6989586621688055567"><span class="hs-identifier hs-var">cs</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ConnectionString -&gt; m ConnectionString
+</span><span id="line-150"></span><span>    </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.MSSQL.Connection.html#RawString"><span class="hs-identifier hs-type">RawString</span></a></span><span> </span><span id="local-6989586621688055393"><span class="annot"><span class="annottext">ConnectionString
+</span><a href="#local-6989586621688055393"><span class="hs-identifier hs-var">cs</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ConnectionString -&gt; m ConnectionString
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">ConnectionString
-</span><a href="#local-6989586621688055567"><span class="hs-identifier hs-var">cs</span></a></span><span>
-</span><span id="line-151"></span><span>    </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.MSSQL.Connection.html#FromEnvironment"><span class="hs-identifier hs-type">FromEnvironment</span></a></span><span> </span><span id="local-6989586621688055566"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621688055566"><span class="hs-identifier hs-var">envVar</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; ConnectionString
+</span><a href="#local-6989586621688055393"><span class="hs-identifier hs-var">cs</span></a></span><span>
+</span><span id="line-151"></span><span>    </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.MSSQL.Connection.html#FromEnvironment"><span class="hs-identifier hs-type">FromEnvironment</span></a></span><span> </span><span id="local-6989586621688055392"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621688055392"><span class="hs-identifier hs-var">envVar</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; ConnectionString
 </span><a href="Database.MSSQL.Pool.html#ConnectionString"><span class="hs-identifier hs-var">MSPool.ConnectionString</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; ConnectionString) -&gt; m Text -&gt; m ConnectionString
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Environment -&gt; Text -&gt; m Text
 forall (m :: * -&gt; *). QErrM m =&gt; Environment -&gt; Text -&gt; m Text
 </span><a href="Hasura.Backends.MSSQL.Connection.html#getEnv"><span class="hs-identifier hs-var">getEnv</span></a></span><span> </span><span class="annot"><span class="annottext">Environment
-</span><a href="#local-6989586621688055568"><span class="hs-identifier hs-var">env</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621688055566"><span class="hs-identifier hs-var">envVar</span></a></span><span>
+</span><a href="#local-6989586621688055394"><span class="hs-identifier hs-var">env</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621688055392"><span class="hs-identifier hs-var">envVar</span></a></span><span>
 </span><span id="line-152"></span><span>
-</span><span id="line-153"></span><span id="local-6989586621688055814"><span class="annot"><a href="Hasura.Backends.MSSQL.Connection.html#getEnv"><span class="hs-identifier hs-type">getEnv</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErrM"><span class="hs-identifier hs-type">QErrM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688055814"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Data.Environment.html#Environment"><span class="hs-identifier hs-type">Env.Environment</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621688055814"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span></span><span>
+</span><span id="line-153"></span><span id="local-6989586621688055640"><span class="annot"><a href="Hasura.Backends.MSSQL.Connection.html#getEnv"><span class="hs-identifier hs-type">getEnv</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErrM"><span class="hs-identifier hs-type">QErrM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688055640"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Data.Environment.html#Environment"><span class="hs-identifier hs-type">Env.Environment</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621688055640"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span></span><span>
 </span><span id="line-154"></span><span id="getEnv"><span class="annot"><span class="annottext">getEnv :: Environment -&gt; Text -&gt; m Text
-</span><a href="Hasura.Backends.MSSQL.Connection.html#getEnv"><span class="hs-identifier hs-var hs-var">getEnv</span></a></span></span><span> </span><span id="local-6989586621688055564"><span class="annot"><span class="annottext">Environment
-</span><a href="#local-6989586621688055564"><span class="hs-identifier hs-var">env</span></a></span></span><span> </span><span id="local-6989586621688055563"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621688055563"><span class="hs-identifier hs-var">k</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-155"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688055562"><span class="annot"><span class="annottext">mEnv :: Maybe String
-</span><a href="#local-6989586621688055562"><span class="hs-identifier hs-var hs-var">mEnv</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Environment -&gt; String -&gt; Maybe String
+</span><a href="Hasura.Backends.MSSQL.Connection.html#getEnv"><span class="hs-identifier hs-var hs-var">getEnv</span></a></span></span><span> </span><span id="local-6989586621688055390"><span class="annot"><span class="annottext">Environment
+</span><a href="#local-6989586621688055390"><span class="hs-identifier hs-var">env</span></a></span></span><span> </span><span id="local-6989586621688055389"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621688055389"><span class="hs-identifier hs-var">k</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-155"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688055388"><span class="annot"><span class="annottext">mEnv :: Maybe String
+</span><a href="#local-6989586621688055388"><span class="hs-identifier hs-var hs-var">mEnv</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Environment -&gt; String -&gt; Maybe String
 </span><a href="Data.Environment.html#lookupEnv"><span class="hs-identifier hs-var">Env.lookupEnv</span></a></span><span> </span><span class="annot"><span class="annottext">Environment
-</span><a href="#local-6989586621688055564"><span class="hs-identifier hs-var">env</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; String
+</span><a href="#local-6989586621688055390"><span class="hs-identifier hs-var">env</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; String
 </span><span class="hs-identifier hs-var">unpack</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621688055563"><span class="hs-identifier hs-var">k</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621688055389"><span class="hs-identifier hs-var">k</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-156"></span><span>  </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Maybe String
-</span><a href="#local-6989586621688055562"><span class="hs-identifier hs-var">mEnv</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621688055388"><span class="hs-identifier hs-var">mEnv</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-157"></span><span>    </span><span class="annot"><span class="annottext">Maybe String
 </span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Code -&gt; Text -&gt; m Text
 forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
@@ -482,19 +482,19 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-string">&quot;environment variable '&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621688055563"><span class="hs-identifier hs-var">k</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+</span><a href="#local-6989586621688055389"><span class="hs-identifier hs-var">k</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;' not set&quot;</span></span><span>
-</span><span id="line-158"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621688055558"><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621688055558"><span class="hs-identifier hs-var">envVal</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; m Text
+</span><span id="line-158"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621688055384"><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621688055384"><span class="hs-identifier hs-var">envVal</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; m Text
 forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
 </span><span class="hs-identifier hs-var">return</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String -&gt; Text
 </span><span class="hs-identifier hs-var">pack</span></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621688055558"><span class="hs-identifier hs-var">envVal</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621688055384"><span class="hs-identifier hs-var">envVal</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-159"></span><span>
 </span><span id="line-160"></span><span class="hs-keyword">type</span><span> </span><span id="MSSQLRunTx"><span class="annot"><a href="Hasura.Backends.MSSQL.Connection.html#MSSQLRunTx"><span class="hs-identifier hs-var">MSSQLRunTx</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-161"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621688055805"><span class="annot"><a href="#local-6989586621688055805"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span id="local-6989586621688055802"><span class="annot"><a href="#local-6989586621688055802"><span class="hs-identifier hs-type">a</span></a></span></span><span class="hs-operator">.</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621688055805"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadBaseControl</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="annot"><a href="#local-6989586621688055805"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Database.MSSQL.Transaction.html#TxET"><span class="hs-identifier hs-type">MSTx.TxET</span></a></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688055805"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688055802"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ExceptT</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688055805"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688055802"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-161"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621688055631"><span class="annot"><a href="#local-6989586621688055631"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span id="local-6989586621688055628"><span class="annot"><a href="#local-6989586621688055628"><span class="hs-identifier hs-type">a</span></a></span></span><span class="hs-operator">.</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621688055631"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadBaseControl</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="annot"><a href="#local-6989586621688055631"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Database.MSSQL.Transaction.html#TxET"><span class="hs-identifier hs-type">MSTx.TxET</span></a></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688055631"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688055628"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ExceptT</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688055631"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688055628"><span class="hs-identifier hs-type">a</span></a></span><span>
 </span><span id="line-162"></span><span>
 </span><span id="line-163"></span><span class="hs-comment">-- | Execution Context required to execute MSSQL transactions</span><span>
 </span><span id="line-164"></span><span class="hs-keyword">data</span><span> </span><span id="MSSQLExecCtx"><span class="annot"><a href="Hasura.Backends.MSSQL.Connection.html#MSSQLExecCtx"><span class="hs-identifier hs-var">MSSQLExecCtx</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="MSSQLExecCtx"><span class="annot"><a href="Hasura.Backends.MSSQL.Connection.html#MSSQLExecCtx"><span class="hs-identifier hs-var">MSSQLExecCtx</span></a></span></span><span>
@@ -518,8 +518,8 @@ forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
 </span><span id="line-173"></span><span class="hs-comment">-- | Creates a MSSQL execution context for a single primary pool</span><span>
 </span><span id="line-174"></span><span class="annot"><a href="Hasura.Backends.MSSQL.Connection.html#mkMSSQLExecCtx"><span class="hs-identifier hs-type">mkMSSQLExecCtx</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Database.MSSQL.Pool.html#MSSQLPool"><span class="hs-identifier hs-type">MSPool.MSSQLPool</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Connection.html#MSSQLExecCtx"><span class="hs-identifier hs-type">MSSQLExecCtx</span></a></span><span>
 </span><span id="line-175"></span><span id="mkMSSQLExecCtx"><span class="annot"><span class="annottext">mkMSSQLExecCtx :: MSSQLPool -&gt; MSSQLExecCtx
-</span><a href="Hasura.Backends.MSSQL.Connection.html#mkMSSQLExecCtx"><span class="hs-identifier hs-var hs-var">mkMSSQLExecCtx</span></a></span></span><span> </span><span id="local-6989586621688055552"><span class="annot"><span class="annottext">MSSQLPool
-</span><a href="#local-6989586621688055552"><span class="hs-identifier hs-var">pool</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="Hasura.Backends.MSSQL.Connection.html#mkMSSQLExecCtx"><span class="hs-identifier hs-var hs-var">mkMSSQLExecCtx</span></a></span></span><span> </span><span id="local-6989586621688055378"><span class="annot"><span class="annottext">MSSQLPool
+</span><a href="#local-6989586621688055378"><span class="hs-identifier hs-var">pool</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-176"></span><span>  </span><span class="annot"><span class="annottext">MSSQLExecCtx :: (forall (m :: * -&gt; *) a.
  (MonadIO m, MonadBaseControl IO m) =&gt;
  TxET QErr m a -&gt; ExceptT QErr m a)
@@ -532,36 +532,36 @@ forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
 </span><span id="line-177"></span><span>    </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">mssqlRunReadOnly :: forall (m :: * -&gt; *) a.
 (MonadIO m, MonadBaseControl IO m) =&gt;
 TxET QErr m a -&gt; ExceptT QErr m a
-</span><a href="Hasura.Backends.MSSQL.Connection.html#mssqlRunReadOnly"><span class="hs-identifier hs-var">mssqlRunReadOnly</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621688055551"><span class="annot"><span class="annottext">TxET QErr m a
-</span><a href="#local-6989586621688055551"><span class="hs-identifier hs-var">tx</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">(MSSQLTxError -&gt; QErr)
+</span><a href="Hasura.Backends.MSSQL.Connection.html#mssqlRunReadOnly"><span class="hs-identifier hs-var">mssqlRunReadOnly</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621688055377"><span class="annot"><span class="annottext">TxET QErr m a
+</span><a href="#local-6989586621688055377"><span class="hs-identifier hs-var">tx</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">(MSSQLTxError -&gt; QErr)
 -&gt; TxET QErr m a -&gt; MSSQLPool -&gt; ExceptT QErr m a
 forall (m :: * -&gt; *) e a.
 (MonadIO m, MonadBaseControl IO m) =&gt;
 (MSSQLTxError -&gt; e) -&gt; TxET e m a -&gt; MSSQLPool -&gt; ExceptT e m a
 </span><a href="Database.MSSQL.Transaction.html#runTxE"><span class="hs-identifier hs-var">MSTx.runTxE</span></a></span><span> </span><span class="annot"><span class="annottext">MSSQLTxError -&gt; QErr
 </span><a href="Hasura.Backends.MSSQL.SQL.Error.html#defaultMSSQLTxErrorHandler"><span class="hs-identifier hs-var">defaultMSSQLTxErrorHandler</span></a></span><span> </span><span class="annot"><span class="annottext">TxET QErr m a
-</span><a href="#local-6989586621688055551"><span class="hs-identifier hs-var">tx</span></a></span><span> </span><span class="annot"><span class="annottext">MSSQLPool
-</span><a href="#local-6989586621688055552"><span class="hs-identifier hs-var">pool</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621688055377"><span class="hs-identifier hs-var">tx</span></a></span><span> </span><span class="annot"><span class="annottext">MSSQLPool
+</span><a href="#local-6989586621688055378"><span class="hs-identifier hs-var">pool</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-178"></span><span>      </span><span class="annot"><span class="annottext">mssqlRunReadWrite :: forall (m :: * -&gt; *) a.
 (MonadIO m, MonadBaseControl IO m) =&gt;
 TxET QErr m a -&gt; ExceptT QErr m a
-</span><a href="Hasura.Backends.MSSQL.Connection.html#mssqlRunReadWrite"><span class="hs-identifier hs-var">mssqlRunReadWrite</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621688055548"><span class="annot"><span class="annottext">TxET QErr m a
-</span><a href="#local-6989586621688055548"><span class="hs-identifier hs-var">tx</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">(MSSQLTxError -&gt; QErr)
+</span><a href="Hasura.Backends.MSSQL.Connection.html#mssqlRunReadWrite"><span class="hs-identifier hs-var">mssqlRunReadWrite</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621688055374"><span class="annot"><span class="annottext">TxET QErr m a
+</span><a href="#local-6989586621688055374"><span class="hs-identifier hs-var">tx</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">(MSSQLTxError -&gt; QErr)
 -&gt; TxET QErr m a -&gt; MSSQLPool -&gt; ExceptT QErr m a
 forall (m :: * -&gt; *) e a.
 (MonadIO m, MonadBaseControl IO m) =&gt;
 (MSSQLTxError -&gt; e) -&gt; TxET e m a -&gt; MSSQLPool -&gt; ExceptT e m a
 </span><a href="Database.MSSQL.Transaction.html#runTxE"><span class="hs-identifier hs-var">MSTx.runTxE</span></a></span><span> </span><span class="annot"><span class="annottext">MSSQLTxError -&gt; QErr
 </span><a href="Hasura.Backends.MSSQL.SQL.Error.html#defaultMSSQLTxErrorHandler"><span class="hs-identifier hs-var">defaultMSSQLTxErrorHandler</span></a></span><span> </span><span class="annot"><span class="annottext">TxET QErr m a
-</span><a href="#local-6989586621688055548"><span class="hs-identifier hs-var">tx</span></a></span><span> </span><span class="annot"><span class="annottext">MSSQLPool
-</span><a href="#local-6989586621688055552"><span class="hs-identifier hs-var">pool</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621688055374"><span class="hs-identifier hs-var">tx</span></a></span><span> </span><span class="annot"><span class="annottext">MSSQLPool
+</span><a href="#local-6989586621688055378"><span class="hs-identifier hs-var">pool</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-179"></span><span>      </span><span class="annot"><span class="annottext">mssqlDestroyConn :: IO ()
 </span><a href="Hasura.Backends.MSSQL.Connection.html#mssqlDestroyConn"><span class="hs-identifier hs-var">mssqlDestroyConn</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">MSSQLPool -&gt; IO ()
 </span><a href="Database.MSSQL.Pool.html#drainMSSQLPool"><span class="hs-identifier hs-var">MSPool.drainMSSQLPool</span></a></span><span> </span><span class="annot"><span class="annottext">MSSQLPool
-</span><a href="#local-6989586621688055552"><span class="hs-identifier hs-var">pool</span></a></span><span>
+</span><a href="#local-6989586621688055378"><span class="hs-identifier hs-var">pool</span></a></span><span>
 </span><span id="line-180"></span><span>    </span><span class="hs-special">}</span><span>
 </span><span id="line-181"></span><span>
-</span><span id="line-182"></span><span id="local-6989586621688055545"><span id="local-6989586621688055546"></span></span><span class="hs-keyword">data</span><span> </span><span id="MSSQLSourceConfig"><span class="annot"><a href="Hasura.Backends.MSSQL.Connection.html#MSSQLSourceConfig"><span class="hs-identifier hs-var">MSSQLSourceConfig</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="MSSQLSourceConfig"><span class="annot"><a href="Hasura.Backends.MSSQL.Connection.html#MSSQLSourceConfig"><span class="hs-identifier hs-var">MSSQLSourceConfig</span></a></span></span><span>
+</span><span id="line-182"></span><span id="local-6989586621688055371"><span id="local-6989586621688055372"></span></span><span class="hs-keyword">data</span><span> </span><span id="MSSQLSourceConfig"><span class="annot"><a href="Hasura.Backends.MSSQL.Connection.html#MSSQLSourceConfig"><span class="hs-identifier hs-var">MSSQLSourceConfig</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="MSSQLSourceConfig"><span class="annot"><a href="Hasura.Backends.MSSQL.Connection.html#MSSQLSourceConfig"><span class="hs-identifier hs-var">MSSQLSourceConfig</span></a></span></span><span>
 </span><span id="line-183"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_mscConnectionString"><span class="annot"><span class="annottext">MSSQLSourceConfig -&gt; ConnectionString
 </span><a href="Hasura.Backends.MSSQL.Connection.html#_mscConnectionString"><span class="hs-identifier hs-var hs-var">_mscConnectionString</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Database.MSSQL.Pool.html#ConnectionString"><span class="hs-identifier hs-type">MSPool.ConnectionString</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-184"></span><span>    </span><span id="_mscExecCtx"><span class="annot"><span class="annottext">MSSQLSourceConfig -&gt; MSSQLExecCtx
@@ -578,8 +578,8 @@ $cto :: forall x. Rep MSSQLSourceConfig x -&gt; MSSQLSourceConfig
 $cfrom :: forall x. MSSQLSourceConfig -&gt; Rep MSSQLSourceConfig x
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">)</span><span>
 </span><span id="line-187"></span><span>
-</span><span id="line-188"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688055537"><span id="local-6989586621688055540"><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Connection.html#MSSQLSourceConfig"><span class="hs-identifier hs-type">MSSQLSourceConfig</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-189"></span><span>  </span><span id="local-6989586621688055536"><span class="annot"><span class="annottext">show :: MSSQLSourceConfig -&gt; String
+</span><span id="line-188"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688055363"><span id="local-6989586621688055366"><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Connection.html#MSSQLSourceConfig"><span class="hs-identifier hs-type">MSSQLSourceConfig</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-189"></span><span>  </span><span id="local-6989586621688055362"><span class="annot"><span class="annottext">show :: MSSQLSourceConfig -&gt; String
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">show</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ConnectionString -&gt; String
 forall a. Show a =&gt; a -&gt; String
 </span><span class="hs-identifier hs-var">show</span></span><span> </span><span class="annot"><span class="annottext">(ConnectionString -&gt; String)
@@ -590,29 +590,29 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">MSSQLSourceConfig -&gt; ConnectionString
 </span><a href="Hasura.Backends.MSSQL.Connection.html#_mscConnectionString"><span class="hs-identifier hs-var hs-var">_mscConnectionString</span></a></span><span>
 </span><span id="line-190"></span><span>
-</span><span id="line-191"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688055531"><span class="annot"><span class="hs-identifier hs-type">Eq</span></span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Connection.html#MSSQLSourceConfig"><span class="hs-identifier hs-type">MSSQLSourceConfig</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-192"></span><span>  </span><span class="annot"><a href="Hasura.Backends.MSSQL.Connection.html#MSSQLSourceConfig"><span class="hs-identifier hs-type">MSSQLSourceConfig</span></a></span><span> </span><span id="local-6989586621688055530"><span class="annot"><span class="annottext">ConnectionString
-</span><a href="#local-6989586621688055530"><span class="hs-identifier hs-var">connStr1</span></a></span></span><span> </span><span class="annot"><span class="annottext">MSSQLExecCtx
-</span><span class="hs-identifier">_</span></span><span> </span><span id="local-6989586621688055529"><span class="annot"><span class="annottext">== :: MSSQLSourceConfig -&gt; MSSQLSourceConfig -&gt; Bool
-</span><span class="hs-operator hs-var hs-var hs-var hs-var">==</span></span></span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Connection.html#MSSQLSourceConfig"><span class="hs-identifier hs-type">MSSQLSourceConfig</span></a></span><span> </span><span id="local-6989586621688055528"><span class="annot"><span class="annottext">ConnectionString
-</span><a href="#local-6989586621688055528"><span class="hs-identifier hs-var">connStr2</span></a></span></span><span> </span><span class="annot"><span class="annottext">MSSQLExecCtx
+</span><span id="line-191"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688055357"><span class="annot"><span class="hs-identifier hs-type">Eq</span></span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Connection.html#MSSQLSourceConfig"><span class="hs-identifier hs-type">MSSQLSourceConfig</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-192"></span><span>  </span><span class="annot"><a href="Hasura.Backends.MSSQL.Connection.html#MSSQLSourceConfig"><span class="hs-identifier hs-type">MSSQLSourceConfig</span></a></span><span> </span><span id="local-6989586621688055356"><span class="annot"><span class="annottext">ConnectionString
+</span><a href="#local-6989586621688055356"><span class="hs-identifier hs-var">connStr1</span></a></span></span><span> </span><span class="annot"><span class="annottext">MSSQLExecCtx
+</span><span class="hs-identifier">_</span></span><span> </span><span id="local-6989586621688055355"><span class="annot"><span class="annottext">== :: MSSQLSourceConfig -&gt; MSSQLSourceConfig -&gt; Bool
+</span><span class="hs-operator hs-var hs-var hs-var hs-var">==</span></span></span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Connection.html#MSSQLSourceConfig"><span class="hs-identifier hs-type">MSSQLSourceConfig</span></a></span><span> </span><span id="local-6989586621688055354"><span class="annot"><span class="annottext">ConnectionString
+</span><a href="#local-6989586621688055354"><span class="hs-identifier hs-var">connStr2</span></a></span></span><span> </span><span class="annot"><span class="annottext">MSSQLExecCtx
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-193"></span><span>    </span><span class="annot"><span class="annottext">ConnectionString
-</span><a href="#local-6989586621688055530"><span class="hs-identifier hs-var">connStr1</span></a></span><span> </span><span class="annot"><span class="annottext">ConnectionString -&gt; ConnectionString -&gt; Bool
+</span><a href="#local-6989586621688055356"><span class="hs-identifier hs-var">connStr1</span></a></span><span> </span><span class="annot"><span class="annottext">ConnectionString -&gt; ConnectionString -&gt; Bool
 forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="annottext">ConnectionString
-</span><a href="#local-6989586621688055528"><span class="hs-identifier hs-var">connStr2</span></a></span><span>
+</span><a href="#local-6989586621688055354"><span class="hs-identifier hs-var">connStr2</span></a></span><span>
 </span><span id="line-194"></span><span>
 </span><span id="line-195"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier hs-type">Cacheable</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Connection.html#MSSQLSourceConfig"><span class="hs-identifier hs-type">MSSQLSourceConfig</span></a></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-196"></span><span>  </span><span id="local-6989586621688055525"><span class="annot"><span class="annottext">unchanged :: Accesses -&gt; MSSQLSourceConfig -&gt; MSSQLSourceConfig -&gt; Bool
+</span><span id="line-196"></span><span>  </span><span id="local-6989586621688055351"><span class="annot"><span class="annottext">unchanged :: Accesses -&gt; MSSQLSourceConfig -&gt; MSSQLSourceConfig -&gt; Bool
 </span><a href="Hasura.Incremental.Internal.Dependency.html#unchanged"><span class="hs-identifier hs-var hs-var hs-var hs-var">unchanged</span></a></span></span><span> </span><span class="annot"><span class="annottext">Accesses
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">MSSQLSourceConfig -&gt; MSSQLSourceConfig -&gt; Bool
 forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">(==)</span></span><span>
 </span><span id="line-197"></span><span>
-</span><span id="line-198"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688055517"><span id="local-6989586621688055519"><span id="local-6989586621688055521"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Connection.html#MSSQLSourceConfig"><span class="hs-identifier hs-type">MSSQLSourceConfig</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-199"></span><span>  </span><span id="local-6989586621688055516"><span class="annot"><span class="annottext">toJSON :: MSSQLSourceConfig -&gt; Value
-</span><a href="#local-6989586621688055516"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ConnectionString -&gt; Value
+</span><span id="line-198"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688055343"><span id="local-6989586621688055345"><span id="local-6989586621688055347"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Connection.html#MSSQLSourceConfig"><span class="hs-identifier hs-type">MSSQLSourceConfig</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-199"></span><span>  </span><span id="local-6989586621688055342"><span class="annot"><span class="annottext">toJSON :: MSSQLSourceConfig -&gt; Value
+</span><a href="#local-6989586621688055342"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ConnectionString -&gt; Value
 forall a. ToJSON a =&gt; a -&gt; Value
 </span><span class="hs-identifier hs-var">toJSON</span></span><span> </span><span class="annot"><span class="annottext">(ConnectionString -&gt; Value)
 -&gt; (MSSQLSourceConfig -&gt; ConnectionString)
@@ -625,19 +625,19 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span id="line-201"></span><span class="annot"><a href="Hasura.Backends.MSSQL.Connection.html#odbcValueToJValue"><span class="hs-identifier hs-type">odbcValueToJValue</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ODBC.Value</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">J.Value</span></span><span>
 </span><span id="line-202"></span><span id="odbcValueToJValue"><span class="annot"><span class="annottext">odbcValueToJValue :: Value -&gt; Value
 </span><a href="Hasura.Backends.MSSQL.Connection.html#odbcValueToJValue"><span class="hs-identifier hs-var hs-var">odbcValueToJValue</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
-</span><span id="line-203"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">ODBC.TextValue</span></span><span> </span><span id="local-6989586621688055514"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621688055514"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Value
+</span><span id="line-203"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">ODBC.TextValue</span></span><span> </span><span id="local-6989586621688055340"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621688055340"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Value
 </span><span class="hs-identifier hs-var">J.String</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621688055514"><span class="hs-identifier hs-var">t</span></a></span><span>
-</span><span id="line-204"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">ODBC.ByteStringValue</span></span><span> </span><span id="local-6989586621688055512"><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621688055512"><span class="hs-identifier hs-var">b</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Value
+</span><a href="#local-6989586621688055340"><span class="hs-identifier hs-var">t</span></a></span><span>
+</span><span id="line-204"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">ODBC.ByteStringValue</span></span><span> </span><span id="local-6989586621688055338"><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621688055338"><span class="hs-identifier hs-var">b</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Value
 </span><span class="hs-identifier hs-var">J.String</span></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Value) -&gt; Text -&gt; Value
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; Text
 </span><a href="Hasura.Prelude.html#bsToTxt"><span class="hs-identifier hs-var">bsToTxt</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621688055512"><span class="hs-identifier hs-var">b</span></a></span><span>
-</span><span id="line-205"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">ODBC.BinaryValue</span></span><span> </span><span id="local-6989586621688055509"><span class="annot"><span class="annottext">Binary
-</span><a href="#local-6989586621688055509"><span class="hs-identifier hs-var">b</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Value
+</span><a href="#local-6989586621688055338"><span class="hs-identifier hs-var">b</span></a></span><span>
+</span><span id="line-205"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">ODBC.BinaryValue</span></span><span> </span><span id="local-6989586621688055335"><span class="annot"><span class="annottext">Binary
+</span><a href="#local-6989586621688055335"><span class="hs-identifier hs-var">b</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Value
 </span><span class="hs-identifier hs-var">J.String</span></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Value) -&gt; Text -&gt; Value
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; Text
@@ -645,46 +645,46 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Binary -&gt; ByteString
 </span><span class="hs-identifier hs-var hs-var">ODBC.unBinary</span></span><span> </span><span class="annot"><span class="annottext">Binary
-</span><a href="#local-6989586621688055509"><span class="hs-identifier hs-var">b</span></a></span><span>
-</span><span id="line-206"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">ODBC.BoolValue</span></span><span> </span><span id="local-6989586621688055506"><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621688055506"><span class="hs-identifier hs-var">b</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Value
+</span><a href="#local-6989586621688055335"><span class="hs-identifier hs-var">b</span></a></span><span>
+</span><span id="line-206"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">ODBC.BoolValue</span></span><span> </span><span id="local-6989586621688055332"><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621688055332"><span class="hs-identifier hs-var">b</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Value
 </span><span class="hs-identifier hs-var">J.Bool</span></span><span> </span><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621688055506"><span class="hs-identifier hs-var">b</span></a></span><span>
-</span><span id="line-207"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">ODBC.DoubleValue</span></span><span> </span><span id="local-6989586621688055503"><span class="annot"><span class="annottext">Double
-</span><a href="#local-6989586621688055503"><span class="hs-identifier hs-var">d</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Double -&gt; Value
+</span><a href="#local-6989586621688055332"><span class="hs-identifier hs-var">b</span></a></span><span>
+</span><span id="line-207"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">ODBC.DoubleValue</span></span><span> </span><span id="local-6989586621688055329"><span class="annot"><span class="annottext">Double
+</span><a href="#local-6989586621688055329"><span class="hs-identifier hs-var">d</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Double -&gt; Value
 forall a. ToJSON a =&gt; a -&gt; Value
 </span><span class="hs-identifier hs-var">J.toJSON</span></span><span> </span><span class="annot"><span class="annottext">Double
-</span><a href="#local-6989586621688055503"><span class="hs-identifier hs-var">d</span></a></span><span>
-</span><span id="line-208"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">ODBC.FloatValue</span></span><span> </span><span id="local-6989586621688055501"><span class="annot"><span class="annottext">Float
-</span><a href="#local-6989586621688055501"><span class="hs-identifier hs-var">f</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Float -&gt; Value
+</span><a href="#local-6989586621688055329"><span class="hs-identifier hs-var">d</span></a></span><span>
+</span><span id="line-208"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">ODBC.FloatValue</span></span><span> </span><span id="local-6989586621688055327"><span class="annot"><span class="annottext">Float
+</span><a href="#local-6989586621688055327"><span class="hs-identifier hs-var">f</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Float -&gt; Value
 forall a. ToJSON a =&gt; a -&gt; Value
 </span><span class="hs-identifier hs-var">J.toJSON</span></span><span> </span><span class="annot"><span class="annottext">Float
-</span><a href="#local-6989586621688055501"><span class="hs-identifier hs-var">f</span></a></span><span>
-</span><span id="line-209"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">ODBC.IntValue</span></span><span> </span><span id="local-6989586621688055499"><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621688055499"><span class="hs-identifier hs-var">i</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Int -&gt; Value
+</span><a href="#local-6989586621688055327"><span class="hs-identifier hs-var">f</span></a></span><span>
+</span><span id="line-209"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">ODBC.IntValue</span></span><span> </span><span id="local-6989586621688055325"><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621688055325"><span class="hs-identifier hs-var">i</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Int -&gt; Value
 forall a. ToJSON a =&gt; a -&gt; Value
 </span><span class="hs-identifier hs-var">J.toJSON</span></span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621688055499"><span class="hs-identifier hs-var">i</span></a></span><span>
-</span><span id="line-210"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">ODBC.ByteValue</span></span><span> </span><span id="local-6989586621688055497"><span class="annot"><span class="annottext">Word8
-</span><a href="#local-6989586621688055497"><span class="hs-identifier hs-var">b</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Word8 -&gt; Value
+</span><a href="#local-6989586621688055325"><span class="hs-identifier hs-var">i</span></a></span><span>
+</span><span id="line-210"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">ODBC.ByteValue</span></span><span> </span><span id="local-6989586621688055323"><span class="annot"><span class="annottext">Word8
+</span><a href="#local-6989586621688055323"><span class="hs-identifier hs-var">b</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Word8 -&gt; Value
 forall a. ToJSON a =&gt; a -&gt; Value
 </span><span class="hs-identifier hs-var">J.toJSON</span></span><span> </span><span class="annot"><span class="annottext">Word8
-</span><a href="#local-6989586621688055497"><span class="hs-identifier hs-var">b</span></a></span><span>
-</span><span id="line-211"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">ODBC.DayValue</span></span><span> </span><span id="local-6989586621688055495"><span class="annot"><span class="annottext">Day
-</span><a href="#local-6989586621688055495"><span class="hs-identifier hs-var">d</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Day -&gt; Value
+</span><a href="#local-6989586621688055323"><span class="hs-identifier hs-var">b</span></a></span><span>
+</span><span id="line-211"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">ODBC.DayValue</span></span><span> </span><span id="local-6989586621688055321"><span class="annot"><span class="annottext">Day
+</span><a href="#local-6989586621688055321"><span class="hs-identifier hs-var">d</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Day -&gt; Value
 forall a. ToJSON a =&gt; a -&gt; Value
 </span><span class="hs-identifier hs-var">J.toJSON</span></span><span> </span><span class="annot"><span class="annottext">Day
-</span><a href="#local-6989586621688055495"><span class="hs-identifier hs-var">d</span></a></span><span>
-</span><span id="line-212"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">ODBC.TimeOfDayValue</span></span><span> </span><span id="local-6989586621688055493"><span class="annot"><span class="annottext">TimeOfDay
-</span><a href="#local-6989586621688055493"><span class="hs-identifier hs-var">td</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">TimeOfDay -&gt; Value
+</span><a href="#local-6989586621688055321"><span class="hs-identifier hs-var">d</span></a></span><span>
+</span><span id="line-212"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">ODBC.TimeOfDayValue</span></span><span> </span><span id="local-6989586621688055319"><span class="annot"><span class="annottext">TimeOfDay
+</span><a href="#local-6989586621688055319"><span class="hs-identifier hs-var">td</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">TimeOfDay -&gt; Value
 forall a. ToJSON a =&gt; a -&gt; Value
 </span><span class="hs-identifier hs-var">J.toJSON</span></span><span> </span><span class="annot"><span class="annottext">TimeOfDay
-</span><a href="#local-6989586621688055493"><span class="hs-identifier hs-var">td</span></a></span><span>
-</span><span id="line-213"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">ODBC.LocalTimeValue</span></span><span> </span><span id="local-6989586621688055491"><span class="annot"><span class="annottext">LocalTime
-</span><a href="#local-6989586621688055491"><span class="hs-identifier hs-var">l</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">LocalTime -&gt; Value
+</span><a href="#local-6989586621688055319"><span class="hs-identifier hs-var">td</span></a></span><span>
+</span><span id="line-213"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">ODBC.LocalTimeValue</span></span><span> </span><span id="local-6989586621688055317"><span class="annot"><span class="annottext">LocalTime
+</span><a href="#local-6989586621688055317"><span class="hs-identifier hs-var">l</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">LocalTime -&gt; Value
 forall a. ToJSON a =&gt; a -&gt; Value
 </span><span class="hs-identifier hs-var">J.toJSON</span></span><span> </span><span class="annot"><span class="annottext">LocalTime
-</span><a href="#local-6989586621688055491"><span class="hs-identifier hs-var">l</span></a></span><span>
+</span><a href="#local-6989586621688055317"><span class="hs-identifier hs-var">l</span></a></span><span>
 </span><span id="line-214"></span><span>  </span><span class="annot"><span class="annottext">Value
 </span><span class="hs-identifier hs-var">ODBC.NullValue</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Value
 </span><span class="hs-identifier hs-var">J.Null</span></span><span>
