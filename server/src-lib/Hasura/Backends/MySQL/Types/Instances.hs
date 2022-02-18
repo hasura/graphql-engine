@@ -20,7 +20,7 @@ import Hasura.Prelude
 import Language.Haskell.TH
 import Language.Haskell.TH.Syntax
 
-$( fmap concat $ for
+$( concat <$> for
      [''Aliased]
      \name ->
        [d|
@@ -42,7 +42,7 @@ $( fmap concat $ for
          |]
  )
 
-$( fmap concat $ for
+$( concat <$> for
      [ ''Where,
        ''Aggregate,
        ''EntityAlias,
@@ -81,7 +81,7 @@ $( fmap concat $ for
          |]
  )
 
-$( fmap concat $ for
+$( concat <$> for
      [ ''ScalarType
      ]
      \name ->
@@ -98,17 +98,17 @@ $( fmap concat $ for
          |]
  )
 
-$( fmap concat $ for
+$( concat <$> for
      [''TableName, ''ScalarType]
      \name -> [d|deriving instance Ord $(conT name)|]
  )
 
-$( fmap concat $ for
+$( concat <$> for
      [''TableName, ''NullsOrder, ''Order]
      \name -> [d|deriving instance Lift $(conT name)|]
  )
 
-$( fmap concat $ for
+$( concat <$> for
      [''Order, ''NullsOrder, ''ScalarType, ''FieldName]
      \name ->
        [d|
@@ -167,11 +167,9 @@ instance ToJSONKey ScalarType
 instance ToTxt ScalarType where
   toTxt = tshow
 
-instance Monoid Where where
-  mempty = Where mempty
+deriving newtype instance Monoid Where
 
-instance Semigroup Where where
-  (Where x) <> (Where y) = Where (x <> y)
+deriving newtype instance Semigroup Where
 
 instance Monoid Top where
   mempty = NoTop
