@@ -28,34 +28,35 @@ spec =
         { name = "MySQL",
           setup = mysqlSetup,
           teardown = mysqlTeardown,
-          options = Feature.defaultOptions
+          customOptions = Nothing
         },
       Feature.Context
         { name = "PostgreSQL",
           setup = postgresSetup,
           teardown = postgresTeardown,
-          options = Feature.defaultOptions
+          customOptions = Nothing
         },
       Feature.Context
         { name = "Citus",
           setup = citusSetup,
           teardown = citusTeardown,
-          options = Feature.defaultOptions
+          customOptions = Nothing
         },
       Feature.Context
         { name = "SQLServer",
           setup = sqlserverSetup,
           teardown = sqlserverTeardown,
-          options = Feature.defaultOptions
+          customOptions = Nothing
         },
       Feature.Context
         { name = "BigQuery",
           setup = bigquerySetup,
           teardown = bigqueryTeardown,
-          options =
-            Feature.Options
-              { stringifyNumbers = True
-              }
+          customOptions =
+            Just $
+              Feature.Options
+                { stringifyNumbers = True
+                }
         }
     ]
     tests

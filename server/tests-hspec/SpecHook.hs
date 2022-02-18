@@ -3,12 +3,12 @@ module SpecHook
   )
 where
 
-import Control.Exception
+import Control.Exception.Safe (bracket)
 import Harness.GraphqlEngine (startServerThread, stopServer)
 import Harness.State (State (..))
-import System.Environment
-import Test.Hspec
-import Text.Read
+import System.Environment (lookupEnv)
+import Test.Hspec (Spec, SpecWith, aroundAllWith)
+import Text.Read (readMaybe)
 import Prelude
 
 setupState :: IO State

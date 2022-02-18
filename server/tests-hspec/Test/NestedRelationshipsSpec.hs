@@ -26,7 +26,7 @@ spec =
         { name = "MySQL",
           setup = mysqlSetup,
           teardown = mysqlTeardown,
-          options = Feature.defaultOptions
+          customOptions = Nothing
         }
     ]
     tests

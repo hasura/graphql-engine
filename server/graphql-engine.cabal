@@ -925,6 +925,7 @@ test-suite tests-hspec
     , mmorph
     , monad-control
     , monad-logger
+    , morpheus-graphql
     , mtl
     , mysql
     , mysql-simple
@@ -1002,6 +1003,9 @@ test-suite tests-hspec
     Test.ObjectRelationshipsLimitSpec
     Test.ObjectRelationshipsSpec
     Test.OrderingSpec
+    Test.RemoteRelationship.XToDBArrayRelationshipSpec
+    Test.RemoteRelationship.XToDBObjectRelationshipSpec
+    Test.RemoteRelationship.XToRemoteSchemaRelationshipSpec
     Test.RequestHeadersSpec
     Test.ServiceLivenessSpec
     Test.ViewsSpec

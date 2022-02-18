@@ -6,14 +6,17 @@ module Harness.Test.Feature
     runWithLocalState,
     Context (..),
     Options (..),
+    combineOptions,
     defaultOptions,
   )
 where
 
+import Control.Applicative ((<|>))
 import Control.Exception.Safe (Exception, SomeException, catch, mask, throwIO)
 import Data.Foldable (for_)
+import Data.Maybe (fromMaybe)
 import Harness.State (State)
-import Test.Hspec (ActionWith, SpecWith, aroundAllWith, describe)
+import Test.Hspec (ActionWith, HasCallStack, SpecWith, aroundAllWith, describe)
 import Test.Hspec.Core.Spec (Item (..), mapSpecItem)
 import Prelude
 
@@ -88,7 +91,8 @@ runWithLocalState ::
   (Options -> SpecWith (State, a)) ->
   SpecWith State
 runWithLocalState contexts tests =
-  for_ contexts \context@Context {name, options} ->
+  for_ contexts \context@Context {name, customOptions} -> do
+    let options = fromMaybe defaultOptions customOptions
     describe name $ aroundAllWith (contextBracket context) (tests options)
   where
     -- We want to be able to report exceptions happening both during the tests
@@ -172,8 +176,9 @@ data Context a = Context
     --
     -- Takes the global 'State' and any local state (i.e. @a@) as arguments.
     teardown :: (State, a) -> IO (),
-    -- | Options which modify the behavior of a given testing 'Context'.
-    options :: Options
+    -- | Options which modify the behavior of a given testing 'Context'; when
+    -- this field is 'Nothing', tests are given the 'defaultOptions'.
+    customOptions :: Maybe Options
   }
 
 data Options = Options
@@ -183,6 +188,26 @@ data Options = Options
     -- This is primarily a workaround for tests which run BigQuery.
     stringifyNumbers :: Bool
   }
+
+-- | This function can be used to combine two sets of 'Option's when creating
+-- custom composite 'Context's.
+--
+-- NOTE: This function throws an impure exception if the options are
+-- irreconcilable.
+combineOptions :: HasCallStack => Maybe Options -> Maybe Options -> Maybe Options
+combineOptions (Just lhs) (Just rhs) =
+  let -- 'stringifyNumbers' can only be unified if both sides have the same value.
+      stringifyNumbers =
+        if lhsStringify == rhsStringify
+          then lhsStringify
+          else reportInconsistency "stringifyNumbers" lhsStringify rhsStringify
+   in Just Options {..}
+  where
+    reportInconsistency fieldName lhsValue rhsValue =
+      error $ "Could not reconcile '" <> fieldName <> "'\n  lhs value: " <> show lhsValue <> "\n  rhs value: " <> show rhsValue
+    Options {stringifyNumbers = lhsStringify} = lhs
+    Options {stringifyNumbers = rhsStringify} = rhs
+combineOptions mLhs mRhs = mLhs <|> mRhs
 
 defaultOptions :: Options
 defaultOptions =

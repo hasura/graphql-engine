@@ -27,7 +27,7 @@ spec =
         { name = "Postgres",
           setup = postgresSetup,
           teardown = postgresTeardown,
-          options = Feature.defaultOptions
+          customOptions = Nothing
         }
     ]
     tests
