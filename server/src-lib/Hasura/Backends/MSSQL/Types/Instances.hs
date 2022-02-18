@@ -233,11 +233,9 @@ instance FromJSON n => FromJSON (Countable n)
 
 deriving instance Ord ColumnName
 
-instance Monoid Where where
-  mempty = Where mempty
+deriving instance Monoid Where
 
-instance Semigroup Where where
-  (Where x) <> (Where y) = Where (x <> y)
+deriving instance Semigroup Where
 
 instance Monoid Top where
   mempty = NoTop

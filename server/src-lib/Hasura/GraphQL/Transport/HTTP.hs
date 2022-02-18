@@ -36,6 +36,7 @@ import Data.ByteString.Lazy qualified as LBS
 import Data.Dependent.Map qualified as DM
 import Data.Environment qualified as Env
 import Data.HashMap.Strict.InsOrd qualified as OMap
+import Data.Monoid (Any (..))
 import Data.Text qualified as T
 import Hasura.Backends.Postgres.Instances.Transport (runPGMutationTransaction)
 import Hasura.Base.Error
@@ -226,16 +227,10 @@ buildResponse telemType res f = case res of
 -- | A predicate on session variables. The 'Monoid' instance makes it simple
 -- to combine several predicates disjunctively.
 newtype SessVarPred = SessVarPred {unSessVarPred :: SessionVariable -> SessionVariableValue -> Bool}
+  deriving (Semigroup, Monoid) via (SessionVariable -> SessionVariableValue -> Any)
 
 keepAllSessionVariables :: SessVarPred
 keepAllSessionVariables = SessVarPred $ \_ _ -> True
-
-instance Semigroup SessVarPred where
-  SessVarPred p1 <> SessVarPred p2 = SessVarPred $ \sv svv ->
-    p1 sv svv || p2 sv svv
-
-instance Monoid SessVarPred where
-  mempty = SessVarPred $ \_ _ -> False
 
 runSessVarPred :: SessVarPred -> SessionVariables -> SessionVariables
 runSessVarPred = filterSessionVariables . unSessVarPred

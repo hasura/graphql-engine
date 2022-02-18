@@ -319,13 +319,7 @@ instance NFData JoinSource
 
 newtype Where
   = Where [Expression]
-  deriving (NFData, Eq, Ord, Show, Generic, Data, Lift, FromJSON, Hashable, Cacheable)
-
-instance Monoid Where where
-  mempty = Where mempty
-
-instance Semigroup Where where
-  (Where x) <> (Where y) = Where (x <> y)
+  deriving (NFData, Eq, Ord, Show, Generic, Data, Lift, FromJSON, Hashable, Cacheable, Semigroup, Monoid)
 
 data Cardinality
   = Many
