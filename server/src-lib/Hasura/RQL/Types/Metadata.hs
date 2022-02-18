@@ -64,7 +64,6 @@ module Hasura.RQL.Types.Metadata
     metadataToOrdJSON,
     mkSourceMetadata,
     mkTableMeta,
-    noMetadataModify,
     parseNonSourcesMetadata,
     rsmComment,
     rsmDefinition,
@@ -107,6 +106,7 @@ import Data.HashMap.Strict.Extended qualified as M
 import Data.HashMap.Strict.InsOrd.Extended qualified as OM
 import Data.HashSet qualified as HS
 import Data.List.Extended qualified as L
+import Data.Monoid (Dual (..), Endo (..))
 import Data.Text qualified as T
 import Data.Text.Extended qualified as T
 import Hasura.Incremental (Cacheable)
@@ -682,16 +682,8 @@ instance FromJSON MetadataNoSources where
         actions
         cronTriggers
 
-newtype MetadataModifier = MetadataModifier {unMetadataModifier :: Metadata -> Metadata}
-
-instance Semigroup MetadataModifier where
-  (MetadataModifier u1) <> (MetadataModifier u2) = MetadataModifier $ u2 . u1
-
-instance Monoid MetadataModifier where
-  mempty = MetadataModifier id
-
-noMetadataModify :: MetadataModifier
-noMetadataModify = mempty
+newtype MetadataModifier = MetadataModifier {runMetadataModifier :: Metadata -> Metadata}
+  deriving (Semigroup, Monoid) via (Dual (Endo Metadata))
 
 dropTableInMetadata ::
   forall b. (Backend b) => SourceName -> TableName b -> MetadataModifier

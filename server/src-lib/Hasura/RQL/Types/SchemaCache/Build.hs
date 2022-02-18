@@ -248,9 +248,9 @@ runMetadataT metadata (MetadataT m) =
   runStateT m metadata
 
 buildSchemaCacheWithInvalidations :: (MetadataM m, CacheRWM m) => CacheInvalidations -> MetadataModifier -> m ()
-buildSchemaCacheWithInvalidations cacheInvalidations metadataModifier = do
+buildSchemaCacheWithInvalidations cacheInvalidations MetadataModifier {..} = do
   metadata <- getMetadata
-  let modifiedMetadata = unMetadataModifier metadataModifier metadata
+  let modifiedMetadata = runMetadataModifier metadata
   buildSchemaCacheWithOptions (CatalogUpdate mempty) cacheInvalidations modifiedMetadata
   putMetadata modifiedMetadata
 
@@ -285,7 +285,7 @@ buildSchemaCacheFor objectId metadataModifier = do
 -- | Like 'buildSchemaCache', but fails if there is any inconsistent metadata.
 buildSchemaCacheStrict :: (QErrM m, CacheRWM m, MetadataM m) => m ()
 buildSchemaCacheStrict = do
-  buildSchemaCache noMetadataModify
+  buildSchemaCache mempty
   sc <- askSchemaCache
   let inconsObjs = scInconsistentObjs sc
   unless (null inconsObjs) $ do

@@ -189,7 +189,7 @@ runReplaceMetadataV2 ReplaceMetadataV2 {..} = do
 
   case _rmv2AllowInconsistentMetadata of
     AllowInconsistentMetadata ->
-      buildSchemaCache noMetadataModify
+      buildSchemaCache mempty
     NoAllowInconsistentMetadata ->
       buildSchemaCacheStrict
 
@@ -402,10 +402,10 @@ runDropInconsistentMetadata _ = do
   -- list of inconsistent objects, so reverse the list to start with dependents first. This is not
   -- perfect — a completely accurate solution would require performing a topological sort — but it
   -- seems to work well enough for now.
-  metadataModifier <- execWriterT $ mapM_ (tell . purgeMetadataObj) (reverse inconsSchObjs)
+  MetadataModifier {..} <- execWriterT $ mapM_ (tell . purgeMetadataObj) (reverse inconsSchObjs)
   metadata <- getMetadata
-  putMetadata $ unMetadataModifier metadataModifier metadata
-  buildSchemaCache noMetadataModify
+  putMetadata $ runMetadataModifier metadata
+  buildSchemaCache mempty
   -- after building the schema cache, we need to check the inconsistent metadata, if any
   -- are only those which are not droppable
   newInconsistentObjects <- scInconsistentObjs <$> askSchemaCache

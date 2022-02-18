@@ -138,7 +138,7 @@ instance MonadMetadataStorage (MetadataStorageT TestM) where
   fetchMetadataResourceVersion = runInSeparateTx fetchMetadataResourceVersionFromCatalog
   fetchMetadata = runInSeparateTx fetchMetadataAndResourceVersionFromCatalog
   fetchMetadataNotifications a b = runInSeparateTx $ fetchMetadataNotificationsFromCatalog a b
-  setMetadata r = runInSeparateTx . setMetadataInCatalog (Just r)
+  setMetadata r = runInSeparateTx . setMetadataInCatalog r
   notifySchemaCacheSync a b c = runInSeparateTx $ notifySchemaCacheSyncTx a b c
   getCatalogState = runInSeparateTx getCatalogStateTx
   setCatalogState a b = runInSeparateTx $ setCatalogStateTx a b
