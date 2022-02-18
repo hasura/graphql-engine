@@ -22,7 +22,7 @@ spec =
         { name = "SQLServer",
           setup = sqlserverSetup,
           teardown = sqlserverTeardown,
-          options = Feature.defaultOptions
+          customOptions = Nothing
         }
     ]
     tests

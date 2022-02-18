@@ -14,6 +14,7 @@ module Harness.GraphqlEngine
     postGraphqlYamlWithHeaders,
     postGraphql,
     postGraphqlWithHeaders,
+    clearMetadata,
 
     -- ** Misc.
     setSource,
@@ -121,6 +122,10 @@ postGraphqlWithHeaders state headers value =
 -- @headers@ are mostly irrelevant for the admin endpoint @v1/metadata@.
 postMetadata_ :: HasCallStack => State -> Value -> IO ()
 postMetadata_ state = post_ state "/v1/metadata"
+
+-- | Resets metadata, removing all sources or remote schemas.
+clearMetadata :: HasCallStack => State -> IO ()
+clearMetadata s = postMetadata_ s [yaml|{type: clear_metadata, args: {}}|]
 
 -------------------------------------------------------------------------------
 
