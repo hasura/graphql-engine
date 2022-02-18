@@ -10,7 +10,6 @@ import Data.Aeson.Casing qualified as J
 import Data.Aeson.Extended
 import Data.Aeson.TH qualified as J
 import Data.Aeson.Types
-import Data.HashSet.InsOrd (InsOrdHashSet, toHashSet)
 import Data.Pool
 import Data.Text.Extended (ToTxt (..))
 import Database.MySQL.Base (Connection)
@@ -20,10 +19,6 @@ import Hasura.Incremental.Internal.Dependency
 import Hasura.Prelude
 import Language.Haskell.TH
 import Language.Haskell.TH.Syntax
-
--- Orphan instance, InsOrdHashSet doesn't have it.
-instance NFData a => NFData (InsOrdHashSet a) where
-  rnf = rnf . toHashSet
 
 $( fmap concat $ for
      [''Aliased]
