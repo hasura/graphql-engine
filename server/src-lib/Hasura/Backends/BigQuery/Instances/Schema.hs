@@ -166,18 +166,8 @@ bqColumnParser columnType (G.Nullability isNullable) =
       BigQuery.DatetimeScalarType -> pure $ possiblyNullable scalarType $ BigQuery.DatetimeValue . BigQuery.Datetime <$> stringBased $$(G.litName "Datetime")
       BigQuery.GeographyScalarType ->
         pure $ possiblyNullable scalarType $ BigQuery.GeographyValue . BigQuery.Geography <$> throughJSON $$(G.litName "Geography")
-      BigQuery.TimestampScalarType -> do
-        let schemaType = P.TNamed P.Nullable $ P.Definition $$(G.litName "Timestamp") Nothing P.TIScalar
-        pure $
-          possiblyNullable scalarType $
-            Parser
-              { pType = schemaType,
-                pParser =
-                  valueToJSON (P.toGraphQLType schemaType)
-                    >=> fmap (BigQuery.StringValue . BigQuery.utctimeToISO8601Text)
-                      . either (parseErrorWith ParseFailed . qeError) pure
-                      . runAesonParser (J.withText "TimestampColumn" BigQuery.textToUTCTime)
-              }
+      BigQuery.TimestampScalarType ->
+        pure $ possiblyNullable scalarType $ BigQuery.TimestampValue . BigQuery.Timestamp <$> stringBased $$(G.litName "Timestamp")
       ty -> throwError $ internalError $ T.pack $ "Type currently unsupported for BigQuery: " ++ show ty
     ColumnEnumReference (EnumReference tableName enumValues) ->
       case nonEmpty (Map.toList enumValues) of
