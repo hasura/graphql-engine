@@ -117,36 +117,53 @@ We often want to run the same tests several times with slightly different
 configuration. Most commonly, we want to assert that a given behaviour works
 consistently across different backends.
 
-[Harness.Test.Feature](Harness/Test/Feature.hs) defines two functions for
+[Harness.Test.Context](Harness/Test/Context.hs) defines two functions for
 running test trees in terms of a list of `Context a`s.
 
 Each `Context a` requires:
-- a unique `name`, of type `String`
-- a `setup` action, of type `State -> IO a`
+- a unique `name`, of type `ContextName`
+- a `mkLocalState` action, of type `State -> IO a`
+- a `setup` action, of type `(State, a) -> IO ()`
 - a `teardown` action, of type `(State, a) -> IO ()`
 - an `options` parameter, which will be threaded through the tests themselves
 to modify behavior for a particular `Context`
 
-Of these two functions, whether one wishes to use `Harness.Test.Feature.run` or
-`Harness.Test.Feature.runWithLocalState` will depend on if their test can be
+Of these two functions, whether one wishes to use `Harness.Test.Context.run` or
+`Harness.Test.Context.runWithLocalState` will depend on if their test can be
 written in terms of information provided by the global `State` type or if it
 depends on some additional "local" state.
 
-More often than not, test authors should use `Harness.Test.Feature.run`, which
+More often than not, test authors should use `Harness.Test.Context.run`, which
 is written in terms of `Context ()`. This uses `()` for the local test which
 does not carry any "useful" state information, and is therefore omitted from
 the body of the tests themselves.
 
 In the rare cases where some local state is necessary (either for the test
 itself, or as an argument to the `teardown` action for some `Context`), test
-authors should use `Harness.Test.Feature.runWithLocalState`. This function
+authors should use `Harness.Test.Context.runWithLocalState`. This function
 takes a type parameter for its local state, which will be provided to both
 the `teardown` action specified in `Context` as well as the body of tests
 themselves.
 
+#### Make local state action
+
+This refers to the function `mkLocalState` defined for `Context`:
+
+```hs
+mkLocalState :: State -> IO a
+```
+
+Its return value, `IO a`, matches the `a` of `Context a`: it is the additional
+local state that is required throughout the tests, in addition to the global
+`State`. Some tests, such as tests which check remote relationships, need to keep some state which is local to the context,
+but most tests do not need additional state, and define `mkLocalState` to be `Harness.Test.Context.noLocalState`.
+
+This local state will be pass to the `setup` function and the `teardown` function.
+The `teardown` function is responsible to destroy the local state as well, if needed.
+
 #### Setup action
 
-A setup action is a function of type `State -> IO a` which is responsible with
+A setup action is a function of type `(State, a) -> IO ()` which is responsible with
 creating the environment for the test. It needs to:
 
 1. Clear and reconfigure the metadata
@@ -158,11 +175,6 @@ etc.
 These actions can be created by running POST requests against graphql-engine
 using `Harness.GraphqlEngine.post_`, or by running SQL requests against the
 backend using `Backend.<backend>.run_`.
-
-Its return value, `IO a`, matches the `a` of `Context a`: it is the additional
-local state that is required throughout the tests, in addition to the global
-`State`. Most tests do not need additional state, and use a `State -> IO ()`
-function.
 
 #### Teardown action
 

@@ -21,8 +21,8 @@ import Harness.Quoter.Graphql (graphql)
 import Harness.Quoter.Sql (sql)
 import Harness.Quoter.Yaml (shouldBeYaml, shouldReturnYaml, yaml)
 import Harness.State (Server, State)
-import Harness.Test.Feature (Context (..))
-import Harness.Test.Feature qualified as Feature
+import Harness.Test.Context (Context (..))
+import Harness.Test.Context qualified as Context
 import Test.Hspec (SpecWith, describe, it)
 import Prelude
 
@@ -30,7 +30,7 @@ import Prelude
 -- Preamble
 
 spec :: SpecWith State
-spec = Feature.runWithLocalState contexts tests
+spec = Context.runWithLocalState contexts tests
   where
     lhsContexts = [lhsPostgres]
     rhsContexts = [rhsPostgres]
@@ -46,16 +46,17 @@ spec = Feature.runWithLocalState contexts tests
 combine :: LHSContext -> RHSContext -> Context (Maybe Server)
 combine lhs (tableName, rhs) =
   Context
-    { name = "from " <> lhsName <> " to " <> rhsName,
-      setup = \state -> do
+    { name = Context.Combine lhsName rhsName,
+      mkLocalState = lhsPostgresMkLocalState,
+      setup = \(state, localState) -> do
         GraphqlEngine.clearMetadata state
-        rhsSetup state
-        lhsSetup state,
+        rhsSetup (state, ())
+        lhsSetup (state, localState),
       teardown = \state@(globalState, _) -> do
         lhsTeardown state
         rhsTeardown (globalState, ()),
       customOptions =
-        Feature.combineOptions lhsOptions rhsOptions
+        Context.combineOptions lhsOptions rhsOptions
     }
   where
     Context {name = lhsName, setup = lhsSetup, teardown = lhsTeardown, customOptions = lhsOptions} =
@@ -75,7 +76,8 @@ type LHSContext = Value -> Context (Maybe Server)
 lhsPostgres :: LHSContext
 lhsPostgres tableName =
   Context
-    { name = "Postgres",
+    { name = Context.Postgres,
+      mkLocalState = lhsPostgresMkLocalState,
       setup = lhsPostgresSetup tableName,
       teardown = lhsPostgresTeardown,
       customOptions = Nothing
@@ -103,7 +105,8 @@ rhsPostgres =
     |]
       context =
         Context
-          { name = "Postgres",
+          { name = Context.Postgres,
+            mkLocalState = Context.noLocalState,
             setup = rhsPostgresSetup,
             teardown = rhsPostgresTeardown,
             customOptions = Nothing
@@ -118,8 +121,11 @@ rhsMSSQL = ([yaml|{"schema":"hasura", "name":"album"}|], Context "MSSQL" rhsMSSQ
 --------------------------------------------------------------------------------
 -- LHS Postgres
 
-lhsPostgresSetup :: Value -> State -> IO (Maybe Server)
-lhsPostgresSetup rhsTableName state = do
+lhsPostgresMkLocalState :: State -> IO (Maybe Server)
+lhsPostgresMkLocalState _ = pure Nothing
+
+lhsPostgresSetup :: Value -> (State, Maybe Server) -> IO ()
+lhsPostgresSetup rhsTableName (state, _) = do
   Postgres.run_
     [sql|
 create table hasura.artist (
@@ -176,7 +182,6 @@ args:
         field_mapping:
           id: artist_id
   |]
-  pure Nothing
 
 lhsPostgresTeardown :: (State, Maybe Server) -> IO ()
 lhsPostgresTeardown _ =
@@ -188,8 +193,8 @@ DROP TABLE hasura.artist;
 --------------------------------------------------------------------------------
 -- RHS Postgres
 
-rhsPostgresSetup :: State -> IO ()
-rhsPostgresSetup state = do
+rhsPostgresSetup :: (State, ()) -> IO ()
+rhsPostgresSetup (state, _) = do
   Postgres.run_
     [sql|
 create table hasura.album (
@@ -254,13 +259,13 @@ DROP TABLE hasura.album;
 --------------------------------------------------------------------------------
 -- Tests
 
-tests :: Feature.Options -> SpecWith (State, Maybe Server)
+tests :: Context.Options -> SpecWith (State, Maybe Server)
 tests opts = describe "array-relationship" $ do
   schemaTests opts
   executionTests opts
   permissionTests opts
 
-schemaTests :: Feature.Options -> SpecWith (State, Maybe Server)
+schemaTests :: Context.Options -> SpecWith (State, Maybe Server)
 schemaTests _opts =
   -- we introspect the schema and validate it
   it "graphql-schema" $ \(state, _) -> do
@@ -394,7 +399,7 @@ schemaTests _opts =
       |]
 
 -- | Basic queries using DB-to-DB joins
-executionTests :: Feature.Options -> SpecWith (State, Maybe Server)
+executionTests :: Context.Options -> SpecWith (State, Maybe Server)
 executionTests opts = describe "execution" $ do
   -- fetches the relationship data
   it "related-data" $ \(state, _) -> do
@@ -517,7 +522,7 @@ executionTests opts = describe "execution" $ do
 -- 1. _aggregate
 
 -- | tests that describe an array relationship's data in the presence of permisisons
-permissionTests :: Feature.Options -> SpecWith (State, Maybe Server)
+permissionTests :: Context.Options -> SpecWith (State, Maybe Server)
 permissionTests opts = describe "permission" $ do
   -- only the allowed rows on the target table are queryable
   it "only-allowed-rows" $ \(state, _) -> do

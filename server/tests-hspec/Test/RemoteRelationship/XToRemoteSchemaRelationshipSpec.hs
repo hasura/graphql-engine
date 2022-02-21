@@ -17,8 +17,8 @@ import Harness.Quoter.Sql (sql)
 import Harness.Quoter.Yaml (shouldReturnYaml, yaml)
 import Harness.RemoteServer qualified as RemoteServer
 import Harness.State (Server, State)
-import Harness.Test.Feature (Context (..))
-import Harness.Test.Feature qualified as Feature
+import Harness.Test.Context (Context (..))
+import Harness.Test.Context qualified as Context
 import Test.Hspec (SpecWith, describe, it)
 import Prelude
 
@@ -26,12 +26,13 @@ import Prelude
 -- Preamble
 
 spec :: SpecWith State
-spec = Feature.runWithLocalState contexts tests
+spec = Context.runWithLocalState contexts tests
   where
     contexts = map mkContext [lhsPostgres]
     lhsPostgres =
       Context
-        { name = "Postgres",
+        { name = Context.Postgres,
+          mkLocalState = lhsPostgresMkLocalState,
           setup = lhsPostgresSetup,
           teardown = lhsPostgresTeardown,
           customOptions = Nothing
@@ -41,12 +42,15 @@ spec = Feature.runWithLocalState contexts tests
 mkContext :: Context (Maybe Server) -> Context LocalTestState
 mkContext lhs =
   Context
-    { name = "from " <> lhsName,
-      setup = \state -> do
-        GraphqlEngine.clearMetadata state
-        rhsServer <- rhsRemoteSchemaSetup state
-        lhsServer <- lhsSetup state
+    { name = lhsName,
+      mkLocalState = \state -> do
+        rhsServer <- rhsPostgresMkLocalState state
+        lhsServer <- lhsPostgresMkLocalState state
         pure $ LocalTestState lhsServer rhsServer,
+      setup = \(state, LocalTestState lhsServer rhsServer) -> do
+        GraphqlEngine.clearMetadata state
+        rhsRemoteSchemaSetup (state, rhsServer)
+        lhsSetup (state, lhsServer),
       teardown = \(state, LocalTestState lhsServer rhsServer) -> do
         lhsTeardown (state, lhsServer)
         rhsRemoteSchemaTeardown (state, rhsServer),
@@ -69,8 +73,11 @@ data LocalTestState = LocalTestState
 --------------------------------------------------------------------------------
 -- LHS Postgres
 
-lhsPostgresSetup :: State -> IO (Maybe Server)
-lhsPostgresSetup state = do
+lhsPostgresMkLocalState :: State -> IO (Maybe Server)
+lhsPostgresMkLocalState _ = pure Nothing
+
+lhsPostgresSetup :: (State, Maybe Server) -> IO ()
+lhsPostgresSetup (state, _) = do
   Postgres.run_
     [sql|
 create table hasura.track (
@@ -117,7 +124,6 @@ args:
             arguments:
               album_id: $album_id
   |]
-  pure Nothing
 
 lhsPostgresTeardown :: (State, Maybe Server) -> IO ()
 lhsPostgresTeardown _ = Postgres.run_ [sql|drop table hasura.track;|]
@@ -139,22 +145,10 @@ type Query {
 
 |]
 
-rhsRemoteSchemaSetup :: State -> IO Server
-rhsRemoteSchemaSetup state = do
-  remoteServer <-
-    RemoteServer.run $
-      RemoteServer.generateQueryInterpreter (Query {album})
-  let remoteSchemaEndpoint = GraphqlEngine.serverUrl remoteServer ++ "/graphql"
-  GraphqlEngine.postMetadata_
-    state
-    [yaml|
-type: add_remote_schema
-args:
-  name: target
-  definition:
-    url: *remoteSchemaEndpoint
-  |]
-  pure $ remoteServer
+rhsPostgresMkLocalState :: State -> IO Server
+rhsPostgresMkLocalState _ =
+  RemoteServer.run $
+    RemoteServer.generateQueryInterpreter (Query {album})
   where
     albums =
       [ (1, ("album1_artist1", Just 1)),
@@ -169,19 +163,32 @@ args:
           artist_id = pure artist_id
         }
 
+rhsRemoteSchemaSetup :: (State, Server) -> IO ()
+rhsRemoteSchemaSetup (state, remoteServer) = do
+  let remoteSchemaEndpoint = GraphqlEngine.serverUrl remoteServer ++ "/graphql"
+  GraphqlEngine.postMetadata_
+    state
+    [yaml|
+type: add_remote_schema
+args:
+  name: target
+  definition:
+    url: *remoteSchemaEndpoint
+  |]
+
 rhsRemoteSchemaTeardown :: (State, Server) -> IO ()
 rhsRemoteSchemaTeardown (_, server) = GraphqlEngine.stopServer server
 
 --------------------------------------------------------------------------------
 -- Tests
 
-tests :: Feature.Options -> SpecWith (State, LocalTestState)
+tests :: Context.Options -> SpecWith (State, LocalTestState)
 tests opts = do
   schemaTests opts
   executionTests opts
 
 -- | Basic queries using *-to-DB joins
-executionTests :: Feature.Options -> SpecWith (State, LocalTestState)
+executionTests :: Context.Options -> SpecWith (State, LocalTestState)
 executionTests opts = describe "execution" $ do
   -- fetches the relationship data
   it "related-data" $ \(state, _) -> do
@@ -270,7 +277,7 @@ executionTests opts = describe "execution" $ do
       (GraphqlEngine.postGraphql state query)
       expectedResponse
 
-schemaTests :: Feature.Options -> SpecWith (State, LocalTestState)
+schemaTests :: Context.Options -> SpecWith (State, LocalTestState)
 schemaTests opts =
   -- we use an introspection query to check:
   -- 1. a field 'album' is added to the track table

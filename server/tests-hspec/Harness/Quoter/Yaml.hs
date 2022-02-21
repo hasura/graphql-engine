@@ -28,7 +28,7 @@ import Data.Text.Lazy qualified as LT
 import Data.Vector qualified as Vector
 import Data.Yaml qualified
 import Data.Yaml.Internal qualified
-import Harness.Test.Feature qualified as Feature (Options (..))
+import Harness.Test.Context qualified as Context (Options (..))
 import Instances.TH.Lift ()
 import Language.Haskell.TH (Exp, Q, listE, mkName, runIO, varE)
 import Language.Haskell.TH.Lift (Lift)
@@ -48,11 +48,11 @@ import Prelude
 --
 -- We use 'Visual' internally to easily display the 'Value' as YAML
 -- when the test suite uses its 'Show' instance.
-shouldReturnYaml :: HasCallStack => Feature.Options -> IO Value -> Value -> IO ()
+shouldReturnYaml :: HasCallStack => Context.Options -> IO Value -> Value -> IO ()
 shouldReturnYaml options actualIO rawExpected = do
   actual <- actualIO
 
-  let Feature.Options {stringifyNumbers} = options
+  let Context.Options {stringifyNumbers} = options
       expected =
         if stringifyNumbers
           then stringifyExpectedToActual rawExpected actual
@@ -79,11 +79,11 @@ stringifyExpectedToActual expected _ = expected
 --
 -- We use 'Visual' internally to easily display the 'Value' as YAML
 -- when the test suite uses its 'Show' instance.
-shouldReturnOneOfYaml :: HasCallStack => Feature.Options -> IO Value -> [Value] -> IO ()
+shouldReturnOneOfYaml :: HasCallStack => Context.Options -> IO Value -> [Value] -> IO ()
 shouldReturnOneOfYaml options actualIO expecteds = do
   actual <- actualIO
 
-  let Feature.Options {stringifyNumbers} = options
+  let Context.Options {stringifyNumbers} = options
       fixNumbers expected =
         if stringifyNumbers
           then stringifyExpectedToActual expected actual
