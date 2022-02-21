@@ -74,7 +74,7 @@ function add_bigquery_source() {
     metadata_url=http://127.0.0.1:$hasura_graphql_server_port/v1/metadata
 
     echo ""
-    echo "Adding BigQuery sources"
+    echo "Adding BigQuery sources to project $HASURA_BIGQUERY_PROJECT_ID"
     curl --fail "$metadata_url" \
     --data-raw '
     {
