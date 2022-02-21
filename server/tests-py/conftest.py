@@ -210,6 +210,13 @@ This option may result in test failures if the schema has to change between the 
         help="Run testcases for auth webhook header forwarding"
     )
 
+    parser.addoption(
+        "--test-read-only-source",
+        action="store_true",
+        default=False,
+        required=False,
+        help="Run testcases with a read-only database source"
+    )
 
 
 #By default,

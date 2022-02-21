@@ -56,17 +56,37 @@ LEFT JOIN LATERAL
     -- The columns 'pg_attribute.attidentity' and 'pg_attribute.attgenerated' are
     -- not available in older versions of Postgres, because those versions do not
     -- implement the concepts the catalog columns represent.
-    -- Therefore we define and use the polyfill functions
-    -- 'hdb_lib.pg_attidentity' and 'hdb_lib.pg_attgenerated', which ensure the
-    -- presence of these columns in this script.
-    INNER JOIN hdb_lib.pg_attidentity() identitypolyfill
-      ON identitypolyfill.attrelid = "column".attrelid
+    -- To support older versions we apply an aliasing hack that ensures
+    -- _something_ called e.g. attidentity is in scope.
+    -- Originally sourced from: https://stackoverflow.com/questions/18951071/postgres-return-a-default-value-when-a-column-doesnt-exist.
+    INNER JOIN
+    (
+      SELECT attrelid, attnum, attname, CASE WHEN attidentity_exists
+                                        THEN attidentity::text
+                                        ELSE ''::text
+                                        END as attidentity
+      FROM pg_catalog.pg_attribute
+      CROSS JOIN (SELECT current_setting('server_version_num')::int >= 100000)
+            AS attidentity(attidentity_exists)
+    ) AS identitypolyfill
+      ON  identitypolyfill.attrelid = "column".attrelid
       AND identitypolyfill.attnum = "column".attnum
       AND identitypolyfill.attname = "column".attname
-    INNER JOIN hdb_lib.pg_attgenerated() generatedpolyfill
-      ON generatedpolyfill.attrelid = "column".attrelid
+
+    INNER JOIN
+    (
+      SELECT attrelid, attnum, attname, CASE WHEN attgenerated_exists
+                                                 THEN attgenerated::text
+                                                 ELSE ''::text
+                                                 END as attgenerated
+      FROM pg_catalog.pg_attribute
+      CROSS JOIN (SELECT current_setting('server_version_num')::int >= 120000)
+            AS attgenerated(attgenerated_exists)
+    ) AS generatedpolyfill
+      ON  generatedpolyfill.attrelid = "column".attrelid
       AND generatedpolyfill.attnum = "column".attnum
       AND generatedpolyfill.attname = "column".attname
+
     LEFT JOIN pg_catalog.pg_type "type"
       ON "type".oid = "column".atttypid
     LEFT JOIN pg_catalog.pg_type base_type
