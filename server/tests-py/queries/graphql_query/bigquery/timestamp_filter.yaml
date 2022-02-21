@@ -1,0 +1,15 @@
+description: Filter by timestamp value
+url: /v1/graphql
+status: 200
+response:
+  data:
+    hasura_author: []
+query:
+  query: |
+    query {
+      hasura_author(where: {created_at: {_gt: "2008-12-26"}}) {
+        id
+        name
+        created_at
+      }
+    }

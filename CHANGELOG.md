@@ -4,8 +4,10 @@
 
 ### Bug fixes and improvements
 (Add entries below in the order of server, console, cli, docs, others)
+
 - server: Webhook Transforms can now delete request/response bodies explicitly.
 - server: Fix truncation of session variables with variable length column types in MSSQL (#8158)
+- server: fix parsing timestamp values in BigQuery backends (fix #8076)
 
 ## v2.3.0-beta.1
 

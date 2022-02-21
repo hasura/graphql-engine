@@ -222,6 +222,10 @@ class TestGraphQLQueryBasicBigquery:
     def test_distinct_on(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + "/distinct_on.yaml", transport)
 
+    # Timestamp value parsing, https://github.com/hasura/graphql-engine/issues/8076
+    def test_timestamp_filter(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + "/timestamp_filter.yaml", transport)
+
     @classmethod
     def dir(cls):
         return 'queries/graphql_query/bigquery'

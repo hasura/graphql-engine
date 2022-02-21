@@ -32,6 +32,9 @@ import Data.Maybe
 import Data.Text qualified as T
 import Data.Text.Lazy qualified as LT
 import Data.Text.Lazy.Builder qualified as LT
+import Data.Text.Read qualified as TR
+import Data.Time
+import Data.Time.Format.ISO8601 (iso8601Show)
 import Data.Vector (Vector)
 import Data.Vector qualified as V
 import GHC.Generics
@@ -646,7 +649,7 @@ parseBigQueryValue isNullable fieldType object =
       has_v isNullable (fmap DatetimeOutputValue . Aeson.parseJSON) object
         Aeson.<?> Aeson.Key "DATETIME"
     FieldTIMESTAMP ->
-      has_v isNullable (fmap (TimestampOutputValue . Timestamp . utctimeToISO8601Text) . Aeson.withText "FieldTIMESTAMP" textToUTCTime) object
+      has_v isNullable (fmap TimestampOutputValue . parseTimestamp) object
         Aeson.<?> Aeson.Key "TIMESTAMP"
     FieldGEOGRAPHY ->
       has_v isNullable (fmap GeographyOutputValue . Aeson.parseJSON) object
@@ -663,6 +666,20 @@ parseBigQueryValue isNullable fieldType object =
     FieldBYTES ->
       has_v isNullable (fmap BytesOutputValue . Aeson.parseJSON) object
         Aeson.<?> Aeson.Key "BYTES"
+
+-- | Parse upstream timestamp value in epoch milliseconds and convert it to calendar date time format
+-- https://cloud.google.com/bigquery/docs/reference/standard-sql/data-types#timestamp_type
+parseTimestamp :: Aeson.Value -> Aeson.Parser Timestamp
+parseTimestamp =
+  fmap (Timestamp . utctimeToISO8601Text) . Aeson.withText "FieldTIMESTAMP" textToUTCTime
+  where
+    textToUTCTime :: Text -> Aeson.Parser UTCTime
+    textToUTCTime =
+      either fail (pure . flip addUTCTime (UTCTime (fromGregorian 1970 0 0) 0) . fst)
+        . (TR.rational :: TR.Reader NominalDiffTime)
+
+    utctimeToISO8601Text :: UTCTime -> Text
+    utctimeToISO8601Text = T.pack . iso8601Show
 
 parseBigQueryField :: BigQueryField -> Aeson.Value -> Aeson.Parser (FieldNameText, OutputValue)
 parseBigQueryField BigQueryField {name, typ, mode} value1 =
