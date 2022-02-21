@@ -22815,7 +22815,7 @@ insertArrRel :: (MonadTx m, MonadIO m, MonadTrace m, Backend ('Postgres pgKind),
 -- | validate an insert object based on insert columns, | insert object
 --   relations and additional columns from parent
 validateInsert :: MonadError QErr m => [PGCol] -> [RelInfo ('Postgres pgKind)] -> [PGCol] -> m ()
-mkInsertQ :: (MonadError QErr m, Backend ('Postgres pgKind)) => QualifiedTable -> Maybe (OnConflictClause ('Postgres pgKind) SQLExp) -> [(PGCol, SQLExp)] -> HashMap PGCol SQLExp -> (AnnBoolExpSQL ('Postgres pgKind), Maybe (AnnBoolExpSQL ('Postgres pgKind))) -> m CTE
+mkInsertQ :: Backend ('Postgres pgKind) => QualifiedTable -> Maybe (OnConflictClause ('Postgres pgKind) SQLExp) -> [(PGCol, SQLExp)] -> HashMap PGCol SQLExp -> (AnnBoolExpSQL ('Postgres pgKind), Maybe (AnnBoolExpSQL ('Postgres pgKind))) -> CTE
 fetchFromColVals :: MonadError QErr m => ColumnValues ('Postgres pgKind) TxtEncodedVal -> [ColumnInfo ('Postgres pgKind)] -> m [(PGCol, SQLExp)]
 mkSQLRow :: HashMap PGCol SQLExp -> [(PGCol, SQLExp)] -> [SQLExp]
 decodeEncJSON :: (FromJSON a, QErrM m) => EncJSON -> m a
