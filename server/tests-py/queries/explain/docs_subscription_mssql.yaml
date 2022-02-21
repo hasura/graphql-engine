@@ -2,9 +2,23 @@ description: The explained MSSQL subscription in our documentation
 url: /v1/graphql/explain
 status: 200
 response:
-  sql: "SELECT ISNULL((SELECT [row].[result_id] AS [result_id],\n       [result].[json] AS [result]\nFROM OPENJSON((N''+NCHAR(91)+''+NCHAR(91)+''+NCHAR(34)+'00000000-0000-0000-0000-000000000000'+NCHAR(34)+','+NCHAR(123)+''+NCHAR(34)+'synthetic'+NCHAR(34)+''+NCHAR(58)+''+NCHAR(91)+''+NCHAR(93)+','+NCHAR(34)+'query'+NCHAR(34)+''+NCHAR(58)+''+NCHAR(123)+''+NCHAR(125)+','+NCHAR(34)+'session'+NCHAR(34)+''+NCHAR(58)+''+NCHAR(123)+''+NCHAR(125)+''+NCHAR(125)+''+NCHAR(93)+''+NCHAR(93)+''))\n     WITH ([result_id] UNIQUEIDENTIFIER '$[0]',\n          [result_vars] NVARCHAR(MAX) '$[1]' AS JSON) AS [row]\nOUTER APPLY (SELECT ISNULL((SELECT (SELECT ISNULL((SELECT [t_user1].[name] AS [name]\n                     FROM [dbo].[user] AS [t_user1]\n                     FOR JSON PATH, INCLUDE_NULL_VALUES), '[]')) AS [user]\n             FOR JSON PATH, INCLUDE_NULL_VALUES, WITHOUT_ARRAY_WRAPPER), 'null')) \nAS [result]([json])\nFOR JSON PATH, INCLUDE_NULL_VALUES), '[]')"
+  sql: "SELECT [row].[result_id] AS [result_id],\n       [result].[json] AS [result]\n\
+    FROM OPENJSON((N''+NCHAR(91)+''+NCHAR(91)+''+NCHAR(34)+'00000000-0000-0000-0000-000000000000'+NCHAR(34)+','+NCHAR(123)+''+NCHAR(34)+'synthetic'+NCHAR(34)+''+NCHAR(58)+''+NCHAR(91)+''+NCHAR(93)+','+NCHAR(34)+'query'+NCHAR(34)+''+NCHAR(58)+''+NCHAR(123)+''+NCHAR(125)+','+NCHAR(34)+'session'+NCHAR(34)+''+NCHAR(58)+''+NCHAR(123)+''+NCHAR(125)+''+NCHAR(125)+''+NCHAR(93)+''+NCHAR(93)+''))\n\
+    \     WITH ([result_id] UNIQUEIDENTIFIER '$[0]',\n          [result_vars] NVARCHAR(MAX)\
+    \ '$[1]' AS JSON) AS [row]\nOUTER APPLY (SELECT (SELECT ISNULL((SELECT [t_user1].[name]\
+    \ AS [name]\n                             FROM [dbo].[user] AS [t_user1]\n   \
+    \                          FOR JSON PATH, INCLUDE_NULL_VALUES), (N''+NCHAR(91)+''+NCHAR(93)+''))\
+    \ AS [root]) AS [user]\n             FOR JSON PATH, INCLUDE_NULL_VALUES, WITHOUT_ARRAY_WRAPPER)\
+    \ \nAS [result]([json])\nFOR JSON PATH, INCLUDE_NULL_VALUES"
   plan:
-  - "SELECT ISNULL((SELECT [row].[result_id] AS [result_id],\n       [result].[json] AS [result]\nFROM OPENJSON((N''+NCHAR(91)+''+NCHAR(91)+''+NCHAR(34)+'00000000-0000-0000-0000-000000000000'+NCHAR(34)+','+NCHAR(123)+''+NCHAR(34)+'synthetic'+NCHAR(34)+''+NCHAR(58)+''+NCHAR(91)+''+NCHAR(93)+','+NCHAR(34)+'query'+NCHAR(34)+''+NCHAR(58)+''+NCHAR(123)+''+NCHAR(125)+','+NCHAR(34)+'session'+NCHAR(34)+''+NCHAR(58)+''+NCHAR(123)+''+NCHAR(125)+''+NCHAR(125)+''+NCHAR(93)+''+NCHAR(93)+''))\n     WITH ([result_id] UNIQUEIDENTIFIER '$[0]',\n          [result_vars] NVARCHAR(MAX) '$[1]' AS JSON) AS [row]\nOUTER APPLY (SELECT ISNULL((SELECT (SELECT ISNULL((SELECT [t_user1].[name] AS [name]\n                     FROM [dbo].[user] AS [t_user1]\n                     FOR JSON PATH, INCLUDE_NULL_VALUES), '[]')) AS [user]\n             FOR JSON PATH, INCLUDE_NULL_VALUES, WITHOUT_ARRAY_WRAPPER), 'null')) \nAS [result]([json])\nFOR JSON PATH, INCLUDE_NULL_VALUES), '[]')"
+  - "SELECT ISNULL((SELECT [row].[result_id] AS [result_id],\n       [result].[json]\
+    \ AS [result]\nFROM OPENJSON((N''+NCHAR(91)+''+NCHAR(91)+''+NCHAR(34)+'00000000-0000-0000-0000-000000000000'+NCHAR(34)+','+NCHAR(123)+''+NCHAR(34)+'synthetic'+NCHAR(34)+''+NCHAR(58)+''+NCHAR(91)+''+NCHAR(93)+','+NCHAR(34)+'query'+NCHAR(34)+''+NCHAR(58)+''+NCHAR(123)+''+NCHAR(125)+','+NCHAR(34)+'session'+NCHAR(34)+''+NCHAR(58)+''+NCHAR(123)+''+NCHAR(125)+''+NCHAR(125)+''+NCHAR(93)+''+NCHAR(93)+''))\n\
+    \     WITH ([result_id] UNIQUEIDENTIFIER '$[0]',\n          [result_vars] NVARCHAR(MAX)\
+    \ '$[1]' AS JSON) AS [row]\nOUTER APPLY (SELECT ISNULL((SELECT (SELECT ISNULL((SELECT\
+    \ [t_user1].[name] AS [name]\n                     FROM [dbo].[user] AS [t_user1]\n\
+    \                     FOR JSON PATH, INCLUDE_NULL_VALUES), '[]')) AS [user]\n\
+    \             FOR JSON PATH, INCLUDE_NULL_VALUES, WITHOUT_ARRAY_WRAPPER), 'null'))\
+    \ \nAS [result]([json])\nFOR JSON PATH, INCLUDE_NULL_VALUES), '[]')"
   - "  |--Compute Scalar(DEFINE:([Expr1010]=isnull([Expr1008],CONVERT_IMPLICIT(nvarchar(max),'[]',0))))"
   - '       |--UDX((OPENJSON_EXPLICIT.[result_id], [Expr1007]))'
   - '            |--Nested Loops(Left Outer Join)'
@@ -13,7 +27,8 @@ response:
   - '                      |--UDX(([Expr1004]))'
   - "                           |--Compute Scalar(DEFINE:([Expr1004]=isnull([Expr1001],CONVERT_IMPLICIT(nvarchar(max),'[]',0))))"
   - '                                |--UDX(([t_user1].[name]))'
-  - '                                     |--Clustered Index Scan(OBJECT:([master].[dbo].[user].[PK__user__3213E83F9704D3EC] AS [t_user1]))'
+  - '                                     |--Clustered Index Scan(OBJECT:([master].[dbo].[user].[PK__user__3213E83F9704D3EC]
+    AS [t_user1]))'
 query:
   query:
     query: |
@@ -22,4 +37,4 @@ query:
           name
         }
       }
-    operationName: "getUsers"
+    operationName: getUsers
