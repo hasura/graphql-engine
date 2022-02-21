@@ -15,35 +15,45 @@ Auth0 JWT Integration with Hasura GraphQL engine
 Introduction
 ------------
 
-In this guide, we will walk through how to set up Auth0 to work with the Hasura GraphQL engine.
+This page helps you to set up Auth0 to work with the Hasura GraphQL engine.
 
 Create an Auth0 Application
 ---------------------------
 
 - Navigate to the `Auth0 dashboard <https://manage.auth0.com>`__.
-- Click on the ``Applications`` menu option on the left and then click the ``+ Create Application`` button.
-- In the ``Create Application`` window, set a name for your application and select ``Single Page Web Applications``
-  (assuming your application is React/Angular/Vue etc).
+- Click on the ``Applications`` menu option on the left, then click the ``+ Create Application`` button.
+- In the ``Create Application`` window, set a name for your application, and select ``Single Page Web Applications``. (assuming your
+  application is React/Angular/Vue etc).
 
 .. thumbnail:: /img/graphql/core/guides/create-client-popup.png
    :alt: Create an Auth0 application
+   :width: 1000px
+
+You get the basic information such as the ``Domain``, ``Client ID``, and ``Client Secret`` from the ``Applications > Settings`` tab
+once the application is created.
 
 Configure Auth0 Rules & Callback URLs
 -------------------------------------
 
-In the settings of the application, add appropriate (e.g: ``http://localhost:3000/callback``) URLs as ``Allowed Callback
-URLs`` and ``Allowed Web Origins``. Add domain specific URLs as well for production apps (e.g: https://myapp.com/callback).
+In the ``Applications > Settings > Application URIs`` section, set ``Allowed Callback URLs`` to ``http://jwt.io``. Select **Save Changes**. 
 
-Auth0 has multiple versions of its SDK available and unfortunately they have different semantics
-when it comes to JWT handling. If you're using `Auth0.js <https://auth0.com/docs/libraries/auth0js>`__,
-you'll need to add a rule to update the `idToken`. If you're using the `Auth0 Single Page App SDK <https://auth0.com/docs/libraries/auth0-spa-js>`__,
-you'll need to add a rule to update the `accessToken`. If you update the wrong token, the necessary
-Hasura claims will not appear in the generated JWT and your client will not authenticate properly.
+Add domain-specific URLs as well for the production apps (e.g: ``https://myapp.com/callback``).
 
-In both cases you'll want to open the Auth0 dashboard and then navigate to "Rules". Then add a rule
-to add the custom JWT claims. You can name the rule anything you want.
+.. note::
 
-For Auth0.js:
+   Disable the ``OIDC Conformant`` under ``Applications > Settings > Advanced Settings > OAuth`` section to avoid callback error.
+
+Auth0 has multiple versions of its SDK that use different semantics to handle JWT.
+
+- If you're using `Auth0.js <https://auth0.com/docs/libraries/auth0js>`__, add a rule to update the ``idToken``.
+- If you're using the `Auth0 Single Page App SDK <https://auth0.com/docs/libraries/auth0-spa-js>`__, add a rule to update the ``accessToken``.
+
+.. note::
+  Your client will not authenticate your app if a wrong token gets updated, as the necessary Hasura claims won't appear in the generated JWT.
+
+In both cases, navigate to ``Auth Pipeline > Rules`` and create a rule here to add the custom JWT claims. You can choose any name for the rule.
+
+For ``Auth0.js``:
 
 .. code-block:: javascript
 
@@ -59,7 +69,7 @@ For Auth0.js:
       callback(null, user, context);
     }
 
-For auth0-spa-js:
+For ``auth0-spa-js``:
 
 .. code-block:: javascript
 
@@ -80,12 +90,16 @@ For auth0-spa-js:
 Create an Auth0 API
 -------------------
 
-In case you are using auth0-spa-js, you also need to create an API so that the access token issued by Auth0 is following the JWT standard. Read more about this `here <https://auth0.com/docs/tokens/access-tokens#json-web-token-access-tokens>`__.
+For ``auth0-spa-js``, also create an API so that the access token issued by Auth0 follows the JWT standard. Read more about this
+`here <https://auth0.com/docs/tokens/access-tokens#json-web-token-access-tokens>`__.
 
-- Navigate to the `Auth0 dashboard <https://manage.auth0.com>`__.
-- Click on the ``APIs`` menu option on the left sidebar and then click the ``+ Create API`` button.
-- In the ``New API`` window, set a name for your API and enter an ``identifier`` (e.g. ``hasura``)
-- In your application code, configure your API ``identifier`` as the ``audience`` when initializing Auth0, e.g.:
+Navigate to `Auth0 dashboard <https://manage.auth0.com>`__.
+Click on the ``APIs`` menu option on the left sidebar and click the ``+ Create API`` button.
+
+In the ``New API`` window, set a name for your API and enter an ``identifier`` (e.g. ``hasura``).
+In your application code, configure your API ``identifier`` as the ``audience`` when initializing Auth0.
+
+For example:
 
 .. code-block:: javascript
 
@@ -97,48 +111,44 @@ In case you are using auth0-spa-js, you also need to create an API so that the a
       audience="hasura"
     >
 
-
-Test auth0 login and generate sample JWTs for testing
+Test Auth0 login and generate sample JWTs for testing
 -----------------------------------------------------
 
-You don't need to integrate your UI with auth0 for testing. You can follow the steps below:
+You don't need to integrate your UI with Auth0 for testing. There are 2 ways you can test connections:
 
-1. Login to your auth0 app by heading to this URL: ``https://<auth0-domain>.auth0.com/authorize?client_id=<client_id>&response_type=token%20id_token&redirect_uri=<callback_uri>&scope=openid%20profile&nonce=mynonce``.
+1. If you are logged in to the Auth0 Dashboard:
 
-   - Replace ``<auth0-domain>`` with your auth0 app domain.
-   - Replace ``<client-id>`` with your auth0 app client id. Get your client id from the app settings page on the auth0 dashboard.
-   - Replace ``callback_uri`` with ``https://localhost:3000/callback`` or the URL you entered above. Note that this URL doesn't really need to exist while you are testing.
+   Navigate to `Auth0 Dashboard <https://manage.auth0.com/dashboard/undefined/dev-m-lbqrnq?_gl=1*w5qijx*rollup_ga*MTY0OTM2NjY1OS4xNjQ0Mzk3OTA3*rollup_ga_F1G3E656YZ*MTY0NDUxMDI0NS4xMC4xLjE2NDQ1MTAyODAuMjU.>`__,
+   and select ``Authentication``. Select the type of connection you want to test and select ``Try Connection``.
 
-2. Once you head to this login page you should see the auth0 login page that you can login with.
+2. If you are not logged in to the Auth0 Dashboard:
 
-.. image:: https://graphql-engine-cdn.hasura.io/img/auth0-login-page.png
-   :class: no-shadow
-   :alt: Auth0 login page
+   Use the `Test partner connections <https://auth0.com/docs/authenticate/identity-providers/test-connections#test-partner-connections>`__ embed link.
+   Select ``LOG IN`` to login to your Auth0 domain.
 
-.. note::
-   In case the above method gives a callback error (with ``access_denied`` in log), try disabling OIDC Conformant setting (https://auth0.com/docs/api-auth/tutorials/adoption/oidc-conformant) under Advanced Settings -> OAuth.
+   Select your application and copy the generated URL, like so:
 
-   Do note that this method of generating tokens doesn't work in case you are using ``auth0-spa-js`` with a custom API created.
+   ``https://dev-m-lbqrnq.us.auth0.com/authorize?response_type=token&scope=openid%20profile&client_id=BDAXJbE7Hw0Jhm4CL0UlAXmgrwebDFfj&redirect_uri=http://jwt.io&connection=THE_CONNECTION_YOU_WANT_TO_TEST``
 
-3. After successfully logging in, you will be redirected to ``https://localhost:3000/callback#xxxxxxxx&id_token=yyyyyyy``. This page may be a 404 if you don't have a UI running on localhost:3000.
+   .. thumbnail:: /img/graphql/core/auth/auth0-login-url.png
+      :alt: auth0 login
+      :width: 750 px
 
-.. image:: https://graphql-engine-cdn.hasura.io/img/auth0-localhost-callback-404.png
-   :class: no-shadow
-   :alt: Auth0 successful callback 404 page
+   - ``client_id``: Client ID of the application. This value is auto-filled from your application.
+   - ``connection``: Name of the connection you want to test. ``Applications > <application_name> > Connections``
 
-4. Extract the ``id_token`` value from this URL. This is the JWT.
+   For example, to test the connection for ``Username-Password-Authentication``, modify the above URL as:
 
-.. image:: https://graphql-engine-cdn.hasura.io/img/id_token-jwt-url.png
-   :class: no-shadow
-   :alt: JWT from id_token query param
+   ``https://dev-m-lbqrnq.us.auth0.com/authorize?response_type=token&scope=openid%20profile&client_id=DCcIkeWPNxtDEjdiI94SODLQEB2WBuYb&redirect_uri=http://jwt.io&connection=Username-Password-Authentication``
 
-5. To test this JWT, and to see if all the Hasura claims are added as per the sections above, let's test this out with `jwt.io <https://jwt.io>`__!
+   Once you follow the link, you will be redirected to your configured identity provider. After successful login, you will be sent back to
+   `JWT.io <https://jwt.io/>`__ to decode, verify and generate JWT.
 
-.. image:: https://graphql-engine-cdn.hasura.io/img/jwt-io-debug.png
-   :class: no-shadow
-   :alt: JWT debug on jwt.io
+   .. thumbnail:: /img/graphql/core/auth/jwt-io-debug.png
+      :alt: JWT debug on jwt.io
+      :width: 900px
 
-**Save this JWT token value so that we can use it later to test authorization using the Hasura console.**
+   **Save this JWT token value to be used later to test authorization using the Hasura console.**
 
 
 Configure Hasura to use Auth0 Keys
@@ -148,15 +158,12 @@ Auth0 publishes their JWK under:
 
 ``https://<your-auth0-domain>.auth0.com/.well-known/jwks.json``
 
-But they have a `bug where the certificate thumbprint does not match
-<https://community.auth0.com/t/certificate-thumbprint-is-longer-than-20-bytes/7794/3>`__.
-Hence, currently this URL does not work with Hasura.
+But they have a `bug where the certificate thumbprint does not match <https://community.auth0.com/t/certificate-thumbprint-is-longer-than-20-bytes/7794/3>`__.
+Hence, this URL does not work with Hasura.
 
-Current workaround is to download the X590 certificate from:
+The current workaround is to download the X590 certificate from:
 
-``https://<your-auth0-domain>.auth0.com/pem``
-
-And use it in the ``key`` field:
+``https://<your-auth0-domain>.auth0.com/pem`` and use it in the ``key`` field:
 
 .. code-block:: json
 
@@ -184,48 +191,43 @@ And use it in the ``key`` field:
     "
         }
 
-An easier way to generate the above config is to use the following UI:
+An easier way to generate the above config is to use the following UI: https://hasura.io/jwt-config/.
 
-https://hasura.io/jwt-config/.
+You can use the generated config in the ``HASURA_GRAPHQL_JWT_SECRET`` env variable or ``--jwt-secret`` flag.
 
-The generated config can be used in env ``HASURA_GRAPHQL_JWT_SECRET`` or ``--jwt-secret`` flag.
-The config generated from this page can be directly pasted in ``yaml`` files and command line arguments as it takes care of
-escaping new lines.
+You can directly copy-paste the config in ``yaml`` files and command-line arguments as it takes care of escaping the new lines.
 
 .. thumbnail:: /img/graphql/core/auth/jwt-config-generated.png
-   :width: 75%
+   :width: 750px
    :alt: Generated JWT config
 
 Add Access Control Rules via Hasura Console
 -------------------------------------------
 
-Auth0 is configured and ready to be used in the application. You can now set up access control rules that
-will automatically get applied whenever a client makes a GraphQL request with the Auth0 token.
+Auth0 is configured and ready to be used in the application. You can now set up access control rules that are automatically applied whenever a
+client makes a GraphQL request with the Auth0 token.
 
 Refer to :ref:`auth_basics` for more information.
 
-To test this out, add an access control rule that uses ``x-hasura-user-id`` for the role ``user``.
-Then make a GraphQL query or a mutation, with the authorization token from the :ref:`previous step <test-auth0>`
-where we generated an Auth0 token.
+Add an access control rule that uses ``x-hasura-user-id`` for the role ``user``.
+Then make a GraphQL query or a mutation, with the authorization token from the :ref:`previous step <test-auth0>` where we generated an Auth0 token.
 
 .. image:: https://graphql-engine-cdn.hasura.io/img/jwt-header-auth-hasura.png
-   :class: no-shadow
    :alt: JWT token used as bearer token on hasura console
+   :width: 1200px
 
-You can also use the env variable ``HASURA_GRAPHQL_UNAUTHORIZED_ROLE`` or ``--unauthorized-role`` flag to set a role
-for **unauthorized users** (e.g. ``anonymous``). This will allow you to set permissions for users that are not
-logged in.
+You can also use the env variable ``HASURA_GRAPHQL_UNAUTHORIZED_ROLE`` or ``--unauthorized-role`` flag to set a role for **unauthorized users**
+(e.g. ``anonymous``). This allows you to set permissions for users that are not logged in.
 
-The configured unauthorized role will be used whenever an access token is not present in a request to the GraphQL API. 
+The configured unauthorized role is used whenever an access token is not present in a request to the GraphQL API. 
 
-This can be useful for data that you would like anyone to be able to access and can be configured and restricted
-just like any other role.
+This is useful for data that you would like anyone to be able to access and can be configured and restricted just like any other role.
 
 Sync Users from Auth0
 ---------------------
 
-Now that you have created an Auth0 application and can signup/login, you will need a way to sync your users in Postgres as well.
-All you really need is the Auth0 ``user_id`` in something like a ``users`` table.
+Now that you have created an Auth0 application and can sign up/login, you will need a way to sync your users in Postgres as well.
+All you need is the Auth0 ``user_id`` in something like a ``users`` table.
 
 Using Auth0 Rules again, add the following rule which will insert a new user every time someone signs up.
 
@@ -252,15 +254,17 @@ Using Auth0 Rules again, add the following rule which will insert a new user eve
      });
    }
 
-Make sure to specify the ``HASURA_ADMIN_SECRET`` variable in the "Rules > Settings" section of Auth0. 
+Make sure to specify the ``HASURA_ADMIN_SECRET`` variable in the ``Rules > Settings`` section of Auth0.
 
-That’s it! This rule will be triggered on every successful signup/login and sync your Auth0 user into your postgres database.
+That’s it! This rule will be triggered on every successful sign up/login and sync your Auth0 user into your postgres database.
 
 .. note::
 
-   We need to use an ``upsert`` operation here because social logins do not distinguish between sign-up and login. Hence, we need to run this rule every time a successful login is made and do nothing if the user already exists.
+   We need to use an ``upsert`` operation here because social logins do not distinguish between sign-up and login. Hence, we need to run this rule
+   every time a successful login is made and do nothing if the user already exists.
 
 
 .. admonition:: Local dev with Auth0 rules
 
-   The sync step will require a reachable endpoint to Hasura and this is not possible in localhost. You can use `ngrok <https://ngrok.com/>`__ or similar services to expose your locally running Hasura with a public endpoint temporarily.
+   The sync step will require a reachable endpoint to Hasura and this is not possible in localhost. You can use `ngrok <https://ngrok.com/>`__ or
+   similar services to expose your locally running Hasura with a public endpoint temporarily.
