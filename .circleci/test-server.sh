@@ -782,6 +782,51 @@ startup-db-calls)
 	# end verbose logging tests
 	;;
 
+read-only-db)
+	## read-only DB tests; Hasura should start and run read queries against a read-only DB
+	echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH READ-ONLY DATABASE ########>\n"
+	export HASURA_GRAPHQL_ADMIN_SECRET="HGE$RANDOM$RANDOM"
+
+	export HASURA_GRAPHQL_ENABLED_LOG_TYPES="startup,http-log,webhook-log,websocket-log,query-log"
+	export HASURA_GRAPHQL_LOG_LEVEL="debug"
+	export HASURA_GRAPHQL_DEV_MODE="false"
+	export HASURA_GRAPHQL_ADMIN_INTERNAL_ERRORS="false"
+
+	# setup the database for read-only access
+	# 'test_graphql_read_only_source.py' assumes 'HASURA_READONLY_DB_URL' is set
+	# Note: setting default_transaction_mode to read-only etc. doesn't work for
+	# DDL statements. To replicate read-only access even for DDLs, we need to
+	# create a read-only user
+	readonly_sql=$(cat <<EOF
+CREATE USER hasuraro WITH PASSWORD 'passme';
+GRANT CONNECT ON DATABASE pg_source_1 TO hasuraro;
+GRANT USAGE ON SCHEMA public TO hasuraro;
+GRANT SELECT ON ALL TABLES IN SCHEMA public TO hasuraro;
+GRANT SELECT ON ALL TABLES IN SCHEMA pg_catalog TO hasuraro;
+GRANT SELECT ON ALL TABLES IN SCHEMA information_schema TO hasuraro;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO hasuraro;
+EOF
+)
+	psql "$HASURA_GRAPHQL_PG_SOURCE_URL_1" -c "$readonly_sql"
+
+	export HASURA_READONLY_DB_URL="postgresql://hasuraro:passme@localhost:5432/pg_source_1"
+
+	run_hge_with_args serve
+	wait_for_port 8080
+
+	# and then test graphql queries work
+	pytest -n 1 --hge-urls "$HGE_URL" \
+		--pg-urls "$HASURA_GRAPHQL_PG_SOURCE_URL_1" \
+		--hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" \
+		--test-read-only-source \
+		test_graphql_read_only_source.py
+
+	unset HASURA_GRAPHQL_ENABLED_LOG_TYPES
+	kill_hge_servers
+
+	# end read-only DB tests
+	;;
+
 remote-schema-https)
 	echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH SECURE REMOTE SCHEMA #########################>\n"
 
