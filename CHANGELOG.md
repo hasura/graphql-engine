@@ -190,6 +190,8 @@ count (
 - cli: core CLI features are not blocked in environments without internet (#7695)
 - server: add `_like`/`_nlike` and spatial operators for BigQuery
 
+- console: support multiline table/column comments (close #3723)
+
 ## v2.1.0-beta.2
 
 ### Action transforms
