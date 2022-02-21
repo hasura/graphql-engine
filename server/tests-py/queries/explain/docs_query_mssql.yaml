@@ -3,12 +3,16 @@ url: /v1/graphql/explain
 status: 200
 response:
 - field: user
-  sql: "SELECT ISNULL((SELECT [t_user1].[name] AS [name]\nFROM [dbo].[user] AS [t_user1]\nFOR JSON PATH, INCLUDE_NULL_VALUES), '[]')"
+  sql: "SELECT ISNULL((SELECT [t_user1].[name] AS [name]\n        FROM [dbo].[user]\
+    \ AS [t_user1]\n        FOR JSON PATH, INCLUDE_NULL_VALUES), (N''+NCHAR(91)+''+NCHAR(93)+''))\
+    \ AS [root]"
   plan:
-  - "SELECT ISNULL((SELECT [t_user1].[name] AS [name]\nFROM [dbo].[user] AS [t_user1]\nFOR JSON PATH, INCLUDE_NULL_VALUES), '[]')"
+  - "SELECT ISNULL((SELECT [t_user1].[name] AS [name]\nFROM [dbo].[user] AS [t_user1]\n\
+    FOR JSON PATH, INCLUDE_NULL_VALUES), '[]')"
   - "  |--Compute Scalar(DEFINE:([Expr1003]=isnull([Expr1001],CONVERT_IMPLICIT(nvarchar(max),'[]',0))))"
   - '       |--UDX(([t_user1].[name]))'
-  - '            |--Clustered Index Scan(OBJECT:([master].[dbo].[user].[PK__user__3213E83F04195C1B] AS [t_user1]))'
+  - '            |--Clustered Index Scan(OBJECT:([master].[dbo].[user].[PK__user__3213E83F04195C1B]
+    AS [t_user1]))'
 query:
   query:
     query: |
@@ -17,4 +21,4 @@ query:
           name
         }
       }
-    operationName: "getUsers"
+    operationName: getUsers

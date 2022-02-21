@@ -19,10 +19,8 @@
 -- equality checks under where clauses, etc., perhaps below multiple layers of
 -- nested function calls.
 module Hasura.Backends.MSSQL.FromIr
-  ( fromSelectRows,
-    mkSQLSelect,
+  ( mkSQLSelect,
     fromRootField,
-    fromSelectAggregate,
     fromGBoolExp,
     Error (..),
     runFromIr,
@@ -107,15 +105,30 @@ mkSQLSelect ::
   FromIr TSQL.Select
 mkSQLSelect jsonAggSelect annSimpleSel =
   case jsonAggSelect of
-    IR.JASMultipleRows -> fromSelectRows annSimpleSel
+    IR.JASMultipleRows ->
+      guardSelectYieldingNull emptyArrayExpression <$> fromSelectRows annSimpleSel
     IR.JASSingleObject ->
-      fromSelectRows annSimpleSel <&> \sel ->
-        sel
-          { selectFor =
-              JsonFor
-                ForJson {jsonCardinality = JsonSingleton, jsonRoot = NoRoot},
-            selectTop = Top 1
-          }
+      fmap (guardSelectYieldingNull nullExpression) $
+        fromSelectRows annSimpleSel <&> \sel ->
+          sel
+            { selectFor =
+                JsonFor
+                  ForJson {jsonCardinality = JsonSingleton, jsonRoot = NoRoot},
+              selectTop = Top 1
+            }
+  where
+    guardSelectYieldingNull :: TSQL.Expression -> TSQL.Select -> TSQL.Select
+    guardSelectYieldingNull fallbackExpression select =
+      let isNullApplication = FunExpISNULL (SelectExpression select) fallbackExpression
+       in emptySelect
+            { selectProjections =
+                [ ExpressionProjection $
+                    Aliased
+                      { aliasedThing = FunctionApplicationExpression isNullApplication,
+                        aliasedAlias = "root"
+                      }
+                ]
+            }
 
 -- | Convert from the IR database query into a select.
 fromRootField :: IR.QueryDB 'MSSQL Void Expression -> FromIr Select
@@ -221,7 +234,7 @@ mkAggregateSelect Args {..} foreignKeyConditions filterExpression selectFrom agg
       ExpressionProjection $
         Aliased
           { aliasedThing =
-              JsonQueryExpression $
+              safeJsonQueryExpression JsonSingleton $
                 SelectExpression $
                   emptySelect
                     { selectProjections = projections,
@@ -606,7 +619,7 @@ fromColumnInfo IR.ColumnInfo {ciColumn = column} =
 
 data FieldSource
   = ExpressionFieldSource (Aliased Expression)
-  | JoinFieldSource (Aliased Join)
+  | JoinFieldSource JsonCardinality (Aliased Join)
   deriving (Eq, Show)
 
 -- | Get FieldSource from a TAFExp type table aggregate field
@@ -669,7 +682,7 @@ fromAggregateField alias aggregateField =
                   ExpressionProjection $ Aliased (ValueExpression (ODBC.TextValue text)) (IR.getFieldNameTxt fieldName)
        in ExpressionProjection $
             flip Aliased alias $
-              JsonQueryExpression $
+              safeJsonQueryExpression JsonSingleton $
                 SelectExpression $
                   emptySelect
                     { selectProjections = projections,
@@ -703,13 +716,13 @@ fromAnnFieldsG existingJoins stringifyNumbers (IR.FieldName name, field) =
     IR.AFObjectRelation objectRelationSelectG ->
       fmap
         ( \aliasedThing ->
-            JoinFieldSource (Aliased {aliasedThing, aliasedAlias = name})
+            JoinFieldSource JsonSingleton (Aliased {aliasedThing, aliasedAlias = name})
         )
         (fromObjectRelationSelectG existingJoins objectRelationSelectG)
     IR.AFArrayRelation arraySelectG ->
       fmap
         ( \aliasedThing ->
-            JoinFieldSource (Aliased {aliasedThing, aliasedAlias = name})
+            JoinFieldSource JsonArray (Aliased {aliasedThing, aliasedAlias = name})
         )
         (fromArraySelectG arraySelectG)
 
@@ -762,14 +775,15 @@ fieldSourceProjections =
   \case
     ExpressionFieldSource aliasedExpression ->
       ExpressionProjection aliasedExpression
-    JoinFieldSource aliasedJoin ->
+    JoinFieldSource cardinality aliasedJoin ->
       ExpressionProjection
         ( aliasedJoin
             { aliasedThing =
                 -- Basically a cast, to ensure that SQL Server won't
                 -- double-encode the JSON but will "pass it through"
                 -- untouched.
-                JsonQueryExpression
+                safeJsonQueryExpression
+                  cardinality
                   ( ColumnExpression
                       ( joinAliasToField
                           (joinJoinAlias (aliasedThing aliasedJoin))
@@ -788,7 +802,7 @@ joinAliasToField JoinAlias {..} =
 fieldSourceJoin :: FieldSource -> Maybe Join
 fieldSourceJoin =
   \case
-    JoinFieldSource aliasedJoin -> pure (aliasedThing aliasedJoin)
+    JoinFieldSource _ aliasedJoin -> pure (aliasedThing aliasedJoin)
     ExpressionFieldSource {} -> Nothing
 
 --------------------------------------------------------------------------------
@@ -1247,6 +1261,22 @@ columnInfoToUnifiedColumn colInfo =
 
 trueExpression :: Expression
 trueExpression = ValueExpression (ODBC.BoolValue True)
+
+-- | A version of @JSON_QUERY(..)@ that returns a proper json literal, rather
+-- than SQL null, which does not compose properly with @FOR JSON@ clauses.
+safeJsonQueryExpression :: JsonCardinality -> Expression -> Expression
+safeJsonQueryExpression expectedType jsonQuery =
+  FunctionApplicationExpression (FunExpISNULL (JsonQueryExpression jsonQuery) jsonTypeExpression)
+  where
+    jsonTypeExpression = case expectedType of
+      JsonSingleton -> nullExpression
+      JsonArray -> emptyArrayExpression
+
+nullExpression :: Expression
+nullExpression = ValueExpression $ ODBC.TextValue "null"
+
+emptyArrayExpression :: Expression
+emptyArrayExpression = ValueExpression $ ODBC.TextValue "[]"
 
 --------------------------------------------------------------------------------
 -- Constants

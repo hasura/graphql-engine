@@ -2,13 +2,13 @@ description: Explain query
 url: /v1/graphql/explain
 status: 200
 response:
-  - field: user
-    sql: |-
-      SELECT ISNULL((SELECT [t_user1].[id] AS [id],
-             [t_user1].[name] AS [name],
-             [t_user1].[age] AS [age]
-      FROM [dbo].[user] AS [t_user1]
-      FOR JSON PATH, INCLUDE_NULL_VALUES), '[]')
+- field: user
+  sql: |-
+    SELECT ISNULL((SELECT [t_user1].[id] AS [id],
+                   [t_user1].[name] AS [name],
+                   [t_user1].[age] AS [age]
+            FROM [dbo].[user] AS [t_user1]
+            FOR JSON PATH, INCLUDE_NULL_VALUES), (N''+NCHAR(91)+''+NCHAR(93)+'')) AS [root]
 query:
   query:
     query: |

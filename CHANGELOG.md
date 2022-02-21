@@ -44,6 +44,7 @@ The optimization can be enabled using the
 - server: fix nullable action response (fix #4405)
 - server: add support for customization of table & computed field GraphQL schema descriptions (fix #7496)
 - server: classify MSSQL exceptions and improve API error responses
+- server: MSSQL generates correct SQL when object relationships are null.
 - console: add support for remote database relationships
 - console: enable support for update permissions for mssql
 - cli: skip tls verfication for all API requests when `insecure-skip-tls-verify` flag is set (fix #4926)

@@ -317,6 +317,7 @@ data TempTable = TempTable
     ttColumns :: [ColumnName]
   }
 
+-- | A version of `Select` without a `FROM` clause. This means it can only project expressions already selected in adjacent join clauses, hence the name @reselect@.
 data Reselect = Reselect
   { reselectProjections :: [Projection],
     reselectFor :: For,
