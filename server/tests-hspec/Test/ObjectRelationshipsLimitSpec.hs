@@ -12,7 +12,7 @@ import Harness.Quoter.Graphql
 import Harness.Quoter.Sql
 import Harness.Quoter.Yaml
 import Harness.State (State)
-import Harness.Test.Feature qualified as Feature
+import Harness.Test.Context qualified as Context
 import Test.Hspec
 import Prelude
 
@@ -22,9 +22,10 @@ import Prelude
 
 spec :: SpecWith State
 spec =
-  Feature.run
-    [ Feature.Context
-        { name = "Postgres",
+  Context.run
+    [ Context.Context
+        { name = Context.Postgres,
+          mkLocalState = Context.noLocalState,
           setup = postgresSetup,
           teardown = postgresTeardown,
           customOptions = Nothing
@@ -42,7 +43,7 @@ spec =
 --
 --   Because of that, we use 'shouldReturnOneOfYaml' and list all of the possible (valid)
 --   expected results.
-tests :: Feature.Options -> SpecWith State
+tests :: Context.Options -> SpecWith State
 tests opts = do
   it "Query by id" $ \state ->
     shouldReturnOneOfYaml
@@ -214,8 +215,8 @@ data:
 
 -- ** Setup
 
-postgresSetup :: State -> IO ()
-postgresSetup state = do
+postgresSetup :: (State, ()) -> IO ()
+postgresSetup (state, ()) = do
   -- Clear and reconfigure the metadata
   GraphqlEngine.setSource state Postgres.defaultSourceMetadata
   postgresSetupTables

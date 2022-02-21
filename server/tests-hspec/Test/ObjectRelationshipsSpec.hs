@@ -12,7 +12,7 @@ import Harness.Quoter.Graphql
 import Harness.Quoter.Sql
 import Harness.Quoter.Yaml
 import Harness.State (State)
-import Harness.Test.Feature qualified as Feature
+import Harness.Test.Context qualified as Context
 import Test.Hspec
 import Prelude
 
@@ -21,9 +21,10 @@ import Prelude
 
 spec :: SpecWith State
 spec = do
-  Feature.run
-    [ Feature.Context
-        { name = "MSSQL",
+  Context.run
+    [ Context.Context
+        { name = Context.SQLServer,
+          mkLocalState = Context.noLocalState,
           setup = mssqlSetup,
           teardown = \_ -> mssqlTeardown,
           customOptions = Nothing
@@ -31,9 +32,10 @@ spec = do
     ]
     mssqlTests
 
-  Feature.run
-    [ Feature.Context
-        { name = "MySQL",
+  Context.run
+    [ Context.Context
+        { name = Context.MySQL,
+          mkLocalState = Context.noLocalState,
           setup = mysqlSetup,
           teardown = \_ -> mysqlTeardown,
           customOptions = Nothing
@@ -43,7 +45,7 @@ spec = do
 
 -- Tests
 
-mysqlTests :: Feature.Options -> SpecWith State
+mysqlTests :: Context.Options -> SpecWith State
 mysqlTests opts = do
   usingWhereClause opts
   xdescribe
@@ -51,12 +53,12 @@ mysqlTests opts = do
     \ (https://github.com/hasura/graphql-engine-mono/issues/3650)"
     (nullField opts)
 
-mssqlTests :: Feature.Options -> SpecWith State
+mssqlTests :: Context.Options -> SpecWith State
 mssqlTests opts = do
   usingWhereClause opts
   nullField opts
 
-usingWhereClause :: Feature.Options -> SpecWith State
+usingWhereClause :: Context.Options -> SpecWith State
 usingWhereClause opts = do
   it "Author of article where id=1" $ \state ->
     shouldReturnYaml
@@ -82,7 +84,7 @@ data:
       id: 1
 |]
 
-nullField :: Feature.Options -> SpecWith State
+nullField :: Context.Options -> SpecWith State
 nullField opts = do
   it "Can realise a null relationship field" $ \state ->
     shouldReturnYaml
@@ -161,8 +163,8 @@ args:
 --------------------------------------------------------------------------------
 -- MySQL backend
 
-mysqlSetup :: State -> IO ()
-mysqlSetup state = do
+mysqlSetup :: (State, ()) -> IO ()
+mysqlSetup (state, _) = do
   -- Clear and reconfigure the metadata
   GraphqlEngine.setSource state Mysql.defaultSourceMetadata
 
@@ -222,8 +224,8 @@ mysqlTeardown = do
 --------------------------------------------------------------------------------
 -- MSSQL backend
 
-mssqlSetup :: State -> IO ()
-mssqlSetup state = do
+mssqlSetup :: (State, ()) -> IO ()
+mssqlSetup (state, _) = do
   -- Clear and reconfigure the metadata
   GraphqlEngine.setSource state Sqlserver.defaultSourceMetadata
 

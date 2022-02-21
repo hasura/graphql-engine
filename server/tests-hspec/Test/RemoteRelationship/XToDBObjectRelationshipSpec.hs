@@ -15,8 +15,8 @@ import Harness.Quoter.Graphql (graphql)
 import Harness.Quoter.Sql (sql)
 import Harness.Quoter.Yaml (shouldReturnYaml, yaml)
 import Harness.State (Server, State)
-import Harness.Test.Feature (Context (..))
-import Harness.Test.Feature qualified as Feature
+import Harness.Test.Context (Context (..))
+import Harness.Test.Context qualified as Context
 import Test.Hspec (SpecWith, describe, it)
 import Prelude
 
@@ -24,7 +24,7 @@ import Prelude
 -- Preamble
 
 spec :: SpecWith State
-spec = Feature.runWithLocalState contexts tests
+spec = Context.runWithLocalState contexts tests
   where
     lhsContexts = [lhsPostgres]
     rhsContexts = [rhsPostgres]
@@ -40,16 +40,17 @@ spec = Feature.runWithLocalState contexts tests
 combine :: LHSContext -> RHSContext -> Context (Maybe Server)
 combine lhs (tableName, rhs) =
   Context
-    { name = "from " <> lhsName <> " to " <> rhsName,
-      setup = \state -> do
+    { name = Context.Combine lhsName rhsName,
+      mkLocalState = lhsPostgresMkLocalState,
+      setup = \(state, localState) -> do
         GraphqlEngine.clearMetadata state
-        rhsSetup state
-        lhsSetup state,
+        rhsSetup (state, ())
+        lhsSetup (state, localState),
       teardown = \state@(globalState, _) -> do
         lhsTeardown state
         rhsTeardown (globalState, ()),
       customOptions =
-        Feature.combineOptions lhsOptions rhsOptions
+        Context.combineOptions lhsOptions rhsOptions
     }
   where
     Context
@@ -77,7 +78,8 @@ type LHSContext = Value -> Context (Maybe Server)
 lhsPostgres :: LHSContext
 lhsPostgres tableName =
   Context
-    { name = "Postgres",
+    { name = Context.Postgres,
+      mkLocalState = lhsPostgresMkLocalState,
       setup = lhsPostgresSetup tableName,
       teardown = lhsPostgresTeardown,
       customOptions = Nothing
@@ -105,7 +107,8 @@ rhsPostgres =
     |]
       context =
         Context
-          { name = "Postgres",
+          { name = Context.Postgres,
+            mkLocalState = Context.noLocalState,
             setup = rhsPostgresSetup,
             teardown = rhsPostgresTeardown,
             customOptions = Nothing
@@ -120,8 +123,11 @@ rhsMSSQL = ([yaml|{"schema":"hasura", "name":"album"}|], Context "MSSQL" rhsMSSQ
 --------------------------------------------------------------------------------
 -- LHS Postgres
 
-lhsPostgresSetup :: Value -> State -> IO (Maybe Server)
-lhsPostgresSetup rhsTableName state = do
+lhsPostgresMkLocalState :: State -> IO (Maybe Server)
+lhsPostgresMkLocalState _ = pure Nothing
+
+lhsPostgresSetup :: Value -> (State, Maybe Server) -> IO ()
+lhsPostgresSetup rhsTableName (state, _) = do
   Postgres.run_
     [sql|
 create table hasura.track (
@@ -183,7 +189,6 @@ args:
         field_mapping:
           album_id: id
   |]
-  pure Nothing
 
 lhsPostgresTeardown :: (State, Maybe Server) -> IO ()
 lhsPostgresTeardown _ = Postgres.run_ [sql|drop table hasura.track;|]
@@ -191,8 +196,8 @@ lhsPostgresTeardown _ = Postgres.run_ [sql|drop table hasura.track;|]
 --------------------------------------------------------------------------------
 -- RHS Postgres
 
-rhsPostgresSetup :: State -> IO ()
-rhsPostgresSetup state = do
+rhsPostgresSetup :: (State, ()) -> IO ()
+rhsPostgresSetup (state, _) = do
   Postgres.run_
     [sql|
 create table hasura.album (
@@ -257,14 +262,14 @@ DROP TABLE hasura.album;
 --------------------------------------------------------------------------------
 -- Tests
 
-tests :: Feature.Options -> SpecWith (State, Maybe Server)
+tests :: Context.Options -> SpecWith (State, Maybe Server)
 tests opts = do
   schemaTests opts
   executionTests opts
   permissionTests opts
 
 -- | Basic queries using *-to-DB joins
-executionTests :: Feature.Options -> SpecWith (State, Maybe Server)
+executionTests :: Context.Options -> SpecWith (State, Maybe Server)
 executionTests opts = describe "execution" $ do
   -- fetches the relationship data
   it "related-data" $ \(state, _) -> do
@@ -355,7 +360,7 @@ executionTests opts = describe "execution" $ do
 
 -- | Spec that describe an object relationship's data in the presence of
 -- permisisons.
-permissionTests :: Feature.Options -> SpecWith (State, Maybe Server)
+permissionTests :: Context.Options -> SpecWith (State, Maybe Server)
 permissionTests opts = describe "permission" $ do
   let userHeaders = [("x-hasura-role", "role1"), ("x-hasura-artist-id", "1")]
 
@@ -442,7 +447,7 @@ permissionTests opts = describe "permission" $ do
       (GraphqlEngine.postGraphqlWithHeaders state userHeaders query)
       expectedResponse
 
-schemaTests :: Feature.Options -> SpecWith (State, Maybe Server)
+schemaTests :: Context.Options -> SpecWith (State, Maybe Server)
 schemaTests opts =
   -- we use an introspection query to check:
   -- 1. a field 'album' is added to the track table

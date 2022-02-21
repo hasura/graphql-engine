@@ -986,7 +986,7 @@ test-suite tests-hspec
     Harness.Backend.Sqlserver
 
  -- Harness.Test
-    Harness.Test.Feature
+    Harness.Test.Context
 
  -- Harness.Quoter
     Harness.Quoter.Graphql

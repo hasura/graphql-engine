@@ -7,7 +7,7 @@ import Harness.Quoter.Graphql (graphql)
 import Harness.Quoter.Sql (sql)
 import Harness.Quoter.Yaml (shouldReturnYaml, yaml)
 import Harness.State (State)
-import Harness.Test.Feature qualified as Feature
+import Harness.Test.Context qualified as Context
 import Test.Hspec (SpecWith, it)
 import Prelude
 
@@ -17,9 +17,10 @@ import Prelude
 
 spec :: SpecWith State
 spec =
-  Feature.run
-    [ Feature.Context
-        { name = "SQLServer",
+  Context.run
+    [ Context.Context
+        { name = Context.SQLServer,
+          mkLocalState = Context.noLocalState,
           setup = sqlserverSetup,
           teardown = sqlserverTeardown,
           customOptions = Nothing
@@ -31,7 +32,7 @@ spec =
 
 -- * Tests
 
-tests :: Feature.Options -> SpecWith State
+tests :: Context.Options -> SpecWith State
 tests opts = do
   -- See https://github.com/hasura/graphql-engine/issues/8158
   it "session variable string values are not truncated to default (30) length" $ \state ->
@@ -64,8 +65,8 @@ data:
 
 -- ** Setup
 
-sqlserverSetup :: State -> IO ()
-sqlserverSetup state = do
+sqlserverSetup :: (State, ()) -> IO ()
+sqlserverSetup (state, _) = do
   -- Clear and reconfigure the metadata
   GraphqlEngine.setSource state Sqlserver.defaultSourceMetadata
   -- Setup

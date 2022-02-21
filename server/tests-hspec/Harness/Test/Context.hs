@@ -1,10 +1,12 @@
 {-# LANGUAGE DeriveAnyClass #-}
 
 -- | Helper functions for easily testing features.
-module Harness.Test.Feature
+module Harness.Test.Context
   ( run,
     runWithLocalState,
     Context (..),
+    ContextName (..),
+    noLocalState,
     Options (..),
     combineOptions,
     defaultOptions,
@@ -21,7 +23,7 @@ import Test.Hspec.Core.Spec (Item (..), mapSpecItem)
 import Prelude
 
 --------------------------------------------------------------------------------
--- Feature
+-- Context
 
 -- | Runs the given tests, for each provided 'Context'@ ()@.
 --
@@ -93,7 +95,7 @@ runWithLocalState ::
 runWithLocalState contexts tests =
   for_ contexts \context@Context {name, customOptions} -> do
     let options = fromMaybe defaultOptions customOptions
-    describe name $ aroundAllWith (contextBracket context) (tests options)
+    describe (show name) $ aroundAllWith (contextBracket context) (tests options)
   where
     -- We want to be able to report exceptions happening both during the tests
     -- and at teardown, which is why we use a custom re-implementation of
@@ -104,11 +106,21 @@ runWithLocalState contexts tests =
       ((State, a) -> IO b) ->
       State ->
       IO ()
-    contextBracket Context {setup, teardown} actionWith globalState =
+    contextBracket Context {mkLocalState, setup, teardown} actionWith globalState =
       mask \restore -> do
-        -- Get local test state from the `setup` function.
-        localState <- setup globalState
+        localState <- mkLocalState globalState
         let state = (globalState, localState)
+
+        catch
+          -- Setup for a test
+          (setup state)
+          ( \setupEx ->
+              catch
+                -- On setup error, attempt to run `teardown` and then throw the setup error
+                (teardown state *> throwIO setupEx)
+                -- On teardown error as well, throw both exceptions
+                (throwIO . Exceptions setupEx)
+          )
 
         -- Run tests.
         _ <-
@@ -157,18 +169,22 @@ runWithLocalState contexts tests =
 --   tests    :: SpecWith (State, Server)
 -- @
 data Context a = Context
-  { -- | A string describing the given context.
+  { -- | A name describing the given context.
     --
-    -- e.g. @"PostgreSQL"@ or @"MySQL v1.2"@
-    name :: String,
-    -- | Setup actions associated with this 'Context'; for example:
-    --  * running SQL commands
+    -- e.g. @Postgre@ or @MySQL@
+    name :: ContextName,
+    -- | Setup actions associated with creating a local state for this 'Context'; for example:
     --  * starting remote servers
-    --  * sending metadata commands
     --
     -- If any of those resources need to be threaded throughout the tests
-    -- themselves they should be returned here.
-    setup :: State -> IO a,
+    -- themselves they should be returned here. Otherwise, a ()
+    mkLocalState :: State -> IO a,
+    -- | Setup actions associated with this 'Context'; for example:
+    --  * running SQL commands
+    --  * sending metadata commands
+    --
+    -- Takes the global 'State' and any local state (i.e. @a@) as arguments.
+    setup :: (State, a) -> IO (),
     -- | Cleanup actions associated with this 'Context'.
     --
     -- This function /must/ return any resources created or modified as part of
@@ -180,6 +196,20 @@ data Context a = Context
     -- this field is 'Nothing', tests are given the 'defaultOptions'.
     customOptions :: Maybe Options
   }
+
+-- | A name describing the given context.
+data ContextName
+  = Postgres
+  | MySQL
+  | SQLServer
+  | BigQuery
+  | Citus
+  | Combine ContextName ContextName
+  deriving (Show, Eq)
+
+-- | Default function for 'mkLocalState' when there's no local state.
+noLocalState :: State -> IO ()
+noLocalState _ = pure ()
 
 data Options = Options
   { -- | Whether a given testing 'Context' should treat numeric values as
