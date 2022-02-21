@@ -5,6 +5,7 @@ module Hasura.GraphQL.Parser
     parserType,
     runParser,
     bind,
+    bindField,
     bindFields,
     boolean,
     int,
