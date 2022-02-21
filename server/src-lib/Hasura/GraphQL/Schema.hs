@@ -25,7 +25,6 @@ import Hasura.GraphQL.Parser
   )
 import Hasura.GraphQL.Parser qualified as P
 import Hasura.GraphQL.Parser.Class
-import Hasura.GraphQL.Parser.Directives (directivesInfo)
 import Hasura.GraphQL.Parser.Internal.Parser (FieldParser (..))
 import Hasura.GraphQL.Schema.Backend
 import Hasura.GraphQL.Schema.Common
@@ -210,6 +209,19 @@ buildRoleContext
           buildQueryParser queryFields queryRemotes allActionInfos customTypes mutationParserFrontend subscriptionParser
         queryParserBackend <-
           buildQueryParser queryFields queryRemotes allActionInfos customTypes mutationParserBackend subscriptionParser
+        -- In order to catch errors early, we attempt to generate the data
+        -- required for introspection, which ends up doing a few correctness
+        -- checks in the GraphQL schema.
+        void $
+          buildIntrospectionSchema
+            (P.parserType queryParserBackend)
+            (P.parserType <$> mutationParserBackend)
+            (P.parserType <$> subscriptionParser)
+        void $
+          buildIntrospectionSchema
+            (P.parserType queryParserFrontend)
+            (P.parserType <$> mutationParserFrontend)
+            (P.parserType <$> subscriptionParser)
 
         let frontendContext =
               GQLContext (finalizeParser queryParserFrontend) (finalizeParser <$> mutationParserFrontend)
@@ -601,6 +613,21 @@ buildQueryParser pgQueryFields remoteFields allActions customTypes mutationParse
   let allQueryFields = pgQueryFields <> fmap (fmap NotNamespaced) actionQueryFields <> fmap (fmap $ fmap RFRemote) remoteFields
   queryWithIntrospectionHelper allQueryFields mutationParser subscriptionParser
 
+-- | Builds a @Schema@ at query parsing time
+parseBuildIntrospectionSchema ::
+  MonadParse m =>
+  P.Type 'Output ->
+  Maybe (P.Type 'Output) ->
+  Maybe (P.Type 'Output) ->
+  m Schema
+parseBuildIntrospectionSchema q m s = qerrAsMonadParse $ buildIntrospectionSchema q m s
+
+qerrAsMonadParse :: MonadParse m => Except QErr a -> m a
+qerrAsMonadParse action =
+  case runExcept action of
+    Right a -> pure a
+    Left QErr {..} -> withPath (++ qePath) $ parseErrorWith qeCode qeError
+
 queryWithIntrospectionHelper ::
   forall n m.
   (MonadSchema n m, MonadError QErr m) =>
@@ -619,43 +646,16 @@ queryWithIntrospectionHelper basicQueryFP mutationP subscriptionP = do
       placeholderField = NotNamespaced (RFRaw $ JO.String placeholderText) <$ P.selection_ $$(G.litName "no_queries_available") (Just $ G.Description placeholderText) P.string
       fixedQueryFP = if null basicQueryFP then [placeholderField] else basicQueryFP
   basicQueryP <- queryRootFromFields fixedQueryFP
-  let directives = directivesInfo @n
-  -- We extract the types from the ordinary GraphQL schema (excluding introspection)
-  allBasicTypes <-
-    collectTypes $
-      catMaybes
-        [ Just $ P.TypeDefinitionsWrapper $ P.parserType basicQueryP,
-          Just $ P.TypeDefinitionsWrapper $ P.diArguments =<< directives,
-          P.TypeDefinitionsWrapper . P.parserType <$> mutationP,
-          P.TypeDefinitionsWrapper . P.parserType <$> subscriptionP
-        ]
-  let introspection = [schema, typeIntrospection]
+  let buildIntrospectionResponse printResponseFromSchema = do
+        partialSchema <-
+          parseBuildIntrospectionSchema
+            (P.parserType basicQueryP)
+            (P.parserType <$> mutationP)
+            (P.parserType <$> subscriptionP)
+        pure $ NotNamespaced $ RFRaw $ printResponseFromSchema partialSchema
+      introspection = [schema, typeIntrospection] <&> (`P.bindField` buildIntrospectionResponse)
       {-# INLINE introspection #-}
-
-  -- TODO: it may be worth looking at whether we can stop collecting
-  -- introspection types monadically.  They are independent of the user schema;
-  -- the types here are always the same and specified by the GraphQL spec
-
-  -- Pull all the introspection types out (__Type, __Schema, etc)
-  allIntrospectionTypes <- collectTypes (map fDefinition introspection)
-
-  let allTypes =
-        Map.unions
-          [ allBasicTypes,
-            Map.filterWithKey (\name _info -> name /= P.getName queryRoot) allIntrospectionTypes
-          ]
-      partialSchema =
-        Schema
-          { sDescription = Nothing,
-            sTypes = allTypes,
-            sQueryType = P.parserType basicQueryP,
-            sMutationType = P.parserType <$> mutationP,
-            sSubscriptionType = P.parserType <$> subscriptionP,
-            sDirectives = directives
-          }
-  let buildIntrospectionResponse fromSchema = NotNamespaced $ RFRaw $ fromSchema partialSchema
-      partialQueryFields =
-        fixedQueryFP ++ (fmap buildIntrospectionResponse <$> introspection)
+      partialQueryFields = fixedQueryFP ++ introspection
   P.safeSelectionSet queryRoot Nothing partialQueryFields <&> fmap (flattenNamespaces . fmap typenameToNamespacedRawRF)
 
 queryRootFromFields ::
@@ -665,20 +665,6 @@ queryRootFromFields ::
   m (Parser 'Output n (RootFieldMap (QueryRootField UnpreparedValue)))
 queryRootFromFields fps =
   P.safeSelectionSet queryRoot Nothing fps <&> fmap (flattenNamespaces . fmap typenameToNamespacedRawRF)
-
-collectTypes ::
-  forall m a.
-  (MonadError QErr m, P.HasTypeDefinitions a) =>
-  a ->
-  m (HashMap G.Name (P.Definition P.SomeTypeInfo))
-collectTypes x =
-  P.collectTypeDefinitions x
-    `onLeft` \(P.ConflictingDefinitions (type1, origin1) (_type2, origins)) ->
-      -- See Note [Collecting types from the GraphQL schema]
-      throw500 $
-        "Found conflicting definitions for " <> P.getName type1 <<> ".  The definition at " <> origin1
-          <<> " differs from the the definition at " <> commaSeparated origins
-          <<> "."
 
 -- | Prepare the parser for subscriptions. Every postgres query field is
 -- exposed as a subscription along with fields to get the status of
