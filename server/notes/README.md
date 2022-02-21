@@ -23,6 +23,7 @@
   - [The interfaces story](the-interfaces-story.md)
   - [Parsing variable values](parsing-variable-values.md)
   - [Nullability in comparison operators](nullability-in-comparison-operators.md)
+  - [What introspection exposes](what-introspection-exposes.md)
   - [Variable expansion in remote schema input parsers](variable-expansion-in-remote-schema-input-parsers.md)
   - [Querying remote schema interfaces](querying-remote-schema-interfaces.md)
   - [Selectability of tables](selectability-of-tables.md)

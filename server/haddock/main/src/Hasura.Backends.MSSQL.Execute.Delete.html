@@ -27,25 +27,25 @@
 </span><span id="line-27"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Session.html"><span class="hs-identifier">Hasura.Session</span></a></span><span>
 </span><span id="line-28"></span><span>
 </span><span id="line-29"></span><span class="hs-comment">-- | Executes a Delete IR AST and return results as JSON.</span><span>
-</span><span id="line-30"></span><span id="local-6989586621688147757"><span class="annot"><a href="Hasura.Backends.MSSQL.Execute.Delete.html#executeDelete"><span class="hs-identifier hs-type">executeDelete</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-31"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688147757"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-30"></span><span id="local-6989586621688152011"><span class="annot"><a href="Hasura.Backends.MSSQL.Execute.Delete.html#executeDelete"><span class="hs-identifier hs-type">executeDelete</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-31"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688152011"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
 </span><span id="line-32"></span><span>  </span><span class="annot"><a href="Hasura.Session.html#UserInfo"><span class="hs-identifier hs-type">UserInfo</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-33"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-34"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#SourceConfig"><span class="hs-identifier hs-type">SourceConfig</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MSSQL"><span class="hs-identifier hs-type">MSSQL</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-35"></span><span>  </span><span class="annot"><a href="Hasura.RQL.IR.Delete.html#AnnDelG"><span class="hs-identifier hs-type">AnnDelG</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MSSQL"><span class="hs-identifier hs-type">MSSQL</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Void</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Column.html#UnpreparedValue"><span class="hs-identifier hs-type">UnpreparedValue</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MSSQL"><span class="hs-identifier hs-type">MSSQL</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-36"></span><span>  </span><span class="annot"><a href="#local-6989586621688147757"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">ExceptT</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="annot"><a href="Hasura.EncJSON.html#EncJSON"><span class="hs-identifier hs-type">EncJSON</span></a></span><span class="hs-special">)</span></span><span>
+</span><span id="line-36"></span><span>  </span><span class="annot"><a href="#local-6989586621688152011"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">ExceptT</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="annot"><a href="Hasura.EncJSON.html#EncJSON"><span class="hs-identifier hs-type">EncJSON</span></a></span><span class="hs-special">)</span></span><span>
 </span><span id="line-37"></span><span id="executeDelete"><span class="annot"><span class="annottext">executeDelete :: UserInfo
 -&gt; Bool
 -&gt; SourceConfig 'MSSQL
 -&gt; AnnDelG 'MSSQL Void (UnpreparedValue 'MSSQL)
 -&gt; m (ExceptT QErr IO EncJSON)
-</span><a href="Hasura.Backends.MSSQL.Execute.Delete.html#executeDelete"><span class="hs-identifier hs-var hs-var">executeDelete</span></a></span></span><span> </span><span id="local-6989586621688147756"><span class="annot"><span class="annottext">UserInfo
-</span><a href="#local-6989586621688147756"><span class="hs-identifier hs-var">userInfo</span></a></span></span><span> </span><span id="local-6989586621688147755"><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621688147755"><span class="hs-identifier hs-var">stringifyNum</span></a></span></span><span> </span><span id="local-6989586621688147754"><span class="annot"><span class="annottext">SourceConfig 'MSSQL
-</span><a href="#local-6989586621688147754"><span class="hs-identifier hs-var">sourceConfig</span></a></span></span><span> </span><span id="local-6989586621688147753"><span class="annot"><span class="annottext">AnnDelG 'MSSQL Void (UnpreparedValue 'MSSQL)
-</span><a href="#local-6989586621688147753"><span class="hs-identifier hs-var">deleteOperation</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-38"></span><span>  </span><span id="local-6989586621688147752"><span class="annot"><span class="annottext">AnnDelG 'MSSQL Void Expression
-</span><a href="#local-6989586621688147752"><span class="hs-identifier hs-var">preparedDelete</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(UnpreparedValue 'MSSQL -&gt; m Expression)
+</span><a href="Hasura.Backends.MSSQL.Execute.Delete.html#executeDelete"><span class="hs-identifier hs-var hs-var">executeDelete</span></a></span></span><span> </span><span id="local-6989586621688152010"><span class="annot"><span class="annottext">UserInfo
+</span><a href="#local-6989586621688152010"><span class="hs-identifier hs-var">userInfo</span></a></span></span><span> </span><span id="local-6989586621688152009"><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621688152009"><span class="hs-identifier hs-var">stringifyNum</span></a></span></span><span> </span><span id="local-6989586621688152008"><span class="annot"><span class="annottext">SourceConfig 'MSSQL
+</span><a href="#local-6989586621688152008"><span class="hs-identifier hs-var">sourceConfig</span></a></span></span><span> </span><span id="local-6989586621688152007"><span class="annot"><span class="annottext">AnnDelG 'MSSQL Void (UnpreparedValue 'MSSQL)
+</span><a href="#local-6989586621688152007"><span class="hs-identifier hs-var">deleteOperation</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-38"></span><span>  </span><span id="local-6989586621688152006"><span class="annot"><span class="annottext">AnnDelG 'MSSQL Void Expression
+</span><a href="#local-6989586621688152006"><span class="hs-identifier hs-var">preparedDelete</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(UnpreparedValue 'MSSQL -&gt; m Expression)
 -&gt; AnnDelG 'MSSQL Void (UnpreparedValue 'MSSQL)
 -&gt; m (AnnDelG 'MSSQL Void Expression)
 forall (t :: * -&gt; *) (f :: * -&gt; *) a b.
@@ -60,8 +60,8 @@ SessionVariables -&gt; UnpreparedValue 'MSSQL -&gt; m Expression
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">UserInfo -&gt; SessionVariables
 </span><a href="Hasura.Session.html#_uiSession"><span class="hs-identifier hs-var hs-var">_uiSession</span></a></span><span> </span><span class="annot"><span class="annottext">UserInfo
-</span><a href="#local-6989586621688147756"><span class="hs-identifier hs-var">userInfo</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">AnnDelG 'MSSQL Void (UnpreparedValue 'MSSQL)
-</span><a href="#local-6989586621688147753"><span class="hs-identifier hs-var">deleteOperation</span></a></span><span>
+</span><a href="#local-6989586621688152010"><span class="hs-identifier hs-var">userInfo</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">AnnDelG 'MSSQL Void (UnpreparedValue 'MSSQL)
+</span><a href="#local-6989586621688152007"><span class="hs-identifier hs-var">deleteOperation</span></a></span><span>
 </span><span id="line-39"></span><span>  </span><span class="annot"><span class="annottext">ExceptT QErr IO EncJSON -&gt; m (ExceptT QErr IO EncJSON)
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(ExceptT QErr IO EncJSON -&gt; m (ExceptT QErr IO EncJSON))
@@ -75,11 +75,11 @@ MSSQLExecCtx
 </span><a href="Hasura.Backends.MSSQL.Connection.html#mssqlRunReadWrite"><span class="hs-identifier hs-var hs-var">mssqlRunReadWrite</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">MSSQLSourceConfig -&gt; MSSQLExecCtx
 </span><a href="Hasura.Backends.MSSQL.Connection.html#_mscExecCtx"><span class="hs-identifier hs-var hs-var">_mscExecCtx</span></a></span><span> </span><span class="annot"><span class="annottext">SourceConfig 'MSSQL
 MSSQLSourceConfig
-</span><a href="#local-6989586621688147754"><span class="hs-identifier hs-var">sourceConfig</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">AnnDel 'MSSQL -&gt; Bool -&gt; TxET QErr IO EncJSON
+</span><a href="#local-6989586621688152008"><span class="hs-identifier hs-var">sourceConfig</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">AnnDel 'MSSQL -&gt; Bool -&gt; TxET QErr IO EncJSON
 </span><a href="Hasura.Backends.MSSQL.Execute.Delete.html#buildDeleteTx"><span class="hs-identifier hs-var">buildDeleteTx</span></a></span><span> </span><span class="annot"><span class="annottext">AnnDel 'MSSQL
 AnnDelG 'MSSQL Void Expression
-</span><a href="#local-6989586621688147752"><span class="hs-identifier hs-var">preparedDelete</span></a></span><span> </span><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621688147755"><span class="hs-identifier hs-var">stringifyNum</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621688152006"><span class="hs-identifier hs-var">preparedDelete</span></a></span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621688152009"><span class="hs-identifier hs-var">stringifyNum</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-40"></span><span>
 </span><span id="line-41"></span><span class="hs-comment">-- | Converts a Delete IR AST to a transaction of three delete sql statements.</span><span>
 </span><span id="line-42"></span><span class="hs-comment">--</span><span>
@@ -102,14 +102,14 @@ AnnDelG 'MSSQL Void Expression
 </span><span id="line-59"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-60"></span><span>  </span><span class="annot"><a href="Database.MSSQL.Transaction.html#TxET"><span class="hs-identifier hs-type">Tx.TxET</span></a></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="annot"><a href="Hasura.EncJSON.html#EncJSON"><span class="hs-identifier hs-type">EncJSON</span></a></span><span>
 </span><span id="line-61"></span><span id="buildDeleteTx"><span class="annot"><span class="annottext">buildDeleteTx :: AnnDel 'MSSQL -&gt; Bool -&gt; TxET QErr IO EncJSON
-</span><a href="Hasura.Backends.MSSQL.Execute.Delete.html#buildDeleteTx"><span class="hs-identifier hs-var hs-var">buildDeleteTx</span></a></span></span><span> </span><span id="local-6989586621688147745"><span class="annot"><span class="annottext">AnnDel 'MSSQL
-</span><a href="#local-6989586621688147745"><span class="hs-identifier hs-var">deleteOperation</span></a></span></span><span> </span><span id="local-6989586621688147744"><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621688147744"><span class="hs-identifier hs-var">stringifyNum</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-62"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688147743"><span class="annot"><span class="annottext">withAlias :: Text
-</span><a href="#local-6989586621688147743"><span class="hs-identifier hs-var hs-var">withAlias</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="Hasura.Backends.MSSQL.Execute.Delete.html#buildDeleteTx"><span class="hs-identifier hs-var hs-var">buildDeleteTx</span></a></span></span><span> </span><span id="local-6989586621688151999"><span class="annot"><span class="annottext">AnnDel 'MSSQL
+</span><a href="#local-6989586621688151999"><span class="hs-identifier hs-var">deleteOperation</span></a></span></span><span> </span><span id="local-6989586621688151998"><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621688151998"><span class="hs-identifier hs-var">stringifyNum</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-62"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688151997"><span class="annot"><span class="annottext">withAlias :: Text
+</span><a href="#local-6989586621688151997"><span class="hs-identifier hs-var hs-var">withAlias</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;with_alias&quot;</span></span><span>
-</span><span id="line-63"></span><span>      </span><span id="local-6989586621688147742"><span class="annot"><span class="annottext">createInsertedTempTableQuery :: Query
-</span><a href="#local-6989586621688147742"><span class="hs-identifier hs-var hs-var">createInsertedTempTableQuery</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-63"></span><span>      </span><span id="local-6989586621688151996"><span class="annot"><span class="annottext">createInsertedTempTableQuery :: Query
+</span><a href="#local-6989586621688151996"><span class="hs-identifier hs-var hs-var">createInsertedTempTableQuery</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-64"></span><span>        </span><span class="annot"><span class="annottext">Printer -&gt; Query
 </span><a href="Hasura.Backends.MSSQL.ToQuery.html#toQueryFlat"><span class="hs-identifier hs-var">toQueryFlat</span></a></span><span> </span><span class="annot"><span class="annottext">(Printer -&gt; Query) -&gt; Printer -&gt; Query
 forall a b. (a -&gt; b) -&gt; a -&gt; b
@@ -128,11 +128,11 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 forall (b :: BackendType) r v. AnnDelG b r v -&gt; TableName b
 </span><a href="Hasura.RQL.IR.Delete.html#dqp1Table"><span class="hs-identifier hs-var hs-var">dqp1Table</span></a></span><span> </span><span class="annot"><span class="annottext">AnnDel 'MSSQL
 AnnDelG 'MSSQL Void Expression
-</span><a href="#local-6989586621688147745"><span class="hs-identifier hs-var">deleteOperation</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">AnnDelG 'MSSQL Void Expression -&gt; [ColumnInfo 'MSSQL]
+</span><a href="#local-6989586621688151999"><span class="hs-identifier hs-var">deleteOperation</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">AnnDelG 'MSSQL Void Expression -&gt; [ColumnInfo 'MSSQL]
 forall (b :: BackendType) r v. AnnDelG b r v -&gt; [ColumnInfo b]
 </span><a href="Hasura.RQL.IR.Delete.html#dqp1AllCols"><span class="hs-identifier hs-var hs-var">dqp1AllCols</span></a></span><span> </span><span class="annot"><span class="annottext">AnnDel 'MSSQL
 AnnDelG 'MSSQL Void Expression
-</span><a href="#local-6989586621688147745"><span class="hs-identifier hs-var">deleteOperation</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">SITTConstraints
+</span><a href="#local-6989586621688151999"><span class="hs-identifier hs-var">deleteOperation</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">SITTConstraints
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#RemoveConstraints"><span class="hs-identifier hs-var">RemoveConstraints</span></a></span><span>
 </span><span id="line-67"></span><span>  </span><span class="hs-comment">-- Create a temp table</span><span>
 </span><span id="line-68"></span><span>  </span><span class="annot"><span class="annottext">(MSSQLTxError -&gt; QErr) -&gt; Query -&gt; TxET QErr IO ()
@@ -141,16 +141,16 @@ MonadIO m =&gt;
 (MSSQLTxError -&gt; e) -&gt; Query -&gt; TxET e m ()
 </span><a href="Database.MSSQL.Transaction.html#unitQueryE"><span class="hs-identifier hs-var">Tx.unitQueryE</span></a></span><span> </span><span class="annot"><span class="annottext">MSSQLTxError -&gt; QErr
 </span><a href="Hasura.Backends.MSSQL.SQL.Error.html#defaultMSSQLTxErrorHandler"><span class="hs-identifier hs-var">defaultMSSQLTxErrorHandler</span></a></span><span> </span><span class="annot"><span class="annottext">Query
-</span><a href="#local-6989586621688147742"><span class="hs-identifier hs-var">createInsertedTempTableQuery</span></a></span><span>
-</span><span id="line-69"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688147732"><span class="annot"><span class="annottext">deleteQuery :: FromIr Printer
-</span><a href="#local-6989586621688147732"><span class="hs-identifier hs-var hs-var">deleteQuery</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Delete -&gt; Printer
+</span><a href="#local-6989586621688151996"><span class="hs-identifier hs-var">createInsertedTempTableQuery</span></a></span><span>
+</span><span id="line-69"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688151986"><span class="annot"><span class="annottext">deleteQuery :: FromIr Printer
+</span><a href="#local-6989586621688151986"><span class="hs-identifier hs-var hs-var">deleteQuery</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Delete -&gt; Printer
 </span><a href="Hasura.Backends.MSSQL.ToQuery.html#fromDelete"><span class="hs-identifier hs-var">TQ.fromDelete</span></a></span><span> </span><span class="annot"><span class="annottext">(Delete -&gt; Printer) -&gt; FromIr Delete -&gt; FromIr Printer
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">AnnDel 'MSSQL -&gt; FromIr Delete
 </span><a href="Hasura.Backends.MSSQL.FromIr.html#fromDelete"><span class="hs-identifier hs-var">TSQL.fromDelete</span></a></span><span> </span><span class="annot"><span class="annottext">AnnDel 'MSSQL
-</span><a href="#local-6989586621688147745"><span class="hs-identifier hs-var">deleteOperation</span></a></span><span>
-</span><span id="line-70"></span><span>  </span><span id="local-6989586621688147728"><span class="annot"><span class="annottext">Query
-</span><a href="#local-6989586621688147728"><span class="hs-identifier hs-var">deleteQueryValidated</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Printer -&gt; Query
+</span><a href="#local-6989586621688151999"><span class="hs-identifier hs-var">deleteOperation</span></a></span><span>
+</span><span id="line-70"></span><span>  </span><span id="local-6989586621688151982"><span class="annot"><span class="annottext">Query
+</span><a href="#local-6989586621688151982"><span class="hs-identifier hs-var">deleteQueryValidated</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Printer -&gt; Query
 </span><a href="Hasura.Backends.MSSQL.ToQuery.html#toQueryFlat"><span class="hs-identifier hs-var">toQueryFlat</span></a></span><span> </span><span class="annot"><span class="annottext">(Printer -&gt; Query) -&gt; TxET QErr IO Printer -&gt; TxET QErr IO Query
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Validate (NonEmpty Error) Printer
@@ -159,7 +159,7 @@ forall e a. Validate e a -&gt; Either e a
 </span><span class="hs-identifier hs-var">V.runValidate</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">FromIr Printer -&gt; Validate (NonEmpty Error) Printer
 forall a. FromIr a -&gt; Validate (NonEmpty Error) a
 </span><a href="Hasura.Backends.MSSQL.FromIr.html#runFromIr"><span class="hs-identifier hs-var">runFromIr</span></a></span><span> </span><span class="annot"><span class="annottext">FromIr Printer
-</span><a href="#local-6989586621688147732"><span class="hs-identifier hs-var">deleteQuery</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Either (NonEmpty Error) Printer
+</span><a href="#local-6989586621688151986"><span class="hs-identifier hs-var">deleteQuery</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Either (NonEmpty Error) Printer
 -&gt; (NonEmpty Error -&gt; TxET QErr IO Printer) -&gt; TxET QErr IO Printer
 forall (m :: * -&gt; *) e a.
 Applicative m =&gt;
@@ -181,9 +181,9 @@ MonadIO m =&gt;
 (MSSQLTxError -&gt; e) -&gt; Query -&gt; TxET e m ()
 </span><a href="Database.MSSQL.Transaction.html#unitQueryE"><span class="hs-identifier hs-var">Tx.unitQueryE</span></a></span><span> </span><span class="annot"><span class="annottext">MSSQLTxError -&gt; QErr
 </span><a href="Hasura.Backends.MSSQL.SQL.Error.html#mutationMSSQLTxErrorHandler"><span class="hs-identifier hs-var">mutationMSSQLTxErrorHandler</span></a></span><span> </span><span class="annot"><span class="annottext">Query
-</span><a href="#local-6989586621688147728"><span class="hs-identifier hs-var">deleteQueryValidated</span></a></span><span>
-</span><span id="line-73"></span><span>  </span><span id="local-6989586621688147720"><span class="annot"><span class="annottext">Select
-</span><a href="#local-6989586621688147720"><span class="hs-identifier hs-var">mutationOutputSelect</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621688151982"><span class="hs-identifier hs-var">deleteQueryValidated</span></a></span><span>
+</span><span id="line-73"></span><span>  </span><span id="local-6989586621688151974"><span class="annot"><span class="annottext">Select
+</span><a href="#local-6989586621688151974"><span class="hs-identifier hs-var">mutationOutputSelect</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Bool
 -&gt; Text
 -&gt; MutationOutputG 'MSSQL Void Expression
 -&gt; TxET QErr IO Select
@@ -191,8 +191,8 @@ forall (m :: * -&gt; *).
 MonadError QErr m =&gt;
 Bool -&gt; Text -&gt; MutationOutputG 'MSSQL Void Expression -&gt; m Select
 </span><a href="Hasura.Backends.MSSQL.Execute.MutationResponse.html#mkMutationOutputSelect"><span class="hs-identifier hs-var">mkMutationOutputSelect</span></a></span><span> </span><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621688147744"><span class="hs-identifier hs-var">stringifyNum</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621688147743"><span class="hs-identifier hs-var">withAlias</span></a></span><span> </span><span class="annot"><span class="annottext">(MutationOutputG 'MSSQL Void Expression -&gt; TxET QErr IO Select)
+</span><a href="#local-6989586621688151998"><span class="hs-identifier hs-var">stringifyNum</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621688151997"><span class="hs-identifier hs-var">withAlias</span></a></span><span> </span><span class="annot"><span class="annottext">(MutationOutputG 'MSSQL Void Expression -&gt; TxET QErr IO Select)
 -&gt; MutationOutputG 'MSSQL Void Expression -&gt; TxET QErr IO Select
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">AnnDelG 'MSSQL Void Expression
@@ -201,9 +201,9 @@ forall (b :: BackendType) r v.
 AnnDelG b r v -&gt; MutationOutputG b r v
 </span><a href="Hasura.RQL.IR.Delete.html#dqp1Output"><span class="hs-identifier hs-var hs-var">dqp1Output</span></a></span><span> </span><span class="annot"><span class="annottext">AnnDel 'MSSQL
 AnnDelG 'MSSQL Void Expression
-</span><a href="#local-6989586621688147745"><span class="hs-identifier hs-var">deleteOperation</span></a></span><span>
-</span><span id="line-74"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688147717"><span class="annot"><span class="annottext">withSelect :: Select
-</span><a href="#local-6989586621688147717"><span class="hs-identifier hs-var hs-var">withSelect</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="#local-6989586621688151999"><span class="hs-identifier hs-var">deleteOperation</span></a></span><span>
+</span><span id="line-74"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688151971"><span class="annot"><span class="annottext">withSelect :: Select
+</span><a href="#local-6989586621688151971"><span class="hs-identifier hs-var hs-var">withSelect</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-75"></span><span>        </span><span class="annot"><span class="annottext">Select
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#emptySelect"><span class="hs-identifier hs-var">emptySelect</span></a></span><span>
 </span><span id="line-76"></span><span>          </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">$sel:selectProjections:Select :: [Projection]
@@ -223,9 +223,9 @@ forall a. a -&gt; Text -&gt; Aliased a
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#tempTableNameDeleted"><span class="hs-identifier hs-var">tempTableNameDeleted</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;deleted_alias&quot;</span></span><span>
 </span><span id="line-78"></span><span>          </span><span class="hs-special">}</span><span>
-</span><span id="line-79"></span><span>      </span><span id="local-6989586621688147710"><span class="annot"><span class="annottext">finalMutationOutputSelect :: Select
-</span><a href="#local-6989586621688147710"><span class="hs-identifier hs-var hs-var">finalMutationOutputSelect</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Select
-</span><a href="#local-6989586621688147720"><span class="hs-identifier hs-var">mutationOutputSelect</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">$sel:selectWith:Select :: Maybe With
+</span><span id="line-79"></span><span>      </span><span id="local-6989586621688151964"><span class="annot"><span class="annottext">finalMutationOutputSelect :: Select
+</span><a href="#local-6989586621688151964"><span class="hs-identifier hs-var hs-var">finalMutationOutputSelect</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Select
+</span><a href="#local-6989586621688151974"><span class="hs-identifier hs-var">mutationOutputSelect</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">$sel:selectWith:Select :: Maybe With
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#%24sel%3AselectWith%3ASelect"><span class="hs-identifier hs-var">selectWith</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">With -&gt; Maybe With
 forall a. a -&gt; Maybe a
 </span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">(With -&gt; Maybe With) -&gt; With -&gt; Maybe With
@@ -242,15 +242,15 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Select -&gt; Text -&gt; Aliased Select
 forall a. a -&gt; Text -&gt; Aliased a
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#Aliased"><span class="hs-identifier hs-var">Aliased</span></a></span><span> </span><span class="annot"><span class="annottext">Select
-</span><a href="#local-6989586621688147717"><span class="hs-identifier hs-var">withSelect</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621688147743"><span class="hs-identifier hs-var">withAlias</span></a></span><span class="hs-special">}</span><span>
-</span><span id="line-80"></span><span>      </span><span id="local-6989586621688147707"><span class="annot"><span class="annottext">mutationOutputSelectQuery :: Query
-</span><a href="#local-6989586621688147707"><span class="hs-identifier hs-var hs-var">mutationOutputSelectQuery</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Printer -&gt; Query
+</span><a href="#local-6989586621688151971"><span class="hs-identifier hs-var">withSelect</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621688151997"><span class="hs-identifier hs-var">withAlias</span></a></span><span class="hs-special">}</span><span>
+</span><span id="line-80"></span><span>      </span><span id="local-6989586621688151961"><span class="annot"><span class="annottext">mutationOutputSelectQuery :: Query
+</span><a href="#local-6989586621688151961"><span class="hs-identifier hs-var hs-var">mutationOutputSelectQuery</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Printer -&gt; Query
 </span><a href="Hasura.Backends.MSSQL.ToQuery.html#toQueryFlat"><span class="hs-identifier hs-var">toQueryFlat</span></a></span><span> </span><span class="annot"><span class="annottext">(Printer -&gt; Query) -&gt; Printer -&gt; Query
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Select -&gt; Printer
 </span><a href="Hasura.Backends.MSSQL.ToQuery.html#fromSelect"><span class="hs-identifier hs-var">TQ.fromSelect</span></a></span><span> </span><span class="annot"><span class="annottext">Select
-</span><a href="#local-6989586621688147710"><span class="hs-identifier hs-var">finalMutationOutputSelect</span></a></span><span>
+</span><a href="#local-6989586621688151964"><span class="hs-identifier hs-var">finalMutationOutputSelect</span></a></span><span>
 </span><span id="line-81"></span><span>  </span><span class="hs-comment">-- Execute SELECT query and fetch mutation response</span><span>
 </span><span id="line-82"></span><span>  </span><span class="annot"><span class="annottext">Text -&gt; EncJSON
 </span><a href="Hasura.EncJSON.html#encJFromText"><span class="hs-identifier hs-var">encJFromText</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; EncJSON) -&gt; TxET QErr IO Text -&gt; TxET QErr IO EncJSON
@@ -261,5 +261,5 @@ forall (m :: * -&gt; *) a e.
 (MSSQLTxError -&gt; e) -&gt; Query -&gt; TxET e m a
 </span><a href="Database.MSSQL.Transaction.html#singleRowQueryE"><span class="hs-identifier hs-var">Tx.singleRowQueryE</span></a></span><span> </span><span class="annot"><span class="annottext">MSSQLTxError -&gt; QErr
 </span><a href="Hasura.Backends.MSSQL.SQL.Error.html#defaultMSSQLTxErrorHandler"><span class="hs-identifier hs-var">defaultMSSQLTxErrorHandler</span></a></span><span> </span><span class="annot"><span class="annottext">Query
-</span><a href="#local-6989586621688147707"><span class="hs-identifier hs-var">mutationOutputSelectQuery</span></a></span><span>
+</span><a href="#local-6989586621688151961"><span class="hs-identifier hs-var">mutationOutputSelectQuery</span></a></span><span>
 </span><span id="line-83"></span></pre></body></html>
