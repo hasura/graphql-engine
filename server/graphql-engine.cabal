@@ -857,12 +857,12 @@ test-suite graphql-engine-tests
     Hasura.Backends.MySQL.DataLoader.ExecuteTests
     Hasura.Backends.MSSQL.ErrorSpec
     Hasura.EventingSpec
-    Hasura.Generator
     Hasura.Generator.Common
     Hasura.GraphQL.NamespaceSpec
     Hasura.GraphQL.Parser.DirectivesTest
     Hasura.GraphQL.Parser.TestUtils
     Hasura.GraphQL.Schema.RemoteTest
+    Hasura.QuickCheck.Instances
     Hasura.IncrementalSpec
     Hasura.RQL.IR.Generator
     Hasura.RQL.MetadataSpec
@@ -876,9 +876,10 @@ test-suite graphql-engine-tests
     Hasura.Server.AuthSpec
     Hasura.Server.MigrateSpec
     Hasura.Server.TelemetrySpec
-    Network.HTTP.Client.TransformableSpec
     Hasura.SessionSpec
     Hasura.SQL.WKTSpec
+    Network.HTTP.Client.TransformableSpec
+    Test.QuickCheck.Extended
 
 test-suite tests-hspec
   import: common-all, common-exe
