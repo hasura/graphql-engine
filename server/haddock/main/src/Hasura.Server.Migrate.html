@@ -59,7 +59,7 @@
 </span><span id="line-59"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="hs-comment">-- | old catalog version</span><span>
 </span><span id="line-60"></span><span>    </span><span id="MRMigrated"><span class="annot"><a href="Hasura.Server.Migrate.html#MRMigrated"><span class="hs-identifier hs-var">MRMigrated</span></a></span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
 </span><span id="line-61"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="MRMaintanenceMode"><span class="annot"><a href="Hasura.Server.Migrate.html#MRMaintanenceMode"><span class="hs-identifier hs-var">MRMaintanenceMode</span></a></span></span><span>
-</span><span id="line-62"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688168347"><span id="local-6989586621688168349"><span id="local-6989586621688168351"><span class="annot"><span class="annottext">Int -&gt; MigrationResult -&gt; ShowS
+</span><span id="line-62"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688175587"><span id="local-6989586621688175589"><span id="local-6989586621688175591"><span class="annot"><span class="annottext">Int -&gt; MigrationResult -&gt; ShowS
 [MigrationResult] -&gt; ShowS
 MigrationResult -&gt; String
 (Int -&gt; MigrationResult -&gt; ShowS)
@@ -74,7 +74,7 @@ show :: MigrationResult -&gt; String
 $cshow :: MigrationResult -&gt; String
 showsPrec :: Int -&gt; MigrationResult -&gt; ShowS
 $cshowsPrec :: Int -&gt; MigrationResult -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688168342"><span id="local-6989586621688168344"><span class="annot"><span class="annottext">MigrationResult -&gt; MigrationResult -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688175582"><span id="local-6989586621688175584"><span class="annot"><span class="annottext">MigrationResult -&gt; MigrationResult -&gt; Bool
 (MigrationResult -&gt; MigrationResult -&gt; Bool)
 -&gt; (MigrationResult -&gt; MigrationResult -&gt; Bool)
 -&gt; Eq MigrationResult
@@ -86,9 +86,9 @@ $c== :: MigrationResult -&gt; MigrationResult -&gt; Bool
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-63"></span><span>
 </span><span id="line-64"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.Logging.html#ToEngineLog"><span class="hs-identifier hs-type">ToEngineLog</span></a></span><span> </span><span class="annot"><a href="Hasura.Server.Migrate.html#MigrationResult"><span class="hs-identifier hs-type">MigrationResult</span></a></span><span> </span><span class="annot"><a href="Hasura.Logging.html#Hasura"><span class="hs-identifier hs-type">Hasura</span></a></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-65"></span><span>  </span><span id="local-6989586621688168337"><span class="annot"><span class="annottext">toEngineLog :: MigrationResult -&gt; (LogLevel, EngineLogType Hasura, Value)
-</span><a href="Hasura.Logging.html#toEngineLog"><span class="hs-identifier hs-var hs-var hs-var hs-var">toEngineLog</span></a></span></span><span> </span><span id="local-6989586621688168335"><span class="annot"><span class="annottext">MigrationResult
-</span><a href="#local-6989586621688168335"><span class="hs-identifier hs-var">result</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-65"></span><span>  </span><span id="local-6989586621688175577"><span class="annot"><span class="annottext">toEngineLog :: MigrationResult -&gt; (LogLevel, EngineLogType Hasura, Value)
+</span><a href="Hasura.Logging.html#toEngineLog"><span class="hs-identifier hs-var hs-var hs-var hs-var">toEngineLog</span></a></span></span><span> </span><span id="local-6989586621688175575"><span class="annot"><span class="annottext">MigrationResult
+</span><a href="#local-6989586621688175575"><span class="hs-identifier hs-var">result</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-66"></span><span>    </span><span class="annot"><span class="annottext">StartupLog -&gt; (LogLevel, EngineLogType Hasura, Value)
 forall a impl.
 ToEngineLog a impl =&gt;
@@ -100,18 +100,18 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span id="line-67"></span><span>      </span><span class="annot"><span class="annottext">StartupLog :: LogLevel -&gt; Text -&gt; Value -&gt; StartupLog
 </span><a href="Hasura.Server.Logging.html#StartupLog"><span class="hs-identifier hs-type">StartupLog</span></a></span><span>
 </span><span id="line-68"></span><span>        </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">slLogLevel :: LogLevel
-</span><a href="#local-6989586621688168333"><span class="hs-identifier hs-var">slLogLevel</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">LogLevel
+</span><a href="#local-6989586621688175573"><span class="hs-identifier hs-var">slLogLevel</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">LogLevel
 </span><a href="Hasura.Logging.html#LevelInfo"><span class="hs-identifier hs-var">LevelInfo</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-69"></span><span>          </span><span class="annot"><span class="annottext">slKind :: Text
-</span><a href="#local-6989586621688168331"><span class="hs-identifier hs-var">slKind</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621688175571"><span class="hs-identifier hs-var">slKind</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;catalog_migrate&quot;</span></span><span class="hs-special">,</span><span>
 </span><span id="line-70"></span><span>          </span><span class="annot"><span class="annottext">slInfo :: Value
-</span><a href="#local-6989586621688168330"><span class="hs-identifier hs-var">slInfo</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Value
+</span><a href="#local-6989586621688175570"><span class="hs-identifier hs-var">slInfo</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Value
 forall a. ToJSON a =&gt; a -&gt; Value
 </span><span class="hs-identifier hs-var">A.toJSON</span></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Value) -&gt; Text -&gt; Value
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">MigrationResult
-</span><a href="#local-6989586621688168335"><span class="hs-identifier hs-var">result</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621688175575"><span class="hs-identifier hs-var">result</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-71"></span><span>            </span><span class="annot"><span class="annottext">MigrationResult
 </span><a href="Hasura.Server.Migrate.html#MRNothingToDo"><span class="hs-identifier hs-var">MRNothingToDo</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-72"></span><span>              </span><span class="annot"><span class="annottext">Text
@@ -133,13 +133,13 @@ forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;).&quot;</span></span><span>
-</span><span id="line-76"></span><span>            </span><span class="annot"><a href="Hasura.Server.Migrate.html#MRMigrated"><span class="hs-identifier hs-type">MRMigrated</span></a></span><span> </span><span id="local-6989586621688168328"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621688168328"><span class="hs-identifier hs-var">oldVersion</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-76"></span><span>            </span><span class="annot"><a href="Hasura.Server.Migrate.html#MRMigrated"><span class="hs-identifier hs-type">MRMigrated</span></a></span><span> </span><span id="local-6989586621688175568"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621688175568"><span class="hs-identifier hs-var">oldVersion</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-77"></span><span>              </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;Successfully migrated from catalog version &quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621688168328"><span class="hs-identifier hs-var">oldVersion</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+</span><a href="#local-6989586621688175568"><span class="hs-identifier hs-var">oldVersion</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot; to version &quot;</span></span><span>
@@ -160,37 +160,37 @@ forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span id="line-84"></span><span class="hs-comment">-- A migration and (hopefully) also its inverse if we have it.</span><span>
 </span><span id="line-85"></span><span class="hs-comment">-- Polymorphic because `m` can be any `MonadTx`, `MonadIO` when</span><span>
 </span><span id="line-86"></span><span class="hs-comment">-- used in the `migrations` function below.</span><span>
-</span><span id="line-87"></span><span class="hs-keyword">data</span><span> </span><span id="MigrationPair"><span class="annot"><a href="Hasura.Server.Migrate.html#MigrationPair"><span class="hs-identifier hs-var">MigrationPair</span></a></span></span><span> </span><span id="local-6989586621688168424"><span class="annot"><a href="#local-6989586621688168424"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="MigrationPair"><span class="annot"><a href="Hasura.Server.Migrate.html#MigrationPair"><span class="hs-identifier hs-var">MigrationPair</span></a></span></span><span>
+</span><span id="line-87"></span><span class="hs-keyword">data</span><span> </span><span id="MigrationPair"><span class="annot"><a href="Hasura.Server.Migrate.html#MigrationPair"><span class="hs-identifier hs-var">MigrationPair</span></a></span></span><span> </span><span id="local-6989586621688175664"><span class="annot"><a href="#local-6989586621688175664"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="MigrationPair"><span class="annot"><a href="Hasura.Server.Migrate.html#MigrationPair"><span class="hs-identifier hs-var">MigrationPair</span></a></span></span><span>
 </span><span id="line-88"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="mpMigrate"><span class="annot"><span class="annottext">MigrationPair m -&gt; m ()
-</span><a href="Hasura.Server.Migrate.html#mpMigrate"><span class="hs-identifier hs-var hs-var">mpMigrate</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="#local-6989586621688168424"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><a href="Hasura.Server.Migrate.html#mpMigrate"><span class="hs-identifier hs-var hs-var">mpMigrate</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="#local-6989586621688175664"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
 </span><span id="line-89"></span><span>    </span><span id="mpDown"><span class="annot"><span class="annottext">MigrationPair m -&gt; Maybe (m ())
-</span><a href="Hasura.Server.Migrate.html#mpDown"><span class="hs-identifier hs-var hs-var">mpDown</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621688168424"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><a href="Hasura.Server.Migrate.html#mpDown"><span class="hs-identifier hs-var hs-var">mpDown</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621688175664"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-90"></span><span>  </span><span class="hs-special">}</span><span>
 </span><span id="line-91"></span><span>
 </span><span id="line-92"></span><span class="annot"><a href="Hasura.Server.Migrate.html#migrateCatalog"><span class="hs-identifier hs-type">migrateCatalog</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-93"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621688168324"><span class="annot"><a href="#local-6989586621688168324"><span class="hs-identifier hs-type">m</span></a></span></span><span class="hs-operator">.</span><span>
-</span><span id="line-94"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Connection.html#MonadTx"><span class="hs-identifier hs-type">MonadTx</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688168324"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-95"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621688168324"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-96"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">MonadBaseControl</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="annot"><a href="#local-6989586621688168324"><span class="hs-identifier hs-type">m</span></a></span><span>
+</span><span id="line-93"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621688175564"><span class="annot"><a href="#local-6989586621688175564"><span class="hs-identifier hs-type">m</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-94"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Connection.html#MonadTx"><span class="hs-identifier hs-type">MonadTx</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688175564"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-95"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621688175564"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-96"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">MonadBaseControl</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="annot"><a href="#local-6989586621688175564"><span class="hs-identifier hs-type">m</span></a></span><span>
 </span><span id="line-97"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
 </span><span id="line-98"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#SourceConnConfiguration"><span class="hs-identifier hs-type">SourceConnConfiguration</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Vanilla"><span class="hs-identifier hs-type">Vanilla</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-99"></span><span>  </span><span class="annot"><a href="Hasura.Server.Types.html#MaintenanceMode"><span class="hs-identifier hs-type">MaintenanceMode</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-100"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">UTCTime</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-101"></span><span>  </span><span class="annot"><a href="#local-6989586621688168324"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Migrate.html#MigrationResult"><span class="hs-identifier hs-type">MigrationResult</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.html#Metadata"><span class="hs-identifier hs-type">Metadata</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-101"></span><span>  </span><span class="annot"><a href="#local-6989586621688175564"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Migrate.html#MigrationResult"><span class="hs-identifier hs-type">MigrationResult</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.html#Metadata"><span class="hs-identifier hs-type">Metadata</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-102"></span><span id="migrateCatalog"><span class="annot"><span class="annottext">migrateCatalog :: Maybe (SourceConnConfiguration ('Postgres 'Vanilla))
 -&gt; MaintenanceMode -&gt; UTCTime -&gt; m (MigrationResult, Metadata)
-</span><a href="Hasura.Server.Migrate.html#migrateCatalog"><span class="hs-identifier hs-var hs-var">migrateCatalog</span></a></span></span><span> </span><span id="local-6989586621688168323"><span class="annot"><span class="annottext">Maybe (SourceConnConfiguration ('Postgres 'Vanilla))
-</span><a href="#local-6989586621688168323"><span class="hs-identifier hs-var">maybeDefaultSourceConfig</span></a></span></span><span> </span><span id="local-6989586621688168322"><span class="annot"><span class="annottext">MaintenanceMode
-</span><a href="#local-6989586621688168322"><span class="hs-identifier hs-var">maintenanceMode</span></a></span></span><span> </span><span id="local-6989586621688168321"><span class="annot"><span class="annottext">UTCTime
-</span><a href="#local-6989586621688168321"><span class="hs-identifier hs-var">migrationTime</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-103"></span><span>  </span><span id="local-6989586621688168320"><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621688168320"><span class="hs-identifier hs-var">catalogSchemaExists</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">SchemaName -&gt; m Bool
+</span><a href="Hasura.Server.Migrate.html#migrateCatalog"><span class="hs-identifier hs-var hs-var">migrateCatalog</span></a></span></span><span> </span><span id="local-6989586621688175563"><span class="annot"><span class="annottext">Maybe (SourceConnConfiguration ('Postgres 'Vanilla))
+</span><a href="#local-6989586621688175563"><span class="hs-identifier hs-var">maybeDefaultSourceConfig</span></a></span></span><span> </span><span id="local-6989586621688175562"><span class="annot"><span class="annottext">MaintenanceMode
+</span><a href="#local-6989586621688175562"><span class="hs-identifier hs-var">maintenanceMode</span></a></span></span><span> </span><span id="local-6989586621688175561"><span class="annot"><span class="annottext">UTCTime
+</span><a href="#local-6989586621688175561"><span class="hs-identifier hs-var">migrationTime</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-103"></span><span>  </span><span id="local-6989586621688175560"><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621688175560"><span class="hs-identifier hs-var">catalogSchemaExists</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">SchemaName -&gt; m Bool
 forall (m :: * -&gt; *). MonadTx m =&gt; SchemaName -&gt; m Bool
 </span><a href="Hasura.Backends.Postgres.Connection.html#doesSchemaExist"><span class="hs-identifier hs-var">doesSchemaExist</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; SchemaName
 </span><a href="Hasura.Backends.Postgres.SQL.Types.html#SchemaName"><span class="hs-identifier hs-var">SchemaName</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;hdb_catalog&quot;</span></span><span class="hs-special">)</span><span>
-</span><span id="line-104"></span><span>  </span><span id="local-6989586621688168317"><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621688168317"><span class="hs-identifier hs-var">versionTableExists</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">SchemaName -&gt; TableName -&gt; m Bool
+</span><span id="line-104"></span><span>  </span><span id="local-6989586621688175557"><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621688175557"><span class="hs-identifier hs-var">versionTableExists</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">SchemaName -&gt; TableName -&gt; m Bool
 forall (m :: * -&gt; *).
 MonadTx m =&gt;
 SchemaName -&gt; TableName -&gt; m Bool
@@ -199,8 +199,8 @@ SchemaName -&gt; TableName -&gt; m Bool
 </span><span class="hs-string">&quot;hdb_catalog&quot;</span></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; TableName
 </span><a href="Hasura.Backends.Postgres.SQL.Types.html#TableName"><span class="hs-identifier hs-var">TableName</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;hdb_version&quot;</span></span><span class="hs-special">)</span><span>
-</span><span id="line-105"></span><span>  </span><span id="local-6989586621688168314"><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621688168314"><span class="hs-identifier hs-var">metadataTableExists</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">SchemaName -&gt; TableName -&gt; m Bool
+</span><span id="line-105"></span><span>  </span><span id="local-6989586621688175554"><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621688175554"><span class="hs-identifier hs-var">metadataTableExists</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">SchemaName -&gt; TableName -&gt; m Bool
 forall (m :: * -&gt; *).
 MonadTx m =&gt;
 SchemaName -&gt; TableName -&gt; m Bool
@@ -209,32 +209,32 @@ SchemaName -&gt; TableName -&gt; m Bool
 </span><span class="hs-string">&quot;hdb_catalog&quot;</span></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; TableName
 </span><a href="Hasura.Backends.Postgres.SQL.Types.html#TableName"><span class="hs-identifier hs-var">TableName</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;hdb_metadata&quot;</span></span><span class="hs-special">)</span><span>
-</span><span id="line-106"></span><span>  </span><span id="local-6989586621688168313"><span class="annot"><span class="annottext">MigrationResult
-</span><a href="#local-6989586621688168313"><span class="hs-identifier hs-var">migrationResult</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
+</span><span id="line-106"></span><span>  </span><span id="local-6989586621688175553"><span class="annot"><span class="annottext">MigrationResult
+</span><a href="#local-6989586621688175553"><span class="hs-identifier hs-var">migrationResult</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
 </span><span id="line-107"></span><span>    </span><span class="hs-keyword">if</span><span>
 </span><span id="line-108"></span><span>        </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">MaintenanceMode
-</span><a href="#local-6989586621688168322"><span class="hs-identifier hs-var">maintenanceMode</span></a></span><span> </span><span class="annot"><span class="annottext">MaintenanceMode -&gt; MaintenanceMode -&gt; Bool
+</span><a href="#local-6989586621688175562"><span class="hs-identifier hs-var">maintenanceMode</span></a></span><span> </span><span class="annot"><span class="annottext">MaintenanceMode -&gt; MaintenanceMode -&gt; Bool
 forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="annottext">MaintenanceMode
 </span><a href="Hasura.Server.Types.html#MaintenanceModeEnabled"><span class="hs-identifier hs-var">MaintenanceModeEnabled</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-109"></span><span>          </span><span class="hs-keyword">if</span><span>
 </span><span id="line-110"></span><span>              </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool
 </span><span class="hs-identifier hs-var">not</span></span><span> </span><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621688168320"><span class="hs-identifier hs-var">catalogSchemaExists</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><a href="#local-6989586621688175560"><span class="hs-identifier hs-var">catalogSchemaExists</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-111"></span><span>                </span><span class="annot"><span class="annottext">Text -&gt; m MigrationResult
 forall (m :: * -&gt; *) a. QErrM m =&gt; Text -&gt; m a
 </span><a href="Hasura.Base.Error.html#throw500"><span class="hs-identifier hs-var">throw500</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;unexpected: hdb_catalog schema not found in maintenance mode&quot;</span></span><span>
 </span><span id="line-112"></span><span>              </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool
 </span><span class="hs-identifier hs-var">not</span></span><span> </span><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621688168317"><span class="hs-identifier hs-var">versionTableExists</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><a href="#local-6989586621688175557"><span class="hs-identifier hs-var">versionTableExists</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-113"></span><span>                </span><span class="annot"><span class="annottext">Text -&gt; m MigrationResult
 forall (m :: * -&gt; *) a. QErrM m =&gt; Text -&gt; m a
 </span><a href="Hasura.Base.Error.html#throw500"><span class="hs-identifier hs-var">throw500</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;unexpected: hdb_catalog.hdb_version table not found in maintenance mode&quot;</span></span><span>
 </span><span id="line-114"></span><span>              </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool
 </span><span class="hs-identifier hs-var">not</span></span><span> </span><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621688168314"><span class="hs-identifier hs-var">metadataTableExists</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><a href="#local-6989586621688175554"><span class="hs-identifier hs-var">metadataTableExists</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-115"></span><span>                </span><span class="annot"><span class="annottext">Text -&gt; m MigrationResult
 forall (m :: * -&gt; *) a. QErrM m =&gt; Text -&gt; m a
 </span><a href="Hasura.Base.Error.html#throw500"><span class="hs-identifier hs-var">throw500</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; m MigrationResult) -&gt; Text -&gt; m MigrationResult
@@ -253,42 +253,42 @@ forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><a href="Hasura.Server.Migrate.html#MRMaintanenceMode"><span class="hs-identifier hs-var">MRMaintanenceMode</span></a></span><span>
 </span><span id="line-119"></span><span>        </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">otherwise</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621688168320"><span class="hs-identifier hs-var">catalogSchemaExists</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621688175560"><span class="hs-identifier hs-var">catalogSchemaExists</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-120"></span><span>          </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">False</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; m MigrationResult
-</span><a href="#local-6989586621688168309"><span class="hs-identifier hs-var">initialize</span></a></span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621688175549"><span class="hs-identifier hs-var">initialize</span></a></span><span> </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">True</span></span><span>
 </span><span id="line-121"></span><span>          </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">True</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621688168317"><span class="hs-identifier hs-var">versionTableExists</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621688175557"><span class="hs-identifier hs-var">versionTableExists</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-122"></span><span>            </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">False</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; m MigrationResult
-</span><a href="#local-6989586621688168309"><span class="hs-identifier hs-var">initialize</span></a></span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621688175549"><span class="hs-identifier hs-var">initialize</span></a></span><span> </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">False</span></span><span>
 </span><span id="line-123"></span><span>            </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">True</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Float -&gt; m MigrationResult
-</span><a href="#local-6989586621688168308"><span class="hs-identifier hs-var">migrateFrom</span></a></span><span> </span><span class="annot"><span class="annottext">(Float -&gt; m MigrationResult) -&gt; m Float -&gt; m MigrationResult
+</span><a href="#local-6989586621688175548"><span class="hs-identifier hs-var">migrateFrom</span></a></span><span> </span><span class="annot"><span class="annottext">(Float -&gt; m MigrationResult) -&gt; m Float -&gt; m MigrationResult
 forall (m :: * -&gt; *) a b. Monad m =&gt; (a -&gt; m b) -&gt; m a -&gt; m b
 </span><span class="hs-operator hs-var">=&lt;&lt;</span></span><span> </span><span class="annot"><span class="annottext">TxE QErr Float -&gt; m Float
 forall (m :: * -&gt; *) a. MonadTx m =&gt; TxE QErr a -&gt; m a
 </span><a href="Hasura.Backends.Postgres.Connection.html#liftTx"><span class="hs-identifier hs-var">liftTx</span></a></span><span> </span><span class="annot"><span class="annottext">TxE QErr Float
 </span><a href="Hasura.Server.Migrate.Internal.html#getCatalogVersion"><span class="hs-identifier hs-var">getCatalogVersion</span></a></span><span>
-</span><span id="line-124"></span><span>  </span><span id="local-6989586621688168304"><span class="annot"><span class="annottext">Metadata
-</span><a href="#local-6989586621688168304"><span class="hs-identifier hs-var">metadata</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">TxE QErr Metadata -&gt; m Metadata
+</span><span id="line-124"></span><span>  </span><span id="local-6989586621688175544"><span class="annot"><span class="annottext">Metadata
+</span><a href="#local-6989586621688175544"><span class="hs-identifier hs-var">metadata</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">TxE QErr Metadata -&gt; m Metadata
 forall (m :: * -&gt; *) a. MonadTx m =&gt; TxE QErr a -&gt; m a
 </span><a href="Hasura.Backends.Postgres.Connection.html#liftTx"><span class="hs-identifier hs-var">liftTx</span></a></span><span> </span><span class="annot"><span class="annottext">TxE QErr Metadata
 </span><a href="Hasura.RQL.DDL.Schema.Catalog.html#fetchMetadataFromCatalog"><span class="hs-identifier hs-var">fetchMetadataFromCatalog</span></a></span><span>
 </span><span id="line-125"></span><span>  </span><span class="annot"><span class="annottext">(MigrationResult, Metadata) -&gt; m (MigrationResult, Metadata)
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">MigrationResult
-</span><a href="#local-6989586621688168313"><span class="hs-identifier hs-var">migrationResult</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Metadata
-</span><a href="#local-6989586621688168304"><span class="hs-identifier hs-var">metadata</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621688175553"><span class="hs-identifier hs-var">migrationResult</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Metadata
+</span><a href="#local-6989586621688175544"><span class="hs-identifier hs-var">metadata</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-126"></span><span>  </span><span class="hs-keyword">where</span><span>
 </span><span id="line-127"></span><span>    </span><span class="hs-comment">-- initializes the catalog, creating the schema if necessary</span><span>
-</span><span id="line-128"></span><span>    </span><span class="annot"><a href="#local-6989586621688168309"><span class="hs-identifier hs-type">initialize</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621688168324"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.Server.Migrate.html#MigrationResult"><span class="hs-identifier hs-type">MigrationResult</span></a></span><span>
-</span><span id="line-129"></span><span>    </span><span id="local-6989586621688168309"><span class="annot"><span class="annottext">initialize :: Bool -&gt; m MigrationResult
-</span><a href="#local-6989586621688168309"><span class="hs-identifier hs-var hs-var">initialize</span></a></span></span><span> </span><span id="local-6989586621688168302"><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621688168302"><span class="hs-identifier hs-var">createSchema</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-128"></span><span>    </span><span class="annot"><a href="#local-6989586621688175549"><span class="hs-identifier hs-type">initialize</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621688175564"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.Server.Migrate.html#MigrationResult"><span class="hs-identifier hs-type">MigrationResult</span></a></span><span>
+</span><span id="line-129"></span><span>    </span><span id="local-6989586621688175549"><span class="annot"><span class="annottext">initialize :: Bool -&gt; m MigrationResult
+</span><a href="#local-6989586621688175549"><span class="hs-identifier hs-var hs-var">initialize</span></a></span></span><span> </span><span id="local-6989586621688175542"><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621688175542"><span class="hs-identifier hs-var">createSchema</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-130"></span><span>      </span><span class="annot"><span class="annottext">TxE QErr () -&gt; m ()
 forall (m :: * -&gt; *) a. MonadTx m =&gt; TxE QErr a -&gt; m a
 </span><a href="Hasura.Backends.Postgres.Connection.html#liftTx"><span class="hs-identifier hs-var">liftTx</span></a></span><span> </span><span class="annot"><span class="annottext">(TxE QErr () -&gt; m ()) -&gt; TxE QErr () -&gt; m ()
@@ -306,7 +306,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span id="line-132"></span><span>          </span><span class="annot"><span class="annottext">Bool -&gt; TxET PGTxErr IO () -&gt; TxET PGTxErr IO ()
 forall (f :: * -&gt; *). Applicative f =&gt; Bool -&gt; f () -&gt; f ()
 </span><span class="hs-identifier hs-var">when</span></span><span> </span><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621688168302"><span class="hs-identifier hs-var">createSchema</span></a></span><span> </span><span class="annot"><span class="annottext">(TxET PGTxErr IO () -&gt; TxET PGTxErr IO ())
+</span><a href="#local-6989586621688175542"><span class="hs-identifier hs-var">createSchema</span></a></span><span> </span><span class="annot"><span class="annottext">(TxET PGTxErr IO () -&gt; TxET PGTxErr IO ())
 -&gt; TxET PGTxErr IO () -&gt; TxET PGTxErr IO ()
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Query -&gt; () -&gt; Bool -&gt; TxET PGTxErr IO ()
@@ -323,19 +323,19 @@ forall (m :: * -&gt; *). MonadTx m =&gt; m ()
 forall (m :: * -&gt; *). MonadTx m =&gt; Query -&gt; m ()
 </span><a href="Hasura.Server.Migrate.html#multiQ"><span class="hs-identifier hs-var">multiQ</span></a></span><span> </span><span class="hs-special">$(</span><span class="hs-identifier">makeRelativeToProject</span><span> </span><span class="hs-string">&quot;src-rsr/initialise.sql&quot;</span><span> </span><span class="hs-operator">&gt;&gt;=</span><span> </span><span class="hs-identifier">Q.sqlFromFile</span><span class="hs-special">)</span><span>
 </span><span id="line-135"></span><span>      </span><span class="annot"><span class="annottext">m ()
-</span><a href="#local-6989586621688168292"><span class="hs-identifier hs-var">updateCatalogVersion</span></a></span><span>
+</span><a href="#local-6989586621688175532"><span class="hs-identifier hs-var">updateCatalogVersion</span></a></span><span>
 </span><span id="line-136"></span><span>
-</span><span id="line-137"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688168291"><span class="annot"><span class="annottext">emptyMetadata' :: Metadata
-</span><a href="#local-6989586621688168291"><span class="hs-identifier hs-var hs-var">emptyMetadata'</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Maybe (SourceConnConfiguration ('Postgres 'Vanilla))
-</span><a href="#local-6989586621688168323"><span class="hs-identifier hs-var">maybeDefaultSourceConfig</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-137"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688175531"><span class="annot"><span class="annottext">emptyMetadata' :: Metadata
+</span><a href="#local-6989586621688175531"><span class="hs-identifier hs-var hs-var">emptyMetadata'</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Maybe (SourceConnConfiguration ('Postgres 'Vanilla))
+</span><a href="#local-6989586621688175563"><span class="hs-identifier hs-var">maybeDefaultSourceConfig</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-138"></span><span>            </span><span class="annot"><span class="annottext">Maybe (SourceConnConfiguration ('Postgres 'Vanilla))
 </span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Metadata
 </span><a href="Hasura.RQL.Types.Metadata.html#emptyMetadata"><span class="hs-identifier hs-var">emptyMetadata</span></a></span><span>
-</span><span id="line-139"></span><span>            </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621688168289"><span class="annot"><span class="annottext">SourceConnConfiguration ('Postgres 'Vanilla)
-</span><a href="#local-6989586621688168289"><span class="hs-identifier hs-var">defaultSourceConfig</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-139"></span><span>            </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621688175529"><span class="annot"><span class="annottext">SourceConnConfiguration ('Postgres 'Vanilla)
+</span><a href="#local-6989586621688175529"><span class="hs-identifier hs-var">defaultSourceConfig</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-140"></span><span>              </span><span class="hs-comment">-- insert metadata with default source</span><span>
-</span><span id="line-141"></span><span>              </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688168288"><span class="annot"><span class="annottext">defaultSourceMetadata :: AnyBackend SourceMetadata
-</span><a href="#local-6989586621688168288"><span class="hs-identifier hs-var hs-var">defaultSourceMetadata</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-141"></span><span>              </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688175528"><span class="annot"><span class="annottext">defaultSourceMetadata :: AnyBackend SourceMetadata
+</span><a href="#local-6989586621688175528"><span class="hs-identifier hs-var hs-var">defaultSourceMetadata</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-142"></span><span>                    </span><span class="annot"><span class="annottext">SourceMetadata ('Postgres 'Vanilla) -&gt; AnyBackend SourceMetadata
 forall (b :: BackendType) (i :: BackendType -&gt; *).
 HasTag b =&gt;
@@ -365,22 +365,22 @@ forall a. Monoid a =&gt; a
 </span><span class="hs-identifier hs-var">mempty</span></span><span> </span><span class="annot"><span class="annottext">Functions ('Postgres 'Vanilla)
 forall a. Monoid a =&gt; a
 </span><span class="hs-identifier hs-var">mempty</span></span><span> </span><span class="annot"><span class="annottext">SourceConnConfiguration ('Postgres 'Vanilla)
-</span><a href="#local-6989586621688168289"><span class="hs-identifier hs-var">defaultSourceConfig</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe QueryTagsConfig
+</span><a href="#local-6989586621688175529"><span class="hs-identifier hs-var">defaultSourceConfig</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe QueryTagsConfig
 forall a. Maybe a
 </span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="annot"><span class="annottext">SourceCustomization
 </span><a href="Hasura.RQL.Types.SourceCustomization.html#emptySourceCustomization"><span class="hs-identifier hs-var">emptySourceCustomization</span></a></span><span>
-</span><span id="line-144"></span><span>                  </span><span id="local-6989586621688168283"><span class="annot"><span class="annottext">sources :: InsOrdHashMap SourceName (AnyBackend SourceMetadata)
-</span><a href="#local-6989586621688168283"><span class="hs-identifier hs-var hs-var">sources</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SourceName
+</span><span id="line-144"></span><span>                  </span><span id="local-6989586621688175523"><span class="annot"><span class="annottext">sources :: InsOrdHashMap SourceName (AnyBackend SourceMetadata)
+</span><a href="#local-6989586621688175523"><span class="hs-identifier hs-var hs-var">sources</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SourceName
 -&gt; AnyBackend SourceMetadata
 -&gt; InsOrdHashMap SourceName (AnyBackend SourceMetadata)
 forall k v. Hashable k =&gt; k -&gt; v -&gt; InsOrdHashMap k v
 </span><span class="hs-identifier hs-var">OMap.singleton</span></span><span> </span><span class="annot"><span class="annottext">SourceName
 </span><a href="Hasura.RQL.Types.Common.html#defaultSource"><span class="hs-identifier hs-var">defaultSource</span></a></span><span> </span><span class="annot"><span class="annottext">AnyBackend SourceMetadata
-</span><a href="#local-6989586621688168288"><span class="hs-identifier hs-var">defaultSourceMetadata</span></a></span><span>
+</span><a href="#local-6989586621688175528"><span class="hs-identifier hs-var">defaultSourceMetadata</span></a></span><span>
 </span><span id="line-145"></span><span>               </span><span class="hs-keyword">in</span><span> </span><span class="annot"><span class="annottext">Metadata
 </span><a href="Hasura.RQL.Types.Metadata.html#emptyMetadata"><span class="hs-identifier hs-var">emptyMetadata</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">_metaSources :: InsOrdHashMap SourceName (AnyBackend SourceMetadata)
 </span><a href="Hasura.RQL.Types.Metadata.html#_metaSources"><span class="hs-identifier hs-var">_metaSources</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">InsOrdHashMap SourceName (AnyBackend SourceMetadata)
-</span><a href="#local-6989586621688168283"><span class="hs-identifier hs-var">sources</span></a></span><span class="hs-special">}</span><span>
+</span><a href="#local-6989586621688175523"><span class="hs-identifier hs-var">sources</span></a></span><span class="hs-special">}</span><span>
 </span><span id="line-146"></span><span>
 </span><span id="line-147"></span><span>      </span><span class="annot"><span class="annottext">TxE QErr () -&gt; m ()
 forall (m :: * -&gt; *) a. MonadTx m =&gt; TxE QErr a -&gt; m a
@@ -388,19 +388,19 @@ forall (m :: * -&gt; *) a. MonadTx m =&gt; TxE QErr a -&gt; m a
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Metadata -&gt; TxE QErr ()
 </span><a href="Hasura.RQL.DDL.Schema.Catalog.html#insertMetadataInCatalog"><span class="hs-identifier hs-var">insertMetadataInCatalog</span></a></span><span> </span><span class="annot"><span class="annottext">Metadata
-</span><a href="#local-6989586621688168291"><span class="hs-identifier hs-var">emptyMetadata'</span></a></span><span>
+</span><a href="#local-6989586621688175531"><span class="hs-identifier hs-var">emptyMetadata'</span></a></span><span>
 </span><span id="line-148"></span><span>      </span><span class="annot"><span class="annottext">MigrationResult -&gt; m MigrationResult
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">MigrationResult
 </span><a href="Hasura.Server.Migrate.html#MRInitialized"><span class="hs-identifier hs-var">MRInitialized</span></a></span><span>
 </span><span id="line-149"></span><span>
 </span><span id="line-150"></span><span>    </span><span class="hs-comment">-- migrates an existing catalog to the latest version from an existing verion</span><span>
-</span><span id="line-151"></span><span>    </span><span class="annot"><a href="#local-6989586621688168308"><span class="hs-identifier hs-type">migrateFrom</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Float</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621688168324"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.Server.Migrate.html#MigrationResult"><span class="hs-identifier hs-type">MigrationResult</span></a></span><span>
-</span><span id="line-152"></span><span>    </span><span id="local-6989586621688168308"><span class="annot"><span class="annottext">migrateFrom :: Float -&gt; m MigrationResult
-</span><a href="#local-6989586621688168308"><span class="hs-identifier hs-var hs-var">migrateFrom</span></a></span></span><span> </span><span id="local-6989586621688168279"><span class="annot"><span class="annottext">Float
-</span><a href="#local-6989586621688168279"><span class="hs-identifier hs-var">previousVersion</span></a></span></span><span>
+</span><span id="line-151"></span><span>    </span><span class="annot"><a href="#local-6989586621688175548"><span class="hs-identifier hs-type">migrateFrom</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Float</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621688175564"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.Server.Migrate.html#MigrationResult"><span class="hs-identifier hs-type">MigrationResult</span></a></span><span>
+</span><span id="line-152"></span><span>    </span><span id="local-6989586621688175548"><span class="annot"><span class="annottext">migrateFrom :: Float -&gt; m MigrationResult
+</span><a href="#local-6989586621688175548"><span class="hs-identifier hs-var hs-var">migrateFrom</span></a></span></span><span> </span><span id="local-6989586621688175519"><span class="annot"><span class="annottext">Float
+</span><a href="#local-6989586621688175519"><span class="hs-identifier hs-var">previousVersion</span></a></span></span><span>
 </span><span id="line-153"></span><span>      </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Float
-</span><a href="#local-6989586621688168279"><span class="hs-identifier hs-var">previousVersion</span></a></span><span> </span><span class="annot"><span class="annottext">Float -&gt; Float -&gt; Bool
+</span><a href="#local-6989586621688175519"><span class="hs-identifier hs-var">previousVersion</span></a></span><span> </span><span class="annot"><span class="annottext">Float -&gt; Float -&gt; Bool
 forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="annottext">Integer -&gt; Float
 forall a. Num a =&gt; Integer -&gt; a
@@ -411,40 +411,40 @@ forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><a href="Hasura.Server.Migrate.html#MRNothingToDo"><span class="hs-identifier hs-var">MRNothingToDo</span></a></span><span>
 </span><span id="line-154"></span><span>      </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">otherwise</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-155"></span><span>        </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688168278"><span class="annot"><span class="annottext">upMigrations :: [(Float, MigrationPair m)]
-</span><a href="#local-6989586621688168278"><span class="hs-identifier hs-var hs-var">upMigrations</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe (SourceConnConfiguration ('Postgres 'Vanilla))
+</span><span id="line-155"></span><span>        </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688175518"><span class="annot"><span class="annottext">upMigrations :: [(Float, MigrationPair m)]
+</span><a href="#local-6989586621688175518"><span class="hs-identifier hs-var hs-var">upMigrations</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe (SourceConnConfiguration ('Postgres 'Vanilla))
 -&gt; Bool -&gt; MaintenanceMode -&gt; [(Float, MigrationPair m)]
 forall (m :: * -&gt; *).
 (MonadIO m, MonadTx m) =&gt;
 Maybe (SourceConnConfiguration ('Postgres 'Vanilla))
 -&gt; Bool -&gt; MaintenanceMode -&gt; [(Float, MigrationPair m)]
 </span><a href="Hasura.Server.Migrate.html#migrations"><span class="hs-identifier hs-var">migrations</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe (SourceConnConfiguration ('Postgres 'Vanilla))
-</span><a href="#local-6989586621688168323"><span class="hs-identifier hs-var">maybeDefaultSourceConfig</span></a></span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621688175563"><span class="hs-identifier hs-var">maybeDefaultSourceConfig</span></a></span><span> </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">False</span></span><span> </span><span class="annot"><span class="annottext">MaintenanceMode
-</span><a href="#local-6989586621688168322"><span class="hs-identifier hs-var">maintenanceMode</span></a></span><span>
+</span><a href="#local-6989586621688175562"><span class="hs-identifier hs-var">maintenanceMode</span></a></span><span>
 </span><span id="line-156"></span><span>            </span><span class="hs-comment">-- 0.8 is the only non-integral catalog version and we'd like to output the version for other</span><span>
 </span><span id="line-157"></span><span>            </span><span class="hs-comment">-- versions as integer rather than float, for example: 40 instead of 40.0</span><span>
-</span><span id="line-158"></span><span>            </span><span id="local-6989586621688168276"><span class="annot"><span class="annottext">previousVersionText :: Text
-</span><a href="#local-6989586621688168276"><span class="hs-identifier hs-var hs-var">previousVersionText</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Bool -&gt; Text
+</span><span id="line-158"></span><span>            </span><span id="local-6989586621688175516"><span class="annot"><span class="annottext">previousVersionText :: Text
+</span><a href="#local-6989586621688175516"><span class="hs-identifier hs-var hs-var">previousVersionText</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Bool -&gt; Text
 forall a. a -&gt; a -&gt; Bool -&gt; a
 </span><span class="hs-identifier hs-var">bool</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Integer -&gt; Text
 forall a. Show a =&gt; a -&gt; Text
 </span><a href="Hasura.Prelude.html#tshow"><span class="hs-identifier hs-var">tshow</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">(</span><span class="annot"><span class="annottext">Float -&gt; Integer
 forall a b. (RealFrac a, Integral b) =&gt; a -&gt; b
 </span><span class="hs-identifier hs-var">floor</span></span><span> </span><span class="annot"><span class="annottext">Float
-</span><a href="#local-6989586621688168279"><span class="hs-identifier hs-var">previousVersion</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Integer</span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621688175519"><span class="hs-identifier hs-var">previousVersion</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Integer</span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;0.8&quot;</span></span><span> </span><span class="annot"><span class="annottext">(Bool -&gt; Text) -&gt; Bool -&gt; Text
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Float
-</span><a href="#local-6989586621688168279"><span class="hs-identifier hs-var">previousVersion</span></a></span><span> </span><span class="annot"><span class="annottext">Float -&gt; Float -&gt; Bool
+</span><a href="#local-6989586621688175519"><span class="hs-identifier hs-var">previousVersion</span></a></span><span> </span><span class="annot"><span class="annottext">Float -&gt; Float -&gt; Bool
 forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="annottext">Float
 </span><span class="hs-number">0.8</span></span><span>
 </span><span id="line-159"></span><span>        </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Float -&gt; [(Float, MigrationPair m)] -&gt; [(Float, MigrationPair m)]
 forall a b. Ord a =&gt; a -&gt; [(a, b)] -&gt; [(a, b)]
-</span><a href="#local-6989586621688168272"><span class="hs-identifier hs-var">neededMigrations</span></a></span><span> </span><span class="annot"><span class="annottext">Float
-</span><a href="#local-6989586621688168279"><span class="hs-identifier hs-var">previousVersion</span></a></span><span> </span><span class="annot"><span class="annottext">[(Float, MigrationPair m)]
-</span><a href="#local-6989586621688168278"><span class="hs-identifier hs-var">upMigrations</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621688175512"><span class="hs-identifier hs-var">neededMigrations</span></a></span><span> </span><span class="annot"><span class="annottext">Float
+</span><a href="#local-6989586621688175519"><span class="hs-identifier hs-var">previousVersion</span></a></span><span> </span><span class="annot"><span class="annottext">[(Float, MigrationPair m)]
+</span><a href="#local-6989586621688175518"><span class="hs-identifier hs-var">upMigrations</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-160"></span><span>          </span><span class="hs-special">[</span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-161"></span><span>            </span><span class="annot"><span class="annottext">Code -&gt; Text -&gt; m MigrationResult
 forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
@@ -473,13 +473,13 @@ forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span id="line-167"></span><span>                </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621688168276"><span class="hs-identifier hs-var">previousVersionText</span></a></span><span>
+</span><a href="#local-6989586621688175516"><span class="hs-identifier hs-var">previousVersionText</span></a></span><span>
 </span><span id="line-168"></span><span>                </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;).&quot;</span></span><span>
-</span><span id="line-169"></span><span>          </span><span id="local-6989586621688168269"><span class="annot"><span class="annottext">[(Float, MigrationPair m)]
-</span><a href="#local-6989586621688168269"><span class="hs-identifier hs-var">migrationsToBeApplied</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-169"></span><span>          </span><span id="local-6989586621688175509"><span class="annot"><span class="annottext">[(Float, MigrationPair m)]
+</span><a href="#local-6989586621688175509"><span class="hs-identifier hs-var">migrationsToBeApplied</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-170"></span><span>            </span><span class="annot"><span class="annottext">((Float, MigrationPair m) -&gt; m ())
 -&gt; [(Float, MigrationPair m)] -&gt; m ()
 forall (t :: * -&gt; *) (f :: * -&gt; *) a b.
@@ -495,9 +495,9 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">(Float, MigrationPair m) -&gt; MigrationPair m
 forall a b. (a, b) -&gt; b
 </span><span class="hs-identifier hs-var">snd</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[(Float, MigrationPair m)]
-</span><a href="#local-6989586621688168269"><span class="hs-identifier hs-var">migrationsToBeApplied</span></a></span><span>
+</span><a href="#local-6989586621688175509"><span class="hs-identifier hs-var">migrationsToBeApplied</span></a></span><span>
 </span><span id="line-171"></span><span>            </span><span class="annot"><span class="annottext">m ()
-</span><a href="#local-6989586621688168292"><span class="hs-identifier hs-var">updateCatalogVersion</span></a></span><span>
+</span><a href="#local-6989586621688175532"><span class="hs-identifier hs-var">updateCatalogVersion</span></a></span><span>
 </span><span id="line-172"></span><span>            </span><span class="annot"><span class="annottext">MigrationResult -&gt; m MigrationResult
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(MigrationResult -&gt; m MigrationResult)
@@ -505,51 +505,51 @@ forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; MigrationResult
 </span><a href="Hasura.Server.Migrate.html#MRMigrated"><span class="hs-identifier hs-var">MRMigrated</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621688168276"><span class="hs-identifier hs-var">previousVersionText</span></a></span><span>
+</span><a href="#local-6989586621688175516"><span class="hs-identifier hs-var">previousVersionText</span></a></span><span>
 </span><span id="line-173"></span><span>      </span><span class="hs-keyword">where</span><span>
-</span><span id="line-174"></span><span>        </span><span id="local-6989586621688168272"><span class="annot"><span class="annottext">neededMigrations :: a -&gt; [(a, b)] -&gt; [(a, b)]
-</span><a href="#local-6989586621688168272"><span class="hs-identifier hs-var hs-var">neededMigrations</span></a></span></span><span> </span><span id="local-6989586621688168267"><span class="annot"><span class="annottext">a
-</span><a href="#local-6989586621688168267"><span class="hs-identifier hs-var">prevVersion</span></a></span></span><span> </span><span id="local-6989586621688168266"><span class="annot"><span class="annottext">[(a, b)]
-</span><a href="#local-6989586621688168266"><span class="hs-identifier hs-var">upMigrations</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-174"></span><span>        </span><span id="local-6989586621688175512"><span class="annot"><span class="annottext">neededMigrations :: a -&gt; [(a, b)] -&gt; [(a, b)]
+</span><a href="#local-6989586621688175512"><span class="hs-identifier hs-var hs-var">neededMigrations</span></a></span></span><span> </span><span id="local-6989586621688175507"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621688175507"><span class="hs-identifier hs-var">prevVersion</span></a></span></span><span> </span><span id="local-6989586621688175506"><span class="annot"><span class="annottext">[(a, b)]
+</span><a href="#local-6989586621688175506"><span class="hs-identifier hs-var">upMigrations</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-175"></span><span>          </span><span class="annot"><span class="annottext">((a, b) -&gt; Bool) -&gt; [(a, b)] -&gt; [(a, b)]
 forall a. (a -&gt; Bool) -&gt; [a] -&gt; [a]
 </span><span class="hs-identifier hs-var">dropWhile</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">(</span><span class="annot"><span class="annottext">a -&gt; a -&gt; Bool
 forall a. Ord a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">&lt;</span></span><span> </span><span class="annot"><span class="annottext">a
-</span><a href="#local-6989586621688168267"><span class="hs-identifier hs-var">prevVersion</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(a -&gt; Bool) -&gt; ((a, b) -&gt; a) -&gt; (a, b) -&gt; Bool
+</span><a href="#local-6989586621688175507"><span class="hs-identifier hs-var">prevVersion</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(a -&gt; Bool) -&gt; ((a, b) -&gt; a) -&gt; (a, b) -&gt; Bool
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">(a, b) -&gt; a
 forall a b. (a, b) -&gt; a
 </span><span class="hs-identifier hs-var">fst</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[(a, b)]
-</span><a href="#local-6989586621688168266"><span class="hs-identifier hs-var">upMigrations</span></a></span><span>
+</span><a href="#local-6989586621688175506"><span class="hs-identifier hs-var">upMigrations</span></a></span><span>
 </span><span id="line-176"></span><span>
-</span><span id="line-177"></span><span>    </span><span id="local-6989586621688168292"><span class="annot"><span class="annottext">updateCatalogVersion :: m ()
-</span><a href="#local-6989586621688168292"><span class="hs-identifier hs-var hs-var">updateCatalogVersion</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; UTCTime -&gt; m ()
+</span><span id="line-177"></span><span>    </span><span id="local-6989586621688175532"><span class="annot"><span class="annottext">updateCatalogVersion :: m ()
+</span><a href="#local-6989586621688175532"><span class="hs-identifier hs-var hs-var">updateCatalogVersion</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; UTCTime -&gt; m ()
 forall (m :: * -&gt; *). MonadTx m =&gt; Text -&gt; UTCTime -&gt; m ()
 </span><a href="Hasura.Server.Migrate.Internal.html#setCatalogVersion"><span class="hs-identifier hs-var">setCatalogVersion</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><a href="Hasura.Server.Migrate.Version.html#latestCatalogVersionString"><span class="hs-identifier hs-var">latestCatalogVersionString</span></a></span><span> </span><span class="annot"><span class="annottext">UTCTime
-</span><a href="#local-6989586621688168321"><span class="hs-identifier hs-var">migrationTime</span></a></span><span>
+</span><a href="#local-6989586621688175561"><span class="hs-identifier hs-var">migrationTime</span></a></span><span>
 </span><span id="line-178"></span><span>
 </span><span id="line-179"></span><span class="annot"><a href="Hasura.Server.Migrate.html#downgradeCatalog"><span class="hs-identifier hs-type">downgradeCatalog</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-180"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621688168262"><span class="annot"><a href="#local-6989586621688168262"><span class="hs-identifier hs-type">m</span></a></span></span><span class="hs-operator">.</span><span>
-</span><span id="line-181"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621688168262"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Connection.html#MonadTx"><span class="hs-identifier hs-type">MonadTx</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688168262"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-180"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621688175502"><span class="annot"><a href="#local-6989586621688175502"><span class="hs-identifier hs-type">m</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-181"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621688175502"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Connection.html#MonadTx"><span class="hs-identifier hs-type">MonadTx</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688175502"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
 </span><span id="line-182"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#SourceConnConfiguration"><span class="hs-identifier hs-type">SourceConnConfiguration</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Vanilla"><span class="hs-identifier hs-type">Vanilla</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-183"></span><span>  </span><span class="annot"><a href="Hasura.Server.Init.Config.html#DowngradeOptions"><span class="hs-identifier hs-type">DowngradeOptions</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-184"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">UTCTime</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-185"></span><span>  </span><span class="annot"><a href="#local-6989586621688168262"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.Server.Migrate.html#MigrationResult"><span class="hs-identifier hs-type">MigrationResult</span></a></span><span>
+</span><span id="line-185"></span><span>  </span><span class="annot"><a href="#local-6989586621688175502"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.Server.Migrate.html#MigrationResult"><span class="hs-identifier hs-type">MigrationResult</span></a></span><span>
 </span><span id="line-186"></span><span id="downgradeCatalog"><span class="annot"><span class="annottext">downgradeCatalog :: Maybe (SourceConnConfiguration ('Postgres 'Vanilla))
 -&gt; DowngradeOptions -&gt; UTCTime -&gt; m MigrationResult
-</span><a href="Hasura.Server.Migrate.html#downgradeCatalog"><span class="hs-identifier hs-var hs-var">downgradeCatalog</span></a></span></span><span> </span><span id="local-6989586621688168261"><span class="annot"><span class="annottext">Maybe (SourceConnConfiguration ('Postgres 'Vanilla))
-</span><a href="#local-6989586621688168261"><span class="hs-identifier hs-var">defaultSourceConfig</span></a></span></span><span> </span><span id="local-6989586621688168260"><span class="annot"><span class="annottext">DowngradeOptions
-</span><a href="#local-6989586621688168260"><span class="hs-identifier hs-var">opts</span></a></span></span><span> </span><span id="local-6989586621688168259"><span class="annot"><span class="annottext">UTCTime
-</span><a href="#local-6989586621688168259"><span class="hs-identifier hs-var">time</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-187"></span><span>  </span><span id="local-6989586621688168258"><span class="annot"><span class="annottext">Float
-</span><a href="#local-6989586621688168258"><span class="hs-identifier hs-var">currentCatalogVersion</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">TxE QErr Float -&gt; m Float
+</span><a href="Hasura.Server.Migrate.html#downgradeCatalog"><span class="hs-identifier hs-var hs-var">downgradeCatalog</span></a></span></span><span> </span><span id="local-6989586621688175501"><span class="annot"><span class="annottext">Maybe (SourceConnConfiguration ('Postgres 'Vanilla))
+</span><a href="#local-6989586621688175501"><span class="hs-identifier hs-var">defaultSourceConfig</span></a></span></span><span> </span><span id="local-6989586621688175500"><span class="annot"><span class="annottext">DowngradeOptions
+</span><a href="#local-6989586621688175500"><span class="hs-identifier hs-var">opts</span></a></span></span><span> </span><span id="local-6989586621688175499"><span class="annot"><span class="annottext">UTCTime
+</span><a href="#local-6989586621688175499"><span class="hs-identifier hs-var">time</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-187"></span><span>  </span><span id="local-6989586621688175498"><span class="annot"><span class="annottext">Float
+</span><a href="#local-6989586621688175498"><span class="hs-identifier hs-var">currentCatalogVersion</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">TxE QErr Float -&gt; m Float
 forall (m :: * -&gt; *) a. MonadTx m =&gt; TxE QErr a -&gt; m a
 </span><a href="Hasura.Backends.Postgres.Connection.html#liftTx"><span class="hs-identifier hs-var">liftTx</span></a></span><span> </span><span class="annot"><span class="annottext">TxE QErr Float
 </span><a href="Hasura.Server.Migrate.Internal.html#getCatalogVersion"><span class="hs-identifier hs-var">getCatalogVersion</span></a></span><span>
-</span><span id="line-188"></span><span>  </span><span id="local-6989586621688168257"><span class="annot"><span class="annottext">Float
-</span><a href="#local-6989586621688168257"><span class="hs-identifier hs-var">targetVersionFloat</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Float</span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
+</span><span id="line-188"></span><span>  </span><span id="local-6989586621688175497"><span class="annot"><span class="annottext">Float
+</span><a href="#local-6989586621688175497"><span class="hs-identifier hs-var">targetVersionFloat</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Float</span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
 </span><span id="line-189"></span><span>    </span><span class="annot"><span class="annottext">Either String Float -&gt; (String -&gt; m Float) -&gt; m Float
 forall (m :: * -&gt; *) e a.
 Applicative m =&gt;
@@ -561,10 +561,10 @@ forall a. Read a =&gt; String -&gt; Either String a
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">DowngradeOptions -&gt; Text
 </span><a href="Hasura.Server.Init.Config.html#dgoTargetVersion"><span class="hs-identifier hs-var hs-var">dgoTargetVersion</span></a></span><span> </span><span class="annot"><span class="annottext">DowngradeOptions
-</span><a href="#local-6989586621688168260"><span class="hs-identifier hs-var">opts</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">((String -&gt; m Float) -&gt; m Float) -&gt; (String -&gt; m Float) -&gt; m Float
+</span><a href="#local-6989586621688175500"><span class="hs-identifier hs-var">opts</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">((String -&gt; m Float) -&gt; m Float) -&gt; (String -&gt; m Float) -&gt; m Float
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621688168252"><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621688168252"><span class="hs-identifier hs-var">err</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621688175492"><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621688175492"><span class="hs-identifier hs-var">err</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-190"></span><span>      </span><span class="annot"><span class="annottext">Text -&gt; m Float
 forall (m :: * -&gt; *) a. QErrM m =&gt; Text -&gt; m a
 </span><a href="Hasura.Base.Error.html#throw500"><span class="hs-identifier hs-var">throw500</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; m Float) -&gt; Text -&gt; m Float
@@ -574,7 +574,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">DowngradeOptions -&gt; Text
 </span><a href="Hasura.Server.Init.Config.html#dgoTargetVersion"><span class="hs-identifier hs-var hs-var">dgoTargetVersion</span></a></span><span> </span><span class="annot"><span class="annottext">DowngradeOptions
-</span><a href="#local-6989586621688168260"><span class="hs-identifier hs-var">opts</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+</span><a href="#local-6989586621688175500"><span class="hs-identifier hs-var">opts</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot; to a float, error: &quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
@@ -582,33 +582,33 @@ forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; Text
 forall a. Show a =&gt; a -&gt; Text
 </span><a href="Hasura.Prelude.html#tshow"><span class="hs-identifier hs-var">tshow</span></a></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621688168252"><span class="hs-identifier hs-var">err</span></a></span><span>
+</span><a href="#local-6989586621688175492"><span class="hs-identifier hs-var">err</span></a></span><span>
 </span><span id="line-191"></span><span>  </span><span class="annot"><span class="annottext">Float -&gt; Float -&gt; m MigrationResult
-</span><a href="#local-6989586621688168251"><span class="hs-identifier hs-var">downgradeFrom</span></a></span><span> </span><span class="annot"><span class="annottext">Float
-</span><a href="#local-6989586621688168258"><span class="hs-identifier hs-var">currentCatalogVersion</span></a></span><span> </span><span class="annot"><span class="annottext">Float
-</span><a href="#local-6989586621688168257"><span class="hs-identifier hs-var">targetVersionFloat</span></a></span><span>
+</span><a href="#local-6989586621688175491"><span class="hs-identifier hs-var">downgradeFrom</span></a></span><span> </span><span class="annot"><span class="annottext">Float
+</span><a href="#local-6989586621688175498"><span class="hs-identifier hs-var">currentCatalogVersion</span></a></span><span> </span><span class="annot"><span class="annottext">Float
+</span><a href="#local-6989586621688175497"><span class="hs-identifier hs-var">targetVersionFloat</span></a></span><span>
 </span><span id="line-192"></span><span>  </span><span class="hs-keyword">where</span><span>
 </span><span id="line-193"></span><span>    </span><span class="hs-comment">-- downgrades an existing catalog to the specified version</span><span>
-</span><span id="line-194"></span><span>    </span><span class="annot"><a href="#local-6989586621688168251"><span class="hs-identifier hs-type">downgradeFrom</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Float</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Float</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621688168262"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.Server.Migrate.html#MigrationResult"><span class="hs-identifier hs-type">MigrationResult</span></a></span><span>
-</span><span id="line-195"></span><span>    </span><span id="local-6989586621688168251"><span class="annot"><span class="annottext">downgradeFrom :: Float -&gt; Float -&gt; m MigrationResult
-</span><a href="#local-6989586621688168251"><span class="hs-identifier hs-var hs-var">downgradeFrom</span></a></span></span><span> </span><span id="local-6989586621688168250"><span class="annot"><span class="annottext">Float
-</span><a href="#local-6989586621688168250"><span class="hs-identifier hs-var">previousVersion</span></a></span></span><span> </span><span id="local-6989586621688168249"><span class="annot"><span class="annottext">Float
-</span><a href="#local-6989586621688168249"><span class="hs-identifier hs-var">targetVersion</span></a></span></span><span>
+</span><span id="line-194"></span><span>    </span><span class="annot"><a href="#local-6989586621688175491"><span class="hs-identifier hs-type">downgradeFrom</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Float</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Float</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621688175502"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.Server.Migrate.html#MigrationResult"><span class="hs-identifier hs-type">MigrationResult</span></a></span><span>
+</span><span id="line-195"></span><span>    </span><span id="local-6989586621688175491"><span class="annot"><span class="annottext">downgradeFrom :: Float -&gt; Float -&gt; m MigrationResult
+</span><a href="#local-6989586621688175491"><span class="hs-identifier hs-var hs-var">downgradeFrom</span></a></span></span><span> </span><span id="local-6989586621688175490"><span class="annot"><span class="annottext">Float
+</span><a href="#local-6989586621688175490"><span class="hs-identifier hs-var">previousVersion</span></a></span></span><span> </span><span id="local-6989586621688175489"><span class="annot"><span class="annottext">Float
+</span><a href="#local-6989586621688175489"><span class="hs-identifier hs-var">targetVersion</span></a></span></span><span>
 </span><span id="line-196"></span><span>      </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Float
-</span><a href="#local-6989586621688168250"><span class="hs-identifier hs-var">previousVersion</span></a></span><span> </span><span class="annot"><span class="annottext">Float -&gt; Float -&gt; Bool
+</span><a href="#local-6989586621688175490"><span class="hs-identifier hs-var">previousVersion</span></a></span><span> </span><span class="annot"><span class="annottext">Float -&gt; Float -&gt; Bool
 forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="annottext">Float
-</span><a href="#local-6989586621688168249"><span class="hs-identifier hs-var">targetVersion</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">MigrationResult -&gt; m MigrationResult
+</span><a href="#local-6989586621688175489"><span class="hs-identifier hs-var">targetVersion</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">MigrationResult -&gt; m MigrationResult
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">MigrationResult
 </span><a href="Hasura.Server.Migrate.html#MRNothingToDo"><span class="hs-identifier hs-var">MRNothingToDo</span></a></span><span>
 </span><span id="line-197"></span><span>      </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">otherwise</span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-198"></span><span>        </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Float -&gt; Either Text [m ()]
-</span><a href="#local-6989586621688168248"><span class="hs-identifier hs-var">neededDownMigrations</span></a></span><span> </span><span class="annot"><span class="annottext">Float
-</span><a href="#local-6989586621688168249"><span class="hs-identifier hs-var">targetVersion</span></a></span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-199"></span><span>          </span><span class="annot"><span class="hs-identifier hs-type">Left</span></span><span> </span><span id="local-6989586621688168247"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621688168247"><span class="hs-identifier hs-var">reason</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><a href="#local-6989586621688175488"><span class="hs-identifier hs-var">neededDownMigrations</span></a></span><span> </span><span class="annot"><span class="annottext">Float
+</span><a href="#local-6989586621688175489"><span class="hs-identifier hs-var">targetVersion</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-199"></span><span>          </span><span class="annot"><span class="hs-identifier hs-type">Left</span></span><span> </span><span id="local-6989586621688175487"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621688175487"><span class="hs-identifier hs-var">reason</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-200"></span><span>            </span><span class="annot"><span class="annottext">Code -&gt; Text -&gt; m MigrationResult
 forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
 </span><a href="Hasura.Base.Error.html#throw400"><span class="hs-identifier hs-var">throw400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
@@ -622,7 +622,7 @@ forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Float -&gt; Text
 forall a. Show a =&gt; a -&gt; Text
 </span><a href="Hasura.Prelude.html#tshow"><span class="hs-identifier hs-var">tshow</span></a></span><span> </span><span class="annot"><span class="annottext">Float
-</span><a href="#local-6989586621688168250"><span class="hs-identifier hs-var">previousVersion</span></a></span><span>
+</span><a href="#local-6989586621688175490"><span class="hs-identifier hs-var">previousVersion</span></a></span><span>
 </span><span id="line-203"></span><span>                </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
@@ -631,7 +631,7 @@ forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">DowngradeOptions -&gt; Text
 </span><a href="Hasura.Server.Init.Config.html#dgoTargetVersion"><span class="hs-identifier hs-var hs-var">dgoTargetVersion</span></a></span><span> </span><span class="annot"><span class="annottext">DowngradeOptions
-</span><a href="#local-6989586621688168260"><span class="hs-identifier hs-var">opts</span></a></span><span>
+</span><a href="#local-6989586621688175500"><span class="hs-identifier hs-var">opts</span></a></span><span>
 </span><span id="line-205"></span><span>                </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
@@ -639,42 +639,42 @@ forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span id="line-206"></span><span>                </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621688168247"><span class="hs-identifier hs-var">reason</span></a></span><span>
-</span><span id="line-207"></span><span>          </span><span class="annot"><span class="hs-identifier hs-type">Right</span></span><span> </span><span id="local-6989586621688168246"><span class="annot"><span class="annottext">[m ()]
-</span><a href="#local-6989586621688168246"><span class="hs-identifier hs-var">path</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><a href="#local-6989586621688175487"><span class="hs-identifier hs-var">reason</span></a></span><span>
+</span><span id="line-207"></span><span>          </span><span class="annot"><span class="hs-identifier hs-type">Right</span></span><span> </span><span id="local-6989586621688175486"><span class="annot"><span class="annottext">[m ()]
+</span><a href="#local-6989586621688175486"><span class="hs-identifier hs-var">path</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-208"></span><span>            </span><span class="annot"><span class="annottext">[m ()] -&gt; m ()
 forall (t :: * -&gt; *) (m :: * -&gt; *) a.
 (Foldable t, Monad m) =&gt;
 t (m a) -&gt; m ()
 </span><span class="hs-identifier hs-var">sequence_</span></span><span> </span><span class="annot"><span class="annottext">[m ()]
-</span><a href="#local-6989586621688168246"><span class="hs-identifier hs-var">path</span></a></span><span>
+</span><a href="#local-6989586621688175486"><span class="hs-identifier hs-var">path</span></a></span><span>
 </span><span id="line-209"></span><span>            </span><span class="annot"><span class="annottext">Bool -&gt; m () -&gt; m ()
 forall (f :: * -&gt; *). Applicative f =&gt; Bool -&gt; f () -&gt; f ()
 </span><span class="hs-identifier hs-var">unless</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">DowngradeOptions -&gt; Bool
 </span><a href="Hasura.Server.Init.Config.html#dgoDryRun"><span class="hs-identifier hs-var hs-var">dgoDryRun</span></a></span><span> </span><span class="annot"><span class="annottext">DowngradeOptions
-</span><a href="#local-6989586621688168260"><span class="hs-identifier hs-var">opts</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">do</span><span>
+</span><a href="#local-6989586621688175500"><span class="hs-identifier hs-var">opts</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-210"></span><span>              </span><span class="annot"><span class="annottext">Text -&gt; UTCTime -&gt; m ()
 forall (m :: * -&gt; *). MonadTx m =&gt; Text -&gt; UTCTime -&gt; m ()
 </span><a href="Hasura.Server.Migrate.Internal.html#setCatalogVersion"><span class="hs-identifier hs-var">setCatalogVersion</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">DowngradeOptions -&gt; Text
 </span><a href="Hasura.Server.Init.Config.html#dgoTargetVersion"><span class="hs-identifier hs-var hs-var">dgoTargetVersion</span></a></span><span> </span><span class="annot"><span class="annottext">DowngradeOptions
-</span><a href="#local-6989586621688168260"><span class="hs-identifier hs-var">opts</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">UTCTime
-</span><a href="#local-6989586621688168259"><span class="hs-identifier hs-var">time</span></a></span><span>
+</span><a href="#local-6989586621688175500"><span class="hs-identifier hs-var">opts</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">UTCTime
+</span><a href="#local-6989586621688175499"><span class="hs-identifier hs-var">time</span></a></span><span>
 </span><span id="line-211"></span><span>            </span><span class="annot"><span class="annottext">MigrationResult -&gt; m MigrationResult
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; MigrationResult
 </span><a href="Hasura.Server.Migrate.html#MRMigrated"><span class="hs-identifier hs-var">MRMigrated</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">DowngradeOptions -&gt; Text
 </span><a href="Hasura.Server.Init.Config.html#dgoTargetVersion"><span class="hs-identifier hs-var hs-var">dgoTargetVersion</span></a></span><span> </span><span class="annot"><span class="annottext">DowngradeOptions
-</span><a href="#local-6989586621688168260"><span class="hs-identifier hs-var">opts</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621688175500"><span class="hs-identifier hs-var">opts</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-212"></span><span>      </span><span class="hs-keyword">where</span><span>
-</span><span id="line-213"></span><span>        </span><span id="local-6989586621688168248"><span class="annot"><span class="annottext">neededDownMigrations :: Float -&gt; Either Text [m ()]
-</span><a href="#local-6989586621688168248"><span class="hs-identifier hs-var hs-var">neededDownMigrations</span></a></span></span><span> </span><span id="local-6989586621688168242"><span class="annot"><span class="annottext">Float
-</span><a href="#local-6989586621688168242"><span class="hs-identifier hs-var">newVersion</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-213"></span><span>        </span><span id="local-6989586621688175488"><span class="annot"><span class="annottext">neededDownMigrations :: Float -&gt; Either Text [m ()]
+</span><a href="#local-6989586621688175488"><span class="hs-identifier hs-var hs-var">neededDownMigrations</span></a></span></span><span> </span><span id="local-6989586621688175482"><span class="annot"><span class="annottext">Float
+</span><a href="#local-6989586621688175482"><span class="hs-identifier hs-var">newVersion</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-214"></span><span>          </span><span class="annot"><span class="annottext">Float -&gt; Float -&gt; [(Float, MigrationPair m)] -&gt; Either Text [m ()]
-</span><a href="#local-6989586621688168241"><span class="hs-identifier hs-var">downgrade</span></a></span><span>
+</span><a href="#local-6989586621688175481"><span class="hs-identifier hs-var">downgrade</span></a></span><span>
 </span><span id="line-215"></span><span>            </span><span class="annot"><span class="annottext">Float
-</span><a href="#local-6989586621688168250"><span class="hs-identifier hs-var">previousVersion</span></a></span><span>
+</span><a href="#local-6989586621688175490"><span class="hs-identifier hs-var">previousVersion</span></a></span><span>
 </span><span id="line-216"></span><span>            </span><span class="annot"><span class="annottext">Float
-</span><a href="#local-6989586621688168242"><span class="hs-identifier hs-var">newVersion</span></a></span><span>
+</span><a href="#local-6989586621688175482"><span class="hs-identifier hs-var">newVersion</span></a></span><span>
 </span><span id="line-217"></span><span>            </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[(Float, MigrationPair m)] -&gt; [(Float, MigrationPair m)]
 forall a. [a] -&gt; [a]
 </span><span class="hs-identifier hs-var">reverse</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Maybe (SourceConnConfiguration ('Postgres 'Vanilla))
@@ -684,21 +684,21 @@ forall (m :: * -&gt; *).
 Maybe (SourceConnConfiguration ('Postgres 'Vanilla))
 -&gt; Bool -&gt; MaintenanceMode -&gt; [(Float, MigrationPair m)]
 </span><a href="Hasura.Server.Migrate.html#migrations"><span class="hs-identifier hs-var">migrations</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe (SourceConnConfiguration ('Postgres 'Vanilla))
-</span><a href="#local-6989586621688168261"><span class="hs-identifier hs-var">defaultSourceConfig</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">DowngradeOptions -&gt; Bool
+</span><a href="#local-6989586621688175501"><span class="hs-identifier hs-var">defaultSourceConfig</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">DowngradeOptions -&gt; Bool
 </span><a href="Hasura.Server.Init.Config.html#dgoDryRun"><span class="hs-identifier hs-var hs-var">dgoDryRun</span></a></span><span> </span><span class="annot"><span class="annottext">DowngradeOptions
-</span><a href="#local-6989586621688168260"><span class="hs-identifier hs-var">opts</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">MaintenanceMode
+</span><a href="#local-6989586621688175500"><span class="hs-identifier hs-var">opts</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">MaintenanceMode
 </span><a href="Hasura.Server.Types.html#MaintenanceModeDisabled"><span class="hs-identifier hs-var">MaintenanceModeDisabled</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-218"></span><span>
-</span><span id="line-219"></span><span>        </span><span class="annot"><a href="#local-6989586621688168241"><span class="hs-identifier hs-type">downgrade</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-219"></span><span>        </span><span class="annot"><a href="#local-6989586621688175481"><span class="hs-identifier hs-type">downgrade</span></a></span><span> </span><span class="hs-glyph">::</span><span>
 </span><span id="line-220"></span><span>          </span><span class="annot"><span class="hs-identifier hs-type">Float</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-221"></span><span>          </span><span class="annot"><span class="hs-identifier hs-type">Float</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-222"></span><span>          </span><span class="hs-special">[</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Float</span></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Server.Migrate.html#MigrationPair"><span class="hs-identifier hs-type">MigrationPair</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688168262"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-223"></span><span>          </span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="#local-6989586621688168262"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span class="hs-special">]</span><span>
-</span><span id="line-224"></span><span>        </span><span id="local-6989586621688168241"><span class="annot"><span class="annottext">downgrade :: Float -&gt; Float -&gt; [(Float, MigrationPair m)] -&gt; Either Text [m ()]
-</span><a href="#local-6989586621688168241"><span class="hs-identifier hs-var hs-var">downgrade</span></a></span></span><span> </span><span id="local-6989586621688168238"><span class="annot"><span class="annottext">Float
-</span><a href="#local-6989586621688168238"><span class="hs-identifier hs-var">lower</span></a></span></span><span> </span><span id="local-6989586621688168237"><span class="annot"><span class="annottext">Float
-</span><a href="#local-6989586621688168237"><span class="hs-identifier hs-var">upper</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[(Float, MigrationPair m)] -&gt; Either Text [m ()]
-</span><a href="#local-6989586621688168236"><span class="hs-identifier hs-var">skipFutureDowngrades</span></a></span><span>
+</span><span id="line-222"></span><span>          </span><span class="hs-special">[</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Float</span></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Server.Migrate.html#MigrationPair"><span class="hs-identifier hs-type">MigrationPair</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688175502"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-223"></span><span>          </span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="#local-6989586621688175502"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span class="hs-special">]</span><span>
+</span><span id="line-224"></span><span>        </span><span id="local-6989586621688175481"><span class="annot"><span class="annottext">downgrade :: Float -&gt; Float -&gt; [(Float, MigrationPair m)] -&gt; Either Text [m ()]
+</span><a href="#local-6989586621688175481"><span class="hs-identifier hs-var hs-var">downgrade</span></a></span></span><span> </span><span id="local-6989586621688175478"><span class="annot"><span class="annottext">Float
+</span><a href="#local-6989586621688175478"><span class="hs-identifier hs-var">lower</span></a></span></span><span> </span><span id="local-6989586621688175477"><span class="annot"><span class="annottext">Float
+</span><a href="#local-6989586621688175477"><span class="hs-identifier hs-var">upper</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[(Float, MigrationPair m)] -&gt; Either Text [m ()]
+</span><a href="#local-6989586621688175476"><span class="hs-identifier hs-var">skipFutureDowngrades</span></a></span><span>
 </span><span id="line-225"></span><span>          </span><span class="hs-keyword">where</span><span>
 </span><span id="line-226"></span><span>            </span><span class="hs-comment">-- We find the list of downgrade scripts to run by first</span><span>
 </span><span id="line-227"></span><span>            </span><span class="hs-comment">-- dropping any downgrades which correspond to newer versions</span><span>
@@ -706,43 +706,43 @@ Maybe (SourceConnConfiguration ('Postgres 'Vanilla))
 </span><span id="line-229"></span><span>            </span><span class="hs-comment">-- Then we take migrations as needed until we reach the target</span><span>
 </span><span id="line-230"></span><span>            </span><span class="hs-comment">-- version, dropping any remaining migrations from the end of the</span><span>
 </span><span id="line-231"></span><span>            </span><span class="hs-comment">-- (reversed) list.</span><span>
-</span><span id="line-232"></span><span>            </span><span class="annot"><a href="#local-6989586621688168236"><span class="hs-identifier hs-type">skipFutureDowngrades</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="#local-6989586621688168235"><span class="hs-identifier hs-type">dropOlderDowngrades</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Float</span></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Server.Migrate.html#MigrationPair"><span class="hs-identifier hs-type">MigrationPair</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688168262"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="#local-6989586621688168262"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span class="hs-special">]</span><span>
-</span><span id="line-233"></span><span>            </span><span id="local-6989586621688168236"><span class="annot"><span class="annottext">skipFutureDowngrades :: [(Float, MigrationPair m)] -&gt; Either Text [m ()]
-</span><a href="#local-6989586621688168236"><span class="hs-identifier hs-var hs-var">skipFutureDowngrades</span></a></span></span><span> </span><span id="local-6989586621688168234"><span class="annot"><span class="annottext">[(Float, MigrationPair m)]
-</span><a href="#local-6989586621688168234"><span class="hs-identifier hs-var">xs</span></a></span></span><span> </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Float
-</span><a href="#local-6989586621688168250"><span class="hs-identifier hs-var">previousVersion</span></a></span><span> </span><span class="annot"><span class="annottext">Float -&gt; Float -&gt; Bool
+</span><span id="line-232"></span><span>            </span><span class="annot"><a href="#local-6989586621688175476"><span class="hs-identifier hs-type">skipFutureDowngrades</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="#local-6989586621688175475"><span class="hs-identifier hs-type">dropOlderDowngrades</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Float</span></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Server.Migrate.html#MigrationPair"><span class="hs-identifier hs-type">MigrationPair</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688175502"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="#local-6989586621688175502"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span class="hs-special">]</span><span>
+</span><span id="line-233"></span><span>            </span><span id="local-6989586621688175476"><span class="annot"><span class="annottext">skipFutureDowngrades :: [(Float, MigrationPair m)] -&gt; Either Text [m ()]
+</span><a href="#local-6989586621688175476"><span class="hs-identifier hs-var hs-var">skipFutureDowngrades</span></a></span></span><span> </span><span id="local-6989586621688175474"><span class="annot"><span class="annottext">[(Float, MigrationPair m)]
+</span><a href="#local-6989586621688175474"><span class="hs-identifier hs-var">xs</span></a></span></span><span> </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Float
+</span><a href="#local-6989586621688175490"><span class="hs-identifier hs-var">previousVersion</span></a></span><span> </span><span class="annot"><span class="annottext">Float -&gt; Float -&gt; Bool
 forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="annottext">Float
-</span><a href="#local-6989586621688168238"><span class="hs-identifier hs-var">lower</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[(Float, MigrationPair m)] -&gt; Either Text [m ()]
-</span><a href="#local-6989586621688168235"><span class="hs-identifier hs-var">dropOlderDowngrades</span></a></span><span> </span><span class="annot"><span class="annottext">[(Float, MigrationPair m)]
-</span><a href="#local-6989586621688168234"><span class="hs-identifier hs-var">xs</span></a></span><span>
-</span><span id="line-234"></span><span>            </span><span class="annot"><a href="#local-6989586621688168236"><span class="hs-identifier hs-var">skipFutureDowngrades</span></a></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Either Text [m ()]
+</span><a href="#local-6989586621688175478"><span class="hs-identifier hs-var">lower</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[(Float, MigrationPair m)] -&gt; Either Text [m ()]
+</span><a href="#local-6989586621688175475"><span class="hs-identifier hs-var">dropOlderDowngrades</span></a></span><span> </span><span class="annot"><span class="annottext">[(Float, MigrationPair m)]
+</span><a href="#local-6989586621688175474"><span class="hs-identifier hs-var">xs</span></a></span><span>
+</span><span id="line-234"></span><span>            </span><span class="annot"><a href="#local-6989586621688175476"><span class="hs-identifier hs-var">skipFutureDowngrades</span></a></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Either Text [m ()]
 forall a b. a -&gt; Either a b
 </span><span class="hs-identifier hs-var">Left</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;the starting version is unrecognized.&quot;</span></span><span>
-</span><span id="line-235"></span><span>            </span><span class="annot"><a href="#local-6989586621688168236"><span class="hs-identifier hs-var">skipFutureDowngrades</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">(</span><span id="local-6989586621688168233"><span class="annot"><span class="annottext">Float
-</span><a href="#local-6989586621688168233"><span class="hs-identifier hs-var">x</span></a></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">MigrationPair m
-</span><span class="hs-identifier">_</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="hs-glyph hs-type">:</span></span><span> </span><span id="local-6989586621688168232"><span class="annot"><span class="annottext">[(Float, MigrationPair m)]
-</span><a href="#local-6989586621688168232"><span class="hs-identifier hs-var">xs</span></a></span></span><span class="hs-special">)</span><span>
+</span><span id="line-235"></span><span>            </span><span class="annot"><a href="#local-6989586621688175476"><span class="hs-identifier hs-var">skipFutureDowngrades</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">(</span><span id="local-6989586621688175473"><span class="annot"><span class="annottext">Float
+</span><a href="#local-6989586621688175473"><span class="hs-identifier hs-var">x</span></a></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">MigrationPair m
+</span><span class="hs-identifier">_</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="hs-glyph hs-type">:</span></span><span> </span><span id="local-6989586621688175472"><span class="annot"><span class="annottext">[(Float, MigrationPair m)]
+</span><a href="#local-6989586621688175472"><span class="hs-identifier hs-var">xs</span></a></span></span><span class="hs-special">)</span><span>
 </span><span id="line-236"></span><span>              </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Float
-</span><a href="#local-6989586621688168233"><span class="hs-identifier hs-var">x</span></a></span><span> </span><span class="annot"><span class="annottext">Float -&gt; Float -&gt; Bool
+</span><a href="#local-6989586621688175473"><span class="hs-identifier hs-var">x</span></a></span><span> </span><span class="annot"><span class="annottext">Float -&gt; Float -&gt; Bool
 forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="annottext">Float
-</span><a href="#local-6989586621688168238"><span class="hs-identifier hs-var">lower</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[(Float, MigrationPair m)] -&gt; Either Text [m ()]
-</span><a href="#local-6989586621688168235"><span class="hs-identifier hs-var">dropOlderDowngrades</span></a></span><span> </span><span class="annot"><span class="annottext">[(Float, MigrationPair m)]
-</span><a href="#local-6989586621688168232"><span class="hs-identifier hs-var">xs</span></a></span><span>
+</span><a href="#local-6989586621688175478"><span class="hs-identifier hs-var">lower</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[(Float, MigrationPair m)] -&gt; Either Text [m ()]
+</span><a href="#local-6989586621688175475"><span class="hs-identifier hs-var">dropOlderDowngrades</span></a></span><span> </span><span class="annot"><span class="annottext">[(Float, MigrationPair m)]
+</span><a href="#local-6989586621688175472"><span class="hs-identifier hs-var">xs</span></a></span><span>
 </span><span id="line-237"></span><span>              </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">otherwise</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[(Float, MigrationPair m)] -&gt; Either Text [m ()]
-</span><a href="#local-6989586621688168236"><span class="hs-identifier hs-var">skipFutureDowngrades</span></a></span><span> </span><span class="annot"><span class="annottext">[(Float, MigrationPair m)]
-</span><a href="#local-6989586621688168232"><span class="hs-identifier hs-var">xs</span></a></span><span>
+</span><a href="#local-6989586621688175476"><span class="hs-identifier hs-var">skipFutureDowngrades</span></a></span><span> </span><span class="annot"><span class="annottext">[(Float, MigrationPair m)]
+</span><a href="#local-6989586621688175472"><span class="hs-identifier hs-var">xs</span></a></span><span>
 </span><span id="line-238"></span><span>
-</span><span id="line-239"></span><span>            </span><span id="local-6989586621688168235"><span class="annot"><span class="annottext">dropOlderDowngrades :: [(Float, MigrationPair m)] -&gt; Either Text [m ()]
-</span><a href="#local-6989586621688168235"><span class="hs-identifier hs-var hs-var">dropOlderDowngrades</span></a></span></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Either Text [m ()]
+</span><span id="line-239"></span><span>            </span><span id="local-6989586621688175475"><span class="annot"><span class="annottext">dropOlderDowngrades :: [(Float, MigrationPair m)] -&gt; Either Text [m ()]
+</span><a href="#local-6989586621688175475"><span class="hs-identifier hs-var hs-var">dropOlderDowngrades</span></a></span></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Either Text [m ()]
 forall a b. a -&gt; Either a b
 </span><span class="hs-identifier hs-var">Left</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;the target version is unrecognized.&quot;</span></span><span>
-</span><span id="line-240"></span><span>            </span><span class="annot"><a href="#local-6989586621688168235"><span class="hs-identifier hs-var">dropOlderDowngrades</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">(</span><span id="local-6989586621688168231"><span class="annot"><span class="annottext">Float
-</span><a href="#local-6989586621688168231"><span class="hs-identifier hs-var">x</span></a></span></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Server.Migrate.html#MigrationPair"><span class="hs-identifier hs-type">MigrationPair</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">mpDown :: forall (m :: * -&gt; *). MigrationPair m -&gt; Maybe (m ())
+</span><span id="line-240"></span><span>            </span><span class="annot"><a href="#local-6989586621688175475"><span class="hs-identifier hs-var">dropOlderDowngrades</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">(</span><span id="local-6989586621688175471"><span class="annot"><span class="annottext">Float
+</span><a href="#local-6989586621688175471"><span class="hs-identifier hs-var">x</span></a></span></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Server.Migrate.html#MigrationPair"><span class="hs-identifier hs-type">MigrationPair</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">mpDown :: forall (m :: * -&gt; *). MigrationPair m -&gt; Maybe (m ())
 </span><a href="Hasura.Server.Migrate.html#mpDown"><span class="hs-identifier hs-var">mpDown</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe (m ())
 </span><span class="hs-identifier hs-var">Nothing</span></span><span class="hs-special">}</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="hs-glyph hs-type">:</span></span><span> </span><span class="annot"><span class="annottext">[(Float, MigrationPair m)]
 </span><span class="hs-identifier">_</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
@@ -756,46 +756,46 @@ forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Float -&gt; Text
 forall a. Show a =&gt; a -&gt; Text
 </span><a href="Hasura.Prelude.html#tshow"><span class="hs-identifier hs-var">tshow</span></a></span><span> </span><span class="annot"><span class="annottext">Float
-</span><a href="#local-6989586621688168231"><span class="hs-identifier hs-var">x</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+</span><a href="#local-6989586621688175471"><span class="hs-identifier hs-var">x</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;.&quot;</span></span><span>
-</span><span id="line-242"></span><span>            </span><span class="annot"><a href="#local-6989586621688168235"><span class="hs-identifier hs-var">dropOlderDowngrades</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">(</span><span id="local-6989586621688168230"><span class="annot"><span class="annottext">Float
-</span><a href="#local-6989586621688168230"><span class="hs-identifier hs-var">x</span></a></span></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Server.Migrate.html#MigrationPair"><span class="hs-identifier hs-type">MigrationPair</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">mpDown :: forall (m :: * -&gt; *). MigrationPair m -&gt; Maybe (m ())
-</span><a href="Hasura.Server.Migrate.html#mpDown"><span class="hs-identifier hs-var">mpDown</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621688168229"><span class="annot"><span class="annottext">m ()
-</span><a href="#local-6989586621688168229"><span class="hs-identifier hs-var">y</span></a></span></span><span class="hs-special">}</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="hs-glyph hs-type">:</span></span><span> </span><span id="local-6989586621688168228"><span class="annot"><span class="annottext">[(Float, MigrationPair m)]
-</span><a href="#local-6989586621688168228"><span class="hs-identifier hs-var">xs</span></a></span></span><span class="hs-special">)</span><span>
+</span><span id="line-242"></span><span>            </span><span class="annot"><a href="#local-6989586621688175475"><span class="hs-identifier hs-var">dropOlderDowngrades</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">(</span><span id="local-6989586621688175470"><span class="annot"><span class="annottext">Float
+</span><a href="#local-6989586621688175470"><span class="hs-identifier hs-var">x</span></a></span></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Server.Migrate.html#MigrationPair"><span class="hs-identifier hs-type">MigrationPair</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">mpDown :: forall (m :: * -&gt; *). MigrationPair m -&gt; Maybe (m ())
+</span><a href="Hasura.Server.Migrate.html#mpDown"><span class="hs-identifier hs-var">mpDown</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621688175469"><span class="annot"><span class="annottext">m ()
+</span><a href="#local-6989586621688175469"><span class="hs-identifier hs-var">y</span></a></span></span><span class="hs-special">}</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="hs-glyph hs-type">:</span></span><span> </span><span id="local-6989586621688175468"><span class="annot"><span class="annottext">[(Float, MigrationPair m)]
+</span><a href="#local-6989586621688175468"><span class="hs-identifier hs-var">xs</span></a></span></span><span class="hs-special">)</span><span>
 </span><span id="line-243"></span><span>              </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Float
-</span><a href="#local-6989586621688168230"><span class="hs-identifier hs-var">x</span></a></span><span> </span><span class="annot"><span class="annottext">Float -&gt; Float -&gt; Bool
+</span><a href="#local-6989586621688175470"><span class="hs-identifier hs-var">x</span></a></span><span> </span><span class="annot"><span class="annottext">Float -&gt; Float -&gt; Bool
 forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="annottext">Float
-</span><a href="#local-6989586621688168237"><span class="hs-identifier hs-var">upper</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[m ()] -&gt; Either Text [m ()]
+</span><a href="#local-6989586621688175477"><span class="hs-identifier hs-var">upper</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[m ()] -&gt; Either Text [m ()]
 forall a b. b -&gt; Either a b
 </span><span class="hs-identifier hs-var">Right</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">m ()
-</span><a href="#local-6989586621688168229"><span class="hs-identifier hs-var">y</span></a></span><span class="hs-special">]</span><span>
+</span><a href="#local-6989586621688175469"><span class="hs-identifier hs-var">y</span></a></span><span class="hs-special">]</span><span>
 </span><span id="line-244"></span><span>              </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">otherwise</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">m ()
-</span><a href="#local-6989586621688168229"><span class="hs-identifier hs-var">y</span></a></span><span> </span><span class="annot"><span class="annottext">m () -&gt; [m ()] -&gt; [m ()]
+</span><a href="#local-6989586621688175469"><span class="hs-identifier hs-var">y</span></a></span><span> </span><span class="annot"><span class="annottext">m () -&gt; [m ()] -&gt; [m ()]
 forall a. a -&gt; [a] -&gt; [a]
 </span><span class="hs-glyph hs-var">:</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">([m ()] -&gt; [m ()]) -&gt; Either Text [m ()] -&gt; Either Text [m ()]
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">[(Float, MigrationPair m)] -&gt; Either Text [m ()]
-</span><a href="#local-6989586621688168235"><span class="hs-identifier hs-var">dropOlderDowngrades</span></a></span><span> </span><span class="annot"><span class="annottext">[(Float, MigrationPair m)]
-</span><a href="#local-6989586621688168228"><span class="hs-identifier hs-var">xs</span></a></span><span>
+</span><a href="#local-6989586621688175475"><span class="hs-identifier hs-var">dropOlderDowngrades</span></a></span><span> </span><span class="annot"><span class="annottext">[(Float, MigrationPair m)]
+</span><a href="#local-6989586621688175468"><span class="hs-identifier hs-var">xs</span></a></span><span>
 </span><span id="line-245"></span><span>
 </span><span id="line-246"></span><span class="annot"><a href="Hasura.Server.Migrate.html#migrations"><span class="hs-identifier hs-type">migrations</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-247"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621688168438"><span class="annot"><a href="#local-6989586621688168438"><span class="hs-identifier hs-type">m</span></a></span></span><span class="hs-operator">.</span><span>
-</span><span id="line-248"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621688168438"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Connection.html#MonadTx"><span class="hs-identifier hs-type">MonadTx</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688168438"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-247"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621688175678"><span class="annot"><a href="#local-6989586621688175678"><span class="hs-identifier hs-type">m</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-248"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621688175678"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Connection.html#MonadTx"><span class="hs-identifier hs-type">MonadTx</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688175678"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
 </span><span id="line-249"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#SourceConnConfiguration"><span class="hs-identifier hs-type">SourceConnConfiguration</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Vanilla"><span class="hs-identifier hs-type">Vanilla</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-250"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-251"></span><span>  </span><span class="annot"><a href="Hasura.Server.Types.html#MaintenanceMode"><span class="hs-identifier hs-type">MaintenanceMode</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-252"></span><span>  </span><span class="hs-special">[</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Float</span></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Server.Migrate.html#MigrationPair"><span class="hs-identifier hs-type">MigrationPair</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688168438"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span><span>
+</span><span id="line-252"></span><span>  </span><span class="hs-special">[</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Float</span></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Server.Migrate.html#MigrationPair"><span class="hs-identifier hs-type">MigrationPair</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688175678"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span><span>
 </span><span id="line-253"></span><span id="migrations"><span class="annot"><span class="annottext">migrations :: Maybe (SourceConnConfiguration ('Postgres 'Vanilla))
 -&gt; Bool -&gt; MaintenanceMode -&gt; [(Float, MigrationPair m)]
-</span><a href="Hasura.Server.Migrate.html#migrations"><span class="hs-identifier hs-var hs-var">migrations</span></a></span></span><span> </span><span id="local-6989586621688168226"><span class="annot"><span class="annottext">Maybe (SourceConnConfiguration ('Postgres 'Vanilla))
-</span><a href="#local-6989586621688168226"><span class="hs-identifier hs-var">maybeDefaultSourceConfig</span></a></span></span><span> </span><span id="local-6989586621688168225"><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621688168225"><span class="hs-identifier hs-var">dryRun</span></a></span></span><span> </span><span id="local-6989586621688168224"><span class="annot"><span class="annottext">MaintenanceMode
-</span><a href="#local-6989586621688168224"><span class="hs-identifier hs-var">maintenanceMode</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="Hasura.Server.Migrate.html#migrations"><span class="hs-identifier hs-var hs-var">migrations</span></a></span></span><span> </span><span id="local-6989586621688175466"><span class="annot"><span class="annottext">Maybe (SourceConnConfiguration ('Postgres 'Vanilla))
+</span><a href="#local-6989586621688175466"><span class="hs-identifier hs-var">maybeDefaultSourceConfig</span></a></span></span><span> </span><span id="local-6989586621688175465"><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621688175465"><span class="hs-identifier hs-var">dryRun</span></a></span></span><span> </span><span id="local-6989586621688175464"><span class="annot"><span class="annottext">MaintenanceMode
+</span><a href="#local-6989586621688175464"><span class="hs-identifier hs-var">maintenanceMode</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-254"></span><span>  </span><span class="hs-comment">-- We need to build the list of migrations at compile-time so that we can compile the SQL</span><span>
 </span><span id="line-255"></span><span>  </span><span class="hs-comment">-- directly into the executable using `Q.sqlFromFile`. The GHC stage restriction makes</span><span>
 </span><span id="line-256"></span><span>  </span><span class="hs-comment">-- doing this a little bit awkward (we can&#8217;t use any definitions in this module at</span><span>
@@ -836,11 +836,11 @@ forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span id="line-291"></span><span>           </span><span class="hs-identifier">migrationsFromFile</span><span> </span><span class="hs-special">[</span><span class="hs-number">44</span><span> </span><span class="hs-glyph">..</span><span> </span><span class="hs-special">(</span><span class="hs-identifier">fromInteger</span><span> </span><span class="hs-identifier">latestCatalogVersion</span><span class="hs-special">)</span><span class="hs-special">]</span><span>
 </span><span id="line-292"></span><span>   </span><span class="hs-special">)</span><span>
 </span><span id="line-293"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-294"></span><span>    </span><span class="annot"><a href="#local-6989586621688168223"><span class="hs-identifier hs-type">runTxOrPrint</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Q.Query</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621688168438"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
-</span><span id="line-295"></span><span>    </span><span id="local-6989586621688168223"><span class="annot"><span class="annottext">runTxOrPrint :: Query -&gt; m ()
-</span><a href="#local-6989586621688168223"><span class="hs-identifier hs-var hs-var">runTxOrPrint</span></a></span></span><span>
+</span><span id="line-294"></span><span>    </span><span class="annot"><a href="#local-6989586621688175463"><span class="hs-identifier hs-type">runTxOrPrint</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Q.Query</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621688175678"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-295"></span><span>    </span><span id="local-6989586621688175463"><span class="annot"><span class="annottext">runTxOrPrint :: Query -&gt; m ()
+</span><a href="#local-6989586621688175463"><span class="hs-identifier hs-var hs-var">runTxOrPrint</span></a></span></span><span>
 </span><span id="line-296"></span><span>      </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621688168225"><span class="hs-identifier hs-var">dryRun</span></a></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="#local-6989586621688175465"><span class="hs-identifier hs-var">dryRun</span></a></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-297"></span><span>        </span><span class="annot"><span class="annottext">IO () -&gt; m ()
 forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
 </span><span class="hs-identifier hs-var">liftIO</span></span><span> </span><span class="annot"><span class="annottext">(IO () -&gt; m ()) -&gt; (Query -&gt; IO ()) -&gt; Query -&gt; m ()
@@ -855,12 +855,12 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 forall (m :: * -&gt; *). MonadTx m =&gt; Query -&gt; m ()
 </span><a href="Hasura.Server.Migrate.html#multiQ"><span class="hs-identifier hs-var">multiQ</span></a></span><span>
 </span><span id="line-299"></span><span>
-</span><span id="line-300"></span><span>    </span><span id="local-6989586621688168222"><span class="annot"><span class="annottext">from42To43 :: m ()
-</span><a href="#local-6989586621688168222"><span class="hs-identifier hs-var hs-var">from42To43</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-300"></span><span>    </span><span id="local-6989586621688175462"><span class="annot"><span class="annottext">from42To43 :: m ()
+</span><a href="#local-6989586621688175462"><span class="hs-identifier hs-var hs-var">from42To43</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-301"></span><span>      </span><span class="annot"><span class="annottext">Bool -&gt; m () -&gt; m ()
 forall (f :: * -&gt; *). Applicative f =&gt; Bool -&gt; f () -&gt; f ()
 </span><span class="hs-identifier hs-var">when</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">MaintenanceMode
-</span><a href="#local-6989586621688168224"><span class="hs-identifier hs-var">maintenanceMode</span></a></span><span> </span><span class="annot"><span class="annottext">MaintenanceMode -&gt; MaintenanceMode -&gt; Bool
+</span><a href="#local-6989586621688175464"><span class="hs-identifier hs-var">maintenanceMode</span></a></span><span> </span><span class="annot"><span class="annottext">MaintenanceMode -&gt; MaintenanceMode -&gt; Bool
 forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="annottext">MaintenanceMode
 </span><a href="Hasura.Server.Types.html#MaintenanceModeEnabled"><span class="hs-identifier hs-var">MaintenanceModeEnabled</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(m () -&gt; m ()) -&gt; m () -&gt; m ()
@@ -870,10 +870,10 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 forall (m :: * -&gt; *) a. QErrM m =&gt; Text -&gt; m a
 </span><a href="Hasura.Base.Error.html#throw500"><span class="hs-identifier hs-var">throw500</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;cannot migrate to catalog version 43 in maintenance mode&quot;</span></span><span>
-</span><span id="line-303"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688168216"><span class="annot"><span class="annottext">query :: Query
-</span><a href="#local-6989586621688168216"><span class="hs-identifier hs-var hs-var">query</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">$(</span><span class="hs-identifier">makeRelativeToProject</span><span> </span><span class="hs-string">&quot;src-rsr/migrations/42_to_43.sql&quot;</span><span> </span><span class="hs-operator">&gt;&gt;=</span><span> </span><span class="hs-identifier">Q.sqlFromFile</span><span class="hs-special">)</span><span>
+</span><span id="line-303"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688175456"><span class="annot"><span class="annottext">query :: Query
+</span><a href="#local-6989586621688175456"><span class="hs-identifier hs-var hs-var">query</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">$(</span><span class="hs-identifier">makeRelativeToProject</span><span> </span><span class="hs-string">&quot;src-rsr/migrations/42_to_43.sql&quot;</span><span> </span><span class="hs-operator">&gt;&gt;=</span><span> </span><span class="hs-identifier">Q.sqlFromFile</span><span class="hs-special">)</span><span>
 </span><span id="line-304"></span><span>      </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621688168225"><span class="hs-identifier hs-var">dryRun</span></a></span><span>
+</span><a href="#local-6989586621688175465"><span class="hs-identifier hs-var">dryRun</span></a></span><span>
 </span><span id="line-305"></span><span>        </span><span class="hs-keyword">then</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">IO () -&gt; m ()
 forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
 </span><span class="hs-identifier hs-var">liftIO</span></span><span> </span><span class="annot"><span class="annottext">(IO () -&gt; m ()) -&gt; (Query -&gt; IO ()) -&gt; Query -&gt; m ()
@@ -883,24 +883,24 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Query -&gt; Text
 </span><span class="hs-identifier hs-var hs-var">Q.getQueryText</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Query
-</span><a href="#local-6989586621688168216"><span class="hs-identifier hs-var">query</span></a></span><span>
+</span><a href="#local-6989586621688175456"><span class="hs-identifier hs-var">query</span></a></span><span>
 </span><span id="line-306"></span><span>        </span><span class="hs-keyword">else</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-307"></span><span>          </span><span id="local-6989586621688168215"><span class="annot"><span class="annottext">MetadataNoSources
-</span><a href="#local-6989586621688168215"><span class="hs-identifier hs-var">metadataV2</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">m MetadataNoSources
+</span><span id="line-307"></span><span>          </span><span id="local-6989586621688175455"><span class="annot"><span class="annottext">MetadataNoSources
+</span><a href="#local-6989586621688175455"><span class="hs-identifier hs-var">metadataV2</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">m MetadataNoSources
 forall (m :: * -&gt; *). MonadTx m =&gt; m MetadataNoSources
 </span><a href="Hasura.RQL.DDL.Schema.LegacyCatalog.html#fetchMetadataFromHdbTables"><span class="hs-identifier hs-var">fetchMetadataFromHdbTables</span></a></span><span>
 </span><span id="line-308"></span><span>          </span><span class="annot"><span class="annottext">Query -&gt; m ()
 forall (m :: * -&gt; *). MonadTx m =&gt; Query -&gt; m ()
 </span><a href="Hasura.Server.Migrate.html#multiQ"><span class="hs-identifier hs-var">multiQ</span></a></span><span> </span><span class="annot"><span class="annottext">Query
-</span><a href="#local-6989586621688168216"><span class="hs-identifier hs-var">query</span></a></span><span>
-</span><span id="line-309"></span><span>          </span><span id="local-6989586621688168213"><span class="annot"><span class="annottext">PostgresConnConfiguration
-</span><a href="#local-6989586621688168213"><span class="hs-identifier hs-var">defaultSourceConfig</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
+</span><a href="#local-6989586621688175456"><span class="hs-identifier hs-var">query</span></a></span><span>
+</span><span id="line-309"></span><span>          </span><span id="local-6989586621688175453"><span class="annot"><span class="annottext">PostgresConnConfiguration
+</span><a href="#local-6989586621688175453"><span class="hs-identifier hs-var">defaultSourceConfig</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
 </span><span id="line-310"></span><span>            </span><span class="annot"><span class="annottext">Maybe PostgresConnConfiguration
 -&gt; m PostgresConnConfiguration -&gt; m PostgresConnConfiguration
 forall (m :: * -&gt; *) a. Applicative m =&gt; Maybe a -&gt; m a -&gt; m a
 </span><a href="Hasura.Prelude.html#onNothing"><span class="hs-identifier hs-var">onNothing</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe (SourceConnConfiguration ('Postgres 'Vanilla))
 Maybe PostgresConnConfiguration
-</span><a href="#local-6989586621688168226"><span class="hs-identifier hs-var">maybeDefaultSourceConfig</span></a></span><span> </span><span class="annot"><span class="annottext">(m PostgresConnConfiguration -&gt; m PostgresConnConfiguration)
+</span><a href="#local-6989586621688175466"><span class="hs-identifier hs-var">maybeDefaultSourceConfig</span></a></span><span> </span><span class="annot"><span class="annottext">(m PostgresConnConfiguration -&gt; m PostgresConnConfiguration)
 -&gt; m PostgresConnConfiguration -&gt; m PostgresConnConfiguration
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span>
@@ -920,9 +920,9 @@ forall a. Show a =&gt; a -&gt; Text
 forall a b. (a, b) -&gt; a
 </span><span class="hs-identifier hs-var">fst</span></span><span> </span><span class="annot"><span class="annottext">(String, String)
 </span><a href="Hasura.Server.Init.html#databaseUrlEnv"><span class="hs-identifier hs-var">databaseUrlEnv</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-313"></span><span>          </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688168211"><span class="annot"><span class="annottext">metadataV3 :: Metadata
-</span><a href="#local-6989586621688168211"><span class="hs-identifier hs-var hs-var">metadataV3</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-314"></span><span>                </span><span class="hs-keyword">let</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.html#MetadataNoSources"><span class="hs-identifier hs-type">MetadataNoSources</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621688168202"><span id="local-6989586621688168203"><span id="local-6989586621688168204"><span id="local-6989586621688168205"><span id="local-6989586621688168206"><span id="local-6989586621688168207"><span id="local-6989586621688168208"><span id="local-6989586621688168209"><span class="annot"><span class="annottext">QueryCollections
+</span><span id="line-313"></span><span>          </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688175451"><span class="annot"><span class="annottext">metadataV3 :: Metadata
+</span><a href="#local-6989586621688175451"><span class="hs-identifier hs-var hs-var">metadataV3</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-314"></span><span>                </span><span class="hs-keyword">let</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.html#MetadataNoSources"><span class="hs-identifier hs-type">MetadataNoSources</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621688175442"><span id="local-6989586621688175443"><span id="local-6989586621688175444"><span id="local-6989586621688175445"><span id="local-6989586621688175446"><span id="local-6989586621688175447"><span id="local-6989586621688175448"><span id="local-6989586621688175449"><span class="annot"><span class="annottext">QueryCollections
 MetadataAllowlist
 Tables ('Postgres 'Vanilla)
 Functions ('Postgres 'Vanilla)
@@ -947,9 +947,9 @@ _mnsRemoteSchemas :: RemoteSchemas
 _mnsFunctions :: Functions ('Postgres 'Vanilla)
 _mnsTables :: Tables ('Postgres 'Vanilla)
 </span><a href="Hasura.RQL.Types.Metadata.html#_mnsCronTriggers"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span></span></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">MetadataNoSources
-</span><a href="#local-6989586621688168215"><span class="hs-identifier hs-var">metadataV2</span></a></span><span>
-</span><span id="line-315"></span><span>                    </span><span id="local-6989586621688168193"><span class="annot"><span class="annottext">defaultSourceMetadata :: AnyBackend SourceMetadata
-</span><a href="#local-6989586621688168193"><span class="hs-identifier hs-var hs-var">defaultSourceMetadata</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="#local-6989586621688175455"><span class="hs-identifier hs-var">metadataV2</span></a></span><span>
+</span><span id="line-315"></span><span>                    </span><span id="local-6989586621688175433"><span class="annot"><span class="annottext">defaultSourceMetadata :: AnyBackend SourceMetadata
+</span><a href="#local-6989586621688175433"><span class="hs-identifier hs-var hs-var">defaultSourceMetadata</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-316"></span><span>                      </span><span class="annot"><span class="annottext">SourceMetadata ('Postgres 'Vanilla) -&gt; AnyBackend SourceMetadata
 forall (b :: BackendType) (i :: BackendType -&gt; *).
 HasTag b =&gt;
@@ -975,10 +975,10 @@ SourceName
 -&gt; SourceMetadata b
 </span><a href="Hasura.RQL.Types.Metadata.html#SourceMetadata"><span class="hs-identifier hs-var">SourceMetadata</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName
 </span><a href="Hasura.RQL.Types.Common.html#defaultSource"><span class="hs-identifier hs-var">defaultSource</span></a></span><span> </span><span class="annot"><span class="annottext">Tables ('Postgres 'Vanilla)
-</span><a href="#local-6989586621688168209"><span class="hs-identifier hs-var">_mnsTables</span></a></span><span> </span><span class="annot"><span class="annottext">Functions ('Postgres 'Vanilla)
-</span><a href="#local-6989586621688168208"><span class="hs-identifier hs-var">_mnsFunctions</span></a></span><span> </span><span class="annot"><span class="annottext">SourceConnConfiguration ('Postgres 'Vanilla)
+</span><a href="#local-6989586621688175449"><span class="hs-identifier hs-var">_mnsTables</span></a></span><span> </span><span class="annot"><span class="annottext">Functions ('Postgres 'Vanilla)
+</span><a href="#local-6989586621688175448"><span class="hs-identifier hs-var">_mnsFunctions</span></a></span><span> </span><span class="annot"><span class="annottext">SourceConnConfiguration ('Postgres 'Vanilla)
 PostgresConnConfiguration
-</span><a href="#local-6989586621688168213"><span class="hs-identifier hs-var">defaultSourceConfig</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe QueryTagsConfig
+</span><a href="#local-6989586621688175453"><span class="hs-identifier hs-var">defaultSourceConfig</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe QueryTagsConfig
 forall a. Maybe a
 </span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="annot"><span class="annottext">SourceCustomization
 </span><a href="Hasura.RQL.Types.SourceCustomization.html#emptySourceCustomization"><span class="hs-identifier hs-var">emptySourceCustomization</span></a></span><span>
@@ -1003,19 +1003,19 @@ forall a. Maybe a
 forall k v. Hashable k =&gt; k -&gt; v -&gt; InsOrdHashMap k v
 </span><span class="hs-identifier hs-var">OMap.singleton</span></span><span> </span><span class="annot"><span class="annottext">SourceName
 </span><a href="Hasura.RQL.Types.Common.html#defaultSource"><span class="hs-identifier hs-var">defaultSource</span></a></span><span> </span><span class="annot"><span class="annottext">AnyBackend SourceMetadata
-</span><a href="#local-6989586621688168193"><span class="hs-identifier hs-var">defaultSourceMetadata</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621688175433"><span class="hs-identifier hs-var">defaultSourceMetadata</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-320"></span><span>                      </span><span class="annot"><span class="annottext">RemoteSchemas
-</span><a href="#local-6989586621688168207"><span class="hs-identifier hs-var">_mnsRemoteSchemas</span></a></span><span>
+</span><a href="#local-6989586621688175447"><span class="hs-identifier hs-var">_mnsRemoteSchemas</span></a></span><span>
 </span><span id="line-321"></span><span>                      </span><span class="annot"><span class="annottext">QueryCollections
-</span><a href="#local-6989586621688168206"><span class="hs-identifier hs-var">_mnsQueryCollections</span></a></span><span>
+</span><a href="#local-6989586621688175446"><span class="hs-identifier hs-var">_mnsQueryCollections</span></a></span><span>
 </span><span id="line-322"></span><span>                      </span><span class="annot"><span class="annottext">MetadataAllowlist
-</span><a href="#local-6989586621688168205"><span class="hs-identifier hs-var">_mnsAllowlist</span></a></span><span>
+</span><a href="#local-6989586621688175445"><span class="hs-identifier hs-var">_mnsAllowlist</span></a></span><span>
 </span><span id="line-323"></span><span>                      </span><span class="annot"><span class="annottext">CustomTypes
-</span><a href="#local-6989586621688168204"><span class="hs-identifier hs-var">_mnsCustomTypes</span></a></span><span>
+</span><a href="#local-6989586621688175444"><span class="hs-identifier hs-var">_mnsCustomTypes</span></a></span><span>
 </span><span id="line-324"></span><span>                      </span><span class="annot"><span class="annottext">Actions
-</span><a href="#local-6989586621688168203"><span class="hs-identifier hs-var">_mnsActions</span></a></span><span>
+</span><a href="#local-6989586621688175443"><span class="hs-identifier hs-var">_mnsActions</span></a></span><span>
 </span><span id="line-325"></span><span>                      </span><span class="annot"><span class="annottext">CronTriggers
-</span><a href="#local-6989586621688168202"><span class="hs-identifier hs-var">_mnsCronTriggers</span></a></span><span>
+</span><a href="#local-6989586621688175442"><span class="hs-identifier hs-var">_mnsCronTriggers</span></a></span><span>
 </span><span id="line-326"></span><span>                      </span><span class="annot"><span class="annottext">Endpoints
 forall a. Monoid a =&gt; a
 </span><span class="hs-identifier hs-var">mempty</span></span><span>
@@ -1037,14 +1037,14 @@ forall (m :: * -&gt; *) a. MonadTx m =&gt; TxE QErr a -&gt; m a
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Metadata -&gt; TxE QErr ()
 </span><a href="Hasura.RQL.DDL.Schema.Catalog.html#insertMetadataInCatalog"><span class="hs-identifier hs-var">insertMetadataInCatalog</span></a></span><span> </span><span class="annot"><span class="annottext">Metadata
-</span><a href="#local-6989586621688168211"><span class="hs-identifier hs-var">metadataV3</span></a></span><span>
+</span><a href="#local-6989586621688175451"><span class="hs-identifier hs-var">metadataV3</span></a></span><span>
 </span><span id="line-333"></span><span>
-</span><span id="line-334"></span><span>    </span><span id="local-6989586621688168221"><span class="annot"><span class="annottext">from43To42 :: m ()
-</span><a href="#local-6989586621688168221"><span class="hs-identifier hs-var hs-var">from43To42</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-335"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688168188"><span class="annot"><span class="annottext">query :: Query
-</span><a href="#local-6989586621688168188"><span class="hs-identifier hs-var hs-var">query</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">$(</span><span class="hs-identifier">makeRelativeToProject</span><span> </span><span class="hs-string">&quot;src-rsr/migrations/43_to_42.sql&quot;</span><span> </span><span class="hs-operator">&gt;&gt;=</span><span> </span><span class="hs-identifier">Q.sqlFromFile</span><span class="hs-special">)</span><span>
+</span><span id="line-334"></span><span>    </span><span id="local-6989586621688175461"><span class="annot"><span class="annottext">from43To42 :: m ()
+</span><a href="#local-6989586621688175461"><span class="hs-identifier hs-var hs-var">from43To42</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-335"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688175428"><span class="annot"><span class="annottext">query :: Query
+</span><a href="#local-6989586621688175428"><span class="hs-identifier hs-var hs-var">query</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">$(</span><span class="hs-identifier">makeRelativeToProject</span><span> </span><span class="hs-string">&quot;src-rsr/migrations/43_to_42.sql&quot;</span><span> </span><span class="hs-operator">&gt;&gt;=</span><span> </span><span class="hs-identifier">Q.sqlFromFile</span><span class="hs-special">)</span><span>
 </span><span id="line-336"></span><span>      </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621688168225"><span class="hs-identifier hs-var">dryRun</span></a></span><span>
+</span><a href="#local-6989586621688175465"><span class="hs-identifier hs-var">dryRun</span></a></span><span>
 </span><span id="line-337"></span><span>        </span><span class="hs-keyword">then</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">IO () -&gt; m ()
 forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
 </span><span class="hs-identifier hs-var">liftIO</span></span><span> </span><span class="annot"><span class="annottext">(IO () -&gt; m ()) -&gt; (Query -&gt; IO ()) -&gt; Query -&gt; m ()
@@ -1054,9 +1054,9 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Query -&gt; Text
 </span><span class="hs-identifier hs-var hs-var">Q.getQueryText</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Query
-</span><a href="#local-6989586621688168188"><span class="hs-identifier hs-var">query</span></a></span><span>
+</span><a href="#local-6989586621688175428"><span class="hs-identifier hs-var">query</span></a></span><span>
 </span><span id="line-338"></span><span>        </span><span class="hs-keyword">else</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-339"></span><span>          </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.html#Metadata"><span class="hs-identifier hs-type">Metadata</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621688168175"><span id="local-6989586621688168176"><span id="local-6989586621688168177"><span id="local-6989586621688168178"><span id="local-6989586621688168179"><span id="local-6989586621688168180"><span id="local-6989586621688168181"><span id="local-6989586621688168182"><span id="local-6989586621688168183"><span id="local-6989586621688168184"><span id="local-6989586621688168185"><span id="local-6989586621688168186"><span id="local-6989586621688168187"><span class="annot"><span class="annottext">InheritedRoles
+</span><span id="line-339"></span><span>          </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.html#Metadata"><span class="hs-identifier hs-type">Metadata</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621688175415"><span id="local-6989586621688175416"><span id="local-6989586621688175417"><span id="local-6989586621688175418"><span id="local-6989586621688175419"><span id="local-6989586621688175420"><span id="local-6989586621688175421"><span id="local-6989586621688175422"><span id="local-6989586621688175423"><span id="local-6989586621688175424"><span id="local-6989586621688175425"><span id="local-6989586621688175426"><span id="local-6989586621688175427"><span class="annot"><span class="annottext">InheritedRoles
 QueryCollections
 MetadataAllowlist
 Endpoints
@@ -1102,9 +1102,9 @@ forall (m :: * -&gt; *) a. MonadTx m =&gt; TxE QErr a -&gt; m a
 </span><span id="line-340"></span><span>          </span><span class="annot"><span class="annottext">Query -&gt; m ()
 forall (m :: * -&gt; *). MonadTx m =&gt; Query -&gt; m ()
 </span><a href="Hasura.Server.Migrate.html#multiQ"><span class="hs-identifier hs-var">multiQ</span></a></span><span> </span><span class="annot"><span class="annottext">Query
-</span><a href="#local-6989586621688168188"><span class="hs-identifier hs-var">query</span></a></span><span>
-</span><span id="line-341"></span><span>          </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688168162"><span class="annot"><span class="annottext">emptyMetadataNoSources :: MetadataNoSources
-</span><a href="#local-6989586621688168162"><span class="hs-identifier hs-var hs-var">emptyMetadataNoSources</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="#local-6989586621688175428"><span class="hs-identifier hs-var">query</span></a></span><span>
+</span><span id="line-341"></span><span>          </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688175402"><span class="annot"><span class="annottext">emptyMetadataNoSources :: MetadataNoSources
+</span><a href="#local-6989586621688175402"><span class="hs-identifier hs-var hs-var">emptyMetadataNoSources</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-342"></span><span>                </span><span class="annot"><span class="annottext">Tables ('Postgres 'Vanilla)
 -&gt; Functions ('Postgres 'Vanilla)
 -&gt; RemoteSchemas
@@ -1130,19 +1130,19 @@ forall a. Monoid a =&gt; a
 </span><span class="hs-identifier hs-var">mempty</span></span><span> </span><span class="annot"><span class="annottext">CronTriggers
 forall a. Monoid a =&gt; a
 </span><span class="hs-identifier hs-var">mempty</span></span><span>
-</span><span id="line-343"></span><span>          </span><span id="local-6989586621688168160"><span class="annot"><span class="annottext">MetadataNoSources
-</span><a href="#local-6989586621688168160"><span class="hs-identifier hs-var">metadataV2</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">InsOrdHashMap SourceName (AnyBackend SourceMetadata)
+</span><span id="line-343"></span><span>          </span><span id="local-6989586621688175400"><span class="annot"><span class="annottext">MetadataNoSources
+</span><a href="#local-6989586621688175400"><span class="hs-identifier hs-var">metadataV2</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">InsOrdHashMap SourceName (AnyBackend SourceMetadata)
 -&gt; [(SourceName, AnyBackend SourceMetadata)]
 forall k v. InsOrdHashMap k v -&gt; [(k, v)]
 </span><span class="hs-identifier hs-var">OMap.toList</span></span><span> </span><span class="annot"><span class="annottext">InsOrdHashMap SourceName (AnyBackend SourceMetadata)
-</span><a href="#local-6989586621688168187"><span class="hs-identifier hs-var">_metaSources</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621688175427"><span class="hs-identifier hs-var">_metaSources</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-344"></span><span>            </span><span class="hs-special">[</span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">MetadataNoSources -&gt; m MetadataNoSources
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">MetadataNoSources
-</span><a href="#local-6989586621688168162"><span class="hs-identifier hs-var">emptyMetadataNoSources</span></a></span><span>
+</span><a href="#local-6989586621688175402"><span class="hs-identifier hs-var">emptyMetadataNoSources</span></a></span><span>
 </span><span id="line-345"></span><span>            </span><span class="hs-special">[</span><span class="hs-special">(</span><span class="annot"><span class="annottext">SourceName
-</span><span class="hs-identifier">_</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688168158"><span class="annot"><span class="annottext">AnyBackend SourceMetadata
-</span><a href="#local-6989586621688168158"><span class="hs-identifier hs-var">exists</span></a></span></span><span class="hs-special">)</span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span class="hs-identifier">_</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688175398"><span class="annot"><span class="annottext">AnyBackend SourceMetadata
+</span><a href="#local-6989586621688175398"><span class="hs-identifier hs-var">exists</span></a></span></span><span class="hs-special">)</span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-346"></span><span>              </span><span class="annot"><span class="annottext">MetadataNoSources -&gt; m MetadataNoSources
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(MetadataNoSources -&gt; m MetadataNoSources)
@@ -1154,11 +1154,11 @@ forall (b :: BackendType) (i :: BackendType -&gt; *).
 HasTag b =&gt;
 AnyBackend i -&gt; Maybe (i b)
 </span><a href="Hasura.SQL.AnyBackend.html#unpackAnyBackend"><span class="hs-identifier hs-var">AB.unpackAnyBackend</span></a></span><span> </span><span class="annot"><span class="annottext">AnyBackend SourceMetadata
-</span><a href="#local-6989586621688168158"><span class="hs-identifier hs-var">exists</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621688175398"><span class="hs-identifier hs-var">exists</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-347"></span><span>                </span><span class="annot"><span class="annottext">Maybe (SourceMetadata ('Postgres 'Vanilla))
 </span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">MetadataNoSources
-</span><a href="#local-6989586621688168162"><span class="hs-identifier hs-var">emptyMetadataNoSources</span></a></span><span>
-</span><span id="line-348"></span><span>                </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.html#SourceMetadata"><span class="hs-identifier hs-type">SourceMetadata</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621688168151"><span id="local-6989586621688168152"><span id="local-6989586621688168153"><span id="local-6989586621688168154"><span id="local-6989586621688168155"><span id="local-6989586621688168156"><span class="annot"><span class="annottext">Maybe QueryTagsConfig
+</span><a href="#local-6989586621688175402"><span class="hs-identifier hs-var">emptyMetadataNoSources</span></a></span><span>
+</span><span id="line-348"></span><span>                </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.html#SourceMetadata"><span class="hs-identifier hs-type">SourceMetadata</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621688175391"><span id="local-6989586621688175392"><span id="local-6989586621688175393"><span id="local-6989586621688175394"><span id="local-6989586621688175395"><span id="local-6989586621688175396"><span class="annot"><span class="annottext">Maybe QueryTagsConfig
 Tables ('Postgres 'Vanilla)
 Functions ('Postgres 'Vanilla)
 SourceConnConfiguration ('Postgres 'Vanilla)
@@ -1190,21 +1190,21 @@ _smName :: SourceName
 -&gt; MetadataNoSources
 </span><a href="Hasura.RQL.Types.Metadata.html#MetadataNoSources"><span class="hs-identifier hs-var">MetadataNoSources</span></a></span><span>
 </span><span id="line-350"></span><span>                    </span><span class="annot"><span class="annottext">Tables ('Postgres 'Vanilla)
-</span><a href="#local-6989586621688168155"><span class="hs-identifier hs-var">_smTables</span></a></span><span>
+</span><a href="#local-6989586621688175395"><span class="hs-identifier hs-var">_smTables</span></a></span><span>
 </span><span id="line-351"></span><span>                    </span><span class="annot"><span class="annottext">Functions ('Postgres 'Vanilla)
-</span><a href="#local-6989586621688168154"><span class="hs-identifier hs-var">_smFunctions</span></a></span><span>
+</span><a href="#local-6989586621688175394"><span class="hs-identifier hs-var">_smFunctions</span></a></span><span>
 </span><span id="line-352"></span><span>                    </span><span class="annot"><span class="annottext">RemoteSchemas
-</span><a href="#local-6989586621688168186"><span class="hs-identifier hs-var">_metaRemoteSchemas</span></a></span><span>
+</span><a href="#local-6989586621688175426"><span class="hs-identifier hs-var">_metaRemoteSchemas</span></a></span><span>
 </span><span id="line-353"></span><span>                    </span><span class="annot"><span class="annottext">QueryCollections
-</span><a href="#local-6989586621688168185"><span class="hs-identifier hs-var">_metaQueryCollections</span></a></span><span>
+</span><a href="#local-6989586621688175425"><span class="hs-identifier hs-var">_metaQueryCollections</span></a></span><span>
 </span><span id="line-354"></span><span>                    </span><span class="annot"><span class="annottext">MetadataAllowlist
-</span><a href="#local-6989586621688168184"><span class="hs-identifier hs-var">_metaAllowlist</span></a></span><span>
+</span><a href="#local-6989586621688175424"><span class="hs-identifier hs-var">_metaAllowlist</span></a></span><span>
 </span><span id="line-355"></span><span>                    </span><span class="annot"><span class="annottext">CustomTypes
-</span><a href="#local-6989586621688168183"><span class="hs-identifier hs-var">_metaCustomTypes</span></a></span><span>
+</span><a href="#local-6989586621688175423"><span class="hs-identifier hs-var">_metaCustomTypes</span></a></span><span>
 </span><span id="line-356"></span><span>                    </span><span class="annot"><span class="annottext">Actions
-</span><a href="#local-6989586621688168182"><span class="hs-identifier hs-var">_metaActions</span></a></span><span>
+</span><a href="#local-6989586621688175422"><span class="hs-identifier hs-var">_metaActions</span></a></span><span>
 </span><span id="line-357"></span><span>                    </span><span class="annot"><span class="annottext">CronTriggers
-</span><a href="#local-6989586621688168181"><span class="hs-identifier hs-var">_metaCronTriggers</span></a></span><span>
+</span><a href="#local-6989586621688175421"><span class="hs-identifier hs-var">_metaCronTriggers</span></a></span><span>
 </span><span id="line-358"></span><span>            </span><span class="annot"><span class="annottext">[(SourceName, AnyBackend SourceMetadata)]
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Code -&gt; Text -&gt; m MetadataNoSources
 forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
@@ -1229,7 +1229,7 @@ forall (m :: * -&gt; *).
 (MonadTx m, HasSystemDefined m) =&gt;
 MetadataNoSources -&gt; m ()
 </span><a href="Hasura.RQL.DDL.Schema.LegacyCatalog.html#saveMetadataToHdbTables"><span class="hs-identifier hs-var">saveMetadataToHdbTables</span></a></span><span> </span><span class="annot"><span class="annottext">MetadataNoSources
-</span><a href="#local-6989586621688168160"><span class="hs-identifier hs-var">metadataV2</span></a></span><span>
+</span><a href="#local-6989586621688175400"><span class="hs-identifier hs-var">metadataV2</span></a></span><span>
 </span><span id="line-361"></span><span>            </span><span class="hs-comment">-- when the graphql-engine is migrated from v1 to v2, we drop the foreign key</span><span>
 </span><span id="line-362"></span><span>            </span><span class="hs-comment">-- constraint of the `hdb_catalog.hdb_cron_event` table because the cron triggers</span><span>
 </span><span id="line-363"></span><span>            </span><span class="hs-comment">-- in v2 are saved in the `hdb_catalog.hdb_metadata` table. So, when a downgrade</span><span>
@@ -1242,7 +1242,7 @@ forall (m :: * -&gt; *). MonadTx m =&gt; m ()
 forall (m :: * -&gt; *). MonadTx m =&gt; m ()
 </span><a href="Hasura.RQL.DDL.Schema.LegacyCatalog.html#recreateSystemMetadata"><span class="hs-identifier hs-var">recreateSystemMetadata</span></a></span><span>
 </span><span id="line-368"></span><span>
-</span><span id="line-369"></span><span id="local-6989586621688168461"><span class="annot"><a href="Hasura.Server.Migrate.html#multiQ"><span class="hs-identifier hs-type">multiQ</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.Connection.html#MonadTx"><span class="hs-identifier hs-type">MonadTx</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688168461"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Q.Query</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621688168461"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span></span><span>
+</span><span id="line-369"></span><span id="local-6989586621688175701"><span class="annot"><a href="Hasura.Server.Migrate.html#multiQ"><span class="hs-identifier hs-type">multiQ</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.Connection.html#MonadTx"><span class="hs-identifier hs-type">MonadTx</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688175701"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Q.Query</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621688175701"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span></span><span>
 </span><span id="line-370"></span><span id="multiQ"><span class="annot"><span class="annottext">multiQ :: Query -&gt; m ()
 </span><a href="Hasura.Server.Migrate.html#multiQ"><span class="hs-identifier hs-var hs-var">multiQ</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">TxE QErr () -&gt; m ()
 forall (m :: * -&gt; *) a. MonadTx m =&gt; TxE QErr a -&gt; m a

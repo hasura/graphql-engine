@@ -29,7 +29,7 @@
 </span><span id="line-29"></span><span class="hs-comment">-- datasource with clearer documentation.</span><span>
 </span><span id="line-30"></span><span class="hs-comment">--</span><span>
 </span><span id="line-31"></span><span class="hs-comment">-- e.g. https://www.postgresql.org/docs/13/sql-expressions.html</span><span>
-</span><span id="line-32"></span><span id="local-6989586621688045890"><span id="local-6989586621688045891"></span></span><span class="hs-keyword">data</span><span> </span><span id="Expression"><span class="annot"><a href="Hasura.Experimental.IR.Expression.html#Expression"><span class="hs-identifier hs-var">Expression</span></a></span></span><span>
+</span><span id="line-32"></span><span id="local-6989586621688053034"><span id="local-6989586621688053035"></span></span><span class="hs-keyword">data</span><span> </span><span id="Expression"><span class="annot"><a href="Hasura.Experimental.IR.Expression.html#Expression"><span class="hs-identifier hs-var">Expression</span></a></span></span><span>
 </span><span id="line-33"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span class="hs-comment">-- | A constant 'Scalar.Value'.</span><span>
 </span><span id="line-34"></span><span>    </span><span id="Literal"><span class="annot"><a href="Hasura.Experimental.IR.Expression.html#Literal"><span class="hs-identifier hs-var">Literal</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Experimental.IR.Scalar.Value.html#Value"><span class="hs-identifier hs-type">Scalar.Value</span></a></span><span>
 </span><span id="line-35"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="hs-comment">-- | A construct for making multiple comparisons between groups of</span><span>
@@ -107,7 +107,7 @@
 </span><span id="line-107"></span><span>    </span><span class="hs-comment">-- XXX(jkachmar): Consider renaming 'Operator' to @ComparisonOperator@ and</span><span>
 </span><span id="line-108"></span><span>    </span><span class="hs-comment">-- this sub-expression to @ApplyComparisonOperator@ for clarity.</span><span>
 </span><span id="line-109"></span><span>    </span><span id="ApplyOperator"><span class="annot"><a href="Hasura.Experimental.IR.Expression.html#ApplyOperator"><span class="hs-identifier hs-var">ApplyOperator</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Experimental.IR.Expression.html#Operator"><span class="hs-identifier hs-type">Operator</span></a></span><span> </span><span class="annot"><a href="Hasura.Experimental.IR.Expression.html#Expression"><span class="hs-identifier hs-type">Expression</span></a></span><span> </span><span class="annot"><a href="Hasura.Experimental.IR.Expression.html#Expression"><span class="hs-identifier hs-type">Expression</span></a></span><span>
-</span><span id="line-110"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="%24cApplyOperator"><span id="%24cNotEqual"><span id="%24cEqual"><span id="%24cColumn"><span id="%24cIsNotNull"><span id="%24cIsNull"><span id="%24cNot"><span id="%24cOr"><span id="%24cAnd"><span id="%24cIn"><span id="%24cLiteral"><span id="%24tExpression"><span id="local-6989586621688045849"><span id="local-6989586621688045851"><span id="local-6989586621688045853"><span id="local-6989586621688045855"><span id="local-6989586621688045857"><span id="local-6989586621688045859"><span id="local-6989586621688045861"><span id="local-6989586621688045863"><span id="local-6989586621688045865"><span id="local-6989586621688045867"><span id="local-6989586621688045869"><span id="local-6989586621688045871"><span id="local-6989586621688045873"><span id="local-6989586621688045875"><span class="annot"><span class="annottext">Typeable Expression
+</span><span id="line-110"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="%24cApplyOperator"><span id="%24cNotEqual"><span id="%24cEqual"><span id="%24cColumn"><span id="%24cIsNotNull"><span id="%24cIsNull"><span id="%24cNot"><span id="%24cOr"><span id="%24cAnd"><span id="%24cIn"><span id="%24cLiteral"><span id="%24tExpression"><span id="local-6989586621688052993"><span id="local-6989586621688052995"><span id="local-6989586621688052997"><span id="local-6989586621688052999"><span id="local-6989586621688053001"><span id="local-6989586621688053003"><span id="local-6989586621688053005"><span id="local-6989586621688053007"><span id="local-6989586621688053009"><span id="local-6989586621688053011"><span id="local-6989586621688053013"><span id="local-6989586621688053015"><span id="local-6989586621688053017"><span id="local-6989586621688053019"><span class="annot"><span class="annottext">Typeable Expression
 DataType
 Constr
 Typeable Expression
@@ -275,7 +275,7 @@ $cgfoldl :: forall (c :: * -&gt; *).
 (forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
 -&gt; (forall g. g -&gt; c g) -&gt; Expression -&gt; c Expression
 $cp1Data :: Typeable Expression
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Data</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688045832"><span id="local-6989586621688045834"><span class="annot"><span class="annottext">Expression -&gt; Expression -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Data</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688052976"><span id="local-6989586621688052978"><span class="annot"><span class="annottext">Expression -&gt; Expression -&gt; Bool
 (Expression -&gt; Expression -&gt; Bool)
 -&gt; (Expression -&gt; Expression -&gt; Bool) -&gt; Eq Expression
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -291,7 +291,7 @@ forall a.
 (forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
 $cto :: forall x. Rep Expression x -&gt; Expression
 $cfrom :: forall x. Expression -&gt; Rep Expression x
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688045813"><span id="local-6989586621688045815"><span id="local-6989586621688045817"><span id="local-6989586621688045819"><span id="local-6989586621688045821"><span id="local-6989586621688045823"><span id="local-6989586621688045825"><span class="annot"><span class="annottext">Eq Expression
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688052957"><span id="local-6989586621688052959"><span id="local-6989586621688052961"><span id="local-6989586621688052963"><span id="local-6989586621688052965"><span id="local-6989586621688052967"><span id="local-6989586621688052969"><span class="annot"><span class="annottext">Eq Expression
 Eq Expression
 -&gt; (Expression -&gt; Expression -&gt; Ordering)
 -&gt; (Expression -&gt; Expression -&gt; Bool)
@@ -329,7 +329,7 @@ $c&lt; :: Expression -&gt; Expression -&gt; Bool
 compare :: Expression -&gt; Expression -&gt; Ordering
 $ccompare :: Expression -&gt; Expression -&gt; Ordering
 $cp1Ord :: Eq Expression
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688045806"><span id="local-6989586621688045808"><span id="local-6989586621688045810"><span class="annot"><span class="annottext">Int -&gt; Expression -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688052950"><span id="local-6989586621688052952"><span id="local-6989586621688052954"><span class="annot"><span class="annottext">Int -&gt; Expression -&gt; ShowS
 [Expression] -&gt; ShowS
 Expression -&gt; String
 (Int -&gt; Expression -&gt; ShowS)
@@ -345,7 +345,7 @@ $cshow :: Expression -&gt; String
 showsPrec :: Int -&gt; Expression -&gt; ShowS
 $cshowsPrec :: Int -&gt; Expression -&gt; ShowS
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
-</span><span id="line-111"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688045802"><span class="annot"><span class="annottext">Eq Expression
+</span><span id="line-111"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688052946"><span class="annot"><span class="annottext">Eq Expression
 Eq Expression
 -&gt; (Accesses -&gt; Expression -&gt; Expression -&gt; Bool)
 -&gt; Cacheable Expression
@@ -354,7 +354,7 @@ forall a. Eq a -&gt; (Accesses -&gt; a -&gt; a -&gt; Bool) -&gt; Cacheable a
 unchanged :: Accesses -&gt; Expression -&gt; Expression -&gt; Bool
 $cunchanged :: Accesses -&gt; Expression -&gt; Expression -&gt; Bool
 $cp1Cacheable :: Eq Expression
-</span><a href="Hasura.Incremental.Internal.Dependency.html#C%3ACacheable"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">Cacheable</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688045797"><span id="local-6989586621688045799"><span class="annot"><span class="annottext">Value -&gt; Parser [Expression]
+</span><a href="Hasura.Incremental.Internal.Dependency.html#C%3ACacheable"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">Cacheable</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688052941"><span id="local-6989586621688052943"><span class="annot"><span class="annottext">Value -&gt; Parser [Expression]
 Value -&gt; Parser Expression
 (Value -&gt; Parser Expression)
 -&gt; (Value -&gt; Parser [Expression]) -&gt; FromJSON Expression
@@ -364,7 +364,7 @@ parseJSONList :: Value -&gt; Parser [Expression]
 $cparseJSONList :: Value -&gt; Parser [Expression]
 parseJSON :: Value -&gt; Parser Expression
 $cparseJSON :: Value -&gt; Parser Expression
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688045792"><span id="local-6989586621688045794"><span class="annot"><span class="annottext">Int -&gt; Expression -&gt; Int
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688052936"><span id="local-6989586621688052938"><span class="annot"><span class="annottext">Int -&gt; Expression -&gt; Int
 Expression -&gt; Int
 (Int -&gt; Expression -&gt; Int)
 -&gt; (Expression -&gt; Int) -&gt; Hashable Expression
@@ -373,12 +373,12 @@ hash :: Expression -&gt; Int
 $chash :: Expression -&gt; Int
 hashWithSalt :: Int -&gt; Expression -&gt; Int
 $chashWithSalt :: Int -&gt; Expression -&gt; Int
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688045789"><span class="annot"><span class="annottext">Expression -&gt; ()
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688052933"><span class="annot"><span class="annottext">Expression -&gt; ()
 (Expression -&gt; ()) -&gt; NFData Expression
 forall a. (a -&gt; ()) -&gt; NFData a
 rnf :: Expression -&gt; ()
 $crnf :: Expression -&gt; ()
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688045780"><span id="local-6989586621688045782"><span id="local-6989586621688045784"><span id="local-6989586621688045786"><span class="annot"><span class="annottext">[Expression] -&gt; Value
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688052924"><span id="local-6989586621688052926"><span id="local-6989586621688052928"><span id="local-6989586621688052930"><span class="annot"><span class="annottext">[Expression] -&gt; Value
 [Expression] -&gt; Encoding
 Expression -&gt; Value
 Expression -&gt; Encoding
@@ -414,12 +414,12 @@ $ctoJSON :: Expression -&gt; Value
 </span><span id="line-121"></span><span class="hs-comment">--</span><span>
 </span><span id="line-122"></span><span class="hs-comment">-- We should define the semantics of these comparisons in a way that is clear</span><span>
 </span><span id="line-123"></span><span class="hs-comment">-- and carefully considered.</span><span>
-</span><span id="line-124"></span><span id="local-6989586621688045777"><span id="local-6989586621688045778"></span></span><span class="hs-keyword">data</span><span> </span><span id="Operator"><span class="annot"><a href="Hasura.Experimental.IR.Expression.html#Operator"><span class="hs-identifier hs-var">Operator</span></a></span></span><span>
+</span><span id="line-124"></span><span id="local-6989586621688052921"><span id="local-6989586621688052922"></span></span><span class="hs-keyword">data</span><span> </span><span id="Operator"><span class="annot"><a href="Hasura.Experimental.IR.Expression.html#Operator"><span class="hs-identifier hs-var">Operator</span></a></span></span><span>
 </span><span id="line-125"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="LessThan"><span class="annot"><a href="Hasura.Experimental.IR.Expression.html#LessThan"><span class="hs-identifier hs-var">LessThan</span></a></span></span><span>
 </span><span id="line-126"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="LessThanOrEqual"><span class="annot"><a href="Hasura.Experimental.IR.Expression.html#LessThanOrEqual"><span class="hs-identifier hs-var">LessThanOrEqual</span></a></span></span><span>
 </span><span id="line-127"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="GreaterThan"><span class="annot"><a href="Hasura.Experimental.IR.Expression.html#GreaterThan"><span class="hs-identifier hs-var">GreaterThan</span></a></span></span><span>
 </span><span id="line-128"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="GreaterThanOrEqual"><span class="annot"><a href="Hasura.Experimental.IR.Expression.html#GreaterThanOrEqual"><span class="hs-identifier hs-var">GreaterThanOrEqual</span></a></span></span><span>
-</span><span id="line-129"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="%24cGreaterThanOrEqual"><span id="%24cGreaterThan"><span id="%24cLessThanOrEqual"><span id="%24cLessThan"><span id="%24tOperator"><span id="local-6989586621688045744"><span id="local-6989586621688045746"><span id="local-6989586621688045748"><span id="local-6989586621688045750"><span id="local-6989586621688045752"><span id="local-6989586621688045754"><span id="local-6989586621688045756"><span id="local-6989586621688045758"><span id="local-6989586621688045760"><span id="local-6989586621688045762"><span id="local-6989586621688045764"><span id="local-6989586621688045766"><span id="local-6989586621688045768"><span id="local-6989586621688045770"><span class="annot"><span class="annottext">Typeable Operator
+</span><span id="line-129"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="%24cGreaterThanOrEqual"><span id="%24cGreaterThan"><span id="%24cLessThanOrEqual"><span id="%24cLessThan"><span id="%24tOperator"><span id="local-6989586621688052888"><span id="local-6989586621688052890"><span id="local-6989586621688052892"><span id="local-6989586621688052894"><span id="local-6989586621688052896"><span id="local-6989586621688052898"><span id="local-6989586621688052900"><span id="local-6989586621688052902"><span id="local-6989586621688052904"><span id="local-6989586621688052906"><span id="local-6989586621688052908"><span id="local-6989586621688052910"><span id="local-6989586621688052912"><span id="local-6989586621688052914"><span class="annot"><span class="annottext">Typeable Operator
 DataType
 Constr
 Typeable Operator
@@ -578,7 +578,7 @@ $cgfoldl :: forall (c :: * -&gt; *).
 (forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
 -&gt; (forall g. g -&gt; c g) -&gt; Operator -&gt; c Operator
 $cp1Data :: Typeable Operator
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Data</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688045735"><span id="local-6989586621688045737"><span class="annot"><span class="annottext">Operator -&gt; Operator -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Data</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688052879"><span id="local-6989586621688052881"><span class="annot"><span class="annottext">Operator -&gt; Operator -&gt; Bool
 (Operator -&gt; Operator -&gt; Bool)
 -&gt; (Operator -&gt; Operator -&gt; Bool) -&gt; Eq Operator
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -594,7 +594,7 @@ forall a.
 (forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
 $cto :: forall x. Rep Operator x -&gt; Operator
 $cfrom :: forall x. Operator -&gt; Rep Operator x
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688045718"><span id="local-6989586621688045720"><span id="local-6989586621688045722"><span id="local-6989586621688045724"><span id="local-6989586621688045726"><span id="local-6989586621688045728"><span id="local-6989586621688045730"><span class="annot"><span class="annottext">Eq Operator
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688052862"><span id="local-6989586621688052864"><span id="local-6989586621688052866"><span id="local-6989586621688052868"><span id="local-6989586621688052870"><span id="local-6989586621688052872"><span id="local-6989586621688052874"><span class="annot"><span class="annottext">Eq Operator
 Eq Operator
 -&gt; (Operator -&gt; Operator -&gt; Ordering)
 -&gt; (Operator -&gt; Operator -&gt; Bool)
@@ -632,7 +632,7 @@ $c&lt; :: Operator -&gt; Operator -&gt; Bool
 compare :: Operator -&gt; Operator -&gt; Ordering
 $ccompare :: Operator -&gt; Operator -&gt; Ordering
 $cp1Ord :: Eq Operator
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688045712"><span id="local-6989586621688045714"><span id="local-6989586621688045716"><span class="annot"><span class="annottext">Int -&gt; Operator -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688052856"><span id="local-6989586621688052858"><span id="local-6989586621688052860"><span class="annot"><span class="annottext">Int -&gt; Operator -&gt; ShowS
 [Operator] -&gt; ShowS
 Operator -&gt; String
 (Int -&gt; Operator -&gt; ShowS)
@@ -646,7 +646,7 @@ $cshow :: Operator -&gt; String
 showsPrec :: Int -&gt; Operator -&gt; ShowS
 $cshowsPrec :: Int -&gt; Operator -&gt; ShowS
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
-</span><span id="line-130"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688045709"><span class="annot"><span class="annottext">Eq Operator
+</span><span id="line-130"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688052853"><span class="annot"><span class="annottext">Eq Operator
 Eq Operator
 -&gt; (Accesses -&gt; Operator -&gt; Operator -&gt; Bool) -&gt; Cacheable Operator
 Accesses -&gt; Operator -&gt; Operator -&gt; Bool
@@ -654,7 +654,7 @@ forall a. Eq a -&gt; (Accesses -&gt; a -&gt; a -&gt; Bool) -&gt; Cacheable a
 unchanged :: Accesses -&gt; Operator -&gt; Operator -&gt; Bool
 $cunchanged :: Accesses -&gt; Operator -&gt; Operator -&gt; Bool
 $cp1Cacheable :: Eq Operator
-</span><a href="#local-6989586621688045709"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">Cacheable</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688045705"><span id="local-6989586621688045707"><span class="annot"><span class="annottext">Value -&gt; Parser [Operator]
+</span><a href="#local-6989586621688052853"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">Cacheable</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688052849"><span id="local-6989586621688052851"><span class="annot"><span class="annottext">Value -&gt; Parser [Operator]
 Value -&gt; Parser Operator
 (Value -&gt; Parser Operator)
 -&gt; (Value -&gt; Parser [Operator]) -&gt; FromJSON Operator
@@ -664,7 +664,7 @@ parseJSONList :: Value -&gt; Parser [Operator]
 $cparseJSONList :: Value -&gt; Parser [Operator]
 parseJSON :: Value -&gt; Parser Operator
 $cparseJSON :: Value -&gt; Parser Operator
-</span><a href="#local-6989586621688045705"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688045701"><span id="local-6989586621688045703"><span class="annot"><span class="annottext">Int -&gt; Operator -&gt; Int
+</span><a href="#local-6989586621688052849"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688052845"><span id="local-6989586621688052847"><span class="annot"><span class="annottext">Int -&gt; Operator -&gt; Int
 Operator -&gt; Int
 (Int -&gt; Operator -&gt; Int) -&gt; (Operator -&gt; Int) -&gt; Hashable Operator
 forall a. (Int -&gt; a -&gt; Int) -&gt; (a -&gt; Int) -&gt; Hashable a
@@ -672,12 +672,12 @@ hash :: Operator -&gt; Int
 $chash :: Operator -&gt; Int
 hashWithSalt :: Int -&gt; Operator -&gt; Int
 $chashWithSalt :: Int -&gt; Operator -&gt; Int
-</span><a href="#local-6989586621688045701"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688045699"><span class="annot"><span class="annottext">Operator -&gt; ()
+</span><a href="#local-6989586621688052845"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688052843"><span class="annot"><span class="annottext">Operator -&gt; ()
 (Operator -&gt; ()) -&gt; NFData Operator
 forall a. (a -&gt; ()) -&gt; NFData a
 rnf :: Operator -&gt; ()
 $crnf :: Operator -&gt; ()
-</span><a href="#local-6989586621688045699"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688045691"><span id="local-6989586621688045693"><span id="local-6989586621688045695"><span id="local-6989586621688045697"><span class="annot"><span class="annottext">[Operator] -&gt; Value
+</span><a href="#local-6989586621688052843"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688052835"><span id="local-6989586621688052837"><span id="local-6989586621688052839"><span id="local-6989586621688052841"><span class="annot"><span class="annottext">[Operator] -&gt; Value
 [Operator] -&gt; Encoding
 Operator -&gt; Value
 Operator -&gt; Encoding
@@ -700,5 +700,5 @@ toEncoding :: Operator -&gt; Encoding
 $ctoEncoding :: Operator -&gt; Encoding
 toJSON :: Operator -&gt; Value
 $ctoJSON :: Operator -&gt; Value
-</span><a href="#local-6989586621688045691"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></a></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621688052835"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></a></span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-131"></span></pre></body></html>
