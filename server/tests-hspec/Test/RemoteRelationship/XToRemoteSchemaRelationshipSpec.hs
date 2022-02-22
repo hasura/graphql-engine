@@ -44,8 +44,8 @@ mkContext lhs =
   Context
     { name = lhsName,
       mkLocalState = \state -> do
-        rhsServer <- rhsPostgresMkLocalState state
-        lhsServer <- lhsPostgresMkLocalState state
+        rhsServer <- rhsRemoteServerMkLocalState state
+        lhsServer <- lhsMkLocalState state
         pure $ LocalTestState lhsServer rhsServer,
       setup = \(state, LocalTestState lhsServer rhsServer) -> do
         GraphqlEngine.clearMetadata state
@@ -59,6 +59,7 @@ mkContext lhs =
   where
     Context
       { name = lhsName,
+        mkLocalState = lhsMkLocalState,
         setup = lhsSetup,
         teardown = lhsTeardown,
         customOptions = lhsOptions
@@ -145,8 +146,8 @@ type Query {
 
 |]
 
-rhsPostgresMkLocalState :: State -> IO Server
-rhsPostgresMkLocalState _ =
+rhsRemoteServerMkLocalState :: State -> IO Server
+rhsRemoteServerMkLocalState _ =
   RemoteServer.run $
     RemoteServer.generateQueryInterpreter (Query {album})
   where
