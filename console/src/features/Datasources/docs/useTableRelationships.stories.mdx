@@ -1,0 +1,56 @@
+import { Meta } from '@storybook/addon-docs';
+
+<Meta title="Hooks/useTableRelationships" />
+
+<h1 class="text-xl font-semibold mb-md">useTableRelationships</h1>
+
+<h2 class="text-lg font-semibold mb-xs">Description</h2>
+<p class="mb-md text-muted mb-0">Get Table FK relationships</p>
+<p class="mb-md text-muted mb-sm">
+  Gets the list of FK relationships from a table and the ones that target the
+  table. This hooks searchs for relationships across schema and will list both
+  simple and composite FK constraints.
+</p>
+
+<br />
+
+<h2 class="text-lg font-semibold mb-xs">Usage</h2>
+
+```javascript
+const query = useTableRelationships({
+  database: 'chinook',
+  table: {
+    name: 'Album',
+    schema: 'public',
+  },
+});
+```
+
+<br />
+
+<h2 class="text-lg font-semibold mb-xs">Response</h2>
+<p class="mb-md text-muted mb-sm">
+  The `query.data` resolves into a an object of type
+</p>
+
+```typescript
+
+{to: {table: string, column: string[]}, from: {table: string, column: string[]}}[]
+```
+
+<br />
+
+<p class="mb-md text-muted mb-sm">A sample response would be - </p>
+
+```javascript
+[
+  {
+    from: { table: '"Track"', column: ['"AlbumId"'] },
+    to: { table: '"Album"', column: ['"AlbumId"'] },
+  },
+  {
+    from: { table: '"Album"', column: ['"ArtistId"'] },
+    to: { table: '"Artist"', column: ['"ArtistId"'] },
+  },
+];
+```

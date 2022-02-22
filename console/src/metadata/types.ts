@@ -997,7 +997,7 @@ export interface HasuraMetadataV2 {
 
 export interface MetadataDataSource {
   name: string;
-  kind?: 'postgres' | 'mysql' | 'mssql' | 'bigquery' | 'citus';
+  kind: 'postgres' | 'mysql' | 'mssql' | 'bigquery' | 'citus';
   configuration?: {
     connection_info?: SourceConnectionInfo;
     // pro-only feature
@@ -1039,7 +1039,6 @@ type APILimit<T> = {
   global: T;
   per_role?: Record<string, T>;
 };
-
 export interface HasuraMetadataV3 {
   version: 3;
   sources: MetadataDataSource[];

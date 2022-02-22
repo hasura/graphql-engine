@@ -8,6 +8,9 @@ export {
 export { useMetadataVersion } from './hooks/useMetadataVersion';
 export { useMetadataTableComputedFields } from './hooks/useMetadataTableComputedFields';
 export { useMetadataTablePermissions } from './hooks/useMetadataTablePermissions';
+export { useMetadataSource } from './hooks/useMetadataSource';
+
+// we probably need to remove all usages that directly use the useMetadata and use only the exported functions
 export { useMetadata } from './hooks/useMetadata';
 export { useMetadataMigration } from './hooks/useMetadataMigration';
 
