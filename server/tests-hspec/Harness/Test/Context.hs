@@ -205,7 +205,14 @@ data ContextName
   | BigQuery
   | Citus
   | Combine ContextName ContextName
-  deriving (Show, Eq)
+
+instance Show ContextName where
+  show Postgres = "Postgres"
+  show MySQL = "MySQL"
+  show SQLServer = "SQLServer"
+  show BigQuery = "BigQuery"
+  show Citus = "Citus"
+  show (Combine name1 name2) = show name1 ++ "-" ++ show name2
 
 -- | Default function for 'mkLocalState' when there's no local state.
 noLocalState :: State -> IO ()
