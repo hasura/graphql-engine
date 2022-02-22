@@ -40,6 +40,7 @@ module Hasura.RQL.DDL.Schema.Cache.Common
 where
 
 import Control.Arrow.Extended
+import Control.Arrow.Interpret
 import Control.Lens
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Control.Monad.Unique
@@ -244,18 +245,18 @@ withRecordDependencies f = proc (e, (metadataObject, (schemaObjectId, s))) -> do
 {-# INLINEABLE withRecordDependencies #-}
 
 noDuplicates ::
-  (ArrowChoice arr, ArrowWriter (Seq CollectedInfo) arr) =>
+  (MonadWriter (Seq CollectedInfo) m) =>
   (a -> MetadataObject) ->
-  [a] `arr` Maybe a
-noDuplicates mkMetadataObject = proc values -> case values of
-  [] -> returnA -< Nothing
-  [value] -> returnA -< Just value
-  value : _ -> do
+  [a] ->
+  m (Maybe a)
+noDuplicates mkMetadataObject = \case
+  [] -> pure Nothing
+  [value] -> pure $ Just value
+  values@(value : _) -> do
     let objectId = _moId $ mkMetadataObject value
         definitions = map (_moDefinition . mkMetadataObject) values
-    tellA -< Seq.singleton $ CIInconsistency (DuplicateObjects objectId definitions)
-    returnA -< Nothing
-{-# INLINEABLE noDuplicates #-}
+    tell $ Seq.singleton $ CIInconsistency (DuplicateObjects objectId definitions)
+    return Nothing
 
 -- | Processes a list of catalog metadata into a map of processed information, marking any duplicate
 -- entries inconsistent.
@@ -275,7 +276,7 @@ buildInfoMap extractKey mkMetadataObject buildInfo = proc (e, infos) ->
     >-> (|
           Inc.keyed
             ( \_ duplicateInfos ->
-                (duplicateInfos >- noDuplicates mkMetadataObject)
+                (noDuplicates mkMetadataObject duplicateInfos >- interpA @(WriterT _ Identity))
                   >-> (| traverseA (\info -> (e, info) >- buildInfo) |)
                   >-> (\info -> join info >- returnA)
             )

@@ -325,6 +325,7 @@ library
     build-depends:     ghc-heap-view
 
   exposed-modules:     Control.Arrow.Extended
+                     , Control.Arrow.Interpret
                      , Control.Arrow.Trans
                      , Control.Concurrent.Extended
                      , Control.Lens.Extended
@@ -835,6 +836,7 @@ test-suite graphql-engine-tests
     , template-haskell
     , text
     , time
+    , transformers
     , transformers-base
     , unordered-containers
     , utf8-string

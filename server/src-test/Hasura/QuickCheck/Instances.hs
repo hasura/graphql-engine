@@ -4,21 +4,32 @@ module Hasura.QuickCheck.Instances () where
 
 -------------------------------------------------------------------------------
 
+import Data.Aeson qualified as Aeson
+import Data.Aeson.Types qualified as Aeson.Types
 import Data.HashMap.Strict.Extended qualified as HashMap
 import Data.HashMap.Strict.InsOrd qualified as InsOrd.HashMap
 import Data.Ratio ((%))
 import Data.Text qualified as T
+import Hasura.Base.Error (QErr (..), QErrExtra (..))
+import Hasura.Base.Error qualified as Error
 import Hasura.GraphQL.Namespace (NamespacedField (..), namespacedField)
 import Hasura.Prelude
+import Hasura.RQL.Types.Common (SourceName (..))
+import Hasura.RQL.Types.Metadata.Object
+  ( MetadataObjId (..),
+    MetadataObject (..),
+  )
 import Hasura.RQL.Types.RemoteSchema
   ( RemoteSchemaInputValueDefinition (..),
     RemoteSchemaIntrospection (..),
+    RemoteSchemaName (..),
     getTypeName,
   )
 import Hasura.RQL.Types.SchemaCache (IntrospectionResult (..))
 import Hasura.Server.Utils qualified as Utils
 import Hasura.Session (SessionVariable, mkSessionVariable)
 import Language.GraphQL.Draft.Syntax qualified as GraphQL
+import Network.HTTP.Types qualified as HTTP.Types
 import Test.QuickCheck.Extended
 
 -------------------------------------------------------------------------------
@@ -40,6 +51,24 @@ instance
   where
   arbitrary = InsOrd.HashMap.fromList <$> arbitrary
   shrink = fmap InsOrd.HashMap.fromList . shrink . InsOrd.HashMap.toList
+
+instance Arbitrary Aeson.Value where
+  arbitrary =
+    elements $
+      -- This is not exhaustive, because it wasn't needed.
+      [ Aeson.Object mempty,
+        Aeson.Array mempty,
+        Aeson.String mempty,
+        Aeson.Number 0,
+        Aeson.Bool False,
+        Aeson.Null
+      ]
+
+instance Arbitrary Aeson.Types.JSONPathElement where
+  arbitrary = Aeson.Types.Index <$> arbitrary
+
+instance Arbitrary HTTP.Types.Status where
+  arbitrary = HTTP.Types.Status <$> arbitrary <*> pure mempty
 
 -------------------------------------------------------------------------------
 -- Orphan instances for Language.GraphQL.Draft.Syntax types
@@ -252,6 +281,45 @@ instance Arbitrary IntrospectionResult where
 instance Arbitrary a => Arbitrary (NamespacedField a) where
   arbitrary = oneof [NotNamespaced <$> arbitrary, Namespaced <$> arbitrary]
   shrink = namespacedField (fmap NotNamespaced . shrink) (fmap Namespaced . shrink)
+
+instance Arbitrary QErrExtra where
+  arbitrary =
+    oneof
+      [ ExtraExtensions <$> arbitrary,
+        ExtraInternal <$> arbitrary
+      ]
+
+instance Arbitrary MetadataObjId where
+  arbitrary =
+    oneof
+      -- This is not exhaustive, because it wasn't needed.
+      [ pure $ MOSource SNDefault,
+        MORemoteSchema . RemoteSchemaName <$> arbitrary
+      ]
+
+instance Arbitrary MetadataObject where
+  arbitrary = MetadataObject <$> arbitrary <*> arbitrary
+
+instance Arbitrary QErr where
+  arbitrary = do
+    -- This is not exhaustive, because it wasn't needed.
+    --
+    -- I just picked a few random error codes.
+    let genCode =
+          elements
+            [ Error.AlreadyExists,
+              Error.Conflict,
+              Error.ConstraintError,
+              Error.ConstraintViolation,
+              Error.NotFound,
+              Error.Unexpected
+            ]
+    QErr
+      <$> arbitrary
+      <*> arbitrary
+      <*> arbitrary
+      <*> genCode
+      <*> arbitrary
 
 -- Generators for GraphQL Engine types
 
