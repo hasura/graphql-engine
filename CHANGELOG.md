@@ -5,6 +5,8 @@
 ### Bug fixes and improvements
 (Add entries below in the order of server, console, cli, docs, others)
 
+- server: fix issues working with read-only DBs by reverting the need for storing required SQL functions in a `hdb_lib` schema in the user's DB
+
 ## v2.3.0-beta.1
 
 ### Experimental SQL optimizations
