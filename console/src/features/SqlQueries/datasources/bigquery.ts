@@ -1,4 +1,5 @@
 import type { TableORSchemaArg } from '@/dataSources/types';
+import { QualifiedTable } from '@/metadata/types';
 import type { DatasourceSqlQueries } from '.';
 
 export const bigquerySqlQueries: DatasourceSqlQueries = {
@@ -47,7 +48,9 @@ export const bigquerySqlQueries: DatasourceSqlQueries = {
   getFKRelations(): string {
     return 'select []';
   },
-  getTableColumnsSql(): string {
-    return 'not implemented';
+  getTableColumnsSql({ name, schema }: QualifiedTable): string {
+    if (!schema || !name) throw Error('empty parameters are not allowed!');
+
+    return `SELECT * FROM ${schema}.INFORMATION_SCHEMA.COLUMNS WHERE table_name = '${name}';`;
   },
 };

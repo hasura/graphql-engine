@@ -867,3 +867,57 @@ export const removeRemoteSchemaQuery = (name: string) => ({
   type: 'remove_remote_schema',
   args: { name },
 });
+
+export const getSaveRemoteDbRelationshipQuery = (
+  isObjRel: boolean,
+  tableName: string,
+  name: string,
+  remoteTable: Record<string, string>,
+  columnMapping: Record<string, string>,
+  source: string,
+  rSource: string,
+  isNew: boolean,
+  driver: string,
+  schema: string
+) => {
+  const args = {
+    source,
+    name,
+    table:
+      currentDriver !== 'bigquery'
+        ? { name: tableName, schema }
+        : { name: tableName, dataset: schema },
+    definition: {
+      to_source: {
+        source: rSource,
+        table:
+          driver !== 'bigquery'
+            ? remoteTable
+            : { name: remoteTable.name, dataset: remoteTable.schema },
+        relationship_type: isObjRel ? 'object' : 'array',
+        field_mapping: columnMapping,
+      },
+    },
+  };
+
+  return getMetadataQuery(
+    isNew ? 'create_remote_relationship' : 'update_remote_relationship',
+    source,
+    args
+  );
+};
+
+export const getDropRemoteDbRelationshipQuery = (
+  name: string,
+  tableName: string,
+  source: string,
+  schema: string
+) =>
+  getMetadataQuery('delete_remote_relationship', source, {
+    name,
+    table:
+      currentDriver !== 'bigquery'
+        ? { name: tableName, schema }
+        : { name: tableName, dataset: schema },
+    source,
+  });

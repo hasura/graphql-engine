@@ -5,14 +5,17 @@ import {
   useMetadata,
   useMetadataVersion,
 } from '@/features/MetadataAPI';
-import { useQuery } from 'react-query';
+import { useQuery, UseQueryResult } from 'react-query';
 import { useAppSelector } from '@/store';
 import { getRunSqlQuery } from '@/components/Common/utils/v1QueryUtils';
 import Endpoints from '@/Endpoints';
 import { RunSQLResponse } from '@/hooks/types';
 import { dataSourceSqlQueries } from '..';
 
-export const useTableColumns = (database: string, table: QualifiedTable) => {
+export const useTableColumns = (
+  database: string,
+  table: QualifiedTable
+): UseQueryResult<Record<string, any>, Error> => {
   const { data: source } = useMetadata(
     MetadataSelector.getDataSourceMetadata(database)
   );
@@ -74,6 +77,6 @@ export const useTableColumns = (database: string, table: QualifiedTable) => {
         d => parser(d.result ?? [])
       );
     },
-    enabled: !!driver,
+    enabled: !!driver && !!table.name,
   });
 };

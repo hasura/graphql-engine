@@ -340,6 +340,10 @@ export type SupportedFeaturesType = {
       enabled: boolean;
       remoteRelationships?: boolean;
       track: boolean;
+      remoteDbRelationships?: {
+        hostSource: boolean;
+        referenceSource: boolean;
+      };
     };
     permissions: {
       enabled: boolean;

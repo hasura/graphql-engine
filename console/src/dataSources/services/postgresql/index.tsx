@@ -633,6 +633,10 @@ export const supportedFeatures: DeepRequired<SupportedFeaturesType> = {
       enabled: true,
       remoteRelationships: true,
       track: true,
+      remoteDbRelationships: {
+        hostSource: true,
+        referenceSource: true,
+      },
     },
     permissions: {
       enabled: true,
