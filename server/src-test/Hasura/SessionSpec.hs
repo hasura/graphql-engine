@@ -1,11 +1,11 @@
 module Hasura.SessionSpec (spec) where
 
-import Hasura.Generator ()
 import Hasura.Prelude
-import Hasura.Server.Utils
-import Hasura.Session
-import Test.Hspec
-import Test.Hspec.QuickCheck
+import Hasura.QuickCheck.Instances ()
+import Hasura.Server.Utils (isSessionVariable)
+import Hasura.Session (sessionVariableToText)
+import Test.Hspec (Spec, describe, shouldSatisfy)
+import Test.Hspec.QuickCheck (prop)
 
 spec :: Spec
 spec = describe "SessionVariable" $ do
