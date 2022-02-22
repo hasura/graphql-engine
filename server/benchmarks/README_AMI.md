@@ -11,6 +11,7 @@ did:
     sudo apt install docker-ce docker-ce-cli containerd.io
     sudo groupadd docker && sudo usermod -aG docker ${USER}
     sudo apt install fio linux-tools-aws linux-tools-common
+    sudo apt install jq
 
 Added following to /etc/rc.local:
 

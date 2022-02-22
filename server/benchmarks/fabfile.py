@@ -280,6 +280,9 @@ def run_benchmark_set(benchmark_set, use_spot=True):
                     continue
             break
 
+        # Install any extra dependencies (TODO: bake these into AMI)
+        c.sudo('apt install -y jq')
+
         # In case our heroic exception handling and cleanup attempts here fail,
         # make sure this instance shuts down (and is terminated, per
         # InstanceInitiatedShutdownBehavior) after X minutes:
