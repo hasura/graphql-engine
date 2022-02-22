@@ -41,7 +41,7 @@ combine :: LHSContext -> RHSContext -> Context (Maybe Server)
 combine lhs (tableName, rhs) =
   Context
     { name = Context.Combine lhsName rhsName,
-      mkLocalState = lhsPostgresMkLocalState,
+      mkLocalState = lhsMkLocalState,
       setup = \(state, localState) -> do
         GraphqlEngine.clearMetadata state
         rhsSetup (state, ())
@@ -55,6 +55,7 @@ combine lhs (tableName, rhs) =
   where
     Context
       { name = lhsName,
+        mkLocalState = lhsMkLocalState,
         setup = lhsSetup,
         teardown = lhsTeardown,
         customOptions = lhsOptions
