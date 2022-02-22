@@ -8,9 +8,12 @@ module Hasura.RQL.Types.SchemaCache.Build
   ( CollectedInfo (..),
     partitionCollectedInfo,
     recordInconsistency,
+    recordInconsistencyM,
     recordInconsistencies,
     recordDependencies,
+    recordDependenciesM,
     withRecordInconsistency,
+    withRecordInconsistencyM,
     CacheRWM (..),
     BuildReason (..),
     CacheInvalidations (..),
@@ -95,9 +98,18 @@ recordInconsistency ::
   (ArrowWriter (Seq w) arr, AsInconsistentMetadata w) => ((Maybe Value, MetadataObject), Text) `arr` ()
 recordInconsistency = first (arr (: [])) >>> recordInconsistencies'
 
+recordInconsistencyM ::
+  (MonadWriter (Seq w) m, AsInconsistentMetadata w) => Maybe Value -> MetadataObject -> Text -> m ()
+recordInconsistencyM val mo reason = recordInconsistenciesM' [(val, mo)] reason
+
 recordInconsistencies ::
   (ArrowWriter (Seq w) arr, AsInconsistentMetadata w) => ([MetadataObject], Text) `arr` ()
 recordInconsistencies = first (arr (map (Nothing,))) >>> recordInconsistencies'
+
+recordInconsistenciesM' ::
+  (MonadWriter (Seq w) m, AsInconsistentMetadata w) => [(Maybe Value, MetadataObject)] -> Text -> m ()
+recordInconsistenciesM' metadataObjects reason =
+  tell $ Seq.fromList $ map (review _InconsistentMetadata . uncurry (InconsistentObject reason)) metadataObjects
 
 recordInconsistencies' ::
   (ArrowWriter (Seq w) arr, AsInconsistentMetadata w) => ([(Maybe Value, MetadataObject)], Text) `arr` ()
@@ -110,6 +122,40 @@ recordDependencies ::
 recordDependencies = proc (metadataObject, schemaObjectId, dependencies) ->
   tellA -< Seq.fromList $ map (CIDependency metadataObject schemaObjectId) dependencies
 
+recordDependenciesM ::
+  (MonadWriter (Seq CollectedInfo) m) =>
+  MetadataObject ->
+  SchemaObjId ->
+  [SchemaDependency] ->
+  m ()
+recordDependenciesM metadataObject schemaObjectId dependencies = do
+  tell $ Seq.fromList $ map (CIDependency metadataObject schemaObjectId) dependencies
+
+-- | Monadic version of 'withRecordInconsistency'
+withRecordInconsistencyM ::
+  (MonadWriter (Seq w) m, AsInconsistentMetadata w) =>
+  MetadataObject ->
+  ExceptT QErr m a ->
+  m (Maybe a)
+withRecordInconsistencyM metadataObject f = do
+  result <- runExceptT f
+  case result of
+    Left err -> do
+      case qeInternal err of
+        Just (ExtraExtensions exts) ->
+          -- the QErr type contains an optional qeInternal :: Maybe QErrExtra field, which either stores an error coming
+          -- from an action webhook (ExtraExtensions) or an internal error thrown somewhere within graphql-engine.
+          --
+          -- if we do have an error here, it should be an internal error and hence never be of the former case:
+          recordInconsistencyM (Just (toJSON exts)) metadataObject "withRecordInconsistency: unexpected ExtraExtensions"
+        Just (ExtraInternal internal) ->
+          recordInconsistencyM (Just (toJSON internal)) metadataObject (qeError err)
+        Nothing ->
+          recordInconsistencyM Nothing metadataObject (qeError err)
+      return Nothing
+    Right v -> return $ Just v
+
+-- | Record any errors resulting from a computation as inconsistencies
 withRecordInconsistency ::
   (ArrowChoice arr, ArrowWriter (Seq w) arr, AsInconsistentMetadata w) =>
   ErrorA QErr arr (e, s) a ->

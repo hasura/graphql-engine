@@ -1,8 +1,12 @@
 module Hasura.RQL.Types.CommonSpec (spec) where
 
+import Control.Arrow.Extended
+import Control.Monad.Trans.Writer
 import Data.Text qualified as Text
+import Hasura.Base.Error
 import Hasura.Prelude
-import Hasura.RQL.Types.Common (PGConnectionParams (..), commentFromMaybeText, commentToMaybeText, getPGConnectionStringFromParams)
+import Hasura.QuickCheck.Instances ()
+import Hasura.RQL.Types
 import Network.URI (isAbsoluteURI)
 import Test.Hspec
 import Test.Hspec.QuickCheck (prop)
@@ -38,6 +42,7 @@ spec :: Spec
 spec = do
   pgConnectionStringFromParamsSpec
   commentSpec
+  withRecordInconsistencyEqualSpec
 
 pgConnectionStringFromParamsSpec :: Spec
 pgConnectionStringFromParamsSpec =
@@ -67,3 +72,16 @@ commentSpec =
       \str ->
         let text = Text.pack <$> str
          in (commentToMaybeText . commentFromMaybeText) text `shouldBe` text
+
+withRecordInconsistencyEqualSpec :: Spec
+withRecordInconsistencyEqualSpec =
+  describe "withRecordInconsistency" do
+    prop "Should equal withRecordInconsistencyM" $
+      \inputMetadata (errOrUnit :: Either QErr ()) ->
+        let arrowInputArr = ErrorA (arr (const errOrUnit))
+            arrow = withRecordInconsistency @(Kleisli (Writer (Seq InconsistentMetadata))) arrowInputArr
+            arrowOutput =
+              runWriter $ runKleisli arrow ((), (inputMetadata, ()))
+            monadInput = liftEither errOrUnit
+            monadOutput = runWriter $ withRecordInconsistencyM inputMetadata monadInput
+         in arrowOutput `shouldBe` monadOutput
