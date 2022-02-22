@@ -10,6 +10,10 @@
 - server: improve baseline memory consumption for typical workloads
 - server: fix parsing timestamp values in BigQuery backends (fix #8076)
 
+## v2.3.0-beta.2
+
+- server: fix issues working with read-only DBs by reverting the need for storing required SQL functions in a `hdb_lib` schema in the user's DB
+
 ## v2.3.0-beta.1
 
 ### Experimental SQL optimizations
