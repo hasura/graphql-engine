@@ -4,6 +4,8 @@
 
 module Hasura.Backends.BigQuery.Source
   ( BigQueryConnSourceConfig (..),
+    RetryOptions (..),
+    BigQueryConnection (..),
     BigQuerySourceConfig (..),
     ConfigurationInput (..),
     ConfigurationInputs (..),
@@ -140,10 +142,12 @@ instance J.FromJSON ConfigurationInput where
     _ -> fail "one of string or number or object must be provided"
 
 data BigQueryConnSourceConfig = BigQueryConnSourceConfig
-  { _cscServiceAccount :: !(ConfigurationJSON ServiceAccount),
-    _cscDatasets :: !ConfigurationInputs,
-    _cscProjectId :: !ConfigurationInput, -- this is part of service-account.json, but we put it here on purpose
-    _cscGlobalSelectLimit :: !(Maybe ConfigurationInput)
+  { _cscServiceAccount :: ConfigurationJSON ServiceAccount,
+    _cscDatasets :: ConfigurationInputs,
+    _cscProjectId :: ConfigurationInput, -- this is part of service-account.json, but we put it here on purpose
+    _cscGlobalSelectLimit :: Maybe ConfigurationInput,
+    _cscRetryBaseDelay :: Maybe ConfigurationInput,
+    _cscRetryLimit :: Maybe ConfigurationInput
   }
   deriving (Eq, Generic, NFData)
 
@@ -156,12 +160,24 @@ deriving instance Hashable BigQueryConnSourceConfig
 instance Cacheable BigQueryConnSourceConfig where
   unchanged _ = (==)
 
+data RetryOptions = RetryOptions
+  { _retryBaseDelay :: Microseconds,
+    _retryNumRetries :: Int
+  }
+  deriving (Eq)
+
+data BigQueryConnection = BigQueryConnection
+  { _bqServiceAccount :: ServiceAccount,
+    _bqProjectId :: Text, -- this is part of service-account.json, but we put it here on purpose
+    _bqRetryOptions :: Maybe RetryOptions,
+    _bqAccessTokenMVar :: MVar (Maybe TokenResp)
+  }
+  deriving (Eq)
+
 data BigQuerySourceConfig = BigQuerySourceConfig
-  { _scServiceAccount :: !ServiceAccount,
-    _scDatasets :: ![Text],
-    _scProjectId :: !Text, -- this is part of service-account.json, but we put it here on purpose
-    _scAccessTokenMVar :: !(MVar (Maybe TokenResp)),
-    _scGlobalSelectLimit :: !Int.Int64
+  { _scConnection :: BigQueryConnection,
+    _scDatasets :: [Text],
+    _scGlobalSelectLimit :: Int.Int64
   }
   deriving (Eq)
 
@@ -170,9 +186,15 @@ instance Cacheable BigQuerySourceConfig where
 
 instance J.ToJSON BigQuerySourceConfig where
   toJSON BigQuerySourceConfig {..} =
-    J.object
-      [ "service_account" J..= _scServiceAccount,
+    J.object $
+      [ "service_account" J..= _bqServiceAccount _scConnection,
         "datasets" J..= _scDatasets,
-        "project_id" J..= _scProjectId,
+        "project_id" J..= _bqProjectId _scConnection,
         "global_select_limit" J..= _scGlobalSelectLimit
       ]
+        <> case _bqRetryOptions _scConnection of
+          Just RetryOptions {..} ->
+            [ "base_delay" J..= diffTimeToMicroSeconds (microseconds _retryBaseDelay),
+              "retry_limit" J..= _retryNumRetries
+            ]
+          Nothing -> []

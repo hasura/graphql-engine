@@ -3,7 +3,7 @@
   status: 200
   response:
     data:
-      hasura_test_article:
+      hasura_article:
       - id: '1'
         title: Title 1
         created_at: '2008-12-25T07:30:01Z'
@@ -34,7 +34,7 @@
   query:
     query: |
       query {
-        hasura_test_article(distinct_on: [author_id, is_published], order_by: [{author_id:asc}, {is_published: asc}, {created_at: asc}]) {
+        hasura_article(distinct_on: [author_id, is_published], order_by: [{author_id:asc}, {is_published: asc}, {created_at: asc}]) {
           id
           title
           created_at
@@ -55,7 +55,7 @@
   status: 200
   response:
     data:
-      hasura_test_author:
+      hasura_author:
       - id: '1'
         name: Author 1
         articles:
@@ -79,7 +79,7 @@
   query:
     query: |
       query {
-        hasura_test_author(order_by: [{id:asc}]) {
+        hasura_author(order_by: [{id:asc}]) {
           id
           name
           articles(distinct_on: is_published, order_by: [{is_published: asc}, {created_at: asc}]) {
@@ -101,7 +101,7 @@
   status: 200
   response:
     data:
-      hasura_test_author:
+      hasura_author:
       - id: '1'
         name: Author 1
         articles:
@@ -125,7 +125,7 @@
   query:
     query: |
       query {
-        hasura_test_author(order_by: [{id:asc}]) {
+        hasura_author(order_by: [{id:asc}]) {
           id
           name
           articles(distinct_on: is_published, order_by: [{is_published: asc}, {created_at: desc}]) {
@@ -164,11 +164,11 @@
   query:
     query: |
       query {
-        first: hasura_test_article(distinct_on: [author_id, is_published], order_by: [{author_id: asc}, {is_published: asc}, {created_at: asc}]) {
+        first: hasura_article(distinct_on: [author_id, is_published], order_by: [{author_id: asc}, {is_published: asc}, {created_at: asc}]) {
           id
           title
         }
-        last: hasura_test_article(distinct_on: [author_id, is_published], order_by: [{author_id: asc}, {is_published: asc}, {created_at: desc}]) {
+        last: hasura_article(distinct_on: [author_id, is_published], order_by: [{author_id: asc}, {is_published: asc}, {created_at: desc}]) {
           id
           title
         }

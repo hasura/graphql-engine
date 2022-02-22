@@ -7,6 +7,13 @@
 Schema/Metadata API Reference: Relationships (Deprecated)
 =========================================================
 
+.. admonition:: Deprecation
+
+  In versions ``v2.0.0`` and above, the schema/metadata API is deprecated in favour of the :ref:`schema API <schema_apis>` and the
+  :ref:`metadata API <metadata_apis>`.
+
+  Though for backwards compatibility, the schema/metadata APIs will continue to function.
+
 .. contents:: Table of contents
   :backlinks: none
   :depth: 1
@@ -39,13 +46,6 @@ example, given tables ``author`` and ``author_details``, if the ``author_details
 table has a primary key ``author_id`` which is a foreign key to the
 ``author`` table's primary key ``id``. In this case there will be a single ``author``
 for every ``author_details`` and a single ``details`` for every ``author``
-
-.. admonition:: Deprecation
-
-  In versions ``v2.0.0`` and above, the schema/metadata API is deprecated in favour of the :ref:`schema API <schema_apis>` and the
-  :ref:`metadata API <metadata_apis>`.
-
-  Though for backwards compatibility, the schema/metadata APIs will continue to function.
 
 .. _schema_metadata_create_object_relationship:
 

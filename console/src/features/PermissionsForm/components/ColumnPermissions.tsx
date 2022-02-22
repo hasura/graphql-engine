@@ -42,11 +42,11 @@ const useStatus = (disabled: boolean) => {
     return { data: 'Disabled: Set row permissions first', isError: false };
   }
 
-  if (selectedColumns.length === 0) {
+  if (selectedColumns?.length === 0) {
     return { data: 'No columns', isError: false };
   }
 
-  if (selectedColumns.length === columnValues.length) {
+  if (selectedColumns?.length === columnValues?.length) {
     return { data: 'All columns', isError: false };
   }
 
@@ -104,7 +104,7 @@ export const ColumnPermissionsSection: React.FC<ColumnPermissionsSectionProps> =
           </div>
 
           <fieldset className="flex gap-4">
-            {columns.map(fieldName => (
+            {columns?.map(fieldName => (
               <label key={fieldName} className="flex gap-2 items-center">
                 <input
                   type="checkbox"

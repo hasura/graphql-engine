@@ -1,0 +1,17 @@
+type: bulk
+args:
+- type: pg_untrack_table
+  args:
+    table: automatic_comment_in_db
+
+- type: pg_untrack_table
+  args:
+    table: automatic_no_comment_in_db
+
+- type: pg_untrack_table
+  args:
+    table: explicit_comment_in_metadata
+
+- type: pg_untrack_table
+  args:
+    table: explicit_no_comment_in_metadata

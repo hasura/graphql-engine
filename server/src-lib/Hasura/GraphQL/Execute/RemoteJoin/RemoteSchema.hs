@@ -32,7 +32,7 @@ import Hasura.Session
 import Hasura.Tracing qualified as Tracing
 import Language.GraphQL.Draft.Syntax qualified as G
 import Network.HTTP.Client qualified as HTTP
-import Network.HTTP.Types qualified as N
+import Network.HTTP.Types qualified as HTTP
 
 -- XXX(jkachmar): Think about reworking 'ResponsePath' to be 'Alias, Maybe [G.Name]'
 
@@ -133,7 +133,7 @@ getRemoteSchemaResponse ::
   ) =>
   Env.Environment ->
   HTTP.Manager ->
-  [N.Header] ->
+  [HTTP.Header] ->
   UserInfo ->
   RemoteSchemaCall ->
   m AO.Object

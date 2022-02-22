@@ -42,6 +42,7 @@ module Hasura.RQL.Types.Table
     getRels,
     getRemoteFieldInfoName,
     isMutable,
+    mkAdminRolePermInfo,
     permAccToLens,
     permAccToType,
     permDel,
@@ -55,6 +56,7 @@ module Hasura.RQL.Types.Table
     tcCustomColumnNames,
     tcCustomName,
     tcCustomRootFields,
+    tcComment,
     tciCustomConfig,
     tciDescription,
     tciEnumValues,
@@ -67,6 +69,7 @@ module Hasura.RQL.Types.Table
     tciUniqueConstraints,
     tciUniqueOrPrimaryKeyConstraints,
     tciViewInfo,
+    tiAdminRolePermInfo,
     tiCoreInfo,
     tiEventTriggerInfoMap,
     tiName,
@@ -580,7 +583,8 @@ type CustomColumnNames b = HashMap (Column b) G.Name
 data TableConfig b = TableConfig
   { _tcCustomRootFields :: !TableCustomRootFields,
     _tcCustomColumnNames :: !(CustomColumnNames b),
-    _tcCustomName :: !(Maybe G.Name)
+    _tcCustomName :: !(Maybe G.Name),
+    _tcComment :: !Comment
   }
   deriving (Generic)
 
@@ -599,7 +603,7 @@ $(makeLenses ''TableConfig)
 
 emptyTableConfig :: (TableConfig b)
 emptyTableConfig =
-  TableConfig emptyCustomRootFields M.empty Nothing
+  TableConfig emptyCustomRootFields M.empty Nothing Automatic
 
 instance (Backend b) => FromJSON (TableConfig b) where
   parseJSON = withObject "TableConfig" $ \obj ->
@@ -607,6 +611,7 @@ instance (Backend b) => FromJSON (TableConfig b) where
       <$> obj .:? "custom_root_fields" .!= emptyCustomRootFields
       <*> obj .:? "custom_column_names" .!= M.empty
       <*> obj .:? "custom_name"
+      <*> obj .:? "comment" .!= Automatic
 
 data Constraint (b :: BackendType) = Constraint
   { _cName :: !(ConstraintName b),
@@ -717,7 +722,8 @@ tciUniqueOrPrimaryKeyConstraints info =
 data TableInfo (b :: BackendType) = TableInfo
   { _tiCoreInfo :: TableCoreInfo b,
     _tiRolePermInfoMap :: !(RolePermInfoMap b),
-    _tiEventTriggerInfoMap :: !(EventTriggerInfoMap b)
+    _tiEventTriggerInfoMap :: !(EventTriggerInfoMap b),
+    _tiAdminRolePermInfo :: RolePermInfo b
   }
   deriving (Generic)
 
@@ -864,3 +870,20 @@ askColInfo m c msg = do
               c <<> " is a " <> fieldType <> "; ",
               msg
             ]
+
+mkAdminRolePermInfo :: Backend b => TableCoreInfo b -> RolePermInfo b
+mkAdminRolePermInfo ti =
+  RolePermInfo (Just i) (Just s) (Just u) (Just d)
+  where
+    fields = _tciFieldInfoMap ti
+    pgCols = map ciColumn $ getCols fields
+    pgColsWithFilter = M.fromList $ map (,Nothing) pgCols
+    scalarComputedFields =
+      HS.fromList $ map _cfiName $ onlyScalarComputedFields $ getComputedFieldInfos fields
+    scalarComputedFields' = HS.toMap scalarComputedFields $> Nothing
+
+    tn = _tciName ti
+    i = InsPermInfo (HS.fromList pgCols) annBoolExpTrue M.empty False mempty
+    s = SelPermInfo pgColsWithFilter scalarComputedFields' annBoolExpTrue Nothing True mempty
+    u = UpdPermInfo (HS.fromList pgCols) tn annBoolExpTrue Nothing M.empty mempty
+    d = DelPermInfo tn annBoolExpTrue mempty

@@ -83,14 +83,8 @@ fromExpression =
     CastExpression e t dataLength ->
       "CAST(" <+> fromExpression e
         <+> " AS "
-        <+> fromString (T.unpack $ scalarTypeDBName t)
-        <+> fromDataLength
+        <+> fromString (T.unpack $ scalarTypeDBName dataLength t)
         <+> ")"
-      where
-        fromDataLength = case dataLength of
-          DataLengthUnspecified -> fromString ""
-          DataLengthInt len -> "(" <+> fromString (show len) <+> ")"
-          DataLengthMax -> "(max)"
     JsonQueryExpression e -> "JSON_QUERY(" <+> fromExpression e <+> ")"
     JsonValueExpression e path ->
       "JSON_VALUE(" <+> fromExpression e <+> fromPath path <+> ")"
@@ -490,7 +484,7 @@ dropTempTableQuery tempTableName =
   QueryPrinter "DROP TABLE " <+> fromTempTableName tempTableName
 
 fromSelect :: Select -> Printer
-fromSelect Select {..} = fmap fromWith selectWith ?<+> wrapFor selectFor result
+fromSelect Select {..} = fmap fromWith selectWith ?<+> result
   where
     result =
       SepByPrinter
@@ -538,7 +532,7 @@ fromJoinSource =
     JoinReselect reselect -> fromReselect reselect
 
 fromReselect :: Reselect -> Printer
-fromReselect Reselect {..} = wrapFor reselectFor result
+fromReselect Reselect {..} = result
   where
     result =
       SepByPrinter
@@ -776,43 +770,6 @@ falsePrinter = "(1<>1)"
 
 parens :: Printer -> Printer
 parens p = "(" <+> IndentPrinter 1 p <+> ")"
-
--- | Wrap a select with things needed when using FOR JSON.
-wrapFor :: For -> Printer -> Printer
-wrapFor for' inner = coalesceNull
-  where
-    coalesceNull =
-      case for' of
-        NoFor -> rooted
-        JsonFor forJson ->
-          SeqPrinter
-            [ "SELECT ISNULL((",
-              rooted,
-              "), '",
-              emptyarrayOrNull forJson,
-              "')"
-            ]
-    emptyarrayOrNull ForJson {..} =
-      case jsonCardinality of
-        JsonSingleton -> "null"
-        JsonArray -> "[]"
-    rooted =
-      case for' of
-        JsonFor ForJson {jsonRoot, jsonCardinality = JsonSingleton} ->
-          case jsonRoot of
-            NoRoot -> inner
-            -- This is gross, but unfortunately ROOT and
-            -- WITHOUT_ARRAY_WRAPPER are not allowed to be used at the
-            -- same time (reason not specified). Therefore we just
-            -- concatenate the necessary JSON string literals around
-            -- the JSON.
-            Root text ->
-              SeqPrinter
-                [ fromString ("SELECT CONCAT('{" <> show text <> ":', ("),
-                  inner,
-                  "), '}')"
-                ]
-        _ -> inner
 
 --------------------------------------------------------------------------------
 

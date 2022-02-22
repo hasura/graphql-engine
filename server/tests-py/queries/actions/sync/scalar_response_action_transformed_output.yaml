@@ -1,0 +1,51 @@
+- description: Update actions webhook to transform scalar string output into an object
+    response
+  url: /v1/query
+  status: 200
+  response:
+    message: success
+  query:
+    type: update_action
+    args:
+      name: scalar_response
+      definition:
+        kind: synchronous
+        output_type: OutObjectScalarTransformed!
+        handler: http://127.0.0.1:5593/scalar-response
+        response_transform:
+          template_engine: Kriti
+          body: |
+            {
+              "foo": {{ $body }}
+            }
+
+- description: Run scalar-response sync action
+  url: /v1/graphql
+  status: 200
+  query:
+    query: |
+      mutation {
+        scalar_response{
+          foo
+        }
+      }
+
+  response:
+    data:
+      scalar_response: 
+        foo: "some-string"
+        
+- description: Revert action wehbook
+  url: /v1/query
+  status: 200
+  response:
+    message: success
+  query:
+    type: update_action
+    args:
+      name: scalar_response
+      definition:
+        kind: synchronous
+        arguments:
+        output_type: String!
+        handler: http://127.0.0.1:5593/scalar-response

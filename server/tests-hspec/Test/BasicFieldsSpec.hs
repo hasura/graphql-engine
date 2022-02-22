@@ -4,17 +4,18 @@
 -- | Test querying an entity for a couple fields.
 module Test.BasicFieldsSpec (spec) where
 
-import Harness.Backend.Citus as Citus
-import Harness.Backend.Mysql as Mysql
-import Harness.Backend.Postgres as Postgres
-import Harness.Backend.Sqlserver as Sqlserver
+import Harness.Backend.BigQuery qualified as BigQuery
+import Harness.Backend.Citus qualified as Citus
+import Harness.Backend.Mysql qualified as Mysql
+import Harness.Backend.Postgres qualified as Postgres
+import Harness.Backend.Sqlserver qualified as Sqlserver
 import Harness.GraphqlEngine qualified as GraphqlEngine
-import Harness.Quoter.Graphql
-import Harness.Quoter.Sql
-import Harness.Quoter.Yaml
+import Harness.Quoter.Graphql (graphql)
+import Harness.Quoter.Sql (sql)
+import Harness.Quoter.Yaml (shouldReturnYaml, yaml)
 import Harness.State (State)
-import Harness.Test.Feature qualified as Feature
-import Test.Hspec
+import Harness.Test.Context qualified as Context
+import Test.Hspec (SpecWith, it)
 import Prelude
 
 --------------------------------------------------------------------------------
@@ -22,38 +23,54 @@ import Prelude
 
 spec :: SpecWith State
 spec =
-  Feature.feature
-    Feature.Feature
-      { Feature.backends =
-          [ Feature.Backend
-              { name = "MySQL",
-                setup = mysqlSetup,
-                teardown = mysqlTeardown
-              },
-            Feature.Backend
-              { name = "PostgreSQL",
-                setup = postgresSetup,
-                teardown = postgresTeardown
-              },
-            Feature.Backend
-              { name = "Citus",
-                setup = citusSetup,
-                teardown = citusTeardown
-              },
-            Feature.Backend
-              { name = "SQLServer",
-                setup = sqlserverSetup,
-                teardown = sqlserverTeardown
-              }
-          ],
-        Feature.tests = tests
-      }
+  Context.run
+    [ Context.Context
+        { name = Context.MySQL,
+          mkLocalState = Context.noLocalState,
+          setup = mysqlSetup,
+          teardown = mysqlTeardown,
+          customOptions = Nothing
+        },
+      Context.Context
+        { name = Context.Postgres,
+          mkLocalState = Context.noLocalState,
+          setup = postgresSetup,
+          teardown = postgresTeardown,
+          customOptions = Nothing
+        },
+      Context.Context
+        { name = Context.Citus,
+          mkLocalState = Context.noLocalState,
+          setup = citusSetup,
+          teardown = citusTeardown,
+          customOptions = Nothing
+        },
+      Context.Context
+        { name = Context.SQLServer,
+          mkLocalState = Context.noLocalState,
+          setup = sqlserverSetup,
+          teardown = sqlserverTeardown,
+          customOptions = Nothing
+        },
+      Context.Context
+        { name = Context.BigQuery,
+          mkLocalState = Context.noLocalState,
+          setup = bigquerySetup,
+          teardown = bigqueryTeardown,
+          customOptions =
+            Just $
+              Context.Options
+                { stringifyNumbers = True
+                }
+        }
+    ]
+    tests
 
 --------------------------------------------------------------------------------
 -- MySQL backend
 
-mysqlSetup :: State -> IO ()
-mysqlSetup state = do
+mysqlSetup :: (State, ()) -> IO ()
+mysqlSetup (state, _) = do
   -- Clear and reconfigure the metadata
   GraphqlEngine.setSource state Mysql.defaultSourceMetadata
 
@@ -76,9 +93,8 @@ VALUES
 |]
 
   -- Track the tables
-  GraphqlEngine.post_
+  GraphqlEngine.postMetadata_
     state
-    "/v1/metadata"
     [yaml|
 type: mysql_track_table
 args:
@@ -88,7 +104,7 @@ args:
     name: author
 |]
 
-mysqlTeardown :: State -> IO ()
+mysqlTeardown :: (State, ()) -> IO ()
 mysqlTeardown _ = do
   Mysql.run_
     [sql|
@@ -98,8 +114,8 @@ DROP TABLE hasura.author;
 --------------------------------------------------------------------------------
 -- PostgreSQL backend
 
-postgresSetup :: State -> IO ()
-postgresSetup state = do
+postgresSetup :: (State, ()) -> IO ()
+postgresSetup (state, _) = do
   -- Clear and reconfigure the metadata
   GraphqlEngine.setSource state Postgres.defaultSourceMetadata
 
@@ -122,9 +138,8 @@ VALUES
 |]
 
   -- Track the tables
-  GraphqlEngine.post_
+  GraphqlEngine.postMetadata_
     state
-    "/v1/metadata"
     [yaml|
 type: postgres_track_table
 args:
@@ -134,7 +149,7 @@ args:
     name: author
 |]
 
-postgresTeardown :: State -> IO ()
+postgresTeardown :: (State, ()) -> IO ()
 postgresTeardown _ = do
   Postgres.run_
     [sql|
@@ -144,8 +159,8 @@ DROP TABLE hasura.author;
 --------------------------------------------------------------------------------
 -- Citus backend
 
-citusSetup :: State -> IO ()
-citusSetup state = do
+citusSetup :: (State, ()) -> IO ()
+citusSetup (state, ()) = do
   -- Clear and reconfigure the metadata
   GraphqlEngine.setSource state Citus.defaultSourceMetadata
 
@@ -168,9 +183,8 @@ VALUES
 |]
 
   -- Track the tables
-  GraphqlEngine.post_
+  GraphqlEngine.postMetadata_
     state
-    "/v1/metadata"
     [yaml|
 type: citus_track_table
 args:
@@ -180,7 +194,7 @@ args:
     name: author
 |]
 
-citusTeardown :: State -> IO ()
+citusTeardown :: (State, ()) -> IO ()
 citusTeardown _ = do
   Citus.run_
     [sql|
@@ -190,8 +204,8 @@ DROP TABLE IF EXISTS hasura.author;
 --------------------------------------------------------------------------------
 -- SQL Server backend
 
-sqlserverSetup :: State -> IO ()
-sqlserverSetup state = do
+sqlserverSetup :: (State, ()) -> IO ()
+sqlserverSetup (state, ()) = do
   -- Clear and reconfigure the metadata
   GraphqlEngine.setSource state Sqlserver.defaultSourceMetadata
 
@@ -214,9 +228,8 @@ VALUES
 |]
 
   -- Track the tables
-  GraphqlEngine.post_
+  GraphqlEngine.postMetadata_
     state
-    "/v1/metadata"
     [yaml|
 type: mssql_track_table
 args:
@@ -226,7 +239,7 @@ args:
     name: author
 |]
 
-sqlserverTeardown :: State -> IO ()
+sqlserverTeardown :: (State, ()) -> IO ()
 sqlserverTeardown _ = do
   Sqlserver.run_
     [sql|
@@ -234,17 +247,87 @@ DROP TABLE hasura.author;
 |]
 
 --------------------------------------------------------------------------------
+-- BigQuery backend
+
+bigquerySetup :: (State, ()) -> IO ()
+bigquerySetup (state, ()) = do
+  -- Clear and reconfigure the metadata
+  serviceAccount <- BigQuery.getServiceAccount
+  projectId <- BigQuery.getProjectId
+  GraphqlEngine.postMetadata_
+    state
+    [yaml|
+type: replace_metadata
+args:
+  version: 3
+  sources:
+  - name: bigquery
+    kind: bigquery
+    tables: []
+    configuration:
+      service_account: *serviceAccount
+      project_id: *projectId
+      datasets: [hasura]
+|]
+
+  -- Setup tables
+  BigQuery.run_
+    serviceAccount
+    projectId
+    [sql|
+CREATE TABLE hasura.author
+(
+    id INT64,
+    name STRING
+);
+|]
+  BigQuery.run_
+    serviceAccount
+    projectId
+    [sql|
+INSERT INTO hasura.author
+    (id, name)
+VALUES
+    (1, 'Author 1'),
+    (2, 'Author 2');
+|]
+
+  -- Track the tables
+  GraphqlEngine.postMetadata_
+    state
+    [yaml|
+type: bigquery_track_table
+args:
+  source: bigquery
+  table:
+    dataset: hasura
+    name: author
+|]
+
+bigqueryTeardown :: (State, ()) -> IO ()
+bigqueryTeardown _ = do
+  serviceAccount <- BigQuery.getServiceAccount
+  projectId <- BigQuery.getProjectId
+  BigQuery.run_
+    serviceAccount
+    projectId
+    [sql|
+DROP TABLE hasura.author;
+|]
+
+--------------------------------------------------------------------------------
 -- Tests
 
-tests :: SpecWith State
-tests = do
+tests :: Context.Options -> SpecWith State
+tests opts = do
   it "Author fields" $ \state ->
     shouldReturnYaml
+      opts
       ( GraphqlEngine.postGraphql
           state
           [graphql|
 query {
-  hasura_author {
+  hasura_author(order_by:[{id:asc}]) {
     name
     id
   }
@@ -261,6 +344,7 @@ data:
 |]
   it "Use operationName" $ \state ->
     shouldReturnYaml
+      opts
       ( GraphqlEngine.postGraphqlYaml
           state
           [yaml|
@@ -272,7 +356,7 @@ query: |
     }
   }
   query chooseThisOne {
-    hasura_author {
+    hasura_author(order_by:[{id:asc}]) {
       id
       name
     }
@@ -289,6 +373,7 @@ data:
 |]
   it "Missing field" $ \state -> do
     shouldReturnYaml
+      opts
       ( GraphqlEngine.postGraphql
           state
           [graphql|
@@ -311,6 +396,7 @@ errors:
 |]
   it "Missing table" $ \state ->
     shouldReturnYaml
+      opts
       ( GraphqlEngine.postGraphql
           state
           [graphql|

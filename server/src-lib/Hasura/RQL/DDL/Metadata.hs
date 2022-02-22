@@ -59,6 +59,7 @@ import Hasura.RQL.Types
 import Hasura.RQL.Types.Eventing.Backend (BackendEventTrigger (..))
 import Hasura.SQL.AnyBackend qualified as AB
 import Kriti qualified as K
+import Kriti.Error qualified as K
 import Network.HTTP.Client.Transformable qualified as HTTP
 
 runClearMetadata ::
@@ -188,7 +189,7 @@ runReplaceMetadataV2 ReplaceMetadataV2 {..} = do
 
   case _rmv2AllowInconsistentMetadata of
     AllowInconsistentMetadata ->
-      buildSchemaCache noMetadataModify
+      buildSchemaCache mempty
     NoAllowInconsistentMetadata ->
       buildSchemaCacheStrict
 
@@ -401,10 +402,10 @@ runDropInconsistentMetadata _ = do
   -- list of inconsistent objects, so reverse the list to start with dependents first. This is not
   -- perfect — a completely accurate solution would require performing a topological sort — but it
   -- seems to work well enough for now.
-  metadataModifier <- execWriterT $ mapM_ (tell . purgeMetadataObj) (reverse inconsSchObjs)
+  MetadataModifier {..} <- execWriterT $ mapM_ (tell . purgeMetadataObj) (reverse inconsSchObjs)
   metadata <- getMetadata
-  putMetadata $ unMetadataModifier metadataModifier metadata
-  buildSchemaCache noMetadataModify
+  putMetadata $ runMetadataModifier metadata
+  buildSchemaCache mempty
   -- after building the schema cache, we need to check the inconsistent metadata, if any
   -- are only those which are not droppable
   newInconsistentObjects <- scInconsistentObjs <$> askSchemaCache
@@ -479,7 +480,7 @@ runRemoveMetricsConfig = do
   pure successMsg
 
 data TestTransformError
-  = UrlInterpError K.RenderedError
+  = UrlInterpError K.SerializedError
   | RequestInitializationError HTTP.HttpException
   | RequestTransformationError HTTP.Request TransformErrorBundle
 
@@ -505,7 +506,7 @@ runTestWebhookTransform (TestWebhookTransform env urlE payload mt _ sv) = do
     let env' = bimap T.pack (J.String . T.pack) <$> Env.toList env
         decodeKritiResult = TE.decodeUtf8 . BL.toStrict . J.encode
 
-    kritiUrlResult <- hoistEither $ first UrlInterpError $ decodeKritiResult <$> K.runKriti (TE.encodeUtf8 $ "\"" <> url <> "\"") env'
+    kritiUrlResult <- hoistEither $ first (UrlInterpError . K.serialize) $ decodeKritiResult <$> K.runKriti ("\"" <> url <> "\"") env'
 
     let unwrappedUrl = T.drop 1 $ T.dropEnd 1 kritiUrlResult
     initReq <- hoistEither $ first RequestInitializationError $ HTTP.mkRequestEither unwrappedUrl

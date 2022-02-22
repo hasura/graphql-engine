@@ -64,7 +64,6 @@ module Hasura.RQL.Types.Metadata
     metadataToOrdJSON,
     mkSourceMetadata,
     mkTableMeta,
-    noMetadataModify,
     parseNonSourcesMetadata,
     rsmComment,
     rsmDefinition,
@@ -107,6 +106,7 @@ import Data.HashMap.Strict.Extended qualified as M
 import Data.HashMap.Strict.InsOrd.Extended qualified as OM
 import Data.HashSet qualified as HS
 import Data.List.Extended qualified as L
+import Data.Monoid (Dual (..), Endo (..))
 import Data.Text qualified as T
 import Data.Text.Extended qualified as T
 import Hasura.Incremental (Cacheable)
@@ -197,17 +197,26 @@ currentMetadataVersion = MVVersion3
 data ComputedFieldMetadata b = ComputedFieldMetadata
   { _cfmName :: !ComputedFieldName,
     _cfmDefinition :: !(ComputedFieldDefinition b),
-    _cfmComment :: !(Maybe Text)
+    _cfmComment :: !Comment
   }
   deriving (Show, Eq, Generic)
 
 instance (Backend b) => Cacheable (ComputedFieldMetadata b)
 
 instance (Backend b) => ToJSON (ComputedFieldMetadata b) where
-  toJSON = genericToJSON hasuraJSON
+  toJSON ComputedFieldMetadata {..} =
+    object
+      [ "name" .= _cfmName,
+        "definition" .= _cfmDefinition,
+        "comment" .= _cfmComment
+      ]
 
 instance (Backend b) => FromJSON (ComputedFieldMetadata b) where
-  parseJSON = genericParseJSON hasuraJSON
+  parseJSON = withObject "ComputedFieldMetadata" $ \obj ->
+    ComputedFieldMetadata
+      <$> obj .: "name"
+      <*> obj .: "definition"
+      <*> obj .:? "comment" .!= Automatic
 
 data RemoteSchemaPermissionMetadata = RemoteSchemaPermissionMetadata
   { _rspmRole :: !RoleName,
@@ -673,16 +682,8 @@ instance FromJSON MetadataNoSources where
         actions
         cronTriggers
 
-newtype MetadataModifier = MetadataModifier {unMetadataModifier :: Metadata -> Metadata}
-
-instance Semigroup MetadataModifier where
-  (MetadataModifier u1) <> (MetadataModifier u2) = MetadataModifier $ u2 . u1
-
-instance Monoid MetadataModifier where
-  mempty = MetadataModifier id
-
-noMetadataModify :: MetadataModifier
-noMetadataModify = mempty
+newtype MetadataModifier = MetadataModifier {runMetadataModifier :: Metadata -> Metadata}
+  deriving (Semigroup, Monoid) via (Dual (Endo Metadata))
 
 dropTableInMetadata ::
   forall b. (Backend b) => SourceName -> TableName b -> MetadataModifier
@@ -931,7 +932,7 @@ metadataToOrdJSON
                 [ ("name", AO.toOrdered name),
                   ("definition", AO.toOrdered definition)
                 ]
-                  <> catMaybes [maybeCommentToMaybeOrdPair comment]
+                  <> catMaybes [commentToMaybeOrdPair comment]
 
             insPermDefToOrdJSON :: forall b. (Backend b) => InsPermDef b -> AO.Value
             insPermDefToOrdJSON = permDefToOrdJSON insPermToOrdJSON
@@ -1255,6 +1256,9 @@ metadataToOrdJSON
 
       maybeAnyToMaybeOrdPair :: Text -> (a -> AO.Value) -> Maybe a -> Maybe (Text, AO.Value)
       maybeAnyToMaybeOrdPair name f = fmap ((name,) . f)
+
+      commentToMaybeOrdPair :: Comment -> Maybe (Text, AO.Value)
+      commentToMaybeOrdPair comment = (\val -> ("comment", AO.toOrdered val)) <$> commentToMaybeText comment
 
 instance ToJSON Metadata where
   toJSON = AO.fromOrdered . metadataToOrdJSON

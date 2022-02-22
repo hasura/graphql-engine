@@ -36,7 +36,7 @@ buildComputedFieldInfo ::
   ComputedFieldName ->
   ComputedFieldDefinition 'BigQuery ->
   RawFunctionInfo 'BigQuery ->
-  Maybe Text ->
+  Comment ->
   m (ComputedFieldInfo 'BigQuery)
 buildComputedFieldInfo _ _ _ _ _ _ =
   throw400 NotSupported "Computed fields aren't supported for BigQuery sources"

@@ -283,7 +283,7 @@ withMetadataCheck source cascade txAccess action = do
   serverConfigCtx <- askServerConfigCtx
   liftEitherM $
     runPgSourceWriteTx sourceConfig $
-      forM_ (M.elems postActionTables) $ \(TableInfo coreInfo _ eventTriggers) -> do
+      forM_ (M.elems postActionTables) $ \(TableInfo coreInfo _ eventTriggers _) -> do
         let table = _tciName coreInfo
             columns = getCols $ _tciFieldInfoMap coreInfo
         forM_ (M.toList eventTriggers) $ \(triggerName, eti) -> do

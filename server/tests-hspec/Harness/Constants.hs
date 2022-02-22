@@ -24,27 +24,45 @@ module Harness.Constants
     sqlserverLivenessCheckIntervalSeconds,
     sqlserverLivenessCheckIntervalMicroseconds,
     sqlserverConnectInfo,
+    bigqueryServiceAccountVar,
+    bigqueryProjectIdVar,
     httpHealthCheckAttempts,
     httpHealthCheckIntervalSeconds,
     httpHealthCheckIntervalMicroseconds,
     citusConnectionString,
     serveOptions,
-    debugMessagesEnabled,
   )
 where
 
+-------------------------------------------------------------------------------
+
 import Data.HashSet qualified as Set
-import Data.Word
+import Data.Word (Word16)
 import Database.MySQL.Simple qualified as Mysql
 import Database.PG.Query qualified as Q
 import Hasura.GraphQL.Execute.LiveQuery.Options qualified as LQ
 import Hasura.Logging qualified as L
 import Hasura.Prelude
 import Hasura.RQL.Types
-import Hasura.Server.Cors
+  ( FunctionPermissionsCtx (FunctionPermissionsInferred),
+    RemoteSchemaPermsCtx (RemoteSchemaPermsDisabled),
+  )
+import Hasura.Server.Cors (CorsConfig (CCAllowAll))
 import Hasura.Server.Init
+  ( API (CONFIG, DEVELOPER, GRAPHQL, METADATA),
+    OptionalInterval (..),
+    ResponseInternalErrorsConfig (..),
+    ServeOptions (..),
+  )
+import Hasura.Server.Init qualified as Init
 import Hasura.Server.Types
+  ( EventingMode (EventingEnabled),
+    MaintenanceMode (MaintenanceModeDisabled),
+    ReadOnlyMode (ReadOnlyModeDisabled),
+  )
 import Network.WebSockets qualified as WS
+
+-------------------------------------------------------------------------------
 
 -- * Postgres
 
@@ -167,6 +185,12 @@ mysqlConnectInfo =
       Mysql.connectPort = mysqlPort
     }
 
+bigqueryServiceAccountVar :: String
+bigqueryServiceAccountVar = "HASURA_BIGQUERY_SERVICE_ACCOUNT"
+
+bigqueryProjectIdVar :: String
+bigqueryProjectIdVar = "HASURA_BIGQUERY_PROJECT_ID"
+
 -- * HTTP health checks
 
 httpHealthCheckAttempts :: Int
@@ -180,7 +204,7 @@ httpHealthCheckIntervalMicroseconds = 1000 * 1000 * httpHealthCheckIntervalSecon
 
 -- * Server configuration
 
-serveOptions :: ServeOptions impl
+serveOptions :: ServeOptions L.Hasura
 serveOptions =
   ServeOptions
     { soPort = 12345, -- The server runner will typically be generating
@@ -191,7 +215,7 @@ serveOptions =
       soTxIso = Q.Serializable,
       soAdminSecret = mempty,
       soAuthHook = Nothing,
-      soJwtSecret = Nothing,
+      soJwtSecret = mempty,
       soUnAuthRole = Nothing,
       soCorsConfig = CCAllowAll,
       soEnableConsole = True,
@@ -202,11 +226,8 @@ serveOptions =
       soEnabledAPIs = testSuiteEnabledApis,
       soLiveQueryOpts = LQ.mkLiveQueriesOptions Nothing Nothing,
       soEnableAllowlist = False,
-      soEnabledLogTypes = Set.empty,
-      soLogLevel =
-        if debugMessagesEnabled
-          then L.LevelDebug
-          else L.LevelOther "test-suite",
+      soEnabledLogTypes = Set.fromList L.userAllowedLogTypes,
+      soLogLevel = fromMaybe (L.LevelOther "test-suite") engineLogLevel,
       soResponseInternalErrorsConfig = InternalErrorsAllRequests,
       soEventsHttpPoolSize = Nothing,
       soEventsFetchInterval = Nothing,
@@ -214,7 +235,7 @@ serveOptions =
       soLogHeadersFromEnv = False,
       soEnableRemoteSchemaPermissions = RemoteSchemaPermsDisabled,
       soConnectionOptions = WS.defaultConnectionOptions,
-      soWebsocketKeepAlive = defaultKeepAliveDelay,
+      soWebsocketKeepAlive = Init.defaultKeepAliveDelay,
       soInferFunctionPermissions = FunctionPermissionsInferred,
       soEnableMaintenanceMode = MaintenanceModeDisabled,
       -- MUST be disabled to be able to modify schema.
@@ -223,14 +244,20 @@ serveOptions =
       soEventsFetchBatchSize = 1,
       soDevMode = True,
       soGracefulShutdownTimeout = 0, -- Don't wait to shutdown.
-      soWebsocketConnectionInitTimeout = defaultWSConnectionInitTimeout,
+      soWebsocketConnectionInitTimeout = Init.defaultWSConnectionInitTimeout,
       soEventingMode = EventingEnabled,
       soReadOnlyMode = ReadOnlyModeDisabled
     }
 
--- | Use the below to show messages.
-debugMessagesEnabled :: Bool
-debugMessagesEnabled = False
+-- | What log level should be used by the engine; this is not exported, and
+-- only used in 'serveOptions'.
+--
+-- This should be adjusted locally for debugging purposes; e.g. change it to
+-- @Just L.Debug@ to enable all logs.
+--
+-- See 'L.LogLevel' for an enumeration of available log levels.
+engineLogLevel :: Maybe L.LogLevel
+engineLogLevel = Nothing
 
 -- These are important for the test suite.
 testSuiteEnabledApis :: HashSet API

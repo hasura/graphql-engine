@@ -86,8 +86,8 @@ import Hasura.Session
 import Hasura.Tracing qualified as Tracing
 import Language.GraphQL.Draft.Syntax (Name (..))
 import ListT qualified
-import Network.HTTP.Client qualified as H
-import Network.HTTP.Types qualified as H
+import Network.HTTP.Client qualified as HTTP
+import Network.HTTP.Types qualified as HTTP
 import Network.WebSockets qualified as WS
 import StmContainers.Map qualified as STMMap
 
@@ -329,8 +329,8 @@ onConn wsId requestHead ipAddress onConnHActions = do
       return $
         Left $
           WS.RejectRequest
-            (H.statusCode $ qeStatus qErr)
-            (H.statusMessage $ qeStatus qErr)
+            (HTTP.statusCode $ qeStatus qErr)
+            (HTTP.statusMessage $ qeStatus qErr)
             []
             (LBS.toStrict $ J.encode $ encodeGQLErr False qErr)
 
@@ -709,7 +709,7 @@ onStart env enabledLogTypes serverEnv wsConn (StartMsg opId q) onMessageActions 
     runRemoteGQ ::
       RootFieldAlias ->
       UserInfo ->
-      [H.Header] ->
+      [HTTP.Header] ->
       RemoteSchemaInfo ->
       ResultCustomizer ->
       GQLReqOutgoing ->
@@ -947,7 +947,7 @@ stopOperation serverEnv wsConn opId logWhenOpNotExist = do
 onConnInit ::
   (MonadIO m, UserAuthentication (Tracing.TraceT m)) =>
   L.Logger L.Hasura ->
-  H.Manager ->
+  HTTP.Manager ->
   WSConn ->
   AuthMode ->
   Maybe ConnParams ->

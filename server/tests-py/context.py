@@ -338,9 +338,6 @@ class ActionsWebhookHandler(http.server.BaseHTTPRequestHandler):
             resp, status = self.create_user_nested()
             self._send_response(status, resp)
 
-        elif req_path == "/invalid-response":
-            self._send_response(HTTPStatus.OK, "some-string")
-
         elif req_path == "/mirror-action":
             resp, status = self.mirror_action()
             self._send_response(status, resp)
@@ -372,6 +369,9 @@ class ActionsWebhookHandler(http.server.BaseHTTPRequestHandler):
         elif req_path == "/null-response":
             resp, status = self.null_response()
             self._send_response(status, resp)
+        
+        elif req_path == "/scalar-response":
+            self._send_response(HTTPStatus.OK, "some-string")
 
         elif req_path == "/recursive-output":
             resp, status = self.recursive_output()

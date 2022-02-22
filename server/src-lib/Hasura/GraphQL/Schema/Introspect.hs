@@ -1,7 +1,8 @@
 {-# LANGUAGE ApplicativeDo #-}
 
 module Hasura.GraphQL.Schema.Introspect
-  ( schema,
+  ( buildIntrospectionSchema,
+    schema,
     typeIntrospection,
   )
 where
@@ -13,10 +14,14 @@ import Data.HashMap.Strict qualified as Map
 import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.List.NonEmpty qualified as NE
 import Data.Text qualified as T
+import Data.Text.Extended
 import Data.Vector qualified as V
+import Hasura.Base.Error
 import Hasura.GraphQL.Parser (FieldParser, Kind (..), Parser, Schema (..))
 import Hasura.GraphQL.Parser qualified as P
 import Hasura.GraphQL.Parser.Class
+import Hasura.GraphQL.Parser.Directives
+import Hasura.GraphQL.Parser.Internal.Parser (FieldParser (..))
 import Hasura.Prelude
 import Language.GraphQL.Draft.Printer qualified as GP
 import Language.GraphQL.Draft.Syntax qualified as G
@@ -143,6 +148,115 @@ there is no deeper meaning to the application of do notation than ease of
 reading.
 -}
 
+{- Note [What introspection exposes]
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+NB: By "introspection query", we mean a query making use of the __type or
+__schema top-level fields.
+
+It would be very convenient if we could simply build up our desired GraphQL
+schema, without regard for introspection. Ideally, we would then extract the
+data required for introspection from this complete GraphQL schema. There are,
+however, some complications:
+
+1. Of course, we _do_ need to include the introspection fields themselves into
+   the query_root, so that we can deal with introspection queries
+   appropriately. So we can't avoid thinking about introspection entirely while
+   constructing the GraphQL schema.
+
+2. The GraphQL specification says that although we must always expose __type and
+   __schema fields as part of the query_root, they must not be visible fields of
+   the query_root object type. See
+   http://spec.graphql.org/June2018/#sec-Schema-Introspection
+
+At this point, one might naively attempt to generate two GraphQL schemas:
+
+- One without the __type and __schema fields, from which we generate the data
+  required for responding to introspection queries.
+- One with the __type and __schema fields, which is used to actually respond to
+  queries.
+
+However, this is also not GraphQL-compliant!
+
+The problem here is that while __type and __schema are not visible fields of the
+query root object, their *types*, __Type and __Schema respectively, *must be*
+exposed through __type introspection, even though those types never appear as
+(transitive) members of the query/mutation/subscription root fields.
+
+So in order to gather the data required for introspection, we follow the
+following recipe:
+
+A. Collect type information from the introspection-free GraphQL schema
+
+B. Collect type information from the introspection-only GraphQL schema
+
+C. Stitch together the results of (A) and (B). In particular, the query_root
+from (A) is used, and all types from (A) and (B) are used, except for the
+query_root obtained in (B). -}
+
+-- | Builds a @Schema@ from GraphQL types for the query_root, mutation_root and
+-- subscription_root.
+--
+-- See Note [What introspection exposes]
+buildIntrospectionSchema ::
+  MonadError QErr m =>
+  P.Type 'Output ->
+  Maybe (P.Type 'Output) ->
+  Maybe (P.Type 'Output) ->
+  m P.Schema
+buildIntrospectionSchema queryRoot' mutationRoot' subscriptionRoot' = do
+  let -- The only directives that we currently expose over introspection are our
+      -- statically defined ones.  So, for instance, we don't correctly expose
+      -- directives from remote schemas.
+      directives = directivesInfo @(P.ParseT Identity)
+      -- The __schema and __type introspection fields
+      introspection = [schema @(P.ParseT Identity), typeIntrospection]
+      {-# INLINE introspection #-}
+
+  -- Collect type information of all non-introspection fields
+  allBasicTypes <-
+    collectTypes
+      [ P.TypeDefinitionsWrapper queryRoot',
+        P.TypeDefinitionsWrapper mutationRoot',
+        P.TypeDefinitionsWrapper subscriptionRoot',
+        P.TypeDefinitionsWrapper $ P.diArguments =<< directives
+      ]
+
+  -- TODO: it may be worth looking at whether we can stop collecting
+  -- introspection types monadically.  They are independent of the user schema;
+  -- the types here are always the same and specified by the GraphQL spec
+
+  -- Pull all the introspection types out (__Type, __Schema, etc)
+  allIntrospectionTypes <- collectTypes (map fDefinition introspection)
+
+  let allTypes =
+        Map.unions
+          [ allBasicTypes,
+            Map.filterWithKey (\name _info -> name /= P.getName queryRoot') allIntrospectionTypes
+          ]
+  pure $
+    P.Schema
+      { sDescription = Nothing,
+        sTypes = allTypes,
+        sQueryType = queryRoot',
+        sMutationType = mutationRoot',
+        sSubscriptionType = subscriptionRoot',
+        sDirectives = directives
+      }
+
+collectTypes ::
+  forall m a.
+  (MonadError QErr m, P.HasTypeDefinitions a) =>
+  a ->
+  m (HashMap G.Name (P.Definition P.SomeTypeInfo))
+collectTypes x =
+  P.collectTypeDefinitions x
+    `onLeft` \(P.ConflictingDefinitions (type1, origin1) (_type2, origins)) ->
+      -- See Note [Collecting types from the GraphQL schema]
+      throw500 $
+        "Found conflicting definitions for " <> P.getName type1 <<> ".  The definition at " <> origin1
+          <<> " differs from the the definition at " <> commaSeparated origins
+          <<> "."
+
 -- | Generate a __type introspection parser
 typeIntrospection ::
   forall n.
@@ -153,15 +267,13 @@ typeIntrospection = do
   let nameArg :: P.InputFieldsParser n Text
       nameArg = P.field $$(G.litName "name") Nothing P.string
   ~(nameText, printer) <- P.subselection $$(G.litName "__type") Nothing nameArg typeField
-  -- We pass around the GraphQL schema information under the name `fakeSchema`,
+  -- We pass around the GraphQL schema information under the name `partialSchema`,
   -- because the GraphQL spec forces us to expose a hybrid between the
   -- specification of valid queries (including introspection) and an
-  -- introspection-free GraphQL schema.  The introspection fields __type and
-  -- __schema are not exposed as part of query_root, but the types of those
-  -- fields must be.  Hasura.GraphQL.Schema is responsible for organising this.
-  pure $ \fakeSchema -> fromMaybe J.Null $ do
+  -- introspection-free GraphQL schema.  See Note [What introspection exposes].
+  pure $ \partialSchema -> fromMaybe J.Null $ do
     name <- G.mkName nameText
-    P.Definition n d (P.SomeTypeInfo i) <- Map.lookup name $ sTypes fakeSchema
+    P.Definition n d (P.SomeTypeInfo i) <- Map.lookup name $ sTypes partialSchema
     Just $ printer $ SomeType $ P.TNamed P.Nullable $ P.Definition n d i
 
 -- | Generate a __schema introspection parser.
@@ -575,18 +687,18 @@ schemaSet =
   let description :: FieldParser n (Schema -> J.Value)
       description =
         P.selection_ $$(G.litName "description") Nothing P.string
-          $> \fakeSchema -> case sDescription fakeSchema of
+          $> \partialSchema -> case sDescription partialSchema of
             Nothing -> J.Null
             Just s -> J.String $ G.unDescription s
       types :: FieldParser n (Schema -> J.Value)
       types = do
         printer <- P.subselection_ $$(G.litName "types") Nothing typeField
         return $
-          \fakeSchema ->
+          \partialSchema ->
             J.Array $
               V.fromList $
                 map (printer . schemaTypeToSomeType) $
-                  sortOn P.dName $ Map.elems $ sTypes fakeSchema
+                  sortOn P.dName $ Map.elems $ sTypes partialSchema
         where
           schemaTypeToSomeType ::
             P.Definition P.SomeTypeInfo ->
@@ -596,23 +708,23 @@ schemaSet =
       queryType :: FieldParser n (Schema -> J.Value)
       queryType = do
         printer <- P.subselection_ $$(G.litName "queryType") Nothing typeField
-        return $ \fakeSchema -> printer $ SomeType $ sQueryType fakeSchema
+        return $ \partialSchema -> printer $ SomeType $ sQueryType partialSchema
       mutationType :: FieldParser n (Schema -> J.Value)
       mutationType = do
         printer <- P.subselection_ $$(G.litName "mutationType") Nothing typeField
-        return $ \fakeSchema -> case sMutationType fakeSchema of
+        return $ \partialSchema -> case sMutationType partialSchema of
           Nothing -> J.Null
           Just tp -> printer $ SomeType tp
       subscriptionType :: FieldParser n (Schema -> J.Value)
       subscriptionType = do
         printer <- P.subselection_ $$(G.litName "subscriptionType") Nothing typeField
-        return $ \fakeSchema -> case sSubscriptionType fakeSchema of
+        return $ \partialSchema -> case sSubscriptionType partialSchema of
           Nothing -> J.Null
           Just tp -> printer $ SomeType tp
       directives :: FieldParser n (Schema -> J.Value)
       directives = do
         printer <- P.subselection_ $$(G.litName "directives") Nothing directiveSet
-        return $ \fakeSchema -> J.array $ map printer $ sDirectives fakeSchema
+        return $ \partialSchema -> J.array $ map printer $ sDirectives partialSchema
    in applyPrinter
         <$> P.selectionSet
           $$(G.litName "__Schema")

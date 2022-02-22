@@ -4,6 +4,7 @@ from context import PytestConf
 
 import json
 import textwrap
+import ruamel.yaml as yaml
 
 # Mark that all tests in this module can be run as server upgrade tests
 pytestmark = pytest.mark.allow_server_upgrade_test
@@ -220,6 +221,10 @@ class TestGraphQLQueryBasicBigquery:
 
     def test_distinct_on(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + "/distinct_on.yaml", transport)
+
+    # Timestamp value parsing, https://github.com/hasura/graphql-engine/issues/8076
+    def test_timestamp_filter(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + "/timestamp_filter.yaml", transport)
 
     @classmethod
     def dir(cls):
@@ -1318,7 +1323,7 @@ class TestGraphQLExplainCommon:
     def test_documented_subscription(self, hge_ctx, backend):
         self.with_admin_secret("subscription", hge_ctx, self.dir() + hge_ctx.backend_suffix('/docs_subscription') + ".yaml")
 
-    def with_admin_secret(self, explain_query_type, hge_ctx, f, hdrs=None, req_st=200):
+    def with_admin_secret(self, explain_query_type, hge_ctx, f, hdrs=None, req_st=200, overwrite_expectations=False):
         conf = get_conf_f(f)
         admin_secret = hge_ctx.hge_key
         headers = {}
@@ -1333,19 +1338,35 @@ class TestGraphQLExplainCommon:
             # return early in case we're testing for failures
             return
 
+
         if explain_query_type == "query":
             # This test is specific to queries with a single field.
             # Comparing only with generated 'sql' since the 'plan' may differ.
             resp_sql = resp_json[0]['sql']
             exp_sql = conf['response'][0]['sql']
+
+            p = (resp_sql == exp_sql) and overwrite_expectations
+            if not p:
+                with open(f, 'w') as outfile:
+                    conf['response'][0]['sql'] = resp_json[0]['sql']
+                    yaml.YAML(typ='rt').dump(conf, outfile) # , default_flow_style=False)
+
             # Outputing response for embedding in test
             assert resp_sql == exp_sql, \
                 f"Unexpected explain SQL in response:\n{textwrap.indent(json.dumps(resp_json, indent=2), '  ')}"
+
         elif explain_query_type == "subscription":
             # Comparing only with generated 'sql' since the 'plan' may differ.
             # In particular, we ignore the subscription's cohort variables.
             resp_sql = resp_json['sql']
             exp_sql = conf['response']['sql']
+
+            p = (resp_sql == exp_sql) and overwrite_expectations
+            if not p:
+                with open(f, 'w') as outfile:
+                    conf['response']['sql'] = resp_json['sql']
+                    yaml.YAML().dump(conf, outfile)
+
             # Outputing response for embedding in test
             assert resp_sql == exp_sql, \
                 f"Unexpected explain SQL in response:\n{textwrap.indent(json.dumps(resp_json, indent=2), '  ')}"

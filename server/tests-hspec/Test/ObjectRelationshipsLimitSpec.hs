@@ -12,7 +12,7 @@ import Harness.Quoter.Graphql
 import Harness.Quoter.Sql
 import Harness.Quoter.Yaml
 import Harness.State (State)
-import Harness.Test.Feature qualified as Feature
+import Harness.Test.Context qualified as Context
 import Test.Hspec
 import Prelude
 
@@ -22,17 +22,16 @@ import Prelude
 
 spec :: SpecWith State
 spec =
-  Feature.feature
-    Feature.Feature
-      { Feature.backends =
-          [ Feature.Backend
-              { name = "Postgres",
-                setup = postgresSetup,
-                teardown = postgresTeardown
-              }
-          ],
-        Feature.tests = tests
-      }
+  Context.run
+    [ Context.Context
+        { name = Context.Postgres,
+          mkLocalState = Context.noLocalState,
+          setup = postgresSetup,
+          teardown = postgresTeardown,
+          customOptions = Nothing
+        }
+    ]
+    tests
 
 --------------------------------------------------------------------------------
 
@@ -44,10 +43,11 @@ spec =
 --
 --   Because of that, we use 'shouldReturnOneOfYaml' and list all of the possible (valid)
 --   expected results.
-tests :: SpecWith State
-tests = do
+tests :: Context.Options -> SpecWith State
+tests opts = do
   it "Query by id" $ \state ->
     shouldReturnOneOfYaml
+      opts
       ( GraphqlEngine.postGraphql
           state
           [graphql|
@@ -79,6 +79,7 @@ data:
 
   it "Query limit 2" $ \state ->
     shouldReturnOneOfYaml
+      opts
       ( GraphqlEngine.postGraphql
           state
           [graphql|
@@ -116,6 +117,7 @@ data:
 
   it "where author name" $ \state ->
     shouldReturnOneOfYaml
+      opts
       ( GraphqlEngine.postGraphql
           state
           [graphql|
@@ -147,6 +149,7 @@ data:
 
   it "order by author id" $ \state ->
     shouldReturnOneOfYaml
+      opts
       ( GraphqlEngine.postGraphql
           state
           [graphql|
@@ -184,6 +187,7 @@ data:
 
   it "count articles" $ \state ->
     shouldReturnYaml
+      opts
       ( GraphqlEngine.postGraphql
           state
           [graphql|
@@ -211,8 +215,8 @@ data:
 
 -- ** Setup
 
-postgresSetup :: State -> IO ()
-postgresSetup state = do
+postgresSetup :: (State, ()) -> IO ()
+postgresSetup (state, ()) = do
   -- Clear and reconfigure the metadata
   GraphqlEngine.setSource state Postgres.defaultSourceMetadata
   postgresSetupTables
@@ -264,9 +268,8 @@ VALUES
 
 postgresTrackTables :: State -> IO ()
 postgresTrackTables state = do
-  GraphqlEngine.post_
+  GraphqlEngine.postMetadata_
     state
-    "/v1/metadata"
     [yaml|
 type: pg_track_table
 args:
@@ -275,9 +278,8 @@ args:
     schema: hasura
     name: author
 |]
-  GraphqlEngine.post_
+  GraphqlEngine.postMetadata_
     state
-    "/v1/metadata"
     [yaml|
 type: pg_track_table
 args:
@@ -289,9 +291,8 @@ args:
 
 postgresCreateRelationships :: State -> IO ()
 postgresCreateRelationships state = do
-  GraphqlEngine.post_
+  GraphqlEngine.postMetadata_
     state
-    "/v1/metadata"
     [yaml|
 type: pg_create_object_relationship
 args:
@@ -313,7 +314,7 @@ args:
 
 -- ** Teardown
 
-postgresTeardown :: State -> IO ()
+postgresTeardown :: (State, ()) -> IO ()
 postgresTeardown _ = do
   Postgres.run_
     [sql|

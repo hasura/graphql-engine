@@ -1,0 +1,29 @@
+description: GraphQL introspection query
+url: /v1/graphql
+status: 200
+query:
+  query: |
+    query IntrospectionQuery {
+      __type(name: "automatic_comment_in_db") {
+        name
+        description
+        kind
+        fields {
+          name
+          description
+        }
+      }
+    }
+  response:
+    data:
+      __type:
+        name: automatic_comment_in_db
+        description: What a great comment in the DB
+        kind: OBJECT
+        fields:
+        - name: id
+          description: null
+        - name: name
+          description: null
+        - name: upper_name
+          description: What a great comment on the function in the DB

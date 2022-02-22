@@ -13,6 +13,7 @@ module Hasura.Base.Error
     err405,
     err401,
     err409,
+    err429,
     err500,
     internalError,
     QErrM,
@@ -20,6 +21,7 @@ module Hasura.Base.Error
     throw404,
     throw405,
     throw409,
+    throw429,
     throw500,
     throw500WithDetail,
     throw401,
@@ -55,7 +57,7 @@ import Data.Aeson.Types
 import Data.Text qualified as T
 import Database.PG.Query qualified as Q
 import Hasura.Prelude
-import Network.HTTP.Types qualified as N
+import Network.HTTP.Types qualified as HTTP
 
 data Code
   = AccessDenied
@@ -145,7 +147,7 @@ instance ToJSON Code where
 
 data QErr = QErr
   { qePath :: !JSONPath,
-    qeStatus :: !N.Status,
+    qeStatus :: !HTTP.Status,
     qeError :: !Text,
     qeCode :: !Code,
     qeInternal :: !(Maybe QErrExtra)
@@ -255,22 +257,25 @@ instance Q.FromPGTxErr QErr where
      in e {qeInternal = Just $ ExtraInternal $ toJSON txe}
 
 err400 :: Code -> Text -> QErr
-err400 c t = QErr [] N.status400 t c Nothing
+err400 c t = QErr [] HTTP.status400 t c Nothing
 
 err404 :: Code -> Text -> QErr
-err404 c t = QErr [] N.status404 t c Nothing
+err404 c t = QErr [] HTTP.status404 t c Nothing
 
 err405 :: Code -> Text -> QErr
-err405 c t = QErr [] N.status405 t c Nothing
+err405 c t = QErr [] HTTP.status405 t c Nothing
 
 err401 :: Code -> Text -> QErr
-err401 c t = QErr [] N.status401 t c Nothing
+err401 c t = QErr [] HTTP.status401 t c Nothing
 
 err409 :: Code -> Text -> QErr
-err409 c t = QErr [] N.status409 t c Nothing
+err409 c t = QErr [] HTTP.status409 t c Nothing
+
+err429 :: Code -> Text -> QErr
+err429 c t = QErr [] HTTP.status429 t c Nothing
 
 err500 :: Code -> Text -> QErr
-err500 c t = QErr [] N.status500 t c Nothing
+err500 c t = QErr [] HTTP.status500 t c Nothing
 
 type QErrM m = (MonadError QErr m)
 
@@ -291,6 +296,9 @@ throw401 t = throwError $ err401 AccessDenied t
 -- | Conflict
 throw409 :: (QErrM m) => Text -> m a
 throw409 t = throwError $ err409 Conflict t
+
+throw429 :: (QErrM m) => Code -> Text -> m a
+throw429 c t = throwError $ err429 c t
 
 throw500 :: (QErrM m) => Text -> m a
 throw500 t = throwError $ internalError t
@@ -330,7 +338,7 @@ modifyErrAndSet500 ::
 modifyErrAndSet500 f = modifyQErr (liftTxtMod500 f)
 
 liftTxtMod500 :: (Text -> Text) -> QErr -> QErr
-liftTxtMod500 f (QErr path _ s c i) = QErr path N.status500 (f s) c i
+liftTxtMod500 f (QErr path _ s c i) = QErr path HTTP.status500 (f s) c i
 
 withPathE :: (ArrowError QErr arr) => arr (e, s) a -> arr (e, (JSONPathElement, s)) a
 withPathE f = proc (e, (pe, s)) -> (| mapErrorA ((e, s) >- f) |) (injectPrefix pe)
@@ -394,7 +402,7 @@ indexedForM = flip indexedMapM
 
 liftIResult :: (QErrM m) => IResult a -> m a
 liftIResult (IError path msg) =
-  throwError $ QErr path N.status400 (T.pack $ formatMsg msg) ParseFailed Nothing
+  throwError $ QErr path HTTP.status400 (T.pack $ formatMsg msg) ParseFailed Nothing
 liftIResult (ISuccess a) =
   return a
 

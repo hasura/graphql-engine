@@ -3,12 +3,12 @@ status: 200
 query:
   query: |
     query fragmentCycle {
-      hasura_test_author (order_by: {id: asc}) {
+      hasura_author (order_by: {id: asc}) {
         ...authorFragment
       }
     }
 
-    fragment authorFragment on hasura_test_author {
+    fragment authorFragment on hasura_author {
       id
       name
       articles (order_by: {id: asc}) {
@@ -16,7 +16,7 @@ query:
       }
     }
 
-    fragment articleFragment on hasura_test_article {
+    fragment articleFragment on hasura_article {
       title
       author {
         ...authorFragment
@@ -25,6 +25,6 @@ query:
 response:
   errors:
   - extensions:
-      path: $.selectionSet.hasura_test_author.selectionSet.authorFragment.selectionSet.articles.selectionSet.articleFragment.selectionSet.author.selectionSet
+      path: $.selectionSet.hasura_author.selectionSet.authorFragment.selectionSet.articles.selectionSet.articleFragment.selectionSet.author.selectionSet
       code: validation-failed
     message: the fragment definition(s) authorFragment and articleFragment form a cycle

@@ -5,6 +5,6 @@ args:
   args:
     source: bigquery
     sql: |
-      CREATE TABLE `hasura_test.table_to_customize` (
+      CREATE TABLE `hasura.table_to_customize` (
         `column_to_customize` STRING
       );

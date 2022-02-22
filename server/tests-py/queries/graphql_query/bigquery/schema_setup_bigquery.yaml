@@ -4,9 +4,7 @@ args:
   args:
     source: bigquery
     sql: |
-      DROP SCHEMA IF EXISTS `regency-polecat-beehive.hasura_test` CASCADE;
-      CREATE SCHEMA `regency-polecat-beehive.hasura_test`;
-      CREATE TABLE `hasura_test.all_types` (
+      CREATE TABLE `hasura.all_types` (
         `string` STRING,
         `bytes` BYTES,
         `integer` INT64,
@@ -21,12 +19,12 @@ args:
         `datetime` DATETIME,
         `geography` GEOGRAPHY
       );
-      CREATE TABLE `hasura_test.author` (
+      CREATE TABLE `hasura.author` (
         `id` INT64,
         `name` STRING,
         `created_at` TIMESTAMP
       );
-      CREATE TABLE `hasura_test.article` (
+      CREATE TABLE `hasura.article` (
         `id` INT64,
         `title` STRING,
         `content` STRING,
@@ -35,7 +33,7 @@ args:
         `published_on` DATETIME,
         `created_at` TIMESTAMP
       );
-      INSERT INTO `hasura_test.all_types` VALUES (
+      INSERT INTO `hasura.all_types` VALUES (
         "STRING",
         CODE_POINTS_TO_BYTES([0,1,2,3,4,5]),
         1,
@@ -51,41 +49,41 @@ args:
         PARSE_DATETIME('%Y-%m-%d %H:%M:%S', '1998-10-18 13:45:55'),
         ST_GEOGPOINT(1, 1)
       );
-      INSERT INTO `hasura_test.author` VALUES (
+      INSERT INTO `hasura.author` VALUES (
         1, "Author 1", PARSE_TIMESTAMP("%c", "Thu Dec 25 07:30:00 2008")
       );
-      INSERT INTO `hasura_test.author` VALUES (
+      INSERT INTO `hasura.author` VALUES (
         2, "Author 2", PARSE_TIMESTAMP("%c", "Thu Dec 25 07:30:00 2008")
       );
-      INSERT INTO `hasura_test.article` VALUES (
+      INSERT INTO `hasura.article` VALUES (
         1, "Title 1", "Content 1", 1, FALSE, NULL, PARSE_TIMESTAMP("%c", "Thu Dec 25 07:30:01 2008")
       );
-      INSERT INTO `hasura_test.article` VALUES (
+      INSERT INTO `hasura.article` VALUES (
         2, "Title 2", "Content 2", 1, TRUE, PARSE_DATETIME('%Y-%m-%d %H:%M:%S', '1998-10-18 13:45:55'), PARSE_TIMESTAMP("%c", "Thu Dec 25 07:30:02 2008")
       );
-      INSERT INTO `hasura_test.article` VALUES (
+      INSERT INTO `hasura.article` VALUES (
         3, "Title 3", "Content 3", 2, FALSE, NULL, PARSE_TIMESTAMP("%c", "Thu Dec 25 07:30:03 2008")
       );
-      INSERT INTO `hasura_test.article` VALUES (
+      INSERT INTO `hasura.article` VALUES (
         4, "Title 4", "Content 4", 2, FALSE, NULL, PARSE_TIMESTAMP("%c", "Thu Dec 26 07:31:04 2008")
       );
 
       -- a copy for remote joins as we can't have the same table tracked in two sources
-      CREATE TABLE `hasura_test.article2`
-      AS SELECT * FROM `hasura_test.article`;
+      CREATE TABLE `hasura.article2`
+      AS SELECT * FROM `hasura.article`;
 
       -- These are helpful for join/aggregate testing.
 
-      CREATE TABLE hasura_test.Artist (
+      CREATE TABLE hasura.Artist (
       artist_self_id int64,
       name string);
 
-      CREATE TABLE hasura_test.Album (
+      CREATE TABLE hasura.Album (
         album_self_id int64,
         artist_other_id int64,
         title string);
 
-      INSERT INTO hasura_test.Artist
+      INSERT INTO hasura.Artist
       VALUES      (1002,
                   "tool" ),
                   (1000,
@@ -93,7 +91,7 @@ args:
                   (1001,
                   "nirvana" );
 
-      INSERT INTO hasura_test.Album
+      INSERT INTO hasura.Album
                   (album_self_id,
                   title,
                   artist_other_id)
@@ -118,16 +116,16 @@ args:
 
       -- These are for testing global limits.
 
-      CREATE TABLE hasura_test.LimitedArtist (
+      CREATE TABLE hasura.LimitedArtist (
       artist_self_id int64,
       name string);
 
-      CREATE TABLE hasura_test.LimitedAlbum (
+      CREATE TABLE hasura.LimitedAlbum (
         album_self_id int64,
         artist_other_id int64,
         title string);
 
-      INSERT INTO hasura_test.LimitedArtist
+      INSERT INTO hasura.LimitedArtist
       VALUES      (1002,
                   "tool" ),
                   (1000,
@@ -135,7 +133,7 @@ args:
                   (1001,
                   "nirvana" );
 
-      INSERT INTO hasura_test.LimitedAlbum
+      INSERT INTO hasura.LimitedAlbum
                   (album_self_id,
                   title,
                   artist_other_id)
@@ -157,19 +155,19 @@ args:
                   ( 2004,
                     "fear innoculum",
                     1002 );
-      SELECT * from hasura_test.Album;
+      SELECT * from hasura.Album;
 
-      CREATE TABLE `hasura_test.article_citation` (
+      CREATE TABLE `hasura.article_citation` (
         `article_id` INT64,
         `cited_article_id` INT64,
         `description` STRING,
       );
-      INSERT INTO hasura_test.article_citation
+      INSERT INTO hasura.article_citation
                   (article_id, cited_article_id, description)
       VALUES      (1, 2, 'citing the 2nd'),
                   (1, 3, 'citing the third as well'),
                   (2, 3, 'the second also cites the third');
 
       -- a copy for remote joins as we can't have the same table tracked in two sources
-      CREATE TABLE `hasura_test.article_citation2`
-      AS SELECT * FROM `hasura_test.article_citation`;
+      CREATE TABLE `hasura.article_citation2`
+      AS SELECT * FROM `hasura.article_citation`;

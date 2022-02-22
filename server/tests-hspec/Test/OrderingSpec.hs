@@ -10,7 +10,7 @@ import Harness.Quoter.Graphql
 import Harness.Quoter.Sql
 import Harness.Quoter.Yaml
 import Harness.State (State)
-import Harness.Test.Feature qualified as Feature
+import Harness.Test.Context qualified as Context
 import Test.Hspec
 import Prelude
 
@@ -19,23 +19,22 @@ import Prelude
 
 spec :: SpecWith State
 spec =
-  Feature.feature
-    Feature.Feature
-      { Feature.backends =
-          [ Feature.Backend
-              { name = "MySQL",
-                setup = mysqlSetup,
-                teardown = mysqlTeardown
-              }
-          ],
-        Feature.tests = tests
-      }
+  Context.run
+    [ Context.Context
+        { name = Context.MySQL,
+          mkLocalState = Context.noLocalState,
+          setup = mysqlSetup,
+          teardown = mysqlTeardown,
+          customOptions = Nothing
+        }
+    ]
+    tests
 
 --------------------------------------------------------------------------------
 -- MySQL backend
 
-mysqlSetup :: State -> IO ()
-mysqlSetup state = do
+mysqlSetup :: (State, ()) -> IO ()
+mysqlSetup (state, _) = do
   -- Clear and reconfigure the metadata
   GraphqlEngine.setSource state Mysql.defaultSourceMetadata
 
@@ -58,9 +57,8 @@ VALUES
 |]
 
   -- Track the tables
-  GraphqlEngine.post_
+  GraphqlEngine.postMetadata_
     state
-    "/v1/metadata"
     [yaml|
 type: mysql_track_table
 args:
@@ -70,7 +68,7 @@ args:
     name: author
 |]
 
-mysqlTeardown :: State -> IO ()
+mysqlTeardown :: (State, ()) -> IO ()
 mysqlTeardown _ = do
   Mysql.run_
     [sql|
@@ -84,10 +82,11 @@ DROP TABLE author;
 -- That includes order by {text,id} {desc,asc}
 --
 
-tests :: SpecWith State
-tests = do
+tests :: Context.Options -> SpecWith State
+tests opts = do
   it "Order by id ascending" $ \state ->
     shouldReturnYaml
+      opts
       ( GraphqlEngine.postGraphql
           state
           [graphql|
@@ -110,6 +109,7 @@ data:
 
   it "Order by id descending" $ \state ->
     shouldReturnYaml
+      opts
       ( GraphqlEngine.postGraphql
           state
           [graphql|
@@ -132,6 +132,7 @@ data:
 
   it "Order by name ascending" $ \state ->
     shouldReturnYaml
+      opts
       ( GraphqlEngine.postGraphql
           state
           [graphql|
@@ -154,6 +155,7 @@ data:
 
   it "Order by name descending" $ \state ->
     shouldReturnYaml
+      opts
       ( GraphqlEngine.postGraphql
           state
           [graphql|

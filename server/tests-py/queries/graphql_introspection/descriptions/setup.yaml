@@ -1,0 +1,51 @@
+type: bulk
+args:
+- type: pg_track_table
+  args:
+    table: automatic_comment_in_db
+
+- type: pg_add_computed_field
+  args:
+    table: automatic_comment_in_db
+    name: upper_name
+    definition:
+      function: automatic_comment_in_db_upper_name
+
+- type: pg_track_table
+  args:
+    table: automatic_no_comment_in_db
+
+- type: pg_add_computed_field
+  args:
+    table: automatic_no_comment_in_db
+    name: upper_name
+    definition:
+      function: automatic_no_comment_in_db_upper_name
+
+- type: pg_track_table
+  args:
+    table: explicit_comment_in_metadata
+    configuration:
+      comment: Such an explicit comment, wow
+
+- type: pg_add_computed_field
+  args:
+    table: explicit_comment_in_metadata
+    name: upper_name
+    definition:
+      function: explicit_comment_in_metadata_upper_name
+    comment: Such an explicit function comment, wow
+
+- type: pg_track_table
+  args:
+    table: explicit_no_comment_in_metadata
+    configuration:
+      comment: ""
+
+- type: pg_add_computed_field
+  args:
+    table: explicit_no_comment_in_metadata
+    name: upper_name
+    definition:
+      function: explicit_no_comment_in_metadata_upper_name
+    comment: ""

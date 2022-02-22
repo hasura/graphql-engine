@@ -54,14 +54,14 @@ Repositories
 Working apps
 ------------
 
-- `WhatsApp clone <https://whatsapp-clone.demo.hasura.app/sign-in>`__
-- `Realtime todo app <https://react-apollo-todo.demo.hasura.app/>`__
-- `Group chat app <https://realtime-chat.demo.hasura.app/>`__
-- `Location tracking app <https://realtime-location-tracking.demo.hasura.app/>`__
-- `Realtime poll app <https://realtime-poll.demo.hasura.app/>`__
-- `Web push notifications demo <https://serverless-push.demo.hasura.app/>`_
-- `Serverless ETL demo <https://serverless-etl.demo.hasura.app/>`__
-- `3 factor app demo <https://3factor.hasura.app/>`__
+- `WhatsApp clone <https://whatsapp-clone.demo.hasura.io/sign-in>`__
+- `Realtime todo app <https://react-apollo-todo.demo.hasura.io/>`__
+- `Group chat app <https://realtime-chat.demo.hasura.io/>`__
+- `Location tracking app <https://realtime-location-tracking.demo.hasura.io/>`__
+- `Realtime poll app <https://realtime-poll.demo.hasura.io/>`__
+- `Web push notifications demo <https://serverless-push.demo.hasura.io/>`_
+- `Serverless ETL demo <https://serverless-etl.demo.hasura.io/>`__
+- `3 factor app demo <https://3factor.hasura.io/>`__
 
 Videos
 ------

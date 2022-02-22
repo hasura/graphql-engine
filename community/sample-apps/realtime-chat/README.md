@@ -6,8 +6,8 @@ Run this example with Docker: `docker compose up -d --build`
 
 [![Edit chat-app](https://codesandbox.io/static/img/play-codesandbox.svg)](https://codesandbox.io/s/github/hasura/graphql-engine/tree/master/community/sample-apps/realtime-chat?fontsize=14)
 
-- [Fully working app](https://realtime-chat.demo.hasura.app/)
-- [Backend](https://realtime-chat.demo.hasura.app/console)
+- [Fully working app](https://realtime-chat.demo.hasura.io/)
+- [Backend](https://realtime-chat.demo.hasura.io/console)
 
 Adapted from the [original blogpost by Rishichandra Wawhal](https://hasura.io/blog/building-a-realtime-chat-app-with-graphql-subscriptions-d68cd33e73f).
 

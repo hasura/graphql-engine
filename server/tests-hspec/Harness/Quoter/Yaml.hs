@@ -1,3 +1,4 @@
+{-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE ScopedTypeVariables #-}
@@ -8,26 +9,33 @@ module Harness.Quoter.Yaml
   ( yaml,
     shouldReturnYaml,
     shouldReturnOneOfYaml,
+    shouldBeYaml,
   )
 where
 
-import Control.Exception
-import Control.Monad.Reader
-import Control.Monad.Trans.Resource
-import Data.Aeson
+import Control.Exception.Safe (Exception, impureThrow, throwM)
+import Control.Monad.Trans.Resource (ResourceT)
+import Data.Aeson (Value)
+import Data.Aeson qualified
 import Data.Aeson qualified as Aeson
+import Data.Aeson.Text qualified as Aeson.Text
 import Data.ByteString.Char8 qualified as BS8
-import Data.Conduit
+import Data.Conduit (runConduitRes, (.|))
 import Data.Conduit.List qualified as CL
+import Data.HashMap.Strict qualified as HashMap
 import Data.Text.Encoding.Error qualified as T
+import Data.Text.Lazy qualified as LT
+import Data.Vector qualified as Vector
 import Data.Yaml qualified
 import Data.Yaml.Internal qualified
+import Harness.Test.Context qualified as Context (Options (..))
 import Instances.TH.Lift ()
-import Language.Haskell.TH
-import Language.Haskell.TH.Lift as TH
-import Language.Haskell.TH.Quote
-import System.IO.Unsafe
-import Test.Hspec (shouldBe, shouldContain)
+import Language.Haskell.TH (Exp, Q, listE, mkName, runIO, varE)
+import Language.Haskell.TH.Lift (Lift)
+import Language.Haskell.TH.Lift qualified as TH
+import Language.Haskell.TH.Quote (QuasiQuoter (..))
+import System.IO.Unsafe (unsafePerformIO)
+import Test.Hspec (HasCallStack, shouldBe, shouldContain)
 import Text.Libyaml qualified as Libyaml
 import Prelude
 
@@ -40,20 +48,61 @@ import Prelude
 --
 -- We use 'Visual' internally to easily display the 'Value' as YAML
 -- when the test suite uses its 'Show' instance.
-shouldReturnYaml :: IO Value -> Value -> IO ()
-shouldReturnYaml actualIO expected = do
+shouldReturnYaml :: HasCallStack => Context.Options -> IO Value -> Value -> IO ()
+shouldReturnYaml options actualIO rawExpected = do
   actual <- actualIO
-  shouldBe (Visual actual) (Visual expected)
+
+  let Context.Options {stringifyNumbers} = options
+      expected =
+        if stringifyNumbers
+          then stringifyExpectedToActual rawExpected actual
+          else rawExpected
+
+  shouldBeYaml actual expected
+
+-- | TODO(jkachmar): Document.
+stringifyExpectedToActual :: Value -> Value -> Value
+stringifyExpectedToActual (Aeson.Number n) (Aeson.String _) =
+  Aeson.String (LT.toStrict . Aeson.Text.encodeToLazyText $ n)
+stringifyExpectedToActual (Aeson.Object hm) (Aeson.Object hm') =
+  let stringifyKV k v =
+        case HashMap.lookup k hm' of
+          Just v' -> stringifyExpectedToActual v v'
+          Nothing -> v
+   in Aeson.Object (HashMap.mapWithKey stringifyKV hm)
+stringifyExpectedToActual (Aeson.Array as) (Aeson.Array bs) =
+  Aeson.Array (Vector.zipWith stringifyExpectedToActual as bs)
+stringifyExpectedToActual expected _ = expected
 
 -- | The action @actualIO@ should produce the @expected@ YAML,
 -- represented (by the yaml package) as an aeson 'Value'.
 --
 -- We use 'Visual' internally to easily display the 'Value' as YAML
 -- when the test suite uses its 'Show' instance.
-shouldReturnOneOfYaml :: IO Value -> [Value] -> IO ()
-shouldReturnOneOfYaml actualIO expected = do
+shouldReturnOneOfYaml :: HasCallStack => Context.Options -> IO Value -> [Value] -> IO ()
+shouldReturnOneOfYaml options actualIO expecteds = do
   actual <- actualIO
-  shouldContain (map Visual expected) [Visual actual]
+
+  let Context.Options {stringifyNumbers} = options
+      fixNumbers expected =
+        if stringifyNumbers
+          then stringifyExpectedToActual expected actual
+          else expected
+
+  shouldContain (map (Visual . fixNumbers) expecteds) [Visual actual]
+
+-- | We use 'Visual' internally to easily display the 'Value' as YAML
+-- when the test suite uses its 'Show' instance.
+--
+-- NOTE(jkachmar): A lot of the matchers we define in this module are
+-- implemented in the @hspec-expectations-json@ package.
+--
+-- Since @Data.Yaml@ uses the same underlying 'Value' type as
+-- @Data.Aeson@, we could pull that in as a dependency and alias
+-- some of these functions accordingly.
+shouldBeYaml :: HasCallStack => Value -> Value -> IO ()
+shouldBeYaml actual expected = do
+  shouldBe (Visual actual) (Visual expected)
 
 -------------------------------------------------------------------
 
@@ -86,7 +135,7 @@ templateYaml inputString = do
             runConduitRes
               (CL.sourceList (concat $(listE events)) .| Libyaml.encode)
           case Data.Yaml.decodeEither' bs of
-            Left e -> throw e
+            Left e -> impureThrow e
             Right (v :: Aeson.Value) -> pure v
       )
     |]
@@ -122,8 +171,7 @@ data YamlTemplateException
   = AnchorsAreDisabled
   | YamlEncodingProblem T.UnicodeException
   deriving stock (Show)
-
-instance Exception YamlTemplateException
+  deriving anyclass (Exception)
 
 deriving instance Lift Libyaml.Event
 
@@ -138,7 +186,7 @@ deriving instance Lift Libyaml.MappingStyle
 -- | For the test suite: diff structural, but display in a readable
 -- way.
 newtype Visual = Visual {unVisual :: Value}
-  deriving (Eq)
+  deriving stock (Eq)
 
 instance Show Visual where
   show = BS8.unpack . Data.Yaml.encode . unVisual

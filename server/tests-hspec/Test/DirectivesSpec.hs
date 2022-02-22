@@ -11,7 +11,7 @@ import Harness.Quoter.Graphql (graphql)
 import Harness.Quoter.Sql
 import Harness.Quoter.Yaml
 import Harness.State (State)
-import Harness.Test.Feature qualified as Feature
+import Harness.Test.Context qualified as Context
 import Test.Hspec
 import Prelude
 
@@ -20,23 +20,22 @@ import Prelude
 
 spec :: SpecWith State
 spec =
-  Feature.feature
-    Feature.Feature
-      { Feature.backends =
-          [ Feature.Backend
-              { name = "MySQL",
-                setup = mysqlSetup,
-                teardown = mysqlTeardown
-              }
-          ],
-        Feature.tests = tests
-      }
+  Context.run
+    [ Context.Context
+        { name = Context.MySQL,
+          mkLocalState = Context.noLocalState,
+          setup = mysqlSetup,
+          teardown = mysqlTeardown,
+          customOptions = Nothing
+        }
+    ]
+    tests
 
 --------------------------------------------------------------------------------
 -- MySQL backend
 
-mysqlSetup :: State -> IO ()
-mysqlSetup state = do
+mysqlSetup :: (State, ()) -> IO ()
+mysqlSetup (state, ()) = do
   -- Clear and reconfigure the metadata
   GraphqlEngine.setSource state Mysql.defaultSourceMetadata
 
@@ -59,9 +58,8 @@ VALUES
 |]
 
   -- Track the tables
-  GraphqlEngine.post_
+  GraphqlEngine.postMetadata_
     state
-    "/v1/metadata"
     [yaml|
 type: mysql_track_table
 args:
@@ -71,7 +69,7 @@ args:
     name: author
 |]
 
-mysqlTeardown :: State -> IO ()
+mysqlTeardown :: (State, ()) -> IO ()
 mysqlTeardown _ = do
   Mysql.run_
     [sql|
@@ -97,10 +95,11 @@ query QueryParams {includeId, skipId} =
   }
 |]
 
-tests :: SpecWith State
-tests = do
+tests :: Context.Options -> SpecWith State
+tests opts = do
   it "Skip id field conditionally" \state ->
     shouldReturnYaml
+      opts
       ( GraphqlEngine.postGraphql
           state
           (query QueryParams {includeId = False, skipId = False})
@@ -114,6 +113,7 @@ data:
 
   it "Skip id field conditionally, includeId=true" \state ->
     shouldReturnYaml
+      opts
       ( GraphqlEngine.postGraphql
           state
           (query QueryParams {includeId = True, skipId = False})
@@ -129,6 +129,7 @@ data:
 
   it "Skip id field conditionally, skipId=true" \state ->
     shouldReturnYaml
+      opts
       ( GraphqlEngine.postGraphql
           state
           (query QueryParams {includeId = False, skipId = True})
@@ -142,6 +143,7 @@ data:
 
   it "Skip id field conditionally, skipId=true, includeId=true" \state ->
     shouldReturnYaml
+      opts
       ( GraphqlEngine.postGraphql
           state
           (query QueryParams {includeId = True, skipId = True})
@@ -157,6 +159,7 @@ data:
 
   it "Author with skip id" \state ->
     shouldReturnYaml
+      opts
       ( GraphqlEngine.postGraphqlYaml
           state
           [yaml|
@@ -180,6 +183,7 @@ data:
 |]
   it "Author with skip name" \state ->
     shouldReturnYaml
+      opts
       ( GraphqlEngine.postGraphqlYaml
           state
           [yaml|
@@ -205,6 +209,7 @@ data:
   -- These three come from <https://github.com/hasura/graphql-engine-mono/blob/5f6f862e5f6b67d82cfa59568edfc4f08b920375/server/tests-py/queries/graphql_query/mysql/select_query_author_with_wrong_directive_err.yaml#L1>
   it "Rejects unknown directives" \state ->
     shouldReturnYaml
+      opts
       ( GraphqlEngine.postGraphqlYaml
           state
           [yaml|
@@ -226,6 +231,7 @@ errors:
 |]
   it "Rejects duplicate directives" \state ->
     shouldReturnYaml
+      opts
       ( GraphqlEngine.postGraphqlYaml
           state
           [yaml|
@@ -247,6 +253,7 @@ errors:
 |]
   it "Rejects directives on wrong element" \state ->
     shouldReturnYaml
+      opts
       ( GraphqlEngine.postGraphqlYaml
           state
           [yaml|

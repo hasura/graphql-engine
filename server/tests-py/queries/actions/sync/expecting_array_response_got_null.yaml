@@ -51,7 +51,7 @@
             transformed_request:
         path: $
         code: unexpected
-      message: expecting array for action webhook response but got null
+      message: got null for the action webhook response
 - description: Revert action definition
   url: /v1/query
   status: 200

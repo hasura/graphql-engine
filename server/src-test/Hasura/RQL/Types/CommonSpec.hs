@@ -1,9 +1,11 @@
 module Hasura.RQL.Types.CommonSpec (spec) where
 
+import Data.Text qualified as Text
 import Hasura.Prelude
-import Hasura.RQL.Types.Common (PGConnectionParams (..), getPGConnectionStringFromParams)
+import Hasura.RQL.Types.Common (PGConnectionParams (..), commentFromMaybeText, commentToMaybeText, getPGConnectionStringFromParams)
 import Network.URI (isAbsoluteURI)
 import Test.Hspec
+import Test.Hspec.QuickCheck (prop)
 
 noPasswordParams :: PGConnectionParams
 noPasswordParams =
@@ -35,6 +37,7 @@ escapeCharParams =
 spec :: Spec
 spec = do
   pgConnectionStringFromParamsSpec
+  commentSpec
 
 pgConnectionStringFromParamsSpec :: Spec
 pgConnectionStringFromParamsSpec =
@@ -56,3 +59,11 @@ pgConnectionStringFromParamsSpec =
 
       connectionString `shouldBe` "postgresql://r00t:p%40ssw0rd@loc%40lhost:5432/test%2F%2Fdb"
       isAbsoluteURI connectionString `shouldBe` True
+
+commentSpec :: Spec
+commentSpec =
+  describe "Comment" $ do
+    prop "should roundtrip between Comment and Maybe Text" $
+      \str ->
+        let text = Text.pack <$> str
+         in (commentToMaybeText . commentFromMaybeText) text `shouldBe` text

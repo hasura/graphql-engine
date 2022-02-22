@@ -1,0 +1,29 @@
+description: GraphQL introspection query
+url: /v1/graphql
+status: 200
+query:
+  query: |
+    query IntrospectionQuery {
+      __type(name: "automatic_no_comment_in_db") {
+        name
+        description
+        kind
+        fields {
+          name
+          description
+        }
+      }
+    }
+  response:
+    data:
+      __type:
+        name: automatic_no_comment_in_db
+        description: columns and relationships of "automatic_no_comment_in_db"
+        kind: OBJECT
+        fields:
+        - name: id
+          description: null
+        - name: name
+          description: null
+        - name: upper_name
+          description: A computed field, executes function automatic_no_comment_in_db_upper_name

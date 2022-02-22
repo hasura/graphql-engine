@@ -3,12 +3,12 @@ url: /v1/graphql
 status: 200
 response:
   data:
-    hasura_test_spatial_types_geog:
+    hasura_spatial_types_geog:
       - multipoint: MULTIPOINT(2 3, 7 8)
 query:
   query: |
     query {
-      hasura_test_spatial_types_geog(
+      hasura_spatial_types_geog(
         where: {
           multipoint: {
             _st_within: "POLYGON ((0 0, 10 10, 10 10, 10 0, 0 0))"
