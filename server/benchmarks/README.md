@@ -17,6 +17,19 @@ following have the following effects:
 - `SKIP_PR_REPORT`: don't post the regression results directly in the PR
   comment body (useful if the results are noisy for now)
 
+### benchmark_sets/*/adhoc_operations/*
+
+Each script here (if present) defines a non-graphql operation to be
+benchmarked. These are run in sequence after the graphql-bench -powered queries
+defined in the `config.query.yaml` files.
+
+These are suitable for e.g. metadata queries or more complex interactions with
+the server, where you don't care about concurrent requests and where the work
+is CPU-bound (because in the future reporting will highlight stable metrics
+like CPU mutator time and allocations).
+
+**This is currently a WIP and not surfaced in reports** 
+
 ### bench.sh
 
 This script runs a particular benchmark set against a particular hasura docker
