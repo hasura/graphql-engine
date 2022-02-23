@@ -214,6 +214,10 @@ pre code {
   background-color: var(--ifm-code-background);
 }
 
+.pagination-nav__item .pagination-nav__sublabel {
+  display: none;
+}
+
 .footer__links {
   font-size: 0.75rem;
   text-transform: uppercase;
