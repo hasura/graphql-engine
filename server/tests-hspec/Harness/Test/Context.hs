@@ -1,6 +1,11 @@
 {-# LANGUAGE DeriveAnyClass #-}
 
--- | Helper functions for easily testing features.
+-- | Helper functions for testing in specific contexts.
+--
+--   A 'Context' represents the prerequisites for running a test,
+--   such as the required backend, the setup process of tables and permissions,
+--   the creation of local state and the teardown of created context after the test
+--   is done.
 module Harness.Test.Context
   ( run,
     runWithLocalState,
@@ -79,7 +84,7 @@ mapItemAction mapActionWith item@Item {itemExample} =
 
 -- | Runs the given tests, for each provided 'Context'@ a@.
 --
--- Each 'Context' provides distinct setup and teardown functions; 'feature'
+-- Each 'Context' provides distinct setup and teardown functions; 'runWithLocalState'
 -- guarantees that the associated 'teardown' function is always called after a
 -- setup, even if the tests fail.
 --
@@ -114,12 +119,14 @@ runWithLocalState contexts tests =
         catch
           -- Setup for a test
           (setup state)
-          ( \setupEx ->
+          ( \setupEx -> do
               catch
-                -- On setup error, attempt to run `teardown` and then throw the setup error
-                (teardown state *> throwIO setupEx)
+                -- On setup error, attempt to run `teardown`
+                (teardown state)
                 -- On teardown error as well, throw both exceptions
                 (throwIO . Exceptions setupEx)
+              -- if teardown succeeds, throw the setup error
+              throwIO setupEx
           )
 
         -- Run tests.
@@ -171,7 +178,7 @@ runWithLocalState contexts tests =
 data Context a = Context
   { -- | A name describing the given context.
     --
-    -- e.g. @Postgre@ or @MySQL@
+    -- e.g. @Postgres@ or @MySQL@
     name :: ContextName,
     -- | Setup actions associated with creating a local state for this 'Context'; for example:
     --  * starting remote servers

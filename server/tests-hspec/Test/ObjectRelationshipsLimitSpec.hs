@@ -318,9 +318,9 @@ postgresTeardown :: (State, ()) -> IO ()
 postgresTeardown _ = do
   Postgres.run_
     [sql|
-DROP TABLE hasura.article;
+DROP TABLE IF EXISTS hasura.article;
 |]
   Postgres.run_
     [sql|
-DROP TABLE hasura.author;
+DROP TABLE IF EXISTS hasura.author;
 |]
