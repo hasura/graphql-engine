@@ -7,6 +7,13 @@
 Schema/Metadata API Reference: Permissions (Deprecated)
 =======================================================
 
+.. admonition:: Deprecation
+
+  In versions ``v2.0.0`` and above, the schema/metadata API is deprecated in favour of the :ref:`schema API <schema_apis>` and the
+  :ref:`metadata API <metadata_apis>`.
+
+  Though for backwards compatibility, the schema/metadata APIs will continue to function.
+
 .. contents:: Table of contents
   :backlinks: none
   :depth: 1
@@ -25,13 +32,6 @@ role has unrestricted access to all operations.
    All ``X-Hasura-*`` header values can be used in the permission rules. These
    values can come with the request and can be validated using webhook or can be
    sent with the JWT token.
-
-.. admonition:: Deprecation
-
-  In versions ``v2.0.0`` and above, the schema/metadata API is deprecated in favour of the :ref:`schema API <schema_apis>` and the
-  :ref:`metadata API <metadata_apis>`.
-
-  Though for backwards compatibility, the schema/metadata APIs will continue to function.
 
 .. _schema_metadata_create_insert_permission:
 

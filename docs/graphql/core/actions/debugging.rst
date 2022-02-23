@@ -41,12 +41,12 @@ inside the ``request`` field.
     {
       "errors": [
         {
-          "message": "expecting null, object or array of objects for action webhook response",
+          "message": "got scalar String for the action webhook response, expecting UserId",
           "extensions": {
-            "code": "parse-failed",
+            "code": "unexpected",
             "path": "$",
             "internal": {
-              "error": "expecting null, object or array of objects for action webhook response",
+              "error": "got scalar String for the action webhook response, expecting UserId",
               "response": {
                 "status": 200,
                 "headers": [
@@ -58,7 +58,7 @@ inside the ``request`` field.
                 "body": "[incorrect response]"
               },
               "request": {
-                "url": "http://127.0.0.1:5593/invalid-response",
+                "url": "http://127.0.0.1:5593/scalar-response",
                 "headers": [],
                 "body": {
                   "action": {

@@ -1,0 +1,6 @@
+type: bulk
+args:
+
+- type: citus_drop_source
+  args:
+    name: citus_readonly

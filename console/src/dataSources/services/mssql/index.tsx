@@ -221,7 +221,10 @@ export const supportedFeatures: DeepRequired<SupportedFeaturesType> = {
     connectionParameters: false,
     databaseURL: true,
     environmentVariable: true,
-    read_replicas: false,
+    read_replicas: {
+      create: true,
+      edit: true,
+    },
     prepared_statements: false,
     isolation_level: false,
     connectionSettings: true,

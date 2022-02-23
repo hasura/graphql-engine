@@ -10,7 +10,7 @@ import Harness.Quoter.Graphql
 import Harness.Quoter.Sql
 import Harness.Quoter.Yaml
 import Harness.State (State)
-import Harness.Test.Feature qualified as Feature
+import Harness.Test.Context qualified as Context
 import Test.Hspec
 import Prelude
 
@@ -19,24 +19,22 @@ import Prelude
 
 spec :: SpecWith State
 spec =
-  Feature.feature
-    Feature.Feature
-      { Feature.backends =
-          [ Feature.Backend
-              { name = "MySQL",
-                setup = mysqlSetup,
-                teardown = mysqlTeardown,
-                backendOptions = Feature.defaultBackendOptions
-              }
-          ],
-        Feature.tests = tests
-      }
+  Context.run
+    [ Context.Context
+        { name = Context.MySQL,
+          mkLocalState = Context.noLocalState,
+          setup = mysqlSetup,
+          teardown = mysqlTeardown,
+          customOptions = Nothing
+        }
+    ]
+    tests
 
 --------------------------------------------------------------------------------
 -- MySQL backend
 
-mysqlSetup :: State -> IO ()
-mysqlSetup state = do
+mysqlSetup :: (State, ()) -> IO ()
+mysqlSetup (state, _) = do
   -- Clear and reconfigure the metadata
   GraphqlEngine.setSource state Mysql.defaultSourceMetadata
 
@@ -61,9 +59,8 @@ VALUES
 |]
 
   -- Track the tables
-  GraphqlEngine.post_
+  GraphqlEngine.postMetadata_
     state
-    "/v1/metadata"
     [yaml|
 type: mysql_track_table
 args:
@@ -73,7 +70,7 @@ args:
     name: author
 |]
 
-mysqlTeardown :: State -> IO ()
+mysqlTeardown :: (State, ()) -> IO ()
 mysqlTeardown _ = do
   Mysql.run_
     [sql|
@@ -83,7 +80,7 @@ DROP TABLE author;
 --------------------------------------------------------------------------------
 -- Tests
 
-tests :: Feature.BackendOptions -> SpecWith State
+tests :: Context.Options -> SpecWith State
 tests opts = do
   it "limit 1" $ \state ->
     shouldReturnYaml

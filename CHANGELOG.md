@@ -2,6 +2,20 @@
 
 ## Next release
 
+### Bug fixes and improvements
+(Add entries below in the order of server, console, cli, docs, others)
+
+- server: Webhook Transforms can now delete request/response bodies explicitly.
+- server: Fix truncation of session variables with variable length column types in MSSQL (#8158)
+- server: improve baseline memory consumption for typical workloads
+- server: fix parsing timestamp values in BigQuery backends (fix #8076)
+
+## v2.3.0-beta.2
+
+- server: fix issues working with read-only DBs by reverting the need for storing required SQL functions in a `hdb_lib` schema in the user's DB
+
+## v2.3.0-beta.1
+
 ### Experimental SQL optimizations
 Row-level permissions are applied by a translation into SQL `WHERE` clauses. If
 some tables have similar row-level permission filters, then the generated SQL
@@ -17,13 +31,30 @@ The optimization can be enabled using the
 `--experimental-features=optimize_permission_filters` flag or the
 `HASURA_GRAPHQL_EXPERIMENTAL_FEATURES` environment variable.
 
+### Breaking changes
+* Computed field comments are now used as the description for the field in the GraphQL schema. This means that computed fields where the comment has been set to empty string will cause the description of the field in the GraphQL schema to also be blank. Setting the computed field comment to null will restore the previous auto-generated description. The previous version of the Console would set the comment to empty string if the comment textbox was left blank, so some existing computed fields may unintentionally have empty string set as their comment.
+
 ### Bug fixes and improvements
-(Add entries below in the order of server, console, cli, docs, others)
-- console: add support for remote database relationships
-- console: enable support for update permissions for mssql #3591
-- server: add support for customization of table GraphQL schema descriptions (#7496)
-- cli: skip tls verfication for all API requests when `insecure-skip-tls-verify` flag is set (#4926)
+
+- server: validate saved REST endpoint queries wrt schema
+- server: improved error reporting for env vars in `test_webhook_transform` metadata API endpoint
+- server: extend allowlist metadata with scope information, new command `update_scope_of_allowlist_in_metadata`
+- server: (Postgres, Citus, and MSSQL backends) Identity columns and computed
+  columns are now marked immutable, removing them from the schema of insert and
+  update mutations.
+- server: allow inserting more than 1 row simultaneously into table with generated columns (fix #4633)
+  that have generated columns in Postgres.
+- server: postgres: return a single entry per row (selected randomly) when an object relationship is misconfigured one-to-many
+- server: Updates Kriti to v0.3.0
+- server: add operation name in the request sent to remote schemas
+- server: add support for scalar response types for actions (fix #7805)
+- server: fix nullable action response (fix #4405)
+- server: add support for customization of table & computed field GraphQL schema descriptions (fix #7496)
 - server: classify MSSQL exceptions and improve API error responses
+- server: MSSQL generates correct SQL when object relationships are null.
+- console: add support for remote database relationships
+- console: enable support for update permissions for mssql
+- cli: skip tls verfication for all API requests when `insecure-skip-tls-verify` flag is set (fix #4926)
 
 ## v2.2.0
 
@@ -91,8 +122,6 @@ count (
 
 ### Bug fixes and improvements
 
-- server: validate saved REST endpoint queries wrt schema
-- server: improved error reporting for env vars in `test_webhook_transform` metadata API endpoint
 - server: add a placeholder field to the schema when the `query_root` would be empty
 - server: fix invalid GraphQL name in the schema arising from a remote relationship from a table in a custom schema
 - server: add a new metadata API `get_cron_triggers` to fetch all the cron triggers
@@ -107,7 +136,6 @@ count (
 - server: fix parsing FLOAT64s in scientific notation and non-finite ones in BigQuery
 - server: extend support for the `min`/`max` aggregates to all comparable types in BigQuery
 - server: fix support for joins in aggregates nodes in BigQuery
-- server: extend allowlist metadata with scope information, new command `update_scope_of_allowlist_in_metadata`
 - server: fix for passing input objects in query variables to remote schemas with type name customization (#7977)
 - server: fix REST endpoints with path segments not showing correctly in the OpenAPI spec
 - server: fix aliases used in GraphQL queries in REST endpoints not being reflected in the OpenAPI spec
@@ -115,7 +143,6 @@ count (
 - server: implement update mutations for MS SQL Server (closes #7834)
 - server: support nested output object types in actions (#4796)
 - server: action webhook requests now include a User-Agent header (fix #8070)
-- server: postgres: return a single entry per row (selected randomly) when an object relationship is misconfigured one-to-many (fix #7936).
 - console: action/event trigger transforms are now called REST connectors
 - console: fix list of tables (and schemas) being unsorted when creating a new trigger event (fix #6391)
 - console: fix custom field names breaking browse table sorting and the pre-populating of the edit row form
@@ -126,11 +153,6 @@ count (
 - cli: fix regression in `migrate create` command (#7971)
 - cli: stop using `/healthz` endpoint to determine server health
 - cli: fix regression with `--address` flag of `hasura console` command (#8005)
-- server: (Postgres, Citus, and MSSQL backends) Identity columns and computed
-  columns are now marked immutable, removing them from the schema of insert and
-  update mutations.
-- server: Fix graphql-engine/issues/4633: We can now insert multiple objects
-  that have generated columns in Postgres.
 
 ## v2.1.1
 

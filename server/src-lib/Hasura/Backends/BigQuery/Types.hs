@@ -59,8 +59,6 @@ module Hasura.Backends.BigQuery.Types
     parseScalarValue,
     projectionAlias,
     scalarTypeGraphQLName,
-    textToUTCTime,
-    utctimeToISO8601Text,
   )
 where
 
@@ -77,9 +75,6 @@ import Data.Scientific
 import Data.Text qualified as T
 import Data.Text.Encoding qualified as T
 import Data.Text.Extended
-import Data.Text.Read qualified as TR
-import Data.Time
-import Data.Time.Format.ISO8601 (iso8601Show)
 import Data.Vector (Vector)
 import Data.Vector.Instances ()
 import Hasura.Base.Error
@@ -319,13 +314,7 @@ instance NFData JoinSource
 
 newtype Where
   = Where [Expression]
-  deriving (NFData, Eq, Ord, Show, Generic, Data, Lift, FromJSON, Hashable, Cacheable)
-
-instance Monoid Where where
-  mempty = Where mempty
-
-instance Semigroup Where where
-  (Where x) <> (Where y) = Where (x <> y)
+  deriving (NFData, Eq, Ord, Show, Generic, Data, Lift, FromJSON, Hashable, Cacheable, Semigroup, Monoid)
 
 data Cardinality
   = Many
@@ -682,14 +671,6 @@ instance Hashable Value
 -- | BigQuery's conception of a timestamp.
 newtype Timestamp = Timestamp Text
   deriving (Show, Eq, Ord, Generic, Data, Lift, ToJSON, FromJSON, Cacheable, NFData, Hashable)
-
-textToUTCTime :: Text -> J.Parser UTCTime
-textToUTCTime =
-  either fail (pure . flip addUTCTime (UTCTime (fromGregorian 1970 0 0) 0) . fst)
-    . (TR.rational :: TR.Reader NominalDiffTime)
-
-utctimeToISO8601Text :: UTCTime -> Text
-utctimeToISO8601Text = T.pack . iso8601Show
 
 -- | BigQuery's conception of a date.
 newtype Date = Date Text

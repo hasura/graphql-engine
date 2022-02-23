@@ -389,7 +389,10 @@ export type SupportedFeaturesType = {
     connectionParameters: boolean;
     databaseURL: boolean;
     environmentVariable: boolean;
-    read_replicas: boolean;
+    read_replicas: {
+      create: boolean;
+      edit: boolean;
+    };
     prepared_statements: boolean;
     isolation_level: boolean;
     connectionSettings: boolean;

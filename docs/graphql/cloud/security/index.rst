@@ -30,5 +30,3 @@ Features
   allow-lists
   api-limits
   disable-graphql-introspection
-  rotating-admin-secrets
-  multiple-jwt-secrets

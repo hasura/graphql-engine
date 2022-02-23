@@ -2,6 +2,7 @@ import reducer from '@/reducer';
 import { RootState } from '@/store';
 import { DeepPartial } from '@/types';
 import { configureStore } from '@reduxjs/toolkit';
+import { render } from '@testing-library/react';
 import merge from 'lodash.merge';
 import React from 'react';
 import { QueryClient, QueryClientProvider } from 'react-query';
@@ -30,3 +31,14 @@ const HookTestProvider: React.FC<{
 export const wrapper: React.FC = ({ children }) => (
   <HookTestProvider>{children}</HookTestProvider>
 );
+
+export function renderWithClient(ui: React.ReactElement) {
+  const { rerender, ...result } = render(
+    <HookTestProvider>{ui}</HookTestProvider>
+  );
+  return {
+    ...result,
+    rerender: (rerenderUi: React.ReactElement) =>
+      rerender(<HookTestProvider>{rerenderUi}</HookTestProvider>),
+  };
+}

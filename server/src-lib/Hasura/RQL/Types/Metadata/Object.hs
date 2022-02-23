@@ -95,11 +95,9 @@ data MetadataObjId
   | MOInheritedRole !RoleName
   | MOEndpoint !EndpointName
   | MOHostTlsAllowlist !String
-  deriving (Generic)
+  deriving (Show, Eq, Generic)
 
 $(makePrisms ''MetadataObjId)
-
-deriving instance Eq MetadataObjId
 
 instance Hashable MetadataObjId
 
@@ -183,7 +181,7 @@ data MetadataObject = MetadataObject
   { _moId :: !MetadataObjId,
     _moDefinition :: !Value
   }
-  deriving (Eq, Generic)
+  deriving (Show, Eq, Generic)
 
 instance Hashable MetadataObject
 
@@ -198,7 +196,7 @@ data InconsistentRoleEntity
       -- use it with `AB.AnyBackend`
       !PermType
   | InconsistentRemoteSchemaPermission !RemoteSchemaName
-  deriving stock (Eq, Generic)
+  deriving stock (Show, Eq, Generic)
 
 instance Hashable InconsistentRoleEntity
 
@@ -232,7 +230,7 @@ data InconsistentMetadata
   | InvalidRestSegments !Text !MetadataObject
   | AmbiguousRestEndpoints !Text ![MetadataObject]
   | ConflictingInheritedPermission !RoleName !InconsistentRoleEntity
-  deriving stock (Eq, Generic)
+  deriving stock (Show, Eq, Generic)
 
 instance Hashable InconsistentMetadata
 

@@ -5,6 +5,7 @@ module Harness.Backend.Sqlserver
   ( livenessCheck,
     run_,
     defaultSourceMetadata,
+    defaultSourceConfiguration,
   )
 where
 
@@ -66,8 +67,13 @@ defaultSourceMetadata =
 name: mssql
 kind: mssql
 tables: []
-configuration:
-  connection_info:
-    database_url: *sqlserverConnectInfo
-    pool_settings: {}
+configuration: *defaultSourceConfiguration
   |]
+
+defaultSourceConfiguration :: Value
+defaultSourceConfiguration =
+  [yaml|
+connection_info:
+  database_url: *sqlserverConnectInfo
+  pool_settings: {}
+|]

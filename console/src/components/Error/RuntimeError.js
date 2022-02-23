@@ -37,9 +37,7 @@ class RuntimeError extends Component {
                 You can report this issue on our{' '}
                 <a href="https://github.com/hasura/graphql-engine/issues">
                   GitHub
-                </a>{' '}
-                or chat with us on{' '}
-                <a href="http://discord.gg/hasura">Discord</a>
+                </a>
               </div>
             </div>
             <div className="col-xs-4">

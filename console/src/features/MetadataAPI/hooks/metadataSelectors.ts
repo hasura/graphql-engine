@@ -31,6 +31,7 @@ export namespace MetadataSelector {
   export const getDataSourceMetadata = (dataSource: string) => (
     m: MetadataResponse
   ) => {
+    // TODO: open a issue about return type
     if (!dataSource) return;
     return m.metadata?.sources.find(source => source.name === dataSource);
   };

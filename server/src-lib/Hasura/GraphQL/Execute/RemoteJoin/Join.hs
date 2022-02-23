@@ -6,7 +6,6 @@ where
 import Data.Aeson qualified as J
 import Data.Aeson.Ordered qualified as JO
 import Data.Environment qualified as Env
-import Data.HashMap.Strict qualified as Map
 import Data.HashMap.Strict.Extended qualified as Map
 import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.HashSet qualified as HS
@@ -36,7 +35,7 @@ import Hasura.Session
 import Hasura.Tracing qualified as Tracing
 import Language.GraphQL.Draft.Syntax qualified as G
 import Network.HTTP.Client qualified as HTTP
-import Network.HTTP.Types qualified as N
+import Network.HTTP.Types qualified as HTTP
 
 forRemoteJoins ::
   (Applicative f) =>
@@ -58,7 +57,7 @@ processRemoteJoins ::
   L.Logger L.Hasura ->
   Env.Environment ->
   HTTP.Manager ->
-  [N.Header] ->
+  [HTTP.Header] ->
   UserInfo ->
   EncJSON ->
   Maybe RemoteJoins ->
@@ -91,7 +90,7 @@ processRemoteJoins_ ::
   L.Logger L.Hasura ->
   Env.Environment ->
   HTTP.Manager ->
-  [N.Header] ->
+  [HTTP.Header] ->
   UserInfo ->
   f JO.Value ->
   RemoteJoins ->

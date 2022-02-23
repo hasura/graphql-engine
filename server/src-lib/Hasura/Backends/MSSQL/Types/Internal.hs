@@ -317,6 +317,7 @@ data TempTable = TempTable
     ttColumns :: [ColumnName]
   }
 
+-- | A version of `Select` without a `FROM` clause. This means it can only project expressions already selected in adjacent join clauses, hence the name @reselect@.
 data Reselect = Reselect
   { reselectProjections :: [Projection],
     reselectFor :: For,
@@ -539,8 +540,8 @@ data ScalarType
   | GeometryType
   | UnknownType Text
 
-scalarTypeDBName :: ScalarType -> Text
-scalarTypeDBName = \case
+scalarTypeDBName :: DataLength -> ScalarType -> Text
+scalarTypeDBName dataLength = \case
   CharType -> "char"
   NumericType -> "numeric"
   DecimalType -> "decimal"
@@ -550,14 +551,14 @@ scalarTypeDBName = \case
   RealType -> "real"
   DateType -> "date"
   Ss_time2Type -> "time"
-  VarcharType -> "varchar"
+  VarcharType -> "varchar" <> fromDataLength dataLength
   WcharType -> "nchar"
-  WvarcharType -> "nvarchar"
+  WvarcharType -> "nvarchar" <> fromDataLength dataLength
   WtextType -> "ntext"
   TextType -> "text"
   TimestampType -> "timestamp"
   BinaryType -> "binary"
-  VarbinaryType -> "varbinary"
+  VarbinaryType -> "varbinary" <> fromDataLength dataLength
   BigintType -> "bigint"
   TinyintType -> "tinyint"
   BitType -> "bit"
@@ -566,6 +567,12 @@ scalarTypeDBName = \case
   GeometryType -> "geometry"
   -- the input form for types that aren't explicitly supported is a string
   UnknownType t -> t
+
+fromDataLength :: DataLength -> Text
+fromDataLength = \case
+  DataLengthUnspecified -> ""
+  DataLengthInt len -> "(" <> tshow len <> ")"
+  DataLengthMax -> "(max)"
 
 mkMSSQLScalarTypeName :: MonadError QErr m => ScalarType -> m G.Name
 mkMSSQLScalarTypeName = \case
@@ -581,10 +588,10 @@ mkMSSQLScalarTypeName = \case
   -- boolean type
   BitType -> pure RQL.boolScalar
   scalarType ->
-    G.mkName (scalarTypeDBName scalarType)
+    G.mkName (scalarTypeDBName DataLengthUnspecified scalarType)
       `onNothing` throw400
         ValidationFailed
-        ( "cannot use SQL type " <> scalarTypeDBName scalarType <> " in the GraphQL schema because its name is not a "
+        ( "cannot use SQL type " <> scalarTypeDBName DataLengthUnspecified scalarType <> " in the GraphQL schema because its name is not a "
             <> "valid GraphQL identifier"
         )
 

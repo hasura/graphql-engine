@@ -182,18 +182,21 @@ remoteRelationshipToSourceField RemoteSourceFieldInfo {..} =
       Just tablePerms -> do
         parsers <- case _rsfiType of
           ObjRel -> do
-            selectionSetParser <- tableSelectionSet _rsfiSource tableInfo tablePerms
-            pure . pure $
-              subselection_ fieldName Nothing selectionSetParser <&> \fields ->
-                IR.SourceRelationshipObject $
-                  IR.AnnObjectSelectG fields _rsfiTable $ IR._tpFilter $ tablePermissionsInfo tablePerms
+            selectionSetParserM <- tableSelectionSet _rsfiSource tableInfo
+            pure $ case selectionSetParserM of
+              Nothing -> []
+              Just selectionSetParser ->
+                pure $
+                  subselection_ fieldName Nothing selectionSetParser <&> \fields ->
+                    IR.SourceRelationshipObject $
+                      IR.AnnObjectSelectG fields _rsfiTable $ IR._tpFilter $ tablePermissionsInfo tablePerms
           ArrRel -> do
             let aggFieldName = fieldName <> $$(G.litName "_aggregate")
-            selectionSetParser <- selectTable _rsfiSource tableInfo fieldName Nothing tablePerms
-            aggSelectionSetParser <- selectTableAggregate _rsfiSource tableInfo aggFieldName Nothing tablePerms
+            selectionSetParser <- selectTable _rsfiSource tableInfo fieldName Nothing
+            aggSelectionSetParser <- selectTableAggregate _rsfiSource tableInfo aggFieldName Nothing
             pure $
               catMaybes
-                [ Just $ selectionSetParser <&> IR.SourceRelationshipArray,
+                [ selectionSetParser <&> fmap IR.SourceRelationshipArray,
                   aggSelectionSetParser <&> fmap IR.SourceRelationshipArrayAggregate
                 ]
         pure $

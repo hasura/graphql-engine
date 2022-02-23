@@ -514,7 +514,7 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
                     -<
                       (Proxy :: Proxy b, sourceName, tableCoreInfosDep, tableFields, permissionInputs, orderedRoles)
                 eventTriggerInfos <- buildTableEventTriggers -< (sourceName, sourceConfig, tableCoreInfo, eventTriggerConfs, metadataInvalidationKey, recreateEventTriggers)
-                returnA -< TableInfo tableCoreInfo permissionInfos eventTriggerInfos
+                returnA -< TableInfo tableCoreInfo permissionInfos eventTriggerInfos (mkAdminRolePermInfo tableCoreInfo)
             )
           |) (tableCoreInfos `alignTableMap` mapFromL _tpiTable permissions `alignTableMap` mapFromL fst eventTriggers)
 

@@ -7,7 +7,6 @@ module Hasura.RQL.Types.Table
     DBTableMetadata (..),
     DBTablesMetadata,
     DelPermInfo (..),
-    Comment (..),
     FieldInfo (..),
     FieldInfoMap,
     ForeignKey (..),
@@ -43,6 +42,7 @@ module Hasura.RQL.Types.Table
     getRels,
     getRemoteFieldInfoName,
     isMutable,
+    mkAdminRolePermInfo,
     permAccToLens,
     permAccToType,
     permDel,
@@ -69,6 +69,7 @@ module Hasura.RQL.Types.Table
     tciUniqueConstraints,
     tciUniqueOrPrimaryKeyConstraints,
     tciViewInfo,
+    tiAdminRolePermInfo,
     tiCoreInfo,
     tiEventTriggerInfoMap,
     tiName,
@@ -85,7 +86,6 @@ import Control.Lens hiding ((.=))
 import Data.Aeson.Casing
 import Data.Aeson.Extended
 import Data.Aeson.TH
-import Data.Aeson.Types (prependFailure, typeMismatch)
 import Data.HashMap.Strict qualified as M
 import Data.HashMap.Strict.Extended qualified as M
 import Data.HashSet qualified as HS
@@ -94,7 +94,6 @@ import Data.List.NonEmpty qualified as NE
 import Data.Semigroup (Any (..), Max (..))
 import Data.Text qualified as T
 import Data.Text.Extended
-import Data.Text.NonEmpty (NonEmptyText, mkNonEmptyText)
 import Hasura.Backends.Postgres.SQL.Types qualified as PG (PGDescription)
 import Hasura.Base.Error
 import Hasura.Incremental (Cacheable)
@@ -581,28 +580,6 @@ isMutable f (Just vi) = f vi
 
 type CustomColumnNames b = HashMap (Column b) G.Name
 
-data Comment
-  = -- | Automatically generate a comment (derive it from DB comments, or a sensible default describing the source of the data)
-    Automatic
-  | -- | The user's explicitly provided comment, no explicitly no comment (ie. leave it blank, do not autogenerate one)
-    Explicit (Maybe NonEmptyText)
-  deriving (Eq, Show, Generic)
-
-instance NFData Comment
-
-instance Cacheable Comment
-
-instance FromJSON Comment where
-  parseJSON = \case
-    Null -> pure Automatic
-    String text -> pure . Explicit $ mkNonEmptyText text
-    val -> prependFailure "parsing Comment failed, " (typeMismatch "String or Null" val)
-
-instance ToJSON Comment where
-  toJSON Automatic = Null
-  toJSON (Explicit (Just value)) = String (toTxt value)
-  toJSON (Explicit Nothing) = String ""
-
 data TableConfig b = TableConfig
   { _tcCustomRootFields :: !TableCustomRootFields,
     _tcCustomColumnNames :: !(CustomColumnNames b),
@@ -745,7 +722,8 @@ tciUniqueOrPrimaryKeyConstraints info =
 data TableInfo (b :: BackendType) = TableInfo
   { _tiCoreInfo :: TableCoreInfo b,
     _tiRolePermInfoMap :: !(RolePermInfoMap b),
-    _tiEventTriggerInfoMap :: !(EventTriggerInfoMap b)
+    _tiEventTriggerInfoMap :: !(EventTriggerInfoMap b),
+    _tiAdminRolePermInfo :: RolePermInfo b
   }
   deriving (Generic)
 
@@ -892,3 +870,20 @@ askColInfo m c msg = do
               c <<> " is a " <> fieldType <> "; ",
               msg
             ]
+
+mkAdminRolePermInfo :: Backend b => TableCoreInfo b -> RolePermInfo b
+mkAdminRolePermInfo ti =
+  RolePermInfo (Just i) (Just s) (Just u) (Just d)
+  where
+    fields = _tciFieldInfoMap ti
+    pgCols = map ciColumn $ getCols fields
+    pgColsWithFilter = M.fromList $ map (,Nothing) pgCols
+    scalarComputedFields =
+      HS.fromList $ map _cfiName $ onlyScalarComputedFields $ getComputedFieldInfos fields
+    scalarComputedFields' = HS.toMap scalarComputedFields $> Nothing
+
+    tn = _tciName ti
+    i = InsPermInfo (HS.fromList pgCols) annBoolExpTrue M.empty False mempty
+    s = SelPermInfo pgColsWithFilter scalarComputedFields' annBoolExpTrue Nothing True mempty
+    u = UpdPermInfo (HS.fromList pgCols) tn annBoolExpTrue Nothing M.empty mempty
+    d = DelPermInfo tn annBoolExpTrue mempty

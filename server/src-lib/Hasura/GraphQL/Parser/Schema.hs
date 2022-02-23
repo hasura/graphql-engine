@@ -857,6 +857,9 @@ instance HasTypeDefinitions (Definition (TypeInfo k)) where
 instance HasTypeDefinitions a => HasTypeDefinitions [a] where
   accumulateTypeDefinitions = traverse_ accumulateTypeDefinitions
 
+instance HasTypeDefinitions a => HasTypeDefinitions (Maybe a) where
+  accumulateTypeDefinitions = traverse_ accumulateTypeDefinitions
+
 instance HasTypeDefinitions TypeDefinitionsWrapper where
   accumulateTypeDefinitions (TypeDefinitionsWrapper x) = accumulateTypeDefinitions x
 
