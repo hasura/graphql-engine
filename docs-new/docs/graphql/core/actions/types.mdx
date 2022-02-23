@@ -44,8 +44,9 @@ This is an object type called `UserInfo` that has two fields:
     `String`)
 -   `userId`: This field is of type `Int!` (non-nullable `Int`)
 
-Hasura supports nested objects. For example, you can define a type like
-the following:
+From version `v2.2.0` onwards, Hasura GraphQL engine supports nested objects.
+
+For example, you can define a type like the following:
 
 ```graphql
 type UserInfo {
@@ -61,8 +62,9 @@ type UserObj {
 }
 ```
 
-Recursive nested objects are also supported. For example, you can use
-the following type:
+Recursive nested objects are also supported.
+
+For example, you can use the following type:
 
 ```graphql
 type UserObj {

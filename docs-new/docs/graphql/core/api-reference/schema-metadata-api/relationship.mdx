@@ -10,7 +10,19 @@ keywords:
    - relationship
 ---
 
-# Schema/Metadata API Reference: Relationships (Deprecated) 
+# Schema/Metadata API Reference: Relationships (Deprecated)
+
+:::caution Deprecation
+
+In versions `v2.0.0` and above, the schema/metadata API is deprecated in
+favour of the [schema API](/graphql/core/api-reference/schema-api/index.mdx) and the
+[metadata API](/graphql/core/api-reference/metadata-api/index.mdx).
+
+Though for backwards compatibility, the schema/metadata APIs will
+continue to function.
+
+:::
+
 
 ## Introduction
 
@@ -40,17 +52,6 @@ example, given tables `author` and `author_details`, if the
 key to the `author` table's primary key `id`. In this case there will be
 a single `author` for every `author_details` and a single `details` for
 every `author`
-
-:::caution Deprecation
-
-In versions `v2.0.0` and above, the schema/metadata API is deprecated in
-favour of the [schema API](/graphql/core/api-reference/schema-api/index.mdx) and the
-[metadata API](/graphql/core/api-reference/metadata-api/index.mdx).
-
-Though for backwards compatibility, the schema/metadata APIs will
-continue to function.
-
-:::
 
 ## create_object_relationship {#schema-metadata-create-object-relationship}
 

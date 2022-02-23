@@ -12,15 +12,6 @@ keywords:
 
 # Schema/Metadata API Reference: Computed Fields (Deprecated)
 
-## Introduction
-
-**computed field** is an extra field added to a table, its value is
-computed via an SQL function which has the table row type as an input
-argument. Currenty, the Hasura GraphQL engine supports functions
-returning [base types](https://www.postgresql.org/docs/current/extend-type-system.html#id-1.8.3.5.9)
-or [table row types](https://www.postgresql.org/docs/current/rowtypes.html#ROWTYPES-DECLARING)
-as computed fields.
-
 :::caution Deprecation
 
 In versions `v2.0.0` and above, the schema/metadata API is deprecated in
@@ -31,6 +22,17 @@ Though for backwards compatibility, the schema/metadata APIs will
 continue to function.
 
 :::
+
+
+## Introduction
+
+**computed field** is an extra field added to a table, its value is
+computed via an SQL function which has the table row type as an input
+argument. Currenty, the Hasura GraphQL engine supports functions
+returning [base types](https://www.postgresql.org/docs/current/extend-type-system.html#id-1.8.3.5.9)
+or [table row types](https://www.postgresql.org/docs/current/rowtypes.html#ROWTYPES-DECLARING)
+as computed fields.
+
 
 ## add_computed_field {#schema-metadata-add-computed-field}
 
