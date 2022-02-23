@@ -1300,15 +1300,17 @@ Enum](https://spec.graphql.org/June2018/#sec-Enums)
 
 ## RequestTransformation {#requesttransformation}
 
-| Key             | required | Schema                   | Description                                                                                                                                        |
-|-----------------|----------|--------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------|
-| method          | false    | String                   | Change the request method to this value.                                                                                                           |
-| url             | false    | String                   | Change the request URL to this value.                                                                                                              |
-| body            | false    | String                   | A template script for transforming the request body.                                                                                               |
-| content_type    | false    | String                   | Replace the Content-Type with this value. Only "application/json" and "application/x-www-form-urlencoded" are allowed. Default: "application/json" |
-| query_params    | false    | Object (String : String) | Replace the query params on the URL with this value.                                                                                               |
-| request_headers | false    | [TransformHeaders](#transformheaders)       | Transform headers as described here.                                                                                                               |
-| template_engine | false    | [TemplateEngine](#templateengine)         | Template language to be used for this transformation. Default: "Kriti"                                                                             |
+| Key             | required | Schema                                       | Description                                                                                                                                        |
+|-----------------|----------|----------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------|
+| version         | false    | "1" \| "2"                                   | Sets the *RequestTransformation* schema version. Version *1* uses a *String* for the *body* field and Version *2* takes a [BodyTransform](#bodytransform). Defaults to version *1*  |
+| method          | false    | String                                       | Change the request method to this value.                                                                                                           |
+| url             | false    | String                                       | Change the request URL to this value.                                                                                                              |
+| body            | false    | [BodyTransform](#bodytransform) \| String    | A template script for transforming the request body.                                                                                               |
+| content_type    | false    | String                                       | Replace the Content-Type with this value. Only "application/json" and "application/x-www-form-urlencoded" are allowed. Default: "application/json" |
+| query_params    | false    | Object (String : String)                     | Replace the query params on the URL with this value.                                                                                               |
+| request_headers | false    | [TransformHeaders](#transformheaders)        | Transform headers as described here.                                                                                                               |
+| template_engine | false    | [TemplateEngine](#templateengine)            | Template language to be used for this transformation. Default: "Kriti"                                                                             |
+
 
 ## TransformHeaders {#transformheaders}
 
@@ -1316,6 +1318,7 @@ Enum](https://spec.graphql.org/June2018/#sec-Enums)
 |---------------|----------|--------------------------------------|--------------------------------------------------------------------------------------------------------|
 | addHeaders    | false    | Object ([HeaderKey](#headerkey) : [HeaderValue](#headervalue)) | A map of Header Key Value pairs to be added to the request. Content-Type cannot be added via this map. |
 | removeHeaders | false    | Array of ([HeaderKey](#headerkey))               | Headers to be removed from the request. Content-Type cannot be removed.                                |
+
 
 ## HeaderKey {#headerkey}
 
@@ -1327,6 +1330,7 @@ Enum](https://spec.graphql.org/June2018/#sec-Enums)
 
 </div>
 
+
 ## HeaderValue {#headervalue}
 
 <div class="parsed-literal">
@@ -1336,6 +1340,15 @@ Enum](https://spec.graphql.org/June2018/#sec-Enums)
 </pre>
 
 </div>
+
+
+## BodyTransform {#bodytransform}
+
+| Key      | required | Schema              | Description                                                                                            |
+|----------|----------|---------------------|--------------------------------------------------------------------------------------------------------|
+| action   | true     | remove \| transform | The action to perform on the request body.                                                             |
+| template | false    | String              | The transformation template to be applied to the body. This is required if the action is *transform*.  |
+
 
 ## TemplateEngine {#templateengine}
 
@@ -1347,10 +1360,11 @@ The JSON templating language to be used for this JSON transformation.
 
 ## ResponseTransformation {#responsetransformation}
 
-| Key             | required | Schema                              | Description                                                            |
-|-----------------|----------|-------------------------------------|------------------------------------------------------------------------|
-| body            | false    | `String`                            | A template script for transforming the response body.                  |
-| template_engine | false    | [TemplateEngine](#templateengine)   | Template language to be used for this transformation. Default: "Kriti" |
+| Key             | required | Schema                                        | Description                                                            |
+|-----------------|----------|-----------------------------------------------|------------------------------------------------------------------------|
+| version         | false    | "1" \| "2"                                    | Sets the *RequestTransformation* schema version. Version *1* uses a *String* for the *body* field and Version *2* takes a [BodyTransform](#bodytransform). Defaults to version *1*. |
+| body            | false    | [BodyTransform](#bodytransform) \| `String`   | A template script for transforming the response body.                  |
+| template_engine | false    | [TemplateEngine](#templateengine)             | Template language to be used for this transformation. Default: "Kriti" |
 
 
 ## RetryConf {#retryconf}
