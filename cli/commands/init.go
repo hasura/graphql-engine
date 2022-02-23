@@ -253,15 +253,16 @@ func (o *InitOptions) createFiles() error {
 
 		// create metadata files
 		plugins := make(metadataobject.Objects, 0)
-		plugins = append(plugins, metadataVersion.New(o.EC, o.EC.MetadataDir))
 		plugins = append(plugins, querycollections.New(o.EC, o.EC.MetadataDir))
 		plugins = append(plugins, allowlist.New(o.EC, o.EC.MetadataDir))
 		plugins = append(plugins, remoteschemas.New(o.EC, o.EC.MetadataDir))
 		plugins = append(plugins, actions.New(o.EC, o.EC.MetadataDir))
 		plugins = append(plugins, crontriggers.New(o.EC, o.EC.MetadataDir))
 		if config.Version == cli.V3 {
+			plugins = append(plugins, metadataVersion.New(o.EC, o.EC.MetadataDir))
 			plugins = append(plugins, sources.New(o.EC, o.EC.MetadataDir))
 		} else {
+			plugins = append(plugins, metadataVersion.NewV3MetadataVersion(o.EC, o.EC.MetadataDir))
 			plugins = append(plugins, tables.New(o.EC, o.EC.MetadataDir))
 			plugins = append(plugins, functions.New(o.EC, o.EC.MetadataDir))
 		}
