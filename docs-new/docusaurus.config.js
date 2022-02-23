@@ -110,9 +110,8 @@ const config = {
             position: 'left',
           },
           {
-            to: 'https://hasura.io/pricing/',
-            label: 'Prcing',
-            position: 'left',
+            type: 'search',
+            position: 'right',
           },
           {
             type: 'docsVersionDropdown',
@@ -124,6 +123,11 @@ const config = {
                 label: 'v1.x',
               },
             ],
+          },
+          {
+            to: 'https://hasura.io/pricing/',
+            label: 'Prcing',
+            position: 'right',
           },
           {
             to: 'https://hasura.io/contact-us/?type=hasuraenterprise',
