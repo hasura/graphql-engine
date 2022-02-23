@@ -9,6 +9,7 @@
 - server: Fix truncation of session variables with variable length column types in MSSQL (#8158)
 - server: improve baseline memory consumption for typical workloads
 - server: fix parsing timestamp values in BigQuery backends (fix #8076)
+- cli: fix metadata version being set to 3 when doing `hasura init --version 2` (#8148)
 
 ## v2.3.0-beta.2
 
