@@ -226,7 +226,7 @@ data ServeOptions impl = ServeOptions
     soEnableConsole :: Bool,
     soConsoleAssetsDir :: Maybe Text,
     soEnableTelemetry :: Bool,
-    soStringifyNum :: Bool,
+    soStringifyNum :: StringifyNumbers,
     soDangerousBooleanCollapse :: Bool,
     soEnabledAPIs :: Set.HashSet API,
     soLiveQueryOpts :: LQ.LiveQueriesOptions,

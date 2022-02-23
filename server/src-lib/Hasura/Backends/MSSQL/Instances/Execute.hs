@@ -231,7 +231,7 @@ msDBMutationPlan ::
   ( MonadError QErr m
   ) =>
   UserInfo ->
-  Bool ->
+  StringifyNumbers ->
   SourceName ->
   SourceConfig 'MSSQL ->
   MutationDB 'MSSQL Void (UnpreparedValue 'MSSQL) ->

@@ -64,7 +64,7 @@ data Mutation (b :: BackendType) = Mutation
     _mQuery :: !(MutationCTE, DS.Seq Q.PrepArg),
     _mOutput :: !(MutationOutput b),
     _mCols :: ![ColumnInfo b],
-    _mStrfyNum :: !Bool
+    _mStrfyNum :: !StringifyNumbers
   }
 
 mkMutation ::
@@ -73,7 +73,7 @@ mkMutation ::
   (MutationCTE, DS.Seq Q.PrepArg) ->
   MutationOutput ('Postgres pgKind) ->
   [ColumnInfo ('Postgres pgKind)] ->
-  Bool ->
+  StringifyNumbers ->
   Mutation ('Postgres pgKind)
 mkMutation _userInfo table query output allCols strfyNum =
   Mutation table query output allCols strfyNum
@@ -108,7 +108,7 @@ execUpdateQuery ::
     PostgresAnnotatedFieldJSON pgKind,
     MonadReader QueryTagsComment m
   ) =>
-  Bool ->
+  StringifyNumbers ->
   UserInfo ->
   (AnnotatedUpdate ('Postgres pgKind), DS.Seq Q.PrepArg) ->
   m EncJSON
@@ -125,7 +125,7 @@ execDeleteQuery ::
     PostgresAnnotatedFieldJSON pgKind,
     MonadReader QueryTagsComment m
   ) =>
-  Bool ->
+  StringifyNumbers ->
   UserInfo ->
   (AnnDel ('Postgres pgKind), DS.Seq Q.PrepArg) ->
   m EncJSON
@@ -141,7 +141,7 @@ execInsertQuery ::
     PostgresAnnotatedFieldJSON pgKind,
     MonadReader QueryTagsComment m
   ) =>
-  Bool ->
+  StringifyNumbers ->
   UserInfo ->
   (InsertQueryP1 ('Postgres pgKind), DS.Seq Q.PrepArg) ->
   m EncJSON
@@ -208,7 +208,7 @@ executeMutationOutputQuery ::
   Maybe Int ->
   MutationCTE ->
   MutationOutput ('Postgres pgKind) ->
-  Bool ->
+  StringifyNumbers ->
   -- | Prepared params
   [Q.PrepArg] ->
   m EncJSON
@@ -232,7 +232,7 @@ mutateAndFetchCols ::
   QualifiedTable ->
   [ColumnInfo ('Postgres pgKind)] ->
   (MutationCTE, DS.Seq Q.PrepArg) ->
-  Bool ->
+  StringifyNumbers ->
   Q.TxE QErr (MutateResp ('Postgres pgKind) TxtEncodedVal)
 mutateAndFetchCols qt cols (cte, p) strfyNum = do
   let mutationTx :: Q.FromRes a => Q.TxE QErr a

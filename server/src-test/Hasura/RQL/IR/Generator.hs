@@ -115,8 +115,12 @@ genAnnSelectG
       <*> genFrom
       <*> genPerm
       <*> genArgs
-      <*> bool
+      <*> genStringifyNumbers
     where
+      genStringifyNumbers =
+        bool <&> \case
+          False -> LeaveNumbersAlone
+          True -> StringifyNumbers
       genFrom =
         genSelectFromG
           genTableName

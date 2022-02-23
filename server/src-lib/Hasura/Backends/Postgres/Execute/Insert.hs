@@ -48,7 +48,7 @@ convertToSQLTransaction ::
   IR.AnnInsert ('Postgres pgKind) Void PG.SQLExp ->
   UserInfo ->
   Seq.Seq Q.PrepArg ->
-  Bool ->
+  StringifyNumbers ->
   m EncJSON
 convertToSQLTransaction (IR.AnnInsert fieldName isSingle annIns mutationOutput) userInfo planVars stringifyNum =
   if null $ IR._aiInsObj annIns
@@ -74,7 +74,7 @@ insertMultipleObjects ::
   UserInfo ->
   IR.MutationOutput ('Postgres pgKind) ->
   Seq.Seq Q.PrepArg ->
-  Bool ->
+  StringifyNumbers ->
   m EncJSON
 insertMultipleObjects multiObjIns additionalColumns userInfo mutationOutput planVars stringifyNum =
   bool withoutRelsInsert withRelsInsert anyRelsToInsert
@@ -132,7 +132,7 @@ insertObject ::
   [(PGCol, PG.SQLExp)] ->
   UserInfo ->
   Seq.Seq Q.PrepArg ->
-  Bool ->
+  StringifyNumbers ->
   m (Int, Maybe (ColumnValues ('Postgres pgKind) TxtEncodedVal))
 insertObject singleObjIns additionalColumns userInfo planVars stringifyNum = Tracing.trace ("Insert " <> qualifiedObjectToText table) do
   validateInsert (map fst columns) (map IR._riRelInfo objectRels) (map fst additionalColumns)
@@ -215,7 +215,7 @@ insertObjRel ::
   ) =>
   Seq.Seq Q.PrepArg ->
   UserInfo ->
-  Bool ->
+  StringifyNumbers ->
   IR.ObjRelIns ('Postgres pgKind) PG.SQLExp ->
   m (Int, [(PGCol, PG.SQLExp)])
 insertObjRel planVars userInfo stringifyNum objRelIns =
@@ -251,7 +251,7 @@ insertArrRel ::
   [(PGCol, PG.SQLExp)] ->
   UserInfo ->
   Seq.Seq Q.PrepArg ->
-  Bool ->
+  StringifyNumbers ->
   IR.ArrRelIns ('Postgres pgKind) PG.SQLExp ->
   m Int
 insertArrRel resCols userInfo planVars stringifyNum arrRelIns =

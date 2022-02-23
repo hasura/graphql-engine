@@ -198,7 +198,7 @@ mkServeOptions rso = do
   enableTelemetry <-
     fromMaybe True
       <$> withEnv (rsoEnableTelemetry rso) (fst enableTelemetryEnv)
-  strfyNum <- withEnvBool (rsoStringifyNum rso) $ fst stringifyNumEnv
+  strfyNum <- bool LeaveNumbersAlone StringifyNumbers <$> (withEnvBool (rsoStringifyNum rso) $ fst stringifyNumEnv)
   dangerousBooleanCollapse <-
     fromMaybe False <$> withEnv (rsoDangerousBooleanCollapse rso) (fst dangerousBooleanCollapseEnv)
   enabledAPIs <-
@@ -1357,7 +1357,9 @@ serveOptsToLog so =
           "console_assets_dir" J..= soConsoleAssetsDir so,
           "enable_telemetry" J..= soEnableTelemetry so,
           "use_prepared_statements" J..= (Q.cpAllowPrepare . soConnParams) so,
-          "stringify_numeric_types" J..= soStringifyNum so,
+          "stringify_numeric_types" J..= case soStringifyNum so of
+            StringifyNumbers -> True
+            LeaveNumbersAlone -> False,
           "v1-boolean-null-collapse" J..= soDangerousBooleanCollapse so,
           "enabled_apis" J..= soEnabledAPIs so,
           "live_query_options" J..= soLiveQueryOpts so,

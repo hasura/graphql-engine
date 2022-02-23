@@ -32,7 +32,7 @@ import Hasura.Session
 executeInsert ::
   MonadError QErr m =>
   UserInfo ->
-  Bool ->
+  StringifyNumbers ->
   SourceConfig 'MSSQL ->
   AnnInsert 'MSSQL Void (UnpreparedValue 'MSSQL) ->
   m (ExceptT QErr IO EncJSON)
@@ -127,7 +127,7 @@ executeInsert userInfo stringifyNum sourceConfig annInsert = do
 --    > SELECT (<mutation_output_select>) AS [mutation_response], (<check_constraint_select>) AS [check_constraint_select]
 --
 --    When executed, the above statement returns a single row with mutation response as a string value and check constraint result as an integer value.
-buildInsertTx :: TSQL.TableName -> Text -> Bool -> AnnInsert 'MSSQL Void Expression -> Tx.TxET QErr IO EncJSON
+buildInsertTx :: TSQL.TableName -> Text -> StringifyNumbers -> AnnInsert 'MSSQL Void Expression -> Tx.TxET QErr IO EncJSON
 buildInsertTx tableName withAlias stringifyNum insert = do
   let tableColumns = _aiTableCols $ _aiData insert
       ifMatchedField = _biIfMatched . _aiBackendInsert . _aiData $ insert
@@ -207,7 +207,7 @@ buildUpsertTx tableName insert ifMatched = do
   Tx.unitQueryE defaultMSSQLTxErrorHandler $ toQueryFlat $ dropTempTableQuery tempTableNameValues
 
 -- | Builds a response to the user using the values in the temporary table named #inserted.
-buildInsertResponseTx :: Bool -> Text -> AnnInsert 'MSSQL Void Expression -> Tx.TxET QErr IO (Text, Int)
+buildInsertResponseTx :: StringifyNumbers -> Text -> AnnInsert 'MSSQL Void Expression -> Tx.TxET QErr IO (Text, Int)
 buildInsertResponseTx stringifyNum withAlias insert = do
   -- Generate a SQL SELECT statement which outputs the mutation response using the #inserted
   mutationOutputSelect <- mkMutationOutputSelect stringifyNum withAlias $ _aiOutput insert

@@ -160,11 +160,11 @@ data QueryDB (b :: BackendType) (r :: Type) v
 -- Select
 
 data AnnSelectG (b :: BackendType) (r :: Type) (f :: Type -> Type) (v :: Type) = AnnSelectG
-  { _asnFields :: !(Fields (f v)),
-    _asnFrom :: !(SelectFromG b v),
-    _asnPerm :: !(TablePermG b v),
-    _asnArgs :: !(SelectArgsG b v),
-    _asnStrfyNum :: !Bool
+  { _asnFields :: (Fields (f v)),
+    _asnFrom :: (SelectFromG b v),
+    _asnPerm :: (TablePermG b v),
+    _asnArgs :: (SelectArgsG b v),
+    _asnStrfyNum :: StringifyNumbers
   }
   deriving stock (Functor, Foldable, Traversable)
 
@@ -195,11 +195,11 @@ type AnnAggregateSelect b = AnnAggregateSelectG b Void (SQLExpression b)
 -- Relay select
 
 data ConnectionSelect (b :: BackendType) (r :: Type) v = ConnectionSelect
-  { _csXRelay :: !(XRelay b),
-    _csPrimaryKeyColumns :: !(PrimaryKeyColumns b),
-    _csSplit :: !(Maybe (NE.NonEmpty (ConnectionSplit b v))),
-    _csSlice :: !(Maybe ConnectionSlice),
-    _csSelect :: !(AnnSelectG b r (ConnectionField b r) v)
+  { _csXRelay :: (XRelay b),
+    _csPrimaryKeyColumns :: (PrimaryKeyColumns b),
+    _csSplit :: (Maybe (NE.NonEmpty (ConnectionSplit b v))),
+    _csSlice :: (Maybe ConnectionSlice),
+    _csSelect :: (AnnSelectG b r (ConnectionField b r) v)
   }
   deriving stock (Functor, Foldable, Traversable)
 
@@ -220,9 +220,9 @@ deriving stock instance
   Show (ConnectionSelect b r v)
 
 data ConnectionSplit (b :: BackendType) v = ConnectionSplit
-  { _csKind :: !ConnectionSplitKind,
-    _csValue :: !v,
-    _csOrderBy :: !(OrderByItemG b (AnnotatedOrderByElement b v))
+  { _csKind :: ConnectionSplitKind,
+    _csValue :: v,
+    _csOrderBy :: (OrderByItemG b (AnnotatedOrderByElement b v))
   }
   deriving stock (Functor, Generic, Foldable, Traversable)
 
@@ -249,8 +249,8 @@ instance
   Hashable (ConnectionSplit b v)
 
 data ConnectionSlice
-  = SliceFirst !Int
-  | SliceLast !Int
+  = SliceFirst Int
+  | SliceLast Int
   deriving stock (Show, Eq, Generic)
   deriving anyclass (Hashable)
 
@@ -275,13 +275,13 @@ instance PG.IsIdentifier FIIdentifier where
   {-# INLINE toIdentifier #-}
 
 data SelectFromG (b :: BackendType) v
-  = FromTable !(TableName b)
-  | FromIdentifier !FIIdentifier
+  = FromTable (TableName b)
+  | FromIdentifier FIIdentifier
   | FromFunction
-      !(FunctionName b)
-      !(FunctionArgsExpTableRow v)
+      (FunctionName b)
+      (FunctionArgsExpTableRow v)
       -- a definition list
-      !(Maybe [(Column b, ScalarType b)])
+      (Maybe [(Column b, ScalarType b)])
   deriving stock (Functor, Foldable, Traversable, Generic)
 
 deriving stock instance (Backend b, Eq v) => Eq (SelectFromG b v)
@@ -295,11 +295,11 @@ type SelectFrom b = SelectFromG b (SQLExpression b)
 -- Select arguments
 
 data SelectArgsG (b :: BackendType) v = SelectArgs
-  { _saWhere :: !(Maybe (AnnBoolExp b v)),
-    _saOrderBy :: !(Maybe (NE.NonEmpty (AnnotatedOrderByItemG b v))),
-    _saLimit :: !(Maybe Int),
-    _saOffset :: !(Maybe Int64),
-    _saDistinct :: !(Maybe (NE.NonEmpty (Column b)))
+  { _saWhere :: (Maybe (AnnBoolExp b v)),
+    _saOrderBy :: (Maybe (NE.NonEmpty (AnnotatedOrderByItemG b v))),
+    _saLimit :: (Maybe Int),
+    _saOffset :: (Maybe Int64),
+    _saDistinct :: (Maybe (NE.NonEmpty (Column b)))
   }
   deriving stock (Generic, Functor, Foldable, Traversable)
 
@@ -334,12 +334,12 @@ noSelectArgs = SelectArgs Nothing Nothing Nothing Nothing Nothing
 -- | The order by element for a computed field based on its return type
 data ComputedFieldOrderByElement (b :: BackendType) v
   = -- | Sort by the scalar computed field
-    CFOBEScalar !(ScalarType b)
+    CFOBEScalar (ScalarType b)
   | CFOBETableAggregation
-      !(TableName b)
-      !(AnnBoolExp b v)
+      (TableName b)
+      (AnnBoolExp b v)
       -- ^ Permission filter of the retuning table
-      !(AnnotatedAggregateOrderBy b)
+      (AnnotatedAggregateOrderBy b)
       -- ^ Sort by aggregation fields of table rows returned by computed field
   deriving stock (Generic, Functor, Foldable, Traversable)
 
@@ -350,11 +350,11 @@ deriving stock instance (Backend b, Show v, Show (BooleanOperators b v)) => Show
 instance (Backend b, Hashable v, Hashable (BooleanOperators b v)) => Hashable (ComputedFieldOrderByElement b v)
 
 data ComputedFieldOrderBy (b :: BackendType) v = ComputedFieldOrderBy
-  { _cfobXField :: !(XComputedField b),
-    _cfobName :: !ComputedFieldName,
-    _cfobFunction :: !(FunctionName b),
-    _cfobFunctionArgsExp :: !(FunctionArgsExpTableRow v),
-    _cfobOrderByElement :: !(ComputedFieldOrderByElement b v)
+  { _cfobXField :: (XComputedField b),
+    _cfobName :: ComputedFieldName,
+    _cfobFunction :: (FunctionName b),
+    _cfobFunctionArgsExp :: (FunctionArgsExpTableRow v),
+    _cfobOrderByElement :: (ComputedFieldOrderByElement b v)
   }
   deriving stock (Generic, Functor, Foldable, Traversable)
 
@@ -365,18 +365,18 @@ deriving stock instance (Backend b, Show v, Show (BooleanOperators b v)) => Show
 instance (Backend b, Hashable v, Hashable (BooleanOperators b v)) => Hashable (ComputedFieldOrderBy b v)
 
 data AnnotatedOrderByElement (b :: BackendType) v
-  = AOCColumn !(ColumnInfo b)
+  = AOCColumn (ColumnInfo b)
   | AOCObjectRelation
-      !(RelInfo b)
-      !(AnnBoolExp b v)
+      (RelInfo b)
+      (AnnBoolExp b v)
       -- ^ Permission filter of the remote table to which the relationship is defined
-      !(AnnotatedOrderByElement b v)
+      (AnnotatedOrderByElement b v)
   | AOCArrayAggregation
-      !(RelInfo b)
-      !(AnnBoolExp b v)
+      (RelInfo b)
+      (AnnBoolExp b v)
       -- ^ Permission filter of the remote table to which the relationship is defined
-      !(AnnotatedAggregateOrderBy b)
-  | AOCComputedField !(ComputedFieldOrderBy b v)
+      (AnnotatedAggregateOrderBy b)
+  | AOCComputedField (ComputedFieldOrderBy b v)
   deriving stock (Generic, Functor, Foldable, Traversable)
 
 deriving stock instance (Backend b, Eq v, Eq (BooleanOperators b v)) => Eq (AnnotatedOrderByElement b v)
@@ -387,7 +387,7 @@ instance (Backend b, Hashable v, Hashable (BooleanOperators b v)) => Hashable (A
 
 data AnnotatedAggregateOrderBy (b :: BackendType)
   = AAOCount
-  | AAOOp !Text !(ColumnInfo b)
+  | AAOOp Text !(ColumnInfo b)
   deriving stock (Generic)
 
 deriving stock instance (Backend b) => Eq (AnnotatedAggregateOrderBy b)
@@ -420,14 +420,14 @@ data RemoteRelationshipSelect b r = RemoteRelationshipSelect
   deriving (Eq, Show, Functor, Foldable, Traversable)
 
 data AnnFieldG (b :: BackendType) (r :: Type) v
-  = AFColumn !(AnnColumnField b v)
-  | AFObjectRelation !(ObjectRelationSelectG b r v)
-  | AFArrayRelation !(ArraySelectG b r v)
-  | AFComputedField !(XComputedField b) !ComputedFieldName !(ComputedFieldSelect b r v)
+  = AFColumn (AnnColumnField b v)
+  | AFObjectRelation (ObjectRelationSelectG b r v)
+  | AFArrayRelation (ArraySelectG b r v)
+  | AFComputedField (XComputedField b) !ComputedFieldName !(ComputedFieldSelect b r v)
   | -- | A remote relationship field
-    AFRemote !(RemoteRelationshipSelect b r)
-  | AFNodeId !(XRelay b) !(TableName b) !(PrimaryKeyColumns b)
-  | AFExpression !Text
+    AFRemote (RemoteRelationshipSelect b r)
+  | AFNodeId (XRelay b) !(TableName b) !(PrimaryKeyColumns b)
+  | AFExpression Text
   deriving stock (Functor, Foldable, Traversable)
 
 deriving stock instance
@@ -468,9 +468,9 @@ mkAnnColumnFieldAsText ci =
 -- Aggregation fields
 
 data TableAggregateFieldG (b :: BackendType) (r :: Type) v
-  = TAFAgg !(AggregateFields b)
-  | TAFNodes (XNodesAgg b) !(AnnFieldsG b r v)
-  | TAFExp !Text
+  = TAFAgg (AggregateFields b)
+  | TAFNodes (XNodesAgg b) (AnnFieldsG b r v)
+  | TAFExp Text
   deriving stock (Functor, Foldable, Traversable)
 
 deriving stock instance
@@ -490,23 +490,23 @@ deriving stock instance
   Show (TableAggregateFieldG b r v)
 
 data AggregateField (b :: BackendType)
-  = AFCount !(CountType b)
-  | AFOp !(AggregateOp b)
-  | AFExp !Text
+  = AFCount (CountType b)
+  | AFOp (AggregateOp b)
+  | AFExp Text
 
 deriving stock instance (Backend b) => Eq (AggregateField b)
 
 deriving stock instance (Backend b) => Show (AggregateField b)
 
 data AggregateOp (b :: BackendType) = AggregateOp
-  { _aoOp :: !Text,
-    _aoFields :: !(ColumnFields b)
+  { _aoOp :: Text,
+    _aoFields :: (ColumnFields b)
   }
   deriving stock (Eq, Show)
 
 data ColFld (b :: BackendType)
-  = CFCol !(Column b) !(ColumnType b)
-  | CFExp !Text
+  = CFCol (Column b) !(ColumnType b)
+  | CFExp Text
   deriving stock (Eq, Show)
 
 type TableAggregateField b = TableAggregateFieldG b Void (SQLExpression b)
@@ -524,9 +524,9 @@ type AnnFieldsG b r v = Fields (AnnFieldG b r v)
 -- Relay fields
 
 data ConnectionField (b :: BackendType) (r :: Type) v
-  = ConnectionTypename !Text
-  | ConnectionPageInfo !PageInfoFields
-  | ConnectionEdges !(EdgeFields b r v)
+  = ConnectionTypename Text
+  | ConnectionPageInfo PageInfoFields
+  | ConnectionEdges (EdgeFields b r v)
   deriving stock (Functor, Foldable, Traversable)
 
 deriving stock instance
@@ -546,7 +546,7 @@ deriving stock instance
   Show (ConnectionField b r v)
 
 data PageInfoField
-  = PageInfoTypename !Text
+  = PageInfoTypename Text
   | PageInfoHasNextPage
   | PageInfoHasPreviousPage
   | PageInfoStartCursor
@@ -554,9 +554,9 @@ data PageInfoField
   deriving stock (Show, Eq)
 
 data EdgeField (b :: BackendType) (r :: Type) v
-  = EdgeTypename !Text
+  = EdgeTypename Text
   | EdgeCursor
-  | EdgeNode !(AnnFieldsG b r v)
+  | EdgeNode (AnnFieldsG b r v)
   deriving stock (Functor, Foldable, Traversable)
 
 deriving stock instance
@@ -584,19 +584,19 @@ type EdgeFields b r v = Fields (EdgeField b r v)
 -- Column
 
 data AnnColumnField (b :: BackendType) v = AnnColumnField
-  { _acfColumn :: !(Column b),
-    _acfType :: !(ColumnType b),
+  { _acfColumn :: (Column b),
+    _acfType :: (ColumnType b),
     -- | If this field is 'True', columns are explicitly casted to @text@ when fetched, which avoids
     -- an issue that occurs because we don’t currently have proper support for array types. See
     -- https://github.com/hasura/graphql-engine/pull/3198 for more details.
-    _acfAsText :: !Bool,
-    _acfOp :: !(Maybe (ColumnOp b)),
+    _acfAsText :: Bool,
+    _acfOp :: (Maybe (ColumnOp b)),
     -- | This type is used to determine if whether the column
     -- should be nullified. When the value is `Nothing`, the column value
     -- will be outputted as computed and when the value is `Just c`, the
     -- column will be outputted when `c` evaluates to `true` and `null`
     -- when `c` evaluates to `false`.
-    _acfCaseBoolExpression :: !(Maybe (AnnColumnCaseBoolExp b v))
+    _acfCaseBoolExpression :: (Maybe (AnnColumnCaseBoolExp b v))
   }
   deriving stock (Functor, Foldable, Traversable)
 
@@ -626,10 +626,10 @@ deriving stock instance Backend b => Eq (ColumnOp b)
 -- Computed field
 
 data ComputedFieldScalarSelect (b :: BackendType) v = ComputedFieldScalarSelect
-  { _cfssFunction :: !(FunctionName b),
-    _cfssArguments :: !(FunctionArgsExpTableRow v),
-    _cfssType :: !(ScalarType b),
-    _cfssColumnOp :: !(Maybe (ColumnOp b))
+  { _cfssFunction :: (FunctionName b),
+    _cfssArguments :: (FunctionArgsExpTableRow v),
+    _cfssType :: (ScalarType b),
+    _cfssColumnOp :: (Maybe (ColumnOp b))
   }
   deriving stock (Functor, Foldable, Traversable)
 
@@ -639,15 +639,15 @@ deriving stock instance (Backend b, Eq v) => Eq (ComputedFieldScalarSelect b v)
 
 data ComputedFieldSelect (b :: BackendType) (r :: Type) v
   = CFSScalar
-      !(ComputedFieldScalarSelect b v)
+      (ComputedFieldScalarSelect b v)
       -- ^ Type containing info about the computed field
-      !(Maybe (AnnColumnCaseBoolExp b v))
+      (Maybe (AnnColumnCaseBoolExp b v))
       -- ^ This type is used to determine if whether the scalar
       -- computed field should be nullified. When the value is `Nothing`,
       -- the scalar computed value will be outputted as computed and when the
       -- value is `Just c`, the scalar computed field will be outputted when
       -- `c` evaluates to `true` and `null` when `c` evaluates to `false`
-  | CFSTable !JsonAggSelect !(AnnSimpleSelectG b r v)
+  | CFSTable JsonAggSelect !(AnnSimpleSelectG b r v)
   deriving stock (Functor, Foldable, Traversable)
 
 deriving stock instance
@@ -669,9 +669,9 @@ deriving stock instance
 -- Local relationship
 
 data AnnRelationSelectG (b :: BackendType) a = AnnRelationSelectG
-  { aarRelationshipName :: !RelName, -- Relationship name
-    aarColumnMapping :: !(HashMap (Column b) (Column b)), -- Column of left table to join with
-    aarAnnSelect :: !a -- Current table. Almost ~ to SQL Select
+  { aarRelationshipName :: RelName, -- Relationship name
+    aarColumnMapping :: (HashMap (Column b) (Column b)), -- Column of left table to join with
+    aarAnnSelect :: a -- Current table. Almost ~ to SQL Select
   }
   deriving stock (Functor, Foldable, Traversable)
 
@@ -688,9 +688,9 @@ type ArrayConnectionSelect b r v = AnnRelationSelectG b (ConnectionSelect b r v)
 type ArrayAggregateSelect b = ArrayAggregateSelectG b Void (SQLExpression b)
 
 data AnnObjectSelectG (b :: BackendType) (r :: Type) v = AnnObjectSelectG
-  { _aosFields :: !(AnnFieldsG b r v),
-    _aosTableFrom :: !(TableName b),
-    _aosTableFilter :: !(AnnBoolExp b v)
+  { _aosFields :: (AnnFieldsG b r v),
+    _aosTableFrom :: (TableName b),
+    _aosTableFilter :: (AnnBoolExp b v)
   }
   deriving stock (Functor, Foldable, Traversable)
 
@@ -717,9 +717,9 @@ type ObjectRelationSelectG b r v = AnnRelationSelectG b (AnnObjectSelectG b r v)
 type ObjectRelationSelect b = ObjectRelationSelectG b Void (SQLExpression b)
 
 data ArraySelectG (b :: BackendType) (r :: Type) v
-  = ASSimple !(ArrayRelationSelectG b r v)
-  | ASAggregate !(ArrayAggregateSelectG b r v)
-  | ASConnection !(ArrayConnectionSelect b r v)
+  = ASSimple (ArrayRelationSelectG b r v)
+  | ASAggregate (ArrayAggregateSelectG b r v)
+  | ASConnection (ArrayConnectionSelect b r v)
   deriving stock (Functor, Foldable, Traversable)
 
 deriving stock instance
@@ -748,9 +748,9 @@ data
     (b :: BackendType)
     (r :: Type)
     (vf :: BackendType -> Type)
-  = SourceRelationshipObject !(AnnObjectSelectG b r (vf b))
-  | SourceRelationshipArray !(AnnSimpleSelectG b r (vf b))
-  | SourceRelationshipArrayAggregate !(AnnAggregateSelectG b r (vf b))
+  = SourceRelationshipObject (AnnObjectSelectG b r (vf b))
+  | SourceRelationshipArray (AnnSimpleSelectG b r (vf b))
+  | SourceRelationshipArrayAggregate (AnnAggregateSelectG b r (vf b))
 
 deriving stock instance
   ( Backend b,
@@ -778,22 +778,22 @@ data
     (r :: Type)
     (vf :: BackendType -> Type)
     (tgt :: BackendType) = RemoteSourceSelect
-  { _rssName :: !SourceName,
-    _rssConfig :: !(SourceConfig tgt),
-    _rssSelection :: !(SourceRelationshipSelection tgt r vf),
+  { _rssName :: SourceName,
+    _rssConfig :: (SourceConfig tgt),
+    _rssSelection :: (SourceRelationshipSelection tgt r vf),
     -- | Additional information about the source's join columns:
     -- (ScalarType tgt) so that the remote can interpret the join values coming
     -- from src
     -- (Column tgt) so that an appropriate join condition / IN clause can be built
     -- by the remote
-    _rssJoinMapping :: !(HM.HashMap FieldName (ScalarType tgt, Column tgt))
+    _rssJoinMapping :: (HM.HashMap FieldName (ScalarType tgt, Column tgt))
   }
 
 -- Permissions
 
 data TablePermG (b :: BackendType) v = TablePerm
-  { _tpFilter :: !(AnnBoolExp b v),
-    _tpLimit :: !(Maybe Int)
+  { _tpFilter :: (AnnBoolExp b v),
+    _tpLimit :: (Maybe Int)
   }
   deriving stock (Generic, Functor, Foldable, Traversable)
 
@@ -832,8 +832,8 @@ data ArgumentExp a
   | -- | Hardcoded reference to @hdb_catalog.hdb_action_log.response_payload@
     AEActionResponsePayload
   | -- | JSON/JSONB hasura session variable object
-    AESession !a
-  | AEInput !a
+    AESession a
+  | AEInput a
   deriving stock (Eq, Show, Functor, Foldable, Traversable, Generic)
   deriving anyclass (Hashable)
 
@@ -860,8 +860,8 @@ actionResponsePayloadColumn = "response_payload"
 {-# INLINE actionResponsePayloadColumn #-}
 
 data FunctionArgsExpG a = FunctionArgsExp
-  { _faePositional :: ![a],
-    _faeNamed :: !(HM.HashMap Text a)
+  { _faePositional :: [a],
+    _faeNamed :: (HM.HashMap Text a)
   }
   deriving stock (Show, Eq, Functor, Foldable, Traversable, Generic)
   deriving anyclass (Hashable)
@@ -904,11 +904,11 @@ insertFunctionArg argName idx value (FunctionArgsExp positional named) =
 -- Actions
 
 data ActionFieldG (b :: BackendType) (r :: Type) v
-  = ACFScalar !G.Name
-  | ACFObjectRelation !(ObjectRelationSelectG b r v)
-  | ACFArrayRelation !(ArraySelectG b r v)
-  | ACFExpression !Text
-  | ACFNestedObject !G.Name !(ActionFieldsG b r v)
+  = ACFScalar G.Name
+  | ACFObjectRelation (ObjectRelationSelectG b r v)
+  | ACFArrayRelation (ArraySelectG b r v)
+  | ACFExpression Text
+  | ACFNestedObject G.Name !(ActionFieldsG b r v)
   deriving (Functor, Foldable, Traversable)
 
 deriving instance
@@ -935,7 +935,7 @@ type ActionFields b = ActionFieldsG b Void (SQLExpression b)
 --
 -- count (
 --   distinct: Boolean
--- ): Int!
+-- ): Int
 data CountDistinct
   = SelectCountDistinct
   | SelectCountNonDistinct
