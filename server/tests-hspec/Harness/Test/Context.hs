@@ -1,5 +1,3 @@
-{-# LANGUAGE DeriveAnyClass #-}
-
 -- | Helper functions for testing in specific contexts.
 --
 --   A 'Context' represents the prerequisites for running a test,
@@ -19,9 +17,9 @@ module Harness.Test.Context
 where
 
 import Control.Applicative ((<|>))
-import Control.Exception.Safe (Exception, SomeException, catch, mask, throwIO)
 import Data.Foldable (for_)
 import Data.Maybe (fromMaybe)
+import Harness.Exceptions (catchRethrow, mask)
 import Harness.State (State)
 import Test.Hspec (ActionWith, HasCallStack, SpecWith, aroundAllWith, describe)
 import Test.Hspec.Core.Spec (Item (..), mapSpecItem)
@@ -106,9 +104,8 @@ runWithLocalState contexts tests =
     -- and at teardown, which is why we use a custom re-implementation of
     -- @bracket@.
     contextBracket ::
-      forall b.
       Context a ->
-      ((State, a) -> IO b) ->
+      ((State, a) -> IO ()) ->
       State ->
       IO ()
     contextBracket Context {mkLocalState, setup, teardown} actionWith globalState =
@@ -116,33 +113,15 @@ runWithLocalState contexts tests =
         localState <- mkLocalState globalState
         let state = (globalState, localState)
 
-        catch
-          -- Setup for a test
+        catchRethrow
           (setup state)
-          ( \setupEx -> do
-              catch
-                -- On setup error, attempt to run `teardown`
-                (teardown state)
-                -- On teardown error as well, throw both exceptions
-                (throwIO . Exceptions setupEx)
-              -- if teardown succeeds, throw the setup error
-              throwIO setupEx
-          )
+          (teardown state)
 
         -- Run tests.
         _ <-
-          catch
+          catchRethrow
             (restore $ actionWith state)
-            ( \restoreEx -> do
-                -- On test error, attempt to run `teardown`...
-                teardown state
-                  `catch`
-                  -- ...if it fails as well, bundle both exceptions together and
-                  -- rethrow them...
-                  (throwIO . Exceptions restoreEx)
-                -- ...otherwise rethrow the original exception.
-                throwIO restoreEx
-            )
+            (teardown state)
         -- If no exception occurred, run the normal teardown function.
         teardown state
 
@@ -258,19 +237,3 @@ defaultOptions =
   Options
     { stringifyNumbers = False
     }
-
---------------------------------------------------------------------------------
--- Local helpers
-
--- | Two exceptions, bundled as one.
-data Exceptions
-  = Exceptions SomeException SomeException
-  deriving anyclass (Exception)
-
-instance Show Exceptions where
-  show (Exceptions e1 e2) =
-    unlines
-      [ "1. " <> show e1,
-        "",
-        "2. " <> show e2
-      ]

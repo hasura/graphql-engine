@@ -976,6 +976,7 @@ test-suite tests-hspec
  -- Harness
     Harness.Constants
     Harness.Env
+    Harness.Exceptions
     Harness.GraphqlEngine
     Harness.Http
     Harness.RemoteServer

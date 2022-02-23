@@ -8,18 +8,21 @@ module Harness.Backend.BigQuery
   )
 where
 
-import Control.Exception
 import Data.String
 import GHC.Stack
 import Harness.Constants as Constants
 import Harness.Env
+import Harness.Exceptions (SomeException, handle, tryInOrder)
 import Hasura.Backends.BigQuery.Connection (initConnection)
 import Hasura.Backends.BigQuery.Execute (BigQuery (..), executeBigQuery)
 import Hasura.Backends.BigQuery.Source (ServiceAccount)
 import Hasura.Prelude
 
-getServiceAccount :: (HasCallStack) => IO ServiceAccount
-getServiceAccount = getEnvJSON Constants.bigqueryServiceAccountVar
+getServiceAccount :: HasCallStack => IO ServiceAccount
+getServiceAccount =
+  tryInOrder
+    (getEnvJson Constants.bigqueryServiceAccountVar)
+    (getEnvJsonFile Constants.bigqueryServiceAccountFileVar)
 
 getProjectId :: (HasCallStack) => IO Text
 getProjectId = getEnvString Constants.bigqueryProjectIdVar
