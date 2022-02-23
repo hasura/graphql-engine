@@ -332,7 +332,7 @@ data AnnActionExecution (b :: BackendType) (r :: Type) v = AnnActionExecution
     _aaeWebhook :: !ResolvedWebhook,
     _aaeHeaders :: ![HeaderConf],
     _aaeForwardClientHeaders :: !Bool,
-    _aaeStrfyNum :: !Bool,
+    _aaeStrfyNum :: !StringifyNumbers,
     _aaeTimeOut :: !Timeout,
     _aaeSource :: !(ActionSourceInfo b),
     _aaeRequestTransform :: !(Maybe MetadataRequestTransform),
@@ -364,7 +364,7 @@ data AnnActionAsyncQuery (b :: BackendType) (r :: Type) v = AnnActionAsyncQuery
     _aaaqOutputType :: !GraphQLType,
     _aaaqFields :: !(AsyncActionQueryFieldsG b r v),
     _aaaqDefinitionList :: ![(Column b, ScalarType b)],
-    _aaaqStringifyNum :: !Bool,
+    _aaaqStringifyNum :: !StringifyNumbers,
     _aaaqForwardClientHeaders :: !Bool,
     _aaaqSource :: !(ActionSourceInfo b)
   }

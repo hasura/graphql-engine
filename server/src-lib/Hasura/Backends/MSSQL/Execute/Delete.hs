@@ -30,7 +30,7 @@ import Hasura.Session
 executeDelete ::
   MonadError QErr m =>
   UserInfo ->
-  Bool ->
+  StringifyNumbers ->
   SourceConfig 'MSSQL ->
   AnnDelG 'MSSQL Void (UnpreparedValue 'MSSQL) ->
   m (ExceptT QErr IO EncJSON)
@@ -56,7 +56,7 @@ executeDelete userInfo stringifyNum sourceConfig deleteOperation = do
 --   relationships with other tables.
 buildDeleteTx ::
   AnnDel 'MSSQL ->
-  Bool ->
+  StringifyNumbers ->
   Tx.TxET QErr IO EncJSON
 buildDeleteTx deleteOperation stringifyNum = do
   let withAlias = "with_alias"

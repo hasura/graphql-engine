@@ -48,6 +48,7 @@ import Hasura.RQL.Types
   ( FunctionPermissionsCtx (FunctionPermissionsInferred),
     RemoteSchemaPermsCtx (RemoteSchemaPermsDisabled),
   )
+import Hasura.RQL.Types.Common (StringifyNumbers (..))
 import Hasura.Server.Cors (CorsConfig (CCAllowAll))
 import Hasura.Server.Init
   ( API (CONFIG, DEVELOPER, GRAPHQL, METADATA),
@@ -225,7 +226,7 @@ serveOptions =
       soEnableConsole = True,
       soConsoleAssetsDir = Nothing,
       soEnableTelemetry = False,
-      soStringifyNum = True,
+      soStringifyNum = StringifyNumbers,
       soDangerousBooleanCollapse = False,
       soEnabledAPIs = testSuiteEnabledApis,
       soLiveQueryOpts = LQ.mkLiveQueriesOptions Nothing Nothing,

@@ -32,7 +32,7 @@ import Hasura.Session
 executeUpdate ::
   MonadError QErr m =>
   UserInfo ->
-  Bool ->
+  StringifyNumbers ->
   SourceConfig 'MSSQL ->
   AnnotatedUpdateG 'MSSQL Void (UnpreparedValue 'MSSQL) ->
   m (ExceptT QErr IO EncJSON)
@@ -61,7 +61,7 @@ executeUpdate userInfo stringifyNum sourceConfig updateOperation = do
 --   relationships with other tables.
 buildUpdateTx ::
   AnnotatedUpdate 'MSSQL ->
-  Bool ->
+  StringifyNumbers ->
   Tx.TxET QErr IO EncJSON
 buildUpdateTx updateOperation stringifyNum = do
   let withAlias = "with_alias"

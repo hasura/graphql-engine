@@ -27,7 +27,7 @@ import Hasura.RQL.Types
 -- For single row insert: the selection set is translated to SQL query using @'mkSQLSelect'
 mkMutationOutputSelect ::
   (MonadError QErr m) =>
-  Bool ->
+  StringifyNumbers ->
   Text ->
   MutationOutputG 'MSSQL Void Expression ->
   m Select
@@ -79,7 +79,7 @@ selectMutationOutputAndCheckCondition alias mutationOutputSelect checkBoolExp =
 
 mkSelect ::
   MonadError QErr m =>
-  Bool ->
+  StringifyNumbers ->
   Text ->
   JsonAggSelect ->
   Fields (AnnFieldG 'MSSQL Void Expression) ->

@@ -109,11 +109,6 @@ data FromIrConfig = FromIrConfig
 defaultFromIrConfig :: FromIrConfig
 defaultFromIrConfig = FromIrConfig {globalSelectLimit = NoTop}
 
-data StringifyNumbers
-  = StringifyNumbers
-  | LeaveNumbersAlone
-  deriving (Eq)
-
 --------------------------------------------------------------------------------
 -- Runners
 
@@ -182,15 +177,11 @@ fromSelectRows annSelectG = do
           _asnFrom = from,
           _asnPerm = perm,
           _asnArgs = args,
-          _asnStrfyNum = num
+          _asnStrfyNum = stringifyNumbers
         } = annSelectG
       Ir.TablePerm {_tpLimit = mPermLimit, _tpFilter = permFilter} = perm
       permissionBasedTop =
         maybe NoTop (Top . fromIntegral) mPermLimit
-      stringifyNumbers =
-        if num
-          then StringifyNumbers
-          else LeaveNumbersAlone
   selectFrom <-
     case from of
       Ir.FromTable qualifiedObject -> fromQualifiedTable qualifiedObject
@@ -485,15 +476,11 @@ fromSelectAggregate minnerJoinFields annSelectG = do
         _asnFrom = from,
         _asnPerm = perm,
         _asnArgs = args,
-        _asnStrfyNum = num -- TODO: Do we ignore this for aggregates?
+        _asnStrfyNum = stringifyNumbers -- TODO: Do we ignore this for aggregates?
       } = annSelectG
     Ir.TablePerm {_tpLimit = mPermLimit, _tpFilter = permFilter} = perm
     permissionBasedTop =
       maybe NoTop (Top . fromIntegral) mPermLimit
-    stringifyNumbers =
-      if num
-        then StringifyNumbers
-        else LeaveNumbersAlone
 
 --------------------------------------------------------------------------------
 -- GraphQL Args
@@ -838,7 +825,7 @@ data FieldSource
 fromTableAggregateFieldG ::
   Args ->
   Top ->
-  StringifyNumbers ->
+  Rql.StringifyNumbers ->
   (Rql.FieldName, Ir.TableAggregateFieldG 'BigQuery Void Expression) ->
   ReaderT EntityAlias FromIr FieldSource
 fromTableAggregateFieldG args permissionBasedTop stringifyNumbers (Rql.FieldName name, field) =
@@ -913,7 +900,7 @@ fromAggregateField aggregateField =
 -- | The main sources of fields, either constants, fields or via joins.
 fromAnnFieldsG ::
   Map TableName EntityAlias ->
-  StringifyNumbers ->
+  Rql.StringifyNumbers ->
   (Rql.FieldName, Ir.AnnFieldG 'BigQuery Void Expression) ->
   ReaderT EntityAlias FromIr FieldSource
 fromAnnFieldsG existingJoins stringifyNumbers (Rql.FieldName name, field) =
@@ -949,12 +936,12 @@ fromAnnFieldsG existingJoins stringifyNumbers (Rql.FieldName name, field) =
 -- number stringification is on, then we wrap it in a
 -- 'ToStringExpression' so that it's casted when being projected.
 fromAnnColumnField ::
-  StringifyNumbers ->
+  Rql.StringifyNumbers ->
   Ir.AnnColumnField 'BigQuery Expression ->
   ReaderT EntityAlias FromIr Expression
 fromAnnColumnField _stringifyNumbers annColumnField = do
   fieldName <- fromColumn column
-  if asText || False -- TOOD: (Rql.isScalarColumnWhere Psql.isBigNum typ && stringifyNumbers == StringifyNumbers)
+  if asText || False -- TODO: (Rql.isScalarColumnWhere Psql.isBigNum typ && stringifyNumbers == Rql.StringifyNumbers)
     then pure (ToStringExpression (ColumnExpression fieldName))
     else case caseBoolExpMaybe of
       Nothing -> pure (ColumnExpression fieldName)
@@ -1110,7 +1097,7 @@ fromObjectRelationSelectG _existingJoins annRelationSelectG = do
   fieldSources <-
     local
       (const entityAlias)
-      (traverse (fromAnnFieldsG mempty LeaveNumbersAlone) fields)
+      (traverse (fromAnnFieldsG mempty Rql.LeaveNumbersAlone) fields)
   selectProjections <-
     NE.nonEmpty (concatMap (toList . fieldSourceProjections True) fieldSources)
       `onNothing` refute (pure NoProjectionFields)

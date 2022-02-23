@@ -116,7 +116,7 @@ bqDBMutationPlan ::
   ( MonadError E.QErr m
   ) =>
   UserInfo ->
-  Bool ->
+  StringifyNumbers ->
   SourceName ->
   SourceConfig 'BigQuery ->
   MutationDB 'BigQuery Void (UnpreparedValue 'BigQuery) ->

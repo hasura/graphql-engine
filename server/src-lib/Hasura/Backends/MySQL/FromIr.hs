@@ -60,11 +60,6 @@ newtype FromIr a = FromIr
   }
   deriving (Functor, Applicative, Monad, MonadValidate (NonEmpty Error))
 
-data StringifyNumbers
-  = StringifyNumbers
-  | LeaveNumbersAlone
-  deriving (Eq)
-
 --------------------------------------------------------------------------------
 -- Runners
 
@@ -437,7 +432,7 @@ fromSelectArgsG selectArgsG = do
 -- number stringification is on, then we wrap it in a
 -- 'ToStringExpression' so that it's casted when being projected.
 fromAnnColumnField ::
-  StringifyNumbers ->
+  IR.StringifyNumbers ->
   IR.AnnColumnField 'MySQL Expression ->
   ReaderT EntityAlias FromIr Expression
 fromAnnColumnField _stringifyNumbers annColumnField = do
@@ -639,7 +634,7 @@ fromObjectRelationSelectG annRelationSelectG = do
   fieldSources <-
     local
       (const entityAlias)
-      (traverse (fromAnnFieldsG LeaveNumbersAlone) fields)
+      (traverse (fromAnnFieldsG IR.LeaveNumbersAlone) fields)
   let selectProjections =
         concatMap (toList . fieldSourceProjections) fieldSources
   filterExpression <- local (const entityAlias) (fromAnnBoolExp tableFilter)
@@ -738,13 +733,9 @@ fromSelectRows annSelectG = do
         _asnFrom = from,
         _asnPerm = perm,
         _asnArgs = args,
-        _asnStrfyNum = num
+        _asnStrfyNum = stringifyNumbers
       } = annSelectG
     IR.TablePerm {_tpLimit = mPermLimit, _tpFilter = permFilter} = perm
-    stringifyNumbers =
-      if num
-        then StringifyNumbers
-        else LeaveNumbersAlone
 
 fromArrayRelationSelectG :: IR.ArrayRelationSelectG 'MySQL Void Expression -> ReaderT EntityAlias FromIr Join
 fromArrayRelationSelectG annRelationSelectG = do
@@ -788,7 +779,7 @@ fromArrayRelationSelectG annRelationSelectG = do
 
 -- | The main sources of fields, either constants, fields or via joins.
 fromAnnFieldsG ::
-  StringifyNumbers ->
+  IR.StringifyNumbers ->
   (IR.FieldName, IR.AnnFieldG 'MySQL Void Expression) ->
   ReaderT EntityAlias FromIr FieldSource
 fromAnnFieldsG stringifyNumbers (IR.FieldName name, field) =

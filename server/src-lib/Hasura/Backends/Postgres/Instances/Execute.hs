@@ -82,6 +82,7 @@ import Hasura.RQL.Types
     liftTx,
   )
 import Hasura.RQL.Types.Column (ColumnType (..), ColumnValue (..))
+import Hasura.RQL.Types.Common (StringifyNumbers)
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.Session (UserInfo (..))
 import Hasura.Tracing qualified as Tracing
@@ -190,7 +191,7 @@ convertDelete ::
   ) =>
   UserInfo ->
   IR.AnnDelG ('Postgres pgKind) Void (UnpreparedValue ('Postgres pgKind)) ->
-  Bool ->
+  StringifyNumbers ->
   QueryTagsComment ->
   m (Tracing.TraceT (Q.TxET QErr IO) EncJSON)
 convertDelete userInfo deleteOperation stringifyNum queryTags = do
@@ -205,7 +206,7 @@ convertUpdate ::
   ) =>
   UserInfo ->
   IR.AnnotatedUpdateG ('Postgres pgKind) Void (UnpreparedValue ('Postgres pgKind)) ->
-  Bool ->
+  StringifyNumbers ->
   QueryTagsComment ->
   m (Tracing.TraceT (Q.TxET QErr IO) EncJSON)
 convertUpdate userInfo updateOperation stringifyNum queryTags = do
@@ -225,7 +226,7 @@ convertInsert ::
   ) =>
   UserInfo ->
   IR.AnnInsert ('Postgres pgKind) Void (UnpreparedValue ('Postgres pgKind)) ->
-  Bool ->
+  StringifyNumbers ->
   QueryTagsComment ->
   m (Tracing.TraceT (Q.TxET QErr IO) EncJSON)
 convertInsert userInfo insertOperation stringifyNum queryTags = do
@@ -269,7 +270,7 @@ pgDBMutationPlan ::
     MonadReader QueryTagsComment m
   ) =>
   UserInfo ->
-  Bool ->
+  StringifyNumbers ->
   SourceName ->
   SourceConfig ('Postgres pgKind) ->
   MutationDB ('Postgres pgKind) Void (UnpreparedValue ('Postgres pgKind)) ->

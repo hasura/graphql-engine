@@ -82,7 +82,7 @@ mkMutFldExp ::
   ) =>
   Identifier ->
   Maybe Int ->
-  Bool ->
+  StringifyNumbers ->
   MutFld ('Postgres pgKind) ->
   S.SQLExp
 mkMutFldExp cteAlias preCalAffRows strfyNum = \case
@@ -140,7 +140,7 @@ mkMutationOutputExp ::
   Maybe Int ->
   MutationCTE ->
   MutationOutput ('Postgres pgKind) ->
-  Bool ->
+  StringifyNumbers ->
   S.SelectWith
 mkMutationOutputExp qt allCols preCalAffRows cte mutOutput strfyNum =
   S.SelectWith
