@@ -206,6 +206,10 @@ html[data-theme='dark'] .admonition .admonition-icon svg {
   text-transform: capitalize;
 }
 
+.admonition a {
+  color: var(--ifm-alert-border-color);
+}
+
 pre code {
   background-color: var(--ifm-code-background);
 }
