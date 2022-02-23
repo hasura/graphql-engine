@@ -21,9 +21,9 @@ function Marker() {
       'background':'#ffff00',
       'borderRadius':'50%',
       'border': '3px solid black',
-      'padding': '2px',
-      'height':'30px',
-      'width':'30px',
+      'padding': '4px',
+      'height':'35px',
+      'width':'35px',
       'position':'relative',
     };
 
