@@ -178,6 +178,10 @@ html[data-theme='dark'] {
 
 /* Docusaurus Specific Styles */
 
+.markdown h1:first-child {
+  --ifm-h1-font-size: 2.5rem; /* 40px */
+}
+
 .docusaurus-highlight-code-line {
   background-color: rgba(0, 0, 0, 0.1);
   display: block;
