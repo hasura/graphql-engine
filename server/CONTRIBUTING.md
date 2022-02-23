@@ -137,7 +137,7 @@ The easiest way to run the Python integration test suite is by running:
 scripts/dev.sh test --integration
 ```
 
-For more details please check out the `README` at `server/tests-py/README`.
+For more details please check out the [README](./tests-py/README.md).
 
 ##### Running the Haskell test suite
 
@@ -183,6 +183,8 @@ docker-compose up
 ```sh
 cabal test tests-hspec --test-show-details=direct
 ```
+
+For more details please check out the [README](./tests-hspec/README.md).
 
 #### Building with profiling
 
