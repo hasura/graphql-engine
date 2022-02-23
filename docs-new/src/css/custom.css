@@ -49,6 +49,20 @@
 
 /* You can override the default Infima variables here. */
 :root {
+    /* Custom Variables */
+    --color-gray-0: #FFFFFF;
+    --color-gray-4: #F3F5F7;
+    --color-gray-8: #E7EBEF;
+    --color-gray-12: #DCE2E8;
+    --color-gray-16: #CFD8DF;
+    --color-gray-74: #344658;
+    --color-gray-78: #2C3B4B;
+    --color-gray-82: #23303D;
+    --color-gray-86: #1C262F;
+    --color-gray-90: #141C22;
+
+
+    /* Docusaurus Specific variables */
     --ifm-color-primary: #0B89D0;
     --ifm-color-primary-dark: #0079BD;
     --ifm-color-primary-darker: #005C8F;
@@ -111,13 +125,16 @@
     --ifm-color-gray-600: #74818A;
     --ifm-color-gray-700: #616D75;
     --ifm-color-gray-800: #404955;
-    --ifm-color-gray-900: #1B2738;
+    --ifm-color-gray-900: var(--color-gray-90);
+    /* --ifm-navbar-background-color; */
+    /* --ifm-background-color */
+    /* --ifm-footer-background-color: ; */
 
-    --ifm-color-white: #FFFFFF;
-    --ifm-color-black: #000000;
     --ifm-color-content-secondary: #616D75;
 
-    --ifm-code-background: #F8FCFF;
+    --ifm-link-color: #005BAE;
+    --ifm-code-background: var(--color-gray-0);
+
     --ifm-code-font-size: 1rem;
 
     /* --ifm-pre-color: inherit; */
@@ -150,6 +167,15 @@
     --ifm-footer-padding-vertical: 3rem;
 }
 
+html[data-theme='dark'] {
+  --ifm-link-color: #48ADF6;
+  /* --ifm-navbar-background-color; */
+  /* --ifm-background-color */
+  /* --ifm-footer-background-color: ; */
+  --ifm-code-background: var(--color-gray-86);
+}
+
+/* Docusaurus Specific Styles */
 
 .docusaurus-highlight-code-line {
   background-color: rgba(0, 0, 0, 0.1);
@@ -162,12 +188,17 @@ html[data-theme='dark'] .docusaurus-highlight-code-line {
   background-color: rgba(0, 0, 0, 0.3);
 }
 
-.no-shadow {
-  box-shadow: none !important;
+html[data-theme='dark'] .admonition.alert {
+  background-color: #292929;
 }
 
-html[data-theme='dark'] .no-shadow {
-  background-color: #fff;
+html[data-theme='dark'] .admonition .admonition-icon svg {
+  fill: var(--ifm-alert-border-color);
+  stroke: var(--ifm-alert-border-color);
+}
+
+.admonition .admonition-heading h5 {
+  text-transform: capitalize;
 }
 
 .footer__links {
@@ -188,6 +219,15 @@ html[data-theme='dark'] .no-shadow {
   display: none;
 } */
 
+
+/* Custom Styles */
+.no-shadow {
+  box-shadow: none !important;
+}
+
+html[data-theme='dark'] .no-shadow {
+  background-color: #fff;
+}
 
 /* Custom Components Styles */
 .custom_doc_layout_wrapper {
