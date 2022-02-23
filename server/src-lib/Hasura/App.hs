@@ -3,7 +3,7 @@
 module Hasura.App
   ( ExitCode (DatabaseMigrationError, DowngradeProcessError, MetadataCleanError, MetadataExportError, SchemaCacheInitError),
     ExitException (ExitException),
-    GlobalCtx (GlobalCtx, _gcDefaultPostgresConnInfo, _gcHttpManager, _gcMetadataDbConnInfo),
+    GlobalCtx (..),
     Loggers (..),
     PGMetadataStorageAppT (runPGMetadataStorageAppT),
     ServeCtx (ServeCtx, _scLoggers, _scMetadataDbPool, _scShutdownLatch),
@@ -224,8 +224,7 @@ mkPGLogger (Logger logger) (Q.PLERetryMsg msg) =
 
 -- | Context required for all graphql-engine CLI commands
 data GlobalCtx = GlobalCtx
-  { _gcHttpManager :: !HTTP.Manager,
-    _gcMetadataDbConnInfo :: !Q.ConnInfo,
+  { _gcMetadataDbConnInfo :: !Q.ConnInfo,
     -- | --database-url option, @'UrlConf' is required to construct default source configuration
     -- and optional retries
     _gcDefaultPostgresConnInfo :: !(Maybe (UrlConf, Q.ConnInfo), Maybe Int)
@@ -245,8 +244,6 @@ initGlobalCtx ::
   PostgresConnInfo (Maybe UrlConf) ->
   m GlobalCtx
 initGlobalCtx env metadataDbUrl defaultPgConnInfo = do
-  httpManager <- liftIO $ HTTP.newManager HTTP.tlsManagerSettings
-
   let PostgresConnInfo dbUrlConf maybeRetries = defaultPgConnInfo
       mkConnInfoFromSource dbUrl = do
         resolvePostgresConnInfo env dbUrl maybeRetries
@@ -256,7 +253,7 @@ initGlobalCtx env metadataDbUrl defaultPgConnInfo = do
          in (Q.ConnInfo retries . Q.CDDatabaseURI . txtToBs . T.pack) mdbUrl
 
       mkGlobalCtx mdbConnInfo sourceConnInfo =
-        pure $ GlobalCtx httpManager mdbConnInfo (sourceConnInfo, maybeRetries)
+        pure $ GlobalCtx mdbConnInfo (sourceConnInfo, maybeRetries)
 
   case (metadataDbUrl, dbUrlConf) of
     (Nothing, Nothing) ->
@@ -382,6 +379,7 @@ initialiseServeCtx env GlobalCtx {..} so@ServeOptions {..} = do
           soEventingMode
           soReadOnlyMode
 
+  schemaCacheHttpManager <- liftIO $ HTTP.newManager HTTP.tlsManagerSettings
   (rebuildableSchemaCache, _) <-
     lift . flip onException (flushLogger loggerCtx) $
       migrateCatalogSchema
@@ -389,7 +387,7 @@ initialiseServeCtx env GlobalCtx {..} so@ServeOptions {..} = do
         logger
         metadataDbPool
         maybeDefaultSourceConfig
-        _gcHttpManager
+        schemaCacheHttpManager
         serverConfigCtx
         (mkPgSourceResolver pgLogger)
         mkMSSQLSourceResolver
