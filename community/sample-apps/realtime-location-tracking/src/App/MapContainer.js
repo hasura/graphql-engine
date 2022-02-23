@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import GoogleMapReact from 'google-map-react';
-import { fitBounds } from 'google-map-react/utils';
+import { fitBounds } from 'google-map-react';
 import {
   GOOGLE_API_KEY,
   bounds,
