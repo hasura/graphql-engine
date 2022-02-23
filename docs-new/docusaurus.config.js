@@ -82,17 +82,37 @@ const config = {
           href: 'https://hasura.io'
         },
         items: [
+          // {
+          //   type: 'doc',
+          //   position: 'left',
+          //   docId: 'graphql/core/index',
+          //   label: 'Core',
+          // },
+          // {
+          //    type: 'docSidebar',
+          //    position: 'left',
+          //    sidebarId: 'cloudDocsSidebar',
+          //    label: 'Cloud',
+          // },
           {
-            type: 'doc',
+            to: 'https://hasura.io/products/',
+            label: 'Product',
             position: 'left',
-            docId: 'graphql/core/index',
-            label: 'Hasura Core',
           },
           {
-             type: 'docSidebar',
-             position: 'left',
-             sidebarId: 'cloudDocsSidebar',
-             label: 'Hasura Cloud',
+            to: 'https://hasura.io/blog/',
+            label: 'Blog',
+            position: 'left',
+          },
+          {
+            to: 'https://hasura.io/learn/',
+            label: 'Learn',
+            position: 'left',
+          },
+          {
+            to: 'https://hasura.io/pricing/',
+            label: 'Prcing',
+            position: 'left',
           },
           {
             type: 'docsVersionDropdown',
@@ -106,9 +126,21 @@ const config = {
             ],
           },
           {
-            href: 'https://github.com/hasura/graphql-engine',
-            label: 'GitHub',
+            to: 'https://hasura.io/contact-us/?type=hasuraenterprise',
+            label: 'Contact Sales',
             position: 'right',
+          },
+          {
+            to: 'https://cloud.hasura.io/login?pg=docs&plcmt=header&cta=log-in&tech=default',
+            label: 'Login',
+            position: 'right',
+            className: "nav-link_login",
+          },
+          {
+            to: 'https://cloud.hasura.io/signup?pg=products&plcmt=header&cta=try-hasura&tech=default',
+            label: 'Get Started',
+            position: 'right',
+            className: "nav-link_getting-started",
           },
         ],
       },

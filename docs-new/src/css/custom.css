@@ -155,6 +155,7 @@
     --ifm-global-shadow-tl: 0px 10px 30px rgba(0, 0, 0, 0.16);
 
     --doc-sidebar-width: 320px !important;
+    --ifm-navbar-height: 72px !important;
 
     --ifm-heading-line-height: 1.25;
     --ifm-h1-font-size: 2.5rem; /* 40px */
@@ -233,7 +234,33 @@ html[data-theme='dark'] .no-shadow {
   background-color: #fff;
 }
 
+/* navbar */
+.navbar__item.navbar__link {
+  font-size: 14px;
+  line-height: 20px;
+}
+
+.nav-link_login {
+  color: var(--ifm-color-primary);
+}
+
+.nav-link_getting-started {
+  font-weight: 500;
+  text-transform: capitalize;
+  white-space: nowrap;
+  background-color: var(--ifm-color-primary-light);
+  color: var(--color-gray-0);
+  border-radius: 4px;
+  padding: 0.5rem 1rem;
+  margin-right: 0.5rem;
+}
+.nav-link_getting-started:hover {
+  background-color: var(--ifm-color-primary-dark);
+  color: var(--color-gray-0);
+}
+
 /* Custom Components Styles */
 .custom_doc_layout_wrapper {
   padding-left: 1.5rem;
+  padding-right: 1.5rem;
 }
