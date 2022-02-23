@@ -163,7 +163,7 @@ The `teardown` function is responsible to destroy the local state as well, if ne
 
 #### Setup action
 
-A setup action is a function of type `(State, a) -> IO ()` which is responsible with
+A setup action is a function of type `(State, a) -> IO ()` which is responsible for
 creating the environment for the test. It needs to:
 
 1. Clear and reconfigure the metadata
