@@ -21,12 +21,4 @@ VERSION="${GIT_TAG_EXACT}"
 test -n "$VERSION" || VERSION="${GIT_BRANCH}-${GIT_SHA}${GIT_DIRTY}"
 
 VERSION="$(echo $VERSION | tr -cd '[[:alnum:]]._-')"
-
-# Sanity check: currently some parts of CI reference BUILDKITE_TAG, others call
-# this script again and these must agree.
-if [ -n "$BUILDKITE_TAG" ] && [ "$VERSION" != "$BUILDKITE_TAG" ]; then
-    echo "BUILDKITE_TAG is set as \"$BUILDKITE_TAG\" but somehow does not agree with repo tag \"$VERSION\"!" 1>&2
-    exit 1
-fi
-
 echo "$VERSION"
