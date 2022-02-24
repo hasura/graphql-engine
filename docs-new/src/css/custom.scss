@@ -219,6 +219,42 @@ pre code {
   background-color: var(--ifm-code-background);
 }
 
+.theme-edit-this-page {
+  display: flex;
+  align-items: center;
+  height: 30px;
+  color: var(--ifm-color-gray-900);
+  svg {
+    display: none;
+  }
+  &::before, &::after {
+    content: '';
+    display: inline-block;
+    transform: translateX(0);
+    transition: transform 0.3s linear;
+  }
+  &::before {
+    margin-right: 0.5rem;
+    background: url('/icons/github-dark.svg') no-repeat;
+    width: 24px;
+    height: 24px;
+  }
+  &::after {
+    margin-left: 0.25rem;
+    background: url('/icons/arrow_right.svg') no-repeat;
+    width: 1rem;
+    height: 1rem;
+    margin-bottom: -0.25rem;
+  }
+  &:hover {
+    text-decoration: none;
+    color: var(--ifm-color-gray-1000);
+    &::after {
+      transform: translateX(0.25rem);
+    }
+  }
+}
+
 .pagination-nav {
   .pagination-nav__item {
     background-color: var(--ifm-background-color);

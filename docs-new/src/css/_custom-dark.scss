@@ -30,6 +30,16 @@ html[data-theme='dark'] {
     }
   }
 
+  .theme-edit-this-page {
+    &::before, &::after {
+      filter: invert(1);
+    }
+    color: var(--ifm-color-gray-2);
+    &:hover {
+      color: var(--ifm-color-gray-0);
+    }
+  }
+
   .pagination-nav {
     .pagination-nav__item:not(:empty) {
       background-color: var(--color-gray-86);
