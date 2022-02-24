@@ -154,6 +154,11 @@
   --ifm-footer-background-color:var(--color-gray-8);
   --ifm-color-content-secondary:#616D75;
   --ifm-link-color:#0676C8;
+  --ifm-menu-color: var(--ifm-color-content);
+  --ifm-menu-color-active: var(--ifm-color-content);
+  --ifm-toc-link-color: var(--ifm-color-content);
+
+
   --ifm-code-background:var(--color-gray-0);
   --ifm-code-font-size:1rem;
 
@@ -191,6 +196,22 @@
 
 .theme-doc-sidebar-container {
   background-color: var(--color-gray-4);
+}
+
+.table-of-contents {
+  margin-left: 0;
+  padding-left: var(--ifm-toc-padding-horizontal);
+  .table-of-contents__link {
+    display: block;
+    font-size: 0.75rem;
+  }
+  .table-of-contents__link--active {
+    font-weight: var(--ifm-font-weight-bold);
+    border-left: 0.25rem solid var(--ifm-color-content-secondary);
+    color: var(--ifm-font-color-base);
+    margin-left: -1rem;
+    padding-left: 0.75rem;
+  }
 }
 
 .markdown h1:first-child {
