@@ -1,12 +1,15 @@
 import React, { Fragment } from 'react';
 import ActualDocPage from '@theme/DocItem';
 
+import styles from "./CustomDocLayout.module.css";
+
 import GraphQLWithHasuraBanner from "@site/src/components/GraphQLWithHasuraBanner/GraphQLWithHasuraBanner";
+import PageHelpful from "@site/src/components/PageHelpful/PageHelpful";
 
 const CustomDocLayout = (props) => (
-  <div className='custom_doc_layout_wrapper'>
+  <div className={styles["custom_doc_layout_wrapper"]}>
     <ActualDocPage {...props} />
-    Custom Doc Item Layout FOOTER - ideally "do u like this page?" kind of stuff.
+    <PageHelpful />
     <GraphQLWithHasuraBanner />
   </div>
 )

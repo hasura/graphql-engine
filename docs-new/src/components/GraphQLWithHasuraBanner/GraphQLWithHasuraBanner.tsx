@@ -7,7 +7,7 @@ import hasuraFree from "@site/static/img/hasura-free.png";
 
 const GraphQLWithHasuraBanner = () => {
   return (
-    <a className={styles["remove-text-decoration"]} href="https://cloud.hasura.io/signup?pg=learn&plcmt=body&cta=try-graphql-with-hasura&tech=default">
+    <a className={styles["remove-text-decoration"]} href="https://cloud.hasura.io/signup?pg=docs&plcmt=pre-footer&cta=try-graphql-with-hasura&tech=default">
       <div className={styles["graphql-with-hasura-wrapper"]}>
         <div className={styles["p40"]}>
           <h3>
