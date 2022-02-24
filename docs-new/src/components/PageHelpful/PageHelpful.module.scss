@@ -2,7 +2,7 @@
   margin: 40px 0;
 
   h4 {
-    color: rgb(27, 39, 56);
+    color: var(--ifm-color-content-secondary);
     text-align: center;
   }
 }
@@ -17,10 +17,14 @@
     margin: 0 12px;
     cursor: pointer;
     display: flex;
-
+    svg {
+      path, circle {
+        stroke: var(--ifm-color-content-secondary);
+      }
+    }
     &.active svg {
       path, circle {
-        stroke: #0079BD;
+        stroke: var(--ifm-link-color);
       }
     }
   }

@@ -186,12 +186,38 @@
   --ifm-footer-padding-vertical:3rem;
 }
 
+/* Dark Mode Styles */
 html[data-theme='dark'] {
   --ifm-link-color:#48ADF6;
   --ifm-navbar-background-color:var(--color-gray-82);
   --ifm-background-color:var(--color-gray-90);
   --ifm-code-background:var(--color-gray-86);
   --ifm-footer-background-color:var(--color-gray-82);
+
+  .no-shadow {
+    background-color: var(--color-gray-0);
+  }
+
+  .docusaurus-highlight-code-line {
+    background-color: rgba(0, 0, 0, 0.3);
+  }
+
+  .admonition {
+    &.alert {
+      background-color: var(--color-gray-86);
+    }
+
+    .admonition-icon svg {
+      fill: var(--ifm-alert-border-color);
+      stroke: var(--ifm-alert-border-color);
+    }
+  }
+
+  .pagination-nav {
+    .pagination-nav__item {
+      background-color: var(--color-gray-86);
+    }
+  }
 }
 
 /* Docusaurus Specific Styles */
@@ -207,22 +233,6 @@ html[data-theme='dark'] {
   padding: 0 var(--ifm-pre-padding);
 }
 
-html[data-theme='dark'] {
-  .docusaurus-highlight-code-line {
-    background-color: rgba(0, 0, 0, 0.3);
-  }
-
-  .admonition {
-    &.alert {
-      background-color: var(--color-gray-86);
-    }
-
-    .admonition-icon svg {
-      fill: var(--ifm-alert-border-color);
-      stroke: var(--ifm-alert-border-color);
-    }
-  }
-}
 
 .admonition {
   .admonition-heading h5 {
@@ -238,8 +248,23 @@ pre code {
   background-color: var(--ifm-code-background);
 }
 
-.pagination-nav__item .pagination-nav__sublabel {
-  display: none;
+.pagination-nav {
+  .pagination-nav__item {
+    background-color: var(--ifm-background-color);
+
+    .pagination-nav__link {
+      border-color: transparent;
+      box-shadow: var(--ifm-global-shadow-lw);
+      color: var(--ifm-color-content-secondary);
+    }
+    .pagination-nav__label {
+      font-size: 1rem;
+    }
+
+    .pagination-nav__sublabel {
+      display: none;
+    }
+  }
 }
 
 .footer__links {
@@ -264,10 +289,6 @@ pre code {
 
 .no-shadow {
   box-shadow: none !important;
-}
-
-html[data-theme='dark'] .no-shadow {
-  background-color: #fff;
 }
 
 /* navbar */
