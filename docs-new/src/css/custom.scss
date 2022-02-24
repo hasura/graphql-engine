@@ -3,6 +3,7 @@
  * bundles Infima by default. Infima is a CSS framework designed to
  * work well for content-centric websites.
  */
+ @use 'custom-dark';
 
  @font-face {
   font-family: "IBM Plex Sans";
@@ -184,45 +185,6 @@
   --ifm-h6-font-size:0.875rem; /* 14px */
 
   --ifm-footer-padding-vertical:3rem;
-}
-
-/* Dark Mode Styles */
-html[data-theme='dark'] {
-  --ifm-link-color:#48ADF6;
-  --ifm-navbar-background-color:var(--color-gray-82);
-  --ifm-background-color:var(--color-gray-90);
-  --ifm-code-background:var(--color-gray-86);
-  --ifm-footer-background-color:var(--color-gray-82);
-  --collapse-button-bg-color-dark: var(--color-gray-86);
-
-  .no-shadow {
-    background-color: var(--color-gray-0);
-  }
-
-  .theme-doc-sidebar-container {
-    background-color: var(--color-gray-86);
-  }
-
-  .docusaurus-highlight-code-line {
-    background-color: rgba(0, 0, 0, 0.3);
-  }
-
-  .admonition {
-    &.alert {
-      background-color: var(--color-gray-86);
-    }
-
-    .admonition-icon svg {
-      fill: var(--ifm-alert-border-color);
-      stroke: var(--ifm-alert-border-color);
-    }
-  }
-
-  .pagination-nav {
-    .pagination-nav__item:not(:empty) {
-      background-color: var(--color-gray-86);
-    }
-  }
 }
 
 /* Docusaurus Specific Styles */

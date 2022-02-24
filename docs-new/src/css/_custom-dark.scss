@@ -1,0 +1,38 @@
+/* Dark Mode Styles */
+html[data-theme='dark'] {
+  --ifm-link-color:#48ADF6;
+  --ifm-navbar-background-color:var(--color-gray-82);
+  --ifm-background-color:var(--color-gray-90);
+  --ifm-code-background:var(--color-gray-86);
+  --ifm-footer-background-color:var(--color-gray-82);
+  --collapse-button-bg-color-dark: var(--color-gray-86);
+
+  .no-shadow {
+    background-color: var(--color-gray-0);
+  }
+
+  .theme-doc-sidebar-container {
+    background-color: var(--color-gray-86);
+  }
+
+  .docusaurus-highlight-code-line {
+    background-color: rgba(0, 0, 0, 0.3);
+  }
+
+  .admonition {
+    &.alert {
+      background-color: var(--color-gray-86);
+    }
+
+    .admonition-icon svg {
+      fill: var(--ifm-alert-border-color);
+      stroke: var(--ifm-alert-border-color);
+    }
+  }
+
+  .pagination-nav {
+    .pagination-nav__item:not(:empty) {
+      background-color: var(--color-gray-86);
+    }
+  }
+}
