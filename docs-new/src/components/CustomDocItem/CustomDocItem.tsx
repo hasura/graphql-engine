@@ -1,17 +1,16 @@
 import React, { Fragment } from 'react';
-import ActualDocPage from '@theme/DocItem';
-
-import styles from "./CustomDocLayout.module.css";
+import ActualDocItem from '@theme/DocItem';
+import styles from "./CustomDocItem.module.css";
 
 import GraphQLWithHasuraBanner from "@site/src/components/GraphQLWithHasuraBanner/GraphQLWithHasuraBanner";
 import PageHelpful from "@site/src/components/PageHelpful/PageHelpful";
 
-const CustomDocLayout = (props) => (
+const CustomDocItem = (props) => (
   <div className={styles["custom_doc_layout_wrapper"]}>
-    <ActualDocPage {...props} />
+    <ActualDocItem {...props} />
     <PageHelpful />
     <GraphQLWithHasuraBanner />
   </div>
 )
 
-export default CustomDocLayout;
+export default CustomDocItem;
