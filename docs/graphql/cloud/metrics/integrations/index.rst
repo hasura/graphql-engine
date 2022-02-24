@@ -29,3 +29,4 @@ Check out the following guides for tutorials on how to integrate the following s
    Datadog <datadog> 
    New Relic <newrelic>
    Azure Monitor <azure-monitor>
+   Prometheus <prometheus>
