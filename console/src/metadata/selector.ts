@@ -5,10 +5,7 @@ import { TableEntry, DataSource } from './types';
 import { filterInconsistentMetadataObjects } from '../components/Services/Settings/utils';
 import { parseCustomTypes } from '../shared/utils/hasuraCustomTypeUtils';
 import { Driver, drivers } from '../dataSources';
-import {
-  EventTrigger,
-  ScheduledTrigger,
-} from '../components/Services/Events/types';
+import { EventTrigger } from '../components/Services/Events/types';
 
 export const getDataSourceMetadata = (state: ReduxState) => {
   const currentDataSource = state.tables?.currentDataSource;
@@ -351,27 +348,6 @@ export const getEventTriggerByName = createSelector(
     return null;
   }
 );
-
-export const getCronTriggers = createSelector(getMetadata, metadata => {
-  const cronTriggers: ScheduledTrigger[] = (metadata?.cron_triggers || []).map(
-    cron => ({
-      name: cron.name,
-      payload: cron.payload,
-      retry_conf: {
-        num_retries: cron.retry_conf?.num_retries,
-        retry_interval_seconds: cron.retry_conf?.retry_interval_seconds,
-        timeout_seconds: cron.retry_conf?.timeout_seconds,
-        tolerance_seconds: cron.retry_conf?.tolerance_seconds,
-      },
-      header_conf: cron.headers,
-      webhook_conf: cron.webhook,
-      cron_schedule: cron.schedule,
-      include_in_metadata: cron.include_in_metadata,
-      comment: cron.comment,
-    })
-  );
-  return cronTriggers || [];
-});
 
 export const getAllowedQueries = (state: ReduxState) =>
   state.metadata.allowedQueries || [];
