@@ -124,6 +124,22 @@ export type ScheduledTrigger = {
   comment: Nullable<string>;
 };
 
+export type CronTriggerAPIResult = {
+  schedule: string;
+  payload: unknown;
+  headers: ServerHeader[];
+  name: string;
+  retry_conf: {
+    num_retries: number;
+    timeout_seconds: number;
+    tolerance_seconds: number;
+    retry_interval_seconds: number;
+  };
+  webhook: string;
+  include_in_metadata: boolean;
+  comment: Nullable<string>;
+};
+
 /*
  * Redux State Type for Event and Scheduled Triggers
  */

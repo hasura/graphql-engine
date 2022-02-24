@@ -382,6 +382,7 @@ library
                      , Hasura.Backends.MSSQL.DDL.BoolExp
                      , Hasura.Backends.MSSQL.DDL.RunSQL
                      , Hasura.Backends.MSSQL.DDL.Source
+                     , Hasura.Backends.MSSQL.DDL.Source.Version
                      , Hasura.Backends.MSSQL.Execute.MutationResponse
                      , Hasura.Backends.MSSQL.Execute.Delete
                      , Hasura.Backends.MSSQL.Execute.Insert
@@ -976,6 +977,7 @@ test-suite tests-hspec
  -- Harness
     Harness.Constants
     Harness.Env
+    Harness.Exceptions
     Harness.GraphqlEngine
     Harness.Http
     Harness.RemoteServer

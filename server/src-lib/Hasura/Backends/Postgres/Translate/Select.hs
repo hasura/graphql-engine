@@ -145,7 +145,7 @@ selectFromToQual = \case
   FromIdentifier i -> S.QualifiedIdentifier (toIdentifier i) Nothing
   FromFunction qf _ _ -> S.QualifiedIdentifier (functionToIdentifier qf) Nothing
 
-aggregateFieldToExp :: AggregateFields ('Postgres pgKind) -> Bool -> S.SQLExp
+aggregateFieldToExp :: AggregateFields ('Postgres pgKind) -> StringifyNumbers -> S.SQLExp
 aggregateFieldToExp aggFlds strfyNum = jsonRow
   where
     jsonRow = S.applyJsonBuildObj (concatMap aggToFlds aggFlds)
@@ -568,7 +568,7 @@ withWriteComputedFieldTableSet action =
 
 processAnnSimpleSelect ::
   forall pgKind m.
-  ( MonadReader Bool m,
+  ( MonadReader StringifyNumbers m,
     MonadWriter JoinTree m,
     Backend ('Postgres pgKind),
     PostgresAnnotatedFieldJSON pgKind
@@ -601,7 +601,7 @@ processAnnSimpleSelect sourcePrefixes fieldAlias permLimitSubQuery annSimpleSel 
 
 processAnnAggregateSelect ::
   forall pgKind m.
-  ( MonadReader Bool m,
+  ( MonadReader StringifyNumbers m,
     MonadWriter JoinTree m,
     Backend ('Postgres pgKind),
     PostgresAnnotatedFieldJSON pgKind
@@ -695,7 +695,7 @@ mkPermissionLimitSubQuery permLimit aggFields orderBys =
 
 processArrayRelation ::
   forall pgKind m.
-  ( MonadReader Bool m,
+  ( MonadReader StringifyNumbers m,
     MonadWriter JoinTree m,
     Backend ('Postgres pgKind),
     PostgresAnnotatedFieldJSON pgKind
@@ -766,7 +766,7 @@ Otherwise:
 
 processSelectParams ::
   forall pgKind m.
-  ( MonadReader Bool m,
+  ( MonadReader StringifyNumbers m,
     MonadWriter JoinTree m,
     Backend ('Postgres pgKind)
   ) =>
@@ -829,7 +829,7 @@ processSelectParams
 
 processOrderByItems ::
   forall pgKind m.
-  ( MonadReader Bool m,
+  ( MonadReader StringifyNumbers m,
     MonadWriter JoinTree m,
     Backend ('Postgres pgKind)
   ) =>
@@ -1094,7 +1094,7 @@ instance PostgresAnnotatedFieldJSON 'Citus where
 
 processAnnFields ::
   forall pgKind m.
-  ( MonadReader Bool m,
+  ( MonadReader StringifyNumbers m,
     MonadWriter JoinTree m,
     Backend ('Postgres pgKind),
     PostgresAnnotatedFieldJSON pgKind
@@ -1210,7 +1210,7 @@ processAnnFields sourcePrefix fieldAlias similarArrFields annFields = do
     mkNodeId :: QualifiedTable -> PrimaryKeyColumns ('Postgres pgKind) -> S.SQLExp
     mkNodeId (QualifiedObject tableSchema tableName) pkeyColumns =
       let columnInfoToSQLExp pgColumnInfo =
-            toJSONableExp False (ciType pgColumnInfo) False $
+            toJSONableExp LeaveNumbersAlone (ciType pgColumnInfo) False $
               S.mkQIdenExp (mkBaseTableAlias sourcePrefix) $ ciColumn pgColumnInfo
        in -- See Note [Relay Node id].
           encodeBase64 $
@@ -1475,7 +1475,7 @@ encodeBase64 =
 
 processConnectionSelect ::
   forall pgKind m.
-  ( MonadReader Bool m,
+  ( MonadReader StringifyNumbers m,
     MonadWriter JoinTree m,
     Backend ('Postgres pgKind),
     PostgresAnnotatedFieldJSON pgKind
@@ -1535,7 +1535,7 @@ processConnectionSelect sourcePrefixes fieldAlias relAlias colMapping connection
         flip concatMap (toList primaryKeyColumns) $
           \pgColumnInfo ->
             [ S.SELit $ getPGColTxt $ ciColumn pgColumnInfo,
-              toJSONableExp False (ciType pgColumnInfo) False $
+              toJSONableExp LeaveNumbersAlone (ciType pgColumnInfo) False $
                 S.mkQIdenExp (mkBaseTableAlias thisPrefix) $ ciColumn pgColumnInfo
             ]
 
@@ -1588,7 +1588,7 @@ processConnectionSelect sourcePrefixes fieldAlias relAlias colMapping connection
 
     processFields ::
       forall n.
-      ( MonadReader Bool n,
+      ( MonadReader StringifyNumbers n,
         MonadWriter JoinTree n,
         MonadState [(S.Alias, S.SQLExp)] n
       ) =>

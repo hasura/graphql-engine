@@ -1,22 +1,32 @@
 import React from 'react';
 import { connect, ConnectedProps } from 'react-redux';
 import STContainer from '../Container';
-import { Triggers, RouterTriggerProps } from '../../types';
+import { RouterTriggerProps } from '../../types';
 import { MapStateToProps } from '../../../../../types';
 import PendingEvents from './PendingEvents';
 import { mapDispatchToPropsEmpty } from '../../../../Common/utils/reactUtils';
-import { getCronTriggers } from '../../../../../metadata/selector';
+import { useGetCronTriggers } from '../Hooks/useGetCronTriggers';
 
 interface Props extends InjectedProps {}
 
 const PendingEventsContainer: React.FC<Props> = props => {
-  const { dispatch, allTriggers, triggerName } = props;
+  const { data: cronTriggers, isLoading, error } = useGetCronTriggers();
+  if (isLoading) {
+    return <span>Loading...</span>;
+  }
+  if (!cronTriggers) {
+    return <span>Could not find any cron triggers</span>;
+  }
+  if (error) {
+    return <span>There was an error, please try again later</span>;
+  }
+  const { dispatch, triggerName } = props;
   return (
     <STContainer
       tabName="pending"
       dispatch={dispatch}
       triggerName={triggerName}
-      allTriggers={allTriggers}
+      allTriggers={cronTriggers}
     >
       <PendingEvents dispatch={dispatch} />
     </STContainer>
@@ -24,7 +34,6 @@ const PendingEventsContainer: React.FC<Props> = props => {
 };
 
 type PropsFromState = {
-  allTriggers: Triggers;
   triggerName: string;
 };
 
@@ -33,7 +42,6 @@ const mapStateToProps: MapStateToProps<PropsFromState, RouterTriggerProps> = (
   ownProps
 ) => {
   return {
-    allTriggers: getCronTriggers(state),
     triggerName: ownProps.params.triggerName,
   };
 };

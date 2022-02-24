@@ -46,6 +46,7 @@ module Hasura.RQL.Types.Common
     Comment (..),
     commentToMaybeText,
     commentFromMaybeText,
+    StringifyNumbers (..),
   )
 where
 
@@ -238,11 +239,16 @@ isSystemDefined :: SystemDefined -> Bool
 isSystemDefined = unSystemDefined
 
 data SQLGenCtx = SQLGenCtx
-  { stringifyNum :: Bool,
+  { stringifyNum :: StringifyNumbers,
     dangerousBooleanCollapse :: Bool,
     optimizePermissionFilters :: Bool
   }
   deriving (Show, Eq)
+
+data StringifyNumbers
+  = StringifyNumbers
+  | LeaveNumbersAlone
+  deriving (Eq, Show)
 
 successMsg :: EncJSON
 successMsg = "{\"message\":\"success\"}"

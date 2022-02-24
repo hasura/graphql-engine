@@ -2075,6 +2075,35 @@ RequestTransformation
      - :ref:`TemplateEngine`
      - Template language to be used for this transformation. Default: "Kriti"
 
+.. note::
+
+   HGE provides the following functions that can be used in the template:
+
+   - ``not``: This function takes a boolean and returns its negation.
+
+     eg::
+
+        > {{not true}}
+        false
+   
+   - ``escapeUri``: This function takes a string and escapes it as per URI specification.
+
+     eg::
+
+        > {{ escapeUri "?foo=bar/baz" }}
+        "%3Ffoo%3Dbar%2Fbaz"
+        
+
+   - ``getSessionVariable``: This function takes a string and returns the session variable of the given name. This function can throw the following errors:
+
+     - Session variable {variable name} not found
+     - Session variable name should be a string
+
+     eg::
+
+        > {{getSessionVariable "myVariableName"}}
+        "myVariableValue"
+
 .. _TransformHeaders:
 
 TransformHeaders

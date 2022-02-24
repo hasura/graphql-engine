@@ -88,7 +88,7 @@ data RemoteRelationshipQueryContext = RemoteRelationshipQueryContext
   }
 
 data QueryContext = QueryContext
-  { qcStringifyNum :: Bool,
+  { qcStringifyNum :: StringifyNumbers,
     -- | should boolean fields be collapsed to True when null is given?
     qcDangerousBooleanCollapse :: Bool,
     qcQueryType :: ET.GraphQLQueryType,

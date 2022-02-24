@@ -81,7 +81,7 @@ class
       MonadReader QueryTagsComment m
     ) =>
     UserInfo ->
-    Bool ->
+    StringifyNumbers ->
     SourceName ->
     SourceConfig b ->
     MutationDB b Void (UnpreparedValue b) ->
@@ -197,7 +197,7 @@ convertRemoteSourceRelationship
             _asnFrom = selectFrom,
             _asnPerm = TablePerm annBoolExpTrue Nothing,
             _asnArgs = noSelectArgs,
-            _asnStrfyNum = False
+            _asnStrfyNum = LeaveNumbersAlone
           }
 
 data DBStepInfo b = DBStepInfo

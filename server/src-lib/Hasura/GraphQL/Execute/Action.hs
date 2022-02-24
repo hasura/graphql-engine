@@ -664,7 +664,7 @@ processOutputSelectionSet ::
   GraphQLType ->
   [(PGCol, PGScalarType)] ->
   RS.ActionFieldsG ('Postgres 'Vanilla) r v ->
-  Bool ->
+  StringifyNumbers ->
   RS.AnnSimpleSelectG ('Postgres 'Vanilla) r v
 processOutputSelectionSet tableRowInput actionOutputType definitionList actionFields =
   RS.AnnSelectG annotatedFields selectFrom RS.noTablePermissions RS.noSelectArgs

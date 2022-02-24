@@ -24,6 +24,7 @@ module Harness.Constants
     sqlserverLivenessCheckIntervalSeconds,
     sqlserverLivenessCheckIntervalMicroseconds,
     sqlserverConnectInfo,
+    bigqueryServiceAccountFileVar,
     bigqueryServiceAccountVar,
     bigqueryProjectIdVar,
     httpHealthCheckAttempts,
@@ -47,6 +48,7 @@ import Hasura.RQL.Types
   ( FunctionPermissionsCtx (FunctionPermissionsInferred),
     RemoteSchemaPermsCtx (RemoteSchemaPermsDisabled),
   )
+import Hasura.RQL.Types.Common (StringifyNumbers (..))
 import Hasura.Server.Cors (CorsConfig (CCAllowAll))
 import Hasura.Server.Init
   ( API (CONFIG, DEVELOPER, GRAPHQL, METADATA),
@@ -185,6 +187,9 @@ mysqlConnectInfo =
       Mysql.connectPort = mysqlPort
     }
 
+bigqueryServiceAccountFileVar :: String
+bigqueryServiceAccountFileVar = "HASURA_BIGQUERY_SERVICE_ACCOUNT_FILE"
+
 bigqueryServiceAccountVar :: String
 bigqueryServiceAccountVar = "HASURA_BIGQUERY_SERVICE_ACCOUNT"
 
@@ -221,7 +226,7 @@ serveOptions =
       soEnableConsole = True,
       soConsoleAssetsDir = Nothing,
       soEnableTelemetry = False,
-      soStringifyNum = True,
+      soStringifyNum = StringifyNumbers,
       soDangerousBooleanCollapse = False,
       soEnabledAPIs = testSuiteEnabledApis,
       soLiveQueryOpts = LQ.mkLiveQueriesOptions Nothing Nothing,

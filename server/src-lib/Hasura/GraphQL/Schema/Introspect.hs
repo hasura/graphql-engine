@@ -247,7 +247,7 @@ collectTypes ::
   forall m a.
   (MonadError QErr m, P.HasTypeDefinitions a) =>
   a ->
-  m (HashMap G.Name (P.Definition P.SomeTypeInfo))
+  m (HashMap G.Name P.SomeDefinitionTypeInfo)
 collectTypes x =
   P.collectTypeDefinitions x
     `onLeft` \(P.ConflictingDefinitions (type1, origin1) (_type2, origins)) ->
@@ -273,8 +273,8 @@ typeIntrospection = do
   -- introspection-free GraphQL schema.  See Note [What introspection exposes].
   pure $ \partialSchema -> fromMaybe J.Null $ do
     name <- G.mkName nameText
-    P.Definition n d (P.SomeTypeInfo i) <- Map.lookup name $ sTypes partialSchema
-    Just $ printer $ SomeType $ P.TNamed P.Nullable $ P.Definition n d i
+    P.SomeDefinitionTypeInfo def <- Map.lookup name $ sTypes partialSchema
+    Just $ printer $ SomeType $ P.TNamed P.Nullable def
 
 -- | Generate a __schema introspection parser.
 schema ::
@@ -370,9 +370,9 @@ typeField =
             SomeType tp ->
               case tp of
                 P.TNamed P.Nullable (P.Definition _ _ (P.TIObject (P.ObjectInfo fields' _interfaces'))) ->
-                  J.Array $ V.fromList $ printer <$> sortOn P.dName fields'
+                  J.Array $ V.fromList $ printer <$> fields'
                 P.TNamed P.Nullable (P.Definition _ _ (P.TIInterface (P.InterfaceInfo fields' _objects'))) ->
-                  J.Array $ V.fromList $ printer <$> sortOn P.dName fields'
+                  J.Array $ V.fromList $ printer <$> fields'
                 _ -> J.Null
       interfaces :: FieldParser n (SomeType -> J.Value)
       interfaces = do
@@ -382,7 +382,7 @@ typeField =
             SomeType tp ->
               case tp of
                 P.TNamed P.Nullable (P.Definition _ _ (P.TIObject (P.ObjectInfo _fields' interfaces'))) ->
-                  J.Array $ V.fromList $ printer . SomeType . P.TNamed P.Nullable . fmap P.TIInterface <$> sortOn P.dName interfaces'
+                  J.Array $ V.fromList $ printer . SomeType . P.TNamed P.Nullable . fmap P.TIInterface <$> interfaces'
                 _ -> J.Null
       possibleTypes :: FieldParser n (SomeType -> J.Value)
       possibleTypes = do
@@ -392,9 +392,9 @@ typeField =
             SomeType tp ->
               case tp of
                 P.TNamed P.Nullable (P.Definition _ _ (P.TIInterface (P.InterfaceInfo _fields' objects'))) ->
-                  J.Array $ V.fromList $ printer . SomeType . P.TNamed P.Nullable . fmap P.TIObject <$> sortOn P.dName objects'
+                  J.Array $ V.fromList $ printer . SomeType . P.TNamed P.Nullable . fmap P.TIObject <$> objects'
                 P.TNamed P.Nullable (P.Definition _ _ (P.TIUnion (P.UnionInfo objects'))) ->
-                  J.Array $ V.fromList $ printer . SomeType . P.TNamed P.Nullable . fmap P.TIObject <$> sortOn P.dName objects'
+                  J.Array $ V.fromList $ printer . SomeType . P.TNamed P.Nullable . fmap P.TIObject <$> objects'
                 _ -> J.Null
       enumValues :: FieldParser n (SomeType -> J.Value)
       enumValues = do
@@ -405,7 +405,7 @@ typeField =
             SomeType tp ->
               case tp of
                 P.TNamed P.Nullable (P.Definition _ _ (P.TIEnum vals)) ->
-                  J.Array $ V.fromList $ fmap printer $ sortOn P.dName $ toList vals
+                  J.Array $ V.fromList $ fmap printer $ toList vals
                 _ -> J.Null
       inputFields :: FieldParser n (SomeType -> J.Value)
       inputFields = do
@@ -415,7 +415,7 @@ typeField =
             SomeType tp ->
               case tp of
                 P.TNamed P.Nullable (P.Definition _ _ (P.TIInputObject (P.InputObjectInfo fieldDefs))) ->
-                  J.Array $ V.fromList $ map printer $ sortOn P.dName fieldDefs
+                  J.Array $ V.fromList $ map printer fieldDefs
                 _ -> J.Null
       -- ofType peels modalities off of types
       ofType :: FieldParser n (SomeType -> J.Value)
@@ -698,13 +698,11 @@ schemaSet =
             J.Array $
               V.fromList $
                 map (printer . schemaTypeToSomeType) $
-                  sortOn P.dName $ Map.elems $ sTypes partialSchema
+                  sortOn P.getName $ Map.elems $ sTypes partialSchema
         where
-          schemaTypeToSomeType ::
-            P.Definition P.SomeTypeInfo ->
-            SomeType
-          schemaTypeToSomeType (P.Definition n d (P.SomeTypeInfo i)) =
-            SomeType $ P.TNamed P.Nullable (P.Definition n d i)
+          schemaTypeToSomeType :: P.SomeDefinitionTypeInfo -> SomeType
+          schemaTypeToSomeType (P.SomeDefinitionTypeInfo def) =
+            SomeType $ P.TNamed P.Nullable def
       queryType :: FieldParser n (Schema -> J.Value)
       queryType = do
         printer <- P.subselection_ $$(G.litName "queryType") Nothing typeField

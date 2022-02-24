@@ -85,11 +85,6 @@ newtype FromIr a = FromIr
   }
   deriving (Functor, Applicative, Monad, MonadValidate (NonEmpty Error))
 
-data StringifyNumbers
-  = StringifyNumbers
-  | LeaveNumbersAlone
-  deriving (Eq)
-
 --------------------------------------------------------------------------------
 -- Runners
 
@@ -184,15 +179,11 @@ fromSelectRows annSelectG = do
         _asnFrom = from,
         _asnPerm = perm,
         _asnArgs = args,
-        _asnStrfyNum = num
+        _asnStrfyNum = stringifyNumbers
       } = annSelectG
     IR.TablePerm {_tpLimit = mPermLimit, _tpFilter = permFilter} = perm
     permissionBasedTop =
       maybe NoTop Top mPermLimit
-    stringifyNumbers =
-      if num
-        then StringifyNumbers
-        else LeaveNumbersAlone
 
 mkNodesSelect :: Args -> Where -> Expression -> Top -> From -> [(Int, (IR.FieldName, [FieldSource]))] -> [(Int, Projection)]
 mkNodesSelect Args {..} foreignKeyConditions filterExpression permissionBasedTop selectFrom nodes =
@@ -284,7 +275,7 @@ fromSelectAggregate
       _asnFrom = from,
       _asnPerm = IR.TablePerm {_tpLimit = (maybe NoTop Top -> permissionBasedTop), _tpFilter = permFilter},
       _asnArgs = args,
-      _asnStrfyNum = (bool LeaveNumbersAlone StringifyNumbers -> stringifyNumbers)
+      _asnStrfyNum = stringifyNumbers
     } =
     do
       selectFrom <- case from of
@@ -654,7 +645,7 @@ fromTableAggFieldG = \case
 
 fromTableNodesFieldG ::
   Map TableName EntityAlias ->
-  StringifyNumbers ->
+  IR.StringifyNumbers ->
   (Int, (IR.FieldName, IR.TableAggregateFieldG 'MSSQL Void Expression)) ->
   Maybe (ReaderT EntityAlias FromIr (Int, (IR.FieldName, [FieldSource])))
 fromTableNodesFieldG argsExistingJoins stringifyNumbers = \case
@@ -694,7 +685,7 @@ fromAggregateField alias aggregateField =
 -- | The main sources of fields, either constants, fields or via joins.
 fromAnnFieldsG ::
   Map TableName EntityAlias ->
-  StringifyNumbers ->
+  IR.StringifyNumbers ->
   (IR.FieldName, IR.AnnFieldG 'MSSQL Void Expression) ->
   ReaderT EntityAlias FromIr FieldSource
 fromAnnFieldsG existingJoins stringifyNumbers (IR.FieldName name, field) =
@@ -730,13 +721,13 @@ fromAnnFieldsG existingJoins stringifyNumbers (IR.FieldName name, field) =
 -- number stringification is on, then we wrap it in a
 -- 'ToStringExpression' so that it's casted when being projected.
 fromAnnColumnField ::
-  StringifyNumbers ->
+  IR.StringifyNumbers ->
   IR.AnnColumnField 'MSSQL Expression ->
   ReaderT EntityAlias FromIr Expression
 fromAnnColumnField _stringifyNumbers annColumnField = do
   fieldName <- fromColumn column
   -- TODO: Handle stringifying large numbers
-  {-(IR.isScalarColumnWhere isBigNum typ && stringifyNumbers == StringifyNumbers)-}
+  {-(IR.isScalarColumnWhere isBigNum typ && stringifyNumbers == IR.StringifyNumbers)-}
 
   -- for geometry and geography values, the automatic json encoding on sql
   -- server would fail. So we need to convert it to a format the json encoding
@@ -818,7 +809,7 @@ fromObjectRelationSelectG existingJoins annRelationSelectG = do
   fieldSources <-
     local
       (const entityAlias)
-      (traverse (fromAnnFieldsG mempty LeaveNumbersAlone) fields)
+      (traverse (fromAnnFieldsG mempty IR.LeaveNumbersAlone) fields)
   let selectProjections = map fieldSourceProjections fieldSources
   joinJoinAlias <-
     do
