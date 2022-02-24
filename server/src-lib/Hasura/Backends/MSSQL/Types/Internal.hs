@@ -104,12 +104,14 @@ import Data.Aeson qualified as J
 import Data.Text.Encoding (encodeUtf8)
 import Database.ODBC.SQLServer qualified as ODBC
 import Hasura.Base.Error
+import Hasura.Incremental (Cacheable)
 import Hasura.Prelude
 import Hasura.RQL.Types.Common qualified as RQL
 import Hasura.SQL.Backend
 import Hasura.SQL.GeoJSON qualified as Geo
 import Hasura.SQL.WKT qualified as WKT
 import Language.GraphQL.Draft.Syntax qualified as G
+import Language.Haskell.TH.Syntax (Lift)
 
 --------------------------------------------------------------------------------
 -- Phantom pretend-generic types that are actually specific
@@ -467,13 +469,12 @@ data Aliased a = Aliased
     aliasedAlias :: Text
   }
 
-newtype SchemaName = SchemaName
-  { schemaNameParts :: [Text]
-  }
+newtype SchemaName = SchemaName {_unSchemaName :: Text}
+  deriving (Show, Eq, Ord, Data, J.ToJSON, J.FromJSON, NFData, Generic, Cacheable, IsString, Hashable, Lift)
 
 data TableName = TableName
-  { tableName :: Text,
-    tableSchema :: Text
+  { tableName :: !Text,
+    tableSchema :: !SchemaName
   }
 
 data FieldName = FieldName
@@ -668,7 +669,7 @@ getGQLTableName tn = do
       "cannot include " <> textName <> " in the GraphQL schema because it is not a valid GraphQL identifier"
 
 snakeCaseTableName :: TableName -> Text
-snakeCaseTableName TableName {tableName, tableSchema} =
+snakeCaseTableName (TableName tableName (SchemaName tableSchema)) =
   if tableSchema == "dbo"
     then tableName
     else tableSchema <> "_" <> tableName

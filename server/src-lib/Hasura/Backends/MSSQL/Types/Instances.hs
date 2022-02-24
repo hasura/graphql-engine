@@ -162,7 +162,7 @@ instance ToTxt ScalarType where
   toTxt = tshow -- TODO: include schema
 
 instance ToTxt TableName where
-  toTxt TableName {tableName, tableSchema} =
+  toTxt (TableName tableName (SchemaName tableSchema)) =
     if tableSchema == "dbo"
       then tableName
       else tableSchema <> "." <> tableName
@@ -200,7 +200,7 @@ instance ToJSON TableName where
   toJSON = genericToJSON hasuraJSON
 
 instance ToJSONKey TableName where
-  toJSONKey = toJSONKeyText $ \(TableName schema name) -> schema <> "." <> name
+  toJSONKey = toJSONKeyText $ \(TableName name (SchemaName schema)) -> schema <> "." <> name
 
 instance ToJSONKey ScalarType
 
