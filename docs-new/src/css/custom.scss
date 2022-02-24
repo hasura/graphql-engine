@@ -214,7 +214,7 @@ html[data-theme='dark'] {
   }
 
   .pagination-nav {
-    .pagination-nav__item {
+    .pagination-nav__item:not(:empty) {
       background-color: var(--color-gray-86);
     }
   }
