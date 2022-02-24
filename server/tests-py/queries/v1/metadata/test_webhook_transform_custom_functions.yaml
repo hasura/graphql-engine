@@ -1,0 +1,79 @@
+- description: Test Webhook Transform getSessionVariable function | success
+  url: /v1/metadata
+  headers:
+    X-Hasura-Role: admin
+  status: 200
+  response:
+    body: some value
+    headers: []
+    method: GET
+    webhook_url: http://localhost:1234/
+  query:
+    type: test_webhook_transform
+    args:
+      webhook_url: http://localhost:1234
+      body:
+        hello: world
+      session_variables:
+        myVariable: some value
+      request_transform:
+        body: '{{ getSessionVariable "myVariable" }}'
+        template_engine: Kriti
+
+- description: Test Webhook Transform getSessionVariable function | non existant session variable
+  url: /v1/metadata
+  headers:
+    X-Hasura-Role: admin
+  status: 200
+  response:
+    body:
+    - error_code: Function Error
+      source_position:
+        end_column: 51
+        start_line: 0
+        end_line: 0
+        start_column: 23
+      message: Session variable "this_variable_doesnt_exist" not found
+    headers: []
+    method: GET
+    webhook_url: http://localhost:1234/
+  query:
+    type: test_webhook_transform
+    args:
+      webhook_url: http://localhost:1234
+      body:
+        hello: world
+      session_variables:
+        myVariable: some value
+      request_transform:
+        body: '{{ getSessionVariable "this_variable_doesnt_exist" }}'
+        template_engine: Kriti
+
+- description: Test Webhook Transform function | wrong function name
+  url: /v1/metadata
+  headers:
+    X-Hasura-Role: admin
+  status: 200
+  response:
+    body:
+    - error_code: Function Error
+      source_position:
+        end_column: 15
+        start_line: 0
+        end_line: 0
+        start_column: 4
+      message: Function fooFunction is not defined.
+    headers: []
+    method: GET
+    webhook_url: http://localhost:1234/
+  query:
+    type: test_webhook_transform
+    args:
+      webhook_url: http://localhost:1234
+      body:
+        hello: world
+      session_variables:
+        myVariable: some value
+      request_transform:
+        body: '{{ fooFunction "myVariable" }}'
+        template_engine: Kriti

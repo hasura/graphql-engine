@@ -238,6 +238,9 @@ class TestMetadata:
     def test_webhook_transform_bad_eval(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/test_webhook_transform_bad_eval.yaml')
 
+    def test_webhook_transform_custom_functions(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/test_webhook_transform_custom_functions.yaml')
+
     @pytest.mark.skipif(
         os.getenv('HASURA_GRAPHQL_PG_SOURCE_URL_1') == os.getenv('HASURA_GRAPHQL_PG_SOURCE_URL_2') or
         os.getenv('HASURA_GRAPHQL_PG_SOURCE_URL_1') is None or

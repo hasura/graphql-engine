@@ -37,9 +37,9 @@ import Data.Text.Encoding qualified as TE
 import Data.Validation qualified as V
 import Hasura.Incremental (Cacheable)
 import Hasura.Prelude hiding (first)
-import Hasura.Session (SessionVariables)
-import Kriti (SerializedError (..), runKriti)
-import Kriti.Error (serialize)
+import Hasura.Session (SessionVariables, getSessionVariableValue, mkSessionVariable)
+import Kriti (SerializedError (..), runKriti, runKritiWith)
+import Kriti.Error (CustomFunctionError (..), serialize)
 import Kriti.Parser (parser)
 import Network.HTTP.Client.Transformable qualified as HTTP
 import Network.URI qualified as URI
@@ -73,7 +73,8 @@ data ReqTransformCtx = ReqTransformCtx
   { tcUrl :: Maybe J.Value,
     tcBody :: J.Value,
     tcSessionVars :: J.Value,
-    tcQueryParams :: Maybe J.Value
+    tcQueryParams :: Maybe J.Value,
+    tcFunctions :: M.HashMap T.Text (J.Value -> Either CustomFunctionError J.Value)
   }
 
 instance J.ToJSON ReqTransformCtx where
@@ -441,7 +442,7 @@ mkReqTemplateTransform :: TemplatingEngine -> TemplateText -> ReqTransformCtx ->
 mkReqTemplateTransform engine (TemplateText template) ReqTransformCtx {..} =
   let context = [("$body", tcBody), ("$session_variables", tcSessionVars)] <> catMaybes [("$query_params",) <$> tcQueryParams, ("$base_url",) <$> tcUrl]
    in case engine of
-        Kriti -> first (TransformErrorBundle . pure . J.toJSON . serialize) $ runKriti template context
+        Kriti -> first (TransformErrorBundle . pure . J.toJSON . serialize) $ runKritiWith (template) context tcFunctions
 
 -- | Construct a Template Transformation function for Responses
 mkRespTemplateTransform :: TemplatingEngine -> TemplateText -> RespTransformCtx -> Either TransformErrorBundle J.Value
@@ -456,8 +457,19 @@ buildReqTransformCtx url sessionVars reqData =
     { tcUrl = Just $ J.toJSON url,
       tcBody = fromMaybe J.Null $ J.decode @J.Value =<< view HTTP.body reqData,
       tcSessionVars = J.toJSON sessionVars,
-      tcQueryParams = Just $ J.toJSON $ bimap TE.decodeUtf8 (fmap TE.decodeUtf8) <$> view HTTP.queryParams reqData
+      tcQueryParams = Just $ J.toJSON $ bimap TE.decodeUtf8 (fmap TE.decodeUtf8) <$> view HTTP.queryParams reqData,
+      tcFunctions = M.singleton "getSessionVariable" getSessionVar
     }
+  where
+    getSessionVar :: J.Value -> Either CustomFunctionError J.Value
+    getSessionVar inp = case inp of
+      J.String txt ->
+        case sessionVarValue of
+          Just x -> Right $ J.String x
+          Nothing -> Left . CustomFunctionError $ "Session variable \"" <> txt <> "\" not found"
+        where
+          sessionVarValue = sessionVars >>= getSessionVariableValue (mkSessionVariable txt)
+      _ -> Left $ CustomFunctionError "Session variable name should be a string"
 
 buildRespTransformCtx :: ReqTransformCtx -> BL.ByteString -> RespTransformCtx
 buildRespTransformCtx reqCtx respBody =
