@@ -1,3 +1,5 @@
+{-# LANGUAGE PatternSynonyms #-}
+
 -- | Types for representing a GraphQL schema.
 module Hasura.GraphQL.Parser.Schema
   ( -- * Kinds
@@ -11,9 +13,9 @@ module Hasura.GraphQL.Parser.Schema
     withTypenameCustomization,
     Nullability (..),
     Type (..),
-    TypeInfo (..),
+    TypeInfo (TIScalar, TIEnum, TIInputObject, TIObject, TIInterface, TIUnion),
     getTypeInfo,
-    SomeTypeInfo (..),
+    SomeDefinitionTypeInfo (..),
     eqType,
     eqTypeInfo,
     typeNullability,
@@ -25,10 +27,10 @@ module Hasura.GraphQL.Parser.Schema
     EnumValueInfo (..),
     InputFieldInfo (..),
     FieldInfo (..),
-    InputObjectInfo (..),
-    ObjectInfo (..),
-    InterfaceInfo (..),
-    UnionInfo (..),
+    InputObjectInfo (InputObjectInfo),
+    ObjectInfo (ObjectInfo, oiFields, oiImplements),
+    InterfaceInfo (InterfaceInfo, iiFields, iiPossibleTypes),
+    UnionInfo (UnionInfo, uiPossibleTypes),
 
     -- * Definitions
     Definition (..),
@@ -54,8 +56,8 @@ import Data.Aeson qualified as J
 import Data.Functor.Classes
 import Data.Has
 import Data.HashMap.Strict.Extended qualified as Map
-import Data.HashSet qualified as Set
 import Data.Hashable (Hashable (..))
+import Data.List qualified as List
 import Data.List.NonEmpty qualified as NE
 import Data.Monoid
 import Data.Text qualified as T
@@ -436,29 +438,52 @@ writing, this isn’t much of a problem in practice. But if that changes, it wou
 be worth implementing a more sophisticated solution that can gather up all the
 different sources of information and make sure they’re consistent. -}
 
-data InputObjectInfo = InputObjectInfo ~[Definition InputFieldInfo]
+-- | Invariant: the list is sorted by 'dName'
+data InputObjectInfo = InputObjectInfo__ ~[Definition InputFieldInfo]
+
+-- Public interface enforcing invariants
+pattern InputObjectInfo :: [Definition InputFieldInfo] -> InputObjectInfo
+pattern InputObjectInfo xs <-
+  InputObjectInfo__ xs
+  where
+    InputObjectInfo xs = InputObjectInfo__ (List.sortOn dName xs)
+
+{-# COMPLETE InputObjectInfo #-}
 
 -- Note that we can't check for equality of the fields since there may be
 -- circularity. So we rather check for equality of names.
 instance Eq InputObjectInfo where
   InputObjectInfo fields1 == InputObjectInfo fields2 =
-    Set.fromList (fmap dName fields1) == Set.fromList (fmap dName fields2)
+    eqByName fields1 fields2
 
-data ObjectInfo = ObjectInfo
+-- | Invariant: the lists are sorted by 'dName', maintained via pattern synonyms
+data ObjectInfo = ObjectInfo__
   { -- | The fields that this object has.  This consists of the fields of the
     -- interfaces that it implements, as well as any additional fields.
-    oiFields :: ~[Definition FieldInfo],
+    _oiFields :: ~[Definition FieldInfo],
     -- | The interfaces that this object implements (inheriting all their
     -- fields). See Note [The interfaces story] for more details.
-    oiImplements :: ~[Definition InterfaceInfo]
+    _oiImplements :: ~[Definition InterfaceInfo]
   }
 
--- Note that we can't check for equality of the fields and the interfaces since
+-- Public interface enforcing invariants
+pattern ObjectInfo :: [Definition FieldInfo] -> [Definition InterfaceInfo] -> ObjectInfo
+pattern ObjectInfo {oiFields, oiImplements} <-
+  ObjectInfo__ oiFields oiImplements
+  where
+    ObjectInfo xs ys = ObjectInfo__ (List.sortOn dName xs) (List.sortOn dName ys)
+
+{-# COMPLETE ObjectInfo #-}
+
+-- | Note that we can't check for equality of the fields and the interfaces since
 -- there may be circularity. So we rather check for equality of names.
+--
+-- This is dodgy... the equality logic here should I think correspond to the
+-- logic in @typeField@ and its neighbors in "Hasura.GraphQL.Schema.Introspect",
+-- in terms of how much we recurse.
 instance Eq ObjectInfo where
   ObjectInfo fields1 interfaces1 == ObjectInfo fields2 interfaces2 =
-    Set.fromList (fmap dName fields1) == Set.fromList (fmap dName fields2)
-      && Set.fromList (fmap dName interfaces1) == Set.fromList (fmap dName interfaces2)
+    eqByName fields1 fields2 && eqByName interfaces1 interfaces2
 
 -- | Type information for a GraphQL interface; see Note [The interfaces story]
 -- for more details.
@@ -466,34 +491,64 @@ instance Eq ObjectInfo where
 -- Note: in the current working draft of the GraphQL specification (> June
 -- 2018), interfaces may implement other interfaces, but we currently don't
 -- support this.
-data InterfaceInfo = InterfaceInfo
+--
+-- Invariant: the lists are sorted by 'dName', maintained via pattern synonyms
+data InterfaceInfo = InterfaceInfo__
   { -- | Fields declared by this interface. Every object implementing this
     -- interface must include those fields.
-    iiFields :: ~[Definition FieldInfo],
+    _iiFields :: ~[Definition FieldInfo],
     -- | Objects that implement this interface. See Note [The interfaces story]
     -- for why we include that information here.
-    iiPossibleTypes :: ~[Definition ObjectInfo]
+    _iiPossibleTypes :: ~[Definition ObjectInfo]
   }
+
+-- Public interface enforcing invariants
+pattern InterfaceInfo :: [Definition FieldInfo] -> [Definition ObjectInfo] -> InterfaceInfo
+pattern InterfaceInfo {iiFields, iiPossibleTypes} <-
+  InterfaceInfo__ iiFields iiPossibleTypes
+  where
+    InterfaceInfo xs ys = InterfaceInfo__ (List.sortOn dName xs) (List.sortOn dName ys)
+
+{-# COMPLETE InterfaceInfo #-}
 
 -- Note that we can't check for equality of the fields and the interfaces since
 -- there may be circularity. So we rather check for equality of names.
 instance Eq InterfaceInfo where
   InterfaceInfo fields1 objects1 == InterfaceInfo fields2 objects2 =
-    Set.fromList (fmap dName fields1) == Set.fromList (fmap dName fields2)
-      && Set.fromList (fmap dName objects1) == Set.fromList (fmap dName objects2)
+    eqByName fields1 fields2 && eqByName objects1 objects2
 
-data UnionInfo = UnionInfo
+-- | Invariant: the list is sorted by 'dName'
+data UnionInfo = UnionInfo__
   { -- | The member object types of this union.
-    uiPossibleTypes :: ~[Definition ObjectInfo]
+    _uiPossibleTypes :: ~[Definition ObjectInfo]
   }
+
+-- Public interface enforcing invariants
+pattern UnionInfo :: [Definition ObjectInfo] -> UnionInfo
+pattern UnionInfo {uiPossibleTypes} <-
+  UnionInfo__ uiPossibleTypes
+  where
+    UnionInfo xs = UnionInfo__ (List.sortOn dName xs)
+
+{-# COMPLETE UnionInfo #-}
 
 data TypeInfo k where
   TIScalar :: TypeInfo 'Both
-  TIEnum :: NonEmpty (Definition EnumValueInfo) -> TypeInfo 'Both
+  -- | Invariant: the NonEmpty is sorted by 'dName'
+  TIEnum__ :: NonEmpty (Definition EnumValueInfo) -> TypeInfo 'Both
   TIInputObject :: InputObjectInfo -> TypeInfo 'Input
   TIObject :: ObjectInfo -> TypeInfo 'Output
   TIInterface :: InterfaceInfo -> TypeInfo 'Output
   TIUnion :: UnionInfo -> TypeInfo 'Output
+
+-- Public interface enforcing invariants
+pattern TIEnum :: forall (k :: Kind). () => (k ~ 'Both) => NonEmpty (Definition EnumValueInfo) -> TypeInfo k
+pattern TIEnum xs <-
+  TIEnum__ xs
+  where
+    TIEnum xs = TIEnum__ (NE.sortWith dName xs)
+
+{-# COMPLETE TIScalar, TIEnum, TIInputObject, TIObject, TIInterface, TIUnion #-}
 
 instance Eq (TypeInfo k) where
   (==) = eqTypeInfo
@@ -501,8 +556,7 @@ instance Eq (TypeInfo k) where
 -- | Like '==', but can compare 'TypeInfo's of different kinds.
 eqTypeInfo :: TypeInfo k1 -> TypeInfo k2 -> Bool
 eqTypeInfo TIScalar TIScalar = True
-eqTypeInfo (TIEnum values1) (TIEnum values2) =
-  Set.fromList (toList values1) == Set.fromList (toList values2)
+eqTypeInfo (TIEnum values1) (TIEnum values2) = values1 == values2
 -- NB the case for input objects currently has quadratic complexity, which is
 -- probably avoidable. HashSets should be able to get this down to
 -- O(n*log(n)). But this requires writing some Hashable instances by hand
@@ -511,7 +565,7 @@ eqTypeInfo (TIInputObject ioi1) (TIInputObject ioi2) = ioi1 == ioi2
 eqTypeInfo (TIObject oi1) (TIObject oi2) = oi1 == oi2
 eqTypeInfo (TIInterface ii1) (TIInterface ii2) = ii1 == ii2
 eqTypeInfo (TIUnion (UnionInfo objects1)) (TIUnion (UnionInfo objects2)) =
-  Set.fromList (fmap dName objects1) == Set.fromList (fmap dName objects2)
+  eqByName objects1 objects2
 eqTypeInfo _ _ = False
 
 getTypeInfo :: Type k -> Definition (TypeInfo k)
@@ -528,10 +582,16 @@ getInterfaceInfo t = case getTypeInfo t of
   d@Definition {dInfo = TIInterface ii} -> Just d {dInfo = ii}
   _ -> Nothing
 
-data SomeTypeInfo = forall k. SomeTypeInfo (TypeInfo k)
+data SomeDefinitionTypeInfo = forall k. SomeDefinitionTypeInfo (Definition (TypeInfo k))
 
-instance Eq SomeTypeInfo where
-  SomeTypeInfo a == SomeTypeInfo b = eqTypeInfo a b
+instance HasName SomeDefinitionTypeInfo where
+  getName (SomeDefinitionTypeInfo (Definition n _ _)) = n
+
+instance Eq SomeDefinitionTypeInfo where
+  -- Same as instance Eq Definition
+  SomeDefinitionTypeInfo (Definition name1 _ ti1)
+    == SomeDefinitionTypeInfo (Definition name2 _ ti2) =
+      name1 == name2 && eqTypeInfo ti1 ti2
 
 data Definition a = Definition
   { dName :: Name,
@@ -557,6 +617,12 @@ instance Eq1 Definition where
 
 instance HasName (Definition a) where
   getName = dName
+
+-- | equivalent to, but faster than...
+--
+-- > map dName x == map dName y
+eqByName :: [Definition a] -> [Definition a] -> Bool
+eqByName = liftEq ((==) `on` dName)
 
 -- | Enum values have no extra information except for the information common to
 -- all definitions, so this is just a placeholder for use as @'Definition'
@@ -703,7 +769,7 @@ data DirectiveInfo = DirectiveInfo
 -- See also Note [Basics of introspection schema generation].
 data Schema = Schema
   { sDescription :: Maybe Description,
-    sTypes :: HashMap Name (Definition SomeTypeInfo),
+    sTypes :: HashMap Name SomeDefinitionTypeInfo,
     sQueryType :: Type 'Output,
     sMutationType :: Maybe (Type 'Output),
     sSubscriptionType :: Maybe (Type 'Output),
@@ -773,11 +839,13 @@ of the design of HGE, which would be resolved by e.g. having namespaces for
 different data sources.
 -}
 
--- | Recursively collects all type definitions accessible from the given value.
+-- | Recursively collects all type definitions accessible from the given value,
+-- attempting to detect any conflicting defintions that may have made it this
+-- far (See 'ConflictingDefinitions' for details).
 collectTypeDefinitions ::
   HasTypeDefinitions a =>
   a ->
-  Either ConflictingDefinitions (HashMap Name (Definition SomeTypeInfo))
+  Either ConflictingDefinitions (HashMap Name SomeDefinitionTypeInfo)
 collectTypeDefinitions x =
   fmap (fmap fst) $
     runExcept $
@@ -786,6 +854,8 @@ collectTypeDefinitions x =
           runTypeAccumulation $
             accumulateTypeDefinitions x
 
+-- | A path through 'Definition', accumulated in 'accumulateTypeDefinitions'
+-- only to power 'ConflictingDefinitions' in the error case.
 newtype TypeOriginStack = TypeOriginStack [Name]
 
 -- Add the current field name to the origin stack
@@ -800,12 +870,23 @@ typeRootRecurse _ x = x
 instance ToTxt TypeOriginStack where
   toTxt (TypeOriginStack fields) = T.intercalate "." $ toTxt <$> reverse fields
 
+-- | NOTE: it's not clear exactly where we'd get conflicting definitions at the
+-- point 'collectTypeDefinitions' is called, but conflicting names from
+-- different data sources is apparently one place (TODO some tests that
+-- excercise this).
+--
+-- ALSO NOTE: it's difficult to see in isolation how or if this check is
+-- correct since 'Definition' is cyclic and has no accomodations for observable
+-- sharing (formerly it had Uniques; see commit history and discussion in
+-- #3685). The check relies on dodgy Eq instances for the types that make up
+-- the Definition graph (see e.g. @instance Eq ObjectInfo@).
+--
 -- See Note [Collecting types from the GraphQL schema]
 data ConflictingDefinitions
   = -- | Type collection has found at least two types with the same name.
     ConflictingDefinitions
-      (Definition SomeTypeInfo, TypeOriginStack)
-      (Definition SomeTypeInfo, NonEmpty TypeOriginStack)
+      (SomeDefinitionTypeInfo, TypeOriginStack)
+      (SomeDefinitionTypeInfo, NonEmpty TypeOriginStack)
 
 -- | Although the majority of graphql-engine is written in terms of abstract
 -- mtl-style effect monads, we figured out that this particular codepath is
@@ -818,14 +899,14 @@ newtype TypeAccumulation a = TypeAccumulation
       ReaderT
         TypeOriginStack
         ( StateT
-            (HashMap Name (Definition SomeTypeInfo, NonEmpty TypeOriginStack))
+            (HashMap Name (SomeDefinitionTypeInfo, NonEmpty TypeOriginStack))
             (ExceptT ConflictingDefinitions Identity)
         )
         a
   }
   deriving (Functor, Applicative, Monad)
   deriving (MonadReader TypeOriginStack)
-  deriving (MonadState (HashMap Name (Definition SomeTypeInfo, NonEmpty TypeOriginStack)))
+  deriving (MonadState (HashMap Name (SomeDefinitionTypeInfo, NonEmpty TypeOriginStack)))
   deriving (MonadError ConflictingDefinitions)
 
 class HasTypeDefinitions a where
@@ -836,23 +917,25 @@ class HasTypeDefinitions a where
     a -> TypeAccumulation ()
 
 instance HasTypeDefinitions (Definition (TypeInfo k)) where
-  accumulateTypeDefinitions definition = do
+  accumulateTypeDefinitions new@Definition {..} = do
     -- This is the important case! We actually have a type definition, so we
     -- need to add it to the state.
     definitions <- get
     stack <- ask
-    let new = SomeTypeInfo <$> definition
-    case Map.lookup (dName new) definitions of
+    let someNew = SomeDefinitionTypeInfo new
+    case Map.lookup dName definitions of
       Nothing -> do
-        put $! Map.insert (dName new) (new, pure stack) definitions
+        put $! Map.insert dName (someNew, pure stack) definitions
         -- This type definition might reference other type definitions, so we
         -- still need to recur.
-        local (typeRootRecurse (getName definition)) $ accumulateTypeDefinitions (dInfo definition)
-      Just (old, origins)
+        local (typeRootRecurse dName) $ accumulateTypeDefinitions dInfo
+      Just (someOld, origins)
         -- It’s important we /don’t/ recur if we’ve already seen this definition
         -- before to avoid infinite loops; see Note [Tying the knot] in Hasura.GraphQL.Parser.Class.
-        | old == new -> put $! Map.insert (dName new) (old, stack `NE.cons` origins) definitions
-        | otherwise -> throwError $ ConflictingDefinitions (new, stack) (old, origins)
+        -- (NOTE: I tried making `origins` an STRef and doing a mutable update
+        -- here but the performance was about the same)
+        | someOld == someNew -> put $! Map.insert dName (someOld, stack `NE.cons` origins) definitions
+        | otherwise -> throwError $ ConflictingDefinitions (someNew, stack) (someOld, origins)
 
 instance HasTypeDefinitions a => HasTypeDefinitions [a] where
   accumulateTypeDefinitions = traverse_ accumulateTypeDefinitions
@@ -911,3 +994,44 @@ instance HasTypeDefinitions (Definition InterfaceInfo) where
 instance HasTypeDefinitions (Definition UnionInfo) where
   accumulateTypeDefinitions d@Definition {..} =
     local (typeOriginRecurse dName) $ accumulateTypeDefinitions (fmap TIUnion d)
+
+{- PERFORMANCE NOTE/TODO:
+
+Since Definition's are cyclic I spent a little time trying to optimize the
+== in accumulateTypeDefinitions into a nearly-noop using pointer
+equality, but could not get it to trigger unless I called it on the unlifted
+ByteArray# within dName, but at that point what was a pretty small theoretical
+benefit disappeared for whatever reason (plus wasn't strictly safe at that
+point). (Note, to have any luck calling on Definitions directly we would need
+to fix the reallocation of Definitions via @fmap TI...@ in
+accumulateTypeDefinitions as well)
+
+The TODO-flavored thing here is to investigate whether we might not have as
+much sharing here as we assume. We can use ghc-debug to inspect the object in
+the heap.
+
+We might also then rewrite accumulateTypeDefinitions to return non-cyclic type
+definition segmants corresponding to the equality logic here (see "dodgy"
+equality comments), and even consider trying to do some kind of global
+interning of these across roles (though I think that would only be an
+very incremental improvement...)
+
+-- | See e.g. https://github.com/haskell/containers/blob/master/containers/src/Utils/Containers/Internal/PtrEquality.hs
+--
+-- If this returns True then the arguments are equal (for any sane definition of equality)
+-- if this returns False nothing can be determined. The caller must ensure
+-- referential transparency is preserved...
+unsafeHetPtrEq :: a -> b -> Bool
+unsafeHetPtrEq !x !y = isTrue# (unsafeCoerce (reallyUnsafePtrEquality# :: x -> x -> Int#) x y)
+{-# INLINE unsafeHetPtrEq #-}
+infix 4 `unsafeHetPtrEq` -- just like (==)
+
+-- | Equivalent to @(==)@ but potentially faster in cases where the arguments
+-- might be pointer-identical.
+fastEq :: (Eq a)=> a -> a -> Bool
+fastEq !x !y =
+  -- See e.g. https://github.com/haskell/containers/blob/master/containers/src/Utils/Containers/Internal/PtrEquality.hs
+  isTrue# (reallyUnsafePtrEquality# x y) || x == y
+
+infix 4 `fastEq` -- just like (==)
+-}
