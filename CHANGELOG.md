@@ -5,6 +5,7 @@
 ### Bug fixes and improvements
 (Add entries below in the order of server, console, cli, docs, others)
 
+- server: add custom function for case insensitive lookup in session variable in request transformation
 - server: Webhook Transforms can now delete request/response bodies explicitly.
 - server: Fix truncation of session variables with variable length column types in MSSQL (#8158)
 - server: improve baseline memory consumption for typical workloads
