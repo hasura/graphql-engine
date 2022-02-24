@@ -8,6 +8,11 @@
 
 - server: Fix experimental sql optimization read from `HASURA_GRAPHQL_EXPERIMENTAL_FEATURES` or `--experimental-features`
 
+## v2.2.1
+
+- server: postgres: return a single entry per row (selected randomly) when an object relationship has multiple matches (fix #7936)
+- console: add support for remote database relationships
+
 ## v2.3.0-beta.2
 
 - server: fix issues working with read-only DBs by reverting the need for storing required SQL functions in a `hdb_lib` schema in the user's DB
@@ -42,7 +47,7 @@ The optimization can be enabled using the
   update mutations.
 - server: Fix graphql-engine/issues/4633: We can now insert multiple objects
   that have generated columns in Postgres.
-- server: postgres: return a single entry per row (selected randomly) when an object relationship is misconfigured one-to-many
+- server: postgres: return a single entry per row (selected randomly) when an object relationship has multiple matches (fix #7936)
 - server: Updates Kriti to v0.3.0
 - server: add operation name in the request sent to remote schemas
 - server: add support for scalar response types for actions (issue #7805)
