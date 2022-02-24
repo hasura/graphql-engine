@@ -3,7 +3,7 @@
   configuration:
     connection_info:
       database_url:
-        from_env: SAMPLE_APPS_DATABASE_URL
+        from_env: PG_DATABASE_URL
       pool_settings:
         idle_timeout: 180
         max_connections: 50
