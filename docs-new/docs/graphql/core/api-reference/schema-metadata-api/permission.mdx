@@ -12,6 +12,18 @@ keywords:
 
 # Schema/Metadata API Reference: Permissions (Deprecated)
 
+:::caution Deprecation
+
+In versions `v2.0.0` and above, the schema/metadata API is deprecated in
+favour of the [schema API](/graphql/core/api-reference/schema-api/index.mdx) and the
+[metadata API](/graphql/core/api-reference/metadata-api/index.mdx).
+
+Though for backwards compatibility, the schema/metadata APIs will
+continue to function.
+
+:::
+
+
 ## Introduction
 
 The permission layer is designed to restrict the operations that can be
@@ -24,17 +36,6 @@ default, the `admin` role has unrestricted access to all operations.
 All `X-Hasura-*` header values can be used in the permission rules.
 These values can come with the request and can be validated using
 webhook or can be sent with the JWT token.
-
-:::
-
-:::caution Deprecation
-
-In versions `v2.0.0` and above, the schema/metadata API is deprecated in
-favour of the [schema API](/graphql/core/api-reference/schema-api/index.mdx) and the
-[metadata API](/graphql/core/api-reference/metadata-api/index.mdx).
-
-Though for backwards compatibility, the schema/metadata APIs will
-continue to function.
 
 :::
 

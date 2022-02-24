@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import ReactDOM from "react-dom";
 import BrowserOnly from '@docusaurus/BrowserOnly';
 import { CSSTransition } from "react-transition-group";
-import styles from './Thumbnail.module.css';
+import styles from './Thumbnail.module.scss';
 
 // Modal Implementation Ref: https://medium.com/tinyso/how-to-create-a-modal-component-in-react-from-basic-to-advanced-a3357a2a716a
 const Modal = (props) => {

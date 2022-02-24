@@ -62,12 +62,12 @@ Actions can be of two types:
 
 The action definition consists of the following:
 
--   `Action Name`: The action will be available as a query or mutation
-    in the GraphQL schema named as the action name
--   `Arguments`: Arguments are used to pass dynamic values along with
-    the query/mutation.
--   `Response type`: The GraphQL type of the response that the query or
-    mutation will return. Actions can only return object types.
+- `Action Name`: The action will be available as a query or mutation
+  in the GraphQL schema named as the action name
+- `Arguments`: Arguments are used to pass dynamic values along with
+  the query/mutation.
+- `Response type`: The GraphQL type of the response that the query or
+  mutation will return. Actions can only return object types or scalar types currently.
 
 For instance, consider this action definition:
 
@@ -77,18 +77,26 @@ extend type Mutation {
 }
 ```
 
+In case the action response is a scalar (eg. Int), the action can also be defined as:
+
+```graphql
+type Mutation {
+  userLogin(username: String!, password: String!): Int!
+}
+```
+
 In this definition, we are extending the mutation root with an action
 called `userLogin`.
 
--   `userLogin` is the action name
--   `username` and `password` are the arguments that accept non-nullable
-    string values.
--   `UserInfo` is the response type of the action
+- `userLogin` is the action name
+- `username` and `password` are the arguments that accept non-nullable
+  string values.
+- `UserInfo` is the response type of the action
+
 
 **Custom Types**
 
-An action must return an object type. This means, you will have to
-define your custom types like so:
+In case the action returns an object type, you will have to define your custom types like so:
 
 ```graphql
 type UserInfo {

@@ -15,10 +15,9 @@ keywords:
 ## Introduction
 
 Hasura stores action logs of [async actions](/graphql/core/actions/async-actions.mdx) in a table
-in the metadata schema. As the table gets larger, you may want to prune
-it.
+in **the "hdb_catalog" schema of the Hasura metadata database**.
 
-You can use any of the following options to prune your logs depending on
+As the table gets larger, you may want to prune it. You can use any of the following options to prune your logs depending on
 your need.
 
 :::caution Warning
@@ -48,17 +47,30 @@ DELETE FROM hdb_catalog.hdb_action_log WHERE id = '<async-action-id>';
 DELETE FROM hdb_catalog.hdb_action_log WHERE action_name = '<action-name>';
 ```
 
-## Option 3: Delete all logs older than a time period
+## Option 3: Delete all logs
+
+```SQL
+DELETE FROM hdb_catalog.hdb_action_log;
+```
+
+## Clearing data before a particular time period
+
+If you wish to keep recent data and only clear data before a particular time period
+you can add the following time clause to your query's where clause:
+
+```SQL
+-- units can be 'minutes', 'hours', 'days', 'months', 'years'
+created_at < now() - interval '<x> <units>'
+```
+
+For example: to delete all logs older than 3 months:
 
 ```SQL
 DELETE FROM hdb_catalog.hdb_action_log WHERE created_at < NOW() - INTERVAL '3 months';
 ```
 
-## Option 4: Delete all logs
+See the [Postgres date/time functions](https://www.postgresql.org/docs/current/functions-datetime.html) for more details.
 
-```SQL
-DELETE FROM hdb_catalog.hdb_action_log;
-```
 
 :::info Additional Resources
 

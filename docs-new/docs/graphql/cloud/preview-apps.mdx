@@ -10,7 +10,7 @@ keywords:
   - pull
   - request
   - github
-sidebar_label: Preview Apps
+sidebar_label: Preview apps
 sidebar_position: 10
 ---
 
@@ -22,7 +22,7 @@ import Thumbnail from "@site/src/components/Thumbnail/Thumbnail";
 
 Hasura Cloud exposes an [API](/graphql/cloud/api-reference.mdx#api-ref-create-preview-app) to create preview apps with metadata and migrations from a branch of a GitHub repo. You can use this API for creating preview Hasura GraphQL Engine instances on pull requests and for previewing a Hasura project with metadata and migrations from a GitHub branch. This can be done either by triggering the API directly from your CI/CD or by using the [hasura-cloud-preview-apps](https://github.com/hasura/hasura-cloud-preview-apps) GitHub action.
 
-:::note
+:::info Note
 
 Usage limits Usage is limited to 60 preview app API calls per month for users with only `Free` tier projects on Hasura Cloud. More plans coming soon.
 

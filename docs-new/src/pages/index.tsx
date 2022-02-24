@@ -3,7 +3,7 @@ import clsx from 'clsx';
 import Layout from '@theme/Layout';
 import Link from '@docusaurus/Link';
 import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
-import styles from './index.module.css';
+import styles from './index.module.scss';
 import hasuras from '../../static/img/hasuras.png';
 
 function HomepageHeader() {
@@ -16,12 +16,12 @@ function HomepageHeader() {
         <div className={styles.links}>
           <Link
             className="button button--primary button--lg"
-            to="/graphql/core/index">
+            to="/latest/graphql/core/index">
             Hasura Core Docs
           </Link>
           <Link
             className="button button--success button--lg"
-            to="/graphql/cloud/index">
+            to="/latest/graphql/cloud/index">
             Hasura Cloud Docs
           </Link>
         </div>
