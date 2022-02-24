@@ -1,0 +1,381 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Hasura.SQL.Types</span><span>
+</span><span id="line-2"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.SQL.Types.html#ToSQL"><span class="hs-identifier">ToSQL</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-3"></span><span>    </span><span class="annot"><a href="Hasura.SQL.Types.html#toSQLTxt"><span class="hs-identifier">toSQLTxt</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-4"></span><span>    </span><span class="annot"><a href="Hasura.SQL.Types.html#CollectableType"><span class="hs-identifier">CollectableType</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-5"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-6"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-7"></span><span>
+</span><span id="line-8"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson</span></span><span>
+</span><span id="line-9"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson.TH</span></span><span>
+</span><span id="line-10"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Incremental.html"><span class="hs-identifier">Hasura.Incremental</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier">Cacheable</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-11"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-12"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Text.Builder</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">TB</span></span><span>
+</span><span id="line-13"></span><span>
+</span><span id="line-14"></span><span class="hs-keyword">class</span><span> </span><span id="ToSQL"><span class="annot"><a href="Hasura.SQL.Types.html#ToSQL"><span class="hs-identifier hs-var">ToSQL</span></a></span></span><span> </span><span id="local-6989586621687925210"><span class="annot"><a href="#local-6989586621687925210"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-15"></span><span>  </span><span id="toSQL"><span class="annot"><a href="Hasura.SQL.Types.html#toSQL"><span class="hs-identifier hs-type">toSQL</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="#local-6989586621687925210"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TB.Builder</span></span><span>
+</span><span id="line-16"></span><span>
+</span><span id="line-17"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.SQL.Types.html#ToSQL"><span class="hs-identifier hs-type">ToSQL</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">TB.Builder</span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-18"></span><span>  </span><span id="local-6989586621687925104"><span class="annot"><span class="annottext">toSQL :: Builder -&gt; Builder
+</span><a href="#local-6989586621687925104"><span class="hs-identifier hs-var hs-var hs-var hs-var">toSQL</span></a></span></span><span> </span><span id="local-6989586621687925103"><span class="annot"><span class="annottext">Builder
+</span><a href="#local-6989586621687925103"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Builder
+</span><a href="#local-6989586621687925103"><span class="hs-identifier hs-var">x</span></a></span><span>
+</span><span id="line-19"></span><span>
+</span><span id="line-20"></span><span id="local-6989586621687925102"><span class="hs-keyword">instance</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.SQL.Types.html#ToSQL"><span class="hs-identifier hs-type">ToSQL</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687925102"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.SQL.Types.html#ToSQL"><span class="hs-identifier hs-type">ToSQL</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="#local-6989586621687925102"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-21"></span><span>  </span><span id="local-6989586621687925100"><span class="annot"><span class="annottext">toSQL :: Maybe a -&gt; Builder
+</span><a href="#local-6989586621687925100"><span class="hs-identifier hs-var hs-var hs-var hs-var">toSQL</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621687925099"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621687925099"><span class="hs-identifier hs-var">a</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">a -&gt; Builder
+forall a. ToSQL a =&gt; a -&gt; Builder
+</span><a href="Hasura.SQL.Types.html#toSQL"><span class="hs-identifier hs-var">toSQL</span></a></span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621687925099"><span class="hs-identifier hs-var">a</span></a></span><span>
+</span><span id="line-22"></span><span>  </span><span class="annot"><a href="Hasura.SQL.Types.html#toSQL"><span class="hs-identifier hs-var">toSQL</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe a
+</span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Builder
+forall a. Monoid a =&gt; a
+</span><span class="hs-identifier hs-var">mempty</span></span></span><span>
+</span><span id="line-23"></span><span>
+</span><span id="line-24"></span><span id="local-6989586621687925098"><span class="annot"><a href="Hasura.SQL.Types.html#toSQLTxt"><span class="hs-identifier hs-type">toSQLTxt</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.SQL.Types.html#ToSQL"><span class="hs-identifier hs-type">ToSQL</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687925098"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="#local-6989586621687925098"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span></span><span>
+</span><span id="line-25"></span><span id="toSQLTxt"><span class="annot"><span class="annottext">toSQLTxt :: a -&gt; Text
+</span><a href="Hasura.SQL.Types.html#toSQLTxt"><span class="hs-identifier hs-var hs-var">toSQLTxt</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Builder -&gt; Text
+</span><span class="hs-identifier hs-var">TB.run</span></span><span> </span><span class="annot"><span class="annottext">(Builder -&gt; Text) -&gt; (a -&gt; Builder) -&gt; a -&gt; Text
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">a -&gt; Builder
+forall a. ToSQL a =&gt; a -&gt; Builder
+</span><a href="Hasura.SQL.Types.html#toSQL"><span class="hs-identifier hs-var">toSQL</span></a></span><span>
+</span><span id="line-26"></span><span>
+</span><span id="line-27"></span><span class="hs-comment">-- | The type of all Postgres types (i.e. scalars and arrays). This type is parameterized so that</span><span>
+</span><span id="line-28"></span><span class="hs-comment">-- we can have both @'CollectableType' 'PGScalarType'@ and @'CollectableType' 'Hasura.RQL.Types.PGColumnType'@, for</span><span>
+</span><span id="line-29"></span><span class="hs-comment">-- when we care about the distinction made by 'Hasura.RQL.Types.PGColumnType'. If we ever change</span><span>
+</span><span id="line-30"></span><span class="hs-comment">-- 'Hasura.RQL.Types.PGColumnType' to handle arrays, not just scalars, then the parameterization can</span><span>
+</span><span id="line-31"></span><span class="hs-comment">-- go away.</span><span>
+</span><span id="line-32"></span><span class="hs-comment">--</span><span>
+</span><span id="line-33"></span><span class="hs-comment">-- TODO (from master): This is incorrect modeling, as 'PGScalarType' will capture anything (under 'PGUnknown').</span><span>
+</span><span id="line-34"></span><span class="hs-comment">-- This should be fixed when support for all types is merged.</span><span>
+</span><span id="line-35"></span><span id="local-6989586621687925094"><span id="local-6989586621687925095"></span></span><span class="hs-keyword">data</span><span> </span><span id="CollectableType"><span class="annot"><a href="Hasura.SQL.Types.html#CollectableType"><span class="hs-identifier hs-var">CollectableType</span></a></span></span><span> </span><span id="local-6989586621687925093"><span class="annot"><a href="#local-6989586621687925093"><span class="hs-identifier hs-type">a</span></a></span></span><span>
+</span><span id="line-36"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="CollectableTypeScalar"><span class="annot"><a href="Hasura.SQL.Types.html#CollectableTypeScalar"><span class="hs-identifier hs-var">CollectableTypeScalar</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="#local-6989586621687925093"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-37"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="CollectableTypeArray"><span class="annot"><a href="Hasura.SQL.Types.html#CollectableTypeArray"><span class="hs-identifier hs-var">CollectableTypeArray</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="#local-6989586621687925093"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-38"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687925085"><span id="local-6989586621687925087"><span id="local-6989586621687925089"><span class="annot"><span class="annottext">Int -&gt; CollectableType a -&gt; ShowS
+[CollectableType a] -&gt; ShowS
+CollectableType a -&gt; String
+(Int -&gt; CollectableType a -&gt; ShowS)
+-&gt; (CollectableType a -&gt; String)
+-&gt; ([CollectableType a] -&gt; ShowS)
+-&gt; Show (CollectableType a)
+forall a. Show a =&gt; Int -&gt; CollectableType a -&gt; ShowS
+forall a. Show a =&gt; [CollectableType a] -&gt; ShowS
+forall a. Show a =&gt; CollectableType a -&gt; String
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [CollectableType a] -&gt; ShowS
+$cshowList :: forall a. Show a =&gt; [CollectableType a] -&gt; ShowS
+show :: CollectableType a -&gt; String
+$cshow :: forall a. Show a =&gt; CollectableType a -&gt; String
+showsPrec :: Int -&gt; CollectableType a -&gt; ShowS
+$cshowsPrec :: forall a. Show a =&gt; Int -&gt; CollectableType a -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687925080"><span id="local-6989586621687925082"><span class="annot"><span class="annottext">CollectableType a -&gt; CollectableType a -&gt; Bool
+(CollectableType a -&gt; CollectableType a -&gt; Bool)
+-&gt; (CollectableType a -&gt; CollectableType a -&gt; Bool)
+-&gt; Eq (CollectableType a)
+forall a. Eq a =&gt; CollectableType a -&gt; CollectableType a -&gt; Bool
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: CollectableType a -&gt; CollectableType a -&gt; Bool
+$c/= :: forall a. Eq a =&gt; CollectableType a -&gt; CollectableType a -&gt; Bool
+== :: CollectableType a -&gt; CollectableType a -&gt; Bool
+$c== :: forall a. Eq a =&gt; CollectableType a -&gt; CollectableType a -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">(forall x. CollectableType a -&gt; Rep (CollectableType a) x)
+-&gt; (forall x. Rep (CollectableType a) x -&gt; CollectableType a)
+-&gt; Generic (CollectableType a)
+forall x. Rep (CollectableType a) x -&gt; CollectableType a
+forall x. CollectableType a -&gt; Rep (CollectableType a) x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+forall a x. Rep (CollectableType a) x -&gt; CollectableType a
+forall a x. CollectableType a -&gt; Rep (CollectableType a) x
+$cto :: forall a x. Rep (CollectableType a) x -&gt; CollectableType a
+$cfrom :: forall a x. CollectableType a -&gt; Rep (CollectableType a) x
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="%24cCollectableTypeArray"><span id="%24cCollectableTypeScalar"><span id="%24tCollectableType"><span id="local-6989586621687925047"><span id="local-6989586621687925049"><span id="local-6989586621687925051"><span id="local-6989586621687925053"><span id="local-6989586621687925055"><span id="local-6989586621687925057"><span id="local-6989586621687925059"><span id="local-6989586621687925061"><span id="local-6989586621687925063"><span id="local-6989586621687925065"><span id="local-6989586621687925067"><span id="local-6989586621687925069"><span id="local-6989586621687925071"><span id="local-6989586621687925073"><span class="annot"><span class="annottext">Typeable (CollectableType a)
+DataType
+Constr
+Typeable (CollectableType a)
+-&gt; (forall (c :: * -&gt; *).
+    (forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+    -&gt; (forall g. g -&gt; c g)
+    -&gt; CollectableType a
+    -&gt; c (CollectableType a))
+-&gt; (forall (c :: * -&gt; *).
+    (forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+    -&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c (CollectableType a))
+-&gt; (CollectableType a -&gt; Constr)
+-&gt; (CollectableType a -&gt; DataType)
+-&gt; (forall (t :: * -&gt; *) (c :: * -&gt; *).
+    Typeable t =&gt;
+    (forall d. Data d =&gt; c (t d)) -&gt; Maybe (c (CollectableType a)))
+-&gt; (forall (t :: * -&gt; * -&gt; *) (c :: * -&gt; *).
+    Typeable t =&gt;
+    (forall d e. (Data d, Data e) =&gt; c (t d e))
+    -&gt; Maybe (c (CollectableType a)))
+-&gt; ((forall b. Data b =&gt; b -&gt; b)
+    -&gt; CollectableType a -&gt; CollectableType a)
+-&gt; (forall r r'.
+    (r -&gt; r' -&gt; r)
+    -&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; CollectableType a -&gt; r)
+-&gt; (forall r r'.
+    (r' -&gt; r -&gt; r)
+    -&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; CollectableType a -&gt; r)
+-&gt; (forall u.
+    (forall d. Data d =&gt; d -&gt; u) -&gt; CollectableType a -&gt; [u])
+-&gt; (forall u.
+    Int -&gt; (forall d. Data d =&gt; d -&gt; u) -&gt; CollectableType a -&gt; u)
+-&gt; (forall (m :: * -&gt; *).
+    Monad m =&gt;
+    (forall d. Data d =&gt; d -&gt; m d)
+    -&gt; CollectableType a -&gt; m (CollectableType a))
+-&gt; (forall (m :: * -&gt; *).
+    MonadPlus m =&gt;
+    (forall d. Data d =&gt; d -&gt; m d)
+    -&gt; CollectableType a -&gt; m (CollectableType a))
+-&gt; (forall (m :: * -&gt; *).
+    MonadPlus m =&gt;
+    (forall d. Data d =&gt; d -&gt; m d)
+    -&gt; CollectableType a -&gt; m (CollectableType a))
+-&gt; Data (CollectableType a)
+CollectableType a -&gt; DataType
+CollectableType a -&gt; Constr
+(forall d. Data d =&gt; c (t d)) -&gt; Maybe (c (CollectableType a))
+(forall b. Data b =&gt; b -&gt; b)
+-&gt; CollectableType a -&gt; CollectableType a
+(forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+-&gt; (forall g. g -&gt; c g)
+-&gt; CollectableType a
+-&gt; c (CollectableType a)
+(forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+-&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c (CollectableType a)
+forall a. Data a =&gt; Typeable (CollectableType a)
+forall a. Data a =&gt; CollectableType a -&gt; DataType
+forall a. Data a =&gt; CollectableType a -&gt; Constr
+forall a.
+Data a =&gt;
+(forall b. Data b =&gt; b -&gt; b)
+-&gt; CollectableType a -&gt; CollectableType a
+forall a u.
+Data a =&gt;
+Int -&gt; (forall d. Data d =&gt; d -&gt; u) -&gt; CollectableType a -&gt; u
+forall a u.
+Data a =&gt;
+(forall d. Data d =&gt; d -&gt; u) -&gt; CollectableType a -&gt; [u]
+forall a r r'.
+Data a =&gt;
+(r -&gt; r' -&gt; r)
+-&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; CollectableType a -&gt; r
+forall a r r'.
+Data a =&gt;
+(r' -&gt; r -&gt; r)
+-&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; CollectableType a -&gt; r
+forall a (m :: * -&gt; *).
+(Data a, Monad m) =&gt;
+(forall d. Data d =&gt; d -&gt; m d)
+-&gt; CollectableType a -&gt; m (CollectableType a)
+forall a (m :: * -&gt; *).
+(Data a, MonadPlus m) =&gt;
+(forall d. Data d =&gt; d -&gt; m d)
+-&gt; CollectableType a -&gt; m (CollectableType a)
+forall a (c :: * -&gt; *).
+Data a =&gt;
+(forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+-&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c (CollectableType a)
+forall a (c :: * -&gt; *).
+Data a =&gt;
+(forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+-&gt; (forall g. g -&gt; c g)
+-&gt; CollectableType a
+-&gt; c (CollectableType a)
+forall a (t :: * -&gt; *) (c :: * -&gt; *).
+(Data a, Typeable t) =&gt;
+(forall d. Data d =&gt; c (t d)) -&gt; Maybe (c (CollectableType a))
+forall a (t :: * -&gt; * -&gt; *) (c :: * -&gt; *).
+(Data a, Typeable t) =&gt;
+(forall d e. (Data d, Data e) =&gt; c (t d e))
+-&gt; Maybe (c (CollectableType a))
+forall a.
+Typeable a
+-&gt; (forall (c :: * -&gt; *).
+    (forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+    -&gt; (forall g. g -&gt; c g) -&gt; a -&gt; c a)
+-&gt; (forall (c :: * -&gt; *).
+    (forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+    -&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c a)
+-&gt; (a -&gt; Constr)
+-&gt; (a -&gt; DataType)
+-&gt; (forall (t :: * -&gt; *) (c :: * -&gt; *).
+    Typeable t =&gt;
+    (forall d. Data d =&gt; c (t d)) -&gt; Maybe (c a))
+-&gt; (forall (t :: * -&gt; * -&gt; *) (c :: * -&gt; *).
+    Typeable t =&gt;
+    (forall d e. (Data d, Data e) =&gt; c (t d e)) -&gt; Maybe (c a))
+-&gt; ((forall b. Data b =&gt; b -&gt; b) -&gt; a -&gt; a)
+-&gt; (forall r r'.
+    (r -&gt; r' -&gt; r) -&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; a -&gt; r)
+-&gt; (forall r r'.
+    (r' -&gt; r -&gt; r) -&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; a -&gt; r)
+-&gt; (forall u. (forall d. Data d =&gt; d -&gt; u) -&gt; a -&gt; [u])
+-&gt; (forall u. Int -&gt; (forall d. Data d =&gt; d -&gt; u) -&gt; a -&gt; u)
+-&gt; (forall (m :: * -&gt; *).
+    Monad m =&gt;
+    (forall d. Data d =&gt; d -&gt; m d) -&gt; a -&gt; m a)
+-&gt; (forall (m :: * -&gt; *).
+    MonadPlus m =&gt;
+    (forall d. Data d =&gt; d -&gt; m d) -&gt; a -&gt; m a)
+-&gt; (forall (m :: * -&gt; *).
+    MonadPlus m =&gt;
+    (forall d. Data d =&gt; d -&gt; m d) -&gt; a -&gt; m a)
+-&gt; Data a
+forall u.
+Int -&gt; (forall d. Data d =&gt; d -&gt; u) -&gt; CollectableType a -&gt; u
+forall u. (forall d. Data d =&gt; d -&gt; u) -&gt; CollectableType a -&gt; [u]
+forall r r'.
+(r -&gt; r' -&gt; r)
+-&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; CollectableType a -&gt; r
+forall r r'.
+(r' -&gt; r -&gt; r)
+-&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; CollectableType a -&gt; r
+forall (m :: * -&gt; *).
+Monad m =&gt;
+(forall d. Data d =&gt; d -&gt; m d)
+-&gt; CollectableType a -&gt; m (CollectableType a)
+forall (m :: * -&gt; *).
+MonadPlus m =&gt;
+(forall d. Data d =&gt; d -&gt; m d)
+-&gt; CollectableType a -&gt; m (CollectableType a)
+forall (c :: * -&gt; *).
+(forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+-&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c (CollectableType a)
+forall (c :: * -&gt; *).
+(forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+-&gt; (forall g. g -&gt; c g)
+-&gt; CollectableType a
+-&gt; c (CollectableType a)
+forall (t :: * -&gt; *) (c :: * -&gt; *).
+Typeable t =&gt;
+(forall d. Data d =&gt; c (t d)) -&gt; Maybe (c (CollectableType a))
+forall (t :: * -&gt; * -&gt; *) (c :: * -&gt; *).
+Typeable t =&gt;
+(forall d e. (Data d, Data e) =&gt; c (t d e))
+-&gt; Maybe (c (CollectableType a))
+$cCollectableTypeArray :: Constr
+$cCollectableTypeScalar :: Constr
+$tCollectableType :: DataType
+gmapMo :: (forall d. Data d =&gt; d -&gt; m d)
+-&gt; CollectableType a -&gt; m (CollectableType a)
+$cgmapMo :: forall a (m :: * -&gt; *).
+(Data a, MonadPlus m) =&gt;
+(forall d. Data d =&gt; d -&gt; m d)
+-&gt; CollectableType a -&gt; m (CollectableType a)
+gmapMp :: (forall d. Data d =&gt; d -&gt; m d)
+-&gt; CollectableType a -&gt; m (CollectableType a)
+$cgmapMp :: forall a (m :: * -&gt; *).
+(Data a, MonadPlus m) =&gt;
+(forall d. Data d =&gt; d -&gt; m d)
+-&gt; CollectableType a -&gt; m (CollectableType a)
+gmapM :: (forall d. Data d =&gt; d -&gt; m d)
+-&gt; CollectableType a -&gt; m (CollectableType a)
+$cgmapM :: forall a (m :: * -&gt; *).
+(Data a, Monad m) =&gt;
+(forall d. Data d =&gt; d -&gt; m d)
+-&gt; CollectableType a -&gt; m (CollectableType a)
+gmapQi :: Int -&gt; (forall d. Data d =&gt; d -&gt; u) -&gt; CollectableType a -&gt; u
+$cgmapQi :: forall a u.
+Data a =&gt;
+Int -&gt; (forall d. Data d =&gt; d -&gt; u) -&gt; CollectableType a -&gt; u
+gmapQ :: (forall d. Data d =&gt; d -&gt; u) -&gt; CollectableType a -&gt; [u]
+$cgmapQ :: forall a u.
+Data a =&gt;
+(forall d. Data d =&gt; d -&gt; u) -&gt; CollectableType a -&gt; [u]
+gmapQr :: (r' -&gt; r -&gt; r)
+-&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; CollectableType a -&gt; r
+$cgmapQr :: forall a r r'.
+Data a =&gt;
+(r' -&gt; r -&gt; r)
+-&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; CollectableType a -&gt; r
+gmapQl :: (r -&gt; r' -&gt; r)
+-&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; CollectableType a -&gt; r
+$cgmapQl :: forall a r r'.
+Data a =&gt;
+(r -&gt; r' -&gt; r)
+-&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; CollectableType a -&gt; r
+gmapT :: (forall b. Data b =&gt; b -&gt; b)
+-&gt; CollectableType a -&gt; CollectableType a
+$cgmapT :: forall a.
+Data a =&gt;
+(forall b. Data b =&gt; b -&gt; b)
+-&gt; CollectableType a -&gt; CollectableType a
+dataCast2 :: (forall d e. (Data d, Data e) =&gt; c (t d e))
+-&gt; Maybe (c (CollectableType a))
+$cdataCast2 :: forall a (t :: * -&gt; * -&gt; *) (c :: * -&gt; *).
+(Data a, Typeable t) =&gt;
+(forall d e. (Data d, Data e) =&gt; c (t d e))
+-&gt; Maybe (c (CollectableType a))
+dataCast1 :: (forall d. Data d =&gt; c (t d)) -&gt; Maybe (c (CollectableType a))
+$cdataCast1 :: forall a (t :: * -&gt; *) (c :: * -&gt; *).
+(Data a, Typeable t) =&gt;
+(forall d. Data d =&gt; c (t d)) -&gt; Maybe (c (CollectableType a))
+dataTypeOf :: CollectableType a -&gt; DataType
+$cdataTypeOf :: forall a. Data a =&gt; CollectableType a -&gt; DataType
+toConstr :: CollectableType a -&gt; Constr
+$ctoConstr :: forall a. Data a =&gt; CollectableType a -&gt; Constr
+gunfold :: (forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+-&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c (CollectableType a)
+$cgunfold :: forall a (c :: * -&gt; *).
+Data a =&gt;
+(forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+-&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c (CollectableType a)
+gfoldl :: (forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+-&gt; (forall g. g -&gt; c g)
+-&gt; CollectableType a
+-&gt; c (CollectableType a)
+$cgfoldl :: forall a (c :: * -&gt; *).
+Data a =&gt;
+(forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+-&gt; (forall g. g -&gt; c g)
+-&gt; CollectableType a
+-&gt; c (CollectableType a)
+$cp1Data :: forall a. Data a =&gt; Typeable (CollectableType a)
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Data</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687925039"><span id="local-6989586621687925041"><span class="annot"><span class="annottext">a -&gt; CollectableType b -&gt; CollectableType a
+(a -&gt; b) -&gt; CollectableType a -&gt; CollectableType b
+(forall a b. (a -&gt; b) -&gt; CollectableType a -&gt; CollectableType b)
+-&gt; (forall a b. a -&gt; CollectableType b -&gt; CollectableType a)
+-&gt; Functor CollectableType
+forall a b. a -&gt; CollectableType b -&gt; CollectableType a
+forall a b. (a -&gt; b) -&gt; CollectableType a -&gt; CollectableType b
+forall (f :: * -&gt; *).
+(forall a b. (a -&gt; b) -&gt; f a -&gt; f b)
+-&gt; (forall a b. a -&gt; f b -&gt; f a) -&gt; Functor f
+&lt;$ :: a -&gt; CollectableType b -&gt; CollectableType a
+$c&lt;$ :: forall a b. a -&gt; CollectableType b -&gt; CollectableType a
+fmap :: (a -&gt; b) -&gt; CollectableType a -&gt; CollectableType b
+$cfmap :: forall a b. (a -&gt; b) -&gt; CollectableType a -&gt; CollectableType b
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Functor</span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-39"></span><span>
+</span><span id="line-40"></span><span id="local-6989586621687925037"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687925035"><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="annot"><a href="#local-6989586621687925037"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.SQL.Types.html#CollectableType"><span class="hs-identifier hs-type">CollectableType</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687925037"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-41"></span><span>
+</span><span id="line-42"></span><span id="local-6989586621687925033"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687925029"><span id="local-6989586621687925031"><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="#local-6989586621687925033"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.SQL.Types.html#CollectableType"><span class="hs-identifier hs-type">CollectableType</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687925033"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span></span></span></span><span>
+</span><span id="line-43"></span><span>
+</span><span id="line-44"></span><span id="local-6989586621687925027"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687925024"><span class="hs-special">(</span><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier hs-type">Cacheable</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687925027"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier hs-type">Cacheable</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.SQL.Types.html#CollectableType"><span class="hs-identifier hs-type">CollectableType</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687925027"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-45"></span><span>
+</span><span id="line-46"></span><span class="hs-special">$(</span><span id="local-6989586621687925011"><span id="local-6989586621687925013"><span id="local-6989586621687925015"><span id="local-6989586621687925017"><span id="local-6989586621687925019"><span id="local-6989586621687925021"><span id="local-6989586621687925093"><span class="hs-identifier">deriveJSON</span><span> </span><span class="hs-identifier">defaultOptions</span><span> </span><span class="hs-special">{</span><span class="hs-identifier">constructorTagModifier</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-identifier">drop</span><span> </span><span class="hs-number">6</span><span class="hs-special">}</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">CollectableType</span></span></span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-47"></span><span>
+</span><span id="line-48"></span><span id="local-6989586621687925005"><span class="hs-keyword">instance</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.SQL.Types.html#ToSQL"><span class="hs-identifier hs-type">ToSQL</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687925005"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.SQL.Types.html#ToSQL"><span class="hs-identifier hs-type">ToSQL</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.SQL.Types.html#CollectableType"><span class="hs-identifier hs-type">CollectableType</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687925005"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-49"></span><span>  </span><span id="local-6989586621687925003"><span class="annot"><span class="annottext">toSQL :: CollectableType a -&gt; Builder
+</span><a href="#local-6989586621687925003"><span class="hs-identifier hs-var hs-var hs-var hs-var">toSQL</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-50"></span><span>    </span><span class="annot"><a href="Hasura.SQL.Types.html#CollectableTypeScalar"><span class="hs-identifier hs-type">CollectableTypeScalar</span></a></span><span> </span><span id="local-6989586621687925002"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621687925002"><span class="hs-identifier hs-var">ty</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">a -&gt; Builder
+forall a. ToSQL a =&gt; a -&gt; Builder
+</span><a href="Hasura.SQL.Types.html#toSQL"><span class="hs-identifier hs-var">toSQL</span></a></span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621687925002"><span class="hs-identifier hs-var">ty</span></a></span><span>
+</span><span id="line-51"></span><span>    </span><span class="hs-comment">-- typename array is an sql standard way of declaring types</span><span>
+</span><span id="line-52"></span><span>    </span><span class="annot"><a href="Hasura.SQL.Types.html#CollectableTypeArray"><span class="hs-identifier hs-type">CollectableTypeArray</span></a></span><span> </span><span id="local-6989586621687925001"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621687925001"><span class="hs-identifier hs-var">ty</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">a -&gt; Builder
+forall a. ToSQL a =&gt; a -&gt; Builder
+</span><a href="Hasura.SQL.Types.html#toSQL"><span class="hs-identifier hs-var">toSQL</span></a></span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621687925001"><span class="hs-identifier hs-var">ty</span></a></span><span> </span><span class="annot"><span class="annottext">Builder -&gt; Builder -&gt; Builder
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Builder
+</span><span class="hs-string">&quot; array&quot;</span></span></span><span>
+</span><span id="line-53"></span></pre></body></html>

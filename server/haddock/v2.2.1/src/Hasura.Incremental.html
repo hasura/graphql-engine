@@ -1,0 +1,95 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-comment">-- | A simple implementation of /incremental build rules/, which can be used to avoid unnecessary</span><span>
+</span><span id="line-2"></span><span class="hs-comment">-- recomputation on incrementally-changing input. See 'Rule' for more details.</span><span>
+</span><span id="line-3"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Hasura.Incremental</span><span>
+</span><span id="line-4"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-comment">-- * The @Rule@ datatype</span></span><span>
+</span><span id="line-5"></span><span>    </span><span class="annot"><a href="Hasura.Incremental.Internal.Rule.html#Rule"><span class="hs-identifier">Rule</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-6"></span><span>    </span><span class="annot"><a href="Hasura.Incremental.Internal.Rule.html#Result"><span class="hs-identifier">Result</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-7"></span><span>    </span><span class="annot"><a href="Hasura.Incremental.Internal.Rule.html#build"><span class="hs-identifier">build</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-8"></span><span>    </span><span class="annot"><a href="Hasura.Incremental.Internal.Rule.html#rebuild"><span class="hs-identifier">rebuild</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-9"></span><span>    </span><span class="annot"><a href="Hasura.Incremental.Internal.Rule.html#rebuildRule"><span class="hs-identifier">rebuildRule</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-10"></span><span>    </span><span class="annot"><a href="Hasura.Incremental.Internal.Rule.html#result"><span class="hs-identifier">result</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-11"></span><span>
+</span><span id="line-12"></span><span>    </span><span class="annot"><span class="hs-comment">-- * Abstract interface</span></span><span>
+</span><span id="line-13"></span><span>    </span><span class="annot"><a href="Hasura.Incremental.Internal.Rule.html#ArrowDistribute"><span class="hs-identifier">ArrowDistribute</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-14"></span><span>    </span><span class="annot"><a href="Hasura.Incremental.Internal.Cache.html#ArrowCache"><span class="hs-identifier">ArrowCache</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-15"></span><span>    </span><span class="annot"><a href="Hasura.Incremental.Internal.Cache.html#MonadDepend"><span class="hs-identifier">MonadDepend</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-16"></span><span>    </span><span class="annot"><a href="Hasura.Incremental.Internal.Cache.html#DependT"><span class="hs-identifier">DependT</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-17"></span><span>
+</span><span id="line-18"></span><span>    </span><span class="annot"><span class="hs-comment">-- * Fine-grained dependencies</span></span><span>
+</span><span id="line-19"></span><span>    </span><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Dependency"><span class="hs-identifier">Dependency</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-20"></span><span>    </span><span class="annot"><a href="Hasura.Incremental.Select.html#Select"><span class="hs-identifier">Select</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Incremental.Select.html#Selector"><span class="hs-identifier">Selector</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-21"></span><span>    </span><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#selectD"><span class="hs-identifier">selectD</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-22"></span><span>    </span><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#selectKeyD"><span class="hs-identifier">selectKeyD</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-23"></span><span>    </span><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier">Cacheable</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-24"></span><span>    </span><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Accesses"><span class="hs-identifier">Accesses</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-25"></span><span>
+</span><span id="line-26"></span><span>    </span><span class="annot"><span class="hs-comment">-- * Cache invalidation</span></span><span>
+</span><span id="line-27"></span><span>    </span><span class="annot"><a href="Hasura.Incremental.html#InvalidationKey"><span class="hs-identifier">InvalidationKey</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-28"></span><span>    </span><span class="annot"><a href="Hasura.Incremental.html#initialInvalidationKey"><span class="hs-identifier">initialInvalidationKey</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-29"></span><span>    </span><span class="annot"><a href="Hasura.Incremental.html#invalidate"><span class="hs-identifier">invalidate</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-30"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-31"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-32"></span><span>
+</span><span id="line-33"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Incremental.Internal.Cache.html"><span class="hs-identifier">Hasura.Incremental.Internal.Cache</span></a></span><span>
+</span><span id="line-34"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html"><span class="hs-identifier">Hasura.Incremental.Internal.Dependency</span></a></span><span>
+</span><span id="line-35"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Incremental.Internal.Rule.html"><span class="hs-identifier">Hasura.Incremental.Internal.Rule</span></a></span><span>
+</span><span id="line-36"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Incremental.Select.html"><span class="hs-identifier">Hasura.Incremental.Select</span></a></span><span>
+</span><span id="line-37"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-38"></span><span>
+</span><span id="line-39"></span><span class="hs-comment">-- | A simple helper type that can be used to implement explicit cache invalidation. Internally,</span><span>
+</span><span id="line-40"></span><span class="hs-comment">-- each 'InvalidationKey' is a counter; 'initialInvalidationKey' starts the counter at 0 and</span><span>
+</span><span id="line-41"></span><span class="hs-comment">-- 'invalidate' increments it by 1. Two 'InvalidationKey's are equal iff they have the same internal</span><span>
+</span><span id="line-42"></span><span class="hs-comment">-- count, so depending on an 'InvalidationKey' provides a mechanism to force portions of the build</span><span>
+</span><span id="line-43"></span><span class="hs-comment">-- process to be reexecuted by calling 'invalidate' before running the build.</span><span>
+</span><span id="line-44"></span><span class="hs-keyword">newtype</span><span> </span><span id="InvalidationKey"><span class="annot"><a href="Hasura.Incremental.html#InvalidationKey"><span class="hs-identifier hs-var">InvalidationKey</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="InvalidationKey"><span class="annot"><a href="Hasura.Incremental.html#InvalidationKey"><span class="hs-identifier hs-var">InvalidationKey</span></a></span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span>
+</span><span id="line-45"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687922905"><span id="local-6989586621687922907"><span id="local-6989586621687922909"><span class="annot"><span class="annottext">Int -&gt; InvalidationKey -&gt; ShowS
+[InvalidationKey] -&gt; ShowS
+InvalidationKey -&gt; String
+(Int -&gt; InvalidationKey -&gt; ShowS)
+-&gt; (InvalidationKey -&gt; String)
+-&gt; ([InvalidationKey] -&gt; ShowS)
+-&gt; Show InvalidationKey
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [InvalidationKey] -&gt; ShowS
+$cshowList :: [InvalidationKey] -&gt; ShowS
+show :: InvalidationKey -&gt; String
+$cshow :: InvalidationKey -&gt; String
+showsPrec :: Int -&gt; InvalidationKey -&gt; ShowS
+$cshowsPrec :: Int -&gt; InvalidationKey -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687922900"><span id="local-6989586621687922902"><span class="annot"><span class="annottext">InvalidationKey -&gt; InvalidationKey -&gt; Bool
+(InvalidationKey -&gt; InvalidationKey -&gt; Bool)
+-&gt; (InvalidationKey -&gt; InvalidationKey -&gt; Bool)
+-&gt; Eq InvalidationKey
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: InvalidationKey -&gt; InvalidationKey -&gt; Bool
+$c/= :: InvalidationKey -&gt; InvalidationKey -&gt; Bool
+== :: InvalidationKey -&gt; InvalidationKey -&gt; Bool
+$c== :: InvalidationKey -&gt; InvalidationKey -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687922896"><span class="annot"><span class="annottext">Eq InvalidationKey
+Eq InvalidationKey
+-&gt; (Accesses -&gt; InvalidationKey -&gt; InvalidationKey -&gt; Bool)
+-&gt; Cacheable InvalidationKey
+Accesses -&gt; InvalidationKey -&gt; InvalidationKey -&gt; Bool
+forall a. Eq a -&gt; (Accesses -&gt; a -&gt; a -&gt; Bool) -&gt; Cacheable a
+unchanged :: Accesses -&gt; InvalidationKey -&gt; InvalidationKey -&gt; Bool
+$cunchanged :: Accesses -&gt; InvalidationKey -&gt; InvalidationKey -&gt; Bool
+$cp1Cacheable :: Eq InvalidationKey
+</span><a href="Hasura.Incremental.Internal.Dependency.html#C%3ACacheable"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">Cacheable</span></a></span></span><span class="hs-special">)</span><span>
+</span><span id="line-46"></span><span>
+</span><span id="line-47"></span><span class="annot"><a href="Hasura.Incremental.html#initialInvalidationKey"><span class="hs-identifier hs-type">initialInvalidationKey</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Incremental.html#InvalidationKey"><span class="hs-identifier hs-type">InvalidationKey</span></a></span><span>
+</span><span id="line-48"></span><span id="initialInvalidationKey"><span class="annot"><span class="annottext">initialInvalidationKey :: InvalidationKey
+</span><a href="Hasura.Incremental.html#initialInvalidationKey"><span class="hs-identifier hs-var hs-var">initialInvalidationKey</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int -&gt; InvalidationKey
+</span><a href="Hasura.Incremental.html#InvalidationKey"><span class="hs-identifier hs-var">InvalidationKey</span></a></span><span> </span><span class="annot"><span class="annottext">Int
+</span><span class="hs-number">0</span></span><span>
+</span><span id="line-49"></span><span>
+</span><span id="line-50"></span><span class="annot"><a href="Hasura.Incremental.html#invalidate"><span class="hs-identifier hs-type">invalidate</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Incremental.html#InvalidationKey"><span class="hs-identifier hs-type">InvalidationKey</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Incremental.html#InvalidationKey"><span class="hs-identifier hs-type">InvalidationKey</span></a></span><span>
+</span><span id="line-51"></span><span id="invalidate"><span class="annot"><span class="annottext">invalidate :: InvalidationKey -&gt; InvalidationKey
+</span><a href="Hasura.Incremental.html#invalidate"><span class="hs-identifier hs-var hs-var">invalidate</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Incremental.html#InvalidationKey"><span class="hs-identifier hs-type">InvalidationKey</span></a></span><span> </span><span id="local-6989586621687922894"><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621687922894"><span class="hs-identifier hs-var">n</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int -&gt; InvalidationKey
+</span><a href="Hasura.Incremental.html#InvalidationKey"><span class="hs-identifier hs-var">InvalidationKey</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621687922894"><span class="hs-identifier hs-var">n</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Int
+forall a. Num a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">+</span></span><span> </span><span class="annot"><span class="annottext">Int
+</span><span class="hs-number">1</span></span><span class="hs-special">)</span><span>
+</span><span id="line-52"></span></pre></body></html>
