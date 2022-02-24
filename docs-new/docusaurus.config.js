@@ -84,6 +84,17 @@ const config = {
         },
         items: [
           {
+            type: 'docsVersionDropdown',
+            position: 'left',
+            dropdownActiveClassDisabled: true,
+            dropdownItemsAfter: [
+              {
+                href: 'https://hasura.io/docs/1.0/graphql/core/index.html',
+                label: 'v1.x',
+              },
+            ],
+          },
+          {
             type: 'doc',
             position: 'left',
             docId: 'graphql/core/index',
@@ -115,15 +126,10 @@ const config = {
             position: 'right',
           },
           {
-            type: 'docsVersionDropdown',
+            href: 'https://github.com/hasura/grapgql-engine',
             position: 'right',
-            dropdownActiveClassDisabled: true,
-            dropdownItemsAfter: [
-              {
-                href: 'https://hasura.io/docs/1.0/graphql/core/index.html',
-                label: 'v1.x',
-              },
-            ],
+            className: 'header-github-link',
+            'aria-label': 'GitHub repository',
           },
           {
             to: 'https://hasura.io/pricing/',
