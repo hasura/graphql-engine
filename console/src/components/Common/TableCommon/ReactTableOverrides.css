@@ -8,6 +8,16 @@
   max-width: 100%;
 }
 
+.ReactTable.-fit-content .rt-table {
+  max-height: 75vh;
+  overflow: auto;
+  padding-right: 3px; /* removes horizontal scrollbar if width is enough */
+}
+
+.ReactTable .pagination-bottom {
+  margin-top: 20px;
+}
+
 .ReactTable .rt-tbody {
   min-height: 32px;
   overflow: unset;
@@ -142,6 +152,9 @@
   min-width: -o-fit-content !important;
   border-right: solid 1px #f2f2f2;
   border-left: solid 1px #f2f2f2;
+  position: sticky;
+  top: 0;
+  z-index: 1;
 }
 .ReactTable .rt-tbody .rt-tr-group:last-child {
   border-bottom: solid 1px rgba(0, 0, 0, 0.05);
