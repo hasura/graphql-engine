@@ -215,6 +215,7 @@
 
 .theme-doc-sidebar-container {
   background-color: var(--color-gray-4);
+}
   .theme-doc-sidebar-menu {
     font-size: 14px;
     font-weight: var(--ifm-font-weight-normal);
@@ -224,7 +225,34 @@
       }
     }
   }
-}
+  .menu__list-item {
+    // margin-top: 0;
+    .menu__caret::before, .menu__link--sublist::after {
+      min-width: 0.7rem;
+      width: 0.7rem;
+      height: 0.7rem;
+    }
+    // .menu__link--active {
+    //   background: var(--ifm-menu-color-background-active) !important;
+    // }
+    // .menu__list-item-collapsible {
+    //   &::before {
+    //     content: '';
+    //     background: url('/icons/chevron-right.svg') no-repeat;
+    //     width: 1.5rem;
+    //     height: 1.5rem;
+    //   }
+    // }
+    // &:not(.theme-doc-sidebar-item-category) {
+    //   .menu__link {
+    //     border-left: 1px solid var(--color-gray-74);
+    //     border-radius: 0;
+    //     &--active {
+    //       border-left-color: var(--color-gray-86);
+    //     }
+    //   }
+    // }
+  }
 
 .table-of-contents {
   margin-left: 0;
