@@ -748,7 +748,7 @@ fromJsonFieldSpec =
       FieldPath r f -> go r <+> ".\"" <+> fromString (T.unpack f) <+> "\""
 
 fromTableName :: TableName -> Printer
-fromTableName TableName {tableName, tableSchema} =
+fromTableName (TableName tableName (SchemaName tableSchema)) =
   fromNameText tableSchema <+> "." <+> fromNameText tableName
 
 fromAliased :: Aliased Printer -> Printer

@@ -47,7 +47,7 @@ CREATE INDEX ON hdb_catalog.event_log (trigger_name);
 /* This index powers `fetchEvents` */
 CREATE INDEX event_log_fetch_events
   ON hdb_catalog.event_log (locked NULLS FIRST, next_retry_at NULLS FIRST, created_at)
-  WHERE delivered = 'f' 
+  WHERE delivered = 'f'
     and error = 'f'
     and archived = 'f'
 ;

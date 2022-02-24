@@ -132,7 +132,7 @@ instance FromJSON SysForeignKeyColumn where
 
 transformTable :: SysTable -> (TableName, DBTableMetadata 'MSSQL)
 transformTable tableInfo =
-  let schemaName = ssName $ staJoinedSysSchema tableInfo
+  let schemaName = SchemaName $ ssName $ staJoinedSysSchema tableInfo
       tableName = TableName (staName tableInfo) schemaName
       tableOID = OID $ staObjectId tableInfo
       (columns, foreignKeys) = unzip $ transformColumn <$> staJoinedSysColumn tableInfo
@@ -167,7 +167,7 @@ transformColumn columnInfo =
         scJoinedForeignKeyColumns columnInfo <&> \foreignKeyColumn ->
           let _fkConstraint = Constraint "fk_mssql" $ OID $ sfkcConstraintObjectId foreignKeyColumn
 
-              schemaName = ssName $ sfkcJoinedReferencedSysSchema foreignKeyColumn
+              schemaName = SchemaName $ ssName $ sfkcJoinedReferencedSysSchema foreignKeyColumn
               _fkForeignTable = TableName (sfkcJoinedReferencedTableName foreignKeyColumn) schemaName
               _fkColumnMapping = HM.singleton rciName $ ColumnName $ sfkcJoinedReferencedColumnName foreignKeyColumn
            in ForeignKey {..}

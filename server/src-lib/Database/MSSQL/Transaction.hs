@@ -2,6 +2,7 @@ module Database.MSSQL.Transaction
   ( TxET (..),
     MSSQLTxError (..),
     TxT,
+    TxE,
     runTx,
     runTxE,
     unitQuery,
@@ -16,7 +17,7 @@ module Database.MSSQL.Transaction
 where
 
 import Control.Exception (try)
-import Control.Monad.Morph (hoist)
+import Control.Monad.Morph (MFunctor (hoist))
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Database.MSSQL.Pool
 import Database.ODBC.SQLServer (FromRow)
@@ -40,6 +41,9 @@ newtype TxET e m a = TxET
       MonadFix
     )
 
+instance MFunctor (TxET e) where
+  hoist f = TxET . hoist (hoist f) . txHandler
+
 instance MonadTrans (TxET e) where
   lift = TxET . lift . lift
 
@@ -49,6 +53,8 @@ data MSSQLTxError
   | MSSQLConnError !ODBC.ODBCException
   | MSSQLInternal !Text
   deriving (Eq, Show)
+
+type TxE e a = TxET e IO a
 
 -- | The transaction command to run, returning an MSSQLTxError or the result.
 type TxT m a = TxET MSSQLTxError m a

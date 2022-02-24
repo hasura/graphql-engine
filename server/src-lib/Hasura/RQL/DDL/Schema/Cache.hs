@@ -21,7 +21,6 @@ module Hasura.RQL.DDL.Schema.Cache
 where
 
 import Control.Arrow.Extended
-import Control.Concurrent.Async.Lifted.Safe qualified as LA
 import Control.Lens hiding ((.=))
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Control.Retry qualified as Retry
@@ -39,8 +38,10 @@ import Data.Text.Extended
 import Data.These (These (..))
 import Data.Time.Clock (getCurrentTime)
 import Database.PG.Query qualified as Q
+import Hasura.Backends.MSSQL.Connection
+import Hasura.Backends.MSSQL.DDL.Source qualified as MSSQL
 import Hasura.Backends.Postgres.Connection
-import Hasura.Backends.Postgres.DDL.Source (initCatalogForSource, logPGSourceCatalogMigrationLockedQueries)
+import Hasura.Backends.Postgres.DDL.Source (initCatalogForSource)
 import Hasura.Base.Error
 import Hasura.GraphQL.Execute.Types
 import Hasura.GraphQL.RemoteServer (getSchemaIntrospection)
@@ -70,7 +71,8 @@ import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.Tag
 import Hasura.SQL.Tag qualified as Tag
 import Hasura.Server.Types
-  ( MaintenanceMode (..),
+  ( EventingMode (..),
+    MaintenanceMode (..),
     ReadOnlyMode (..),
   )
 import Hasura.Session
@@ -410,7 +412,8 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
         MonadIO m,
         BackendMetadata b,
         HasServerConfigCtx m,
-        MonadError QErr m
+        MonadError QErr m,
+        MonadBaseControl IO m
       ) =>
       (Int, SourceConfig b) `arr` RecreateEventTriggers
     initCatalogIfNeeded = Inc.cache proc (numEventTriggers, sourceConfig) -> do
@@ -418,38 +421,47 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
         -< do
           if numEventTriggers > 0
             then do
-              case backendTag @b of
-                Tag.PostgresVanillaTag -> do
-                  migrationTime <- liftIO getCurrentTime
-                  maintenanceMode <- _sccMaintenanceMode <$> askServerConfigCtx
-                  eventingMode <- _sccEventingMode <$> askServerConfigCtx
-                  readOnlyMode <- _sccReadOnlyMode <$> askServerConfigCtx
-                  liftEitherM $
-                    liftIO $
-                      LA.withAsync (logPGSourceCatalogMigrationLockedQueries logger sourceConfig) $
-                        const $ do
-                          let initCatalogAction =
-                                runExceptT $ runTx (_pscExecCtx sourceConfig) Q.ReadWrite (initCatalogForSource maintenanceMode eventingMode readOnlyMode migrationTime)
-                          -- The `initCatalogForSource` action is retried here because
-                          -- in cloud there will be multiple workers (graphql-engine instances)
-                          -- trying to migrate the source catalog, when needed. This introduces
-                          -- a race condition as both the workers try to migrate the source catalog
-                          -- concurrently and when one of them succeeds the other ones will fail
-                          -- and be in an inconsistent state. To avoid the inconsistency, we retry
-                          -- migrating the catalog on error and in the retry `initCatalogForSource`
-                          -- will see that the catalog is already migrated, so it won't attempt the
-                          -- migration again
-                          Retry.retrying
-                            ( Retry.constantDelay (fromIntegral $ diffTimeToMicroSeconds $ seconds $ Seconds 10)
-                                <> Retry.limitRetries 3
-                            )
-                            (const $ return . isLeft)
-                            (const initCatalogAction)
-                -- TODO: When event triggers are supported on new databases,
-                -- the initialization of the source catalog should also return
-                -- if the event triggers are to be re-created or not, essentially
-                -- replacing the `RETDoNothing` below
-                _ -> pure RETDoNothing
+              migrationTime <- liftIO getCurrentTime
+              maintenanceMode <- _sccMaintenanceMode <$> askServerConfigCtx
+              eventingMode <- _sccEventingMode <$> askServerConfigCtx
+              readOnlyMode <- _sccReadOnlyMode <$> askServerConfigCtx
+
+              if
+                  -- when safe mode is enabled, don't perform any migrations
+                  | readOnlyMode == ReadOnlyModeEnabled -> pure RETDoNothing
+                  -- when eventing mode is disabled, don't perform any migrations
+                  | eventingMode == EventingDisabled -> pure RETDoNothing
+                  -- when maintenance mode is enabled, don't perform any migrations
+                  | maintenanceMode == MaintenanceModeEnabled -> pure RETDoNothing
+                  | otherwise -> do
+                    let initCatalogAction =
+                          case backendTag @b of
+                            Tag.PostgresVanillaTag -> do
+                              runExceptT $ runTx (_pscExecCtx sourceConfig) Q.ReadWrite (initCatalogForSource migrationTime)
+                            Tag.MSSQLTag -> do
+                              runExceptT $
+                                mssqlRunReadWrite (_mscExecCtx sourceConfig) MSSQL.initCatalogForSource
+                            -- TODO: When event triggers are supported on new databases,
+                            -- the initialization of the source catalog should also return
+                            -- if the event triggers are to be re-created or not, essentially
+                            -- replacing the `RETDoNothing` below
+                            _ -> pure $ Right RETDoNothing
+                    -- The `initCatalogForSource` action is retried here because
+                    -- in cloud there will be multiple workers (graphql-engine instances)
+                    -- trying to migrate the source catalog, when needed. This introduces
+                    -- a race condition as both the workers try to migrate the source catalog
+                    -- concurrently and when one of them succeeds the other ones will fail
+                    -- and be in an inconsistent state. To avoid the inconsistency, we retry
+                    -- migrating the catalog on error and in the retry `initCatalogForSource`
+                    -- will see that the catalog is already migrated, so it won't attempt the
+                    -- migration again
+                    liftEither
+                      =<< Retry.retrying
+                        ( Retry.constantDelay (fromIntegral $ diffTimeToMicroSeconds $ seconds $ Seconds 10)
+                            <> Retry.limitRetries 3
+                        )
+                        (const $ return . isLeft)
+                        (const initCatalogAction)
             else pure RETDoNothing
 
     buildSource ::

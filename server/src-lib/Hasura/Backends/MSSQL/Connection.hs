@@ -9,6 +9,7 @@ module Hasura.Backends.MSSQL.Connection
   ( MSSQLConnConfiguration (MSSQLConnConfiguration),
     MSSQLSourceConfig (MSSQLSourceConfig, _mscExecCtx),
     MSSQLExecCtx (..),
+    MonadMSSQLTx (..),
     createMSSQLPool,
     getEnv,
     odbcValueToJValue,
@@ -16,6 +17,7 @@ module Hasura.Backends.MSSQL.Connection
   )
 where
 
+import Control.Monad.Morph (hoist)
 import Control.Monad.Trans.Control
 import Data.Aeson
 import Data.Aeson qualified as J
@@ -29,6 +31,25 @@ import Hasura.Backends.MSSQL.SQL.Error
 import Hasura.Base.Error
 import Hasura.Incremental (Cacheable (..))
 import Hasura.Prelude
+
+class MonadError QErr m => MonadMSSQLTx m where
+  liftMSSQLTx :: MSTx.TxE QErr a -> m a
+
+instance MonadMSSQLTx m => MonadMSSQLTx (ReaderT s m) where
+  liftMSSQLTx = lift . liftMSSQLTx
+
+instance MonadMSSQLTx m => MonadMSSQLTx (StateT s m) where
+  liftMSSQLTx = lift . liftMSSQLTx
+
+instance (Monoid w, MonadMSSQLTx m) => MonadMSSQLTx (WriterT w m) where
+  liftMSSQLTx = lift . liftMSSQLTx
+
+instance MonadIO m => MonadMSSQLTx (MSTx.TxET QErr m) where
+  liftMSSQLTx = hoist liftIO
+
+-- | ODBC connection string for MSSQL server
+newtype MSSQLConnectionString = MSSQLConnectionString {unMSSQLConnectionString :: Text}
+  deriving (Show, Eq, ToJSON, FromJSON, Cacheable, Hashable, NFData)
 
 -- * Orphan instances
 
