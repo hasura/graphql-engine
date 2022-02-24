@@ -1,0 +1,20 @@
+.custom-footer-wrapper {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  padding: 1rem 0;
+
+  .dark-theme-logo {
+    display: none;
+  }
+  
+  html[data-theme='dark'] {
+    .dark-theme-logo {
+      display: initial;
+    }
+    .light-theme-logo {
+      display: none;
+    }
+  }
+}

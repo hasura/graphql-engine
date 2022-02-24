@@ -1,8 +1,8 @@
 import React from "react";
 import styles from "./PageHelpful.module.scss";
 
-import HappyPace from "@site/static/icons/happy.svg";
-import SadPace from "@site/static/icons/sad.svg";
+import HappyFace from "@site/static/icons/happy.svg";
+import SadFace from "@site/static/icons/sad.svg";
 
 const PageHelpful = () => {
   return (
@@ -10,10 +10,10 @@ const PageHelpful = () => {
       <h4>Did you find this page helpful?</h4>
       <div className={styles["helpful-icon-wrapper"]}>
         <div className={styles["helpful-icon"] + " " + styles["active"]}>
-          <HappyPace />
+          <HappyFace />
         </div>
         <div className={styles["helpful-icon"]}>
-          <SadPace />
+          <SadFace />
         </div>
       </div>
     </div>

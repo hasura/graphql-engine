@@ -4,10 +4,11 @@ import styles from './GraphQLWithHasuraBanner.module.scss';
 import ArrowRight from "@site/static/icons/arrow_right.svg";
 import Star from "@site/static/img/star.svg";
 import hasuraFree from "@site/static/img/hasura-free.png";
+import Link from '@docusaurus/Link';
 
 const GraphQLWithHasuraBanner = () => {
   return (
-    <a className={styles["remove-text-decoration"]} href="https://cloud.hasura.io/signup?pg=docs&plcmt=pre-footer&cta=try-graphql-with-hasura&tech=default">
+    <Link className={styles["remove-text-decoration"]} href="https://cloud.hasura.io/signup?pg=docs&plcmt=pre-footer&cta=try-graphql-with-hasura&tech=default">
       <div className={styles["graphql-with-hasura-wrapper"]}>
         <div className={styles["p40"]}>
           <h3>
@@ -38,7 +39,7 @@ const GraphQLWithHasuraBanner = () => {
           <img src={hasuraFree} alt="Promo" />
         </div>
       </div>
-    </a>
+    </Link>
   );
 }
 
