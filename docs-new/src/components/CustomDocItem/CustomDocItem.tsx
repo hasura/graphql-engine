@@ -1,6 +1,6 @@
 import React, { Fragment } from 'react';
 import ActualDocItem from '@theme/DocItem';
-import styles from "./CustomDocItem.module.css";
+import styles from "./CustomDocItem.module.scss";
 
 import GraphQLWithHasuraBanner from "@site/src/components/GraphQLWithHasuraBanner/GraphQLWithHasuraBanner";
 import PageHelpful from "@site/src/components/PageHelpful/PageHelpful";

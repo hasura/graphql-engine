@@ -4,7 +4,7 @@ import useIsBrowser from '@docusaurus/useIsBrowser';
 import cslx from 'clsx';
 import { createGraphiQLFetcher } from '@graphiql/toolkit';
 import "graphiql/graphiql.min.css";
-import "./styles.css";
+import "./styles.scss";
 
 
 const GraphiQLIDE = ({ query, variables, response, viewOnly=true }) => {

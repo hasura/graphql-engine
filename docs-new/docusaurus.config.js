@@ -40,12 +40,13 @@ const config = {
           }
         },
         theme: {
-          customCss: require.resolve('./src/css/custom.css'),
+          customCss: require.resolve('./src/css/custom.scss'),
         },
       }),
     ],
   ],
-  // plugins: [
+  plugins: [
+    'docusaurus-plugin-sass',
   //   [
   //     'ideal-image',
   //     {
@@ -56,7 +57,7 @@ const config = {
   //       disableInDev: false,
   //     },
   //   ],
-  // ],
+  ],
 
   themeConfig:
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */

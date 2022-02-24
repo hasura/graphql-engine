@@ -1,5 +1,5 @@
 import React from 'react';
-import styles from './GraphQLWithHasuraBanner.module.css';
+import styles from './GraphQLWithHasuraBanner.module.scss';
 
 import ArrowRight from "@site/static/icons/arrow_right.svg";
 import Star from "@site/static/img/star.svg";
