@@ -24,17 +24,27 @@ import { findEventTrigger, findScheduledTrigger } from './utils';
 import { ReduxState } from '../../../types';
 
 import { mapDispatchToPropsEmpty } from '../../Common/utils/reactUtils';
-import { getEventTriggers, getCronTriggers } from '../../../metadata/selector';
+import { getEventTriggers } from '../../../metadata/selector';
+import { useGetCronTriggers } from './CronTriggers/Hooks/useGetCronTriggers';
 
 interface Props extends InjectedProps {}
 
 const Container: React.FC<Props> = props => {
+  const { data: cronTriggers, isLoading, error } = useGetCronTriggers();
+  if (isLoading) {
+    return <span>Loading...</span>;
+  }
+  if (!cronTriggers) {
+    return <span>Could not find any cron triggers</span>;
+  }
+  if (error) {
+    return <span>There was an error, please try again later</span>;
+  }
   const {
     children,
     pathname: currentLocation,
     triggerName: currentTriggerName,
     eventTriggers,
-    cronTriggers,
   } = props;
 
   let currentEventTrigger;
@@ -136,7 +146,6 @@ const mapStateToProps = (state: ReduxState, ownProps: ExternalProps) => {
   return {
     ...state.events,
     eventTriggers: getEventTriggers(state),
-    cronTriggers: getCronTriggers(state),
     pathname: ownProps.location.pathname,
     triggerName: ownProps.params.triggerName,
   };

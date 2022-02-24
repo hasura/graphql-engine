@@ -1,25 +1,31 @@
 import React from 'react';
 import { connect, ConnectedProps } from 'react-redux';
 import STContainer from '../Container';
-import { Triggers, RouterTriggerProps } from '../../types';
+import { RouterTriggerProps } from '../../types';
 import { MapStateToProps } from '../../../../../types';
 import Logs from './Logs';
 import { mapDispatchToPropsEmpty } from '../../../../Common/utils/reactUtils';
-import { getCronTriggers } from '../../../../../metadata/selector';
+import { useGetCronTriggers } from '../Hooks/useGetCronTriggers';
 
 interface Props extends InjectedProps {}
 
-const LogsContainer: React.FC<Props> = ({
-  dispatch,
-  allTriggers,
-  triggerName,
-}) => {
+const LogsContainer: React.FC<Props> = ({ dispatch, triggerName }) => {
+  const { data: cronTriggers, isLoading, error } = useGetCronTriggers();
+  if (isLoading) {
+    return <span>Loading...</span>;
+  }
+  if (!cronTriggers) {
+    return <span>Could not find any cron triggers</span>;
+  }
+  if (error) {
+    return <span>There was an error, please try again later</span>;
+  }
   return (
     <STContainer
       tabName="logs"
       dispatch={dispatch}
       triggerName={triggerName}
-      allTriggers={allTriggers}
+      allTriggers={cronTriggers}
     >
       <Logs dispatch={dispatch} />
     </STContainer>
@@ -27,7 +33,6 @@ const LogsContainer: React.FC<Props> = ({
 };
 
 type PropsFromState = {
-  allTriggers: Triggers;
   triggerName: string;
 };
 
@@ -36,7 +41,6 @@ const mapStateToProps: MapStateToProps<PropsFromState, RouterTriggerProps> = (
   ownProps
 ) => {
   return {
-    allTriggers: getCronTriggers(state),
     triggerName: ownProps.params.triggerName,
   };
 };
