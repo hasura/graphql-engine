@@ -90,6 +90,9 @@ class TestActionsSync:
     def test_object_response_action_transformed_output(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/object_response_action_transformed_output.yaml')
 
+    def test_expecting_object_response_with_nested_null(self, hge_ctx):
+       check_query_f(hge_ctx, self.dir() + '/expecting_object_response_with_nested_null.yaml')
+
 
     # Webhook response validation tests. See https://github.com/hasura/graphql-engine/issues/3977
     def test_mirror_action_not_null(self, hge_ctx):

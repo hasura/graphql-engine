@@ -142,6 +142,7 @@ function:
 
 ### Bug fixes and improvements
 
+- server: Don't drop nested typed null fields in actions (fix #8237)
 - server: Fix regression in MSSQL subscriptions when results exceed 2048 characters (#8267)
 - server: refactor OpenAPI spec generation (for REST endpoints) and improve OpenAPI warnings
 - server: add jsonb to string cast support - postgres 
