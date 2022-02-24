@@ -4,20 +4,21 @@
 
 .graphql-with-hasura-wrapper {
   background-image: url("@site/static/img/hasura-free.png");
-  background-color: rgb(234, 240, 246);
-  box-shadow: rgb(0 0 0 / 20%) 0px 2px 6px 0px;
+  background-color: #eaf0f6;
+  color: var(--color-gray-90);
+  box-shadow: var(--ifm-global-shadow-lw);
   background-size: contain;
   background-position: right center;
   background-repeat: no-repeat;
   transition: all 0.2s ease-in-out 0s;
   cursor: pointer;
-  border-radius: 8px;
+  border-radius: 0.5rem;
   display: grid;
   grid-template-columns: 1fr;
   margin: 40px 0;
 
   &:hover {
-    box-shadow: 0px 10px 30px rgba(0, 0, 0, 0.16);
+    box-shadow: var(--ifm-global-shadow-tl);
 
     .try-hasura-div .arrow {
       transform: translateX(5px);
@@ -35,10 +36,6 @@
 }
 
 .graphql-with-hasura-wrapper {
-  h3 {
-    color: rgb(27, 38, 55);
-  }
-
   .desc, ul {
     padding-inline-start: 0px;
   }
@@ -48,7 +45,6 @@
     margin-bottom: 0;
 
     li {
-      color: rgb(27, 38, 55);
       list-style-type: none;
       display: flex;
       align-items: flex-start;
@@ -67,7 +63,6 @@
   display: flex;
   align-items: center;
   font-size: 0.75rem;
-  color: rgb(27, 38, 55);
   font-weight: 600;
   text-transform: uppercase;
 
@@ -75,6 +70,20 @@
     transition: all .3s ease-in-out;
     display: grid;
     margin-left: 6px;
+  }
+}
+
+html[data-theme='dark'] {
+  .graphql-with-hasura-wrapper {
+    background-color: var(--color-gray-82);
+    color: var(--ifm-color-content-secondary);
+  }
+  .try-hasura-div {
+    color: var(--ifm-link-color);
+
+    .arrow path {
+      stroke: var(--ifm-link-color);
+    }
   }
 }
 
