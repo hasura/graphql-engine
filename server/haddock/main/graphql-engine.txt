@@ -26368,8 +26368,7 @@ mkPGLogger :: Logger Hasura -> PGLogger
 
 -- | Context required for all graphql-engine CLI commands
 data GlobalCtx
-GlobalCtx :: !Manager -> !ConnInfo -> !(Maybe (UrlConf, ConnInfo), Maybe Int) -> GlobalCtx
-[_gcHttpManager] :: GlobalCtx -> !Manager
+GlobalCtx :: !ConnInfo -> !(Maybe (UrlConf, ConnInfo), Maybe Int) -> GlobalCtx
 [_gcMetadataDbConnInfo] :: GlobalCtx -> !ConnInfo
 
 -- | <ul>
