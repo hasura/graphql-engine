@@ -11,6 +11,11 @@
 - server: fix parsing timestamp values in BigQuery backends (fix #8076)
 - cli: fix metadata version being set to 3 when doing `hasura init --version 2` (#8148)
 
+## v2.2.1
+
+- server: postgres: return a single entry per row (selected randomly) when an object relationship has multiple matches (fix #7936)
+- console: add support for remote database relationships
+
 ## v2.3.0-beta.2
 
 - server: fix issues working with read-only DBs by reverting the need for storing required SQL functions in a `hdb_lib` schema in the user's DB
@@ -45,7 +50,7 @@ The optimization can be enabled using the
   update mutations.
 - server: allow inserting more than 1 row simultaneously into table with generated columns (fix #4633)
   that have generated columns in Postgres.
-- server: postgres: return a single entry per row (selected randomly) when an object relationship is misconfigured one-to-many
+- server: postgres: return a single entry per row (selected randomly) when an object relationship has multiple matches (fix #7936)
 - server: Updates Kriti to v0.3.0
 - server: add operation name in the request sent to remote schemas
 - server: add support for scalar response types for actions (fix #7805)
