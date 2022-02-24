@@ -133,9 +133,7 @@ class Main extends React.Component {
       this.props.metadata.inconsistentInheritedRoles.length > 0 &&
       !this.props.inconsistentInheritedRole
     ) {
-      this.props.dispatch(
-        _push(`${globals.urlPrefix}/settings/metadata-status`)
-      );
+      this.props.dispatch(_push(`/settings/metadata-status`));
     }
   }
 
