@@ -1,24 +1,73 @@
 import React from "react";
+import BrowserOnly from "@docusaurus/BrowserOnly";
+import Link from "@docusaurus/Link";
+
 import LogoDark from "@site/static/img/logo.svg";
 import LogoLight from "@site/static/img/logo-light.svg";
-import BrowserOnly from "@docusaurus/BrowserOnly";
+import GithubIcon from "@site/static/icons/github.svg";
+import TwitterIcon from "@site/static/icons/twitter.svg";
+import DiscordIcon from "@site/static/icons/discord.svg";
+import LinkedInIcon from "@site/static/icons/linkedin.svg";
+import YoutubeIcon from "@site/static/icons/youtube.svg";
 import styles from "./CustomFooter.module.scss";
 
-const CustomFooter = () => {
-  return (
-    <footer className={styles["custom-footer-wrapper"]}>
-      <div>
-        <LogoLight className={styles["dark-theme-logo"]} />
-        <LogoDark className={styles["light-theme-logo"]} />
-      </div>
-      <div className={""}>
-        {`Copyright © ${new Date().getFullYear()} Hasura Inc. All rights reserved`}
-      </div>
-      <div className={""}>
-        {/* < /> */}
-      </div>
-    </footer>
-  )
-}
+const CustomFooter = () => (
+<footer className={styles["custom-footer-wrapper"]}>
+  <div className={styles["logo-wrapper"]}>
+    <LogoLight className={styles["dark-theme-logo"]} />
+    <LogoDark className={styles["light-theme-logo"]} />
+  </div>
+  <div className={styles["copyright"]}>
+    {`© ${new Date().getFullYear()} Hasura Inc. All rights reserved`}
+  </div>
+  <div className={styles["footerSocialIconsWrapper"]}>
+    <div className={styles["socialBrands"]}>
+      <Link
+        href={"https://github.com/hasura/graphql-engine"}
+        rel="noopener noreferrer"
+        aria-label={"Github"}
+      >
+        <GithubIcon />
+      </Link>
+    </div>
+    <div className={styles["socialBrands"]}>
+      <Link
+        href={"https://twitter.com/hasurahq"}
+        rel="noopener noreferrer"
+        aria-label={"Twitter"}
+      >
+        <TwitterIcon />
+      </Link>
+    </div>
+    <div className={styles["socialBrands"]}>
+      <Link
+        href={"https://discord.com/invite/hasura"}
+        rel="noopener noreferrer"
+        aria-label={"Discord"}
+      >
+        <DiscordIcon />
+      </Link>
+    </div>
+    <div className={styles["socialBrands"]}>
+      <Link
+        href={"https://www.youtube.com/channel/UCZo1ciR8pZvdD3Wxp9aSNhQ"}
+        rel="noopener noreferrer"
+        aria-label={"Youtube"}
+      >
+        <YoutubeIcon />
+      </Link>
+    </div>
+    <div className={styles["socialBrands"]}>
+      <Link
+        href={"https://www.linkedin.com/company/hasura"}
+        rel="noopener noreferrer"
+        aria-label={"Linkedin"}
+      >
+        <LinkedInIcon />
+      </Link>
+    </div>
+  </div>
+</footer>
+);
 
 export default CustomFooter;
