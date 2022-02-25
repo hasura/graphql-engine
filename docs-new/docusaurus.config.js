@@ -94,12 +94,12 @@ const config = {
               },
             ],
           },
-          {
-            type: 'doc',
-            position: 'left',
-            docId: 'graphql/core/index',
-            label: 'Docs',
-          },
+          // {
+          //   type: 'doc',
+          //   position: 'left',
+          //   docId: 'graphql/core/index',
+          //   label: 'Docs',
+          // },
           // {
           //    type: 'docSidebar',
           //    position: 'left',
@@ -111,14 +111,14 @@ const config = {
             label: 'Product',
             position: 'left',
           },
-          // {
-          //   to: 'https://hasura.io/blog/',
-          //   label: 'Blog',
-          //   position: 'left',
-          // },
+          {
+            to: 'https://hasura.io/blog/',
+            label: 'Blog',
+            position: 'left',
+          },
           {
             to: 'https://hasura.io/learn/',
-            label: 'Learn',
+            label: 'Tutorials',
             position: 'left',
           },
           {
@@ -126,7 +126,7 @@ const config = {
             position: 'right',
           },
           {
-            href: 'https://github.com/hasura/grapgql-engine',
+            href: 'https://github.com/hasura/graphql-engine',
             position: 'right',
             className: 'header-github-link',
             'aria-label': 'GitHub repository',
@@ -134,11 +134,6 @@ const config = {
           {
             to: 'https://hasura.io/pricing/',
             label: 'Prcing',
-            position: 'right',
-          },
-          {
-            to: 'https://hasura.io/contact-us/?type=hasuraenterprise',
-            label: 'Contact Sales',
             position: 'right',
           },
           {
