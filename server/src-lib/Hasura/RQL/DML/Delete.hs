@@ -1,5 +1,3 @@
-{-# LANGUAGE ScopedTypeVariables #-}
-
 module Hasura.RQL.DML.Delete
   ( validateDeleteQWith,
     validateDeleteQ,

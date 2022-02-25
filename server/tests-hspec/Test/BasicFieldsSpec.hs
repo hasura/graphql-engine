@@ -1,6 +1,3 @@
-{-# LANGUAGE QuasiQuotes #-}
-{-# LANGUAGE RecordWildCards #-}
-
 -- | Test querying an entity for a couple fields.
 module Test.BasicFieldsSpec (spec) where
 

@@ -1,6 +1,3 @@
-{-# LANGUAGE QuasiQuotes #-}
-{-# LANGUAGE RecordWildCards #-}
-
 -- | Tests that `where' works.
 module Test.WhereSpec (spec) where
 

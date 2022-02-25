@@ -1,6 +1,3 @@
-{-# LANGUAGE QuasiQuotes #-}
-{-# LANGUAGE RecordWildCards #-}
-
 -- | Test directives.
 module Test.DirectivesSpec (spec) where
 

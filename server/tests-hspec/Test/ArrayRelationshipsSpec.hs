@@ -1,6 +1,3 @@
-{-# LANGUAGE QuasiQuotes #-}
-{-# LANGUAGE RecordWildCards #-}
-
 -- | Testing array relationships.
 module Test.ArrayRelationshipsSpec (spec) where
 

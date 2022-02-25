@@ -1,6 +1,5 @@
 {-# OPTIONS -fno-warn-orphans #-}
 {-# LANGUAGE DeriveAnyClass #-}
-{-# LANGUAGE OverloadedStrings #-}
 
 module Hasura.Backends.MySQL.Types.Internal
   ( Aliased (..),

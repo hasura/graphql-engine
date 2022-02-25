@@ -1,6 +1,3 @@
-{-# LANGUAGE QuasiQuotes #-}
-{-# LANGUAGE RecordWildCards #-}
-
 -- | Tests for limit/offset.
 module Test.LimitOffsetSpec (spec) where
 
