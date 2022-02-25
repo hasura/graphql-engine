@@ -7,7 +7,6 @@
    :description: Homepage for all of Hasura's documentation.
    :keywords: hasura, docs, home
 
-
 Hasura Documentation
 ====================
 
