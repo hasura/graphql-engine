@@ -292,8 +292,14 @@
   }
 }
 
-pre code {
-  background-color: var(--ifm-code-background);
+code {
+  background-color: var(--color-gray-4);
+}
+
+pre {
+  code {
+    background-color: var(--ifm-code-background);
+  }
 }
 
 .theme-edit-this-page {

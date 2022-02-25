@@ -3,9 +3,20 @@ html[data-theme='dark'] {
   --ifm-link-color:#48ADF6;
   --ifm-navbar-background-color:var(--color-gray-82);
   --ifm-background-color:var(--color-gray-90);
+  --ifm-hero-background-color: var(--ifm-background-color);
   --ifm-code-background:var(--color-gray-86);
   --ifm-footer-background-color:var(--color-gray-82);
   --collapse-button-bg-color-dark: var(--color-gray-86);
+
+  code {
+    background-color: var(--color-gray-78);
+  }
+
+  pre {
+    code {
+      background-color: var(--ifm-code-background);
+    }
+  }
 
   .header-github-link {
     &:hover {

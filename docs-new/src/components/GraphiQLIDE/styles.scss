@@ -63,6 +63,9 @@
     line-height: 18px;
     font-size: 16px;
     padding: 2px 10px;
+    div:not(:first-child) {
+      display: none !important;
+    }
   }
 
   &.view-only .execute-button {
@@ -78,6 +81,16 @@ html[data-theme='dark'] {
     -webkit-box-shadow: -1px 2px 10px 2px rgba(24, 26, 28, 1);
     -moz-box-shadow: -1px 2px 10px 2px rgba(24, 26, 28, 1);
     box-shadow: -1px 2px 10px 2px rgba(24, 26, 28, 1);
+    .secondary-editor-title {
+      background-color: var(--color-gray-78);
+      color: var(--color-gray-4);
+      div {
+        color: inherit !important;
+      }
+    }
+    .secondary-editor-title, .resultWrap {
+      border-color: var(--color-gray-78);
+    }
   }
 
   /*
@@ -87,7 +100,7 @@ html[data-theme='dark'] {
   */
 
   .cm-s-dracula.CodeMirror, .cm-s-dracula .CodeMirror-gutters {
-    background-color: var(--ifm-code-background) !important;
+    background-color: var(--color-gray-86) !important;
     color: #f8f8f2 !important;
     border: none;
   }
