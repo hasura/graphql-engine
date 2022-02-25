@@ -150,7 +150,7 @@ if [ -e $targetFile ]; then
     rm $targetFile
 fi
 
-hasura version
+hasura version --skip-update-check
 
 if ! $(echo "$PATH" | grep -q "$INSTALL_PATH"); then
     log
