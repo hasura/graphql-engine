@@ -1,7 +1,6 @@
-This note is in [Hasura.GraphQL.Schema.Remote](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Schema/Remote.hs#L666).
+This note is in [Hasura.GraphQL.Schema.Remote](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Schema/Remote.hs#L677).
 It is referenced at:
-  - line 716 of [Hasura.GraphQL.Schema.Remote](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Schema/Remote.hs#L716)
-  - line 761 of [Hasura.GraphQL.Schema.Remote](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Schema/Remote.hs#L761)
+  - line 727 of [Hasura.GraphQL.Schema.Remote](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Schema/Remote.hs#L727)
 
 # Querying remote schema interfaces
 

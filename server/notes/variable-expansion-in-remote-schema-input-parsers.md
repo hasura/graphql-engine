@@ -1,8 +1,8 @@
-This note is in [Hasura.GraphQL.Schema.Remote](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Schema/Remote.hs#L106).
+This note is in [Hasura.GraphQL.Schema.Remote](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Schema/Remote.hs#L117).
 It is referenced at:
-  - line 225 of [Hasura.GraphQL.Schema.Remote](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Schema/Remote.hs#L225)
-  - line 331 of [Hasura.GraphQL.Schema.Remote](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Schema/Remote.hs#L331)
-  - line 430 of [Hasura.GraphQL.Schema.Remote](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Schema/Remote.hs#L430)
+  - line 236 of [Hasura.GraphQL.Schema.Remote](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Schema/Remote.hs#L236)
+  - line 342 of [Hasura.GraphQL.Schema.Remote](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Schema/Remote.hs#L342)
+  - line 441 of [Hasura.GraphQL.Schema.Remote](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Schema/Remote.hs#L441)
 
 # Variable expansion in remote schema input parsers
 
