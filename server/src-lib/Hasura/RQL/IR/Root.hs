@@ -89,14 +89,14 @@ type MutationActionRoot v =
 type QueryRootField v =
   RootField
     (QueryDBRoot (RemoteRelationshipField v) v)
-    RQL.RemoteField
+    (RemoteSchemaRootField Void RQL.RemoteSchemaVariable)
     (QueryActionRoot v)
     JO.Value
 
 type MutationRootField v =
   RootField
     (MutationDBRoot (RemoteRelationshipField v) v)
-    RQL.RemoteField
+    (RemoteSchemaRootField Void RQL.RemoteSchemaVariable)
     (MutationActionRoot v)
     JO.Value
 

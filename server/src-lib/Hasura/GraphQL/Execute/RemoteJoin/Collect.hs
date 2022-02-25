@@ -281,7 +281,7 @@ createRemoteJoin joinColumnAliases remoteRelationship =
               RemoteSchemaJoin
                 (inputArgsToMap _rselArgs)
                 _rselResultCustomizer
-                _rselSelection
+                (convertSelectionSet _rselSelection)
                 joinColumnAliases
                 _rselFieldCall
                 _rselRemoteSchema

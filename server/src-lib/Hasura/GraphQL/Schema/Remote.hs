@@ -12,7 +12,7 @@ where
 import Data.Has
 import Data.HashMap.Strict qualified as Map
 import Data.HashMap.Strict.InsOrd qualified as OMap
-import Data.HashMap.Strict.InsOrd.Extended qualified as OMap
+import Data.HashSet qualified as Set
 import Data.List.NonEmpty qualified as NE
 import Data.Monoid (Any (..))
 import Data.Text.Extended
@@ -23,6 +23,7 @@ import Hasura.GraphQL.Parser as P
 import Hasura.GraphQL.Parser.Internal.Parser qualified as P
 import Hasura.GraphQL.Parser.Internal.TypeChecking qualified as P
 import Hasura.Prelude
+import Hasura.RQL.IR.RemoteSchema qualified as IR
 import Hasura.RQL.Types.RemoteSchema
 import Hasura.RQL.Types.ResultCustomization
 import Hasura.RQL.Types.SchemaCache (IntrospectionResult (IntrospectionResult, irMutationRoot, irQueryRoot, irSubscriptionRoot), ParsedIntrospectionG (..))
@@ -49,17 +50,27 @@ buildRemoteParser introspectionResult remoteSchemaInfo@RemoteSchemaInfo {..} = d
       (customizeRemoteNamespace remoteSchemaInfo <$> irMutationRoot introspectionResult <*> rawMutationParsers)
       (customizeRemoteNamespace remoteSchemaInfo <$> irSubscriptionRoot introspectionResult <*> rawSubscriptionParsers)
 
-makeResultCustomizer :: RemoteSchemaCustomizer -> G.Field G.NoFragments a -> ResultCustomizer
-makeResultCustomizer remoteSchemaCustomizer G.Field {..} =
-  modifyFieldByName (fromMaybe _fName _fAlias) $
+makeResultCustomizer ::
+  RemoteSchemaCustomizer ->
+  IR.GraphQLField Void RemoteSchemaVariable ->
+  ResultCustomizer
+makeResultCustomizer remoteSchemaCustomizer IR.GraphQLField {..} =
+  modifyFieldByName _fAlias $
     if _fName == $$(G.litName "__typename")
       then customizeTypeNameString (_rscCustomizeTypeName remoteSchemaCustomizer)
-      else foldMap resultCustomizerFromSelection _fSelectionSet
+      else resultCustomizerFromSelection _fSelectionSet
   where
-    resultCustomizerFromSelection :: G.Selection G.NoFragments a -> ResultCustomizer
+    resultCustomizerFromSelection ::
+      IR.SelectionSet Void RemoteSchemaVariable -> ResultCustomizer
     resultCustomizerFromSelection = \case
-      G.SelectionField fld -> makeResultCustomizer remoteSchemaCustomizer fld
-      G.SelectionInlineFragment G.InlineFragment {..} -> foldMap resultCustomizerFromSelection _ifSelectionSet
+      IR.SelectionSetObject s -> foldMap customizeField s
+      IR.SelectionSetUnion s -> foldMap (foldMap customizeField) $ IR._atssMemberSelectionSets s
+      IR.SelectionSetInterface s -> foldMap (foldMap customizeField) $ IR._atssMemberSelectionSets s
+      IR.SelectionSetNone -> mempty
+
+    customizeField :: IR.Field Void RemoteSchemaVariable -> ResultCustomizer
+    customizeField = \case
+      IR.FieldGraphQL f -> makeResultCustomizer remoteSchemaCustomizer f
 
 buildRawRemoteParser ::
   forall r m n.
@@ -68,9 +79,9 @@ buildRawRemoteParser ::
   RemoteSchemaInfo ->
   -- | parsers for, respectively: queries, mutations, and subscriptions
   m
-    ( [P.FieldParser n RemoteField],
-      Maybe [P.FieldParser n RemoteField],
-      Maybe [P.FieldParser n RemoteField]
+    ( [P.FieldParser n (IR.RemoteSchemaRootField Void RemoteSchemaVariable)],
+      Maybe [P.FieldParser n (IR.RemoteSchemaRootField Void RemoteSchemaVariable)],
+      Maybe [P.FieldParser n (IR.RemoteSchemaRootField Void RemoteSchemaVariable)]
     )
 buildRawRemoteParser (IntrospectionResult sdoc queryRoot mutationRoot subscriptionRoot) info = do
   queryT <- makeParsers queryRoot
@@ -78,21 +89,21 @@ buildRawRemoteParser (IntrospectionResult sdoc queryRoot mutationRoot subscripti
   subscriptionT <- makeNonQueryRootFieldParser subscriptionRoot $$(G.litName "Subscription")
   return (queryT, mutationT, subscriptionT)
   where
-    makeFieldParser :: G.Name -> G.FieldDefinition RemoteSchemaInputValueDefinition -> m (P.FieldParser n RemoteField)
+    makeFieldParser :: G.Name -> G.FieldDefinition RemoteSchemaInputValueDefinition -> m (P.FieldParser n (IR.RemoteSchemaRootField Void RemoteSchemaVariable))
     makeFieldParser rootTypeName fieldDef =
       fmap makeRemoteField <$> remoteFieldFromDefinition sdoc rootTypeName fieldDef
 
-    makeRemoteField :: G.Field G.NoFragments RemoteSchemaVariable -> RemoteField
-    makeRemoteField fld = RemoteFieldG info (makeResultCustomizer (rsCustomizer info) fld) fld
+    makeRemoteField :: IR.GraphQLField Void RemoteSchemaVariable -> (IR.RemoteSchemaRootField Void RemoteSchemaVariable)
+    makeRemoteField fld = IR.RemoteSchemaRootField info (makeResultCustomizer (rsCustomizer info) fld) fld
 
-    makeParsers :: G.Name -> m [P.FieldParser n RemoteField]
+    makeParsers :: G.Name -> m [P.FieldParser n (IR.RemoteSchemaRootField Void RemoteSchemaVariable)]
     makeParsers rootName =
       case lookupType sdoc rootName of
         Just (G.TypeDefinitionObject o) ->
           traverse (makeFieldParser rootName) $ G._otdFieldsDefinition o
         _ -> throw400 Unexpected $ rootName <<> " has to be an object type"
 
-    makeNonQueryRootFieldParser :: Maybe G.Name -> G.Name -> m (Maybe [P.FieldParser n RemoteField])
+    makeNonQueryRootFieldParser :: Maybe G.Name -> G.Name -> m (Maybe [P.FieldParser n (IR.RemoteSchemaRootField Void RemoteSchemaVariable)])
     makeNonQueryRootFieldParser userProvidedRootName defaultRootName =
       case userProvidedRootName of
         Just _rootName -> traverse makeParsers userProvidedRootName
@@ -539,7 +550,7 @@ remoteSchemaObject ::
   MonadBuildRemoteSchema r m n =>
   RemoteSchemaIntrospection ->
   G.ObjectTypeDefinition RemoteSchemaInputValueDefinition ->
-  m (Parser 'Output n [G.Field G.NoFragments RemoteSchemaVariable])
+  m (Parser 'Output n (IR.ObjectSelectionSet Void RemoteSchemaVariable))
 remoteSchemaObject schemaDoc defn@(G.ObjectTypeDefinition description name interfaces _directives subFields) =
   P.memoizeOn 'remoteSchemaObject defn do
     subFieldParsers <- traverse (remoteFieldFromDefinition schemaDoc name) subFields
@@ -548,13 +559,13 @@ remoteSchemaObject schemaDoc defn@(G.ObjectTypeDefinition description name inter
     -- TODO: also check sub-interfaces, when these are supported in a future graphql spec
     traverse_ validateImplementsFields interfaceDefs
     typename <- mkTypename name
+    let allFields = map (fmap IR.FieldGraphQL) subFieldParsers -- <> map (fmap IR.FieldRemote) remoteJoinParsers
     pure $
-      P.selectionSetObject typename description subFieldParsers implements
-        <&> toList
-          . OMap.mapWithKey
-            ( \alias -> handleTypename $ \_ ->
-                G.Field (Just alias) $$(G.litName "__typename") mempty mempty mempty
-            )
+      P.selectionSetObject typename description allFields implements
+        <&> OMap.mapWithKey \alias ->
+          handleTypename $
+            const $
+              IR.FieldGraphQL $ IR.mkGraphQLField (Just alias) $$(G.litName "__typename") mempty mempty IR.SelectionSetNone
   where
     getInterface :: G.Name -> m (G.InterfaceTypeDefinition [G.Name] RemoteSchemaInputValueDefinition)
     getInterface interfaceName =
@@ -719,7 +730,7 @@ remoteSchemaInterface ::
   MonadBuildRemoteSchema r m n =>
   RemoteSchemaIntrospection ->
   G.InterfaceTypeDefinition [G.Name] RemoteSchemaInputValueDefinition ->
-  m (Parser 'Output n (G.SelectionSet G.NoFragments RemoteSchemaVariable))
+  m (Parser 'Output n (IR.DeduplicatedSelectionSet Void RemoteSchemaVariable))
 remoteSchemaInterface schemaDoc defn@(G.InterfaceTypeDefinition description name _directives fields possibleTypes) =
   P.memoizeOn 'remoteSchemaObject defn do
     subFieldParsers <- traverse (remoteFieldFromDefinition schemaDoc name) fields
@@ -734,7 +745,9 @@ remoteSchemaInterface schemaDoc defn@(G.InterfaceTypeDefinition description name
     -- should have a check that expresses that that collection of objects is equal
     -- to 'possibleTypes'.
     typename <- mkTypename name
-    pure $ P.selectionSetInterface typename description subFieldParsers objs <&> constructInterfaceSelectionSet
+    pure $
+      P.selectionSetInterface typename description subFieldParsers objs
+        <&> IR.mkInterfaceSelectionSet (Set.fromList $ map G._fldName fields)
   where
     getObject :: G.Name -> m (G.ObjectTypeDefinition RemoteSchemaInputValueDefinition)
     getObject objectName =
@@ -751,77 +764,20 @@ remoteSchemaInterface schemaDoc defn@(G.InterfaceTypeDefinition description name
                 <> " can only include object types. It cannot include "
                 <> squote objectName
 
-    -- 'constructInterfaceQuery' constructs a remote interface query.
-    constructInterfaceSelectionSet ::
-      [(G.Name, [G.Field G.NoFragments RemoteSchemaVariable])] ->
-      G.SelectionSet G.NoFragments RemoteSchemaVariable
-    constructInterfaceSelectionSet objNameAndFields =
-      let -- common interface fields that exist in every
-          -- selection set provided
-          -- #1 of Note [Querying remote schema Interfaces]
-          commonInterfaceFields =
-            OMap.elems $
-              OMap.mapMaybe (allTheSame . toList) $
-                OMap.groupListWith G._fName $
-                  concatMap (filter ((`elem` interfaceFieldNames) . G._fName) . snd) $
-                    objNameAndFields
-
-          interfaceFieldNames = map G._fldName fields
-
-          allTheSame (x : xs) | all (== x) xs = Just x
-          allTheSame _ = Nothing
-
-          -- #2 of Note [Querying remote schema interface fields]
-          nonCommonInterfaceFields =
-            catMaybes $
-              flip map objNameAndFields $ \(objName, objFields) ->
-                let nonCommonFields = filter (not . flip elem commonInterfaceFields) objFields
-                 in mkObjInlineFragment (objName, map G.SelectionField nonCommonFields)
-
-          -- helper function for #4 of Note [Querying remote schema interface fields]
-          mkObjInlineFragment (_, []) = Nothing
-          mkObjInlineFragment (objName, selSet) =
-            Just $
-              G.SelectionInlineFragment $
-                G.InlineFragment (Just objName) mempty selSet
-       in -- #5 of Note [Querying remote schema interface fields]
-          fmap G.SelectionField commonInterfaceFields <> nonCommonInterfaceFields
-
 -- | 'remoteSchemaUnion' returns a output parser for a given 'UnionTypeDefinition'.
 remoteSchemaUnion ::
   forall r m n.
   MonadBuildRemoteSchema r m n =>
   RemoteSchemaIntrospection ->
   G.UnionTypeDefinition ->
-  m (Parser 'Output n (G.SelectionSet G.NoFragments RemoteSchemaVariable))
+  m (Parser 'Output n (IR.DeduplicatedSelectionSet Void RemoteSchemaVariable))
 remoteSchemaUnion schemaDoc defn@(G.UnionTypeDefinition description name _directives objectNames) =
   P.memoizeOn 'remoteSchemaObject defn do
     objs <- traverse (getObjectParser schemaDoc getObject) objectNames
     when (null objs) $
       throw400 RemoteSchemaError $ "List of member types cannot be empty for union type " <> squote name
     typename <- mkTypename name
-    pure $
-      P.selectionSetUnion typename description objs
-        <&> ( \objNameAndFields ->
-                catMaybes $
-                  objNameAndFields <&> \(objName, fields) ->
-                    case fields of
-                      -- The return value obtained from the parsing of a union selection set
-                      -- specifies, for each object in the union type, a fragment-free
-                      -- selection set for that object type. In particular, if, for a given
-                      -- object type, the selection set passed to the union type did not
-                      -- specify any fields for that object type (i.e. if no inline fragment
-                      -- applied to that object), the selection set resulting from the parsing
-                      -- through that object type would be empty, i.e. []. We exclude such
-                      -- object types from the reconstructed selection set for the union
-                      -- type, as selection sets cannot be empty.
-                      [] -> Nothing
-                      _ ->
-                        Just
-                          ( G.SelectionInlineFragment $
-                              G.InlineFragment (Just objName) mempty $ fmap G.SelectionField fields
-                          )
-            )
+    pure $ P.selectionSetUnion typename description objs <&> IR.mkUnionSelectionSet
   where
     getObject :: G.Name -> m (G.ObjectTypeDefinition RemoteSchemaInputValueDefinition)
     getObject objectName =
@@ -844,29 +800,31 @@ remoteFieldFromDefinition ::
   RemoteSchemaIntrospection ->
   G.Name ->
   G.FieldDefinition RemoteSchemaInputValueDefinition ->
-  m (FieldParser n (G.Field G.NoFragments RemoteSchemaVariable))
-remoteFieldFromDefinition schemaDoc parentTypeName (G.FieldDefinition description name argsDefinition gType _) = do
-  let addNullableList :: FieldParser n a -> FieldParser n a
-      addNullableList (P.FieldParser (Definition name' desc (FieldInfo args typ)) parser) =
-        P.FieldParser (Definition name' desc (FieldInfo args (TList Nullable typ))) parser
-
-      addNonNullableList :: FieldParser n a -> FieldParser n a
-      addNonNullableList (P.FieldParser (Definition name' desc (FieldInfo args typ)) parser) =
-        P.FieldParser (Definition name' desc (FieldInfo args (TList NonNullable typ))) parser
-
-      -- TODO add directives, deprecation
-      convertType :: G.GType -> m (FieldParser n (G.Field G.NoFragments RemoteSchemaVariable))
-      convertType gType' = do
-        case gType' of
-          G.TypeNamed (G.Nullability True) fieldTypeName ->
-            P.nullableField <$> remoteFieldFromName schemaDoc parentTypeName name description fieldTypeName argsDefinition
-          G.TypeList (G.Nullability True) gType'' ->
-            addNullableList <$> convertType gType''
-          G.TypeNamed (G.Nullability False) fieldTypeName -> do
-            P.nonNullableField <$> remoteFieldFromName schemaDoc parentTypeName name description fieldTypeName argsDefinition
-          G.TypeList (G.Nullability False) gType'' ->
-            addNonNullableList <$> convertType gType''
+  m (FieldParser n (IR.GraphQLField Void RemoteSchemaVariable))
+remoteFieldFromDefinition schemaDoc parentTypeName (G.FieldDefinition description name argsDefinition gType _) =
   convertType gType
+  where
+    addNullableList :: FieldParser n a -> FieldParser n a
+    addNullableList (P.FieldParser (Definition name' desc (FieldInfo args typ)) parser) =
+      P.FieldParser (Definition name' desc (FieldInfo args (TList Nullable typ))) parser
+
+    addNonNullableList :: FieldParser n a -> FieldParser n a
+    addNonNullableList (P.FieldParser (Definition name' desc (FieldInfo args typ)) parser) =
+      P.FieldParser (Definition name' desc (FieldInfo args (TList NonNullable typ))) parser
+
+    -- TODO add directives, deprecation
+    convertType ::
+      G.GType ->
+      m (FieldParser n (IR.GraphQLField Void RemoteSchemaVariable))
+    convertType = \case
+      G.TypeNamed (G.Nullability True) fieldTypeName ->
+        P.nullableField <$> remoteFieldFromName schemaDoc parentTypeName name description fieldTypeName argsDefinition
+      G.TypeList (G.Nullability True) gType' ->
+        addNullableList <$> convertType gType'
+      G.TypeNamed (G.Nullability False) fieldTypeName -> do
+        P.nonNullableField <$> remoteFieldFromName schemaDoc parentTypeName name description fieldTypeName argsDefinition
+      G.TypeList (G.Nullability False) gType' ->
+        addNonNullableList <$> convertType gType'
 
 -- | 'remoteFieldFromName' accepts a GraphQL name and searches for its definition
 --   in the 'RemoteSchemaIntrospection'.
@@ -879,7 +837,7 @@ remoteFieldFromName ::
   Maybe G.Description ->
   G.Name ->
   G.ArgumentsDefinition RemoteSchemaInputValueDefinition ->
-  m (FieldParser n (G.Field G.NoFragments RemoteSchemaVariable))
+  m (FieldParser n (IR.GraphQLField Void RemoteSchemaVariable))
 remoteFieldFromName sdoc parentTypeName fieldName description fieldTypeName argsDefns =
   case lookupType sdoc fieldTypeName of
     Nothing -> throw400 RemoteSchemaError $ "Could not find type with name " <>> fieldTypeName
@@ -897,7 +855,7 @@ remoteField ::
   Maybe G.Description ->
   G.ArgumentsDefinition RemoteSchemaInputValueDefinition ->
   G.TypeDefinition [G.Name] RemoteSchemaInputValueDefinition ->
-  m (FieldParser n (G.Field G.NoFragments RemoteSchemaVariable))
+  m (FieldParser n (IR.GraphQLField Void RemoteSchemaVariable))
 remoteField sdoc parentTypeName fieldName description argsDefn typeDefn = do
   -- TODO add directives
   argsParser <- argumentsParser argsDefn sdoc
@@ -908,44 +866,46 @@ remoteField sdoc parentTypeName fieldName description argsDefn typeDefn = do
     G.TypeDefinitionObject objTypeDefn -> do
       remoteSchemaObjFields <- remoteSchemaObject sdoc objTypeDefn
       -- converting [Field NoFragments Name] to (SelectionSet NoFragments G.Name)
-      let remoteSchemaObjSelSet = fmap G.SelectionField <$> remoteSchemaObjFields
+      let remoteSchemaObjSelSet = IR.SelectionSetObject <$> remoteSchemaObjFields
       pure remoteSchemaObjSelSet <&> mkFieldParserWithSelectionSet customizedFieldName argsParser
     G.TypeDefinitionScalar scalarTypeDefn ->
       pure $ mkFieldParserWithoutSelectionSet customizedFieldName argsParser $ void $ remoteFieldScalarParser customizeTypename scalarTypeDefn
     G.TypeDefinitionEnum enumTypeDefn ->
       pure $ mkFieldParserWithoutSelectionSet customizedFieldName argsParser $ void $ remoteFieldEnumParser customizeTypename enumTypeDefn
     G.TypeDefinitionInterface ifaceTypeDefn ->
-      remoteSchemaInterface sdoc ifaceTypeDefn <&> mkFieldParserWithSelectionSet customizedFieldName argsParser
+      remoteSchemaInterface sdoc ifaceTypeDefn
+        <&> (mkFieldParserWithSelectionSet customizedFieldName argsParser . fmap IR.SelectionSetInterface)
     G.TypeDefinitionUnion unionTypeDefn ->
-      remoteSchemaUnion sdoc unionTypeDefn <&> mkFieldParserWithSelectionSet customizedFieldName argsParser
+      remoteSchemaUnion sdoc unionTypeDefn
+        <&> (mkFieldParserWithSelectionSet customizedFieldName argsParser . fmap IR.SelectionSetUnion)
     _ -> throw400 RemoteSchemaError "expected output type, but got input type"
   where
     mkField ::
       Maybe G.Name ->
       G.Name ->
       HashMap G.Name (G.Value RemoteSchemaVariable) ->
-      G.SelectionSet G.NoFragments RemoteSchemaVariable ->
-      G.Field G.NoFragments RemoteSchemaVariable
+      IR.SelectionSet Void RemoteSchemaVariable ->
+      IR.GraphQLField Void RemoteSchemaVariable
     mkField alias customizedFieldName args selSet =
       -- If there's no alias then use customizedFieldName as the alias so the
       -- correctly customized field name will be returned from the remote server.
       let alias' = alias <|> guard (customizedFieldName /= fieldName) *> Just customizedFieldName
-       in G.Field alias' fieldName args mempty selSet
+       in IR.mkGraphQLField alias' fieldName args mempty selSet
 
     mkFieldParserWithoutSelectionSet ::
       G.Name ->
       InputFieldsParser n (Altered, HashMap G.Name (G.Value RemoteSchemaVariable)) ->
       Parser 'Both n () ->
-      FieldParser n (G.Field G.NoFragments RemoteSchemaVariable)
+      FieldParser n (IR.GraphQLField Void RemoteSchemaVariable)
     mkFieldParserWithoutSelectionSet customizedFieldName argsParser outputParser =
       P.rawSelection customizedFieldName description argsParser outputParser
-        <&> \(alias, _, (_, args)) -> mkField alias customizedFieldName args []
+        <&> \(alias, _, (_, args)) -> mkField alias customizedFieldName args IR.SelectionSetNone
 
     mkFieldParserWithSelectionSet ::
       G.Name ->
       InputFieldsParser n (Altered, HashMap G.Name (G.Value RemoteSchemaVariable)) ->
-      Parser 'Output n (G.SelectionSet G.NoFragments RemoteSchemaVariable) ->
-      FieldParser n (G.Field G.NoFragments RemoteSchemaVariable)
+      Parser 'Output n (IR.SelectionSet Void RemoteSchemaVariable) ->
+      FieldParser n (IR.GraphQLField Void RemoteSchemaVariable)
     mkFieldParserWithSelectionSet customizedFieldName argsParser outputParser =
       P.rawSubselection customizedFieldName description argsParser outputParser
         <&> \(alias, _, (_, args), selSet) -> mkField alias customizedFieldName args selSet
@@ -961,7 +921,7 @@ getObjectParser ::
   RemoteSchemaIntrospection ->
   (G.Name -> m (G.ObjectTypeDefinition RemoteSchemaInputValueDefinition)) ->
   G.Name ->
-  m (Parser 'Output n (G.Name, [G.Field G.NoFragments RemoteSchemaVariable]))
+  m (Parser 'Output n (G.Name, IR.ObjectSelectionSet Void RemoteSchemaVariable))
 getObjectParser schemaDoc getObject objName = do
   obj <- remoteSchemaObject schemaDoc =<< getObject objName
   return $ (objName,) <$> obj
@@ -971,8 +931,8 @@ customizeRemoteNamespace ::
   (MonadParse n) =>
   RemoteSchemaInfo ->
   G.Name ->
-  [P.FieldParser n RemoteField] ->
-  [P.FieldParser n (NamespacedField RemoteField)]
+  [P.FieldParser n (IR.RemoteSchemaRootField Void RemoteSchemaVariable)] ->
+  [P.FieldParser n (NamespacedField (IR.RemoteSchemaRootField Void RemoteSchemaVariable))]
 customizeRemoteNamespace remoteSchemaInfo@RemoteSchemaInfo {..} rootTypeName fieldParsers =
   customizeNamespace (_rscNamespaceFieldName rsCustomizer) fromParsedSelection mkNamespaceTypename fieldParsers
   where
@@ -980,7 +940,7 @@ customizeRemoteNamespace remoteSchemaInfo@RemoteSchemaInfo {..} rootTypeName fie
       handleTypename . const $
         -- In P.selectionSet we lose the resultCustomizer from __typename fields so we need to put it back
         let resultCustomizer = modifyFieldByName alias $ customizeTypeNameString $ _rscCustomizeTypeName rsCustomizer
-         in RemoteFieldG remoteSchemaInfo resultCustomizer $ G.Field (Just alias) $$(G.litName "__typename") mempty mempty mempty
+         in IR.RemoteSchemaRootField remoteSchemaInfo resultCustomizer $ IR.mkGraphQLField (Just alias) $$(G.litName "__typename") mempty mempty IR.SelectionSetNone
     mkNamespaceTypename = MkTypename $ const $ runMkTypename (remoteSchemaCustomizeTypeName rsCustomizer) rootTypeName
 
 type MonadBuildRemoteSchema r m n = (MonadSchema n m, MonadError QErr m, MonadReader r m, Has MkTypename r, Has CustomizeRemoteFieldName r)

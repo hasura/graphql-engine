@@ -15,10 +15,10 @@ import Hasura.RQL.Types.Column
 import Hasura.SQL.Backend
 
 data AnnDelG (b :: BackendType) (r :: Type) v = AnnDel
-  { dqp1Table :: !(TableName b),
-    dqp1Where :: !(AnnBoolExp b v, AnnBoolExp b v),
-    dqp1Output :: !(MutationOutputG b r v),
-    dqp1AllCols :: ![ColumnInfo b]
+  { dqp1Table :: TableName b,
+    dqp1Where :: (AnnBoolExp b v, AnnBoolExp b v),
+    dqp1Output :: MutationOutputG b r v,
+    dqp1AllCols :: [ColumnInfo b]
   }
   deriving (Functor, Foldable, Traversable)
 

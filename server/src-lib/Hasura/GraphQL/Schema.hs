@@ -232,12 +232,12 @@ buildRoleContext
     where
       getQueryRemotes ::
         [ParsedIntrospection] ->
-        [P.FieldParser (P.ParseT Identity) (NamespacedField RemoteField)]
+        [P.FieldParser (P.ParseT Identity) (NamespacedField (RemoteSchemaRootField Void RemoteSchemaVariable))]
       getQueryRemotes = concatMap piQuery
 
       getMutationRemotes ::
         [ParsedIntrospection] ->
-        [P.FieldParser (P.ParseT Identity) (NamespacedField RemoteField)]
+        [P.FieldParser (P.ParseT Identity) (NamespacedField (RemoteSchemaRootField Void RemoteSchemaVariable))]
       getMutationRemotes = concatMap (concat . piMutation)
 
       buildSource ::
@@ -418,8 +418,8 @@ unauthenticatedContext ::
   ( MonadError QErr m,
     MonadIO m
   ) =>
-  [P.FieldParser (P.ParseT Identity) (NamespacedField RemoteField)] ->
-  [P.FieldParser (P.ParseT Identity) (NamespacedField RemoteField)] ->
+  [P.FieldParser (P.ParseT Identity) (NamespacedField (RemoteSchemaRootField Void RemoteSchemaVariable))] ->
+  [P.FieldParser (P.ParseT Identity) (NamespacedField (RemoteSchemaRootField Void RemoteSchemaVariable))] ->
   RemoteSchemaPermsCtx ->
   m GQLContext
 unauthenticatedContext adminQueryRemotes adminMutationRemotes remoteSchemaPermsCtx = P.runSchemaT $ do
@@ -602,7 +602,7 @@ buildQueryParser ::
     Has CustomizeRemoteFieldName r
   ) =>
   [P.FieldParser n (NamespacedField (QueryRootField UnpreparedValue))] ->
-  [P.FieldParser n (NamespacedField RemoteField)] ->
+  [P.FieldParser n (NamespacedField (RemoteSchemaRootField Void RemoteSchemaVariable))] ->
   [ActionInfo] ->
   AnnotatedCustomTypes ->
   Maybe (Parser 'Output n (RootFieldMap (MutationRootField UnpreparedValue))) ->
@@ -700,7 +700,7 @@ buildMutationParser ::
     Has MkRootFieldName r,
     Has CustomizeRemoteFieldName r
   ) =>
-  [P.FieldParser n (NamespacedField RemoteField)] ->
+  [P.FieldParser n (NamespacedField (RemoteSchemaRootField Void RemoteSchemaVariable))] ->
   [ActionInfo] ->
   AnnotatedCustomTypes ->
   [P.FieldParser n (NamespacedField (MutationRootField UnpreparedValue))] ->

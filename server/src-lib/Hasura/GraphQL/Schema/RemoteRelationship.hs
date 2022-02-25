@@ -115,7 +115,7 @@ remoteRelationshipToSchemaField lhsFields RemoteSchemaFieldInfo {..} = runMaybeT
 
   pure $
     remoteFld
-      `P.bindField` \fld@G.Field {G._fArguments = args, G._fSelectionSet = selSet, G._fName = fname} -> do
+      `P.bindField` \fld@IR.GraphQLField {IR._fArguments = args, IR._fSelectionSet = selSet, IR._fName = fname} -> do
         let remoteArgs =
               Map.toList args <&> \(argName, argVal) -> IR.RemoteFieldArgument argName $ P.GraphQLValue argVal
         let resultCustomizer =

@@ -122,13 +122,13 @@ convertMutationSelectionSet
             exists
             \(SourceConfigWith (sourceConfig :: SourceConfig b) queryTagsConfig (MDBR db)) -> do
               let mutationQueryTagsAttributes = encodeQueryTags $ QTMutation $ MutationMetadata reqId maybeOperationName rootFieldName parameterizedQueryHash
-              let queryTagsComment = Tagged.untag $ createQueryTags @m mutationQueryTagsAttributes queryTagsConfig
-              let (noRelsDBAST, remoteJoins) = RJ.getRemoteJoinsMutationDB db
+                  queryTagsComment = Tagged.untag $ createQueryTags @m mutationQueryTagsAttributes queryTagsConfig
+                  (noRelsDBAST, remoteJoins) = RJ.getRemoteJoinsMutationDB db
               dbStepInfo <- flip runReaderT queryTagsComment $ mkDBMutationPlan @b userInfo stringifyNum sourceName sourceConfig noRelsDBAST
               pure $ ExecStepDB [] (AB.mkAnyBackend dbStepInfo) remoteJoins
         RFRemote remoteField -> do
-          RemoteFieldG remoteSchemaInfo resultCustomizer resolvedRemoteField <- runVariableCache $ resolveRemoteField userInfo remoteField
-          pure $ buildExecStepRemote remoteSchemaInfo resultCustomizer G.OperationTypeMutation [G.SelectionField resolvedRemoteField] (GH._grOperationName gqlUnparsed)
+          RemoteSchemaRootField remoteSchemaInfo resultCustomizer resolvedRemoteField <- runVariableCache $ resolveRemoteField userInfo remoteField
+          pure $ buildExecStepRemote remoteSchemaInfo resultCustomizer G.OperationTypeMutation [G.SelectionField $ convertGraphQLField resolvedRemoteField] (GH._grOperationName gqlUnparsed)
         RFAction action -> do
           let (noRelsDBAST, remoteJoins) = RJ.getRemoteJoinsActionMutation action
           (actionName, _fch) <- pure $ case noRelsDBAST of
