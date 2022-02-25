@@ -1,6 +1,6 @@
 {-# LANGUAGE DeriveAnyClass #-}
 
-module Hasura.Experimental.IR.OrderBy
+module Hasura.Backends.DataWrapper.IR.OrderBy
   ( OrderBy (..),
     OrderType (..),
   )
@@ -8,7 +8,7 @@ where
 
 --------------------------------------------------------------------------------
 
-import Hasura.Experimental.IR.Column qualified as Column (Name)
+import Hasura.Backends.DataWrapper.IR.Column qualified as Column (Name)
 import Hasura.Incremental (Cacheable)
 import Hasura.Prelude
 

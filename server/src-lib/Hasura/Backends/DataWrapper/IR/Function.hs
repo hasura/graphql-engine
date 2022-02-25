@@ -1,8 +1,8 @@
-module Hasura.Experimental.IR.Function (Name) where
+module Hasura.Backends.DataWrapper.IR.Function (Name) where
 
 --------------------------------------------------------------------------------
 
-import Hasura.Experimental.IR.Name qualified as Name
+import Hasura.Backends.DataWrapper.IR.Name qualified as Name
 
 --------------------------------------------------------------------------------
 

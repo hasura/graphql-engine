@@ -1,6 +1,6 @@
 {-# LANGUAGE DeriveAnyClass #-}
 
-module Hasura.Experimental.IR.Expression
+module Hasura.Backends.DataWrapper.IR.Expression
   ( Expression (..),
     Operator (..),
   )
@@ -9,15 +9,15 @@ where
 --------------------------------------------------------------------------------
 
 import Data.Aeson (FromJSON, ToJSON)
-import Hasura.Experimental.IR.Column qualified as Column (Name)
-import Hasura.Experimental.IR.Scalar.Value qualified as Scalar (Value)
+import Hasura.Backends.DataWrapper.IR.Column qualified as Column (Name)
+import Hasura.Backends.DataWrapper.IR.Scalar.Value qualified as Scalar (Value)
 import Hasura.Incremental (Cacheable)
 import Hasura.Prelude
 
 --------------------------------------------------------------------------------
 
--- | A concrete (i.e. not polymorphic) representation for expressions that make
--- up datasource-agnostic queries.
+-- | A "concrete" expression type for datasource-agnostic queries (as opposed
+-- to our existing polymorphic intermediate representation).
 --
 -- This type should be seen as an intermediate phase of the processing pipeline
 -- which provides a high-level interface that the GraphQL Engine can use to
@@ -41,7 +41,7 @@ data Expression
     --
     -- cf. https://www.postgresql.org/docs/13/functions-comparisons.html#FUNCTIONS-COMPARISONS-IN-SCALAR
     --
-    -- NOTE(jkachmar): It's unclear that there's any benefit from using a
+    -- XXX(jkachmar): It's unclear that there's any benefit from using a
     -- 'HashSet' for the RHS collection of 'Scalar.Value's.
     --
     -- Consider switching this to a 'Set' after the typeclass methods which use

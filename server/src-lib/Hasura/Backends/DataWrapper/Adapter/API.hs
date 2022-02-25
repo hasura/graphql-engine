@@ -1,13 +1,13 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
-module Hasura.Experimental.Adapter.API () where
+module Hasura.Backends.DataWrapper.Adapter.API () where
 
 --------------------------------------------------------------------------------
 
-import Hasura.SQL.Backend (BackendType (Experimental))
+import Hasura.SQL.Backend (BackendType (DataWrapper))
 import Hasura.Server.API.Backend (BackendAPI (..))
 
 --------------------------------------------------------------------------------
 
-instance BackendAPI 'Experimental where
+instance BackendAPI 'DataWrapper where
   metadataV1CommandParsers = []

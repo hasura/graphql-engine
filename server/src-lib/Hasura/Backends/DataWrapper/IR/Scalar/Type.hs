@@ -1,6 +1,6 @@
 {-# LANGUAGE DeriveAnyClass #-}
 
-module Hasura.Experimental.IR.Scalar.Type
+module Hasura.Backends.DataWrapper.IR.Scalar.Type
   ( Type (..),
   )
 where
@@ -18,11 +18,11 @@ import Hasura.Prelude
 --
 -- Used to specify the domain of legal values for a @Column@.
 --
--- NOTE(jkachmar): This type shouldn't _need_ ser/de instances, but they're
--- imposed by the 'Backend' class.
+-- NOTE: This type shouldn't _need_ ser/de instances, but they're imposed by
+-- the 'Backend' class.
 --
--- NOTE(cdparks): Should we add a Nullable _ :: Type constructor
--- instead of using a isNullable flag in @Column@?
+-- XXX: Should we add a @Nullable _ :: Type@ constructor instead of using an
+-- @isNullable@ flag in @Column@?
 data Type
   = String
   | Number

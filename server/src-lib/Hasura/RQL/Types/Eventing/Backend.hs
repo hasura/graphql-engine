@@ -238,26 +238,26 @@ instance BackendEventTrigger 'MySQL where
 -- implement these methods in the 'Hasura.Experimental.Adapters' module
 -- hierarchy just to keep everything as tidy as possible for that section of
 -- code.
-instance BackendEventTrigger 'Experimental where
+instance BackendEventTrigger 'DataWrapper where
   insertManualEvent _ _ _ _ _ _ =
-    throw400 NotSupported "Event triggers are not supported for Experimental sources"
+    throw400 NotSupported "Event triggers are not supported for GraphQL Data Wrappers."
   fetchUndeliveredEvents _ _ _ _ =
-    throw400 NotSupported "Event triggers are not supported for Experimental sources"
+    throw400 NotSupported "Event triggers are not supported for GraphQL Data Wrappers."
   setRetry _ _ _ _ =
-    throw400 NotSupported "Event triggers are not supported for Experimental sources"
+    throw400 NotSupported "Event triggers are not supported for GraphQL Data Wrappers."
   recordSuccess _ _ _ _ =
-    runExceptT $ throw400 NotSupported "Event triggers are not supported for Experimental sources"
+    runExceptT $ throw400 NotSupported "Event triggers are not supported for GraphQL Data Wrappers."
   getMaintenanceModeVersion _ =
-    throw400 NotSupported "Event triggers are not supported for Experimental sources"
+    throw400 NotSupported "Event triggers are not supported for GraphQL Data Wrappers."
   recordError _ _ _ _ _ =
-    runExceptT $ throw400 NotSupported "Event triggers are not supported for Experimental sources"
+    runExceptT $ throw400 NotSupported "Event triggers are not supported for GraphQL Data Wrappers."
   recordError' _ _ _ _ _ =
-    runExceptT $ throw400 NotSupported "Event triggers are not supported for Experimental sources"
+    runExceptT $ throw400 NotSupported "Event triggers are not supported for GraphQL Data Wrappers."
   dropTriggerAndArchiveEvents _ _ =
-    throw400 NotSupported "Event triggers are not supported for Experimental sources"
+    throw400 NotSupported "Event triggers are not supported for GraphQL Data Wrappers."
   redeliverEvent _ _ =
-    throw400 NotSupported "Event triggers are not supported for Experimental sources"
+    throw400 NotSupported "Event triggers are not supported for GraphQL Data Wrappers."
   unlockEventsInSource _ _ =
-    runExceptT $ throw400 NotSupported "Event triggers are not supported for Experimental sources"
+    runExceptT $ throw400 NotSupported "Event triggers are not supported for GraphQL Data Wrappers."
   createTableEventTrigger _ _ _ _ _ _ =
-    runExceptT $ throw400 NotSupported "Event triggers are not supported for Experimental sources"
+    runExceptT $ throw400 NotSupported "Event triggers are not supported for GraphQL Data Wrappers."

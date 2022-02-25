@@ -1,6 +1,6 @@
 {-# LANGUAGE StandaloneKindSignatures #-}
 
-module Hasura.Experimental.IR.Name
+module Hasura.Backends.DataWrapper.IR.Name
   ( Name (..),
     NameType (..),
   )
