@@ -81,11 +81,15 @@ p {
 
 #v1-maintenance-warning {
   background-color: #FFEFD8;
-  padding: 1rem;
+  padding: 1.5rem;
   margin: 1rem 0;
   color: black;
   border-left: 4px solid #F2B14F;
   border-radius: 4px;
+}
+
+#v1-maintenance-warning .latest-version {
+  margin-top: 1rem;
 }
 
 #v1-maintenance-warning a {
