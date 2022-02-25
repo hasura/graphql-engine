@@ -79,6 +79,19 @@ p {
   line-height: 1.7;
 }
 
+#v1-maintenance-warning {
+  background-color: #FFEFD8;
+  padding: 1rem;
+  margin: 1rem 0;
+  color: black;
+  border-left: 4px solid #F2B14F;
+  border-radius: 4px;
+}
+
+#v1-maintenance-warning a {
+  font-weight: bold;
+}
+
 .inline-block {
   display: inline-block;
   vertical-align: middle;
