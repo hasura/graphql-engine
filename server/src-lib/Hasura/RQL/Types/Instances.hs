@@ -3,7 +3,7 @@
 module Hasura.RQL.Types.Instances (module B) where
 
 import Hasura.Backends.BigQuery.Instances.Types as B ()
+import Hasura.Backends.DataWrapper.Adapter.Backend as B ()
 import Hasura.Backends.MSSQL.Instances.Types as B ()
 import Hasura.Backends.MySQL.Instances.Types as B ()
 import Hasura.Backends.Postgres.Instances.Types as B ()
-import Hasura.Experimental.Adapter.Backend as B ()

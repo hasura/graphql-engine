@@ -1,12 +1,12 @@
-module Hasura.Experimental.Schema.Column
+module Hasura.Backends.DataWrapper.Schema.Column
   ( Column (..),
   )
 where
 
 --------------------------------------------------------------------------------
 
-import Hasura.Experimental.IR.Column qualified as Column (Name)
-import Hasura.Experimental.IR.Scalar.Type qualified as Scalar (Type)
+import Hasura.Backends.DataWrapper.IR.Column qualified as Column (Name)
+import Hasura.Backends.DataWrapper.IR.Scalar.Type qualified as Scalar (Type)
 import Hasura.Prelude
 
 --------------------------------------------------------------------------------
@@ -20,8 +20,8 @@ import Hasura.Prelude
 -- cf. https://en.wikipedia.org/wiki/Column_(database)
 --     https://www.postgresql.org/docs/13/ddl-basics.html
 --
--- NOTE(cdparks): Instead of an isNullable flag, should we instead
--- add a Nullable constructor to Scalar.Type?
+-- XXX: Instead of an @isNullable@ flag, should we instead add a @Nullable@
+-- data constructor to 'Scalar.Type'?
 data Column = Column
   { name :: Column.Name,
     type_ :: Scalar.Type,

@@ -1,12 +1,12 @@
-module Hasura.Experimental.Schema.Table
+module Hasura.Backends.DataWrapper.Schema.Table
   ( Table (..),
   )
 where
 
 --------------------------------------------------------------------------------
 
-import Hasura.Experimental.IR.Table qualified as Table (Name)
-import Hasura.Experimental.Schema.Column (Column)
+import Hasura.Backends.DataWrapper.IR.Table qualified as Table (Name)
+import Hasura.Backends.DataWrapper.Schema.Column (Column)
 import Hasura.Prelude
 
 --------------------------------------------------------------------------------

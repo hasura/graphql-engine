@@ -1,6 +1,6 @@
 {-# LANGUAGE DeriveAnyClass #-}
 
-module Hasura.Experimental.IR.Scalar.Value
+module Hasura.Backends.DataWrapper.IR.Scalar.Value
   ( Value (..),
   )
 where
@@ -15,8 +15,8 @@ import Hasura.Prelude
 
 -- | Literal scalar values that can appear as leaf nodes in expressions
 --
--- NOTE(jkachmar): This type shouldn't _need_ ser/de instances, but they're
--- imposed by the 'Backend' class.
+-- NOTE: This type shouldn't _need_ ser/de instances, but they're imposed by
+-- the 'Backend' class.
 data Value
   = String Text
   | Number Double

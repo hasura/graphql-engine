@@ -470,25 +470,24 @@ library
                      , Hasura.Backends.MySQL.ToQuery
                      , Hasura.Backends.MySQL.Instances.API
 
-                     -- XXX(jkachmar): This needs to be renamed before we
-                     -- stabilize it.
-                     , Hasura.Experimental.Adapter.API
-                     , Hasura.Experimental.Adapter.Backend
-                     , Hasura.Experimental.Adapter.Execute
-                     , Hasura.Experimental.Adapter.Metadata
-                     , Hasura.Experimental.Adapter.Schema
-                     , Hasura.Experimental.Adapter.Transport
-                     , Hasura.Experimental.IR.Column
-                     , Hasura.Experimental.IR.Expression
-                     , Hasura.Experimental.IR.Function
-                     , Hasura.Experimental.IR.Name
-                     , Hasura.Experimental.IR.OrderBy
-                     , Hasura.Experimental.IR.Query
-                     , Hasura.Experimental.IR.Scalar.Type
-                     , Hasura.Experimental.IR.Scalar.Value
-                     , Hasura.Experimental.IR.Table
-                     , Hasura.Experimental.Schema.Column
-                     , Hasura.Experimental.Schema.Table
+                     -- GraphQL Data Wrappers
+                     , Hasura.Backends.DataWrapper.Adapter.API
+                     , Hasura.Backends.DataWrapper.Adapter.Backend
+                     , Hasura.Backends.DataWrapper.Adapter.Execute
+                     , Hasura.Backends.DataWrapper.Adapter.Metadata
+                     , Hasura.Backends.DataWrapper.Adapter.Schema
+                     , Hasura.Backends.DataWrapper.Adapter.Transport
+                     , Hasura.Backends.DataWrapper.IR.Column
+                     , Hasura.Backends.DataWrapper.IR.Expression
+                     , Hasura.Backends.DataWrapper.IR.Function
+                     , Hasura.Backends.DataWrapper.IR.Name
+                     , Hasura.Backends.DataWrapper.IR.OrderBy
+                     , Hasura.Backends.DataWrapper.IR.Query
+                     , Hasura.Backends.DataWrapper.IR.Scalar.Type
+                     , Hasura.Backends.DataWrapper.IR.Scalar.Value
+                     , Hasura.Backends.DataWrapper.IR.Table
+                     , Hasura.Backends.DataWrapper.Schema.Column
+                     , Hasura.Backends.DataWrapper.Schema.Table
 
                      -- Exposed for benchmark:
                      , Hasura.Cache.Bounded

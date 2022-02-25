@@ -1,17 +1,15 @@
-{-# LANGUAGE DeriveAnyClass #-}
-
-module Hasura.Experimental.IR.Column
+module Hasura.Backends.DataWrapper.IR.Table
   ( Name,
   )
 where
 
 --------------------------------------------------------------------------------
 
-import Hasura.Experimental.IR.Name qualified as Name
+import Hasura.Backends.DataWrapper.IR.Name qualified as Name
 
 --------------------------------------------------------------------------------
 
--- | An alias for 'Name.Column' 'Name.Name's.
+-- | An alias for 'Name.Table' 'Name.Name's.
 --
 -- This alias is defined in its own module primarily for the convenience of
 -- importing it qualified.
@@ -19,9 +17,9 @@ import Hasura.Experimental.IR.Name qualified as Name
 -- For example:
 -- @
 --   import Data.Coerce (coerce)
---   import Hasura.Experimental.IR.Column qualified as Column (Name)
+--   import Hasura.Experimental.IR.Table qualified as Table (Name)
 --
 --   example :: Table.Name
---   example = coerce @Text @Table.Name "column_name"
+--   example = coerce @Text @Table.Name "table_name"
 -- @
-type Name = Name.Name 'Name.Column
+type Name = Name.Name 'Name.Table

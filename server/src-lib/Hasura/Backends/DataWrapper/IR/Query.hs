@@ -1,4 +1,4 @@
-module Hasura.Experimental.IR.Query
+module Hasura.Backends.DataWrapper.IR.Query
   ( Query (..),
     Field (..),
     ColumnContents (..),
@@ -8,27 +8,27 @@ where
 
 --------------------------------------------------------------------------------
 
-import Hasura.Experimental.IR.Column qualified as Column (Name)
-import Hasura.Experimental.IR.Expression (Expression)
-import Hasura.Experimental.IR.OrderBy (OrderBy)
-import Hasura.Experimental.IR.Table qualified as Table (Name)
+import Hasura.Backends.DataWrapper.IR.Column qualified as Column (Name)
+import Hasura.Backends.DataWrapper.IR.Expression (Expression)
+import Hasura.Backends.DataWrapper.IR.OrderBy (OrderBy)
+import Hasura.Backends.DataWrapper.IR.Table qualified as Table (Name)
 import Hasura.Prelude
 
 --------------------------------------------------------------------------------
 
--- | An abstract request to retrieve structured data from some source
+-- | An abstract request to retrieve structured data from some source.
 data Query = Query
   { -- NOTE: We should clarify what the 'Text' key is supposed to indicate.
     fields :: HashMap Text Field,
-    -- | Reference to the table these fields are in
+    -- | Reference to the table these fields are in.
     from :: Table.Name,
-    -- | Optionally limit to N results
+    -- | Optionally limit to N results.
     limit :: Maybe Int,
-    -- | Optionally offset from the Nth result
+    -- | Optionally offset from the Nth result.
     offset :: Maybe Int,
-    -- | Optionally constrain the results to satisfy some predicate
+    -- | Optionally constrain the results to satisfy some predicate.
     where_ :: Maybe Expression,
-    -- | Optionally order the results by the value of one or more fields
+    -- | Optionally order the results by the value of one or more fields.
     orderBy :: [OrderBy]
   }
   deriving stock (Data, Eq, Generic, Ord, Show)
