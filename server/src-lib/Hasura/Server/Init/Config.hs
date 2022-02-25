@@ -368,6 +368,7 @@ readExperimentalFeatures = mapM readAPI . T.splitOn "," . T.pack
   where
     readAPI si = case T.toLower $ T.strip si of
       "inherited_roles" -> Right EFInheritedRoles
+      "optimize_permission_filters" -> Right EFOptimizePermissionFilters
       _ -> Left "Only expecting list of comma separated experimental features"
 
 readLogLevel :: String -> Either String L.LogLevel
