@@ -8,6 +8,8 @@ html[data-theme='dark'] {
   --ifm-code-background:var(--color-gray-86);
   --ifm-footer-background-color:var(--color-gray-82);
   --collapse-button-bg-color-dark: var(--color-gray-86);
+  --docsearch-searchbox-background: var(--color-gray-90) !important;
+  --docsearch-searchbox-focus-background: var(--color-gray-86) !important;
 
   code {
     background-color: var(--color-gray-78);

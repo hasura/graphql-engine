@@ -212,6 +212,12 @@
 .DocSearch-Button {
   border-radius: var(--ifm-global-radius) !important;
 }
+@media (min-width: 768px) {
+  .DocSearch-Button {
+    width: 14rem;
+  }
+}
+
 
 .theme-doc-sidebar-container {
   background-color: var(--color-gray-4);
