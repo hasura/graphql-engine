@@ -18,6 +18,7 @@ import Hasura.GraphQL.Parser.TestUtils
 import Hasura.GraphQL.RemoteServer (identityCustomizer)
 import Hasura.GraphQL.Schema.Remote
 import Hasura.Prelude
+import Hasura.RQL.IR.RemoteSchema
 import Hasura.RQL.Types.RemoteSchema
 import Hasura.RQL.Types.SchemaCache
 import Hasura.Session
@@ -106,7 +107,7 @@ buildQueryParsers introspection = do
         RemoteSchemaInfo (ValidatedRemoteSchemaDef N.nullURI [] False 60 Nothing) identityCustomizer
   pure $
     head query <&> \case
-      NotNamespaced remoteFld -> _rfField remoteFld
+      NotNamespaced remoteFld -> convertGraphQLField $ _rfField remoteFld
       Namespaced _ ->
         -- Shouldn't happen if we're using identityCustomizer
         -- TODO: add some tests for remote schema customization

@@ -138,6 +138,7 @@ import Hasura.Incremental
 import Hasura.Prelude
 import Hasura.RQL.DDL.WebhookTransforms
 import Hasura.RQL.IR.BoolExp
+import Hasura.RQL.IR.RemoteSchema
 import Hasura.RQL.Types.Action
 import Hasura.RQL.Types.Allowlist
 import Hasura.RQL.Types.ApiLimit
@@ -226,9 +227,9 @@ data IntrospectionResult = IntrospectionResult
 instance Cacheable IntrospectionResult
 
 data ParsedIntrospectionG m = ParsedIntrospection
-  { piQuery :: [P.FieldParser m (NamespacedField RemoteField)],
-    piMutation :: Maybe [P.FieldParser m (NamespacedField RemoteField)],
-    piSubscription :: Maybe [P.FieldParser m (NamespacedField RemoteField)]
+  { piQuery :: [P.FieldParser m (NamespacedField (RemoteSchemaRootField Void RemoteSchemaVariable))],
+    piMutation :: Maybe [P.FieldParser m (NamespacedField (RemoteSchemaRootField Void RemoteSchemaVariable))],
+    piSubscription :: Maybe [P.FieldParser m (NamespacedField (RemoteSchemaRootField Void RemoteSchemaVariable))]
   }
 
 type ParsedIntrospection = ParsedIntrospectionG (P.ParseT Identity)

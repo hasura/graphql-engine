@@ -5,6 +5,7 @@ module Data.List.Extended
     getDifferenceOn,
     getOverlapWith,
     hasNoDuplicates,
+    longestCommonPrefix,
     module L,
   )
 where
@@ -38,3 +39,16 @@ getOverlapWith getKey left right =
 
 hasNoDuplicates :: (Eq a, Hashable a) => [a] -> Bool
 hasNoDuplicates xs = Set.size (Set.fromList xs) == length xs
+
+-- | Returns the longest prefix common to all given lists. Returns an empty list on an empty list.
+--
+-- >>> longestCommonPrefix ["abcd", "abce", "abgh"]
+-- "ab"
+--
+-- >>> longestCommonPrefix []
+-- []
+longestCommonPrefix :: Eq a => [[a]] -> [a]
+longestCommonPrefix [] = []
+longestCommonPrefix (x : xs) = foldr prefix x xs
+  where
+    prefix l1 l2 = map fst $ takeWhile (uncurry (==)) $ zip l1 l2
