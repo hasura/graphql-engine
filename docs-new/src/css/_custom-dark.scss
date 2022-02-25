@@ -1,6 +1,7 @@
 /* Dark Mode Styles */
 html[data-theme='dark'] {
   --ifm-link-color:#48ADF6;
+  --ifm-heading-color: var(--color-gray-12);
   --ifm-navbar-background-color:var(--color-gray-82);
   --ifm-background-color:var(--color-gray-90);
   --ifm-hero-background-color: var(--ifm-background-color);
@@ -64,6 +65,9 @@ html[data-theme='dark'] {
   .pagination-nav {
     .pagination-nav__item:not(:empty) {
       background-color: var(--color-gray-86);
+      &:hover {
+        background-color: var(--color-gray-82);
+      }
     }
   }
 }

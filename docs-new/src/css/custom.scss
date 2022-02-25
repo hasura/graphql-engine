@@ -139,8 +139,8 @@
   --ifm-color-danger-contrast-background:#FFE8E8;
   --ifm-color-danger-contrast-foreground:#6A0808;
 
-  /* --ifm-color-gray-100: #F8FCFF;
-  --ifm-color-gray-200: #EBF1F6;
+  --ifm-color-gray-100: var(--color-gray-12);
+/*--ifm-color-gray-200: #EBF1F6;
   --ifm-color-gray-300: #D5DEE5;
   --ifm-color-gray-400: #B1BCC7;
   --ifm-color-gray-500: #909DA6;
@@ -151,6 +151,7 @@
 
   /* --ifm-navbar-background-color; */
   /* --ifm-background-color */
+  --ifm-heading-color: var(--color-gray-74);
   --ifm-footer-background-color:var(--color-gray-8);
   --ifm-color-content-secondary:#616D75;
   --ifm-link-color:#0676C8;
@@ -158,12 +159,10 @@
   --ifm-menu-color-active: var(--ifm-color-content);
   --ifm-toc-link-color: var(--ifm-color-content);
 
-
   --ifm-code-background:var(--color-gray-0);
   --ifm-code-font-size:1rem;
 
   /* --ifm-pre-color: inherit; */
-  /* --ifm-heading-color: inherit; */
   --ifm-global-shadow-lw:0px 2px 6px rgba(0, 0, 0, 0.2);
   --ifm-global-shadow-md:0px 4px 14px rgba(0, 0, 0, 0.16);
   --ifm-global-shadow-tl:0px 10px 30px rgba(0, 0, 0, 0.16);
@@ -182,7 +181,6 @@
   --ifm-font-weight-semibold:500;
   --ifm-font-weight-bold:600;
 
-
   --ifm-heading-line-height:1.25;
   --ifm-h1-font-size:2.5rem; /* 40px */
   --ifm-h2-font-size:2rem; /* 32px */
@@ -190,6 +188,8 @@
   --ifm-h4-font-size:1.25rem; /* 20px */
   --ifm-h5-font-size:1rem; /* 16px */
   --ifm-h6-font-size:0.875rem; /* 14px */
+
+  --ifm-heading-font-weight: var(--ifm-font-weight-semibold);
 
   --ifm-footer-padding-vertical:3rem;
 }
@@ -263,15 +263,18 @@
   }
   .table-of-contents__link--active {
     font-weight: var(--ifm-font-weight-bold);
-    border-left: 0.25rem solid var(--ifm-color-content-secondary);
+    border-left: 0.125rem solid var(--ifm-link-color);
     color: var(--ifm-font-color-base);
     margin-left: -1rem;
     padding-left: 0.75rem;
   }
 }
 
-.markdown h1:first-child {
-  --ifm-h1-font-size:2.5rem; /* 40px */
+.markdown {
+  --ifm-h1-vertical-rhythm-top: 2.5;
+  h1:first-child {
+    --ifm-h1-font-size:2.5rem; /* 40px */
+  }
 }
 
 .docusaurus-highlight-code-line {
@@ -339,8 +342,11 @@ pre {
 }
 
 .pagination-nav {
-  .pagination-nav__item {
-    background-color: var(--ifm-background-color);
+  .pagination-nav__item:not(:empty) {
+    background-color: var(--color-gray-4);
+    &:hover {
+      background-color: var(--color-gray-8);
+    }
 
     .pagination-nav__link {
       border-color: transparent;
