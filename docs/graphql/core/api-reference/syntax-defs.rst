@@ -2116,14 +2116,14 @@ TransformHeaders
      - required
      - Schema
      - Description
-   * - addHeaders
+   * - add_headers
      - false
      - Object (:ref:`HeaderKey` : :ref:`HeaderValue`)
-     - A map of Header Key Value pairs to be added to the request. Content-Type cannot be added via this map.
-   * - removeHeaders
+     - A map of Header Key Value pairs to be added to the request.
+   * - remove_headers
      - false
      - Array of (:ref:`HeaderKey`)
-     - Headers to be removed from the request. Content-Type cannot be removed.
+     - Headers to be removed from the request.
 
 .. _HeaderKey:
 
