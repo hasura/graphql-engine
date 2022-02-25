@@ -1,5 +1,4 @@
 {-# LANGUAGE NondecreasingIndentation #-}
-{-# LANGUAGE OverloadedStrings #-}
 
 module Hasura.GraphQL.Transport.WebSocket.Server
   ( AcceptWith (AcceptWith),

@@ -1,6 +1,3 @@
-{-# LANGUAGE LambdaCase #-}
-{-# LANGUAGE OverloadedStrings #-}
-
 -- |
 -- Module      : Hasura.Server.OpenAPI
 -- Description : Builds an OpenAPI specification for the REST endpoints from a SchemaCache via the `declareOpenApiSpec` function.

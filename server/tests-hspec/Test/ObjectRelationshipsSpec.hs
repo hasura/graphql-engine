@@ -1,6 +1,3 @@
-{-# LANGUAGE QuasiQuotes #-}
-{-# LANGUAGE RecordWildCards #-}
-
 -- | Testing object relationships.
 module Test.ObjectRelationshipsSpec (spec) where
 
