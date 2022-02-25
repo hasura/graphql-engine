@@ -113,7 +113,7 @@ import Hasura.Server.Types
 import Hasura.Server.Version
 import Hasura.Session
 import Hasura.Tracing qualified as Tracing
-import Network.HTTP.Client.DynamicTlsPermissions (mkHttpManager)
+import Network.HTTP.Client.CreateManager (mkHttpManager)
 import Network.HTTP.Client.Manager (HasHttpManagerM (..))
 import Network.HTTP.Client.Transformable qualified as HTTP
 import Network.Wai (Application)
@@ -404,7 +404,7 @@ initialiseServeCtx env GlobalCtx {..} so@ServeOptions {..} = do
 
   schemaCacheRef <- initialiseCache rebuildableSchemaCache
 
-  srvMgr <- liftIO $ mkHttpManager (readTlsAllowlist schemaCacheRef)
+  srvMgr <- liftIO $ mkHttpManager (readTlsAllowlist schemaCacheRef) mempty
 
   pure $
     ServeCtx

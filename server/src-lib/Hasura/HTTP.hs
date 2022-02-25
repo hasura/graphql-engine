@@ -11,6 +11,7 @@ module Hasura.HTTP
   )
 where
 
+import Control.Exception (fromException)
 import Control.Lens hiding ((.=))
 import Data.Aeson qualified as J
 import Data.CaseInsensitive (original)
@@ -22,6 +23,7 @@ import Hasura.Prelude
 import Hasura.Server.Utils (redactSensitiveHeader)
 import Hasura.Server.Version (currentVersion)
 import Network.HTTP.Client qualified as HTTP
+import Network.HTTP.Client.Restricted qualified as Restricted
 import Network.HTTP.Types qualified as HTTP
 import Network.Wreq qualified as Wreq
 
@@ -79,7 +81,9 @@ serializeHTTPExceptionMessage (HttpException (HTTP.HttpExceptionRequest _ httpEx
     HTTP.ConnectionTimeout -> "Connection timeout"
     HTTP.ConnectionFailure _ -> "Connection failure"
     HTTP.InvalidStatusLine _ -> "Invalid HTTP Status Line"
-    HTTP.InternalException _ -> "Internal Exception"
+    HTTP.InternalException err -> case fromException err of
+      Just (Restricted.ConnectionRestricted _ _) -> "Blocked connection to private IP address"
+      Nothing -> "Internal Exception"
     HTTP.ProxyConnectException _ _ _ -> "Proxy connection exception"
     HTTP.NoResponseDataReceived -> "No response data received"
     HTTP.TlsNotSupported -> "TLS not supported"

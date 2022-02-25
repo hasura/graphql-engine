@@ -136,6 +136,7 @@ library
                      , base
                      , bytestring
                      , containers
+                     , data-default
                      , deepseq
                      , dependent-map >=0.4 && <0.5
                      , dependent-sum
@@ -148,6 +149,7 @@ library
                      , http-conduit
                      , http-media
                      , http-types
+                     , ip
                      , kan-extensions
                      , kriti-lang
                      , lifted-base
@@ -194,6 +196,7 @@ library
 
                      -- Logging related
                      , network
+                     , network-bsd
                      , byteorder
 
                      -- for parsing RSA keys
@@ -723,6 +726,9 @@ library
                      , Network.HTTP.Client.Transformable
                      , Network.HTTP.Client.Manager
                      , Network.HTTP.Client.DynamicTlsPermissions
+                     , Network.HTTP.Client.Restricted
+                     , Network.HTTP.Client.Blocklisting
+                     , Network.HTTP.Client.CreateManager
                      , Network.URI.Extended
                      , Network.Wai.Extended
                      , Network.Wai.Handler.WebSockets.Custom

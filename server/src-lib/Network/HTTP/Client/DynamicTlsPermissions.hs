@@ -1,5 +1,5 @@
 module Network.HTTP.Client.DynamicTlsPermissions
-  ( mkHttpManager,
+  ( dynamicTlsSettings,
   )
 where
 
@@ -13,8 +13,6 @@ import GHC.Exception (Exception (displayException))
 import Hasura.Prelude
 import Hasura.RQL.Types.Network (TlsAllow (TlsAllow), TlsPermission (SelfSigned))
 import Network.Connection qualified as HTTP
-import Network.HTTP.Client qualified as HTTP
-import Network.HTTP.Client.TLS qualified as HTTP
 import Network.TLS qualified as HTTP
 import Network.TLS.Extra qualified as TLS
 import System.X509 qualified as HTTP
@@ -30,13 +28,10 @@ instance Exception TlsServiceDefinitionError where
 errorE :: String -> c
 errorE = impureThrow . TlsServiceDefinitionError
 
--- | This mkHttpManager function takes a mechanism for finding the current allowlist,
--- Thus allowing it to be coupled from any ref type such as SchemaCacheRef.
-mkHttpManager :: IO [TlsAllow] -> IO HTTP.Manager
-mkHttpManager currentAllow = do
+dynamicTlsSettings :: IO [TlsAllow] -> IO HTTP.TLSSettings
+dynamicTlsSettings currentAllow = do
   systemStore <- HTTP.getSystemCertificateStore
-  let settings = HTTP.mkManagerSettings (tlsSettingsComplex systemStore) Nothing
-  HTTP.newManager settings
+  return (tlsSettingsComplex systemStore)
   where
     tlsSettingsComplex :: HTTP.CertificateStore -> HTTP.TLSSettings
     tlsSettingsComplex systemStore = HTTP.TLSSettings (clientParams systemStore)
