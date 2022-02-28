@@ -6,16 +6,21 @@ For motivation, rationale, and more, see the [test suite rfc](../../rfcs/hspec-t
 
 **Table of Contents**
 
-- [Running the test suite](#running-the-test-suite)
-- [Test suite structure](#test-suite-structure)
+- [tests-hspec](#tests-hspec)
+  - [Running the test suite](#running-the-test-suite)
+  - [Test suite structure](#test-suite-structure)
     - [Harness](#harness)
     - [Test](#test)
-- [Adding a new test](#adding-a-new-test)
-    - [Specifying backends](#specifying-backends)
-        - [Setup action](#setup-action)
-        - [Teardown action](#teardown-action)
+  - [Adding a new test](#adding-a-new-test)
+    - [Specifying contexts](#specifying-contexts)
+      - [Make local state action](#make-local-state-action)
+      - [Setup action](#setup-action)
+      - [Teardown action](#teardown-action)
     - [Writing tests](#writing-tests)
-    - [Style guide](#style-guide)
+  - [Style guide](#style-guide)
+    - [Stick to Simple Haskell](#stick-to-simple-haskell)
+    - [Write small, atomic, autonomous specs](#write-small-atomic-autonomous-specs)
+    - [Use the `Harness.*` hierarchy for common functions](#use-the-harness-hierarchy-for-common-functions)
 
 ## Running the test suite
 
@@ -68,7 +73,7 @@ For motivation, rationale, and more, see the [test suite rfc](../../rfcs/hspec-t
    cabal run tests-hspec -- --help
    ```
 
-3. The local databases presist even after shutting down docker-compose.
+3. The local databases persist even after shutting down docker-compose.
    If this is undesirable, delete the databases using the following command:
 
    ```sh
@@ -230,12 +235,25 @@ data:
 __Note__: these quasi-quoter can also perform string interpolation. See the relevant modules
 under the [Harness.Quoter](Harness/Quoter) namespace.
 
-### Style guide
+## Style guide
 
-- Test suite should be very easy to read for a junior or intermediate Haskell developer.
-  Be mindful of advanced feature use and abstractions!
-- Prefer self-contained specs, even if there's some query duplication.
-- Avoid functions or types in tests, other than calls to the `Harness.*` API.
-  Any supporting code should be in the `Harness.*` hierarchy and apply broadly to the test suites
-  overall.
-- Consider reorganising tests if modules get much longer than 1/2 pagescrolls (~200-300 LOC?).
+### Stick to [Simple Haskell](https://www.simplehaskell.org/)
+This test suite should remain accessible to contributors who are new to Haskell and/or the GraphQL engine codebase. Consider the [power-to-weight](https://www.snoyman.com/blog/2019/11/boring-haskell-manifesto/#power-to-weight-ratio) ratio of features, language extensions or abstractions before you introduce them. For example, try to fully leverage Haskell '98 or 2010 features before making use of more advanced ones.
+
+### Write small, atomic, autonomous specs
+Small: Keep specs short and succinct wherever possible. Consider reorganising modules that grow much longer than ~200-300 lines of code.
+
+*For example: The [`TestGraphQLQueryBasic*` pytest class](../tests-py/test_graphql_queries.py#L251) was ported to the hspec suite as separate `BasicFields`, `LimitOffset`, `Where`, `Ordering`, `Directives` and `Views` specs.*
+
+Atomic: Each spec should test only one feature against the backends (or contexts) that support it. Each module should contain only the context setup and teardown, and the tests themselves. The database schema, test data, and feature expectations should be easy to reason about without navigating to different module.
+
+*For example: [`BasicFieldsSpec.hs`](Test/BasicFieldsSpec.hs)*
+
+Autonomous: Each test should run independently of other tests, and not be dependent on the results of a previous test. Shared test state, where unavoidable, should be made explicit.
+
+*For example: [Remote relationship tests](Test/RemoteRelationship/) explicitly require shared state.*
+
+### Use the `Harness.*` hierarchy for common functions
+Avoid functions or types in tests, other than calls to the `Harness.*` API.
+
+Any supporting code should be in the `Harness.*` hierarchy and apply broadly to the test suites overall.
