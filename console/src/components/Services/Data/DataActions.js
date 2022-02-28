@@ -697,8 +697,10 @@ const handleMigrationErrors = (title, errorMsg) => dispatch => {
   } else {
     // any other unhandled codes
     const parsedErrorMsg = errorMsg;
-    parsedErrorMsg.message = JSON.parse(errorMsg.message);
-    dispatch(showErrorNotification(title, errorMsg.code, parsedErrorMsg));
+    parsedErrorMsg.message = getErrorMessage(errorMsg.message);
+    dispatch(
+      showErrorNotification(title, parsedErrorMsg.message.error, parsedErrorMsg)
+    );
   }
 };
 
