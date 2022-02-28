@@ -11,6 +11,7 @@
 - server: improve performance of `replace_metadata` for large schemas
 - server: improve baseline memory consumption for typical workloads
 - server: fix parsing timestamp values in BigQuery backends (fix #8076)
+- server: add support for customising the GraphQL schema descriptions of table root fields
 - console: include cron trigger with include in metadata as false on cron trigger manage page
 - cli: fix metadata version being set to 3 when doing `hasura init --version 2` (#8148)
 

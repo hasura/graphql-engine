@@ -160,3 +160,6 @@ class TestGraphQlIntrospectionDescriptions:
 
     def test_explicit_no_comment_in_metadata(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/explicit_no_comment_in_metadata.yaml")
+
+    def test_root_fields(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/root_fields.yaml")

@@ -14,6 +14,17 @@ args:
 - type: pg_track_table
   args:
     table: automatic_no_comment_in_db
+    configuration:
+      custom_root_fields:
+        select: AutomaticNoCommentInDb
+        select_by_pk: AutomaticNoCommentInDbByPk
+        select_aggregate: AutomaticNoCommentInDbAgg
+        insert: InsertAutomaticNoCommentInDb
+        insert_one: InsertOneAutomaticNoCommentInDb
+        update: UpdateAutomaticNoCommentInDb
+        update_by_pk: UpdateByPkAutomaticNoCommentInDb
+        delete: DeleteAutomaticNoCommentInDb
+        delete_by_pk: DeleteByPkAutomaticNoCommentInDb
 
 - type: pg_add_computed_field
   args:
@@ -27,6 +38,34 @@ args:
     table: explicit_comment_in_metadata
     configuration:
       comment: Such an explicit comment, wow
+      custom_root_fields:
+        select:
+          name: ExplicitCommentInMetadata
+          comment: Explicit comment on select
+        select_by_pk:
+          name: ExplicitCommentInMetadataByPk
+          comment: Explicit comment on select_by_pk
+        select_aggregate:
+          name: ExplicitCommentInMetadataAgg
+          comment: Explicit comment on select_aggregate
+        insert:
+          name: InsertExplicitCommentInMetadata
+          comment: Explicit comment on insert
+        insert_one:
+          name: InsertOneExplicitCommentInMetadata
+          comment: Explicit comment on insert_one
+        update:
+          name: UpdateExplicitCommentInMetadata
+          comment: Explicit comment on update
+        update_by_pk:
+          name: UpdateByPkExplicitCommentInMetadata
+          comment: Explicit comment on update_by_pk
+        delete:
+          name: DeleteExplicitCommentInMetadata
+          comment: Explicit comment on delete
+        delete_by_pk:
+          name: DeleteByPkExplicitCommentInMetadata
+          comment: Explicit comment on delete_by_pk
 
 - type: pg_add_computed_field
   args:
@@ -41,6 +80,34 @@ args:
     table: explicit_no_comment_in_metadata
     configuration:
       comment: ""
+      custom_root_fields:
+        select:
+          name: null
+          comment: ""
+        select_by_pk:
+          name: null
+          comment: ""
+        select_aggregate:
+          name: null
+          comment: ""
+        insert:
+          name: null
+          comment: ""
+        insert_one:
+          name: null
+          comment: ""
+        update:
+          name: null
+          comment: ""
+        update_by_pk:
+          name: null
+          comment: ""
+        delete:
+          name: null
+          comment: ""
+        delete_by_pk:
+          name: null
+          comment: ""
 
 - type: pg_add_computed_field
   args:

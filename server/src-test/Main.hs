@@ -40,6 +40,7 @@ import Hasura.RQL.Types
 import Hasura.RQL.Types.AllowlistSpec qualified as AllowlistSpec
 import Hasura.RQL.Types.CommonSpec qualified as CommonTypesSpec
 import Hasura.RQL.Types.EndpointSpec qualified as EndpointSpec
+import Hasura.RQL.Types.TableSpec qualified as TableSpec
 import Hasura.RQL.WebhookTransformsSpec qualified as WebhookTransformsSpec
 import Hasura.SQL.WKTSpec qualified as WKTSpec
 import Hasura.Server.Auth.JWTSpec qualified as JWTSpec
@@ -99,6 +100,7 @@ unitSpecs = do
   describe "Hasura.RQL.Types.Common" CommonTypesSpec.spec
   describe "Hasura.RQL.Types.Allowlist" AllowlistSpec.spec
   describe "Hasura.RQL.Types.Endpoint" EndpointSpec.spec
+  describe "Hasura.RQL.Types.Table" TableSpec.spec
   describe "Hasura.GraphQL.Namespace" NamespaceSpec.spec
   describe "Hasura.SQL.WKT" WKTSpec.spec
   describe "Hasura.Server.Auth.JWT" JWTSpec.spec

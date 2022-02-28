@@ -58,7 +58,7 @@ export const getColQuery = (
     const rel = relationships.find((r: any) => r.rel_name === c.name);
     return `${customColumns[c.name] ?? c.name} ${
       rel?.rel_type === 'array' ? `(limit: ${limit})` : ''
-    } { 
+    } {
         ${getColQuery(c.columns, limit, relationships, tableConfiguration).join(
           '\n'
         )} }`;
@@ -175,7 +175,9 @@ export const getFullQueryNameBase = (defaultSchema: string) => ({
   operation,
 }: GetFullQueryName): string => {
   const customRootFields = tableConfiguration?.custom_root_fields ?? {};
-  if (customRootFields[operation]) return customRootFields[operation]!;
+  const customRootField = customRootFields[operation];
+  if (typeof customRootField === 'string') return customRootField;
+  else if (customRootField?.name) return customRootField.name;
   const withUpdate = operation === 'update' ? 'update_' : '';
   const withSchema =
     schema === defaultSchema || tableConfiguration?.custom_name

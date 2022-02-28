@@ -1,0 +1,140 @@
+description: GraphQL introspection query
+url: /v1/graphql
+status: 200
+query:
+  query: |
+    query IntrospectionQuery {
+      query_root: __type(name: "query_root") {
+        name
+        kind
+        fields {
+          name
+          description
+        }
+      }
+      mutation_root: __type(name: "mutation_root") {
+        name
+        kind
+        fields {
+          name
+          description
+        }
+      }
+    }
+response:
+  data:
+    query_root:
+      name: query_root
+      kind: OBJECT
+      fields:
+      - name: AutomaticNoCommentInDb
+        description: 'fetch data from the table: "automatic_no_comment_in_db"'
+
+      - name: AutomaticNoCommentInDbAgg
+        description: 'fetch aggregated fields from the table: "automatic_no_comment_in_db"'
+
+      - name: AutomaticNoCommentInDbByPk
+        description: 'fetch data from the table: "automatic_no_comment_in_db" using primary key columns'
+
+      - name: ExplicitCommentInMetadata
+        description: Explicit comment on select
+
+      - name: ExplicitCommentInMetadataAgg
+        description: Explicit comment on select_aggregate
+
+      - name: ExplicitCommentInMetadataByPk
+        description: Explicit comment on select_by_pk
+
+      - name: automatic_comment_in_db
+        description: 'fetch data from the table: "automatic_comment_in_db"'
+
+      - name: automatic_comment_in_db_aggregate
+        description: 'fetch aggregated fields from the table: "automatic_comment_in_db"'
+
+      - name: automatic_comment_in_db_by_pk
+        description: 'fetch data from the table: "automatic_comment_in_db" using primary key columns'
+
+      - name: explicit_no_comment_in_metadata
+        description: null
+
+      - name: explicit_no_comment_in_metadata_aggregate
+        description: null
+
+      - name: explicit_no_comment_in_metadata_by_pk
+        description: null
+
+    mutation_root:
+      name: mutation_root
+      kind: OBJECT
+      fields:
+      - name: DeleteAutomaticNoCommentInDb
+        description: 'delete data from the table: "automatic_no_comment_in_db"'
+
+      - name: DeleteByPkAutomaticNoCommentInDb
+        description: 'delete single row from the table: "automatic_no_comment_in_db"'
+
+      - name: DeleteByPkExplicitCommentInMetadata
+        description: Explicit comment on delete_by_pk
+
+      - name: DeleteExplicitCommentInMetadata
+        description: Explicit comment on delete
+
+      - name: InsertAutomaticNoCommentInDb
+        description: 'insert data into the table: "automatic_no_comment_in_db"'
+
+      - name: InsertExplicitCommentInMetadata
+        description: Explicit comment on insert
+
+      - name: InsertOneAutomaticNoCommentInDb
+        description: 'insert a single row into the table: "automatic_no_comment_in_db"'
+
+      - name: InsertOneExplicitCommentInMetadata
+        description: Explicit comment on insert_one
+
+      - name: UpdateAutomaticNoCommentInDb
+        description: 'update data of the table: "automatic_no_comment_in_db"'
+
+      - name: UpdateByPkAutomaticNoCommentInDb
+        description: 'update single row of the table: "automatic_no_comment_in_db"'
+
+      - name: UpdateByPkExplicitCommentInMetadata
+        description: Explicit comment on update_by_pk
+
+      - name: UpdateExplicitCommentInMetadata
+        description: Explicit comment on update
+
+      - name: delete_automatic_comment_in_db
+        description: 'delete data from the table: "automatic_comment_in_db"'
+
+      - name: delete_automatic_comment_in_db_by_pk
+        description: 'delete single row from the table: "automatic_comment_in_db"'
+
+      - name: delete_explicit_no_comment_in_metadata
+        description: null
+
+      - name: delete_explicit_no_comment_in_metadata_by_pk
+        description: null
+
+      - name: insert_automatic_comment_in_db
+        description: 'insert data into the table: "automatic_comment_in_db"'
+
+      - name: insert_automatic_comment_in_db_one
+        description: 'insert a single row into the table: "automatic_comment_in_db"'
+
+      - name: insert_explicit_no_comment_in_metadata
+        description: null
+
+      - name: insert_explicit_no_comment_in_metadata_one
+        description: null
+
+      - name: update_automatic_comment_in_db
+        description: 'update data of the table: "automatic_comment_in_db"'
+
+      - name: update_automatic_comment_in_db_by_pk
+        description: 'update single row of the table: "automatic_comment_in_db"'
+
+      - name: update_explicit_no_comment_in_metadata
+        description: null
+
+      - name: update_explicit_no_comment_in_metadata_by_pk
+        description: null

@@ -1,10 +1,16 @@
 import React from 'react';
+import {
+  CustomRootField,
+  CustomRootFields,
+} from '../../../../../dataSources/types';
 import CollapsibleToggle from '../../../../Common/CollapsibleToggle/CollapsibleToggle';
 
 import { getRootFieldLabel } from './utils';
+import { Nullable } from '../../../../../components/Common/utils/tsUtils';
+import { getTableCustomRootFieldName } from '../../../../../dataSources';
 
 interface RootFieldEditorProps {
-  rootFields: Record<string, string>;
+  rootFields: CustomRootFields;
   disabled: boolean;
   tableName: string;
   tableSchema: string;
@@ -81,7 +87,7 @@ const RootFieldEditor: React.FC<RootFieldEditorProps> = ({
 
   const getRow = (
     rfType: string,
-    value: string | undefined,
+    value: Nullable<string> | CustomRootField,
     onChange: ChangeHandler
   ) => (
     <div className="flex items-center">
@@ -89,7 +95,7 @@ const RootFieldEditor: React.FC<RootFieldEditorProps> = ({
       <div className="ml-auto w-6/12">
         <input
           type="text"
-          value={value || ''}
+          value={getTableCustomRootFieldName(value) || ''}
           placeholder={`${getDefaultRootField(rfType)} (default)`}
           className="form-control"
           onChange={onChange}

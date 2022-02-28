@@ -2,7 +2,14 @@ import { isEqual } from '../../components/Common/utils/jsUtils';
 import { Nullable } from '../../components/Common/utils/tsUtils';
 import { QualifiedTable } from '../../metadata/types';
 import { FixMe } from '../../types';
-import { BaseTable, CheckConstraint, Relationship, Table } from '../types';
+import {
+  BaseTable,
+  CheckConstraint,
+  CustomRootFields,
+  CustomRootField,
+  Relationship,
+  Table,
+} from '../types';
 
 export type Operations = 'insert' | 'select' | 'update' | 'delete';
 export const QUERY_TYPES: Operations[] = [
@@ -270,11 +277,37 @@ export const getTableCustomName = (table: Table) => {
   return '';
 };
 
-export const getTableCustomRootFields = (table: Table) => {
+export const getTableCustomRootFields = (table: Table): CustomRootFields => {
   if (table.configuration) {
     return table.configuration.custom_root_fields || {};
   }
   return {};
+};
+
+export const getTableCustomRootFieldName = (
+  rootFieldValue: Nullable<string> | CustomRootField
+): string | null => {
+  if (rootFieldValue) {
+    if (typeof rootFieldValue === 'string') {
+      return rootFieldValue;
+    } else if (rootFieldValue.name) {
+      return rootFieldValue.name;
+    }
+  }
+  return null;
+};
+
+export const setTableCustomRootFieldName = (
+  existingRootFieldValue: Nullable<string> | CustomRootField,
+  newName: Nullable<string>
+): Nullable<string> | CustomRootField => {
+  if (typeof existingRootFieldValue === 'object') {
+    return {
+      ...existingRootFieldValue,
+      name: newName,
+    };
+  }
+  return newName;
 };
 
 export const getTableCustomColumnNames = (table: Table) => {

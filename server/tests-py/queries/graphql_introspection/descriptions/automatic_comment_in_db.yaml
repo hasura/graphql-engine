@@ -14,16 +14,16 @@ query:
         }
       }
     }
-  response:
-    data:
-      __type:
-        name: automatic_comment_in_db
-        description: What a great comment in the DB
-        kind: OBJECT
-        fields:
-        - name: id
-          description: null
-        - name: name
-          description: null
-        - name: upper_name
-          description: What a great comment on the function in the DB
+response:
+  data:
+    __type:
+      name: automatic_comment_in_db
+      description: What a great comment in the DB
+      kind: OBJECT
+      fields:
+      - name: id
+        description: null
+      - name: name
+        description: null
+      - name: upper_name
+        description: What a great comment on the function in the DB

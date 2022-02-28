@@ -14,16 +14,16 @@ query:
         }
       }
     }
-  response:
-    data:
-      __type:
-        name: explicit_no_comment_in_metadata
+response:
+  data:
+    __type:
+      name: explicit_no_comment_in_metadata
+      description: null
+      kind: OBJECT
+      fields:
+      - name: id
         description: null
-        kind: OBJECT
-        fields:
-        - name: id
-          description: null
-        - name: name
-          description: null
-        - name: upper_name
-          description: null
+      - name: name
+        description: null
+      - name: upper_name
+        description: null
