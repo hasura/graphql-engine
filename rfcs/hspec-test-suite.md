@@ -69,6 +69,8 @@ Acceptance criteria
 
 Checkpoints
 -----------
+[This GitHub issue is kept up to date with progress.](https://github.com/hasura/graphql-engine/issues/7760)
+
  *Each checkpoint does not necessarily correspond to single PR. Organise PRs as you judge sensible, but prefer smaller PRs where they are functional and self-contained.*
 
 We will scope this to something very simple for now: basic queries (where, order by, filter and offset) but aim to be as comprehensive and deliberate as possible. Incidentally, this will also be the first set of features we will want to be able to test for any new backend. We will extend this subset of features in the same order as that in which we prioritize work on new backends.
@@ -189,7 +191,7 @@ Related work
 [DB-to-DB Joins Test Suite tracking GitHub issue](https://github.com/hasura/graphql-engine-mono/issues/2528)
 
 
-[This PR](https://github.com/hasura/graphql-engine-mono/pull/2403) unblocks testing of DB-to-DB joins, which was untenable with our existing Python test suite. Although the PR includes exploratory work and overlaps somewhat with this RFC’s proposal, it’s minimally-scoped to support testing of DB-to-DB joins as soon as possible. Some or all of this work may be refactored or deleted depending on the outcome of this RFC and related work.
+[This change](https://github.com/hasura/graphql-engine/commit/67b4e1cc5b1351fd0e9951f003ed081fa65297e7) unblocks testing of DB-to-DB joins, which was untenable with our existing Python test suite. Although the PR includes exploratory work and overlaps somewhat with this RFC’s proposal, it’s minimally-scoped to support testing of DB-to-DB joins as soon as possible. Some or all of this work may be refactored or deleted depending on the outcome of this RFC and related work.
 
 Within that PR, [Vamshi described](https://github.com/hasura/graphql-engine-mono/pull/2403#issuecomment-933630333) the expected DB-to-DB relationship behaviour and a proposal for designing new DB-to-DB joins tests.
 
