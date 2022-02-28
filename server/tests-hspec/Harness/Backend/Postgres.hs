@@ -6,6 +6,13 @@ module Harness.Backend.Postgres
     run_,
     defaultSourceMetadata,
     defaultSourceConfiguration,
+    createTable,
+    insertTable,
+    trackTable,
+    dropTable,
+    untrackTable,
+    setup,
+    teardown,
   )
 where
 
@@ -13,12 +20,20 @@ import Control.Concurrent
 import Control.Exception
 import Control.Monad.Reader
 import Data.Aeson (Value)
+import Data.Bool (bool)
 import Data.ByteString.Char8 qualified as S8
+import Data.Foldable (for_)
 import Data.String
+import Data.Text (Text)
+import Data.Text qualified as T
+import Data.Text.Extended (commaSeparated)
 import Database.PostgreSQL.Simple qualified as Postgres
 import GHC.Stack
 import Harness.Constants as Constants
+import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Yaml (yaml)
+import Harness.State (State)
+import Harness.Test.Schema qualified as Schema
 import System.Process.Typed
 import Prelude
 
@@ -82,3 +97,137 @@ connection_info:
   database_url: *postgresqlConnectionString
   pool_settings: {}
 |]
+
+-- | Serialize Table into a PL-SQL statement, as needed, and execute it on the Postgres backend
+createTable :: Schema.Table -> IO ()
+createTable Schema.Table {tableName, tableColumns, tablePrimaryKey = pk, tableReferences} = do
+  run_ $
+    T.unpack $
+      T.unwords
+        [ "CREATE TABLE",
+          T.pack Constants.postgresDb <> "." <> tableName,
+          "(",
+          commaSeparated $
+            (mkColumn <$> tableColumns)
+              <> (bool [mkPrimaryKey pk] [] (null pk))
+              <> (mkReference <$> tableReferences),
+          ");"
+        ]
+  where
+    scalarType :: Schema.ScalarType -> Text
+    scalarType = \case
+      Schema.TInt -> "SERIAL"
+      Schema.TStr -> "VARCHAR"
+    mkColumn :: Schema.Column -> Text
+    mkColumn Schema.Column {columnName, columnType, columnNullable, columnDefault} =
+      T.unwords
+        [ columnName,
+          scalarType columnType,
+          bool "NOT NULL" "DEFAULT NULL" columnNullable,
+          maybe "" ("DEFAULT " <>) columnDefault
+        ]
+    mkPrimaryKey :: [Text] -> Text
+    mkPrimaryKey key =
+      T.unwords
+        [ "PRIMARY KEY",
+          "(",
+          commaSeparated key,
+          ")"
+        ]
+    mkReference :: Schema.Reference -> Text
+    mkReference Schema.Reference {referenceLocalColumn, referenceTargetTable, referenceTargetColumn} =
+      T.unwords
+        [ "CONSTRAINT FOREIGN KEY",
+          referenceLocalColumn,
+          "REFERENCES",
+          referenceTargetTable,
+          "(",
+          referenceTargetColumn,
+          ")",
+          "ON DELETE CASCADE",
+          "ON UPDATE CASCADE"
+        ]
+
+-- | Serialize tableData into a PL-SQL insert statement and execute it.
+insertTable :: Schema.Table -> IO ()
+insertTable Schema.Table {tableName, tableColumns, tableData} =
+  run_ $
+    T.unpack $
+      T.unwords
+        [ "INSERT INTO",
+          T.pack Constants.postgresDb <> "." <> tableName,
+          "(",
+          commaSeparated (Schema.columnName <$> tableColumns),
+          ")",
+          "VALUES",
+          commaSeparated $ mkRow <$> tableData,
+          ";"
+        ]
+  where
+    mkRow :: [Schema.ScalarValue] -> Text
+    mkRow row =
+      T.unwords
+        [ "(",
+          commaSeparated $ Schema.serialize <$> row,
+          ")"
+        ]
+
+-- | Post an http request to start tracking the table
+trackTable :: State -> Schema.Table -> IO ()
+trackTable state Schema.Table {tableName} = do
+  let schemaName = T.pack Constants.postgresDb
+  GraphqlEngine.postMetadata_ state $
+    [yaml|
+type: postgres_track_table
+args:
+  source: postgres
+  table:
+    schema: *schemaName
+    name: *tableName
+|]
+
+-- | Serialize Table into a PL-SQL DROP statement and execute it
+dropTable :: Schema.Table -> IO ()
+dropTable Schema.Table {tableName} = do
+  run_ $
+    T.unpack $
+      T.unwords
+        [ "DROP TABLE",
+          T.pack Constants.postgresDb <> "." <> tableName,
+          ";"
+        ]
+
+-- | Post an http request to stop tracking the table
+untrackTable :: State -> Schema.Table -> IO ()
+untrackTable state Schema.Table {tableName} = do
+  let schemaName = T.pack Constants.postgresDb
+  GraphqlEngine.postMetadata_ state $
+    [yaml|
+type: postgres_untrack_table
+args:
+  source: postgres
+  table:
+    schema: *schemaName
+    name: *tableName
+|]
+
+-- | Setup the schema in the most expected way.
+-- NOTE: Certain test modules may warrant having their own local version.
+setup :: [Schema.Table] -> (State, ()) -> IO ()
+setup tables (state, _) = do
+  -- Clear and reconfigure the metadata
+  GraphqlEngine.setSource state defaultSourceMetadata
+
+  -- Setup and track tables
+  for_ tables $ \table -> do
+    createTable table
+    insertTable table
+    trackTable state table
+
+-- | Teardown the schema and tracking in the most expected way.
+-- NOTE: Certain test modules may warrant having their own version.
+teardown :: [Schema.Table] -> (State, ()) -> IO ()
+teardown tables (state, _) =
+  for_ tables $ \table -> do
+    untrackTable state table
+    dropTable table
