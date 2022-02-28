@@ -773,13 +773,22 @@ startup-db-calls)
 	set +x
 
 	wait_for_port 8080
+	kill_hge_servers
+	# end verbose logging
 
+	# running HGE server again for pytest, the test will use the log generated from the previous run
+	# see https://github.com/hasura/graphql-engine-mono/pull/3813 for more information
+	run_hge_with_args serve
+	wait_for_port 8080
 	pytest -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --test-startup-db-calls test_startup_db_calls.py
 
-	unset HASURA_GRAPHQL_ENABLED_LOG_TYPES
 	kill_hge_servers
 
-	# end verbose logging tests
+	unset HASURA_GRAPHQL_ENABLED_LOG_TYPES
+	unset HASURA_GRAPHQL_LOG_LEVEL
+	unset HASURA_GRAPHQL_ADMIN_SECRET
+	unset LOGGING_TEST_LOGFILE_PATH
+
 	;;
 
 read-only-db)
