@@ -16,6 +16,10 @@
 - console: show an error notification if Hasura CLI migrations fail
 - cli: fix metadata version being set to 3 when doing `hasura init --version 2` (#8148)
 
+## v2.3.0-beta.3
+
+- server: Fix experimental sql optimization read from `HASURA_GRAPHQL_EXPERIMENTAL_FEATURES` or `--experimental-features`
+
 ## v2.2.1
 
 - server: postgres: return a single entry per row (selected randomly) when an object relationship has multiple matches (fix #7936)
