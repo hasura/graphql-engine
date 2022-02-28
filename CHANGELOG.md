@@ -3,7 +3,6 @@
 ## Next release
 
 ### Bug fixes and improvements
-(Add entries below in the order of server, console, cli, docs, others)
 
 ## v2.3.0-beta.3
 
