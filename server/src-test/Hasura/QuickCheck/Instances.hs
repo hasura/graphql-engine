@@ -8,13 +8,15 @@ import Data.Aeson qualified as Aeson
 import Data.Aeson.Types qualified as Aeson.Types
 import Data.HashMap.Strict.Extended qualified as HashMap
 import Data.HashMap.Strict.InsOrd qualified as InsOrd.HashMap
+import Data.HashSet qualified as HashSet
 import Data.Ratio ((%))
 import Data.Text qualified as T
 import Hasura.Base.Error (QErr (..), QErrExtra (..))
 import Hasura.Base.Error qualified as Error
 import Hasura.GraphQL.Namespace (NamespacedField (..), namespacedField)
 import Hasura.Prelude
-import Hasura.RQL.Types.Common (SourceName (..))
+import Hasura.RQL.Types (CustomRootField (..), TableCustomRootFields (..), getAllCustomRootFields)
+import Hasura.RQL.Types.Common (Comment (..), SourceName (..))
 import Hasura.RQL.Types.Metadata.Object
   ( MetadataObjId (..),
     MetadataObject (..),
@@ -320,6 +322,40 @@ instance Arbitrary QErr where
       <*> arbitrary
       <*> genCode
       <*> arbitrary
+
+instance Arbitrary Comment where
+  arbitrary =
+    oneof
+      [ pure Automatic,
+        Explicit <$> arbitrary
+      ]
+
+  shrink Automatic = []
+  shrink (Explicit t) = Explicit <$> shrink t
+
+instance Arbitrary CustomRootField where
+  arbitrary = CustomRootField <$> arbitrary <*> arbitrary
+
+instance Arbitrary TableCustomRootFields where
+  arbitrary =
+    ( TableCustomRootFields
+        <$> arbitrary
+        <*> arbitrary
+        <*> arbitrary
+        <*> arbitrary
+        <*> arbitrary
+        <*> arbitrary
+        <*> arbitrary
+        <*> arbitrary
+        <*> arbitrary
+    )
+      `suchThat` allFieldNamesAreUnique
+    where
+      allFieldNamesAreUnique :: TableCustomRootFields -> Bool
+      allFieldNamesAreUnique tcrf =
+        let allNames = mapMaybe _crfName $ getAllCustomRootFields tcrf
+            uniqueNames = HashSet.fromList allNames
+         in length allNames == length uniqueNames
 
 -- Generators for GraphQL Engine types
 

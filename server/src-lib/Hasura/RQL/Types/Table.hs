@@ -4,6 +4,7 @@ module Hasura.RQL.Types.Table
   ( CombinedSelPermInfo (..),
     Constraint (..),
     CustomColumnNames,
+    CustomRootField (..),
     DBTableMetadata (..),
     DBTablesMetadata,
     DelPermInfo (..),
@@ -35,6 +36,7 @@ module Hasura.RQL.Types.Table
     fieldInfoGraphQLName,
     fieldInfoGraphQLNames,
     fieldInfoName,
+    getAllCustomRootFields,
     getCols,
     getColumnInfoM,
     getComputedFieldInfos,
@@ -86,6 +88,7 @@ import Control.Lens hiding ((.=))
 import Data.Aeson.Casing
 import Data.Aeson.Extended
 import Data.Aeson.TH
+import Data.Aeson.Types (prependFailure, typeMismatch)
 import Data.HashMap.Strict qualified as M
 import Data.HashMap.Strict.Extended qualified as M
 import Data.HashSet qualified as HS
@@ -113,16 +116,48 @@ import Hasura.Server.Utils (englishList)
 import Hasura.Session
 import Language.GraphQL.Draft.Syntax qualified as G
 
+data CustomRootField = CustomRootField
+  { _crfName :: Maybe G.Name,
+    _crfComment :: Comment
+  }
+  deriving (Show, Eq, Generic)
+
+instance NFData CustomRootField
+
+instance Cacheable CustomRootField
+
+instance FromJSON CustomRootField where
+  parseJSON = \case
+    Null -> pure $ CustomRootField Nothing Automatic
+    String text -> pure $ CustomRootField (G.mkName text) Automatic
+    Object obj ->
+      CustomRootField
+        <$> (obj .:? "name")
+        <*> (obj .:? "comment" .!= Automatic)
+    val -> prependFailure "parsing CustomRootField failed, " (typeMismatch "Object, String or Null" val)
+
+instance ToJSON CustomRootField where
+  toJSON (CustomRootField Nothing Automatic) = Null
+  toJSON (CustomRootField (Just name) Automatic) = String $ G.unName name
+  toJSON (CustomRootField name comment) =
+    object
+      [ "name" .= name,
+        "comment" .= comment
+      ]
+
+defaultCustomRootField :: CustomRootField
+defaultCustomRootField = CustomRootField Nothing Automatic
+
 data TableCustomRootFields = TableCustomRootFields
-  { _tcrfSelect :: !(Maybe G.Name),
-    _tcrfSelectByPk :: !(Maybe G.Name),
-    _tcrfSelectAggregate :: !(Maybe G.Name),
-    _tcrfInsert :: !(Maybe G.Name),
-    _tcrfInsertOne :: !(Maybe G.Name),
-    _tcrfUpdate :: !(Maybe G.Name),
-    _tcrfUpdateByPk :: !(Maybe G.Name),
-    _tcrfDelete :: !(Maybe G.Name),
-    _tcrfDeleteByPk :: !(Maybe G.Name)
+  { _tcrfSelect :: CustomRootField,
+    _tcrfSelectByPk :: CustomRootField,
+    _tcrfSelectAggregate :: CustomRootField,
+    _tcrfInsert :: CustomRootField,
+    _tcrfInsertOne :: CustomRootField,
+    _tcrfUpdate :: CustomRootField,
+    _tcrfUpdateByPk :: CustomRootField,
+    _tcrfDelete :: CustomRootField,
+    _tcrfDeleteByPk :: CustomRootField
   }
   deriving (Show, Eq, Generic)
 
@@ -130,65 +165,70 @@ instance NFData TableCustomRootFields
 
 instance Cacheable TableCustomRootFields
 
-$(deriveToJSON hasuraJSON {omitNothingFields = True} ''TableCustomRootFields)
+instance ToJSON TableCustomRootFields where
+  toJSON TableCustomRootFields {..} =
+    object $
+      filter
+        ((/= Null) . snd)
+        [ "select" .= _tcrfSelect,
+          "select_by_pk" .= _tcrfSelectByPk,
+          "select_aggregate" .= _tcrfSelectAggregate,
+          "insert" .= _tcrfInsert,
+          "insert_one" .= _tcrfInsertOne,
+          "update" .= _tcrfUpdate,
+          "update_by_pk" .= _tcrfUpdateByPk,
+          "delete" .= _tcrfDelete,
+          "delete_by_pk" .= _tcrfDeleteByPk
+        ]
 
 instance FromJSON TableCustomRootFields where
   parseJSON = withObject "Object" $ \obj -> do
-    select <- obj .:? "select"
-    selectByPk <- obj .:? "select_by_pk"
-    selectAggregate <- obj .:? "select_aggregate"
-    insert <- obj .:? "insert"
-    insertOne <- obj .:? "insert_one"
-    update <- obj .:? "update"
-    updateByPk <- obj .:? "update_by_pk"
-    delete <- obj .:? "delete"
-    deleteByPk <- obj .:? "delete_by_pk"
-
-    let duplicateRootFields =
-          HS.toList $
-            duplicates $
-              catMaybes
-                [ select,
-                  selectByPk,
-                  selectAggregate,
-                  insert,
-                  insertOne,
-                  update,
-                  updateByPk,
-                  delete,
-                  deleteByPk
-                ]
-    for_ (nonEmpty duplicateRootFields) \duplicatedFields ->
-      fail $
-        T.unpack $
-          "the following custom root field names are duplicated: "
-            <> englishList "and" (toTxt <$> duplicatedFields)
-
-    pure $
+    tableCustomRootFields <-
       TableCustomRootFields
-        select
-        selectByPk
-        selectAggregate
-        insert
-        insertOne
-        update
-        updateByPk
-        delete
-        deleteByPk
+        <$> (obj .:? "select" .!= defaultCustomRootField)
+        <*> (obj .:? "select_by_pk" .!= defaultCustomRootField)
+        <*> (obj .:? "select_aggregate" .!= defaultCustomRootField)
+        <*> (obj .:? "insert" .!= defaultCustomRootField)
+        <*> (obj .:? "insert_one" .!= defaultCustomRootField)
+        <*> (obj .:? "update" .!= defaultCustomRootField)
+        <*> (obj .:? "update_by_pk" .!= defaultCustomRootField)
+        <*> (obj .:? "delete" .!= defaultCustomRootField)
+        <*> (obj .:? "delete_by_pk" .!= defaultCustomRootField)
+
+    let duplicateRootFields = HS.toList . duplicates . mapMaybe _crfName $ getAllCustomRootFields tableCustomRootFields
+    for_ (nonEmpty duplicateRootFields) \duplicatedFields ->
+      fail . T.unpack $
+        "the following custom root field names are duplicated: "
+          <> englishList "and" (toTxt <$> duplicatedFields)
+
+    pure tableCustomRootFields
 
 emptyCustomRootFields :: TableCustomRootFields
 emptyCustomRootFields =
   TableCustomRootFields
-    { _tcrfSelect = Nothing,
-      _tcrfSelectByPk = Nothing,
-      _tcrfSelectAggregate = Nothing,
-      _tcrfInsert = Nothing,
-      _tcrfInsertOne = Nothing,
-      _tcrfUpdate = Nothing,
-      _tcrfUpdateByPk = Nothing,
-      _tcrfDelete = Nothing,
-      _tcrfDeleteByPk = Nothing
+    { _tcrfSelect = defaultCustomRootField,
+      _tcrfSelectByPk = defaultCustomRootField,
+      _tcrfSelectAggregate = defaultCustomRootField,
+      _tcrfInsert = defaultCustomRootField,
+      _tcrfInsertOne = defaultCustomRootField,
+      _tcrfUpdate = defaultCustomRootField,
+      _tcrfUpdateByPk = defaultCustomRootField,
+      _tcrfDelete = defaultCustomRootField,
+      _tcrfDeleteByPk = defaultCustomRootField
     }
+
+getAllCustomRootFields :: TableCustomRootFields -> [CustomRootField]
+getAllCustomRootFields (TableCustomRootFields select selectByPk selectAgg insert insertOne update updateByPk delete deleteByPk) =
+  [ select,
+    selectByPk,
+    selectAgg,
+    insert,
+    insertOne,
+    update,
+    updateByPk,
+    delete,
+    deleteByPk
+  ]
 
 data FieldInfo (b :: BackendType)
   = FIColumn !(ColumnInfo b)

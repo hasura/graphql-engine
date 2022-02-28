@@ -83,23 +83,28 @@ export interface TableEntry {
  */
 export interface CustomRootFields {
   /** Customise the `<table-name>` root field */
-  select?: string;
+  select?: string | CustomRootField | null;
   /** Customise the `<table-name>_by_pk` root field */
-  select_by_pk?: string;
+  select_by_pk?: string | CustomRootField | null;
   /** Customise the `<table-name>_aggregate` root field */
-  select_aggregate?: string;
+  select_aggregate?: string | CustomRootField | null;
   /** Customise the `insert_<table-name>` root field */
-  insert?: string;
+  insert?: string | CustomRootField | null;
   /** Customise the `insert_<table-name>_one` root field */
-  insert_one?: string;
+  insert_one?: string | CustomRootField | null;
   /** Customise the `update_<table-name>` root field */
-  update?: string;
+  update?: string | CustomRootField | null;
   /** Customise the `update_<table-name>_by_pk` root field */
-  update_by_pk?: string;
+  update_by_pk?: string | CustomRootField | null;
   /** Customise the `delete_<table-name>` root field */
-  delete?: string;
+  delete?: string | CustomRootField | null;
   /** Customise the `delete_<table-name>_by_pk` root field */
-  delete_by_pk?: string;
+  delete_by_pk?: string | CustomRootField | null;
+}
+
+export interface CustomRootField {
+  name?: string | null;
+  comment?: string | null;
 }
 
 /**

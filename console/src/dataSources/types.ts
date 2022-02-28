@@ -173,6 +173,23 @@ export type Constraint = {
 export type PrimaryKey = Constraint;
 export type UniqueKey = Constraint;
 
+export type CustomRootFields = {
+  select?: Nullable<string> | CustomRootField;
+  select_by_pk?: Nullable<string> | CustomRootField;
+  select_aggregate?: Nullable<string> | CustomRootField;
+  insert?: Nullable<string> | CustomRootField;
+  insert_one?: Nullable<string> | CustomRootField;
+  update?: Nullable<string> | CustomRootField;
+  update_by_pk?: Nullable<string> | CustomRootField;
+  delete?: Nullable<string> | CustomRootField;
+  delete_by_pk?: Nullable<string> | CustomRootField;
+};
+
+export type CustomRootField = {
+  name?: Nullable<string>;
+  comment?: Nullable<string>;
+};
+
 /**
  * @deprecated use {@link NormalizedTable} instead
  * which will be later renamed to Table when it
@@ -195,17 +212,7 @@ export interface Table extends BaseTable {
     custom_column_names: {
       [column: string]: string;
     };
-    custom_root_fields: {
-      select: Nullable<string>;
-      select_by_pk: Nullable<string>;
-      select_aggregate?: Nullable<string>;
-      insert?: Nullable<string>;
-      insert_one?: Nullable<string>;
-      update?: Nullable<string>;
-      update_by_pk?: Nullable<string>;
-      delete?: Nullable<string>;
-      delete_by_pk?: Nullable<string>;
-    };
+    custom_root_fields: CustomRootFields;
     custom_name: string;
   };
   computed_fields: ComputedField[];

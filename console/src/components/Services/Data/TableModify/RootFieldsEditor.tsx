@@ -8,10 +8,15 @@ import {
 } from './ModifyActions';
 
 import { Dispatch } from '../../../../types';
+import { CustomRootFields } from '../../../../dataSources/types';
+import {
+  getTableCustomRootFieldName,
+  setTableCustomRootFieldName,
+} from '../../../../dataSources';
 
 type RootFieldsEditorProps = {
-  existingRootFields: Record<string, string>;
-  rootFieldsEdit: Record<string, string>;
+  existingRootFields: CustomRootFields;
+  rootFieldsEdit: CustomRootFields;
   dispatch: Dispatch;
   tableName: string;
   customName: string;
@@ -28,20 +33,30 @@ const RootFieldsEditor = ({
   existingCustomName,
   tableSchema,
 }: RootFieldsEditorProps) => {
-  const setRootFieldsBulk = (rf: Record<string, string>) => {
+  const setRootFieldsBulk = (rf: CustomRootFields) => {
     dispatch(modifyRootFields(rf));
   };
 
-  const onChange = (field: string, customField: string) => {
+  const onChange = (field: keyof CustomRootFields, customField: string) => {
     const newRootFields = {
       ...rootFieldsEdit,
-      [field]: customField,
+      [field]: setTableCustomRootFieldName(rootFieldsEdit[field], customField),
     };
     dispatch(modifyRootFields(newRootFields));
   };
 
   const onChangeCustomName = (newName: string) => {
     dispatch(modifyTableCustomName(newName));
+  };
+
+  const getRootFieldNames = (
+    rootFields: CustomRootFields
+  ): Record<string, string> => {
+    const rootFieldNames = Object.entries(rootFields).map(([key, value]) =>
+      value ? { [key]: getTableCustomRootFieldName(value) } : {}
+    );
+
+    return Object.assign({}, ...rootFieldNames);
   };
 
   const collapsedLabel = () => {
@@ -57,9 +72,8 @@ const RootFieldsEditor = ({
       );
     }
 
-    Object.keys(existingRootFields).forEach(rootField => {
-      const customRootField = existingRootFields[rootField];
-      if (customRootField) {
+    Object.entries(getRootFieldNames(existingRootFields)).forEach(
+      ([rootField, customRootField]) => {
         customRootFieldLabels.push(
           <>
             <span className="flex items-center" key={rootField}>
@@ -70,7 +84,7 @@ const RootFieldsEditor = ({
           </>
         );
       }
-    });
+    );
 
     return <div>{customRootFieldLabels}</div>;
   };
