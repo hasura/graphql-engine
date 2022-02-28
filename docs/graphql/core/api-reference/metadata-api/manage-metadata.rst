@@ -15,7 +15,7 @@ Metadata API Reference: Manage metadata
 Introduction
 ------------
 
-APIs to manage Hasura metadata which is stored in ``hdb_catalog`` schema.
+APIs for managing Hasura metadata which is stored in the ``hdb catalog`` schema.
 
 .. admonition:: Supported from
 
@@ -306,40 +306,64 @@ Response:
 
 .. code-block:: json
 
-   [
-       {
-           "definition": {
-               "using": {
-                   "foreign_key_constraint_on": {
-                       "column": "author_id",
-                       "table": "article"
+   {
+       "is_consistent": false,
+       "inconsistent_objects": [
+           {
+               "type": "array_relation",
+               "definition": {
+                   "name": "articles",
+                   "source": "default",
+                   "comment": null,
+                   "table": {
+                       "schema": "public",
+                       "name": "author"
+                   },
+                   "using": {
+                       "foreign_key_constraint_on": {
+                           "column": "author_id",
+                           "table": {
+                               "schema": "public",
+                               "name": "article"
+                           }
+                       }
                    }
                },
-               "name": "articles",
-               "comment": null,
-               "table": "author"
+               "reason": "Inconsistent object: in table \"public.author\": in relationship \"articles\": no foreign constraint exists on the given column(s)"
            },
-           "reason": "table \"article\" does not exist",
-           "type": "array_relation"
-       },
-       {
-           "definition": {
-               "using": {
-                   "foreign_key_constraint_on": "author_id"
+           {
+               "type": "object_relation",
+               "definition": {
+                   "name": "authors",
+                   "source": "default",
+                   "comment": "null",
+                   "table": {
+                       "schema": "public",
+                       "name": "article"
+                   },
+                   "using": {
+                       "foreign_key_constraint_on": {
+                           "column": "author_id",
+                           "table": {
+                               "schema": "public",
+                               "name": "author"
+                           }
+                       }
+                   }
                },
-               "name": "author",
-               "comment": null,
-               "table": "article"
+               "reason": "table \"article\" does not exist"
            },
-           "reason": "table \"article\" does not exist",
-           "type": "object_relation"
-       },
-       {
-           "definition": "article",
-           "reason": "no such table/view exists in source : \"article\"",
-           "type": "table"
-       }
-   ]
+           {
+               "type": "table",
+               "name": "table article in source default",
+               "definition": {
+                   "schema": "public",
+                   "name": "article"
+               },
+               "reason": "no such table/view exists in source : \"article\""
+           }
+       ]
+   }
 
 .. _metadata_drop_inconsistent_metadata:
 
@@ -362,7 +386,7 @@ drop_inconsistent_metadata
 .. _test_webhook_transform:
 
 test_webhook_transform
---------------------------
+----------------------
 
 ``test_webhook_transform`` can be used to test out request transformations using mock data.
 
