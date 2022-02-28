@@ -24,13 +24,16 @@ module Harness.Constants
     sqlserverLivenessCheckIntervalSeconds,
     sqlserverLivenessCheckIntervalMicroseconds,
     sqlserverConnectInfo,
+    sqlserverDb,
     bigqueryServiceAccountFileVar,
     bigqueryServiceAccountVar,
     bigqueryProjectIdVar,
+    bigqueryDataset,
     httpHealthCheckAttempts,
     httpHealthCheckIntervalSeconds,
     httpHealthCheckIntervalMicroseconds,
     citusConnectionString,
+    citusDb,
     serveOptions,
   )
 where
@@ -145,6 +148,9 @@ sqlserverLivenessCheckIntervalSeconds = 1
 sqlserverConnectInfo :: Text
 sqlserverConnectInfo = "DRIVER={ODBC Driver 17 for SQL Server};SERVER=127.0.0.1,65003;Uid=hasura;Pwd=Hasura1!;Encrypt=no"
 
+sqlserverDb :: String
+sqlserverDb = "hasura"
+
 sqlserverLivenessCheckIntervalMicroseconds :: Int
 sqlserverLivenessCheckIntervalMicroseconds = 1000 * 1000 * sqlserverLivenessCheckIntervalSeconds
 
@@ -195,6 +201,9 @@ bigqueryServiceAccountVar = "HASURA_BIGQUERY_SERVICE_ACCOUNT"
 
 bigqueryProjectIdVar :: String
 bigqueryProjectIdVar = "HASURA_BIGQUERY_PROJECT_ID"
+
+bigqueryDataset :: String
+bigqueryDataset = "hasura"
 
 -- * HTTP health checks
 

@@ -998,6 +998,7 @@ test-suite tests-hspec
 
  -- Harness.Test
     Harness.Test.Context
+    Harness.Test.Schema
 
  -- Harness.Quoter
     Harness.Quoter.Graphql
