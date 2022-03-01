@@ -17,5 +17,4 @@ package graphql-engine
   -- See:https://github.com/haskell/cabal/issues/6221
   optimization: 0
   documentation: false
-  flags: +developer
 
