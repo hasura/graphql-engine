@@ -12,6 +12,7 @@
   - [Async action subscriptions](async-action-subscriptions.md)
   - [Blake2b faster than SHA-256](blake2b-faster-than-sha256.md)
   - [Minimal LiveQuery Poller Log](minimal-livequery-poller-log.md)
+  - [Remote Joins Architecture](remote-joins-architecture.md)
   - [Tying the knot](tying-the-knot.md)
   - [Lazily merge selection sets](lazily-merge-selection-sets.md)
   - [When are fields optional?](when-are-fields-optional.md)
