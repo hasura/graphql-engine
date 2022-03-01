@@ -1,5 +1,4 @@
 {-# LANGUAGE ApplicativeDo #-}
-{-# LANGUAGE CPP #-}
 {-# OPTIONS_GHC -O0 #-}
 
 -- | Types and functions related to the server initialisation
@@ -672,11 +671,7 @@ dangerousBooleanCollapseEnv =
   )
 
 defaultEnabledAPIs :: [API]
-#ifdef DeveloperAPIs
-defaultEnabledAPIs = [METADATA,GRAPHQL,PGDUMP,CONFIG,DEVELOPER]
-#else
-defaultEnabledAPIs = [METADATA,GRAPHQL,PGDUMP,CONFIG]
-#endif
+defaultEnabledAPIs = [METADATA, GRAPHQL, PGDUMP, CONFIG]
 
 enabledAPIsEnv :: (String, String)
 enabledAPIsEnv =

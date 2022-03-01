@@ -15,11 +15,6 @@ source-repository head
   type:     git
   location: https://github.com/hasura/graphql-engine
 
-flag developer
-  description: Enable support for development-only APIs
-  default: False
-  manual: True
-
 flag profiling
   description: Configures the project to be profiling-compatible
   default: False
@@ -43,8 +38,6 @@ common common-all
     -- Insisting on export lists might help with compile times, and help to document modules:
     -Wmissing-export-lists
 
-  if flag(developer)
-    cpp-options: -DDeveloperAPIs
   if flag(profiling)
     cpp-options: -DPROFILING
 
