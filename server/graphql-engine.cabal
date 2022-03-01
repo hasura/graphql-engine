@@ -332,17 +332,21 @@ library
                      , Data.Aeson.Ordered
                      , Data.Environment
                      , Data.HashMap.Strict.Extended
+                     , Data.HashMap.Strict.Multi
+                     , Data.HashMap.Strict.NonEmpty
                      , Data.HashMap.Strict.InsOrd.Extended
                      , Data.List.Extended
                      , Data.Parser.CacheControl
                      , Data.Parser.Expires
                      , Data.Parser.JSONPath
                      , Data.Sequence.NonEmpty
+                     , Data.Set.Extended
                      , Data.SqlCommenter
                      , Data.TByteString
                      , Data.Text.Extended
                      , Data.Text.NonEmpty
                      , Data.Time.Clock.Units
+                     , Data.Trie
                      , Data.URL.Template
                      , Database.MSSQL.Transaction
                      , Database.MSSQL.Pool
@@ -854,26 +858,27 @@ test-suite graphql-engine-tests
     Data.Parser.URLTemplate
     Data.Text.RawString
     Data.TimeSpec
+    Data.TrieSpec
     Database.MSSQL.TransactionSpec
-    Hasura.Backends.MySQL.DataLoader.ExecuteTests
     Hasura.Backends.MSSQL.ErrorSpec
+    Hasura.Backends.MySQL.DataLoader.ExecuteTests
     Hasura.EventingSpec
     Hasura.Generator.Common
     Hasura.GraphQL.NamespaceSpec
     Hasura.GraphQL.Parser.DirectivesTest
     Hasura.GraphQL.Parser.TestUtils
     Hasura.GraphQL.Schema.RemoteTest
-    Hasura.QuickCheck.Instances
     Hasura.IncrementalSpec
+    Hasura.QuickCheck.Instances
     Hasura.RQL.IR.Generator
-    Hasura.RQL.MetadataSpec
     Hasura.RQL.IR.Postgres
+    Hasura.RQL.MetadataSpec
     Hasura.RQL.PermissionSpec
-    Hasura.RQL.WebhookTransformsSpec
     Hasura.RQL.Types.AllowlistSpec
     Hasura.RQL.Types.CommonSpec
     Hasura.RQL.Types.EndpointSpec
     Hasura.RQL.Types.TableSpec
+    Hasura.RQL.WebhookTransformsSpec
     Hasura.Server.Auth.JWTSpec
     Hasura.Server.AuthSpec
     Hasura.Server.MigrateSpec

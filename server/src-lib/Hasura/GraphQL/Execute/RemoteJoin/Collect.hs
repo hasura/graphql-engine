@@ -10,7 +10,8 @@ where
 import Control.Lens (Traversal', preview, _2)
 import Control.Monad.Writer
 import Data.HashMap.Strict qualified as Map
-import Data.List.NonEmpty qualified as NE
+import Data.HashMap.Strict.NonEmpty (NEHashMap)
+import Data.HashMap.Strict.NonEmpty qualified as NEMap
 import Data.Text qualified as T
 import Hasura.GraphQL.Execute.RemoteJoin.Types
 import Hasura.GraphQL.Parser.Column (UnpreparedValue (..))
@@ -19,30 +20,30 @@ import Hasura.RQL.IR
 import Hasura.RQL.Types
 import Hasura.SQL.AnyBackend qualified as AB
 
-{- Note: [Remote Joins Architecture]
+{- Note [Remote Joins Architecture]
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
- Unparsed Incoming GraphQL  +------------------------------+
---------------------------> | Parsing of the GraphQL query |-----+
-                            +------------------------------+     |
-                                                                 | DB Query and remote joins (if any)
-                                                                 |
-                                                                 V
-+----------------------------------+  SQL query response  +----------------------------+
-|  Traverse the DB response to     | <------------------- |  Execution of the DB query |
-|  get the values of the arguments |                      +----------------------------+
-|   of the remote field            |
-+----------------------------------+
-             |
-             | Remote field arguments
-             V
-+--------------------------+  Remote schema response   +----------------------------------------+
-| Query the remote schema  | ------------------------> | Replace the remote join fields in      |
-| with the remote field    |                           | the SQL query response (JSON) with     |
-| arguments to the remote  |                           | the response obtained from the remote  |
-| field configured in the  |                           | schema at appropriate places.          |
-| remote join.             |                           +----------------------------------------+
-+--------------------------+
+    Unparsed Incoming GraphQL   +------------------------------+
+    --------------------------> | Parsing of the GraphQL query |-----+
+                                +------------------------------+     |
+                                                                     | DB Query and remote joins (if any)
+                                                                     |
+                                                                     V
+    +----------------------------------+  SQL query response  +----------------------------+
+    |  Traverse the DB response to     | <------------------- |  Execution of the DB query |
+    |  get the values of the arguments |                      +----------------------------+
+    |   of the remote field            |
+    +----------------------------------+
+                 |
+                 | Remote field arguments
+                 V
+    +--------------------------+  Remote schema response   +----------------------------------------+
+    | Query the remote schema  | ------------------------> | Replace the remote join fields in      |
+    | with the remote field    |                           | the SQL query response (JSON) with     |
+    | arguments to the remote  |                           | the response obtained from the remote  |
+    | field configured in the  |                           | schema at appropriate places.          |
+    | remote join.             |                           +----------------------------------------+
+    +--------------------------+
 -}
 
 -- | A writer monad used to collect together all remote joins
@@ -61,15 +62,15 @@ newtype Collector a = Collector {runCollector :: (a, Maybe RemoteJoins)}
 
 -- | Collect some remote joins appearing at the given field names in the current
 -- context.
-collect :: NonEmpty (FieldName, RemoteJoin) -> Collector ()
-collect = tell . Just . JoinTree . fmap (second Leaf)
+collect :: NEHashMap FieldName RemoteJoin -> Collector ()
+collect = tell . Just . JoinTree . fmap Leaf
 
 -- | Keep track of the given field name in the current path from the root of the
 -- selection set.
 withField :: FieldName -> Collector a -> Collector a
 withField name = censor (fmap wrap)
   where
-    wrap rjs = JoinTree ((name, Tree rjs) :| [])
+    wrap rjs = JoinTree $ NEMap.singleton name (Tree rjs)
 
 -- | Collects remote joins from the AST and also adds the necessary join fields
 getRemoteJoins ::
@@ -362,7 +363,7 @@ transformAnnFields fields = do
         annotatedFields & mapMaybe \(fieldName, (_, mRemoteJoin)) ->
           (fieldName,) <$> mRemoteJoin
 
-  case NE.nonEmpty remoteJoins of
+  case NEMap.fromList remoteJoins of
     Nothing -> pure transformedFields
     Just neRemoteJoins -> do
       collect neRemoteJoins
@@ -504,7 +505,7 @@ getJoinColumnAlias fieldName field selectedFields allAliases =
     Just fieldAlias -> JCSelected fieldAlias
   where
     -- This generates an alias for a phantom field that does not conflict with
-    -- any of the existing aliases in the seleciton set
+    -- any of the existing aliases in the selection set
     --
     -- If we generate a unique name for each field name which is longer than
     -- the longest alias in the selection set, the generated name would be
