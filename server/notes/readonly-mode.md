@@ -1,4 +1,4 @@
-This note is in [Hasura.Server.Init](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/Server/Init.hs#L51).
+This note is in [Hasura.Server.Init](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/Server/Init.hs#L50).
 It is referenced at:
   - line 76 of [Hasura.Server.Types](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/Server/Types.hs#L76)
 
