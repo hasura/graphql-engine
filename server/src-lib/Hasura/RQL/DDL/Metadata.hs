@@ -488,19 +488,14 @@ runTestWebhookTransform ::
   (QErrM m) =>
   TestWebhookTransform ->
   m EncJSON
-runTestWebhookTransform (TestWebhookTransform env urlE payload mt _ sv) = do
+runTestWebhookTransform (TestWebhookTransform env headers urlE payload mt _ sv) = do
   url <- case urlE of
-    URL url' ->
-      case AT.parseOnly parseEnvTemplate url' of
-        Left _ -> throwError $ err400 ParseFailed "Invalid Url Template"
-        Right xs ->
-          let lookup' var = maybe (Left var) (Right . T.pack) $ Env.lookupEnv env (T.unpack var)
-              result = traverse (fmap indistinct . bitraverse lookup' pure) xs
-              err e = throwError $ err400 NotFound $ "Missing Env Var: " <> e
-           in either err (pure . fold) result
+    URL url' -> interpolateFromEnv env url'
     EnvVar var ->
       let err = throwError $ err400 NotFound "Missing Env Var"
        in maybe err (pure . T.pack) $ Env.lookupEnv env var
+
+  headers' <- traverse (traverse (fmap TE.encodeUtf8 . interpolateFromEnv env . TE.decodeUtf8)) headers
 
   result <- runExceptT $ do
     let env' = bimap T.pack (J.String . T.pack) <$> Env.toList env
@@ -511,7 +506,7 @@ runTestWebhookTransform (TestWebhookTransform env urlE payload mt _ sv) = do
     let unwrappedUrl = T.drop 1 $ T.dropEnd 1 kritiUrlResult
     initReq <- hoistEither $ first RequestInitializationError $ HTTP.mkRequestEither unwrappedUrl
 
-    let req = initReq & HTTP.body .~ pure (J.encode payload)
+    let req = initReq & HTTP.body .~ pure (J.encode payload) & HTTP.headers .~ headers'
         reqTransform = mkRequestTransform mt
         reqTransformCtx = buildReqTransformCtx unwrappedUrl sv
     hoistEither $ first (RequestTransformationError req) $ applyRequestTransform reqTransformCtx reqTransform req
@@ -524,6 +519,16 @@ runTestWebhookTransform (TestWebhookTransform env urlE payload mt _ sv) = do
     -- NOTE: In the following two cases we have failed before producing a valid request.
     Left (UrlInterpError err) -> pure $ encJFromJValue $ J.toJSON err
     Left (RequestInitializationError err) -> pure $ encJFromJValue $ J.String $ "Error: " <> tshow err
+
+interpolateFromEnv :: MonadError QErr m => Env.Environment -> Text -> m Text
+interpolateFromEnv env url =
+  case AT.parseOnly parseEnvTemplate url of
+    Left _ -> throwError $ err400 ParseFailed "Invalid Url Template"
+    Right xs ->
+      let lookup' var = maybe (Left var) (Right . T.pack) $ Env.lookupEnv env (T.unpack var)
+          result = traverse (fmap indistinct . bitraverse lookup' pure) xs
+          err e = throwError $ err400 NotFound $ "Missing Env Var: " <> e
+       in either err (pure . fold) result
 
 parseEnvTemplate :: AT.Parser [Either T.Text T.Text]
 parseEnvTemplate = AT.many1 $ pEnv <|> pLit <|> fmap Right "{"

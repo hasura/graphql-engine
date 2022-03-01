@@ -400,6 +400,7 @@ test_webhook_transform
        "type" : "test_webhook_transform",
        "args" : {
          "webhook_url": "http://localhost:1234",
+         "request_headers": [["myKey", "myValue"]],
          "body": { "hello": "world" },
          "request_transform": {
            "body": "{{ $body.world }}",
@@ -420,6 +421,7 @@ The `webhook_url` can be provided in an Environment Variable supplied in an obje
        "type" : "test_webhook_transform",
        "args" : {
          "webhook_url": {"from_env": "url_env_var" },
+         "request_headers": [["myKey", "myValue"]],
          "body": { "hello": "world" },
          "request_transform": {
            "body": "{{ $body.world }}",
