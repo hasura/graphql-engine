@@ -210,24 +210,24 @@ Before running the test suite either manually or via `dev.sh`:
    the state needs to be cleared, which should be done in the teardown step. The setup and teardown
    is localised for every python test class.
 
-   See `TestCreateAndDelete` in [test_events.py](tests-py/test_events.py)
+   See `TestCreateAndDelete` in [test_events.py](test_events.py)
    for reference.
 
 3. The setup and teardown can be configured to run before and after every test in a test class
    or run before and after running all the tests in a class. Depending on the use case, there
-   are different fixtures like `per_class_tests_db_state`,`per_method_tests_db_state` defined in the [conftest.py](tests-py/conftest.py) file.
+   are different fixtures like `per_class_tests_db_state`,`per_method_tests_db_state` defined in the [conftest.py](conftest.py) file.
 
 4. Sometimes, it's required to run the graphql-engine with in a different configuration only
    for a particular set of tests. In this case, these tests should be run only when the graphql-engine
    is run with the said configuration and should be skipped in other graphql-engine configurations. This
    can be done by accepting a new command-line flag from the `pytest` command and depending on the value or
    presence of the flag, the tests should be run accordingly. After adding this kind of a test, a new section
-   needs to be added in the [test-server.sh](../.circleci/test-server.sh). This new section's name should also
+   needs to be added in the [test-server.sh](../../oss-.circleci/test-server.sh). This new section's name should also
    be added in the `server-test-names.txt` file, otherwise the test will not be run in the CI.
 
    For example,
 
-   The tests in the [test_remote_schema_permissions.py](tests-py/test_remote_schema_permissions.py)
+   The tests in the [test_remote_schema_permissions.py](test_remote_schema_permissions.py)
    are only to be run when the remote schema permissions are enabled in the graphql-engine and when
    it's not set, these tests should be skipped. Now, to run these tests we parse a command line option
    from pytest called (`--enable-remote-schema-permissions`) and the presence of this flag means that
@@ -243,7 +243,7 @@ The current workflow for supporting a new backend in integration tests is as fol
     1. `setup_<backend>`: for `v1/query` or metadata queries such as `<backend>_track_table`. [Example](https://github.com/hasura/graphql-engine/commit/64d52f5fa333f337ef76ada4e0b6abd49353c457/scripts/dev.sh#diff-97ba2b889f4ed620e8bd044f819b1f94f95bfc695a69804519e38a00119337d9).
     2. `schema_setup_<backend>`: for `v2/query` queries such as `<backend>_run_sql`. [Example](https://github.com/hasura/graphql-engine/commit/64d52f5fa333f337ef76ada4e0b6abd49353c457/scripts/dev.sh#diff-b34081ef8e1c34492fcf0cf72a8c1d64bcb66944f2ab2efb9ac0812cd7a003c7).
     3. `teardown_<backend>` and `cleardb_<backend>`
-    4. important: filename suffixes should be the same as the value that’s being passed to `—backend`; that's how the files are looked up.
+    4. **Important:** filename suffixes _**should be the same**_ as the value that’s being passed to `—backend`; that's how the files are looked up.
 4. Specify a `backend` parameter for [the `per_backend_tests` fixture](https://github.com/hasura/graphql-engine/commit/64d52f5fa333f337ef76ada4e0b6abd49353c457/scripts/dev.sh#diff-1034b560ce9984643a4aa4edab1d612aa512f1c3c28bbc93364700620681c962R420), parameterised by backend. [Example](https://github.com/hasura/graphql-engine/commit/64d52f5fa333f337ef76ada4e0b6abd49353c457/scripts/dev.sh#diff-40b7c6ad5362e70cafd29a3ac5d0a5387bd75befad92532ea4aaba99421ba3c8R12-R13).
 
 Note: When teardown is not disabled (via `skip_teardown`(*) , in which case, this phase is skipped entirely), `teardown.yaml` always runs before `schema_teardown.yaml`, even if the tests fail. See `setup_and_teardown` in `server/tests-py/conftest.py` for the full source code/logic.
@@ -254,9 +254,10 @@ This means, for example, that if `teardown.yaml` untracks a table, and `schema_t
 
 **Test suite naming convention**
 The current convention is to indicate the backend(s) tests can be run against in the class name. For example:
-    * `TestGraphQLQueryBasicMySQL` for tests that can only be run on MySQL
-    * `TestGraphQLQueryBasicCommon` for tests that can be run against more than one backend
-    * if a test class doesn't have a suffix specifying the backend, nor does its name end in `Common`, then it is likely a test written pre-v2.0 that can only be run on Postgres
+   * `TestGraphQLQueryBasicMySQL` for tests that can only be run on MySQL
+   * `TestGraphQLQueryBasicCommon` for tests that can be run against more than one backend
+   * If a test class doesn't have a suffix specifying the backend, nor does its name end in `Common`, then it is likely a test written pre-v2.0 that 
+     can only be run on Postgres
 
 This naming convention enables easier test filtering with [pytest command line flags](https://docs.pytest.org/en/6.2.x/usage.html#specifying-tests-selecting-tests).
 
