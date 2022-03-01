@@ -857,21 +857,32 @@ export type RequestTransformContentType =
   | 'application/x-www-form-urlencoded';
 
 export type RequestTransformHeaders = {
-  addHeaders: Record<string, string>;
-  removeHeaders: string[];
+  add_headers?: Record<string, string>;
+  remove_headers?: string[];
 };
 
 export type RequestTransformTemplateEngine = 'Kriti';
 
-export interface RequestTransform {
+interface RequestTransformFields {
   method?: Nullable<RequestTransformMethod>;
   url?: Nullable<string>;
-  body?: Nullable<string>;
   content_type?: Nullable<RequestTransformContentType>;
   request_headers?: Nullable<RequestTransformHeaders>;
   query_params?: Nullable<Record<string, string>>;
   template_engine?: Nullable<RequestTransformTemplateEngine>;
 }
+
+interface RequestTransformV1 extends RequestTransformFields {
+  version: 1;
+  body?: string;
+}
+
+interface RequestTransformV2 extends RequestTransformFields {
+  version: 2;
+  body?: Record<string, Nullable<string>>;
+}
+
+export type RequestTransform = RequestTransformV1 | RequestTransformV2;
 
 /**
  * https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/actions.html#actiondefinition

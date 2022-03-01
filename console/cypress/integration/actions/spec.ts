@@ -15,6 +15,7 @@ import {
   clearRequestUrl,
   toggleContextArea,
   typeIntoContextAreaEnvVars,
+  getActionTransfromV1RequestBody,
 } from '../../helpers/webhookTransformHelpers';
 
 const ACTION_REQUEST_BODY_TRANSFORM_TEXTAREA = 4;
@@ -292,7 +293,7 @@ export const deleteQueryAction = () => deleteAction('addNumbers');
 
 export const createActionTransform = () => {
   // Click on create
-  cy.getBySel('data-create-actions').click();
+  cy.getBySel('actions-sidebar-add-table').click();
   // Clear default text on
   clearActionDef();
   // type statement
@@ -415,3 +416,45 @@ export const modifyActionTransform = () => {
 };
 
 export const deleteActionTransform = () => deleteAction('login');
+
+const createV1ActionTransform = (actionName: string) => {
+  cy.request(
+    'POST',
+    'http://localhost:8080/v1/metadata',
+    getActionTransfromV1RequestBody(actionName)
+  ).then(response => {
+    expect(response.body).to.not.be.null;
+    expect(response.body).to.be.a('array');
+    expect(response.body[0]).to.have.property('message', 'success'); // true
+  });
+};
+
+export const modifyV1ActionTransform = () => {
+  // Creates an action with v1 transform
+  createV1ActionTransform('login');
+
+  cy.wait(AWAIT_SHORT);
+  // modify and save the action, the action should be converted into v2 and checkbox to remove body should be visible
+  cy.visit('/actions/manage/login/modify');
+  cy.url({ timeout: AWAIT_LONG }).should(
+    'eq',
+    `${baseUrl}/actions/manage/login/modify`
+  );
+  cy.getBySel('transform-POST').click();
+  cy.getBySel('transform-requestUrl')
+    .clear()
+    .type('/{{$body.action.name}}/actions', {
+      parseSpecialCharSequences: false,
+    });
+
+  cy.getBySel('save-modify-action-changes').click();
+  cy.get('.notification', { timeout: AWAIT_LONG })
+    .should('be.visible')
+    .and('contain', 'Action saved successfully');
+
+  // check if checkbox to remove body is visible
+  cy.getBySel('transform-showRequestBody-checkbox').should('be.visible');
+
+  // delete the action
+  deleteActionTransform();
+};

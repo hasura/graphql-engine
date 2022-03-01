@@ -20,6 +20,7 @@ type ConfigureTransformationProps = {
   requestQueryParamsOnChange: (requestQueryParams: KeyValuePair[]) => void;
   requestAddHeadersOnChange: (requestAddHeaders: KeyValuePair[]) => void;
   requestBodyOnChange: (requestBody: string) => void;
+  requestBodyEnabledOnChange: (enableRequestBody: boolean) => void;
   requestSampleInputOnChange: (requestSampleInput: string) => void;
   requestContentTypeOnChange: (
     requestContentType: RequestTransformContentType
@@ -38,6 +39,7 @@ const ConfigureTransformation: React.FC<ConfigureTransformationProps> = ({
   requestQueryParamsOnChange,
   requestAddHeadersOnChange,
   requestBodyOnChange,
+  requestBodyEnabledOnChange,
   requestSampleInputOnChange,
   requestContentTypeOnChange,
   requestUrlTransformOnChange,
@@ -56,6 +58,7 @@ const ConfigureTransformation: React.FC<ConfigureTransformationProps> = ({
     requestBodyError,
     requestSampleInput,
     requestTransformedBody,
+    enableRequestBody,
     requestContentType,
     isRequestUrlTransform,
     isRequestPayloadTransform,
@@ -171,9 +174,11 @@ const ConfigureTransformation: React.FC<ConfigureTransformationProps> = ({
             requestBodyError={requestBodyError}
             requestSampleInput={requestSampleInput}
             requestTransformedBody={requestTransformedBody}
+            enableRequestBody={enableRequestBody}
             requestContentType={requestContentType}
             resetSampleInput={resetSampleInput}
             requestBodyOnChange={requestBodyOnChange}
+            requestBodyEnabledOnChange={requestBodyEnabledOnChange}
             requestSampleInputOnChange={requestSampleInputOnChange}
             requestContentTypeOnChange={requestContentTypeOnChange}
           />

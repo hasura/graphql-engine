@@ -8,6 +8,7 @@ import {
   createActionTransform,
   modifyActionTransform,
   deleteActionTransform,
+  modifyV1ActionTransform,
 } from './spec';
 import { testMode } from '../../helpers/common';
 import { setMetaData } from '../validators/validators';
@@ -35,6 +36,10 @@ export const runActionsTests = () => {
     it('Create Action With Transform', createActionTransform);
     it('Update Action With Transform', modifyActionTransform);
     it('Delete Action With Transform', deleteActionTransform);
+    it(
+      'Create an action with V1 Transform and edit it through console, which will lead to the action being saved as V2',
+      modifyV1ActionTransform
+    );
   });
 };
 

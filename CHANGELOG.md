@@ -14,6 +14,7 @@
 - server: add support for customising the GraphQL schema descriptions of table root fields
 - console: include cron trigger with include in metadata as false on cron trigger manage page
 - console: show an error notification if Hasura CLI migrations fail
+- console: provide checkbox to remove body in rest connectors
 - cli: fix metadata version being set to 3 when doing `hasura init --version 2` (#8148)
 
 ## v2.3.0-beta.3
