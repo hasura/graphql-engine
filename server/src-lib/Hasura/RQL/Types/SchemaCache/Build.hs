@@ -34,13 +34,15 @@ import Control.Monad.Morph
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Aeson (Value, toJSON)
 import Data.Aeson.TH
-import Data.HashMap.Strict.Extended qualified as M
+import Data.HashMap.Strict.Extended qualified as Map
 import Data.HashMap.Strict.InsOrd qualified as OMap
+import Data.HashMap.Strict.Multi qualified as MultiMap
 import Data.List qualified as L
 import Data.Sequence qualified as Seq
 import Data.Set qualified as S
 import Data.Text.Extended
 import Data.Text.NonEmpty (unNonEmptyText)
+import Data.Trie qualified as Trie
 import Database.MSSQL.Transaction qualified as MSSQL
 import Database.PG.Query qualified as Q
 import Hasura.Backends.Postgres.Connection
@@ -314,17 +316,17 @@ buildSchemaCacheFor objectId metadataModifier = do
   buildSchemaCache metadataModifier
   newSchemaCache <- askSchemaCache
 
-  let diffInconsistentObjects = M.difference `on` (groupInconsistentMetadataById . scInconsistentObjs)
+  let diffInconsistentObjects = Map.difference `on` (groupInconsistentMetadataById . scInconsistentObjs)
       newInconsistentObjects = newSchemaCache `diffInconsistentObjects` oldSchemaCache
 
-  for_ (M.lookup objectId newInconsistentObjects) $ \matchingObjects -> do
+  for_ (Map.lookup objectId newInconsistentObjects) $ \matchingObjects -> do
     let reasons = commaSeparated $ imReason <$> matchingObjects
     throwError (err400 InvalidConfiguration reasons) {qeInternal = Just $ ExtraInternal $ toJSON matchingObjects}
 
   unless (null newInconsistentObjects) $
     throwError
       (err400 Unexpected "cannot continue due to new inconsistent metadata")
-        { qeInternal = Just $ ExtraInternal $ toJSON (L.nub . concatMap toList $ M.elems newInconsistentObjects)
+        { qeInternal = Just $ ExtraInternal $ toJSON (L.nub . concatMap toList $ Map.elems newInconsistentObjects)
         }
 
 -- | Like 'buildSchemaCache', but fails if there is any inconsistent metadata.
@@ -345,9 +347,9 @@ withNewInconsistentObjsCheck action = do
   result <- action
   currentObjects <- scInconsistentObjs <$> askSchemaCache
 
-  let diffInconsistentObjects = M.difference `on` groupInconsistentMetadataById
+  let diffInconsistentObjects = Map.difference `on` groupInconsistentMetadataById
       newInconsistentObjects =
-        L.nub $ concatMap toList $ M.elems (currentObjects `diffInconsistentObjects` originalObjects)
+        L.nub $ concatMap toList $ Map.elems (currentObjects `diffInconsistentObjects` originalObjects)
   unless (null newInconsistentObjects) $
     throwError
       (err500 Unexpected "cannot continue due to newly found inconsistent metadata")
@@ -363,7 +365,7 @@ getInconsistentRestQueries :: Maybe RemoteSchemaIntrospection -> EndpointTrie GQ
 getInconsistentRestQueries Nothing _ _ = []
 getInconsistentRestQueries (Just rs) tMap getMetaObj = map (\(o, t) -> InconsistentObject t Nothing o) fE
   where
-    methodList = concatMap (\(_, s) -> (S.toList s)) $ concatMap (M.toList . _unMultiMap) $ leaves tMap
+    methodList = concatMap S.toList $ concatMap MultiMap.elems $ Trie.elems tMap
     endpoints = concatMap (\x -> map (x,) (mdDefinitions x)) methodList
     mdDefinitions :: EndpointMetadata GQLQueryWithText -> [G.ExecutableDefinition G.Name]
     mdDefinitions = G.getExecutableDefinitions . unGQLQuery . getGQLQuery . _edQuery . _ceDefinition

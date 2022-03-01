@@ -24,8 +24,8 @@ where
 import Control.Lens (view, _1)
 import Data.Aeson.Ordered qualified as AO
 import Data.HashMap.Strict qualified as Map
+import Data.HashMap.Strict.NonEmpty qualified as Map
 import Data.IntMap.Strict qualified as IntMap
-import Data.List.NonEmpty qualified as NE
 import Hasura.GraphQL.Parser qualified as P
 import Hasura.Prelude
 import Hasura.RQL.IR.Select qualified as IR
@@ -63,10 +63,7 @@ import Language.GraphQL.Draft.Syntax qualified as G
 -- '[City]' and 'state' is of type [State], we currently do not capture any
 -- information if any of the fields in the path expect json arrays. It is
 -- similar in spirit to a GraphQL selection set in this regard
-newtype JoinTree a =
-  -- Ideally this should be represented as 'NonEmptyMap FieldName (JoinNode a)'
-  -- if there is a good package which implements the above type
-  JoinTree {unJoinTree :: NE.NonEmpty (FieldName, JoinNode a)}
+newtype JoinTree a = JoinTree {unJoinTree :: Map.NEHashMap FieldName (JoinNode a)}
   deriving stock (Eq, Foldable, Functor, Generic, Traversable, Show)
   deriving newtype (Semigroup)
 

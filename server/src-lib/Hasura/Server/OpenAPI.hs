@@ -18,13 +18,14 @@ import Control.Lens
 import Data.Aeson qualified as J
 import Data.HashMap.Strict qualified as Map
 import Data.HashMap.Strict.InsOrd qualified as OMap
+import Data.HashMap.Strict.Multi qualified as MMap
 import Data.List.NonEmpty qualified as NE
 import Data.OpenApi
 import Data.OpenApi.Declare
-import Data.Set qualified as Set
 import Data.Text qualified as T
 import Data.Text.Extended (commaSeparated)
 import Data.Text.NonEmpty
+import Data.Trie qualified as Trie
 import Hasura.GraphQL.Analyse (Analysis (Analysis, _aFields, _aVars), FieldAnalysis (FieldAnalysis, _fFields), FieldDef (FieldInfo, FieldList), analyzeGraphqlQuery)
 import Hasura.GraphQL.RemoteServer (getSchemaIntrospection)
 import Hasura.Prelude hiding (get, put)
@@ -430,8 +431,8 @@ extractEndpointInfo sd method d = do
 getEndpointsData :: Maybe RemoteSchemaIntrospection -> SchemaCache -> Declare (Definitions Schema) [EndpointData]
 getEndpointsData sd sc = do
   let endpointTrie = scEndpoints sc
-      methodMaps = leaves endpointTrie
-      endpointsWithMethods = concatMap (\(m, s) -> map (m,) (Set.toList s)) $ concatMap (Map.toList . _unMultiMap) methodMaps
+      methodMaps = Trie.elems endpointTrie
+      endpointsWithMethods = concatMap (\(m, s) -> map (m,) s) $ concatMap MMap.toList methodMaps
 
   endpointsWithInfo <- traverse (uncurry (extractEndpointInfo sd)) endpointsWithMethods
 

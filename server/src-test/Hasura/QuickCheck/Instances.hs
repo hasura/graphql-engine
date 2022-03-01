@@ -8,15 +8,19 @@ import Data.Aeson qualified as Aeson
 import Data.Aeson.Types qualified as Aeson.Types
 import Data.HashMap.Strict.Extended qualified as HashMap
 import Data.HashMap.Strict.InsOrd qualified as InsOrd.HashMap
+import Data.HashMap.Strict.Multi qualified as MMap
 import Data.HashSet qualified as HashSet
 import Data.Ratio ((%))
+import Data.Set qualified as Set
 import Data.Text qualified as T
+import Data.Trie qualified as Trie
 import Hasura.Base.Error (QErr (..), QErrExtra (..))
 import Hasura.Base.Error qualified as Error
 import Hasura.GraphQL.Namespace (NamespacedField (..), namespacedField)
 import Hasura.Prelude
 import Hasura.RQL.Types (CustomRootField (..), TableCustomRootFields (..), getAllCustomRootFields)
 import Hasura.RQL.Types.Common (Comment (..), SourceName (..))
+import Hasura.RQL.Types.Endpoint.Trie
 import Hasura.RQL.Types.Metadata.Object
   ( MetadataObjId (..),
     MetadataObject (..),
@@ -71,6 +75,20 @@ instance Arbitrary Aeson.Types.JSONPathElement where
 
 instance Arbitrary HTTP.Types.Status where
   arbitrary = HTTP.Types.Status <$> arbitrary <*> pure mempty
+
+-------------------------------------------------------------------------------
+-- Orphan instances for types defined by us, but which are not coupled to
+-- GraphQL Engine.
+
+instance (Eq k, Hashable k, Arbitrary k, Eq v, Arbitrary v) => Arbitrary (Trie.Trie k v) where
+  arbitrary = Trie.Trie <$> scale (`div` 2) arbitrary <*> arbitrary
+  shrink (Trie.Trie m v) =
+    [Trie.Trie m v' | v' <- shrink v]
+      ++ [Trie.Trie m' v | m' <- shrink m]
+
+instance (Eq k, Hashable k, Arbitrary k, Ord v, Arbitrary v) => Arbitrary (MMap.MultiMap k v) where
+  arbitrary = MMap.fromMap . fmap (Set.fromList . take 5) <$> arbitrary
+  shrink m = map MMap.fromMap $ shrink $ MMap.toMap m
 
 -------------------------------------------------------------------------------
 -- Orphan instances for Language.GraphQL.Draft.Syntax types
@@ -223,6 +241,13 @@ genInputObjectTypeDefinition values name =
 
 -------------------------------------------------------------------------------
 -- Instances for GraphQL Engine types
+
+instance Arbitrary a => Arbitrary (PathComponent a) where
+  arbitrary =
+    oneof
+      [ PathLiteral <$> arbitrary,
+        pure PathParam
+      ]
 
 instance Arbitrary SessionVariable where
   arbitrary = do

@@ -29,9 +29,11 @@ import Control.Lens
 import Data.Aeson
 import Data.Aeson.Casing
 import Data.Aeson.TH
+import Data.HashMap.Strict.Multi qualified as MM
 import Data.Text qualified as T
 import Data.Text.Extended
 import Data.Text.NonEmpty
+import Data.Trie qualified as T
 import Database.PG.Query qualified as Q
 import Hasura.Prelude
 import Hasura.RQL.Types.Endpoint.Trie as Trie
@@ -109,14 +111,14 @@ data EndpointDef query = EndpointDef
 $(deriveJSON (aesonDrop 3 snakeCase) ''EndpointDef)
 $(makeLenses ''EndpointDef)
 
-type EndpointTrie query = MultiMapTrie Text EndpointMethod (EndpointMetadata query)
+type EndpointTrie query = MultiMapPathTrie Text EndpointMethod (EndpointMetadata query)
 
 buildEndpointsTrie :: Ord query => [EndpointMetadata query] -> EndpointTrie query
 buildEndpointsTrie = foldl' insert mempty
   where
     insert t q =
-      let endpointMap = foldMap (`singletonMultiMap` q) $ _ceMethods q
-       in insertPath (splitPath (const PathParam) PathLiteral (_ceUrl q)) endpointMap t
+      let endpointMap = foldMap (`MM.singleton` q) $ _ceMethods q
+       in T.insertWith (<>) (splitPath (const PathParam) PathLiteral (_ceUrl q)) endpointMap t
 
 -- | Split a path and construct PathSegments based on callbacks for variables and literals
 --   Var callback is passed the ":" prefix as part of the text.
