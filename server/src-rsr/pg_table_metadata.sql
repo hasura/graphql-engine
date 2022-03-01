@@ -188,4 +188,4 @@ LEFT JOIN
 WHERE "table".relkind IN ('r', 't', 'v', 'm', 'f', 'p')
   -- and tables not from any system schemas
   AND schema.nspname NOT LIKE 'pg_%'
-  AND schema.nspname NOT IN ('information_schema', 'hdb_catalog', 'hdb_lib');
+  AND schema.nspname NOT IN ('information_schema', 'hdb_catalog', 'hdb_lib', '_timescaledb_internal');
