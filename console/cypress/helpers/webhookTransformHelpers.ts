@@ -99,3 +99,89 @@ export const checkTransformRequestBodyError = (exists: boolean) => {
     cy.getBySel('transform-requestBody-error').should('not.exist');
   }
 };
+
+export const getActionTransfromV1RequestBody = (actionName: string) => ({
+  type: 'bulk',
+  source: 'default',
+  args: [
+    {
+      type: 'set_custom_types',
+      args: {
+        scalars: [],
+        input_objects: [
+          {
+            name: 'SampleInput',
+            description: null,
+            fields: [
+              {
+                name: 'username',
+                type: 'String!',
+                description: null,
+              },
+              {
+                name: 'password',
+                type: 'String!',
+                description: null,
+              },
+            ],
+          },
+        ],
+        objects: [
+          {
+            name: 'SampleOutput',
+            description: null,
+            fields: [
+              {
+                name: 'accessToken',
+                type: 'String!',
+                description: null,
+              },
+            ],
+          },
+          {
+            name: 'LoginResponse',
+            fields: [
+              {
+                name: 'accessToken',
+                type: 'String!',
+              },
+            ],
+          },
+        ],
+        enums: [],
+      },
+    },
+    {
+      type: 'create_action',
+      args: {
+        name: actionName,
+        definition: {
+          arguments: [
+            {
+              name: 'arg1',
+              type: 'SampleInput!',
+              description: null,
+            },
+          ],
+          kind: 'synchronous',
+          output_type: 'SampleOutput',
+          handler: 'http://host.docker.internal:3000',
+          type: 'mutation',
+          headers: [],
+          timeout: null,
+          request_transform: {
+            version: 1,
+            template_engine: 'Kriti',
+            method: 'GET',
+            url: '{{$base_url}}/users',
+            query_params: {},
+            body:
+              '{\n  "users": {\n    "name": {{$body.input.arg1.username}}\n  }\n}',
+            content_type: 'application/json',
+          },
+        },
+        comment: null,
+      },
+    },
+  ],
+});

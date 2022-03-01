@@ -24,6 +24,7 @@ import {
   setRequestBodyError,
   setRequestSampleInput,
   setRequestTransformedBody,
+  setEnableRequestBody,
   setRequestContentType,
   setRequestUrlTransform,
   setRequestPayloadTransform,
@@ -205,6 +206,10 @@ const AddAction: React.FC<AddActionProps> = ({
     transformDispatch(setRequestTransformedBody(requestTransformedBody));
   };
 
+  const requestBodyEnabledOnChange = (enableRequestBody: boolean) => {
+    transformDispatch(setEnableRequestBody(enableRequestBody));
+  };
+
   const requestContentTypeOnChange = (
     requestContentType: RequestTransformContentType
   ) => {
@@ -231,15 +236,15 @@ const AddAction: React.FC<AddActionProps> = ({
         requestUrlPreviewOnChange
       );
     };
-    const options = getValidateTransformOptions(
-      transformState.requestSampleInput,
-      handler,
-      transformState.envVars,
-      transformState.sessionVars,
-      undefined,
-      transformState.requestUrl,
-      transformState.requestQueryParams
-    );
+    const options = getValidateTransformOptions({
+      version: transformState.version,
+      inputPayloadString: transformState.requestSampleInput,
+      webhookUrl: handler,
+      envVarsFromContext: transformState.envVars,
+      sessionVarsFromContext: transformState.sessionVars,
+      requestUrl: transformState.requestUrl,
+      queryParams: transformState.requestQueryParams,
+    });
     if (!handler) {
       requestUrlErrorOnChange(
         'Please configure your webhook handler to generate request url transform'
@@ -276,13 +281,14 @@ const AddAction: React.FC<AddActionProps> = ({
         requestTransformedBodyOnChange
       );
     };
-    const options = getValidateTransformOptions(
-      transformState.requestSampleInput,
-      handler,
-      transformState.envVars,
-      transformState.sessionVars,
-      transformState.requestBody
-    );
+    const options = getValidateTransformOptions({
+      version: transformState.version,
+      inputPayloadString: transformState.requestSampleInput,
+      webhookUrl: handler,
+      envVarsFromContext: transformState.envVars,
+      sessionVarsFromContext: transformState.sessionVars,
+      transformerBody: transformState.requestBody,
+    });
     if (!handler) {
       requestBodyErrorOnChange(
         'Please configure your webhook handler to generate request body transform'
@@ -364,6 +370,7 @@ const AddAction: React.FC<AddActionProps> = ({
           requestQueryParamsOnChange={requestQueryParamsOnChange}
           requestAddHeadersOnChange={requestAddHeadersOnChange}
           requestBodyOnChange={requestBodyOnChange}
+          requestBodyEnabledOnChange={requestBodyEnabledOnChange}
           requestSampleInputOnChange={requestSampleInputOnChange}
           requestContentTypeOnChange={requestContentTypeOnChange}
           requestUrlTransformOnChange={requestUrlTransformOnChange}

@@ -29,6 +29,8 @@ export const SET_REQUEST_SAMPLE_INPUT =
   'RequestTransform/SET_REQUEST_SAMPLE_INPUT';
 export const SET_REQUEST_TRANSFORMED_BODY =
   'RequestTransform/SET_REQUEST_TRANSFORMED_BODY';
+export const SET_ENABLE_REQUEST_BODY =
+  'RequestTransform/SET_ENABLE_REQUEST_BODY';
 export const SET_REQUEST_CONTENT_TYPE =
   'RequestTransform/SET_REQUEST_CONTENT_TYPE';
 export const SET_REQUEST_URL_TRANSFORM =
@@ -98,6 +100,11 @@ export interface SetRequestTransformedBody extends ReduxAction {
   requestTransformedBody: string;
 }
 
+export interface SetEnableRequestBody extends ReduxAction {
+  type: typeof SET_ENABLE_REQUEST_BODY;
+  enableRequestBody: boolean;
+}
+
 export interface SetRequestContentType extends ReduxAction {
   type: typeof SET_REQUEST_CONTENT_TYPE;
   requestContentType: RequestTransformContentType;
@@ -131,12 +138,14 @@ export type RequestTransformEvents =
   | SetRequestBodyError
   | SetRequestSampleInput
   | SetRequestTransformedBody
+  | SetEnableRequestBody
   | SetRequestContentType
   | SetRequestUrlTransform
   | SetRequestPayloadTransform
   | SetRequestTransformState;
 
 export type RequestTransformState = {
+  version: 1 | 2;
   envVars: KeyValuePair[];
   sessionVars: KeyValuePair[];
   requestMethod: Nullable<RequestTransformMethod>;
@@ -149,6 +158,7 @@ export type RequestTransformState = {
   requestBodyError: string;
   requestSampleInput: string;
   requestTransformedBody: string;
+  enableRequestBody: boolean;
   requestContentType: RequestTransformContentType;
   isRequestUrlTransform: boolean;
   isRequestPayloadTransform: boolean;

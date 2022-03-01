@@ -15,6 +15,7 @@ import {
   SET_REQUEST_BODY_ERROR,
   SET_REQUEST_SAMPLE_INPUT,
   SET_REQUEST_TRANSFORMED_BODY,
+  SET_ENABLE_REQUEST_BODY,
   SET_REQUEST_CONTENT_TYPE,
   SET_REQUEST_URL_TRANSFORM,
   SET_REQUEST_PAYLOAD_TRANSFORM,
@@ -31,6 +32,7 @@ import {
   SetRequestBodyError,
   SetRequestSampleInput,
   SetRequestTransformedBody,
+  SetEnableRequestBody,
   SetRequestTransformState,
   SetRequestContentType,
   SetRequestUrlTransform,
@@ -125,6 +127,13 @@ export const setRequestTransformedBody = (
   requestTransformedBody,
 });
 
+export const setEnableRequestBody = (
+  enableRequestBody: boolean
+): SetEnableRequestBody => ({
+  type: SET_ENABLE_REQUEST_BODY,
+  enableRequestBody,
+});
+
 export const setRequestContentType = (
   requestContentType: RequestTransformContentType
 ): SetRequestContentType => ({
@@ -153,7 +162,10 @@ export const setRequestTransformState = (
   newState,
 });
 
+const currentVersion = 2;
+
 export const requestTransformState: RequestTransformState = {
+  version: currentVersion,
   envVars: [],
   sessionVars: [],
   requestMethod: null,
@@ -166,6 +178,7 @@ export const requestTransformState: RequestTransformState = {
   requestBodyError: '',
   requestSampleInput: '',
   requestTransformedBody: '',
+  enableRequestBody: true,
   requestContentType: defaultRequestContentType,
   isRequestUrlTransform: false,
   isRequestPayloadTransform: false,
@@ -260,6 +273,11 @@ export const requestTransformReducer = (
       return {
         ...state,
         requestTransformedBody: action.requestTransformedBody,
+      };
+    case SET_ENABLE_REQUEST_BODY:
+      return {
+        ...state,
+        enableRequestBody: action.enableRequestBody,
       };
     case SET_REQUEST_CONTENT_TYPE:
       return {
