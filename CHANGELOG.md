@@ -12,6 +12,7 @@
 - server: improve baseline memory consumption for typical workloads
 - server: fix parsing timestamp values in BigQuery backends (fix #8076)
 - server: add support for customising the GraphQL schema descriptions of table root fields
+- server: add a `request_headers` field to the `test_webhook_transform` API.
 - console: include cron trigger with include in metadata as false on cron trigger manage page
 - console: show an error notification if Hasura CLI migrations fail
 - console: provide checkbox to remove body in rest connectors

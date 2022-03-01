@@ -407,7 +407,7 @@ mkQueryParamsTransform engine templates transformCtx =
 mkHeaderTransform :: TemplatingEngine -> TransformHeaders -> ReqTransformCtx -> Either TransformErrorBundle ([HTTP.Header] -> [HTTP.Header])
 mkHeaderTransform engine TransformHeaders {..} ctx = do
   add <- V.toEither $ fmap mappend $ traverse (bitraverse (pure . CI.map TE.encodeUtf8) (V.fromEither . transformST engine ctx)) addHeaders
-  let filter' xs = filter (flip elem (fmap (CI.map TE.encodeUtf8) removeHeaders) . fst) xs
+  let filter' xs = filter (flip notElem (fmap (CI.map TE.encodeUtf8) removeHeaders) . fst) xs
   pure $ add . filter'
 
 mkUrlTransform :: TemplatingEngine -> StringTemplateText -> ReqTransformCtx -> Either TransformErrorBundle Text

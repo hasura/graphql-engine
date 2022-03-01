@@ -28,5 +28,7 @@
         query_params:
           "foo": "bar"
         request_headers:
+          remove_headers:
+            - user-agent
           add_headers:
             foo: "bar"
