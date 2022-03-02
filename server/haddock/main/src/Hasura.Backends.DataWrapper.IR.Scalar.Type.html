@@ -23,11 +23,11 @@
 </span><span id="line-23"></span><span class="hs-comment">--</span><span>
 </span><span id="line-24"></span><span class="hs-comment">-- XXX: Should we add a @Nullable _ :: Type@ constructor instead of using an</span><span>
 </span><span id="line-25"></span><span class="hs-comment">-- @isNullable@ flag in @Column@?</span><span>
-</span><span id="line-26"></span><span id="local-6989586621688124641"><span id="local-6989586621688124642"></span></span><span class="hs-keyword">data</span><span> </span><span id="Type"><span class="annot"><a href="Hasura.Backends.DataWrapper.IR.Scalar.Type.html#Type"><span class="hs-identifier hs-var">Type</span></a></span></span><span>
+</span><span id="line-26"></span><span id="local-6989586621688124801"><span id="local-6989586621688124802"></span></span><span class="hs-keyword">data</span><span> </span><span id="Type"><span class="annot"><a href="Hasura.Backends.DataWrapper.IR.Scalar.Type.html#Type"><span class="hs-identifier hs-var">Type</span></a></span></span><span>
 </span><span id="line-27"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="String"><span class="annot"><a href="Hasura.Backends.DataWrapper.IR.Scalar.Type.html#String"><span class="hs-identifier hs-var">String</span></a></span></span><span>
 </span><span id="line-28"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="Number"><span class="annot"><a href="Hasura.Backends.DataWrapper.IR.Scalar.Type.html#Number"><span class="hs-identifier hs-var">Number</span></a></span></span><span>
 </span><span id="line-29"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="Bool"><span class="annot"><a href="Hasura.Backends.DataWrapper.IR.Scalar.Type.html#Bool"><span class="hs-identifier hs-var">Bool</span></a></span></span><span>
-</span><span id="line-30"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="%24cBool"><span id="%24cNumber"><span id="%24cString"><span id="%24tType"><span id="local-6989586621688124609"><span id="local-6989586621688124611"><span id="local-6989586621688124613"><span id="local-6989586621688124615"><span id="local-6989586621688124617"><span id="local-6989586621688124619"><span id="local-6989586621688124621"><span id="local-6989586621688124623"><span id="local-6989586621688124625"><span id="local-6989586621688124627"><span id="local-6989586621688124629"><span id="local-6989586621688124631"><span id="local-6989586621688124633"><span id="local-6989586621688124635"><span class="annot"><span class="annottext">Typeable Type
+</span><span id="line-30"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="%24cBool"><span id="%24cNumber"><span id="%24cString"><span id="%24tType"><span id="local-6989586621688124769"><span id="local-6989586621688124771"><span id="local-6989586621688124773"><span id="local-6989586621688124775"><span id="local-6989586621688124777"><span id="local-6989586621688124779"><span id="local-6989586621688124781"><span id="local-6989586621688124783"><span id="local-6989586621688124785"><span id="local-6989586621688124787"><span id="local-6989586621688124789"><span id="local-6989586621688124791"><span id="local-6989586621688124793"><span id="local-6989586621688124795"><span class="annot"><span class="annottext">Typeable Type
 DataType
 Constr
 Typeable Type
@@ -177,7 +177,7 @@ $cgfoldl :: forall (c :: * -&gt; *).
 (forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
 -&gt; (forall g. g -&gt; c g) -&gt; Type -&gt; c Type
 $cp1Data :: Typeable Type
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Data</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688124600"><span id="local-6989586621688124602"><span class="annot"><span class="annottext">Type -&gt; Type -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Data</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688124760"><span id="local-6989586621688124762"><span class="annot"><span class="annottext">Type -&gt; Type -&gt; Bool
 (Type -&gt; Type -&gt; Bool) -&gt; (Type -&gt; Type -&gt; Bool) -&gt; Eq Type
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 /= :: Type -&gt; Type -&gt; Bool
@@ -192,7 +192,7 @@ forall a.
 (forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
 $cto :: forall x. Rep Type x -&gt; Type
 $cfrom :: forall x. Type -&gt; Rep Type x
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688124581"><span id="local-6989586621688124583"><span id="local-6989586621688124585"><span id="local-6989586621688124587"><span id="local-6989586621688124589"><span id="local-6989586621688124591"><span id="local-6989586621688124593"><span class="annot"><span class="annottext">Eq Type
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688124741"><span id="local-6989586621688124743"><span id="local-6989586621688124745"><span id="local-6989586621688124747"><span id="local-6989586621688124749"><span id="local-6989586621688124751"><span id="local-6989586621688124753"><span class="annot"><span class="annottext">Eq Type
 Eq Type
 -&gt; (Type -&gt; Type -&gt; Ordering)
 -&gt; (Type -&gt; Type -&gt; Bool)
@@ -230,7 +230,7 @@ $c&lt; :: Type -&gt; Type -&gt; Bool
 compare :: Type -&gt; Type -&gt; Ordering
 $ccompare :: Type -&gt; Type -&gt; Ordering
 $cp1Ord :: Eq Type
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688124574"><span id="local-6989586621688124576"><span id="local-6989586621688124578"><span class="annot"><span class="annottext">Int -&gt; Type -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688124734"><span id="local-6989586621688124736"><span id="local-6989586621688124738"><span class="annot"><span class="annottext">Int -&gt; Type -&gt; ShowS
 [Type] -&gt; ShowS
 Type -&gt; String
 (Int -&gt; Type -&gt; ShowS)
@@ -245,7 +245,7 @@ showsPrec :: Int -&gt; Type -&gt; ShowS
 $cshowsPrec :: Int -&gt; Type -&gt; ShowS
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-31"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span>
-</span><span id="line-32"></span><span>    </span><span class="hs-special">(</span><span> </span><span id="local-6989586621688124570"><span class="annot"><span class="annottext">Eq Type
+</span><span id="line-32"></span><span>    </span><span class="hs-special">(</span><span> </span><span id="local-6989586621688124730"><span class="annot"><span class="annottext">Eq Type
 Eq Type -&gt; (Accesses -&gt; Type -&gt; Type -&gt; Bool) -&gt; Cacheable Type
 Accesses -&gt; Type -&gt; Type -&gt; Bool
 forall a. Eq a -&gt; (Accesses -&gt; a -&gt; a -&gt; Bool) -&gt; Cacheable a
@@ -253,7 +253,7 @@ unchanged :: Accesses -&gt; Type -&gt; Type -&gt; Bool
 $cunchanged :: Accesses -&gt; Type -&gt; Type -&gt; Bool
 $cp1Cacheable :: Eq Type
 </span><a href="Hasura.Incremental.Internal.Dependency.html#C%3ACacheable"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">Cacheable</span></a></span></span><span class="hs-special">,</span><span>
-</span><span id="line-33"></span><span>      </span><span id="local-6989586621688124565"><span id="local-6989586621688124567"><span class="annot"><span class="annottext">Value -&gt; Parser [Type]
+</span><span id="line-33"></span><span>      </span><span id="local-6989586621688124725"><span id="local-6989586621688124727"><span class="annot"><span class="annottext">Value -&gt; Parser [Type]
 Value -&gt; Parser Type
 (Value -&gt; Parser Type) -&gt; (Value -&gt; Parser [Type]) -&gt; FromJSON Type
 forall a.
@@ -263,7 +263,7 @@ $cparseJSONList :: Value -&gt; Parser [Type]
 parseJSON :: Value -&gt; Parser Type
 $cparseJSON :: Value -&gt; Parser Type
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></span></span></span><span class="hs-special">,</span><span>
-</span><span id="line-34"></span><span>      </span><span id="local-6989586621688124560"><span id="local-6989586621688124562"><span class="annot"><span class="annottext">FromJSONKeyFunction [Type]
+</span><span id="line-34"></span><span>      </span><span id="local-6989586621688124720"><span id="local-6989586621688124722"><span class="annot"><span class="annottext">FromJSONKeyFunction [Type]
 FromJSONKeyFunction Type
 FromJSONKeyFunction Type
 -&gt; FromJSONKeyFunction [Type] -&gt; FromJSONKey Type
@@ -274,7 +274,7 @@ $cfromJSONKeyList :: FromJSONKeyFunction [Type]
 fromJSONKey :: FromJSONKeyFunction Type
 $cfromJSONKey :: FromJSONKeyFunction Type
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSONKey</span></span></span></span><span class="hs-special">,</span><span>
-</span><span id="line-35"></span><span>      </span><span id="local-6989586621688124555"><span id="local-6989586621688124557"><span class="annot"><span class="annottext">Int -&gt; Type -&gt; Int
+</span><span id="line-35"></span><span>      </span><span id="local-6989586621688124715"><span id="local-6989586621688124717"><span class="annot"><span class="annottext">Int -&gt; Type -&gt; Int
 Type -&gt; Int
 (Int -&gt; Type -&gt; Int) -&gt; (Type -&gt; Int) -&gt; Hashable Type
 forall a. (Int -&gt; a -&gt; Int) -&gt; (a -&gt; Int) -&gt; Hashable a
@@ -283,13 +283,13 @@ $chash :: Type -&gt; Int
 hashWithSalt :: Int -&gt; Type -&gt; Int
 $chashWithSalt :: Int -&gt; Type -&gt; Int
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></span></span></span><span class="hs-special">,</span><span>
-</span><span id="line-36"></span><span>      </span><span id="local-6989586621688124552"><span class="annot"><span class="annottext">Type -&gt; ()
+</span><span id="line-36"></span><span>      </span><span id="local-6989586621688124712"><span class="annot"><span class="annottext">Type -&gt; ()
 (Type -&gt; ()) -&gt; NFData Type
 forall a. (a -&gt; ()) -&gt; NFData a
 rnf :: Type -&gt; ()
 $crnf :: Type -&gt; ()
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></span></span><span class="hs-special">,</span><span>
-</span><span id="line-37"></span><span>      </span><span id="local-6989586621688124543"><span id="local-6989586621688124545"><span id="local-6989586621688124547"><span id="local-6989586621688124549"><span class="annot"><span class="annottext">[Type] -&gt; Encoding
+</span><span id="line-37"></span><span>      </span><span id="local-6989586621688124703"><span id="local-6989586621688124705"><span id="local-6989586621688124707"><span id="local-6989586621688124709"><span class="annot"><span class="annottext">[Type] -&gt; Encoding
 [Type] -&gt; Value
 Type -&gt; Encoding
 Type -&gt; Value
@@ -313,7 +313,7 @@ $ctoEncoding :: Type -&gt; Encoding
 toJSON :: Type -&gt; Value
 $ctoJSON :: Type -&gt; Value
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></span></span></span></span></span><span class="hs-special">,</span><span>
-</span><span id="line-38"></span><span>      </span><span id="local-6989586621688124538"><span id="local-6989586621688124540"><span class="annot"><span class="annottext">ToJSONKeyFunction [Type]
+</span><span id="line-38"></span><span>      </span><span id="local-6989586621688124698"><span id="local-6989586621688124700"><span class="annot"><span class="annottext">ToJSONKeyFunction [Type]
 ToJSONKeyFunction Type
 ToJSONKeyFunction Type
 -&gt; ToJSONKeyFunction [Type] -&gt; ToJSONKey Type
@@ -327,7 +327,7 @@ $ctoJSONKey :: ToJSONKeyFunction Type
 </span><span id="line-39"></span><span>    </span><span class="hs-special">)</span><span>
 </span><span id="line-40"></span><span>
 </span><span id="line-41"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Data.Text.Extended.html#ToTxt"><span class="hs-identifier hs-type">ToTxt</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.DataWrapper.IR.Scalar.Type.html#Type"><span class="hs-identifier hs-type">Type</span></a></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-42"></span><span>  </span><span id="local-6989586621688124534"><span class="annot"><span class="annottext">toTxt :: Type -&gt; Text
+</span><span id="line-42"></span><span>  </span><span id="local-6989586621688124694"><span class="annot"><span class="annottext">toTxt :: Type -&gt; Text
 </span><a href="Data.Text.Extended.html#toTxt"><span class="hs-identifier hs-var hs-var hs-var hs-var">toTxt</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Type -&gt; Text
 forall a. Show a =&gt; a -&gt; Text
 </span><a href="Hasura.Prelude.html#tshow"><span class="hs-identifier hs-var">tshow</span></a></span><span>
