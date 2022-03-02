@@ -281,7 +281,7 @@
       }
     }
   }
-  .theme-doc-sidebar-item-link-level-2.menu__list-item {
+  .theme-doc-sidebar-item-link-level-1.menu__list-item, .theme-doc-sidebar-item-link-level-2.menu__list-item {
     display: flex;
     align-items: center;
     &::before {

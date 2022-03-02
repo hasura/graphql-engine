@@ -55,7 +55,7 @@ html[data-theme='dark'] {
         }
       }
     }
-    .theme-doc-sidebar-item-link-level-2.menu__list-item {
+    .theme-doc-sidebar-item-link-level-1.menu__list-item, .theme-doc-sidebar-item-link-level-2.menu__list-item {
       &::before {
         background: url('/icons/dot.svg') no-repeat;
       }
