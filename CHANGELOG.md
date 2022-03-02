@@ -15,6 +15,7 @@
 - server: add a `request_headers` field to the `test_webhook_transform` API.
 - console: include cron trigger with include in metadata as false on cron trigger manage page
 - console: show an error notification if Hasura CLI migrations fail
+- console: fixed an issue where cron triggers were not removed from the list after deletion
 - console: only show tables from current schema in clone permissions section
 - console: provide checkbox to remove body in rest connectors
 - cli: fix metadata version being set to 3 when doing `hasura init --version 2` (#8148)
