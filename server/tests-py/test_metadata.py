@@ -229,6 +229,9 @@ class TestMetadata:
     def test_webhook_transform_success_old_body_schema(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/test_webhook_transform_success_old_body_schema.yaml')
 
+    def test_webhook_transform_success_form_urlencoded(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/test_webhook_transform_success_form_urlencoded.yaml')
+
     def test_webhook_transform_with_url_env_reference_success(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/test_webhook_transform_env_reference_success.yaml')
 

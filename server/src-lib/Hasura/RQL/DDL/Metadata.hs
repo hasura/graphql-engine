@@ -513,7 +513,7 @@ runTestWebhookTransform (TestWebhookTransform env headers urlE payload mt _ sv) 
 
   case result of
     Right transformed ->
-      let body = J.toJSON $ J.decode @J.Value =<< (transformed ^. HTTP.body)
+      let body = decodeBody (transformed ^. HTTP.body)
        in pure $ packTransformResult transformed body
     Left (RequestTransformationError req err) -> pure $ packTransformResult req (J.toJSON err)
     -- NOTE: In the following two cases we have failed before producing a valid request.
@@ -529,6 +529,21 @@ interpolateFromEnv env url =
           result = traverse (fmap indistinct . bitraverse lookup' pure) xs
           err e = throwError $ err400 NotFound $ "Missing Env Var: " <> e
        in either err (pure . fold) result
+
+decodeBody :: Maybe BL.ByteString -> J.Value
+decodeBody Nothing = J.Null
+decodeBody (Just bs) = fromMaybe J.Null $ jsonToValue bs <|> formUrlEncodedToValue bs
+
+-- | Attempt to encode a 'ByteString' as an Aeson 'Value'
+jsonToValue :: BL.ByteString -> Maybe J.Value
+jsonToValue bs = J.decode bs
+
+-- | Quote a 'ByteString' then attempt to encode it as a JSON
+-- String. This is necessary for 'x-www-url-formencoded' bodies. They
+-- are a list of key/value pairs encoded as a raw 'ByteString' with no
+-- quoting whereas JSON Strings must be quoted.
+formUrlEncodedToValue :: BL.ByteString -> Maybe J.Value
+formUrlEncodedToValue bs = J.decode ("\"" <> bs <> "\"")
 
 parseEnvTemplate :: AT.Parser [Either T.Text T.Text]
 parseEnvTemplate = AT.many1 $ pEnv <|> pLit <|> fmap Right "{"
