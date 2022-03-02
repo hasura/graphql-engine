@@ -1,0 +1,24 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# OPTIONS_GHC -fno-warn-orphans #-}</span><span>
+</span><span id="line-2"></span><span>
+</span><span id="line-3"></span><span class="hs-comment">-- | A convenience wrapper around &quot;GHC.Stats&quot;, which makes RTS stats available</span><span>
+</span><span id="line-4"></span><span class="hs-comment">-- (when the program is run with +RTS -T)</span><span>
+</span><span id="line-5"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">GHC.Stats.Extended</span><span>
+</span><span id="line-6"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="hs-keyword">module</span><span> </span><span class="annot"><span class="hs-identifier">GHC.Stats</span></span><span class="hs-special">,</span><span>
+</span><span id="line-7"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-8"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-9"></span><span>
+</span><span id="line-10"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">A</span></span><span>
+</span><span id="line-11"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson.TH</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">A</span></span><span>
+</span><span id="line-12"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">GHC.Stats</span></span><span>
+</span><span id="line-13"></span><span>
+</span><span id="line-14"></span><span class="hs-special">$(</span><span id="local-6989586621688005246"><span id="local-6989586621688005248"><span id="local-6989586621688005250"><span id="local-6989586621688005252"><span class="hs-identifier">A.deriveToJSON</span><span> </span><span class="hs-identifier">A.defaultOptions</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">GCDetails</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-15"></span><span class="hs-special">$(</span><span id="local-6989586621688005235"><span id="local-6989586621688005237"><span id="local-6989586621688005239"><span id="local-6989586621688005241"><span class="hs-identifier">A.deriveToJSON</span><span> </span><span class="hs-identifier">A.defaultOptions</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">RTSStats</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-16"></span><span>
+</span><span id="line-17"></span><span class="hs-comment">{- for base &gt;= 4.15
+instance A.ToJSON S.GCDetails where
+    toEncoding = A.genericToEncoding A.defaultOptions
+
+instance A.ToJSON S.RTSStats where
+    toEncoding = A.genericToEncoding A.defaultOptions
+-}</span><span>
+</span><span id="line-24"></span></pre></body></html>

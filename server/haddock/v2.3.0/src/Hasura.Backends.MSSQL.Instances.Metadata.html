@@ -1,0 +1,157 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE UndecidableInstances #-}</span><span>
+</span><span id="line-2"></span><span class="hs-pragma">{-# OPTIONS_GHC -fno-warn-orphans #-}</span><span>
+</span><span id="line-3"></span><span>
+</span><span id="line-4"></span><span class="hs-comment">-- | MSSQL Instances Metadata</span><span>
+</span><span id="line-5"></span><span class="hs-comment">--</span><span>
+</span><span id="line-6"></span><span class="hs-comment">-- Defines a 'Hasura.RQL.Types.Metadata.Backend.BackendMetadata' type class instance for MSSQL.</span><span>
+</span><span id="line-7"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Hasura.Backends.MSSQL.Instances.Metadata</span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-8"></span><span>
+</span><span id="line-9"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.DDL.html"><span class="hs-identifier">Hasura.Backends.MSSQL.DDL</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">MSSQL</span></span><span>
+</span><span id="line-10"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Backend.html"><span class="hs-identifier">Hasura.RQL.Types.Metadata.Backend</span></a></span><span>
+</span><span id="line-11"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.SQL.Backend.html"><span class="hs-identifier">Hasura.SQL.Backend</span></a></span><span>
+</span><span id="line-12"></span><span>
+</span><span id="line-13"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688094497"><span class="annot"><a href="Hasura.RQL.Types.Metadata.Backend.html#BackendMetadata"><span class="hs-identifier hs-type">BackendMetadata</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MSSQL"><span class="hs-identifier hs-type">MSSQL</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-14"></span><span>  </span><span id="local-6989586621688094495"><span class="annot"><span class="annottext">buildComputedFieldInfo :: HashSet (TableName 'MSSQL)
+-&gt; TableName 'MSSQL
+-&gt; ComputedFieldName
+-&gt; ComputedFieldDefinition 'MSSQL
+-&gt; RawFunctionInfo 'MSSQL
+-&gt; Comment
+-&gt; m (ComputedFieldInfo 'MSSQL)
+</span><a href="Hasura.RQL.Types.Metadata.Backend.html#buildComputedFieldInfo"><span class="hs-identifier hs-var hs-var hs-var hs-var">buildComputedFieldInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">HashSet (TableName 'MSSQL)
+-&gt; TableName 'MSSQL
+-&gt; ComputedFieldName
+-&gt; ComputedFieldDefinition 'MSSQL
+-&gt; RawFunctionInfo 'MSSQL
+-&gt; Comment
+-&gt; m (ComputedFieldInfo 'MSSQL)
+forall (m :: * -&gt; *).
+MonadError QErr m =&gt;
+HashSet (TableName 'MSSQL)
+-&gt; TableName 'MSSQL
+-&gt; ComputedFieldName
+-&gt; ComputedFieldDefinition 'MSSQL
+-&gt; RawFunctionInfo 'MSSQL
+-&gt; Comment
+-&gt; m (ComputedFieldInfo 'MSSQL)
+</span><a href="Hasura.Backends.MSSQL.DDL.html#buildComputedFieldInfo"><span class="hs-identifier hs-var">MSSQL.buildComputedFieldInfo</span></a></span><span>
+</span><span id="line-15"></span><span>  </span><span id="local-6989586621688094492"><span class="annot"><span class="annottext">fetchAndValidateEnumValues :: SourceConfig 'MSSQL
+-&gt; TableName 'MSSQL
+-&gt; Maybe (PrimaryKey 'MSSQL (RawColumnInfo 'MSSQL))
+-&gt; [RawColumnInfo 'MSSQL]
+-&gt; m (Either QErr EnumValues)
+</span><a href="Hasura.RQL.Types.Metadata.Backend.html#fetchAndValidateEnumValues"><span class="hs-identifier hs-var hs-var hs-var hs-var">fetchAndValidateEnumValues</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SourceConfig 'MSSQL
+-&gt; TableName 'MSSQL
+-&gt; Maybe (PrimaryKey 'MSSQL (RawColumnInfo 'MSSQL))
+-&gt; [RawColumnInfo 'MSSQL]
+-&gt; m (Either QErr EnumValues)
+forall (m :: * -&gt; *).
+Monad m =&gt;
+SourceConfig 'MSSQL
+-&gt; TableName 'MSSQL
+-&gt; Maybe (PrimaryKey 'MSSQL (RawColumnInfo 'MSSQL))
+-&gt; [RawColumnInfo 'MSSQL]
+-&gt; m (Either QErr EnumValues)
+</span><a href="Hasura.Backends.MSSQL.DDL.html#fetchAndValidateEnumValues"><span class="hs-identifier hs-var">MSSQL.fetchAndValidateEnumValues</span></a></span><span>
+</span><span id="line-16"></span><span>  </span><span id="local-6989586621688094489"><span class="annot"><span class="annottext">resolveSourceConfig :: SourceName
+-&gt; SourceConnConfiguration 'MSSQL
+-&gt; Environment
+-&gt; m (Either QErr (SourceConfig 'MSSQL))
+</span><a href="Hasura.RQL.Types.Metadata.Backend.html#resolveSourceConfig"><span class="hs-identifier hs-var hs-var hs-var hs-var">resolveSourceConfig</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SourceName
+-&gt; SourceConnConfiguration 'MSSQL
+-&gt; Environment
+-&gt; m (Either QErr (SourceConfig 'MSSQL))
+forall (m :: * -&gt; *).
+(MonadIO m, MonadResolveSource m) =&gt;
+SourceName
+-&gt; MSSQLConnConfiguration
+-&gt; Environment
+-&gt; m (Either QErr MSSQLSourceConfig)
+</span><a href="Hasura.Backends.MSSQL.DDL.Source.html#resolveSourceConfig"><span class="hs-identifier hs-var">MSSQL.resolveSourceConfig</span></a></span><span>
+</span><span id="line-17"></span><span>  </span><span id="local-6989586621688094486"><span class="annot"><span class="annottext">resolveDatabaseMetadata :: SourceConfig 'MSSQL
+-&gt; SourceTypeCustomization
+-&gt; m (Either QErr (ResolvedSource 'MSSQL))
+</span><a href="Hasura.RQL.Types.Metadata.Backend.html#resolveDatabaseMetadata"><span class="hs-identifier hs-var hs-var hs-var hs-var">resolveDatabaseMetadata</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SourceConfig 'MSSQL
+-&gt; SourceTypeCustomization
+-&gt; m (Either QErr (ResolvedSource 'MSSQL))
+forall (m :: * -&gt; *).
+(MonadIO m, MonadBaseControl IO m) =&gt;
+MSSQLSourceConfig
+-&gt; SourceTypeCustomization
+-&gt; m (Either QErr (ResolvedSource 'MSSQL))
+</span><a href="Hasura.Backends.MSSQL.DDL.Source.html#resolveDatabaseMetadata"><span class="hs-identifier hs-var">MSSQL.resolveDatabaseMetadata</span></a></span><span>
+</span><span id="line-18"></span><span>  </span><span id="local-6989586621688094483"><span class="annot"><span class="annottext">parseBoolExpOperations :: ValueParser 'MSSQL m v
+-&gt; TableName 'MSSQL
+-&gt; FieldInfoMap (FieldInfo 'MSSQL)
+-&gt; ColumnReference 'MSSQL
+-&gt; Value
+-&gt; m [OpExpG 'MSSQL v]
+</span><a href="Hasura.RQL.Types.Metadata.Backend.html#parseBoolExpOperations"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseBoolExpOperations</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ValueParser 'MSSQL m v
+-&gt; TableName 'MSSQL
+-&gt; FieldInfoMap (FieldInfo 'MSSQL)
+-&gt; ColumnReference 'MSSQL
+-&gt; Value
+-&gt; m [OpExpG 'MSSQL v]
+forall (m :: * -&gt; *) v.
+MonadError QErr m =&gt;
+ValueParser 'MSSQL m v
+-&gt; TableName
+-&gt; FieldInfoMap (FieldInfo 'MSSQL)
+-&gt; ColumnReference 'MSSQL
+-&gt; Value
+-&gt; m [OpExpG 'MSSQL v]
+</span><a href="Hasura.Backends.MSSQL.DDL.BoolExp.html#parseBoolExpOperations"><span class="hs-identifier hs-var">MSSQL.parseBoolExpOperations</span></a></span><span>
+</span><span id="line-19"></span><span>  </span><span id="local-6989586621688094480"><span class="annot"><span class="annottext">buildFunctionInfo :: SourceName
+-&gt; FunctionName 'MSSQL
+-&gt; SystemDefined
+-&gt; FunctionConfig
+-&gt; FunctionPermissionsMap
+-&gt; RawFunctionInfo 'MSSQL
+-&gt; Maybe Text
+-&gt; m (FunctionInfo 'MSSQL, SchemaDependency)
+</span><a href="Hasura.RQL.Types.Metadata.Backend.html#buildFunctionInfo"><span class="hs-identifier hs-var hs-var hs-var hs-var">buildFunctionInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SourceName
+-&gt; FunctionName 'MSSQL
+-&gt; SystemDefined
+-&gt; FunctionConfig
+-&gt; FunctionPermissionsMap
+-&gt; RawFunctionInfo 'MSSQL
+-&gt; Maybe Text
+-&gt; m (FunctionInfo 'MSSQL, SchemaDependency)
+forall (m :: * -&gt; *).
+MonadError QErr m =&gt;
+SourceName
+-&gt; FunctionName 'MSSQL
+-&gt; SystemDefined
+-&gt; FunctionConfig
+-&gt; FunctionPermissionsMap
+-&gt; RawFunctionInfo 'MSSQL
+-&gt; Maybe Text
+-&gt; m (FunctionInfo 'MSSQL, SchemaDependency)
+</span><a href="Hasura.Backends.MSSQL.DDL.html#buildFunctionInfo"><span class="hs-identifier hs-var">MSSQL.buildFunctionInfo</span></a></span><span>
+</span><span id="line-20"></span><span>  </span><span id="local-6989586621688094477"><span class="annot"><span class="annottext">updateColumnInEventTrigger :: TableName 'MSSQL
+-&gt; Column 'MSSQL
+-&gt; Column 'MSSQL
+-&gt; TableName 'MSSQL
+-&gt; EventTriggerConf 'MSSQL
+-&gt; EventTriggerConf 'MSSQL
+</span><a href="Hasura.RQL.Types.Metadata.Backend.html#updateColumnInEventTrigger"><span class="hs-identifier hs-var hs-var hs-var hs-var">updateColumnInEventTrigger</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">TableName 'MSSQL
+-&gt; Column 'MSSQL
+-&gt; Column 'MSSQL
+-&gt; TableName 'MSSQL
+-&gt; EventTriggerConf 'MSSQL
+-&gt; EventTriggerConf 'MSSQL
+</span><a href="Hasura.Backends.MSSQL.DDL.html#updateColumnInEventTrigger"><span class="hs-identifier hs-var">MSSQL.updateColumnInEventTrigger</span></a></span><span>
+</span><span id="line-21"></span><span>  </span><span id="local-6989586621688094474"><span class="annot"><span class="annottext">parseCollectableType :: CollectableType (ColumnType 'MSSQL)
+-&gt; Value -&gt; m (PartialSQLExp 'MSSQL)
+</span><a href="Hasura.RQL.Types.Metadata.Backend.html#parseCollectableType"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseCollectableType</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">CollectableType (ColumnType 'MSSQL)
+-&gt; Value -&gt; m (PartialSQLExp 'MSSQL)
+forall (m :: * -&gt; *).
+MonadError QErr m =&gt;
+CollectableType (ColumnType 'MSSQL)
+-&gt; Value -&gt; m (PartialSQLExp 'MSSQL)
+</span><a href="Hasura.Backends.MSSQL.DDL.html#parseCollectableType"><span class="hs-identifier hs-var">MSSQL.parseCollectableType</span></a></span><span>
+</span><span id="line-22"></span><span>  </span><span id="local-6989586621688094471"><span class="annot"><span class="annottext">postDropSourceHook :: SourceConfig 'MSSQL -&gt; m ()
+</span><a href="Hasura.RQL.Types.Metadata.Backend.html#postDropSourceHook"><span class="hs-identifier hs-var hs-var hs-var hs-var">postDropSourceHook</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SourceConfig 'MSSQL -&gt; m ()
+forall (m :: * -&gt; *). MonadIO m =&gt; MSSQLSourceConfig -&gt; m ()
+</span><a href="Hasura.Backends.MSSQL.DDL.Source.html#postDropSourceHook"><span class="hs-identifier hs-var">MSSQL.postDropSourceHook</span></a></span><span>
+</span><span id="line-23"></span></pre></body></html>

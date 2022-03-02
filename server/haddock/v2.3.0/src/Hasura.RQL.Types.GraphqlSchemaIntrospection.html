@@ -1,0 +1,139 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Hasura.RQL.Types.GraphqlSchemaIntrospection</span><span>
+</span><span id="line-2"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.GraphqlSchemaIntrospection.html#SetGraphqlIntrospectionOptions"><span class="hs-identifier">SetGraphqlIntrospectionOptions</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-3"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-4"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-5"></span><span>
+</span><span id="line-6"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson.TH</span></span><span>
+</span><span id="line-7"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashSet</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Set</span></span><span>
+</span><span id="line-8"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Incremental.html"><span class="hs-identifier">Hasura.Incremental</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier">Cacheable</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-9"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-10"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Session.html"><span class="hs-identifier">Hasura.Session</span></a></span><span>
+</span><span id="line-11"></span><span>
+</span><span id="line-12"></span><span id="local-6989586621688024230"><span id="local-6989586621688024231"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="SetGraphqlIntrospectionOptions"><span class="annot"><a href="Hasura.RQL.Types.GraphqlSchemaIntrospection.html#SetGraphqlIntrospectionOptions"><span class="hs-identifier hs-var">SetGraphqlIntrospectionOptions</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="SetGraphqlIntrospectionOptions"><span class="annot"><a href="Hasura.RQL.Types.GraphqlSchemaIntrospection.html#SetGraphqlIntrospectionOptions"><span class="hs-identifier hs-var">SetGraphqlIntrospectionOptions</span></a></span></span><span> </span><span class="hs-special">{</span><span id="_idrDisabledForRoles"><span class="annot"><span class="annottext">SetGraphqlIntrospectionOptions -&gt; HashSet RoleName
+</span><a href="Hasura.RQL.Types.GraphqlSchemaIntrospection.html#_idrDisabledForRoles"><span class="hs-identifier hs-var hs-var">_idrDisabledForRoles</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Set.HashSet</span></span><span> </span><span class="annot"><a href="Hasura.Session.html#RoleName"><span class="hs-identifier hs-type">RoleName</span></a></span><span class="hs-special">)</span><span class="hs-special">}</span><span>
+</span><span id="line-13"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688024222"><span id="local-6989586621688024224"><span id="local-6989586621688024226"><span class="annot"><span class="annottext">Int -&gt; SetGraphqlIntrospectionOptions -&gt; ShowS
+[SetGraphqlIntrospectionOptions] -&gt; ShowS
+SetGraphqlIntrospectionOptions -&gt; String
+(Int -&gt; SetGraphqlIntrospectionOptions -&gt; ShowS)
+-&gt; (SetGraphqlIntrospectionOptions -&gt; String)
+-&gt; ([SetGraphqlIntrospectionOptions] -&gt; ShowS)
+-&gt; Show SetGraphqlIntrospectionOptions
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [SetGraphqlIntrospectionOptions] -&gt; ShowS
+$cshowList :: [SetGraphqlIntrospectionOptions] -&gt; ShowS
+show :: SetGraphqlIntrospectionOptions -&gt; String
+$cshow :: SetGraphqlIntrospectionOptions -&gt; String
+showsPrec :: Int -&gt; SetGraphqlIntrospectionOptions -&gt; ShowS
+$cshowsPrec :: Int -&gt; SetGraphqlIntrospectionOptions -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688024217"><span id="local-6989586621688024219"><span class="annot"><span class="annottext">SetGraphqlIntrospectionOptions
+-&gt; SetGraphqlIntrospectionOptions -&gt; Bool
+(SetGraphqlIntrospectionOptions
+ -&gt; SetGraphqlIntrospectionOptions -&gt; Bool)
+-&gt; (SetGraphqlIntrospectionOptions
+    -&gt; SetGraphqlIntrospectionOptions -&gt; Bool)
+-&gt; Eq SetGraphqlIntrospectionOptions
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: SetGraphqlIntrospectionOptions
+-&gt; SetGraphqlIntrospectionOptions -&gt; Bool
+$c/= :: SetGraphqlIntrospectionOptions
+-&gt; SetGraphqlIntrospectionOptions -&gt; Bool
+== :: SetGraphqlIntrospectionOptions
+-&gt; SetGraphqlIntrospectionOptions -&gt; Bool
+$c== :: SetGraphqlIntrospectionOptions
+-&gt; SetGraphqlIntrospectionOptions -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">(forall x.
+ SetGraphqlIntrospectionOptions
+ -&gt; Rep SetGraphqlIntrospectionOptions x)
+-&gt; (forall x.
+    Rep SetGraphqlIntrospectionOptions x
+    -&gt; SetGraphqlIntrospectionOptions)
+-&gt; Generic SetGraphqlIntrospectionOptions
+forall x.
+Rep SetGraphqlIntrospectionOptions x
+-&gt; SetGraphqlIntrospectionOptions
+forall x.
+SetGraphqlIntrospectionOptions
+-&gt; Rep SetGraphqlIntrospectionOptions x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+$cto :: forall x.
+Rep SetGraphqlIntrospectionOptions x
+-&gt; SetGraphqlIntrospectionOptions
+$cfrom :: forall x.
+SetGraphqlIntrospectionOptions
+-&gt; Rep SetGraphqlIntrospectionOptions x
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688024207"><span id="local-6989586621688024209"><span id="local-6989586621688024211"><span class="annot"><span class="annottext">b
+-&gt; SetGraphqlIntrospectionOptions -&gt; SetGraphqlIntrospectionOptions
+NonEmpty SetGraphqlIntrospectionOptions
+-&gt; SetGraphqlIntrospectionOptions
+SetGraphqlIntrospectionOptions
+-&gt; SetGraphqlIntrospectionOptions -&gt; SetGraphqlIntrospectionOptions
+(SetGraphqlIntrospectionOptions
+ -&gt; SetGraphqlIntrospectionOptions
+ -&gt; SetGraphqlIntrospectionOptions)
+-&gt; (NonEmpty SetGraphqlIntrospectionOptions
+    -&gt; SetGraphqlIntrospectionOptions)
+-&gt; (forall b.
+    Integral b =&gt;
+    b
+    -&gt; SetGraphqlIntrospectionOptions
+    -&gt; SetGraphqlIntrospectionOptions)
+-&gt; Semigroup SetGraphqlIntrospectionOptions
+forall b.
+Integral b =&gt;
+b
+-&gt; SetGraphqlIntrospectionOptions -&gt; SetGraphqlIntrospectionOptions
+forall a.
+(a -&gt; a -&gt; a)
+-&gt; (NonEmpty a -&gt; a)
+-&gt; (forall b. Integral b =&gt; b -&gt; a -&gt; a)
+-&gt; Semigroup a
+stimes :: b
+-&gt; SetGraphqlIntrospectionOptions -&gt; SetGraphqlIntrospectionOptions
+$cstimes :: forall b.
+Integral b =&gt;
+b
+-&gt; SetGraphqlIntrospectionOptions -&gt; SetGraphqlIntrospectionOptions
+sconcat :: NonEmpty SetGraphqlIntrospectionOptions
+-&gt; SetGraphqlIntrospectionOptions
+$csconcat :: NonEmpty SetGraphqlIntrospectionOptions
+-&gt; SetGraphqlIntrospectionOptions
+&lt;&gt; :: SetGraphqlIntrospectionOptions
+-&gt; SetGraphqlIntrospectionOptions -&gt; SetGraphqlIntrospectionOptions
+$c&lt;&gt; :: SetGraphqlIntrospectionOptions
+-&gt; SetGraphqlIntrospectionOptions -&gt; SetGraphqlIntrospectionOptions
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Semigroup</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688024199"><span id="local-6989586621688024201"><span id="local-6989586621688024203"><span class="annot"><span class="annottext">Semigroup SetGraphqlIntrospectionOptions
+SetGraphqlIntrospectionOptions
+Semigroup SetGraphqlIntrospectionOptions
+-&gt; SetGraphqlIntrospectionOptions
+-&gt; (SetGraphqlIntrospectionOptions
+    -&gt; SetGraphqlIntrospectionOptions
+    -&gt; SetGraphqlIntrospectionOptions)
+-&gt; ([SetGraphqlIntrospectionOptions]
+    -&gt; SetGraphqlIntrospectionOptions)
+-&gt; Monoid SetGraphqlIntrospectionOptions
+[SetGraphqlIntrospectionOptions] -&gt; SetGraphqlIntrospectionOptions
+SetGraphqlIntrospectionOptions
+-&gt; SetGraphqlIntrospectionOptions -&gt; SetGraphqlIntrospectionOptions
+forall a.
+Semigroup a -&gt; a -&gt; (a -&gt; a -&gt; a) -&gt; ([a] -&gt; a) -&gt; Monoid a
+mconcat :: [SetGraphqlIntrospectionOptions] -&gt; SetGraphqlIntrospectionOptions
+$cmconcat :: [SetGraphqlIntrospectionOptions] -&gt; SetGraphqlIntrospectionOptions
+mappend :: SetGraphqlIntrospectionOptions
+-&gt; SetGraphqlIntrospectionOptions -&gt; SetGraphqlIntrospectionOptions
+$cmappend :: SetGraphqlIntrospectionOptions
+-&gt; SetGraphqlIntrospectionOptions -&gt; SetGraphqlIntrospectionOptions
+mempty :: SetGraphqlIntrospectionOptions
+$cmempty :: SetGraphqlIntrospectionOptions
+$cp1Monoid :: Semigroup SetGraphqlIntrospectionOptions
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Monoid</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-14"></span><span>
+</span><span id="line-15"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688024196"><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.GraphqlSchemaIntrospection.html#SetGraphqlIntrospectionOptions"><span class="hs-identifier hs-type">SetGraphqlIntrospectionOptions</span></a></span></span><span>
+</span><span id="line-16"></span><span>
+</span><span id="line-17"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688024192"><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier hs-type">Cacheable</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.GraphqlSchemaIntrospection.html#SetGraphqlIntrospectionOptions"><span class="hs-identifier hs-type">SetGraphqlIntrospectionOptions</span></a></span></span><span>
+</span><span id="line-18"></span><span>
+</span><span id="line-19"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688024187"><span id="local-6989586621688024189"><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.GraphqlSchemaIntrospection.html#SetGraphqlIntrospectionOptions"><span class="hs-identifier hs-type">SetGraphqlIntrospectionOptions</span></a></span></span></span><span>
+</span><span id="line-20"></span><span>
+</span><span id="line-21"></span><span class="hs-special">$(</span><span id="local-6989586621688024174"><span id="local-6989586621688024176"><span id="local-6989586621688024178"><span id="local-6989586621688024180"><span id="local-6989586621688024182"><span id="local-6989586621688024184"><span class="hs-identifier">deriveJSON</span><span> </span><span class="hs-identifier">hasuraJSON</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">SetGraphqlIntrospectionOptions</span></span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-22"></span></pre></body></html>
