@@ -1,5 +1,21 @@
 {-# LANGUAGE DeriveAnyClass #-}
 
+-- | Webhook Transformations are data transformations used to modify HTTP
+-- Requests before those requests are executed or Responses after
+-- requests are executed.
+--
+-- 'MetadataRequestTransform'/'MetadataResponseTransform' values are
+-- stored in Metadata within the 'CreateAction' and
+-- 'CreateEventTriggerQuery' Types and then converted into
+-- 'RequestTransform'/'ResponseTransform' values using
+-- 'mkRequestTransform'/'mkResponseTransform'.
+--
+-- 'RequestTransforms' and 'ResponseTransforms' are applied to an HTTP
+-- Request/Response using 'applyRequestTransform' and
+-- 'applyResponseTransform'.
+--
+-- In the case of body transformations, a user specified templating
+-- script is applied.
 module Hasura.RQL.DDL.WebhookTransforms
   ( applyRequestTransform,
     applyResponseTransform,
@@ -8,7 +24,7 @@ module Hasura.RQL.DDL.WebhookTransforms
     mkRequestTransform,
     mkResponseTransform,
     RequestMethod (..),
-    RemoveOrTransform (..),
+    BodyTransform (..),
     StringTemplateText (..),
     TemplatingEngine (..),
     TemplateText (..),
@@ -25,13 +41,14 @@ where
 
 import Control.Lens (traverseOf, view)
 import Data.Aeson qualified as J
-import Data.Bifunctor (bimap, first)
+import Data.Bifunctor
 import Data.Bitraversable
 import Data.ByteString qualified as B
 import Data.ByteString.Lazy qualified as BL
 import Data.CaseInsensitive qualified as CI
 import Data.Either.Validation
 import Data.HashMap.Strict qualified as M
+import Data.List qualified as L
 import Data.Text qualified as T
 import Data.Text.Encoding qualified as TE
 import Data.Validation qualified as V
@@ -43,27 +60,6 @@ import Kriti.Error (CustomFunctionError (..), serialize)
 import Kriti.Parser (parser)
 import Network.HTTP.Client.Transformable qualified as HTTP
 import Network.URI qualified as URI
-
-{-
-
-Webhook Transformations are data transformations used to modify HTTP
-Requests before those requests are executed or Responses after
-requests are executed.
-
-'MetadataRequestTransform'/'MetadataResponseTransform' values are
-stored in Metadata within the 'CreateAction' and
-'CreateEventTriggerQuery' Types and then converted into
-'RequestTransform'/'ResponseTransform' values using
-'mkRequestTransform'/'mkResponseTransform'.
-
-'RequestTransforms' and 'ResponseTransforms' are applied to an HTTP
-Request/Response using 'applyRequestTransform' and
-'applyResponseTransform'.
-
-In the case of body transformations, a user specified templating
-script is applied.
-
--}
 
 -------------
 --- Types ---
@@ -95,7 +91,12 @@ data RequestTransform = RequestTransform
     -- | A function which contructs a new URL given the request context.
     reqTransformRequestURL :: Maybe (ReqTransformCtx -> Either TransformErrorBundle Text),
     -- | A function for transforming the request body.
-    reqTransformBody :: Maybe (RemoveOrTransform (ReqTransformCtx -> Either TransformErrorBundle J.Value)),
+    reqTransformBody ::
+      Maybe
+        ( BodyTransform
+            (ReqTransformCtx -> Either TransformErrorBundle J.Value)
+            (ReqTransformCtx -> Either TransformErrorBundle B.ByteString)
+        ),
     -- | A function which contructs new query parameters given the request context.
     reqTransformQueryParams :: Maybe (ReqTransformCtx -> Either TransformErrorBundle HTTP.Query),
     -- | A function which contructs new Headers given the request context.
@@ -105,7 +106,14 @@ data RequestTransform = RequestTransform
 -- | A set of data transformation functions generated from a
 -- 'MetadataResponseTransform'. 'Nothing' means use the original
 -- response value.
-newtype ResponseTransform = ResponseTransform {respTransformBody :: Maybe (RemoveOrTransform (RespTransformCtx -> Either TransformErrorBundle J.Value))}
+newtype ResponseTransform = ResponseTransform
+  { respTransformBody ::
+      Maybe
+        ( BodyTransform
+            (RespTransformCtx -> Either TransformErrorBundle J.Value)
+            (ReqTransformCtx -> Either TransformErrorBundle B.ByteString)
+        )
+  }
 
 -- | A de/serializable request transformation template which can be stored in
 -- the metadata associated with an action/event trigger/etc. and used to produce
@@ -129,7 +137,7 @@ data MetadataRequestTransform = MetadataRequestTransform
     -- | Template script for transforming the URL.
     mtRequestURL :: Maybe StringTemplateText,
     -- | Template script for transforming the request body.
-    mtBodyTransform :: Maybe (RemoveOrTransform TemplateText),
+    mtBodyTransform :: Maybe (BodyTransform TemplateText StringTemplateText),
     -- | A list of template scripts for constructing new Query Params.
     mtQueryParams :: Maybe [(StringTemplateText, Maybe StringTemplateText)],
     -- | A list of template scripts for constructing headers.
@@ -179,7 +187,7 @@ data MetadataResponseTransform = MetadataResponseTransform
   { -- | The Schema Version
     mrtVersion :: Version,
     -- | Template script for transforming the response body.
-    mrtBodyTransform :: Maybe (RemoveOrTransform TemplateText),
+    mrtBodyTransform :: Maybe (BodyTransform TemplateText StringTemplateText),
     -- | The template engine to use for transformations. Default: Kriti
     mrtTemplatingEngine :: TemplatingEngine
   }
@@ -211,11 +219,17 @@ instance J.FromJSON MetadataResponseTransform where
     let templateEngine' = fromMaybe Kriti templateEngine
     pure $ MetadataResponseTransform version body templateEngine'
 
-data RemoveOrTransform a = Remove | Transform a
+data BodyTransform a b = Remove | Transform a | FormUrlEncoded (M.HashMap T.Text b)
   deriving stock (Show, Eq, Functor, Generic)
   deriving anyclass (NFData, Cacheable)
 
-instance J.ToJSON a => J.ToJSON (RemoveOrTransform a) where
+instance Bifunctor BodyTransform where
+  bimap f g = \case
+    Remove -> Remove
+    Transform a -> Transform $ f a
+    FormUrlEncoded form -> FormUrlEncoded $ fmap g form
+
+instance (J.ToJSON a, J.ToJSON b) => J.ToJSON (BodyTransform a b) where
   toJSON = \case
     Remove -> J.object ["action" J..= ("remove" :: T.Text)]
     Transform a ->
@@ -223,16 +237,24 @@ instance J.ToJSON a => J.ToJSON (RemoveOrTransform a) where
         [ "action" J..= ("transform" :: T.Text),
           "template" J..= J.toJSON a
         ]
+    FormUrlEncoded form ->
+      J.object
+        [ "action" J..= ("x_www_form_urlencoded" :: T.Text),
+          "form_template" J..= J.toJSON form
+        ]
 
-instance J.FromJSON a => J.FromJSON (RemoveOrTransform a) where
-  parseJSON = J.withObject "RemoveOrTransform" $ \o -> do
-    action :: T.Text <- o J..: "action"
-    if action == "remove"
-      then pure Remove
-      else do
-        "transform" :: T.Text <- o J..: "action"
+instance (J.FromJSON a, J.FromJSON b) => J.FromJSON (BodyTransform a b) where
+  parseJSON = J.withObject "body" \o -> do
+    action <- o J..: "action"
+    case action of
+      "remove" -> pure Remove
+      "transform" -> do
         template <- o J..: "template"
         pure $ Transform template
+      "x_www_form_urlencoded" -> do
+        template <- o J..: "form_template"
+        pure $ FormUrlEncoded template
+      x -> fail $ "'" <> x <> "'" <> "is not a valid body action."
 
 newtype RequestMethod = RequestMethod (CI.CI T.Text)
   deriving stock (Generic)
@@ -377,12 +399,12 @@ mkRequestTransform MetadataRequestTransform {..} =
       urlTransform = mkUrlTransform mtTemplatingEngine <$> mtRequestURL
       queryTransform = mkQueryParamsTransform mtTemplatingEngine <$> mtQueryParams
       headerTransform = mkHeaderTransform mtTemplatingEngine <$> mtRequestHeaders
-      bodyTransform = fmap (mkReqTemplateTransform mtTemplatingEngine) <$> mtBodyTransform
+      bodyTransform = bimap (mkReqTemplateTransform mtTemplatingEngine) (flip (transformST mtTemplatingEngine)) <$> mtBodyTransform
    in RequestTransform methodTransform urlTransform bodyTransform queryTransform headerTransform
 
 mkResponseTransform :: MetadataResponseTransform -> ResponseTransform
 mkResponseTransform MetadataResponseTransform {..} =
-  let bodyTransform = fmap (mkRespTemplateTransform mrtTemplatingEngine) <$> mrtBodyTransform
+  let bodyTransform = bimap (mkRespTemplateTransform mrtTemplatingEngine) (flip (transformST mrtTemplatingEngine)) <$> mrtBodyTransform
    in ResponseTransform bodyTransform
 
 -- | Transform a String Template
@@ -509,6 +531,7 @@ applyRequestTransform transformCtx' RequestTransform {..} reqData =
         case reqTransformBody of
           Nothing -> pure body
           Just Remove -> pure Nothing
+          Just (FormUrlEncoded kv) -> fmap (Just . foldForm) $ traverse (\f -> f transformCtx) kv
           Just (Transform f) -> pure . J.encode <$> f transformCtx
 
       urlFunc :: Text -> Either TransformErrorBundle Text
@@ -545,6 +568,7 @@ applyResponseTransform ResponseTransform {..} ctx@RespTransformCtx {..} =
         case respTransformBody of
           Nothing -> pure body
           Just Remove -> pure mempty
+          Just (FormUrlEncoded _) -> pure mempty
           Just (Transform f) -> J.encode <$> f ctx
    in bodyFunc (J.encode rtcBody)
 
@@ -580,3 +604,14 @@ infixr 8 .=?
 -- | Wrap a template with escaped double quotes.
 wrapTemplate :: StringTemplateText -> StringTemplateText
 wrapTemplate (StringTemplateText t) = StringTemplateText $ "\"" <> t <> "\""
+
+escapeURIText :: T.Text -> T.Text
+escapeURIText =
+  T.pack . URI.escapeURIString URI.isUnescapedInURIComponent . T.unpack
+
+escapeURIBS :: B.ByteString -> B.ByteString
+escapeURIBS =
+  TE.encodeUtf8 . T.pack . URI.escapeURIString URI.isUnescapedInURIComponent . T.unpack . TE.decodeUtf8
+
+foldForm :: HashMap Text B.ByteString -> BL.ByteString
+foldForm = fold . L.intersperse "&" . M.foldMapWithKey @[BL.ByteString] \k v -> [BL.fromStrict $ TE.encodeUtf8 (escapeURIText k) <> "=" <> escapeURIBS v]

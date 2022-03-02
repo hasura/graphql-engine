@@ -2189,6 +2189,10 @@ BodyTransform
      - String
      - The transformation template to be applied to the body. This is
        required if the action is `transform`.
+   * - form_template
+     - false
+     - Object (:ref:`String` : :ref:`String`)
+     - The key/value pairs to be used in a `x-www-url-formencoded` body. The values can be transfomation templates.
 
 .. _TemplateEngine:
 
