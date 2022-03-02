@@ -159,7 +159,7 @@
   --ifm-menu-color-active: var(--ifm-color-content);
   --ifm-toc-link-color: var(--ifm-color-content);
 
-  --ifm-code-background:var(--color-gray-0);
+  --ifm-code-background:var(--color-gray-4);
   --ifm-code-font-size:1rem;
 
   /* --ifm-pre-color: inherit; */
@@ -380,6 +380,10 @@
   a {
     color: var(--ifm-alert-border-color);
   }
+}
+
+.theme-code-block {
+  box-shadow: none !important;
 }
 
 code {
