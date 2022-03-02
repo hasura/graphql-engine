@@ -41,6 +41,9 @@ html[data-theme='dark'] {
       &::before {
         background: url('/icons/collapse-arrow-left-light.svg') no-repeat;
       }
+      &:hover {
+        background-color: var(--color-gray-82);
+      }
     }
   }
 
