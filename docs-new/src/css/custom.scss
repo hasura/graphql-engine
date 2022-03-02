@@ -242,6 +242,24 @@
 }
 .theme-doc-sidebar-container {
   background-color: var(--color-gray-4);
+  button[class*='collapseSidebarButton_'], div[class*='collapsedDocSidebar_'] {
+    svg {
+      display: none;
+    }
+    &::before {
+      content: '';
+      display: inline-block;
+      background: url('/icons/collapse-arrow-left.svg') no-repeat;
+      width: 1.25rem;
+      height: 1.25rem;
+      margin-top: 0.25rem;
+    }
+  }
+  div[class*='collapsedDocSidebar_'] {
+    &::before {
+      transform: rotate(180deg);
+    }
+  }
 }
   .theme-doc-sidebar-menu {
     font-size: 14px;
