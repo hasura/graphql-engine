@@ -1,4 +1,5 @@
 import React from 'react';
+import { useQueryClient } from 'react-query';
 import Button from '../../../../Common/Button/Button';
 import { useScheduledTrigger } from '../state';
 import { ScheduledTrigger } from '../../types';
@@ -16,6 +17,7 @@ type Props = {
 const Modify: React.FC<Props> = props => {
   const { dispatch, currentTrigger } = props;
   const { state, setState } = useScheduledTrigger();
+  const queryClient = useQueryClient();
 
   React.useEffect(() => {
     if (currentTrigger) {
@@ -27,10 +29,10 @@ const Modify: React.FC<Props> = props => {
   if (!currentTrigger) {
     return null;
   }
-
   const deleteFunc = () => {
     const requestCallback = () => {
       setState.loading('delete', false);
+      queryClient.refetchQueries(['cronTrigger'], { active: true });
     };
     setState.loading('delete', true);
     dispatch(
