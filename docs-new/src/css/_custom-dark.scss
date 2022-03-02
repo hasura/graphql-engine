@@ -65,10 +65,19 @@ html[data-theme='dark'] {
   }
 
   .pagination-nav {
-    .pagination-nav__item:not(:empty) {
-      background-color: var(--color-gray-86);
-      &:hover {
-        background-color: var(--color-gray-82);
+    .pagination-nav__item {
+      &:not(:empty) {
+        background-color: var(--color-gray-86);
+        &:hover {
+          background-color: var(--color-gray-82);
+        }
+
+        .pagination-nav__link {
+          color: var(--ifm-color-content-secondary);
+        }
+      }
+      &:first-child .pagination-nav__label::before, &--next .pagination-nav__label::after {
+        background: url("/icons/arrow_right-light.svg") no-repeat;
       }
     }
   }
