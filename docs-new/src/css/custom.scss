@@ -325,6 +325,20 @@
   }
 }
 
+.theme-doc-breadcrumbs {
+  .breadcrumbs{
+    .breadcrumbs__item {
+      --ifm-breadcrumb-padding-horizontal: 0;
+      &:first-child {
+        display: none;
+      }
+      .breadcrumbs__link {
+        background-color: transparent;
+      }
+    }
+  }
+}
+
 .markdown {
   --ifm-h1-vertical-rhythm-top: 2.5;
   h1:first-child {
