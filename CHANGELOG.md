@@ -3,6 +3,10 @@
 ## Next release
 
 ### Bug fixes and improvements
+
+## v2.4.0-beta.1
+
+### Bug fixes and improvements
 (Add entries below in the order of server, console, cli, docs, others)
 
 - server: add custom function for case insensitive lookup in session variable in request transformation
