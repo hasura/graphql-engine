@@ -12,7 +12,6 @@ const LatestRelease = ({ prerelease }) => {
 				"https://releases.hasura.io/graphql-engine?agent=docs.hasura.io"
 			);
 			const responseJson = await response.json();
-			console.log(response, responseJson);
 			setReleases(responseJson);
 		})();
 	}, []);
