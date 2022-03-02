@@ -68,6 +68,15 @@
   font-display: swap;
 }
 
+@font-face {
+  font-family: "IBM Plex Mono Regular";
+  src: url("/fonts/IBM-Plex-Mono-Regular.woff2") format("woff2");
+
+  /* Super Modern Browsers */
+  font-weight: normal;
+  font-display: swap;
+}
+
 /* You can override the default Infima variables here. */
 
 :root {
@@ -173,7 +182,7 @@
   --ifm-navbar-height:72px !important;
 
   --ifm-font-family-base:"IBM Plex Sans",system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,sans-serif,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol";
-  --ifm-font-family-monospace:"IBM Plex Mono",SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;
+  --ifm-font-family-monospace:"IBM Plex Mono Regular", "IBM Plex Mono",SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;
   --ifm-font-size-base:16px;
   --ifm-line-height-base:1.5; /* 150% */
   --ifm-font-weight-light:300;
