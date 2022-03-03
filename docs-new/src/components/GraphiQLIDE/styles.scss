@@ -43,6 +43,11 @@
     }
   }
 
+  .CodeMirror {
+    font-family: var(--ifm-font-family-monospace);
+    font-size: var(--ifm-code-font-size);
+  }
+
   .CodeMirror pre {
     padding: 0 15px;
   }
