@@ -380,6 +380,7 @@ library
                      , Hasura.Backends.MSSQL.Connection
                      , Hasura.Backends.MSSQL.DDL
                      , Hasura.Backends.MSSQL.DDL.BoolExp
+                     , Hasura.Backends.MSSQL.DDL.EventTrigger
                      , Hasura.Backends.MSSQL.DDL.RunSQL
                      , Hasura.Backends.MSSQL.DDL.Source
                      , Hasura.Backends.MSSQL.DDL.Source.Version
