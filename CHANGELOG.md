@@ -6,6 +6,8 @@
 ### Bug fixes and improvements
 (Add entries below in the order of server, console, cli, docs, others)
 
+- server: fix regression where remote relationships would get exposed over Relay, which is unsupported
+
 ## v2.2.0
 
 ### Breaking Changes
