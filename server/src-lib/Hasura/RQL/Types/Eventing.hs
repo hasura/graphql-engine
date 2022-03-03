@@ -9,6 +9,7 @@ module Hasura.RQL.Types.Eventing
     TriggerTypes (..),
     WebhookRequest (..),
     WebhookResponse (..),
+    OpVar (..),
     invocationVersionET,
     invocationVersionST,
   )
@@ -108,3 +109,14 @@ instance Q.ToPrepArg PGTextArray where
     where
       -- 25 is the OID value of TEXT, https://jdbc.postgresql.org/development/privateapi/constant-values.html
       encoder = PE.array 25 . PE.dimensionArray foldl' (PE.encodingArray . PE.text_strict)
+
+-- | Used to construct the payload of Event Trigger
+--
+-- OLD: Depicts the old database row value for UPDATE/DELETE trigger operations.
+--      This is used to construct the 'data.old' field of the event trigger
+--      payload. The value of 'data.old' is null in INSERT trigger operation.
+--
+-- NEW: Depicts the new database row value for INSERT/UPDATE trigger operations.
+--      This is used to construct the 'data.new' field of the event trigger
+--      payload. The value of 'data.new' is null in DELETE trigger operation.
+data OpVar = OLD | NEW deriving (Show)

@@ -7,6 +7,7 @@ import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Aeson
 import Data.Set qualified as Set
 import Data.Time.Clock qualified as Time
+import Hasura.Backends.MSSQL.DDL.EventTrigger qualified as MSSQL
 import Hasura.Backends.Postgres.DDL.EventTrigger qualified as PG
 import Hasura.Base.Error
 import Hasura.Prelude
@@ -16,6 +17,7 @@ import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.EventTrigger
 import Hasura.RQL.Types.Eventing
 import Hasura.RQL.Types.Source
+import Hasura.RQL.Types.Table (PrimaryKey)
 import Hasura.SQL.Backend
 import Hasura.Server.Types
 import Hasura.Session (UserInfo)
@@ -158,13 +160,20 @@ class Backend b => BackendEventTrigger (b :: BackendType) where
     m (Either QErr Int)
 
   createTableEventTrigger ::
-    (MonadBaseControl IO m, MonadIO m) =>
+    (MonadBaseControl IO m, MonadIO m, MonadError QErr m) =>
     ServerConfigCtx ->
     SourceConfig b ->
     TableName b ->
     [ColumnInfo b] ->
     TriggerName ->
     TriggerOpsDef b ->
+    -- TODO: Naveen: Find a better way to pass these extra, backend specific
+    -- parameters instead of adding a bunch of Maybes to the type class
+    -- functions.
+    --
+    -- Update event trigger on MS-SQL are only supported on tables with primary
+    -- keys. Hence the PrimaryKey argument below.
+    Maybe (PrimaryKey b (ColumnInfo b)) ->
     m (Either QErr ())
 
 instance BackendEventTrigger ('Postgres 'Vanilla) where
@@ -191,7 +200,7 @@ instance BackendEventTrigger ('Postgres 'Citus) where
   dropTriggerAndArchiveEvents _ _ = throw400 NotSupported "Event triggers are not supported for Citus sources"
   redeliverEvent _ _ = throw400 NotSupported "Event triggers are not supported for Citus sources"
   unlockEventsInSource _ _ = runExceptT $ throw400 NotSupported "Event triggers are not supported for Citus sources"
-  createTableEventTrigger _ _ _ _ _ _ = runExceptT $ throw400 NotSupported "Event triggers are not supported for Citus sources"
+  createTableEventTrigger _ _ _ _ _ _ _ = runExceptT $ throw400 NotSupported "Event triggers are not supported for Citus sources"
 
 instance BackendEventTrigger 'MSSQL where
   insertManualEvent _ _ _ _ _ _ = throw400 NotSupported $ "Event triggers are not supported for MS-SQL sources"
@@ -204,7 +213,7 @@ instance BackendEventTrigger 'MSSQL where
   dropTriggerAndArchiveEvents _ _ = throw400 NotSupported "Event triggers are not supported for MS-SQL sources"
   redeliverEvent _ _ = throw400 NotSupported "Event triggers are not supported for MS-SQL sources"
   unlockEventsInSource _ _ = runExceptT $ throw400 NotSupported "Event triggers are not supported for MS-SQL sources"
-  createTableEventTrigger _ _ _ _ _ _ = runExceptT $ throw400 NotSupported "Event triggers are not supported for MS-SQL sources"
+  createTableEventTrigger = MSSQL.createTableEventTrigger
 
 instance BackendEventTrigger 'BigQuery where
   insertManualEvent _ _ _ _ _ _ = throw400 NotSupported $ "Event triggers are not supported for BigQuery sources"
@@ -217,7 +226,7 @@ instance BackendEventTrigger 'BigQuery where
   dropTriggerAndArchiveEvents _ _ = throw400 NotSupported "Event triggers are not supported for BigQuery sources"
   redeliverEvent _ _ = throw400 NotSupported "Event triggers are not supported for BigQuery sources"
   unlockEventsInSource _ _ = runExceptT $ throw400 NotSupported "Event triggers are not supported for BigQuery sources"
-  createTableEventTrigger _ _ _ _ _ _ = runExceptT $ throw400 NotSupported "Event triggers are not supported for BigQuery sources"
+  createTableEventTrigger _ _ _ _ _ _ _ = runExceptT $ throw400 NotSupported "Event triggers are not supported for BigQuery sources"
 
 instance BackendEventTrigger 'MySQL where
   insertManualEvent _ _ _ _ _ _ = throw400 NotSupported $ "Event triggers are not supported for MySQL sources"
@@ -230,7 +239,7 @@ instance BackendEventTrigger 'MySQL where
   dropTriggerAndArchiveEvents _ _ = throw400 NotSupported "Event triggers are not supported for MySQL sources"
   redeliverEvent _ _ = throw400 NotSupported "Event triggers are not supported for MySQL sources"
   unlockEventsInSource _ _ = runExceptT $ throw400 NotSupported "Event triggers are not supported for MySQL sources"
-  createTableEventTrigger _ _ _ _ _ _ = runExceptT $ throw400 NotSupported "Event triggers are not supported for MySQL sources"
+  createTableEventTrigger _ _ _ _ _ _ _ = runExceptT $ throw400 NotSupported "Event triggers are not supported for MySQL sources"
 
 --------------------------------------------------------------------------------
 
@@ -259,5 +268,5 @@ instance BackendEventTrigger 'DataWrapper where
     throw400 NotSupported "Event triggers are not supported for GraphQL Data Wrappers."
   unlockEventsInSource _ _ =
     runExceptT $ throw400 NotSupported "Event triggers are not supported for GraphQL Data Wrappers."
-  createTableEventTrigger _ _ _ _ _ _ =
+  createTableEventTrigger _ _ _ _ _ _ _ =
     runExceptT $ throw400 NotSupported "Event triggers are not supported for GraphQL Data Wrappers."

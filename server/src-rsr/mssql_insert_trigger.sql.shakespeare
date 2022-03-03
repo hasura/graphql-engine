@@ -1,0 +1,14 @@
+CREATE OR ALTER TRIGGER #{qualifiedTriggerName}
+ON #{qualifiedTableName}
+AFTER INSERT
+AS
+BEGIN
+DECLARE @json NVARCHAR(MAX)
+SET @json =  (
+  SELECT #{deliveryColsSQLExpression}, NULL as [data.old]
+  FROM INSERTED
+  FOR JSON PATH, INCLUDE_NULL_VALUES
+)
+insert into hdb_catalog.event_log (schema_name,table_name,trigger_name,payload)
+select '#{schemaName}','#{tableName}','#{triggerNameText}', value from OPENJSON (@json)
+END;
