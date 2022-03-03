@@ -1,6 +1,7 @@
 // @ts-check
 // Note: type annotations allow type checking and IDEs autocompletion
 
+const path = require('path');
 const lightCodeTheme = require('prism-react-renderer/themes/vsLight');
 const darkCodeTheme = require('prism-react-renderer/themes/dracula');
 
@@ -48,6 +49,20 @@ const config = {
   ],
   plugins: [
     'docusaurus-plugin-sass',
+    [
+      path.resolve(__dirname, './src/plugins/docusaurus-plugin-segment-analytics'),
+      {
+        // prodKey: 'RQXoHRpNcmBKllUDihjDjupGv4AHn5TB',
+        prodKey: 'FRKElp5cyMax6GAdM8OVyNMIFVppgEgp', // use devKey only until goes live
+        devKey: 'FRKElp5cyMax6GAdM8OVyNMIFVppgEgp',
+        // boolean (defaults to false) on whether you want
+        // to include analytics.page() automatically
+        trackPage: true,
+        // number (defaults to 50); time to wait after a route update before it should
+        // track the page change, to implement this, make sure your `trackPage` property is set to `true`
+        // trackPageDelay: 50,
+      }
+    ],
   //   [
   //     'ideal-image',
   //     {
