@@ -72,6 +72,9 @@ The optimization can be enabled using the
 
 - server: Fix experimental sql optimization read from `HASURA_GRAPHQL_EXPERIMENTAL_FEATURES` or `--experimental-features`
 
+## v2.2.2
+- server: fix regression where remote relationships would get exposed over Relay, which is unsupported
+
 ## v2.2.1
 
 - server: postgres: return a single entry per row (selected randomly) when an object relationship has multiple matches (fix #7936)
