@@ -52,7 +52,7 @@ X-Hasura-Role: admin
 }
 ```
 
-### Args Syntax {#metadata-create-query-collection-syntax
+### Args Syntax {#metadata-create-query-collection-syntax}
 
 | Key        | Required | Schema                                                                                | Description                  |
 |------------|----------|---------------------------------------------------------------------------------------|------------------------------|
@@ -200,8 +200,8 @@ If a query occurs in multiple collections, a role will be allowed to access the 
 `update_scope_of_collection_in_allowlist` is used to add change the
 scope of a collection in the allowlist. Its effect is the same as first
 dropping the collection from the allowlist using
-`drop_collection_from_allowlist`, and then adding it with the given
-scope using `add_collection_to_allowlist`.
+[drop_collection_from_allowlist](#metadata-drop-collection-from-allowlist), and then adding it with the given
+scope using [add_collection_to_allowlist](#metadata-add-collection-to-allowlist).
 
 ``` http
 POST /v1/metadata HTTP/1.1
