@@ -25,26 +25,24 @@ const PageHelpful = () => {
     <div className={styles["helpful-wrapper"]}>
       <h4>Did you find this page helpful?</h4>
       <div className={styles["helpful-icon-wrapper"]}>
-        <Fragment>
-          <div
-            className={`${styles["helpful-icon"]} ${
-              hasResponse ? isHelpful ? styles.active : "" : styles.no_response
-            }`}
-            onClick={() => recordResponse(true)}
-          >
-            <HappyFace />
-          </div>
-          <div
-            className={`${styles["helpful-icon"]} ${
-              hasResponse ? !isHelpful ? styles.active : "" : styles.no_response
-            }`}
-            onClick={() => recordResponse(false)}
-          >
-            <SadFace />
-          </div>
-        </Fragment>
-        {hasResponse && <div>Thank you for your feedback!</div>}
+        <div
+          className={`${styles["helpful-icon"]} ${
+            hasResponse ? isHelpful ? styles.active : "" : styles.no_response
+          }`}
+          onClick={() => recordResponse(true)}
+        >
+          <HappyFace />
+        </div>
+        <div
+          className={`${styles["helpful-icon"]} ${
+            hasResponse ? !isHelpful ? styles.active : "" : styles.no_response
+          }`}
+          onClick={() => recordResponse(false)}
+        >
+          <SadFace />
+        </div>
       </div>
+      {hasResponse && <div>Thank you for your feedback!</div>}
     </div>
   );
 };

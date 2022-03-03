@@ -1,9 +1,9 @@
 .helpful-wrapper {
   margin: 40px 0;
+  text-align: center;
 
   h4 {
     color: var(--ifm-color-content-secondary);
-    text-align: center;
   }
 }
 
@@ -11,7 +11,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding-top: 8px;
+  padding: 8px 0;
 
   .helpful-icon {
     margin: 0 12px;
