@@ -99,9 +99,7 @@ subscription {
 
 ### Object
 
-<div class="parsed-literal">
-
-<!-- [SimpleObject](#simpleobject) \| [AggregateObject](#aggregateobject) -->
+<div className="parsed-literal">
 
 <pre>
 <code>
@@ -282,12 +280,7 @@ author_aggregate {
 
 ### Argument
 
-<div class="parsed-literal">
-
-<!--
-[DistinctOnExp](#distinctonexp) \| [WhereExp](#whereexp) \|
-[OrderByExp](#orderbyexp) \| [PaginationExp](#paginationexp)
--->
+<div className="parsed-literal">
 
 <pre>
 <code>
@@ -302,9 +295,7 @@ author_aggregate {
 
 #### DistinctOnExp {#distinctonexp}
 
-<div class="parsed-literal">
-
-<!-- distinct_on: \[ [TableSelectColumnEnum](#tableselectcolumnenum) \] -->
+<div className="parsed-literal">
 
 <pre>
 <code>
@@ -340,9 +331,7 @@ enum article_select_column {
 
 #### WhereExp {#whereexp}
 
-<div class="parsed-literal">
-
-<!-- where: [BoolExp](#boolexp) -->
+<div className="parsed-literal">
 
 <pre>
 <code>
@@ -367,12 +356,7 @@ query {
 
 ##### BoolExp
 
-<div class="parsed-literal">
-
-<!--
-[AndExp](#andexp) \| [OrExp](#orexp) \| [NotExp](#notexp) \|
-[TrueExp](#trueexp) \| [ColumnExp](#columnexp)
--->
+<div className="parsed-literal">
 
 <pre>
 <code>
@@ -388,13 +372,7 @@ query {
 
 ###### AndExp {#andexp}
 
-<div class="parsed-literal">
-
-<!--
-{  
-  \_and: \[[BoolExp](#boolexp)\]
-}
--->
+<div className="parsed-literal">
 
 <pre>
 <code>
@@ -469,13 +447,7 @@ rating: {
 
 ###### OrExp {#orexp}
 
-<div class="parsed-literal">
-
-<!--
-{  
-  \_or: \[[BoolExp](#boolexp)\]
-}
--->
+<div className="parsed-literal">
 
 <pre>
 <code>
@@ -543,13 +515,7 @@ behaves.
 
 ###### NotExp
 
-<div class="parsed-literal">
-
-<!--
-{  
-  \_not: [BoolExp](#boolexp)
-}
--->
+<div className="parsed-literal">
 
 <pre>
 <code>
@@ -598,13 +564,7 @@ query {
 
 ###### ColumnExp
 
-<div class="parsed-literal">
-
-<!--
-{  
-  field-name : {[Operator](#operator): Value }
-}
--->
+<div className="parsed-literal">
 
 <pre>
 <code>
@@ -772,9 +732,7 @@ docs](https://www.postgresql.org/docs/current/ltree.html).)
 ###### CastExp {#castexp}
 
 
-<div class="parsed-literal">
-
-<!-- {type-name: {[Operator](#operator): Value}} -->
+<div className="parsed-literal">
 
 <pre>
 <code>
@@ -818,12 +776,7 @@ Currently, only casting between `geometry` and `geography` types is allowed.
 
 #### OrderByExp {#orderbyexp}
 
-<div class="parsed-literal">
-
-<!--
-order_by: ([TableOrderBy](#tableorderby) \| \[
-[TableOrderBy](#tableorderby) \])
--->
+<div className="parsed-literal">
 
 <pre>
 <code>
@@ -874,9 +827,7 @@ query {
 
 **For columns**
 
-<div class="parsed-literal">
-
-<!-- {column: [OrderByEnum](#orderbyenum)} -->
+<div className="parsed-literal">
 
 <pre>
 <code>
@@ -899,9 +850,7 @@ query {
 
 **For object relations**
 
-<div class="parsed-literal">
-
-<!-- {relation-name: [TableOrderBy](#tableorderby)} -->
+<div className="parsed-literal">
 
 <pre>
 <code>
@@ -924,9 +873,7 @@ query {
 
 **For array relations aggregate**
 
-<div class="parsed-literal">
-
-<!-- {relation-name_aggregate: [AggregateOrderBy](#aggregateorderby)} -->
+<div className="parsed-literal">
 
 <pre>
 <code>
@@ -951,9 +898,7 @@ query {
 
 Returning scalar values:
 
-<div class="parsed-literal">
-
-<!-- {computed-field-name: [OrderByEnum](#orderbyenum)} -->
+<div className="parsed-literal">
 
 <pre>
 <code>
@@ -965,9 +910,7 @@ Returning scalar values:
 
 Returning set of table rows:
 
-<div class="parsed-literal">
-
-<!-- {computed-field-name: [TableOrderBy](#tableorderby)} -->
+<div className="parsed-literal">
 
 <pre>
 <code>
@@ -977,9 +920,7 @@ Returning set of table rows:
 
 </div>
 
-<div class="parsed-literal">
-
-<!-- {computed-field-name_aggregate: [AggregateOrderBy](#aggregateorderby)} -->
+<div className="parsed-literal">
 
 <pre>
 <code>
@@ -1006,9 +947,7 @@ input article_order_by {
 
 **For computed fields returning scalar type**
 
-<div class="parsed-literal">
-
-<!-- {computed-field-name: [OrderByEnum](#orderbyenum)} -->
+<div className="parsed-literal">
 
 <pre>
 <code>
@@ -1040,9 +979,7 @@ query {
 Computed fields returning set of table rows can be used to sort the
 query by their aggregate fields.
 
-<div class="parsed-literal">
-
-<!-- {computed-field-name_aggregate: [AggregateOrderBy](#aggregateorderby)} -->
+<div className="parsed-literal">
 
 <pre>
 <code>
@@ -1096,9 +1033,7 @@ enum order_by {
 
 **Count aggregate**
 
-<div class="parsed-literal">
-
-<!-- {count: [OrderByEnum](#orderbyenum)} -->
+<div className="parsed-literal">
 
 <pre>
 <code>
@@ -1120,9 +1055,7 @@ query {
 
 **Operation aggregate**
 
-<div class="parsed-literal">
-
-<!-- {op_name: [TableAggOpOrderBy](#tableaggoporderby)} -->
+<div className="parsed-literal">
 
 <pre>
 <code>
@@ -1147,9 +1080,7 @@ Available operations are `sum`, `avg`, `max`, `min`, `stddev`,
 
 ###### TableAggOpOrderBy
 
-<div class="parsed-literal">
-
-<!-- {column: [OrderByEnum](#orderbyenum)} -->
+<div className="parsed-literal">
 
 <pre>
 <code>
@@ -1161,7 +1092,7 @@ Available operations are `sum`, `avg`, `max`, `min`, `stddev`,
 
 #### PaginationExp {#paginationexp}
 
-<div class="parsed-literal">
+<div className="parsed-literal">
 
 <pre>
 <code>

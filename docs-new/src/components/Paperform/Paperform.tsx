@@ -3,7 +3,7 @@ import useIsBrowser from '@docusaurus/useIsBrowser';
 import styles from "./Paperform.module.scss";
 import BrowserOnly from "@docusaurus/BrowserOnly";
 
-export default function Paperform({ formId, styleClass="" }) {
+export default function Paperform({ formId, styleClassName="" }) {
   const isBrowser = useIsBrowser();
   const [isLoaded, setIsLoaded] = useState(false);
   const embedDivRef = useRef(null);
@@ -70,7 +70,7 @@ export default function Paperform({ formId, styleClass="" }) {
   }, [isBrowser]);
 
   return (
-    <div className={`${styles["paperform-embed-wrapper"]} ${styleClass ? styleClass : ''}`}>
+    <div className={`${styles["paperform-embed-wrapper"]} ${styleClassName ? styleClassName : ''}`}>
       {!isLoaded && <span className={styles.loadingText}>Loading...</span>}
       <BrowserOnly>
         {() => (

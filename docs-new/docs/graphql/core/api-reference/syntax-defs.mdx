@@ -14,9 +14,7 @@ keywords:
 
 ## TableName {#tablename}
 
-<div class="parsed-literal haskell-pre">
-
-<!-- String \| [QualifiedTable](#qualifiedtable) -->
+<div className="parsed-literal haskell-pre">
 
 <pre>
 <code>
@@ -41,9 +39,7 @@ keywords:
 
 ## FunctionName {#functionname}
 
-<div class="parsed-literal haskell-pre">
-
-<!-- String \| [QualifiedFunction](#qualifiedfunction) -->
+<div className="parsed-literal haskell-pre">
 
 <pre>
 <code>
@@ -142,7 +138,7 @@ keywords:
 
 | Key         | Required | Schema                          | Description                                                                                                                                                    |
 |-------------|----------|---------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| sslmode     | true     | `String`                        | The SSL connection mode. See the libpq ssl <span class="title-ref">support docs \<https://www.postgresql.org/docs/9.1/libpq-ssl.html></span> for more details. |
+| sslmode     | true     | `String`                        | The SSL connection mode. See the libpq ssl [support docs](https://www.postgresql.org/docs/9.1/libpq-ssl.html) for more details. |
 | sslrootcert | true     | [FromEnv](#fromenv)             | Environment variable which stores trusted certificate authorities.                                                                                             |
 | sslcert     | true     | [FromEnv](#fromenv)             | Environment variable which stores the client certificate.                                                                                                      |
 | sslkey      | true     | [FromEnv](#fromenv)             | Environment variable which stores the client private key.                                                                                                      |
@@ -157,7 +153,7 @@ keywords:
 
 ## PGColumnType {#pgcolumntype}
 
-<div class="parsed-literal">
+<div className="parsed-literal">
 
 <pre>
 <code>
@@ -209,7 +205,7 @@ String
 
 ## PGColumn {#pgcolumn}
 
-<div class="parsed-literal">
+<div className="parsed-literal">
 
 <pre>
 <code>
@@ -221,7 +217,7 @@ String
 
 ## RelationshipName {#relationshipname}
 
-<div class="parsed-literal">
+<div className="parsed-literal">
 
 <pre>
 <code>
@@ -311,9 +307,7 @@ and `manual_configuration`.
 
 ## ObjRelUsingChoice {#objrelusingchoice}
 
-<div class="parsed-literal haskell-pre">
-
-<!-- [SameTable](#sametable) \| [RemoteTable](#remotetable) -->
+<div className="parsed-literal haskell-pre">
 
 <pre>
 <code>
@@ -326,11 +320,9 @@ and `manual_configuration`.
 
 ## SameTable {#sametable}
 
-<div class="parsed-literal">
+<div className="parsed-literal">
 
-<!-- [PGColumn](#pgcolumn) -->
-
-<div class="parsed-literal">
+<div className="parsed-literal">
 
 <pre>
 <code>
@@ -344,14 +336,7 @@ and `manual_configuration`.
 
 ## RemoteTable {#remotetable}
 
-<div class="parsed-literal haskell-pre">
-
-<!--
-{  
-  "table" : [TableName](#tablename), "column" : [PGColumn](#pgcolumn)
-
-}
--->
+<div className="parsed-literal haskell-pre">
 
 <pre>
 <code>
@@ -417,13 +402,7 @@ Supported in `v2.0.0-alpha.3` and above.
 
 ## BoolExp {#boolexp}
 
-<div class="parsed-literal haskell-pre">
-
-<!--
-[AndExp](#andexp) \| [OrExp](#orexp) \| [NotExp](#notexp) \|
-[ExistsExp](#existsexp) \| [TrueExp](#trueexp) \|
-ColumnExp](#columnexp)
--->
+<div className="parsed-literal haskell-pre">
 
 <pre>
 <code>
@@ -441,13 +420,7 @@ ColumnExp](#columnexp)
 
 ## AndExp {#andexp}
 
-<div class="parsed-literal haskell-pre">
-
-<!--
-{  
-    "$and" : \[[BoolExp](#boolexp)\],
-}
--->
+<div className="parsed-literal haskell-pre">
 
 <pre>
 <code>
@@ -461,13 +434,7 @@ ColumnExp](#columnexp)
 
 ## OrExp {#orexp}
 
-<div class="parsed-literal haskell-pre">
-
-<!--
-{  
-    "$or" : \[[BoolExp](#boolexp)\],
-}
--->
+<div className="parsed-literal haskell-pre">
 
 <pre>
 <code>
@@ -481,13 +448,7 @@ ColumnExp](#columnexp)
 
 ## NotExp {#notexp}
 
-<div class="parsed-literal haskell-pre">
-
-<!--
-{  
-    "$not" : [BoolExp](#boolexp)
-}
--->
+<div className="parsed-literal haskell-pre">
 
 <pre>
 <code>
@@ -501,15 +462,7 @@ ColumnExp](#columnexp)
 
 ## ExistsExp {#existsexp}
 
-<div class="parsed-literal haskell-pre">
-
-<!--
-{  
-    "$exists" : {  
-        "\_table": [TableName](#tablename), "\_where": [BoolExp](#boolexp)
-    }
-}
--->
+<div className="parsed-literal haskell-pre">
 
 <pre>
 <code>
@@ -535,13 +488,7 @@ ColumnExp](#columnexp)
 
 ## ColumnExp {#columnexp}
 
-<div class="parsed-literal haskell-pre">
-
-<!--
-{  
-[PGColumn](#pgcolumn) \| scalar [ComputedFieldName](#computedfieldname)
-: { [Operator](#metadataoperator) : Value }
--->
+<div className="parsed-literal haskell-pre">
 
 <pre>
 <code>
@@ -598,18 +545,7 @@ jsonb):**
 
 **Column Comparison Operator**
 
-<div class="parsed-literal haskell-pre">
-
-<!--
-{  
-    [PGColumn](#pgcolumn): {  
-        [Operator](#metadataoperator): {  
-            [PGColumn](#pgcolumn) \| \["$", [PGColumn](#pgcolumn)\]
-        }
-    }
-}
--->
-
+<div className="parsed-literal haskell-pre">
 
 <pre>
 <code>
@@ -631,21 +567,7 @@ column of :
 
 1.  The same table -
 
-<div class="parsed-literal haskell-pre">
-
-<!--
-{  
-[PGColumn](#pgcolumn): {  
-[Operator](#metadataoperator): {  
-[PGColumn](#pgcolumn)
-
-}
-
-}
-
-}
--->
-
+<div className="parsed-literal haskell-pre">
 
 <pre>
 <code>
@@ -663,20 +585,7 @@ column of :
 
 2.  The table on which the permission is being defined on -
 
-<div class="parsed-literal haskell-pre">
-
-<!--
-{
-[PGColumn](#pgcolumn): {  
-[Operator](#metadataoperator): {  
-\[$, [PGColumn](#pgcolumn)\]
-
-}
-
-}
-
-}
--->
+<div className="parsed-literal haskell-pre">
 
 <pre>
 <code>
@@ -814,7 +723,7 @@ session variable of the same name.
 
 ## RemoteSchemaName {#remoteschemaname}
 
-<div class="parsed-literal">
+<div className="parsed-literal">
 
 <pre>
 <code>String</code>
@@ -824,18 +733,7 @@ session variable of the same name.
 
 ## RemoteSchemaDef {#remoteschemadef}
 
-<div class="parsed-literal haskell-pre">
-
-<!--
-{  
-"url" : url-string, "url_from_env" : env-var-string, "headers": \[ {
-"name": header-name-string, "value": header-value-string,
-"value_from_env": env-var-string } \], "forward_client_headers":
-boolean, "timeout_seconds": integer, "customization":
-[RemoteSchemaCustomization](#remoteschemacustomization)
-
-}
--->
+<div className="parsed-literal haskell-pre">
 
 <pre>
 <code>
@@ -954,7 +852,7 @@ boolean, "timeout_seconds": integer, "customization":
 
 ## CollectionName {#collectionname}
 
-<div class="parsed-literal">
+<div className="parsed-literal">
 
 <pre>
 <code>String</code>
@@ -964,7 +862,7 @@ boolean, "timeout_seconds": integer, "customization":
 
 ## QueryName {#queryname}
 
-<div class="parsed-literal">
+<div className="parsed-literal">
 
 <pre>
 <code>String</code>
@@ -983,14 +881,7 @@ boolean, "timeout_seconds": integer, "customization":
 
 ## AllowlistScope {#allowlistscope}
 
-<div class="parsed-literal">
-
-<!--
-{  
-"global": Boolean, "roles" : \[RoleName\]
-
-}
--->
+<div className="parsed-literal">
 
 <pre>
 <code>
@@ -1012,7 +903,7 @@ boolean, "timeout_seconds": integer, "customization":
 
 ## EndpointUrl {#endpointurl}
 
-<div class="parsed-literal">
+<div className="parsed-literal">
 
 <pre>
 <code>String</code>
@@ -1023,7 +914,7 @@ boolean, "timeout_seconds": integer, "customization":
 
 ## EndpointMethods {#endpointmethods}
 
-<div class="parsed-literal">
+<div className="parsed-literal">
 
 <pre>
 <code>{`[String]`}</code>
@@ -1057,7 +948,7 @@ name to GraphQL name mapping
 
 ## ActionName {#actionname}
 
-<div class="parsed-literal">
+<div className="parsed-literal">
 
 <pre>
 <code>String</code>
@@ -1070,7 +961,7 @@ name to GraphQL name mapping
 A String value which supports templating environment variables enclosed
 in `{{` and `}}`.
 
-<div class="parsed-literal">
+<div className="parsed-literal">
 
 <pre>
 <code>String</code>
@@ -1103,7 +994,7 @@ A GraphQL [Type
 Reference](https://spec.graphql.org/June2018/#sec-Type-References)
 string.
 
-<div class="parsed-literal">
+<div className="parsed-literal">
 
 <pre>
 <code>String</code>
@@ -1119,7 +1010,7 @@ of String types
 A string literal that conform to [GraphQL
 spec](https://spec.graphql.org/June2018/#Name).
 
-<div class="parsed-literal">
+<div className="parsed-literal">
 
 <pre>
 <code>String</code>
@@ -1170,8 +1061,8 @@ via [Custom Types](/graphql/core/api-reference/metadata-api/custom-types.mdx)
 |--------------------|----------|-------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------|
 | custom_name        | false    | `String`                                                    | Customise the `<function-name>` with the provided custom name value. The GraphQL nodes for the function will be generated according to the custom name. |
 | custom_root_fields | false    | [Custom Function Root Fields](#custom-function-root-fields) | Customise the root fields                                                                                                                               |
-| session_argument   | false    | <span class="title-ref">String</span>                       | Function argument which accepts session info JSON                                                                                                       |
-| exposed_as         | false    | <span class="title-ref">String</span>                       | In which part of the schema should we expose this function? Either "mutation" or "query".                                                               |
+| session_argument   | false    | <em>String</em>                       | Function argument which accepts session info JSON                                                                                                       |
+| exposed_as         | false    | <em>String</em>                       | In which part of the schema should we expose this function? Either "mutation" or "query".                                                               |
 
 <div id="function-req-note" />
 
@@ -1269,7 +1160,7 @@ Enum](https://spec.graphql.org/June2018/#sec-Enums)
 
 ## TriggerName {#triggername}
 
-<div class="parsed-literal">
+<div className="parsed-literal">
 
 <pre>
 <code>String</code>
@@ -1286,9 +1177,7 @@ Enum](https://spec.graphql.org/June2018/#sec-Enums)
 
 ## EventTriggerColumns {#eventtriggercolumns}
 
-<div class="parsed-literal haskell-pre">
-
-<!-- "\*" \| \[[PGColumn](#pgcolumn)\] -->
+<div className="parsed-literal haskell-pre">
 
 <pre>
 <code>
@@ -1322,7 +1211,7 @@ Enum](https://spec.graphql.org/June2018/#sec-Enums)
 
 ## HeaderKey {#headerkey}
 
-<div class="parsed-literal">
+<div className="parsed-literal">
 
 <pre>
 <code>String</code>
@@ -1333,7 +1222,7 @@ Enum](https://spec.graphql.org/June2018/#sec-Enums)
 
 ## HeaderValue {#headervalue}
 
-<div class="parsed-literal">
+<div className="parsed-literal">
 
 <pre>
 <code>String</code>
@@ -1377,7 +1266,7 @@ The JSON templating language to be used for this JSON transformation.
 
 ## RemoteRelationshipName {#remoterelationshipname}
 
-<div class="parsed-literal">
+<div className="parsed-literal">
 
 <pre>
 <code>String</code>
