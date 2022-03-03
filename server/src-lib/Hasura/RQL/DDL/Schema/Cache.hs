@@ -30,7 +30,7 @@ import Data.Dependent.Map qualified as DMap
 import Data.Either (isLeft)
 import Data.Environment qualified as Env
 import Data.HashMap.Strict.Extended qualified as M
-import Data.HashMap.Strict.InsOrd qualified as OMap
+import Data.HashMap.Strict.InsOrd.Extended qualified as OMap
 import Data.HashSet qualified as HS
 import Data.Proxy
 import Data.Set qualified as S
@@ -778,8 +778,8 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
                       returnA
                         -<
                           ( remoteSchemaCtx
-                              { _rscPermissions = M.mapMaybe id $ M.fromList resolvedPermissions,
-                                _rscRemoteRelationships = OMap.mapMaybe id <$> OMap.fromList resolvedRelationships
+                              { _rscPermissions = M.catMaybes $ M.fromList resolvedPermissions,
+                                _rscRemoteRelationships = OMap.catMaybes <$> OMap.fromList resolvedRelationships
                               },
                             metadataObj
                           )

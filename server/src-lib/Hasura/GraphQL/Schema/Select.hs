@@ -1647,7 +1647,7 @@ nodePG = memoizeOn 'nodePG () do
         sourceConfig <- maybeToList $ unsafeSourceConfiguration @('Postgres 'Vanilla) sourceInfo
         pure (tableName, (source, sourceConfig, AB.runBackend sourceInfo _siCustomization))
   tables <-
-    Map.mapMaybe id <$> flip Map.traverseWithKey allTables \table (source, sourceConfig, sourceCustomization) -> runMaybeT do
+    Map.catMaybes <$> flip Map.traverseWithKey allTables \table (source, sourceConfig, sourceCustomization) -> runMaybeT do
       tableInfo <- lift $ askTableInfo source table
       tablePkeyColumns <- hoistMaybe $ tableInfo ^? tiCoreInfo . tciPrimaryKey . _Just . pkColumns
       selectPermissions <- MaybeT $ tableSelectPermissions tableInfo
