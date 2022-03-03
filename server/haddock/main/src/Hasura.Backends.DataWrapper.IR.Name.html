@@ -23,9 +23,9 @@
 </span><span id="line-23"></span><span class="hs-comment">-- represented as semantically distinct types without the boilerplate of</span><span>
 </span><span id="line-24"></span><span class="hs-comment">-- actually defining these wrappers separately.</span><span>
 </span><span id="line-25"></span><span class="hs-keyword">type</span><span> </span><span class="annot"><a href="Hasura.Backends.DataWrapper.IR.Name.html#Name"><span class="hs-identifier hs-type">Name</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.DataWrapper.IR.Name.html#NameType"><span class="hs-identifier hs-type">NameType</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Type</span></span><span>
-</span><span id="line-26"></span><span id="local-6989586621688081195"><span id="local-6989586621688081196"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="Name"><span class="annot"><a href="Hasura.Backends.DataWrapper.IR.Name.html#Name"><span class="hs-identifier hs-var">Name</span></a></span></span><span> </span><span id="local-6989586621688081194"><span class="annot"><a href="#local-6989586621688081194"><span class="hs-identifier hs-type">ty</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Name"><span class="annot"><a href="Hasura.Backends.DataWrapper.IR.Name.html#Name"><span class="hs-identifier hs-var">Name</span></a></span></span><span> </span><span class="hs-special">{</span><span id="unName"><span class="annot"><span class="annottext">Name ty -&gt; Text
+</span><span id="line-26"></span><span id="local-6989586621688081399"><span id="local-6989586621688081400"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="Name"><span class="annot"><a href="Hasura.Backends.DataWrapper.IR.Name.html#Name"><span class="hs-identifier hs-var">Name</span></a></span></span><span> </span><span id="local-6989586621688081398"><span class="annot"><a href="#local-6989586621688081398"><span class="hs-identifier hs-type">ty</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Name"><span class="annot"><a href="Hasura.Backends.DataWrapper.IR.Name.html#Name"><span class="hs-identifier hs-var">Name</span></a></span></span><span> </span><span class="hs-special">{</span><span id="unName"><span class="annot"><span class="annottext">Name ty -&gt; Text
 </span><a href="Hasura.Backends.DataWrapper.IR.Name.html#unName"><span class="hs-identifier hs-var hs-var">unName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">}</span><span>
-</span><span id="line-27"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="%24cName"><span id="%24tName"><span id="local-6989586621688081163"><span id="local-6989586621688081165"><span id="local-6989586621688081167"><span id="local-6989586621688081169"><span id="local-6989586621688081171"><span id="local-6989586621688081173"><span id="local-6989586621688081175"><span id="local-6989586621688081177"><span id="local-6989586621688081179"><span id="local-6989586621688081181"><span id="local-6989586621688081183"><span id="local-6989586621688081185"><span id="local-6989586621688081187"><span id="local-6989586621688081189"><span class="annot"><span class="annottext">Typeable (Name ty)
+</span><span id="line-27"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="%24cName"><span id="%24tName"><span id="local-6989586621688081367"><span id="local-6989586621688081369"><span id="local-6989586621688081371"><span id="local-6989586621688081373"><span id="local-6989586621688081375"><span id="local-6989586621688081377"><span id="local-6989586621688081379"><span id="local-6989586621688081381"><span id="local-6989586621688081383"><span id="local-6989586621688081385"><span id="local-6989586621688081387"><span id="local-6989586621688081389"><span id="local-6989586621688081391"><span id="local-6989586621688081393"><span class="annot"><span class="annottext">Typeable (Name ty)
 DataType
 Constr
 Typeable (Name ty)
@@ -231,7 +231,7 @@ Typeable ty =&gt;
 (forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
 -&gt; (forall g. g -&gt; c g) -&gt; Name ty -&gt; c (Name ty)
 $cp1Data :: forall (ty :: NameType). Typeable ty =&gt; Typeable (Name ty)
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Data</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688081156"><span id="local-6989586621688081158"><span class="annot"><span class="annottext">Name ty -&gt; Name ty -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Data</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688081360"><span id="local-6989586621688081362"><span class="annot"><span class="annottext">Name ty -&gt; Name ty -&gt; Bool
 (Name ty -&gt; Name ty -&gt; Bool)
 -&gt; (Name ty -&gt; Name ty -&gt; Bool) -&gt; Eq (Name ty)
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -250,7 +250,7 @@ forall (ty :: NameType) x. Rep (Name ty) x -&gt; Name ty
 forall (ty :: NameType) x. Name ty -&gt; Rep (Name ty) x
 $cto :: forall (ty :: NameType) x. Rep (Name ty) x -&gt; Name ty
 $cfrom :: forall (ty :: NameType) x. Name ty -&gt; Rep (Name ty) x
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688081137"><span id="local-6989586621688081139"><span id="local-6989586621688081141"><span id="local-6989586621688081143"><span id="local-6989586621688081145"><span id="local-6989586621688081147"><span id="local-6989586621688081149"><span class="annot"><span class="annottext">Eq (Name ty)
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688081341"><span id="local-6989586621688081343"><span id="local-6989586621688081345"><span id="local-6989586621688081347"><span id="local-6989586621688081349"><span id="local-6989586621688081351"><span id="local-6989586621688081353"><span class="annot"><span class="annottext">Eq (Name ty)
 Eq (Name ty)
 -&gt; (Name ty -&gt; Name ty -&gt; Ordering)
 -&gt; (Name ty -&gt; Name ty -&gt; Bool)
@@ -292,7 +292,7 @@ $c&lt; :: forall (ty :: NameType). Name ty -&gt; Name ty -&gt; Bool
 compare :: Name ty -&gt; Name ty -&gt; Ordering
 $ccompare :: forall (ty :: NameType). Name ty -&gt; Name ty -&gt; Ordering
 $cp1Ord :: forall (ty :: NameType). Eq (Name ty)
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688081130"><span id="local-6989586621688081132"><span id="local-6989586621688081134"><span class="annot"><span class="annottext">Int -&gt; Name ty -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688081334"><span id="local-6989586621688081336"><span id="local-6989586621688081338"><span class="annot"><span class="annottext">Int -&gt; Name ty -&gt; ShowS
 [Name ty] -&gt; ShowS
 Name ty -&gt; String
 (Int -&gt; Name ty -&gt; ShowS)
@@ -310,7 +310,7 @@ showsPrec :: Int -&gt; Name ty -&gt; ShowS
 $cshowsPrec :: forall (ty :: NameType). Int -&gt; Name ty -&gt; ShowS
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-28"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">newtype</span></span><span>
-</span><span id="line-29"></span><span>    </span><span class="hs-special">(</span><span> </span><span id="local-6989586621688081126"><span class="annot"><span class="annottext">Eq (Name ty)
+</span><span id="line-29"></span><span>    </span><span class="hs-special">(</span><span> </span><span id="local-6989586621688081330"><span class="annot"><span class="annottext">Eq (Name ty)
 Eq (Name ty)
 -&gt; (Accesses -&gt; Name ty -&gt; Name ty -&gt; Bool) -&gt; Cacheable (Name ty)
 Accesses -&gt; Name ty -&gt; Name ty -&gt; Bool
@@ -321,7 +321,7 @@ unchanged :: Accesses -&gt; Name ty -&gt; Name ty -&gt; Bool
 $cunchanged :: forall (ty :: NameType). Accesses -&gt; Name ty -&gt; Name ty -&gt; Bool
 $cp1Cacheable :: forall (ty :: NameType). Eq (Name ty)
 </span><a href="Hasura.Incremental.Internal.Dependency.html#C%3ACacheable"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">Cacheable</span></a></span></span><span class="hs-special">,</span><span>
-</span><span id="line-30"></span><span>      </span><span id="local-6989586621688081121"><span id="local-6989586621688081123"><span class="annot"><span class="annottext">Value -&gt; Parser [Name ty]
+</span><span id="line-30"></span><span>      </span><span id="local-6989586621688081325"><span id="local-6989586621688081327"><span class="annot"><span class="annottext">Value -&gt; Parser [Name ty]
 Value -&gt; Parser (Name ty)
 (Value -&gt; Parser (Name ty))
 -&gt; (Value -&gt; Parser [Name ty]) -&gt; FromJSON (Name ty)
@@ -334,7 +334,7 @@ $cparseJSONList :: forall (ty :: NameType). Value -&gt; Parser [Name ty]
 parseJSON :: Value -&gt; Parser (Name ty)
 $cparseJSON :: forall (ty :: NameType). Value -&gt; Parser (Name ty)
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></span></span></span><span class="hs-special">,</span><span>
-</span><span id="line-31"></span><span>      </span><span id="local-6989586621688081116"><span id="local-6989586621688081118"><span class="annot"><span class="annottext">FromJSONKeyFunction [Name ty]
+</span><span id="line-31"></span><span>      </span><span id="local-6989586621688081320"><span id="local-6989586621688081322"><span class="annot"><span class="annottext">FromJSONKeyFunction [Name ty]
 FromJSONKeyFunction (Name ty)
 FromJSONKeyFunction (Name ty)
 -&gt; FromJSONKeyFunction [Name ty] -&gt; FromJSONKey (Name ty)
@@ -347,7 +347,7 @@ $cfromJSONKeyList :: forall (ty :: NameType). FromJSONKeyFunction [Name ty]
 fromJSONKey :: FromJSONKeyFunction (Name ty)
 $cfromJSONKey :: forall (ty :: NameType). FromJSONKeyFunction (Name ty)
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSONKey</span></span></span></span><span class="hs-special">,</span><span>
-</span><span id="line-32"></span><span>      </span><span id="local-6989586621688081111"><span id="local-6989586621688081113"><span class="annot"><span class="annottext">Int -&gt; Name ty -&gt; Int
+</span><span id="line-32"></span><span>      </span><span id="local-6989586621688081315"><span id="local-6989586621688081317"><span class="annot"><span class="annottext">Int -&gt; Name ty -&gt; Int
 Name ty -&gt; Int
 (Int -&gt; Name ty -&gt; Int) -&gt; (Name ty -&gt; Int) -&gt; Hashable (Name ty)
 forall a. (Int -&gt; a -&gt; Int) -&gt; (a -&gt; Int) -&gt; Hashable a
@@ -358,14 +358,14 @@ $chash :: forall (ty :: NameType). Name ty -&gt; Int
 hashWithSalt :: Int -&gt; Name ty -&gt; Int
 $chashWithSalt :: forall (ty :: NameType). Int -&gt; Name ty -&gt; Int
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></span></span></span><span class="hs-special">,</span><span>
-</span><span id="line-33"></span><span>      </span><span id="local-6989586621688081108"><span class="annot"><span class="annottext">Name ty -&gt; ()
+</span><span id="line-33"></span><span>      </span><span id="local-6989586621688081312"><span class="annot"><span class="annottext">Name ty -&gt; ()
 (Name ty -&gt; ()) -&gt; NFData (Name ty)
 forall a. (a -&gt; ()) -&gt; NFData a
 forall (ty :: NameType). Name ty -&gt; ()
 rnf :: Name ty -&gt; ()
 $crnf :: forall (ty :: NameType). Name ty -&gt; ()
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></span></span><span class="hs-special">,</span><span>
-</span><span id="line-34"></span><span>      </span><span id="local-6989586621688081099"><span id="local-6989586621688081101"><span id="local-6989586621688081103"><span id="local-6989586621688081105"><span class="annot"><span class="annottext">[Name ty] -&gt; Encoding
+</span><span id="line-34"></span><span>      </span><span id="local-6989586621688081303"><span id="local-6989586621688081305"><span id="local-6989586621688081307"><span id="local-6989586621688081309"><span class="annot"><span class="annottext">[Name ty] -&gt; Encoding
 [Name ty] -&gt; Value
 Name ty -&gt; Encoding
 Name ty -&gt; Value
@@ -393,7 +393,7 @@ $ctoEncoding :: forall (ty :: NameType). Name ty -&gt; Encoding
 toJSON :: Name ty -&gt; Value
 $ctoJSON :: forall (ty :: NameType). Name ty -&gt; Value
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></span></span></span></span></span><span class="hs-special">,</span><span>
-</span><span id="line-35"></span><span>      </span><span id="local-6989586621688081094"><span id="local-6989586621688081096"><span class="annot"><span class="annottext">ToJSONKeyFunction [Name ty]
+</span><span id="line-35"></span><span>      </span><span id="local-6989586621688081298"><span id="local-6989586621688081300"><span class="annot"><span class="annottext">ToJSONKeyFunction [Name ty]
 ToJSONKeyFunction (Name ty)
 ToJSONKeyFunction (Name ty)
 -&gt; ToJSONKeyFunction [Name ty] -&gt; ToJSONKey (Name ty)
@@ -406,7 +406,7 @@ $ctoJSONKeyList :: forall (ty :: NameType). ToJSONKeyFunction [Name ty]
 toJSONKey :: ToJSONKeyFunction (Name ty)
 $ctoJSONKey :: forall (ty :: NameType). ToJSONKeyFunction (Name ty)
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">ToJSONKey</span></span></span></span><span class="hs-special">,</span><span>
-</span><span id="line-36"></span><span>      </span><span id="local-6989586621688081091"><span class="annot"><span class="annottext">Name ty -&gt; Text
+</span><span id="line-36"></span><span>      </span><span id="local-6989586621688081295"><span class="annot"><span class="annottext">Name ty -&gt; Text
 (Name ty -&gt; Text) -&gt; ToTxt (Name ty)
 forall a. (a -&gt; Text) -&gt; ToTxt a
 forall (ty :: NameType). Name ty -&gt; Text
