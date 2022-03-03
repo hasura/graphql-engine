@@ -35,16 +35,14 @@ SELECT name FROM child /* request_id=487c2ed5-08a4-429a-b0e0-4666a82e3cc6, field
 
 ## Formats of Query Tags
 
-The format of the Query Tags describes how the <span
-class="title-ref">(Key,Value)</span> pairs are constructed. Currently we support two formats of Query Tags:
+The format of the Query Tags describes how the <em>(Key,Value)</em> pairs are constructed. Currently we support two formats of Query Tags:
 
 1.  Standard (`standard`)
 2.  SQLCommenter (`sqlcommenter`)
 
 ### Standard
 
-This format makes a collection of <span
-class="title-ref">key=value</span> pairs and separates each pair by a comma `,` . **This is the default format for Query Tags**
+This format makes a collection of <em>key=value</em> pairs and separates each pair by a comma `,` . **This is the default format for Query Tags**
 
 For eg:
 
@@ -97,13 +95,9 @@ Note The default format for the Query Tags is `Standard` and it is enabled by de
 
 In the above metadata spec:
 
-1.  The <span class="title-ref">query_tags</span> field is optional. If the <span class="title-ref">query_tags</span> field is not present for a source, then query tags is enabled for the source and the format used is <span class="title-ref">standard</span>.
-2.  To disable query tags for any source, set the value of <span
-    class="title-ref">disabled</span> field to <span
-    class="title-ref">true</span>.
-3.  To override the default format (<span
-    class="title-ref">Standard</span>) for query tags, use the <span
-    class="title-ref">format</span> field.
+1.  The <em>query_tags</em> field is optional. If the <em>query_tags</em> field is not present for a source, then query tags is enabled for the source and the format used is <em>standard</em>.
+2.  To disable query tags for any source, set the value of <em>disabled</em> field to <em>true</em>.
+3.  To override the default format (<em>Standard</em>) for query tags, use the <em>format</em> field.
 
 ## Example Metadata Specification
 

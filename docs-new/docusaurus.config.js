@@ -1,6 +1,7 @@
 // @ts-check
 // Note: type annotations allow type checking and IDEs autocompletion
 
+const path = require('path');
 const lightCodeTheme = require('prism-react-renderer/themes/vsLight');
 const darkCodeTheme = require('prism-react-renderer/themes/dracula');
 
@@ -28,6 +29,7 @@ const config = {
           editUrl: 'https://github.com/hasura/graphql-engine/edit/main/docs-new/',
           docItemComponent: require.resolve('./src/components/CustomDocItem/CustomDocItem.tsx'),
           exclude: ['**/*.wip', 'migration-guide'],
+          breadcrumbs: true,
           // showLastUpdateAuthor: true,
           // showLastUpdateTime: true,
           lastVersion: "current",
@@ -47,6 +49,20 @@ const config = {
   ],
   plugins: [
     'docusaurus-plugin-sass',
+    [
+      path.resolve(__dirname, './src/plugins/docusaurus-plugin-segment-analytics'),
+      {
+        // prodKey: 'RQXoHRpNcmBKllUDihjDjupGv4AHn5TB',
+        prodKey: 'FRKElp5cyMax6GAdM8OVyNMIFVppgEgp', // use devKey only until goes live
+        devKey: 'FRKElp5cyMax6GAdM8OVyNMIFVppgEgp',
+        // boolean (defaults to false) on whether you want
+        // to include analytics.page() automatically
+        trackPage: true,
+        // number (defaults to 50); time to wait after a route update before it should
+        // track the page change, to implement this, make sure your `trackPage` property is set to `true`
+        // trackPageDelay: 50,
+      }
+    ],
   //   [
   //     'ideal-image',
   //     {
@@ -94,12 +110,12 @@ const config = {
               },
             ],
           },
-          {
-            type: 'doc',
-            position: 'left',
-            docId: 'graphql/core/index',
-            label: 'Docs',
-          },
+          // {
+          //   type: 'doc',
+          //   position: 'left',
+          //   docId: 'graphql/core/index',
+          //   label: 'Docs',
+          // },
           // {
           //    type: 'docSidebar',
           //    position: 'left',
@@ -111,14 +127,14 @@ const config = {
             label: 'Product',
             position: 'left',
           },
-          // {
-          //   to: 'https://hasura.io/blog/',
-          //   label: 'Blog',
-          //   position: 'left',
-          // },
+          {
+            to: 'https://hasura.io/blog/',
+            label: 'Blog',
+            position: 'left',
+          },
           {
             to: 'https://hasura.io/learn/',
-            label: 'Learn',
+            label: 'Tutorials',
             position: 'left',
           },
           {
@@ -126,7 +142,7 @@ const config = {
             position: 'right',
           },
           {
-            href: 'https://github.com/hasura/grapgql-engine',
+            href: 'https://github.com/hasura/graphql-engine',
             position: 'right',
             className: 'header-github-link',
             'aria-label': 'GitHub repository',
@@ -134,11 +150,6 @@ const config = {
           {
             to: 'https://hasura.io/pricing/',
             label: 'Prcing',
-            position: 'right',
-          },
-          {
-            to: 'https://hasura.io/contact-us/?type=hasuraenterprise',
-            label: 'Contact Sales',
             position: 'right',
           },
           {
