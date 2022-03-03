@@ -254,7 +254,10 @@ func TestProjectMetadata_Reload(t *testing.T) {
 				projectDirectory: "testdata/projectv3",
 				endpointString:   hgeEndpoint,
 			},
-			`{"message": "success"}`,
+			`{
+				"is_consistent": true,
+				"message": "success"
+			}`,
 			require.NoError,
 		},
 		// TODO: automate the following tests

@@ -153,6 +153,37 @@ table using ``psql`` and this column should now be added to the GraphQL schema.
        }
    }
 
+Response:
+
+If the metadata is consistent:
+
+.. code-block:: json
+
+  {
+      "is_consistent": true,
+      "message": "success"
+  }
+
+If the metadata is not consistent:
+
+.. code-block:: json
+
+  {
+      "is_consistent": false,
+      "message": "success",
+      "inconsistent_objects": [
+          {
+              "definition": {
+                  "schema": "public",
+                  "name": "article"
+              },
+              "name": "table article in source default",
+              "reason": "Inconsistent object: no such table/view exists in source: \"article\"",
+              "type": "table"
+          }
+      ]
+  }
+
 .. _schema_metadata_reload_metadata_syntax:
 
 Args syntax

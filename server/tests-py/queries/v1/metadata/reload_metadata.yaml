@@ -4,3 +4,6 @@ status: 200
 query:
   type: reload_metadata
   args: {}
+response:
+  is_consistent: true
+  message: success
