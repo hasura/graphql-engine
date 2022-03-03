@@ -46,7 +46,7 @@ convertMutationAction ::
   HTTP.Manager ->
   HTTP.RequestHeaders ->
   Maybe GH.GQLQueryText ->
-  ActionMutation ('Postgres 'Vanilla) Void (UnpreparedValue ('Postgres 'Vanilla)) ->
+  ActionMutation Void ->
   m ActionExecutionPlan
 convertMutationAction env logger userInfo manager reqHeaders gqlQueryText = \case
   AMSync s -> pure $ AEPSync $ resolveActionExecution env logger userInfo s actionExecContext gqlQueryText

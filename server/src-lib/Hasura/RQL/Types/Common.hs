@@ -6,6 +6,7 @@ module Hasura.RQL.Types.Common
     relTypeToTxt,
     OID (..),
     FieldName (..),
+    Fields,
     InsertOrder (..),
     ToAesonPairs (..),
     InpValInfo (..),
@@ -186,6 +187,10 @@ newtype FieldName = FieldName {getFieldNameTxt :: Text}
 
 instance ToTxt FieldName where
   toTxt (FieldName c) = c
+
+-- The field name here is the GraphQL alias, i.e, the name with which the field
+-- should appear in the response
+type Fields a = [(FieldName, a)]
 
 class ToAesonPairs a where
   toAesonPairs :: (KeyValue v) => a -> [v]

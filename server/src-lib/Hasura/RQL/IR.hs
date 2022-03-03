@@ -3,6 +3,7 @@ module Hasura.RQL.IR
   )
 where
 
+import Hasura.RQL.IR.Action as IR
 import Hasura.RQL.IR.BoolExp as IR
 import Hasura.RQL.IR.Delete as IR
 import Hasura.RQL.IR.Insert as IR

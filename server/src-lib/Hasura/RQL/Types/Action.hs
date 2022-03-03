@@ -78,7 +78,7 @@ import Hasura.Incremental (Cacheable)
 import Hasura.Prelude
 import Hasura.RQL.DDL.Headers
 import Hasura.RQL.DDL.WebhookTransforms (MetadataRequestTransform, MetadataResponseTransform)
-import Hasura.RQL.IR.Select
+import Hasura.RQL.IR.Action
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.CustomTypes
@@ -318,27 +318,23 @@ getActionSourceInfo :: AnnotatedOutputType -> ActionSourceInfo ('Postgres 'Vanil
 getActionSourceInfo (AOTObject aot) = maybe ASINoSource (uncurry ASISource) . _aotSource $ aot
 getActionSourceInfo (AOTScalar _) = ASINoSource
 
-data AnnActionExecution (b :: BackendType) (r :: Type) v = AnnActionExecution
+data AnnActionExecution (r :: Type) = AnnActionExecution
   { _aaeName :: !ActionName,
     -- | output type
     _aaeOutputType :: !GraphQLType,
     -- | output selection
-    _aaeFields :: !(ActionFieldsG b r v),
+    _aaeFields :: !(ActionFieldsG r),
     -- | jsonified input arguments
     _aaePayload :: !J.Value,
     -- | to validate the response fields from webhook
     _aaeOutputFields :: !ActionOutputFields,
-    _aaeDefinitionList :: ![(Column b, ScalarType b)],
     _aaeWebhook :: !ResolvedWebhook,
     _aaeHeaders :: ![HeaderConf],
     _aaeForwardClientHeaders :: !Bool,
-    _aaeStrfyNum :: !StringifyNumbers,
     _aaeTimeOut :: !Timeout,
-    _aaeSource :: !(ActionSourceInfo b),
     _aaeRequestTransform :: !(Maybe MetadataRequestTransform),
     _aaeResponseTransform :: !(Maybe MetadataResponseTransform)
   }
-  deriving (Functor, Foldable, Traversable)
 
 data AnnActionMutationAsync = AnnActionMutationAsync
   { _aamaName :: !ActionName,
@@ -348,27 +344,25 @@ data AnnActionMutationAsync = AnnActionMutationAsync
   }
   deriving (Show, Eq)
 
-data AsyncActionQueryFieldG (b :: BackendType) (r :: Type) v
+data AsyncActionQueryFieldG (r :: Type)
   = AsyncTypename !Text
-  | AsyncOutput !(ActionFieldsG b r v)
+  | AsyncOutput !(ActionFieldsG r)
   | AsyncId
   | AsyncCreatedAt
   | AsyncErrors
-  deriving (Functor, Foldable, Traversable)
 
-type AsyncActionQueryFieldsG b r v = Fields (AsyncActionQueryFieldG b r v)
+type AsyncActionQueryFieldsG r = Fields (AsyncActionQueryFieldG r)
 
-data AnnActionAsyncQuery (b :: BackendType) (r :: Type) v = AnnActionAsyncQuery
+data AnnActionAsyncQuery (b :: BackendType) (r :: Type) = AnnActionAsyncQuery
   { _aaaqName :: !ActionName,
     _aaaqActionId :: !ActionId,
     _aaaqOutputType :: !GraphQLType,
-    _aaaqFields :: !(AsyncActionQueryFieldsG b r v),
+    _aaaqFields :: !(AsyncActionQueryFieldsG r),
     _aaaqDefinitionList :: ![(Column b, ScalarType b)],
     _aaaqStringifyNum :: !StringifyNumbers,
     _aaaqForwardClientHeaders :: !Bool,
     _aaaqSource :: !(ActionSourceInfo b)
   }
-  deriving (Functor, Foldable, Traversable)
 
 data ActionExecContext = ActionExecContext
   { _aecManager :: !HTTP.Manager,

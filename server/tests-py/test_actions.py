@@ -74,19 +74,19 @@ class TestActionsSync:
 
     def test_expecting_array_response_got_object(self, hge_ctx):
         check_query_secret(hge_ctx, self.dir() + '/expecting_array_response.yaml')
-    
+
     def test_expecting_scalar_output_type_success(self, hge_ctx):
         check_query_secret(hge_ctx, self.dir() + '/get_scalar_action_output_type_success.yaml')
-    
+
     def test_expecting_scalar_string_output_type_got_object(self, hge_ctx):
         check_query_secret(hge_ctx, self.dir() + '/expecting_scalar_response_got_object.yaml')
-    
+
     def test_expecting_object_output_type_success_got_scalar_string(self, hge_ctx):
         check_query_secret(hge_ctx, self.dir() + '/expecting_object_response_got_scalar.yaml')
-    
+
     def test_scalar_response_action_transformed_output(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/scalar_response_action_transformed_output.yaml')
-    
+
     def test_object_response_action_transformed_output(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/object_response_action_transformed_output.yaml')
 
@@ -266,6 +266,25 @@ class TestQueryActions:
         code, resp, _ = hge_ctx.anyq('/v1/graphql', query, headers)
         assert code == 200,resp
         check_query_f(hge_ctx, self.dir() + '/get_user_by_email_nested_success.yaml')
+
+    def test_query_action_success_output_nested_join(self, hge_ctx):
+        gql_query = '''
+        mutation {
+          insert_user_one(object: {email: "clarke@gmail.com", name:"Clarke"}){
+            id
+          }
+        }
+        '''
+        query = {
+            'query': gql_query
+        }
+        headers = {}
+        admin_secret = hge_ctx.hge_key
+        if admin_secret is not None:
+            headers['X-Hasura-Admin-Secret'] = admin_secret
+        code, resp, _ = hge_ctx.anyq('/v1/graphql', query, headers)
+        assert code == 200,resp
+        check_query_f(hge_ctx, self.dir() + '/get_user_by_email_nested_join_success.yaml')
 
     def test_query_action_success_output_list(self, hge_ctx):
         gql_query = '''
@@ -696,7 +715,7 @@ class TestCreateActionNestedTypeWithRelation:
         check_query_f(hge_ctx, self.dir() + '/create_async_action_with_nested_output_and_relation.yaml')
 
     # no toplevel, extensions with no error
-    def test_create_sync_action_with_nested_output_and_nested_relation_fail(self, hge_ctx):
+    def test_create_sync_action_with_nested_output_and_nested_relation(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/create_sync_action_with_nested_output_and_nested_relation.yaml')
 
 @pytest.mark.usefixtures('per_class_tests_db_state')
