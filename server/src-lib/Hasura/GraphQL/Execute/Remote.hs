@@ -21,6 +21,7 @@ import Hasura.GraphQL.Parser
 import Hasura.GraphQL.Transport.HTTP.Protocol
 import Hasura.GraphQL.Transport.HTTP.Protocol qualified as GH
 import Hasura.Prelude
+import Hasura.RQL.IR.RemoteSchema
 import Hasura.RQL.Types
 import Hasura.Session
 import Language.GraphQL.Draft.Syntax qualified as G
@@ -222,8 +223,8 @@ resolveRemoteVariable userInfo = \case
 resolveRemoteField ::
   (MonadError QErr m) =>
   UserInfo ->
-  RemoteFieldG RemoteSchemaVariable ->
-  StateT RemoteJSONVariableMap m (RemoteFieldG Variable)
+  RemoteSchemaRootField Void RemoteSchemaVariable ->
+  StateT RemoteJSONVariableMap m (RemoteSchemaRootField Void Variable)
 resolveRemoteField userInfo = traverse (resolveRemoteVariable userInfo)
 
 -- | TODO: Documentation.

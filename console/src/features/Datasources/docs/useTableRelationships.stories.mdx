@@ -4,43 +4,33 @@ import { Meta } from '@storybook/addon-docs';
 
 <h1 class="text-xl font-semibold mb-md">useTableRelationships</h1>
 
-<h2 class="text-lg font-semibold mb-xs">Description</h2>
-<p class="mb-md text-muted mb-0">Get Table FK relationships</p>
+<h2 class="text-lg font-semibold mb-xs">Overview</h2>
+
+```typescript
+import { useTableRelationships } from '@features/Datasources';
+```
+
 <p class="mb-md text-muted mb-sm">
   Gets the list of FK relationships from a table and the ones that target the
   table. This hooks searchs for relationships across schema and will list both
   simple and composite FK constraints.
 </p>
 
-<br />
-
-<h2 class="text-lg font-semibold mb-xs">Usage</h2>
-
-```javascript
+```typescript
 const query = useTableRelationships({
-  database: 'chinook',
-  table: {
-    name: 'Album',
+  target: {
+    database: 'chinook',
     schema: 'public',
+    table: 'Album',
   },
 });
 ```
 
-<br />
-
-<h2 class="text-lg font-semibold mb-xs">Response</h2>
 <p class="mb-md text-muted mb-sm">
-  The `query.data` resolves into a an object of type
+  This will return a <b>query</b> object that can used in your react component.
+  The <b>query</b> object contains the result, if the API call is successful.
+  The output format will be -
 </p>
-
-```typescript
-
-{to: {table: string, column: string[]}, from: {table: string, column: string[]}}[]
-```
-
-<br />
-
-<p class="mb-md text-muted mb-sm">A sample response would be - </p>
 
 ```javascript
 [
@@ -54,3 +44,43 @@ const query = useTableRelationships({
   },
 ];
 ```
+
+<h2 class="text-lg font-semibold mb-xs">Properties</h2>
+
+<br />
+
+<div class="overflow-x-auto border border-gray-300 rounded mb-md">
+  <table class="min-w-full divide-y divide-gray-200 text-left">
+    <thead>
+      <tr>
+        <th
+          scope="col"
+          class="bg-gray-50 px-sm py-sm text-sm font-semibold text-muted uppercase tracking-wider"
+        >
+          Property
+        </th>
+        <th
+          scope="col"
+          class="bg-gray-50 px-sm py-sm text-sm font-semibold text-muted uppercase tracking-wider"
+        >
+          Type
+        </th>
+        <th
+          scope="col"
+          class="bg-gray-50 px-sm py-sm text-sm font-semibold text-muted uppercase tracking-wider"
+        >
+          Description
+        </th>
+      </tr>
+    </thead>
+    <tbody class="bg-white divide-y divide-gray-200">
+      <tr class="group">
+        <td class="p-sm whitespace-nowrap text-muted">Target </td>
+        <td class="p-sm whitespace-nowrap text-muted">DataTarget</td>
+        <td class="p-sm whitespace-nowrap text-muted">
+          Data path for the table (should be one of the supported driver format)
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>

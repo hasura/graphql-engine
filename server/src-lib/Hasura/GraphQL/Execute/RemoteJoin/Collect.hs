@@ -10,7 +10,8 @@ where
 import Control.Lens (Traversal', preview, _2)
 import Control.Monad.Writer
 import Data.HashMap.Strict qualified as Map
-import Data.List.NonEmpty qualified as NE
+import Data.HashMap.Strict.NonEmpty (NEHashMap)
+import Data.HashMap.Strict.NonEmpty qualified as NEMap
 import Data.Text qualified as T
 import Hasura.GraphQL.Execute.RemoteJoin.Types
 import Hasura.GraphQL.Parser.Column (UnpreparedValue (..))
@@ -18,31 +19,32 @@ import Hasura.Prelude
 import Hasura.RQL.IR
 import Hasura.RQL.Types
 import Hasura.SQL.AnyBackend qualified as AB
+import Language.GraphQL.Draft.Syntax qualified as G
 
-{- Note: [Remote Joins Architecture]
+{- Note [Remote Joins Architecture]
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
- Unparsed Incoming GraphQL  +------------------------------+
---------------------------> | Parsing of the GraphQL query |-----+
-                            +------------------------------+     |
-                                                                 | DB Query and remote joins (if any)
-                                                                 |
-                                                                 V
-+----------------------------------+  SQL query response  +----------------------------+
-|  Traverse the DB response to     | <------------------- |  Execution of the DB query |
-|  get the values of the arguments |                      +----------------------------+
-|   of the remote field            |
-+----------------------------------+
-             |
-             | Remote field arguments
-             V
-+--------------------------+  Remote schema response   +----------------------------------------+
-| Query the remote schema  | ------------------------> | Replace the remote join fields in      |
-| with the remote field    |                           | the SQL query response (JSON) with     |
-| arguments to the remote  |                           | the response obtained from the remote  |
-| field configured in the  |                           | schema at appropriate places.          |
-| remote join.             |                           +----------------------------------------+
-+--------------------------+
+    Unparsed Incoming GraphQL   +------------------------------+
+    --------------------------> | Parsing of the GraphQL query |-----+
+                                +------------------------------+     |
+                                                                     | DB Query and remote joins (if any)
+                                                                     |
+                                                                     V
+    +----------------------------------+  SQL query response  +----------------------------+
+    |  Traverse the DB response to     | <------------------- |  Execution of the DB query |
+    |  get the values of the arguments |                      +----------------------------+
+    |   of the remote field            |
+    +----------------------------------+
+                 |
+                 | Remote field arguments
+                 V
+    +--------------------------+  Remote schema response   +----------------------------------------+
+    | Query the remote schema  | ------------------------> | Replace the remote join fields in      |
+    | with the remote field    |                           | the SQL query response (JSON) with     |
+    | arguments to the remote  |                           | the response obtained from the remote  |
+    | field configured in the  |                           | schema at appropriate places.          |
+    | remote join.             |                           +----------------------------------------+
+    +--------------------------+
 -}
 
 -- | A writer monad used to collect together all remote joins
@@ -61,15 +63,15 @@ newtype Collector a = Collector {runCollector :: (a, Maybe RemoteJoins)}
 
 -- | Collect some remote joins appearing at the given field names in the current
 -- context.
-collect :: NonEmpty (FieldName, RemoteJoin) -> Collector ()
-collect = tell . Just . JoinTree . fmap (second Leaf)
+collect :: NEHashMap FieldName RemoteJoin -> Collector ()
+collect = tell . Just . JoinTree . fmap Leaf
 
 -- | Keep track of the given field name in the current path from the root of the
 -- selection set.
 withField :: FieldName -> Collector a -> Collector a
 withField name = censor (fmap wrap)
   where
-    wrap rjs = JoinTree ((name, Tree rjs) :| [])
+    wrap rjs = JoinTree $ NEMap.singleton name (Tree rjs)
 
 -- | Collects remote joins from the AST and also adds the necessary join fields
 getRemoteJoins ::
@@ -130,9 +132,8 @@ getRemoteJoinsMutationOutput =
 -- local helpers
 
 getRemoteJoinsActionFields ::
-  Backend b =>
-  ActionFieldsG b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b) ->
-  (ActionFieldsG b Void (UnpreparedValue b), Maybe RemoteJoins)
+  ActionFieldsG (RemoteRelationshipField UnpreparedValue) ->
+  (ActionFieldsG Void, Maybe RemoteJoins)
 getRemoteJoinsActionFields =
   runCollector . transformActionFields
 
@@ -163,17 +164,15 @@ getRemoteJoinsMutationDB = \case
        in (delete {dqp1Output = output'}, remoteJoins)
 
 getRemoteJoinsSyncAction ::
-  (Backend b) =>
-  AnnActionExecution b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b) ->
-  (AnnActionExecution b Void (UnpreparedValue b), Maybe RemoteJoins)
+  AnnActionExecution (RemoteRelationshipField UnpreparedValue) ->
+  (AnnActionExecution Void, Maybe RemoteJoins)
 getRemoteJoinsSyncAction actionExecution =
   let (fields', remoteJoins) = getRemoteJoinsActionFields $ _aaeFields actionExecution
    in (actionExecution {_aaeFields = fields'}, remoteJoins)
 
 getRemoteJoinsActionQuery ::
-  (Backend b) =>
-  ActionQuery b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b) ->
-  (ActionQuery b Void (UnpreparedValue b), Maybe RemoteJoins)
+  ActionQuery (RemoteRelationshipField UnpreparedValue) ->
+  (ActionQuery Void, Maybe RemoteJoins)
 getRemoteJoinsActionQuery = \case
   AQQuery sync ->
     first AQQuery $ getRemoteJoinsSyncAction sync
@@ -197,9 +196,8 @@ getRemoteJoinsActionQuery = \case
           AsyncErrors -> pure AsyncErrors
 
 getRemoteJoinsActionMutation ::
-  (Backend b) =>
-  ActionMutation b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b) ->
-  (ActionMutation b Void (UnpreparedValue b), Maybe RemoteJoins)
+  ActionMutation (RemoteRelationshipField UnpreparedValue) ->
+  (ActionMutation Void, Maybe RemoteJoins)
 getRemoteJoinsActionMutation = \case
   AMAsync async -> (AMAsync async, Nothing)
   AMSync sync -> first AMSync $ getRemoteJoinsSyncAction sync
@@ -281,7 +279,7 @@ createRemoteJoin joinColumnAliases remoteRelationship =
               RemoteSchemaJoin
                 (inputArgsToMap _rselArgs)
                 _rselResultCustomizer
-                _rselSelection
+                (convertSelectionSet _rselSelection)
                 joinColumnAliases
                 _rselFieldCall
                 _rselRemoteSchema
@@ -362,7 +360,7 @@ transformAnnFields fields = do
         annotatedFields & mapMaybe \(fieldName, (_, mRemoteJoin)) ->
           (fieldName,) <$> mRemoteJoin
 
-  case NE.nonEmpty remoteJoins of
+  case NEMap.fromList remoteJoins of
     Nothing -> pure transformedFields
     Just neRemoteJoins -> do
       collect neRemoteJoins
@@ -371,11 +369,6 @@ transformAnnFields fields = do
     -- Placeholder text to annotate a remote relationship field.
     remoteAnnPlaceholder :: AnnFieldG src Void (UnpreparedValue src)
     remoteAnnPlaceholder = AFExpression "remote relationship placeholder"
-
-    -- Get the fields targeted by some 'Traversal' for an arbitrary list of
-    -- tuples, discarding any elements whose fields cannot be focused upon.
-    getFields :: Traversal' super sub -> [(any, super)] -> [(any, sub)]
-    getFields focus = mapMaybe (traverse $ preview focus)
 
     -- This is a map of column name to its alias of all columns in the
     -- selection set.
@@ -445,6 +438,11 @@ transformAnnFields fields = do
               ComputedFieldScalarSelect _scfFunction functionArgs _scfType Nothing
        in AFComputedField _scfXField _scfName fieldSelect
 
+-- | Get the fields targeted by some 'Traversal' for an arbitrary list of
+-- tuples, discarding any elements whose fields cannot be focused upon.
+getFields :: Traversal' super sub -> [(any, super)] -> [(any, sub)]
+getFields focus = mapMaybe (traverse $ preview focus)
+
 -- | Annotate an element a remote source join from '_rssJoinMapping' so that
 -- a remote join can be constructed.
 transformAnnRelation ::
@@ -456,40 +454,80 @@ transformAnnRelation transform relation@(AnnRelationSelectG _ _ select) = do
   pure $ relation {aarAnnSelect = transformedSelect}
 
 transformActionFields ::
-  forall src.
-  Backend src =>
-  ActionFieldsG src (RemoteRelationshipField UnpreparedValue) (UnpreparedValue src) ->
-  Collector (ActionFieldsG src Void (UnpreparedValue src))
+  ActionFieldsG (RemoteRelationshipField UnpreparedValue) ->
+  Collector (ActionFieldsG Void)
 transformActionFields fields = do
   -- Produces a list of transformed fields that may or may not have an
   -- associated remote join.
-  for fields \(fieldName, field') -> withField fieldName do
-    -- FIXME: There's way too much going on in this 'case .. of' block...
-    let mkCollector ::
-          ActionFieldG src (RemoteRelationshipField UnpreparedValue) (UnpreparedValue src) ->
-          Collector
-            (ActionFieldG src Void (UnpreparedValue src))
-        mkCollector annField = case annField of
-          -- ActionFields which do not need to be transformed.
-          ACFScalar c -> pure (ACFScalar c)
-          ACFExpression t -> pure (ACFExpression t)
-          -- ActionFields with no associated remote joins and whose transformations are
-          -- relatively straightforward.
-          ACFObjectRelation annRel -> do
-            transformed <- transformAnnRelation transformObjectSelect annRel
-            pure (ACFObjectRelation transformed)
-          ACFArrayRelation (ASSimple annRel) -> do
-            transformed <- transformAnnRelation transformSelect annRel
-            pure (ACFArrayRelation . ASSimple $ transformed)
-          ACFArrayRelation (ASAggregate aggRel) -> do
-            transformed <- transformAnnRelation transformAggregateSelect aggRel
-            pure (ACFArrayRelation . ASAggregate $ transformed)
-          ACFArrayRelation (ASConnection annRel) -> do
-            transformed <- transformAnnRelation transformConnectionSelect annRel
-            pure (ACFArrayRelation . ASConnection $ transformed)
-          ACFNestedObject fn fs ->
-            ACFNestedObject fn <$> transformActionFields fs
-    (fieldName,) <$> mkCollector field'
+  annotatedFields <- for fields \(fieldName, field') -> withField fieldName do
+    (fieldName,) <$> case field' of
+      -- ActionFields which do not need to be transformed.
+      ACFScalar c -> pure (ACFScalar c, Nothing)
+      ACFExpression t -> pure (ACFExpression t, Nothing)
+      -- Remote ActionFields, whose elements require annotation so that they can be
+      -- used to construct a remote join.
+      ACFRemote ActionRemoteRelationshipSelect {..} ->
+        pure
+          ( -- We generate this so that the response has a key with the relationship,
+            -- without which preserving the order of fields in the final response
+            -- would require a lot of bookkeeping.
+            remoteActionPlaceholder,
+            Just $ createRemoteJoin joinColumnAliases _arrsRelationship
+          )
+      ACFNestedObject fn fs ->
+        (,Nothing) . ACFNestedObject fn <$> transformActionFields fs
+
+  let transformedFields = (fmap . fmap) fst annotatedFields
+      remoteJoins =
+        annotatedFields & mapMaybe \(fieldName, (_, mRemoteJoin)) ->
+          (fieldName,) <$> mRemoteJoin
+
+  case NEMap.fromList remoteJoins of
+    Nothing -> pure transformedFields
+    Just neRemoteJoins -> do
+      collect neRemoteJoins
+      pure $ transformedFields <> phantomFields
+  where
+    -- Placeholder text to annotate a remote relationship field.
+    remoteActionPlaceholder :: ActionFieldG Void
+    remoteActionPlaceholder = ACFExpression "remote relationship placeholder"
+
+    -- This is a map of column name to its alias of all columns in the
+    -- selection set.
+    scalarFields :: HashMap G.Name FieldName
+    scalarFields =
+      Map.fromList $
+        [ (name, alias)
+          | (alias, name) <- getFields _ACFScalar fields
+        ]
+
+    -- Annotate a join field with its field name and an alias so that it may
+    -- be used to construct a remote join.
+    annotateJoinField ::
+      FieldName -> G.Name -> (G.Name, JoinColumnAlias)
+    annotateJoinField fieldName field =
+      let alias = getJoinColumnAlias fieldName field scalarFields allAliases
+       in (field, alias)
+      where
+        allAliases = map fst fields
+
+    -- goes through all the remote relationships in the selection set and emits
+    -- 1. a map of join field names to their aliases in the lhs response
+    -- 2. a list of extra fields that need to be included in the lhs query
+    --    that are required for the join
+    (joinColumnAliases, phantomFields :: ([(FieldName, ActionFieldG Void)])) =
+      let lhsJoinFields =
+            Map.unions $ map (_arrsLHSJoinFields . snd) $ getFields _ACFRemote fields
+          annotatedJoinColumns = Map.mapWithKey annotateJoinField $ lhsJoinFields
+          phantomFields_ :: ([(FieldName, ActionFieldG Void)]) =
+            toList annotatedJoinColumns & mapMaybe \(joinField, alias) ->
+              case alias of
+                JCSelected _ -> Nothing
+                JCPhantom a ->
+                  let annotatedColumn =
+                        ACFScalar joinField
+                   in Just (a, annotatedColumn)
+       in (fmap snd annotatedJoinColumns, phantomFields_)
 
 getJoinColumnAlias ::
   (Eq field, Hashable field) =>
@@ -504,7 +542,7 @@ getJoinColumnAlias fieldName field selectedFields allAliases =
     Just fieldAlias -> JCSelected fieldAlias
   where
     -- This generates an alias for a phantom field that does not conflict with
-    -- any of the existing aliases in the seleciton set
+    -- any of the existing aliases in the selection set
     --
     -- If we generate a unique name for each field name which is longer than
     -- the longest alias in the selection set, the generated name would be

@@ -67,6 +67,8 @@ import {
 import {
   findTable,
   generateTableDef,
+  getSchemaTableNames,
+  getTrackedTables,
   QUERY_TYPES,
   dataSource,
   isFeatureSupported,
@@ -1601,7 +1603,10 @@ class Permissions extends Component {
         const getApplyToList = () => {
           const _applyToListHtml = [];
 
-          const tableOptions = allSchemas.map(schema => schema.table_name);
+          const tableOptions = getSchemaTableNames(
+            getTrackedTables(allSchemas),
+            currentSchema
+          );
           const actionsList = supportedQueryTypes || [
             'insert',
             'select',

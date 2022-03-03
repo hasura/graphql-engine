@@ -14,6 +14,7 @@ import Data.Parser.CacheControlSpec qualified as CacheControlParser
 import Data.Parser.JSONPathSpec qualified as JsonPath
 import Data.Time.Clock (getCurrentTime)
 import Data.TimeSpec qualified as TimeSpec
+import Data.TrieSpec qualified as TrieSpec
 import Data.URL.Template
 import Database.MSSQL.TransactionSpec qualified as TransactionSpec
 import Database.PG.Query qualified as Q
@@ -40,6 +41,7 @@ import Hasura.RQL.Types
 import Hasura.RQL.Types.AllowlistSpec qualified as AllowlistSpec
 import Hasura.RQL.Types.CommonSpec qualified as CommonTypesSpec
 import Hasura.RQL.Types.EndpointSpec qualified as EndpointSpec
+import Hasura.RQL.Types.TableSpec qualified as TableSpec
 import Hasura.RQL.WebhookTransformsSpec qualified as WebhookTransformsSpec
 import Hasura.SQL.WKTSpec qualified as WKTSpec
 import Hasura.Server.Auth.JWTSpec qualified as JWTSpec
@@ -90,6 +92,7 @@ unitSpecs = do
   describe "Data.Parser.CacheControl" CacheControlParser.spec
   describe "Data.Parser.JSONPath" JsonPath.spec
   describe "Data.Time" TimeSpec.spec
+  describe "Data.Trie" TrieSpec.spec
   describe "Hasura.Backends.MySQL.DataLoader.ExecuteTests" MySQLDataLoader.spec
   describe "Hasura.Backends.MSSQL.ErrorSpec" MSSQLErrorSpec.spec
   describe "Hasura.Eventing" EventingSpec.spec
@@ -99,6 +102,7 @@ unitSpecs = do
   describe "Hasura.RQL.Types.Common" CommonTypesSpec.spec
   describe "Hasura.RQL.Types.Allowlist" AllowlistSpec.spec
   describe "Hasura.RQL.Types.Endpoint" EndpointSpec.spec
+  describe "Hasura.RQL.Types.Table" TableSpec.spec
   describe "Hasura.GraphQL.Namespace" NamespaceSpec.spec
   describe "Hasura.SQL.WKT" WKTSpec.spec
   describe "Hasura.Server.Auth.JWT" JWTSpec.spec

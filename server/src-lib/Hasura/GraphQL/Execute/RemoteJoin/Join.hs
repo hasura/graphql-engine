@@ -8,6 +8,7 @@ import Data.Aeson.Ordered qualified as JO
 import Data.Environment qualified as Env
 import Data.HashMap.Strict.Extended qualified as Map
 import Data.HashMap.Strict.InsOrd qualified as OMap
+import Data.HashMap.Strict.NonEmpty qualified as NEMap
 import Data.HashSet qualified as HS
 import Data.IntMap.Strict qualified as IntMap
 import Data.List.NonEmpty qualified as NE
@@ -385,8 +386,8 @@ collectJoinArguments joinTree lhs = do
 
           joinTreeNodes =
             Map.mapKeys getFieldNameTxt $
-              Map.fromList $
-                NE.toList $ unJoinTree joinTree_
+              NEMap.toHashMap $
+                unJoinTree joinTree_
 
       -- during this traversal we assume that the remote join column has some
       -- placeholder value in the response. If this weren't present it would

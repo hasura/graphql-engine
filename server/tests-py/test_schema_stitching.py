@@ -709,8 +709,6 @@ class TestRemoteSchemaReload:
         st_code, resp = hge_ctx.v1q(reload_metadata_q)
         assert st_code == 200, resp
         # Check if the remote schema present in inconsistent metadata
-        st_code, resp = hge_ctx.v1q(get_inconsistent_metadata_q)
-        assert st_code == 200, resp
         assert resp['is_consistent'] == False, resp
         assert resp['inconsistent_objects'][0]['type'] == 'remote_schema', resp
         # Restart remote graphql server

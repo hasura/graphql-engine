@@ -3,9 +3,7 @@ module Hasura.RQL.Types.RemoteSchema
     AddRemoteSchemaQuery (..),
     AliasMapping,
     DropRemoteSchemaPermissions (..),
-    RemoteField,
     RemoteFieldCustomization (..),
-    RemoteFieldG (..),
     RemoteSchemaCustomization (..),
     RemoteSchemaCustomizer (..),
     RemoteSchemaDef (..),
@@ -36,16 +34,12 @@ module Hasura.RQL.Types.RemoteSchema
     remoteSchemaCustomizeFieldName,
     getTypeName,
     remoteSchemaCustomizeTypeName,
-    rfField,
-    rfRemoteSchemaInfo,
-    rfResultCustomizer,
     singletonAliasMapping,
     validateRemoteSchemaCustomization,
     validateRemoteSchemaDef,
   )
 where
 
-import Control.Lens.TH (makeLenses)
 import Data.Aeson qualified as J
 import Data.Aeson.TH qualified as J
 import Data.Environment qualified as Env
@@ -411,17 +405,6 @@ instance Cacheable RemoteSchemaInputValueDefinition
 newtype RemoteSchemaIntrospection
   = RemoteSchemaIntrospection (HashMap G.Name (G.TypeDefinition [G.Name] RemoteSchemaInputValueDefinition))
   deriving (Show, Eq, Generic, Hashable, Cacheable, Ord)
-
-data RemoteFieldG var = RemoteFieldG
-  { _rfRemoteSchemaInfo :: !RemoteSchemaInfo,
-    _rfResultCustomizer :: !ResultCustomizer,
-    _rfField :: !(G.Field G.NoFragments var)
-  }
-  deriving (Functor, Foldable, Traversable)
-
-$(makeLenses ''RemoteFieldG)
-
-type RemoteField = RemoteFieldG RemoteSchemaVariable
 
 data RemoteSchemaPermsCtx
   = RemoteSchemaPermsEnabled

@@ -15,11 +15,6 @@ source-repository head
   type:     git
   location: https://github.com/hasura/graphql-engine
 
-flag developer
-  description: Enable support for development-only APIs
-  default: False
-  manual: True
-
 flag profiling
   description: Configures the project to be profiling-compatible
   default: False
@@ -43,8 +38,6 @@ common common-all
     -- Insisting on export lists might help with compile times, and help to document modules:
     -Wmissing-export-lists
 
-  if flag(developer)
-    cpp-options: -DDeveloperAPIs
   if flag(profiling)
     cpp-options: -DPROFILING
 
@@ -136,6 +129,7 @@ library
                      , base
                      , bytestring
                      , containers
+                     , data-default
                      , deepseq
                      , dependent-map >=0.4 && <0.5
                      , dependent-sum
@@ -148,6 +142,7 @@ library
                      , http-conduit
                      , http-media
                      , http-types
+                     , ip
                      , kan-extensions
                      , kriti-lang
                      , lifted-base
@@ -194,6 +189,7 @@ library
 
                      -- Logging related
                      , network
+                     , network-bsd
                      , byteorder
 
                      -- for parsing RSA keys
@@ -336,17 +332,21 @@ library
                      , Data.Aeson.Ordered
                      , Data.Environment
                      , Data.HashMap.Strict.Extended
+                     , Data.HashMap.Strict.Multi
+                     , Data.HashMap.Strict.NonEmpty
                      , Data.HashMap.Strict.InsOrd.Extended
                      , Data.List.Extended
                      , Data.Parser.CacheControl
                      , Data.Parser.Expires
                      , Data.Parser.JSONPath
                      , Data.Sequence.NonEmpty
+                     , Data.Set.Extended
                      , Data.SqlCommenter
                      , Data.TByteString
                      , Data.Text.Extended
                      , Data.Text.NonEmpty
                      , Data.Time.Clock.Units
+                     , Data.Trie
                      , Data.URL.Template
                      , Database.MSSQL.Transaction
                      , Database.MSSQL.Pool
@@ -380,6 +380,7 @@ library
                      , Hasura.Backends.MSSQL.Connection
                      , Hasura.Backends.MSSQL.DDL
                      , Hasura.Backends.MSSQL.DDL.BoolExp
+                     , Hasura.Backends.MSSQL.DDL.EventTrigger
                      , Hasura.Backends.MSSQL.DDL.RunSQL
                      , Hasura.Backends.MSSQL.DDL.Source
                      , Hasura.Backends.MSSQL.DDL.Source.Version
@@ -467,25 +468,24 @@ library
                      , Hasura.Backends.MySQL.ToQuery
                      , Hasura.Backends.MySQL.Instances.API
 
-                     -- XXX(jkachmar): This needs to be renamed before we
-                     -- stabilize it.
-                     , Hasura.Experimental.Adapter.API
-                     , Hasura.Experimental.Adapter.Backend
-                     , Hasura.Experimental.Adapter.Execute
-                     , Hasura.Experimental.Adapter.Metadata
-                     , Hasura.Experimental.Adapter.Schema
-                     , Hasura.Experimental.Adapter.Transport
-                     , Hasura.Experimental.IR.Column
-                     , Hasura.Experimental.IR.Expression
-                     , Hasura.Experimental.IR.Function
-                     , Hasura.Experimental.IR.Name
-                     , Hasura.Experimental.IR.OrderBy
-                     , Hasura.Experimental.IR.Query
-                     , Hasura.Experimental.IR.Scalar.Type
-                     , Hasura.Experimental.IR.Scalar.Value
-                     , Hasura.Experimental.IR.Table
-                     , Hasura.Experimental.Schema.Column
-                     , Hasura.Experimental.Schema.Table
+                     -- GraphQL Data Wrappers
+                     , Hasura.Backends.DataWrapper.Adapter.API
+                     , Hasura.Backends.DataWrapper.Adapter.Backend
+                     , Hasura.Backends.DataWrapper.Adapter.Execute
+                     , Hasura.Backends.DataWrapper.Adapter.Metadata
+                     , Hasura.Backends.DataWrapper.Adapter.Schema
+                     , Hasura.Backends.DataWrapper.Adapter.Transport
+                     , Hasura.Backends.DataWrapper.IR.Column
+                     , Hasura.Backends.DataWrapper.IR.Expression
+                     , Hasura.Backends.DataWrapper.IR.Function
+                     , Hasura.Backends.DataWrapper.IR.Name
+                     , Hasura.Backends.DataWrapper.IR.OrderBy
+                     , Hasura.Backends.DataWrapper.IR.Query
+                     , Hasura.Backends.DataWrapper.IR.Scalar.Type
+                     , Hasura.Backends.DataWrapper.IR.Scalar.Value
+                     , Hasura.Backends.DataWrapper.IR.Table
+                     , Hasura.Backends.DataWrapper.Schema.Column
+                     , Hasura.Backends.DataWrapper.Schema.Table
 
                      -- Exposed for benchmark:
                      , Hasura.Cache.Bounded
@@ -623,6 +623,7 @@ library
                      , Hasura.RQL.DML.Internal
                      , Hasura.RQL.DML.Update
                      , Hasura.RQL.DML.Types
+                     , Hasura.RQL.IR.Action
                      , Hasura.RQL.IR.BoolExp
                      , Hasura.RQL.IR.Conflict
                      , Hasura.RQL.IR.Delete
@@ -723,6 +724,9 @@ library
                      , Network.HTTP.Client.Transformable
                      , Network.HTTP.Client.Manager
                      , Network.HTTP.Client.DynamicTlsPermissions
+                     , Network.HTTP.Client.Restricted
+                     , Network.HTTP.Client.Blocklisting
+                     , Network.HTTP.Client.CreateManager
                      , Network.URI.Extended
                      , Network.Wai.Extended
                      , Network.Wai.Handler.WebSockets.Custom
@@ -856,25 +860,27 @@ test-suite graphql-engine-tests
     Data.Parser.URLTemplate
     Data.Text.RawString
     Data.TimeSpec
+    Data.TrieSpec
     Database.MSSQL.TransactionSpec
-    Hasura.Backends.MySQL.DataLoader.ExecuteTests
     Hasura.Backends.MSSQL.ErrorSpec
+    Hasura.Backends.MySQL.DataLoader.ExecuteTests
     Hasura.EventingSpec
     Hasura.Generator.Common
     Hasura.GraphQL.NamespaceSpec
     Hasura.GraphQL.Parser.DirectivesTest
     Hasura.GraphQL.Parser.TestUtils
     Hasura.GraphQL.Schema.RemoteTest
-    Hasura.QuickCheck.Instances
     Hasura.IncrementalSpec
+    Hasura.QuickCheck.Instances
     Hasura.RQL.IR.Generator
-    Hasura.RQL.MetadataSpec
     Hasura.RQL.IR.Postgres
+    Hasura.RQL.MetadataSpec
     Hasura.RQL.PermissionSpec
-    Hasura.RQL.WebhookTransformsSpec
     Hasura.RQL.Types.AllowlistSpec
     Hasura.RQL.Types.CommonSpec
     Hasura.RQL.Types.EndpointSpec
+    Hasura.RQL.Types.TableSpec
+    Hasura.RQL.WebhookTransformsSpec
     Hasura.Server.Auth.JWTSpec
     Hasura.Server.AuthSpec
     Hasura.Server.MigrateSpec
@@ -992,6 +998,7 @@ test-suite tests-hspec
 
  -- Harness.Test
     Harness.Test.Context
+    Harness.Test.Schema
 
  -- Harness.Quoter
     Harness.Quoter.Graphql

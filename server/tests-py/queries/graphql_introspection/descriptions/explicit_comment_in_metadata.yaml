@@ -14,16 +14,16 @@ query:
         }
       }
     }
-  response:
-    data:
-      __type:
-        name: explicit_comment_in_metadata
-        description: Such an explicit comment, wow
-        kind: OBJECT
-        fields:
-        - name: id
-          description: null
-        - name: name
-          description: null
-        - name: upper_name
-          description: Such an explicit function comment, wow
+response:
+  data:
+    __type:
+      name: explicit_comment_in_metadata
+      description: Such an explicit comment, wow
+      kind: OBJECT
+      fields:
+      - name: id
+        description: null
+      - name: name
+        description: null
+      - name: upper_name
+        description: Such an explicit function comment, wow

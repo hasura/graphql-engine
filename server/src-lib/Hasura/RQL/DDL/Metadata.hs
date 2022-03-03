@@ -367,7 +367,12 @@ runReloadMetadata (ReloadMetadata reloadRemoteSchemas reloadSources reloadRecrea
           }
 
   buildSchemaCacheWithOptions (CatalogUpdate $ Just recreateEventTriggersSources) cacheInvalidations metadata
-  pure successMsg
+  inconsObjs <- scInconsistentObjs <$> askSchemaCache
+  pure . encJFromJValue . J.object $
+    [ ("message" :: Text) J..= ("success" :: Text),
+      "is_consistent" J..= null inconsObjs
+    ]
+      <> ["inconsistent_objects" J..= inconsObjs | not (null inconsObjs)]
 
 runDumpInternalState ::
   (QErrM m, CacheRM m) =>
@@ -488,19 +493,14 @@ runTestWebhookTransform ::
   (QErrM m) =>
   TestWebhookTransform ->
   m EncJSON
-runTestWebhookTransform (TestWebhookTransform env urlE payload mt _ sv) = do
+runTestWebhookTransform (TestWebhookTransform env headers urlE payload mt _ sv) = do
   url <- case urlE of
-    URL url' ->
-      case AT.parseOnly parseEnvTemplate url' of
-        Left _ -> throwError $ err400 ParseFailed "Invalid Url Template"
-        Right xs ->
-          let lookup' var = maybe (Left var) (Right . T.pack) $ Env.lookupEnv env (T.unpack var)
-              result = traverse (fmap indistinct . bitraverse lookup' pure) xs
-              err e = throwError $ err400 NotFound $ "Missing Env Var: " <> e
-           in either err (pure . fold) result
+    URL url' -> interpolateFromEnv env url'
     EnvVar var ->
       let err = throwError $ err400 NotFound "Missing Env Var"
        in maybe err (pure . T.pack) $ Env.lookupEnv env var
+
+  headers' <- traverse (traverse (fmap TE.encodeUtf8 . interpolateFromEnv env . TE.decodeUtf8)) headers
 
   result <- runExceptT $ do
     let env' = bimap T.pack (J.String . T.pack) <$> Env.toList env
@@ -511,19 +511,44 @@ runTestWebhookTransform (TestWebhookTransform env urlE payload mt _ sv) = do
     let unwrappedUrl = T.drop 1 $ T.dropEnd 1 kritiUrlResult
     initReq <- hoistEither $ first RequestInitializationError $ HTTP.mkRequestEither unwrappedUrl
 
-    let req = initReq & HTTP.body .~ pure (J.encode payload)
+    let req = initReq & HTTP.body .~ pure (J.encode payload) & HTTP.headers .~ headers'
         reqTransform = mkRequestTransform mt
         reqTransformCtx = buildReqTransformCtx unwrappedUrl sv
     hoistEither $ first (RequestTransformationError req) $ applyRequestTransform reqTransformCtx reqTransform req
 
   case result of
     Right transformed ->
-      let body = J.toJSON $ J.decode @J.Value =<< (transformed ^. HTTP.body)
+      let body = decodeBody (transformed ^. HTTP.body)
        in pure $ packTransformResult transformed body
     Left (RequestTransformationError req err) -> pure $ packTransformResult req (J.toJSON err)
     -- NOTE: In the following two cases we have failed before producing a valid request.
     Left (UrlInterpError err) -> pure $ encJFromJValue $ J.toJSON err
     Left (RequestInitializationError err) -> pure $ encJFromJValue $ J.String $ "Error: " <> tshow err
+
+interpolateFromEnv :: MonadError QErr m => Env.Environment -> Text -> m Text
+interpolateFromEnv env url =
+  case AT.parseOnly parseEnvTemplate url of
+    Left _ -> throwError $ err400 ParseFailed "Invalid Url Template"
+    Right xs ->
+      let lookup' var = maybe (Left var) (Right . T.pack) $ Env.lookupEnv env (T.unpack var)
+          result = traverse (fmap indistinct . bitraverse lookup' pure) xs
+          err e = throwError $ err400 NotFound $ "Missing Env Var: " <> e
+       in either err (pure . fold) result
+
+decodeBody :: Maybe BL.ByteString -> J.Value
+decodeBody Nothing = J.Null
+decodeBody (Just bs) = fromMaybe J.Null $ jsonToValue bs <|> formUrlEncodedToValue bs
+
+-- | Attempt to encode a 'ByteString' as an Aeson 'Value'
+jsonToValue :: BL.ByteString -> Maybe J.Value
+jsonToValue bs = J.decode bs
+
+-- | Quote a 'ByteString' then attempt to encode it as a JSON
+-- String. This is necessary for 'x-www-url-formencoded' bodies. They
+-- are a list of key/value pairs encoded as a raw 'ByteString' with no
+-- quoting whereas JSON Strings must be quoted.
+formUrlEncodedToValue :: BL.ByteString -> Maybe J.Value
+formUrlEncodedToValue bs = J.decode ("\"" <> bs <> "\"")
 
 parseEnvTemplate :: AT.Parser [Either T.Text T.Text]
 parseEnvTemplate = AT.many1 $ pEnv <|> pLit <|> fmap Right "{"

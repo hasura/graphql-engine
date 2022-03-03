@@ -31,7 +31,6 @@ flags: -optimize-hasura
 
 package graphql-engine
   documentation: false
-  flags: +developer
   -- NOTE: 'cabal new-build --enable-coverage' seems to rebuild all deps with coverage
   -- which is not what we originally wanted. But building the test modules
   -- themselves with coverage is actually nice for validation.

@@ -1,6 +1,3 @@
-{-# LANGUAGE QuasiQuotes #-}
-{-# LANGUAGE RecordWildCards #-}
-
 -- | Test views.
 module Test.ViewsSpec (spec) where
 

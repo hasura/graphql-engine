@@ -41,7 +41,7 @@ import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.EventTrigger
 import Hasura.RQL.Types.Eventing
 import Hasura.RQL.Types.Source
-import Hasura.RQL.Types.Table ()
+import Hasura.RQL.Types.Table (PrimaryKey)
 import Hasura.SQL.Backend
 import Hasura.SQL.Types
 import Hasura.Server.Migrate.Internal
@@ -50,10 +50,6 @@ import Hasura.Server.Types
 import Hasura.Session
 import Hasura.Tracing qualified as Tracing
 import Text.Shakespeare.Text qualified as ST
-
--- Corresponds to the 'OLD' and 'NEW' Postgres records; see
--- https://www.postgresql.org/docs/current/plpgsql-trigger.html
-data OpVar = OLD | NEW deriving (Show)
 
 fetchUndeliveredEvents ::
   (MonadIO m, MonadError QErr m) =>
@@ -189,8 +185,9 @@ createTableEventTrigger ::
   [ColumnInfo ('Postgres pgKind)] ->
   TriggerName ->
   TriggerOpsDef ('Postgres pgKind) ->
+  Maybe (PrimaryKey ('Postgres pgKind) (ColumnInfo ('Postgres pgKind))) ->
   m (Either QErr ())
-createTableEventTrigger serverConfigCtx sourceConfig table columns triggerName opsDefinition = runPgSourceWriteTx sourceConfig $ do
+createTableEventTrigger serverConfigCtx sourceConfig table columns triggerName opsDefinition _ = runPgSourceWriteTx sourceConfig $ do
   -- Clean all existing triggers
   liftTx $ dropTriggerQ triggerName -- executes DROP IF EXISTS.. sql
   -- Create the given triggers

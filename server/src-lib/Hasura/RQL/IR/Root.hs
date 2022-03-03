@@ -50,15 +50,13 @@ data MutationDB (b :: BackendType) (r :: Type) v
     MDBFunction RQL.JsonAggSelect (AnnSimpleSelectG b r v)
   deriving stock (Generic, Functor, Foldable, Traversable)
 
-data ActionQuery (b :: BackendType) (r :: Type) v
-  = AQQuery !(RQL.AnnActionExecution b r v)
-  | AQAsync !(RQL.AnnActionAsyncQuery b r v)
-  deriving (Functor, Foldable, Traversable)
+data ActionQuery (r :: Type)
+  = AQQuery !(RQL.AnnActionExecution r)
+  | AQAsync !(RQL.AnnActionAsyncQuery ('Postgres 'Vanilla) r)
 
-data ActionMutation (b :: BackendType) (r :: Type) v
-  = AMSync !(RQL.AnnActionExecution b r v)
+data ActionMutation (r :: Type)
+  = AMSync !(RQL.AnnActionExecution r)
   | AMAsync !RQL.AnnActionMutationAsync
-  deriving (Functor, Foldable, Traversable)
 
 -- The `db` type argument of @RootField@ expects only one type argument, the backend `b`, as not all
 -- types stored in a RootField will have a second parameter like @QueryDB@ does: they all only have
@@ -80,23 +78,23 @@ data RemoteRelationshipField vf
 
 -- | Represents a query root field to an action
 type QueryActionRoot v =
-  ActionQuery ('Postgres 'Vanilla) (RemoteRelationshipField v) (v ('Postgres 'Vanilla))
+  ActionQuery (RemoteRelationshipField v)
 
 -- | Represents a mutation root field to an action
 type MutationActionRoot v =
-  ActionMutation ('Postgres 'Vanilla) (RemoteRelationshipField v) (v ('Postgres 'Vanilla))
+  ActionMutation (RemoteRelationshipField v)
 
 type QueryRootField v =
   RootField
     (QueryDBRoot (RemoteRelationshipField v) v)
-    RQL.RemoteField
+    (RemoteSchemaRootField Void RQL.RemoteSchemaVariable)
     (QueryActionRoot v)
     JO.Value
 
 type MutationRootField v =
   RootField
     (MutationDBRoot (RemoteRelationshipField v) v)
-    RQL.RemoteField
+    (RemoteSchemaRootField Void RQL.RemoteSchemaVariable)
     (MutationActionRoot v)
     JO.Value
 
