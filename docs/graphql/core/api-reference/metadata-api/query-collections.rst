@@ -220,7 +220,7 @@ allow-list. It is possible to specify a scope, defaulting to global.
 
 If the given collection already exists in the allowlist regardless
 of scope, ``add_collection_to_allowlist`` is a no-op. To change the
-scope, use :ref:`update_scope_of_collection_in_allowlist`.
+scope, use :ref:`metadata_update_scope_of_collection_in_allowlist`.
 
 If the scope is global, all roles will be able to access the queries
 present in the query collection:
@@ -301,8 +301,8 @@ update_scope_of_collection_in_allowlist
 ``update_scope_of_collection_in_allowlist`` is used to add change the
 scope of a collection in the allowlist. Its effect is the same as
 first dropping the collection from the allowlist using
-:ref:`drop_collection_from_allowlist`, and then adding it with the
-given scope using :ref:`add_collection_to_allowlist`.
+:ref:`metadata_drop_collection_from_allowlist`, and then adding it with the
+given scope using :ref:`metadata_add_collection_to_allowlist`.
 
 .. code-block:: http
 
@@ -324,7 +324,7 @@ given scope using :ref:`add_collection_to_allowlist`.
        }
    }
 
-.. _metadata_update_scope_of_collection_in_allowlist:
+.. _metadata_update_scope_of_collection_in_allowlist_syntax:
 
 Args Syntax
 ^^^^^^^^^^^
