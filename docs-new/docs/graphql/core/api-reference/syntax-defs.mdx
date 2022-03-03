@@ -1240,10 +1240,10 @@ HGE provides the following functions that can be used in the template:
 
 ## TransformHeaders {#transformheaders}
 
-| Key           | required | Schema                               | Description                                                                                            |
-|---------------|----------|--------------------------------------|--------------------------------------------------------------------------------------------------------|
-| addHeaders    | false    | Object ([HeaderKey](#headerkey) : [HeaderValue](#headervalue)) | A map of Header Key Value pairs to be added to the request. Content-Type cannot be added via this map. |
-| removeHeaders | false    | Array of ([HeaderKey](#headerkey))               | Headers to be removed from the request. Content-Type cannot be removed.                                |
+| Key            | required | Schema                                                         | Description                                                  |
+|----------------|----------|----------------------------------------------------------------|--------------------------------------------------------------|
+| add_headers    | false    | Object ([HeaderKey](#headerkey) : [HeaderValue](#headervalue)) | A map of Header Key Value pairs to be added to the request.  |
+| remove_headers | false    | Array of ([HeaderKey](#headerkey))                             | Headers to be removed from the request.                      |
 
 
 ## HeaderKey {#headerkey}
