@@ -307,62 +307,41 @@ Response:
 .. code-block:: json
 
    {
-       "is_consistent": false,
-       "inconsistent_objects": [
-           {
-               "type": "array_relation",
-               "definition": {
-                   "name": "articles",
-                   "source": "default",
-                   "comment": null,
-                   "table": {
-                       "schema": "public",
-                       "name": "author"
-                   },
-                   "using": {
-                       "foreign_key_constraint_on": {
-                           "column": "author_id",
-                           "table": {
-                               "schema": "public",
-                               "name": "article"
-                           }
-                       }
-                   }
-               },
-               "reason": "Inconsistent object: in table \"public.author\": in relationship \"articles\": no foreign constraint exists on the given column(s)"
+     "is_consistent": false,
+     "inconsistent_objects": [
+       {
+         "type": "table",
+         "name": "table public.article in source default",
+         "definition": {
+           "schema": "public",
+           "name": "article"
+         },
+         "reason": "Inconsistent object: no such table/view exists in source: \"public.article\""
+       },
+       {
+         "type": "array_relation",
+         "name": "array_relation articles in table public.author in source default",
+         "definition": {
+           "name": "articles",
+           "source": "default",
+           "comment": null,
+           "table": {
+             "schema": "public",
+             "name": "author"
            },
-           {
-               "type": "object_relation",
-               "definition": {
-                   "name": "authors",
-                   "source": "default",
-                   "comment": "null",
-                   "table": {
-                       "schema": "public",
-                       "name": "article"
-                   },
-                   "using": {
-                       "foreign_key_constraint_on": {
-                           "column": "author_id",
-                           "table": {
-                               "schema": "public",
-                               "name": "author"
-                           }
-                       }
-                   }
-               },
-               "reason": "table \"article\" does not exist"
-           },
-           {
-               "type": "table",
-               "name": "table article in source default",
-               "definition": {
-                   "schema": "public",
-                   "name": "article"
-               },
-               "reason": "no such table/view exists in source : \"article\""
+           "using": {
+             "foreign_key_constraint_on": {
+               "column": "author_id",
+               "table": {
+                 "schema": "public",
+                 "name": "article"
+               }
+             }
            }
-       ]
+         },
+         "reason": "Inconsistent object: in table \"public.author\": in relationship \"articles\": table \"public.article\" does not exist"
+       }
+     ]
    }
 
 .. _metadata_drop_inconsistent_metadata:
