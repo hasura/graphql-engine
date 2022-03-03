@@ -1,5 +1,6 @@
 module Data.HashMap.Strict.InsOrd.Extended
   ( module OMap,
+    catMaybes,
     groupTuples,
     groupListWith,
     partition,
@@ -12,6 +13,9 @@ import Data.Hashable (Hashable)
 import Data.List qualified as L
 import Data.Sequence.NonEmpty qualified as NE
 import Prelude
+
+catMaybes :: InsOrdHashMap k (Maybe v) -> InsOrdHashMap k v
+catMaybes = OMap.mapMaybe id
 
 groupTuples ::
   (Eq k, Hashable k, Foldable t) =>

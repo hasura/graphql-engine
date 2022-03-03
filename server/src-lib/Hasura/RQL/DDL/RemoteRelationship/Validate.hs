@@ -7,7 +7,7 @@ module Hasura.RQL.DDL.RemoteRelationship.Validate
   )
 where
 
-import Data.HashMap.Strict qualified as HM
+import Data.HashMap.Strict.Extended qualified as HM
 import Data.HashSet qualified as HS
 import Data.List.NonEmpty qualified as NE
 import Data.Text.Extended
@@ -215,25 +215,22 @@ stripInMap ::
     (Either ValidationError)
     (HM.HashMap G.Name RemoteSchemaInputValueDefinition)
 stripInMap relName lhsIdentifier types schemaArguments providedArguments =
-  fmap
-    (HM.mapMaybe id)
-    ( HM.traverseWithKey
-        ( \name remoteInpValDef@(RemoteSchemaInputValueDefinition inpValInfo _preset) ->
-            case HM.lookup name providedArguments of
-              Nothing -> pure $ Just remoteInpValDef
-              Just value -> do
-                maybeNewGType <- stripValue relName lhsIdentifier types (G._ivdType inpValInfo) value
-                pure
-                  ( fmap
-                      ( \newGType ->
-                          let newInpValInfo = inpValInfo {G._ivdType = newGType}
-                           in RemoteSchemaInputValueDefinition newInpValInfo Nothing
-                      )
-                      maybeNewGType
+  fmap HM.catMaybes $
+    HM.traverseWithKey
+      ( \name remoteInpValDef@(RemoteSchemaInputValueDefinition inpValInfo _preset) ->
+          case HM.lookup name providedArguments of
+            Nothing -> pure $ Just remoteInpValDef
+            Just value -> do
+              maybeNewGType <- stripValue relName lhsIdentifier types (G._ivdType inpValInfo) value
+              pure $
+                fmap
+                  ( \newGType ->
+                      let newInpValInfo = inpValInfo {G._ivdType = newGType}
+                       in RemoteSchemaInputValueDefinition newInpValInfo Nothing
                   )
-        )
-        schemaArguments
-    )
+                  maybeNewGType
+      )
+      schemaArguments
 
 -- | Strip a value type completely, or modify it, if the given value
 -- is atomic-ish.

@@ -122,6 +122,13 @@
     - warn: {lhs: "MaybeT (return x)",       rhs: "hoistMaybe x"}
     - warn: {lhs: "MaybeT (pure Nothing)",   rhs: "Control.Applicative.empty"}
     - warn: {lhs: "MaybeT (return Nothing)", rhs: "Control.Applicative.empty"}
+    # catMaybes
+    - warn: {lhs: "Data.HashMap.Strict.mapMaybe id", rhs: "Data.HashMap.Strict.Extended.catMaybes"}
+    - warn: {lhs: "Data.HashMap.Strict.Extended.mapMaybe id", rhs: "Data.HashMap.Strict.Extended.catMaybes"}
+    - warn: {lhs: "Data.HashMap.Strict.InsOrd.mapMaybe id", rhs: "Data.HashMap.Strict.InsOrd.Extended.catMaybes"}
+    - warn: {lhs: "Data.HashMap.Strict.InsOrd.Extended.mapMaybe id", rhs: "Data.HashMap.Strict.InsOrd.Extended.catMaybes"}
+    - warn: {lhs: "Data.IntMap.Strict.mapMaybe id", rhs: "Data.HashMap.Strict.Extended.catMaybes"}
+    - warn: {lhs: "Data.IntMap.Strict.Extended.mapMaybe id", rhs: "Data.HashMap.Strict.Extended.catMaybes"}
 
 - group:
     name: data-text-extended

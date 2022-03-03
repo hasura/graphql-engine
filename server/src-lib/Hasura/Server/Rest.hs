@@ -9,7 +9,7 @@ import Data.Aeson hiding (json)
 import Data.Aeson qualified as J
 import Data.Align qualified as Align
 import Data.Environment qualified as Env
-import Data.HashMap.Strict qualified as M
+import Data.HashMap.Strict.Extended qualified as M
 import Data.Text qualified as T
 import Data.Text.Encoding qualified as T
 import Data.Text.Extended
@@ -155,7 +155,7 @@ runCustomEndpoint env execCtx requestId userInfo reqHeaders ipAddress RestReques
 
               resolvedVariablesMaybe <- joinedVars `onLeft` throw400 BadRequest
 
-              let resolvedVariables = M.mapMaybe id resolvedVariablesMaybe
+              let resolvedVariables = M.catMaybes resolvedVariablesMaybe
 
               -- Construct a graphql query by pairing the resolved variables
               -- with the query string from the schema cache, and pass it

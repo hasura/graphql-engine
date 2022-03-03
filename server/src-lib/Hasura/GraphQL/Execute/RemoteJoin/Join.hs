@@ -10,7 +10,7 @@ import Data.HashMap.Strict.Extended qualified as Map
 import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.HashMap.Strict.NonEmpty qualified as NEMap
 import Data.HashSet qualified as HS
-import Data.IntMap.Strict qualified as IntMap
+import Data.IntMap.Strict.Extended qualified as IntMap
 import Data.List.NonEmpty qualified as NE
 import Data.Scientific qualified as Scientific
 import Data.Text qualified as T
@@ -99,7 +99,7 @@ processRemoteJoins_ ::
   m (f JO.Value)
 processRemoteJoins_ requestId logger env manager reqHdrs userInfo lhs joinTree gqlreq = do
   (compositeValue, joins) <- collectJoinArguments (assignJoinIds joinTree) lhs
-  joinIndices <- fmap (IntMap.mapMaybe id) $
+  joinIndices <- fmap IntMap.catMaybes $
     for joins $ \JoinArguments {..} -> do
       let joinArguments = IntMap.fromList $ map swap $ Map.toList _jalArguments
       case _jalJoin of
