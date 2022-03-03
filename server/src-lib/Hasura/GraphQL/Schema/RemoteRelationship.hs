@@ -40,21 +40,19 @@ remoteRelationshipField ::
   (MonadBuildSchemaBase r m n) =>
   RemoteFieldInfo lhsJoinField ->
   m (Maybe [FieldParser n (IR.RemoteRelationshipField UnpreparedValue)])
-remoteRelationshipField RemoteFieldInfo {..} = do
+remoteRelationshipField RemoteFieldInfo {..} = runMaybeT do
   queryType <- asks $ qcQueryType . getter
   -- https://github.com/hasura/graphql-engine/issues/5144
-  -- The above issue is easily fixable by removing the following guard and 'MaybeT' monad transformation
-  void $ runMaybeT $ guard $ queryType == ET.QueryHasura
+  -- The above issue is easily fixable by removing the following guard
+  guard $ queryType == ET.QueryHasura
   case _rfiRHS of
     RFISource anyRemoteSourceFieldInfo ->
-      dispatchAnyBackend @BackendSchema anyRemoteSourceFieldInfo \remoteSourceFieldInfo ->
-        -- the fmap soup here is to go over all the IR.RemoteSourceSelect and
-        -- wrap them as 'IR.RemoteRelationshipField's
-        Just . map (fmap (IR.RemoteSourceField . mkAnyBackend))
-          <$> remoteRelationshipToSourceField remoteSourceFieldInfo
-    RFISchema remoteSchema ->
-      fmap (pure . fmap IR.RemoteSchemaField)
-        <$> remoteRelationshipToSchemaField _rfiLHS remoteSchema
+      dispatchAnyBackend @BackendSchema anyRemoteSourceFieldInfo \remoteSourceFieldInfo -> do
+        fields <- lift $ remoteRelationshipToSourceField remoteSourceFieldInfo
+        pure $ fmap (IR.RemoteSourceField . mkAnyBackend) <$> fields
+    RFISchema remoteSchema -> do
+      fields <- MaybeT $ remoteRelationshipToSchemaField _rfiLHS remoteSchema
+      pure $ pure $ IR.RemoteSchemaField <$> fields
 
 -- | Parser(s) for remote relationship fields to a remote schema
 remoteRelationshipToSchemaField ::
